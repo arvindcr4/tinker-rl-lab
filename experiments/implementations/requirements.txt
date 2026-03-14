@@ -1,0 +1,37 @@
+# Tinker RL Implementations - Dependencies
+# ==========================================
+
+# Core ML/DL
+torch>=2.0.0
+numpy>=1.24.0
+
+# HuggingFace ecosystem (for TRL implementations)
+transformers>=4.35.0
+trl>=0.7.0
+datasets>=2.14.0
+peft>=0.6.0
+accelerate>=0.24.0
+
+# Reinforcement Learning libraries
+stable-baselines3>=2.0.0
+gymnasium>=0.29.0
+tianshou>=0.5.0
+d3rlpy>=2.0.0
+
+# PufferLib (high-throughput RL)
+pufferlib>=0.7.0
+
+# rl_games (NVIDIA)
+rl-games>=1.6.0
+
+# Utilities
+tensorboard>=2.14.0
+wandb>=0.15.0
+tqdm>=4.66.0
+
+# Optional: CUDA support
+# torch-cuda>=2.0.0  # Uncomment if using NVIDIA GPU
+
+# Development
+pytest>=7.0.0
+black>=23.0.0

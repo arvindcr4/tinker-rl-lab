@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Secrets
+.env
+.secrets/
+*.key
+
+# Logs
+*.log
+logs/
+
+# Checkpoints
+checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large files
+*.pdf
+*.pptx
+*.xlsx
+temp.json
+*.db
+slack.har
+
+# Task outcomes (may contain sensitive data)
+tasks/outcome/

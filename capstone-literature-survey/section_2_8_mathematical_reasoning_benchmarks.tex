@@ -1,0 +1,73 @@
+\subsection{Mathematical Reasoning Benchmarks}
+\label{sec:math-benchmarks}
+
+The evaluation of mathematical reasoning in large language models requires carefully designed benchmarks that test multi-step problem solving, symbolic manipulation, and logical deduction. This section surveys the principal benchmarks used to measure progress in LLM mathematical reasoning---the same benchmarks against which GRPO-trained models are evaluated in this work.
+
+\subsubsection{GSM8K}
+
+The Grade School Math 8K (GSM8K) benchmark, introduced by \cite{cobbe2021gsm8k}, comprises 8,500 linguistically diverse grade-school-level math word problems created by human problem writers. The dataset is partitioned into 7,473 training problems and 1,319 test problems. Each problem requires between 2 and 8 steps of elementary arithmetic reasoning---addition, subtraction, multiplication, and division---to solve. Solutions are expressed in natural language as a sequence of reasoning steps, culminating in a final numeric answer demarcated by the \texttt{####} delimiter.
+
+The benchmark evaluates models via \emph{exact match} on the extracted final numeric answer, making evaluation unambiguous and fully automatable. At the time of its introduction, the best-performing model achieved only 35\% accuracy using a fine-tuned GPT-3 verifier, underscoring the difficulty that multi-step arithmetic reasoning posed for early large language models. Since then, rapid progress driven by chain-of-thought prompting \cite{wei2022chainofthought}, scaling, and reinforcement learning has pushed frontier model performance above 95\%. Models such as GPT-4, Claude 3.5 Sonnet, and Gemini 1.5 Pro routinely achieve 95--97\% accuracy, leading some researchers to consider GSM8K approaching saturation as a discriminative benchmark for the strongest models. Recent work on GSM8K-Platinum has further revealed that a non-trivial fraction of residual errors on the original benchmark stem from label noise (ambiguous or mislabeled problems) rather than genuine model failures, reinforcing the view that GSM8K primarily serves as a \emph{necessary but not sufficient} test of mathematical competence.
+
+Despite nearing saturation at the frontier, GSM8K retains significant value for evaluating smaller models, studying the effect of reinforcement learning on reasoning emergence, and serving as a standardized reference point across the literature. It remains one of the two primary benchmarks (alongside MATH) used in the DeepSeek-R1 \cite{lightman2023lets} and broader GRPO literature to track reasoning improvements during RL training.
+
+\subsubsection{MATH}
+
+The MATH benchmark, introduced by \cite{hendrycks2021math} and published at NeurIPS 2021, presents a substantially harder challenge than GSM8K. It consists of 12,500 competition-level mathematics problems drawn from high school competitions such as the AMC 10, AMC 12, and AIME, as well as from curated problem repositories. Problems are distributed across seven subject areas:
+
+\begin{enumerate}
+    \item \textbf{Prealgebra} --- foundational arithmetic and elementary concepts,
+    \item \textbf{Algebra} --- equations, inequalities, polynomials, and functions,
+    \item \textbf{Number Theory} --- divisibility, modular arithmetic, and primes,
+    \item \textbf{Counting \& Probability} --- combinatorics and probabilistic reasoning,
+    \item \textbf{Geometry} --- Euclidean geometry, coordinate geometry, and trigonometric applications,
+    \item \textbf{Intermediate Algebra} --- sequences, series, complex numbers, and advanced algebraic manipulation,
+    \item \textbf{Precalculus} --- trigonometric identities, conic sections, and vectors.
+\end{enumerate}
+
+Each problem is assigned one of five difficulty levels (Levels 1--5), with Level 1 corresponding roughly to straightforward competition problems and Level 5 representing the most challenging problems that would test strong competition participants. Solutions are provided in full \LaTeX-formatted step-by-step derivations, with the final answer enclosed in a \verb|\boxed{}| environment, enabling automated extraction and exact-match evaluation via symbolic equivalence checking.
+
+At the time of release, the best model (GPT-2 fine-tuned on the training set) achieved only 6.9\% accuracy, and even GPT-3 with few-shot prompting scored below 10\%. This stood in stark contrast to human competition participants, who could solve a substantial fraction of these problems. The difficulty gap relative to GSM8K is enormous: while GSM8K tests multi-step arithmetic accessible to grade school students, MATH requires domain-specific mathematical knowledge, creative problem-solving strategies, and the ability to compose multiple techniques within a single solution. As of early 2026, frontier reasoning models have made dramatic progress, with the strongest systems exceeding 95\% on MATH. However, unlike GSM8K, the hardest Level-5 problems in MATH continue to challenge even the most capable models, preserving its discriminative power at the frontier.
+
+\subsubsection{MATH-500}
+
+MATH-500 is a curated 500-problem subset of the MATH test set, originally introduced by \cite{lightman2023lets} in the context of process reward model research. The subset was selected to be representative of the full MATH test set across all seven subject areas and five difficulty levels, providing a compact yet statistically meaningful evaluation. Its smaller size makes it particularly attractive for computationally expensive evaluation protocols, such as majority voting (pass@$k$) with large sample counts.
+
+MATH-500 has become a widely adopted evaluation benchmark in the reinforcement learning for reasoning literature. Most notably, \cite{lightman2023lets} reported that DeepSeek-R1-Zero---a model trained purely via reinforcement learning without any supervised fine-tuning---achieved 95.9\% accuracy on MATH-500, a result that demonstrated the capacity of RL alone to elicit strong mathematical reasoning. As of early 2026, the strongest models exceed 99\% on MATH-500, with scores such as 99.2\% from LongCat-Flash-Thinking and 98.2\% from GLM-4.5, indicating that even this competition-level subset is approaching saturation for frontier reasoning systems. MATH-500 is used as one of the primary evaluation benchmarks in this work.
+
+\subsubsection{AIME}
+
+The American Invitational Mathematics Examination (AIME) is a prestigious mathematical competition administered annually by the Mathematical Association of America (MAA) to the top-performing students from the AMC 10 and AMC 12 examinations. Each AIME consists of 15 problems to be solved within 3 hours. All answers are integers in the range 0--999, which makes automated evaluation straightforward via exact integer match.
+
+AIME problems are considerably harder than those in GSM8K or the easier levels of MATH, requiring deep mathematical insight, multi-step reasoning chains, and creative problem-solving strategies across algebra, geometry, number theory, and combinatorics. In the context of LLM evaluation, AIME problems (typically drawn from the 2024 or 2025 examinations) serve as a \emph{harder-tier} benchmark that discriminates among frontier reasoning models where GSM8K and even MATH have begun to saturate. As of early 2026, the strongest models achieve approximately 94--96\% on AIME 2024 (e.g., GPT-5 at 95.7\%, Grok~4 at 94.3\%), while AIME 2025 scores reach as high as 99.2\% for the top systems with extended reasoning. The DeepSeek-R1 paper reported 79.8\% on AIME 2024, demonstrating significant but not yet frontier-level performance for RL-trained open models at the time of its release.
+
+\subsubsection{Chain-of-Thought Prompting and Its Connection to RL-Trained Reasoning}
+
+The effectiveness of LLMs on mathematical benchmarks was dramatically improved by the introduction of \emph{chain-of-thought} (CoT) prompting \cite{wei2022chainofthought}. Rather than requiring the model to produce an answer directly, CoT prompting elicits a sequence of intermediate reasoning steps---a ``chain of thought''---that decomposes the problem into manageable sub-steps before arriving at the final answer. \cite{wei2022chainofthought} demonstrated that simply prepending a few exemplars with step-by-step solutions to the prompt could substantially improve performance on arithmetic, commonsense, and symbolic reasoning benchmarks, with particularly dramatic gains on GSM8K.
+
+The significance of chain-of-thought reasoning extends beyond prompting strategies. CoT provides a natural \emph{action space} for reinforcement learning approaches to mathematical reasoning. In the GRPO framework and related RL methods, the model learns to generate chain-of-thought solutions as its ``actions,'' receiving reward signals based on the correctness of the final answer. The key insight underlying DeepSeek-R1-Zero is that RL training can cause CoT-like reasoning behaviors---including self-verification, backtracking, and reflection---to \emph{emerge spontaneously} without explicit CoT supervision. The model is not shown exemplar reasoning chains; rather, through reinforcement learning with outcome-based rewards on mathematical benchmarks, it discovers that generating intermediate reasoning steps is instrumentally useful for arriving at correct answers.
+
+This connection between CoT and RL-trained reasoning is foundational to the GRPO scaling investigation in this work. Process reward models \cite{lightman2023lets}, which provide step-level supervision of reasoning chains, further bridge this connection by offering denser reward signals that evaluate each intermediate step rather than only the final answer. The interplay between outcome-based rewards (as in GRPO), process-based rewards, and the emergent structure of learned reasoning chains represents a central theme in the current landscape of mathematical reasoning research.
+
+\subsubsection{Benchmark Comparison}
+
+Table~\ref{tab:math-benchmarks} provides a comparative overview of the mathematical reasoning benchmarks discussed in this section.
+
+\begin{table}[ht]
+\centering
+\caption{Comparison of mathematical reasoning benchmarks used for LLM evaluation. Frontier SOTA figures reflect approximate best-reported results as of early 2026.}
+\label{tab:math-benchmarks}
+\small
+\begin{tabular}{lccccl}
+\toprule
+\textbf{Benchmark} & \textbf{Size} & \textbf{Difficulty} & \textbf{Answer Format} & \textbf{Frontier SOTA} & \textbf{Primary Use} \\
+\midrule
+GSM8K & 1,319 (test) & Grade school & Numeric (integer) & $\sim$97\% & Baseline reasoning \\
+MATH & 5,000 (test) & Competition & \LaTeX{} (\verb|\boxed{}|) & $>$95\% & Standard evaluation \\
+MATH-500 & 500 & Competition & \LaTeX{} (\verb|\boxed{}|) & $\sim$99\% & Efficient evaluation \\
+AIME 2024 & 30 & Olympiad-track & Integer (0--999) & $\sim$96\% & Frontier discrimination \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The progression from GSM8K through MATH to AIME reflects an increasing demand for mathematical sophistication, creative problem solving, and extended multi-step reasoning. Together, these benchmarks provide a multi-resolution evaluation framework: GSM8K tests foundational arithmetic reasoning and serves as a floor for competent models; MATH and MATH-500 test competition-level mathematical knowledge and serve as the primary evaluation targets for GRPO and related RL methods; and AIME provides a ceiling-level challenge that continues to discriminate among the most capable systems. This hierarchy of difficulty is essential for studying how reinforcement learning scales mathematical reasoning across different capability regimes.

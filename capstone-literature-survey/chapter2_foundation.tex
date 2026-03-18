@@ -1,0 +1,195 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% RL for LLMs: A Systematic GRPO Scaling Study
+%% Capstone Project — Group 6
+%% MTech Data Science & AI, PES University, Bengaluru
+%%
+%% Chapter 2: Foundation (Literature Review)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt,a4paper]{report}
+
+%% ---------- Page geometry ----------
+\usepackage[
+  top=2.5cm,
+  bottom=2.5cm,
+  left=3cm,
+  right=2.5cm
+]{geometry}
+
+%% ---------- Mathematics ----------
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+%% ---------- Typography & spacing ----------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{setspace}
+\onehalfspacing
+
+%% ---------- Graphics & figures ----------
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{caption}
+\usepackage{subcaption}
+
+%% ---------- Tables ----------
+\usepackage{booktabs}
+
+%% ---------- Algorithms ----------
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+
+%% ---------- Code listings ----------
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  captionpos=b
+}
+
+%% ---------- Hyperlinks ----------
+\usepackage[
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  citecolor=green!50!black,
+  urlcolor=blue!60!black
+]{hyperref}
+
+%% ---------- Bibliography ----------
+\usepackage[round,sort&compress]{natbib}
+\bibliographystyle{plainnat}
+
+%% ---------- Title information ----------
+\title{%
+  \vspace{-1cm}
+  \textbf{RL for LLMs: A Systematic GRPO Scaling Study} \\[1.5em]
+  \large Capstone Project Report \\[0.8em]
+  \large MTech in Data Science \& Artificial Intelligence
+}
+\author{%
+  \textbf{Group 6} \\[1em]
+  Department of Computer Science and Engineering \\
+  PES University, Bengaluru --- 560085, India
+}
+\date{Academic Year 2025--2026}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%% ================================================================
+%% TITLE PAGE
+%% ================================================================
+\begin{titlepage}
+  \centering
+  \vspace*{1.5cm}
+
+  {\LARGE\bfseries PES University, Bengaluru}\\[0.4cm]
+  {\large Department of Computer Science and Engineering}\\[0.3cm]
+  {\large MTech in Data Science \& Artificial Intelligence}\\[2.5cm]
+
+  \rule{\textwidth}{1.2pt}\\[0.5cm]
+  {\Huge\bfseries RL for LLMs:\\[0.3em]
+   A Systematic GRPO Scaling Study}\\[0.5cm]
+  \rule{\textwidth}{1.2pt}\\[2cm]
+
+  {\Large\textbf{Capstone Project Report}}\\[1.5cm]
+
+  {\large\textbf{Group 6}}\\[2.5cm]
+
+  \vfill
+  {\large Academic Year 2025--2026}
+\end{titlepage}
+
+%% ================================================================
+%% CHAPTER 2: FOUNDATION
+%% ================================================================
+\setcounter{chapter}{1}          % so that \chapter gives "Chapter 2"
+\chapter{Foundation}
+\label{ch:foundation}
+
+%% ----------------------------------------------------------------
+\section{Introduction}
+\label{sec:foundation-intro}
+
+Large language models (LLMs) have demonstrated remarkable capabilities across
+a broad spectrum of natural-language tasks, yet their raw pre-trained behaviour
+often diverges from the nuanced requirements of downstream applications.
+Bridging this gap---aligning model outputs with human intent, factual
+correctness, and structured reasoning---has become one of the central
+challenges of modern NLP research.  The present chapter lays the theoretical
+and empirical groundwork upon which our scaling study is built, surveying the
+key ideas, algorithms, and benchmarks that collectively motivate and inform
+our experimental design.
+
+\paragraph{Reinforcement Learning from Human Feedback (RLHF).}
+The RLHF pipeline, popularised by InstructGPT \citep{ouyang2022instructgpt},
+established a three-stage recipe---supervised fine-tuning, reward-model
+training, and reinforcement-learning-based policy optimisation---that
+transformed how practitioners align LLMs with human preferences.  We begin
+in Section~\ref{sec:rlhf-pipeline} by reviewing this pipeline in detail,
+since every subsequent algorithmic advance discussed in this chapter can be
+understood as an attempt to simplify, stabilise, or scale one or more of
+its stages.
+
+\paragraph{Policy optimisation: from PPO to DPO to GRPO.}
+Proximal Policy Optimisation \citep[PPO;][]{schulman2017ppo} served as the
+workhorse optimiser within early RLHF systems, but its reliance on a
+separately trained value network and careful hyperparameter tuning introduced
+significant computational overhead.  Direct Preference Optimisation
+\citep[DPO;][]{rafailov2023dpo} later showed that the reward-modelling
+step could be bypassed entirely by re-parameterising the Bradley--Terry
+preference objective in terms of the policy itself.  Most recently, Group
+Relative Policy Optimisation \citep[GRPO;][]{shao2024deepseekmath} proposed
+an elegant middle ground: it retains the explicit reward signal of PPO but
+eliminates the value function by computing advantages relative to a group
+of sampled completions, thereby reducing memory requirements and simplifying
+the training loop.  The DeepSeek-R1 effort \citep{deepseek2025r1}
+subsequently demonstrated that GRPO can elicit sophisticated multi-step
+reasoning in large-scale models.  Section~\ref{sec:policy-optimisation}
+traces this algorithmic lineage, formalises each objective, and analyses the
+trade-offs that make GRPO an attractive choice for resource-constrained
+scaling experiments.
+
+\paragraph{Parameter-efficient fine-tuning.}
+Full fine-tuning of models with billions of parameters is prohibitively
+expensive for most research groups.  Low-Rank Adaptation
+\citep[LoRA;][]{hu2021lora} offers a compelling alternative by injecting
+trainable low-rank matrices into frozen pre-trained weights, dramatically
+reducing the number of trainable parameters while preserving expressive
+power.  In Section~\ref{sec:peft}, we review LoRA and its variants,
+discussing how they interact with reinforcement learning objectives and
+why they are essential enablers of the scaling experiments presented in
+later chapters.
+
+\paragraph{Mathematical reasoning benchmarks.}
+Rigorous evaluation requires benchmarks with unambiguous ground-truth
+answers.  We focus on two widely adopted mathematical reasoning datasets:
+GSM8K \citep{cobbe2021gsm8k}, a collection of grade-school math word
+problems, and MATH \citep{hendrycks2021math}, a more challenging suite
+spanning algebra, number theory, geometry, and beyond.  Together with
+chain-of-thought prompting strategies \citep{wei2022chainofthought}, these
+benchmarks provide a controlled test-bed for measuring whether
+reinforcement-learning-based fine-tuning genuinely improves a model's
+capacity for step-by-step reasoning rather than superficial pattern
+matching.  Section~\ref{sec:benchmarks} describes these datasets, their
+evaluation protocols, and the metrics we adopt.
+
+\paragraph{Related scaling studies.}
+Finally, Section~\ref{sec:related-scaling} surveys prior work that has
+investigated how RLHF and its variants behave as a function of model
+size, dataset scale, and compute budget.  These studies provide important
+baselines and methodological precedents for our own systematic exploration
+of GRPO scaling behaviour.
+
+\medskip
+\noindent
+Taken together, the topics covered in this chapter establish the conceptual
+vocabulary, algorithmic toolkit, and evaluation methodology required to
+appreciate the experimental contributions of the subsequent chapters.  By
+grounding our study in this foundation, we aim to make the design choices,
+trade-offs, and results of our GRPO scaling experiments both transparent
+and reproducible.
+
+\end{document}

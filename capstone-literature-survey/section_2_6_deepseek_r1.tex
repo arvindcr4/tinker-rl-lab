@@ -1,0 +1,219 @@
+\subsection{DeepSeek-R1 and Emergent Reasoning}
+\label{sec:deepseek-r1}
+
+A central question in the study of large language model (LLM) reasoning is whether
+sophisticated problem-solving behaviors can emerge from reinforcement learning alone,
+without reliance on human-annotated reasoning demonstrations. DeepSeek-R1
+\cite{deepseek2025r1} provides a compelling affirmative answer. Published by
+DeepSeek-AI, the work introduces two models---DeepSeek-R1-Zero and
+DeepSeek-R1---that together demonstrate the power of Group Relative Policy
+Optimization (GRPO) \cite{shao2024deepseekmath} to elicit emergent chain-of-thought
+reasoning, self-reflection, and verification behaviors in large-scale language models.
+
+\subsubsection{DeepSeek-R1-Zero: Pure RL without Supervised Fine-Tuning}
+
+DeepSeek-R1-Zero is trained by applying GRPO directly to the DeepSeek-V3-Base
+model \cite{deepseek2024v3}, a 671-billion-parameter Mixture-of-Experts architecture,
+without any supervised fine-tuning (SFT) stage. The training setup is deliberately
+minimal: the model receives a simple template requiring it to produce a reasoning
+process enclosed in \texttt{<think>...</think>} tags, followed by a final answer. No
+content-specific biases or human-crafted reasoning demonstrations are provided,
+ensuring that any emergent reasoning strategies arise purely from the RL optimization
+signal.
+
+The reward design for DeepSeek-R1-Zero is entirely rule-based, consisting of two
+components:
+\begin{itemize}
+    \item \textbf{Accuracy rewards:} For mathematics problems, the final numerical
+    answer is extracted and compared against the ground truth. For coding tasks,
+    generated solutions are executed against a suite of predefined test cases. These
+    rewards provide objective, binary feedback on correctness.
+    \item \textbf{Format rewards:} The model is incentivized to place its reasoning
+    within the designated \texttt{<think>...</think>} tags and to present the final
+    answer in the required format.
+\end{itemize}
+Crucially, no neural reward model is employed. This deliberate design choice avoids
+the well-documented problem of reward hacking, where models learn to exploit biases
+in learned reward functions rather than genuinely improving task performance. By
+relying exclusively on verifiable, rule-based signals, DeepSeek-R1-Zero ensures that
+the RL training signal faithfully reflects actual problem-solving ability.
+
+The results are striking. On the AIME 2024 benchmark, the average pass@1 accuracy of
+DeepSeek-R1-Zero increases from an initial 15.6\% to 71.0\% over the course of
+training.\footnote{The v1 preprint reports 71.0\%; the revised Nature version (v2)
+reports 77.9\% after extended training.} With majority-vote consensus decoding
+(cons@64), the score reaches 86.7\%---significantly surpassing the average performance
+of human competitors. On MATH-500, DeepSeek-R1-Zero achieves 95.9\% pass@1 accuracy. These gains are achieved with a training configuration of 16
+sampled outputs per question, a group size of 512, a learning rate of $3 \times
+10^{-6}$, and a KL coefficient of 0.001, over approximately 10{,}400 policy update
+steps.
+
+\subsubsection{Emergent Behaviors}
+
+Perhaps the most remarkable aspect of DeepSeek-R1-Zero is the spontaneous emergence
+of sophisticated reasoning behaviors that were never explicitly taught. Three
+categories of emergent behavior are particularly noteworthy:
+
+\paragraph{Spontaneous chain-of-thought.} As training progresses, DeepSeek-R1-Zero
+naturally learns to allocate more ``thinking time'' to problems, with the average
+response length increasing steadily throughout training. The model progressively
+generates longer reasoning traces---hundreds to thousands of tokens---in which it
+explores multiple solution strategies, decomposes complex problems into sub-steps, and
+systematically works through intermediate calculations.
+
+\paragraph{Self-reflection and verification.} The model develops the capacity to
+recognize errors in its own reasoning and backtrack. It spontaneously produces phrases
+such as ``Wait, let me reconsider'' or ``Let me verify this step,'' reassessing
+intermediate conclusions and exploring alternative approaches when an initial strategy
+appears flawed.
+
+\paragraph{The ``aha moment.''} The authors highlight a particularly striking
+phenomenon observed during training: an intermediate checkpoint of DeepSeek-R1-Zero
+begins producing the word ``Wait'' with markedly increased frequency during
+reflections, signaling a sudden qualitative shift in reasoning patterns. In one
+illustrative example, the model pauses mid-derivation and writes: ``\textit{Wait,
+wait. Wait. That's an aha moment I can flag here. Let's reevaluate this
+step-by-step}.'' The authors describe this as ``an aha moment for us, allowing us to
+witness the power and beauty of reinforcement learning''---a moment where the model,
+without any explicit instruction, learns to pause, reconsider, and redirect its
+reasoning.
+
+These emergent behaviors demonstrate that reinforcement learning with appropriate
+incentive structures can give rise to complex cognitive strategies without explicit
+supervision, providing evidence that reasoning capabilities can be ``incentivized''
+rather than ``taught.''
+
+\subsubsection{Limitations of R1-Zero}
+
+Despite its impressive reasoning capabilities, DeepSeek-R1-Zero exhibits several
+practical shortcomings. First, its outputs suffer from \textbf{poor readability}: the
+reasoning traces, while effective, are often verbose, disorganized, and difficult for
+human readers to follow. Second, the model exhibits pervasive \textbf{language
+mixing}, frequently combining English and Chinese within a single chain-of-thought
+response---a consequence of DeepSeek-V3-Base being pre-trained on multilingual
+corpora. Third, because the RL training focuses exclusively on reasoning tasks with
+rule-based rewards, DeepSeek-R1-Zero has \textbf{limited generalization} to broader
+capabilities such as creative writing, open-domain question answering, and
+instruction following.
+
+\subsubsection{The DeepSeek-R1 Multi-Stage Pipeline}
+
+To address the limitations of R1-Zero while preserving its reasoning strengths,
+DeepSeek-R1 is trained through a carefully designed four-stage pipeline:
+
+\paragraph{Stage 1: Cold-start SFT.} Several thousand curated long
+chain-of-thought examples are collected to fine-tune the DeepSeek-V3-Base model. These
+examples are designed to exhibit a conversational, human-aligned thinking process
+presented in first-person perspective, with explicit problem comprehension, detailed
+step-by-step reasoning, and integrated reflection and verification. This cold-start
+data provides a well-formatted foundation for the subsequent RL stage, producing the
+intermediate checkpoint DeepSeek-R1-Dev1.
+
+\paragraph{Stage 2: Reasoning-focused RL.} RL training is applied to the cold-start
+checkpoint using GRPO with rule-based accuracy and format rewards, augmented by a
+\textbf{language-consistency reward}. This additional reward signal is computed as the
+proportion of words in the chain-of-thought that match the target language of the
+query, directly penalizing language mixing:
+\begin{equation}
+    R_{\text{language}} = \frac{\text{Num}(\text{Words}_{\text{target}})}{\text{Num}(\text{Words}_{\text{total}})}.
+\end{equation}
+The language-consistency reward is added directly to the final reward for both
+reasoning and non-reasoning data. Ablation experiments confirm that while this
+alignment introduces a slight degradation in raw benchmark performance, it
+substantially improves readability and user experience. This stage yields
+DeepSeek-R1-Dev2.
+
+\paragraph{Stage 3: Rejection sampling and SFT.} The Dev2 checkpoint is used to
+generate reasoning trajectories via rejection sampling, filtering for correctness and
+quality. These reasoning samples are combined with non-reasoning data (including
+writing, open-domain QA, and instruction-following tasks) to construct a diverse SFT
+dataset of approximately 800{,}000 samples. Fine-tuning on this mixed dataset produces
+DeepSeek-R1-Dev3, which excels not only in reasoning but also in general language
+generation.
+
+\paragraph{Stage 4: RL across all scenarios.} A final RL stage is applied using a
+combination of rule-based rewards for reasoning tasks, model-based preference rewards
+(helpfulness and safety) for general tasks, and language-consistency rewards. This
+comprehensive RL stage uses diverse prompt distributions spanning mathematics, coding,
+STEM, logic, and general instruction-following, producing the final DeepSeek-R1 model.
+The integration of multiple reward signals enables the model to maintain strong
+reasoning while aligning with human preferences for helpfulness and harmlessness.
+
+\subsubsection{Benchmark Results}
+
+Table~\ref{tab:deepseek-r1-results} presents a comparison of DeepSeek-R1-Zero,
+DeepSeek-R1, and OpenAI o1-1217 on key reasoning benchmarks. DeepSeek-R1 achieves
+performance broadly comparable to OpenAI o1-1217, surpassing it on MATH-500 while
+achieving near-parity on AIME 2024. On GPQA Diamond, a benchmark of PhD-level science
+questions, DeepSeek-R1 narrows the gap to within 4.2 percentage points. These results
+are particularly significant given that DeepSeek-R1 is open-weight and trained at a
+fraction of the estimated cost of proprietary alternatives.
+
+\begin{table}[ht]
+\centering
+\caption{Benchmark comparison of DeepSeek-R1-Zero, DeepSeek-R1, and OpenAI o1-1217.
+All figures are pass@1 (\%) except where noted. Results for OpenAI o1-1217 are from
+official reports. AIME 2024 and GPQA Diamond use $k{=}64$ samples; MATH-500 uses
+$k{=}16$.}
+\label{tab:deepseek-r1-results}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Benchmark} & \textbf{DeepSeek-R1-Zero} & \textbf{DeepSeek-R1} & \textbf{OpenAI o1-1217} \\
+\midrule
+AIME 2024 (pass@1)       & 77.9  & 79.8  & 79.2 \\
+MATH-500 (pass@1)        & 95.9  & 97.3  & 96.4 \\
+GPQA Diamond (pass@1)    & 75.8  & 71.5  & 75.7 \\
+\midrule
+AIME 2024 (cons@64)      & 86.7  & ---   & ---  \\
+Codeforces (percentile)  & 80.4  & 96.3  & 96.6 \\
+LiveCodeBench (pass@1)   & 50.0  & 65.9  & 63.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Distillation to Smaller Models}
+
+A key practical contribution of DeepSeek-R1 is the demonstration that its reasoning
+capabilities can be effectively transferred to substantially smaller models through
+knowledge distillation. The authors distill DeepSeek-R1's outputs into six student
+models ranging from 1.5 billion to 70 billion parameters, built on the Qwen-2.5 and
+Llama-3 model families. The distillation procedure is straightforward: approximately
+800{,}000 samples of reasoning trajectories generated by DeepSeek-R1 are used to
+fine-tune each student's base model for 2--3 epochs, without any additional RL stage.
+
+The distilled models achieve remarkable performance relative to their size. For
+instance, DeepSeek-R1-Distill-Qwen-1.5B---a model with only 1.5 billion
+parameters---achieves 28.9\% pass@1 on AIME 2024 and 83.9\% on MATH-500, surpassing
+GPT-4o (9.3\% and 74.6\%, respectively) and Claude-3.5-Sonnet (16.0\% and 78.3\%).
+The larger DeepSeek-R1-Distill-Qwen-32B reaches 72.6\% on AIME 2024 and 94.3\% on
+MATH-500.
+
+A particularly important finding is that \textbf{distillation outperforms direct RL on
+smaller models}. When Qwen-2.5-32B-Base is trained with large-scale RL from scratch
+(over 10{,}000 steps), the resulting model (Qwen2.5-32B-Zero) achieves 47.0\% pass@1
+on AIME 2024 and 91.6\% on MATH-500. In contrast, DeepSeek-R1-Distill-Qwen-32B,
+which uses only SFT on distilled data, achieves 72.6\% and 94.3\% on the same
+benchmarks---a substantial margin. This result suggests that for models below a
+certain capacity threshold, distilling the reasoning patterns of a more powerful
+teacher is both more effective and more computationally efficient than attempting to
+discover those patterns through RL from scratch. However, the authors note that
+advancing beyond the frontiers of existing reasoning capability ultimately requires
+large-scale RL on sufficiently powerful base models.
+
+\subsubsection{Significance for GRPO Scaling}
+
+DeepSeek-R1 represents the most prominent demonstration to date of GRPO operating at
+the scale of hundreds of billions of parameters. Several aspects are directly relevant
+to the study of GRPO scaling. First, the success of R1-Zero establishes that GRPO
+with purely rule-based rewards is sufficient to elicit complex emergent reasoning in
+large models, without requiring neural reward models or supervised demonstrations.
+Second, the observation that smaller base models (7B and 16B) failed to exhibit
+meaningful reasoning improvements under the same RL protocol highlights a critical
+\textit{scale dependence}: the effectiveness of GRPO-based reasoning RL appears
+contingent on the base model possessing sufficient capacity to leverage long
+chain-of-thought reasoning. Third, the distillation results reveal an asymmetry in
+how GRPO scaling interacts with model size---while large models benefit directly from
+RL, smaller models benefit more from inheriting the reasoning patterns of RL-trained
+teachers. These findings collectively position DeepSeek-R1 as a foundational reference
+point for understanding how GRPO-based reinforcement learning scales across model
+sizes, training regimes, and task domains.

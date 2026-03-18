@@ -1,0 +1,145 @@
+\subsection{Direct Preference Optimization}
+\label{sec:dpo}
+
+The RLHF pipeline described in Section~\ref{sec:rlhf} is effective but
+operationally burdensome: it requires training a separate reward model,
+maintaining both a policy and a reference policy in memory, and running an
+online RL loop with PPO---each stage introducing its own hyperparameters and
+instabilities.  \emph{Direct Preference Optimization}
+(DPO)~\cite{rafailov2023dpo} eliminates the reward-modelling and
+reinforcement-learning stages entirely by showing that the optimal policy under
+the KL-constrained RLHF objective admits a closed-form solution, and that this
+solution can be exploited to reparameterize the reward function in terms of the
+policy itself.
+
+%% ---------- Derivation ----------
+\paragraph{Closed-form optimal policy.}
+Recall that the KL-constrained RLHF objective seeks a policy $\pi$ that
+maximises expected reward while remaining close to the supervised fine-tuned
+reference policy $\pi_{\text{ref}}$:
+\begin{equation}
+\label{eq:rlhf-obj}
+\max_{\pi}\;\mathbb{E}_{x \sim \mathcal{D},\, y \sim \pi(\cdot|x)}
+  \bigl[r(x,y)\bigr]
+  - \beta\, D_{\mathrm{KL}}\!\bigl(\pi(\cdot|x) \,\|\, \pi_{\text{ref}}(\cdot|x)\bigr),
+\end{equation}
+where $\beta > 0$ controls the strength of the KL penalty.  By writing the KL
+divergence in its definition and taking the functional derivative with respect
+to $\pi(y|x)$, one can verify that the unique optimum of
+Eq.~\eqref{eq:rlhf-obj} is
+\begin{equation}
+\label{eq:optimal-policy}
+\pi^{*}(y|x)
+  = \frac{1}{Z(x)}\,\pi_{\text{ref}}(y|x)\,
+    \exp\!\Bigl(\frac{1}{\beta}\,r(x,y)\Bigr),
+\qquad
+Z(x) = \sum_{y} \pi_{\text{ref}}(y|x)\,
+       \exp\!\Bigl(\frac{1}{\beta}\,r(x,y)\Bigr).
+\end{equation}
+The partition function $Z(x)$ is intractable to compute for large vocabulary
+spaces, but---crucially---it depends only on the prompt $x$ and cancels in the
+key step that follows.
+
+\paragraph{Reward reparameterization.}
+Taking the logarithm of both sides of Eq.~\eqref{eq:optimal-policy} and
+rearranging yields an expression for the reward in terms of the optimal policy:
+\begin{equation}
+\label{eq:reward-reparam}
+r(x,y) = \beta\,\log\frac{\pi^{*}(y|x)}{\pi_{\text{ref}}(y|x)}
+        + \beta\,\log Z(x).
+\end{equation}
+The reward is thus determined (up to the prompt-dependent constant
+$\beta\log Z(x)$) by the log-ratio of the optimal policy to the reference
+policy.  This reparameterization is the central insight of DPO: rather than
+first learning a reward model and then optimizing a policy against it, one can
+directly learn the policy that \emph{implicitly} defines the reward.
+
+\paragraph{The DPO loss.}
+Substituting Eq.~\eqref{eq:reward-reparam} into the Bradley--Terry preference
+model~\cite{bradley1952rank}
+$p(y_w \succ y_l | x) = \sigma\!\bigl(r(x,y_w) - r(x,y_l)\bigr)$,
+the partition functions cancel, giving a probability of preferring the winning
+completion $y_w$ over the losing completion $y_l$ that depends only on
+policy log-ratios.  Maximising the log-likelihood of the observed preference
+data $\mathcal{D} = \{(x^{(i)}, y_w^{(i)}, y_l^{(i)})\}$ under this model
+yields the DPO objective:
+\begin{equation}
+\label{eq:dpo-loss}
+\boxed{
+\mathcal{L}_{\text{DPO}}(\theta)
+  = -\,\mathbb{E}_{(x,\,y_w,\,y_l)\sim\mathcal{D}}\!
+    \left[\log\sigma\!\left(
+      \beta\left(
+        \log\frac{\pi_{\theta}(y_w|x)}{\pi_{\text{ref}}(y_w|x)}
+      - \log\frac{\pi_{\theta}(y_l|x)}{\pi_{\text{ref}}(y_l|x)}
+      \right)
+    \right)\right].}
+\end{equation}
+Training proceeds by standard gradient descent on the language-model parameters
+$\theta$; no reward model, no value function, and no online sampling are
+required.  The reference policy $\pi_{\text{ref}}$ is kept frozen throughout
+and is typically the SFT checkpoint from which $\pi_{\theta}$ is initialised.
+
+\paragraph{Practical advantages.}
+DPO enjoys several compelling benefits relative to the full PPO-based RLHF
+pipeline:
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Architectural simplicity.}  The entire alignment procedure
+      reduces to supervised learning on preference pairs.  There is no need to
+      train or serve a separate reward model, and no RL optimiser (with its
+      attendant clipping, GAE, and multiple rollout-to-update ratios) is
+      required.
+\item \textbf{Memory and compute efficiency.}  Because only the policy and
+      reference model are loaded (and the reference can share weights via
+      LoRA offsets), DPO typically requires 40--60\% less GPU memory and
+      wall-clock time than PPO at comparable model scale.
+\item \textbf{Training stability.}  The loss in Eq.~\eqref{eq:dpo-loss} is a
+      simple cross-entropy--style objective; it does not suffer from the
+      high-variance gradient estimates and reward hacking failure modes that
+      plague online RL.
+\end{enumerate}
+
+\paragraph{Limitations.}
+Despite its elegance, DPO has several well-documented shortcomings:
+\begin{itemize}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Offline, static preference data.}  DPO optimises against a fixed
+      dataset of preference pairs.  As $\pi_{\theta}$ drifts from the
+      distribution that generated the data, the implicit reward signal becomes
+      stale---a form of \emph{distribution shift} that degrades alignment
+      quality over continued training.
+\item \textbf{No online exploration.}  Because DPO never samples from the
+      current policy during training, it cannot discover novel high-reward
+      behaviours that lie outside the support of the static dataset.
+\item \textbf{Likelihood displacement.}  Empirical studies have shown that DPO
+      can decrease the absolute likelihood of \emph{preferred} completions
+      while increasing the margin over dispreferred ones---a phenomenon termed
+      \emph{likelihood displacement}.  This can degrade generation quality even
+      as the preference-classification accuracy improves.
+\item \textbf{Weaker long-horizon alignment.}  For tasks that require
+      multi-step reasoning chains---where the correctness of later steps
+      depends on earlier ones---the pairwise, completion-level preference
+      signal in DPO provides limited credit assignment, making it less
+      effective than methods that can assign step-level or
+      outcome-level rewards.
+\end{itemize}
+
+\paragraph{Why DPO is insufficient for mathematical reasoning.}
+The limitations above are particularly acute in the domain of mathematical
+problem solving.  First, mathematical reasoning is \emph{verifiable}: a
+derivation either reaches the correct answer or it does not, and this binary
+outcome signal is far richer and cheaper to obtain than human preference
+annotations.  DPO cannot exploit this signal because it requires pre-collected
+\emph{pairwise} preferences rather than scalar correctness labels.  Second,
+the solution space for mathematical problems is vast and compositional; a
+model must explore diverse multi-step reasoning paths to improve, yet DPO's
+offline nature precludes such exploration.  Third, the credit-assignment
+problem is severe: a single algebraic error in the fifth step of a ten-step
+proof renders the entire completion incorrect, but DPO's completion-level loss
+provides no mechanism to localise fault.
+
+These shortcomings motivate the search for alignment methods that (i)~leverage
+verifiable outcome rewards rather than pairwise preferences, (ii)~sample from
+the current policy during training to enable on-policy exploration, and
+(iii)~achieve the computational simplicity of DPO without sacrificing the
+performance benefits of online RL.  \emph{Group Relative Policy Optimization}
+(GRPO), introduced in Section~\ref{sec:grpo}, addresses precisely this gap.

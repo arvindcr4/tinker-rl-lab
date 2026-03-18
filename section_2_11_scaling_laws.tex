@@ -1,0 +1,252 @@
+\subsection{Scaling Laws and Empirical Observations}
+\label{sec:scaling-laws}
+
+A defining feature of modern deep learning---and large language models in
+particular---is the remarkable predictability with which performance improves as
+a function of scale.  This section surveys the empirical scaling laws that
+govern pretraining, post-training via reinforcement learning, and inference-time
+computation, and discusses their implications for the GRPO scaling study
+undertaken in this capstone.
+
+%% ---------- Classical Scaling Laws ----------
+\subsubsection{Classical Scaling Laws for Pretraining}
+
+Kaplan et al.\ introduced the first comprehensive empirical characterisation of
+how language model cross-entropy loss depends on three scale
+factors~\cite{kaplan2020scaling}.  Training Transformer language models across
+more than seven orders of magnitude in parameter count, dataset size, and
+compute budget, they established that test loss obeys smooth power-law
+relationships with each factor when the other two are not bottlenecked:
+\begin{equation}
+  L(N) = \left(\frac{N_c}{N}\right)^{\!\alpha_N}\!,\qquad
+  L(D) = \left(\frac{D_c}{D}\right)^{\!\alpha_D}\!,\qquad
+  L(C) = \left(\frac{C_c}{C}\right)^{\!\alpha_C}\!,
+  \label{eq:kaplan-power-laws}
+\end{equation}
+where $N$ denotes non-embedding parameters, $D$ the number of training tokens,
+$C$ the compute budget (in PF-days), and $N_c, D_c, C_c$ are scale constants.
+The fitted exponents---$\alpha_N \approx 0.076$, $\alpha_D \approx 0.095$, and
+$\alpha_C \approx 0.050$---imply that scaling model size yields larger marginal
+returns than scaling data alone.  A key practical corollary was that
+compute-efficient training should allocate most of a fixed compute budget to
+\emph{larger models trained on relatively modest data}, stopping well before
+convergence.  Additional findings included the \emph{universality of
+overfitting}: the performance penalty from insufficient data scales predictably
+as $N^{0.74}/D$, meaning that an eightfold increase in model size requires only
+a roughly fivefold increase in data to maintain the same loss.  Training curves
+themselves follow power laws whose parameters are approximately independent of
+model size, enabling extrapolation of final loss from early training dynamics.
+These scaling laws provided the intellectual foundation for the GPT-3 scaling
+strategy and fundamentally shaped how the field reasons about resource
+allocation in large-scale pretraining.
+
+%% ---------- Chinchilla Scaling ----------
+\subsubsection{Compute-Optimal Training: Chinchilla Scaling}
+
+Hoffmann et al.\ revisited the question of optimal resource allocation by
+training over 400 language models ranging from 70 million to 16 billion
+parameters on 5 to 500 billion tokens~\cite{hoffmann2022chinchilla}.  Their
+central finding overturned the Kaplan prescription: for compute-optimal
+training, model size and the number of training tokens should be scaled
+\emph{equally}---for every doubling of model size, the number of training tokens
+should also be doubled.  Formally, they modelled the loss as a joint function of
+parameters and data:
+\begin{equation}
+  L(N, D) = \frac{A}{N^{\alpha}} + \frac{B}{D^{\beta}} + E,
+  \label{eq:chinchilla}
+\end{equation}
+where $E$ represents an irreducible loss term and $\alpha \approx 0.34$,
+$\beta \approx 0.28$.  Under a fixed compute budget $C \propto 6ND$ (the
+standard FLOPs approximation for Transformer training), the optimal allocation
+scales both $N$ and $D$ proportionally with $C$.  This analysis revealed that
+many contemporary models---including the original GPT-3 (175B parameters
+trained on 300B tokens)---were significantly \emph{undertrained} relative to
+their parameter count.  The authors validated their prediction by training
+Chinchilla, a 70B-parameter model on $4\times$ more data than the 280B Gopher,
+using the same compute budget.  Chinchilla uniformly outperformed Gopher,
+GPT-3, and Megatron-Turing NLG (530B) on a wide range of downstream tasks,
+demonstrating that compute-optimal data scaling is at least as important as
+parameter scaling.
+
+The Chinchilla result has had far-reaching consequences: it established that
+the ratio of tokens to parameters is a first-order design variable, shifted
+industry practice toward training smaller models on larger corpora (e.g.,
+Llama~2 at 70B on 2T tokens), and provided a quantitative framework for
+budgeting pretraining runs.  For the present study, the Chinchilla insight is
+relevant insofar as the base models used for GRPO fine-tuning---Qwen-2.5 and
+Llama-3 families---have been pretrained under approximately compute-optimal
+regimes, ensuring that the starting checkpoints represent efficient use of their
+respective pretraining budgets.
+
+%% ---------- Scaling Laws for RL Fine-Tuning ----------
+\subsubsection{Scaling Laws for Reinforcement Learning Fine-Tuning}
+
+While pretraining scaling laws are well established, the scaling behaviour of
+\emph{post-training} via reinforcement learning has only recently begun to
+receive systematic study.  RL training differs from pretraining in fundamental
+ways: it optimises a reward signal rather than a log-likelihood objective, it
+operates on-policy with generated rollouts rather than static data, and it
+exhibits saturating rather than power-law performance curves.
+
+Khatri et al.\ conducted the first large-scale systematic investigation of RL
+scaling, spanning over 400,000 GPU-hours of
+experiments~\cite{khatri2025scaling}.  They proposed a sigmoidal
+compute-performance model for RL training:
+\begin{equation}
+  R_C - R_0 = (A - R_0) \cdot \frac{1}{1 + (C_{\text{mid}} / C)^B},
+  \label{eq:rl-sigmoid}
+\end{equation}
+where $R_C$ is the expected reward at compute budget $C$, $R_0$ is the initial
+performance, $A \in [0,1]$ is the asymptotic pass rate (performance ceiling),
+$B > 0$ is a scaling exponent governing compute efficiency, and $C_{\text{mid}}$
+sets the midpoint of the performance curve.  This sigmoidal form---with its
+characteristic slow-start, rapid-improvement, and saturation phases---contrasts
+sharply with the unbounded power-law improvement observed in pretraining and
+reflects the bounded nature of task-specific accuracy metrics.
+
+Three key findings emerged from this study.  First, \emph{not all RL recipes
+reach the same ceiling}: design choices such as loss type and batch size
+materially shift the asymptotic performance $A$, whereas interventions commonly
+believed to improve peak performance---such as loss aggregation, advantage
+normalisation, data curriculum, and length penalties---primarily modulate compute
+efficiency $B$ without raising the ceiling.  Second, \emph{methods that appear
+superior at small compute budgets can be inferior at scale}, underscoring the
+importance of evaluating RL algorithms by their scaling trajectories rather than
+fixed-budget snapshots.  Third, \emph{scaling model size substantially improves
+both the asymptotic RL performance and downstream generalisation}, confirming
+that the quality of the pretrained base model is a dominant factor in RL
+outcomes.
+
+Complementary work by Nimmaturi et al.\ derived predictive scaling laws
+specifically for GRPO training across Llama~3B/8B and Qwen~3B/7B
+models~\cite{nimmaturi2025grposcaling}.  Their analysis confirmed the
+exponential saturation pattern and identified that training beyond a certain
+fraction of an epoch offers diminishing returns, suggesting that principled
+early stopping can reduce GRPO compute costs significantly without sacrificing
+downstream performance.
+
+The effect of \emph{group size} $G$---the number of completions sampled per
+prompt in GRPO---represents a scaling dimension unique to group-based RL
+methods.  Larger groups yield more stable advantage estimates by providing
+richer within-group reward statistics, but increase per-step compute linearly.
+DeepSeek-R1 used $G = 64$ for its large-scale training, while academic
+reproductions have found that values between 8 and 32 offer a practical
+trade-off between variance reduction and compute cost.
+
+A particularly consequential finding from DeepSeek-R1 concerns the interaction
+between model size and RL training
+effectiveness~\cite{deepseek2025r1}.  DeepSeek reported that for smaller models
+(1.5B--14B parameters), \emph{distilling} reasoning traces from a larger
+RL-trained model into the smaller model via supervised fine-tuning consistently
+outperformed applying RL directly to the smaller model.  This suggests that
+small models may lack the capacity to independently discover effective reasoning
+strategies through RL exploration, even though they can faithfully reproduce
+such strategies when provided as training data.  The implication is stark: the
+effectiveness of RL fine-tuning is not scale-invariant, and there may exist a
+minimum model capacity below which direct RL training yields suboptimal
+returns compared to distillation-based approaches.
+
+%% ---------- Test-Time Compute Scaling ----------
+\subsubsection{Test-Time Compute Scaling}
+
+A complementary scaling dimension operates not during training but at inference
+time.  Snell et al.\ investigated how allocating additional compute at test time
+can improve LLM performance on challenging
+problems~\cite{snell2024scaling}.  They analysed two primary mechanisms for
+scaling test-time computation: (1)~\emph{search against process-based verifier
+reward models}, in which multiple candidate solutions are generated and ranked
+by a learned verifier; and (2)~\emph{adaptive distribution updating}, in which
+the model's response distribution is refined conditioned on the specific prompt
+at test time.
+
+Their central finding was that the effectiveness of test-time compute scaling
+is \emph{critically prompt-dependent}: on easy problems, additional inference
+compute yields minimal gains, while on problems of moderate difficulty---where
+the base model achieves non-trivial but imperfect success rates---test-time
+scaling can deliver substantial improvements.  This observation motivated a
+\emph{compute-optimal} test-time strategy that adaptively allocates inference
+compute per prompt based on estimated difficulty, achieving more than $4\times$
+improvement in compute efficiency over uniform best-of-$N$ baselines.  Most
+strikingly, in a FLOPs-matched comparison, a smaller model equipped with
+compute-optimal test-time scaling outperformed a $14\times$ larger model
+operating in zero-shot mode, demonstrating that inference-time and
+pretraining-time compute are partially substitutable resources.
+
+This result has direct relevance to the long chain-of-thought reasoning
+paradigm pioneered by DeepSeek-R1 and OpenAI's o1.  These models effectively
+implement a form of test-time compute scaling by generating extended reasoning
+traces---sometimes thousands of tokens---before producing a final answer.  The
+RL training process (via GRPO or related methods) teaches the model to
+\emph{allocate its own test-time compute} by learning when to think longer,
+self-verify, backtrack, and explore alternative solution paths.  In this view,
+scaling RL training and scaling test-time compute are deeply intertwined: RL
+training produces policies that can effectively utilise additional inference-time
+tokens, and the quality of this learned compute allocation improves with both
+model scale and RL training investment.
+
+%% ---------- Reward Hacking and Overoptimisation ----------
+\subsubsection{Reward Hacking and Overoptimisation}
+
+Scaling RL training is not without risks.  Gao et al.\ provided the first
+systematic characterisation of \emph{reward model overoptimisation}, the
+phenomenon whereby optimising too aggressively against a proxy reward model
+degrades true (gold-standard) performance, in accordance with Goodhart's
+law~\cite{gao2023scaling}.  Using a synthetic setup in which a large
+``gold-standard'' reward model serves as the ground truth, they studied how gold
+reward scores evolve as a policy is optimised against a smaller proxy reward
+model via both RL and best-of-$n$ sampling.
+
+For best-of-$n$ sampling, the gold reward initially increases as a function of
+the KL divergence $d_{\mathrm{KL}}$ between the optimised and initial policies
+but eventually peaks and declines.  For RL-based optimisation, a qualitatively
+similar pattern emerges, but RL consumes substantially more KL budget for the
+same degree of optimisation.  Crucially, the coefficients of these functional
+forms \emph{scale smoothly with the number of reward model parameters}: larger
+proxy reward models delay the onset of overoptimisation and achieve higher peak
+gold rewards, but do not eliminate the phenomenon entirely.  Increasing the
+reward model's training dataset size produces a similar protective effect.
+The KL penalty coefficient $\beta$ in the RL objective controls how far the
+policy drifts from the reference but, notably, does not change the
+KL--gold-reward frontier---it merely determines where on the frontier the
+optimised policy lands.
+
+These findings have direct implications for GRPO-based training.  Although the
+present study uses \emph{rule-based verifiable rewards} (exact-match correctness
+on mathematics benchmarks) rather than learned reward models, the
+overoptimisation phenomenon can still manifest in subtler forms: the policy may
+learn formatting tricks that increase exact-match rates without genuine
+reasoning improvement, or it may overfit to the distributional characteristics
+of the training prompts.  The KL regularisation term in the GRPO objective
+(Section~\ref{sec:grpo}) serves as the primary safeguard against such
+degradation, and its coefficient $\beta$ must be tuned with awareness of the
+overoptimisation dynamics characterised by Gao et al.
+
+%% ---------- Implications for This Study ----------
+\subsubsection{Implications for the Present Study}
+
+The scaling laws surveyed above delineate several orthogonal dimensions along
+which performance can be improved: pretraining model size, pretraining data
+volume, RL training compute, group size $G$, training data diversity, and
+test-time compute.  The present capstone study focuses on a specific and
+practically important slice of this space: \emph{the effect of base model size
+on GRPO training dynamics and downstream mathematical reasoning performance},
+holding the RL algorithm (GRPO), adaptation method (LoRA), training framework
+(TRL), reward structure (rule-based verification), and evaluation benchmarks
+(GSM8K, MATH) constant.
+
+This design isolates what the scaling literature identifies as one of the most
+consequential variables.  Khatri et al.\ showed that scaling model size
+substantially raises the asymptotic reward ceiling $A$ in
+Equation~\eqref{eq:rl-sigmoid}, while DeepSeek-R1's distillation findings
+suggest that there may exist a critical model capacity below which direct RL
+training is dominated by knowledge distillation.  By systematically varying
+model size while controlling for other factors, this study aims to empirically
+locate this transition, characterise how GRPO reward trajectories change with
+scale, and provide actionable guidance for practitioners deciding between direct
+RL training and distillation under resource constraints.  Additionally, by
+monitoring chain-of-thought length and reasoning pattern emergence across
+scales, the study connects to the test-time compute scaling literature: if
+larger RL-trained models generate longer and more effective reasoning traces,
+this would constitute evidence that model scale and learned test-time compute
+allocation are complementary rather than substitutable resources in the
+mathematical reasoning domain.

@@ -1,0 +1,370 @@
+\subsection{Group Relative Policy Optimization}
+\label{sec:grpo}
+
+The preceding sections traced a clear trajectory: PPO
+(Section~\ref{sec:ppo}) demonstrated that reinforcement learning can
+substantially improve LLM alignment but at the cost of training and serving
+four models simultaneously---policy, reference, reward, and value networks.
+DPO (Section~\ref{sec:dpo}) eliminated the reward model and value network
+altogether but sacrificed on-policy exploration and the ability to leverage
+verifiable scalar rewards.  \emph{Group Relative Policy Optimization}
+(GRPO), introduced by \cite{shao2024deepseekmath} in the DeepSeekMath
+project, charts an elegant middle course: it retains the on-policy sampling
+and explicit reward signal of PPO while discarding the value network that
+constitutes its principal computational bottleneck.  Because GRPO is the
+algorithm at the heart of the scaling experiments presented in later
+chapters, this section provides a detailed treatment of its derivation,
+mechanics, and empirical motivation.
+
+%% ---------- Motivation ----------
+\paragraph{Motivation: the cost of the critic.}
+Recall from Section~\ref{sec:ppo} that the PPO objective relies on an
+advantage $A_t$ computed via Generalised Advantage Estimation
+(GAE)~\cite{schulman2017ppo}, which in turn requires a \emph{learned value
+function} $V_\psi$ of comparable size to the policy model $\pi_\theta$.
+Training the value function alongside the policy introduces three
+burdens:
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Memory.}  The standard PPO setup for LLMs loads four
+      full-sized models into GPU memory: the policy $\pi_\theta$, the old
+      (frozen) reference policy $\pi_{\text{ref}}$, the reward model
+      $r_\varphi$, and the value model $V_\psi$.  For a 7\,B-parameter
+      model in mixed precision, each copy consumes roughly 14\,GB, so the
+      aggregate footprint easily exceeds the capacity of a single
+      high-end GPU.
+\item \textbf{Training complexity.}  The value network must be trained
+      concurrently with the policy, doubling the number of backward passes
+      per update step and introducing an additional set of hyperparameters
+      (value-function learning rate, GAE discount factor $\gamma$, GAE
+      smoothing parameter $\lambda$).
+\item \textbf{Credit-assignment difficulty.}  In the LLM setting, the
+      reward model typically assigns a single scalar score to the
+      \emph{entire} completion, yet GAE requires per-token value
+      estimates.  Learning an accurate token-level value function from a
+      single end-of-sequence reward is a challenging regression problem
+      that can introduce high variance into the advantage estimates.
+\end{enumerate}
+
+\noindent
+GRPO eliminates $V_\psi$ entirely.  Instead of learning a baseline for
+variance reduction, it \emph{computes} a baseline on the fly by sampling
+multiple completions for each prompt and normalizing their rewards
+within the group.  This reduces the number of trained models from four to
+three---policy, reference, and reward---cutting memory requirements by
+approximately 25\% and simplifying the training loop.
+
+%% ---------- Algorithm in detail ----------
+\paragraph{The GRPO algorithm.}
+GRPO proceeds in three conceptually distinct steps for each batch of
+prompts.  We describe each step in turn and then present the full
+pseudocode in Algorithm~\ref{alg:grpo}.
+
+\subparagraph{Step 1: Group sampling.}
+For each prompt $q$ drawn from the task distribution $\mathcal{D}$, the
+current (old) policy generates a \emph{group} of $G$ independent
+completions:
+\begin{equation}
+\label{eq:grpo-sampling}
+\{o_1, o_2, \ldots, o_G\} \sim \pi_{\theta_{\text{old}}}(\cdot \mid q).
+\end{equation}
+Each $o_i = (o_{i,1}, o_{i,2}, \ldots, o_{i,|o_i|})$ is a variable-length
+token sequence.  The group size $G$ is a key hyperparameter;
+\cite{shao2024deepseekmath} use $G = 64$ in their experiments on
+DeepSeekMath 7B.  Intuitively, a larger group provides a more reliable
+estimate of the reward distribution for a given prompt, at the expense of
+increased sampling cost.
+
+\subparagraph{Step 2: Group-relative advantage estimation.}
+A reward model $r_\varphi$ (or, more generally, any verifiable reward
+function) scores each completion, yielding a vector of scalar rewards:
+\begin{equation}
+\label{eq:grpo-rewards}
+\mathbf{r} = \{r_1, r_2, \ldots, r_G\},
+\qquad r_i = r_\varphi(q, o_i).
+\end{equation}
+The key innovation of GRPO is that advantages are computed by
+\emph{z-score normalization within the group}, without any learned value
+function:
+\begin{equation}
+\label{eq:grpo-advantage}
+\boxed{
+\hat{A}_{i,t} = \tilde{r}_i
+  = \frac{r_i - \operatorname{mean}(\mathbf{r})}
+         {\operatorname{std}(\mathbf{r})},
+\qquad i = 1, \ldots, G,
+\quad t = 1, \ldots, |o_i|.}
+\end{equation}
+Under outcome supervision, every token in the $i$-th completion shares the
+same advantage $\tilde{r}_i$; this is the setting adopted in the
+DeepSeekMath experiments and in our own scaling study.  Note that the
+advantage is \emph{relative}: a completion that happens to receive a
+positive reward may still receive a negative advantage if most other
+completions in the same group score higher.  This comparative structure
+aligns naturally with reward models, which are themselves trained on
+pairwise comparisons between outputs for the same prompt.
+
+\subparagraph{Step 3: Clipped policy update with KL regularization.}
+Given the group-relative advantages, GRPO updates the policy by
+maximizing the following objective:
+\begin{equation}
+\label{eq:grpo-objective}
+\boxed{
+\mathcal{J}_{\text{GRPO}}(\theta)
+  = \mathbb{E}_{q \sim \mathcal{D},\;
+      \{o_i\}_{i=1}^{G} \sim \pi_{\theta_{\text{old}}}(\cdot|q)}
+    \left[
+      \frac{1}{G}\sum_{i=1}^{G}
+      \frac{1}{|o_i|}\sum_{t=1}^{|o_i|}
+      \left(
+        \min\!\Bigl(
+          \rho_{i,t}\,\hat{A}_{i,t},\;
+          \operatorname{clip}\bigl(\rho_{i,t},\,
+            1{-}\varepsilon,\,1{+}\varepsilon\bigr)\,\hat{A}_{i,t}
+        \Bigr)
+        - \beta\, D_{\mathrm{KL}}^{(i,t)}
+      \right)
+    \right],}
+\end{equation}
+where the per-token probability ratio is
+\begin{equation}
+\label{eq:grpo-ratio}
+\rho_{i,t}
+  = \frac{\pi_\theta(o_{i,t} \mid q,\, o_{i,<t})}
+         {\pi_{\theta_{\text{old}}}(o_{i,t} \mid q,\, o_{i,<t})},
+\end{equation}
+and the per-token KL divergence from the reference policy is estimated via
+the unbiased estimator of \cite{schulman2017ppo}:
+\begin{equation}
+\label{eq:grpo-kl}
+D_{\mathrm{KL}}^{(i,t)}
+  = \frac{\pi_{\text{ref}}(o_{i,t} \mid q,\, o_{i,<t})}
+         {\pi_\theta(o_{i,t} \mid q,\, o_{i,<t})}
+  - \log\frac{\pi_{\text{ref}}(o_{i,t} \mid q,\, o_{i,<t})}
+             {\pi_\theta(o_{i,t} \mid q,\, o_{i,<t})}
+  - 1.
+\end{equation}
+This estimator is guaranteed to be non-negative and avoids the need to
+compute full distributional KL, which would be intractable over the
+vocabulary.  The coefficient $\beta$ controls the strength of the
+regularization; \cite{shao2024deepseekmath} set $\beta = 0.04$.  The
+clipping parameter $\varepsilon$ (typically $0.2$) serves the same
+stabilizing role as in PPO, preventing any single update from moving the
+policy too far from $\pi_{\theta_{\text{old}}}$.
+
+An important design choice distinguishes GRPO from PPO in its treatment of
+the KL penalty.  In PPO-based RLHF, the KL penalty is typically folded
+\emph{into the reward} at each token, i.e.,
+$r_t = r_\varphi(q, o_{\leq t}) - \beta \log
+\frac{\pi_\theta(o_t \mid q, o_{<t})}{\pi_{\text{ref}}(o_t \mid q, o_{<t})}$,
+which then feeds into GAE to compute advantages.  GRPO instead adds the KL
+term \emph{directly to the loss} (Eq.~\ref{eq:grpo-objective}), keeping the
+advantage computation clean and free of reference-policy dependence.
+
+%% ---------- Algorithm environment ----------
+\begin{algorithm}[t]
+\DontPrintSemicolon
+\SetAlgoLined
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+\Input{Initial policy $\pi_{\theta_{\text{init}}}$;\;
+       reward model $r_\varphi$;\;
+       task prompts $\mathcal{D}$;\;
+       hyperparameters $\varepsilon, \beta, G, \mu$}
+\Output{Optimized policy $\pi_\theta$}
+\BlankLine
+$\pi_\theta \leftarrow \pi_{\theta_{\text{init}}}$ \;
+\For{iteration $= 1, \ldots, I$}{
+  $\pi_{\text{ref}} \leftarrow \pi_\theta$
+    \tcp*{Sync reference model}
+  \For{step $= 1, \ldots, M$}{
+    Sample a mini-batch $\mathcal{D}_b \subset \mathcal{D}$ \;
+    $\pi_{\theta_{\text{old}}} \leftarrow \pi_\theta$
+      \tcp*{Snapshot policy}
+    \ForEach{prompt $q \in \mathcal{D}_b$}{
+      Sample $G$ outputs $\{o_i\}_{i=1}^{G} \sim
+        \pi_{\theta_{\text{old}}}(\cdot \mid q)$
+        \tcp*{Step 1}
+      Compute rewards $\{r_i\}_{i=1}^{G}$ using $r_\varphi$ \;
+      $\hat{A}_{i,t} \leftarrow
+        \dfrac{r_i - \operatorname{mean}(\mathbf{r})}
+              {\operatorname{std}(\mathbf{r})}$
+        \quad $\forall\, i,t$
+        \tcp*{Step 2}
+    }
+    \For{GRPO sub-iteration $= 1, \ldots, \mu$}{
+      Update $\pi_\theta$ by maximizing $\mathcal{J}_{\text{GRPO}}(\theta)$
+        \quad (Eq.~\ref{eq:grpo-objective})
+        \tcp*{Step 3}
+    }
+  }
+  \textbf{(Optional)} Update $r_\varphi$ via continual training with replay
+    \tcp*{Iterative RL}
+}
+\Return $\pi_\theta$ \;
+\caption{Group Relative Policy Optimization (GRPO)}
+\label{alg:grpo}
+\end{algorithm}
+
+%% ---------- Comparison with PPO ----------
+\paragraph{Comparison with PPO.}
+Table~\ref{tab:ppo-vs-grpo} summarizes the principal differences between PPO
+and GRPO in the context of LLM fine-tuning.  The most consequential
+distinction is the replacement of the learned value function with
+group-relative normalization.  In PPO, the advantage at token $t$ is
+\begin{equation}
+\label{eq:ppo-gae}
+A_t^{\text{PPO}} = \sum_{l=0}^{T-t}(\gamma\lambda)^l\,
+  \bigl(r_{t+l} + \gamma\, V_\psi(s_{t+l+1}) - V_\psi(s_{t+l})\bigr),
+\end{equation}
+which requires both the reward signal $r_{t+l}$ and per-state value
+predictions from $V_\psi$.  GRPO replaces this entire computation with the
+closed-form z-score of Eq.~\eqref{eq:grpo-advantage}, which depends only on
+the rewards within the current group.  This substitution is particularly
+well-suited to the LLM setting, where the reward model typically assigns a
+single scalar to the full completion rather than per-token rewards, making
+the training of an accurate token-level value function both difficult and
+wasteful.
+
+\begin{table}[t]
+\centering
+\caption{Comparison of PPO and GRPO for LLM reinforcement learning.}
+\label{tab:ppo-vs-grpo}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Aspect} & \textbf{PPO} & \textbf{GRPO} \\
+\midrule
+Models in memory &
+  Policy, reference, reward, value (4) &
+  Policy, reference, reward (3) \\
+Advantage estimation &
+  GAE via learned $V_\psi$ &
+  Z-score within sampled group \\
+KL regularization &
+  Penalty added to reward &
+  Penalty added directly to loss \\
+Per-token value network &
+  Required &
+  Not needed \\
+Sampling strategy &
+  Single rollout per prompt &
+  $G$ rollouts per prompt \\
+Hyperparameters &
+  $\varepsilon, \gamma, \lambda, \beta,$ value LR &
+  $\varepsilon, \beta, G$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The elimination of the value network also yields a meaningful reduction in
+wall-clock training time.  In the PPO loop, each update step requires a
+forward pass through $V_\psi$ for every token in every rollout to compute
+GAE, followed by a backward pass to update $V_\psi$---all in addition to
+the policy gradient update.  GRPO replaces these operations with a single
+reward-model inference per completion (not per token) and a trivial
+mean/standard-deviation computation, resulting in faster iterations and
+simpler engineering.
+
+%% ---------- Reward design ----------
+\paragraph{Reward design for mathematical reasoning.}
+A distinctive feature of mathematical reasoning tasks is that correctness
+is \emph{verifiable}: one can check whether a model's final answer matches
+the ground truth without relying on a learned reward model.
+\cite{shao2024deepseekmath} exploit this property by designing
+\emph{rule-based} reward functions for their GRPO experiments:
+
+\begin{itemize}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Accuracy reward.}  The primary signal is a binary indicator:
+      $r_{\text{acc}}(q, o) = \mathbf{1}[\text{extract}(o) = a^*]$, where
+      $a^*$ is the ground-truth answer and $\text{extract}(\cdot)$ is a
+      deterministic parser that isolates the final boxed answer from the
+      completion.  This reward is exact, noise-free, and incurs zero
+      inference cost---a stark contrast to learned reward models, which
+      are expensive to serve and susceptible to reward hacking.
+\item \textbf{Format reward.}  An auxiliary reward encourages the model
+      to produce well-structured chain-of-thought solutions.  For
+      instance, a small bonus may be awarded for enclosing the final
+      answer in a \verb|\boxed{}| environment or for following a
+      prescribed step-by-step template.  Format rewards are typically
+      combined additively with the accuracy reward:
+      $r_i = r_{\text{acc}} + \alpha\, r_{\text{format}}$, where $\alpha$
+      is a small weighting coefficient.
+\end{itemize}
+
+\noindent
+The combination of verifiable binary rewards and group-relative
+normalization creates a particularly clean learning signal.  Within a
+group of $G = 64$ completions, some will be correct and others incorrect;
+the z-score normalization assigns positive advantages to correct
+completions and negative advantages to incorrect ones, with the magnitude
+calibrated by the proportion of correct answers in the group.  When the
+model is weak and most completions are wrong, the few correct ones
+receive very large positive advantages, providing a strong gradient
+signal.  As the model improves and more completions become correct, the
+advantage magnitudes shrink, naturally annealing the learning rate.
+This self-regulating property is an appealing feature of GRPO that
+requires no manual scheduling.
+
+%% ---------- Process supervision ----------
+\paragraph{Extension to process supervision.}
+While outcome supervision assigns a single reward per completion, GRPO
+also supports \emph{process supervision}, in which a process reward model
+scores each intermediate reasoning step.  Formally, if output $o_i$
+consists of $K_i$ steps with end-of-step indices
+$\text{idx}(1), \ldots, \text{idx}(K_i)$, the process reward model yields
+step-level rewards $\{r^{\text{idx}(j)}_i\}_{j=1}^{K_i}$.  These are
+again normalized via group-level statistics, and the advantage of each
+token is set to the sum of normalized rewards from subsequent steps:
+$\hat{A}_{i,t} = \sum_{\text{idx}(j) \geq t} \tilde{r}^{\text{idx}(j)}_i$.
+Process supervision provides finer-grained credit assignment and can
+improve sample efficiency on complex multi-step problems, though it
+requires a more expensive process reward model.
+
+%% ---------- Iterative RL ----------
+\paragraph{Iterative GRPO.}
+As training progresses, the policy may drift beyond the calibration range
+of the initial reward model.  To address this, \cite{shao2024deepseekmath}
+propose an \emph{iterative} variant (Algorithm~\ref{alg:grpo}, optional
+step): after each outer iteration, the reward model is updated via
+continual training on newly sampled completions from the current policy,
+using a replay mechanism that retains 10\% of historical data to prevent
+catastrophic forgetting.  The reference model is simultaneously reset to
+the current policy checkpoint.  This co-evolution of reward model and
+policy enables sustained improvement over multiple rounds of
+reinforcement learning.
+
+%% ---------- DeepSeekMath results ----------
+\paragraph{DeepSeekMath results.}
+Applied to the DeepSeekMath-Instruct 7B base model, GRPO training on
+chain-of-thought instruction-tuning data from GSM8K and MATH yielded
+striking gains.  On the competition-level MATH benchmark,
+DeepSeekMath-RL 7B achieved a top-1 accuracy of \textbf{51.7\%}---a
+4.9 percentage-point improvement over the supervised fine-tuned
+baseline (46.8\%) and competitive with far larger proprietary models
+such as Gemini-Ultra (53.2\%) and GPT-4 (52.9\%).  With
+self-consistency decoding over 64 samples, accuracy rose further to
+\textbf{60.9\%}.  On GSM8K, GRPO improved accuracy from 82.9\% to
+88.2\%.  Crucially, these gains \emph{transferred to out-of-domain
+benchmarks}: CMATH (Chinese mathematics) improved from 84.6\% to
+88.8\%, even though no Chinese data were included in the RL training
+set.  These results established GRPO as a practical and effective
+alternative to PPO for mathematical reasoning, directly motivating
+its adoption by the DeepSeek-R1 project~\cite{deepseek2025r1} for
+training large-scale reasoning models.
+
+\paragraph{Significance for this study.}
+The appeal of GRPO for our scaling experiments is threefold.  First, the
+elimination of the value network makes GRPO feasible on the GPU budgets
+available to academic research groups---a consideration that is central to
+the resource-constrained setting of this capstone project.  Second, the
+algorithm's reliance on verifiable rewards rather than learned preference
+models sidesteps the fragility and expense of reward-model training, an
+important practical advantage when iterating rapidly across model sizes and
+hyperparameter configurations.  Third, while
+\cite{shao2024deepseekmath} demonstrated GRPO at a single model scale
+(7B), \cite{deepseek2025r1} applied it to much larger models without
+publishing detailed ablations of the scaling behaviour.  Our study aims to
+fill this gap by systematically characterising how GRPO's training
+dynamics, sample efficiency, and downstream accuracy evolve as a function
+of model size, group size~$G$, KL coefficient~$\beta$, and
+compute budget---questions that remain largely open in the literature.

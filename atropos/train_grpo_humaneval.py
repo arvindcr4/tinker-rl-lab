@@ -33,6 +33,14 @@ from pathlib import Path
 from typing import Any, List
 
 import yaml
+
+# Pre-import peft/transformers before wandb installs its import hooks
+try:
+    import transformers  # noqa: F401
+    from peft import LoraConfig  # noqa: F401
+except Exception:
+    pass
+
 import wandb
 
 

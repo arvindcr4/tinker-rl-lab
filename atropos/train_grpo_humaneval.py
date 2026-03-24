@@ -384,12 +384,15 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
         raise ValueError(f"Unknown task: {task}")
 
     from trl import GRPOConfig, GRPOTrainer
+    _per_device_bs = cfg["batch_size"] // cfg["group_size"]
+    _num_gen       = cfg["group_size"]
     grpo_config = GRPOConfig(
         output_dir=cfg["checkpoint_dir"],
         num_train_epochs=1,
         max_steps=cfg["total_steps"],
-        per_device_train_batch_size=cfg["batch_size"] // cfg["group_size"],
-        num_generations=cfg["group_size"],
+        per_device_train_batch_size=_per_device_bs,
+        num_generations=_num_gen,
+        generation_batch_size=_per_device_bs * _num_gen,  # must be divisible by num_generations
         max_completion_length=cfg["max_token_length"],
         learning_rate=cfg["learning_rate"],
         logging_steps=1,

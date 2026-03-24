@@ -1,5 +1,7 @@
-# GSM8K GRPO - Qwen3-30B-A3B MoE (Bigger model experiment)
-# Experiment: Cost-effective big model - 30B total, 3B active (MoE)
+# GSM8K GRPO - Qwen3-30B-A3B MoE (3B active params)
+# Block C: size ladder — MoE point (plotted separately by active params)
+# Note: MoE architecture means active params ≠ total params
+# wandb_group: systematic-scaling-study
 
 env:
   group_size: 16
@@ -29,6 +31,7 @@ tinker:
   checkpoint_dir: "./checkpoints/gsm8k_qwen30b_moe/"
   save_checkpoint_interval: 10
   wandb_project: "tinker-rl-scaling"
+  wandb_group: "systematic-scaling-study"
   wandb_group: "systematic-scaling-study"
   wandb_run_name: "gsm8k-qwen3-30b-moe"
 

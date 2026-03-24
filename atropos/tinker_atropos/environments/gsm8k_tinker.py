@@ -74,6 +74,9 @@ class GSM8kEnv(BaseEnv):
             TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
         )
 
+        # Store full config on class for access in setup()
+        cls._full_config = config
+
         env_config = BaseEnvConfig(
             tokenizer_name=config.base_model,
             group_size=config.group_size,
@@ -120,6 +123,14 @@ class GSM8kEnv(BaseEnv):
         await super().wandb_log(wandb_metrics)
 
     async def setup(self):
+        # Read experiment control fields from full config
+        full_cfg = getattr(self.__class__, '_full_config', None)
+        self.use_prompt_prefix = full_cfg.use_prompt_prefix if full_cfg else True
+        data_seed = full_cfg.data_seed if full_cfg else 42
+
+        # Build the active prefix based on config
+        self.active_prefix = list(convo_prefix) if self.use_prompt_prefix else []
+
         # Ensure tokenizer has a chat template
         if self.tokenizer.chat_template is None:
             # Set default Llama-style chat template
@@ -138,8 +149,8 @@ class GSM8kEnv(BaseEnv):
                 "{% endfor %}"
             )
 
-        self.train = load_dataset("gsm8k", "main", split="train").shuffle(seed=42)
-        test_data = load_dataset("gsm8k", "main", split="test").shuffle(seed=42)
+        self.train = load_dataset("gsm8k", "main", split="train").shuffle(seed=data_seed)
+        test_data = load_dataset("gsm8k", "main", split="test").shuffle(seed=data_seed)
         self.test = list()
         for item in test_data:
             self.test.append(
@@ -162,7 +173,7 @@ class GSM8kEnv(BaseEnv):
         """
         completion = await self.server.chat_completion(
             messages=[
-                *convo_prefix,
+                *self.active_prefix,
                 {"role": "user", "content": question + question_suffix},
             ],
             n=1,
@@ -203,7 +214,7 @@ class GSM8kEnv(BaseEnv):
 
         sample = {
             "messages": [
-                *convo_prefix,
+                *self.active_prefix,
                 {"role": "user", "content": question + question_suffix},
                 {"role": "assistant", "content": response_content},
             ],
@@ -271,7 +282,7 @@ class GSM8kEnv(BaseEnv):
         gold_answer = "\\boxed{" + item["answer"].split("#")[-1].strip().replace(",", "") + "}"
 
         # Generate group_size rollouts with logprobs
-        messages = [*convo_prefix, user_message]
+        messages = [*self.active_prefix, user_message]
 
         async with self.server.managed_server(tokenizer=self.tokenizer) as managed:
             chat_completion = await managed.chat_completion(
@@ -289,7 +300,7 @@ class GSM8kEnv(BaseEnv):
         to_backlog = list()
         for choice, node in zip(chat_completion.choices, nodes):
             completion_messages = (
-                *convo_prefix,
+                *self.active_prefix,
                 user_message,
                 {"role": "assistant", "content": choice.message.content},
             )

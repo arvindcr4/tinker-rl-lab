@@ -1,5 +1,6 @@
-# GSM8K GRPO - Qwen3-4B (Scaling experiment)
-# Experiment: GRPO scaling ladder - 4B parameter point
+# GSM8K GRPO - Qwen3-4B (base)
+# Block C: size ladder — 4B point
+# wandb_group: systematic-scaling-study
 
 env:
   group_size: 16
@@ -29,6 +30,7 @@ tinker:
   checkpoint_dir: "./checkpoints/gsm8k_qwen4b/"
   save_checkpoint_interval: 10
   wandb_project: "tinker-rl-scaling"
+  wandb_group: "systematic-scaling-study"
   wandb_group: "systematic-scaling-study"
   wandb_run_name: "gsm8k-qwen3-4b"
 

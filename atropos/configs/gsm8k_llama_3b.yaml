@@ -1,6 +1,7 @@
-# GSM8K GRPO - Llama 3.2-3B (Scaling experiment)
-# Experiment: GRPO scaling ladder - 3B parameter point
+# GSM8K GRPO - Llama 3.2-3B (base)
+# Below-capacity reference: Llama-3.2-3B fails to learn on GSM8K
 # Uses unsloth mirror for tokenizer (meta-llama is gated)
+# wandb_group: systematic-scaling-study
 
 env:
   group_size: 16
@@ -30,6 +31,7 @@ tinker:
   checkpoint_dir: "./checkpoints/gsm8k_llama3b/"
   save_checkpoint_interval: 10
   wandb_project: "tinker-rl-scaling"
+  wandb_group: "systematic-scaling-study"
   wandb_group: "systematic-scaling-study"
   wandb_run_name: "gsm8k-llama3.2-3b"
   tinker_model_name: "meta-llama/Llama-3.2-3B"

@@ -1,5 +1,6 @@
 # MATH Competition GRPO - Qwen3-8B
-# Experiment: Competition math (harder than GSM8K)
+# Block H anchor: benchmark transfer (GSM8K → MATH)
+# Addresses criticism: "100% GSM8K is not evidence of robust mathematical reasoning"
 
 env:
   group_size: 16
@@ -7,7 +8,7 @@ env:
   max_batches_offpolicy: 3
   tokenizer_name: "Qwen/Qwen3-8B"
   use_wandb: false
-  rollout_server_url: "http://localhost:8012"
+  rollout_server_url: "http://localhost:8042"
   wandb_name: "math-qwen3-8b-env"
   ensure_scores_are_not_same: false
   max_token_length: 1024
@@ -17,7 +18,7 @@ env:
 
 openai:
   - model_name: "Qwen/Qwen3-8B"
-    base_url: "http://localhost:8013/v1"
+    base_url: "http://localhost:8043/v1"
     api_key: "x"
     weight: 1.0
     num_requests_for_eval: 256

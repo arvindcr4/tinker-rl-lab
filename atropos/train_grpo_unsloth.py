@@ -236,9 +236,11 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
         print(f"  Loading {model_name} with Transformers/PEFT ({params_b}B, 4-bit={load_in_4bit}) ...")
         quantization_config = None
         compute_dtype = torch.float32 if load_in_4bit else (torch.bfloat16 if torch.cuda.is_available() else torch.float32)
+        # BnB 4-bit requires entire model on GPU (no CPU offload).
+        # Use device_map={"":0} when quantizing to avoid auto-offloading to CPU.
         model_kwargs = {
             "trust_remote_code": True,
-            "device_map": "auto",
+            "device_map": {"": 0} if load_in_4bit else "auto",
             "torch_dtype": compute_dtype,
         }
         if load_in_4bit:

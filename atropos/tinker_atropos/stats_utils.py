@@ -416,18 +416,139 @@ def run_full_analysis(
     return results
 
 
-def compare_models(
-    results_a: Dict,
-    results_b: Dict,
-    window: int = 10,
+def two_way_anova_2x2(
+    cell_11: List[float],
+    cell_12: List[float],
+    cell_21: List[float],
+    cell_22: List[float],
+    factor_a_labels: tuple = ("A1", "A2"),
+    factor_b_labels: tuple = ("B1", "B2"),
 ) -> Dict:
     """
-    Run Mann-Whitney U and Cohen's d comparing the final `window` steps
-    of two models.
+    Two-way ANOVA for a 2×2 balanced design.
+
+    Cells:
+        cell_11 = Factor A level 1, Factor B level 1
+        cell_12 = Factor A level 1, Factor B level 2
+        cell_21 = Factor A level 2, Factor B level 1
+        cell_22 = Factor A level 2, Factor B level 2
+
+    Assumes equal cell sizes (trims to shortest if unequal).
+
+    Returns dict with:
+        ss_a, ss_b, ss_ab, ss_within
+        ms_a, ms_b, ms_ab, ms_within
+        f_a, f_b, f_ab
+        p_a, p_b, p_ab
+        means: cell means
     """
-    # We only have the full results dict, so we need the raw rewards.
-    # This function should be called after run_full_analysis with raw data.
-    raise NotImplementedError("Call mannwhitney() directly with reward slices.")
+    # Trim to equal cell size
+    n = min(len(cell_11), len(cell_12), len(cell_21), len(cell_22))
+    c11, c12, c21, c22 = cell_11[:n], cell_12[:n], cell_21[:n], cell_22[:n]
+
+    grand_mean = _mean(c11 + c12 + c21 + c22)
+
+    # Marginal means
+    mean_a1 = _mean(c11 + c12)
+    mean_a2 = _mean(c21 + c22)
+    mean_b1 = _mean(c11 + c21)
+    mean_b2 = _mean(c12 + c22)
+    mean_11 = _mean(c11)
+    mean_12 = _mean(c12)
+    mean_21 = _mean(c21)
+    mean_22 = _mean(c22)
+
+    N = 4 * n
+    # SS_A (rows)
+    ss_a = n * 2 * ((mean_a1 - grand_mean) ** 2 + (mean_a2 - grand_mean) ** 2)
+    # SS_B (cols)
+    ss_b = n * 2 * ((mean_b1 - grand_mean) ** 2 + (mean_b2 - grand_mean) ** 2)
+    # SS_AB (interaction)
+    ss_ab = n * (
+        (mean_11 - mean_a1 - mean_b1 + grand_mean) ** 2
+        + (mean_12 - mean_a1 - mean_b2 + grand_mean) ** 2
+        + (mean_21 - mean_a2 - mean_b1 + grand_mean) ** 2
+        + (mean_22 - mean_a2 - mean_b2 + grand_mean) ** 2
+    )
+    # SS_Within
+    ss_within = (
+        sum((x - mean_11) ** 2 for x in c11)
+        + sum((x - mean_12) ** 2 for x in c12)
+        + sum((x - mean_21) ** 2 for x in c21)
+        + sum((x - mean_22) ** 2 for x in c22)
+    )
+
+    df_a = 1
+    df_b = 1
+    df_ab = 1
+    df_within = N - 4
+
+    ms_a = ss_a / df_a
+    ms_b = ss_b / df_b
+    ms_ab = ss_ab / df_ab
+    ms_within = ss_within / df_within if df_within > 0 else float("inf")
+
+    def safe_f(ms_num: float) -> tuple:
+        if ms_within == 0:
+            return (float("inf"), 0.0)
+        f = ms_num / ms_within
+        p = _f_pvalue(f, 1, df_within)
+        return f, p
+
+    f_a, p_a = safe_f(ms_a)
+    f_b, p_b = safe_f(ms_b)
+    f_ab, p_ab = safe_f(ms_ab)
+
+    return {
+        "factor_a_labels": factor_a_labels,
+        "factor_b_labels": factor_b_labels,
+        "n_per_cell": n,
+        "grand_mean": grand_mean,
+        "cell_means": {
+            f"{factor_a_labels[0]},{factor_b_labels[0]}": mean_11,
+            f"{factor_a_labels[0]},{factor_b_labels[1]}": mean_12,
+            f"{factor_a_labels[1]},{factor_b_labels[0]}": mean_21,
+            f"{factor_a_labels[1]},{factor_b_labels[1]}": mean_22,
+        },
+        "marginal_means_a": {factor_a_labels[0]: mean_a1, factor_a_labels[1]: mean_a2},
+        "marginal_means_b": {factor_b_labels[0]: mean_b1, factor_b_labels[1]: mean_b2},
+        "ss_a": ss_a, "ss_b": ss_b, "ss_ab": ss_ab, "ss_within": ss_within,
+        "ms_a": ms_a, "ms_b": ms_b, "ms_ab": ms_ab, "ms_within": ms_within,
+        "f_a": f_a, "p_a": p_a,
+        "f_b": f_b, "p_b": p_b,
+        "f_ab": f_ab, "p_ab": p_ab,
+        "significant_a": p_a < 0.05,
+        "significant_b": p_b < 0.05,
+        "significant_interaction": p_ab < 0.05,
+    }
+
+
+def print_anova_report(anova: Dict) -> None:
+    """Pretty-print two-way ANOVA results."""
+    fa, fb = anova["factor_a_labels"], anova["factor_b_labels"]
+    print(f"\n{'='*60}")
+    print(f"  Two-Way ANOVA ({fa[0]}/{fa[1]} x {fb[0]}/{fb[1]})")
+    print(f"{'='*60}")
+    print(f"  n per cell: {anova['n_per_cell']}")
+    print(f"  Grand mean: {anova['grand_mean']:.4f}")
+    print()
+    print("  Cell means:")
+    for k, v in anova["cell_means"].items():
+        print(f"    {k:<25} {v:.4f}")
+    print()
+    print(f"  {'Source':<15}  {'SS':>10}  {'MS':>10}  {'F':>8}  {'p':>10}  Sig")
+    print(f"  {'-'*15}  {'-'*10}  {'-'*10}  {'-'*8}  {'-'*10}  ---")
+    print(f"  {'Factor A':<15}  {anova['ss_a']:>10.4f}  {anova['ms_a']:>10.4f}  "
+          f"{anova['f_a']:>8.2f}  {anova['p_a']:>10.2e}  "
+          f"{'*' if anova['significant_a'] else 'ns'}")
+    print(f"  {'Factor B':<15}  {anova['ss_b']:>10.4f}  {anova['ms_b']:>10.4f}  "
+          f"{anova['f_b']:>8.2f}  {anova['p_b']:>10.2e}  "
+          f"{'*' if anova['significant_b'] else 'ns'}")
+    print(f"  {'A × B':<15}  {anova['ss_ab']:>10.4f}  {anova['ms_ab']:>10.4f}  "
+          f"{anova['f_ab']:>8.2f}  {anova['p_ab']:>10.2e}  "
+          f"{'*' if anova['significant_interaction'] else 'ns'}")
+    print(f"  {'Within':<15}  {anova['ss_within']:>10.4f}  {anova['ms_within']:>10.4f}")
+    print()
 
 
 # ---------------------------------------------------------------------------

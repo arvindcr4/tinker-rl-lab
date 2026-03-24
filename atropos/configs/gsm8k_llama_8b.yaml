@@ -30,7 +30,7 @@ tinker:
   checkpoint_dir: "./checkpoints/gsm8k_llama8b/"
   save_checkpoint_interval: 10
   wandb_project: "tinker-rl-scaling"
-  wandb_group: "gsm8k-scaling-ladder"
+  wandb_group: "systematic-scaling-study"
   wandb_run_name: "gsm8k-llama3.1-8b"
   tinker_model_name: "meta-llama/Llama-3.1-8B-Instruct"
 

@@ -1,0 +1,103 @@
+# Axolotl GRPO — Qwen3-8B on GSM8K
+# Direct equivalent of Tinker GRPO experiment, runnable on HF Spaces / RunPod
+# Uses vLLM for fast rollout generation
+#
+# Usage (2+ GPUs):
+#   # Terminal 1: Start vLLM on last GPU(s)
+#   CUDA_VISIBLE_DEVICES=1 axolotl vllm-serve experiments/axolotl/grpo_gsm8k_qwen8b.yaml
+#
+#   # Terminal 2: Train on first GPU(s)
+#   CUDA_VISIBLE_DEVICES=0 axolotl train experiments/axolotl/grpo_gsm8k_qwen8b.yaml
+#
+# Single GPU (no vLLM, slower):
+#   Set use_vllm: false and remove vllm section
+
+base_model: Qwen/Qwen3-8B
+
+# QLoRA to fit on 24 GB GPUs
+load_in_4bit: true
+load_in_8bit: false
+strict: false
+
+# LoRA — match Tinker experiment
+adapter: qlora
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.0
+lora_target_linear: true
+
+# GRPO RL training
+rl: grpo
+
+# vLLM for fast generation (requires 2nd GPU)
+vllm:
+  host: 0.0.0.0
+  port: 8100
+  tensor_parallel_size: 1
+  gpu_memory_utilization: 0.85
+  dtype: auto
+
+trl:
+  # GRPO config — match Tinker hyperparameters
+  beta: 0.001               # KL penalty (low — near-zero like Tinker)
+  num_generations: 16        # group_size in Tinker
+  max_completion_length: 512 # max_token_length in Tinker
+  temperature: 1.0
+
+  # vLLM integration
+  use_vllm: true
+  vllm_server_host: 0.0.0.0
+  vllm_server_port: 8100
+  vllm_server_timeout: 300
+
+  # Reward functions (binary correctness)
+  reward_funcs:
+    - "experiments/axolotl/gsm8k_rewards.py.gsm8k_correctness_reward"
+  reward_weights:
+    - 1.0
+
+# Dataset: GSM8K prompts
+datasets:
+  - path: openai/gsm8k
+    name: main
+    type: grpo
+    split: train
+    transform: experiments/axolotl/gsm8k_rewards.py.gsm8k_grpo_transform
+
+val_set_size: 0.0
+output_dir: ./outputs/grpo_gsm8k_qwen8b
+
+# Training — match Tinker
+sequence_len: 2048
+num_epochs: 1
+micro_batch_size: 8
+gradient_accumulation_steps: 1  # GRPO handles batching via num_generations
+
+# Optimizer — match Tinker
+optimizer: adamw_torch_fused
+learning_rate: 0.00004
+lr_scheduler: cosine
+warmup_ratio: 0.1
+weight_decay: 0.0
+max_grad_norm: 1.0
+
+# Precision
+bf16: auto
+tf32: true
+
+# Efficiency
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+flash_attention: true
+
+# Logging
+logging_steps: 1
+saves_per_epoch: 2
+
+# W&B
+wandb_project: tinker-rl-scaling
+wandb_name: grpo-gsm8k-qwen3-8b-axolotl
+wandb_log_model: false
+
+special_tokens:

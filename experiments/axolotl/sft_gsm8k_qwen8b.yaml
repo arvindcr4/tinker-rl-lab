@@ -1,0 +1,79 @@
+# Axolotl SFT Baseline — Qwen3-8B on GSM8K
+# Matched to GRPO experiment: same model, same LoRA rank, same LR, same data
+# Addresses criticism #8: "No matched baseline showing GRPO is the reason"
+#
+# Usage:
+#   axolotl train experiments/axolotl/sft_gsm8k_qwen8b.yaml
+#
+# For QLoRA on a single T4/A10G (24 GB):
+#   Keep load_in_4bit: true
+# For full LoRA on A100 (80 GB):
+#   Set load_in_4bit: false, load_in_8bit: false
+
+base_model: Qwen/Qwen3-8B
+
+# QLoRA to fit on 24 GB GPUs (A10G / L40S)
+load_in_4bit: true
+load_in_8bit: false
+strict: false
+
+# LoRA — match GRPO experiment exactly
+adapter: qlora
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.0
+lora_target_linear: true
+
+# Dataset: GSM8K train set with chain-of-thought solutions
+datasets:
+  - path: openai/gsm8k
+    name: main
+    type: completion
+    split: train
+    field: question
+    transform: experiments/axolotl/gsm8k_sft_transform.py.gsm8k_sft_transform
+
+val_set_size: 0.05
+output_dir: ./outputs/sft_gsm8k_qwen8b
+
+# Sequence and packing
+sequence_len: 2048
+sample_packing: true
+eval_sample_packing: true
+
+# Training — match GRPO compute budget
+# GRPO does 50 steps × 128 samples = 6400 total samples
+# GSM8K train has ~7500 examples, so ~1 epoch is comparable
+num_epochs: 1
+micro_batch_size: 8
+gradient_accumulation_steps: 16  # effective batch = 128
+
+# Optimizer — match GRPO
+optimizer: adamw_torch_fused
+learning_rate: 0.00004
+lr_scheduler: cosine
+warmup_ratio: 0.1
+weight_decay: 0.0
+max_grad_norm: 1.0
+
+# Precision
+bf16: auto
+tf32: true
+
+# Efficiency
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+flash_attention: true
+
+# Logging
+logging_steps: 1
+saves_per_epoch: 2
+evals_per_epoch: 4
+
+# W&B
+wandb_project: tinker-rl-scaling
+wandb_name: sft-gsm8k-qwen3-8b
+wandb_log_model: false
+
+special_tokens:

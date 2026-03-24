@@ -28,6 +28,10 @@ class EnvConfig(BaseModel):
     total_steps: int = 50
     steps_per_eval: int = 100
 
+    # Experiment control
+    data_seed: int = 42
+    use_prompt_prefix: bool = True
+
 
 class OpenAIServerConfig(BaseModel):
     """OpenAI-compatible server configuration"""
@@ -134,6 +138,14 @@ class TinkerAtroposConfig(BaseModel):
     @property
     def ensure_scores_are_not_same(self) -> bool:
         return self.env.ensure_scores_are_not_same
+
+    @property
+    def data_seed(self) -> int:
+        return self.env.data_seed
+
+    @property
+    def use_prompt_prefix(self) -> bool:
+        return self.env.use_prompt_prefix
 
     @property
     def wandb_run_name(self) -> str:

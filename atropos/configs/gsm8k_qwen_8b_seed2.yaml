@@ -1,0 +1,39 @@
+# GSM8K GRPO - Qwen3-8B (base) — Seed 256
+# Block E: multi-seed replication (seed 2 of 3)
+# Addresses criticism: "Statistics are not publishable — need multi-seed runs"
+# wandb_group: multi-seed-replication
+
+env:
+  group_size: 16
+  batch_size: 128
+  max_batches_offpolicy: 3
+  tokenizer_name: "Qwen/Qwen3-8B"
+  use_wandb: false
+  rollout_server_url: "http://localhost:8022"
+  wandb_name: "gsm8k-qwen3-8b-seed256-env"
+  ensure_scores_are_not_same: false
+  max_token_length: 512
+  max_num_workers: 24
+  total_steps: 50
+  steps_per_eval: 25
+  data_seed: 256
+
+openai:
+  - model_name: "Qwen/Qwen3-8B"
+    base_url: "http://localhost:8023/v1"
+    api_key: "x"
+    weight: 1.0
+    num_requests_for_eval: 256
+
+tinker:
+  lora_rank: 32
+  learning_rate: 0.00004
+  max_token_trainer_length: 2048
+  checkpoint_dir: "./checkpoints/gsm8k_qwen8b_seed256/"
+  save_checkpoint_interval: 10
+  wandb_project: "tinker-rl-scaling"
+  wandb_group: "multi-seed-replication"
+  wandb_run_name: "gsm8k-qwen3-8b-seed256"
+
+slurm: false
+testing: false

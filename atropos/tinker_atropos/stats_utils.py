@@ -601,3 +601,162 @@ def print_report(results: Dict) -> None:
     mw = results["mannwhitney_early_vs_late"]
     print(f"  Mann-Whitney U (early vs late)    : U={mw['U']:.0f},  p={mw['p']:.2e}  {mw['conclusion']}")
     print()
+
+
+# ---------------------------------------------------------------------------
+# 9. Multi-seed analysis (independent replication)
+# ---------------------------------------------------------------------------
+
+def multi_seed_summary(
+    seed_reward_curves: List[List[float]],
+    n_per_step: int = 128,
+) -> Dict:
+    """
+    Aggregate statistics across multiple independent seed runs.
+
+    Parameters
+    ----------
+    seed_reward_curves : list of reward curves (one per seed run)
+    n_per_step         : binary samples per step
+
+    Returns dict with:
+        n_seeds, per_step_mean, per_step_std, per_step_ci,
+        final_mean, final_std, final_ci,
+        convergence_steps (step to reach 80% for each seed)
+    """
+    n_seeds = len(seed_reward_curves)
+    min_len = min(len(c) for c in seed_reward_curves)
+
+    # Per-step mean and std across seeds
+    per_step_mean = []
+    per_step_std = []
+    for t in range(min_len):
+        vals = [c[t] for c in seed_reward_curves]
+        per_step_mean.append(_mean(vals))
+        per_step_std.append(_std(vals))
+
+    # Final performance across seeds
+    final_vals = [c[-1] for c in seed_reward_curves]
+    final_mean = _mean(final_vals)
+    final_std = _std(final_vals)
+
+    # Bootstrap CI on final performance (across seeds)
+    lo, mu, hi = bootstrap_ci(final_vals, n_per_step=1, n_bootstrap=1000)
+
+    # Convergence step for each seed
+    convergence_steps = []
+    for curve in seed_reward_curves:
+        step_80 = next((i for i, x in enumerate(curve) if x >= 0.80), len(curve))
+        convergence_steps.append(step_80)
+
+    return {
+        "n_seeds": n_seeds,
+        "per_step_mean": per_step_mean,
+        "per_step_std": per_step_std,
+        "final_mean": final_mean,
+        "final_std": final_std,
+        "final_ci": (lo, mu, hi),
+        "convergence_steps": convergence_steps,
+        "convergence_mean": _mean([float(s) for s in convergence_steps]),
+        "convergence_std": _std([float(s) for s in convergence_steps]),
+    }
+
+
+def print_multi_seed_report(label: str, summary: Dict) -> None:
+    """Pretty-print multi-seed analysis."""
+    print(f"\n{'='*60}")
+    print(f"  Multi-Seed Report: {label}")
+    print(f"{'='*60}")
+    print(f"  Seeds: {summary['n_seeds']}")
+    print(f"  Final performance: {summary['final_mean']:.4f} +/- {summary['final_std']:.4f}")
+    lo, mu, hi = summary["final_ci"]
+    print(f"  Final 95% CI: [{lo:.4f}, {hi:.4f}]")
+    print(f"  Convergence step (to 80%): {summary['convergence_mean']:.1f} +/- {summary['convergence_std']:.1f}")
+    print(f"    Per seed: {summary['convergence_steps']}")
+    print()
+
+
+# ---------------------------------------------------------------------------
+# 10. One-way ANOVA (for ablation with >2 levels)
+# ---------------------------------------------------------------------------
+
+def oneway_anova(
+    groups: List[List[float]],
+    group_labels: Optional[List[str]] = None,
+) -> Dict:
+    """
+    One-way ANOVA for comparing k groups.
+
+    Parameters
+    ----------
+    groups       : list of groups (each is a list of observations)
+    group_labels : optional labels
+
+    Returns dict with F, p, group means, and eta-squared.
+    """
+    k = len(groups)
+    if group_labels is None:
+        group_labels = [f"G{i+1}" for i in range(k)]
+
+    all_obs = []
+    for g in groups:
+        all_obs.extend(g)
+    grand_mean = _mean(all_obs)
+    N = len(all_obs)
+
+    group_means = [_mean(g) for g in groups]
+    group_sizes = [len(g) for g in groups]
+
+    # SS_between
+    ss_between = sum(n * (m - grand_mean) ** 2 for n, m in zip(group_sizes, group_means))
+    # SS_within
+    ss_within = sum(
+        sum((x - m) ** 2 for x in g)
+        for g, m in zip(groups, group_means)
+    )
+
+    df_between = k - 1
+    df_within = N - k
+
+    ms_between = ss_between / df_between if df_between > 0 else 0.0
+    ms_within = ss_within / df_within if df_within > 0 else float("inf")
+
+    f_stat = ms_between / ms_within if ms_within > 0 else float("inf")
+    p_value = _f_pvalue(f_stat, df_between, df_within)
+
+    eta_sq = ss_between / (ss_between + ss_within) if (ss_between + ss_within) > 0 else 0.0
+
+    return {
+        "k": k,
+        "N": N,
+        "group_labels": group_labels,
+        "group_means": dict(zip(group_labels, group_means)),
+        "group_sizes": dict(zip(group_labels, group_sizes)),
+        "ss_between": ss_between,
+        "ss_within": ss_within,
+        "ms_between": ms_between,
+        "ms_within": ms_within,
+        "f_stat": f_stat,
+        "p_value": p_value,
+        "significant": p_value < 0.05,
+        "eta_squared": eta_sq,
+    }
+
+
+def print_oneway_anova_report(label: str, result: Dict) -> None:
+    """Pretty-print one-way ANOVA results."""
+    print(f"\n{'='*60}")
+    print(f"  One-Way ANOVA: {label}")
+    print(f"{'='*60}")
+    print(f"  Groups: {result['k']},  Total N: {result['N']}")
+    print()
+    print(f"  {'Group':<20} {'Mean':>8} {'n':>5}")
+    print(f"  {'-'*20} {'-'*8} {'-'*5}")
+    for lbl in result["group_labels"]:
+        print(f"  {lbl:<20} {result['group_means'][lbl]:>8.4f} {result['group_sizes'][lbl]:>5}")
+    print()
+    print(f"  F({result['k']-1}, {result['N']-result['k']}) = {result['f_stat']:.3f},  "
+          f"p = {result['p_value']:.2e}  "
+          f"{'***' if result['p_value'] < 0.001 else '*' if result['p_value'] < 0.05 else 'ns'}")
+    print(f"  eta-squared = {result['eta_squared']:.4f}")
+    print()

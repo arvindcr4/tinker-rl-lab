@@ -1,6 +1,7 @@
-# GSM8K GRPO - Llama 3.1-8B-Instruct (Scaling experiment)
-# Experiment: GRPO scaling ladder - 8B parameter point (Llama family)
+# GSM8K GRPO - Llama 3.1-8B-Instruct
+# Block A anchor: instruction-tuning isolation (instruct vs base)
 # Uses NousResearch mirror for tokenizer (meta-llama is gated)
+# wandb_group: systematic-scaling-study
 
 env:
   group_size: 16
@@ -31,7 +32,7 @@ tinker:
   save_checkpoint_interval: 10
   wandb_project: "tinker-rl-scaling"
   wandb_group: "systematic-scaling-study"
-  wandb_run_name: "gsm8k-llama3.1-8b"
+  wandb_run_name: "gsm8k-llama3.1-8b-instruct"
   tinker_model_name: "meta-llama/Llama-3.1-8B-Instruct"
 
 slurm: false

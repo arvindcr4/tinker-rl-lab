@@ -88,6 +88,26 @@ def _score_response(response: str, gold_boxed: str) -> float:
     return 1.0 if verify(answer_parsed, gold_parsed) else 0.0
 
 
+def _completion_to_text(completion) -> str:
+    """
+    Normalize TRL completion payloads across versions.
+    """
+    if isinstance(completion, str):
+        return completion
+    if isinstance(completion, dict):
+        if "content" in completion and isinstance(completion["content"], str):
+            return completion["content"]
+        if "text" in completion and isinstance(completion["text"], str):
+            return completion["text"]
+    if isinstance(completion, (list, tuple)) and completion:
+        last = completion[-1]
+        if isinstance(last, dict) and isinstance(last.get("content"), str):
+            return last["content"]
+        if isinstance(last, str):
+            return last
+    return str(completion)
+
+
 # Few-shot prefix — identical to gsm8k_tinker.py's convo_prefix
 _QUESTION_SUFFIX = " Provide a numerical answer without units, written inside \\boxed{}."
 _FEW_SHOT_Q = "How many r's are in strawberry?" + _QUESTION_SUFFIX
@@ -133,6 +153,9 @@ def load_config(path: str) -> dict:
         "batch_size":       cfg.get("batch_size",        128),
         "group_size":       cfg.get("group_size",        16),
         "max_token_length": cfg.get("max_token_length",  512),
+        "max_token_trainer_length": t.get("max_token_trainer_length", 2048),
+        "use_prompt_prefix": cfg.get("use_prompt_prefix", True),
+        "data_seed":        cfg.get("data_seed", 42),
         "lora_rank":        t.get("lora_rank",           32),
         "learning_rate":    t.get("learning_rate",       4e-5),
         "wandb_project":    t.get("wandb_project",       "tinker-rl-scaling"),
@@ -155,30 +178,83 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
     Load model with Unsloth. Uses 4-bit quantisation for ≥4B models to fit
     smaller GPUs; full BF16 for tiny models.
     """
-    from unsloth import FastLanguageModel
-
     params_b = _param_count_B(model_name)
     load_in_4bit = params_b >= 4.0
 
-    print(f"  Loading {model_name} ({params_b}B, 4-bit={load_in_4bit}) ...")
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=model_name,
-        max_seq_length=max_seq_len,
-        load_in_4bit=load_in_4bit,
-        dtype=None,   # auto
-    )
+    use_unsloth = os.environ.get("ATROPOS_USE_UNSLOTH", "0").lower() in {"1", "true", "yes"}
+    if use_unsloth:
+        try:
+            from unsloth import FastLanguageModel
 
-    model = FastLanguageModel.get_peft_model(
-        model,
-        r=lora_rank,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                        "gate_proj", "up_proj", "down_proj"],
-        lora_alpha=lora_rank,
-        lora_dropout=0,
-        bias="none",
-        use_gradient_checkpointing="unsloth",
-        random_state=42,
-    )
+            print(f"  Loading {model_name} with Unsloth ({params_b}B, 4-bit={load_in_4bit}) ...")
+            model, tokenizer = FastLanguageModel.from_pretrained(
+                model_name=model_name,
+                max_seq_length=max_seq_len,
+                load_in_4bit=load_in_4bit,
+                dtype=None,
+            )
+
+            model = FastLanguageModel.get_peft_model(
+                model,
+                r=lora_rank,
+                target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
+                                "gate_proj", "up_proj", "down_proj"],
+                lora_alpha=lora_rank,
+                lora_dropout=0,
+                bias="none",
+                use_gradient_checkpointing="unsloth",
+                random_state=42,
+            )
+            backend = "unsloth"
+        except Exception as exc:
+            print(f"  Unsloth load failed, falling back to Transformers/PEFT: {exc}")
+            model = None
+            tokenizer = None
+            backend = "hf"
+    else:
+        model = None
+        tokenizer = None
+        backend = "hf"
+
+    if backend == "hf":
+        import torch
+        from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+        from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+
+        print(f"  Loading {model_name} with Transformers/PEFT ({params_b}B, 4-bit={load_in_4bit}) ...")
+        quantization_config = None
+        model_kwargs = {
+            "trust_remote_code": True,
+            "device_map": "auto",
+            "torch_dtype": torch.bfloat16 if torch.cuda.is_available() else torch.float32,
+        }
+        if load_in_4bit:
+            quantization_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_compute_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
+            )
+            model_kwargs["quantization_config"] = quantization_config
+
+        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+        model = AutoModelForCausalLM.from_pretrained(model_name, **model_kwargs)
+        model.config.use_cache = False
+
+        if load_in_4bit:
+            model = prepare_model_for_kbit_training(model)
+        model.gradient_checkpointing_enable()
+
+        peft_config = LoraConfig(
+            r=lora_rank,
+            lora_alpha=lora_rank,
+            lora_dropout=0.0,
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
+                            "gate_proj", "up_proj", "down_proj"],
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        model = get_peft_model(model, peft_config)
 
     # Ensure chat template exists (needed for base models)
     if tokenizer.chat_template is None:
@@ -229,7 +305,7 @@ def make_reward_fn():
                 gold = gold_list[i] if isinstance(gold_list[i], str) else gold_list[i][0]
             else:
                 gold = ""   # fallback (shouldn't happen)
-            rewards.append(_score_response(completion, gold))
+            rewards.append(_score_response(_completion_to_text(completion), gold))
         return rewards
 
     return reward_fn
@@ -296,11 +372,15 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
 
     # ── model + tokenizer ───────────────────────────────────────────────────
     model, tokenizer = load_model_and_tokenizer(
-        cfg["model_name"], cfg["lora_rank"], cfg["max_token_length"]
+        cfg["model_name"], cfg["lora_rank"], cfg["max_token_trainer_length"]
     )
 
     # ── dataset ─────────────────────────────────────────────────────────────
-    dataset = prepare_dataset(tokenizer, seed=seed)
+    dataset = prepare_dataset(
+        tokenizer,
+        use_prefix=cfg["use_prompt_prefix"],
+        seed=cfg["data_seed"],
+    )
 
     # ── GRPOTrainer ─────────────────────────────────────────────────────────
     from trl import GRPOConfig, GRPOTrainer

@@ -29,7 +29,7 @@ tinker:
   checkpoint_dir: "./checkpoints/gsm8k_qwen4b/"
   save_checkpoint_interval: 10
   wandb_project: "tinker-rl-scaling"
-  wandb_group: "gsm8k-scaling-ladder"
+  wandb_group: "systematic-scaling-study"
   wandb_run_name: "gsm8k-qwen3-4b"
 
 slurm: false

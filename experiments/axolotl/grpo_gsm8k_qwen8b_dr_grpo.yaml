@@ -1,0 +1,85 @@
+# Axolotl GRPO with Dr. GRPO loss — Qwen3-8B on GSM8K
+# Tests newer GRPO variant (addresses criticism #15: "GRPO is obsolete")
+# Dr. GRPO fixes length bias and advantage estimation bias in vanilla GRPO
+#
+# Usage (2+ GPUs):
+#   CUDA_VISIBLE_DEVICES=1 axolotl vllm-serve experiments/axolotl/grpo_gsm8k_qwen8b_dr_grpo.yaml
+#   CUDA_VISIBLE_DEVICES=0 axolotl train experiments/axolotl/grpo_gsm8k_qwen8b_dr_grpo.yaml
+
+base_model: Qwen/Qwen3-8B
+
+load_in_4bit: true
+load_in_8bit: false
+strict: false
+
+adapter: qlora
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.0
+lora_target_linear: true
+
+rl: grpo
+
+vllm:
+  host: 0.0.0.0
+  port: 8100
+  tensor_parallel_size: 1
+  gpu_memory_utilization: 0.85
+  dtype: auto
+
+trl:
+  # Dr. GRPO loss — fixes bias in vanilla GRPO
+  loss_type: dr_grpo
+  max_completion_length: 512
+
+  beta: 0.001
+  num_generations: 16
+  temperature: 1.0
+
+  use_vllm: true
+  vllm_server_host: 0.0.0.0
+  vllm_server_port: 8100
+  vllm_server_timeout: 300
+
+  reward_funcs:
+    - "experiments/axolotl/gsm8k_rewards.py.gsm8k_correctness_reward"
+  reward_weights:
+    - 1.0
+
+datasets:
+  - path: openai/gsm8k
+    name: main
+    type: grpo
+    split: train
+    transform: experiments/axolotl/gsm8k_rewards.py.gsm8k_grpo_transform
+
+val_set_size: 0.0
+output_dir: ./outputs/grpo_gsm8k_qwen8b_dr_grpo
+
+sequence_len: 2048
+num_epochs: 1
+micro_batch_size: 8
+gradient_accumulation_steps: 1
+
+optimizer: adamw_torch_fused
+learning_rate: 0.00004
+lr_scheduler: cosine
+warmup_ratio: 0.1
+weight_decay: 0.0
+max_grad_norm: 1.0
+
+bf16: auto
+tf32: true
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+flash_attention: true
+
+logging_steps: 1
+saves_per_epoch: 2
+
+wandb_project: tinker-rl-scaling
+wandb_name: dr-grpo-gsm8k-qwen3-8b
+wandb_log_model: false
+
+special_tokens:

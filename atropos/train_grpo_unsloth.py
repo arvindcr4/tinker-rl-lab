@@ -283,6 +283,11 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
             task_type="CAUSAL_LM",
         )
         model = get_peft_model(model, peft_config)
+        # TRL GRPOTrainer accesses model.warnings_issued; ensure it exists even
+        # after PEFT wrapping (transformers 5.x sets it on PreTrainedModel but
+        # some new Qwen3 models omit it)
+        if not hasattr(model.base_model.model, 'warnings_issued'):
+            model.base_model.model.warnings_issued = {}
 
     # Ensure chat template exists (needed for base models)
     if tokenizer.chat_template is None:

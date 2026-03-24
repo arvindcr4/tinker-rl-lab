@@ -33,6 +33,15 @@ from typing import List
 
 import yaml
 
+# ── Pre-import peft/transformers before wandb installs its import hooks ─────
+# wandb monkey-patches importlib; importing these first avoids the lazy-load
+# chain: peft→transformers→image_utils→torchvision (broken nms in 2.3.0 env)
+try:
+    import transformers  # noqa: F401
+    from peft import LoraConfig  # noqa: F401
+except Exception:
+    pass  # will surface a cleaner error later when actually used
+
 # ── WandB (required) ────────────────────────────────────────────────────────
 import wandb
 
@@ -180,7 +189,9 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
     smaller GPUs; full BF16 for tiny models.
     """
     params_b = _param_count_B(model_name)
-    load_in_4bit = params_b >= 4.0
+    load_in_4bit = os.environ.get("ATROPOS_FORCE_4BIT", "0").lower() in {"1", "true", "yes"}
+    if not load_in_4bit:
+        load_in_4bit = params_b > 8.0
 
     use_unsloth = os.environ.get("ATROPOS_USE_UNSLOTH", "0").lower() in {"1", "true", "yes"}
     if use_unsloth:
@@ -224,26 +235,31 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
 
         print(f"  Loading {model_name} with Transformers/PEFT ({params_b}B, 4-bit={load_in_4bit}) ...")
         quantization_config = None
+        compute_dtype = torch.float32 if load_in_4bit else (torch.bfloat16 if torch.cuda.is_available() else torch.float32)
         model_kwargs = {
             "trust_remote_code": True,
             "device_map": "auto",
-            "torch_dtype": torch.bfloat16 if torch.cuda.is_available() else torch.float32,
+            "torch_dtype": compute_dtype,
         }
         if load_in_4bit:
             quantization_config = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_quant_type="nf4",
                 bnb_4bit_use_double_quant=True,
-                bnb_4bit_compute_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
+                bnb_4bit_compute_dtype=compute_dtype,
             )
             model_kwargs["quantization_config"] = quantization_config
 
         tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
         model = AutoModelForCausalLM.from_pretrained(model_name, **model_kwargs)
         model.config.use_cache = False
+        model.config.torch_dtype = compute_dtype
 
         if load_in_4bit:
             model = prepare_model_for_kbit_training(model)
+            output_embeddings = model.get_output_embeddings()
+            if output_embeddings is not None:
+                output_embeddings.to(torch.float32)
         model.gradient_checkpointing_enable()
 
         peft_config = LoraConfig(
@@ -430,12 +446,16 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
     # ── GRPOTrainer ─────────────────────────────────────────────────────────
     from trl import GRPOConfig, GRPOTrainer
 
+    per_device_train_batch_size = cfg["group_size"]
+    gradient_accumulation_steps = max(1, cfg["batch_size"] // per_device_train_batch_size)
+
     # num_generations = group_size (TRL calls it num_generations)
     grpo_config = GRPOConfig(
         output_dir=cfg["checkpoint_dir"],
         num_train_epochs=1,
         max_steps=cfg["total_steps"],
-        per_device_train_batch_size=cfg["batch_size"] // cfg["group_size"],
+        per_device_train_batch_size=per_device_train_batch_size,
+        gradient_accumulation_steps=gradient_accumulation_steps,
         num_generations=cfg["group_size"],
         max_completion_length=cfg["max_token_length"],
         learning_rate=cfg["learning_rate"],

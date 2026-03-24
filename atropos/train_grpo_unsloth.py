@@ -140,11 +140,20 @@ def build_prompt(question: str, tokenizer, use_prefix: bool = True) -> str:
             {"role": "assistant", "content": _FEW_SHOT_A},
         ]
     messages.append({"role": "user", "content": question + _QUESTION_SUFFIX})
-    return tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
-    )
+    try:
+        return tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+    except Exception:
+        # Fallback for base models whose chat template references 'tokenizer'
+        # or is otherwise broken in the Jinja2 sandbox (transformers 5.x)
+        parts = []
+        for m in messages:
+            role = m["role"].capitalize()
+            parts.append(f"{role}: {m['content']}")
+        return "\n".join(parts) + "\nAssistant:"
 
 
 # ── config loader ────────────────────────────────────────────────────────────

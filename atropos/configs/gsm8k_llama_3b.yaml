@@ -8,7 +8,7 @@ env:
   batch_size: 128
   max_batches_offpolicy: 3
   tokenizer_name: "unsloth/Llama-3.2-3B"
-  use_wandb: false
+  use_wandb: true
   rollout_server_url: "http://localhost:8004"
   wandb_name: "gsm8k-llama3.2-3b-env"
   ensure_scores_are_not_same: false

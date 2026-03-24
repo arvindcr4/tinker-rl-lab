@@ -8,7 +8,7 @@ env:
   batch_size: 128
   max_batches_offpolicy: 3
   tokenizer_name: "NousResearch/Meta-Llama-3.1-8B-Instruct"
-  use_wandb: false
+  use_wandb: true
   rollout_server_url: "http://localhost:8006"
   wandb_name: "gsm8k-llama3.1-8b-env"
   ensure_scores_are_not_same: false

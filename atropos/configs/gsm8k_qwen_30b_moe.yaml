@@ -8,7 +8,7 @@ env:
   batch_size: 128
   max_batches_offpolicy: 3
   tokenizer_name: "Qwen/Qwen3-30B-A3B"
-  use_wandb: false
+  use_wandb: true
   rollout_server_url: "http://localhost:8002"
   wandb_name: "gsm8k-qwen3-30b-moe-env"
   ensure_scores_are_not_same: false

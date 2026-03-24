@@ -201,6 +201,9 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
     load_in_4bit = os.environ.get("ATROPOS_FORCE_4BIT", "0").lower() in {"1", "true", "yes"}
     if not load_in_4bit:
         load_in_4bit = params_b > 8.0
+    # Env var ATROPOS_FORCE_BF16 forces bf16 regardless of model size
+    if os.environ.get("ATROPOS_FORCE_BF16", "0").lower() in {"1", "true", "yes"}:
+        load_in_4bit = False
 
     use_unsloth = os.environ.get("ATROPOS_USE_UNSLOTH", "0").lower() in {"1", "true", "yes"}
     if use_unsloth:

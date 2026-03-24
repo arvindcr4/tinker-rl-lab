@@ -1,0 +1,36 @@
+# Tool Use GRPO - Qwen2.5-0.5B (small model baseline)
+# For Arumugam: browser/tool use with smallest model to test capacity threshold
+
+env:
+  group_size: 16
+  batch_size: 64
+  max_batches_offpolicy: 3
+  tokenizer_name: "Qwen/Qwen2.5-0.5B-Instruct"
+  use_wandb: true
+  rollout_server_url: "http://localhost:8000"
+  wandb_name: "tool-use-qwen0.5b-env"
+  ensure_scores_are_not_same: false
+  max_token_length: 512
+  max_num_workers: 16
+  total_steps: 50
+  steps_per_eval: 10
+
+openai:
+  - model_name: "Qwen/Qwen2.5-0.5B-Instruct"
+    base_url: "http://localhost:8001/v1"
+    api_key: "x"
+    weight: 1.0
+    num_requests_for_eval: 100
+
+tinker:
+  lora_rank: 32
+  learning_rate: 0.00005
+  max_token_trainer_length: 1024
+  checkpoint_dir: "./checkpoints/tool_use_qwen0_5b/"
+  save_checkpoint_interval: 10
+  wandb_project: "tinker-rl-scaling"
+  wandb_group: "tool-use-scaling"
+  wandb_run_name: "tool-use-qwen0.5b"
+
+slurm: false
+testing: false

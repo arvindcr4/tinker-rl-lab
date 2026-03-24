@@ -4,7 +4,7 @@
 
 env:
   group_size: 16
-  batch_size: 128
+  batch_size: 64
   max_batches_offpolicy: 3
   tokenizer_name: "Qwen/Qwen3-14B"
   use_wandb: true
@@ -30,8 +30,6 @@ tinker:
   checkpoint_dir: "./checkpoints/gsm8k_qwen14b/"
   save_checkpoint_interval: 10
   wandb_project: "tinker-rl-scaling"
-  wandb_group: "systematic-scaling-study"
-  wandb_group: "systematic-scaling-study"
   wandb_run_name: "gsm8k-qwen3-14b"
 
 slurm: false

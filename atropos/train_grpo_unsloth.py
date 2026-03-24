@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -347,6 +348,50 @@ class StepLogger:
         print(f"  Reward log saved → {path}")
 
 
+def _bool_env(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.lower() in {"1", "true", "yes", "on"}
+
+
+def maybe_push_to_hub(final_dir: str, cfg: dict, config_path: str, seed: int) -> None:
+    """
+    Upload the saved adapter/tokenizer directory to Hugging Face when enabled.
+    """
+    if not _bool_env("HF_PUSH", default=False):
+        return
+
+    from huggingface_hub import HfApi, create_repo
+
+    token = os.environ.get("HF_TOKEN")
+    if not token:
+        raise RuntimeError("HF_PUSH=1 requires HF_TOKEN to be set.")
+
+    api = HfApi(token=token)
+    owner = os.environ.get("HF_REPO_OWNER")
+    if not owner:
+        owner = api.whoami(token=token)["name"]
+
+    repo_name = os.environ.get("HF_REPO_NAME")
+    if not repo_name:
+        repo_name = cfg["wandb_run_name"]
+        if seed != 42:
+            repo_name = f"{repo_name}-seed{seed}"
+
+    repo_id = f"{owner}/{repo_name}"
+    private = _bool_env("HF_PUSH_PRIVATE", default=True)
+    create_repo(repo_id=repo_id, token=token, private=private, exist_ok=True, repo_type="model")
+    api.upload_folder(
+        repo_id=repo_id,
+        folder_path=final_dir,
+        repo_type="model",
+        token=token,
+        commit_message=f"Upload adapter for {cfg['model_name']} ({cfg['wandb_run_name']})",
+    )
+    print(f"  Hugging Face upload complete → {repo_id}")
+
+
 # ── main training loop ───────────────────────────────────────────────────────
 
 def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
@@ -442,6 +487,14 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
     # Save reward log as CSV for offline analysis
     csv_path = os.path.join(cfg["checkpoint_dir"], "reward_log.csv")
     logger.save_csv(csv_path)
+
+    final_dir = os.path.join(cfg["checkpoint_dir"], "final")
+    Path(final_dir).mkdir(parents=True, exist_ok=True)
+    trainer.save_model(final_dir)
+    tokenizer.save_pretrained(final_dir)
+    shutil.copy2(config_path, os.path.join(final_dir, "training_config.yaml"))
+    shutil.copy2(csv_path, os.path.join(final_dir, "reward_log.csv"))
+    maybe_push_to_hub(final_dir, cfg, config_path, seed)
 
     wandb.finish()
 

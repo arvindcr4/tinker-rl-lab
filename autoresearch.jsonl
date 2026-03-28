@@ -14,3 +14,4 @@
 {"type":"config","name":"codebase-quality","metricName":"quality_issues","metricUnit":"issues","bestDirection":"lower"}
 {"run":4,"commit":"9ebdcc6","metric":0,"metrics":{"repo_tracked_files":202,"repo_size_kb":4024},"status":"keep","description":"fixed README stale references to non-existent dirs","timestamp":1774713374,"segment":1}
 {"type":"config","name":"Remove leftover generated workspace artifacts after tracked cleanup","metricName":"workspace_cleanup_issues","metricUnit":"issues","bestDirection":"lower"}
+{"run":24,"commit":"552da7b","metric":5,"metrics":{},"status":"keep","description":"Started a new cleanup phase focused on leftover untracked workspace artifacts after tracked-file cleanup. Baseline found 5 issues in the generated doc mirror (directory present, nested git repos, and embedded virtualenv).","timestamp":1774713731669,"segment":4,"confidence":null,"iterationTokens":103}

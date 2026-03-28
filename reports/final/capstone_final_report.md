@@ -1,6 +1,6 @@
 # Reinforcement Learning for Agentic LLM Fine-Tuning: GRPO-Based Optimization Across Tool Use, Code Generation, and Math Reasoning
 
-**Capstone Project — Group 6 | MTech CSE | PES University**
+**Capstone Project — Group 6 | MTech DSAI | PES University**
 
 Arvind C R (PES2PGE24DS006), Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L (PES2PGE24DS176), Dhruva N Murthy, Mohammad Rafi
 

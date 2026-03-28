@@ -154,4 +154,4 @@ Note: The supplementary_appendix.tex is input automatically by the main paper be
 ---
 
 ## Contact
-For questions about this submission, contact the authors through the PES University MTech CSE program.
+For questions about this submission, contact the authors through the PES University MTech DSAI program.

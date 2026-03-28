@@ -1,11 +1,32 @@
 {
-  "model": "Qwen/Qwen3-8B",
-  "dataset": "GSM8K",
-  "test_size": 1319,
-  "correct": 0,
-  "total": 0,
-  "accuracy": 0,
-  "accuracy_percent": "0.0%",
+  "schema_version": 2,
+  "evaluation_status": "failed",
+  "config": {
+    "model": "Qwen/Qwen3-8B",
+    "model_source": "Qwen/Qwen3-8B",
+    "dataset": "openai/gsm8k",
+    "dataset_config": "main",
+    "dataset_split": "test",
+    "n_samples": 1,
+    "temperature": 0.0,
+    "do_sample": false,
+    "seed": 0,
+    "max_tokens": 512,
+    "test_size": 1319
+  },
+  "summary": {
+    "correct": 0,
+    "incorrect": 0,
+    "errors": 1319,
+    "attempted": 0,
+    "accuracy": 0.0,
+    "accuracy_percent": "0.0%"
+  },
+  "failure_reason": "Evaluation could not load the tokenizer/model dependencies in the execution environment, so no held-out examples were successfully attempted.",
+  "notes": [
+    "This file records a failed held-out evaluation attempt and should not be interpreted as model accuracy.",
+    "A successful rerun with the hardened evaluation script is required before making any held-out GSM8K generalization claim."
+  ],
   "examples": [
     {
       "idx": 0,

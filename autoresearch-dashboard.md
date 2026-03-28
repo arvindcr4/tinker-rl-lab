@@ -1,27 +1,31 @@
 # Autoresearch Dashboard: Codebase Cleanup
 
-**Runs:** 4 | **Kept:** 4 | **Discarded:** 0 | **Crashed:** 0
-**Baseline:** trash_files_remaining: 424 files (#1)
-**Best:** quality_issues: 0 files (#4, -100%)
+**Outcome:** cleanup complete across tracked artifacts, workspace leftovers, and session docs.
 
-## Segment 0: Trash Removal
+## Key Milestones
 
-| # | commit | trash_files_remaining | status | description |
-|---|--------|-----------------------|--------|-------------|
-| 1 | d263f9a | 424 | keep | baseline: 421 doc/ + 3 unrelated files |
-| 2 | 535d9e5 | 0 (-100%) | keep | doc/ removal + unrelated files cleaned |
-| 3 | 64a5922 | 0 (-100%) | keep | removed duplicates, untracked PDF, fixed .gitignore |
+| Phase | Best commit | Result |
+|---|---|---|
+| Tracked trash removal | `6861cfe` | Removed `doc/` mirror and unrelated files |
+| Repo size reduction | `1dce478` / `6638c3f` | Shrunk tracked size from ~359 MB to ~4 MB |
+| README / structure accuracy | `9ebdcc6` | Fixed stale references to non-existent directories |
+| Workspace artifact cleanup | `fc31568` / `cefa459` | Removed leftover `doc/` remnants and project `__pycache__/` |
+| Session doc accuracy | `f03474c` | Finalized autoresearch notes to match actual cleanup state |
 
-## Segment 1: Quality Polish
+## Final State
 
-| # | commit | quality_issues | status | description |
-|---|--------|----------------|--------|-------------|
-| 4 | 9ebdcc6 | 0 | keep | fixed README stale references |
+| Metric | Start | Final |
+|---|---:|---:|
+| Tracked trash/unrelated artifacts | 424 | 0 |
+| Tracked files | 657 | 204 |
+| Tracked repo size (KB) | 358,720 | 4,036 |
+| README structure issues | 1+ | 0 |
+| Workspace cleanup issues | 5 | 0 |
+| Workspace bytecode issues | 5 | 0 |
+| Session doc issues | 2 | 0 |
 
-## Summary
+## Notes
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Tracked files | 657 | 202 | -69% |
-| Repo size (KB) | 358,720 | 4,024 | -99% |
-| Quality issues | 424 | 0 | -100% |
+- Off-limits research assets were preserved.
+- Cleanup focused on generated mirrors, duplicates, ignored artifacts, and stale documentation.
+- The repository is now in a compact, reviewable state for scientific work.

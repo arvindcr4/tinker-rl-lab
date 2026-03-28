@@ -1,0 +1,70 @@
+[gsm8k_4B_s137] Loading GSM8K...
+[gsm8k_4B_s137] 7473 GSM8K examples | model=Qwen/Qwen3.5-4B seed=137 rank=32 lr=3e-05
+[gsm8k_4B_s137] Connecting to Tinker...
+[gsm8k_4B_s137] Run: 566747c0-b9a6-5a8c-9352-4b477bb919d4:train:0
+[gsm8k_4B_s137]   1/50 | loss=-1.7869 | reward=0.875 | acc=87.5%
+[gsm8k_4B_s137]   2/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]   3/50 | loss=1.3083 | reward=0.750 | acc=75.0%
+[gsm8k_4B_s137]   4/50 | loss=0.0000 | reward=0.500 | acc=50.0%
+[gsm8k_4B_s137]   5/50 | loss=-4.6939 | reward=0.875 | acc=87.5%
+[gsm8k_4B_s137]   6/50 | loss=0.0000 | reward=0.500 | acc=50.0%
+[gsm8k_4B_s137]   7/50 | loss=-6.4182 | reward=0.625 | acc=62.5%
+[gsm8k_4B_s137]   8/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]   9/50 | loss=-9.0599 | reward=0.750 | acc=75.0%
+[gsm8k_4B_s137]  10/50 | loss=-24.4585 | reward=0.500 | acc=50.0%
+[gsm8k_4B_s137]  11/50 | loss=0.0000 | reward=0.500 | acc=50.0%
+[gsm8k_4B_s137]  12/50 | loss=0.0000 | reward=0.500 | acc=50.0%
+[gsm8k_4B_s137]   -> ckpt s12
+[gsm8k_4B_s137]  13/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  14/50 | loss=-3.5614 | reward=0.875 | acc=87.5%
+[gsm8k_4B_s137]  15/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  16/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  17/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  18/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  19/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  20/50 | loss=-13.9304 | reward=0.750 | acc=75.0%
+[gsm8k_4B_s137]  21/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  22/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  23/50 | loss=0.0000 | reward=0.500 | acc=50.0%
+[gsm8k_4B_s137]  24/50 | loss=2.4648 | reward=0.250 | acc=25.0%
+[gsm8k_4B_s137]   -> ckpt s24
+[gsm8k_4B_s137]  25/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  26/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  27/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  28/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  29/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  30/50 | loss=0.0000 | reward=0.500 | acc=50.0%
+[gsm8k_4B_s137]  31/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  32/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  33/50 | loss=-2.4668 | reward=0.875 | acc=87.5%
+[gsm8k_4B_s137]  34/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  35/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  36/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]   -> ckpt s36
+[gsm8k_4B_s137]  37/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  38/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  39/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  40/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  41/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  42/50 | loss=1.4743 | reward=0.125 | acc=12.5%
+[gsm8k_4B_s137]  43/50 | loss=3.8455 | reward=0.875 | acc=87.5%
+[gsm8k_4B_s137]  44/50 | loss=-22.9455 | reward=0.875 | acc=87.5%
+[gsm8k_4B_s137]  45/50 | loss=-0.2572 | reward=0.875 | acc=87.5%
+[gsm8k_4B_s137]  46/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  47/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+[gsm8k_4B_s137]  48/50 | loss=-4.2727 | reward=0.625 | acc=62.5%
+[gsm8k_4B_s137]   -> ckpt s48
+[gsm8k_4B_s137]  49/50 | loss=-5.8013 | reward=0.875 | acc=87.5%
+[gsm8k_4B_s137]  50/50 | loss=0.0000 | reward=1.000 | acc=100.0%
+
+[gsm8k_4B_s137] === FINAL REPORT ===
+[gsm8k_4B_s137] Model: Qwen/Qwen3.5-4B | Seed: 137 | LoRA rank: 32
+[gsm8k_4B_s137] Steps: 50 | Group: 4 | LR: 3e-05
+[gsm8k_4B_s137] First-5 avg accuracy: 80.0%
+[gsm8k_4B_s137] Last-10 avg accuracy: 82.5%
+[gsm8k_4B_s137] Peak accuracy: 100.0%
+[gsm8k_4B_s137] Zero-loss steps: 34/50 (68%)
+[gsm8k_4B_s137] Zero-reward steps: 0/50 (0%)
+[gsm8k_4B_s137] Run ID: 566747c0-b9a6-5a8c-9352-4b477bb919d4:train:0
+[gsm8k_4B_s137] Sampler: tinker://566747c0-b9a6-5a8c-9352-4b477bb919d4:train:0/sampler_weights/final
+[gsm8k_4B_s137] Reward trace: [0.875, 1.0, 0.75, 0.5, 0.875, 0.5, 0.625, 1.0, 0.75, 0.5, 0.5, 0.5, 1.0, 0.875, 1.0, 1.0, 1.0, 1.0, 1.0, 0.75, 1.0, 1.0, 0.5, 0.25, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 0.875, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.125, 0.875, 0.875, 0.875, 1.0, 1.0, 0.625, 0.875, 1.0]

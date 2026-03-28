@@ -30,5 +30,5 @@ Removed hardcoded Tinker API keys from 8 files (replaced with env var lookups).
 ```bash
 cp -r ai-scientist-template ~/AI-Scientist/templates/grpo_gsm8k
 cd ~/AI-Scientist
-python launch_scientist.py --model "claude-3-5-sonnet-20241022" --experiment grpo_gsm8k --num-ideas 2
+python launch_scientist.py --model "claude-opus-4-6" --experiment grpo_gsm8k --num-ideas 2
 ```

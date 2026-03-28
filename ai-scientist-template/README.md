@@ -13,7 +13,7 @@ Given this template, AI Scientist will:
 5. **Self-review** — NeurIPS-style review with Accept/Reject decision
 6. **Optionally improve** — revise based on review feedback
 
-Cost: ~$15 per generated paper (Claude Sonnet), ~$5 with DeepSeek.
+Cost: ~$15 per generated paper (Claude Sonnet 4.6), ~$5 with DeepSeek. For maximum quality, use Claude Opus 4.6 (`claude-opus-4-6`) at ~$50/paper.
 
 ## Setup
 
@@ -92,13 +92,19 @@ cp ~/AI-Scientist/templates/nanoGPT/latex/fancyhdr.sty ~/AI-Scientist/templates/
 ```bash
 cd ~/AI-Scientist
 
-# Generate 2 ideas with Claude (good starting point)
+# Best quality: Claude Opus 4.6 (deepest reasoning)
 python launch_scientist.py \
-    --model "claude-3-5-sonnet-20241022" \
+    --model "claude-opus-4-6" \
     --experiment grpo_gsm8k \
     --num-ideas 2
 
-# Or with DeepSeek (cheaper)
+# Good balance: Claude Sonnet 4.6 (best coding model, cheaper)
+python launch_scientist.py \
+    --model "claude-sonnet-4-6" \
+    --experiment grpo_gsm8k \
+    --num-ideas 4
+
+# Budget option: DeepSeek
 python launch_scientist.py \
     --model "deepseek-chat" \
     --experiment grpo_gsm8k \
@@ -106,7 +112,7 @@ python launch_scientist.py \
 
 # With improvement loop (paper gets revised after review)
 python launch_scientist.py \
-    --model "claude-3-5-sonnet-20241022" \
+    --model "claude-opus-4-6" \
     --experiment grpo_gsm8k \
     --num-ideas 2 \
     --improvement
@@ -193,7 +199,7 @@ AI Scientist also supports an **open-ended evolution** mode where it builds on p
 ```bash
 cd ~/AI-Scientist
 python experimental/launch_oe_scientist.py \
-    --model "claude-3-5-sonnet-20241022" \
+    --model "claude-sonnet-4-6" \
     --experiment grpo_gsm8k \
     --num-ideas 10 \
     --num-rounds 5

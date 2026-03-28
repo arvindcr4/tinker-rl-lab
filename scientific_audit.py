@@ -30,6 +30,7 @@ def check_paper():
     paper_md = read(PAPER_MD)
     md = read(REPORT_MD)
     checklist = read(SUBMISSION_CHECKLIST)
+    supp = read(FINAL_DIR / "supplementary_appendix.tex")
 
     abstract_match = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", tex, re.S)
     if abstract_match:
@@ -54,6 +55,23 @@ def check_paper():
 
     if re.search(r"\|\s*GSM8K\s*\|\s*30\.0% \± 2\.5% \(3 seeds\)\s*\|", checklist):
         add(SUBMISSION_CHECKLIST, "checklist.gsm8k.label", "Submission checklist labels GSM8K as a generic result instead of explicitly marking it as training-set reward.")
+
+    for path, text in [
+        (PAPER_TEX, tex),
+        (PAPER_TEX_ANON, anon),
+        (PAPER_MD, paper_md),
+    ]:
+        if "confirms grpo training stability" in text.lower():
+            add(path, "paper.stability.overclaim", "Paper claims the 3-seed GSM8K result 'confirms' training stability; this should be softened to a more accurate characterization.")
+
+    for path, text in [
+        (REPORT_MD, md),
+        (PAPER_MD, paper_md),
+        (FINAL_DIR / "supplementary_appendix.tex", supp),
+    ]:
+        low = text.lower()
+        if "99% gsm8k accuracy" in low or "99\\% gsm8k accuracy" in low:
+            add(path, "gsm8k.peak_accuracy.overclaim", "A 99% GSM8K statement appears without making clear that it refers to a peak training-step metric rather than held-out benchmark accuracy.")
 
 
 def _is_name(node, name: str) -> bool:

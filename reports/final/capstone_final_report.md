@@ -302,7 +302,7 @@ A sharp capacity threshold exists between 3B and 8B parameters for GRPO on GSM8K
 
 ### 5.2 MoE Architectural Effects
 
-A Qwen3-30B-MoE model with ~3B active parameters achieved 99% GSM8K accuracy but exhibited 2.43x higher step-to-step volatility than the dense 8B model (Levene's test p = 7.0x10^-6). Despite this volatility, both converged to comparable performance, suggesting sparse routing can substitute for total dense capacity but introduces training instability.
+A Qwen3-30B-MoE model with ~3B active parameters reached a 99% peak GSM8K training-step accuracy in our internal runs but exhibited 2.43x higher step-to-step volatility than the dense 8B model (Levene's test p = 7.0x10^-6). Despite this volatility, both converged to comparable performance, suggesting sparse routing can substitute for total dense capacity but introduces training instability.
 
 ### 5.3 Two-Phase Learning Progression
 

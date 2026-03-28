@@ -156,6 +156,8 @@ def check_latex_builds():
             if result.returncode != 0:
                 add(FINAL_DIR / cmd[-1], code, f"LaTeX build step failed: {' '.join(cmd)}")
                 break
+            if code == "latex.main.bibtex" and "Warning--empty journal" in result.stdout:
+                add(FINAL_DIR / "references.bib", "latex.bibtex.empty_journal", "BibTeX emitted 'empty journal' warnings for cited references, so the bibliography metadata is incomplete.")
     finally:
         for name in cleanup:
             path = FINAL_DIR / name

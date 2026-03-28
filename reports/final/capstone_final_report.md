@@ -289,7 +289,7 @@ We evaluated the base Qwen3-8B model on a random 50-example subset of the GSM8K 
 | 042 | 37.5% | 62.5% | 27.5% | 18% | 14% |
 | 999 | 20.0% | 87.5% | 35.0% | 18% | 16% |
 | **Mean** | **24.0%** | **72.5%** | **30.5%** | **20.8%** | **17.6%** |
-| **Std** | **+/-8.2%** | **+/-12.9%** | **+/-3.3%** | | |
+| **Std** | **+/-8.4%** | **+/-13.7%** | **+/-3.3%** | | |
 
 Cross-seed mean accuracy is 30.5% +/- 3.3% (95% CI [26.5%, 34.5%]), demonstrating stability of GRPO training outcomes across 5 seeds. Peak accuracy varies more (62.5--87.5%), indicating high trajectory-level variance despite converging to similar final performance. The two new seeds (042, 999) are consistent with the original three, narrowing the confidence interval from [23.8%, 36.2%] (3 seeds) to [26.5%, 34.5%] (5 seeds).
 

@@ -5,3 +5,4 @@
 {"run":4,"commit":"90ebf86","metric":100,"metrics":{"template_file_count":7,"guide_sections":5},"status":"keep","description":"fixed experiment.py to match current TRL GRPOTrainer API (peft_config, reward_funcs list, model string)","timestamp":1774716195,"segment":0}
 {"run":5,"commit":"b2fed25","metric":100,"metrics":{"template_file_count":8,"guide_sections":5},"status":"keep","description":"added WRITEUP.md with prior results and research context for paper writing","timestamp":1774716227,"segment":0}
 {"run":6,"commit":"f79e4b1","metric":100,"metrics":{"template_file_count":7,"guide_sections":5},"status":"keep","description":"updated model recommendations to Claude 4.6 (Opus + Sonnet)","timestamp":1774716348,"segment":0}
+{"type":"config","name":"Address reviewer caveats on scientific rigor and evaluation clarity","metricName":"caveat_issues","metricUnit":"issues","bestDirection":"lower"}

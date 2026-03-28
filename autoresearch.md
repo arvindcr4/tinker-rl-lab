@@ -41,4 +41,13 @@ Remove trash, unrelated, and auto-generated files from the tinker-rl-lab reposit
 - Verify no breakage after each removal
 
 ## What's Been Tried
-(Nothing yet — starting fresh)
+- Removed the tracked `doc/` HTML mirror and unrelated files (`0xsero_tweets.json`, `experiments/jarvis_config.ini`, `experiments/dropbox_uploader.sh`).
+- Removed generated HTML exports from `atropos/notebooks/html/`, `experiments/html/`, and the duplicate `grpo-results/` results mirror.
+- Updated `.gitignore` to cover generated exports and local virtualenv artifacts.
+- Cleaned leftover untracked workspace artifacts (`doc/` mirror remnants and project-local `__pycache__/` directories).
+
+## Current State
+- Tracked trash/unrelated artifacts: 0
+- Tracked files: ~204
+- Tracked repo size: ~4 MB
+- README structure references corrected to match the real repository layout.

@@ -31,7 +31,7 @@ PDF_COUNT=$(git ls-files -- '*.pdf' 2>/dev/null | wc -l)
 ISSUES=$((ISSUES + PDF_COUNT))
 
 # 5. Missing .gitignore entries (check if .venv-axolotl pattern exists)
-if ! grep -q '\.venv-axolotl' .gitignore 2>/dev/null; then
+if ! grep -qE '\.venv-(\*|axolotl)' .gitignore 2>/dev/null; then
     ISSUES=$((ISSUES + 1))
 fi
 

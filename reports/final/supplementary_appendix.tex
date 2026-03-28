@@ -239,6 +239,8 @@ The multi-turn reward function (5-component) enables finer-grained learning sign
 
 The -0.30 penalty for repeated tool calls was critical: it eliminated SFT's looping failure mode entirely (Section 4.1.2 of main paper). Without this penalty, models would repeatedly call the same tool in an infinite loop.
 
+Because these scores come from custom scenario rollouts rather than a standard benchmark, we emphasize that they are internal protocol numbers. We did not measure inter-rater reliability, did not use multiple human judges, and did not adopt proxy-state final-answer evaluation. Future revisions should benchmark the same agents under ToolRM / FC-RewardBench-style outcome evaluation or other standardized multi-turn frameworks.
+
 % ===========================================================================
 \section{Qualitative Examples}
 % ===========================================================================
@@ -308,6 +310,8 @@ This trajectory illustrates the two-phase pattern: format compliance (steps 1-20
 
 Total estimated spend: $\sim$\$50/person, well within typical capstone project budgets.
 
+We report GPU platform and wall-clock budget, but not a full token-processed accounting per run. Likewise, our data-split story is uneven across domains: HumanEval uses a held-out benchmark subset, while tool calling and GSM8K largely report training-distribution rollouts. This split mismatch is a major threat to cross-domain comparability.
+
 % ===========================================================================
 \section{Code and Reproducibility}
 % ===========================================================================
@@ -318,6 +322,10 @@ All training scripts are available in the repository:
     \item \texttt{grpo\_exp\_a\_baseline.py}, \texttt{exp\_b\_high\_lr.py}, \texttt{exp\_c\_low\_temp.py}, \texttt{exp\_d\_xlam.py} -- Tool-use experiments
     \item \texttt{grpo\_100\_xlam.py}, \texttt{grpo\_100\_synthetic.py}, \texttt{grpo\_100\_math.py} -- Extended runs
 \end{itemize}
+
+At present, we can release training scripts, paper sources, and the hardened held-out evaluation script, but the exact prompt packs / scenario definitions used for every internal tool-calling score are not yet packaged as a replication bundle. Releasing prompts, scoring rubrics, and scenario manifests is an explicit next step for reproducibility.
+
+For stability diagnostics, we did not log KL-to-SFT trajectories or policy entropy, and our MoE analysis does not yet include routing entropy or expert-load imbalance measurements. Those omissions limit causal interpretation of both drift and volatility claims.
 
 Training logs are available at: \texttt{/tmp/gsm8k\_*.log}, \texttt{/tmp/grpo\_*.log}
 

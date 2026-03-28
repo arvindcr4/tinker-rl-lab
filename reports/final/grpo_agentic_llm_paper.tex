@@ -124,6 +124,8 @@ Step-DPO \citep{lai2024stepdpo} demonstrates $\sim$+3\% MATH gains for >70B mode
     \item LoRA rank: 8, 16, or 32
 \end{itemize}
 
+These choices prioritize low-cost iteration rather than maximal stability. In particular, we do \emph{not} use KL regularization to an SFT reference policy and we do \emph{not} log policy entropy trajectories. We therefore interpret the reported runs as an initial empirical study rather than a fully drift-controlled RL recipe; lightweight KL anchoring and entropy diagnostics are important next-step mitigations.
+
 \subsection{Models}
 
 \begin{table}[htbp]
@@ -214,6 +216,8 @@ Using Qwen2.5-3B-Instruct with SFT followed by GRPO (40 steps, LoRA rank 8):
 
 Key finding: The -0.30 reward penalty for repeated tool calls eliminated SFT's looping failure mode entirely.
 
+Important caveat: these 0.72--0.92 multi-turn scores are \emph{custom reward-derived scenario scores}, not results from a standardized benchmark or proxy-state evaluator. We used a small hand-authored scenario set with deterministic rubric components, and inter-rater reliability was not measured because the scoring was not performed by multiple human annotators. We therefore present these numbers as internal diagnostics rather than definitive cross-paper benchmarks.
+
 \subsection{Code Generation}
 
 On software engineering coding tasks using Qwen3-8B with SFT followed by GRPO:
@@ -223,6 +227,8 @@ On software engineering coding tasks using Qwen3-8B with SFT followed by GRPO:
     \item Problems solved: 16/50 $\rightarrow$ 20/50 (+4)
     \item Training loss: 0.85 $\rightarrow$ 0.18 (-78\%)
 \end{itemize}
+
+These code-generation numbers come from a \textbf{50-problem subset} rather than the full standard HumanEval harness, so we do not claim statistical significance or direct comparability to papers reporting full-suite pass@$k$. A full standard harness evaluation (full HumanEval/MBPP with confidence intervals) remains future work.
 
 \subsection{Mathematical Reasoning}
 
@@ -279,6 +285,8 @@ Higher rank correlates with faster initial learning (rank 64 achieves 47.5\% in 
 
 A capacity effect exists between 3B and 8B parameters for GRPO on GSM8K. Dense 3B models (Llama-3.2-3B) fail to learn, achieving only 0.78\%$\rightarrow$2.34\% accuracy over 50 steps, while 8B models rapidly converge from 7\% to near-perfect accuracy. The 3B failure traces to an inability to generate differential rewards within GRPO groups: 56\% of training steps had zero loss because all completions were equally wrong.
 
+However, this should be read as a \emph{capacity-plus-exploration} observation rather than a pure parameter-count theorem. The 3B failure may be confounded by reward sparsity, small group size, and limited exploration under our chosen temperatures. We did not run the decisive rescue ablations proposed by reviewers---larger group size (e.g., G=32--64), broader temperature sweeps, or curriculum learning---so the present evidence does not isolate capacity from exploration effects.
+
 \subsection{Synthetic vs. Real Data Gap}
 
 On tool calling, synthetic 5-tool tasks saturate to reward >0.9 within 5 GRPO steps. Salesforce xlam-60k with diverse real-world tool schemas yields rewards of 0.06--0.36 after 100 steps -- a 3--8x difficulty gap.
@@ -293,12 +301,16 @@ GRPO training exhibits a characteristic two-phase pattern:
 
 This is analogous to curriculum learning without explicit curricula.
 
+Across all domains, our reporting should be interpreted with the underlying data splits and compute budgets in mind. Tool and GSM8K numbers are primarily computed on training-prompt distributions with fresh rollouts; only the preliminary code-generation result uses a held-out benchmark subset. Typical Tinker runs use batch size 2, group size 4--16, 30--100 optimization steps, and cloud A100 time on the order summarized in the appendix. We do not yet report total tokens processed per run or full GPU-hours per experiment, which is another limitation for strict efficiency comparison.
+
 % ===========================================================================
 % Related Work
 % ===========================================================================
 \section{Related Work}
 
 GRPO was introduced by \citet{shao2024deepseekmath} who achieved 88.2\% on GSM8K with a 7B model using group size G=64. \citet{lai2024stepdpo} demonstrated step-wise preference optimization achieving +3\% on MATH for large models. \citet{li2024common7b} showed LLaMA-2-7B reaches 82.6\% GSM8K with synthetic SFT alone. Our work extends these findings to smaller models (0.5B--8B) and multiple task domains, providing systematic empirical characterization of GRPO's failure modes and scaling properties.
+
+We also note several comparison families that are directly relevant but not yet empirically included here: tool-use reward modeling and evaluation frameworks such as ToolRM and FC-RewardBench, proxy-state multi-turn evaluation, critic-free baselines such as RLOO / REINFORCE++, step-wise GRPO variants such as S-GRPO, and the broader QLoRA-style PEFT efficiency literature. Our current positioning is therefore partial: we study a practical GRPO pipeline, but not yet against the full contemporary comparison set.
 
 % ===========================================================================
 % Conclusion
@@ -315,7 +327,7 @@ We presented an empirical study of GRPO for fine-tuning small language models on
     \item Multi-seed replication suggests moderately consistent training dynamics across three seeds (30.0\%, SD = 2.5\%)
 \end{enumerate}
 
-Limitations: evaluation on training data, small number of seeds (3), and single-run results for some experiments. Future work should prioritize held-out test evaluation, PPO baselines, and intermediate model sizes (4B, 6B).
+Limitations: evaluation on training data for math/tool use, custom rather than standardized tool evaluation, a 50-problem code subset, no KL anchoring, no entropy diagnostics, missing routing-entropy / expert-load diagnostics for the MoE analysis, and single-run results for some experiments. Future work should prioritize held-out test evaluation, PPO/RLOO/REINFORCE++ and Step-DPO / S-GRPO comparisons, larger-group and temperature ablations, and intermediate model sizes (4B, 6B).
 
 \medskip
 

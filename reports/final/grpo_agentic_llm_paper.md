@@ -8,11 +8,13 @@
 
 ## Abstract
 
-We investigate whether Group Relative Policy Optimization (GRPO) can reliably improve small language models (0.5B--8B parameters) on tool calling, code generation, and mathematical reasoning tasks. Across 17 cloud GPU training runs on Tinker and multiple team-executed experiments, we demonstrate that GRPO enables significant capability gains: JSON tool-call validity improves from 0% to 92%, multi-turn tool chaining quality from 0.72 to 0.91, and code generation (HumanEval) from 32% to 40%. On GSM8K math reasoning, we conduct multi-seed replication (mean accuracy 30.0%, SD = 2.5%) and a LoRA rank ablation (rank 8--64). We identify seven original findings including a capacity threshold between 3B and 8B parameters, MoE routing-induced training volatility, a two-phase learning progression, and a 3--8x difficulty gap between synthetic and real-world tool schemas. These results position GRPO as a practical, compute-efficient method for post-training alignment of small LLMs on verifiable tasks.
+We investigate whether Group Relative Policy Optimization (GRPO) can reliably improve small language models (0.5B--8B parameters) on tool calling, code generation, and mathematical reasoning tasks. Across 17 cloud GPU training runs on Tinker and multiple team-executed experiments, we observe strong gains on task-specific metrics: JSON tool-call validity improves from 0% to 92%, multi-turn tool chaining quality from 0.72 to 0.91, and code generation (HumanEval) from 32% to 40%. On GSM8K math reasoning, we conduct multi-seed replication of *training-set reward* (mean last-10 accuracy 30.0%, SD = 2.5%) and a LoRA rank ablation (rank 8--64). We identify seven original findings including a capacity threshold between 3B and 8B parameters, MoE routing-induced training volatility, a two-phase learning progression, and a 3--8x difficulty gap between synthetic and real-world tool schemas. Because held-out GSM8K evaluation is still pending, we frame the math results as training-dynamics evidence rather than a generalization claim. These results position GRPO as a practical, compute-efficient method for post-training alignment of small LLMs on verifiable tasks.
 
 ---
 
 ## 1. Introduction
+
+> **Evaluation Scope Note:** The GSM8K numbers reported in this draft summarize training-set reward under fresh rollouts, not held-out test-set generalization.
 
 Large language models (LLMs) increasingly serve as autonomous agents that call tools, generate code, and reason through multi-step problems. While supervised fine-tuning (SFT) can teach output formats, it fails to teach *judgment* -- when to call a tool, which tool to select, and when to stop. Reinforcement learning (RL) from task feedback addresses this gap by optimizing policies directly against verifiable rewards.
 

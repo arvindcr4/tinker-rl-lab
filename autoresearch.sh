@@ -104,6 +104,49 @@ if ! grep -qE '(sk-ant-|sk-|tml-|AAAA)' ai-scientist-template/experiment.py 2>/d
     SCORE=$((SCORE + 5))
 fi
 
+# 11. experiment.py has multi-seed support
+if grep -q "num_seeds" ai-scientist-template/experiment.py 2>/dev/null; then
+    SCORE=$((SCORE + 3))
+fi
+
+# 12. experiment.py has configurable model selection
+if grep -q "MODELS" ai-scientist-template/experiment.py 2>/dev/null; then
+    SCORE=$((SCORE + 3))
+fi
+
+# 13. seed_ideas.json has 2+ ideas
+if python3 -c "import json; d=json.load(open('ai-scientist-template/seed_ideas.json')); assert len(d)>=2; print('OK')" 2>/dev/null | grep -q "OK"; then
+    SCORE=$((SCORE + 3))
+fi
+
+# 14. LaTeX has at least 5 BibTeX entries
+if python3 -c "
+import re
+tex = open('ai-scientist-template/latex/template.tex').read()
+entries = re.findall(r'@\w+\{', tex)
+assert len(entries) >= 5, f'only {len(entries)} entries'
+print('OK')
+" 2>/dev/null | grep -q "OK"; then
+    SCORE=$((SCORE + 3))
+fi
+
+# 15. README has installation commands (pip, conda, git clone)
+if grep -q "pip install" ai-scientist-template/README.md 2>/dev/null && \
+   grep -q "git clone" ai-scientist-template/README.md 2>/dev/null; then
+    SCORE=$((SCORE + 3))
+fi
+
+# 16. experiment.py handles GPU/CPU gracefully
+if grep -q "device_map\|cuda\|torch.device" ai-scientist-template/experiment.py 2>/dev/null; then
+    SCORE=$((SCORE + 2))
+fi
+
+# 17. plot.py generates multiple plot types
+PLOT_COUNT=$(grep -c "savefig" ai-scientist-template/plot.py 2>/dev/null || echo 0)
+if [ "$PLOT_COUNT" -ge 3 ]; then
+    SCORE=$((SCORE + 2))
+fi
+
 # Cap at 100
 if [ "$SCORE" -gt 100 ]; then
     SCORE=100

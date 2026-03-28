@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>get_gprof</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = ".venv-axolotl/bin/get_gprof";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>get_gprof</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-comment">#!/home/arvind/tinker-rl-lab/.venv-axolotl/bin/python</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Author: Mike McKerns (mmckerns @caltech and @uqfoundation)
+Copyright (c) 2008-2016 California Institute of Technology.
+Copyright (c) 2016-2026 The Uncertainty Quantification Foundation.
+License: 3-clause BSD.  The full license text is available at:</p>
+<ul>
+<li>https://github.com/uqfoundation/dill/blob/master/LICENSE</li>
+</ul>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-string">'''
+build profile graph for the given instance
+
+running:
+  $ get_gprof &lt;args&gt; &lt;instance&gt;
+
+executes:
+  gprof2dot -f pstats &lt;args&gt; &lt;type&gt;.prof | dot -Tpng -o &lt;type&gt;.call.png
+
+where:
+  &lt;args&gt; are arguments for gprof2dot, such as "-n 5 -e 5"
+  &lt;instance&gt; is code to create the instance to profile
+  &lt;type&gt; is the class of the instance (i.e. type(instance))
+
+For example:
+  $ get_gprof -n 5 -e 1 "import numpy; numpy.array([1,2])"
+
+will create 'ndarray.call.png' with the profile graph for numpy.array([1,2]),
+where '-n 5' eliminates nodes below 5% threshold, similarly '-e 1' eliminates
+edges below 1% threshold
+'''</span>
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    <span class="hljs-keyword">import</span> sys
+    <span class="hljs-keyword">if</span> len(sys.argv) &lt; <span class="hljs-number">2</span>:
+        <span class="hljs-keyword">print</span> (<span class="hljs-string">"Please provide an object instance (e.g. 'import math; math.pi')"</span>)
+        sys.exit()
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>grab args for gprof2dot</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    args = sys.argv[<span class="hljs-number">1</span>:<span class="hljs-number">-1</span>]
+    args = <span class="hljs-string">' '</span>.join(args)
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>last arg builds the object</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    obj = sys.argv[<span class="hljs-number">-1</span>]
+    obj = obj.split(<span class="hljs-string">';'</span>)
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>multi-line prep for generating an instance</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    <span class="hljs-keyword">for</span> line <span class="hljs-keyword">in</span> obj[:<span class="hljs-number">-1</span>]:
+        exec(line)
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>one-line generation of an instance</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    <span class="hljs-keyword">try</span>:
+        obj = eval(obj[<span class="hljs-number">-1</span>])
+    <span class="hljs-keyword">except</span> Exception:
+        <span class="hljs-keyword">print</span> (<span class="hljs-string">"Error processing object instance"</span>)
+        sys.exit()
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>get object 'name'</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    objtype = type(obj)
+    name = getattr(objtype, <span class="hljs-string">'__name__'</span>, getattr(objtype, <span class="hljs-string">'__class__'</span>, objtype))
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>profile dumping an object</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    <span class="hljs-keyword">import</span> dill
+    <span class="hljs-keyword">import</span> os
+    <span class="hljs-keyword">import</span> cProfile
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<p>name = os.path.splitext(os.path.basename(<strong>file</strong>))[0]</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    cProfile.run(<span class="hljs-string">"dill.dumps(obj)"</span>, filename=<span class="hljs-string">"%s.prof"</span> % name)
+    msg = <span class="hljs-string">"gprof2dot -f pstats %s %s.prof | dot -Tpng -o %s.call.png"</span> % (args, name, name)
+    <span class="hljs-keyword">try</span>:
+        res = os.system(msg)
+    <span class="hljs-keyword">except</span> Exception:
+        <span class="hljs-keyword">print</span> (<span class="hljs-string">"Please verify install of 'gprof2dot' to view profile graphs"</span>)
+    <span class="hljs-keyword">if</span> res:
+        <span class="hljs-keyword">print</span> (<span class="hljs-string">"Please verify install of 'gprof2dot' to view profile graphs"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10"></a>
+</div>
+<p>get stats</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    f_prof = <span class="hljs-string">"%s.prof"</span> % name
+    <span class="hljs-keyword">import</span> pstats
+    stats = pstats.Stats(f_prof, stream=sys.stdout)
+    stats.strip_dirs().sort_stats(<span class="hljs-string">'cumtime'</span>)
+    stats.print_stats(<span class="hljs-number">20</span>) <span class="hljs-comment">#<span class="hljs-doctag">XXX:</span> save to file instead of print top 20?</span>
+    os.remove(f_prof)
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

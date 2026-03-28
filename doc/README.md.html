@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>README.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="doc-style.css" />
+  <script src="doc-filelist.js"></script>
+  <script>
+    var relativeDir = "";
+    var thisFile = "README.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#tinker-rl-lab">Tinker RL Lab</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#overview">Overview</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#repository-structure">Repository Structure</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#components">Components</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#1.experiments-tinker-rl-cookbook">1. Experiments (Tinker RL Cookbook)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#2.atropos-integration">2. Atropos Integration</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#3.rl-gym">3. RL Gym</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#quick-start">Quick Start</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#prerequisites">Prerequisites</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#running-tinker-experiments">Running Tinker Experiments</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#running-atropos-+-tinker">Running Atropos + Tinker</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#source-repositories">Source Repositories</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#documentation">Documentation</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#references">References</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#authors">Authors</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#license">License</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="tinker-rl-lab">
+  <h1>
+    <a href="#tinker-rl-lab" name="tinker-rl-lab" class="pilcrow"></a>
+Tinker RL Lab
+  </h1>
+</div>
+<p>A consolidated research repository for Reinforcement Learning experiments with Large Language Models, integrating the Tinker platform, Atropos environments, and RL Gym implementations.</p>
+<div class="pilwrap" id="overview">
+  <h2>
+    <a href="#overview" name="overview" class="pilcrow"></a>
+Overview
+  </h2>
+</div>
+<p>This repository consolidates multiple research projects focused on:</p>
+<ul>
+<li><strong>Tinker Platform Experiments</strong>: RL training, SFT, preference learning, and distillation</li>
+<li><strong>Atropos Integration</strong>: Connecting Atropos environments with Tinker API</li>
+<li><strong>RL Gym</strong>: Google Drive and browser automation tasks for RL research</li>
+</ul>
+<div class="pilwrap" id="repository-structure">
+  <h2>
+    <a href="#repository-structure" name="repository-structure" class="pilcrow"></a>
+Repository Structure
+  </h2>
+</div>
+<pre><code>tinker-rl-lab/
+├── grpo-results/         # GRPO RL experiment results and metrics
+├── agentic-rl-finetuning/ # Agentic RL fine-tuning research
+├── capstone-literature-survey/ # Literature Survey: RL for LLMs (GRPO Scaling)
+├── experiments/           # Tinker RL Cookbook experiments
+│   ├── notebooks/        # Jupyter notebooks for each experiment
+│   ├── implementations/  # RL implementations (PPO, DPO, GRPO, etc.)
+│   ├── results/          # Training metrics
+│   └── logs/             # Training output logs
+│
+├── atropos/              # Tinker-Atropos integration
+│   ├── tinker_atropos/   # Core package
+│   │   ├── environments/ # GSM8K, Math, LogP steering
+│   │   ├── trainer.py    # Tinker trainer
+│   │   └── config.py     # Configuration management
+│   ├── configs/          # YAML configurations
+│   └── notebooks/        # Analysis notebooks
+│
+├── rl-gym/               # RL Gym (Google Drive &amp; Browser tasks)
+│   ├── gcloud_drive/     # Google Drive integration
+│   └── docs/             # Task documentation
+│
+└── rl-master/            # RL Master (Task execution)
+    ├── client_for_your_service.py
+    └── gcloud_drive/
+</code></pre>
+<div class="pilwrap" id="components">
+  <h2>
+    <a href="#components" name="components" class="pilcrow"></a>
+Components
+  </h2>
+</div>
+<div class="pilwrap" id="1.experiments-tinker-rl-cookbook">
+  <h3>
+    <a href="#1.experiments-tinker-rl-cookbook" name="1.experiments-tinker-rl-cookbook" class="pilcrow"></a>
+1. Experiments (Tinker RL Cookbook)
+  </h3>
+</div>
+<p>PES LLM Research Project experiments using the <a href="https://thinkingmachines.ai/tinker">Tinker</a> platform.</p>
+<table>
+<thead>
+<tr>
+<th>Recipe</th>
+<th>Description</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Math RL (Arithmetic)</td>
+<td>Train model to add numbers</td>
+<td>Complete - 100% accuracy</td>
+</tr>
+<tr>
+<td>Chat SL</td>
+<td>Supervised fine-tuning on NoRobots</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Preference Shorter</td>
+<td>Train for concise responses</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Distillation Off-Policy</td>
+<td>SFT on OpenThoughts3</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Distillation On-Policy</td>
+<td>KL minimization to teacher</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Math RL (GSM8K)</td>
+<td>Word problem solving</td>
+<td>Complete</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Results:</strong></p>
+<ul>
+<li>Arithmetic: 69.5% → 100% accuracy in ~20 steps</li>
+<li>Preference learning effectively shapes response style</li>
+<li>Distillation transfers knowledge efficiently</li>
+</ul>
+<div class="pilwrap" id="2.atropos-integration">
+  <h3>
+    <a href="#2.atropos-integration" name="2.atropos-integration" class="pilcrow"></a>
+2. Atropos Integration
+  </h3>
+</div>
+<p>Integration layer connecting <a href="https://github.com/NousResearch/atropos">Atropos</a> with the Tinker API.</p>
+<p>Features:</p>
+<ul>
+<li>Use any Atropos environment with Tinker training</li>
+<li>Built-in GSM8K and Math environments</li>
+<li>LoRA-based fine-tuning with configurable parameters</li>
+<li>Checkpoint management and weight downloading</li>
+</ul>
+<div class="pilwrap" id="3.rl-gym">
+  <h3>
+    <a href="#3.rl-gym" name="3.rl-gym" class="pilcrow"></a>
+3. RL Gym
+  </h3>
+</div>
+<p>Google Drive and browser automation tasks for RL agent training.</p>
+<p>Features:</p>
+<ul>
+<li>200+ tasks for browser automation</li>
+<li>Google Drive API integration</li>
+<li>MCP tool integration</li>
+<li>Task generation and verification</li>
+</ul>
+<div class="pilwrap" id="quick-start">
+  <h2>
+    <a href="#quick-start" name="quick-start" class="pilcrow"></a>
+Quick Start
+  </h2>
+</div>
+<div class="pilwrap" id="prerequisites">
+  <h3>
+    <a href="#prerequisites" name="prerequisites" class="pilcrow"></a>
+Prerequisites
+  </h3>
+</div>
+<pre><code class="bash"><span class="hljs-comment"># Create virtual environment</span>
+python3 -m venv tinker-env
+<span class="hljs-built_in">source</span> tinker-env/bin/activate
+
+<span class="hljs-comment"># Install dependencies</span>
+pip install tinker tinker-cookbook atropos
+</code></pre>
+<div class="pilwrap" id="running-tinker-experiments">
+  <h3>
+    <a href="#running-tinker-experiments" name="running-tinker-experiments" class="pilcrow"></a>
+Running Tinker Experiments
+  </h3>
+</div>
+<pre><code class="bash"><span class="hljs-built_in">export</span> TINKER_API_KEY=<span class="hljs-string">"your-key-here"</span>
+
+<span class="hljs-comment"># Math RL</span>
+python -m tinker_cookbook.recipes.math_rl.train \
+    model_name=<span class="hljs-string">"meta-llama/Llama-3.2-1B"</span> \
+    env=arithmetic
+
+<span class="hljs-comment"># Chat SFT</span>
+python -m tinker_cookbook.recipes.chat_sl.train \
+    model_name=<span class="hljs-string">"meta-llama/Llama-3.2-1B"</span>
+</code></pre>
+<div class="pilwrap" id="running-atropos-+-tinker">
+  <h3>
+    <a href="#running-atropos-+-tinker" name="running-atropos-+-tinker" class="pilcrow"></a>
+Running Atropos + Tinker
+  </h3>
+</div>
+<pre><code class="bash"><span class="hljs-comment"># Terminal 1: Start Atropos API</span>
+run-api
+
+<span class="hljs-comment"># Terminal 2: Start training</span>
+<span class="hljs-built_in">export</span> TINKER_API_KEY=<span class="hljs-string">"your-key"</span>
+python atropos/launch_training.py --config atropos/configs/default.yaml
+
+<span class="hljs-comment"># Terminal 3: Start environment</span>
+python atropos/tinker_atropos/environments/gsm8k_tinker.py serve \
+    --config atropos/configs/default.yaml
+</code></pre>
+<div class="pilwrap" id="source-repositories">
+  <h2>
+    <a href="#source-repositories" name="source-repositories" class="pilcrow"></a>
+Source Repositories
+  </h2>
+</div>
+<p>This repository consolidates all PES LLM Research projects:</p>
+<table>
+<thead>
+<tr>
+<th>Original Repo</th>
+<th>Description</th>
+<th>Created</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/arvindcr4/tinker-experiments">tinker-experiments</a></td>
+<td>Tinker RL Cookbook experiments</td>
+<td>Jan 2026</td>
+</tr>
+<tr>
+<td><a href="https://github.com/arvindcr4/tinker-atropos">tinker-atropos</a></td>
+<td>Atropos + Tinker integration</td>
+<td>Mar 2026</td>
+</tr>
+<tr>
+<td><a href="https://github.com/arvindcr4/rl">rl</a></td>
+<td>RL Gym tasks and documentation</td>
+<td>Aug 2025</td>
+</tr>
+<tr>
+<td><a href="https://github.com/arvindcr4/rl_master">rl_master</a></td>
+<td>Task execution and MCP tools</td>
+<td>Nov 2025</td>
+</tr>
+<tr>
+<td><a href="https://github.com/pes-llm-research/agentic-rl-finetuning">agentic-rl-finetuning</a></td>
+<td>Agentic RL fine-tuning</td>
+<td>Mar 2026</td>
+</tr>
+<tr>
+<td><a href="https://github.com/arvindcr4/capstone-literature-survey">capstone-literature-survey</a></td>
+<td>GRPO Scaling Literature Survey</td>
+<td>Mar 2026</td>
+</tr>
+</tbody>
+</table>
+<div class="pilwrap" id="documentation">
+  <h2>
+    <a href="#documentation" name="documentation" class="pilcrow"></a>
+Documentation
+  </h2>
+</div>
+<ul>
+<li><a href="https://tinker-docs.thinkingmachines.ai">Tinker Documentation</a></li>
+<li><a href="https://github.com/NousResearch/atropos">Atropos GitHub</a></li>
+<li><a href="https://github.com/thinkingmachines/tinker-cookbook">Tinker Cookbook</a></li>
+</ul>
+<div class="pilwrap" id="references">
+  <h2>
+    <a href="#references" name="references" class="pilcrow"></a>
+References
+  </h2>
+</div>
+<ul>
+<li><a href="https://thinkingmachines.ai/blog/deepcoder">DeepCoder Blog Post</a></li>
+<li><a href="https://thinkingmachines.ai/blog/on-policy-distillation">On-Policy Distillation Blog</a></li>
+</ul>
+<div class="pilwrap" id="authors">
+  <h2>
+    <a href="#authors" name="authors" class="pilcrow"></a>
+Authors
+  </h2>
+</div>
+<p>PES LLM Research Team</p>
+<div class="pilwrap" id="license">
+  <h2>
+    <a href="#license" name="license" class="pilcrow"></a>
+License
+  </h2>
+</div>
+<p>See individual component directories for license information.</p>
+</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>download_weights.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../";
+    var thisFile = "atropos/tinker_atropos/utils/download_weights.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>download_weights.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-keyword">import</span> tinker
+<span class="hljs-keyword">import</span> urllib.request
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Replace this with your weights path output at the end of the training run
+&lt;unique_id&gt; is the Training Run ID in Tinker console</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">TINKER_PATH = <span class="hljs-string">"tinker://&lt;unique_id&gt;/sampler_weights/final"</span>
+
+OUTPUT_FILENAME = <span class="hljs-string">"archive.tar"</span>
+
+print(<span class="hljs-string">"Downloading weights from Tinker..."</span>)
+
+sc = tinker.ServiceClient()
+rc = sc.create_rest_client()
+future = rc.get_checkpoint_archive_url_from_tinker_path(TINKER_PATH)
+checkpoint_archive_url_response = future.result()
+
+urllib.request.urlretrieve(checkpoint_archive_url_response.url, OUTPUT_FILENAME)
+
+print(<span class="hljs-string">f"Finished! Weights are available at <span class="hljs-subst">{OUTPUT_FILENAME}</span>"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>run_logp_steering.sh</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "atropos/run_logp_steering.sh";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>run_logp_steering.sh</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-meta">#!/bin/bash
+</span></pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Launch logprob-steering self-distillation on Qwen3-30B-A3B</p>
+<p>Starts 3 processes:</p>
+<ol>
+<li>Atropos trajectory API server (port 8000)</li>
+<li>Tinker trainer + FastAPI inference server (port 8001)</li>
+<li>LogpSteeringEnv worker</li>
+</ol>
+<p>Usage: bash run_logp_steering.sh</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">
+<span class="hljs-built_in">set</span> -e
+
+SCRIPT_DIR=<span class="hljs-string">"<span class="hljs-variable">$(cd "$(dirname "$0")</span>"</span> &amp;&amp; <span class="hljs-built_in">pwd</span>)<span class="hljs-string">"
+VENV="</span><span class="hljs-variable">$SCRIPT_DIR</span>/.venv/bin/python<span class="hljs-string">"
+
+echo "</span>============================================<span class="hljs-string">"
+echo "</span> Logprob-Steering Self-Distillation<span class="hljs-string">"
+echo "</span> Model: Qwen/Qwen3-30B-A3B<span class="hljs-string">"
+echo "</span> Steering: emojification<span class="hljs-string">"
+echo "</span> Steps: 75<span class="hljs-string">"
+echo "</span>============================================<span class="hljs-string">"
+echo "</span><span class="hljs-string">"
+
+</span></pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<ol>
+<li>Atropos trajectory API (port 8000)</li>
+</ol>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-built_in">echo</span> <span class="hljs-string">"[1/3] Starting Atropos API server on port 8000..."</span>
+<span class="hljs-variable">$VENV</span> -m uvicorn atroposlib.api.server:app --host 0.0.0.0 --port 8000 &amp;
+ATROPOS_PID=$!
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"  PID: <span class="hljs-variable">$ATROPOS_PID</span>"</span>
+sleep 2
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<ol start="2">
+<li>Tinker trainer + inference server (port 8001)</li>
+</ol>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-built_in">echo</span> <span class="hljs-string">"[2/3] Starting Tinker trainer + inference server on port 8001..."</span>
+<span class="hljs-built_in">cd</span> <span class="hljs-string">"<span class="hljs-variable">$SCRIPT_DIR</span>"</span>
+<span class="hljs-variable">$VENV</span> launch_training.py --config configs/logp_steering_qwen3_30b.yaml &amp;
+TRAINER_PID=$!
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"  PID: <span class="hljs-variable">$TRAINER_PID</span>"</span>
+sleep 5
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<ol start="3">
+<li>LogpSteeringEnv (from tinker_atropos/environments/)</li>
+</ol>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-built_in">echo</span> <span class="hljs-string">"[3/3] Starting LogpSteeringEnv..."</span>
+<span class="hljs-variable">$VENV</span> -m tinker_atropos.environments.logp_steering serve &amp;
+ENV_PID=$!
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"  PID: <span class="hljs-variable">$ENV_PID</span>"</span>
+
+<span class="hljs-built_in">echo</span> <span class="hljs-string">""</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"All processes started:"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"  Atropos API:  PID <span class="hljs-variable">$ATROPOS_PID</span> (port 8000)"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"  Tinker:       PID <span class="hljs-variable">$TRAINER_PID</span> (port 8001)"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"  Environment:  PID <span class="hljs-variable">$ENV_PID</span>"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">""</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Press Ctrl+C to stop all."</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>Trap cleanup</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-function"><span class="hljs-title">cleanup</span></span>() {
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">""</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"Shutting down..."</span>
+    <span class="hljs-built_in">kill</span> <span class="hljs-variable">$ENV_PID</span> <span class="hljs-variable">$TRAINER_PID</span> <span class="hljs-variable">$ATROPOS_PID</span> 2&gt;/dev/null
+    <span class="hljs-built_in">wait</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"Done."</span>
+}
+<span class="hljs-built_in">trap</span> cleanup EXIT INT TERM
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>Wait for any to exit</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-built_in">wait</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

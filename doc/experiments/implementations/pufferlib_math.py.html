@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>pufferlib_math.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "experiments/implementations/pufferlib_math.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>pufferlib_math.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-string">"""
+PufferLib Math RL Implementation
+=================================
+Port of Tinker Math RL to PufferLib for high-throughput training.
+
+PufferLib features:
+- VTrace for off-policy correction
+- Priority sampling
+- High throughput with async environments
+"""</span>
+
+<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+<span class="hljs-keyword">import</span> gymnasium <span class="hljs-keyword">as</span> gym
+<span class="hljs-keyword">from</span> gymnasium <span class="hljs-keyword">import</span> spaces
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ArithmeticEnv</span><span class="hljs-params">(gym.Env)</span>:</span>
+    <span class="hljs-string">"""
+    Arithmetic environment compatible with PufferLib.
+
+    Observation: [num1, num2] normalized to [0, 1]
+    Action: predicted answer (discrete)
+    Reward: 1.0 if correct, 0.0 otherwise
+    """</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, max_num: int = <span class="hljs-number">99</span>)</span>:</span>
+        super().__init__()
+        self.max_num = max_num
+        self.max_answer = max_num * <span class="hljs-number">2</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Normalized observations for neural network</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        self.observation_space = spaces.Box(
+            low=<span class="hljs-number">0.0</span>, high=<span class="hljs-number">1.0</span>, shape=(<span class="hljs-number">2</span>,), dtype=np.float32
+        )
+        self.action_space = spaces.Discrete(self.max_answer + <span class="hljs-number">1</span>)
+
+        self.current_nums = <span class="hljs-literal">None</span>
+        self.correct_answer = <span class="hljs-literal">None</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">reset</span><span class="hljs-params">(self, seed=None, options=None)</span>:</span>
+        super().reset(seed=seed)
+
+        self.current_nums = self.np_random.integers(<span class="hljs-number">1</span>, self.max_num + <span class="hljs-number">1</span>, size=<span class="hljs-number">2</span>)
+        self.correct_answer = int(self.current_nums.sum())
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>Normalize to [0, 1]</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        obs = self.current_nums.astype(np.float32) / self.max_num
+        <span class="hljs-keyword">return</span> obs, {}
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">step</span><span class="hljs-params">(self, action)</span>:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Verifiable binary reward</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        reward = <span class="hljs-number">1.0</span> <span class="hljs-keyword">if</span> action == self.correct_answer <span class="hljs-keyword">else</span> <span class="hljs-number">0.0</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Normalize observation</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        obs = self.current_nums.astype(np.float32) / self.max_num
+
+        <span class="hljs-keyword">return</span> obs, reward, <span class="hljs-literal">True</span>, <span class="hljs-literal">False</span>, {
+            <span class="hljs-string">"correct"</span>: reward == <span class="hljs-number">1.0</span>,
+            <span class="hljs-string">"predicted"</span>: action,
+            <span class="hljs-string">"expected"</span>: self.correct_answer,
+        }
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>PufferLib configuration</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">PUFFERLIB_CONFIG = {
+    <span class="hljs-string">"train"</span>: {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>Core training parameters</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-string">"total_timesteps"</span>: <span class="hljs-number">100</span>_000,
+        <span class="hljs-string">"learning_rate"</span>: <span class="hljs-number">1e-4</span>,  <span class="hljs-comment"># Matching Tinker</span>
+        <span class="hljs-string">"batch_size"</span>: <span class="hljs-number">2048</span>,
+        <span class="hljs-string">"minibatch_size"</span>: <span class="hljs-number">512</span>,
+        <span class="hljs-string">"update_epochs"</span>: <span class="hljs-number">4</span>,
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>PPO parameters</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-string">"gamma"</span>: <span class="hljs-number">0.99</span>,
+        <span class="hljs-string">"gae_lambda"</span>: <span class="hljs-number">0.95</span>,
+        <span class="hljs-string">"clip_coef"</span>: <span class="hljs-number">0.2</span>,
+        <span class="hljs-string">"vf_coef"</span>: <span class="hljs-number">0.5</span>,
+        <span class="hljs-string">"ent_coef"</span>: <span class="hljs-number">0.01</span>,
+        <span class="hljs-string">"max_grad_norm"</span>: <span class="hljs-number">0.5</span>,
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<p>VTrace (PufferLib specialty)</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-string">"vtrace"</span>: <span class="hljs-literal">True</span>,
+        <span class="hljs-string">"vtrace_rho_clip"</span>: <span class="hljs-number">1.0</span>,
+        <span class="hljs-string">"vtrace_c_clip"</span>: <span class="hljs-number">1.0</span>,
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10"></a>
+</div>
+<p>Environment</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-string">"num_envs"</span>: <span class="hljs-number">16</span>,
+        <span class="hljs-string">"num_steps"</span>: <span class="hljs-number">128</span>,
+    },
+    <span class="hljs-string">"env"</span>: {
+        <span class="hljs-string">"max_num"</span>: <span class="hljs-number">99</span>,
+    }
+}
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">make_env_creator</span><span class="hljs-params">(config)</span>:</span>
+    <span class="hljs-string">"""Create environment factory for PufferLib."""</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">create_env</span><span class="hljs-params">()</span>:</span>
+        <span class="hljs-keyword">return</span> ArithmeticEnv(max_num=config[<span class="hljs-string">"env"</span>][<span class="hljs-string">"max_num"</span>])
+    <span class="hljs-keyword">return</span> create_env
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-string">"""
+    Main training function for PufferLib.
+
+    Note: Full PufferLib integration requires pufferlib package.
+    This shows the configuration and environment setup pattern.
+    """</span>
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">60</span>)
+    print(<span class="hljs-string">"PufferLib Math RL Configuration"</span>)
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">60</span>)
+
+    config = PUFFERLIB_CONFIG
+
+    print(<span class="hljs-string">"\nTraining Config:"</span>)
+    <span class="hljs-keyword">for</span> key, value <span class="hljs-keyword">in</span> config[<span class="hljs-string">"train"</span>].items():
+        print(<span class="hljs-string">f"  <span class="hljs-subst">{key}</span>: <span class="hljs-subst">{value}</span>"</span>)
+
+    print(<span class="hljs-string">"\nEnvironment Config:"</span>)
+    <span class="hljs-keyword">for</span> key, value <span class="hljs-keyword">in</span> config[<span class="hljs-string">"env"</span>].items():
+        print(<span class="hljs-string">f"  <span class="hljs-subst">{key}</span>: <span class="hljs-subst">{value}</span>"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11"></a>
+</div>
+<p>Create environment for testing</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    env = ArithmeticEnv(max_num=config[<span class="hljs-string">"env"</span>][<span class="hljs-string">"max_num"</span>])
+
+    print(<span class="hljs-string">"\n--- Testing Environment ---"</span>)
+    obs, _ = env.reset()
+    print(<span class="hljs-string">f"Observation shape: <span class="hljs-subst">{obs.shape}</span>"</span>)
+    print(<span class="hljs-string">f"Action space: <span class="hljs-subst">{env.action_space}</span>"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12"></a>
+</div>
+<p>Test a few steps</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    correct = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(<span class="hljs-number">10</span>):
+        obs, _ = env.reset()
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13"></a>
+</div>
+<p>Random action</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        action = env.action_space.sample()
+        _, reward, _, _, info = env.step(action)
+        <span class="hljs-keyword">if</span> info[<span class="hljs-string">"correct"</span>]:
+            correct += <span class="hljs-number">1</span>
+        print(<span class="hljs-string">f"  Problem <span class="hljs-subst">{i+<span class="hljs-number">1</span>}</span>: <span class="hljs-subst">{info[<span class="hljs-string">'expected'</span>]}</span>, Predicted: <span class="hljs-subst">{info[<span class="hljs-string">'predicted'</span>]}</span>, Correct: <span class="hljs-subst">{info[<span class="hljs-string">'correct'</span>]}</span>"</span>)
+
+    print(<span class="hljs-string">f"\nRandom baseline: <span class="hljs-subst">{correct}</span>/10 = <span class="hljs-subst">{correct*<span class="hljs-number">10</span>}</span>%"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14"></a>
+</div>
+<p>Full PufferLib training would look like:</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    print(<span class="hljs-string">"\n--- Full PufferLib Training (requires pufferlib) ---"</span>)
+    print(<span class="hljs-string">"""
+    from pufferlib import pufferl
+
+</span></pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15"></a>
+</div>
+<p>Load and customize config</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    args = pufferl.load_config(<span class="hljs-string">'default'</span>)
+    args.update(PUFFERLIB_CONFIG[<span class="hljs-string">'train'</span>])
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16"></a>
+</div>
+<p>Create trainer</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    trainer = pufferl.PPO(
+        env_creator=make_env_creator(PUFFERLIB_CONFIG),
+        policy=pufferl.MLP(hidden_sizes=[<span class="hljs-number">64</span>, <span class="hljs-number">64</span>]),
+        config=args,
+    )
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17"></a>
+</div>
+<p>Train</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    trainer.train()
+    <span class="hljs-string">""")
+
+
+if __name__ == "__main__":
+    main()
+
+</span></pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

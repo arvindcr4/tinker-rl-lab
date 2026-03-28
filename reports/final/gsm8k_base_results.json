@@ -1,0 +1,365 @@
+{
+  "config": {
+    "model": "Qwen/Qwen3-8B",
+    "n_samples": 1,
+    "temperature": 0.7,
+    "max_tokens": 512,
+    "test_size": 50
+  },
+  "correct": 13,
+  "incorrect": 37,
+  "errors": 0,
+  "examples": [
+    {
+      "idx": 0,
+      "question": "Janet\u2019s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for ...",
+      "predicted": "18",
+      "ground_truth": "18",
+      "status": "correct"
+    },
+    {
+      "idx": 1,
+      "question": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it ...",
+      "predicted": "3.",
+      "ground_truth": "3",
+      "status": "correct"
+    },
+    {
+      "idx": 2,
+      "question": "Josh decides to try flipping a house.  He buys a house for $80,000 and then puts in $50,000 in repai...",
+      "predicted": "150",
+      "ground_truth": "70000",
+      "status": "incorrect"
+    },
+    {
+      "idx": 3,
+      "question": "James decides to run 3 sprints 3 times a week.  He runs 60 meters each sprint.  How many total meter...",
+      "predicted": "540.",
+      "ground_truth": "540",
+      "status": "correct"
+    },
+    {
+      "idx": 4,
+      "question": "Every day, Wendi feeds each of her chickens three cups of mixed chicken feed, containing seeds, meal...",
+      "predicted": "60",
+      "ground_truth": "20",
+      "status": "incorrect"
+    },
+    {
+      "idx": 5,
+      "question": "Kylar went to the store to buy glasses for his new apartment. One glass costs $5, but every second g...",
+      "predicted": "64.",
+      "ground_truth": "64",
+      "status": "correct"
+    },
+    {
+      "idx": 6,
+      "question": "Toulouse has twice as many sheep as Charleston. Charleston has 4 times as many sheep as Seattle. How...",
+      "predicted": "260.",
+      "ground_truth": "260",
+      "status": "correct"
+    },
+    {
+      "idx": 7,
+      "question": "Carla is downloading a 200 GB file. Normally she can download 2 GB/minute, but 40% of the way throug...",
+      "predicted": "200",
+      "ground_truth": "160",
+      "status": "incorrect"
+    },
+    {
+      "idx": 8,
+      "question": "John drives for 3 hours at a speed of 60 mph and then turns around because he realizes he forgot som...",
+      "predicted": "1.5",
+      "ground_truth": "45",
+      "status": "incorrect"
+    },
+    {
+      "idx": 9,
+      "question": "Eliza's rate per hour for the first 40 hours she works each week is $10. She also receives an overti...",
+      "predicted": "10",
+      "ground_truth": "460",
+      "status": "incorrect"
+    },
+    {
+      "idx": 10,
+      "question": "A new program had 60 downloads in the first month. The number of downloads in the second month was t...",
+      "predicted": "240",
+      "ground_truth": "366",
+      "status": "incorrect"
+    },
+    {
+      "idx": 11,
+      "question": "Toula went to the bakery and bought various types of pastries. She bought 3 dozen donuts which cost ...",
+      "predicted": "4",
+      "ground_truth": "694",
+      "status": "incorrect"
+    },
+    {
+      "idx": 12,
+      "question": "Carlos is planting a lemon tree. The tree will cost $90 to plant. Each year it will grow 7 lemons, w...",
+      "predicted": "3",
+      "ground_truth": "13",
+      "status": "incorrect"
+    },
+    {
+      "idx": 13,
+      "question": "Melanie is a door-to-door saleswoman. She sold a third of her vacuum cleaners at the green house, 2 ...",
+      "predicted": "5",
+      "ground_truth": "18",
+      "status": "incorrect"
+    },
+    {
+      "idx": 14,
+      "question": "In a dance class of 20 students, 20% enrolled in contemporary dance, 25% of the remaining enrolled i...",
+      "predicted": "60",
+      "ground_truth": "60",
+      "status": "correct"
+    },
+    {
+      "idx": 15,
+      "question": "A merchant wants to make a choice of purchase between 2 purchase plans: jewelry worth $5,000 or elec...",
+      "predicted": "16.",
+      "ground_truth": "125",
+      "status": "incorrect"
+    },
+    {
+      "idx": 16,
+      "question": "Two trains leave San Rafael at the same time. They begin traveling westward, both traveling for 80 m...",
+      "predicted": "230",
+      "ground_truth": "230",
+      "status": "correct"
+    },
+    {
+      "idx": 17,
+      "question": "Jill gets paid $20 per hour to teach and $30 to be a cheerleading coach. If she works 50 weeks a yea...",
+      "predicted": "450",
+      "ground_truth": "57500",
+      "status": "incorrect"
+    },
+    {
+      "idx": 18,
+      "question": "Claire makes a 3 egg omelet every morning for breakfast.  How many dozens of eggs will she eat in 4 ...",
+      "predicted": "84",
+      "ground_truth": "7",
+      "status": "incorrect"
+    },
+    {
+      "idx": 19,
+      "question": "Marissa is hiking a 12-mile trail. She took 1 hour to walk the first 4 miles, then another hour to w...",
+      "predicted": "4",
+      "ground_truth": "6",
+      "status": "incorrect"
+    },
+    {
+      "idx": 20,
+      "question": "I have 10 liters of orange drink that are two-thirds water and I wish to add it to 15 liters of pine...",
+      "predicted": "3",
+      "ground_truth": "15",
+      "status": "incorrect"
+    },
+    {
+      "idx": 21,
+      "question": "Raymond and Samantha are cousins. Raymond was born 6 years before Samantha. Raymond had a son at the...",
+      "predicted": "6",
+      "ground_truth": "14",
+      "status": "incorrect"
+    },
+    {
+      "idx": 22,
+      "question": "Billy sells DVDs. He has 8 customers on Tuesday. His first 3 customers buy one DVD each.  His next 2...",
+      "predicted": "0",
+      "ground_truth": "7",
+      "status": "incorrect"
+    },
+    {
+      "idx": 23,
+      "question": "A candle melts by 2 centimeters every hour that it burns. How many centimeters shorter will a candle...",
+      "predicted": "8",
+      "ground_truth": "8",
+      "status": "correct"
+    },
+    {
+      "idx": 24,
+      "question": "Kyle bought last year's best-selling book for $19.50. This is with a 25% discount from the original ...",
+      "predicted": "2.",
+      "ground_truth": "26",
+      "status": "incorrect"
+    },
+    {
+      "idx": 25,
+      "question": "Marie ordered one chicken meal that costs $12, 5 packs of milk that costs $3 each, 4 apples that cos...",
+      "predicted": "50.",
+      "ground_truth": "2",
+      "status": "incorrect"
+    },
+    {
+      "idx": 26,
+      "question": "Mishka bought 3 pairs of shorts, 3 pairs of pants, and 3 pairs of shoes. One pair of shorts costs $1...",
+      "predicted": "116",
+      "ground_truth": "243",
+      "status": "incorrect"
+    },
+    {
+      "idx": 27,
+      "question": "Cynthia eats one serving of ice cream every night.  She buys cartons of ice cream with 15 servings o...",
+      "predicted": "60",
+      "ground_truth": "16",
+      "status": "incorrect"
+    },
+    {
+      "idx": 28,
+      "question": "Henry made two stops during his 60-mile bike trip. He first stopped after 20 miles. His second stop ...",
+      "predicted": "60",
+      "ground_truth": "25",
+      "status": "incorrect"
+    },
+    {
+      "idx": 29,
+      "question": "Gloria is shoe shopping when she comes across a pair of boots that fit her shoe budget. However, she...",
+      "predicted": "104.",
+      "ground_truth": "104",
+      "status": "correct"
+    },
+    {
+      "idx": 30,
+      "question": "Darrell and Allen's ages are in the ratio of 7:11. If their total age now is 162, calculate Allen's ...",
+      "predicted": "162.",
+      "ground_truth": "109",
+      "status": "incorrect"
+    },
+    {
+      "idx": 31,
+      "question": "Gunter is trying to count the jelly beans in a jar. He asks his friends how many they think are in t...",
+      "predicted": "80.",
+      "ground_truth": "80",
+      "status": "correct"
+    },
+    {
+      "idx": 32,
+      "question": "John takes care of 10 dogs.  Each dog takes .5 hours a day to walk and take care of their business. ...",
+      "predicted": "7",
+      "ground_truth": "35",
+      "status": "incorrect"
+    },
+    {
+      "idx": 33,
+      "question": "Gretchen has 110 coins. There are 30 more gold coins than silver coins. How many gold coins does Gre...",
+      "predicted": "30",
+      "ground_truth": "70",
+      "status": "incorrect"
+    },
+    {
+      "idx": 34,
+      "question": "Siobhan has 2 fewer jewels than Aaron. Aaron has 5 more jewels than half of Raymond's jewels. If Ray...",
+      "predicted": "40.",
+      "ground_truth": "23",
+      "status": "incorrect"
+    },
+    {
+      "idx": 35,
+      "question": "Mike plays ping pong for 40 minutes.  In the first 20 minutes, he scores 4 points.  In the second 20...",
+      "predicted": "1",
+      "ground_truth": "9",
+      "status": "incorrect"
+    },
+    {
+      "idx": 36,
+      "question": "Terry eats 2 yogurts a day.  They are currently on sale at 4 yogurts for $5.00.  How much does he sp...",
+      "predicted": "75.00",
+      "ground_truth": "75",
+      "status": "correct"
+    },
+    {
+      "idx": 37,
+      "question": "John plans to sell all his toys and use the money to buy video games. He has 13 lego sets and he sel...",
+      "predicted": "15",
+      "ground_truth": "2",
+      "status": "incorrect"
+    },
+    {
+      "idx": 38,
+      "question": "John runs 60 miles a week. He runs 3 days a week.  He runs 3 hours the first day and half as much th...",
+      "predicted": "10",
+      "ground_truth": "10",
+      "status": "correct"
+    },
+    {
+      "idx": 39,
+      "question": "Dana can run at a rate of speed four times faster than she can walk, but she can skip at a rate of s...",
+      "predicted": "3",
+      "ground_truth": "18",
+      "status": "incorrect"
+    },
+    {
+      "idx": 40,
+      "question": "Brandon's iPhone is four times as old as Ben's iPhone. Ben's iPhone is two times older than Suzy's i...",
+      "predicted": "3",
+      "ground_truth": "8",
+      "status": "incorrect"
+    },
+    {
+      "idx": 41,
+      "question": "The great dragon, Perg, sat high atop mount Farbo, breathing fire upon anything within a distance of...",
+      "predicted": "1000",
+      "ground_truth": "200",
+      "status": "incorrect"
+    },
+    {
+      "idx": 42,
+      "question": "Grandma Jones baked 5 apple pies for the fireman's luncheon.  She cut each pie into 8 pieces and set...",
+      "predicted": "26",
+      "ground_truth": "26",
+      "status": "correct"
+    },
+    {
+      "idx": 43,
+      "question": "According to its nutritional info, a bag of chips has 250 calories per serving. If a 300g bag has 5 ...",
+      "predicted": "125",
+      "ground_truth": "48",
+      "status": "incorrect"
+    },
+    {
+      "idx": 44,
+      "question": "Charlie wants to sell beeswax candles.  For every pound of beeswax, he can make 10 tapered candles. ...",
+      "predicted": "2",
+      "ground_truth": "20",
+      "status": "incorrect"
+    },
+    {
+      "idx": 45,
+      "question": "Meredith is a freelance blogger who writes about health topics and submits to clients each day as he...",
+      "predicted": "26",
+      "ground_truth": "104",
+      "status": "incorrect"
+    },
+    {
+      "idx": 46,
+      "question": "Candice put 80 post-it notes in her purse before she headed out to her job at the coffee shop.  On h...",
+      "predicted": "80",
+      "ground_truth": "163",
+      "status": "incorrect"
+    },
+    {
+      "idx": 47,
+      "question": "John buys twice as many red ties as blue ties.  The red ties cost 50% more than blue ties.  He spent...",
+      "predicted": "600",
+      "ground_truth": "800",
+      "status": "incorrect"
+    },
+    {
+      "idx": 48,
+      "question": "Tracy used a piece of wire 4 feet long to support tomato plants in the garden. The wire was cut into...",
+      "predicted": "12",
+      "ground_truth": "8",
+      "status": "incorrect"
+    },
+    {
+      "idx": 49,
+      "question": "Richard lives in an apartment building with 15 floors. Each floor contains 8 units, and 3/4 of the b...",
+      "predicted": "4",
+      "ground_truth": "30",
+      "status": "incorrect"
+    }
+  ],
+  "accuracy": 0.26
+}

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>humaneval_tinker.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../";
+    var thisFile = "atropos/tinker_atropos/environments/humaneval_tinker.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>humaneval_tinker.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-string">"""
+HumanEval GRPO Environment for Atropos.
+Trains models to write correct Python functions verified by unit tests.
+
+Dataset: openai/openai_humaneval
+Reward: 1.0 if generated code passes all test cases, 0.0 otherwise.
+Execution: subprocess with 10s timeout (safe, no network access).
+"""</span>
+<span class="hljs-keyword">import</span> ast
+<span class="hljs-keyword">import</span> os
+<span class="hljs-keyword">import</span> random
+<span class="hljs-keyword">import</span> re
+<span class="hljs-keyword">import</span> subprocess
+<span class="hljs-keyword">import</span> sys
+<span class="hljs-keyword">import</span> tempfile
+<span class="hljs-keyword">import</span> textwrap
+<span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> Dict, List, Optional, Tuple, Union
+
+<span class="hljs-keyword">from</span> datasets <span class="hljs-keyword">import</span> load_dataset
+<span class="hljs-keyword">from</span> atroposlib.envs.base <span class="hljs-keyword">import</span> (
+    APIServerConfig,
+    BaseEnv,
+    BaseEnvConfig,
+    ScoredDataGroup,
+)
+<span class="hljs-keyword">from</span> atroposlib.type_definitions <span class="hljs-keyword">import</span> Item
+<span class="hljs-keyword">from</span> tinker_atropos.config <span class="hljs-keyword">import</span> TinkerAtroposConfig
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_get_config_path</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-keyword">for</span> i, arg <span class="hljs-keyword">in</span> enumerate(sys.argv):
+        <span class="hljs-keyword">if</span> arg == <span class="hljs-string">"--config"</span> <span class="hljs-keyword">and</span> i + <span class="hljs-number">1</span> &lt; len(sys.argv):
+            <span class="hljs-keyword">return</span> sys.argv[i + <span class="hljs-number">1</span>]
+    <span class="hljs-keyword">return</span> os.environ.get(<span class="hljs-string">"TINKER_CONFIG_PATH"</span>, <span class="hljs-string">"configs/humaneval_qwen_8b.yaml"</span>)
+
+CONFIG_PATH = _get_config_path()
+
+SYSTEM_PROMPT = (
+    <span class="hljs-string">"You are an expert Python programmer. "</span>
+    <span class="hljs-string">"Complete the function body for the given Python function signature and docstring. "</span>
+    <span class="hljs-string">"Respond with ONLY the complete function implementation (including the def line). "</span>
+    <span class="hljs-string">"Do not include any other text, markdown, or explanation."</span>
+)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_extract_code</span><span class="hljs-params">(text: str)</span> -&gt; str:</span>
+    <span class="hljs-string">"""Extract Python code from model response."""</span>
+    text = text.strip()
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Remove markdown fences</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    text = re.sub(<span class="hljs-string">r"```python\s*"</span>, <span class="hljs-string">""</span>, text)
+    text = re.sub(<span class="hljs-string">r"```\s*"</span>, <span class="hljs-string">""</span>, text)
+    <span class="hljs-keyword">return</span> text.strip()
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_run_tests</span><span class="hljs-params">(code: str, test_code: str, entry_point: str, timeout: int = <span class="hljs-number">10</span>)</span> -&gt; bool:</span>
+    <span class="hljs-string">"""
+    Execute generated code + test harness in a subprocess.
+    Returns True if all tests pass, False otherwise.
+    """</span>
+    full_code = textwrap.dedent(<span class="hljs-string">f"""
+import sys
+import traceback
+
+</span></pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>Generated function</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">{code}
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Test harness</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">{test_code}
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Run tests</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-keyword">try</span>:
+    check({entry_point})
+    sys.exit(<span class="hljs-number">0</span>)
+<span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+    traceback.print_exc()
+    sys.exit(<span class="hljs-number">1</span>)
+<span class="hljs-string">""")
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+            f.write(full_code)
+            fname = f.name
+        result = subprocess.run(
+            [sys.executable, fname],
+            capture_output=True,
+            timeout=timeout,
+        )
+        return result.returncode == 0
+    except subprocess.TimeoutExpired:
+        return False
+    except Exception:
+        return False
+    finally:
+        try:
+            os.unlink(fname)
+        except Exception:
+            pass
+
+
+class HumanEvalEnv(BaseEnv):
+    """</span>
+    GRPO environment <span class="hljs-keyword">for</span> HumanEval coding tasks.
+    Reward: <span class="hljs-number">1.0</span> <span class="hljs-keyword">if</span> generated code passes all unit tests.
+    <span class="hljs-string">"""
+
+    name = "humaneval"
+
+    def __init__(self, config, server_configs, slurm=True, testing=False):
+        super().__init__(config, server_configs, slurm, testing)
+        self.percent_correct_buffer = []
+        self.eval_metrics = []
+        self.train_data = []
+        self.eval_data = []
+        self.iter = 0
+
+    @classmethod
+    def config_init(cls):
+        config = TinkerAtroposConfig.from_yaml(CONFIG_PATH) if CONFIG_PATH else TinkerAtroposConfig()
+        env_config = BaseEnvConfig(
+            tokenizer_name=config.base_model,
+            group_size=config.group_size,
+            use_wandb=config.use_wandb,
+            rollout_server_url=config.atropos_api_url,
+            total_steps=config.num_steps,
+            batch_size=config.batch_size,
+            steps_per_eval=config.steps_per_eval,
+            max_token_length=config.max_token_env_length,
+            max_num_workers=config.max_num_workers,
+            max_batches_offpolicy=config.max_batches_offpolicy,
+            wandb_name=f"{config.wandb_run_name}-env",
+            ensure_scores_are_not_same=config.ensure_scores_are_not_same,
+        )
+        server_configs = [
+            APIServerConfig(
+                model_name=config.base_model,
+                base_url=config.inference_api_url + "/v1",
+                api_key="x",
+                server_type="sglang",
+                num_requests_for_eval=config.num_requests_for_eval,
+            )
+        ]
+        return env_config, server_configs
+
+    async def setup(self):
+        print("Loading HumanEval dataset...")
+        dataset = load_dataset("openai/openai_humaneval", split="test")
+        all_items = list(dataset)
+        random.shuffle(all_items)
+</span></pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>Use 80% for train (cycle through), 20% for eval</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        split = int(<span class="hljs-number">0.8</span> * len(all_items))
+        self.train_data = all_items[:split]
+        self.eval_data = all_items[split:]
+        print(<span class="hljs-string">f"Loaded <span class="hljs-subst">{len(self.train_data)}</span> train / <span class="hljs-subst">{len(self.eval_data)}</span> eval problems"</span>)
+        self.iter = <span class="hljs-number">0</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_make_prompt</span><span class="hljs-params">(self, item: Dict)</span> -&gt; str:</span>
+        <span class="hljs-keyword">return</span> item[<span class="hljs-string">"prompt"</span>]
+
+    <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">wandb_log</span><span class="hljs-params">(self, wandb_metrics=None)</span>:</span>
+        <span class="hljs-keyword">if</span> wandb_metrics <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+            wandb_metrics = {}
+        <span class="hljs-keyword">if</span> self.percent_correct_buffer:
+            wandb_metrics[<span class="hljs-string">"train/pass_rate"</span>] = sum(self.percent_correct_buffer) / len(self.percent_correct_buffer)
+        self.percent_correct_buffer = []
+        <span class="hljs-keyword">for</span> k, v <span class="hljs-keyword">in</span> self.eval_metrics:
+            wandb_metrics[k] = v
+        self.eval_metrics = []
+        <span class="hljs-keyword">await</span> super().wandb_log(wandb_metrics)
+
+    <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">rollout_and_score_eval</span><span class="hljs-params">(self, item: Dict)</span> -&gt; Dict:</span>
+        completion = <span class="hljs-keyword">await</span> self.server.chat_completion(
+            messages=[
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"system"</span>, <span class="hljs-string">"content"</span>: SYSTEM_PROMPT},
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>, <span class="hljs-string">"content"</span>: self._make_prompt(item)},
+            ],
+            n=<span class="hljs-number">1</span>,
+            max_tokens=self.config.max_token_length,
+            temperature=<span class="hljs-number">0.0</span>,
+            split=<span class="hljs-string">"eval"</span>,
+        )
+        response = completion.choices[<span class="hljs-number">0</span>].message.content
+        code = _extract_code(response)
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>Prepend prompt (contains imports + function signature) to completion</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        full_code = item[<span class="hljs-string">"prompt"</span>] + <span class="hljs-string">"\n"</span> + code
+        passed = _run_tests(full_code, item[<span class="hljs-string">"test"</span>], item[<span class="hljs-string">"entry_point"</span>])
+        <span class="hljs-keyword">return</span> {<span class="hljs-string">"score"</span>: float(passed), <span class="hljs-string">"task_id"</span>: item[<span class="hljs-string">"task_id"</span>]}
+
+    <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">evaluate</span><span class="hljs-params">(self, *args, **kwargs)</span>:</span>
+        <span class="hljs-keyword">import</span> time
+        <span class="hljs-keyword">from</span> tqdm.asyncio <span class="hljs-keyword">import</span> tqdm_asyncio
+        start = time.time()
+        tasks = [self.rollout_and_score_eval(ex) <span class="hljs-keyword">for</span> ex <span class="hljs-keyword">in</span> self.eval_data]
+        results = <span class="hljs-keyword">await</span> tqdm_asyncio.gather(*tasks)
+        scores = [r[<span class="hljs-string">"score"</span>] <span class="hljs-keyword">for</span> r <span class="hljs-keyword">in</span> results]
+        pass_rate = sum(scores) / len(scores) <span class="hljs-keyword">if</span> scores <span class="hljs-keyword">else</span> <span class="hljs-number">0.0</span>
+        self.eval_metrics.append((<span class="hljs-string">"eval/pass_at_1"</span>, pass_rate))
+        <span class="hljs-keyword">await</span> self.evaluate_log(
+            metrics={<span class="hljs-string">"eval/pass_at_1"</span>: pass_rate},
+            samples=[{<span class="hljs-string">"messages"</span>: [], <span class="hljs-string">"score"</span>: r[<span class="hljs-string">"score"</span>], <span class="hljs-string">"task_id"</span>: r[<span class="hljs-string">"task_id"</span>]} <span class="hljs-keyword">for</span> r <span class="hljs-keyword">in</span> results],
+            start_time=start,
+            end_time=time.time(),
+            generation_parameters={<span class="hljs-string">"temperature"</span>: <span class="hljs-number">0.0</span>, <span class="hljs-string">"max_tokens"</span>: self.config.max_token_length},
+        )
+
+    <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">collect_trajectories</span><span class="hljs-params">(self, item: Dict)</span> -&gt; Tuple[ScoredDataGroup, list]:</span>
+        prompt_text = self._make_prompt(item)
+        messages = [
+            {<span class="hljs-string">"role"</span>: <span class="hljs-string">"system"</span>, <span class="hljs-string">"content"</span>: SYSTEM_PROMPT},
+            {<span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>, <span class="hljs-string">"content"</span>: prompt_text},
+        ]
+        <span class="hljs-keyword">async</span> <span class="hljs-keyword">with</span> self.server.managed_server(tokenizer=self.tokenizer) <span class="hljs-keyword">as</span> managed:
+            completions = <span class="hljs-keyword">await</span> managed.chat_completion(
+                messages=messages,
+                n=self.config.group_size,
+                max_tokens=self.config.max_token_length,
+                temperature=<span class="hljs-number">1.0</span>,
+                stop=[self.tokenizer.eos_token_id],
+            )
+            state = managed.get_state()
+            nodes = state[<span class="hljs-string">"nodes"</span>]
+
+        to_score = []
+        <span class="hljs-keyword">for</span> choice, node <span class="hljs-keyword">in</span> zip(completions.choices, nodes):
+            to_score.append({
+                <span class="hljs-string">"messages"</span>: (*messages, {<span class="hljs-string">"role"</span>: <span class="hljs-string">"assistant"</span>, <span class="hljs-string">"content"</span>: choice.message.content}),
+                <span class="hljs-string">"prompt"</span>: item[<span class="hljs-string">"prompt"</span>],
+                <span class="hljs-string">"test"</span>: item[<span class="hljs-string">"test"</span>],
+                <span class="hljs-string">"entry_point"</span>: item[<span class="hljs-string">"entry_point"</span>],
+                <span class="hljs-string">"tokens"</span>: node.tokens,
+                <span class="hljs-string">"masked_tokens"</span>: node.masked_tokens,
+                <span class="hljs-string">"logprobs"</span>: node.logprobs,
+            })
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">await</span> self.score(to_score), []
+
+    <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">score</span><span class="hljs-params">(self, rollout_group_data)</span> -&gt; Optional[ScoredDataGroup]:</span>
+        <span class="hljs-keyword">import</span> asyncio
+        scores_obj = ScoredDataGroup()
+        scores_obj[<span class="hljs-string">"tokens"</span>] = []
+        scores_obj[<span class="hljs-string">"masks"</span>] = []
+        scores_obj[<span class="hljs-string">"scores"</span>] = []
+        scores_obj[<span class="hljs-string">"inference_logprobs"</span>] = []
+
+        random.shuffle(rollout_group_data)
+        <span class="hljs-keyword">for</span> item <span class="hljs-keyword">in</span> rollout_group_data:
+            response = item[<span class="hljs-string">"messages"</span>][<span class="hljs-number">-1</span>][<span class="hljs-string">"content"</span>]
+            code = _extract_code(response)
+            full_code = item[<span class="hljs-string">"prompt"</span>] + <span class="hljs-string">"\n"</span> + code
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>Run in executor to avoid blocking event loop</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">            loop = asyncio.get_event_loop()
+            passed = <span class="hljs-keyword">await</span> loop.run_in_executor(
+                <span class="hljs-literal">None</span>, _run_tests, full_code, item[<span class="hljs-string">"test"</span>], item[<span class="hljs-string">"entry_point"</span>]
+            )
+            reward = <span class="hljs-number">1.0</span> <span class="hljs-keyword">if</span> passed <span class="hljs-keyword">else</span> <span class="hljs-number">0.0</span>
+
+            masked_tokens = item[<span class="hljs-string">"masked_tokens"</span>]
+            <span class="hljs-keyword">if</span> len([t <span class="hljs-keyword">for</span> t <span class="hljs-keyword">in</span> masked_tokens <span class="hljs-keyword">if</span> t != <span class="hljs-number">-100</span>]) &lt; <span class="hljs-number">10</span>:
+                <span class="hljs-keyword">continue</span>
+
+            scores_obj[<span class="hljs-string">"tokens"</span>].append(item[<span class="hljs-string">"tokens"</span>])
+            scores_obj[<span class="hljs-string">"masks"</span>].append(masked_tokens)
+            scores_obj[<span class="hljs-string">"inference_logprobs"</span>].append(item[<span class="hljs-string">"logprobs"</span>])
+            scores_obj[<span class="hljs-string">"scores"</span>].append(reward)
+            self.percent_correct_buffer.append(reward)
+
+            <span class="hljs-keyword">if</span> len(scores_obj[<span class="hljs-string">"tokens"</span>]) &gt;= self.config.group_size:
+                <span class="hljs-keyword">break</span>
+
+        <span class="hljs-keyword">return</span> scores_obj <span class="hljs-keyword">if</span> scores_obj[<span class="hljs-string">"tokens"</span>] <span class="hljs-keyword">else</span> <span class="hljs-literal">None</span>
+
+    <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">get_next_item</span><span class="hljs-params">(self)</span> -&gt; Dict:</span>
+        item = self.train_data[self.iter % len(self.train_data)]
+        self.iter += <span class="hljs-number">1</span>
+        <span class="hljs-keyword">return</span> item
+
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    HumanEvalEnv.cli()
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

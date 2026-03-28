@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>run_all_experiments.sh</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "atropos/run_all_experiments.sh";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>run_all_experiments.sh</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-meta">#!/bin/bash
+</span></pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Run all GSM8K scaling ladder experiments sequentially
+Each experiment: 50 steps of GRPO on GSM8K</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">
+<span class="hljs-built_in">set</span> -e
+
+<span class="hljs-built_in">export</span> TINKER_API_KEY=<span class="hljs-string">"<span class="hljs-variable">${TINKER_API_KEY:?Set TINKER_API_KEY first}</span>"</span>
+
+EXPERIMENTS=(
+    <span class="hljs-string">"configs/gsm8k_llama_3b.yaml"</span>
+    <span class="hljs-string">"configs/gsm8k_llama_8b.yaml"</span>
+    <span class="hljs-string">"configs/gsm8k_qwen_8b.yaml"</span>
+    <span class="hljs-string">"configs/gsm8k_qwen_30b_moe.yaml"</span>
+)
+
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"============================================"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"  GRPO Scaling Ladder - All Experiments"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"  Models: Llama-3B, Llama-8B, Qwen-8B, Qwen-30B-MoE"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"  Task: GSM8K, 50 steps each"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"============================================"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">""</span>
+
+RESULTS_FILE=<span class="hljs-string">"./logs/scaling_results.txt"</span>
+mkdir -p ./logs
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"GRPO Scaling Ladder Results - <span class="hljs-variable">$(date)</span>"</span> &gt; <span class="hljs-string">"<span class="hljs-variable">$RESULTS_FILE</span>"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"=========================================="</span> &gt;&gt; <span class="hljs-string">"<span class="hljs-variable">$RESULTS_FILE</span>"</span>
+
+<span class="hljs-keyword">for</span> config <span class="hljs-keyword">in</span> <span class="hljs-string">"<span class="hljs-variable">${EXPERIMENTS[@]}</span>"</span>; <span class="hljs-keyword">do</span>
+    name=$(basename <span class="hljs-string">"<span class="hljs-variable">$config</span>"</span> .yaml)
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">""</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"&gt;&gt;&gt; Starting experiment: <span class="hljs-variable">$name</span>"</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"&gt;&gt;&gt; Config: <span class="hljs-variable">$config</span>"</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">""</span>
+
+    START_TIME=$(date +%s)
+
+    <span class="hljs-keyword">if</span> ./run_experiment.sh <span class="hljs-string">"<span class="hljs-variable">$config</span>"</span>; <span class="hljs-keyword">then</span>
+        END_TIME=$(date +%s)
+        DURATION=$((END_TIME - START_TIME))
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"PASS: <span class="hljs-variable">$name</span> (<span class="hljs-variable">${DURATION}</span>s)"</span> &gt;&gt; <span class="hljs-string">"<span class="hljs-variable">$RESULTS_FILE</span>"</span>
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"&gt;&gt;&gt; COMPLETED: <span class="hljs-variable">$name</span> in <span class="hljs-variable">${DURATION}</span>s"</span>
+    <span class="hljs-keyword">else</span>
+        END_TIME=$(date +%s)
+        DURATION=$((END_TIME - START_TIME))
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"FAIL: <span class="hljs-variable">$name</span> (<span class="hljs-variable">${DURATION}</span>s)"</span> &gt;&gt; <span class="hljs-string">"<span class="hljs-variable">$RESULTS_FILE</span>"</span>
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"&gt;&gt;&gt; FAILED: <span class="hljs-variable">$name</span> after <span class="hljs-variable">${DURATION}</span>s"</span>
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"&gt;&gt;&gt; Check logs/<span class="hljs-variable">$(basename "$config" .yaml)</span>/ for details"</span>
+    <span class="hljs-keyword">fi</span>
+
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">""</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"--- Waiting 10s before next experiment ---"</span>
+    sleep 10
+<span class="hljs-keyword">done</span>
+
+<span class="hljs-built_in">echo</span> <span class="hljs-string">""</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"============================================"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"  All experiments complete!"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"  Results: <span class="hljs-variable">$RESULTS_FILE</span>"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"============================================"</span>
+cat <span class="hljs-string">"<span class="hljs-variable">$RESULTS_FILE</span>"</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

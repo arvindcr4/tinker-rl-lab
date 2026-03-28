@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CLAIM_SUPPORT_EXPERIMENTS.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "atropos/CLAIM_SUPPORT_EXPERIMENTS.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#claim-support-experiment-matrix">Claim-Support Experiment Matrix</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#what-this-package-tests">What This Package Tests</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#training-blocks">Training Blocks</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#1.matched-qwen-gsm8k-scaling">1. Matched Qwen GSM8K scaling</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#2.replication-prompt-bootstrap-controls">2. Replication / prompt / bootstrap controls</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#3.harder-math-benchmark-training">3. Harder math benchmark training</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#run-everything">Run everything</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#out-of-distribution-evaluation">Out-of-Distribution Evaluation</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#end-to-end-example">End-to-end example</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#direct-eval-without-helper-script">Direct eval without helper script</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#how-these-results-support-claims">How These Results Support Claims</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#weak-but-safe">Weak but safe</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#medium">Medium</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#stronger">Stronger</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#what-not-to-claim-even-after-running-this">What Not To Claim Even After Running This</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="claim-support-experiment-matrix">
+  <h1>
+    <a href="#claim-support-experiment-matrix" name="claim-support-experiment-matrix" class="pilcrow"></a>
+Claim-Support Experiment Matrix
+  </h1>
+</div>
+<p>This matrix is the minimum credible package for defending a claim stronger than:</p>
+<blockquote>
+<p>&quot;We optimized GSM8K.&quot;</p>
+</blockquote>
+<p>It is designed to answer the reviewer objection that GSM8K saturation alone does not establish robust mathematical reasoning.</p>
+<div class="pilwrap" id="what-this-package-tests">
+  <h2>
+    <a href="#what-this-package-tests" name="what-this-package-tests" class="pilcrow"></a>
+What This Package Tests
+  </h2>
+</div>
+<ol>
+<li>
+<p><code>Matched-family scaling</code>
+Why: separates a real scaling trend from a one-off 3B vs 8B anecdote.</p>
+</li>
+<li>
+<p><code>Replication</code>
+Why: shows the result is not a lucky single trajectory.</p>
+</li>
+<li>
+<p><code>Prompt-prefix ablation</code>
+Why: checks whether the worked-example prefix is carrying the result.</p>
+</li>
+<li>
+<p><code>Bootstrap-threshold control</code>
+Why: distinguishes model capacity from initial-signal / task-difficulty effects.</p>
+</li>
+<li>
+<p><code>Harder in-domain math</code>
+Why: tests whether GSM8K gains survive on a more difficult symbolic-math benchmark.</p>
+</li>
+<li>
+<p><code>Out-of-distribution benchmark evaluation</code>
+Why: tests whether the trained checkpoint generalizes beyond one saturated benchmark.</p>
+</li>
+</ol>
+<div class="pilwrap" id="training-blocks">
+  <h2>
+    <a href="#training-blocks" name="training-blocks" class="pilcrow"></a>
+Training Blocks
+  </h2>
+</div>
+<div class="pilwrap" id="1.matched-qwen-gsm8k-scaling">
+  <h3>
+    <a href="#1.matched-qwen-gsm8k-scaling" name="1.matched-qwen-gsm8k-scaling" class="pilcrow"></a>
+1. Matched Qwen GSM8K scaling
+  </h3>
+</div>
+<ul>
+<li><a href="/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_4b.yaml.html">gsm8k_qwen_4b.yaml</a></li>
+<li><a href="/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_8b.yaml.html">gsm8k_qwen_8b.yaml</a></li>
+<li><a href="/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_14b.yaml.html">gsm8k_qwen_14b.yaml</a></li>
+</ul>
+<p>Run:</p>
+<pre><code class="bash">./run_claim_support_train.sh scaling
+</code></pre>
+<div class="pilwrap" id="2.replication-prompt-bootstrap-controls">
+  <h3>
+    <a href="#2.replication-prompt-bootstrap-controls" name="2.replication-prompt-bootstrap-controls" class="pilcrow"></a>
+2. Replication / prompt / bootstrap controls
+  </h3>
+</div>
+<ul>
+<li><a href="/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_8b_seed1.yaml.html">gsm8k_qwen_8b_seed1.yaml</a></li>
+<li><a href="/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_8b_seed2.yaml.html">gsm8k_qwen_8b_seed2.yaml</a></li>
+<li><a href="/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_8b_seed3.yaml.html">gsm8k_qwen_8b_seed3.yaml</a></li>
+<li><a href="/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_8b_no_prefix.yaml.html">gsm8k_qwen_8b_no_prefix.yaml</a></li>
+<li><a href="/home/arvind/tinker-rl-lab/atropos/configs/bootstrap_threshold_easy.yaml.html">bootstrap_threshold_easy.yaml</a></li>
+<li><a href="/home/arvind/tinker-rl-lab/atropos/configs/bootstrap_threshold_hardest.yaml.html">bootstrap_threshold_hardest.yaml</a></li>
+</ul>
+<p>Run:</p>
+<pre><code class="bash">./run_claim_support_train.sh controls
+</code></pre>
+<div class="pilwrap" id="3.harder-math-benchmark-training">
+  <h3>
+    <a href="#3.harder-math-benchmark-training" name="3.harder-math-benchmark-training" class="pilcrow"></a>
+3. Harder math benchmark training
+  </h3>
+</div>
+<ul>
+<li><a href="/home/arvind/tinker-rl-lab/atropos/configs/math_qwen_4b.yaml.html">math_qwen_4b.yaml</a></li>
+<li><a href="/home/arvind/tinker-rl-lab/atropos/configs/math_qwen_8b.yaml.html">math_qwen_8b.yaml</a></li>
+<li><a href="/home/arvind/tinker-rl-lab/atropos/configs/math_qwen_14b.yaml.html">math_qwen_14b.yaml</a></li>
+</ul>
+<p>Run:</p>
+<pre><code class="bash">./run_claim_support_train.sh hard_math
+</code></pre>
+<div class="pilwrap" id="run-everything">
+  <h3>
+    <a href="#run-everything" name="run-everything" class="pilcrow"></a>
+Run everything
+  </h3>
+</div>
+<pre><code class="bash">./run_claim_support_train.sh all
+</code></pre>
+<div class="pilwrap" id="out-of-distribution-evaluation">
+  <h2>
+    <a href="#out-of-distribution-evaluation" name="out-of-distribution-evaluation" class="pilcrow"></a>
+Out-of-Distribution Evaluation
+  </h2>
+</div>
+<p>Use <a href="/home/arvind/tinker-rl-lab/atropos/eval_reasoning_suite.py.html">eval_reasoning_suite.py</a> to evaluate a base model or saved checkpoint on:</p>
+<ul>
+<li><code>gsm8k</code></li>
+<li><code>gsm1k</code></li>
+<li><code>gsm_symbolic_main</code></li>
+<li><code>gsm_symbolic_p1</code></li>
+<li><code>gsm_symbolic_p2</code></li>
+<li><code>math</code></li>
+<li><code>olympiadbench</code></li>
+</ul>
+<p>The intended use is:</p>
+<ol>
+<li>Train a checkpoint on GSM8K.</li>
+<li>Serve that checkpoint with <a href="/home/arvind/tinker-rl-lab/atropos/serve.py.html">serve.py</a>.</li>
+<li>Run deterministic eval on multiple benchmarks.</li>
+</ol>
+<div class="pilwrap" id="end-to-end-example">
+  <h3>
+    <a href="#end-to-end-example" name="end-to-end-example" class="pilcrow"></a>
+End-to-end example
+  </h3>
+</div>
+<pre><code class="bash">./run_claim_support_evals.sh \
+  --config configs/gsm8k_qwen_8b.yaml \
+  --weights tinker://.../sampler_weights/step_50 \
+  --no-prefix
+</code></pre>
+<div class="pilwrap" id="direct-eval-without-helper-script">
+  <h3>
+    <a href="#direct-eval-without-helper-script" name="direct-eval-without-helper-script" class="pilcrow"></a>
+Direct eval without helper script
+  </h3>
+</div>
+<pre><code class="bash">python serve.py --model Qwen/Qwen3-8B --weights tinker://... --port 8031
+
+python eval_reasoning_suite.py \
+  --model Qwen/Qwen3-8B \
+  --base-url http://127.0.0.1:8031/v1 \
+  --benchmarks gsm8k gsm1k gsm_symbolic_main math olympiadbench \
+  --no-prefix \
+  --output-dir logs/reasoning_eval_qwen8b_step50
+</code></pre>
+<div class="pilwrap" id="how-these-results-support-claims">
+  <h2>
+    <a href="#how-these-results-support-claims" name="how-these-results-support-claims" class="pilcrow"></a>
+How These Results Support Claims
+  </h2>
+</div>
+<p>You can defend progressively stronger statements depending on what the results show.</p>
+<div class="pilwrap" id="weak-but-safe">
+  <h3>
+    <a href="#weak-but-safe" name="weak-but-safe" class="pilcrow"></a>
+Weak but safe
+  </h3>
+</div>
+<ul>
+<li>&quot;GRPO + LoRA strongly optimizes GSM8K under deterministic exact-match evaluation.&quot;</li>
+</ul>
+<div class="pilwrap" id="medium">
+  <h3>
+    <a href="#medium" name="medium" class="pilcrow"></a>
+Medium
+  </h3>
+</div>
+<p>Requirements:</p>
+<ul>
+<li>multi-seed GSM8K stability</li>
+<li>no-prefix still improves materially</li>
+<li>MATH also improves</li>
+</ul>
+<p>Claim:</p>
+<ul>
+<li>&quot;The gains are not reducible to a single seed or a fixed worked-example prefix, and transfer to a harder symbolic-math benchmark.&quot;</li>
+</ul>
+<div class="pilwrap" id="stronger">
+  <h3>
+    <a href="#stronger" name="stronger" class="pilcrow"></a>
+Stronger
+  </h3>
+</div>
+<p>Requirements:</p>
+<ul>
+<li>GSM8K-trained checkpoint improves on <code>gsm1k</code> or <code>gsm_symbolic_*</code></li>
+<li>GSM8K-trained checkpoint also improves on <code>math</code> and/or <code>olympiadbench</code></li>
+</ul>
+<p>Claim:</p>
+<ul>
+<li>&quot;The post-training gains extend beyond within-benchmark GSM8K optimization and show evidence of broader mathematical generalization.&quot;</li>
+</ul>
+<div class="pilwrap" id="what-not-to-claim-even-after-running-this">
+  <h2>
+    <a href="#what-not-to-claim-even-after-running-this" name="what-not-to-claim-even-after-running-this" class="pilcrow"></a>
+What Not To Claim Even After Running This
+  </h2>
+</div>
+<p>Still avoid:</p>
+<ul>
+<li>&quot;robust mathematical reasoning&quot; as a blanket claim from GSM8K alone</li>
+<li>&quot;agentic RL&quot; from these experiments</li>
+<li>&quot;pure RL with no supervision&quot; if the prompt prefix is enabled</li>
+<li>&quot;capacity threshold&quot; unless the bootstrap controls and intermediate scale points agree</li>
+</ul>
+</div>
+  </div>
+</body>
+</html>

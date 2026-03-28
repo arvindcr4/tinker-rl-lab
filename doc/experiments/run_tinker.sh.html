@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>run_tinker.sh</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "experiments/run_tinker.sh";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>run_tinker.sh</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-meta">#!/bin/bash
+</span></pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Tinker RL Training Script</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>Activate virtual environment</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-built_in">source</span> ~/tinker-env/bin/activate
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Set API key</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-built_in">export</span> TINKER_API_KEY=<span class="hljs-string">"tml-Yrqi9ktkRU7fGblwskPjIXYoLg1jOoxfDtWyNfsdpofonErXL8T1CAPRtqFwZqy7CAAAA"</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Run arithmetic RL training</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">python -m tinker_cookbook.recipes.math_rl.train \
+  model_name=<span class="hljs-string">"meta-llama/Llama-3.2-1B"</span> \
+  group_size=4 \
+  groups_per_batch=100 \
+  learning_rate=1e-4
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

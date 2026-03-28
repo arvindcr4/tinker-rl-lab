@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>trl_gsm8k_math.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "experiments/implementations/trl_gsm8k_math.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>trl_gsm8k_math.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-string">"""
+TRL GRPO GSM8K Word Problems
+=============================
+Port of Tinker Math RL (GSM8K) to TRL.
+
+GSM8K is a dataset of grade school math word problems.
+Unlike arithmetic, this requires:
+- Chain-of-thought reasoning
+- Answer extraction from text
+- More complex verification
+"""</span>
+
+<span class="hljs-keyword">import</span> re
+<span class="hljs-keyword">import</span> torch
+<span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> List, Optional
+<span class="hljs-keyword">from</span> datasets <span class="hljs-keyword">import</span> load_dataset
+<span class="hljs-keyword">from</span> transformers <span class="hljs-keyword">import</span> AutoModelForCausalLM, AutoTokenizer
+<span class="hljs-keyword">from</span> trl <span class="hljs-keyword">import</span> GRPOTrainer, GRPOConfig
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">extract_gsm8k_answer</span><span class="hljs-params">(text: str)</span> -&gt; Optional[float]:</span>
+    <span class="hljs-string">"""
+    Extract numeric answer from GSM8K-style response.
+
+    GSM8K answers are typically formatted as:
+    "#### 42" or just a number at the end.
+    """</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Look for #### pattern first</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    match = re.search(<span class="hljs-string">r'####\s*([-+]?\d*\.?\d+)'</span>, text)
+    <span class="hljs-keyword">if</span> match:
+        <span class="hljs-keyword">return</span> float(match.group(<span class="hljs-number">1</span>))
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>Fall back to last number in text</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    numbers = re.findall(<span class="hljs-string">r'[-+]?\d*\.?\d+'</span>, text)
+    <span class="hljs-keyword">if</span> numbers:
+        <span class="hljs-keyword">return</span> float(numbers[<span class="hljs-number">-1</span>])
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">None</span>
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">verify_gsm8k_answer</span><span class="hljs-params">(predicted: Optional[float], expected: float, tolerance: float = <span class="hljs-number">0.01</span>)</span> -&gt; bool:</span>
+    <span class="hljs-string">"""Verify if predicted answer matches expected (with tolerance)."""</span>
+    <span class="hljs-keyword">if</span> predicted <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>
+    <span class="hljs-keyword">return</span> abs(predicted - expected) &lt; tolerance
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">gsm8k_reward_function</span><span class="hljs-params">(
+    completions: List[str],
+    prompts: List[str],
+    answers: List[float],
+)</span> -&gt; List[float]:</span>
+    <span class="hljs-string">"""
+    Verifiable reward function for GSM8K.
+
+    Reward structure:
+    - reward=1.0: Correct final answer
+    - reward=0.5: Has chain-of-thought but wrong answer
+    - reward=0.0: No reasoning, wrong answer
+    - reward=-0.1: Invalid format
+    """</span>
+    rewards = []
+
+    <span class="hljs-keyword">for</span> completion, expected <span class="hljs-keyword">in</span> zip(completions, answers):
+        predicted = extract_gsm8k_answer(completion)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Check for chain-of-thought (has some reasoning)</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        has_reasoning = len(completion.split()) &gt; <span class="hljs-number">10</span>
+
+        <span class="hljs-keyword">if</span> predicted <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Invalid format</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">            rewards.append(<span class="hljs-number">-0.1</span>)
+        <span class="hljs-keyword">elif</span> verify_gsm8k_answer(predicted, expected):
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>Correct answer</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">            rewards.append(<span class="hljs-number">1.0</span>)
+        <span class="hljs-keyword">elif</span> has_reasoning:
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>Wrong answer but showed work</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">            rewards.append(<span class="hljs-number">0.5</span>)
+        <span class="hljs-keyword">else</span>:
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>Wrong answer, no reasoning</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">            rewards.append(<span class="hljs-number">0.0</span>)
+
+    <span class="hljs-keyword">return</span> rewards
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_gsm8k_dataset</span><span class="hljs-params">(split: str = <span class="hljs-string">"train"</span>, num_samples: Optional[int] = None)</span>:</span>
+    <span class="hljs-string">"""Load GSM8K dataset with proper formatting."""</span>
+    dataset = load_dataset(<span class="hljs-string">"gsm8k"</span>, <span class="hljs-string">"main"</span>, split=split)
+
+    <span class="hljs-keyword">if</span> num_samples:
+        dataset = dataset.select(range(min(num_samples, len(dataset))))
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">format_example</span><span class="hljs-params">(example)</span>:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<p>Extract numeric answer from solution</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        answer_str = example[<span class="hljs-string">"answer"</span>].split(<span class="hljs-string">"####"</span>)[<span class="hljs-number">-1</span>].strip()
+        answer = float(answer_str.replace(<span class="hljs-string">","</span>, <span class="hljs-string">""</span>))
+
+        <span class="hljs-keyword">return</span> {
+            <span class="hljs-string">"prompt"</span>: <span class="hljs-string">f"Solve this math problem step by step:\n\n<span class="hljs-subst">{example[<span class="hljs-string">'question'</span>]}</span>\n\nShow your work and end with #### followed by the numeric answer."</span>,
+            <span class="hljs-string">"answer"</span>: answer,
+        }
+
+    <span class="hljs-keyword">return</span> dataset.map(format_example)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10"></a>
+</div>
+<p>Model configuration</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    model_name = <span class="hljs-string">"meta-llama/Llama-3.2-1B-Instruct"</span>
+
+    print(<span class="hljs-string">"Loading model and tokenizer..."</span>)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer.pad_token = tokenizer.eos_token
+
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        torch_dtype=torch.bfloat16,
+        device_map=<span class="hljs-string">"auto"</span>,
+    )
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11"></a>
+</div>
+<p>Load GSM8K dataset</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    print(<span class="hljs-string">"Loading GSM8K dataset..."</span>)
+    dataset = load_gsm8k_dataset(split=<span class="hljs-string">"train"</span>, num_samples=<span class="hljs-number">500</span>)
+    print(<span class="hljs-string">f"Loaded <span class="hljs-subst">{len(dataset)}</span> problems"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12"></a>
+</div>
+<p>GRPO Configuration for GSM8K</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    grpo_config = GRPOConfig(
+        output_dir=<span class="hljs-string">"./grpo_gsm8k_output"</span>,
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13"></a>
+</div>
+<p>Batch settings</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        per_device_train_batch_size=<span class="hljs-number">2</span>,
+        gradient_accumulation_steps=<span class="hljs-number">16</span>,
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14"></a>
+</div>
+<p>GRPO-specific</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        num_generations=<span class="hljs-number">4</span>,
+        beta=<span class="hljs-number">0.1</span>,
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15"></a>
+</div>
+<p>Learning rate</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        learning_rate=<span class="hljs-number">5e-5</span>,
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16"></a>
+</div>
+<p>LoRA settings</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        use_peft=<span class="hljs-literal">True</span>,
+        lora_r=<span class="hljs-number">32</span>,
+        lora_alpha=<span class="hljs-number">64</span>,
+        lora_dropout=<span class="hljs-number">0.05</span>,
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17"></a>
+</div>
+<p>Generation - longer for chain-of-thought</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        max_new_tokens=<span class="hljs-number">256</span>,
+        temperature=<span class="hljs-number">0.7</span>,
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-18" id="section-18"></a>
+</div>
+<p>Training</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        num_train_epochs=<span class="hljs-number">2</span>,
+        logging_steps=<span class="hljs-number">1</span>,
+        save_steps=<span class="hljs-number">50</span>,
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19"></a>
+</div>
+<p>Optimization</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        max_grad_norm=<span class="hljs-number">1.0</span>,
+        warmup_ratio=<span class="hljs-number">0.1</span>,
+    )
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-20" id="section-20"></a>
+</div>
+<p>Reward function wrapper</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">reward_fn</span><span class="hljs-params">(completions, prompts)</span>:</span>
+        batch_answers = [dataset[i][<span class="hljs-string">"answer"</span>] <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(len(prompts))]
+        <span class="hljs-keyword">return</span> gsm8k_reward_function(completions, prompts, batch_answers)
+
+    print(<span class="hljs-string">"Initializing GRPOTrainer for GSM8K..."</span>)
+    trainer = GRPOTrainer(
+        model=model,
+        config=grpo_config,
+        train_dataset=dataset,
+        processing_class=tokenizer,
+        reward_funcs=reward_fn,
+    )
+
+    print(<span class="hljs-string">"Starting GSM8K GRPO training..."</span>)
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">50</span>)
+    print(<span class="hljs-string">"GSM8K is harder than arithmetic - expect slower convergence"</span>)
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">50</span>)
+
+    trainer.train()
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-21" id="section-21"></a>
+</div>
+<p>Save final model</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    trainer.save_model(<span class="hljs-string">"./grpo_gsm8k_final"</span>)
+    print(<span class="hljs-string">"Training complete! Model saved to ./grpo_gsm8k_final"</span>)
+
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    main()
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

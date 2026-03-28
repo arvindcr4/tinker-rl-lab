@@ -1,0 +1,71 @@
+% NeurIPS style file (simplified version for submission)
+% Based on the official NeurIPS style
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{nips_style}[2026 NeurIPS Style]
+
+% Page layout
+\RequirePackage{fullpage}
+\RequirePackage{times}
+\RequirePackage{color}
+\RequirePackage{url}
+\RequirePackage{latexsym}
+\RequirePackage{amsmath,amssymb,mathtools}
+\RequirePackage{booktabs}
+\RequirePackage{microtype}
+
+% For figures
+\RequirePackage{graphicx}
+\RequirePackage{caption}
+\RequirePackage{subcaption}
+
+% Bibliography
+\RequirePackage{natbib}
+\bibliographystyle{plainnat}
+
+% Hyperref
+\RequirePackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% ===========================================================================
+% Custom commands
+% ===========================================================================
+\def\beforereview{\special{papersize=\the\paperwidth,\the\paperheight}}
+\def\endbeforereview{}
+
+% Final mode
+\DeclareOption{final}{\renewcommand\beforereview{}}
+\DeclareOption{preprint}{\renewcommand\endbeforereview{}}
+
+% Process options
+\ProcessOptions\relax
+
+% Title styling
+\RequirePackage{titling}
+\pretitle{\begin{flushleft}\LARGE\bfseries}
+\posttitle{\par\end{flushleft}\vskip 0.5em}
+\preauthor{\begin{flushleft}\large\begin{tabular}[t]{c}}
+\postauthor{\end{tabular}\par\end{flushleft}}
+\predate{\begin{flushleft}\normalsize}
+\postdate{\par\end{flushleft}}
+
+% Section headings
+\RequirePackage{titlesec}
+\titleformat*{\section}{\large\bfseries\uppercase}
+\titleformat*{\subsection}{\normalsize\bfseries}
+
+% Itemize
+\RequirePackage{enumitem}
+\setlist{itemsep=0pt,parsep=0pt,topsep=4pt}
+
+% ===========================================================================
+% Page limits (NeurIPS style)
+% ===========================================================================
+% 9 pages content + references
+% With preprint option, these limits are relaxed
+\endinput

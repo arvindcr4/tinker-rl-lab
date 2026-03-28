@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>d3rlpy_offline.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "experiments/implementations/d3rlpy_offline.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>d3rlpy_offline.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-string">"""
+d3rlpy Offline RL Implementation
+=================================
+Port of Tinker distillation concepts to offline RL with d3rlpy.
+
+d3rlpy specializes in offline RL algorithms:
+- CQL (Conservative Q-Learning)
+- IQL (Implicit Q-Learning)
+- TD3+BC, AWAC, etc.
+
+Use case: Train from pre-collected trajectories without online interaction.
+"""</span>
+
+<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+<span class="hljs-keyword">import</span> d3rlpy
+<span class="hljs-keyword">from</span> d3rlpy.dataset <span class="hljs-keyword">import</span> MDPDataset
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">create_arithmetic_dataset</span><span class="hljs-params">(
+    num_episodes: int = <span class="hljs-number">10000</span>,
+    max_num: int = <span class="hljs-number">99</span>,
+    expert_ratio: float = <span class="hljs-number">0.7</span>,
+)</span> -&gt; MDPDataset:</span>
+    <span class="hljs-string">"""
+    Create offline dataset for arithmetic task.
+
+    Args:
+        num_episodes: Number of episodes
+        max_num: Maximum number in addition
+        expert_ratio: Fraction of correct (expert) trajectories
+    """</span>
+    observations = []
+    actions = []
+    rewards = []
+    terminals = []
+
+    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> range(num_episodes):
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Generate problem</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        num1 = np.random.randint(<span class="hljs-number">1</span>, max_num + <span class="hljs-number">1</span>)
+        num2 = np.random.randint(<span class="hljs-number">1</span>, max_num + <span class="hljs-number">1</span>)
+        correct_answer = num1 + num2
+
+        obs = np.array([num1 / max_num, num2 / max_num], dtype=np.float32)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>Expert vs random action</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-keyword">if</span> np.random.random() &lt; expert_ratio:
+            action = correct_answer  <span class="hljs-comment"># Expert action</span>
+            reward = <span class="hljs-number">1.0</span>
+        <span class="hljs-keyword">else</span>:
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Random incorrect action</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">            action = np.random.randint(<span class="hljs-number">0</span>, max_num * <span class="hljs-number">2</span> + <span class="hljs-number">1</span>)
+            reward = <span class="hljs-number">1.0</span> <span class="hljs-keyword">if</span> action == correct_answer <span class="hljs-keyword">else</span> <span class="hljs-number">0.0</span>
+
+        observations.append(obs)
+        actions.append(action)
+        rewards.append(reward)
+        terminals.append(<span class="hljs-literal">True</span>)  <span class="hljs-comment"># Single-step episodes</span>
+
+    <span class="hljs-keyword">return</span> MDPDataset(
+        observations=np.array(observations),
+        actions=np.array(actions).reshape(<span class="hljs-number">-1</span>, <span class="hljs-number">1</span>),
+        rewards=np.array(rewards),
+        terminals=np.array(terminals),
+    )
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">train_cql</span><span class="hljs-params">(dataset: MDPDataset)</span>:</span>
+    <span class="hljs-string">"""
+    Train with Conservative Q-Learning (CQL).
+
+    CQL adds a conservative penalty to prevent overestimation
+    of Q-values for out-of-distribution actions.
+    """</span>
+    print(<span class="hljs-string">"Training CQL..."</span>)
+
+    cql = d3rlpy.algos.DiscreteCQLConfig(
+        learning_rate=<span class="hljs-number">3e-4</span>,
+        batch_size=<span class="hljs-number">256</span>,
+        gamma=<span class="hljs-number">0.99</span>,
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>CQL-specific</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        alpha=<span class="hljs-number">4.0</span>,  <span class="hljs-comment"># Conservative penalty weight</span>
+    ).create(device=<span class="hljs-string">"cuda:0"</span> <span class="hljs-keyword">if</span> d3rlpy.torch_utility.get_device() <span class="hljs-keyword">else</span> <span class="hljs-string">"cpu:0"</span>)
+
+    cql.fit(
+        dataset,
+        n_steps=<span class="hljs-number">10000</span>,
+        n_steps_per_epoch=<span class="hljs-number">1000</span>,
+        show_progress=<span class="hljs-literal">True</span>,
+    )
+
+    cql.save_model(<span class="hljs-string">"cql_arithmetic.d3"</span>)
+    <span class="hljs-keyword">return</span> cql
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">train_iql</span><span class="hljs-params">(dataset: MDPDataset)</span>:</span>
+    <span class="hljs-string">"""
+    Train with Implicit Q-Learning (IQL).
+
+    IQL avoids querying OOD actions by using expectile regression.
+    Good for offline RL when you can't interact with environment.
+    """</span>
+    print(<span class="hljs-string">"Training IQL..."</span>)
+
+    iql = d3rlpy.algos.DiscreteIQLConfig(
+        learning_rate=<span class="hljs-number">3e-4</span>,
+        batch_size=<span class="hljs-number">256</span>,
+        gamma=<span class="hljs-number">0.99</span>,
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>IQL-specific</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        expectile=<span class="hljs-number">0.7</span>,  <span class="hljs-comment"># Asymmetric loss parameter</span>
+        weight_temp=<span class="hljs-number">3.0</span>,  <span class="hljs-comment"># Temperature for advantage weighting</span>
+    ).create(device=<span class="hljs-string">"cuda:0"</span> <span class="hljs-keyword">if</span> d3rlpy.torch_utility.get_device() <span class="hljs-keyword">else</span> <span class="hljs-string">"cpu:0"</span>)
+
+    iql.fit(
+        dataset,
+        n_steps=<span class="hljs-number">10000</span>,
+        n_steps_per_epoch=<span class="hljs-number">1000</span>,
+        show_progress=<span class="hljs-literal">True</span>,
+    )
+
+    iql.save_model(<span class="hljs-string">"iql_arithmetic.d3"</span>)
+    <span class="hljs-keyword">return</span> iql
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">train_bc</span><span class="hljs-params">(dataset: MDPDataset)</span>:</span>
+    <span class="hljs-string">"""
+    Behavior Cloning baseline.
+
+    Simple imitation learning - matches Tinker's off-policy distillation
+    when applied to expert demonstrations.
+    """</span>
+    print(<span class="hljs-string">"Training Behavior Cloning..."</span>)
+
+    bc = d3rlpy.algos.DiscreteBCConfig(
+        learning_rate=<span class="hljs-number">1e-4</span>,
+        batch_size=<span class="hljs-number">256</span>,
+    ).create(device=<span class="hljs-string">"cuda:0"</span> <span class="hljs-keyword">if</span> d3rlpy.torch_utility.get_device() <span class="hljs-keyword">else</span> <span class="hljs-string">"cpu:0"</span>)
+
+    bc.fit(
+        dataset,
+        n_steps=<span class="hljs-number">5000</span>,
+        n_steps_per_epoch=<span class="hljs-number">1000</span>,
+        show_progress=<span class="hljs-literal">True</span>,
+    )
+
+    bc.save_model(<span class="hljs-string">"bc_arithmetic.d3"</span>)
+    <span class="hljs-keyword">return</span> bc
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">evaluate_model</span><span class="hljs-params">(model, num_eval: int = <span class="hljs-number">1000</span>, max_num: int = <span class="hljs-number">99</span>)</span>:</span>
+    <span class="hljs-string">"""Evaluate trained model on arithmetic task."""</span>
+    correct = <span class="hljs-number">0</span>
+
+    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> range(num_eval):
+        num1 = np.random.randint(<span class="hljs-number">1</span>, max_num + <span class="hljs-number">1</span>)
+        num2 = np.random.randint(<span class="hljs-number">1</span>, max_num + <span class="hljs-number">1</span>)
+        expected = num1 + num2
+
+        obs = np.array([[num1 / max_num, num2 / max_num]], dtype=np.float32)
+        action = model.predict(obs)[<span class="hljs-number">0</span>]
+
+        <span class="hljs-keyword">if</span> action == expected:
+            correct += <span class="hljs-number">1</span>
+
+    accuracy = correct / num_eval * <span class="hljs-number">100</span>
+    <span class="hljs-keyword">return</span> accuracy
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>:</span>
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">60</span>)
+    print(<span class="hljs-string">"d3rlpy Offline RL for Math Task"</span>)
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">60</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>Create offline dataset</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    print(<span class="hljs-string">"\nCreating offline dataset..."</span>)
+    dataset = create_arithmetic_dataset(
+        num_episodes=<span class="hljs-number">10000</span>,
+        expert_ratio=<span class="hljs-number">0.7</span>,  <span class="hljs-comment"># 70% expert demonstrations</span>
+    )
+    print(<span class="hljs-string">f"Dataset size: <span class="hljs-subst">{len(dataset)}</span> episodes"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>Train different algorithms</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    print(<span class="hljs-string">"\n--- Training Algorithms ---"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<ol>
+<li>Behavior Cloning (baseline, like off-policy distillation)</li>
+</ol>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    bc_model = train_bc(dataset)
+    bc_acc = evaluate_model(bc_model)
+    print(<span class="hljs-string">f"Behavior Cloning accuracy: <span class="hljs-subst">{bc_acc:<span class="hljs-number">.1</span>f}</span>%"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10"></a>
+</div>
+<ol start="2">
+<li>CQL (conservative offline RL)</li>
+</ol>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    cql_model = train_cql(dataset)
+    cql_acc = evaluate_model(cql_model)
+    print(<span class="hljs-string">f"CQL accuracy: <span class="hljs-subst">{cql_acc:<span class="hljs-number">.1</span>f}</span>%"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11"></a>
+</div>
+<ol start="3">
+<li>IQL (implicit Q-learning)</li>
+</ol>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    iql_model = train_iql(dataset)
+    iql_acc = evaluate_model(iql_model)
+    print(<span class="hljs-string">f"IQL accuracy: <span class="hljs-subst">{iql_acc:<span class="hljs-number">.1</span>f}</span>%"</span>)
+
+    print(<span class="hljs-string">"\n--- Results Summary ---"</span>)
+    print(<span class="hljs-string">f"Behavior Cloning: <span class="hljs-subst">{bc_acc:<span class="hljs-number">.1</span>f}</span>%"</span>)
+    print(<span class="hljs-string">f"CQL:              <span class="hljs-subst">{cql_acc:<span class="hljs-number">.1</span>f}</span>%"</span>)
+    print(<span class="hljs-string">f"IQL:              <span class="hljs-subst">{iql_acc:<span class="hljs-number">.1</span>f}</span>%"</span>)
+    print(<span class="hljs-string">"\nExpected: All should approach ~70% (expert ratio in dataset)"</span>)
+
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    main()
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

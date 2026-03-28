@@ -65,4 +65,4 @@ Run `evaluate_gsm8k_test.py` on your trained checkpoint and update Section 4.3.3
 ## Authors
 
 Arvind C R, Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L, Dhruva N Murthy, Mohammad Rafi  
-Group 6, MTech CSE, PES University
+Group 6, MTech DSAI, PES University

@@ -1,7 +1,7 @@
 # GRPO for Agentic LLM Fine-Tuning: Empirical Studies on Tool Use, Code Generation, and Math Reasoning
 
 **Authors:** Arvind C R, Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L, Dhruva N Murthy, Mohammad Rafi  
-**Affiliation:** Group 6, MTech CSE, PES University  
+**Affiliation:** Group 6, MTech DSAI, PES University  
 **Date:** March 28, 2026
 
 ---

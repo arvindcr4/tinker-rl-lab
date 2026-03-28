@@ -13,3 +13,4 @@
 {"run":3,"commit":"b25921e","metric":0,"metrics":{"repo_tracked_files":202,"repo_size_kb":4024},"status":"keep","description":"removed duplicate grpo-results/, untracked PDF, fixed .gitignore","timestamp":1774713245,"segment":0}
 {"type":"config","name":"codebase-quality","metricName":"quality_issues","metricUnit":"issues","bestDirection":"lower"}
 {"run":4,"commit":"9ebdcc6","metric":0,"metrics":{"repo_tracked_files":202,"repo_size_kb":4024},"status":"keep","description":"fixed README stale references to non-existent dirs","timestamp":1774713374,"segment":1}
+{"type":"config","name":"Remove leftover generated workspace artifacts after tracked cleanup","metricName":"workspace_cleanup_issues","metricUnit":"issues","bestDirection":"lower"}

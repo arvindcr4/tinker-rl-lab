@@ -21,6 +21,9 @@ need(('routing entropy' in PAPER) or ('expert load imbalance' in SUPP) or ('rout
 need(('compute budget' in PAPER or 'gpu-hours' in PAPER or 'tokens processed' in PAPER) and ('data split' in PAPER or 'splits' in SUPP), 'budget_and_splits', 'Paper/supplement should explicitly summarize compute budgets and data split limitations.')
 need(('toolrm' in PAPER or 'fc-rewardbench' in PAPER or 'rloo' in PAPER or 'reinforce++' in PAPER or 's-grpo' in PAPER or 'proxy state' in PAPER or 'qlora' in PAPER), 'related_work_positioning', 'Paper should explicitly position itself against missing evaluation/baseline families (e.g. ToolRM, FC-RewardBench, proxy-state evaluation, RLOO/REINFORCE++, S-GRPO, QLoRA context).')
 need('release code' in PAPER or 'release code' in REPORT or 'evaluation scripts' in SUPP, 'replication_release', 'Report should explicitly state what code/prompts/evaluation assets are or are not released for replication.')
+need('near-perfect accuracy' not in PAPER, 'paper.near_perfect_overclaim', 'Main paper should not describe GSM8K training-set reward as near-perfect accuracy.')
+need('confirming the threshold' not in REPORT and 'confirms the threshold' not in REPORT, 'report.threshold_overclaim', 'Capstone report should avoid saying a single-seed 4B result confirms the capacity threshold.')
+need('8b: 100% peak on gsm8k' not in REPORT, 'report.peak_table_overclaim', 'Summary tables should not present peak GSM8K training-step numbers in a way that reads like benchmark performance.')
 
 print(f'METRIC caveat_issues={len(issues)}')
 for code, msg in issues:

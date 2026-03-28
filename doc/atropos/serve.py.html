@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>serve.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "atropos/serve.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>serve.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-string">"""
+Standalone tinker inference server. No training, no atropos — just chat.
+
+Usage:
+    python serve.py                                    # default model
+    python serve.py --model Qwen/Qwen3-30B-A3B        # specific model
+    python serve.py --weights tinker://...path...      # from saved weights
+    python serve.py --port 8001                        # custom port
+"""</span>
+
+<span class="hljs-keyword">import</span> argparse
+<span class="hljs-keyword">import</span> random
+<span class="hljs-keyword">import</span> time
+
+<span class="hljs-keyword">import</span> tinker
+<span class="hljs-keyword">from</span> tinker.types <span class="hljs-keyword">import</span> ModelInput, SamplingParams
+<span class="hljs-keyword">from</span> fastapi <span class="hljs-keyword">import</span> FastAPI, HTTPException
+<span class="hljs-keyword">from</span> transformers <span class="hljs-keyword">import</span> AutoTokenizer
+
+<span class="hljs-keyword">from</span> tinker_atropos.types <span class="hljs-keyword">import</span> (
+    ChatCompletionRequest,
+    ChatCompletionResponse,
+    CompletionRequest,
+    CompletionResponse,
+    LogprobsRequest,
+    LogprobsResponse,
+    TokenLogprob,
+)
+
+app = FastAPI(title=<span class="hljs-string">"Tinker Inference Server"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Global state</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">sampling_client = <span class="hljs-literal">None</span>
+tokenizer = <span class="hljs-literal">None</span>
+model_name = <span class="hljs-literal">None</span>
+
+
+<span class="hljs-meta">@app.get("/health")</span>
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">health</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-keyword">return</span> {<span class="hljs-string">"status"</span>: <span class="hljs-string">"ok"</span>, <span class="hljs-string">"model"</span>: model_name, <span class="hljs-string">"ready"</span>: sampling_client <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>}
+
+
+<span class="hljs-meta">@app.post("/v1/chat/completions", response_model=ChatCompletionResponse)</span>
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">chat_completions</span><span class="hljs-params">(request: ChatCompletionRequest)</span>:</span>
+    <span class="hljs-keyword">if</span> sampling_client <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+        <span class="hljs-keyword">raise</span> HTTPException(status_code=<span class="hljs-number">503</span>, detail=<span class="hljs-string">"Model not loaded"</span>)
+
+    <span class="hljs-keyword">try</span>:
+        messages_dict = [{<span class="hljs-string">"role"</span>: msg.role, <span class="hljs-string">"content"</span>: msg.content} <span class="hljs-keyword">for</span> msg <span class="hljs-keyword">in</span> request.messages]
+        prompt_text = tokenizer.apply_chat_template(
+            messages_dict, tokenize=<span class="hljs-literal">False</span>, add_generation_prompt=<span class="hljs-literal">True</span>
+        )
+        prompt_tokens = tokenizer.encode(prompt_text, add_special_tokens=<span class="hljs-literal">False</span>)
+        model_input = ModelInput.from_ints(prompt_tokens)
+
+        sampling_params = SamplingParams(
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
+            stop=request.stop <span class="hljs-keyword">if</span> request.stop <span class="hljs-keyword">else</span> [],
+        )
+
+        result = <span class="hljs-keyword">await</span> sampling_client.sample_async(
+            prompt=model_input,
+            sampling_params=sampling_params,
+            num_samples=request.n,
+        )
+
+        choices = []
+        <span class="hljs-keyword">for</span> i, sequence <span class="hljs-keyword">in</span> enumerate(result.sequences):
+            output_text = tokenizer.decode(sequence.tokens, skip_special_tokens=<span class="hljs-literal">True</span>)
+            choices.append(
+                {
+                    <span class="hljs-string">"message"</span>: {<span class="hljs-string">"role"</span>: <span class="hljs-string">"assistant"</span>, <span class="hljs-string">"content"</span>: output_text},
+                    <span class="hljs-string">"index"</span>: i,
+                    <span class="hljs-string">"finish_reason"</span>: <span class="hljs-string">"stop"</span>,
+                }
+            )
+
+        <span class="hljs-keyword">return</span> ChatCompletionResponse(
+            id=<span class="hljs-string">f"chatcmpl-<span class="hljs-subst">{random.randint(<span class="hljs-number">0</span>, <span class="hljs-number">999999</span>)}</span>"</span>,
+            choices=choices,
+            created=int(time.time()),
+            model=model_name,
+        )
+    <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+        <span class="hljs-keyword">raise</span> HTTPException(status_code=<span class="hljs-number">500</span>, detail=str(e))
+
+
+<span class="hljs-meta">@app.post("/v1/completions", response_model=CompletionResponse)</span>
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">completions</span><span class="hljs-params">(request: CompletionRequest)</span>:</span>
+    <span class="hljs-keyword">if</span> sampling_client <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+        <span class="hljs-keyword">raise</span> HTTPException(status_code=<span class="hljs-number">503</span>, detail=<span class="hljs-string">"Model not loaded"</span>)
+
+    <span class="hljs-keyword">try</span>:
+        prompts = [request.prompt] <span class="hljs-keyword">if</span> isinstance(request.prompt, str) <span class="hljs-keyword">else</span> request.prompt
+        all_choices = []
+
+        <span class="hljs-keyword">for</span> prompt <span class="hljs-keyword">in</span> prompts:
+            prompt_tokens = tokenizer.encode(prompt, add_special_tokens=<span class="hljs-literal">False</span>)
+            model_input = ModelInput.from_ints(prompt_tokens)
+
+            sampling_params = SamplingParams(
+                max_tokens=request.max_tokens,
+                temperature=request.temperature,
+                stop=request.stop <span class="hljs-keyword">if</span> request.stop <span class="hljs-keyword">else</span> [],
+            )
+
+            result = <span class="hljs-keyword">await</span> sampling_client.sample_async(
+                prompt=model_input,
+                sampling_params=sampling_params,
+                num_samples=request.n,
+            )
+
+            <span class="hljs-keyword">for</span> sequence <span class="hljs-keyword">in</span> result.sequences:
+                output_text = tokenizer.decode(sequence.tokens, skip_special_tokens=<span class="hljs-literal">True</span>)
+                all_choices.append(
+                    {
+                        <span class="hljs-string">"text"</span>: output_text,
+                        <span class="hljs-string">"index"</span>: len(all_choices),
+                        <span class="hljs-string">"finish_reason"</span>: <span class="hljs-string">"stop"</span>,
+                    }
+                )
+
+        <span class="hljs-keyword">return</span> CompletionResponse(
+            id=<span class="hljs-string">f"cmpl-<span class="hljs-subst">{random.randint(<span class="hljs-number">0</span>, <span class="hljs-number">999999</span>)}</span>"</span>,
+            choices=all_choices,
+            created=int(time.time()),
+            model=model_name,
+        )
+    <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+        <span class="hljs-keyword">raise</span> HTTPException(status_code=<span class="hljs-number">500</span>, detail=str(e))
+
+
+<span class="hljs-meta">@app.post("/logprobs", response_model=LogprobsResponse)</span>
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">logprobs</span><span class="hljs-params">(request: LogprobsRequest)</span>:</span>
+    <span class="hljs-keyword">if</span> sampling_client <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+        <span class="hljs-keyword">raise</span> HTTPException(status_code=<span class="hljs-number">503</span>, detail=<span class="hljs-string">"Model not loaded"</span>)
+
+    <span class="hljs-keyword">try</span>:
+        <span class="hljs-keyword">if</span> request.input_ids <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+            token_ids = request.input_ids
+        <span class="hljs-keyword">elif</span> request.text <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+            token_ids = tokenizer.encode(request.text, add_special_tokens=<span class="hljs-literal">False</span>)
+        <span class="hljs-keyword">else</span>:
+            <span class="hljs-keyword">raise</span> HTTPException(status_code=<span class="hljs-number">400</span>, detail=<span class="hljs-string">"input_ids or text required"</span>)
+
+        <span class="hljs-keyword">if</span> len(token_ids) == <span class="hljs-number">0</span>:
+            <span class="hljs-keyword">raise</span> HTTPException(status_code=<span class="hljs-number">400</span>, detail=<span class="hljs-string">"Empty input"</span>)
+
+        model_input = ModelInput.from_ints(token_ids)
+        prompt_lps = <span class="hljs-keyword">await</span> sampling_client.compute_logprobs_async(model_input)
+
+        token_logprobs = []
+        <span class="hljs-keyword">for</span> i, token_id <span class="hljs-keyword">in</span> enumerate(token_ids):
+            lp = prompt_lps[i] <span class="hljs-keyword">if</span> i &lt; len(prompt_lps) <span class="hljs-keyword">and</span> prompt_lps[i] <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">else</span> <span class="hljs-number">0.0</span>
+            token_text = tokenizer.decode([token_id]) <span class="hljs-keyword">if</span> request.return_text <span class="hljs-keyword">else</span> <span class="hljs-literal">None</span>
+            token_logprobs.append(TokenLogprob(token_id=token_id, logprob=lp, token=token_text))
+
+        <span class="hljs-keyword">return</span> LogprobsResponse(logprobs=token_logprobs, num_tokens=len(token_ids))
+    <span class="hljs-keyword">except</span> HTTPException:
+        <span class="hljs-keyword">raise</span>
+    <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+        <span class="hljs-keyword">raise</span> HTTPException(status_code=<span class="hljs-number">500</span>, detail=str(e))
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-keyword">global</span> sampling_client, tokenizer, model_name
+
+    parser = argparse.ArgumentParser(description=<span class="hljs-string">"Tinker inference server"</span>)
+    parser.add_argument(<span class="hljs-string">"--model"</span>, default=<span class="hljs-string">"Qwen/Qwen3-30B-A3B"</span>, help=<span class="hljs-string">"Model name"</span>)
+    parser.add_argument(<span class="hljs-string">"--weights"</span>, default=<span class="hljs-literal">None</span>, help=<span class="hljs-string">"Saved weights path (tinker://...)"</span>)
+    parser.add_argument(<span class="hljs-string">"--port"</span>, type=int, default=<span class="hljs-number">8001</span>, help=<span class="hljs-string">"Server port"</span>)
+    args = parser.parse_args()
+
+    model_name = args.model
+    print(<span class="hljs-string">f"Loading model: <span class="hljs-subst">{model_name}</span>"</span>)
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    print(<span class="hljs-string">"Tokenizer loaded"</span>)
+
+    service_client = tinker.ServiceClient()
+
+    <span class="hljs-keyword">if</span> args.weights:
+        print(<span class="hljs-string">f"Loading weights from: <span class="hljs-subst">{args.weights}</span>"</span>)
+        sampling_client = service_client.create_sampling_client(model_path=args.weights)
+    <span class="hljs-keyword">else</span>:
+        print(<span class="hljs-string">"Using base model weights"</span>)
+        sampling_client = service_client.create_sampling_client(base_model=model_name)
+
+    print(<span class="hljs-string">"Sampling client ready"</span>)
+
+    <span class="hljs-keyword">import</span> uvicorn
+
+    print(<span class="hljs-string">f"\nServing on http://0.0.0.0:<span class="hljs-subst">{args.port}</span>"</span>)
+    print(<span class="hljs-string">"  /v1/chat/completions  - OpenAI chat"</span>)
+    print(<span class="hljs-string">"  /v1/completions       - OpenAI completions"</span>)
+    print(<span class="hljs-string">"  /logprobs             - per-token logprobs"</span>)
+    print(<span class="hljs-string">"  /health               - health check"</span>)
+
+    uvicorn.run(app, host=<span class="hljs-string">"0.0.0.0"</span>, port=args.port, log_level=<span class="hljs-string">"info"</span>)
+
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    main()
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

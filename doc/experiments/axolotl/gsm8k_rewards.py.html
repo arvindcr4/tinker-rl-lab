@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>gsm8k_rewards.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "experiments/axolotl/gsm8k_rewards.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>gsm8k_rewards.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-string">"""
+GSM8K reward functions and transforms for Axolotl GRPO.
+
+Binary correctness reward matching the Tinker GRPO experiment:
+  1.0 if final answer is correct, 0.0 otherwise.
+"""</span>
+
+<span class="hljs-keyword">import</span> re
+<span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> Optional
+
+
+question_suffix = <span class="hljs-string">" Provide a numerical answer without units, written inside \\boxed{}."</span>
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_extract_boxed</span><span class="hljs-params">(text: str)</span> -&gt; Optional[str]:</span>
+    <span class="hljs-string">"""Extract answer from \\boxed{...} format."""</span>
+    match = re.search(<span class="hljs-string">r"\\boxed\{([^}]+)\}"</span>, text)
+    <span class="hljs-keyword">if</span> match:
+        <span class="hljs-keyword">return</span> match.group(<span class="hljs-number">1</span>).strip()
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Fallback: last number in text</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    numbers = re.findall(<span class="hljs-string">r"[-+]?\d*\.?\d+"</span>, text)
+    <span class="hljs-keyword">return</span> numbers[<span class="hljs-number">-1</span>] <span class="hljs-keyword">if</span> numbers <span class="hljs-keyword">else</span> <span class="hljs-literal">None</span>
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_normalize_number</span><span class="hljs-params">(s: str)</span> -&gt; Optional[float]:</span>
+    <span class="hljs-string">"""Parse a string as a number, handling commas."""</span>
+    <span class="hljs-keyword">try</span>:
+        <span class="hljs-keyword">return</span> float(s.replace(<span class="hljs-string">","</span>, <span class="hljs-string">""</span>).strip())
+    <span class="hljs-keyword">except</span> (ValueError, AttributeError):
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">None</span>
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">gsm8k_correctness_reward</span><span class="hljs-params">(completions: list[str], **kwargs)</span> -&gt; list[float]:</span>
+    <span class="hljs-string">"""
+    Binary reward: 1.0 if correct, 0.0 otherwise.
+
+    Expects kwargs to contain 'answer' (gold numeric answers).
+    Matches Tinker's scoring exactly.
+    """</span>
+    gold_answers = kwargs.get(<span class="hljs-string">"answer"</span>, [])
+    rewards = []
+
+    <span class="hljs-keyword">for</span> completion, gold <span class="hljs-keyword">in</span> zip(completions, gold_answers):
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>Strip think tags if present (Qwen3 thinking mode)</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        answer_text = completion.split(<span class="hljs-string">"&lt;/think&gt;"</span>)[<span class="hljs-number">-1</span>] <span class="hljs-keyword">if</span> <span class="hljs-string">"&lt;/think&gt;"</span> <span class="hljs-keyword">in</span> completion <span class="hljs-keyword">else</span> completion
+
+        predicted_str = _extract_boxed(answer_text)
+        predicted = _normalize_number(predicted_str) <span class="hljs-keyword">if</span> predicted_str <span class="hljs-keyword">else</span> <span class="hljs-literal">None</span>
+        expected = _normalize_number(str(gold))
+
+        <span class="hljs-keyword">if</span> predicted <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">and</span> expected <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+            rewards.append(<span class="hljs-number">1.0</span> <span class="hljs-keyword">if</span> abs(predicted - expected) &lt; <span class="hljs-number">0.01</span> <span class="hljs-keyword">else</span> <span class="hljs-number">0.0</span>)
+        <span class="hljs-keyword">else</span>:
+            rewards.append(<span class="hljs-number">0.0</span>)
+
+    <span class="hljs-keyword">return</span> rewards
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">gsm8k_grpo_transform</span><span class="hljs-params">(cfg, *args, **kwargs)</span>:</span>
+    <span class="hljs-string">"""Transform GSM8K dataset for GRPO: extract prompt + gold answer label."""</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">transform_fn</span><span class="hljs-params">(example, tokenizer=None)</span>:</span>
+        gold = example[<span class="hljs-string">"answer"</span>].split(<span class="hljs-string">"####"</span>)[<span class="hljs-number">-1</span>].strip().replace(<span class="hljs-string">","</span>, <span class="hljs-string">""</span>)
+        <span class="hljs-keyword">return</span> {
+            <span class="hljs-string">"prompt"</span>: [
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>, <span class="hljs-string">"content"</span>: example[<span class="hljs-string">"question"</span>] + question_suffix},
+            ],
+            <span class="hljs-string">"answer"</span>: gold,
+        }
+
+    <span class="hljs-keyword">return</span> transform_fn, {<span class="hljs-string">"remove_columns"</span>: [<span class="hljs-string">"question"</span>]}
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

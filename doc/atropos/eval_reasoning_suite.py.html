@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>eval_reasoning_suite.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "atropos/eval_reasoning_suite.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>eval_reasoning_suite.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-comment">#!/usr/bin/env python3</span>
+<span class="hljs-string">"""
+Deterministic evaluation suite for reasoning benchmarks.
+
+This script is for claim-support evaluation after training, especially when the
+question is whether a checkpoint generalizes beyond GSM8K saturation.
+
+Supported benchmarks
+--------------------
+- gsm8k
+- gsm1k
+- gsm_symbolic_main
+- gsm_symbolic_p1
+- gsm_symbolic_p2
+- math
+- olympiadbench
+
+The script talks to any OpenAI-compatible chat endpoint, including the local
+`serve.py` server in this repo.
+"""</span>
+
+<span class="hljs-keyword">from</span> __future__ <span class="hljs-keyword">import</span> annotations
+
+<span class="hljs-keyword">import</span> argparse
+<span class="hljs-keyword">import</span> asyncio
+<span class="hljs-keyword">import</span> json
+<span class="hljs-keyword">import</span> os
+<span class="hljs-keyword">import</span> random
+<span class="hljs-keyword">import</span> time
+<span class="hljs-keyword">from</span> dataclasses <span class="hljs-keyword">import</span> dataclass
+<span class="hljs-keyword">from</span> pathlib <span class="hljs-keyword">import</span> Path
+<span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> Any, Dict, Iterable, List, Optional
+
+<span class="hljs-keyword">import</span> aiohttp
+<span class="hljs-keyword">from</span> datasets <span class="hljs-keyword">import</span> concatenate_datasets, load_dataset
+<span class="hljs-keyword">from</span> latex2sympy2_extended <span class="hljs-keyword">import</span> NormalizationConfig
+<span class="hljs-keyword">from</span> math_verify <span class="hljs-keyword">import</span> LatexExtractionConfig, parse, verify
+
+<span class="hljs-keyword">from</span> tinker_atropos.config <span class="hljs-keyword">import</span> TinkerAtroposConfig
+
+
+GSM_QUESTION_SUFFIX = <span class="hljs-string">" Provide a numerical answer without units, written inside \\boxed{}."</span>
+MATH_QUESTION_SUFFIX = <span class="hljs-string">" Provide your answer inside \\boxed{}."</span>
+
+GSM_PREFIX = [
+    {
+        <span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>,
+        <span class="hljs-string">"content"</span>: <span class="hljs-string">"How many r's are in strawberry?"</span> + GSM_QUESTION_SUFFIX,
+    },
+    {
+        <span class="hljs-string">"role"</span>: <span class="hljs-string">"assistant"</span>,
+        <span class="hljs-string">"content"</span>: (
+            <span class="hljs-string">"Let's spell the word out and number all the letters: "</span>
+            <span class="hljs-string">"1) s 2) t 3) r 4) a 5) w 6) b 7) e 8) r 9) r 10) y. "</span>
+            <span class="hljs-string">"We have r's at positions 3, 8, and 9. \\boxed{3}"</span>
+        ),
+    },
+]
+
+MATH_PREFIX = [
+    {
+        <span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>,
+        <span class="hljs-string">"content"</span>: (
+            <span class="hljs-string">"What is the sum of all positive integers n such that n^2 divides 12!?"</span>
+            + MATH_QUESTION_SUFFIX
+        ),
+    },
+    {
+        <span class="hljs-string">"role"</span>: <span class="hljs-string">"assistant"</span>,
+        <span class="hljs-string">"content"</span>: (
+            <span class="hljs-string">"We need n^2 | 12!. First, 12! = 2^10 * 3^5 * 5^2 * 7 * 11. "</span>
+            <span class="hljs-string">"For n^2 | 12!, each prime in n can appear at most floor(exponent/2) times. "</span>
+            <span class="hljs-string">"So n divides 2^5 * 3^2 * 5 = 1440. The sum of divisors of 1440 = "</span>
+            <span class="hljs-string">"(1+2+4+8+16+32)(1+3+9)(1+5) = 63 * 13 * 6 = 4914. \\boxed{4914}"</span>
+        ),
+    },
+]
+
+MATH_SUBJECTS = [
+    <span class="hljs-string">"algebra"</span>,
+    <span class="hljs-string">"counting_and_probability"</span>,
+    <span class="hljs-string">"geometry"</span>,
+    <span class="hljs-string">"intermediate_algebra"</span>,
+    <span class="hljs-string">"number_theory"</span>,
+    <span class="hljs-string">"prealgebra"</span>,
+    <span class="hljs-string">"precalculus"</span>,
+]
+
+
+<span class="hljs-meta">@dataclass</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Example</span>:</span>
+    benchmark: str
+    prompt: str
+    gold_answers: List[str]
+    metadata: Dict[str, Any]
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">parse_args</span><span class="hljs-params">()</span> -&gt; argparse.Namespace:</span>
+    parser = argparse.ArgumentParser(
+        description=<span class="hljs-string">"Deterministic reasoning benchmark evaluation against an OpenAI-compatible endpoint."</span>
+    )
+    parser.add_argument(
+        <span class="hljs-string">"--config"</span>,
+        type=str,
+        help=<span class="hljs-string">"Optional Tinker-Atropos YAML config. Used to infer model/base_url/max_tokens/prefix defaults."</span>,
+    )
+    parser.add_argument(
+        <span class="hljs-string">"--benchmarks"</span>,
+        nargs=<span class="hljs-string">"+"</span>,
+        default=[<span class="hljs-string">"gsm8k"</span>],
+        help=(
+            <span class="hljs-string">"Benchmarks to run. Supported: gsm8k gsm1k gsm_symbolic_main gsm_symbolic_p1 "</span>
+            <span class="hljs-string">"gsm_symbolic_p2 math olympiadbench all"</span>
+        ),
+    )
+    parser.add_argument(<span class="hljs-string">"--base-url"</span>, type=str, help=<span class="hljs-string">"OpenAI-compatible base URL, e.g. http://localhost:8001/v1"</span>)
+    parser.add_argument(<span class="hljs-string">"--model"</span>, type=str, help=<span class="hljs-string">"Model name passed to the endpoint"</span>)
+    parser.add_argument(<span class="hljs-string">"--api-key"</span>, type=str, default=<span class="hljs-string">"x"</span>, help=<span class="hljs-string">"API key for the endpoint"</span>)
+    parser.add_argument(
+        <span class="hljs-string">"--max-tokens"</span>,
+        type=int,
+        default=<span class="hljs-literal">None</span>,
+        help=<span class="hljs-string">"Override generation max_tokens. Falls back to config env.max_token_length or 512."</span>,
+    )
+    parser.add_argument(
+        <span class="hljs-string">"--temperature"</span>,
+        type=float,
+        default=<span class="hljs-number">0.0</span>,
+        help=<span class="hljs-string">"Evaluation temperature. Keep at 0.0 for deterministic scoring."</span>,
+    )
+    parser.add_argument(
+        <span class="hljs-string">"--concurrency"</span>,
+        type=int,
+        default=<span class="hljs-number">16</span>,
+        help=<span class="hljs-string">"Concurrent requests per batch."</span>,
+    )
+    parser.add_argument(
+        <span class="hljs-string">"--max-examples"</span>,
+        type=int,
+        default=<span class="hljs-literal">None</span>,
+        help=<span class="hljs-string">"Optional cap per benchmark for smoke tests."</span>,
+    )
+    parser.add_argument(
+        <span class="hljs-string">"--sample-seed"</span>,
+        type=int,
+        default=<span class="hljs-number">42</span>,
+        help=<span class="hljs-string">"Sampling seed used when max_examples truncates a benchmark."</span>,
+    )
+    parser.add_argument(
+        <span class="hljs-string">"--output-dir"</span>,
+        type=str,
+        default=<span class="hljs-string">"logs/reasoning_eval"</span>,
+        help=<span class="hljs-string">"Directory for per-benchmark summaries and prediction jsonl files."</span>,
+    )
+    parser.add_argument(
+        <span class="hljs-string">"--use-prefix"</span>,
+        dest=<span class="hljs-string">"use_prefix"</span>,
+        action=<span class="hljs-string">"store_true"</span>,
+        default=<span class="hljs-literal">None</span>,
+        help=<span class="hljs-string">"Force benchmark-specific worked-example prefix on."</span>,
+    )
+    parser.add_argument(
+        <span class="hljs-string">"--no-prefix"</span>,
+        dest=<span class="hljs-string">"use_prefix"</span>,
+        action=<span class="hljs-string">"store_false"</span>,
+        help=<span class="hljs-string">"Force worked-example prefix off."</span>,
+    )
+    parser.add_argument(
+        <span class="hljs-string">"--include-olympiad-multi-answer"</span>,
+        action=<span class="hljs-string">"store_true"</span>,
+        help=<span class="hljs-string">"Include OlympiadBench multi-answer items instead of the default single-answer subset."</span>,
+    )
+    <span class="hljs-keyword">return</span> parser.parse_args()
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_clean_gold_answer</span><span class="hljs-params">(text: str)</span> -&gt; str:</span>
+    text = text.strip()
+    <span class="hljs-keyword">if</span> text.startswith(<span class="hljs-string">"$"</span>) <span class="hljs-keyword">and</span> text.endswith(<span class="hljs-string">"$"</span>) <span class="hljs-keyword">and</span> len(text) &gt;= <span class="hljs-number">2</span>:
+        text = text[<span class="hljs-number">1</span>:<span class="hljs-number">-1</span>].strip()
+    <span class="hljs-keyword">return</span> text
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_extract_gsm_answer</span><span class="hljs-params">(answer: str)</span> -&gt; str:</span>
+    <span class="hljs-keyword">if</span> <span class="hljs-string">"####"</span> <span class="hljs-keyword">in</span> answer:
+        answer = answer.split(<span class="hljs-string">"####"</span>)[<span class="hljs-number">-1</span>]
+    <span class="hljs-keyword">return</span> answer.strip().replace(<span class="hljs-string">","</span>, <span class="hljs-string">""</span>)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_extract_math_boxed_answer</span><span class="hljs-params">(solution: str)</span> -&gt; str:</span>
+    idx = solution.rfind(<span class="hljs-string">"\\boxed{"</span>)
+    <span class="hljs-keyword">if</span> idx == <span class="hljs-number">-1</span>:
+        <span class="hljs-keyword">return</span> _clean_gold_answer(solution)
+
+    depth = <span class="hljs-number">0</span>
+    start = idx + len(<span class="hljs-string">"\\boxed{"</span>)
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(start, len(solution)):
+        <span class="hljs-keyword">if</span> solution[i] == <span class="hljs-string">"{"</span>:
+            depth += <span class="hljs-number">1</span>
+        <span class="hljs-keyword">elif</span> solution[i] == <span class="hljs-string">"}"</span>:
+            <span class="hljs-keyword">if</span> depth == <span class="hljs-number">0</span>:
+                <span class="hljs-keyword">return</span> _clean_gold_answer(solution[start:i])
+            depth -= <span class="hljs-number">1</span>
+    <span class="hljs-keyword">return</span> _clean_gold_answer(solution[start:])
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_gold_parse</span><span class="hljs-params">(answer: str)</span>:</span>
+    <span class="hljs-keyword">return</span> parse(
+        <span class="hljs-string">"\\boxed{"</span> + _clean_gold_answer(answer) + <span class="hljs-string">"}"</span>,
+        extraction_mode=<span class="hljs-string">"first_match"</span>,
+        extraction_config=[LatexExtractionConfig()],
+    )
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_response_parse</span><span class="hljs-params">(response_text: str)</span>:</span>
+    <span class="hljs-keyword">return</span> parse(
+        response_text.split(<span class="hljs-string">"&lt;/think&gt;"</span>)[<span class="hljs-number">-1</span>],
+        extraction_mode=<span class="hljs-string">"first_match"</span>,
+        extraction_config=[
+            LatexExtractionConfig(
+                normalization_config=NormalizationConfig(
+                    nits=<span class="hljs-literal">False</span>,
+                    malformed_operators=<span class="hljs-literal">False</span>,
+                    basic_latex=<span class="hljs-literal">True</span>,
+                    boxed=<span class="hljs-string">"all"</span>,
+                    units=<span class="hljs-literal">True</span>,
+                ),
+                boxed_match_priority=<span class="hljs-number">0</span>,
+                try_extract_without_anchor=<span class="hljs-literal">False</span>,
+            )
+        ],
+    )
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_is_correct</span><span class="hljs-params">(response_text: str, gold_answers: Iterable[str])</span> -&gt; bool:</span>
+    pred = _response_parse(response_text)
+    <span class="hljs-keyword">for</span> answer <span class="hljs-keyword">in</span> gold_answers:
+        gold = _gold_parse(answer)
+        <span class="hljs-keyword">if</span> verify(pred, gold):
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_normalize_base_url</span><span class="hljs-params">(base_url: str)</span> -&gt; str:</span>
+    base_url = base_url.rstrip(<span class="hljs-string">"/"</span>)
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> base_url.endswith(<span class="hljs-string">"/v1"</span>):
+        base_url = base_url + <span class="hljs-string">"/v1"</span>
+    <span class="hljs-keyword">return</span> base_url
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_sample_examples</span><span class="hljs-params">(examples: List[Example], max_examples: Optional[int], seed: int)</span> -&gt; List[Example]:</span>
+    <span class="hljs-keyword">if</span> max_examples <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">or</span> len(examples) &lt;= max_examples:
+        <span class="hljs-keyword">return</span> examples
+    rng = random.Random(seed)
+    sampled = list(examples)
+    rng.shuffle(sampled)
+    <span class="hljs-keyword">return</span> sampled[:max_examples]
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_gsm8k_examples</span><span class="hljs-params">(max_examples: Optional[int], seed: int)</span> -&gt; List[Example]:</span>
+    dataset = load_dataset(<span class="hljs-string">"gsm8k"</span>, <span class="hljs-string">"main"</span>, split=<span class="hljs-string">"test"</span>)
+    examples = [
+        Example(
+            benchmark=<span class="hljs-string">"gsm8k"</span>,
+            prompt=row[<span class="hljs-string">"question"</span>],
+            gold_answers=[_extract_gsm_answer(row[<span class="hljs-string">"answer"</span>])],
+            metadata={<span class="hljs-string">"source"</span>: <span class="hljs-string">"gsm8k"</span>, <span class="hljs-string">"id"</span>: idx},
+        )
+        <span class="hljs-keyword">for</span> idx, row <span class="hljs-keyword">in</span> enumerate(dataset)
+    ]
+    <span class="hljs-keyword">return</span> _sample_examples(examples, max_examples, seed)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_gsm1k_examples</span><span class="hljs-params">(max_examples: Optional[int], seed: int)</span> -&gt; List[Example]:</span>
+    dataset = load_dataset(<span class="hljs-string">"ScaleAI/gsm1k"</span>, split=<span class="hljs-string">"test"</span>)
+    examples = [
+        Example(
+            benchmark=<span class="hljs-string">"gsm1k"</span>,
+            prompt=row[<span class="hljs-string">"question"</span>],
+            gold_answers=[_clean_gold_answer(row[<span class="hljs-string">"answer"</span>]).replace(<span class="hljs-string">","</span>, <span class="hljs-string">""</span>)],
+            metadata={<span class="hljs-string">"source"</span>: <span class="hljs-string">"ScaleAI/gsm1k"</span>, <span class="hljs-string">"id"</span>: idx},
+        )
+        <span class="hljs-keyword">for</span> idx, row <span class="hljs-keyword">in</span> enumerate(dataset)
+    ]
+    <span class="hljs-keyword">return</span> _sample_examples(examples, max_examples, seed)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_gsm_symbolic_examples</span><span class="hljs-params">(variant: str, max_examples: Optional[int], seed: int)</span> -&gt; List[Example]:</span>
+    dataset = load_dataset(<span class="hljs-string">"apple/GSM-Symbolic"</span>, variant, split=<span class="hljs-string">"test"</span>)
+    examples = [
+        Example(
+            benchmark=<span class="hljs-string">f"gsm_symbolic_<span class="hljs-subst">{variant}</span>"</span>,
+            prompt=row[<span class="hljs-string">"question"</span>],
+            gold_answers=[_extract_gsm_answer(row[<span class="hljs-string">"answer"</span>])],
+            metadata={
+                <span class="hljs-string">"source"</span>: <span class="hljs-string">"apple/GSM-Symbolic"</span>,
+                <span class="hljs-string">"variant"</span>: variant,
+                <span class="hljs-string">"id"</span>: row[<span class="hljs-string">"id"</span>],
+                <span class="hljs-string">"instance"</span>: row[<span class="hljs-string">"instance"</span>],
+                <span class="hljs-string">"original_id"</span>: row[<span class="hljs-string">"original_id"</span>],
+            },
+        )
+        <span class="hljs-keyword">for</span> row <span class="hljs-keyword">in</span> dataset
+    ]
+    <span class="hljs-keyword">return</span> _sample_examples(examples, max_examples, seed)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_math_examples</span><span class="hljs-params">(max_examples: Optional[int], seed: int)</span> -&gt; List[Example]:</span>
+    train_splits = []
+    <span class="hljs-keyword">for</span> subject <span class="hljs-keyword">in</span> MATH_SUBJECTS:
+        train_splits.append(load_dataset(<span class="hljs-string">"EleutherAI/hendrycks_math"</span>, subject, split=<span class="hljs-string">"test"</span>))
+    dataset = concatenate_datasets(train_splits)
+    dataset = dataset.shuffle(seed=seed)
+    examples = [
+        Example(
+            benchmark=<span class="hljs-string">"math"</span>,
+            prompt=row[<span class="hljs-string">"problem"</span>],
+            gold_answers=[_extract_math_boxed_answer(row[<span class="hljs-string">"solution"</span>])],
+            metadata={<span class="hljs-string">"source"</span>: <span class="hljs-string">"EleutherAI/hendrycks_math"</span>, <span class="hljs-string">"subject"</span>: row.get(<span class="hljs-string">"type"</span>), <span class="hljs-string">"id"</span>: idx},
+        )
+        <span class="hljs-keyword">for</span> idx, row <span class="hljs-keyword">in</span> enumerate(dataset)
+    ]
+    <span class="hljs-keyword">return</span> _sample_examples(examples, max_examples, seed)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_olympiadbench_examples</span><span class="hljs-params">(
+    max_examples: Optional[int],
+    seed: int,
+    include_multi_answer: bool,
+)</span> -&gt; List[Example]:</span>
+    dataset = load_dataset(<span class="hljs-string">"math-ai/olympiadbench"</span>, split=<span class="hljs-string">"test"</span>)
+    filtered = []
+    <span class="hljs-keyword">for</span> row <span class="hljs-keyword">in</span> dataset:
+        <span class="hljs-keyword">if</span> row[<span class="hljs-string">"subject"</span>] != <span class="hljs-string">"Math"</span>:
+            <span class="hljs-keyword">continue</span>
+        <span class="hljs-keyword">if</span> row[<span class="hljs-string">"language"</span>] != <span class="hljs-string">"English"</span>:
+            <span class="hljs-keyword">continue</span>
+        <span class="hljs-keyword">if</span> row[<span class="hljs-string">"modality"</span>] != <span class="hljs-string">"Text-only"</span>:
+            <span class="hljs-keyword">continue</span>
+        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">not</span> include_multi_answer) <span class="hljs-keyword">and</span> row[<span class="hljs-string">"is_multiple_answer"</span>]:
+            <span class="hljs-keyword">continue</span>
+        gold_answers = [_clean_gold_answer(ans) <span class="hljs-keyword">for</span> ans <span class="hljs-keyword">in</span> row[<span class="hljs-string">"final_answer"</span>] <span class="hljs-keyword">if</span> ans]
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> gold_answers:
+            <span class="hljs-keyword">continue</span>
+        filtered.append(
+            Example(
+                benchmark=<span class="hljs-string">"olympiadbench"</span>,
+                prompt=row[<span class="hljs-string">"question"</span>],
+                gold_answers=gold_answers,
+                metadata={
+                    <span class="hljs-string">"source"</span>: <span class="hljs-string">"math-ai/olympiadbench"</span>,
+                    <span class="hljs-string">"id"</span>: row[<span class="hljs-string">"id"</span>],
+                    <span class="hljs-string">"answer_type"</span>: row[<span class="hljs-string">"answer_type"</span>],
+                    <span class="hljs-string">"difficulty"</span>: row[<span class="hljs-string">"difficulty"</span>],
+                    <span class="hljs-string">"is_multiple_answer"</span>: row[<span class="hljs-string">"is_multiple_answer"</span>],
+                },
+            )
+        )
+    <span class="hljs-keyword">return</span> _sample_examples(filtered, max_examples, seed)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_examples</span><span class="hljs-params">(
+    benchmark: str,
+    max_examples: Optional[int],
+    seed: int,
+    include_olympiad_multi_answer: bool,
+)</span> -&gt; List[Example]:</span>
+    <span class="hljs-keyword">if</span> benchmark == <span class="hljs-string">"gsm8k"</span>:
+        <span class="hljs-keyword">return</span> load_gsm8k_examples(max_examples, seed)
+    <span class="hljs-keyword">if</span> benchmark == <span class="hljs-string">"gsm1k"</span>:
+        <span class="hljs-keyword">return</span> load_gsm1k_examples(max_examples, seed)
+    <span class="hljs-keyword">if</span> benchmark == <span class="hljs-string">"gsm_symbolic_main"</span>:
+        <span class="hljs-keyword">return</span> load_gsm_symbolic_examples(<span class="hljs-string">"main"</span>, max_examples, seed)
+    <span class="hljs-keyword">if</span> benchmark == <span class="hljs-string">"gsm_symbolic_p1"</span>:
+        <span class="hljs-keyword">return</span> load_gsm_symbolic_examples(<span class="hljs-string">"p1"</span>, max_examples, seed)
+    <span class="hljs-keyword">if</span> benchmark == <span class="hljs-string">"gsm_symbolic_p2"</span>:
+        <span class="hljs-keyword">return</span> load_gsm_symbolic_examples(<span class="hljs-string">"p2"</span>, max_examples, seed)
+    <span class="hljs-keyword">if</span> benchmark == <span class="hljs-string">"math"</span>:
+        <span class="hljs-keyword">return</span> load_math_examples(max_examples, seed)
+    <span class="hljs-keyword">if</span> benchmark == <span class="hljs-string">"olympiadbench"</span>:
+        <span class="hljs-keyword">return</span> load_olympiadbench_examples(max_examples, seed, include_olympiad_multi_answer)
+    <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">f"Unsupported benchmark: <span class="hljs-subst">{benchmark}</span>"</span>)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">benchmark_prefix</span><span class="hljs-params">(benchmark: str, use_prefix: bool)</span> -&gt; List[Dict[str, str]]:</span>
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> use_prefix:
+        <span class="hljs-keyword">return</span> []
+    <span class="hljs-keyword">if</span> benchmark.startswith(<span class="hljs-string">"gsm"</span>):
+        <span class="hljs-keyword">return</span> list(GSM_PREFIX)
+    <span class="hljs-keyword">return</span> list(MATH_PREFIX)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">benchmark_suffix</span><span class="hljs-params">(benchmark: str)</span> -&gt; str:</span>
+    <span class="hljs-keyword">if</span> benchmark.startswith(<span class="hljs-string">"gsm"</span>):
+        <span class="hljs-keyword">return</span> GSM_QUESTION_SUFFIX
+    <span class="hljs-keyword">return</span> MATH_QUESTION_SUFFIX
+
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">fetch_completion</span><span class="hljs-params">(
+    session: aiohttp.ClientSession,
+    base_url: str,
+    model_name: str,
+    api_key: str,
+    messages: List[Dict[str, str]],
+    max_tokens: int,
+    temperature: float,
+)</span> -&gt; str:</span>
+    url = _normalize_base_url(base_url) + <span class="hljs-string">"/chat/completions"</span>
+    headers = {
+        <span class="hljs-string">"Authorization"</span>: <span class="hljs-string">f"Bearer <span class="hljs-subst">{api_key}</span>"</span>,
+        <span class="hljs-string">"Content-Type"</span>: <span class="hljs-string">"application/json"</span>,
+    }
+    payload = {
+        <span class="hljs-string">"model"</span>: model_name,
+        <span class="hljs-string">"messages"</span>: messages,
+        <span class="hljs-string">"n"</span>: <span class="hljs-number">1</span>,
+        <span class="hljs-string">"max_tokens"</span>: max_tokens,
+        <span class="hljs-string">"temperature"</span>: temperature,
+    }
+    <span class="hljs-keyword">async</span> <span class="hljs-keyword">with</span> session.post(url, headers=headers, json=payload) <span class="hljs-keyword">as</span> response:
+        raw_text = <span class="hljs-keyword">await</span> response.text()
+        <span class="hljs-keyword">if</span> response.status != <span class="hljs-number">200</span>:
+            <span class="hljs-keyword">raise</span> RuntimeError(<span class="hljs-string">f"HTTP <span class="hljs-subst">{response.status}</span>: <span class="hljs-subst">{raw_text[:<span class="hljs-number">500</span>]}</span>"</span>)
+        data = json.loads(raw_text)
+        <span class="hljs-keyword">return</span> data[<span class="hljs-string">"choices"</span>][<span class="hljs-number">0</span>][<span class="hljs-string">"message"</span>][<span class="hljs-string">"content"</span>]
+
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">evaluate_example</span><span class="hljs-params">(
+    session: aiohttp.ClientSession,
+    example: Example,
+    base_url: str,
+    model_name: str,
+    api_key: str,
+    max_tokens: int,
+    temperature: float,
+    use_prefix: bool,
+)</span> -&gt; Dict[str, Any]:</span>
+    messages = [
+        *benchmark_prefix(example.benchmark, use_prefix),
+        {<span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>, <span class="hljs-string">"content"</span>: example.prompt + benchmark_suffix(example.benchmark)},
+    ]
+    started = time.time()
+    <span class="hljs-keyword">try</span>:
+        response_text = <span class="hljs-keyword">await</span> fetch_completion(
+            session=session,
+            base_url=base_url,
+            model_name=model_name,
+            api_key=api_key,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+        correct = _is_correct(response_text, example.gold_answers)
+        error = <span class="hljs-literal">None</span>
+    <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> exc:
+        response_text = <span class="hljs-string">""</span>
+        correct = <span class="hljs-literal">False</span>
+        error = str(exc)
+
+    <span class="hljs-keyword">return</span> {
+        <span class="hljs-string">"benchmark"</span>: example.benchmark,
+        <span class="hljs-string">"correct"</span>: correct,
+        <span class="hljs-string">"error"</span>: error,
+        <span class="hljs-string">"latency_sec"</span>: round(time.time() - started, <span class="hljs-number">4</span>),
+        <span class="hljs-string">"gold_answers"</span>: example.gold_answers,
+        <span class="hljs-string">"response"</span>: response_text,
+        <span class="hljs-string">"metadata"</span>: example.metadata,
+        <span class="hljs-string">"question"</span>: example.prompt,
+    }
+
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">evaluate_benchmark</span><span class="hljs-params">(
+    benchmark: str,
+    examples: List[Example],
+    base_url: str,
+    model_name: str,
+    api_key: str,
+    max_tokens: int,
+    temperature: float,
+    concurrency: int,
+    use_prefix: bool,
+)</span> -&gt; List[Dict[str, Any]]:</span>
+    timeout = aiohttp.ClientTimeout(total=<span class="hljs-literal">None</span>, connect=<span class="hljs-number">60</span>, sock_read=<span class="hljs-number">600</span>)
+    connector = aiohttp.TCPConnector(limit=max(<span class="hljs-number">1</span>, concurrency))
+
+    print(<span class="hljs-string">f"\n=== Evaluating <span class="hljs-subst">{benchmark}</span>: <span class="hljs-subst">{len(examples)}</span> examples ==="</span>)
+    results: List[Dict[str, Any]] = []
+    <span class="hljs-keyword">async</span> <span class="hljs-keyword">with</span> aiohttp.ClientSession(timeout=timeout, connector=connector) <span class="hljs-keyword">as</span> session:
+        <span class="hljs-keyword">for</span> start <span class="hljs-keyword">in</span> range(<span class="hljs-number">0</span>, len(examples), concurrency):
+            batch = examples[start : start + concurrency]
+            batch_results = <span class="hljs-keyword">await</span> asyncio.gather(
+                *[
+                    evaluate_example(
+                        session=session,
+                        example=example,
+                        base_url=base_url,
+                        model_name=model_name,
+                        api_key=api_key,
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                        use_prefix=use_prefix,
+                    )
+                    <span class="hljs-keyword">for</span> example <span class="hljs-keyword">in</span> batch
+                ]
+            )
+            results.extend(batch_results)
+            done = len(results)
+            correct = sum(<span class="hljs-number">1</span> <span class="hljs-keyword">for</span> r <span class="hljs-keyword">in</span> results <span class="hljs-keyword">if</span> r[<span class="hljs-string">"correct"</span>])
+            print(<span class="hljs-string">f"  <span class="hljs-subst">{benchmark}</span>: <span class="hljs-subst">{done}</span>/<span class="hljs-subst">{len(examples)}</span> done | accuracy=<span class="hljs-subst">{correct / done:<span class="hljs-number">.4</span>f}</span>"</span>)
+    <span class="hljs-keyword">return</span> results
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">summarize_results</span><span class="hljs-params">(
+    benchmark: str,
+    results: List[Dict[str, Any]],
+    model_name: str,
+    base_url: str,
+    max_tokens: int,
+    temperature: float,
+    use_prefix: bool,
+)</span> -&gt; Dict[str, Any]:</span>
+    total = len(results)
+    correct = sum(<span class="hljs-number">1</span> <span class="hljs-keyword">for</span> r <span class="hljs-keyword">in</span> results <span class="hljs-keyword">if</span> r[<span class="hljs-string">"correct"</span>])
+    errors = sum(<span class="hljs-number">1</span> <span class="hljs-keyword">for</span> r <span class="hljs-keyword">in</span> results <span class="hljs-keyword">if</span> r[<span class="hljs-string">"error"</span>])
+    <span class="hljs-keyword">return</span> {
+        <span class="hljs-string">"benchmark"</span>: benchmark,
+        <span class="hljs-string">"total_examples"</span>: total,
+        <span class="hljs-string">"num_correct"</span>: correct,
+        <span class="hljs-string">"accuracy"</span>: (correct / total) <span class="hljs-keyword">if</span> total <span class="hljs-keyword">else</span> <span class="hljs-number">0.0</span>,
+        <span class="hljs-string">"num_request_errors"</span>: errors,
+        <span class="hljs-string">"model_name"</span>: model_name,
+        <span class="hljs-string">"base_url"</span>: base_url,
+        <span class="hljs-string">"max_tokens"</span>: max_tokens,
+        <span class="hljs-string">"temperature"</span>: temperature,
+        <span class="hljs-string">"use_prefix"</span>: use_prefix,
+        <span class="hljs-string">"timestamp"</span>: int(time.time()),
+    }
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">write_outputs</span><span class="hljs-params">(
+    output_dir: Path,
+    benchmark: str,
+    summary: Dict[str, Any],
+    results: List[Dict[str, Any]],
+)</span> -&gt; <span class="hljs-keyword">None</span>:</span>
+    output_dir.mkdir(parents=<span class="hljs-literal">True</span>, exist_ok=<span class="hljs-literal">True</span>)
+    summary_path = output_dir / <span class="hljs-string">f"<span class="hljs-subst">{benchmark}</span>_summary.json"</span>
+    preds_path = output_dir / <span class="hljs-string">f"<span class="hljs-subst">{benchmark}</span>_predictions.jsonl"</span>
+
+    <span class="hljs-keyword">with</span> open(summary_path, <span class="hljs-string">"w"</span>) <span class="hljs-keyword">as</span> f:
+        json.dump(summary, f, indent=<span class="hljs-number">2</span>, sort_keys=<span class="hljs-literal">True</span>)
+
+    <span class="hljs-keyword">with</span> open(preds_path, <span class="hljs-string">"w"</span>) <span class="hljs-keyword">as</span> f:
+        <span class="hljs-keyword">for</span> row <span class="hljs-keyword">in</span> results:
+            f.write(json.dumps(row, ensure_ascii=<span class="hljs-literal">False</span>) + <span class="hljs-string">"\n"</span>)
+
+    print(<span class="hljs-string">f"  Wrote summary: <span class="hljs-subst">{summary_path}</span>"</span>)
+    print(<span class="hljs-string">f"  Wrote predictions: <span class="hljs-subst">{preds_path}</span>"</span>)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">expand_benchmarks</span><span class="hljs-params">(benchmarks: List[str])</span> -&gt; List[str]:</span>
+    supported = [
+        <span class="hljs-string">"gsm8k"</span>,
+        <span class="hljs-string">"gsm1k"</span>,
+        <span class="hljs-string">"gsm_symbolic_main"</span>,
+        <span class="hljs-string">"gsm_symbolic_p1"</span>,
+        <span class="hljs-string">"gsm_symbolic_p2"</span>,
+        <span class="hljs-string">"math"</span>,
+        <span class="hljs-string">"olympiadbench"</span>,
+    ]
+    <span class="hljs-keyword">if</span> benchmarks == [<span class="hljs-string">"all"</span>]:
+        <span class="hljs-keyword">return</span> supported
+    invalid = [b <span class="hljs-keyword">for</span> b <span class="hljs-keyword">in</span> benchmarks <span class="hljs-keyword">if</span> b <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> supported]
+    <span class="hljs-keyword">if</span> invalid:
+        <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">f"Unsupported benchmarks: <span class="hljs-subst">{invalid}</span>. Supported: <span class="hljs-subst">{supported}</span>"</span>)
+    <span class="hljs-keyword">return</span> benchmarks
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">resolve_runtime</span><span class="hljs-params">(args: argparse.Namespace)</span> -&gt; Dict[str, Any]:</span>
+    config = <span class="hljs-literal">None</span>
+    <span class="hljs-keyword">if</span> args.config:
+        config = TinkerAtroposConfig.from_yaml(args.config)
+
+    model_name = args.model <span class="hljs-keyword">or</span> (config.openai[<span class="hljs-number">0</span>].model_name <span class="hljs-keyword">if</span> config <span class="hljs-keyword">else</span> <span class="hljs-literal">None</span>)
+    base_url = args.base_url <span class="hljs-keyword">or</span> (config.openai[<span class="hljs-number">0</span>].base_url <span class="hljs-keyword">if</span> config <span class="hljs-keyword">else</span> <span class="hljs-literal">None</span>)
+    api_key = args.api_key <span class="hljs-keyword">or</span> (config.openai[<span class="hljs-number">0</span>].api_key <span class="hljs-keyword">if</span> config <span class="hljs-keyword">else</span> <span class="hljs-string">"x"</span>)
+    max_tokens = args.max_tokens <span class="hljs-keyword">or</span> (config.max_token_env_length <span class="hljs-keyword">if</span> config <span class="hljs-keyword">else</span> <span class="hljs-number">512</span>)
+
+    <span class="hljs-keyword">if</span> model_name <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">or</span> base_url <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+        <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">"Provide either --config or both --model and --base-url."</span>)
+
+    use_prefix = args.use_prefix
+    <span class="hljs-keyword">if</span> use_prefix <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+        use_prefix = config.use_prompt_prefix <span class="hljs-keyword">if</span> config <span class="hljs-keyword">else</span> <span class="hljs-literal">True</span>
+
+    <span class="hljs-keyword">return</span> {
+        <span class="hljs-string">"model_name"</span>: model_name,
+        <span class="hljs-string">"base_url"</span>: base_url,
+        <span class="hljs-string">"api_key"</span>: api_key,
+        <span class="hljs-string">"max_tokens"</span>: max_tokens,
+        <span class="hljs-string">"use_prefix"</span>: use_prefix,
+    }
+
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">async_main</span><span class="hljs-params">()</span> -&gt; <span class="hljs-keyword">None</span>:</span>
+    args = parse_args()
+    runtime = resolve_runtime(args)
+    benchmarks = expand_benchmarks(args.benchmarks)
+    output_dir = Path(args.output_dir)
+
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">80</span>)
+    print(<span class="hljs-string">"Reasoning Evaluation Suite"</span>)
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">80</span>)
+    print(<span class="hljs-string">f"Model:       <span class="hljs-subst">{runtime[<span class="hljs-string">'model_name'</span>]}</span>"</span>)
+    print(<span class="hljs-string">f"Endpoint:    <span class="hljs-subst">{runtime[<span class="hljs-string">'base_url'</span>]}</span>"</span>)
+    print(<span class="hljs-string">f"Benchmarks:  <span class="hljs-subst">{<span class="hljs-string">', '</span>.join(benchmarks)}</span>"</span>)
+    print(<span class="hljs-string">f"Max tokens:  <span class="hljs-subst">{runtime[<span class="hljs-string">'max_tokens'</span>]}</span>"</span>)
+    print(<span class="hljs-string">f"Temperature: <span class="hljs-subst">{args.temperature}</span>"</span>)
+    print(<span class="hljs-string">f"Use prefix:  <span class="hljs-subst">{runtime[<span class="hljs-string">'use_prefix'</span>]}</span>"</span>)
+    print(<span class="hljs-string">f"Concurrency: <span class="hljs-subst">{args.concurrency}</span>"</span>)
+    print(<span class="hljs-string">f"Max examples:<span class="hljs-subst">{args.max_examples <span class="hljs-keyword">if</span> args.max_examples <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">else</span> <span class="hljs-string">'full'</span>}</span>"</span>)
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">80</span>)
+
+    combined_summary = []
+    <span class="hljs-keyword">for</span> benchmark <span class="hljs-keyword">in</span> benchmarks:
+        examples = load_examples(
+            benchmark=benchmark,
+            max_examples=args.max_examples,
+            seed=args.sample_seed,
+            include_olympiad_multi_answer=args.include_olympiad_multi_answer,
+        )
+        results = <span class="hljs-keyword">await</span> evaluate_benchmark(
+            benchmark=benchmark,
+            examples=examples,
+            base_url=runtime[<span class="hljs-string">"base_url"</span>],
+            model_name=runtime[<span class="hljs-string">"model_name"</span>],
+            api_key=runtime[<span class="hljs-string">"api_key"</span>],
+            max_tokens=runtime[<span class="hljs-string">"max_tokens"</span>],
+            temperature=args.temperature,
+            concurrency=args.concurrency,
+            use_prefix=runtime[<span class="hljs-string">"use_prefix"</span>],
+        )
+        summary = summarize_results(
+            benchmark=benchmark,
+            results=results,
+            model_name=runtime[<span class="hljs-string">"model_name"</span>],
+            base_url=runtime[<span class="hljs-string">"base_url"</span>],
+            max_tokens=runtime[<span class="hljs-string">"max_tokens"</span>],
+            temperature=args.temperature,
+            use_prefix=runtime[<span class="hljs-string">"use_prefix"</span>],
+        )
+        write_outputs(output_dir, benchmark, summary, results)
+        combined_summary.append(summary)
+        print(
+            <span class="hljs-string">f"  <span class="hljs-subst">{benchmark}</span>: accuracy=<span class="hljs-subst">{summary[<span class="hljs-string">'accuracy'</span>]:<span class="hljs-number">.4</span>f}</span> "</span>
+            <span class="hljs-string">f"(<span class="hljs-subst">{summary[<span class="hljs-string">'num_correct'</span>]}</span>/<span class="hljs-subst">{summary[<span class="hljs-string">'total_examples'</span>]}</span>)"</span>
+        )
+
+    combined_path = output_dir / <span class="hljs-string">"combined_summary.json"</span>
+    <span class="hljs-keyword">with</span> open(combined_path, <span class="hljs-string">"w"</span>) <span class="hljs-keyword">as</span> f:
+        json.dump(combined_summary, f, indent=<span class="hljs-number">2</span>, sort_keys=<span class="hljs-literal">True</span>)
+    print(<span class="hljs-string">f"\nWrote combined summary: <span class="hljs-subst">{combined_path}</span>"</span>)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> -&gt; <span class="hljs-keyword">None</span>:</span>
+    asyncio.run(async_main())
+
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    main()
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

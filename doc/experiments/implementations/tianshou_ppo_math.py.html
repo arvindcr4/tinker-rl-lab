@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>tianshou_ppo_math.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "experiments/implementations/tianshou_ppo_math.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>tianshou_ppo_math.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-string">"""
+Tianshou PPO Math RL Implementation
+====================================
+Port of Tinker Math RL to Tianshou.
+
+Tianshou is a modular RL library with clean PyTorch implementation.
+Features: vectorized environments, flexible policy networks.
+"""</span>
+
+<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+<span class="hljs-keyword">import</span> torch
+<span class="hljs-keyword">from</span> torch <span class="hljs-keyword">import</span> nn
+
+<span class="hljs-keyword">import</span> gymnasium <span class="hljs-keyword">as</span> gym
+<span class="hljs-keyword">from</span> gymnasium <span class="hljs-keyword">import</span> spaces
+
+<span class="hljs-keyword">from</span> tianshou.data <span class="hljs-keyword">import</span> Collector, VectorReplayBuffer
+<span class="hljs-keyword">from</span> tianshou.env <span class="hljs-keyword">import</span> DummyVectorEnv
+<span class="hljs-keyword">from</span> tianshou.policy <span class="hljs-keyword">import</span> PPOPolicy
+<span class="hljs-keyword">from</span> tianshou.trainer <span class="hljs-keyword">import</span> OnpolicyTrainer
+<span class="hljs-keyword">from</span> tianshou.utils.net.common <span class="hljs-keyword">import</span> Net
+<span class="hljs-keyword">from</span> tianshou.utils.net.discrete <span class="hljs-keyword">import</span> Actor, Critic
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ArithmeticEnv</span><span class="hljs-params">(gym.Env)</span>:</span>
+    <span class="hljs-string">"""Arithmetic environment for Tianshou."""</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, max_num: int = <span class="hljs-number">99</span>)</span>:</span>
+        super().__init__()
+        self.max_num = max_num
+        self.max_answer = max_num * <span class="hljs-number">2</span>
+
+        self.observation_space = spaces.Box(
+            low=<span class="hljs-number">0</span>, high=<span class="hljs-number">1</span>, shape=(<span class="hljs-number">2</span>,), dtype=np.float32
+        )
+        self.action_space = spaces.Discrete(self.max_answer + <span class="hljs-number">1</span>)
+
+        self.current_nums = <span class="hljs-literal">None</span>
+        self.correct_answer = <span class="hljs-literal">None</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">reset</span><span class="hljs-params">(self, seed=None, options=None)</span>:</span>
+        super().reset(seed=seed)
+        self.current_nums = self.np_random.integers(<span class="hljs-number">1</span>, self.max_num + <span class="hljs-number">1</span>, size=<span class="hljs-number">2</span>)
+        self.correct_answer = int(self.current_nums.sum())
+        obs = self.current_nums.astype(np.float32) / self.max_num
+        <span class="hljs-keyword">return</span> obs, {}
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">step</span><span class="hljs-params">(self, action)</span>:</span>
+        reward = <span class="hljs-number">1.0</span> <span class="hljs-keyword">if</span> action == self.correct_answer <span class="hljs-keyword">else</span> <span class="hljs-number">0.0</span>
+        obs = self.current_nums.astype(np.float32) / self.max_num
+        <span class="hljs-keyword">return</span> obs, reward, <span class="hljs-literal">True</span>, <span class="hljs-literal">False</span>, {<span class="hljs-string">"correct"</span>: reward == <span class="hljs-number">1.0</span>}
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">make_env</span><span class="hljs-params">(max_num: int = <span class="hljs-number">99</span>)</span>:</span>
+    <span class="hljs-string">"""Environment factory for Tianshou."""</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_make</span><span class="hljs-params">()</span>:</span>
+        <span class="hljs-keyword">return</span> ArithmeticEnv(max_num=max_num)
+    <span class="hljs-keyword">return</span> _make
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Configuration (matching Tinker)</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    device = <span class="hljs-string">"cuda"</span> <span class="hljs-keyword">if</span> torch.cuda.is_available() <span class="hljs-keyword">else</span> <span class="hljs-string">"cpu"</span>
+    max_num = <span class="hljs-number">99</span>
+    num_envs = <span class="hljs-number">10</span>
+    hidden_sizes = [<span class="hljs-number">64</span>, <span class="hljs-number">64</span>]
+    lr = <span class="hljs-number">1e-4</span>  <span class="hljs-comment"># Matching Tinker</span>
+
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">60</span>)
+    print(<span class="hljs-string">"Tianshou PPO Math RL Training"</span>)
+    print(<span class="hljs-string">f"Device: <span class="hljs-subst">{device}</span>"</span>)
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">60</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>Create environments</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    train_envs = DummyVectorEnv([make_env(max_num) <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> range(num_envs)])
+    test_envs = DummyVectorEnv([make_env(max_num) <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> range(num_envs)])
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Get dimensions</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    state_shape = train_envs.observation_space[<span class="hljs-number">0</span>].shape
+    action_shape = train_envs.action_space[<span class="hljs-number">0</span>].n
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Create networks</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    net = Net(
+        state_shape=state_shape,
+        hidden_sizes=hidden_sizes,
+        device=device,
+    )
+
+    actor = Actor(
+        preprocess_net=net,
+        action_shape=action_shape,
+        device=device,
+    ).to(device)
+
+    critic = Critic(
+        preprocess_net=Net(
+            state_shape=state_shape,
+            hidden_sizes=hidden_sizes,
+            device=device,
+        ),
+        device=device,
+    ).to(device)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>Optimizers</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    optim = torch.optim.Adam(
+        list(actor.parameters()) + list(critic.parameters()),
+        lr=lr,
+    )
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>PPO Policy (matching Tinker hyperparameters)</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    policy = PPOPolicy(
+        actor=actor,
+        critic=critic,
+        optim=optim,
+        dist_fn=torch.distributions.Categorical,
+        action_space=train_envs.action_space[<span class="hljs-number">0</span>],
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>PPO specific</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        eps_clip=<span class="hljs-number">0.2</span>,  <span class="hljs-comment"># Matching Tinker clip range</span>
+        vf_coef=<span class="hljs-number">0.5</span>,
+        ent_coef=<span class="hljs-number">0.01</span>,
+        gae_lambda=<span class="hljs-number">0.95</span>,
+        discount_factor=<span class="hljs-number">0.99</span>,
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<p>Training</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        max_grad_norm=<span class="hljs-number">0.5</span>,
+        deterministic_eval=<span class="hljs-literal">True</span>,
+    )
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10"></a>
+</div>
+<p>Collectors</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    train_collector = Collector(
+        policy,
+        train_envs,
+        VectorReplayBuffer(total_size=<span class="hljs-number">20000</span>, buffer_num=num_envs),
+    )
+    test_collector = Collector(policy, test_envs)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11"></a>
+</div>
+<p>Training</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    print(<span class="hljs-string">"\nStarting training..."</span>)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">stop_fn</span><span class="hljs-params">(mean_rewards)</span>:</span>
+        <span class="hljs-keyword">return</span> mean_rewards &gt;= <span class="hljs-number">0.95</span>  <span class="hljs-comment"># Stop when accuracy ~95%</span>
+
+    result = OnpolicyTrainer(
+        policy=policy,
+        train_collector=train_collector,
+        test_collector=test_collector,
+        max_epoch=<span class="hljs-number">100</span>,
+        step_per_epoch=<span class="hljs-number">1000</span>,
+        repeat_per_collect=<span class="hljs-number">10</span>,
+        episode_per_test=<span class="hljs-number">100</span>,
+        batch_size=<span class="hljs-number">64</span>,
+        step_per_collect=<span class="hljs-number">200</span>,
+        stop_fn=stop_fn,
+        verbose=<span class="hljs-literal">True</span>,
+        show_progress=<span class="hljs-literal">True</span>,
+    ).run()
+
+    print(<span class="hljs-string">"\n"</span> + <span class="hljs-string">"="</span> * <span class="hljs-number">60</span>)
+    print(<span class="hljs-string">"Training Complete!"</span>)
+    print(<span class="hljs-string">f"Best reward: <span class="hljs-subst">{result.best_reward:<span class="hljs-number">.3</span>f}</span>"</span>)
+    print(<span class="hljs-string">f"Best reward std: <span class="hljs-subst">{result.best_reward_std:<span class="hljs-number">.3</span>f}</span>"</span>)
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">60</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12"></a>
+</div>
+<p>Save policy</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    torch.save(policy.state_dict(), <span class="hljs-string">"tianshou_ppo_math.pt"</span>)
+    print(<span class="hljs-string">"Model saved to tianshou_ppo_math.pt"</span>)
+
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    main()
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

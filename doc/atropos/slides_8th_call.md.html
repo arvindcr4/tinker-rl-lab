@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>slides_8th_call.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "atropos/slides_8th_call.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#tinker-rl-project-8th-guidance-call">Tinker RL Project — 8th Guidance Call</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#group-6-or-pes-university-or-1-march-2026">Group 6 | PES University | 1 March 2026</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#slide-1-progress-since-7th-call">Slide 1: Progress Since 7th Call</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#completed">Completed</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#addressing-feedback">Addressing Feedback</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#slide-2-experiment-status">Slide 2: Experiment Status</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#slide-3-current-sota-where-we-stand">Slide 3: Current SOTA — Where We Stand</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#sota-small-model-rl-for-math-reasoning-2025-2026">SOTA: Small Model RL for Math Reasoning (2025-2026)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#key-observation">Key Observation</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#slide-4-our-contribution-what-were-improving">Slide 4: Our Contribution — What We&#39;re Improving</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#gap-in-literature">Gap in Literature</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#our-contribution">Our Contribution</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#specific-experiments">Specific Experiments</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#slide-5-technical-setup">Slide 5: Technical Setup</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#architecture-tinker-+-atropos">Architecture: Tinker + Atropos</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#hyperparameters-consistent-across-all-experiments">Hyperparameters (Consistent Across All Experiments)</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#slide-6-timeline-and-next-steps">Slide 6: Timeline &amp;amp; Next Steps</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#upcoming">Upcoming</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#for-interim-report-mar-28">For Interim Report (Mar 28)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#guidance-questions">Guidance Questions</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="tinker-rl-project-8th-guidance-call">
+  <h1>
+    <a href="#tinker-rl-project-8th-guidance-call" name="tinker-rl-project-8th-guidance-call" class="pilcrow"></a>
+Tinker RL Project — 8th Guidance Call
+  </h1>
+</div>
+<div class="pilwrap" id="group-6-or-pes-university-or-1-march-2026">
+  <h2>
+    <a href="#group-6-or-pes-university-or-1-march-2026" name="group-6-or-pes-university-or-1-march-2026" class="pilcrow"></a>
+Group 6 | PES University | 1 March 2026
+  </h2>
+</div>
+<hr>
+<div class="pilwrap" id="slide-1-progress-since-7th-call">
+  <h2>
+    <a href="#slide-1-progress-since-7th-call" name="slide-1-progress-since-7th-call" class="pilcrow"></a>
+Slide 1: Progress Since 7th Call
+  </h2>
+</div>
+<div class="pilwrap" id="completed">
+  <h3>
+    <a href="#completed" name="completed" class="pilcrow"></a>
+Completed
+  </h3>
+</div>
+<ul>
+<li><strong>SOTA Literature Survey</strong>: Mapped current state-of-the-art for GRPO on small models</li>
+<li><strong>Tinker-Atropos Setup</strong>: Cloned, configured, and running experiments via cloud API</li>
+<li><strong>Experiment 1 Running</strong>: Qwen3-8B GRPO on GSM8K (50 steps, in progress)</li>
+<li><strong>4 Experiment Configs Created</strong>: Scaling ladder across model sizes</li>
+</ul>
+<div class="pilwrap" id="addressing-feedback">
+  <h3>
+    <a href="#addressing-feedback" name="addressing-feedback" class="pilcrow"></a>
+Addressing Feedback
+  </h3>
+</div>
+<ul>
+<li>&quot;What is the current SOTA?&quot; → Added SOTA comparison slide (Slide 3)</li>
+<li>&quot;What are we improving?&quot; → Defined contribution angle (Slide 4)</li>
+<li>&quot;Try bigger models&quot; → Qwen3-8B (running), Qwen3-30B-A3B MoE (queued)</li>
+</ul>
+<hr>
+<div class="pilwrap" id="slide-2-experiment-status">
+  <h2>
+    <a href="#slide-2-experiment-status" name="slide-2-experiment-status" class="pilcrow"></a>
+Slide 2: Experiment Status
+  </h2>
+</div>
+<table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Model</th>
+<th>Size</th>
+<th>Status</th>
+<th>GSM8K Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Math RL (Arithmetic)</td>
+<td>Llama-3.2-1B</td>
+<td>1B</td>
+<td>DONE (prev)</td>
+<td>100% (arithmetic)</td>
+</tr>
+<tr>
+<td>GSM8K Word Problems</td>
+<td>Llama-3.2-1B</td>
+<td>1B</td>
+<td>DONE (prev)</td>
+<td>~63%</td>
+</tr>
+<tr>
+<td><strong>GSM8K Scaling</strong></td>
+<td><strong>Qwen3-8B</strong></td>
+<td><strong>8B</strong></td>
+<td><strong>RUNNING</strong></td>
+<td><strong>TBD</strong></td>
+</tr>
+<tr>
+<td>GSM8K Scaling</td>
+<td>Qwen3-30B-A3B</td>
+<td>30B (3B active)</td>
+<td>QUEUED</td>
+<td>TBD</td>
+</tr>
+<tr>
+<td>GSM8K Scaling</td>
+<td>Llama-3.2-3B</td>
+<td>3B</td>
+<td>QUEUED</td>
+<td>TBD</td>
+</tr>
+<tr>
+<td>GSM8K Scaling</td>
+<td>Llama-3.1-8B</td>
+<td>8B</td>
+<td>QUEUED (needs HF)</td>
+<td>TBD</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Training Details (Qwen3-8B)</strong>:</p>
+<ul>
+<li>Method: GRPO, LoRA rank 32, lr=4e-5</li>
+<li>Batch size: 128, Group size: 16</li>
+<li>Platform: Tinker cloud API (GPU provisioned remotely)</li>
+<li>Early metrics (step 0-7): Loss dropping 205→22, reward ~5-8%</li>
+</ul>
+<hr>
+<div class="pilwrap" id="slide-3-current-sota-where-we-stand">
+  <h2>
+    <a href="#slide-3-current-sota-where-we-stand" name="slide-3-current-sota-where-we-stand" class="pilcrow"></a>
+Slide 3: Current SOTA — Where We Stand
+  </h2>
+</div>
+<div class="pilwrap" id="sota-small-model-rl-for-math-reasoning-2025-2026">
+  <h3>
+    <a href="#sota-small-model-rl-for-math-reasoning-2025-2026" name="sota-small-model-rl-for-math-reasoning-2025-2026" class="pilcrow"></a>
+SOTA: Small Model RL for Math Reasoning (2025-2026)
+  </h3>
+</div>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Size</th>
+<th>Method</th>
+<th>Best Result</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DeepSeek-R1-Distill-Qwen-1.5B</td>
+<td>1.5B</td>
+<td>Distillation from 671B</td>
+<td>MATH-500: 83.9%</td>
+<td>DeepSeek, Jan 2025</td>
+</tr>
+<tr>
+<td>DeepScaleR-1.5B</td>
+<td>1.5B</td>
+<td>GRPO on distilled model</td>
+<td>Beats o1-Preview (AIME)</td>
+<td>Feb 2025</td>
+</tr>
+<tr>
+<td>DeepSeek-R1-Distill-Qwen-7B</td>
+<td>7B</td>
+<td>Distillation from 671B</td>
+<td>MATH-500: 92.8%</td>
+<td>DeepSeek, Jan 2025</td>
+</tr>
+<tr>
+<td>DeepSeek-R1-Distill-Llama-8B</td>
+<td>8B</td>
+<td>Distillation from 671B</td>
+<td>MATH-500: 89.1%</td>
+<td>DeepSeek, Jan 2025</td>
+</tr>
+<tr>
+<td>SimpleRL-Zoo</td>
+<td>7B</td>
+<td>Zero RL (GRPO)</td>
+<td>Substantial gains (8K examples)</td>
+<td>COLM 2025</td>
+</tr>
+<tr>
+<td>TinyZero</td>
+<td>3B</td>
+<td>GRPO</td>
+<td>Emergent &quot;aha moments&quot;</td>
+<td>Feb 2025</td>
+</tr>
+<tr>
+<td>DeepCoder-14B</td>
+<td>14B</td>
+<td>RL + code rewards</td>
+<td>60.6% LiveCodeBench (≈o3-mini)</td>
+<td>Apr 2025</td>
+</tr>
+<tr>
+<td><strong>Our result</strong></td>
+<td><strong>1B</strong></td>
+<td><strong>GRPO (no distillation)</strong></td>
+<td><strong>GSM8K: ~63%</strong></td>
+<td><strong>This project</strong></td>
+</tr>
+</tbody>
+</table>
+<div class="pilwrap" id="key-observation">
+  <h3>
+    <a href="#key-observation" name="key-observation" class="pilcrow"></a>
+Key Observation
+  </h3>
+</div>
+<p>SOTA models (DeepScaleR, DeepSeek-R1-Distill) start from a <strong>distilled checkpoint</strong> from a 671B teacher model.
+Our approach: <strong>pure GRPO from a general-purpose base model</strong> — no distillation, no massive teacher required.</p>
+<hr>
+<div class="pilwrap" id="slide-4-our-contribution-what-were-improving">
+  <h2>
+    <a href="#slide-4-our-contribution-what-were-improving" name="slide-4-our-contribution-what-were-improving" class="pilcrow"></a>
+Slide 4: Our Contribution — What We're Improving
+  </h2>
+</div>
+<div class="pilwrap" id="gap-in-literature">
+  <h3>
+    <a href="#gap-in-literature" name="gap-in-literature" class="pilcrow"></a>
+Gap in Literature
+  </h3>
+</div>
+<ol>
+<li>Most GRPO results are on <strong>Qwen-family</strong> models only — Llama behavior under GRPO is underexplored</li>
+<li>No systematic <strong>scaling study</strong> comparing GRPO across model families (Llama vs Qwen) at multiple sizes</li>
+<li>Existing work requires <strong>expensive infrastructure</strong> — our Tinker-based approach is cloud-accessible</li>
+<li><strong>Reproducibility</strong>: Most papers lack runnable notebooks</li>
+</ol>
+<div class="pilwrap" id="our-contribution">
+  <h3>
+    <a href="#our-contribution" name="our-contribution" class="pilcrow"></a>
+Our Contribution
+  </h3>
+</div>
+<blockquote>
+<p><strong>Systematic GRPO scaling analysis across model families and sizes (1B→8B→30B) on math reasoning, with reproducible cloud-based experiments on the Tinker platform</strong></p>
+</blockquote>
+<div class="pilwrap" id="specific-experiments">
+  <h3>
+    <a href="#specific-experiments" name="specific-experiments" class="pilcrow"></a>
+Specific Experiments
+  </h3>
+</div>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>What we compare</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Model size</strong></td>
+<td>1B → 3B → 8B → 30B (MoE)</td>
+</tr>
+<tr>
+<td><strong>Model family</strong></td>
+<td>Llama vs Qwen under identical GRPO recipe</td>
+</tr>
+<tr>
+<td><strong>Training paradigm</strong></td>
+<td>Pure GRPO vs Distillation+GRPO</td>
+</tr>
+<tr>
+<td><strong>Infrastructure</strong></td>
+<td>Cloud API (Tinker) — no GPU management</td>
+</tr>
+<tr>
+<td><strong>Reproducibility</strong></td>
+<td>Jupyter notebooks + YAML configs for every run</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<div class="pilwrap" id="slide-5-technical-setup">
+  <h2>
+    <a href="#slide-5-technical-setup" name="slide-5-technical-setup" class="pilcrow"></a>
+Slide 5: Technical Setup
+  </h2>
+</div>
+<div class="pilwrap" id="architecture-tinker-+-atropos">
+  <h3>
+    <a href="#architecture-tinker-+-atropos" name="architecture-tinker-+-atropos" class="pilcrow"></a>
+Architecture: Tinker + Atropos
+  </h3>
+</div>
+<pre><code>┌─────────────────┐     ┌──────────────────┐     ┌────────────────────┐
+│  GSM8K Env       │────▶│  Atropos API      │────▶│  Tinker Trainer     │
+│  (rollouts +     │     │  (coordination)   │     │  (cloud GPU)       │
+│   scoring)       │◀────│                    │◀────│  LoRA + GRPO       │
+└─────────────────┘     └──────────────────┘     └────────────────────┘
+      ▲                                                    │
+      │              ┌──────────────────┐                  │
+      └──────────────│  Tinker Inference │◀─────────────────┘
+                     │  (sampling)       │  updated weights
+                     └──────────────────┘  each step
+</code></pre>
+<ul>
+<li><strong>GRPO</strong>: No critic/reward model needed (1x memory vs PPO's 4x)</li>
+<li><strong>LoRA</strong>: Rank 32, ~0.1% of parameters trained</li>
+<li><strong>Cloud API</strong>: All GPU compute via Tinker — runs from CPU-only laptop</li>
+<li><strong>Verifiable rewards</strong>: Binary (correct/incorrect) per GSM8K answer</li>
+</ul>
+<div class="pilwrap" id="hyperparameters-consistent-across-all-experiments">
+  <h3>
+    <a href="#hyperparameters-consistent-across-all-experiments" name="hyperparameters-consistent-across-all-experiments" class="pilcrow"></a>
+Hyperparameters (Consistent Across All Experiments)
+  </h3>
+</div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LoRA rank</td>
+<td>32</td>
+</tr>
+<tr>
+<td>Learning rate</td>
+<td>3-5 × 10⁻⁵</td>
+</tr>
+<tr>
+<td>Batch size</td>
+<td>128</td>
+</tr>
+<tr>
+<td>Group size</td>
+<td>16</td>
+</tr>
+<tr>
+<td>Max token length</td>
+<td>512</td>
+</tr>
+<tr>
+<td>Training steps</td>
+<td>50</td>
+</tr>
+<tr>
+<td>Loss function</td>
+<td>Importance Sampling</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<div class="pilwrap" id="slide-6-timeline-and-next-steps">
+  <h2>
+    <a href="#slide-6-timeline-and-next-steps" name="slide-6-timeline-and-next-steps" class="pilcrow"></a>
+Slide 6: Timeline &amp; Next Steps
+  </h2>
+</div>
+<div class="pilwrap" id="upcoming">
+  <h3>
+    <a href="#upcoming" name="upcoming" class="pilcrow"></a>
+Upcoming
+  </h3>
+</div>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Milestone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mar 1</td>
+<td>Qwen3-8B experiment running</td>
+</tr>
+<tr>
+<td>Mar 3-5</td>
+<td>Complete Qwen3-30B-A3B MoE experiment</td>
+</tr>
+<tr>
+<td>Mar 5-7</td>
+<td>Llama-3B and Llama-8B experiments (after HF login)</td>
+</tr>
+<tr>
+<td>Mar 7</td>
+<td>9th Guidance — present scaling results</td>
+</tr>
+<tr>
+<td>Mar 14-21</td>
+<td>Ablation studies (lr, rank, group_size)</td>
+</tr>
+<tr>
+<td>Mar 28</td>
+<td><strong>3rd Submission — Interim Report</strong></td>
+</tr>
+<tr>
+<td>Apr 11</td>
+<td>Final Report + Conference Paper</td>
+</tr>
+</tbody>
+</table>
+<div class="pilwrap" id="for-interim-report-mar-28">
+  <h3>
+    <a href="#for-interim-report-mar-28" name="for-interim-report-mar-28" class="pilcrow"></a>
+For Interim Report (Mar 28)
+  </h3>
+</div>
+<ul>
+<li>Chapter 3: Methodology (GRPO on Tinker, experiment design)</li>
+<li>Scaling ladder results with charts</li>
+<li>SOTA comparison table</li>
+<li>Ablation analysis</li>
+</ul>
+<div class="pilwrap" id="guidance-questions">
+  <h3>
+    <a href="#guidance-questions" name="guidance-questions" class="pilcrow"></a>
+Guidance Questions
+  </h3>
+</div>
+<ol>
+<li>Should we add a <strong>code generation</strong> experiment (DeepCoder recipe) or focus on math scaling depth?</li>
+<li>Is the <strong>Llama vs Qwen comparison</strong> angle strong enough for conference paper?</li>
+<li>Any preference on conference venue? (NeurIPS workshop, EMNLP, ACL findings?)</li>
+</ol>
+</div>
+  </div>
+</body>
+</html>

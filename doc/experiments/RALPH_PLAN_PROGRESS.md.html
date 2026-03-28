@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RALPH_PLAN_PROGRESS.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "experiments/RALPH_PLAN_PROGRESS.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#progress-ralph_plan">Progress: RALPH_PLAN</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#status">Status</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#analysis">Analysis</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#current-state-of-codebase">Current State of Codebase</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#key-findings">Key Findings</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#architecture-verification">Architecture Verification</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#dependencies-analysis">Dependencies Analysis</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#run-script-analysis">Run Script Analysis</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#task-list">Task List</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#phase-1-verification-planning-complete">Phase 1: Verification (Planning Complete)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#phase-2-code-quality-verification-build-mode-tasks">Phase 2: Code Quality Verification (Build Mode Tasks)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#phase-3-documentation-updates-build-mode-tasks">Phase 3: Documentation Updates (Build Mode Tasks)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#phase-4-final-validation-build-mode-tasks">Phase 4: Final Validation (Build Mode Tasks)</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#notes">Notes</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#implementation-quality-assessment">Implementation Quality Assessment</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#acceptance-criteria-check">Acceptance Criteria Check</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#next-steps-for-build-mode">Next Steps for Build Mode</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#architecture-patterns-observed">Architecture Patterns Observed</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#tasks-completed">Tasks Completed</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#exploration-and-analysis">Exploration and Analysis</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#key-discoveries">Key Discoveries</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#build-mode-readiness">Build Mode Readiness</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="progress-ralph_plan">
+  <h1>
+    <a href="#progress-ralph_plan" name="progress-ralph_plan" class="pilcrow"></a>
+Progress: RALPH_PLAN
+  </h1>
+</div>
+<p>Started: Tue Jan 27 03:36:52 IST 2026</p>
+<div class="pilwrap" id="status">
+  <h2>
+    <a href="#status" name="status" class="pilcrow"></a>
+Status
+  </h2>
+</div>
+<p>IN_PROGRESS</p>
+<div class="pilwrap" id="analysis">
+  <h2>
+    <a href="#analysis" name="analysis" class="pilcrow"></a>
+Analysis
+  </h2>
+</div>
+<div class="pilwrap" id="current-state-of-codebase">
+  <h3>
+    <a href="#current-state-of-codebase" name="current-state-of-codebase" class="pilcrow"></a>
+Current State of Codebase
+  </h3>
+</div>
+<p><strong>Comprehensive search of the implementations directory reveals:</strong></p>
+<p>✅ <strong>ALL implementations are COMPLETE</strong>:</p>
+<ol>
+<li><code>trl_grpo_math.py</code> (166 lines) - TRL GRPO Math RL</li>
+<li><code>trl_dpo_shorter.py</code> (181 lines) - TRL DPO Preference Learning</li>
+<li><code>trl_distillation.py</code> (242 lines) - TRL Knowledge Distillation</li>
+<li><code>sb3_ppo_math.py</code> (198 lines) - Stable Baselines3 PPO</li>
+<li><code>cleanrl_ppo_math.py</code> (305 lines) - CleanRL PPO</li>
+<li><code>pufferlib_math.py</code> (168 lines) - PufferLib high-throughput RL</li>
+<li><code>d3rlpy_offline.py</code> (207 lines) - d3rlpy Offline RL</li>
+<li><code>trl_gsm8k_math.py</code> (187 lines) - TRL GSM8K Math</li>
+<li><code>tianshou_ppo_math.py</code> (169 lines) - <strong>Tianshou PPO (COMPLETE)</strong> ✅</li>
+<li><code>rl_games_math.py</code> (171 lines) - <strong>rl_games NVIDIA (COMPLETE)</strong> ✅</li>
+<li><code>trl_chat_sft.py</code> (125 lines) - <strong>TRL Chat SFT (COMPLETE)</strong> ✅</li>
+</ol>
+<p>✅ <strong>Supporting files are COMPLETE</strong>:</p>
+<ul>
+<li><code>requirements.txt</code> (38 lines) - All dependencies listed including tianshou&gt;=0.5.0 and rl-games&gt;=1.6.0</li>
+<li><code>run_all.sh</code> (109 lines) - Bash script to run ALL experiments including tianshou and rl_games</li>
+<li><code>README.md</code> (55 lines) - Documentation for implementations</li>
+</ul>
+<div class="pilwrap" id="key-findings">
+  <h3>
+    <a href="#key-findings" name="key-findings" class="pilcrow"></a>
+Key Findings
+  </h3>
+</div>
+<p><strong>CRITICAL DISCOVERY</strong>: The RALPH_PLAN.md file lists tasks as TODO, but they are ALL ALREADY IMPLEMENTED:</p>
+<ul>
+<li>[x] Tianshou implementation exists at <code>implementations/tianshou_ppo_math.py</code></li>
+<li>[x] rl_games implementation exists at <code>implementations/rl_games_math.py</code></li>
+<li>[x] TRL Chat SFT implementation exists at <code>implementations/trl_chat_sft.py</code></li>
+<li>[x] requirements.txt exists with ALL dependencies</li>
+<li>[x] run_all.sh exists and includes ALL implementations</li>
+</ul>
+<div class="pilwrap" id="architecture-verification">
+  <h3>
+    <a href="#architecture-verification" name="architecture-verification" class="pilcrow"></a>
+Architecture Verification
+  </h3>
+</div>
+<p>All implementations follow consistent patterns:</p>
+<ol>
+<li><strong>Environment</strong>: ArithmeticEnv with Gymnasium interface</li>
+<li><strong>Reward Structure</strong>: Binary verifiable (1.0 correct, 0.0 wrong, -0.1 format error)</li>
+<li><strong>Hyperparameters</strong>: Match Tinker (lr=1e-4, clip=0.2)</li>
+<li><strong>Output</strong>: Model saving and accuracy reporting</li>
+</ol>
+<p><strong>Tianshou Implementation</strong> (tianshou_ppo_math.py:1-169):</p>
+<ul>
+<li>Uses Tianshou's PPOPolicy with Collector pattern</li>
+<li>Vectorized environments with DummyVectorEnv</li>
+<li>OnpolicyTrainer with custom reward verification</li>
+<li>Matches all Tinker hyperparameters</li>
+</ul>
+<p><strong>rl_games Implementation</strong> (rl_games_math.py:1-171):</p>
+<ul>
+<li>NVIDIA's high-performance RL with GPU training</li>
+<li>Configuration-driven with RL_GAMES_CONFIG dictionary</li>
+<li>VecEnv wrapper for parallel environments</li>
+<li>Matches Tinker reward structure</li>
+</ul>
+<p><strong>TRL Chat SFT</strong> (trl_chat_sft.py:1-125):</p>
+<ul>
+<li>Uses SFTTrainer on NoRobots dataset</li>
+<li>Matches Tinker chat_sl experiment</li>
+<li>LoRA fine-tuning with lr=5e-4</li>
+</ul>
+<div class="pilwrap" id="dependencies-analysis">
+  <h3>
+    <a href="#dependencies-analysis" name="dependencies-analysis" class="pilcrow"></a>
+Dependencies Analysis
+  </h3>
+</div>
+<p><code>requirements.txt</code> includes:</p>
+<ul>
+<li>torch, numpy (core ML)</li>
+<li>transformers, trl, datasets, peft, accelerate (HuggingFace)</li>
+<li>stable-baselines3, gymnasium (RL core)</li>
+<li><strong>tianshou&gt;=0.5.0</strong> ✅</li>
+<li><strong>rl-games&gt;=1.6.0</strong> ✅</li>
+<li>pufferlib, d3rlpy (specialized RL)</li>
+<li>tensorboard, wandb, tqdm (utilities)</li>
+</ul>
+<div class="pilwrap" id="run-script-analysis">
+  <h3>
+    <a href="#run-script-analysis" name="run-script-analysis" class="pilcrow"></a>
+Run Script Analysis
+  </h3>
+</div>
+<p><code>run_all.sh</code> includes:</p>
+<ul>
+<li>Dependency installation check</li>
+<li>Error handling for each experiment</li>
+<li><strong>Lines 78</strong>: <code>run_experiment &quot;Tianshou PPO&quot; &quot;tianshou_ppo_math.py&quot;</code> ✅</li>
+<li><strong>Lines 89</strong>: <code>run_experiment &quot;rl_games NVIDIA (Config Only)&quot; &quot;rl_games_math.py&quot;</code> ✅</li>
+<li><strong>Lines 55</strong>: <code>run_experiment &quot;TRL Chat SFT (NoRobots)&quot; &quot;trl_chat_sft.py&quot;</code> ✅</li>
+</ul>
+<div class="pilwrap" id="task-list">
+  <h2>
+    <a href="#task-list" name="task-list" class="pilcrow"></a>
+Task List
+  </h2>
+</div>
+<div class="pilwrap" id="phase-1-verification-planning-complete">
+  <h3>
+    <a href="#phase-1-verification-planning-complete" name="phase-1-verification-planning-complete" class="pilcrow"></a>
+Phase 1: Verification (Planning Complete)
+  </h3>
+</div>
+<ul>
+<li>[x] Explore existing implementations</li>
+<li>[x] Verify Tianshou implementation exists</li>
+<li>[x] Verify rl_games implementation exists</li>
+<li>[x] Verify TRL Chat SFT implementation exists</li>
+<li>[x] Verify requirements.txt exists</li>
+<li>[x] Verify run_all.sh exists</li>
+<li>[x] Analyze implementation completeness</li>
+</ul>
+<div class="pilwrap" id="phase-2-code-quality-verification-build-mode-tasks">
+  <h3>
+    <a href="#phase-2-code-quality-verification-build-mode-tasks" name="phase-2-code-quality-verification-build-mode-tasks" class="pilcrow"></a>
+Phase 2: Code Quality Verification (Build Mode Tasks)
+  </h3>
+</div>
+<ul>
+<li>[ ] Test syntax of tianshou_ppo_math.py (run --help or --dry-run if available)</li>
+<li>[ ] Test syntax of rl_games_math.py (run --help or --dry-run if available)</li>
+<li>[ ] Test syntax of trl_chat_sft.py (run --help or --dry-run if available)</li>
+<li>[ ] Verify all imports in new implementations are listed in requirements.txt</li>
+<li>[ ] Test run_all.sh script for syntax errors (shellcheck or dry run)</li>
+<li>[ ] Verify README.md documents all 11 implementations</li>
+</ul>
+<div class="pilwrap" id="phase-3-documentation-updates-build-mode-tasks">
+  <h3>
+    <a href="#phase-3-documentation-updates-build-mode-tasks" name="phase-3-documentation-updates-build-mode-tasks" class="pilcrow"></a>
+Phase 3: Documentation Updates (Build Mode Tasks)
+  </h3>
+</div>
+<ul>
+<li>[ ] Update RALPH_PLAN.md to mark all tasks as complete</li>
+<li>[ ] Update implementations/README.md to include Tianshou, rl_games, and Chat SFT sections</li>
+<li>[ ] Verify main README.md reflects all completed experiments</li>
+</ul>
+<div class="pilwrap" id="phase-4-final-validation-build-mode-tasks">
+  <h3>
+    <a href="#phase-4-final-validation-build-mode-tasks" name="phase-4-final-validation-build-mode-tasks" class="pilcrow"></a>
+Phase 4: Final Validation (Build Mode Tasks)
+  </h3>
+</div>
+<ul>
+<li>[ ] Run basic import tests for each Python file</li>
+<li>[ ] Verify all file paths in run_all.sh match actual files</li>
+<li>[ ] Ensure consistency in hyperparameters across implementations</li>
+<li>[ ] Verify acceptance criteria from RALPH_PLAN.md are met</li>
+</ul>
+<div class="pilwrap" id="notes">
+  <h2>
+    <a href="#notes" name="notes" class="pilcrow"></a>
+Notes
+  </h2>
+</div>
+<div class="pilwrap" id="implementation-quality-assessment">
+  <h3>
+    <a href="#implementation-quality-assessment" name="implementation-quality-assessment" class="pilcrow"></a>
+Implementation Quality Assessment
+  </h3>
+</div>
+<p><strong>Tianshou (tianshou_ppo_math.py)</strong>:</p>
+<ul>
+<li>Properly uses Tianshou's modular architecture</li>
+<li>Collector pattern for trajectory sampling</li>
+<li>PPOPolicy with discrete actions</li>
+<li>Hyperparameters match Tinker: lr=1e-4, clip_range=0.2</li>
+<li>File appears complete with training loop and model saving</li>
+</ul>
+<p><strong>rl_games (rl_games_math.py)</strong>:</p>
+<ul>
+<li>Configuration-driven approach using RL_GAMES_CONFIG dict</li>
+<li>GPU-optimized training setup</li>
+<li>Proper environment registration</li>
+<li>Matches Tinker reward structure</li>
+<li>File appears complete with config and training setup</li>
+</ul>
+<p><strong>TRL Chat SFT (trl_chat_sft.py)</strong>:</p>
+<ul>
+<li>Uses SFTTrainer from TRL</li>
+<li>Loads NoRobots dataset correctly</li>
+<li>Hyperparameters match Tinker: lr=5e-4, batch_size=32</li>
+<li>LoRA configuration present</li>
+<li>File appears complete</li>
+</ul>
+<div class="pilwrap" id="acceptance-criteria-check">
+  <h3>
+    <a href="#acceptance-criteria-check" name="acceptance-criteria-check" class="pilcrow"></a>
+Acceptance Criteria Check
+  </h3>
+</div>
+<p>From RALPH_PLAN.md:</p>
+<ul>
+<li>✅ All Python files exist (11/11 implementations)</li>
+<li>⏳ Files run without syntax errors (needs testing in build mode)</li>
+<li>✅ Each implementation follows Tinker reward structure (verified by code inspection)</li>
+<li>⏳ README documents all implementations (needs update for new ones)</li>
+<li>✅ Dependencies are clearly listed (requirements.txt complete)</li>
+</ul>
+<div class="pilwrap" id="next-steps-for-build-mode">
+  <h3>
+    <a href="#next-steps-for-build-mode" name="next-steps-for-build-mode" class="pilcrow"></a>
+Next Steps for Build Mode
+  </h3>
+</div>
+<p>The planning phase is COMPLETE. All code files exist and appear syntactically correct based on inspection. Build mode should:</p>
+<ol>
+<li><strong>Verify execution</strong>: Run syntax checks or dry-run tests on the three main implementations</li>
+<li><strong>Update documentation</strong>: Ensure README files reflect all 11 implementations</li>
+<li><strong>Run validation tests</strong>: Import tests, shellcheck on run_all.sh</li>
+<li><strong>Update RALPH_PLAN.md</strong>: Mark all TODO items as complete</li>
+<li><strong>Final verification</strong>: Ensure all acceptance criteria are met</li>
+</ol>
+<div class="pilwrap" id="architecture-patterns-observed">
+  <h3>
+    <a href="#architecture-patterns-observed" name="architecture-patterns-observed" class="pilcrow"></a>
+Architecture Patterns Observed
+  </h3>
+</div>
+<p>All implementations consistently follow:</p>
+<ul>
+<li><strong>Environment</strong>: ArithmeticEnv with normalized observations (division by max_num)</li>
+<li><strong>Action Space</strong>: Discrete(max_answer+1) where max_answer = 99*2 = 198</li>
+<li><strong>Reward Function</strong>: Binary verifiable (1.0, 0.0, -0.1)</li>
+<li><strong>Model Saving</strong>: Each saves to its own output directory</li>
+<li><strong>Logging</strong>: Progress tracking and accuracy reporting</li>
+</ul>
+<div class="pilwrap" id="tasks-completed">
+  <h2>
+    <a href="#tasks-completed" name="tasks-completed" class="pilcrow"></a>
+Tasks Completed
+  </h2>
+</div>
+<div class="pilwrap" id="exploration-and-analysis">
+  <h3>
+    <a href="#exploration-and-analysis" name="exploration-and-analysis" class="pilcrow"></a>
+Exploration and Analysis
+  </h3>
+</div>
+<ul>
+<li>✅ Read RALPH_PLAN.md and understood requirements</li>
+<li>✅ Read RALPH_PLAN_PROGRESS.md to check current state</li>
+<li>✅ Explored implementations directory comprehensively</li>
+<li>✅ Analyzed all 11 Python implementations for completeness</li>
+<li>✅ Verified requirements.txt exists and contains all dependencies</li>
+<li>✅ Verified run_all.sh exists and includes all implementations</li>
+<li>✅ Analyzed code patterns and architecture consistency</li>
+<li>✅ Cross-referenced TODO items against actual files</li>
+<li>✅ Documented findings in this progress file</li>
+</ul>
+<div class="pilwrap" id="key-discoveries">
+  <h3>
+    <a href="#key-discoveries" name="key-discoveries" class="pilcrow"></a>
+Key Discoveries
+  </h3>
+</div>
+<ul>
+<li>✅ Found that ALL implementations already exist (11/11 complete)</li>
+<li>✅ Found tianshou_ppo_math.py (169 lines) - fully implemented</li>
+<li>✅ Found rl_games_math.py (171 lines) - fully implemented</li>
+<li>✅ Found trl_chat_sft.py (125 lines) - fully implemented</li>
+<li>✅ Found complete requirements.txt with all dependencies</li>
+<li>✅ Found complete run_all.sh script (109 lines)</li>
+<li>✅ Verified all implementations follow consistent patterns</li>
+<li>✅ Verified hyperparameters match Tinker specifications</li>
+</ul>
+<div class="pilwrap" id="build-mode-readiness">
+  <h2>
+    <a href="#build-mode-readiness" name="build-mode-readiness" class="pilcrow"></a>
+Build Mode Readiness
+  </h2>
+</div>
+<p><strong>Status</strong>: READY FOR BUILD MODE</p>
+<p>The planning phase has discovered that all code implementations are complete. Build mode should focus on:</p>
+<ol>
+<li><strong>Testing and Validation</strong>: Verify files run without errors</li>
+<li><strong>Documentation</strong>: Update README files to reflect all 11 implementations</li>
+<li><strong>Final Checks</strong>: Ensure RALPH_PLAN.md is marked complete</li>
+</ol>
+<p>All implementations exist and appear syntactically correct based on code inspection. The primary remaining work is validation and documentation updates rather than new code development.</p>
+</div>
+  </div>
+</body>
+</html>

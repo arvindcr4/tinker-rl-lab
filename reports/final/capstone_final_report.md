@@ -6,11 +6,15 @@ Arvind C R (PES2PGE24DS006), Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L 
 
 **Date:** March 28, 2026
 
+> **Critical Note on Evaluation Scope:** This paper measures *training-set reward optimization*, not held-out test-set generalization. The GSM8K results in Section 4.3.2 reflect reward on training prompts with fresh rollouts. Section 4.3.3 provides evaluation methodology for measuring true held-out generalization.
+
 ---
 
 ## Abstract
 
-We investigate whether Group Relative Policy Optimization (GRPO) can reliably improve small language models (0.5B--8B parameters) on tool calling, code generation, and mathematical reasoning tasks. Across 17 cloud GPU training runs on Tinker and multiple team-executed experiments on Google Colab, we demonstrate that GRPO enables significant capability gains: JSON tool-call validity improves from 0% to 92%, multi-turn tool chaining quality from 0.72 to 0.91, and code generation (HumanEval) from 32% to 40%. On GSM8K math reasoning, we conduct multi-seed replication (mean accuracy 30.0% +/- 2.5%) and a LoRA rank ablation (rank 8--64), establishing a parameter-efficiency frontier. We identify seven original findings: (1) a sharp capacity threshold between 3B and 8B parameters below which GRPO produces zero gradient signal, (2) MoE routing-induced training volatility (2.43x higher than dense), (3) a two-phase learning progression (format-first, reasoning-second), (4) SFT+GRPO outperforms either alone, (5) a 3--8x difficulty gap between synthetic and real-world tool schemas, (6) LoRA rank scales initial learning speed without changing the asymptotic ceiling, and (7) cross-seed stability of GRPO on GSM8K. These results position GRPO as a practical, compute-efficient method for post-training alignment of small LLMs on verifiable tasks.
+We investigate whether Group Relative Policy Optimization (GRPO) can reliably optimize reward on verifiable tasks for small language models (0.5B--8B parameters) on tool calling, code generation, and mathematical reasoning tasks. Across 17 cloud GPU training runs on Tinker and multiple team-executed experiments on Google Colab, we demonstrate that GRPO enables significant capability gains: JSON tool-call validity improves from 0% to 92%, multi-turn tool chaining quality from 0.72 to 0.91, and code generation (HumanEval) from 32% to 40%. On GSM8K math reasoning, we conduct multi-seed replication (mean accuracy 30.0% +/- 2.5%) and a LoRA rank ablation (rank 8--64), establishing a parameter-efficiency frontier. We identify seven original findings: (1) a sharp capacity threshold between 3B and 8B parameters below which GRPO produces zero gradient signal, (2) MoE routing-induced training volatility (2.43x higher than dense), (3) a two-phase learning progression (format-first, reasoning-second), (4) SFT+GRPO outperforms either alone, (5) a 3--8x difficulty gap between synthetic and real-world tool schemas, (6) LoRA rank scales initial learning speed without changing the asymptotic ceiling, and (7) cross-seed stability of GRPO on GSM8K. These results position GRPO as a practical, compute-efficient method for post-training alignment of small LLMs on verifiable tasks.
+
+> **Evaluation Note:** Our GSM8K results measure training-set reward, not held-out test accuracy. True generalization requires held-out evaluation (see Section 4.3.3).
 
 ---
 
@@ -228,6 +232,37 @@ Qwen3-4B with SFT followed by GRPO on 12 custom mathematical reasoning questions
 
 GRPO eliminated hallucination entirely but increased latency 3.4x due to longer chain-of-thought reasoning. Note: This is a 12-question custom benchmark, not a standard evaluation.
 
+#### 4.3.3 GSM8K Test-Set Evaluation Methodology
+
+To measure true held-out generalization on math reasoning (not just training reward), evaluate trained checkpoints on the GSM8K test set (1319 held-out examples):
+
+```python
+from datasets import load_dataset
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import re
+
+def extract_answer(text):
+    match = re.search(r'####\s*(-?\d+\.?\d*)', text)
+    return match.group(1) if match else None
+
+def evaluate_on_test(model_path):
+    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
+    model = AutoModelForCausalLM.from_pretrained(model_path)
+    gsm8k = load_dataset("openai/gsm8k", "main")["test"]
+    correct = 0
+    for item in gsm8k:
+        prompt = f"Question: {item['question']}\nAnswer:"
+        inputs = tokenizer(prompt, return_tensors="pt")
+        outputs = model.generate(**inputs, max_new_tokens=512, temperature=0.7)
+        pred = extract_answer(tokenizer.decode(outputs[0], skip_special_tokens=True))
+        gt = extract_answer(item['answer'])
+        if pred == gt:
+            correct += 1
+    return correct / len(gsm8k)
+```
+
+**Baseline:** Base Qwen3-8B achieves ~47-52% on held-out GSM8K test with chain-of-thought prompting. Run this evaluation to determine if GRPO improves generalization beyond the base model's capability.
+
 #### 4.3.2 Arvind — GSM8K GRPO on Tinker (7 runs)
 
 **Multi-seed replication (Qwen3-8B, LoRA rank 32, 50 steps, 3 seeds):**
@@ -261,7 +296,9 @@ Peak accuracy 75.0%, last-10 average 27.5%. Lower learning rate stabilizes train
 
 ### 5.1 Capacity Threshold for GRPO
 
-A sharp capacity threshold exists between 3B and 8B parameters for GRPO on GSM8K. Dense 3B models (Llama-3.2-3B) fail to learn, achieving only 0.78%->2.34% accuracy over 50 steps, while 8B models (Qwen3-8B) rapidly converge from 7% to near-perfect accuracy. The 3B failure traces to an inability to generate differential rewards within GRPO groups: 56% of training steps had zero loss because all completions were equally wrong. This finding is independently confirmed by Dhruva's negative result on Qwen 0.5B/1.5B.
+A sharp capacity threshold exists between 3B and 8B parameters for GRPO on GSM8K. Dense 3B models (Llama-3.2-3B) fail to learn, achieving only 0.78%->2.34% accuracy over 50 steps, while 8B models (Qwen3-8B) rapidly optimize reward to >0.9 on training prompts. The 3B failure traces to an inability to generate differential rewards within GRPO groups: 56% of training steps had zero loss because all completions were equally wrong. This finding is independently confirmed by Dhruva's negative result on Qwen 0.5B/1.5B.
+
+**Revised Interpretation:** The 8B model does not achieve 'near-perfect accuracy' -- it achieves high reward on training prompts through format optimization (producing correct answer formats). True held-out evaluation is required to measure math reasoning improvement.
 
 ### 5.2 MoE Architectural Effects
 
@@ -393,7 +430,7 @@ Total estimated spend: ~$50/person, well within the $2K--$2.6K envelope projecte
 
 ## 9. Conclusion
 
-GRPO is an effective and compute-efficient method for post-training alignment of small LLMs on verifiable tasks. Our key results:
+GRPO enables reliable reward optimization on verifiable tasks for models ≥8B parameters. Our key results:
 
 1. **Tool calling:** GRPO transforms models that never call tools (0% JSON) into reliable tool callers (92% JSON, 0.91 multi-turn quality), with SFT as a prerequisite for format learning.
 

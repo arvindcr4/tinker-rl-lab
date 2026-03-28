@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>test_distillation.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../";
+    var thisFile = "atropos/tinker_atropos/tests/test_distillation.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>test_distillation.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-keyword">import</span> pytest
+<span class="hljs-keyword">from</span> tinker_atropos.trainer <span class="hljs-keyword">import</span> TinkerAtroposTrainer
+<span class="hljs-keyword">from</span> tinker_atropos.config <span class="hljs-keyword">import</span> TinkerAtroposConfig
+
+
+<span class="hljs-meta">@pytest.fixture</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">trainer</span><span class="hljs-params">()</span>:</span>
+    config = TinkerAtroposConfig()
+    trainer = TinkerAtroposTrainer(config=config)
+    <span class="hljs-keyword">return</span> trainer
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">make_batch</span><span class="hljs-params">(
+    tokens_list,
+    logprobs_list,
+    scores,
+    distill_token_ids=None,
+    distill_logprobs=None,
+    overrides=None,
+)</span>:</span>
+    <span class="hljs-string">"""Helper to build a batch dict matching atropos format."""</span>
+    item = {
+        <span class="hljs-string">"tokens"</span>: tokens_list,
+        <span class="hljs-string">"inference_logprobs"</span>: logprobs_list,
+        <span class="hljs-string">"scores"</span>: scores,
+        <span class="hljs-string">"overrides"</span>: overrides,
+    }
+    <span class="hljs-keyword">if</span> distill_token_ids <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+        item[<span class="hljs-string">"distill_token_ids"</span>] = distill_token_ids
+    <span class="hljs-keyword">if</span> distill_logprobs <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+        item[<span class="hljs-string">"distill_logprobs"</span>] = distill_logprobs
+    <span class="hljs-keyword">return</span> {<span class="hljs-string">"batch"</span>: [item]}
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestDistillFieldNames</span>:</span>
+    <span class="hljs-string">"""Verify the trainer reads the correct field names from atropos."""</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_detects_distill_data</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""distill_ (double L) fields should be detected."""</span>
+        batch = make_batch(
+            tokens_list=[[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>], [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">6</span>]],
+            logprobs_list=[
+                [<span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">-0.5</span>, <span class="hljs-number">-0.3</span>, <span class="hljs-number">-0.2</span>],
+                [<span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">-0.4</span>, <span class="hljs-number">-0.35</span>, <span class="hljs-number">-0.25</span>],
+            ],
+            scores=[<span class="hljs-number">2.0</span>, <span class="hljs-number">1.0</span>],
+            distill_token_ids=[
+                [[<span class="hljs-number">1</span>], [<span class="hljs-number">2</span>], [<span class="hljs-number">3</span>], [<span class="hljs-number">4</span>], [<span class="hljs-number">5</span>]],
+                [[<span class="hljs-number">1</span>], [<span class="hljs-number">2</span>], [<span class="hljs-number">3</span>], [<span class="hljs-number">4</span>], [<span class="hljs-number">6</span>]],
+            ],
+            distill_logprobs=[
+                [[<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.6</span>], [<span class="hljs-number">-0.4</span>], [<span class="hljs-number">-0.3</span>]],
+                [[<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.5</span>], [<span class="hljs-number">-0.45</span>], [<span class="hljs-number">-0.35</span>]],
+            ],
+        )
+
+        _, _, has_distil = trainer.pad_data_to_good_offset(batch)
+        <span class="hljs-keyword">assert</span> has_distil <span class="hljs-keyword">is</span> <span class="hljs-literal">True</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_no_distill_without_fields</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""Without distill fields, has_distil should be False."""</span>
+        batch = make_batch(
+            tokens_list=[[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>], [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">5</span>]],
+            logprobs_list=[
+                [<span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">-0.5</span>, <span class="hljs-number">-0.3</span>],
+                [<span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">-0.4</span>, <span class="hljs-number">-0.2</span>],
+            ],
+            scores=[<span class="hljs-number">2.0</span>, <span class="hljs-number">1.0</span>],
+        )
+
+        _, _, has_distil = trainer.pad_data_to_good_offset(batch)
+        <span class="hljs-keyword">assert</span> has_distil <span class="hljs-keyword">is</span> <span class="hljs-literal">False</span>
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestDistillAdvantageOverwrite</span>:</span>
+    <span class="hljs-string">"""When distill data is present, advantages should be logp_t - logp_s."""</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_advantages_overwritten_with_distill</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""Per-token advantages = teacher_logp - student_logp."""</span>
+        batch = make_batch(
+            tokens_list=[[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>]],
+            logprobs_list=[[<span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">-0.5</span>, <span class="hljs-number">-0.3</span>, <span class="hljs-number">-0.2</span>]],
+            scores=[<span class="hljs-number">1.0</span>],
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>[seq_len, K=1] format</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">            distill_token_ids=[[[<span class="hljs-number">1</span>], [<span class="hljs-number">2</span>], [<span class="hljs-number">3</span>], [<span class="hljs-number">4</span>], [<span class="hljs-number">5</span>]]],
+            distill_logprobs=[[[<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.8</span>], [<span class="hljs-number">-0.6</span>], [<span class="hljs-number">-0.4</span>]]],
+        )
+
+        datums, _, has_distil = trainer.pad_data_to_good_offset(batch)
+        <span class="hljs-keyword">assert</span> has_distil <span class="hljs-keyword">is</span> <span class="hljs-literal">True</span>
+        <span class="hljs-keyword">assert</span> len(datums) == <span class="hljs-number">1</span>
+
+        advantages = datums[<span class="hljs-number">0</span>].loss_fn_inputs[<span class="hljs-string">"advantages"</span>].to_torch().tolist()
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>After shift, positions are [1:] so we look at target alignment:
+target_tokens = [2, 3, 4, 5], logprobs shifted = [-0.5, -0.3, -0.2] at gen positions
+Prompt tokens (logprob=1.0) get advantage 0.0
+Generated tokens: teacher_lp - student_lp
+Position 0 (was logp=1.0): advantage = 0.0 (prompt)
+Position 1 (was logp=1.0): advantage = 0.0 (prompt)
+Position 2 (logp=-0.5, teacher=-0.8): advantage = -0.8 - (-0.5) = -0.3
+Position 3 (logp=-0.3, teacher=-0.6): advantage = -0.6 - (-0.3) = -0.3
+But shift happens: all_logprobs = logprobs[1:], distil_lps from [1:]</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Verify prompt tokens get 0.0 advantage</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-keyword">assert</span> advantages[<span class="hljs-number">0</span>] == <span class="hljs-number">0.0</span>  <span class="hljs-comment"># was logprob 1.0 (prompt sentinel)</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Verify generated tokens have teacher-student diff</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-keyword">for</span> adv <span class="hljs-keyword">in</span> advantages[<span class="hljs-number">1</span>:]:
+            <span class="hljs-keyword">assert</span> adv != <span class="hljs-number">0.0</span>  <span class="hljs-comment"># should be overwritten with distil values</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_prompt_tokens_still_masked_in_distill</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""Prompt sentinel tokens (logprob=1.0) still get 0.0 advantage."""</span>
+        batch = make_batch(
+            tokens_list=[[<span class="hljs-number">10</span>, <span class="hljs-number">20</span>, <span class="hljs-number">30</span>, <span class="hljs-number">40</span>]],
+            logprobs_list=[[<span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">-0.5</span>, <span class="hljs-number">-0.3</span>]],
+            scores=[<span class="hljs-number">1.0</span>],
+            distill_token_ids=[[[<span class="hljs-number">10</span>], [<span class="hljs-number">20</span>], [<span class="hljs-number">30</span>], [<span class="hljs-number">40</span>]]],
+            distill_logprobs=[[[<span class="hljs-number">-0.2</span>], [<span class="hljs-number">-0.2</span>], [<span class="hljs-number">-0.7</span>], [<span class="hljs-number">-0.5</span>]]],
+        )
+
+        datums, _, _ = trainer.pad_data_to_good_offset(batch)
+        advantages = datums[<span class="hljs-number">0</span>].loss_fn_inputs[<span class="hljs-string">"advantages"</span>].to_torch().tolist()
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>First position after shift was logprob=1.0 -&gt; advantage=0.0</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-keyword">assert</span> advantages[<span class="hljs-number">0</span>] == <span class="hljs-number">0.0</span>
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestDistillStats</span>:</span>
+    <span class="hljs-string">"""Verify distil_stats are computed correctly."""</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_distil_stats_populated</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""distil_stats should be set when distill data present."""</span>
+        batch = make_batch(
+            tokens_list=[
+                [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>],
+                [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">6</span>],
+            ],
+            logprobs_list=[
+                [<span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">-0.5</span>, <span class="hljs-number">-0.3</span>, <span class="hljs-number">-0.2</span>],
+                [<span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">-0.4</span>, <span class="hljs-number">-0.35</span>, <span class="hljs-number">-0.25</span>],
+            ],
+            scores=[<span class="hljs-number">2.0</span>, <span class="hljs-number">1.0</span>],
+            distill_token_ids=[
+                [[<span class="hljs-number">1</span>], [<span class="hljs-number">2</span>], [<span class="hljs-number">3</span>], [<span class="hljs-number">4</span>], [<span class="hljs-number">5</span>]],
+                [[<span class="hljs-number">1</span>], [<span class="hljs-number">2</span>], [<span class="hljs-number">3</span>], [<span class="hljs-number">4</span>], [<span class="hljs-number">6</span>]],
+            ],
+            distill_logprobs=[
+                [[<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.6</span>], [<span class="hljs-number">-0.4</span>], [<span class="hljs-number">-0.3</span>]],
+                [[<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.5</span>], [<span class="hljs-number">-0.45</span>], [<span class="hljs-number">-0.35</span>]],
+            ],
+        )
+
+        trainer.pad_data_to_good_offset(batch)
+
+        <span class="hljs-keyword">assert</span> hasattr(trainer, <span class="hljs-string">"distil_stats"</span>)
+        ds = trainer.distil_stats
+        <span class="hljs-keyword">assert</span> <span class="hljs-string">"distil/teacher_logp_mean"</span> <span class="hljs-keyword">in</span> ds
+        <span class="hljs-keyword">assert</span> <span class="hljs-string">"distil/student_logp_mean"</span> <span class="hljs-keyword">in</span> ds
+        <span class="hljs-keyword">assert</span> <span class="hljs-string">"distil/advantage_mean"</span> <span class="hljs-keyword">in</span> ds
+        <span class="hljs-keyword">assert</span> <span class="hljs-string">"distil/advantage_std"</span> <span class="hljs-keyword">in</span> ds
+        <span class="hljs-keyword">assert</span> <span class="hljs-string">"distil/advantage_abs_mean"</span> <span class="hljs-keyword">in</span> ds
+        <span class="hljs-keyword">assert</span> <span class="hljs-string">"distil/kl_approx"</span> <span class="hljs-keyword">in</span> ds
+        <span class="hljs-keyword">assert</span> <span class="hljs-string">"distil/num_tokens"</span> <span class="hljs-keyword">in</span> ds
+        <span class="hljs-keyword">assert</span> ds[<span class="hljs-string">"distil/num_tokens"</span>] &gt; <span class="hljs-number">0</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_distil_stats_empty_without_distill</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""distil_stats should be empty dict when no distill data."""</span>
+        batch = make_batch(
+            tokens_list=[[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>], [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">5</span>]],
+            logprobs_list=[
+                [<span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">-0.5</span>, <span class="hljs-number">-0.3</span>],
+                [<span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">-0.4</span>, <span class="hljs-number">-0.2</span>],
+            ],
+            scores=[<span class="hljs-number">2.0</span>, <span class="hljs-number">1.0</span>],
+        )
+
+        trainer.pad_data_to_good_offset(batch)
+
+        <span class="hljs-keyword">assert</span> hasattr(trainer, <span class="hljs-string">"distil_stats"</span>)
+        <span class="hljs-keyword">assert</span> trainer.distil_stats == {}
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_distil_stats_only_count_generated_tokens</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""distil_stats should exclude prompt sentinel tokens."""</span>
+        batch = make_batch(
+            tokens_list=[[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>]],
+            logprobs_list=[[<span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">-0.3</span>, <span class="hljs-number">-0.2</span>]],  <span class="hljs-comment"># 3 prompt, 2 generated</span>
+            scores=[<span class="hljs-number">1.0</span>],
+            distill_token_ids=[[[<span class="hljs-number">1</span>], [<span class="hljs-number">2</span>], [<span class="hljs-number">3</span>], [<span class="hljs-number">4</span>], [<span class="hljs-number">5</span>]]],
+            distill_logprobs=[[[<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.1</span>], [<span class="hljs-number">-0.5</span>], [<span class="hljs-number">-0.4</span>]]],
+        )
+
+        trainer.pad_data_to_good_offset(batch)
+        ds = trainer.distil_stats
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>Only 2 generated tokens after shift (positions with logprob != 1.0)</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-keyword">assert</span> ds[<span class="hljs-string">"distil/num_tokens"</span>] == <span class="hljs-number">2</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_kl_approx_direction</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""kl_approx = mean(student - teacher), positive when student &gt; teacher."""</span>
+        batch = make_batch(
+            tokens_list=[[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]],
+            logprobs_list=[[<span class="hljs-number">1.0</span>, <span class="hljs-number">-0.3</span>, <span class="hljs-number">-0.2</span>]],  <span class="hljs-comment"># student logprobs (higher)</span>
+            scores=[<span class="hljs-number">1.0</span>],
+            distill_token_ids=[[[<span class="hljs-number">1</span>], [<span class="hljs-number">2</span>], [<span class="hljs-number">3</span>]]],
+            distill_logprobs=[
+                [
+                    [<span class="hljs-number">-0.1</span>],
+                    [
+                        <span class="hljs-number">-0.5</span>,
+                    ],
+                    [<span class="hljs-number">-0.4</span>],
+                ]
+            ],  <span class="hljs-comment"># teacher logprobs (lower)</span>
+        )
+
+        trainer.pad_data_to_good_offset(batch)
+        ds = trainer.distil_stats
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>student (-0.2) &gt; teacher (-0.4) at the gen position -&gt; kl positive</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-keyword">assert</span> ds[<span class="hljs-string">"distil/kl_approx"</span>] &gt; <span class="hljs-number">0</span>
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestDistillValidation</span>:</span>
+    <span class="hljs-string">"""Test _validate_distil_field shape checks."""</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_valid_2d_k1</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""[seq_len, 1] should pass and return squeezed 1D."""</span>
+        result = trainer._validate_distil_field([[<span class="hljs-number">-0.5</span>], [<span class="hljs-number">-0.3</span>], [<span class="hljs-number">-0.2</span>]], <span class="hljs-string">"test_field"</span>, seq_len=<span class="hljs-number">3</span>)
+        <span class="hljs-keyword">assert</span> result <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>
+        <span class="hljs-keyword">assert</span> len(result) == <span class="hljs-number">3</span>
+        <span class="hljs-keyword">assert</span> float(result[<span class="hljs-number">0</span>]) == pytest.approx(<span class="hljs-number">-0.5</span>)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_rejects_1d</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""1D input should raise — must be [seq_len, K]."""</span>
+        <span class="hljs-keyword">with</span> pytest.raises(ValueError, match=<span class="hljs-string">"1D"</span>):
+            trainer._validate_distil_field([<span class="hljs-number">-0.5</span>, <span class="hljs-number">-0.3</span>], <span class="hljs-string">"test_field"</span>, seq_len=<span class="hljs-number">2</span>)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_rejects_k_gt_1</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""K&gt;1 should raise for tinker (only supports K=1)."""</span>
+        <span class="hljs-keyword">with</span> pytest.raises(ValueError, match=<span class="hljs-string">"K=2"</span>):
+            trainer._validate_distil_field([[<span class="hljs-number">-0.5</span>, <span class="hljs-number">-0.3</span>], [<span class="hljs-number">-0.2</span>, <span class="hljs-number">-0.1</span>]], <span class="hljs-string">"test_field"</span>, seq_len=<span class="hljs-number">2</span>)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_rejects_seq_len_mismatch</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""Wrong number of positions should raise."""</span>
+        <span class="hljs-keyword">with</span> pytest.raises(ValueError, match=<span class="hljs-string">"positions"</span>):
+            trainer._validate_distil_field([[<span class="hljs-number">-0.5</span>], [<span class="hljs-number">-0.3</span>]], <span class="hljs-string">"test_field"</span>, seq_len=<span class="hljs-number">3</span>)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_none_passthrough</span><span class="hljs-params">(self, trainer)</span>:</span>
+        <span class="hljs-string">"""None input should return None."""</span>
+        result = trainer._validate_distil_field(<span class="hljs-literal">None</span>, <span class="hljs-string">"test_field"</span>, seq_len=<span class="hljs-number">5</span>)
+        <span class="hljs-keyword">assert</span> result <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestConfigInferenceUrl</span>:</span>
+    <span class="hljs-string">"""Test the inference_api_url property fix."""</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_strips_v1_suffix</span><span class="hljs-params">(self)</span>:</span>
+        config = TinkerAtroposConfig(
+            openai=[{<span class="hljs-string">"model_name"</span>: <span class="hljs-string">"test"</span>, <span class="hljs-string">"base_url"</span>: <span class="hljs-string">"http://localhost:8001/v1"</span>}]
+        )
+        <span class="hljs-keyword">assert</span> config.inference_api_url == <span class="hljs-string">"http://localhost:8001"</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_no_v1_suffix</span><span class="hljs-params">(self)</span>:</span>
+        config = TinkerAtroposConfig(
+            openai=[{<span class="hljs-string">"model_name"</span>: <span class="hljs-string">"test"</span>, <span class="hljs-string">"base_url"</span>: <span class="hljs-string">"http://localhost:8001"</span>}]
+        )
+        <span class="hljs-keyword">assert</span> config.inference_api_url == <span class="hljs-string">"http://localhost:8001"</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_strips_trailing_slash</span><span class="hljs-params">(self)</span>:</span>
+        config = TinkerAtroposConfig(
+            openai=[{<span class="hljs-string">"model_name"</span>: <span class="hljs-string">"test"</span>, <span class="hljs-string">"base_url"</span>: <span class="hljs-string">"http://localhost:8001/"</span>}]
+        )
+        <span class="hljs-keyword">assert</span> config.inference_api_url == <span class="hljs-string">"http://localhost:8001"</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_doesnt_mangle_port</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""Regression: old rstrip('/v1') would eat chars from port '8001'."""</span>
+        config = TinkerAtroposConfig(
+            openai=[{<span class="hljs-string">"model_name"</span>: <span class="hljs-string">"test"</span>, <span class="hljs-string">"base_url"</span>: <span class="hljs-string">"http://localhost:8001/v1"</span>}]
+        )
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<p>Old buggy rstrip would give &quot;http://localhost:800&quot;</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-keyword">assert</span> <span class="hljs-string">"8001"</span> <span class="hljs-keyword">in</span> config.inference_api_url
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_default_url</span><span class="hljs-params">(self)</span>:</span>
+        config = TinkerAtroposConfig(openai=[])
+        <span class="hljs-keyword">assert</span> config.inference_api_url == <span class="hljs-string">"http://localhost:8001"</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

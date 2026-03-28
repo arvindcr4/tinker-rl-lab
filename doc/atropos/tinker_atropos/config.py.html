@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>config.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "atropos/tinker_atropos/config.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>config.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-keyword">import</span> random
+<span class="hljs-keyword">import</span> string
+<span class="hljs-keyword">from</span> pathlib <span class="hljs-keyword">import</span> Path
+<span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> Optional, List, Dict, Any
+
+<span class="hljs-keyword">import</span> yaml
+<span class="hljs-keyword">from</span> pydantic <span class="hljs-keyword">import</span> BaseModel, Field
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">generate_run_suffix</span><span class="hljs-params">()</span> -&gt; str:</span>
+    <span class="hljs-string">"""Generate a random 4-character suffix for unique wandb run names."""</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-string">""</span>.join(random.choices(string.ascii_lowercase + string.digits, k=<span class="hljs-number">4</span>))
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">EnvConfig</span><span class="hljs-params">(BaseModel)</span>:</span>
+    <span class="hljs-string">"""Environment configuration - matches Atropos BaseEnvConfig"""</span>
+
+    group_size: int = <span class="hljs-number">16</span>
+    batch_size: int = <span class="hljs-number">128</span>
+    max_batches_offpolicy: int = <span class="hljs-number">3</span>
+    tokenizer_name: str = <span class="hljs-string">"meta-llama/Llama-3.1-8B-Instruct"</span>
+    use_wandb: bool = <span class="hljs-literal">True</span>
+    rollout_server_url: str = <span class="hljs-string">"http://localhost:8000"</span>
+    wandb_name: str = <span class="hljs-string">"atropos-tinker-env"</span>
+    ensure_scores_are_not_same: bool = <span class="hljs-literal">False</span>
+    max_token_length: int = <span class="hljs-number">256</span>
+    max_num_workers: int = <span class="hljs-number">24</span>
+    total_steps: int = <span class="hljs-number">50</span>
+    steps_per_eval: int = <span class="hljs-number">100</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Experiment control</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    data_seed: int = <span class="hljs-number">42</span>
+    use_prompt_prefix: bool = <span class="hljs-literal">True</span>
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">OpenAIServerConfig</span><span class="hljs-params">(BaseModel)</span>:</span>
+    <span class="hljs-string">"""OpenAI-compatible server configuration"""</span>
+
+    model_name: str
+    base_url: str
+    api_key: str = <span class="hljs-string">"x"</span>
+    weight: float = <span class="hljs-number">1.0</span>
+    num_requests_for_eval: int = <span class="hljs-number">256</span>
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TinkerConfig</span><span class="hljs-params">(BaseModel)</span>:</span>
+    <span class="hljs-string">"""Tinker-specific configuration for LoRA training"""</span>
+
+    lora_rank: int = <span class="hljs-number">32</span>
+    learning_rate: float = <span class="hljs-number">4e-5</span>
+    max_token_trainer_length: int = <span class="hljs-number">2048</span>
+    checkpoint_dir: str = <span class="hljs-string">"./temp/"</span>
+    save_checkpoint_interval: int = <span class="hljs-number">0</span>
+    tinker_model_name: Optional[str] = <span class="hljs-literal">None</span>  <span class="hljs-comment"># Override model name for Tinker API (if different from tokenizer)</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>Wandb configuration for trainer</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    wandb_project: str = <span class="hljs-string">"atropos-tinker"</span>
+    wandb_group: Optional[str] = <span class="hljs-literal">None</span>
+    wandb_run_name: str = <span class="hljs-string">"atropos-tinker-run"</span>
+    wandb_run_suffix: str = Field(default_factory=generate_run_suffix)
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TinkerAtroposConfig</span><span class="hljs-params">(BaseModel)</span>:</span>
+    <span class="hljs-string">"""Complete Tinker-Atropos configuration"""</span>
+
+    env: EnvConfig = Field(default_factory=EnvConfig)
+    openai: List[OpenAIServerConfig] = Field(
+        default_factory=<span class="hljs-keyword">lambda</span>: [
+            OpenAIServerConfig(
+                model_name=<span class="hljs-string">"meta-llama/Llama-3.1-8B-Instruct"</span>,
+                base_url=<span class="hljs-string">"http://localhost:8001/v1"</span>,
+            )
+        ]
+    )
+    tinker: TinkerConfig = Field(default_factory=TinkerConfig)
+    slurm: bool = <span class="hljs-literal">False</span>
+    testing: bool = <span class="hljs-literal">False</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Convenience properties</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">base_model</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+        <span class="hljs-string">"""Convenience accessor for model name"""</span>
+        <span class="hljs-keyword">return</span> self.env.tokenizer_name
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">tinker_model</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+        <span class="hljs-string">"""Model name for Tinker API - may differ from tokenizer name for gated models"""</span>
+        <span class="hljs-keyword">return</span> self.tinker.tinker_model_name <span class="hljs-keyword">or</span> self.base_model
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">atropos_api_url</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+        <span class="hljs-string">"""Convenience accessor for Atropos API URL"""</span>
+        <span class="hljs-keyword">return</span> self.env.rollout_server_url
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">inference_api_url</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+        <span class="hljs-string">"""Convenience accessor for inference server URL (first OpenAI server)"""</span>
+        <span class="hljs-keyword">if</span> self.openai:
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Remove /v1 suffix if present</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">            url = self.openai[<span class="hljs-number">0</span>].base_url
+            <span class="hljs-keyword">if</span> url.endswith(<span class="hljs-string">"/v1"</span>):
+                url = url[:<span class="hljs-number">-3</span>]
+            <span class="hljs-keyword">return</span> url.rstrip(<span class="hljs-string">"/"</span>)
+        <span class="hljs-keyword">return</span> <span class="hljs-string">"http://localhost:8001"</span>
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">group_size</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-keyword">return</span> self.env.group_size
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">batch_size</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-keyword">return</span> self.env.batch_size
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">max_batches_offpolicy</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-keyword">return</span> self.env.max_batches_offpolicy
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">use_wandb</span><span class="hljs-params">(self)</span> -&gt; bool:</span>
+        <span class="hljs-keyword">return</span> self.env.use_wandb
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">num_steps</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-keyword">return</span> self.env.total_steps
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">steps_per_eval</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-keyword">return</span> self.env.steps_per_eval
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">max_token_env_length</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-keyword">return</span> self.env.max_token_length
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">max_num_workers</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-keyword">return</span> self.env.max_num_workers
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">ensure_scores_are_not_same</span><span class="hljs-params">(self)</span> -&gt; bool:</span>
+        <span class="hljs-keyword">return</span> self.env.ensure_scores_are_not_same
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">data_seed</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-keyword">return</span> self.env.data_seed
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">use_prompt_prefix</span><span class="hljs-params">(self)</span> -&gt; bool:</span>
+        <span class="hljs-keyword">return</span> self.env.use_prompt_prefix
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">wandb_run_name</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+        <span class="hljs-keyword">return</span> self.tinker.wandb_run_name
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">wandb_project</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+        <span class="hljs-keyword">return</span> self.tinker.wandb_project
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">wandb_group</span><span class="hljs-params">(self)</span> -&gt; Optional[str]:</span>
+        <span class="hljs-keyword">return</span> self.tinker.wandb_group
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">wandb_run_suffix</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+        <span class="hljs-keyword">return</span> self.tinker.wandb_run_suffix
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">lora_rank</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-keyword">return</span> self.tinker.lora_rank
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">learning_rate</span><span class="hljs-params">(self)</span> -&gt; float:</span>
+        <span class="hljs-keyword">return</span> self.tinker.learning_rate
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">max_token_trainer_length</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-keyword">return</span> self.tinker.max_token_trainer_length
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">checkpoint_dir</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+        <span class="hljs-keyword">return</span> self.tinker.checkpoint_dir
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">save_checkpoint_interval</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-keyword">return</span> self.tinker.save_checkpoint_interval
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">num_requests_for_eval</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-keyword">if</span> self.openai:
+            <span class="hljs-keyword">return</span> self.openai[<span class="hljs-number">0</span>].num_requests_for_eval
+        <span class="hljs-keyword">return</span> <span class="hljs-number">256</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">to_dict</span><span class="hljs-params">(self)</span> -&gt; Dict[str, Any]:</span>
+        <span class="hljs-keyword">return</span> self.model_dump()
+
+<span class="hljs-meta">    @classmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">from_yaml</span><span class="hljs-params">(cls, yaml_path: str | Path)</span> -&gt; "TinkerAtroposConfig":</span>
+        <span class="hljs-string">"""
+        Load configuration from a YAML file.
+        """</span>
+        yaml_path = Path(yaml_path)
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> yaml_path.exists():
+            <span class="hljs-keyword">raise</span> FileNotFoundError(<span class="hljs-string">f"Config file not found: <span class="hljs-subst">{yaml_path}</span>"</span>)
+
+        <span class="hljs-keyword">with</span> open(yaml_path, <span class="hljs-string">"r"</span>) <span class="hljs-keyword">as</span> f:
+            yaml_data = yaml.safe_load(f)
+
+        <span class="hljs-keyword">return</span> cls(**yaml_data)
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

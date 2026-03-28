@@ -1,0 +1,330 @@
+% ===========================================================================
+% Supplementary Appendix
+% GRPO for Agentic LLM Fine-Tuning
+% ===========================================================================
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{times}
+\usepackage{url}
+\usepackage{latexsym}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage{caption}
+
+% ===========================================================================
+% Supplementary Material
+% ===========================================================================
+\begin{document}
+
+% ===========================================================================
+\section{Complete Training Run Registry}
+% ===========================================================================
+
+\subsection{Tool-Use Experiments (Tinker Cloud GPU, Qwen3-8B)}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Complete tool-use GRPO runs on Tinker (Qwen3-8B, LoRA rank 32). All runs use Adam optimizer ($\beta_1$=0.9, $\beta_2$=0.95, $\epsilon$=1e-8), max sequence 1024 input / 512 generation.}
+    \begin{tabular}{llcccccl}
+        \toprule
+        Run ID & Config & Group & Temp & Steps & Last-10 Reward & Status \\
+        \midrule
+        88ed2271 & Baseline: LR=3e-5 & 8 & 0.8 & 30 & 0.875 & Done \\
+        2d488a85 & High LR: LR=1e-4 & 16 & 0.8 & 30 & 0.999 & Done \\
+        5569c1fa & Low Temp: LR=3e-5 & 4 & 0.4 & 30 & 0.977 & Done \\
+        22e9e5fd & xlam-60k: LR=3e-5 & 8 & 0.8 & 30 & 0.363 & Done \\
+        386273f4 & Synthetic 5-tool & 4 & 0.8 & 100 & 0.825 & Done \\
+        f63b618c & xlam-60k extended & 4 & 0.8 & 100 & 0.113 & Done \\
+        1b01abef & MATH problems & 4 & 0.8 & 100 & 0.264 & Done \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:tool_runs}
+\end{table}
+
+\subsection{GSM8K Mathematical Reasoning Experiments (Tinker, Qwen3-8B)}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Complete GSM8K GRPO runs on Tinker (Qwen3-8B). Multi-seed replication and LoRA rank ablation series.}
+    \begin{tabular}{llcccccc}
+        \toprule
+        Run ID & Seed & Rank & LR & Steps & Peak Acc & Last-10 Acc \\
+        \midrule
+        5db4e965 & 137 & 32 & 3e-5 & 50 & 62.5\% & 27.5\% \\
+        aabb48cb & 256 & 32 & 3e-5 & 50 & 62.5\% & 32.5\% \\
+        99971b26 & 512 & 32 & 3e-5 & 50 & 87.5\% & 30.0\% \\
+        ba2a1694 & 42 & 8 & 3e-5 & 50 & 62.5\% & 21.2\% \\
+        92ebcc48 & 42 & 16 & 3e-5 & 50 & 75.0\% & 18.8\% \\
+        9219771c & 42 & 64 & 3e-5 & 50 & 87.5\% & 25.0\% \\
+        1cc20cec & 42 & 32 & 5e-6 & 100 & 75.0\% & 27.5\% \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:gsm8k_runs}
+\end{table}
+
+\subsection{Google Colab QLoRA Experiments}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Local QLoRA experiments on Google Colab (T4 GPU, 16GB VRAM).}
+    \begin{tabular}{lllccl}
+        \toprule
+        Model & Dataset & Method & LoRA Rank & Steps & Result \\
+        \midrule
+        Qwen2.5-0.5B & 14 synthetic & SFT only & 16 & 10 & JSON 30\% \\
+        Qwen2.5-1.5B & Glaive-v2 & SFT+GRPO & 16 & 700 & JSON 92\% \\
+        Qwen2.5-3B & ToolBench-v1 & SFT+GRPO & 8 & 40 & 0.91 multi-turn \\
+        Llama-3.2-3B & GSM8K & GRPO only & 32 & 50 & 2.34\% acc \\
+        Qwen3-4B & GSM8K & SFT+GRPO & 32 & 50 & In progress \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:colab_runs}
+\end{table}
+
+% ===========================================================================
+\section{Training Hyperparameters}
+% ===========================================================================
+
+\subsection{Tinker Cloud GPU Configuration}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Tinker SDK hyperparameters for all GRPO runs.}
+    \begin{tabular}{ll}
+        \toprule
+        Parameter & Value \\
+        \midrule
+        SDK Version & v0.16.1 \\
+        Optimizer & Adam \\
+        $\beta_1$ & 0.9 \\
+        $\beta_2$ & 0.95 \\
+        $\epsilon$ & 1e-8 \\
+        Weight Decay & 0 \\
+        Batch Size & 2 prompts/step \\
+        Group Size & 4, 8, or 16 \\
+        Max Input Length & 1024 tokens \\
+        Max Generation Length & 512 tokens \\
+        Warmup & None (constant LR) \\
+        Checkpoint Frequency & Final only \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:tinker_hyperparams}
+\end{table}
+
+\subsection{LoRA Configuration}
+
+\begin{table}[htbp]
+    \centering
+    \caption{LoRA adapter targets and ranks used across experiments.}
+    \begin{tabular}{ll}
+        \toprule
+        Parameter & Value \\
+        \midrule
+        Target Modules & q\_proj, k\_proj, v\_proj, o\_proj, \\
+                        & gate\_proj, up\_proj, down\_proj \\
+        LoRA Ranks Tested & 8, 16, 32, 64 \\
+        Default Rank & 32 \\
+        Alpha & 2 $\times$ rank (default) \\
+        Dropout & 0.0 \\
+        QLoRA (Colab) & 4-bit NF4, bfloat16 compute \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:lora_config}
+\end{table}
+
+% ===========================================================================
+\section{Failure Case Analysis}
+% ===========================================================================
+
+\subsection{Three-Billion Parameter Failure Mode}
+
+The Llama-3.2-3B model on GSM8K (run not shown in main paper) achieved only 2.34\% accuracy after 50 GRPO steps, barely above the 1.56\% random baseline. Analysis of training logs reveals the root cause: \textbf{56\% of training steps had zero gradient} because all G=4 sampled completions received identical rewards (all correct or all incorrect).
+
+This ``zero-loss'' phenomenon indicates the 3B model lacks the reasoning capacity to generate diverse completion quality within a group. When all completions are equally wrong, advantages are zero and no learning occurs. The 8B model (Qwen3-8B) shows only 16--28\% zero-loss rate, enabling effective gradient updates.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Zero-loss step percentage across model sizes (lower is better).}
+    \begin{tabular}{lccc}
+        \toprule
+        Model & Parameters & Zero-Loss \% & Final Acc \\
+        \midrule
+        Llama-3.2-3B & 3B & 56\% & 2.34\% \\
+        Qwen3-8B (seed 512) & 8B & 16\% & 30.0\% \\
+        Qwen3-8B (seed 137) & 8B & 28\% & 27.5\% \\
+        Qwen3-8B (seed 256) & 8B & 24\% & 32.5\% \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:zero_loss}
+\end{table}
+
+\subsection{Qwen3-30B-MoE Volatility Analysis}
+
+The Qwen3-30B-MoE model achieved 99\% GSM8K accuracy but exhibited 2.43$\times$ higher step-to-step reward variance than the dense 8B model. Statistical testing (Levene's test) confirms this difference is significant: $F(1, 98) = 22.4$, $p = 7.0 \times 10^{-6}$.
+
+This volatility stems from MoE routing: different experts activate for different tokens, creating non-smooth loss surfaces. The sparse activation pattern means small changes in the router can dramatically shift which experts process each token, amplifying training instability.
+
+\begin{table}[htbp]
+    \centering
+    \caption{MoE vs. Dense training stability comparison.}
+    \begin{tabular}{lccc}
+        \toprule
+        Model & Step Var (SD) & Peak Acc & Final Acc \\
+        \midrule
+        Qwen3-8B Dense & 0.12 & 87.5\% & 30.0\% \\
+        Qwen3-30B-MoE & 0.29 & 99.0\% & 95.0\% \\
+        Ratio (MoE/Dense) & 2.43$\times$ & --- & --- \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:moe_volatility}
+\end{table}
+
+\subsection{MBPP Evaluation Failure}
+
+The MBPP (Mostly Basic Python Problems) benchmark produced 0\% pass rate across all runs due to an output parsing bug in the evaluation script. The script expected a specific JSON format for extracted answers but the model output format differed, preventing correct answer matching.
+
+This represents a methodological failure: an invalidated benchmark should not be reported. Only HumanEval results (which used a working evaluator) are reported in the main paper. Future work should verify evaluator correctness before running experiments.
+
+% ===========================================================================
+\section{Additional Experimental Details}
+% ===========================================================================
+
+\subsection{Reward Function Weighting Rationale}
+
+The tool calling reward (0.3 + 0.4 + 0.3) was designed to prioritize:
+\begin{itemize}
+    \item \textbf{Correct tool name (+0.4):} Selecting the right tool is the core judgment decision
+    \item \textbf{Valid JSON (+0.3):} Required for downstream parsing
+    \item \textbf{Arguments present (+0.3):} Functional tool use requires populated arguments
+\end{itemize}
+
+These weights were not validated via ablation. Future work should test alternative weightings, particularly increasing the tool-name weight to further emphasize selection judgment over format compliance.
+
+\subsection{Evaluation Protocol Limitations}
+
+As noted in the main paper, our primary evaluation metrics are computed on \textbf{training prompts with new rollouts}, not on held-out test sets. Specifically:
+\begin{itemize}
+    \item Tool-use rewards: Fresh sampling from the same prompt distribution
+    \item GSM8K accuracy: Random subset of 8 training examples per step (batch=2, group=4)
+    \item HumanEval: Standard pass@1 on the 50-example benchmark (test set)
+\end{itemize}
+
+The GSM8K evaluation is the most compromised: evaluating on training data with small group sizes (G=4) means the ``test'' examples overlap with training distribution. True held-out evaluation on the GSM8K test set (1319 examples) was not performed.
+
+\subsection{Multi-Turn Tool Calling Reward Breakdown}
+
+The multi-turn reward function (5-component) enables finer-grained learning signals:
+
+\begin{table}[htbp]
+    \centering
+    \caption{Multi-turn tool calling reward components.}
+    \begin{tabular}{ll}
+        \toprule
+        Component & Weight \\
+        \midrule
+        First turn = tool call & +0.25 \\
+        Final natural language answer & +0.30 \\
+        Arguments populated & +0.15 \\
+        Clean JSON output & +0.10 \\
+        Repeated tool call (penalty) & -0.30 \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:multiturn_reward}
+\end{table}
+
+The -0.30 penalty for repeated tool calls was critical: it eliminated SFT's looping failure mode entirely (Section 4.1.2 of main paper). Without this penalty, models would repeatedly call the same tool in an infinite loop.
+
+% ===========================================================================
+\section{Qualitative Examples}
+% ===========================================================================
+
+\subsection{Successful Tool Call (Post-GRPO)}
+\begin{verbatim}
+<|im_start|>user
+What is the weather in Bangalore?<|im_end|>
+<|im_start|>assistant
+{
+  "tool_calls": [
+    {
+      "name": "get_weather",
+      "arguments": {
+        "location": "Bangalore",
+        "unit": "celsius"
+      }
+    }
+  ]
+}<|im_end|>
+\end{verbatim}
+
+\subsection{Failed Tool Call (Pre-GRPO, Plain Text)}
+\begin{verbatim}
+<|im_start|>user
+What is the weather in Bangalore?<|im_end|>
+<|im_start|>assistant
+The weather in Bangalore is sunny and warm today.
+The temperature is around 28 degrees Celsius.
+It should be a nice day to go outside!<|im_end|>
+\end{verbatim}
+
+The pre-GRPO model generates natural language responses instead of structured tool calls. After GRPO training, the model reliably produces valid JSON with correct tool names and populated arguments.
+
+\subsection{Two-Phase Learning Trajectory (Representative)}
+
+\begin{verbatim}
+Step 1:  Reward=0.00, Loss=0.85, Output="42" (format: plain text)
+Step 5:  Reward=0.05, Loss=0.80, Output="The answer is 42." (format: text with number)
+Step 10: Reward=0.10, Loss=0.72, Output="\boxed{42}" (format: boxed answer)
+Step 15: Reward=0.14, Loss=0.65, Output="\boxed{42}" (stable format)
+Step 20: Reward=0.40, Loss=0.55, Output="\boxed{42}" (reasoning begins)
+Step 25: Reward=0.58, Loss=0.40, Output="\boxed{42}" (reasoning improves)
+Step 30: Reward=0.55, Loss=0.38, Output="\boxed{42}" (plateau)
+\end{verbatim}
+
+This trajectory illustrates the two-phase pattern: format compliance (steps 1-20) precedes reasoning improvement (steps 20-30).
+
+% ===========================================================================
+\section{Platform and Compute Costs}
+% ===========================================================================
+
+\begin{table}[htbp]
+    \centering
+    \caption{Compute platform usage and estimated costs.}
+    \begin{tabular}{llcl}
+        \toprule
+        Platform & GPU & Experiments & Est. Cost \\
+        \midrule
+        Tinker SDK v0.16.1 & Cloud A100 & 17 runs & \$30--40 \\
+        Google Colab Pro & T4 16GB & 5 team members & \$10/person \\
+        HuggingFace Hub & N/A & Model hosting & Free \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:compute}
+\end{table}
+
+Total estimated spend: $\sim$\$50/person, well within typical capstone project budgets.
+
+% ===========================================================================
+\section{Code and Reproducibility}
+% ===========================================================================
+
+All training scripts are available in the repository:
+\begin{itemize}
+    \item \texttt{grpo\_gsm8k\_base.py} -- Parameterized GSM8K training
+    \item \texttt{grpo\_exp\_a\_baseline.py}, \texttt{exp\_b\_high\_lr.py}, \texttt{exp\_c\_low\_temp.py}, \texttt{exp\_d\_xlam.py} -- Tool-use experiments
+    \item \texttt{grpo\_100\_xlam.py}, \texttt{grpo\_100\_synthetic.py}, \texttt{grpo\_100\_math.py} -- Extended runs
+\end{itemize}
+
+Training logs are available at: \texttt{/tmp/gsm8k\_*.log}, \texttt{/tmp/grpo\_*.log}
+
+Model checkpoints are hosted on Tinker and HuggingFace Hub:
+\begin{itemize}
+    \item SWE-trained model: \texttt{huggingface.co/Madhu2133/qwen3-8b-swe-grpo}
+    \item Tool-use checkpoints: \texttt{tinker://\textit{run\_id}/sampler\_weights/final}
+\end{itemize}
+
+\end{document}

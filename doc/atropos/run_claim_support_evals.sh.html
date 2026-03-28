@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>run_claim_support_evals.sh</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "atropos/run_claim_support_evals.sh";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>run_claim_support_evals.sh</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-meta">#!/bin/bash
+</span></pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Start a local inference server for a base model or saved checkpoint, then run
+the deterministic reasoning benchmark suite against it.</p>
+<p>Examples:
+./run_claim_support_evals.sh --model Qwen/Qwen3-8B
+./run_claim_support_evals.sh --model Qwen/Qwen3-8B --weights tinker://.../step_50
+./run_claim_support_evals.sh --config configs/gsm8k_qwen_8b.yaml --weights tinker://... --no-prefix</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">
+<span class="hljs-built_in">set</span> -e
+
+SCRIPT_DIR=<span class="hljs-string">"<span class="hljs-variable">$(cd "$(dirname "${BASH_SOURCE[0]}")</span>"</span> &amp;&amp; <span class="hljs-built_in">pwd</span>)<span class="hljs-string">"
+cd "</span><span class="hljs-variable">$SCRIPT_DIR</span><span class="hljs-string">"
+
+CONFIG="</span><span class="hljs-string">"
+MODEL="</span><span class="hljs-string">"
+WEIGHTS="</span><span class="hljs-string">"
+PORT="</span>8001<span class="hljs-string">"
+OUTPUT_DIR="</span>logs/reasoning_eval<span class="hljs-string">"
+MAX_EXAMPLES="</span><span class="hljs-string">"
+NO_PREFIX="</span><span class="hljs-string">"
+INCLUDE_MULTI="</span><span class="hljs-string">"
+BENCHMARKS=("</span>gsm8k<span class="hljs-string">" "</span>gsm1k<span class="hljs-string">" "</span>gsm_symbolic_main<span class="hljs-string">" "</span>gsm_symbolic_p1<span class="hljs-string">" "</span>gsm_symbolic_p2<span class="hljs-string">" "</span>math<span class="hljs-string">" "</span>olympiadbench<span class="hljs-string">")
+
+while [[ <span class="hljs-variable">$#</span> -gt 0 ]]; do
+    case "</span><span class="hljs-variable">$1</span><span class="hljs-string">" in
+        --config)
+            CONFIG="</span><span class="hljs-variable">$2</span><span class="hljs-string">"
+            shift 2
+            ;;
+        --model)
+            MODEL="</span><span class="hljs-variable">$2</span><span class="hljs-string">"
+            shift 2
+            ;;
+        --weights)
+            WEIGHTS="</span><span class="hljs-variable">$2</span><span class="hljs-string">"
+            shift 2
+            ;;
+        --port)
+            PORT="</span><span class="hljs-variable">$2</span><span class="hljs-string">"
+            shift 2
+            ;;
+        --output-dir)
+            OUTPUT_DIR="</span><span class="hljs-variable">$2</span><span class="hljs-string">"
+            shift 2
+            ;;
+        --max-examples)
+            MAX_EXAMPLES="</span><span class="hljs-variable">$2</span><span class="hljs-string">"
+            shift 2
+            ;;
+        --no-prefix)
+            NO_PREFIX="</span>--no-prefix<span class="hljs-string">"
+            shift
+            ;;
+        --include-olympiad-multi-answer)
+            INCLUDE_MULTI="</span>--include-olympiad-multi-answer<span class="hljs-string">"
+            shift
+            ;;
+        --benchmarks)
+            shift
+            BENCHMARKS=()
+            while [[ <span class="hljs-variable">$#</span> -gt 0 &amp;&amp; "</span><span class="hljs-variable">$1</span><span class="hljs-string">" != --* ]]; do
+                BENCHMARKS+=("</span><span class="hljs-variable">$1</span><span class="hljs-string">")
+                shift
+            done
+            ;;
+        *)
+            echo "</span>Unknown argument: <span class="hljs-variable">$1</span><span class="hljs-string">"
+            exit 1
+            ;;
+    esac
+done
+
+source .venv/bin/activate
+
+if [[ -n "</span><span class="hljs-variable">$CONFIG</span><span class="hljs-string">" &amp;&amp; -z "</span><span class="hljs-variable">$MODEL</span><span class="hljs-string">" ]]; then
+    MODEL="</span>$(python - &lt;&lt;PY
+from tinker_atropos.config import TinkerAtroposConfig
+cfg = TinkerAtroposConfig.from_yaml(<span class="hljs-string">"<span class="hljs-variable">$CONFIG</span>"</span>)
+<span class="hljs-built_in">print</span>(cfg.base_model)
+PY
+)<span class="hljs-string">"
+fi
+
+if [[ -z "</span><span class="hljs-variable">$MODEL</span><span class="hljs-string">" ]]; then
+    echo "</span>Provide --model, or provide --config so the model can be inferred.<span class="hljs-string">"
+    exit 1
+fi
+
+cleanup() {
+    if [[ -n "</span><span class="hljs-variable">$SERVER_PID</span><span class="hljs-string">" ]]; then
+        kill "</span><span class="hljs-variable">$SERVER_PID</span><span class="hljs-string">" 2&gt;/dev/null || true
+        wait "</span><span class="hljs-variable">$SERVER_PID</span><span class="hljs-string">" 2&gt;/dev/null || true
+    fi
+}
+trap cleanup EXIT
+
+mkdir -p "</span><span class="hljs-variable">$OUTPUT_DIR</span><span class="hljs-string">"
+
+echo "</span>============================================<span class="hljs-string">"
+echo "</span>  Claim-Support Evaluation Suite<span class="hljs-string">"
+echo "</span>  Model: <span class="hljs-variable">$MODEL</span><span class="hljs-string">"
+echo "</span>  Weights: <span class="hljs-variable">${WEIGHTS:-&lt;base model&gt;}</span><span class="hljs-string">"
+echo "</span>  Port: <span class="hljs-variable">$PORT</span><span class="hljs-string">"
+echo "</span>  Benchmarks: <span class="hljs-variable">${BENCHMARKS[*]}</span><span class="hljs-string">"
+echo "</span>============================================<span class="hljs-string">"
+
+SERVER_CMD=(python serve.py --model "</span><span class="hljs-variable">$MODEL</span><span class="hljs-string">" --port "</span><span class="hljs-variable">$PORT</span><span class="hljs-string">")
+if [[ -n "</span><span class="hljs-variable">$WEIGHTS</span><span class="hljs-string">" ]]; then
+    SERVER_CMD+=(--weights "</span><span class="hljs-variable">$WEIGHTS</span><span class="hljs-string">")
+fi
+
+"</span><span class="hljs-variable">${SERVER_CMD[@]}</span><span class="hljs-string">" &gt; "</span><span class="hljs-variable">$OUTPUT_DIR</span>/serve.log<span class="hljs-string">" 2&gt;&amp;1 &amp;
+SERVER_PID=$!
+
+echo "</span>Waiting <span class="hljs-keyword">for</span> serve.py to become healthy...<span class="hljs-string">"
+for _ in <span class="hljs-variable">$(seq 1 60)</span>; do
+    if curl -fsS "</span>http://127.0.0.1:<span class="hljs-variable">${PORT}</span>/health<span class="hljs-string">" &gt;/dev/null 2&gt;&amp;1; then
+        break
+    fi
+    sleep 2
+done
+
+if ! curl -fsS "</span>http://127.0.0.1:<span class="hljs-variable">${PORT}</span>/health<span class="hljs-string">" &gt;/dev/null 2&gt;&amp;1; then
+    echo "</span>serve.py did not become healthy. Check <span class="hljs-variable">$OUTPUT_DIR</span>/serve.log<span class="hljs-string">"
+    exit 1
+fi
+
+EVAL_CMD=(
+    python eval_reasoning_suite.py
+    --model "</span><span class="hljs-variable">$MODEL</span><span class="hljs-string">"
+    --base-url "</span>http://127.0.0.1:<span class="hljs-variable">${PORT}</span>/v1<span class="hljs-string">"
+    --output-dir "</span><span class="hljs-variable">$OUTPUT_DIR</span><span class="hljs-string">"
+    --benchmarks "</span><span class="hljs-variable">${BENCHMARKS[@]}</span><span class="hljs-string">"
+)
+
+if [[ -n "</span><span class="hljs-variable">$CONFIG</span><span class="hljs-string">" ]]; then
+    EVAL_CMD+=(--config "</span><span class="hljs-variable">$CONFIG</span><span class="hljs-string">")
+fi
+if [[ -n "</span><span class="hljs-variable">$MAX_EXAMPLES</span><span class="hljs-string">" ]]; then
+    EVAL_CMD+=(--max-examples "</span><span class="hljs-variable">$MAX_EXAMPLES</span><span class="hljs-string">")
+fi
+if [[ -n "</span><span class="hljs-variable">$NO_PREFIX</span><span class="hljs-string">" ]]; then
+    EVAL_CMD+=("</span><span class="hljs-variable">$NO_PREFIX</span><span class="hljs-string">")
+fi
+if [[ -n "</span><span class="hljs-variable">$INCLUDE_MULTI</span><span class="hljs-string">" ]]; then
+    EVAL_CMD+=("</span><span class="hljs-variable">$INCLUDE_MULTI</span><span class="hljs-string">")
+fi
+
+"</span><span class="hljs-variable">${EVAL_CMD[@]}</span><span class="hljs-string">"
+
+</span></pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

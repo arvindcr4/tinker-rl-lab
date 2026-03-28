@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>launch_training.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "atropos/launch_training.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>launch_training.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-keyword">import</span> argparse
+<span class="hljs-keyword">import</span> asyncio
+<span class="hljs-keyword">import</span> sys
+
+<span class="hljs-keyword">from</span> tinker_atropos.config <span class="hljs-keyword">import</span> TinkerAtroposConfig
+<span class="hljs-keyword">import</span> tinker_atropos.trainer <span class="hljs-keyword">as</span> trainer_module
+<span class="hljs-keyword">from</span> tinker_atropos.trainer <span class="hljs-keyword">import</span> TinkerAtroposTrainer
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">parse_args</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-string">"""Parse command-line arguments."""</span>
+    parser = argparse.ArgumentParser(
+        description=<span class="hljs-string">"Launch Tinker-Atropos training with YAML configuration"</span>,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument(
+        <span class="hljs-string">"--config"</span>,
+        type=str,
+        default=<span class="hljs-literal">None</span>,
+        help=<span class="hljs-string">"Path to YAML config file (e.g., configs/default.yaml)"</span>,
+    )
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Allow overriding specific config parameters via CLI</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    parser.add_argument(<span class="hljs-string">"--base-model"</span>, type=str, help=<span class="hljs-string">"Override base model"</span>)
+    parser.add_argument(<span class="hljs-string">"--lora-rank"</span>, type=int, help=<span class="hljs-string">"Override LoRA rank"</span>)
+    parser.add_argument(<span class="hljs-string">"--learning-rate"</span>, type=float, help=<span class="hljs-string">"Override learning rate"</span>)
+    parser.add_argument(<span class="hljs-string">"--num-steps"</span>, type=int, help=<span class="hljs-string">"Override number of training steps"</span>)
+    parser.add_argument(<span class="hljs-string">"--batch-size"</span>, type=int, help=<span class="hljs-string">"Override batch size"</span>)
+    parser.add_argument(<span class="hljs-string">"--group-size"</span>, type=int, help=<span class="hljs-string">"Override group size"</span>)
+    parser.add_argument(<span class="hljs-string">"--wandb-project"</span>, type=str, help=<span class="hljs-string">"Override wandb project name"</span>)
+    parser.add_argument(<span class="hljs-string">"--wandb-group"</span>, type=str, help=<span class="hljs-string">"Override wandb group name"</span>)
+    parser.add_argument(
+        <span class="hljs-string">"--no-wandb"</span>,
+        action=<span class="hljs-string">"store_true"</span>,
+        help=<span class="hljs-string">"Disable wandb logging"</span>,
+    )
+
+    <span class="hljs-keyword">return</span> parser.parse_args()
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_config</span><span class="hljs-params">(args)</span> -&gt; TinkerAtroposConfig:</span>
+    <span class="hljs-string">"""
+    Load configuration from YAML file and apply CLI overrides.
+    """</span>
+
+    <span class="hljs-keyword">if</span> args.config:
+        print(<span class="hljs-string">f"Loading config from: <span class="hljs-subst">{args.config}</span>"</span>)
+        config = TinkerAtroposConfig.from_yaml(args.config)
+    <span class="hljs-keyword">else</span>:
+        print(<span class="hljs-string">"Using default configuration"</span>)
+        config = TinkerAtroposConfig()
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>Apply CLI overrides</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    overrides = {}
+    <span class="hljs-keyword">if</span> args.base_model:
+        overrides[<span class="hljs-string">"base_model"</span>] = args.base_model
+    <span class="hljs-keyword">if</span> args.lora_rank <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+        overrides[<span class="hljs-string">"lora_rank"</span>] = args.lora_rank
+    <span class="hljs-keyword">if</span> args.learning_rate <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+        overrides[<span class="hljs-string">"learning_rate"</span>] = args.learning_rate
+    <span class="hljs-keyword">if</span> args.num_steps <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+        overrides[<span class="hljs-string">"num_steps"</span>] = args.num_steps
+    <span class="hljs-keyword">if</span> args.batch_size <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+        overrides[<span class="hljs-string">"batch_size"</span>] = args.batch_size
+    <span class="hljs-keyword">if</span> args.group_size <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+        overrides[<span class="hljs-string">"group_size"</span>] = args.group_size
+    <span class="hljs-keyword">if</span> args.wandb_project:
+        overrides[<span class="hljs-string">"wandb_project"</span>] = args.wandb_project
+    <span class="hljs-keyword">if</span> args.wandb_group:
+        overrides[<span class="hljs-string">"wandb_group"</span>] = args.wandb_group
+    <span class="hljs-keyword">if</span> args.no_wandb:
+        overrides[<span class="hljs-string">"use_wandb"</span>] = <span class="hljs-literal">False</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Create new config with overrides if any were provided</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    <span class="hljs-keyword">if</span> overrides:
+        print(<span class="hljs-string">f"Applying CLI overrides: <span class="hljs-subst">{overrides}</span>"</span>)
+        config_dict = config.to_dict()
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Handle nested config fields</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-keyword">if</span> <span class="hljs-string">"use_wandb"</span> <span class="hljs-keyword">in</span> overrides:
+            config_dict[<span class="hljs-string">"env"</span>][<span class="hljs-string">"use_wandb"</span>] = overrides.pop(<span class="hljs-string">"use_wandb"</span>)
+        config_dict.update(overrides)
+        config = TinkerAtroposConfig(**config_dict)
+
+    <span class="hljs-keyword">return</span> config
+
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-string">"""Main entry point for launching training."""</span>
+    args = parse_args()
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>Load configuration</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    <span class="hljs-keyword">try</span>:
+        config = load_config(args)
+    <span class="hljs-keyword">except</span> FileNotFoundError <span class="hljs-keyword">as</span> e:
+        print(<span class="hljs-string">f"Error: <span class="hljs-subst">{e}</span>"</span>)
+        sys.exit(<span class="hljs-number">1</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>Display configuration</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    print(<span class="hljs-string">"\n"</span> + <span class="hljs-string">"="</span> * <span class="hljs-number">80</span>)
+    print(<span class="hljs-string">"Training Configuration:"</span>)
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">80</span>)
+    print(<span class="hljs-string">f"Base Model: <span class="hljs-subst">{config.base_model}</span>"</span>)
+    print(<span class="hljs-string">f"LoRA Rank: <span class="hljs-subst">{config.lora_rank}</span>"</span>)
+    print(<span class="hljs-string">f"Learning Rate: <span class="hljs-subst">{config.learning_rate}</span>"</span>)
+    print(<span class="hljs-string">f"Training Steps: <span class="hljs-subst">{config.num_steps}</span>"</span>)
+    print(<span class="hljs-string">f"Batch Size: <span class="hljs-subst">{config.batch_size}</span>"</span>)
+    print(<span class="hljs-string">f"Group Size: <span class="hljs-subst">{config.group_size}</span>"</span>)
+    print(<span class="hljs-string">f"Max Token Length (Env): <span class="hljs-subst">{config.max_token_env_length}</span>"</span>)
+    print(<span class="hljs-string">f"Max Token Length (Trainer): <span class="hljs-subst">{config.max_token_trainer_length}</span>"</span>)
+    print(<span class="hljs-string">f"Max Workers: <span class="hljs-subst">{config.max_num_workers}</span>"</span>)
+    print(<span class="hljs-string">f"Wandb Enabled: <span class="hljs-subst">{config.use_wandb}</span>"</span>)
+    <span class="hljs-keyword">if</span> config.use_wandb:
+        print(<span class="hljs-string">f"  Project: <span class="hljs-subst">{config.wandb_project}</span>"</span>)
+        print(<span class="hljs-string">f"  Group: <span class="hljs-subst">{config.wandb_group <span class="hljs-keyword">or</span> <span class="hljs-string">'(auto-generated)'</span>}</span>"</span>)
+        print(<span class="hljs-string">f"  Run Name: <span class="hljs-subst">{config.wandb_run_name}</span>-<span class="hljs-subst">{config.wandb_run_suffix}</span>"</span>)
+    print(<span class="hljs-string">f"Atropos API URL: <span class="hljs-subst">{config.atropos_api_url}</span>"</span>)
+    print(<span class="hljs-string">f"Inference API URL: <span class="hljs-subst">{config.inference_api_url}</span>"</span>)
+    print(<span class="hljs-string">"="</span> * <span class="hljs-number">80</span> + <span class="hljs-string">"\n"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>Initialize trainer</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    print(<span class="hljs-string">"Initializing Tinker-Atropos Trainer..."</span>)
+    trainer = TinkerAtroposTrainer(config=config)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<p>Set the global trainer variable so FastAPI endpoints can access it</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    trainer_module.trainer = trainer
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10"></a>
+</div>
+<p>Start FastAPI inference server in background thread</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    <span class="hljs-keyword">from</span> tinker_atropos.trainer <span class="hljs-keyword">import</span> run_fastapi_server
+    <span class="hljs-keyword">import</span> threading
+    <span class="hljs-keyword">from</span> urllib.parse <span class="hljs-keyword">import</span> urlparse
+
+    inference_port = urlparse(config.inference_api_url).port <span class="hljs-keyword">or</span> <span class="hljs-number">8001</span>
+    print(<span class="hljs-string">f"Starting FastAPI inference server on port <span class="hljs-subst">{inference_port}</span>..."</span>)
+    server_thread = threading.Thread(target=run_fastapi_server, args=(inference_port,), daemon=<span class="hljs-literal">True</span>)
+    server_thread.start()
+
+    print(<span class="hljs-string">"Waiting for FastAPI server to start..."</span>)
+    <span class="hljs-keyword">await</span> asyncio.sleep(<span class="hljs-number">3</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11"></a>
+</div>
+<p>Run training</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    <span class="hljs-keyword">try</span>:
+        <span class="hljs-keyword">await</span> trainer.run()
+        print(<span class="hljs-string">"\n"</span> + <span class="hljs-string">"="</span> * <span class="hljs-number">80</span>)
+        print(<span class="hljs-string">"Training completed successfully!"</span>)
+        print(<span class="hljs-string">"="</span> * <span class="hljs-number">80</span>)
+    <span class="hljs-keyword">except</span> KeyboardInterrupt:
+        print(<span class="hljs-string">"\n\nTraining interrupted by user."</span>)
+        sys.exit(<span class="hljs-number">1</span>)
+    <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+        print(<span class="hljs-string">f"\n\nError during training: <span class="hljs-subst">{e}</span>"</span>)
+        <span class="hljs-keyword">import</span> traceback
+
+        traceback.print_exc()
+        sys.exit(<span class="hljs-number">1</span>)
+
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    asyncio.run(main())
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

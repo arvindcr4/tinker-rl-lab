@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>types.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "atropos/tinker_atropos/types.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>types.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> List, Dict, Any
+<span class="hljs-keyword">from</span> pydantic <span class="hljs-keyword">import</span> BaseModel
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Request format for /v1/completions endpoint.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CompletionRequest</span><span class="hljs-params">(BaseModel)</span>:</span>
+    prompt: str | List[str]
+    max_tokens: int = <span class="hljs-number">100</span>
+    temperature: float = <span class="hljs-number">1.0</span>
+    stop: List[str] | <span class="hljs-literal">None</span> = <span class="hljs-literal">None</span>
+    n: int = <span class="hljs-number">1</span>
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>Response format for /v1/completions endpoint.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CompletionResponse</span><span class="hljs-params">(BaseModel)</span>:</span>
+    id: str
+    choices: List[Dict[str, Any]]
+    created: int
+    model: str
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ChatMessage</span><span class="hljs-params">(BaseModel)</span>:</span>
+    role: str  <span class="hljs-comment"># "system", "user", "assistant"</span>
+    content: str
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Request format for /v1/chat/completions endpoint.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ChatCompletionRequest</span><span class="hljs-params">(BaseModel)</span>:</span>
+    messages: List[ChatMessage]
+    max_tokens: int = <span class="hljs-number">100</span>
+    temperature: float = <span class="hljs-number">1.0</span>
+    stop: List[str] | <span class="hljs-literal">None</span> = <span class="hljs-literal">None</span>
+    n: int = <span class="hljs-number">1</span>
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Response format for /v1/chat/completions endpoint.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ChatCompletionResponse</span><span class="hljs-params">(BaseModel)</span>:</span>
+    id: str
+    choices: List[Dict[str, Any]]
+    created: int
+    model: str
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>Request format for /generate endpoint (SGLang compatible).</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GenerateRequest</span><span class="hljs-params">(BaseModel)</span>:</span>
+    text: str | List[str] | <span class="hljs-literal">None</span> = <span class="hljs-literal">None</span>  <span class="hljs-comment"># Input text or list of texts</span>
+    input_ids: List[int] | List[List[int]] | <span class="hljs-literal">None</span> = <span class="hljs-literal">None</span>  <span class="hljs-comment"># Input token IDs (alternative to text)</span>
+    sampling_params: Dict[
+        str, Any
+    ] | <span class="hljs-literal">None</span> = <span class="hljs-literal">None</span>  <span class="hljs-comment"># Sampling parameters: temperature, top_p, max_new_tokens, n, etc.</span>
+    return_logprob: bool = <span class="hljs-literal">True</span>  <span class="hljs-comment"># Whether to return log probabilities</span>
+    top_logprobs_num: int = <span class="hljs-number">0</span>  <span class="hljs-comment"># Number of top logprobs to return per token</span>
+    return_text_in_logprobs: bool = <span class="hljs-literal">False</span>  <span class="hljs-comment"># Whether to return text in logprobs</span>
+    logprob_start_len: int | <span class="hljs-literal">None</span> = <span class="hljs-literal">None</span>  <span class="hljs-comment"># Start position for logprobs (for prompt)</span>
+    stream: bool = <span class="hljs-literal">False</span>  <span class="hljs-comment"># Whether to stream responses</span>
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>Response format for /generate endpoint (SGLang compatible).
+For single completion (n=1): returns one GenerateResponse
+For multiple completions (n&gt;1): returns List[GenerateResponse]</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GenerateResponse</span><span class="hljs-params">(BaseModel)</span>:</span>
+    text: str | List[str]  <span class="hljs-comment"># Generated text(s)</span>
+    meta_info: Dict[
+        str, Any
+    ]  <span class="hljs-comment"># Contains: output_token_logprobs, finish_reason, prompt_tokens, completion_tokens</span>
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TokenLogprob</span><span class="hljs-params">(BaseModel)</span>:</span>
+    token_id: int
+    logprob: float
+    token: str | <span class="hljs-literal">None</span> = <span class="hljs-literal">None</span>  <span class="hljs-comment"># Decoded token text (when return_text=True)</span>
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>Request format for /logprobs endpoint.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LogprobsRequest</span><span class="hljs-params">(BaseModel)</span>:</span>
+    input_ids: List[int] | <span class="hljs-literal">None</span> = <span class="hljs-literal">None</span>  <span class="hljs-comment"># Token IDs to compute logprobs for</span>
+    text: str | <span class="hljs-literal">None</span> = <span class="hljs-literal">None</span>  <span class="hljs-comment"># Text to tokenize then compute logprobs (alternative to input_ids)</span>
+    return_text: bool = <span class="hljs-literal">False</span>  <span class="hljs-comment"># Whether to include decoded token strings</span>
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<p>Response format for /logprobs endpoint.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LogprobsResponse</span><span class="hljs-params">(BaseModel)</span>:</span>
+    logprobs: List[TokenLogprob]  <span class="hljs-comment"># Per-token logprobs</span>
+    num_tokens: int  <span class="hljs-comment"># Total number of tokens in the input</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

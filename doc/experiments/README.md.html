@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>README.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "experiments/README.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#tinker-rl-cookbook-experiments">Tinker RL Cookbook Experiments</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#overview">Overview</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#experiments">Experiments</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#repository-structure">Repository Structure</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#setup">Setup</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#running-experiments">Running Experiments</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#math-rl-arithmetic">Math RL (Arithmetic)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#chat-supervised-learning">Chat Supervised Learning</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#preference-learning-shorter">Preference Learning (Shorter)</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#key-results">Key Results</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#math-rl-arithmetic-1">Math RL (Arithmetic)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#learning-curves">Learning Curves</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#notebooks">Notebooks</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#presentation">Presentation</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#references">References</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#authors">Authors</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="tinker-rl-cookbook-experiments">
+  <h1>
+    <a href="#tinker-rl-cookbook-experiments" name="tinker-rl-cookbook-experiments" class="pilcrow"></a>
+Tinker RL Cookbook Experiments
+  </h1>
+</div>
+<p>PES LLM Research Project - Reinforcement Learning for Language Models</p>
+<div class="pilwrap" id="overview">
+  <h2>
+    <a href="#overview" name="overview" class="pilcrow"></a>
+Overview
+  </h2>
+</div>
+<p>This repository contains experiments with the <a href="https://thinkingmachines.ai/tinker">Tinker</a> platform for training LLMs using reinforcement learning, supervised fine-tuning, and knowledge distillation.</p>
+<div class="pilwrap" id="experiments">
+  <h2>
+    <a href="#experiments" name="experiments" class="pilcrow"></a>
+Experiments
+  </h2>
+</div>
+<table>
+<thead>
+<tr>
+<th>Recipe</th>
+<th>Description</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Math RL (Arithmetic)</td>
+<td>Train model to add numbers</td>
+<td>✅ Complete - 100% accuracy</td>
+</tr>
+<tr>
+<td>Chat SL</td>
+<td>Supervised fine-tuning on NoRobots</td>
+<td>✅ Complete</td>
+</tr>
+<tr>
+<td>Preference Shorter</td>
+<td>Train for concise responses</td>
+<td>✅ Complete</td>
+</tr>
+<tr>
+<td>Distillation Off-Policy</td>
+<td>SFT on OpenThoughts3</td>
+<td>✅ Complete</td>
+</tr>
+<tr>
+<td>Distillation On-Policy</td>
+<td>KL minimization to teacher</td>
+<td>✅ Complete</td>
+</tr>
+<tr>
+<td>Math RL (GSM8K)</td>
+<td>Word problem solving</td>
+<td>✅ Complete</td>
+</tr>
+</tbody>
+</table>
+<div class="pilwrap" id="repository-structure">
+  <h2>
+    <a href="#repository-structure" name="repository-structure" class="pilcrow"></a>
+Repository Structure
+  </h2>
+</div>
+<pre><code>tinker-experiments/
+├── notebooks/                    # Jupyter notebooks for each experiment
+│   ├── 01_math_rl_arithmetic.ipynb
+│   ├── 02_chat_sl_sft.ipynb
+│   ├── 03_preference_shorter.ipynb
+│   ├── 04_distillation_off_policy.ipynb
+│   ├── 05_distillation_on_policy.ipynb
+│   └── 06_math_rl_gsm8k.ipynb
+├── results/                      # Training metrics (JSONL)
+│   ├── arithmetic_metrics.jsonl
+│   ├── distillation_off_metrics.jsonl
+│   └── distillation_on_metrics.jsonl
+├── logs/                         # Training output logs
+├── create_presentation.py        # PowerPoint generator
+├── Tinker_RL_Demo.pptx          # Presentation for demo
+└── README.md
+</code></pre>
+<div class="pilwrap" id="setup">
+  <h2>
+    <a href="#setup" name="setup" class="pilcrow"></a>
+Setup
+  </h2>
+</div>
+<ol>
+<li>Create a virtual environment:</li>
+</ol>
+<pre><code class="bash">python3 -m venv tinker-env
+<span class="hljs-built_in">source</span> tinker-env/bin/activate
+</code></pre>
+<ol start="2">
+<li>Install dependencies:</li>
+</ol>
+<pre><code class="bash">pip install tinker tinker-cookbook
+</code></pre>
+<ol start="3">
+<li>Set your API key:</li>
+</ol>
+<pre><code class="bash"><span class="hljs-built_in">export</span> TINKER_API_KEY=<span class="hljs-string">"your-key-here"</span>
+</code></pre>
+<div class="pilwrap" id="running-experiments">
+  <h2>
+    <a href="#running-experiments" name="running-experiments" class="pilcrow"></a>
+Running Experiments
+  </h2>
+</div>
+<div class="pilwrap" id="math-rl-arithmetic">
+  <h3>
+    <a href="#math-rl-arithmetic" name="math-rl-arithmetic" class="pilcrow"></a>
+Math RL (Arithmetic)
+  </h3>
+</div>
+<pre><code class="bash">python -m tinker_cookbook.recipes.math_rl.train \
+    model_name=<span class="hljs-string">"meta-llama/Llama-3.2-1B"</span> \
+    env=arithmetic \
+    group_size=4 \
+    groups_per_batch=100 \
+    learning_rate=1e-4
+</code></pre>
+<div class="pilwrap" id="chat-supervised-learning">
+  <h3>
+    <a href="#chat-supervised-learning" name="chat-supervised-learning" class="pilcrow"></a>
+Chat Supervised Learning
+  </h3>
+</div>
+<pre><code class="bash">python -m tinker_cookbook.recipes.chat_sl.train \
+    model_name=<span class="hljs-string">"meta-llama/Llama-3.2-1B"</span> \
+    dataset=no_robots \
+    learning_rate=5e-4 \
+    batch_size=32
+</code></pre>
+<div class="pilwrap" id="preference-learning-shorter">
+  <h3>
+    <a href="#preference-learning-shorter" name="preference-learning-shorter" class="pilcrow"></a>
+Preference Learning (Shorter)
+  </h3>
+</div>
+<pre><code class="bash">python -m tinker_cookbook.recipes.preference.shorter.train \
+    model_name=<span class="hljs-string">"Qwen/Qwen3-0.6B-Instruct"</span> \
+    group_size=4 \
+    groups_per_batch=50
+</code></pre>
+<div class="pilwrap" id="key-results">
+  <h2>
+    <a href="#key-results" name="key-results" class="pilcrow"></a>
+Key Results
+  </h2>
+</div>
+<div class="pilwrap" id="math-rl-arithmetic-1">
+  <h3>
+    <a href="#math-rl-arithmetic-1" name="math-rl-arithmetic-1" class="pilcrow"></a>
+Math RL (Arithmetic)
+  </h3>
+</div>
+<ul>
+<li>Starting accuracy: 69.5%</li>
+<li>Final accuracy: 100%</li>
+<li>Reward: 0.676 → 1.0</li>
+<li>Steps to convergence: ~20</li>
+</ul>
+<div class="pilwrap" id="learning-curves">
+  <h3>
+    <a href="#learning-curves" name="learning-curves" class="pilcrow"></a>
+Learning Curves
+  </h3>
+</div>
+<p>The experiments demonstrate that:</p>
+<ol>
+<li>Simple tasks (arithmetic) converge quickly with RL</li>
+<li>Preference learning effectively shapes response style</li>
+<li>Distillation transfers knowledge efficiently</li>
+</ol>
+<div class="pilwrap" id="notebooks">
+  <h2>
+    <a href="#notebooks" name="notebooks" class="pilcrow"></a>
+Notebooks
+  </h2>
+</div>
+<p>Interactive Jupyter notebooks are provided for each experiment. They include:</p>
+<ul>
+<li>Configuration explanations</li>
+<li>Training commands</li>
+<li>Metric interpretation</li>
+<li>Result analysis</li>
+</ul>
+<div class="pilwrap" id="presentation">
+  <h2>
+    <a href="#presentation" name="presentation" class="pilcrow"></a>
+Presentation
+  </h2>
+</div>
+<p><code>Tinker_RL_Demo.pptx</code> contains slides summarizing:</p>
+<ul>
+<li>Tinker platform overview</li>
+<li>Training methods explored</li>
+<li>Experiment results</li>
+<li>Key findings and future work</li>
+</ul>
+<div class="pilwrap" id="references">
+  <h2>
+    <a href="#references" name="references" class="pilcrow"></a>
+References
+  </h2>
+</div>
+<ul>
+<li><a href="https://thinkingmachines.ai/tinker">Tinker Documentation</a></li>
+<li><a href="https://github.com/thinkingmachines/tinker-cookbook">Tinker Cookbook</a></li>
+<li><a href="https://thinkingmachines.ai/blog/deepcoder">DeepCoder Blog Post</a></li>
+<li><a href="https://thinkingmachines.ai/blog/on-policy-distillation">On-Policy Distillation Blog</a></li>
+</ul>
+<div class="pilwrap" id="authors">
+  <h2>
+    <a href="#authors" name="authors" class="pilcrow"></a>
+Authors
+  </h2>
+</div>
+<p>PES LLM Research Team</p>
+</div>
+  </div>
+</body>
+</html>

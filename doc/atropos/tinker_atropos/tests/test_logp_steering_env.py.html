@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>test_logp_steering_env.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../";
+    var thisFile = "atropos/tinker_atropos/tests/test_logp_steering_env.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>test_logp_steering_env.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-string">"""Tests for the logp_steering environment logic (no network, no tinker)."""</span>
+<span class="hljs-keyword">import</span> pytest
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestExtractFirstTurn</span>:</span>
+    <span class="hljs-string">"""Test _extract_first_turn helper."""</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_make_env</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""Create a minimal LogpSteeringEnv without full init."""</span>
+        <span class="hljs-keyword">from</span> tinker_atropos.environments.logp_steering <span class="hljs-keyword">import</span> LogpSteeringEnv
+
+        env = object.__new__(LogpSteeringEnv)
+        <span class="hljs-keyword">return</span> env
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_single_user_message</span><span class="hljs-params">(self)</span>:</span>
+        env = self._make_env()
+        item = {
+            <span class="hljs-string">"conversation"</span>: [
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>, <span class="hljs-string">"content"</span>: <span class="hljs-string">"Hello there"</span>},
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"assistant"</span>, <span class="hljs-string">"content"</span>: <span class="hljs-string">"Hi!"</span>},
+            ]
+        }
+        result = env._extract_first_turn(item)
+        <span class="hljs-keyword">assert</span> result <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>
+        <span class="hljs-keyword">assert</span> len(result) == <span class="hljs-number">1</span>
+        <span class="hljs-keyword">assert</span> result[<span class="hljs-number">0</span>][<span class="hljs-string">"role"</span>] == <span class="hljs-string">"user"</span>
+        <span class="hljs-keyword">assert</span> result[<span class="hljs-number">0</span>][<span class="hljs-string">"content"</span>] == <span class="hljs-string">"Hello there"</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_system_then_user</span><span class="hljs-params">(self)</span>:</span>
+        env = self._make_env()
+        item = {
+            <span class="hljs-string">"conversation"</span>: [
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"system"</span>, <span class="hljs-string">"content"</span>: <span class="hljs-string">"You are helpful"</span>},
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>, <span class="hljs-string">"content"</span>: <span class="hljs-string">"What's up"</span>},
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"assistant"</span>, <span class="hljs-string">"content"</span>: <span class="hljs-string">"Not much"</span>},
+            ]
+        }
+        result = env._extract_first_turn(item)
+        <span class="hljs-keyword">assert</span> len(result) == <span class="hljs-number">2</span>
+        <span class="hljs-keyword">assert</span> result[<span class="hljs-number">0</span>][<span class="hljs-string">"role"</span>] == <span class="hljs-string">"system"</span>
+        <span class="hljs-keyword">assert</span> result[<span class="hljs-number">1</span>][<span class="hljs-string">"role"</span>] == <span class="hljs-string">"user"</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_empty_conversation</span><span class="hljs-params">(self)</span>:</span>
+        env = self._make_env()
+        item = {<span class="hljs-string">"conversation"</span>: []}
+        result = env._extract_first_turn(item)
+        <span class="hljs-keyword">assert</span> result <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_no_user_message</span><span class="hljs-params">(self)</span>:</span>
+        env = self._make_env()
+        item = {
+            <span class="hljs-string">"conversation"</span>: [
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"system"</span>, <span class="hljs-string">"content"</span>: <span class="hljs-string">"You are helpful"</span>},
+            ]
+        }
+        result = env._extract_first_turn(item)
+        <span class="hljs-keyword">assert</span> result <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_multi_turn_only_takes_first</span><span class="hljs-params">(self)</span>:</span>
+        env = self._make_env()
+        item = {
+            <span class="hljs-string">"conversation"</span>: [
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>, <span class="hljs-string">"content"</span>: <span class="hljs-string">"First question"</span>},
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"assistant"</span>, <span class="hljs-string">"content"</span>: <span class="hljs-string">"First answer"</span>},
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>, <span class="hljs-string">"content"</span>: <span class="hljs-string">"Second question"</span>},
+                {<span class="hljs-string">"role"</span>: <span class="hljs-string">"assistant"</span>, <span class="hljs-string">"content"</span>: <span class="hljs-string">"Second answer"</span>},
+            ]
+        }
+        result = env._extract_first_turn(item)
+        <span class="hljs-keyword">assert</span> len(result) == <span class="hljs-number">1</span>
+        <span class="hljs-keyword">assert</span> result[<span class="hljs-number">0</span>][<span class="hljs-string">"content"</span>] == <span class="hljs-string">"First question"</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_missing_conversation_key</span><span class="hljs-params">(self)</span>:</span>
+        env = self._make_env()
+        item = {}
+        result = env._extract_first_turn(item)
+        <span class="hljs-keyword">assert</span> result <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestSteeringPrefixConstruction</span>:</span>
+    <span class="hljs-string">"""Test that steering prefix + student tokens produces valid teacher input."""</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_prefix_prepend</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""Teacher tokens = prefix + student tokens, no retokenization."""</span>
+        prefix = [<span class="hljs-number">151644</span>, <span class="hljs-number">8948</span>, <span class="hljs-number">198</span>, <span class="hljs-number">100</span>, <span class="hljs-number">200</span>, <span class="hljs-number">151645</span>, <span class="hljs-number">198</span>]
+        student_tokens = [<span class="hljs-number">151644</span>, <span class="hljs-number">872</span>, <span class="hljs-number">198</span>, <span class="hljs-number">50</span>, <span class="hljs-number">60</span>, <span class="hljs-number">151645</span>, <span class="hljs-number">198</span>, <span class="hljs-number">151644</span>, <span class="hljs-number">77091</span>, <span class="hljs-number">198</span>, <span class="hljs-number">70</span>, <span class="hljs-number">80</span>]
+
+        teacher_tokens = prefix + student_tokens
+        <span class="hljs-keyword">assert</span> len(teacher_tokens) == len(prefix) + len(student_tokens)
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>student tokens are exactly preserved at the end</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-keyword">assert</span> teacher_tokens[-len(student_tokens) :] == student_tokens
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_alignment_tail_slice</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""Taking last N from teacher logprobs gives exact student alignment."""</span>
+        prefix_len = <span class="hljs-number">25</span>
+        student_len = <span class="hljs-number">100</span>
+        teacher_logprobs = [<span class="hljs-number">-0.5</span>] * (prefix_len + student_len)
+
+        aligned = teacher_logprobs[-student_len:]
+        <span class="hljs-keyword">assert</span> len(aligned) == student_len
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_distill_format_k1</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""distill arrays should be [seq_len][1] for tinker K=1."""</span>
+        student_tokens = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>]
+        teacher_lps = [<span class="hljs-number">-0.5</span>, <span class="hljs-number">-0.3</span>, <span class="hljs-number">-0.2</span>, <span class="hljs-number">-0.4</span>, <span class="hljs-number">-0.1</span>]
+
+        distill_ids = [[tid] <span class="hljs-keyword">for</span> tid <span class="hljs-keyword">in</span> student_tokens]
+        distill_lps = [[lp] <span class="hljs-keyword">for</span> lp <span class="hljs-keyword">in</span> teacher_lps]
+
+        <span class="hljs-keyword">assert</span> len(distill_ids) == len(student_tokens)
+        <span class="hljs-keyword">assert</span> len(distill_lps) == len(teacher_lps)
+        <span class="hljs-keyword">assert</span> all(len(row) == <span class="hljs-number">1</span> <span class="hljs-keyword">for</span> row <span class="hljs-keyword">in</span> distill_ids)
+        <span class="hljs-keyword">assert</span> all(len(row) == <span class="hljs-number">1</span> <span class="hljs-keyword">for</span> row <span class="hljs-keyword">in</span> distill_lps)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_score_computation</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""Score = mean(teacher - student) on non-prompt tokens."""</span>
+        student_lps = [<span class="hljs-number">1.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">-0.5</span>, <span class="hljs-number">-0.3</span>, <span class="hljs-number">-0.2</span>]  <span class="hljs-comment"># 2 prompt, 3 gen</span>
+        teacher_lps = [<span class="hljs-number">-0.1</span>, <span class="hljs-number">-0.1</span>, <span class="hljs-number">-0.8</span>, <span class="hljs-number">-0.6</span>, <span class="hljs-number">-0.4</span>]
+
+        diffs = []
+        <span class="hljs-keyword">for</span> s, t <span class="hljs-keyword">in</span> zip(student_lps, teacher_lps):
+            <span class="hljs-keyword">if</span> s != <span class="hljs-number">1.0</span>:
+                diffs.append(t - s)
+
+        score = sum(diffs) / len(diffs)
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>(-0.8 - -0.5) + (-0.6 - -0.3) + (-0.4 - -0.2) = -0.3 + -0.3 + -0.2 = -0.8
+-0.8 / 3 ≈ -0.267</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">        <span class="hljs-keyword">assert</span> score == pytest.approx(<span class="hljs-number">-0.8</span> / <span class="hljs-number">3</span>, rel=<span class="hljs-number">1e-6</span>)
+        <span class="hljs-keyword">assert</span> len(diffs) == <span class="hljs-number">3</span>  <span class="hljs-comment"># only gen tokens counted</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

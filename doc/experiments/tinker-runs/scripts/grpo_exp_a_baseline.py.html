@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>grpo_exp_a_baseline.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../";
+    var thisFile = "experiments/tinker-runs/scripts/grpo_exp_a_baseline.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>grpo_exp_a_baseline.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-string">"""Experiment A: Baseline GRPO — LR=3e-5, group=8, temp=0.8, LoRA rank=32"""</span>
+<span class="hljs-keyword">import</span> os, json, re, warnings, random, sys, argparse
+warnings.filterwarnings(<span class="hljs-string">"ignore"</span>)
+os.environ[<span class="hljs-string">"TINKER_API_KEY"</span>] = <span class="hljs-string">"tml-ig7SDcYd3ivjkjEqlu6uO0t2ptzVKhM5sgJoE0l1YP0LA0h4ChH1NtiGsSHOalUMAAAA"</span>
+
+<span class="hljs-keyword">import</span> torch, tinker, tinker.types <span class="hljs-keyword">as</span> T
+<span class="hljs-keyword">from</span> transformers <span class="hljs-keyword">import</span> AutoTokenizer
+
+EXP_NAME   = <span class="hljs-string">"A_baseline"</span>
+MODEL      = <span class="hljs-string">"Qwen/Qwen3-8B"</span>
+LORA_RANK  = <span class="hljs-number">32</span>
+GROUP_SIZE = <span class="hljs-number">8</span>
+STEPS      = <span class="hljs-number">30</span>
+LR         = <span class="hljs-number">3e-5</span>
+TEMP       = <span class="hljs-number">0.8</span>
+SAVE_EVERY = <span class="hljs-number">10</span>
+
+SYSTEM_PROMPT = (
+    <span class="hljs-string">"You are a tool-calling assistant. Respond ONLY with a valid JSON object:\n"</span>
+    <span class="hljs-string">'{"tool": "&lt;name&gt;", "arguments": {&lt;key&gt;: &lt;value&gt;}}\n'</span>
+    <span class="hljs-string">"No prose. Only JSON."</span>
+)
+
+TOOLS = [
+    {<span class="hljs-string">"name"</span>:<span class="hljs-string">"calculator"</span>,   <span class="hljs-string">"description"</span>:<span class="hljs-string">"Arithmetic"</span>, <span class="hljs-string">"parameters"</span>:{<span class="hljs-string">"expression"</span>:<span class="hljs-string">"string"</span>}},
+    {<span class="hljs-string">"name"</span>:<span class="hljs-string">"get_weather"</span>,  <span class="hljs-string">"description"</span>:<span class="hljs-string">"Weather for a city"</span>, <span class="hljs-string">"parameters"</span>:{<span class="hljs-string">"city"</span>:<span class="hljs-string">"string"</span>,<span class="hljs-string">"units"</span>:<span class="hljs-string">"string"</span>}},
+    {<span class="hljs-string">"name"</span>:<span class="hljs-string">"web_search"</span>,   <span class="hljs-string">"description"</span>:<span class="hljs-string">"Web search"</span>, <span class="hljs-string">"parameters"</span>:{<span class="hljs-string">"query"</span>:<span class="hljs-string">"string"</span>}},
+    {<span class="hljs-string">"name"</span>:<span class="hljs-string">"get_time"</span>,     <span class="hljs-string">"description"</span>:<span class="hljs-string">"Time in timezone"</span>, <span class="hljs-string">"parameters"</span>:{<span class="hljs-string">"timezone"</span>:<span class="hljs-string">"string"</span>}},
+    {<span class="hljs-string">"name"</span>:<span class="hljs-string">"set_reminder"</span>, <span class="hljs-string">"description"</span>:<span class="hljs-string">"Set a reminder"</span>, <span class="hljs-string">"parameters"</span>:{<span class="hljs-string">"task"</span>:<span class="hljs-string">"string"</span>,<span class="hljs-string">"time"</span>:<span class="hljs-string">"string"</span>}},
+]
+TOOL_SCHEMA = json.dumps(TOOLS)
+
+RAW = [
+    (<span class="hljs-string">"What is 245 * 37?"</span>,                   <span class="hljs-string">"calculator"</span>,   {<span class="hljs-string">"expression"</span>:<span class="hljs-string">"245 * 37"</span>}),
+    (<span class="hljs-string">"Calculate sqrt(144)"</span>,                  <span class="hljs-string">"calculator"</span>,   {<span class="hljs-string">"expression"</span>:<span class="hljs-string">"sqrt(144)"</span>}),
+    (<span class="hljs-string">"15% of 980?"</span>,                          <span class="hljs-string">"calculator"</span>,   {<span class="hljs-string">"expression"</span>:<span class="hljs-string">"0.15 * 980"</span>}),
+    (<span class="hljs-string">"Divide 1024 by 32"</span>,                    <span class="hljs-string">"calculator"</span>,   {<span class="hljs-string">"expression"</span>:<span class="hljs-string">"1024 / 32"</span>}),
+    (<span class="hljs-string">"2 to the power of 10"</span>,                 <span class="hljs-string">"calculator"</span>,   {<span class="hljs-string">"expression"</span>:<span class="hljs-string">"2 ** 10"</span>}),
+    (<span class="hljs-string">"Weather in Tokyo?"</span>,                    <span class="hljs-string">"get_weather"</span>,  {<span class="hljs-string">"city"</span>:<span class="hljs-string">"Tokyo"</span>,<span class="hljs-string">"units"</span>:<span class="hljs-string">"metric"</span>}),
+    (<span class="hljs-string">"Is it raining in London?"</span>,             <span class="hljs-string">"get_weather"</span>,  {<span class="hljs-string">"city"</span>:<span class="hljs-string">"London"</span>,<span class="hljs-string">"units"</span>:<span class="hljs-string">"metric"</span>}),
+    (<span class="hljs-string">"Temperature in New York"</span>,              <span class="hljs-string">"get_weather"</span>,  {<span class="hljs-string">"city"</span>:<span class="hljs-string">"New York"</span>,<span class="hljs-string">"units"</span>:<span class="hljs-string">"imperial"</span>}),
+    (<span class="hljs-string">"How hot is Dubai right now?"</span>,          <span class="hljs-string">"get_weather"</span>,  {<span class="hljs-string">"city"</span>:<span class="hljs-string">"Dubai"</span>,<span class="hljs-string">"units"</span>:<span class="hljs-string">"metric"</span>}),
+    (<span class="hljs-string">"Search for GPT-5 news"</span>,                <span class="hljs-string">"web_search"</span>,   {<span class="hljs-string">"query"</span>:<span class="hljs-string">"GPT-5 news"</span>}),
+    (<span class="hljs-string">"Capital of Australia?"</span>,                <span class="hljs-string">"web_search"</span>,   {<span class="hljs-string">"query"</span>:<span class="hljs-string">"capital of Australia"</span>}),
+    (<span class="hljs-string">"Find Python asyncio tutorial"</span>,         <span class="hljs-string">"web_search"</span>,   {<span class="hljs-string">"query"</span>:<span class="hljs-string">"Python asyncio tutorial"</span>}),
+    (<span class="hljs-string">"What time is it in Singapore?"</span>,        <span class="hljs-string">"get_time"</span>,     {<span class="hljs-string">"timezone"</span>:<span class="hljs-string">"Asia/Singapore"</span>}),
+    (<span class="hljs-string">"Current time in Los Angeles?"</span>,         <span class="hljs-string">"get_time"</span>,     {<span class="hljs-string">"timezone"</span>:<span class="hljs-string">"America/Los_Angeles"</span>}),
+    (<span class="hljs-string">"Time in Berlin?"</span>,                      <span class="hljs-string">"get_time"</span>,     {<span class="hljs-string">"timezone"</span>:<span class="hljs-string">"Europe/Berlin"</span>}),
+    (<span class="hljs-string">"Remind me to call mom at 6pm"</span>,         <span class="hljs-string">"set_reminder"</span>, {<span class="hljs-string">"task"</span>:<span class="hljs-string">"call mom"</span>,<span class="hljs-string">"time"</span>:<span class="hljs-string">"6pm"</span>}),
+    (<span class="hljs-string">"Set a reminder for team meeting 10am"</span>, <span class="hljs-string">"set_reminder"</span>, {<span class="hljs-string">"task"</span>:<span class="hljs-string">"team meeting"</span>,<span class="hljs-string">"time"</span>:<span class="hljs-string">"10am"</span>}),
+    (<span class="hljs-string">"Remind me to take medicine at 8pm"</span>,    <span class="hljs-string">"set_reminder"</span>, {<span class="hljs-string">"task"</span>:<span class="hljs-string">"take medicine"</span>,<span class="hljs-string">"time"</span>:<span class="hljs-string">"8pm"</span>}),
+]
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">make_prompt</span><span class="hljs-params">(query)</span>:</span>
+    <span class="hljs-keyword">return</span> (
+        <span class="hljs-string">f"&lt;|im_start|&gt;system\n<span class="hljs-subst">{SYSTEM_PROMPT}</span>&lt;|im_end|&gt;\n"</span>
+        <span class="hljs-string">f"&lt;|im_start|&gt;user\nAvailable tools:\n<span class="hljs-subst">{TOOL_SCHEMA}</span>\n\nUser: <span class="hljs-subst">{query}</span>&lt;|im_end|&gt;\n"</span>
+        <span class="hljs-string">f"&lt;|im_start|&gt;assistant\n"</span>
+    )
+
+examples = [(make_prompt(q), t, a) <span class="hljs-keyword">for</span> q, t, a <span class="hljs-keyword">in</span> RAW] * <span class="hljs-number">28</span>
+random.shuffle(examples)
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">reward</span><span class="hljs-params">(response, tool_name, arguments)</span>:</span>
+    m = re.search(<span class="hljs-string">r'\{.*\}'</span>, response.strip(), re.DOTALL)
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> m: <span class="hljs-keyword">return</span> <span class="hljs-number">0.0</span>
+    <span class="hljs-keyword">try</span>: p = json.loads(m.group())
+    <span class="hljs-keyword">except</span> json.JSONDecodeError: <span class="hljs-keyword">return</span> <span class="hljs-number">0.1</span>
+    score = <span class="hljs-number">0.3</span>
+    <span class="hljs-keyword">if</span> p.get(<span class="hljs-string">"tool"</span>) == tool_name <span class="hljs-keyword">or</span> p.get(<span class="hljs-string">"name"</span>) == tool_name: score += <span class="hljs-number">0.4</span>
+    pred_args = p.get(<span class="hljs-string">"arguments"</span>, p.get(<span class="hljs-string">"parameters"</span>, {}))
+    <span class="hljs-keyword">if</span> isinstance(pred_args, dict) <span class="hljs-keyword">and</span> arguments:
+        score += <span class="hljs-number">0.3</span> * sum(<span class="hljs-number">1</span> <span class="hljs-keyword">for</span> k <span class="hljs-keyword">in</span> arguments <span class="hljs-keyword">if</span> k <span class="hljs-keyword">in</span> pred_args) / len(arguments)
+    <span class="hljs-keyword">return</span> min(score, <span class="hljs-number">1.0</span>)
+
+_advantages = []
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">grpo_loss_fn</span><span class="hljs-params">(data, logprobs_list)</span>:</span>
+    losses = []
+    <span class="hljs-keyword">for</span> i, logprobs <span class="hljs-keyword">in</span> enumerate(logprobs_list):
+        losses.append(-_advantages[i] * logprobs.sum())
+    loss = torch.stack(losses).mean()
+    <span class="hljs-keyword">return</span> loss, {<span class="hljs-string">"grpo_loss"</span>: loss.item()}
+
+print(<span class="hljs-string">f"[<span class="hljs-subst">{EXP_NAME}</span>] Connecting..."</span>)
+svc = tinker.ServiceClient(base_url=<span class="hljs-literal">None</span>)
+tc  = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK)
+tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=<span class="hljs-literal">True</span>)
+w0  = tc.save_weights_for_sampler(name=<span class="hljs-string">"step_0"</span>).result()
+sc  = tc.create_sampling_client(model_path=w0.path)
+print(<span class="hljs-string">f"[<span class="hljs-subst">{EXP_NAME}</span>] Run: <span class="hljs-subst">{tc.model_id}</span> | LR=<span class="hljs-subst">{LR}</span> group=<span class="hljs-subst">{GROUP_SIZE}</span> temp=<span class="hljs-subst">{TEMP}</span> rank=<span class="hljs-subst">{LORA_RANK}</span>"</span>)
+
+step_rewards = []
+<span class="hljs-keyword">for</span> step <span class="hljs-keyword">in</span> range(STEPS):
+    batch = random.sample(examples, <span class="hljs-number">4</span>)
+    all_data, all_advs, batch_rewards = [], [], []
+
+    <span class="hljs-keyword">for</span> prompt_text, tool_name, args <span class="hljs-keyword">in</span> batch:
+        prompt_ids = tok.encode(prompt_text, add_special_tokens=<span class="hljs-literal">False</span>)
+        sp = T.SamplingParams(max_tokens=<span class="hljs-number">192</span>, temperature=TEMP, top_p=<span class="hljs-number">0.95</span>)
+        responses = sc.sample(T.ModelInput.from_ints(prompt_ids), num_samples=GROUP_SIZE, sampling_params=sp).result()
+        rewards = []
+        <span class="hljs-keyword">for</span> resp <span class="hljs-keyword">in</span> responses.sequences:
+            text = tok.decode(list(resp.tokens), skip_special_tokens=<span class="hljs-literal">True</span>)
+            rewards.append(reward(text, tool_name, args))
+        mean_r = sum(rewards) / len(rewards)
+        std_r  = (sum((r - mean_r)**<span class="hljs-number">2</span> <span class="hljs-keyword">for</span> r <span class="hljs-keyword">in</span> rewards) / len(rewards))**<span class="hljs-number">0.5</span> + <span class="hljs-number">1e-8</span>
+        advs = [(r - mean_r) / std_r <span class="hljs-keyword">for</span> r <span class="hljs-keyword">in</span> rewards]
+        batch_rewards.extend(rewards)
+        <span class="hljs-keyword">for</span> resp, adv <span class="hljs-keyword">in</span> zip(responses.sequences, advs):
+            resp_ids = list(resp.tokens)
+            full_ids = prompt_ids + resp_ids
+            target_ids = full_ids[<span class="hljs-number">1</span>:] + [<span class="hljs-number">0</span>]
+            all_data.append(T.Datum(
+                model_input=T.ModelInput.from_ints(full_ids),
+                loss_fn_inputs={<span class="hljs-string">"target_tokens"</span>: T.TensorData(data=target_ids, dtype=<span class="hljs-string">"int64"</span>, shape=[len(target_ids)])}
+            ))
+            all_advs.append(adv)
+
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> all_data: <span class="hljs-keyword">continue</span>
+    _advantages = all_advs
+    result = tc.forward_backward_custom(data=all_data, loss_fn=grpo_loss_fn).result()
+    tc.optim_step(T.AdamParams(learning_rate=LR, beta1=<span class="hljs-number">0.9</span>, beta2=<span class="hljs-number">0.95</span>, eps=<span class="hljs-number">1e-8</span>)).result()
+    avg_r = sum(batch_rewards) / len(batch_rewards)
+    step_rewards.append(avg_r)
+    loss_val = result.metrics.get(<span class="hljs-string">"grpo_loss"</span>, float(<span class="hljs-string">"nan"</span>))
+    print(<span class="hljs-string">f"[<span class="hljs-subst">{EXP_NAME}</span>] Step <span class="hljs-subst">{step+<span class="hljs-number">1</span>:<span class="hljs-number">3</span>d}</span>/<span class="hljs-subst">{STEPS}</span> | loss=<span class="hljs-subst">{loss_val:<span class="hljs-number">.4</span>f}</span> | reward=<span class="hljs-subst">{avg_r:<span class="hljs-number">.3</span>f}</span>"</span>)
+    <span class="hljs-keyword">if</span> (step + <span class="hljs-number">1</span>) % SAVE_EVERY == <span class="hljs-number">0</span>:
+        tc.save_state(name=<span class="hljs-string">f"state_<span class="hljs-subst">{step+<span class="hljs-number">1</span>}</span>"</span>)
+        ckpt = tc.save_weights_for_sampler(name=<span class="hljs-string">f"step_<span class="hljs-subst">{step+<span class="hljs-number">1</span>}</span>"</span>).result()
+        sc = tc.create_sampling_client(model_path=ckpt.path)
+        print(<span class="hljs-string">f"[<span class="hljs-subst">{EXP_NAME}</span>]   -&gt; Checkpoint step_<span class="hljs-subst">{step+<span class="hljs-number">1</span>}</span>"</span>)
+
+tc.save_state(name=<span class="hljs-string">"final"</span>)
+final = tc.save_weights_for_sampler(name=<span class="hljs-string">"final"</span>).result()
+print(<span class="hljs-string">f"\n[<span class="hljs-subst">{EXP_NAME}</span>] DONE | avg_reward_last10=<span class="hljs-subst">{sum(step_rewards[<span class="hljs-number">-10</span>:])/max(len(step_rewards[<span class="hljs-number">-10</span>:]),<span class="hljs-number">1</span>):<span class="hljs-number">.3</span>f}</span>"</span>)
+print(<span class="hljs-string">f"[<span class="hljs-subst">{EXP_NAME}</span>] Run ID: <span class="hljs-subst">{tc.model_id}</span>"</span>)
+print(<span class="hljs-string">f"[<span class="hljs-subst">{EXP_NAME}</span>] Sampler: <span class="hljs-subst">{final.path}</span>"</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>gsm8k_base_results.json</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "reports/final/gsm8k_base_results.json";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>gsm8k_base_results.json</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="json">{
+  <span class="hljs-attr">"config"</span>: {
+    <span class="hljs-attr">"model"</span>: <span class="hljs-string">"Qwen/Qwen3-8B"</span>,
+    <span class="hljs-attr">"n_samples"</span>: <span class="hljs-number">1</span>,
+    <span class="hljs-attr">"temperature"</span>: <span class="hljs-number">0.7</span>,
+    <span class="hljs-attr">"max_tokens"</span>: <span class="hljs-number">512</span>,
+    <span class="hljs-attr">"test_size"</span>: <span class="hljs-number">50</span>
+  },
+  <span class="hljs-attr">"correct"</span>: <span class="hljs-number">13</span>,
+  <span class="hljs-attr">"incorrect"</span>: <span class="hljs-number">37</span>,
+  <span class="hljs-attr">"errors"</span>: <span class="hljs-number">0</span>,
+  <span class="hljs-attr">"examples"</span>: [
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">0</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Janet\u2019s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for ..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"18"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"18"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">1</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it ..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"3."</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"3"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">2</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Josh decides to try flipping a house.  He buys a house for $80,000 and then puts in $50,000 in repai..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"150"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"70000"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">3</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"James decides to run 3 sprints 3 times a week.  He runs 60 meters each sprint.  How many total meter..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"540."</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"540"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">4</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Every day, Wendi feeds each of her chickens three cups of mixed chicken feed, containing seeds, meal..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"60"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"20"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">5</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Kylar went to the store to buy glasses for his new apartment. One glass costs $5, but every second g..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"64."</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"64"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">6</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Toulouse has twice as many sheep as Charleston. Charleston has 4 times as many sheep as Seattle. How..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"260."</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"260"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">7</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Carla is downloading a 200 GB file. Normally she can download 2 GB/minute, but 40% of the way throug..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"200"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"160"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">8</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"John drives for 3 hours at a speed of 60 mph and then turns around because he realizes he forgot som..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"1.5"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"45"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">9</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Eliza's rate per hour for the first 40 hours she works each week is $10. She also receives an overti..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"10"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"460"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">10</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"A new program had 60 downloads in the first month. The number of downloads in the second month was t..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"240"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"366"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">11</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Toula went to the bakery and bought various types of pastries. She bought 3 dozen donuts which cost ..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"4"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"694"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">12</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Carlos is planting a lemon tree. The tree will cost $90 to plant. Each year it will grow 7 lemons, w..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"3"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"13"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">13</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Melanie is a door-to-door saleswoman. She sold a third of her vacuum cleaners at the green house, 2 ..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"5"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"18"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">14</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"In a dance class of 20 students, 20% enrolled in contemporary dance, 25% of the remaining enrolled i..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"60"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"60"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">15</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"A merchant wants to make a choice of purchase between 2 purchase plans: jewelry worth $5,000 or elec..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"16."</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"125"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">16</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Two trains leave San Rafael at the same time. They begin traveling westward, both traveling for 80 m..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"230"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"230"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">17</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Jill gets paid $20 per hour to teach and $30 to be a cheerleading coach. If she works 50 weeks a yea..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"450"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"57500"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">18</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Claire makes a 3 egg omelet every morning for breakfast.  How many dozens of eggs will she eat in 4 ..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"84"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"7"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">19</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Marissa is hiking a 12-mile trail. She took 1 hour to walk the first 4 miles, then another hour to w..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"4"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"6"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">20</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"I have 10 liters of orange drink that are two-thirds water and I wish to add it to 15 liters of pine..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"3"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"15"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">21</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Raymond and Samantha are cousins. Raymond was born 6 years before Samantha. Raymond had a son at the..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"6"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"14"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">22</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Billy sells DVDs. He has 8 customers on Tuesday. His first 3 customers buy one DVD each.  His next 2..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"0"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"7"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">23</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"A candle melts by 2 centimeters every hour that it burns. How many centimeters shorter will a candle..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"8"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"8"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">24</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Kyle bought last year's best-selling book for $19.50. This is with a 25% discount from the original ..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"2."</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"26"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">25</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Marie ordered one chicken meal that costs $12, 5 packs of milk that costs $3 each, 4 apples that cos..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"50."</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"2"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">26</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Mishka bought 3 pairs of shorts, 3 pairs of pants, and 3 pairs of shoes. One pair of shorts costs $1..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"116"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"243"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">27</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Cynthia eats one serving of ice cream every night.  She buys cartons of ice cream with 15 servings o..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"60"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"16"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">28</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Henry made two stops during his 60-mile bike trip. He first stopped after 20 miles. His second stop ..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"60"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"25"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">29</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Gloria is shoe shopping when she comes across a pair of boots that fit her shoe budget. However, she..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"104."</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"104"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">30</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Darrell and Allen's ages are in the ratio of 7:11. If their total age now is 162, calculate Allen's ..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"162."</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"109"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">31</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Gunter is trying to count the jelly beans in a jar. He asks his friends how many they think are in t..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"80."</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"80"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">32</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"John takes care of 10 dogs.  Each dog takes .5 hours a day to walk and take care of their business. ..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"7"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"35"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">33</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Gretchen has 110 coins. There are 30 more gold coins than silver coins. How many gold coins does Gre..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"30"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"70"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">34</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Siobhan has 2 fewer jewels than Aaron. Aaron has 5 more jewels than half of Raymond's jewels. If Ray..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"40."</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"23"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">35</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Mike plays ping pong for 40 minutes.  In the first 20 minutes, he scores 4 points.  In the second 20..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"1"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"9"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">36</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Terry eats 2 yogurts a day.  They are currently on sale at 4 yogurts for $5.00.  How much does he sp..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"75.00"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"75"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">37</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"John plans to sell all his toys and use the money to buy video games. He has 13 lego sets and he sel..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"15"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"2"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">38</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"John runs 60 miles a week. He runs 3 days a week.  He runs 3 hours the first day and half as much th..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"10"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"10"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">39</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Dana can run at a rate of speed four times faster than she can walk, but she can skip at a rate of s..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"3"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"18"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">40</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Brandon's iPhone is four times as old as Ben's iPhone. Ben's iPhone is two times older than Suzy's i..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"3"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"8"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">41</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"The great dragon, Perg, sat high atop mount Farbo, breathing fire upon anything within a distance of..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"1000"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"200"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">42</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Grandma Jones baked 5 apple pies for the fireman's luncheon.  She cut each pie into 8 pieces and set..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"26"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"26"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"correct"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">43</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"According to its nutritional info, a bag of chips has 250 calories per serving. If a 300g bag has 5 ..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"125"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"48"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">44</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Charlie wants to sell beeswax candles.  For every pound of beeswax, he can make 10 tapered candles. ..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"2"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"20"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">45</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Meredith is a freelance blogger who writes about health topics and submits to clients each day as he..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"26"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"104"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">46</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Candice put 80 post-it notes in her purse before she headed out to her job at the coffee shop.  On h..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"80"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"163"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">47</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"John buys twice as many red ties as blue ties.  The red ties cost 50% more than blue ties.  He spent..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"600"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"800"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">48</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Tracy used a piece of wire 4 feet long to support tomato plants in the garden. The wire was cut into..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"12"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"8"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    },
+    {
+      <span class="hljs-attr">"idx"</span>: <span class="hljs-number">49</span>,
+      <span class="hljs-attr">"question"</span>: <span class="hljs-string">"Richard lives in an apartment building with 15 floors. Each floor contains 8 units, and 3/4 of the b..."</span>,
+      <span class="hljs-attr">"predicted"</span>: <span class="hljs-string">"4"</span>,
+      <span class="hljs-attr">"ground_truth"</span>: <span class="hljs-string">"30"</span>,
+      <span class="hljs-attr">"status"</span>: <span class="hljs-string">"incorrect"</span>
+    }
+  ],
+  <span class="hljs-attr">"accuracy"</span>: <span class="hljs-number">0.26</span>
+}
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

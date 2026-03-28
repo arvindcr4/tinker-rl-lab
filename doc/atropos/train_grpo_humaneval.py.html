@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>train_grpo_humaneval.py</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "atropos/train_grpo_humaneval.py";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>train_grpo_humaneval.py</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-string">"""
+train_grpo_humaneval.py — GRPO training for HumanEval / tool-use tasks.
+
+Supports two task modes via --task flag:
+  humaneval   : pass@1 on openai/openai_humaneval (code execution reward)
+  tool_use    : JSON tool-call correctness reward (custom dataset)
+
+Usage:
+    python train_grpo_humaneval.py --config configs/humaneval_qwen_8b.yaml --task humaneval
+    python train_grpo_humaneval.py --config configs/tool_use_qwen_8b.yaml  --task tool_use
+    python train_grpo_humaneval.py --config configs/tool_use_qwen_0_5b.yaml --task tool_use
+
+All runs log to WandB (project/group from YAML config).
+After training the LoRA adapter is pushed to HuggingFace when HF_PUSH=1.
+"""</span>
+
+<span class="hljs-keyword">from</span> __future__ <span class="hljs-keyword">import</span> annotations
+
+<span class="hljs-keyword">import</span> argparse
+<span class="hljs-keyword">import</span> ast
+<span class="hljs-keyword">import</span> contextlib
+<span class="hljs-keyword">import</span> io
+<span class="hljs-keyword">import</span> json
+<span class="hljs-keyword">import</span> os
+<span class="hljs-keyword">import</span> re
+<span class="hljs-keyword">import</span> shutil
+<span class="hljs-keyword">import</span> signal
+<span class="hljs-keyword">import</span> sys
+<span class="hljs-keyword">import</span> textwrap
+<span class="hljs-keyword">import</span> time
+<span class="hljs-keyword">import</span> traceback
+<span class="hljs-keyword">from</span> pathlib <span class="hljs-keyword">import</span> Path
+<span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> Any, List
+
+<span class="hljs-keyword">import</span> yaml
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Pre-import peft/transformers before wandb installs its import hooks</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python"><span class="hljs-keyword">try</span>:
+    <span class="hljs-keyword">import</span> transformers  <span class="hljs-comment"># noqa: F401</span>
+    <span class="hljs-keyword">from</span> peft <span class="hljs-keyword">import</span> LoraConfig  <span class="hljs-comment"># noqa: F401</span>
+<span class="hljs-keyword">except</span> Exception:
+    <span class="hljs-keyword">pass</span>
+
+<span class="hljs-keyword">import</span> wandb
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>── reward: HumanEval ────────────────────────────────────────────────────────</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">
+_CODE_FENCE = re.compile(<span class="hljs-string">r"```(?:python)?\s*(.*?)```"</span>, re.DOTALL)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_extract_code</span><span class="hljs-params">(text: str)</span> -&gt; str:</span>
+    <span class="hljs-string">"""Pull code from a markdown fence, falling back to the raw text."""</span>
+    m = _CODE_FENCE.search(text)
+    <span class="hljs-keyword">return</span> m.group(<span class="hljs-number">1</span>).strip() <span class="hljs-keyword">if</span> m <span class="hljs-keyword">else</span> text.strip()
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_run_humaneval_test</span><span class="hljs-params">(completion_code: str, test_code: str, entry_point: str,
+                        timeout: float = <span class="hljs-number">5.0</span>)</span> -&gt; float:</span>
+    <span class="hljs-string">"""
+    Execute the completion + HumanEval test harness in a restricted subprocess.
+    Returns 1.0 if all assert statements pass, else 0.0.
+    """</span>
+    full_code = textwrap.dedent(<span class="hljs-string">f"""
+<span class="hljs-subst">{completion_code}</span>
+
+<span class="hljs-subst">{test_code}</span>
+
+check(<span class="hljs-subst">{entry_point}</span>)
+"""</span>)
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Restrict dangerous builtins</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    safe_globals: dict[str, Any] = {
+        <span class="hljs-string">"__builtins__"</span>: {
+            k: __builtins__[k]  <span class="hljs-comment"># type: ignore[index]</span>
+            <span class="hljs-keyword">for</span> k <span class="hljs-keyword">in</span> (
+                <span class="hljs-string">"abs"</span>, <span class="hljs-string">"all"</span>, <span class="hljs-string">"any"</span>, <span class="hljs-string">"bin"</span>, <span class="hljs-string">"bool"</span>, <span class="hljs-string">"chr"</span>, <span class="hljs-string">"dict"</span>, <span class="hljs-string">"divmod"</span>,
+                <span class="hljs-string">"enumerate"</span>, <span class="hljs-string">"filter"</span>, <span class="hljs-string">"float"</span>, <span class="hljs-string">"frozenset"</span>, <span class="hljs-string">"getattr"</span>, <span class="hljs-string">"hasattr"</span>,
+                <span class="hljs-string">"hash"</span>, <span class="hljs-string">"hex"</span>, <span class="hljs-string">"int"</span>, <span class="hljs-string">"isinstance"</span>, <span class="hljs-string">"issubclass"</span>, <span class="hljs-string">"iter"</span>, <span class="hljs-string">"len"</span>,
+                <span class="hljs-string">"list"</span>, <span class="hljs-string">"map"</span>, <span class="hljs-string">"max"</span>, <span class="hljs-string">"min"</span>, <span class="hljs-string">"next"</span>, <span class="hljs-string">"oct"</span>, <span class="hljs-string">"ord"</span>, <span class="hljs-string">"pow"</span>, <span class="hljs-string">"print"</span>,
+                <span class="hljs-string">"range"</span>, <span class="hljs-string">"repr"</span>, <span class="hljs-string">"reversed"</span>, <span class="hljs-string">"round"</span>, <span class="hljs-string">"set"</span>, <span class="hljs-string">"setattr"</span>, <span class="hljs-string">"slice"</span>,
+                <span class="hljs-string">"sorted"</span>, <span class="hljs-string">"str"</span>, <span class="hljs-string">"sum"</span>, <span class="hljs-string">"tuple"</span>, <span class="hljs-string">"type"</span>, <span class="hljs-string">"zip"</span>,
+            )
+            <span class="hljs-keyword">if</span> k <span class="hljs-keyword">in</span> __builtins__  <span class="hljs-comment"># type: ignore[operator]</span>
+        }
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_exec</span><span class="hljs-params">()</span>:</span>
+        exec(compile(full_code, <span class="hljs-string">"&lt;humaneval&gt;"</span>, <span class="hljs-string">"exec"</span>), safe_globals)  <span class="hljs-comment"># noqa: S102</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_timeout_handler</span><span class="hljs-params">(signum, frame)</span>:</span>
+        <span class="hljs-keyword">raise</span> TimeoutError(<span class="hljs-string">"execution timed out"</span>)
+
+    old = signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(int(timeout) + <span class="hljs-number">1</span>)
+    <span class="hljs-keyword">try</span>:
+        _exec()
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1.0</span>
+    <span class="hljs-keyword">except</span> Exception:
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0.0</span>
+    <span class="hljs-keyword">finally</span>:
+        signal.alarm(<span class="hljs-number">0</span>)
+        signal.signal(signal.SIGALRM, old)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">make_humaneval_reward_fn</span><span class="hljs-params">(dataset)</span>:</span>
+    <span class="hljs-string">"""Return a GRPOTrainer-compatible reward function for HumanEval."""</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Build lookup: task_id → {test, entry_point}</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    lookup = {
+        row[<span class="hljs-string">"task_id"</span>]: {
+            <span class="hljs-string">"test"</span>: row[<span class="hljs-string">"test"</span>],
+            <span class="hljs-string">"entry_point"</span>: row[<span class="hljs-string">"entry_point"</span>],
+            <span class="hljs-string">"prompt"</span>: row[<span class="hljs-string">"prompt"</span>],
+        }
+        <span class="hljs-keyword">for</span> row <span class="hljs-keyword">in</span> dataset
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">reward_fn</span><span class="hljs-params">(completions: List[str], prompts=None, **kwargs)</span> -&gt; List[float]:</span>
+        task_ids = kwargs.get(<span class="hljs-string">"task_id"</span>, <span class="hljs-literal">None</span>)
+        rewards = []
+        <span class="hljs-keyword">for</span> i, completion <span class="hljs-keyword">in</span> enumerate(completions):
+            code = _extract_code(completion <span class="hljs-keyword">if</span> isinstance(completion, str) <span class="hljs-keyword">else</span> str(completion))
+            <span class="hljs-keyword">if</span> task_ids <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+                tid = task_ids[i] <span class="hljs-keyword">if</span> isinstance(task_ids[i], str) <span class="hljs-keyword">else</span> task_ids[i][<span class="hljs-number">0</span>]
+                meta = lookup.get(tid, {})
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>prepend the original prompt so the function signature is defined</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">                full_code = meta.get(<span class="hljs-string">"prompt"</span>, <span class="hljs-string">""</span>) + <span class="hljs-string">"\n"</span> + code
+                score = _run_humaneval_test(full_code, meta.get(<span class="hljs-string">"test"</span>, <span class="hljs-string">""</span>), meta.get(<span class="hljs-string">"entry_point"</span>, <span class="hljs-string">""</span>))
+            <span class="hljs-keyword">else</span>:
+                score = <span class="hljs-number">0.0</span>
+            rewards.append(score)
+        <span class="hljs-keyword">return</span> rewards
+
+    <span class="hljs-keyword">return</span> reward_fn
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">build_humaneval_dataset</span><span class="hljs-params">(tokenizer, max_token_length: int = <span class="hljs-number">1024</span>)</span>:</span>
+    <span class="hljs-keyword">from</span> datasets <span class="hljs-keyword">import</span> load_dataset
+
+    ds = load_dataset(<span class="hljs-string">"openai/openai_humaneval"</span>, split=<span class="hljs-string">"test"</span>)
+
+    SUFFIX = (
+        <span class="hljs-string">"\n# Write a complete Python solution. "</span>
+        <span class="hljs-string">"Enclose your code in a ```python``` block."</span>
+    )
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_fmt</span><span class="hljs-params">(ex)</span>:</span>
+        messages = [{<span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>, <span class="hljs-string">"content"</span>: ex[<span class="hljs-string">"prompt"</span>] + SUFFIX}]
+        <span class="hljs-keyword">return</span> {
+            <span class="hljs-string">"prompt"</span>: tokenizer.apply_chat_template(
+                messages, tokenize=<span class="hljs-literal">False</span>, add_generation_prompt=<span class="hljs-literal">True</span>
+            ),
+            <span class="hljs-string">"task_id"</span>: ex[<span class="hljs-string">"task_id"</span>],
+        }
+
+    <span class="hljs-keyword">return</span> ds.map(_fmt, remove_columns=ds.column_names)
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>── reward: tool use ─────────────────────────────────────────────────────────</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>Simple synthetic tool-use dataset: given a question, the model must emit
+a JSON blob with {&quot;tool&quot;: &quot;<name>&quot;, &quot;args&quot;: {...}} and then answer.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">_TOOL_SCHEMA = {
+    <span class="hljs-string">"calculator"</span>: {<span class="hljs-string">"description"</span>: <span class="hljs-string">"Evaluate a math expression."</span>, <span class="hljs-string">"args"</span>: {<span class="hljs-string">"expression"</span>: <span class="hljs-string">"str"</span>}},
+    <span class="hljs-string">"lookup"</span>:     {<span class="hljs-string">"description"</span>: <span class="hljs-string">"Look up a fact."</span>,            <span class="hljs-string">"args"</span>: {<span class="hljs-string">"query"</span>: <span class="hljs-string">"str"</span>}},
+    <span class="hljs-string">"search"</span>:     {<span class="hljs-string">"description"</span>: <span class="hljs-string">"Search the web."</span>,             <span class="hljs-string">"args"</span>: {<span class="hljs-string">"query"</span>: <span class="hljs-string">"str"</span>}},
+}
+
+_TOOL_EXAMPLES = [
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<p>(question, tool, args_match_fn, gold_answer)</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">    (<span class="hljs-string">"What is 17 * 23?"</span>,               <span class="hljs-string">"calculator"</span>, <span class="hljs-keyword">lambda</span> a: <span class="hljs-string">"17"</span> <span class="hljs-keyword">in</span> a.get(<span class="hljs-string">"expression"</span>,<span class="hljs-string">""</span>) <span class="hljs-keyword">and</span> <span class="hljs-string">"23"</span> <span class="hljs-keyword">in</span> a.get(<span class="hljs-string">"expression"</span>,<span class="hljs-string">""</span>), <span class="hljs-string">"391"</span>),
+    (<span class="hljs-string">"What is the capital of France?"</span>,  <span class="hljs-string">"lookup"</span>,     <span class="hljs-keyword">lambda</span> a: <span class="hljs-string">"france"</span> <span class="hljs-keyword">in</span> a.get(<span class="hljs-string">"query"</span>,<span class="hljs-string">""</span>).lower(), <span class="hljs-string">"Paris"</span>),
+    (<span class="hljs-string">"Search for recent AI news."</span>,      <span class="hljs-string">"search"</span>,     <span class="hljs-keyword">lambda</span> a: <span class="hljs-string">"ai"</span> <span class="hljs-keyword">in</span> a.get(<span class="hljs-string">"query"</span>,<span class="hljs-string">""</span>).lower(), <span class="hljs-literal">None</span>),
+    (<span class="hljs-string">"Calculate 144 / 12."</span>,             <span class="hljs-string">"calculator"</span>, <span class="hljs-keyword">lambda</span> a: <span class="hljs-string">"144"</span> <span class="hljs-keyword">in</span> a.get(<span class="hljs-string">"expression"</span>,<span class="hljs-string">""</span>), <span class="hljs-string">"12"</span>),
+    (<span class="hljs-string">"Who wrote Hamlet?"</span>,               <span class="hljs-string">"lookup"</span>,     <span class="hljs-keyword">lambda</span> a: <span class="hljs-string">"hamlet"</span> <span class="hljs-keyword">in</span> a.get(<span class="hljs-string">"query"</span>,<span class="hljs-string">""</span>).lower(), <span class="hljs-string">"Shakespeare"</span>),
+]
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_score_tool_call</span><span class="hljs-params">(response: str, gold_tool: str, args_ok_fn, gold_answer)</span> -&gt; float:</span>
+    <span class="hljs-string">"""
+    Score a tool-use response.
+    +0.5 for correct tool call in JSON, +0.5 for correct final answer.
+    """</span>
+    score = <span class="hljs-number">0.0</span>
+    <span class="hljs-keyword">try</span>:
+        m = re.search(<span class="hljs-string">r"\{.*?\}"</span>, response, re.DOTALL)
+        <span class="hljs-keyword">if</span> m:
+            call = json.loads(m.group())
+            <span class="hljs-keyword">if</span> call.get(<span class="hljs-string">"tool"</span>) == gold_tool <span class="hljs-keyword">and</span> args_ok_fn(call.get(<span class="hljs-string">"args"</span>, {})):
+                score += <span class="hljs-number">0.5</span>
+    <span class="hljs-keyword">except</span> Exception:
+        <span class="hljs-keyword">pass</span>
+    <span class="hljs-keyword">if</span> gold_answer <span class="hljs-keyword">and</span> gold_answer.lower() <span class="hljs-keyword">in</span> response.lower():
+        score += <span class="hljs-number">0.5</span>
+    <span class="hljs-keyword">return</span> score
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">make_tool_use_reward_fn</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-string">"""Return a GRPOTrainer-compatible reward function for tool use."""</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">reward_fn</span><span class="hljs-params">(completions: List[str], prompts=None, **kwargs)</span> -&gt; List[float]:</span>
+        gold_tools   = kwargs.get(<span class="hljs-string">"gold_tool"</span>,   <span class="hljs-literal">None</span>)
+        gold_answers = kwargs.get(<span class="hljs-string">"gold_answer"</span>, <span class="hljs-literal">None</span>)
+        gold_args    = kwargs.get(<span class="hljs-string">"gold_args"</span>,   <span class="hljs-literal">None</span>)   <span class="hljs-comment"># serialised lambda index</span>
+
+        rewards = []
+        <span class="hljs-keyword">for</span> i, completion <span class="hljs-keyword">in</span> enumerate(completions):
+            text = completion <span class="hljs-keyword">if</span> isinstance(completion, str) <span class="hljs-keyword">else</span> str(completion)
+            <span class="hljs-keyword">if</span> gold_tools <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+                gt   = gold_tools[i][<span class="hljs-number">0</span>]   <span class="hljs-keyword">if</span> isinstance(gold_tools[i],   list) <span class="hljs-keyword">else</span> gold_tools[i]
+                ga   = gold_answers[i][<span class="hljs-number">0</span>] <span class="hljs-keyword">if</span> isinstance(gold_answers[i], list) <span class="hljs-keyword">else</span> gold_answers[i]
+                idx  = int(gold_args[i][<span class="hljs-number">0</span>] <span class="hljs-keyword">if</span> isinstance(gold_args[i], list) <span class="hljs-keyword">else</span> gold_args[i])
+                _, _, args_fn, _ = _TOOL_EXAMPLES[idx % len(_TOOL_EXAMPLES)]
+                rewards.append(_score_tool_call(text, gt, args_fn, ga))
+            <span class="hljs-keyword">else</span>:
+                rewards.append(<span class="hljs-number">0.0</span>)
+        <span class="hljs-keyword">return</span> rewards
+
+    <span class="hljs-keyword">return</span> reward_fn
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">build_tool_use_dataset</span><span class="hljs-params">(tokenizer, seed: int = <span class="hljs-number">42</span>)</span>:</span>
+    <span class="hljs-keyword">from</span> datasets <span class="hljs-keyword">import</span> Dataset
+
+    SYSTEM = (
+        <span class="hljs-string">"You have access to tools. To use a tool, output JSON: "</span>
+        <span class="hljs-string">'{{"tool": "&lt;name&gt;", "args": {{...}}}} then give your final answer.'</span>
+    )
+    rows = []
+    <span class="hljs-keyword">for</span> i, (q, tool, _, ans) <span class="hljs-keyword">in</span> enumerate(_TOOL_EXAMPLES * <span class="hljs-number">200</span>):   <span class="hljs-comment"># repeat to get 1000 examples</span>
+        messages = [
+            {<span class="hljs-string">"role"</span>: <span class="hljs-string">"system"</span>,    <span class="hljs-string">"content"</span>: SYSTEM},
+            {<span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>,      <span class="hljs-string">"content"</span>: q},
+        ]
+        rows.append({
+            <span class="hljs-string">"prompt"</span>:      tokenizer.apply_chat_template(messages, tokenize=<span class="hljs-literal">False</span>, add_generation_prompt=<span class="hljs-literal">True</span>),
+            <span class="hljs-string">"gold_tool"</span>:   tool,
+            <span class="hljs-string">"gold_answer"</span>: ans <span class="hljs-keyword">or</span> <span class="hljs-string">""</span>,
+            <span class="hljs-string">"gold_args"</span>:   str(i % len(_TOOL_EXAMPLES)),
+        })
+
+    <span class="hljs-keyword">import</span> random
+    rng = random.Random(seed)
+    rng.shuffle(rows)
+    <span class="hljs-keyword">return</span> Dataset.from_list(rows)
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10"></a>
+</div>
+<p>── shared: config loader + model loader (same as train_grpo_unsloth.py) ────</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_config</span><span class="hljs-params">(path: str)</span> -&gt; dict:</span>
+    <span class="hljs-keyword">with</span> open(path) <span class="hljs-keyword">as</span> f:
+        raw = yaml.safe_load(f)
+    cfg = raw.get(<span class="hljs-string">"env"</span>, {})
+    t   = raw.get(<span class="hljs-string">"tinker"</span>, {})
+    oi  = (raw.get(<span class="hljs-string">"openai"</span>) <span class="hljs-keyword">or</span> [{}])[<span class="hljs-number">0</span>]
+    <span class="hljs-keyword">return</span> {
+        <span class="hljs-string">"model_name"</span>:              oi.get(<span class="hljs-string">"model_name"</span>) <span class="hljs-keyword">or</span> cfg.get(<span class="hljs-string">"tokenizer_name"</span>),
+        <span class="hljs-string">"total_steps"</span>:             cfg.get(<span class="hljs-string">"total_steps"</span>,       <span class="hljs-number">50</span>),
+        <span class="hljs-string">"batch_size"</span>:              cfg.get(<span class="hljs-string">"batch_size"</span>,        <span class="hljs-number">128</span>),
+        <span class="hljs-string">"group_size"</span>:              cfg.get(<span class="hljs-string">"group_size"</span>,        <span class="hljs-number">16</span>),
+        <span class="hljs-string">"max_token_length"</span>:        cfg.get(<span class="hljs-string">"max_token_length"</span>,  <span class="hljs-number">512</span>),
+        <span class="hljs-string">"max_token_trainer_length"</span>: t.get(<span class="hljs-string">"max_token_trainer_length"</span>, <span class="hljs-number">2048</span>),
+        <span class="hljs-string">"lora_rank"</span>:               t.get(<span class="hljs-string">"lora_rank"</span>,           <span class="hljs-number">32</span>),
+        <span class="hljs-string">"learning_rate"</span>:           t.get(<span class="hljs-string">"learning_rate"</span>,       <span class="hljs-number">4e-5</span>),
+        <span class="hljs-string">"wandb_project"</span>:           t.get(<span class="hljs-string">"wandb_project"</span>,       <span class="hljs-string">"tinker-rl-scaling"</span>),
+        <span class="hljs-string">"wandb_group"</span>:             t.get(<span class="hljs-string">"wandb_group"</span>,         <span class="hljs-string">"coding-scaling"</span>),
+        <span class="hljs-string">"wandb_run_name"</span>:          t.get(<span class="hljs-string">"wandb_run_name"</span>,      <span class="hljs-string">"grpo-run"</span>),
+        <span class="hljs-string">"checkpoint_dir"</span>:          t.get(<span class="hljs-string">"checkpoint_dir"</span>,      <span class="hljs-string">"./checkpoints/run/"</span>),
+    }
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_param_count_B</span><span class="hljs-params">(model_name: str)</span> -&gt; float:</span>
+    m = re.search(<span class="hljs-string">r"(\d+\.?\d*)[Bb]"</span>, model_name.split(<span class="hljs-string">"/"</span>)[<span class="hljs-number">-1</span>])
+    <span class="hljs-keyword">return</span> float(m.group(<span class="hljs-number">1</span>)) <span class="hljs-keyword">if</span> m <span class="hljs-keyword">else</span> <span class="hljs-number">8.0</span>
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_model_and_tokenizer</span><span class="hljs-params">(model_name: str, lora_rank: int, max_seq_len: int)</span>:</span>
+    params_b = _param_count_B(model_name)
+    load_in_4bit = params_b &gt;= <span class="hljs-number">4.0</span>
+    use_unsloth = os.environ.get(<span class="hljs-string">"ATROPOS_USE_UNSLOTH"</span>, <span class="hljs-string">"0"</span>).lower() <span class="hljs-keyword">in</span> {<span class="hljs-string">"1"</span>, <span class="hljs-string">"true"</span>, <span class="hljs-string">"yes"</span>}
+
+    <span class="hljs-keyword">if</span> use_unsloth:
+        <span class="hljs-keyword">try</span>:
+            <span class="hljs-keyword">from</span> unsloth <span class="hljs-keyword">import</span> FastLanguageModel
+            model, tokenizer = FastLanguageModel.from_pretrained(
+                model_name=model_name, max_seq_length=max_seq_len,
+                load_in_4bit=load_in_4bit, dtype=<span class="hljs-literal">None</span>,
+            )
+            model = FastLanguageModel.get_peft_model(
+                model, r=lora_rank,
+                target_modules=[<span class="hljs-string">"q_proj"</span>, <span class="hljs-string">"k_proj"</span>, <span class="hljs-string">"v_proj"</span>, <span class="hljs-string">"o_proj"</span>,
+                                 <span class="hljs-string">"gate_proj"</span>, <span class="hljs-string">"up_proj"</span>, <span class="hljs-string">"down_proj"</span>],
+                lora_alpha=lora_rank, lora_dropout=<span class="hljs-number">0</span>, bias=<span class="hljs-string">"none"</span>,
+                use_gradient_checkpointing=<span class="hljs-string">"unsloth"</span>, random_state=<span class="hljs-number">42</span>,
+            )
+            print(<span class="hljs-string">f"  Loaded <span class="hljs-subst">{model_name}</span> with Unsloth (<span class="hljs-subst">{params_b}</span>B, 4-bit=<span class="hljs-subst">{load_in_4bit}</span>)"</span>)
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> exc:
+            use_unsloth = <span class="hljs-literal">False</span>
+            print(<span class="hljs-string">f"  Unsloth failed (<span class="hljs-subst">{exc}</span>), falling back to HF"</span>)
+
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> use_unsloth:
+        <span class="hljs-keyword">import</span> torch
+        <span class="hljs-keyword">from</span> peft <span class="hljs-keyword">import</span> LoraConfig, get_peft_model, prepare_model_for_kbit_training
+        <span class="hljs-keyword">from</span> transformers <span class="hljs-keyword">import</span> AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+
+        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=<span class="hljs-literal">True</span>)
+        kwargs: dict[str, Any] = {<span class="hljs-string">"trust_remote_code"</span>: <span class="hljs-literal">True</span>, <span class="hljs-string">"device_map"</span>: <span class="hljs-string">"auto"</span>,
+                                  <span class="hljs-string">"torch_dtype"</span>: torch.bfloat16}
+        <span class="hljs-keyword">if</span> load_in_4bit:
+            kwargs[<span class="hljs-string">"quantization_config"</span>] = BitsAndBytesConfig(
+                load_in_4bit=<span class="hljs-literal">True</span>, bnb_4bit_quant_type=<span class="hljs-string">"nf4"</span>,
+                bnb_4bit_use_double_quant=<span class="hljs-literal">True</span>, bnb_4bit_compute_dtype=torch.bfloat16,
+            )
+        model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
+        model.config.use_cache = <span class="hljs-literal">False</span>
+        <span class="hljs-keyword">if</span> load_in_4bit:
+            model = prepare_model_for_kbit_training(model)
+        model.gradient_checkpointing_enable()
+        model = get_peft_model(model, LoraConfig(
+            r=lora_rank, lora_alpha=lora_rank, lora_dropout=<span class="hljs-number">0.0</span>, bias=<span class="hljs-string">"none"</span>,
+            task_type=<span class="hljs-string">"CAUSAL_LM"</span>,
+            target_modules=[<span class="hljs-string">"q_proj"</span>, <span class="hljs-string">"k_proj"</span>, <span class="hljs-string">"v_proj"</span>, <span class="hljs-string">"o_proj"</span>,
+                             <span class="hljs-string">"gate_proj"</span>, <span class="hljs-string">"up_proj"</span>, <span class="hljs-string">"down_proj"</span>],
+        ))
+        print(<span class="hljs-string">f"  Loaded <span class="hljs-subst">{model_name}</span> with HF/PEFT (<span class="hljs-subst">{params_b}</span>B, 4-bit=<span class="hljs-subst">{load_in_4bit}</span>)"</span>)
+
+    <span class="hljs-keyword">if</span> tokenizer.chat_template <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+        tokenizer.chat_template = (
+            <span class="hljs-string">"{% for message in messages %}"</span>
+            <span class="hljs-string">"{% if message['role'] == 'user' %}{{ '&lt;|user|&gt;\n' + message['content'] + '\n' }}{% endif %}"</span>
+            <span class="hljs-string">"{% if message['role'] == 'assistant' %}{{ '&lt;|assistant|&gt;\n' + message['content'] + tokenizer.eos_token + '\n' }}{% endif %}"</span>
+            <span class="hljs-string">"{% endfor %}{% if add_generation_prompt %}{{ '&lt;|assistant|&gt;\n' }}{% endif %}"</span>
+        )
+    <span class="hljs-keyword">if</span> tokenizer.pad_token <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+        tokenizer.pad_token = tokenizer.eos_token
+    <span class="hljs-keyword">return</span> model, tokenizer
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">maybe_push_to_hub</span><span class="hljs-params">(final_dir: str, cfg: dict, config_path: str, seed: int)</span> -&gt; <span class="hljs-keyword">None</span>:</span>
+    <span class="hljs-keyword">if</span> os.environ.get(<span class="hljs-string">"HF_PUSH"</span>, <span class="hljs-string">"0"</span>).lower() <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> {<span class="hljs-string">"1"</span>, <span class="hljs-string">"true"</span>, <span class="hljs-string">"yes"</span>}:
+        <span class="hljs-keyword">return</span>
+    <span class="hljs-keyword">from</span> huggingface_hub <span class="hljs-keyword">import</span> HfApi, create_repo
+    token = os.environ[<span class="hljs-string">"HF_TOKEN"</span>]
+    api = HfApi(token=token)
+    owner = os.environ.get(<span class="hljs-string">"HF_REPO_OWNER"</span>) <span class="hljs-keyword">or</span> api.whoami(token=token)[<span class="hljs-string">"name"</span>]
+    repo_name = cfg[<span class="hljs-string">"wandb_run_name"</span>] + (<span class="hljs-string">f"-seed<span class="hljs-subst">{seed}</span>"</span> <span class="hljs-keyword">if</span> seed != <span class="hljs-number">42</span> <span class="hljs-keyword">else</span> <span class="hljs-string">""</span>)
+    repo_id = <span class="hljs-string">f"<span class="hljs-subst">{owner}</span>/<span class="hljs-subst">{repo_name}</span>"</span>
+    private = os.environ.get(<span class="hljs-string">"HF_PUSH_PRIVATE"</span>, <span class="hljs-string">"1"</span>) <span class="hljs-keyword">in</span> {<span class="hljs-string">"1"</span>, <span class="hljs-string">"true"</span>, <span class="hljs-string">"yes"</span>}
+    create_repo(repo_id=repo_id, token=token, private=private, exist_ok=<span class="hljs-literal">True</span>, repo_type=<span class="hljs-string">"model"</span>)
+    api.upload_folder(repo_id=repo_id, folder_path=final_dir, repo_type=<span class="hljs-string">"model"</span>, token=token,
+                      commit_message=<span class="hljs-string">f"Upload <span class="hljs-subst">{cfg[<span class="hljs-string">'wandb_run_name'</span>]}</span> adapter"</span>)
+    print(<span class="hljs-string">f"  HuggingFace upload → <span class="hljs-subst">{repo_id}</span>"</span>)
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11"></a>
+</div>
+<p>── main ─────────────────────────────────────────────────────────────────────</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="python">
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">train</span><span class="hljs-params">(config_path: str, task: str, seed: int = <span class="hljs-number">42</span>, wandb_api_key: str | None = None)</span>:</span>
+    cfg = load_config(config_path)
+    print(<span class="hljs-string">f"\n<span class="hljs-subst">{<span class="hljs-string">'='</span>*<span class="hljs-number">60</span>}</span>"</span>)
+    print(<span class="hljs-string">f"  GRPO (<span class="hljs-subst">{task}</span>) — <span class="hljs-subst">{cfg[<span class="hljs-string">'model_name'</span>]}</span>"</span>)
+    print(<span class="hljs-string">f"  Steps: <span class="hljs-subst">{cfg[<span class="hljs-string">'total_steps'</span>]}</span>  batch: <span class="hljs-subst">{cfg[<span class="hljs-string">'batch_size'</span>]}</span>  group: <span class="hljs-subst">{cfg[<span class="hljs-string">'group_size'</span>]}</span>"</span>)
+    print(<span class="hljs-string">f"<span class="hljs-subst">{<span class="hljs-string">'='</span>*<span class="hljs-number">60</span>}</span>\n"</span>)
+
+    os.environ[<span class="hljs-string">"WANDB_MODE"</span>] = <span class="hljs-string">"online"</span>
+    <span class="hljs-keyword">if</span> wandb_api_key:
+        wandb.login(key=wandb_api_key)
+    run_name = <span class="hljs-string">f"<span class="hljs-subst">{cfg[<span class="hljs-string">'wandb_run_name'</span>]}</span>-seed<span class="hljs-subst">{seed}</span>"</span> <span class="hljs-keyword">if</span> seed != <span class="hljs-number">42</span> <span class="hljs-keyword">else</span> cfg[<span class="hljs-string">"wandb_run_name"</span>]
+    wandb.init(project=cfg[<span class="hljs-string">"wandb_project"</span>], group=cfg[<span class="hljs-string">"wandb_group"</span>], name=run_name,
+               config={**cfg, <span class="hljs-string">"task"</span>: task, <span class="hljs-string">"seed"</span>: seed, <span class="hljs-string">"config_file"</span>: config_path})
+
+    model, tokenizer = load_model_and_tokenizer(
+        cfg[<span class="hljs-string">"model_name"</span>], cfg[<span class="hljs-string">"lora_rank"</span>], cfg[<span class="hljs-string">"max_token_trainer_length"</span>]
+    )
+
+    <span class="hljs-keyword">if</span> task == <span class="hljs-string">"humaneval"</span>:
+        dataset    = build_humaneval_dataset(tokenizer, cfg[<span class="hljs-string">"max_token_length"</span>])
+        reward_fn  = make_humaneval_reward_fn(
+            __import__(<span class="hljs-string">"datasets"</span>).load_dataset(<span class="hljs-string">"openai/openai_humaneval"</span>, split=<span class="hljs-string">"test"</span>)
+        )
+        extra_cols = [<span class="hljs-string">"task_id"</span>]
+    <span class="hljs-keyword">elif</span> task == <span class="hljs-string">"tool_use"</span>:
+        dataset    = build_tool_use_dataset(tokenizer, seed=seed)
+        reward_fn  = make_tool_use_reward_fn()
+        extra_cols = [<span class="hljs-string">"gold_tool"</span>, <span class="hljs-string">"gold_answer"</span>, <span class="hljs-string">"gold_args"</span>]
+    <span class="hljs-keyword">else</span>:
+        <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">f"Unknown task: <span class="hljs-subst">{task}</span>"</span>)
+
+    <span class="hljs-keyword">from</span> trl <span class="hljs-keyword">import</span> GRPOConfig, GRPOTrainer
+    _per_device_bs = cfg[<span class="hljs-string">"batch_size"</span>] // cfg[<span class="hljs-string">"group_size"</span>]
+    _num_gen       = cfg[<span class="hljs-string">"group_size"</span>]
+    grpo_config = GRPOConfig(
+        output_dir=cfg[<span class="hljs-string">"checkpoint_dir"</span>],
+        num_train_epochs=<span class="hljs-number">1</span>,
+        max_steps=cfg[<span class="hljs-string">"total_steps"</span>],
+        per_device_train_batch_size=_per_device_bs,
+        num_generations=_num_gen,
+        generation_batch_size=_per_device_bs * _num_gen,  <span class="hljs-comment"># must be divisible by num_generations</span>
+        max_completion_length=cfg[<span class="hljs-string">"max_token_length"</span>],
+        learning_rate=cfg[<span class="hljs-string">"learning_rate"</span>],
+        logging_steps=<span class="hljs-number">1</span>,
+        save_steps=<span class="hljs-number">10</span>,
+        seed=seed,
+        report_to=<span class="hljs-string">"wandb"</span>,
+        run_name=run_name,
+        bf16=<span class="hljs-literal">True</span>, fp16=<span class="hljs-literal">False</span>,
+        gradient_checkpointing=<span class="hljs-literal">True</span>,
+        dataloader_num_workers=<span class="hljs-number">0</span>,
+        remove_unused_columns=<span class="hljs-literal">False</span>,
+    )
+    trainer = GRPOTrainer(
+        model=model, args=grpo_config,
+        train_dataset=dataset,
+        reward_funcs=[reward_fn],
+        processing_class=tokenizer,
+    )
+
+    <span class="hljs-keyword">from</span> transformers <span class="hljs-keyword">import</span> TrainerCallback
+    step_log: list[float] = []
+
+    <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">RewardLogCallback</span><span class="hljs-params">(TrainerCallback)</span>:</span>
+        <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">on_log</span><span class="hljs-params">(self, args, state, control, logs=None, **kwargs)</span>:</span>
+            <span class="hljs-keyword">if</span> logs <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+                <span class="hljs-keyword">return</span>
+            mean_r = logs.get(<span class="hljs-string">"reward/mean"</span>, logs.get(<span class="hljs-string">"rewards/mean"</span>))
+            <span class="hljs-keyword">if</span> mean_r <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+                step_log.append(float(mean_r))
+                wandb.log({<span class="hljs-string">"train/percent_correct"</span>: float(mean_r), <span class="hljs-string">"train/step"</span>: state.global_step},
+                          step=state.global_step)
+                print(<span class="hljs-string">f"  step <span class="hljs-subst">{state.global_step:<span class="hljs-number">3</span>d}</span>  mean_reward=<span class="hljs-subst">{float(mean_r):<span class="hljs-number">.4</span>f}</span>"</span>)
+
+    trainer.add_callback(RewardLogCallback())
+
+    t0 = time.time()
+    trainer.train()
+    print(<span class="hljs-string">f"\n  Training complete in <span class="hljs-subst">{(time.time()-t0)/<span class="hljs-number">60</span>:<span class="hljs-number">.1</span>f}</span> min"</span>)
+
+    csv_path  = os.path.join(cfg[<span class="hljs-string">"checkpoint_dir"</span>], <span class="hljs-string">"reward_log.csv"</span>)
+    final_dir = os.path.join(cfg[<span class="hljs-string">"checkpoint_dir"</span>], <span class="hljs-string">"final"</span>)
+    Path(csv_path).parent.mkdir(parents=<span class="hljs-literal">True</span>, exist_ok=<span class="hljs-literal">True</span>)
+    Path(final_dir).mkdir(parents=<span class="hljs-literal">True</span>, exist_ok=<span class="hljs-literal">True</span>)
+    <span class="hljs-keyword">with</span> open(csv_path, <span class="hljs-string">"w"</span>) <span class="hljs-keyword">as</span> f:
+        f.write(<span class="hljs-string">"step,mean_reward\n"</span>)
+        <span class="hljs-keyword">for</span> i, r <span class="hljs-keyword">in</span> enumerate(step_log):
+            f.write(<span class="hljs-string">f"<span class="hljs-subst">{i}</span>,<span class="hljs-subst">{r:<span class="hljs-number">.6</span>f}</span>\n"</span>)
+    trainer.save_model(final_dir)
+    tokenizer.save_pretrained(final_dir)
+    shutil.copy2(config_path, os.path.join(final_dir, <span class="hljs-string">"training_config.yaml"</span>))
+    shutil.copy2(csv_path, os.path.join(final_dir, <span class="hljs-string">"reward_log.csv"</span>))
+    maybe_push_to_hub(final_dir, cfg, config_path, seed)
+
+    wandb.finish()
+    <span class="hljs-keyword">return</span> step_log
+
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(<span class="hljs-string">"--config"</span>,    required=<span class="hljs-literal">True</span>)
+    parser.add_argument(<span class="hljs-string">"--task"</span>,      required=<span class="hljs-literal">True</span>, choices=[<span class="hljs-string">"humaneval"</span>, <span class="hljs-string">"tool_use"</span>])
+    parser.add_argument(<span class="hljs-string">"--seed"</span>,      type=int, default=<span class="hljs-number">42</span>)
+    parser.add_argument(<span class="hljs-string">"--wandb_key"</span>, default=<span class="hljs-literal">None</span>)
+    args = parser.parse_args()
+    train(
+        config_path=args.config,
+        task=args.task,
+        seed=args.seed,
+        wandb_api_key=args.wandb_key <span class="hljs-keyword">or</span> os.environ.get(<span class="hljs-string">"WANDB_API_KEY"</span>),
+    )
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

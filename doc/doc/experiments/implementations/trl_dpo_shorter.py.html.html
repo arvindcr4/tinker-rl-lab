@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>trl_dpo_shorter.py.html</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../";
+    var thisFile = "doc/experiments/implementations/trl_dpo_shorter.py.html";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>trl_dpo_shorter.py.html</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="html"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>trl_dpo_shorter.py<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">http-equiv</span>=<span class="hljs-string">"content-type"</span> <span class="hljs-attr">content</span>=<span class="hljs-string">"text/html; charset=UTF-8"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">link</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">"stylesheet"</span> <span class="hljs-attr">media</span>=<span class="hljs-string">"all"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"../../doc-style.css"</span> /&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../../doc-filelist.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="actionscript">
+    <span class="hljs-keyword">var</span> relativeDir = <span class="hljs-string">"../../"</span>;
+    <span class="hljs-keyword">var</span> thisFile = <span class="hljs-string">"experiments/implementations/trl_dpo_shorter.py"</span>;
+    <span class="hljs-keyword">var</span> defaultSidebar = <span class="hljs-literal">true</span>;
+  </span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../../doc-script.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"sidebar_wrapper"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"sidebar_switch"</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"tree"</span>&gt;</span>Files<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"headings"</span>&gt;</span>Headings<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"tree"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"headings"</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"sidebar-toggle"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"container"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"background highlight"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">table</span> <span class="hljs-attr">cellpadding</span>=<span class="hljs-string">"0"</span> <span class="hljs-attr">cellspacing</span>=<span class="hljs-string">"0"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">tbody</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>trl_dpo_shorter.py<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-1"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-1"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"""
+TRL DPO Preference Learning for Shorter Responses
+==================================================
+Port of Tinker Preference Shorter experiment to HuggingFace TRL.
+
+Original Tinker Method:
+- Generate group_size responses per prompt
+- Pairwise comparison: shorter response wins
+- Reward based on win_minus_loss score
+
+This implementation uses DPOTrainer with length-penalized preferences.
+"""<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>import<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> torch
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>from<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> typing <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>import<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> List
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>from<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> datasets <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>import<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> Dataset
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>from<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> transformers <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>import<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> AutoModelForCausalLM, AutoTokenizer
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>from<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> trl <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>import<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> DPOTrainer, DPOConfig
+
+
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-function"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>def<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-title"</span>&gt;</span>create_preference_dataset<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-params"</span>&gt;</span>(
+    prompts: List[str],
+    model,
+    tokenizer,
+    num_generations: int = <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>4<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+    max_new_tokens: int = <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>128<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+)<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> -<span class="hljs-symbol">&amp;gt;</span> Dataset:<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"""
+    Create pairwise preference dataset favoring shorter responses.
+
+    For each prompt:
+    1. Generate num_generations responses
+    2. Create pairs where shorter response is chosen
+    3. Filter pairs where both end properly (format check)
+    """<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+    data = []
+    model_to_use = model
+    model_to_use.eval()
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>for<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> prompt <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>in<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> prompts:
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-2"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-2"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Generate multiple responses<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>        inputs = tokenizer(prompt, return_tensors=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"pt"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>).to(model_to_use.device)
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>with<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> torch.no_grad():
+            outputs = model_to_use.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                num_return_sequences=num_generations,
+                do_sample=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-literal"</span>&gt;</span>True<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+                temperature=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>0.8<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+                top_p=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>0.95<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+                pad_token_id=tokenizer.eos_token_id,
+            )
+
+        responses = [
+            tokenizer.decode(out[inputs.input_ids.shape[<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>1<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>]:], skip_special_tokens=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-literal"</span>&gt;</span>True<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+            <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>for<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> out <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>in<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> outputs
+        ]
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-3"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-3"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Check format (ends properly)<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>        valid_responses = [
+            (r, len(r)) <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>for<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> r <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>in<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> responses
+            <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>if<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> r.strip() <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>and<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>not<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> r.endswith(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"..."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)  <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-comment"</span>&gt;</span># Basic format check<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+        ]
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>if<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> len(valid_responses) <span class="hljs-symbol">&amp;lt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>2<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>:
+            <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>continue<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-4"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-4"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Sort by length (shortest first)<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>        valid_responses.sort(key=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>lambda<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> x: x[<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>1<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>])
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-5"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-5"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Create pairwise preferences (shorter is chosen)<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>for<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> i, (chosen, chosen_len) <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>in<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> enumerate(valid_responses[:<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>-1<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>]):
+            <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>for<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> rejected, rejected_len <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>in<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> valid_responses[i + <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>1<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>:]:
+                <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>if<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> rejected_len <span class="hljs-symbol">&amp;gt;</span> chosen_len * <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>1.1<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>:  <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-comment"</span>&gt;</span># At least 10% longer<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+                    data.append({
+                        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"prompt"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>: prompt,
+                        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"chosen"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>: chosen,
+                        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"rejected"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>: rejected,
+                    })
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>return<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> Dataset.from_list(data)
+
+
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-function"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>def<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-title"</span>&gt;</span>load_prompts<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-params"</span>&gt;</span>(num_prompts: int = <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>500<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> -<span class="hljs-symbol">&amp;gt;</span> List[str]:<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"""Load diverse prompts for preference training."""<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-6"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-6"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Sample prompts (in practice, load from dataset like NoRobots)<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>    base_prompts = [
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Explain what machine learning is."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"What are the benefits of exercise?"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"How does photosynthesis work?"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Describe the water cycle."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"What is the capital of France?"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Explain how computers work."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"What are the primary colors?"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"How do airplanes fly?"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"What is gravity?"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Explain the concept of democracy."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+    ]
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-7"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-7"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Expand with variations<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>    prompts = []
+    <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>for<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> i <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>in<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> range(num_prompts):
+        prompt = base_prompts[i % len(base_prompts)]
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>if<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> i <span class="hljs-symbol">&amp;gt;</span>= len(base_prompts):
+            prompt = <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>f"Briefly: <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-subst"</span>&gt;</span>{prompt}<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+        prompts.append(prompt)
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>return<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> prompts
+
+
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-function"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>def<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-title"</span>&gt;</span>main<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-params"</span>&gt;</span>()<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>:<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-8"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-8"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Model configuration (matching Tinker)<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>    model_name = <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Qwen/Qwen2-0.5B-Instruct"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>  <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-comment"</span>&gt;</span># Small instruct model<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Loading model and tokenizer..."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>if<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> tokenizer.pad_token <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>is<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-literal"</span>&gt;</span>None<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        torch_dtype=torch.bfloat16,
+        device_map=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"auto"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+    )
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-9"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-9"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Load reference model (frozen)<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>    ref_model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        torch_dtype=torch.bfloat16,
+        device_map=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"auto"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+    )
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-10"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-10"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Create preference dataset<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Generating preference dataset (this may take a while)..."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+    prompts = load_prompts(num_prompts=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>100<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)  <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-comment"</span>&gt;</span># Reduced for demo<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+
+    preference_dataset = create_preference_dataset(
+        prompts=prompts,
+        model=model,
+        tokenizer=tokenizer,
+        num_generations=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>4<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,  <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-comment"</span>&gt;</span># group_size in Tinker<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+        max_new_tokens=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>100<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+    )
+
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>f"Created <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-subst"</span>&gt;</span>{len(preference_dataset)}<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> preference pairs"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-11"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-11"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>DPO Configuration<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>    dpo_config = DPOConfig(
+        output_dir=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"./dpo_shorter_output"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        beta=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>0.1<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        per_device_train_batch_size=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>4<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        gradient_accumulation_steps=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>4<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        learning_rate=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>5e-7<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        max_length=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>512<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        max_prompt_length=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>256<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        loss_type=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"sigmoid"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        num_train_epochs=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>1<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        logging_steps=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>1<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        save_steps=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>50<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        max_grad_norm=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>1.0<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        warmup_ratio=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>0.1<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+    )
+
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Initializing DPOTrainer..."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+    trainer = DPOTrainer(
+        model=model,
+        ref_model=ref_model,
+        args=dpo_config,
+        train_dataset=preference_dataset,
+        tokenizer=tokenizer,
+    )
+
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Starting DPO training for shorter responses..."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+    trainer.train()
+    trainer.save_model(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"./dpo_shorter_final"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Training complete!"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+
+
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>if<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> __name__ == <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"__main__"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>:
+    main()
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+  <span class="hljs-tag">&lt;/<span class="hljs-name">tbody</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">table</span>&gt;</span>
+
+  <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

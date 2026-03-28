@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>trl_chat_sft.py.html</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../";
+    var thisFile = "doc/experiments/implementations/trl_chat_sft.py.html";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>trl_chat_sft.py.html</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="html"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>trl_chat_sft.py<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">http-equiv</span>=<span class="hljs-string">"content-type"</span> <span class="hljs-attr">content</span>=<span class="hljs-string">"text/html; charset=UTF-8"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">link</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">"stylesheet"</span> <span class="hljs-attr">media</span>=<span class="hljs-string">"all"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"../../doc-style.css"</span> /&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../../doc-filelist.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="actionscript">
+    <span class="hljs-keyword">var</span> relativeDir = <span class="hljs-string">"../../"</span>;
+    <span class="hljs-keyword">var</span> thisFile = <span class="hljs-string">"experiments/implementations/trl_chat_sft.py"</span>;
+    <span class="hljs-keyword">var</span> defaultSidebar = <span class="hljs-literal">true</span>;
+  </span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../../doc-script.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"sidebar_wrapper"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"sidebar_switch"</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"tree"</span>&gt;</span>Files<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"headings"</span>&gt;</span>Headings<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"tree"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"headings"</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"sidebar-toggle"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"container"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"background highlight"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">table</span> <span class="hljs-attr">cellpadding</span>=<span class="hljs-string">"0"</span> <span class="hljs-attr">cellspacing</span>=<span class="hljs-string">"0"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">tbody</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>trl_chat_sft.py<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-1"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-1"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"""
+TRL Chat SL (Supervised Fine-Tuning) Implementation
+====================================================
+Port of Tinker Chat SL experiment to TRL SFTTrainer.
+
+Original Tinker experiment:
+- dataset=no_robots (HuggingFace dataset)
+- Standard supervised fine-tuning
+- learning_rate=5e-4
+- batch_size=32
+"""<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>import<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> torch
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>from<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> datasets <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>import<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> load_dataset
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>from<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> transformers <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>import<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> AutoModelForCausalLM, AutoTokenizer
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>from<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> trl <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>import<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> SFTTrainer, SFTConfig
+
+
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-function"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>def<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-title"</span>&gt;</span>load_no_robots_dataset<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-params"</span>&gt;</span>(num_samples=None)<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>:<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"""
+    Load NoRobots dataset for chat SFT.
+
+    NoRobots is a high-quality instruction-following dataset
+    without synthetic/AI-generated responses.
+    """<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+    dataset = load_dataset(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"HuggingFaceH4/no_robots"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>, split=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"train"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>if<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> num_samples:
+        dataset = dataset.select(range(min(num_samples, len(dataset))))
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-function"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>def<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-title"</span>&gt;</span>format_chat<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-params"</span>&gt;</span>(example)<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>:<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-2"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-2"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Format as chat template<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>        messages = example.get(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"messages"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>, [])
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>if<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> messages:
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-3"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-3"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Convert to text format<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>            text = <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>""<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>for<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> msg <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>in<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> messages:
+                role = msg.get(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"role"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>, <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"user"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+                content = msg.get(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"content"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>, <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>""<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+                <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>if<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> role == <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"user"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>:
+                    text += <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>f"User: <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-subst"</span>&gt;</span>{content}<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>\n"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>elif<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> role == <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"assistant"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>:
+                    text += <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>f"Assistant: <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-subst"</span>&gt;</span>{content}<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>\n"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>return<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> {<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"text"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>: text.strip()}
+        <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>return<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> {<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"text"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>: <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>""<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>}
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>return<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> dataset.map(format_chat)
+
+
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-function"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>def<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-title"</span>&gt;</span>main<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-params"</span>&gt;</span>()<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>:<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-4"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-4"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Model configuration (matching Tinker)<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>    model_name = <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"meta-llama/Llama-3.2-1B"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Loading model and tokenizer..."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer.pad_token = tokenizer.eos_token
+
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        torch_dtype=torch.bfloat16,
+        device_map=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"auto"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+    )
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-5"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-5"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Load NoRobots dataset (matching Tinker)<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Loading NoRobots dataset..."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+    dataset = load_no_robots_dataset(num_samples=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>1000<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)  <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-comment"</span>&gt;</span># Reduced for demo<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>f"Loaded <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-subst"</span>&gt;</span>{len(dataset)}<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> examples"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-6"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-6"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>SFT Configuration (matching Tinker hyperparameters)<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>    sft_config = SFTConfig(
+        output_dir=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"./chat_sft_output"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-7"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-7"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Batch settings (matching Tinker: batch_size=32)<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>        per_device_train_batch_size=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>4<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        gradient_accumulation_steps=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>8<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,  <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-comment"</span>&gt;</span># Effective batch = 32<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-8"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-8"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Learning rate (matching Tinker: 5e-4)<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>        learning_rate=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>5e-4<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-9"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-9"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Training<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>        num_train_epochs=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>3<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        max_seq_length=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>512<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-10"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-10"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>LoRA for efficiency<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>        use_peft=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-literal"</span>&gt;</span>True<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        lora_r=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>32<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        lora_alpha=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>64<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        lora_dropout=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>0.05<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-11"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-11"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Logging<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>        logging_steps=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>10<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        save_steps=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>100<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-12"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-12"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Optimization<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>        max_grad_norm=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>1.0<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        warmup_ratio=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>0.1<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        weight_decay=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>0.01<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-13"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-13"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Mixed precision<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>        fp16=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-literal"</span>&gt;</span>False<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+        bf16=<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-literal"</span>&gt;</span>True<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>,
+    )
+
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Initializing SFTTrainer..."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+    trainer = SFTTrainer(
+        model=model,
+        train_dataset=dataset,
+        args=sft_config,
+        tokenizer=tokenizer,
+    )
+
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Starting Chat SFT training..."<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"="<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> * <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>50<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Supervised fine-tuning on NoRobots dataset"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"="<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> * <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-number"</span>&gt;</span>50<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+
+    trainer.train()
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+      <span class="hljs-tag">&lt;<span class="hljs-name">tr</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"docs"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilwrap"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"pilcrow"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"#section-14"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"section-14"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Save final model<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">td</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"code highlight"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">pre</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"python"</span>&gt;</span>    trainer.save_model(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"./chat_sft_final"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+    print(<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"Training complete! Model saved to ./chat_sft_final"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>)
+
+
+<span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-keyword"</span>&gt;</span>if<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span> __name__ == <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hljs-string"</span>&gt;</span>"__main__"<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>:
+    main()
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">td</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">tr</span>&gt;</span>
+    
+  <span class="hljs-tag">&lt;/<span class="hljs-name">tbody</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">table</span>&gt;</span>
+
+  <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

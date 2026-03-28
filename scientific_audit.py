@@ -89,11 +89,16 @@ def check_eval_script():
     source = read(EVAL_PY)
 
     parser_has_seed = "--seed" in source
+    parser_has_split = "--split" in source
+    split_choices_locked = 'choices=["test"]' in source or "choices=['test']" in source
     checkpoint_arg_used = False
     fallback_last_number = "Fallback: extract last number" in source
     do_sample_true = False
     default_temp_nonzero = False
-    extract_uses_last_number = False
+    has_dataset_split_metadata = '"dataset_split": args.split' in source
+    has_do_sample_metadata = '"do_sample": args.do_sample' in source
+    has_seed_metadata = '"seed": args.seed' in source
+    has_model_source_metadata = '"model_source":' in source
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
@@ -119,10 +124,22 @@ def check_eval_script():
         add(EVAL_PY, "eval.nondeterministic_sampling", "HF evaluation uses do_sample=True instead of deterministic decoding, weakening rigor and reproducibility.")
     if not parser_has_seed:
         add(EVAL_PY, "eval.missing_seed", "Evaluation script has no seed control for stochastic generation.")
+    if not parser_has_split:
+        add(EVAL_PY, "eval.missing_split_arg", "Evaluation script does not record which dataset split it evaluates.")
+    if parser_has_split and not split_choices_locked:
+        add(EVAL_PY, "eval.unlocked_split", "Evaluation script allows non-test splits; held-out evaluation should be locked to the GSM8K test split to avoid accidental train-set reporting.")
     if not checkpoint_arg_used:
         add(EVAL_PY, "eval.unused_checkpoint_path", "--checkpoint_path is declared but never used, so local checkpoint evaluation is broken/misleading.")
     if fallback_last_number:
         add(EVAL_PY, "eval.lenient_answer_extraction", "Answer extraction falls back to the last number in the response, which can overcount correctness and invite benchmark leakage.")
+    if not has_dataset_split_metadata:
+        add(EVAL_PY, "eval.missing_split_metadata", "Saved evaluation results do not record the dataset split, weakening auditability.")
+    if not has_do_sample_metadata:
+        add(EVAL_PY, "eval.missing_sampling_metadata", "Saved evaluation results do not record whether decoding was greedy or sampled.")
+    if not has_seed_metadata:
+        add(EVAL_PY, "eval.missing_seed_metadata", "Saved evaluation results do not record the evaluation seed.")
+    if not has_model_source_metadata:
+        add(EVAL_PY, "eval.missing_model_source_metadata", "Saved evaluation results do not record the exact checkpoint/model source used for evaluation.")
 
 
 def _run(cmd, cwd: Path):

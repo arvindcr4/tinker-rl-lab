@@ -35,6 +35,7 @@ def setup_argparse():
     parser.add_argument("--max_tokens", type=int, default=512, help="Max tokens to generate")
     parser.add_argument("--output", type=str, default="gsm8k_test_results.json", help="Output file")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of test examples")
+    parser.add_argument("--split", type=str, default="test", choices=["test"], help="Dataset split to evaluate (locked to held-out test for integrity)")
     return parser
 
 def extract_answer(text: str) -> Optional[str]:
@@ -175,7 +176,7 @@ def evaluate_model(args):
     
     print("Loading GSM8K dataset...")
     gsm8k = load_dataset("openai/gsm8k", "main")
-    test_data = gsm8k["test"]
+    test_data = gsm8k[args.split]
     
     if args.limit:
         test_data = test_data.select(range(args.limit))
@@ -188,8 +189,14 @@ def evaluate_model(args):
     results = {
         "config": {
             "model": args.model_name if not args.run_id else f"tinker://{args.run_id}",
+            "model_source": args.checkpoint_path or (f"tinker://{args.run_id}/sampler_weights/final" if args.run_id else args.model_name),
+            "dataset": "openai/gsm8k",
+            "dataset_config": "main",
+            "dataset_split": args.split,
             "n_samples": args.n_samples,
             "temperature": args.temperature,
+            "do_sample": args.do_sample,
+            "seed": args.seed,
             "max_tokens": args.max_tokens,
             "test_size": len(test_data),
         },

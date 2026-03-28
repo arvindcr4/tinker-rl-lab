@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>grpo_agentic_llm_paper.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "reports/final/grpo_agentic_llm_paper.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#grpo-for-agentic-llm-fine-tuning-empirical-studies-on-tool-use-code-generation-and-math-reasoning">GRPO for Agentic LLM Fine-Tuning: Empirical Studies on Tool Use, Code Generation, and Math Reasoning</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#abstract">Abstract</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#1.introduction">1. Introduction</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#2.background">2. Background</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#2.1-grpo-algorithm">2.1 GRPO Algorithm</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#2.2-related-work">2.2 Related Work</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#3.experimental-setup">3. Experimental Setup</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#models">Models</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#hyperparameters">Hyperparameters</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#reward-functions">Reward Functions</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#4.experiments">4. Experiments</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#4.1-single-turn-tool-calling">4.1 Single-Turn Tool Calling</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#4.2-multi-turn-tool-chaining">4.2 Multi-Turn Tool Chaining</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#4.3-code-generation">4.3 Code Generation</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#4.4-gsm8k-multi-seed-replication">4.4 GSM8K Multi-Seed Replication</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#4.5-lora-rank-ablation">4.5 LoRA Rank Ablation</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#5.analysis">5. Analysis</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#capacity-threshold-f1">Capacity Threshold (F1)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#moe-volatility-f2">MoE Volatility (F2)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#two-phase-learning-f3">Two-Phase Learning (F3)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#synthetic-vs.real-gap-f5">Synthetic vs. Real Gap (F5)</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#6.related-work">6. Related Work</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#7.conclusion">7. Conclusion</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#references">References</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="grpo-for-agentic-llm-fine-tuning-empirical-studies-on-tool-use-code-generation-and-math-reasoning">
+  <h1>
+    <a href="#grpo-for-agentic-llm-fine-tuning-empirical-studies-on-tool-use-code-generation-and-math-reasoning" name="grpo-for-agentic-llm-fine-tuning-empirical-studies-on-tool-use-code-generation-and-math-reasoning" class="pilcrow"></a>
+GRPO for Agentic LLM Fine-Tuning: Empirical Studies on Tool Use, Code Generation, and Math Reasoning
+  </h1>
+</div>
+<p><strong>Authors:</strong> Arvind C R, Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L, Dhruva N Murthy, Mohammad Rafi<br>
+<strong>Affiliation:</strong> Group 6, MTech DSAI, PES University<br>
+<strong>Date:</strong> March 28, 2026</p>
+<hr>
+<div class="pilwrap" id="abstract">
+  <h2>
+    <a href="#abstract" name="abstract" class="pilcrow"></a>
+Abstract
+  </h2>
+</div>
+<p>We investigate whether Group Relative Policy Optimization (GRPO) can reliably improve small language models (0.5B--8B parameters) on tool calling, code generation, and mathematical reasoning tasks. Across 17 cloud GPU training runs on Tinker and multiple team-executed experiments, we observe strong gains on task-specific metrics: JSON tool-call validity improves from 0% to 92%, multi-turn tool chaining quality from 0.72 to 0.91, and code generation (HumanEval) from 32% to 40%. On GSM8K math reasoning, we conduct multi-seed replication of <em>training-set reward</em> (mean last-10 accuracy 30.0%, SD = 2.5%) and a LoRA rank ablation (rank 8--64). We identify seven original findings including a capacity threshold between 3B and 8B parameters, MoE routing-induced training volatility, a two-phase learning progression, and a 3--8x difficulty gap between synthetic and real-world tool schemas. Because held-out GSM8K evaluation is still pending, we frame the math results as training-dynamics evidence rather than a generalization claim. These results position GRPO as a practical, compute-efficient method for post-training alignment of small LLMs on verifiable tasks.</p>
+<hr>
+<div class="pilwrap" id="1.introduction">
+  <h2>
+    <a href="#1.introduction" name="1.introduction" class="pilcrow"></a>
+1. Introduction
+  </h2>
+</div>
+<blockquote>
+<p><strong>Evaluation Scope Note:</strong> The GSM8K numbers reported in this draft summarize training-set reward under fresh rollouts, not held-out test-set generalization.</p>
+</blockquote>
+<p>Large language models (LLMs) increasingly serve as autonomous agents that call tools, generate code, and reason through multi-step problems. While supervised fine-tuning (SFT) can teach output formats, it fails to teach <em>judgment</em> -- when to call a tool, which tool to select, and when to stop. Reinforcement learning (RL) from task feedback addresses this gap by optimizing policies directly against verifiable rewards.</p>
+<p>Group Relative Policy Optimization (GRPO) [Shao et al., 2024] is a critic-free variant of PPO that computes advantages by normalizing rewards within groups of sampled completions. It requires no value function, no reference model for KL regularization, and substantially less compute than standard PPO -- making it attractive for resource-constrained post-training of small models.</p>
+<p><strong>Contributions:</strong></p>
+<ol>
+<li>Empirical characterization of GRPO across three task domains on models from 0.5B to 8B parameters</li>
+<li>Multi-seed replication on GSM8K (3 seeds, mean 30.0%, SD = 2.5%)</li>
+<li>LoRA rank ablation (rank 8/16/64) mapping the parameter-efficiency frontier</li>
+<li>Seven original findings on capacity thresholds, MoE volatility, learning phases, and reward design</li>
+<li>Open-source Tinker SDK pipeline enabling GRPO on 8B models without local GPU resources</li>
+</ol>
+<hr>
+<div class="pilwrap" id="2.background">
+  <h2>
+    <a href="#2.background" name="2.background" class="pilcrow"></a>
+2. Background
+  </h2>
+</div>
+<div class="pilwrap" id="2.1-grpo-algorithm">
+  <h3>
+    <a href="#2.1-grpo-algorithm" name="2.1-grpo-algorithm" class="pilcrow"></a>
+2.1 GRPO Algorithm
+  </h3>
+</div>
+<p>For each prompt, we sample K completions (group size G) and compute binary rewards. Advantages are normalized within each group:</p>
+<pre><code>advantage_i = (reward_i - mean(rewards)) / (std(rewards) + epsilon)
+</code></pre>
+<p>When all completions receive identical rewards, advantages are zero and no gradient update occurs -- the &quot;zero-loss&quot; phenomenon.</p>
+<div class="pilwrap" id="2.2-related-work">
+  <h3>
+    <a href="#2.2-related-work" name="2.2-related-work" class="pilcrow"></a>
+2.2 Related Work
+  </h3>
+</div>
+<p>DeepSeekMath [Shao et al., 2024] reports GRPO improving a 7B model from 82.9% to 88.2% on GSM8K with group size G=64. Step-DPO [Lai et al., 2024] demonstrates ~+3% MATH gains for &gt;70B models with step-wise preference pairs.</p>
+<hr>
+<div class="pilwrap" id="3.experimental-setup">
+  <h2>
+    <a href="#3.experimental-setup" name="3.experimental-setup" class="pilcrow"></a>
+3. Experimental Setup
+  </h2>
+</div>
+<div class="pilwrap" id="models">
+  <h3>
+    <a href="#models" name="models" class="pilcrow"></a>
+Models
+  </h3>
+</div>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Parameters</th>
+<th>Type</th>
+<th>Platform</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qwen2.5-0.5B-Instruct</td>
+<td>0.5B</td>
+<td>Dense</td>
+<td>Colab</td>
+</tr>
+<tr>
+<td>Qwen2.5-1.5B-Instruct</td>
+<td>1.5B</td>
+<td>Dense</td>
+<td>Colab</td>
+</tr>
+<tr>
+<td>Qwen2.5-3B-Instruct</td>
+<td>3B</td>
+<td>Dense</td>
+<td>Colab</td>
+</tr>
+<tr>
+<td>Qwen3-4B</td>
+<td>4B</td>
+<td>Dense</td>
+<td>Colab</td>
+</tr>
+<tr>
+<td>Qwen3-8B</td>
+<td>8B</td>
+<td>Dense</td>
+<td>Tinker</td>
+</tr>
+<tr>
+<td>Qwen3-30B-MoE</td>
+<td>30B (3B active)</td>
+<td>MoE</td>
+<td>Tinker</td>
+</tr>
+</tbody>
+</table>
+<div class="pilwrap" id="hyperparameters">
+  <h3>
+    <a href="#hyperparameters" name="hyperparameters" class="pilcrow"></a>
+Hyperparameters
+  </h3>
+</div>
+<ul>
+<li>Batch size: 2 prompts per step</li>
+<li>Group size: G ∈ {4, 8, 16}</li>
+<li>Max sequence: 1024 tokens (input), 512 tokens (generation)</li>
+<li>LoRA rank: 8, 16, or 32</li>
+</ul>
+<div class="pilwrap" id="reward-functions">
+  <h3>
+    <a href="#reward-functions" name="reward-functions" class="pilcrow"></a>
+Reward Functions
+  </h3>
+</div>
+<p><strong>Tool calling (3-component, 0--1):</strong></p>
+<ul>
+<li>+0.3: Valid JSON output</li>
+<li>+0.4: Correct tool name</li>
+<li>+0.3: All argument keys present</li>
+</ul>
+<p><strong>Math reasoning (binary):</strong></p>
+<ul>
+<li>1.0: Correct answer</li>
+<li>0.0: Incorrect</li>
+</ul>
+<hr>
+<div class="pilwrap" id="4.experiments">
+  <h2>
+    <a href="#4.experiments" name="4.experiments" class="pilcrow"></a>
+4. Experiments
+  </h2>
+</div>
+<div class="pilwrap" id="4.1-single-turn-tool-calling">
+  <h3>
+    <a href="#4.1-single-turn-tool-calling" name="4.1-single-turn-tool-calling" class="pilcrow"></a>
+4.1 Single-Turn Tool Calling
+  </h3>
+</div>
+<p>Using Qwen2.5-1.5B-Instruct with 500 SFT + 200 GRPO prompts:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>SFT Only</th>
+<th>After GRPO</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JSON Valid</td>
+<td>0%</td>
+<td>92%</td>
+<td>+92%</td>
+</tr>
+<tr>
+<td>Correct Tool</td>
+<td>0%</td>
+<td>50%</td>
+<td>+50%</td>
+</tr>
+<tr>
+<td>Has Arguments</td>
+<td>0%</td>
+<td>42%</td>
+<td>+42%</td>
+</tr>
+</tbody>
+</table>
+<div class="pilwrap" id="4.2-multi-turn-tool-chaining">
+  <h3>
+    <a href="#4.2-multi-turn-tool-chaining" name="4.2-multi-turn-tool-chaining" class="pilcrow"></a>
+4.2 Multi-Turn Tool Chaining
+  </h3>
+</div>
+<p>Using Qwen2.5-3B-Instruct with SFT followed by GRPO (40 steps):</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>SFT</th>
+<th>GRPO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Average</td>
+<td>0.72</td>
+<td>0.91</td>
+</tr>
+</tbody>
+</table>
+<p>The -0.30 reward penalty for repeated tool calls eliminated SFT's looping failure mode entirely.</p>
+<div class="pilwrap" id="4.3-code-generation">
+  <h3>
+    <a href="#4.3-code-generation" name="4.3-code-generation" class="pilcrow"></a>
+4.3 Code Generation
+  </h3>
+</div>
+<p>On software engineering tasks using Qwen3-8B:</p>
+<ul>
+<li>HumanEval pass@1: 32% → 40% (+8%)</li>
+<li>Problems solved: 16/50 → 20/50 (+4)</li>
+</ul>
+<div class="pilwrap" id="4.4-gsm8k-multi-seed-replication">
+  <h3>
+    <a href="#4.4-gsm8k-multi-seed-replication" name="4.4-gsm8k-multi-seed-replication" class="pilcrow"></a>
+4.4 GSM8K Multi-Seed Replication
+  </h3>
+</div>
+<p>Using Qwen3-8B with LoRA rank 32, 50 steps, 3 seeds:</p>
+<table>
+<thead>
+<tr>
+<th>Seed</th>
+<th>First-5 Avg</th>
+<th>Peak Acc</th>
+<th>Last-10 Avg</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>137</td>
+<td>25.0%</td>
+<td>62.5%</td>
+<td>27.5%</td>
+</tr>
+<tr>
+<td>256</td>
+<td>22.5%</td>
+<td>62.5%</td>
+<td>32.5%</td>
+</tr>
+<tr>
+<td>512</td>
+<td>15.0%</td>
+<td>87.5%</td>
+<td>30.0%</td>
+</tr>
+<tr>
+<td><strong>Mean</strong></td>
+<td><strong>20.8%</strong></td>
+<td><strong>70.8%</strong></td>
+<td><strong>30.0% ± 2.5%</strong></td>
+</tr>
+</tbody>
+</table>
+<p>95% CI: [23.8%, 36.2%]</p>
+<div class="pilwrap" id="4.5-lora-rank-ablation">
+  <h3>
+    <a href="#4.5-lora-rank-ablation" name="4.5-lora-rank-ablation" class="pilcrow"></a>
+4.5 LoRA Rank Ablation
+  </h3>
+</div>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>First-5 Avg</th>
+<th>Peak Acc</th>
+<th>Last-10 Avg</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8</td>
+<td>27.5%</td>
+<td>62.5%</td>
+<td>21.2%</td>
+</tr>
+<tr>
+<td>16</td>
+<td>20.0%</td>
+<td>75.0%</td>
+<td>18.8%</td>
+</tr>
+<tr>
+<td>64</td>
+<td>47.5%</td>
+<td>87.5%</td>
+<td>25.0%</td>
+</tr>
+</tbody>
+</table>
+<p>Higher rank correlates with faster initial learning but converges to similar long-run performance.</p>
+<hr>
+<div class="pilwrap" id="5.analysis">
+  <h2>
+    <a href="#5.analysis" name="5.analysis" class="pilcrow"></a>
+5. Analysis
+  </h2>
+</div>
+<div class="pilwrap" id="capacity-threshold-f1">
+  <h3>
+    <a href="#capacity-threshold-f1" name="capacity-threshold-f1" class="pilcrow"></a>
+Capacity Threshold (F1)
+  </h3>
+</div>
+<p>A capacity effect exists between 3B and 8B parameters. Dense 3B models (Llama-3.2-3B) fail to learn (0.78%→2.34% accuracy), while 8B models rapidly converge. The 3B failure traces to 56% zero-loss steps where all completions were equally wrong.</p>
+<div class="pilwrap" id="moe-volatility-f2">
+  <h3>
+    <a href="#moe-volatility-f2" name="moe-volatility-f2" class="pilcrow"></a>
+MoE Volatility (F2)
+  </h3>
+</div>
+<p>Qwen3-30B-MoE reached a 99% peak GSM8K training-step accuracy in our internal runs but exhibited 2.43x higher step-to-step volatility (Levene's test: F(1, 98) = 22.4, p = 7.0 × 10⁻⁶).</p>
+<div class="pilwrap" id="two-phase-learning-f3">
+  <h3>
+    <a href="#two-phase-learning-f3" name="two-phase-learning-f3" class="pilcrow"></a>
+Two-Phase Learning (F3)
+  </h3>
+</div>
+<ul>
+<li><strong>Phase 1 (Steps 1--20):</strong> Format compliance (0%→14% accuracy)</li>
+<li><strong>Phase 2 (Steps 21--25):</strong> Reasoning improvement (14%→58%)</li>
+</ul>
+<div class="pilwrap" id="synthetic-vs.real-gap-f5">
+  <h3>
+    <a href="#synthetic-vs.real-gap-f5" name="synthetic-vs.real-gap-f5" class="pilcrow"></a>
+Synthetic vs. Real Gap (F5)
+  </h3>
+</div>
+<p>Synthetic 5-tool tasks: reward &gt;0.9 within 5 steps<br>
+xlam-60k real data: reward 0.06--0.36 after 100 steps<br>
+<strong>Gap: 3--8x</strong></p>
+<hr>
+<div class="pilwrap" id="6.related-work">
+  <h2>
+    <a href="#6.related-work" name="6.related-work" class="pilcrow"></a>
+6. Related Work
+  </h2>
+</div>
+<p>GRPO was introduced by [Shao et al., 2024] who achieved 88.2% on GSM8K with a 7B model. [Lai et al., 2024] demonstrated step-wise preference optimization achieving +3% on MATH. [Li et al., 2024] showed LLaMA-2-7B reaches 82.6% GSM8K with synthetic SFT alone. Our work extends these findings to smaller models (0.5B--8B) with systematic empirical characterization.</p>
+<hr>
+<div class="pilwrap" id="7.conclusion">
+  <h2>
+    <a href="#7.conclusion" name="7.conclusion" class="pilcrow"></a>
+7. Conclusion
+  </h2>
+</div>
+<p>We presented an empirical study of GRPO for fine-tuning small language models:</p>
+<ol>
+<li>GRPO transforms non-tool-calling models into reliable tool callers (0%→92% JSON validity)</li>
+<li>A capacity threshold exists between 3B and 8B parameters</li>
+<li>LoRA rank scales initial learning speed but converges to similar long-run performance</li>
+<li>Synthetic benchmarks dramatically overestimate capability (3--8x gap)</li>
+<li>Multi-seed replication suggests moderately consistent training dynamics across three seeds (30.0%, SD = 2.5%)</li>
+</ol>
+<p><strong>Limitations:</strong> Evaluation on training data, small number of seeds (3), single-run results for some experiments.</p>
+<hr>
+<div class="pilwrap" id="references">
+  <h2>
+    <a href="#references" name="references" class="pilcrow"></a>
+References
+  </h2>
+</div>
+<ol>
+<li>Shao, Z., et al. (2024). DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models. arXiv:2402.03300.</li>
+<li>Lai, X., et al. (2024). Step-DPO: Step-wise Preference Optimization for Long-chain Reasoning. arXiv:2412.01939.</li>
+<li>Li, C., et al. (2024). Common 7B Language Models Already Possess Strong Math Capabilities. arXiv:2403.04706.</li>
+<li>Havrilla, A., et al. (2024). Teaching Large Language Models to Reason with Reinforcement Learning. arXiv:2403.14642.</li>
+<li>Pang, R., et al. (2024). Iterative Reasoning Preference Optimization. arXiv:2404.00530.</li>
+</ol>
+</div>
+  </div>
+</body>
+</html>

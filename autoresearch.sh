@@ -147,6 +147,11 @@ if [ "$PLOT_COUNT" -ge 3 ]; then
     SCORE=$((SCORE + 2))
 fi
 
+# 18. No hardcoded API keys in the ENTIRE repo (not just template)
+if ! grep -rn 'tml-[A-Za-z0-9]\{20,\}' --include='*.py' --include='*.sh' . 2>/dev/null | grep -v '.git/' | grep -v '.venv' | grep -q .; then
+    SCORE=$((SCORE + 3))
+fi
+
 # Cap at 100
 if [ "$SCORE" -gt 100 ]; then
     SCORE=100

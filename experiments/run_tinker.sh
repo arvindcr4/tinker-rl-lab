@@ -5,7 +5,7 @@
 source ~/tinker-env/bin/activate
 
 # Set API key
-export TINKER_API_KEY="tml-Yrqi9ktkRU7fGblwskPjIXYoLg1jOoxfDtWyNfsdpofonErXL8T1CAPRtqFwZqy7CAAAA"
+export TINKER_API_KEY="${TINKER_API_KEY:?Set TINKER_API_KEY environment variable}"
 
 # Run arithmetic RL training
 python -m tinker_cookbook.recipes.math_rl.train \

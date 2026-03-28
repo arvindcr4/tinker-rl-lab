@@ -1,18 +1,23 @@
 # Tinker RL Lab
 
-A consolidated research repository for Reinforcement Learning experiments with Large Language Models, integrating the Tinker platform, Atropos environments, and RL Gym implementations.
+A consolidated research repository for Reinforcement Learning experiments with Large Language Models, integrating multiple RL frameworks and compute backends.
 
 ## Overview
 
 This repository consolidates multiple research projects focused on:
-- **Tinker Platform Experiments**: RL training, SFT, preference learning, and distillation
-- **Atropos Integration**: Connecting Atropos environments with Tinker API
-- **RL Gym**: Google Drive and browser automation tasks for RL research
+- **Multiple RL Frameworks**: Tinker/SkyRL, verl, OpenRLHF, TRL (HuggingFace)
+- **Multiple Compute Backends**: Local GPU, vast.ai, Google Colab
+- **Multiple Environments**: Atropos, GSM8K, Math, HumanEval, Tool Use
 
 ## Repository Structure
 
 ```
 tinker-rl-lab/
+├── skyrl/               # SkyRL tx integration (Local Tinker API)
+│   ├── backends/         # vast.ai and Colab runners
+│   ├── configs/          # YAML configurations
+│   └── notebooks/         # Colab notebooks
+│
 ├── atropos/              # Tinker-Atropos integration
 │   ├── tinker_atropos/   # Core package
 │   │   ├── environments/ # GSM8K, Math, LogP steering
@@ -21,11 +26,23 @@ tinker-rl-lab/
 │   ├── configs/          # YAML configurations
 │   └── notebooks/        # Analysis notebooks & GRPO results
 │
+├── verl/                 # Volcano Engine RL integration
+│   └── trainer.py
+│
+├── openrlhf/             # OpenRLHF integration
+│   └── trainer.py
+│
+├── trl_integrations/     # HuggingFace TRL integration
+│   └── trainer.py
+│
+├── unified/              # Unified launcher for all frameworks
+│   └── launcher.py
+│
 ├── experiments/           # Tinker RL Cookbook experiments
 │   ├── notebooks/        # Jupyter notebooks for each experiment
 │   ├── implementations/  # RL implementations (PPO, DPO, GRPO, etc.)
 │   ├── results/          # Training metrics
-│   └── tinker-runs/      # Training logs and scripts
+│   └── tinker-runs/     # Training logs and scripts
 │
 ├── agentic-rl-finetuning/ # Agentic RL fine-tuning research
 ├── capstone-literature-survey/ # Literature Survey: RL for LLMs (GRPO Scaling)
@@ -61,6 +78,43 @@ Features:
 - Built-in GSM8K and Math environments
 - LoRA-based fine-tuning with configurable parameters
 - Checkpoint management and weight downloading
+
+### 3. SkyRL (Local Tinker API)
+
+SkyRL tx implements the Tinker API locally on your own GPUs. Any tinker-cookbook recipe works without cloud API.
+
+Features:
+- Local Tinker API server implementation
+- GRPO, PPO, REINFORCE algorithms
+- vLLM/SGLang inference
+- vast.ai and Colab backends
+
+### 4. verl (Volcano Engine RL)
+
+Production-ready RL training framework with HybridFlow programming model.
+
+Features:
+- Multi-GPU and multi-node via Ray
+- PPO, GRPO, REINFORCE
+- High-throughput vLLM inference
+
+### 5. OpenRLHF
+
+Scalable agentic RL framework with Ray + vLLM distributed architecture.
+
+Features:
+- PPO, DAPO, REINFORCE++
+- Async RL training
+- Multi-GPU and multi-node support
+
+### 6. TRL (HuggingFace)
+
+HuggingFace's full-stack RL library with easy model integration.
+
+Features:
+- GRPO, PPO, DPO, Reward Modeling
+- Works with any HF model
+- Single GPU to multi-GPU (DeepSpeed)
 
 ## Quick Start
 
@@ -104,6 +158,45 @@ python atropos/launch_training.py --config atropos/configs/default.yaml
 python atropos/tinker_atropos/environments/gsm8k_tinker.py serve \
     --config atropos/configs/default.yaml
 ```
+
+### Running SkyRL (Local Tinker API)
+
+```bash
+# Start local Tinker API server
+cd SkyRL/skyrl-train
+uv run --extra gpu --extra tinker -m skyrl.tinker.api \
+    --base-model Qwen/Qwen2.5-1.5B-Instruct --port 8000
+
+# In another terminal - run any tinker-cookbook recipe
+export TINKER_API_KEY="tml-dummy"
+export TINKER_BASE_URL="http://localhost:8000"
+python -m tinker_cookbook.recipes.math_rl.train base_url=$TINKER_BASE_URL ...
+```
+
+### Running on vast.ai
+
+```bash
+# SkyRL on vast.ai
+cd skyrl/backends
+./vastai_launch.sh --model Qwen/Qwen2.5-1.5B-Instruct
+
+# Or use Python launcher
+python -m skyrl.backends.vastai_runner --model Qwen/Qwen2.5-1.5B-Instruct
+```
+
+### Running with Unified Launcher
+
+```bash
+# Use any framework with unified launcher
+python -m unified.launcher --framework skyrl --model Qwen/Qwen2.5-1.5B-Instruct
+python -m unified.launcher --framework trl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm grpo
+python -m unified.launcher --framework verl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm ppo
+python -m unified.launcher --framework openrlhf --model Qwen/Qwen2.5-1.5B-Instruct
+```
+
+### Running in Google Colab
+
+Open `skyrl/notebooks/skyrl_colab_training.ipynb` and run cells sequentially.
 
 ## Source Repositories
 

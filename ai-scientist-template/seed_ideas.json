@@ -14,5 +14,13 @@
     "Interestingness": 7,
     "Feasibility": 8,
     "Novelty": 5
+  },
+  {
+    "Name": "group_size_scaling_with_kl_penalty",
+    "Title": "Scaling GRPO Group Size with KL Divergence Regularization to Stabilize Training",
+    "Experiment": "Investigate the effect of GRPO group size on training stability and accuracy. Modify the GRPOConfig in experiment.py to test group sizes [2, 4, 8, 16] while adding a KL penalty term. For each group size: (1) Set num_generations to the group size value, (2) Add a KL divergence penalty coefficient (beta=0.01) via the GRPOConfig's kl_coef parameter if available, or implement it manually by computing KL between the current policy and the initial policy logprobs. Run each configuration with 3 seeds at 30 steps. Report last-10 accuracy and training loss variance (as a stability proxy). Hypothesis: larger group sizes provide better advantage estimates but may diverge without KL regularization; the optimal group_size-KL combination should outperform the baseline group_size=4 without KL.",
+    "Interestingness": 8,
+    "Feasibility": 7,
+    "Novelty": 7
   }
 ]

@@ -1,3 +1,5 @@
 {"type":"config","name":"codebase-cleanup","metricName":"trash_files_remaining","metricUnit":"files","bestDirection":"lower"}
 {"run":1,"commit":"d263f9a","metric":424,"metrics":{"repo_tracked_files":657,"repo_size_kb":358720},"status":"keep","description":"baseline: 421 doc/ files + 3 unrelated files tracked","timestamp":1774712883,"segment":0}
 {"type":"config","name":"Remove tracked trash and unrelated artifacts from repository","metricName":"trash_files_remaining","metricUnit":"","bestDirection":"lower"}
+{"run":18,"commit":"6861cfe","metric":0,"metrics":{},"status":"keep","description":"Removed the remaining tracked trash from the repository by deleting the generated doc/ HTML mirror plus unrelated artifacts (0xsero_tweets.json, experiments/jarvis_config.ini, experiments/dropbox_uploader.sh), reducing trash_files_remaining from 3 to 0 and shrinking tracked size substantially.","timestamp":1774712928052,"segment":1,"confidence":null,"iterationTokens":2784}
+{"type":"config","name":"Reduce tracked repository size after trash cleanup","metricName":"repo_size_kb","metricUnit":"kb","bestDirection":"lower"}

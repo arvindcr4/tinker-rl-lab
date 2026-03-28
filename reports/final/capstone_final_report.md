@@ -235,6 +235,10 @@ Qwen3-4B with SFT followed by GRPO on 12 custom mathematical reasoning questions
 
 GRPO eliminated hallucination entirely but increased latency 3.4x due to longer chain-of-thought reasoning. Note: This is a 12-question custom benchmark, not a standard evaluation.
 
+#### Reviewer-facing caveat on code generation and tool-use evaluation
+
+Two important limitations remain. First, the code-generation headline uses a **50-problem subset** rather than the full standard HumanEval/MBPP harness, so it should be read as a preliminary subset result rather than a definitive benchmark comparison with confidence intervals. Second, the multi-turn tool-calling scores (for example 0.90/0.92) are **custom reward-derived scenario scores** from a small internal evaluation set; we did not measure inter-rater reliability or use standardized evaluators such as proxy-state final-state judging.
+
 #### 4.3.3 GSM8K Test-Set Evaluation Methodology
 
 To measure true held-out generalization on math reasoning (not just training reward), evaluate trained checkpoints on the GSM8K test set (1319 held-out examples):
@@ -325,11 +329,15 @@ Peak accuracy 75.0%, last-10 average 27.5%. Lower learning rate stabilizes train
 
 A capacity threshold exists between 3B and 4B parameters for GRPO on GSM8K. Dense 3B models (Llama-3.2-3B) fail to learn, achieving only 0.78%->2.34% accuracy over 50 steps, while the Qwen3.5-4B model achieves 80.0% first-5 accuracy and 82.5% last-10 accuracy — a dramatic leap. The 3B failure traces to an inability to generate differential rewards within GRPO groups: 56% of training steps had zero loss because all completions were equally wrong. This finding is independently confirmed by Dhruva's negative result on Qwen 0.5B/1.5B. The new 4B result (Qwen3.5-4B, seed=137) narrows the capacity threshold to between 3B and 4B parameters. However, we note that the 4B model is from the Qwen3.5 generation while the 8B is Qwen3 — the capacity effect may partially reflect generational improvements in base model capability rather than pure parameter count. **Caveat:** This 4B result uses a single seed and should be confirmed with multi-seed replication.
 
+An additional caveat is that this threshold may also be confounded by **exploration and reward sparsity**. We did not run the most informative rescue ablations --- larger GRPO group sizes (e.g., 32--64), temperature sweeps, or curriculum schedules --- that could reveal whether the 3B failure is due to insufficient exploration rather than insufficient capacity alone.
+
 **Revised Interpretation:** The 8B model does not achieve 'near-perfect accuracy' -- it achieves high reward on training prompts through format optimization (producing correct answer formats). True held-out evaluation is required to measure math reasoning improvement.
 
 ### 5.2 MoE Architectural Effects
 
 A Qwen3-30B-MoE model with ~3B active parameters reached a 99% peak GSM8K training-step accuracy in our internal runs but exhibited 2.43x higher step-to-step volatility than the dense 8B model (Levene's test p = 7.0x10^-6). Despite this volatility, both converged to comparable performance, suggesting sparse routing can substitute for total dense capacity but introduces training instability.
+
+However, this MoE claim remains incomplete because we did **not** log routing entropy, expert load imbalance, or other gating diagnostics. At present, the evidence is variance-level rather than mechanism-level.
 
 ### 5.3 Two-Phase Learning Progression
 
@@ -395,9 +403,13 @@ The baseline held-out evaluation of the untrained Qwen3-8B on a 50-example GSM8K
 | Gap | Priority | Estimated Effort |
 |-----|----------|-----------------|
 | Full GSM8K held-out test (1319 examples) | Critical | Fix Tinker import issue |
+| KL / entropy diagnostics for GRPO drift | Critical | Instrument training loop |
+| Standardized tool-use evaluation (ToolRM / FC-RewardBench / proxy-state) | Critical | New evaluator + benchmark packaging |
+| Full HumanEval/MBPP harness with pass@k and CIs | Critical | Re-run canonical evaluation |
 | 4B multi-seed replication | High | 2+ Tinker runs |
 | SFT baseline for GRPO comparison | High | 1 run |
 | PPO baseline for algorithmic comparison | High | 1 run |
+| RLOO / REINFORCE++ / S-GRPO comparison | High | 2--3 runs |
 | Train/validation/test splits | High | Code change |
 | MATH extended (>100 steps, curriculum) | Medium | 2 runs |
 | MoE routing ablation (temperature) | Medium | 2 runs |
@@ -507,3 +519,5 @@ These findings, combined with the scalable Tinker cloud GPU pipeline, provide a 
 ---
 
 *All Tinker training runs, logs, and model checkpoints are available for inspection and reproduction.*
+
+Current release status: we plan to release code, prompts, evaluation scripts, logs, and scenario manifests, but today the repository only includes training code, paper sources, logs, and the hardened held-out GSM8K evaluation script. It does not yet include a fully packaged release of every prompt set, scenario definition, and scoring rubric used for the internal tool-calling evaluations.

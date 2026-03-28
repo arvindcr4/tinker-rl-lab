@@ -34,6 +34,12 @@ ENV/
 # Jupyter
 .ipynb_checkpoints/
 
+# Generated notebook/document exports
+atropos/notebooks/html/
+grpo-results/html/
+experiments/html/
+doc/
+
 # Secrets
 .env
 .secrets/

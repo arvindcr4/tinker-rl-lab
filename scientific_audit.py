@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import ast
 import re
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -10,6 +11,7 @@ PAPER_MD = ROOT / "reports/final/grpo_agentic_llm_paper.md"
 REPORT_MD = ROOT / "reports/final/capstone_final_report.md"
 SUBMISSION_CHECKLIST = ROOT / "reports/final/SUBMISSION_CHECKLIST.md"
 EVAL_PY = ROOT / "reports/final/evaluate_gsm8k_test.py"
+FINAL_DIR = ROOT / "reports/final"
 
 issues = []
 
@@ -105,9 +107,48 @@ def check_eval_script():
         add(EVAL_PY, "eval.lenient_answer_extraction", "Answer extraction falls back to the last number in the response, which can overcount correctness and invite benchmark leakage.")
 
 
+def _run(cmd, cwd: Path):
+    return subprocess.run(cmd, cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+
+def check_latex_builds():
+    cleanup = [
+        "grpo_agentic_llm_paper.aux", "grpo_agentic_llm_paper.bbl", "grpo_agentic_llm_paper.blg", "grpo_agentic_llm_paper.log", "grpo_agentic_llm_paper.out", "grpo_agentic_llm_paper.pdf",
+        "grpo_agentic_llm_paper_anonymous.aux", "grpo_agentic_llm_paper_anonymous.log", "grpo_agentic_llm_paper_anonymous.out", "grpo_agentic_llm_paper_anonymous.pdf",
+        "supplementary_appendix.aux", "supplementary_appendix.log", "supplementary_appendix.out", "supplementary_appendix.pdf",
+    ]
+    for name in cleanup:
+        path = FINAL_DIR / name
+        if path.exists():
+            path.unlink()
+
+    steps = [
+        (["pdflatex", "-interaction=nonstopmode", "-halt-on-error", "grpo_agentic_llm_paper.tex"], "latex.main.pass1"),
+        (["bibtex", "grpo_agentic_llm_paper"], "latex.main.bibtex"),
+        (["pdflatex", "-interaction=nonstopmode", "-halt-on-error", "grpo_agentic_llm_paper.tex"], "latex.main.pass2"),
+        (["pdflatex", "-interaction=nonstopmode", "-halt-on-error", "grpo_agentic_llm_paper.tex"], "latex.main.pass3"),
+        (["pdflatex", "-interaction=nonstopmode", "-halt-on-error", "grpo_agentic_llm_paper_anonymous.tex"], "latex.anonymous"),
+        (["pdflatex", "-interaction=nonstopmode", "-halt-on-error", "supplementary_appendix.tex"], "latex.supplementary.pass1"),
+        (["pdflatex", "-interaction=nonstopmode", "-halt-on-error", "supplementary_appendix.tex"], "latex.supplementary.pass2"),
+    ]
+
+    try:
+        for cmd, code in steps:
+            result = _run(cmd, FINAL_DIR)
+            if result.returncode != 0:
+                add(FINAL_DIR / cmd[-1], code, f"LaTeX build step failed: {' '.join(cmd)}")
+                break
+    finally:
+        for name in cleanup:
+            path = FINAL_DIR / name
+            if path.exists():
+                path.unlink()
+
+
 def main():
     check_paper()
     check_eval_script()
+    check_latex_builds()
     print(f"METRIC audit_issues={len(issues)}")
     for path, code, message in issues:
         print(f"ISSUE {code} {path}: {message}")

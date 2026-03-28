@@ -34,15 +34,13 @@ pdflatex grpo_agentic_llm_paper.tex
 pdflatex grpo_agentic_llm_paper.tex
 ```
 
-### Compile with Supplementary
+### Compile Supplementary Appendix Separately
 ```bash
-pdflatex grpo_agentic_llm_paper.tex
-bibtex grpo_agentic_llm_paper
-pdflatex grpo_agentic_llm_paper.tex
-pdflatex grpo_agentic_llm_paper.tex
+pdflatex supplementary_appendix.tex
+pdflatex supplementary_appendix.tex
 ```
 
-Note: The supplementary_appendix.tex is input automatically by the main paper before `\end{document}`.
+Note: `supplementary_appendix.tex` is a standalone document and should be compiled separately from the main paper.
 
 ### Dependencies
 - Standard LaTeX distribution (TeX Live 2020+)

@@ -5,7 +5,8 @@
 \ProvidesPackage{nips_style}[2026 NeurIPS Style]
 
 % Page layout
-\RequirePackage{fullpage}
+% Use only core packages available in minimal TeX installs.
+\RequirePackage[margin=1in]{geometry}
 \RequirePackage{times}
 \RequirePackage{color}
 \RequirePackage{url}
@@ -21,7 +22,6 @@
 
 % Bibliography
 \RequirePackage{natbib}
-\bibliographystyle{plainnat}
 
 % Hyperref
 \RequirePackage{hyperref}
@@ -45,23 +45,10 @@
 % Process options
 \ProcessOptions\relax
 
-% Title styling
-\RequirePackage{titling}
-\pretitle{\begin{flushleft}\LARGE\bfseries}
-\posttitle{\par\end{flushleft}\vskip 0.5em}
-\preauthor{\begin{flushleft}\large\begin{tabular}[t]{c}}
-\postauthor{\end{tabular}\par\end{flushleft}}
-\predate{\begin{flushleft}\normalsize}
-\postdate{\par\end{flushleft}}
-
-% Section headings
-\RequirePackage{titlesec}
-\titleformat*{\section}{\large\bfseries\uppercase}
-\titleformat*{\subsection}{\normalsize\bfseries}
-
-% Itemize
-\RequirePackage{enumitem}
-\setlist{itemsep=0pt,parsep=0pt,topsep=4pt}
+\AtBeginDocument{%
+  \setlength{\parindent}{0pt}%
+  \setlength{\parskip}{0.35em}%
+}
 
 % ===========================================================================
 % Page limits (NeurIPS style)

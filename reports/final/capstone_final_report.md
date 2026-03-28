@@ -375,7 +375,7 @@ The baseline held-out evaluation of the untrained Qwen3-8B on a 50-example GSM8K
 
 | # | Finding | Evidence | Source |
 |---|---------|----------|--------|
-| F1 | Capacity threshold between 3B and 4B (models <=3B fail, 4B+ succeeds) | 3B: 2.3% final; 4B: 82.5% final; 8B: 100% peak on GSM8K | Arvind, Dhruva |
+| F1 | Capacity-sensitive regime between 3B and 4B under our current setup | 3B: 2.3% final; 4B: 82.5% final (single seed); 8B: 62.5--87.5% peak training-step reward | Arvind, Dhruva |
 | F2 | MoE routing -> 2.43x training volatility | Levene's test p=7.0e-6, same final accuracy | Arvind |
 | F3 | Format-first, reasoning-second phases | Steps 1-20: format; 21-25: reasoning | Arvind |
 | F4 | SFT+GRPO > either alone | JSON 0%->92%, multi-turn 0.72->0.91 | Sandhya, Arumugam |
@@ -494,7 +494,7 @@ GRPO enables reliable reward optimization on verifiable tasks for models >=4B pa
 
 1. **Tool calling:** GRPO transforms models that never call tools (0% JSON) into reliable tool callers (92% JSON, 0.91 multi-turn quality), with SFT as a prerequisite for format learning.
 
-2. **Math reasoning:** A capacity threshold exists between 3B and 4B parameters; below 3B, GRPO receives zero gradient signal. The 4B model (Qwen3.5-4B) achieves 82.5% last-10 accuracy, confirming the threshold. Above threshold, multi-seed replication confirms 30.5% +/- 3.3% (95% CI [26.5%, 34.5%]) GSM8K accuracy with our 8B setup. A baseline held-out evaluation of untrained Qwen3-8B on a 50-example test subset yields 26.0% accuracy.
+2. **Math reasoning:** A capacity-sensitive regime appears between 3B and 4B parameters under our current setup; below 3B, GRPO frequently receives zero gradient signal. The 4B model (Qwen3.5-4B) achieves 82.5% last-10 training-set reward in a single-seed run, which is consistent with --- but does not by itself prove --- a threshold. Above that regime, multi-seed replication yields 30.5% +/- 3.3% (95% CI [26.5%, 34.5%]) GSM8K training-set accuracy with our 8B setup. A baseline held-out evaluation of untrained Qwen3-8B on a 50-example test subset yields 26.0% accuracy.
 
 3. **Parameter efficiency:** LoRA rank 64 provides the fastest initial learning but all ranks converge to similar long-run performance, suggesting a rank 16--32 sweet spot for cost-effectiveness.
 

@@ -1,0 +1,39 @@
+[A_baseline] Connecting...
+[A_baseline] Run: 88ed2271-a4f3-5696-884f-a107df5993e6:train:0 | LR=3e-05 group=8 temp=0.8 rank=32
+[A_baseline] Step   1/30 | loss=-7.0045 | reward=0.819
+[A_baseline] Step   2/30 | loss=-4.5852 | reward=0.850
+[A_baseline] Step   3/30 | loss=-4.9077 | reward=0.759
+[A_baseline] Step   4/30 | loss=-1.5234 | reward=0.884
+[A_baseline] Step   5/30 | loss=-1.6588 | reward=0.941
+[A_baseline] Step   6/30 | loss=-5.6711 | reward=0.938
+[A_baseline] Step   7/30 | loss=-2.5415 | reward=0.909
+[A_baseline] Step   8/30 | loss=-1.5596 | reward=0.969
+[A_baseline] Step   9/30 | loss=-0.0855 | reward=0.972
+[A_baseline] Step  10/30 | loss=-3.2114 | reward=0.969
+[A_baseline]   -> Checkpoint step_10
+[A_baseline] Step  11/30 | loss=-3.5320 | reward=0.772
+[A_baseline] Step  12/30 | loss=-5.1301 | reward=0.909
+[A_baseline] Step  13/30 | loss=0.0000 | reward=1.000
+[A_baseline] Step  14/30 | loss=-6.9867 | reward=0.750
+[A_baseline] Step  15/30 | loss=0.0000 | reward=1.000
+[A_baseline] Step  16/30 | loss=-16.5236 | reward=0.750
+[A_baseline] Step  17/30 | loss=0.0000 | reward=1.000
+[A_baseline] Step  18/30 | loss=-13.0792 | reward=0.584
+[A_baseline] Step  19/30 | loss=-5.8693 | reward=0.909
+[A_baseline] Step  20/30 | loss=-8.1233 | reward=0.938
+[A_baseline]   -> Checkpoint step_20
+[A_baseline] Step  21/30 | loss=0.0000 | reward=1.000
+[A_baseline] Step  22/30 | loss=-7.2432 | reward=0.938
+[A_baseline] Step  23/30 | loss=-12.3375 | reward=0.853
+[A_baseline] Step  24/30 | loss=-9.9053 | reward=0.822
+[A_baseline] Step  25/30 | loss=-11.3346 | reward=0.791
+[A_baseline] Step  26/30 | loss=-5.4625 | reward=0.909
+[A_baseline] Step  27/30 | loss=-13.1698 | reward=0.766
+[A_baseline] Step  28/30 | loss=-15.2355 | reward=0.728
+[A_baseline] Step  29/30 | loss=0.0000 | reward=1.000
+[A_baseline] Step  30/30 | loss=-3.7327 | reward=0.941
+[A_baseline]   -> Checkpoint step_30
+
+[A_baseline] DONE | avg_reward_last10=0.875
+[A_baseline] Run ID: 88ed2271-a4f3-5696-884f-a107df5993e6:train:0
+[A_baseline] Sampler: tinker://88ed2271-a4f3-5696-884f-a107df5993e6:train:0/sampler_weights/final

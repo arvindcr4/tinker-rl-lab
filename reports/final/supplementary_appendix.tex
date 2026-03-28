@@ -165,7 +165,7 @@ This ``zero-loss'' phenomenon indicates the 3B model lacks the reasoning capacit
 
 \subsection{Qwen3-30B-MoE Volatility Analysis}
 
-The Qwen3-30B-MoE model achieved 99\% GSM8K accuracy but exhibited 2.43$\times$ higher step-to-step reward variance than the dense 8B model. Statistical testing (Levene's test) confirms this difference is significant: $F(1, 98) = 22.4$, $p = 7.0 \times 10^{-6}$.
+The Qwen3-30B-MoE model reached 99\% peak GSM8K training-step accuracy in our internal runs but exhibited 2.43$\times$ higher step-to-step reward variance than the dense 8B model. Statistical testing (Levene's test) confirms this difference is significant: $F(1, 98) = 22.4$, $p = 7.0 \times 10^{-6}$.
 
 This volatility stems from MoE routing: different experts activate for different tokens, creating non-smooth loss surfaces. The sparse activation pattern means small changes in the router can dramatically shift which experts process each token, amplifying training instability.
 

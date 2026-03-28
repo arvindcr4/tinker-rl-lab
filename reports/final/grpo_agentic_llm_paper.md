@@ -136,7 +136,7 @@ Higher rank correlates with faster initial learning but converges to similar lon
 A capacity effect exists between 3B and 8B parameters. Dense 3B models (Llama-3.2-3B) fail to learn (0.78%→2.34% accuracy), while 8B models rapidly converge. The 3B failure traces to 56% zero-loss steps where all completions were equally wrong.
 
 ### MoE Volatility (F2)
-Qwen3-30B-MoE achieved 99% GSM8K accuracy but exhibited 2.43x higher step-to-step volatility (Levene's test: F(1, 98) = 22.4, p = 7.0 × 10⁻⁶).
+Qwen3-30B-MoE reached a 99% peak GSM8K training-step accuracy in our internal runs but exhibited 2.43x higher step-to-step volatility (Levene's test: F(1, 98) = 22.4, p = 7.0 × 10⁻⁶).
 
 ### Two-Phase Learning (F3)
 - **Phase 1 (Steps 1--20):** Format compliance (0%→14% accuracy)
@@ -163,7 +163,7 @@ We presented an empirical study of GRPO for fine-tuning small language models:
 2. A capacity threshold exists between 3B and 8B parameters
 3. LoRA rank scales initial learning speed but converges to similar long-run performance
 4. Synthetic benchmarks dramatically overestimate capability (3--8x gap)
-5. Multi-seed replication confirms GRPO training stability (30.0%, SD = 2.5%)
+5. Multi-seed replication suggests moderately consistent training dynamics across three seeds (30.0%, SD = 2.5%)
 
 **Limitations:** Evaluation on training data, small number of seeds (3), single-run results for some experiments.
 

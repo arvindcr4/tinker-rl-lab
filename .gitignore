@@ -22,6 +22,7 @@ wheels/
 
 # Virtual environments
 .venv/
+.venv-*/
 venv/
 ENV/
 
@@ -36,9 +37,11 @@ ENV/
 
 # Generated notebook/document exports
 atropos/notebooks/html/
-grpo-results/html/
 experiments/html/
 doc/
+
+# Duplicate results directory (canonical copy in atropos/notebooks/)
+grpo-results/
 
 # Secrets
 .env

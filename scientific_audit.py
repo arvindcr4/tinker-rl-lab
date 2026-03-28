@@ -5,7 +5,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 PAPER_TEX = ROOT / "reports/final/grpo_agentic_llm_paper.tex"
+PAPER_TEX_ANON = ROOT / "reports/final/grpo_agentic_llm_paper_anonymous.tex"
+PAPER_MD = ROOT / "reports/final/grpo_agentic_llm_paper.md"
 REPORT_MD = ROOT / "reports/final/capstone_final_report.md"
+SUBMISSION_CHECKLIST = ROOT / "reports/final/SUBMISSION_CHECKLIST.md"
 EVAL_PY = ROOT / "reports/final/evaluate_gsm8k_test.py"
 
 issues = []
@@ -21,7 +24,10 @@ def read(path: Path) -> str:
 
 def check_paper():
     tex = read(PAPER_TEX)
+    anon = read(PAPER_TEX_ANON)
+    paper_md = read(PAPER_MD)
     md = read(REPORT_MD)
+    checklist = read(SUBMISSION_CHECKLIST)
 
     abstract_match = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", tex, re.S)
     if abstract_match:
@@ -34,6 +40,18 @@ def check_paper():
 
     if "publishable confidence intervals" in md.lower():
         add(REPORT_MD, "report.overclaim.publishable", "Capstone report claims 'publishable confidence intervals' despite n=3 seeds and no held-out evaluation.")
+
+    anon_abstract_match = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", anon, re.S)
+    if anon_abstract_match:
+        anon_abstract = anon_abstract_match.group(1).lower()
+        if "held-out" not in anon_abstract and "training-set" not in anon_abstract and "evaluation scope" not in anon_abstract:
+            add(PAPER_TEX_ANON, "paper_anon.abstract.scope", "Anonymous LaTeX abstract still reports GSM8K gains without an explicit training-set-vs-held-out caveat.")
+
+    if "held-out" not in paper_md.lower() and "training-set reward" not in paper_md.lower():
+        add(PAPER_MD, "paper_md.global.scope", "Markdown paper lacks an explicit held-out-vs-training-set scope warning.")
+
+    if re.search(r"\|\s*GSM8K\s*\|\s*30\.0% \± 2\.5% \(3 seeds\)\s*\|", checklist):
+        add(SUBMISSION_CHECKLIST, "checklist.gsm8k.label", "Submission checklist labels GSM8K as a generic result instead of explicitly marking it as training-set reward.")
 
 
 def _is_name(node, name: str) -> bool:

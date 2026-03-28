@@ -1,0 +1,18 @@
+[
+  {
+    "Name": "partial_credit_reward_shaping",
+    "Title": "Partial Credit Reward Shaping for GRPO Math Reasoning: Moving Beyond Binary Feedback",
+    "Experiment": "Modify the reward_fn in experiment.py to assign partial credit instead of binary 0/1 rewards. Specifically: (1) Give 0.3 reward if the response contains any \\boxed{} output (correct format), (2) Give 0.5 reward if the response contains intermediate numerical calculations that match sub-steps of the reference solution, (3) Give 1.0 for exact match as before, (4) Give 0.1 bonus for responses under 200 tokens (conciseness). Run with the default configuration (qwen-1.5b, 30 steps, 3 seeds) and compare last-10 accuracy and peak accuracy against the binary reward baseline. Hypothesis: partial credit provides denser gradient signal, improving both learning speed (higher first-5 accuracy) and final performance (higher last-10 accuracy).",
+    "Interestingness": 8,
+    "Feasibility": 9,
+    "Novelty": 6
+  },
+  {
+    "Name": "curriculum_difficulty_scheduling",
+    "Title": "Curriculum Learning for GRPO: Easy-First GSM8K Training with Difficulty-Based Scheduling",
+    "Experiment": "Modify the load_gsm8k function and training loop in experiment.py to implement curriculum learning. (1) Score each GSM8K problem by difficulty proxy: number of arithmetic operations in the reference solution (count occurrences of +, -, *, / in row['answer']). (2) Sort examples from easiest to hardest. (3) In the first 10 steps, sample only from the easiest 30% of problems. In steps 11-20, sample from the easiest 60%. In steps 21-30, sample from all problems. Compare against the baseline which samples uniformly at random. Run with default config (qwen-1.5b, 30 steps, 3 seeds). Hypothesis: starting with easy problems helps the model learn the output format (phase 1) faster, then harder problems build reasoning ability (phase 2), matching the observed two-phase learning pattern.",
+    "Interestingness": 7,
+    "Feasibility": 8,
+    "Novelty": 5
+  }
+]

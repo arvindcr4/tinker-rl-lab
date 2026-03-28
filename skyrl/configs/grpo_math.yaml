@@ -1,0 +1,70 @@
+# SkyRL GRPO Config for MATH Problems
+# Usage with SkyRL tx: uv run --extra vllm -m skyrl_train.entrypoints.main_base @configs/grpo_math.yaml
+
+# Model configuration
+trainer:
+  policy:
+    model:
+      path: "Qwen/Qwen2.5-1.5B-Instruct"
+    optimizer_config:
+      lr: 5.0e-7
+
+  placement:
+    policy_num_gpus_per_node: 1
+    ref_num_gpus_per_node: 1
+    policy_num_nodes: 1
+    ref_num_nodes: 1
+    colocate_all: false
+
+  strategy: "fsdp2"
+
+  # Training settings
+  epochs: 30
+  eval_batch_size: 256
+  eval_before_train: true
+  eval_interval: 5
+  update_epochs_per_batch: 1
+  train_batch_size: 256
+  policy_mini_batch_size: 64
+  micro_forward_batch_size_per_gpu: 40
+  micro_train_batch_size_per_gpu: 40
+  ckpt_interval: 10
+  max_prompt_length: 768
+
+  algorithm:
+    advantage_estimator: "grpo"
+    use_kl_loss: true
+    kl_coef: 0.02
+
+# Data configuration
+data:
+  train_data:
+    - "/data/math/train.parquet"
+  val_data:
+    - "/data/math/validation.parquet"
+
+# Generator configuration
+generator:
+  num_inference_engines: 1
+  inference_engine_tensor_parallel_size: 1
+  sampling_params:
+    max_generate_length: 1536
+  n_samples_per_prompt: 8
+  gpu_memory_utilization: 0.8
+  backend: "vllm"
+  run_engines_locally: true
+  weight_sync_backend: "local"
+  async_engine: true
+  batched: true
+
+# Environment
+environment:
+  env_class: "math"
+
+# Logging
+trainer:
+  logger: "wandb"
+  project_name: "skyrl-colab"
+  run_name: "grpo-math"
+  resume_mode: "null"
+  ckpt_path: "./checkpoints/"

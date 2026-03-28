@@ -42,7 +42,7 @@ Usage: python grpo_gsm8k_base.py --model Qwen/Qwen3-8B --seed 137 --rank 32 --st
 """
 import os, json, re, warnings, random, argparse
 warnings.filterwarnings("ignore")
-os.environ["TINKER_API_KEY"] = "tml-ig7SDcYd3ivjkjEqlu6uO0t2ptzVKhM5sgJoE0l1YP0LA0h4ChH1NtiGsSHOalUMAAAA"
+os.environ.setdefault("TINKER_API_KEY", os.environ.get("TINKER_API_KEY", ""))
 import torch, tinker, tinker.types as T
 from transformers import AutoTokenizer
 from datasets import load_dataset

@@ -63,7 +63,7 @@ reports/final/
 | Tool calling | 0%→92% JSON validity | Qwen2.5-1.5B |
 | Multi-turn | 0.72→0.91 quality | Qwen2.5-3B |
 | Code gen | 32%→40% HumanEval | Qwen3-8B |
-| GSM8K | 30.0% ± 2.5% (3 seeds) | Qwen3-8B |
+| GSM8K train reward | 30.0% ± 2.5% (3 seeds) | Qwen3-8B |
 | Capacity threshold | 3B fails, 8B succeeds | Multi-model |
 | Synthetic gap | 3-8x easier than real | xlam-60k |
 

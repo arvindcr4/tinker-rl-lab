@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>run_one.sh</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="doc-style.css" />
+  <script src="doc-filelist.js"></script>
+  <script>
+    var relativeDir = "";
+    var thisFile = "run_one.sh";
+    var defaultSidebar = true;
+  </script>
+  <script src="doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>run_one.sh</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-meta">#!/bin/bash
+</span></pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>run_one.sh — runs a single experiment defined by MODEL_CONFIG env var.
+All credentials via env: WANDB_API_KEY, HF_TOKEN, MODEL_CONFIG
+Usage: MODEL_CONFIG=configs/gsm8k_qwen_0_6b.yaml bash run_one.sh</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-built_in">set</span> -euo pipefail
+<span class="hljs-built_in">exec</span> &gt;&gt; /root/experiment.log 2&gt;&amp;1
+
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"=== <span class="hljs-variable">$(date)</span> run_one.sh START | MODEL_CONFIG=<span class="hljs-variable">${MODEL_CONFIG:-NOT SET}</span> ==="</span>
+nvidia-smi | head -3
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>── install deps (idempotent) ─────────────────────────────────────────────────</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">python3 -c <span class="hljs-string">"import unsloth"</span> 2&gt;/dev/null || {
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"=== <span class="hljs-variable">$(date)</span> installing unsloth ==="</span>;
+    pip install -q <span class="hljs-string">"unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"</span> 2&gt;&amp;1 | tail -3;
+}
+python3 -c <span class="hljs-string">"import trl"</span> 2&gt;/dev/null || pip install -q <span class="hljs-string">"trl&gt;=0.9.0"</span> peft&gt;=0.12.0 accelerate&gt;=0.33.0 2&gt;&amp;1 | tail -2
+python3 -c <span class="hljs-string">"import math_verify"</span> 2&gt;/dev/null || pip install -q math-verify latex2sympy2-extended datasets wandb pyyaml huggingface_hub 2&gt;&amp;1 | tail -2
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"=== <span class="hljs-variable">$(date)</span> deps ready ==="</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>── clone / update repo ───────────────────────────────────────────────────────</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-keyword">if</span> [ ! -d /root/trl-lab ]; <span class="hljs-keyword">then</span>
+    git <span class="hljs-built_in">clone</span> --depth 1 https://github.com/pes-llm-research/tinker-rl-lab.git /root/trl-lab
+<span class="hljs-keyword">else</span>
+    git -C /root/trl-lab pull --rebase 2&gt;&amp;1 | tail -2
+<span class="hljs-keyword">fi</span>
+<span class="hljs-built_in">cd</span> /root/trl-lab/atropos
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"=== <span class="hljs-variable">$(date)</span> repo ready ==="</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>── auth ──────────────────────────────────────────────────────────────────────</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">python3 -c <span class="hljs-string">"import wandb; wandb.login(key='<span class="hljs-variable">${WANDB_API_KEY}</span>')"</span>
+python3 -c <span class="hljs-string">"from huggingface_hub import login; login(token='<span class="hljs-variable">${HF_TOKEN}</span>')"</span>
+
+<span class="hljs-built_in">export</span> ATROPOS_USE_UNSLOTH=1
+<span class="hljs-built_in">export</span> HF_PUSH=1
+<span class="hljs-built_in">export</span> HF_PUSH_PRIVATE=1
+<span class="hljs-built_in">export</span> WANDB_SILENT=<span class="hljs-literal">false</span>
+
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"=== <span class="hljs-variable">$(date)</span> STARTING: <span class="hljs-variable">${MODEL_CONFIG}</span> ==="</span>
+python3 train_grpo_unsloth.py \
+    --config <span class="hljs-string">"<span class="hljs-variable">${MODEL_CONFIG}</span>"</span> \
+    --seed 42 \
+    &amp;&amp; <span class="hljs-built_in">echo</span> <span class="hljs-string">"=== <span class="hljs-variable">$(date)</span> DONE: <span class="hljs-variable">${MODEL_CONFIG}</span> ==="</span> \
+    || <span class="hljs-built_in">echo</span> <span class="hljs-string">"=== <span class="hljs-variable">$(date)</span> FAILED: <span class="hljs-variable">${MODEL_CONFIG}</span> ==="</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

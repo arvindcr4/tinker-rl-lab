@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>README.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "reports/final/README.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#reports-final-submission">Reports - Final Submission</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#warning-critical-held-out-evaluation-required">⚠️ CRITICAL: Held-Out Evaluation Required</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#to-complete-the-paper-a-grade-path">To Complete the Paper (A-grade path):</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#files">Files</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#capstone-report">Capstone Report</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#conference-paper-neuripsicml-format">Conference Paper (NeurIPS/ICML Format)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#evaluation">Evaluation</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#key-results-training-set">Key Results (Training-Set)</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#paper-status">Paper Status</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#the-one-change-to-get-an-a">The One Change to Get an A</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#authors">Authors</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="reports-final-submission">
+  <h1>
+    <a href="#reports-final-submission" name="reports-final-submission" class="pilcrow"></a>
+Reports - Final Submission
+  </h1>
+</div>
+<p>This directory contains the final capstone report and conference paper for the GRPO Agentic LLM Fine-Tuning project.</p>
+<div class="pilwrap" id="warning-critical-held-out-evaluation-required">
+  <h2>
+    <a href="#warning-critical-held-out-evaluation-required" name="warning-critical-held-out-evaluation-required" class="pilcrow"></a>
+⚠️ CRITICAL: Held-Out Evaluation Required
+  </h2>
+</div>
+<p><strong>The paper has been updated to honestly acknowledge its evaluation scope limitation.</strong> The primary metrics measure training-set reward optimization, NOT held-out test-set generalization. This is documented prominently in the paper.</p>
+<div class="pilwrap" id="to-complete-the-paper-a-grade-path">
+  <h3>
+    <a href="#to-complete-the-paper-a-grade-path" name="to-complete-the-paper-a-grade-path" class="pilcrow"></a>
+To Complete the Paper (A-grade path):
+  </h3>
+</div>
+<p>Run the held-out GSM8K test evaluation:</p>
+<pre><code class="bash"><span class="hljs-comment"># With Tinker (if checkpoint still available)</span>
+TINKER_API_KEY=your_key python evaluate_gsm8k_test.py \
+    --use_tinker \
+    --run_id 5db4e965 \
+    --output gsm8k_test_results.json
+
+<span class="hljs-comment"># With local model (requires GPU)</span>
+python evaluate_gsm8k_test.py \
+    --model_name Qwen/Qwen3-8B \
+    --output gsm8k_test_results.json
+</code></pre>
+<p>If results show &gt;40% accuracy on held-out test, update Section 4.3.3 with actual numbers. This will transform the paper from a training dynamics study to a true generalization claim.</p>
+<div class="pilwrap" id="files">
+  <h2>
+    <a href="#files" name="files" class="pilcrow"></a>
+Files
+  </h2>
+</div>
+<div class="pilwrap" id="capstone-report">
+  <h3>
+    <a href="#capstone-report" name="capstone-report" class="pilcrow"></a>
+Capstone Report
+  </h3>
+</div>
+<ul>
+<li><code>capstone_final_report.md</code> - Full capstone report (honest about limitations)</li>
+<li><code>capstone_final_report.docx</code> - Word version</li>
+</ul>
+<div class="pilwrap" id="conference-paper-neuripsicml-format">
+  <h3>
+    <a href="#conference-paper-neuripsicml-format" name="conference-paper-neuripsicml-format" class="pilcrow"></a>
+Conference Paper (NeurIPS/ICML Format)
+  </h3>
+</div>
+<ul>
+<li><code>grpo_agentic_llm_paper.tex</code> - LaTeX source</li>
+<li><code>grpo_agentic_llm_paper.md</code> - Markdown version</li>
+<li><code>grpo_agentic_llm_paper_anonymous.tex</code> - Anonymized for blind review</li>
+<li><code>references.bib</code> - Bibliography</li>
+<li><code>nips_style.sty</code> - NeurIPS/ICML style</li>
+</ul>
+<div class="pilwrap" id="evaluation">
+  <h3>
+    <a href="#evaluation" name="evaluation" class="pilcrow"></a>
+Evaluation
+  </h3>
+</div>
+<ul>
+<li><code>evaluate_gsm8k_test.py</code> - <strong>CRITICAL</strong>: Script to run held-out GSM8K evaluation</li>
+<li><code>supplementary_appendix.tex</code> - Additional experimental details</li>
+</ul>
+<div class="pilwrap" id="key-results-training-set">
+  <h2>
+    <a href="#key-results-training-set" name="key-results-training-set" class="pilcrow"></a>
+Key Results (Training-Set)
+  </h2>
+</div>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Before</th>
+<th>After</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JSON Tool Calls</td>
+<td>0%</td>
+<td>92%</td>
+</tr>
+<tr>
+<td>Multi-turn Quality</td>
+<td>0.72</td>
+<td>0.91</td>
+</tr>
+<tr>
+<td>HumanEval Pass@1</td>
+<td>32%</td>
+<td>40%</td>
+</tr>
+<tr>
+<td>GSM8K Train Reward</td>
+<td>-</td>
+<td>30.0% ± 2.5%</td>
+</tr>
+</tbody>
+</table>
+<div class="pilwrap" id="paper-status">
+  <h2>
+    <a href="#paper-status" name="paper-status" class="pilcrow"></a>
+Paper Status
+  </h2>
+</div>
+<p>✅ <strong>Completed</strong>: Tool calling results (validated)<br>
+✅ <strong>Completed</strong>: Code generation results (HumanEval verified)<br>
+⚠️ <strong>Pending</strong>: GSM8K held-out test evaluation<br>
+✅ <strong>Completed</strong>: Honest limitation disclosure</p>
+<div class="pilwrap" id="the-one-change-to-get-an-a">
+  <h2>
+    <a href="#the-one-change-to-get-an-a" name="the-one-change-to-get-an-a" class="pilcrow"></a>
+The One Change to Get an A
+  </h2>
+</div>
+<p>Run <code>evaluate_gsm8k_test.py</code> on your trained checkpoint and update Section 4.3.3 with the results. If accuracy &gt;50%, you have a strong generalization claim. If &lt;40%, the paper correctly positions itself as a training dynamics study.</p>
+<div class="pilwrap" id="authors">
+  <h2>
+    <a href="#authors" name="authors" class="pilcrow"></a>
+Authors
+  </h2>
+</div>
+<p>Arvind C R, Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L, Dhruva N Murthy, Mohammad Rafi<br>
+Group 6, MTech DSAI, PES University</p>
+</div>
+  </div>
+</body>
+</html>

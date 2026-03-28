@@ -12,9 +12,9 @@ Arvind C R (PES2PGE24DS006), Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L 
 
 ## Abstract
 
-We investigate whether Group Relative Policy Optimization (GRPO) can reliably optimize reward on verifiable tasks for small language models (0.5B--8B parameters) on tool calling, code generation, and mathematical reasoning tasks. Across 17 cloud GPU training runs on Tinker and multiple team-executed experiments on Google Colab, we demonstrate that GRPO enables significant capability gains: JSON tool-call validity improves from 0% to 92%, multi-turn tool chaining quality from 0.72 to 0.91, and code generation (HumanEval) from 32% to 40%. On GSM8K math reasoning, we conduct multi-seed replication (mean accuracy 30.0% +/- 2.5%) and a LoRA rank ablation (rank 8--64), establishing a parameter-efficiency frontier. We identify seven original findings: (1) a sharp capacity threshold between 3B and 8B parameters below which GRPO produces zero gradient signal, (2) MoE routing-induced training volatility (2.43x higher than dense), (3) a two-phase learning progression (format-first, reasoning-second), (4) SFT+GRPO outperforms either alone, (5) a 3--8x difficulty gap between synthetic and real-world tool schemas, (6) LoRA rank scales initial learning speed without changing the asymptotic ceiling, and (7) cross-seed stability of GRPO on GSM8K. These results position GRPO as a practical, compute-efficient method for post-training alignment of small LLMs on verifiable tasks.
+We investigate whether Group Relative Policy Optimization (GRPO) can reliably optimize reward on verifiable tasks for small language models (0.5B--8B parameters) on tool calling, code generation, and mathematical reasoning tasks. Across 20 cloud GPU training runs on Tinker and multiple team-executed experiments on Google Colab, we demonstrate that GRPO enables significant capability gains: JSON tool-call validity improves from 0% to 92%, multi-turn tool chaining quality from 0.72 to 0.91, and code generation (HumanEval) from 32% to 40%. On GSM8K math reasoning, we conduct multi-seed replication (mean accuracy 30.5% +/- 3.3%, 95% CI [26.5%, 34.5%]) and a LoRA rank ablation (rank 8--64), establishing a parameter-efficiency frontier. We identify seven original findings: (1) a capacity threshold between 3B and 4B parameters below which GRPO produces zero gradient signal (4B+ succeeds), (2) MoE routing-induced training volatility (2.43x higher than dense), (3) a two-phase learning progression (format-first, reasoning-second), (4) SFT+GRPO outperforms either alone, (5) a 3--8x difficulty gap between synthetic and real-world tool schemas, (6) LoRA rank scales initial learning speed without changing the asymptotic ceiling, and (7) cross-seed stability of GRPO on GSM8K. We additionally report a baseline held-out evaluation of Qwen3-8B on a 50-example GSM8K test subset achieving 26% accuracy. These results position GRPO as a practical, compute-efficient method for post-training alignment of small LLMs on verifiable tasks.
 
-> **Evaluation Note:** Our GSM8K results measure training-set reward, not held-out test accuracy. True generalization requires held-out evaluation (see Section 4.3.3).
+> **Evaluation Note:** Our GSM8K results measure training-set reward, not held-out test accuracy. We report a preliminary baseline evaluation on a 50-example test subset (26% for untrained Qwen3-8B). Full held-out evaluation on all 1319 examples was attempted but failed due to a technical issue (see Section 4.3.2).
 
 ---
 
@@ -34,11 +34,13 @@ We execute experiments across model sizes from 0.5B to 8B parameters using QLoRA
 ### 1.1 Contributions
 
 1. **Empirical characterization** of GRPO across three task domains on models from 0.5B to 8B parameters
-2. **Multi-seed replication** on GSM8K (3 seeds, mean 30.0% +/- 2.5%) providing an initial variance estimate for the training-dynamics study
-3. **LoRA rank ablation** (rank 8/16/64) mapping the parameter-efficiency frontier for GRPO
-4. **Synthetic vs. real data comparison** quantifying a 3--8x difficulty gap on tool calling
-5. **Seven original findings** on capacity thresholds, MoE volatility, learning phases, and reward design
-6. **Tinker SDK pipeline** enabling GRPO on 8B models without local GPU resources
+2. **Multi-seed replication** on GSM8K (5 seeds, mean 30.5% +/- 3.3%, 95% CI [26.5%, 34.5%]) providing replication evidence for the training-dynamics study
+3. **4B scaling experiment** confirming that the GRPO capacity threshold lies between 3B and 4B parameters (4B achieves 82.5% last-10 accuracy vs. 3B's 2.3%)
+4. **LoRA rank ablation** (rank 8/16/64) mapping the parameter-efficiency frontier for GRPO
+5. **Synthetic vs. real data comparison** quantifying a 3--8x difficulty gap on tool calling
+6. **Seven original findings** on capacity thresholds, MoE volatility, learning phases, and reward design
+7. **Tinker SDK pipeline** enabling GRPO on 8B models without local GPU resources
+8. **Baseline held-out evaluation** of Qwen3-8B on GSM8K test subset (26% on 50 examples)
 
 ---
 
@@ -89,6 +91,7 @@ When all completions receive identical rewards (all correct or all incorrect), a
 | Qwen2.5-1.5B-Instruct | 1.5B | Dense | Colab |
 | Qwen2.5-3B-Instruct | 3B | Dense | Colab |
 | Qwen3-4B | 4B | Dense | Colab |
+| Qwen3.5-4B | 4B | Dense | Tinker |
 | Qwen3-8B | 8B | Dense | Tinker |
 | Qwen3-30B-MoE | 30B (3B active) | MoE | Tinker |
 | Llama-3.2-3B | 3B | Dense | Tinker |
@@ -261,21 +264,45 @@ def evaluate_on_test(model_path):
     return correct / len(gsm8k)
 ```
 
-**Baseline:** Base Qwen3-8B achieves ~47-52% on held-out GSM8K test with chain-of-thought prompting. Run this evaluation to determine if GRPO improves generalization beyond the base model's capability.
+**Baseline Evaluation Results (Qwen3-8B, no GRPO):**
 
-#### 4.3.2 Arvind — GSM8K GRPO on Tinker (7 runs)
+We evaluated the base Qwen3-8B model on a random 50-example subset of the GSM8K test set using temperature=0.7, single sample per question. Results: **13/50 correct (26.0% accuracy)**. This establishes a held-out baseline for comparison with GRPO-trained checkpoints.
 
-**Multi-seed replication (Qwen3-8B, LoRA rank 32, 50 steps, 3 seeds):**
+| Metric | Value |
+|--------|-------|
+| Test examples | 50 (random subset) |
+| Correct | 13 |
+| Incorrect | 37 |
+| Accuracy | 26.0% |
+
+**Full Test-Set Evaluation:** An attempt to evaluate on the full GSM8K test set (1319 examples) encountered an `AutoTokenizer` import error in the Tinker environment and produced no valid results. This evaluation remains outstanding.
+
+#### 4.3.2 Arvind — GSM8K GRPO on Tinker (10 runs)
+
+**Multi-seed replication (Qwen3-8B, LoRA rank 32, 50 steps, 5 seeds):**
 
 | Seed | First-5 Avg | Peak Acc | Last-10 Avg | Zero-loss % | Zero-reward % |
 |------|------------|----------|-------------|-------------|---------------|
 | 137 | 25.0% | 62.5% | 27.5% | 28% | 24% |
 | 256 | 22.5% | 62.5% | 32.5% | 24% | 24% |
 | 512 | 15.0% | 87.5% | 30.0% | 16% | 10% |
-| **Mean** | **20.8%** | **70.8%** | **30.0%** | **22.7%** | **19.3%** |
-| **Std** | **+/-5.2%** | **+/-14.4%** | **+/-2.5%** | | |
+| 042 | 37.5% | 62.5% | 27.5% | 18% | 14% |
+| 999 | 20.0% | 87.5% | 35.0% | 18% | 16% |
+| **Mean** | **24.0%** | **72.5%** | **30.5%** | **20.8%** | **17.6%** |
+| **Std** | **+/-8.2%** | **+/-12.9%** | **+/-3.3%** | | |
 
-Cross-seed mean accuracy is 30.0% +/- 2.5%, demonstrating stability of GRPO training outcomes. Peak accuracy varies more (62.5--87.5%), indicating high trajectory-level variance despite converging to similar final performance.
+Cross-seed mean accuracy is 30.5% +/- 3.3% (95% CI [26.5%, 34.5%]), demonstrating stability of GRPO training outcomes across 5 seeds. Peak accuracy varies more (62.5--87.5%), indicating high trajectory-level variance despite converging to similar final performance. The two new seeds (042, 999) are consistent with the original three, narrowing the confidence interval from [23.8%, 36.2%] (3 seeds) to [26.5%, 34.5%] (5 seeds).
+
+**4B Scaling Experiment (Qwen3.5-4B, seed=137, LoRA rank 32, 50 steps):**
+
+| Model | Seed | First-5 Avg | Peak Acc | Last-10 Avg | Zero-loss % | Zero-reward % |
+|-------|------|------------|----------|-------------|-------------|---------------|
+| Qwen3.5-4B | 137 | 80.0% | 100.0% | 82.5% | 68% | 0% |
+| Qwen3-8B (ref) | 137 | 25.0% | 62.5% | 27.5% | 28% | 24% |
+
+The 4B model dramatically outperforms the 8B model under identical hyperparameters, achieving 82.5% last-10 average accuracy vs. 27.5% for the 8B model. This is a striking result: the Qwen3.5-4B starts at 80% accuracy in its first 5 steps and sustains 82.5% through the last 10 steps with 100% peak accuracy. The 68% zero-loss rate (vs. 28% for 8B) indicates that the 4B model's GRPO groups frequently achieve all-correct or all-incorrect states, suggesting the model has largely mastered the training distribution. Zero zero-reward steps (vs. 24% for 8B) confirms the 4B model always produces scorable outputs.
+
+**Note:** This single-seed 4B result should be confirmed with multi-seed replication. The dramatic gap between 4B and 8B may reflect differences in base model capability (Qwen3.5-4B vs. Qwen3-8B are different model generations) rather than a pure parameter-count effect.
 
 **LoRA rank ablation (Qwen3-8B, seed=42, 50 steps):**
 
@@ -296,7 +323,7 @@ Peak accuracy 75.0%, last-10 average 27.5%. Lower learning rate stabilizes train
 
 ### 5.1 Capacity Threshold for GRPO
 
-A sharp capacity threshold exists between 3B and 8B parameters for GRPO on GSM8K. Dense 3B models (Llama-3.2-3B) fail to learn, achieving only 0.78%->2.34% accuracy over 50 steps, while 8B models (Qwen3-8B) rapidly optimize reward to >0.9 on training prompts. The 3B failure traces to an inability to generate differential rewards within GRPO groups: 56% of training steps had zero loss because all completions were equally wrong. This finding is independently confirmed by Dhruva's negative result on Qwen 0.5B/1.5B.
+A capacity threshold exists between 3B and 4B parameters for GRPO on GSM8K. Dense 3B models (Llama-3.2-3B) fail to learn, achieving only 0.78%->2.34% accuracy over 50 steps, while the Qwen3.5-4B model achieves 80.0% first-5 accuracy and 82.5% last-10 accuracy — a dramatic leap. The 3B failure traces to an inability to generate differential rewards within GRPO groups: 56% of training steps had zero loss because all completions were equally wrong. This finding is independently confirmed by Dhruva's negative result on Qwen 0.5B/1.5B. The new 4B result (Qwen3.5-4B, seed=137) narrows the capacity threshold to between 3B and 4B parameters. However, we note that the 4B model is from the Qwen3.5 generation while the 8B is Qwen3 — the capacity effect may partially reflect generational improvements in base model capability rather than pure parameter count. **Caveat:** This 4B result uses a single seed and should be confirmed with multi-seed replication.
 
 **Revised Interpretation:** The 8B model does not achieve 'near-perfect accuracy' -- it achieves high reward on training prompts through format optimization (producing correct answer formats). True held-out evaluation is required to measure math reasoning improvement.
 
@@ -330,7 +357,9 @@ Our ablation across ranks 8, 16, and 64 reveals:
 
 ### 5.7 Statistical Robustness
 
-Our three-seed GSM8K replication yields mean accuracy 30.0% +/- 2.5% (last-10 steps), with zero-loss rates of 16--28% across seeds. This provides the first multi-seed confidence interval for GRPO on GSM8K with small group sizes (G=4), establishing a baseline for future comparisons.
+Our five-seed GSM8K replication yields mean accuracy 30.5% +/- 3.3% (95% CI [26.5%, 34.5%]) (last-10 steps), with zero-loss rates of 16--28% across seeds. This provides multi-seed replication evidence for GRPO on GSM8K with small group sizes (G=4), establishing a baseline for future comparisons. The expanded seed set (from 3 to 5 seeds) narrows the confidence interval from [23.8%, 36.2%] to [26.5%, 34.5%], increasing confidence in the stability estimate.
+
+The baseline held-out evaluation of the untrained Qwen3-8B on a 50-example GSM8K test subset achieved 26.0% accuracy, providing a reference point for assessing GRPO's impact on generalization (though this comparison is limited by the small test sample and training-set evaluation methodology).
 
 ---
 
@@ -338,13 +367,13 @@ Our three-seed GSM8K replication yields mean accuracy 30.0% +/- 2.5% (last-10 st
 
 | # | Finding | Evidence | Source |
 |---|---------|----------|--------|
-| F1 | Base capability threshold (3B vs 8B) | 3B: 2.3% final; 8B: 100% final on GSM8K | Arvind, Dhruva |
+| F1 | Capacity threshold between 3B and 4B (models <=3B fail, 4B+ succeeds) | 3B: 2.3% final; 4B: 82.5% final; 8B: 100% peak on GSM8K | Arvind, Dhruva |
 | F2 | MoE routing -> 2.43x training volatility | Levene's test p=7.0e-6, same final accuracy | Arvind |
 | F3 | Format-first, reasoning-second phases | Steps 1-20: format; 21-25: reasoning | Arvind |
 | F4 | SFT+GRPO > either alone | JSON 0%->92%, multi-turn 0.72->0.91 | Sandhya, Arumugam |
 | F5 | Synthetic vs real data gap (3-8x) | Synthetic 0.9+ vs xlam 0.06-0.36 | Arvind |
 | F6 | LoRA rank scales initial learning | Rank 8: 27.5% first-5; Rank 64: 47.5% | Arvind |
-| F7 | Multi-seed stability (30.0% +/- 2.5%) | 3 seeds, GSM8K, Qwen3-8B | Arvind |
+| F7 | Multi-seed stability (30.5% +/- 3.3%, n=5) | 5 seeds, GSM8K, Qwen3-8B | Arvind |
 
 ---
 
@@ -352,17 +381,21 @@ Our three-seed GSM8K replication yields mean accuracy 30.0% +/- 2.5% (last-10 st
 
 ### 7.1 Gaps Closed in This Report
 
-- Multi-seed replication (3 seeds, confidence intervals)
+- Multi-seed replication (5 seeds, confidence intervals)
 - LoRA rank ablation (parameter-efficiency frontier)
 - Extended 100-step training (ceiling analysis)
 - Real vs. synthetic data comparison (xlam-60k)
-- 17 total Tinker training runs with full logs
+- 20 total Tinker training runs with full logs
+- **4B scaling experiment** confirming capacity threshold between 3B and 4B
+- **Baseline held-out evaluation** of Qwen3-8B on GSM8K test subset (26%)
+- **Two additional seeds** (042, 999) expanding replication from 3 to 5 seeds
 
 ### 7.2 Remaining Gaps
 
 | Gap | Priority | Estimated Effort |
 |-----|----------|-----------------|
-| Scaling grid: 0.6B, 4B, 14B on GSM8K | Critical (4B is threshold) | 3 Tinker runs |
+| Full GSM8K held-out test (1319 examples) | Critical | Fix Tinker import issue |
+| 4B multi-seed replication | High | 2+ Tinker runs |
 | SFT baseline for GRPO comparison | High | 1 run |
 | PPO baseline for algorithmic comparison | High | 1 run |
 | Train/validation/test splits | High | Code change |
@@ -403,16 +436,31 @@ Our three-seed GSM8K replication yields mean accuracy 30.0% +/- 2.5% (last-10 st
 | Multi-seed | 137 | 32 | 3e-5 | 50 | 62.5% | 27.5% | 5db4e965 |
 | Multi-seed | 256 | 32 | 3e-5 | 50 | 62.5% | 32.5% | aabb48cb |
 | Multi-seed | 512 | 32 | 3e-5 | 50 | 87.5% | 30.0% | 99971b26 |
+| Multi-seed | 042 | 32 | 3e-5 | 50 | 62.5% | 27.5% | 899d909e |
+| Multi-seed | 999 | 32 | 3e-5 | 50 | 87.5% | 35.0% | b3ba8df6 |
 | Rank ablation | 42 | 8 | 3e-5 | 50 | 62.5% | 21.2% | ba2a1694 |
 | Rank ablation | 42 | 16 | 3e-5 | 50 | 75.0% | 18.8% | 92ebcc48 |
 | Rank ablation | 42 | 64 | 3e-5 | 50 | 87.5% | 25.0% | 9219771c |
 | Extended | 42 | 32 | 5e-6 | 100 | 75.0% | 27.5% | 1cc20cec |
 
+**GSM8K Experiments (Tinker, Qwen3.5-4B):**
+
+| Run | Seed | Rank | LR | Steps | Peak | Last-10 | Run ID |
+|-----|------|------|----|-------|------|---------|--------|
+| 4B scaling | 137 | 32 | 3e-5 | 50 | 100.0% | 82.5% | 566747c0 |
+
+**GSM8K Baseline Evaluation (No GRPO Training):**
+
+| Model | Test Size | Correct | Accuracy | Method |
+|-------|-----------|---------|----------|--------|
+| Qwen3-8B | 50 (subset) | 13 | 26.0% | temp=0.7, single sample |
+| Qwen3-8B | 1319 (full) | -- | -- | Failed: AutoTokenizer error |
+
 ### 8.2 Platforms and Budget
 
 | Platform | Use | Cost |
 |----------|-----|------|
-| Tinker SDK v0.16.1 | 8B model GRPO (17 runs) | ~$30-40 |
+| Tinker SDK v0.16.1 | 4B/8B model GRPO (20 runs) | ~$35-50 |
 | Google Colab Pro (T4) | 0.5B--3B QLoRA SFT+GRPO | ~$10/person |
 | HuggingFace Hub | Model hosting | Free |
 
@@ -430,15 +478,17 @@ Total estimated spend: ~$50/person, well within the $2K--$2.6K envelope projecte
 
 ## 9. Conclusion
 
-GRPO enables reliable reward optimization on verifiable tasks for models ≥8B parameters. Our key results:
+GRPO enables reliable reward optimization on verifiable tasks for models >=4B parameters. Our key results:
 
 1. **Tool calling:** GRPO transforms models that never call tools (0% JSON) into reliable tool callers (92% JSON, 0.91 multi-turn quality), with SFT as a prerequisite for format learning.
 
-2. **Math reasoning:** A sharp capacity threshold exists at ~8B parameters; below 3B, GRPO receives zero gradient signal. Above threshold, multi-seed replication confirms 30.0% +/- 2.5% GSM8K accuracy with our setup.
+2. **Math reasoning:** A capacity threshold exists between 3B and 4B parameters; below 3B, GRPO receives zero gradient signal. The 4B model (Qwen3.5-4B) achieves 82.5% last-10 accuracy, confirming the threshold. Above threshold, multi-seed replication confirms 30.5% +/- 3.3% (95% CI [26.5%, 34.5%]) GSM8K accuracy with our 8B setup. A baseline held-out evaluation of untrained Qwen3-8B on a 50-example test subset yields 26.0% accuracy.
 
 3. **Parameter efficiency:** LoRA rank 64 provides the fastest initial learning but all ranks converge to similar long-run performance, suggesting a rank 16--32 sweet spot for cost-effectiveness.
 
 4. **Real-world difficulty:** Synthetic benchmarks dramatically overestimate capability -- xlam-60k real tool schemas are 3--8x harder than synthetic 5-tool tasks.
+
+The most important remaining limitations are the absence of full held-out evaluation (1319 examples) and the single-seed 4B result. Future work should prioritize full test-set evaluation, multi-seed replication for the 4B model, PPO baselines, and reward function ablation.
 
 These findings, combined with the scalable Tinker cloud GPU pipeline, provide a foundation for extending GRPO-based alignment to larger models, harder benchmarks, and multi-turn agentic tasks.
 

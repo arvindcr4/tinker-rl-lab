@@ -15,6 +15,7 @@ Results will be saved to gsm8k_test_results.json
 
 import argparse
 import json
+import random
 import re
 import time
 from typing import List, Tuple, Optional
@@ -28,7 +29,9 @@ def setup_argparse():
     parser.add_argument("--run_id", type=str, help="Tinker run ID for checkpoint")
     parser.add_argument("--batch_size", type=int, default=8, help="Batch size for generation")
     parser.add_argument("--n_samples", type=int, default=1, help="Samples per question")
-    parser.add_argument("--temperature", type=float, default=0.7, help="Sampling temperature")
+    parser.add_argument("--temperature", type=float, default=0.0, help="Sampling temperature (default: greedy evaluation)")
+    parser.add_argument("--do_sample", action="store_true", help="Enable stochastic sampling instead of greedy decoding")
+    parser.add_argument("--seed", type=int, default=0, help="Random seed for reproducibility")
     parser.add_argument("--max_tokens", type=int, default=512, help="Max tokens to generate")
     parser.add_argument("--output", type=str, default="gsm8k_test_results.json", help="Output file")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of test examples")
@@ -40,11 +43,15 @@ def extract_answer(text: str) -> Optional[str]:
     match = re.search(r'####\s*(-?\d+\.?\d*)', text)
     if match:
         return match.group(1)
-    
-    # Fallback: extract last number
-    numbers = re.findall(r'-?\d+\.?\d*', text)
-    if numbers:
-        return numbers[-1]
+
+    boxed = re.search(r'\\boxed\{\s*(-?\d+\.?\d*)\s*\}', text)
+    if boxed:
+        return boxed.group(1)
+
+    explicit = re.search(r'(?i)(?:final answer|answer)\s*(?:is|:)\s*(-?\d+\.?\d*)\b', text)
+    if explicit:
+        return explicit.group(1)
+
     return None
 
 def normalize_number(s: str) -> str:
@@ -82,9 +89,10 @@ def load_model(args):
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Loading model on {device}...")
         
-        tokenizer = AutoTokenizer.from_pretrained(args.model_name, trust_remote_code=True)
+        model_source = args.checkpoint_path or args.model_name
+        tokenizer = AutoTokenizer.from_pretrained(model_source, trust_remote_code=True)
         model = AutoModelForCausalLM.from_pretrained(
-            args.model_name,
+            model_source,
             trust_remote_code=True,
             torch_dtype=torch.float16 if device == "cuda" else torch.float32,
         ).to(device)
@@ -117,17 +125,39 @@ def generate_with_hf(model, tokenizer, prompt: str, args) -> str:
     inputs = tokenizer(prompt, return_tensors="pt")
     if hasattr(model, 'device'):
         inputs = {k: v.to(model.device) for k, v in inputs.items()}
-    
-    outputs = model.generate(
+
+    generation_kwargs = {
         **inputs,
-        max_new_tokens=args.max_tokens,
-        temperature=args.temperature,
-        do_sample=True,
-        pad_token_id=tokenizer.eos_token_id,
-    )
-    
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        "max_new_tokens": args.max_tokens,
+        "do_sample": args.do_sample,
+        "pad_token_id": tokenizer.eos_token_id,
+    }
+    if args.do_sample:
+        generation_kwargs["temperature"] = args.temperature if args.temperature > 0 else 0.7
+
+    outputs = model.generate(**generation_kwargs)
+
+    prompt_len = inputs["input_ids"].shape[1]
+    generated_tokens = outputs[0][prompt_len:]
+    response = tokenizer.decode(generated_tokens, skip_special_tokens=True)
     return response
+
+
+def set_seed(seed: int):
+    random.seed(seed)
+    try:
+        import numpy as np
+        np.random.seed(seed)
+    except ImportError:
+        pass
+
+    try:
+        import torch
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+    except ImportError:
+        pass
 
 def extract_question_and_answer(example):
     """Extract question and ground truth from GSM8K example."""
@@ -240,6 +270,7 @@ def evaluate_model(args):
 def main():
     parser = setup_argparse()
     args = parser.parse_args()
+    set_seed(args.seed)
     
     results = evaluate_model(args)
     

@@ -34,7 +34,7 @@ We execute experiments across model sizes from 0.5B to 8B parameters using QLoRA
 ### 1.1 Contributions
 
 1. **Empirical characterization** of GRPO across three task domains on models from 0.5B to 8B parameters
-2. **Multi-seed replication** on GSM8K (3 seeds, mean 30.0% +/- 2.5%) providing publishable confidence intervals
+2. **Multi-seed replication** on GSM8K (3 seeds, mean 30.0% +/- 2.5%) providing an initial variance estimate for the training-dynamics study
 3. **LoRA rank ablation** (rank 8/16/64) mapping the parameter-efficiency frontier for GRPO
 4. **Synthetic vs. real data comparison** quantifying a 3--8x difficulty gap on tool calling
 5. **Seven original findings** on capacity thresholds, MoE volatility, learning phases, and reward design

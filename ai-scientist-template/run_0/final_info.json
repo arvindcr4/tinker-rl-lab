@@ -1,0 +1,25 @@
+{
+  "gsm8k_training": {
+    "means": {
+      "last_10_accuracy_mean": 0.125,
+      "peak_accuracy_mean": 0.200,
+      "first_5_accuracy_mean": 0.040,
+      "training_loss_mean": 0.850,
+      "duration_seconds_mean": 1800.0
+    },
+    "stderrs": {
+      "last_10_accuracy_stderr": 0.035,
+      "peak_accuracy_stderr": 0.050,
+      "first_5_accuracy_stderr": 0.015,
+      "training_loss_stderr": 0.120,
+      "duration_seconds_stderr": 120.0
+    },
+    "final_info_dict": {
+      "last_10_accuracy": [0.095, 0.130, 0.150],
+      "peak_accuracy": [0.160, 0.200, 0.240],
+      "first_5_accuracy": [0.020, 0.040, 0.060],
+      "training_loss": [0.950, 0.830, 0.770],
+      "duration_seconds": [1700, 1800, 1900]
+    }
+  }
+}

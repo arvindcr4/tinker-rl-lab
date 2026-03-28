@@ -1,53 +1,46 @@
-# Autoresearch: Codebase Cleanup
+# Autoresearch: AI Scientist Integration
 
 ## Objective
-Remove trash, unrelated, and auto-generated files from the tinker-rl-lab repository. The repo is an RL research project for LLM fine-tuning (GRPO, PPO, DPO etc.) with Tinker/Atropos. It has accumulated bloat: a 337M auto-generated HTML doc/ mirror, unrelated data files, and missing gitignore entries.
+Create a complete, working Sakana AI Scientist template for the GRPO math reasoning research in this repo. The template should let AI Scientist autonomously generate experiment ideas, run them, write papers, and self-review — producing results that feed back into the capstone thesis and conference paper.
 
 ## Metrics
-- **Primary**: trash_files_remaining (count, lower is better)
-  - Counts git-tracked files that are unrelated to the RL research project OR are auto-generated artifacts that shouldn't be version-controlled
-- **Secondary**: repo_tracked_files (total tracked file count), repo_size_kb (git ls-files size)
+- **Primary**: integration_completeness (score 0-100, higher is better)
+  - 0-20: Template files exist but are stubs
+  - 20-40: Template files are complete but untested
+  - 40-60: Template passes syntax/import checks
+  - 60-80: Baseline runs successfully, AI Scientist can load template
+  - 80-100: End-to-end pipeline tested with at least one idea
+- **Secondary**: template_file_count, guide_sections
 
 ## How to Run
 `./autoresearch.sh` — outputs `METRIC name=number` lines.
 
 ## Files in Scope
-- `.gitignore` — update to exclude generated/unrelated patterns
-- `doc/` — entire directory is auto-generated HTML; 235 tracked files, 337M
-- `0xsero_tweets.json` — unrelated Twitter data scrape (1.6MB)
-- `experiments/jarvis_config.ini` — unrelated Jarvis AI agent config
-- `experiments/dropbox_uploader.sh` — unrelated Dropbox utility
-- `autoresearch.jsonl` — previous autoresearch session state (not project code)
+- `ai-scientist-template/experiment.py` — GRPO training script (TRL-based, local GPU)
+- `ai-scientist-template/plot.py` — Visualization script
+- `ai-scientist-template/prompt.json` — System prompt and task description
+- `ai-scientist-template/seed_ideas.json` — Example ideas for few-shot
+- `ai-scientist-template/latex/template.tex` — LaTeX paper template
+- `ai-scientist-template/run_0/final_info.json` — Baseline results
+- `ai-scientist-template/README.md` — Setup and usage guide
 
 ## Off Limits
 - `atropos/` — core project code
-- `experiments/implementations/` — RL implementations
-- `experiments/notebooks/` — experiment notebooks
-- `experiments/tinker-runs/` — training logs and scripts
-- `experiments/results/` — training metrics
-- `grpo-results/` — GRPO experiment results
-- `agentic-rl-finetuning/` — research notebooks
-- `capstone-literature-survey/` — literature survey
-- `reports/` — final reports and papers
-- `README.md` — project readme
-- `scientific_audit.py` — audit tool
-- `run_coding.sh`, `run_one.sh`, `vast_run.sh` — launcher scripts
+- `experiments/` — existing experiment data
+- `reports/` — existing papers and thesis
 
 ## Constraints
-- Do NOT remove any file that is part of the actual RL research
-- Remove files from git tracking (git rm) not just delete from disk
-- Update .gitignore so removed patterns don't get re-added
-- Each experiment = one logical batch of removals
-- Verify no breakage after each removal
+- Template must work with AI Scientist's expected interface (experiment.py --out_dir, final_info.json format)
+- experiment.py must be self-contained and runnable on a single GPU
+- Must not require Tinker API (runs locally with TRL)
+- Must not expose API keys
 
 ## What's Been Tried
-- Removed the tracked `doc/` HTML mirror and unrelated files (`0xsero_tweets.json`, `experiments/jarvis_config.ini`, `experiments/dropbox_uploader.sh`).
-- Removed generated HTML exports from `atropos/notebooks/html/`, `experiments/html/`, and the duplicate `grpo-results/` results mirror.
-- Updated `.gitignore` to cover generated exports and local virtualenv artifacts.
-- Cleaned leftover untracked workspace artifacts (`doc/` mirror remnants and project-local `__pycache__/` directories).
-
-## Current State
-- Tracked trash/unrelated artifacts: 0
-- Tracked files: ~204
-- Tracked repo size: ~4 MB
-- README structure references corrected to match the real repository layout.
+- Run 1: Created complete template with all 6 required files + README guide
+  - experiment.py: TRL GRPOTrainer with Qwen 0.5B-3B, LoRA, 3-seed
+  - plot.py: accuracy comparison, training curves, metric summary
+  - prompt.json: tailored to GRPO math reasoning domain
+  - seed_ideas.json: partial credit reward + curriculum learning
+  - LaTeX template with domain-relevant embedded references
+  - Placeholder baseline in run_0/final_info.json
+  - Comprehensive README with setup steps, cloud GPU instructions, thesis integration

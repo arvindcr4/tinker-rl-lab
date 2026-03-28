@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import ast
+import json
 import re
 import subprocess
 from pathlib import Path
@@ -12,6 +13,7 @@ REPORT_MD = ROOT / "reports/final/capstone_final_report.md"
 SUBMISSION_CHECKLIST = ROOT / "reports/final/SUBMISSION_CHECKLIST.md"
 EVAL_PY = ROOT / "reports/final/evaluate_gsm8k_test.py"
 FINAL_DIR = ROOT / "reports/final"
+RESULT_JSONS = [FINAL_DIR / "gsm8k_base_results.json", FINAL_DIR / "gsm8k_test_results.json"]
 
 issues = []
 
@@ -182,10 +184,40 @@ def check_latex_builds():
                 path.unlink()
 
 
+def check_result_jsons():
+    required_config = {"model", "model_source", "dataset", "dataset_config", "dataset_split", "n_samples", "temperature", "do_sample", "seed", "max_tokens", "test_size"}
+    required_summary = {"correct", "incorrect", "errors", "attempted", "accuracy", "accuracy_percent"}
+
+    for path in RESULT_JSONS:
+        data = json.loads(read(path))
+        if data.get("schema_version") != 2:
+            add(path, "results.schema_version", "Result JSON does not declare the current schema_version=2.")
+        if data.get("evaluation_status") not in {"completed", "failed"}:
+            add(path, "results.status", "Result JSON must declare evaluation_status as 'completed' or 'failed'.")
+        config = data.get("config")
+        summary = data.get("summary")
+        if not isinstance(config, dict) or not required_config.issubset(config):
+            add(path, "results.config", "Result JSON is missing required evaluation provenance fields in config.")
+            continue
+        if not isinstance(summary, dict) or not required_summary.issubset(summary):
+            add(path, "results.summary", "Result JSON is missing required summary fields.")
+            continue
+        if config.get("dataset_split") != "test":
+            add(path, "results.non_test_split", "Bundled GSM8K result JSON must be explicitly marked as test-split evaluation.")
+        attempted = summary.get("attempted")
+        if attempted != summary.get("correct", 0) + summary.get("incorrect", 0):
+            add(path, "results.attempted_mismatch", "attempted must equal correct + incorrect in the result summary.")
+        if data.get("evaluation_status") == "failed" and not data.get("failure_reason"):
+            add(path, "results.failure_reason", "Failed evaluations must record a failure_reason.")
+        if data.get("evaluation_status") == "completed" and attempted == 0:
+            add(path, "results.completed_zero_attempts", "Completed evaluations must have at least one attempted example.")
+
+
 def main():
     check_paper()
     check_eval_script()
     check_latex_builds()
+    check_result_jsons()
     print(f"METRIC audit_issues={len(issues)}")
     for path, code, message in issues:
         print(f"ISSUE {code} {path}: {message}")

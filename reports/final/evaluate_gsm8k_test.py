@@ -187,6 +187,8 @@ def evaluate_model(args):
     model_or_client, tokenizer, is_tinker = load_model(args)
     
     results = {
+        "schema_version": 2,
+        "evaluation_status": "completed",
         "config": {
             "model": args.model_name if not args.run_id else f"tinker://{args.run_id}",
             "model_source": args.checkpoint_path or (f"tinker://{args.run_id}/sampler_weights/final" if args.run_id else args.model_name),
@@ -200,9 +202,14 @@ def evaluate_model(args):
             "max_tokens": args.max_tokens,
             "test_size": len(test_data),
         },
-        "correct": 0,
-        "incorrect": 0,
-        "errors": 0,
+        "summary": {
+            "correct": 0,
+            "incorrect": 0,
+            "errors": 0,
+            "attempted": 0,
+            "accuracy": 0.0,
+            "accuracy_percent": "0.0%",
+        },
         "examples": [],
     }
     
@@ -212,7 +219,7 @@ def evaluate_model(args):
         question, ground_truth = extract_question_and_answer(example)
         
         if ground_truth is None:
-            results["errors"] += 1
+            results["summary"]["errors"] += 1
             continue
         
         try:
@@ -226,10 +233,10 @@ def evaluate_model(args):
             predicted = extract_answer(response)
             
             if predicted and normalize_number(predicted) == normalize_number(ground_truth):
-                results["correct"] += 1
+                results["summary"]["correct"] += 1
                 status = "correct"
             else:
-                results["incorrect"] += 1
+                results["summary"]["incorrect"] += 1
                 status = "incorrect"
             
             results["examples"].append({
@@ -241,19 +248,24 @@ def evaluate_model(args):
             })
             
         except Exception as e:
-            results["errors"] += 1
+            results["summary"]["errors"] += 1
             results["examples"].append({
                 "idx": i,
                 "error": str(e),
                 "status": "error",
             })
-    
+
     # Calculate metrics
-    total = results["correct"] + results["incorrect"]
+    total = results["summary"]["correct"] + results["summary"]["incorrect"]
+    results["summary"]["attempted"] = total
     if total > 0:
-        results["accuracy"] = results["correct"] / total
+        results["summary"]["accuracy"] = results["summary"]["correct"] / total
     else:
-        results["accuracy"] = 0.0
+        results["summary"]["accuracy"] = 0.0
+        if results["summary"]["errors"] > 0:
+            results["evaluation_status"] = "failed"
+            results["failure_reason"] = "No held-out examples were successfully scored; inspect the recorded errors."
+    results["summary"]["accuracy_percent"] = f"{results['summary']['accuracy']:.1%}"
     
     # Print summary
     print(f"\n{'='*50}")
@@ -261,10 +273,11 @@ def evaluate_model(args):
     print(f"{'='*50}")
     print(f"Model: {results['config']['model']}")
     print(f"Test Set Size: {len(test_data)}")
-    print(f"Correct: {results['correct']}")
-    print(f"Incorrect: {results['incorrect']}")
-    print(f"Errors: {results['errors']}")
-    print(f"Accuracy: {results['accuracy']:.2%}")
+    print(f"Status: {results['evaluation_status']}")
+    print(f"Correct: {results['summary']['correct']}")
+    print(f"Incorrect: {results['summary']['incorrect']}")
+    print(f"Errors: {results['summary']['errors']}")
+    print(f"Accuracy: {results['summary']['accuracy']:.2%}")
     print(f"{'='*50}")
     
     # Save results
@@ -280,10 +293,10 @@ def main():
     set_seed(args.seed)
     
     results = evaluate_model(args)
-    
+
     # Print for easy copying
-    print(f"\n## GSM8K Test Accuracy: {results['accuracy']:.2%}")
-    print(f"# Correct: {results['correct']}/{results['correct']+results['incorrect']}")
+    print(f"\n## GSM8K Test Accuracy: {results['summary']['accuracy']:.2%}")
+    print(f"# Correct: {results['summary']['correct']}/{results['summary']['attempted']}")
 
 if __name__ == "__main__":
     main()

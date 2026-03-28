@@ -25,7 +25,8 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
+from peft import LoraConfig
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOConfig, GRPOTrainer
 
@@ -81,29 +82,33 @@ def extract_answer(text: str) -> str | None:
     return None
 
 
-def reward_fn(completions: list[str], answers: list[str], **kwargs) -> list[float]:
+def reward_fn(completions: list[str], answer: list[str], **kwargs) -> list[float]:
     """Binary exact-match reward for GSM8K.
+
+    Called by GRPOTrainer with completions (model outputs) and any extra
+    dataset columns as keyword args. The 'answer' column from our dataset
+    is passed automatically.
 
     This is the core reward signal. Modifications here can dramatically
     change training dynamics. Ideas:
     - Partial credit for correct intermediate steps
-    - Format bonus for using \boxed{}
+    - Format bonus for using \\boxed{}
     - Length penalty for verbose responses
     - Curriculum-based reward scaling
     """
     rewards = []
-    for completion, answer in zip(completions, answers):
+    for completion, ans in zip(completions, answer):
         pred = extract_answer(completion)
         if pred is None:
             rewards.append(0.0)
             continue
         try:
-            if abs(float(pred) - float(answer)) < 0.01:
+            if abs(float(pred) - float(ans)) < 0.01:
                 rewards.append(1.0)
             else:
                 rewards.append(0.0)
         except ValueError:
-            rewards.append(1.0 if pred == answer else 0.0)
+            rewards.append(1.0 if pred == ans else 0.0)
     return rewards
 
 
@@ -145,20 +150,27 @@ def train_single_seed(
     run_dir.mkdir(parents=True, exist_ok=True)
 
     hf_model = MODELS[model_name]
-    tokenizer = AutoTokenizer.from_pretrained(hf_model, trust_remote_code=True)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
 
     # Subsample training data for speed
     random.shuffle(examples)
     train_data = examples[:500]
 
     # Create dataset compatible with GRPOTrainer
-    from datasets import Dataset
+    # Must have "prompt" column; extra columns (e.g. "answer") are passed
+    # to reward_funcs as kwargs
     train_dataset = Dataset.from_list([
         {"prompt": ex["prompt"], "answer": ex["answer"]}
         for ex in train_data
     ])
+
+    # LoRA configuration (passed to GRPOTrainer, not GRPOConfig)
+    peft_config = LoraConfig(
+        r=args.lora_rank,
+        lora_alpha=args.lora_rank * 2,
+        lora_dropout=0.05,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
 
     # Configure GRPO training
     config = GRPOConfig(
@@ -177,25 +189,14 @@ def train_single_seed(
         num_generations=args.group_size,
         max_prompt_length=MAX_PROMPT_LENGTH,
         max_completion_length=MAX_COMPLETION_LENGTH,
-        # LoRA
-        use_peft=True,
-        lora_r=args.lora_rank,
-        lora_alpha=args.lora_rank * 2,
-    )
-
-    model = AutoModelForCausalLM.from_pretrained(
-        hf_model,
-        torch_dtype=torch.bfloat16,
-        device_map="auto",
-        trust_remote_code=True,
     )
 
     trainer = GRPOTrainer(
-        model=model,
+        model=hf_model,
         args=config,
         train_dataset=train_dataset,
-        reward_funcs=reward_fn,
-        tokenizer=tokenizer,
+        reward_funcs=[reward_fn],
+        peft_config=peft_config,
     )
 
     # Train and collect metrics
@@ -233,7 +234,7 @@ def train_single_seed(
     np.save(run_dir / "reward_trace.npy", np.array(step_rewards))
 
     # Clean up GPU memory
-    del model, trainer
+    del trainer
     torch.cuda.empty_cache()
 
     return metrics

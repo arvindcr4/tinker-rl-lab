@@ -55,3 +55,5 @@
 {"type":"config","name":"Autoresearch config alignment","metricName":"config_issues","metricUnit":"issues","bestDirection":"lower"}
 {"run":26,"commit":"3106bf5","metric":0,"metrics":{},"status":"keep","description":"Aligned autoresearch.md with the current unified-audit workflow by documenting suite_issues and run_all_audits.py, then added a config audit to keep the session instructions synchronized with the repo's audit-first loop.","timestamp":1774754981454,"segment":16,"confidence":null,"iterationTokens":777}
 {"type":"config","name":"Unified audit suite restored after config sync","metricName":"suite_issues","metricUnit":"issues","bestDirection":"lower"}
+{"run":27,"commit":"6d16d31","metric":0,"metrics":{},"status":"keep","description":"Restored autoresearch.sh to the unified audit suite after synchronizing autoresearch.md, confirming the repo is back to the all-audits default and all 10 hygiene checks still pass together.","timestamp":1774754998916,"segment":17,"confidence":null,"iterationTokens":101}
+{"type":"config","name":"Blind-review package guidance completeness","metricName":"blind_package_issues","metricUnit":"issues","bestDirection":"lower"}

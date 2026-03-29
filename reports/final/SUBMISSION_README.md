@@ -22,6 +22,8 @@
 |------|-------------|
 | `grpo_agentic_llm_paper_anonymous.tex` | Anonymized for blind review |
 
+For blind review submissions, submit the anonymized paper source/package instead of the author-identified paper source.
+
 ---
 
 ## Compilation Instructions
@@ -101,6 +103,7 @@ Note: `supplementary_appendix.tex` is a standalone document and should be compil
 - [ ] No identifying information in acknowledgments
 - [ ] Git history does not reveal authors (create fresh clone)
 - [ ] Do not include generated build artifacts (`.aux`, `.log`, `.out`, compiled PDFs) in the submission package
+- [ ] Exclude the non-anonymous paper source from blind-review bundles
 - [ ] Run `python run_all_audits.py` before exporting the final blind-review package
 
 ---

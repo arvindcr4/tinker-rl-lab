@@ -110,23 +110,65 @@ def audit_paper() -> dict:
     if bib_entries < 15:
         issues["X_bib_entries"] = "Bibliography has only %d entries (need >=15)" % bib_entries
 
+    # === Tier 2: Deeper quality issues from discovery report ===
+
+    # 18. Abstract should explicitly say "training-set reward" not "accuracy"
+    abstract_match = re.search(r'\\begin\{abstract\}(.*?)\\end\{abstract\}', full, re.S)
+    if abstract_match:
+        abstract_text = abstract_match.group(1)
+        if "training-set" not in abstract_text.lower() and "training reward" not in abstract_text.lower():
+            issues["T2_abstract_label"] = "Abstract doesn't explicitly label results as training-set metrics"
+
+    # 19. Conclusion should acknowledge scope limitations
+    conclusion_match = re.search(r'\\section\{Conclusion\}(.*?)(?:\\section|\\end\{document\})', full, re.S)
+    if conclusion_match:
+        conc_text = conclusion_match.group(1)
+        if "held-out" not in conc_text.lower() and "test set" not in conc_text.lower():
+            issues["T2_conclusion_heldout"] = "Conclusion doesn't mention need for held-out evaluation"
+
+    # 20. Reward function limitations discussed
+    if not re.search(r'reward.*(?:coarse|hack|limitation)|argument[- ]value.*(?:check|correct)', full, re.I):
+        issues["T2_reward_limitations"] = "Reward function limitations (coarseness, hacking risk) not discussed"
+
+    # 21. Safety considerations for tool execution
+    if not re.search(r'safety.*(?:tool|execution|loop)|incorrect.*tool.*execution', full, re.I):
+        issues["T2_safety"] = "No safety discussion for tool execution risks"
+
+    # 22. Failure taxonomy for tool-calling errors
+    if not re.search(r'(?:wrong.*function|argument.*mismatch|value.*error).*(?:taxonomy|categor)', full, re.I):
+        if not re.search(r'failure.*(?:mode|taxonomy|categor)|error.*(?:type|categor)', full, re.I):
+            issues["T2_failure_taxonomy"] = "No failure taxonomy for tool-calling errors"
+
+    # 23. Synthetic-to-real gap quantified with schema characteristics
+    if not re.search(r'schema.*(?:divers|characteristic|complex)|(?:5|five).*tool.*(?:60|sixty).*(?:k|thousand)', full, re.I):
+        issues["T2_schema_gap"] = "Synthetic-to-real gap not quantified with schema characteristics"
+
+    # 24. Two-phase learning validated with multiple seeds/tasks
+    if not re.search(r'two[- ]phase.*(?:seed|task|replic)|phase.*(?:format|reasoning).*(?:seed|replicate)', full, re.I):
+        issues["T2_two_phase_validation"] = "Two-phase learning not validated across seeds/tasks"
+
+    # 25. Appendix diagnostics table present
+    if not re.search(r'Entropy.*KL.*(?:table|diagnostic)|diagnostic.*telemetry', appendix, re.I):
+        issues["T2_diagnostics_table"] = "Appendix missing diagnostics table with entropy/KL data"
+
     return issues
 
 
 def main():
     issues = audit_paper()
     n = len(issues)
+    total_checks = 25
 
     print(f"METRIC reviewer_issues={n}")
-    print(f"METRIC total_checks=17")
-    print(f"METRIC resolved={17 - n}")
+    print(f"METRIC total_checks={total_checks}")
+    print(f"METRIC resolved={total_checks - n}")
 
     if issues:
         print(f"\n--- {n} UNRESOLVED ISSUES ---")
         for k, v in sorted(issues.items()):
             print(f"  [{k}] {v}")
     else:
-        print("\nAll 17 reviewer issues resolved!")
+        print(f"\nAll {total_checks} reviewer issues resolved!")
 
     return n
 

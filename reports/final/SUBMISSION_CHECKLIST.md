@@ -40,10 +40,15 @@ reports/final/
 ## Remaining Tasks for Final Submission
 
 ### High Priority
-1. [ ] **Anonymous submission:** Create anonymized version of LaTeX paper
-2. [ ] **Review page count:** Ensure within 9-page limit
-3. [ ] **Figure captions:** Add clear, informative captions
-4. [ ] **Supplementary appendix:** Add any additional experiments
+1. [ ] **Held-out GSM8K evaluation:** Run full test-set evaluation and update Section 4.3.3
+2. [ ] **Standardized claim audit:** Remove or narrow any claim not backed by held-out or standard evaluation
+3. [ ] **Tool-calling protocol disclosure:** Document schemas, prompts, rubric, and judge details; add standardized benchmark if possible
+4. [ ] **Code-generation standardization:** Re-run full HumanEval/MBPP harness with pass@k and confidence intervals
+5. [ ] **Methods/evaluation tables:** Add splits, budgets, decoding settings, seeds, and verifier/judge details
+6. [ ] **Anonymous submission:** Create anonymized version of LaTeX paper
+7. [ ] **Review page count:** Ensure within 9-page limit
+8. [ ] **Figure captions:** Add clear, informative captions
+9. [ ] **Supplementary appendix:** Add any additional experiments
 
 ### Medium Priority
 1. [ ] **Response to reviewers:** Prepare point-by-point responses

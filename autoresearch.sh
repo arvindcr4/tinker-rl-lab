@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 set -euo pipefail
-python run_all_audits.py
+python export_guard_audit.py

@@ -16,6 +16,7 @@ AUDITS = [
     'submission_workflow_audit.py',
     'blind_review_package_audit.py',
     'blind_review_export_audit.py',
+    'export_guard_audit.py',
 ]
 
 failures = []

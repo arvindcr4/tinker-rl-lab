@@ -2,9 +2,11 @@
 
 This directory contains the final capstone report and conference paper for the GRPO Agentic LLM Fine-Tuning project.
 
-## ⚠️ CRITICAL: Held-Out Evaluation Required
+## ⚠️ CRITICAL: Standardized Evaluation Still Required
 
-**The paper has been updated to honestly acknowledge its evaluation scope limitation.** The primary metrics measure training-set reward optimization, NOT held-out test-set generalization. This is documented prominently in the paper.
+**The paper now acknowledges its evaluation-scope limitations, but key reviewer-facing gaps still need to be closed.** The strongest current evidence is in training-set reward optimization and training dynamics, not yet in fully standardized held-out generalization across math, tool calling, and code generation.
+
+See `PAPER_IMPROVEMENT_PLAN.md` for the concrete remediation roadmap.
 
 ### To Complete the Paper (A-grade path):
 
@@ -26,6 +28,9 @@ python evaluate_gsm8k_test.py \
 If results show >40% accuracy on held-out test, update Section 4.3.3 with actual numbers. This will transform the paper from a training dynamics study to a true generalization claim.
 
 ## Files
+
+### Improvement Plan
+- `PAPER_IMPROVEMENT_PLAN.md` - prioritized plan to address reviewer concerns, standardize evaluation, and strengthen the paper
 
 ### Capstone Report
 - `capstone_final_report.md` - Full capstone report (honest about limitations)
@@ -53,14 +58,15 @@ If results show >40% accuracy on held-out test, update Section 4.3.3 with actual
 
 ## Paper Status
 
-✅ **Completed**: Tool calling results (validated)  
-✅ **Completed**: Code generation results (HumanEval verified)  
-⚠️ **Pending**: GSM8K held-out test evaluation  
-✅ **Completed**: Honest limitation disclosure
+✅ **Completed**: Honest limitation disclosure  
+⚠️ **Pending**: Full held-out GSM8K evaluation  
+⚠️ **Pending**: Standardized tool-calling evaluation / judge protocol disclosure  
+⚠️ **Pending**: Canonical full HumanEval/MBPP evaluation  
+⚠️ **Pending**: Reproducibility packaging for prompts, schemas, and checkpoints
 
-## The One Change to Get an A
+## Highest-Leverage Next Step
 
-Run `evaluate_gsm8k_test.py` on your trained checkpoint and update Section 4.3.3 with the results. If accuracy >50%, you have a strong generalization claim. If <40%, the paper correctly positions itself as a training dynamics study.
+Run `evaluate_gsm8k_test.py` on the trained checkpoint and update Section 4.3.3 with full held-out results. That is the single highest-leverage improvement, but not the only one: the paper also needs standardized tool/code evaluation or narrower claim boundaries. See `PAPER_IMPROVEMENT_PLAN.md` for the full sequencing.
 
 ## Authors
 

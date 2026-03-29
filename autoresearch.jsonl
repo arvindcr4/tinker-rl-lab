@@ -38,3 +38,5 @@
 {"run":43,"commit":"a145bd0","metric":0,"metrics":{"total_checks":30,"resolved":30,"claim_issues":0,"anon_issues":0},"status":"keep","description":"added per-run compute budget table (tokens, wall-clock, GPU-hours) to appendix","timestamp":1774753406,"segment":8}
 {"run":44,"commit":"a145bd0","metric":0,"metrics":{"total_checks":30,"resolved":30,"claim_issues":0},"status":"keep","description":"final quality pass: all consistency checks pass, all 3 abstract versions synced, 24 bib entries, compute budget table complete","timestamp":1774753488,"segment":8}
 {"run":45,"commit":"0580631","metric":0,"metrics":{"total_checks":30,"resolved":30},"status":"keep","description":"added cross-domain summary table with eval scope qualifiers","timestamp":1774753578,"segment":8}
+{"run":46,"commit":"aafaca5","metric":0,"metrics":{"total_checks":30,"resolved":30},"status":"keep","description":"qualified two-phase learning as domain-dependent (breakpoints vary step 1-10 across seeds on GSM8K)","timestamp":1774753631,"segment":8}
+{"type":"config","name":"Claim strength calibration across paper set","metricName":"strength_issues","metricUnit":"issues","bestDirection":"lower"}

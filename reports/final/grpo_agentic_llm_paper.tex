@@ -284,6 +284,17 @@ Using Qwen3-8B with LoRA rank 32, 50 steps, 5 seeds:
 
 Cross-seed mean training-set reward is 30.5\% (SD = 3.3\%, 95\% CI [26.4\%, 34.6\%] via $t$-distribution with $n=5$). Zero-loss rates range from 16--28\%, indicating that exploration success varies meaningfully across random seeds even for the same model and hyperparameters.
 
+\subsubsection{Preliminary Held-Out Results}
+
+We recovered the seed-137 Tinker checkpoint and evaluated on the GSM8K test set with greedy decoding and a chain-of-thought answer extractor. On a preliminary 10-problem subsample:
+
+\begin{itemize}
+    \item \textbf{GRPO checkpoint} (seed 137, rank 32): 9/10 correct (90\%, CI [70\%, 100\%])
+    \item \textbf{Base Qwen3-8B} (no LoRA): 9/10 correct (90\%, CI [70\%, 100\%])
+\end{itemize}
+
+Both models achieve the same accuracy on this small sample, suggesting that Qwen3-8B is already strong on GSM8K and the GRPO adapter may not measurably improve held-out generalization. A full 100-problem evaluation is in progress; results will be reported when available. If confirmed, this would imply that the training-set reward gains ($\sim$30\%) reflect learning specific training prompts rather than generalizable mathematical reasoning improvements---an important negative finding for the field.
+
 \subsubsection{LoRA Rank Ablation}
 
 \begin{table}[htbp]
@@ -318,6 +329,7 @@ Table~\ref{tab:summary} consolidates key results across all three domains with e
         Tool (multi-turn) & Scenario Quality & 0.72 & 0.91 & Train, custom rubric \\
         Code (HumanEval) & Pass@1 & 32\% & 40\% & 50-item test subset \\
         Math (GSM8K, 5 seeds) & Training Reward & --- & 30.5\% $\pm$ 3.3\% & Train rollouts \\
+        Math (GSM8K, held-out) & Test Accuracy & 90\% (base) & 90\% (GRPO) & 10-item test pilot \\
         Math (GSM8K, 4B) & Training Reward & 87.5\% & 82.5\% (last-10) & Train rollouts \\
         Math (GSM8K, 3B) & Training Reward & 0.8\% & 2.3\% & Train rollouts \\
         \bottomrule

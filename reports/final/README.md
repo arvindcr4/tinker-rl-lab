@@ -73,6 +73,16 @@ These numbers should not all be read as standardized benchmark claims:
 
 Run `evaluate_gsm8k_test.py` on the trained checkpoint and update Section 4.3.3 with full held-out results. That is the single highest-leverage improvement, but not the only one: the paper also needs standardized tool/code evaluation or narrower claim boundaries. See `PAPER_IMPROVEMENT_PLAN.md` for the full sequencing.
 
+## Audit Suite
+
+Before submission or export, run:
+
+```bash
+python run_all_audits.py
+```
+
+This verifies the paper, capstone, submission docs, anonymization hygiene, held-out-evaluation readiness, claim strength, and packaging checks in one pass.
+
 ## Authors
 
 Arvind C R, Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L, Dhruva N Murthy, Mohammad Rafi  

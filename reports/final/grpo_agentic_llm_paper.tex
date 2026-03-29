@@ -329,6 +329,14 @@ GRPO training exhibits a characteristic two-phase pattern:
 
 This is analogous to curriculum learning without explicit curricula.
 
+\subsection{Reward Function Limitations}
+
+Our reward functions are deliberately simple and verifiable, but this coarseness introduces known limitations. The tool-calling reward checks JSON validity, tool name, and argument-key presence but does \emph{not} verify argument-value correctness---a model can receive full reward by calling the right function with plausible but wrong values. This gap creates a reward-hacking surface: models may learn to produce syntactically correct but semantically incorrect tool calls. Adding argument-type and value checks, or leveraging outcome reward models such as ToolRM \citep{wang2025toolrm}, would reduce this risk. The math reward is binary (correct/incorrect) with no partial credit for intermediate reasoning steps, which contributes to reward sparsity for weaker models.
+
+\subsection{Safety Considerations}
+
+GRPO-trained tool-calling models introduce safety risks that warrant explicit discussion. First, \textbf{incorrect tool execution}: a model that reliably produces valid JSON may still call the wrong function or supply dangerous arguments (e.g., deleting data instead of reading it). Our reward function does not penalize semantically harmful tool calls. Second, \textbf{persistent loops}: although the -0.30 penalty for repeated tool calls eliminated looping in our experiments, more complex multi-step workflows may require explicit loop-detection safeguards. Third, \textbf{hallucinated capabilities}: models may generate calls to tools that do not exist in the available schema, particularly when transferring from synthetic to real-world tool sets. Future work should incorporate hallucination and loop penalties validated by standardized evaluators, and evaluate safety under adversarial prompting.
+
 Across all domains, our reporting should be interpreted with the underlying data splits and compute budgets in mind. Tool and GSM8K numbers are primarily computed on training-prompt distributions with fresh rollouts; only the preliminary code-generation result uses a held-out benchmark subset. Typical Tinker runs use batch size 2, group size 4--16, 30--100 optimization steps, and cloud A100 time on the order summarized in the appendix. We do not yet report total tokens processed per run or full GPU-hours per experiment, which is another limitation for strict efficiency comparison.
 
 % ===========================================================================

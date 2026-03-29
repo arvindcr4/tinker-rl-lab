@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "evaluation_status": "completed",
+  "config": {
+    "model": "Qwen/Qwen3-8B",
+    "model_source": "Qwen/Qwen3-8B",
+    "dataset": "openai/gsm8k",
+    "dataset_config": "main",
+    "dataset_split": "test",
+    "n_samples": 1,
+    "temperature": 0.0,
+    "do_sample": false,
+    "seed": 0,
+    "max_tokens": 2048,
+    "test_size": 5
+  },
+  "summary": {
+    "correct": 4,
+    "incorrect": 1,
+    "errors": 0,
+    "attempted": 5,
+    "accuracy": 0.8,
+    "accuracy_percent": "80.0%",
+    "accuracy_ci_95": [
+      0.4,
+      1.0
+    ],
+    "accuracy_ci_95_percent": [
+      "40.0%",
+      "100.0%"
+    ]
+  },
+  "examples": [
+    {
+      "idx": 0,
+      "question": "Janet\u2019s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for ...",
+      "predicted": "18",
+      "ground_truth": "18",
+      "status": "correct"
+    },
+    {
+      "idx": 1,
+      "question": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it ...",
+      "predicted": "3",
+      "ground_truth": "3",
+      "status": "correct"
+    },
+    {
+      "idx": 2,
+      "question": "Josh decides to try flipping a house.  He buys a house for $80,000 and then puts in $50,000 in repai...",
+      "predicted": "250",
+      "ground_truth": "70000",
+      "status": "incorrect"
+    },
+    {
+      "idx": 3,
+      "question": "James decides to run 3 sprints 3 times a week.  He runs 60 meters each sprint.  How many total meter...",
+      "predicted": "540",
+      "ground_truth": "540",
+      "status": "correct"
+    },
+    {
+      "idx": 4,
+      "question": "Every day, Wendi feeds each of her chickens three cups of mixed chicken feed, containing seeds, meal...",
+      "predicted": "20",
+      "ground_truth": "20",
+      "status": "correct"
+    }
+  ]
+}

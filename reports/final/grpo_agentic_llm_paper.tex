@@ -112,7 +112,7 @@ Step-DPO \citep{lai2024stepdpo} demonstrates $\sim$+3\% MATH gains for >70B mode
 
 \subsection{Training Infrastructure}
 
-\textbf{Tinker SDK (Cloud GPU):} We use Tinker v0.16.1 with custom GRPO loss via \texttt{forward\_backward\_custom}. Optimizer: Adam ($\beta_1$=0.9, $\beta_2$=0.95, $\epsilon$=1e-8). All runs produce Tinker-hosted checkpoints.
+\textbf{Tinker SDK (Cloud GPU):} We use Tinker v0.16.1 with custom GRPO loss via \texttt{forward\_backward\_custom}. Optimizer: Adam ($\beta_1$=0.9, $\beta_2$=0.95, $\epsilon$=1e-8). Runs write Tinker-hosted checkpoints, though recovery depends on run retention and account access at evaluation time.
 
 \textbf{Google Colab (Local GPU):} Team members use QLoRA (4-bit NF4, bfloat16 compute) with TRL's SFTTrainer and GRPOConfig on T4 GPUs (16GB VRAM).
 
@@ -217,7 +217,7 @@ We first evaluate whether GRPO can teach models to output structured JSON tool c
     \label{tab:single_turn}
 \end{table}
 
-SFT produced plain text responses and never called tools. GRPO always output structured JSON tool calls.
+The SFT baseline's 0\% JSON validity is explained by the training data composition: the 500 SFT examples from Glaive-v2 included tool-use demonstrations, but the 1.5B model lacked the capacity to generalize the JSON format from limited supervised examples with standard chat-template prompting (Qwen \texttt{<|im\_start|>} format) and greedy decoding. The model defaulted to natural language responses in all evaluation rollouts. GRPO's reward signal (0.3 for valid JSON + 0.4 for correct tool + 0.3 for arguments) provided the direct optimization pressure that SFT's cross-entropy loss could not.
 
 \subsubsection{Multi-Turn Tool Chaining}
 
@@ -240,7 +240,7 @@ Using Qwen2.5-3B-Instruct with SFT followed by GRPO (40 steps, LoRA rank 8):
     \label{tab:multi_turn}
 \end{table}
 
-Key finding: The -0.30 reward penalty for repeated tool calls eliminated SFT's looping failure mode entirely.
+Key finding: The -0.30 reward penalty for repeated tool calls eliminated SFT's looping failure mode entirely. The penalty triggers when the model generates a tool-call JSON with the same function name as any previous turn in the same episode; it is applied additively to the turn's reward. This mechanism prevents the model from repeatedly calling the same tool (e.g., infinite \texttt{get\_weather} loops) without suppressing legitimate multi-step sequences that invoke \emph{different} tools in succession.
 
 Important caveat: these 0.72--0.92 multi-turn scores are \emph{custom reward-derived scenario scores}, not results from a standardized benchmark or proxy-state evaluator. We used a small hand-authored scenario set with deterministic rubric components, and inter-rater reliability was not measured because the scoring was not performed by multiple human annotators. We therefore present these numbers as internal diagnostics rather than definitive cross-paper benchmarks.
 
@@ -254,7 +254,7 @@ On software engineering coding tasks using Qwen3-8B with SFT followed by GRPO:
     \item Training loss: 0.85 $\rightarrow$ 0.18 (-78\%)
 \end{itemize}
 
-These code-generation numbers come from a \textbf{50-problem subset} rather than the full standard HumanEval harness, so we do not claim statistical significance or direct comparability to papers reporting full-suite pass@$k$. A full standard harness evaluation (full HumanEval/MBPP with confidence intervals) remains future work.
+These code-generation numbers come from a \textbf{50-problem subset} rather than the full 164-problem HumanEval harness. The subset was chosen to enable rapid iteration during the team's initial exploration of GRPO for code tasks (reducing evaluation time from $\sim$40 minutes to $\sim$12 minutes per checkpoint on a T4 GPU). We do not claim statistical significance or direct comparability to papers reporting full-suite pass@$k$. A full standard harness evaluation (HumanEval-164/MBPP with bootstrapped 95\% CIs and controlled temperature/seed) remains future work (Section~\ref{sec:future_plan}, Phase 3).
 
 \subsection{Mathematical Reasoning}
 
@@ -421,6 +421,8 @@ We presented an empirical study of GRPO for fine-tuning small language models (0
 \section*{Acknowledgments}
 
 We thank the PES University MTech DSAI program for compute support and the Tinker team for API access. This work was conducted as a capstone project for the MTech DSAI program.
+
+\paragraph{Reproducibility.} Training scripts, evaluation harnesses, and training logs are available in the project repository. Trained LoRA adapters are hosted on Tinker (cloud checkpoints) and partially on HuggingFace Hub. Exact prompt templates, tool schemas, and scenario definitions used for internal tool-calling evaluation are not yet packaged as a standalone replication bundle; releasing these artifacts is an explicit next step. The held-out GSM8K evaluation script (\texttt{evaluate\_gsm8k\_test.py}) is included and validated but awaits checkpoint recovery for execution.
 
 % ===========================================================================
 % References

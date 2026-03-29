@@ -163,6 +163,43 @@ This ``zero-loss'' phenomenon indicates the 3B model lacks the reasoning capacit
     \label{tab:zero_loss}
 \end{table}
 
+\subsection{Comprehensive Zero-Loss Dynamics Across All GSM8K Runs}
+
+Table~\ref{tab:zero_loss_comprehensive} reports zero-loss and zero-reward step frequencies across all available GSM8K training runs, providing the quantitative basis for the capacity-threshold and exploration-sparsity claims in the main paper.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Zero-loss and zero-reward dynamics across all GSM8K GRPO runs. Zero-loss indicates all-same-reward groups (no gradient signal). Zero-reward indicates all-incorrect completions. 3B data from Colab; 4B and 8B from Tinker.}
+    \begin{tabular}{llccccc}
+        \toprule
+        Model & Config & Steps & Zero-Loss \% & Zero-Reward \% & Peak Acc & Last-10 Acc \\
+        \midrule
+        Llama-3.2-3B & seed=42, G=4 & 50 & 56\% & 56\% & 3.1\% & 2.3\% \\
+        \midrule
+        Qwen3.5-4B & seed=137, r=32 & 50 & 68\% & 0\% & 100\% & 82.5\% \\
+        \midrule
+        Qwen3-8B & seed=137, r=32 & 50 & 28\% & 24\% & 62.5\% & 27.5\% \\
+        Qwen3-8B & seed=256, r=32 & 50 & 24\% & 24\% & 62.5\% & 32.5\% \\
+        Qwen3-8B & seed=512, r=32 & 50 & 16\% & 10\% & 87.5\% & 30.0\% \\
+        Qwen3-8B & seed=42, r=32 & 50 & 18\% & 14\% & 62.5\% & 27.5\% \\
+        Qwen3-8B & seed=999, r=32 & 50 & 18\% & 16\% & 87.5\% & 35.0\% \\
+        Qwen3-8B & seed=42, r=8 & 50 & 20\% & 14\% & 62.5\% & 21.2\% \\
+        Qwen3-8B & seed=42, r=16 & 50 & 20\% & 18\% & 75.0\% & 18.8\% \\
+        Qwen3-8B & seed=42, r=64 & 50 & 18\% & 16\% & 87.5\% & 25.0\% \\
+        Qwen3-8B & lr=5e-6, 100 steps & 100 & 17\% & 15\% & 75.0\% & 27.5\% \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:zero_loss_comprehensive}
+\end{table}
+
+\textbf{Key patterns:}
+\begin{itemize}
+    \item The 3B model's 56\% zero-loss rate stems from zero-reward (all-incorrect) groups, confirming reward sparsity as the proximate cause.
+    \item The 4B model's 68\% zero-loss rate stems from \emph{all-correct} groups (0\% zero-reward), indicating the opposite regime: the model solves problems so easily that group variance vanishes. This is productive zero-loss (learning saturated, not stalled).
+    \item 8B models show 16--28\% zero-loss, with seed 512 showing the lowest rate and highest peak accuracy, suggesting exploration varies meaningfully across seeds.
+    \item LoRA rank does not substantially affect zero-loss rates (18--20\% for r=8/16/64), supporting the paper's finding that rank affects learning speed but not the fundamental capacity to generate reward signal.
+\end{itemize}
+
 \subsection{Qwen3-30B-MoE Volatility Analysis}
 
 The Qwen3-30B-MoE model reached 99\% peak GSM8K training-step accuracy in our internal runs but exhibited 2.43$\times$ higher step-to-step reward variance than the dense 8B model. Statistical testing (Levene's test) confirms this difference is significant: $F(1, 98) = 22.4$, $p = 7.0 \times 10^{-6}$.

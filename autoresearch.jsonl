@@ -57,3 +57,5 @@
 {"type":"config","name":"Unified audit suite restored after config sync","metricName":"suite_issues","metricUnit":"issues","bestDirection":"lower"}
 {"run":27,"commit":"6d16d31","metric":0,"metrics":{},"status":"keep","description":"Restored autoresearch.sh to the unified audit suite after synchronizing autoresearch.md, confirming the repo is back to the all-audits default and all 10 hygiene checks still pass together.","timestamp":1774754998916,"segment":17,"confidence":null,"iterationTokens":101}
 {"type":"config","name":"Blind-review package guidance completeness","metricName":"blind_package_issues","metricUnit":"issues","bestDirection":"lower"}
+{"run":28,"commit":"fedefc2","metric":0,"metrics":{},"status":"keep","description":"Added a blind-review package audit and clarified in the submission docs that blind-review bundles should use the anonymized paper source/package and exclude the non-anonymous paper source.","timestamp":1774755067237,"segment":18,"confidence":null,"iterationTokens":1289}
+{"type":"config","name":"Unified audit suite includes blind-review package checks","metricName":"suite_issues","metricUnit":"issues","bestDirection":"lower"}

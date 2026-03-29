@@ -14,6 +14,7 @@ AUDITS = [
     'claim_strength_audit.py',
     'submission_package_audit.py',
     'submission_workflow_audit.py',
+    'blind_review_package_audit.py',
 ]
 
 failures = []

@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 set -euo pipefail
-python heldout_readiness_audit.py
+python anonymization_repro_audit.py

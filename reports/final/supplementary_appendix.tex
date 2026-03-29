@@ -379,6 +379,26 @@ This trajectory illustrates the two-phase pattern: format compliance (steps 1-20
 
 Total estimated spend: $\sim$\$50/person, well within typical capstone project budgets.
 
+\begin{table}[htbp]
+    \centering
+    \caption{Estimated per-run compute budgets for representative experiments. Token estimates assume batch\_size=2, group\_size as configured, max\_generation=512 tokens. Wall-clock times are from logged telemetry where available; others are estimated from Tinker billing.}
+    \begin{tabular}{llcccc}
+        \toprule
+        Domain & Config & Steps & Group & Est. Tokens & Est. Time \\
+        \midrule
+        Arithmetic & Qwen3-8B, r=32 & 100 & 4 & 410K & $\sim$17 min \\
+        GSM8K & Qwen3-8B, r=32 & 50 & 8 & 410K & $\sim$25 min \\
+        GSM8K & Qwen3-8B, r=32 & 100 & 8 & 820K & $\sim$50 min \\
+        GSM8K & Qwen3.5-4B, r=32 & 50 & 8 & 410K & $\sim$20 min \\
+        Tool (synthetic) & Qwen3-8B, r=32 & 30 & 8 & 245K & $\sim$15 min \\
+        Tool (xlam-60k) & Qwen3-8B, r=32 & 100 & 8 & 820K & $\sim$50 min \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:per_run_budget}
+\end{table}
+
+\textbf{Limitations of budget reporting:} We do not report exact tokens processed per run (the Tinker SDK does not expose this metric). Token estimates above are upper bounds assuming maximum generation length. Wall-clock times exclude checkpoint saving overhead. GPU-hours are not tracked per-run; the aggregate across all 17 Tinker runs is estimated at 8--12 A100 GPU-hours.
+
 We report GPU platform and wall-clock budget, but not a full token-processed accounting per run. Likewise, our data-split story is uneven across domains: HumanEval uses a held-out benchmark subset, while tool calling and GSM8K largely report training-distribution rollouts. This split mismatch is a major threat to cross-domain comparability.
 
 % ===========================================================================

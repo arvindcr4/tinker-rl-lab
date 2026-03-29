@@ -396,12 +396,13 @@ At present, we can release training scripts, paper sources, and the hardened hel
 
 For stability diagnostics, we did not log KL-to-SFT trajectories or policy entropy, and our MoE analysis does not yet include routing entropy or expert-load imbalance measurements. Those omissions limit causal interpretation of both drift and volatility claims.
 
-Training logs are available at: \texttt{/tmp/gsm8k\_*.log}, \texttt{/tmp/grpo\_*.log}
+Representative training logs were collected during experimentation, but the literal local \texttt{/tmp} paths used during development are not a portable reproduction interface and should not be treated as a release artifact.
 
-Model checkpoints are hosted on Tinker and HuggingFace Hub:
+Checkpoint access is partial rather than universal at present:
 \begin{itemize}
-    \item SWE-trained model: \texttt{huggingface.co/Madhu2133/qwen3-8b-swe-grpo}
-    \item Tool-use checkpoints: \texttt{tinker://\textit{run\_id}/sampler\_weights/final}
+    \item Some trained artifacts were published to project-managed model hosting during development.
+    \item Some tool-use and math checkpoints were written to Tinker under run-specific paths such as \texttt{tinker://\textit{run\_id}/sampler\_weights/final}, but present-day recovery depends on retention and account access.
 \end{itemize}
+A clean anonymous release should replace personal account identifiers with project-level artifact locations or explicit recovery instructions.
 
 \end{document}

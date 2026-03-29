@@ -157,4 +157,4 @@ Note: `supplementary_appendix.tex` is a standalone document and should be compil
 - GSM8K headline GRPO numbers are training-set reward metrics; full held-out evaluation remains the highest-priority missing experiment.
 
 ## Contact
-For questions about this submission, contact the authors through the PES University MTech DSAI program.
+For blind-review submissions, remove this section or replace it with the venue's anonymized contact mechanism.

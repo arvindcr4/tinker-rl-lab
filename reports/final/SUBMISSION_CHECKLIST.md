@@ -54,6 +54,7 @@ reports/final/
 1. [ ] **Response to reviewers:** Prepare point-by-point responses
 2. [ ] **Supplementary video:** Optional 5-minute video
 3. [ ] **Code release:** Clean repository for anonymized code submission
+4. [ ] **Run full audit suite:** `python run_all_audits.py` before creating the final submission package
 
 ### Submission Venues
 1. **NeurIPS 2026** - Deadline typically in May

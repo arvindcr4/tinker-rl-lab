@@ -367,7 +367,14 @@ However, this should be read as a \emph{capacity-plus-exploration} observation r
 
 \subsection{Synthetic vs. Real Data Gap}
 
-On tool calling, synthetic 5-tool tasks saturate to reward >0.9 within 5 GRPO steps. Salesforce xlam-60k with diverse real-world tool schemas yields rewards of 0.06--0.36 after 100 steps -- a 3--8x difficulty gap.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig3_synthetic_vs_real.pdf}
+    \caption{Synthetic vs.\ real-world tool schema difficulty over 100 GRPO steps (Qwen3-8B). Synthetic 5-tool tasks saturate above 0.8 reward, while real-world xlam-60k schemas remain below 0.2, revealing a 3--8$\times$ difficulty gap.}
+    \label{fig:synth_real}
+\end{figure}
+
+On tool calling, synthetic 5-tool tasks saturate to reward $>$0.9 within 5 GRPO steps (Figure~\ref{fig:synth_real}). Salesforce xlam-60k with diverse real-world tool schemas yields rewards of 0.06--0.36 after 100 steps---a 3--8$\times$ difficulty gap. This gap likely reflects schema diversity (5 vs.\ 60,000 schemas), argument complexity, and distribution shift between curated training data and real-world API specifications.
 
 \subsection{Two-Phase Learning Progression}
 

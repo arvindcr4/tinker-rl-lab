@@ -3,7 +3,7 @@ set -euo pipefail
 python reports/final/evaluate_gsm8k_test.py \
   --use_tinker \
   --model_name Qwen/Qwen3-8B \
-  --limit 5 \
+  --limit 20 \
   --output reports/final/gsm8k_base_smoke_results.json
 python - <<'PY'
 import json

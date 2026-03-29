@@ -12,21 +12,21 @@
     "do_sample": false,
     "seed": 0,
     "max_tokens": 2048,
-    "test_size": 5
+    "test_size": 20
   },
   "summary": {
-    "correct": 4,
-    "incorrect": 1,
+    "correct": 17,
+    "incorrect": 3,
     "errors": 0,
-    "attempted": 5,
-    "accuracy": 0.8,
-    "accuracy_percent": "80.0%",
+    "attempted": 20,
+    "accuracy": 0.85,
+    "accuracy_percent": "85.0%",
     "accuracy_ci_95": [
-      0.4,
+      0.65,
       1.0
     ],
     "accuracy_ci_95_percent": [
-      "40.0%",
+      "65.0%",
       "100.0%"
     ]
   },
@@ -64,6 +64,111 @@
       "question": "Every day, Wendi feeds each of her chickens three cups of mixed chicken feed, containing seeds, meal...",
       "predicted": "20",
       "ground_truth": "20",
+      "status": "correct"
+    },
+    {
+      "idx": 5,
+      "question": "Kylar went to the store to buy glasses for his new apartment. One glass costs $5, but every second g...",
+      "predicted": "8",
+      "ground_truth": "64",
+      "status": "incorrect"
+    },
+    {
+      "idx": 6,
+      "question": "Toulouse has twice as many sheep as Charleston. Charleston has 4 times as many sheep as Seattle. How...",
+      "predicted": "260",
+      "ground_truth": "260",
+      "status": "correct"
+    },
+    {
+      "idx": 7,
+      "question": "Carla is downloading a 200 GB file. Normally she can download 2 GB/minute, but 40% of the way throug...",
+      "predicted": "160",
+      "ground_truth": "160",
+      "status": "correct"
+    },
+    {
+      "idx": 8,
+      "question": "John drives for 3 hours at a speed of 60 mph and then turns around because he realizes he forgot som...",
+      "predicted": "45",
+      "ground_truth": "45",
+      "status": "correct"
+    },
+    {
+      "idx": 9,
+      "question": "Eliza's rate per hour for the first 40 hours she works each week is $10. She also receives an overti...",
+      "predicted": "460",
+      "ground_truth": "460",
+      "status": "correct"
+    },
+    {
+      "idx": 10,
+      "question": "A new program had 60 downloads in the first month. The number of downloads in the second month was t...",
+      "predicted": "366",
+      "ground_truth": "366",
+      "status": "correct"
+    },
+    {
+      "idx": 11,
+      "question": "Toula went to the bakery and bought various types of pastries. She bought 3 dozen donuts which cost ...",
+      "predicted": "694",
+      "ground_truth": "694",
+      "status": "correct"
+    },
+    {
+      "idx": 12,
+      "question": "Carlos is planting a lemon tree. The tree will cost $90 to plant. Each year it will grow 7 lemons, w...",
+      "predicted": "13",
+      "ground_truth": "13",
+      "status": "correct"
+    },
+    {
+      "idx": 13,
+      "question": "Melanie is a door-to-door saleswoman. She sold a third of her vacuum cleaners at the green house, 2 ...",
+      "predicted": "18",
+      "ground_truth": "18",
+      "status": "correct"
+    },
+    {
+      "idx": 14,
+      "question": "In a dance class of 20 students, 20% enrolled in contemporary dance, 25% of the remaining enrolled i...",
+      "predicted": "60",
+      "ground_truth": "60",
+      "status": "correct"
+    },
+    {
+      "idx": 15,
+      "question": "A merchant wants to make a choice of purchase between 2 purchase plans: jewelry worth $5,000 or elec...",
+      "predicted": "125",
+      "ground_truth": "125",
+      "status": "correct"
+    },
+    {
+      "idx": 16,
+      "question": "Two trains leave San Rafael at the same time. They begin traveling westward, both traveling for 80 m...",
+      "predicted": "230",
+      "ground_truth": "230",
+      "status": "correct"
+    },
+    {
+      "idx": 17,
+      "question": "Jill gets paid $20 per hour to teach and $30 to be a cheerleading coach. If she works 50 weeks a yea...",
+      "predicted": "750",
+      "ground_truth": "57500",
+      "status": "incorrect"
+    },
+    {
+      "idx": 18,
+      "question": "Claire makes a 3 egg omelet every morning for breakfast.  How many dozens of eggs will she eat in 4 ...",
+      "predicted": "7",
+      "ground_truth": "7",
+      "status": "correct"
+    },
+    {
+      "idx": 19,
+      "question": "Marissa is hiking a 12-mile trail. She took 1 hour to walk the first 4 miles, then another hour to w...",
+      "predicted": "6",
+      "ground_truth": "6",
       "status": "correct"
     }
   ]

@@ -49,12 +49,17 @@ If results show >40% accuracy on held-out test, update Section 4.3.3 with actual
 
 ## Key Results (Training-Set)
 
-| Task | Before | After | 
-|------|--------|-------|
-| JSON Tool Calls | 0% | 92% |
-| Multi-turn Quality | 0.72 | 0.91 |
-| HumanEval Pass@1 | 32% | 40% |
-| GSM8K Train Reward | - | 30.0% ± 2.5% |
+These numbers should not all be read as standardized benchmark claims:
+- **Tool results are internal/custom** and still need standardized evaluator disclosure or replacement.
+- **HumanEval is currently a 50-problem subset result**, not yet the canonical full-harness benchmark.
+- **Math is the strongest current evidence**, but the main reported GRPO math numbers are still training-set reward metrics until full held-out evaluation is completed.
+
+| Task | Before | After | Scope note |
+|------|--------|-------|------------|
+| JSON Tool Calls | 0% | 92% | custom internal tool-calling setup |
+| Multi-turn Quality | 0.72 | 0.91 | custom judge-derived internal scenario score |
+| HumanEval Pass@1 | 32% | 40% | preliminary 50-problem subset |
+| GSM8K Train Reward | - | 30.0% ± 2.5% | training-set reward, not held-out test accuracy |
 
 ## Paper Status
 

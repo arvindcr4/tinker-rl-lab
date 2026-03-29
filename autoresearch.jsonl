@@ -16,3 +16,5 @@
 {"run":36,"commit":"3e596f0","metric":0,"metrics":{"total_checks":17,"resolved":17},"status":"keep","description":"added KL/entropy/group-composition diagnostics table to appendix from arithmetic logs","timestamp":1774752495,"segment":8}
 {"run":37,"commit":"e0f343b","metric":0,"metrics":{"total_checks":25,"resolved":25},"status":"keep","description":"added reward limitations and safety discussion, expanded audit to 25 checks, all pass","timestamp":1774752587,"segment":8}
 {"type":"config","name":"Paper improvement plan completeness","metricName":"plan_issues","metricUnit":"issues","bestDirection":"lower"}
+{"run":12,"commit":"b0c1c9b","metric":0,"metrics":{},"status":"keep","description":"Added a concrete paper-improvement roadmap, corrected final-report status language, elevated held-out GSM8K/tool/code standardization in the submission checklist, and added a plan audit so the repo can verify the roadmap covers all key reviewer concerns.","timestamp":1774752633132,"segment":3,"confidence":null,"iterationTokens":1497}
+{"type":"config","name":"Submission claim caveat alignment","metricName":"claim_issues","metricUnit":"issues","bestDirection":"lower"}

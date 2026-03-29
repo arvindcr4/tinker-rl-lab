@@ -61,20 +61,20 @@ reports/final/
 3. **EMNLP 2026** - Deadline typically in July
 4. **COLM 2026** - Deadline typically in February
 
-## Key Results to Highlight
+## Key Results to Highlight (Preliminary / Custom results must be labeled)
 
-| Finding | Result | Evidence |
-|---------|--------|----------|
-| Tool calling | 0%→92% JSON validity | Qwen2.5-1.5B |
-| Multi-turn | 0.72→0.91 quality | Qwen2.5-3B |
-| Code gen | 32%→40% HumanEval | Qwen3-8B |
-| GSM8K train reward | 30.0% ± 2.5% (3 seeds) | Qwen3-8B |
-| Capacity threshold | 3B fails, 8B succeeds | Multi-model |
-| Synthetic gap | 3-8x easier than real | xlam-60k |
+| Finding | Result | Evidence | Caveat |
+|---------|--------|----------|--------|
+| Tool calling | 0%→92% JSON validity | Qwen2.5-1.5B | custom internal tool-calling setup |
+| Multi-turn | 0.72→0.91 quality | Qwen2.5-3B | custom internal / judge-derived scenario score |
+| Code gen | 32%→40% HumanEval | Qwen3-8B | preliminary 50-problem subset, not full canonical harness |
+| GSM8K training-set reward | 30.0% ± 2.5% (3 seeds) | Qwen3-8B | not held-out test accuracy |
+| Capacity threshold | 3B fails, 8B succeeds | Multi-model | currently setup-specific; exploration confounds remain |
+| Synthetic gap | 3-8x easier than real | xlam-60k | depends on custom schema distribution |
 
 ## Notes for Authors
 
 - Paper should focus on empirical findings, not theoretical contributions
-- Emphasize reproducibility (Tinker SDK, checkpoints available)
+- Emphasize reproducibility carefully (Tinker SDK, released scripts/configs, and explicit checkpoint availability status)
 - Highlight novel findings (capacity threshold, MoE volatility, two-phase learning)
-- Acknowledge limitations honestly
+- Acknowledge limitations honestly, especially custom internal tool scores, the 50-problem HumanEval subset, and training-set math metrics vs held-out evaluation

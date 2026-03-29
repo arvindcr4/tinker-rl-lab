@@ -1,0 +1,1 @@
+{"run":56,"commit":"c5ae98a","metric":0,"metrics":{"total_checks":30,"resolved":30,"evals_running":7},"status":"keep","description":"max parallelism: 7 x 100-problem held-out evals running (5 GRPO seeds + base + 4B) via Tinker API","timestamp":1774759294,"segment":8}

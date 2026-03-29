@@ -1,0 +1,65 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Complete Training Run Registry}{1}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Tool-Use Experiments (Tinker Cloud GPU, Qwen3-8B)}{1}{subsection.1.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Complete tool-use GRPO runs on Tinker (Qwen3-8B, LoRA rank 32). All runs use Adam optimizer ($\beta _1$=0.9, $\beta _2$=0.95, $\epsilon $=1e-8), max sequence 1024 input / 512 generation.\relax }}{1}{table.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:tool_runs}{{1}{1}{Complete tool-use GRPO runs on Tinker (Qwen3-8B, LoRA rank 32). All runs use Adam optimizer ($\beta _1$=0.9, $\beta _2$=0.95, $\epsilon $=1e-8), max sequence 1024 input / 512 generation.\relax }{table.caption.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}GSM8K Mathematical Reasoning Experiments (Tinker, Qwen3-8B)}{1}{subsection.1.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Complete GSM8K GRPO runs on Tinker. Multi-seed replication (Qwen3-8B), LoRA rank ablation, and 4B scaling experiment. All metrics are training-set reward.\relax }}{1}{table.caption.2}\protected@file@percent }
+\newlabel{tab:gsm8k_runs}{{2}{1}{Complete GSM8K GRPO runs on Tinker. Multi-seed replication (Qwen3-8B), LoRA rank ablation, and 4B scaling experiment. All metrics are training-set reward.\relax }{table.caption.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Local QLoRA experiments on Google Colab (T4 GPU, 16GB VRAM).\relax }}{2}{table.caption.3}\protected@file@percent }
+\newlabel{tab:colab_runs}{{3}{2}{Local QLoRA experiments on Google Colab (T4 GPU, 16GB VRAM).\relax }{table.caption.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Google Colab QLoRA Experiments}{2}{subsection.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Training Hyperparameters}{2}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Tinker Cloud GPU Configuration}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Tinker SDK hyperparameters for all GRPO runs.\relax }}{2}{table.caption.4}\protected@file@percent }
+\newlabel{tab:tinker_hyperparams}{{4}{2}{Tinker SDK hyperparameters for all GRPO runs.\relax }{table.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}LoRA Configuration}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Failure Case Analysis}{2}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Three-Billion Parameter Failure Mode}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces LoRA adapter targets and ranks used across experiments.\relax }}{3}{table.caption.5}\protected@file@percent }
+\newlabel{tab:lora_config}{{5}{3}{LoRA adapter targets and ranks used across experiments.\relax }{table.caption.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Zero-loss step percentage across model sizes (lower is better).\relax }}{3}{table.caption.6}\protected@file@percent }
+\newlabel{tab:zero_loss}{{6}{3}{Zero-loss step percentage across model sizes (lower is better).\relax }{table.caption.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Comprehensive Zero-Loss Dynamics Across All GSM8K Runs}{3}{subsection.3.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Zero-loss and zero-reward dynamics across all GSM8K GRPO runs. Zero-loss indicates all-same-reward groups (no gradient signal). Zero-reward indicates all-incorrect completions. 3B data from Colab; 4B and 8B from Tinker.\relax }}{4}{table.caption.7}\protected@file@percent }
+\newlabel{tab:zero_loss_comprehensive}{{7}{4}{Zero-loss and zero-reward dynamics across all GSM8K GRPO runs. Zero-loss indicates all-same-reward groups (no gradient signal). Zero-reward indicates all-incorrect completions. 3B data from Colab; 4B and 8B from Tinker.\relax }{table.caption.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Qwen3-30B-MoE Volatility Analysis}{4}{subsection.3.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces MoE vs. Dense training stability comparison.\relax }}{4}{table.caption.8}\protected@file@percent }
+\newlabel{tab:moe_volatility}{{8}{4}{MoE vs. Dense training stability comparison.\relax }{table.caption.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Policy Entropy, KL, and Group-Composition Diagnostics}{4}{subsection.3.4}\protected@file@percent }
+\newlabel{sec:diagnostics_table}{{3.4}{4}{Policy Entropy, KL, and Group-Composition Diagnostics}{subsection.3.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Diagnostic telemetry from arithmetic GRPO training (Qwen3-8B, 100 steps, G=4). Entropy, KL, and group composition are logged per step; selected milestones shown.\relax }}{5}{table.caption.9}\protected@file@percent }
+\newlabel{tab:diagnostics}{{9}{5}{Diagnostic telemetry from arithmetic GRPO training (Qwen3-8B, 100 steps, G=4). Entropy, KL, and group composition are logged per step; selected milestones shown.\relax }{table.caption.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}MBPP Evaluation Failure}{5}{subsection.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Additional Experimental Details}{6}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Reward Function Weighting Rationale}{6}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Evaluation Protocol Limitations}{6}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Multi-Turn Tool Calling Reward Breakdown}{6}{subsection.4.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Multi-turn tool calling reward components.\relax }}{6}{table.caption.10}\protected@file@percent }
+\newlabel{tab:multiturn_reward}{{10}{6}{Multi-turn tool calling reward components.\relax }{table.caption.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Qualitative Examples}{7}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Successful Tool Call (Post-GRPO)}{7}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Failed Tool Call (Pre-GRPO, Plain Text)}{7}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Two-Phase Learning Trajectory (Representative)}{7}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Platform and Compute Costs}{8}{section.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Compute platform usage and estimated costs.\relax }}{8}{table.caption.11}\protected@file@percent }
+\newlabel{tab:compute}{{11}{8}{Compute platform usage and estimated costs.\relax }{table.caption.11}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces Estimated per-run compute budgets for representative experiments. Token estimates assume batch\_size=2, group\_size as configured, max\_generation=512 tokens. Wall-clock times are from logged telemetry where available; others are estimated from Tinker billing.\relax }}{8}{table.caption.12}\protected@file@percent }
+\newlabel{tab:per_run_budget}{{12}{8}{Estimated per-run compute budgets for representative experiments. Token estimates assume batch\_size=2, group\_size as configured, max\_generation=512 tokens. Wall-clock times are from logged telemetry where available; others are estimated from Tinker billing.\relax }{table.caption.12}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Code and Reproducibility}{8}{section.7}\protected@file@percent }
+\gdef \@abspage@last{9}

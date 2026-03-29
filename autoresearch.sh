@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 set -euo pipefail
-python capstone_claim_audit.py
+python abstract_scope_audit.py

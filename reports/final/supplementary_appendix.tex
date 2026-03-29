@@ -184,6 +184,38 @@ This volatility stems from MoE routing: different experts activate for different
     \label{tab:moe_volatility}
 \end{table}
 
+\subsection{Policy Entropy, KL, and Group-Composition Diagnostics}
+\label{sec:diagnostics_table}
+
+The arithmetic task provides the richest telemetry logged during GRPO training. Table~\ref{tab:diagnostics} summarizes key diagnostic metrics at milestone training steps. Policy entropy collapses by $>$3 orders of magnitude (0.773 $\rightarrow$ 0.0002) within 12 steps, while KL to the training policy remains near zero throughout, indicating the model converges to a near-deterministic policy without drifting far from initialization. Group composition shifts from 81\% mixed groups at step 0 (productive gradient signal) to $>$96\% all-good groups by step 4 (saturated learning, diminishing returns).
+
+\begin{table}[htbp]
+    \centering
+    \caption{Diagnostic telemetry from arithmetic GRPO training (Qwen3-8B, 100 steps, G=4). Entropy, KL, and group composition are logged per step; selected milestones shown.}
+    \begin{tabular}{rcccccc}
+        \toprule
+        Step & Reward & Entropy & KL (v1) & Frac Mixed & Frac All Good & Frac All Bad \\
+        \midrule
+        0  & 0.676 & 0.773   & 5.7e-4  & 0.81 & 0.19 & 0.00 \\
+        1  & 0.795 & 0.586   & 6.3e-4  & 0.62 & 0.37 & 0.01 \\
+        2  & 0.933 & 0.228   & $-$1.4e-4 & 0.36 & 0.64 & 0.00 \\
+        4  & 0.999 & 0.030   & 9.7e-5  & 0.04 & 0.96 & 0.00 \\
+        7  & 0.990 & 0.004   & 3.0e-5  & 0.00 & 0.99 & 0.01 \\
+        11 & 1.000 & 2.5e-4  & $-$6.6e-6 & 0.00 & 1.00 & 0.00 \\
+        19 & 0.998 & 0.006   & $-$4.5e-5 & 0.01 & 0.99 & 0.00 \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:diagnostics}
+\end{table}
+
+\textbf{Key observations:}
+\begin{itemize}
+    \item \textbf{Entropy collapse:} 0.773 $\rightarrow$ 0.0002 (3,865$\times$ reduction) in $\sim$12 steps. Without explicit entropy regularization, the policy becomes near-deterministic, which limits further exploration.
+    \item \textbf{KL remains near zero:} KL divergence to the initial training policy oscillates around $\pm$0.001 nats, indicating no KL anchor was needed for this short horizon / easy task. Longer or harder tasks may require explicit KL regularization.
+    \item \textbf{Group saturation:} Once frac\_all\_good exceeds 0.95, within-group variance drops, advantages shrink, and effective learning rate diminishes (the ``zero-advantage'' regime). This provides a natural stopping criterion.
+    \item \textbf{Missing for GSM8K/MATH:} Comparable entropy/KL/group-composition metrics were \emph{not logged} for the main GSM8K and MATH experiments (Tinker SDK did not expose these in the training loop). Adding this telemetry is a Phase 1 priority in our experimental roadmap (Section~\ref{sec:future_plan}).
+\end{itemize}
+
 \subsection{MBPP Evaluation Failure}
 
 The MBPP (Mostly Basic Python Problems) benchmark produced 0\% pass rate across all runs due to an output parsing bug in the evaluation script. The script expected a specific JSON format for extracted answers but the model output format differed, preventing correct answer matching.

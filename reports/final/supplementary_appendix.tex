@@ -50,18 +50,26 @@
 
 \begin{table}[htbp]
     \centering
-    \caption{Complete GSM8K GRPO runs on Tinker (Qwen3-8B). Multi-seed replication and LoRA rank ablation series.}
-    \begin{tabular}{llcccccc}
+    \caption{Complete GSM8K GRPO runs on Tinker. Multi-seed replication (Qwen3-8B), LoRA rank ablation, and 4B scaling experiment. All metrics are training-set reward.}
+    \begin{tabular}{lllcccccc}
         \toprule
-        Run ID & Seed & Rank & LR & Steps & Peak Acc & Last-10 Acc \\
+        Run ID & Model & Seed & Rank & LR & Steps & Peak & Last-10 \\
         \midrule
-        5db4e965 & 137 & 32 & 3e-5 & 50 & 62.5\% & 27.5\% \\
-        aabb48cb & 256 & 32 & 3e-5 & 50 & 62.5\% & 32.5\% \\
-        99971b26 & 512 & 32 & 3e-5 & 50 & 87.5\% & 30.0\% \\
-        ba2a1694 & 42 & 8 & 3e-5 & 50 & 62.5\% & 21.2\% \\
-        92ebcc48 & 42 & 16 & 3e-5 & 50 & 75.0\% & 18.8\% \\
-        9219771c & 42 & 64 & 3e-5 & 50 & 87.5\% & 25.0\% \\
-        1cc20cec & 42 & 32 & 5e-6 & 100 & 75.0\% & 27.5\% \\
+        \multicolumn{8}{l}{\emph{Multi-seed replication (Qwen3-8B, rank 32)}} \\
+        899d909e & Qwen3-8B & 42 & 32 & 3e-5 & 50 & 62.5\% & 27.5\% \\
+        5db4e965 & Qwen3-8B & 137 & 32 & 3e-5 & 50 & 62.5\% & 27.5\% \\
+        aabb48cb & Qwen3-8B & 256 & 32 & 3e-5 & 50 & 62.5\% & 32.5\% \\
+        99971b26 & Qwen3-8B & 512 & 32 & 3e-5 & 50 & 87.5\% & 30.0\% \\
+        b3ba8df6 & Qwen3-8B & 999 & 32 & 3e-5 & 50 & 87.5\% & 35.0\% \\
+        \midrule
+        \multicolumn{8}{l}{\emph{LoRA rank ablation (Qwen3-8B, seed 42)}} \\
+        ba2a1694 & Qwen3-8B & 42 & 8 & 3e-5 & 50 & 62.5\% & 21.2\% \\
+        92ebcc48 & Qwen3-8B & 42 & 16 & 3e-5 & 50 & 75.0\% & 18.8\% \\
+        9219771c & Qwen3-8B & 42 & 64 & 3e-5 & 50 & 87.5\% & 25.0\% \\
+        \midrule
+        \multicolumn{8}{l}{\emph{Extended run and scaling}} \\
+        1cc20cec & Qwen3-8B & 42 & 32 & 5e-6 & 100 & 75.0\% & 27.5\% \\
+        566747c0 & Qwen3.5-4B & 137 & 32 & 3e-5 & 50 & 100\% & 82.5\% \\
         \bottomrule
     \end{tabular}
     \label{tab:gsm8k_runs}

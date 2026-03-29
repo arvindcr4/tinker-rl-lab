@@ -147,6 +147,32 @@ These choices prioritize low-cost iteration rather than maximal stability. In pa
     \label{tab:models}
 \end{table}
 
+\subsection{Datasets and Splits}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Dataset sizes, composition, and evaluation splits per domain.}
+    \begin{tabular}{llccl}
+        \toprule
+        Domain & Dataset & Train Size & Eval Split & Eval Protocol \\
+        \midrule
+        Tool (single) & Glaive-v2 & 500 SFT + 200 RL & Train rollouts & Custom rubric \\
+        Tool (multi) & ToolBench-v1 & 40 scenarios & Train rollouts & Custom rubric \\
+        Tool (real) & xlam-60k & 60,000 schemas & Train rollouts & Reward only \\
+        Code & HumanEval & 164 total & 50-item subset & pass@1 \\
+        Math (GSM8K) & GSM8K & 7,473 train & Train rollouts & Binary reward \\
+        Math (MATH) & MATH & 7,500 train & Train rollouts & Binary reward \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:datasets}
+\end{table}
+
+\textbf{Important:} For math and tool-use domains, reported metrics are computed on \emph{training-prompt rollouts} (fresh samples from the training distribution), not held-out test sets. Only the HumanEval code subset uses a benchmark test set. The GSM8K test set contains 1,319 held-out examples; evaluation on this split is pending and represents the most critical gap in our current evaluation.
+
+\subsection{Decoding and Evaluation Protocol}
+
+All GRPO training uses temperature $T=0.8$--$1.0$ with top-$p$ sampling for rollout generation. Reported ``accuracy'' values are binary reward means (1.0 = correct, 0.0 = incorrect) computed on fresh rollouts at the training temperature, \emph{not} greedy-decoded held-out test accuracy. For future held-out evaluation, we specify: greedy decoding ($T=0$), max 512 tokens, Qwen chat template, with pass@1 and bootstrapped 95\% CIs over the full test set.
+
 \subsection{Reward Functions}
 
 \textbf{Tool calling (3-component, 0--1):}
@@ -285,7 +311,9 @@ Higher rank correlates with faster initial learning (rank 64 achieves 47.5\% in 
 
 A capacity effect exists between 3B and 8B parameters for GRPO on GSM8K. Dense 3B models (Llama-3.2-3B) fail to learn, achieving only 0.78\%$\rightarrow$2.34\% accuracy over 50 steps, while 8B models improve substantially on the same training-prompt reward metric. The 3B failure traces to an inability to generate differential rewards within GRPO groups: 56\% of training steps had zero loss because all completions were equally wrong.
 
-However, this should be read as a \emph{capacity-plus-exploration} observation rather than a pure parameter-count theorem. The 3B failure may be confounded by reward sparsity, small group size, and limited exploration under our chosen temperatures. We did not run the decisive rescue ablations proposed by reviewers---larger group size (e.g., G=32--64), broader temperature sweeps, or curriculum learning---so the present evidence does not isolate capacity from exploration effects.
+We quantify the failure mechanism via group-composition analysis from available training logs. On an arithmetic task with rich telemetry, an 8B model shows rapid progression from 81\% mixed groups (step 0) to 96\%+ all-good groups (step 4), with frac\_all\_bad never exceeding 1\%. Policy entropy collapses from 0.773 to 0.0002 over 20 steps, indicating convergence. By contrast, 3B models on GSM8K show 56\% zero-reward steps (all completions wrong $\Rightarrow$ zero within-group variance $\Rightarrow$ skipped updates), with up to 5 consecutive zero-signal steps.
+
+However, this should be read as a \emph{capacity-plus-exploration} observation rather than a pure parameter-count theorem. The 3B failure may be confounded by reward sparsity, small group size (G=4--16), and limited exploration under fixed temperature. The decisive rescue ablations---larger group size (e.g., G=32--64 as in DeepSeek-style setups), broader temperature sweeps ($T \in \{0.7, 1.0, 1.3, 1.5\}$), and curriculum learning (easy-to-hard schedules)---were not run, so the present evidence does not isolate capacity from exploration effects. Literature suggests curriculum strategies consistently help sub-7B models overcome cold-start barriers \citep{parashar2025curriculum, chen2025selfevolving}.
 
 \subsection{Synthetic vs. Real Data Gap}
 
@@ -308,9 +336,53 @@ Across all domains, our reporting should be interpreted with the underlying data
 % ===========================================================================
 \section{Related Work}
 
-GRPO was introduced by \citet{shao2024deepseekmath} who achieved 88.2\% on GSM8K with a 7B model using group size G=64. \citet{lai2024stepdpo} demonstrated step-wise preference optimization achieving +3\% on MATH for large models. \citet{li2024common7b} showed LLaMA-2-7B reaches 82.6\% GSM8K with synthetic SFT alone. Our work extends these findings to smaller models (0.5B--8B) and multiple task domains, providing systematic empirical characterization of GRPO's failure modes and scaling properties.
+\paragraph{GRPO and critic-free RL.}
+GRPO was introduced by \citet{shao2024deepseekmath} who achieved 88.2\% on GSM8K with a 7B model using group size G=64. Several contemporary methods also eliminate the critic: RLOO \citep{ahmadian2024backtobasics} uses a leave-one-out baseline and matches PPO in stability for some RLHF tasks, while REINFORCE++ \citep{hu2025reinforceplusplus} adds KL-shaped, z-scored advantages. Step-wise variants address GRPO's coarse sequence-level credit assignment: S-GRPO \citep{shen2025sgrpo} down-weights imbalanced groups to reduce noise, and StepGRPO \citep{huang2025stepgrpo} introduces dense intermediate rewards per reasoning step. We do not yet compare empirically to these alternatives; doing so is a priority for future work.
 
-We also note several comparison families that are directly relevant but not yet empirically included here: tool-use reward modeling and evaluation frameworks such as ToolRM and FC-RewardBench, proxy-state multi-turn evaluation, critic-free baselines such as RLOO / REINFORCE++, step-wise GRPO variants such as S-GRPO, and the broader QLoRA-style PEFT efficiency literature. Our current positioning is therefore partial: we study a practical GRPO pipeline, but not yet against the full contemporary comparison set.
+\paragraph{Preference-based methods.}
+DPO \citep{rafailov2024dpo} and Step-DPO \citep{lai2024stepdpo} provide stable offline optimization without online rollouts. Step-DPO demonstrated $\sim$+3\% MATH gains for $>$70B models with as few as 10K step-wise preference pairs. \citet{li2024common7b} showed LLaMA-2-7B reaches 82.6\% GSM8K with synthetic SFT alone. These methods establish efficiency baselines that calibrate whether GRPO's online exploration is necessary at small scale.
+
+\paragraph{Tool-use evaluation.}
+Tool-calling evaluation has advanced rapidly: ToolRM \citep{wang2025toolrm} provides outcome reward models for structured tool-call assessment, and FC-RewardBench \citep{chen2025fcrewardbench} offers pairwise discrimination benchmarks for single-turn function calling. For multi-turn evaluation, proxy-state frameworks \citep{liu2025proxystate} judge tool-chaining quality via final-state inspection with LLM judges, providing hallucination diagnostics absent from our custom rubric. Our tool-calling scores (0.72--0.92) use a hand-authored scenario set without these standardized evaluators; adopting them would strengthen reproducibility.
+
+\paragraph{Curriculum and exploration for small models.}
+Curriculum-learning strategies consistently help sub-7B models overcome cold-start and sparse-reward barriers: easy-to-hard schedules \citep{parashar2025curriculum}, adaptive bandit curricula \citep{chen2025selfevolving}, and progressive length constraints \citep{hammoud2025trainlong} all yield measurable gains over random training. These approaches are directly relevant to our 3B failure mode (Section~\ref{sec:capacity}).
+
+\paragraph{Parameter-efficient fine-tuning.}
+Our QLoRA baseline \citep{dettmers2023qlora} enables single-GPU training via NF4 quantization. Newer methods target different efficiency frontiers: QR-Adaptor \citep{zhou2025qradaptor} jointly optimizes per-layer bitwidth and LoRA rank (+4.89\% GSM8K over prior quantized-LoRA), while LoTA-QAF \citep{chen2025lotaqaf} provides losslessly mergeable ternary adapters with 1.7--2.0$\times$ inference speedups. We retain QLoRA as our primary low-friction choice but note that a bounded comparison to these alternatives would sharpen efficiency claims.
+
+Our work extends these findings to smaller models (0.5B--8B) and multiple task domains, providing systematic empirical characterization of GRPO's failure modes and scaling properties. Our current positioning is partial: we study a practical GRPO pipeline but not yet against the full contemporary comparison set outlined above.
+
+% ===========================================================================
+% Future Experiments and Evaluation Plan
+% ===========================================================================
+\section{Planned Experiments and Standardized Evaluation Roadmap}
+\label{sec:future_plan}
+
+We outline a concrete experimental plan to address the evaluation and ablation gaps identified above, organized by priority.
+
+\paragraph{Phase 1: Held-out evaluation (immediate).}
+(a)~Recover trained LoRA adapters from Tinker checkpoints and evaluate on the full GSM8K test set (1,319 examples) with greedy decoding, reporting pass@1 with bootstrapped 95\% CIs over 3+ seeds.
+(b)~Evaluate on MATH test set (5,000 examples) for transfer assessment.
+(c)~Relabel all existing figures as ``training-set reward'' and add paired test-set plots.
+
+\paragraph{Phase 2: Exploration and sparsity ablations.}
+(a)~Group size sweep: $G \in \{16, 32, 64, 128\}$ on GSM8K for both 3B and 8B models, measuring zero-advantage fraction and reward density per group size.
+(b)~Temperature sweep: $T \in \{0.7, 1.0, 1.3, 1.5\}$ to probe whether higher sampling temperatures rescue 3B learning.
+(c)~Lightweight KL anchoring: $\beta \in \{0.01, 0.05, 0.1\}$ with logged KL/entropy trajectories.
+(d)~Curriculum: easy-to-hard schedules on GSM8K sorted by solution length.
+
+\paragraph{Phase 3: Standardized benchmarks and baselines.}
+(a)~Tool calling: adopt FC-RewardBench-style pairwise discrimination and proxy-state final-answer evaluation with LLM judges; report judge reliability.
+(b)~Code generation: run canonical HumanEval (164 problems) and MBPP harnesses with pass@1/pass@$k$ and 95\% CIs.
+(c)~Baselines: add SFT-only, DPO, and (if feasible) RLOO/REINFORCE++ under matched compute budgets.
+
+\paragraph{Phase 4: MoE and PEFT diagnostics.}
+(a)~MoE routing telemetry: router entropy, per-expert load coefficient of variation, router-shift ratio.
+(b)~LoRA rank ablation: $r \in \{8, 16, 32, 64\}$ with memory/throughput/accuracy reported side-by-side.
+(c)~Bounded comparison to QR-Adaptor or LoTA-QAF on one model/task pair.
+
+Estimated scope: $\sim$20--30 runs over 4--6 weeks, \$500--\$1000 in compute. Phases 1--2 can begin immediately from existing checkpoints and logs.
 
 % ===========================================================================
 % Conclusion

@@ -101,6 +101,7 @@ Note: `supplementary_appendix.tex` is a standalone document and should be compil
 - [ ] No identifying information in acknowledgments
 - [ ] Git history does not reveal authors (create fresh clone)
 - [ ] Do not include generated build artifacts (`.aux`, `.log`, `.out`, compiled PDFs) in the submission package
+- [ ] Run `python run_all_audits.py` before exporting the final blind-review package
 
 ---
 

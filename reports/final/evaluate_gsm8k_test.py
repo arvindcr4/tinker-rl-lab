@@ -92,7 +92,11 @@ def load_model(args):
         
         svc = T.ServiceClient()
         if args.run_id:
-            checkpoint_path = f"tinker://{args.run_id}/sampler_weights/final"
+            # Run IDs from training logs include :train:0 suffix for the training shard
+            run_id = args.run_id
+            if ":train:" not in run_id:
+                run_id = f"{run_id}:train:0"
+            checkpoint_path = f"tinker://{run_id}/sampler_weights/final"
             client = svc.create_sampling_client(model_path=checkpoint_path)
         else:
             client = svc.create_sampling_client(base_model=args.model_name)

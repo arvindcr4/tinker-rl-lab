@@ -5,10 +5,10 @@ Systematically address all reviewer issues from the Discovery Report on the GRPO
 
 ## Metrics
 - **Primary**: reviewer_issues (count, lower is better) — from paper_improvement_audit.py (30 checks)
-- **Secondary**: claim_issues (from submission_claim_audit.py), total_checks, resolved
+- **Secondary**: suite_issues (from run_all_audits.py), claim_issues, total_checks, resolved
 
 ## How to Run
-`./autoresearch.sh` — outputs `METRIC name=number` lines.
+`./autoresearch.sh` — currently runs `python run_all_audits.py` and outputs `METRIC name=number` lines.
 
 ## Files in Scope
 - `reports/final/grpo_agentic_llm_paper.tex` — Main conference paper
@@ -19,6 +19,7 @@ Systematically address all reviewer issues from the Discovery Report on the GRPO
 - `paper_improvement_audit.py` — 30-check reviewer issue audit
 - `paper_plan_audit.py` — Same audit (alternative name)
 - `submission_claim_audit.py` — Claim consistency audit for ancillary docs
+- `run_all_audits.py` — Unified suite for all paper/submission hygiene audits
 
 ## Off Limits
 - `experiments/` — existing experiment data (read-only for analysis)

@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 set -euo pipefail
-python claim_strength_audit.py
+python paper_improvement_audit.py

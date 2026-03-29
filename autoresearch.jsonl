@@ -59,3 +59,5 @@
 {"type":"config","name":"Blind-review package guidance completeness","metricName":"blind_package_issues","metricUnit":"issues","bestDirection":"lower"}
 {"run":28,"commit":"fedefc2","metric":0,"metrics":{},"status":"keep","description":"Added a blind-review package audit and clarified in the submission docs that blind-review bundles should use the anonymized paper source/package and exclude the non-anonymous paper source.","timestamp":1774755067237,"segment":18,"confidence":null,"iterationTokens":1289}
 {"type":"config","name":"Unified audit suite includes blind-review package checks","metricName":"suite_issues","metricUnit":"issues","bestDirection":"lower"}
+{"run":29,"commit":"1d35882","metric":0,"metrics":{},"status":"keep","description":"Extended the unified audit suite with blind-review package checks and confirmed all 11 paper/submission hygiene audits now pass together, including anonymized-bundle guidance.","timestamp":1774755086115,"segment":19,"confidence":null,"iterationTokens":102}
+{"type":"config","name":"Blind-review export workflow implementation","metricName":"export_issues","metricUnit":"issues","bestDirection":"lower"}

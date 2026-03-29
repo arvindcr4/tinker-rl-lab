@@ -45,7 +45,7 @@ reports/final/
 3. [ ] **Tool-calling protocol disclosure:** Document schemas, prompts, rubric, and judge details; add standardized benchmark if possible
 4. [ ] **Code-generation standardization:** Re-run full HumanEval/MBPP harness with pass@k and confidence intervals
 5. [ ] **Methods/evaluation tables:** Add splits, budgets, decoding settings, seeds, and verifier/judge details
-6. [ ] **Anonymous submission:** Create anonymized version of LaTeX paper and use the anonymized paper source/package for blind-review bundles
+6. [ ] **Anonymous submission:** Create anonymized version of LaTeX paper, use the anonymized paper source/package for blind-review bundles, and export with `python reports/final/prepare_blind_review_package.py --force`
 7. [ ] **Review page count:** Ensure within 9-page limit
 8. [ ] **Figure captions:** Add clear, informative captions
 9. [ ] **Supplementary appendix:** Add any additional experiments

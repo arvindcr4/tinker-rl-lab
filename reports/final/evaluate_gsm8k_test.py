@@ -48,26 +48,61 @@ def setup_argparse():
     parser.add_argument("--temperature", type=float, default=0.0, help="Sampling temperature (default: greedy evaluation)")
     parser.add_argument("--do_sample", action="store_true", help="Enable stochastic sampling instead of greedy decoding")
     parser.add_argument("--seed", type=int, default=0, help="Random seed for reproducibility")
-    parser.add_argument("--max_tokens", type=int, default=512, help="Max tokens to generate")
+    parser.add_argument("--max_tokens", type=int, default=2048, help="Max tokens to generate (2048 for CoT models)")
     parser.add_argument("--output", type=str, default="gsm8k_test_results.json", help="Output file")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of test examples")
     parser.add_argument("--split", type=str, default="test", choices=["test"], help="Dataset split to evaluate (locked to held-out test for integrity)")
     return parser
 
 def extract_answer(text: str) -> Optional[str]:
-    """Extract final numeric answer from response using GSM8K format."""
+    """Extract final numeric answer from response.
+
+    Handles multiple output formats:
+    - GSM8K standard: #### <number>
+    - LaTeX boxed: \\boxed{<number>}
+    - Explicit statement: "the answer is <number>"
+    - Qwen3 <think> reasoning: looks for the last numeric conclusion
+    """
+    # Strip <think>...</think> wrapper if present — answer is usually restated after
+    # or at the end of reasoning
+    clean = text
+    # If there's content after </think>, prefer that
+    think_end = text.find('</think>')
+    if think_end != -1:
+        after_think = text[think_end + 8:].strip()
+        if after_think:
+            clean = after_think  # Use post-thinking answer
+
     # GSM8K format: answer ends with "#### <number>"
-    match = re.search(r'####\s*(-?\d+\.?\d*)', text)
+    match = re.search(r'####\s*(-?\d[\d,]*\.?\d*)', clean)
     if match:
-        return match.group(1)
+        return match.group(1).replace(',', '')
 
-    boxed = re.search(r'\\boxed\{\s*(-?\d+\.?\d*)\s*\}', text)
+    boxed = re.search(r'\\boxed\{\s*(-?\d[\d,]*\.?\d*)\s*\}', clean)
     if boxed:
-        return boxed.group(1)
+        return boxed.group(1).replace(',', '')
 
-    explicit = re.search(r'(?i)(?:final answer|answer)\s*(?:is|:)\s*(-?\d+\.?\d*)\b', text)
+    # "the answer is X" / "answer: X" patterns
+    explicit = re.search(r'(?i)(?:the\s+)?(?:final\s+)?answer\s*(?:is|:|=)\s*\$?\s*(-?\d[\d,]*\.?\d*)', clean)
     if explicit:
-        return explicit.group(1)
+        return explicit.group(1).replace(',', '')
+
+    # "= X cups/dollars/etc" at end of reasoning — take the last "= <number>"
+    equals_matches = re.findall(r'=\s*(-?\d[\d,]*\.?\d*)\s*(?:cups?|dollars?|\$|%|items?|people|hours?|minutes?|days?|miles?|meters?|kg|lbs?|pounds?|gallons?|liters?|feet|inches|years?|months?|weeks?|seconds?|cents?|\.?\s*$)', clean, re.I)
+    if equals_matches:
+        return equals_matches[-1].replace(',', '')
+
+    # Last resort: search the FULL text (including <think>) for the patterns above
+    if clean != text:
+        # Try "the answer is X" in the thinking section
+        explicit_full = re.search(r'(?i)(?:the\s+)?(?:final\s+)?answer\s*(?:is|:|=|would be)\s*\$?\s*(-?\d[\d,]*\.?\d*)', text)
+        if explicit_full:
+            return explicit_full.group(1).replace(',', '')
+
+        # "So, X cups/dollars" pattern common in Qwen3 reasoning
+        so_pattern = re.findall(r'(?i)(?:so|therefore|thus|hence),?\s*(?:the\s+)?(?:answer\s+is\s+)?(?:it\s+(?:is|would be)\s+)?\$?\s*(-?\d[\d,]*\.?\d*)\s*(?:cups?|dollars?|\$|%|items?|people|hours?|minutes?|days?|miles?|meters?|kg|lbs?|pounds?|gallons?|liters?|feet|inches|years?|months?|weeks?|seconds?|cents?)', text)
+        if so_pattern:
+            return so_pattern[-1].replace(',', '')
 
     return None
 

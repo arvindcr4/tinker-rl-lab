@@ -151,13 +151,35 @@ def audit_paper() -> dict:
     if not re.search(r'Entropy.*KL.*(?:table|diagnostic)|diagnostic.*telemetry', appendix, re.I):
         issues["T2_diagnostics_table"] = "Appendix missing diagnostics table with entropy/KL data"
 
+    # === Tier 3: Questions for Authors / deeper rigor ===
+
+    # 26. Tool-calling scoring protocol explained
+    if not re.search(r'(?:custom|hand[- ]authored).*(?:rubric|scenario)|scoring.*(?:protocol|rubric)', full, re.I):
+        issues["T3_scoring_protocol"] = "Tool-calling scoring protocol not explained (rubric, judge type)"
+
+    # 27. SFT baseline 0% JSON validity explained
+    if not re.search(r'SFT.*(?:plain text|never.*tool|0%.*JSON)', full, re.I):
+        issues["T3_sft_baseline"] = "SFT 0% JSON validity not explained (format, decoding, parser)"
+
+    # 28. 50-problem subset rationale
+    if not re.search(r'50[- ]problem.*(?:subset|reason|chose|limit)', full, re.I):
+        issues["T3_humaneval_subset"] = "50-problem HumanEval subset choice not explained"
+
+    # 29. Exact training prompts per domain documented
+    if not re.search(r'(?:prompt|template).*(?:format|example)|chat.*template', full, re.I):
+        issues["T3_prompt_format"] = "Exact prompt templates not documented per domain"
+
+    # 30. Repeated tool-call penalty mechanism explained
+    if not re.search(r'-0\.30.*(?:penalty|repeated)|penalty.*repeated.*tool', full, re.I):
+        issues["T3_penalty_mechanism"] = "Repeated tool-call penalty mechanism not explained"
+
     return issues
 
 
 def main():
     issues = audit_paper()
     n = len(issues)
-    total_checks = 25
+    total_checks = 30
 
     print(f"METRIC reviewer_issues={n}")
     print(f"METRIC total_checks={total_checks}")

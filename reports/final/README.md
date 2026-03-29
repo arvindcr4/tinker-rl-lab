@@ -83,6 +83,12 @@ python run_all_audits.py
 
 This verifies the paper, capstone, submission docs, anonymization hygiene, held-out-evaluation readiness, claim strength, packaging checks, and submission-workflow checks in one pass.
 
+For blind-review export, you can generate a clean bundle with:
+
+```bash
+python reports/final/prepare_blind_review_package.py --force
+```
+
 ## Authors
 
 Arvind C R, Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L, Dhruva N Murthy, Mohammad Rafi  

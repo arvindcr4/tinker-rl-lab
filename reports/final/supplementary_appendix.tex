@@ -258,7 +258,7 @@ The arithmetic task provides the richest telemetry logged during GRPO training. 
     \item \textbf{Entropy collapse:} 0.773 $\rightarrow$ 0.0002 (3,865$\times$ reduction) in $\sim$12 steps. Without explicit entropy regularization, the policy becomes near-deterministic, which limits further exploration.
     \item \textbf{KL remains near zero:} KL divergence to the initial training policy oscillates around $\pm$0.001 nats, indicating no KL anchor was needed for this short horizon / easy task. Longer or harder tasks may require explicit KL regularization.
     \item \textbf{Group saturation:} Once frac\_all\_good exceeds 0.95, within-group variance drops, advantages shrink, and effective learning rate diminishes (the ``zero-advantage'' regime). This provides a natural stopping criterion.
-    \item \textbf{Missing for GSM8K/MATH:} Comparable entropy/KL/group-composition metrics were \emph{not logged} for the main GSM8K and MATH experiments (Tinker SDK did not expose these in the training loop). Adding this telemetry is a Phase 1 priority in our experimental roadmap (Section~\ref{sec:future_plan}).
+    \item \textbf{Missing for GSM8K/MATH:} Comparable entropy/KL/group-composition metrics were \emph{not logged} for the main GSM8K and MATH experiments (Tinker SDK did not expose these in the training loop). Adding this telemetry is a Phase 1 priority in our experimental roadmap (Section 7 of the main paper).
 \end{itemize}
 
 \subsection{MBPP Evaluation Failure}

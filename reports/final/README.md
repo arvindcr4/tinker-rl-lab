@@ -89,6 +89,8 @@ For blind-review export, you can generate a clean bundle with:
 python reports/final/prepare_blind_review_package.py --force
 ```
 
+By default, the export script runs `python run_all_audits.py` first and refuses to package files if the audit suite is failing.
+
 ## Authors
 
 Arvind C R, Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L, Dhruva N Murthy, Mohammad Rafi  

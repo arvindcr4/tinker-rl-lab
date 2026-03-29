@@ -105,7 +105,7 @@ Note: `supplementary_appendix.tex` is a standalone document and should be compil
 - [ ] Do not include generated build artifacts (`.aux`, `.log`, `.out`, compiled PDFs) in the submission package
 - [ ] Exclude the non-anonymous paper source from blind-review bundles
 - [ ] Run `python run_all_audits.py` before exporting the final blind-review package
-- [ ] Generate the export bundle with `python reports/final/prepare_blind_review_package.py --force`
+- [ ] Generate the export bundle with `python reports/final/prepare_blind_review_package.py --force` (this runs `python run_all_audits.py` first unless `--skip-audits` is explicitly used)
 
 ---
 

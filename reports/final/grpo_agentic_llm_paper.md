@@ -83,6 +83,8 @@ DeepSeekMath [Shao et al., 2024] reports GRPO improving a 7B model from 82.9% to
 
 Using Qwen2.5-1.5B-Instruct with 500 SFT + 200 GRPO prompts. These are **custom internal tool-calling evaluations**, not standardized benchmark results:
 
+The SFT baseline produced plain-text answers and never emitted a valid tool-call JSON under the standard chat-template prompt, which explains the 0% JSON validity baseline.
+
 | Metric | SFT Only | After GRPO | Change |
 |--------|----------|------------|--------|
 | JSON Valid | 0% | 92% | +92% |

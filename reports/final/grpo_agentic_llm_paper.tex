@@ -217,7 +217,7 @@ We first evaluate whether GRPO can teach models to output structured JSON tool c
     \label{tab:single_turn}
 \end{table}
 
-The SFT baseline's 0\% JSON validity is explained by the training data composition: the 500 SFT examples from Glaive-v2 included tool-use demonstrations, but the 1.5B model lacked the capacity to generalize the JSON format from limited supervised examples with standard chat-template prompting (Qwen \texttt{<|im\_start|>} format) and greedy decoding. The model defaulted to natural language responses in all evaluation rollouts. GRPO's reward signal (0.3 for valid JSON + 0.4 for correct tool + 0.3 for arguments) provided the direct optimization pressure that SFT's cross-entropy loss could not.
+The SFT baseline's 0\% JSON validity is explained by the training data composition: the 500 SFT examples from Glaive-v2 included tool-use demonstrations, but the 1.5B model lacked the capacity to generalize the JSON format from limited supervised examples with standard chat-template prompting (Qwen \texttt{<|im\_start|>} format) and greedy decoding. In practice, the SFT baseline produced plain-text answers and never emitted a valid tool-call JSON in evaluation rollouts. GRPO's reward signal (0.3 for valid JSON + 0.4 for correct tool + 0.3 for arguments) provided the direct optimization pressure that SFT's cross-entropy loss could not.
 
 \subsubsection{Multi-Turn Tool Chaining}
 

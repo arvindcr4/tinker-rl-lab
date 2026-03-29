@@ -153,7 +153,7 @@ We use cloud GPU infrastructure with custom GRPO loss implementation. Optimizer:
 
 \subsection{Tool Calling}
 
-Using Model B (1.5B) with 500 SFT + 200 GRPO prompts. These are custom internal tool-calling evaluations, not standardized benchmark results:
+Using Model B (1.5B) with 500 SFT + 200 GRPO prompts. These are custom internal tool-calling evaluations, not standardized benchmark results. The SFT baseline produced plain-text answers and never emitted a valid tool-call JSON under the standard chat-template prompt, which explains the 0\% JSON validity baseline:
 
 \begin{table}[htbp]
     \centering

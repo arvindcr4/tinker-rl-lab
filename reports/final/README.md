@@ -81,7 +81,7 @@ Before submission or export, run:
 python run_all_audits.py
 ```
 
-This verifies the paper, capstone, submission docs, anonymization hygiene, held-out-evaluation readiness, claim strength, and packaging checks in one pass.
+This verifies the paper, capstone, submission docs, anonymization hygiene, held-out-evaluation readiness, claim strength, packaging checks, and submission-workflow checks in one pass.
 
 ## Authors
 

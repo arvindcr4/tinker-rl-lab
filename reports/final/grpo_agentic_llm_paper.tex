@@ -345,13 +345,13 @@ On tool calling, synthetic 5-tool tasks saturate to reward >0.9 within 5 GRPO st
 
 \subsection{Two-Phase Learning Progression}
 
-GRPO training exhibits a characteristic two-phase pattern:
+On tool-calling tasks, GRPO training exhibits a characteristic two-phase pattern:
 \begin{itemize}
     \item \textbf{Phase 1 (Steps 1--20):} Model learns answer FORMAT compliance (0\%$\rightarrow$14\% accuracy)
     \item \textbf{Phase 2 (Steps 21--25):} Once format stabilizes, reasoning capability rapidly improves (14\%$\rightarrow$58\%)
 \end{itemize}
 
-This is analogous to curriculum learning without explicit curricula.
+This is analogous to curriculum learning without explicit curricula. However, we note that the two-phase pattern is most pronounced in tool-calling (where format compliance is a distinct, measurable sub-task) and in the arithmetic task (where format validity and correctness are separately tracked). On GSM8K, the pattern is less clear: breakpoints (first step with $>$50\% reward) vary from step 1 to step 10 across 5 seeds, and learning trajectories are noisy enough that a clean phase separation is not consistently identifiable. We therefore describe this as a \emph{domain-dependent} observation rather than a universal GRPO property.
 
 \subsection{Reward Function Limitations}
 

@@ -1,0 +1,61 @@
+This is BibTeX, Version 0.99d (TeX Live 2023)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: grpo_agentic_llm_paper.aux
+The style file: plainnat.bst
+Database file #1: references.bib
+Warning--empty journal in ahmadian2024backtobasics
+Warning--empty journal in chen2025fcrewardbench
+Warning--empty journal in chen2025selfevolving
+Warning--empty journal in chen2025lotaqaf
+Warning--empty journal in dettmers2023qlora
+Warning--empty journal in hammoud2025trainlong
+Warning--empty journal in hu2025reinforceplusplus
+Warning--empty journal in huang2025stepgrpo
+Warning--empty journal in liu2025proxystate
+Warning--empty journal in parashar2025curriculum
+Warning--empty journal in rafailov2024dpo
+Warning--empty journal in shen2025sgrpo
+Warning--empty journal in wang2025toolrm
+Warning--empty journal in zhou2025qradaptor
+You've used 17 entries,
+            2773 wiz_defined-function locations,
+            649 strings with 6931 characters,
+and the built_in function-call counts, 6104 in all, are:
+= -- 519
+> -- 359
+< -- 16
++ -- 127
+- -- 108
+* -- 368
+:= -- 999
+add.period$ -- 51
+call.type$ -- 17
+change.case$ -- 71
+chr.to.int$ -- 15
+cite$ -- 48
+duplicate$ -- 324
+empty$ -- 512
+format.name$ -- 141
+if$ -- 1264
+int.to.chr$ -- 3
+int.to.str$ -- 1
+missing$ -- 17
+newline$ -- 93
+num.names$ -- 68
+pop$ -- 186
+preamble$ -- 1
+purify$ -- 54
+quote$ -- 0
+skip$ -- 253
+stack$ -- 0
+substring$ -- 34
+swap$ -- 6
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 187
+warning$ -- 14
+while$ -- 51
+width$ -- 0
+write$ -- 197
+(There were 14 warnings)

@@ -1,0 +1,102 @@
+\begin{thebibliography}{17}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Ahmadian et~al.(2024)]{ahmadian2024backtobasics}
+Arash Ahmadian et~al.
+\newblock Back to basics: Revisiting reinforce style optimization for learning
+  from human feedback in llms.
+\newblock 2024.
+
+\bibitem[Chen et~al.(2025{\natexlab{a}})]{chen2025fcrewardbench}
+Hao Chen et~al.
+\newblock Fc-rewardbench: A benchmark for function calling reward models.
+\newblock 2025{\natexlab{a}}.
+
+\bibitem[Chen et~al.(2025{\natexlab{b}})]{chen2025selfevolving}
+Wei Chen et~al.
+\newblock Self-evolving curriculum for reinforcement learning in language
+  models.
+\newblock 2025{\natexlab{b}}.
+
+\bibitem[Chen et~al.(2025{\natexlab{c}})]{chen2025lotaqaf}
+Xiang Chen et~al.
+\newblock Lota-qaf: Lossless ternary adaptation via quantization-aligned
+  factorization.
+\newblock 2025{\natexlab{c}}.
+
+\bibitem[Dettmers et~al.(2023)Dettmers, Pagnoni, Holtzman, and
+  Zettlemoyer]{dettmers2023qlora}
+Tim Dettmers, Artidoro Pagnoni, Ari Holtzman, and Luke Zettlemoyer.
+\newblock Qlora: Efficient finetuning of quantized language models.
+\newblock 2023.
+
+\bibitem[Hammoud et~al.(2025)]{hammoud2025trainlong}
+Hadi Hammoud et~al.
+\newblock Train long, think short: Progressive length constraints for rl.
+\newblock 2025.
+
+\bibitem[Hu et~al.(2025)]{hu2025reinforceplusplus}
+Jian Hu et~al.
+\newblock Reinforce++: A simple and efficient approach for aligning large
+  language models.
+\newblock 2025.
+
+\bibitem[Huang et~al.(2025)]{huang2025stepgrpo}
+Yifan Huang et~al.
+\newblock Stepgrpo: Learning to reason with step-wise rewards.
+\newblock 2025.
+
+\bibitem[Lai et~al.(2024)]{lai2024stepdpo}
+Xianfeng Lai et~al.
+\newblock Step-dpo: Step-wise preference optimization for long-chain reasoning.
+\newblock \emph{arXiv preprint arXiv:2412.01939}, 2024.
+
+\bibitem[Li et~al.(2024)]{li2024common7b}
+Chong Li et~al.
+\newblock Common 7b language models already possess strong math capabilities.
+\newblock \emph{arXiv preprint arXiv:2403.04706}, 2024.
+
+\bibitem[Liu et~al.(2025)]{liu2025proxystate}
+Zhen Liu et~al.
+\newblock Proxy-state evaluation for multi-turn tool-augmented language models.
+\newblock 2025.
+
+\bibitem[Parashar et~al.(2025)]{parashar2025curriculum}
+Aneesh Parashar et~al.
+\newblock Curriculum reinforcement learning for language model reasoning.
+\newblock 2025.
+
+\bibitem[Rafailov et~al.(2024)]{rafailov2024dpo}
+Rafael Rafailov et~al.
+\newblock Direct preference optimization: Your language model is secretly a
+  reward model.
+\newblock 2024.
+
+\bibitem[Shao et~al.(2024)]{shao2024deepseekmath}
+Zhihong Shao et~al.
+\newblock Deepseekmath: Pushing the limits of mathematical reasoning in open
+  language models.
+\newblock \emph{arXiv preprint arXiv:2402.03300}, 2024.
+
+\bibitem[Shen et~al.(2025)]{shen2025sgrpo}
+Yilong Shen et~al.
+\newblock S-grpo: Mitigating think-answer mismatch in group relative policy
+  optimization.
+\newblock 2025.
+
+\bibitem[Wang et~al.(2025)]{wang2025toolrm}
+Yangjun Wang et~al.
+\newblock Toolrm: Outcome reward models for tool-augmented language models.
+\newblock 2025.
+
+\bibitem[Zhou et~al.(2025)]{zhou2025qradaptor}
+Yifan Zhou et~al.
+\newblock Qr-adaptor: Efficient fine-tuning of quantized language models via
+  joint rank-bitwidth optimization.
+\newblock 2025.
+
+\end{thebibliography}

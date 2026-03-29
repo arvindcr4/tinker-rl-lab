@@ -13,6 +13,7 @@ AUDITS = [
     'anonymization_repro_audit.py',
     'claim_strength_audit.py',
     'submission_package_audit.py',
+    'submission_workflow_audit.py',
 ]
 
 failures = []

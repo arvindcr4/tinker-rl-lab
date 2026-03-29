@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 set -euo pipefail
-python submission_workflow_audit.py
+python run_all_audits.py

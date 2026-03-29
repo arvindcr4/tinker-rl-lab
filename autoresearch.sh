@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 set -euo pipefail
-python reviewer_caveat_audit.py
+python paper_improvement_audit.py

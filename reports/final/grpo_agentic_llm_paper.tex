@@ -303,6 +303,28 @@ Cross-seed mean training-set reward is 30.5\% (SD = 3.3\%, 95\% CI [26.4\%, 34.6
 
 Higher rank correlates with faster initial learning (rank 64 achieves 47.5\% in first 5 steps vs. 27.5\% for rank 8).
 
+\subsection{Cross-Domain Summary}
+
+Table~\ref{tab:summary} consolidates key results across all three domains with explicit scope qualifiers.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Cross-domain results summary. All values are training-set metrics unless noted. ``Eval scope'' indicates whether the metric is computed on training prompts (Train) or a held-out benchmark (Test).}
+    \begin{tabular}{llccl}
+        \toprule
+        Domain & Metric & Before & After & Eval Scope \\
+        \midrule
+        Tool (single-turn) & JSON Validity & 0\% & 92\% & Train, custom rubric \\
+        Tool (multi-turn) & Scenario Quality & 0.72 & 0.91 & Train, custom rubric \\
+        Code (HumanEval) & Pass@1 & 32\% & 40\% & 50-item test subset \\
+        Math (GSM8K, 5 seeds) & Training Reward & --- & 30.5\% $\pm$ 3.3\% & Train rollouts \\
+        Math (GSM8K, 4B) & Training Reward & 87.5\% & 82.5\% (last-10) & Train rollouts \\
+        Math (GSM8K, 3B) & Training Reward & 0.8\% & 2.3\% & Train rollouts \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:summary}
+\end{table}
+
 % ===========================================================================
 % Analysis
 % ===========================================================================

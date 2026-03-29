@@ -43,7 +43,7 @@ When all completions receive identical rewards, advantages are zero and no gradi
 
 ### 2.2 Related Work
 
-DeepSeekMath [Shao et al., 2024] reports GRPO improving a 7B model from 82.9% to 88.2% on GSM8K with group size G=64. Step-DPO [Lai et al., 2024] demonstrates ~+3% MATH gains for >70B models with step-wise preference pairs.
+DeepSeekMath [Shao et al., 2024] reports GRPO improving a 7B model from 82.9% to 88.2% on GSM8K with group size G=64. Step-DPO [Lai et al., 2024] demonstrates ~+3% MATH gains for >70B models with step-wise preference pairs. We view critic-free baselines such as **RLOO** and **REINFORCE++** as important future comparisons because they can test whether GRPO is uniquely effective or simply one workable lightweight RL recipe.
 
 ---
 
@@ -81,7 +81,7 @@ DeepSeekMath [Shao et al., 2024] reports GRPO improving a 7B model from 82.9% to
 
 ### 4.1 Single-Turn Tool Calling
 
-Using Qwen2.5-1.5B-Instruct with 500 SFT + 200 GRPO prompts:
+Using Qwen2.5-1.5B-Instruct with 500 SFT + 200 GRPO prompts. These are **custom internal tool-calling evaluations**, not standardized benchmark results:
 
 | Metric | SFT Only | After GRPO | Change |
 |--------|----------|------------|--------|
@@ -104,6 +104,8 @@ The -0.30 reward penalty for repeated tool calls eliminated SFT's looping failur
 On software engineering tasks using Qwen3-8B:
 - HumanEval pass@1: 32% → 40% (+8%)
 - Problems solved: 16/50 → 20/50 (+4)
+
+These code-generation numbers come from a **50-problem subset** rather than the full standard HumanEval harness, so we do not claim direct comparability to full-suite pass@k results.
 
 ### 4.4 GSM8K Multi-Seed Replication
 
@@ -159,13 +161,13 @@ GRPO was introduced by [Shao et al., 2024] who achieved 88.2% on GSM8K with a 7B
 
 We presented an empirical study of GRPO for fine-tuning small language models:
 
-1. GRPO transforms non-tool-calling models into reliable tool callers (0%→92% JSON validity)
+1. GRPO can strongly improve JSON tool-call formatting on our custom internal tool-calling setup (0%→92% JSON validity), though standardized tool benchmarks are still needed
 2. A capacity threshold exists between 3B and 8B parameters
 3. LoRA rank scales initial learning speed but converges to similar long-run performance
 4. Synthetic benchmarks dramatically overestimate capability (3--8x gap)
 5. Multi-seed replication suggests moderately consistent training dynamics across three seeds (30.0%, SD = 2.5%)
 
-**Limitations:** Evaluation on training data, small number of seeds (3), single-run results for some experiments.
+**Limitations:** Evaluation on training data for math/tool use, custom rather than standardized tool evaluation, a 50-problem HumanEval subset, small number of seeds (3), and single-run results for some experiments. Held-out GSM8K evaluation remains the most important missing experiment.
 
 ---
 

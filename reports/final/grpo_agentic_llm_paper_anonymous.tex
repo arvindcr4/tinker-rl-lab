@@ -94,7 +94,7 @@ DeepSeekMath reports GRPO improving an instruction-tuned 7B model from 82.9\% to
 
 \subsection{Supervision Baselines}
 
-Step-DPO demonstrates $\sim$+3\% MATH gains for >70B models with as few as 10K step-wise preference pairs. Prior work shows LLaMA-2-7B reaching 82.6\% GSM8K with synthetic SFT at $\sim$10$^6$ examples. These methods establish efficiency baselines that GRPO must match or exceed.
+Step-DPO demonstrates $\sim$+3\% MATH gains for >70B models with as few as 10K step-wise preference pairs. Prior work shows LLaMA-2-7B reaching 82.6\% GSM8K with synthetic SFT at $\sim$10$^6$ examples. Critic-free alternatives such as RLOO and REINFORCE++ are also important comparison baselines because they test whether GRPO is uniquely effective or simply one workable lightweight RL recipe. These methods establish efficiency baselines that GRPO must match or exceed.
 
 % ===========================================================================
 % Experimental Setup
@@ -153,7 +153,7 @@ We use cloud GPU infrastructure with custom GRPO loss implementation. Optimizer:
 
 \subsection{Tool Calling}
 
-Using Model B (1.5B) with 500 SFT + 200 GRPO prompts:
+Using Model B (1.5B) with 500 SFT + 200 GRPO prompts. These are custom internal tool-calling evaluations, not standardized benchmark results:
 
 \begin{table}[htbp]
     \centering
@@ -200,6 +200,7 @@ On software engineering coding tasks using Model E (8B):
     \item HumanEval pass@1: 32\% $\rightarrow$ 40\% (+8\%)
     \item Problems solved: 16/50 $\rightarrow$ 20/50 (+4)
 \end{itemize}
+These code-generation numbers come from a 50-problem subset rather than the full standard HumanEval harness, so we do not claim direct comparability to full-suite pass@$k$ results.
 
 \subsection{Mathematical Reasoning}
 
@@ -279,14 +280,14 @@ GRPO was introduced achieving 88.2\% on GSM8K with a 7B model. Step-wise prefere
 We presented an empirical study of GRPO for fine-tuning small language models on tool calling, code generation, and mathematical reasoning tasks. Key findings:
 
 \begin{enumerate}
-    \item GRPO transforms non-tool-calling models into reliable tool callers (0\%$\rightarrow$92\% JSON validity)
+    \item GRPO can strongly improve JSON tool-call formatting on our custom internal tool-calling setup (0\%$\rightarrow$92\% JSON validity), though standardized tool benchmarks are still needed
     \item A capacity threshold exists between 3B and 8B parameters; below 3B, GRPO receives zero gradient signal
     \item LoRA rank scales initial learning speed but converges to similar long-run performance
     \item Synthetic benchmarks dramatically overestimate capability -- real tool schemas are 3--8x harder
     \item Multi-seed replication suggests moderately consistent training dynamics across three seeds (30.0\%, SD = 2.5\%)
 \end{enumerate}
 
-Limitations: evaluation on training data, small number of seeds (3), single-run results for some experiments.
+Limitations: evaluation on training data for math/tool use, custom rather than standardized tool evaluation, a 50-problem HumanEval subset, small number of seeds (3), and single-run results for some experiments. Held-out GSM8K evaluation remains the most important missing experiment.
 
 % ===========================================================================
 % References

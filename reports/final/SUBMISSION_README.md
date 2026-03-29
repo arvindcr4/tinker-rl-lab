@@ -65,14 +65,14 @@ Note: `supplementary_appendix.tex` is a standalone document and should be compil
 | Supplementary Appendix | ~5 pages |
 | References | ~0.5 pages |
 
-**Status:** Main paper is well within the 9-page limit. Supplementary adds ~5 pages of additional experimental details.
+**Status:** Estimated main-paper length is ~6.75 pages before final recompilation, but page count should be rechecked from the generated PDF before submission. Supplementary adds ~5 pages of additional experimental details.
 
 ---
 
 ## Submission Checklist
 
 ### Content Requirements
-- [x] 9-page limit satisfied (main paper ~6.75 pages)
+- [ ] 9-page limit re-verified from final compiled PDF (current estimate: ~6.75 pages)
 - [x] Abstract with key results
 - [x] Introduction with contributions clearly stated
 - [x] Background on GRPO algorithm
@@ -103,16 +103,16 @@ Note: `supplementary_appendix.tex` is a standalone document and should be compil
 
 ---
 
-## Key Results Summary
+## Key Results Summary (Preliminary / Custom results must be labeled)
 
-| Finding | Result | Model |
-|---------|--------|-------|
-| Tool calling (JSON validity) | 0\% → 92\% | Qwen2.5-1.5B |
-| Multi-turn tool quality | 0.72 → 0.91 | Qwen2.5-3B |
-| HumanEval pass@1 | 32\% → 40\% | Qwen3-8B |
-| GSM8K (multi-seed) | 30.0\% ± 2.5\% | Qwen3-8B |
-| Capacity threshold | 3B fails, 8B succeeds | Multiple |
-| Synthetic vs real gap | 3--8x difficulty difference | xlam-60k |
+| Finding | Result | Model | Caveat |
+|---------|--------|-------|--------|
+| Tool calling (JSON validity) | 0\% → 92\% | Qwen2.5-1.5B | custom internal tool-calling setup |
+| Multi-turn tool quality | 0.72 → 0.91 | Qwen2.5-3B | custom judge-derived internal scenario score |
+| HumanEval pass@1 | 32\% → 40\% | Qwen3-8B | preliminary 50-problem subset, not full canonical harness |
+| GSM8K training-set reward | 30.0\% ± 2.5\% | Qwen3-8B | training-set reward, not held-out test accuracy |
+| Capacity threshold | 3B fails, 8B succeeds | Multiple | setup-specific until exploration confounds are ablated |
+| Synthetic vs real gap | 3--8x difficulty difference | xlam-60k | depends on custom schema distribution |
 
 ---
 
@@ -147,9 +147,14 @@ Note: `supplementary_appendix.tex` is a standalone document and should be compil
 
 7. **Code and Reproducibility** (Section S7)
    - Script locations
-   - Model checkpoint URLs
+   - Explicit checkpoint availability status and recovery instructions
 
 ---
+
+### Evaluation Caveat
+- Tool results are currently based on custom internal evaluations and should not be presented as standardized benchmark outcomes.
+- HumanEval currently reflects a 50-problem subset rather than the full canonical harness.
+- GSM8K headline GRPO numbers are training-set reward metrics; full held-out evaluation remains the highest-priority missing experiment.
 
 ## Contact
 For questions about this submission, contact the authors through the PES University MTech DSAI program.

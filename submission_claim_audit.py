@@ -4,6 +4,7 @@ from pathlib import Path
 
 readme = Path('reports/final/README.md').read_text()
 checklist = Path('reports/final/SUBMISSION_CHECKLIST.md').read_text()
+submission = Path('reports/final/SUBMISSION_README.md').read_text()
 ideas = Path('autoresearch.ideas.md').read_text() if Path('autoresearch.ideas.md').exists() else ''
 
 issues = []
@@ -29,6 +30,20 @@ if 'training-set reward' not in checklist.lower():
     issues.append('checklist_missing_training_set_math_note')
 if 'checkpoints available' in checklist.lower() or 'checkpoints available' in readme.lower():
     issues.append('misleading_checkpoint_availability_claim')
+
+# Submission README should also preserve caveats and avoid completion claims.
+if 'Key Results Summary' in submission and 'preliminary / custom' not in submission.lower():
+    issues.append('submission_missing_preliminary_label')
+if '50-problem subset' not in submission.lower():
+    issues.append('submission_missing_humaneval_subset_note')
+if 'custom internal' not in submission.lower() and 'custom judge-derived' not in submission.lower():
+    issues.append('submission_missing_tool_custom_note')
+if 'training-set reward' not in submission.lower():
+    issues.append('submission_missing_training_set_math_note')
+if 'model checkpoint urls' in submission.lower():
+    issues.append('submission_overstates_checkpoint_release')
+if re.search(r'\[x\].*9-page limit satisfied', submission):
+    issues.append('submission_has_unverified_page_count_checkbox')
 
 # Ideas backlog should stay focused on unrun, concrete experiment paths.
 if 'paper-improvement roadmap' in ideas.lower() or 'plan audit' in ideas.lower():

@@ -1,46 +1,61 @@
-# Autoresearch: AI Scientist Integration
+# Autoresearch: Paper Improvement — Address Discovery Report Issues
 
 ## Objective
-Create a complete, working Sakana AI Scientist template for the GRPO math reasoning research in this repo. The template should let AI Scientist autonomously generate experiment ideas, run them, write papers, and self-review — producing results that feed back into the capstone thesis and conference paper.
+Systematically address all reviewer issues from the Discovery Report on the GRPO paper. Improve the paper's scientific rigor, presentation clarity, related work positioning, and evaluation transparency without inventing new experimental results.
 
 ## Metrics
-- **Primary**: integration_completeness (score 0-100, higher is better)
-  - 0-20: Template files exist but are stubs
-  - 20-40: Template files are complete but untested
-  - 40-60: Template passes syntax/import checks
-  - 60-80: Baseline runs successfully, AI Scientist can load template
-  - 80-100: End-to-end pipeline tested with at least one idea
-- **Secondary**: template_file_count, guide_sections
+- **Primary**: reviewer_issues (count, lower is better) — from paper_improvement_audit.py (30 checks)
+- **Secondary**: claim_issues (from submission_claim_audit.py), total_checks, resolved
 
 ## How to Run
 `./autoresearch.sh` — outputs `METRIC name=number` lines.
 
 ## Files in Scope
-- `ai-scientist-template/experiment.py` — GRPO training script (TRL-based, local GPU)
-- `ai-scientist-template/plot.py` — Visualization script
-- `ai-scientist-template/prompt.json` — System prompt and task description
-- `ai-scientist-template/seed_ideas.json` — Example ideas for few-shot
-- `ai-scientist-template/latex/template.tex` — LaTeX paper template
-- `ai-scientist-template/run_0/final_info.json` — Baseline results
-- `ai-scientist-template/README.md` — Setup and usage guide
+- `reports/final/grpo_agentic_llm_paper.tex` — Main conference paper
+- `reports/final/supplementary_appendix.tex` — Supplementary material
+- `reports/final/references.bib` — Bibliography
+- `reports/final/README.md` — Submission README with caveats
+- `reports/final/SUBMISSION_CHECKLIST.md` — Submission checklist
+- `paper_improvement_audit.py` — 30-check reviewer issue audit
+- `paper_plan_audit.py` — Same audit (alternative name)
+- `submission_claim_audit.py` — Claim consistency audit for ancillary docs
 
 ## Off Limits
-- `atropos/` — core project code
-- `experiments/` — existing experiment data
-- `reports/` — existing papers and thesis
+- `experiments/` — existing experiment data (read-only for analysis)
+- `atropos/` �� core project code
+- No inventing new experimental results
 
 ## Constraints
-- Template must work with AI Scientist's expected interface (experiment.py --out_dir, final_info.json format)
-- experiment.py must be self-contained and runnable on a single GPU
-- Must not require Tinker API (runs locally with TRL)
-- Must not expose API keys
+- All improvements must be text/analysis changes — no fabricated results
+- Existing telemetry (arithmetic_metrics.jsonl) can be extracted and tabulated
+- GSM8K logs can be parsed for zero-loss/reward statistics
 
 ## What's Been Tried
-- Run 1: Created complete template with all 6 required files + README guide
-  - experiment.py: TRL GRPOTrainer with Qwen 0.5B-3B, LoRA, 3-seed
-  - plot.py: accuracy comparison, training curves, metric summary
-  - prompt.json: tailored to GRPO math reasoning domain
-  - seed_ideas.json: partial credit reward + curriculum learning
-  - LaTeX template with domain-relevant embedded references
-  - Placeholder baseline in run_0/final_info.json
-  - Comprehensive README with setup steps, cloud GPU instructions, thesis integration
+### Run 35 (KEEP, 7→0 issues): Major paper overhaul
+- Expanded Related Work with 5 paragraphs: RLOO/REINFORCE++, S-GRPO/StepGRPO, DPO/Step-DPO, ToolRM/FC-RewardBench, curriculum learning, QR-Adaptor/LoTA-QAF
+- Added Datasets and Splits table with per-domain sizes and eval protocols
+- Added Decoding and Evaluation Protocol subsection
+- Added group-composition analysis to capacity-threshold section
+- Added Section 7: Planned Experiments and Standardized Evaluation Roadmap (4 phases)
+- Added 15 new bibliography entries
+- Created automated 30-check reviewer audit
+
+### Run 36 (KEEP): Appendix diagnostics
+- Added quantitative KL/entropy/group-composition diagnostics table from arithmetic_metrics.jsonl
+- Entropy collapse 0.773→0.0002, KL near zero, group saturation documented
+
+### Run 37 (KEEP): Reward limitations + safety
+- Added Reward Function Limitations subsection (coarseness, hacking risk)
+- Added Safety Considerations subsection (incorrect execution, loops, hallucination)
+
+### Run 38 (KEEP): Comprehensive zero-loss table
+- Added comprehensive zero-loss dynamics table across all GSM8K runs to appendix
+- Key finding: 4B zero-loss is productive (all-correct saturation), 3B zero-loss is stalled (all-incorrect)
+- LoRA rank doesn't affect zero-loss rates, supporting paper's rank-independence finding
+
+### Key Insights
+- The paper already had many caveats from previous sessions; this session deepened them
+- The arithmetic task telemetry is the richest data source — GSM8K logs lack entropy/KL
+- The 4B model's 68% zero-loss from ALL-CORRECT groups is an interesting counter-finding
+- All improvements that can be made without new GPU runs are now done
+- Remaining improvements require new experiments (held-out eval, ablations, baselines)

@@ -79,7 +79,7 @@ When all completions receive identical rewards (all correct or all incorrect), a
 
 ### 3.2 Training Infrastructure
 
-**Tinker SDK (Cloud GPU):** We use Tinker v0.16.1 with `forward_backward_custom(loss_type_input="logprobs")` to implement custom GRPO loss. Advantages are stored in a side-channel since the SDK only allows `target_tokens` and `weights` in `loss_fn_inputs`. Optimizer: Adam (beta1=0.9, beta2=0.95, eps=1e-8). All training runs produce Tinker-hosted model checkpoints.
+**Tinker SDK (Cloud GPU):** We use Tinker v0.16.1 with `forward_backward_custom(loss_type_input="logprobs")` to implement custom GRPO loss. Advantages are stored in a side-channel since the SDK only allows `target_tokens` and `weights` in `loss_fn_inputs`. Optimizer: Adam (beta1=0.9, beta2=0.95, eps=1e-8). Runs write Tinker-hosted model checkpoints, though later recovery depends on run retention and account access at evaluation time.
 
 **Google Colab (Local GPU):** Team members use QLoRA (4-bit NF4, bfloat16 compute) with TRL's SFTTrainer and GRPOConfig on T4 GPUs (16GB VRAM). LoRA targets: q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj.
 
@@ -518,6 +518,6 @@ These findings, combined with the scalable Tinker cloud GPU pipeline, provide a 
 
 ---
 
-*All Tinker training runs, logs, and model checkpoints are available for inspection and reproduction.*
+*Tinker training runs, logs, and model checkpoints were produced during the project, but present-day inspection or reproduction depends on which runs remain retained and accessible through the original accounts.*
 
 Current release status: we plan to release code, prompts, evaluation scripts, logs, and scenario manifests, but today the repository only includes training code, paper sources, logs, and the hardened held-out GSM8K evaluation script. It does not yet include a fully packaged release of every prompt set, scenario definition, and scoring rubric used for the internal tool-calling evaluations.

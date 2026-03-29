@@ -21,6 +21,22 @@ import time
 from typing import List, Tuple, Optional
 from tqdm import tqdm
 
+def bootstrap_accuracy_ci(correct: int, total: int, seed: int, n_bootstrap: int = 2000) -> Tuple[float, float]:
+    """Bootstrap a 95% CI for exact-match accuracy from Bernoulli outcomes."""
+    if total <= 0:
+        return 0.0, 0.0
+
+    rng = random.Random(seed)
+    outcomes = [1] * correct + [0] * (total - correct)
+    samples = []
+    for _ in range(n_bootstrap):
+        draw = [outcomes[rng.randrange(total)] for _ in range(total)]
+        samples.append(sum(draw) / total)
+    samples.sort()
+    lower = samples[int(0.025 * (n_bootstrap - 1))]
+    upper = samples[int(0.975 * (n_bootstrap - 1))]
+    return lower, upper
+
 def setup_argparse():
     parser = argparse.ArgumentParser(description="Evaluate on GSM8K test set")
     parser.add_argument("--checkpoint_path", type=str, help="Local path to checkpoint")
@@ -260,8 +276,13 @@ def evaluate_model(args):
     results["summary"]["attempted"] = total
     if total > 0:
         results["summary"]["accuracy"] = results["summary"]["correct"] / total
+        ci_low, ci_high = bootstrap_accuracy_ci(results["summary"]["correct"], total, args.seed)
+        results["summary"]["accuracy_ci_95"] = [ci_low, ci_high]
+        results["summary"]["accuracy_ci_95_percent"] = [f"{ci_low:.1%}", f"{ci_high:.1%}"]
     else:
         results["summary"]["accuracy"] = 0.0
+        results["summary"]["accuracy_ci_95"] = [0.0, 0.0]
+        results["summary"]["accuracy_ci_95_percent"] = ["0.0%", "0.0%"]
         if results["summary"]["errors"] > 0:
             results["evaluation_status"] = "failed"
             results["failure_reason"] = "No held-out examples were successfully scored; inspect the recorded errors."
@@ -278,6 +299,7 @@ def evaluate_model(args):
     print(f"Incorrect: {results['summary']['incorrect']}")
     print(f"Errors: {results['summary']['errors']}")
     print(f"Accuracy: {results['summary']['accuracy']:.2%}")
+    print(f"95% bootstrap CI: [{results['summary']['accuracy_ci_95_percent'][0]}, {results['summary']['accuracy_ci_95_percent'][1]}]")
     print(f"{'='*50}")
     
     # Save results
@@ -296,6 +318,7 @@ def main():
 
     # Print for easy copying
     print(f"\n## GSM8K Test Accuracy: {results['summary']['accuracy']:.2%}")
+    print(f"## 95% bootstrap CI: [{results['summary']['accuracy_ci_95_percent'][0]}, {results['summary']['accuracy_ci_95_percent'][1]}]")
     print(f"# Correct: {results['summary']['correct']}/{results['summary']['attempted']}")
 
 if __name__ == "__main__":

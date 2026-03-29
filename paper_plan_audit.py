@@ -158,7 +158,7 @@ def audit_paper() -> dict:
         issues["T3_scoring_protocol"] = "Tool-calling scoring protocol not explained (rubric, judge type)"
 
     # 27. SFT baseline 0% JSON validity explained
-    if not re.search(r'SFT.*(?:plain text|never.*tool|0%.*JSON)', full, re.I):
+    if not re.search(r'SFT.*(?:plain text|never.*tool|0\\?%.*JSON|lacked.*capacity|defaulted)', full, re.I):
         issues["T3_sft_baseline"] = "SFT 0% JSON validity not explained (format, decoding, parser)"
 
     # 28. 50-problem subset rationale

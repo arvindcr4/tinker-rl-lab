@@ -397,17 +397,17 @@ Estimated scope: $\sim$20--30 runs over 4--6 weeks, \$500--\$1000 in compute. Ph
 % ===========================================================================
 \section{Conclusion}
 
-We presented an empirical study of GRPO for fine-tuning small language models on tool calling, code generation, and mathematical reasoning tasks. Key findings:
+We presented an empirical study of GRPO for fine-tuning small language models (0.5B--8B) on tool calling, code generation, and mathematical reasoning. Our key findings, with scope qualifiers:
 
 \begin{enumerate}
-    \item GRPO transforms non-tool-calling models into reliable tool callers (0\%$\rightarrow$92\% JSON validity)
-    \item A capacity threshold exists between 3B and 8B parameters; below 3B, GRPO receives zero gradient signal
-    \item LoRA rank scales initial learning speed but converges to similar long-run performance
-    \item Synthetic benchmarks dramatically overestimate capability -- xlam-60k real tool schemas are 3--8x harder
-    \item Multi-seed replication suggests moderately consistent training dynamics across three seeds (30.0\%, SD = 2.5\%)
+    \item \textbf{Tool calling:} GRPO transforms non-tool-calling models into reliable structured callers (0\%$\rightarrow$92\% JSON validity), with a -0.30 penalty eliminating persistent loops. \emph{Scope: custom internal evaluation; standardized benchmarks pending.}
+    \item \textbf{Capacity--exploration interaction:} A sharp performance break exists between 3B and $\geq$8B parameters under our setup. The 3B failure stems from reward sparsity (56\% zero-reward steps $\Rightarrow$ zero gradient signal) rather than training instability, but this may be confounded by small group size and fixed temperature. \emph{Scope: not yet disentangled from exploration effects.}
+    \item \textbf{Parameter efficiency:} LoRA rank 32 ($\sim$0.1\% trainable params) with QLoRA suffices for near-maximal training-set reward on GSM8K, with rank primarily affecting learning speed rather than asymptotic performance.
+    \item \textbf{Synthetic--real gap:} A 3--8$\times$ difficulty gap exists between synthetic 5-tool schemas and diverse real-world tool schemas (xlam-60k), informing dataset design for tool-calling RL.
+    \item \textbf{Training dynamics:} GRPO exhibits a two-phase progression (format compliance $\rightarrow$ reasoning), rapid entropy collapse ($>$3 orders of magnitude), and MoE routing-induced volatility (2.43$\times$ vs.~dense). \emph{Scope: training-set metrics only; held-out generalization unknown.}
 \end{enumerate}
 
-Limitations: evaluation on training data for math/tool use, custom rather than standardized tool evaluation, a 50-problem code subset, no KL anchoring, no entropy diagnostics, missing routing-entropy / expert-load diagnostics for the MoE analysis, and single-run results for some experiments. Future work should prioritize held-out test evaluation, PPO/RLOO/REINFORCE++ and Step-DPO / S-GRPO comparisons, larger-group and temperature ablations, and intermediate model sizes (4B, 6B).
+\paragraph{Limitations.} The most significant gap is evaluation: math and tool-use results are training-set reward metrics, not held-out test accuracy; code generation uses a non-standard 50-problem subset; and tool-calling evaluation relies on a custom rubric without standardized judges. Training runs omit KL regularization and entropy diagnostics, and the MoE analysis lacks routing-level telemetry. The concrete experimental roadmap in Section~\ref{sec:future_plan} addresses each of these gaps. In its current form, this work is best read as a practitioner-oriented study of GRPO's training dynamics and failure modes at small scale, not as a generalization claim.
 
 \medskip
 

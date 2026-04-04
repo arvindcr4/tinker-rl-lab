@@ -96,6 +96,8 @@ DeepSeekMath reports GRPO improving an instruction-tuned 7B model from 82.9\% to
 
 Step-DPO demonstrates $\sim$+3\% MATH gains for >70B models with as few as 10K step-wise preference pairs. Prior work shows LLaMA-2-7B reaching 82.6\% GSM8K with synthetic SFT at $\sim$10$^6$ examples. Critic-free alternatives such as RLOO and REINFORCE++ are also important comparison baselines because they test whether GRPO is uniquely effective or simply one workable lightweight RL recipe. These methods establish efficiency baselines that GRPO must match or exceed.
 
+Recent GRPO variants address entropy collapse and exploration limitations: DeepSeek-R1 removes the KL penalty ($\beta=0$) and adds an entropy bonus to sustain exploration (``Dr.\ GRPO''), while DAPO introduces asymmetric advantage clipping, overlong filtering, and high-temperature sampling ($T=1.2$) for decoupled alignment. We implement both variants alongside rejection-sampling DPO as reproducible baselines in our supplementary Colab notebook.
+
 % ===========================================================================
 % Experimental Setup
 % ===========================================================================

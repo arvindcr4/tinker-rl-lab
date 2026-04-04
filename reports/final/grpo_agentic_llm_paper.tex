@@ -101,9 +101,34 @@ When all completions receive identical rewards (all correct or all incorrect), a
 
 DeepSeekMath reports GRPO improving an instruction-tuned 7B model from 82.9\% to 88.2\% on GSM8K and 46.8\% to 51.7\% on MATH with group size G=64.
 
+\paragraph{Standard GRPO hyperparameter ranges.}
+A cross-paper synthesis of published GRPO configurations (Table~\ref{tab:grpo_standards}) reveals convergent practices for three hyperparameters: group sizes cluster at 8--64, learning rates at $1 \times 10^{-6}$--$5 \times 10^{-6}$, and sampling temperatures at 0.7--1.2. The KL coefficient $\beta$ shows no consensus---DeepSeek-R1-Zero uses $\beta{=}0.001$, DeepSeekMath uses $\beta{=}0.04$, and Skywork-OR1 omits it entirely \citep{deepseekr1, shao2024deepseekmath}. Our setup ($G{=}16$, LR${}=4 \times 10^{-5}$, $T{=}1.0$) matches community ranges except for a $\sim$10$\times$ higher learning rate, which we attribute to LoRA-only training (0.1\% trainable parameters vs.\ full fine-tuning).
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Standard GRPO hyperparameters across published systems.}
+    \begin{tabular}{lcccc}
+        \toprule
+        System & $G$ & LR & $T$ & $\beta$ (KL) \\
+        \midrule
+        DeepSeek-R1-Zero & 16 & $3 \times 10^{-6}$ & 1.0 & 0.001 \\
+        DeepSeekMath-RL 7B & 64 & $1 \times 10^{-6}$ & -- & 0.04 \\
+        JT-Math & 16 & $4 \times 10^{-6}$ & 1.2 & 0.001 \\
+        Skywork-OR1 & -- & -- & -- & 0 \\
+        R1-style (Qwen/Llama) & 8 & $2.5$--$5 \times 10^{-6}$ & 0.7 & 0 \\
+        \midrule
+        \textbf{Ours} & \textbf{16} & $\mathbf{4 \times 10^{-5}}$ & \textbf{1.0} & \textbf{--} \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:grpo_standards}
+\end{table}
+
 \subsection{Supervision Baselines}
 
 Step-DPO \citep{lai2024stepdpo} demonstrates $\sim$+3\% MATH gains for >70B models with as few as 10K step-wise preference pairs. Li et al. show LLaMA-2-7B reaching 82.6\% GSM8K with synthetic SFT at $\sim$10$^6$ examples. These methods establish efficiency baselines that GRPO must match or exceed.
+
+Recent GRPO variants address entropy collapse and exploration limitations: DeepSeek-R1 \citep{deepseekr1} removes the KL penalty ($\beta=0$) and adds an entropy bonus to sustain exploration (``Dr.\ GRPO''), while DAPO \citep{yu2025dapo} introduces asymmetric advantage clipping, overlong filtering, and high-temperature sampling ($T=1.2$) for decoupled alignment. We implement both variants alongside rejection-sampling DPO \citep{rafailov2024dpo} as reproducible baselines in our supplementary Colab notebook.
 
 % ===========================================================================
 % Experimental Setup
@@ -440,7 +465,7 @@ We outline a concrete experimental plan to address the evaluation and ablation g
 \paragraph{Phase 3: Standardized benchmarks and baselines.}
 (a)~Tool calling: adopt FC-RewardBench-style pairwise discrimination and proxy-state final-answer evaluation with LLM judges; report judge reliability.
 (b)~Code generation: run canonical HumanEval (164 problems) and MBPP harnesses with pass@1/pass@$k$ and 95\% CIs.
-(c)~Baselines: add SFT-only, DPO, and (if feasible) RLOO/REINFORCE++ under matched compute budgets.
+(c)~Baselines: add SFT-only, DPO, and (if feasible) RLOO/REINFORCE++ under matched compute budgets. A reproducible Colab notebook implementing Dr.\ GRPO ($\beta=0$ with entropy bonus), DAPO (decoupled clipping with high-temperature sampling), and rejection-sampling DPO on GSM8K is available in the supplementary repository.
 
 \paragraph{Phase 4: MoE and PEFT diagnostics.}
 (a)~MoE routing telemetry: router entropy, per-expert load coefficient of variation, router-shift ratio.
@@ -465,6 +490,8 @@ We presented an empirical study of GRPO for fine-tuning small language models (0
 \end{enumerate}
 
 \paragraph{Limitations.} The most significant gap is evaluation: math and tool-use results are training-set reward metrics, not held-out test accuracy; code generation uses a non-standard 50-problem subset; and tool-calling evaluation relies on a custom rubric without standardized judges. Training runs omit KL regularization and entropy diagnostics, and the MoE analysis lacks routing-level telemetry. The concrete experimental roadmap in Section~\ref{sec:future_plan} addresses each of these gaps. In its current form, this work is best read as a practitioner-oriented study of GRPO's training dynamics and failure modes at small scale, not as a generalization claim.
+
+\paragraph{Alignment with reviewer priorities.} A systematic analysis of 490 RL-for-LLM reviews across 248 papers (2017--2023) finds that \emph{insufficient evaluation} is flagged in 86.3\% of reviews, with \emph{missing baselines} (56.8\%) and \emph{missing ablations} (14.5\%) as the top specific complaints. Notably, human evaluation absence is rarely criticized (2.1\%), and including capability benchmarks shows no statistically significant correlation with higher reviewer scores (Mann--Whitney $U$, $p > 0.05$). These findings---derived from a large-scale OpenReview meta-analysis---motivate our prioritization of baseline comparisons (Dr.\ GRPO, DAPO, DPO) and ablation coverage (group size, LoRA rank, temperature) over human-judge studies in our experimental roadmap.
 
 \medskip
 

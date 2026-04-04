@@ -94,6 +94,28 @@
     \label{tab:colab_runs}
 \end{table}
 
+\subsection{Advanced RL Algorithm Variants (Colab Notebook)}
+
+We provide a reproducible Colab notebook (\texttt{advanced\_rl\_colab.ipynb}) implementing three non-standard RL algorithms for comparison with standard GRPO:
+
+\begin{table}[htbp]
+    \centering
+    \caption{Advanced RL algorithm configurations (Qwen3-8B + LoRA rank 32 on GSM8K).}
+    \begin{tabular}{llcccc}
+        \toprule
+        Algorithm & Key Change & $\beta$ (KL) & LR & Temp & Steps \\
+        \midrule
+        Standard GRPO & Baseline & 0.04 & 4e-5 & 1.0 & 50 \\
+        Dr.\ GRPO & No KL + entropy bonus & 0.0 & 5e-5 & 1.0 & 50 \\
+        DAPO & Overlong filter + high temp & 0.0 & 4e-5 & 1.2 & 50 \\
+        DPO & Offline preference pairs & 0.1 & 5e-6 & -- & 3 epochs \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:advanced_rl}
+\end{table}
+
+\noindent\textbf{Dr.\ GRPO} \citep{deepseekr1} removes the KL divergence penalty and adds a token-level entropy bonus ($\lambda=0.01$) to prevent the entropy collapse documented in Section~5.3 of the main paper. \textbf{DAPO} \citep{yu2025dapo} further decouples alignment by using asymmetric advantage clipping and higher sampling temperature for diverse rollouts. \textbf{DPO} \citep{rafailov2024dpo} uses rejection-sampled preference pairs (correct vs.\ incorrect completions from the base model) for offline preference learning without on-policy rollouts.
+
 % ===========================================================================
 \section{Training Hyperparameters}
 % ===========================================================================

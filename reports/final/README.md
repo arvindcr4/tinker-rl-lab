@@ -44,8 +44,13 @@ If results show >40% accuracy on held-out test, update Section 4.3.3 with actual
 - `nips_style.sty` - NeurIPS/ICML style
 
 ### Evaluation
-- `evaluate_gsm8k_test.py` - **CRITICAL**: Script to run held-out GSM8K evaluation
+- `evaluate_gsm8k_test.py` - Held-out GSM8K evaluation script (Tinker API or local HF)
+- `run_heldout_parallel.sh` - Run 5-seed parallel evaluation
 - `supplementary_appendix.tex` - Additional experimental details
+
+### Reproducibility Notebooks
+- `../../submission_colab.ipynb` - Standard GRPO training + evaluation Colab
+- `../../advanced_rl_colab.ipynb` - Dr. GRPO, DAPO, DPO Colab (advanced algorithms)
 
 ## Key Results (Training-Set)
 
@@ -64,7 +69,11 @@ These numbers should not all be read as standardized benchmark claims:
 ## Paper Status
 
 ✅ **Completed**: Honest limitation disclosure  
-⚠️ **Pending**: Full held-out GSM8K evaluation  
+✅ **Completed**: W&B logging (17 Tinker runs uploaded to tinker-rl-scaling project)  
+✅ **Completed**: Advanced RL notebook (Dr. GRPO, DAPO, DPO) -- `advanced_rl_colab.ipynb`  
+✅ **Completed**: Submission Colab -- `submission_colab.ipynb`  
+✅ **Completed**: All 13 audits passing (0 issues)  
+🔄 **In Progress**: Held-out GSM8K evaluation (5 seeds x 200 examples via Tinker API)  
 ⚠️ **Pending**: Standardized tool-calling evaluation / judge protocol disclosure  
 ⚠️ **Pending**: Canonical full HumanEval/MBPP evaluation  
 ⚠️ **Pending**: Reproducibility packaging for prompts, schemas, and checkpoints

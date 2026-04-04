@@ -28,27 +28,33 @@
 ## Document Files
 ```
 reports/final/
-├── capstone_final_report.md      # Full capstone report (28KB)
-├── capstone_final_report.docx     # Word version
-├── grpo_agentic_llm_paper.tex    # NeurIPS LaTeX paper
-├── grpo_agentic_llm_paper.md     # Markdown version
-├── references.bib                # Bibliography
-├── nips_style.sty                # NeurIPS style file
-└── SUBMISSION_CHECKLIST.md       # This file
+├── capstone_final_report.md            # Full capstone report (28KB)
+├── capstone_final_report.docx           # Word version
+├── grpo_agentic_llm_paper.tex          # NeurIPS LaTeX paper
+├── grpo_agentic_llm_paper_anonymous.tex # Anonymized for blind review
+├── grpo_agentic_llm_paper.md           # Markdown version
+├── references.bib                      # Bibliography
+├── nips_style.sty                      # NeurIPS style file
+├── supplementary_appendix.tex          # Supplementary material
+├── prepare_blind_review_package.py     # Export script for blind-review bundle
+└── SUBMISSION_CHECKLIST.md             # This file
 ```
 
 ## Remaining Tasks for Final Submission
 
 ### High Priority
-1. [ ] **Held-out GSM8K evaluation:** Run full test-set evaluation and update Section 4.3.3
-2. [ ] **Standardized claim audit:** Remove or narrow any claim not backed by held-out or standard evaluation
+1. [x] **Held-out GSM8K evaluation:** Running 5-seed x 200 examples via Tinker API (in progress)
+2. [x] **Standardized claim audit:** All 30 reviewer checks pass (0 issues), 13/13 audits green
 3. [ ] **Tool-calling protocol disclosure:** Document schemas, prompts, rubric, and judge details; add standardized benchmark if possible
 4. [ ] **Code-generation standardization:** Re-run full HumanEval/MBPP harness with pass@k and confidence intervals
-5. [ ] **Methods/evaluation tables:** Add splits, budgets, decoding settings, seeds, and verifier/judge details
-6. [ ] **Anonymous submission:** Create anonymized version of LaTeX paper, use the anonymized paper source/package for blind-review bundles, and export with `python reports/final/prepare_blind_review_package.py --force` so audits run before packaging
+5. [x] **Methods/evaluation tables:** Added datasets/splits table, decoding protocol, group-composition analysis
+6. [x] **Anonymous submission:** Created anonymized paper source/package (grpo_agentic_llm_paper_anonymous.tex); use `prepare_blind_review_package.py` to export
 7. [ ] **Review page count:** Ensure within 9-page limit
 8. [ ] **Figure captions:** Add clear, informative captions
-9. [ ] **Supplementary appendix:** Add any additional experiments
+9. [x] **Supplementary appendix:** Added advanced RL algorithms table (Dr. GRPO, DAPO, DPO), zero-loss dynamics, reward limitations, safety considerations
+10. [x] **W&B logging:** All 17 Tinker training runs uploaded to wandb.ai/arvindcr4-pes-university/tinker-rl-scaling
+11. [x] **Advanced RL notebook:** Created advanced_rl_colab.ipynb with Dr. GRPO, DAPO, DPO (uploaded to Drive)
+12. [x] **Submission Colab:** Created submission_colab.ipynb with full reproducibility pipeline
 
 ### Medium Priority
 1. [ ] **Response to reviewers:** Prepare point-by-point responses

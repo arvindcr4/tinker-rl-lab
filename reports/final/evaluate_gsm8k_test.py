@@ -158,9 +158,8 @@ def load_model(args):
 def generate_with_tinker(client, tokenizer, prompt: str, args) -> str:
     """Generate using Tinker API."""
     from tinker import ModelInput, SamplingParams
-    
-    inputs = tokenizer(prompt, return_tensors="pt")
-    input_ids = inputs["input_ids"].tolist()[0]
+
+    input_ids = tokenizer.encode(prompt)
     
     model_input = ModelInput.from_ints(input_ids)
     sp = SamplingParams(

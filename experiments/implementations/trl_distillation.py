@@ -8,6 +8,8 @@ Two approaches:
 2. On-Policy: KL divergence minimization to teacher
 """
 
+import sys
+import os
 import torch
 import torch.nn.functional as F
 from typing import List
@@ -20,6 +22,10 @@ from transformers import (
     TrainingArguments,
 )
 from trl import SFTTrainer, SFTConfig
+
+# Add project root to path for utils
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+from utils.seed import set_global_seed, get_seed_from_args, log_experiment_metadata
 
 
 @dataclass

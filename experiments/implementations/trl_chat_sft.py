@@ -10,10 +10,16 @@ Original Tinker experiment:
 - batch_size=32
 """
 
+import sys
+import os
 import torch
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import SFTTrainer, SFTConfig
+
+# Add project root to path for utils
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+from utils.seed import set_global_seed, get_seed_from_args, log_experiment_metadata
 
 
 def load_no_robots_dataset(num_samples=None):

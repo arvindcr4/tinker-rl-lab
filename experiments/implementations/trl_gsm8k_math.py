@@ -11,11 +11,17 @@ Unlike arithmetic, this requires:
 """
 
 import re
+import sys
+import os
 import torch
 from typing import List, Optional
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOTrainer, GRPOConfig
+
+# Add project root to path for utils
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+from utils.seed import set_global_seed, get_seed_from_args, log_experiment_metadata
 
 
 def extract_gsm8k_answer(text: str) -> Optional[float]:

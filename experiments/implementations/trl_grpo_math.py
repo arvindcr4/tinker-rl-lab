@@ -12,12 +12,18 @@ This implementation uses GRPOTrainer with verifiable binary rewards.
 """
 
 import re
+import sys
+import os
 import torch
 from dataclasses import dataclass
 from typing import List, Optional
 from datasets import Dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOTrainer, GRPOConfig
+
+# Add project root to path for utils
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+from utils.seed import set_global_seed, get_seed_from_args, log_experiment_metadata
 
 
 @dataclass
@@ -83,6 +89,11 @@ def math_reward_function(completions: List[str], prompts: List[str], answers: Li
 
 
 def main():
+    # Seed management for reproducibility
+    seed = get_seed_from_args(default=42)
+    env_info = set_global_seed(seed)
+    print(f"Seed set to {seed} | Environment: {env_info}")
+
     # Model configuration (matching Tinker)
     model_name = "meta-llama/Llama-3.2-1B"
 
@@ -158,8 +169,23 @@ def main():
     trainer.train()
 
     # Save final model
-    trainer.save_model("./grpo_math_final")
-    print("Training complete! Model saved to ./grpo_math_final")
+    output_dir = f"./grpo_math_final_seed{seed}"
+    trainer.save_model(output_dir)
+    print(f"Training complete! Model saved to {output_dir}")
+
+    # Log experiment metadata
+    log_experiment_metadata(
+        experiment_name="trl_grpo_math",
+        seed=seed,
+        hyperparameters={
+            "model_name": model_name,
+            "learning_rate": 1e-4,
+            "lora_rank": 32,
+            "num_generations": 4,
+            "beta": 0.1,
+        },
+        output_dir=output_dir,
+    )
 
 
 if __name__ == "__main__":

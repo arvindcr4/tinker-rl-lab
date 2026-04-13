@@ -11,11 +11,17 @@ Original Tinker Method:
 This implementation uses DPOTrainer with length-penalized preferences.
 """
 
+import sys
+import os
 import torch
 from typing import List
 from datasets import Dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import DPOTrainer, DPOConfig
+
+# Add project root to path for utils
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+from utils.seed import set_global_seed, get_seed_from_args, log_experiment_metadata
 
 
 def create_preference_dataset(

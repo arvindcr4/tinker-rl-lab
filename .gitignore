@@ -61,3 +61,4 @@ slack.har
 # Task outcomes (may contain sensitive data)
 tasks/outcome/
 paper/tikz/*.aux
+wandb/

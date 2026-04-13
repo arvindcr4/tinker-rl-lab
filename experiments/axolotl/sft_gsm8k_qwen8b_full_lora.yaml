@@ -1,0 +1,61 @@
+# Axolotl SFT Baseline — Qwen3-8B on GSM8K (Full LoRA, A100 required)
+# Non-quantized version for A100 (80 GB) or multi-GPU setups
+# Use sft_gsm8k_qwen8b.yaml for QLoRA on smaller GPUs
+#
+# Usage:
+#   axolotl train experiments/axolotl/sft_gsm8k_qwen8b_full_lora.yaml
+
+base_model: Qwen/Qwen3-8B
+
+# Full precision LoRA (requires A100 80GB)
+load_in_4bit: false
+load_in_8bit: false
+strict: false
+
+adapter: lora
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.0
+lora_target_linear: true
+
+datasets:
+  - path: openai/gsm8k
+    name: main
+    type: completion
+    split: train
+    transform: experiments/axolotl/gsm8k_sft_transform.py.gsm8k_sft_transform
+
+val_set_size: 0.05
+output_dir: ./outputs/sft_gsm8k_qwen8b_full_lora
+
+sequence_len: 2048
+sample_packing: true
+eval_sample_packing: true
+
+num_epochs: 1
+micro_batch_size: 8
+gradient_accumulation_steps: 16  # effective batch = 128
+
+optimizer: adamw_torch_fused
+learning_rate: 0.00004
+lr_scheduler: cosine
+warmup_ratio: 0.1
+weight_decay: 0.0
+max_grad_norm: 1.0
+
+bf16: auto
+tf32: true
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+flash_attention: true
+
+logging_steps: 1
+saves_per_epoch: 2
+evals_per_epoch: 4
+
+wandb_project: tinker-rl-scaling
+wandb_name: sft-gsm8k-qwen3-8b-full-lora
+wandb_log_model: false
+
+special_tokens:

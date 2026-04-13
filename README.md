@@ -31,6 +31,9 @@ This repository consolidates multiple research projects focused on:
 
 ```
 tinker-rl-lab/
+├── grpo-results/         # GRPO RL experiment results and metrics
+├── agentic-rl-finetuning/ # Agentic RL fine-tuning research
+├── capstone-literature-survey/ # Literature Survey: RL for LLMs (GRPO Scaling)
 ├── experiments/           # Tinker RL Cookbook experiments
 │   ├── notebooks/        # Jupyter notebooks for each experiment
 │   ├── implementations/  # RL implementations (PPO, DPO, GRPO, etc.)
@@ -145,6 +148,19 @@ See [REPRODUCE.md](REPRODUCE.md) for complete reproduction instructions.
 | Qwen3-8B | 8B | `atropos/configs/gsm8k_qwen_8b.yaml` |
 | Qwen3-14B | 14B | `atropos/configs/gsm8k_qwen_14b.yaml` |
 | Qwen3-30B-A3B (MoE) | 30B | `atropos/configs/gsm8k_qwen_30b_moe.yaml` |
+
+### Consolidated Projects
+
+This repository consolidates all PES LLM Research projects:
+
+| Original Repo | Description | Created |
+|--------------|-------------|---------|
+| [tinker-experiments](https://github.com/arvindcr4/tinker-experiments) | Tinker RL Cookbook experiments | Jan 2026 |
+| [tinker-atropos](https://github.com/arvindcr4/tinker-atropos) | Atropos + Tinker integration | Mar 2026 |
+| [rl](https://github.com/arvindcr4/rl) | RL Gym tasks and documentation | Aug 2025 |
+| [rl_master](https://github.com/arvindcr4/rl_master) | Task execution and MCP tools | Nov 2025 |
+| [agentic-rl-finetuning](https://github.com/pes-llm-research/agentic-rl-finetuning) | Agentic RL fine-tuning | Mar 2026 |
+| [capstone-literature-survey](https://github.com/arvindcr4/capstone-literature-survey) | GRPO Scaling Literature Survey | Mar 2026 |
 
 ## Reproducibility
 

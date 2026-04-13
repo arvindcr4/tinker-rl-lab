@@ -1,0 +1,39 @@
+[B_high_lr] Connecting...
+[B_high_lr] Run: 2d488a85-203b-5da1-aff1-b8eed35a1199:train:0 | LR=0.0001 group=16 temp=0.8 rank=32
+[B_high_lr] Step   1/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step   2/30 | loss=-6.7243 | reward=0.735
+[B_high_lr] Step   3/30 | loss=-4.8571 | reward=0.900
+[B_high_lr] Step   4/30 | loss=-0.6089 | reward=0.930
+[B_high_lr] Step   5/30 | loss=-3.0654 | reward=0.969
+[B_high_lr] Step   6/30 | loss=-6.7463 | reward=0.875
+[B_high_lr] Step   7/30 | loss=-8.2431 | reward=0.815
+[B_high_lr] Step   8/30 | loss=-6.9947 | reward=0.873
+[B_high_lr] Step   9/30 | loss=-15.6324 | reward=0.761
+[B_high_lr] Step  10/30 | loss=-13.9402 | reward=0.775
+[B_high_lr]   -> Checkpoint step_10
+[B_high_lr] Step  11/30 | loss=-5.3819 | reward=0.741
+[B_high_lr] Step  12/30 | loss=-11.9277 | reward=0.881
+[B_high_lr] Step  13/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step  14/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step  15/30 | loss=-7.3286 | reward=0.969
+[B_high_lr] Step  16/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step  17/30 | loss=-14.6729 | reward=0.806
+[B_high_lr] Step  18/30 | loss=-4.9499 | reward=0.972
+[B_high_lr] Step  19/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step  20/30 | loss=0.0000 | reward=1.000
+[B_high_lr]   -> Checkpoint step_20
+[B_high_lr] Step  21/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step  22/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step  23/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step  24/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step  25/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step  26/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step  27/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step  28/30 | loss=-0.3455 | reward=0.986
+[B_high_lr] Step  29/30 | loss=0.0000 | reward=1.000
+[B_high_lr] Step  30/30 | loss=0.0000 | reward=1.000
+[B_high_lr]   -> Checkpoint step_30
+
+[B_high_lr] DONE | avg_reward_last10=0.999
+[B_high_lr] Run ID: 2d488a85-203b-5da1-aff1-b8eed35a1199:train:0
+[B_high_lr] Sampler: tinker://2d488a85-203b-5da1-aff1-b8eed35a1199:train:0/sampler_weights/final

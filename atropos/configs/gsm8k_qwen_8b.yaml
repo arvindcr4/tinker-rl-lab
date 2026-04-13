@@ -1,12 +1,13 @@
-# GSM8K GRPO - Qwen3-8B (Cross-family comparison)
-# Experiment: Compare Qwen vs Llama family under same GRPO recipe
+# GSM8K GRPO - Qwen3-8B (base)
+# Block B anchor: family isolation (Qwen3-8B base vs Llama-3.1-8B base)
+# Block C anchor: size ladder 8B point
 
 env:
   group_size: 16
   batch_size: 128
   max_batches_offpolicy: 3
   tokenizer_name: "Qwen/Qwen3-8B"
-  use_wandb: false
+  use_wandb: true
   rollout_server_url: "http://localhost:8000"
   wandb_name: "gsm8k-qwen3-8b-env"
   ensure_scores_are_not_same: false
@@ -29,7 +30,7 @@ tinker:
   checkpoint_dir: "./checkpoints/gsm8k_qwen8b/"
   save_checkpoint_interval: 10
   wandb_project: "tinker-rl-scaling"
-  wandb_group: "gsm8k-scaling-ladder"
+  wandb_group: "systematic-scaling-study"
   wandb_run_name: "gsm8k-qwen3-8b"
 
 slurm: false

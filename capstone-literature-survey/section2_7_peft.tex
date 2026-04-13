@@ -1,0 +1,341 @@
+%% ----------------------------------------------------------------
+%% Section 2.7: Parameter-Efficient Fine-Tuning
+%% ----------------------------------------------------------------
+\section{Parameter-Efficient Fine-Tuning}
+\label{sec:peft}
+
+The preceding sections have established that reinforcement learning from
+human feedback---and its modern variants such as GRPO---can substantially
+improve LLM alignment and reasoning capabilities.  However, these
+algorithms presuppose the ability to \emph{fine-tune} the underlying
+language model, an operation whose cost scales linearly with the number
+of trainable parameters.  For a model with $N$ parameters, full
+fine-tuning requires storing not only the parameters themselves but also
+their gradients and optimizer states.  With the Adam
+optimizer~\citep{kingma2015adam}, this amounts to roughly $16N$ bytes of
+GPU memory in mixed-precision training (2 bytes for the \texttt{fp16}
+parameters, 4 bytes for the \texttt{fp32} master copy, 4 bytes each for
+the first- and second-moment estimates, and 2 bytes for the gradients).
+For a 7-billion-parameter model, this alone exceeds 100\,GB---well
+beyond the capacity of a single commodity GPU.
+
+The problem is compounded in reinforcement learning settings.  GRPO, for
+instance, requires maintaining a \emph{reference policy} $\pi_{\text{ref}}$
+alongside the \emph{active policy} $\pi_\theta$ in order to compute the
+KL-divergence penalty that prevents reward hacking.  Naively, this doubles
+the memory footprint attributable to model parameters.  Furthermore,
+GRPO's group-based advantage estimation benefits from large group sizes
+$G$ (typically 8--64 completions per prompt), which in turn demands
+substantial memory for storing the sampled sequences and their
+log-probabilities.  Under these constraints, full fine-tuning of models
+at the 7B scale and beyond becomes impractical without access to large
+multi-GPU clusters.
+
+\emph{Parameter-efficient fine-tuning} (PEFT) methods address this
+bottleneck by training only a small subset of parameters---or injecting
+a small number of new trainable parameters---while keeping the bulk of
+the pre-trained model frozen.  This section reviews the most prominent
+PEFT techniques, with particular emphasis on Low-Rank Adaptation (LoRA)
+and its quantised variant QLoRA, which together form the backbone of our
+experimental pipeline.
+
+%% ----------------------------------------------------------------
+\subsection{Low-Rank Adaptation (LoRA)}
+\label{sec:lora}
+
+Low-Rank Adaptation, introduced by \citet{hu2021lora}, is grounded in the
+empirical observation that the weight updates learned during fine-tuning
+occupy a low-dimensional subspace relative to the full parameter space.
+That is, although the pre-trained weight matrix $\mathbf{W}_0 \in
+\mathbb{R}^{d \times k}$ is full-rank, the task-specific update
+$\Delta\mathbf{W}$ can be well-approximated by a matrix of much lower
+rank.  LoRA exploits this structure by \emph{freezing} $\mathbf{W}_0$
+and injecting a trainable low-rank decomposition:
+\begin{equation}
+  \label{eq:lora-weight}
+  \mathbf{W} = \mathbf{W}_0 + \Delta\mathbf{W}
+             = \mathbf{W}_0 + \mathbf{B}\mathbf{A},
+\end{equation}
+where $\mathbf{B} \in \mathbb{R}^{d \times r}$ and
+$\mathbf{A} \in \mathbb{R}^{r \times k}$, with the rank
+$r \ll \min(d, k)$.
+
+\paragraph{Forward pass.}
+During the forward pass, the output of the adapted layer is computed as:
+\begin{equation}
+  \label{eq:lora-forward}
+  \mathbf{h} = \mathbf{W}_0 \mathbf{x} + \mathbf{B}\mathbf{A}\mathbf{x}
+             = \mathbf{W}_0 \mathbf{x}
+               + \frac{\alpha}{r}\,\mathbf{B}\mathbf{A}\mathbf{x},
+\end{equation}
+where $\alpha$ is a scaling hyperparameter (often set equal to $r$ so that
+the scaling factor $\alpha / r = 1$).  The pre-trained computation
+$\mathbf{W}_0\mathbf{x}$ proceeds exactly as in the frozen model; only
+the low-rank branch $\mathbf{B}\mathbf{A}\mathbf{x}$ introduces trainable
+parameters.
+
+\paragraph{Initialization.}
+A key design choice in LoRA is the initialization strategy.
+\citet{hu2021lora} initialize $\mathbf{A}$ with a random Gaussian
+distribution, $\mathbf{A} \sim \mathcal{N}(0, \sigma^2)$, and set
+$\mathbf{B} = \mathbf{0}$.  This ensures that the product
+$\mathbf{B}\mathbf{A} = \mathbf{0}$ at the start of training, so the
+adapted model begins from exactly the same function as the pre-trained
+model.  Training therefore commences from a known-good initialization,
+which stabilizes the optimization trajectory and is particularly
+important when the downstream task involves reinforcement learning
+objectives that are already difficult to optimize.
+
+\paragraph{Inference-time merging.}
+Unlike adapter-based methods that add sequential modules and thereby
+increase inference latency, LoRA introduces \emph{no additional latency
+at inference time}.  Once training is complete, the low-rank matrices can
+be absorbed into the pre-trained weight:
+\begin{equation}
+  \label{eq:lora-merge}
+  \mathbf{W}_{\text{merged}} = \mathbf{W}_0 + \mathbf{B}\mathbf{A}.
+\end{equation}
+The merged weight $\mathbf{W}_{\text{merged}}$ has the same dimensions as
+$\mathbf{W}_0$, so the deployed model incurs identical computational cost
+to the original pre-trained model.  This property is especially valuable
+in production settings where serving multiple task-specific variants of
+the same base model is required: one need only store and swap the small
+$\mathbf{B}$ and $\mathbf{A}$ matrices rather than full model copies.
+
+\paragraph{Rank selection.}
+The rank $r$ controls the trade-off between expressiveness and efficiency.
+Common choices in the literature include $r \in \{8, 16, 32, 64\}$.
+\citet{hu2021lora} demonstrated that even $r = 4$ or $r = 8$ can match
+full fine-tuning performance on many NLU benchmarks, suggesting that
+task-specific adaptations are indeed low-rank.  For more complex tasks
+such as mathematical reasoning, practitioners often increase $r$ to 16
+or 32 to provide the adaptation with additional capacity.
+
+\paragraph{Target modules.}
+LoRA can, in principle, be applied to any linear layer in the
+transformer.  In practice, \citet{hu2021lora} found that adapting the
+\emph{query} ($\mathbf{W}_Q$) and \emph{value} ($\mathbf{W}_V$)
+projection matrices in the multi-head self-attention mechanism yields
+the best trade-off between parameter count and downstream performance.
+Some subsequent works additionally adapt the key projection
+$\mathbf{W}_K$, the output projection $\mathbf{W}_O$, and the
+feed-forward network (FFN) layers, though with diminishing returns
+relative to the additional parameter budget.
+
+\paragraph{Parameter savings.}
+The memory savings afforded by LoRA are dramatic.  For a single adapted
+weight matrix $\mathbf{W}_0 \in \mathbb{R}^{d \times k}$, full
+fine-tuning requires $d \times k$ trainable parameters, whereas LoRA
+requires only $r \times (d + k)$.  For a typical transformer hidden
+dimension $d = 4096$ and $r = 16$, this represents a reduction factor
+of $d \times k \,/\, [r(d+k)] \approx d / (2r) = 128\times$ per
+adapted matrix.  Across all attention projections in a 7-billion-parameter
+model, LoRA with $r = 16$ typically trains roughly 0.1\% of the total
+parameters---approximately 10 million trainable parameters out of 7
+billion---while achieving performance competitive with full fine-tuning.
+The corresponding reduction in optimizer state memory is proportional,
+bringing the training memory footprint within reach of a single
+high-end GPU.
+
+%% ----------------------------------------------------------------
+\subsection{QLoRA: Quantised Low-Rank Adaptation}
+\label{sec:qlora}
+
+While LoRA dramatically reduces the number of \emph{trainable} parameters,
+the \emph{frozen} pre-trained weights $\mathbf{W}_0$ must still reside in
+GPU memory for the forward and backward passes.  For a 65-billion-parameter
+model stored in \texttt{float16}, this alone requires approximately 130\,GB
+of memory.  \citet{dettmers2023qlora} introduced QLoRA to address this
+remaining bottleneck through three complementary innovations.
+
+\paragraph{4-bit NormalFloat quantization.}
+QLoRA quantizes the frozen base model weights to 4-bit precision using
+a \emph{NormalFloat} (NF4) data type.  The NF4 format is
+information-theoretically optimal for normally distributed weights: its
+quantization levels are chosen such that each bin contains an equal
+number of values under a standard normal distribution.  Formally, for a
+weight tensor $\mathbf{W}$ with entries approximately distributed as
+$w_{ij} \sim \mathcal{N}(0, \sigma^2)$, the NF4 quantization levels
+$q_i$ are determined by:
+\begin{equation}
+  q_i = \Phi^{-1}\!\left(\frac{2i + 1}{2^{b+1}}\right), \quad
+  i = 0, 1, \ldots, 2^b - 1,
+\end{equation}
+where $\Phi^{-1}$ is the inverse of the standard normal CDF and $b = 4$
+is the bit width.  During the forward pass, quantized weights are
+dequantized to \texttt{bfloat16} on the fly for matrix multiplication;
+the LoRA adapters $\mathbf{B}$ and $\mathbf{A}$ remain in
+\texttt{bfloat16} throughout.
+
+\paragraph{Double quantization.}
+Blockwise quantization requires storing a scaling constant per block
+(typically one \texttt{float32} constant per 64 weights).  These
+constants themselves consume non-trivial memory at scale.  Double
+quantization applies a second round of quantization to these scaling
+constants, reducing their memory footprint from 32 bits to approximately
+8 bits per constant.  \citet{dettmers2023qlora} report that double
+quantization saves an additional 0.37 bits per parameter on average,
+translating to approximately 3\,GB of savings for a 65B model.
+
+\paragraph{Paged optimizers.}
+To handle the occasional memory spikes that arise during gradient
+checkpointing and dynamic batch construction, QLoRA employs
+\emph{paged optimizers} that leverage NVIDIA's unified memory to
+automatically page optimizer states between GPU and CPU memory.  This
+mechanism prevents out-of-memory errors during training without
+requiring the practitioner to manually manage memory allocation, and
+introduces negligible overhead because optimizer-state access patterns
+exhibit high temporal locality.
+
+\paragraph{Practical impact.}
+Taken together, these three techniques enable fine-tuning a
+65-billion-parameter model on a \emph{single} 48\,GB GPU (such as an
+NVIDIA A6000 or A100-48GB).  \citet{dettmers2023qlora} demonstrated that
+QLoRA matches the performance of full 16-bit fine-tuning on a range of
+benchmarks, establishing that the quantization-induced approximation
+error is negligible for downstream task quality.  For our scaling
+experiments, QLoRA is the primary method by which we fit 7B-class models
+and their associated RL infrastructure (reference policy, group sampling
+buffers) onto the available hardware.
+
+%% ----------------------------------------------------------------
+\subsection{Other Parameter-Efficient Methods}
+\label{sec:other-peft}
+
+While LoRA and QLoRA are the methods most directly relevant to our work,
+several alternative PEFT approaches deserve brief mention, as they
+provide important context for the design space.
+
+\paragraph{Prefix tuning.}
+\citet{li2021prefix} proposed prepending a sequence of trainable
+continuous vectors---termed \emph{prefix tokens}---to the key and value
+representations at every transformer layer.  These virtual tokens are
+optimized while all pre-trained parameters remain frozen.  Prefix tuning
+is effective for natural-language generation tasks but introduces
+additional computation proportional to the prefix length at every layer,
+slightly increasing inference latency.
+
+\paragraph{Prompt tuning.}
+\citet{lester2021prompt} introduced a simpler variant in which trainable
+\emph{soft prompts}---continuous embeddings concatenated to the input
+embedding sequence---are optimized for each downstream task.  Unlike
+prefix tuning, soft prompts are applied only at the input layer, making
+the method extremely lightweight (often fewer than 100k trainable
+parameters).  However, prompt tuning tends to underperform on small
+models and is less suited to complex generation tasks such as
+multi-step mathematical reasoning.
+
+\paragraph{Adapter layers.}
+\citet{houlsby2019adapters} proposed inserting small bottleneck modules
+(\emph{adapters}) between existing transformer layers.  Each adapter
+consists of a down-projection, a nonlinearity, and an up-projection,
+with a residual connection.  While adapters are highly effective and were
+among the first PEFT methods proposed, they introduce sequential
+computation that increases inference latency---a disadvantage that LoRA's
+merging property directly addresses.
+
+\medskip
+\noindent
+Table~\ref{tab:peft-comparison} summarizes the key characteristics of
+these methods.
+
+\begin{table}[t]
+  \centering
+  \caption{Comparison of parameter-efficient fine-tuning methods.
+           ``Extra inference cost'' indicates whether the method adds
+           computation beyond the original pre-trained model at
+           deployment time.}
+  \label{tab:peft-comparison}
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    \textbf{Method} & \textbf{Trainable params} & \textbf{Extra inference cost}
+      & \textbf{Merges into base} \\
+    \midrule
+    Full fine-tuning              & 100\%          & None       & N/A \\
+    Adapters \citep{houlsby2019adapters}
+                                  & $\sim$3--5\%   & Yes        & No \\
+    Prefix tuning \citep{li2021prefix}
+                                  & $\sim$0.1--1\% & Yes        & No \\
+    Prompt tuning \citep{lester2021prompt}
+                                  & $<$0.01\%      & Minimal    & No \\
+    LoRA \citep{hu2021lora}       & $\sim$0.1\%    & None       & Yes \\
+    QLoRA \citep{dettmers2023qlora}
+                                  & $\sim$0.1\%    & None\textsuperscript{*}
+                                                                & Yes \\
+    \bottomrule
+  \end{tabular}
+  \\[4pt]
+  \raggedright
+  \footnotesize\textsuperscript{*}After merging and re-quantization to
+  the desired serving precision.
+\end{table}
+
+%% ----------------------------------------------------------------
+\subsection{LoRA for Reinforcement Learning Fine-Tuning}
+\label{sec:lora-rl}
+
+The combination of LoRA with reinforcement learning objectives such as
+GRPO is not merely a matter of computational convenience; it confers
+several structural advantages that make it particularly well-suited to
+the RL fine-tuning setting.
+
+\paragraph{Memory budget reallocation.}
+As discussed in Section~\ref{sec:grpo} (assuming the GRPO section is
+labeled accordingly), GRPO computes advantages by sampling a group of $G$
+completions per prompt and evaluating each against a reward function.
+The quality of the advantage estimate improves with $G$, but larger
+groups require proportionally more memory for storing sequences, their
+log-probabilities, and intermediate computations.  By reducing the memory
+consumed by trainable parameters and their optimizer states from
+$\sim$16$N$ bytes (full fine-tuning with Adam) to $\sim$16 r(d+k)L$
+bytes (where $L$ is the number of adapted layers), LoRA frees a
+substantial portion of the GPU memory budget.  This freed memory can be
+directly reallocated to support larger group sizes $G$ and larger batch
+sizes, both of which improve training stability and sample efficiency.
+
+\paragraph{Stable reference policy.}
+GRPO's KL-divergence penalty
+$D_{\mathrm{KL}}(\pi_\theta \| \pi_{\text{ref}})$ requires access to a
+reference policy.  When using LoRA, the reference policy is simply the
+frozen base model $\mathbf{W}_0$---no separate copy of the model
+weights is needed.  At any point during training, the reference policy's
+output can be obtained by performing a forward pass with the LoRA
+adapters disabled (i.e., setting $\mathbf{B}\mathbf{A} = \mathbf{0}$).
+This eliminates the need to maintain two full copies of the model in
+memory, effectively halving the memory overhead associated with the
+reference policy and making single-GPU GRPO training feasible for
+models at the 7B scale.
+
+\paragraph{Regularization effect.}
+The low-rank constraint imposed by LoRA acts as an implicit regularizer
+on the policy update.  Because the adaptation $\Delta\mathbf{W} =
+\mathbf{B}\mathbf{A}$ is restricted to a rank-$r$ subspace, the policy
+cannot deviate arbitrarily from $\pi_{\text{ref}}$, which complements
+the explicit KL penalty in GRPO.  Empirically, this dual regularization
+(low-rank constraint plus KL penalty) has been observed to reduce reward
+hacking---the phenomenon where the policy exploits reward model
+weaknesses rather than genuinely improving on the target
+task~\citep{hu2021lora, dettmers2023qlora}.
+
+\paragraph{Efficient multi-task and iterative training.}
+In iterative GRPO pipelines where the policy is periodically updated and
+the reward function or curriculum changes, LoRA enables efficient
+checkpointing and rollback.  Each checkpoint consists only of the small
+$\mathbf{B}$ and $\mathbf{A}$ matrices (typically tens of megabytes
+rather than tens of gigabytes), facilitating rapid experimentation with
+different hyperparameter schedules, reward shaping strategies, and
+curriculum orderings---all of which are critical dimensions in the
+scaling study presented in later chapters.
+
+\medskip
+\noindent
+In summary, parameter-efficient fine-tuning---and LoRA/QLoRA in
+particular---is not merely an engineering convenience but a
+\emph{methodological enabler} for the class of RL-based training
+experiments we pursue.  By compressing the trainable parameter space,
+eliminating the need for a separate reference model copy, and freeing
+GPU memory for the large sample groups that GRPO requires, LoRA
+transforms the scaling study from one that would demand a multi-node
+GPU cluster into one achievable on modest hardware.  The specific
+LoRA configurations and QLoRA quantization settings used in our
+experiments are detailed in Chapter~4.

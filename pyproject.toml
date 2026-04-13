@@ -1,0 +1,90 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "tinkerrl"
+version = "0.1.0"
+description = "TinkerRL: A Reproducible Multi-Library Reinforcement Learning Benchmark Suite"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "PES LLM Research Team", email = "arvindcr4@gmail.com"},
+]
+keywords = [
+    "reinforcement-learning",
+    "benchmark",
+    "reproducibility",
+    "deep-learning",
+    "machine-learning",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "numpy>=1.24.0",
+    "torch>=2.0.0",
+    "gymnasium>=0.29.0",
+]
+
+[project.optional-dependencies]
+trl = [
+    "transformers>=4.36.0",
+    "trl>=0.7.0",
+    "datasets>=2.14.0",
+    "peft>=0.5.0",
+    "accelerate>=0.24.0",
+]
+sb3 = [
+    "stable-baselines3>=2.1.0",
+]
+cleanrl = [
+    "tensorboard>=2.14.0",
+]
+tianshou = [
+    "tianshou>=0.5.0",
+]
+d3rlpy = [
+    "d3rlpy>=2.0.0",
+]
+all = [
+    "tinkerrl[trl,sb3,cleanrl,tianshou,d3rlpy]",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0",
+    "pre-commit>=3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/pes-llm-research/tinker-rl-lab"
+Documentation = "https://github.com/pes-llm-research/tinker-rl-lab/blob/main/README.md"
+Repository = "https://github.com/pes-llm-research/tinker-rl-lab"
+Issues = "https://github.com/pes-llm-research/tinker-rl-lab/issues"
+
+[tool.setuptools.packages.find]
+include = ["tinkerrl*", "utils*", "experiments*", "scripts*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"

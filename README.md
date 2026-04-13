@@ -55,7 +55,10 @@ tinker-rl-lab/
 │
 ├── scripts/              # Automation scripts
 │   ├── run_seeds.sh      # Multi-seed experiment runner
-│   └── anonymize.sh      # Anonymization for double-blind review
+│   ├── anonymize.sh      # Anonymization for double-blind review
+│   ├── hyperparam_sensitivity.py  # Hyperparameter sweep analysis
+│   ├── contamination_check.py     # Data contamination detection
+│   └── generate_figures.py        # Publication-quality figures
 │
 ├── paper/                # Paper sources
 │   ├── main.tex          # NeurIPS 2026 LaTeX source
@@ -64,12 +67,17 @@ tinker-rl-lab/
 │
 ├── Dockerfile            # Reproducible environment
 ├── requirements.txt      # Pinned dependencies
+├── pyproject.toml        # pip-installable package config
 ├── REPRODUCE.md          # Exact reproduction commands
 ├── COMPUTE.md            # Compute resource documentation
+├── BASELINES.md          # Floor/ceiling baselines documentation
+├── BENCHMARKS_COMPARISON.md  # Comparison vs existing RL benchmarks
+├── CONTRIBUTING.md       # Contribution guidelines
 ├── NEURIPS_CHECKLIST.md  # NeurIPS paper checklist responses
 ├── ACM_CHECKLIST.md      # ACM submission checklist
 ├── ARTIFACT.md           # ACM artifact evaluation description
 ├── LIMITATIONS_AND_IMPACT.md  # Limitations & broader impact
+├── .github/workflows/ci.yml  # GitHub Actions CI
 └── LICENSE               # Apache 2.0
 ```
 
@@ -87,7 +95,8 @@ docker run --gpus all -it tinker-rl-lab bash
 ```bash
 python3 -m venv tinker-env
 source tinker-env/bin/activate
-pip install -r requirements.txt
+pip install -e .              # Install as package
+# Or: pip install -r requirements.txt
 ```
 
 ### Running Experiments
@@ -154,12 +163,20 @@ This repository follows both NeurIPS and ACM reproducibility guidelines:
 ### Reproducibility & Artifacts
 - [REPRODUCE.md](REPRODUCE.md) — Exact commands to reproduce all results
 - [COMPUTE.md](COMPUTE.md) — Compute resources and costs
+- [BASELINES.md](BASELINES.md) — Floor/ceiling baselines and statistical methodology
 - [ARTIFACT.md](ARTIFACT.md) — ACM artifact evaluation description
 - [LIMITATIONS_AND_IMPACT.md](LIMITATIONS_AND_IMPACT.md) — Limitations and broader impact
+- [BENCHMARKS_COMPARISON.md](BENCHMARKS_COMPARISON.md) — Comparison with existing RL benchmarks
+- [CONTRIBUTING.md](CONTRIBUTING.md) — How to contribute
 
 ### Submission Checklists
 - [NEURIPS_CHECKLIST.md](NEURIPS_CHECKLIST.md) — NeurIPS paper checklist responses
 - [ACM_CHECKLIST.md](ACM_CHECKLIST.md) — ACM submission checklist (CCS, badges, TAPS)
+
+### Analysis Scripts
+- `scripts/hyperparam_sensitivity.py` — Hyperparameter sensitivity sweep
+- `scripts/contamination_check.py` — Data contamination detection
+- `scripts/generate_figures.py` — Publication-quality figure generation
 
 ### External
 - [Tinker Documentation](https://tinker-docs.thinkingmachines.ai)

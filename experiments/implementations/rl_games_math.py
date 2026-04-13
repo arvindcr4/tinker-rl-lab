@@ -7,10 +7,14 @@ rl_games is designed for high-performance GPU training.
 Used in Isaac Gym for robotics simulation.
 """
 
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import numpy as np
 import torch
 import gymnasium as gym
 from gymnasium import spaces
+from utils.seed import set_global_seed, get_seed_from_args
 
 
 class ArithmeticEnv(gym.Env):
@@ -109,11 +113,14 @@ def main():
     Note: Full rl_games integration requires rl_games package.
     This shows the configuration pattern.
     """
+    seed = get_seed_from_args()
+    set_global_seed(seed)
     print("=" * 60)
     print("rl_games (NVIDIA) PPO Math RL Configuration")
     print("=" * 60)
 
     config = RL_GAMES_CONFIG
+    config["params"]["seed"] = seed
 
     print("\nPPO Configuration:")
     ppo_config = config["params"]["config"]

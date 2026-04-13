@@ -8,12 +8,16 @@ Note: SB3 is designed for RL agents, not LLMs. This implementation
 shows the pattern for custom reward wrappers and PPO training.
 """
 
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3.common.callbacks import BaseCallback
+from utils.seed import set_global_seed, get_seed_from_args
 
 
 class ArithmeticEnv(gym.Env):
@@ -112,6 +116,8 @@ class MetricsCallback(BaseCallback):
 
 def main():
     print("Creating arithmetic environment...")
+    seed = get_seed_from_args()
+    set_global_seed(seed)
 
     # Create vectorized environment
     def make_env():

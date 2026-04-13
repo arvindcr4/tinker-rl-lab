@@ -11,9 +11,13 @@ d3rlpy specializes in offline RL algorithms:
 Use case: Train from pre-collected trajectories without online interaction.
 """
 
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import numpy as np
 import d3rlpy
 from d3rlpy.dataset import MDPDataset
+from utils.seed import set_global_seed, get_seed_from_args
 
 
 def create_arithmetic_dataset(
@@ -166,6 +170,8 @@ def evaluate_model(model, num_eval: int = 1000, max_num: int = 99):
 
 
 def main():
+    seed = get_seed_from_args()
+    set_global_seed(seed)
     print("=" * 60)
     print("d3rlpy Offline RL for Math Task")
     print("=" * 60)

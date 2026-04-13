@@ -7,6 +7,9 @@ Tianshou is a modular RL library with clean PyTorch implementation.
 Features: vectorized environments, flexible policy networks.
 """
 
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import numpy as np
 import torch
 from torch import nn
@@ -20,6 +23,7 @@ from tianshou.policy import PPOPolicy
 from tianshou.trainer import OnpolicyTrainer
 from tianshou.utils.net.common import Net
 from tianshou.utils.net.discrete import Actor, Critic
+from utils.seed import set_global_seed, get_seed_from_args
 
 
 class ArithmeticEnv(gym.Env):
@@ -61,6 +65,8 @@ def make_env(max_num: int = 99):
 def main():
     # Configuration (matching Tinker)
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    seed = get_seed_from_args()
+    set_global_seed(seed)
     max_num = 99
     num_envs = 10
     hidden_sizes = [64, 64]

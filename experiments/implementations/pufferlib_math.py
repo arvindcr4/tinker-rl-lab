@@ -9,9 +9,13 @@ PufferLib features:
 - High throughput with async environments
 """
 
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
+from utils.seed import set_global_seed, get_seed_from_args
 
 
 class ArithmeticEnv(gym.Env):
@@ -108,6 +112,8 @@ def main():
     Note: Full PufferLib integration requires pufferlib package.
     This shows the configuration and environment setup pattern.
     """
+    seed = get_seed_from_args()
+    set_global_seed(seed)
     print("=" * 60)
     print("PufferLib Math RL Configuration")
     print("=" * 60)

@@ -13,12 +13,15 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import gymnasium as gym
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions.categorical import Categorical
+from utils.seed import set_global_seed, get_seed_from_args
 
 
 @dataclass
@@ -135,10 +138,8 @@ def main():
     args = Args()
 
     # Seeding
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    torch.backends.cudnn.deterministic = args.torch_deterministic
+    seed = get_seed_from_args(default=args.seed)
+    set_global_seed(seed)
 
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     print(f"Using device: {device}")

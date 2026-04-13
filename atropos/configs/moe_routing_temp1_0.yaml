@@ -1,0 +1,37 @@
+# E6 — MoE Routing Variance: standard temperature (1.0)
+# Expected: high within-group reward variance from routing divergence
+# Run alongside moe_routing_temp0_3.yaml and compare train/reward_std curves
+
+env:
+  group_size: 16
+  batch_size: 128
+  max_batches_offpolicy: 3
+  tokenizer_name: "Qwen/Qwen3-30B-A3B"
+  use_wandb: true
+  rollout_server_url: "http://localhost:8000"
+  wandb_name: "moe-routing-t1-env"
+  ensure_scores_are_not_same: false
+  max_token_length: 512
+  max_num_workers: 16
+  total_steps: 40
+  steps_per_eval: 10
+
+openai:
+  - model_name: "Qwen/Qwen3-30B-A3B"
+    base_url: "http://localhost:8001/v1"
+    api_key: "x"
+    weight: 1.0
+    num_requests_for_eval: 200
+
+tinker:
+  lora_rank: 32
+  learning_rate: 0.00003
+  max_token_trainer_length: 1024
+  checkpoint_dir: "./checkpoints/moe_routing_t1/"
+  save_checkpoint_interval: 10
+  wandb_project: "tinker-rl-scaling"
+  wandb_group: "moe-routing-ablation"
+  wandb_run_name: "moe-routing-temp1-0"
+
+slurm: false
+testing: false

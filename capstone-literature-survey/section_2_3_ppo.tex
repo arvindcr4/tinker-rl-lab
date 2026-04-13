@@ -1,0 +1,90 @@
+\subsection{Proximal Policy Optimization for Language Models}
+\label{sec:ppo}
+
+Proximal Policy Optimization (PPO), introduced by \cite{schulman2017ppo}, has become the dominant reinforcement learning algorithm for aligning large language models with human preferences. PPO belongs to the family of policy gradient methods and was originally designed for continuous control and game-playing tasks. Its adoption as the RL backbone of RLHF---most notably in InstructGPT \cite{ouyang2022instructgpt}---established the standard pipeline for post-training alignment of LLMs. This section presents the PPO algorithm in its general form, describes its adaptation to the language modeling setting, and discusses the practical challenges that motivate the search for simpler alternatives.
+
+\subsubsection{The PPO Algorithm}
+
+Policy gradient methods optimize a parameterized policy $\pi_\theta$ by ascending the gradient of an expected return objective. The vanilla policy gradient estimator takes the form
+\begin{equation}
+    \hat{g} = \hat{\mathbb{E}}_t \left[ \nabla_\theta \log \pi_\theta(a_t \mid s_t) \, \hat{A}_t \right],
+\end{equation}
+where $\hat{A}_t$ is an estimator of the advantage function at timestep $t$. A known limitation of this estimator is that performing multiple gradient steps on the same batch of data leads to destructively large policy updates, since the objective is only a valid local approximation of the true performance measure.
+
+Trust Region Policy Optimization (TRPO) addressed this instability by maximizing a surrogate objective subject to a constraint on the KL divergence between successive policies. PPO retains the benefits of trust-region methods while eliminating the need for constrained optimization. The key idea is to define a \emph{clipped surrogate objective} that automatically penalizes policy updates that move the probability ratio too far from unity.
+
+Let $r_t(\theta)$ denote the probability ratio between the current and old policies:
+\begin{equation}
+    r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)}.
+\end{equation}
+The clipped surrogate objective is then defined as
+\begin{equation}
+    \label{eq:ppo_clip}
+    L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\!\Big( r_t(\theta) \, \hat{A}_t, \;\; \text{clip}\!\big(r_t(\theta),\, 1-\epsilon,\, 1+\epsilon\big) \, \hat{A}_t \Big) \right],
+\end{equation}
+where $\epsilon$ is a hyperparameter (typically $\epsilon = 0.2$) controlling the width of the trust region. The $\min$ operator ensures that the objective is a \emph{lower bound} on the unclipped surrogate: when the advantage $\hat{A}_t > 0$, the ratio is clipped from above at $1 + \epsilon$, removing the incentive to increase the action probability beyond the trust region; when $\hat{A}_t < 0$, the ratio is clipped from below at $1 - \epsilon$, preventing the policy from decreasing the action probability too aggressively. This mechanism serves as a soft trust region that is far simpler to implement than the conjugate gradient procedure required by TRPO.
+
+PPO employs an \textbf{actor-critic architecture} in which the policy (actor) and a learned value function (critic) are trained jointly. The full objective combines the clipped policy loss, a value function regression loss, and an entropy bonus for exploration:
+\begin{equation}
+    L^{\text{CLIP+VF+S}}(\theta) = \hat{\mathbb{E}}_t \Big[ L_t^{\text{CLIP}}(\theta) - c_1 \, L_t^{\text{VF}}(\theta) + c_2 \, S[\pi_\theta](s_t) \Big],
+\end{equation}
+where $L_t^{\text{VF}}(\theta) = \big(V_\theta(s_t) - \hat{R}_t\big)^2$ is the squared-error value function loss, $S[\pi_\theta](s_t)$ is the entropy of the policy at state $s_t$, and $c_1$, $c_2$ are balancing coefficients.
+
+\subsubsection{Generalized Advantage Estimation}
+
+Accurate advantage estimation is critical to the stability and sample efficiency of PPO. \emph{Generalized Advantage Estimation} (GAE) provides a principled mechanism for interpolating between high-bias, low-variance estimates (temporal-difference residuals) and low-bias, high-variance estimates (Monte Carlo returns). Define the TD residual as
+\begin{equation}
+    \delta_t = r_t + \gamma \, V(s_{t+1}) - V(s_t),
+\end{equation}
+where $\gamma \in [0,1]$ is the discount factor. The GAE advantage estimator is the exponentially weighted sum of multi-step TD residuals:
+\begin{equation}
+    \label{eq:gae}
+    \hat{A}_t^{\text{GAE}(\gamma, \lambda)} = \sum_{l=0}^{\infty} (\gamma \lambda)^l \, \delta_{t+l},
+\end{equation}
+where $\lambda \in [0,1]$ controls the bias-variance trade-off. Setting $\lambda = 0$ recovers the one-step TD residual $\hat{A}_t = \delta_t$, while $\lambda = 1$ yields the full Monte Carlo return minus the baseline. In practice, $\lambda = 0.95$ and $\gamma = 0.99$ are common defaults \cite{schulman2017ppo}.
+
+\subsubsection{Recasting PPO for Language Generation}
+
+Applying PPO to language model alignment requires a reinterpretation of the RL formalism in terms of text generation. The correspondence is as follows:
+\begin{itemize}
+    \item \textbf{State} ($s_t$): the prompt concatenated with all tokens generated so far, i.e., the partial sequence $(x, y_1, y_2, \ldots, y_{t-1})$.
+    \item \textbf{Action} ($a_t$): the next token $y_t$ sampled from the language model's output distribution.
+    \item \textbf{Policy} ($\pi_\theta$): the language model itself, which defines a distribution over the vocabulary conditioned on the current state: $\pi_\theta(a_t \mid s_t) = p_\theta(y_t \mid x, y_{<t})$.
+    \item \textbf{Reward}: a scalar signal provided by a learned reward model $r_\phi(x, y)$ upon completion of the full response $y$. The reward is sparse---assigned only at the final token---making credit assignment across the sequence a central challenge.
+\end{itemize}
+
+Following the formulation of \cite{ouyang2022instructgpt}, the per-token reward is augmented with a KL-divergence penalty that discourages the policy from deviating too far from a frozen reference model $\pi^{\text{SFT}}$ (typically the supervised fine-tuned model that initializes training):
+\begin{equation}
+    \label{eq:rlhf_reward}
+    R(x, y) = r_\phi(x, y) - \eta \, \text{KL}\!\big(\pi_\theta(\cdot \mid x) \;\|\; \pi^{\text{SFT}}(\cdot \mid x)\big),
+\end{equation}
+where $\eta$ is a coefficient controlling the strength of the KL constraint. This penalty serves a dual purpose: it prevents \emph{reward hacking}---where the policy exploits weaknesses in the reward model to achieve high scores without genuinely improving response quality---and it preserves the language modeling capabilities acquired during pretraining. \cite{zheng2023secrets} find that this token-level KL penalty is in fact critical to the stability of PPO training, allowing the optimization to scale to longer training horizons without policy collapse.
+
+\subsubsection{The Four-Model Architecture}
+
+A distinctive characteristic of PPO-based RLHF is its requirement for \textbf{four separate neural network models} to be active during training \cite{ouyang2022instructgpt, zheng2023secrets}:
+\begin{enumerate}
+    \item \textbf{Policy model} $\pi_\theta$: the language model being optimized, which generates responses and is updated via the PPO objective.
+    \item \textbf{Reference model} $\pi^{\text{SFT}}$: a frozen copy of the initial SFT model, used to compute the KL-divergence penalty in Equation~\eqref{eq:rlhf_reward}. It remains fixed throughout training.
+    \item \textbf{Reward model} $r_\phi$: a model (typically derived from the same pretrained backbone) that has been trained on human preference comparisons to output a scalar reward for any prompt-response pair.
+    \item \textbf{Value model (critic)} $V_\psi$: estimates the expected cumulative reward from each state and is trained to minimize the squared error $L^{\text{VF}}(\psi) = \hat{\mathbb{E}}_t\big[\|V_\psi(s_t) - \hat{R}_t\|^2\big]$. It is used to compute the advantage estimates via GAE (Equation~\ref{eq:gae}).
+\end{enumerate}
+All four models may be of comparable size to the base LLM (e.g., 7B--70B parameters each), and all must reside in GPU memory simultaneously during training. For a 70B-parameter LLM, this implies that the effective memory footprint during RLHF is roughly four times that of standard supervised fine-tuning, placing severe demands on hardware infrastructure. \cite{ouyang2022instructgpt} additionally introduced a variant called \textbf{PPO-ptx} that mixes pretraining gradients into the RL objective to mitigate catastrophic forgetting:
+\begin{equation}
+    L^{\text{PPO-ptx}}(\theta) = L^{\text{PPO-CLIP}}(\theta) + \lambda_{\text{ptx}} \, \mathbb{E}_{x \sim \mathcal{D}_{\text{pretrain}}} \big[\log \pi_\theta^{\text{RL}}(x)\big],
+\end{equation}
+where $\lambda_{\text{ptx}}$ controls the weight of the pretraining language modeling loss.
+
+\subsubsection{Challenges of PPO for Large Language Models}
+
+Despite its effectiveness, PPO presents several practical challenges when applied to LLMs that have motivated research into simpler alternatives:
+
+\paragraph{Computational cost.} The four-model architecture described above imposes an enormous memory and compute burden. On-policy learning further compounds this cost: PPO requires generating fresh rollouts from the current policy at every training iteration, meaning that the full autoregressive decoding cost of the LLM is incurred at each update step. This is in contrast to offline or off-policy methods that can reuse previously collected data.
+
+\paragraph{Hyperparameter sensitivity.} Successful PPO training for LLMs requires careful tuning of numerous hyperparameters, including the clipping parameter $\epsilon$, the KL penalty coefficient $\eta$, the GAE parameters $(\gamma, \lambda)$, learning rates, batch sizes, and the number of PPO epochs per rollout batch. \cite{zheng2023secrets} conducted an extensive empirical investigation into these sensitivities, identifying \emph{policy constraints} as the single most critical factor for stable training. They found that without appropriate constraints---particularly the token-level KL penalty and advantage normalization---PPO training frequently exhibits reward hacking, response length explosion, and catastrophic pattern collapse, where the policy degenerates into producing repetitive or incoherent text.
+
+\paragraph{Reward model dependence.} The quality of the reward model places an upper bound on the quality of the final policy. Since the reward model is itself an imperfect proxy for human judgment, aggressive optimization against it inevitably leads to Goodhart's law effects: the policy learns to exploit the reward model rather than genuinely improve. The KL penalty in Equation~\eqref{eq:rlhf_reward} partially mitigates this, but calibrating its strength requires additional tuning.
+
+\paragraph{Implementation complexity.} \cite{zheng2023secrets} emphasize that ``accurate code implementation matters''---subtle details such as advantage whitening (normalizing advantages to zero mean and unit variance), reward clipping, value function loss clipping, and global gradient norm clipping all have material effects on training stability. The authors propose \textbf{PPO-max}, an enhanced variant of PPO that integrates these stabilization techniques, demonstrating substantially improved training robustness for LLMs.
+
+These challenges---the four-model memory overhead, on-policy sampling cost, hyperparameter fragility, and implementation complexity---collectively explain why PPO-based RLHF, despite its strong empirical results, has been described as a ``puzzle'' to stabilize at scale \cite{zheng2023secrets}. They also provide the direct motivation for the development of simpler reinforcement learning algorithms for LLM alignment, including the group-based methods that are the subject of this work.

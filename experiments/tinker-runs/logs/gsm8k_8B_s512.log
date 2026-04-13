@@ -1,0 +1,70 @@
+[gsm8k_8B_s512] Loading GSM8K...
+[gsm8k_8B_s512] 7473 GSM8K examples | model=Qwen/Qwen3-8B seed=512 rank=32 lr=3e-05
+[gsm8k_8B_s512] Connecting to Tinker...
+[gsm8k_8B_s512] Run: 99971b26-f228-5726-88c7-ab92c73b72ec:train:0
+[gsm8k_8B_s512]   1/50 | loss=-2.0603 | reward=0.375 | acc=37.5%
+[gsm8k_8B_s512]   2/50 | loss=-4.0957 | reward=0.125 | acc=12.5%
+[gsm8k_8B_s512]   3/50 | loss=-2.8940 | reward=0.250 | acc=25.0%
+[gsm8k_8B_s512]   4/50 | loss=0.0000 | reward=0.000 | acc=0.0%
+[gsm8k_8B_s512]   5/50 | loss=0.0000 | reward=0.000 | acc=0.0%
+[gsm8k_8B_s512]   6/50 | loss=-2.7206 | reward=0.375 | acc=37.5%
+[gsm8k_8B_s512]   7/50 | loss=-3.4790 | reward=0.500 | acc=50.0%
+[gsm8k_8B_s512]   8/50 | loss=-0.2472 | reward=0.375 | acc=37.5%
+[gsm8k_8B_s512]   9/50 | loss=0.0000 | reward=0.500 | acc=50.0%
+[gsm8k_8B_s512]  10/50 | loss=3.3797 | reward=0.250 | acc=25.0%
+[gsm8k_8B_s512]  11/50 | loss=-4.2413 | reward=0.375 | acc=37.5%
+[gsm8k_8B_s512]  12/50 | loss=-2.0259 | reward=0.250 | acc=25.0%
+[gsm8k_8B_s512]   -> ckpt s12
+[gsm8k_8B_s512]  13/50 | loss=-3.4236 | reward=0.125 | acc=12.5%
+[gsm8k_8B_s512]  14/50 | loss=-8.6438 | reward=0.125 | acc=12.5%
+[gsm8k_8B_s512]  15/50 | loss=-1.6795 | reward=0.500 | acc=50.0%
+[gsm8k_8B_s512]  16/50 | loss=-1.6520 | reward=0.250 | acc=25.0%
+[gsm8k_8B_s512]  17/50 | loss=-1.7212 | reward=0.125 | acc=12.5%
+[gsm8k_8B_s512]  18/50 | loss=-2.7434 | reward=0.250 | acc=25.0%
+[gsm8k_8B_s512]  19/50 | loss=2.8310 | reward=0.875 | acc=87.5%
+[gsm8k_8B_s512]  20/50 | loss=-2.7333 | reward=0.125 | acc=12.5%
+[gsm8k_8B_s512]  21/50 | loss=-6.4281 | reward=0.375 | acc=37.5%
+[gsm8k_8B_s512]  22/50 | loss=-7.8942 | reward=0.500 | acc=50.0%
+[gsm8k_8B_s512]  23/50 | loss=-0.8005 | reward=0.250 | acc=25.0%
+[gsm8k_8B_s512]  24/50 | loss=-6.3167 | reward=0.125 | acc=12.5%
+[gsm8k_8B_s512]   -> ckpt s24
+[gsm8k_8B_s512]  25/50 | loss=0.0000 | reward=0.000 | acc=0.0%
+[gsm8k_8B_s512]  26/50 | loss=-0.8808 | reward=0.250 | acc=25.0%
+[gsm8k_8B_s512]  27/50 | loss=0.0410 | reward=0.375 | acc=37.5%
+[gsm8k_8B_s512]  28/50 | loss=-1.0355 | reward=0.625 | acc=62.5%
+[gsm8k_8B_s512]  29/50 | loss=-1.0464 | reward=0.250 | acc=25.0%
+[gsm8k_8B_s512]  30/50 | loss=0.0000 | reward=0.500 | acc=50.0%
+[gsm8k_8B_s512]  31/50 | loss=-7.9402 | reward=0.625 | acc=62.5%
+[gsm8k_8B_s512]  32/50 | loss=-4.3064 | reward=0.375 | acc=37.5%
+[gsm8k_8B_s512]  33/50 | loss=-9.0897 | reward=0.375 | acc=37.5%
+[gsm8k_8B_s512]  34/50 | loss=-2.0290 | reward=0.750 | acc=75.0%
+[gsm8k_8B_s512]  35/50 | loss=0.0000 | reward=0.500 | acc=50.0%
+[gsm8k_8B_s512]  36/50 | loss=-2.1032 | reward=0.125 | acc=12.5%
+[gsm8k_8B_s512]   -> ckpt s36
+[gsm8k_8B_s512]  37/50 | loss=-3.4060 | reward=0.250 | acc=25.0%
+[gsm8k_8B_s512]  38/50 | loss=-6.0713 | reward=0.500 | acc=50.0%
+[gsm8k_8B_s512]  39/50 | loss=-3.4445 | reward=0.125 | acc=12.5%
+[gsm8k_8B_s512]  40/50 | loss=0.0359 | reward=0.250 | acc=25.0%
+[gsm8k_8B_s512]  41/50 | loss=-4.0265 | reward=0.500 | acc=50.0%
+[gsm8k_8B_s512]  42/50 | loss=-2.4506 | reward=0.125 | acc=12.5%
+[gsm8k_8B_s512]  43/50 | loss=-4.1237 | reward=0.375 | acc=37.5%
+[gsm8k_8B_s512]  44/50 | loss=0.0000 | reward=0.000 | acc=0.0%
+[gsm8k_8B_s512]  45/50 | loss=3.5275 | reward=0.375 | acc=37.5%
+[gsm8k_8B_s512]  46/50 | loss=0.0000 | reward=0.000 | acc=0.0%
+[gsm8k_8B_s512]  47/50 | loss=-6.6480 | reward=0.750 | acc=75.0%
+[gsm8k_8B_s512]  48/50 | loss=-6.1881 | reward=0.375 | acc=37.5%
+[gsm8k_8B_s512]   -> ckpt s48
+[gsm8k_8B_s512]  49/50 | loss=-5.6950 | reward=0.375 | acc=37.5%
+[gsm8k_8B_s512]  50/50 | loss=-5.0031 | reward=0.125 | acc=12.5%
+
+[gsm8k_8B_s512] === FINAL REPORT ===
+[gsm8k_8B_s512] Model: Qwen/Qwen3-8B | Seed: 512 | LoRA rank: 32
+[gsm8k_8B_s512] Steps: 50 | Group: 4 | LR: 3e-05
+[gsm8k_8B_s512] First-5 avg accuracy: 15.0%
+[gsm8k_8B_s512] Last-10 avg accuracy: 30.0%
+[gsm8k_8B_s512] Peak accuracy: 87.5%
+[gsm8k_8B_s512] Zero-loss steps: 8/50 (16%)
+[gsm8k_8B_s512] Zero-reward steps: 5/50 (10%)
+[gsm8k_8B_s512] Run ID: 99971b26-f228-5726-88c7-ab92c73b72ec:train:0
+[gsm8k_8B_s512] Sampler: tinker://99971b26-f228-5726-88c7-ab92c73b72ec:train:0/sampler_weights/final
+[gsm8k_8B_s512] Reward trace: [0.375, 0.125, 0.25, 0.0, 0.0, 0.375, 0.5, 0.375, 0.5, 0.25, 0.375, 0.25, 0.125, 0.125, 0.5, 0.25, 0.125, 0.25, 0.875, 0.125, 0.375, 0.5, 0.25, 0.125, 0.0, 0.25, 0.375, 0.625, 0.25, 0.5, 0.625, 0.375, 0.375, 0.75, 0.5, 0.125, 0.25, 0.5, 0.125, 0.25, 0.5, 0.125, 0.375, 0.0, 0.375, 0.0, 0.75, 0.375, 0.375, 0.125]

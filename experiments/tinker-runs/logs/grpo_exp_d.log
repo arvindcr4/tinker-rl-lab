@@ -1,0 +1,43 @@
+[D_xlam] Loading Salesforce/xlam-function-calling-60k...
+Generating train split:   0%|          | 0/60000 [00:00<?, ? examples/s]Generating train split: 100%|██████████| 60000/60000 [00:01<00:00, 56363.59 examples/s]Generating train split: 100%|██████████| 60000/60000 [00:01<00:00, 55265.73 examples/s]
+[D_xlam] Loaded 60000 examples
+[D_xlam] Parsed 2000 usable examples
+[D_xlam] Connecting...
+[D_xlam] Run: 22e9e5fd-e7d8-5b00-8ba7-70dedf9b9251:train:0 | LR=3e-05 group=8 temp=0.8
+[D_xlam] Step   1/30 | loss=-2.3319 | reward=0.253
+[D_xlam] Step   2/30 | loss=0.6737 | reward=0.062
+[D_xlam] Step   3/30 | loss=-5.4944 | reward=0.184
+[D_xlam] Step   4/30 | loss=-0.0619 | reward=0.144
+[D_xlam] Step   5/30 | loss=1.0418 | reward=0.009
+[D_xlam] Step   6/30 | loss=0.3350 | reward=0.359
+[D_xlam] Step   7/30 | loss=-4.1806 | reward=0.594
+[D_xlam] Step   8/30 | loss=-4.4257 | reward=0.113
+[D_xlam] Step   9/30 | loss=-0.3597 | reward=0.109
+[D_xlam] Step  10/30 | loss=1.7016 | reward=0.772
+[D_xlam]   -> Checkpoint step_10
+[D_xlam] Step  11/30 | loss=-1.0758 | reward=0.503
+[D_xlam] Step  12/30 | loss=-3.3181 | reward=0.228
+[D_xlam] Step  13/30 | loss=1.1695 | reward=0.141
+[D_xlam] Step  14/30 | loss=0.6622 | reward=0.300
+[D_xlam] Step  15/30 | loss=-2.8151 | reward=0.453
+[D_xlam] Step  16/30 | loss=-2.6474 | reward=0.094
+[D_xlam] Step  17/30 | loss=-8.8998 | reward=0.294
+[D_xlam] Step  18/30 | loss=-5.8775 | reward=0.344
+[D_xlam] Step  19/30 | loss=-2.9214 | reward=0.278
+[D_xlam] Step  20/30 | loss=-0.4103 | reward=0.247
+[D_xlam]   -> Checkpoint step_20
+[D_xlam] Step  21/30 | loss=-8.5629 | reward=0.594
+[D_xlam] Step  22/30 | loss=-3.8936 | reward=0.041
+[D_xlam] Step  23/30 | loss=1.5568 | reward=0.556
+[D_xlam] Step  24/30 | loss=0.0000 | reward=0.500
+[D_xlam] Step  25/30 | loss=0.4724 | reward=0.416
+[D_xlam] Step  26/30 | loss=2.2644 | reward=0.269
+[D_xlam] Step  27/30 | loss=-3.5893 | reward=0.419
+[D_xlam] Step  28/30 | loss=-8.9861 | reward=0.322
+[D_xlam] Step  29/30 | loss=-4.5422 | reward=0.103
+[D_xlam] Step  30/30 | loss=-9.2577 | reward=0.416
+[D_xlam]   -> Checkpoint step_30
+
+[D_xlam] DONE | avg_reward_last10=0.363
+[D_xlam] Run ID: 22e9e5fd-e7d8-5b00-8ba7-70dedf9b9251:train:0
+[D_xlam] Sampler: tinker://22e9e5fd-e7d8-5b00-8ba7-70dedf9b9251:train:0/sampler_weights/final

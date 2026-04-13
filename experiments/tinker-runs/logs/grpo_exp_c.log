@@ -1,0 +1,39 @@
+[C_low_temp] Connecting...
+[C_low_temp] Run: 5569c1fa-e21d-5aef-aece-dfc2ed86ec42:train:0 | LR=3e-05 group=4 temp=0.4 rank=32
+[C_low_temp] Step   1/30 | loss=-3.1414 | reward=0.875
+[C_low_temp] Step   2/30 | loss=-3.2944 | reward=0.750
+[C_low_temp] Step   3/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step   4/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step   5/30 | loss=-3.7036 | reward=0.625
+[C_low_temp] Step   6/30 | loss=-1.8920 | reward=0.881
+[C_low_temp] Step   7/30 | loss=-0.1095 | reward=0.944
+[C_low_temp] Step   8/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step   9/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step  10/30 | loss=-0.3130 | reward=0.944
+[C_low_temp]   -> Checkpoint step_10
+[C_low_temp] Step  11/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step  12/30 | loss=-3.7366 | reward=0.938
+[C_low_temp] Step  13/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step  14/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step  15/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step  16/30 | loss=-4.0714 | reward=0.819
+[C_low_temp] Step  17/30 | loss=-0.3300 | reward=0.944
+[C_low_temp] Step  18/30 | loss=-0.1554 | reward=0.944
+[C_low_temp] Step  19/30 | loss=-0.3716 | reward=0.944
+[C_low_temp] Step  20/30 | loss=0.0000 | reward=1.000
+[C_low_temp]   -> Checkpoint step_20
+[C_low_temp] Step  21/30 | loss=-0.6920 | reward=0.944
+[C_low_temp] Step  22/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step  23/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step  24/30 | loss=-3.3292 | reward=0.938
+[C_low_temp] Step  25/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step  26/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step  27/30 | loss=0.0045 | reward=0.887
+[C_low_temp] Step  28/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step  29/30 | loss=0.0000 | reward=1.000
+[C_low_temp] Step  30/30 | loss=0.0000 | reward=1.000
+[C_low_temp]   -> Checkpoint step_30
+
+[C_low_temp] DONE | avg_reward_last10=0.977
+[C_low_temp] Run ID: 5569c1fa-e21d-5aef-aece-dfc2ed86ec42:train:0
+[C_low_temp] Sampler: tinker://5569c1fa-e21d-5aef-aece-dfc2ed86ec42:train:0/sampler_weights/final

@@ -1,0 +1,975 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% RL for LLMs: A Systematic GRPO Scaling Study
+%% Capstone Project — Group 6
+%% MTech Data Science & AI, PES University, Bengaluru
+%%
+%% Chapter 2: Foundation (Literature Review)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt,a4paper]{report}
+
+%% ---------- Page geometry ----------
+\usepackage[
+  top=2.5cm,
+  bottom=2.5cm,
+  left=3cm,
+  right=2.5cm
+]{geometry}
+
+%% ---------- Mathematics ----------
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+%% ---------- Typography & spacing ----------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{setspace}
+\onehalfspacing
+
+%% ---------- Lists ----------
+\usepackage{enumitem}
+
+%% ---------- Graphics & figures ----------
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{caption}
+\usepackage{subcaption}
+
+%% ---------- Tables ----------
+\usepackage{booktabs}
+
+%% ---------- Algorithms ----------
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+
+%% ---------- Code listings ----------
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  captionpos=b
+}
+
+%% ---------- Hyperlinks ----------
+\usepackage[
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  citecolor=green!50!black,
+  urlcolor=blue!60!black
+]{hyperref}
+
+%% ---------- Bibliography ----------
+\usepackage[round,sort&compress]{natbib}
+\bibliographystyle{plainnat}
+
+%% ---------- Title information ----------
+\title{%
+  \vspace{-1cm}
+  \textbf{RL for LLMs: A Systematic GRPO Scaling Study} \\[1.5em]
+  \large Capstone Project Report \\[0.8em]
+  \large MTech in Data Science \& Artificial Intelligence
+}
+\author{%
+  \textbf{Group 6} \\[1em]
+  Department of Computer Science and Engineering \\
+  PES University, Bengaluru --- 560085, India
+}
+\date{Academic Year 2025--2026}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%% ================================================================
+%% TITLE PAGE
+%% ================================================================
+\begin{titlepage}
+  \centering
+  \vspace*{1.5cm}
+
+  {\LARGE\bfseries PES University, Bengaluru}\\[0.4cm]
+  {\large Department of Computer Science and Engineering}\\[0.3cm]
+  {\large MTech in Data Science \& Artificial Intelligence}\\[2.5cm]
+
+  \rule{\textwidth}{1.2pt}\\[0.5cm]
+  {\Huge\bfseries RL for LLMs:\\[0.3em]
+   A Systematic GRPO Scaling Study}\\[0.5cm]
+  \rule{\textwidth}{1.2pt}\\[2cm]
+
+  {\Large\textbf{Capstone Project Report}}\\[1.5cm]
+
+  {\large\textbf{Group 6}}\\[2.5cm]
+
+  \vfill
+  {\large Academic Year 2025--2026}
+\end{titlepage}
+
+%% ================================================================
+%% CHAPTER 2: FOUNDATION
+%% ================================================================
+\setcounter{chapter}{1}          % so that \chapter gives "Chapter 2"
+\chapter{Foundation}
+\label{ch:foundation}
+
+%% ----------------------------------------------------------------
+%% Section 2.1: Introduction
+%% ----------------------------------------------------------------
+\section{Introduction}
+\label{sec:foundation-intro}
+
+Large language models (LLMs) have demonstrated remarkable capabilities across
+a broad spectrum of natural-language tasks, yet their raw pre-trained behaviour
+often diverges from the nuanced requirements of downstream applications.
+Bridging this gap---aligning model outputs with human intent, factual
+correctness, and structured reasoning---has become one of the central
+challenges of modern NLP research.  The present chapter lays the theoretical
+and empirical groundwork upon which our scaling study is built, surveying the
+key ideas, algorithms, and benchmarks that collectively motivate and inform
+our experimental design.
+
+\paragraph{Reinforcement Learning from Human Feedback (RLHF).}
+The RLHF pipeline, popularised by InstructGPT \citep{ouyang2022instructgpt},
+established a three-stage recipe---supervised fine-tuning, reward-model
+training, and reinforcement-learning-based policy optimisation---that
+transformed how practitioners align LLMs with human preferences.  We begin
+in Section~\ref{sec:rlhf} by reviewing this pipeline in detail,
+since every subsequent algorithmic advance discussed in this chapter can be
+understood as an attempt to simplify, stabilise, or scale one or more of
+its stages.
+
+\paragraph{Policy optimisation: from PPO to DPO to GRPO.}
+Proximal Policy Optimisation \citep[PPO;][]{schulman2017ppo} served as the
+workhorse optimiser within early RLHF systems, but its reliance on a
+separately trained value network and careful hyperparameter tuning introduced
+significant computational overhead.  Direct Preference Optimisation
+\citep[DPO;][]{rafailov2023dpo} later showed that the reward-modelling
+step could be bypassed entirely by re-parameterising the Bradley--Terry
+preference objective in terms of the policy itself.  Most recently, Group
+Relative Policy Optimisation \citep[GRPO;][]{shao2024deepseekmath} proposed
+an elegant middle ground: it retains the explicit reward signal of PPO but
+eliminates the value function by computing advantages relative to a group
+of sampled completions, thereby reducing memory requirements and simplifying
+the training loop.  The DeepSeek-R1 effort \citep{deepseek2025r1}
+subsequently demonstrated that GRPO can elicit sophisticated multi-step
+reasoning in large-scale models.  Sections~\ref{sec:ppo}--\ref{sec:grpo}
+trace this algorithmic lineage, formalise each objective, and analyse the
+trade-offs that make GRPO an attractive choice for resource-constrained
+scaling experiments.
+
+\paragraph{Parameter-efficient fine-tuning.}
+Full fine-tuning of models with billions of parameters is prohibitively
+expensive for most research groups.  Low-Rank Adaptation
+\citep[LoRA;][]{hu2021lora} offers a compelling alternative by injecting
+trainable low-rank matrices into frozen pre-trained weights, dramatically
+reducing the number of trainable parameters while preserving expressive
+power.  In Section~\ref{sec:peft}, we review LoRA and its variants,
+discussing how they interact with reinforcement learning objectives and
+why they are essential enablers of the scaling experiments presented in
+later chapters.
+
+\paragraph{Mathematical reasoning benchmarks.}
+Rigorous evaluation requires benchmarks with unambiguous ground-truth
+answers.  We focus on two widely adopted mathematical reasoning datasets:
+GSM8K \citep{cobbe2021gsm8k}, a collection of grade-school math word
+problems, and MATH \citep{hendrycks2021math}, a more challenging suite
+spanning algebra, number theory, geometry, and beyond.  Together with
+chain-of-thought prompting strategies \citep{wei2022chainofthought}, these
+benchmarks provide a controlled test-bed for measuring whether
+reinforcement-learning-based fine-tuning genuinely improves a model's
+capacity for step-by-step reasoning rather than superficial pattern
+matching.  Section~\ref{sec:math-benchmarks} describes these datasets, their
+evaluation protocols, and the metrics we adopt.
+
+\paragraph{Related scaling studies and infrastructure.}
+Finally, Sections~\ref{sec:related-work-rl-reasoning}--\ref{sec:scaling-laws}
+survey prior work that has investigated how RLHF and its variants behave as
+a function of model size, dataset scale, and compute budget, along with
+the infrastructure that makes such experiments feasible.  These studies
+provide important baselines and methodological precedents for our own
+systematic exploration of GRPO scaling behaviour.
+
+\medskip
+\noindent
+Taken together, the topics covered in this chapter establish the conceptual
+vocabulary, algorithmic toolkit, and evaluation methodology required to
+appreciate the experimental contributions of the subsequent chapters.  By
+grounding our study in this foundation, we aim to make the design choices,
+trade-offs, and results of our GRPO scaling experiments both transparent
+and reproducible.
+
+
+%% ================================================================
+%% Section 2.2: Reinforcement Learning from Human Feedback
+%% ================================================================
+\section{Reinforcement Learning from Human Feedback}
+\label{sec:rlhf}
+
+The core challenge in deploying large language models is the misalignment between the pretraining objective---predicting the next token on internet text---and the downstream goal of generating outputs that are helpful, honest, and harmless. Reinforcement Learning from Human Feedback (RLHF) emerged as the dominant paradigm for bridging this gap, establishing a systematic pipeline that transforms raw human preference judgments into a training signal capable of steering model behavior. This section traces the intellectual lineage of RLHF, formalizes its three-stage pipeline, and examines the limitations that have motivated subsequent alternatives.
+
+\subsection{Origins and Early Work}
+
+The idea of learning reward functions from human preferences, rather than hand-engineering them, predates the modern LLM era. \cite{christiano2017deep} proposed a framework for \emph{deep reinforcement learning from human preferences}, demonstrating that a reward model trained on pairwise comparisons of trajectory segments could guide an RL agent to solve complex tasks---including Atari games and simulated robot locomotion---without access to the ground-truth reward function. Critically, their approach required human feedback on less than one percent of the agent's total interactions with the environment, making human oversight practically feasible. This work established two foundational principles: (i)~pairwise comparisons are a more reliable and cognitively simpler annotation format than absolute scalar ratings, and (ii)~a learned reward model can serve as a proxy objective that decouples the expensive human evaluation from the iterative policy optimization loop.
+
+The transition from simulated environments to natural language was pioneered by \cite{ziegler2019finetuning}, who applied reward learning to fine-tune language models on four tasks: stylistic text continuation and abstractive summarization. Using a pretrained language model as the initial policy, they trained a reward model on approximately 60,000 human comparisons and optimized the policy with Proximal Policy Optimization (PPO)~\cite{schulman2017ppo}. A key technical contribution was the introduction of a Kullback--Leibler (KL) divergence penalty between the learned policy and the original supervised model, which prevented the policy from deviating too far from the pretrained distribution---a regularization mechanism that would become standard in all subsequent RLHF work.
+
+\cite{stiennon2020learning} scaled this approach substantially, applying it to the Reddit TL;DR summarization task with models up to 6.7 billion parameters. They collected a high-quality dataset of 64,832 human comparisons and demonstrated that policies trained with human feedback significantly outperformed supervised learning baselines---even those with ten times more parameters. This work also provided early empirical evidence of \emph{reward over-optimization}: as the policy was optimized more aggressively against the reward model, true human preference scores initially improved but eventually degraded, revealing that the reward model's predictions became anti-correlated with genuine quality under heavy optimization.
+
+\subsection{The Three-Stage RLHF Pipeline}
+
+The work of \cite{ouyang2022instructgpt} consolidated and scaled the preceding research into the now-canonical three-stage RLHF pipeline, applying it to align GPT-3 across a broad distribution of real-world user instructions. The resulting system, \textbf{InstructGPT}, became the methodological foundation for ChatGPT and established RLHF as the dominant post-training paradigm for large language models.
+
+\paragraph{Stage 1: Supervised Fine-Tuning (SFT).}
+The pipeline begins with supervised fine-tuning of a pretrained language model on a dataset of high-quality demonstrations. In the InstructGPT setting, a team of 40 human contractors wrote demonstrations of desired model behavior for a diverse set of prompts. A pretrained GPT-3 model was then fine-tuned on approximately 13,000 such demonstration prompts using standard maximum likelihood estimation. The resulting SFT model serves a dual purpose: it provides a strong initialization for the RL policy and establishes a reference distribution against which policy divergence is subsequently penalized.
+
+\paragraph{Stage 2: Reward Model Training.}
+The second stage trains a scalar reward model that serves as a proxy for human judgment. Starting from the SFT model with its final unembedding layer replaced by a randomly initialized linear projection head, the reward model is trained to predict which of two candidate completions a human annotator would prefer for a given prompt. \cite{ouyang2022instructgpt} employed a 6B parameter reward model, finding that 175B reward models exhibited training instability.
+
+The reward model is trained under the \textbf{Bradley--Terry} pairwise comparison framework. Given a prompt $x$ and a pair of completions where $y_w$ is preferred over $y_l$ by a human annotator, the probability that $y_w$ is preferred is modeled as:
+\begin{equation}
+    P(y_w \succ y_l \mid x) = \sigma\!\bigl(r_\theta(x, y_w) - r_\theta(x, y_l)\bigr),
+\end{equation}
+where $r_\theta(x, y)$ is the scalar reward assigned by the model with parameters $\theta$, and $\sigma(\cdot)$ denotes the logistic sigmoid function. The corresponding training loss is:
+\begin{equation}
+    \mathcal{L}_{\text{RM}}(\theta) = -\frac{1}{\binom{K}{2}} \, \mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}} \Bigl[\log \sigma\!\bigl(r_\theta(x, y_w) - r_\theta(x, y_l)\bigr)\Bigr],
+    \label{eq:rm_loss}
+\end{equation}
+where $K$ is the number of candidate responses ranked per prompt.
+
+\paragraph{Stage 3: Reinforcement Learning with PPO.}
+In the final stage, the SFT model is fine-tuned as an RL policy to maximize the learned reward signal using PPO~\cite{schulman2017ppo}. To prevent reward hacking, a per-token KL divergence penalty constrains the RL policy to remain close to the reference SFT distribution:
+\begin{equation}
+    \mathcal{J}(\phi) = \mathbb{E}_{(x, y) \sim \pi_\phi^{\text{RL}}} \Bigl[r_\theta(x, y) - \beta \, \text{KL}\!\bigl(\pi_\phi^{\text{RL}}(\cdot \mid x) \,\|\, \pi^{\text{SFT}}(\cdot \mid x)\bigr)\Bigr],
+    \label{eq:rlhf_objective}
+\end{equation}
+where $\beta$ controls the strength of the KL penalty.
+
+\subsection{InstructGPT: Results and Significance}
+
+The results of \cite{ouyang2022instructgpt} provided compelling evidence for the effectiveness of RLHF at scale. The headline finding was striking: \emph{the 1.3B parameter InstructGPT model was preferred by human evaluators over the 175B parameter GPT-3}, despite having more than 100$\times$ fewer parameters. The 175B InstructGPT model was preferred over the 175B GPT-3 baseline 85\% of the time. On TruthfulQA, InstructGPT generated truthful and informative answers approximately twice as often as GPT-3, and hallucination rates on closed-domain tasks dropped from 41\% to 21\%.
+
+\subsection{Limitations of the Standard RLHF Pipeline}
+
+Despite its empirical success, the standard RLHF pipeline introduces several significant challenges:
+
+\paragraph{Computational Complexity.}
+The full RLHF pipeline requires maintaining up to four models simultaneously in GPU memory: (i)~the policy model, (ii)~the reference model, (iii)~the reward model, and (iv)~the value/critic model. For large-scale models, this quadrupling of memory requirements imposes severe infrastructure constraints.
+
+\paragraph{Training Instability.}
+PPO-based RLHF training is notoriously sensitive to hyperparameters, including the KL penalty coefficient $\beta$, the PPO clipping ratio, learning rates, and the number of PPO epochs per batch.
+
+\paragraph{Reward Hacking and Over-Optimization.}
+As the policy is optimized against the learned proxy reward, it inevitably discovers outputs that achieve high reward model scores without corresponding improvements in genuine quality---a failure mode known as \emph{reward hacking} or \emph{Goodhart's Law} applied to learned objectives.
+
+\paragraph{Human Annotation Bottleneck.}
+The pipeline depends critically on the quality, consistency, and scale of human preference annotations, creating a bottleneck that limits iteration speed.
+
+\vspace{0.5em}
+\noindent These limitations---particularly the computational overhead and the fragility of PPO-based optimization---have driven the development of alternative approaches discussed in the following sections.
+
+
+%% ================================================================
+%% Section 2.3: Proximal Policy Optimization for Language Models
+%% ================================================================
+\section{Proximal Policy Optimization for Language Models}
+\label{sec:ppo}
+
+Proximal Policy Optimization (PPO), introduced by \cite{schulman2017ppo}, has become the dominant reinforcement learning algorithm for aligning large language models with human preferences. This section presents the PPO algorithm, describes its adaptation to language modeling, and discusses the practical challenges that motivate the search for simpler alternatives.
+
+\subsection{The PPO Algorithm}
+
+Policy gradient methods optimize a parameterized policy $\pi_\theta$ by ascending the gradient of an expected return objective. Let $r_t(\theta)$ denote the probability ratio between the current and old policies:
+\begin{equation}
+    r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)}.
+\end{equation}
+The clipped surrogate objective is:
+\begin{equation}
+    \label{eq:ppo_clip}
+    L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\!\Big( r_t(\theta) \, \hat{A}_t, \;\; \text{clip}\!\big(r_t(\theta),\, 1-\epsilon,\, 1+\epsilon\big) \, \hat{A}_t \Big) \right],
+\end{equation}
+where $\epsilon$ is a hyperparameter (typically $\epsilon = 0.2$) controlling the width of the trust region.
+
+PPO employs an \textbf{actor-critic architecture} with the full objective:
+\begin{equation}
+    L^{\text{CLIP+VF+S}}(\theta) = \hat{\mathbb{E}}_t \Big[ L_t^{\text{CLIP}}(\theta) - c_1 \, L_t^{\text{VF}}(\theta) + c_2 \, S[\pi_\theta](s_t) \Big],
+\end{equation}
+where $L_t^{\text{VF}}(\theta) = \big(V_\theta(s_t) - \hat{R}_t\big)^2$ is the value function loss and $S[\pi_\theta](s_t)$ is the entropy bonus.
+
+\subsection{Generalized Advantage Estimation}
+
+\emph{Generalized Advantage Estimation} (GAE) provides a principled mechanism for interpolating between high-bias and low-variance advantage estimates. Define the TD residual as $\delta_t = r_t + \gamma \, V(s_{t+1}) - V(s_t)$. The GAE advantage estimator is:
+\begin{equation}
+    \label{eq:gae}
+    \hat{A}_t^{\text{GAE}(\gamma, \lambda)} = \sum_{l=0}^{\infty} (\gamma \lambda)^l \, \delta_{t+l},
+\end{equation}
+where $\lambda \in [0,1]$ controls the bias-variance trade-off.
+
+\subsection{Recasting PPO for Language Generation}
+
+Applying PPO to language model alignment requires reinterpreting the RL formalism:
+\begin{itemize}
+    \item \textbf{State} ($s_t$): the prompt concatenated with all tokens generated so far.
+    \item \textbf{Action} ($a_t$): the next token $y_t$ sampled from the LLM's output distribution.
+    \item \textbf{Policy} ($\pi_\theta$): the language model itself.
+    \item \textbf{Reward}: a scalar signal from a learned reward model $r_\phi(x, y)$ upon completion of the full response, making credit assignment across the sequence a central challenge.
+\end{itemize}
+
+\subsection{The Four-Model Architecture}
+
+A distinctive characteristic of PPO-based RLHF is its requirement for \textbf{four separate neural network models} during training \cite{ouyang2022instructgpt, zheng2023secrets}:
+\begin{enumerate}
+    \item \textbf{Policy model} $\pi_\theta$: the language model being optimized.
+    \item \textbf{Reference model} $\pi^{\text{SFT}}$: a frozen copy for computing the KL penalty.
+    \item \textbf{Reward model} $r_\phi$: scores generated completions.
+    \item \textbf{Value model (critic)} $V_\psi$: estimates expected cumulative reward for GAE.
+\end{enumerate}
+For a 70B-parameter LLM, the effective memory footprint is roughly four times that of standard supervised fine-tuning.
+
+\subsection{Challenges of PPO for Large Language Models}
+
+\paragraph{Computational cost.} The four-model architecture and on-policy sampling impose enormous memory and compute burdens.
+
+\paragraph{Hyperparameter sensitivity.} \cite{zheng2023secrets} conducted an extensive empirical investigation, identifying \emph{policy constraints} as the single most critical factor for stable training.
+
+\paragraph{Reward model dependence.} The quality of the reward model places an upper bound on the quality of the final policy.
+
+\paragraph{Implementation complexity.} Subtle details such as advantage whitening, reward clipping, and global gradient norm clipping all materially affect training stability \cite{zheng2023secrets}.
+
+These challenges collectively explain why PPO-based RLHF has been described as a ``puzzle'' to stabilize at scale and provide the direct motivation for the development of simpler RL algorithms for LLMs.
+
+
+%% ================================================================
+%% Section 2.4: Direct Preference Optimization
+%% ================================================================
+\section{Direct Preference Optimization}
+\label{sec:dpo}
+
+\emph{Direct Preference Optimization} (DPO)~\cite{rafailov2023dpo} eliminates the reward-modelling and reinforcement-learning stages entirely by showing that the optimal policy under the KL-constrained RLHF objective admits a closed-form solution.
+
+\paragraph{Closed-form optimal policy.}
+The KL-constrained RLHF objective seeks:
+\begin{equation}
+\label{eq:rlhf-obj}
+\max_{\pi}\;\mathbb{E}_{x \sim \mathcal{D},\, y \sim \pi(\cdot|x)}
+  \bigl[r(x,y)\bigr]
+  - \beta\, D_{\mathrm{KL}}\!\bigl(\pi(\cdot|x) \,\|\, \pi_{\text{ref}}(\cdot|x)\bigr).
+\end{equation}
+The unique optimum is:
+\begin{equation}
+\label{eq:optimal-policy}
+\pi^{*}(y|x)
+  = \frac{1}{Z(x)}\,\pi_{\text{ref}}(y|x)\,
+    \exp\!\Bigl(\frac{1}{\beta}\,r(x,y)\Bigr),
+\end{equation}
+where $Z(x)$ is the partition function.
+
+\paragraph{Reward reparameterization.}
+Rearranging yields the reward in terms of the optimal policy:
+\begin{equation}
+\label{eq:reward-reparam}
+r(x,y) = \beta\,\log\frac{\pi^{*}(y|x)}{\pi_{\text{ref}}(y|x)}
+        + \beta\,\log Z(x).
+\end{equation}
+
+\paragraph{The DPO loss.}
+Substituting into the Bradley--Terry preference model~\cite{bradley1952rank}, the partition functions cancel, giving:
+\begin{equation}
+\label{eq:dpo-loss}
+\boxed{
+\mathcal{L}_{\text{DPO}}(\theta)
+  = -\,\mathbb{E}_{(x,\,y_w,\,y_l)\sim\mathcal{D}}\!
+    \left[\log\sigma\!\left(
+      \beta\left(
+        \log\frac{\pi_{\theta}(y_w|x)}{\pi_{\text{ref}}(y_w|x)}
+      - \log\frac{\pi_{\theta}(y_l|x)}{\pi_{\text{ref}}(y_l|x)}
+      \right)
+    \right)\right].}
+\end{equation}
+
+\paragraph{Practical advantages.}
+DPO enjoys several benefits: (1)~no separate reward model or RL optimizer required; (2)~40--60\% less GPU memory than PPO; (3)~stable cross-entropy-style training.
+
+\paragraph{Limitations.}
+DPO has well-documented shortcomings: (1)~dependence on offline, static preference data leading to distribution shift; (2)~no online exploration; (3)~likelihood displacement; (4)~weak credit assignment for long-horizon reasoning tasks.
+
+\paragraph{Why DPO is insufficient for mathematical reasoning.}
+Mathematical reasoning is \emph{verifiable}---a derivation either reaches the correct answer or not---and this binary outcome signal is far richer and cheaper to obtain than human preference annotations. DPO cannot exploit this signal because it requires pre-collected pairwise preferences. Furthermore, the credit-assignment problem is severe: a single error in one step renders the entire completion incorrect, but DPO's completion-level loss provides no mechanism to localise fault. These shortcomings motivate GRPO, introduced next.
+
+
+%% ================================================================
+%% Section 2.5: Group Relative Policy Optimization
+%% ================================================================
+\section{Group Relative Policy Optimization}
+\label{sec:grpo}
+
+\emph{Group Relative Policy Optimization} (GRPO), introduced by \cite{shao2024deepseekmath} in the DeepSeekMath project, charts an elegant middle course: it retains the on-policy sampling and explicit reward signal of PPO while discarding the value network that constitutes its principal computational bottleneck.
+
+\paragraph{Motivation: the cost of the critic.}
+The standard PPO setup loads four full-sized models into GPU memory. GRPO eliminates $V_\psi$ entirely by \emph{computing} a baseline on the fly through group sampling and reward normalization, reducing the number of trained models from four to three.
+
+\paragraph{The GRPO algorithm.}
+GRPO proceeds in three steps:
+
+\subparagraph{Step 1: Group sampling.}
+For each prompt $q$, the current policy generates a group of $G$ independent completions:
+\begin{equation}
+\label{eq:grpo-sampling}
+\{o_1, o_2, \ldots, o_G\} \sim \pi_{\theta_{\text{old}}}(\cdot \mid q).
+\end{equation}
+
+\subparagraph{Step 2: Group-relative advantage estimation.}
+A reward function scores each completion, yielding $\mathbf{r} = \{r_1, \ldots, r_G\}$. Advantages are computed by z-score normalization within the group:
+\begin{equation}
+\label{eq:grpo-advantage}
+\boxed{
+\hat{A}_{i,t} = \tilde{r}_i
+  = \frac{r_i - \operatorname{mean}(\mathbf{r})}
+         {\operatorname{std}(\mathbf{r})},
+\qquad i = 1, \ldots, G,
+\quad t = 1, \ldots, |o_i|.}
+\end{equation}
+
+\subparagraph{Step 3: Clipped policy update with KL regularization.}
+\begin{equation}
+\label{eq:grpo-objective}
+\boxed{
+\mathcal{J}_{\text{GRPO}}(\theta)
+  = \mathbb{E}_{q \sim \mathcal{D},\;
+      \{o_i\}_{i=1}^{G} \sim \pi_{\theta_{\text{old}}}(\cdot|q)}
+    \left[
+      \frac{1}{G}\sum_{i=1}^{G}
+      \frac{1}{|o_i|}\sum_{t=1}^{|o_i|}
+      \left(
+        \min\!\Bigl(
+          \rho_{i,t}\,\hat{A}_{i,t},\;
+          \operatorname{clip}\bigl(\rho_{i,t},\,
+            1{-}\varepsilon,\,1{+}\varepsilon\bigr)\,\hat{A}_{i,t}
+        \Bigr)
+        - \beta\, D_{\mathrm{KL}}^{(i,t)}
+      \right)
+    \right],}
+\end{equation}
+where the per-token probability ratio is $\rho_{i,t} = \pi_\theta(o_{i,t} \mid q, o_{i,<t}) / \pi_{\theta_{\text{old}}}(o_{i,t} \mid q, o_{i,<t})$, and the per-token KL divergence uses the unbiased estimator:
+\begin{equation}
+\label{eq:grpo-kl}
+D_{\mathrm{KL}}^{(i,t)}
+  = \frac{\pi_{\text{ref}}(o_{i,t} \mid q,\, o_{i,<t})}
+         {\pi_\theta(o_{i,t} \mid q,\, o_{i,<t})}
+  - \log\frac{\pi_{\text{ref}}(o_{i,t} \mid q,\, o_{i,<t})}
+             {\pi_\theta(o_{i,t} \mid q,\, o_{i,<t})}
+  - 1.
+\end{equation}
+
+%% ---------- Algorithm environment ----------
+\begin{algorithm}[t]
+\DontPrintSemicolon
+\SetAlgoLined
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+\Input{Initial policy $\pi_{\theta_{\text{init}}}$;\;
+       reward model $r_\varphi$;\;
+       task prompts $\mathcal{D}$;\;
+       hyperparameters $\varepsilon, \beta, G, \mu$}
+\Output{Optimized policy $\pi_\theta$}
+\BlankLine
+$\pi_\theta \leftarrow \pi_{\theta_{\text{init}}}$ \;
+\For{iteration $= 1, \ldots, I$}{
+  $\pi_{\text{ref}} \leftarrow \pi_\theta$
+    \tcp*{Sync reference model}
+  \For{step $= 1, \ldots, M$}{
+    Sample a mini-batch $\mathcal{D}_b \subset \mathcal{D}$ \;
+    $\pi_{\theta_{\text{old}}} \leftarrow \pi_\theta$
+      \tcp*{Snapshot policy}
+    \ForEach{prompt $q \in \mathcal{D}_b$}{
+      Sample $G$ outputs $\{o_i\}_{i=1}^{G} \sim
+        \pi_{\theta_{\text{old}}}(\cdot \mid q)$
+        \tcp*{Step 1}
+      Compute rewards $\{r_i\}_{i=1}^{G}$ using $r_\varphi$ \;
+      $\hat{A}_{i,t} \leftarrow
+        \dfrac{r_i - \operatorname{mean}(\mathbf{r})}
+              {\operatorname{std}(\mathbf{r})}$
+        \quad $\forall\, i,t$
+        \tcp*{Step 2}
+    }
+    \For{GRPO sub-iteration $= 1, \ldots, \mu$}{
+      Update $\pi_\theta$ by maximizing $\mathcal{J}_{\text{GRPO}}(\theta)$
+        \quad (Eq.~\ref{eq:grpo-objective})
+        \tcp*{Step 3}
+    }
+  }
+}
+\Return $\pi_\theta$ \;
+\caption{Group Relative Policy Optimization (GRPO)}
+\label{alg:grpo}
+\end{algorithm}
+
+\paragraph{Comparison with PPO.}
+
+\begin{table}[t]
+\centering
+\caption{Comparison of PPO and GRPO for LLM reinforcement learning.}
+\label{tab:ppo-vs-grpo}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Aspect} & \textbf{PPO} & \textbf{GRPO} \\
+\midrule
+Models in memory &
+  Policy, reference, reward, value (4) &
+  Policy, reference, reward (3) \\
+Advantage estimation &
+  GAE via learned $V_\psi$ &
+  Z-score within sampled group \\
+KL regularization &
+  Penalty added to reward &
+  Penalty added directly to loss \\
+Per-token value network &
+  Required &
+  Not needed \\
+Sampling strategy &
+  Single rollout per prompt &
+  $G$ rollouts per prompt \\
+Hyperparameters &
+  $\varepsilon, \gamma, \lambda, \beta,$ value LR &
+  $\varepsilon, \beta, G$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Reward design for mathematical reasoning.}
+\cite{shao2024deepseekmath} exploit the verifiability of mathematics through rule-based reward functions:
+\begin{itemize}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Accuracy reward:} $r_{\text{acc}}(q, o) = \mathbf{1}[\text{extract}(o) = a^*]$, where $a^*$ is the ground-truth answer.
+\item \textbf{Format reward:} A small bonus for structured chain-of-thought output (e.g., enclosing the final answer in \verb|\boxed{}|).
+\end{itemize}
+
+The combination of verifiable binary rewards and group-relative normalization creates a self-regulating learning signal: when the model is weak and most completions are wrong, the few correct ones receive very large positive advantages; as the model improves, advantage magnitudes naturally shrink.
+
+\paragraph{DeepSeekMath results.}
+On the competition-level MATH benchmark, DeepSeekMath-RL 7B achieved \textbf{51.7\%} top-1 accuracy---competitive with Gemini-Ultra (53.2\%) and GPT-4 (52.9\%). With self-consistency over 64 samples, accuracy rose to \textbf{60.9\%}. On GSM8K, GRPO improved accuracy from 82.9\% to 88.2\%, with gains transferring to out-of-domain benchmarks.
+
+
+%% ================================================================
+%% Section 2.6: DeepSeek-R1 and Emergent Reasoning
+%% ================================================================
+\section{DeepSeek-R1 and Emergent Reasoning}
+\label{sec:deepseek-r1}
+
+DeepSeek-R1 \cite{deepseek2025r1} provides a compelling demonstration that reasoning abilities can emerge from reinforcement learning alone.
+
+\subsection{DeepSeek-R1-Zero: Pure RL without Supervised Fine-Tuning}
+
+DeepSeek-R1-Zero is trained by applying GRPO directly to DeepSeek-V3-Base \cite{deepseek2024v3}, a 671-billion-parameter Mixture-of-Experts architecture, without any SFT stage. The reward design is entirely rule-based: accuracy rewards (exact match on final answer or test case execution) and format rewards (\texttt{<think>...</think>} tags). No neural reward model is employed.
+
+On AIME 2024, pass@1 accuracy increases from an initial 15.6\% to 71.0\% over the course of training. With consensus decoding (cons@64), the score reaches 86.7\%. On MATH-500, DeepSeek-R1-Zero achieves 95.9\%.
+
+\subsection{Emergent Behaviors}
+
+\paragraph{Spontaneous chain-of-thought.} The model naturally learns to allocate more ``thinking time,'' with average response length increasing steadily throughout training.
+
+\paragraph{Self-reflection and verification.} The model develops the capacity to recognize errors and backtrack, spontaneously producing phrases such as ``Wait, let me reconsider.''
+
+\paragraph{The ``aha moment.''} An intermediate checkpoint begins producing reflections like: ``\textit{Wait, wait. Wait. That's an aha moment I can flag here. Let's reevaluate this step-by-step}.'' The authors describe this as ``an aha moment for us, allowing us to witness the power and beauty of reinforcement learning.''
+
+\subsection{The DeepSeek-R1 Multi-Stage Pipeline}
+
+To address R1-Zero's limitations (poor readability, language mixing), DeepSeek-R1 uses a four-stage pipeline:
+
+\paragraph{Stage 1: Cold-start SFT.} Fine-tuning on curated long chain-of-thought examples.
+
+\paragraph{Stage 2: Reasoning-focused RL.} GRPO with accuracy, format, and language-consistency rewards:
+\begin{equation}
+    R_{\text{language}} = \frac{\text{Num}(\text{Words}_{\text{target}})}{\text{Num}(\text{Words}_{\text{total}})}.
+\end{equation}
+
+\paragraph{Stage 3: Rejection sampling and SFT.} Generating $\sim$800K samples via rejection sampling, combined with non-reasoning data.
+
+\paragraph{Stage 4: RL across all scenarios.} Final RL with diverse reward signals spanning reasoning, helpfulness, and safety.
+
+\subsection{Benchmark Results}
+
+\begin{table}[ht]
+\centering
+\caption{Benchmark comparison of DeepSeek models and OpenAI o1-1217. All figures are pass@1 (\%).}
+\label{tab:deepseek-r1-results}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Benchmark} & \textbf{R1-Zero} & \textbf{R1} & \textbf{o1-1217} \\
+\midrule
+AIME 2024 (pass@1)       & 77.9  & 79.8  & 79.2 \\
+MATH-500 (pass@1)        & 95.9  & 97.3  & 96.4 \\
+GPQA Diamond (pass@1)    & 75.8  & 71.5  & 75.7 \\
+Codeforces (percentile)  & 80.4  & 96.3  & 96.6 \\
+LiveCodeBench (pass@1)   & 50.0  & 65.9  & 63.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Distillation to Smaller Models}
+
+DeepSeek-R1's reasoning capabilities transfer effectively to smaller models (1.5B--70B) through knowledge distillation. Critically, \textbf{distillation outperforms direct RL on smaller models}: DeepSeek-R1-Distill-Qwen-32B achieves 72.6\% on AIME 2024 vs.\ 47.0\% for Qwen2.5-32B-Zero (trained with large-scale RL from scratch). This suggests that below a certain capacity threshold, distilling reasoning patterns from a more powerful teacher is both more effective and more computationally efficient than RL from scratch.
+
+
+%% ================================================================
+%% Section 2.7: Parameter-Efficient Fine-Tuning
+%% ================================================================
+\section{Parameter-Efficient Fine-Tuning}
+\label{sec:peft}
+
+The preceding sections have established that RL---and GRPO in particular---can substantially improve LLM reasoning capabilities. However, these algorithms presuppose the ability to \emph{fine-tune} the underlying language model. For a model with $N$ parameters, full fine-tuning with Adam requires roughly $16N$ bytes of GPU memory. For a 7B model, this alone exceeds 100\,GB. The problem is compounded in RL settings where GRPO requires maintaining a reference policy alongside the active policy.
+
+\subsection{Low-Rank Adaptation (LoRA)}
+\label{sec:lora}
+
+Low-Rank Adaptation \citep{hu2021lora} freezes $\mathbf{W}_0$ and injects a trainable low-rank decomposition:
+\begin{equation}
+  \label{eq:lora-weight}
+  \mathbf{W} = \mathbf{W}_0 + \Delta\mathbf{W}
+             = \mathbf{W}_0 + \mathbf{B}\mathbf{A},
+\end{equation}
+where $\mathbf{B} \in \mathbb{R}^{d \times r}$, $\mathbf{A} \in \mathbb{R}^{r \times k}$, and $r \ll \min(d, k)$. The forward pass is:
+\begin{equation}
+  \mathbf{h} = \mathbf{W}_0 \mathbf{x}
+               + \frac{\alpha}{r}\,\mathbf{B}\mathbf{A}\mathbf{x},
+\end{equation}
+where $\alpha$ is a scaling hyperparameter. Initialization: $\mathbf{A} \sim \mathcal{N}(0, \sigma^2)$, $\mathbf{B} = \mathbf{0}$, ensuring $\mathbf{B}\mathbf{A} = \mathbf{0}$ at the start. At inference, the low-rank matrices merge into the base weight: $\mathbf{W}_{\text{merged}} = \mathbf{W}_0 + \mathbf{B}\mathbf{A}$, introducing \emph{zero additional latency}.
+
+\paragraph{Rank selection.} Common choices include $r \in \{8, 16, 32, 64\}$. Even $r = 4$ can match full fine-tuning on many benchmarks.
+
+\paragraph{Target modules.} Adapting query ($\mathbf{W}_Q$) and value ($\mathbf{W}_V$) projections yields the best trade-off. For a 7B model with $r = 16$, LoRA trains $\sim$0.1\% of total parameters.
+
+\subsection{QLoRA: Quantised Low-Rank Adaptation}
+\label{sec:qlora}
+
+\citet{dettmers2023qlora} introduced QLoRA with three innovations:
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{4-bit NormalFloat (NF4) quantization}: information-theoretically optimal for normally distributed weights.
+\item \textbf{Double quantization}: reduces memory from quantization constants.
+\item \textbf{Paged optimizers}: manages memory spikes via unified memory.
+\end{enumerate}
+Together, these enable fine-tuning a 65B model on a single 48\,GB GPU.
+
+\subsection{Other Parameter-Efficient Methods}
+
+\begin{table}[t]
+  \centering
+  \caption{Comparison of parameter-efficient fine-tuning methods.}
+  \label{tab:peft-comparison}
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    \textbf{Method} & \textbf{Trainable params} & \textbf{Extra inference cost}
+      & \textbf{Merges into base} \\
+    \midrule
+    Full fine-tuning              & 100\%          & None       & N/A \\
+    Adapters \citep{houlsby2019adapters}
+                                  & $\sim$3--5\%   & Yes        & No \\
+    Prefix tuning \citep{li2021prefix}
+                                  & $\sim$0.1--1\% & Yes        & No \\
+    Prompt tuning \citep{lester2021prompt}
+                                  & $<$0.01\%      & Minimal    & No \\
+    LoRA \citep{hu2021lora}       & $\sim$0.1\%    & None       & Yes \\
+    QLoRA \citep{dettmers2023qlora}
+                                  & $\sim$0.1\%    & None       & Yes \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{LoRA for Reinforcement Learning Fine-Tuning}
+
+The combination of LoRA with GRPO confers several structural advantages:
+
+\paragraph{Memory budget reallocation.} LoRA frees GPU memory that can be reallocated to larger group sizes $G$ and batch sizes.
+
+\paragraph{Stable reference policy.} The reference policy is simply the frozen base model $\mathbf{W}_0$---no separate copy needed. The reference output can be obtained by performing a forward pass with LoRA adapters disabled.
+
+\paragraph{Regularization effect.} The low-rank constraint acts as implicit regularization on the policy update, complementing GRPO's explicit KL penalty.
+
+\paragraph{Efficient checkpointing.} Each checkpoint consists only of the small $\mathbf{B}$ and $\mathbf{A}$ matrices (megabytes rather than gigabytes), facilitating rapid experimentation.
+
+
+%% ================================================================
+%% Section 2.8: Mathematical Reasoning Benchmarks
+%% ================================================================
+\section{Evaluation Benchmarks}
+\label{sec:math-benchmarks}
+
+\subsection{GSM8K}
+
+The Grade School Math 8K (GSM8K) benchmark \cite{cobbe2021gsm8k} comprises 8,500 grade-school-level math word problems (7,473 train, 1,319 test). Each problem requires 2--8 steps of elementary arithmetic reasoning. Evaluation is via exact match on the final numeric answer. Frontier models now achieve $>$95\%, and GSM8K is approaching saturation, though it retains value for evaluating smaller models and studying RL-driven reasoning emergence.
+
+\subsection{MATH}
+
+The MATH benchmark \cite{hendrycks2021math} consists of 12,500 competition-level mathematics problems across seven subject areas (Prealgebra, Algebra, Number Theory, Counting \& Probability, Geometry, Intermediate Algebra, Precalculus) and five difficulty levels. Answers are in \LaTeX{} \verb|\boxed{}| format. At release, GPT-2 achieved only 6.9\%; frontier reasoning models now exceed 95\%.
+
+\subsection{MATH-500}
+
+MATH-500, introduced by \cite{lightman2023lets}, is a curated 500-problem subset of the MATH test set, representative across all subjects and difficulty levels. DeepSeek-R1-Zero achieved 95.9\% on this subset. It is one of the primary evaluation benchmarks in this work.
+
+\subsection{AIME}
+
+The American Invitational Mathematics Examination consists of 15 problems with integer answers (0--999), representing a harder-tier benchmark. DeepSeek-R1 reported 79.8\% pass@1 on AIME 2024.
+
+\subsection{Chain-of-Thought and Its Connection to RL-Trained Reasoning}
+
+Chain-of-thought (CoT) prompting \cite{wei2022chainofthought} dramatically improved LLM performance on mathematical benchmarks by eliciting intermediate reasoning steps. The key insight underlying DeepSeek-R1-Zero is that RL training can cause CoT-like behaviors to \emph{emerge spontaneously}: the model discovers that generating intermediate reasoning steps is instrumentally useful for arriving at correct answers.
+
+\begin{table}[ht]
+\centering
+\caption{Comparison of mathematical reasoning benchmarks.}
+\label{tab:math-benchmarks}
+\small
+\begin{tabular}{lccccl}
+\toprule
+\textbf{Benchmark} & \textbf{Size} & \textbf{Difficulty} & \textbf{Answer Format} & \textbf{Frontier SOTA} & \textbf{Primary Use} \\
+\midrule
+GSM8K & 1,319 (test) & Grade school & Numeric & $\sim$97\% & Baseline reasoning \\
+MATH & 5,000 (test) & Competition & \LaTeX{} (\verb|\boxed{}|) & $>$95\% & Standard evaluation \\
+MATH-500 & 500 & Competition & \LaTeX{} (\verb|\boxed{}|) & $\sim$99\% & Efficient evaluation \\
+AIME 2024 & 30 & Olympiad-track & Integer (0--999) & $\sim$96\% & Frontier discrimination \\
+\midrule
+\multicolumn{6}{l}{\textit{Code Generation \& Software Engineering}} \\
+\midrule
+HumanEval & 164 & Introductory & Pass/Fail (tests) & $\sim$99\% & Code synthesis \\
+MBPP & 974 & Introductory & Pass/Fail (tests) & $\sim$95\% & Code synthesis \\
+LiveCodeBench & 600+ & Competition & Pass/Fail (tests) & $\sim$65\% & Contamination-free code \\
+SWE-bench Verified & 500 & Real-world & Patch resolution & $\sim$72\% & Software engineering \\
+\midrule
+\multicolumn{6}{l}{\textit{Scientific \& General Reasoning}} \\
+\midrule
+GPQA Diamond & 198 & Graduate & Multiple choice & $\sim$92\% & Expert-level science \\
+MMLU-Pro & 12,000+ & Undergraduate+ & Multiple choice (10) & $\sim$85\% & General knowledge \\
+OlympiadBench & 8,476 & Olympiad & Open-ended & $\sim$60\% & Multimodal science \\
+ARC-AGI-2 & 400 & Abstract & Grid transform & $<$10\% & Fluid intelligence \\
+MMMU & 11,500 & Expert & Multiple choice & $\sim$78\% & Multimodal reasoning \\
+\midrule
+\multicolumn{6}{l}{\textit{Additional Math \& Code Datasets}} \\
+\midrule
+AMC 10/12 & 25 each & High school & Multiple choice (5) & $\sim$95\% & Mid-tier math \\
+Minerva Math & 272 & University & Open-ended & $\sim$90\% & STEM reasoning \\
+APPS & 10,000 & Mixed & Pass/Fail (tests) & $\sim$80\% & Algorithmic code \\
+CodeContests & 13,328 & Competition & Pass/Fail (tests) & $\sim$45\% & Competitive programming \\
+MathVista & 6,141 & Mixed & Mixed & $\sim$70\% & Visual math \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Code Generation Benchmarks}
+
+\subsubsection{HumanEval and MBPP}
+
+HumanEval \cite{chen2021humaneval} is a benchmark of 164 hand-crafted Python programming problems introduced by OpenAI. Each problem includes a function signature, a docstring specification, and a suite of unit tests. The model must synthesize a correct function body from the docstring; evaluation uses the \emph{pass@k} metric, measuring whether at least one of $k$ generated samples passes all test cases. At release, Codex-12B achieved 28.8\% pass@1; as of early 2026, frontier models exceed 99\%.
+
+The Mostly Basic Python Problems (MBPP) benchmark \cite{austin2021mbpp} complements HumanEval with 974 crowd-sourced Python programming tasks targeting introductory-level skills. Each task provides a natural language description and three test cases. MBPP tests a broader distribution of basic programming patterns than HumanEval. Both benchmarks have approached saturation for frontier models, leading to the development of enhanced variants (HumanEval+ and MBPP+) with expanded test suites that expose edge-case failures \cite{liu2024humanevalplus}.
+
+\subsubsection{LiveCodeBench}
+
+LiveCodeBench \cite{jain2024livecodebench}, published at ICLR 2025, addresses the critical problem of \emph{data contamination} in code benchmarks. It continuously collects new competitive programming problems from LeetCode, AtCoder, and Codeforces after a given cutoff date, ensuring that problems were not present in any model's training data. Beyond code generation, LiveCodeBench evaluates self-repair, code execution prediction, and test output prediction capabilities. The benchmark currently hosts over 600 problems and has been instrumental in detecting contamination across models including GPT-4o, Claude, and DeepSeek. DeepCoder-14B, a GRPO+-trained model, achieved 60.6\% on LiveCodeBench \cite{deepcoder2025}, demonstrating the applicability of RL-based training to code reasoning.
+
+\subsubsection{SWE-bench}
+
+SWE-bench \cite{jimenez2024swebench}, published at ICLR 2024, evaluates whether language models can resolve real-world GitHub issues by generating code patches. The benchmark sources task instances from popular open-source Python repositories, each consisting of a GitHub issue description and a test suite that validates the fix. The full benchmark contains 2,294 instances; the \emph{SWE-bench Verified} subset of 500 instances has been validated by human software engineers from OpenAI to ensure solvability and unambiguous specifications.
+
+SWE-bench represents a qualitative shift from function-level code generation to repository-level software engineering---models must navigate multi-file codebases, understand project conventions, and produce patches that pass both new and regression tests. As of early 2026, the strongest agentic systems achieve approximately 72\% on SWE-bench Verified. SWE-bench has become the de facto standard for evaluating AI coding agents, and its multimodal and multilingual extensions further broaden the evaluation scope.
+
+\subsection{Scientific and General Reasoning Benchmarks}
+
+\subsubsection{GPQA Diamond}
+
+The Graduate-Level Google-Proof Q\&A (GPQA) benchmark \cite{rein2024gpqa}, developed by researchers at NYU and Anthropic, evaluates expert-level scientific reasoning. The \emph{Diamond} subset consists of 198 multiple-choice questions in biology, physics, and chemistry, crafted by PhD-level domain experts and validated through a rigorous multi-stage protocol. Questions are designed to be ``Google-proof''---skilled non-experts with unrestricted internet access achieve only $\sim$34\% accuracy, while domain experts score $\sim$65--70\%.
+
+GPQA Diamond has served as a critical benchmark for tracking the frontier of scientific reasoning in LLMs. At launch, GPT-4 achieved only $\sim$39\%. By mid-2024, OpenAI's o1 reached $\sim$77\%, surpassing human expert performance. As of early 2026, top models exceed 92\%. The benchmark's relevance to RL-trained reasoning models is significant: DeepSeek-R1 achieved 71.5\% on GPQA Diamond, demonstrating that GRPO-based training can enhance scientific reasoning beyond mathematics.
+
+\subsubsection{MMLU and MMLU-Pro}
+
+The Massive Multitask Language Understanding (MMLU) benchmark \cite{hendrycks2021mmlu} evaluates knowledge and reasoning across 57 diverse subjects spanning STEM, humanities, social sciences, and professional domains. Each subject contains multiple-choice questions at difficulty levels ranging from elementary to advanced professional. MMLU has been one of the most widely cited LLM benchmarks, though frontier models now routinely exceed 90\%, reducing its discriminative power.
+
+MMLU-Pro \cite{wang2024mmlupro} addresses these limitations by expanding answer choices from 4 to 10, eliminating trivially solvable questions, and focusing on reasoning-intensive tasks. The resulting benchmark of over 12,000 questions causes a 16--33\% accuracy drop compared to original MMLU, restoring discriminative power. DeepSeek-R1 achieved 85.5\% on MMLU, demonstrating that RL-trained reasoning capabilities transfer beyond mathematics to general knowledge domains.
+
+\subsubsection{OlympiadBench}
+
+OlympiadBench \cite{he2024olympiadbench}, presented at ACL 2024, is a bilingual (English--Chinese) multimodal benchmark comprising 8,476 Olympiad-level problems in mathematics and physics. Unlike MATH or AIME, which are text-only, OlympiadBench includes problems with diagrams, graphs, and figures that require visual understanding. Problems are drawn from international science Olympiads and national competitions, with detailed step-by-step solutions provided for evaluation.
+
+The benchmark is particularly relevant to the study of RL-trained reasoning models because it tests whether mathematical reasoning capabilities transfer to problems requiring both symbolic manipulation and visual interpretation. Frontier reasoning models achieve approximately 60\% accuracy, indicating substantial room for improvement and preserving discriminative power for evaluating future RL-enhanced systems.
+
+\subsubsection{ARC-AGI}
+
+The Abstraction and Reasoning Corpus (ARC-AGI) \cite{chollet2019arc}, introduced by Fran\c{c}ois Chollet, evaluates \emph{fluid intelligence}---the ability to solve novel problems without prior domain-specific knowledge. Each task presents a small number of input--output grid pairs as demonstrations; the model must infer the underlying transformation rule and apply it to a held-out test grid. ARC-AGI is designed to resist memorisation: tasks require recognising abstract patterns (symmetry, counting, object manipulation) that are trivial for humans but remain extremely challenging for LLMs.
+
+ARC-AGI-1 was the benchmark that pinpointed the moment in late 2024 when AI systems moved beyond pure memorisation, with OpenAI's o3-preview achieving a breakthrough score. ARC-AGI-2, released in March 2025, is substantially harder: pure LLMs score 0\%, and public reasoning systems achieve only single-digit accuracy, while every task has been solved by at least two humans in under two attempts. ARC-AGI provides a complementary evaluation axis to mathematical benchmarks by testing general abstract reasoning rather than domain-specific knowledge.
+
+\subsubsection{MMMU}
+
+The Massive Multi-discipline Multimodal Understanding (MMMU) benchmark \cite{yue2024mmmu} evaluates multimodal models on 11,500 expert-level questions spanning 30 subjects across six disciplines (Art \& Design, Business, Science, Health \& Medicine, Humanities, and Technology \& Engineering). Each question requires understanding images---charts, diagrams, maps, chemical structures, medical scans, or artwork---alongside textual reasoning.
+
+MMMU is particularly important for evaluating whether RL-trained reasoning capabilities extend to multimodal settings. At release, frontier models achieved approximately 56\%; by early 2026, the best systems reach $\sim$78\%, indicating that multimodal expert-level reasoning remains an active challenge. The benchmark has become the standard evaluation for vision-language models and is increasingly relevant as GRPO-style training is extended to multimodal architectures.
+
+\subsection{Additional Evaluation Datasets}
+
+\subsubsection{AMC 10/12}
+
+The American Mathematics Competitions (AMC 10 and AMC 12) are widely-administered pre-AIME competitions consisting of 25 multiple-choice problems each, with 75-minute time limits. AMC problems are generally easier than AIME but harder than GSM8K, filling a useful difficulty gap. Problems test algebra, geometry, combinatorics, and number theory at the high school level. SimpleRL-Zoo \cite{zeng2025simplerl} uses AMC as one of its standard evaluation benchmarks, reporting that GRPO-trained models show consistent improvements across the AMC difficulty range.
+
+\subsubsection{Minerva Math}
+
+The Minerva Math benchmark, curated from the evaluation suite of Google's Minerva model \cite{lewkowycz2022minerva}, consists of quantitative reasoning problems drawn from STEM courses including calculus, linear algebra, probability, and physics. Problems require multi-step symbolic computation and domain knowledge beyond the competition-math style of MATH and AIME. Minerva Math has been adopted as a standard evaluation benchmark by several RL-for-reasoning works, including SimpleRL-Zoo and AceReason-Nemotron, providing coverage of university-level mathematical reasoning that complements the competition-oriented benchmarks.
+
+\subsubsection{APPS and CodeContests}
+
+APPS \cite{hendrycks2021apps} (Automated Programming Progress Standard) consists of 10,000 coding problems collected from open-access coding websites such as Codeforces and Kattis, spanning three difficulty levels: introductory, interview, and competition. Each problem includes multiple test cases for evaluation, and solutions require understanding of algorithms, data structures, and mathematical reasoning.
+
+CodeContests \cite{li2022codecontests}, introduced by DeepMind, is a competitive programming benchmark drawn from Codeforces contests with additional problems from other platforms. It includes 13,328 problems with extensive test cases (both public and hidden). Both benchmarks evaluate a model's ability to translate natural language problem descriptions into correct programs, testing algorithmic reasoning---a capability closely related to the chain-of-thought reasoning that GRPO training aims to enhance.
+
+\subsubsection{MathVista}
+
+MathVista \cite{lu2024mathvista} is a consolidated mathematical reasoning benchmark designed to evaluate models on tasks requiring \emph{visual} mathematical understanding. It aggregates 6,141 problems from 28 existing datasets and 3 newly created datasets, spanning five primary mathematical reasoning types: algebraic reasoning, arithmetic reasoning, geometry reasoning, numeric common sense, and statistical reasoning. Problems include function plots, geometric diagrams, tables, bar charts, and scientific figures.
+
+MathVista bridges the gap between text-only math benchmarks (GSM8K, MATH) and general multimodal benchmarks (MMMU), providing targeted evaluation of whether mathematical reasoning capabilities extend to visual inputs. At release, GPT-4V achieved 49.9\%; as of early 2026, frontier multimodal reasoning models reach approximately 70\%, indicating ongoing challenges in visual mathematical reasoning.
+
+
+%% ================================================================
+%% Section 2.9: Related Work on RL for LLM Reasoning
+%% ================================================================
+\section{Related Work on RL for LLM Reasoning}
+\label{sec:related-work-rl-reasoning}
+
+The release of DeepSeek-R1 in January 2025 ignited a wave of research into RL as a mechanism for eliciting and scaling reasoning capabilities. This section surveys the most influential concurrent efforts.
+
+\subsection{DeepScaleR: Iterative Context Lengthening}
+
+DeepScaleR~\cite{luo2025deepscaler}, developed at UC Berkeley and Agentica, demonstrated that RL can be scaled effectively even with a \emph{1.5B parameter} model. The central innovation is \textbf{iterative context lengthening}: training begins with shorter context windows (8K tokens) and progressively extends to 16K and 24K. DeepScaleR-1.5B achieved \textbf{43.1\% Pass@1 on AIME 2024}, matching OpenAI's o1-preview. The training dataset comprised $\sim$40,000 math problems, and the entire recipe was open-sourced.
+
+\subsection{SimpleRL-Zoo: Systematic Investigation of Zero RL Training}
+
+SimpleRL-Zoo~\cite{zeng2025simplerl}, published at COLM 2025, studied zero RL training across \textbf{10 diverse base models} spanning different families and scales. Key findings: (i)~most prior reproduction efforts focused on Qwen2.5 models, which are unrepresentatively favorable starting points; (ii)~the ``aha moment'' was observed for the first time in small models outside the Qwen family; (iii)~base model quality is often more important than scale alone.
+
+\subsection{TinyZero: Minimal Reproduction of R1-Zero Reasoning}
+
+TinyZero~\cite{wen2025tinyzero} reproduced the R1-Zero paradigm at the \textbf{3B parameter} scale on the Countdown number game for under \$30 of compute. The 3B base model spontaneously developed self-verification, systematic search, and iterative revision---demonstrating the minimal conditions under which RL can induce genuine reasoning.
+
+\subsection{DeepCoder: Extending RL Reasoning to Code Generation}
+
+DeepCoder~\cite{xu2025deepcoder} extended the RL scaling paradigm to competitive programming, achieving \textbf{60.6\% Pass@1 on LiveCodeBench} with a 14B model using GRPO+ (enhanced GRPO with DAPO-inspired modifications). The approach adopted iterative context lengthening and sparse binary rewards from test case execution.
+
+\subsection{Open-Reasoner-Zero and Other Reproductions}
+
+Open-Reasoner-Zero demonstrated that vanilla PPO with rule-based rewards---without KL regularization---achieved superior performance to DeepSeek-R1-Zero-Qwen-32B while requiring only 1/10 of the training steps. Other efforts include Dr.\ GRPO (correcting GRPO's length bias), Sky-T1 (achieving o1-preview performance with minimal resources), and Logic-RL (extending RL training to logical reasoning).
+
+\subsection{Scaling Trends in RL Post-Training}
+
+Tan et al.\ conducted a comprehensive investigation across the Qwen2.5 dense model series (0.5B--72B), establishing that: (1)~under fixed compute, larger models trained for fewer RL steps outperform smaller models trained longer; (2)~RL post-training follows predictable power-law scaling; (3)~data reuse is effective, as final RL performance is governed by total optimization steps rather than sample uniqueness.
+
+
+%% ================================================================
+%% Section 2.10: Infrastructure for RL Training of LLMs
+%% ================================================================
+\section{Infrastructure for RL Training of LLMs}
+\label{sec:infrastructure-rl-training}
+
+RL training introduces infrastructure demands beyond supervised fine-tuning: on-policy sampling, reward scoring, and gradient computation must share or synchronize model weights. This section surveys the key tools.
+
+\subsection{TRL: Transformer Reinforcement Learning}
+
+TRL \cite{vonwerra2022trl} provides a unified interface for post-training with PPO, DPO, GRPO, and more. Its \texttt{GRPOTrainer} class manages the full RL loop and supports custom reward functions, with distributed training via DeepSpeed and FSDP.
+
+\subsection{OpenRLHF}
+
+OpenRLHF is a high-performance distributed RLHF framework combining Ray, vLLM, and DeepSpeed. It supports PPO, REINFORCE++, GRPO, RLOO, and DAPO algorithms, with tight vLLM integration for high-throughput on-policy generation.
+
+\subsection{DeepSpeed and FSDP}
+
+DeepSpeed's ZeRO optimizer \cite{rajbhandari2020zero} partitions optimizer states (Stage 1), gradients (Stage 2), and parameters (Stage 3) across data-parallel ranks, reducing per-GPU memory consumption to $O(1/N)$. PyTorch FSDP provides a native alternative. Both are critical enablers for RL training where multiple large models must coexist in memory.
+
+\subsection{vLLM}
+
+vLLM \cite{kwon2023vllm} addresses the inference bottleneck through PagedAttention and continuous batching, achieving 10--24$\times$ higher throughput than naive inference. In RL training, generation can account for up to 90\% of wall-clock time, making vLLM essential for practical GRPO training.
+
+\subsection{Tinker: Training-as-a-Service}
+
+Tinker, developed by Thinking Machines Lab, exposes a cloud-based Python API with four primitive operations: \texttt{forward\_backward}, \texttt{optim\_step}, \texttt{sample}, and \texttt{save\_state}. Researchers write training loops locally on CPU while Tinker orchestrates distributed GPU computation. The platform supports models from Qwen3.5-4B to Qwen3.5-397B-A17B via LoRA fine-tuning, significantly democratizing access to RL research.
+
+\subsection{Atropos and the Tinker--Atropos Integration}
+
+Atropos, developed by Nous Research, is an environment microservice framework that decouples environments, trajectory batching, and training into independently deployable components. The \emph{tinker-atropos} integration connects Atropos environments to Tinker's managed compute, enabling any Atropos environment to leverage Tinker's GPU infrastructure. Experimental results on GSM8k demonstrate comparable reward convergence with lower per-step training time due to asynchronous decoupling of inference and gradient computation.
+
+
+%% ================================================================
+%% Section 2.11: Scaling Laws and Empirical Observations
+%% ================================================================
+\section{Scaling Laws and Empirical Observations}
+\label{sec:scaling-laws}
+
+\subsection{Classical Scaling Laws for Pretraining}
+
+Kaplan et al.\ established that test loss obeys smooth power-law relationships \cite{kaplan2020scaling}:
+\begin{equation}
+  L(N) = \left(\frac{N_c}{N}\right)^{\!\alpha_N}\!,\qquad
+  L(D) = \left(\frac{D_c}{D}\right)^{\!\alpha_D}\!,\qquad
+  L(C) = \left(\frac{C_c}{C}\right)^{\!\alpha_C}\!,
+  \label{eq:kaplan-power-laws}
+\end{equation}
+where $N$ denotes parameters, $D$ training tokens, $C$ compute, with exponents $\alpha_N \approx 0.076$, $\alpha_D \approx 0.095$, $\alpha_C \approx 0.050$.
+
+\subsection{Compute-Optimal Training: Chinchilla Scaling}
+
+Hoffmann et al.\ showed that model size and training tokens should be scaled equally \cite{hoffmann2022chinchilla}:
+\begin{equation}
+  L(N, D) = \frac{A}{N^{\alpha}} + \frac{B}{D^{\beta}} + E,
+  \label{eq:chinchilla}
+\end{equation}
+with $\alpha \approx 0.34$, $\beta \approx 0.28$. Under fixed compute $C \propto 6ND$, optimal allocation scales both $N$ and $D$ proportionally. Chinchilla (70B, 4$\times$ more data) uniformly outperformed Gopher (280B).
+
+\subsection{Scaling Laws for Reinforcement Learning Fine-Tuning}
+
+RL training exhibits \emph{sigmoidal} rather than power-law performance curves. Khatri et al.\ proposed:
+\begin{equation}
+  R_C - R_0 = (A - R_0) \cdot \frac{1}{1 + (C_{\text{mid}} / C)^B},
+  \label{eq:rl-sigmoid}
+\end{equation}
+where $A$ is the asymptotic pass rate and $B$ governs compute efficiency. Key findings: (1)~not all RL recipes reach the same ceiling; (2)~methods superior at small compute can be inferior at scale; (3)~scaling model size substantially improves both asymptotic performance and downstream generalization.
+
+The effect of \emph{group size} $G$ is a scaling dimension unique to GRPO. DeepSeek-R1 used $G = 64$; academic reproductions find $G \in [8, 32]$ offers a practical trade-off.
+
+\subsection{Test-Time Compute Scaling}
+
+Snell et al.\ showed that compute-optimal test-time scaling---adaptively allocating inference compute per prompt---can achieve $>$4$\times$ improvement over uniform best-of-$N$ baselines \cite{snell2024scaling}. A smaller model with optimal test-time scaling outperformed a 14$\times$ larger model in zero-shot mode. This connects directly to R1-style long chain-of-thought reasoning, where RL teaches models to allocate their own test-time compute.
+
+\subsection{Reward Hacking and Overoptimisation}
+
+Gao et al.\ characterised reward model overoptimisation \cite{gao2023scaling}: gold reward initially increases with KL divergence from the reference policy but eventually peaks and declines. Larger proxy reward models delay overoptimisation onset but do not eliminate it. For GRPO with rule-based rewards, overoptimisation can still manifest through formatting tricks or overfitting to training prompt distributions.
+
+\subsection{Implications for the Present Study}
+
+This capstone focuses on the effect of base model size on GRPO training dynamics, holding the algorithm (GRPO), adaptation method (LoRA), training framework (TRL \cite{vonwerra2022trl}), reward structure (rule-based verification), and benchmarks (GSM8K, MATH) constant. This design isolates what the scaling literature identifies as one of the most consequential variables, aiming to empirically locate the transition point below which distillation dominates direct RL, and to provide actionable guidance for practitioners under resource constraints.
+
+
+%% ================================================================
+%% Section 2.12: Summary
+%% ================================================================
+\section{Summary}
+\label{sec:lit-summary}
+
+This chapter has traced the intellectual lineage of reinforcement learning for large language models, from its earliest formulations through to the latest open-source reproductions.
+
+The foundational paradigm of \textbf{RLHF with PPO} established that human preference signals could steer pretrained language models toward helpful behaviour~\cite{ouyang2022instructgpt}, but carried substantial engineering complexity: a four-model orchestration with extensive hyperparameter tuning~\cite{schulman2017ppo, zheng2023secrets}.
+
+\textbf{Direct Preference Optimization (DPO)} offered an elegant shortcut by collapsing the RLHF pipeline into supervised learning on preference pairs~\cite{rafailov2023dpo}, yet introduced dependence on static data and the absence of online exploration.
+
+\textbf{Group Relative Policy Optimization (GRPO)}~\cite{shao2024deepseekmath} charted a middle path, replacing learned value estimation with group-relative advantage normalization. The resulting algorithm retained PPO's clipped surrogate objective and KL regularisation while halving the number of trainable models.
+
+\textbf{DeepSeek-R1}~\cite{deepseek2025r1} demonstrated that pure GRPO training with rule-based rewards could elicit emergent reasoning---self-verification, reflection, and extended chains of thought---without curated human demonstrations.
+
+\textbf{Parameter-efficient fine-tuning} via LoRA~\cite{hu2021lora} and QLoRA~\cite{dettmers2023qlora} has been indispensable in democratising access to RL training, making GRPO feasible on academic-grade hardware.
+
+\textbf{Evaluation benchmarks} spanning mathematical reasoning (GSM8K, MATH, AIME, AMC, Minerva Math, OlympiadBench, MathVista), code generation (HumanEval, LiveCodeBench, SWE-bench, APPS, CodeContests), and scientific/general reasoning (GPQA Diamond, MMLU-Pro, MMMU, ARC-AGI) collectively provide verifiable ground-truth answers enabling rule-based reward computation and comprehensive capability assessment.
+
+A \textbf{growing ecosystem of open-source reproductions}---TinyZero~\cite{wen2025tinyzero}, SimpleRL-Zoo~\cite{zeng2025simplerl}, DeepScaleR~\cite{luo2025deepscaler}, and DeepCoder~\cite{xu2025deepcoder}---has validated that GRPO-based training can be replicated at various scales using open data and commodity hardware.
+
+\paragraph{Positioning of this study.} The present capstone project contributes to this landscape by conducting a controlled, systematic investigation of how GRPO training dynamics, emergent reasoning behaviours, and downstream mathematical performance scale across model sizes. By holding the algorithm (GRPO), the adaptation method (LoRA), the training framework (TRL~\cite{vonwerra2022trl}), and the evaluation benchmarks constant while varying model capacity, this study isolates the effect of scale on reinforcement-learned reasoning---a dimension that existing work has explored only incidentally.
+
+
+%% ================================================================
+%% BIBLIOGRAPHY
+%% ================================================================
+\bibliography{references}
+
+\end{document}

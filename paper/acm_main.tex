@@ -35,6 +35,8 @@
 \usepackage{balance}        % Balance columns on last page
 \usepackage{xcolor}         % Colors
 \usepackage{listings}       % Code listings
+\usepackage{tikz}
+\usetikzlibrary{positioning, fit, arrows.meta, backgrounds, calc, shadows, shapes.geometric, shapes.misc}
 
 % =============================================================================
 % Custom Commands
@@ -135,6 +137,15 @@
 % \end{teaserfigure}
 
 \maketitle
+
+% Figure 1: Architecture Overview
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{tikz/architecture.pdf}
+\caption{Overview of \ours{}: a unified benchmark spanning 3 task families,
+7 RL libraries, and comprehensive evaluation infrastructure.}
+\label{fig:architecture}
+\end{figure}
 
 % =============================================================================
 \begin{abstract}
@@ -249,6 +260,14 @@ Distillation (On-Policy) & IS Loss & $\log p_t - \log p_s$ & Online \\
 \end{tabular}
 \end{table}
 
+% Figure 2: Taxonomy
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{tikz/taxonomy.pdf}
+\caption{Taxonomy of RL libraries in \ours{}.}
+\label{fig:taxonomy}
+\end{figure}
+
 \subsection{Cross-Library Implementation}
 
 \begin{table}[h]
@@ -291,6 +310,14 @@ $\gamma$ & 0.99 & 0.99 & 0.99 & 0.99 & 0.99 & 0.99 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+% Figure 3: Reward Flow
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.55\linewidth]{tikz/reward_flow.pdf}
+\caption{Verifiable reward paradigm: binary correctness signals replace shaped reward heuristics.}
+\label{fig:reward_flow}
+\end{figure}
 
 \subsection{Baselines: Floor and Ceiling}
 
@@ -356,20 +383,21 @@ Tianshou (PPO) & -- $\pm$ -- & [--, --] & -- \\
 \end{tabular}
 \end{table}
 
-% Figure placeholders
-% \begin{figure}[h]
-% \centering
-% \includegraphics[width=0.95\linewidth]{figures/learning_curves.pdf}
-% \caption{Learning curves across RL libraries (mean $\pm$ std, 5 seeds).}
-% \label{fig:learning_curves}
-% \end{figure}
+% Figure 4: Learning curves
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/learning_curves.pdf}
+\caption{Learning curves across RL libraries (mean $\pm$ std, 5 seeds).}
+\label{fig:learning_curves}
+\end{figure}
 
-% \begin{figure}[h]
-% \centering
-% \includegraphics[width=0.8\linewidth]{figures/performance_profiles.pdf}
-% \caption{Performance profiles (Agarwal et al., 2021).}
-% \label{fig:performance_profiles}
-% \end{figure}
+% Figure 5: Performance profiles
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/performance_profiles.pdf}
+\caption{Performance profiles following Agarwal et al.~\cite{agarwal2021deep}.}
+\label{fig:performance_profiles}
+\end{figure}
 
 \subsection{GSM8K Results}
 
@@ -394,12 +422,21 @@ Qwen3-30B-A3B & -- & -- & -- \\
 \subsection{Scaling Analysis}
 \label{sec:scaling}
 
-% \begin{figure}[h]
-% \centering
-% \includegraphics[width=0.8\linewidth]{figures/scaling_plot.pdf}
-% \caption{Scaling: accuracy vs. model parameters (log scale).}
-% \label{fig:scaling}
-% \end{figure}
+% Figure 6: Scaling
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/scaling_plot.pdf}
+\caption{Scaling: GSM8K accuracy vs. model parameters (log scale).}
+\label{fig:scaling}
+\end{figure}
+
+% Figure 7: Sensitivity heatmap
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/sensitivity_heatmap.pdf}
+\caption{Hyperparameter sensitivity. Bold outline marks default values.}
+\label{fig:sensitivity}
+\end{figure}
 
 \subsection{Comparison with Existing Benchmarks}
 

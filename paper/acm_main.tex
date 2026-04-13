@@ -1,0 +1,423 @@
+% =============================================================================
+% ACM Conference Paper: TinkerRL Lab
+% =============================================================================
+% Template: ACM acmart v2.16 (sigconf proceedings format)
+% Suitable for: KDD, SIGIR, AAAI (via ACM), CHI, CIKM, WWW, etc.
+% =============================================================================
+
+% For submission/review (single-column, anonymous, line numbers):
+\documentclass[manuscript,review,anonymous]{acmart}
+
+% For camera-ready (two-column proceedings):
+% \documentclass[sigconf]{acmart}
+
+% =============================================================================
+% ACM Metadata (REQUIRED — update after acceptance)
+% =============================================================================
+% These will be provided by ACM after acceptance. Leave as placeholders.
+%\acmDOI{10.1145/nnnnnnn.nnnnnnn}
+%\acmISBN{978-x-xxxx-xxxx-x/xx/xx}
+%\acmConference[Conference'26]{Proceedings of the Conference}{Month Day--Day, 2026}{City, Country}
+%\acmYear{2026}
+%\copyrightyear{2026}
+%\acmPrice{15.00}
+%\acmBooktitle{Proceedings of Conference'26}
+
+% =============================================================================
+% Packages
+% =============================================================================
+\usepackage{booktabs}       % Professional-quality tables
+\usepackage{subcaption}     % Sub-figures
+\usepackage{algorithm}      % Algorithm environment
+\usepackage{algorithmic}    % Algorithm pseudocode
+\usepackage{multirow}       % Multi-row table cells
+\usepackage{graphicx}       % Graphics
+\usepackage{balance}        % Balance columns on last page
+\usepackage{xcolor}         % Colors
+\usepackage{listings}       % Code listings
+
+% =============================================================================
+% Custom Commands
+% =============================================================================
+\newcommand{\tinker}{\textsc{Tinker}}
+\newcommand{\atropos}{\textsc{Atropos}}
+\newcommand{\grpo}{\textsc{Grpo}}
+\newcommand{\ours}{\textsc{TinkerRL-Bench}}
+
+% =============================================================================
+% ACM CCS Concepts (REQUIRED)
+% Generated from: https://dl.acm.org/ccs
+% =============================================================================
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10010147.10010257</concept_id>
+       <concept_desc>Computing methodologies~Machine learning</concept_desc>
+       <concept_significance>500</concept_significance>
+   </concept>
+   <concept>
+       <concept_id>10010147.10010257.10010293.10010294</concept_id>
+       <concept_desc>Computing methodologies~Reinforcement learning</concept_desc>
+       <concept_significance>500</concept_significance>
+   </concept>
+   <concept>
+       <concept_id>10010147.10010257.10010293</concept_id>
+       <concept_desc>Computing methodologies~Learning paradigms</concept_desc>
+       <concept_significance>300</concept_significance>
+   </concept>
+   <concept>
+       <concept_id>10010147.10010178.10010187</concept_id>
+       <concept_desc>Computing methodologies~Natural language processing</concept_desc>
+       <concept_significance>300</concept_significance>
+   </concept>
+   <concept>
+       <concept_id>10011007.10011074</concept_id>
+       <concept_desc>Software and its engineering~Software creation and management</concept_desc>
+       <concept_significance>100</concept_significance>
+   </concept>
+   <concept>
+       <concept_id>10002944.10011122.10002947</concept_id>
+       <concept_desc>General and reference~Evaluation</concept_desc>
+       <concept_significance>300</concept_significance>
+   </concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computing methodologies~Machine learning}
+\ccsdesc[500]{Computing methodologies~Reinforcement learning}
+\ccsdesc[300]{Computing methodologies~Learning paradigms}
+\ccsdesc[300]{Computing methodologies~Natural language processing}
+\ccsdesc[100]{Software and its engineering~Software creation and management}
+\ccsdesc[300]{General and reference~Evaluation}
+
+% =============================================================================
+% Keywords (REQUIRED)
+% =============================================================================
+\keywords{reinforcement learning, language models, benchmark, reproducibility, RLHF, GRPO, DPO, post-training}
+
+% =============================================================================
+% Title and Authors
+% =============================================================================
+\title{A Unified Benchmark for RL Post-Training of Language Models}
+
+% For anonymous submission, authors are hidden automatically with the
+% "anonymous" option in \documentclass
+
+\author{Author 1}
+\authornote{Equal contribution.}
+\email{author1@pes.edu}
+\affiliation{%
+  \institution{PES University}
+  \city{Bangalore}
+  \country{India}
+}
+
+\author{Author 2}
+\authornotemark[1]
+\email{author2@pes.edu}
+\affiliation{%
+  \institution{PES University}
+  \city{Bangalore}
+  \country{India}
+}
+
+% =============================================================================
+\begin{document}
+% =============================================================================
+
+% ACM-specific: teaser figure (optional, appears before abstract)
+% \begin{teaserfigure}
+%   \centering
+%   \includegraphics[width=\textwidth]{figures/teaser.pdf}
+%   \caption{Overview of \ours{}: a unified benchmark spanning 7 RL libraries
+%   and 11 implementations for RL post-training of language models.}
+%   \label{fig:teaser}
+% \end{teaserfigure}
+
+\maketitle
+
+% =============================================================================
+\begin{abstract}
+% =============================================================================
+Reinforcement learning (RL) has become the dominant approach for post-training
+language models, yet the field lacks standardized benchmarks for comparing RL
+methods across training frameworks. We present \ours{}, a unified benchmark
+spanning 11 implementations across 7 RL libraries (TRL, Stable Baselines3,
+CleanRL, Tianshou, PufferLib, rl\_games, d3rlpy) evaluated on mathematical
+reasoning (GSM8K, arithmetic), preference learning, and knowledge distillation
+tasks. Using standardized reward functions, hyperparameter mappings, and
+statistical evaluation protocols based on \texttt{rliable}, we provide the
+first controlled cross-library comparison of RL post-training methods for
+language models at scales from 0.6B to 30B parameters. Our results reveal
+that [KEY FINDING 1], [KEY FINDING 2], and [KEY FINDING 3]. We release all
+code, model checkpoints, and evaluation tooling to promote reproducible
+research in RL post-training.
+
+\textbf{Code:} \url{https://github.com/[anonymous]/tinker-rl-lab} \quad
+\textbf{Models:} \url{https://huggingface.co/[anonymous]}
+\end{abstract}
+
+% =============================================================================
+\section{Introduction}
+\label{sec:intro}
+% =============================================================================
+
+Reinforcement learning from human feedback (RLHF) and its variants---including
+GRPO~\cite{shao2024deepseekmath}, DPO~\cite{rafailov2024direct}, and knowledge
+distillation---have become essential for aligning language models with human
+preferences. However, the proliferation of training frameworks (TRL, OpenRLHF,
+veRL, Tinker) has made it increasingly difficult to attribute performance
+differences to algorithmic innovations versus implementation details.
+
+The RL community has long recognized this reproducibility challenge.
+Henderson et al.~\cite{henderson2018deep} demonstrated that implementation
+details can cause larger performance gaps than the algorithms themselves.
+Cavenaghi et al.~\cite{cavenaghi2023systematic} conducted a systematic study
+finding that none of 60 examined RL papers met strict ACM reproducibility
+badge definitions. More recently, Jordan et al.~\cite{jordan2024benchmarking}
+argued that rigorous benchmarking in RL requires computational resources often
+exceeding what researchers can afford, leading to underpowered comparisons.
+
+\paragraph{Contributions.} We make the following contributions:
+\begin{enumerate}
+    \item \textbf{Unified benchmark}: 11 implementations of RL post-training
+    methods across 7 libraries with standardized reward functions and
+    hyperparameter mappings (Section~\ref{sec:benchmark}).
+    \item \textbf{Cross-library evaluation}: The first controlled comparison
+    of RL post-training frameworks on identical tasks with multi-seed
+    evaluation and statistical testing (Section~\ref{sec:results}).
+    \item \textbf{Scaling analysis}: Systematic evaluation across model
+    scales from 0.6B to 30B parameters (Section~\ref{sec:scaling}).
+    \item \textbf{Reproducibility toolkit}: Docker environments, seed
+    management, statistical analysis tools, and Hugging Face integration
+    for full reproducibility (Section~\ref{sec:reproducibility}).
+\end{enumerate}
+
+% =============================================================================
+\section{Related Work}
+\label{sec:related}
+% =============================================================================
+
+\paragraph{RL for Language Models.}
+PPO~\cite{schulman2017proximal} has been the standard algorithm for RLHF since
+InstructGPT~\cite{ouyang2022training}. Recent alternatives include
+GRPO~\cite{shao2024deepseekmath}, which eliminates the value model, and
+DPO~\cite{rafailov2024direct}, which bypasses RL entirely. Multiple training
+frameworks have emerged (TRL, OpenRLHF, veRL, Tinker), each with different
+implementation choices.
+% TODO: Expand
+
+\paragraph{RL Benchmarking.}
+Henderson et al.~\cite{henderson2018deep} first highlighted reproducibility
+issues in deep RL. The rliable framework~\cite{agarwal2021deep} established
+rigorous statistical methodology. Lynnerup et al.~\cite{lynnerup2019survey}
+surveyed reproducibility on real-world robots. Yamerenko et al.~\cite{yamerenko2025generating}
+proposed generative benchmarking with converse optimality for evaluating
+sensitivity and robustness.
+% TODO: Expand
+
+\paragraph{Reproducibility in ML.}
+Pineau et al.~\cite{pineau2020improving} formalized ML reproducibility
+criteria through the NeurIPS Reproducibility Program. ACM's Artifact Review
+and Badging policy~\cite{acm2020badges} established standards for evaluated,
+available, and validated artifacts. Leeser~\cite{leeser2026artifact}
+documented the growing adoption of artifact evaluation across ACM venues.
+% TODO: Expand
+
+% =============================================================================
+\section{Benchmark Design}
+\label{sec:benchmark}
+% =============================================================================
+
+\subsection{Task Suite}
+
+\begin{table}[h]
+\centering
+\caption{Benchmark task suite with standardized reward functions.}
+\label{tab:tasks}
+\begin{tabular}{llll}
+\toprule
+\textbf{Task} & \textbf{Method} & \textbf{Reward} & \textbf{Dataset} \\
+\midrule
+Math RL (Arithmetic) & GRPO & Binary correctness & Generated \\
+Math RL (GSM8K) & GRPO & Binary correctness & GSM8K \\
+Chat SFT & SFT & Cross-entropy loss & NoRobots \\
+Preference (Shorter) & DPO & Pairwise preference & Generated \\
+Distillation (Off-Policy) & SFT & KL divergence & OpenThoughts3 \\
+Distillation (On-Policy) & IS Loss & $\log p_t - \log p_s$ & Online \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Cross-Library Implementation}
+
+\begin{table}[h]
+\centering
+\caption{Implementations across RL libraries.}
+\label{tab:implementations}
+\begin{tabular}{lll}
+\toprule
+\textbf{Library} & \textbf{Implementation} & \textbf{Category} \\
+\midrule
+TRL (HuggingFace) & GRPOTrainer, DPOTrainer, SFTTrainer & LLM-native \\
+Stable Baselines3 & PPO & Classic RL \\
+CleanRL & PPO (single-file) & Research RL \\
+Tianshou & PPO & Modular RL \\
+PufferLib & PPO (high-throughput) & High-perf RL \\
+rl\_games (NVIDIA) & PPO (GPU-optimized) & High-perf RL \\
+d3rlpy & CQL (offline) & Offline RL \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Hyperparameter Mapping}
+
+% TODO: Describe the hyperparameter mapping methodology
+
+% =============================================================================
+\section{Experimental Setup}
+\label{sec:setup}
+% =============================================================================
+
+\subsection{Models}
+
+We evaluate on: Llama-3.2-1B, Llama-3.2-3B, Llama-3.1-8B-Instruct,
+Qwen3-0.6B-Instruct, Qwen3-4B, Qwen3-8B, Qwen3-14B, Qwen3-30B-A3B (MoE).
+
+\subsection{Training Protocol}
+
+All experiments use LoRA~\cite{hu2022lora} with rank 32, learning rate $10^{-4}$,
+Adam optimizer ($\beta_1=0.9$, $\beta_2=0.95$, $\epsilon=10^{-8}$).
+
+\paragraph{Seed management.} Each experiment is run with 5 seeds:
+$\{42, 123, 456, 789, 1024\}$. Seeds are set for Python \texttt{random},
+NumPy, PyTorch, and CUDA backends.
+
+\subsection{Statistical Methodology}
+
+Following Colas et al.~\cite{colas2019hitchhiker} and Agarwal et al.~\cite{agarwal2021deep}, we report:
+\begin{itemize}
+    \item Mean $\pm$ standard error across seeds
+    \item 95\% bootstrap confidence intervals (10,000 resamples)
+    \item Welch's t-test for pairwise algorithm comparisons
+    \item \texttt{rliable} aggregate metrics (IQM, median, optimality gap)
+\end{itemize}
+
+\subsection{Compute Resources}
+
+See Appendix~\ref{app:compute} for full details. Total project compute:
+$\sim$446 A100 GPU-hours.
+
+% =============================================================================
+\section{Results}
+\label{sec:results}
+% =============================================================================
+
+\subsection{Cross-Library Comparison}
+
+% TODO: Results table
+\begin{table}[h]
+\centering
+\caption{Cross-library comparison on Math RL (Arithmetic). Mean $\pm$ SE across 5 seeds.}
+\label{tab:results_arithmetic}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Library} & \textbf{Final Accuracy} & \textbf{95\% CI} & \textbf{Steps to 95\%} \\
+\midrule
+TRL (GRPO) & -- $\pm$ -- & [--, --] & -- \\
+Tinker (GRPO) & -- $\pm$ -- & [--, --] & -- \\
+SB3 (PPO) & -- $\pm$ -- & [--, --] & -- \\
+CleanRL (PPO) & -- $\pm$ -- & [--, --] & -- \\
+Tianshou (PPO) & -- $\pm$ -- & [--, --] & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{GSM8K Results}
+
+% TODO: GSM8K results
+
+\subsection{Scaling Analysis}
+\label{sec:scaling}
+
+% TODO: Scaling results across model sizes
+
+% =============================================================================
+\section{Reproducibility}
+\label{sec:reproducibility}
+% =============================================================================
+
+We provide comprehensive reproducibility infrastructure:
+\begin{itemize}
+    \item \textbf{Docker}: Exact environment with pinned dependencies
+    \item \textbf{Seed management}: Deterministic training across frameworks
+    \item \textbf{Hugging Face Hub}: All checkpoints with model cards
+    \item \textbf{Statistical toolkit}: \texttt{rliable}-based analysis scripts
+    \item \textbf{REPRODUCE.md}: Exact commands for every experiment
+\end{itemize}
+
+We target three ACM Artifact Badges~\cite{acm2020badges}:
+\begin{description}
+    \item[Artifacts Available] All code, data, and checkpoints permanently
+    archived on GitHub and Hugging Face Hub.
+    \item[Artifacts Evaluated -- Functional] Complete documentation,
+    Dockerfile, and scripts enable exercising all experiments.
+    \item[Artifacts Evaluated -- Reusable] Modular design allows extending
+    to new RL libraries, tasks, and model scales.
+\end{description}
+
+% =============================================================================
+\section{Limitations}
+\label{sec:limitations}
+% =============================================================================
+
+\paragraph{Model scale.} Experiments limited to 0.6B--30B parameters.
+\paragraph{Task coverage.} Primarily mathematical reasoning and preference learning.
+\paragraph{Platform dependency.} Tinker API required for some experiments.
+\paragraph{LoRA only.} No full fine-tuning comparisons.
+\paragraph{Statistical power.} 5 seeds per experiment (10+ recommended).
+
+\subsection{Broader Impact}
+\label{sec:impact}
+
+% TODO: Condense from LIMITATIONS_AND_IMPACT.md
+
+% =============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+% =============================================================================
+
+% TODO: Write conclusion
+
+% =============================================================================
+% ACM Reference Format
+% =============================================================================
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+% =============================================================================
+\appendix
+% =============================================================================
+
+\section{Compute Resources}
+\label{app:compute}
+
+See \texttt{COMPUTE.md} in the repository for full compute breakdown.
+
+\section{Hyperparameter Tables}
+\label{app:hyperparams}
+
+% TODO: Full hyperparameter tables for all experiments
+
+\section{Additional Results}
+\label{app:results}
+
+% TODO: Additional figures and tables
+
+\section{ACM Artifact Description}
+\label{app:artifact}
+
+See \texttt{ARTIFACT.md} in the repository for the complete artifact
+description following ACM guidelines.
+
+\end{document}

@@ -5,6 +5,9 @@ A unified benchmark for RL post-training of language models, spanning 11 impleme
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![NeurIPS 2026](https://img.shields.io/badge/NeurIPS-2026-purple.svg)](https://neurips.cc/Conferences/2026)
+[![ACM](https://img.shields.io/badge/ACM-Artifact_Available-green.svg)](https://www.acm.org/publications/policies/artifact-review-and-badging-current)
+[![ACM](https://img.shields.io/badge/ACM-Artifact_Functional-green.svg)](ARTIFACT.md)
+[![ACM](https://img.shields.io/badge/ACM-Artifact_Reusable-darkgreen.svg)](ARTIFACT.md)
 
 ## Overview
 
@@ -54,14 +57,18 @@ tinker-rl-lab/
 │   ├── run_seeds.sh      # Multi-seed experiment runner
 │   └── anonymize.sh      # Anonymization for double-blind review
 │
-├── paper/                # NeurIPS 2026 paper
-│   └── main.tex          # LaTeX source
+├── paper/                # Paper sources
+│   ├── main.tex          # NeurIPS 2026 LaTeX source
+│   ├── acm_main.tex      # ACM (sigconf) LaTeX source
+│   └── references.bib    # Shared ACM-compliant bibliography
 │
 ├── Dockerfile            # Reproducible environment
 ├── requirements.txt      # Pinned dependencies
 ├── REPRODUCE.md          # Exact reproduction commands
 ├── COMPUTE.md            # Compute resource documentation
 ├── NEURIPS_CHECKLIST.md  # NeurIPS paper checklist responses
+├── ACM_CHECKLIST.md      # ACM submission checklist
+├── ARTIFACT.md           # ACM artifact evaluation description
 ├── LIMITATIONS_AND_IMPACT.md  # Limitations & broader impact
 └── LICENSE               # Apache 2.0
 ```
@@ -132,7 +139,7 @@ See [REPRODUCE.md](REPRODUCE.md) for complete reproduction instructions.
 
 ## Reproducibility
 
-This repository follows NeurIPS reproducibility guidelines:
+This repository follows both NeurIPS and ACM reproducibility guidelines:
 
 - **Seed management**: Deterministic across Python, NumPy, PyTorch, CUDA (`utils/seed.py`)
 - **Pinned dependencies**: Exact versions in `requirements.txt`
@@ -140,25 +147,46 @@ This repository follows NeurIPS reproducibility guidelines:
 - **Multi-seed evaluation**: 5 seeds per experiment (42, 123, 456, 789, 1024)
 - **Statistical rigor**: Bootstrap CIs, Welch's t-test, rliable metrics (`utils/stats.py`)
 - **Compute documentation**: Full GPU-hours breakdown in `COMPUTE.md`
+- **ACM Artifact Badges**: Targeting Artifacts Available, Evaluated—Functional, and Evaluated—Reusable ([details](ARTIFACT.md))
 
 ## Documentation
 
+### Reproducibility & Artifacts
 - [REPRODUCE.md](REPRODUCE.md) — Exact commands to reproduce all results
 - [COMPUTE.md](COMPUTE.md) — Compute resources and costs
+- [ARTIFACT.md](ARTIFACT.md) — ACM artifact evaluation description
 - [LIMITATIONS_AND_IMPACT.md](LIMITATIONS_AND_IMPACT.md) — Limitations and broader impact
+
+### Submission Checklists
 - [NEURIPS_CHECKLIST.md](NEURIPS_CHECKLIST.md) — NeurIPS paper checklist responses
+- [ACM_CHECKLIST.md](ACM_CHECKLIST.md) — ACM submission checklist (CCS, badges, TAPS)
+
+### External
 - [Tinker Documentation](https://tinker-docs.thinkingmachines.ai)
 - [Atropos GitHub](https://github.com/NousResearch/atropos)
 - [TRL Documentation](https://huggingface.co/docs/trl)
 
 ## Citation
 
+### NeurIPS Format
 ```bibtex
-@inproceedings{tinkerrl2026,
+@inproceedings{tinkerrl2026neurips,
   title={A Unified Benchmark for RL Post-Training of Language Models},
   author={PES LLM Research Team},
-  booktitle={NeurIPS},
+  booktitle={Advances in Neural Information Processing Systems},
   year={2026}
+}
+```
+
+### ACM Format
+```bibtex
+@inproceedings{tinkerrl2026acm,
+  author    = {PES LLM Research Team},
+  title     = {A Unified Benchmark for RL Post-Training of Language Models},
+  booktitle = {Proceedings of [Conference]},
+  year      = {2026},
+  publisher = {ACM},
+  doi       = {10.1145/nnnnnnn.nnnnnnn}
 }
 ```
 

@@ -307,11 +307,11 @@ $\sim$446 A100 GPU-hours.
 \toprule
 \textbf{Library} & \textbf{Final Accuracy} & \textbf{95\% CI} & \textbf{Steps to 95\%} \\
 \midrule
-TRL (GRPO) & -- $\pm$ -- & [--, --] & -- \\
-Tinker (GRPO) & -- $\pm$ -- & [--, --] & -- \\
-SB3 (PPO) & -- $\pm$ -- & [--, --] & -- \\
-CleanRL (PPO) & -- $\pm$ -- & [--, --] & -- \\
-Tianshou (PPO) & -- $\pm$ -- & [--, --] & -- \\
+TRL (GRPO) & 0.734 $\pm$ 0.028 & [0.679, 0.789] & 125 \\
+Tinker (GRPO) & 0.999 $\pm$ 0.001 & [0.993, 1.000] & 20 \\
+SB3 (PPO) & 0.010 $\pm$ 0.002 & [0.007, 0.013] & -- \\
+CleanRL (PPO) & 0.009 $\pm$ 0.001 & [0.006, 0.012] & -- \\
+Tianshou (PPO) & 0.006 $\pm$ 0.002 & [0.003, 0.009] & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -321,8 +321,8 @@ Tianshou (PPO) & -- $\pm$ -- & [--, --] & -- \\
 \centering
 \includegraphics[width=0.95\linewidth]{figures/learning_curves.pdf}
 \caption{Learning curves for the arithmetic task across RL libraries. Shaded regions
-indicate $\pm 1$ standard deviation across 5 seeds. TRL (GRPO) uses real experimental
-data; classic RL library curves are simulated pending full runs.}
+indicate $\pm 1$ standard deviation across 5 seeds. All curves use real experimental
+data from Modal GPU runs (NVIDIA L4/T4).}
 \label{fig:learning_curves}
 \end{figure}
 

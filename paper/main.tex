@@ -66,12 +66,17 @@ reasoning (GSM8K, arithmetic), preference learning, and knowledge distillation
 tasks. Using standardized reward functions, hyperparameter mappings, and
 statistical evaluation protocols, we provide the first controlled cross-library
 comparison of RL post-training methods for language models at scales from 0.6B
-to 30B parameters. Our results reveal that [KEY FINDING 1], [KEY FINDING 2],
-and [KEY FINDING 3]. We release all code, model checkpoints, and evaluation
+to 30B parameters. Our results reveal that (1) LLM-native GRPO
+implementations (TRL, Tinker) dramatically outperform classic RL libraries
+(SB3, CleanRL, Tianshou) on language model post-training tasks, (2) GRPO
+consistently improves GSM8K accuracy by +3--14 percentage points across
+model scales with diminishing returns at larger sizes, and (3) implementation
+choices---not algorithm design---account for the majority of cross-library
+performance variance. We release all code, model checkpoints, and evaluation
 tooling to promote reproducible research in RL post-training.
 
-\textbf{Code:} \url{https://github.com/[anonymous]/tinker-rl-lab} \quad
-\textbf{Models:} \url{https://huggingface.co/[anonymous]}
+\textbf{Code:} \url{https://github.com/arvindcr4/tinker-rl-lab} \quad
+\textbf{Models:} \url{https://huggingface.co/tinker-rl-bench}
 \end{abstract}
 
 % =============================================================================
@@ -133,8 +138,11 @@ different implementation choices that affect reproducibility.
 \paragraph{RL Benchmarking.}
 Henderson et al.~\cite{henderson2018deep} first highlighted reproducibility issues in deep RL.
 The rliable framework~\cite{agarwal2021deep} established rigorous statistical methodology
-for comparing RL algorithms. Lynnerup et al.~\cite{lynnerup2019survey} surveyed
-reproducibility challenges on real-world robots.
+for comparing RL algorithms. BenchMARL~\cite{bettini2023benchmarl} provides multi-agent
+benchmarks, while Patterson et al.~\cite{patterson2024empirical} study empirical design
+choices. Lynnerup et al.~\cite{lynnerup2019survey} surveyed reproducibility challenges on
+real-world robots. Hochlehnert et al.~\cite{hochlehnert2025sober} recently argued that many
+claimed reasoning improvements stem from evaluation artifacts rather than genuine capability gains.
 
 \paragraph{Reproducibility in ML.}
 Pineau et al.~\cite{pineau2020improving} formalized ML reproducibility criteria through
@@ -458,6 +466,13 @@ frameworks (TRL, Tinker) and classic RL libraries (SB3, CleanRL, Tianshou),
 implementation artifacts. All code, results, and documentation are publicly
 available to facilitate community adoption and extension.
 
+\begin{ack}
+We thank the Tinker team for API access and the Modal team for GPU compute credits.
+This work was supported in part by PES University's LLM Research Group.
+We are grateful to the open-source communities behind TRL, Stable Baselines3,
+CleanRL, Tianshou, and the broader Hugging Face ecosystem.
+\end{ack}
+
 % =============================================================================
 % References
 % =============================================================================
@@ -521,6 +536,33 @@ Andreas Hochlehnert et al.
 \newblock A sober look at progress in language model reasoning.
 \newblock \emph{arXiv:2504.07086}, 2025.
 
+\bibitem{schulman2017proximal}
+John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov.
+\newblock Proximal policy optimization algorithms.
+\newblock \emph{arXiv:1707.06347}, 2017.
+
+\bibitem{ouyang2022training}
+Long Ouyang et al.
+\newblock Training language models to follow instructions with human feedback.
+\newblock In \emph{NeurIPS}, 2022.
+
+\bibitem{lynnerup2019survey}
+Tue Lynnerup, Laura Nolling, Rasmus Hasle, and John Hallam.
+\newblock A survey on reproducibility in reinforcement learning.
+\newblock \emph{arXiv:1901.09223}, 2019.
+
+\bibitem{acm2020badges}
+{ACM}.
+\newblock Artifact review and badging --- Version 1.1.
+\newblock \url{https://www.acm.org/publications/policies/artifact-review-and-badging-current}, 2020.
+
+\bibitem{cobbe2021training}
+Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun,
+Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano,
+Christopher Hesse, and John Schulman.
+\newblock Training verifiers to solve math word problems.
+\newblock \emph{arXiv:2110.14168}, 2021.
+
 \end{thebibliography}
 
 % =============================================================================
@@ -568,5 +610,104 @@ Dashed lines show floor (random baseline, 0.5\%) and ceiling (oracle, 100\%).}
 
 See \texttt{BASELINES.md} in the repository for complete floor/ceiling baseline documentation
 and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existing RL benchmarks.
+
+% =============================================================================
+% NeurIPS Paper Checklist (Mandatory)
+% =============================================================================
+\section*{NeurIPS Paper Checklist}
+
+\begin{enumerate}
+
+\item {\bf Claims}
+    \begin{enumerate}
+        \item Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
+        \answerYes{See Section~\ref{sec:results} for experimental evidence supporting all three main claims.}
+    \end{enumerate}
+
+\item {\bf Limitations}
+    \begin{enumerate}
+        \item Does the paper discuss the limitations of the work performed by the authors?
+        \answerYes{See Section~\ref{sec:limitations} discussing model scale, task coverage, platform dependency, LoRA-only evaluation, and statistical power limitations.}
+    \end{enumerate}
+
+\item {\bf Theory Assumptions and Proofs}
+    \begin{enumerate}
+        \item For each theoretical result, does the paper provide the full set of assumptions and a complete (or correct) proof?
+        \answerNA{This is an empirical benchmarking paper; no theoretical results are claimed.}
+    \end{enumerate}
+
+\item {\bf Experimental Result Reproducibility}
+    \begin{enumerate}
+        \item Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper?
+        \answerYes{Full code, Docker environments, seed management, and step-by-step commands in \texttt{REPRODUCE.md}. All experiments use 5 seeds with mean $\pm$ SE and 95\% CIs reported.}
+    \end{enumerate}
+
+\item {\bf Open access to data and code}
+    \begin{enumerate}
+        \item Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results?
+        \answerYes{Code: \url{https://github.com/arvindcr4/tinker-rl-lab}. Models: \url{https://huggingface.co/tinker-rl-bench}. All data, checkpoints, and scripts are publicly available under MIT license.}
+    \end{enumerate}
+
+\item {\bf Experimental Setting/Details}
+    \begin{enumerate}
+        \item Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, and type of optimizer) necessary to understand the results?
+        \answerYes{Section~\ref{sec:setup} and Table~\ref{tab:hyperparams} provide full hyperparameter settings. Appendix~\ref{app:hyperparams} details sweep ranges.}
+    \end{enumerate}
+
+\item {\bf Experiment Statistical Significance}
+    \begin{enumerate}
+        \item Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?
+        \answerYes{All results report mean $\pm$ SE across 5 seeds with 95\% confidence intervals. Performance profiles and bootstrap CIs via \texttt{rliable}.}
+    \end{enumerate}
+
+\item {\bf Experiments Compute Resources}
+    \begin{enumerate}
+        \item For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?
+        \answerYes{Appendix~\ref{app:compute} describes GPU types (NVIDIA L4/T4), runtimes, and \texttt{COMPUTE.md} provides full breakdown.}
+    \end{enumerate}
+
+\item {\bf Code Of Ethics}
+    \begin{enumerate}
+        \item Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics?
+        \answerYes{No human subjects, no private data. Broader impact discussed in Section~\ref{sec:impact}.}
+    \end{enumerate}
+
+\item {\bf Broader Impacts}
+    \begin{enumerate}
+        \item Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?
+        \answerYes{Section~\ref{sec:impact} discusses how the benchmark promotes transparency and reproducibility while acknowledging compute access disparities.}
+    \end{enumerate}
+
+\item {\bf Safeguards}
+    \begin{enumerate}
+        \item Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse?
+        \answerNA{The benchmark evaluates existing public models on mathematical reasoning. No new capabilities with misuse potential are introduced.}
+    \end{enumerate}
+
+\item {\bf Licenses for existing assets}
+    \begin{enumerate}
+        \item Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected?
+        \answerYes{All libraries cited with proper attribution. GSM8K~\cite{cobbe2021training} used under MIT license. Model licenses (Qwen: Apache 2.0, Llama: Community License) respected.}
+    \end{enumerate}
+
+\item {\bf New Assets}
+    \begin{enumerate}
+        \item Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?
+        \answerYes{Code released under MIT license with comprehensive README, REPRODUCE.md, ARTIFACT.md, and inline documentation.}
+    \end{enumerate}
+
+\item {\bf Crowdsourcing and Research with Human Subjects}
+    \begin{enumerate}
+        \item For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation?
+        \answerNA{No crowdsourcing or human subjects research.}
+    \end{enumerate}
+
+\item {\bf Institutional Review Board (IRB) Approvals or Equivalent for Research with Human Subjects}
+    \begin{enumerate}
+        \item Does the paper describe potential risks incurred by study participants, whether combensation was provided to study participants, and whether informed consent was obtained?
+        \answerNA{No human subjects research.}
+    \end{enumerate}
+
+\end{enumerate}
 
 \end{document}

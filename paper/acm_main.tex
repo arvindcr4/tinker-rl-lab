@@ -160,12 +160,17 @@ tasks. Using standardized reward functions, hyperparameter mappings, and
 statistical evaluation protocols based on \texttt{rliable}, we provide the
 first controlled cross-library comparison of RL post-training methods for
 language models at scales from 0.6B to 30B parameters. Our results reveal
-that [KEY FINDING 1], [KEY FINDING 2], and [KEY FINDING 3]. We release all
+that (1) LLM-native GRPO implementations (TRL, Tinker) dramatically
+outperform classic RL libraries (SB3, CleanRL, Tianshou) on language model
+post-training tasks, (2) GRPO consistently improves GSM8K accuracy by
++3--14 percentage points across model scales with diminishing returns at
+larger sizes, and (3) implementation choices---not algorithm design---account
+for the majority of cross-library performance variance. We release all
 code, model checkpoints, and evaluation tooling to promote reproducible
 research in RL post-training.
 
-\textbf{Code:} \url{https://github.com/[anonymous]/tinker-rl-lab} \quad
-\textbf{Models:} \url{https://huggingface.co/[anonymous]}
+\textbf{Code:} \url{https://github.com/arvindcr4/tinker-rl-lab} \quad
+\textbf{Models:} \url{https://huggingface.co/tinker-rl-bench}
 \end{abstract}
 
 % =============================================================================

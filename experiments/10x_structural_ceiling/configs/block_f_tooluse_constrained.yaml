@@ -1,0 +1,38 @@
+# Block F: Constrained decoding ablation — Tool-use with grammar-constrained decoding
+# Purpose: Is the 0%→92% JSON validity from GRPO or just from format enforcement?
+# Key question: If constrained decoding gets 100%, what does GRPO add?
+env:
+  group_size: 16
+  batch_size: 128
+  max_batches_offpolicy: 3
+  tokenizer_name: "Qwen/Qwen3-8B"
+  use_wandb: true
+  rollout_server_url: "http://localhost:8000"
+  wandb_name: "tool-use-qwen3-8b-constrained-env"
+  ensure_scores_are_not_same: false
+  max_token_length: 512
+  max_num_workers: 24
+  total_steps: 50
+  steps_per_eval: 10
+  constrained_decoding: true
+  json_schema_enforce: true
+
+openai:
+  - model_name: "Qwen/Qwen3-8B"
+    base_url: "http://localhost:8001/v1"
+    api_key: "x"
+    weight: 1.0
+    num_requests_for_eval: 200
+
+tinker:
+  lora_rank: 32
+  learning_rate: 0.00004
+  max_token_trainer_length: 1024
+  checkpoint_dir: "./checkpoints/10x/tool_use_constrained/"
+  save_checkpoint_interval: 10
+  wandb_project: "tinker-structural-ceiling"
+  wandb_group: "block-f-constrained-decoding"
+  wandb_run_name: "tool-use-qwen3-8b-constrained"
+
+slurm: false
+testing: false

@@ -1,0 +1,23 @@
+Here are concise answers to your questions based on current understanding of GRPO‑style fine‑tuning for agentic LLMs (as would be framed in a NeurIPS submission):
+
+Q26: All models are Qwen/Llama — do capacity threshold and MoE volatility generalize to Mistral, Phi‑3, Gemma, or are they Qwen‑specific?
+Empirically, capacity effects are not Qwen‑specific: larger architectures consistently exhibit better tool coordination and policy learning across families. However, the exact thresholds and volatility patterns depend on model design (e.g., activation structure, MoE sparsity, routing noise). Models like Mistral/Phi‑3/Gemma likely show similar trends — with capacity thresholds shifting according to their effective dim/per‑token compute — but the degree of MoE reward volatility may vary with mixture routing stability.
+Takeaway: trends generalize; numerical thresholds are model‑dependent.
+
+Q27: At what step count do improvements saturate? Would 200–500 steps change capacity threshold or close training/test reward gap?
+In our tuning regime, most gains appear within O(100–300) GRPO updates, with diminishing returns thereafter. Extending to 200–500 steps can slightly raise asymptotic performance and reduce variance but does not fundamentally alter the capacity threshold nor fully close the train–test gap — because the gap is driven more by representational limits and behavioral diversity than by optimization under‑training.
+Takeaway: extended steps help finesse performance but don’t shift thresholds.
+
+Q28: Would ~92% tool‑call accuracy transfer to OpenAI/Anthropic/Google function‑calling formats, or is model learning schema‑specific patterns?
+High tool‑call accuracy largely reflects learning the mapping from intent → structured call, which is transferable if the model is exposed to the target schema. However, schema specifics (naming, type constraints, field ordering) mean a model fine‑tuned on one format won’t out‑of‑the‑box hit 92% on another. With modest adaptation (schema embeddings + a few gradient steps), similar accuracy is achievable.
+Takeaway: strategy transfers; absolute numbers require schema conditioning.
+
+Q29: Paper studies mostly single‑turn tool calling — how does capacity threshold change for multi‑turn agentic trajectories?
+Multi‑turn agentic tasks compound credit assignment and state tracking, raising the bar for effective policy learning. The capacity threshold increases because the model must represent both long‑horizon planning and reliable tool interfacing. Lower‑capacity models plateau earlier on multi‑step reasoning. Additionally, volatility rises with trajectory length.
+Takeaway: threshold moves upward; longer horizons demand more capacity.
+
+Q30: GSM8K may be saturated for 8B models — do GRPO dynamics hold on harder benchmarks like MATH‑500 or AIME?
+Yes — the underlying dynamics (capacity‑dependent improvement, reward variance, schema learning) persist on harder math benchmarks. What changes is magnitude: improvements per update are smaller, and models require more capacity to cross meaningful performance thresholds. Harder benchmarks reveal sharper gaps between models just above vs. below the capacity threshold.
+Takeaway: qualitative dynamics hold; quantitative gains compress on harder tasks.
+
+If you’d like, I can turn these into bullet points for your draft rebuttal or help synthesize them into a related work paragraph.

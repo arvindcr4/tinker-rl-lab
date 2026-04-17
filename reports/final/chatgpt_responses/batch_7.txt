@@ -1,0 +1,18 @@
+Here are concise responses for Q31–Q35 that you can incorporate into your NeurIPS rebuttal/next draft:
+
+Q31: No ablation on group size (4 vs 8 vs 16) — since group size controls GRPO advantage estimator variance, is this the most critical ablation missing?
+A: Yes — group size directly affects the variance of the GRPO advantage estimator. Showing performance across smaller and larger group sizes would clarify sensitivity/stability and help justify the default choice. Without it, it’s hard to know if gains are due to estimator fidelity or just larger batch effects.
+
+Q32: LoRA rank-speed tradeoff reported but accuracy vs rank curve missing — add ablation at 8,16,32,64 to find if monotonic or has knee?
+A: Agree. Reporting accuracy vs. LoRA rank (e.g., 8/16/32/64) is important to reveal where diminishing returns occur. This helps practitioners choose an efficient rank and assesses whether performance scales smoothly or has a clear knee.
+
+Q33: SFT+GRPO complementarity needs matched-compute control where GRPO alone runs 2x steps — otherwise SFT may just be better initialization for any RL.
+A: Correct. A matched-compute comparison (GRPO with/without SFT for equal total gradient steps) is necessary to separate the benefit of warm-starting from structural benefits of the GRPO objective itself.
+
+Q34: To isolate GRPO from reward design, include SFT baseline on GRPO‑generated positive rollouts — separates policy optimization from data curriculum.
+A: Useful suggestion. Evaluating an SFT-trained model on the same GRPO high‑reward trajectories would help determine how much improvement comes from selection/curriculum vs policy optimization.
+
+Q35: Tool calling reward function not ablated — is 0% to 92% driven by reward structure (format, correctness, partial credit) rather than GRPO?
+A: Yes — without a reward‑ablation (e.g., fixed/noisy/partial rewards), it’s unclear if the large gains stem from reward specification rather than GRPO per se. This is particularly critical when using structured tool‑based feedback.
+
+If you want, I can draft one‑sentence rebuttals for reviewers integrating these points.

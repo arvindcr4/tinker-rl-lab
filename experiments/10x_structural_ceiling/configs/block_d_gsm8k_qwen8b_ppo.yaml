@@ -1,0 +1,40 @@
+# Block D: PPO baseline — Qwen3-8B on GSM8K
+# Purpose: Algorithm isolation — does PPO (with critic) break GRPO's null?
+# Implementation: Uses TRL PPOTrainer via atropos PPO env
+env:
+  group_size: 1
+  batch_size: 128
+  max_batches_offpolicy: 1
+  tokenizer_name: "Qwen/Qwen3-8B"
+  use_wandb: true
+  rollout_server_url: "http://localhost:8000"
+  wandb_name: "gsm8k-qwen3-8b-ppo-env"
+  ensure_scores_are_not_same: false
+  max_token_length: 512
+  max_num_workers: 24
+  total_steps: 50
+  steps_per_eval: 25
+  algorithm: "ppo"
+  ppo_epochs: 4
+  ppo_clip_range: 0.2
+  kl_coeff: 0.05
+
+openai:
+  - model_name: "Qwen/Qwen3-8B"
+    base_url: "http://localhost:8001/v1"
+    api_key: "x"
+    weight: 1.0
+    num_requests_for_eval: 256
+
+tinker:
+  lora_rank: 32
+  learning_rate: 0.00002
+  max_token_trainer_length: 2048
+  checkpoint_dir: "./checkpoints/10x/gsm8k_qwen8b_ppo/"
+  save_checkpoint_interval: 10
+  wandb_project: "tinker-structural-ceiling"
+  wandb_group: "block-d-algorithm-isolation"
+  wandb_run_name: "gsm8k-qwen3-8b-ppo"
+
+slurm: false
+testing: false

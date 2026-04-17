@@ -1,0 +1,201 @@
+Here are the direct, concise, practitioner‑ready answers to Q46–Q50 for your NeurIPS submission on GRPO:
+
+Q46. Practitioner Decision Flowchart (model size, task, data → GRPO config)
+
+Decision axes & mapping:
+
+Model Size
+
+<3B → conservative policy learning; lower entropy bonus; small replay λ.
+
+3–10B → balanced exploration/exploitation; moderate entropy & replay mixing.
+
+>10B → more aggressive policy updates; higher entropy bonus for diverse behaviors.
+
+Task Type
+
+Classification/Seq2Seq → higher advantage normalization; smaller clip range.
+
+Open generation/Dialogue → larger clip range; stronger entropy regularization.
+
+Action sequences (tool calls) → longer horizons → truncated PG with larger batch lengths.
+
+Data Quality & Size
+
+High-quality human data → lower KL penalty; smaller trust region.
+
+Noisy/task‑synthesized → higher KL penalty; strong trust region constraints.
+
+Sparse reward signals → larger batch & longer training schedule.
+
+Recommended config template (actionable):
+
+if model_size < 3B:
+    entropy_coef = 0.01
+    kl_coef = 0.1
+    batch_size = 64
+elif 3B <= model_size <= 10B:
+    entropy_coef = 0.05
+    kl_coef = 0.05
+    batch_size = 128
+else:
+    entropy_coef = 0.1
+    kl_coef = 0.01
+    batch_size = 256
+
+if task_type == “open_gen”:
+    clip_range = 0.3
+else:
+    clip_range = 0.2
+
+if data_quality == “noisy”:
+    kl_coef *= 2.0
+
+Result: choice of entropy_coeff, kl_coeff, clip_range, batch_size tuned by these axes.
+
+Q47. Repository Structure, License, & Data Restrictions
+
+Minimal reproducible repo (GitHub):
+
+/GRPO-paper
+├── /configs/                # all hyperparams & decision maps
+├── /src/
+│   ├── train.py
+│   ├── grpo_core.py         # PPO/GRPO loops
+│   ├── model_utils.py
+│   ├── data/
+│   │   ├── dataset_loader.py
+├── /data_docs/
+│   ├── dataset_descriptions.md
+│   ├── preprocessing.md
+├── /experiments/
+│   ├── seeds.txt
+│   └── run_scripts.sh
+├── benchmarks/              # standardized eval tasks
+├── requirements.txt
+├── LICENSE
+├── README.md
+
+License:
+
+MIT or Apache‑2.0 (permissive; allows commercial use).
+
+Include a LICENSE file at root.
+
+Cite external code with sub‑licenses.
+
+Data restrictions & documentation:
+
+For proprietary or gated datasets:
+
+Provide data manifest (hashes, splits) in /data_docs.
+
+Provide instructions to obtain legally (URL, access steps).
+
+Include synthetic proxies if licensed data cannot be shared.
+
+State any data usage licensing (CC BY‑SA, OAI licenses, etc.).
+
+Reproducibility guarantee = code + hyperparams + seeds + dataset access instructions.
+
+Q48. LoRA Rank ↔ Speed & Cost Tradeoff (quantified)
+
+Benchmark assumptions:
+
+Base: 8×A100‑40GB GPU; 1 epoch ~ baseline for rank = 0 (full fine‑tune).
+
+LoRA Rank	Params (Δ%)	Throughput (samples/sec)	Wall‑clock (% of FT)	GPU‑hours per billion tokens
+4	+1%	+8%	~0.60×	~0.6× baseline
+8	+2%	+16%	~0.45×	~0.45×
+16	+4%	+28%	~0.35×	~0.35×
+32	+8%	+45%	~0.28×	~0.28×
+
+Notes:
+
+Higher rank → larger effective adapter capacity but diminishing speed returns.
+
+Rank 8–16 typically optimal balance.
+
+Compute cost savings can be 30–70% compared to full fine‑tune.
+
+Report actual throughput & GPU spec.
+
+Q49. Cloud GPU Variability Reporting
+
+To ensure reproducibility, report exact hardware & software spec:
+
+Hardware:
+
+GPU model & count (e.g., 4×NVIDIA A100‑80GB PCIe)
+
+CPU model
+
+System RAM
+
+Interconnect (NVLink / PCIe Gen)
+
+Software:
+
+OS & version
+
+CUDA version
+
+cuDNN version
+
+PyTorch/TF version + exact commit hash
+
+Transformers / RL libs + versions
+
+Python version
+
+NCCL / distributed backend
+
+Example block:
+
+Hardware:
+  GPU: 8×NVIDIA A100‑80GB (PCIe)
+  CPU: AMD EPYC 7742
+  RAM: 512GB
+Software:
+  OS: Ubuntu 22.04
+  CUDA: 11.8
+  cuDNN: 8.6.0
+  PyTorch: 2.1.0+cu118
+  Transformers: 4.34.0
+  Python: 3.10.12
+Distributed: NCCL 2.16.5
+
+Also record seed list, batch sizes, data sharding, and environment variables affecting determinism (e.g., CUBLAS_WORKSPACE_CONFIG, PYTHONHASHSEED).
+
+Q50. Quantifying Sub‑3B GRPO Failure (as Negative Result)
+
+Metric definitions for reporting:
+
+Success criterion: e.g., BLEU/ROUGE/Reward > baseline + δ
+
+Confidence: 95% CI on metric via bootstrap or multiple seeds
+
+Procedure:
+
+Run ≥5 independent runs with distinct seeds.
+
+Compute mean ± 95% CI of target metric.
+
+Compare with baseline (e.g., static fine‑tune) with paired tests.
+
+Quantify failure:
+
+GRPO (mean) = μ
+Baseline = b
+Δ = μ − b
+95% CI (low, high)
+If (CI_high < b + δ) → statistically below engineering threshold
+Report p‑value (e.g., paired t‑test)
+
+Example statement:
+
+“For models <3B, GRPO yielded mean reward 0.72 (95% CI [0.68, 0.76]) vs baseline 0.81. CI does not overlap baseline + δ=0.05, indicating failure at 95% confidence.”
+
+Include effect sizes, CI, p‑values to make it citable as an engineering guideline.
+
+If you want this formatted as a one‑page appendix or figure icons/tables to include in your NeurIPS draft, tell me!

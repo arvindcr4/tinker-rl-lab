@@ -1,0 +1,16 @@
+Here are concise answers to your NeurIPS paper review questions:
+
+Q1:
+Using a subset of 50 items from HumanEval is likely to focus on a manageable, meaningful sample, but it could introduce cherry-picking bias. To mitigate this, ensure the 50 items are representative of the overall problem distribution. Consider using random sampling from the full 164 to test consistency and robustness of results across a broader range.
+
+Q2:
+To validate the custom JSON tool-call metric, it’s important to compare it against human judgment using a sample of varied tasks. A minimum validation would involve comparing it with manual evaluations on a sample of tool calls to ensure it aligns with human expectations, especially for accuracy and context understanding.
+
+Q3:
+Overfitting concerns due to narrow prompt distribution can be addressed by ensuring that the training steps involve a broad set of prompts and testing across diverse scenarios. It’s also important to track validation accuracy on unseen prompts to confirm that improvements generalize beyond the training set.
+
+Q4:
+The complementarity of SFT+GRPO depends on the task order, and it should be tested across both SFT-then-GRPO and GRPO-then-SFT sequences at matched compute. This ensures that the observed performance gains are not due to a particular order and can be generalized to other sequences.
+
+Q5:
+Hyperparameter selection should ideally be based on a combination of grid search for systematic exploration and random search to ensure coverage across diverse configurations. Manual tuning could introduce biases, so the approach should be clearly documented and, ideally, automated for better cross-model fairness and reproducibility.

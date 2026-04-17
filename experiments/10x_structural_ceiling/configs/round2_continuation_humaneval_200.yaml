@@ -1,0 +1,36 @@
+# Round 2 Exp 1c: Continue HumanEval to 200 steps (total null at 50)
+# Purpose: Does code generation ever break out of the null?
+env:
+  group_size: 16
+  batch_size: 64
+  max_batches_offpolicy: 3
+  tokenizer_name: "Qwen/Qwen3-8B"
+  use_wandb: true
+  rollout_server_url: "http://localhost:8050"
+  wandb_name: "humaneval-qwen3-8b-200step-env"
+  ensure_scores_are_not_same: false
+  max_token_length: 1024
+  max_num_workers: 16
+  total_steps: 200
+  steps_per_eval: 50
+  seed: 42
+
+openai:
+  - model_name: "Qwen/Qwen3-8B"
+    base_url: "http://localhost:8051/v1"
+    api_key: "x"
+    weight: 1.0
+    num_requests_for_eval: 164
+
+tinker:
+  lora_rank: 32
+  learning_rate: 0.00004
+  max_token_trainer_length: 2048
+  checkpoint_dir: "./checkpoints/10x/humaneval_qwen8b/"
+  save_checkpoint_interval: 25
+  wandb_project: "tinker-structural-ceiling"
+  wandb_group: "round2-continuation"
+  wandb_run_name: "humaneval-qwen3-8b-200step"
+
+slurm: false
+testing: false

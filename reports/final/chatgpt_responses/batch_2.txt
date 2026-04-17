@@ -1,0 +1,24 @@
+Here are concise, stats‑grounded answers to Q6–Q10:
+
+Q6 — Single reported “30.5%” training reward vs 83.3%:
+If only one run is reported, you cannot tell whether 30.5% is representative. With 5 seeds you’d compute a mean ± SD/CI; point estimates can vary widely across seeds. The large gap vs 83.3% could be seed‑specific noise rather than a real effect without reporting cross‑seed variation.
+
+Q7 — Threshold at 3B–4B with few sizes and no parametric test:
+Yes — fitting a sigmoid or piecewise/threshold regression with confidence intervals on the breakpoint is appropriate. You can estimate a change‑point and its CI (e.g., via bootstrapping), which is more rigorous than eyeballing a threshold from 3–4 sizes.
+
+Q8 — MoE routing volatility “2.43×”:
+This is a ratio relative to what? It must be normalized to a base metric (e.g., same input across seeds or average non‑MoE routing variance). To claim significance, you need a bootstrap test of routing instability across seeds/inputs; only then can you say whether 2.43× exceeds random variation with a p‑value.
+
+Q9 — 32% → 40% on 50 items = 4 more correct:
+Contingency table (approx):
+
+	Correct	Incorrect
+Baseline	16	34
+GRPO	20	30
+
+Fisher exact p ≈ 0.41 (two‑tailed), not significant at p < 0.05. So with N=50 this jump is suggestive but not statistically significant by standard criteria.
+
+Q10 — Cross‑seed stability SD=2.2% vs published GRPO baselines:
+You need to compare your across‑seed SD with published reported variances of comparable methods (ideally on the same metric/task). Simply reporting SD=2.2% does not on its own show “meaningfully lower” instability; a formal comparison (e.g., variance ratio test or non‑overlapping CIs) against baseline seed variability is required. Without that, claims of better stability are premature.
+
+If you want, I can write code to compute the Fisher test and bootstrap CIs for the threshold/regression.

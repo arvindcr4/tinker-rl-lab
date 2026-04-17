@@ -50,29 +50,97 @@
 
 \begin{table}[htbp]
     \centering
-    \caption{Complete GSM8K GRPO runs on Tinker. Multi-seed replication (Qwen3-8B), LoRA rank ablation, and 4B scaling experiment. All metrics are training-set reward.}
-    \begin{tabular}{lllcccccc}
+    \caption{Complete GSM8K GRPO runs on Tinker. Multi-seed replication (Qwen3-8B), LoRA rank ablation, group size ablation, 4B multi-seed replication, and extended run. All metrics are training-set reward.}
+    \begin{tabular}{lllccccccc}
         \toprule
-        Run ID & Model & Seed & Rank & LR & Steps & Peak & Last-10 \\
+        Run ID & Model & Seed & Rank & $G$ & LR & Steps & Peak & Last-10 \\
         \midrule
-        \multicolumn{8}{l}{\emph{Multi-seed replication (Qwen3-8B, rank 32)}} \\
-        899d909e & Qwen3-8B & 42 & 32 & 3e-5 & 50 & 62.5\% & 27.5\% \\
-        5db4e965 & Qwen3-8B & 137 & 32 & 3e-5 & 50 & 62.5\% & 27.5\% \\
-        aabb48cb & Qwen3-8B & 256 & 32 & 3e-5 & 50 & 62.5\% & 32.5\% \\
-        99971b26 & Qwen3-8B & 512 & 32 & 3e-5 & 50 & 87.5\% & 30.0\% \\
-        b3ba8df6 & Qwen3-8B & 999 & 32 & 3e-5 & 50 & 87.5\% & 35.0\% \\
+        \multicolumn{9}{l}{\emph{Multi-seed replication (Qwen3-8B, rank 32, G=4)}} \\
+        899d909e & Qwen3-8B & 42 & 32 & 4 & 3e-5 & 50 & 62.5\% & 27.5\% \\
+        5db4e965 & Qwen3-8B & 137 & 32 & 4 & 3e-5 & 50 & 62.5\% & 27.5\% \\
+        aabb48cb & Qwen3-8B & 256 & 32 & 4 & 3e-5 & 50 & 62.5\% & 32.5\% \\
+        99971b26 & Qwen3-8B & 512 & 32 & 4 & 3e-5 & 50 & 87.5\% & 30.0\% \\
+        b3ba8df6 & Qwen3-8B & 999 & 32 & 4 & 3e-5 & 50 & 87.5\% & 35.0\% \\
         \midrule
-        \multicolumn{8}{l}{\emph{LoRA rank ablation (Qwen3-8B, seed 42)}} \\
-        ba2a1694 & Qwen3-8B & 42 & 8 & 3e-5 & 50 & 62.5\% & 21.2\% \\
-        92ebcc48 & Qwen3-8B & 42 & 16 & 3e-5 & 50 & 75.0\% & 18.8\% \\
-        9219771c & Qwen3-8B & 42 & 64 & 3e-5 & 50 & 87.5\% & 25.0\% \\
+        \multicolumn{9}{l}{\emph{LoRA rank ablation (Qwen3-8B, seed 42, G=4)}} \\
+        ba2a1694 & Qwen3-8B & 42 & 8 & 4 & 3e-5 & 50 & 62.5\% & 21.2\% \\
+        92ebcc48 & Qwen3-8B & 42 & 16 & 4 & 3e-5 & 50 & 75.0\% & 18.8\% \\
+        9219771c & Qwen3-8B & 42 & 64 & 4 & 3e-5 & 50 & 87.5\% & 25.0\% \\
         \midrule
-        \multicolumn{8}{l}{\emph{Extended run and scaling}} \\
-        1cc20cec & Qwen3-8B & 42 & 32 & 5e-6 & 100 & 75.0\% & 27.5\% \\
-        566747c0 & Qwen3.5-4B & 137 & 32 & 3e-5 & 50 & 100\% & 82.5\% \\
+        \multicolumn{9}{l}{\emph{Group size ablation (Qwen3-8B, seed 42, rank 32)}} \\
+        a13b85f7 & Qwen3-8B & 42 & 32 & 4 & 3e-5 & 50 & 62.5\% & 23.8\% \\
+        8c42a6aa & Qwen3-8B & 42 & 32 & 8 & 3e-5 & 50 & 68.8\% & 24.4\% \\
+        ae5c6287 & Qwen3-8B & 42 & 32 & 16 & 3e-5 & 50 & 75.0\% & 36.2\% \\
+        6e2f0d73 & Qwen3-8B & 42 & 32 & 32 & 3e-5 & 50 & 100\% & 54.7\% \\
+        \midrule
+        \multicolumn{9}{l}{\emph{4B multi-seed replication (Qwen3.5-4B, rank 32, G=4)}} \\
+        b6e8e70d & Qwen3.5-4B & 42 & 32 & 4 & 3e-5 & 50 & 87.5\% & 68.8\% \\
+        566747c0 & Qwen3.5-4B & 137 & 32 & 4 & 3e-5 & 50 & 100\% & 82.5\% \\
+        a00e78da & Qwen3.5-4B & 256 & 32 & 4 & 3e-5 & 50 & 100\% & 96.2\% \\
+        cd17f565 & Qwen3.5-4B & 512 & 32 & 4 & 3e-5 & 50 & 100\% & 91.2\% \\
+        \midrule
+        \multicolumn{9}{l}{\emph{3B group-size control (Llama-3.2-3B, rank 32)}} \\
+        86162fb1 & Llama-3.2-3B & 42 & 32 & 32 & 3e-5 & 50 & 12.5\% & 5.0\% \\
+        \midrule
+        \multicolumn{9}{l}{\emph{Extended run}} \\
+        1cc20cec & Qwen3-8B & 42 & 32 & 4 & 5e-6 & 100 & 75.0\% & 27.5\% \\
         \bottomrule
     \end{tabular}
     \label{tab:gsm8k_runs}
+\end{table}
+
+\subsection{10x Structural Ceiling Experiments (Tinker, 32 runs, \$65)}
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Complete 10x Structural Ceiling run registry. All runs are 50 steps on Tinker with full checkpoint resumption. ZVF = Zero-Variance Fraction, GU = Gradient Utilization = 1 - ZVF.}
+    \begin{tabular}{llcccccc}
+        \toprule
+        Dimension & Config & Model & Steps & Final Reward & Avg Last-10 & Mean ZVF \\
+        \midrule
+        \multicolumn{7}{l}{\emph{Benchmark hierarchy (Qwen3-8B, G=16)}} \\
+        Benchmark & Tool-use JSON & Qwen3-8B & 50 & 1.000 & 1.000 & -- \\
+        Benchmark & GSM8K (LR=1e-4) & Qwen3-8B & 50 & 1.000 & 1.000 & $\sim$1.00 \\
+        Benchmark & GSM8K (seed4) & Qwen3-8B & 50 & 0.984 & 0.972 & 0.550 \\
+        Benchmark & GSM8K (seed5) & Qwen3-8B & 50 & 0.922 & 0.925 & 0.430 \\
+        Benchmark & MATH-500 & Qwen3-8B & 50 & 0.720 & 0.574 & -- \\
+        Benchmark & HumanEval & Qwen3-8B & 50 & 0.000 & 0.024 & -- \\
+        \midrule
+        \multicolumn{7}{l}{\emph{Cross-family architecture (8B, tool-use + GSM8K)}} \\
+        Architecture & Tool-use & Qwen3-8B & 50 & 1.000 & 1.000 & -- \\
+        Architecture & Tool-use & Llama-3.1-8B-Inst & 50 & 0.103 & -- & 0.00 \\
+        Architecture & Tool-use & Llama-3.1-8B base & 50 & 0.000 & -- & 1.00 \\
+        Architecture & GSM8K & Llama-3.1-8B-Inst & 39 & 0.969 & -- & 0.50 \\
+        Architecture & GSM8K & Llama-3.1-8B base & 26 & 0.047 & -- & 0.75 \\
+        \midrule
+        \multicolumn{7}{l}{\emph{Model size ladder (GSM8K)}} \\
+        Size & 8B & Qwen3-8B & 50 & 1.000 & 0.972 & 0.550 \\
+        Size & 1.7B & Qwen3-1.7B & 50 & 0.016 & 0.009 & 0.885 \\
+        Size & 0.6B & Qwen3-0.6B & 50 & 0.016 & 0.009 & 0.920 \\
+        Size & 3B & Llama-3.2-3B & 47 & 0.016 & $\sim$0.02 & $\sim$0.90 \\
+        Size & 1B & Llama-3.2-1B & 50 & 0.000 & 0.000 & 1.00 \\
+        \midrule
+        \multicolumn{7}{l}{\emph{Group size ablation (Qwen3-8B, GSM8K)}} \\
+        Group & G=4 & Qwen3-8B & 50 & 1.000 & 0.944 & 0.520 \\
+        Group & G=16 (seed4) & Qwen3-8B & 50 & 0.984 & 0.972 & 0.550 \\
+        Group & G=16 (seed5) & Qwen3-8B & 50 & 0.922 & 0.925 & 0.430 \\
+        Group & G=32 & Qwen3-8B & 50 & 1.000 & 0.957 & 0.455 \\
+        Group & G=64 & Qwen3-8B & 50 & 1.000 & $\sim$0.98 & 0.525 \\
+        \midrule
+        \multicolumn{7}{l}{\emph{Learning rate ablation (Qwen3-8B, G=16, GSM8K)}} \\
+        LR & 1e-5 & Qwen3-8B & 50 & 0.594 & 0.677 & 0.175 \\
+        LR & 4e-5 (seed4) & Qwen3-8B & 50 & 0.984 & 0.972 & 0.550 \\
+        LR & 4e-5 (seed5) & Qwen3-8B & 50 & 0.922 & 0.925 & 0.430 \\
+        LR & 1e-4 & Qwen3-8B & 50 & 1.000 & 1.000 & $\sim$1.00 \\
+        LR & 3e-4 & Qwen3-8B & 50 & 0.984 & 0.901 & 0.565 \\
+        \midrule
+        \multicolumn{7}{l}{\emph{Constrained decoding (Qwen3-8B, tool-use)}} \\
+        Constrained & Unconstrained & Qwen3-8B & 50 & 0.998 & -- & 0.725 \\
+        Constrained & Constrained & Qwen3-8B & 50 & 0.981 & -- & 0.660 \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:10x_runs}
 \end{table}
 
 \subsection{Google Colab QLoRA Experiments}
@@ -117,6 +185,89 @@ We provide a reproducible Colab notebook (\texttt{advanced\_rl\_colab.ipynb}) im
 \noindent\textbf{Dr.\ GRPO} \citep{deepseekr1} removes the KL divergence penalty and adds a token-level entropy bonus ($\lambda=0.01$) to prevent the entropy collapse documented in Section~5.3 of the main paper. \textbf{DAPO} \citep{yu2025dapo} further decouples alignment by using asymmetric advantage clipping and higher sampling temperature for diverse rollouts. \textbf{DPO} \citep{rafailov2024dpo} uses rejection-sampled preference pairs (correct vs.\ incorrect completions from the base model) for offline preference learning without on-policy rollouts.
 
 % ===========================================================================
+\section{Claim-to-Configuration Mapping}
+% ===========================================================================
+
+Table~\ref{tab:config_map} maps each main-paper claim to its exact training configuration, enabling reviewers to trace results without cross-referencing run IDs.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Configuration for each main-paper claim. $N$ = number of independent runs or seeds.}
+    \begin{tabular}{p{3.2cm}lcccccc}
+        \toprule
+        Claim & Model & Rank & $G$ & LR & Steps & $N$ \\
+        \midrule
+        \multicolumn{7}{l}{\emph{Original experiments}} \\
+        Tool 0\%$\to$92\% & Qwen2.5-1.5B & 16 & 8 & 3e-5 & 700 & 1 \\
+        Multi-turn 0.72$\to$0.91 & Qwen2.5-3B & 8 & 4 & 3e-5 & 40 & 1 \\
+        Code 32\%$\to$40\% & Qwen3-8B & 32 & 4 & 3e-5 & 50 & 1 \\
+        GSM8K 30.5\% (SD 3.3) & Qwen3-8B & 32 & 4 & 3e-5 & 50 & 5 \\
+        Held-out 83.3\% & Qwen3-8B & 32 & 4 & 3e-5 & 50 & 5 \\
+        Group-size scaling & Qwen3-8B & 32 & 4--32 & 3e-5 & 50 & 4 \\
+        Capacity threshold & 3B/4B & 32 & 4,32 & 3e-5 & 50 & 2/4 \\
+        MoE volatility & Qwen3-30B & 32 & 8 & 3e-5 & 50 & 1 \\
+        LoRA rank tradeoff & Qwen3-8B & 8--64 & 4 & 3e-5 & 50 & 3 \\
+        \midrule
+        \multicolumn{7}{l}{\emph{10x Structural Ceiling (32 runs)}} \\
+        Benchmark hierarchy & Qwen3-8B & 32 & 16 & 4e-5 & 50 & 6 \\
+        Architecture depend. & Qwen/Llama-8B & 32 & 16 & 4e-5 & 50 & 5 \\
+        Size ladder & 0.6B--8B & 32 & 16 & 4e-5 & 50 & 5 \\
+        Group saturation & Qwen3-8B & 32 & 4--64 & 4e-5 & 50 & 5 \\
+        LR tradeoff & Qwen3-8B & 32 & 16 & 1e-5--3e-4 & 50 & 5 \\
+        Constrained decoding & Qwen3-8B & 32 & 16 & 4e-5 & 50 & 2 \\
+        SFT prerequisite & Llama-8B base/inst & 32 & 16 & 4e-5 & 50 & 2 \\
+        Reward hacking & Llama-8B base & 32 & 16 & 4e-5 & 50 & 1 \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:config_map}
+\end{table}
+
+% ===========================================================================
+\section{Claim-to-Run Mapping}
+% ===========================================================================
+
+Table~\ref{tab:claim_map} maps each main-paper finding to the specific runs that support it, enabling reviewers to trace every claim to its evidence.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Mapping of main-paper claims to supporting evidence. Single-run claims are marked ($\star$).}
+    \begin{tabular}{p{3.8cm}lp{4.5cm}}
+        \toprule
+        Claim & Runs & Evidence \\
+        \midrule
+        \multicolumn{3}{l}{\emph{Original experiments}} \\
+        Tool calling 0\%$\rightarrow$92\% & Colab Qwen2.5-1.5B & Single SFT+GRPO pipeline ($\star$) \\
+        Multi-turn 0.72$\rightarrow$0.91 & Colab Qwen2.5-3B & 4 scenarios, custom rubric ($\star$) \\
+        Code 32\%$\rightarrow$40\% & Tinker Qwen3-8B & 50-item subset, $p{=}0.53$ ($\star$) \\
+        GSM8K 30.5\% (SD 3.3\%) & 899d, 5db4, aabb, 9997, b3ba & 5 seeds, same config \\
+        Held-out 83.3\% (SD 2.2\%) & Same 5 seeds & 200 test examples each \\
+        Capacity threshold 3B--4B & Colab 3B + 8616 + 4$\times$4B & 3B confirmed at both $G$; 4 4B seeds \\
+        MoE volatility 2.43$\times$ & MoE run + 5 dense seeds & Levene's $p{=}7{\times}10^{-6}$ \\
+        SFT+GRPO complementarity & Colab 1.5B, 3B & 2 pipelines ($\star$) \\
+        Group-size scaling & a13b, 8c42, ae5c, 6e2f & 4 group sizes, seed 42 \\
+        LoRA rank--speed tradeoff & ba2a, 92eb, 9219 & 3 ranks, seed 42 ($\star$) \\
+        Two-phase learning & Arithmetic diagnostic run & Single run ($\star$) \\
+        Synthetic--real gap & 386273f4, f63b618c & 2 runs, same model \\
+        \midrule
+        \multicolumn{3}{l}{\emph{10x Structural Ceiling (32 runs, W\&B: tinker-structural-ceiling)}} \\
+        Benchmark hierarchy & 6 runs across 4 benchmarks & Tool/GSM8K/MATH/HumanEval \\
+        Architecture dependence & 5 runs (Qwen/Llama-8B) & Tool-use + GSM8K, both families \\
+        SFT prerequisite & 2 runs (base vs instruct) & Llama-8B, +0.922 delta \\
+        Size ladder & 5 runs (0.6B--8B) & Qwen + Llama, cross-family \\
+        Group saturation (ZVF/GU) & 5 runs (G=4/16/32/64) & Novel diagnostic metric \\
+        LR speed--saturation & 5 runs (1e-5 to 3e-4) & Full 50-step correction \\
+        Constrained decoding & 2 runs & No difference (0.998 vs 0.981) \\
+        Reward hacking/collapse & 1 run (Llama-8B base) & Loss $-238$, collapse at step 41 ($\star$) \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:claim_map}
+\end{table}
+
+\textbf{Key limitation:} Of the original twelve claims, four rest on single runs or single pipelines (marked $\star$). The 10x Structural Ceiling experiment adds 32 systematic runs across 7 dimensions, substantially strengthening the evidence base. The capacity threshold is now confirmed across both Qwen (0.6B, 1.7B) and Llama (1B, 3B) families, partially resolving the architecture confound. The reward hacking observation remains a single run.
+
+% ===========================================================================
 \section{Training Hyperparameters}
 % ===========================================================================
 
@@ -136,7 +287,7 @@ We provide a reproducible Colab notebook (\texttt{advanced\_rl\_colab.ipynb}) im
         $\epsilon$ & 1e-8 \\
         Weight Decay & 0 \\
         Batch Size & 2 prompts/step \\
-        Group Size & 4, 8, or 16 \\
+        Group Size & 4, 8, 16, or 32 \\
         Max Input Length & 1024 tokens \\
         Max Generation Length & 512 tokens \\
         Warmup & None (constant LR) \\
@@ -173,9 +324,11 @@ We provide a reproducible Colab notebook (\texttt{advanced\_rl\_colab.ipynb}) im
 
 \subsection{Three-Billion Parameter Failure Mode}
 
-The Llama-3.2-3B model on GSM8K (run not shown in main paper) achieved only 2.34\% accuracy after 50 GRPO steps, barely above the 1.56\% random baseline. Analysis of training logs reveals the root cause: \textbf{56\% of training steps had zero gradient} because all G=4 sampled completions received identical rewards (all correct or all incorrect).
+The Llama-3.2-3B model on GSM8K achieved only 2.34\% accuracy after 50 GRPO steps (95\% CI $[0.3\%, 4.4\%]$ via binomial proportion on $G{=}4$ groups), barely above the 1.56\% random baseline. A one-sample binomial test yields $p{=}0.68$, failing to reject the null hypothesis that the model performs at chance. This constitutes a \textbf{formal negative result}: GRPO at $G{=}4$ does not produce statistically detectable learning in 3B models on GSM8K.
 
-This ``zero-loss'' phenomenon indicates the 3B model lacks the reasoning capacity to generate diverse completion quality within a group. When all completions are equally wrong, advantages are zero and no learning occurs. The 8B model (Qwen3-8B) shows only 16--28\% zero-loss rate, enabling effective gradient updates.
+The root cause is that \textbf{56\% of training steps had zero gradient} because all $G{=}4$ sampled completions received identical rewards (all incorrect). When all completions are equally wrong, GRPO advantages are zero and no gradient update occurs. The 8B model (Qwen3-8B) shows only 16--28\% zero-loss rate, enabling effective gradient updates.
+
+\textbf{Practitioner guideline:} Sub-3B dense models should not be expected to learn via GRPO with $G \leq 4$ on math reasoning tasks. Higher group sizes ($G{=}16$--$64$) or curriculum warm-starting may be needed to generate within-group reward variance at this scale, but this remains untested.
 
 \begin{table}[htbp]
     \centering
@@ -205,18 +358,29 @@ Table~\ref{tab:zero_loss_comprehensive} reports zero-loss and zero-reward step f
         Model & Config & Steps & Zero-Loss \% & Zero-Reward \% & Peak Acc & Last-10 Acc \\
         \midrule
         Llama-3.2-3B & seed=42, G=4 & 50 & 56\% & 56\% & 3.1\% & 2.3\% \\
+        Llama-3.2-3B & seed=42, G=32 & 50 & 18\% & 18\% & 12.5\% & 5.0\% \\
         \midrule
-        Qwen3.5-4B & seed=137, r=32 & 50 & 68\% & 0\% & 100\% & 82.5\% \\
+        Qwen3.5-4B & seed=42, G=4 & 50 & -- & -- & 87.5\% & 68.8\% \\
+        Qwen3.5-4B & seed=137, G=4 & 50 & 68\% & 0\% & 100\% & 82.5\% \\
+        Qwen3.5-4B & seed=256, G=4 & 50 & -- & -- & 100\% & 96.2\% \\
+        Qwen3.5-4B & seed=512, G=4 & 50 & -- & -- & 100\% & 91.2\% \\
         \midrule
-        Qwen3-8B & seed=137, r=32 & 50 & 28\% & 24\% & 62.5\% & 27.5\% \\
-        Qwen3-8B & seed=256, r=32 & 50 & 24\% & 24\% & 62.5\% & 32.5\% \\
-        Qwen3-8B & seed=512, r=32 & 50 & 16\% & 10\% & 87.5\% & 30.0\% \\
-        Qwen3-8B & seed=42, r=32 & 50 & 18\% & 14\% & 62.5\% & 27.5\% \\
-        Qwen3-8B & seed=999, r=32 & 50 & 18\% & 16\% & 87.5\% & 35.0\% \\
-        Qwen3-8B & seed=42, r=8 & 50 & 20\% & 14\% & 62.5\% & 21.2\% \\
-        Qwen3-8B & seed=42, r=16 & 50 & 20\% & 18\% & 75.0\% & 18.8\% \\
-        Qwen3-8B & seed=42, r=64 & 50 & 18\% & 16\% & 87.5\% & 25.0\% \\
-        Qwen3-8B & lr=5e-6, 100 steps & 100 & 17\% & 15\% & 75.0\% & 27.5\% \\
+        Qwen3-8B & seed=137, r=32, G=4 & 50 & 28\% & 24\% & 62.5\% & 27.5\% \\
+        Qwen3-8B & seed=256, r=32, G=4 & 50 & 24\% & 24\% & 62.5\% & 32.5\% \\
+        Qwen3-8B & seed=512, r=32, G=4 & 50 & 16\% & 10\% & 87.5\% & 30.0\% \\
+        Qwen3-8B & seed=42, r=32, G=4 & 50 & 18\% & 14\% & 62.5\% & 27.5\% \\
+        Qwen3-8B & seed=999, r=32, G=4 & 50 & 18\% & 16\% & 87.5\% & 35.0\% \\
+        Qwen3-8B & seed=42, r=8, G=4 & 50 & 20\% & 14\% & 62.5\% & 21.2\% \\
+        Qwen3-8B & seed=42, r=16, G=4 & 50 & 20\% & 18\% & 75.0\% & 18.8\% \\
+        Qwen3-8B & seed=42, r=64, G=4 & 50 & 18\% & 16\% & 87.5\% & 25.0\% \\
+        \midrule
+        \multicolumn{7}{l}{\emph{Group size ablation (Qwen3-8B, seed 42, rank 32)}} \\
+        Qwen3-8B & seed=42, G=4 & 50 & 26\% & 20\% & 62.5\% & 23.8\% \\
+        Qwen3-8B & seed=42, G=8 & 50 & 6\% & 6\% & 68.8\% & 24.4\% \\
+        Qwen3-8B & seed=42, G=16 & 50 & 2\% & 2\% & 75.0\% & 36.2\% \\
+        Qwen3-8B & seed=42, G=32 & 50 & 2\% & 0\% & 100\% & 54.7\% \\
+        \midrule
+        Qwen3-8B & lr=5e-6, G=4, 100 steps & 100 & 17\% & 15\% & 75.0\% & 27.5\% \\
         \bottomrule
     \end{tabular}
     \label{tab:zero_loss_comprehensive}
@@ -228,6 +392,7 @@ Table~\ref{tab:zero_loss_comprehensive} reports zero-loss and zero-reward step f
     \item The 4B model's 68\% zero-loss rate stems from \emph{all-correct} groups (0\% zero-reward), indicating the opposite regime: the model solves problems so easily that group variance vanishes. This is productive zero-loss (learning saturated, not stalled).
     \item 8B models show 16--28\% zero-loss, with seed 512 showing the lowest rate and highest peak accuracy, suggesting exploration varies meaningfully across seeds.
     \item LoRA rank does not substantially affect zero-loss rates (18--20\% for r=8/16/64), supporting the paper's finding that rank affects learning speed but not the fundamental capacity to generate reward signal.
+    \item \textbf{Group size dramatically reduces zero-loss:} At $G{=}4$, 26\% of steps have zero gradient; at $G{=}32$, only 2\%. Larger groups ensure at least one correct and one incorrect completion per group, providing consistent gradient signal. This explains why $G{=}32$ achieves 54.7\% vs.\ $G{=}4$'s 23.8\%.
 \end{itemize}
 
 \subsection{Qwen3-30B-MoE Volatility Analysis}
@@ -313,7 +478,7 @@ As noted in the main paper, our primary evaluation metrics are computed on \text
     \item HumanEval: Standard pass@1 on the 50-example benchmark (test set)
 \end{itemize}
 
-The GSM8K evaluation is the most compromised: evaluating on training data with small group sizes (G=4) means the ``test'' examples overlap with training distribution. True held-out evaluation on the GSM8K test set (1319 examples) was not performed.
+The GSM8K training-step evaluation is the most compromised: evaluating on training data with small group sizes (G=4) means the ``test'' examples overlap with training distribution. We subsequently performed held-out evaluation on 200 randomly sampled GSM8K test-set examples (5 seeds, 200 each), reporting 83.3\% (SD 2.2\%) accuracy. A base-model control (Qwen3-8B without LoRA) scored 82.0\% on the same 200 examples, showing the +1.3pp delta is not significant ($p{=}0.26$).
 
 \subsection{Multi-Turn Tool Calling Reward Breakdown}
 
@@ -399,7 +564,8 @@ This trajectory illustrates the two-phase pattern: format compliance (steps 1-20
         \toprule
         Platform & GPU & Experiments & Est. Cost \\
         \midrule
-        Tinker SDK v0.16.1 & Cloud A100 & 17 runs & \$30--40 \\
+        Tinker SDK v0.16.1 & Cloud A100 & 25 original runs & \$40--55 \\
+        Tinker SDK v0.16.1 & Cloud A100 & 32 runs (10x Structural Ceiling) & $\sim$\$65 \\
         Google Colab Pro & T4 16GB & 5 team members & \$10/person \\
         HuggingFace Hub & N/A & Model hosting & Free \\
         \bottomrule
@@ -407,7 +573,7 @@ This trajectory illustrates the two-phase pattern: format compliance (steps 1-20
     \label{tab:compute}
 \end{table}
 
-Total estimated spend: $\sim$\$50/person, well within typical capstone project budgets.
+Total Tinker spend: $\sim$\$105--120 across 57 runs. Total estimated project spend: $\sim$\$130, well within typical capstone project budgets.
 
 \begin{table}[htbp]
     \centering
@@ -427,7 +593,7 @@ Total estimated spend: $\sim$\$50/person, well within typical capstone project b
     \label{tab:per_run_budget}
 \end{table}
 
-\textbf{Limitations of budget reporting:} We do not report exact tokens processed per run (the Tinker SDK does not expose this metric). Token estimates above are upper bounds assuming maximum generation length. Wall-clock times exclude checkpoint saving overhead. GPU-hours are not tracked per-run; the aggregate across all 17 Tinker runs is estimated at 8--12 A100 GPU-hours.
+\textbf{Limitations of budget reporting:} We do not report exact tokens processed per run (the Tinker SDK does not expose this metric). Token estimates above are upper bounds assuming maximum generation length. Wall-clock times exclude checkpoint saving overhead. GPU-hours are not tracked per-run; the aggregate across all 57 Tinker runs is estimated at 24--32 A100 GPU-hours (original 25 runs: 12--16 hours; 10x Structural Ceiling 32 runs: $\sim$12--16 hours at $\sim$40 min wall time for parallel batch).
 
 We report GPU platform and wall-clock budget, but not a full token-processed accounting per run. Likewise, our data-split story is uneven across domains: HumanEval uses a held-out benchmark subset, while tool calling and GSM8K largely report training-distribution rollouts. This split mismatch is a major threat to cross-domain comparability.
 
@@ -440,6 +606,9 @@ All training scripts are available in the repository:
     \item \texttt{grpo\_gsm8k\_base.py} -- Parameterized GSM8K training
     \item \texttt{grpo\_exp\_a\_baseline.py}, \texttt{exp\_b\_high\_lr.py}, \texttt{exp\_c\_low\_temp.py}, \texttt{exp\_d\_xlam.py} -- Tool-use experiments
     \item \texttt{grpo\_100\_xlam.py}, \texttt{grpo\_100\_synthetic.py}, \texttt{grpo\_100\_math.py} -- Extended runs
+    \item \texttt{experiments/10x\_structural\_ceiling/grpo\_10x\_runner.py} -- Unified runner with YAML config, checkpoint resumption, ZVF/GU logging
+    \item \texttt{experiments/10x\_structural\_ceiling/configs/*.yaml} -- 23 YAML configs for all 10x ablation dimensions
+    \item \texttt{experiments/10x\_structural\_ceiling/RESULTS.md} -- Complete 50-step results with 8 findings
 \end{itemize}
 
 At present, we can release training scripts, paper sources, and the hardened held-out evaluation script, but the exact prompt packs / scenario definitions used for every internal tool-calling score are not yet packaged as a replication bundle. Releasing prompts, scoring rubrics, and scenario manifests is an explicit next step for reproducibility.
@@ -454,5 +623,175 @@ Checkpoint access is partial rather than universal at present:
     \item Some tool-use and math checkpoints were written to Tinker under run-specific paths such as \texttt{tinker://\textit{run\_id}/sampler\_weights/final}, but present-day recovery depends on retention and account access.
 \end{itemize}
 A clean anonymous release should replace personal account identifiers with project-level artifact locations or explicit recovery instructions.
+
+% ===========================================================================
+\section{Content Moved from Main Paper}
+% ===========================================================================
+
+\subsection{GRPO Hyperparameter Comparison Table}
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Standard GRPO hyperparameters across published systems.}
+    \begin{tabular}{lcccc}
+        \toprule
+        System & $G$ & LR & $T$ & $\beta$ (KL) \\
+        \midrule
+        DeepSeek-R1-Zero & 16 & $3 \times 10^{-6}$ & 1.0 & 0.001 \\
+        DeepSeekMath-RL 7B & 64 & $1 \times 10^{-6}$ & -- & 0.04 \\
+        JT-Math & 16 & $4 \times 10^{-6}$ & 1.2 & 0.001 \\
+        Skywork-OR1 & -- & -- & -- & 0 \\
+        R1-style (Qwen/Llama) & 8 & $2.5$--$5 \times 10^{-6}$ & 0.7 & 0 \\
+        \midrule
+        \textbf{Ours} & \textbf{16} & $\mathbf{4 \times 10^{-5}}$ & \textbf{1.0} & \textbf{--} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Our $\sim$10$\times$ higher learning rate is attributed to LoRA-only training (0.1\% trainable parameters vs.\ full fine-tuning in published systems).
+
+\subsection{Reward Function Limitations}
+
+Our reward functions are deliberately simple and verifiable, but this coarseness introduces known limitations. The tool-calling reward checks JSON validity, tool name, and argument-key presence but does \emph{not} verify argument-value correctness---a model can receive full reward by calling the right function with plausible but wrong values. This creates a reward-hacking surface. Adding argument-type and value checks, or leveraging outcome reward models such as ToolRM, would reduce this risk. The math reward is binary (correct/incorrect) with no partial credit for intermediate reasoning steps, contributing to reward sparsity for weaker models.
+
+\subsection{Safety Considerations}
+
+GRPO-trained tool-calling models introduce safety risks: (1) \textbf{incorrect tool execution}---valid JSON with wrong functions or dangerous arguments; (2) \textbf{persistent loops}---the -0.30 penalty eliminated loops in our experiments but may not suffice for complex workflows; (3) \textbf{hallucinated capabilities}---calls to nonexistent tools, especially when transferring from synthetic to real schemas. Future work should incorporate hallucination and loop penalties validated by standardized evaluators.
+
+\subsection{Practitioner Decision Guide}
+
+Based on our findings, we offer preliminary guidance for practitioners considering GRPO for post-training (Table~\ref{tab:practitioner}).
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Practitioner decision guide based on empirical findings. All recommendations are preliminary and derived from limited experiments.}
+    \begin{tabular}{lll}
+        \toprule
+        Condition & Recommendation & Evidence \\
+        \midrule
+        Model $\leq$3B & Do not use GRPO ($G{=}32$ yields only 5\%) & Confirmed at $G{=}4$ and $G{=}32$ (Sec.~5.1) \\
+        Model 3B--4B & Use $G \geq 16$; consider SFT warm-start & Capacity threshold (Sec.~5.1) \\
+        Model $\geq$8B & GRPO viable; $G \geq 16$ recommended; rank 32 sufficient & 5-seed replication + group ablation \\
+        MoE architecture & Expect 2--3$\times$ reward variance & $p{=}7{\times}10^{-6}$ (Sec.~7) \\
+        Tool calling & SFT first, then GRPO & 0\%$\rightarrow$92\% (Sec.~4.1) \\
+        Synthetic data & Expect 3--8$\times$ easier than real & Sec.~5.2 \\
+        LoRA rank choice & Rank 32 default; 64 for faster convergence & Rank ablation (Sec.~4.4.3) \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:practitioner}
+\end{table}
+
+\textbf{Caveat:} These guidelines are derived from experiments on Qwen/Llama families with GSM8K and custom tool-calling tasks. Generalization to other model families, harder benchmarks, or multi-turn agentic trajectories is untested.
+
+\subsection{Planned Experiments and Evaluation Roadmap}
+
+\paragraph{Phase 1 (Immediate):} Held-out GSM8K test evaluation (1,319 examples, 3+ seeds, bootstrapped 95\% CIs) and MATH test set transfer.
+
+\paragraph{Phase 2 (Ablations):} Group size sweep $G \in \{4, 8, 16, 32\}$ on 8B completed; remaining: $G \in \{64, 128\}$, group-size ablation on 3B, temperature sweep $T \in \{0.7, 1.0, 1.3, 1.5\}$; KL anchoring $\beta \in \{0.01, 0.05, 0.1\}$; curriculum (easy-to-hard).
+
+\paragraph{Phase 3 (Benchmarks):} Canonical HumanEval-164/MBPP with pass@$k$; FC-RewardBench-style tool evaluation; SFT-only, PPO, DPO, RLOO baselines under matched compute. Reproducible notebooks (Dr.\ GRPO, DAPO, DPO, PPO, REINFORCE) are available in the supplementary repository.
+
+\paragraph{Phase 4 (Diagnostics):} MoE routing telemetry; LoRA rank $r \in \{8, 16, 32, 64\}$ with memory/throughput/accuracy; QR-Adaptor comparison.
+
+Estimated scope: $\sim$20--30 runs, \$500--\$1000.
+
+\subsection{Reviewer Priority Analysis}
+
+A systematic analysis of 490 RL-for-LLM reviews across 248 papers (2017--2023) finds that \emph{insufficient evaluation} is flagged in 86.3\% of reviews, with \emph{missing baselines} (56.8\%) and \emph{missing ablations} (14.5\%) as the top complaints. Human evaluation absence is rarely criticized (2.1\%), and including capability benchmarks shows no significant correlation with reviewer scores (Mann--Whitney $U$, $p > 0.05$). This motivates our prioritization of baseline comparisons and ablation coverage over human-judge studies.
+
+% ===========================================================================
+\section{Tool-Calling Evaluation Protocol}
+% ===========================================================================
+
+This section documents the custom tool-calling evaluation setup used in the main paper, addressing the reviewer concern about non-standardized evaluation.
+
+\subsection{Tool Schema Format}
+
+All tool schemas follow the OpenAI-compatible function-calling format:
+
+\begin{verbatim}
+{
+  "type": "function",
+  "function": {
+    "name": "get_weather",
+    "description": "Get current weather for a location",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "location": {"type": "string", "description": "City name"},
+        "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}
+      },
+      "required": ["location"]
+    }
+  }
+}
+\end{verbatim}
+
+\subsection{Single-Turn Evaluation Rubric}
+
+Each tool call is scored on three binary components:
+
+\begin{table}[htbp]
+    \centering
+    \caption{Single-turn tool-calling reward rubric.}
+    \begin{tabular}{lcp{6cm}}
+        \toprule
+        Component & Weight & Criterion \\
+        \midrule
+        JSON Valid & +0.3 & Output parses as valid JSON \\
+        Correct Tool & +0.4 & \texttt{name} field matches expected tool \\
+        Arguments Present & +0.3 & All required argument keys exist \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\textbf{Limitations:} This rubric does \emph{not} verify argument values, argument types, or semantic correctness. A model can score 1.0 by producing syntactically correct JSON with plausible but wrong argument values.
+
+\subsection{Multi-Turn Scenario Set}
+
+Four hand-authored scenarios with deterministic expected tool sequences:
+
+\begin{table}[htbp]
+    \centering
+    \caption{Multi-turn evaluation scenarios.}
+    \begin{tabular}{llc}
+        \toprule
+        Scenario & Expected Tool Sequence & Turns \\
+        \midrule
+        Weather + Packing & get\_weather $\rightarrow$ suggest\_packing & 2 \\
+        Stock + News & get\_stock\_price $\rightarrow$ get\_news & 2 \\
+        Search + Calculate & web\_search $\rightarrow$ calculator & 2 \\
+        Single Tool & get\_weather & 1 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Prompt Template}
+
+\begin{verbatim}
+<|im_start|>system
+You are a helpful assistant with access to the following tools:
+{tool_schemas_json}
+
+When you need to use a tool, respond with a JSON object
+containing "tool_calls" array. Otherwise respond normally.
+<|im_end|>
+<|im_start|>user
+{user_query}<|im_end|>
+\end{verbatim}
+
+\subsection{Judge Details}
+
+Scoring is fully automated (no LLM judge, no human annotation):
+\begin{itemize}
+    \item JSON validity: Python \texttt{json.loads()} parsing
+    \item Tool name: exact string match against expected tool
+    \item Arguments: set intersection of required keys
+    \item Repeat penalty: -0.30 if \texttt{name} matches any previous turn
+\end{itemize}
+
+Inter-rater reliability was not measured because scoring is deterministic. This is a \emph{limitation}: deterministic rubrics can miss semantic correctness that human judges would catch.
 
 \end{document}

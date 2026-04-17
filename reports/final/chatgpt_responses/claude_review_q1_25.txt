@@ -1,0 +1,396 @@
+NeurIPS Area Chair Review — GRPO for Agentic LLM Fine-Tuning
+Reviewer: Claude (Sonnet 4.6), acting as Area Chair
+Date: 2026-04-04
+==============================================================
+
+Q1: Why were only 50 HumanEval items used instead of full 164, and does this
+subset selection introduce cherry-picking bias inflating 32%->40%?
+
+The paper describes this as a "preliminary 50-problem subset" but provides no
+justification for which 50 items were selected or whether selection was random,
+stratified, or convenience-based. At n=50, each problem represents 2 percentage
+points, so the 8-point gain (16/50 -> 20/50) is literally four problems — an
+effect size that sits entirely within the bootstrap 95% CI [27%, 53%] the
+authors themselves report. Without confirmation that the 50 items were drawn
+uniformly at random from the full 164 before any training was run, cherry-picking
+bias cannot be ruled out. The minimum fix is to state the exact random seed used
+to subsample, or run the full 164-item evaluation; until then this result should
+not be foregrounded as evidence of GRPO effectiveness on code.
+
+---
+
+Q2: Custom JSON tool-call metric — have they validated scoring fidelity against
+human judgment? What validation is minimum?
+
+No validation against human judgment is reported anywhere in the paper or
+supplementary. The supplementary explicitly acknowledges: "We did not measure
+inter-rater reliability, did not use multiple human judges." The three-component
+rubric (JSON validity 0.3, tool name 0.4, arguments present 0.3) is a proxy
+for task success, not a measure of it — a model could score 0.7 by producing
+valid JSON with the right tool name but completely wrong arguments. The minimum
+acceptable validation is: (a) human agreement rate on a random sample of
+~100 scored completions (Cohen's kappa >= 0.8 target), and (b) correlation of
+rubric score with end-task success (e.g., does the tool call actually execute
+correctly). Without this, the 0%->92% headline figure is uninterpretable.
+
+---
+
+Q3: With only 50 training steps, how to rule out 0%->92% tool-call improvement
+reflects overfitting?
+
+The paper cannot rule it out in its current form. The tool-call evaluation is
+performed on "training-prompt rollouts" from the same prompt distribution used
+for GRPO updates — there is no held-out tool-call test set. With only 200 RL
+prompts from Glaive-v2 and G=4-16 group size, 50 steps see the same prompts
+multiple times, so the model has ample opportunity to memorize specific prompt-
+completion patterns rather than learning generalizable tool-use. The diagnostic
+would be straightforward: evaluate on 50 held-out Glaive-v2 prompts (or ToolBench
+scenarios) not seen during training. The paper's own supplementary warns "our
+primary evaluation metrics are computed on training prompts with new rollouts,
+not on held-out test sets" — this is precisely the overfitting risk.
+
+---
+
+Q4: SFT+GRPO complementarity — was ordering (SFT-then-GRPO vs GRPO-then-SFT)
+tested?
+
+No. Every experiment that combines SFT and GRPO uses SFT-then-GRPO ordering only.
+The paper claims SFT+GRPO complementarity as a novel finding, but complementarity
+in one ordering direction is a weaker claim than true synergy: it is well-
+established that SFT warm-starts improve RL training by narrowing the initial
+exploration space. GRPO-then-SFT (or interleaved SFT-GRPO-SFT) is not tested,
+so the "complementarity" finding is really "SFT is a useful initializer for GRPO"
+— an already-known result from ReST, STaR, and related work. The paper should
+either test the reverse ordering or reframe this as a confirmation rather than
+a novel finding.
+
+---
+
+Q5: How were hyperparameters selected across 17 runs — grid/random/manual?
+
+The paper does not state this explicitly. The supplementary shows that LR values
+{3e-5, 5e-6, 1e-4}, group sizes {4, 8, 16}, and temperatures {0.4, 0.8, 1.0, 1.2}
+appear across runs, but no systematic grid or random search protocol is described.
+Given the run IDs and configurations, this appears to be manual exploration driven
+by partial results — effectively OFAT (one-factor-at-a-time) tuning, which is known
+to miss interaction effects. More critically, there is no mention of a held-out
+validation set used to stop hyperparameter search; peak training reward was the
+apparent criterion, which introduces overfitting to training dynamics. A Methods
+subsection explicitly stating the hyperparameter selection protocol is required for
+reproducibility.
+
+---
+
+Q6: Training reward 30.5% as single number — was it measured across seeds?
+
+Yes and no. The 30.5% is the mean of the Last-10-Avg training rewards across 5
+seeds (27.5%, 27.5%, 32.5%, 30.0%, 35.0%), with SD=3.3% (reported in the paper).
+This is methodologically appropriate. However, the abstract also reports "SD=2.2%"
+which refers to the held-out test accuracy distribution (83.3%), not the training
+reward — the paper conflates these two standard deviations in the abstract and
+conclusion, which will confuse readers. The training reward of 30.5% (SD=3.3%)
+is well-characterized; the problem is that it dramatically underestimates the
+actual policy quality because it is measured under high-temperature stochastic
+sampling during training, not greedy decoding. The paper explains this discrepancy
+but does not fix the abstract.
+
+---
+
+Q7: 3B-4B capacity threshold from few model sizes — should they fit threshold
+regression with CIs?
+
+Yes, strongly. The "capacity threshold" claim rests on exactly two data points:
+3B (2.34% accuracy) and 4B (82.5% accuracy), plus a third at 8B (83.3%). There
+is no 3.5B, no repeat of 4B with a different architecture, and no sweep between
+3B and 4B. A step-function capacity threshold is an extraordinary claim that
+requires either (a) testing 3.5B, 3.8B, etc. to locate the break, or (b) fitting
+a logistic or sigmoid regression on {model_size, accuracy} with confidence
+intervals to show the inflection. As written, the 3B-4B threshold could equally
+be explained by the confound that the 3B and 4B models are different architectures
+(Llama-3.2-3B vs. Qwen3.5-4B) and different platforms (Colab vs. Tinker), making
+the comparison unreliable. The paper partially acknowledges this in the analysis
+section but still foregrounds it as a novel finding.
+
+---
+
+Q8: MoE routing volatility 2.43x — what metric and is it statistically
+significant?
+
+The metric is step-to-step reward variance, reported as SD 0.29 (MoE) vs. 0.12
+(Dense), ratio 2.43x. The supplementary reports a Levene's test result:
+F(1,98)=22.4, p=7.0e-6, confirming the variance difference is statistically
+significant at n=50 steps each. This is the most statistically rigorous result
+in the paper. However, the Qwen3-30B-MoE results (99% peak, 95% final accuracy)
+are not reported in the main paper's run registry table, and it is unclear whether
+the MoE run used identical hyperparameters to the dense 8B comparison — if LR or
+group size differed, the variance comparison is confounded. The paper should add
+the MoE run to the main run registry with full hyperparameters, and explicitly
+state that all confounds were controlled.
+
+---
+
+Q9: Code improvement 32%->40% on 50 items = 4 problems. Significant at p<0.05?
+
+No. Under a standard binomial proportion test (H0: p=0.32, observed 20/50=0.40),
+the one-sided p-value is approximately 0.16, well above the p<0.05 threshold. The
+authors' own bootstrap 95% CI [27%, 53%] post-GRPO explicitly brackets the
+pre-GRPO 32% baseline, confirming the improvement is not statistically
+distinguishable from noise. The paper correctly states "we do not claim statistical
+significance" in the text, but the abstract and conclusion table list this result
+alongside the well-powered GSM8K results without adequate warning. Given that
+exactly 4 additional problems were solved, this result should either be removed
+from primary claims or explicitly labeled as "inconclusive" in every location
+where it appears, including the abstract.
+
+---
+
+Q10: Cross-seed stability SD=2.2% — compared to published GRPO baselines?
+
+The paper does not compare its SD=2.2% (held-out test) or SD=3.3% (training
+reward) against published GRPO variance figures. DeepSeekMath reports a single
+run at 88.2% GSM8K, providing no seed variance for comparison. DAPO and Dr.GRPO
+papers similarly report limited seed replication. The 5-seed replication is
+genuinely stronger than most published GRPO work, but without a baseline
+comparison, calling SD=2.2% "cross-seed stability" as a novel finding is
+overclaiming — it is a measurement rather than a finding. The authors should
+compare to the variance one would expect from simple sampling noise at n=200
+(binomial SE at 83.3% is approximately 2.6%), which suggests the across-seed
+SD=2.2% is within the range expected by chance, not evidence of unusual stability.
+
+---
+
+Q11: ToolBench, APIBench, ToolAlpaca not cited — how does 0%->92% compare?
+
+These benchmarks are not cited for comparison, and the 0%->92% figure cannot be
+placed in context without them. ToolBench (Wang et al. 2023) reports win rates
+and API call success rates for instruction-tuned models on standardized multi-step
+scenarios; APIBench evaluates hallucination rates on ~16k API calls; ToolAlpaca
+assesses generalization to unseen tools. The paper's 92% JSON validity on
+Glaive-v2 training rollouts is a format compliance metric, not an end-task success
+metric — it is not comparable to any of these benchmarks' metrics. The Related
+Work section cites ToolRM and FC-RewardBench as "standardized tool-calling
+evaluation absent from our custom rubric," implicitly acknowledging the gap, but
+does not quantify how large the gap is or attempt even a qualitative mapping.
+
+---
+
+Q12: How to position GSM8K findings against DeepSeekMath and DAPO variants?
+
+The paper's 83.3% held-out GSM8K is below DeepSeekMath's 88.2% (7B, G=64, full
+training) and below Common7B's 82.6% via SFT alone. The paper acknowledges the
+SFT-only baseline but does not run it as an ablation — meaning it cannot
+demonstrate GRPO adds anything over SFT for math reasoning with this setup. DAPO
+and Dr.GRPO configurations are implemented in a supplementary Colab notebook but
+not benchmarked on GSM8K held-out test with comparable seeds, so no empirical
+comparison is possible. The positioning should be honest: 83.3% with LoRA on
+Qwen3-8B after 50 steps is a reasonable practitioner result but not a state-of-
+the-art claim. The paper should either run the SFT-only ablation or explicitly
+note that GRPO's marginal contribution over SFT on math is unknown.
+
+---
+
+Q13: SFT+GRPO echoes ReST, STaR — how to differentiate?
+
+The paper does not cite ReST (Gulcehre et al. 2023) or STaR (Zeiler et al. 2022)
+in the Related Work, which is a significant omission. Both methods use iterative
+self-improvement where model outputs become the next round's training data,
+producing a similar "SFT warms up RL" dynamic. The paper's SFT+GRPO
+complementarity finding would need to demonstrate: (a) that the benefit persists
+when SFT and GRPO are run on the same data distribution, not sequential datasets;
+(b) that GRPO adds a qualitatively different signal (online exploration) rather
+than simply more gradient steps. Without ReST/STaR as baselines and without
+testing GRPO-only vs. SFT-only vs. SFT+GRPO with matched compute, the
+differentiation is asserted rather than demonstrated.
+
+---
+
+Q14: Concurrent work STILL/Tiny-GRPO target sub-3B — impact on novelty?
+
+The paper does not cite STILL or Tiny-GRPO. If these concurrent works target
+sub-3B models and report capacity thresholds, the 3B-4B finding would be a
+confirmation rather than a novel discovery. More broadly, the concurrent work
+landscape (Dr.GRPO, DAPO, S-GRPO, StepGRPO, RLOO, REINFORCE++) is cited in
+the paper, but without a systematic comparison table showing what each work
+demonstrates about small-model GRPO, the novelty boundary is undefined. The
+paper should add a "concurrent work" paragraph explicitly listing which findings
+have been reported elsewhere at sub-8B scale, and distinguish its contributions
+accordingly. The 5-seed replication on a single benchmark with held-out evaluation
+is likely the most defensible novel contribution.
+
+---
+
+Q15: MoE volatility contextualized against Switch Transformer/GLaM — is 2.43x
+surprising?
+
+The paper does not cite Switch Transformer (Fedus et al. 2022), GLaM (Du et al.
+2022), or any MoE training stability literature. The 2.43x variance increase
+during RL fine-tuning of a MoE model is plausible given known MoE training
+instability (router collapse, load imbalance, gradient spikes at expert
+boundaries), but "surprising" cannot be assessed without a baseline expectation.
+Switch Transformer papers document training instability requiring careful LR
+scheduling and gradient clipping; GLaM uses auxiliary load-balancing losses
+precisely because router variance compounds training noise. Against this
+background, 2.43x is perhaps expected or even conservative. The paper proposes
+"non-smooth loss surfaces" as the mechanism but does not measure routing entropy,
+expert load imbalance, or gradient norm spikes that would confirm this.
+
+---
+
+Q16: 'Agentic LLM fine-tuning' never defined — what operational definition?
+
+The term appears in the title and abstract but is never operationally defined.
+The paper covers three tasks: structured JSON tool calling, code generation via
+pass@1, and math reasoning on GSM8K. Of these, only tool calling has a
+meaningfully "agentic" character (sequential tool selection within an episode);
+code generation and math reasoning are single-turn tasks with no environmental
+feedback loop or multi-step decision making. A working definition might be:
+"fine-tuning LLMs to execute multi-step tasks requiring dynamic tool selection
+and sequential decision-making under verifiable environmental feedback." Under
+this definition, only the multi-turn tool chaining experiment qualifies, and the
+title overclaims. The paper should either (a) adopt and justify a definition that
+encompasses all three tasks, or (b) retitle to "GRPO for Small LLM Post-Training."
+
+---
+
+Q17: Novel vs. confirmatory criteria implicit — should add Methods subsection?
+
+Yes. The paper distinguishes "four novel findings" from "three empirical
+confirmations" but the criteria for this classification are never stated. The
+reader cannot evaluate whether capacity thresholds at 3B-4B are novel (they
+resemble known "emergent abilities" literature), whether MoE volatility is novel
+(it echoes Switch Transformer findings), or whether two-phase learning is
+confirmatory (it resembles curriculum learning observations). A 1-paragraph
+Methods subsection titled "Novelty Classification Criteria" should state: what
+evidence threshold distinguishes novel from confirmatory, whether a literature
+search was conducted to verify novelty, and how concurrent work was assessed.
+Without this, the four-vs-three split reads as author preference rather than
+principled analysis.
+
+---
+
+Q18: Are figure captions self-contained per NeurIPS standards?
+
+Partially. The main paper has three figures. Fig. 1 caption mentions "(a)
+Training-set reward trajectories... (b) Zero-loss origins" but the panel labels
+and what "not shown" means for the 3B model are unclear without the figure text.
+Fig. 2 caption references "Section 5.3" for context, which is a cross-reference
+dependency that violates self-containedness. Fig. 3 caption is adequate but uses
+undefined notation ("$>$0.8 reward" is ambiguous without knowing the reward
+scale). NeurIPS guidelines require that captions be understandable without
+reading the main text. The supplementary table captions are generally better.
+The fix is mechanical: add the axis labels, metric definitions, and model names
+directly into each caption.
+
+---
+
+Q19: Paper conflates synthetic-real gap with train-test discrepancy — how to
+separate?
+
+The paper presents both: (a) the synthetic-vs-real data gap (5-tool synthetic
+reaches >0.9 reward, xlam-60k stays <0.36), and (b) the train-test discrepancy
+(30.5% training reward vs. 83.3% held-out accuracy on GSM8K). These are
+fundamentally different phenomena — the first is a data distribution difficulty
+gap, the second is an evaluation protocol artifact from high-temperature stochastic
+sampling during training. The paper discusses them in adjacent subsections (3.3
+and 4.2.2) without distinguishing them conceptually. The confusion matters because
+the synthetic-real gap is a genuine generalization concern, while the
+training-reward underestimate is an instrumentation artifact. A clear framing
+would be: Section X addresses data domain transfer; Section Y addresses training
+metric reliability. These should not share the heading "evaluation limitations."
+
+---
+
+Q20: Should add config table mapping each result to exact hyperparameters?
+
+Yes, this is essential for reproducibility and is currently absent from the main
+paper. The supplementary run registry (Tables A1-A3) provides run IDs and some
+parameters, but the mapping from each quantitative claim in the main paper to its
+exact hyperparameter configuration is not direct. For example, the 83.3% held-out
+GSM8K uses "LoRA rank 32" and "50 steps" but the exact LR (3e-5), group size (8),
+and temperature (1.0) are only findable by cross-referencing run IDs in the
+supplementary. A single consolidated table — one row per main paper claim, columns
+for model, LR, rank, group size, temperature, steps, seed, platform — would
+eliminate ambiguity and is standard practice for NeurIPS reproducibility.
+
+---
+
+Q21: 3B-4B threshold from 2 data points — reframe as hypothesis?
+
+Strongly agree. The evidence is: Llama-3.2-3B on Colab fails (2.34%), Qwen3.5-4B
+on Tinker succeeds (82.5%). These are different model families, different
+platforms, and different base capability levels — Llama-3.2-3B and Qwen3.5-4B
+are not architecturally comparable checkpoints on a single scaling axis. The paper
+should reframe this from "we identify a capacity threshold between 3B and 4B" to
+"we hypothesize a capacity threshold in the 3B-4B range, pending controlled
+ablations with matched architectures and platforms." This is not a cosmetic change:
+as written, reviewers will correctly flag the confound and may reject on this basis
+alone. The hypothesis framing is honest and does not require new experiments.
+
+---
+
+Q22: Should abstract foreground 3 novel claims specifically?
+
+Yes. The current abstract lists all results sequentially without clearly
+distinguishing the four novel findings from the three confirmations, and includes
+methodological caveats mid-sentence ("custom evaluation," "50-problem subset")
+that reduce clarity. For a NeurIPS abstract, the structure should be: (1) one
+sentence on what problem is studied, (2) two sentences on the strongest novel
+findings with their evidence, (3) one sentence on limitations. The three most
+defensible novel claims are: (a) 5-seed held-out GSM8K replication at 83.3%
+(SD=2.2%) — the only result with proper held-out evaluation, (b) MoE variance
+is 2.43x dense with statistical significance (p=7e-6), and (c) the 3B-4B capacity
+boundary (framed as a hypothesis). The abstract should lead with these rather than
+burying them after the 0%->92% tool-call figure.
+
+---
+
+Q23: MoE volatility purely observational — propose mechanism?
+
+The paper proposes "non-smooth loss surfaces from MoE routing" as a qualitative
+mechanism but provides no supporting measurement. Three testable mechanisms are:
+(a) router entropy collapse — if the router concentrates on few experts, small
+parameter perturbations redirect many tokens, amplifying reward variance; (b)
+expert load imbalance — if a few experts carry most tokens, their gradient updates
+are large and variable; (c) GRPO's within-group normalization interacts with
+sparse activation, since different group members may activate different expert
+subsets, making the advantage normalization within-group less meaningful. The
+supplementary notes "routing entropy or expert-load imbalance measurements" were
+not collected, which is the core gap. At minimum, the paper should propose one
+of these as a falsifiable hypothesis for future work, rather than stopping at
+observation.
+
+---
+
+Q24: Cross-seed stability = standard practice, not finding — reframe?
+
+Correct. Running multiple seeds and reporting standard deviation is a basic
+reproducibility practice recommended in the ML community since Loshchilov &
+Hutter (2017) and institutionalized by NeurIPS reproducibility checklists. The
+paper elevates this to a "novel finding" which will draw skeptical reviewer
+comments. The reframe should be: "We confirm GRPO reproducibility with 5-seed
+replication (SD=2.2% held-out test accuracy), satisfying NeurIPS reproducibility
+standards." This positions the multi-seed work as a methodological strength
+(which it genuinely is relative to most single-run GRPO papers) without
+overclaiming novelty. The actual insight — that zero-loss rates vary from 16-28%
+across seeds, implying exploration is stochastic in a meaningful way — is more
+interesting and could be elevated instead.
+
+---
+
+Q25: Unified mechanistic narrative vs. separate per-task reports?
+
+The paper currently reads as three independent experiment logs (tool calling, code
+generation, math reasoning) connected by the GRPO method name but not by a
+shared mechanistic story. A unified narrative would observe that all three tasks
+share the same GRPO training dynamic — format compliance precedes reasoning
+improvement, group saturation creates zero-loss regimes, and model capacity
+determines whether the zero-loss regime is productive (all-correct) or
+pathological (all-wrong). This "capacity-modulated group saturation" story could
+unify the findings: small models saturate into all-wrong regimes and stall; large
+models saturate into all-correct regimes and plateau; mid-range models (4B-8B)
+maintain productive mixed groups. Framing the paper around this mechanism, with
+task-specific results as evidence, would transform it from a run report into a
+mechanistic contribution and substantially strengthen the NeurIPS submission.
+
+==============================================================
+END OF REVIEW

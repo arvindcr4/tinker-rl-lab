@@ -12,22 +12,22 @@
     "do_sample": false,
     "seed": 0,
     "max_tokens": 2048,
-    "test_size": 20
+    "test_size": 40
   },
   "summary": {
-    "correct": 17,
-    "incorrect": 3,
+    "correct": 35,
+    "incorrect": 5,
     "errors": 0,
-    "attempted": 20,
-    "accuracy": 0.85,
-    "accuracy_percent": "85.0%",
+    "attempted": 40,
+    "accuracy": 0.875,
+    "accuracy_percent": "87.5%",
     "accuracy_ci_95": [
-      0.65,
-      1.0
+      0.775,
+      0.975
     ],
     "accuracy_ci_95_percent": [
-      "65.0%",
-      "100.0%"
+      "77.5%",
+      "97.5%"
     ]
   },
   "examples": [
@@ -48,7 +48,7 @@
     {
       "idx": 2,
       "question": "Josh decides to try flipping a house.  He buys a house for $80,000 and then puts in $50,000 in repai...",
-      "predicted": "250",
+      "predicted": "62.5",
       "ground_truth": "70000",
       "status": "incorrect"
     },
@@ -69,7 +69,7 @@
     {
       "idx": 5,
       "question": "Kylar went to the store to buy glasses for his new apartment. One glass costs $5, but every second g...",
-      "predicted": "8",
+      "predicted": null,
       "ground_truth": "64",
       "status": "incorrect"
     },
@@ -104,9 +104,9 @@
     {
       "idx": 10,
       "question": "A new program had 60 downloads in the first month. The number of downloads in the second month was t...",
-      "predicted": "366",
+      "predicted": "60",
       "ground_truth": "366",
-      "status": "correct"
+      "status": "incorrect"
     },
     {
       "idx": 11,
@@ -153,9 +153,9 @@
     {
       "idx": 17,
       "question": "Jill gets paid $20 per hour to teach and $30 to be a cheerleading coach. If she works 50 weeks a yea...",
-      "predicted": "750",
+      "predicted": "57500.",
       "ground_truth": "57500",
-      "status": "incorrect"
+      "status": "correct"
     },
     {
       "idx": 18,
@@ -169,6 +169,146 @@
       "question": "Marissa is hiking a 12-mile trail. She took 1 hour to walk the first 4 miles, then another hour to w...",
       "predicted": "6",
       "ground_truth": "6",
+      "status": "correct"
+    },
+    {
+      "idx": 20,
+      "question": "I have 10 liters of orange drink that are two-thirds water and I wish to add it to 15 liters of pine...",
+      "predicted": "15",
+      "ground_truth": "15",
+      "status": "correct"
+    },
+    {
+      "idx": 21,
+      "question": "Raymond and Samantha are cousins. Raymond was born 6 years before Samantha. Raymond had a son at the...",
+      "predicted": "14",
+      "ground_truth": "14",
+      "status": "correct"
+    },
+    {
+      "idx": 22,
+      "question": "Billy sells DVDs. He has 8 customers on Tuesday. His first 3 customers buy one DVD each.  His next 2...",
+      "predicted": "7",
+      "ground_truth": "7",
+      "status": "correct"
+    },
+    {
+      "idx": 23,
+      "question": "A candle melts by 2 centimeters every hour that it burns. How many centimeters shorter will a candle...",
+      "predicted": "8",
+      "ground_truth": "8",
+      "status": "correct"
+    },
+    {
+      "idx": 24,
+      "question": "Kyle bought last year's best-selling book for $19.50. This is with a 25% discount from the original ...",
+      "predicted": "26",
+      "ground_truth": "26",
+      "status": "correct"
+    },
+    {
+      "idx": 25,
+      "question": "Marie ordered one chicken meal that costs $12, 5 packs of milk that costs $3 each, 4 apples that cos...",
+      "predicted": "2",
+      "ground_truth": "2",
+      "status": "correct"
+    },
+    {
+      "idx": 26,
+      "question": "Mishka bought 3 pairs of shorts, 3 pairs of pants, and 3 pairs of shoes. One pair of shorts costs $1...",
+      "predicted": "243",
+      "ground_truth": "243",
+      "status": "correct"
+    },
+    {
+      "idx": 27,
+      "question": "Cynthia eats one serving of ice cream every night.  She buys cartons of ice cream with 15 servings o...",
+      "predicted": "16",
+      "ground_truth": "16",
+      "status": "correct"
+    },
+    {
+      "idx": 28,
+      "question": "Henry made two stops during his 60-mile bike trip. He first stopped after 20 miles. His second stop ...",
+      "predicted": "25",
+      "ground_truth": "25",
+      "status": "correct"
+    },
+    {
+      "idx": 29,
+      "question": "Gloria is shoe shopping when she comes across a pair of boots that fit her shoe budget. However, she...",
+      "predicted": "104",
+      "ground_truth": "104",
+      "status": "correct"
+    },
+    {
+      "idx": 30,
+      "question": "Darrell and Allen's ages are in the ratio of 7:11. If their total age now is 162, calculate Allen's ...",
+      "predicted": "109.",
+      "ground_truth": "109",
+      "status": "correct"
+    },
+    {
+      "idx": 31,
+      "question": "Gunter is trying to count the jelly beans in a jar. He asks his friends how many they think are in t...",
+      "predicted": "80",
+      "ground_truth": "80",
+      "status": "correct"
+    },
+    {
+      "idx": 32,
+      "question": "John takes care of 10 dogs.  Each dog takes .5 hours a day to walk and take care of their business. ...",
+      "predicted": "35",
+      "ground_truth": "35",
+      "status": "correct"
+    },
+    {
+      "idx": 33,
+      "question": "Gretchen has 110 coins. There are 30 more gold coins than silver coins. How many gold coins does Gre...",
+      "predicted": "70",
+      "ground_truth": "70",
+      "status": "correct"
+    },
+    {
+      "idx": 34,
+      "question": "Siobhan has 2 fewer jewels than Aaron. Aaron has 5 more jewels than half of Raymond's jewels. If Ray...",
+      "predicted": "2",
+      "ground_truth": "23",
+      "status": "incorrect"
+    },
+    {
+      "idx": 35,
+      "question": "Mike plays ping pong for 40 minutes.  In the first 20 minutes, he scores 4 points.  In the second 20...",
+      "predicted": "9",
+      "ground_truth": "9",
+      "status": "correct"
+    },
+    {
+      "idx": 36,
+      "question": "Terry eats 2 yogurts a day.  They are currently on sale at 4 yogurts for $5.00.  How much does he sp...",
+      "predicted": "75",
+      "ground_truth": "75",
+      "status": "correct"
+    },
+    {
+      "idx": 37,
+      "question": "John plans to sell all his toys and use the money to buy video games. He has 13 lego sets and he sel...",
+      "predicted": "2.",
+      "ground_truth": "2",
+      "status": "correct"
+    },
+    {
+      "idx": 38,
+      "question": "John runs 60 miles a week. He runs 3 days a week.  He runs 3 hours the first day and half as much th...",
+      "predicted": "4.5",
+      "ground_truth": "10",
+      "status": "incorrect"
+    },
+    {
+      "idx": 39,
+      "question": "Dana can run at a rate of speed four times faster than she can walk, but she can skip at a rate of s...",
+      "predicted": "18",
+      "ground_truth": "18",
       "status": "correct"
     }
   ]

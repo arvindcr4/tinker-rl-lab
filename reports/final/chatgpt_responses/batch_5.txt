@@ -1,0 +1,16 @@
+Here are the concise answers to your questions:
+
+Q21: 3B-4B threshold interpolated from only 2 model sizes (Qwen2.5-3B and Qwen3.5-4B) - reframe as hypothesis requiring validation?
+Yes, it would be clearer to frame this as a hypothesis needing further validation. This will underscore the preliminary nature of the observation and emphasize the need for additional model sizes to confirm the threshold.
+
+Q22: With confirmatory findings labeled as such, contribution reduces to 3 novel claims - should abstract foreground these three specifically?
+Yes, the abstract should focus on the three novel claims to enhance the clarity and impact of the paper. This helps direct the reader’s attention to the primary contributions rather than re-emphasizing confirmatory findings.
+
+Q23: MoE routing volatility is purely observational - should we propose mechanism (reward gradient interfering with load balancing loss)?
+Yes, proposing a mechanism would strengthen the paper. Explaining how the reward gradient could interfere with load balancing would provide a more rigorous theoretical foundation for the observed volatility.
+
+Q24: Cross-seed stability under multi-seed eval is standard practice not a finding - reframe unless we show GRPO more stable than alternatives?
+Yes, cross-seed stability should be reframed unless you can directly compare GRPO’s stability with alternatives, showing that GRPO performs better or differently. Otherwise, it appears as a standard evaluation procedure rather than a novel result.
+
+Q25: Would unified mechanistic narrative (GRPO succeeds when reward is dense and verifiable) strengthen framing vs treating each task separately?
+Yes, a unified mechanistic narrative would provide a stronger theoretical framework. It helps link the tasks under a cohesive story, making the contributions appear more interconnected and advancing a generalizable understanding of GRPO.

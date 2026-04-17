@@ -1,0 +1,21 @@
+Here are concise answers for the questions in your NeurIPS paper:
+
+Q36: Training reward 30.5% while test 83.3% suggests reward misspecification - formal analysis of why optimizing training reward does not maximize test accuracy?
+
+The discrepancy likely stems from overfitting to the training distribution. Training reward optimization may lead to memorization of specific patterns, while the test set introduces out-of-distribution examples. Maximizing training reward does not guarantee generalization to unseen test cases, as the model might not capture the broader underlying patterns that affect test performance.
+
+Q37: Two-phase learning mirrors curriculum learning theory - grounding in theory would predict phase transition as function of capacity and reward sparsity?
+
+In curriculum learning, simpler tasks are introduced first, progressing to more complex ones as the model learns. The two-phase learning setup reflects this by transitioning to more complex learning once a certain capacity threshold is reached. The phase transition can be theorized as a function of model capacity, where higher-capacity models can handle sparse reward structures and transition to more complex tasks effectively, improving generalization.
+
+Q38: GRPO advantage normalizes within group - theoretical argument for why group sizes 4-16 appropriate for observed reward scales?
+
+Group sizes in this range (4-16) balance the variance in gradient estimates. Smaller groups suffer from high variance, while larger groups dilute the effect of individual agents. This range normalizes the GRPO advantage by providing sufficient diversity of opinions within the group while maintaining efficient learning dynamics. It helps in stabilizing training without losing the benefit of group-based decision-making.
+
+Q39: Capacity threshold implies phase transition in expressivity - theoretical basis (scaling laws, NTK, circuit interpretability) for 3B-4B boundary?
+
+The 3B-4B capacity threshold marks a phase transition in model expressivity, governed by scaling laws such as those observed in Neural Tangent Kernels (NTK) and model circuit interpretability. NTK theory suggests that, beyond a certain model size, the learning dynamics change significantly, enabling the model to better generalize. This aligns with empirical observations where models in the 3B-4B range exhibit a sharp increase in generalization ability and task performance.
+
+Q40: MoE volatility from load balancing loss conflicting with policy gradient - formalize as optimization interference, propose mitigation?
+
+The interference arises because the mixture of experts (MoE) model's load balancing loss competes with the policy gradient optimization objective. The load balancing loss prioritizes even distribution of computational load across experts, potentially diverting focus from optimizing policy performance. To mitigate, we can decouple the two objectives by applying a multi-objective loss function with appropriate weighting, allowing for independent optimization of both aspects. Additionally, we could introduce expert selection strategies that prioritize performance consistency over load balancing.

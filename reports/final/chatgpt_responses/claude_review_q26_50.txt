@@ -1,0 +1,155 @@
+NeurIPS Area Chair Review — GRPO for Agentic LLM Fine-Tuning
+Questions Q26–Q50 | Reviewer: Claude (Sonnet 4.6)
+Date: 2026-04-04
+==============================================================
+
+Q26: All models Qwen/Llama — do findings generalize to Mistral/Phi-3/Gemma?
+
+The paper uses exclusively Qwen2.5/Qwen3 variants and one Llama-3.2-3B, all of which share aggressive instruction-tuning and chat-template alignment from the same research lineage. Mistral, Phi-3, and Gemma have different tokenizer vocabularies, chat-template formats, and pretraining distributions that could shift where the capacity threshold lies or how quickly entropy collapses. The 3B–4B threshold claim is almost certainly architecture-specific: Phi-3-mini (3.8B) has a very different capability profile from Llama-3.2-3B, so the "sub-3B fails" finding cannot be transported without replication. The paper should either restrict its claims to the Qwen/Llama family or explicitly flag architecture generalizability as an open question; the current framing implies broader applicability than the data supports.
+
+---
+
+Q27: At what step count do improvements saturate? Would 200–500 steps change findings?
+
+The paper runs 50 steps for GSM8K multi-seed and 30–100 steps for tool calling; the 100-step extended run (run 1cc20cec) shows last-10 accuracy of 27.5% versus 27.5% at 50 steps with lower LR (5e-6), suggesting diminishing returns but not convergence. The training-set reward curve is essentially the only saturation signal reported, and it is noisy enough (peak 62.5%–87.5% within the same 50-step window across seeds) that 50 steps is clearly not asymptotic. Whether 200–500 steps would reveal continued improvement, collapse due to entropy depletion (the arithmetic task entropy hit 0.0002 by step 12), or oscillation is unknown and represents a significant gap; the held-out test accuracy of 83.3% might be reachable from the SFT checkpoint alone, and longer runs could either close or widen that gap. This is arguably the most consequential missing result for the paper's core claims.
+
+---
+
+Q28: Would 92% tool-call accuracy transfer to different function-calling formats?
+
+The paper uses the OpenAI-compatible JSON function-calling format ({"tool_calls": [{"name": ..., "arguments": {...}}]}), and the reward is evaluated against exact string match on tool name and required-key presence in that specific schema. Anthropic tool-use XML format, Google Gemini's function-call proto-JSON, or LangChain's ReAct format (Thought/Action/Action Input) would require different output templates and the reward function would need to be redesigned from scratch. The 0%→92% improvement is therefore a reward-format learning result, not a general structured-output result; if the format changed, the SFT baseline (which scored 0%) would likely also score 0% and GRPO would need to relearn the new format. Transfer is not guaranteed and was not tested.
+
+---
+
+Q29: Single-turn vs multi-turn tool calling — how does capacity threshold change?
+
+The paper uses Qwen2.5-1.5B for single-turn (achieving 92% JSON validity) and Qwen2.5-3B for multi-turn (achieving 0.91 average scenario score), so the multi-turn experiments are run on a larger model, making direct capacity comparisons impossible. From the available data, the 1.5B model can learn format compliance for single-turn calls but no multi-turn experiments were run below 3B, so it is unknown whether 1.5B fails at chaining. The -0.30 repeat-penalty is load-bearing for multi-turn and was not stress-tested; in longer chains (3+ turns), it would likely need to become episode-level rather than per-step. The capacity threshold for multi-turn is entirely uninvestigated.
+
+---
+
+Q30: GSM8K saturated for 8B — do dynamics hold on MATH-500/AIME?
+
+The 8B model reaches 83.3% held-out GSM8K accuracy, which is below the known ceiling (DeepSeekMath reports 88.2% with G=64 vs G=8 here) but still high enough that grade-school arithmetic is a near-saturated regime for an 8B model. The paper does run MATH problems (run 1b01abef, last-10 reward 0.264) but this is training-set reward only and is never connected to MATH-500 test accuracy. AIME is entirely absent. Given that MATH is known to require multi-step symbolic manipulation and competition-level reasoning that 8B models struggle with, the two-phase learning dynamics and capacity threshold behavior would likely look very different — the 8B model might fall in the "3B failure" regime for AIME. This is a meaningful gap for any generalization claim about GRPO training dynamics.
+
+---
+
+Q31: No group size ablation (4 vs 8 vs 16) — is this the most critical missing ablation?
+
+The paper uses G=4, G=8, and G=16 across different experiments but never controls for group size while varying it systematically on the same task and model. Group size is theoretically the most impactful hyperparameter in GRPO: it directly determines gradient signal density, advantage normalization stability, and the zero-loss rate — the very mechanism the paper uses to explain the 3B failure. Running G=4, 8, 16, 32, 64 on the same Qwen3-8B/GSM8K setup would take approximately 5 runs ($100 each at current costs) and could either validate or invalidate the capacity-threshold claim. The roadmap mentions G in {16, 32, 64, 128} but omits G=4 and G=8, which are the settings actually used. Yes, this is the single most critical missing ablation.
+
+---
+
+Q32: LoRA rank–speed curve missing — add ablation at 8, 16, 32, 64 for knee point?
+
+The paper actually runs ranks 8, 16, 32, and 64 (Table 3 / runs ba2a1694, 92ebcc48, 899d909e, 9219771c), but the analysis only reports training-set reward and does not compute wall-clock time per rank, GPU memory footprint, or tokens-per-second throughput. The claim "rank affects learning speed not asymptotic ceiling" is supported by the peak accuracy data (62.5%, 75.0%, 62.5%, 87.5% for ranks 8/16/32/64 respectively) but the last-10 averages are 21.2%, 18.8%, 27.5%, 25.0% — actually non-monotone, undermining the clean "speed not ceiling" narrative. A proper efficiency frontier plot (time-to-threshold accuracy vs rank) would clarify the knee point and is missing. The data exists but the analysis is incomplete.
+
+---
+
+Q33: SFT+GRPO needs matched-compute control (GRPO alone 2x steps)?
+
+The SFT+GRPO complementarity claim (finding 4) compares SFT-initialized GRPO against GRPO-only baselines, but the paper does not run GRPO-only for 2x steps to control for the additional compute consumed by SFT. The Qwen2.5-1.5B single-turn result (0%→92%) uses SFT+GRPO on Glaive-v2, but there is no GRPO-only comparison at all for that experiment. The multi-turn 3B experiment is entirely SFT+GRPO with no ablated condition. Without matching compute, the benefit attributed to SFT initialization could simply be warm-starting (better initial policy reduces wasted zero-loss steps), which GRPO alone with 2x budget might also achieve. This control is mandatory for the complementarity claim to stand.
+
+---
+
+Q34: Isolate GRPO from reward design — SFT baseline on positive rollouts?
+
+The tool-calling result (0%→92%) conflates GRPO's policy gradient contribution with the reward function's shaping effect. An SFT baseline trained on the model's own positive GRPO rollouts (filtered by reward > 0.8) — sometimes called "best-of-N SFT" or rejection sampling fine-tuning (RFT) — would isolate whether RL's online exploration is necessary or whether offline imitation of good samples suffices. Li et al. (2024) showed 82.6% GSM8K with SFT alone on a Common-7B model, a result cited in the paper but not tested here. At the 1.5B scale where format learning dominates, RFT might achieve comparable tool-call validity with far less complexity, which would significantly weaken the paper's GRPO-specific claims.
+
+---
+
+Q35: Tool calling reward not ablated — is 0%→92% from reward structure or GRPO?
+
+The three-component reward (JSON valid +0.3, correct tool +0.4, arguments present +0.3) was never ablated: no ablation of individual components, no alternative weighting, and no comparison to a single binary reward (correct/incorrect). The supplementary acknowledges the weights were not validated. The SFT baseline scored 0% on all components, which is unusual — a 1.5B instruction-tuned model should be capable of producing JSON-like output. This suggests the SFT training (500 Glaive-v2 examples) may have been insufficient rather than the model lacking capacity, meaning the improvement is attributable to more training signal (any RL reward) rather than specifically to the GRPO mechanism. The reward structure vs. algorithm contribution is not disentangled.
+
+---
+
+Q36: Training 30.5% vs test 83.3% = reward misspecification? Formal analysis needed?
+
+The 52.8 percentage point gap between training-set reward (30.5%) and held-out greedy accuracy (83.3%) is striking and the paper's explanation — that high-temperature group sampling underestimates the greedy policy — is plausible but informal. A formal analysis would quantify the relationship between sampling temperature T, group size G, and the expected gap between stochastic and greedy accuracy as a function of model confidence calibration. Alternatively, the gap could indicate that training reward measures something else entirely (e.g., whether at least one group member is correct) rather than policy quality. The paper notes the discrepancy and provides a qualitative explanation, but does not rule out reward misspecification, lucky generalization from a base model already near 80%, or overfitting to a favorable 200-example subsample. This deserves formal treatment or at minimum a fuller diagnostic.
+
+---
+
+Q37: Two-phase learning grounded in curriculum learning theory?
+
+The two-phase pattern (format compliance steps 1–20, reasoning improvement steps 21–25) is documented for tool calling and qualitatively described for math reasoning, but the paper correctly notes it is "consistent with known curriculum effects" rather than a novel contribution. Curriculum learning theory (Bengio et al., 2009; Parashar et al. 2025 cited in the paper) predicts that learning simpler sub-tasks before harder ones improves convergence, but GRPO's phases emerge organically from reward structure rather than from explicit curriculum design. A formal grounding would require showing that format compliance and reasoning exhibit distinct loss landscapes and that sequential mastery is optimal — none of which is shown. The paper's framing as an "empirical confirmation" is appropriately modest; no further theoretical grounding is needed to justify that framing, but any stronger claims would require it.
+
+---
+
+Q38: GRPO advantage within group — theoretical argument for group sizes 4–16?
+
+GRPO's advantage estimator (reward_i - mean) / std) has known theoretical properties: with small G, the baseline is high-variance, and with G=4 specifically, a single outlier response dominates normalization. The paper uses G=4 in many runs (including the 3B failure analysis) but offers no theoretical justification for this choice beyond computational budget. DeepSeekMath uses G=64 and REINFORCE++ theory supports larger groups for lower-variance gradient estimates. With G=4, the 3B model's 56% zero-loss rate could be substantially reduced by increasing G, meaning the "capacity threshold" may be an artifact of G=4 rather than a fundamental 3B limit. The paper acknowledges this possibility in Section 5.1 but does not provide theoretical guidance on when G=4 is defensible.
+
+---
+
+Q39: Capacity threshold = phase transition in expressivity — theoretical basis?
+
+The paper observes a sharp performance gap between 3B (2.34% accuracy) and 4B (82.5% last-10 reward) and frames this as a "capacity threshold." However, no theoretical mechanism is offered: is this LoRA expressivity (the 3B model's LoRA subspace is too constrained to represent the policy gradient direction), forward-pass computation (insufficient depth/width for multi-step reasoning), or training dynamics (reward sparsity prevents gradient flow at 3B)? The supplementary appendix notes the 3B failure could be a G=4 exploration artifact, which directly undermines the threshold interpretation. Phase transition theories from statistical mechanics (sharp transitions in expressivity as a function of parameter count) exist in the neural scaling literature but are not invoked. The current evidence is consistent with a threshold but does not establish it theoretically.
+
+---
+
+Q40: MoE volatility from load balancing conflict — formalize as optimization interference?
+
+The 2.43x higher step-to-step reward variance for Qwen3-30B-MoE vs. dense 8B is real (Levene's test p=7e-6) and the hypothesized mechanism (router state changes amplify loss surface non-smoothness) is intuitive. However, Qwen3-30B-MoE has a separate load-balancing auxiliary loss that operates concurrently with the GRPO policy gradient, and this interaction is not analyzed. The optimization interference framing — where two losses with different curvatures create conflicting gradient directions — is well-studied for multi-task learning (e.g., PCGrad, GradNorm) but not applied here. The paper reports the phenomenon but does not measure routing entropy, expert load imbalance, or the correlation between router state changes and reward variance spikes. Formalizing this as optimization interference would require measuring auxiliary-loss gradient magnitude and direction relative to GRPO gradients.
+
+---
+
+Q41: No PPO/REINFORCE baselines — best rebuttal?
+
+The best rebuttal is the compute argument: a proper PPO baseline requires a value network (typically another LLM), doubling GPU memory and training time, which was not feasible on the $50/person budget. REINFORCE is closer in cost but is known to be high-variance without a baseline, making its poor performance expected rather than informative. The paper already cites RLOO (leave-one-out baseline), REINFORCE++, and S-GRPO as related work and commits to PPO/DPO/RLOO comparisons in Phase 3 of the roadmap, with a reproducible notebook already implementing DPO. The reviewer's concern is legitimate for novelty claims (demonstrating GRPO is better than alternatives), but the paper's framing as a training-dynamics study rather than a comparative efficiency claim partially insulates it. The rebuttal should lean on the budget constraint and emphasize that the paper's primary contribution is characterization of GRPO behavior, not superiority over alternatives.
+
+---
+
+Q42: 50 steps as meaningful RL — compute-normalized comparison?
+
+50 gradient steps with batch size 2 and group size 8 yields 800 unique training samples seen — comparable to a few hundred supervised examples, which is an extremely short training regime for RL. The paper does not normalize comparisons by compute (FLOPs, GPU-hours, or tokens processed), so it is unclear whether the held-out 83.3% GSM8K accuracy reflects GRPO learning or simply a strong Qwen3-8B base checkpoint. The 100-step extended run achieves the same last-10 training reward (27.5%) as the 50-step run, suggesting no benefit from 2x compute at lower LR (5e-6). A compute-normalized comparison would plot accuracy vs. A100 GPU-hours and compare GRPO at various step counts against SFT-only, which the paper does not do. This is a genuine weakness: 50 steps is presented as a complete experiment rather than an early stopping point.
+
+---
+
+Q43: Custom tool eval — adopt BFCL/ToolBench-eval or release code sufficient?
+
+The paper uses a hand-authored 4-scenario rubric with fully automated scoring (Python json.loads + exact string match). Berkeley Function Calling Leaderboard (BFCL) and ToolBench provide thousands of scenarios with multi-judge reliability and community-standardized metrics. Given the paper's acknowledgment that its rubric does not verify argument values, types, or semantic correctness, a single malicious or lucky response can score 1.0 — a severe validity threat. Releasing the evaluation code addresses reproducibility but not validity; the scenarios are too few (4 multi-turn) and too simple (2-turn chains) to be a credible evaluation of agentic tool use. The paper should adopt BFCL or FC-RewardBench for at least one standardized result; releasing custom code alone is insufficient to address the evaluation validity concern.
+
+---
+
+Q44: Qwen3 has RLHF — GRPO unwinding alignment? Base checkpoint results needed?
+
+Qwen3 models (Qwen3-8B, Qwen3.5-4B) are instruct-tuned checkpoints with RLHF/DPO alignment baked in. Running GRPO on top risks (a) reinforcing misaligned behaviors that were suppressed by RLHF, (b) overwriting alignment constraints by optimizing a narrow task reward, or (c) benefiting from RLHF's structured output formatting in a way that would not generalize to base model GRPO. The 83.3% GSM8K result could partially reflect residual RLHF math-reasoning capability being unlocked rather than GRPO inducing new reasoning. A base checkpoint comparison (Qwen3-8B-Base, no RLHF) would isolate GRPO's contribution from the RLHF head start. This is not mentioned in the paper or roadmap and represents a significant confound for all held-out accuracy claims.
+
+---
+
+Q45: 17 runs insufficient — prepare claim-to-run mapping table?
+
+The paper makes distinct claims for tool calling (single-turn, multi-turn, synthetic vs real), code generation, GSM8K (multi-seed, rank ablation, capacity threshold), and MoE volatility — approximately 8 distinct empirical claims supported by at most 17 runs. Some claims (MoE volatility, complementarity) rest on a single run each. A claim-to-run mapping table would reveal that several claims are single-datapoint observations: the MoE volatility result (one MoE run vs one dense run), the 4B capacity saturation (one 4B run: 566747c0), and the SFT+GRPO complementarity (no ablated conditions). The paper should explicitly build this table in a rebuttal response; it will expose which claims need additional runs and which are adequately supported. Reviewers are correct that 17 runs spread across 8 claims provides thin statistical coverage per claim.
+
+---
+
+Q46: Practitioner decision flowchart for GRPO configuration?
+
+Based on the paper's findings, a decision flowchart would ask: (1) Is the model >= 4B parameters? If no, GRPO is likely to fail on complex reasoning — consider curriculum or use SFT-only. (2) Is the task format-structured (tool calls, JSON)? If yes, use SFT warm-start before GRPO. (3) Is the data synthetic/curated or real-world? If real-world, expect 3–8x lower reward and more steps needed. (4) For LoRA rank: use rank 32 as default (best last-10 average), rank 64 only if early learning speed matters and memory allows. (5) For group size: G=8 is the paper's most-used setting; G=4 risks zero-loss failures for harder tasks. However, such a flowchart would be overfit to 17 runs on two model families, and the paper does not currently provide this — adding it as a "practitioner guidance" section would improve impact while being appropriately caveated.
+
+---
+
+Q47: Repository structure and license for reproducibility?
+
+The supplementary lists training scripts (grpo_gsm8k_base.py, exp_a through exp_d, 100-step extended runs) but acknowledges that prompt packs, scenario definitions, and scoring rubrics are "not yet packaged as a replication bundle." Checkpoint recovery depends on Tinker account retention under run-specific paths (tinker://<run_id>/sampler_weights/final) that may not be accessible to external reviewers. No repository URL, DOI, or anonymous submission link is provided in the paper; the phrase "available in the project repository" is unverifiable. The paper needs: (1) an anonymous repository link (e.g., anonymous.4open.science) with all scripts, (2) a LICENSE file (MIT/Apache-2.0 recommended), (3) packaged scenario definitions, and (4) at minimum the 5 GSM8K seeds' final checkpoints uploaded to Hugging Face with public access before camera-ready. Current reproducibility posture is insufficient for NeurIPS standards.
+
+---
+
+Q48: LoRA rank cost quantification (wall-clock, GPU-hours)?
+
+The supplementary provides estimated wall-clock times (GSM8K 50-step: ~25 min, 100-step: ~50 min) but these are from "Tinker billing estimates" rather than logged telemetry and do not break down by LoRA rank. The paper claims rank affects learning speed but provides no timing data — if rank 64 trains 40% slower per step than rank 8, the "faster initial learning" result would need to be reframed as "more compute-efficient per step" rather than "faster in wall-clock time." The supplementary acknowledges "GPU-hours are not tracked per-run" and that the aggregate across 17 Tinker runs is only estimated at 8–12 A100 GPU-hours. Peak memory per rank is also absent. This data almost certainly exists in Tinker billing logs and should be extracted; the rank ablation table (Table 3) should include a "step time (s)" and "peak VRAM (GB)" column.
+
+---
+
+Q49: Cloud GPU variability — hardware config and framework versions?
+
+The paper reports Tinker SDK v0.16.1 on "Cloud A100" but does not specify A100 40GB vs 80GB, PCIe vs SXM, single vs multi-GPU, CUDA version, PyTorch version, or Transformers version. Cloud A100 performance can vary by 15–30% depending on these factors. The Colab experiments use T4 16GB with QLoRA (4-bit NF4) but no CUDA/PyTorch version. Tinker SDK is a proprietary platform with a custom GRPO loss implementation — this is potentially the most significant reproducibility issue, as external researchers cannot verify the GRPO loss implementation without access to Tinker SDK source. The paper should document CUDA/PyTorch/Transformers versions and either publish the GRPO loss code or map it precisely to a public implementation (e.g., TRL's GRPOTrainer).
+
+---
+
+Q50: Sub-3B failure as quantified negative result?
+
+The 3B failure (Llama-3.2-3B: 2.34% accuracy, 56% zero-loss steps) is the paper's strongest negative result and is actually well-quantified relative to the positive results — it has a clear mechanistic explanation (all-incorrect zero-loss vs. all-correct zero-loss for 4B), Levene's test would confirm the variance difference, and it is replicated across two model architectures implicitly (Llama-3.2-3B on Colab, with the 4B comparison on Tinker). What is missing is: (1) error bars on the 2.34% figure (a single Colab run), (2) the comparison between Llama-3.2-3B and Qwen2.5-3B (different architecture but same parameter count — are both failing?), and (3) a formal power analysis asking whether 50 steps is sufficient to detect any improvement at 3B scale. Presenting this as a formal negative result with these additions would strengthen the paper considerably and serve the community by clearly delineating where GRPO is not appropriate.
+
+==============================================================
+END OF REVIEW — Q26 through Q50

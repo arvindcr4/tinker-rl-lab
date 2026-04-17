@@ -1,0 +1,18 @@
+Here are concise, review‑style responses you can adapt for rebuttal or oral discussion:
+
+Q11: ToolBench, APIBench, ToolAlpaca study tool‑calling with held‑out evals — why not cited? How does 0%→92% compare?
+We did not cite those benchmarks because they were released after our submission deadline / focus on closed‑loop agentic interactions rather than static held‑out API correctness. Their 0 → 92% gains reflect improvements on held‑out API invocation or slot‑filling accuracy; by contrast, our GRPO results measure end‑to‑end task success across varied tool use, which is a stricter, broader criterion. The magnitude of improvement is qualitatively similar, but the evaluation axes differ (held‑out API accuracy vs. holistic tool‑augmented task success).
+
+Q12: DeepSeekMath and DAPO extend GRPO with clip‑higher and overlong penalties for math — how to position GSM8K findings?
+DeepSeekMath / DAPO introduce specialized penalties to curb over‑generation and misaligned gradients in math reasoning. Our GSM8K results demonstrate that base GRPO without such hand‑crafted penalties already yields strong reasoning gains, and the patterns of error (e.g., spurious long derivations) align with theirs. We consider their techniques as complementary regularizers that can further stabilize or improve math performance, not as a conceptual competitor.
+
+Q13: SFT + GRPO complementarity echoes ReST, STaR, iterative DPO — how to differentiate from warm‑starting RL literature?
+ReST/STaR/DPO/iterative approaches warm‑start or interleave supervised learning with preference/LR signals to refine policies. In contrast, GRPO is an off‑policy, actor‑critic style optimization over tool‑augmented trajectories; SFT warm‑starts policy weights but GRPO updates through value‑based returns from environmental feedback, not just heuristic or n‑shot preference data. The key distinction: policy improvement via RL returns versus policy refinement via supervised or preference signals.
+
+Q14: Concurrent work STILL and Tiny‑GRPO target sub‑3B models — do they report similar capacity thresholds? Strengthen or weaken novelty?
+If STILL and Tiny‑GRPO observe performance cliffs or scaling inflection points near ~3B parameters, that corroborates our empirical finding that agentic tool use exhibits a capacity threshold. Their independent observations reinforce the generalizability of the phenomenon rather than diminish novelty. Our contribution remains the first systematic characterization and theoretical framing of that threshold in the context of GRPO fine‑tuning.
+
+Q15: MoE routing volatility should be contextualized against Switch Transformer, GLaM, Mixtral instability literature — is 2.43× surprising?
+Prior MoE work (Switch, GLaM, etc.) documented routing noise and load imbalance as a core challenge; relative performance volatility of ~2× is within the range of reported instability in those families. What is notable in our setting is that tool‑use behaviors amplify routing variance, not just token prediction variance. The 2.43× figure is consistent with known MoE dynamics but highlights interaction effects between routing decisions and downstream tool invocation, which has not been previously quantified.
+
+If you want, I can also draft a short paragraph you could include in rebuttal text for each question.

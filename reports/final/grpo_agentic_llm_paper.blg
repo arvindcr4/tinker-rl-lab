@@ -8,54 +8,55 @@ Warning--empty journal in chen2025fcrewardbench
 Warning--empty journal in chen2025selfevolving
 Warning--empty journal in chen2025lotaqaf
 Warning--empty journal in dettmers2023qlora
-Warning--empty journal in hammoud2025trainlong
+Warning--empty journal in gulcehre2023rest
 Warning--empty journal in hu2025reinforceplusplus
 Warning--empty journal in huang2025stepgrpo
-Warning--empty journal in liu2025proxystate
+Warning--empty journal in jiang2024mixtral
 Warning--empty journal in parashar2025curriculum
+Warning--empty journal in patil2023gorilla
 Warning--empty journal in rafailov2024dpo
 Warning--empty journal in shen2025sgrpo
 Warning--empty journal in wang2025toolrm
 Warning--empty journal in zhou2025qradaptor
-You've used 17 entries,
+You've used 25 entries,
             2773 wiz_defined-function locations,
-            649 strings with 6931 characters,
-and the built_in function-call counts, 6104 in all, are:
-= -- 519
-> -- 359
-< -- 16
-+ -- 127
-- -- 108
-* -- 368
-:= -- 999
-add.period$ -- 51
-call.type$ -- 17
-change.case$ -- 71
-chr.to.int$ -- 15
-cite$ -- 48
-duplicate$ -- 324
-empty$ -- 512
-format.name$ -- 141
-if$ -- 1264
+            690 strings with 8112 characters,
+and the built_in function-call counts, 9142 in all, are:
+= -- 787
+> -- 528
+< -- 22
++ -- 186
+- -- 159
+* -- 578
+:= -- 1489
+add.period$ -- 75
+call.type$ -- 25
+change.case$ -- 108
+chr.to.int$ -- 23
+cite$ -- 65
+duplicate$ -- 480
+empty$ -- 771
+format.name$ -- 204
+if$ -- 1895
 int.to.chr$ -- 3
 int.to.str$ -- 1
-missing$ -- 17
-newline$ -- 93
-num.names$ -- 68
-pop$ -- 186
+missing$ -- 25
+newline$ -- 133
+num.names$ -- 100
+pop$ -- 262
 preamble$ -- 1
-purify$ -- 54
+purify$ -- 83
 quote$ -- 0
-skip$ -- 253
+skip$ -- 371
 stack$ -- 0
-substring$ -- 34
-swap$ -- 6
+substring$ -- 91
+swap$ -- 13
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 187
-warning$ -- 14
-while$ -- 51
+type$ -- 275
+warning$ -- 15
+while$ -- 79
 width$ -- 0
-write$ -- 197
-(There were 14 warnings)
+write$ -- 295
+(There were 15 warnings)

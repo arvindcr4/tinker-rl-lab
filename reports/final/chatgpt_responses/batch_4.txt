@@ -1,0 +1,14 @@
+Q16: Operational definition of agentic LLM fine-tuning
+An agentic LLM fine-tuning approach involves the model learning to autonomously interact with tools or perform tasks with minimal human intervention. This contrasts with non-agentic LLMs, which may generate outputs based solely on input without performing actions or interacting with external systems (e.g., tools, APIs).
+
+Q17: Novel vs confirmatory classification criteria
+Yes, it would be beneficial to add a Methods subsection clearly stating the threshold for classification as novel vs confirmatory. This will help readers understand what constitutes a new contribution versus an empirical verification, thus enhancing the transparency of the paper's claims.
+
+Q18: Figure captions self-contained
+Figure captions should indeed be self-contained. They should describe the figure's content and significance in a way that allows the reader to understand the result without needing to refer back to the main text. If not currently self-contained, revising them for clarity would be useful to comply with NeurIPS standards.
+
+Q19: Synthetic-real gap vs. train-test reward discrepancy
+The synthetic-real gap refers to the difference in distribution between synthetic training data and real-world test data, whereas the train-test reward discrepancy refers to the mismatch between the reward signal used during training and the actual test performance. To separate these, clarify that the synthetic-real gap is a data distribution issue, while the train-test reward discrepancy pertains to the metric used for evaluating performance, possibly influenced by training methodology.
+
+Q20: Group sizes 4-16 and LoRA ranks 8-64 hyperparameters
+Yes, it would be helpful to include a configuration table mapping each result to its exact hyperparameters, especially for group sizes (4-16) and LoRA ranks (8-64). This would improve the reproducibility of the study and allow other researchers to better understand the specific settings under which each result was achieved.

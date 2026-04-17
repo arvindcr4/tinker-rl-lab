@@ -1,14 +1,48 @@
-# Autoresearch: Paper Improvement — Address Discovery Report Issues
+# Autoresearch: Session 7 — 3B GRPO Rescue via Parallel-Agent Loop
+
+> Inspired by Ryan Li's Paradigm Optimization Arena winner (1,039 strategies,
+> bitter-lesson). Loop = propose-hypothesis → run → score → keep/discard →
+> feed learnings → loop. Started 2026-04-11.
 
 ## Objective
-Systematically address all reviewer issues from the Discovery Report on the GRPO paper. Improve the paper's scientific rigor, presentation clarity, related work positioning, and evaluation transparency without inventing new experimental results.
+Resolve the single largest open question in the GRPO paper: **is the 3B model's
+GSM8K failure a hard capacity wall, or can it be rescued by a combination of
+group_size / temperature / reward-shape / curriculum / advantage-normalization
+changes?** Phase 1 explores on the fast Qwen3-0.6B / 1.7B proxy. Phase 2
+verifies winners on real 3B models (Qwen3-3B, Llama-3B) across 5 seeds. Phase 3
+triggers a from-scratch reset agent when the loop plateaus for 3 waves.
+
+If rescue succeeds → the paper's capacity-threshold claim softens, a new
+recipe is added to Section 7. If rescue fails → the claim is strengthened
+by 1000+ experiments of evidence.
 
 ## Metrics
-- **Primary**: reviewer_issues (count, lower is better) — from paper_improvement_audit.py (30 checks)
-- **Secondary**: suite_issues (from run_all_audits.py), claim_issues, total_checks, resolved
+- **Primary**: `last10_avg_accuracy` — mean binary reward on GSM8K over last 10
+  training steps (emitted by `research_loop/train.py` as `METRIC`).
+- **Secondary**: `peak_accuracy`, `first5_avg_accuracy`, `zero_reward_pct`,
+  `zero_loss_pct`, `wall_clock_seconds`.
+
+Phase 2 switches primary to real held-out GSM8K accuracy via
+`reports/final/evaluate_gsm8k_test.py`, 5-seed median.
 
 ## How to Run
-`./autoresearch.sh` — currently runs `python run_all_audits.py` and outputs `METRIC name=number` lines.
+Autoresearch loop has moved to the new `research_loop/` framework:
+
+- `python research_loop/coordinator.py status` — dashboard
+- `python research_loop/coordinator.py wave new --size 8 --phase 1` — create wave
+- `python research_loop/run_one.py --config <variant.yaml>` — single experiment
+- `python research_loop/coordinator.py wave ingest wave_NNN` — close wave
+
+Each wave = N parallel Claude Code agents, each with one hypothesis. Results
+append to `research_loop/results.jsonl` AND to this repo's `autoresearch.jsonl`
+(history). See `research_loop/README.md` for the full plan, budget, and knobs.
+
+## Prior Session — Paper Improvement (Runs 35-44, superseded)
+Earlier session's objective was reviewer-issue minimization on the GRPO paper
+via `paper_improvement_audit.py`. Reached 0 issues by Run 44; remaining
+improvements required compute. This session is that compute.
+
+## Off Limits (unchanged)
 
 ## Files in Scope
 - `reports/final/grpo_agentic_llm_paper.tex` — Main conference paper

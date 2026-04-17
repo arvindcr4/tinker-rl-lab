@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-export TINKER_API_KEY="tml-lpYVuVb7Zy4op6Bc6cvivFArSb4KHff208nZIsG3QNETRETCwIxu4vDUf9YtYgHbEAAAA"
+: "${TINKER_API_KEY:?Set TINKER_API_KEY in env (was hardcoded, removed 2026-04-11)}"
 cd /home/arvind/tinker-rl-lab/reports/final
 
 LIMIT=200

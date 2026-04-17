@@ -1,0 +1,53 @@
+# SkyRL + Hosted Tinker Configuration
+# Connects SkyRL training loop to the Tinker cloud API (thinkingmachines.ai)
+# No local GPU required — all training happens on Tinker's infrastructure
+#
+# Usage:
+#   export TINKER_API_KEY="tml-..."  # already in ~/.zshrc
+#   python ~/tinker-rl-lab/skyrl/run_skyrl_tinker.py --config configs/tinker_hosted.yaml
+
+# Tinker connection
+tinker:
+  # Use hosted Tinker service (base_url: null means cloud)
+  base_url: null
+  # API key loaded from TINKER_API_KEY env var
+  lora_rank: 32
+  learning_rate: 3.0e-5
+  optimizer:
+    beta1: 0.9
+    beta2: 0.95
+    eps: 1.0e-8
+
+# Model
+model:
+  name: "Qwen/Qwen3-8B"
+  tokenizer: "Qwen/Qwen3-8B"
+
+# GRPO training
+training:
+  algorithm: "grpo"
+  steps: 50
+  group_size: 8
+  prompts_per_step: 4
+  save_every: 10
+  sampling:
+    max_tokens: 512
+    temperature: 0.8
+    top_p: 0.95
+
+# Logging (W&B)
+logging:
+  backend: "wandb"
+  project: "skyrl-tinker"
+  run_name: null  # auto-generated: {model}-{env}-{timestamp}
+  log_every: 1    # log every N steps
+  log_samples: true  # log example prompts/responses to W&B tables
+
+# HuggingFace Hub upload
+huggingface:
+  push_to_hub: true
+  hub_org: "arvindcr4"          # your HF username
+  repo_prefix: "skyrl-tinker"   # repo name: {prefix}-{model_short}-{env}
+  private: false
+  push_checkpoints: false       # only push final model, not intermediates
+  model_card: true              # auto-generate model card

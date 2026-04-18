@@ -4,6 +4,10 @@
 % Template: ACM acmart v2.16 (sigconf proceedings format)
 % Suitable for: KDD, SIGIR, AAAI (via ACM), CHI, CIKM, WWW, etc.
 % =============================================================================
+% SUBMISSION NOTE: For anonymous submission, comment out author block above
+% and uncomment: \author{Anonymous Authors}
+% Also anonymize: GitHub URLs, HuggingFace URLs, PES University references
+% Replace with: \url{https://anonymous.4open.science/r/tinker-rl-lab}
 
 % For submission/review (single-column, anonymous, line numbers):
 \documentclass[manuscript,review,anonymous]{acmart}
@@ -105,18 +109,50 @@
 % For anonymous submission, authors are hidden automatically with the
 % "anonymous" option in \documentclass
 
-\author{Author 1}
+\author{Arvind C R}
 \authornote{Equal contribution.}
-\email{author1@pes.edu}
+\email{arvindcr4@gmail.com}
 \affiliation{%
   \institution{PES University}
   \city{Bangalore}
   \country{India}
 }
 
-\author{Author 2}
+\author{Sandhya Jeyaraj}
 \authornotemark[1]
-\email{author2@pes.edu}
+\email{sandhya.jeyaraj2014@gmail.com}
+\affiliation{%
+  \institution{PES University}
+  \city{Bangalore}
+  \country{India}
+}
+
+\author{Madhu Kumara L}
+\email{madhukumara1993@gmail.com}
+\affiliation{%
+  \institution{PES University}
+  \city{Bangalore}
+  \country{India}
+}
+
+\author{Mohammad Rafi}
+\email{gmd.rafi.2024@gmail.com}
+\affiliation{%
+  \institution{PES University}
+  \city{Bangalore}
+  \country{India}
+}
+
+\author{Dhruva N Murthy}
+\email{dhruva.n.murthy@gmail.com}
+\affiliation{%
+  \institution{PES University}
+  \city{Bangalore}
+  \country{India}
+}
+
+\author{Arumugam K}
+\email{chettyarumugam@mail.com}
 \affiliation{%
   \institution{PES University}
   \city{Bangalore}
@@ -459,6 +495,47 @@ ACM/NeurIPS ready & \checkmark & \texttimes & \texttimes & \texttimes & \texttim
 \end{tabular}
 \end{table}
 
+\subsection{Task-Specific GRPO Results}
+\label{sec:task_grpo}
+
+Beyond the cross-library comparison, team members conducted GRPO experiments on
+diverse real-world tasks. Table~\ref{tab:task_grpo} summarizes these results,
+showing that GRPO-based training is effective across tool use, code reasoning,
+and multi-stage reasoning scenarios with modest compute budgets.
+
+\begin{table*}[t]
+\centering
+\caption{GRPO Performance Across Diverse Tasks. Experiments conducted by team members
+on consumer-grade and cloud hardware.}
+\label{tab:task_grpo}
+\begin{tabular}{llllll}
+\toprule
+\textbf{Task} & \textbf{Model} & \textbf{Method} & \textbf{Pre-Training} & \textbf{Post-RL} & \textbf{Notes} \\
+\midrule
+Tool Call (Single-turn) & Qwen2-0.5B-Instruct & LoRA fine-tuning & --- & Functional & 20 examples, \$0.17 on vast.ai \\
+Code Reasoning (HumanEval) & Qwen3-8B & GRPO & 32\% & 86\% & 300 steps; best performer \\
+Code Reasoning (HumanEval) & Qwen2.5-Coder-1.5B & GRPO & 67\% (4/6) & 100\% (6/6) & LoRA on q\_proj/v\_proj, 20 epochs \\
+Multi-turn Tool Use & Qwen2.5-3B & GRPO+QLoRA & Baseline & Improved & Multi-turn tool calling \\
+Multi-turn Tool Use (SFT+GRPO) & Qwen3-8B & SFT $\to$ GRPO & 52\% arg acc. & 70\%--71\% & Schema compliance 97\%$\to$100\% \\
+Multi-stage Reasoning & Qwen3-4B-Instruct & GRPO & Baseline & Improved & Small model matches 30B performance \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\paragraph{Training Dynamics.}
+Our experiments reveal consistent GRPO training dynamics across tasks.
+First, GRPO exhibits a two-phase learning pattern: during early steps (phases
+1--20) the model learns answer format (accuracy 0--14\%), then rapidly
+internalizes reasoning logic in later steps (phases 21--25: 14--58\%).
+Second, a prerequisite for effective RL training is that the base model must
+already occasionally solve the target problems; without any positive reward
+signal, the RL gradient cannot propagate useful updates. Third, Mixture-of-Experts
+(MoE) models exhibit volatile training curves due to sparse routing, requiring
+careful monitoring and potentially larger batch sizes to stabilize updates.
+These findings motivate the model selection criterion of choosing Qwen3-4B-Instruct
+over a 30B MoE model for the multi-stage reasoning task, demonstrating that
+small dense models can match or exceed large MoE models when properly trained.
+
 % =============================================================================
 \section{Reproducibility}
 \label{sec:reproducibility}
@@ -471,6 +548,17 @@ We provide comprehensive reproducibility infrastructure:
     \item \textbf{Hugging Face Hub}: All checkpoints with model cards
     \item \textbf{Statistical toolkit}: \texttt{rliable}-based analysis scripts
     \item \textbf{REPRODUCE.md}: Exact commands for every experiment
+\end{itemize}
+
+\paragraph{Team Model Checkpoints.}
+All task-specific models from Section~\ref{sec:task_grpo} are publicly released
+on Hugging Face Hub:
+\begin{itemize}
+    \item \texttt{arvindcr4/tool-call-lora-qwen0.5b} --- Tool call LoRA (Qwen2-0.5B)
+    \item \texttt{Balasandhya/llm-multiturn-tool-call-grpo-QloRA-Qwen2.5-3B} --- Multi-turn GRPO
+    \item \texttt{Madhu2133/qwen3-8b-code-grpo-v10} --- Code reasoning GRPO (86\% HumanEval)
+    \item \texttt{MohammadRafiML} --- Multi-stage reasoning models
+    \item \texttt{dhruvanmurthy/llm\_efficiency} --- SFT+GRPO pipeline
 \end{itemize}
 
 We target three ACM Artifact Badges~\cite{acm2020badges}:
@@ -500,6 +588,12 @@ We target three ACM Artifact Badges~\cite{acm2020badges}:
 This benchmark promotes transparency and reproducibility in RL post-training research.
 By establishing standardized evaluation, we aim to reduce misleading performance claims
 and encourage rigorous experimental methodology.
+
+\paragraph{Ethics Statement.}
+We have read and adhere to the ICLR Code of Ethics. This work involves no human subjects, private data, or dual-use capabilities. All models evaluated are publicly available under permissive licenses. Our benchmark promotes transparency in RL post-training research.
+
+\paragraph{Reproducibility Statement.}
+All experiments are reproducible via Docker containers, fixed random seeds ($\{42, 123, 456, 789, 1024\}$), and step-by-step commands documented in \texttt{REPRODUCE.md}. Code is available at \url{https://github.com/arvindcr4/tinker-rl-lab} and model checkpoints at \url{https://huggingface.co/tinker-rl-bench}. Statistical analyses use \texttt{rliable} with 10,000 bootstrap resamples.
 
 % =============================================================================
 \section{Conclusion}

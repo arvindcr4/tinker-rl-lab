@@ -4,6 +4,10 @@
 % Template: NeurIPS 2026 (based on neurips_2025.sty)
 % Track: Evaluations & Datasets (recommended) or Main Track
 % =============================================================================
+% SUBMISSION NOTE: For anonymous submission, comment out author block above
+% and uncomment: \author{Anonymous Authors}
+% Also anonymize: GitHub URLs, HuggingFace URLs, PES University references
+% Replace with: \url{https://anonymous.4open.science/r/tinker-rl-lab}
 
 \documentclass{article}
 
@@ -41,13 +45,29 @@
 % \author{Anonymous Authors}
 
 \author{
-  Author 1\thanks{Equal contribution.} \\
+  Arvind C R\thanks{Equal contribution.} \\
   PES University\\
-  \texttt{author1@pes.edu} \\
+  \texttt{arvindcr4@gmail.com} \\
   \And
-  Author 2\footnotemark[1] \\
+  Sandhya Jeyaraj\footnotemark[1] \\
   PES University\\
-  \texttt{author2@pes.edu} \\
+  \texttt{sandhya.jeyaraj2014@gmail.com} \\
+  \And
+  Madhu Kumara L \\
+  PES University\\
+  \texttt{madhukumara1993@gmail.com} \\
+  \And
+  Mohammad Rafi \\
+  PES University\\
+  \texttt{gmd.rafi.2024@gmail.com} \\
+  \And
+  Dhruva N Murthy \\
+  PES University\\
+  \texttt{dhruva.n.murthy@gmail.com} \\
+  \And
+  Arumugam K \\
+  PES University\\
+  \texttt{chettyarumugam@mail.com} \\
 }
 
 \begin{document}
@@ -415,6 +435,47 @@ ACM/NeurIPS ready & \checkmark & \texttimes & \texttimes & \texttimes & \texttim
 \end{tabular}
 \end{table}
 
+\subsection{Task-Specific GRPO Results}
+\label{sec:task_grpo}
+
+Beyond the cross-library comparison, team members conducted GRPO experiments on
+diverse real-world tasks. Table~\ref{tab:task_grpo} summarizes these results,
+showing that GRPO-based training is effective across tool use, code reasoning,
+and multi-stage reasoning scenarios with modest compute budgets.
+
+\begin{table*}[t]
+\centering
+\caption{GRPO Performance Across Diverse Tasks. Experiments conducted by team members
+on consumer-grade and cloud hardware.}
+\label{tab:task_grpo}
+\begin{tabular}{llllll}
+\toprule
+\textbf{Task} & \textbf{Model} & \textbf{Method} & \textbf{Pre-Training} & \textbf{Post-RL} & \textbf{Notes} \\
+\midrule
+Tool Call (Single-turn) & Qwen2-0.5B-Instruct & LoRA fine-tuning & --- & Functional & 20 examples, \$0.17 on vast.ai \\
+Code Reasoning (HumanEval) & Qwen3-8B & GRPO & 32\% & 86\% & 300 steps; best performer \\
+Code Reasoning (HumanEval) & Qwen2.5-Coder-1.5B & GRPO & 67\% (4/6) & 100\% (6/6) & LoRA on q\_proj/v\_proj, 20 epochs \\
+Multi-turn Tool Use & Qwen2.5-3B & GRPO+QLoRA & Baseline & Improved & Multi-turn tool calling \\
+Multi-turn Tool Use (SFT+GRPO) & Qwen3-8B & SFT $\to$ GRPO & 52\% arg acc. & 70\%--71\% & Schema compliance 97\%$\to$100\% \\
+Multi-stage Reasoning & Qwen3-4B-Instruct & GRPO & Baseline & Improved & Small model matches 30B performance \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\paragraph{Training Dynamics.}
+Our experiments reveal consistent GRPO training dynamics across tasks.
+First, GRPO exhibits a two-phase learning pattern: during early steps (phases
+1--20) the model learns answer format (accuracy 0--14\%), then rapidly
+internalizes reasoning logic in later steps (phases 21--25: 14--58\%).
+Second, a prerequisite for effective RL training is that the base model must
+already occasionally solve the target problems; without any positive reward
+signal, the RL gradient cannot propagate useful updates. Third, Mixture-of-Experts
+(MoE) models exhibit volatile training curves due to sparse routing, requiring
+careful monitoring and potentially larger batch sizes to stabilize updates.
+These findings motivate the model selection criterion of choosing Qwen3-4B-Instruct
+over a 30B MoE model for the multi-stage reasoning task, demonstrating that
+small dense models can match or exceed large MoE models when properly trained.
+
 % =============================================================================
 \section{Reproducibility}
 \label{sec:reproducibility}
@@ -427,6 +488,17 @@ We provide comprehensive reproducibility infrastructure:
     \item \textbf{Hugging Face Hub}: All checkpoints with model cards
     \item \textbf{Statistical toolkit}: \texttt{rliable}-based analysis scripts
     \item \textbf{REPRODUCE.md}: Exact commands for every experiment
+\end{itemize}
+
+\paragraph{Team Model Checkpoints.}
+All task-specific models from Section~\ref{sec:task_grpo} are publicly released
+on Hugging Face Hub:
+\begin{itemize}
+    \item \texttt{arvindcr4/tool-call-lora-qwen0.5b} --- Tool call LoRA (Qwen2-0.5B)
+    \item \texttt{Balasandhya/llm-multiturn-tool-call-grpo-QloRA-Qwen2.5-3B} --- Multi-turn GRPO
+    \item \texttt{Madhu2133/qwen3-8b-code-grpo-v10} --- Code reasoning GRPO (86\% HumanEval)
+    \item \texttt{MohammadRafiML} --- Multi-stage reasoning models
+    \item \texttt{dhruvanmurthy/llm\_efficiency} --- SFT+GRPO pipeline
 \end{itemize}
 
 % =============================================================================
@@ -451,6 +523,12 @@ performance claims and encourage more rigorous experimental methodology. We do n
 foresee direct negative societal impact, though improvements in LLM training efficiency
 may amplify existing concerns about language model deployment.
 
+\paragraph{Ethics Statement.}
+We have read and adhere to the ICLR Code of Ethics. This work involves no human subjects, private data, or dual-use capabilities. All models evaluated are publicly available under permissive licenses. Our benchmark promotes transparency in RL post-training research.
+
+\paragraph{Reproducibility Statement.}
+All experiments are reproducible via Docker containers, fixed random seeds ($\{42, 123, 456, 789, 1024\}$), and step-by-step commands documented in \texttt{REPRODUCE.md}. Code is available at \url{https://github.com/arvindcr4/tinker-rl-lab} and model checkpoints at \url{https://huggingface.co/tinker-rl-bench}. Statistical analyses use \texttt{rliable} with 10,000 bootstrap resamples.
+
 % =============================================================================
 \section{Conclusion}
 \label{sec:conclusion}
@@ -472,6 +550,9 @@ This work was supported in part by PES University's LLM Research Group.
 We are grateful to the open-source communities behind TRL, Stable Baselines3,
 CleanRL, Tianshou, and the broader Hugging Face ecosystem.
 \end{ack}
+
+\section*{Impact Statement}
+This paper presents work whose goal is to advance the field of Machine Learning. There are many potential societal consequences of our work, none which we feel must be specifically highlighted here. Our benchmark promotes transparency and reproducibility in RL post-training research, which we believe benefits the broader research community. We acknowledge that improvements in LLM training efficiency could amplify existing concerns about language model deployment, though our contribution is a benchmarking framework rather than new model capabilities.
 
 % =============================================================================
 % References
@@ -706,6 +787,12 @@ and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existi
     \begin{enumerate}
         \item Does the paper describe potential risks incurred by study participants, whether combensation was provided to study participants, and whether informed consent was obtained?
         \answerNA{No human subjects research.}
+    \end{enumerate}
+
+\item {\bf Declaration of LLM usage}
+    \begin{enumerate}
+        \item Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods?
+        \answerYes{LLMs (Qwen, Llama families) are the primary subject of evaluation. Their usage as RL training targets is described in Sections~\ref{sec:benchmark} and~\ref{sec:setup}. LLMs were not used for paper writing.}
     \end{enumerate}
 
 \end{enumerate}

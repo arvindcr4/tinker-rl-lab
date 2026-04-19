@@ -2,7 +2,7 @@
   "campaign": "bitter_lesson_v2",
   "timestamp": "20260419_091120",
   "total": 32,
-  "completed": 6,
+  "completed": 11,
   "results": [
     {
       "tag": "w1_llama33-70b-inst",
@@ -91,6 +91,46 @@
       "status": "failed",
       "error": "Run (oeidbyzx) is finished. The call to `_summary_update_callback` will be ignored. Please make sure that you are using an active run.",
       "timestamp": "2026-04-19T09:51:11.308368"
+    },
+    {
+      "tag": "w1_llama31-8b-base",
+      "model": "meta-llama/Llama-3.1-8B",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "Run (7bn59gdn) is finished. The call to `_summary_update_callback` will be ignored. Please make sure that you are using an active run.",
+      "timestamp": "2026-04-19T10:00:46.410716"
+    },
+    {
+      "tag": "w2_qwen3-8b_G2",
+      "model": "Qwen/Qwen3-8B",
+      "wave": "2-groupsize",
+      "status": "failed",
+      "error": "Run (wv5ssnmp) is finished. The call to `_summary_update_callback` will be ignored. Please make sure that you are using an active run.",
+      "timestamp": "2026-04-19T10:03:27.980074"
+    },
+    {
+      "tag": "w2_qwen3-8b_G4",
+      "model": "Qwen/Qwen3-8B",
+      "wave": "2-groupsize",
+      "status": "failed",
+      "error": "Run (lpxrbgw2) is finished. The call to `_summary_update_callback` will be ignored. Please make sure that you are using an active run.",
+      "timestamp": "2026-04-19T10:05:39.755149"
+    },
+    {
+      "tag": "w2_qwen3-8b_G16",
+      "model": "Qwen/Qwen3-8B",
+      "wave": "2-groupsize",
+      "status": "failed",
+      "error": "Run (ao38u7bu) is finished. The call to `_summary_update_callback` will be ignored. Please make sure that you are using an active run.",
+      "timestamp": "2026-04-19T10:08:47.054179"
+    },
+    {
+      "tag": "w1_deepseek-v31-base",
+      "model": "deepseek-ai/DeepSeek-V3.1-Base",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "Error retrieving result: Error code: 401 - {'detail': 'Invalid JWT'} with status code e.status_code=401 for self.request_id='a4bbfdd1-a683-53cd-9818-1f4d2bc57e24:sample:2:13' and expected type self.model_cls=<class 'tinker.SampleResponse'>",
+      "timestamp": "2026-04-19T11:15:30.043874"
     }
   ]
 }

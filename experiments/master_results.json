@@ -3,14 +3,14 @@
     "generated_at": "2026-04-19T02:40:19.496919Z",
     "project": "tinker-rl-lab-world-class",
     "wandb_project": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-world-class",
-    "total_experiments": 70,
+    "total_experiments": 76,
     "sources": [
       "/home/user/workspace/tinker-rl-lab/experiments/all_results_consolidated.json",
       "/home/user/workspace/tinker-rl-lab/experiments/tinker-runs/results",
       "/home/user/workspace/tinker-rl-lab/experiments/modal/results/modal_parallel_results.json",
       "/home/user/workspace/tinker-rl-lab/experiments/results/modal_results_all.json"
     ],
-    "updated_at": "2026-04-19T09:49:42.549680+00:00"
+    "updated_at": "2026-04-19T11:17:17.107442+00:00"
   },
   "trl_grpo_baseline_summary": {
     "mean_accuracy": 0.734,
@@ -3596,81 +3596,6 @@
       "source": "bitter_lesson_campaign_v2"
     },
     {
-      "experiment_id": "campaign_v2_w1_kimi-k2-thinking_recovered",
-      "model": "moonshotai/Kimi-K2-Thinking",
-      "method": "GRPO",
-      "platform": "Tinker",
-      "task": "gsm8k",
-      "seed": 42,
-      "group_size": 8,
-      "lr": 1e-05,
-      "steps": 30,
-      "peak_reward": 1.0,
-      "last_10_avg": 0.917,
-      "reward_trace_sampled": [
-        1.0,
-        1.0,
-        1.0,
-        0.938,
-        1.0,
-        0.812
-      ],
-      "status": "completed_recovered",
-      "wave": "1-frontier",
-      "note": "W&B finish failed; rewards from log sampling (every 5 steps)",
-      "source": "bitter_lesson_campaign_v2_log_recovery"
-    },
-    {
-      "experiment_id": "campaign_v2_w1_kimi-k25_recovered",
-      "model": "moonshotai/Kimi-K2.5",
-      "method": "GRPO",
-      "platform": "Tinker",
-      "task": "gsm8k",
-      "seed": 42,
-      "group_size": 8,
-      "lr": 1e-05,
-      "steps": 30,
-      "peak_reward": 1.0,
-      "last_10_avg": 0.729,
-      "reward_trace_sampled": [
-        0.125,
-        1.0,
-        0.438,
-        0.562,
-        0.625,
-        1.0
-      ],
-      "status": "completed_recovered",
-      "wave": "1-frontier",
-      "note": "W&B finish failed; rewards from log sampling (every 5 steps)",
-      "source": "bitter_lesson_campaign_v2_log_recovery"
-    },
-    {
-      "experiment_id": "campaign_v2_w1_llama31-70b-base_recovered",
-      "model": "meta-llama/Llama-3.1-70B",
-      "method": "GRPO",
-      "platform": "Tinker",
-      "task": "gsm8k",
-      "seed": 42,
-      "group_size": 8,
-      "lr": 1e-05,
-      "steps": 30,
-      "peak_reward": 0.562,
-      "last_10_avg": 0.396,
-      "reward_trace_sampled": [
-        0.312,
-        0.562,
-        0.125,
-        0.562,
-        0.25,
-        0.375
-      ],
-      "status": "completed_recovered",
-      "wave": "1-frontier",
-      "note": "W&B finish failed; rewards from log sampling (every 5 steps)",
-      "source": "bitter_lesson_campaign_v2_log_recovery"
-    },
-    {
       "experiment_id": "modal_trl_trl_qwen3_8b",
       "model": "Qwen/Qwen3-8B",
       "method": "TRL-GRPO",
@@ -3815,55 +3740,7 @@
       "source": "modal_trl_grpo_campaign"
     },
     {
-      "experiment_id": "campaign_v2_w1_gpt-oss-120b_partial",
-      "model": "openai/gpt-oss-120b",
-      "method": "GRPO",
-      "platform": "Tinker",
-      "task": "gsm8k",
-      "seed": 42,
-      "group_size": 8,
-      "lr": 1e-05,
-      "steps": 30,
-      "peak_reward": 1.0,
-      "last_10_avg": 0.8753333333333333,
-      "reward_trace_sampled": [
-        0.938,
-        0.938,
-        0.75,
-        1.0,
-        0.938,
-        0.688
-      ],
-      "status": "in_progress",
-      "wave": "1-frontier",
-      "note": "Partial results (still running); sampled every 5 steps",
-      "source": "bitter_lesson_campaign_v2_partial"
-    },
-    {
-      "experiment_id": "campaign_v2_w1_qwen35-397b_partial",
-      "model": "Qwen/Qwen3.5-397B-A17B",
-      "method": "GRPO",
-      "platform": "Tinker",
-      "task": "gsm8k",
-      "seed": 42,
-      "group_size": 8,
-      "lr": 1e-05,
-      "steps": 30,
-      "peak_reward": 1.0,
-      "last_10_avg": 0.96875,
-      "reward_trace_sampled": [
-        0.875,
-        1.0,
-        1.0,
-        1.0
-      ],
-      "status": "in_progress",
-      "wave": "1-frontier",
-      "note": "Partial results (still running); sampled every 5 steps",
-      "source": "bitter_lesson_campaign_v2_partial"
-    },
-    {
-      "experiment_id": "campaign_v2_w1_deepseek-v31-base_partial",
+      "experiment_id": "campaign_v2_w1_deepseek-v31-base",
       "model": "deepseek-ai/DeepSeek-V3.1-Base",
       "method": "GRPO",
       "platform": "Tinker",
@@ -3871,21 +3748,119 @@
       "seed": 42,
       "group_size": 8,
       "lr": 1e-05,
-      "steps": 30,
-      "peak_reward": 0.688,
-      "last_10_avg": 0.5416666666666666,
-      "reward_trace_sampled": [
+      "steps_completed": 26,
+      "peak_reward": 0.812,
+      "last10_avg": 0.5728333333333334,
+      "first5_avg": 0.525,
+      "reward_trace": [
         0.625,
         0.312,
-        0.688
+        0.688,
+        0.562,
+        0.438,
+        0.812
       ],
-      "status": "in_progress",
-      "wave": "1-frontier",
-      "note": "Partial results (still running); sampled every 5 steps",
-      "source": "bitter_lesson_campaign_v2_partial"
+      "status": "completed",
+      "source": "bitter_lesson_campaign_v2"
     },
     {
-      "experiment_id": "campaign_v2_w1_llama31-8b-base_partial",
+      "experiment_id": "campaign_v2_w1_gpt-oss-120b",
+      "model": "openai/gpt-oss-120b",
+      "method": "GRPO",
+      "platform": "Tinker",
+      "task": "gsm8k",
+      "seed": 42,
+      "group_size": 8,
+      "lr": 1e-05,
+      "steps_completed": 26,
+      "peak_reward": 1.0,
+      "last10_avg": 0.8753333333333333,
+      "first5_avg": 0.9128000000000001,
+      "reward_trace": [
+        0.938,
+        0.938,
+        0.75,
+        1.0,
+        0.938,
+        0.688
+      ],
+      "status": "completed",
+      "source": "bitter_lesson_campaign_v2"
+    },
+    {
+      "experiment_id": "campaign_v2_w1_kimi-k2-thinking",
+      "model": "moonshotai/Kimi-K2-Thinking",
+      "method": "GRPO",
+      "platform": "Tinker",
+      "task": "gsm8k",
+      "seed": 42,
+      "group_size": 8,
+      "lr": 1e-05,
+      "steps_completed": 26,
+      "peak_reward": 1.0,
+      "last10_avg": 0.9583333333333334,
+      "first5_avg": 0.9875999999999999,
+      "reward_trace": [
+        1.0,
+        1.0,
+        1.0,
+        0.938,
+        1.0,
+        0.812
+      ],
+      "status": "completed",
+      "source": "bitter_lesson_campaign_v2"
+    },
+    {
+      "experiment_id": "campaign_v2_w1_kimi-k25",
+      "model": "moonshotai/Kimi-K2.5",
+      "method": "GRPO",
+      "platform": "Tinker",
+      "task": "gsm8k",
+      "seed": 42,
+      "group_size": 8,
+      "lr": 1e-05,
+      "steps_completed": 26,
+      "peak_reward": 1.0,
+      "last10_avg": 0.625,
+      "first5_avg": 0.55,
+      "reward_trace": [
+        0.125,
+        1.0,
+        0.438,
+        0.562,
+        0.625,
+        1.0
+      ],
+      "status": "completed",
+      "source": "bitter_lesson_campaign_v2"
+    },
+    {
+      "experiment_id": "campaign_v2_w1_llama31-70b-base",
+      "model": "meta-llama/Llama-3.1-70B",
+      "method": "GRPO",
+      "platform": "Tinker",
+      "task": "gsm8k",
+      "seed": 42,
+      "group_size": 8,
+      "lr": 1e-05,
+      "steps_completed": 26,
+      "peak_reward": 0.562,
+      "last10_avg": 0.36433333333333334,
+      "first5_avg": 0.3622,
+      "reward_trace": [
+        0.312,
+        0.562,
+        0.125,
+        0.562,
+        0.25,
+        0.375
+      ],
+      "status": "completed",
+      "source": "bitter_lesson_campaign_v2"
+    },
+    {
+      "experiment_id": "campaign_v2_w1_llama31-8b-base",
       "model": "meta-llama/Llama-3.1-8B",
       "method": "GRPO",
       "platform": "Tinker",
@@ -3893,17 +3868,175 @@
       "seed": 42,
       "group_size": 8,
       "lr": 1e-05,
-      "steps": 30,
+      "steps_completed": 26,
       "peak_reward": 0.188,
-      "last_10_avg": 0.188,
-      "reward_trace_sampled": [
+      "last10_avg": 0.11466666666666665,
+      "first5_avg": 0.1252,
+      "reward_trace": [
         0.188,
-        0.188
+        0.188,
+        0.0,
+        0.188,
+        0.062,
+        0.062
+      ],
+      "status": "completed",
+      "source": "bitter_lesson_campaign_v2"
+    },
+    {
+      "experiment_id": "campaign_v2_w1_qwen35-397b",
+      "model": "Qwen/Qwen3.5-397B-A17B",
+      "method": "GRPO",
+      "platform": "Tinker",
+      "task": "gsm8k",
+      "seed": 42,
+      "group_size": 8,
+      "lr": 1e-05,
+      "steps_completed": 26,
+      "peak_reward": 1.0,
+      "last10_avg": 0.9791666666666666,
+      "first5_avg": 0.975,
+      "reward_trace": [
+        0.875,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "status": "completed",
+      "source": "bitter_lesson_campaign_v2"
+    },
+    {
+      "experiment_id": "campaign_v2_w2_qwen3-8b_G16",
+      "model": "Qwen/Qwen3-8B",
+      "method": "GRPO",
+      "platform": "Tinker",
+      "task": "gsm8k",
+      "seed": 42,
+      "group_size": 16,
+      "lr": 1e-05,
+      "steps_completed": 26,
+      "peak_reward": 0.719,
+      "last10_avg": 0.38033333333333336,
+      "first5_avg": 0.4064,
+      "reward_trace": [
+        0.719,
+        0.344,
+        0.25,
+        0.125,
+        0.594,
+        0.25
+      ],
+      "status": "completed",
+      "source": "bitter_lesson_campaign_v2"
+    },
+    {
+      "experiment_id": "campaign_v2_w2_qwen3-8b_G2",
+      "model": "Qwen/Qwen3-8B",
+      "method": "GRPO",
+      "platform": "Tinker",
+      "task": "gsm8k",
+      "seed": 42,
+      "group_size": 2,
+      "lr": 1e-05,
+      "steps_completed": 26,
+      "peak_reward": 0.5,
+      "last10_avg": 0.375,
+      "first5_avg": 0.35,
+      "reward_trace": [
+        0.0,
+        0.5,
+        0.5,
+        0.25,
+        0.5,
+        0.5
+      ],
+      "status": "completed",
+      "source": "bitter_lesson_campaign_v2"
+    },
+    {
+      "experiment_id": "campaign_v2_w2_qwen3-8b_G32",
+      "model": "Qwen/Qwen3-8B",
+      "method": "GRPO",
+      "platform": "Tinker",
+      "task": "gsm8k",
+      "seed": 42,
+      "group_size": 32,
+      "lr": 1e-05,
+      "steps_completed": 11,
+      "peak_reward": 0.453,
+      "last10_avg": 0.43766666666666665,
+      "first5_avg": 0.43766666666666665,
+      "reward_trace": [
+        0.438,
+        0.453,
+        0.422
       ],
       "status": "in_progress",
-      "wave": "1-frontier",
-      "note": "Partial results (still running); sampled every 5 steps",
-      "source": "bitter_lesson_campaign_v2_partial"
+      "source": "bitter_lesson_campaign_v2"
+    },
+    {
+      "experiment_id": "campaign_v2_w2_qwen3-8b_G4",
+      "model": "Qwen/Qwen3-8B",
+      "method": "GRPO",
+      "platform": "Tinker",
+      "task": "gsm8k",
+      "seed": 42,
+      "group_size": 4,
+      "lr": 1e-05,
+      "steps_completed": 26,
+      "peak_reward": 0.75,
+      "last10_avg": 0.5208333333333334,
+      "first5_avg": 0.5,
+      "reward_trace": [
+        0.75,
+        0.5,
+        0.25,
+        0.625,
+        0.375,
+        0.625
+      ],
+      "status": "completed",
+      "source": "bitter_lesson_campaign_v2"
+    },
+    {
+      "experiment_id": "campaign_v2_w3_dsv31_s123",
+      "model": "deepseek-ai/DeepSeek-V3.1",
+      "method": "GRPO",
+      "platform": "Tinker",
+      "task": "gsm8k",
+      "seed": 123,
+      "group_size": 8,
+      "lr": 1e-05,
+      "steps_completed": 1,
+      "peak_reward": 0.875,
+      "last10_avg": 0.875,
+      "first5_avg": 0.875,
+      "reward_trace": [
+        0.875
+      ],
+      "status": "in_progress",
+      "source": "bitter_lesson_campaign_v2"
+    },
+    {
+      "experiment_id": "campaign_v2_w3_dsv31_s456",
+      "model": "deepseek-ai/DeepSeek-V3.1",
+      "method": "GRPO",
+      "platform": "Tinker",
+      "task": "gsm8k",
+      "seed": 456,
+      "group_size": 8,
+      "lr": 1e-05,
+      "steps_completed": 1,
+      "peak_reward": 1.0,
+      "last10_avg": 1.0,
+      "first5_avg": 1.0,
+      "reward_trace": [
+        1.0
+      ],
+      "status": "in_progress",
+      "source": "bitter_lesson_campaign_v2"
     }
   ]
 }

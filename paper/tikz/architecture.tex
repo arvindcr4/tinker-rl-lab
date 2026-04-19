@@ -1,145 +1,153 @@
-\documentclass[tikz,border=14pt]{standalone}
+% architecture.tex — Dual-platform system architecture diagram
+% Standalone TikZ figure; can also be \input{} into main.tex
+% Compile: pdflatex architecture.tex
+\documentclass[tikz,border=4pt]{standalone}
+
 \usepackage{tikz}
-\usetikzlibrary{positioning, fit, arrows.meta, backgrounds, calc, shadows}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric,
+                calc, fit, backgrounds}
+
+% ── Shared colour palette ────────────────────────────────────────────────────
+\definecolor{CloudBlue}    {RGB}{ 40, 110, 200}
+\definecolor{CloudBg}      {RGB}{215, 232, 255}
+\definecolor{ModalPurple}  {RGB}{120,  60, 185}
+\definecolor{ModalBg}      {RGB}{238, 220, 255}
+\definecolor{ServiceGreen} {RGB}{ 40, 155,  90}
+\definecolor{ServiceBg}    {RGB}{218, 248, 228}
+\definecolor{ArrowGray}    {RGB}{ 80,  85, 100}
+\definecolor{PanelBg}      {RGB}{248, 250, 252}
+\definecolor{PanelBorder}  {RGB}{200, 208, 218}
+\definecolor{LabelGray}    {RGB}{120, 128, 140}
+
+% ── Node styles ─────────────────────────────────────────────────────────────
+\tikzset{
+  % Platform header box
+  platform/.style={
+    rectangle, rounded corners=6pt,
+    fill=#1!15, draw=#1, line width=1.2pt,
+    font=\bfseries\scriptsize, text=#1,
+    inner sep=7pt, minimum width=4.8cm, minimum height=0.68cm,
+    align=center
+  },
+  platform/.default=CloudBlue,
+  % Sub-component inside a platform
+  subcomp/.style={
+    rectangle, rounded corners=4pt,
+    fill=white, draw=#1!60, line width=0.75pt,
+    font=\scriptsize, text=black,
+    inner sep=4pt, minimum width=2.1cm, minimum height=0.55cm,
+    align=center
+  },
+  subcomp/.default=CloudBlue,
+  % External service node
+  service/.style={
+    rectangle, rounded corners=5pt,
+    fill=ServiceBg, draw=ServiceGreen, line width=0.9pt,
+    font=\scriptsize\bfseries, text=ServiceGreen,
+    inner sep=5pt, minimum width=2.1cm, minimum height=0.58cm,
+    align=center
+  },
+  % Stat badge (small annotation)
+  statbadge/.style={
+    font=\tiny, text=LabelGray, align=center
+  },
+  % Data-flow arrows
+  dataarrow/.style={
+    ->, >=Stealth, line width=0.75pt, color=ArrowGray
+  },
+  dataarrow_blue/.style={
+    ->, >=Stealth, line width=0.75pt, color=CloudBlue!80, dashed
+  },
+  dataarrow_purple/.style={
+    ->, >=Stealth, line width=0.75pt, color=ModalPurple!80, dashed
+  }
+}
 
 \begin{document}
-\begin{tikzpicture}[
-  font=\sffamily,
-  base/.style={
-    draw, rounded corners=3pt, align=center,
-    minimum height=1.0cm, text width=2.5cm,
-    line width=0.75pt,
-    drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.13}
-  },
-  task/.style={base, fill=blue!15, draw=blue!45},
-  llmnative/.style={base, fill=green!15, draw=green!50, text width=2.3cm},
-  classicrl/.style={base, fill=orange!15, draw=orange!50, text width=2.0cm},
-  highperf/.style={base, fill=violet!15, draw=violet!50, text width=2.0cm},
-  offline/.style={base, fill=yellow!20, draw=yellow!55!orange!60, text width=2.3cm},
-  infra/.style={base, fill=gray!15, draw=gray!55, text width=2.5cm},
-  groupbox/.style={draw, dashed, rounded corners=5pt, inner sep=8pt, line width=0.6pt},
-  sidebar/.style={line width=2pt, -Stealth},
-]
+\begin{tikzpicture}[node distance=0.5cm and 0.7cm]
 
-%% ─────────────────────────────────────────────────────
-%% LAYER 1: Tasks
-%% ─────────────────────────────────────────────────────
-\node[task] (math)   at (0,0) {\textbf{Math RL}\\[2pt]{\tiny Arithmetic, GSM8K}};
-\node[task] (pref)   [right=0.7cm of math]
-  {\textbf{Preference}\\[0pt]\textbf{Learning}\\[2pt]{\tiny DPO}};
-\node[task] (distil) [right=0.7cm of pref]
-  {\textbf{Distillation}\\[2pt]{\tiny Off/On-Policy}};
+  % ── PLATFORM A: Tinker Cloud ──────────────────────────────────────────────
+  \node[platform=CloudBlue] (cloud_hdr)
+        {Tinker Cloud API\\\tiny 14 experiments \textbullet{} GRPO only \textbullet{} serverless};
 
-\begin{scope}[on background layer]
-  \node[groupbox, fill=blue!4, draw=blue!35,
-        label={[font=\sffamily\bfseries\small, text=blue!55]above:Tasks}]
-    (taskgrp) [fit=(math)(pref)(distil)] {};
-\end{scope}
+  % Sub-components inside Cloud platform
+  \node[subcomp=CloudBlue, below left=0.6cm and 0.35cm of cloud_hdr]  (c_grpo)
+        {GRPO Trainer};
+  \node[subcomp=CloudBlue, below right=0.6cm and 0.35cm of cloud_hdr] (c_inf)
+        {Inference API};
 
-%% ─────────────────────────────────────────────────────
-%% LAYER 2: RL Libraries
-%% ─────────────────────────────────────────────────────
-\node[llmnative] (trl) at ([yshift=-3.0cm]$(math)!0.5!(pref)$)
-  {\textbf{TRL}\\[2pt]{\tiny GRPO, DPO, SFT}};
-\node[classicrl] (sb3)       [right=0.45cm of trl]    {\textbf{SB3}};
-\node[classicrl] (cleanrl)   [right=0.45cm of sb3]    {\textbf{CleanRL}};
-\node[classicrl] (tianshou)  [right=0.45cm of cleanrl]{\textbf{Tianshou}};
-\node[highperf]  (pufferlib) [right=0.45cm of tianshou]{\textbf{PufferLib}};
-\node[highperf]  (rlgames)   [right=0.45cm of pufferlib]{\textbf{rl\_games}};
-\node[offline]   (d3rlpy)    [right=0.45cm of rlgames]
-  {\textbf{d3rlpy}\\[2pt]{\tiny CQL, IQL, BC}};
+  % Fit a background panel around cloud components
+  \begin{scope}[on background layer]
+    \node[rectangle, rounded corners=5pt,
+          fill=CloudBg!50, draw=CloudBlue!30, line width=0.6pt,
+          fit=(cloud_hdr)(c_grpo)(c_inf), inner sep=6pt] (cloud_panel) {};
+  \end{scope}
 
-\begin{scope}[on background layer]
-  \node[groupbox, fill=green!4, draw=green!40,
-        label={[font=\sffamily\tiny\bfseries, text=green!60!black]below:LLM-native}]
-    (llmgrp) [fit=(trl)] {};
-  \node[groupbox, fill=orange!4, draw=orange!35,
-        label={[font=\sffamily\tiny\bfseries, text=orange!70!black]below:Classic RL}]
-    (classicgrp) [fit=(sb3)(cleanrl)(tianshou)] {};
-  \node[groupbox, fill=violet!4, draw=violet!35,
-        label={[font=\sffamily\tiny\bfseries, text=violet!70!black]below:High-Perf}]
-    (highperfgrp) [fit=(pufferlib)(rlgames)] {};
-  \node[groupbox, fill=yellow!4, draw=yellow!50!orange!40,
-        label={[font=\sffamily\tiny\bfseries, text=yellow!60!black]below:Offline}]
-    (offlinegrp) [fit=(d3rlpy)] {};
-  \node[groupbox, fill=gray!3, draw=gray!30, inner sep=14pt,
-        label={[font=\sffamily\bfseries\small, text=gray!55]above:RL Libraries}]
-    (libgrp) [fit=(llmgrp)(classicgrp)(highperfgrp)(offlinegrp)] {};
-\end{scope}
+  % ── PLATFORM B: Modal H100 ────────────────────────────────────────────────
+  \node[platform=ModalPurple, below=1.6cm of cloud_hdr] (modal_hdr)
+        {Modal H100 GPU\\\tiny 6 experiments \textbullet{} PPO + custom \textbullet{} dedicated GPU};
 
-%% ─────────────────────────────────────────────────────
-%% LAYER 3: Infrastructure
-%% ─────────────────────────────────────────────────────
-\node[infra] (seedmgmt) at ([yshift=-3.0cm]$(sb3)!0.5!(tianshou)$)
-  {\textbf{Seed}\\[0pt]\textbf{Management}};
-\node[infra] (statstk)  [right=0.8cm of seedmgmt] {\textbf{Statistical Toolkit}};
-\node[infra] (docker)   [right=0.8cm of statstk]  {\textbf{Docker / CI}};
-\node[infra] (hf)       [right=0.8cm of docker]   {\textbf{HuggingFace Hub}};
+  % Sub-components inside Modal platform
+  \node[subcomp=ModalPurple, below left=0.6cm and 0.35cm of modal_hdr]  (m_ppo)
+        {PPO Trainer};
+  \node[subcomp=ModalPurple, below right=0.6cm and 0.35cm of modal_hdr] (m_cust)
+        {Custom Loop};
 
-\begin{scope}[on background layer]
-  \node[groupbox, fill=gray!6, draw=gray!40, inner sep=10pt,
-        label={[font=\sffamily\bfseries\small, text=gray!55]above:Infrastructure}]
-    (infragrp) [fit=(seedmgmt)(statstk)(docker)(hf)] {};
-\end{scope}
+  % Fit a background panel around modal components
+  \begin{scope}[on background layer]
+    \node[rectangle, rounded corners=5pt,
+          fill=ModalBg!50, draw=ModalPurple!30, line width=0.6pt,
+          fit=(modal_hdr)(m_ppo)(m_cust), inner sep=6pt] (modal_panel) {};
+  \end{scope}
 
-%% ─────────────────────────────────────────────────────
-%% Layer connectors
-%% ─────────────────────────────────────────────────────
-\begin{scope}[on background layer]
-  \draw[-Stealth, gray!40, line width=0.9pt, dashed]
-    (taskgrp.south) -- (libgrp.north);
-  \draw[-Stealth, gray!40, line width=0.9pt, dashed]
-    (libgrp.south)  -- (infragrp.north);
-\end{scope}
+  % ── EXTERNAL SERVICES (right column) ─────────────────────────────────────
+  % Place them to the right of the platform panels
+  \node[service, right=1.0cm of cloud_panel.east, yshift=0.55cm] (wb)
+        {W\&B\\{\tiny experiment logging}};
 
-%% ─────────────────────────────────────────────────────
-%% LEFT SIDE — Evaluation Protocol
-%% Anchored 2cm left of libgrp (widest layer)
-%% ─────────────────────────────────────────────────────
-\coordinate (EvalX)      at ([xshift=-1.9cm]libgrp.west);
-\coordinate (evaltop)    at (EvalX |- taskgrp.north);
-\coordinate (evalbottom) at (EvalX |- infragrp.south);
+  \node[service, below=0.55cm of wb] (hf)
+        {HuggingFace\\{\tiny checkpoints}};
 
-\draw[sidebar, color=blue!65] (evalbottom) -- (evaltop);
+  \node[service, below=0.55cm of hf] (gh)
+        {GitHub\\{\tiny code \& configs}};
 
-\node[rotate=90, anchor=south, font=\sffamily\bfseries\small, text=blue!65]
-  at ($(evaltop)!0.5!(evalbottom)$) {Evaluation Protocol};
+  % ── ARROWS: platforms → external services ────────────────────────────────
 
-\foreach \frac/\lbl in {0.18/Multi-seed (\texttimes5), 0.50/Bootstrap CI, 0.82/IQM}{
-  \draw[blue!40, line width=0.7pt]
-    ($(evaltop)!\frac!(evalbottom)$) -- ++(0.15cm,0);
-  \node[anchor=east, font=\sffamily\scriptsize, text=blue!65, xshift=-0.02cm]
-    at ($(evaltop)!\frac!(evalbottom)$) {\lbl};
-}
+  % Cloud → W&B
+  \draw[dataarrow_blue]
+        (cloud_panel.east |- wb.west) -- node[above, font=\tiny, text=CloudBlue]{metrics} (wb.west);
 
-%% ─────────────────────────────────────────────────────
-%% RIGHT SIDE — Outputs
-%% Anchored 2.8cm right of libgrp; labels inside the gap
-%% ─────────────────────────────────────────────────────
-\coordinate (OutX)      at ([xshift=2.0cm]libgrp.east);
-\coordinate (outtop)    at (OutX |- taskgrp.north);
-\coordinate (outbottom) at (OutX |- infragrp.south);
+  % Cloud → HuggingFace
+  \draw[dataarrow_blue]
+        (cloud_panel.east |- hf.west) -- node[above, font=\tiny, text=CloudBlue]{ckpts} (hf.west);
 
-\draw[sidebar, color=teal!70] (outbottom) -- (outtop);
+  % Modal → W&B
+  \draw[dataarrow_purple]
+        (modal_panel.east |- wb.west)
+        .. controls +(1.0,0) and +(-0.4,0.4) ..
+        (wb.south west);
 
-%% "Outputs" label rotated on the arrow, with three sub-labels also rotated
-\node[rotate=-90, anchor=south, font=\sffamily\bfseries\small, text=teal!70]
-  at ($(outtop)!0.5!(outbottom)$) {Outputs};
+  % Modal → HuggingFace
+  \draw[dataarrow_purple]
+        (modal_panel.east |- hf.west) -- node[below, font=\tiny, text=ModalPurple]{ckpts} (hf.west);
 
-%% Labels between libgrp.east and the Outputs arrow (anchor=east toward arrow)
-\node[anchor=east, font=\sffamily\scriptsize, text=teal!70, xshift=-0.12cm]
-  at ($(outtop)!0.18!(outbottom)$) {Paper / NeurIPS};
+  % Modal → GitHub
+  \draw[dataarrow_purple]
+        (modal_panel.east |- gh.west) -- node[below, font=\tiny, text=ModalPurple]{sync} (gh.west);
 
-\node[anchor=east, font=\sffamily\scriptsize, text=teal!70, xshift=-0.12cm]
-  at ($(outtop)!0.50!(outbottom)$) {Figures};
+  % Cloud → GitHub
+  \draw[dataarrow_blue]
+        (cloud_panel.east |- gh.west)
+        .. controls +(1.2,0) and +(-0.4,-0.35) ..
+        (gh.north west);
 
-\node[anchor=east, font=\sffamily\scriptsize, text=teal!70, xshift=-0.12cm]
-  at ($(outtop)!0.82!(outbottom)$) {Artifacts};
-
-\foreach \frac in {0.18,0.50,0.82}{
-  \draw[teal!40, line width=0.7pt]
-    ([xshift=-0.12cm]$(outtop)!\frac!(outbottom)$) -- ++(0.12cm,0);
-}
+  % ── LEGEND ───────────────────────────────────────────────────────────────
+  \node[font=\tiny, text=LabelGray, align=left,
+        below=0.4cm of modal_panel.south west, anchor=north west]
+  {%
+    \textcolor{CloudBlue!80}{-- --} Tinker Cloud data flow \quad
+    \textcolor{ModalPurple!80}{-- --} Modal data flow%
+  };
 
 \end{tikzpicture}
 \end{document}

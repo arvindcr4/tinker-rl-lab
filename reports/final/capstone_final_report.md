@@ -1159,6 +1159,30 @@ We report 20 hypothesis tests across the paper. To control the false discovery r
 
 ---
 
+### 5.16 Task 6 — Deterministic Statistical Rigor Pass (NEW)
+
+To harden every comparison reported in Tables 1–4 of the paper, we added a deterministic rigor pass that produces, for each row:
+
+1. 95% percentile bootstrap confidence interval (B = 10,000 resamples) on the point estimate (full-trace mean, last-10 mean, or Δ against a baseline);
+2. Cohen's \(d\) with a 95% Hedges–Olkin analytical CI (and Hedges' \(g\) small-sample correction) — one-sample form for Table 3, two-sample pooled form for Tables 1, 2, and 4;
+3. a raw p-value from the appropriate test (Mann–Whitney \(U\) for within-experiment late-vs-early, Welch's \(t\) for cross-library, one-sample \(t\) for post-RL vs baseline, Welch + Mann–Whitney for PPO vs GRPO);
+4. a Bonferroni-corrected p-value across the paper-wide family of \(k = 38\) tests (plus BH-FDR as a less conservative alternative, logged in `experiments/statistical_analysis.json`).
+
+All random draws are routed through `np.random.SeedSequence(MASTER_SEED=20260506)` whose `spawn_key` is the BLAKE2 digest of a human-readable tag. Running the pipeline twice produces byte-identical `experiments/statistical_analysis.json` and `experiments/stat_rigor_tables.json`. The end-to-end flow is `experiments/compute_statistics.py` → `experiments/render_stat_rigor_tex.py` → `paper/sections/stat_rigor_updates.tex`, which is `\input`'d into the appendix (Appendix G: *Statistical Protocol*).
+
+**Headline numbers (n = 30 per arm, matched single-seed):**
+
+| Comparison | Effect (last-10) | 95% CI | Cohen's \(d\) | Welch p (raw) | Welch p (Bonf., k = 2) | MW p (Bonf., k = 2) |
+|---|---|---|---|---|---|---|
+| PPO vs GRPO on Qwen3-8B | +0.006 | [−0.119, +0.119] | +0.01 | 0.973 | 1.000 | 1.000 |
+| PPO vs GRPO on Llama-3.1-8B-Inst | +0.081 (GRPO–PPO = −0.081) | [−0.154, −0.010] | −0.56 | 0.035 | 0.070 | 0.012 \(^{*}\) |
+
+The parametric Welch test on the Llama pair no longer clears Bonferroni at \(k = 2\) when using the full 30-step per-step trace (\(d = -0.56\); previously the paper reported \(d = 12.75\) based on pooled 5-seed aggregates that cannot be reproduced from the single-seed traces in `master_results.json`). The non-parametric Mann–Whitney test on the same data does survive Bonferroni (\(p_{\text{MW}}^{\text{Bonf}} = 0.012\)), and the bootstrap CI on the difference excludes zero. We therefore state the Llama-PPO-advantage claim conservatively as *statistically detectable under the non-parametric test and a medium effect in Cohen's \(d\) terms*, rather than *very large* as implied by the previous pooled aggregate. This is the single most material change from the rigor pass.
+
+All other headline claims survive: TRL-GRPO cross-seed mean \(= 0.734\) (95% CI [0.672, 0.783]; one-sample \(t\) vs 0.5 gives \(t(4) = 7.44\), \(p < 0.01\), Cohen's \(d = 3.33\)); every GSM8K scaling delta in Table 3 survives Bonferroni at \(k = 7\); and the three Classic-RL PPO libraries (SB3, CleanRL, Tianshou) each show \(d > 14\) against the TRL-GRPO reference with \(p_{\text{Bonf}} < 10^{-3}\).
+
+---
+
 ## 6. Summary of Findings
 
 | # | Finding | Type | Evidence | Source |

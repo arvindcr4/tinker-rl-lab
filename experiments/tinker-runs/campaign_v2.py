@@ -234,9 +234,12 @@ def run_experiment(exp):
             "timestamp": datetime.utcnow().isoformat(),
         }
 
-        if wb_run:
-            wb_run.summary.update({"peak_reward": peak, "last10_avg": last10})
-            wb_run.finish()
+        try:
+            if wb_run:
+                wb_run.summary.update({"peak_reward": peak, "last10_avg": last10})
+                wb_run.finish()
+        except Exception as wb_err:
+            print(f"  [{tag}] W&B finish error (results saved): {wb_err}", flush=True)
 
         print(f"  ✓ [{tag}] DONE peak={peak:.3f} last10={last10:.3f}", flush=True)
         return result

@@ -5,8 +5,8 @@ import modal, os, json
 
 app = modal.App("tinker-rl-trl-grpo")
 
-HF_TOKEN = os.environ["HF_TOKEN"]
-WANDB_KEY = os.environ["WANDB_API_KEY"]
+HF_TOKEN = os.environ.get("HF_TOKEN", "")
+WANDB_KEY = os.environ.get("WANDB_API_KEY", "")
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
@@ -126,15 +126,16 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
     training_args = GRPOConfig(
         output_dir=f"/tmp/trl-grpo-{tag}",
         learning_rate=1e-5,
-        per_device_train_batch_size=2,
+        per_device_train_batch_size=8,
         num_generations=8,  # group size
+        generation_batch_size=8,
         max_completion_length=512,
-        max_prompt_length=512,
         num_train_epochs=1,
+        max_steps=30,
         logging_steps=1,
         report_to="wandb",
         bf16=True,
-        gradient_accumulation_steps=2,
+        gradient_accumulation_steps=1,
         save_strategy="no",
     )
     

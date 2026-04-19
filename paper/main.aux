@@ -67,7 +67,7 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Statistical Methodology}{5}{subsection.4.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Compute Resources}{5}{subsection.4.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Tinker API (14 experiments).}{5}{section*.19}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Modal A100 GPU cluster (6 experiments).}{5}{section*.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Modal H100 GPU cluster (6 experiments).}{5}{section*.20}\protected@file@percent }
 \citation{agarwal2021deep}
 \citation{agarwal2021deep}
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Experiment workflow pipeline. Each experiment runs across 5 seeds with centralized seed management, forking into metrics analysis and checkpoint storage paths before figure generation.}}{6}{figure.caption.18}\protected@file@percent }
@@ -113,50 +113,53 @@
 \newlabel{tab:task_grpo}{{8}{10}{GRPO Performance Across Diverse Tasks. Experiments conducted by team members on consumer-grade and cloud hardware}{table.caption.29}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.12}KL Divergence Analysis}{10}{subsection.5.12}\protected@file@percent }
 \newlabel{sec:kl}{{5.12}{10}{KL Divergence Analysis}{subsection.5.12}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.13}Cross-Architecture Tool-Use}{10}{subsection.5.13}\protected@file@percent }
-\newlabel{sec:tool_use_cross_arch}{{5.13}{10}{Cross-Architecture Tool-Use}{subsection.5.13}{}}
+\@writefile{toc}{\contentsline {paragraph}{Outcome.}{10}{section*.36}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Qualitative Observations.}{10}{section*.37}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Cross-Architecture Scaling: GRPO training reward on GSM8K across model families and scale tiers (Tinker API, single seed). Peak and last-10-step mean reward reported. $\dagger $~Training interrupted; reported metrics are from available steps. ``---'' entries did not complete due to platform failures.}}{11}{table.caption.31}\protected@file@percent }
 \newlabel{tab:cross_arch_scaling}{{9}{11}{Cross-Architecture Scaling: GRPO training reward on GSM8K across model families and scale tiers (Tinker API, single seed). Peak and last-10-step mean reward reported. $\dagger $~Training interrupted; reported metrics are from available steps. ``---'' entries did not complete due to platform failures}{table.caption.31}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Dense vs.~MoE at Matched Active Parameters. GRPO training reward (peak and last-10-step mean) on GSM8K via Tinker API. $\dagger $~Training interrupted; reported metrics are from available steps.}}{11}{table.caption.32}\protected@file@percent }
 \newlabel{tab:dense_moe}{{10}{11}{Dense vs.~MoE at Matched Active Parameters. GRPO training reward (peak and last-10-step mean) on GSM8K via Tinker API. $\dagger $~Training interrupted; reported metrics are from available steps}{table.caption.32}{}}
-\@writefile{toc}{\contentsline {paragraph}{Table footnotes (results section).}{11}{section*.38}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.13}Cross-Architecture Tool-Use}{11}{subsection.5.13}\protected@file@percent }
+\newlabel{sec:tool_use_cross_arch}{{5.13}{11}{Cross-Architecture Tool-Use}{subsection.5.13}{}}
+\@writefile{toc}{\contentsline {paragraph}{Table footnotes.}{11}{section*.39}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Frontier Model Evaluation: GSM8K GRPO training reward via Tinker API. Peak and last-10-step mean reward reported. All metrics are training rewards (single seed); held-out accuracy evaluation was not completed. $\dagger $~Training interrupted; reported metrics are from available steps.}}{12}{table.caption.33}\protected@file@percent }
 \newlabel{tab:frontier}{{11}{12}{Frontier Model Evaluation: GSM8K GRPO training reward via Tinker API. Peak and last-10-step mean reward reported. All metrics are training rewards (single seed); held-out accuracy evaluation was not completed. $\dagger $~Training interrupted; reported metrics are from available steps}{table.caption.33}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces PPO vs.~GRPO Comparison: GSM8K training reward (peak and last-10-step mean) compute efficiency. Training cost, throughput, and VRAM figures not logged during runs; KL tracking failed due to gradient graph error (see footnote). Training cost reported in A100-hours; throughput in tokens/second/GPU.}}{12}{table.caption.34}\protected@file@percent }
-\newlabel{tab:ppo_grpo}{{12}{12}{PPO vs.~GRPO Comparison: GSM8K training reward (peak and last-10-step mean) compute efficiency. Training cost, throughput, and VRAM figures not logged during runs; KL tracking failed due to gradient graph error (see footnote). Training cost reported in A100-hours; throughput in tokens/second/GPU}{table.caption.34}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces PPO vs.~GRPO Comparison: GSM8K training reward (peak and last-10-step mean). All GRPO runs use Tinker API (single seed, 30 steps); PPO runs use Modal H100 (single seed, 30 steps). Bold indicates the higher last-10 average for each model pair.}}{12}{table.caption.34}\protected@file@percent }
+\newlabel{tab:ppo_grpo}{{12}{12}{PPO vs.~GRPO Comparison: GSM8K training reward (peak and last-10-step mean). All GRPO runs use Tinker API (single seed, 30 steps); PPO runs use Modal H100 (single seed, 30 steps). Bold indicates the higher last-10 average for each model pair}{table.caption.34}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {6}Reproducibility}{12}{section.6}\protected@file@percent }
 \newlabel{sec:reproducibility}{{6}{12}{Reproducibility}{section.6}{}}
-\@writefile{toc}{\contentsline {paragraph}{Team Model Checkpoints.}{12}{section*.39}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Team Model Checkpoints.}{12}{section*.40}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Limitations}{12}{section.7}\protected@file@percent }
+\newlabel{sec:limitations}{{7}{12}{Limitations}{section.7}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Step-level reward comparison between GRPO (Tinker) and PPO (Modal H100) on Qwen3-8B GSM8K. Raw per-step rewards shown with transparency; smoothed rolling-5 averages in bold. The shaded region marks the last-10 evaluation window. GRPO achieves a higher last-10 average (34.4\%) vs.~PPO (22.5\%) despite PPO reaching a higher peak (75\% vs.~62.5\%). PPO exhibits substantially higher volatility (std 0.284 vs.~0.147).}}{13}{figure.caption.35}\protected@file@percent }
 \newlabel{fig:ppo_vs_grpo}{{9}{13}{Step-level reward comparison between GRPO (Tinker) and PPO (Modal H100) on Qwen3-8B GSM8K. Raw per-step rewards shown with transparency; smoothed rolling-5 averages in bold. The shaded region marks the last-10 evaluation window. GRPO achieves a higher last-10 average (34.4\%) vs.~PPO (22.5\%) despite PPO reaching a higher peak (75\% vs.~62.5\%). PPO exhibits substantially higher volatility (std 0.284 vs.~0.147)}{figure.caption.35}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces KL Divergence at Training Completion across model scales. Mean $\pm $ SE across 5 seeds; target KL budget set to 0.01 per step. All entries are ``---'': the KL tracking experiment failed due to a PyTorch gradient graph error (\texttt  {element 0 of tensors does not require grad and does not have a grad\_fn}), preventing any KL measurements.}}{13}{table.caption.36}\protected@file@percent }
-\newlabel{tab:kl_divergence}{{13}{13}{KL Divergence at Training Completion across model scales. Mean $\pm $ SE across 5 seeds; target KL budget set to 0.01 per step. All entries are ``---'': the KL tracking experiment failed due to a PyTorch gradient graph error (\texttt {element 0 of tensors does not require grad and does not have a grad\_fn}), preventing any KL measurements}{table.caption.36}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {7}Limitations}{13}{section.7}\protected@file@percent }
-\newlabel{sec:limitations}{{7}{13}{Limitations}{section.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces Cross-Architecture Tool-Use: Function-calling accuracy (\%) after GRPO post-training. Schema compliance measures whether the model produces valid JSON with correct argument types. ``---'' entries either failed due to JWT authentication expiry or scored 0\% (task too difficult for the model).}}{13}{table.caption.38}\protected@file@percent }
+\newlabel{tab:tool_use_cross_arch}{{13}{13}{Cross-Architecture Tool-Use: Function-calling accuracy (\%) after GRPO post-training. Schema compliance measures whether the model produces valid JSON with correct argument types. ``---'' entries either failed due to JWT authentication expiry or scored 0\% (task too difficult for the model)}{table.caption.38}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Infrastructure Failures}{13}{subsection.7.1}\protected@file@percent }
 \newlabel{sec:infra_failures}{{7.1}{13}{Infrastructure Failures}{subsection.7.1}{}}
-\@writefile{toc}{\contentsline {paragraph}{JWT Token Expiration (Tinker API).}{13}{section*.40}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Cross-Architecture Tool-Use: Function-calling accuracy (\%) after GRPO post-training. Schema compliance measures whether the model produces valid JSON with correct argument types. ``---'' entries either failed due to JWT authentication expiry or scored 0\% (task too difficult for the model).}}{14}{table.caption.37}\protected@file@percent }
-\newlabel{tab:tool_use_cross_arch}{{14}{14}{Cross-Architecture Tool-Use: Function-calling accuracy (\%) after GRPO post-training. Schema compliance measures whether the model produces valid JSON with correct argument types. ``---'' entries either failed due to JWT authentication expiry or scored 0\% (task too difficult for the model)}{table.caption.37}{}}
-\@writefile{toc}{\contentsline {paragraph}{Modal Timeout (60-Minute Hard Limit).}{14}{section*.41}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{KL Divergence Tracking Bug.}{14}{section*.42}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Weights \& Biases Step-Level Data Loss.}{14}{section*.43}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{JWT Token Expiration (Tinker API).}{13}{section*.41}\protected@file@percent }
+\citation{henderson2018deep}
+\@writefile{toc}{\contentsline {paragraph}{Modal Timeout (60-Minute Hard Limit).}{14}{section*.42}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{KL Divergence Tracking Bug.}{14}{section*.43}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Weights \& Biases Step-Level Data Loss.}{14}{section*.44}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Methodological Limitations}{14}{subsection.7.2}\protected@file@percent }
 \newlabel{sec:method_limits}{{7.2}{14}{Methodological Limitations}{subsection.7.2}{}}
-\@writefile{toc}{\contentsline {paragraph}{Closed-Source Training Implementation (Tinker).}{14}{section*.44}\protected@file@percent }
-\citation{henderson2018deep}
+\@writefile{toc}{\contentsline {paragraph}{Closed-Source Training Implementation (Tinker).}{14}{section*.45}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Short Training Horizons (30 Steps).}{14}{section*.46}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Single-Seed Tinker Experiments.}{14}{section*.47}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Train-Set Reward as the Primary Metric.}{14}{section*.48}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Tool-Use Task: 0\% Reward.}{14}{section*.49}\protected@file@percent }
 \citation{cobbe2021training}
 \citation{chen2021codex}
-\@writefile{toc}{\contentsline {paragraph}{Short Training Horizons (30 Steps).}{15}{section*.45}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Single-Seed Tinker Experiments.}{15}{section*.46}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Train-Set Reward as the Primary Metric.}{15}{section*.47}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Tool-Use Task: 0\% Reward.}{15}{section*.48}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Broader Impact}{15}{subsection.7.3}\protected@file@percent }
 \newlabel{sec:impact}{{7.3}{15}{Broader Impact}{subsection.7.3}{}}
-\@writefile{toc}{\contentsline {paragraph}{Alignment and Misuse.}{15}{section*.49}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Democratizing RL-for-LLM Research.}{15}{section*.50}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Training Data and Privacy.}{15}{section*.51}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{No Direct Dual-Use Concern.}{15}{section*.52}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Alignment and Misuse.}{15}{section*.50}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Democratizing RL-for-LLM Research.}{15}{section*.51}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Training Data and Privacy.}{15}{section*.52}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{No Direct Dual-Use Concern.}{15}{section*.53}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Reproducibility Statement.}{15}{section*.54}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Conclusion}{15}{section.8}\protected@file@percent }
+\newlabel{sec:conclusion}{{8}{15}{Conclusion}{section.8}{}}
 \bibstyle{plainnat}
 \bibcite{henderson2018deep}{{1}{}{{}}{{}}}
 \bibcite{shao2024deepseekmath}{{2}{}{{}}{{}}}
@@ -167,9 +170,6 @@
 \bibcite{pineau2020improving}{{7}{}{{}}{{}}}
 \bibcite{hu2022lora}{{8}{}{{}}{{}}}
 \bibcite{schulman2017proximal}{{9}{}{{}}{{}}}
-\@writefile{toc}{\contentsline {paragraph}{Reproducibility Statement.}{16}{section*.53}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {8}Conclusion}{16}{section.8}\protected@file@percent }
-\newlabel{sec:conclusion}{{8}{16}{Conclusion}{section.8}{}}
 \bibcite{ouyang2022training}{{10}{}{{}}{{}}}
 \bibcite{lynnerup2019survey}{{11}{}{{}}{{}}}
 \bibcite{bettini2023benchmarl}{{12}{}{{}}{{}}}
@@ -184,19 +184,19 @@
 \bibcite{zhang2025verifybench}{{21}{}{{}}{{}}}
 \@writefile{toc}{\contentsline {section}{\numberline {A}Compute Resources}{17}{appendix.A}\protected@file@percent }
 \newlabel{app:compute}{{A}{17}{Compute Resources}{appendix.A}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Compute allocation by platform and experiment group.}}{17}{table.caption.57}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {B}Hyperparameter Tables}{17}{appendix.B}\protected@file@percent }
 \newlabel{app:hyperparams}{{B}{17}{Hyperparameter Tables}{appendix.B}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Hyperparameter sweep ranges for sensitivity analysis.}}{17}{table.caption.58}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {C}Additional Results}{17}{appendix.C}\protected@file@percent }
 \newlabel{app:results}{{C}{17}{Additional Results}{appendix.C}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Compute allocation by platform and experiment group.}}{18}{table.caption.56}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces Hyperparameter sweep ranges for sensitivity analysis.}}{18}{table.caption.57}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Final accuracy comparison across RL libraries on the arithmetic task, sorted by performance. Error bars indicate $\pm 1$ standard deviation across 5 seeds. Dashed lines show floor (random baseline, 0.5\%) and ceiling (oracle, 100\%).}}{19}{figure.caption.58}\protected@file@percent }
-\newlabel{fig:comparison_bars}{{10}{19}{Final accuracy comparison across RL libraries on the arithmetic task, sorted by performance. Error bars indicate $\pm 1$ standard deviation across 5 seeds. Dashed lines show floor (random baseline, 0.5\%) and ceiling (oracle, 100\%)}{figure.caption.58}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Cross-seed reproducibility analysis for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. The mean is significantly above 50\% ($t = 7.44$, $p < 0.001$), confirming that GRPO produces reliable learning signal even at 0.5B scale.}}{19}{figure.caption.59}\protected@file@percent }
-\newlabel{fig:trl_seeds}{{11}{19}{Cross-seed reproducibility analysis for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. The mean is significantly above 50\% ($t = 7.44$, $p < 0.001$), confirming that GRPO produces reliable learning signal even at 0.5B scale}{figure.caption.59}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Final accuracy comparison across RL libraries on the arithmetic task, sorted by performance. Error bars indicate $\pm 1$ standard deviation across 5 seeds. Dashed lines show floor (random baseline, 0.5\%) and ceiling (oracle, 100\%).}}{18}{figure.caption.59}\protected@file@percent }
+\newlabel{fig:comparison_bars}{{10}{18}{Final accuracy comparison across RL libraries on the arithmetic task, sorted by performance. Error bars indicate $\pm 1$ standard deviation across 5 seeds. Dashed lines show floor (random baseline, 0.5\%) and ceiling (oracle, 100\%)}{figure.caption.59}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Cross-seed reproducibility analysis for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. The mean is significantly above 50\% ($t = 7.44$, $p < 0.001$), confirming that GRPO produces reliable learning signal even at 0.5B scale.}}{18}{figure.caption.60}\protected@file@percent }
+\newlabel{fig:trl_seeds}{{11}{18}{Cross-seed reproducibility analysis for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. The mean is significantly above 50\% ($t = 7.44$, $p < 0.001$), confirming that GRPO produces reliable learning signal even at 0.5B scale}{figure.caption.60}{}}
 \citation{agarwal2021deep}
 \citation{colas2019hitchhiker}
 \citation{jordan2024benchmarking}
 \citation{cobbe2021training}
 \providecommand\NAT@force@numbers{}\NAT@force@numbers
-\gdef \@abspage@last{22}
+\gdef \@abspage@last{21}

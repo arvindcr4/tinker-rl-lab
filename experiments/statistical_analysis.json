@@ -1,0 +1,438 @@
+{
+  "metadata": {
+    "source_file": "/home/user/workspace/tinker-rl-lab/experiments/all_results_consolidated.json",
+    "experiments_analyzed": [
+      "frontier_gsm8k_deepseek-v3.1",
+      "scale_gsm8k_qwen3-8b",
+      "ppo_qwen3-8b",
+      "ppo_llama-8b-inst"
+    ],
+    "n_bootstrap": 10000,
+    "ci_level": 0.95,
+    "notes": {
+      "scale_gsm8k_qwen3-8b": "Tinker GRPO experiment on Qwen3-8B (gsm8k task)",
+      "ppo_qwen3-8b": "Modal PPO-REINFORCE experiment on Qwen3-8B (gsm8k task)",
+      "ppo_llama-8b-inst": "Modal PPO-REINFORCE experiment on Llama-3.1-8B-Instruct (gsm8k task)",
+      "frontier_gsm8k_deepseek-v3.1": "Tinker GRPO on DeepSeek-V3.1 (frontier model)"
+    }
+  },
+  "descriptive_statistics": {
+    "frontier_gsm8k_deepseek-v3.1": {
+      "mean": 0.85,
+      "median": 0.875,
+      "std": 0.10418859418331135,
+      "min": 0.625,
+      "max": 1.0,
+      "iqr": 0.125,
+      "skewness": -0.1790421686972105,
+      "kurtosis": -0.5592286501377428,
+      "n": 20
+    },
+    "scale_gsm8k_qwen3-8b": {
+      "mean": 0.32083333333333336,
+      "median": 0.3125,
+      "std": 0.14656017555076573,
+      "min": 0.0625,
+      "max": 0.625,
+      "iqr": 0.25,
+      "skewness": 0.09830386761599996,
+      "kurtosis": -0.8721211172134549,
+      "n": 30
+    },
+    "ppo_qwen3-8b": {
+      "mean": 0.2833333333333333,
+      "median": 0.25,
+      "std": 0.2841603885779677,
+      "min": 0.0,
+      "max": 1.0,
+      "iqr": 0.5,
+      "skewness": 0.5957008047967736,
+      "kurtosis": -0.5061486050075352,
+      "n": 30
+    },
+    "ppo_llama-8b-inst": {
+      "mean": 0.95,
+      "median": 1.0,
+      "std": 0.12105854952787556,
+      "min": 0.5,
+      "max": 1.0,
+      "iqr": 0.0,
+      "skewness": -2.372239201176863,
+      "kurtosis": 4.899653979238751,
+      "n": 30
+    }
+  },
+  "bootstrap_confidence_intervals": {
+    "frontier_gsm8k_deepseek-v3.1": {
+      "ci_mean": {
+        "lower": 0.80625,
+        "upper": 0.89375,
+        "point_estimate": 0.85
+      },
+      "ci_last10_avg": {
+        "lower": 0.8125,
+        "upper": 0.9125,
+        "point_estimate": 0.8625
+      }
+    },
+    "scale_gsm8k_qwen3-8b": {
+      "ci_mean": {
+        "lower": 0.26875,
+        "upper": 0.3729166666666667,
+        "point_estimate": 0.32083333333333336
+      },
+      "ci_last10_avg": {
+        "lower": 0.25,
+        "upper": 0.3875,
+        "point_estimate": 0.31875
+      }
+    },
+    "ppo_qwen3-8b": {
+      "ci_mean": {
+        "lower": 0.18333333333333332,
+        "upper": 0.38333333333333336,
+        "point_estimate": 0.2833333333333333
+      },
+      "ci_last10_avg": {
+        "lower": 0.175,
+        "upper": 0.525,
+        "point_estimate": 0.35
+      }
+    },
+    "ppo_llama-8b-inst": {
+      "ci_mean": {
+        "lower": 0.9,
+        "upper": 0.9916666666666667,
+        "point_estimate": 0.95
+      },
+      "ci_last10_avg": {
+        "lower": 0.875,
+        "upper": 1.0,
+        "point_estimate": 0.95
+      }
+    }
+  },
+  "effect_sizes": {
+    "grpo_vs_ppo_qwen3-8b": {
+      "cohens_d": 0.16586831512393213,
+      "magnitude": "negligible",
+      "interpretation": "GRPO Qwen3-8B vs PPO Qwen3-8B (n=30 each)",
+      "grpo_mean": 0.32083333333333336,
+      "ppo_mean": 0.2833333333333333
+    },
+    "early_vs_late": {
+      "frontier_gsm8k_deepseek-v3.1": {
+        "cohens_d": 0.23533936216582105,
+        "magnitude": "small",
+        "early_mean": 0.8375,
+        "late_mean": 0.8625,
+        "interpretation": "Late (last 10) vs Early (first 10) for frontier_gsm8k_deepseek-v3.1"
+      },
+      "scale_gsm8k_qwen3-8b": {
+        "cohens_d": 0.5372535950459102,
+        "magnitude": "medium",
+        "early_mean": 0.24375,
+        "late_mean": 0.31875,
+        "interpretation": "Late (last 10) vs Early (first 10) for scale_gsm8k_qwen3-8b"
+      },
+      "ppo_qwen3-8b": {
+        "cohens_d": 0.07947194142390251,
+        "magnitude": "negligible",
+        "early_mean": 0.325,
+        "late_mean": 0.35,
+        "interpretation": "Late (last 10) vs Early (first 10) for ppo_qwen3-8b"
+      },
+      "ppo_llama-8b-inst": {
+        "cohens_d": -0.268328157299975,
+        "magnitude": "small",
+        "early_mean": 0.975,
+        "late_mean": 0.95,
+        "interpretation": "Late (last 10) vs Early (first 10) for ppo_llama-8b-inst"
+      }
+    },
+    "llama_ppo_vs_qwen_ppo": {
+      "cohens_d": 3.0524201998259057,
+      "magnitude": "large",
+      "interpretation": "PPO Llama-8B vs PPO Qwen3-8B (n=30 each)",
+      "llama_mean": 0.95,
+      "qwen_mean": 0.2833333333333333
+    }
+  },
+  "trend_analysis": {
+    "frontier_gsm8k_deepseek-v3.1": {
+      "mann_kendall": {
+        "S": 11,
+        "tau": 0.05789473684210526,
+        "z": 0.34900240637988805,
+        "p_value": 0.7270875029947517,
+        "trend": "increasing",
+        "significant": false
+      },
+      "linear_regression": {
+        "slope": 0.0018796992481203006,
+        "intercept": 0.8321428571428571,
+        "r_squared": 0.011392116655274544,
+        "p_value": 0.6542422400836538,
+        "se": 0.004127261041447234,
+        "significant": false
+      }
+    },
+    "scale_gsm8k_qwen3-8b": {
+      "mann_kendall": {
+        "S": 57,
+        "tau": 0.1310344827586207,
+        "z": 1.008558896485887,
+        "p_value": 0.3131862283743494,
+        "trend": "increasing",
+        "significant": false
+      },
+      "linear_regression": {
+        "slope": 0.0029477196885428244,
+        "intercept": 0.2780913978494624,
+        "r_squared": 0.0313503297978802,
+        "p_value": 0.3492653920141635,
+        "se": 0.003096488540214051,
+        "significant": false
+      }
+    },
+    "ppo_qwen3-8b": {
+      "mann_kendall": {
+        "S": -5,
+        "tau": -0.011494252873563218,
+        "z": -0.07548961637037198,
+        "p_value": 0.9398251588997579,
+        "trend": "decreasing",
+        "significant": false
+      },
+      "linear_regression": {
+        "slope": -0.0014460511679644046,
+        "intercept": 0.30430107526881717,
+        "r_squared": 0.002006974930626755,
+        "p_value": 0.814156619545077,
+        "se": 0.00609392947839874,
+        "significant": false
+      }
+    },
+    "ppo_llama-8b-inst": {
+      "mann_kendall": {
+        "S": -19,
+        "tau": -0.04367816091954023,
+        "z": -0.4992941927825683,
+        "p_value": 0.6175721456113974,
+        "trend": "decreasing",
+        "significant": false
+      },
+      "linear_regression": {
+        "slope": -0.000778642936596218,
+        "intercept": 0.9612903225806451,
+        "r_squared": 0.0032061767977491344,
+        "p_value": 0.7663155115295602,
+        "se": 0.0025945871820342616,
+        "significant": false
+      }
+    }
+  },
+  "volatility_analysis": {
+    "frontier_gsm8k_deepseek-v3.1": {
+      "rolling_std_window5": [
+        null,
+        null,
+        null,
+        null,
+        0.10458250331675945,
+        0.11180339887498948,
+        0.13693063937629152,
+        0.08838834764831845,
+        0.10458250331675945,
+        0.14252192813739223,
+        0.14252192813739223,
+        0.10458250331675945,
+        0.10458250331675945,
+        0.10458250331675945,
+        0.10458250331675945,
+        0.10458250331675945,
+        0.08838834764831845,
+        0.10458250331675945,
+        0.10458250331675945,
+        0.08838834764831845
+      ],
+      "mean_rolling_std": 0.10876159170761598,
+      "coefficient_of_variation": 0.12257481668624864,
+      "max_drawdown": 0.375
+    },
+    "scale_gsm8k_qwen3-8b": {
+      "rolling_std_window5": [
+        null,
+        null,
+        null,
+        null,
+        0.1926379375927805,
+        0.18957188610128875,
+        0.1711632992203644,
+        0.11353688827865595,
+        0.11353688827865595,
+        0.08149003006503311,
+        0.05590169943749474,
+        0.12960275845829825,
+        0.20444284042245156,
+        0.2044428404224516,
+        0.1734304615688951,
+        0.1688657010763287,
+        0.1688657010763287,
+        0.11353688827865593,
+        0.07126096406869611,
+        0.0625,
+        0.07126096406869613,
+        0.14388580541526672,
+        0.14921670482891652,
+        0.14921670482891652,
+        0.14921670482891652,
+        0.14921670482891652,
+        0.10269797953221865,
+        0.07126096406869611,
+        0.12022115038544591,
+        0.09882117688026186
+      ],
+      "mean_rolling_std": 0.13153083246202427,
+      "coefficient_of_variation": 0.45681093678160745,
+      "max_drawdown": 0.5
+    },
+    "ppo_qwen3-8b": {
+      "rolling_std_window5": [
+        null,
+        null,
+        null,
+        null,
+        0.4183300132670378,
+        0.4183300132670378,
+        0.4472135954999579,
+        0.4472135954999579,
+        0.4183300132670378,
+        0.25,
+        0.25,
+        0.25,
+        0.22360679774997896,
+        0.22360679774997896,
+        0.25,
+        0.22360679774997896,
+        0.22360679774997894,
+        0.13693063937629155,
+        0.13693063937629155,
+        0.13693063937629155,
+        0.2091650066335189,
+        0.2091650066335189,
+        0.22360679774997896,
+        0.2738612787525831,
+        0.2738612787525831,
+        0.2850438562747845,
+        0.32596012026013244,
+        0.30618621784789724,
+        0.33541019662496846,
+        0.30618621784789724
+      ],
+      "mean_rolling_std": 0.277041627588757,
+      "coefficient_of_variation": 1.0029190185104744,
+      "max_drawdown": 1.0
+    },
+    "ppo_llama-8b-inst": {
+      "rolling_std_window5": [
+        null,
+        null,
+        null,
+        null,
+        0.11180339887498948,
+        0.11180339887498948,
+        0.11180339887498947,
+        0.11180339887498947,
+        0.0,
+        0.0,
+        0.0,
+        0.22360679774997896,
+        0.22360679774997896,
+        0.22360679774997896,
+        0.22360679774997902,
+        0.22360679774997902,
+        0.0,
+        0.0,
+        0.11180339887498948,
+        0.11180339887498948,
+        0.11180339887498948,
+        0.11180339887498947,
+        0.11180339887498947,
+        0.11180339887498948,
+        0.11180339887498948,
+        0.11180339887498948,
+        0.11180339887498947,
+        0.11180339887498947,
+        0.11180339887498948,
+        0.11180339887498948
+      ],
+      "mean_rolling_std": 0.1118033988749895,
+      "coefficient_of_variation": 0.12743005213460587,
+      "max_drawdown": 0.5
+    }
+  },
+  "cross_seed_analysis": {
+    "seeds": [
+      42,
+      123,
+      456,
+      789,
+      1024
+    ],
+    "accuracies": [
+      0.735,
+      0.81,
+      0.62,
+      0.74,
+      0.765
+    ],
+    "model": "Qwen2.5-0.5B",
+    "descriptive": {
+      "mean": 0.7340000000000001,
+      "median": 0.74,
+      "std": 0.07030291601349123,
+      "min": 0.62,
+      "max": 0.81,
+      "iqr": 0.030000000000000027,
+      "skewness": -0.8145087708898244,
+      "kurtosis": -0.40077392287481617,
+      "n": 5
+    },
+    "ci_mean_95_bootstrap": {
+      "lower": 0.672,
+      "upper": 0.782,
+      "point_estimate": 0.7340000000000001
+    },
+    "coefficient_of_variation": 0.0957805395279172,
+    "ttest_vs_0.5": {
+      "t_statistic": 7.442648703711529,
+      "p_value_two_sided": 0.0017406055448732631,
+      "p_value_one_sided": 0.0008703027724366316,
+      "significant_greater_than_0.5": true,
+      "null_hypothesis": "mean == 0.5",
+      "alternative": "mean > 0.5"
+    }
+  },
+  "comparative_tests": {
+    "wilcoxon_grpo_vs_ppo_qwen3-8b": {
+      "statistic": 202.0,
+      "p_value": 0.5296226716268646,
+      "significant": false,
+      "n_pairs": 30,
+      "grpo_mean": 0.32083333333333336,
+      "ppo_mean": 0.2833333333333333
+    },
+    "mann_whitney_llama_vs_qwen_ppo": {
+      "statistic": 872.0,
+      "p_value": 5.6293871985739716e-11,
+      "significant": true,
+      "rank_biserial_r": -0.9377777777777778,
+      "n_llama": 30,
+      "n_qwen": 30,
+      "llama_mean": 0.95,
+      "qwen_mean": 0.2833333333333333,
+      "interpretation": "Llama-8B PPO mean=0.9500 vs Qwen3-8B PPO mean=0.2833"
+    }
+  }
+}

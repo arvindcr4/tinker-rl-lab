@@ -1,0 +1,183 @@
+{
+  "experiment": "frontier_gsm8k_nemotron-120b",
+  "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16",
+  "model_short": "nemotron-120b",
+  "task": "gsm8k",
+  "seed": 42,
+  "rank": 16,
+  "lr": 1e-05,
+  "group": 4,
+  "steps": 20,
+  "run_id": "657a920a-9e74-55d2-9354-71a6ec2f1f61:train:0",
+  "checkpoint": "tinker://657a920a-9e74-55d2-9354-71a6ec2f1f61:train:0/sampler_weights/final",
+  "first5_avg": 0.175,
+  "last10_avg": 0.1625,
+  "peak": 0.875,
+  "zero_loss_pct": 70.0,
+  "zero_reward_pct": 55.00000000000001,
+  "reward_trace": [
+    0.0,
+    0.0,
+    0.875,
+    0.0,
+    0.0,
+    0.0,
+    0.125,
+    0.5,
+    0.375,
+    0.0,
+    0.125,
+    0.25,
+    0.0,
+    0.0,
+    0.25,
+    0.0,
+    0.0,
+    0.0,
+    0.5,
+    0.5
+  ],
+  "step_log": [
+    {
+      "step": 1,
+      "loss": 0.0,
+      "reward": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 2,
+      "loss": 0.0,
+      "reward": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 3,
+      "loss": -42.757484436035156,
+      "reward": 0.875,
+      "zvf": 0.0,
+      "gu": 1.0
+    },
+    {
+      "step": 4,
+      "loss": 0.0,
+      "reward": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 5,
+      "loss": 0.0,
+      "reward": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 6,
+      "loss": 0.0,
+      "reward": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 7,
+      "loss": 5.0445404052734375,
+      "reward": 0.125,
+      "zvf": 0.0,
+      "gu": 1.0
+    },
+    {
+      "step": 8,
+      "loss": 0.0,
+      "reward": 0.5,
+      "zvf": 0.0,
+      "gu": 1.0
+    },
+    {
+      "step": 9,
+      "loss": -100.07317352294922,
+      "reward": 0.375,
+      "zvf": 0.0,
+      "gu": 1.0
+    },
+    {
+      "step": 10,
+      "loss": 0.0,
+      "reward": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 11,
+      "loss": -14.067096710205078,
+      "reward": 0.125,
+      "zvf": 0.0,
+      "gu": 1.0
+    },
+    {
+      "step": 12,
+      "loss": -76.11570739746094,
+      "reward": 0.25,
+      "zvf": 0.0,
+      "gu": 1.0
+    },
+    {
+      "step": 13,
+      "loss": 0.0,
+      "reward": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 14,
+      "loss": 0.0,
+      "reward": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 15,
+      "loss": 70.30506896972656,
+      "reward": 0.25,
+      "zvf": 0.0,
+      "gu": 1.0
+    },
+    {
+      "step": 16,
+      "loss": 0.0,
+      "reward": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 17,
+      "loss": 0.0,
+      "reward": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 18,
+      "loss": 0.0,
+      "reward": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 19,
+      "loss": 0.0,
+      "reward": 0.5,
+      "zvf": 0.0,
+      "gu": 1.0
+    },
+    {
+      "step": 20,
+      "loss": 0.0,
+      "reward": 0.5,
+      "zvf": 0.0,
+      "gu": 1.0
+    }
+  ],
+  "timestamp": "2026-04-19T03:31:55.848278"
+}

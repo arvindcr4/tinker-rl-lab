@@ -205,7 +205,7 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
         return {"experiment": exp, "model": model_id, "error": str(e), "stage": "init"}
 
     print(f"[{exp}] Connected: {tc.model_id}")
-    wandb.config.update({"tinker_run_id": tc.model_id})
+    wb_run.config.update({"tinker_run_id": tc.model_id}, allow_val_change=True)
 
     _adv = []
     def loss_fn(data, lp):
@@ -269,7 +269,7 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
         step_log.append({"step": step+1, "loss": lv, "reward": avg, "zvf": zvf, "gu": gu})
 
         # ── W&B log ──
-        wandb.log({
+        wb_run.log({
             "step": step + 1,
             "train/loss": lv,
             "train/reward": avg,
@@ -313,7 +313,7 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
     }
 
     # ── W&B summary ──
-    wandb.summary.update({
+    wb_run.summary.update({
         "final/first5_avg": summary["first5_avg"],
         "final/last10_avg": summary["last10_avg"],
         "final/peak": summary["peak"],
@@ -331,11 +331,11 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
     hf_repo = upload_to_hf(exp, model_id, summary, step_log)
     if hf_repo:
         summary["hf_repo"] = hf_repo
-        wandb.summary["hf_repo"] = hf_repo
+        wb_run.summary["hf_repo"] = hf_repo
 
     # ── W&B artifacts ──
     try:
-        artifact = wandb.Artifact(name=exp.replace("/","-"), type="experiment-results")
+        artifact = wandb.Artifact(name=exp.replace("/","-"), type="experiment-results", description=f"Results for {exp}")
         artifact.add_file(os.path.join(RESULTS_DIR, f"{exp}.json"))
         wb_run.log_artifact(artifact)
     except: pass
@@ -378,6 +378,24 @@ if __name__ == "__main__":
     exps = EXPERIMENTS
     if args.filter:
         exps = [e for e in exps if args.filter in e["tag"]]
+
+    # Skip already-completed experiments
+    completed_tags = set()
+    for fname in os.listdir(RESULTS_DIR):
+        if fname.endswith('.json'):
+            tag = fname.replace('.json', '')
+            try:
+                with open(os.path.join(RESULTS_DIR, fname)) as f:
+                    data = json.load(f)
+                if 'error' not in data and data.get('peak', -1) >= 0:
+                    completed_tags.add(tag)
+            except Exception:
+                pass
+    before = len(exps)
+    exps = [e for e in exps if e['tag'] not in completed_tags]
+    if before != len(exps):
+        print(f"Skipping {before - len(exps)} already-completed experiments: {completed_tags}")
+        print(f"Running {len(exps)} remaining experiments")
 
     print(f"\n{'='*70}")
     print(f"LAUNCHING {len(exps)} TINKER EXPERIMENTS (max {args.max_parallel} parallel)")

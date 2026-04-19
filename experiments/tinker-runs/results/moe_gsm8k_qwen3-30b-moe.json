@@ -1,0 +1,27 @@
+{
+  "experiment": "moe_gsm8k_qwen3-30b-moe",
+  "model": "Qwen/Qwen3-30B-A3B",
+  "model_short": "qwen3-30b-moe",
+  "task": "gsm8k",
+  "seed": 42,
+  "rank": 32,
+  "lr": 3e-05,
+  "group": 8,
+  "steps": 30,
+  "steps_completed": 20,
+  "partial": true,
+  "run_id": "partial-from-console",
+  "checkpoint": "training_interrupted",
+  "first5_avg": 0.3252,
+  "last10_avg": 0.3252,
+  "peak": 0.5,
+  "zero_loss_pct": 0,
+  "zero_reward_pct": 0.0,
+  "reward_trace": [
+    0.188,
+    0.438,
+    0.062,
+    0.5,
+    0.438
+  ]
+}

@@ -21,7 +21,6 @@ Reference:
 import os
 import random
 import argparse
-from typing import Optional
 
 
 def set_global_seed(seed: int = 42, deterministic_cudnn: bool = True) -> dict:

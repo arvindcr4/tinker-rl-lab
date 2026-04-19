@@ -123,21 +123,33 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-# Keep the checks that catch *real* bugs: unused imports, undefined names,
-# redefinitions, and syntax. Drop the stylistic checks that produce noise
-# on a research-code repo with many one-off scripts and semicolons.
+# Keep the bug-finding checks (F401 unused import, F811 redefinition,
+# F821 undefined name) enabled globally so they continue to flag real
+# issues in first-party code (``utils/``, ``tests/``, top-level modules).
+# Noisy exploratory-code paths (``scripts/**``, ``experiments/**``) scope
+# those same rules via ``per-file-ignores`` below; vendored trees are
+# excluded entirely via ``extend-exclude`` above.
 select = ["F", "W", "I", "UP031"]
 ignore = [
     "E501",   # line length — handled by formatter if at all
-    "F401",   # unused imports — common in research notebooks / try-blocks
     "F541",   # f-string without placeholders — used for multi-line format strings
     "F841",   # unused local (research scripts set aside intermediates)
-    "F811",   # redefinition — common in notebook-style scripts
-    "F821",   # undefined name — false positives from tinker/verl stubs
     "W291",   # trailing whitespace (autofixable; CI should not block on it)
     "W293",   # blank line with whitespace
     "I001",   # unsorted imports (let contributors organize imports their way)
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Scope the noisy notebook/script-style false positives to exploratory code
+# paths instead of disabling bug-finding checks for the whole repository.
+# First-party code (``utils/``, ``tests/``, library modules) still gets
+# F401 / F811 / F821 enforcement.
+"scripts/**/*.py"      = ["F401", "F811", "F821"]
+"experiments/**/*.py"  = ["F401", "F811", "F821"]
+"paper/figures/**/*.py" = ["F401", "F811", "F821"]
+# Top-level GRPO research drivers (one-shot scripts, not reusable library
+# code; they keep exploratory imports deliberately).
+"grpo_*.py"            = ["F401", "F811", "F821"]
 
 [tool.ruff.format]
 # Only format what we lint; keep research scripts as the author wrote them

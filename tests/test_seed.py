@@ -5,7 +5,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from utils.seed import set_global_seed, get_seed_from_args
+from utils.seed import set_global_seed
 
 
 def test_set_global_seed_deterministic():

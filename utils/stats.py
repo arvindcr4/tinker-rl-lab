@@ -20,7 +20,6 @@ import json
 import glob
 import argparse
 from typing import Dict, List, Optional, Tuple
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -241,7 +240,10 @@ def try_rliable_analysis(results: Dict[str, np.ndarray], output_dir: str):
     try:
         from rliable import library as rly
         from rliable import metrics as rly_metrics
-        from rliable import plot_utils
+        # ``plot_utils`` is imported to verify the full rliable install is
+        # present (the caller later builds rliable plots via helper scripts);
+        # we assign ``_`` to signal the availability check to ruff/linters.
+        from rliable import plot_utils as _  # noqa: F401
 
         print("Running rliable analysis...")
 

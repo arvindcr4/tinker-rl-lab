@@ -1,0 +1,25 @@
+{
+  "experiment": "scale_gsm8k_qwen3.5-27b",
+  "model": "Qwen/Qwen3.5-27B",
+  "model_short": "qwen3.5-27b",
+  "task": "gsm8k",
+  "seed": 42,
+  "rank": 32,
+  "lr": 3e-05,
+  "group": 8,
+  "steps": 30,
+  "steps_completed": 10,
+  "partial": true,
+  "run_id": "partial-from-console",
+  "checkpoint": "training_interrupted",
+  "first5_avg": 0.43733333333333335,
+  "last10_avg": 0.43733333333333335,
+  "peak": 0.75,
+  "zero_loss_pct": 0,
+  "zero_reward_pct": 33.33333333333333,
+  "reward_trace": [
+    0.562,
+    0.75,
+    0.0
+  ]
+}

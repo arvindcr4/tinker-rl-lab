@@ -1,0 +1,26 @@
+{
+  "experiment": "frontier_gsm8k_qwen3-235b",
+  "model": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+  "model_short": "qwen3-235b-moe",
+  "task": "gsm8k",
+  "seed": 42,
+  "rank": 16,
+  "lr": 1e-05,
+  "group": 4,
+  "steps": 20,
+  "steps_completed": 15,
+  "partial": true,
+  "run_id": "partial-from-console",
+  "checkpoint": "training_interrupted",
+  "first5_avg": 1.0,
+  "last10_avg": 1.0,
+  "peak": 1.0,
+  "zero_loss_pct": 0,
+  "zero_reward_pct": 0.0,
+  "reward_trace": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ]
+}

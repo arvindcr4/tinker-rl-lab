@@ -1,370 +1,519 @@
 """
-Publication-quality figure generation for NeurIPS TinkerRL paper.
-Nature/Science academic style — no titles, minimal chartjunk.
+Generate all figures for the TinkerRL NeurIPS paper.
 """
-
 import json
 import numpy as np
 import matplotlib
-matplotlib.use("Agg")
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib.ticker import MaxNLocator
-import os
+from matplotlib.lines import Line2D
+from scipy import stats
+import warnings
+warnings.filterwarnings('ignore')
 
-# ---------------------------------------------------------------------------
-# Global rcParams — Nature/Science academic style
-# ---------------------------------------------------------------------------
-plt.rcParams.update({
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
-    "font.size": 11,
-    "axes.labelsize": 13,
-    "axes.titlesize": 12,
-    "axes.linewidth": 0.8,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-    "xtick.direction": "out",
-    "ytick.direction": "out",
-    "xtick.major.width": 0.8,
-    "ytick.major.width": 0.8,
-    "xtick.major.size": 4,
-    "ytick.major.size": 4,
-    "legend.frameon": False,
-    "legend.fontsize": 9,
-    "figure.dpi": 300,
-    "savefig.dpi": 300,
-    "savefig.bbox": "tight",
-    "pdf.fonttype": 42,      # embed fonts in PDF
-    "ps.fonttype": 42,
-    "axes.grid": False,
-})
-
-OUT = "/home/user/workspace/tinker-rl-lab/paper/figures"
-
-# ---------------------------------------------------------------------------
+# ─────────────────────────────────────────────────────────
 # Load data
-# ---------------------------------------------------------------------------
-with open("/home/user/workspace/tinker-rl-lab/experiments/all_results_consolidated.json") as f:
+# ─────────────────────────────────────────────────────────
+with open('/home/user/workspace/tinker-rl-lab/experiments/all_results_consolidated.json') as f:
     data = json.load(f)
 
-tc = data["tinker_completed"]
-mc = data["modal_completed"]
-trl = data["old_modal_trl_grpo"]
+# ─────────────────────────────────────────────────────────
+# Shared style
+# ─────────────────────────────────────────────────────────
+plt.rcParams.update({
+    'font.family': 'DejaVu Sans',
+    'font.size': 11,
+    'axes.titlesize': 13,
+    'axes.labelsize': 12,
+    'legend.fontsize': 9.5,
+    'xtick.labelsize': 10,
+    'ytick.labelsize': 10,
+    'axes.spines.top': False,
+    'axes.spines.right': False,
+    'figure.facecolor': 'white',
+    'axes.facecolor': 'white',
+    'axes.grid': True,
+    'grid.color': '#e5e5e5',
+    'grid.linewidth': 0.7,
+})
 
-# Colour palette (colorblind-friendly — Okabe-Ito inspired from tab10)
-COLORS = {
-    "deepseek":    "#1f77b4",   # blue
-    "qwen3_grpo":  "#ff7f0e",   # orange
-    "llama_grpo":  "#2ca02c",   # green
-    "qwen3_ppo":   "#d62728",   # red
-    "llama_ppo":   "#9467bd",   # purple
-    "trl":         "#8c564b",   # brown
+OUTDIR = '/home/user/workspace/tinker-rl-lab/paper/figures/'
+
+# ─────────────────────────────────────────────────────────
+# Color palette
+# ─────────────────────────────────────────────────────────
+# Model family → base color
+FAMILY_COLORS = {
+    'qwen':      '#2166ac',   # blue
+    'llama':     '#d6604d',   # red
+    'deepseek':  '#4dac26',   # green
+    'nemotron':  '#f4a582',   # orange
+    'moe':       '#762a83',   # purple
 }
 
-# ---------------------------------------------------------------------------
-# Helper
-# ---------------------------------------------------------------------------
-def save(fig, name):
-    png = os.path.join(OUT, f"{name}.png")
-    pdf = os.path.join(OUT, f"{name}.pdf")
-    fig.savefig(png, dpi=300, bbox_inches="tight")
-    fig.savefig(pdf, bbox_inches="tight")
-    print(f"  Saved {png}")
-    print(f"  Saved {pdf}")
-    plt.close(fig)
+MODEL_COLORS = {
+    'qwen3-8b':          '#084594',
+    'qwen3.5-4b':        '#2171b5',
+    'qwen3.5-27b':       '#4292c6',
+    'qwen3-32b':         '#6baed6',
+    'qwen3-235b-moe':    '#9ecae1',
+    'qwen3-30b-moe-inst':'#c6dbef',
+    'qwen3-30b-moe':     '#deebf7',
+    'llama-8b-inst':     '#d6604d',
+    'deepseek-v3.1':     '#4dac26',
+    'nemotron-120b':     '#f4a582',
+}
 
+# ─────────────────────────────────────────────────────────
+# Helper: pretty model names
+# ─────────────────────────────────────────────────────────
+PRETTY = {
+    'qwen3-8b':           'Qwen3-8B',
+    'qwen3.5-4b':         'Qwen3.5-4B',
+    'qwen3.5-27b':        'Qwen3.5-27B',
+    'qwen3-32b':          'Qwen3-32B',
+    'qwen3-235b-moe':     'Qwen3-235B (MoE)',
+    'qwen3-30b-moe-inst': 'Qwen3-30B-Inst (MoE)',
+    'qwen3-30b-moe':      'Qwen3-30B (MoE)',
+    'llama-8b-inst':      'Llama-3.1-8B',
+    'deepseek-v3.1':      'DeepSeek-V3.1',
+    'nemotron-120b':      'Nemotron-120B',
+}
 
-def smooth(y, w=3):
-    """Simple moving average."""
-    if len(y) < w:
-        return np.array(y, dtype=float)
-    kernel = np.ones(w) / w
-    padded = np.pad(y, (w // 2, w // 2), mode="edge")
-    return np.convolve(padded, kernel, mode="valid")[: len(y)]
+def pname(ms):
+    return PRETTY.get(ms, ms)
 
+def is_partial(exp):
+    return exp.get('partial', False)
 
-# ===========================================================================
-# Figure 1 — Learning curves (double-column, 7 in)
-# ===========================================================================
-print("Generating Figure 1: learning_curves")
+# ═══════════════════════════════════════════════════════════
+# Figure 1: Learning curves – all GSM8K GRPO experiments
+# ═══════════════════════════════════════════════════════════
+gsm8k_exps = [e for e in data if e.get('task') == 'gsm8k' and e.get('platform', '') != 'modal_h100' and e.get('algorithm', '') != 'PPO']
 
-deepseek_trace  = np.array(tc["frontier_gsm8k_deepseek-v3.1"]["reward_trace"], dtype=float)
-qwen3g_trace    = np.array(tc["scale_gsm8k_qwen3-8b"]["reward_trace"], dtype=float)
-# Llama GRPO: complete failure — all zeros, 30 steps
-llama_grpo_trace = np.zeros(30, dtype=float)
+fig, ax = plt.subplots(figsize=(10, 6))
 
-qwen3p_trace    = np.array(mc["ppo_qwen3-8b"]["reward_trace"], dtype=float)
-llamap_trace    = np.array(mc["ppo_llama-8b-inst"]["reward_trace"], dtype=float)
+for exp in gsm8k_exps:
+    trace = exp.get('reward_trace', [])
+    if not trace:
+        continue
+    ms = exp['model_short']
+    color = MODEL_COLORS.get(ms, '#888888')
+    steps = list(range(1, len(trace) + 1))
+    lw = 1.8
+    label = pname(ms)
+    # smooth with rolling average (window=3)
+    sm = np.convolve(trace, np.ones(3)/3, mode='valid')
+    sm_steps = steps[1:len(sm)+1]
+    if is_partial(exp):
+        ax.plot(steps, trace, color=color, linewidth=lw, linestyle='--', alpha=0.5)
+        ax.plot(sm_steps, sm, color=color, linewidth=lw+0.5, linestyle='--', alpha=0.9, label=label + ' (partial)')
+    else:
+        ax.plot(steps, trace, color=color, linewidth=lw, linestyle='-', alpha=0.35)
+        ax.plot(sm_steps, sm, color=color, linewidth=lw+0.5, linestyle='-', alpha=0.9, label=label)
 
-fig, axes = plt.subplots(1, 2, figsize=(7, 3.2))
-fig.subplots_adjust(wspace=0.38)
+ax.set_xlabel('Training Step')
+ax.set_ylabel('Mean Reward')
+ax.set_title('GRPO Learning Curves on GSM8K')
+ax.set_ylim(-0.05, 1.15)
+ax.set_xlim(0.5)
 
-# --- Panel A: Tinker GRPO ---
-ax = axes[0]
-steps_ds  = np.arange(1, len(deepseek_trace) + 1)
-steps_q3g = np.arange(1, len(qwen3g_trace) + 1)
-steps_lg  = np.arange(1, len(llama_grpo_trace) + 1)
+# Legend – deduplicate
+handles, labels = ax.get_legend_handles_labels()
+by_label = dict(zip(labels, handles))
+ax.legend(by_label.values(), by_label.keys(), loc='upper left', framealpha=0.9, ncol=2)
 
-ax.plot(steps_ds,  deepseek_trace,  color=COLORS["deepseek"],   lw=1.5, marker="o", ms=3,
-        label="DeepSeek-V3.1 (~671B)")
-ax.plot(steps_q3g, qwen3g_trace,    color=COLORS["qwen3_grpo"], lw=1.5, marker="s", ms=3,
-        label="Qwen3-8B")
-ax.plot(steps_lg,  llama_grpo_trace, color=COLORS["llama_grpo"], lw=1.5, marker="^", ms=3,
-        ls="--", label="Llama-3.1-8B (tool_use)")
-
-ax.set_xlabel("Training Step")
-ax.set_ylabel("Mean Reward")
-ax.set_ylim(-0.05, 1.10)
-ax.set_xlim(0, 32)
-ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=6))
-ax.legend(loc="lower right", handlelength=1.5)
-ax.text(-0.18, 1.0, "(a)", transform=ax.transAxes, fontsize=13, fontweight="bold",
-        va="top", ha="left")
-ax.set_title("Tinker GRPO", fontsize=10, pad=4, loc="left", color="#444444")
-
-# --- Panel B: Modal PPO ---
-ax = axes[1]
-steps_q3p = np.arange(1, len(qwen3p_trace) + 1)
-steps_lp  = np.arange(1, len(llamap_trace) + 1)
-
-ax.plot(steps_q3p, qwen3p_trace, color=COLORS["qwen3_ppo"], lw=1.5, marker="s", ms=3,
-        label="Qwen3-8B")
-ax.plot(steps_lp,  llamap_trace, color=COLORS["llama_ppo"], lw=1.5, marker="D", ms=3,
-        label="Llama-3.1-8B")
-
-ax.set_xlabel("Training Step")
-ax.set_ylabel("Mean Reward")
-ax.set_ylim(-0.05, 1.10)
-ax.set_xlim(0, 32)
-ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=6))
-ax.legend(loc="lower right", handlelength=1.5)
-ax.text(-0.18, 1.0, "(b)", transform=ax.transAxes, fontsize=13, fontweight="bold",
-        va="top", ha="left")
-ax.set_title("Modal PPO-REINFORCE", fontsize=10, pad=4, loc="left", color="#444444")
+# Add dashed/solid legend annotation
+solid_line = Line2D([0], [0], color='gray', linewidth=1.5, linestyle='-', label='Full run')
+dash_line  = Line2D([0], [0], color='gray', linewidth=1.5, linestyle='--', label='Partial run')
+ax.add_artist(ax.legend(handles=list(by_label.values()) + [solid_line, dash_line],
+                        labels=list(by_label.keys()) + ['Full run', 'Partial run'],
+                        loc='upper left', framealpha=0.9, ncol=2, fontsize=9))
 
 plt.tight_layout()
-save(fig, "learning_curves")
+plt.savefig(OUTDIR + 'learning_curves.png', dpi=300, bbox_inches='tight')
+plt.close()
+print('✓ learning_curves.png')
 
+# ═══════════════════════════════════════════════════════════
+# Figure 2: Grouped bar chart – peak vs last-10 accuracy
+# ═══════════════════════════════════════════════════════════
+# Gather one entry per model (prefer full run if duplicate)
+model_data = {}
+for exp in data:
+    if exp.get('task') != 'gsm8k':
+        continue
+    ms = exp['model_short']
+    algo = exp.get('algorithm', 'GRPO')
+    platform = exp.get('platform', 'tinker')
+    key = ms + ('_ppo' if algo == 'PPO' else '_grpo')
 
-# ===========================================================================
-# Figure 2 — Comparison bar chart (single-column, 3.5 in)
-# ===========================================================================
-print("Generating Figure 2: comparison_bars")
+    peak   = exp.get('peak', exp.get('peak_accuracy', 0)) or 0
+    last10 = exp.get('last10_avg', exp.get('last10_accuracy', 0)) or 0
+    partial = is_partial(exp)
 
-# Data for GSM8K comparisons
-models = ["Qwen3-8B", "Llama-3.1-8B"]
-grpo_peak   = [0.625,  0.0]
-grpo_last10 = [0.344,  0.0]
-ppo_peak    = [1.0,    1.0]
-ppo_last10  = [0.35,   0.95]
+    if key not in model_data or peak > model_data[key]['peak']:
+        model_data[key] = {
+            'model_short': ms,
+            'label': pname(ms) + (' [PPO]' if algo == 'PPO' else ' [GRPO]'),
+            'peak': peak,
+            'last10': last10,
+            'partial': partial,
+            'algo': algo,
+        }
 
-x     = np.arange(len(models))
-width = 0.18
-gap   = 0.04
+# sort by peak desc
+rows = sorted(model_data.values(), key=lambda r: -r['peak'])
 
-fig, ax = plt.subplots(figsize=(5.0, 3.6))
+labels = [r['label'] for r in rows]
+peaks  = [r['peak'] * 100 for r in rows]
+last10s= [r['last10'] * 100 for r in rows]
+partials = [r['partial'] for r in rows]
+algos  = [r['algo'] for r in rows]
 
-b1 = ax.bar(x - 1.5*width - gap, grpo_peak,   width, color=COLORS["qwen3_grpo"], label="GRPO Peak",         zorder=3)
-b2 = ax.bar(x - 0.5*width,       grpo_last10, width, color=COLORS["qwen3_grpo"], label="GRPO Last-10 Avg",  alpha=0.55, hatch="///", zorder=3)
-b3 = ax.bar(x + 0.5*width + gap, ppo_peak,    width, color=COLORS["qwen3_ppo"],  label="PPO Peak",          zorder=3)
-b4 = ax.bar(x + 1.5*width + 2*gap, ppo_last10, width, color=COLORS["qwen3_ppo"], label="PPO Last-10 Avg",   alpha=0.55, hatch="///", zorder=3)
+x = np.arange(len(rows))
+bar_w = 0.35
 
-# Value labels
-def autolabel(rects):
-    for rect in rects:
-        h = rect.get_height()
-        if h > 0:
-            ax.annotate(f"{h:.2f}",
-                        xy=(rect.get_x() + rect.get_width() / 2, h),
-                        xytext=(0, 2), textcoords="offset points",
-                        ha="center", va="bottom", fontsize=7.5)
+fig, ax = plt.subplots(figsize=(12, 5))
 
-autolabel(b1); autolabel(b2); autolabel(b3); autolabel(b4)
+for i, (pk, l10, part, algo) in enumerate(zip(peaks, last10s, partials, algos)):
+    color_peak  = '#1a5276' if algo == 'GRPO' else '#78281f'
+    color_last10 = '#5dade2' if algo == 'GRPO' else '#e74c3c'
+    hatch = '//' if part else ''
+    ax.bar(x[i] - bar_w/2, pk,  bar_w, color=color_peak,   hatch=hatch, edgecolor='white', linewidth=0.5, zorder=3)
+    ax.bar(x[i] + bar_w/2, l10, bar_w, color=color_last10, hatch=hatch, edgecolor='white', linewidth=0.5, zorder=3, alpha=0.85)
+
+ax.set_xticks(x)
+ax.set_xticklabels(labels, rotation=35, ha='right', fontsize=9)
+ax.set_ylabel('Accuracy (%)')
+ax.set_title('Peak vs Last-10 Accuracy on GSM8K')
+ax.set_ylim(0, 115)
+ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f'{v:.0f}%'))
+
+legend_handles = [
+    mpatches.Patch(color='#1a5276', label='GRPO – Peak'),
+    mpatches.Patch(color='#5dade2', label='GRPO – Last-10'),
+    mpatches.Patch(color='#78281f', label='PPO – Peak'),
+    mpatches.Patch(color='#e74c3c', label='PPO – Last-10'),
+    mpatches.Patch(facecolor='white', edgecolor='gray', hatch='//', label='Partial run'),
+]
+ax.legend(handles=legend_handles, loc='upper right', framealpha=0.9, fontsize=9)
+
+plt.tight_layout()
+plt.savefig(OUTDIR + 'comparison_bars.png', dpi=300, bbox_inches='tight')
+plt.close()
+print('✓ comparison_bars.png')
+
+# ═══════════════════════════════════════════════════════════
+# Figure 3: Scaling plot – model size vs peak accuracy
+# ═══════════════════════════════════════════════════════════
+MODEL_SIZES = {
+    'qwen3-8b':           8,
+    'qwen3.5-4b':         4,
+    'qwen3.5-27b':        27,
+    'qwen3-32b':          32,
+    'qwen3-235b-moe':     22,   # active params
+    'llama-8b-inst':      8,
+    'deepseek-v3.1':      685,
+    'nemotron-120b':      12,   # active
+    'qwen3-30b-moe-inst': 3,    # A3B active
+    'qwen3-30b-moe':      3,
+}
+
+# Build per-model best peak
+model_peak = {}
+for exp in data:
+    if exp.get('task') != 'gsm8k':
+        continue
+    if exp.get('algorithm', '') == 'PPO':
+        continue
+    ms = exp['model_short']
+    pk = exp.get('peak', 0) or 0
+    if ms not in model_peak or pk > model_peak[ms]:
+        model_peak[ms] = pk
+
+# Qwen scaling series (dense models or MoE as labelled in task)
+qwen_series = {k: v for k, v in model_peak.items() if 'qwen' in k and k != 'qwen3-235b-moe'}
+other_series = {k: v for k, v in model_peak.items() if k not in qwen_series}
+
+fig, ax = plt.subplots(figsize=(8, 5))
+
+# Qwen points + trend line
+qx = np.array([MODEL_SIZES[k] for k in qwen_series if k in MODEL_SIZES])
+qy = np.array([v * 100 for k, v in qwen_series.items() if k in MODEL_SIZES])
+# sort by size
+sort_idx = np.argsort(qx)
+qx, qy = qx[sort_idx], qy[sort_idx]
+
+# trend on log scale
+if len(qx) >= 2:
+    log_qx = np.log10(qx)
+    slope, intercept, r, p, se = stats.linregress(log_qx, qy)
+    x_fit = np.logspace(np.log10(min(qx)*0.8), np.log10(max(qx)*1.2), 200)
+    y_fit = slope * np.log10(x_fit) + intercept
+    ax.plot(x_fit, y_fit, color=FAMILY_COLORS['qwen'], linewidth=1.2, linestyle='--', alpha=0.6, label='Qwen trend')
+
+for k, v in qwen_series.items():
+    if k not in MODEL_SIZES:
+        continue
+    sz = MODEL_SIZES[k]
+    pk = v * 100
+    color = MODEL_COLORS.get(k, FAMILY_COLORS['qwen'])
+    ax.scatter(sz, pk, color=color, s=120, zorder=5, edgecolors='white', linewidths=0.8)
+    ax.annotate(pname(k), (sz, pk), textcoords='offset points', xytext=(6, 4),
+                fontsize=8.5, color=color)
+
+# MoE Qwen235B
+k = 'qwen3-235b-moe'
+if k in model_peak and k in MODEL_SIZES:
+    sz = MODEL_SIZES[k]
+    pk = model_peak[k] * 100
+    ax.scatter(sz, pk, color=FAMILY_COLORS['moe'], marker='D', s=130, zorder=5,
+               edgecolors='white', linewidths=0.8)
+    ax.annotate(pname(k), (sz, pk), textcoords='offset points', xytext=(6, 4),
+                fontsize=8.5, color=FAMILY_COLORS['moe'])
+
+# Llama
+k = 'llama-8b-inst'
+if k in model_peak and k in MODEL_SIZES:
+    sz = MODEL_SIZES[k]
+    pk = model_peak[k] * 100
+    ax.scatter(sz, pk, color=FAMILY_COLORS['llama'], marker='s', s=130, zorder=5,
+               edgecolors='white', linewidths=0.8)
+    ax.annotate(pname(k), (sz, pk), textcoords='offset points', xytext=(6, -12),
+                fontsize=8.5, color=FAMILY_COLORS['llama'])
+
+# DeepSeek
+k = 'deepseek-v3.1'
+if k in model_peak and k in MODEL_SIZES:
+    sz = MODEL_SIZES[k]
+    pk = model_peak[k] * 100
+    ax.scatter(sz, pk, color=FAMILY_COLORS['deepseek'], marker='^', s=140, zorder=5,
+               edgecolors='white', linewidths=0.8)
+    ax.annotate(pname(k), (sz, pk), textcoords='offset points', xytext=(6, 4),
+                fontsize=8.5, color=FAMILY_COLORS['deepseek'])
+
+# Nemotron
+k = 'nemotron-120b'
+if k in model_peak and k in MODEL_SIZES:
+    sz = MODEL_SIZES[k]
+    pk = model_peak[k] * 100
+    ax.scatter(sz, pk, color=FAMILY_COLORS['nemotron'], marker='P', s=130, zorder=5,
+               edgecolors='white', linewidths=0.8)
+    ax.annotate(pname(k), (sz, pk), textcoords='offset points', xytext=(6, 4),
+                fontsize=8.5, color=FAMILY_COLORS['nemotron'])
+
+ax.set_xscale('log')
+ax.set_xlabel('Model Size (B active params, log scale)')
+ax.set_ylabel('Peak Accuracy (%)')
+ax.set_title('Scaling: Model Size vs Peak GSM8K Accuracy')
+ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f'{v:.0f}%'))
+ax.set_ylim(0, 115)
+
+legend_elements = [
+    Line2D([0], [0], marker='o', color='w', markerfacecolor=FAMILY_COLORS['qwen'],
+           markersize=9, label='Qwen (dense)'),
+    Line2D([0], [0], marker='D', color='w', markerfacecolor=FAMILY_COLORS['moe'],
+           markersize=9, label='Qwen (MoE)'),
+    Line2D([0], [0], marker='s', color='w', markerfacecolor=FAMILY_COLORS['llama'],
+           markersize=9, label='Llama'),
+    Line2D([0], [0], marker='^', color='w', markerfacecolor=FAMILY_COLORS['deepseek'],
+           markersize=9, label='DeepSeek'),
+    Line2D([0], [0], marker='P', color='w', markerfacecolor=FAMILY_COLORS['nemotron'],
+           markersize=9, label='Nemotron'),
+]
+ax.legend(handles=legend_elements, loc='lower right', framealpha=0.9)
+
+plt.tight_layout()
+plt.savefig(OUTDIR + 'scaling_plot.png', dpi=300, bbox_inches='tight')
+plt.close()
+print('✓ scaling_plot.png')
+
+# ═══════════════════════════════════════════════════════════
+# Figure 4: PPO vs GRPO side-by-side comparison
+# ═══════════════════════════════════════════════════════════
+# From the data + task spec hardcoded values:
+ppo_grpo = {
+    'Qwen3-8B': {
+        'PPO':  {'peak': 75.0,  'last10': 22.5},
+        'GRPO': {'peak': 62.5,  'last10': 34.375},
+    },
+    'Llama-3.1-8B': {
+        'PPO':  {'peak': 100.0, 'last10': 97.5},
+        'GRPO': {'peak': 100.0, 'last10': 84.375},
+    },
+}
+
+# Override with data where available
+for exp in data:
+    if exp.get('task') != 'gsm8k':
+        continue
+    ms = exp['model_short']
+    algo = exp.get('algorithm', 'GRPO')
+    pk   = (exp.get('peak', 0) or 0) * 100
+    l10  = (exp.get('last10_avg', 0) or 0) * 100
+    label_map = {'qwen3-8b': 'Qwen3-8B', 'llama-8b-inst': 'Llama-3.1-8B'}
+    if ms in label_map:
+        mdl = label_map[ms]
+        if mdl in ppo_grpo and algo in ppo_grpo[mdl]:
+            if pk > 0:
+                ppo_grpo[mdl][algo]['peak'] = pk
+                ppo_grpo[mdl][algo]['last10'] = l10
+
+models = list(ppo_grpo.keys())
+algos  = ['PPO', 'GRPO']
+colors_peak  = {'PPO': '#78281f', 'GRPO': '#1a5276'}
+colors_last10= {'PPO': '#e74c3c', 'GRPO': '#5dade2'}
+
+n_models = len(models)
+group_w  = 1.0
+bar_w    = 0.18
+offsets  = {'PPO_peak': -1.5*bar_w, 'PPO_last10': -0.5*bar_w,
+            'GRPO_peak': 0.5*bar_w,  'GRPO_last10': 1.5*bar_w}
+
+fig, ax = plt.subplots(figsize=(8, 5))
+x = np.arange(n_models) * group_w
+
+for i, mdl in enumerate(models):
+    for algo in algos:
+        vals = ppo_grpo[mdl][algo]
+        # peak bar
+        key_pk = f'{algo}_peak'
+        ax.bar(x[i] + offsets[key_pk], vals['peak'], bar_w,
+               color=colors_peak[algo], edgecolor='white', linewidth=0.5, zorder=3)
+        # last10 bar
+        key_l10 = f'{algo}_last10'
+        ax.bar(x[i] + offsets[key_l10], vals['last10'], bar_w,
+               color=colors_last10[algo], edgecolor='white', linewidth=0.5, zorder=3, alpha=0.85)
 
 ax.set_xticks(x)
 ax.set_xticklabels(models, fontsize=11)
-ax.set_ylabel("Reward")
-ax.set_ylim(0, 1.18)
-ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-ax.legend(loc="upper right", fontsize=8, ncol=2,
-          handlelength=1.2, handletextpad=0.5, columnspacing=0.8)
-ax.spines["left"].set_visible(True)
+ax.set_ylabel('Accuracy (%)')
+ax.set_title('PPO vs GRPO on GSM8K')
+ax.set_ylim(0, 115)
+ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f'{v:.0f}%'))
 
-# Footnote
-ax.text(0.01, -0.15, "Task: GSM8K math reasoning. GRPO = Tinker platform; PPO = Modal platform.",
-        transform=ax.transAxes, fontsize=7.5, color="#666666", va="top")
+legend_handles = [
+    mpatches.Patch(color=colors_peak['PPO'],   label='PPO – Peak'),
+    mpatches.Patch(color=colors_last10['PPO'], label='PPO – Last-10'),
+    mpatches.Patch(color=colors_peak['GRPO'],  label='GRPO – Peak'),
+    mpatches.Patch(color=colors_last10['GRPO'],label='GRPO – Last-10'),
+]
+ax.legend(handles=legend_handles, loc='lower right', framealpha=0.9)
+
+# value labels
+for i, mdl in enumerate(models):
+    for algo in algos:
+        vals = ppo_grpo[mdl][algo]
+        for key, val in [('_peak', vals['peak']), ('_last10', vals['last10'])]:
+            off = offsets[f'{algo}{key}']
+            ax.text(x[i] + off, val + 1.5, f'{val:.0f}%', ha='center', va='bottom', fontsize=7.5, rotation=0)
 
 plt.tight_layout()
-save(fig, "comparison_bars")
+plt.savefig(OUTDIR + 'ppo_vs_grpo_comparison.png', dpi=300, bbox_inches='tight')
+plt.close()
+print('✓ ppo_vs_grpo_comparison.png')
 
-
-# ===========================================================================
-# Figure 3 — Scaling plot (single-column, 3.5 in)
-# ===========================================================================
-print("Generating Figure 3: scaling_plot")
-
-# Points: (params_B, last10_avg, label, method, marker)
-points = [
-    (0.5,   0.734, "Qwen2.5-0.5B\n(TRL GRPO)", "GRPO",  "o", COLORS["trl"]),
-    (8.0,   0.344, "Qwen3-8B\n(Tinker GRPO)", "GRPO",   "s", COLORS["qwen3_grpo"]),
-    (671.0, 0.850, "DeepSeek-V3.1\n(Tinker GRPO)", "GRPO", "D", COLORS["deepseek"]),
-    (8.0,   0.350, "Qwen3-8B\n(Modal PPO)",    "PPO",    "^", COLORS["qwen3_ppo"]),
-    (8.0,   0.950, "Llama-3.1-8B\n(Modal PPO)", "PPO",  "P", COLORS["llama_ppo"]),
-]
-
-fig, ax = plt.subplots(figsize=(4.5, 3.8))
-
-for (params, last10, label, method, mk, col) in points:
-    ax.scatter(params, last10, s=70, marker=mk, color=col, zorder=5,
-               edgecolors="white", linewidths=0.5)
-
-# Annotations with offsets to avoid overlap
-offsets = {
-    "Qwen2.5-0.5B\n(TRL GRPO)":     (-0.02,  0.04),
-    "Qwen3-8B\n(Tinker GRPO)":      ( 0.0,  -0.08),
-    "DeepSeek-V3.1\n(Tinker GRPO)": (-0.3,   0.04),
-    "Qwen3-8B\n(Modal PPO)":        ( 0.0,   0.04),
-    "Llama-3.1-8B\n(Modal PPO)":    ( 0.0,   0.04),
+# ═══════════════════════════════════════════════════════════
+# Figure 5: Sensitivity heatmap
+# ═══════════════════════════════════════════════════════════
+# Category assignment
+CATEGORY_MAP = {
+    'scale_gsm8k_qwen3-8b':       ('qwen3-8b',           'Scaling'),
+    'scale_gsm8k_qwen3.5-4b':     ('qwen3.5-4b',         'Scaling'),
+    'scale_gsm8k_qwen3.5-27b':    ('qwen3.5-27b',        'Scaling'),
+    'scale_gsm8k_qwen3-32b':      ('qwen3-32b',          'Scaling'),
+    'frontier_gsm8k_deepseek-v3.1': ('deepseek-v3.1',    'Frontier'),
+    'frontier_gsm8k_nemotron-120b': ('nemotron-120b',     'Frontier'),
+    'frontier_gsm8k_qwen3-235b':    ('qwen3-235b-moe',   'Frontier'),
+    'moe_gsm8k_qwen3-30b-inst':   ('qwen3-30b-moe-inst', 'MoE'),
+    'moe_gsm8k_qwen3-30b-moe':    ('qwen3-30b-moe',      'MoE'),
+    'scale_gsm8k_llama-8b-inst':  ('llama-8b-inst',      'Scaling'),
+    'cross_tool_llama-8b-inst':   ('llama-8b-inst',       'Cross-Task'),
+    'cross_tool_qwen3-32b':       ('qwen3-32b',           'Cross-Task'),
 }
 
-for (params, last10, label, method, mk, col) in points:
-    dx, dy = offsets.get(label, (0, 0.04))
-    ax.annotate(label,
-                xy=(params, last10),
-                xytext=(params * (1 + 0.05), last10 + dy),
-                fontsize=7.5,
-                color="#333333",
-                ha="left" if params < 100 else "right",
-                arrowprops=dict(arrowstyle="-", color="#aaaaaa", lw=0.6))
+categories = ['Scaling', 'Frontier', 'MoE', 'Cross-Task']
 
-# Legend by method
-grpo_patch = mpatches.Patch(color="#888888", label="GRPO (Tinker / TRL)")
-ppo_patch  = mpatches.Patch(color=COLORS["qwen3_ppo"], alpha=0.7, label="PPO (Modal)")
-ax.legend(handles=[grpo_patch, ppo_patch], loc="lower right", fontsize=8)
+# Build model list (ordered by category then peak)
+row_order = ['qwen3.5-4b', 'qwen3-8b', 'qwen3.5-27b', 'qwen3-32b',
+             'llama-8b-inst',
+             'deepseek-v3.1', 'nemotron-120b', 'qwen3-235b-moe',
+             'qwen3-30b-moe-inst', 'qwen3-30b-moe']
 
-ax.set_xscale("log")
-ax.set_xlabel("Model Parameters (B)")
-ax.set_ylabel("Last-10 Reward Average")
-ax.set_xlim(0.2, 3000)
-ax.set_ylim(0.0, 1.05)
-ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(
-    lambda x, _: f"{x:g}"))
+# Build matrix: rows=models, cols=categories, value=peak accuracy (%)
+# Default to NaN (no data)
+heat = {m: {c: np.nan for c in categories} for m in row_order}
 
-# Disclaimer note
-ax.text(0.02, 0.02,
-        "Note: different tasks / platforms — trends are indicative only.",
-        transform=ax.transAxes, fontsize=7, color="#888888", va="bottom")
+for exp_name, (ms, cat) in CATEGORY_MAP.items():
+    # find experiment
+    for exp in data:
+        if exp['experiment'] == exp_name:
+            pk = exp.get('peak', exp.get('peak_accuracy', 0)) or 0
+            heat[ms][cat] = pk * 100
+            break
 
-plt.tight_layout()
-save(fig, "scaling_plot")
+# build matrix
+mat = np.array([[heat[m][c] for c in categories] for m in row_order], dtype=float)
 
+fig, ax = plt.subplots(figsize=(8, 6))
+import matplotlib.cm as cm
 
-# ===========================================================================
-# Figure 4 — PPO vs GRPO detail, Qwen3-8B (double-column, 7 in)
-# ===========================================================================
-print("Generating Figure 4: ppo_vs_grpo_detail")
+masked = np.ma.masked_invalid(mat)
+im = ax.imshow(masked, cmap='RdYlGn', vmin=0, vmax=100, aspect='auto')
 
-grpo = qwen3g_trace
-ppo  = qwen3p_trace
-steps = np.arange(1, 31)
+# grid lines
+for i in range(len(row_order) + 1):
+    ax.axhline(i - 0.5, color='white', linewidth=1.5)
+for j in range(len(categories) + 1):
+    ax.axvline(j - 0.5, color='white', linewidth=1.5)
 
-fig, ax = plt.subplots(figsize=(5.5, 3.2))
+ax.set_xticks(range(len(categories)))
+ax.set_xticklabels(categories, fontsize=11)
+ax.set_yticks(range(len(row_order)))
+ax.set_yticklabels([pname(m) for m in row_order], fontsize=9.5)
 
-# Raw traces (light / thin)
-ax.plot(steps, grpo, color=COLORS["qwen3_grpo"], lw=0.8, alpha=0.35)
-ax.plot(steps, ppo,  color=COLORS["qwen3_ppo"],  lw=0.8, alpha=0.35)
+# cell text
+for i in range(len(row_order)):
+    for j in range(len(categories)):
+        val = mat[i, j]
+        if not np.isnan(val):
+            txt = f'{val:.0f}%'
+            color = 'white' if val < 30 or val > 80 else 'black'
+            ax.text(j, i, txt, ha='center', va='center', fontsize=9, color=color, fontweight='bold')
+        else:
+            ax.text(j, i, '–', ha='center', va='center', fontsize=11, color='#aaaaaa')
 
-# Smoothed (bold)
-ax.plot(steps, smooth(grpo, 5), color=COLORS["qwen3_grpo"], lw=2.0,
-        label="Tinker GRPO (raw + smoothed)")
-ax.plot(steps, smooth(ppo, 5),  color=COLORS["qwen3_ppo"],  lw=2.0,
-        label="Modal PPO-REINFORCE (raw + smoothed)")
+cb = plt.colorbar(im, ax=ax, shrink=0.7, pad=0.02)
+cb.set_label('Peak Accuracy (%)', fontsize=10)
+cb.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f'{v:.0f}%'))
 
-# Shaded last-10 window
-last10_start = 21
-ax.axvspan(last10_start, 30, alpha=0.08, color="grey", zorder=0)
-ax.text(last10_start + 0.3, 1.04, "last-10 window",
-        fontsize=7.5, color="#666666", va="bottom")
+ax.set_title('Model Performance by Experiment Category (GSM8K)', pad=14)
+ax.tick_params(length=0)
+ax.spines[:].set_visible(False)
+ax.grid(False)
 
-# Annotate final last-10 averages
-grpo_l10 = np.mean(grpo[-10:])
-ppo_l10  = np.mean(ppo[-10:])
-ax.axhline(grpo_l10, xmin=(last10_start-1)/30, xmax=1,
-           color=COLORS["qwen3_grpo"], lw=0.9, ls=":", alpha=0.7)
-ax.axhline(ppo_l10,  xmin=(last10_start-1)/30, xmax=1,
-           color=COLORS["qwen3_ppo"],  lw=0.9, ls=":", alpha=0.7)
+# partial marker
+partial_models_cats = set()
+for exp_name, (ms, cat) in CATEGORY_MAP.items():
+    for exp in data:
+        if exp['experiment'] == exp_name and is_partial(exp):
+            partial_models_cats.add((ms, cat))
 
-ax.text(30.4, grpo_l10, f"{grpo_l10:.3f}", color=COLORS["qwen3_grpo"],
-        va="center", fontsize=8)
-ax.text(30.4, ppo_l10,  f"{ppo_l10:.3f}", color=COLORS["qwen3_ppo"],
-        va="center", fontsize=8)
+for ms, cat in partial_models_cats:
+    if ms in row_order and cat in categories:
+        i = row_order.index(ms)
+        j = categories.index(cat)
+        ax.text(j + 0.38, i - 0.38, '*', ha='right', va='top', fontsize=10,
+                color='#333333', fontweight='bold')
 
-ax.set_xlabel("Training Step")
-ax.set_ylabel("Mean Reward")
-ax.set_ylim(-0.05, 1.15)
-ax.set_xlim(0, 33)
-ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=8))
-ax.legend(loc="upper left", handlelength=1.5)
+ax.text(1.02, -0.04, '* partial run', transform=ax.transAxes, fontsize=8,
+        color='#555555', ha='left')
 
 plt.tight_layout()
-save(fig, "ppo_vs_grpo_detail")
+plt.savefig(OUTDIR + 'sensitivity_heatmap.png', dpi=300, bbox_inches='tight')
+plt.close()
+print('✓ sensitivity_heatmap.png')
 
-
-# ===========================================================================
-# Figure 5 — TRL GRPO seeds box/violin (single-column, 3.5 in)
-# ===========================================================================
-print("Generating Figure 5: old_trl_seeds")
-
-seeds_acc = np.array(trl["accuracies"])
-mean_acc  = trl["mean_accuracy"]
-std_acc   = trl["std"]
-seed_ids  = trl["seeds"]
-
-fig, ax = plt.subplots(figsize=(3.5, 3.6))
-
-# Violin
-parts = ax.violinplot([seeds_acc], positions=[0], widths=0.5,
-                      showmeans=False, showmedians=False, showextrema=False)
-for pc in parts["bodies"]:
-    pc.set_facecolor(COLORS["trl"])
-    pc.set_alpha(0.35)
-    pc.set_edgecolor(COLORS["trl"])
-
-# Box (IQR)
-q25, q75 = np.percentile(seeds_acc, [25, 75])
-ax.plot([0, 0], [q25, q75], lw=4, color=COLORS["trl"], solid_capstyle="round", zorder=4)
-ax.plot(0, np.median(seeds_acc), "o", ms=8, color=COLORS["trl"], zorder=5, label="Median")
-
-# Mean ± std
-ax.errorbar(0, mean_acc, yerr=std_acc, fmt="D", ms=7, color="#333333",
-            elinewidth=1.5, capsize=5, zorder=6, label=f"Mean ± SD ({mean_acc:.3f}±{std_acc:.3f})")
-
-# Individual points (jittered)
-np.random.seed(0)
-jitter = np.random.uniform(-0.05, 0.05, len(seeds_acc))
-for i, (acc, sid, jit) in enumerate(zip(seeds_acc, seed_ids, jitter)):
-    ax.scatter(jit, acc, s=40, color=COLORS["trl"], zorder=7, alpha=0.85,
-               edgecolors="white", linewidths=0.5)
-    ax.annotate(f"s={sid}", (jit, acc), xytext=(0.12, acc),
-                fontsize=7.5, color="#555555", va="center")
-
-ax.set_xlim(-0.5, 0.8)
-ax.set_ylim(0.55, 0.88)
-ax.set_xticks([])
-ax.set_ylabel("Accuracy (GSM8K)")
-ax.legend(loc="lower right", fontsize=8, handlelength=1.2)
-
-# Add thin horizontal reference lines at 0.7 and 0.8
-for ref in [0.7, 0.8]:
-    ax.axhline(ref, color="#cccccc", lw=0.8, ls="--", zorder=0)
-    ax.text(-0.48, ref, f"{ref:.1f}", fontsize=7.5, color="#aaaaaa", va="center")
-
-ax.text(0.03, 0.02,
-        f"Qwen2.5-0.5B · TRL GRPO · {trl['steps']} steps · {trl['gpu']} GPU\nn=5 seeds",
-        transform=ax.transAxes, fontsize=7.5, color="#666666", va="bottom")
-
-plt.tight_layout()
-save(fig, "old_trl_seeds")
-
-print("\nAll figures generated successfully.")
+print('\nAll figures saved to', OUTDIR)

@@ -74,3 +74,4 @@ paper/tikz/*.aux
 wandb/
 .modal/
 node_modules/
+wandb/

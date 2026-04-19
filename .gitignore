@@ -72,3 +72,5 @@ slack.har
 tasks/outcome/
 paper/tikz/*.aux
 wandb/
+.modal/
+node_modules/

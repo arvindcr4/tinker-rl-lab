@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "properties": {
+    "url": {"type": "string", "title": "URL"},
+    "owner": {"type": "string", "title": "Team Member"},
+    "platform": {"type": "string", "title": "Platform"},
+    "status": {"type": "string", "title": "Status (accessible/404/private/error)"},
+    "content_type": {"type": "string", "title": "Content Type (model/dataset/repo/project)"},
+    "description": {"type": "string", "title": "Description"},
+    "model_name": {"type": "string", "title": "Model/Repo Name"},
+    "key_metrics": {"type": "string", "title": "Key Metrics or Stats Found"},
+    "num_runs_or_files": {"type": "string", "title": "Number of Runs/Files/Commits"},
+    "last_updated": {"type": "string", "title": "Last Updated Date"},
+    "downloads_or_stars": {"type": "string", "title": "Downloads/Stars/Views"}
+  }
+}

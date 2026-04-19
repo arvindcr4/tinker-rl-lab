@@ -1,0 +1,169 @@
+% =============================================================================
+% Ethics Statement and Broader Impact
+% Self-contained file: \input{ethics_statement} into main.tex
+% Intended placement: after the Conclusion section, before References.
+% Label: \label{sec:impact}
+% =============================================================================
+
+\section{Broader Impact and Ethics Statement}
+\label{sec:impact}
+
+\subsection{Broader Impact}
+
+\paragraph{Positive impacts.}
+\ours{} lowers the barrier to reproducible RL post-training research by
+providing a unified benchmark harness that works across multiple compute
+platforms.  Prior work frequently reports results on a single proprietary
+GPU cluster, making it difficult to determine how much of the observed
+performance is attributable to the training algorithm versus the hardware
+and scheduling environment.  By running identical experiments on both a
+closed API (Tinker) and an open, explicitly provisioned cloud (Modal), we
+surface \emph{platform-dependent variance} as a first-class experimental
+variable.  This transparency allows practitioners to make more informed
+decisions when selecting infrastructure for RL fine-tuning and helps the
+community calibrate trust in benchmark results from single-platform papers.
+
+Releasing all code, model checkpoints, and experiment logs publicly enables
+independent replication, third-party auditing, and incremental improvement
+without the need to re-run expensive GPU-hours from scratch.  We expect the
+benchmark to be most valuable for researchers at resource-constrained
+institutions who need a principled starting point for RL post-training
+experiments.
+
+\paragraph{Potential negative impacts and limitations.}
+\begin{itemize}
+  \item \textbf{Reward hacking.}  RLHF and GRPO optimise a proxy reward
+        signal rather than the true underlying objective.  Models trained
+        to maximise verifier-based rewards on GSM8K or HumanEval may learn
+        to exploit idiosyncrasies of the verification function rather than
+        genuinely improving reasoning or coding ability.  We include KL
+        divergence tracking precisely to monitor policy drift, but reward
+        hacking remains a risk in any production deployment of RL-fine-tuned
+        models.
+
+  \item \textbf{Alignment concerns.}  Reinforcement learning from human or
+        proxy feedback can shift model behaviour in directions that are
+        difficult to predict or reverse.  Models trained with poorly
+        specified reward signals may become better at appearing correct while
+        simultaneously becoming less calibrated or more prone to confident
+        errors.  Our benchmark focuses on mathematically verifiable tasks,
+        which partially mitigates this risk, but we caution against
+        uncritical transfer of RL post-training pipelines to open-ended or
+        subjective task domains without additional alignment safeguards.
+
+  \item \textbf{Compute access disparities.}  Even with cost-optimised
+        LoRA fine-tuning, reproducing the full \ours{} benchmark requires
+        access to NVIDIA H100 GPUs (or equivalent) for 200--600 GPU-hours.
+        This remains out of reach for many research groups, particularly in
+        the Global South.  We partially address this by providing pretrained
+        checkpoints, but the barrier to running novel experiments remains
+        high.
+
+  \item \textbf{Closed-platform dependency.}  A portion of our benchmark
+        relies on the Tinker API, a proprietary, closed-source service.
+        Results from Tinker experiments cannot be independently reproduced
+        by researchers without API access.  We consider this a significant
+        limitation and flag all Tinker-derived results accordingly in our
+        figures.  We strongly recommend that readers treat Modal/open-source
+        results as the primary reproducibility reference.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+\subsection{Compute Costs and Carbon Footprint}
+% ---------------------------------------------------------------------------
+
+Table~\ref{tab:carbon} summarises our compute allocation and estimated
+carbon footprint.  Carbon intensity estimates follow the methodology of
+\citet{patterson2024empirical}, using a conservative average grid intensity
+of 0.233 kg\,CO$_2$-eq per kWh for the United States (EPA eGRID 2023
+average) and a power usage effectiveness (PUE) of 1.1 for cloud data
+centres.  NVIDIA H100 SXM5 TDP is 700\,W; NVIDIA L4 TDP is 72\,W.
+
+\begin{table}[h]
+\centering
+\caption{Compute allocation and estimated carbon footprint by platform.
+  Tinker API carbon figures are marked N/A because GPU type is undisclosed.
+  Modal figures use confirmed hardware specifications.}
+\label{tab:carbon}
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Platform} & \textbf{GPU} & \textbf{Est. GPU-h} &
+\textbf{TDP (W)} & \textbf{Est. kWh} &
+\textbf{Est. CO\textsubscript{2} (kg)} \\
+\midrule
+Modal (H100 SXM5) & H100 SXM5 & $\sim$250 & 700 & $\sim$192 & $\sim$0.49 \\
+Modal (L4, older runs) & L4       & $\sim$50  & 72  & $\sim$4   & $\sim$0.01 \\
+Tinker API            & unknown  & $\sim$950 & N/A & N/A       & N/A        \\
+\midrule
+\multicolumn{3}{l}{\textbf{Total (Modal only, estimable)}}      & & $\sim$196 & $\sim$0.50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The estimated carbon footprint for the Modal portion of our experiments is
+approximately \textbf{0.4--0.6\,kg\,CO$_2$-eq}, comparable to a short
+car journey.  We cannot estimate the Tinker API footprint due to the
+platform's opacity.  We acknowledge that the full experimental campaign
+(including failed runs) consumed additional GPU-hours; our estimates above
+reflect \emph{successful} jobs only.
+
+% ---------------------------------------------------------------------------
+\subsection{Data Provenance}
+% ---------------------------------------------------------------------------
+
+All training and evaluation datasets used in \ours{} are publicly available
+research datasets.  No private, proprietary, or sensitive data were used
+at any stage.
+
+\begin{itemize}
+  \item \textbf{GSM8K}~\cite{cobbe2021training}: 8,500 grade-school math
+        word problems with natural-language solutions, released by OpenAI
+        under the MIT licence.  We use the standard train/test splits
+        without modification.
+
+  \item \textbf{HumanEval}: 164 Python programming problems with unit
+        tests, released by OpenAI under the MIT licence.  We use the
+        original evaluation protocol (pass@$k$) without modification.
+
+  \item \textbf{Synthetic tool-use dataset}: Generated by the authors from
+        publicly documented APIs (calculator, web-search stub, calendar).
+        No third-party proprietary data or user data were used in
+        generation.  The generation prompts and all resulting examples are
+        included in the repository under MIT licence.
+\end{itemize}
+
+No web-scraped data, personally identifiable information, or data subject
+to copyright restrictions were used.  No human annotators were employed.
+
+% ---------------------------------------------------------------------------
+\subsection{Limitation Acknowledgment: Tinker API Closed-Source Nature}
+% ---------------------------------------------------------------------------
+
+A central tension in \ours{} is that we benchmark \emph{against} a
+closed-source platform while simultaneously advocating for reproducibility.
+We include Tinker API experiments for three reasons: (i) Tinker represents
+a realistic production environment for practitioners who lack on-premises
+GPU clusters; (ii) the platform/open-source gap is itself a scientifically
+interesting quantity to measure; and (iii) the high failure rate (11 of 14
+experiments, 79\%) is a finding worth documenting publicly, as it reveals
+the fragility of API-dependent training pipelines.
+
+We make the following commitments to mitigate the reproducibility gap:
+\begin{enumerate}
+  \item All Tinker API experiment scripts, configuration files, and raw
+        logs are archived in the repository.  Researchers with Tinker
+        access can attempt replication using our exact configurations.
+  \item All figures derived \emph{solely} from Tinker data are marked with
+        ``\dag{}'' and accompanied by a note that independent reproduction
+        requires Tinker API access.
+  \item Primary statistical conclusions are drawn from Modal experiments
+        wherever possible.  Tinker-only results are reported descriptively
+        and are not used to support quantitative claims.
+  \item If Tinker releases an open-source version or a compatible open
+        alternative becomes available, we commit to re-running failed
+        experiments and issuing a revised version of this paper.
+\end{enumerate}
+
+We believe honest disclosure of these constraints is more valuable to the
+community than suppressing the Tinker experiments or presenting only
+successful runs.

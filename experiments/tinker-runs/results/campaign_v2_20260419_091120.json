@@ -2,7 +2,7 @@
   "campaign": "bitter_lesson_v2",
   "timestamp": "20260419_091120",
   "total": 32,
-  "completed": 1,
+  "completed": 6,
   "results": [
     {
       "tag": "w1_llama33-70b-inst",
@@ -11,6 +11,86 @@
       "status": "failed",
       "error": "You are trying to access a gated repo.\nMake sure to have access to it at https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct.\n403 Client Error. (Request ID: Root=1-69e49c38-615292e038ac86cc2890c098;f85f2cf1-1dec-4369-a31a-de5d23c95327)\n\nCannot access gated repo for url https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct/resolve/main/config.json.\nAccess to model meta-llama/Llama-3.3-70B-Instruct is restricted and you are not in the authorized list. Visit https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct to ask for access.",
       "timestamp": "2026-04-19T09:11:20.319145"
+    },
+    {
+      "tag": "w1_qwen3-8b-base",
+      "model": "Qwen/Qwen3-8B-Base",
+      "wave": "1-frontier",
+      "status": "completed",
+      "run_id": "ca0d6a00-3a4c-5a24-8b8d-f9d69db9609e:train:0",
+      "seed": 42,
+      "group_size": 8,
+      "lr": 1e-05,
+      "steps": 30,
+      "peak_reward": 1.0,
+      "last10_avg": 0.85625,
+      "first5_avg": 0.825,
+      "reward_trace": [
+        0.6875,
+        0.9375,
+        1.0,
+        0.875,
+        0.625,
+        0.625,
+        1.0,
+        0.875,
+        0.9375,
+        0.8125,
+        1.0,
+        0.9375,
+        0.9375,
+        0.625,
+        0.875,
+        0.9375,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.8125,
+        1.0,
+        0.5625,
+        0.9375,
+        0.9375,
+        1.0,
+        0.8125,
+        0.9375,
+        0.875,
+        0.6875
+      ],
+      "final_checkpoint": "tinker://ca0d6a00-3a4c-5a24-8b8d-f9d69db9609e:train:0/sampler_weights/final",
+      "timestamp": "2026-04-19T09:26:11.146835"
+    },
+    {
+      "tag": "w1_llama31-70b-base",
+      "model": "meta-llama/Llama-3.1-70B",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "Run (bxe5um4k) is finished. The call to `_summary_update_callback` will be ignored. Please make sure that you are using an active run.",
+      "timestamp": "2026-04-19T09:42:52.141549"
+    },
+    {
+      "tag": "w1_kimi-k25",
+      "model": "moonshotai/Kimi-K2.5",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "Run (hiy9w3wo) is finished. The call to `_summary_update_callback` will be ignored. Please make sure that you are using an active run.",
+      "timestamp": "2026-04-19T09:47:03.621507"
+    },
+    {
+      "tag": "w1_gpt-oss-120b",
+      "model": "openai/gpt-oss-120b",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "Run (v3ur5b1w) is finished. The call to `_summary_update_callback` will be ignored. Please make sure that you are using an active run.",
+      "timestamp": "2026-04-19T09:48:51.607943"
+    },
+    {
+      "tag": "w1_kimi-k2-thinking",
+      "model": "moonshotai/Kimi-K2-Thinking",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "Run (oeidbyzx) is finished. The call to `_summary_update_callback` will be ignored. Please make sure that you are using an active run.",
+      "timestamp": "2026-04-19T09:51:11.308368"
     }
   ]
 }

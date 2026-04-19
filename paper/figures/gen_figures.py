@@ -296,8 +296,10 @@ for i in range(n_metrics):
         raw_val = raw_matrix[i, j]
         norm_val = norm_matrix[i, j]
         text = fmt_val(metric_names[i], raw_val)
-        # White text on dark cells, dark text on light cells
-        text_color = "white" if (norm_val > 0.75 or norm_val < 0.25) else "#28251D"
+        # Adaptive text color based on cell luminance
+        rgba = cmap(norm_val)
+        lum = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
+        text_color = "#28251D" if lum > 0.5 else "white"
         ax.text(j, i, text,
                 ha="center", va="center",
                 fontsize=10.5, fontweight="medium",

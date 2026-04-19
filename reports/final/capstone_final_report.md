@@ -4,7 +4,7 @@
 
 **Project Guides:** Prof. Narayana Darapaneni (Northwestern University / Great Learning) | Mr. Anwesh Reddy Paduri (Great Learning / PES University)
 
-Arvind C R (PES2PGE24DS006), Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L (PES2PGE24DS176), Dhruva N Murthy, Mohammad Rafi
+Arvind C R (PES2PGE24DS006), Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L (PES2PGE24DS176), Dhruva N Murthy, Mohammad Rafi, Anwesh Reddy Paduri, Prof. Narayana Darapaneni
 
 **Date:** April 5, 2026 (Updated with 15 completed World-Class Suite results and full statistical analysis)
 

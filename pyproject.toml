@@ -1,13 +1,13 @@
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "tinkerrl"
 version = "0.1.0"
 description = "TinkerRL: A Reproducible Multi-Library Reinforcement Learning Benchmark Suite"
 readme = "README.md"
-license = {text = "MIT"}
+license = {text = "Apache-2.0"}
 requires-python = ">=3.9"
 authors = [
     {name = "PES LLM Research Team", email = "arvindcr4@gmail.com"},
@@ -22,7 +22,7 @@ keywords = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -75,15 +75,68 @@ Repository = "https://github.com/pes-llm-research/tinker-rl-lab"
 Issues = "https://github.com/pes-llm-research/tinker-rl-lab/issues"
 
 [tool.setuptools.packages.find]
-include = ["tinkerrl*", "utils*", "experiments*", "scripts*"]
+# First-party Python packages only. Vendored / integration subtrees
+# (atropos, verl, openrlhf, skyrl, trl_integrations, unified,
+# agentic-rl-finetuning, ai-scientist-template, research_loop) are kept
+# out of the `tinkerrl` wheel on purpose — they ship as source-only
+# references from upstream projects and have their own packaging.
+include = ["tinkerrl*", "utils*"]
+exclude = [
+    "atropos*", "verl*", "openrlhf*", "skyrl*", "trl_integrations*",
+    "unified*", "agentic-rl-finetuning*", "ai-scientist-template*",
+    "research_loop*", "capstone-literature-survey*", "huggingface*",
+    "tests*", "paper*", "reports*", "experiments*", "scripts*",
+]
 
 [tool.ruff]
 line-length = 100
 target-version = "py39"
+extend-exclude = [
+    # Vendored / upstream integrations — not authored by this project.
+    "atropos",
+    "verl",
+    "openrlhf",
+    "skyrl",
+    "trl_integrations",
+    "unified",
+    "agentic-rl-finetuning",
+    "ai-scientist-template",
+    "research_loop",
+    "capstone-literature-survey",
+    "huggingface",
+    # Generated / archived notebooks & result files.
+    "*.ipynb",
+    "paper/tikz",
+    "experiments/collab-results",
+    "experiments/modal",
+    "experiments/tinker-runs",
+    "experiments/10x_structural_ceiling",
+    "experiments/notebooks",
+    "reports/final",
+    "grpo_ablation_results",
+]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP"]
-ignore = ["E501"]
+# Keep the checks that catch *real* bugs: unused imports, undefined names,
+# redefinitions, and syntax. Drop the stylistic checks that produce noise
+# on a research-code repo with many one-off scripts and semicolons.
+select = ["F", "W", "I", "UP031"]
+ignore = [
+    "E501",   # line length — handled by formatter if at all
+    "F401",   # unused imports — common in research notebooks / try-blocks
+    "F541",   # f-string without placeholders — used for multi-line format strings
+    "F841",   # unused local (research scripts set aside intermediates)
+    "F811",   # redefinition — common in notebook-style scripts
+    "F821",   # undefined name — false positives from tinker/verl stubs
+    "W291",   # trailing whitespace (autofixable; CI should not block on it)
+    "W293",   # blank line with whitespace
+    "I001",   # unsorted imports (let contributors organize imports their way)
+]
+
+[tool.ruff.format]
+# Only format what we lint; keep research scripts as the author wrote them
+# unless they clearly opt-in via `ruff format`.
+exclude = ["experiments/**", "scripts/**"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

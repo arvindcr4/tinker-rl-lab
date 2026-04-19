@@ -31,7 +31,7 @@ def audit_paper() -> dict:
     # Check if tables/captions contain "training-set" or "training reward" qualifiers
     train_reward_labels = len(re.findall(r'training[- ](?:set|reward|prompt)', full, re.I))
     if train_reward_labels < 4:  # should appear near every results table
-        issues["D1_train_label"] = "Training-set results not consistently labeled (found %d, need >=4)" % train_reward_labels
+        issues["D1_train_label"] = f"Training-set results not consistently labeled (found {train_reward_labels}, need >=4)"
 
     # 2. Missing comprehensive methods table (compute budgets)
     if not re.search(r'GPU[- ]hours|tokens processed|compute budget|wall[- ]clock', full, re.I):
@@ -103,12 +103,12 @@ def audit_paper() -> dict:
         rw_text = related_work_match.group(1)
         rw_cites = len(re.findall(r'\\cite[tp]?\{', rw_text))
         if rw_cites < 8:
-            issues["X_related_work_thin"] = "Related work has only %d citations (need >=8)" % rw_cites
+            issues["X_related_work_thin"] = f"Related work has only {rw_cites} citations (need >=8)"
 
     # 17. References too few
     bib_entries = len(re.findall(r'@\w+\{', bib))
     if bib_entries < 15:
-        issues["X_bib_entries"] = "Bibliography has only %d entries (need >=15)" % bib_entries
+        issues["X_bib_entries"] = f"Bibliography has only {bib_entries} entries (need >=15)"
 
     # === Tier 2: Deeper quality issues from discovery report ===
 

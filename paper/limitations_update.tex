@@ -1,0 +1,168 @@
+% =============================================================================
+\section{Limitations}
+\label{sec:limitations}
+% =============================================================================
+
+We report our limitations with deliberate candor. Top venues reward honest
+analysis; we believe documenting infrastructure failures alongside algorithmic
+results is itself a contribution to reproducible science.
+
+% -----------------------------------------------------------------------
+\subsection{Infrastructure Failures}
+\label{sec:infra_failures}
+% -----------------------------------------------------------------------
+
+\paragraph{JWT Token Expiration (Tinker API).}
+Of 14 Tinker experiments launched, \textbf{11 failed mid-run} because the
+platform's short-lived JWT authentication token expired before training
+completed. Only three experiments ran to completion: DeepSeek-V3.1,
+Qwen3-8B, and Llama-3.1-8B (tool\_use configuration). This is a fundamental
+limitation of serverless ML platforms that do not support long-running
+stateful jobs out of the box. Our workaround---issuing tokens immediately
+before job submission---reduces but does not eliminate the hazard for
+multi-hour runs. We recommend that platform operators expose a token-refresh
+endpoint or implement background credential rotation; until then, practitioners
+should checkpoint frequently and implement automatic restart logic. All
+reported Tinker results in this paper derive from the three completed runs;
+the remaining 11 experimental cells are treated as missing data and excluded
+from aggregated statistics.
+
+\paragraph{Modal Timeout (60-Minute Hard Limit).}
+Three of six Modal-hosted evaluation jobs timed out at the platform's
+60-minute wall-clock limit: held-out evaluations on 32B and 27B models, and
+the HumanEval pass@1 suite. Large-model inference on a single A100 is
+substantially slower than expected for generation-heavy tasks---generating
+even modest numbers of long solutions at 32B scale can exceed 60 minutes
+easily. Affected cells are marked \texttt{[TIMEOUT]} in the tables.
+Future work should shard generation across multiple GPUs (tensor parallelism),
+use speculative decoding, or negotiate higher time limits with the provider.
+
+\paragraph{KL Divergence Tracking Bug.}
+The gradient computation for KL divergence monitoring failed because reference
+model logits were computed under \texttt{torch.no\_grad()}, but the downstream
+KL term expected gradients from the reference branch. The resulting
+\texttt{RuntimeError} (``element 0 of tensors does not require grad'') silently
+killed the tracking loop without halting training, so policy-drift monitoring
+was absent for all completed Tinker runs. Consequently, Table~\ref{tab:kl_divergence}
+contains no Tinker-platform entries. The fix---retaining gradients for the
+reference model or using \texttt{.detach()} consistently on both branches
+before computing the KL estimate---is straightforward but was identified only
+in post-hoc code review. We release the corrected implementation in
+\texttt{src/grpo\_trainer.py} and note that this bug class is likely to affect
+other GRPO re-implementations.
+
+\paragraph{Weights \& Biases Step-Level Data Loss.}
+All training runs completed W\&B sync without error, yet querying the API
+for step-level reward trajectories returns zero steps for reward metrics across
+all experiments---only run-level \emph{summary} values (final reward, episode
+count) were captured. We traced this to a logging pattern that flushed metrics
+to the summary dict (\texttt{wandb.run.summary.update(\ldots)}) rather than
+calling \texttt{wandb.log(\{..., "step": step\})} at each training step,
+causing W\&B to record a single aggregate point instead of a time series.
+As a result, learning curves presented in Appendix~\ref{app:curves} are
+reconstructed from local CSV checkpoints rather than W\&B trajectories, and
+the published W\&B runs should \emph{not} be used to infer convergence speed.
+The corrected logging code is included in the repository.
+
+% -----------------------------------------------------------------------
+\subsection{Methodological Limitations}
+\label{sec:method_limits}
+% -----------------------------------------------------------------------
+
+\paragraph{Closed-Source Training Implementation (Tinker).}
+Tinker is a commercial, closed-source API. We cannot inspect the exact GRPO
+loss formulation, reward normalization scheme, minibatch construction, or
+hardware configuration used server-side. Our Tinker results therefore measure
+the \emph{platform's} GRPO implementation, not a precisely specified algorithm.
+Researchers wishing to attribute performance differences to specific
+implementation choices should use the open-source backends (TRL, OpenRLHF,
+veRL) where every hyperparameter is auditable.
+
+\paragraph{Short Training Horizons (30 Steps).}
+All Tinker experiments used a budget of 30 gradient steps---a deliberate choice
+to contain API costs but one that may be insufficient to observe convergence
+on harder tasks. Thirty steps represents roughly one or two passes over the
+prompt pool at the batch sizes we used. Long-horizon effects such as reward
+hacking, catastrophic forgetting, or late-stage policy collapse are unlikely
+to manifest at this scale. We regard our Tinker results as \emph{early-training
+snapshots} rather than converged solutions, and caution against drawing strong
+conclusions about asymptotic performance.
+
+\paragraph{Single-Seed Tinker Experiments.}
+Cost constraints precluded multi-seed replication on Tinker: each configuration
+was run once. Without variance estimates we cannot apply standard significance
+tests to Tinker results. We report these numbers descriptively and recommend
+that future work with larger budgets run at least three seeds, consistent with
+best practices from \citet{henderson2018deep}.
+
+\paragraph{Train-Set Reward as the Primary Metric.}
+Reported rewards are computed on the same prompt distribution used for
+training, not a held-out test split. Only two partial held-out evaluations
+were completed before timeout (Section~\ref{sec:infra_failures}). There is
+therefore a non-trivial risk that reported gains partly reflect prompt-level
+memorization rather than genuine generalization. Our open-source baselines
+(TRL, CleanRL) do include held-out evaluation, providing a partial check;
+but the Tinker-API results lack this safeguard.
+
+\paragraph{Tool-Use Task: 0\% Reward.}
+The synthetic tool-use task yielded a reward of exactly 0\% for all completed
+runs under the Tinker backend. We interpret this as a task-design problem
+rather than a model capability failure: the reward function requires exact
+JSON-schema compliance with nested function signatures, a level of precision
+that is difficult to reach in 30 steps without a warm-started SFT initialization.
+The task may also require a graduated curriculum (simple → complex tool calls)
+that was absent from our design. We release the task definition and reward
+function so that the community can iterate; in the interim, tool-use results
+should be treated as a negative baseline rather than a performance signal.
+
+% =============================================================================
+\subsection{Broader Impact}
+\label{sec:impact}
+% =============================================================================
+
+\paragraph{Alignment and Misuse.}
+GRPO and related RLHF methods are dual-use technologies. On the positive side,
+they are the primary mechanism by which frontier models are aligned to human
+preferences, and our benchmark lowers the barrier to studying these methods
+rigorously. On the negative side, the same reward-maximization machinery can
+be directed at adversarial objectives---optimizing for reward-hack proxies,
+generating persuasive misinformation, or circumventing safety classifiers. We
+do not provide new attack capabilities, but improvements in RL post-training
+efficiency reduce the compute budget required for such misuse. We encourage
+the community to develop robust reward modeling and out-of-distribution
+detection in parallel with efficiency advances.
+
+\paragraph{Democratizing RL-for-LLM Research.}
+A primary motivation for \ours{} is to make rigorous RL post-training
+experiments accessible to researchers without large-scale compute. By
+publishing standardized tasks, Docker containers, and cost-annotated run
+logs, we aim to reduce the advantage that well-resourced labs hold in this
+space. Our total experimental expenditure was modest: approximately \$120 in
+Tinker API credits (of which roughly \$80 was consumed by the 11 failed runs),
+and roughly \$95 in Modal compute for the six held-out evaluation jobs
+(three of which timed out). Open-source backend experiments were conducted on
+a single A100 node donated by PES University's LLM Research Group. We include
+these cost breakdowns explicitly so that other groups can budget accordingly.
+
+\paragraph{Training Data and Privacy.}
+All training data is drawn from publicly released datasets: GSM8K
+\citep{cobbe2021gsm8k} for mathematical reasoning, HumanEval
+\citep{chen2021codex} for code generation, and a synthetic tool-use corpus
+generated without human subjects. No private data, personally identifiable
+information, or licensed proprietary content is used. The benchmark does not
+involve human participants in any capacity, and no IRB review was required.
+
+\paragraph{No Direct Dual-Use Concern.}
+Our contribution is a \emph{benchmarking framework}, not a new model or
+capability. We do not release any model trained on sensitive, harmful, or
+restricted content. All evaluated checkpoints are derived from publicly
+available base models under permissive licenses (Apache 2.0 or equivalent).
+We do not foresee direct security or biosafety risks arising from this work.
+
+\paragraph{Reproducibility Statement.}
+Despite the infrastructure failures documented above, all successfully
+completed experiments are reproducible via Docker containers, fixed random
+seeds, and step-by-step commands in \texttt{REPRODUCE.md}. Corrected logging
+and KL-tracking code is included in the release. We have archived all local
+CSV training logs so that the step-level reward trajectories excluded from
+W\&B are nonetheless available to other researchers.

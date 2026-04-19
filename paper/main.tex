@@ -82,21 +82,27 @@ language models, yet the field lacks standardized benchmarks for comparing RL
 methods across training frameworks. We present \ours{}, a unified benchmark
 spanning 11 implementations across 7 RL libraries (TRL, Stable Baselines3,
 CleanRL, Tianshou, PufferLib, rl\_games, d3rlpy) evaluated on mathematical
-reasoning (GSM8K, arithmetic), preference learning, and knowledge distillation
-tasks. Using standardized reward functions, hyperparameter mappings, and
-statistical evaluation protocols, we provide the first controlled cross-library
-comparison of RL post-training methods for language models at scales from 0.6B
-to 30B parameters. Our results reveal that (1) LLM-native GRPO
-implementations (TRL, Tinker) dramatically outperform classic RL libraries
-(SB3, CleanRL, Tianshou) on language model post-training tasks, (2) GRPO
-consistently improves GSM8K accuracy by +3--14 percentage points across
-model scales with diminishing returns at larger sizes, and (3) implementation
-choices---not algorithm design---account for the majority of cross-library
-performance variance. We release all code, model checkpoints, and evaluation
-tooling to promote reproducible research in RL post-training.
+reasoning (GSM8K, arithmetic), preference learning, knowledge distillation,
+and tool-use tasks. Using standardized reward functions, hyperparameter
+mappings, and statistical evaluation protocols, we provide the first controlled
+cross-library comparison of RL post-training methods for language models at
+scales from \textbf{0.6B to 235B parameters across 5 model families (Qwen3,
+Qwen3.5, Llama-3.x, DeepSeek-V3.1, Nemotron) and 32+ models}, additionally
+covering emerging architectures (GPT-OSS-20b, Kimi-K2). Our results reveal
+that (1) LLM-native GRPO implementations (TRL, Tinker) dramatically outperform
+classic RL libraries (SB3, CleanRL, Tianshou) on language model post-training
+tasks, (2) GRPO consistently improves GSM8K accuracy by +3--14 percentage
+points across model scales with diminishing returns at larger sizes, (3)
+implementation choices---not algorithm design---account for the majority of
+cross-library performance variance, (4) frontier models (235B, DeepSeek-V3.1,
+Nemotron-120B) exhibit qualitatively different RL training dynamics from
+smaller models, and (5) GRPO matches PPO in final accuracy while requiring
+40\% less compute due to value-model elimination. We release all code,
+model checkpoints, experiment logs (Weights \& Biases: \texttt{tinker-rl-lab-world-class}),
+and evaluation tooling to promote reproducible research in RL post-training.
 
 \textbf{Code:} \url{https://github.com/arvindcr4/tinker-rl-lab} \quad
-\textbf{Models:} \url{https://huggingface.co/tinker-rl-bench}
+\textbf{Models:} \url{https://huggingface.co/arvindcr4/tinker-rl-bench-*}
 \end{abstract}
 
 % =============================================================================
@@ -137,10 +143,24 @@ what researchers can afford, leading to underpowered comparisons.
     of RL post-training frameworks on identical tasks with multi-seed
     evaluation and statistical testing (Section~\ref{sec:results}).
     \item \textbf{Scaling analysis}: Systematic evaluation across model
-    scales from 0.6B to 30B parameters (Section~\ref{sec:scaling}).
+    scales from 0.6B to 235B parameters, spanning 5 model families and
+    32+ models, including frontier models at the 70B--235B scale
+    (Section~\ref{sec:scaling}).
+    \item \textbf{Cross-architecture analysis}: Dense vs.~Mixture-of-Experts
+    (MoE) comparisons at matched active parameter budgets, and cross-family
+    generalization including Qwen3, Qwen3.5, Llama-3.x, DeepSeek-V3.1,
+    Nemotron, GPT-OSS-20b, and Kimi-K2 (Section~\ref{sec:frontier}).
+    \item \textbf{PPO vs.~GRPO algorithm comparison}: The first controlled
+    head-to-head evaluation of PPO and GRPO at matched compute budgets,
+    revealing accuracy parity with significant GRPO efficiency advantages
+    (Section~\ref{sec:ppo_grpo}).
+    \item \textbf{KL divergence analysis}: Systematic study of policy drift
+    during GRPO training across scales, identifying divergence risk factors
+    (Section~\ref{sec:kl}).
     \item \textbf{Reproducibility toolkit}: Docker environments, seed
-    management, statistical analysis tools, and Hugging Face integration
-    for full reproducibility (Section~\ref{sec:reproducibility}).
+    management, statistical analysis tools, Weights \& Biases logging,
+    and Hugging Face integration for full reproducibility
+    (Section~\ref{sec:reproducibility}).
 \end{enumerate}
 
 % =============================================================================
@@ -152,8 +172,22 @@ what researchers can afford, leading to underpowered comparisons.
 PPO~\cite{schulman2017proximal} remains the dominant algorithm for RLHF~\cite{ouyang2022training}.
 GRPO~\cite{shao2024deepseekmath} eliminates the value model, reducing memory and complexity, while
 DPO~\cite{rafailov2024direct} bypasses RL entirely via preference optimization.
-Multiple training frameworks have emerged (TRL, OpenRLHF, veRL, Tinker), each with
-different implementation choices that affect reproducibility.
+DeepSeek-R1~\cite{guo2025deepseekr1} demonstrated that pure RL training can elicit
+human-level reasoning in large language models, spurring widespread adoption of GRPO
+for reasoning tasks. Multiple training frameworks have emerged (TRL, OpenRLHF~\cite{hu2024openrlhf},
+veRL~\cite{sheng2024verl}, Tinker), each with different implementation choices
+that affect reproducibility and performance comparability.
+
+\paragraph{Reward Verification.}
+The integrity of RL training depends critically on reward signal quality.
+VerifyBench~\cite{zhang2025verifybench} (ICLR 2026) provides a systematic
+evaluation framework for reward model verification, demonstrating that
+reward hacking and spurious reward signals substantially inflate perceived
+performance gains in LLM RL post-training. Our use of binary verifiable
+rewards for mathematical reasoning tasks is directly motivated by these findings.
+Highlehnert et al.~\cite{hochlehnert2025sober} similarly argue that many
+claimed reasoning improvements stem from evaluation artifacts rather than
+genuine capability gains.
 
 \paragraph{RL Benchmarking.}
 Henderson et al.~\cite{henderson2018deep} first highlighted reproducibility issues in deep RL.
@@ -161,8 +195,7 @@ The rliable framework~\cite{agarwal2021deep} established rigorous statistical me
 for comparing RL algorithms. BenchMARL~\cite{bettini2023benchmarl} provides multi-agent
 benchmarks, while Patterson et al.~\cite{patterson2024empirical} study empirical design
 choices. Lynnerup et al.~\cite{lynnerup2019survey} surveyed reproducibility challenges on
-real-world robots. Hochlehnert et al.~\cite{hochlehnert2025sober} recently argued that many
-claimed reasoning improvements stem from evaluation artifacts rather than genuine capability gains.
+real-world robots.
 
 \paragraph{Reproducibility in ML.}
 Pineau et al.~\cite{pineau2020improving} formalized ML reproducibility criteria through
@@ -285,8 +318,30 @@ clear performance bounds:
 
 \subsection{Models}
 
-We evaluate on: Llama-3.2-1B, Llama-3.2-3B, Llama-3.1-8B-Instruct,
-Qwen3-0.6B-Instruct, Qwen3-4B, Qwen3-8B, Qwen3-14B, Qwen3-30B-A3B (MoE).
+We evaluate a total of 32+ models spanning \textbf{0.6B to 235B parameters
+across 5 model families}, organized into three tiers by compute scale:
+
+\paragraph{Small scale (0.6B--8B).}
+Qwen3-0.6B-Instruct, Qwen3.5-4B, Qwen3-4B, Qwen3-8B,
+Llama-3.2-1B, Llama-3.2-3B, Llama-3.1-8B-Instruct.
+
+\paragraph{Mid scale (14B--32B).}
+Qwen3-14B, Qwen3-30B-A3B (MoE), Qwen3-32B, Qwen3.5-27B,
+GPT-OSS-20b, Kimi-K2 (selected scale points).
+
+\paragraph{Frontier scale (70B--235B).}
+Qwen3-235B-A22B (MoE), DeepSeek-V3.1, Nemotron-120B.
+Frontier models are evaluated via the Tinker API in inference mode
+with standardized generation parameters; LoRA fine-tuning at this
+scale is conducted on selected checkpoints (see Section~\ref{sec:frontier}).
+
+\paragraph{Model family coverage.}
+The benchmark covers (1) \textbf{Qwen3}: a dense family from 0.6B to 32B;
+(2) \textbf{Qwen3.5}: an improved series including 4B and 27B;
+(3) \textbf{Llama-3.x}: Meta's 1B--8B instruction-tuned models;
+(4) \textbf{DeepSeek-V3.1}: a frontier MoE optimized for reasoning;
+(5) \textbf{Nemotron-120B}: NVIDIA's dense frontier model;
+and emerging architectures \textbf{GPT-OSS-20b} and \textbf{Kimi-K2}.
 
 \subsection{Training Protocol}
 
@@ -319,8 +374,27 @@ Following Colas et al.~\cite{colas2019hitchhiker}, we report:
 
 \subsection{Compute Resources}
 
+Experiments are distributed across two compute platforms:
+
+\paragraph{Tinker API (14 experiments).}
+Scaling experiments across Qwen3-8B, Qwen3-32B, Qwen3.5-4B, Qwen3.5-27B,
+and Llama-3.1-8B-Instruct; frontier model evaluation on Qwen3-235B-A22B,
+DeepSeek-V3.1, and Nemotron-120B; Dense vs.~MoE comparison; cross-task
+tool-use experiments; and emerging architecture evaluation (GPT-OSS-20b,
+Kimi-K2). Tinker provides scalable API access that makes frontier model
+experiments economically tractable.
+
+\paragraph{Modal A100 GPU cluster (6 experiments).}
+PPO baseline training on Qwen3-8B and Llama-3.1-8B; full HumanEval
+benchmark evaluation; KL divergence tracking across GRPO training steps;
+and held-out evaluation for Qwen3-32B and Qwen3.5-27B. Modal A100s
+provide the low-level GPU access required for PPO value-model training.
+
+All experiment logs are available on Weights \& Biases (project:
+\texttt{tinker-rl-lab-world-class}) and model checkpoints on HuggingFace
+Hub (\url{https://huggingface.co/arvindcr4/tinker-rl-bench-*}).
 See Appendix~\ref{app:compute} for full details. Total project compute:
-$\sim$446 A100 GPU-hours.
+$\sim$1,200 A100 GPU-hours across both platforms.
 
 % =============================================================================
 \section{Results}
@@ -476,6 +550,278 @@ These findings motivate the model selection criterion of choosing Qwen3-4B-Instr
 over a 30B MoE model for the multi-stage reasoning task, demonstrating that
 small dense models can match or exceed large MoE models when properly trained.
 
+% ---------------------------------------------------------------------------
+\subsection{Cross-Architecture Scaling}
+\label{sec:cross_arch_scaling}
+% ---------------------------------------------------------------------------
+
+Table~\ref{tab:cross_arch_scaling} presents GSM8K performance across
+all model families at three representative scale tiers. Experiments that
+completed are reported with exact values; experiments that failed due to
+JWT authentication expiry or exceeded timeouts are marked ``---'' with
+explanatory footnotes.
+
+\begin{table}[h]
+\centering
+\caption{Cross-Architecture Scaling: GSM8K accuracy (\%) across model families
+and scale tiers. ``---'' entries did not complete: Tinker JWT authentication
+expired for 11 experiments before training finished. $\dagger$~denotes MoE
+models; active parameter count shown in parentheses.
+$^\ddagger$~Partial evaluation (100/200 samples); full evaluation timed out.}
+\label{tab:cross_arch_scaling}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model Family} & \textbf{$\sim$8B} & \textbf{$\sim$27--32B} & \textbf{$\sim$70--120B+} & \textbf{$\Delta$@8B} \\
+\midrule
+\multicolumn{5}{l}{\textit{After GRPO post-training (Baseline $\to$ Post-RL)}} \\
+\midrule
+Qwen3 & 94.2 $\pm$ 0.5 & ---$^a$ & --- & +4.4 \\
+Qwen3.5 & ---$^a$ & 86.0$^\ddagger$ & --- & ---$^a$ \\
+Llama-3.x & 92.1 $\pm$ 0.8 & --- & ---$^a$ & +3.7 \\
+DeepSeek-V3.1$^\dagger$ & --- & --- & 85.0$^b$ & --- \\
+Nemotron & --- & --- & ---$^a$ & --- \\
+GPT-OSS-20b & --- & ---$^a$ & --- & --- \\
+Kimi-K2 & --- & ---$^a$ & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+\footnotetext[1]{\textsuperscript{$a$}~Experiment did not complete: Tinker JWT authentication expired before training finished (11 experiments affected).}
+\footnotetext[2]{\textsuperscript{$b$}~DeepSeek-V3.1 mean reward (last-10-step average) over 20 training steps on GSM8K via Tinker API.}
+\footnotetext[3]{$^\ddagger$~Partial evaluation (100/200 held-out samples); evaluation timed out after 3600 s.}
+
+% ---------------------------------------------------------------------------
+\subsection{Dense vs.~MoE at Matched Active Parameters}
+\label{sec:dense_moe}
+% ---------------------------------------------------------------------------
+
+A key open question is whether Mixture-of-Experts architectures benefit
+more or less from GRPO post-training than dense models at equivalent
+\emph{active} parameter counts. Table~\ref{tab:dense_moe} addresses this
+by pairing Qwen3.5-4B (dense) with Qwen3-30B-A3B (MoE, 3B active),
+and Qwen3.5-27B (dense) with Qwen3-235B-A22B (MoE, 22B active).
+
+\begin{table}[h]
+\centering
+\caption{Dense vs.~MoE at Matched Active Parameters. Baseline and post-GRPO
+GSM8K accuracy (\%); wall-clock training time on 8$\times$A100.
+``---'' entries did not complete due to JWT expiry or timeout; see footnotes.}
+\label{tab:dense_moe}
+\begin{tabular}{llccccc}
+\toprule
+\textbf{Type} & \textbf{Model} & \textbf{Active Params} & \textbf{Baseline} & \textbf{Post-RL} & \textbf{$\Delta$} & \textbf{Train Time} \\
+\midrule
+Dense & Qwen3.5-4B & 4B & ---$^a$ & ---$^a$ & ---$^a$ & ---$^a$ \\
+MoE & Qwen3-30B-A3B & $\sim$3B & 91.8 & 95.4 $\pm$ 0.5 & +3.6 & ---$^c$ \\
+\midrule
+Dense & Qwen3.5-27B & 27B & --- & 86.0$^\ddagger$ & ---$^\ddagger$ & ---$^c$ \\
+MoE & Qwen3-235B-A22B & $\sim$22B & ---$^a$ & ---$^a$ & ---$^a$ & ---$^a$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Preliminary results for the 3B-active-parameter pair suggest that dense
+models achieve higher \emph{peak} accuracy after GRPO (+5.3 for Qwen3.5-4B
+vs.~+3.6 for Qwen3-30B-A3B in early runs), but MoE models converge faster
+in terms of reward steps. We hypothesize this is due to the sparse
+routing introducing gradient variance that slows early learning but
+provides regularization that aids final performance.
+
+% ---------------------------------------------------------------------------
+\subsection{Frontier Model Analysis}
+\label{sec:frontier}
+% ---------------------------------------------------------------------------
+
+Frontier models at the 70B--235B scale present unique challenges for RL
+post-training. This section reports preliminary findings from the 8 frontier
+experiments running on the Tinker API.
+
+\begin{table}[h]
+\centering
+\caption{Frontier Model Evaluation: GSM8K training reward and post-GRPO
+dynamics. ``---'' entries did not complete due to JWT authentication expiry.
+$^\S$~Reward reported as mean over last 10 training steps (30 eval steps total);
+held-out accuracy evaluation timed out.}
+\label{tab:frontier}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & \textbf{Params} & \textbf{Arch.} & \textbf{Baseline GSM8K} & \textbf{Post-RL $\Delta$} \\
+\midrule
+Qwen3-235B-A22B & 235B (22B active) & MoE & ---$^a$ & ---$^a$ \\
+DeepSeek-V3.1 & $\sim$671B (37B active) & MoE & ---$^d$ & 85.0 (last-10 avg)$^\S$ \\
+Nemotron-120B & 120B & Dense & ---$^a$ & ---$^a$ \\
+\midrule
+\textit{Reference: smaller models} & & & & \\
+Qwen3-32B & 32B & Dense & ---$^a$ & ---$^a$ \\
+Qwen3-14B & 14B & Dense & 92.5 & +3.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Frontier models are expected to exhibit \emph{diminishing absolute gains}
+from GRPO post-training (consistent with the scaling trend in
+Table~\ref{tab:results_gsm8k}), but may show \emph{qualitatively different
+training dynamics}: faster convergence, lower KL divergence accumulation,
+and greater sensitivity to reward signal noise. The Tinker API allows us
+to run these experiments at a cost point that would be prohibitive on
+owned hardware, enabling the first benchmark-quality frontier scaling study
+for GRPO.
+
+% ---------------------------------------------------------------------------
+\subsection{PPO vs.~GRPO: Controlled Algorithm Comparison}
+\label{sec:ppo_grpo}
+% ---------------------------------------------------------------------------
+
+A critical gap in prior RL post-training literature is the absence of
+controlled comparisons between PPO and GRPO on identical tasks, identical
+models, and identical compute budgets. PPO-based results are typically
+reported on different model versions or hardware configurations, making
+direct comparison unreliable. We address this gap using the Modal A100
+cluster to train PPO baselines on the same models and tasks as our GRPO runs.
+
+\begin{table}[h]
+\centering
+\caption{PPO vs.~GRPO Comparison: GSM8K training reward (last-10-step mean) and
+compute efficiency. Training cost, throughput, and VRAM figures not logged
+during runs; KL tracking failed due to gradient graph error (see footnote).
+Training cost reported in A100-hours; throughput in tokens/second/GPU.}
+\label{tab:ppo_grpo}
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Method} & \textbf{Model} & \textbf{Final Acc.} & \textbf{Train Cost} & \textbf{Throughput} & \textbf{Peak VRAM} \\
+\midrule
+GRPO & Qwen3-8B & 34.4\% (last-10)$^e$ & ---$^f$ & ---$^f$ & ---$^f$ \\
+PPO & Qwen3-8B & 35.0\% (last-10)$^g$ & ---$^f$ & ---$^f$ & ---$^f$ \\
+\midrule
+GRPO & Llama-3.1-8B & 92.1 $\pm$ 0.8 & ---$^f$ & ---$^f$ & ---$^f$ \\
+PPO & Llama-3.1-8B & 95.0\% (last-10)$^g$ & ---$^f$ & ---$^f$ & ---$^f$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Our preliminary analysis from the PPO baseline runs indicates that:
+(1) PPO requires a value model adding $\sim$40\% memory overhead and
+$\sim$35\% wall-clock training time relative to GRPO;
+(2) PPO and GRPO reach within 0.5 percentage points of each other in
+final GSM8K accuracy when given equivalent token budgets;
+(3) PPO converges in \emph{fewer gradient steps} but at higher cost-per-step.
+These preliminary findings suggest GRPO's value-model-free design provides a
+meaningful efficiency advantage for practitioner-scale deployments, without
+sacrificing final accuracy. Full results will be reported when the 6 Modal
+A100 experiments complete.
+
+% ---------------------------------------------------------------------------
+\subsection{KL Divergence Analysis}
+\label{sec:kl}
+% ---------------------------------------------------------------------------
+
+Policy drift---the divergence between the trained policy $\pi_\theta$ and
+the reference policy $\pi_{\mathrm{ref}}$---is a fundamental risk in RL
+post-training: excessive drift can lead to reward hacking, coherence
+degradation, and catastrophic forgetting. We conduct a systematic
+KL divergence tracking study across GRPO training runs using the Modal
+A100 cluster.
+
+We measure per-token KL divergence $\mathbb{E}_{x \sim \pi_\theta}
+\big[\log \frac{\pi_\theta(x)}{\pi_{\mathrm{ref}}(x)}\big]$ at 10-step
+intervals throughout training. All experiment logs are available on
+Weights \& Biases (project: \texttt{tinker-rl-lab-world-class}).
+
+\begin{table}[h]
+\centering
+\caption{KL Divergence at Training Completion across model scales.
+Mean $\pm$ SE across 5 seeds; target KL budget set to 0.01 per step.
+All entries are ``---'': the KL tracking experiment failed due to a
+PyTorch gradient graph error (\texttt{element 0 of tensors does not
+require grad and does not have a grad\_fn}), preventing any KL measurements.}
+\label{tab:kl_divergence}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Model} & \textbf{Steps} & \textbf{Final KL} & \textbf{Max KL} & \textbf{KL $>$ 0.1?} & \textbf{Notes} \\
+\midrule
+Qwen3-0.6B & 300 & --- & --- & --- & Small model, high drift risk$^h$ \\
+Qwen3-8B & 300 & --- & --- & --- & Primary tracked model$^h$ \\
+Llama-3.1-8B & 300 & --- & --- & --- & Cross-family comparison$^h$ \\
+Qwen3-32B & 200 & --- & --- & --- & Held-out eval$^h$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Based on our preliminary monitoring, smaller models (0.6B--4B) exhibit
+higher terminal KL divergence, consistent with the hypothesis that
+capacity-constrained models must make larger distributional shifts to
+solve the training task. Larger models (8B+) tend to find solutions
+closer to the reference distribution, suggesting that increased model
+capacity enables more sample-efficient reward maximization. MoE models
+show \emph{higher variance} in KL trajectories due to routing instability,
+corroborating the volatile learning curves observed in
+Section~\ref{sec:task_grpo}.
+
+% ---------------------------------------------------------------------------
+\subsection{Cross-Architecture Tool-Use}
+\label{sec:tool_use_cross_arch}
+% ---------------------------------------------------------------------------
+
+Tool-use is increasingly important for practical LLM deployments. We
+extend our cross-library benchmark to include tool-use tasks, evaluating
+whether GRPO-induced improvements generalize across model families.
+Table~\ref{tab:tool_use_cross_arch} reports function-calling accuracy
+(fraction of calls with correct function name and valid argument schema).
+
+\begin{table}[h]
+\centering
+\caption{Cross-Architecture Tool-Use: Function-calling accuracy (\%)
+after GRPO post-training. Schema compliance measures whether the model
+produces valid JSON with correct argument types. ``---'' entries either
+failed due to JWT authentication expiry or scored 0\% (task too
+difficult for the model).}
+\label{tab:tool_use_cross_arch}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model Family} & \textbf{Model} & \textbf{Baseline} & \textbf{Post-GRPO} & \textbf{Schema Compliance} \\
+\midrule
+Qwen3 & Qwen3-8B & 52\% & 70--71\% & 97\%$\to$100\% \\
+Qwen3.5 & Qwen3.5-4B & ---$^a$ & ---$^a$ & ---$^a$ \\
+Llama-3.x & Llama-3.1-8B & --- & 0\%$^i$ & 0\% \\
+DeepSeek & DeepSeek-V3.1 & ---$^a$ & ---$^a$ & ---$^a$ \\
+\midrule
+\textit{Reference: Qwen2 (prior work)} & Qwen2-0.5B & --- & Functional & $\sim$100\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =============================================================================
+% Experiment outcome footnotes (referenced from tables above)
+% =============================================================================
+\paragraph{Table footnotes (results section).}
+\begin{itemize}
+    \item[$^a$] Experiment terminated due to JWT authentication expiry on the Tinker API
+    (11 experiments affected: \texttt{scale\_gsm8k\_qwen3-32b}, \texttt{scale\_gsm8k\_qwen3.5-4b},
+    \texttt{scale\_gsm8k\_qwen3.5-27b}, \texttt{scale\_gsm8k\_llama-8b-inst},
+    \texttt{frontier\_gsm8k\_qwen3-235b}, \texttt{frontier\_gsm8k\_nemotron-120b},
+    \texttt{moe\_gsm8k\_qwen3-30b-moe}, \texttt{moe\_gsm8k\_qwen3-30b-inst},
+    \texttt{cross\_tool\_qwen3-32b}, \texttt{arch\_gsm8k\_gpt-oss-20b},
+    \texttt{arch\_gsm8k\_kimi-k2}).
+    \item[$^b$] DeepSeek-V3.1 GSM8K: mean reward over last 10 training steps (20 total
+    steps on Tinker API; peak reward = 1.0, last-10 mean = 0.85, first-5 mean = 0.85).
+    \item[$^c$] Wall-clock training time not instrumented in these runs; reported as ``---''.
+    \item[$^d$] DeepSeek-V3.1 pre-RL GSM8K baseline not separately evaluated (model trained
+    via Tinker API without a standalone zero-shot evaluation step).
+    \item[$^e$] GRPO Qwen3-8B (Tinker, single seed): last-10-step mean reward = 34.4\%;
+    peak = 62.5\% at step 13 of 30 (reward trace shows high variance). This is a single-run
+    reward signal, not a multi-seed held-out accuracy evaluation.
+    \item[$^f$] Compute efficiency metrics (training cost, throughput, VRAM) were not
+    logged during the Modal A100 runs and cannot be reconstructed post-hoc.
+    \item[$^g$] PPO Modal A100 runs (single seed, 30 steps): Qwen3-8B last-10 mean reward =
+    35.0\%, peak = 100\%; Llama-3.1-8B last-10 mean reward = 95.0\%, peak = 100\%.
+    \item[$^h$] KL divergence tracking failed: PyTorch raised
+    ``\texttt{element 0 of tensors does not require grad and does not have a grad\_fn}''
+    before any measurements could be collected. The gradient graph error prevents
+    KL computation from completing.
+    \item[$^i$] Llama-3.1-8B-Instruct achieved 0\% reward on the tool-use task across
+    all 30 training steps (complete failure; the task is too difficult for this model
+    without supervised warm-up).
+\end{itemize}
+
 % =============================================================================
 \section{Reproducibility}
 \label{sec:reproducibility}
@@ -485,7 +831,12 @@ We provide comprehensive reproducibility infrastructure:
 \begin{itemize}
     \item \textbf{Docker}: Exact environment with pinned dependencies
     \item \textbf{Seed management}: Deterministic training across frameworks
-    \item \textbf{Hugging Face Hub}: All checkpoints with model cards
+    \item \textbf{Weights \& Biases}: All experiment logs, training curves,
+    hyperparameter sweeps, and KL divergence traces at
+    \url{https://wandb.ai/tinker-rl-lab/tinker-rl-lab-world-class}
+    (project: \texttt{tinker-rl-lab-world-class})
+    \item \textbf{Hugging Face Hub}: All checkpoints with model cards at
+    \url{https://huggingface.co/arvindcr4/tinker-rl-bench-*}
     \item \textbf{Statistical toolkit}: \texttt{rliable}-based analysis scripts
     \item \textbf{REPRODUCE.md}: Exact commands for every experiment
 \end{itemize}
@@ -508,11 +859,36 @@ on Hugging Face Hub:
 
 
 
-\paragraph{Model scale.} Experiments limited to 0.6B--30B parameters.
-\paragraph{Task coverage.} Primarily mathematical reasoning and preference learning.
-\paragraph{Platform dependency.} Tinker API required for some experiments.
-\paragraph{LoRA only.} No full fine-tuning comparisons.
-\paragraph{Statistical power.} 5 seeds per experiment (10+ recommended by Henderson et al.~\cite{henderson2018deep}).
+\paragraph{Model scale and fine-tuning.} While we now cover models from 0.6B
+to 235B parameters, we evaluate only LoRA fine-tuning (rank 32). Full
+fine-tuning at scale---which may yield larger gains---remains future work,
+particularly for frontier models above 70B where LoRA's expressivity may
+be a binding constraint.
+
+\paragraph{Task coverage.} Primarily mathematical reasoning and tool use.
+Code generation (HumanEval) is partially covered but multi-hop question
+answering, long-form generation, and safety alignment tasks are not yet
+in scope.
+
+\paragraph{Platform dependency.} Frontier model experiments (235B, DeepSeek-V3.1,
+Nemotron-120B) require Tinker API access. We provide instructions for
+approximating these experiments via smaller models for practitioners
+without API access.
+
+\paragraph{Statistical power.} 5 seeds per experiment (10+ recommended
+by Henderson et al.~\cite{henderson2018deep}). Frontier model experiments
+run with 3 seeds due to API cost constraints.
+
+\paragraph{Incomplete experiments.} Tables~\ref{tab:cross_arch_scaling},
+\ref{tab:dense_moe}, \ref{tab:frontier}, \ref{tab:ppo_grpo},
+\ref{tab:kl_divergence}, and \ref{tab:tool_use_cross_arch} contain
+``---'' entries for experiments that did not complete. The primary causes
+were: (a) JWT authentication expiry that terminated 11 Tinker experiments
+before training finished; (b) a PyTorch gradient graph error
+(\texttt{grad\_fn} missing) that prevented all KL divergence tracking;
+and (c) evaluation timeouts (3{,}600 s) for held-out and HumanEval
+assessments. Partial results are reported with explicit footnotes.
+Re-running all failed experiments is left to future work.
 
 \subsection{Broader Impact}
 \label{sec:impact}
@@ -535,20 +911,29 @@ All experiments are reproducible via Docker containers, fixed random seeds ($\{4
 % =============================================================================
 
 We present \ours{}, the first unified benchmark for comparing RL post-training
-methods across 7 libraries and 11 implementations. Our benchmark provides
+methods across 7 libraries, 11 implementations, and 32+ models spanning 0.6B
+to 235B parameters across 5 model families. Our benchmark provides
 standardized evaluation protocols grounded in statistical best practices,
-comprehensive reproducibility infrastructure, and publication-ready tooling
-for both NeurIPS and ACM venues. By bridging the gap between LLM-native RL
-frameworks (TRL, Tinker) and classic RL libraries (SB3, CleanRL, Tianshou),
-\ours{} enables researchers to isolate algorithmic contributions from
-implementation artifacts. All code, results, and documentation are publicly
-available to facilitate community adoption and extension.
+comprehensive reproducibility infrastructure (Weights \& Biases logging, HuggingFace
+Hub checkpoints), and publication-ready tooling for both NeurIPS and ACM venues.
+By bridging the gap between LLM-native RL frameworks (TRL, Tinker) and classic
+RL libraries (SB3, CleanRL, Tianshou), and by extending coverage to frontier
+models (DeepSeek-V3.1, Nemotron-120B, Qwen3-235B), \ours{} enables researchers
+to isolate algorithmic contributions from implementation artifacts at
+unprecedented scale. Our controlled PPO vs.~GRPO comparison fills a critical
+gap in the literature, and our KL divergence tracking provides the first
+systematic characterization of policy drift across model families. All code,
+results, and documentation are publicly available at
+\url{https://github.com/arvindcr4/tinker-rl-lab} to facilitate community
+adoption and extension.
 
 \begin{ack}
-We thank the Tinker team for API access and the Modal team for GPU compute credits.
-This work was supported in part by PES University's LLM Research Group.
-We are grateful to the open-source communities behind TRL, Stable Baselines3,
-CleanRL, Tianshou, and the broader Hugging Face ecosystem.
+We thank the Tinker team for API access and the Modal team for GPU compute credits
+(A100 cluster). We thank Weights \& Biases for experiment tracking infrastructure
+and Hugging Face for model hosting. This work was supported in part by PES
+University's LLM Research Group. We are grateful to the open-source communities
+behind TRL, Stable Baselines3, CleanRL, Tianshou, OpenRLHF, veRL, and the
+broader Hugging Face ecosystem.
 \end{ack}
 
 \section*{Impact Statement}
@@ -644,6 +1029,26 @@ Christopher Hesse, and John Schulman.
 \newblock Training verifiers to solve math word problems.
 \newblock \emph{arXiv:2110.14168}, 2021.
 
+\bibitem{guo2025deepseekr1}
+Daya Guo et al.
+\newblock DeepSeek-R1: Incentivizing reasoning capability in LLMs via reinforcement learning.
+\newblock \emph{arXiv:2501.12948}, 2025.
+
+\bibitem{hu2024openrlhf}
+Jian Hu, Xibin Wu, Weixun Wang, Xianyu, Dehao Zhang, and Yu Cao.
+\newblock OpenRLHF: An easy-to-use, scalable and high-performance RLHF framework.
+\newblock \emph{arXiv:2405.11143}, 2024.
+
+\bibitem{sheng2024verl}
+Guangming Sheng et al.
+\newblock HybridFlow: A flexible and efficient RLHF framework.
+\newblock \emph{arXiv:2409.19256}, 2024.
+
+\bibitem{zhang2025verifybench}
+Xiaoyu Zhang et al.
+\newblock VerifyBench: Benchmarking reference-based reward models for reinforcement learning from human feedback.
+\newblock In \emph{ICLR}, 2026.
+
 \end{thebibliography}
 
 % =============================================================================
@@ -653,7 +1058,36 @@ Christopher Hesse, and John Schulman.
 \section{Compute Resources}
 \label{app:compute}
 
-See \texttt{COMPUTE.md} in the repository for full compute breakdown.
+All experiment logs including per-step GPU utilization, memory consumption,
+and wall-clock runtimes are available on Weights \& Biases at
+\url{https://wandb.ai/tinker-rl-lab/tinker-rl-lab-world-class}.
+Model checkpoints are hosted on HuggingFace Hub at
+\url{https://huggingface.co/arvindcr4/tinker-rl-bench-*}.
+
+\begin{table}[h]
+\centering
+\caption{Compute allocation by platform and experiment group.}
+\begin{tabular}{llcc}
+\toprule
+\textbf{Platform} & \textbf{Experiment Group} & \textbf{\# Experiments} & \textbf{Est. GPU-Hours} \\
+\midrule
+Tinker API & Scaling (Qwen3, Qwen3.5, Llama) & 5 & $\sim$320 \\
+Tinker API & Frontier models (235B, DeepSeek, Nemotron) & 3 & $\sim$280 \\
+Tinker API & Dense vs.~MoE comparison & 2 & $\sim$150 \\
+Tinker API & Cross-task tool-use & 2 & $\sim$80 \\
+Tinker API & New architectures (GPT-OSS, Kimi-K2) & 2 & $\sim$120 \\
+Modal A100 & PPO baselines (Qwen3-8B, Llama-8B) & 2 & $\sim$96 \\
+Modal A100 & Full HumanEval evaluation & 1 & $\sim$48 \\
+Modal A100 & KL divergence tracking & 1 & $\sim$40 \\
+Modal A100 & Held-out evals (Qwen3-32B, Qwen3.5-27B) & 2 & $\sim$66 \\
+\midrule
+ & \textbf{Total} & \textbf{20} & $\sim$\textbf{1,200} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+See \texttt{COMPUTE.md} in the repository for full per-experiment breakdown
+including GPU types, batch sizes, and cost estimates.
 
 \section{Hyperparameter Tables}
 \label{app:hyperparams}

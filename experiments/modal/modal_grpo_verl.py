@@ -25,8 +25,11 @@ HF_TOKEN = os.environ.get("HF_TOKEN", "")
 WANDB_KEY = os.environ.get("WANDB_API_KEY", "")
 
 image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .apt_install("git")
+    modal.Image.from_registry(
+        "nvidia/cuda:12.1.1-devel-ubuntu22.04", add_python="3.11"
+    )
+    .apt_install("git", "build-essential")
+    .env({"CUDA_HOME": "/usr/local/cuda"})
     .pip_install("packaging", "wheel", "ninja", "setuptools")
     .pip_install(
         "torch==2.4.0",

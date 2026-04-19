@@ -1,0 +1,280 @@
+{
+  "campaign": "bitter_lesson",
+  "timestamp": "20260419_090525",
+  "total_planned": 34,
+  "completed": 34,
+  "results": [
+    {
+      "tag": "wave1_gpt-oss-120b_gsm8k",
+      "model": "openai/gpt-oss-120b",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:26.411226"
+    },
+    {
+      "tag": "wave2_qwen3-8b_G2_gsm8k",
+      "model": "Qwen/Qwen3-8B",
+      "wave": "2-groupsize",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:26.424394"
+    },
+    {
+      "tag": "wave1_deepseek-v31-base_gsm8k",
+      "model": "deepseek-ai/DeepSeek-V3.1-Base",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:26.436006"
+    },
+    {
+      "tag": "wave1_llama31-8b-base_gsm8k",
+      "model": "meta-llama/Llama-3.1-8B",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:26.522101"
+    },
+    {
+      "tag": "wave2_qwen3-8b_G32_gsm8k",
+      "model": "Qwen/Qwen3-8B",
+      "wave": "2-groupsize",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:27.066790"
+    },
+    {
+      "tag": "wave3_deepseek-v31_seed456_gsm8k",
+      "model": "deepseek-ai/DeepSeek-V3.1",
+      "wave": "3-multiseed",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:27.783112"
+    },
+    {
+      "tag": "wave3_deepseek-v31_seed789_gsm8k",
+      "model": "deepseek-ai/DeepSeek-V3.1",
+      "wave": "3-multiseed",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:28.392152"
+    },
+    {
+      "tag": "wave3_nemotron-120b_seed123_gsm8k",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16",
+      "wave": "3-multiseed",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:29.025479"
+    },
+    {
+      "tag": "wave3_nemotron-120b_seed456_gsm8k",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16",
+      "wave": "3-multiseed",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:29.890580"
+    },
+    {
+      "tag": "wave1_qwen35-397b_gsm8k",
+      "model": "Qwen/Qwen3.5-397B-A17B",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:36.629854"
+    },
+    {
+      "tag": "wave1_kimi-k2-thinking_gsm8k",
+      "model": "moonshotai/Kimi-K2-Thinking",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:36.630446"
+    },
+    {
+      "tag": "wave1_llama33-70b-inst_gsm8k",
+      "model": "meta-llama/Llama-3.3-70B-Instruct",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:36.730637"
+    },
+    {
+      "tag": "wave1_llama31-70b-base_gsm8k",
+      "model": "meta-llama/Llama-3.1-70B",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:36.730894"
+    },
+    {
+      "tag": "wave1_kimi-k25_gsm8k",
+      "model": "moonshotai/Kimi-K2.5",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:36.730994"
+    },
+    {
+      "tag": "wave1_qwen3-8b-base_gsm8k",
+      "model": "Qwen/Qwen3-8B-Base",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:36.731212"
+    },
+    {
+      "tag": "wave2_qwen3-8b_G16_gsm8k",
+      "model": "Qwen/Qwen3-8B",
+      "wave": "2-groupsize",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:37.041441"
+    },
+    {
+      "tag": "wave2_qwen3-8b_G4_gsm8k",
+      "model": "Qwen/Qwen3-8B",
+      "wave": "2-groupsize",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:37.122981"
+    },
+    {
+      "tag": "wave3_deepseek-v31_seed123_gsm8k",
+      "model": "deepseek-ai/DeepSeek-V3.1",
+      "wave": "3-multiseed",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:37.242797"
+    },
+    {
+      "tag": "wave3_qwen3-235b_seed123_gsm8k",
+      "model": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+      "wave": "3-multiseed",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:37.498938"
+    },
+    {
+      "tag": "wave1_nemotron3-nano-30b_gsm8k",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:37.742797"
+    },
+    {
+      "tag": "wave1_llama32-1b_gsm8k",
+      "model": "meta-llama/Llama-3.2-1B",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:37.871634"
+    },
+    {
+      "tag": "wave1_qwen3-4b-inst-2507_gsm8k",
+      "model": "Qwen/Qwen3-4B-Instruct-2507",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:38.337318"
+    },
+    {
+      "tag": "wave4_qwen3-8b_lr5e-06_gsm8k",
+      "model": "Qwen/Qwen3-8B",
+      "wave": "4-lr-sweep",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:38.499855"
+    },
+    {
+      "tag": "wave4_qwen3-8b_lr0.0001_gsm8k",
+      "model": "Qwen/Qwen3-8B",
+      "wave": "4-lr-sweep",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:39.098638"
+    },
+    {
+      "tag": "wave4_qwen3-8b_lr0.0003_gsm8k",
+      "model": "Qwen/Qwen3-8B",
+      "wave": "4-lr-sweep",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:39.717337"
+    },
+    {
+      "tag": "wave3_nemotron-120b_seed789_gsm8k",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16",
+      "wave": "3-multiseed",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:40.475844"
+    },
+    {
+      "tag": "wave3_qwen3-235b_seed789_gsm8k",
+      "model": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+      "wave": "3-multiseed",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:47.645390"
+    },
+    {
+      "tag": "wave3_qwen3-235b_seed456_gsm8k",
+      "model": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+      "wave": "3-multiseed",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:47.645873"
+    },
+    {
+      "tag": "wave5_llama31-8b-inst_100steps_gsm8k",
+      "model": "meta-llama/Llama-3.1-8B-Instruct",
+      "wave": "5-longrun",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:47.647493"
+    },
+    {
+      "tag": "wave1_qwen35-35b-moe_gsm8k",
+      "model": "Qwen/Qwen3.5-35B-A3B",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:47.647677"
+    },
+    {
+      "tag": "wave5_qwen3-8b_100steps_gsm8k",
+      "model": "Qwen/Qwen3-8B",
+      "wave": "5-longrun",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:47.647787"
+    },
+    {
+      "tag": "wave1_llama32-3b_gsm8k",
+      "model": "meta-llama/Llama-3.2-3B",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:47.902399"
+    },
+    {
+      "tag": "wave1_qwen3-30b-inst-2507_gsm8k",
+      "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:48.408004"
+    },
+    {
+      "tag": "wave4_qwen3-8b_lr3e-05_gsm8k",
+      "model": "Qwen/Qwen3-8B",
+      "wave": "4-lr-sweep",
+      "status": "failed",
+      "error": "ServiceClient.create_lora_training_client() got an unexpected keyword argument 'model'",
+      "timestamp": "2026-04-19T09:05:48.911209"
+    }
+  ]
+}

@@ -1,0 +1,249 @@
+{
+  "tinker_completed": {
+    "frontier_gsm8k_deepseek-v3.1": {
+      "model": "DeepSeek-V3.1 (~671B, 37B active)",
+      "type": "MoE",
+      "task": "gsm8k",
+      "peak": 1.0,
+      "last10_avg": 0.85,
+      "first5_avg": 0.85,
+      "steps": 20,
+      "reward_trace": [
+        0.875,
+        0.875,
+        1.0,
+        0.75,
+        0.75,
+        0.75,
+        0.625,
+        0.875,
+        0.875,
+        1.0,
+        0.75,
+        1.0,
+        0.875,
+        0.875,
+        0.75,
+        1.0,
+        0.875,
+        0.75,
+        0.875,
+        0.875
+      ]
+    },
+    "cross_tool_llama-8b-inst": {
+      "model": "Llama-3.1-8B-Instruct",
+      "type": "Dense",
+      "task": "tool_use",
+      "peak": 0.0,
+      "last10_avg": 0.0,
+      "first5_avg": 0.0,
+      "steps": 30,
+      "note": "Complete failure - tool_use task too difficult for this model"
+    },
+    "scale_gsm8k_qwen3-8b": {
+      "model": "Qwen3-8B",
+      "type": "Dense",
+      "task": "gsm8k",
+      "peak": 0.625,
+      "last10_avg": 0.34375,
+      "first5_avg": 0.3125,
+      "steps": 30,
+      "reward_trace": [
+        0.375,
+        0.0625,
+        0.5625,
+        0.1875,
+        0.375,
+        0.3125,
+        0.125,
+        0.125,
+        0.1875,
+        0.125,
+        0.25,
+        0.4375,
+        0.625,
+        0.1875,
+        0.3125,
+        0.5,
+        0.375,
+        0.375,
+        0.4375,
+        0.5,
+        0.3125,
+        0.125,
+        0.25,
+        0.4375,
+        0.5,
+        0.3125,
+        0.4375,
+        0.375,
+        0.1875,
+        0.25
+      ]
+    }
+  },
+  "tinker_failed_jwt": [
+    "scale_gsm8k_qwen3-32b",
+    "scale_gsm8k_qwen3.5-4b",
+    "scale_gsm8k_qwen3.5-27b",
+    "scale_gsm8k_llama-8b-inst",
+    "frontier_gsm8k_qwen3-235b",
+    "frontier_gsm8k_nemotron-120b",
+    "moe_gsm8k_qwen3-30b-moe",
+    "moe_gsm8k_qwen3-30b-inst",
+    "cross_tool_qwen3-32b",
+    "arch_gsm8k_gpt-oss-20b",
+    "arch_gsm8k_kimi-k2"
+  ],
+  "modal_completed": {
+    "ppo_qwen3-8b": {
+      "model": "Qwen3-8B",
+      "method": "PPO-REINFORCE",
+      "task": "gsm8k",
+      "peak": 1.0,
+      "last10_avg": 0.35,
+      "first5_avg": 0.4,
+      "steps": 30,
+      "hf_repo": "arvindcr4/tinker-rl-bench-ppo_gsm8k_Qwen3-8B_s42",
+      "reward_trace": [
+        0.5,
+        0.5,
+        0.0,
+        0.0,
+        1.0,
+        0.5,
+        0.0,
+        0.0,
+        0.25,
+        0.5,
+        0.5,
+        0.0,
+        0.5,
+        0.25,
+        0.0,
+        0.0,
+        0.0,
+        0.25,
+        0.25,
+        0.0,
+        0.5,
+        0.5,
+        0.5,
+        0.0,
+        0.75,
+        0.25,
+        0.0,
+        0.25,
+        0.75,
+        0.0
+      ]
+    },
+    "ppo_llama-8b-inst": {
+      "model": "Llama-3.1-8B-Instruct",
+      "method": "PPO-REINFORCE",
+      "task": "gsm8k",
+      "peak": 1.0,
+      "last10_avg": 0.95,
+      "first5_avg": 0.95,
+      "steps": 30,
+      "reward_trace": [
+        1.0,
+        1.0,
+        1.0,
+        0.75,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.5,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.75,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.75,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.75,
+        1.0
+      ]
+    }
+  },
+  "modal_partial": {
+    "humaneval_qwen3-8b": {
+      "partial_result": "40/164 problems, cum_pass@1=65.0%",
+      "error": "timeout 3600s"
+    },
+    "heldout_qwen3.5-27b": {
+      "partial_result": "100/200 samples, 86/100=86.0%",
+      "error": "timeout 3600s"
+    },
+    "heldout_qwen3-32b": {
+      "partial_result": "100/200 samples, 33/100=33.0%",
+      "error": "timeout 3600s"
+    }
+  },
+  "modal_failed": {
+    "kl_qwen3-8b": {
+      "error": "element 0 of tensors does not require grad and does not have a grad_fn"
+    }
+  },
+  "old_modal_trl_grpo": {
+    "mean_accuracy": 0.734,
+    "std": 0.065,
+    "seeds": [
+      42,
+      123,
+      456,
+      789,
+      1024
+    ],
+    "accuracies": [
+      0.735,
+      0.81,
+      0.62,
+      0.74,
+      0.765
+    ],
+    "model": "Qwen2.5-0.5B",
+    "gpu": "L4",
+    "steps": 125
+  },
+  "team_member_results": {
+    "sandhya": {
+      "models": "0.5B/1.5B/3B",
+      "best": "GRPO 0.91 vs SFT 0.72 (3B)",
+      "task": "tool_calling"
+    },
+    "madhu": {
+      "models": "Qwen3-8B",
+      "best": "HumanEval 86% (141/164)",
+      "task": "code_generation",
+      "github": "madhukumara1993/qwen3-grpo"
+    },
+    "mohammad_rafi": {
+      "models": "Qwen3-4B",
+      "best": "+0.6pp (67.2%\u219267.8%)",
+      "task": "math_reasoning"
+    },
+    "dhruva": {
+      "note": "NeurIPS Spotlight on pruning, not RLHF",
+      "lm_eval_contrib": true
+    },
+    "arumugam": {
+      "note": "8 training examples, keyword eval, not viable"
+    }
+  }
+}

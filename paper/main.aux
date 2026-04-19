@@ -2,17 +2,24 @@
 \providecommand\hyper@newdestlabel[2]{}
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{henderson2018deep}
 \citation{shao2024deepseekmath}
 \citation{rafailov2024direct}
 \citation{henderson2018deep}
 \citation{jordan2024benchmarking}
-\citation{henderson2018deep}
+\citation{agarwal2021deep}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Overview of \textsc  {TinkerRL-Bench}{}: a unified benchmark spanning 3 task families, 7 RL libraries, and comprehensive infrastructure for reproducible evaluation. Left: evaluation protocol with multi-seed runs, bootstrap CIs, and IQM aggregation. Right: output artifacts.}}{2}{figure.caption.2}\protected@file@percent }
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
 \newlabel{fig:architecture}{{1}{2}{Overview of \ours {}: a unified benchmark spanning 3 task families, 7 RL libraries, and comprehensive infrastructure for reproducible evaluation. Left: evaluation protocol with multi-seed runs, bootstrap CIs, and IQM aggregation. Right: output artifacts}{figure.caption.2}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{2}{section.1}\protected@file@percent }
 \newlabel{sec:intro}{{1}{2}{Introduction}{section.1}{}}
-\@writefile{toc}{\contentsline {paragraph}{Contributions.}{2}{section*.3}\protected@file@percent }
+\citation{henderson2018deep}
+\citation{wu2025grpo_dpo,kaddour2026tpo}
+\citation{nimmaturi2025scalinglaws}
+\citation{zhang2026aero}
+\citation{zhang2026greso}
+\citation{nimmaturi2025scalinglaws}
+\@writefile{toc}{\contentsline {paragraph}{Contributions.}{3}{section*.3}\protected@file@percent }
 \citation{schulman2017proximal}
 \citation{ouyang2022training}
 \citation{shao2024deepseekmath}
@@ -33,10 +40,11 @@
 \citation{wang2025eframe}
 \citation{kaddour2026tpo}
 \citation{carrino2026rgra}
-\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{3}{section.2}\protected@file@percent }
-\newlabel{sec:related}{{2}{3}{Related Work}{section.2}{}}
-\@writefile{toc}{\contentsline {paragraph}{RL for Language Models.}{3}{section*.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{GRPO Variants and Extensions.}{3}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Evaluations \& Datasets Track Positioning.}{4}{section*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{4}{section.2}\protected@file@percent }
+\newlabel{sec:related}{{2}{4}{Related Work}{section.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{RL for Language Models.}{4}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{GRPO Variants and Extensions.}{4}{section*.6}\protected@file@percent }
 \citation{zhang2026aero}
 \citation{zhang2026greso}
 \citation{lin2025cppo}
@@ -48,9 +56,19 @@
 \citation{hochlehnert2025sober}
 \citation{li2025reward_shaping}
 \citation{ichihara2025mogrpo}
-\@writefile{toc}{\contentsline {paragraph}{Zero-Variance and Gradient Dead Zones.}{4}{section*.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Scaling Laws for RL Post-Training.}{4}{section*.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Reward Verification.}{4}{section*.8}\protected@file@percent }
+\citation{qwen2025gspo}
+\citation{yu2025dapo}
+\@writefile{toc}{\contentsline {paragraph}{Zero-Variance and Gradient Dead Zones.}{5}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Scaling Laws for RL Post-Training.}{5}{section*.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Reward Verification.}{5}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{GRPO Production-Scale Adoption.}{5}{section*.10}\protected@file@percent }
+\citation{nan2025ngrpo}
+\citation{zhang2025scaffgrpo}
+\citation{han2026ebpo}
+\citation{zhang2026aero}
+\citation{zhou2026demystify}
+\citation{lei2026minpro}
+\citation{yang2025sspo}
 \citation{henderson2018deep}
 \citation{agarwal2021deep}
 \citation{bettini2023benchmarl}
@@ -59,245 +77,298 @@
 \citation{zhang2024benchvariance}
 \citation{pineau2020improving}
 \citation{acm2020badges}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Taxonomy of RL libraries in \textsc  {TinkerRL-Bench}{}. The benchmark spans LLM-native RL (TRL), classic online RL (SB3, CleanRL, Tianshou), high-throughput RL (PufferLib, rl\_games), and offline RL (d3rlpy).}}{5}{figure.caption.10}\protected@file@percent }
-\newlabel{fig:taxonomy}{{2}{5}{Taxonomy of RL libraries in \ours {}. The benchmark spans LLM-native RL (TRL), classic online RL (SB3, CleanRL, Tianshou), high-throughput RL (PufferLib, rl\_games), and offline RL (d3rlpy)}{figure.caption.10}{}}
-\@writefile{toc}{\contentsline {paragraph}{RL Benchmarking and Reproducibility.}{5}{section*.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3}Benchmark Design}{5}{section.3}\protected@file@percent }
-\newlabel{sec:benchmark}{{3}{5}{Benchmark Design}{section.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Task Suite}{5}{subsection.3.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Benchmark task suite with standardized reward functions.}}{5}{table.caption.11}\protected@file@percent }
-\newlabel{tab:tasks}{{1}{5}{Benchmark task suite with standardized reward functions}{table.caption.11}{}}
+\@writefile{toc}{\contentsline {paragraph}{ZVF Solutions: Emerging Remediation Literature.}{6}{section*.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Statistical Foundations of GRPO.}{6}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{RL Benchmarking and Reproducibility.}{6}{section*.13}\protected@file@percent }
 \citation{agarwal2021deep}
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Implementations across RL libraries.}}{6}{table.caption.12}\protected@file@percent }
-\newlabel{tab:implementations}{{2}{6}{Implementations across RL libraries}{table.caption.12}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Verifiable reward paradigm in \textsc  {TinkerRL-Bench}{}. Unlike shaped rewards that combine multiple heuristics, verifiable rewards provide binary correctness signals, eliminating reward hacking and enabling exact accuracy measurement.}}{6}{figure.caption.14}\protected@file@percent }
-\newlabel{fig:reward_flow}{{3}{6}{Verifiable reward paradigm in \ours {}. Unlike shaped rewards that combine multiple heuristics, verifiable rewards provide binary correctness signals, eliminating reward hacking and enabling exact accuracy measurement}{figure.caption.14}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Cross-Library Implementation}{6}{subsection.3.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Hyperparameter Mapping}{6}{subsection.3.3}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Hyperparameter mapping across libraries (PPO defaults).}}{6}{table.caption.13}\protected@file@percent }
-\newlabel{tab:hyperparams}{{3}{6}{Hyperparameter mapping across libraries (PPO defaults)}{table.caption.13}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Reward Verification}{6}{subsection.3.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Baselines: Floor and Ceiling}{6}{subsection.3.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Taxonomy of RL libraries in \textsc  {TinkerRL-Bench}{}. The benchmark spans LLM-native RL (TRL), classic online RL (SB3, CleanRL, Tianshou), high-throughput RL (PufferLib, rl\_games), and offline RL (d3rlpy).}}{7}{figure.caption.14}\protected@file@percent }
+\newlabel{fig:taxonomy}{{2}{7}{Taxonomy of RL libraries in \ours {}. The benchmark spans LLM-native RL (TRL), classic online RL (SB3, CleanRL, Tianshou), high-throughput RL (PufferLib, rl\_games), and offline RL (d3rlpy)}{figure.caption.14}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Benchmark task suite with standardized reward functions.}}{7}{table.caption.15}\protected@file@percent }
+\newlabel{tab:tasks}{{1}{7}{Benchmark task suite with standardized reward functions}{table.caption.15}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Benchmark Design}{7}{section.3}\protected@file@percent }
+\newlabel{sec:benchmark}{{3}{7}{Benchmark Design}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Task Suite}{7}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Cross-Library Implementation}{7}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Hyperparameter Mapping}{7}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Reward Verification}{7}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Baselines: Floor and Ceiling}{7}{subsection.3.5}\protected@file@percent }
 \citation{hu2022lora}
 \citation{colas2019hitchhiker}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Implementations across RL libraries.}}{8}{table.caption.16}\protected@file@percent }
+\newlabel{tab:implementations}{{2}{8}{Implementations across RL libraries}{table.caption.16}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Hyperparameter mapping across libraries (PPO defaults).}}{8}{table.caption.17}\protected@file@percent }
+\newlabel{tab:hyperparams}{{3}{8}{Hyperparameter mapping across libraries (PPO defaults)}{table.caption.17}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Experimental Setup}{8}{section.4}\protected@file@percent }
+\newlabel{sec:setup}{{4}{8}{Experimental Setup}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Models}{8}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Small scale (0.6B--8B).}{8}{section*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Mid scale (14B--32B).}{8}{section*.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Frontier scale (70B--235B).}{8}{section*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Model family coverage.}{8}{section*.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Training Protocol}{8}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Seed management.}{8}{section*.23}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Statistical Methodology}{8}{subsection.4.3}\protected@file@percent }
 \citation{agarwal2021deep}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Experiment workflow pipeline. Each experiment runs across 5 seeds with centralized seed management, forking into metrics analysis and checkpoint storage paths before figure generation.}}{7}{figure.caption.20}\protected@file@percent }
-\newlabel{fig:pipeline}{{4}{7}{Experiment workflow pipeline. Each experiment runs across 5 seeds with centralized seed management, forking into metrics analysis and checkpoint storage paths before figure generation}{figure.caption.20}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Experimental Setup}{7}{section.4}\protected@file@percent }
-\newlabel{sec:setup}{{4}{7}{Experimental Setup}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Models}{7}{subsection.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Small scale (0.6B--8B).}{7}{section*.15}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Mid scale (14B--32B).}{7}{section*.16}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Frontier scale (70B--235B).}{7}{section*.17}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Model family coverage.}{7}{section*.18}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Training Protocol}{7}{subsection.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Seed management.}{7}{section*.19}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Statistical Methodology}{7}{subsection.4.3}\protected@file@percent }
+\citation{benjamini1995controlling}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Verifiable reward paradigm in \textsc  {TinkerRL-Bench}{}. Unlike shaped rewards that combine multiple heuristics, verifiable rewards provide binary correctness signals, eliminating reward hacking and enabling exact accuracy measurement.}}{9}{figure.caption.18}\protected@file@percent }
+\newlabel{fig:reward_flow}{{3}{9}{Verifiable reward paradigm in \ours {}. Unlike shaped rewards that combine multiple heuristics, verifiable rewards provide binary correctness signals, eliminating reward hacking and enabling exact accuracy measurement}{figure.caption.18}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Experiment workflow pipeline. Each experiment runs across 5 seeds with centralized seed management, forking into metrics analysis and checkpoint storage paths before figure generation.}}{9}{figure.caption.24}\protected@file@percent }
+\newlabel{fig:pipeline}{{4}{9}{Experiment workflow pipeline. Each experiment runs across 5 seeds with centralized seed management, forking into metrics analysis and checkpoint storage paths before figure generation}{figure.caption.24}{}}
+\@writefile{toc}{\contentsline {paragraph}{Power Analysis.}{9}{section*.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Multiple-Comparison Correction.}{9}{section*.26}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Statistical power for two-sample Welch $t$-tests at $\alpha = 0.05$, power target $1{-}\beta = 0.80$. Column~(3): equal groups $n_1 = n_2 = 5$ (Modal H100 / TRL within-group). Column~(4): unequal groups $n_1 = 5$, $n_2 = 15$ (TRL vs.\ pooled Classic RL).}}{10}{table.caption.27}\protected@file@percent }
+\newlabel{tab:power-analysis}{{4}{10}{Statistical power for two-sample Welch $t$-tests at $\alpha = 0.05$, power target $1{-}\beta = 0.80$. Column~(3): equal groups $n_1 = n_2 = 5$ (Modal H100 / TRL within-group). Column~(4): unequal groups $n_1 = 5$, $n_2 = 15$ (TRL vs.\ pooled Classic RL)}{table.caption.27}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces All hypothesis tests reported in the paper with Benjamini--Hochberg (BH) adjusted $p$-values at FDR $= 0.05$. Tests are ranked by raw $p$-value (ascending). $\text  {$\mathsurround \z@ \mathchar "458$}$ = significant after BH correction; $\times $ = not significant. Total tests: 20. Significant after BH: 19.}}{10}{table.caption.28}\protected@file@percent }
+\newlabel{tab:bh-pvalues}{{5}{10}{All hypothesis tests reported in the paper with Benjamini--Hochberg (BH) adjusted $p$-values at FDR $= 0.05$. Tests are ranked by raw $p$-value (ascending). $\checkmark $ = significant after BH correction; $\times $ = not significant. Total tests: 20. Significant after BH: 19}{table.caption.28}{}}
+\@writefile{toc}{\contentsline {paragraph}{TRL baseline characterisation.}{10}{section*.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Variance decomposition.}{10}{section*.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Compute Resources}{10}{subsection.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Tinker API (14 experiments).}{10}{section*.31}\protected@file@percent }
 \citation{agarwal2021deep}
 \citation{agarwal2021deep}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces \textbf  {Main Results:} GRPO and PPO training reward on GSM8K across model scales. All Tinker runs are single-seed; all Modal runs are single-seed on H100. $\dagger $~Training interrupted; reported metrics are from available steps.}}{11}{table.caption.33}\protected@file@percent }
+\newlabel{tab:main_results}{{6}{11}{\textbf {Main Results:} GRPO and PPO training reward on GSM8K across model scales. All Tinker runs are single-seed; all Modal runs are single-seed on H100. $\dagger $~Training interrupted; reported metrics are from available steps}{table.caption.33}{}}
+\@writefile{toc}{\contentsline {paragraph}{Modal H100 GPU cluster (6 experiments).}{11}{section*.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Results}{11}{section.5}\protected@file@percent }
+\newlabel{sec:results}{{5}{11}{Results}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Main Results: GRPO Across Models and Algorithms}{11}{subsection.5.1}\protected@file@percent }
+\newlabel{sec:main_results}{{5.1}{11}{Main Results: GRPO Across Models and Algorithms}{subsection.5.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Cross-Library Comparison}{11}{subsection.5.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Cross-library comparison on Math RL (Arithmetic). Mean $\pm $ SE across 5 seeds.}}{11}{table.caption.34}\protected@file@percent }
+\newlabel{tab:results_arithmetic}{{7}{11}{Cross-library comparison on Math RL (Arithmetic). Mean $\pm $ SE across 5 seeds}{table.caption.34}{}}
 \citation{nimmaturi2025scalinglaws}
-\@writefile{toc}{\contentsline {paragraph}{TRL baseline characterisation.}{8}{section*.21}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Variance decomposition.}{8}{section*.22}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Compute Resources}{8}{subsection.4.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Tinker API (14 experiments).}{8}{section*.23}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Modal H100 GPU cluster (6 experiments).}{8}{section*.24}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}Results}{8}{section.5}\protected@file@percent }
-\newlabel{sec:results}{{5}{8}{Results}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Main Results: GRPO Across Models and Algorithms}{8}{subsection.5.1}\protected@file@percent }
-\newlabel{sec:main_results}{{5.1}{8}{Main Results: GRPO Across Models and Algorithms}{subsection.5.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Cross-Library Comparison}{8}{subsection.5.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}GSM8K Results}{8}{subsection.5.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Scaling Analysis}{8}{subsection.5.4}\protected@file@percent }
-\newlabel{sec:scaling}{{5.4}{8}{Scaling Analysis}{subsection.5.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Parametric Scaling Law Fit}{8}{subsection.5.5}\protected@file@percent }
-\newlabel{sec:scaling_laws}{{5.5}{8}{Parametric Scaling Law Fit}{subsection.5.5}{}}
-\@writefile{toc}{\contentsline {paragraph}{Exponential Saturation Model.}{8}{section*.31}\protected@file@percent }
-\newlabel{eq:exp_sat}{{1}{8}{Exponential Saturation Model}{equation.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Learning curves for the arithmetic task across RL libraries. Shaded regions indicate $\pm 1$ standard deviation across 5 seeds. All curves use real experimental data from Modal GPU runs (NVIDIA L4/T4).}}{12}{figure.caption.35}\protected@file@percent }
+\newlabel{fig:learning_curves}{{5}{12}{Learning curves for the arithmetic task across RL libraries. Shaded regions indicate $\pm 1$ standard deviation across 5 seeds. All curves use real experimental data from Modal GPU runs (NVIDIA L4/T4)}{figure.caption.35}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Performance profiles showing the fraction of runs above a given normalized score threshold, following the methodology of Agarwal et al.~\cite  {agarwal2021deep}.}}{12}{figure.caption.36}\protected@file@percent }
+\newlabel{fig:performance_profiles}{{6}{12}{Performance profiles showing the fraction of runs above a given normalized score threshold, following the methodology of Agarwal et al.~\cite {agarwal2021deep}}{figure.caption.36}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}GSM8K Results}{12}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Scaling Analysis}{12}{subsection.5.4}\protected@file@percent }
+\newlabel{sec:scaling}{{5.4}{12}{Scaling Analysis}{subsection.5.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Parametric Scaling Law Fit}{12}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:scaling_laws}{{5.5}{12}{Parametric Scaling Law Fit}{subsection.5.5}{}}
 \citation{nimmaturi2025scalinglaws}
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces \textbf  {Main Results:} GRPO and PPO training reward on GSM8K across model scales. All Tinker runs are single-seed; all Modal runs are single-seed on H100. $\dagger $~Training interrupted; reported metrics are from available steps.}}{9}{table.caption.25}\protected@file@percent }
-\newlabel{tab:main_results}{{4}{9}{\textbf {Main Results:} GRPO and PPO training reward on GSM8K across model scales. All Tinker runs are single-seed; all Modal runs are single-seed on H100. $\dagger $~Training interrupted; reported metrics are from available steps}{table.caption.25}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Cross-library comparison on Math RL (Arithmetic). Mean $\pm $ SE across 5 seeds.}}{9}{table.caption.26}\protected@file@percent }
-\newlabel{tab:results_arithmetic}{{5}{9}{Cross-library comparison on Math RL (Arithmetic). Mean $\pm $ SE across 5 seeds}{table.caption.26}{}}
-\@writefile{toc}{\contentsline {paragraph}{Fit Quality and Family Breakdown.}{9}{section*.32}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Three-Phase Learning Dynamics.}{9}{section*.33}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Scale Correlations.}{9}{section*.34}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Learning curves for the arithmetic task across RL libraries. Shaded regions indicate $\pm 1$ standard deviation across 5 seeds. All curves use real experimental data from Modal GPU runs (NVIDIA L4/T4).}}{10}{figure.caption.27}\protected@file@percent }
-\newlabel{fig:learning_curves}{{5}{10}{Learning curves for the arithmetic task across RL libraries. Shaded regions indicate $\pm 1$ standard deviation across 5 seeds. All curves use real experimental data from Modal GPU runs (NVIDIA L4/T4)}{figure.caption.27}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Performance profiles showing the fraction of runs above a given normalized score threshold, following the methodology of Agarwal et al.~\cite  {agarwal2021deep}.}}{10}{figure.caption.28}\protected@file@percent }
-\newlabel{fig:performance_profiles}{{6}{10}{Performance profiles showing the fraction of runs above a given normalized score threshold, following the methodology of Agarwal et al.~\cite {agarwal2021deep}}{figure.caption.28}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Hyperparameter Sensitivity}{10}{subsection.5.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}Comparison with Existing Benchmarks}{10}{subsection.5.7}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces GSM8K results across model scales. Mean $\pm $ SE across 5 seeds.}}{11}{table.caption.29}\protected@file@percent }
-\newlabel{tab:results_gsm8k}{{6}{11}{GSM8K results across model scales. Mean $\pm $ SE across 5 seeds}{table.caption.29}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Scaling analysis: GSM8K accuracy as a function of model size (log scale x-axis). Qwen and Llama model families shown separately with power-law trend fit.}}{11}{figure.caption.30}\protected@file@percent }
-\newlabel{fig:scaling}{{7}{11}{Scaling analysis: GSM8K accuracy as a function of model size (log scale x-axis). Qwen and Llama model families shown separately with power-law trend fit}{figure.caption.30}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}Task-Specific GRPO Results}{11}{subsection.5.8}\protected@file@percent }
-\newlabel{sec:task_grpo}{{5.8}{11}{Task-Specific GRPO Results}{subsection.5.8}{}}
-\@writefile{toc}{\contentsline {paragraph}{Training Dynamics.}{11}{section*.40}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.9}Cross-Architecture Scaling}{11}{subsection.5.9}\protected@file@percent }
-\newlabel{sec:cross_arch_scaling}{{5.9}{11}{Cross-Architecture Scaling}{subsection.5.9}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Exponential saturation fits to reward traces across model families. Each curve shows the fitted $R(t)$ with observed data points overlaid. DeepSeek and Qwen3-MoE show the strongest saturation behavior.}}{12}{figure.caption.35}\protected@file@percent }
-\newlabel{fig:scaling_law}{{8}{12}{Exponential saturation fits to reward traces across model families. Each curve shows the fitted $R(t)$ with observed data points overlaid. DeepSeek and Qwen3-MoE show the strongest saturation behavior}{figure.caption.35}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Fitted scaling parameters ($R_{\max }$ and $k$) as a function of model size (log scale). Pearson correlations shown; both are statistically significant at $p < 0.05$.}}{12}{figure.caption.36}\protected@file@percent }
-\newlabel{fig:scaling_params}{{9}{12}{Fitted scaling parameters ($R_{\max }$ and $k$) as a function of model size (log scale). Pearson correlations shown; both are statistically significant at $p < 0.05$}{figure.caption.36}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.10}Dense vs.~MoE at Matched Active Parameters}{12}{subsection.5.10}\protected@file@percent }
-\newlabel{sec:dense_moe}{{5.10}{12}{Dense vs.~MoE at Matched Active Parameters}{subsection.5.10}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.11}Frontier Model Analysis}{12}{subsection.5.11}\protected@file@percent }
-\newlabel{sec:frontier}{{5.11}{12}{Frontier Model Analysis}{subsection.5.11}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Hyperparameter sensitivity analysis. Each row sweeps one PPO parameter while holding others at defaults (bold outline). Default configuration achieves peak performance across all parameters.}}{13}{figure.caption.37}\protected@file@percent }
-\newlabel{fig:sensitivity}{{10}{13}{Hyperparameter sensitivity analysis. Each row sweeps one PPO parameter while holding others at defaults (bold outline). Default configuration achieves peak performance across all parameters}{figure.caption.37}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Comparison of \textsc  {TinkerRL-Bench}{} with existing RL benchmarks.}}{13}{table.caption.38}\protected@file@percent }
-\newlabel{tab:benchmark_comparison}{{7}{13}{Comparison of \ours {} with existing RL benchmarks}{table.caption.38}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.12}PPO vs.~GRPO: Controlled Algorithm Comparison}{13}{subsection.5.12}\protected@file@percent }
-\newlabel{sec:ppo_grpo}{{5.12}{13}{PPO vs.~GRPO: Controlled Algorithm Comparison}{subsection.5.12}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces GSM8K results across model scales. Mean $\pm $ SE across 5 seeds.}}{13}{table.caption.37}\protected@file@percent }
+\newlabel{tab:results_gsm8k}{{8}{13}{GSM8K results across model scales. Mean $\pm $ SE across 5 seeds}{table.caption.37}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Scaling analysis: GSM8K accuracy as a function of model size (log scale x-axis). Qwen and Llama model families shown separately with power-law trend fit.}}{13}{figure.caption.38}\protected@file@percent }
+\newlabel{fig:scaling}{{7}{13}{Scaling analysis: GSM8K accuracy as a function of model size (log scale x-axis). Qwen and Llama model families shown separately with power-law trend fit}{figure.caption.38}{}}
+\@writefile{toc}{\contentsline {paragraph}{Exponential Saturation Model.}{13}{section*.39}\protected@file@percent }
+\newlabel{eq:exp_sat}{{1}{13}{Exponential Saturation Model}{equation.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Fit Quality and Family Breakdown.}{13}{section*.40}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Three-Phase Learning Dynamics.}{13}{section*.41}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Scale Correlations.}{13}{section*.42}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Exponential saturation fits to reward traces across model families. Each curve shows the fitted $R(t)$ with observed data points overlaid. DeepSeek and Qwen3-MoE show the strongest saturation behavior.}}{14}{figure.caption.43}\protected@file@percent }
+\newlabel{fig:scaling_law}{{8}{14}{Exponential saturation fits to reward traces across model families. Each curve shows the fitted $R(t)$ with observed data points overlaid. DeepSeek and Qwen3-MoE show the strongest saturation behavior}{figure.caption.43}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Fitted scaling parameters ($R_{\max }$ and $k$) as a function of model size (log scale). Pearson correlations shown; both are statistically significant at $p < 0.05$.}}{14}{figure.caption.44}\protected@file@percent }
+\newlabel{fig:scaling_params}{{9}{14}{Fitted scaling parameters ($R_{\max }$ and $k$) as a function of model size (log scale). Pearson correlations shown; both are statistically significant at $p < 0.05$}{figure.caption.44}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Hyperparameter Sensitivity}{14}{subsection.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}Comparison with Existing Benchmarks}{14}{subsection.5.7}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Comparison of \textsc  {TinkerRL-Bench}{} with existing RL benchmarks.}}{14}{table.caption.46}\protected@file@percent }
+\newlabel{tab:benchmark_comparison}{{9}{14}{Comparison of \ours {} with existing RL benchmarks}{table.caption.46}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}Task-Specific GRPO Results}{14}{subsection.5.8}\protected@file@percent }
+\newlabel{sec:task_grpo}{{5.8}{14}{Task-Specific GRPO Results}{subsection.5.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Hyperparameter sensitivity analysis. Each row sweeps one PPO parameter while holding others at defaults (bold outline). Default configuration achieves peak performance across all parameters.}}{15}{figure.caption.45}\protected@file@percent }
+\newlabel{fig:sensitivity}{{10}{15}{Hyperparameter sensitivity analysis. Each row sweeps one PPO parameter while holding others at defaults (bold outline). Default configuration achieves peak performance across all parameters}{figure.caption.45}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces GRPO Performance Across Diverse Tasks. Experiments conducted by team members on consumer-grade and cloud hardware.}}{15}{table.caption.47}\protected@file@percent }
+\newlabel{tab:task_grpo}{{10}{15}{GRPO Performance Across Diverse Tasks. Experiments conducted by team members on consumer-grade and cloud hardware}{table.caption.47}{}}
+\@writefile{toc}{\contentsline {paragraph}{Training Dynamics.}{15}{section*.48}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.9}Cross-Architecture Scaling}{15}{subsection.5.9}\protected@file@percent }
+\newlabel{sec:cross_arch_scaling}{{5.9}{15}{Cross-Architecture Scaling}{subsection.5.9}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Cross-Architecture Scaling: GRPO training reward on GSM8K across model families and scale tiers (Tinker API, single seed). Peak and last-10-step mean reward reported. $\dagger $~Training interrupted; reported metrics are from available steps. ``---'' entries did not complete due to platform failures.}}{16}{table.caption.49}\protected@file@percent }
+\newlabel{tab:cross_arch_scaling}{{11}{16}{Cross-Architecture Scaling: GRPO training reward on GSM8K across model families and scale tiers (Tinker API, single seed). Peak and last-10-step mean reward reported. $\dagger $~Training interrupted; reported metrics are from available steps. ``---'' entries did not complete due to platform failures}{table.caption.49}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.10}Dense vs.~MoE at Matched Active Parameters}{16}{subsection.5.10}\protected@file@percent }
+\newlabel{sec:dense_moe}{{5.10}{16}{Dense vs.~MoE at Matched Active Parameters}{subsection.5.10}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces Dense vs.~MoE at Matched Active Parameters. GRPO training reward (peak and last-10-step mean) on GSM8K via Tinker API. $\dagger $~Training interrupted; reported metrics are from available steps.}}{16}{table.caption.50}\protected@file@percent }
+\newlabel{tab:dense_moe}{{12}{16}{Dense vs.~MoE at Matched Active Parameters. GRPO training reward (peak and last-10-step mean) on GSM8K via Tinker API. $\dagger $~Training interrupted; reported metrics are from available steps}{table.caption.50}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.11}Frontier Model Analysis}{16}{subsection.5.11}\protected@file@percent }
+\newlabel{sec:frontier}{{5.11}{16}{Frontier Model Analysis}{subsection.5.11}{}}
 \citation{schulman2017proximal}
-\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces GRPO Performance Across Diverse Tasks. Experiments conducted by team members on consumer-grade and cloud hardware.}}{14}{table.caption.39}\protected@file@percent }
-\newlabel{tab:task_grpo}{{8}{14}{GRPO Performance Across Diverse Tasks. Experiments conducted by team members on consumer-grade and cloud hardware}{table.caption.39}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Cross-Architecture Scaling: GRPO training reward on GSM8K across model families and scale tiers (Tinker API, single seed). Peak and last-10-step mean reward reported. $\dagger $~Training interrupted; reported metrics are from available steps. ``---'' entries did not complete due to platform failures.}}{14}{table.caption.41}\protected@file@percent }
-\newlabel{tab:cross_arch_scaling}{{9}{14}{Cross-Architecture Scaling: GRPO training reward on GSM8K across model families and scale tiers (Tinker API, single seed). Peak and last-10-step mean reward reported. $\dagger $~Training interrupted; reported metrics are from available steps. ``---'' entries did not complete due to platform failures}{table.caption.41}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.13}Policy Drift Analysis via Reward Trajectory Stability}{14}{subsection.5.13}\protected@file@percent }
-\newlabel{sec:kl}{{5.13}{14}{Policy Drift Analysis via Reward Trajectory Stability}{subsection.5.13}{}}
-\@writefile{toc}{\contentsline {paragraph}{Stability Metrics.}{14}{section*.48}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Quantitative Results.}{14}{section*.49}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces Frontier Model Evaluation: GSM8K GRPO training reward via Tinker API. Peak and last-10-step mean reward reported. All metrics are training rewards (single seed); held-out accuracy evaluation was not completed. $\dagger $~Training interrupted; reported metrics are from available steps.}}{17}{table.caption.51}\protected@file@percent }
+\newlabel{tab:frontier}{{13}{17}{Frontier Model Evaluation: GSM8K GRPO training reward via Tinker API. Peak and last-10-step mean reward reported. All metrics are training rewards (single seed); held-out accuracy evaluation was not completed. $\dagger $~Training interrupted; reported metrics are from available steps}{table.caption.51}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.12}PPO vs.~GRPO: Controlled Algorithm Comparison}{17}{subsection.5.12}\protected@file@percent }
+\newlabel{sec:ppo_grpo}{{5.12}{17}{PPO vs.~GRPO: Controlled Algorithm Comparison}{subsection.5.12}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces PPO vs.~GRPO Comparison: GSM8K training reward (peak and last-10-step mean). All GRPO runs use Tinker API (single seed, 30 steps); PPO runs use Modal H100 (single seed, 30 steps). Bold indicates the higher last-10 average for each model pair.}}{17}{table.caption.52}\protected@file@percent }
+\newlabel{tab:ppo_grpo}{{14}{17}{PPO vs.~GRPO Comparison: GSM8K training reward (peak and last-10-step mean). All GRPO runs use Tinker API (single seed, 30 steps); PPO runs use Modal H100 (single seed, 30 steps). Bold indicates the higher last-10 average for each model pair}{table.caption.52}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.13}Policy Drift Analysis via Reward Trajectory Stability}{17}{subsection.5.13}\protected@file@percent }
+\newlabel{sec:kl}{{5.13}{17}{Policy Drift Analysis via Reward Trajectory Stability}{subsection.5.13}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Step-level reward comparison between GRPO (Tinker) and PPO (Modal H100) on Qwen3-8B GSM8K. Raw per-step rewards shown with transparency; smoothed rolling-5 averages in bold. The shaded region marks the last-10 evaluation window. GRPO achieves a higher last-10 average (34.4\%) vs.~PPO (22.5\%) despite PPO reaching a higher peak (75\% vs.~62.5\%). PPO exhibits substantially higher volatility (std 0.284 vs.~0.147).}}{18}{figure.caption.53}\protected@file@percent }
+\newlabel{fig:ppo_vs_grpo}{{11}{18}{Step-level reward comparison between GRPO (Tinker) and PPO (Modal H100) on Qwen3-8B GSM8K. Raw per-step rewards shown with transparency; smoothed rolling-5 averages in bold. The shaded region marks the last-10 evaluation window. GRPO achieves a higher last-10 average (34.4\%) vs.~PPO (22.5\%) despite PPO reaching a higher peak (75\% vs.~62.5\%). PPO exhibits substantially higher volatility (std 0.284 vs.~0.147)}{figure.caption.53}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Effect sizes, statistical power, and multiple-comparison corrections for all pairwise comparisons in this paper. Cohen's $d$ uses pooled standard deviation; $^*$ Bonferroni-significant ($\alpha /k$); $^\dag  $ Benjamini--Hochberg FDR significant (BH-FDR $< 0.05$). Post-hoc power computed at observed $d$ with $\alpha =0.05$ (two-tailed). MDE: minimum detectable effect at 80\% power.}}{18}{table.caption.54}\protected@file@percent }
+\newlabel{tab:effect_sizes}{{15}{18}{Effect sizes, statistical power, and multiple-comparison corrections for all pairwise comparisons in this paper. Cohen's $d$ uses pooled standard deviation; $^*$ Bonferroni-significant ($\alpha /k$); $^\dag $ Benjamini--Hochberg FDR significant (BH-FDR $< 0.05$). Post-hoc power computed at observed $d$ with $\alpha =0.05$ (two-tailed). MDE: minimum detectable effect at 80\% power}{table.caption.54}{}}
+\@writefile{toc}{\contentsline {paragraph}{Stability Metrics.}{18}{section*.56}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Quantitative Results.}{18}{section*.57}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Policy Drift Risk Classification.}{18}{section*.58}\protected@file@percent }
 \citation{shao2024deepseekmath}
-\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Dense vs.~MoE at Matched Active Parameters. GRPO training reward (peak and last-10-step mean) on GSM8K via Tinker API. $\dagger $~Training interrupted; reported metrics are from available steps.}}{15}{table.caption.42}\protected@file@percent }
-\newlabel{tab:dense_moe}{{10}{15}{Dense vs.~MoE at Matched Active Parameters. GRPO training reward (peak and last-10-step mean) on GSM8K via Tinker API. $\dagger $~Training interrupted; reported metrics are from available steps}{table.caption.42}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Frontier Model Evaluation: GSM8K GRPO training reward via Tinker API. Peak and last-10-step mean reward reported. All metrics are training rewards (single seed); held-out accuracy evaluation was not completed. $\dagger $~Training interrupted; reported metrics are from available steps.}}{15}{table.caption.43}\protected@file@percent }
-\newlabel{tab:frontier}{{11}{15}{Frontier Model Evaluation: GSM8K GRPO training reward via Tinker API. Peak and last-10-step mean reward reported. All metrics are training rewards (single seed); held-out accuracy evaluation was not completed. $\dagger $~Training interrupted; reported metrics are from available steps}{table.caption.43}{}}
-\@writefile{toc}{\contentsline {paragraph}{Policy Drift Risk Classification.}{15}{section*.50}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Algorithm Stability Comparison.}{15}{section*.51}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Nemotron-120B Collapse Case Study.}{15}{section*.52}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Honest Limitation.}{15}{section*.53}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.14}Zero-Variance Fraction: Cross-Library, Cross-Scale Analysis}{15}{subsection.5.14}\protected@file@percent }
-\newlabel{sec:zvf-analysis}{{5.14}{15}{Zero-Variance Fraction: Cross-Library, Cross-Scale Analysis}{subsection.5.14}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Forest plot of effect sizes (Cohen's $d$) for all five planned pairwise comparisons. Error bars show 95\% confidence intervals. The LLM-native vs.\ Classic RL comparison is the largest effect by two orders of magnitude.}}{19}{figure.caption.55}\protected@file@percent }
+\newlabel{fig:effect_sizes}{{12}{19}{Forest plot of effect sizes (Cohen's $d$) for all five planned pairwise comparisons. Error bars show 95\% confidence intervals. The LLM-native vs.\ Classic RL comparison is the largest effect by two orders of magnitude}{figure.caption.55}{}}
+\@writefile{toc}{\contentsline {paragraph}{Algorithm Stability Comparison.}{19}{section*.59}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Nemotron-120B Collapse Case Study.}{19}{section*.60}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces \textbf  {Policy drift proxy analysis.} (a)~Stability Index vs.\ last-10 reward ($r = -0.436$, $p = 0.020$); higher instability predicts worse outcomes. (b)~Peak-to-Tail Drift with risk zones: green (stable, $\leq 0.1$), yellow (moderate), red (high, $> 0.3$). (c)~Rolling variance for Nemotron-120B (collapse) vs.\ DeepSeek-V3.1 (stable). (d)~GRPO exhibits significantly lower drift than classic-RL PPO ($p = 0.018$).}}{20}{figure.caption.62}\protected@file@percent }
+\newlabel{fig:kl_proxy}{{13}{20}{\textbf {Policy drift proxy analysis.} (a)~Stability Index vs.\ last-10 reward ($r = -0.436$, $p = 0.020$); higher instability predicts worse outcomes. (b)~Peak-to-Tail Drift with risk zones: green (stable, $\leq 0.1$), yellow (moderate), red (high, $> 0.3$). (c)~Rolling variance for Nemotron-120B (collapse) vs.\ DeepSeek-V3.1 (stable). (d)~GRPO exhibits significantly lower drift than classic-RL PPO ($p = 0.018$)}{figure.caption.62}{}}
+\@writefile{toc}{\contentsline {paragraph}{Honest Limitation.}{20}{section*.61}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.14}Zero-Variance Fraction: Cross-Library, Cross-Scale Analysis}{20}{subsection.5.14}\protected@file@percent }
+\newlabel{sec:zvf-analysis}{{5.14}{20}{Zero-Variance Fraction: Cross-Library, Cross-Scale Analysis}{subsection.5.14}{}}
 \citation{zhang2026aero,zhang2026greso}
-\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces PPO vs.~GRPO Comparison: GSM8K training reward (peak and last-10-step mean). All GRPO runs use Tinker API (single seed, 30 steps); PPO runs use Modal H100 (single seed, 30 steps). Bold indicates the higher last-10 average for each model pair.}}{16}{table.caption.44}\protected@file@percent }
-\newlabel{tab:ppo_grpo}{{12}{16}{PPO vs.~GRPO Comparison: GSM8K training reward (peak and last-10-step mean). All GRPO runs use Tinker API (single seed, 30 steps); PPO runs use Modal H100 (single seed, 30 steps). Bold indicates the higher last-10 average for each model pair}{table.caption.44}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Step-level reward comparison between GRPO (Tinker) and PPO (Modal H100) on Qwen3-8B GSM8K. Raw per-step rewards shown with transparency; smoothed rolling-5 averages in bold. The shaded region marks the last-10 evaluation window. GRPO achieves a higher last-10 average (34.4\%) vs.~PPO (22.5\%) despite PPO reaching a higher peak (75\% vs.~62.5\%). PPO exhibits substantially higher volatility (std 0.284 vs.~0.147).}}{16}{figure.caption.45}\protected@file@percent }
-\newlabel{fig:ppo_vs_grpo}{{11}{16}{Step-level reward comparison between GRPO (Tinker) and PPO (Modal H100) on Qwen3-8B GSM8K. Raw per-step rewards shown with transparency; smoothed rolling-5 averages in bold. The shaded region marks the last-10 evaluation window. GRPO achieves a higher last-10 average (34.4\%) vs.~PPO (22.5\%) despite PPO reaching a higher peak (75\% vs.~62.5\%). PPO exhibits substantially higher volatility (std 0.284 vs.~0.147)}{figure.caption.45}{}}
 \citation{wu2025grpo_dpo}
-\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces Effect sizes, statistical power, and multiple-comparison corrections for all pairwise comparisons in this paper. Cohen's $d$ uses pooled standard deviation; $^*$ Bonferroni-significant ($\alpha /k$); $^\dag  $ Benjamini--Hochberg FDR significant (BH-FDR $< 0.05$). Post-hoc power computed at observed $d$ with $\alpha =0.05$ (two-tailed). MDE: minimum detectable effect at 80\% power.}}{17}{table.caption.46}\protected@file@percent }
-\newlabel{tab:effect_sizes}{{13}{17}{Effect sizes, statistical power, and multiple-comparison corrections for all pairwise comparisons in this paper. Cohen's $d$ uses pooled standard deviation; $^*$ Bonferroni-significant ($\alpha /k$); $^\dag $ Benjamini--Hochberg FDR significant (BH-FDR $< 0.05$). Post-hoc power computed at observed $d$ with $\alpha =0.05$ (two-tailed). MDE: minimum detectable effect at 80\% power}{table.caption.46}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Forest plot of effect sizes (Cohen's $d$) for all five planned pairwise comparisons. Error bars show 95\% confidence intervals. The LLM-native vs.\ Classic RL comparison is the largest effect by two orders of magnitude.}}{17}{figure.caption.47}\protected@file@percent }
-\newlabel{fig:effect_sizes}{{12}{17}{Forest plot of effect sizes (Cohen's $d$) for all five planned pairwise comparisons. Error bars show 95\% confidence intervals. The LLM-native vs.\ Classic RL comparison is the largest effect by two orders of magnitude}{figure.caption.47}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.15}GRPO Is Secretly DPO: Validation Against Our Data}{17}{subsection.5.15}\protected@file@percent }
-\newlabel{sec:grpo-dpo}{{5.15}{17}{GRPO Is Secretly DPO: Validation Against Our Data}{subsection.5.15}{}}
-\@writefile{toc}{\contentsline {paragraph}{ZVF Theory.}{17}{section*.57}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces \textbf  {Policy drift proxy analysis.} (a)~Stability Index vs.\ last-10 reward ($r = -0.436$, $p = 0.020$); higher instability predicts worse outcomes. (b)~Peak-to-Tail Drift with risk zones: green (stable, $\leq 0.1$), yellow (moderate), red (high, $> 0.3$). (c)~Rolling variance for Nemotron-120B (collapse) vs.\ DeepSeek-V3.1 (stable). (d)~GRPO exhibits significantly lower drift than classic-RL PPO ($p = 0.018$).}}{18}{figure.caption.54}\protected@file@percent }
-\newlabel{fig:kl_proxy}{{13}{18}{\textbf {Policy drift proxy analysis.} (a)~Stability Index vs.\ last-10 reward ($r = -0.436$, $p = 0.020$); higher instability predicts worse outcomes. (b)~Peak-to-Tail Drift with risk zones: green (stable, $\leq 0.1$), yellow (moderate), red (high, $> 0.3$). (c)~Rolling variance for Nemotron-120B (collapse) vs.\ DeepSeek-V3.1 (stable). (d)~GRPO exhibits significantly lower drift than classic-RL PPO ($p = 0.018$)}{figure.caption.54}{}}
-\@writefile{toc}{\contentsline {paragraph}{Empirical validation.}{18}{section*.58}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.16}Cross-Architecture Tool-Use}{18}{subsection.5.16}\protected@file@percent }
-\newlabel{sec:tool_use_cross_arch}{{5.16}{18}{Cross-Architecture Tool-Use}{subsection.5.16}{}}
-\@writefile{toc}{\contentsline {paragraph}{Table footnotes.}{18}{section*.61}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Per-step ZVF heatmap. Red: ZVF$=1$ (zero gradient); blue: ZVF$=0$ (gradient flows); grey: no data. Experiments sorted by aggregate ZVF (descending).}}{19}{figure.caption.55}\protected@file@percent }
-\newlabel{fig:zvf-heatmap}{{14}{19}{Per-step ZVF heatmap. Red: ZVF$=1$ (zero gradient); blue: ZVF$=0$ (gradient flows); grey: no data. Experiments sorted by aggregate ZVF (descending)}{figure.caption.55}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces \textbf  {Left:} ZVF vs.\ final performance scatter ($r = -0.769$, $p = 0.0008$). \textbf  {Right:} Mean ZVF by model family. Llama's high mean ZVF is driven entirely by tool-use experiments.}}{19}{figure.caption.56}\protected@file@percent }
-\newlabel{fig:zvf-correlation}{{15}{19}{\textbf {Left:} ZVF vs.\ final performance scatter ($r = -0.769$, $p = 0.0008$). \textbf {Right:} Mean ZVF by model family. Llama's high mean ZVF is driven entirely by tool-use experiments}{figure.caption.56}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Reproducibility}{19}{section.6}\protected@file@percent }
-\newlabel{sec:reproducibility}{{6}{19}{Reproducibility}{section.6}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces Theoretical ZVF curves $p^G + (1-p)^G$ as a function of accuracy $p$ for group sizes $G \in \{2, 4, 8, 16, 32\}$, overlaid with our observed data points. Beyond $G=8$, marginal gains are negligible for $p \in [0.2, 0.8]$.}}{20}{figure.caption.59}\protected@file@percent }
-\newlabel{fig:group_size_zvf}{{16}{20}{Theoretical ZVF curves $p^G + (1-p)^G$ as a function of accuracy $p$ for group sizes $G \in \{2, 4, 8, 16, 32\}$, overlaid with our observed data points. Beyond $G=8$, marginal gains are negligible for $p \in [0.2, 0.8]$}{figure.caption.59}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Cross-Architecture Tool-Use: Function-calling accuracy (\%) after GRPO post-training. Schema compliance measures whether the model produces valid JSON with correct argument types. ``---'' entries either failed due to JWT authentication expiry or scored 0\% (task too difficult for the model).}}{20}{table.caption.60}\protected@file@percent }
-\newlabel{tab:tool_use_cross_arch}{{14}{20}{Cross-Architecture Tool-Use: Function-calling accuracy (\%) after GRPO post-training. Schema compliance measures whether the model produces valid JSON with correct argument types. ``---'' entries either failed due to JWT authentication expiry or scored 0\% (task too difficult for the model)}{table.caption.60}{}}
-\@writefile{toc}{\contentsline {paragraph}{Team Model Checkpoints.}{20}{section*.62}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7}Limitations}{21}{section.7}\protected@file@percent }
-\newlabel{sec:limitations}{{7}{21}{Limitations}{section.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Infrastructure Failures}{21}{subsection.7.1}\protected@file@percent }
-\newlabel{sec:infra_failures}{{7.1}{21}{Infrastructure Failures}{subsection.7.1}{}}
-\@writefile{toc}{\contentsline {paragraph}{JWT Token Expiration (Tinker API).}{21}{section*.63}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Modal Timeout (60-Minute Hard Limit).}{21}{section*.64}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{KL Divergence Tracking Bug.}{21}{section*.65}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Weights \& Biases Step-Level Data Loss.}{21}{section*.66}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Methodological Limitations}{21}{subsection.7.2}\protected@file@percent }
-\newlabel{sec:method_limits}{{7.2}{21}{Methodological Limitations}{subsection.7.2}{}}
-\@writefile{toc}{\contentsline {paragraph}{Closed-Source Training Implementation (Tinker).}{21}{section*.67}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Short Training Horizons (30 Steps).}{21}{section*.68}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Per-step ZVF heatmap. Red: ZVF$=1$ (zero gradient); blue: ZVF$=0$ (gradient flows); grey: no data. Experiments sorted by aggregate ZVF (descending).}}{21}{figure.caption.63}\protected@file@percent }
+\newlabel{fig:zvf-heatmap}{{14}{21}{Per-step ZVF heatmap. Red: ZVF$=1$ (zero gradient); blue: ZVF$=0$ (gradient flows); grey: no data. Experiments sorted by aggregate ZVF (descending)}{figure.caption.63}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces \textbf  {Left:} ZVF vs.\ final performance scatter ($r = -0.769$, $p = 0.0008$). \textbf  {Right:} Mean ZVF by model family. Llama's high mean ZVF is driven entirely by tool-use experiments.}}{21}{figure.caption.64}\protected@file@percent }
+\newlabel{fig:zvf-correlation}{{15}{21}{\textbf {Left:} ZVF vs.\ final performance scatter ($r = -0.769$, $p = 0.0008$). \textbf {Right:} Mean ZVF by model family. Llama's high mean ZVF is driven entirely by tool-use experiments}{figure.caption.64}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.15}GRPO Is Secretly DPO: Validation Against Our Data}{21}{subsection.5.15}\protected@file@percent }
+\newlabel{sec:grpo-dpo}{{5.15}{21}{GRPO Is Secretly DPO: Validation Against Our Data}{subsection.5.15}{}}
+\@writefile{toc}{\contentsline {paragraph}{ZVF Theory.}{21}{section*.65}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Empirical validation.}{22}{section*.66}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces Theoretical ZVF curves $p^G + (1-p)^G$ as a function of accuracy $p$ for group sizes $G \in \{2, 4, 8, 16, 32\}$, overlaid with our observed data points. Beyond $G=8$, marginal gains are negligible for $p \in [0.2, 0.8]$.}}{22}{figure.caption.67}\protected@file@percent }
+\newlabel{fig:group_size_zvf}{{16}{22}{Theoretical ZVF curves $p^G + (1-p)^G$ as a function of accuracy $p$ for group sizes $G \in \{2, 4, 8, 16, 32\}$, overlaid with our observed data points. Beyond $G=8$, marginal gains are negligible for $p \in [0.2, 0.8]$}{figure.caption.67}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.16}Cross-Architecture Tool-Use}{22}{subsection.5.16}\protected@file@percent }
+\newlabel{sec:tool_use_cross_arch}{{5.16}{22}{Cross-Architecture Tool-Use}{subsection.5.16}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces Cross-Architecture Tool-Use: Function-calling accuracy (\%) after GRPO post-training. Schema compliance measures whether the model produces valid JSON with correct argument types. ``---'' entries either failed due to JWT authentication expiry or scored 0\% (task too difficult for the model).}}{22}{table.caption.68}\protected@file@percent }
+\newlabel{tab:tool_use_cross_arch}{{16}{22}{Cross-Architecture Tool-Use: Function-calling accuracy (\%) after GRPO post-training. Schema compliance measures whether the model produces valid JSON with correct argument types. ``---'' entries either failed due to JWT authentication expiry or scored 0\% (task too difficult for the model)}{table.caption.68}{}}
+\@writefile{toc}{\contentsline {paragraph}{Table footnotes.}{22}{section*.69}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Reproducibility}{23}{section.6}\protected@file@percent }
+\newlabel{sec:reproducibility}{{6}{23}{Reproducibility}{section.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Team Model Checkpoints.}{23}{section*.70}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Limitations}{23}{section.7}\protected@file@percent }
+\newlabel{sec:limitations}{{7}{23}{Limitations}{section.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Infrastructure Failures}{23}{subsection.7.1}\protected@file@percent }
+\newlabel{sec:infra_failures}{{7.1}{23}{Infrastructure Failures}{subsection.7.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{JWT Token Expiration (Tinker API).}{23}{section*.71}\protected@file@percent }
 \citation{henderson2018deep}
+\@writefile{toc}{\contentsline {paragraph}{Modal Timeout (60-Minute Hard Limit).}{24}{section*.72}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{KL Divergence Tracking Bug.}{24}{section*.73}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Weights \& Biases Step-Level Data Loss.}{24}{section*.74}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Methodological Limitations}{24}{subsection.7.2}\protected@file@percent }
+\newlabel{sec:method_limits}{{7.2}{24}{Methodological Limitations}{subsection.7.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Closed-Source Training Implementation (Tinker).}{24}{section*.75}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Short Training Horizons (30 Steps).}{24}{section*.76}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Single-Seed Tinker Experiments.}{24}{section*.77}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Train-Set Reward as the Primary Metric.}{24}{section*.78}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Tool-Use Task: 0\% Reward.}{24}{section*.79}\protected@file@percent }
 \citation{liu2025drgrpo}
 \citation{wang2025madgrpo}
 \citation{liu2025drgrpo,wang2025madgrpo}
 \citation{liu2025drgrpo}
-\@writefile{toc}{\contentsline {paragraph}{Single-Seed Tinker Experiments.}{22}{section*.69}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Train-Set Reward as the Primary Metric.}{22}{section*.70}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Tool-Use Task: 0\% Reward.}{22}{section*.71}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Length Bias and Reward Instability Analysis}{22}{subsection.7.3}\protected@file@percent }
-\newlabel{sec:length_bias}{{7.3}{22}{Length Bias and Reward Instability Analysis}{subsection.7.3}{}}
-\@writefile{toc}{\contentsline {paragraph}{Background.}{22}{section*.72}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Metrics.}{22}{section*.73}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Comparative results.}{22}{section*.74}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Implications.}{22}{section*.75}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Broader Impact}{22}{subsection.7.4}\protected@file@percent }
-\newlabel{sec:impact}{{7.4}{22}{Broader Impact}{subsection.7.4}{}}
-\@writefile{toc}{\contentsline {paragraph}{Alignment and Misuse.}{22}{section*.77}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Length Bias and Reward Instability Analysis}{25}{subsection.7.3}\protected@file@percent }
+\newlabel{sec:length_bias}{{7.3}{25}{Length Bias and Reward Instability Analysis}{subsection.7.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Background.}{25}{section*.80}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Metrics.}{25}{section*.81}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Comparative results.}{25}{section*.82}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Implications.}{25}{section*.83}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces Reward stability analysis across experiments. GRPO runs (blue) and PPO runs (orange) plotted by instability index vs.\ monotonicity score. Verbosity-trap experiments (flag=1) are marked with a star.}}{25}{figure.caption.84}\protected@file@percent }
+\newlabel{fig:reward_stability}{{17}{25}{Reward stability analysis across experiments. GRPO runs (blue) and PPO runs (orange) plotted by instability index vs.\ monotonicity score. Verbosity-trap experiments (flag=1) are marked with a star}{figure.caption.84}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Broader Impact}{25}{subsection.7.4}\protected@file@percent }
+\newlabel{sec:impact}{{7.4}{25}{Broader Impact}{subsection.7.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Alignment and Misuse.}{25}{section*.85}\protected@file@percent }
 \citation{cobbe2021training}
 \citation{chen2021codex}
-\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces Reward stability analysis across experiments. GRPO runs (blue) and PPO runs (orange) plotted by instability index vs.\ monotonicity score. Verbosity-trap experiments (flag=1) are marked with a star.}}{23}{figure.caption.76}\protected@file@percent }
-\newlabel{fig:reward_stability}{{17}{23}{Reward stability analysis across experiments. GRPO runs (blue) and PPO runs (orange) plotted by instability index vs.\ monotonicity score. Verbosity-trap experiments (flag=1) are marked with a star}{figure.caption.76}{}}
-\@writefile{toc}{\contentsline {paragraph}{Democratizing RL-for-LLM Research.}{23}{section*.78}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Training Data and Privacy.}{23}{section*.79}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{No Direct Dual-Use Concern.}{23}{section*.80}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Reproducibility Statement.}{23}{section*.81}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {8}Conclusion}{23}{section.8}\protected@file@percent }
-\newlabel{sec:conclusion}{{8}{23}{Conclusion}{section.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{Democratizing RL-for-LLM Research.}{26}{section*.86}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Training Data and Privacy.}{26}{section*.87}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{No Direct Dual-Use Concern.}{26}{section*.88}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Reproducibility Statement.}{26}{section*.89}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Discussion}{26}{section.8}\protected@file@percent }
+\newlabel{sec:discussion}{{8}{26}{Discussion}{section.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Why Does Algorithm Preference Depend on the Model?}{26}{subsection.8.1}\protected@file@percent }
+\newlabel{sec:discuss_model_algo}{{8.1}{26}{Why Does Algorithm Preference Depend on the Model?}{subsection.8.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Hypothesis 1: Reward landscape geometry.}{26}{section*.90}\protected@file@percent }
+\citation{shao2024deepseekmath}
+\citation{liu2025rlsubnetworks}
+\citation{henderson2018deep}
+\citation{zhang2026aero}
+\citation{nimmaturi2025scalinglaws}
+\@writefile{toc}{\contentsline {paragraph}{Hypothesis 2: Instruction-tuning quality modulates advantage noise.}{27}{section*.91}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Hypothesis 3: Reference-policy proximity.}{27}{section*.92}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}What the Implementation Gap Means for the Field}{27}{subsection.8.2}\protected@file@percent }
+\newlabel{sec:discuss_impl}{{8.2}{27}{What the Implementation Gap Means for the Field}{subsection.8.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}Connections to Concurrent Work}{27}{subsection.8.3}\protected@file@percent }
+\newlabel{sec:discuss_related}{{8.3}{27}{Connections to Concurrent Work}{subsection.8.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{AERO and ZVF as a training diagnostic.}{27}{section*.93}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Scaling laws: exponential saturation and its limits.}{27}{section*.94}\protected@file@percent }
+\citation{wu2025grpo_dpo}
+\citation{kaddour2026tpo}
+\citation{liu2025rlsubnetworks}
+\citation{henderson2018deep}
+\@writefile{toc}{\contentsline {paragraph}{``It Takes Two'' and the 2-GRPO/DPO equivalence.}{28}{section*.95}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Target Policy Optimization and sparse-reward regimes.}{28}{section*.96}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.4}Limitations of Proxy Metrics and the Path to Direct KL Measurement}{28}{subsection.8.4}\protected@file@percent }
+\newlabel{sec:discuss_kl}{{8.4}{28}{Limitations of Proxy Metrics and the Path to Direct KL Measurement}{subsection.8.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {9}Conclusion}{28}{section.9}\protected@file@percent }
+\newlabel{sec:conclusion}{{9}{28}{Conclusion}{section.9}{}}
+\citation{liu2025rlsubnetworks}
+\citation{zhang2026aero}
+\citation{wu2025grpo_dpo}
+\citation{guo2025deepseekr1nature}
 \bibstyle{plainnat}
-\bibcite{henderson2018deep}{{1}{}{{}}{{}}}
-\bibcite{shao2024deepseekmath}{{2}{}{{}}{{}}}
-\bibcite{rafailov2024direct}{{3}{}{{}}{{}}}
-\bibcite{colas2019hitchhiker}{{4}{}{{}}{{}}}
-\bibcite{agarwal2021deep}{{5}{}{{}}{{}}}
-\bibcite{jordan2024benchmarking}{{6}{}{{}}{{}}}
-\bibcite{pineau2020improving}{{7}{}{{}}{{}}}
-\bibcite{hu2022lora}{{8}{}{{}}{{}}}
-\bibcite{schulman2017proximal}{{9}{}{{}}{{}}}
-\bibcite{ouyang2022training}{{10}{}{{}}{{}}}
-\bibcite{lynnerup2019survey}{{11}{}{{}}{{}}}
-\bibcite{bettini2023benchmarl}{{12}{}{{}}{{}}}
-\bibcite{patterson2024empirical}{{13}{}{{}}{{}}}
-\bibcite{hochlehnert2025sober}{{14}{}{{}}{{}}}
-\bibcite{acm2020badges}{{15}{}{{}}{{}}}
-\bibcite{cobbe2021training}{{16}{}{{}}{{}}}
-\bibcite{chen2021codex}{{17}{}{{}}{{}}}
-\bibcite{guo2025deepseekr1}{{18}{}{{}}{{}}}
-\bibcite{hu2024openrlhf}{{19}{}{{}}{{}}}
-\bibcite{sheng2024verl}{{20}{}{{}}{{}}}
-\bibcite{zhang2025verifybench}{{21}{}{{}}{{}}}
-\bibcite{guo2025deepseekr1nature}{{22}{}{{}}{{}}}
-\bibcite{wu2025grpo_dpo}{{23}{}{{}}{{}}}
-\bibcite{hatamizadeh2026igrpo}{{24}{}{{}}{{}}}
-\bibcite{liu2026gdpo}{{25}{}{{}}{{}}}
-\bibcite{hu2026openvlthinker}{{26}{}{{}}{{}}}
-\bibcite{zhang2026aero}{{27}{}{{}}{{}}}
-\bibcite{wang2025eframe}{{28}{}{{}}{{}}}
-\bibcite{kaddour2026tpo}{{29}{}{{}}{{}}}
-\bibcite{carrino2026rgra}{{30}{}{{}}{{}}}
-\bibcite{wolfe2026grpotricks}{{31}{}{{}}{{}}}
-\bibcite{liu2025drgrpo}{{32}{}{{}}{{}}}
-\bibcite{wang2025madgrpo}{{33}{}{{}}{{}}}
-\bibcite{raschka2025statellms}{{34}{}{{}}{{}}}
-\bibcite{zhang2026greso}{{35}{}{{}}{{}}}
-\bibcite{lin2025cppo}{{36}{}{{}}{{}}}
-\bibcite{nimmaturi2025scalinglaws}{{37}{}{{}}{{}}}
-\bibcite{liu2025rlsubnetworks}{{38}{}{{}}{{}}}
-\bibcite{hu2024minicpm}{{39}{}{{}}{{}}}
-\bibcite{subramanian2025slm}{{40}{}{{}}{{}}}
-\bibcite{li2025reward_shaping}{{41}{}{{}}{{}}}
-\bibcite{ichihara2025mogrpo}{{42}{}{{}}{{}}}
-\bibcite{zhang2024benchvariance}{{43}{}{{}}{{}}}
-\@writefile{toc}{\contentsline {section}{\numberline {A}Compute Resources}{26}{appendix.A}\protected@file@percent }
-\newlabel{app:compute}{{A}{26}{Compute Resources}{appendix.A}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {B}Hyperparameter Tables}{26}{appendix.B}\protected@file@percent }
-\newlabel{app:hyperparams}{{B}{26}{Hyperparameter Tables}{appendix.B}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {C}Additional Results}{26}{appendix.C}\protected@file@percent }
-\newlabel{app:results}{{C}{26}{Additional Results}{appendix.C}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Compute allocation by platform and experiment group.}}{27}{table.caption.85}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces Hyperparameter sweep ranges for sensitivity analysis.}}{27}{table.caption.86}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {18}{\ignorespaces Final accuracy comparison across RL libraries on the arithmetic task, sorted by performance. Error bars indicate $\pm 1$ standard deviation across 5 seeds. Dashed lines show floor (random baseline, 0.5\%) and ceiling (oracle, 100\%).}}{28}{figure.caption.87}\protected@file@percent }
-\newlabel{fig:comparison_bars}{{18}{28}{Final accuracy comparison across RL libraries on the arithmetic task, sorted by performance. Error bars indicate $\pm 1$ standard deviation across 5 seeds. Dashed lines show floor (random baseline, 0.5\%) and ceiling (oracle, 100\%)}{figure.caption.87}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {19}{\ignorespaces Cross-seed reproducibility analysis for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. The mean is significantly above 50\% ($t = 7.44$, $p < 0.001$), confirming that GRPO produces reliable learning signal even at 0.5B scale.}}{28}{figure.caption.88}\protected@file@percent }
-\newlabel{fig:trl_seeds}{{19}{28}{Cross-seed reproducibility analysis for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. The mean is significantly above 50\% ($t = 7.44$, $p < 0.001$), confirming that GRPO produces reliable learning signal even at 0.5B scale}{figure.caption.88}{}}
+\bibcite{henderson2018deep}{{1}{2018}{{Henderson et~al.}}{{}}}
+\@writefile{toc}{\contentsline {paragraph}{The open question.}{29}{section*.97}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{What the released artifacts enable.}{29}{section*.98}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Looking forward.}{29}{section*.99}\protected@file@percent }
+\bibcite{shao2024deepseekmath}{{2}{2024}{{Shao et~al.}}{{}}}
+\bibcite{rafailov2024direct}{{3}{2024}{{Rafailov et~al.}}{{}}}
+\bibcite{colas2019hitchhiker}{{4}{2019}{{Colas et~al.}}{{}}}
+\bibcite{agarwal2021deep}{{5}{2021}{{Agarwal et~al.}}{{}}}
+\bibcite{jordan2024benchmarking}{{6}{2024}{{Jordan et~al.}}{{}}}
+\bibcite{pineau2020improving}{{7}{2020}{{Pineau et~al.}}{{}}}
+\bibcite{hu2022lora}{{8}{2022}{{Hu et~al.}}{{}}}
+\bibcite{schulman2017proximal}{{9}{2017}{{Schulman et~al.}}{{}}}
+\bibcite{ouyang2022training}{{10}{2022}{{Ouyang et~al.}}{{}}}
+\bibcite{lynnerup2019survey}{{11}{2019}{{Lynnerup et~al.}}{{}}}
+\bibcite{bettini2023benchmarl}{{12}{2023}{{Bettini et~al.}}{{}}}
+\bibcite{patterson2024empirical}{{13}{2024}{{Patterson et~al.}}{{}}}
+\bibcite{hochlehnert2025sober}{{14}{2025}{{Hochlehnert et~al.}}{{}}}
+\bibcite{acm2020badges}{{15}{2020}{{ACM}}{{}}}
+\bibcite{cobbe2021training}{{16}{2021}{{Cobbe et~al.}}{{}}}
+\bibcite{chen2021codex}{{17}{2021}{{Chen et~al.}}{{}}}
+\bibcite{guo2025deepseekr1}{{18}{2025}{{Guo et~al.}}{{}}}
+\bibcite{hu2024openrlhf}{{19}{2024}{{Hu et~al.}}{{}}}
+\bibcite{sheng2024verl}{{20}{2024}{{Sheng et~al.}}{{}}}
+\bibcite{zhang2025verifybench}{{21}{2025}{{Zhang et~al.}}{{}}}
+\bibcite{guo2025deepseekr1nature}{{22}{2025}{{Guo et~al.}}{{}}}
+\bibcite{wu2025grpo_dpo}{{23}{2025}{{Wu et~al.}}{{}}}
+\bibcite{hatamizadeh2026igrpo}{{24}{2026}{{Hatamizadeh et~al.}}{{}}}
+\bibcite{liu2026gdpo}{{25}{2026}{{Liu et~al.}}{{}}}
+\bibcite{hu2026openvlthinker}{{26}{2026}{{Hu et~al.}}{{}}}
+\bibcite{zhang2026aero}{{27}{2026}{{Zhang et~al.}}{{}}}
+\bibcite{wang2025eframe}{{28}{2025}{{Wang et~al.}}{{}}}
+\bibcite{kaddour2026tpo}{{29}{2026}{{Kaddour}}{{}}}
+\bibcite{carrino2026rgra}{{30}{2026}{{Carrino et~al.}}{{}}}
+\bibcite{wolfe2026grpotricks}{{31}{2026}{{Wolfe et~al.}}{{}}}
+\bibcite{liu2025drgrpo}{{32}{2025}{{Liu et~al.}}{{}}}
+\bibcite{wang2025madgrpo}{{33}{2025}{{Wang et~al.}}{{}}}
+\bibcite{raschka2025statellms}{{34}{2025}{{Raschka}}{{}}}
+\bibcite{zhang2026greso}{{35}{2026}{{Zhang et~al.}}{{}}}
+\bibcite{lin2025cppo}{{36}{2025}{{Lin et~al.}}{{}}}
+\bibcite{nimmaturi2025scalinglaws}{{37}{2025}{{Nimmaturi et~al.}}{{}}}
+\bibcite{liu2025rlsubnetworks}{{38}{2025}{{Liu et~al.}}{{}}}
+\bibcite{hu2024minicpm}{{39}{2024}{{Hu et~al.}}{{}}}
+\bibcite{subramanian2025slm}{{40}{2025}{{Subramanian et~al.}}{{}}}
+\bibcite{li2025reward_shaping}{{41}{2025}{{Li et~al.}}{{}}}
+\bibcite{ichihara2025mogrpo}{{42}{2025}{{Ichihara et~al.}}{{}}}
+\bibcite{zhang2024benchvariance}{{43}{2024}{{Zhang et~al.}}{{}}}
+\bibcite{benjamini1995controlling}{{44}{1995}{{Benjamini \& Hochberg}}{{}}}
+\bibcite{yu2025dapo}{{45}{2025}{{Yu et~al.}}{{}}}
+\bibcite{qwen2025gspo}{{46}{2025}{{Qwen Team}}{{}}}
+\bibcite{zhou2026demystify}{{47}{2026}{{Zhou et~al.}}{{}}}
+\bibcite{nan2025ngrpo}{{48}{2025}{{Nan et~al.}}{{}}}
+\bibcite{zhang2025scaffgrpo}{{49}{2025}{{Zhang et~al.}}{{}}}
+\bibcite{han2026ebpo}{{50}{2026}{{Han et~al.}}{{}}}
+\bibcite{lei2026minpro}{{51}{2026}{{Lei et~al.}}{{}}}
+\bibcite{yang2025sspo}{{52}{2025}{{Yang et~al.}}{{}}}
+\bibcite{liu2025luspo}{{53}{2025}{{Liu et~al.}}{{}}}
+\bibcite{cheng2026isocompute}{{54}{2026}{{Cheng et~al.}}{{}}}
+\bibcite{hong2025cooper}{{55}{2025}{{Hong et~al.}}{{}}}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Compute Resources}{32}{appendix.A}\protected@file@percent }
+\newlabel{app:compute}{{A}{32}{Compute Resources}{appendix.A}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces Compute allocation by platform and experiment group.}}{32}{table.caption.103}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {B}Hyperparameter Tables}{33}{appendix.B}\protected@file@percent }
+\newlabel{app:hyperparams}{{B}{33}{Hyperparameter Tables}{appendix.B}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {18}{\ignorespaces Hyperparameter sweep ranges for sensitivity analysis.}}{33}{table.caption.104}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {C}Additional Results}{33}{appendix.C}\protected@file@percent }
+\newlabel{app:results}{{C}{33}{Additional Results}{appendix.C}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {18}{\ignorespaces Final accuracy comparison across RL libraries on the arithmetic task, sorted by performance. Error bars indicate $\pm 1$ standard deviation across 5 seeds. Dashed lines show floor (random baseline, 0.5\%) and ceiling (oracle, 100\%).}}{33}{figure.caption.105}\protected@file@percent }
+\newlabel{fig:comparison_bars}{{18}{33}{Final accuracy comparison across RL libraries on the arithmetic task, sorted by performance. Error bars indicate $\pm 1$ standard deviation across 5 seeds. Dashed lines show floor (random baseline, 0.5\%) and ceiling (oracle, 100\%)}{figure.caption.105}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {19}{\ignorespaces Cross-seed reproducibility analysis for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. The mean is significantly above 50\% ($t = 7.44$, $p < 0.001$), confirming that GRPO produces reliable learning signal even at 0.5B scale.}}{33}{figure.caption.106}\protected@file@percent }
+\newlabel{fig:trl_seeds}{{19}{33}{Cross-seed reproducibility analysis for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. The mean is significantly above 50\% ($t = 7.44$, $p < 0.001$), confirming that GRPO produces reliable learning signal even at 0.5B scale}{figure.caption.106}{}}
 \citation{agarwal2021deep}
 \citation{colas2019hitchhiker}
 \citation{jordan2024benchmarking}
 \citation{cobbe2021training}
-\providecommand\NAT@force@numbers{}\NAT@force@numbers
-\gdef \@abspage@last{30}
+\gdef \@abspage@last{36}

@@ -1,0 +1,16 @@
+{
+  "campaign": "bitter_lesson_v2",
+  "timestamp": "20260419_091120",
+  "total": 32,
+  "completed": 1,
+  "results": [
+    {
+      "tag": "w1_llama33-70b-inst",
+      "model": "meta-llama/Llama-3.3-70B-Instruct",
+      "wave": "1-frontier",
+      "status": "failed",
+      "error": "You are trying to access a gated repo.\nMake sure to have access to it at https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct.\n403 Client Error. (Request ID: Root=1-69e49c38-615292e038ac86cc2890c098;f85f2cf1-1dec-4369-a31a-de5d23c95327)\n\nCannot access gated repo for url https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct/resolve/main/config.json.\nAccess to model meta-llama/Llama-3.3-70B-Instruct is restricted and you are not in the authorized list. Visit https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct to ask for access.",
+      "timestamp": "2026-04-19T09:11:20.319145"
+    }
+  ]
+}

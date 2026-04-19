@@ -85,6 +85,10 @@
 \newcommand{\answerPartial}[1][]{\textcolor{purple}{[Partial] #1}}
 
 \begin{document}
+\sloppy
+\hbadness=10000
+\vbadness=10000
+\hfuzz=2pt
 
 \maketitle
 
@@ -556,7 +560,7 @@ rl\_games), and offline RL (d3rlpy).}
 \subsection{Task Suite}
 
 % Table of tasks
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Benchmark task suite with standardized reward functions.}
 \label{tab:tasks}
@@ -577,7 +581,7 @@ Distillation (On-Policy) & IS Loss & $\log p_t - \log p_s$ & Online \\
 \subsection{Cross-Library Implementation}
 
 % Table of implementations
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Implementations across RL libraries.}
 \label{tab:implementations}
@@ -602,7 +606,7 @@ We standardize hyperparameters across libraries using a common configuration sch
 Table~\ref{tab:hyperparams} shows the mapping from Tinker PPO defaults to each library's
 native parameter names.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Hyperparameter mapping across libraries (PPO defaults).}
 \label{tab:hyperparams}
@@ -946,7 +950,7 @@ $^\star$ Still running at time of writing; partial metrics from steps completed.
 \subsection{Cross-Library Comparison}
 
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Cross-library comparison on Math RL (Arithmetic). Mean $\pm$ SE across 5 seeds.}
 \label{tab:results_arithmetic}
@@ -985,7 +989,7 @@ score threshold, following the methodology of Agarwal et al.~\cite{agarwal2021de
 \subsection{GSM8K Results}
 
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{GSM8K results across model scales. Mean $\pm$ SE across 5 seeds.}
 \label{tab:results_gsm8k}
@@ -1057,7 +1061,7 @@ time---does not depend significantly on model scale ($r = -0.088$, $p = 0.658$),
 suggesting that larger models are more efficient per step but not necessarily
 requiring fewer steps to converge.
 
-\begin{figure}[h]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/scaling_law_figure}
 \caption{Exponential saturation fits to reward traces across model families.
@@ -1066,7 +1070,7 @@ DeepSeek and Qwen3-MoE show the strongest saturation behavior.}
 \label{fig:scaling_law}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/scaling_params_figure}
 \caption{Fitted scaling parameters ($R_{\max}$ and $k$) as a function of model
@@ -1091,7 +1095,7 @@ across all parameters.}
 
 Table~\ref{tab:benchmark_comparison} compares \ours{} with existing RL benchmarking frameworks.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Comparison of \ours{} with existing RL benchmarks.}
 \label{tab:benchmark_comparison}
@@ -1163,7 +1167,7 @@ all model families, from 4B to 671B parameters. Completed experiments report
 peak and last-10-step mean reward; partially interrupted experiments are
 marked $\dagger$ and report metrics from available steps only.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Cross-Architecture Scaling: GRPO training reward on GSM8K across model families
 and scale tiers (Tinker API, single seed). Peak and last-10-step mean reward reported.
@@ -1207,7 +1211,7 @@ more or less from GRPO post-training than dense models at equivalent
 by pairing Qwen3.5-4B (dense) with Qwen3-30B-A3B (MoE, 3B active),
 and Qwen3.5-27B (dense) with Qwen3-235B-A22B (MoE, 22B active).
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Dense vs.~MoE at Matched Active Parameters. GRPO training reward (peak and
 last-10-step mean) on GSM8K via Tinker API.
@@ -1246,7 +1250,7 @@ Frontier models at the 70B--235B scale present unique challenges for RL
 post-training. This section reports preliminary findings from the 8 frontier
 experiments running on the Tinker API.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Frontier Model Evaluation: GSM8K GRPO training reward via Tinker API.
 Peak and last-10-step mean reward reported. All metrics are training rewards
@@ -1289,7 +1293,7 @@ reported on different model versions or hardware configurations, making
 direct comparison unreliable. We address this gap using the Modal H100
 cluster to train PPO baselines on the same models and tasks as our GRPO runs.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{PPO vs.~GRPO Comparison: GSM8K training reward (peak and last-10-step mean).
 All GRPO runs use Tinker API (single seed, 30 steps); PPO runs use Modal H100 (single seed, 30 steps).
@@ -1356,7 +1360,7 @@ Tinker vs TRL (LLM-native) & $20$ & $5$ & $1.17$ & $[0.13, 2.21]$ & 0.016$^\dag$
 }
 \end{table}
 
-\begin{figure}[h]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/effect_sizes_forest}
 \caption{Forest plot of effect sizes (Cohen's $d$) for all five planned pairwise
@@ -1492,7 +1496,7 @@ measurement of ZVF prevalence in GRPO training}. We recommend monitoring
 $\mathrm{GU}_t$ in real time, with intervention triggered when $\mathrm{GU}_t < 0.5$
 for more than 10 consecutive steps~\cite{zhang2026aero,zhang2026greso}.
 
-\begin{figure}[h]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/zvf_heatmap}
 \caption{Per-step ZVF heatmap. Red: ZVF$=1$ (zero gradient); blue: ZVF$=0$ (gradient
@@ -1500,7 +1504,7 @@ flows); grey: no data. Experiments sorted by aggregate ZVF (descending).}
 \label{fig:zvf-heatmap}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/zvf_correlation}
 \caption{\textbf{Left:} ZVF vs.\ final performance scatter ($r = -0.769$,
@@ -1542,7 +1546,7 @@ For our G=8 DeepSeek-V3.1 run ($p=0.85$), 27\% of steps were zero-gradient;
 switching to $G=2$ would reduce rollouts by 75\% while preserving all
 informative contrastive signal.
 
-\begin{figure}[h]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/group_size_zvf}
 \caption{Theoretical ZVF curves $p^G + (1-p)^G$ as a function of accuracy $p$
@@ -1562,7 +1566,7 @@ whether GRPO-induced improvements generalize across model families.
 Table~\ref{tab:tool_use_cross_arch} reports function-calling accuracy
 (fraction of calls with correct function name and valid argument schema).
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Cross-Architecture Tool-Use: Function-calling accuracy (\%)
 after GRPO post-training. Schema compliance measures whether the model
@@ -1830,7 +1834,7 @@ Direct mitigation strategies---sequence-length normalization, token-budget
 penalties, or the ``Dr.~GRPO'' correction~\cite{liu2025drgrpo}---are not yet
 represented in the current experiment set and constitute a natural next ablation.
 
-\begin{figure}[h]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/reward_stability}
 \caption{Reward stability analysis across experiments. GRPO runs (blue) and PPO runs
@@ -2496,7 +2500,7 @@ and wall-clock runtimes are available on Weights \& Biases at
 Model checkpoints are hosted on HuggingFace Hub at
 \url{https://huggingface.co/arvindcr4/tinker-rl-bench-*}.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Compute allocation by platform and experiment group.}
 \small
@@ -2527,7 +2531,7 @@ including GPU types, batch sizes, and cost estimates.
 
 Full hyperparameter sweep ranges used in sensitivity analysis (Section~\ref{fig:sensitivity}):
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Hyperparameter sweep ranges for sensitivity analysis.}
 \begin{tabular}{lcc}
@@ -2547,7 +2551,7 @@ GAE $\lambda$ & $\{0.8, 0.9, 0.95, 0.98, 1.0\}$ & 0.95 \\
 \label{app:results}
 
 % Figure 9: Comparison bars
-\begin{figure}[h]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/comparison_bars.pdf}
 \caption{Final accuracy comparison across RL libraries on the arithmetic task,
@@ -2556,7 +2560,7 @@ Dashed lines show floor (random baseline, 0.5\%) and ceiling (oracle, 100\%).}
 \label{fig:comparison_bars}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.5\linewidth]{figures/old_trl_seeds.pdf}
 \caption{Cross-seed reproducibility analysis for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. The mean is significantly above 50\% ($t = 7.44$, $p < 0.001$), confirming that GRPO produces reliable learning signal even at 0.5B scale.}

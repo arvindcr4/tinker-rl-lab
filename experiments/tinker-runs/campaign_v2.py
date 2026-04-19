@@ -236,8 +236,14 @@ def run_experiment(exp):
 
         try:
             if wb_run:
-                wb_run.summary.update({"peak_reward": peak, "last10_avg": last10})
-                wb_run.finish()
+                try:
+                    wb_run.summary.update({"peak_reward": peak, "last10_avg": last10})
+                except Exception:
+                    pass
+                try:
+                    wb_run.finish()
+                except Exception:
+                    pass
         except Exception as wb_err:
             print(f"  [{tag}] W&B finish error (results saved): {wb_err}", flush=True)
 

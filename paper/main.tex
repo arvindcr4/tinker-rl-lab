@@ -423,32 +423,33 @@ Partial experiments (fewer steps than planned) are marked $\dagger$.
 All Tinker runs are single-seed; all Modal runs are single-seed on H100.
 $\dagger$~Training interrupted; reported metrics are from available steps.}
 \label{tab:main_results}
-\begin{tabular}{llllrcc}
+\small
+\begin{tabular}{@{}l l l l r c c@{}}
 \toprule
-\textbf{Algorithm} & \textbf{Platform} & \textbf{Model} & \textbf{Size} & \textbf{Steps} & \textbf{Peak} & \textbf{Last-10 Avg} \\
+\textbf{Algo} & \textbf{Plat.} & \textbf{Model} & \textbf{Size} & \textbf{Steps} & \textbf{Peak} & \textbf{Last-10} \\
 \midrule
 \multicolumn{7}{l}{\textit{GRPO on Tinker API (GSM8K)}} \\
 \midrule
 GRPO & Tinker & Qwen3-8B & 8B & 30 & 62.5\% & 34.4\% \\
 GRPO & Tinker & Qwen3.5-4B & 4B & 30 & 100\% & 85.0\% \\
-GRPO & Tinker & Qwen3.5-27B$^\dagger$ & 27B & 10$^\dagger$ & 75.0\% & 43.7\% \\
-GRPO & Tinker & Qwen3-32B$^\dagger$ & 32B & 10$^\dagger$ & 31.2\% & 25.0\% \\
-GRPO & Tinker & Llama-3.1-8B-Instruct & 8B & 30 & 100\% & 84.4\% \\
-GRPO & Tinker & DeepSeek-V3.1 & $\sim$671B (37B act.) & 20 & 100\% & 85.0\% \\
-GRPO & Tinker & Nemotron-120B$^\dagger$ & 120B & 20$^\dagger$ & 87.5\% & 16.2\% \\
-GRPO & Tinker & Qwen3-235B-A22B (MoE)$^\dagger$ & 235B (22B act.) & 15$^\dagger$ & 100\% & 100\% \\
-GRPO & Tinker & Qwen3-30B-A3B (MoE base)$^\dagger$ & 30B (3B act.) & partial$^\dagger$ & 50.0\% & 32.5\% \\
-GRPO & Tinker & Qwen3-30B-A3B-Instruct (MoE)$^\dagger$ & 30B (3B act.) & partial$^\dagger$ & 100\% & 100\% \\
+GRPO & Tinker & Qwen3.5-27B$^\dagger$ & 27B & 10 & 75.0\% & 43.7\% \\
+GRPO & Tinker & Qwen3-32B$^\dagger$ & 32B & 10 & 31.2\% & 25.0\% \\
+GRPO & Tinker & Llama-3.1-8B-Inst & 8B & 30 & 100\% & 84.4\% \\
+GRPO & Tinker & DeepSeek-V3.1 & 671B (37B) & 20 & 100\% & 85.0\% \\
+GRPO & Tinker & Nemotron-120B$^\dagger$ & 120B & 20 & 87.5\% & 16.2\% \\
+GRPO & Tinker & Qwen3-235B-A22B$^\dagger$ & 235B (22B) & 15 & 100\% & 100\% \\
+GRPO & Tinker & Qwen3-30B-A3B$^\dagger$ & 30B (3B) & partial & 50.0\% & 32.5\% \\
+GRPO & Tinker & Qwen3-30B-Inst$^\dagger$ & 30B (3B) & partial & 100\% & 100\% \\
 \midrule
 \multicolumn{7}{l}{\textit{PPO on Modal H100 (GSM8K)}} \\
 \midrule
-PPO & Modal H100 & Qwen3-8B & 8B & 30 & 75.0\% & 22.5\% \\
-PPO & Modal H100 & Llama-3.1-8B-Instruct & 8B & 30 & 100\% & 97.5\% \\
+PPO & Modal & Qwen3-8B & 8B & 30 & 75.0\% & 22.5\% \\
+PPO & Modal & Llama-3.1-8B-Inst & 8B & 30 & 100\% & 97.5\% \\
 \midrule
-\multicolumn{7}{l}{\textit{Cross-task (Tool-Use), GRPO on Tinker API}} \\
+\multicolumn{7}{l}{\textit{Cross-task (Tool-Use), GRPO on Tinker}} \\
 \midrule
 GRPO & Tinker & Qwen3-32B & 32B & 30 & 0\% & 0\% \\
-GRPO & Tinker & Llama-3.1-8B-Instruct & 8B & 30 & 0\% & 0\% \\
+GRPO & Tinker & Llama-3.1-8B-Inst & 8B & 30 & 0\% & 0\% \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -548,7 +549,8 @@ Table~\ref{tab:benchmark_comparison} compares \ours{} with existing RL benchmark
 \centering
 \caption{Comparison of \ours{} with existing RL benchmarks.}
 \label{tab:benchmark_comparison}
-\begin{tabular}{lccccc}
+\small
+\begin{tabular}{@{}lccccc@{}}
 \toprule
 \textbf{Feature} & \textbf{\ours} & \textbf{Gymnasium} & \textbf{SB3 Zoo} & \textbf{CleanRL} & \textbf{Dopamine} \\
 \midrule
@@ -576,16 +578,17 @@ and multi-stage reasoning scenarios with modest compute budgets.
 \caption{GRPO Performance Across Diverse Tasks. Experiments conducted by team members
 on consumer-grade and cloud hardware.}
 \label{tab:task_grpo}
-\begin{tabular}{llllll}
+\footnotesize
+\begin{tabular}{@{}l l l c c p{2.8cm}@{}}
 \toprule
-\textbf{Task} & \textbf{Model} & \textbf{Method} & \textbf{Pre-Training} & \textbf{Post-RL} & \textbf{Notes} \\
+\textbf{Task} & \textbf{Model} & \textbf{Method} & \textbf{Pre} & \textbf{Post-RL} & \textbf{Notes} \\
 \midrule
-Tool Call (Single-turn) & Qwen2-0.5B-Instruct & LoRA fine-tuning & --- & Functional & 20 examples, \$0.17 on vast.ai \\
-Code Reasoning (HumanEval) & Qwen3-8B & GRPO & 32\% & 86\% & 300 steps; best performer \\
-Code Reasoning (HumanEval) & Qwen2.5-Coder-1.5B & GRPO & 67\% (4/6) & 100\% (6/6) & LoRA on q\_proj/v\_proj, 20 epochs \\
-Multi-turn Tool Use & Qwen2.5-3B & GRPO+QLoRA & Baseline & Improved & Multi-turn tool calling \\
-Multi-turn Tool Use (SFT+GRPO) & Qwen3-8B & SFT $\to$ GRPO & 52\% arg acc. & 70\%--71\% & Schema compliance 97\%$\to$100\% \\
-Multi-stage Reasoning & Qwen3-4B-Instruct & GRPO & Baseline & Improved & Small model matches 30B performance \\
+Tool Call (1-turn) & Qwen2-0.5B-Inst & LoRA & --- & Func. & 20 ex., \$0.17 vast.ai \\
+Code (HumanEval) & Qwen3-8B & GRPO & 32\% & 86\% & 300 steps; best \\
+Code (HumanEval) & Qwen2.5-Coder-1.5B & GRPO & 67\% & 100\% & LoRA q/v\_proj, 20ep \\
+Multi-turn Tools & Qwen2.5-3B & GRPO+QLoRA & Base & Impr. & Multi-turn tool call \\
+Tools (SFT+GRPO) & Qwen3-8B & SFT$\to$GRPO & 52\% & 70\% & Schema 97$\to$100\% \\
+Multi-stage Reas. & Qwen3-4B-Inst & GRPO & Base & Impr. & Matches 30B MoE \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -838,9 +841,10 @@ produces valid JSON with correct argument types. ``---'' entries either
 failed due to JWT authentication expiry or scored 0\% (task too
 difficult for the model).}
 \label{tab:tool_use_cross_arch}
-\begin{tabular}{lcccc}
+\small
+\begin{tabular}{@{}lcccc@{}}
 \toprule
-\textbf{Model Family} & \textbf{Model} & \textbf{Baseline} & \textbf{Post-GRPO} & \textbf{Schema Compliance} \\
+\textbf{Family} & \textbf{Model} & \textbf{Base} & \textbf{Post-GRPO} & \textbf{Schema} \\
 \midrule
 Qwen3 & Qwen3-8B & 52\% & 70--71\% & 97\%$\to$100\% \\
 Qwen3.5 & Qwen3.5-4B & \multicolumn{3}{c}{\textit{Not evaluated (training interrupted)}} \\
@@ -1243,9 +1247,10 @@ Model checkpoints are hosted on HuggingFace Hub at
 \begin{table}[h]
 \centering
 \caption{Compute allocation by platform and experiment group.}
-\begin{tabular}{llcc}
+\small
+\begin{tabular}{@{}llcc@{}}
 \toprule
-\textbf{Platform} & \textbf{Experiment Group} & \textbf{\# Experiments} & \textbf{Est. GPU-Hours} \\
+\textbf{Platform} & \textbf{Experiment Group} & \textbf{\#} & \textbf{GPU-Hrs} \\
 \midrule
 Tinker API & Scaling (Qwen3, Qwen3.5, Llama) & 5 & $\sim$320 \\
 Tinker API & Frontier models (235B, DeepSeek, Nemotron) & 3 & $\sim$280 \\

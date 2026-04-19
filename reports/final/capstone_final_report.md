@@ -2,6 +2,8 @@
 
 **Capstone Project — Group 6 | MTech DSAI | PES University**
 
+**Project Guides:** Mr. Anwesh | Prof. Ch. Satish Kumar (Department of Mathematics)
+
 Arvind C R (PES2PGE24DS006), Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L (PES2PGE24DS176), Dhruva N Murthy, Mohammad Rafi
 
 **Date:** April 5, 2026 (Updated with 15 completed World-Class Suite results and full statistical analysis)

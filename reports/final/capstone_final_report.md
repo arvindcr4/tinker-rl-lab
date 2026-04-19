@@ -2,7 +2,7 @@
 
 **Capstone Project — Group 6 | MTech DSAI | PES University**
 
-**Project Guides:** Mr. Anwesh | Prof. Ch. Satish Kumar (Department of Mathematics)
+**Project Guides:** Prof. Narayana Darapaneni (Northwestern University / Great Learning) | Mr. Anwesh Reddy Paduri (Great Learning / PES University)
 
 Arvind C R (PES2PGE24DS006), Sandhya Jeyaraj, Arumugam Chetty K, Madhu Kumara L (PES2PGE24DS176), Dhruva N Murthy, Mohammad Rafi
 

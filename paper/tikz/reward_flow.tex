@@ -1,115 +1,137 @@
-\documentclass[tikz,border=10pt]{standalone}
+% reward_flow.tex — GRPO reward signal flow diagram
+% Standalone TikZ figure; can also be \input{} into main.tex
+% Compile: pdflatex reward_flow.tex
+\documentclass[tikz,border=4pt]{standalone}
+
 \usepackage{tikz}
-\usepackage{amssymb}
-\usepackage{amsmath}
-\usetikzlibrary{positioning, arrows.meta, shapes.geometric, shapes.misc,
-                shapes.multipart, backgrounds, fit, calc}
+\usepackage{amsmath}   % for \dfrac
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, fit}
+
+% ── Shared colour palette ────────────────────────────────────────────────────
+\definecolor{ModelOrange}  {RGB}{220, 130,  50}
+\definecolor{ModelBg}      {RGB}{255, 235, 210}
+\definecolor{CompBlue}     {RGB}{ 50, 110, 190}
+\definecolor{CompBg}       {RGB}{215, 232, 255}
+\definecolor{DataGreen}    {RGB}{ 55, 150,  90}
+\definecolor{DataBg}       {RGB}{218, 245, 225}
+\definecolor{ArrowDark}    {RGB}{ 60,  60,  80}
+\definecolor{FormulaBg}    {RGB}{250, 250, 235}
+\definecolor{FormulaBorder}{RGB}{180, 170,  80}
+
+% ── Node styles ─────────────────────────────────────────────────────────────
+\tikzset{
+  % LLM / model node
+  modelnode/.style={
+    rectangle, rounded corners=6pt,
+    fill=ModelBg, draw=ModelOrange, line width=1.1pt,
+    text=ModelOrange, font=\bfseries\scriptsize,
+    inner sep=6pt, minimum width=1.7cm, minimum height=0.65cm,
+    align=center
+  },
+  % Computation step node
+  compnode/.style={
+    rectangle, rounded corners=5pt,
+    fill=CompBg, draw=CompBlue, line width=0.9pt,
+    text=CompBlue, font=\scriptsize,
+    inner sep=5pt, minimum width=1.9cm, minimum height=0.60cm,
+    align=center
+  },
+  % Data / intermediate-result node
+  datanode/.style={
+    rectangle, rounded corners=5pt,
+    fill=DataBg, draw=DataGreen, line width=0.9pt,
+    text=DataGreen, font=\scriptsize,
+    inner sep=5pt, minimum width=1.7cm, minimum height=0.58cm,
+    align=center
+  },
+  % Formula box
+  formulabox/.style={
+    rectangle, rounded corners=3pt,
+    fill=FormulaBg, draw=FormulaBorder, line width=0.7pt,
+    text=black, font=\tiny,
+    inner sep=4pt, align=center
+  },
+  % Arrow
+  flowarrow/.style={
+    ->, >=Stealth, line width=0.85pt, color=ArrowDark
+  },
+  % Arrow label
+  arrowlabel/.style={
+    font=\tiny, text=ArrowDark, midway, above, inner sep=1.5pt
+  }
+}
 
 \begin{document}
-\begin{tikzpicture}[
-  font=\sffamily,
-  >=Stealth,
-  thick,
-  %% Main node styles
-  model/.style={
-    draw=blue!70!black, fill=blue!12, rounded corners=7pt, thick,
-    minimum width=2.2cm, minimum height=1.0cm, align=center,
-    font=\sffamily\bfseries
-  },
-  verifier/.style={
-    draw=green!60!black, fill=green!12, thick,
-    shape=diamond, aspect=1.8,
-    minimum width=2.8cm, minimum height=1.2cm, align=center,
-    font=\sffamily\bfseries\small
-  },
-  reward-good/.style={
-    draw=green!60!black, fill=green!12, rounded corners=5pt, thick,
-    minimum width=2.2cm, minimum height=0.75cm, align=center,
-    font=\sffamily\bfseries\small
-  },
-  reward-bad/.style={
-    draw=red!60!black, fill=red!10, rounded corners=5pt, thick,
-    minimum width=2.2cm, minimum height=0.75cm, align=center,
-    font=\sffamily\bfseries\small
-  },
-  update/.style={
-    draw=blue!70!black, fill=blue!18, rounded corners=6pt, thick,
-    minimum width=2.4cm, minimum height=0.85cm, align=center,
-    font=\sffamily\bfseries\small
-  },
-  %% Annotation / example box styles
-  annotation/.style={
-    draw=gray!60, fill=gray!5, rounded corners=5pt, dashed, thick,
-    align=left, font=\sffamily\small
-  },
-  example/.style={
-    draw=gray!50, fill=white, rounded corners=4pt, thick,
-    align=center, font=\sffamily\small
-  },
-]
+\begin{tikzpicture}[node distance=0.55cm and 0.45cm]
 
-%% ── MAIN NODES ────────────────────────────────────────────────────────────
-\node[model]    (model)    at (0, 0)      {Model};
-\node[verifier] (verifier) at (4.5, 0)    {Verifier};
-\node[reward-good] (r1)    at (8.0,  1.4) {Reward = 1.0};
-\node[reward-bad]  (r0)    at (8.0, -1.4) {Reward = 0.0};
-\node[update]   (update)   at (4.5, -3.6) {PPO / GRPO\\Update};
+  % ── Pipeline nodes (horizontal, left → right) ─────────────────────────────
 
-%% ── MAIN ARROWS ───────────────────────────────────────────────────────────
-%% Model → Verifier
-\draw[->, thick, blue!60!black]
-  (model.east) -- (verifier.west)
-  node[midway, above, font=\sffamily\small, black] {Response};
+  % 1. LLM (input)
+  \node[modelnode] (llm_in) {LLM};
 
-%% Verifier → Reward=1.0 (correct path)
-\draw[->, thick, green!60!black]
-  (verifier.east) -- ++(0.5,0) |- (r1.west)
-  node[near start, above, font=\sffamily\small\itshape, xshift=1.0cm, green!50!black] {Correct};
+  % 2. Generate N responses
+  \node[compnode, right=0.9cm of llm_in] (gen) {Generate\\$N$ Responses};
 
-%% Verifier → Reward=0.0 (incorrect path)
-\draw[->, thick, red!60!black]
-  (verifier.east) -- ++(0.5,0) |- (r0.west)
-  node[near start, below, font=\sffamily\small\itshape, xshift=1.0cm, red!60!black] {Incorrect};
+  % 3. Reward function
+  \node[compnode, right=0.9cm of gen] (rf) {Reward\\Function};
 
-%% Reward=1.0 → Update
-\draw[->, thick, green!60!black]
-  (r1.south) -- ++(0,-0.5cm) -| (update.north);
+  % 4. Compute advantages
+  \node[compnode, right=0.9cm of rf] (adv) {Compute\\Advantages};
 
-%% Reward=0.0 → Update
-\draw[->, thick, red!50!black]
-  (r0.south) -- ++(0,-0.5cm) -| (update.north);
+  % 5. Policy gradient update
+  \node[compnode, right=0.9cm of adv] (pg) {Policy\\Gradient\\Update};
 
-%% Update → Model (feedback loop, below)
-\draw[->, thick, blue!70!black]
-  (update.west) -- ++(-4.5, 0) -- (model.south)
-  node[midway, below, font=\sffamily\small, black] {Gradient Update};
+  % 6. Updated LLM (output)
+  \node[modelnode, right=0.9cm of pg] (llm_out) {Updated\\LLM};
 
-%% ── COMPARISON ANNOTATION ─────────────────────────────────────────────────
-\node[annotation, text width=5.4cm] (annot) at (4.5, 3.6) {
-  \textbf{vs.\ Shaped Rewards}\\[2pt]
-  \textcolor{red!60!black}{%
-    \tikz[baseline=(t.base)]{%
-      \node[inner sep=0pt] (t) {reward = $f$(quality, length, fluency, \ldots)};%
-      \draw[red!60!black, thick] (t.west) -- (t.east);%
-    }%
-  }\\[4pt]
-  \textbf{Verifiable:} reward $\in \{0, 1\}$ \textcolor{green!60!black}{$\checkmark$}
-};
+  % ── Data annotations (below each node) ───────────────────────────────────
 
-%% Arrow from annotation to verifier
-\draw[->, dashed, gray!60] (annot.south) -- (verifier.north);
+  % Responses annotation
+  \node[datanode, below=0.55cm of gen] (resp_data)
+        {$\{x_i\}_{i=1}^{N}$\\responses};
 
-%% ── EXAMPLE BOX ───────────────────────────────────────────────────────────
-\node[example, text width=7.8cm] (example) at (4.0, -5.4) {
-  \textbf{Example:}\quad
-  $47 + 83 = \;?$
-  \;\;$\xrightarrow{\text{Model}}$\;\;
-  ``130''
-  \;\;$\xrightarrow{\text{Verifier}}$\;\;
-  $130 = 130$? \textcolor{green!60!black}{$\checkmark$}
-  \;\;$\to$\;\;
-  Reward: \textbf{1.0}
-};
+  % Rewards annotation
+  \node[datanode, below=0.55cm of rf] (rew_data)
+        {$\{r_i\}_{i=1}^{N}$\\rewards};
+
+  % Advantages annotation
+  \node[datanode, below=0.55cm of adv] (adv_data)
+        {$\{\hat{A}_i\}_{i=1}^{N}$\\advantages};
+
+  % ── Arrows between pipeline nodes ────────────────────────────────────────
+  \draw[flowarrow] (llm_in.east)  -- node[arrowlabel]{prompt} (gen.west);
+  \draw[flowarrow] (gen.east)     -- (rf.west);
+  \draw[flowarrow] (rf.east)      -- (adv.west);
+  \draw[flowarrow] (adv.east)     -- (pg.west);
+  \draw[flowarrow] (pg.east)      -- node[arrowlabel]{weights} (llm_out.west);
+
+  % ── Arrows from pipeline nodes to data annotations ────────────────────────
+  \draw[flowarrow, dashed, color=DataGreen!70]
+        (gen.south)  -- (resp_data.north);
+  \draw[flowarrow, dashed, color=DataGreen!70]
+        (rf.south)   -- (rew_data.north);
+  \draw[flowarrow, dashed, color=DataGreen!70]
+        (adv.south)  -- (adv_data.north);
+
+  % ── Key formula (below centre) ────────────────────────────────────────────
+  \node[formulabox,
+        below=0.55cm of rew_data,
+        xshift=0.2cm]
+  (formula)
+  {%
+    $\hat{A}_i = \dfrac{r_i - \bar{r}}{\sigma_r}$%
+    \quad
+    \footnotesize where $\bar{r}=\mathrm{mean}(\{r_i\}),\;\sigma_r=\mathrm{std}(\{r_i\})$%
+  };
+
+  % ── Feedback loop arrow (Updated LLM → LLM) ───────────────────────────────
+  % Arc above the pipeline
+  \draw[flowarrow, color=ModelOrange!80, dashed, rounded corners=6pt]
+        (llm_out.north)
+        -- ++(0, 0.55)
+        -- ++(-7.55, 0)
+        -- (llm_in.north)
+        node[midway, above, font=\tiny, text=ModelOrange!80] {next iteration};
 
 \end{tikzpicture}
 \end{document}

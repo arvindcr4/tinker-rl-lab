@@ -1,97 +1,106 @@
-\documentclass[tikz,border=10pt]{standalone}
+% taxonomy.tex — Task taxonomy diagram for TinkerRL Benchmark
+% Standalone TikZ figure; can also be \input{} into main.tex
+% Compile: pdflatex taxonomy.tex
+\documentclass[tikz,border=4pt]{standalone}
+
 \usepackage{tikz}
-\usetikzlibrary{positioning, arrows.meta, shapes.geometric, backgrounds, fit}
+\usepackage{amssymb}  % for \checkmark
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, fit}
+
+% ── Shared colour palette ────────────────────────────────────────────────────
+\definecolor{RootBlue}    {RGB}{30,  90, 160}
+\definecolor{MidBlue}     {RGB}{70, 140, 210}
+\definecolor{LeafGreen}   {RGB}{ 55, 150,  90}
+\definecolor{LeafBg}      {RGB}{220, 245, 228}
+\definecolor{MidBg}       {RGB}{210, 232, 255}
+\definecolor{RootBg}      {RGB}{180, 215, 255}
+\definecolor{BadgeBg}     {RGB}{245, 245, 245}
+\definecolor{ArrowGray}   {RGB}{100, 110, 125}
+
+% ── Node styles ─────────────────────────────────────────────────────────────
+\tikzset{
+  % Root node
+  root/.style={
+    rectangle, rounded corners=6pt,
+    fill=RootBg, draw=RootBlue, line width=1.2pt,
+    text=RootBlue, font=\bfseries\small,
+    inner sep=6pt, minimum width=3.2cm, minimum height=0.65cm,
+    align=center
+  },
+  % Category (mid-level) nodes
+  category/.style={
+    rectangle, rounded corners=5pt,
+    fill=MidBg, draw=MidBlue, line width=0.9pt,
+    text=MidBlue, font=\bfseries\scriptsize,
+    inner sep=5pt, minimum width=2.6cm, minimum height=0.58cm,
+    align=center
+  },
+  % Leaf (task) nodes
+  leaf/.style={
+    rectangle, rounded corners=4pt,
+    fill=LeafBg, draw=LeafGreen, line width=0.8pt,
+    text=black, font=\scriptsize,
+    inner sep=4pt, minimum width=2.4cm, minimum height=0.52cm,
+    align=center
+  },
+  % Badge showing model count / status
+  badge/.style={
+    rectangle, rounded corners=2pt,
+    fill=BadgeBg, draw=ArrowGray!60, line width=0.5pt,
+    text=ArrowGray, font=\tiny,
+    inner sep=2pt
+  },
+  % Arrow style
+  treearrow/.style={
+    ->, >=Stealth, line width=0.7pt, color=ArrowGray, rounded corners=3pt
+  }
+}
 
 \begin{document}
-\begin{tikzpicture}[
-  font=\sffamily,
-  >=Stealth,
-  thick,
-  %% Node styles
-  root/.style={
-    draw, rounded corners=7pt, fill=gray!15, thick,
-    text=black, font=\sffamily\bfseries\large,
-    inner sep=8pt, align=center
-  },
-  branch/.style={
-    draw, rounded corners=6pt, thick,
-    inner sep=6pt, align=center, font=\sffamily\normalsize
-  },
-  subbranch/.style={
-    draw, rounded corners=5pt, thick,
-    inner sep=5pt, align=center, font=\sffamily\small
-  },
-  leaf/.style={
-    draw, rounded corners=4pt,
-    inner sep=4pt, align=center, font=\sffamily\small
-  },
-  %% Colors
-  llm/.style={fill=green!12, draw=green!55!black},
-  classic/.style={fill=blue!12, draw=blue!55!black},
-  offline/.style={fill=orange!18, draw=orange!65!black},
-  llm-sub/.style={fill=green!8, draw=green!50!black},
-  classic-sub/.style={fill=blue!8, draw=blue!50!black},
-  offline-sub/.style={fill=orange!10, draw=orange!60!black},
-  llm-leaf/.style={fill=green!6, draw=green!40!black},
-  classic-leaf/.style={fill=blue!6, draw=blue!40!black},
-  offline-leaf/.style={fill=orange!8, draw=orange!50!black},
-]
+\begin{tikzpicture}[node distance=0.5cm and 1.0cm]
 
-%% ── ROOT ──────────────────────────────────────────────────────────────────
-\node[root] (root) at (0, 0) {TinkerRL Benchmark};
+  % ── Root ──────────────────────────────────────────────────────────────────
+  \node[root] (root) {TinkerRL Benchmark};
 
-%% ── LEVEL 1 ───────────────────────────────────────────────────────────────
-\node[branch, llm]     (llm)     at (-7.0, -2.0) {LLM-RL};
-\node[branch, classic] (classic) at ( 0.0, -2.0) {Classic RL};
-\node[branch, offline] (offline) at ( 7.0, -2.0) {Offline RL};
+  % ── Category nodes (placed below root with horizontal spread) ─────────────
+  \node[category, below left=1.1cm and 2.3cm of root]  (math)  {Mathematical\\Reasoning};
+  \node[category, below=1.1cm of root]                  (tool)  {Tool Use};
+  \node[category, below right=1.1cm and 2.3cm of root] (code)  {Code\\Generation};
 
-%% Root → L1 edges
-\foreach \ch in {llm, classic, offline}
-  \draw[->, thick] (root.south) -- ++(0,-0.5) -| (\ch.north);
+  % ── Leaf nodes ────────────────────────────────────────────────────────────
+  % Math → GSM8K
+  \node[leaf, below=0.9cm of math] (gsm8k) {GSM8K};
+  \node[badge, below=0.18cm of gsm8k] (gsm8k_badge)
+        {\textbf{8} models tested \quad \textcolor{LeafGreen}{$\checkmark$ Complete}};
 
-%% ── LEVEL 2 ───────────────────────────────────────────────────────────────
-\node[subbranch, llm-sub]     (trl)  at (-7.0, -4.0) {TRL};
-\node[subbranch, classic-sub] (ppo)  at (-2.2, -4.0) {Online PPO};
-\node[subbranch, classic-sub] (high) at ( 2.2, -4.0) {High-Throughput};
-\node[subbranch, offline-sub] (d3r)  at ( 7.0, -4.0) {d3rlpy};
+  % Tool → Function Calling
+  \node[leaf, below=0.9cm of tool] (fc) {Function Calling};
+  \node[badge, below=0.18cm of fc] (fc_badge)
+        {\textbf{2} models tested \quad \textcolor{MidBlue}{$\sim$ Partial}};
 
-%% L1 → L2 edges
-\draw[->, thick] (llm.south) -- (trl.north);
-\draw[->, thick] (classic.south) -- ++(0,-0.4) -| (ppo.north);
-\draw[->, thick] (classic.south) -- ++(0,-0.4) -| (high.north);
-\draw[->, thick] (offline.south) -- (d3r.north);
+  % Code → HumanEval
+  \node[leaf, below=0.9cm of code] (he) {HumanEval};
+  \node[badge, below=0.18cm of he] (he_badge)
+        {\textbf{1} model \quad \textcolor{ArrowGray}{$\circ$ Partial}};
 
-%% ── LEVEL 3: TRL leaves ───────────────────────────────────────────────────
-\node[leaf, llm-leaf] (grpo) at (-10.0, -6.0) {GRPO};
-\node[leaf, llm-leaf] (dpo)  at ( -8.2, -6.0) {DPO};
-\node[leaf, llm-leaf] (sft)  at ( -6.6, -6.0) {SFT};
-\node[leaf, llm-leaf] (dist) at ( -4.6, -6.0) {Distillation};
+  % ── Edges: root → categories ──────────────────────────────────────────────
+  \draw[treearrow] (root.south) -- ++(0,-0.4) -| (math.north);
+  \draw[treearrow] (root.south) -- ++(0,-0.4) -| (tool.north);
+  \draw[treearrow] (root.south) -- ++(0,-0.4) -| (code.north);
 
-\foreach \lf in {grpo, dpo, sft, dist}
-  \draw[->, thick] (trl.south) -- ++(0,-0.35) -| (\lf.north);
+  % ── Edges: categories → leaves ────────────────────────────────────────────
+  \draw[treearrow] (math.south) -- (gsm8k.north);
+  \draw[treearrow] (tool.south) -- (fc.north);
+  \draw[treearrow] (code.south) -- (he.north);
 
-%% ── LEVEL 3: Online PPO leaves ────────────────────────────────────────────
-\node[leaf, classic-leaf] (sb3)      at (-2.9, -6.0) {SB3};
-\node[leaf, classic-leaf] (cleanrl)  at (-1.6, -6.0) {CleanRL};
-\node[leaf, classic-leaf] (tianshou) at ( 0.0, -6.0) {Tianshou};
-
-\foreach \lf in {sb3, cleanrl, tianshou}
-  \draw[->, thick] (ppo.south) -- ++(0,-0.35) -| (\lf.north);
-
-%% ── LEVEL 3: High-Throughput leaves ──────────────────────────────────────
-\node[leaf, classic-leaf] (puffer)  at (1.4, -6.0) {PufferLib};
-\node[leaf, classic-leaf] (rlgames) at (3.2, -6.0) {rl\_games};
-
-\foreach \lf in {puffer, rlgames}
-  \draw[->, thick] (high.south) -- ++(0,-0.35) -| (\lf.north);
-
-%% ── LEVEL 3: d3rlpy leaves ────────────────────────────────────────────────
-\node[leaf, offline-leaf] (cql) at (5.6, -6.0) {CQL};
-\node[leaf, offline-leaf] (iql) at (7.0, -6.0) {IQL};
-\node[leaf, offline-leaf] (bc)  at (8.4, -6.0) {BC};
-
-\foreach \lf in {cql, iql, bc}
-  \draw[->, thick] (d3r.south) -- ++(0,-0.35) -| (\lf.north);
+  % ── Legend ────────────────────────────────────────────────────────────────
+  \node[font=\tiny, text=ArrowGray, align=left,
+        below=1.5cm of gsm8k_badge, xshift=2.0cm]
+  {%
+    \textcolor{LeafGreen}{$\checkmark$} Complete \enspace
+    \textcolor{MidBlue}{$\sim$} In progress \enspace
+    \textcolor{ArrowGray}{$\circ$} Planned%
+  };
 
 \end{tikzpicture}
 \end{document}

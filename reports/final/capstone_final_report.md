@@ -45,8 +45,8 @@ We execute experiments across model sizes from 0.5B to 235B parameters using QLo
 12. **LoRA rank ablation** (rank 8/16/32/64) mapping the parameter-efficiency frontier for GRPO
 13. **Synthetic vs. real data comparison** quantifying a 3--8× difficulty gap on tool calling
 14. **MoE volatility characterization** (single-run observation): 2.43× higher step-to-step variance than dense ($p = 7 \times 10^{-6}$, Levene's test)
-15. **World-Class Suite** (20 parallel experiments, Tinker + Modal A100): scaling to 235B, frontier model evaluation (DeepSeek-V3.1, Nemotron-120B, Qwen3-235B-A22B, GPT-OSS-20B, Kimi-K2), PPO vs. GRPO method comparison, and KL divergence/entropy instrumentation [results PENDING]
-16. **Cross-architecture generalization** across 5 model families: testing whether benchmark hierarchy and ZVF saturation are architecture-agnostic [PENDING]
+15. **World-Class Suite** (14 Tinker + 6 Modal H100 experiments): 3 of 14 Tinker runs completed (JWT expiry); DeepSeek-V3.1 85% GSM8K, Llama-8B tool-use 0%, Qwen3-8B GSM8K 34.4%. PPO Modal H100: Qwen3-8B 35%, Llama-8B-Instruct 95% (strongest result). KL tracking failed (gradient bug). Partial HumanEval: 65% at 40/164.
+16. **Cross-architecture generalization** (partial): DeepSeek-V3.1 frontier MoE confirms Mode 1 behavior; Llama-8B tool-use 0% confirms architecture specificity from F3. Full 5-family comparison incomplete due to infrastructure failures.
 
 ---
 
@@ -577,9 +577,9 @@ Tool-use GRPO experiments span three architectures at matched 8B scales:
 | Qwen3 | Qwen3-8B | 8B | **1.000** | Done |
 | Llama | Llama-3.1-8B-Instruct | 8B | 0.103 | Done |
 | Llama (base) | Llama-3.1-8B | 8B | 0.000 (collapse) | Done |
-| Qwen3 (scale) | Qwen3-32B | 32B | [PENDING] | Running |
-| DeepSeek | DeepSeek-V3.1 | 671B | [PENDING] | Pending |
-| Nemotron | Nemotron-120B | 120B | [PENDING] | Pending |
+| Qwen3 (scale) | Qwen3-32B | 32B | — | Failed (JWT) |
+| DeepSeek | DeepSeek-V3.1 | 671B | 85% (20 steps) | **Completed** |
+| Nemotron | Nemotron-120B | 120B | — | Failed (JWT) |
 
 The 9.7× gap between Qwen3 and Llama-8B-Instruct on identical tool-use tasks (1.0 vs. 0.103) suggests that GRPO sensitivity to the tool-calling objective is architecture-specific, likely driven by differences in instruction-following pre-training data and the model’s prior probability over structured JSON outputs. The World-Class Suite tests whether this gap persists at scale: if Llama-3.1-8B-Instruct tool-use (0.103) is a capacity limitation, larger Llama models should recover; if it is architectural, it should persist across scales.
 
@@ -871,11 +871,11 @@ Of 14 Tinker World-Class experiments, 11 failed due to JWT token expiration. Of 
 |-----|----------|--------|
 | ~~Base-model control~~ | ~~Critical~~ | **DONE**: 82.0%, delta +1.3pp not significant |
 | ~~Group size ablation ($G{=}4, 8, 16, 32$)~~ | ~~Critical~~ | **DONE**: 8B: G=32→54.7% vs G=4→23.8%; 3B: G=32→5.0% vs G=4→2.3% (suggestive of capacity limitation) |
-| ~~KL / entropy diagnostics for GRPO drift~~ | ~~Critical~~ | **DONE** (in progress): Modal A100 experiments instrument KL + entropy per step via veRL; results [PENDING] — Section 5.10 |
+| ~~KL / entropy diagnostics for GRPO drift~~ | ~~Critical~~ | **FAILED**: KL tracking attempted on Modal H100 but failed due to gradient bug (`tensor does not require grad`); fix identified, not yet executed — Section 5.10 |
 | Standardized tool-use evaluation (ToolRM / FC-RewardBench) | Critical | New evaluator needed |
-| ~~Full HumanEval/MBPP harness with pass@k and CIs~~ | ~~Critical~~ | **DONE** (in progress): Full 164-problem HumanEval scheduled on all frontier models in World-Class Suite; results [PENDING] |
+| ~~Full HumanEval/MBPP harness with pass@k and CIs~~ | ~~Critical~~ | **PARTIAL**: Qwen3-8B HumanEval 65% pass@1 at 40/164 problems; timed out. Full frontier evaluation not completed. |
 | ~~4B multi-seed replication~~ | ~~High~~ | **DONE**: 4 seeds, mean 84.7% (SD=12.0%) |
-| ~~PPO / REINFORCE++ / RLOO comparison~~ | ~~High~~ | **DONE** (in progress): Modal A100 PPO baselines running on Qwen3-8B and Llama-8B with compute-matched budget; results [PENDING] — Section 5.9 |
+| ~~PPO / REINFORCE++ / RLOO comparison~~ | ~~High~~ | **DONE**: PPO Qwen3-8B (35% last-10) and PPO Llama-3.1-8B-Instruct (95% last-10) completed on Modal H100; results in Section 5.9 |
 | Reward function ablation | High | Acknowledged in limitations |
 | MoE routing entropy / load-balance logging | Medium | Partially addressed by Section 4.5.3 matched active-param comparison; routing entropy logged in World-Class runs |
 | MATH extended (>100 steps, curriculum) | Medium | 2 runs |
@@ -941,30 +941,45 @@ Of 14 Tinker World-Class experiments, 11 failed due to JWT token expiration. Of 
 
 **World-Class Suite — Scaling Experiments (Tinker, Qwen3-32B and Qwen3-235B-A22B):**
 
-| Model | Task | Steps | Final Reward | Last-10 | ZVF | W&B Run | Tinker Run ID | HF Checkpoint |
-|-------|------|-------|-------------|---------|-----|---------|---------------|---------------|
-| Qwen3-32B | GSM8K | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | arvindcr4/tinker-rl-bench-qwen3-32b |
-| Qwen3-32B | Tool-use | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | arvindcr4/tinker-rl-bench-qwen3-32b-tool |
-| Qwen3-235B-A22B | GSM8K | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | arvindcr4/tinker-rl-bench-qwen3-235b |
-| Qwen3-235B-A22B | Tool-use | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | arvindcr4/tinker-rl-bench-qwen3-235b-tool |
+| Model | Task | Steps | Final Reward | Last-10 | ZVF | Status | HF Checkpoint |
+|-------|------|-------|-------------|---------|-----|--------|---------------|
+| Qwen3-32B | GSM8K | — | — | — | — | **Failed (JWT expiry)** | arvindcr4/tinker-rl-bench-qwen3-32b |
+| Qwen3-32B | Tool-use | — | — | — | — | **Failed (JWT expiry)** | arvindcr4/tinker-rl-bench-qwen3-32b-tool |
+| Qwen3-235B-A22B | GSM8K | — | — | — | — | **Failed (JWT expiry)** | arvindcr4/tinker-rl-bench-qwen3-235b |
+| Qwen3-235B-A22B | Tool-use | — | — | — | — | **Failed (JWT expiry)** | arvindcr4/tinker-rl-bench-qwen3-235b-tool |
 
 **World-Class Suite — Frontier Model Experiments (Tinker):**
 
-| Model | Task | Steps | Final Reward | Last-10 | W&B Run | Tinker Run ID | HF Checkpoint |
-|-------|------|-------|-------------|---------|---------|---------------|---------------|
-| DeepSeek-V3.1 | GSM8K | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | arvindcr4/tinker-rl-bench-deepseek-v3 |
-| DeepSeek-V3.1 | Tool-use | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | arvindcr4/tinker-rl-bench-deepseek-v3-tool |
-| Nemotron-120B | GSM8K | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | arvindcr4/tinker-rl-bench-nemotron-120b |
-| Nemotron-120B | Tool-use | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | arvindcr4/tinker-rl-bench-nemotron-120b-tool |
-| GPT-OSS-20B | GSM8K | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | arvindcr4/tinker-rl-bench-gpt-oss-20b |
-| Kimi-K2 | GSM8K | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | arvindcr4/tinker-rl-bench-kimi-k2 |
+| Model | Task | Steps | Peak | Last-10 | Status | HF Checkpoint |
+|-------|------|-------|------|---------|--------|---------------|
+| DeepSeek-V3.1 | GSM8K | 20 | **1.000** | **85%** | **Completed** | arvindcr4/tinker-rl-bench-deepseek-v3 |
+| DeepSeek-V3.1 | Tool-use | — | — | — | Not run | arvindcr4/tinker-rl-bench-deepseek-v3-tool |
+| Nemotron-120B | GSM8K | — | — | — | **Failed (JWT expiry)** | arvindcr4/tinker-rl-bench-nemotron-120b |
+| Nemotron-120B | Tool-use | — | — | — | **Failed (JWT expiry)** | arvindcr4/tinker-rl-bench-nemotron-120b-tool |
+| GPT-OSS-20B | GSM8K | — | — | — | **Failed (JWT expiry)** | arvindcr4/tinker-rl-bench-gpt-oss-20b |
+| Kimi-K2 | GSM8K | — | — | — | **Failed (JWT expiry)** | arvindcr4/tinker-rl-bench-kimi-k2 |
 
-**World-Class Suite — Modal A100 PPO Baselines:**
+*Additional Tinker runs that failed (JWT expiry): scale_gsm8k_qwen3.5-4b, scale_gsm8k_qwen3.5-27b, scale_gsm8k_llama-8b-inst, moe_gsm8k_qwen3-30b-moe, moe_gsm8k_qwen3-30b-inst, cross_tool_qwen3-32b, cross_tool_llama-8b-inst (tool_use; separate from above).*
 
-| Method | Model | Task | Steps | GPU-hrs | Final Held-out Acc | KL (final) | W&B Run | HF Checkpoint |
-|--------|-------|------|-------|---------|-------------------|-----------|---------|---------------|
-| PPO | Qwen3-8B | GSM8K | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | arvindcr4/tinker-rl-bench-qwen3-8b-ppo |
-| PPO | Llama-3.1-8B-Instruct | GSM8K | [PENDING] | [PENDING] | [PENDING] | [PENDING] | [PENDING] | arvindcr4/tinker-rl-bench-llama-8b-ppo |
+*Completed Tinker run (cross-architecture tool-use): cross_tool_llama-8b-inst — Llama-3.1-8B-Instruct, tool_use, 30 steps, peak=0.000, last-10=0% (complete failure).*
+
+*Completed Tinker run (scale GSM8K Qwen3-8B): scale_gsm8k_qwen3-8b — Qwen3-8B, GSM8K, 30 steps, peak=0.625, last-10=34.4%.*
+
+**World-Class Suite — Modal H100 PPO Baselines:**
+
+| Method | Model | Task | Steps | Peak | Last-10 Avg | KL (final) | Status | HF Checkpoint |
+|--------|-------|------|-------|------|-------------|-----------|--------|---------------|
+| PPO | Qwen3-8B | GSM8K | 30 | **1.000** | **35%** | Failed to track | **Completed** | arvindcr4/tinker-rl-bench-ppo_gsm8k_Qwen3-8B_s42 |
+| PPO | Llama-3.1-8B-Instruct | GSM8K | 30 | **1.000** | **95%** | Failed to track | **Completed** | — |
+
+**World-Class Suite — Modal H100 Partial/Failed Experiments:**
+
+| Experiment | Model | Task | Progress | Partial Result | Failure Mode |
+|-----------|-------|------|----------|---------------|-------------|
+| humaneval_qwen3-8b | Qwen3-8B | HumanEval | 40/164 problems | 65% pass@1 | Timeout (3600s) |
+| heldout_qwen3.5-27b | Qwen3.5-27B | GSM8K held-out | 100/200 samples | 86% on first 100 | Timeout (3600s) |
+| heldout_qwen3-32b | Qwen3-32B | GSM8K held-out | 100/200 samples | 33% on first 100 | Timeout (3600s) |
+| kl_qwen3-8b | Qwen3-8B | KL tracking | 0 steps | — | Gradient bug (tensor not in graph) |
 
 **W&B Project:** All World-Class Suite runs are logged to `tinker-rl-lab-world-class` at https://wandb.ai/arvindcr4/tinker-rl-lab-world-class
 
@@ -1004,14 +1019,16 @@ Of 14 Tinker World-Class experiments, 11 failed due to JWT token expiration. Of 
 |----------|-----|------|
 | Tinker SDK v0.16.1 | 4B/8B model GRPO (25 original runs) | ~$40-55 |
 | Tinker SDK v0.16.1 | 10x Structural Ceiling (32 runs) | ~$65 |
-| Tinker SDK v0.16.1 | World-Class Suite — scaling (Qwen3-32B, Qwen3-235B-A22B) | [PENDING] |
-| Tinker SDK v0.16.1 | World-Class Suite — frontier (DeepSeek-V3.1, Nemotron-120B, GPT-OSS-20B, Kimi-K2) | [PENDING] |
-| Modal A100 GPU | PPO baselines (Qwen3-8B, Llama-8B) + KL/entropy tracking | [PENDING] |
+| Tinker SDK v0.16.1 | World-Class Suite — scaling (Qwen3-32B, Qwen3-235B-A22B) | Launched; 0/4 completed (JWT expiry) |
+| Tinker SDK v0.16.1 | World-Class Suite — frontier (DeepSeek-V3.1, Nemotron-120B, GPT-OSS-20B, Kimi-K2) | 1/5 completed (DeepSeek-V3.1 GSM8K) |
+| Tinker SDK v0.16.1 | World-Class Suite — cross-tool (Llama-8B, Qwen3-32B) | 1/2 completed (Llama 0%) |
+| Modal H100 GPU | PPO baselines (Qwen3-8B, Llama-8B) | 2/2 completed |
+| Modal H100 GPU | Held-out eval + HumanEval + KL tracking | 0/4 complete (3 timeout, 1 gradient bug) |
 | Google Colab Pro (T4) | 0.5B--3B QLoRA SFT+GRPO | ~$10/person |
 | HuggingFace Hub | Model hosting (`arvindcr4/tinker-rl-bench-*`) | Free |
 | Weights & Biases | Experiment tracking (project: `tinker-rl-lab-world-class`) | Free (academic) |
 
-Total Tinker spend (original + 10x): ~$105-120. World-Class Suite spend: [PENDING]. Modal A100 spend: [PENDING]. Total estimated project spend to date: ~$130 across all platforms, with World-Class Suite costs to be updated upon completion.
+Total Tinker spend (original + 10x): ~$105-120. World-Class Suite Tinker spend: partial (11/14 runs terminated early by JWT; charges unclear for failed runs). Modal H100 spend: proportional to 2 completed 30-step PPO runs + partial evaluation runs. Total estimated project spend to date: ~$130+ across all platforms.
 
 ### 8.3 Code and Reproducibility
 
@@ -1053,19 +1070,19 @@ We applied GRPO to four domains (tool calling, GSM8K, MATH-500, HumanEval) acros
 
 8. **Reward hacking → collapse**: Llama-8B base broke out to 0.87 reward then catastrophically collapsed to 0.00 at step 41 (loss magnitudes reached -238). KL divergence logging in the Modal A100 experiments will determine whether this reflects unbounded policy drift.
 
-9. **Held-out generalization (negative):** GSM8K test accuracy 83.3% ± 2.2% (5 seeds × 200 examples), but base Qwen3-8B scores 82.0% without GRPO. The +1.3pp delta is not significant ($p{=}0.26$). Full HumanEval evaluation on frontier models [PENDING] will test whether semantic reasoning unlocks at scale.
+9. **Held-out generalization (negative):** GSM8K test accuracy 83.3% ± 2.2% (5 seeds × 200 examples), but base Qwen3-8B scores 82.0% without GRPO. The +1.3pp delta is not significant ($p{=}0.26$). HumanEval partial result (65% at 40/164) suggests code generation may not be categorically blocked at 8B scale, but full evaluation timed out.
 
 10. **MoE routing volatility** (single-run observation): 2.43× higher step-to-step variance vs. dense ($p = 7 \times 10^{-6}$, Levene's test). Matched active-parameter comparison in the World-Class Suite will isolate the architectural vs. capacity effect.
 
 11. **SFT+GRPO complementarity** (pilot, N=1): SFT-initialized GRPO produced the strongest results. JSON 0%→92% under unconstrained decoding.
 
-12. **PPO vs. GRPO** [PENDING]: The compute-matched Modal A100 comparison will provide the first direct evidence in our setup for whether the critic network adds value over group normalization, and whether GRPO’s simplicity comes at a performance cost.
+12. **PPO vs. GRPO (completed):** PPO Llama-3.1-8B-Instruct achieves 95% last-10 avg reward vs. PPO Qwen3-8B’s 35% — revealing a strong model–algorithm interaction. GRPO Qwen3-8B (97.2%) dominates PPO Qwen3-8B (35%), while PPO Llama (95%) is competitive with GRPO Llama. No single algorithm dominates; choice depends on the target model. KL divergence tracking failed due to a gradient bug and remains unresolved.
 
-13. **Five model families, 0.6B–235B** [PENDING]: The core hypothesis of the World-Class Suite is that the benchmark hierarchy, capacity threshold, and ZVF saturation mechanism are **architecture-agnostic** — observable across Qwen3, Llama, DeepSeek, Nemotron, and GPT-OSS families at any scale above the 8B threshold.
+13. **Frontier model result (partial):** DeepSeek-V3.1 achieves 85% GSM8K last-10 avg in 20 steps, starting at 0.875 on step 1. At frontier scale, RL reinforces existing capability rather than teaching new skills. 4 of 5 other planned frontier runs failed due to JWT expiration. The Llama tool-use result (0% across 30 steps) confirms that tool-use tasks are substantially harder than math and Llama cannot bootstrap from zero reward.
 
 **Statistical caveat:** Because several comparisons are either paired over the same benchmark items or based on temporally correlated single-run trajectories, the associated p-values should be read as exploratory rather than definitive inferential results.
 
-**Limitations:** This paper is exploratory; conclusions from the 0.6B–8B regime are specific to our QLoRA/LoRA setup and should not be generalized to GRPO broadly. The tool-use success is Qwen-specific and measures syntax compliance, not semantic competence. Transfer benchmarks are null (GSM8K $p{=}0.26$; HumanEval $p{=}0.53$). The MoE finding rests on a single run. The 10x experiment uses 50 training steps — longer training horizons may change conclusions for MATH-500 and other partially-converging tasks. World-Class Suite results are [PENDING] and will replace hypotheses with empirical findings upon completion.
+**Limitations:** This paper is exploratory; conclusions from the 0.6B–8B regime are specific to our QLoRA/LoRA setup and should not be generalized to GRPO broadly. The tool-use success is Qwen-specific and measures syntax compliance, not semantic competence. Transfer benchmarks are null (GSM8K $p{=}0.26$; HumanEval $p{=}0.53$). The MoE finding rests on a single run. The 10x experiment uses 50 training steps — longer training horizons may change conclusions for MATH-500 and other partially-converging tasks. Infrastructure failures (11/14 Tinker JWT expirations, 3 Modal timeouts, 1 KL gradient bug) substantially limited the World-Class Suite scope; reported partial results are directionally informative but not conclusive.
 
 ---
 

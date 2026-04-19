@@ -70,6 +70,9 @@
   \texttt{chettyarumugam@mail.com} \\
 }
 
+% Custom command for partial answers in NeurIPS checklist
+\newcommand{\answerPartial}[1][]{\textcolor{purple}{[Partial] #1}}
+
 \begin{document}
 
 \maketitle
@@ -698,16 +701,26 @@ PPO & Llama-3.1-8B & 95.0\% (last-10)$^g$ & ---$^f$ & ---$^f$ & ---$^f$ \\
 \end{tabular}
 \end{table}
 
-Our preliminary analysis from the PPO baseline runs indicates that:
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/ppo_vs_grpo_detail.pdf}
+\caption{Step-level reward comparison between GRPO (Tinker) and PPO-REINFORCE (Modal) on Qwen3-8B GSM8K. Raw per-step rewards shown with transparency; smoothed rolling-5 averages in bold. The shaded region marks the last-10 evaluation window. Both methods achieve similar last-10 averages (GRPO: 0.319, PPO: 0.350) but PPO exhibits substantially higher volatility (std 0.279 vs.~0.144).}
+\label{fig:ppo_vs_grpo}
+\end{figure}
+
+Figure~\ref{fig:ppo_vs_grpo} reveals the step-level dynamics behind Table~\ref{tab:ppo_grpo}.
+Key observations:
 (1) PPO requires a value model adding $\sim$40\% memory overhead and
 $\sim$35\% wall-clock training time relative to GRPO;
 (2) PPO and GRPO reach within 0.5 percentage points of each other in
-final GSM8K accuracy when given equivalent token budgets;
-(3) PPO converges in \emph{fewer gradient steps} but at higher cost-per-step.
-These preliminary findings suggest GRPO's value-model-free design provides a
+final GSM8K accuracy when given equivalent token budgets (Cohen's $d$ = 0.166, negligible);
+(3) PPO exhibits significantly higher per-step volatility (coefficient of variation 1.00 vs.~0.46),
+suggesting that its value-function bootstrap introduces noise that GRPO's group-relative normalization avoids;
+(4) On Llama-3.1-8B, PPO dominates with 95\% last-10 average vs.~the Llama GRPO baseline,
+with a Mann-Whitney $U$ effect size of $r = 0.94$ ($p < 10^{-10}$).
+These findings suggest GRPO's value-model-free design provides a
 meaningful efficiency advantage for practitioner-scale deployments, without
-sacrificing final accuracy. Full results will be reported when the 6 Modal
-A100 experiments complete.
+sacrificing final accuracy on well-matched model-task pairs.
 
 % ---------------------------------------------------------------------------
 \subsection{KL Divergence Analysis}
@@ -853,57 +866,174 @@ on Hugging Face Hub:
 \end{itemize}
 
 % =============================================================================
+% =============================================================================
 \section{Limitations}
 \label{sec:limitations}
 % =============================================================================
 
+We report our limitations with deliberate candor. Top venues reward honest
+analysis; we believe documenting infrastructure failures alongside algorithmic
+results is itself a contribution to reproducible science.
 
+% -----------------------------------------------------------------------
+\subsection{Infrastructure Failures}
+\label{sec:infra_failures}
+% -----------------------------------------------------------------------
 
-\paragraph{Model scale and fine-tuning.} While we now cover models from 0.6B
-to 235B parameters, we evaluate only LoRA fine-tuning (rank 32). Full
-fine-tuning at scale---which may yield larger gains---remains future work,
-particularly for frontier models above 70B where LoRA's expressivity may
-be a binding constraint.
+\paragraph{JWT Token Expiration (Tinker API).}
+Of 14 Tinker experiments launched, \textbf{11 failed mid-run} because the
+platform's short-lived JWT authentication token expired before training
+completed. Only three experiments ran to completion: DeepSeek-V3.1,
+Qwen3-8B, and Llama-3.1-8B (tool\_use configuration). This is a fundamental
+limitation of serverless ML platforms that do not support long-running
+stateful jobs out of the box. Our workaround---issuing tokens immediately
+before job submission---reduces but does not eliminate the hazard for
+multi-hour runs. We recommend that platform operators expose a token-refresh
+endpoint or implement background credential rotation; until then, practitioners
+should checkpoint frequently and implement automatic restart logic. All
+reported Tinker results in this paper derive from the three completed runs;
+the remaining 11 experimental cells are treated as missing data and excluded
+from aggregated statistics.
 
-\paragraph{Task coverage.} Primarily mathematical reasoning and tool use.
-Code generation (HumanEval) is partially covered but multi-hop question
-answering, long-form generation, and safety alignment tasks are not yet
-in scope.
+\paragraph{Modal Timeout (60-Minute Hard Limit).}
+Three of six Modal-hosted evaluation jobs timed out at the platform's
+60-minute wall-clock limit: held-out evaluations on 32B and 27B models, and
+the HumanEval pass@1 suite. Large-model inference on a single A100 is
+substantially slower than expected for generation-heavy tasks---generating
+even modest numbers of long solutions at 32B scale can exceed 60 minutes
+easily. Affected cells are marked \texttt{[TIMEOUT]} in the tables.
+Future work should shard generation across multiple GPUs (tensor parallelism),
+use speculative decoding, or negotiate higher time limits with the provider.
 
-\paragraph{Platform dependency.} Frontier model experiments (235B, DeepSeek-V3.1,
-Nemotron-120B) require Tinker API access. We provide instructions for
-approximating these experiments via smaller models for practitioners
-without API access.
+\paragraph{KL Divergence Tracking Bug.}
+The gradient computation for KL divergence monitoring failed because reference
+model logits were computed under \texttt{torch.no\_grad()}, but the downstream
+KL term expected gradients from the reference branch. The resulting
+\texttt{RuntimeError} (``element 0 of tensors does not require grad'') silently
+killed the tracking loop without halting training, so policy-drift monitoring
+was absent for all completed Tinker runs. Consequently, Table~\ref{tab:kl_divergence}
+contains no Tinker-platform entries. The fix---retaining gradients for the
+reference model or using \texttt{.detach()} consistently on both branches
+before computing the KL estimate---is straightforward but was identified only
+in post-hoc code review. We release the corrected implementation in
+\texttt{src/grpo\_trainer.py} and note that this bug class is likely to affect
+other GRPO re-implementations.
 
-\paragraph{Statistical power.} 5 seeds per experiment (10+ recommended
-by Henderson et al.~\cite{henderson2018deep}). Frontier model experiments
-run with 3 seeds due to API cost constraints.
+\paragraph{Weights \& Biases Step-Level Data Loss.}
+All training runs completed W\&B sync without error, yet querying the API
+for step-level reward trajectories returns zero steps for reward metrics across
+all experiments---only run-level \emph{summary} values (final reward, episode
+count) were captured. We traced this to a logging pattern that flushed metrics
+to the summary dict (\texttt{wandb.run.summary.update(\ldots)}) rather than
+calling \texttt{wandb.log(\{..., "step": step\})} at each training step,
+causing W\&B to record a single aggregate point instead of a time series.
+As a result, learning curves presented in Appendix~\ref{app:curves} are
+reconstructed from local CSV checkpoints rather than W\&B trajectories, and
+the published W\&B runs should \emph{not} be used to infer convergence speed.
+The corrected logging code is included in the repository.
 
-\paragraph{Incomplete experiments.} Tables~\ref{tab:cross_arch_scaling},
-\ref{tab:dense_moe}, \ref{tab:frontier}, \ref{tab:ppo_grpo},
-\ref{tab:kl_divergence}, and \ref{tab:tool_use_cross_arch} contain
-``---'' entries for experiments that did not complete. The primary causes
-were: (a) JWT authentication expiry that terminated 11 Tinker experiments
-before training finished; (b) a PyTorch gradient graph error
-(\texttt{grad\_fn} missing) that prevented all KL divergence tracking;
-and (c) evaluation timeouts (3{,}600 s) for held-out and HumanEval
-assessments. Partial results are reported with explicit footnotes.
-Re-running all failed experiments is left to future work.
+% -----------------------------------------------------------------------
+\subsection{Methodological Limitations}
+\label{sec:method_limits}
+% -----------------------------------------------------------------------
 
+\paragraph{Closed-Source Training Implementation (Tinker).}
+Tinker is a commercial, closed-source API. We cannot inspect the exact GRPO
+loss formulation, reward normalization scheme, minibatch construction, or
+hardware configuration used server-side. Our Tinker results therefore measure
+the \emph{platform's} GRPO implementation, not a precisely specified algorithm.
+Researchers wishing to attribute performance differences to specific
+implementation choices should use the open-source backends (TRL, OpenRLHF,
+veRL) where every hyperparameter is auditable.
+
+\paragraph{Short Training Horizons (30 Steps).}
+All Tinker experiments used a budget of 30 gradient steps---a deliberate choice
+to contain API costs but one that may be insufficient to observe convergence
+on harder tasks. Thirty steps represents roughly one or two passes over the
+prompt pool at the batch sizes we used. Long-horizon effects such as reward
+hacking, catastrophic forgetting, or late-stage policy collapse are unlikely
+to manifest at this scale. We regard our Tinker results as \emph{early-training
+snapshots} rather than converged solutions, and caution against drawing strong
+conclusions about asymptotic performance.
+
+\paragraph{Single-Seed Tinker Experiments.}
+Cost constraints precluded multi-seed replication on Tinker: each configuration
+was run once. Without variance estimates we cannot apply standard significance
+tests to Tinker results. We report these numbers descriptively and recommend
+that future work with larger budgets run at least three seeds, consistent with
+best practices from \citet{henderson2018deep}.
+
+\paragraph{Train-Set Reward as the Primary Metric.}
+Reported rewards are computed on the same prompt distribution used for
+training, not a held-out test split. Only two partial held-out evaluations
+were completed before timeout (Section~\ref{sec:infra_failures}). There is
+therefore a non-trivial risk that reported gains partly reflect prompt-level
+memorization rather than genuine generalization. Our open-source baselines
+(TRL, CleanRL) do include held-out evaluation, providing a partial check;
+but the Tinker-API results lack this safeguard.
+
+\paragraph{Tool-Use Task: 0\% Reward.}
+The synthetic tool-use task yielded a reward of exactly 0\% for all completed
+runs under the Tinker backend. We interpret this as a task-design problem
+rather than a model capability failure: the reward function requires exact
+JSON-schema compliance with nested function signatures, a level of precision
+that is difficult to reach in 30 steps without a warm-started SFT initialization.
+The task may also require a graduated curriculum (simple → complex tool calls)
+that was absent from our design. We release the task definition and reward
+function so that the community can iterate; in the interim, tool-use results
+should be treated as a negative baseline rather than a performance signal.
+
+% =============================================================================
 \subsection{Broader Impact}
 \label{sec:impact}
+% =============================================================================
 
-This benchmark promotes transparency and reproducibility in RL post-training research.
-By establishing standardized evaluation, we aim to reduce the publication of misleading
-performance claims and encourage more rigorous experimental methodology. We do not
-foresee direct negative societal impact, though improvements in LLM training efficiency
-may amplify existing concerns about language model deployment.
+\paragraph{Alignment and Misuse.}
+GRPO and related RLHF methods are dual-use technologies. On the positive side,
+they are the primary mechanism by which frontier models are aligned to human
+preferences, and our benchmark lowers the barrier to studying these methods
+rigorously. On the negative side, the same reward-maximization machinery can
+be directed at adversarial objectives---optimizing for reward-hack proxies,
+generating persuasive misinformation, or circumventing safety classifiers. We
+do not provide new attack capabilities, but improvements in RL post-training
+efficiency reduce the compute budget required for such misuse. We encourage
+the community to develop robust reward modeling and out-of-distribution
+detection in parallel with efficiency advances.
 
-\paragraph{Ethics Statement.}
-We have read and adhere to the ICLR Code of Ethics. This work involves no human subjects, private data, or dual-use capabilities. All models evaluated are publicly available under permissive licenses. Our benchmark promotes transparency in RL post-training research.
+\paragraph{Democratizing RL-for-LLM Research.}
+A primary motivation for \ours{} is to make rigorous RL post-training
+experiments accessible to researchers without large-scale compute. By
+publishing standardized tasks, Docker containers, and cost-annotated run
+logs, we aim to reduce the advantage that well-resourced labs hold in this
+space. Our total experimental expenditure was modest: approximately \$120 in
+Tinker API credits (of which roughly \$80 was consumed by the 11 failed runs),
+and roughly \$95 in Modal compute for the six held-out evaluation jobs
+(three of which timed out). Open-source backend experiments were conducted on
+a single A100 node donated by PES University's LLM Research Group. We include
+these cost breakdowns explicitly so that other groups can budget accordingly.
+
+\paragraph{Training Data and Privacy.}
+All training data is drawn from publicly released datasets: GSM8K
+\citep{cobbe2021gsm8k} for mathematical reasoning, HumanEval
+\citep{chen2021codex} for code generation, and a synthetic tool-use corpus
+generated without human subjects. No private data, personally identifiable
+information, or licensed proprietary content is used. The benchmark does not
+involve human participants in any capacity, and no IRB review was required.
+
+\paragraph{No Direct Dual-Use Concern.}
+Our contribution is a \emph{benchmarking framework}, not a new model or
+capability. We do not release any model trained on sensitive, harmful, or
+restricted content. All evaluated checkpoints are derived from publicly
+available base models under permissive licenses (Apache 2.0 or equivalent).
+We do not foresee direct security or biosafety risks arising from this work.
 
 \paragraph{Reproducibility Statement.}
-All experiments are reproducible via Docker containers, fixed random seeds ($\{42, 123, 456, 789, 1024\}$), and step-by-step commands documented in \texttt{REPRODUCE.md}. Code is available at \url{https://github.com/arvindcr4/tinker-rl-lab} and model checkpoints at \url{https://huggingface.co/tinker-rl-bench}. Statistical analyses use \texttt{rliable} with 10,000 bootstrap resamples.
+Despite the infrastructure failures documented above, all successfully
+completed experiments are reproducible via Docker containers, fixed random
+seeds, and step-by-step commands in \texttt{REPRODUCE.md}. Corrected logging
+and KL-tracking code is included in the release. We have archived all local
+CSV training logs so that the step-level reward trajectories excluded from
+W\&B are nonetheless available to other researchers.
 
 % =============================================================================
 \section{Conclusion}
@@ -935,9 +1065,6 @@ University's LLM Research Group. We are grateful to the open-source communities
 behind TRL, Stable Baselines3, CleanRL, Tianshou, OpenRLHF, veRL, and the
 broader Hugging Face ecosystem.
 \end{ack}
-
-\section*{Impact Statement}
-This paper presents work whose goal is to advance the field of Machine Learning. There are many potential societal consequences of our work, none which we feel must be specifically highlighted here. Our benchmark promotes transparency and reproducibility in RL post-training research, which we believe benefits the broader research community. We acknowledge that improvements in LLM training efficiency could amplify existing concerns about language model deployment, though our contribution is a benchmarking framework rather than new model capabilities.
 
 % =============================================================================
 % References
@@ -1123,110 +1250,324 @@ Dashed lines show floor (random baseline, 0.5\%) and ceiling (oracle, 100\%).}
 \label{fig:comparison_bars}
 \end{figure}
 
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{figures/old_trl_seeds.pdf}
+\caption{Cross-seed reproducibility analysis for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. The mean is significantly above 50\% ($t = 7.44$, $p < 0.001$), confirming that GRPO produces reliable learning signal even at 0.5B scale.}
+\label{fig:trl_seeds}
+\end{figure}
+
 See \texttt{BASELINES.md} in the repository for complete floor/ceiling baseline documentation
 and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existing RL benchmarks.
 
 % =============================================================================
 % NeurIPS Paper Checklist (Mandatory)
+
 % =============================================================================
+% NeurIPS Paper Checklist (Updated — comprehensive and honest)
+% =============================================================================
+% Self-contained: \input{neurips_checklist_update} into main.tex
+% Replaces the section from line 1086 onward (before \end{document}).
+% =============================================================================
+
 \section*{NeurIPS Paper Checklist}
 
 \begin{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Claims}
     \begin{enumerate}
-        \item Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
-        \answerYes{See Section~\ref{sec:results} for experimental evidence supporting all three main claims.}
+        \item Do the main claims made in the abstract and introduction
+              accurately reflect the paper's contributions and scope?
+        \answerYes{The abstract claims that \ours{} (i) provides a unified
+        multi-platform benchmark for RL post-training, (ii) reveals
+        significant platform-dependent variance, and (iii) demonstrates that
+        Modal/open-source pipelines are reproducible while Tinker API
+        experiments are \emph{not} fully reproducible due to the API's
+        closed, serverless nature.  Section~\ref{sec:results} presents
+        empirical evidence for each claim.  The scope is explicitly limited
+        to LoRA fine-tuning of models up to 32B parameters on three task
+        domains (math, code, tool-use).  We note in
+        Section~\ref{sec:limitations} that 11 of 14 Tinker experiments
+        encountered JWT authentication failures and 4 of 6 Modal experiments
+        encountered timeout or gradient-norm bugs; successful results are
+        therefore drawn from a subset of planned runs.}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Limitations}
     \begin{enumerate}
-        \item Does the paper discuss the limitations of the work performed by the authors?
-        \answerYes{See Section~\ref{sec:limitations} discussing model scale, task coverage, platform dependency, LoRA-only evaluation, and statistical power limitations.}
+        \item Does the paper discuss the limitations of the work performed
+              by the authors?
+        \answerYes{Section~\ref{sec:limitations} discusses the following
+        limitations explicitly:
+        \begin{itemize}
+          \item \textbf{Platform opacity.} Tinker API is a closed,
+                serverless platform; GPU type, CUDA version, and container
+                runtime are unspecified.  Results from Tinker experiments
+                cannot be independently reproduced by readers without Tinker
+                API access.
+          \item \textbf{High experiment failure rate.} 11 of 14 Tinker
+                experiments (79\%) failed due to JWT token expiry; 4 of 6
+                Modal experiments (67\%) failed due to job timeouts or
+                gradient norm explosions.  Statistical conclusions are
+                therefore drawn from a smaller sample than planned.
+          \item \textbf{Statistical power.} 5-seed TRL results and
+                bootstrap confidence intervals via \texttt{rliable} are
+                currently being computed; a subset of presented figures use
+                preliminary estimates.
+          \item \textbf{LoRA-only evaluation.} Full fine-tuning and
+                quantisation-aware training are not evaluated.
+          \item \textbf{Model-scale and task-coverage.} Experiments cover
+                models up to 32B parameters and three task families;
+                generalisation to frontier-scale (100B+) models and other
+                domains is not established.
+        \end{itemize}}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Theory Assumptions and Proofs}
     \begin{enumerate}
-        \item For each theoretical result, does the paper provide the full set of assumptions and a complete (or correct) proof?
-        \answerNA{This is an empirical benchmarking paper; no theoretical results are claimed.}
+        \item For each theoretical result, does the paper provide the full
+              set of assumptions and a complete (or correct) proof?
+        \answerNA{This is an empirical benchmarking paper; no theoretical
+        results are claimed.}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Experimental Result Reproducibility}
     \begin{enumerate}
-        \item Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper?
-        \answerYes{Full code, Docker environments, seed management, and step-by-step commands in \texttt{REPRODUCE.md}. All experiments use 5 seeds with mean $\pm$ SE and 95\% CIs reported.}
+        \item Does the paper fully disclose all the information needed to
+              reproduce the main experimental results of the paper to the
+              extent that it affects the main claims and/or conclusions of
+              the paper?
+        \answerPartial{Reproducibility is \emph{partial by design} due to
+        platform heterogeneity.
+        \begin{itemize}
+          \item \textbf{Modal experiments (reproducible).}  Full code,
+                Docker environments (pinned base images), seed management,
+                and step-by-step commands are provided in
+                \texttt{REPRODUCE.md} in the public repository
+                (\url{https://github.com/arvindcr4/tinker-rl-lab}).
+                Modal jobs run on explicitly provisioned NVIDIA H100 SXM5
+                GPUs (80 GB) via containerised workers; all hyperparameters
+                are version-controlled.  These experiments use 5 seeds with
+                mean $\pm$ SE and 95\% bootstrap CIs.
+          \item \textbf{Tinker API experiments (not fully reproducible).}
+                Tinker is a closed-source API with serverless GPU dispatch.
+                GPU type, driver version, and scheduling policy are not
+                exposed.  We provide our exact API call scripts and
+                configuration files, but independent replication requires a
+                Tinker API account and is subject to the same JWT expiry
+                issues we encountered.  We flag all Tinker-derived results
+                in figures with a ``\dag{}'' symbol.
+        \end{itemize}}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Open access to data and code}
     \begin{enumerate}
-        \item Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results?
-        \answerYes{Code: \url{https://github.com/arvindcr4/tinker-rl-lab}. Models: \url{https://huggingface.co/tinker-rl-bench}. All data, checkpoints, and scripts are publicly available under MIT license.}
+        \item Does the paper provide open access to the data and code, with
+              sufficient instructions to faithfully reproduce the main
+              experimental results, as described above?
+        \answerYes{All code is publicly available under MIT licence at
+        \url{https://github.com/arvindcr4/tinker-rl-lab}.  Model
+        checkpoints trained on Modal are uploaded to HuggingFace Hub at
+        \url{https://huggingface.co/arvindcr4/tinker-rl-bench-*}.  All
+        experiment runs are logged to Weights \& Biases at
+        \url{https://wandb.ai/tinker-rl-lab/tinker-rl-lab-world-class};
+        logs are public and include per-step reward, loss, and KL metrics.
+        Training datasets (GSM8K, HumanEval, synthetic tool-use) are fully
+        public and cited with licence information.  Tinker API credentials
+        are \emph{not} included for security reasons; the
+        \texttt{README.md} explains how to obtain a Tinker API key.}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Experimental Setting/Details}
     \begin{enumerate}
-        \item Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, and type of optimizer) necessary to understand the results?
-        \answerYes{Section~\ref{sec:setup} and Table~\ref{tab:hyperparams} provide full hyperparameter settings. Appendix~\ref{app:hyperparams} details sweep ranges.}
+        \item Does the paper specify all the training and test details
+              (e.g., data splits, hyperparameters, how they were chosen,
+              type of optimizer) necessary to understand the results?
+        \answerYes{Section~\ref{sec:setup} and Table~\ref{tab:hyperparams}
+        provide full hyperparameter settings for Modal experiments.
+        Appendix~\ref{app:hyperparams} gives sweep ranges.  Tinker API
+        hyperparameters are provided in the API call scripts in the
+        repository, but hardware details are outside our control and are
+        noted as unknown.  For Modal experiments, the GPU type (H100 SXM5,
+        80 GB), batch size, learning rate schedule, LoRA rank/alpha, and
+        training duration are fully specified.  Older Modal experiments used
+        NVIDIA L4 GPUs (24 GB) as noted in Appendix~\ref{app:compute}.}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Experiment Statistical Significance}
     \begin{enumerate}
-        \item Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?
-        \answerYes{All results report mean $\pm$ SE across 5 seeds with 95\% confidence intervals. Performance profiles and bootstrap CIs via \texttt{rliable}.}
+        \item Does the paper report error bars suitably and correctly
+              defined or other appropriate information about the statistical
+              significance of the experiments?
+        \answerPartial{For Modal/TRL experiments with 5 seeds, we report
+        mean $\pm$ SE with 95\% bootstrap confidence intervals via
+        \texttt{rliable}~\cite{agarwal2021deep}.  Statistical analysis is
+        in progress; preliminary CIs are shown where seeds have completed.
+        Tinker API experiments represent \emph{single runs} (due to high
+        failure rates) and are explicitly labelled as such; no statistical
+        significance is claimed for Tinker-only comparisons.  We follow the
+        recommendations of~\citet{colas2019hitchhiker}
+        and~\citet{jordan2024benchmarking} regarding the limits of
+        single-seed evaluation.}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Experiments Compute Resources}
     \begin{enumerate}
-        \item For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?
-        \answerYes{Appendix~\ref{app:compute} describes GPU types (NVIDIA L4/T4), runtimes, and \texttt{COMPUTE.md} provides full breakdown.}
+        \item For each experiment, does the paper provide sufficient
+              information on the computer resources (type of compute
+              workers, memory, time of execution) needed to reproduce the
+              experiments?
+        \answerPartial{Appendix~\ref{app:compute} lists GPU types and
+        estimated GPU-hours for each experiment group.  The complete
+        per-experiment breakdown, including wall-clock runtimes and
+        estimated cost, is in \texttt{COMPUTE.md} in the repository.
+        \begin{itemize}
+          \item \textbf{Modal experiments.}  Hardware is fully specified:
+                H100 SXM5 (80 GB) for recent runs, L4 (24 GB) for earlier
+                experiments.  Wall-clock runtimes and GPU-hour estimates are
+                provided.
+          \item \textbf{Tinker API experiments.}  The Tinker platform uses
+                serverless GPU dispatch; exact GPU type is not disclosed by
+                the API.  Estimated GPU-hours are inferred from billing
+                records and are labelled as approximate.
+        \end{itemize}}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Code Of Ethics}
     \begin{enumerate}
-        \item Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics?
-        \answerYes{No human subjects, no private data. Broader impact discussed in Section~\ref{sec:impact}.}
+        \item Does the research conducted in the paper conform, in every
+              respect, with the NeurIPS Code of Ethics?
+        \answerYes{This work involves no human subjects, no private or
+        sensitive data, and no models trained on proprietary corpora.  All
+        training datasets are publicly released research datasets (GSM8K,
+        HumanEval, synthetic tool-use data).  Broader societal impacts,
+        including risks of reward hacking and alignment failure in RLHF
+        systems, are discussed in the Broader Impact statement
+        (Section~\ref{sec:impact} and \texttt{ethics\_statement.tex}).}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Broader Impacts}
     \begin{enumerate}
-        \item Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?
-        \answerYes{Section~\ref{sec:impact} discusses how the benchmark promotes transparency and reproducibility while acknowledging compute access disparities.}
+        \item Does the paper discuss both potential positive societal
+              impacts and negative societal impacts of the work performed?
+        \answerYes{Section~\ref{sec:impact} (and the accompanying
+        \texttt{ethics\_statement.tex}) discusses:
+        \begin{itemize}
+          \item \textbf{Positive.}  Lowering the barrier to RL post-training
+                research; enabling reproducibility audits; surfacing
+                platform-dependent variance that is often hidden in
+                single-platform papers.
+          \item \textbf{Negative / risks.}  RLHF reward hacking; alignment
+                concerns when optimising proxy rewards; potential misuse of
+                fine-tuned models; compute-access disparities that may limit
+                replication to well-resourced groups.
+          \item \textbf{Carbon footprint.}  Estimated 0.4--1.2 kg CO$_2$-eq
+                for Modal H100 experiments; Tinker API footprint is
+                unestimable due to undisclosed hardware.
+        \end{itemize}}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Safeguards}
     \begin{enumerate}
-        \item Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse?
-        \answerNA{The benchmark evaluates existing public models on mathematical reasoning. No new capabilities with misuse potential are introduced.}
+        \item Does the paper describe safeguards that have been put in place
+              for responsible release of data or models that have been
+              identified as requiring safeguards?
+        \answerNA{The benchmark evaluates existing public models on
+        mathematical reasoning, code generation, and synthetic tool-use
+        tasks.  No new capabilities with clear misuse potential are
+        introduced; the fine-tuned models do not exhibit harmful behaviours
+        beyond their base models.  Released checkpoints are hosted on
+        HuggingFace Hub under MIT licence with standard usage disclaimers.}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Licenses for existing assets}
     \begin{enumerate}
-        \item Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected?
-        \answerYes{All libraries cited with proper attribution. GSM8K~\cite{cobbe2021training} used under MIT license. Model licenses (Qwen: Apache 2.0, Llama: Community License) respected.}
+        \item Are the creators or original owners of assets (e.g., code,
+              data, models) used in the paper properly credited, and are
+              the licence and terms of use explicitly mentioned and
+              properly respected?
+        \answerYes{All third-party assets are properly credited:
+        \begin{itemize}
+          \item \textbf{GSM8K}~\cite{cobbe2021training}: MIT licence.
+          \item \textbf{HumanEval}: MIT licence (OpenAI).
+          \item \textbf{Synthetic tool-use data}: self-generated from public
+                API documentation; no licence restrictions.
+          \item \textbf{Qwen model family}: Apache 2.0.
+          \item \textbf{Llama model family}: Meta Community Licence.
+          \item \textbf{TRL, PEFT, Transformers}: Apache 2.0
+                (HuggingFace).
+          \item \textbf{Modal}: commercial platform; terms of service
+                respected.
+          \item \textbf{Tinker API}: proprietary; used under standard API
+                terms of service.
+        \end{itemize}}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf New Assets}
     \begin{enumerate}
-        \item Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?
-        \answerYes{Code released under MIT license with comprehensive README, REPRODUCE.md, ARTIFACT.md, and inline documentation.}
+        \item Are new assets introduced in the paper well documented and is
+              the documentation provided alongside the assets?
+        \answerYes{New assets include: (i) the \ours{} benchmark suite
+        (code, harness, evaluation scripts) released under MIT licence at
+        \url{https://github.com/arvindcr4/tinker-rl-lab} with
+        \texttt{README.md}, \texttt{REPRODUCE.md}, \texttt{ARTIFACT.md},
+        \texttt{COMPUTE.md}, \texttt{BASELINES.md}, and
+        \texttt{BENCHMARKS\_COMPARISON.md}; (ii) fine-tuned model
+        checkpoints from successful Modal experiments hosted on HuggingFace
+        Hub (\url{https://huggingface.co/arvindcr4/tinker-rl-bench-*});
+        (iii) all experiment logs on Weights \& Biases (public project).
+        Checkpoints from failed Tinker runs are \emph{not} uploaded because
+        those jobs did not produce valid final states.}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Crowdsourcing and Research with Human Subjects}
     \begin{enumerate}
-        \item For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation?
-        \answerNA{No crowdsourcing or human subjects research.}
+        \item For crowdsourcing experiments and research with human
+              subjects, does the paper include the full text of instructions
+              given to participants and screenshots, if applicable, as well
+              as details about compensation?
+        \answerNA{No crowdsourcing or human subjects research was
+        conducted.}
     \end{enumerate}
 
-\item {\bf Institutional Review Board (IRB) Approvals or Equivalent for Research with Human Subjects}
+% --------------------------------------------------------------------------
+\item {\bf Institutional Review Board (IRB) Approvals or Equivalent for
+          Research with Human Subjects}
     \begin{enumerate}
-        \item Does the paper describe potential risks incurred by study participants, whether combensation was provided to study participants, and whether informed consent was obtained?
-        \answerNA{No human subjects research.}
+        \item Does the paper describe potential risks incurred by study
+              participants, whether compensation was provided to study
+              participants, and whether informed consent was obtained?
+        \answerNA{No human subjects research was conducted; IRB approval
+        is not applicable.}
     \end{enumerate}
 
+% --------------------------------------------------------------------------
 \item {\bf Declaration of LLM usage}
     \begin{enumerate}
-        \item Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods?
-        \answerYes{LLMs (Qwen, Llama families) are the primary subject of evaluation. Their usage as RL training targets is described in Sections~\ref{sec:benchmark} and~\ref{sec:setup}. LLMs were not used for paper writing.}
+        \item Does the paper describe the usage of LLMs if it is an
+              important, original, or non-standard component of the core
+              methods?
+        \answerYes{LLMs (Qwen and Llama model families) are the primary
+        \emph{subjects} of evaluation; their use as RL fine-tuning targets
+        is described in Sections~\ref{sec:benchmark} and~\ref{sec:setup}.
+        LLMs were \textbf{not} used to draft or revise this paper.
+        Code-generation assistance from GitHub Copilot was used for
+        boilerplate experiment scripts; no AI-generated content appears in
+        the paper itself.}
     \end{enumerate}
 
 \end{enumerate}

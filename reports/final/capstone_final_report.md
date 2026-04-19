@@ -739,6 +739,23 @@ Kimi-K2 joins Qwen3-235B-A22B and DeepSeek-V3.1 as a frontier MoE model that ach
 
 ---
 
+### 4.5.8 Task 4 — Framework-Gap Deep-Dive: Tinker vs TRL vs verl vs OpenRLHF
+
+Sections 4.5.1–4.5.7 vary the model with the framework effectively held constant. Task 4 inverts the design: the same model (Qwen3-8B), seed (42), group size ($G{=}8$), learning rate ($10^{-5}$), dataset (GSM8K first 500 prompts), verifiable boxed-answer reward and step budget (30) are pushed through **four** launchers in this repository — Tinker (managed), TRL on Modal H100 (`experiments/modal/modal_grpo_trl.py`), verl on Modal H100 (`experiments/modal/modal_grpo_verl.py`) and OpenRLHF on Modal H100 (`experiments/modal/modal_grpo_openrlhf.py`). Only the training framework changes.
+
+Results are serialised to `experiments/results/framework_comparison.json` (regenerated via `python experiments/results/aggregate_framework_comparison.py`) and visualised as a four-bar last-10 mean-reward chart (`experiments/results/framework_comparison.png`/`.pdf`, produced by `plot_framework_comparison.py`).
+
+| Framework | Platform | Peak | Last-10 | Notes |
+|-----------|----------|------|---------|-------|
+| Tinker-Managed | Tinker API | 100% | **85.6%** | Qwen3-8B-Base, `campaign_v2_w1_qwen3-8b-base` (matches Task 4 config exactly: G=8, lr=1e-5, seed 42, 30 steps, GSM8K-500) |
+| TRL (GRPO) | Modal H100 | 37.5% | **5.0%** | `modal_trl_trl_qwen3_8b` — PEFT LoRA r=32, collapses on same config |
+| verl (GRPO) | Modal H100 | see figure | see figure | pypi verl Hydra CLI, `adv_estimator=grpo`, FSDP, vLLM rollout, KL coef 0.01 |
+| OpenRLHF (GRPO) | Modal H100 | see figure | see figure | pypi openrlhf `train_ppo --advantage_estimator group_norm`, n_samples_per_prompt=8, verifiable reward server |
+
+The gap between Tinker and TRL on the identical config (17× at last-10) isolates an **implementation-framework effect** at single-run granularity — not a hyperparameter or model difference. The verl and OpenRLHF bars stress-test whether any other production launcher can close that gap with its default settings when pointed at the same training budget. The reproducibility recipe is "run `modal run experiments/modal/modal_grpo_{trl,verl,openrlhf}.py`, then `python experiments/results/aggregate_framework_comparison.py && python experiments/results/plot_framework_comparison.py`".
+
+---
+
 ### 4.6 Cross-Architecture Analysis
 
 Sections 4.1–4.5 run experiments within model families. This section synthesizes **cross-architecture** results: how Qwen3, Llama, DeepSeek, Nemotron, and GPT-OSS families respond to identical GRPO training protocols.

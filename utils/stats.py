@@ -341,5 +341,31 @@ def main():
     print("\nStatistical analysis complete.")
 
 
+# ----------------------------------------------------------------------------
+# Compatibility aliases
+# ----------------------------------------------------------------------------
+# Some downstream tooling / CI imports the bootstrap CI under a shorter name.
+bootstrap_ci = compute_bootstrap_ci
+
+
+def compute_iqm(scores: np.ndarray, tau: float = 0.25) -> float:
+    """Compute the Interquartile Mean (IQM) of a score array.
+
+    Follows Agarwal et al. (2021), "Deep RL at the Edge of the Statistical
+    Precipice". Drops the top and bottom `tau` fraction of values and returns
+    the mean of the middle (1 - 2*tau) fraction. Default tau=0.25 gives the
+    canonical IQM over the central 50% of scores.
+    """
+    arr = np.asarray(scores, dtype=float).ravel()
+    if arr.size == 0:
+        return float("nan")
+    lo = np.quantile(arr, tau)
+    hi = np.quantile(arr, 1 - tau)
+    mid = arr[(arr >= lo) & (arr <= hi)]
+    if mid.size == 0:
+        return float(np.mean(arr))
+    return float(np.mean(mid))
+
+
 if __name__ == "__main__":
     main()

@@ -66,6 +66,12 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.0",
     "pre-commit>=3.0",
+    # Required so `utils.stats` can be imported by the test-core job
+    # (utils/stats.py uses pandas / matplotlib / seaborn for the
+    # per-experiment analysis tooling).
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "seaborn>=0.13",
 ]
 
 [project.urls]

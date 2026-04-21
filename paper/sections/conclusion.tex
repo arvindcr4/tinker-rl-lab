@@ -44,26 +44,28 @@ from Tinker-GRPO under matched compute---library ablations belong
 alongside every algorithmic comparison.
 
 \paragraph{The open question.}
-Why does the model--algorithm interaction (F4) exist at all?  We conjecture
+Why might the model--algorithm interaction (F4) exist?  We conjecture
 that initial reward-landscape geometry---proxied by zero-shot task
 accuracy---determines whether GRPO's variance-reduced group contrast or PPO's
-value-function smoothing is preferable.  This is directly testable with the
-LoRA adapters and step-level traces we release, and would convert F4 from an
-empirical curiosity into a predictive rule.
+value-function smoothing is preferable.  This is directly testable with
+multi-seed runs across at least 4 model families, and would convert F4 from
+a hypothesis into a predictive rule.  The lagged ZVF regression
+(\S\ref{sec:zvf-lagged}) also needs prospective validation: does
+monitoring ZVF in real time and triggering early termination actually save
+compute without losing good runs?
 
 \paragraph{What the artifacts enable.}
 Every run, log, and checkpoint in this paper is public.  Researchers can
 (i)~calibrate AERO~\citep{zhang2026aero}'s Beta prior against our cross-scale
 ZVF traces; (ii)~test whether the 2-GRPO/DPO
 equivalence~\citep{wu2025grpo_dpo} extrapolates across F4's direction flip;
-(iii)~probe whether F5's sustained-ceiling behaviour is a property of agentic
+(iii)~probe whether F5's ceiling-stability behaviour is a property of agentic
 RL pre-training or of MoE routing; (iv)~falsify the reward-landscape
 conjecture with gradient-level analysis~\citep{liu2025rlsubnetworks};
-(v)~run the pre-registered $G\!=\!256$ large-group and dense partial-reward
-HumanEval rescues that directly test F6's $1/G$ boundary; and
-(vi)~re-run the F7 PPO/GRPO flip across TRL, veRL, and OpenRLHF to
-separate algorithm from framework.  RL
+and (v)~replicate F4 with multi-seed runs across additional model families to
+confirm or refute the algorithm-model interaction hypothesis.  RL
 post-training is no longer a niche technique---it is how the most capable
-language models learn to reason.  F1--F7 are the first controlled
-cross-library, cross-family map of that regime; the hardest and most
-important work is the mechanistic follow-up they make possible.
+language models learn to reason.  F1--F5 are the first controlled
+cross-library, cross-family map of that regime, with honest assessment of
+statistical limitations; the hardest and most important work is the
+mechanistic follow-up they make possible.

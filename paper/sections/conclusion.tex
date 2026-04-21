@@ -30,11 +30,14 @@ replication, not a conclusion.
 not buy stability at the 30-step horizon, but Kimi-K2-class pre-training
 recipes do---Nemotron-120B collapses where Kimi-K2 and Qwen3-235B-A22B hold
 their ceilings.  (All single-seed, early-training observations.)
-\textbf{F6 (Cold-Start Capability Threshold):} critic-free GRPO requires
-zero-shot pass rate $>\!1/G$ to avoid ZVF\,=\,1.00 collapse; this
-closed-form bound predicts the tool-use / GSM8K / MATH-500 / HumanEval
-hierarchy and explains the external dense-reward HumanEval success as a
-$1/G$ bypass rather than a semantic one.
+\textbf{F6 (Cold-Start Capability Threshold, validated):} the probability
+of a mixed-reward group $P(\text{usable})\!=\!1-(1-p_0)^{G}-p_0^{G}$
+quantitatively predicts the task hierarchy we observe---tool-use
+(no warm-up) and binary-reward HumanEval sit at $P(\text{usable})\!\approx\!0$
+and fail; SFT-warmed tool-use, GSM8K on Qwen3-8B, and dense-reward
+HumanEval all sit at $P(\text{usable})\!\approx\!1$ and learn.  The familiar
+$1/G$ bound is the small-$p_0$ limit; the closed-form predictor is the
+mechanism.
 \textbf{F7 (Framework is a first-class variable):} the PPO/GRPO ranking
 flips between Qwen3-8B and Llama-3.1-8B-Instruct, and TRL-GRPO diverges
 from Tinker-GRPO under matched compute---library ablations belong

@@ -40,13 +40,15 @@ Kimi-K2 holds 100\%/80\% and Qwen3-235B-A22B holds 100\%/100\%---ceiling
 stability is architecture- and pre-training-conditional, not a monotone
 function of scale.  (All single-seed, early-training observations; asymptotic
 convergence is not assessed.)
-\textbf{(F6) Cold-Start Capability Threshold.}  Critic-free GRPO is
-mathematically blind when base-model zero-shot pass rate falls below
-$1/G$: all $G$ samples are wrong, $\sigma_r\!\to\!\epsilon$, and gradients
-die.  This closed-form bound reconciles our central HumanEval null
-(initial ZVF\,=\,1.00) with an external dense-reward run passing
-141/164 problems on the same base model---semantic difficulty is a
-sampling-floor artifact, not an intrinsic limit of the algorithm.
+\textbf{(F6) Cold-Start Capability Threshold (validated).}  Critic-free
+GRPO is blind whenever the probability of a mixed-reward group
+$P(\text{usable})=1-(1-p_0)^{G}-p_0^{G}$ drops below the ZVF noise floor;
+the familiar $p_0\!>\!1/G$ is the small-$p_0$ limit.  We validate this
+predictor directly against every major task in the corpus
+(strict vs.\ SFT-warmed tool-use, GSM8K, MATH-500, and binary vs.\
+dense-reward HumanEval on the same Qwen3-8B base), recovering the
+observed task hierarchy as a consequence of $P(\text{usable})$ rather
+than of task semantics.
 \textbf{(F7) Framework is a first-class experimental variable.}  On matched
 model, task, and compute, the PPO-vs-GRPO winner flips between Qwen3-8B and
 Llama-3.1-8B-Instruct, and TRL-vs-Tinker last-10 reward differs even under

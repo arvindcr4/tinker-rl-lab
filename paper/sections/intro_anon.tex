@@ -85,22 +85,24 @@ three-phase saturation model of~\citet{nimmaturi2025scalinglaws}; it is
 conditional on pre-training recipe (agentic RL, MoE routing, instruction
 quality), making frontier-scale evaluation a qualitatively distinct regime.
 
-\paragraph{F6 --- Cold-Start Capability Threshold.}
-Because GRPO has no value function to estimate partial progress, it
-depends entirely on the base policy spontaneously sampling at least one
-correct completion within each group of size $G$.  This yields a closed-form
-exploration boundary: gradient flow requires zero-shot pass rate strictly
-greater than $1/G$, otherwise every sample in the group is wrong,
-$\sigma_r\!\to\!\epsilon$, and advantages collapse.  Our task hierarchy
-obeys this bound---Tool-Use and GSM8K (initial ZVF\,=\,0.00) learn,
-MATH-500 (initial ZVF\,=\,0.20) improves partially, HumanEval
-(initial ZVF\,=\,1.00) is null---and the bound cleanly resolves the
-apparent contradiction with an external Qwen3-8B pipeline that solved
-141/164 HumanEval problems: dense partial-credit rewards bypassed the
-$1/G$ floor rather than the semantic difficulty of code.  This extends
-sparse-reward exploration arguments~\citep{burda2018exploration,%
-ecoffet2019goexplore} from value-based RL into the critic-free regime
-and names a concrete failure boundary the original GRPO
+\paragraph{F6 --- Cold-Start Capability Threshold (validated).}
+Because GRPO has no value function to estimate partial progress, the
+gradient estimator vanishes whenever every sample in a group receives
+the same reward.  Under sparse binary reward with per-sample hit rate
+$p_0$ and group size $G$, the probability of a mixed-reward group is
+exactly $P(\text{usable})\!=\!1-(1-p_0)^{G}-p_0^{G}$, of which the
+familiar $p_0\!>\!1/G$ is only the small-$p_0$ limit.  We validate this
+predictor against every task family in the corpus
+(strict vs.\ SFT-warmed tool-use, GSM8K, MATH-500, binary vs.\
+dense-reward HumanEval on the same Qwen3-8B base, and the Llama-3.2-3B
+$G{=}32$ control): the observed initial ZVF and last-10 reward match
+$P(\text{usable})$ within log granularity, and the group-size
+progression on Qwen3-8B/GSM8K ($G{=}4{:}23.8\%\to G{=}32{:}54.7\%$
+last-10) falls out of this predictor rather than being
+asserted.  This \emph{extends} sparse-reward exploration
+arguments~\citep{burda2018exploration,ecoffet2019goexplore} from
+value-based RL into the critic-free regime and names a concrete,
+falsifiable boundary the original GRPO
 formulation~\citep{shao2024deepseekmath} leaves implicit.
 
 \paragraph{F7 --- Framework is a first-class experimental variable.}
@@ -125,10 +127,12 @@ statistical limitations.
 Docker environments, W\&B logs\footnote{\url{https://wandb.ai/anonymous/tinker-rl-bench}},
 LoRA adapters, and HuggingFace checkpoints---that lets others falsify or
 extend every finding.
-\textbf{(iv)}~The $1/G$ Cold-Start Capability Threshold (F6) as a
-closed-form, falsifiable boundary for when critic-free RL can produce
-usable gradients, together with two pre-registered rescue experiments
-(large-$G$ and dense partial rewards).
+\textbf{(iv)}~A calibrated predictor
+$P(\text{usable})\!=\!1-(1-p_0)^{G}-p_0^{G}$ for when critic-free GRPO
+has a learning signal (F6), validated against the full task corpus and
+used to \emph{derive} the task hierarchy rather than assert it;
+together with two pre-registered rescue experiments (large-$G$ and
+dense partial rewards) that falsify the predictor's edge cases.
 \textbf{(v)}~Framework-level ablations (F7) as evidence that library
 choice is an experimental variable, not an implementation detail, for
 RL post-training comparisons.

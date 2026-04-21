@@ -86,3 +86,4 @@ wandb/
 .modal/
 node_modules/
 wandb/
+.tinker_api_key

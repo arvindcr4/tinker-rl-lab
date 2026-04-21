@@ -5,7 +5,7 @@ checksum list lives in the companion file `checksums.sha256`, which is the
 authoritative input to `sha256sum -c`.
 
 ```
-7316e38125fffb3ffd3f9df9a97f725b6d6b9885931378c8aef6d24d76ee6451  ethics_statement.pdf
+6e936cc3fac5dc9162b4400494cc6637734f3602152c92b07edd784492547fca  ethics_statement.pdf
 bc41f80541af4a838e279e45af7ee8c52744ca756a194a7d5a0aa23bd48be8a8  paper.pdf
 aeb4bdcfef725a1c951846f0a617b5bb21d508b4ca458abb644b1726016de993  paper_anon.pdf
 de8008c881b63bee1b8b2c33bfaee7445dfda63cf70d5dd43ac718502b9d91aa  code.tar.gz

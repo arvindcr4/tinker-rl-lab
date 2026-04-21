@@ -108,22 +108,24 @@ Given the group-relative advantages, GRPO updates the policy by
 maximizing the following objective:
 \begin{equation}
 \label{eq:grpo-objective}
-\boxed{
+\begin{aligned}
 \mathcal{J}_{\text{GRPO}}(\theta)
-  = \mathbb{E}_{q \sim \mathcal{D},\;
-      \{o_i\}_{i=1}^{G} \sim \pi_{\theta_{\text{old}}}(\cdot|q)}
+  &= \mathbb{E}_{\substack{q \sim \mathcal{D}\\
+      \{o_i\}_{i=1}^{G} \sim \pi_{\theta_{\text{old}}}(\cdot|q)}}
     \left[
       \frac{1}{G}\sum_{i=1}^{G}
       \frac{1}{|o_i|}\sum_{t=1}^{|o_i|}
-      \left(
-        \min\!\Bigl(
-          \rho_{i,t}\,\hat{A}_{i,t},\;
-          \operatorname{clip}\bigl(\rho_{i,t},\,
-            1{-}\varepsilon,\,1{+}\varepsilon\bigr)\,\hat{A}_{i,t}
-        \Bigr)
-        - \beta\, D_{\mathrm{KL}}^{(i,t)}
-      \right)
-    \right],}
+      \ell_{i,t}
+    \right],\\
+\ell_{i,t}
+  &=
+      \min\!\Bigl(
+        \rho_{i,t}\,\hat{A}_{i,t},\;
+        \operatorname{clip}\bigl(\rho_{i,t},\,
+          1{-}\varepsilon,\,1{+}\varepsilon\bigr)\,\hat{A}_{i,t}
+      \Bigr)
+      - \beta\, D_{\mathrm{KL}}^{(i,t)} .
+\end{aligned}
 \end{equation}
 where the per-token probability ratio is
 \begin{equation}
@@ -230,7 +232,7 @@ wasteful.
 \caption{Comparison of PPO and GRPO for LLM reinforcement learning.}
 \label{tab:ppo-vs-grpo}
 \small
-\begin{tabular}{@{}lll@{}}
+\begin{tabular}{@{}p{0.22\textwidth}p{0.36\textwidth}p{0.32\textwidth}@{}}
 \toprule
 \textbf{Aspect} & \textbf{PPO} & \textbf{GRPO} \\
 \midrule

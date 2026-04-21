@@ -5,7 +5,7 @@ The evaluation of mathematical reasoning in large language models requires caref
 
 \subsubsection{GSM8K}
 
-The Grade School Math 8K (GSM8K) benchmark, introduced by \cite{cobbe2021gsm8k}, comprises 8,500 linguistically diverse grade-school-level math word problems created by human problem writers. The dataset is partitioned into 7,473 training problems and 1,319 test problems. Each problem requires between 2 and 8 steps of elementary arithmetic reasoning---addition, subtraction, multiplication, and division---to solve. Solutions are expressed in natural language as a sequence of reasoning steps, culminating in a final numeric answer demarcated by the \texttt{####} delimiter.
+The Grade School Math 8K (GSM8K) benchmark, introduced by \cite{cobbe2021gsm8k}, comprises 8,500 linguistically diverse grade-school-level math word problems created by human problem writers. The dataset is partitioned into 7,473 training problems and 1,319 test problems. Each problem requires between 2 and 8 steps of elementary arithmetic reasoning---addition, subtraction, multiplication, and division---to solve. Solutions are expressed in natural language as a sequence of reasoning steps, culminating in a final numeric answer demarcated by the \texttt{\#\#\#\#} delimiter.
 
 The benchmark evaluates models via \emph{exact match} on the extracted final numeric answer, making evaluation unambiguous and fully automatable. At the time of its introduction, the best-performing model achieved only 35\% accuracy using a fine-tuned GPT-3 verifier, underscoring the difficulty that multi-step arithmetic reasoning posed for early large language models. Since then, rapid progress driven by chain-of-thought prompting \cite{wei2022chainofthought}, scaling, and reinforcement learning has pushed frontier model performance above 95\%. Models such as GPT-4, Claude 3.5 Sonnet, and Gemini 1.5 Pro routinely achieve 95--97\% accuracy, leading some researchers to consider GSM8K approaching saturation as a discriminative benchmark for the strongest models. Recent work on GSM8K-Platinum has further revealed that a non-trivial fraction of residual errors on the original benchmark stem from label noise (ambiguous or mislabeled problems) rather than genuine model failures, reinforcing the view that GSM8K primarily serves as a \emph{necessary but not sufficient} test of mathematical competence.
 
@@ -57,14 +57,15 @@ Table~\ref{tab:math-benchmarks} provides a comparative overview of the mathemati
 \centering
 \caption{Comparison of mathematical reasoning benchmarks used for LLM evaluation. Frontier SOTA figures reflect approximate best-reported results as of early 2026.}
 \label{tab:math-benchmarks}
-\small
-\begin{tabular}{lccccl}
+\footnotesize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}p{0.15\textwidth}p{0.13\textwidth}p{0.16\textwidth}p{0.18\textwidth}p{0.12\textwidth}p{0.20\textwidth}@{}}
 \toprule
-\textbf{Benchmark} & \textbf{Size} & \textbf{Difficulty} & \textbf{Answer Format} & \textbf{Frontier SOTA} & \textbf{Primary Use} \\
+\textbf{Benchmark} & \textbf{Size} & \textbf{Difficulty} & \textbf{Answer format} & \textbf{SOTA} & \textbf{Primary use} \\
 \midrule
 GSM8K & 1,319 (test) & Grade school & Numeric (integer) & $\sim$97\% & Baseline reasoning \\
-MATH & 5,000 (test) & Competition & \LaTeX{} (\verb|\boxed{}|) & $>$95\% & Standard evaluation \\
-MATH-500 & 500 & Competition & \LaTeX{} (\verb|\boxed{}|) & $\sim$99\% & Efficient evaluation \\
+MATH & 5,000 (test) & Competition & \LaTeX{} (\texttt{\textbackslash boxed\{\}}) & $>$95\% & Standard evaluation \\
+MATH-500 & 500 & Competition & \LaTeX{} (\texttt{\textbackslash boxed\{\}}) & $\sim$99\% & Efficient evaluation \\
 AIME 2024 & 30 & Olympiad-track & Integer (0--999) & $\sim$96\% & Frontier discrimination \\
 \bottomrule
 \end{tabular}

@@ -246,7 +246,8 @@ these methods.
            computation beyond the original pre-trained model at
            deployment time.}
   \label{tab:peft-comparison}
-  \begin{tabular}{@{}lccc@{}}
+  \small
+  \begin{tabular}{@{}p{0.30\textwidth}p{0.20\textwidth}p{0.22\textwidth}p{0.16\textwidth}@{}}
     \toprule
     \textbf{Method} & \textbf{Trainable params} & \textbf{Extra inference cost}
       & \textbf{Merges into base} \\
@@ -287,7 +288,7 @@ The quality of the advantage estimate improves with $G$, but larger
 groups require proportionally more memory for storing sequences, their
 log-probabilities, and intermediate computations.  By reducing the memory
 consumed by trainable parameters and their optimizer states from
-$\sim$16$N$ bytes (full fine-tuning with Adam) to $\sim$16 r(d+k)L$
+	$\sim 16N$ bytes (full fine-tuning with Adam) to $\sim 16r(d+k)L$
 bytes (where $L$ is the number of adapted layers), LoRA frees a
 substantial portion of the GPU memory budget.  This freed memory can be
 directly reallocated to support larger group sizes $G$ and larger batch

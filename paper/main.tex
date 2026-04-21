@@ -728,10 +728,13 @@ curve ($R^{2} = 0.797$), suggesting its sparse architecture converges more smoot
 \paragraph{Three-Phase Learning Dynamics.}
 Following~\citet{nimmaturi2025scalinglaws}, 15 of 28 experiments (53.6\%) satisfy
 a three-phase criterion (slow start~$\to$ rapid improvement~$\to$ saturation).
-The fraction rises to \textbf{73\%} for LLM fine-tuning experiments, providing
-strong empirical support for this hypothesis in the transformer fine-tuning setting.
-The 80\% reward threshold is crossed at approximately \textbf{62\%} of total
-training steps, implying significant compute waste in the tail.
+The fraction rises to 73\% for LLM fine-tuning experiments.  However, with
+only 20--30 data points per trace and mean $R^2{=}0.210$, the three-phase
+pattern should be interpreted cautiously: it is consistent with random noise
+on short traces, and we do \emph{not} claim it as a validated scaling law.
+The 80\% reward threshold is crossed at approximately 62\% of total
+training steps in those traces that satisfy the criterion, but this estimate
+is unreliable given the poor fit quality and short horizons.
 
 \paragraph{Scale Correlations.}
 Larger models learn faster ($r = 0.468$ between model size and $k$, $p = 0.012$)
@@ -964,7 +967,13 @@ matches the dense model with 100\% peak and last-10 average, confirming that
 the instruction-tuning initialization, not the MoE architecture itself,
 determines GRPO trainability. At the 22B-active tier, Qwen3-235B-A22B
 (partial, 15 steps) achieves 100\% on both metrics, while the dense
-Qwen3.5-27B (partial, 10 steps) achieves 75\% peak and 43.7\% last-10 average.
+Qwen3.5-27B (partial, 10 steps) achieves 75\% peak and 43.7\% last-10
+average.  \textbf{Limitation:} we lack a dense-base model at the 4B scale
+and a dense-instruct model at the 27B scale with which to form a fully
+crossed (architecture $\times$ initialization) design; the base-vs-instruct
+and dense-vs-MoE effects are therefore partially confounded, and F3 absorbs
+what might otherwise appear as an architecture effect.  The 22B-active tier
+comparison is further limited by different partial-run step counts.
 
 % ---------------------------------------------------------------------------
 \subsection{Frontier Model Analysis}
@@ -1057,8 +1066,13 @@ vs.~84.4\% for GRPO, a Mann-Whitney $U$ effect size of $r = 0.94$ ($p < 10^{-10}
 (4) The model--algorithm interaction is pronounced: GRPO is preferred for Qwen3-8B
 while PPO is preferred for Llama-3.1-8B, suggesting that the base model's
 reward landscape determines which optimization method is more stable.
-These findings suggest that algorithm selection should be model-specific
-rather than universally preferring one method.
+\textbf{Caveat:} these comparisons are single-seed with only two model families;
+with MDE $d{=}2.024$ at 80\% power, the interaction is a hypothesis requiring
+replication rather than a conclusion.  The Mann-Whitney test on per-step
+rewards assumes independence, which is violated within a single training
+trajectory; the reported $p$-value should be interpreted cautiously.
+If confirmed with multi-seed replication, algorithm selection should be
+model-specific rather than universally preferring one method.
 
 \begin{table}[ht]
 \centering
@@ -1220,6 +1234,65 @@ To our knowledge, this is the \textbf{first systematic cross-library, cross-scal
 measurement of ZVF prevalence in GRPO training}. We recommend monitoring
 $\mathrm{GU}_t$ in real time, with intervention triggered when $\mathrm{GU}_t < 0.5$
 for more than 10 consecutive steps~\cite{zhang2026aero,zhang2026greso}.
+
+% ---------------------------------------------------------------------------
+\subsection{ZVF Lagged Regression: Disentangling Prediction from Tautology}
+\label{sec:zvf-lagged}
+% ---------------------------------------------------------------------------
+
+A natural concern is that ZVF's correlation with final reward is tautological
+on binary-reward tasks: since $\mathrm{ZVF}(p,G) = p^G + (1-p)^G$ is a
+monotone function of accuracy $p$, correlating ZVF with reward is
+correlating $f(p)$ with $p$.  To address this, we estimate lagged regressions
+over the 33 runs with step-level ZVF telemetry:
+\begin{align}
+  R_{t+k} &= \alpha + \beta \, R_t \tag{M1} \\
+  R_{t+k} &= \alpha + \beta \, R_t + \gamma \, \mathrm{ZVF}_t \tag{M2}
+\end{align}
+where $k \in \{1, 3, 5, 10\}$ is the prediction horizon.
+If ZVF is merely a restatement of current reward, $\gamma$ should be zero after
+controlling for $R_t$.
+
+\paragraph{Results.}
+Table~\ref{tab:zvf_lagged} reports the key findings.  At lag 5, the partial
+correlation of $\mathrm{ZVF}_t$ with $R_{t+5}$ controlling for $R_t$ is
+$r{=}0.059$ ($p{=}0.096$): most of ZVF's zero-order correlation ($r{=}{-}0.075$)
+is explained by current reward.  At lag 10, ZVF retains marginal independent
+signal (partial $r{=}0.080$, $p{=}0.045$; $\Delta R^2{=}0.005$).  Within-run
+regressions (which control for run-level confounders including model, task, and
+hardware) show a mean ZVF coefficient that is not significantly different from
+zero at any lag ($p{>}0.16$ for all).
+
+\paragraph{Interpretation.}
+ZVF's headline correlation with final reward is largely confounded by current
+reward level on binary-reward tasks.  ZVF is \emph{not} an independent causal
+predictor in the way that scale or algorithm choice are.  Its practical value is
+as a \emph{triage diagnostic}: ZVF $\geq 80\%$ sustained over 5+ steps with
+reward $\leq 5\%$ correctly identifies all collapsed runs in our corpus
+(precision 1.0, recall 1.0), and the marginal independent signal at longer
+lags ($k{=}10$) is consistent with ZVF capturing reward-landscape flatness that
+prefigures future degradation.  We therefore reframe F1 from ``ZVF dominance'' to
+``ZVF as an early-warning diagnostic,'' and report the lagged regression
+results alongside the zero-order correlation.
+
+\begin{table}[htbp]
+\centering
+\caption{ZVF lagged regression: partial correlation of $\mathrm{ZVF}_t$ with
+$R_{t+k}$ controlling for $R_t$, across 33 runs with step-level telemetry.
+N = pooled observations across all runs.}
+\label{tab:zvf_lagged}
+\small
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+Lag $k$ & $N$ & $r(\mathrm{ZVF}_t, R_{t+k})$ & Partial $r \mid R_t$ & $p$ \\
+\midrule
+1 & 927 & $-0.096$ & $0.050$ & $0.130$ \\
+3 & 861 & $-0.129$ & $-0.006$ & $0.865$ \\
+5 & 795 & $-0.075$ & $0.059$ & $0.096$ \\
+10 & 630 & $-0.061$ & $0.080$ & $0.045$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{figure}[htbp]
 \centering

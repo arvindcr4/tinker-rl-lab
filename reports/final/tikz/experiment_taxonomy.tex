@@ -1,0 +1,35 @@
+\begin{tikzpicture}[
+  node distance=0.95cm and 1.1cm,
+  root/.style={
+    rectangle, rounded corners=5pt, draw=black!60, fill=gray!10,
+    minimum width=4.0cm, minimum height=0.85cm, align=center,
+    font=\small\bfseries
+  },
+  branch/.style={
+    rectangle, rounded corners=4pt, draw=blue!55!black, fill=blue!6,
+    minimum width=3.0cm, minimum height=0.78cm, align=center,
+    font=\small\bfseries
+  },
+  leaf/.style={
+    rectangle, rounded corners=3pt, draw=green!45!black, fill=green!7,
+    minimum width=2.9cm, minimum height=0.72cm, align=center,
+    font=\scriptsize
+  },
+  arrow/.style={-{Stealth[length=2.1mm]}, thick, draw=gray!70!black}
+]
+\node[root] (root) {Project experiment space};
+\node[branch, below left=1.1cm and 3.1cm of root] (task) {Task axis};
+\node[branch, below=1.1cm of root] (model) {Model axis};
+\node[branch, below right=1.1cm and 3.1cm of root] (platform) {Platform axis};
+
+\node[leaf, below=0.75cm of task] (tasks) {Tool calling\\GSM8K / MATH\\HumanEval / keywords};
+\node[leaf, below=0.75cm of model] (models) {0.5B to frontier MoE\\Qwen, Llama, DeepSeek\\Nemotron, Kimi, GPT-OSS};
+\node[leaf, below=0.75cm of platform] (plats) {Tinker GRPO\\TRL baselines\\Modal H100 PPO};
+
+\draw[arrow] (root.south) -- ++(0,-0.35) -| (task.north);
+\draw[arrow] (root.south) -- (model.north);
+\draw[arrow] (root.south) -- ++(0,-0.35) -| (platform.north);
+\draw[arrow] (task) -- (tasks);
+\draw[arrow] (model) -- (models);
+\draw[arrow] (platform) -- (plats);
+\end{tikzpicture}

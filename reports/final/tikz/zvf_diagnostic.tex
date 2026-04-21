@@ -1,0 +1,33 @@
+\begin{tikzpicture}[
+  node distance=1.0cm and 1.1cm,
+  good/.style={
+    rectangle, rounded corners=4pt, draw=green!45!black, fill=green!8,
+    minimum width=3.0cm, minimum height=0.82cm, align=center,
+    font=\small
+  },
+  bad/.style={
+    rectangle, rounded corners=4pt, draw=red!60!black, fill=red!7,
+    minimum width=3.0cm, minimum height=0.82cm, align=center,
+    font=\small
+  },
+  neutral/.style={
+    rectangle, rounded corners=4pt, draw=black!55, fill=gray!8,
+    minimum width=3.0cm, minimum height=0.82cm, align=center,
+    font=\small
+  },
+  arrow/.style={-{Stealth[length=2.2mm]}, thick, draw=gray!70!black}
+]
+\node[neutral] (group) {One prompt\\$G$ completions};
+\node[good, below left=1.0cm and 1.8cm of group] (mixed) {Mixed rewards\\some correct, some wrong};
+\node[bad, below right=1.0cm and 1.8cm of group] (flat) {Flat rewards\\all correct or all wrong};
+\node[good, below=of mixed] (signal) {$\sigma_r > 0$\\usable advantage};
+\node[bad, below=of flat] (nosignal) {$\sigma_r \approx 0$\\zero gradient signal};
+\node[neutral, below right=0.95cm and -0.2cm of signal] (action) {Training implication\\choose difficulty, $G$, LR, SFT warm-up};
+
+\draw[arrow] (group) -- (mixed);
+\draw[arrow] (group) -- (flat);
+\draw[arrow] (mixed) -- (signal);
+\draw[arrow] (flat) -- (nosignal);
+\draw[arrow] (signal) -- (action);
+\draw[arrow] (nosignal) -- (action);
+\end{tikzpicture}

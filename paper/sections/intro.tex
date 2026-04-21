@@ -30,17 +30,22 @@ comparison holds library and hyperparameter budget fixed.  Running this
 substrate produced five empirical discoveries that reframe what practitioners
 should measure, report, and optimize.
 
-\paragraph{F1 --- ZVF dominance.}
+\paragraph{F1 --- ZVF as an early-warning diagnostic.}
 The Zero-Variance Fraction (ZVF)---the share of GRPO groups whose rollouts all
-receive identical rewards and therefore contribute zero gradient---is the
-single strongest predictor of final reward across our corpus
+receive identical rewards and therefore contribute zero gradient---correlates
+with final reward across our corpus
 ($r_{\text{Pearson}}{=}{-}0.769$, $p{=}0.0008$; Spearman
-$\rho{=}{-}0.784$, $p{=}0.0005$).  Task type alone explains most of the
-variance: tool-use without SFT warm-up sits at ZVF $\approx$ 100\% from step 0,
-while GSM8K averages 8.5\%.  Elevated ZVF precedes reward collapse by 5--10
-steps---earlier than any reward-trajectory signal---making it an actionable
-early-warning diagnostic.  The simultaneous emergence of at least six
-independent 2025--2026 proposals targeting this failure
+$\rho{=}{-}0.784$, $p{=}0.0005$).  However, a lagged regression analysis
+(\S\ref{sec:zvf-lagged}) reveals that this zero-order correlation is largely
+explained by current reward level: the partial correlation of ZVF$_t$ with
+reward$_{t+5}$ controlling for reward$_t$ is only $r{=}0.059$ ($p{=}0.096$),
+though ZVF retains marginal independent signal at longer horizons (lag 10:
+partial $r{=}0.080$, $p{=}0.045$).  ZVF's practical value is as a
+\emph{triage diagnostic}: task type alone drives most of the variance
+(tool-use without SFT sits at ZVF $\approx$ 100\% from step 0, while GSM8K
+averages 8.5\%), and all runs with sustained ZVF $\geq 80\%$ and reward
+$\leq 5\%$ in the first 5 steps collapsed.  The simultaneous emergence of
+at least six independent 2025--2026 proposals targeting this failure
 mode~\citep{zhang2026aero,zhang2026greso} externally validates that ZVF
 names a real, cross-scale pathology.
 
@@ -65,14 +70,16 @@ Llama collapse to ZVF-saturated non-learning.  The RL community's implicit
 ``GRPO makes models reason'' framing inverts the causal arrow: SFT gates
 trainability, GRPO refines what SFT has already unlocked.
 
-\paragraph{F4 --- PPO vs.\ GRPO is model-dependent.}
-At matched compute on Modal H100 GPUs, GRPO beats PPO on Qwen3-8B (last-10:
-$34.4\%$ vs.\ $22.5\%$) while PPO decisively beats GRPO on Llama-3.1-8B
-($97.5\%$ vs.\ $84.4\%$; Mann-Whitney $r{=}0.94$, $p{<}10^{-10}$).  The
-direction of advantage \emph{reverses} across families---a finding the field's
-algorithm-vs-algorithm papers structurally cannot produce because they fix a
-single model family.  Universal algorithm recommendations are therefore
-incorrect by construction; model-conditioned selection is required.
+\paragraph{F4 --- PPO vs.\ GRPO may be model-dependent (hypothesis).}
+At matched compute on Modal H100 GPUs, GRPO outperforms PPO on Qwen3-8B
+(last-10: $34.4\%$ vs.\ $22.5\%$) while PPO outperforms GRPO on
+Llama-3.1-8B ($97.5\%$ vs.\ $84.4\%$; Mann-Whitney $r{=}0.94$,
+$p{<}10^{-10}$ on per-step rewards).  The direction of advantage
+\emph{reverses} across families.  However, these comparisons are single-seed
+and span only two model families; with MDE $d{=}2.024$ at 80\% power, we
+report this as a \emph{hypothesis} requiring replication rather than a
+conclusion.  If confirmed, universal algorithm recommendations would be
+incorrect by construction; model-conditioned selection would be required.
 
 \paragraph{F5 --- Kimi-K2 sustained ceiling.}
 Scale alone does not buy stability.  Nemotron-120B reaches peak $87.5\%$ and
@@ -85,14 +92,56 @@ three-phase saturation model of~\citet{nimmaturi2025scalinglaws}; it is
 conditional on pre-training recipe (agentic RL, MoE routing, instruction
 quality), making frontier-scale evaluation a qualitatively distinct regime.
 
+\paragraph{F6 --- Cold-Start Capability Threshold.}
+Because GRPO has no value function to estimate partial progress, it
+depends entirely on the base policy spontaneously sampling at least one
+correct completion within each group of size $G$.  This yields a closed-form
+exploration boundary: gradient flow requires zero-shot pass rate strictly
+greater than $1/G$, otherwise every sample in the group is wrong,
+$\sigma_r\!\to\!\epsilon$, and advantages collapse.  Our task hierarchy
+obeys this bound---Tool-Use and GSM8K (initial ZVF\,=\,0.00) learn,
+MATH-500 (initial ZVF\,=\,0.20) improves partially, HumanEval
+(initial ZVF\,=\,1.00) is null---and the bound cleanly resolves the
+apparent contradiction with an external Qwen3-8B pipeline that solved
+141/164 HumanEval problems: dense partial-credit rewards bypassed the
+$1/G$ floor rather than the semantic difficulty of code.  This extends
+sparse-reward exploration arguments~\citep{burda2018exploration,%
+ecoffet2019goexplore} from value-based RL into the critic-free regime
+and names a concrete failure boundary the original GRPO
+formulation~\citep{shao2024deepseekmath} leaves implicit.
+
+\paragraph{F7 --- Framework is a first-class experimental variable.}
+Tinker, TRL, Modal PPO, and classical PPO libraries expose different
+sampling loops, optimizer behaviours, rollout accounting, and KL
+handling.  On matched model, task, and compute, the PPO-vs-GRPO winner
+flips between Qwen3-8B and Llama-3.1-8B-Instruct (F4), and TRL-GRPO
+differs measurably from Tinker-GRPO under the same nominal algorithm.
+Reporting ``PPO vs.\ GRPO'' without the library is therefore
+under-specified.  This extends Henderson et al.'s reproducibility
+critique~\citep{henderson2018deep} from Atari/MuJoCo into LLM
+post-training and argues that library-level ablations belong alongside
+algorithmic claims in every RLHF paper.
+
 \paragraph{Contributions.}
-\textbf{(i)}~F1--F5 as the first controlled cross-library, cross-family
-empirical map of RL post-training dynamics.
-\textbf{(ii)}~ZVF as an operational diagnostic with calibrated thresholds
-($\geq 50\%$ sustained over 5+ steps $\Rightarrow$ early termination).
-\textbf{(iii)}~A reproducibility substrate---79 runs, step-level traces,
-Docker environments, W\&B logs\footnote{\url{https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-world-class}},
+\textbf{(i)}~F1--F7 as the first controlled cross-library, cross-family
+empirical map of RL post-training dynamics, with honest assessment of
+statistical limitations.
+\textbf{(ii)}~ZVF as a triage diagnostic: lagged regression confirms its
+zero-order correlation is largely confounded by current reward, but ZVF
+retains marginal independent signal at longer horizons and all runs meeting
+the early-failure rule collapsed.
+\textbf{(iii)}~A reproducibility substrate---79 runs (15 multi-seed, 28
+single-seed complete, 36 partial/interrupted providing early-training
+diagnostics), step-level traces, Docker environments, W\&B
+logs\footnote{\url{https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-world-class}},
 LoRA adapters, and HuggingFace checkpoints---that lets others falsify or
 extend every finding.
+\textbf{(iv)}~The $1/G$ Cold-Start Capability Threshold (F6) as a
+closed-form, falsifiable boundary for when critic-free RL can produce
+usable gradients, together with two pre-registered rescue experiments
+(large-$G$ and dense partial rewards).
+\textbf{(v)}~Framework-level ablations (F7) as evidence that library
+choice is an experimental variable, not an implementation detail, for
+RL post-training comparisons.
 We release everything under MIT licence at
 \url{https://github.com/arvindcr4/tinker-rl-lab}.

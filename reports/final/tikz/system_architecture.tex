@@ -1,0 +1,43 @@
+\begin{tikzpicture}[
+  scale=0.9, transform shape,
+  node distance=0.7cm and 0.5cm,
+  data/.style={
+    rectangle, rounded corners=4pt, draw=purple!55!black, fill=purple!7,
+    minimum width=2.4cm, minimum height=0.76cm, align=center,
+    font=\footnotesize
+  },
+  train/.style={
+    rectangle, rounded corners=4pt, draw=blue!55!black, fill=blue!7,
+    minimum width=2.4cm, minimum height=0.76cm, align=center,
+    font=\footnotesize
+  },
+  eval/.style={
+    rectangle, rounded corners=4pt, draw=green!45!black, fill=green!7,
+    minimum width=2.4cm, minimum height=0.76cm, align=center,
+    font=\footnotesize
+  },
+  store/.style={
+    cylinder, shape border rotate=90, aspect=0.25,
+    draw=orange!70!black, fill=orange!10,
+    minimum height=1.0cm, minimum width=1.2cm, align=center,
+    font=\footnotesize
+  },
+  arrow/.style={-{Stealth[length=2.2mm]}, thick}
+]
+\node[data] (datasets) {Datasets\\Glaive, ToolBench\\GSM8K, MATH};
+\node[train, right=of datasets] (env) {Reward envs\\parsers \& verifiers};
+\node[train, right=of env] (trainer) {Training backends\\Tinker, TRL, Modal};
+\node[store, right=of trainer] (logs) {Logs\\W\&B\\JSON};
+\node[eval, below=of trainer] (evals) {Evaluation\\held-out tests\\ablation analysis};
+\node[eval, left=of evals] (stats) {Statistics\\CIs, effect sizes\\ZVF/GU};
+\node[data, right=of evals] (report) {Report artifacts\\figures, tables\\checklists};
+
+\draw[arrow] (datasets) -- (env);
+\draw[arrow] (env) -- (trainer);
+\draw[arrow] (trainer) -- (logs);
+\draw[arrow] (trainer) -- (evals);
+\draw[arrow] (logs) -- (evals);
+\draw[arrow] (evals) -- (stats);
+\draw[arrow] (evals) -- (report);
+\draw[arrow] (stats) -- (report);
+\end{tikzpicture}

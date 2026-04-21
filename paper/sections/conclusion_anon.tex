@@ -21,9 +21,19 @@ across Qwen and Llama.
 \textbf{F4 (PPO vs.\ GRPO is model-dependent):} the ranking reverses between
 Qwen3-8B and Llama-3.1-8B ($p{<}10^{-10}$), so universal algorithm
 recommendations are incorrect by construction.
-\textbf{F5 (Kimi-K2 sustained ceiling):} scale alone does not buy stability,
-but Kimi-K2-class pre-training recipes do---Nemotron-120B collapses where
-Kimi-K2 and Qwen3-235B-A22B hold their ceilings.
+\textbf{F5 (Ceiling stability varies across architectures):} scale alone does
+not buy stability at the 30-step horizon, but Kimi-K2-class pre-training
+recipes do---Nemotron-120B collapses where Kimi-K2 and Qwen3-235B-A22B hold
+their ceilings.  (All single-seed, early-training observations.)
+\textbf{F6 (Cold-Start Capability Threshold):} critic-free GRPO requires
+zero-shot pass rate $>\!1/G$ to avoid ZVF\,=\,1.00 collapse; this
+closed-form bound predicts the tool-use / GSM8K / MATH-500 / HumanEval
+hierarchy and explains the external dense-reward HumanEval success as a
+$1/G$ bypass rather than a semantic one.
+\textbf{F7 (Framework is a first-class variable):} the PPO/GRPO ranking
+flips between Qwen3-8B and Llama-3.1-8B-Instruct, and TRL-GRPO diverges
+from Tinker-GRPO under matched compute---library ablations belong
+alongside every algorithmic comparison.
 
 \paragraph{The open question.}
 Why does the model--algorithm interaction (F4) exist at all?  We conjecture
@@ -39,9 +49,13 @@ Every run, log, and checkpoint in this paper is public.  Researchers can
 ZVF traces; (ii)~test whether the 2-GRPO/DPO
 equivalence~\citep{wu2025grpo_dpo} extrapolates across F4's direction flip;
 (iii)~probe whether F5's sustained-ceiling behaviour is a property of agentic
-RL pre-training or of MoE routing; and (iv)~falsify the reward-landscape
-conjecture with gradient-level analysis~\citep{liu2025rlsubnetworks}.  RL
+RL pre-training or of MoE routing; (iv)~falsify the reward-landscape
+conjecture with gradient-level analysis~\citep{liu2025rlsubnetworks};
+(v)~run the pre-registered $G\!=\!256$ large-group and dense partial-reward
+HumanEval rescues that directly test F6's $1/G$ boundary; and
+(vi)~re-run the F7 PPO/GRPO flip across TRL, veRL, and OpenRLHF to
+separate algorithm from framework.  RL
 post-training is no longer a niche technique---it is how the most capable
-language models learn to reason.  F1--F5 are the first controlled
+language models learn to reason.  F1--F7 are the first controlled
 cross-library, cross-family map of that regime; the hardest and most
 important work is the mechanistic follow-up they make possible.

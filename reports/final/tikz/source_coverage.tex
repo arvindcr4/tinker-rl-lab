@@ -1,0 +1,25 @@
+\begin{tikzpicture}[
+  node distance=1.2cm and 1.4cm,
+  source/.style={
+    rectangle, rounded corners=4pt, draw=blue!55!black, fill=blue!6,
+    minimum width=3.1cm, minimum height=0.82cm, align=center,
+    font=\small
+  },
+  report/.style={
+    rectangle, rounded corners=5pt, draw=green!45!black, fill=green!8,
+    minimum width=4.0cm, minimum height=1.0cm, align=center,
+    font=\small\bfseries
+  },
+  arrow/.style={-{Stealth[length=2.3mm]}, thick, draw=gray!70!black}
+]
+\node[source] (chapter1) {Chapter 1 material\\problem, scope, objectives};
+\node[source, below=of chapter1] (lit) {Literature survey\\RLHF, PPO, DPO, GRPO, PEFT};
+\node[source, below=of lit] (interim) {Interim material\\timeline, setup, planned studies};
+\node[source, right=2.4cm of lit] (experiments) {Experiment artifacts\\Tinker, TRL, Modal, team runs};
+\node[report, right=2.6cm of experiments] (final) {Final Report \texttt{.tex}\\integrated thesis};
+
+\draw[arrow] (chapter1.east) -- ++(0.8,0) |- (final.west);
+\draw[arrow] (lit.east) -- (experiments.west);
+\draw[arrow] (interim.east) -- ++(0.8,0) |- (final.west);
+\draw[arrow] (experiments.east) -- (final.west);
+\end{tikzpicture}

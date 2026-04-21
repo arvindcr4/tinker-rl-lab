@@ -1,0 +1,38 @@
+\begin{tikzpicture}[
+  node distance=0.95cm and 1.0cm,
+  block/.style={
+    rectangle, rounded corners=4pt, draw=black!60, fill=gray!7,
+    minimum width=2.5cm, minimum height=0.78cm, align=center,
+    font=\small
+  },
+  reward/.style={
+    rectangle, rounded corners=4pt, draw=orange!70!black, fill=orange!10,
+    minimum width=2.6cm, minimum height=0.78cm, align=center,
+    font=\small
+  },
+  update/.style={
+    rectangle, rounded corners=4pt, draw=green!45!black, fill=green!9,
+    minimum width=2.7cm, minimum height=0.78cm, align=center,
+    font=\small
+  },
+  arrow/.style={-{Stealth[length=2.3mm]}, thick}
+]
+\node[block] (prompt) {Prompt batch};
+\node[block, right=of prompt] (sample) {Sample $G$ responses\\per prompt};
+\node[reward, right=of sample] (score) {Rule-based reward\\JSON, math, code};
+\node[reward, below=of score] (adv) {Group advantage\\$\hat{A}_i=(r_i-\bar r)/(\sigma_r+\epsilon)$};
+\node[update, left=of adv] (loss) {Policy-gradient\\LoRA update};
+\node[update, left=of loss] (policy) {Updated policy};
+
+\draw[arrow] (prompt) -- (sample);
+\draw[arrow] (sample) -- (score);
+\draw[arrow] (score) -- (adv);
+\draw[arrow] (adv) -- (loss);
+\draw[arrow] (loss) -- (policy);
+\draw[arrow, dashed] (policy.north) |- node[pos=0.25, above, font=\scriptsize] {next step} (sample.north);
+
+\node[draw=red!60!black, fill=red!7, rounded corners=4pt, align=center,
+      below=0.85cm of adv, font=\small, minimum width=5.8cm] (zvf)
+      {Zero-variance failure: if all rewards match, $\sigma_r \approx 0$ and the update vanishes.};
+\draw[-{Stealth[length=2.0mm]}, red!65!black, thick] (zvf.north) -- (adv.south);
+\end{tikzpicture}

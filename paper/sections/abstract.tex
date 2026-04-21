@@ -12,10 +12,15 @@ libraries, 5 model families, and 0.6B--$\sim$1T parameters, designed to isolate
 cause from confound on GSM8K, MATH-500, HumanEval, and tool-use.
 
 Five discoveries reframe what should be measured and reported.
-\textbf{(F1) ZVF dominance.}  Zero-Variance Fraction---the share of GRPO
-groups with no within-group reward variance---is the single strongest predictor
-of final reward (Pearson $r{=}{-}0.769$, $p{=}0.0008$), outranking scale,
-algorithm, and library, and elevates 5--10 steps before reward collapses.
+\textbf{(F1) ZVF as an early-warning diagnostic.}  Zero-Variance Fraction---the
+share of GRPO groups with no within-group reward variance---correlates with
+final reward (Pearson $r{=}{-}0.769$, $p{=}0.0008$).  A lagged regression
+controlling for current reward shows ZVF's zero-order correlation is largely
+explained by reward level (partial $r{=}0.059$ at lag 5, $p{=}0.096$), but
+ZVF retains marginal independent signal at longer horizons (lag 10:
+partial $r{=}0.080$, $p{=}0.045$) and is a practical triage tool: all runs
+with sustained ZVF $\geq 80\%$ and reward $\leq 5\%$ in the first 5 steps
+collapsed.
 \textbf{(F2) Inverted-U in group size.}  $G{=}32$ maximizes gradient
 utilization (54.5\%) and latest saturation onset (step 29); smaller and larger
 $G$ are both worse, contradicting ``more rollouts is better.''
@@ -23,14 +28,30 @@ $G$ are both worse, contradicting ``more rollouts is better.''
 $+0.922$ GSM8K delta (0.047$\to$0.969); Qwen3-30B-A3B-Instruct hits 100\%
 last-10 where its base twin stalls at 32.5\%.  SFT, not RL, is the
 trainability gate.
-\textbf{(F4) PPO vs.\ GRPO is model-dependent.}  GRPO beats PPO on Qwen3-8B
-(34.4\% vs.\ 22.5\%); PPO beats GRPO on Llama-3.1-8B (97.5\% vs.\ 84.4\%,
-Mann-Whitney $r{=}0.94$, $p{<}10^{-10}$)---the ranking reverses across
-families.
-\textbf{(F5) Kimi-K2 sustained ceiling.}  Where Nemotron-120B peaks 87.5\%
-then collapses to 16.2\%, Kimi-K2 holds peak 100\% / last-10 80\% in 20 steps
-(Kimi-K2-Thinking: 91.7\% last-10)---ceiling stability is architecture-
-and pre-training-conditional, not a monotone function of scale.
+\textbf{(F4) PPO vs.\ GRPO may be model-dependent.}  In two single-seed
+comparisons on matched compute, GRPO outperforms PPO on Qwen3-8B
+(34.4\% vs.\ 22.5\% last-10) while PPO outperforms GRPO on Llama-3.1-8B
+(97.5\% vs.\ 84.4\%).  We report this as a \emph{hypothesis} rather than a
+conclusion: with only two model families and single-seed runs (MDE
+$d{=}2.024$ at 80\% power), the interaction requires replication.
+\textbf{(F5) Ceiling stability varies across architectures.}  At the 30-step
+horizon, Nemotron-120B peaks 87.5\% then collapses to 16.2\% last-10, while
+Kimi-K2 holds 100\%/80\% and Qwen3-235B-A22B holds 100\%/100\%---ceiling
+stability is architecture- and pre-training-conditional, not a monotone
+function of scale.  (All single-seed, early-training observations; asymptotic
+convergence is not assessed.)
+\textbf{(F6) Cold-Start Capability Threshold.}  Critic-free GRPO is
+mathematically blind when base-model zero-shot pass rate falls below
+$1/G$: all $G$ samples are wrong, $\sigma_r\!\to\!\epsilon$, and gradients
+die.  This closed-form bound reconciles our central HumanEval null
+(initial ZVF\,=\,1.00) with an external dense-reward run passing
+141/164 problems on the same base model---semantic difficulty is a
+sampling-floor artifact, not an intrinsic limit of the algorithm.
+\textbf{(F7) Framework is a first-class experimental variable.}  On matched
+model, task, and compute, the PPO-vs-GRPO winner flips between Qwen3-8B and
+Llama-3.1-8B-Instruct, and TRL-vs-Tinker last-10 reward differs even under
+the same nominal algorithm---library choice must be reported and ablated, not
+treated as implementation detail.
 
 Code, 79 run logs, and checkpoints:
 \url{https://github.com/arvindcr4/tinker-rl-lab}.

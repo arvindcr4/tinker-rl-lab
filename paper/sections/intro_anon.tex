@@ -85,14 +85,52 @@ three-phase saturation model of~\citet{nimmaturi2025scalinglaws}; it is
 conditional on pre-training recipe (agentic RL, MoE routing, instruction
 quality), making frontier-scale evaluation a qualitatively distinct regime.
 
+\paragraph{F6 --- Cold-Start Capability Threshold.}
+Because GRPO has no value function to estimate partial progress, it
+depends entirely on the base policy spontaneously sampling at least one
+correct completion within each group of size $G$.  This yields a closed-form
+exploration boundary: gradient flow requires zero-shot pass rate strictly
+greater than $1/G$, otherwise every sample in the group is wrong,
+$\sigma_r\!\to\!\epsilon$, and advantages collapse.  Our task hierarchy
+obeys this bound---Tool-Use and GSM8K (initial ZVF\,=\,0.00) learn,
+MATH-500 (initial ZVF\,=\,0.20) improves partially, HumanEval
+(initial ZVF\,=\,1.00) is null---and the bound cleanly resolves the
+apparent contradiction with an external Qwen3-8B pipeline that solved
+141/164 HumanEval problems: dense partial-credit rewards bypassed the
+$1/G$ floor rather than the semantic difficulty of code.  This extends
+sparse-reward exploration arguments~\citep{burda2018exploration,%
+ecoffet2019goexplore} from value-based RL into the critic-free regime
+and names a concrete failure boundary the original GRPO
+formulation~\citep{shao2024deepseekmath} leaves implicit.
+
+\paragraph{F7 --- Framework is a first-class experimental variable.}
+Tinker, TRL, Modal PPO, and classical PPO libraries expose different
+sampling loops, optimizer behaviours, rollout accounting, and KL
+handling.  On matched model, task, and compute, the PPO-vs-GRPO winner
+flips between Qwen3-8B and Llama-3.1-8B-Instruct (F4), and TRL-GRPO
+differs measurably from Tinker-GRPO under the same nominal algorithm.
+Reporting ``PPO vs.\ GRPO'' without the library is therefore
+under-specified.  This extends Henderson et al.'s reproducibility
+critique~\citep{henderson2018deep} from Atari/MuJoCo into LLM
+post-training and argues that library-level ablations belong alongside
+algorithmic claims in every RLHF paper.
+
 \paragraph{Contributions.}
-\textbf{(i)}~F1--F5 as the first controlled cross-library, cross-family
-empirical map of RL post-training dynamics.
+\textbf{(i)}~F1--F7 as the first controlled cross-library, cross-family
+empirical map of RL post-training dynamics, with honest assessment of
+statistical limitations.
 \textbf{(ii)}~ZVF as an operational diagnostic with calibrated thresholds
 ($\geq 50\%$ sustained over 5+ steps $\Rightarrow$ early termination).
 \textbf{(iii)}~A reproducibility substrate---79 runs, step-level traces,
 Docker environments, W\&B logs\footnote{\url{https://wandb.ai/anonymous/tinker-rl-bench}},
 LoRA adapters, and HuggingFace checkpoints---that lets others falsify or
 extend every finding.
+\textbf{(iv)}~The $1/G$ Cold-Start Capability Threshold (F6) as a
+closed-form, falsifiable boundary for when critic-free RL can produce
+usable gradients, together with two pre-registered rescue experiments
+(large-$G$ and dense partial rewards).
+\textbf{(v)}~Framework-level ablations (F7) as evidence that library
+choice is an experimental variable, not an implementation detail, for
+RL post-training comparisons.
 We release everything under MIT licence at
 \url{https://anonymous.4open.science/r/tinker-rl-lab}.

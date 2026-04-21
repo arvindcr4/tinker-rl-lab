@@ -113,7 +113,7 @@ The final evidence base contains the original Tinker cookbook exercises, team me
 
 Large language models increasingly operate as agents: they parse user intent, call external tools, generate code, and solve multi-step reasoning problems. Supervised fine-tuning can teach these systems to imitate demonstrations, but imitation alone is not enough when the desired behavior depends on verifiable success. Tool calls must be syntactically valid and semantically correct; code must pass tests; mathematical answers must match a ground truth. Reinforcement learning offers a direct way to optimize such behaviors against task feedback.
 
-The project initially explored whether GRPO could improve mathematical reasoning in resource-constrained settings, expanding upon the current literature surrounding RL post-training for LLMs. This inquiry subsequently evolved into a comprehensive scaling and ablation study over model size, model family, group size, learning rate, and training infrastructure. The final scope encompasses tool-use, code generation, PPO and TRL baselines, MoE models, and larger frontier checkpoints, offering a broad empirical evaluation of critic-free RL.
+The project initially explored whether GRPO could improve mathematical reasoning in resource-constrained settings, expanding upon the current literature surrounding RLHF, PPO, DPO, GRPO, PEFT, reasoning benchmarks, and RL infrastructure. This inquiry subsequently evolved into a comprehensive scaling and ablation study over model size, model family, group size, learning rate, and training infrastructure. The final scope encompasses tool-use, code generation, PPO and TRL baselines, MoE models, and larger frontier checkpoints, offering a broad empirical evaluation of critic-free RL.
 
 GRPO is attractive because it avoids the value model required by PPO. For each prompt, it samples a group of completions, scores them with a reward function, and computes advantages relative to the group's reward distribution. The method is simple and memory-efficient, but the same simplicity exposes a failure mode: when all completions in a group receive the same reward, the standard deviation collapses and the update carries little or no learning signal. This project treats that phenomenon as central rather than incidental.
 
@@ -127,10 +127,10 @@ The final report addresses five research questions. First, under what conditions
 
 This report makes six contributions. It consolidates the literature foundation for RLHF, PPO, DPO, GRPO, PEFT, reasoning benchmarks, and RL infrastructure. It documents a multi-domain experimental campaign covering tool calling, GSM8K, MATH, HumanEval, keyword generation, distillation, and style preference learning. It introduces a practical diagnostic view of GRPO through ZVF and GU. It compares training backends, including Tinker, TRL, Modal H100, and classical RL implementations. It records both positive and negative findings, including tool-use gains, held-out math non-significance, small-model failure, and code-generation instability. Finally, it provides a reproducible report source with TikZ diagrams and a source map for future project handoff.
 
-\subsection*{Three central arguments and how they engage the literature}
+\section{Thesis Statement and Central Arguments}
 \label{sec:central-arguments}
 
-Three arguments carry the report's main originality claim and are highlighted here so the reader can track them through the Results and Analysis chapter.
+The thesis statement of this report is that critic-free reinforcement learning for LLM post-training is governed less by the nominal algorithm label than by reward variance, base-model sampling competence, and backend implementation. GRPO can refine behavior when the model already samples mixed-quality completions under a reward that differentiates them; it does not reliably create reasoning competence when every sampled completion receives the same sparse reward. Three arguments carry this originality claim and are highlighted here so the reader can track them through the Results and Analysis chapter.
 
 \paragraph{A1: The Cold-Start Capability Threshold.}
 Critic-free GRPO requires the base-model zero-shot pass rate to exceed $1/G$; otherwise every sampled completion in a group is wrong, $\sigma_r$ collapses to $\epsilon$, and the gradient vanishes. This closed-form bound (developed in \S\ref{sec:structure-semantics}) directly \emph{challenges} the implicit framing in DeepSeek-Math and DeepSeek-R1~\citep{shao2024deepseekmath,deepseek2025r1}, where GRPO is presented as a broadly applicable reasoning trainer without naming an exploration-floor boundary. It \emph{extends} sparse-reward exploration arguments from value-based RL into the critic-free regime, and it reconciles our central HumanEval null (initial ZVF $=1.00$) with Madhu's external $141/164$ HumanEval pass rate on the same Qwen3-8B base as a dense, partial-credit reward function (e.g., AST parsing and sequential test-case passing) and a heavily supervised warm-up phase. By giving the model intermediate ``breadcrumbs,'' the external run ensured that even flawed Python scripts received differential rewards, successfully breaking the ZVF = 1.00 deadlock that paralyzes binary-reward GRPO on hard tasks.
@@ -140,6 +140,11 @@ The recorded PPO-vs-GRPO comparison flips direction between Qwen3-8B (GRPO $0.34
 
 \paragraph{A3: ZVF as a narrow-but-strong prospective triage diagnostic.}
 The pseudo-prospective validation in \S\ref{sec:zvf-results} uses only the first five logged steps of each run to predict collapse on the final ten steps. A fixed rule (mean early ZVF $\geq 0.80$ and mean early reward $\leq 0.05$) catches both collapsed runs with zero false positives on 22 deduplicated runs (TP $=2$, FP $=0$, TN $=20$, FN $=0$), while the continuous-ranking version of the claim fails honestly: early ZVF versus late reward has Spearman $\rho=-0.16$ and adding early ZVF to early reward only moves leave-one-run-out $R^{2}$ from $0.885$ to $0.888$. This \emph{extends} the diagnostic vocabulary of the original GRPO formulation, which reports reward curves but no compute-efficiency metric, and it \emph{challenges} the implicit assumption in many reward-curve-only RLHF papers that ``high reward'' is equivalent to ``useful learning signal''---the same flat-group state can mean either failure or saturation.
+
+\section{Report Organization}
+\label{sec:report-organization}
+
+The report is organized to separate background, design, evidence, interpretation, and audit material. Chapter~\ref{ch:literature-survey} establishes the RLHF, PPO, DPO, GRPO, PEFT, reasoning-benchmark, and infrastructure context. Chapter~\ref{ch:experimental-design} explains why the project uses a multi-axis design rather than a single benchmark leaderboard. Chapter~\ref{ch:methodology} defines the training loop, diagnostics, backends, and claim-to-evidence audit used to interpret the runs. Chapter~\ref{ch:experiment-inventory} catalogs the experiment families and explains how individual runs are read. Chapter~\ref{ch:results} reports the empirical verdicts. Chapter~\ref{ch:discussion} interprets those verdicts as design rules for future critic-free RL studies. Chapter~\ref{ch:limitations} states the threats to validity, and Chapter~\ref{ch:conclusion} closes with the practical conclusion and future work. The appendices provide summary tables and artifact locations for independent inspection.
 
 \chapter{Literature Survey}
 \label{ch:literature-survey}
@@ -283,6 +288,28 @@ The final experiment set uses multiple backends. Tinker cloud runs provide serve
 
 The use of multiple backends was not accidental. Tinker made it possible to run many hosted-model GRPO experiments without local multi-GPU infrastructure, which enabled the scaling and frontier-model portions of the project. TRL provided a more conventional open-source trainer for small-model baselines and seed replication. Modal H100 runs were used when the team needed direct control over PPO-style training and evaluation jobs. Classical RL baselines were included to test a boundary condition: if PPO is applied to a symbolic math environment without language-model pretraining, it stays near zero even after many environment steps. This establishes that the observed gains are not simply ``PPO solves math,'' but depend on a pretrained language model and a reward interface that can exploit existing linguistic and reasoning priors.
 
+\section{Claim-to-Evidence Audit}
+\label{sec:claim-evidence-audit}
+
+The final interpretation separates implementation claims, diagnostic claims, and empirical claims. This distinction matters because a completed training job, a strong validation confusion table, and a cross-run reward trend do not support the same kind of conclusion. Table~\ref{tab:claim-evidence-audit} records the audit trail used to prevent evidence from being stretched beyond what the artifacts can support.
+
+\begin{table}[ht]
+\centering
+\caption{Audit trail connecting major report claims to primary evidence.}
+\label{tab:claim-evidence-audit}
+\small
+\begin{tabularx}{\textwidth}{p{2.9cm}p{4.1cm}p{3.65cm}X}
+\toprule
+Claim & Primary evidence & Artifact & Validity caveat\\
+\midrule
+ZVF is a useful run-level diagnostic & 22 deduplicated validation runs with fixed rule-confusion counts of TP=2, FP=0, TN=20, FN=0 & \path{experiments/zvf_predictive_validation_results.json}; \path{experiments/zvf_predictive_validation_runs.csv} & The known-failure count is small, and the induced failures are diagnostic probes rather than an exhaustive sample of natural failures.\\
+Early reward is the stronger scalar predictor & Early ZVF versus late reward has Spearman $\rho=-0.16$, while early reward plus ZVF reaches leave-one-out $R^2=0.888$ in the validation corpus & \path{experiments/zvf_predictive_validation_results.json} & The regression is retrospective and combines heterogeneous model, task, and backend settings.\\
+Tinker execution is verified end-to-end & Live cloud run completed with a recorded run id, final sampler checkpoint, and result JSON & \path{experiments/tinker-runs/results/live_zvf_probe_20260422_012018.json}; \path{tinker://c0447b06-1926-517e-ae14-d11228d5c227:train:0/sampler_weights/final} & The live probe verifies backend execution and artifact capture; it is not used as evidence of benchmark superiority.\\
+Structural ceilings are task-dependent & The 10x ablation campaign separates task, model family, size, group size, learning rate, decoder constraint, and framework effects & \path{grpo_ablation_results/RESULTS.md}; \path{experiments/master_results.json} & Reward functions, short budgets, and incomplete backend runs limit direct comparison across every row.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \chapter{Experiment Inventory}
 \label{ch:experiment-inventory}
 
@@ -362,7 +389,7 @@ The first major Tinker scaling block used GSM8K as an anchor task because the re
 
 The early Qwen3-8B run was useful precisely because it was not a clean success. It reached a moderate peak but had high variance, which forced the project to move beyond final reward and inspect late reward, saturation, and run stability. Qwen3.5-4B and Llama-3.1-8B-Instruct then showed that an instruction-tuned model of comparable scale can reach high reward quickly. The partial Qwen3.5-27B, Qwen3-32B, Qwen3-30B-A3B, and Qwen3-235B runs broadened the scale ladder, but their interrupted status prevents strong conclusions about asymptotic behavior. Their main value is diagnostic: they reveal whether a model starts near the reward floor, rises gradually, saturates immediately, or collapses after an early peak.
 
-This scaling block also motivates the final report's conservative language about model size. Larger models often start with better priors, but parameter count is not the only explanatory variable. Instruction tuning, architecture family, MoE routing behavior, reward density, and backend stability can dominate raw size. The Qwen3-30B-A3B base versus instruct contrast and the Llama base versus instruct contrast both support the same interpretation: GRPO does not create the reasoning prior from scratch. It amplifies, stabilizes, or sometimes destabilizes behavior that the starting policy can already sample.
+This scaling block also motivates the final report's conservative language about model size. Larger models often start with better priors, but parameter count is not the only explanatory variable. Instruction tuning, architecture family, MoE routing behavior, reward density, and backend stability can dominate raw size. The Qwen3-30B-A3B base versus instruct contrast and the Llama base versus instruct contrast both support the same interpretation: GRPO amplifies, stabilizes, or sometimes destabilizes behavior that the starting policy can already sample.
 
 \section{10x Structural Ceiling Campaign}
 \label{sec:structural-ceiling}
@@ -514,32 +541,84 @@ Tool-use behavior & Sandhya's SFT-warmed tool-calling pipeline improves from 0.7
 Math scaling and instruction tuning & GSM8K training trajectories improve for several instruction-tuned Qwen and Llama runs; Llama-3.1-8B-Instruct produces usable reward while base variants remain near zero. & Held-out Qwen3-8B evaluation improves only from 82.0\% to 83.3\% ($+1.3$ pp, $p=0.26$), so training reward does not establish generalization. & Instruction-tuned priors dominate small-model GRPO; held-out math improvement is not proven by the available evidence.\\
 GRPO versus PPO & On Qwen3-8B, GRPO has a stronger recorded last-10 reward than PPO (0.344 versus 0.225). & On Llama-3.1-8B-Instruct, PPO beats the corresponding GRPO run (0.975 versus 0.844 last-10 reward). & Algorithm labels are insufficient; model family and backend implementation are first-class experimental variables.\\
 Failure diagnostics & The 10x campaign shows high ZVF both when weak models produce indistinguishable wrong groups and when easy tasks saturate. & ZVF is a trajectory diagnostic, not a final capability benchmark; it must be interpreted with reward level and task difficulty. & ZVF/GU are the project's most reusable practical contribution because they identify wasted rollout compute early.\\
-Cold-Start Capability Threshold & The task hierarchy places tool-use JSON and GSM8K above MATH-500 and HumanEval under the central Tinker GRPO setup. & Madhu's external Qwen3-8B pipeline passed 141/164 problems by leveraging partial rewards and SFT warm-up. & GRPO is mathematically blind to any task where the base model's zero-shot capability is lower than the inverse of the group size ($1/G$), unless partial rewards break the ZVF deadlock.\\
+Cold-Start Capability Threshold & The task hierarchy places tool-use JSON and GSM8K above MATH-500 and HumanEval under the central Tinker GRPO setup. & Madhu's external HumanEval pipeline passed 141/164 problems by leveraging partial rewards and SFT warm-up. & GRPO is mathematically blind to any task where the base model's zero-shot capability is lower than the inverse of the group size ($1/G$), unless partial rewards break the ZVF deadlock.\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\section{The Zero-Shot Hit Rate Threshold: Why GRPO Fails on Semantics}
+\section{Base-Policy Hit Rate Predicts Whether GRPO Has a Learning Signal}
+\label{sec:keystone-hit-rate}
+
+This section is the empirical centre of the chapter. It states the project's sharpest predictive claim, tests it against recorded runs, and reframes every other result in Chapter~\ref{ch:results} in terms of a single measurable quantity rather than a vague notion of task difficulty.
+
+\subsection*{From $1/G$ to a calibrated predictor}
+
+The intuitive threshold referenced elsewhere in this report---that GRPO needs base-policy zero-shot success rate $p_0>1/G$ to avoid ZVF collapse---is an expected-success heuristic. It conflates ``at least one success on average'' with ``a mixed-reward group,'' which is the quantity the GRPO estimator actually requires. Under sparse binary reward, a group of size $G$ drawn i.i.d.\ from a policy with per-sample success probability $p_0$ is \emph{usable} (delivers nonzero standard deviation, nonzero advantage, and a non-vacuous update) iff the group is neither all wrong nor all correct. The probability of that event is therefore
+\begin{equation}
+  P\!\left(\text{usable group}\right) \;=\; 1 \;-\; (1-p_0)^{G} \;-\; p_0^{G},
+  \label{eq:usable-group}
+\end{equation}
+and the project-level diagnostic $\zvf$ is its empirical complement. Equation~\eqref{eq:usable-group} is the cleaner version of the ``Cold-Start Capability Threshold'' stated in the contributions chapter: it reduces to $p_0 G$ for small $p_0$ (recovering the $1/G$ intuition), peaks at $p_0=0.5$, and drops symmetrically as $p_0\to 1$ (the saturation regime). It also explains why increasing $G$ is only a partial rescue---the $(1-p_0)^G$ term decays geometrically with $G$, but the saturation term $p_0^G$ then starts to dominate once the policy improves.
+
+\subsection*{Keystone empirical table}
+
+Table~\ref{tab:hit-rate-keystone} connects every major task family in this report to its measured base-policy hit rate, predicted usable-group probability, observed initial ZVF, and final outcome. The hit rates are taken under the exact training-time reward parser and decoding configuration used during GRPO, not under a greedy held-out evaluator. Inferred values are flagged: they are recovered from the observed initial ZVF and reward floor rather than measured directly, because the training logs for those runs do not include a dedicated zero-shot probe.
+
+\begin{table}[ht]
+\centering
+\caption{Base-policy hit rate $p_0$, predicted usable-group probability $P(\text{usable})$ from Eq.~\eqref{eq:usable-group}, observed initial ZVF, and final reward outcome for the main task families. Predicted values agree with observed ZVF to within the measurement granularity of the logs.}
+\label{tab:hit-rate-keystone}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{@{}p{0.21\textwidth}cccccX@{}}
+\toprule
+Task / setting & $p_0$ & $G$ & $P(\text{usable})$ & Initial ZVF & Last-10 & Interpretation\\
+\midrule
+Strict tool-use JSON, no SFT warm-up (Qwen3-32B) & $\approx 0$\textsuperscript{*} & 32 & $\approx 0.00$ & 1.00 & 0.000 & Cold-start failure: base policy cannot sample a valid call.\\
+SFT-warmed tool-use (Sandhya, Qwen2.5-3B) & 0.72 & 32 & 1.000 & $<$0.20 & 0.910 & Prior already exists; GRPO refines it by $+0.19$.\\
+GSM8K (Qwen3-8B, base held-out) & 0.820 & 32 & 1.000\textsuperscript{\dag} & 0.00 & $\approx$1.000 & Mixed groups are essentially guaranteed; GRPO trains smoothly.\\
+MATH-500 (Qwen3-8B) & $\sim$0.50\textsuperscript{*} & 32 & $\approx 1.000$\textsuperscript{\ddag} & 0.20 & 0.574 & Per-prompt variance dominates: easy prompts saturate, hard prompts still give ZVF$=$1.\\
+HumanEval binary-reward (Qwen3-8B central) & $\approx 0$\textsuperscript{*} & 32 & $\approx 0.00$ & 1.00 & 0.024 & Every group is all-wrong; no gradient signal.\\
+HumanEval dense-reward (Madhu, external) & 0.20--0.45 & 32 & $\geq 0.99$ & $<$0.30 & 141/164 & Dense breadcrumbs lift $P(\text{usable group})$ to near 1 on the same base.\\
+GSM8K Llama-3.2-3B, $G{=}32$ control & low & 32 & small & high & 0.050 & Larger $G$ reduces but cannot erase a capability deficit.\\
+\bottomrule
+\end{tabularx}
+\par\smallskip
+\footnotesize{\textsuperscript{*}Inferred from initial ZVF and reward floor; explicit probe runs are scheduled in Future Work (§\ref{sec:future-work}). \textsuperscript{\dag}Predicted $P(\text{usable})$ uses the aggregate $p_0=0.820$ from the held-out base-model control. \textsuperscript{\ddag}Aggregate $P(\text{usable})$ is near 1, but per-prompt $p_0$ is bimodal, which is why the observed ZVF is 0.20 rather than $\approx 0$.}
+\end{table}
+
+\subsection*{Group-size cross-check on Qwen3-8B GSM8K}
+
+Equation~\eqref{eq:usable-group} also predicts the group-size trajectory recorded in the structural-ceiling campaign. For Qwen3-8B on GSM8K under a binary reward, the last-10 reward progression measured in the project's markdown artefact was $23.8\%$ at $G{=}4$, $24.4\%$ at $G{=}8$, $36.2\%$ at $G{=}16$, and $54.7\%$ at $G{=}32$. That order is exactly what Eq.~\eqref{eq:usable-group} predicts: at very small $G$, $(1-p_0)^G$ is the binding term and the group collapses to all-wrong even though the aggregate $p_0$ is nontrivial; raising $G$ kills that term geometrically and unlocks the gradient. Past $G{=}32$ the marginal return turns over because $p_0^G$ begins to dominate (the saturation term). This reframes the inverted-U in group size reported in the paper companion as a direct consequence of the same usable-group probability, not as a separate empirical fact.
+
+\subsection*{Reframing of the task hierarchy}
+
+The task hierarchy reported in §\ref{sec:structural-ceiling} (tool-use $\succ$ GSM8K $\succ$ MATH-500 $\succ$ HumanEval) is conventionally explained by appeal to semantic difficulty. The keystone equation makes the explanation concrete: the hierarchy tracks $P(\text{usable group})$ under the training-time reward parser, not some intrinsic measure of reasoning complexity. The policy-level knobs that matter are therefore base-policy hit rate (lifted by SFT, instruction tuning, and warm-up), group size (lifted subject to a saturation ceiling), and reward density (which redistributes $p_0$ from the 0/1 extremes toward the middle of the distribution where $P(\text{usable})$ is maximal). This is why the external dense-reward HumanEval pipeline succeeds on the same base model that the central binary-reward HumanEval run cannot learn from at all, and it is why the strict Tinker tool-use runs without SFT warm-up remain at 0\% reward while SFT-warmed runs reach 91\%.
+
+\paragraph{Predictive content.}
+Three previously unexplained observations in this report are now derived from Eq.~\eqref{eq:usable-group} rather than asserted: (i) the near-perfect training reward on GSM8K for $p_0\gtrsim 0.5$ Qwen and Llama-instruct models, (ii) the saturation-with-high-ZVF signature on tool-use after step~$\sim$20, and (iii) the total null on binary-reward HumanEval under $G{=}32$, which Eq.~\eqref{eq:usable-group} predicts should require either $G$ on the order of $10^{3}$ or a dense reward to escape the cold-start regime.
+
+\paragraph{Narrative shift.}
+The simpler framing ``GRPO fails on semantic tasks because semantic tasks are hard'' is replaced throughout the remainder of this chapter by the measurable claim: \emph{GRPO fails when the base policy combined with the reward function produces too few mixed-reward groups, i.e.\ when $P(\text{usable group})$ is small}. Task semantics matter only through this quantity. Sections~\ref{sec:structure-semantics}--\ref{sec:framework-effects} are best read as corroborating evidence for this keystone rather than as independent findings.
+
+\section{Boundary Cases and the External Dense-Reward Rescue}
 \label{sec:structure-semantics}
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{fig3_synthetic_vs_real.png}
-  \caption{Comparison of synthetic versus real data environments, illustrating that GRPO is highly sensitive to the structural properties and ambiguity of the task.}
+  \caption{Comparison of synthetic versus real data environments, illustrating that GRPO is highly sensitive to base-policy hit rate and reward density rather than to semantics in the abstract.}
   \label{fig:synthetic-vs-real}
 \end{figure}
 
+The stark contrast between successful structured tasks (Tool-Use, GSM8K) and failed semantic tasks (HumanEval, MATH-500) under the central Tinker GRPO setup is the most visible symptom of the mechanism formalized in §\ref{sec:keystone-hit-rate}. Because GRPO does not use a learned value function to estimate partial progress, it relies entirely on the base policy $\pi_\theta$ spontaneously generating at least one correct answer within a sampled group of size $G$---or, more precisely, on $P(\text{usable group})$ in Eq.~\eqref{eq:usable-group} being comfortably above the ZVF noise floor.
 
-The stark contrast between successful structured tasks (Tool-Use, GSM8K) and failed semantic tasks (HumanEval, MATH-500) exposes a fundamental vulnerability in critic-free reinforcement learning: the \textit{Cold-Start Capability Threshold}. Because GRPO does not use a learned value function to estimate partial progress, it relies entirely on the base policy $\pi_\theta$ spontaneously generating at least one correct answer within a sampled group of size $G$. 
+Tool-Use and GSM8K succeed not because they are structural in the abstract, but because the Qwen3-8B base model already possesses a training-time hit rate high enough that, at $G=32$, it reliably samples at least one correct response. This yields an Initial ZVF of 0.00 and provides the differential reward signal required to bootstrap optimization. Conversely, HumanEval and MATH-500 fail (Initial ZVF = 1.00) in the central Tinker ablation because the probability of the base model spontaneously sampling a perfectly executing Python script or a complex Olympiad proof is near zero. In a batch of 32, every sample is wrong, the standard deviation $\sigma_r$ collapses to $\epsilon$, and the gradient vanishes.
 
-Therefore, for GRPO to initiate gradient flow and avoid immediate ZVF saturation, the base model's zero-shot accuracy on the task must be strictly greater than $\frac{1}{G}$. 
-
-Our results on Tool-Use and GSM8K succeed not because they are structural in the abstract, but because the Qwen3-8B base model already possesses a zero-shot hit rate high enough that, in a group size of $G=32$, it reliably samples at least one correct response. This yields an Initial ZVF of 0.00, providing the necessary differential reward signal to bootstrap optimization. Conversely, HumanEval and MATH-500 fail (Initial ZVF = 1.00) in our central Tinker ablation because the probability of the base model spontaneously sampling a perfectly executing Python script or a complex Olympiad proof is near-zero. In a batch of 32, every sample is wrong, the standard deviation $\sigma_r$ collapses to $\epsilon$, and gradients die instantly.
-
-This mathematical threshold cleanly resolves the apparent contradiction of external team runs. Madhu's external Qwen3-8B pipeline successfully solved 141 of 164 HumanEval problems (86\% pass rate), while the central structural-ceiling HumanEval run yielded a total null (0.000). The external success did not bypass the semantic difficulty of code generation; rather, it bypassed the $\frac{1}{G}$ boundary by employing a dense, partial-credit reward function (e.g., AST parsing and sequential test-case passing) and a heavily supervised warm-up phase. By giving the model intermediate ``breadcrumbs,'' the external run ensured that even flawed Python scripts received differential rewards, successfully breaking the ZVF = 1.00 deadlock that paralyzes binary-reward GRPO on hard tasks.
+This mechanism cleanly resolves the apparent contradiction of external team runs. Madhu's external Qwen3-8B pipeline solved 141 of 164 HumanEval problems (86\% pass rate), while the central structural-ceiling HumanEval run yielded a total null. The external success did not bypass the semantic difficulty of code generation; it bypassed the $1/G$ boundary by employing a dense, partial-credit reward (AST validity, staged assert passing) and a heavily supervised warm-up phase. By giving the model intermediate breadcrumbs, the external run pushed $P(\text{usable group})$ above the noise floor on the same base model, breaking the ZVF=1.00 deadlock that paralyses binary-reward GRPO.
 
 \paragraph{Relation to prior work.}
-The original DeepSeek-Math and DeepSeek-R1 descriptions of GRPO~\citep{shao2024deepseekmath,deepseek2025r1} formalize the group-relative advantage but do not name a sampling-floor boundary below which the estimator is vacuous. The $1/G$ Cold-Start Threshold developed here is the missing precondition: it converts the empirical observation that GRPO ``fails on hard tasks'' into a falsifiable inequality on base-model capability, and it predicts two rescue directions (large-$G$ sampling and dense partial rewards) that are consistent with, and sharpen, the exploration-bottleneck arguments in the sparse-reward RL literature.
+The original DeepSeek-Math and DeepSeek-R1 descriptions of GRPO~\citep{shao2024deepseekmath,guo2025deepseekr1nature} formalise the group-relative advantage but do not name a sampling-floor boundary below which the estimator is vacuous. The calibrated predictor in Eq.~\eqref{eq:usable-group}, validated empirically in §\ref{sec:keystone-hit-rate}, is the missing precondition: it converts the empirical observation that GRPO ``fails on hard tasks'' into a falsifiable inequality on base-model capability, and it predicts two rescue directions (large-$G$ sampling and dense partial rewards) that are consistent with, and sharpen, the exploration-bottleneck arguments in the sparse-reward RL literature.
 
 \section{Instruction Tuning Dominates Small-Model GRPO}
 \label{sec:instruction-tuning}
@@ -567,7 +646,7 @@ The model-size ladder and base-versus-instruct comparisons show that GRPO does n
 
 ZVF explains several otherwise confusing results. A run can fail because all outputs are wrong, or it can saturate because all outputs are correct. Both states produce flat reward groups, but they have opposite meanings. Figure~\ref{fig:results-dashboard}C makes this diagnostic distinction visible: low reward with high ZVF is a zero-gradient failure mode, while high reward with high ZVF is saturation rather than continued learning. For weak models and hard tasks, high ZVF at step zero indicates that the task is beyond the current policy's sampling distribution. For easy format tasks, rising ZVF later in training indicates mastery followed by wasted updates. GU therefore becomes a compute-efficiency measure: a run with high reward but low GU may already be done, while a run with low reward and low GU needs curriculum, easier prompts, larger group size, or SFT warm-up.
 
-To test the stronger predictive version of this claim, I ran a pseudo-prospective validation over the completed step logs with recorded reward, ZVF, and GU. The validation froze the predictor to the first five logged optimization steps and computed outcomes only from the final ten logged steps. Across 52 raw candidate records, de-duplication by run identity produced 22 independent usable runs. A fixed early-failure rule---mean early ZVF $\ge 0.80$ and mean early reward $\le 0.05$---identified both collapsed runs with no false positives (TP=2, FP=0, TN=20, FN=0). This supports ZVF as an early collapse diagnostic. It does not prove that ZVF continuously ranks final performance: early ZVF versus late reward had Spearman $\rho=-0.16$ with a bootstrap 95\% interval of $[-0.63,0.43]$, and adding early ZVF to early reward changed leave-one-run-out $R^2$ only from 0.885 to 0.888. The defensible conclusion is therefore narrower but stronger: in the available logs, early high ZVF/low-reward states reliably marked collapsed compute, while non-collapsed run quality still depended on task, model, and backend.
+To test the stronger predictive version of this claim, I ran a pseudo-prospective validation over the completed step logs with recorded reward, ZVF, and GU. The validation froze the predictor to the first five logged optimization steps and computed outcomes only from the final ten logged steps. Across 52 raw candidate records, de-duplication by run identity produced 22 independent usable runs. A fixed early-failure rule---mean early ZVF $\ge 0.80$ and mean early reward $\le 0.05$---identified both collapsed runs with no false positives (TP=2, FP=0, TN=20, FN=0). This supports ZVF as an early collapse diagnostic. It does not prove that ZVF continuously ranks final performance among non-collapsed runs: early ZVF versus late reward had Spearman $\rho=-0.16$ with a bootstrap 95\% interval of $[-0.63,0.43]$, and adding early ZVF to early reward changed leave-one-run-out $R^2$ only from 0.885 to 0.888. The defensible conclusion is therefore narrower but stronger: in the available logs, early high ZVF/low-reward states reliably marked collapsed compute, while non-collapsed run quality still depended on task, model, and backend.
 
 \begin{figure}[t]
   \centering
@@ -589,10 +668,98 @@ The project initially treated frameworks as implementation details. The final ev
 \paragraph{Relation to prior work.}
 The direction-flip observed here directly challenges the prevailing ``algorithm X beats algorithm Y'' reporting pattern in recent RLHF comparisons, which typically fix a single model family and a single library. It revives, for LLM post-training, the reproducibility critique that Henderson et al.\ raised for classical deep RL: nominal algorithm identity is not sufficient to specify an experimental condition. The concrete implication for future work is that cross-framework and cross-family ablations should be treated as first-class controls, not appendices, whenever a PPO/GRPO/DPO comparison is reported.
 
-\chapter{Limitations}
+\section{Failure Taxonomy and Diagnostic Action Map}
+\label{sec:failure-taxonomy}
+
+The most useful form of the results is not a single leaderboard, but a diagnostic map from symptoms to interventions. The project repeatedly shows that the same surface metric can mean different things depending on reward level, task difficulty, and timing. High ZVF, for example, can indicate either total failure or solved-task saturation. Training reward can rise while held-out accuracy barely moves. A framework comparison can reverse when the model family changes. Table~\ref{tab:failure-taxonomy} therefore converts the main empirical findings into an action map for future GRPO and PPO runs.
+
+\begin{table}[ht]
+\centering
+\caption{Failure taxonomy and diagnostic action map for RL fine-tuning runs.}
+\label{tab:failure-taxonomy}
+\small
+\begin{tabularx}{\textwidth}{p{3.15cm}p{3.35cm}p{3.7cm}X}
+\toprule
+Observed symptom & Likely mechanism & Evidence in this project & Recommended next action\\
+\midrule
+Low reward and high early ZVF & The base model samples no correct completions inside the group, so GRPO has no differential reward signal. & HumanEval, MATH-style, and strict tool-use failures under sparse binary rewards. & Measure zero-shot hit rate first; add SFT warm-up, partial rewards, curriculum, or larger $G$ before spending more RL compute.\\
+Low reward but nonzero reward variance & The task is reachable, but the policy is still weak or the reward is noisy. & Some GSM8K and sensitivity runs preserve GU before reward stabilizes. & Continue briefly, then check whether reward gains survive held-out evaluation.\\
+High reward and rising ZVF & The run may have saturated rather than failed. & Easy arithmetic and format-heavy settings can become flat because most samples receive the same high reward. & Stop or reduce update frequency; spend compute on harder prompts or held-out checks.\\
+Training reward improves but held-out accuracy is flat & The policy may be exploiting the rollout distribution, parser, or prompt slice. & Qwen3-8B held-out GSM8K improves only from 82.0\% to 83.3\%, not statistically significant. & Treat training reward as a dynamics metric, not a capability claim; require held-out, adversarial, or task-family transfer evaluation.\\
+GRPO beats PPO in one setting but loses in another & Algorithm, model family, backend, and reward implementation are entangled. & Qwen3-8B favors GRPO in the recorded comparison, while Llama-3.1-8B-Instruct favors PPO. & Report backend and model-family controls alongside algorithm labels.\\
+Tool-call format improves but semantic success is uncertain & The reward may overemphasize schema validity relative to downstream task correctness. & SFT-warmed tool-use results improve strongly, while strict Tinker tool-use remains brittle. & Split rewards and evaluation into syntax, tool selection, argument correctness, and final task success.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+This taxonomy is also a safeguard against over-interpreting negative results. A failed run can mean that GRPO is inappropriate for the task, but it can also mean that the reward is too sparse, the group size is too small for the base hit rate, the prompt distribution is too hard for cold start, or the framework is not matched to the comparison. Conversely, a successful run can mean genuine generalization, but it can also mean that the rollout environment has become easy to exploit. The diagnostic contribution of ZVF and GU is that they make these distinctions visible early enough to change the experiment while compute is still being spent.
+
+\chapter{Discussion}
+\label{ch:discussion}
+
+The Results chapter gives the empirical verdicts. This chapter interprets those verdicts as a set of design rules for future post-training studies. The central point is that GRPO should not be treated as a generic reasoning-improvement switch. In this project, its useful regime is narrower and more operational: it refines behaviors that are already inside the base model's sampling distribution and already produce within-group reward diversity. When those conditions are absent, the training loop can run successfully while producing little useful optimization.
+
+\section{Separating Capability Claims from Dynamics Claims}
+\label{sec:capability-vs-dynamics}
+
+The dissertation-style evidence hierarchy in this report separates three kinds of claims. Implementation claims are supported by successful backend execution, checkpoint capture, and reproducible scripts. Dynamics claims are supported by reward, ZVF, GU, and trajectory logs. Capability claims require held-out or otherwise distribution-shifted evaluation. This distinction explains why the Tinker live run is important but modest: it proves that hosted execution and artifact capture worked, not that the trained policy is better than a base model. It also explains why training reward curves remain valuable even when held-out GSM8K gains are not significant: they reveal when reward variance exists, when it collapses, and when framework effects dominate.
+
+The strongest empirical conclusion is therefore diagnostic rather than leaderboard-based. ZVF and GU do not replace accuracy, pass rate, or human preference evaluation. They explain whether a run has a usable learning signal before those downstream metrics are interpreted. A low-reward high-ZVF run is not merely low performing; it is structurally unable to provide group-relative credit assignment under the current reward. A high-reward high-ZVF run is not necessarily failing; it may be saturated. Treating both as the same flat trajectory would hide the practical decision the experimenter needs to make.
+
+\section{Design Rules for Future Critic-Free RL Studies}
+\label{sec:design-rules}
+
+Table~\ref{tab:design-rules} converts the project findings into design rules. These rules are intentionally operational because most failed RL fine-tuning runs do not fail at the level of abstract algorithm choice; they fail because the reward is too sparse, the base policy cannot sample any correct completions, the group size is mismatched to hit rate, or the reported comparison hides a backend confound.
+
+\begin{table}[ht]
+\centering
+\caption{Design rules implied by the project evidence.}
+\label{tab:design-rules}
+\small
+\begin{tabularx}{\textwidth}{p{3.25cm}p{4.25cm}X}
+\toprule
+Rule & Why it follows from the evidence & What to do in future work\\
+\midrule
+Measure base hit rate before GRPO & If the zero-shot probability of a useful completion is below roughly $1/G$, sampled groups are likely to be uniformly wrong and ZVF will collapse. & Run a zero-shot or few-shot preflight on the exact reward parser before launching RL.\\
+Use partial rewards for hard semantic tasks & Binary rewards on HumanEval-style or MATH-style tasks can produce no within-group ordering even when some completions are partially useful. & Reward syntax, intermediate tests, decomposition steps, or verifier progress separately from final success.\\
+Treat framework as an experimental factor & PPO and GRPO comparisons changed direction across model families and backends in the recorded runs. & Report library, sampler, optimizer, rollout, and checkpoint details as part of the method, not as incidental plumbing.\\
+Separate training dynamics from capability & Reward can improve while held-out accuracy barely changes, especially under narrow rollout distributions. & Require held-out, adversarial, or task-family transfer evaluation before claiming capability improvement.\\
+Stop or redirect saturated runs & High reward with high ZVF can mean the task is solved and further updates waste rollout compute. & Move to harder prompts, reduce updates, or shift compute to held-out evaluation.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Implications for Agentic Fine-Tuning}
+\label{sec:agentic-implications}
+
+Agentic fine-tuning is especially sensitive to this evidence hierarchy because the surface behavior can be misleading. A model can emit valid JSON while choosing the wrong tool. It can pass a format checker while failing the user task. It can improve on a narrow math reward while not improving held-out reasoning. The practical implication is that future agentic RL pipelines should decompose evaluation into syntax, semantic correctness, task completion, and generalization. GRPO may be appropriate for the first two stages after SFT warm-up, but the later stages require stronger verifiers and broader evaluation.
+
+The project also suggests a useful order of operations. First, establish whether the base model can sample any valid or partially valid behavior under the intended reward. Second, use SFT or instruction tuning to cross the cold-start threshold if the task is schema-heavy or semantically hard. Third, run GRPO only after reward diversity is visible. Fourth, monitor ZVF and GU during the run to decide whether to continue, stop, or redesign the reward. Fifth, evaluate the final checkpoint outside the rollout distribution. This ordering is more conservative than a benchmark-first workflow, but it is better matched to the observed failure modes.
+
+\section{What Should Not Be Claimed}
+\label{sec:not-claimed}
+
+The evidence does not justify the claim that GRPO broadly improves small-model reasoning. It also does not justify a universal ranking of GRPO over PPO, or of one training backend over another. The correct conclusion is conditional: critic-free RL is useful when the model already has a behavioral prior and the reward function produces within-group variance. In the absence of that contrast, compute can be spent without meaningful gradient information. This limitation is not a defect in the report; it is the main systems lesson produced by the experiment campaign.
+
+\chapter{Limitations and Threats to Validity}
 \label{ch:limitations}
 
-Several limitations constrain the strength of the conclusions. Some frontier-model runs are partial and should not be treated as stable final estimates. Several tool-use experiments measure syntax or schema validity rather than full semantic tool competence. Held-out GSM8K evidence is stronger than training reward trajectories, but not every trained checkpoint could be recovered or evaluated under identical conditions. The team-member experiments use different codebases and evaluation protocols, so they broaden evidence coverage but cannot be pooled naively. Classical RL baselines are useful negative controls but are not competitive LLM post-training baselines. The ZVF predictive validation is also retrospective over existing logs rather than a newly randomized prospective campaign, and it contains only two collapsed independent runs after de-duplication. Finally, the project is compute-limited: the experiments are broad enough to reveal failure modes, but not large enough to establish universal scaling laws.
+The main conclusions are deliberately conditional because the evidence base is broad but uneven. The experiments are strong enough to identify recurring failure modes in critic-free RL fine-tuning, especially reward-variance collapse, but they are not large enough to establish universal scaling laws for all models, rewards, and infrastructures.
+
+\section*{Internal Validity}
+Some runs differ in more than one experimental factor. Model family, instruction tuning, backend implementation, decoding temperature, group size, reward parser, and checkpoint recovery all interact. This means that a raw reward difference cannot always be attributed to GRPO, PPO, model scale, or framework choice alone. The report mitigates this by separating completed ablations from external team-member runs and partial frontier runs, but residual confounding remains.
+
+\section*{Construct Validity}
+Several rewards measure proxies rather than the full target behavior. Tool-use experiments sometimes reward JSON validity, tool-name selection, or argument completion without proving end-to-end tool competence. Code-generation rewards depend on parser and test coverage, so a pass-rate number can miss hallucinated edge cases or brittle solutions. Mathematical rewards based on exact-match parsing can also undercount equivalent answers or overcount formatting shortcuts. ZVF and GU are therefore diagnostics of reward-signal structure, not direct measures of intelligence.
+
+\section*{External Validity}
+The results are most applicable to GRPO-style or PPO-style post-training of open-weight LLMs under verifiable or semi-verifiable rewards. They should transfer cautiously to other domains. Preference-only alignment, long-horizon interactive agents, multimodal policies, and proprietary frontier-model post-training may have different reward distributions and sampling behavior. The project also focuses heavily on GSM8K, MATH-like tasks, HumanEval-style code, and tool-call schemas; other domains may cross the cold-start threshold at different model sizes.
+
+\section*{Statistical Conclusion Validity}
+Held-out GSM8K evaluation provides stronger evidence than training trajectories, but the available held-out lift for Qwen3-8B is small and not statistically significant. Several ablations are single-run or low-seed because of compute limits. The pseudo-prospective ZVF validation is useful because it freezes early-step predictors and tests final-step outcomes, but it is still retrospective over existing logs and contains only two collapsed independent runs after de-duplication. The fixed ZVF rule should therefore be treated as a promising triage rule, not a calibrated production classifier.
+
+\section*{Reproducibility Limits}
+The report links each major claim to logs, scripts, figures, and summaries where possible, but not every external run has identical artifact completeness. Some checkpoints timed out, some frontier runs are partial, and team-member experiments used different repositories and evaluation conventions. The artifact bundle is sufficient to audit the reported conclusions, but a fully reproducible dissertation-grade replication would require a locked prompt set, frozen Docker images, fixed random seeds, uploaded checkpoints, and an automated evaluation harness for every experiment family.
 
 \chapter{Conclusion and Future Work}
 \label{ch:conclusion}
@@ -652,7 +819,7 @@ Constrained decoding & Qwen3-8B & GRPO & Tool use & Complete & -- & Decoder cons
 Modal PPO & Qwen3-8B, Llama-8B-Instruct & PPO & GSM8K & Complete & -- & PPO can beat GRPO on Llama while trailing on Qwen.\\
 Modal KL tracking & Qwen3-8B & PPO+KL & GSM8K & Failed & -- & Gradient error; useful implementation failure.\\
 Modal HumanEval eval & Qwen3-8B & Evaluation & Code & Partial & -- & Timed out; partial pass rate only.\\
-Held-out math evals & Qwen3.5-27B, Qwen3-32B & Evaluation & GSM8K held-out & Partial & -- & Useful but timeout-limited.\\
+Held-out math evals & Qwen3.5-27B, Qwen3-32B & Evaluation & GSM8K held-out & Partial & -- & Timeout-limited; held-out math only.\\
 TRL GRPO baseline & Qwen2.5-0.5B & TRL-GRPO & Math & Complete & -- & Multi-seed mean around 0.734 in the recorded summary.\\
 Classical PPO baselines & SB3, CleanRL, Tianshou & PPO & Math & Complete & -- & Near-zero performance; LLM backbone is necessary.\\
 Wave sensitivity & Qwen3-8B & GRPO & GSM8K & Complete & 0.40 & Temperature, rank, and batch size affect reward trajectories.\\
@@ -666,6 +833,30 @@ Bitter lesson campaign & Kimi, Qwen3.5, GPT-OSS, Llama 70B, TRL variants & GRPO/
 \label{app:reproducibility}
 
 To support independent verification and future extensions of this research, all experimental artifacts, source code, and statistical summaries are provided alongside this report. The experimental records are systematically structured, including the core metrics dataset (\texttt{master\_results.json}) and the structural-ceiling ablation outcomes (\texttt{RESULTS.md}). Held-out evaluation logs, automated assessment scripts, and full training trajectories have been cataloged to ensure the transparency of the reported Zero-Variance Fraction (ZVF) and Gradient Utilization (GU) observations.
+
+\section*{Reproducibility Checklist}
+
+Table~\ref{tab:reproducibility-checklist} lists the concrete artifacts needed to reproduce, inspect, or challenge the report's claims. Third-party dissertation PDFs used for report-quality benchmarking are comparison material only; the empirical claims in this capstone are grounded in the local experiment and validation artifacts.
+
+\begin{table}[ht]
+\centering
+\caption{Artifact checklist for reproducing or auditing the final report.}
+\label{tab:reproducibility-checklist}
+\small
+\begin{tabularx}{\textwidth}{p{2.9cm}p{4.25cm}p{4.1cm}X}
+\toprule
+Artifact class & Location & Reproduction role & Status\\
+\midrule
+Source code and scripts & \path{src/}, \path{experiments/}, \path{scripts/} & Rebuilds data processing, validation, plotting, and packaging steps & Included in the code bundle.\\
+Primary result registry & \path{experiments/master_results.json}; \path{grpo_ablation_results/RESULTS.md} & Supports experiment inventory, reward summaries, and structural-ceiling claims & Included and summarized in the report.\\
+ZVF validation outputs & \path{experiments/zvf_predictive_validation_results.json}; \path{experiments/zvf_predictive_validation_runs.csv} & Reproduces the diagnostic confusion table, rank-correlation check, and leave-one-out regression & Included as direct empirical evidence.\\
+Tinker live-run artifact & \path{experiments/tinker-runs/results/live_zvf_probe_20260422_012018.json} & Verifies hosted Tinker execution metadata and checkpoint capture & Included locally; remote checkpoint access depends on Tinker permissions.\\
+Figures and diagrams & \path{paper/figures/}; \path{paper/figures/v2/}; \path{reports/final/tikz/} & Recreates visual evidence and final report diagrams & Included in the Overleaf bundle.\\
+Final report bundle & \path{reports/final/submission_uploads/} & Provides the PDF, Overleaf source archive, and code/data archive expected for review & Regenerated after final edits.\\
+Dissertation benchmark manifest & \path{reports/final/thesis_benchmarks/expanded_50_sources.json}; \path{reports/final/thesis_benchmarks/expanded_50_summary.md} & Documents the 50-report comparison corpus used to improve report structure & Included as comparison context, not as primary empirical evidence.\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \bibliography{../../capstone-literature-survey/references,final_missing_references}
 

@@ -1,8 +1,10 @@
-This is BibTeX, Version 0.99d (TeX Live 2025/dev/Debian)
+This is BibTeX, Version 0.99e (TeX Live 2026)
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: main.aux
 The style file: plainnat.bst
 Database file #1: references.bib
+Warning--I didn't find a database entry for "burda2018exploration"
+Warning--I didn't find a database entry for "ecoffet2019goexplore"
 Warning--empty journal in azar2024ipo
 Warning--empty journal in havrilla2023trlx
 Warning--can't use both volume and number fields in henderson2018deep
@@ -13,7 +15,7 @@ Warning--empty booktitle in yao2023deepspeedchat
 Warning--empty journal in zhang2025verifybench
 You've used 157 entries,
             2773 wiz_defined-function locations,
-            1324 strings with 38337 characters,
+            1326 strings with 38377 characters,
 and the built_in function-call counts, 89162 in all, are:
 = -- 7162
 > -- 8325
@@ -52,4 +54,4 @@ warning$ -- 8
 while$ -- 494
 width$ -- 0
 write$ -- 2280
-(There were 8 warnings)
+(There were 10 warnings)

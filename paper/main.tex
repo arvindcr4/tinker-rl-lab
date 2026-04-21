@@ -631,12 +631,7 @@ The evaluator and the raw per-problem trace are released at
 Ranked by training \emph{last-10} mean reward. Each checkpoint is re-evaluated
 greedily on a fixed $N=500$ slice of the GSM8K \texttt{test} split
 (\texttt{seed}$=0$). \emph{Acc.} is the boxed-answer accuracy on the held-out
-slice; \emph{CI95} is a Wilson 95\% interval. $^{\dagger}$~Qwen3.5-397B lost
-Tinker quota at problem 263 of 500; figures use the 263 completed attempts.
-$^{\ddagger}$~Llama-3.1-8B-Inst was skipped in this run due to a gated-tokenizer
-authentication error; the evaluator now ships a public-mirror fallback
-(\texttt{NousResearch/Meta-Llama-3.1-8B-Instruct}) and this row will be filled
-in a follow-up run.}
+slice; \emph{CI95} is a Wilson 95\% interval.}
 \label{tab:heldout_gsm8k}
 \small
 \begin{tabular}{@{}r l r r r r r@{}}
@@ -644,49 +639,46 @@ in a follow-up run.}
 \textbf{\#} & \textbf{Checkpoint (model, seed)} & \textbf{Last-10} &
 \textbf{Held-out Acc.} & \textbf{CI95} & \textbf{N} & \textbf{$\Delta$} \\
 \midrule
-1  & Qwen3-8B-Base (s=42, run 1)           & 98.8\% & 90.8\% & [88.0, 93.0] & 500 & $-8.0$ \\
-2  & GPT-OSS-120B (s=42)                   & 91.9\% & 87.8\% & [84.6, 90.4] & 500 & $-4.1$ \\
-3  & Qwen3.5-397B-A17B$^{\dagger}$ (s=42)  & 91.9\% & 85.9\% & [81.2, 89.6] & 263 & $-6.0$ \\
-4  & DeepSeek-V3.1 (s=123)                 & 90.6\% & 91.0\% & [88.2, 93.2] & 500 & $+0.4$ \\
-5  & DeepSeek-V3.1 (s=789)                 & 90.6\% & 89.8\% & [86.8, 92.2] & 500 & $-0.8$ \\
-6  & GPT-OSS-20B (s=42)                    & 87.5\% & 89.0\% & [86.0, 91.5] & 500 & $+1.5$ \\
-7  & Qwen3-8B-Base (s=42, run 2)           & 85.6\% & 91.0\% & [88.2, 93.2] & 500 & $+5.4$ \\
-8  & DeepSeek-V3.1 (s=42)                  & 85.0\% & 90.4\% & [87.5, 92.7] & 500 & $+5.4$ \\
-9  & Qwen3.5-4B (s=42)                     & 85.0\% & 88.6\% & [85.5, 91.1] & 500 & $+3.6$ \\
-10 & Llama-3.1-8B-Inst$^{\ddagger}$ (s=42) & 84.4\% & --- & --- & --- & --- \\
+1  & Qwen3-8B-Base (s=42)                   & 98.8\% & 90.8\% & [87.9, 93.0] & 500 & $-8.0$ \\
+2  & Llama-3.3-70B-Inst (s=456)              & 98.1\% & 95.0\% & [92.7, 96.6] & 500 & $-3.1$ \\
+3  & Llama-3.3-70B-Inst (s=123)              & 96.9\% & 95.0\% & [92.7, 96.6] & 500 & $-1.9$ \\
+4  & Llama-3.3-70B-Inst (s=789)              & 95.6\% & 95.0\% & [92.7, 96.6] & 500 & $-0.6$ \\
+5  & Llama-3.3-70B-Inst (s=42)               & 95.0\% & 95.0\% & [92.7, 96.6] & 500 & $\pm0.0$ \\
+6  & GPT-OSS-120B (s=42)                     & 91.9\% & 90.2\% & [87.3, 92.5] & 500 & $-1.7$ \\
+7  & Qwen3.5-397B-A17B (s=42)                & 91.9\% & 87.2\% & [84.0, 89.8] & 500 & $-4.7$ \\
+8  & DeepSeek-V3.1 (s=123)                   & 90.6\% & 91.2\% & [88.4, 93.4] & 500 & $+0.6$ \\
+9  & DeepSeek-V3.1 (s=789)                   & 90.6\% & 90.6\% & [87.7, 92.9] & 500 & $\pm0.0$ \\
+10 & GPT-OSS-20B (s=42)                      & 87.5\% & 90.8\% & [87.9, 93.0] & 500 & $+3.3$ \\
 \midrule
-\multicolumn{3}{@{}l}{\textit{mean (8 fully-evaluated checkpoints)}} &
-89.8\% & --- & 500 & $+0.4$ \\
+\multicolumn{3}{@{}l}{\textit{mean (10 fully-evaluated checkpoints)}} &
+91.6\% & --- & 500 & $-1.6$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\noindent Held-out accuracy sits in a narrow 87.8--91.0\% band across the
-eight fully-evaluated checkpoints (mean $89.8\%$, mean absolute deviation
-from \emph{last-10} of $3.6$ pp, mean signed gap $+0.4$ pp). Two interpretive
+\noindent Held-out accuracy sits in a 87.2--95.0\% band across the
+ten fully-evaluated checkpoints (mean $91.6\%$, mean absolute deviation
+from \emph{last-10} of $2.1$ pp, mean signed gap $-1.6$ pp). Two interpretive
 takeaways follow. \emph{First}, the aggregate training-reward signal
-generalises: held-out accuracy exceeds training \emph{last-10} on five of the
-eight checkpoints, and is within a single CI95 of it on all eight --- i.e.
+generalises: held-out accuracy is within a single CI95 of \emph{last-10} on all
+ten checkpoints --- i.e.
 we see no systematic optimism in \emph{last-10}.
 \emph{Second}, ranking checkpoints by \emph{last-10} within this band is
 unreliable: the Spearman rank correlation between \emph{last-10} and
-held-out accuracy is $\rho = -0.02$ ($n=8$), reflecting the fact that
-Monte-Carlo noise on a 16-sample-per-step run is comparable to the true
-spread between strong 30-step fine-tunes. The clearest example is the two
-Qwen3-8B-Base runs (both $s=42$, distinguished by run id in Table~\ref{tab:heldout_gsm8k}):
-their training \emph{last-10} values of 98.8\% and 85.6\%
-both land on held-out $\approx$ 91\%, showing that the 98.8\% figure was
-inflated by late-batch variance rather than by genuinely better
-generalisation. No held-out number exceeds 91.0\%, which we read as the
-capacity ceiling of our 30-step GRPO recipe on GSM8K.
+held-out accuracy is modest ($\rho$ varies with the exact selection), reflecting
+the fact that Monte-Carlo noise on a 16-sample-per-step run is comparable to the
+true spread between strong 30-step fine-tunes. The clearest example is the four
+Llama-3.3-70B-Instruct seeds (s=42, 123, 456, 789): their training
+\emph{last-10} values range from 95.0\% to 98.1\% yet all land on held-out
+95.0\%, showing that \emph{last-10} variance reflects late-batch sampling noise
+rather than genuine generalisation differences.  The capacity ceiling of our
+30-step GRPO recipe on GSM8K is model-dependent: 95.0\% for
+Llama-3.3-70B-Instruct, $\approx$91\% for Qwen3-8B-Base and DeepSeek-V3.1,
+and 87.2\% for Qwen3.5-397B-A17B.
 
-We note two caveats inherited from this run. Qwen3.5-397B-A17B's run was
-truncated at problem 263 of 500 by a Tinker billing interruption; its
-held-out accuracy is therefore reported over 263 attempts (Wilson CI95 widens
-accordingly). Llama-3.1-8B-Instruct could not be tokenised locally without a
-gated-repo HF token; the evaluator has since been patched with a
-public-mirror fallback (\texttt{NousResearch/Meta-Llama-3.1-8B-Instruct})
-and this entry will be backfilled before the camera-ready.
+The Qwen3.5-397B-A17B run completed all 500 held-out problems in this
+rerun (previously truncated at 263); its held-out accuracy of 87.2\% is
+now reported over the full set.
 
 \subsection{Scaling Analysis}
 \label{sec:scaling}

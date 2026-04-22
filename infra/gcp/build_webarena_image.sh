@@ -57,8 +57,12 @@ sudo usermod -aG docker "$USER" || true
 
 # Python env
 sudo python3 -m venv /opt/tinker
-sudo /opt/tinker/bin/pip install -U pip
-sudo /opt/tinker/bin/pip install \
+sudo /opt/tinker/bin/pip install -U pip setuptools wheel
+
+# Pin numpy + pyarrow to versions with cp312 wheels BEFORE pulling datasets
+sudo /opt/tinker/bin/pip install --prefer-binary "numpy>=1.26,<3" "pyarrow>=16,<22"
+
+sudo /opt/tinker/bin/pip install --prefer-binary \
   "tinker>=0.1" "transformers>=4.44" "gymnasium>=0.29" \
   "playwright>=1.44" "browsergym-core" "browsergym-miniwob" \
   "browsergym-webarena" "browsergym-experiments" \

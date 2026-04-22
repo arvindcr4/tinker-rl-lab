@@ -1,29 +1,24 @@
 {
   "bundle_name": "tinker-rl-lab-submission.zip",
-  "created_at_utc": "2026-04-22T00:00:00Z",
-  "source_commit": "6699519",
+  "created_at_utc": "2026-04-22T01:00:00Z",
+  "source_commit": "15e2e3a",
   "paper_anon_sha256": "c0164113a7268244d876010367271167d3895f537125e93bd7db407a4e006723",
   "paper_main_sha256": "SEE paper/main.pdf",
-  "code_tar_sha256": "SEE checksums.sha256 inside submission/contents",
-  "supporting_data_tar_sha256": "N/A - not in blind submission",
-  "claim_verifier": "scripts/verify_claims_offline.py",
-  "paper_version": "main_anon.tex",
-  "tables_version": "Referenced in SECTION below",
-  "schema_validator": "scripts/validate_master_results_schema.py",
-  "figure_provenance": "FIGURE_PROVENANCE.md",
-  "eval_protocol": "EVAL_PROTOCOL.md",
-  "result_ledger": "experiments/master_results.json",
+  "code_tar_sha256": "88a4c5c3f7dc7acf5f5991b2e62531a83b57b9928c74ab4fadaa8549948d90a2",
+  "paper_anon_size_mb": 1.76,
+  "code_tar_size_mb": 14.96,
   "submission_score": 94,
+  "audit_suite": {
+    "suite_issues": 0,
+    "audits_total": 13,
+    "audits_passing": 13
+  },
   "artifact_summary": {
     "paper_anon_pages": 60,
-    "paper_main_pages": 64,
     "latex_warnings": 1,
-    "code_tar_size_mb": 37.5,
-    "supporting_data_tar_size_mb": 850,
-    "total_experiments": 83,
-    "completed_experiments": 44,
-    "heldout_seeds": 5,
-    "verification_checks": 12
+    "total_experiments": 95,
+    "verification_checks": 12,
+    "figures_present": "9/9"
   },
   "key_claims": [
     "qwen3-8b-grpo-last10-34.4pct",

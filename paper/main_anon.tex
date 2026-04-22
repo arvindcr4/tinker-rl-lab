@@ -38,7 +38,7 @@
 \newcommand{\grpo}{\textsc{Grpo}}
 \newcommand{\ours}{\textsc{TinkerRL Audit}}
 
-\title{When Does GRPO Have a Learning Signal?\\ A Claim-to-Evidence Audit of LLM Post-Training}
+\title{When Does GRPO-Style Training Have a Learning Signal?\\ A Claim-to-Evidence Audit of a Critic-Free Group-Relative Runner}
 
 \author{%
   Anonymous Author(s)\\
@@ -78,7 +78,7 @@
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{tikz/taxonomy.pdf}
-\caption{Taxonomy of RL libraries in \ours{}. The audit corpus spans LLM-native RL
+\caption{Taxonomy of of RL libraries in \ours{}. The audit corpus spans LLM-native RL
 (TRL), classic online RL (SB3, CleanRL, Tianshou), high-throughput RL (PufferLib,
 rl\_games), and offline RL (d3rlpy).}
 \label{fig:taxonomy}
@@ -481,9 +481,11 @@ signal, the RL gradient cannot propagate useful updates. Third, Mixture-of-Exper
 (MoE) models exhibit volatile training curves due to sparse routing, requiring
 careful monitoring and potentially larger batch sizes to stabilize updates.
 These findings motivate treating instruction tuning and reward diversity as
-first-class design variables. In one multi-stage reasoning setup, a Qwen3-4B-Instruct
-run was more useful than a 30B MoE run, but that observation is not a general
-dense-over-MoE claim.
+first-class design variables. In one multi-stage reward harness, a
+Qwen3-4B-Instruct run was more useful than a 30B MoE run. That observation
+suggests initialization and reward compatibility mattered in this setup; it
+does not establish a general dense-over-MoE or GRPO-trained reasoning
+advantage.
 
 % ---------------------------------------------------------------------------
 \subsection{Auxiliary Cross-Model Reward Probes}
@@ -766,13 +768,7 @@ independent of architecture.
 \paragraph{Nemotron-120B Collapse Case Study.}
 Nemotron-120B presents the clearest reward-instability case in our audit
 corpus: $\text{SI} = 1.180$, $\text{PTD} = 0.762$.
-Figure~\ref{fig:kl_proxy} shows the Nemotron-120B trajectory
-(pink) with an early surrogate-loss excursion followed by persistently
-elevated per-step ZVF, consistent with an early-training policy
-excursion from which the model never recovers. This contrasts sharply with Qwen3-235B-A22B
-($\text{SI} \approx 0$, $\text{PTD} \approx 0$), whose zero-variance
-reward trajectory indicates the policy remained in the immediate
-neighborhood of the reference initialization throughout training.
+Figure~\ref{fig:kl_proxy} shows the Nemotron-120B trajectory (pink) with an early surrogate-loss excursion followed by persistently elevated per-step ZVF, consistent with an early-training policy excursion followed by sustained low reward. This contrasts with Qwen3-235B-A22B ($\text{SI} \approx 0$, $\text{PTD} \approx 0$), whose flat reward trajectory is consistent with the policy remaining near the reference initialization throughout training.
 
 \paragraph{Honest Limitation.}
 These proxy metrics capture \emph{symptoms} of reward instability rather than
@@ -867,7 +863,7 @@ For binary-outcome tasks with per-prompt accuracy $p$:
   \mathrm{GU}(p, G) = 1 - p^G - (1-p)^G.
 \]
 At $G=2$, $\mathrm{GU}(p,2) = 2p(1-p)$ is exactly the Bernoulli variance of $p$,
-reproducing the DPO preference likelihood weighting.
+reproducing the DPO preference weighting.
 Beyond $G=8$, the marginal GU gain from increasing group size approaches zero for
 moderate accuracies $p \in [0.2, 0.8]$; the gain from $G=16 \to G=32$ is less
 than 0.3\% at $p=0.5$.
@@ -879,7 +875,7 @@ High-accuracy frontier models ($p > 0.8$) show \emph{negative} residuals
 Moderate-accuracy experiments ($p \approx 0.3$--$0.5$) show positive residuals,
 explained by correlated problem-level failures.
 For our G=8 DeepSeek-V3.1 run ($p \approx 0.85$), 27\% of steps were
-zero-gradient; switching to $G=2$ would reduce rollouts by 75\% while preserving all
+zero-gradient; switching to $G = 2$ would reduce rollouts by 75\% while preserving all
 informative contrastive signal.
 
 \begin{figure}[htbp]
@@ -976,7 +972,7 @@ Environment task success & Not yet established & Requires a MiniWoB/WebArena sui
     \texttt{frontier\_gsm8k\_qwen3-235b} (15 steps), \texttt{frontier\_gsm8k\_nemotron-120b} (20 steps),
     \texttt{moe\_gsm8k\_qwen3-30b-moe} (partial), \texttt{moe\_gsm8k\_qwen3-30b-inst} (partial).
     Additionally, \texttt{arch\_gsm8k\_gpt-oss-20b} did not produce usable data and is excluded
-    from all tables. \texttt{arch\_gsm8k\_kimi-k2} completed (20 steps; peak 100\%, last-10 80.0\%)
+    from all tables. \texttt{arch\_gsm8k\_kimi-k2} completed (20 steps; peak 100\%, last-10 95.8\%)
     and is included in Table~\ref{tab:main_results}.
     \item[$^b$] DeepSeek-V3.1 GSM8K: 20 training steps on Tinker API;
     peak reward = 100\%, last-10 mean = 85.0\%, first-5 mean = 85.0\%.
@@ -1001,8 +997,8 @@ coverage they provide.
 \paragraph{New Larger Models (training-reward parser, not held-out benchmark).}
 We evaluated six previously untested models on GSM8K with GRPO (Table~\ref{tab:main_results}, Campaign Extension block).
 \textbf{Kimi-K2-Thinking} had the highest sustained online reward in this block
-(peak 100\%, last-10 95.8\%), consistent with the hypothesis that
-reasoning-specialized starting policies more often sample rewardable completions.
+(peak 100\%, last-10 95.8\%), suggesting that models already specialized for
+reasoning may be better matched to this verifier-reward setup.
 \textbf{Qwen3.5-397B-A17B}---the largest MoE model in our study at 397B total /
 17B active parameters---reached 100\% peak with 97.9\% last-10 average under
 the training parser; this is an online-reward ceiling in the recorded campaign,
@@ -1061,13 +1057,18 @@ We provide comprehensive reproducibility infrastructure:
 
 \paragraph{Anonymous Model Checkpoints.}
 Task-specific models from Section~\ref{sec:task_grpo} are released via the
-anonymous mirror. Repository handles are redacted for blind review; reviewers
+anonymous mirror. Repository handles are redacted for security reasons; reviewers
 can download the artefacts through the anonymous 4open.science repository
 link provided above. Model-card slugs in the anonymous release use the
 pattern \texttt{anonymous/tinker-rl-bench-<task>-<model>}.
 
 % =============================================================================
 % =============================================================================
+
+\section*{Claims We Explicitly Do Not Make}
+
+\paragraph{Scope boundary (response to hostile review).}
+This paper is an engineering diagnostic, not a benchmark result, not a new algorithm, and not a clean causal study. The runner is GRPO-style but omits the PPO ratio/clip, the frozen reference policy, and the completion-only token mask, and uses one optimizer step per rollout batch (a P1-A diagnostic finds $61.6\%$--$89.6\%$ of the loss magnitude comes from prompt tokens); the HumanEval-style sandbox strips Python built-ins; the tool-use reward scores JSON schema rather than tool execution; the MATH-500 and HumanEval training pools are loaded from the \texttt{test} splits and are reward-environment probes, not generalization tests; most Tinker runs are single-seed on a 30-step horizon; PPO/GRPO comparisons are backend-, sampler-, optimizer-, LoRA-, and checkpoint-confounded; the held-out GSM8K control lift is $82.0\%\!\to\!83.3\%$ ($p=0.26$) and is the only clean capability result. The top-$k$ post-selection ledger in \texttt{experiments/results/heldout\_gsm8k.json} has a selection-induced $92.08\%$ mean across ten heterogeneous checkpoints and should not be compared to the $82.0\%\!\to\!83.3\%$ control. Readers should treat the manuscript as a candid engineering audit whose narrow defensible contribution is reward-diversity triage (ZVF/GU) plus stack-identifiability reporting discipline, not a leaderboard or algorithm paper.
 
 \section*{Claims We Explicitly Do Not Make}
 To bound the attack surface of this empirical study, we explicitly disclaim
@@ -1310,11 +1311,11 @@ group-relative contrast effectively navigates these ridges without a value
 function approximation error.
 Llama-3.1-8B enters at a lower zero-shot baseline, presenting a rougher
 landscape where the value function's global smoothing is beneficial.
-This conjecture predicts that \emph{GRPO should be preferred whenever the
-model's prior task performance exceeds a threshold} (roughly 80--90\% on
-comparable tasks), and PPO should be preferred below it.
-Our data are consistent with this prediction, though the sample size is too
-small to test it directly.
+This conjecture predicts that, under similar verifier-reward and sampling
+conditions, group-relative methods may be more competitive when the model
+already samples some correct completions, whereas value-function methods may
+help when the initial reward landscape is rougher. Our data are too small and
+confounded to support a prescriptive GRPO-vs-PPO rule.
 
 \paragraph{Hypothesis 2: Instruction-tuning quality modulates advantage noise.}
 Both Qwen3-8B and Llama-3.1-8B are instruction-tuned, but they differ in
@@ -1408,7 +1409,8 @@ and 21\% of training time.
 
 \citet{liu2025rlsubnetworks} show that the DPO objective can be viewed as
 a contrastive objective over a subnetwork of parameters, and that the
-subnetwork's size determines the KL per parameter.
+subnetwork's size determines the KL per
+parameter.
 Our finite-group analysis recovers the same expected-ZVF expression:
 $\mathrm{GU}(p, 2) = 2p(1-p)$, which is exactly the Bernoulli variance of
 the per-prompt accuracy $p$ and reproduces the DPO preference weighting.

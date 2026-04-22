@@ -1,10 +1,10 @@
 # Reviewer README
 
-This bundle is a current submission snapshot containing paper PDFs, the capstone report PDF, a sanitized presentation deck, source code, and curated supporting data.
+This bundle is the blind-review submission snapshot containing the compact anonymous paper and anonymized source code.
 
-Start with `paper_anon.pdf` for blind review. `paper.pdf` and `report.pdf` are included for full-context assessment. `code.tar.gz` contains source and document files; `supporting_data.tar.gz` contains project-generated result artifacts, BrowserGym smoke outputs, ledgers, and local-audit manifests.
+Start with `paper_anon.pdf`. It is the compact diagnostic-audit paper, not the long benchmark-style report. `code.tar.gz` contains anonymized source and document files needed to inspect the artifact.
 
-The large local W&B/Hugging Face/Tinker mirror is intentionally not redistributed. It is represented by manifests and result ledgers.
+The capstone report, public author-identified paper, presentation deck, and large local W&B/Hugging Face/Tinker mirror are intentionally not included in this blind package.
 
 Verify member checksums after unzipping with:
 

@@ -26,7 +26,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import asyncio
 import json
 import logging
 import os
@@ -186,7 +185,7 @@ class TinkerChatSampler:
         self.sc = service.create_sampling_client(base_model=model)
         self._has_async = hasattr(self.sc, "sample_async")
 
-    async def sample(self, messages: List[Dict[str, str]]) -> str:
+    def sample(self, messages: List[Dict[str, str]]) -> str:
         prompt_text = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
@@ -201,15 +200,14 @@ class TinkerChatSampler:
             top_p=1.0,
             stop=stop,
         )
-        if self._has_async:
-            result = await self.sc.sample_async(
-                prompt=model_input, num_samples=1, sampling_params=params,
-            )
-        else:
-            future = self.sc.sample(
-                prompt=model_input, num_samples=1, sampling_params=params,
-            )
-            result = await asyncio.to_thread(future.result)
+        # Synchronous sampling only. Playwright sync API (used by BrowserGym)
+        # cannot be called from within an asyncio event loop, so the whole
+        # episode driver runs without asyncio. Tinker's .sample() returns a
+        # future; block on .result() directly.
+        future = self.sc.sample(
+            prompt=model_input, num_samples=1, sampling_params=params,
+        )
+        result = future.result()
         completion_ids = result.sequences[0].tokens
         return self.tokenizer.decode(completion_ids, skip_special_tokens=True)
 
@@ -218,7 +216,7 @@ class TinkerChatSampler:
 # Rollout
 # ---------------------------------------------------------------------------
 
-async def run_episode(
+def run_episode(
     sampler: TinkerChatSampler,
     env_id: str,
     seed: int,
@@ -256,7 +254,7 @@ async def run_episode(
                 step=step, max_steps=max_steps,
             )
             messages.append({"role": "user", "content": user_msg})
-            response = await sampler.sample(messages)
+            response = sampler.sample(messages)
             messages.append({"role": "assistant", "content": response})
             thought, action = _parse_response(response)
             step_error: Optional[str] = None
@@ -342,7 +340,7 @@ def _shard(tasks: List[str], shard_spec: str) -> List[str]:
     return tasks[k::n]
 
 
-async def _main_async(args) -> int:
+def _main_sync(args) -> int:
     _import_benchmark(args.benchmark)
     tasks = _parse_tasks(args.tasks, args.benchmark)
     tasks = _shard(tasks, args.shard)
@@ -378,15 +376,13 @@ async def _main_async(args) -> int:
     sampler = TinkerChatSampler(
         model=args.model, temperature=args.temperature, max_tokens=args.action_tokens,
     )
-    sem = asyncio.Semaphore(args.concurrency)
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     completed = {"n": 0, "sum_score": 0.0, "sum_steps": 0}
 
-    async def one(env_id: str, seed: int, idx: int) -> None:
-        async with sem:
-            res = await run_episode(
+    def one(env_id: str, seed: int, idx: int) -> None:
+            res = run_episode(
                 sampler, env_id, seed,
                 max_steps=args.max_steps,
                 max_axtree_chars=args.max_axtree_chars,
@@ -433,12 +429,10 @@ async def _main_async(args) -> int:
                 pass
         logger.info("resuming: %d already done", len(done_ids))
 
-    coros = [
+    for i, env_id in enumerate(tasks):
+        if env_id in done_ids:
+            continue
         one(env_id, seed=args.seed + i, idx=i)
-        for i, env_id in enumerate(tasks)
-        if env_id not in done_ids
-    ]
-    await asyncio.gather(*coros)
 
     # --- Optional: HuggingFace Hub upload ---
     if args.hf_repo:
@@ -522,7 +516,7 @@ def main() -> int:
     if not os.environ.get("TINKER_API_KEY") and not Path(os.path.expanduser("~/.tinker_api_key")).exists():
         print("ERROR: TINKER_API_KEY not set and ~/.tinker_api_key missing", file=sys.stderr)
         return 2
-    return asyncio.run(_main_async(args))
+    return _main_sync(args)
 
 
 if __name__ == "__main__":

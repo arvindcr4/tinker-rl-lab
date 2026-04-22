@@ -173,7 +173,7 @@
 % \end{teaserfigure}
 
 \begin{abstract}
-This project is a systems-oriented empirical audit of critic-free, group-relative reinforcement learning. We investigate the conditions under which post-training receives a non-zero advantage signal, and demonstrate when in-domain training-reward gains fail to transfer to held-out semantic capability. Using a variant inspired by Group Relative Policy Optimization (GRPO), we evaluate tool-call emission, mathematical reasoning, and code generation across 32 controlled ablations. Our findings yield three primary contributions. First, we isolate \textit{reward contrast} as the fundamental bottleneck: a group-relative gradient requires mixed-reward sampling, $P(\text{informative group}) = 1 - p_0^{G} - (1-p_0)^{G}$. Second, we establish a \textit{reward-vs-capability separation}: structured-output format compliance (e.g., JSON schemas) improves sharply via RL, but proxy format rewards easily trigger length-bias and parser exploits without conferring semantic generalization (held-out GSM8K lift was statistically insignificant, $p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$). Finally, we demonstrate \textit{stack identifiability}: algorithmic labels like "PPO" or "GRPO" are insufficiently specified experimental treatments, as their relative performance ranking reversed entirely when moving from Qwen3-8B to Llama-3.1-8B-Instruct. We conclude that Zero-Variance Fraction (ZVF) tracking is a necessary triage diagnostic for identifying cold-start collapse before interpreting reward curves.
+This project is a systems-oriented empirical audit of critic-free, group-relative reinforcement learning. We investigate the conditions under which post-training receives a non-zero advantage signal, and demonstrate when in-domain training-reward gains fail to transfer to held-out semantic capability. Using a variant inspired by Group Relative Policy Optimization (GRPO), we evaluate tool-call emission, mathematical reasoning, and code generation across 32 controlled ablations. Our findings yield three primary contributions. First, we isolate \textit{reward contrast} as the fundamental bottleneck: a group-relative gradient requires mixed-reward sampling, $P(\text{informative group}) = 1 - p_0^{G} - (1-p_0)^{G}$. Second, we establish a \textit{reward-vs-capability separation}: structured-output format compliance (e.g., JSON schemas) improves sharply via RL, but proxy format rewards easily trigger length-bias and parser exploits without conferring semantic generalization (held-out GSM8K lift was statistically insignificant, $p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$). Finally, we demonstrate \textit{stack identifiability}: algorithmic labels like "PPO" or "GRPO" are insufficiently specified experimental treatments, as their relative performance ranking reversed entirely when moving from Qwen3-8B to Llama-3.1-8B-Instruct. We conclude that Zero-Variance Fraction (ZVF) tracking is a necessary triage diagnostic for identifying cold-start collapse before interpreting reward curves.
 \end{abstract}
 
 \maketitle
@@ -210,7 +210,7 @@ concerns identified by Henderson et al.~\citep{henderson2018deep} for deep RL.
 On the strongest evidence tier, this paper does \emph{not} show that GRPO
 broadly improves reasoning.  The clean held-out capability check is a GSM8K
 200-example slice that was not used during training, and it improves only from
-$82.0\%$ to $83.3\%$ ($p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$).  We therefore do not claim a significant
+$82.0\%$ to $83.3\%$ ($p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$).  We therefore do not claim a significant
 held-out math effect.  This negative result determines the scope of the rest of
 the paper: training reward curves and proxy environments may explain when a
 post-training loop has signal, but they do not establish general reasoning or
@@ -297,7 +297,7 @@ C2: PPO/GRPO/DPO labels are under-specified treatments. & Methodological contrib
 Qwen artifact sensitivity, the Llama PPO-favored row, and backend/model/reward/parser confounding. &
 No universal algorithm ranking.\\
 C3: Training reward does not equal capability. & Central negative result &
-Held-out GSM8K $82.0\%\!\to\!83.3\%$ ($p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$); tool-use rewards are
+Held-out GSM8K $82.0\%\!\to\!83.3\%$ ($p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$); tool-use rewards are
 proxy/schema rewards; HumanEval/MATH harnesses are limited. &
 Training reward supports dynamics claims only.\\
 \bottomrule
@@ -476,6 +476,22 @@ $\sim$446 A100 GPU-hours.
 \section{Results}
 \label{sec:results}
 % =============================================================================
+
+\paragraph{Metric taxonomy.}
+All results below use one of three non-interchangeable quantities.  \textbf{Online
+training reward} is the scalar reward observed during training on the sampled
+training prompts or task episodes; for GSM8K it is a binary boxed-answer reward,
+but it is still an online training statistic rather than a held-out benchmark.
+\textbf{Held-out accuracy} is reported only when a checkpoint is evaluated after
+training on a disjoint evaluation split or fixed held-out slice with a stated
+sample size and confidence interval.  \textbf{Proxy diagnostics} such as
+zero-variance fraction (ZVF), stability index (SI), peak-to-tail drift (PTD),
+and surrogate-loss traces are telemetry-derived signals about optimization or
+policy stability; they are not accuracy numbers and are not treated as reward
+improvements.  Tables and figures are labelled by metric family, and we do not
+rank models by mixing these families.
+
+
 
 \subsection{Cross-Library Comparison}
 

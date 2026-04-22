@@ -99,7 +99,7 @@
 
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-This project is a systems-oriented empirical audit of critic-free, group-relative reinforcement learning. We investigate the conditions under which post-training receives a non-zero advantage signal, and show cases where in-domain training-reward gains fail to transfer to held-out semantic capability. Using a variant inspired by Group Relative Policy Optimization (GRPO), we evaluate tool-call emission, mathematical reasoning, and code generation across 32 controlled ablations. Our findings yield three primary contributions. First, we isolate \textit{reward contrast} as the fundamental bottleneck: a group-relative gradient requires mixed-reward sampling, $P(\text{informative group}) = 1 - p_0^{G} - (1-p_0)^{G}$. Second, we document a \textit{reward-vs-capability separation}: structured-output format compliance (e.g., JSON schemas) improves sharply via RL, but proxy format rewards easily trigger length-bias and parser exploits without conferring semantic generalization (held-out GSM8K lift was statistically insignificant, $p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$). Finally, we document \textit{stack identifiability}: algorithmic labels like "PPO" or "GRPO" are insufficiently specified experimental treatments, as the observed relative ranking changed when moving from Qwen3-8B to Llama-3.1-8B-Instruct. We conclude that Zero-Variance Fraction (ZVF) tracking is a useful triage diagnostic for identifying cold-start collapse before interpreting reward curves.
+This project is a systems-oriented empirical audit of critic-free, group-relative reinforcement learning. We investigate the conditions under which post-training receives a non-zero advantage signal, and show cases where in-domain training-reward gains fail to transfer to held-out semantic capability. Using a variant inspired by Group Relative Policy Optimization (GRPO), we evaluate tool-call emission, mathematical reasoning, and code generation across 32 controlled ablations. Our findings yield three primary contributions. First, we isolate \textit{reward contrast} as the fundamental bottleneck: a group-relative gradient requires mixed-reward sampling, $P(\text{informative group}) = 1 - p_0^{G} - (1-p_0)^{G}$. Second, we document a \textit{reward-vs-capability separation}: structured-output format compliance (e.g., JSON schemas) improves sharply via RL, but proxy format rewards easily trigger length-bias and parser exploits without conferring semantic generalization (held-out GSM8K lift was statistically insignificant, $p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$). Finally, we document \textit{stack identifiability}: algorithmic labels like "PPO" or "GRPO" are insufficiently specified experimental treatments, as the observed relative ranking changed when moving from Qwen3-8B to Llama-3.1-8B-Instruct. We conclude that Zero-Variance Fraction (ZVF) tracking is a useful triage diagnostic for identifying cold-start collapse before interpreting reward curves.
 
 \tableofcontents
 \listoffigures
@@ -127,7 +127,7 @@ concerns identified by Henderson et al.~\citep{henderson2018deep} for deep RL.
 On the strongest evidence tier, this paper does \emph{not} show that GRPO
 broadly improves reasoning.  The clean held-out capability check is a GSM8K
 200-example slice that was not used during training, and it improves only from
-$82.0\%$ to $83.3\%$ ($p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$).  We therefore do not claim a significant
+$82.0\%$ to $83.3\%$ ($p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$).  We therefore do not claim a significant
 held-out math effect.  This negative result determines the scope of the rest of
 the paper: training reward curves and proxy environments may explain when a
 post-training loop has signal, but they do not establish general reasoning or
@@ -214,7 +214,7 @@ C2: PPO/GRPO/DPO labels are under-specified treatments. & Methodological contrib
 Qwen artifact sensitivity, the Llama PPO-favored row, and backend/model/reward/parser confounding. &
 No universal algorithm ranking.\\
 C3: Training reward does not equal capability. & Central negative result &
-Held-out GSM8K $82.0\%\!\to\!83.3\%$ ($p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$); tool-use rewards are
+Held-out GSM8K $82.0\%\!\to\!83.3\%$ ($p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$); tool-use rewards are
 proxy/schema rewards; HumanEval/MATH harnesses are limited. &
 Training reward supports dynamics claims only.\\
 \bottomrule
@@ -261,7 +261,7 @@ Claim & Status & Evidence allowed as headline & Verdict\\
 \midrule
 GRPO is a reward-contrast amplifier. & Most original contribution & Mixed-group probability, early-run ZVF/GU, collapse and saturation cases, base-hit-rate audits, and the 22-run pseudo-prospective validation. & Signal exists only when sampled groups contain reward diversity; ZVF/GU are diagnostic, not calibrated predictors.\\
 PPO/GRPO/DPO labels are under-specified treatments. & Methodological contribution & Qwen artifact sensitivity, the Llama PPO-favored row, and backend/model/reward/parser confounding. & Report stack-conditioned claims, not universal algorithm rankings.\\
-Training reward does not equal capability. & Central negative result & Held-out GSM8K $82.0\%\!\to\!83.3\%$ ($p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$), proxy/schema tool-use rewards, and limited HumanEval/MATH harnesses. & Online reward supports dynamics claims only.\\
+Training reward does not equal capability. & Central negative result & Held-out GSM8K $82.0\%\!\to\!83.3\%$ ($p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$), proxy/schema tool-use rewards, and limited HumanEval/MATH harnesses. & Online reward supports dynamics claims only.\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -283,7 +283,7 @@ The reversal---not the individual direction---is the finding, and it is enough t
 This empirical instability aligns with recent group-relative optimization variants such as GSPO~\citep{zheng2025gspo}: apparently small choices about ratio granularity, loss normalization, and backend semantics can change stability enough that they belong in the treatment definition rather than in an implementation footnote.
 
 \paragraph{A3 --- Training reward and proxy success are not capability improvement.}
-\emph{Thesis.} Online reward is evidence about the rollout environment, not an automatic capability claim. The held-out Qwen3-8B GSM8K control improves only from $82.0\%$ to $83.3\%$ ($p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$), so the report does not claim a significant held-out math gain. Tool-use rewards primarily measure JSON validity, tool-name choice, and argument-key presence; the central HumanEval harness rejects many valid Python completions because built-ins are removed; and MATH rewards mix boxed-answer format with final-answer matching. This argument aligns with recent RLVR cautionary work showing that spurious or weak rewards can amplify model-specific pretrained behaviors without establishing new reasoning capability~\citep{shao2025spurious,liu2025r1zerocritical}. The practical rule is therefore strict: reward, ZVF, and GU curves support dynamics claims, while capability claims require held-out or distribution-shifted evaluation under a frozen evaluator.
+\emph{Thesis.} Online reward is evidence about the rollout environment, not an automatic capability claim. The held-out Qwen3-8B GSM8K control improves only from $82.0\%$ to $83.3\%$ ($p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$), so the report does not claim a significant held-out math gain. Tool-use rewards primarily measure JSON validity, tool-name choice, and argument-key presence; the central HumanEval harness rejects many valid Python completions because built-ins are removed; and MATH rewards mix boxed-answer format with final-answer matching. This argument aligns with recent RLVR cautionary work showing that spurious or weak rewards can amplify model-specific pretrained behaviors without establishing new reasoning capability~\citep{shao2025spurious,liu2025r1zerocritical}. The practical rule is therefore strict: reward, ZVF, and GU curves support dynamics claims, while capability claims require held-out or distribution-shifted evaluation under a frozen evaluator.
 
 
 
@@ -542,7 +542,7 @@ The artifact directory contains several result files because the project evolved
 Experiment ID & Dataset / split & Model & Metric object & Headline number & Included claim\\
 \midrule
 gsm8k-base-control-200 & GSM8K test, same 200 examples & Qwen3-8B, no LoRA & Held-out greedy accuracy & 164/200 = 82.0\% & Base reference for held-out math only.\\
-gsm8k-grpo-heldout-5seed & GSM8K test, 200 examples per seed & Qwen3-8B GRPO LoRA & Held-out greedy accuracy & Mean 83.3\%, SD 2.2, $p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$ & Non-significant held-out lift; no broad math-improvement claim.\\
+gsm8k-grpo-heldout-5seed & GSM8K test, 200 examples per seed & Qwen3-8B GRPO LoRA & Held-out greedy accuracy & Mean 83.3\%, SD 2.2, $p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$ & Non-significant held-out lift; no broad math-improvement claim.\\
 structural-gsm8k-qwen8b & GSM8K rollout prompts & Qwen3-8B GRPO & Online training reward & Last-10 near 1.0 in selected runs & Training-dynamics and saturation evidence only.\\
 sandhya-tool-sft-grpo & Custom function-calling data & Qwen2.5-3B & Structured tool-call score & 0.72 SFT to 0.91 SFT+GRPO & Structured-output refinement after warm-up.\\
 strict-tool-no-warmup & Tool-call schema, Tinker & Qwen3-32B / Llama-8B & Online reward & 0.000 & Sparse schema reward can be dead without warm-up.\\
@@ -728,7 +728,7 @@ Llama-3.1-8B-Instruct & 0.844 & 0.975 & PPO stronger in this recorded setting\\
 \section{Held-Out Evaluation and Statistical Checks}
 \label{sec:heldout-evaluation}
 
-The held-out GSM8K evaluation is the most important correction to a purely training-reward narrative. Five Qwen3-8B GRPO checkpoints were evaluated on 200 held-out GSM8K test examples per seed with greedy decoding. The mean held-out accuracy was 83.3\% with standard deviation 2.2\%. A base Qwen3-8B control without the LoRA adapter scored 82.0\% on the same 200 examples under the same decoding setup. The resulting +1.3 percentage-point difference is not statistically significant under the recorded one-sample test ($t=1.32$, $p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$).
+The held-out GSM8K evaluation is the most important correction to a purely training-reward narrative. Five Qwen3-8B GRPO checkpoints were evaluated on 200 held-out GSM8K test examples per seed with greedy decoding. The mean held-out accuracy was 83.3\% with standard deviation 2.2\%. A base Qwen3-8B control without the LoRA adapter scored 82.0\% on the same 200 examples under the same decoding setup. The resulting +1.3 percentage-point difference is not statistically significant under the recorded one-sample test ($t=1.32$, $p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$).
 
 \begin{table}[ht]
 \centering
@@ -755,6 +755,22 @@ This result does not make the GRPO math experiments irrelevant. It changes what 
 The same caution applies to HumanEval and schema-valid JSON emission. Madhu's HumanEval result is strong under its own pipeline, but the central structural-ceiling HumanEval run was null. The strict Tinker tool-use runs were also null, while SFT-warmed tool pipelines produced strong format-compliance gains. The report therefore separates task families by what their evaluations actually measure: syntax and schema compliance for schema-valid JSON emission, exact-answer correctness for GSM8K and MATH, and functional pass rate for HumanEval-style code. Treating those as interchangeable ``accuracy'' numbers would hide the most important experimental lesson.
 
 \chapter{Results and Analysis}
+
+\paragraph{Metric taxonomy.}
+All results below use one of three non-interchangeable quantities.  \textbf{Online
+training reward} is the scalar reward observed during training on the sampled
+training prompts or task episodes; for GSM8K it is a binary boxed-answer reward,
+but it is still an online training statistic rather than a held-out benchmark.
+\textbf{Held-out accuracy} is reported only when a checkpoint is evaluated after
+training on a disjoint evaluation split or fixed held-out slice with a stated
+sample size and confidence interval.  \textbf{Proxy diagnostics} such as
+zero-variance fraction (ZVF), stability index (SI), peak-to-tail drift (PTD),
+and surrogate-loss traces are telemetry-derived signals about optimization or
+policy stability; they are not accuracy numbers and are not treated as reward
+improvements.  Tables and figures are labelled by metric family, and we do not
+rank models by mixing these families.
+
+
 \label{ch:results}
 
 The experiment inventory in Chapter~\ref{ch:experiment-inventory} is broad, but the final conclusion rests on four empirical checks: whether GRPO refines structured tool-call emission after warm-up, whether online training reward survives held-out math evaluation, whether ZVF/GU flags reward-signal collapse or saturation, and whether algorithm comparisons remain stable across model families and backends. Figure~\ref{fig:results-dashboard} puts those checks on one page. It is the empirical center of this chapter: GRPO is not treated as a uniformly successful reasoning method, nor are failed runs treated as noise. The positive and negative outcomes together show when critic-free RL has a usable reward signal and when it does not.
@@ -762,7 +778,7 @@ The experiment inventory in Chapter~\ref{ch:experiment-inventory} is broad, but 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{results_dashboard.pdf}
-  \caption{Chapter 6 results dashboard. Panel A shows that tool-call format reward improves only after an SFT warm-up creates valid samples. Panel B shows that Qwen3-8B held-out GSM8K accuracy improves only from 82.0\% to 83.3\% after GRPO, which is not statistically significant ($p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$). Panel C shows how ZVF separates usable reward diversity from flat wrong groups and flat saturated groups. Panel D shows that algorithm-label comparisons are stack-conditioned: the Qwen PPO summary is artifact-sensitive, while the recorded Llama-3.1-8B-Instruct comparison favors PPO.}
+  \caption{Chapter 6 results dashboard. Panel A shows that tool-call format reward improves only after an SFT warm-up creates valid samples. Panel B shows that Qwen3-8B held-out GSM8K accuracy improves only from 82.0\% to 83.3\% after GRPO, which is not statistically significant ($p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$). Panel C shows how ZVF separates usable reward diversity from flat wrong groups and flat saturated groups. Panel D shows that algorithm-label comparisons are stack-conditioned: the Qwen PPO summary is artifact-sensitive, while the recorded Llama-3.1-8B-Instruct comparison favors PPO.}
   \label{fig:results-dashboard}
 \end{figure}
 
@@ -779,7 +795,7 @@ Table~\ref{tab:rq-verdicts} connects each research question to its strongest sup
 Research question & Strongest evidence & Counter-evidence or limitation & Verdict\\
 \midrule
 Structured tool-call emission & Sandhya's SFT-warmed tool-calling pipeline improves from 0.72 under SFT to 0.91 after GRPO on the 3B model. & Strict Tinker tool-use runs without warm-up remain at 0\% reward, so schema-heavy tasks are too sparse when the model cannot already sample valid calls. & The group-relative loop amplifies schema compliance after warm-up; it does not establish full interactive schema-valid JSON emission without execution-level evaluation.\\
-Math scaling and instruction tuning & GSM8K training trajectories improve for several instruction-tuned Qwen and Llama runs; Llama-3.1-8B-Instruct produces usable reward while base variants remain near zero. & Held-out Qwen3-8B evaluation improves only from 82.0\% to 83.3\% ($+1.3$ pp, $p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$), so training reward does not establish generalization. & Instruction-tuned priors dominate small-model GRPO; held-out math improvement is not proven by the available evidence.\\
+Math scaling and instruction tuning & GSM8K training trajectories improve for several instruction-tuned Qwen and Llama runs; Llama-3.1-8B-Instruct produces usable reward while base variants remain near zero. & Held-out Qwen3-8B evaluation improves only from 82.0\% to 83.3\% ($+1.3$ pp, $p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$), so training reward does not establish generalization. & Instruction-tuned priors dominate small-model GRPO; held-out math improvement is not proven by the available evidence.\\
 GRPO versus PPO & On Llama-3.1-8B-Instruct, PPO beats the corresponding GRPO run (0.975 versus 0.844 last-10 reward). & On Qwen3-8B, artifact summaries disagree over the PPO last-10 value (0.350), so the row is not used as a GRPO-over-PPO claim. & Algorithm labels are insufficient; result ledger, model family, and backend implementation are first-class experimental variables.\\
 Failure diagnostics & The 10x campaign shows high ZVF both when weak models produce indistinguishable wrong groups and when easy tasks saturate. & ZVF is a trajectory diagnostic, not a final capability benchmark; it must be interpreted with reward level and task difficulty. & ZVF/GU are the project's most reusable practical contribution because they identify wasted rollout compute early.\\
 Mixed-group sampling condition & The task hierarchy places tool-use JSON and GSM8K above MATH-500 and HumanEval under the central Tinker GRPO setup. & Madhu's external HumanEval pipeline passed 141/164 problems by leveraging partial rewards and SFT warm-up. & The $1/G$ rule is only a sampling heuristic; the more precise condition is whether groups avoid the all-wrong and all-correct regimes.\\
@@ -1045,7 +1061,7 @@ Recent alternative formulations, such as REINFORCE++ \citep{hu2025reinforceplusp
 
 
 \section*{Statistical Power and Paired Testing}
-The held-out GSM8K comparison uses five GRPO seeds against a single base-model evaluation on 200 prompts. The reported $p$-value is based on a between-group test that treats the five GRPO runs and the base model as independent samples at the run level. A paired per-prompt test, which would have strictly higher power and a more defensible null, is present as `p0_gsm8k_paired.md`. The current null result ($82.0\%\to83.3\%$, $p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$) should therefore be read as ``no significant lift detected at this power,'' not as ``no effect.'' Future work should (i) enlarge the held-out slice to at least 500 prompts, (ii) run multiple base-model evaluation passes at matched decoding temperature, and (iii) report a paired McNemar or bootstrap test.
+The held-out GSM8K comparison uses five GRPO seeds against a single base-model evaluation on 200 prompts. The reported $p$-value is based on a between-group test that treats the five GRPO runs and the base model as independent samples at the run level. A paired per-prompt test, which would have strictly higher power and a more defensible null, is present as `p0_gsm8k_paired.md`. The current null result ($82.0\%\to83.3\%$, $p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$) should therefore be read as ``no significant lift detected at this power,'' not as ``no effect.'' Future work should (i) enlarge the held-out slice to at least 500 prompts, (ii) run multiple base-model evaluation passes at matched decoding temperature, and (iii) report a paired McNemar or bootstrap test.
 
 \section*{Diagnostic Scope of ZVF/GU}
 The pseudo-prospective validation set contains only two independent collapsed runs after de-duplication. The first-five-step ZVF rule achieves perfect precision and recall on those two positives, but this is a demonstration that the rule is \emph{consistent with} the identified failures, not a calibrated predictive claim. The continuous Spearman ranking of early ZVF against final reward is weak ($\rho=-0.16$) and the leave-one-out $R^2$ uplift from adding early-ZVF features is $0.885\!\to\!0.888$. ZVF/GU should therefore be read as a cheap \emph{early compute-triage} signal (``stop, warm-start, densify reward, change task'') rather than as a regression predictor of final reward. More positive failures are needed before a calibrated threshold can be claimed, and newer in-run signals such as RL-ZVP~\citep{liu2025rlzvp} may obviate the need for a hard threshold entirely.
@@ -1054,7 +1070,7 @@ The pseudo-prospective validation set contains only two independent collapsed ru
 \label{ch:conclusion}
 
 \section{Conclusion}
-The project does not claim that GRPO improves reasoning. The training runner is not canonical GRPO (§\ref{sec:grpo-fidelity}), the HumanEval and tool-use rewards measure sandbox-restricted execution and schema compliance rather than end-to-end competence, and the MATH-500 and HumanEval prompt pools are loaded from the \texttt{test} split and used as reward-environment probes rather than generalization tests. The only capability signal evaluated on a genuinely held-out slice is GSM8K, where the lift from $82.0\%$ to $83.3\%$ is statistically indistinguishable from noise ($p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$) under the chosen test ($p=0.26, paired per-prompt p=0.53 (evaluated on a random 50-problem subset)9$).
+The project does not claim that GRPO improves reasoning. The training runner is not canonical GRPO (§\ref{sec:grpo-fidelity}), the HumanEval and tool-use rewards measure sandbox-restricted execution and schema compliance rather than end-to-end competence, and the MATH-500 and HumanEval prompt pools are loaded from the \texttt{test} split and used as reward-environment probes rather than generalization tests. The only capability signal evaluated on a genuinely held-out slice is GSM8K, where the lift from $82.0\%$ to $83.3\%$ is statistically indistinguishable from noise ($p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$) under the chosen test ($p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$).
 
 The surviving claim is narrower and systems-shaped. First, a group-relative policy gradient requires $p_0 > 0$ and $p_0 < 1$ within a sample group $G$ to produce non-zero advantage updates. When either the base policy is too weak to produce any success, or the task saturates so that every completion succeeds, the standard-deviation denominator in Eq.~\eqref{eq:grpo-advantage} collapses and the resulting gradients carry no useful ordering. Equation~\eqref{eq:usable-group} formalises the \emph{necessary condition} for that signal to exist, under an i.i.d.\ binary-reward idealisation that is a first-order diagnostic and not a theorem. Second, Zero-Variance Fraction and Gradient Utilisation are the cheapest observable proxy for that condition: on the de-duplicated 22-run validation set, a fixed first-five-step rule flags both collapsed runs without false positives, but with only two positive failures this is an early-stopping triage signal, not a calibrated predictor. Third, even strong training-reward gains---the tool-use and central structured-output campaigns are the clearest examples in this report---can fail to transport to held-out semantic evaluation once the reward is replaced by an external held-out metric. Fourth, the apparent PPO-versus-GRPO ordering reverses across model families and backends in this corpus, which is consistent with an identifiability problem in which the algorithm label is only one component of the treatment.
 

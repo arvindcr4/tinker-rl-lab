@@ -1,71 +1,42 @@
 % =============================================================================
-% Conclusion — reframed around the five empirical discoveries (F1--F5)
+% Conclusion -- three-claim framing
 % Drop-in include: \input{sections/conclusion}
-% Target: <= 0.75 page
 % =============================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-We asked a simple question---\emph{what actually drives performance in RL
-post-training?}---and answered it with 79 controlled runs.  Five findings
-stand.
-\textbf{F1 (ZVF early-warning diagnostic):} ZVF correlates with final
-reward at $r{=}{-}0.769$ ($p{=}0.0008$), but lagged regression reveals
-this is largely explained by current reward level (partial $r{=}0.059$ at
-lag 5). ZVF retains marginal independent signal at longer horizons (lag 10:
-partial $r{=}0.080$, $p{=}0.045$), and all runs with sustained ZVF
-$\geq 80\%$ in the first 5 steps collapsed---making it a practical triage
-tool rather than an independent causal predictor.
-\textbf{F2 (inverted-U in group size):} $G{=}32$ is the sweet spot; both
-smaller and larger $G$ waste compute, refuting the ``more rollouts is better''
-folklore.
-\textbf{F3 (base vs.\ instruct dichotomy):} the $+0.922$ SFT delta dwarfs
-every RL contribution we measure and gates trainability below 8B-instruct
-across Qwen and Llama.
-\textbf{F4 (PPO vs.\ GRPO may be model-dependent):} the ranking reverses
-between Qwen3-8B and Llama-3.1-8B, but with only two single-seed model
-families (MDE $d{=}2.024$), this remains a hypothesis requiring
-replication, not a conclusion.
-\textbf{F5 (Ceiling stability varies across architectures):} scale alone does
-not buy stability at the 30-step horizon, but Kimi-K2-class pre-training
-recipes do---Nemotron-120B collapses where Kimi-K2 and Qwen3-235B-A22B hold
-their ceilings.  (All single-seed, early-training observations.)
-\textbf{F6 (Cold-Start Capability Threshold, validated):} the probability
-of a mixed-reward group $P(\text{usable})\!=\!1-(1-p_0)^{G}-p_0^{G}$
-quantitatively predicts the task hierarchy we observe---tool-use
-(no warm-up) and binary-reward HumanEval sit at $P(\text{usable})\!\approx\!0$
-and fail; SFT-warmed tool-use, GSM8K on Qwen3-8B, and dense-reward
-HumanEval all sit at $P(\text{usable})\!\approx\!1$ and learn.  The familiar
-$1/G$ bound is the small-$p_0$ limit; the closed-form predictor is the
-mechanism.
-\textbf{F7 (Framework is a first-class variable):} the PPO/GRPO ranking
-flips between Qwen3-8B and Llama-3.1-8B-Instruct, and TRL-GRPO diverges
-from Tinker-GRPO under matched compute---library ablations belong
-alongside every algorithmic comparison.
+This study does not show that GRPO generally improves reasoning.  The
+strongest held-out GSM8K result is a small, statistically non-significant lift
+from 82.0\% to 83.3\% ($p=0.26$), and the sparse HumanEval-style setup
+obtains almost no usable signal.  The more defensible conclusion is that GRPO
+is a conditional reward-contrast amplifier.  It can refine behavior when the
+current policy samples both successes and failures under a reward that
+distinguishes them; it cannot reliably bootstrap competence when sampled
+groups are flat.
 
-\paragraph{The open question.}
-Why might the model--algorithm interaction (F4) exist?  We conjecture
-that initial reward-landscape geometry---proxied by zero-shot task
-accuracy---determines whether GRPO's variance-reduced group contrast or PPO's
-value-function smoothing is preferable.  This is directly testable with
-multi-seed runs across at least 4 model families, and would convert F4 from
-a hypothesis into a predictive rule.  The lagged ZVF regression
-(\S\ref{sec:zvf-lagged}) also needs prospective validation: does
-monitoring ZVF in real time and triggering early termination actually save
-compute without losing good runs?
+The paper's main contribution is therefore diagnostic.  ZVF and GU should be
+logged early and interpreted jointly with reward level.  High ZVF with low
+reward is a cold-start alarm; high ZVF with high reward is saturation; low ZVF
+means rollout compute is still producing contrast.  In our validation set,
+the first-five-step rule catches the two collapsed runs without false
+positives, but the low number of failures and weak continuous-ranking result
+mean ZVF/GU should be treated as triage diagnostics, not performance
+predictors.
 
-\paragraph{What the artifacts enable.}
-Every run, log, and checkpoint in this paper is public.  Researchers can
-(i)~calibrate AERO~\citep{zhang2026aero}'s Beta prior against our cross-scale
-ZVF traces; (ii)~test whether the 2-GRPO/DPO
-equivalence~\citep{wu2025grpo_dpo} extrapolates across F4's direction flip;
-(iii)~probe whether F5's ceiling-stability behaviour is a property of agentic
-RL pre-training or of MoE routing; (iv)~falsify the reward-landscape
-conjecture with gradient-level analysis~\citep{liu2025rlsubnetworks};
-and (v)~replicate F4 with multi-seed runs across additional model families to
-confirm or refute the algorithm-model interaction hypothesis.  RL
-post-training is no longer a niche technique---it is how the most capable
-language models learn to reason.  F1--F5 are the first controlled
-cross-library, cross-family map of that regime, with honest assessment of
-statistical limitations; the hardest and most important work is the
-mechanistic follow-up they make possible.
+The mechanism behind that diagnostic is mixed-group probability:
+\[
+P(\text{usable group}) = 1 - p_0^G - (1-p_0)^G .
+\]
+This formula is the cleanest way to state the boundary condition.  The
+expected-one-success rule $p_0>1/G$ is only a heuristic.  Future work should
+test the three direct interventions implied by the equation: raise $p_0$ with
+SFT or easier curricula, raise $G$ where rollout cost allows, and densify the
+reward so equivalent partial progress is not collapsed into all-zero groups.
+
+Finally, algorithm labels should be reported as stack-conditioned results.
+The Qwen PPO/GRPO row is artifact-sensitive, and the Llama row favors PPO;
+neither supports a universal PPO/GRPO ordering.  A publishable comparison
+needs the full treatment definition: model family, backend, reward parser,
+sampler, optimizer, KL/reference handling, LoRA configuration, checkpoint
+selection, and held-out evaluation.  Without those controls, ``PPO versus
+GRPO'' is not an interpretable scientific claim.

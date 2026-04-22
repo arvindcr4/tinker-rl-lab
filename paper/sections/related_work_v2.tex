@@ -84,6 +84,8 @@ REINFORCE with a value baseline, when carefully implemented, matches GRPO on
 several RLHF tasks.
 
 A third thread attacks the \emph{zero-variance failure mode} (ZVF) directly.
+RL-ZVP~\cite{rlzvp2025} treats all-correct and all-incorrect groups as
+recoverable training material by changing the advantage signal, while
 AERO~\cite{zhang2026aero} and GRESO~\cite{zhang2026greso} pre-screen prompts
 before sampling; CPPO~\cite{lin2025cppo} prunes completions post-rollout,
 giving up to $7.98\times$ speedup on GSM8K. NGRPO~\cite{nan2025ngrpo} adds
@@ -101,10 +103,12 @@ MinPRO~\cite{lei2026minpro} shows that token-level importance sampling in
 GRPO is only an approximation to the rigorous prefix importance ratio;
 SSPO~\cite{yang2025sspo} operates at sentence granularity to balance the
 stability of GSPO against the expressiveness of token-level GRPO, improving
-by $3.56$ points on math benchmarks. Taken together, these results explain at
-a theoretical level why implementation details at the granularity of the
-importance ratio have such large empirical effects --- an explanation our
-benchmark complements with a $73\,\mathrm{pp}$ cross-library measurement.
+by $3.56$ points on math benchmarks.  This paper uses the same zero-variance
+condition differently: under standard GRPO, ZVF/GU become experiment-management
+signals that tell the researcher whether to stop, warm-start, densify reward,
+increase group size, or change task difficulty.  In that sense, our diagnostic
+framing complements RL-ZVP's training-algorithm framing and Zhou et al.'s
+finite-sample theory.
 
 % -----------------------------------------------------------------------------
 \subsection{Reasoning RL and Process Reward Models}

@@ -1,53 +1,36 @@
 % =============================================================================
-% Abstract — reframed around the five empirical discoveries (F1--F5)
-% Drop-in include: \input{sections/abstract}
-% Target: <= 250 words
+% Anonymous abstract -- three-claim framing
 % =============================================================================
 \begin{abstract}
-RL post-training of language models is now shaped by a handful of algorithms
-(PPO, GRPO, DPO) and a growing fleet of frameworks (TRL, \tinker{}, OpenRLHF,
-veRL), yet which choices actually drive performance remains empirically
-unsettled.  We present \ours{}, a controlled study of 79 runs spanning 7 RL
-libraries, 5 model families, and 0.6B--$\sim$1T parameters, designed to isolate
-cause from confound on GSM8K, MATH-500, HumanEval, and tool-use.
+GRPO is often discussed as a reasoning-improvement algorithm, but sparse
+verifiable rewards only create a useful update when sampled groups contain
+reward contrast.  We present an exploratory systems study of 79 post-training
+runs across tool-call formatting, GSM8K, MATH-style prompts, HumanEval-style
+verification, multiple model families, and several training stacks.  The main
+contribution is not a leaderboard.  It is a diagnostic account of when
+standard GRPO has a learning signal.
 
-Five discoveries reframe what should be measured and reported.
-\textbf{(F1) ZVF dominance.}  Zero-Variance Fraction---the share of GRPO
-groups with no within-group reward variance---is the single strongest predictor
-of final reward (Pearson $r{=}{-}0.769$, $p{=}0.0008$), outranking scale,
-algorithm, and library, and elevates 5--10 steps before reward collapses.
-\textbf{(F2) Inverted-U in group size.}  $G{=}32$ maximizes gradient
-utilization (54.5\%) and latest saturation onset (step 29); smaller and larger
-$G$ are both worse, contradicting ``more rollouts is better.''
-\textbf{(F3) Base vs.\ instruct dichotomy.}  Instruction tuning delivers a
-$+0.922$ GSM8K delta (0.047$\to$0.969); Qwen3-30B-A3B-Instruct hits 100\%
-last-10 where its base twin stalls at 32.5\%.  SFT, not RL, is the
-trainability gate.
-\textbf{(F4) PPO vs.\ GRPO is model-dependent.}  GRPO beats PPO on Qwen3-8B
-(34.4\% vs.\ 22.5\%); PPO beats GRPO on Llama-3.1-8B (97.5\% vs.\ 84.4\%,
-Mann-Whitney $r{=}0.94$, $p{<}10^{-10}$)---the ranking reverses across
-families.
-\textbf{(F5) Ceiling stability varies across architectures.}  At the 30-step
-horizon, Nemotron-120B peaks 87.5\% then collapses to 16.2\% last-10, while
-Kimi-K2 holds 100\%/80\% and Qwen3-235B-A22B holds 100\%/100\%---ceiling
-stability is architecture- and pre-training-conditional, not a monotone
-function of scale.  (All single-seed, early-training observations; asymptotic
-convergence is not assessed.)
-\textbf{(F6) Cold-Start Capability Threshold (validated).}  Critic-free
-GRPO is blind whenever the probability of a mixed-reward group
-$P(\text{usable})=1-(1-p_0)^{G}-p_0^{G}$ drops below the ZVF noise floor;
-the familiar $p_0\!>\!1/G$ is the small-$p_0$ limit.  We validate this
-predictor directly against every major task in the corpus
-(strict vs.\ SFT-warmed tool-use, GSM8K, MATH-500, and binary vs.\
-dense-reward HumanEval on the same Qwen3-8B base), recovering the
-observed task hierarchy as a consequence of $P(\text{usable})$ rather
-than of task semantics.
-\textbf{(F7) Framework is a first-class experimental variable.}  On matched
-model, task, and compute, the PPO-vs-GRPO winner flips between Qwen3-8B and
-Llama-3.1-8B-Instruct, and TRL-vs-Tinker last-10 reward differs even under
-the same nominal algorithm---library choice must be reported and ablated, not
-treated as implementation detail.
+First, Zero-Variance Fraction (ZVF) and Gradient Utilization (GU) are best
+treated as early triage diagnostics rather than calibrated performance
+predictors.  High ZVF with low reward flags cold-start collapse; high ZVF
+with high reward flags saturation; low ZVF indicates usable within-group
+contrast.  A fixed first-five-step rule catches both collapsed runs in a
+22-run de-duplicated validation set with no false positives, but only two
+positive failures are observed, and continuous ZVF ranking is weak.
+Second, the relevant mechanism is mixed-reward sampling probability:
+\[
+P(\text{usable}) \approx \frac{1}{N}\sum_x \left[1 - (1-p_x)^G - p_x^G\right].
+\]
+The familiar $1/G$ rule is only an expected-one-success heuristic.  Third,
+PPO/GRPO/DPO labels are incomplete experimental treatments unless the model
+family, backend, reward parser, sampler, optimizer, checkpoint rule, and
+evaluation harness are specified.  Our Qwen PPO/GRPO comparison is
+artifact-sensitive, and our Llama comparison favors PPO; neither supports a
+universal algorithm ranking.
 
-Code, 79 run logs, and checkpoints:
-\url{https://anonymous.4open.science/r/tinker-rl-lab}.
+Held-out GSM8K improves only from 82.0\% to 83.3\% ($p=0.26$), so we do not
+claim significant held-out math improvement.  The defensible conclusion is
+that GRPO is a reward-contrast amplifier: useful when the policy already
+samples distinguishable outcomes, brittle when the reward distribution is
+flat.
 \end{abstract}

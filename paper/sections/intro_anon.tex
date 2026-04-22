@@ -1,140 +1,70 @@
 % =============================================================================
-% Introduction — reframed around the five empirical discoveries (F1--F5)
-% Drop-in include: \input{sections/intro}
-% Target: <= 1.5 pages
+% Anonymous introduction -- three-claim framing
 % =============================================================================
 \section{Introduction}
 \label{sec:intro}
 
-Reinforcement learning post-training now defines the state of the art in
-language-model reasoning and alignment~\citep{ouyang2022training,%
-guo2025deepseekr1nature}, and a small zoo of algorithms
-(PPO~\citep{schulman2017proximal}, GRPO~\citep{shao2024deepseekmath},
-DPO~\citep{rafailov2024direct}) interacts with a larger zoo of training
-frameworks (TRL, \tinker{}, OpenRLHF~\citep{hu2024openrlhf},
-veRL~\citep{sheng2024verl}).  Every week a new benchmark reports that one
-algorithm ``beats'' another, usually on a different model family, library, and
-reward protocol.  What the community lacks is not another leaderboard but a
-controlled empirical substrate that can say \emph{when} and \emph{why} RL
-post-training succeeds or fails---the same diagnosis Henderson et
-al.~\citep{henderson2018deep} demanded of classical deep RL nearly a decade
-ago.
+Reinforcement learning post-training now anchors many claims about language
+model reasoning and alignment~\citep{ouyang2022training,guo2025deepseekr1nature}.
+PPO~\citep{schulman2017proximal}, GRPO~\citep{shao2024deepseekmath}, and
+DPO~\citep{rafailov2024direct} are often compared as if the algorithm label
+were the full treatment.  In practice, the outcome also depends on the base
+model, instruction tuning, reward parser, group construction, sampler,
+backend, LoRA configuration, checkpoint selection, and evaluation harness.
 
-\ours{} is that substrate: 79 controlled runs spanning 7 RL libraries,
-5 model families, 32+ checkpoints, and scales from 0.6B to $\sim$1T
-parameters, all reported against \texttt{rliable}
-standards~\citep{agarwal2021deep} with stratified bootstrap 95\% CIs,
-IQM aggregation, and pre-registered hypotheses.  Every cross-library
-comparison holds model, task, reward, and seed fixed; every cross-family
-comparison holds library and hyperparameter budget fixed.  Running this
-substrate produced five empirical discoveries that reframe what practitioners
-should measure, report, and optimize.
+We study this problem as a systems question rather than as an algorithm
+leaderboard.  The corpus contains 79 runs across structured tool-call
+emission, GSM8K, MATH-style tasks, HumanEval-style binary verification, small
+and frontier-scale model families, and several training backends.  The results
+are intentionally uneven: some runs improve online reward, some saturate, some
+collapse from step zero, and held-out GSM8K shows only a small non-significant
+lift.  That heterogeneity lets us ask which failures are genuine negative
+evidence and which failures simply show that a sparse reward produced no
+usable contrast.
 
-\paragraph{F1 --- ZVF dominance.}
-The Zero-Variance Fraction (ZVF)---the share of GRPO groups whose rollouts all
-receive identical rewards and therefore contribute zero gradient---is the
-single strongest predictor of final reward across our corpus
-($r_{\text{Pearson}}{=}{-}0.769$, $p{=}0.0008$; Spearman
-$\rho{=}{-}0.784$, $p{=}0.0005$).  Task type alone explains most of the
-variance: tool-use without SFT warm-up sits at ZVF $\approx$ 100\% from step 0,
-while GSM8K averages 8.5\%.  Elevated ZVF precedes reward collapse by 5--10
-steps---earlier than any reward-trajectory signal---making it an actionable
-early-warning diagnostic.  The simultaneous emergence of at least six
-independent 2025--2026 proposals targeting this failure
-mode~\citep{zhang2026aero,zhang2026greso} externally validates that ZVF
-names a real, cross-scale pathology.
+\paragraph{Claim 1: ZVF/GU are early triage diagnostics.}
+The most reusable methodological contribution is the operational use of
+Zero-Variance Fraction (ZVF) and Gradient Utilization (GU).  High ZVF with
+low reward means cold-start collapse; high ZVF with high reward means
+saturation; low ZVF means the current policy still samples both successes and
+failures.  In a 22-run de-duplicated validation set, a fixed rule using only
+the first five logged steps catches both collapsed runs with no false
+positives.  This is not enough to call ZVF a calibrated predictor.  The safe
+claim is narrower: ZVF/GU are cheap early-run diagnostics that convert flat
+reward groups into decisions to stop, warm-start, densify reward, change task
+difficulty, or increase group size.
 
-\paragraph{F2 --- Inverted-U in group size.}
-Holding model, task, seed, and LR fixed on Qwen3-8B/GSM8K, group size $G$
-traces an inverted-U in gradient utilization: $G{=}4$ collapses to $23.8\%$
-last-10 with immediate ZVF saturation; $G{=}16$ recovers; $G{=}32$ maximizes
-mean gradient utilization ($54.5\%$) and delays saturation onset to step 29;
-$G{=}64$ yields diminishing returns at $2\times$ compute.  ``More rollouts is
-always better'' is wrong---past $G{=}32$, additional samples buy variance
-reduction the advantage estimator cannot spend, a finding consistent with the
-scaling-law analysis of Zhou et al.~\citep{zhou2026demystify} and the
-2-GRPO efficiency argument of Wu et al.~\citep{wu2025grpo_dpo}.
+\paragraph{Claim 2: GRPO success depends on mixed-reward groups.}
+Under binary rewards, a sampled group has zero variance if every completion is
+wrong or every completion is correct.  If the current policy succeeds with
+success rate $p_x$ for prompt $x$ and group size is $G$, the probability of a usable mixed
+group is
+\[
+P(\text{usable}) \approx \frac{1}{N}\sum_x \left[1 - (1-p_x)^G - p_x^G\right].
+\]
+The familiar $p_x > 1/G$ rule is only an expected-one-success heuristic, not a
+threshold theorem.  SFT warm-up helps because it changes $p_0$; larger groups
+help only when they reduce the all-wrong term more than they waste compute;
+dense or partial-credit rewards help because they reduce all-zero/all-one
+groups.  GRPO is therefore best understood as a reward-contrast amplifier
+rather than a capability creator.
 
-\paragraph{F3 --- Base vs.\ instruct dichotomy.}
-The delta between SFT-aligned and raw base checkpoints ($+0.922$ on GSM8K:
-$0.047 \to 0.969$) dwarfs every RL contribution we measure.  The dichotomy
-holds cross-family (Qwen, Llama) and cross-architecture (dense, MoE):
-Qwen3-30B-A3B-Instruct reaches 100\% last-10 while its base-model twin stalls
-at 32.5\% under identical GRPO protocols.  Below 8B-instruct, both Qwen and
-Llama collapse to ZVF-saturated non-learning.  The RL community's implicit
-``GRPO makes models reason'' framing inverts the causal arrow: SFT gates
-trainability, GRPO refines what SFT has already unlocked.
-
-\paragraph{F4 --- PPO vs.\ GRPO is model-dependent.}
-At matched compute on Modal H100 GPUs, GRPO beats PPO on Qwen3-8B (last-10:
-$34.4\%$ vs.\ $22.5\%$) while PPO decisively beats GRPO on Llama-3.1-8B
-($97.5\%$ vs.\ $84.4\%$; Mann-Whitney $r{=}0.94$, $p{<}10^{-10}$).  The
-direction of advantage \emph{reverses} across families---a finding the field's
-algorithm-vs-algorithm papers structurally cannot produce because they fix a
-single model family.  Universal algorithm recommendations are therefore
-incorrect by construction; model-conditioned selection is required.
-
-\paragraph{F5 --- Kimi-K2 sustained ceiling.}
-Scale alone does not buy stability.  Nemotron-120B reaches peak $87.5\%$ and
-then catastrophically collapses to $16.2\%$ last-10 on GSM8K, while
-Kimi-K2 ($\sim$1T MoE) sustains peak $100\%$ /
-last-10 $80\%$ in 20 steps, and Kimi-K2-Thinking reaches $91.7\%$ last-10.
-Qwen3-235B-A22B achieves perfect $100\%$ last-10 under the same protocol.
-The ceiling is neither monotone in parameter count nor predicted by the
-three-phase saturation model of~\citet{nimmaturi2025scalinglaws}; it is
-conditional on pre-training recipe (agentic RL, MoE routing, instruction
-quality), making frontier-scale evaluation a qualitatively distinct regime.
-
-\paragraph{F6 --- Cold-Start Capability Threshold (validated).}
-Because GRPO has no value function to estimate partial progress, the
-gradient estimator vanishes whenever every sample in a group receives
-the same reward.  Under sparse binary reward with per-sample hit rate
-$p_0$ and group size $G$, the probability of a mixed-reward group is
-exactly $P(\text{usable})\!=\!1-(1-p_0)^{G}-p_0^{G}$, of which the
-familiar $p_0\!>\!1/G$ is only the small-$p_0$ limit.  We validate this
-predictor against every task family in the corpus
-(strict vs.\ SFT-warmed tool-use, GSM8K, MATH-500, binary vs.\
-dense-reward HumanEval on the same Qwen3-8B base, and the Llama-3.2-3B
-$G{=}32$ control): the observed initial ZVF and last-10 reward match
-$P(\text{usable})$ within log granularity, and the group-size
-progression on Qwen3-8B/GSM8K ($G{=}4{:}23.8\%\to G{=}32{:}54.7\%$
-last-10) falls out of this predictor rather than being
-asserted.  This \emph{extends} sparse-reward exploration
-arguments~\citep{burda2018exploration,ecoffet2019goexplore} from
-value-based RL into the critic-free regime and names a concrete,
-falsifiable boundary the original GRPO
-formulation~\citep{shao2024deepseekmath} leaves implicit.
-
-\paragraph{F7 --- Framework is a first-class experimental variable.}
-Tinker, TRL, Modal PPO, and classical PPO libraries expose different
-sampling loops, optimizer behaviours, rollout accounting, and KL
-handling.  On matched model, task, and compute, the PPO-vs-GRPO winner
-flips between Qwen3-8B and Llama-3.1-8B-Instruct (F4), and TRL-GRPO
-differs measurably from Tinker-GRPO under the same nominal algorithm.
-Reporting ``PPO vs.\ GRPO'' without the library is therefore
-under-specified.  This extends Henderson et al.'s reproducibility
-critique~\citep{henderson2018deep} from Atari/MuJoCo into LLM
-post-training and argues that library-level ablations belong alongside
-algorithmic claims in every RLHF paper.
+\paragraph{Claim 3: algorithm labels are incomplete treatments.}
+The PPO/GRPO/DPO label is not enough to interpret an LLM post-training run.
+Our Qwen PPO/GRPO comparison is artifact-sensitive: the source-of-truth ledger
+records PPO at 0.225 last-10 reward, while a statistical summary records
+0.350.  The Llama-3.1-8B-Instruct comparison favors PPO over GRPO.  These
+observations should not be turned into a directional algorithm ranking.  They
+instead show that algorithm-level claims require stack-conditioned reporting:
+model family, backend, reward implementation, rollout sampler, optimizer and
+KL handling, LoRA target modules, checkpoint-selection rule, and evaluation
+slice must be fixed or explicitly modeled.
 
 \paragraph{Contributions.}
-\textbf{(i)}~F1--F7 as the first controlled cross-library, cross-family
-empirical map of RL post-training dynamics, with honest assessment of
-statistical limitations.
-\textbf{(ii)}~ZVF as an operational diagnostic with calibrated thresholds
-($\geq 50\%$ sustained over 5+ steps $\Rightarrow$ early termination).
-\textbf{(iii)}~A reproducibility substrate---79 runs, step-level traces,
-Docker environments, W\&B logs\footnote{\url{https://wandb.ai/anonymous/tinker-rl-bench}},
-LoRA adapters, and HuggingFace checkpoints---that lets others falsify or
-extend every finding.
-\textbf{(iv)}~A calibrated predictor
-$P(\text{usable})\!=\!1-(1-p_0)^{G}-p_0^{G}$ for when critic-free GRPO
-has a learning signal (F6), validated against the full task corpus and
-used to \emph{derive} the task hierarchy rather than assert it;
-together with two pre-registered rescue experiments (large-$G$ and
-dense partial rewards) that falsify the predictor's edge cases.
-\textbf{(v)}~Framework-level ablations (F7) as evidence that library
-choice is an experimental variable, not an implementation detail, for
-RL post-training comparisons.
-We release everything under MIT licence at
-\url{https://anonymous.4open.science/r/tinker-rl-lab}.
+This paper contributes (i) an operational ZVF/GU triage framing for standard
+GRPO runs; (ii) a mixed-group probability mechanism that explains why
+warm-starts, group size, reward density, and task difficulty govern whether
+GRPO has signal; (iii) a source-of-truth ledger that separates online training
+reward from held-out accuracy and flags artifact inconsistencies; and (iv) a
+methodological warning that PPO, GRPO, and DPO comparisons in LLM
+post-training are not identifiable unless the full training stack is reported.

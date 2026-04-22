@@ -28,7 +28,16 @@ if [ -z "$TINKER_API_KEY" ]; then
     exit 1
 fi
 
-source .venv/bin/activate
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
+elif [ -d "../.venv-at" ]; then
+    source ../.venv-at/bin/activate
+elif [ -d "../.venv" ]; then
+    source ../.venv/bin/activate
+else
+    echo "ERROR: no virtualenv found at .venv, ../.venv-at, or ../.venv"
+    exit 1
+fi
 
 cleanup() {
     echo ""

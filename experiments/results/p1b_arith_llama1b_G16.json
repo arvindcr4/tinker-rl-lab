@@ -1,0 +1,232 @@
+{
+  "tag": "p1b_arith_llama1b_G16",
+  "status": "completed",
+  "model": "meta-llama/Llama-3.2-1B",
+  "task": "arith",
+  "group_size": 16,
+  "prompts": 30,
+  "seed": 20260422,
+  "temperature": 0.8,
+  "top_p": 0.95,
+  "max_tokens": 256,
+  "started_at": "2026-04-22T03:25:52.366478+00:00",
+  "run_id": "bf77225a-12f0-5773-bae8-6c8af10c63ca:train:0",
+  "mean_p_x": 0.014583333333333334,
+  "predicted_usable_group_rate": 0.13671874202399278,
+  "empirical_initial_zvf": 0.8,
+  "n_prompts": 30,
+  "per_prompt": [
+    {
+      "idx": 0,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 1,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 2,
+      "p_x": 0.0625,
+      "n_correct": 1,
+      "n_samples": 16,
+      "zero_variance": 0
+    },
+    {
+      "idx": 3,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 4,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 5,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 6,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 7,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 8,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 9,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 10,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 11,
+      "p_x": 0.0625,
+      "n_correct": 1,
+      "n_samples": 16,
+      "zero_variance": 0
+    },
+    {
+      "idx": 12,
+      "p_x": 0.0625,
+      "n_correct": 1,
+      "n_samples": 16,
+      "zero_variance": 0
+    },
+    {
+      "idx": 13,
+      "p_x": 0.0625,
+      "n_correct": 1,
+      "n_samples": 16,
+      "zero_variance": 0
+    },
+    {
+      "idx": 14,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 15,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 16,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 17,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 18,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 19,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 20,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 21,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 22,
+      "p_x": 0.0625,
+      "n_correct": 1,
+      "n_samples": 16,
+      "zero_variance": 0
+    },
+    {
+      "idx": 23,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 24,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 25,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 26,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 27,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 28,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 16,
+      "zero_variance": 1
+    },
+    {
+      "idx": 29,
+      "p_x": 0.125,
+      "n_correct": 2,
+      "n_samples": 16,
+      "zero_variance": 0
+    }
+  ],
+  "wall_clock_sec": 311.2253680229187,
+  "completed_at": "2026-04-22T03:31:03.591991+00:00"
+}

@@ -2,13 +2,20 @@
 % Anonymous abstract -- three-claim framing
 % =============================================================================
 \begin{abstract}
-GRPO is often discussed as a reasoning-improvement algorithm, but sparse
-verifiable rewards only create a useful update when sampled groups contain
-reward contrast.  We present an exploratory systems study of 79 post-training
-runs across tool-call formatting, GSM8K, MATH-style prompts, HumanEval-style
-verification, multiple model families, and several training stacks.  The main
-contribution is not a leaderboard.  It is a diagnostic account of when
-standard GRPO has a learning signal.
+We present a systems-oriented empirical audit of 79 post-training runs
+across tool-call formatting, GSM8K, MATH-style prompts, HumanEval-style
+verification, multiple model families, and several training stacks.  Our
+training runner is a group-relative policy-gradient variant inspired by GRPO,
+not a faithful reproduction of the canonical objective of
+\citet{shao2024deepseekmath}: it does not implement the PPO ratio and clip,
+does not retain a frozen reference policy for KL regularization, uses a
+single optimizer step per rollout batch, and does not apply a completion-only
+token mask (a post-hoc P1-A diagnostic on Qwen3.5-4B measures 61.6\%--89.6\%
+of the full-sequence loss magnitude to come from prompt tokens rather than
+from the completion).  The contribution is therefore not a
+leaderboard claim about ``GRPO''; it is a diagnostic account of when a
+critic-free group-relative RL loop has a usable learning signal and when
+apparent training-reward gains fail to transport to held-out capability.
 
 First, Zero-Variance Fraction (ZVF) and Gradient Utilization (GU) are best
 treated as early triage diagnostics rather than calibrated performance
@@ -28,9 +35,20 @@ evaluation harness are specified.  Our Qwen PPO/GRPO comparison is
 artifact-sensitive, and our Llama comparison favors PPO; neither supports a
 universal algorithm ranking.
 
-Held-out GSM8K improves only from 82.0\% to 83.3\% ($p=0.26$), so we do not
-claim significant held-out math improvement.  The defensible conclusion is
-that GRPO is a reward-contrast amplifier: useful when the policy already
-samples distinguishable outcomes, brittle when the reward distribution is
-flat.
+Several reward environments in this study measure proxies rather than
+end-to-end capability: the HumanEval-style sandbox executes completions with
+Python built-ins removed (rejecting legitimate uses of \texttt{len},
+\texttt{range}, \texttt{sum}); the tool-use reward scores JSON well-formedness,
+tool-name selection, and argument-key presence without executing tools; the
+MATH reward combines \texttt{\textbackslash boxed\{\}} format credit with
+final-answer matching; and the MATH-500 and HumanEval prompt pools used in the
+training loop are loaded from the \texttt{test} split of their respective
+datasets and therefore function as reward-environment probes rather than
+generalization tests.  Held-out GSM8K, evaluated on a separate 200-example
+slice that was not used during training, improves only from $82.0\%$ to
+$83.3\%$ ($p=0.26$), so we do not claim a significant held-out math effect.
+The defensible conclusion is that this runner behaves as a reward-contrast
+amplifier: useful when the policy already samples distinguishable outcomes
+under a verifier that rewards them, brittle when the reward distribution is
+flat or when the verifier penalizes legitimate completions.
 \end{abstract}

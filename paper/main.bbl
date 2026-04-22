@@ -1,4 +1,4 @@
-\begin{thebibliography}{157}
+\begin{thebibliography}{158}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -448,6 +448,15 @@ Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody~Hao Yu,
 \newblock In \emph{Proceedings of the 29th Symposium on Operating Systems
   Principles (SOSP)}, 2023.
 \newblock \doi{10.1145/3600006.3613165}.
+
+\bibitem[Le et~al.(2025)Le, Jeon, Vu, Lai, and Yang]{rlzvp2025}
+Thanh-Long~V. Le, Myeongho Jeon, Kim Vu, Viet Lai, and Eunho Yang.
+\newblock No prompt left behind: Exploiting zero-variance prompts in {LLM}
+  reinforcement learning via entropy-guided advantage shaping.
+\newblock \emph{arXiv preprint}, 2025.
+\newblock \doi{10.48550/arXiv.2509.21880}.
+\newblock URL \url{https://arxiv.org/abs/2509.21880}.
+\newblock arXiv:2509.21880.
 
 \bibitem[Lee et~al.(2023)Lee, Hunter, and Ruiz]{lee2023platypus}
 Ariel~N. Lee, Cole~J. Hunter, and Nataniel Ruiz.
@@ -1248,12 +1257,13 @@ Lianmin Zheng, Liangsheng Yin, Zhiqiang Xie, Chuyue Sun, Jeff Huang, Cody~Hao
 \newblock {SGLang}: Efficient execution of structured language model programs.
 \newblock In \emph{Advances in Neural Information Processing Systems}, 2024.
 
-\bibitem[Zhou et~al.(2026)]{zhou2026demystify}
-Yao Zhou et~al.
-\newblock Demystifying {GRPO}: A statistical framework for group-relative
-  policy optimization.
+\bibitem[Zhou et~al.(2026)Zhou, Ye, Xu, Zhu, Gong, and Shi]{zhou2026demystify}
+Hongyi Zhou, Kai Ye, Erhan Xu, Jin Zhu, Shijin Gong, and Chengchun Shi.
+\newblock Demystifying group relative policy optimization: Its policy gradient
+  is a {U}-statistic.
 \newblock \emph{arXiv preprint}, 2026.
-\newblock \doi{10.48550/arXiv.2601.14456}.
-\newblock arXiv:2601.14456.
+\newblock \doi{10.48550/arXiv.2603.01162}.
+\newblock URL \url{https://arxiv.org/abs/2603.01162}.
+\newblock arXiv:2603.01162.
 
 \end{thebibliography}

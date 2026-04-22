@@ -32,6 +32,11 @@ dev = [
     "mypy>=1.6.0",
     "pre-commit>=3.5.0",
 ]
+browser = [
+    "browsergym-miniwob==0.14.3",
+    "browsergym-webarena==0.14.3",
+    "playwright==1.44.0",
+]
 
 [tool.setuptools.packages.find]
 include = ["tinker_atropos*"]

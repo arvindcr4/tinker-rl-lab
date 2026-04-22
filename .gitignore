@@ -46,8 +46,15 @@ grpo-results/
 
 # Secrets
 .env
+.env.*
 .secrets/
 *.key
+*.pem
+*.p12
+*.p8
+*.token
+*.secret
+.tinker_api_key
 
 # Logs
 *.log
@@ -82,8 +89,30 @@ paper/main.blg
 paper/main.fls
 paper/main.fdb_latexmk
 paper/main.synctex.gz
+paper/main_anon.aux
+paper/main_anon.bbl
+paper/main_anon.blg
+paper/main_anon.out
+paper/ethics_wrapper.aux
+paper/ethics_wrapper.bbl
+paper/ethics_wrapper.blg
+paper/ethics_wrapper.out
+reports/final/*.aux
+reports/final/*.bbl
+reports/final/*.blg
+reports/final/*.fdb_latexmk
+reports/final/*.fls
+reports/final/*.lof
+reports/final/*.lot
+reports/final/*.out
+reports/final/*.toc
+
+# Archives (too large for git)
+*.zip
+*.tar.gz
+reports/final/capstone_final_report_submission/
+
 wandb/
 .modal/
 node_modules/
 wandb/
-.tinker_api_key

@@ -77,8 +77,8 @@ def add_deck():
 
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     set_bg(slide)
-    text(slide, 0.9, 0.95, 11.5, 0.55, "Reinforcement Learning for Agentic LLM Fine-Tuning", 28, TEAL, True, PP_ALIGN.CENTER)
-    text(slide, 0.9, 1.7, 11.5, 0.9, "GRPO Across Tool Use, Code Generation, and Mathematical Reasoning", 34, WHITE, True, PP_ALIGN.CENTER)
+    text(slide, 0.9, 0.95, 11.5, 0.55, "When Does GRPO Have a Learning Signal?", 28, TEAL, True, PP_ALIGN.CENTER)
+    text(slide, 0.9, 1.7, 11.5, 0.9, "Reward Diversity, Structured Outputs, and Reasoning Benchmarks", 34, WHITE, True, PP_ALIGN.CENTER)
     text(slide, 1.6, 3.0, 10.1, 0.35, "Final Capstone Presentation | Group 6 | PES University", 17, MUTED, False, PP_ALIGN.CENTER)
     stat(slide, 1.3, 4.2, "32+", "structured runs")
     stat(slide, 4.1, 4.2, "5", "task families", BLUE)
@@ -88,19 +88,19 @@ def add_deck():
 
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     set_bg(slide)
-    title(slide, "01", "Problem and Research Questions", "When does critic-free RL improve LLM agents, and when does it fail?")
+    title(slide, "01", "Problem and Research Questions", "When does critic-free RL have usable reward signal?")
     card(slide, 0.7, 1.35, 5.7, 4.9)
     text(slide, 1.0, 1.65, 5.1, 0.4, "Motivation", 20, TEAL, True)
     bullets(slide, 1.0, 2.25, [
-        "Agents need verifiable behavior, not only imitation.",
-        "Tool calls must be schema-valid and semantically correct.",
-        "Math and code tasks expose whether RL improves reasoning.",
+        "LLM post-training needs verifiable behavior, not only imitation.",
+        "Tool-call emissions must be valid before execution can be tested.",
+        "Math and code tasks expose whether reward gains generalize.",
         "GRPO removes the PPO value model, but depends on reward variance.",
     ])
     card(slide, 6.9, 1.35, 5.7, 4.9)
     text(slide, 7.2, 1.65, 5.1, 0.4, "Core Questions", 20, AMBER, True)
     bullets(slide, 7.2, 2.25, [
-        "Can GRPO improve tool-use beyond supervised tuning?",
+        "Can GRPO improve structured tool-call emission beyond supervised tuning?",
         "How do model size and instruction tuning affect GRPO?",
         "How do GRPO and PPO compare under similar constraints?",
         "Can ZVF and GU diagnose bad RL runs early?",
@@ -132,7 +132,7 @@ def add_deck():
     set_bg(slide)
     title(slide, "03", "Experiment Inventory", "Final report consolidates the first chapter, interim scope, literature survey, and all completed experiments")
     cols = [
-        ("Tool Use", ["SFT warm-up", "GRPO on schema rewards", "0.5B and 1.5B Qwen variants"], TEAL),
+        ("Structured Outputs", ["SFT warm-up", "GRPO on schema rewards", "0.5B and 1.5B Qwen variants"], TEAL),
         ("Math", ["Arithmetic", "GSM8K", "MATH and held-out GSM8K"], BLUE),
         ("Code", ["HumanEval-style rewards", "Semantic code", "Framework sensitivity"], AMBER),
         ("Baselines", ["PPO: SB3, CleanRL", "TRL GRPO", "DPO & distillation"], GREEN),
@@ -148,11 +148,11 @@ def add_deck():
     title(slide, "04", "Key Result: Tool Use", "GRPO is most useful when the model already has a supervised behavioral prior")
     stat(slide, 0.8, 1.5, "SFT", "establishes schema")
     stat(slide, 3.65, 1.5, "GRPO", "sharpens validity", GREEN)
-    stat(slide, 6.5, 1.5, "ZVF", "predicts collapse", AMBER)
+    stat(slide, 6.5, 1.5, "ZVF", "triage alarm", AMBER)
     stat(slide, 9.35, 1.5, "GU", "tracks usable signal", BLUE)
     card(slide, 1.0, 3.55, 11.3, 1.85)
     text(slide, 1.35, 3.85, 10.7, 0.35, "Interpretation", 19, TEAL, True)
-    text(slide, 1.35, 4.35, 10.7, 0.55, "Tool-call rewards are structured and immediate. Once SFT teaches the output format, GRPO can exploit reward variation to improve valid action emission.", 16, WHITE)
+    text(slide, 1.35, 4.35, 10.7, 0.55, "Tool-call rewards are structured and immediate. Once SFT teaches the output format, GRPO can exploit reward variation to improve schema-valid emission.", 16, WHITE)
 
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     set_bg(slide)
@@ -192,7 +192,7 @@ def add_deck():
     set_bg(slide)
     title(slide, "07", "Final Conclusions", "GRPO amplifies useful priors; it does not reliably create missing reasoning ability")
     conclusions = [
-        ("1", "Best domain", "Structured tool-use after supervised warm-up"),
+        ("1", "Best domain", "Structured tool-call emission after supervised warm-up"),
         ("2", "Main failure mode", "Zero reward variance leads to dead policy updates"),
         ("3", "Scaling lesson", "Bigger and instruction-tuned models give GRPO more usable signal"),
         ("4", "Evaluation lesson", "Training reward saturation is not held-out generalization"),
@@ -224,7 +224,7 @@ def add_deck():
     set_bg(slide)
     text(slide, 1.0, 2.25, 11.3, 0.8, "Thank You", 44, WHITE, True, PP_ALIGN.CENTER)
     text(slide, 1.0, 3.25, 11.3, 0.5, "Questions and Discussion", 24, TEAL, True, PP_ALIGN.CENTER)
-    text(slide, 1.0, 4.25, 11.3, 0.35, "Group 6 | Reinforcement Learning for Agentic LLM Fine-Tuning", 15, MUTED, False, PP_ALIGN.CENTER)
+    text(slide, 1.0, 4.25, 11.3, 0.35, "Group 6 | When Does GRPO Have a Learning Signal?", 15, MUTED, False, PP_ALIGN.CENTER)
 
     return prs
 

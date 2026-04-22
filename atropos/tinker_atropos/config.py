@@ -32,6 +32,14 @@ class EnvConfig(BaseModel):
     data_seed: int = 42
     use_prompt_prefix: bool = True
 
+    # BrowserGym/WebArena control. These are ignored by non-browser envs.
+    browsergym_benchmark: str = "miniwob"
+    browsergym_env_ids: List[str] = Field(default_factory=list)
+    browsergym_max_browser_steps: int = 8
+    browsergym_eval_episodes: int = 16
+    browsergym_headless: bool = True
+    browsergym_observation_max_chars: int = 6000
+
 
 class OpenAIServerConfig(BaseModel):
     """OpenAI-compatible server configuration"""
@@ -146,6 +154,30 @@ class TinkerAtroposConfig(BaseModel):
     @property
     def use_prompt_prefix(self) -> bool:
         return self.env.use_prompt_prefix
+
+    @property
+    def browsergym_benchmark(self) -> str:
+        return self.env.browsergym_benchmark
+
+    @property
+    def browsergym_env_ids(self) -> List[str]:
+        return self.env.browsergym_env_ids
+
+    @property
+    def browsergym_max_browser_steps(self) -> int:
+        return self.env.browsergym_max_browser_steps
+
+    @property
+    def browsergym_eval_episodes(self) -> int:
+        return self.env.browsergym_eval_episodes
+
+    @property
+    def browsergym_headless(self) -> bool:
+        return self.env.browsergym_headless
+
+    @property
+    def browsergym_observation_max_chars(self) -> int:
+        return self.env.browsergym_observation_max_chars
 
     @property
     def wandb_run_name(self) -> str:

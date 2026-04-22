@@ -4,14 +4,25 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-This study does not show that GRPO generally improves reasoning.  The
-strongest held-out GSM8K result is a small, statistically non-significant lift
-from 82.0\% to 83.3\% ($p=0.26$), and the sparse HumanEval-style setup
-obtains almost no usable signal.  The more defensible conclusion is that GRPO
-is a conditional reward-contrast amplifier.  It can refine behavior when the
-current policy samples both successes and failures under a reward that
-distinguishes them; it cannot reliably bootstrap competence when sampled
-groups are flat.
+This study does not show that GRPO generally improves reasoning, and we are
+careful not to claim that it does.  The training runner is a group-relative
+policy-gradient variant inspired by GRPO rather than a faithful implementation
+of the canonical objective (missing PPO clip, reference-KL, and completion-only
+mask; a P1-A diagnostic measures $\sim$76\% of the full-sequence loss magnitude
+to be prompt-token gradient), so algorithm-level conclusions apply to this
+runner and not to GRPO-the-algorithm.  Three of our reward environments
+(HumanEval, tool-use, and MATH) measure sandbox-restricted execution, JSON
+schema compliance, and boxed-answer formatting respectively, not end-to-end
+capability.  The MATH-500 and HumanEval prompt pools in the training loop are
+loaded from the \texttt{test} splits and function as reward-environment
+probes, not as generalization tests.  The only capability signal evaluated on
+a genuinely held-out slice is GSM8K, where the lift from $82.0\%$ to
+$83.3\%$ is not significant ($p=0.26$).  The defensible conclusion is that
+this critic-free group-relative RL loop behaves as a conditional reward-contrast
+amplifier: it can refine behavior when the current policy samples both
+successes and failures under a verifier that rewards them, and it cannot
+reliably bootstrap competence when sampled groups are flat or the verifier
+rejects legitimate completions.
 
 The paper's main contribution is therefore diagnostic.  ZVF and GU should be
 logged early and interpreted jointly with reward level.  High ZVF with low

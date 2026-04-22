@@ -1,0 +1,68 @@
+This is BibTeX, Version 0.99e (TeX Live 2026)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: combined_capstone.aux
+The style file: plainnat.bst
+Illegal, another \bibdata command---line 1220 of file combined_capstone.aux
+ : \bibdata
+ :         {refs}
+I'm skipping whatever remains of this command
+Illegal, another \bibstyle command---line 1325 of file combined_capstone.aux
+ : \bibstyle
+ :          {plainnat}
+I'm skipping whatever remains of this command
+Illegal, another \bibdata command---line 1326 of file combined_capstone.aux
+ : \bibdata
+ :         {references}
+I'm skipping whatever remains of this command
+Database file #1: references.bib
+Warning--I didn't find a database entry for "ziegler2019finetuning"
+Warning--I didn't find a database entry for "bradley1952rank"
+Warning--I didn't find a database entry for "houlsby2019adapters"
+Warning--I didn't find a database entry for "li2021prefix"
+Warning--I didn't find a database entry for "lester2021prompt"
+Warning--I didn't find a database entry for "rajbhandari2020zero"
+Warning--I didn't find a database entry for "kwon2023vllm"
+Warning--I didn't find a database entry for "kaplan2020scaling"
+Warning--I didn't find a database entry for "hoffmann2022chinchilla"
+You've used 95 entries,
+            2773 wiz_defined-function locations,
+            1114 strings with 28088 characters,
+and the built_in function-call counts, 53800 in all, are:
+= -- 4174
+> -- 5347
+< -- 32
++ -- 1811
+- -- 1704
+* -- 4774
+:= -- 8804
+add.period$ -- 315
+call.type$ -- 95
+change.case$ -- 811
+chr.to.int$ -- 83
+cite$ -- 190
+duplicate$ -- 1690
+empty$ -- 3137
+format.name$ -- 1828
+if$ -- 10806
+int.to.chr$ -- 13
+int.to.str$ -- 1
+missing$ -- 40
+newline$ -- 513
+num.names$ -- 380
+pop$ -- 1832
+preamble$ -- 1
+purify$ -- 716
+quote$ -- 0
+skip$ -- 1765
+stack$ -- 0
+substring$ -- 261
+swap$ -- 136
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 1040
+warning$ -- 0
+while$ -- 290
+width$ -- 0
+write$ -- 1210
+(There were 3 error messages)

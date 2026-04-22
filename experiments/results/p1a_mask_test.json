@@ -1,0 +1,73 @@
+{
+  "tag": "p1a_mask_test",
+  "model": "Qwen/Qwen3.5-4B",
+  "rank": 4,
+  "seed": 20260422,
+  "started_at": "2026-04-22T02:58:43.881029+00:00",
+  "status": "completed",
+  "run_id": "134e0fc2-0d15-58b4-b8d6-140f35891321:train:0",
+  "losses": {
+    "full_sequence_sum": {
+      "clock_cycle:unique": 3465607.0,
+      "loss:sum": 94.34706687927246,
+      "mean_loss": 94.3470687866211,
+      "per_seq_loss": [
+        47.28168869018555,
+        141.41244506835938
+      ]
+    },
+    "completion_only_sum": {
+      "clock_cycle:unique": 3465609.0,
+      "loss:sum": 16.432968139648438,
+      "mean_loss": 16.432968139648438,
+      "per_seq_loss": [
+        18.167612075805664,
+        14.698324203491211
+      ]
+    },
+    "completion_only_mean": {
+      "clock_cycle:unique": 3465611.0,
+      "loss:sum": 1.218017339706421,
+      "mean_loss": 1.2180172204971313,
+      "per_seq_loss": [
+        1.2111741304397583,
+        1.2248603105545044
+      ]
+    }
+  },
+  "sequence_shapes": {
+    "short": {
+      "prompt_len": 11,
+      "resp_len": 15,
+      "total_len": 26
+    },
+    "long": {
+      "prompt_len": 42,
+      "resp_len": 12,
+      "total_len": 54
+    }
+  },
+  "prompt_attribution": [
+    {
+      "seq": 0,
+      "full_loss": 47.28168869018555,
+      "completion_loss": 18.167612075805664,
+      "prompt_contribution": 29.114076614379883,
+      "prompt_frac_of_full": 0.6157579693303807
+    },
+    {
+      "seq": 1,
+      "full_loss": 141.41244506835938,
+      "completion_loss": 14.698324203491211,
+      "prompt_contribution": 126.71412086486816,
+      "prompt_frac_of_full": 0.8960606034611311
+    }
+  ],
+  "verdict": {
+    "avg_abs_prompt_frac_of_full_loss": 0.7559092863957559,
+    "threshold": 0.05,
+    "verdict": "LEAK"
+  },
+  "wall_clock_sec": 29.737537145614624,
+  "completed_at": "2026-04-22T02:59:13.618908+00:00"
+}

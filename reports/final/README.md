@@ -1,31 +1,12 @@
 # Reports - Final Submission
 
-This directory contains the final capstone report and conference paper for the GRPO Agentic LLM Fine-Tuning project.
+This directory contains the final capstone report and conference paper material for the GRPO reward-diversity study.
 
-## ⚠️ CRITICAL: Standardized Evaluation Still Required
+## Current Status
 
-**The paper now acknowledges its evaluation-scope limitations, but key reviewer-facing gaps still need to be closed.** The strongest current evidence is in training-set reward optimization and training dynamics, not yet in fully standardized held-out generalization across math, tool calling, and code generation.
+The final capstone report is framed as an exploratory systems study, not as a broad proof that GRPO improves reasoning. The strongest positive evidence is structured tool-call emission after SFT warm-up. The strongest negative check is the held-out GSM8K result: Qwen3-8B base scores 82.0% on the matched 200-example slice, while GRPO checkpoints average 83.3% (SD 2.2, p=0.26), so the lift is small and not statistically significant.
 
-See `PAPER_IMPROVEMENT_PLAN.md` for the concrete remediation roadmap.
-
-### To Complete the Paper (A-grade path):
-
-Run the held-out GSM8K test evaluation:
-
-```bash
-# With Tinker (if checkpoint still available)
-TINKER_API_KEY=your_key python evaluate_gsm8k_test.py \
-    --use_tinker \
-    --run_id 5db4e965 \
-    --output gsm8k_test_results.json
-
-# With local model (requires GPU)
-python evaluate_gsm8k_test.py \
-    --model_name Qwen/Qwen3-8B \
-    --output gsm8k_test_results.json
-```
-
-If results show >40% accuracy on held-out test, update Section 4.3.3 with actual numbers. This will transform the paper from a training dynamics study to a true generalization claim.
+See `result_ledger.md` for the source-of-truth result table and `ARTIFACT_SANITIZATION.md` for credential-exclusion rules.
 
 ## Files
 
@@ -52,12 +33,12 @@ If results show >40% accuracy on held-out test, update Section 4.3.3 with actual
 - `../../submission_colab.ipynb` - Standard GRPO training + evaluation Colab
 - `../../advanced_rl_colab.ipynb` - Dr. GRPO, DAPO, DPO Colab (advanced algorithms)
 
-## Key Results (Training-Set)
+## Key Results
 
 These numbers should not all be read as standardized benchmark claims:
 - **Tool results are internal/custom** and still need standardized evaluator disclosure or replacement.
 - **HumanEval is currently a 50-problem subset result**, not yet the canonical full-harness benchmark.
-- **Math is the strongest current evidence**, but the main reported GRPO math numbers are still training-set reward metrics until full held-out evaluation is completed.
+- **Math has a completed held-out check**, but it is negative for a strong GRPO-improvement claim.
 
 | Task | Before | After | Scope note |
 |------|--------|-------|------------|
@@ -65,6 +46,7 @@ These numbers should not all be read as standardized benchmark claims:
 | Multi-turn Quality | 0.72 | 0.91 | custom judge-derived internal scenario score |
 | HumanEval Pass@1 | 32% | 40% | preliminary 50-problem subset |
 | GSM8K Train Reward | - | 30.0% ± 2.5% | training-set reward, not held-out test accuracy |
+| GSM8K Held-Out Accuracy | 82.0% base | 83.3% GRPO | +1.3pp, p=0.26; not significant |
 
 ## Paper Status
 
@@ -73,14 +55,14 @@ These numbers should not all be read as standardized benchmark claims:
 ✅ **Completed**: Advanced RL notebook (Dr. GRPO, DAPO, DPO) -- `advanced_rl_colab.ipynb`  
 ✅ **Completed**: Submission Colab -- `submission_colab.ipynb`  
 ✅ **Completed**: All 13 audits passing (0 issues)  
-🔄 **In Progress**: Held-out GSM8K evaluation (5 seeds x 200 examples via Tinker API)  
+✅ **Completed**: Held-out GSM8K evaluation (5 seeds x 200 examples; non-significant lift)  
 ⚠️ **Pending**: Standardized tool-calling evaluation / judge protocol disclosure  
 ⚠️ **Pending**: Canonical full HumanEval/MBPP evaluation  
-⚠️ **Pending**: Reproducibility packaging for prompts, schemas, and checkpoints
+⚠️ **Pending**: Fully local reproduction path without hosted-service permissions
 
 ## Highest-Leverage Next Step
 
-Run `evaluate_gsm8k_test.py` on the trained checkpoint and update Section 4.3.3 with full held-out results. That is the single highest-leverage improvement, but not the only one: the paper also needs standardized tool/code evaluation or narrower claim boundaries. See `PAPER_IMPROVEMENT_PLAN.md` for the full sequencing.
+Add a minimal local reproduction path that does not require private Tinker, W&B, or checkpoint permissions. The best next experiment is a matched baseline table with Best-of-N, rejection SFT, DAPO/Dr.GRPO-style variants, and RLOO/REINFORCE++ on the same small task slices.
 
 ## Audit Suite
 

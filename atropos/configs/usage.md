@@ -20,6 +20,15 @@ Minimal resource configuration optimized for rapid testing and debugging.
 
 **Use case**: Local testing, debugging, CI/CD pipelines
 
+### BrowserGym/WebArena Smoke Configs
+Browser-control GRPO configs for agentic browser use:
+
+- `browsergym_miniwob_qwen_8b_smoke.yaml`
+- `browsergym_webarena_qwen_8b_smoke.yaml`
+
+See `browsergym_usage.md` for BrowserGym setup, MiniWoB assets, WebArena URLs,
+and run commands.
+
 ## Configuration Parameters
 
 ### Tinker Model Configuration

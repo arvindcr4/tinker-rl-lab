@@ -1,0 +1,44 @@
+# W&B-logged smoke config for BrowserGym WebArena browser-control GRPO.
+# Requires a running WebArena deployment and WA_* URLs; see configs/browsergym_usage.md.
+env:
+  group_size: 2
+  batch_size: 2
+  max_batches_offpolicy: 1
+  tokenizer_name: "Qwen/Qwen3-8B"
+  use_wandb: true
+  rollout_server_url: "http://localhost:8032"
+  wandb_name: "browsergym-webarena-qwen8b-smoke-env"
+  ensure_scores_are_not_same: false
+  max_token_length: 768
+  max_num_workers: 1
+  total_steps: 1
+  steps_per_eval: 100
+  data_seed: 42
+  use_prompt_prefix: true
+  browsergym_benchmark: "webarena"
+  browsergym_env_ids:
+    - "browsergym/webarena.10"
+  browsergym_max_browser_steps: 8
+  browsergym_eval_episodes: 1
+  browsergym_headless: true
+  browsergym_observation_max_chars: 6000
+
+openai:
+  - model_name: "Qwen/Qwen3-8B"
+    base_url: "http://localhost:8033/v1"
+    api_key: "x"
+    weight: 1.0
+    num_requests_for_eval: 2
+
+tinker:
+  lora_rank: 16
+  learning_rate: 0.00004
+  max_token_trainer_length: 2048
+  checkpoint_dir: "./checkpoints/browsergym_webarena_qwen8b_smoke/"
+  save_checkpoint_interval: 0
+  wandb_project: "tinker-agentic-smoke"
+  wandb_group: "browsergym-tinker-smoke"
+  wandb_run_name: "browsergym-webarena-qwen8b-smoke"
+
+slurm: false
+testing: false

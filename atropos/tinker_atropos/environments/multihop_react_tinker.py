@@ -249,7 +249,7 @@ def _score_react_trace(
 
 def _load_hotpotqa(split: str = "train", max_examples: int = 5000, seed: int = 42):
     """Load HotpotQA bridge questions with their context paragraphs."""
-    ds = load_dataset("hotpot_qa", "distractor", split=split, trust_remote_code=True)
+    ds = load_dataset("hotpot_qa", "distractor", split=split)
     ds = ds.shuffle(seed=seed)
 
     examples = []

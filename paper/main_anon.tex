@@ -38,7 +38,7 @@
 \newcommand{\grpo}{\textsc{Grpo}}
 \newcommand{\ours}{\textsc{TinkerRL-Bench}}
 
-\title{A Unified Benchmark for RL Post-Training of Language Models}
+\title{When Does GRPO Have a Learning Signal? Reward Diversity Diagnostics and Stack Effects in LLM Post-Training}
 
 \author{%
   Anonymous Author(s)\\
@@ -58,10 +58,10 @@
 \maketitle
 
 % =============================================================================
-% Abstract reframed around F1--F5 (see sections/abstract.tex)
+% Abstract reframed around the three central claims (see sections/abstract_anon.tex)
 \input{sections/abstract_anon}
 
-% Introduction reframed around F1--F5 (see sections/intro.tex)
+% Introduction reframed around the three central claims (see sections/intro_anon.tex)
 \input{sections/intro_anon}
 
 % =============================================================================
@@ -466,7 +466,7 @@ GRPO & OpenRLHF (Modal-H100) & Qwen3-8B & 8B & 30 & see Fig.~\ref{fig:framework_
 \midrule
 \multicolumn{7}{l}{\textit{PPO on Modal H100 (GSM8K)}} \\
 \midrule
-PPO & Modal & Qwen3-8B & 8B & 30 & 75.0\% & 22.5\% \\
+PPO & Modal & Qwen3-8B & 8B & 30 & 75.0\% & 22.5\% ledger / 35.0\% stat summary \\
 PPO & Modal & Llama-3.1-8B-Inst & 8B & 30 & 100\% & 97.5\% \\
 \midrule
 \multicolumn{7}{l}{\textit{Cross-task (Tool-Use), GRPO on Tinker}} \\
@@ -970,29 +970,30 @@ owned hardware, enabling the first benchmark-quality frontier scaling study
 for GRPO.
 
 % ---------------------------------------------------------------------------
-\subsection{PPO vs.~GRPO: Controlled Algorithm Comparison}
+\subsection{PPO vs.~GRPO: Stack-Conditioned Comparison}
 \label{sec:ppo_grpo}
 % ---------------------------------------------------------------------------
 
-A critical gap in prior RL post-training literature is the absence of
-controlled comparisons between PPO and GRPO on identical tasks, identical
-models, and identical compute budgets. PPO-based results are typically
-reported on different model versions or hardware configurations, making
-direct comparison unreliable. We address this gap using the Modal H100
-cluster to train PPO baselines on the same models and tasks as our GRPO runs.
+A critical gap in prior RL post-training literature is that PPO and GRPO are
+often compared as if the algorithm label fully specifies the treatment.  Our
+results argue for a narrower interpretation.  The same label hides the backend,
+sampler, reward parser, KL/reference handling, optimizer, LoRA configuration,
+checkpoint-selection rule, and evaluation slice.  We therefore treat the
+PPO/GRPO rows as stack-conditioned evidence, not as an algorithm leaderboard.
 
 \begin{table}[htbp]
 \centering
-\caption{PPO vs.~GRPO Comparison: GSM8K training reward (peak and last-10-step mean).
-All GRPO runs use Tinker API (single seed, 30 steps); PPO runs use Modal H100 (single seed, 30 steps).
-Bold indicates the higher last-10 average for each model pair.}
+\caption{PPO vs.~GRPO comparison as stack-conditioned evidence.  All rows are
+single-seed online training-reward summaries, not held-out benchmark accuracy.
+The Qwen PPO value is artifact-sensitive: the source ledger records 22.5\%,
+while the statistical summary records a 35.0\% PPO last-10 mean.}
 \label{tab:ppo_grpo}
-\begin{tabular}{llccc}
+\begin{tabular}{llccp{4.2cm}}
 \toprule
 \textbf{Method} & \textbf{Model} & \textbf{Steps} & \textbf{Peak} & \textbf{Last-10 Avg} \\
 \midrule
 GRPO (Tinker) & Qwen3-8B & 30 & 62.5\% & \textbf{34.4\%} \\
-PPO (Modal H100) & Qwen3-8B & 30 & 75.0\% & 22.5\% \\
+PPO (Modal H100) & Qwen3-8B & 30 & 75.0\% & 22.5\% in ledger; 35.0\% in statistics summary \\
 \midrule
 GRPO (Tinker) & Llama-3.1-8B-Instruct & 30 & 100\% & 84.4\% \\
 PPO (Modal H100) & Llama-3.1-8B-Instruct & 30 & 100\% & \textbf{97.5\%} \\
@@ -1003,25 +1004,24 @@ PPO (Modal H100) & Llama-3.1-8B-Instruct & 30 & 100\% & \textbf{97.5\%} \\
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/v2/ppo_vs_grpo.pdf}
-\caption{Step-level reward comparison between GRPO (Tinker) and PPO (Modal H100) on Qwen3-8B GSM8K. Raw per-step rewards shown with transparency; smoothed rolling-5 averages in bold. The shaded region marks the last-10 evaluation window. GRPO achieves a higher last-10 average (34.4\%) vs.~PPO (22.5\%) despite PPO reaching a higher peak (75\% vs.~62.5\%). PPO exhibits substantially higher volatility (std 0.284 vs.~0.147).}
+\caption{Artifact-specific step-level reward comparison between GRPO (Tinker)
+and PPO (Modal H100) on Qwen3-8B GSM8K.  Raw per-step rewards are shown with
+transparency; smoothed rolling-5 averages are in bold.  Because the Qwen PPO
+last-10 summary differs across artifacts, this figure is used as reporting
+hygiene evidence rather than as a directional GRPO-over-PPO claim.}
 \label{fig:ppo_vs_grpo}
 \end{figure}
 
-Figure~\ref{fig:ppo_vs_grpo} reveals the step-level dynamics behind Table~\ref{tab:ppo_grpo}.
-Key observations:
-(1) PPO requires a value model adding $\sim$40\% memory overhead and
-$\sim$35\% wall-clock training time relative to GRPO;
-(2) On Qwen3-8B, GRPO achieves a higher last-10 average (34.4\%) than PPO (22.5\%),
-with GRPO exhibiting lower per-step volatility (CV 0.46 vs.~1.00 for PPO);
-Cohen's $d = 0.166$ (negligible) indicates no practically significant difference
-in expected reward, but GRPO's lower variance is preferable in deployment;
-(3) On Llama-3.1-8B, PPO substantially dominates with 97.5\% last-10 average
-vs.~84.4\% for GRPO, a Mann-Whitney $U$ effect size of $r = 0.94$ ($p < 10^{-10}$);
-(4) The model--algorithm interaction is pronounced: GRPO is preferred for Qwen3-8B
-while PPO is preferred for Llama-3.1-8B, suggesting that the base model's
-reward landscape determines which optimization method is more stable.
-These findings suggest that algorithm selection should be model-specific
-rather than universally preferring one method.
+Figure~\ref{fig:ppo_vs_grpo} reveals why a source-of-truth ledger is necessary.
+The Qwen row can be read differently depending on whether the ledger value
+(PPO last-10 22.5\%) or the statistical summary value (35.0\%) is treated as
+canonical.  We therefore withhold a directional Qwen algorithm claim.  The
+Llama-3.1-8B-Instruct row favors PPO in the recorded setting, but it is still
+single-seed and backend-confounded.  The appropriate conclusion is
+identifiability rather than ranking: ``PPO'' and ``GRPO'' are incomplete
+treatment labels unless the model family, backend, reward implementation,
+sampler, optimizer, checkpoint-selection rule, and evaluation harness are
+reported and controlled.
 
 \begin{table}[ht]
 \centering
@@ -1166,12 +1166,13 @@ When $\mathrm{ZVF}_t = 1$, every prompt contributes zero gradient.
 the fraction of prompts providing informative signal.
 
 Across $N = 15$ experiments spanning 5 model families and 3\,B--671\,B parameters,
-ZVF exhibits a strong negative correlation with final performance:
+ZVF has a strong zero-order association with final performance:
 \[
   r_{\text{Pearson}} = -0.769 \;(p = 0.0008), \qquad
   \rho_{\text{Spearman}} = -0.784 \;(p = 0.0005).
 \]
-Task type is the dominant driver: tool-use experiments reach $\mathrm{ZVF} = 100\%$
+This association is not by itself a predictive model.  Task type is the
+dominant driver: tool-use experiments reach $\mathrm{ZVF} = 100\%$
 (mean $\mathrm{GU} = 0\%$), while GSM8K experiments average $\mathrm{ZVF} = 8.5\%$
 (mean $\mathrm{GU} = 91.5\%$). Model scale does not uniformly reduce ZVF
 ($r_\text{Pearson} = -0.257$), indicating that task--reward alignment is more
@@ -1179,10 +1180,11 @@ critical than parameter count for maintaining gradient flow. A one-way ANOVA
 across model families yields $F(4,10) = 0.949$, $p = 0.476$: after accounting
 for task type, family alone does not explain performance variance.
 
-To our knowledge, this is the \textbf{first systematic cross-library, cross-scale
-measurement of ZVF prevalence in GRPO training}. We recommend monitoring
-$\mathrm{GU}_t$ in real time, with intervention triggered when $\mathrm{GU}_t < 0.5$
-for more than 10 consecutive steps~\cite{zhang2026aero,zhang2026greso}.
+To our knowledge, this is the \textbf{first systematic cross-library,
+cross-scale operational use of ZVF/GU as a GRPO triage diagnostic}.  We
+recommend monitoring $\mathrm{GU}_t$ in real time and interpreting it jointly
+with reward level: low reward plus high ZVF suggests cold-start collapse,
+while high reward plus high ZVF suggests saturation.
 
 \begin{figure}[htbp]
 \centering
@@ -1590,18 +1592,19 @@ W\&B are nonetheless available to other researchers.
 \section{Discussion}
 \label{sec:discussion}
 
-\subsection{Why Does Algorithm Preference Depend on the Model?}
+\subsection{Why Might Stack-Conditioned Algorithm Effects Vary?}
 \label{sec:discuss_model_algo}
 
-The sharpest finding in our benchmark is the \emph{reversal} of algorithm
-ranking across model families: GRPO outperforms PPO on Qwen3-8B while PPO
-substantially dominates on Llama-3.1-8B (Mann-Whitney $r = 0.94$,
-$p < 10^{-10}$).
-This interaction is not an artifact of differing compute budgets or random
-seeds --- the two algorithms ran on identical tasks, identical step counts, and
-identical hyperparameters.
-We offer three complementary mechanistic hypotheses that future gradient-level
-analysis can test.
+The sharpest observation in our benchmark is not a stable algorithm ranking,
+but the fact that such a ranking is not identifiable from the available
+artifacts.  The Qwen PPO/GRPO row changes interpretation depending on which
+result summary is treated as canonical, while PPO substantially dominates in
+the recorded Llama-3.1-8B setting (Mann-Whitney $r = 0.94$, $p < 10^{-10}$ on
+per-step rewards).  However, these rows are single-seed and backend-confounded,
+and the Mann-Whitney $p$-value assumes independent observations while per-step
+rewards within a single trajectory are autocorrelated.  We present three
+mechanistic hypotheses that future work can test with proper multi-seed
+replication.
 
 \paragraph{Hypothesis 1: Reward landscape geometry.}
 GRPO replaces the value-function baseline of PPO with a within-group reward
@@ -1775,7 +1778,7 @@ despite updating only 5--30\% of weights.
 Connecting our behavioral proxy metrics to this parameter-level analysis is a
 natural and important next step.
 
-% Conclusion reframed around F1--F5 (see sections/conclusion.tex)
+% Conclusion reframed around the three central claims (see sections/conclusion_anon.tex)
 \input{sections/conclusion_anon}
 
 % Ethics, Limitations, and Broader Impact (Task 10)

@@ -1,0 +1,18 @@
+To: pesu.eclib@pes.edu
+Cc: anwesh@greatlearning.in, sudha.bg@greatlearning.in
+Subject: Request for Plagiarism Check - Final Capstone Report
+
+Dear Team,
+
+Please find attached our final capstone report for plagiarism verification.
+
+Project title: Reinforcement Learning for Agentic LLM Fine-Tuning
+Group: Group 6
+Program: M.Tech in Data Science and Artificial Intelligence
+
+Kindly run the plagiarism check and share the report/status so that we can complete the final submission.
+
+Thank you.
+
+Regards,
+Group 6

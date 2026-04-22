@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Checkout Task</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 760px; margin: 40px auto; line-height: 1.45; }
+    label { display: block; margin: 14px 0; }
+    input, select, button { font: inherit; padding: 8px; margin-top: 4px; }
+    button { cursor: pointer; }
+    #status { margin-top: 20px; padding: 12px; border: 1px solid #999; }
+  </style>
+</head>
+<body data-success="false">
+  <h1>Checkout</h1>
+  <form id="checkout-form">
+    <label>Full name
+      <input id="full-name" aria-label="Full name" autocomplete="off">
+    </label>
+    <label>Email address
+      <input id="email" aria-label="Email address" type="email" autocomplete="off">
+    </label>
+    <label>Plan
+      <select id="plan" aria-label="Plan">
+        <option value="">Choose a plan</option>
+        <option value="starter">Starter</option>
+        <option value="pro">Pro</option>
+        <option value="enterprise">Enterprise</option>
+      </select>
+    </label>
+    <label>Seats
+      <input id="seats" aria-label="Seats" type="number" min="1" value="1">
+    </label>
+    <label>
+      <input id="terms" aria-label="Accept terms" type="checkbox">
+      Accept terms
+    </label>
+    <button id="submit-order" type="submit">Submit order</button>
+  </form>
+  <div id="status" role="status">Waiting for order.</div>
+  <script>
+    document.querySelector("#checkout-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const name = document.querySelector("#full-name").value.trim();
+      const email = document.querySelector("#email").value.trim();
+      const plan = document.querySelector("#plan").value;
+      const seats = document.querySelector("#seats").value.trim();
+      const terms = document.querySelector("#terms").checked;
+      const ok = name === "Ada Lovelace" && email === "ada@example.com" &&
+        plan === "pro" && seats === "3" && terms;
+      document.body.dataset.success = String(ok);
+      document.querySelector("#status").textContent = ok
+        ? "Order confirmed for Ada Lovelace on Pro seats 3."
+        : "Order incomplete. Check name, email, plan, seats, and terms.";
+    });
+  </script>
+</body>
+</html>

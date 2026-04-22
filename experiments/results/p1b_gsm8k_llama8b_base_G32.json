@@ -1,0 +1,232 @@
+{
+  "tag": "p1b_gsm8k_llama8b_base_G32",
+  "status": "completed",
+  "model": "meta-llama/Llama-3.1-8B",
+  "task": "gsm8k",
+  "group_size": 32,
+  "prompts": 30,
+  "seed": 20260422,
+  "temperature": 0.8,
+  "top_p": 0.95,
+  "max_tokens": 256,
+  "started_at": "2026-04-22T02:56:44.368567+00:00",
+  "run_id": "3964a70c-8e91-5c3e-95f5-29e86b928f8b:train:0",
+  "mean_p_x": 0.12083333333333333,
+  "predicted_usable_group_rate": 0.7673578142013597,
+  "empirical_initial_zvf": 0.13333333333333333,
+  "n_prompts": 30,
+  "per_prompt": [
+    {
+      "idx": 0,
+      "p_x": 0.1875,
+      "n_correct": 6,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 1,
+      "p_x": 0.03125,
+      "n_correct": 1,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 2,
+      "p_x": 0.15625,
+      "n_correct": 5,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 3,
+      "p_x": 0.125,
+      "n_correct": 4,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 4,
+      "p_x": 0.09375,
+      "n_correct": 3,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 5,
+      "p_x": 0.03125,
+      "n_correct": 1,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 6,
+      "p_x": 0.21875,
+      "n_correct": 7,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 7,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 32,
+      "zero_variance": 1
+    },
+    {
+      "idx": 8,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 32,
+      "zero_variance": 1
+    },
+    {
+      "idx": 9,
+      "p_x": 0.125,
+      "n_correct": 4,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 10,
+      "p_x": 0.09375,
+      "n_correct": 3,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 11,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 32,
+      "zero_variance": 1
+    },
+    {
+      "idx": 12,
+      "p_x": 0.21875,
+      "n_correct": 7,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 13,
+      "p_x": 0.0625,
+      "n_correct": 2,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 14,
+      "p_x": 0.0625,
+      "n_correct": 2,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 15,
+      "p_x": 0.03125,
+      "n_correct": 1,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 16,
+      "p_x": 0.28125,
+      "n_correct": 9,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 17,
+      "p_x": 0.25,
+      "n_correct": 8,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 18,
+      "p_x": 0.03125,
+      "n_correct": 1,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 19,
+      "p_x": 0.125,
+      "n_correct": 4,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 20,
+      "p_x": 0.09375,
+      "n_correct": 3,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 21,
+      "p_x": 0.125,
+      "n_correct": 4,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 22,
+      "p_x": 0.34375,
+      "n_correct": 11,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 23,
+      "p_x": 0.03125,
+      "n_correct": 1,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 24,
+      "p_x": 0.375,
+      "n_correct": 12,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 25,
+      "p_x": 0.25,
+      "n_correct": 8,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 26,
+      "p_x": 0.03125,
+      "n_correct": 1,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 27,
+      "p_x": 0.21875,
+      "n_correct": 7,
+      "n_samples": 32,
+      "zero_variance": 0
+    },
+    {
+      "idx": 28,
+      "p_x": 0.0,
+      "n_correct": 0,
+      "n_samples": 32,
+      "zero_variance": 1
+    },
+    {
+      "idx": 29,
+      "p_x": 0.03125,
+      "n_correct": 1,
+      "n_samples": 32,
+      "zero_variance": 0
+    }
+  ],
+  "wall_clock_sec": 349.4767518043518,
+  "completed_at": "2026-04-22T03:02:33.845481+00:00"
+}

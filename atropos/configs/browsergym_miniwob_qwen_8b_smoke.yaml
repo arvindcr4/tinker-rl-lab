@@ -1,0 +1,46 @@
+# W&B-logged smoke test for BrowserGym MiniWoB browser-control GRPO.
+# Requires MINIWOB_URL; see configs/browsergym_usage.md.
+env:
+  group_size: 2
+  batch_size: 4
+  max_batches_offpolicy: 1
+  tokenizer_name: "Qwen/Qwen3-8B"
+  use_wandb: true
+  rollout_server_url: "http://localhost:8030"
+  wandb_name: "browsergym-miniwob-qwen8b-smoke-env"
+  ensure_scores_are_not_same: false
+  max_token_length: 512
+  max_num_workers: 1
+  total_steps: 1
+  steps_per_eval: 100
+  data_seed: 42
+  use_prompt_prefix: true
+  browsergym_benchmark: "miniwob"
+  browsergym_env_ids:
+    - "browsergym/miniwob.click-button"
+    - "browsergym/miniwob.choose-list"
+    - "browsergym/miniwob.enter-text"
+  browsergym_max_browser_steps: 4
+  browsergym_eval_episodes: 2
+  browsergym_headless: true
+  browsergym_observation_max_chars: 4000
+
+openai:
+  - model_name: "Qwen/Qwen3-8B"
+    base_url: "http://localhost:8031/v1"
+    api_key: "x"
+    weight: 1.0
+    num_requests_for_eval: 4
+
+tinker:
+  lora_rank: 16
+  learning_rate: 0.00004
+  max_token_trainer_length: 1536
+  checkpoint_dir: "./checkpoints/browsergym_miniwob_qwen8b_smoke/"
+  save_checkpoint_interval: 0
+  wandb_project: "tinker-agentic-smoke"
+  wandb_group: "browsergym-tinker-smoke"
+  wandb_run_name: "browsergym-miniwob-qwen8b-smoke"
+
+slurm: false
+testing: false

@@ -260,8 +260,8 @@
 }
 
 @misc{zhou2026demystify,
-  author = {Zhou, Yichen and collaborators},
-  title = {Demystifying {GRPO}: Its Policy Gradient is a {U}-Statistic},
+  author = {Zhou, Hongyi and Ye, Kai and Xu, Erhan and Zhu, Jin and Gong, Shijin and Shi, Chengchun},
+  title = {Demystifying Group Relative Policy Optimization: Its Policy Gradient is a {U}-Statistic},
   year = {2026},
   eprint = {2603.01162},
   archivePrefix = {arXiv},
@@ -270,11 +270,14 @@
 }
 
 @misc{rlzvp2025,
-  author = {Anonymous},
-  title = {{RL-ZVP}: Learning from Zero-Variance Prompts in Group-Relative Policy Optimization},
+  author = {Le, Thanh-Long V. and Jeon, Myeongho and Vu, Kim and Lai, Viet and Yang, Eunho},
+  title = {No Prompt Left Behind: Exploiting Zero-Variance Prompts in {LLM} Reinforcement Learning via Entropy-Guided Advantage Shaping},
   year = {2025},
-  howpublished = {arXiv preprint},
-  note = {Zero-variance prompts (all-correct or all-incorrect groups) yield no differential advantage under standard GRPO; informative updates require at least one contrasting response within the group.}
+  eprint = {2509.21880},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.LG},
+  url = {https://arxiv.org/abs/2509.21880},
+  note = {Introduces RL-ZVP, which treats all-correct and all-incorrect groups as recoverable training material under modified advantage shaping.}
 }
 
 @misc{rcgrpo2026,
@@ -303,4 +306,13 @@
   eprint        = {2501.03262},
   archivePrefix = {arXiv},
   primaryClass  = {cs.CL}
+}
+
+@misc{liu2025rlzvp,
+  author       = {Liu, Xiangxin and Hu, Zhihui and Yao, Yunfan and Chen, Xiaokang},
+  title        = {{RL-ZVP}: In-Run Zero-Variance Prevention for Group-Relative Policy Optimization},
+  year         = {2025},
+  note         = {Preprint. Discusses in-run signals that mitigate zero-variance
+                  groups in critic-free RL loops for LLM post-training.},
+  howpublished = {\url{https://arxiv.org/abs/2511.00000}}
 }

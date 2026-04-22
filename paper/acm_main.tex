@@ -186,24 +186,22 @@
 % =============================================================================
 \begin{abstract}
 % =============================================================================
-Reinforcement learning (RL) has become the dominant approach for post-training
-language models, yet the field lacks standardized benchmarks for comparing RL
-methods across training frameworks. We present \ours{}, a unified benchmark
-spanning 11 implementations across 7 RL libraries (TRL, Stable Baselines3,
-CleanRL, Tianshou, PufferLib, rl\_games, d3rlpy) evaluated on mathematical
-reasoning (GSM8K, arithmetic), preference learning, and knowledge distillation
-tasks. Using standardized reward functions, hyperparameter mappings, and
-statistical evaluation protocols based on \texttt{rliable}, we provide the
-first controlled cross-library comparison of RL post-training methods for
-language models at scales from 0.6B to 30B parameters. Our results reveal
-that (1) LLM-native GRPO implementations (TRL, Tinker) dramatically
-outperform classic RL libraries (SB3, CleanRL, Tianshou) on language model
-post-training tasks, (2) GRPO consistently improves GSM8K accuracy by
-+3--14 percentage points across model scales with diminishing returns at
-larger sizes, and (3) implementation choices---not algorithm design---account
-for the majority of cross-library performance variance. We release all
-code, model checkpoints, and evaluation tooling to promote reproducible
-research in RL post-training.
+Reinforcement learning (RL) is now widely used for post-training language
+models, yet sparse verifiable rewards only produce useful GRPO updates when
+sampled groups contain reward contrast.  We present \ours{}, an exploratory
+systems study of post-training runs across tool-call formatting, GSM8K,
+MATH-style prompts, HumanEval-style verification, model families, and training
+stacks.  The contribution is not a universal algorithm leaderboard.  Instead,
+we argue that Zero-Variance Fraction (ZVF) and Gradient Utilization (GU) should
+be treated as early triage diagnostics: high ZVF with low reward flags
+cold-start collapse, high ZVF with high reward flags saturation, and low ZVF
+indicates usable within-group contrast.  The core mechanism is mixed-reward
+sampling probability, $P(\text{usable group}) = 1 - p_0^G - (1-p_0)^G$, not
+the task label.  We also show why PPO/GRPO/DPO labels are incomplete
+experimental treatments unless the full model, backend, reward parser,
+sampler, optimizer, checkpoint, and evaluation stack is reported.  Held-out
+GSM8K improves only from 82.0\% to 83.3\% ($p=0.26$), so we do not claim
+significant held-out math improvement.
 
 \textbf{Code:} \url{https://github.com/arvindcr4/tinker-rl-lab} \quad
 \textbf{Models:} \url{https://huggingface.co/tinker-rl-bench}
@@ -232,17 +230,16 @@ exceeding what researchers can afford, leading to underpowered comparisons.
 
 \paragraph{Contributions.} We make the following contributions:
 \begin{enumerate}
-    \item \textbf{Unified benchmark}: 11 implementations of RL post-training
-    methods across 7 libraries with standardized reward functions and
-    hyperparameter mappings (Section~\ref{sec:benchmark}).
-    \item \textbf{Cross-library evaluation}: The first controlled comparison
-    of RL post-training frameworks on identical tasks with multi-seed
-    evaluation and statistical testing (Section~\ref{sec:results}).
-    \item \textbf{Scaling analysis}: Systematic evaluation across model
-    scales from 0.6B to 30B parameters (Section~\ref{sec:scaling}).
-    \item \textbf{Reproducibility toolkit}: Docker environments, seed
-    management, statistical analysis tools, and Hugging Face integration
-    for full reproducibility (Section~\ref{sec:reproducibility}).
+    \item \textbf{ZVF/GU triage}: an operational diagnostic for distinguishing
+    cold-start collapse, saturation, and usable within-group reward contrast.
+    \item \textbf{Mixed-group mechanism}: a probability model,
+    $1-p_0^G-(1-p_0)^G$, explaining why warm-starts, group size, reward density,
+    and task difficulty determine whether GRPO has signal.
+    \item \textbf{Stack-conditioned reporting}: evidence that PPO/GRPO/DPO
+    comparisons are under-specified without model, backend, reward, sampler,
+    optimizer, checkpoint, and evaluation details.
+    \item \textbf{Reproducibility artifacts}: Docker environments, run logs,
+    statistical analyses, and checkpoint metadata for independent inspection.
 \end{enumerate}
 
 % =============================================================================
@@ -600,11 +597,12 @@ All experiments are reproducible via Docker containers, fixed random seeds ($\{4
 \label{sec:conclusion}
 % =============================================================================
 
-We present \ours{}, the first unified benchmark for comparing RL post-training
-methods across 7 libraries and 11 implementations. Our benchmark provides
-standardized evaluation protocols, comprehensive reproducibility infrastructure,
-and publication-ready tooling for both NeurIPS and ACM venues. All code, results,
-and documentation are publicly available.
+We present \ours{} as an exploratory systems study of when standard GRPO has a
+learning signal.  The strongest defensible conclusion is conditional: GRPO can
+amplify reward contrast when the current policy samples distinguishable
+outcomes, but it does not reliably bootstrap competence from flat sparse
+rewards.  Future algorithm comparisons should report the full stack and
+separate online reward from held-out accuracy.
 
 % =============================================================================
 % ACM Reference Format

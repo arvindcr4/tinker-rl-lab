@@ -1,0 +1,196 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\setstretch{1.2}
+
+\begin{document}
+
+\begin{center}
+\textbf{\Large Project Proposal}\\[0.3cm]
+\textbf{\large Fine-Tuning Agentic AI Workflows Using Reinforcement Learning}\\[0.5cm]
+\textbf{Group 6 -- MTech AIML Capstone Project}\\[0.3cm]
+PES University, Bengaluru\\[0.5cm]
+\end{center}
+
+\noindent\textbf{Team Members:}
+\begin{itemize}
+    \item Madhu Kumara
+    \item Balasandhya Jeyaraj
+    \item Mohammad
+    \item Arumugam Chetty K
+    \item Arvind C R
+    \item Dhruva
+\end{itemize}
+
+\noindent\textbf{Advisors:}
+\begin{itemize}
+    \item Dr. Narayana Darapaneni (Director - AIML, PES University)
+    \item Anwesh Reddy Paduri (Senior Data Scientist, PES University)
+\end{itemize}
+
+\vspace{0.5cm}
+
+\section*{1. Background and Motivation}
+
+Recent advances in reinforcement learning and large language models have enabled the development of agentic AI systems that can autonomously plan, reason, and interact with software tools such as APIs, browsers, code interpreters, and external services. Frameworks like ReAct (Reasoning and Acting) and Toolformer have demonstrated that LLMs can effectively use tools when properly prompted or trained.
+
+However, despite their strong generative and reasoning capabilities, these agents often exhibit behavior that is misaligned with human intent, leading to suboptimal, unsafe, or undesirable outcomes. Traditional supervised fine-tuning (SFT) on demonstration data provides a strong baseline but struggles with exploration, error recovery, and long-horizon decision-making.
+
+Reinforcement Learning from Human Feedback (RLHF) has emerged as the dominant paradigm for aligning LLMs, with recent innovations including Direct Preference Optimization (DPO), Group Relative Policy Optimization (GRPO), and Process Reward Models (PRMs) offering computational and sample efficiency advantages over classical PPO-based approaches.
+
+\section*{2. Problem Statement}
+
+How can agentic AI systems be fine-tuned using modern reinforcement learning techniques (DPO, GRPO, STEP-DPO) so that their autonomous decision-making behavior aligns more closely with human preferences, safety expectations, and task objectives, particularly in complex environments requiring tool use, multi-step reasoning, and knowledge retrieval?
+
+\section*{3. Research Objectives}
+
+The primary objectives of this project are:
+\begin{enumerate}
+    \item \textbf{Survey:} Conduct a comprehensive literature survey of 44 papers covering tool use mechanisms, RL algorithms, RAG, RLHF, and evaluation benchmarks.
+    \item \textbf{Framework Design:} Design an experimental ablation framework to systematically evaluate combinations of RL algorithms, data strategies, and tool use patterns.
+    \item \textbf{Implementation:} Implement and compare fine-tuning approaches (PPO, DPO, GRPO, STEP-DPO) on agentic tasks.
+    \item \textbf{Evaluation:} Evaluate on realistic benchmarks including SWE-bench, WebArena, and OSWorld.
+    \item \textbf{Analysis:} Identify research gaps and provide recommendations for practitioners.
+\end{enumerate}
+
+\section*{4. Scope and Research Category Alignment}
+
+This project falls within the following Reinforcement Learning research categories:
+\begin{itemize}
+    \item \textbf{RLHF \& Alignment} -- DPO, GRPO, Constitutional AI
+    \item \textbf{Agentic RL} -- Tool use, multi-step reasoning, trajectory learning
+    \item \textbf{Reasoning \& Search} -- Chain-of-thought, process rewards, tree search
+    \item \textbf{Multi-Agent Systems} -- Coordination, routing, emergent behavior
+\end{itemize}
+
+\subsection*{Key Technologies Covered}
+\begin{itemize}
+    \item \textbf{Tool Use:} ReAct, Toolformer, Code-as-Action
+    \item \textbf{RL Algorithms:} PPO, DPO, GRPO, STEP-DPO, Process Reward Models
+    \item \textbf{Knowledge Grounding:} RAG, HippoRAG (neurobiologically inspired memory)
+    \item \textbf{Evaluation:} SWE-bench, WebArena, VisualWebArena, OSWorld, WorkArena
+\end{itemize}
+
+\section*{5. Proposed Methodology}
+
+\textbf{Phase 1: Literature Survey and Taxonomy}
+\begin{itemize}
+    \item Survey 44 papers across 6 research areas
+    \item Develop taxonomy of agentic AI techniques
+    \item Identify research gaps and opportunities
+\end{itemize}
+
+\textbf{Phase 2: Baseline Agent Development}
+\begin{itemize}
+    \item Implement ReAct-style agent with tool use capabilities
+    \item Establish SFT baseline on agentic trajectories
+    \item Set up evaluation on SWE-bench and WebArena
+\end{itemize}
+
+\textbf{Phase 3: RL Fine-Tuning}
+\begin{itemize}
+    \item Implement DPO on preference pairs
+    \item Implement GRPO for self-improvement (DeepSeek-R1 approach)
+    \item Implement STEP-DPO for step-wise preference optimization
+    \item Compare with PPO baseline
+\end{itemize}
+
+\textbf{Phase 4: RAG Integration}
+\begin{itemize}
+    \item Integrate retrieval for tool documentation
+    \item Implement HippoRAG for trajectory memory
+    \item Evaluate RAG + RL synergy
+\end{itemize}
+
+\textbf{Phase 5: Ablation Studies and Analysis}
+\begin{itemize}
+    \item Systematic comparison of algorithm-data-tool combinations
+    \item Analysis of process rewards vs. outcome rewards
+    \item Generalization and error recovery evaluation
+\end{itemize}
+
+\section*{6. Team Assignments}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}llc@{}}
+\toprule
+\textbf{Team Member} & \textbf{Research Area} & \textbf{Papers} \\
+\midrule
+Arvind C R & Tool Use, Evaluation Benchmarks, Scaling & 10 \\
+Sandhya Jeyaraj & RL Algorithms (PPO, DPO, GRPO, PRMs) & 10 \\
+Madhu Kumara & RAG, Memory Systems, Multi-Agent RL & 10 \\
+Mohammad & Multi-Agent Systems, Fine-tuning Strategies & 6 \\
+Arumugam Chetty K & RLHF Foundations, Constitutional AI & 5 \\
+Dhruva & Survey Overview, Taxonomy, Synthesis & 3 \\
+\midrule
+\textbf{Total} & & \textbf{44} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section*{7. Expected Outcomes}
+
+\begin{itemize}
+    \item Comprehensive survey of 44 papers on agentic AI fine-tuning
+    \item Experimental comparison of PPO, DPO, GRPO, and STEP-DPO
+    \item Ablation framework for systematic evaluation
+    \item Guidelines for algorithm selection based on task characteristics
+    \item Identification of research gaps (latent reasoning, safe exploration, multi-agent coordination)
+    \item Conference paper submission to a peer-reviewed venue
+\end{itemize}
+
+\section*{8. Significance of the Work}
+
+This project contributes to ongoing research in AI alignment and autonomous systems by:
+\begin{itemize}
+    \item Extending RLHF methodologies to agentic workflows with tool use
+    \item Providing systematic comparison of modern RL algorithms (DPO, GRPO)
+    \item Evaluating on realistic benchmarks (SWE-bench, WebArena, OSWorld)
+    \item Integrating RAG for knowledge-grounded agent behavior
+    \item Identifying research gaps for future work
+\end{itemize}
+
+The results are expected to be relevant for both academic research and practical deployment of aligned AI agents.
+
+\section*{9. Timeline}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Phase} & \textbf{Milestone} \\
+\midrule
+Phase 1 & Literature survey complete, taxonomy defined \\
+Phase 2 & Baseline agent implemented, initial evaluation \\
+Phase 3 & RL fine-tuning experiments complete \\
+Phase 4 & RAG integration and evaluation \\
+Phase 5 & Ablation studies, final report, conference paper \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section*{10. Conclusion}
+
+By integrating modern reinforcement learning techniques (DPO, GRPO, STEP-DPO) with tool use mechanisms (ReAct, Toolformer) and knowledge grounding (RAG, HippoRAG), this project aims to advance the development of aligned, capable agentic AI systems. Our systematic survey and experimental framework will provide practitioners with actionable guidance for building LLM agents that effectively complete complex tasks while remaining aligned with human intent.
+
+\section*{References}
+
+\begin{enumerate}
+    \item Yao, S., et al. ``ReAct: Synergizing Reasoning and Acting in Language Models.'' ICLR 2023.
+    \item Schick, T., et al. ``Toolformer: Language Models Can Teach Themselves to Use Tools.'' NeurIPS 2023.
+    \item Rafailov, R., et al. ``Direct Preference Optimization: Your Language Model is Secretly a Reward Model.'' NeurIPS 2023.
+    \item DeepSeek-AI. ``DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning.'' arXiv:2501.12948.
+    \item Schulman, J., et al. ``Proximal Policy Optimization Algorithms.'' arXiv:1707.06347.
+    \item Jimenez, C., et al. ``SWE-bench: Can Language Models Resolve Real-World GitHub Issues?'' ICLR 2024.
+    \item Zhou, S., et al. ``WebArena: A Realistic Web Environment for Building Autonomous Agents.'' ICLR 2024.
+    \item Xie, T., et al. ``OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks.'' NeurIPS 2024.
+    \item Gutierrez, A., et al. ``HippoRAG: Neurobiologically Inspired Long-Term Memory for LLMs.'' NeurIPS 2024.
+    \item Bai, Y., et al. ``Constitutional AI: Harmlessness from AI Feedback.'' arXiv:2212.08073.
+    \item Chen, Z., et al. ``FireAct: Toward Language Agent Fine-tuning.'' ICLR 2024.
+    \item Christiano, P., et al. ``Deep Reinforcement Learning from Human Preferences.'' NeurIPS 2017.
+\end{enumerate}
+
+\end{document}

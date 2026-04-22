@@ -15,15 +15,31 @@ backend, LoRA configuration, checkpoint selection, and evaluation harness.
 This is the LLM post-training version of the reproducibility problem that
 Henderson et al.~\citep{henderson2018deep} identified in classical deep RL.
 
-\ours{} studies this problem as a systems question rather than as an
-algorithm leaderboard.  The corpus contains 79 runs across structured
-tool-call emission, GSM8K, MATH-style tasks, HumanEval-style binary
-verification, small and frontier-scale model families, and several training
-backends.  The results are intentionally uneven: some runs improve online
-reward, some saturate, some collapse from step zero, and held-out GSM8K shows
-only a small non-significant lift.  That heterogeneity is the point.  It lets
-us ask which failures are genuine negative evidence and which failures simply
-show that a sparse reward produced no usable contrast.
+\ours{} studies this problem as a systems audit rather than as an algorithm
+leaderboard.  The corpus contains 79 runs across structured tool-call
+emission, GSM8K, MATH-style tasks, HumanEval-style binary verification, small
+and frontier-scale model families, and several training backends.  Before
+presenting any results we note three deliberate scoping choices.  \emph{(i)
+Algorithm fidelity.}  The training runner is a group-relative policy-gradient
+variant: it retains group-normalized advantages and the critic-free structure
+of GRPO, but it does not implement the PPO probability ratio and clip of
+\citet{schulman2017proximal}, does not retain a frozen reference policy for
+KL regularization, does one optimizer step per rollout batch, and does not
+apply a completion-only token mask (a P1-A diagnostic on Qwen3.5-4B measures
+$\sim$0.76 of the full-sequence loss magnitude to come from prompt tokens
+rather than from the completion).  Claims in
+this paper therefore refer to this runner, not to canonical GRPO.
+\emph{(ii) Evaluator scope.}  The HumanEval, tool-use, and MATH rewards
+measure sandboxed execution with Python built-ins removed, JSON schema
+compliance, and boxed-answer formatting respectively; they are proxies, not
+end-to-end capability metrics.  \emph{(iii) Probe-vs.-generalization.}  The
+MATH-500 and HumanEval prompt pools in the training loop are loaded from the
+\texttt{test} splits and are used as reward-environment probes, not as
+held-out generalization tests.  The only genuinely held-out capability
+evaluation in this paper is a separate GSM8K 200-example slice that was not
+used during training.  The remaining heterogeneity in outcomes across runs is
+the point: it lets us ask which failures are evidence about the policy and
+which failures are evidence about the reward environment.
 
 \paragraph{Claim 1: ZVF/GU are early triage diagnostics.}
 The most reusable methodological contribution is the operational use of

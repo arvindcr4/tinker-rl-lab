@@ -1,0 +1,36 @@
+# Smoke test for the multi-hop ReAct retrieval environment.
+env:
+  group_size: 4
+  batch_size: 8
+  max_batches_offpolicy: 1
+  tokenizer_name: "Qwen/Qwen3-8B"
+  use_wandb: false
+  rollout_server_url: "http://localhost:8010"
+  wandb_name: "multihop-react-qwen8b-smoke-env"
+  ensure_scores_are_not_same: false
+  max_token_length: 384
+  max_num_workers: 4
+  total_steps: 1
+  steps_per_eval: 100
+  data_seed: 42
+  use_prompt_prefix: true
+
+openai:
+  - model_name: "Qwen/Qwen3-8B"
+    base_url: "http://localhost:8011/v1"
+    api_key: "x"
+    weight: 1.0
+    num_requests_for_eval: 8
+
+tinker:
+  lora_rank: 16
+  learning_rate: 0.00004
+  max_token_trainer_length: 1536
+  checkpoint_dir: "./checkpoints/multihop_react_qwen8b_smoke/"
+  save_checkpoint_interval: 0
+  wandb_project: "tinker-agentic-smoke"
+  wandb_group: "agentic-smoke"
+  wandb_run_name: "multihop-react-qwen8b-smoke"
+
+slurm: false
+testing: false

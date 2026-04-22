@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Inventory Task</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 820px; margin: 40px auto; line-height: 1.45; }
+    input, button { font: inherit; padding: 8px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 18px; }
+    th, td { border: 1px solid #aaa; padding: 10px; text-align: left; }
+    #status { margin-top: 20px; padding: 12px; border: 1px solid #999; }
+  </style>
+</head>
+<body data-success="false">
+  <h1>Model Inventory</h1>
+  <label>Search inventory
+    <input id="search" aria-label="Search inventory" autocomplete="off">
+  </label>
+  <table aria-label="Inventory results">
+    <thead><tr><th>Model</th><th>Capability</th><th>Action</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div id="details" aria-live="polite"></div>
+  <div id="status" role="status">No model selected.</div>
+  <script>
+    const models = [
+      ["Llama-3.1-8B", "math reasoning"],
+      ["Qwen3-8B", "browser and tool control"],
+      ["Qwen3-4B", "compact reasoning"],
+      ["HumanEval Runner", "code execution"]
+    ];
+    const rows = document.querySelector("#rows");
+    function render() {
+      const query = document.querySelector("#search").value.toLowerCase();
+      rows.innerHTML = "";
+      models
+        .filter(([name, cap]) => (name + " " + cap).toLowerCase().includes(query))
+        .forEach(([name, cap]) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${name}</td><td>${cap}</td><td><button aria-label="Open ${name} details">Open ${name} details</button></td>`;
+          tr.querySelector("button").addEventListener("click", () => {
+            document.querySelector("#details").textContent = `${name}: ${cap}`;
+            const ok = name === "Qwen3-8B";
+            document.body.dataset.success = String(ok);
+            document.querySelector("#status").textContent = ok
+              ? "Selected Qwen3-8B for browser and tool control."
+              : `Selected ${name}, not the target model.`;
+          });
+          rows.appendChild(tr);
+        });
+    }
+    document.querySelector("#search").addEventListener("input", render);
+    render();
+  </script>
+</body>
+</html>

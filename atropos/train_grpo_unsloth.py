@@ -208,13 +208,18 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
     use_unsloth = os.environ.get("ATROPOS_USE_UNSLOTH", "0").lower() in {"1", "true", "yes"}
     if use_unsloth:
         try:
-            from unsloth import FastLanguageModel
+            from unsloth import FastLanguageModel, PatchFastRL
+            PatchFastRL("GRPO", FastLanguageModel)
+            
+            import importlib.util
+            has_vllm = importlib.util.find_spec("vllm") is not None
 
-            print(f"  Loading {model_name} with Unsloth ({params_b}B, 4-bit={load_in_4bit}) ...")
+            print(f"  Loading {model_name} with Unsloth ({params_b}B, 4-bit={load_in_4bit}, vLLM={has_vllm}) ...")
             model, tokenizer = FastLanguageModel.from_pretrained(
                 model_name=model_name,
                 max_seq_length=max_seq_len,
                 load_in_4bit=load_in_4bit,
+                fast_inference=has_vllm,
                 dtype=None,
             )
 
@@ -483,6 +488,7 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
         seed=seed,
         report_to="wandb",
         run_name=cfg["wandb_run_name"],
+        use_vllm=__import__("importlib.util").util.find_spec("vllm") is not None,
         # Unsloth-compatible settings
         bf16=True,
         fp16=False,

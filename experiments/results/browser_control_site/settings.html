@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Settings Task</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 760px; margin: 40px auto; line-height: 1.45; }
+    label { display: block; margin: 14px 0; }
+    input, select, button { font: inherit; padding: 8px; margin-top: 4px; }
+    #status { margin-top: 20px; padding: 12px; border: 1px solid #999; }
+  </style>
+</head>
+<body data-success="false">
+  <h1>Agent Settings</h1>
+  <form id="settings-form">
+    <label>Agent profile
+      <select id="profile" aria-label="Agent profile">
+        <option value="reasoning">Reasoning Agent</option>
+        <option value="browser">Browser Agent</option>
+        <option value="coding">Coding Agent</option>
+      </select>
+    </label>
+    <label>Browsing depth
+      <input id="depth" aria-label="Browsing depth" type="number" min="1" max="6" value="1">
+    </label>
+    <label>
+      <input id="browser-tools" aria-label="Enable browser tools" type="checkbox">
+      Enable browser tools
+    </label>
+    <button id="save-settings" type="submit">Save settings</button>
+  </form>
+  <div id="status" role="status">Settings not saved.</div>
+  <script>
+    document.querySelector("#settings-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const profile = document.querySelector("#profile").value;
+      const depth = document.querySelector("#depth").value.trim();
+      const tools = document.querySelector("#browser-tools").checked;
+      const ok = profile === "browser" && depth === "4" && tools;
+      document.body.dataset.success = String(ok);
+      document.querySelector("#status").textContent = ok
+        ? "Settings saved: Browser Agent depth 4 tools enabled."
+        : "Settings incomplete. Check profile, depth, and tools.";
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+{
+  "experiment": "browser_control_smoke",
+  "started_at": "2026-04-22T03:26:57.050887+00:00",
+  "completed_at": "2026-04-22T03:27:26.404533+00:00",
+  "preferred_model": "kimi-k2-0905-preview",
+  "controller_model": "qwen/qwen3-32b",
+  "model_warning": "Preferred Groq model 'kimi-k2-0905-preview' is unavailable; using 'qwen/qwen3-32b'.",
+  "browser_driver": "agent-browser",
+  "task_count": 3,
+  "success_count": 3,
+  "pass_rate": 1.0,
+  "tasks": [
+    {
+      "task_id": "checkout",
+      "objective": "Complete the checkout: enter full name Ada Lovelace, email ada@example.com, choose the Pro plan, set seats to 3, accept terms, then submit the order.",
+      "url": "http://127.0.0.1:52520/checkout.html",
+      "success": true,
+      "status": "Order confirmed for Ada Lovelace on Pro seats 3.",
+      "steps": 6,
+      "history": [
+        {
+          "step": 0,
+          "action": {
+            "action": "fill",
+            "ref": "@e3",
+            "text": "Ada Lovelace"
+          },
+          "returncode": 0,
+          "stdout": "\u2713 Done\n",
+          "stderr": ""
+        },
+        {
+          "step": 1,
+          "action": {
+            "action": "fill",
+            "ref": "@e4",
+            "text": "ada@example.com"
+          },
+          "returncode": 0,
+          "stdout": "\u2713 Done\n",
+          "stderr": ""
+        },
+        {
+          "step": 2,
+          "action": {
+            "action": "select",
+            "ref": "@e5",
+            "value": "Pro"
+          },
+          "returncode": 0,
+          "stdout": "\u2713 Done\n",
+          "stderr": ""
+        },
+        {
+          "step": 3,
+          "action": {
+            "action": "fill",
+            "ref": "@e6",
+            "text": "3"
+          },
+          "returncode": 0,
+          "stdout": "\u2713 Done\n",
+          "stderr": ""
+        },
+        {
+          "step": 4,
+          "action": {
+            "action": "check",
+            "ref": "@e7"
+          },
+          "returncode": 0,
+          "stdout": "\u2713 Done\n",
+          "stderr": ""
+        },
+        {
+          "step": 5,
+          "action": {
+            "action": "click",
+            "ref": "@e2"
+          },
+          "returncode": 0,
+          "stdout": "\u2713 Done\n",
+          "stderr": ""
+        }
+      ],
+      "screenshot": "experiments/results/browser_control_screenshots/checkout.png",
+      "screenshot_returncode": 0
+    },
+    {
+      "task_id": "inventory_search",
+      "objective": "Find the Qwen3-8B model in the inventory and open/select its details.",
+      "url": "http://127.0.0.1:52520/inventory.html",
+      "success": true,
+      "status": "Selected Qwen3-8B for browser and tool control.",
+      "steps": 1,
+      "history": [
+        {
+          "step": 0,
+          "action": {
+            "action": "click",
+            "ref": "@e19"
+          },
+          "returncode": 0,
+          "stdout": "\u2713 Done\n",
+          "stderr": ""
+        }
+      ],
+      "screenshot": "experiments/results/browser_control_screenshots/inventory_search.png",
+      "screenshot_returncode": 0
+    },
+    {
+      "task_id": "settings",
+      "objective": "Configure the browser agent settings: choose Browser Agent, set browsing depth to 4, enable browser tools, and save settings.",
+      "url": "http://127.0.0.1:52520/settings.html",
+      "success": true,
+      "status": "Settings saved: Browser Agent depth 4 tools enabled.",
+      "steps": 4,
+      "history": [
+        {
+          "step": 0,
+          "action": {
+            "action": "select",
+            "ref": "@e3",
+            "value": "Browser Agent"
+          },
+          "returncode": 0,
+          "stdout": "\u2713 Done\n",
+          "stderr": ""
+        },
+        {
+          "step": 1,
+          "action": {
+            "action": "fill",
+            "ref": "@e4",
+            "text": "4"
+          },
+          "returncode": 0,
+          "stdout": "\u2713 Done\n",
+          "stderr": ""
+        },
+        {
+          "step": 2,
+          "action": {
+            "action": "check",
+            "ref": "@e5"
+          },
+          "returncode": 0,
+          "stdout": "\u2713 Done\n",
+          "stderr": ""
+        },
+        {
+          "step": 3,
+          "action": {
+            "action": "click",
+            "ref": "@e2"
+          },
+          "returncode": 0,
+          "stdout": "\u2713 Done\n",
+          "stderr": ""
+        }
+      ],
+      "screenshot": "experiments/results/browser_control_screenshots/settings.png",
+      "screenshot_returncode": 0
+    }
+  ]
+}

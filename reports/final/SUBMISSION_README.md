@@ -1,7 +1,7 @@
-# GRPO for Agentic LLM Fine-Tuning — Submission Instructions
+# When Does GRPO Have a Learning Signal? - Submission Instructions
 
 ## Paper Information
-- **Title:** GRPO for Agentic LLM Fine-Tuning: Empirical Studies on Tool Use, Code Generation, and Math Reasoning
+- **Title:** When Does GRPO Have a Learning Signal? An Empirical Study of Reward Diversity, Structured Outputs, and Reasoning Benchmarks in LLM Post-Training
 - **Format:** NeurIPS/ICML LaTeX (9-page limit + references)
 - **Files:** Main paper + optional Supplementary Appendix
 
@@ -117,6 +117,7 @@ Note: `supplementary_appendix.tex` is a standalone document and should be compil
 | Multi-turn tool quality | 0.72 → 0.91 | Qwen2.5-3B | custom judge-derived internal scenario score |
 | HumanEval pass@1 | 32\% → 40\% | Qwen3-8B | preliminary 50-problem subset, not full canonical harness |
 | GSM8K training-set reward | 30.0\% ± 2.5\% | Qwen3-8B | training-set reward, not held-out test accuracy |
+| GSM8K held-out greedy accuracy | 82.0\% base → 83.3\% GRPO | Qwen3-8B | +1.3pp, p=0.26; not significant |
 | Capacity threshold | 3B fails, 8B succeeds | Multiple | setup-specific until exploration confounds are ablated |
 | Synthetic vs real gap | 3--8x difficulty difference | xlam-60k | depends on custom schema distribution |
 
@@ -160,7 +161,8 @@ Note: `supplementary_appendix.tex` is a standalone document and should be compil
 ### Evaluation Caveat
 - Tool results are currently based on custom internal evaluations and should not be presented as standardized benchmark outcomes.
 - HumanEval currently reflects a 50-problem subset rather than the full canonical harness.
-- GSM8K headline GRPO numbers are training-set reward metrics; full held-out evaluation remains the highest-priority missing experiment.
+- GSM8K online reward and held-out accuracy are separate metrics. The completed held-out check shows only a small, non-significant +1.3pp lift over the base model.
+- Public/submission artifacts exclude local credential files; see `ARTIFACT_SANITIZATION.md`.
 
 ## Contact
 For blind-review submissions, remove this section or replace it with the venue's anonymized contact mechanism.

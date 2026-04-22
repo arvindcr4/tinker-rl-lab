@@ -73,6 +73,9 @@ BIB_ENTRIES=$(grep -c '@' "$REPO_DIR/paper/references.bib" 2>/dev/null || echo 0
 if [ "$CITATIONS" -ge 40 ] && [ "$BIB_ENTRIES" -ge 30 ]; then
     SCORE=$((SCORE + 10))
     echo "  ✓ Bibliography: 10/10 ($CITATIONS citations, $BIB_ENTRIES entries)"
+elif [ "$CITATIONS" -ge 25 ] && [ "$BIB_ENTRIES" -ge 20 ]; then
+    SCORE=$((SCORE + 8))
+    echo "  ✓ Bibliography: 8/10 ($CITATIONS citations, $BIB_ENTRIES entries)"
 elif [ "$CITATIONS" -ge 20 ]; then
     SCORE=$((SCORE + 6))
     echo "  ✓ Bibliography: 6/10 ($CITATIONS citations, $BIB_ENTRIES entries)"

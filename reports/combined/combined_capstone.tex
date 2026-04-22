@@ -3565,26 +3565,31 @@ Llama-3.1-8B-Instruct & 84.4\% & 97.5\% & PPO & +13.1\,pp \\
 \end{tabular}
 \end{table}
 
-\section{Cross-Task Results: Tool-Use}
+\section{Cross-Task Results: Tool-Call Schema Compliance}
 \label{sec:tool-use}
 
 Both Qwen3-32B and Llama-3.1-8B-Instruct scored \textbf{0\% on all 30 tool-use steps}. This is a task design issue
 (strict JSON-schema compliance without SFT warm-up), not a model capability ceiling.
 
 
-\section{Bitter Lesson Campaign: Frontier Scale Experiments}
+\section{Campaign Extension: Frontier Runs Under the Training-Reward Parser}
 \label{sec:bitter-lesson}
 
-Beyond the 25 original and 32 structural-ceiling runs, a subsequent \emph{Bitter Lesson Campaign} scaled
-experimentation to 70+ runs across 15+ model architectures on two frameworks (Tinker + TRL) and two GPU
-platforms (Tinker API + Modal H100). The goal was to test whether the empirical patterns we identified at
-0.6B--8B scale persist at frontier scale (30B--397B parameters).
+Beyond the 25 original and 32 structural-ceiling runs, we extended the
+campaign to 70+ runs across 15+ model architectures on two frameworks
+(Tinker + TRL) and two GPU platforms (Tinker API + Modal H100).  These
+extension runs measure training-time reward under our existing parsers,
+not held-out capability, and no clean held-out evaluation is run over the
+extended set.  We keep them for ZVF/GU diagnostic coverage and to check
+whether the empirical patterns identified at 0.6B--8B scale persist at
+frontier scale (30B--397B parameters); we do \emph{not} claim this as a
+test of the ``bitter lesson'' hypothesis.
 
 \subsection{Completed Frontier Runs}
 
 \begin{table}[htbp]
 \centering
-\caption{Bitter Lesson Campaign --- Frontier GRPO Results on GSM8K}
+\caption{Campaign Extension --- Frontier GRPO training reward on GSM8K (not held-out accuracy). Last-10 is mean training reward over the final ten logged steps.}
 \label{tab:bitter-lesson}
 \footnotesize
 \begin{tabular}{lrrrrl}
@@ -3601,10 +3606,14 @@ Nemotron-120B (dense) & 120B & 20 & 87.5\% & 16.2\% & Peak-then-collapse (Mode 2
 \end{tabular}
 \end{table}
 
-\textbf{Key observation:} Frontier models reinforce rather than learn GSM8K capability. High-reward models
-(DeepSeek-V3.1 at 87.5\% on step 1, GPT-OSS-120B at 93.8\%, Qwen3.5-397B) begin in Phase 3 of the
-three-phase learning pattern (\S\ref{sec:scaling-laws}). The ceiling of our benchmark is reached by
-reasoning-specialized MoE models within 15--20 steps.
+\textbf{Key observation (training-reward dynamics only):} Frontier models begin training with
+high first-step reward under our GSM8K parser (DeepSeek-V3.1 at 87.5\% on step 1, GPT-OSS-120B at 93.8\%,
+Qwen3.5-397B near ceiling), consistent with Phase 3 of the three-phase learning pattern
+(\S\ref{sec:scaling-laws}).  We interpret this as ``the training-reward ceiling is reached quickly,''
+not as evidence that these models \emph{learned} GSM8K capability from GRPO: with no held-out evaluation
+over the extension set, we cannot distinguish reinforcement-of-prior-capability from genuine capability
+gain.  The ceiling of the training-reward parser is reached by reasoning-specialized MoE models within
+15--20 steps.
 
 \subsection{Nemotron-120B: A New Failure Mode}
 \label{sec:nemotron-mode-2b}
@@ -3622,19 +3631,17 @@ designate \textbf{Mode 2b: peak-then-collapse}. Distinct from the prior failure 
 Mode 2b challenges a simplistic ``bigger is more stable'' assumption: Nemotron-120B is the \emph{largest
 dense} model and exhibits the \emph{most unstable} training dynamics across 77+ runs.
 
-\section{Framework Gap: Tinker vs TRL Deep-Dive}
+\section{Stack Sensitivity: Tinker vs TRL Under Nominally Matched Config}
 \label{sec:framework-gap}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{heatmap.pdf}
-\caption{Full 76-run reward heatmap from the World-Class and Bitter Lesson campaigns, highlighting the
-17$\times$ gap between Tinker GRPO and TRL GRPO on matched models.}
+\caption{Full 76-run training-reward heatmap from the main and extension campaigns. The 17$\times$ training-reward gap between Tinker GRPO and TRL GRPO on nominally matched Qwen3-8B is evidence that ``same GRPO config'' is stack-dependent (backend, sampler, loss-mask, KL/reference, LoRA, precision, checkpoint, and evaluator details remain entangled), not a causal framework ranking.}
 \label{fig:heatmap}
 \end{figure}
 
-The implementation framework explains more outcome variance than algorithm choice ($\eta^2_{\text{library}} = 0.546$
-vs $\eta^2_{\text{algorithm}} = 0.558$, one-way ANOVA). We extend this with same-model comparisons.
+The implementation framework explains more outcome variance than algorithm \emph{label} ($\eta^2_{\text{library}} = 0.546$ vs $\eta^2_{\text{algorithm}} = 0.558$, one-way ANOVA).  We read this as evidence that PPO/GRPO/DPO labels are under-specified experimental treatments unless the full stack (backend, sampler, loss-mask, KL/reference, LoRA, precision, checkpoint, evaluator) is reported, not as a ranking of Tinker over TRL as implementations.  We extend this with same-model comparisons.
 
 \subsection{Matched-Model Results}
 

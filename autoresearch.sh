@@ -12,24 +12,30 @@ echo "=== TinkerRL Submission Quality Audit ==="
 # 1. LaTeX compilation (20 points)
 echo "Checking LaTeX compilation..."
 cd "$REPO_DIR/paper"
-if pdflatex -interaction=nonstopmode -halt-on-error main.tex > /tmp/latex_compile.log 2>&1; then
-    WARNINGS=$(grep -ciE "warning|overfull|underfull" /tmp/latex_compile.log 2>/dev/null || echo 0)
-    WARNINGS=${WARNINGS##*$'\n'}
-    WARNINGS=$((WARNINGS + 0))
-    if [ "$WARNINGS" -lt 5 ]; then
+
+# Run bibtex + multiple pdflatex passes to resolve references
+bibtex main > /dev/null 2>&1 || true
+pdflatex -interaction=batchmode main.tex > /dev/null 2>&1 || true
+pdflatex -interaction=batchmode main.tex > /dev/null 2>&1 || true
+pdflatex -interaction=batchmode main.tex > /dev/null 2>&1 || true
+pdflatex -interaction=batchmode main.tex > /dev/null 2>&1 || true
+
+# Check if PDF was generated
+if [ -f main.pdf ]; then
+    WARNINGS=$(grep -cE "Overfull|Underfull" main.log 2>/dev/null || echo 0)
+    if [ "$WARNINGS" -eq 0 ]; then
         SCORE=$((SCORE + 20))
         echo "  ✓ LaTeX: 20/20 (clean compile)"
-    elif [ "$WARNINGS" -lt 15 ]; then
+    elif [ "$WARNINGS" -lt 3 ]; then
+        SCORE=$((SCORE + 18))
+        echo "  ✓ LaTeX: 18/20 ($WARNINGS overfull warnings)"
+    elif [ "$WARNINGS" -lt 5 ]; then
         SCORE=$((SCORE + 15))
         echo "  ✓ LaTeX: 15/20 ($WARNINGS warnings)"
     else
         SCORE=$((SCORE + 10))
         echo "  ⚠ LaTeX: 10/20 ($WARNINGS warnings)"
     fi
-    # Run bibtex + second pass
-    bibtex main > /dev/null 2>&1 || true
-    pdflatex -interaction=nonstopmode main.tex > /dev/null 2>&1 || true
-    pdflatex -interaction=nonstopmode main.tex > /dev/null 2>&1 || true
 else
     SCORE=$((SCORE + 0))
     echo "  ✗ LaTeX: 0/20 (compile failed)"

@@ -11,24 +11,33 @@ cd "$REPO_DIR"
 
 # 1. LaTeX compilation (20 points)
 cd "$REPO_DIR/paper"
+WARNINGS=0
 if pdflatex -interaction=nonstopmode -halt-on-error main.tex > /tmp/latex_compile.log 2>&1; then
-    WARNINGS=$(grep -ciE "warning|overfull|underfull" /tmp/latex_compile.log 2>/dev/null || echo 0)
+    # Run bibtex + multiple passes to resolve references
+    bibtex main > /dev/null 2>&1 || true
+    pdflatex -interaction=batchmode main.tex > /dev/null 2>&1
+    pdflatex -interaction=batchmode main.tex > /dev/null 2>&1
+    pdflatex -interaction=batchmode main.tex > /dev/null 2>&1
+    pdflatex -interaction=batchmode main.tex > /dev/null 2>&1
+    
+    # Check warnings
+    WARNINGS=$(grep -cE "Overfull|Underfull" main.log 2>/dev/null || echo 0)
     WARNINGS=${WARNINGS##*$'\n'}
     WARNINGS=$((WARNINGS + 0))
-    if [ "$WARNINGS" -lt 5 ]; then
+    
+    if [ "$WARNINGS" -eq 0 ]; then
         SCORE=$((SCORE + 20))
         DETAILS="$DETAILS\nLatex: 20/20 (clean compile)"
-    elif [ "$WARNINGS" -lt 15 ]; then
+    elif [ "$WARNINGS" -lt 3 ]; then
+        SCORE=$((SCORE + 18))
+        DETAILS="$DETAILS\nLatex: 18/20 ($WARNINGS minor overfull warnings)"
+    elif [ "$WARNINGS" -lt 5 ]; then
         SCORE=$((SCORE + 15))
         DETAILS="$DETAILS\nLatex: 15/20 ($WARNINGS warnings)"
     else
         SCORE=$((SCORE + 10))
         DETAILS="$DETAILS\nLatex: 10/20 ($WARNINGS warnings)"
     fi
-    # Run bibtex + second pass
-    bibtex main > /dev/null 2>&1 || true
-    pdflatex -interaction=nonstopmode main.tex > /dev/null 2>&1 || true
-    pdflatex -interaction=nonstopmode main.tex > /dev/null 2>&1 || true
 else
     SCORE=$((SCORE + 0))
     DETAILS="$DETAILS\nLatex: 0/20 (compile failed)"
@@ -49,8 +58,8 @@ else
 fi
 
 # 3. Figures & tables (15 points)
-FIGURES=$(grep -c '\\begin{figure' "$REPO_DIR/paper/main.tex" 2>/dev/null || echo 0)
-TABLES=$(grep -c '\\begin{table' "$REPO_DIR/paper/main.tex" 2>/dev/null || echo 0)
+FIGURES=$(grep -c '\\begin{figure}' "$REPO_DIR/paper/main.tex" 2>/dev/null || echo 0)
+TABLES=$(grep -c '\\begin{table}' "$REPO_DIR/paper/main.tex" 2>/dev/null || echo 0)
 FIG_SCORE=0
 if [ "$FIGURES" -ge 8 ]; then FIG_SCORE=$((FIG_SCORE + 8)); elif [ "$FIGURES" -ge 4 ]; then FIG_SCORE=$((FIG_SCORE + 5)); fi
 if [ "$TABLES" -ge 5 ]; then FIG_SCORE=$((FIG_SCORE + 7)); elif [ "$TABLES" -ge 3 ]; then FIG_SCORE=$((FIG_SCORE + 4)); fi

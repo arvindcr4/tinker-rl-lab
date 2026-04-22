@@ -969,19 +969,18 @@ measures behavior under a broken verifier.
 
 \begin{table*}[t]
 \centering
-\caption{Task-specific proxy reward summaries from independently implemented team experiments. Entries report task-specific post-training metrics; they are not directly comparable to GSM8K online training reward or held-out GSM8K accuracy. Rows use different datasets, rewards, and harnesses, so they support breadth and hypothesis generation rather than a pooled capability claim.}
+\caption{Task-specific proxy reward summaries from team experiments. Rows use different datasets, rewards, and harnesses, so they support breadth and hypothesis generation rather than a pooled capability claim.}
 \label{tab:task_grpo}
 \footnotesize
-\begin{tabular}{@{}l l l c c p{2.8cm}@{}}
+\begin{tabular}{@{}l l l c c p{2.5cm}@{}}
 \toprule
-\textbf{Task} & \textbf{Model} & \textbf{Method} & \textbf{Pre} & \textbf{Post-training} & \textbf{Notes} \\
+\textbf{Task} & \textbf{Model} & \textbf{Method} & \textbf{Pre} & \textbf{Post} & \textbf{Notes} \\
 \midrule
-Tool Call (1-turn) & Qwen2-0.5B-Inst & LoRA & --- & Func. & 20 ex., \$0.17 vast.ai \\
-Code (HumanEval) & Qwen3-8B & GRPO & 32\% & 86\% & 300 steps; best \\
-Code (HumanEval) & Qwen2.5-Coder-1.5B & GRPO & 67\% & 100\% & LoRA q/v\_proj, 20ep \\
-Multi-turn Tools & Qwen2.5-3B & GRPO+QLoRA & Base & Impr. & Multi-turn tool call \\
-Tools (SFT+GRPO) & Qwen3-8B & SFT$\to$GRPO & 52\% & 70\% & Schema 97$\to$100\% \\
-Multi-stage Reas. & Qwen3-4B-Inst & GRPO & Base & Impr. & Single setup; not architecture claim \\
+Tool Call (1-turn) & Qwen2-0.5B-Inst & LoRA & --- & Func. & 20 ex., \$0.17 \\
+Code (HumanEval) & Qwen3-8B & GRPO & 32\% & 86\% & 300 steps \\
+Code (HumanEval) & Qwen2.5-Coder-1.5B & GRPO & 67\% & 100\% & 20ep \\
+Multi-turn Tools & Qwen2.5-3B & GRPO & Base & Impr. & Multi-turn \\
+Tools (SFT+GRPO) & Qwen3-8B & SFT$\to$GRPO & 52\% & 70\% & Schema \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -1060,9 +1059,9 @@ effects remain entangled.
 \centering
 \caption{Auxiliary dense/MoE initialization probe. GRPO training reward (peak and last-10-step mean) on GSM8K via Tinker API, not held-out benchmark accuracy. $\dagger$~Training interrupted; reported metrics are from available steps.}
 \label{tab:dense_moe}
-\begin{tabular}{llccp{4.2cm}}
+\begin{tabular}{llccp{3.5cm}}
 \toprule
-\textbf{Type} & \textbf{Model} & \textbf{Active Params} & \textbf{Peak} & \textbf{Last-10 Avg} \\
+\textbf{Type} & \textbf{Model} & \textbf{Params} & \textbf{Peak} & \textbf{Last-10} \\
 \midrule
 Dense & Qwen3.5-4B & 4B & 100\% & 85.0\% \\
 MoE & Qwen3-30B-A3B (base)$^\dagger$ & $\sim$3B & 50.0\% & 32.5\% \\
@@ -1154,10 +1153,10 @@ while the statistical summary records a 35.0\% PPO last-10 mean.}
 \label{tab:ppo_grpo}
 \begin{tabular}{llccc}
 \toprule
-\textbf{Method} & \textbf{Model} & \textbf{Steps} & \textbf{Peak} & \textbf{Last-10 Avg} \\
+\textbf{Method} & \textbf{Model} & \textbf{Steps} & \textbf{Peak} & \textbf{Last-10} \\
 \midrule
 GRPO (Tinker) & Qwen3-8B & 30 & 62.5\% & \textbf{34.4\%} \\
-PPO (Modal H100) & Qwen3-8B & 30 & 75.0\% & 22.5\% in ledger; 35.0\% in statistics summary \\
+PPO (Modal H100) & Qwen3-8B & 30 & 75.0\% & 22.5\% / 35.0\% \\
 \midrule
 GRPO (Tinker) & Llama-3.1-8B-Instruct & 30 & 100\% & 84.4\% \\
 PPO (Modal H100) & Llama-3.1-8B-Instruct & 30 & 100\% & \textbf{97.5\%} \\

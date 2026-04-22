@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import random
 import re
@@ -27,6 +28,8 @@ from atroposlib.envs.base import (
     ScoredDataGroup,
 )
 from tinker_atropos.config import TinkerAtroposConfig
+
+logger = logging.getLogger(__name__)
 
 
 def _get_config_path():
@@ -232,6 +235,10 @@ def _run_browsergym_episode(
             if terminated or truncated:
                 break
     except Exception as exc:
+        logger.exception(
+            "BrowserGym episode failed (env_id=%s, seed=%s): %r",
+            env_id, seed, exc,
+        )
         return {
             "score": 0.0,
             "actions": actions,

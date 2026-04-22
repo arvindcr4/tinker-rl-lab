@@ -1,0 +1,54 @@
+version: "3.8"
+
+# WebArena Docker stack for a single GCP VM.
+# Images must be loaded first via load_images.sh (pulls tars from archive.org + docker load).
+
+services:
+  shopping:
+    image: shopping_final_0712
+    container_name: webarena-shopping
+    ports:
+      - "127.0.0.1:7770:80"
+    restart: unless-stopped
+    shm_size: "1gb"
+
+  shopping_admin:
+    image: shopping_admin_final_0719
+    container_name: webarena-shopping-admin
+    ports:
+      - "127.0.0.1:7780:80"
+    restart: unless-stopped
+    shm_size: "1gb"
+
+  forum:
+    image: postmill-populated-exposed-withimg
+    container_name: webarena-forum
+    ports:
+      - "127.0.0.1:9999:80"
+    restart: unless-stopped
+
+  gitlab:
+    image: gitlab-populated-final-port8023
+    container_name: webarena-gitlab
+    command: /opt/gitlab/embedded/bin/runsvdir-start
+    ports:
+      - "127.0.0.1:8023:8023"
+    restart: unless-stopped
+    shm_size: "2gb"
+
+  wikipedia:
+    image: ghcr.io/kiwix/kiwix-serve:latest
+    container_name: webarena-wikipedia
+    command: ["/data/wikipedia_en_all_maxi_2022-05.zim"]
+    volumes:
+      - /opt/webarena-data/kiwix:/data:ro
+    ports:
+      - "127.0.0.1:8888:8080"
+    restart: unless-stopped
+
+  homepage:
+    image: webarena-homepage:local
+    container_name: webarena-homepage
+    ports:
+      - "127.0.0.1:4399:4399"
+    restart: unless-stopped

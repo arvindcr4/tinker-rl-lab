@@ -43,7 +43,7 @@
 \newcommand{\grpo}{\textsc{Grpo}}
 \newcommand{\ours}{\textsc{TinkerRL Audit}}
 
-\title{When Does a GRPO-Like Group-Relative RL Loop Have a Learning Signal?}
+\title{When Does GRPO Have a Learning Signal?\\ A Claim-to-Evidence Audit of LLM Post-Training}
 
 % For submission, use anonymous authors:
 % \author{Anonymous Authors}
@@ -113,7 +113,7 @@
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{tikz/taxonomy.pdf}
-\caption{Taxonomy of of RL libraries in \ours{}. The audit corpus spans LLM-native RL
+\caption{Taxonomy of RL libraries in \ours{}. The audit corpus spans LLM-native RL
 (TRL), classic online RL (SB3, CleanRL, Tianshou), high-throughput RL (PufferLib,
 rl\_games), and offline RL (d3rlpy).}
 \label{fig:taxonomy}
@@ -604,7 +604,7 @@ Tianshou (PPO) & 0.006 $\pm$ 0.002 & [0.003, 0.009] & N/A \\
 % Figure 5: Learning curves
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.95\linewidth]{figures/v1/learning_curves.pdf}
+\includegraphics[width=0.95\linewidth]{figures/v2/learning_curves.pdf}
 \caption{Learning curves for the arithmetic sanity task across RL libraries.
 Shaded regions indicate $\pm 1$ standard deviation across 5 seeds. These curves
 measure a narrow tokenized arithmetic environment and are not evidence for a
@@ -615,7 +615,7 @@ general LLM post-training framework ranking.}
 % Figure 6: Performance profiles
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{figures/v1/performance_profiles.pdf}
+\includegraphics[width=0.85\linewidth]{figures/v2/performance_profiles.pdf}
 \caption{Performance profiles for the arithmetic sanity task, showing the
 fraction of runs above a given normalized score threshold following
 Agarwal et al.~\cite{agarwal2021deep}.  They summarize that toy environment
@@ -755,7 +755,7 @@ now reported over the full set.
 \includegraphics[width=0.85\linewidth]{figures/v2/scaling.pdf}
 \caption{Descriptive reward/accuracy context under the rollout/evaluation parser: GSM8K training reward
 or explicitly labelled held-out accuracy as a function of model size (log scale
-x-axis).  Values should not be read as a single held-out benchmark leaderboard.}
+x-axis).  Values should not be read as a single held-out benchmark diagnostic baseline.}
 \label{fig:scaling}
 \end{figure}
 
@@ -1060,7 +1060,7 @@ comparison is further limited by different partial-run step counts.
 
 These larger-model rows are auxiliary reward-trajectory probes.  They are not
 used for the central claims, and they should not be read as a frontier
-leaderboard or a scaling-law test.  This section reports preliminary findings
+diagnostic baseline or a scaling-law test.  This section reports preliminary findings
 from the 8 larger-model experiments running on the Tinker API.
 
 \begin{table}[htbp]
@@ -1101,7 +1101,7 @@ often compared as if the algorithm label fully specifies the treatment.  Our
 results argue for a narrower interpretation.  The same label hides the backend,
 sampler, reward parser, KL/reference handling, optimizer, LoRA configuration,
 checkpoint-selection rule, and evaluation slice.  We therefore treat the
-PPO/GRPO rows as stack-conditioned evidence, not as an algorithm leaderboard.
+PPO/GRPO rows as stack-conditioned evidence, not as an algorithm diagnostic baseline.
 
 \begin{table}[htbp]
 \centering
@@ -1688,7 +1688,7 @@ central contribution is the diagnostic one: in a critic-free group-relative RL
 loop with binary or verifier-like rewards, within-group reward diversity
 determines whether the update has usable signal.  ZVF/GU are therefore proposed
 as early triage measurements, not as proof of broad reasoning improvement, not
-as an algorithm leaderboard, and not as a replacement for held-out evaluation.
+as an algorithm diagnostic baseline, and not as a replacement for held-out evaluation.
 The limitations below state which claims are constrained and which claim remains
 supported.
 

@@ -78,7 +78,7 @@ This project is a systems-oriented empirical audit of critic-free, group-relativ
 
 Large language models are increasingly fine-tuned using reinforcement learning to execute verifiable tasks like mathematical reasoning and tool calling. While recent breakthroughs attribute these capabilities to algorithms like Group Relative Policy Optimization (GRPO) \citep{shao2024deepseekmath}, this paper treats the training loop not as a magic capability-injector, but as a mechanical system subject to strict diagnostic constraints. We present a claim-to-evidence audit of group-relative RL. 
 
-Rather than chasing state-of-the-art benchmark superiority, we ask: under what precise conditions does the group-relative estimator receive a functional learning signal? When does it collapse? And when does a rising training reward safely predict held-out generalization? By decoupling the nominal algorithm from the base-model sampling competence, reward variance, and execution stack, we reveal that many "RL failures" are actually cold-start sampling collapses, and many "RL successes" are format-hacking exploits over the reward parser.
+Rather than chasing state-of-the-art diagnostic precision, we ask: under what precise conditions does the group-relative estimator receive a functional learning signal? When does it collapse? And when does a rising training reward safely predict held-out generalization? By decoupling the nominal algorithm from the base-model sampling competence, reward variance, and execution stack, we reveal that many "RL failures" are actually cold-start sampling collapses, and many "RL successes" are format-hacking exploits over the reward parser.
 
 \section{Background}
 

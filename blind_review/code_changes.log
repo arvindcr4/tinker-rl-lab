@@ -1,52 +1,53 @@
 # Code anonymisation change log
 
 Tarball: blind_review/tinker-rl-lab-anon.tar.gz
-Tarball SHA-256: 8a9b54e63a09ad29cc33e6df9f253b7596853ed06b466d1de81291bc7812a910
-Tarball size: 39373258 bytes
+Tarball SHA-256: 400bbcaf5daaff915f3e9463474353f4f8b40d4649d18b8c301b1d1f83bfb702
+Tarball size: 30553978 bytes
 
 ## Totals by rule
 
 - wandb project tinker-rl-lab-world-class -> tinker-rl-bench: 107
-- wandb entity arvindcr4-pes-university -> anonymous-entity: 88
+- wandb entity arvindcr4-pes-university -> anonymous-entity: 87
 - GH handle arvindcr4 -> anonymous: 83
-- ``PES University'' -> Anonymous Institution: 55
-- GH org pes-llm-research -> anonymous-org: 46
+- GH org pes-llm-research -> anonymous-org: 44
+- ``PES University'' -> Anonymous Institution: 36
 - github.com/anonymous-org/tinker-rl-lab -> anonymous.4open.science: 27
 - github.com/anonymous/tinker-rl-lab -> anonymous.4open.science: 25
-- first name Madhu -> Anonymous: 24
-- first name Arvind -> Anonymous: 18
-- name Mohammad Rafi -> Anonymous: 18
-- PES student ID redacted: 18
-- name Sandhya Jeyaraj -> Anonymous: 14
-- name Madhu Kumara L -> Anonymous: 14
-- name Arvind C R -> Anonymous: 13
-- name Narayana Darapaneni -> Anonymous: 12
+- first name Arvind -> Anonymous: 17
+- first name Madhu -> Anonymous: 14
 - notebook metadata.colab removed: 12
-- first name Sandhya -> Anonymous: 11
-- name Anwesh Reddy Paduri -> Anonymous: 8
-- name Dhruva N Murthy -> Anonymous: 8
-- first name Arumugam -> Anonymous: 8
-- name Arumugam Chetty K -> Anonymous: 8
+- name Mohammad Rafi -> Anonymous: 11
+- name Sandhya Jeyaraj -> Anonymous: 7
+- name Madhu Kumara L -> Anonymous: 7
 - ``PES LLM Research Team'' -> Anonymous Authors: 6
-- first name Dhruva -> Anonymous: 6
+- name Narayana Darapaneni -> Anonymous: 6
+- name Arvind C R -> Anonymous: 6
+- first name Arumugam -> Anonymous: 6
+- name Anwesh Reddy Paduri -> Anonymous: 5
+- name Dhruva N Murthy -> Anonymous: 5
 - name Arumugam K -> Anonymous: 5
+- first name Sandhya -> Anonymous: 5
 - GH handle madhukumara1993 -> anonymous: 4
 - lowercase arumugam (slug/id) -> anonymous: 4
 - ``PES LLM Research'' -> Anonymous: 4
-- name Anwesh Reddy Padhuri -> Anonymous: 4
 - ``Great Learning'' -> Anonymous Institution: 2
+- name Arumugam Chetty K -> Anonymous: 2
+- first name Dhruva -> Anonymous: 2
 - HF handle MohammadRafiML -> anonymous: 1
 - HF handle dhruvanmurthy -> anonymous: 1
 - LICENSE copyright line already anonymous: 1
 - first name Rafi -> Anonymous: 1
 - ``Northwestern University'' -> Anonymous Institution: 1
-- email redacted: 1
+- name Anwesh Reddy Padhuri -> Anonymous: 1
 
 ## Excluded files / directories
 
 - CITATION.cff
+- ai-scientist-template/
+- ai-scientist-v2/
 - autoresearch-dashboard.md
 - blind_review/
+- capstone-literature-survey/
 - experiments/collab-results/LLM_Tool_Call_Finetuning.pptx
 - experiments/collab-results/exp3_multiturn.pptx
 - paper/acm_main.tex
@@ -58,6 +59,7 @@ Tarball size: 39373258 bytes
 - paper/main.pdf
 - paper/main.tex
 - paper/neurips_checklist_update.tex
+- reports/
 - reports/combined/combined_capstone.tex
 - reports/combined/combined_capstone_backup.tex
 - reports/combined/interim_proposal.tex
@@ -69,6 +71,7 @@ Tarball size: 39373258 bytes
 - reports/final/grpo_agentic_llm_paper.tex
 - reports/final/submission_uploads/PLAGIARISM_EMAIL_DRAFT.txt
 - reports/final/submission_uploads/SUBMISSION_MANIFEST.md
+- research_loop/
 - scripts/anonymize.sh
 - team-analysis.pplx.md
 - team-links-audit.pplx.md
@@ -179,12 +182,6 @@ Tarball size: 39373258 bytes
 ### agentic-rl-finetuning/notebooks/axolotl_sft_qlora.ipynb
 
 - notebook metadata.colab removed: 1
-
-### ai-scientist-template/latex/template.tex
-
-- ``PES University'' -> Anonymous Institution: 1
-- name Arvind C R -> Anonymous: 1
-- email redacted: 1
 
 ### atropos/configs/humaneval_qwen_8b.yaml
 
@@ -301,24 +298,6 @@ Tarball size: 39373258 bytes
 ### atropos/slides_8th_call.md
 
 - ``PES University'' -> Anonymous Institution: 1
-
-### capstone-literature-survey/README.md
-
-- ``PES University'' -> Anonymous Institution: 1
-- name Sandhya Jeyaraj -> Anonymous: 1
-- name Madhu Kumara L -> Anonymous: 1
-- name Mohammad Rafi -> Anonymous: 1
-- name Arumugam Chetty K -> Anonymous: 1
-- first name Arvind -> Anonymous: 1
-- first name Dhruva -> Anonymous: 1
-
-### capstone-literature-survey/chapter2_foundation.tex
-
-- ``PES University'' -> Anonymous Institution: 3
-
-### capstone-literature-survey/foundation_chapter.tex
-
-- ``PES University'' -> Anonymous Institution: 3
 
 ### experiments/10x_structural_ceiling/RESULTS.md
 
@@ -592,76 +571,6 @@ Tarball size: 39373258 bytes
 - GH org pes-llm-research -> anonymous-org: 4
 - ``PES LLM Research Team'' -> Anonymous Authors: 1
 - github.com/anonymous-org/tinker-rl-lab -> anonymous.4open.science: 4
-
-### reports/combined/base_final.tex
-
-- GH org pes-llm-research -> anonymous-org: 2
-- ``PES University'' -> Anonymous Institution: 4
-- name Narayana Darapaneni -> Anonymous: 3
-- name Anwesh Reddy Padhuri -> Anonymous: 3
-- name Sandhya Jeyaraj -> Anonymous: 3
-- name Madhu Kumara L -> Anonymous: 3
-- name Mohammad Rafi -> Anonymous: 2
-- name Arumugam Chetty K -> Anonymous: 2
-- name Arvind C R -> Anonymous: 3
-- first name Sandhya -> Anonymous: 1
-- first name Madhu -> Anonymous: 2
-- first name Dhruva -> Anonymous: 2
-- PES student ID redacted: 6
-
-### reports/combined/lit_survey.tex
-
-- ``PES University'' -> Anonymous Institution: 3
-
-### reports/final/README.md
-
-- ``PES University'' -> Anonymous Institution: 1
-- name Sandhya Jeyaraj -> Anonymous: 1
-- name Madhu Kumara L -> Anonymous: 1
-- name Mohammad Rafi -> Anonymous: 1
-- name Dhruva N Murthy -> Anonymous: 1
-- name Arumugam Chetty K -> Anonymous: 1
-- name Arvind C R -> Anonymous: 1
-
-### reports/final/SUBMISSION_CHECKLIST.md
-
-- wandb entity arvindcr4-pes-university -> anonymous-entity: 1
-
-### reports/final/capstone_final_report.tex
-
-- ``PES University'' -> Anonymous Institution: 1
-- name Narayana Darapaneni -> Anonymous: 1
-- name Anwesh Reddy Paduri -> Anonymous: 1
-- name Sandhya Jeyaraj -> Anonymous: 1
-- name Madhu Kumara L -> Anonymous: 1
-- name Mohammad Rafi -> Anonymous: 2
-- name Dhruva N Murthy -> Anonymous: 1
-- name Arumugam Chetty K -> Anonymous: 1
-- name Arvind C R -> Anonymous: 1
-- first name Sandhya -> Anonymous: 5
-- first name Madhu -> Anonymous: 8
-- first name Dhruva -> Anonymous: 1
-- first name Arumugam -> Anonymous: 2
-- PES student ID redacted: 6
-
-### reports/final/create_submission_ppt.py
-
-- ``PES University'' -> Anonymous Institution: 1
-- name Narayana Darapaneni -> Anonymous: 1
-- name Anwesh Reddy Paduri -> Anonymous: 1
-
-### reports/final/thesis_benchmarks/extracted_structure.json
-
-- ``PES University'' -> Anonymous Institution: 1
-- name Narayana Darapaneni -> Anonymous: 1
-- name Anwesh Reddy Paduri -> Anonymous: 1
-- name Sandhya Jeyaraj -> Anonymous: 1
-- name Madhu Kumara L -> Anonymous: 1
-- name Mohammad Rafi -> Anonymous: 1
-- name Dhruva N Murthy -> Anonymous: 1
-- name Arumugam Chetty K -> Anonymous: 1
-- name Arvind C R -> Anonymous: 1
-- PES student ID redacted: 6
 
 ### run_coding.sh
 

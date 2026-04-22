@@ -29,7 +29,7 @@ did not have resources to close within the submission window.
 Salesforce xLAM-Function-Calling-60k \cite{liu2024xlam} tool-use corpus,
 (ii) a set of LoRA adapters published on the HuggingFace Hub
 (\texttt{anonymous/tinker-rl-bench-*}), and (iii) diagnostic code for
-Zero-Variance Fraction, reward-stability, and length-bias analysis. We
+Zero-Variance Fraction and reward-instability analysis. We
 analyse four concrete misuse pathways these artefacts could, in principle,
 enable, and we describe the existing guardrails and the residual risk we
 judge acceptable for publication.
@@ -56,9 +56,10 @@ signal, which itself requires expertise and labelled data.
 GRPO, like all policy-gradient RL from a proxy reward, is vulnerable to
 reward hacking: the model learns to exploit idiosyncrasies of the reward
 function rather than solve the intended task \cite{skalse2022specificationgaming,
-krakovna2020specification}. Our length-bias analysis
-(Section~\ref{sec:length_bias}) and the verbosity-trap finding in 4/11
-GRPO runs are concrete demonstrations of this failure mode in our own data.
+krakovna2020specification}. Our reward-instability audit
+(Section~\ref{sec:length_bias}) flags verbosity-trap-like regressions in 4/11
+GRPO trajectories, but treats them as proxy-reward failures rather than proof
+that response length alone caused the regression.
 Users who apply our scripts to under-specified reward functions in
 production settings (e.g., a custom ``helpfulness'' classifier) may observe
 models that appear to improve on held-out metrics while silently
@@ -107,9 +108,9 @@ authors; no in-kind credits are omitted. Dollar figures are in USD.
 \begin{table}[ht]
 \centering
 \small
-\caption{Itemised compute spend across platforms. Totals include both
-successful and failed runs, because failed-run spend is real and should
-not be hidden from reviewers \cite{henderson2018deep}.}
+\caption{Itemised compute spend across platforms. Totals include successful,
+interrupted, and unsuccessful attempts to reflect the actual cost of the audit
+\cite{henderson2018deep}.}
 \label{tab:compute_spend}
 \begin{tabular}{llrr}
 \toprule
@@ -219,7 +220,7 @@ contribution could be as low as \textasciitilde 130\,kg. We report the
 central estimate in the main table and caution readers that it should not
 be interpreted as precise. \emph{All} numbers should be regarded as upper
 bounds on the carbon cost of reproducing our work, because subsequent
-users can skip the failed runs and the ablation sweeps.
+users can skip unsuccessful attempts and optional ablation sweeps.
 
 \paragraph{Offset and mitigation.}
 We did not purchase carbon offsets. Instead, we have (a) released all

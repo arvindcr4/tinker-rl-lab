@@ -46,30 +46,26 @@
     \answerYes{Section~\ref{sec:limitations} enumerates the limitations
     in detail:
     \begin{itemize}
-      \item \textbf{Platform opacity.} Tinker API is a closed, serverless
-            platform; GPU type, driver version, CUDA runtime, and
-            scheduler are undisclosed, so Tinker-derived results cannot be
-            independently reproduced without Tinker access
-            (Section~\ref{sec:infra_failures}).
-      \item \textbf{Infrastructure failures.} 11~of 14 Tinker runs were
-            interrupted by JWT token expiry; 4~of 6 Modal runs hit
-            timeouts or gradient-norm blow-ups.  Specific failed runs are
-            named in Section~\ref{sec:infra_failures}.
-      \item \textbf{Single-seed Tinker runs.} Cost constraints precluded
-            multi-seed replication on Tinker; these results are treated
-            as descriptive only (Section~\ref{sec:method_limits}).
-      \item \textbf{LoRA-only evaluation.} Full fine-tuning and
-            quantisation-aware training are not evaluated
+      \item \textbf{Stack specificity.} Tinker API rows measure a managed,
+            closed-source training stack rather than canonical GRPO as a fully
+            auditable algorithm (Section~\ref{sec:infra_failures}).
+      \item \textbf{Interrupted and short-horizon runs.} Partial runs are
+            marked $\dagger$ and used only for observed-step telemetry; most
+            managed runs are short-horizon and single-seed
+            (Sections~\ref{sec:infra_failures}--\ref{sec:method_limits}).
+      \item \textbf{Telemetry gaps.} Direct KL tracking and some W\&B
+            step-level exports are unavailable, so reward-stability proxies are
+            not treated as KL measurements (Section~\ref{sec:infra_failures}).
+      \item \textbf{Train reward versus capability.} The only clean held-out
+            capability check is GSM8K $82.0\%\to83.3\%$ with $p=0.26$;
+            training rewards support dynamics claims only
             (Section~\ref{sec:method_limits}).
-      \item \textbf{Train-set reward metric.} Primary Tinker metrics are
-            training rewards, not held-out accuracy.  The only clean
-            held-out capability claim in the paper is the separate GSM8K
-            200-example slice, whose lift is small and non-significant
-            (Section~\ref{sec:method_limits}).
-      \item \textbf{Proxy metrics in place of direct KL.}
-            Section~\ref{sec:discuss_kl} discusses the limits of
-            trajectory-based stability indices as substitutes for direct
-            KL divergence.
+      \item \textbf{Proxy reward environments.} Tool-use, HumanEval-style,
+            and MATH-style rows are verifier/proxy probes rather than broad
+            end-to-end capability evaluations (Section~\ref{sec:length_bias}).
+      \item \textbf{Diagnostic scope.} ZVF/GU are triage diagnostics for
+            within-group reward contrast, not universal predictors or
+            algorithm-ranking evidence (Section~\ref{sec:method_limits}).
     \end{itemize}}
     \end{enumerate}
 
@@ -78,7 +74,7 @@
     \begin{enumerate}
     \item For each theoretical result, does the paper provide the full
           set of assumptions and a complete (or correct) proof?
-    \answerNA{This is an empirical benchmarking paper; no formal theorems
+    \answerNA{This is an empirical audit paper; no formal theorems
     are claimed.  GRPO and PPO objectives stated in
     Section~\ref{sec:benchmark} are background definitions, not original
     theoretical results.}
@@ -105,11 +101,11 @@
             with mean $\pm$ SE and 95\,\% bootstrap CIs via
             \texttt{rliable}.
       \item \textbf{Tinker API experiments (not fully reproducible).}
-            Tinker is closed-source with serverless GPU dispatch; GPU
-            type, driver version, and scheduling policy are not exposed.
+            Tinker is a managed closed-source backend; exact hardware,
+            driver, and scheduling details are not exposed.
             We release our exact API scripts and configuration files, but
             independent replication requires a Tinker account and is
-            subject to the same JWT expiry issues we observed
+            subject to the same managed-backend interruption risks
             (Section~\ref{sec:infra_failures}).  All Tinker-derived
             numbers in figures and tables are flagged with a ``$\dagger$''.
     \end{itemize}

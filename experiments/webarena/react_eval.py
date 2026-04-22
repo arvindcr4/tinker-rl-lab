@@ -228,7 +228,17 @@ async def run_episode(
 ) -> EpisodeResult:
     _import_benchmark(benchmark)
     t0 = time.time()
-    env = _make_env(env_id)
+    # Playwright sync API is thread-bound: every env.reset/step/close must run on
+    # the SAME OS thread. asyncio.to_thread uses a shared pool and picks whichever
+    # worker is idle → "cannot switch to a different thread". Pin this episode to
+    # a single-worker executor.
+    import concurrent.futures
+    _pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+    loop = asyncio.get_running_loop()
+    async def _run(fn, *fa, **fkw):
+        return await loop.run_in_executor(_pool, lambda: fn(*fa, **fkw))
+
+    env = await _run(_make_env, env_id)
     steps: List[StepRecord] = []
     total_reward = 0.0
     max_reward = 0.0
@@ -237,7 +247,7 @@ async def run_episode(
     valid_action_count = 0
     last_error: Optional[str] = None
     try:
-        obs, info = await asyncio.to_thread(env.reset, seed=seed)
+        obs, info = await _run(env.reset, seed=seed)
         goal = _goal_to_str(obs)
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         for step in range(1, max_steps + 1):
@@ -258,7 +268,7 @@ async def run_episode(
                 last_error = step_error
                 break
             try:
-                obs, reward, terminated, truncated, info = await asyncio.to_thread(env.step, action)
+                obs, reward, terminated, truncated, info = await _run(env.step, action)
                 reward_f = float(reward or 0.0)
                 valid_action_count += 1
                 total_reward += reward_f
@@ -274,11 +284,15 @@ async def run_episode(
             ))
             if terminated or truncated:
                 break
-            # Trim history: keep system + last 6 turns to stay under context budget
             if len(messages) > 14:
                 messages = [messages[0]] + messages[-12:]
     except Exception as exc:
         logger.exception("Episode crashed env_id=%s seed=%s: %r", env_id, seed, exc)
+        try:
+            await _run(env.close)
+        except Exception:
+            pass
+        _pool.shutdown(wait=False)
         return EpisodeResult(
             env_id=env_id, seed=seed, score=0.0, total_reward=0.0,
             terminated=False, truncated=False, num_steps=len(steps),
@@ -287,9 +301,10 @@ async def run_episode(
         )
     finally:
         try:
-            await asyncio.to_thread(env.close)
+            await _run(env.close)
         except Exception:
             pass
+        _pool.shutdown(wait=False)
     score = max(max_reward, total_reward)
     score = max(0.0, min(1.0, float(score)))
     return EpisodeResult(

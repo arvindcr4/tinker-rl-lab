@@ -496,9 +496,10 @@ ACM/NeurIPS ready & \checkmark & \texttimes & \texttimes & \texttimes & \texttim
 \label{sec:task_grpo}
 
 Beyond the cross-library comparison, team members conducted GRPO experiments on
-diverse real-world tasks. Table~\ref{tab:task_grpo} summarizes these results,
-showing that GRPO-based training is effective across tool use, code reasoning,
-and multi-stage reasoning scenarios with modest compute budgets.
+diverse real-world tasks. Table~\ref{tab:task_grpo} summarizes these results.
+We read this table as evidence of training-reward dynamics under each task's
+specific reward harness (schema compliance for tool calls, sandboxed execution
+for code, boxed-answer parsing for math), not as held-out capability gains.
 
 \begin{table*}[t]
 \centering

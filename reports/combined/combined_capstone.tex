@@ -3988,7 +3988,7 @@ Smaller models show larger absolute gains but from lower baselines.
 
 This chapter presents five \emph{elevation analyses}---post-hoc diagnostic studies applied across the full
 experimental registry. These were built after the core campaigns (10x Structural Ceiling, World-Class
-Suite, Bitter Lesson Campaign) were complete, and they re-use the reward trace data already captured on
+Suite, Campaign Extension) were complete, and they re-use the reward trace data already captured on
 W\&B. All analyses treat single-seed Tinker runs as descriptive (not inferential) per the power analysis
 in \S\ref{sec:power-analysis}.
 
@@ -4444,9 +4444,7 @@ KL coefficient ($\beta$) & 0 to 0.15 & \textbf{No consensus}; often set to 0 \\
     xbar, bar width=10pt,
     width=0.75\textwidth, height=7cm,
     xlabel={Percentage of Reviews (\%)},
-    symbolic y coords={Reward hacking, Training instability, Computational cost,
-                       Distribution shift, Theoretical concerns, Reproducibility,
-                       Contribution novelty, Insufficient evaluation},
+    symbolic y coords={Reward hacking,Training instability,Computational cost,Distribution shift,Theoretical concerns,Reproducibility,Contribution novelty,Insufficient evaluation},
     ytick=data,
     xmin=0, xmax=100,
     nodes near coords,
@@ -4454,14 +4452,14 @@ KL coefficient ($\beta$) & 0 to 0.15 & \textbf{No consensus}; often set to 0 \\
     y tick label style={font=\small},
 ]
 \addplot[fill=blue!50] coordinates {
-    (86.3, Insufficient evaluation)
-    (57.3, Contribution novelty)
-    (52.7, Reproducibility)
-    (40.8, Theoretical concerns)
-    (39.8, Distribution shift)
-    (33.7, Computational cost)
-    (31.6, Training instability)
-    (18.8, Reward hacking)
+    (86.3,Insufficient evaluation)
+    (57.3,Contribution novelty)
+    (52.7,Reproducibility)
+    (40.8,Theoretical concerns)
+    (39.8,Distribution shift)
+    (33.7,Computational cost)
+    (31.6,Training instability)
+    (18.8,Reward hacking)
 };
 \end{axis}
 \end{tikzpicture}
@@ -4616,7 +4614,7 @@ F28 & 2-GRPO/DPO equivalence partially confirmed; $G$=2 saves 75--87.5\% rollout
 F29 & BH correction: 19/20 tests survive at FDR=0.05 & Statistical hardening & Only PPO vs GRPO Qwen3-8B fails \\
 F30 & Power analysis: MDE $d$=2.024 at $n$=5; single-seed zero power & Statistical hardening & Qwen PPO-GRPO post-hoc power $\approx$6\% \\
 F31 & Six concurrent papers independently identify ZVF (NGRPO, Scaf-GRPO, EBPO, LENS, Hard Examples, RL-ZVP) & External validation & All Sep 2025--Feb 2026 \\
-F32 & Kimi-K2-Thinking: Peak 100\%, last-10 91.7\% (every step $\ge$0.812) & Confirmed & Bitter Lesson Campaign \\
+F32 & Kimi-K2-Thinking: Peak 100\%, last-10 91.7\% (every step $\ge$0.812) & Confirmed & Campaign Extension \\
 F33 & Qwen3.5-397B-A17B: 397B total / 17B active; peak 100\%, last-10 96.9\% in 16 steps & Confirmed & Upper bound in study \\
 F34 & GPT-OSS-120B: 93.8\% at step 1, peak 100\%, last-10 87.5\% & Confirmed & Near-perfect from init \\
 F35 & Tinker vs TRL on Qwen3-8B: 85.6\% vs 5.0\% (17$\times$ gap) & Confirmed & Extends F21 with same-model \\

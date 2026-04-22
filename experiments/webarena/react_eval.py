@@ -307,8 +307,10 @@ async def run_episode(
 def _parse_tasks(spec: str, benchmark: str) -> List[str]:
     """Accept either a comma list or 'all' for benchmark's registered tasks."""
     import gymnasium as gym
+    # webarena_verified is a semantic alias; tasks are registered under browsergym/webarena.
+    prefix_name = "webarena" if benchmark == "webarena_verified" else benchmark
     if spec == "all":
-        prefix = f"browsergym/{benchmark}"
+        prefix = f"browsergym/{prefix_name}"
         return sorted(i for i in gym.envs.registry.keys() if i.startswith(prefix))
     out: List[str] = []
     for t in spec.split(","):

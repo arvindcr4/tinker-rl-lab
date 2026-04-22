@@ -41,7 +41,7 @@
 
 \graphicspath{{./}{../../paper/figures/}{../../paper/figures/v2/}{../../grpo_ablation_results/images/}}
 
-\newcommand{\projecttitle}{When Does a Group-Relative Runner Have a Learning Signal?}
+\newcommand{\projecttitle}{When Does a GRPO-Like Group-Relative RL Loop Have a Learning Signal?}
 \newcommand{\projectsubtitle}{A Diagnostic Audit of Reward Diversity, Evidence Calibration, and Stack-Conditioned LLM Post-Training}
 \newcommand{\zvf}{\mathrm{ZVF}}
 \newcommand{\gu}{\mathrm{GU}}
@@ -411,7 +411,7 @@ Tinker GRPO scaling & GRPO with LoRA & GSM8K across Qwen, Llama, DeepSeek, Nemot
 Modal H100 & PPO, PPO+KL, evaluation & GSM8K, HumanEval, held-out math & Mixed\\
 TRL and classical baselines & TRL-GRPO, SB3 PPO, CleanRL PPO, Tianshou PPO & Math and GSM8K & Complete\\
 Wave sensitivity & GRPO & Temperature, LoRA rank, and batch-size sensitivity on Qwen3-8B & Complete\\
-Bitter lesson campaign & GRPO, TRL-GRPO & Larger dense and MoE GSM8K runs, stack-sensitivity comparisons & Mixed\\
+Additional scaling runs & GRPO, TRL-GRPO & Larger dense and MoE GSM8K runs, stack-sensitivity comparisons & Mixed\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -997,7 +997,7 @@ Held-out math evals & Qwen3.5-27B, Qwen3-32B & Evaluation & GSM8K held-out & Par
 TRL GRPO baseline & Qwen2.5-0.5B & TRL-GRPO & Math & Complete & --- & Multi-seed mean around 0.734 in the recorded summary.\\
 Classical PPO baselines & SB3, CleanRL, Tianshou & PPO & Math & Complete & --- & Near-zero performance; LLM backbone is necessary.\\
 Wave sensitivity & Qwen3-8B & GRPO & GSM8K & Complete & 0.40 & Hyperparameters tune an existing signal; they do not manufacture one.\\
-Bitter lesson campaign & Kimi, Qwen3.5, GPT-OSS, Llama 70B & GRPO, TRL-GRPO & GSM8K & Mixed & --- & Extended scale and stack-sensitivity evidence.\\
+Additional scaling runs & Kimi, Qwen3.5, GPT-OSS, Llama 70B & GRPO, TRL-GRPO & GSM8K & Mixed & --- & Extended scale and stack-sensitivity evidence.\\
 \bottomrule
 \end{longtable}
 \endgroup

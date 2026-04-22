@@ -4,16 +4,8 @@
 |---|---:|---|
 | `REVIEWER_README.md` | 0.00 MiB | `7d19c93641ef26549e2ba4634556f829fe9b6172739a3d92d60ab85827d1e039` |
 | `SUBMISSION_README.md` | 0.00 MiB | `08dac95f139bafb95c11a348b57faec341b69fc070392e7c2fc3b0238e23b11d` |
-| `code.tar.gz` | 37.55 MiB | `8a9b54e63a09ad29cc33e6df9f253b7596853ed06b466d1de81291bc7812a910` |
-| `data_statement.md` | 0.00 MiB | `2980b5883f4f530f4f6f8faa27ea252cd8cd9b1fe8015552fee78fb63aab72ca` |
-| `ethics_statement.pdf` | 0.29 MiB | `6e936cc3fac5dc9162b4400494cc6637734f3602152c92b07edd784492547fca` |
-| `grpo_agentic_llm_paper.pdf` | 0.63 MiB | `806a9be72964eba869c69530146eb37797022a2f2993cf84ac0b0024581759ae` |
-| `grpo_agentic_llm_paper_anonymous.pdf` | 0.62 MiB | `57abb74e3925f5f3bbbf66958a7b2c0810f6410b0def65fbea84ae50d2b2c7e3` |
-| `paper.pdf` | 6.43 MiB | `a996a27b72a9aa8d9bad12858f38367012f43519fb415b2ebb78cb52b0ab736c` |
+| `code.tar.gz` | 29.14 MiB | `400bbcaf5daaff915f3e9463474353f4f8b40d4649d18b8c301b1d1f83bfb702` |
 | `paper_anon.pdf` | 6.44 MiB | `2e3b68a14f82b174725943fa1b4f86146b98a71225ecca3e5955194b1ff184c1` |
-| `presentation.pptx` | 0.04 MiB | `cfc1af742f66fcaa0bed8a2d92b3c0b2c94b88d534fa440299751653688cea8c` |
-| `report.pdf` | 0.89 MiB | `18ce051591334141305f1435b9c114a628534add703b478acf0f2d9c4619f5e3` |
-| `supporting_data.tar.gz` | 0.45 MiB | `ca1198e5df9638aba3bebda6a287507a554729bfd6cb4a5b7054ea7ad0b25a76` |
 
 Verify with:
 

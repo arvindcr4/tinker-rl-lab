@@ -104,6 +104,7 @@ EXCLUDE_FILES = {
 }
 
 EXCLUDE_DIRS = {
+    "ai-scientist-template", "ai-scientist-v2", "capstone-literature-survey", "reports", "private_audit_manifest", "research_loop", 
     "__pycache__",
     ".DS_Store",
     ".venv",

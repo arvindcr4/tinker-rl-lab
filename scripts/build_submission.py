@@ -44,48 +44,21 @@ PRESENTATION_REPLACEMENTS = {
 
 
 SOURCES = [
-    (ROOT / "paper" / "main.pdf", CONTENTS / "paper.pdf"),
     (ROOT / "paper" / "main_anon.pdf", CONTENTS / "paper_anon.pdf"),
-    (ROOT / "paper" / "ethics_wrapper.pdf", CONTENTS / "ethics_statement.pdf"),
-    (
-        ROOT / "reports" / "final" / "capstone_final_report.pdf",
-        CONTENTS / "report.pdf",
-    ),
-    (
-        ROOT / "reports" / "final" / "grpo_agentic_llm_paper.pdf",
-        CONTENTS / "grpo_agentic_llm_paper.pdf",
-    ),
-    (
-        ROOT / "reports" / "final" / "grpo_agentic_llm_paper_anonymous.pdf",
-        CONTENTS / "grpo_agentic_llm_paper_anonymous.pdf",
-    ),
-    (
-        ROOT / "blind_review" / "tinker-rl-lab-anon.tar.gz",
-        CONTENTS / "code.tar.gz",
-    ),
+    (ROOT / "blind_review" / "tinker-rl-lab-anon.tar.gz", CONTENTS / "code.tar.gz"),
 ]
 
 # Bundle files that live in contents/ already.
 EXISTING_MEMBERS = [
     "REVIEWER_README.md",
     "SUBMISSION_README.md",
-    "data_statement.md",
-    "supporting_data.tar.gz",
 ]
 
 BUNDLE_ORDER = [
     "REVIEWER_README.md",
     "SUBMISSION_README.md",
     "code.tar.gz",
-    "data_statement.md",
-    "ethics_statement.pdf",
-    "grpo_agentic_llm_paper.pdf",
-    "grpo_agentic_llm_paper_anonymous.pdf",
-    "paper.pdf",
     "paper_anon.pdf",
-    "presentation.pptx",
-    "report.pdf",
-    "supporting_data.tar.gz",
 ]
 
 

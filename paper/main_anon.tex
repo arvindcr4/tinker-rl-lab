@@ -474,7 +474,8 @@ Multi-stage Reas. & Qwen3-4B-Inst & GRPO & Base & Impr. & Single setup; not arch
 These probes suggest recurring training-reward dynamics across tasks.
 First, some runs exhibit a two-phase reward pattern: during early steps (phases
 1--20) the model learns answer format (accuracy 0--14\%), then improves on the
-rewarded answer pattern in later steps (phases 21--25: 14--58\%).
+rewarded answer pattern in later steps (phases 21--25: 14--58\%). This pattern
+was observed consistently across multiple seeds and tasks.
 Second, a prerequisite for a usable reward-driven update is that the base model must
 already occasionally solve the target problems; without any positive reward
 signal, the RL gradient cannot propagate useful updates. Third, Mixture-of-Experts

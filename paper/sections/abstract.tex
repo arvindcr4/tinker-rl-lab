@@ -5,7 +5,9 @@
 This paper is an engineering diagnostic for group-relative reinforcement
 learning for LLMs (RLVR), not a benchmark or leaderboard.  We study whether a
 critic-free group-relative update has a usable learning signal under a given
-model--reward--sampler--stack combination.
+model--reward--sampler--stack combination.  All reported task-specific
+evaluations use custom parsers and are not canonical harness results (e.g.,
+HumanEval results use a 50-problem subset rather than the full benchmark).
 
 \textbf{Contribution: a diagnostic and reporting framework.}  First, we
 introduce a mixed-group probability mechanism:
@@ -37,7 +39,7 @@ Qwen3-8B improves only $82.0\% \to 83.3\%$ ($p = 0.26$), a small and
 non-significant gain.  Four Llama-3.3-70B seeds show training last-10 values
 ranging 95.0--98.1\% yet all land on 95.0\% held-out accuracy, demonstrating
 that last-10 variance reflects Monte-Carlo noise rather than genuine
-generalization differences.  Online training reward is dynamics evidence,
+generalization differences.  Online training-set reward is dynamics evidence,
 not capability evidence.
 
 Fourth, we show that algorithm labels (PPO, GRPO, DPO) are under-specified

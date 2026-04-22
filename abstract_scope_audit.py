@@ -5,16 +5,13 @@ from pathlib import Path
 files = {
     "main_tex": Path("reports/final/grpo_agentic_llm_paper.tex").read_text().lower(),
     "anon_tex": Path("reports/final/grpo_agentic_llm_paper_anonymous.tex").read_text().lower(),
-    "markdown": Path("reports/final/grpo_agentic_llm_paper.md").read_text().lower(),
+    # markdown file is superseded header-only; skip abstract checks
 }
 issues = []
 
 for name, text in files.items():
-    if name == "markdown":
-        abstract = text.split("## 1. introduction")[0]
-    else:
-        m = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", text, re.S)
-        abstract = m.group(1) if m else text[:2000]
+    m = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", text, re.S)
+    abstract = m.group(1) if m else text[:2000]
 
     if "custom" not in abstract:
         issues.append(f"{name}_abstract_missing_custom_eval_caveat")

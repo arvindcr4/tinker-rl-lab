@@ -33,7 +33,7 @@ See `result_ledger.md` for the source-of-truth result table and `ARTIFACT_SANITI
 - `../../submission_colab.ipynb` - Standard GRPO training + evaluation Colab
 - `../../advanced_rl_colab.ipynb` - Dr. GRPO, DAPO, DPO Colab (advanced algorithms)
 
-## Key Results
+## Key Results (Training-Set)
 
 These numbers should not all be read as standardized benchmark claims:
 - **Tool results are internal/custom** and still need standardized evaluator disclosure or replacement.
@@ -58,7 +58,8 @@ These numbers should not all be read as standardized benchmark claims:
 ✅ **Completed**: Held-out GSM8K evaluation (5 seeds x 200 examples; non-significant lift)  
 ⚠️ **Pending**: Standardized tool-calling evaluation / judge protocol disclosure  
 ⚠️ **Pending**: Canonical full HumanEval/MBPP evaluation  
-⚠️ **Pending**: Fully local reproduction path without hosted-service permissions
+⚠️ **Pending**: Fully local reproduction path without hosted-service permissions  
+⚠️ **Note**: Checkpoints are available if still accessible on the platform (if checkpoint still available); availability is not guaranteed for indefinitely retained resources
 
 ## Highest-Leverage Next Step
 

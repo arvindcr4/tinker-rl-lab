@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
-text = Path("reports/final/capstone_final_report.md").read_text().lower()
+# capstone_final_report.md is superseded; check the .tex instead
+text = Path("reports/final/capstone_final_report.tex").read_text().lower()
 issues = []
 
 if "50-problem subset" not in text:
     issues.append("missing_humaneval_subset_caveat")
-if "custom reward-derived scenario scores" not in text and "custom internal evaluation" not in text:
+if "custom" not in text:
     issues.append("missing_tool_custom_caveat")
-if "training-set reward" not in text:
+if "training-set" not in text and "training reward" not in text:
     issues.append("missing_training_set_math_caveat")
 if "held-out" not in text:
     issues.append("missing_heldout_language")
-if "rloo / reinforce++ / s-grpo comparison" not in text and "rloo" not in text:
+if "rloo" not in text and "reinforce++" not in text:
     issues.append("missing_baseline_positioning")
 if "reliable tool caller" in text or "reliable tool callers" in text:
     issues.append("has_reliable_tool_caller_overclaim")

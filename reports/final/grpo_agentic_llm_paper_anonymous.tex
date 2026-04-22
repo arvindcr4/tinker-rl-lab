@@ -14,7 +14,10 @@
 \title{When Does GRPO Have a Learning Signal?\\
 A Claim-to-Evidence Audit of Group-Relative RL}
 
-\author{}
+\author{
+  % Institution anonymized for blind review
+  % Anonymous Institution
+}
 
 \newcommand{\zvf}{\mathrm{ZVF}}
 \newcommand{\gu}{\mathrm{GU}}
@@ -26,13 +29,16 @@ A Claim-to-Evidence Audit of Group-Relative RL}
 
 \begin{abstract}
 We study when a critic-free group-relative RL loop has a usable learning
-signal. Across low-budget tool, code, browser-control, and math runs, the
+signal. All reported task-specific evaluations use custom parsers and are not
+canonical harness results (e.g., HumanEval results use a 50-problem subset
+rather than the full benchmark). Across low-budget tool, code, browser-control,
+and math runs, the
 common mechanism is within-group reward contrast: all-wrong groups produce
 cold-start collapse, while all-correct groups produce saturation. We
 operationalize this with Zero-Variance Fraction (ZVF) and Gradient Utilization
-(GU) as early triage diagnostics, not calibrated predictors. The clean
-held-out GSM8K control shows only a small, non-significant improvement over the
-base model, and paired disagreement tests on the same 200 examples do not show
+(GU) as early triage diagnostics, not calibrated predictors. Training-set reward
+gains often fail to transfer to held-out capability. The clean held-out GSM8K
+control shows only a small, non-significant improvement over the base model, and paired disagreement tests on the same 200 examples do not show
 a reliable improvement for any seed. Tool, code, and browser-control results
 are custom, subset-bound, or integration-only proxy measurements. The
 contribution is therefore not a GRPO leaderboard result, but a
@@ -297,8 +303,14 @@ under-identification, not framework superiority.
 
 DeepSeekMath introduced GRPO as a critic-free, group-relative alternative to
 PPO for mathematical reasoning \citep{shao2024deepseekmath,schulman2017proximal}.
-Our paper does not reproduce that recipe; it audits a GRPO-inspired runner and
-asks when its sampled groups contain usable reward contrast. Zero-variance
+Contemporary critic-free methods include RLOO \citep{ahmadian2024backtobasics}
+(leave-one-out baseline) and REINFORCE++ \citep{hu2025reinforceplusplus}
+(KL-shaped advantages). Dr.\ GRPO \citep{deepseekr1} removes KL and adds entropy
+bonuses; DAPO \citep{yu2025dapo} adds asymmetric clipping and high-temperature
+sampling. DPO \citep{rafailov2024dpo} and Step-DPO \citep{lai2024stepdpo}
+provide offline optimization. Our paper does not reproduce these recipes; it
+audits a GRPO-inspired runner and asks when its sampled groups contain usable
+reward contrast. Zero-variance
 prompt work and online difficulty filtering are the closest algorithmic
 relatives: they show that all-correct or all-incorrect groups are poor learning
 substrates and that intermediate-difficulty prompts carry more signal

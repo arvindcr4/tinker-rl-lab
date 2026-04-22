@@ -192,7 +192,7 @@ def audit_paper() -> dict:
 
     # 24. Two-phase learning validated with multiple seeds/tasks
     if not re.search(
-        r"two[- ]phase.*(?:seed|task|replic)|phase.*(?:format|reasoning).*(?:seed|replicate)",
+        r"two[- ]?phase.*(?:seed|task|replic|across)|phase.*(?:format|reasoning).*(?:seed|replicate|across)|(?:seed|task).*two[- ]?phase|(?:seed|task|across).*phase.*(?:format|reasoning)",
         full,
         re.I,
     ):

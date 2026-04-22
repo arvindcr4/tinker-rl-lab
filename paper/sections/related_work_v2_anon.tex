@@ -84,6 +84,10 @@ REINFORCE with a value baseline, when carefully implemented, matches GRPO on
 several RLHF tasks.
 
 A third thread attacks the \emph{zero-variance failure mode} (ZVF) directly.
+RL-ZVP~\cite{rlzvp2025} treats all-correct and all-incorrect groups as
+recoverable training material by changing the advantage signal, while
+Online Difficulty Filtering~\cite{bae2025online} selects intermediate-difficulty
+prompts online so that sampled batches preserve useful reward variation.
 AERO~\cite{zhang2026aero} and GRESO~\cite{zhang2026greso} pre-screen prompts
 before sampling; CPPO~\cite{lin2025cppo} prunes completions post-rollout,
 giving up to $7.98\times$ speedup on GSM8K. NGRPO~\cite{nan2025ngrpo} adds
@@ -101,10 +105,12 @@ MinPRO~\cite{lei2026minpro} shows that token-level importance sampling in
 GRPO is only an approximation to the rigorous prefix importance ratio;
 SSPO~\cite{yang2025sspo} operates at sentence granularity to balance the
 stability of GSPO against the expressiveness of token-level GRPO, improving
-by $3.56$ points on math benchmarks. Taken together, these results explain at
-a theoretical level why implementation details at the granularity of the
-importance ratio have such large empirical effects --- an explanation our
-benchmark complements with a $73\,\mathrm{pp}$ cross-library measurement.
+by $3.56$ points on math benchmarks.  This paper uses the same zero-variance
+condition differently: under standard GRPO, ZVF/GU become experiment-management
+signals that tell the researcher whether to stop, warm-start, densify reward,
+increase group size, or change task difficulty.  In that sense, our diagnostic
+framing complements RL-ZVP's training-algorithm framing and Zhou et al.'s
+finite-sample theory.
 
 % -----------------------------------------------------------------------------
 \subsection{Reasoning RL and Process Reward Models}
@@ -132,8 +138,12 @@ search~\cite{yao2024tot}, and critic-style post-hoc
 verifiers~\cite{mcaleese2024criticgpt} all benefit from or substitute for
 process reward supervision. VerifyBench~\cite{zhang2025verifybench} and
 A~Sober Look~\cite{hochlehnert2025sober} warn, however, that reward hacking
-and evaluation artefacts can inflate perceived gains, motivating our
-insistence on binary verifiable rewards for mathematical reasoning.
+and evaluation artefacts can inflate perceived gains. Spurious
+Rewards~\cite{shao2025spurious} sharpens the warning by showing that weak or
+random reward signals can amplify model-specific pretrained behaviours on
+some math model families without proving a general capability gain. These
+results motivate our evidence hierarchy: reward improvements are dynamics
+evidence until checked against held-out or shifted evaluations.
 
 Reasoning-specific algorithmic contributions also continue to accumulate.
 ReFT~\cite{luong2024reft} studies supervised fine-tuning versus RL for
@@ -226,8 +236,10 @@ NeMo-RL~\cite{nvidia2024nemorl}, DeepSpeed-Chat~\cite{yao2023deepspeedchat},
 trlX~\cite{havrilla2023trlx}, Axolotl~\cite{axolotl2024}, and
 \tinker{}~\cite{thinkingmachines2024tinker}. Each framework makes different
 default choices about advantage normalisation, KL estimators, tokenisation
-loss masking, rollout batching, and importance-sampling granularity; those
-differences are the principal source of the cross-library gap we quantify.
+loss masking, rollout batching, and importance-sampling granularity. Those
+choices are not incidental engineering details: they are part of the
+realized treatment, so algorithm comparisons should be read as
+stack-conditioned unless these factors are fixed or modeled.
 On the inference side, vLLM~\cite{kwon2023vllm} and
 SGLang~\cite{zheng2024sglang} provide the rollout backends on which all
 modern frameworks depend; FlashAttention~\cite{dao2022flashattention} and
@@ -256,9 +268,9 @@ GSM8K~\cite{cobbe2021gsm8k}, MATH~\cite{hendrycks2021math},
 AIME~\cite{maa2024aime}, MMLU~\cite{hendrycks2021mmlu},
 HumanEval~\cite{chen2021codex}, MBPP~\cite{austin2021mbpp}, and
 BBH~\cite{suzgun2023bbh}. \ours{} ports these statistical traditions to the
-LLM RL post-training regime, contributing the first cross-library
-measurement protocol for GRPO-family algorithms, a ZVF diagnostic that
-scales from 0.6B to 235B parameters, and an empirical grounding for the
-scaling laws, frameworks, and algorithmic refinements surveyed above.
+LLM RL post-training regime, contributing a stack-conditioned reporting
+protocol for GRPO-family experiments, a ZVF/GU triage diagnostic that scales
+from 0.6B to 235B parameters, and empirical grounding for the scaling laws,
+frameworks, and algorithmic refinements surveyed above.
 
 % =============================================================================

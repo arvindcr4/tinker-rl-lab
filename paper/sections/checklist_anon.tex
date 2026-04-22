@@ -23,27 +23,19 @@
     \begin{enumerate}
     \item Do the main claims made in the abstract and introduction
           accurately reflect the paper's contributions and scope?
-    \answerYes{The abstract and Section~\ref{sec:intro} state five
-    contributions: (i)~a 73-percentage-point implementation gap across
-    7~libraries, (ii)~model-dependent GRPO/PPO preference, (iii)~frontier
-    collapse on Nemotron-120B, (iv)~zero-variance fraction (ZVF) as a
-    leading diagnostic of GRPO failure, and (v)~reward-trajectory
-    proxies for KL-free monitoring.  Empirical support is given in
-    Section~\ref{sec:results}: the cross-library gap in
-    Section~\ref{sec:main_results}; the algorithm$\times$model
-    interaction in Section~\ref{sec:ppo_grpo}; the frontier regime in
-    Section~\ref{sec:frontier}; ZVF analysis in
-    Section~\ref{sec:zvf-analysis}; and proxy metrics in
-    Sections~\ref{sec:length_bias} and~\ref{sec:discuss_kl}.  Evidence is
-    drawn from the 44~controlled experiments tabulated in
-    Section~\ref{sec:results} and the 32-run Bitter Lesson extension of
-    Section~\ref{sec:bitter_lesson}.  The scope is explicitly restricted
-    to LoRA fine-tuning on three task families (math, code, tool-use)
-    with evaluated scales of 0.6B--235B parameters
-    (Section~\ref{sec:setup}); Section~\ref{sec:limitations} records
-    that 11 of 14 Tinker runs were interrupted by JWT token expiry and
-    4 of 6 Modal runs timed out, so reported numbers reflect the
-    \emph{available} data and partial runs are marked $\dagger$.}
+    \answerYes{The abstract and Section~\ref{sec:intro} state three
+    headline claims and their evidence hierarchy: (i)~GRPO is a
+    reward-contrast amplifier whose useful signal depends on mixed-reward
+    sampled groups, with ZVF/GU used as triage diagnostics rather than
+    calibrated predictors; (ii)~PPO/GRPO/DPO labels are under-specified
+    treatments unless the model, prompt, reward, sampler, loss, backend,
+    checkpoint rule, and evaluator are reported; and (iii)~training reward
+    is not held-out capability.  Empirical support is given in
+    Section~\ref{sec:results} and in the ZVF, held-out GSM8K,
+    stack-sensitivity, and proxy-reward analyses.  The scope is explicitly
+    restricted to the available LoRA/QLoRA post-training runs on math, code,
+    and tool-use reward environments, with partial and proxy runs marked as
+    such in the results and limitations.}
     \end{enumerate}
 
 % -- 2. Limitations ------------------------------------------------------------
@@ -70,9 +62,10 @@
             quantisation-aware training are not evaluated
             (Section~\ref{sec:method_limits}).
       \item \textbf{Train-set reward metric.} Primary Tinker metrics are
-            training rewards, not held-out accuracy, with held-out
-            evaluation only completed for the Modal Qwen3-32B / Qwen3.5-27B
-            arms (Section~\ref{sec:method_limits}).
+            training rewards, not held-out accuracy.  The only clean
+            held-out capability claim in the paper is the separate GSM8K
+            200-example slice, whose lift is small and non-significant
+            (Section~\ref{sec:method_limits}).
       \item \textbf{Proxy metrics in place of direct KL.}
             Section~\ref{sec:discuss_kl} discusses the limits of
             trajectory-based stability indices as substitutes for direct

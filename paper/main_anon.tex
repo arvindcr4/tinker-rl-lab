@@ -457,7 +457,7 @@ TRL-GRPO & Modal & Qwen3-8B & 8B & 30 & 37.5\% & 5.0\% \\
 TRL-GRPO & Modal & Llama-3.2-3B-Inst & 3B & 30 & 100\% & 71.3\% \\
 TRL-GRPO & Modal & Llama-3.2-1B-Inst & 1B & 30 & 87.5\% & 36.2\% \\
 \midrule
-\multicolumn{7}{l}{\textit{Task~4 Framework Gap --- identical GRPO config: Qwen3-8B, seed=42, $G=8$, lr=$10^{-5}$, GSM8K-500, 30 steps}} \\
+\multicolumn{7}{l}{\textit{Task~4 Stack-Sensitivity Probe --- nominally matched visible GRPO config: Qwen3-8B, seed=42, $G=8$, lr=$10^{-5}$, GSM8K-500, 30 steps}} \\
 \midrule
 GRPO & Tinker-Managed & Qwen3-8B-Base & 8B & 30 & 100\% & 85.6\% \\
 GRPO & TRL (Modal-H100) & Qwen3-8B & 8B & 30 & 37.5\% & 5.0\% \\
@@ -481,29 +481,34 @@ GRPO & Tinker & Llama-3.1-8B-Inst & 8B & 30 & 0\% & 0\% \\
 $^\ddagger$ W\&B logging error on completion; metrics recovered from training log (every-5-step sampling).
 $^\star$ Still running at time of writing; partial metrics from steps completed.}
 
-\subsection{Task~4: Framework Gap on an Identical GRPO Config}
+\subsection{Task~4: Stack-Sensitivity Probe Under a Nominal GRPO Config}
 \label{sec:framework_gap}
 
-To isolate \emph{framework effects} from algorithmic ones, we fixed the GRPO
-configuration (Qwen3-8B, seed~42, group size $G=8$, learning rate $10^{-5}$,
-GSM8K-500, 30 steps) and ran it through four launchers in this repository:
-Tinker (managed), TRL~\citep{vonwerra2022trl} on Modal H100, verl on Modal H100
-and OpenRLHF on Modal H100. Only the training framework is swapped; prompts,
-reward model (verifiable boxed-answer match) and seed are byte-identical.
-Results are serialised to
+We attempted a nominal framework-swap comparison under matched visible
+hyperparameters (Qwen3-8B, seed~42, group size $G=8$, learning rate $10^{-5}$,
+GSM8K-500, 30 steps).  This is not evidence that one framework causally
+dominates another.  Backend-level implementation details---checkpoint and
+tokenizer identity, prompt construction, sampler behavior, loss masking,
+KL/reference handling, optimizer defaults, LoRA target modules, precision,
+rollout plumbing, checkpoint selection, and evaluator details---remain part of
+the treatment.  The comparison is therefore interpreted as stack-sensitivity
+evidence: visible GRPO hyperparameters alone do not fully specify the training
+process.  In the current artifact, only the managed and TRL rows are real runs;
+the verl and OpenRLHF rows are deterministic dry-run fallbacks and support
+engineering-readiness discussion only.  Results are serialised to
 \texttt{experiments/results/framework\_comparison.json} and visualised as a
 four-bar last-10-reward chart (Figure~\ref{fig:framework_gap}).
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.8\columnwidth]{figures/v2/framework_comparison.pdf}
-\caption{Task~4 framework-gap deep-dive. Identical GRPO config
-(Qwen3-8B, $G{=}8$, lr${=}10^{-5}$, GSM8K-500, 30 steps, seed~42) run through
-four launchers (\texttt{verl/}, \texttt{openrlhf/}, \texttt{trl\_integrations/}
-and Tinker-Managed) in this repository. Tinker's managed reference-model
-offload and tuned rollout defaults dominate at 30 steps; TRL-H100 collapses on
-the same config (PEFT LoRA rank~32 over 500 prompts $\approx$ 10\% of
-Tinker's effective capacity), with verl and OpenRLHF bracketing in between.}
+\caption{Task~4 stack-sensitivity probe.  The visible GRPO configuration is
+nominally matched (Qwen3-8B, $G{=}8$, lr${=}10^{-5}$, GSM8K-500, 30 steps,
+seed~42), but the full post-training stack is not identical.  The managed and
+TRL rows are real runs; verl and OpenRLHF are dry-run fallbacks in the current
+artifact.  The figure is evidence that ``GRPO config'' is under-specified
+unless backend, sampler, loss-mask, KL/reference, LoRA, precision, checkpoint,
+and evaluator details are reported, not a causal framework ranking.}
 \label{fig:framework_gap}
 \end{figure}
 
@@ -626,12 +631,13 @@ in a follow-up run.}
 
 \noindent Held-out accuracy sits in a narrow 87.8--91.0\% band across the
 eight fully-evaluated checkpoints (mean $89.8\%$, mean absolute deviation
-from \emph{last-10} of $3.6$ pp, mean signed gap $+0.4$ pp). Two interpretive
-takeaways follow. \emph{First}, the aggregate training-reward signal
-generalises: held-out accuracy exceeds training \emph{last-10} on five of the
-eight checkpoints, and is within a single CI95 of it on all eight --- i.e.
-we see no systematic optimism in \emph{last-10}.
-\emph{Second}, ranking checkpoints by \emph{last-10} within this band is
+from \emph{last-10} of $3.6$ pp, mean signed gap $+0.4$ pp).  This table is a
+checkpoint-selection analysis, not evidence that GRPO caused a significant
+held-out capability gain.  Selected high-training-reward checkpoints often
+retain high held-out GSM8K accuracy, and held-out accuracy is within a single
+CI95 of \emph{last-10} on all eight checkpoints, but this should be read as a
+dynamics/selection observation rather than a generalization claim.  Ranking
+checkpoints by \emph{last-10} within this band is
 unreliable: the Spearman rank correlation between \emph{last-10} and
 held-out accuracy is $\rho = -0.02$ ($n=8$), reflecting the fact that
 Monte-Carlo noise on a 16-sample-per-step run is comparable to the true
@@ -658,8 +664,9 @@ and this entry will be backfilled before the camera-ready.
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/v2/scaling.pdf}
-\caption{Scaling analysis: GSM8K accuracy as a function of model size (log scale x-axis).
-Qwen and Llama model families shown separately with power-law trend fit.}
+\caption{Scaling analysis under the rollout/evaluation parser: GSM8K training reward
+or explicitly labelled held-out accuracy as a function of model size (log scale
+x-axis).  Values should not be read as a single held-out benchmark leaderboard.}
 \label{fig:scaling}
 \end{figure}
 
@@ -966,8 +973,8 @@ Table~\ref{tab:results_gsm8k}), but may show \emph{qualitatively different
 training dynamics}: faster convergence, lower KL divergence accumulation,
 and greater sensitivity to reward signal noise. The Tinker API allows us
 to run these experiments at a cost point that would be prohibitive on
-owned hardware, enabling the first benchmark-quality frontier scaling study
-for GRPO.
+owned hardware, enabling a broad but uneven systems audit that generates
+hypotheses about frontier-scale group-relative RL behavior.
 
 % ---------------------------------------------------------------------------
 \subsection{PPO vs.~GRPO: Stack-Conditioned Comparison}
@@ -1311,7 +1318,7 @@ DeepSeek & DeepSeek-V3.1 & \multicolumn{3}{c}{\textit{Not evaluated (training in
 \label{sec:bitter_lesson}
 % =============================================================================
 
-Inspired by the ``bitter lesson'' that scale and compute dominate clever algorithms~\cite{schulman2017proximal}, we launched a systematic campaign of 32 additional Tinker GRPO experiments plus 3 TRL-GRPO framework-comparison experiments on Modal H100s, bringing our total to 70+ training runs.
+Inspired by the ``bitter lesson'' that scale and compute dominate clever algorithms~\cite{schulman2017proximal}, we launched a systematic campaign of 32 additional Tinker GRPO experiments plus 3 TRL-GRPO stack-comparison experiments on Modal H100s, bringing our total to 70+ training runs.
 
 \paragraph{New Frontier Models.}
 We evaluated six previously untested models on GSM8K with GRPO (Table~\ref{tab:main_results}, Bitter Lesson block).
@@ -1320,11 +1327,19 @@ We evaluated six previously untested models on GSM8K with GRPO (Table~\ref{tab:m
 \textbf{GPT-OSS-120B} showed remarkably stable training (93.8\% at step 1, 87.5\% last-10), consistent with our earlier finding that frontier models \emph{reinforce} rather than \emph{learn} GSM8K capability.
 Conversely, \textbf{DeepSeek-V3.1-Base} (671B/37B active) achieved only 57.3\% last-10 despite its massive scale, suggesting that dense parameter count alone is insufficient---base models need instruction-following capability for effective GRPO.
 
-\paragraph{Framework Gap Deepens.}
-The TRL-GRPO experiments on Modal H100 reveal a striking framework effect that exceeds our earlier measurements.
-On the \emph{same model} (Qwen3-8B), Tinker GRPO achieves 84.4\% last-10 while TRL-GRPO achieves only 5.0\% (peak 37.5\%)---a 17$\times$ gap.
-This suggests the framework implementation (not just the algorithm) is a dominant factor in RL post-training outcomes, extending the findings of~\citet{henderson2018deep}.
-TRL-GRPO on Llama-3.2-3B-Instruct performs substantially better (71.3\% last-10), indicating that TRL's implementation is more effective on instruction-tuned models with existing chat formatting.
+\paragraph{Stack Sensitivity, Not Framework Ranking.}
+The TRL-GRPO experiments on Modal H100 expose a reporting problem rather than
+a clean causal framework effect.  Under nominally matched visible settings on
+Qwen3-8B, the managed row reaches 84.4\% last-10 reward while the TRL row
+reaches 5.0\% (peak 37.5\%).  This large divergence does not prove that one
+framework is better than another, because framework, backend defaults, sampler
+behavior, loss-mask semantics, LoRA/PEFT implementation, precision, rollout
+plumbing, and evaluator details remain entangled.  It proves the more
+defensible point: the phrase ``same GRPO config'' is under-specified unless
+those hidden stack variables are logged and controlled.  TRL-GRPO on
+Llama-3.2-3B-Instruct performs substantially better (71.3\% last-10),
+reinforcing the stack-conditioned interpretation rather than a universal
+framework ranking.
 
 \paragraph{Base vs.~Instruct Models.}
 A clear pattern emerges: base models (Llama-3.1-70B at 36.4\%, Llama-3.1-8B at 11.5\%, DeepSeek-V3.1-Base at 57.3\%) struggle significantly compared to instruct counterparts.
@@ -1598,7 +1613,7 @@ W\&B are nonetheless available to other researchers.
 The sharpest observation in our benchmark is not a stable algorithm ranking,
 but the fact that such a ranking is not identifiable from the available
 artifacts.  The Qwen PPO/GRPO row changes interpretation depending on which
-result summary is treated as canonical, while PPO substantially dominates in
+result summary is treated as canonical, while PPO is substantially higher in
 the recorded Llama-3.1-8B setting (Mann-Whitney $r = 0.94$, $p < 10^{-10}$ on
 per-step rewards).  However, these rows are single-seed and backend-confounded,
 and the Mann-Whitney $p$-value assumes independent observations while per-step
@@ -1654,35 +1669,24 @@ Direct testing requires gradient-level analysis of the kind described in
 \citet{liu2025rlsubnetworks}, and we release our checkpoints expressly to
 enable such analysis.
 
-\subsection{What the Implementation Gap Means for the Field}
+\subsection{What Stack Sensitivity Means for the Field}
 \label{sec:discuss_impl}
 
-The 73-percentage-point gap between LLM-native libraries (Tinker, TRL) and
-classic RL libraries (SB3, CleanRL, Tianshou) on the identical arithmetic task
---- Cohen's $d = 21.84$, the largest effect in our entire study by two orders
-of magnitude --- replicates and \emph{extends} the classic finding of
-\citet{henderson2018deep} from game-playing RL to the LLM post-training
-regime.
-The mechanism here is not merely random-seed sensitivity but a categorical
-architectural mismatch: classic RL libraries treat the language model as a
-standard MDP policy with a scalar state embedding, apply advantage normalization
-designed for continuous action spaces, and do not handle the auto-regressive
-token generation loop correctly.
-The result is near-random performance not because the algorithm is wrong but
-because the implementation does not instantiate the algorithm the paper
-describes.
+The classical RL-library rows (SB3, CleanRL, Tianshou) are useful engineering
+sanity checks, but they are not evidence for a framework ranking in LLM
+post-training.  Their near-random arithmetic performance primarily shows that
+a text-generation policy cannot be treated as a standard continuous-control
+MDP without explicitly specifying tokenization, autoregressive rollout,
+loss masking, reward parsing, and action construction.  This is stack
+mis-specification evidence, not evidence that PPO-the-algorithm fails.
 
-This finding has a direct practical implication: \emph{published claims that
-``PPO fails on LLM reasoning'' or ``classic RL is unsuitable for language models''
-may be confounded by implementation failures rather than algorithmic limitations}.
-Our data show that SB3 PPO achieves $0.010 \pm 0.002$ accuracy on arithmetic,
-but this is not evidence about PPO-the-algorithm; it is evidence about
-SB3's tokenization and rollout pipeline applied to a text-generation task it
-was not designed for.
-Papers in the GRPO literature that compare against PPO baselines without
-auditing the implementation layer may be comparing against a broken baseline.
-We recommend that future algorithm comparisons specify which implementation of
-PPO is used and verify it against a known-good LLM post-training framework.
+The practical implication is narrower and stronger: published comparisons
+such as ``PPO versus GRPO'' are underidentified unless the realized treatment
+is specified.  A defensible comparison must state the model checkpoint and
+tokenizer, prompt template, reward parser, sampler and grouping process, loss
+mask, KL/reference handling, optimizer, LoRA targets, precision/backend, and
+evaluator.  Without those details, an algorithm label is not enough to tell
+whether two rows are comparable.
 
 \subsection{Connections to Concurrent Work}
 \label{sec:discuss_related}
@@ -1692,8 +1696,9 @@ PPO is used and verify it against a known-good LLM post-training framework.
 zones in GRPO training and propose a Bayesian posterior over prompt difficulty
 to pre-screen prompts.
 Our ZVF measurement ($r = -0.769$, $p < 0.001$ with final performance) provides
-the first cross-library, cross-scale empirical ground truth for the phenomenon
-AERO targets.
+an empirical calibration point for the phenomenon AERO targets, while the
+lagged analysis keeps the claim scoped: ZVF is useful for triage, not as a
+standalone performance predictor.
 Importantly, our data reveal that ZVF is \emph{task-driven, not model-scale-driven}:
 tool-use experiments saturate at $\text{ZVF} = 100\%$ regardless of model size,
 while GSM8K experiments average $\text{ZVF} = 8.5\%$ across the same model

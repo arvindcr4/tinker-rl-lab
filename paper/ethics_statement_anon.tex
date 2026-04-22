@@ -117,7 +117,7 @@ not be hidden from reviewers \cite{henderson2018deep}.}
 \midrule
 Tinker SDK v0.16.1 & GRPO on 4B/8B (original suite)        & 25 & \$40--55 \\
 Tinker SDK v0.16.1 & 10x Structural Ceiling ablation       & 32 & \$65 \\
-Tinker SDK v0.16.1 & World-Class Suite (frontier/MoE)      & 13 & \$25--30 \\
+Tinker SDK v0.16.1 & Larger-model support suite (frontier/MoE) & 13 & \$25--30 \\
 Modal H100         & PPO baselines (Qwen3-8B, Llama-3.1-8B)& 2  & \$12--18 \\
 Modal H100         & KL-tracking run (failed)              & 1  & \$2--4   \\
 Google Colab Pro (T4) & 0.5B--3B QLoRA SFT+GRPO            & --- & \$10/person \\
@@ -325,15 +325,14 @@ system-level telemetry (energy, throughput, queueing).
 \paragraph{What this means for our claims.}
 Tinker results in this paper measure the \emph{platform's} implementation
 of GRPO, not an abstract specification of the algorithm. A reader who asks
-``why does Tinker GRPO score 99.9\% on GSM8K while open-source TRL GRPO
-scores 73.4\% on the same task'' cannot fully answer that question from
-our data: we are able to rule out a handful of candidate explanations
-(seed variance, model-size confound) but not the implementation itself.
-We therefore draw \emph{quantitative} conclusions only from the
-open-source side (TRL, veRL on Modal H100, OpenRLHF) where every
-hyperparameter is auditable, and use Tinker results primarily as an
-\emph{upper bound} on what a carefully engineered production stack can
-achieve for critic-free RL at our scales.
+``why do nominally similar managed and TRL GRPO runs produce different reward
+trajectories'' cannot fully answer that question from our data: visible
+hyperparameters are matched in some probes, but hidden sampler, loss-mask,
+LoRA, precision, rollout, checkpoint, and evaluator details remain part of
+the treatment.  We therefore treat managed and TRL rows as stack-conditioned
+evidence, not as a causal framework ranking.  Dry-run verl/OpenRLHF launcher
+rows are engineering-readiness artifacts only and are not used for empirical
+framework conclusions.
 
 \paragraph{Reproducibility commitments we can make.}
 \begin{enumerate}
@@ -344,14 +343,14 @@ achieve for critic-free RL at our scales.
   \item Every figure and every summary statistic derived solely from
         Tinker data is marked with ``\dag'' and a footnote stating that
         independent replication requires Tinker API access.
-  \item Primary statistical claims (significance tests, ANOVA variance
-        decompositions) are drawn from open-source Modal H100 and TRL
-        runs. Tinker-only results are reported descriptively.
+  \item Primary statistical claims distinguish real runs from dry-run
+        launchers and separate online reward from held-out capability.
+        Managed-only results are reported descriptively unless accompanied by
+        a matched held-out control.
   \item We commit to re-running any Tinker-only experiment on an open
         backend if an equivalent open-source service becomes available,
-        and to issuing a revised version of this paper if the Tinker
-        99.9\% figure is ever shown to be due to an undisclosed
-        implementation choice rather than the algorithm.
+        and to issuing a revised version of this paper if a stack variable
+        changes the interpretation of any headline result.
 \end{enumerate}
 
 \paragraph{Key rotation and credential hygiene.}

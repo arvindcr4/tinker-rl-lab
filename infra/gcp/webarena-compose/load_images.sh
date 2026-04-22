@@ -50,11 +50,10 @@ download_one() {
 
 for name in "${!IMAGES[@]}"; do
   download_one "$name" "${IMAGES[$name]}" "${CMU_MIRROR[$name]}"
-done
-
-for name in "${!IMAGES[@]}"; do
   echo "[load] $name"
   sudo docker load --input "$name"
+  echo "[cleanup] $name (free disk)"
+  sudo rm -f "$name"
 done
 
 echo ""

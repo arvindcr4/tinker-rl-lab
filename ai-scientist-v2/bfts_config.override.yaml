@@ -1,0 +1,38 @@
+# Conservative reference settings for AI Scientist-v2 BFTS runs.
+#
+# This file documents the intended limits for this repository. It is not meant
+# to be copied blindly over upstream bfts_config.yaml because upstream schemas
+# may change.
+
+agent:
+  num_workers: 2
+  steps: 8
+  num_seeds: 2
+
+search:
+  max_debug_depth: 1
+  debug_prob: 0.25
+  num_drafts: 2
+
+repo_contract:
+  mode: propose_then_import
+  allowed_write_paths:
+    - research_loop/queue.jsonl
+    - research_loop/variant_configs/
+    - research_loop/wave_briefs/
+    - .ai_scientist_v2_runs/
+  disallowed_paths:
+    - .env
+    - .env.*
+    - .tinker_api_key
+    - artifacts/local_copies/
+    - wandb/
+    - submission/
+    - paper/
+    - reports/final/
+  live_run_gate:
+    require_env:
+      - RESEARCH_LOOP_BUDGET_USD
+    prefer_commands:
+      - python3 research_loop/run_one.py --dry-run --config <config>
+      - python3 research_loop/run_one.py --config <config>

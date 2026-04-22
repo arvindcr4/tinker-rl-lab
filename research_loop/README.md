@@ -136,3 +136,20 @@ When `last10_avg_accuracy` stops improving for 3 consecutive waves (`coordinator
 flags this), spawn a single agent with zero context except: (a) the challenge
 (rescue 3B GSM8K), (b) current best score, (c) forbidden list of knobs already
 exhausted. Ryan Li's biggest jump came from such a reset.
+
+## AI Scientist-v2 idea source
+
+AI Scientist-v2 can be used as a bounded upstream idea generator for this loop.
+Do not give it direct access to live Tinker/W&B/HF credentials or unrestricted
+repo writes. Prepare a redacted context pack, run ideation, import ideas into the
+queue, then launch normal coordinator waves:
+
+```bash
+python3 scripts/prepare_ai_scientist_v2.py --output-dir .ai_scientist_v2_runs/latest
+bash .ai_scientist_v2_runs/latest/run_ideation.sh
+python3 scripts/import_ai_scientist_v2_ideas.py --ideas .ai_scientist_v2_runs/latest/tinker_rl_lab_topic.json --dry-run
+python3 scripts/import_ai_scientist_v2_ideas.py --ideas .ai_scientist_v2_runs/latest/tinker_rl_lab_topic.json
+python3 research_loop/coordinator.py wave new --size 4 --phase 1
+```
+
+See `ai-scientist-v2/experiment_contract.md` for the execution boundary.

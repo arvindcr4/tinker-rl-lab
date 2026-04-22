@@ -80,6 +80,10 @@ EXCLUDE_FILES = {
     "reports/final/PAPER_IMPROVEMENT_PLAN.md",
     "scripts/anonymize.sh",
     "verify_links_entities.txt",
+    ".DS_Store",
+    ".env",
+    ".tinker_api_key",
+
     "autoresearch-dashboard.md",
     # Citation metadata file lists real author names -- excluded from blind
     # bundle. A reviewer-facing citation block lives in the paper itself.
@@ -90,6 +94,14 @@ EXCLUDE_FILES = {
 }
 
 EXCLUDE_DIRS = {
+    "__pycache__",
+    ".DS_Store",
+    ".venv",
+    ".venv-at",
+    ".venv-sentinel",
+    ".ruff_cache",
+    ".pytest_cache",
+
     "blind_review",
     "past_session_contexts",
     "wandb",

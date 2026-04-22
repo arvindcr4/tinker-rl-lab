@@ -112,6 +112,7 @@ reports/final/*.toc
 *.tar.gz
 reports/final/capstone_final_report_submission/
 artifacts/local_copies/
+.ai_scientist_v2_runs/
 
 wandb/
 .modal/

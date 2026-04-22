@@ -66,9 +66,20 @@ Tianshou (PPO) & 5 & 0.008 [0.006, 0.011] & \textit{5 seeds} & +14.58 & [8.07, 2
 \end{table}
 
 % --- Table 3 (updated): GSM8K scaling with effect sizes ---------------
+\paragraph{Secondary GSM8K summary scope.}
+Table~\ref{tab:results_gsm8k_stats} is not part of the primary held-out
+capability claim.  These rows mix sources and protocols, and they are
+superseded for causal capability interpretation by the stricter held-out
+Qwen3-8B control ($82.0\%\!\to\!83.3\%$, $p=0.26$).  We retain the table as a
+secondary scaling summary and treat it as hypothesis-generating evidence.
+
 \begin{table}[htbp]
 \centering
-\caption{\textbf{GSM8K Results (Table~3, rigor pass).} Post-RL accuracy vs.\ baseline with bootstrap 95\,\% CI on $\Delta$, Cohen's $d$ for the paired effect, and Bonferroni-corrected one-sample $t$-test $p$-values across the $k=7$ model pairs.}
+\caption{\textbf{Secondary GSM8K summary (Table~3, rigor pass).} Post-RL
+score vs.\ baseline under mixed sources/protocols with bootstrap 95\,\% CI on
+$\Delta$, Cohen's $d$ for the paired effect, and Bonferroni-corrected
+one-sample $t$-test $p$-values across the $k=7$ model pairs.  This table is
+not the primary held-out capability claim.}
 \label{tab:results_gsm8k_stats}
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}

@@ -1,0 +1,30 @@
+# Example config from a Gemini 3.1 Pro AI Scientist-v2 proposal.
+#
+# This is tracked as an example. Generated wave configs remain ignored under
+# research_loop/variant_configs/wave_*.
+name: asv2_curriculum_group_size_rescue
+phase: 1
+current_best_score: null
+score_metric: last10_avg_accuracy
+n_seeds_verified: 0
+
+model: Qwen/Qwen3.5-4B
+seed: 42
+rank: 16
+steps: 100
+lr: 3.0e-5
+group_size: 32
+batch: 2
+temperature: 1.0
+max_tokens: 512
+
+adv_norm: std
+reward_shape: graded
+curriculum: easy_first
+
+eval_subset: 500
+seed_pool: [0, 137, 256, 1024, 2047]
+
+parent: best_recipe_vbaseline_v0
+agent: ai_scientist_v2_gemini31_salvage
+hypothesis: "Easy-first curriculum plus group_size=32 and graded reward may break all-incorrect zero-advantage saturation on the Qwen3.5-4B proxy."

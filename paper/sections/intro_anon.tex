@@ -38,34 +38,59 @@ used during training.  The remaining heterogeneity in outcomes across runs is
 the point: it lets us ask which failures are evidence about the policy and
 which failures are evidence about the reward environment.
 
-\paragraph{Claim 1: ZVF/GU are early triage diagnostics.}
+\paragraph{Thesis.}
+This paper does not show that GRPO broadly improves reasoning.  The clean
+held-out GSM8K control shows only a small, non-significant gain over the base
+model.  The thesis is narrower: in a critic-free group-relative RL loop, the
+existence of a learning signal is governed by reward diversity inside sampled
+groups.  ZVF/GU expose cold-start collapse and saturation early; training
+reward is easy to overinterpret; and algorithm labels such as PPO, GRPO, and
+DPO are not meaningful experimental treatments unless the full stack is
+specified.  Held-out evaluations support capability claims, training rewards
+support dynamics claims, and partial or proxy runs support hypotheses only.
+
+\begin{table}[t]
+\centering
+\caption{Claim--evidence--verdict hierarchy used throughout the paper.}
+\label{tab:claim_evidence_verdict}
+\small
+\begin{tabular}{@{}p{0.27\linewidth}p{0.18\linewidth}p{0.33\linewidth}p{0.16\linewidth}@{}}
+\toprule
+\textbf{Claim} & \textbf{Status} & \textbf{Headline evidence} & \textbf{Verdict}\\
+\midrule
+C1: GRPO is a reward-contrast amplifier. & Most original contribution &
+Mixed-group probability, early-run ZVF/GU, measured base-hit-rate audits, and collapse/saturation cases. &
+Signal exists only when sampled groups contain reward diversity.\\
+C2: PPO/GRPO/DPO labels are under-specified treatments. & Methodological contribution &
+Qwen artifact sensitivity, the Llama PPO-favored row, and backend/model/reward/parser confounding. &
+No universal algorithm ranking.\\
+C3: Training reward does not equal capability. & Central negative result &
+Held-out GSM8K $82.0\%\!\to\!83.3\%$ ($p=0.26$); tool-use rewards are
+proxy/schema rewards; HumanEval/MATH harnesses are limited. &
+Training reward supports dynamics claims only.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Claim 1: reward diversity governs the learning signal.}
 The most reusable methodological contribution is the operational use of
 Zero-Variance Fraction (ZVF) and Gradient Utilization (GU).  High ZVF with
 low reward means cold-start collapse; high ZVF with high reward means
 saturation; low ZVF means the current policy still samples both successes and
-failures.  In a 22-run de-duplicated validation set, a fixed rule using only
-the first five logged steps catches both collapsed runs with no false
-positives.  This is not enough to call ZVF a calibrated predictor.  The safe
-claim is narrower: ZVF/GU are cheap early-run diagnostics that convert flat
-reward groups into decisions to stop, warm-start, densify reward, change task
-difficulty, or increase group size.
-
-\paragraph{Claim 2: GRPO success depends on mixed-reward groups.}
-Under binary rewards, a sampled group has zero variance if every completion is
-wrong or every completion is correct.  If the current policy succeeds with
-success rate $p_x$ for prompt $x$ and group size is $G$, the probability of a usable mixed
-group is
+failures.  Under binary rewards, if the current policy succeeds with success
+rate $p_x$ for prompt $x$ and group size is $G$, the probability of a usable
+mixed group is
 \[
 P(\text{usable}) \approx \frac{1}{N}\sum_x \left[1 - (1-p_x)^G - p_x^G\right].
 \]
 The familiar $p_x > 1/G$ rule is only an expected-one-success heuristic, not a
-threshold theorem.  SFT warm-up helps because it changes $p_0$; larger groups
-help only when they reduce the all-wrong term more than they waste compute;
-dense or partial-credit rewards help because they reduce all-zero/all-one
-groups.  GRPO is therefore best understood as a reward-contrast amplifier
-rather than a capability creator.
+threshold theorem.  In a 22-run de-duplicated validation set, a fixed rule
+using only the first five logged steps catches both collapsed runs with no
+false positives.  Continuous ranking by early ZVF is weak, so the claim is
+triage rather than forecasting.  GRPO is therefore best understood as a
+reward-contrast amplifier rather than a capability creator.
 
-\paragraph{Claim 3: algorithm labels are incomplete treatments.}
+\paragraph{Claim 2: algorithm labels are incomplete treatments.}
 The PPO/GRPO/DPO label is not enough to interpret an LLM post-training run.
 Our Qwen PPO/GRPO comparison is artifact-sensitive: the source-of-truth ledger
 records PPO at 0.225 last-10 reward, while a statistical summary records
@@ -76,11 +101,20 @@ model family, backend, reward implementation, rollout sampler, optimizer and
 KL handling, LoRA target modules, checkpoint-selection rule, and evaluation
 slice must be fixed or explicitly modeled.
 
+\paragraph{Claim 3: training reward is not capability.}
+Online reward curves measure the reward environment that produced the update.
+They should not be upgraded into general reasoning or tool-use claims without
+matched held-out evaluation.  The clean GSM8K control improves only from
+$82.0\%$ to $83.3\%$ ($p=0.26$), so the paper does not claim a significant
+held-out math effect.  The positive tool-use rows measure schema compliance
+rather than executed tool success, and the HumanEval/MATH rows are bounded by
+their sandbox and answer-parser choices.
+
 \paragraph{Contributions.}
 This paper contributes (i) an operational ZVF/GU triage framing for standard
-GRPO runs; (ii) a mixed-group probability mechanism that explains why
-warm-starts, group size, reward density, and task difficulty govern whether
-GRPO has signal; (iii) a source-of-truth ledger that separates online training
-reward from held-out accuracy and flags artifact inconsistencies; and (iv) a
-methodological warning that PPO, GRPO, and DPO comparisons in LLM
-post-training are not identifiable unless the full training stack is reported.
+group-relative RL runs; (ii) a mixed-group probability mechanism that explains
+why warm-starts, group size, reward density, and task difficulty govern whether
+there is signal; (iii) a methodological warning that PPO, GRPO, and DPO
+comparisons in LLM post-training are not identifiable unless the full training
+stack is reported; and (iv) a source-of-truth ledger that separates online
+training reward from held-out accuracy and flags artifact inconsistencies.

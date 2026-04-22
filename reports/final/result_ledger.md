@@ -39,3 +39,16 @@ This ledger reconciles headline numbers used in the final capstone report. It se
 - PPO/GRPO comparisons are treated as model/backend interaction evidence, not as an algorithm leaderboard.
 - The Qwen PPO/GRPO row is not directional evidence because artifact summaries disagree over the PPO last-10 value (0.225 here versus 0.350 in `experiments/statistical_analysis.md`).
 - Browser-control smoke results are reported only as agentic capability coverage unless replaced by standardized BrowserGym/WebArena runs.
+
+## Private Local Audit Snapshot
+
+This is an internal preservation layer, not a public submission artifact. It is used to make the W&B/HF/Tinker evidence searchable and auditable locally.
+
+| Artifact class | Local count / size | How it is used |
+|---|---:|---|
+| W&B cloud runs | 272 runs | Local preservation of metadata, configs, summaries, histories, file manifests, and run files |
+| W&B history rows | 5,013 rows | Step-level trace audit where W&B API history was available |
+| Hugging Face cached repos | 22 repos | Local hardlinked cache inventory for model/dataset snapshots |
+| Tinker checkpoint registry | 2,226 entries | Account-visible checkpoint path/size/type/timestamp manifest |
+| Downloaded Tinker checkpoints | 28 checkpoints / 6.03 GiB | Bounded local copy prioritized by report references and final sampler weights |
+| NIA artifact payload | 2,611 synced items | Searchable text view of logs, configs, histories, manifests, and file inventories |

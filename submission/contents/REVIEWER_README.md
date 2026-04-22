@@ -1,45 +1,13 @@
-# Tinker RL Lab — NeurIPS 2026 (Datasets & Benchmarks, blind review)
+# Reviewer README
 
-Welcome, reviewer. This bundle contains everything you need to assess
-the submission.
+This bundle is a current submission snapshot containing paper PDFs, the capstone report PDF, source code, and curated supporting data.
 
-## Files
+Start with `paper_anon.pdf` for blind review. `paper.pdf` and `report.pdf` are included for full-context assessment. `code.tar.gz` contains source and document files; `supporting_data.tar.gz` contains project-generated result artifacts, BrowserGym smoke outputs, ledgers, and local-audit manifests.
 
-| File | What it is |
-|---|---|
-| `paper_anon.pdf` | **Anonymised camera-ready paper (51 pages).** This is the version to review. |
-| `paper.pdf` | Non-anonymous paper, included for ACs only. Do not open unless needed for de-anonymisation checks. |
-| `code.tar.gz` | Anonymised code tarball (27 MB, 643 files). Extract and follow `REPRODUCE.md` inside. |
-| `ethics_statement.pdf` | Standalone ethics statement (duplicates §Ethics in the paper). |
-| `data_statement.md` | Dataset provenance, licensing, PII / offensive-content notes. |
-| `MANIFEST.md` | SHA-256 of every file in this bundle. |
-| `REVIEWER_README.md` | This file. |
+The large local W&B/Hugging Face/Tinker mirror is intentionally not redistributed. It is represented by manifests and result ledgers.
 
-## How to run the reproducibility smoke test
+Verify member checksums after unzipping with:
 
 ```bash
-tar xzf code.tar.gz
-cd tinker-rl-lab-anon
-# Offline smoke test (~25 s CPU):
-bash scripts/smoke_test.sh
-# Headline-claim check (±2 pp tolerance):
-python3 reproducibility/check_qwen3_8b_claim.py
+sha256sum -c checksums.sha256
 ```
-
-`scripts/integration_audit.py` reproduces the 7 integration checks we
-used to verify paper↔code↔data consistency.
-
-## Anonymity guarantees
-
-- `paper_anon.pdf` passes `pdftotext | grep` for every team member
-  name, handle, institution, and private repo slug with zero hits.
-- `code.tar.gz` passes the identifier post-scan in
-  `blind_review/anonymize_code.py` with zero residuals.
-- Substitutions are idempotent: you can re-run the anonymisation
-  scripts on the produced output and get a no-op.
-
-## Contact
-
-Please use the OpenReview submission thread for questions. We will
-not be able to respond on GitHub because the public mirror is
-de-anonymising.

@@ -252,7 +252,7 @@ and emerging architectures \textbf{GPT-OSS-20b} and \textbf{Kimi-K2}.
 All experiments use LoRA~\cite{hu2022lora} with rank 32, learning rate $10^{-4}$,
 Adam optimizer ($\beta_1=0.9$, $\beta_2=0.95$, $\epsilon=10^{-8}$).
 
-\paragraph{Seed management.} Each experiment is run with 5 seeds:
+\paragraph{Seed management.} Only selected TRL baselines and the GSM8K held-out evaluation are 5-seed; most Tinker runs are single-seed.:
 $\{42, 123, 456, 789, 1024\}$. Seeds are set for Python \texttt{random},
 NumPy, PyTorch, and CUDA backends.
 
@@ -328,7 +328,7 @@ Table~\ref{tab:bh-pvalues} lists all raw $p$-values alongside BH-adjusted
 $p$-values; 19 of 20 tests
 survive correction.
 
-All tests are two-sided.  Effect sizes are reported as Cohen's $d$ for
+Note: These are trace-level descriptive effect sizes, not independent-run inferential statistics. All nominal tests are two-sided.  Effect sizes are reported as Cohen's $d$ for
 $t$-tests and Pearson/Spearman $r$ for correlations.  Bootstrap 95\%
 confidence intervals ($B = 10{,}000$) are reported for all means.
 
@@ -405,7 +405,7 @@ median $= 0.740$, and IQM $= 0.747$. Normality was not rejected by Shapiro--Wilk
 \paragraph{Variance decomposition.}
 One-way ANOVAs across 42 experiments with valid performance observations show
 that library/framework ($\eta^2 = 0.546$) and training algorithm ($\eta^2 = 0.558$)
-are the dominant variance sources, consistent with our central thesis. Model
+are the factors that explain variance in this artifact, though they are confounded with model, backend, reward, hardware, and task, consistent with our central thesis. Model
 family explains $\eta^2 = 0.471$; model scale explains $\eta^2 = 0.322$.
 
 \subsection{Compute Resources}
@@ -699,10 +699,8 @@ true spread between strong 30-step fine-tunes. The clearest example is the four
 Llama-3.3-70B-Instruct seeds (s=42, 123, 456, 789): their training
 \emph{last-10} values range from 95.0\% to 98.1\% yet all land on held-out
 95.0\%, showing that \emph{last-10} variance reflects late-batch sampling noise
-rather than genuine generalisation differences.  The capacity ceiling of our
-30-step GRPO recipe on GSM8K is model-dependent: 95.0\% for
-Llama-3.3-70B-Instruct, $\approx$91\% for Qwen3-8B-Base and DeepSeek-V3.1,
-and 87.2\% for Qwen3.5-397B-A17B.
+rather than genuine generalisation differences.  \paragraph{Capacity ceiling warning.}
+The capacity ceiling estimates in this section (95.0\% for Llama-3.3-70B-Instruct, $\approx$91\% for Qwen3-8B-Base and DeepSeek-V3.1) are single-seed, checkpoint-selected observations, not controlled ceiling estimates. Four Llama-3.3-70B-Instruct seeds range from 95.0\% to 98.1\% last-10 reward but all land on 95.0\% held-out accuracy, showing that last-10 variance reflects late-batch sampling noise rather than genuine generalization differences.
 
 The Qwen3.5-397B-A17B run completed all 500 held-out problems in this
 rerun (previously truncated at 263); its held-out accuracy of 87.2\% is
@@ -996,9 +994,9 @@ Results for the 3B-active-parameter pair show a striking gap: the dense
 Qwen3.5-4B reaches 100\% peak and 85.0\% last-10 average, while the
 MoE base model (Qwen3-30B-A3B) reaches only 50\% peak and 32.5\% last-10
 average. However, the instruction-tuned MoE variant (Qwen3-30B-A3B-Instruct)
-matches the dense model with 100\% peak and last-10 average, confirming that
-the instruction-tuning initialization, not the MoE architecture itself,
-determines GRPO trainability. At the 22B-active tier, Qwen3-235B-A22B
+matches the dense model with 100\% peak and last-10 average, showing that
+initialization quality is entangled with the apparent architecture effect in
+this setup. At the 22B-active tier, Qwen3-235B-A22B
 (partial, 15 steps) achieves 100\% on both metrics, while the dense
 Qwen3.5-27B (partial, 10 steps) achieves 75\% peak and 43.7\% last-10
 average.  \textbf{Limitation:} we lack a dense-base model at the 4B scale
@@ -1167,13 +1165,13 @@ per-step reward variability evolves through training, serving as a
 real-time proxy for the rate of policy drift.
 
 \paragraph{Quantitative Results.}
-Across 28 experiments, both SI and PTD correlate significantly with
-training outcomes:
+Across 28 experiments, SI and PTD are associated with late reward in
+exploratory, uncorrected correlations:
 SI vs.\ last-10 average yields Pearson $r = -0.436$ ($p = 0.020$),
 while PTD vs.\ last-10 average yields $r = -0.517$ ($p = 0.005$).
-These correlations confirm that reward-trajectory instability is a
-reliable observable indicator of policy drift even without explicit
-KL measurements.
+These correlations make reward-trajectory instability a useful warning signal,
+but they do not validate SI or PTD as calibrated substitutes for direct KL
+measurement.
 
 \paragraph{Policy Drift Risk Classification.}
 We classify experiments into three drift regimes:
@@ -1245,7 +1243,7 @@ When $\mathrm{ZVF}_t = 1$, every prompt contributes zero gradient.
 the fraction of prompts providing informative signal.
 
 Across $N = 15$ experiments spanning 5 model families and 3\,B--671\,B parameters,
-ZVF has a strong zero-order association with final performance:
+ZVF has a large zero-order association with final performance in this corpus:
 \[
   r_{\text{Pearson}} = -0.769 \;(p = 0.0008), \qquad
   \rho_{\text{Spearman}} = -0.784 \;(p = 0.0005).
@@ -1255,15 +1253,14 @@ dominant driver: tool-use experiments reach $\mathrm{ZVF} = 100\%$
 (mean $\mathrm{GU} = 0\%$), while GSM8K experiments average $\mathrm{ZVF} = 8.5\%$
 (mean $\mathrm{GU} = 91.5\%$). Model scale does not uniformly reduce ZVF
 ($r_\text{Pearson} = -0.257$), indicating that task--reward alignment is more
-critical than parameter count for maintaining gradient flow. A one-way ANOVA
+informative than parameter count for maintaining gradient flow in this corpus. A one-way ANOVA
 across model families yields $F(4,10) = 0.949$, $p = 0.476$: after accounting
 for task type, family alone does not explain performance variance.
 
-To our knowledge, this is the \textbf{first systematic cross-library,
-cross-scale operational use of ZVF/GU as a GRPO triage diagnostic}.  We
-recommend monitoring $\mathrm{GU}_t$ in real time and interpreting it jointly
-with reward level: low reward plus high ZVF suggests cold-start collapse,
-while high reward plus high ZVF suggests saturation.
+We use ZVF/GU as an operational GRPO triage diagnostic across libraries and
+scales. We recommend monitoring $\mathrm{GU}_t$ in real time and interpreting
+it jointly with reward level: low reward plus high ZVF suggests cold-start
+collapse, while high reward plus high ZVF suggests saturation.
 
 % ---------------------------------------------------------------------------
 \subsection{ZVF Lagged Regression: Disentangling Prediction from Tautology}
@@ -1581,8 +1578,32 @@ on Hugging Face Hub:
 % =============================================================================
 % =============================================================================
 
+
+\section*{Trust Calibration and Empirical Scope}
+To ensure transparency, we explicitly calibrate the claims of this report against the underlying evidence:
+\begin{itemize}
+    \item \textbf{Noncanonical Runner:} Our training loop is a noncanonical group-relative policy-gradient runner, not a faithful GRPO reproduction (it omits PPO ratios, clipping, and reference-KL penalties).
+    \item \textbf{Statistical Power:} All $p$-values and effect sizes reported for training traces are exploratory diagnostics over autocorrelated steps, not confirmatory tests over independent replicates, as most Tinker runs are single-seed.
+    \item \textbf{Proxy Rewards:} Our tool-use and code generation rewards evaluate schema compliance and restricted-sandbox parsing, respectively, rather than end-to-end semantic capability.
+    \item \textbf{Confounding Factors:} Any observed architectural differences (e.g., dense vs. MoE) or scaling patterns are confounded by initialization and framework choices, serving as hypothesis generation rather than causal proof.
+    \item \textbf{Reproducibility:} While we provide extensive local artifacts, full independent reconstruction is partial due to our reliance on opaque external backends.
+\end{itemize}
+
 \section*{Claims We Explicitly Do Not Make}
-To bound the attack surface of this empirical study, we explicitly disclaim the following: We do not claim our runner achieves state-of-the-art reasoning on GSM8K or MATH-500. We do not claim GRPO is universally superior or inferior to PPO, nor do we assert that our specific hyperparameter configurations represent the global optima for these model families. Our contribution is strictly diagnostic: identifying the structural boundaries of reward variance and stack identifiability that govern whether critic-free RL functions at all.
+\label{sec:claims_we_do_not_make}
+
+To bound the attack surface of this empirical study, we explicitly disclaim the following:
+
+\begin{itemize}
+    \item We do not claim GRPO universally improves reasoning or achieves state-of-the-art GSM8K/MATH performance. We report training reward trajectories and a checkpoint-selection held-out analysis; we do not claim a statistically significant held-out math effect (the clean Qwen3-8B control: $82.0\% \to 83.3\%$, $p=0.26$).
+    \item We do not claim ZVF predicts final performance. ZVF is a triage diagnostic that identifies training regimes (cold-start collapse vs. saturation vs. healthy contrast); it is not a calibrated performance predictor. The zero-order correlation ($r = -0.769$) is largely confounded by current reward level on binary tasks; the partial correlation controlling for $R_t$ at lag 5 is only $r = 0.059$ ($p = 0.096$).
+    \item We do not claim PPO is inferior or superior to GRPO. Algorithm labels are under-specified unless model family, backend, reward parser, sampler, LoRA configuration, optimizer, checkpoint-selection rule, and evaluator are reported.
+    \item We do not claim our benchmark establishes scaling laws. The exponential saturation fits have mean $R^2 = 0.210$ on short (20--30 step) traces; they are descriptive summaries, not validated scaling laws.
+    \item We do not claim group size $G=8$ is globally optimal. The group-size ablation was single-seed and 30-step; multi-seed validation is needed before calling $G=8$ optimal.
+    \item We do not claim Dense models outperform MoE architectures at matched active parameters. The Dense vs MoE comparison is confounded by base vs instruct initialization; the architecture effect cannot be isolated from the initialization effect.
+    \item We do not claim tool-use learning. The tool-call task yielded 0\% schema compliance for completed runs (Qwen3-32B and Llama-3.1-8B); this is a task-design problem requiring revision, not evidence of capability limits.
+    \item We do not claim significant cross-library performance variance. We demonstrate substantial cross-library divergence under nominally matched configurations; the single-seed Tinker runs lack variance estimates and do not support significance claims.
+\end{itemize}
 
 \section{Limitations}
 \label{sec:limitations}
@@ -1938,8 +1959,8 @@ Our ZVF measurements can serve as a calibration dataset for AERO's Beta prior.
 \citet{nimmaturi2025scalinglaws} derive a three-phase exponential saturation
 law for GRPO, finding that 80\% of training steps contribute marginally and
 proposing early stopping.
-We confirm the three-phase pattern in 73\% of LLM fine-tuning experiments,
-broadly consistent with their result.
+We observe a compatible three-phase pattern in 73\% of LLM fine-tuning
+experiments, while treating it as descriptive because the traces are short.
 However, our data reveal a critical boundary condition: the saturation
 framework \emph{fails for unstable training runs}.
 Nemotron-120B's trajectory (87.5\% peak $\to$ 16.2\% last-10) is
@@ -1956,7 +1977,7 @@ stopping rules derived from the saturation model.
 \citet{wu2025grpo_dpo} prove that at $G = 2$, GRPO's advantage reduces to a
 DPO-equivalent contrastive objective, and show empirically that 2-GRPO retains
 98.1\% of 16-GRPO performance at 12.5\% of rollout cost.
-Our theoretical analysis confirms their prediction for the expected ZVF:
+Our finite-group analysis recovers the same expected-ZVF expression:
 $\mathrm{GU}(p, 2) = 2p(1-p)$, which is exactly the Bernoulli variance of
 the per-prompt accuracy $p$ and reproduces the DPO preference weighting.
 For our DeepSeek-V3.1 run ($p \approx 0.85$, $G = 8$), 27\% of steps were
@@ -1986,9 +2007,9 @@ $\text{ZVF} = 1$ persists past the first five training steps.
 \label{sec:discuss_kl}
 
 Our policy drift analysis relies on three reward-trajectory proxies (SI, PTD,
-Rolling Variance) that correlate significantly with training outcomes
-($r = -0.517$, $p = 0.005$ for PTD) but are not the same as direct KL
-divergence measurements.
+Rolling Variance) that are associated with late reward in this artifact
+($r = -0.517$, $p = 0.005$ for PTD, uncorrected) but are not the same as direct
+KL divergence measurements.
 The proxies capture \emph{observable symptoms} of policy drift --- reward
 instability and peak-to-tail degradation --- but cannot distinguish between
 two importantly different causes: (a) the policy has genuinely drifted far from

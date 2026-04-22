@@ -102,7 +102,10 @@ fi
 gsutil cp "/tmp/results_shard_\${WORKER_ID}.jsonl" \\
   "gs://\${BUCKET}/\${RUN_ID}/results_shard_\${WORKER_ID}.jsonl"
 
-sudo shutdown -h now
+echo "==> SHARD \$WORKER_ID COMPLETE. VM idle until manual cleanup." | sudo tee /tmp/EVAL_DONE
+# Do NOT shutdown — MIG would recreate without worker-id metadata and loop forever.
+# Sleep indefinitely so MIG keeps this VM; user deletes MIG when all shards are in GCS.
+sleep infinity
 STARTUP
 
 PREEMPT_FLAG=""

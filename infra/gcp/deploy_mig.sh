@@ -23,6 +23,9 @@ set -euo pipefail
 : "${MACHINE_TYPE:=e2-standard-4}"
 : "${DISK_GB:=1000}"
 : "${PREEMPTIBLE:=false}"
+: "${WANDB_PROJECT:=}"
+: "${HF_REPO:=}"
+: "${HF_PRIVATE:=false}"
 RUN_ID="$(date -u +%Y%m%d-%H%M%S)"
 MIG_NAME="webarena-mig-$RUN_ID"
 TEMPLATE_NAME="webarena-tpl-$RUN_ID"
@@ -40,29 +43,48 @@ MODEL=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/co
 MAX_STEPS=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/max-steps)
 BUCKET=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/bucket)
 RUN_ID=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/run-id)
+WANDB_PROJECT=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/wandb-project || echo "")
+HF_REPO=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/hf-repo || echo "")
+HF_PRIVATE=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/hf-private || echo "false")
 
-# Fetch Tinker key from Secret Manager
-export TINKER_API_KEY=\$(gcloud secrets versions access latest --secret=tinker-api-key --project="\$(gcloud config get-value project)")
+PROJECT_ID=\$(gcloud config get-value project)
 
-# Launch WebArena docker stack (compose + images staged during image build)
+# Required: Tinker key
+export TINKER_API_KEY=\$(gcloud secrets versions access latest --secret=tinker-api-key --project="\$PROJECT_ID")
+
+# Optional: W&B + HF Hub tokens (silently skip if secret not present)
+export WANDB_API_KEY=\$(gcloud secrets versions access latest --secret=wandb-api-key --project="\$PROJECT_ID" 2>/dev/null || echo "")
+export HF_TOKEN=\$(gcloud secrets versions access latest --secret=hf-token --project="\$PROJECT_ID" 2>/dev/null || echo "")
+if [ -z "\$WANDB_API_KEY" ]; then WANDB_PROJECT=""; fi
+if [ -z "\$HF_TOKEN" ]; then HF_REPO=""; fi
+
+# Launch WebArena docker stack
 cd /opt/webarena-compose
 sudo docker compose up -d
-sleep 90  # let shopping_admin / gitlab warm up
+sleep 90
 
-# Set WebArena site URLs to localhost
+# Site URLs (all on localhost)
 export WEBARENA_SHOPPING_URL=http://localhost:7770
 export WEBARENA_SHOPPING_ADMIN_URL=http://localhost:7780
 export WEBARENA_REDDIT_URL=http://localhost:9999
 export WEBARENA_GITLAB_URL=http://localhost:8023
 export WEBARENA_WIKIPEDIA_URL=http://localhost:8888
-export WEBARENA_MAP_URL=http://public-map.server.invalid  # use external public map
+export WEBARENA_MAP_URL=http://public-map.server.invalid
 export WEBARENA_HOMEPAGE_URL=http://localhost:4399
 
-# Pull latest harness (image may be weeks old)
 sudo git -C /opt/tinker-rl-lab pull --ff-only || true
 
-# Run eval shard
 cd /opt/tinker-rl-lab
+HF_FLAGS=""
+if [ -n "\$HF_REPO" ]; then
+  HF_FLAGS="--hf-repo \$HF_REPO"
+  if [ "\$HF_PRIVATE" = "true" ]; then HF_FLAGS="\$HF_FLAGS --hf-private"; fi
+fi
+WANDB_FLAGS=""
+if [ -n "\$WANDB_PROJECT" ]; then
+  WANDB_FLAGS="--wandb-project \$WANDB_PROJECT --run-name webarena-\$RUN_ID-w\$WORKER_ID"
+fi
+
 /opt/tinker/bin/python -m experiments.webarena.react_eval \\
   --benchmark "\$BENCHMARK" \\
   --tasks all \\
@@ -70,13 +92,12 @@ cd /opt/tinker-rl-lab
   --max-steps "\$MAX_STEPS" \\
   --concurrency 5 \\
   --out "/tmp/results_shard_\${WORKER_ID}.jsonl" \\
-  --shard "\${WORKER_ID}/\${NUM_WORKERS}"
+  --shard "\${WORKER_ID}/\${NUM_WORKERS}" \\
+  \$WANDB_FLAGS \$HF_FLAGS
 
-# Upload to GCS
 gsutil cp "/tmp/results_shard_\${WORKER_ID}.jsonl" \\
   "gs://\${BUCKET}/\${RUN_ID}/results_shard_\${WORKER_ID}.jsonl"
 
-# Self-shutdown to stop billing
 sudo shutdown -h now
 STARTUP
 
@@ -94,7 +115,7 @@ gcloud compute instance-templates create "$TEMPLATE_NAME" \
   --boot-disk-type=pd-balanced \
   --scopes=cloud-platform \
   --metadata-from-file=startup-script=/tmp/webarena_startup.sh \
-  --metadata=num-workers="$NUM_WORKERS",benchmark="$BENCHMARK",model="$MODEL",max-steps="$MAX_STEPS",bucket="$BUCKET",run-id="$RUN_ID" \
+  --metadata=num-workers="$NUM_WORKERS",benchmark="$BENCHMARK",model="$MODEL",max-steps="$MAX_STEPS",bucket="$BUCKET",run-id="$RUN_ID",wandb-project="$WANDB_PROJECT",hf-repo="$HF_REPO",hf-private="$HF_PRIVATE" \
   $PREEMPT_FLAG
 
 echo "==> Creating MIG $MIG_NAME with $NUM_WORKERS workers..."

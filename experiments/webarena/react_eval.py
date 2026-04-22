@@ -338,6 +338,30 @@ async def _main_async(args) -> int:
     logger.info("shard=%s tasks=%d benchmark=%s model=%s",
                 args.shard, len(tasks), args.benchmark, args.model)
 
+    # --- Optional: Weights & Biases ---
+    wandb_run = None
+    if args.wandb_project:
+        try:
+            import wandb
+            run_name = f"{args.benchmark}-{args.model.replace('/', '_')}-shard{args.shard.replace('/', 'of')}"
+            wandb_run = wandb.init(
+                project=args.wandb_project,
+                name=args.run_name or run_name,
+                group=args.run_name or args.benchmark,
+                config={
+                    "benchmark": args.benchmark, "model": args.model,
+                    "max_steps": args.max_steps, "shard": args.shard,
+                    "temperature": args.temperature, "concurrency": args.concurrency,
+                    "max_axtree_chars": args.max_axtree_chars, "num_tasks": len(tasks),
+                },
+                tags=["webarena-eval", args.benchmark],
+                reinit=True,
+            )
+            logger.info("wandb run: %s", wandb_run.url if wandb_run else None)
+        except Exception as exc:
+            logger.warning("wandb init failed (%r); continuing without wandb", exc)
+            wandb_run = None
+
     sampler = TinkerChatSampler(
         model=args.model, temperature=args.temperature, max_tokens=args.action_tokens,
     )
@@ -345,7 +369,9 @@ async def _main_async(args) -> int:
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    async def one(env_id: str, seed: int) -> None:
+    completed = {"n": 0, "sum_score": 0.0, "sum_steps": 0}
+
+    async def one(env_id: str, seed: int, idx: int) -> None:
         async with sem:
             res = await run_episode(
                 sampler, env_id, seed,
@@ -355,8 +381,33 @@ async def _main_async(args) -> int:
             )
             with out_path.open("a") as f:
                 f.write(json.dumps(asdict(res), default=str) + "\n")
-            logger.info("done env=%s score=%.3f steps=%d err=%s",
-                        env_id, res.score, res.num_steps, res.error)
+            completed["n"] += 1
+            completed["sum_score"] += res.score
+            completed["sum_steps"] += res.num_steps
+            logger.info(
+                "done[%d/%d] env=%s score=%.3f steps=%d err=%s",
+                completed["n"], len(tasks), env_id, res.score, res.num_steps, res.error,
+            )
+            if wandb_run is not None:
+                try:
+                    import wandb as _wb  # noqa: F401
+                    wandb_run.log(
+                        {
+                            "episode/score": res.score,
+                            "episode/num_steps": res.num_steps,
+                            "episode/valid_actions": res.valid_action_count,
+                            "episode/wall_time_sec": res.wall_time_sec,
+                            "episode/terminated": int(res.terminated),
+                            "episode/truncated": int(res.truncated),
+                            "episode/error": int(bool(res.error)),
+                            "running/mean_score": completed["sum_score"] / completed["n"],
+                            "running/mean_steps": completed["sum_steps"] / completed["n"],
+                            "running/completed": completed["n"],
+                        },
+                        step=idx,
+                    )
+                except Exception as exc:
+                    logger.warning("wandb.log failed: %r", exc)
 
     if out_path.exists() and not args.resume:
         out_path.unlink()
@@ -370,11 +421,51 @@ async def _main_async(args) -> int:
         logger.info("resuming: %d already done", len(done_ids))
 
     coros = [
-        one(env_id, seed=args.seed + i)
+        one(env_id, seed=args.seed + i, idx=i)
         for i, env_id in enumerate(tasks)
         if env_id not in done_ids
     ]
     await asyncio.gather(*coros)
+
+    # --- Optional: HuggingFace Hub upload ---
+    if args.hf_repo:
+        try:
+            from huggingface_hub import HfApi, create_repo
+            api = HfApi()
+            create_repo(
+                args.hf_repo, repo_type="dataset", exist_ok=True, private=args.hf_private,
+            )
+            remote_name = f"{args.run_name or args.benchmark}/{out_path.name}"
+            api.upload_file(
+                path_or_fileobj=str(out_path),
+                path_in_repo=remote_name,
+                repo_id=args.hf_repo,
+                repo_type="dataset",
+                commit_message=f"results: {args.benchmark} shard {args.shard} model={args.model}",
+            )
+            logger.info("uploaded %s -> hf://%s/%s", out_path, args.hf_repo, remote_name)
+        except Exception as exc:
+            logger.warning("HF upload failed (%r); local file intact at %s", exc, out_path)
+
+    if wandb_run is not None:
+        try:
+            wandb_run.summary["final/n_completed"] = completed["n"]
+            wandb_run.summary["final/mean_score"] = (
+                completed["sum_score"] / completed["n"] if completed["n"] else 0.0
+            )
+            wandb_run.summary["final/shard"] = args.shard
+            # Log the JSONL as a W&B artifact for later reruns/diffs
+            import wandb as _wb
+            art = _wb.Artifact(
+                name=f"results-{args.benchmark}-{args.shard.replace('/', '-of-')}",
+                type="eval-results",
+            )
+            art.add_file(str(out_path))
+            wandb_run.log_artifact(art)
+            wandb_run.finish()
+        except Exception as exc:
+            logger.warning("wandb finalize failed: %r", exc)
+
     return 0
 
 
@@ -399,6 +490,16 @@ def main() -> int:
     p.add_argument("--resume", action="store_true",
                    help="Skip env_ids already present in --out")
     p.add_argument("--log-level", default="INFO")
+
+    p.add_argument("--wandb-project", default=os.environ.get("WANDB_PROJECT"),
+                   help="Enable W&B logging to this project (requires WANDB_API_KEY)")
+    p.add_argument("--run-name", default=os.environ.get("WANDB_RUN_NAME"),
+                   help="Override default W&B run name / HF subdir")
+    p.add_argument("--hf-repo", default=os.environ.get("HF_RESULTS_REPO"),
+                   help="Upload results to this HF dataset repo (e.g. 'user/webarena-results'). Requires HF_TOKEN")
+    p.add_argument("--hf-private", action="store_true",
+                   help="Create/use private HF repo")
+
     args = p.parse_args()
 
     logging.basicConfig(

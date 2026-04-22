@@ -59,7 +59,8 @@ sudo /opt/tinker/bin/pip install \
   "tinker>=0.1" "transformers>=4.44" "gymnasium>=0.29" \
   "playwright>=1.44" "browsergym-core" "browsergym-miniwob" \
   "browsergym-webarena" "browsergym-experiments" \
-  "datasets" "tqdm" "pyyaml" "google-cloud-storage" "google-cloud-secret-manager"
+  "datasets" "tqdm" "pyyaml" "google-cloud-storage" "google-cloud-secret-manager" \
+  "wandb" "huggingface_hub"
 
 sudo /opt/tinker/bin/playwright install chromium
 sudo /opt/tinker/bin/playwright install-deps chromium

@@ -8,7 +8,8 @@ set -euo pipefail
 : "${GCP_ZONE:=us-central1-a}"
 : "${IMAGE_NAME:=webarena-v1}"
 : "${IMAGE_FAMILY:=webarena}"
-: "${BUILDER_DISK_GB:=1500}"
+: "${BUILDER_DISK_GB:=300}"
+: "${SERVICE_ACCOUNT:=webarena-runner@${GCP_PROJECT}.iam.gserviceaccount.com}"
 BUILDER_NAME="webarena-builder-$$"
 REPO_DIR="$(cd "$(dirname "$0")"/../.. && pwd)"
 
@@ -22,7 +23,9 @@ gcloud compute instances create "$BUILDER_NAME" \
   --image-family=ubuntu-2404-lts-amd64 \
   --image-project=ubuntu-os-cloud \
   --boot-disk-size="${BUILDER_DISK_GB}GB" \
-  --boot-disk-type=pd-balanced
+  --boot-disk-type=pd-balanced \
+  --service-account="$SERVICE_ACCOUNT" \
+  --scopes=cloud-platform
 
 trap 'echo "==> Cleaning builder..."; gcloud compute instances delete -q "$BUILDER_NAME" --zone="$GCP_ZONE" || true' EXIT
 

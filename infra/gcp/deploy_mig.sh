@@ -26,6 +26,7 @@ set -euo pipefail
 : "${WANDB_PROJECT:=}"
 : "${HF_REPO:=}"
 : "${HF_PRIVATE:=false}"
+: "${SERVICE_ACCOUNT:=webarena-runner@${GCP_PROJECT}.iam.gserviceaccount.com}"
 RUN_ID="$(date -u +%Y%m%d-%H%M%S)"
 MIG_NAME="webarena-mig-$RUN_ID"
 TEMPLATE_NAME="webarena-tpl-$RUN_ID"
@@ -113,6 +114,7 @@ gcloud compute instance-templates create "$TEMPLATE_NAME" \
   --image-project="$GCP_PROJECT" \
   --boot-disk-size="${DISK_GB}GB" \
   --boot-disk-type=pd-balanced \
+  --service-account="$SERVICE_ACCOUNT" \
   --scopes=cloud-platform \
   --metadata-from-file=startup-script=/tmp/webarena_startup.sh \
   --metadata=num-workers="$NUM_WORKERS",benchmark="$BENCHMARK",model="$MODEL",max-steps="$MAX_STEPS",bucket="$BUCKET",run-id="$RUN_ID",wandb-project="$WANDB_PROJECT",hf-repo="$HF_REPO",hf-private="$HF_PRIVATE" \

@@ -64,14 +64,17 @@ cd /opt/webarena-compose
 sudo docker compose up -d
 sleep 90
 
-# Site URLs (all on localhost)
-export WEBARENA_SHOPPING_URL=http://localhost:7770
-export WEBARENA_SHOPPING_ADMIN_URL=http://localhost:7780
-export WEBARENA_REDDIT_URL=http://localhost:9999
-export WEBARENA_GITLAB_URL=http://localhost:8023
-export WEBARENA_WIKIPEDIA_URL=http://localhost:8888
-export WEBARENA_MAP_URL=http://public-map.server.invalid
-export WEBARENA_HOMEPAGE_URL=http://localhost:4399
+# Site URLs — BrowserGym WebArena expects WA_* naming
+export WA_SHOPPING=http://localhost:7770
+export WA_SHOPPING_ADMIN=http://localhost:7780
+export WA_REDDIT=http://localhost:9999
+export WA_GITLAB=http://localhost:8023
+export WA_WIKIPEDIA=http://localhost:8888
+export WA_MAP=http://public-map.server.invalid
+export WA_HOMEPAGE=http://localhost:4399
+
+# Patch missing deps at runtime (image was frozen before we discovered orjson requirement)
+sudo /opt/tinker/bin/pip install --quiet orjson || true
 
 sudo git -C /opt/tinker-rl-lab pull --ff-only || true
 

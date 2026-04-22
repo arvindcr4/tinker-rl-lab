@@ -25,9 +25,9 @@ variant: it retains group-normalized advantages and the critic-free structure
 of GRPO, but it does not implement the PPO probability ratio and clip of
 \citet{schulman2017proximal}, does not retain a frozen reference policy for
 KL regularization, does one optimizer step per rollout batch, and does not
-apply a completion-only token mask (a P1-A diagnostic on Qwen3.5-4B measures
-$\sim$0.76 of the full-sequence loss magnitude to come from prompt tokens
-rather than from the completion).  Claims in
+apply a completion-only token mask (a P1-A diagnostic on Qwen3.5-4B
+measures 61.6\%--89.6\% of the full-sequence loss magnitude to come from
+prompt tokens rather than from the completion).  Claims in
 this paper therefore refer to this runner, not to canonical GRPO.
 \emph{(ii) Evaluator scope.}  The HumanEval, tool-use, and MATH rewards
 measure sandboxed execution with Python built-ins removed, JSON schema

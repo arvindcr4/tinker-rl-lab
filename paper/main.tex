@@ -194,9 +194,11 @@ Target KL & 0.01 & 0.01 & 0.01 & N/A & N/A & N/A \\
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.55\textwidth]{tikz/reward_flow.pdf}
-\caption{Verifiable reward paradigm in \ours{}. Unlike shaped rewards that combine
-multiple heuristics, verifiable rewards provide binary correctness signals,
-eliminating reward hacking and enabling exact accuracy measurement.}
+\caption{Verifiable reward paradigm in \ours{}. Unlike learned reward models,
+verifiable rewards provide binary correctness signals and remove learned
+reward-model inference cost, but they remain vulnerable to parser, format,
+length, and harness artifacts.  We do not claim verifiable rewards
+``eliminate'' reward hacking.}
 \label{fig:reward_flow}
 \end{figure}
 
@@ -456,7 +458,7 @@ $\dagger$~Training interrupted; reported metrics are from available steps.}
 \toprule
 \textbf{Algo} & \textbf{Plat.} & \textbf{Model} & \textbf{Size} & \textbf{Steps} & \textbf{Peak} & \textbf{Last-10} \\
 \midrule
-\multicolumn{7}{l}{\textit{GRPO on Tinker API (GSM8K)}} \\
+\multicolumn{7}{l}{\textit{GRPO on Tinker API (GSM8K training reward; not held-out accuracy)}} \\
 \midrule
 GRPO & Tinker & Qwen3-8B & 8B & 30 & 62.5\% & 34.4\% \\
 GRPO & Tinker & Qwen3.5-4B & 4B & 30 & 100\% & 85.0\% \\
@@ -470,7 +472,7 @@ GRPO & Tinker & Q3-30B-A3B$^\dagger$ & 30B (3B) & partial & 50.0\% & 32.5\% \\
 GRPO & Tinker & Q3-30B-Inst$^\dagger$ & 30B (3B) & partial & 100\% & 100\% \\
 GRPO & Tinker & Kimi-K2 & MoE & 20 & 100\% & 80.0\% \\
 \midrule
-\multicolumn{7}{l}{\textit{Bitter Lesson Campaign --- New Frontier Models (GRPO, Tinker)}} \\
+\multicolumn{7}{l}{\textit{Campaign Extension: Additional Runs Under the Training-Reward Parser (GRPO, Tinker)}} \\
 \midrule
 GRPO & Tinker & Qwen3-8B-Base & 8B & 30 & 100\% & 84.4\% \\
 GRPO & Tinker & Kimi-K2-Thinking & MoE & 30 & 100\% & 95.8\% \\
@@ -506,7 +508,7 @@ GRPO & OpenRLHF (Modal-H100) & Qwen3-8B & 8B & 30 & see Fig.~\ref{fig:framework_
 PPO & Modal & Qwen3-8B & 8B & 30 & 75.0\% & 22.5\% ledger / 35.0\% stat summary \\
 PPO & Modal & Llama-3.1-8B-Inst & 8B & 30 & 100\% & 97.5\% \\
 \midrule
-\multicolumn{7}{l}{\textit{Cross-task (Tool-Use), GRPO on Tinker}} \\
+\multicolumn{7}{l}{\textit{Cross-task (Tool-Call Schema Compliance), GRPO on Tinker}} \\
 \midrule
 GRPO & Tinker & Qwen3-32B & 32B & 30 & 0\% & 0\% \\
 GRPO & Tinker & Llama-3.1-8B-Inst & 8B & 30 & 0\% & 0\% \\
@@ -616,6 +618,16 @@ Qwen3-30B-A3B (MoE) & 91.8 & 95.4 $\pm$ 0.5 & +3.6 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\paragraph{Post-selection warning.}
+The ten checkpoints in Table~\ref{tab:heldout_gsm8k} below are chosen by
+ranking all $\sim$70 campaign runs by training \emph{last-10} mean reward and
+taking the top ten.  This is a checkpoint-selection analysis, not a
+single-model held-out generalization result.  It is not comparable to, and
+does not contradict, the abstract's clean paired control on Qwen3-8B, where
+held-out GSM8K improves only from $82.0\%$ to $83.3\%$ ($p=0.26$).  Reading
+this table as ``GRPO lifts GSM8K to 87--95\%'' would be the selection-induced
+overclaim that the abstract explicitly warns against.
 
 \paragraph{Held-out GSM8K evaluation of the top-10 checkpoints.}
 To separate optimisation from generalisation we selected the ten Tinker
@@ -846,9 +858,16 @@ ACM/NeurIPS ready & \checkmark & \texttimes & \texttimes & \texttimes & \texttim
 \label{sec:task_grpo}
 
 Beyond the cross-library comparison, team members conducted GRPO experiments on
-diverse real-world tasks. Table~\ref{tab:task_grpo} summarizes these results,
-showing that GRPO-based training is effective across tool use, code reasoning,
-and multi-stage reasoning scenarios with modest compute budgets.
+diverse real-world tasks. Table~\ref{tab:task_grpo} summarizes these results.
+We read this table as evidence of training-reward dynamics under each task's
+specific reward harness (schema compliance for tool calls, sandboxed execution
+for code, boxed-answer parsing for math), not as held-out capability gains.
+Several rewards in this table are proxies: the tool-use reward scores JSON
+well-formedness, tool-name selection, and argument-key presence without
+executing tools, so the row measures tool-call \emph{schema compliance}, not
+tool \emph{use}; the HumanEval-style sandbox rejects legitimate completions
+that use \texttt{len}, \texttt{range}, or \texttt{sum}, so the code row
+measures behavior under a broken verifier.
 
 \begin{table*}[t]
 \centering
@@ -918,7 +937,7 @@ Qwen3-235B-A22B (MoE)$^\dagger$ & 15$^\dagger$ & 100\% & 100\% \\
 Qwen3-30B-A3B (MoE base)$^\dagger$ & partial$^\dagger$ & 50.0\% & 32.5\% \\
 Qwen3-30B-A3B-Instruct (MoE inst)$^\dagger$ & partial$^\dagger$ & 100\% & 100\% \\
 \midrule
-\multicolumn{4}{l}{\textit{Cross-task (Tool-Use), GRPO on Tinker API}} \\
+\multicolumn{4}{l}{\textit{Cross-task (Tool-Call Schema Compliance), GRPO on Tinker API}} \\
 \midrule
 Qwen3-32B & 30 & 0\% & 0\% \\
 Llama-3.1-8B-Instruct & 30 & 0\% & 0\% \\
@@ -1443,13 +1462,19 @@ Environment task success & Not yet established & Requires a MiniWoB/WebArena sui
 \end{itemize}
 
 % =============================================================================
-\subsection{Bitter Lesson Campaign: Scaling Experiments to 70 Runs}
+\subsection{Campaign Extension: Additional Runs Under the Training-Reward Parser}
 \label{sec:bitter_lesson}
 % =============================================================================
 
-Inspired by the ``bitter lesson'' that scale and compute dominate clever algorithms~\cite{schulman2017proximal}, we launched a systematic campaign of 32 additional Tinker GRPO experiments plus 3 TRL-GRPO stack-comparison experiments on Modal H100s, bringing our total to 70+ training runs.
+We launched a systematic extension of 32 additional Tinker GRPO experiments
+plus 3 TRL-GRPO stack-comparison experiments on Modal H100s, bringing our
+total to 70+ training runs.  These runs are \emph{not} a test of the ``bitter
+lesson'' hypothesis: they measure training-time reward under our existing
+parsers, not held-out capability, and no clean held-out evaluation is run
+over this extended set.  We keep them here for the ZVF/GU diagnostic
+coverage they provide.
 
-\paragraph{New Frontier Models.}
+\paragraph{New Frontier Models (training-reward parser, not held-out benchmark).}
 We evaluated six previously untested models on GSM8K with GRPO (Table~\ref{tab:main_results}, Bitter Lesson block).
 \textbf{Kimi-K2-Thinking} achieved the highest sustained performance (peak 100\%, last-10 95.8\%), confirming that reasoning-specialized models respond most strongly to RL post-training.
 \textbf{Qwen3.5-397B-A17B}---the largest MoE model in our study at 397B total / 17B active parameters---reached 100\% peak with 97.9\% last-10 average, establishing a new upper bound.
@@ -2056,7 +2081,7 @@ PPO-REINFORCE = 4 runs; Tinker GRPO frontier = 9 runs; team members =
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.5\linewidth]{figures/v2/old_trl_seeds.pdf}
-\caption{Cross-seed reproducibility analysis for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. The mean is significantly above 50\% ($t = 7.44$, $p < 0.001$), confirming that GRPO produces reliable learning signal even at 0.5B scale.}
+\caption{Cross-seed reproducibility for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. We report the five-seed spread rather than a null-hypothesis test: a $t$-test against $50\%$ is not an appropriate null for GSM8K (a random-guess baseline is closer to $0\%$ than $50\%$), so the low CV is the defensible finding here.}
 \label{fig:trl_seeds}
 \end{figure}
 

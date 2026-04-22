@@ -89,12 +89,18 @@ if [ -n "\$WANDB_PROJECT" ]; then
   WANDB_FLAGS="--wandb-project \$WANDB_PROJECT --run-name webarena-\$RUN_ID-w\$WORKER_ID"
 fi
 
+# NOTE: --concurrency 1 is mandatory below. Playwright's sync API maintains
+# a single client per process pinned to the thread that created it. With
+# --concurrency >1, multiple episodes share the process but run on different
+# worker threads (even with single-worker executors per episode), and
+# Playwright raises "cannot switch to a different thread" at env.reset.
+# To parallelize, scale horizontally (more VMs), not --concurrency.
 /opt/tinker/bin/python -m experiments.webarena.react_eval \\
   --benchmark "\$BENCHMARK" \\
   --tasks all \\
   --model "\$MODEL" \\
   --max-steps "\$MAX_STEPS" \\
-  --concurrency 5 \\
+  --concurrency 1 \\
   --out "/tmp/results_shard_\${WORKER_ID}.jsonl" \\
   --shard "\${WORKER_ID}/\${NUM_WORKERS}" \\
   \$WANDB_FLAGS \$HF_FLAGS

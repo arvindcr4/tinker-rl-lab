@@ -10,6 +10,8 @@ set -euo pipefail
 : "${IMAGE_FAMILY:=webarena}"
 : "${BUILDER_DISK_GB:=300}"
 : "${SERVICE_ACCOUNT:=webarena-runner@${GCP_PROJECT}.iam.gserviceaccount.com}"
+: "${BUILDER_MACHINE_TYPE:=n2-standard-8}"
+: "${WEBARENA_TAR_GCS_BUCKET:=}"
 BUILDER_NAME="webarena-builder-$$"
 REPO_DIR="$(cd "$(dirname "$0")"/../.. && pwd)"
 
@@ -19,11 +21,11 @@ gcloud config set project "$GCP_PROJECT"
 echo "==> Creating builder VM..."
 gcloud compute instances create "$BUILDER_NAME" \
   --zone="$GCP_ZONE" \
-  --machine-type=e2-standard-4 \
+  --machine-type="$BUILDER_MACHINE_TYPE" \
   --image-family=ubuntu-2404-lts-amd64 \
   --image-project=ubuntu-os-cloud \
   --boot-disk-size="${BUILDER_DISK_GB}GB" \
-  --boot-disk-type=pd-balanced \
+  --boot-disk-type=pd-ssd \
   --service-account="$SERVICE_ACCOUNT" \
   --scopes=cloud-platform
 
@@ -43,34 +45,37 @@ gcloud compute scp --recurse \
   "$BUILDER_NAME:/tmp/webarena-compose" \
   --zone="$GCP_ZONE"
 
-cat > /tmp/webarena_setup.sh <<'SETUP'
+cat > /tmp/webarena_setup.sh <<SETUP
 #!/usr/bin/env bash
 set -euo pipefail
+export WEBARENA_TAR_GCS_BUCKET="${WEBARENA_TAR_GCS_BUCKET}"
 sudo apt-get update
-sudo apt-get install -y ca-certificates curl gnupg git python3-pip python3-venv \
-  build-essential libnss3 libatk-bridge2.0-0 libcups2 libxkbcommon0 \
+sudo apt-get install -y ca-certificates curl gnupg git python3-pip python3-venv \\
+  build-essential libnss3 libatk-bridge2.0-0 libcups2 libxkbcommon0 \\
   libgbm1 libasound2t64 libgtk-3-0
 
 # Docker
 curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker "$USER" || true
+sudo usermod -aG docker "\$USER" || true
 
 # Python env
 sudo python3 -m venv /opt/tinker
 sudo /opt/tinker/bin/pip install -U pip setuptools wheel
 
 # Pin numpy + pyarrow to versions with cp312 wheels BEFORE pulling datasets
-sudo /opt/tinker/bin/pip install --prefer-binary "numpy>=1.26,<3" "pyarrow>=16,<22"
+sudo /opt/tinker/bin/pip install --prefer-binary --only-binary=numpy,pyarrow "numpy>=1.26,<3" "pyarrow>=16,<22"
 
-sudo /opt/tinker/bin/pip install --prefer-binary \
-  "tinker>=0.1" "transformers>=4.44" "gymnasium>=0.29" \
-  "playwright>=1.44" "browsergym-core" "browsergym-miniwob" \
-  "browsergym-webarena" "browsergym-experiments" \
-  "datasets" "tqdm" "pyyaml" "google-cloud-storage" "google-cloud-secret-manager" \
+sudo /opt/tinker/bin/pip install --prefer-binary --only-binary=numpy,pyarrow \\
+  "tinker>=0.1" "transformers>=4.44" "gymnasium>=0.29" \\
+  "playwright>=1.44" "browsergym-core" "browsergym-miniwob" \\
+  "browsergym-webarena" "browsergym-experiments" \\
+  "datasets>=2.20,<4" "pandas>=2.0" "tqdm" "pyyaml" \\
+  "google-cloud-storage" "google-cloud-secret-manager" \\
   "wandb" "huggingface_hub"
 
 sudo /opt/tinker/bin/playwright install chromium
-sudo /opt/tinker/bin/playwright install-deps chromium
+# install-deps skipped: libasound2 was renamed to libasound2t64 in Ubuntu 24.04;
+# all required libs are pulled in the apt-get install block above.
 
 # Clone tinker-rl-lab for startup script to use
 sudo rm -rf /opt/tinker-rl-lab
@@ -82,14 +87,14 @@ sudo cp -r /tmp/webarena-compose/* /opt/webarena-compose/
 
 # Clone homepage Flask app from webarena repo
 sudo rm -rf /opt/webarena-homepage
-sudo git clone --depth 1 --filter=blob:none --sparse \
+sudo git clone --depth 1 --filter=blob:none --sparse \\
   https://github.com/web-arena-x/webarena /tmp/wa-src
 (cd /tmp/wa-src && sudo git sparse-checkout set environment_docker/webarena-homepage)
 sudo mv /tmp/wa-src/environment_docker/webarena-homepage /opt/webarena-homepage
 sudo rm -rf /tmp/wa-src
 
-# Download + load WebArena docker images (~30 min)
-sudo bash /opt/webarena-compose/load_images.sh
+# Download + load WebArena docker images (~5 min from GCS, ~30 min from CMU)
+sudo WEBARENA_TAR_GCS_BUCKET="${WEBARENA_TAR_GCS_BUCKET}" bash /opt/webarena-compose/load_images.sh
 
 echo "==> setup complete"
 SETUP

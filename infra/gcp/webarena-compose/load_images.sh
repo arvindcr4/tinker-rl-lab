@@ -5,6 +5,7 @@
 set -euo pipefail
 
 WORK=${WORK:-/opt/webarena-images}
+GCS_BUCKET=${WEBARENA_TAR_GCS_BUCKET:-}
 sudo mkdir -p "$WORK"
 cd "$WORK"
 
@@ -30,6 +31,14 @@ download_one() {
   if [ -f "$name" ]; then
     echo "[skip] $name already present"
     return 0
+  fi
+  if [ -n "$GCS_BUCKET" ]; then
+    echo "[gcs] $name <- $GCS_BUCKET/$name"
+    if sudo gsutil -m -o "GSUtil:parallel_thread_count=8" cp "$GCS_BUCKET/$name" "$name.part"; then
+      mv "$name.part" "$name"
+      return 0
+    fi
+    echo "[gcs-fail] falling back to CMU mirror"
   fi
   echo "[download] $name <- $url"
   if ! curl -fL --retry 3 -o "$name.part" "$url"; then

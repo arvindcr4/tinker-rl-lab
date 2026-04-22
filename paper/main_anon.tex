@@ -458,7 +458,7 @@ support breadth and hypothesis generation rather than a pooled capability claim.
 \footnotesize
 \begin{tabular}{@{}l l l c c p{2.8cm}@{}}
 \toprule
-\textbf{Task} & \textbf{Model} & \textbf{Method} & \textbf{Pre} & \textbf{Post-RL} & \textbf{Notes} \\
+\textbf{Task} & \textbf{Model} & \textbf{Method} & \textbf{Pre} & \textbf{Post-training} & \textbf{Notes} \\
 \midrule
 Tool Call (1-turn) & Qwen2-0.5B-Inst & LoRA & --- & Func. & 20 ex., \$0.17 vast.ai \\
 Code (HumanEval) & Qwen3-8B & GRPO & 32\% & 86\% & 300 steps; best \\
@@ -902,7 +902,7 @@ per-step variance reduction for end-of-training stability.}
 Tool-use is increasingly important for practical LLM deployments. We include
 auxiliary tool-use probes to test schema-compliance reward environments across
 model families.
-Table~\ref{tab:tool_use_cross_arch} reports function-calling accuracy
+Table~\ref{tab:tool_use_cross_arch} reports function-calling schema score
 (fraction of calls with correct function name and valid argument schema).
 
 \begin{table}[htbp]
@@ -1346,6 +1346,21 @@ Direct testing requires gradient-level analysis of the kind described in
 \citet{liu2025rlsubnetworks}, and we release our checkpoints expressly to
 enable such analysis.
 
+\paragraph{Causal test of the ZVF/GU hypothesis.}
+To test whether ZVF/GU is merely observational or actually causal, we propose
+a controlled experiment that stratifies GSM8K prompts by measured base-policy
+hit rate and trains matched GRPO runs that differ only in prompt-pool reward
+diversity.  Three arms would be run with Qwen3-8B and identical GRPO config:
+(1)~dead prompts (base hit rate $<25\%$), (2)~mixed prompts (base hit rate
+$25\%\text{--}75\%$), and (3)~saturated prompts (base hit rate $>75\%$).
+The primary endpoint is first-5-step gradient utilization and reward slope,
+not held-out accuracy: the thesis is not that GRPO improves GSM8K, but that
+GRPO has a learning signal only under reward diversity.  The expected pattern
+is: dead and saturated arms show ZVF $\approx 1.0$ and flat reward curves;
+the mixed arm shows lower ZVF and positive reward slope.  Running this
+experiment would turn the current observational ZVF/GU diagnostic into a
+direct causal test.
+
 \subsection{What Stack Sensitivity Means for the Field}
 \label{sec:discuss_impl}
 
@@ -1569,7 +1584,7 @@ PPO-REINFORCE = 4 runs; Tinker GRPO frontier = 9 runs; team members =
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.5\linewidth]{figures/v2/old_trl_seeds.pdf}
-\caption{Cross-seed reproducibility for TRL GRPO on Qwen2-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. We report the five-seed spread rather than a null-hypothesis test: a $t$-test against $50\%$ is not an appropriate null for GSM8K (a random-guess baseline is closer to $0\%$ than $50\%$), so the low CV is the defensible finding here.}
+\caption{Cross-seed reproducibility for TRL GRPO on Qwen2-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean verifier score 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. We report the five-seed spread rather than a null-hypothesis test: a $t$-test against $50\%$ is not an appropriate null for GSM8K (a random-guess baseline is closer to $0\%$ than $50\%$), so the low CV is the defensible finding here.}
 \label{fig:trl_seeds}
 \end{figure}
 

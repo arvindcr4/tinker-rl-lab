@@ -1383,7 +1383,7 @@ per-step variance reduction for end-of-training stability.}
 \end{figure}
 
 % ---------------------------------------------------------------------------
-\subsection{Cross-Architecture Tool-Use}
+\subsection{Cross-Architecture Tool-Call Schema Compliance}
 \label{sec:tool_use_cross_arch}
 % ---------------------------------------------------------------------------
 
@@ -1395,8 +1395,9 @@ Table~\ref{tab:tool_use_cross_arch} reports function-calling accuracy
 
 \begin{table}[htbp]
 \centering
-\caption{Cross-Architecture Tool-Use: Function-calling accuracy (\%)
-after GRPO post-training. Schema compliance measures whether the model
+\caption{Cross-Architecture Tool-Call Schema Compliance: fraction of completions (\%)
+after GRPO post-training whose JSON is well-formed and whose tool name and argument
+keys match the schema; tools are not executed. Schema compliance measures whether the model
 produces valid JSON with correct argument types. ``---'' entries either
 failed due to JWT authentication expiry or scored 0\% (task too
 difficult for the model).}
@@ -1482,7 +1483,7 @@ over this extended set.  We keep them here for the ZVF/GU diagnostic
 coverage they provide.
 
 \paragraph{New Frontier Models (training-reward parser, not held-out benchmark).}
-We evaluated six previously untested models on GSM8K with GRPO (Table~\ref{tab:main_results}, Bitter Lesson block).
+We evaluated six previously untested models on GSM8K with GRPO (Table~\ref{tab:main_results}, Campaign Extension block).
 \textbf{Kimi-K2-Thinking} achieved the highest sustained performance (peak 100\%, last-10 95.8\%), confirming that reasoning-specialized models respond most strongly to RL post-training.
 \textbf{Qwen3.5-397B-A17B}---the largest MoE model in our study at 397B total / 17B active parameters---reached 100\% peak with 97.9\% last-10 average, establishing a new upper bound.
 \textbf{GPT-OSS-120B} showed remarkably stable training (93.8\% at step 1, 87.5\% last-10), consistent with our earlier finding that frontier models \emph{reinforce} rather than \emph{learn} GSM8K capability.
@@ -1663,7 +1664,7 @@ Our open-source baselines (TRL, CleanRL) do include held-out evaluation,
 providing a partial check; but the Tinker-API results lack this safeguard
 beyond the top-10 GSM8K evaluation.
 
-\paragraph{Tool-Use Task: 0\% Reward.}
+\paragraph{Tool-Call Schema Task: 0\% Reward.}
 The synthetic tool-use task yielded a reward of exactly 0\% for all completed
 runs under the Tinker backend. We interpret this as a task-design problem
 rather than a model capability failure: the reward function requires exact

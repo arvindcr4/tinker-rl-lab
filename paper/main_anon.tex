@@ -1070,7 +1070,44 @@ pattern \texttt{anonymous/tinker-rl-bench-<task>-<model>}.
 \paragraph{Scope boundary (response to hostile review).}
 This paper is an engineering diagnostic, not a benchmark result, not a new algorithm, and not a clean causal study. The runner is GRPO-style but omits the PPO ratio/clip, the frozen reference policy, and the completion-only token mask, and uses one optimizer step per rollout batch (a P1-A diagnostic finds $61.6\%$--$89.6\%$ of the loss magnitude comes from prompt tokens); the HumanEval-style sandbox strips Python built-ins; the tool-use reward scores JSON schema rather than tool execution; the MATH-500 and HumanEval training pools are loaded from the \texttt{test} splits and are reward-environment probes, not generalization tests; most Tinker runs are single-seed on a 30-step horizon; PPO/GRPO comparisons are backend-, sampler-, optimizer-, LoRA-, and checkpoint-confounded; the held-out GSM8K control lift is $82.0\%\!\to\!83.3\%$ ($p=0.26$) and is the only clean capability result. The top-$k$ post-selection ledger in \texttt{experiments/results/heldout\_gsm8k.json} has a selection-induced $92.08\%$ mean across ten heterogeneous checkpoints and should not be compared to the $82.0\%\!\to\!83.3\%$ control. Readers should treat the manuscript as a candid engineering audit whose narrow defensible contribution is reward-diversity triage (ZVF/GU) plus stack-identifiability reporting discipline, not a leaderboard or algorithm paper.
 
-\section*{Claims We Explicitly Do Not Make}
+\paragraph{55-point claim audit (priority disclaimers).}
+An external 55-claim audit produced the following additional scoping we adopt
+here. (i)~\textit{Run counts}: the release bundle contains more than 70
+recorded run artifacts; the earlier abstract count of 79 reflected pre-dedup
+ledger entries, and different derived tables use different inclusion rules;
+headline analyses use only completed or explicitly $\dagger$-partial runs
+from the source-of-truth ledger. (ii)~\textit{Prompt-token loss contamination}:
+the $61.6\%$--$89.6\%$ range is a two-sequence P1-A diagnostic on
+Qwen3.5-4B, treated as an implementation-fidelity warning, not a corpus-wide
+estimate. (iii)~\textit{Priority}: we do not claim to be the first systematic
+cross-library use of ZVF/GU; zero-variance prompt diagnostics exist in the
+recent literature \citep{zvpEGAS2025}, and we provide a reproducible case
+study rather than a priority claim. (iv)~\textit{Group size}: the single-seed
+group-size sweep is inconclusive---different aggregations favor different
+winners---and we do not claim $G{=}8$ is globally optimal. (v)~\textit{Scaling
+laws}: exponential-saturation fits on 20--30 step traces are
+hypothesis-generating, not validated scaling laws. (vi)~\textit{Tool-use vs.
+schema compliance}: tool-call experiments establish JSON/schema compliance
+under a schema-only reward, not executed tool-use capability; strict
+no-warmup Tinker tool-use scored 0\%. (vii)~\textit{Browser-control}: the
+BrowserGym/MiniWoB smoke test yielded reward 0.0 and no trainable datums;
+it is an integration check, not learning evidence. (viii)~\textit{Policy drift}:
+SI, PTD, and rolling-variance are reward-instability proxies, not validated
+KL/policy-distance measurements; Nemotron-120B is a reward-collapse case
+consistent with drift or parser mismatch, not proof of catastrophic drift.
+(ix)~\textit{Length bias}: the rewarded-shorter pattern is specific to this
+GSM8K parser and is not a matched PPO-vs-GRPO algorithmic comparison.
+(x)~\textit{Reproducibility}: W\&B step-level logging and direct KL tracking
+failed, Tinker is closed-source, and the HuggingFace checkpoint inventory is
+partial; we support review with Docker, ledgers, local CSV traces, and some
+public model cards, but do not claim end-to-end reproducibility for every run.
+(xi)~\textit{GRPO-as-DPO}: the theoretical connection
+\citep{wu2025grpo_dpo} informs our interpretation of mixed groups; we do not
+empirically establish DPO equivalence for our runner. The full rectification
+mapping lives in \texttt{reports/final/HOSTILE\_REVIEW\_RECTIFICATION.md} and
+the companion 55-point claim log.
+
+
 To bound the attack surface of this empirical study, we explicitly disclaim
 the following: We do not claim our runner achieves state-of-the-art reasoning
 on GSM8K or MATH-500. We do not claim GRPO is universally superior or inferior
@@ -1268,9 +1305,7 @@ involve human participants in any capacity, and no IRB review was required.
 \paragraph{No Direct Dual-Use Concern.}
 Our contribution is a \emph{diagnostic audit framework}, not a new model or
 capability. We do not release any model trained on sensitive, harmful, or
-restricted content. All evaluated checkpoints are derived from publicly
-available base models under permissive licenses (Apache 2.0 or equivalent).
-We do not foresee direct security or biosafety risks arising from this work.
+restricted content. Evaluated checkpoints derive from publicly available base models under their respective licenses: Qwen model families under Apache-2.0; Llama-3.x model families under Meta's Llama Community License; DeepSeek-V3.1 and Nemotron under their respective community/commercial terms. We do not claim all bases are Apache/MIT-equivalent. We do not introduce a new hazardous dataset or attack method, but improved RL post-training workflows are dual-use in the general sense that any optimization advance can lower cost for misuse; we discuss this as a qualitative residual risk rather than claiming no direct risk.
 
 \paragraph{Reproducibility Statement.}
 Despite the infrastructure failures documented above, all successfully
@@ -1474,8 +1509,7 @@ Llama-3.1-8B) where GPU access is reproducible.
 Additionally, the per-token divergence framework of \citet{liu2025rlsubnetworks}
 --- which measures which parameters actually update during RL fine-tuning ---
 could reveal whether the small subnetwork they identify has higher KL per
-parameter, explaining why moderate-sized models can catastrophically drift
-despite updating only 5--30\% of weights.
+parameter, potentially explaining why moderate-sized models sometimes exhibit reward collapse consistent with drift (rather than direct evidence of catastrophic drift, which would require direct KL or policy-distance telemetry we do not have) despite updating only 5--30\% of weights.
 Connecting our behavioral proxy metrics to this parameter-level analysis is a
 natural and important next step.
 

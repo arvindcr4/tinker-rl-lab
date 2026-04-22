@@ -1,0 +1,32 @@
+{
+  "bundle_name": "tinker-rl-lab-submission.zip",
+  "created_at_utc": "2026-04-22T00:00:00Z",
+  "source_commit": "HEAD",
+  "paper_anon_sha256": "SEE_SHA256SUMS.txt",
+  "paper_main_sha256": "SEE_SHA256SUMS.txt",
+  "code_tar_sha256": "SEE_SHA256SUMS.txt",
+  "supporting_data_tar_sha256": "SEE_SHA256SUMS.txt",
+  "claim_verifier": "scripts/verify_claims_offline.py",
+  "paper_version": "main_anon.tex",
+  "tables_version": "Referenced in SECTION below",
+  "schema_validator": "scripts/validate_master_results_schema.py",
+  "figure_provenance": "FIGURE_PROVENANCE.md",
+  "eval_protocol": "EVAL_PROTOCOL.md",
+  "result_ledger": "supporting_data/reports/final/result_ledger.md",
+  "artifact_summary": {
+    "paper_anon_pages": 54,
+    "paper_main_pages": 64,
+    "code_tar_size_mb": 37.5,
+    "supporting_data_tar_size_mb": 850,
+    "total_experiments": 83,
+    "completed_experiments": 44,
+    "heldout_seeds": 5
+  },
+  "key_claims": [
+    "qwen3-8b-grpo-last10-34.4pct",
+    "qwen3-8b-ppo-last10-22.5pct", 
+    "gsm8k-heldout-82.0-to-83.3-pct-p0.26",
+    "zvf-triage-2-2-zero-false-positives",
+    "framework-stack-sensitivity-evidence"
+  ]
+}

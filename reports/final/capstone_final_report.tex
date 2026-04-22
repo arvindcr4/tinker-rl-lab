@@ -254,6 +254,7 @@ The thesis of this report is scoped deliberately: it is a \emph{systems-oriented
 \caption{Primary claim-to-evidence verdicts for the final report.}
 \label{tab:primary-claim-verdicts}
 \small
+\footnotesize
 \begin{tabularx}{\textwidth}{p{3.25cm}p{2.55cm}X p{3.0cm}}
 \toprule
 Claim & Status & Evidence allowed as headline & Verdict\\
@@ -334,6 +335,7 @@ The highest-confidence evidence comes from completed multi-step runs with consis
 \centering
 \caption{Evidence hierarchy used when interpreting experiment outcomes.}
 \label{tab:evidence-hierarchy}
+\footnotesize
 \begin{tabularx}{\textwidth}{p{3.0cm}p{3.5cm}X}
 \toprule
 Evidence level & Typical artifacts & Interpretation rule\\
@@ -405,6 +407,7 @@ The reader should treat the training loop in this project as a \emph{group-relat
 \small
 \caption{Implementation fidelity of the in-repository training runner relative to canonical GRPO. Entries reflect the audited configuration of the central Tinker training loop. External team-member pipelines (e.g.\ Madhu's HumanEval stack) may differ and are reported separately.}
 \label{tab:grpo-fidelity}
+\footnotesize
 \begin{tabularx}{\textwidth}{lcX}
 \toprule
 Component & Status & Notes \\
@@ -456,6 +459,7 @@ The study is not a complete RLVR algorithm diagnostic baseline. Several serious 
 \caption{Important baselines and GRPO variants not run in the main experiment set.}
 \label{tab:missing-modern-baselines}
 \small
+\footnotesize
 \begin{tabularx}{\textwidth}{p{3.0cm}p{3.6cm}X}
 \toprule
 Method & Status in this report & What it would test\\
@@ -480,6 +484,7 @@ The final interpretation separates implementation claims, diagnostic claims, and
 \caption{Audit trail connecting major report claims to primary evidence.}
 \label{tab:claim-evidence-audit}
 \small
+\footnotesize
 \begin{tabularx}{\textwidth}{p{2.9cm}p{4.1cm}p{3.65cm}X}
 \toprule
 Claim & Primary evidence & Artifact & Validity caveat\\
@@ -503,6 +508,7 @@ The experiment inventory is organized by the question each block answers, rather
 \centering
 \caption{Primary experiment families considered in the final report.}
 \label{tab:experiment-families}
+\footnotesize
 \begin{tabularx}{\textwidth}{p{3.1cm}p{3.1cm}Xp{2.0cm}}
 \toprule
 Family & Methods & Main tasks & Status\\
@@ -530,6 +536,7 @@ The artifact directory contains several result files because the project evolved
 \label{tab:source-ledger}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
+\footnotesize
 \begin{tabularx}{\textwidth}{p{2.6cm}p{2.5cm}p{2.4cm}p{2.5cm}p{2.3cm}X}
 \toprule
 Experiment ID & Dataset / split & Model & Metric object & Headline number & Included claim\\
@@ -558,6 +565,7 @@ Runs in Table~\ref{tab:excluded-runs} are retained in the artifact bundle for tr
 \label{tab:excluded-runs}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
+\footnotesize
 \begin{tabularx}{\textwidth}{p{3.0cm}p{3.0cm}p{3.6cm}X}
 \toprule
 Artifact / ID & Status & Reason excluded & How it is used\\
@@ -583,6 +591,7 @@ Each experiment was interpreted through four questions. The first question is wh
 \centering
 \caption{Experiment readout logic used to connect runs to conclusions.}
 \label{tab:experiment-readout}
+\footnotesize
 \begin{tabularx}{\textwidth}{p{3.0cm}p{3.0cm}p{3.4cm}X}
 \toprule
 Experiment block & Main controlled variable & Primary readout & Why it matters\\
@@ -764,6 +773,7 @@ Table~\ref{tab:rq-verdicts} connects each research question to its strongest sup
 \caption{Research-question verdicts and supporting evidence.}
 \label{tab:rq-verdicts}
 \small
+\footnotesize
 \begin{tabularx}{\textwidth}{p{2.45cm}p{4.05cm}p{4.05cm}X}
 \toprule
 Research question & Strongest evidence & Counter-evidence or limitation & Verdict\\
@@ -801,7 +811,8 @@ Table~\ref{tab:hit-rate-keystone} connects the major task families in this repor
 \label{tab:hit-rate-keystone}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
-\begin{tabularx}{\textwidth}{@{}p{0.24\textwidth} c c c c c c X@{}}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}p{0.21\textwidth} p{0.1\textwidth} c p{0.1\textwidth} p{0.12\textwidth} c p{0.13\textwidth} X@{}}
 \toprule
 Task / model / setup & Reward type & $G$ & Measured pre-GRPO sampled hit rate & Predicted usable-group rate & Observed early ZVF & Late reward / held-out result & Verdict \\
 \midrule
@@ -884,6 +895,7 @@ The most useful form of the results is not a single diagnostic baseline, but a d
 \caption{Failure taxonomy and diagnostic action map for RL fine-tuning runs.}
 \label{tab:failure-taxonomy}
 \small
+\footnotesize
 \begin{tabularx}{\textwidth}{p{3.15cm}p{3.35cm}p{3.7cm}X}
 \toprule
 Observed symptom & Likely mechanism & Evidence in this project & Recommended next action\\
@@ -923,6 +935,7 @@ Table~\ref{tab:design-rules} converts the project findings into design rules. Th
 \caption{Design rules implied by the project evidence.}
 \label{tab:design-rules}
 \small
+\footnotesize
 \begin{tabularx}{\textwidth}{p{3.25cm}p{4.25cm}X}
 \toprule
 Rule & Why it follows from the evidence & What to do in future work\\
@@ -948,6 +961,7 @@ The BrowserGym/MiniWoB smoke test adds one more rung to this ladder. It is more 
 \caption{Capability ladder for tool-use and browser-control evidence.}
 \label{tab:agentic-capability-ladder}
 \small
+\footnotesize
 \begin{tabularx}{\textwidth}{p{3.2cm}p{3.9cm}X}
 \toprule
 Evaluation level & Evidence in this project & What can be claimed\\
@@ -1120,6 +1134,7 @@ After the final experiment pass, a local audit mirror was built to preserve acco
 \caption{Private local audit snapshot used for internal NIA indexing.}
 \label{tab:private-audit-snapshot}
 \small
+\footnotesize
 \begin{tabularx}{\textwidth}{p{3.1cm}p{2.4cm}X}
 \toprule
 Artifact class & Count / size & Audit role\\
@@ -1143,6 +1158,7 @@ Table~\ref{tab:reproducibility-checklist} lists the concrete artifacts needed to
 \caption{Artifact checklist for reproducing or auditing the final report.}
 \label{tab:reproducibility-checklist}
 \small
+\footnotesize
 \begin{tabularx}{\textwidth}{p{2.9cm}p{4.25cm}p{4.1cm}X}
 \toprule
 Artifact class & Location & Reproduction role & Status\\

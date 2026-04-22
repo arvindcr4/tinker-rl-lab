@@ -43,7 +43,8 @@
 \newcommand{\grpo}{\textsc{Grpo}}
 \newcommand{\ours}{\textsc{TinkerRL Audit}}
 
-\title{When Does GRPO-Style Training Have a Learning Signal?\\ A Claim-to-Evidence Audit of a Critic-Free Group-Relative Runner}
+\title{Reward Diversity Diagnostics for Group-Relative LLM Post-Training\\
+A Claim-to-Evidence Audit of a Critic-Free Group-Relative Runner}
 
 % For submission, use anonymous authors:
 % \author{Anonymous Authors}
@@ -194,10 +195,9 @@ Target KL & 0.01 & 0.01 & 0.01 & N/A & N/A & N/A \\
 \centering
 \includegraphics[width=0.55\textwidth]{tikz/reward_flow.pdf}
 \caption{Verifiable reward paradigm in \ours{}. Unlike learned reward models,
-verifiable rewards provide binary correctness signals and remove learned
-reward-model inference cost, but they remain vulnerable to parser, format,
-length, and harness artifacts.  We do not claim verifiable rewards
-``eliminate'' reward hacking.}
+verifiable rewards reduce reliance on reward models, but they can still induce
+reward hacking through parser artifacts, format shortcuts, length effects, and
+train-prompt overfitting. Verifiable rewards do not eliminate reward hacking.}
 \label{fig:reward_flow}
 \end{figure}
 
@@ -465,6 +465,34 @@ $\sim$1,200 A100 GPU-hours across both platforms.
 
 \subsection{Training-Reward Ledger Across Models and Algorithms}
 \label{sec:main_results}
+
+This paper is an empirical audit of a heterogeneous run corpus, not a controlled
+algorithm benchmark. Most Tinker runs are single-seed, short-horizon, and
+evaluated by online training reward. We therefore use them to study reward
+dynamics, failure modes, and stack sensitivity. Capability claims are restricted
+to evaluations with held-out prompts and explicit base-model controls; under that
+standard, the GSM8K lift is small and non-significant. Table~\ref{tab:evidence_types}
+summarizes the evidence hierarchy used throughout the paper.
+
+\begin{table}[htbp]
+\centering
+\caption{Evidence types and permitted interpretations in this audit.}
+\label{tab:evidence_types}
+\scriptsize
+\begin{tabular}{p{3.2cm}p{3.0cm}p{2.5cm}p{2.5cm}}
+\toprule
+\textbf{Evidence type} & \textbf{Runs} & \textbf{Independent unit} & \textbf{Can support} \\
+\midrule
+Tinker GRPO traces & Mostly single-seed, 30-step & run/checkpoint & descriptive dynamics only \\
+GSM8K held-out base-vs-GRPO & 5 seeds, 200 prompts & paired prompt/seed & narrow capability check; null result \\
+Top-checkpoint GSM8K audit & selected checkpoints, 500 prompts & checkpoint & selection/overfitting audit, not causal effect \\
+ZVF validation & 22 deduplicated runs & run & triage claim only \\
+Tool-use / HumanEval / MATH & proxy or harness-bound & task-specific trace & no broad capability claim \\
+\midrule
+\multicolumn{4}{p{11.2cm}}{\small \textit{Note:} Because many runs are single-seed and step-level rewards are autocorrelated within traces, we avoid treating per-step samples as independent experimental replicates. Inferential tests are reported only when the independent unit is a seed, prompt, or independently replicated run. Step-level reward samples inside a single training trace are treated as autocorrelated telemetry, not independent observations.} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 Table~\ref{tab:main_results} presents the consolidated training-reward ledger for
 GRPO-style training on GSM8K across models evaluated on the Tinker API, alongside
@@ -1173,12 +1201,13 @@ comparison is the largest effect by two orders of magnitude.}
 \label{sec:kl}
 % ---------------------------------------------------------------------------
 
-This secondary analysis should be read as reward-trajectory diagnostics, not
-as direct KL divergence measurement.  Policy drift---the divergence between the
-trained policy $\pi_\theta$ and the reference policy $\pi_{\mathrm{ref}}$---is
-a fundamental risk in RL post-training: excessive drift can lead to reward
-hacking, coherence degradation, and catastrophic forgetting~\citep{schulman2017proximal}.
-Direct KL divergence tracking via per-token $\mathbb{E}_{x \sim \pi_\theta}
+This secondary analysis should be read as reward-instability diagnostics, not
+as direct KL divergence measurement.  These proxy metrics capture symptoms
+visible in the reward trace: tail variance, peak-to-tail degradation, and
+non-monotonicity.  They do not distinguish true distributional drift from reward
+noise, parser brittleness, or changing prompt difficulty.  We therefore use
+them as reward-instability proxies, not as KL substitutes.  Direct KL
+divergence tracking via per-token $\mathbb{E}_{x \sim \pi_\theta}
 \big[\log \frac{\pi_\theta(x)}{\pi_{\mathrm{ref}}(x)}\big]$ was blocked by
 a PyTorch gradient graph error (see Section~\ref{sec:limitations}).
 We therefore develop \emph{reward-trajectory stability proxies} that

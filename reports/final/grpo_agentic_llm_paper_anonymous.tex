@@ -1,515 +1,378 @@
 \documentclass{article}
-% ===========================================================================
-% NeurIPS 2026 Format - ANONYMOUS SUBMISSION
-% ===========================================================================
 
-\usepackage[preprint]{nips_style}
-
+\usepackage{neurips_2026}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{times}
-\usepackage{url}
-\usepackage{latexsym}
-\usepackage{graphicx}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{microtype}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{url}
 \usepackage{hyperref}
-\usepackage{caption}
-\usepackage{subcaption}
 
-% ===========================================================================
-% Title (Anonymous)
-% ===========================================================================
-\title{When Does GRPO Have a Learning Signal?\\Reward-Contrast Diagnostics and Stack-Conditioned Evidence}
+\title{When Does GRPO Have a Learning Signal?\\
+A Claim-to-Evidence Audit of Group-Relative RL}
 
-% Authors (ANONYMIZED for blind review)
-\author{
-  Anonymous Author(s)\\
-  \\
-  Anonymous Institution
-}
+\author{}
 
-% ===========================================================================
-% Document
-% ===========================================================================
+\newcommand{\zvf}{\mathrm{ZVF}}
+\newcommand{\gu}{\mathrm{GU}}
+\newcommand{\usable}{P_{\mathrm{usable}}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
 \begin{document}
-
 \maketitle
 
-% ===========================================================================
-% Abstract
-% ===========================================================================
 \begin{abstract}
-  We do not foreground GRPO as a generic reasoning-improvement result.  Instead
-  we audit when a critic-free group-relative RL loop has a usable learning
-  signal and when apparent reward gains should not be upgraded into capability
-  claims.  Across structured tool calling, code generation, and math reasoning
-  runs, the central mechanism is reward contrast: under binary or verifier-like
-  rewards, the update is useful only when sampled groups contain both successes
-  and failures.  Zero-Variance Fraction (ZVF) and Gradient Utilization (GU)
-  expose the two flat-group regimes, cold-start collapse and saturation, and
-  function as early triage diagnostics rather than calibrated predictors.
-  The clean held-out GSM8K control remains small and non-significant
-  (83.3\% vs.\ 82.0\% base model, $p{=}0.26$), while tool-use, HumanEval, and
-  MATH rewards are proxy or harness-bound measurements.  We therefore interpret
-  online reward as dynamics evidence, not benchmark accuracy.  Finally, PPO,
-  GRPO, and DPO labels are treated as under-specified treatments: model,
-  prompt construction, reward parser, sampler, optimizer, loss mask,
-  KL/reference handling, LoRA configuration, backend, checkpoint rule, and
-  evaluator all affect the realized update.  The contribution is a
-  claim-to-evidence audit for RLVR experiments, not a leaderboard.
+We study when a critic-free group-relative RL loop has a usable learning
+signal. Across low-budget tool, code, browser-control, and math runs, the
+common mechanism is within-group reward contrast: all-wrong groups produce
+cold-start collapse, while all-correct groups produce saturation. We
+operationalize this with Zero-Variance Fraction (ZVF) and Gradient Utilization
+(GU) as early triage diagnostics, not calibrated predictors. The clean
+held-out GSM8K control shows only a small, non-significant improvement over the
+base model, and paired disagreement tests on the same 200 examples do not show
+a reliable improvement for any seed. Tool, code, and browser-control results
+are custom, subset-bound, or integration-only proxy measurements. The
+contribution is therefore not a GRPO leaderboard result, but a
+claim-to-evidence audit showing how reward density, base-policy hit rate, group
+size, and stack details determine whether a nominal GRPO run has interpretable
+signal.
 \end{abstract}
 
-% ===========================================================================
-% Introduction
-% ===========================================================================
 \section{Introduction}
 
-Large language models (LLMs) increasingly serve as autonomous agents that call tools, generate code, and reason through multi-step problems. We define \emph{agentic fine-tuning} as post-training that optimizes action-taking in structured environments (tool selection, code generation, verifiable reasoning), as opposed to general instruction-following. The central question is not whether GRPO broadly improves reasoning, but when the reward environment supplies enough within-group contrast for the update to mean anything.
+This paper does not claim that Group Relative Policy Optimization (GRPO)
+broadly improves reasoning. The narrower claim is that in a critic-free
+group-relative update, the learning signal exists only when sampled groups
+contain reward diversity. If every completion for a prompt is wrong, the group
+has no ordering signal; if every completion is right, the group is saturated.
+Both cases can produce flat or misleading reward curves. We audit this failure
+mode in a heterogeneous post-training corpus covering mathematical reasoning,
+tool-call formatting, code tasks, and a BrowserGym/MiniWoB integration smoke
+test.
 
-Group Relative Policy Optimization (GRPO) \citep{shao2024deepseekmath} is a critic-free variant of Proximal Policy Optimization (PPO) that computes advantages by normalizing rewards within groups of sampled completions. It requires no value function, no reference model for KL regularization, and substantially less compute than standard PPO -- making it attractive for resource-constrained post-training of small models.
+The paper is organized as a claim-to-evidence audit rather than a benchmark.
+Online training reward is interpreted as evidence about optimization dynamics,
+not as benchmark accuracy. Held-out evaluations are used for capability claims.
+Tool-use rewards are treated as schema or proxy rewards unless tools are
+executed and evaluated end to end. Algorithm labels such as PPO, GRPO, and DPO
+are treated as incomplete treatment descriptions unless the full stack is
+reported.
 
-This paper investigates GRPO across one agentic and two non-agentic transfer domains:
-\begin{itemize}
-    \item \textbf{Tool calling (agentic):} structured JSON function calling with 5--60,000 tool schemas
-    \item \textbf{Code generation (transfer control):} HumanEval benchmark subset
-    \item \textbf{Mathematical reasoning (transfer control):} GSM8K (grade-school) benchmark
-\end{itemize}
-
-We execute experiments across model sizes from 0.5B to 8B parameters using QLoRA on consumer GPUs and LoRA on cloud GPUs. The submission is organized around the claim hierarchy in Table~\ref{tab:claim_audit_compact}. Our contributions are: (1)~a reward-contrast diagnostic using ZVF/GU to separate cold-start collapse from saturation; (2)~a mixed-group probability design rule explaining why base-policy hit rate, group size, reward density, and task difficulty determine whether critic-free RL has signal; (3)~a stack-conditioned treatment definition for PPO/GRPO/DPO comparisons; and (4)~an evidence hierarchy separating online reward from held-out capability.
-
-\begin{table}[htbp]
+\begin{table}[t]
 \centering
-\caption{Claim-to-evidence hierarchy used for the compact paper.}
-\label{tab:claim_audit_compact}
+\caption{Claim/evidence/scope hierarchy for the compact submission.}
+\label{tab:claim_scope}
 \small
-\begin{tabular}{p{0.30\linewidth}p{0.22\linewidth}p{0.38\linewidth}}
+\begin{tabularx}{\linewidth}{p{0.22\linewidth}Y Y Y}
 \toprule
-Claim & Status & Evidence rule\\
+Claim & Evidence & Allowed conclusion & Not allowed \\
 \midrule
-GRPO is a reward-contrast amplifier. & Most original contribution & Use mixed-group probability, early ZVF/GU, and collapse/saturation cases; do not claim calibrated prediction.\\
-PPO/GRPO/DPO labels are under-specified treatments. & Methodological contribution & Report stack-conditioned evidence; do not rank algorithms without matched model, reward, sampler, loss, backend, checkpoint, and evaluator.\\
-Training reward does not equal capability. & Central negative result & Headline held-out GSM8K is $82.0\%\!\to\!83.3\%$ ($p=0.26$); tool-use/code/math rewards are proxy or harness-bound.\\
+Reward contrast governs signal &
+Mixed-group probability, early ZVF/GU, collapse and saturation traces &
+Group-relative updates need within-prompt reward variation &
+Universal GRPO improvement \\
+Training reward is not capability &
+GSM8K base 82.0\% vs. GRPO mean 83.3\%, $p=0.26$; paired seed tests below &
+Held-out math gain is not established &
+``GRPO improves GSM8K'' \\
+Stack labels are incomplete &
+Backend, parser, sampler, loss-mask, LoRA, KL/reference, checkpoint, and evaluator differences &
+Report stack-conditioned results &
+PPO/GRPO/DPO leaderboard ranking \\
+Tool and browser results are proxy evidence &
+JSON/tool-name/argument-key rewards; BrowserGym smoke reward 0.0 &
+Schema/integration evidence only &
+End-to-end tool or browser competence \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Our contributions are: (1) a reward-diversity diagnostic for group-relative
+RL using ZVF and GU; (2) a finite-group mechanism that connects base-policy hit
+rate, group size, reward density, and task difficulty; (3) a negative held-out
+capability result on GSM8K; and (4) a stack-conditioned reporting template for
+post-training comparisons.
+
+\section{Mechanism: Reward Contrast}
+
+For a prompt $x$, let $p_x$ be the probability that the current policy samples
+a rewarded completion under the rollout distribution, and let $G$ be group
+size. With a binary verifier, a sampled group has usable contrast if it
+contains at least one success and at least one failure. The probability of such
+a group is
+\begin{equation}
+  \usable(x;G) = 1 - (1-p_x)^G - p_x^G .
+\end{equation}
+For a prompt set, the empirical design quantity is
+\begin{equation}
+  \widehat{\usable}(G) =
+  \frac{1}{N}\sum_{x=1}^N \left[1-(1-p_x)^G-p_x^G\right].
+\end{equation}
+This is not a theorem that GRPO improves capability. It is a design rule for
+whether the sampled rollout distribution can produce a non-zero relative
+advantage.
+
+We log two diagnostics. Zero-Variance Fraction is the fraction of prompt groups
+whose rewards are all identical:
+\[
+\zvf = \Pr(\operatorname{Var}(r_{x,1:G})=0).
+\]
+Gradient Utilization is the fraction of rollout groups or steps that yield a
+non-zero advantage:
+\[
+\gu = 1-\zvf .
+\]
+High ZVF with low reward indicates cold-start collapse; high ZVF with high
+reward indicates saturation. Low ZVF indicates that rollout compute is
+producing mixed groups. We use ZVF/GU for triage, not for calibrated
+forecasting: pooled lagged analyses in the artifact do not establish that ZVF
+adds reliable predictive power beyond current reward.
+
+\section{Audit Corpus and Evidence Levels}
+
+The reviewer-facing paper uses a compact ledger. It does not treat run count
+as a contribution. The broader repository contains interrupted attempts,
+partial probes, local W\&B/Hugging Face/Tinker mirrors, and bookkeeping
+records; those are preservation artifacts, not independent experiments. The
+main paper uses only the evidence classes in Table~\ref{tab:evidence_levels}.
+
+\begin{table}[t]
+\centering
+\caption{Evidence levels used in the main text.}
+\label{tab:evidence_levels}
+\small
+\begin{tabularx}{\linewidth}{p{0.23\linewidth}Y Y}
+\toprule
+Evidence type & Examples in this paper & Supports \\
+\midrule
+Held-out capability &
+Base and GRPO checkpoints on the same 200 GSM8K test examples &
+Capability or generalization claims, when paired or controlled \\
+Online training reward &
+GSM8K/MATH/tool/code rollout rewards during training &
+Optimization dynamics and reward-environment behavior \\
+Proxy/schema reward &
+JSON validity, tool-name match, argument-key presence &
+Structured-output behavior under a custom parser \\
+Integration smoke test &
+BrowserGym/MiniWoB routing through browser, W\&B, and checkpoint plumbing &
+Systems integration only; no learned browser success \\
+Stack case study &
+Runs that differ in backend, parser, sampler, LoRA, loss, or evaluator &
+Treatment-identifiability concerns, not algorithm ranking \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The group-relative runner is GRPO-inspired, not a canonical reproduction of
+DeepSeekMath GRPO. Some runs omit reference KL, PPO clipping, or completion-only
+masking, and the managed backend hides some low-level implementation details.
+Those are part of the treatment and therefore part of the claim boundary.
+
+\section{Results}
+
+\subsection{Reward Diversity Explains Signal Availability}
+
+The strongest empirical pattern is diagnostic. Strict sparse-reward tool runs
+without warm-starting produce all-zero reward groups and no useful update.
+High-hit-rate math settings rapidly saturate, producing all-correct groups.
+Intermediate regimes produce mixed groups, and larger group sizes preserve
+usable contrast longer.
+
+\begin{table}[t]
+\centering
+\caption{Group size changes online reward dynamics for one 8B GSM8K setup.
+These are training-rollout rewards, not held-out benchmark accuracies.}
+\label{tab:group_size}
+\small
+\begin{tabular}{lcccc}
+\toprule
+$G$ & First-5 reward & Last-10 reward & Peak reward & Zero-reward steps \\
+\midrule
+4  & 32.5\% & 23.8\% & 62.5\%  & 20\% \\
+8  & 33.8\% & 24.4\% & 68.8\%  & 6\% \\
+16 & 29.4\% & 36.2\% & 75.0\%  & 2\% \\
+32 & 32.8\% & 54.7\% & 100.0\% & 0\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-% ===========================================================================
-% Background
-% ===========================================================================
-\section{Background}
-
-\subsection{Group Relative Policy Optimization (GRPO)}
-
-GRPO \citep{shao2024deepseekmath} simplifies PPO by eliminating the critic network. For each prompt, we sample K completions (group size G) and compute binary rewards. Advantages are normalized within each group:
-
-\begin{equation}
-    \text{advantage}_i = \frac{\text{reward}_i - \mu_{\text{group}}}{\sigma_{\text{group}} + \epsilon}
-\end{equation}
-
-The policy gradient loss is:
-\begin{equation}
-    \mathcal{L} = -\mathbb{E}\left[\text{advantage}_i \cdot \sum_t \log \pi_\theta(a_t | s_t)\right]
-\end{equation}
-
-When all completions receive identical rewards (all correct or all incorrect), advantages are zero and no gradient update occurs -- the ``zero-loss'' phenomenon we track in Section \ref{sec:capacity}.
-
-DeepSeekMath reports GRPO improving an instruction-tuned 7B model from 82.9\% to 88.2\% on GSM8K and 46.8\% to 51.7\% on MATH with group size G=64.
-Recent RLVR work makes the conditional nature of that result clearer:
-zero-variance prompt and online difficulty-filtering studies show that
-intermediate-difficulty, mixed-outcome groups carry the usable learning
-signal~\citep{rlzvp2025,bae2025online}, while spurious-reward analyses show
-that weak or random rewards can amplify model-specific pretrained behaviors
-without proving a general capability gain~\citep{shao2025spurious}.
-
-Published GRPO configurations converge on $G \in [8, 64]$, LR $\in [1 \times 10^{-6}, 5 \times 10^{-6}]$, and $T \in [0.7, 1.2]$; the KL coefficient $\beta$ shows no consensus \citep{deepseekr1, shao2024deepseekmath}. Our setup ($G{=}16$, LR${}=4 \times 10^{-5}$, $T{=}1.0$) uses a $\sim$10$\times$ higher LR, which we attribute to LoRA-only training. A full cross-paper comparison table is in the Supplementary Appendix.
-
-Recent variants address entropy collapse: Dr.\ GRPO \citep{deepseekr1} removes KL and adds entropy bonuses, while DAPO \citep{yu2025dapo} uses asymmetric clipping and high-temperature sampling. We implement both alongside DPO \citep{rafailov2024dpo} in a supplementary notebook.
-
-% ===========================================================================
-% Experimental Setup
-% ===========================================================================
-\section{Experimental Setup}
-
-\subsection{Training Infrastructure}
-
-We use two platforms: \textbf{Cloud A100 GPUs} (Adam optimizer, custom GRPO loss) and \textbf{Consumer T4 GPUs} (QLoRA with TRL). Cloud runs use batch size 2, $G \in \{4, 8, 16, 32\}$, max 1024/512 input/generation tokens, and LoRA rank 8--64. Hyperparameters were selected via manual tuning informed by published GRPO configurations; no systematic grid or random search was performed. We do \emph{not} use KL regularization or log entropy trajectories, so these runs represent an initial empirical study rather than a fully drift-controlled recipe. Full hyperparameters are in the Supplementary Appendix.
-
-\subsection{Models}
-
-\begin{table}[htbp]
-    \centering
-    \caption{Models used in experiments}
-    \begin{tabular}{lccc}
-        \toprule
-        Model & Parameters & Type & Platform \\
-        \midrule
-        Model A (0.5B) & 0.5B & Dense & Consumer \\
-        Model B (1.5B) & 1.5B & Dense & Consumer \\
-        Model C (3B-Dense) & 3B & Dense & Consumer \\
-        Model D (4B) & 4B & Dense & Cloud \\
-        Model E (8B) & 8B & Dense & Cloud \\
-        Model F (30B-MoE) & 30B (3B active) & MoE & Cloud \\
-        Model G (3B-Alt) & 3B & Dense & Cloud \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:models}
-\end{table}
-
-\subsection{Datasets and Splits}
-
-\begin{table}[htbp]
-    \centering
-    \caption{Dataset sizes, composition, and evaluation splits per domain.}
-    \begin{tabular}{llccl}
-        \toprule
-        Domain & Dataset & Train Size & Eval Split & Eval Protocol \\
-        \midrule
-        Tool (single) & Glaive-v2 & 500 SFT + 200 RL & Train rollouts & Custom rubric \\
-        Tool (multi) & ToolBench-v1 & 40 scenarios & Train rollouts & Custom rubric \\
-        Tool (real) & xlam-60k & 60,000 schemas & Train rollouts & Reward only \\
-        Code & HumanEval & 164 total & 50-item subset & pass@1 \\
-        Math (GSM8K) & GSM8K & 7,473 train & Train rollouts & Binary reward \\
-        Math (MATH) & MATH & 7,500 train & Train rollouts & Binary reward \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:datasets}
-\end{table}
-
-\textbf{Important:} Math and tool-use metrics are computed on \emph{training-prompt rollouts}, not held-out test sets. Only HumanEval uses a benchmark subset. Reported ``accuracy'' values are binary reward means at training temperature ($T{=}0.8$--$1.0$), \emph{not} greedy-decoded held-out accuracy.
-
-A consolidated configuration table mapping each claim to its exact hyperparameters is provided in the Supplementary Appendix.
-
-\subsection{Reward Functions}
-
-\textbf{Tool calling (3-component, 0--1):}
-\begin{itemize}
-    \item +0.3: Valid JSON output
-    \item +0.4: Correct tool name
-    \item +0.3: All argument keys present
-\end{itemize}
-
-\textbf{Math reasoning (binary):}
-\begin{itemize}
-    \item 1.0: Correct answer in \texttt{\textbackslash boxed\{\}} or as final number
-    \item 0.0: Incorrect
-\end{itemize}
-
-\textbf{Code generation:} Binary pass/fail on test cases.
-
-\subsection{Prompt Format}
-
-All domains use a consistent chat template format. For math reasoning, the prompt template is: \texttt{``Solve this math problem step by step. End with \#\#\#\# followed by the numerical answer.''} For tool calling, the prompt includes available tool schemas as JSON followed by the user query; the model must respond with a JSON tool call. For code generation, the prompt template follows the HumanEval docstring format. Exact prompt templates per domain are provided in the Supplementary Appendix.
-
-% ===========================================================================
-% Experiments
-% ===========================================================================
-\section{Experiments}
-
-\subsection{Tool Calling}
-
-\subsubsection{Single-Turn Tool Calling}
-
-We first evaluate whether GRPO can teach models to output structured JSON tool calls instead of plain text responses. Using Model B (1.5B) with 500 SFT + 200 GRPO prompts on Glaive-function-calling-v2:
-
-\begin{table}[htbp]
-    \centering
-    \caption{Single-turn tool calling results (Model B, 1.5B)}
-    \begin{tabular}{lccc}
-        \toprule
-        Metric & SFT Only & After GRPO & Change \\
-        \midrule
-        JSON Valid & 0\% & 92\% & +92\% \\
-        Correct Tool & 0\% & 50\% & +50\% \\
-        Has Arguments & 0\% & 42\% & +42\% \\
-        Clean Output & 0\% & 92\% & +92\% \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:single_turn}
-\end{table}
-
-The SFT baseline produced plain-text answers and never emitted valid JSON, despite 500 tool-use demonstrations. GRPO's reward signal provided the direct optimization pressure that SFT's cross-entropy loss could not at this model scale.
-
-\subsubsection{Multi-Turn Tool Chaining}
-
-Using Model C (3B) with SFT followed by GRPO (40 steps, LoRA rank 8):
-
-\begin{table}[htbp]
-    \centering
-    \caption{Multi-turn tool chaining results (Model C, 3B)}
-    \begin{tabular}{lccc}
-        \toprule
-        Scenario & SFT & GRPO & Winner \\
-        \midrule
-        Weather + Packing & 0.90 & 0.90 & Tie \\
-        Stock + News Chain & 0.77 & 0.90 & GRPO \\
-        Search + Calculate & 0.63 & 0.92 & GRPO \\
-        Single Tool & 0.60 & 0.90 & GRPO \\
-        \textbf{Average} & \textbf{0.72} & \textbf{0.91} & \textbf{GRPO} \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:multi_turn}
-\end{table}
-
-The -0.30 penalty for repeated tool calls eliminated SFT's looping failure mode entirely by penalizing same-function calls within an episode.
-
-These scores are \emph{custom scenario scores} from a hand-authored rubric, not standardized benchmarks. Full tool-calling protocol details are in the Supplementary Appendix.
-
-\subsection{Code Generation}
-
-On software engineering coding tasks using Model E (8B) with SFT followed by GRPO:
-
-\begin{itemize}
-    \item HumanEval pass@1: 32\% $\rightarrow$ 40\% (+8\%)
-    \item Problems solved: 16/50 $\rightarrow$ 20/50 (+4)
-    \item Training loss: 0.85 $\rightarrow$ 0.18 (-78\%)
-\end{itemize}
-
-These results use a \textbf{randomly sampled 50-problem subset} (bootstrap 95\% CI: $[27\%, 53\%]$ post-GRPO; Fisher's exact $p{=}0.53$) rather than the full 164-problem HumanEval harness. The 4-problem delta is not statistically significant; a full canonical evaluation with pass@$k$ and confidence intervals remains future work.
-
-\subsection{Mathematical Reasoning}
-
-\subsubsection{Multi-Seed Replication on GSM8K}
-
-Using Model E (8B) with LoRA rank 32, 50 steps, 5 seeds:
-
-\begin{table}[htbp]
-    \centering
-    \caption{GSM8K multi-seed replication results (training-set reward, Model E, rank 32)}
-    \begin{tabular}{lcccc}
-        \toprule
-        Seed & First-5 Avg & Peak Reward & Last-10 Avg & Zero-loss \% \\
-        \midrule
-        Seed 1  & 37.5\% & 62.5\% & 27.5\% & 18\% \\
-        Seed 2 & 25.0\% & 62.5\% & 27.5\% & 28\% \\
-        Seed 3 & 22.5\% & 62.5\% & 32.5\% & 24\% \\
-        Seed 4 & 15.0\% & 87.5\% & 30.0\% & 16\% \\
-        Seed 5 & 20.0\% & 87.5\% & 35.0\% & 18\% \\
-        \midrule
-        \textbf{Mean} & \textbf{24.0\%} & \textbf{72.5\%} & \textbf{30.5\%} & \textbf{20.8\%} \\
-        \textbf{Std} & \textbf{$\pm$8.4\%} & \textbf{$\pm$13.7\%} & \textbf{$\pm$3.3\%} & \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:multiseed}
-\end{table}
-
-Cross-seed mean training-set reward is 30.5\% (SD = 3.3\%, 95\% CI [26.5\%, 34.5\%] via $t$-distribution with $n=5$). Zero-loss rates range from 16--28\%, indicating that exploration success varies meaningfully across random seeds even for the same model and hyperparameters.
-
-\subsubsection{Held-Out Test Results}
-
-We evaluate GRPO checkpoints on 200 held-out GSM8K test examples per seed with greedy decoding:
-
-\begin{table}[htbp]
-    \centering
-    \caption{GSM8K held-out test accuracy (200 examples per seed, greedy decoding)}
-    \begin{tabular}{lccc}
-        \toprule
-        Seed & Correct/200 & Accuracy & 95\% CI \\
-        \midrule
-        Seed 1  & 166/200 & 83.0\% & [77.5\%, 88.0\%] \\
-        Seed 2 & 165/200 & 82.5\% & [77.0\%, 87.5\%] \\
-        Seed 3 & 161/200 & 80.5\% & [74.5\%, 86.0\%] \\
-        Seed 4 & 168/200 & 84.0\% & [79.0\%, 89.0\%] \\
-        Seed 5 & 173/200 & 86.5\% & [81.5\%, 91.0\%] \\
-        \midrule
-        \textbf{Mean} & & \textbf{83.3\%} & \textbf{SD = 2.2\%, CI [80.6\%, 86.0\%]} \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:heldout}
-\end{table}
-
-The held-out accuracy (83.3\%) exceeds the mean online sampled reward (30.5\%), but these are \emph{not comparable}: training reward averages per-completion correctness under stochastic sampling ($T{=}0.8$--$1.0$) across the trajectory, while test accuracy is greedy pass@1 on the final checkpoint.
-
-\paragraph{Base-model control.} We evaluate the base model \emph{without} any LoRA adapter on the same 200 test examples with identical greedy decoding: \textbf{164/200 = 82.0\%} (95\% bootstrap CI [76.5\%, 87.5\%]). The GRPO-trained mean (83.3\%) exceeds the base by only +1.3 percentage points. A one-sample $t$-test of the 5 GRPO seeds against the base accuracy yields $t{=}1.32$, $p{=}0.26$ (two-sided), so \emph{the improvement is not statistically significant}. Four of five seeds exceed the base, but one seed (80.5\%) falls below it. We conclude that the held-out GSM8K accuracy is overwhelmingly attributable to the base model's pre-existing capability, with GRPO contributing a small, non-significant increment under our setup.
-
-\subsubsection{LoRA Rank Ablation}
-
-\begin{table}[htbp]
-    \centering
-    \caption{LoRA rank ablation (Model E, seed=1)}
-    \begin{tabular}{lcccc}
-        \toprule
-        Rank & Trainable Params & First-5 Avg & Peak Acc & Last-10 Avg \\
-        \midrule
-        8 & $\sim$0.1\% & 27.5\% & 62.5\% & 21.2\% \\
-        16 & $\sim$0.2\% & 20.0\% & 75.0\% & 18.8\% \\
-        32 (default) & $\sim$0.4\% & 37.5\% & 62.5\% & 27.5\% \\
-        64 & $\sim$0.8\% & 47.5\% & 87.5\% & 25.0\% \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:lora_ablation}
-\end{table}
-
-Higher rank correlates with faster initial learning (rank 64 achieves 47.5\% in first 5 steps vs. 27.5\% for rank 8).
-
-\subsubsection{Group Size Ablation}
-
-\begin{table}[htbp]
-    \centering
-    \caption{Group size ablation (Model E (8B), seed=42, rank 32, 50 steps). Larger groups provide more gradient signal, reducing zero-loss and zero-reward rates.}
-    \begin{tabular}{lccccc}
-        \toprule
-        $G$ & First-5 Avg & Last-10 Avg & Peak Acc & Zero-loss & Zero-rew \\
-        \midrule
-        4  & 32.5\% & 23.8\% & 62.5\%  & 26\% & 20\% \\
-        8  & 33.8\% & 24.4\% & 68.8\%  & 6\%  & 6\% \\
-        16 & 29.4\% & 36.2\% & 75.0\%  & 2\%  & 2\% \\
-        32 & 32.8\% & 54.7\% & 100.0\% & 2\%  & 0\% \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:group_ablation}
-\end{table}
-
-Group size has a dramatic effect: $G{=}32$ achieves 54.7\% last-10 reward and 100\% peak vs.\ 23.8\% and 62.5\% for $G{=}4$. Zero-reward steps drop from 20\% ($G{=}4$) to 0\% ($G{=}32$), confirming that larger groups ensure at least one correct completion per prompt. This directly addresses whether the 3B capacity-threshold failure is a $G{=}4$ artifact: even at $G{=}32$, the 8B model's last-10 (54.7\%) does not approach the 4B's (84.7\%), suggesting capacity still matters, but exploration via larger groups substantially helps.
-
-\subsection{Cross-Domain Summary}
-
-\begin{table}[htbp]
-    \centering
-    \footnotesize
-    \caption{Cross-domain results. ``Pre-GRPO'' is the SFT-only or base-model baseline; ``Post-GRPO'' is the final GRPO checkpoint. All training-set metrics unless noted.}
-    \begin{tabular}{llccl}
-        \toprule
-        Domain & Metric & Pre-GRPO & Post-GRPO & Scope \\
-        \midrule
-        Tool (single) & JSON Validity & 0\% & 92\% & Custom \\
-        Tool (multi) & Quality & 0.72 & 0.91 & Custom \\
-        Code & Pass@1 & 32\% & 40\% & 50-item subset \\
-        Math (8B, 5 seeds) & Test Acc & 82.0\% (base) & 83.3\%$\pm$2.2\% & Held-out ($p{=}0.26$) \\
-        Math (4B, 4 seeds) & Train Reward (last-10) & --- & 84.7\%$\pm$12.0\% & Train \\
-        Math (3B, $G{=}4$) & Train Reward (last-10) & --- & 2.3\% & Train \\
-        Math (3B, $G{=}32$) & Train Reward (last-10) & --- & 5.0\% & Train \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:summary}
-\end{table}
-
-% ===========================================================================
-% Analysis
-% ===========================================================================
-\section{Analysis}
-
-\subsection{Capacity Threshold for GRPO}
-\label{sec:capacity}
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.85\textwidth]{fig1_capacity_threshold.png}
-    \caption{Capacity threshold for GRPO on GSM8K (training-set reward, LoRA rank 32). (a)~Mean reward per step: Model D (4B) saturates near 85\% by step 10; Model E (8B) fluctuates (peak 87.5\%, last-10 30.5\%); Model G (3B) stays below 3\%. (b)~Zero-loss decomposition: 3B zero-loss originates from all-incorrect groups (no reward signal); 4B zero-loss from all-correct groups (productive saturation). Dashed line marks 50\% reward.}
-    \label{fig:capacity}
-\end{figure}
-
-Dense 3B models fail (0.78\%$\rightarrow$2.34\% training reward, $G{=}4$) while 4B models succeed strongly (last-10: 84.7\%$\pm$12.0\%, 4 seeds). The 3B's 2.34\% is near-random for GSM8K and indistinguishable from noise given the small effective sample ($n{=}50$ steps $\times$ batch 2 $\times$ $G{=}4$). The 3B failure traces to 56\% zero-loss steps from all-incorrect groups, while the 4B's 50--68\% zero-loss stems from all-\emph{correct} groups (productive saturation).
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.85\textwidth]{fig2_diagnostics.png}
-    \caption{GRPO training diagnostics on arithmetic (Model E, $G{=}4$, 25 steps). Left: policy entropy collapses from 0.773 to 0.0002 ($>$3 orders of magnitude). Center: fraction of mixed-reward groups drops from 81\% to $<$4\% by step 4. Right: mean reward saturates near 1.0 by step 5. These metrics were logged only for the arithmetic task; comparable telemetry is unavailable for GSM8K runs.}
-    \label{fig:diagnostics}
-\end{figure}
-
-Group-composition analysis (Figure~\ref{fig:diagnostics}) confirms the mechanism: on an arithmetic task, 8B models progress from 81\% mixed groups to 96\%+ all-good groups by step 4, with policy entropy collapsing from 0.773 to 0.0002. By contrast, 3B models show 56\% zero-reward steps with up to 5 consecutive zero-signal steps. Our group-size ablation (Table~\ref{tab:group_ablation}) confirms that larger groups help substantially on the 8B model: $G{=}32$ achieves 54.7\% last-10 vs.\ $G{=}4$'s 23.8\%.
-
-Critically, we also ran $G{=}32$ on the 3B model. Zero-loss drops from 56\% ($G{=}4$) to 18\% ($G{=}32$), confirming improved exploration. However, last-10 accuracy rises only from 2.3\% to \textbf{5.0\%}---still near random and far below the 4B's 84.7\% at $G{=}4$. Even with adequate gradient signal ($>$80\% non-zero steps), the 3B model does not learn GSM8K-level reasoning via GRPO in our setup. Because the comparison crosses model families and is conducted in a short-budget regime (50 steps, no KL), we interpret this as a suggestive model-family/scale discontinuity rather than a confirmed universal capacity threshold.
-
-\subsection{Synthetic vs. Real Data Gap}
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.7\textwidth]{fig3_synthetic_vs_real.png}
-    \caption{Tool-calling reward over training steps for synthetic vs.\ real schemas (Model E, $G{=}8$, LoRA rank 32). Synthetic 5-tool tasks (upper curve) saturate above 0.8 reward within 5 steps. Real-world xlam-60k schemas (lower curve) plateau at 0.06--0.36 after 100 steps, a 3--8$\times$ difficulty gap. $y$-axis: mean binary reward; $x$-axis: GRPO training steps.}
-    \label{fig:synth_real}
-\end{figure}
-
-Synthetic 5-tool tasks saturate to reward $>$0.9 within 5 steps (Figure~\ref{fig:synth_real}), while xlam-60k yields 0.06--0.36 after 100 steps---a 3--8$\times$ gap consistent with known domain-transfer challenges in tool use. This is a \emph{data distribution} effect (curated vs.\ real schemas), distinct from the train-test \emph{metric} discrepancy observed for GSM8K (Section~4.4.2), which reflects decoding regime differences.
-
-\subsection{Browser-Control Smoke Test}
-
-We also connected the training loop to BrowserGym MiniWoB through a real
-Chromium/Playwright browser environment. This is reported only as systems
-evidence: the run verified that browser observations, action scripts, W\&B
-rollout tables, and hosted checkpointing can route through the same pipeline,
-but the one-step smoke run obtained 0.0 reward and no trainable datum groups.
-The archived rollout traces indicate the main failure mode: the text-only
-prompt asked the model to emit actions over BrowserGym element ids, but did not
-provide enough grounded DOM/accessibility information for reliable id
-selection, so the model guessed plausible ids. Table~\ref{tab:agentic_levels}
-therefore separates browser-control integration from browser-task competence.
-
-\begin{table}[htbp]
+The same table should not be read as a capability result: it is a
+training-environment measurement under the rollout parser. Its value is that it
+shows the finite-group mechanism in action. Increasing $G$ raises the chance
+that a prompt group contains at least one success and one failure; once all
+groups are all-correct or all-wrong, the relative advantage loses ordering
+information.
+
+\subsection{Held-Out GSM8K Does Not Establish Capability Gain}
+
+The cleanest capability check is a 200-example GSM8K held-out slice evaluated
+with identical greedy decoding for the base model and five GRPO checkpoints.
+The base model solves 164/200 examples (82.0\%). GRPO checkpoints average
+83.3\% with standard deviation 2.2 percentage points. A one-sample test against
+the base accuracy gives $p=0.26$, so the held-out lift is not statistically
+reliable.
+
+Because the base and GRPO checkpoints are evaluated on the same examples, a
+paired disagreement analysis is more informative than a headline mean. It asks
+how many examples are solved only by the base model versus only by the GRPO
+checkpoint.
+
+\begin{table}[t]
 \centering
-\caption{Agentic evidence levels in this study. BrowserGym/MiniWoB is an
-integration smoke test, not a learned browser-control result.}
-\label{tab:agentic_levels}
+\caption{Paired GSM8K disagreement audit on the same 200 held-out examples.
+Exact paired tests show example churn, not reliable improvement.}
+\label{tab:paired_gsm8k}
 \small
-\begin{tabular}{@{}p{3.0cm}p{3.8cm}p{5.4cm}@{}}
+\begin{tabular}{lccc}
 \toprule
-\textbf{Level} & \textbf{Evidence} & \textbf{Interpretation}\\
+GRPO seed & Base-only correct & GRPO-only correct & Exact paired $p$ \\
 \midrule
-Schema validity & SFT-warmed tool pipelines & GRPO refines structured-output format after a behavioral prior exists.\\
-Tool choice proxy & Custom tool-name / argument-key rewards & Useful proxy evidence, but not full execution correctness.\\
-Browser routing & BrowserGym MiniWoB smoke & Browser/environment integration works; reward remained 0.0.\\
-Environment success & Not established & Requires MiniWoB/WebArena suites with grounded observations and baselines.\\
+42  & 13 & 15 & 0.851 \\
+137 & 15 & 16 & 1.000 \\
+256 & 19 & 16 & 0.736 \\
+512 & 12 & 16 & 0.572 \\
+999 & 7  & 16 & 0.093 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Two-Phase Learning Progression}
+The conclusion is deliberately negative: GRPO changes which examples are
+solved, but this held-out slice does not support a broad math-capability gain.
+This negative result is the credibility anchor for the rest of the audit.
 
-On tool-calling tasks, GRPO exhibits two phases: format compliance (steps 1--20, 0\%$\rightarrow$14\%) followed by rapid reasoning improvement (steps 21--25, 14\%$\rightarrow$58\%). This pattern is most pronounced where format compliance is a distinct sub-task; on GSM8K the phases are less separable. We describe this as a \emph{domain-dependent} observation consistent with known curriculum effects, rather than a novel GRPO property.
+\subsection{Tool, Code, and Browser Evidence Is Proxy-Bound}
 
-Reward function limitations (coarseness, hacking risk) and safety considerations (incorrect execution, hallucinated capabilities) are discussed in the Supplementary Appendix.
+Tool-call training can improve structured output under a custom reward, but the
+positive rows measure parser-aligned behavior rather than executed tool
+competence. In one SFT-warmed tool pipeline, JSON validity rose from 0\% to
+92\%, correct tool-name reward reached 50\%, and argument-key presence reached
+42\%. These are useful schema-compliance signals, but not a standardized
+ToolBench/Gorilla-style held-out API evaluation.
 
-% ===========================================================================
-% Related Work
-% ===========================================================================
+HumanEval evidence is also limited. A 50-problem subset moved from 16/50 to
+20/50 pass@1, but the Fisher exact test is non-significant ($p=0.53$), and the
+full canonical HumanEval pass@$k$ harness was not completed in the central
+setup. The BrowserGym/MiniWoB run is even narrower: it verified browser
+observation/action/screenshot plumbing through the training pipeline, but a
+one-step smoke run received 0.0 reward and no trainable datum groups.
+
+\begin{table}[t]
+\centering
+\caption{Agentic evidence levels. The paper includes browser control as
+systems integration evidence, not learned browser-task competence.}
+\label{tab:agentic}
+\small
+\begin{tabularx}{\linewidth}{p{0.24\linewidth}Y Y}
+\toprule
+Level & Evidence & Interpretation \\
+\midrule
+Schema validity & SFT-warmed JSON/tool-call rewards & Structured-output behavior can be shaped after warm-starting \\
+Tool choice proxy & Tool-name and argument-key reward & Parser-aligned proxy, not full execution correctness \\
+Browser routing & BrowserGym/MiniWoB smoke & Browser pipeline integrated; reward remained 0.0 \\
+Environment success & Not established & Requires standardized BrowserGym/WebArena suites and baselines \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Algorithm Labels Are Not Treatment Definitions}
+
+The artifact contains PPO/GRPO/DPO comparisons, but they are not used as
+algorithm rankings. In LLM post-training, the treatment is the tuple
+\[
+T=(A,M,C,R,S,O,L,K,E),
+\]
+where $A$ is the nominal algorithm, $M$ the checkpoint/tokenizer, $C$ the prompt
+construction, $R$ the reward/parser, $S$ the sampler and group construction,
+$O$ the optimizer schedule, $L$ the loss mask and KL/reference handling, $K$
+the backend/kernel/precision stack, and $E$ the evaluator and checkpoint rule.
+Two runs with the same $A=\mathrm{GRPO}$ but different tuple elements are not
+replicates of one treatment. The paper therefore claims treatment
+under-identification, not framework superiority.
+
 \section{Related Work}
 
-\paragraph{GRPO and critic-free RL.}
-GRPO \citep{shao2024deepseekmath} achieved 88.2\% GSM8K with G=64. Contemporary critic-free methods include RLOO \citep{ahmadian2024backtobasics} (leave-one-out baseline), REINFORCE++ \citep{hu2025reinforceplusplus} (KL-shaped advantages), S-GRPO \citep{shen2025sgrpo} (group reweighting), and StepGRPO \citep{huang2025stepgrpo} (dense step rewards). Dr.\ GRPO \citep{deepseekr1} removes KL and adds entropy bonuses; DAPO \citep{yu2025dapo} adds asymmetric clipping and high-temperature sampling. Empirical comparison to these alternatives remains future work.
+DeepSeekMath introduced GRPO as a critic-free, group-relative alternative to
+PPO for mathematical reasoning \citep{shao2024deepseekmath,schulman2017proximal}.
+Our paper does not reproduce that recipe; it audits a GRPO-inspired runner and
+asks when its sampled groups contain usable reward contrast. Zero-variance
+prompt work and online difficulty filtering are the closest algorithmic
+relatives: they show that all-correct or all-incorrect groups are poor learning
+substrates and that intermediate-difficulty prompts carry more signal
+\citep{rlzvp2025,bae2025online}. Spurious-reward results motivate our evidence
+hierarchy by showing that reward improvements can amplify model-specific priors
+without establishing general capability \citep{shao2025spurious}.
 
-\paragraph{Preference-based and iterative self-training.}
-DPO \citep{rafailov2024dpo} and Step-DPO \citep{lai2024stepdpo} provide offline optimization; \citet{li2024common7b} showed 82.6\% GSM8K with SFT alone. Our SFT+GRPO complementarity echoes ReST \citep{gulcehre2023rest} and STaR \citep{zelikman2022star}, which warm-start RL from self-generated rationales; we note the parallel but have not controlled for the warm-starting effect.
+The stack-identifiability claim extends older deep-RL reproducibility findings:
+seed noise, implementation details, and statistical uncertainty can dominate
+nominal algorithm labels \citep{henderson2018deep,agarwal2021deep}. Tool-use
+benchmarks such as Gorilla and ToolLLM evaluate held-out API behavior
+\citep{patil2023gorilla,qin2024toolllm}; ToolRM/FC-RewardBench studies reward
+models for tool calling \citep{wang2025toolrm}. Our custom tool rewards are not
+equivalent to those standardized evaluations.
 
-\paragraph{Tool-use evaluation.}
-ToolLLM \citep{qin2024toolllm} and Gorilla \citep{patil2023gorilla} benchmark tool calling with held-out APIs; ToolRM \citep{wang2025toolrm} and FC-RewardBench \citep{chen2025fcrewardbench} provide reward-model benchmarks. Our custom rubric lacks this standardization.
+\section{Limitations}
 
-\paragraph{MoE training instability.}
-Switch Transformers \citep{fedus2022switch} and GLaM \citep{du2022glam} document expert load-balancing challenges during pretraining; Mixtral \citep{jiang2024mixtral} uses top-2 routing to mitigate instability. Our 2.43$\times$ variance amplification under GRPO extends this to \emph{post-training} RL. We hypothesize that GRPO's policy gradient interferes with the router's auxiliary load-balancing loss: the policy gradient pushes expert selection toward reward-maximizing routes, while the balancing loss pushes toward uniform utilization, creating optimization interference that amplifies step-to-step variance.
+\paragraph{Noncanonical runner.}
+The experiments use a GRPO-inspired group-relative policy-gradient runner. They
+should not be read as claims about canonical DeepSeekMath GRPO or every TRL,
+verl, OpenRLHF, or Tinker implementation.
 
-\paragraph{Curriculum and PEFT.}
-Curriculum strategies \citep{parashar2025curriculum, chen2025selfevolving} help sub-7B models overcome cold-start barriers, directly relevant to our 3B failure. QLoRA \citep{dettmers2023qlora} enables our single-GPU training; newer methods (QR-Adaptor \citep{zhou2025qradaptor}, LoTA-QAF \citep{chen2025lotaqaf}) offer alternative efficiency frontiers.
+\paragraph{Short horizons and limited replication.}
+Several results are single-run, short-budget, or interrupted. Group-size and
+architecture observations are design probes. They motivate the reward-contrast
+mechanism but do not establish universal scaling laws or capacity thresholds.
 
-% ===========================================================================
-% Conclusion
-% ===========================================================================
+\paragraph{Proxy rewards.}
+Tool-use scores are parser/schema rewards unless execution-level tool success
+is measured. BrowserGym/MiniWoB evidence is integration-only. HumanEval evidence
+is subset-bound. Online reward curves are dynamics evidence, not capability.
+
+\paragraph{Public benchmark contamination and missing baselines.}
+GSM8K and HumanEval are public and may appear in pretraining data. The clean
+GSM8K comparison is therefore a narrow same-slice control, not proof of novel
+reasoning. We do not include full matched PPO, REINFORCE, DPO, grammar-constrained
+decoding, or supervised-only baselines for every setting.
+
+\paragraph{Diagnostics, not predictors.}
+ZVF/GU are useful alarms for cold-start collapse and saturation. They are not
+claimed to be calibrated predictors of final capability, and the artifact's
+lagged analysis does not justify that stronger claim.
+
 \section{Conclusion}
 
-We applied GRPO to three agentic domains at low budget (25 runs). The clearest result is that SFT+GRPO teaches tool-calling format compliance that SFT alone does not produce. Beyond this, our diagnostic analysis yields a unifying observation: \emph{GRPO produces learning signal when the model can generate within-group reward variance}. When all completions score identically (all wrong for 3B, all correct for saturated 4B), gradients vanish and learning stalls. This connects to a known property of REINFORCE-family estimators: variance of the gradient estimate depends on reward diversity within the batch \citep{williams1992simple}. GRPO's group-relative normalization makes this dependence explicit---group saturation is the observable signature of gradient collapse. This pattern explains the model-family/scale discontinuity, the group-size effect, and the synthetic--real gap. We summarize one primary result and several secondary observations:
+The strongest conclusion is methodological: GRPO-style critic-free RL should be
+audited for reward contrast before reward curves are interpreted. In this
+corpus, rising online reward sometimes reflects schema compliance, parser
+alignment, or saturation, while the clean held-out GSM8K control remains
+non-significant. The practical contribution is a reporting discipline: log
+ZVF/GU, separate training reward from held-out capability, and define the full
+post-training stack before making algorithm-level comparisons.
 
-\begin{enumerate}
-    \item \textbf{Tool calling} (single pipeline, $N{=}1$): SFT+GRPO raises strict JSON validity from 0\% to 92\% on one custom pipeline. \emph{This measures learned format compliance under unconstrained decoding; grammar-constrained decoding is a practical alternative not compared here.}
-    \item \textbf{Model-family/scale discontinuity} (suggestive): Sharp break between 3B--4B traced to zero-reward group saturation; replicated across 4 seeds on 4B (84.7\%$\pm$12.0\%). \emph{$G{=}32$ on 3B reduces zero-loss from 56\% to 18\% but yields only 5.0\%, suggesting the discontinuity is not purely an exploration artifact. However, because the comparison crosses model families, we interpret this as suggestive rather than as a confirmed universal capacity threshold.}
-    \item \textbf{MoE routing volatility} (single-run observation): 2.43$\times$ higher step-to-step variance vs.\ dense models in one MoE run. \emph{Requires replication before drawing architecture-level conclusions.}
-    \item \textbf{SFT+GRPO complementarity} (pilot observation, $N{=}1$ per pipeline): In two configurations, SFT-initialized GRPO produced the strongest results. \emph{Lacks matched-compute and reverse-order controls; consistent with known warm-starting effects (ReST, STaR).}
-    \item \textbf{Group-size scaling} (seed-fixed ablation, $N{=}1$): For one 8B seed, $G{=}32$ achieves 54.7\% last-10 vs.\ $G{=}4$'s 23.8\%, with zero-reward steps dropping from 20\% to 0\%.
-    \item \textbf{Cross-seed stability} (methodological): GSM8K reward SD = 3.3\% across 5 seeds (8B); 4B SD = 12.0\% across 4 seeds.
-    \item \textbf{Confirmatory observations:} Two-phase learning (format before reasoning), synthetic--real gap (3--8$\times$), and LoRA rank--speed tradeoff are consistent with prior work and documented in the Supplementary Appendix.
-\end{enumerate}
-
-\paragraph{Limitations.} This paper is exploratory; all conclusions are specific to our low-budget QLoRA/LoRA regime and should not be generalized to GRPO broadly. The strongest positive result is learned \emph{schema validity} on a single custom pipeline ($N{=}1$)---not semantic tool competence, argument correctness, browser-control competence, or end-to-end task success. Grammar-constrained decoding is a practical alternative not compared. Transfer benchmarks are null (GSM8K $p{=}0.26$; HumanEval $p{=}0.53$), and the BrowserGym smoke test is integration evidence only because it scored 0.0 reward. The model-family/scale discontinuity crosses two families and may reflect architecture rather than capacity. Single-run results (MoE, group ablation) are point estimates. No reward ablation, no PPO/REINFORCE baselines, no KL/entropy logging.
-
-\medskip
-
-\textbf{Supplementary Material.} Additional experimental details, complete run registry (all 25 runs), training hyperparameters, failure case analysis, and qualitative examples are provided in the Supplementary Appendix.
-
-\paragraph{Reproducibility.} Training scripts, evaluation harnesses, and logs are available at \url{https://anonymous.4open.science/r/grpo-agentic-anonymous}. Tool-calling prompt templates and scenario definitions are documented in the Supplementary Appendix.
-
-% ===========================================================================
-% References
-% ===========================================================================
 \bibliographystyle{plainnat}
 \bibliography{references}
+
+\clearpage
+\section*{NeurIPS Paper Checklist}
+\begin{enumerate}
+\item \textbf{Claims.} The abstract and introduction state that this is a
+diagnostic audit, not a broad GRPO capability claim.
+\item \textbf{Limitations.} Section 6 lists runner scope, short horizons,
+proxy rewards, public benchmark contamination, missing baselines, and diagnostic
+scope.
+\item \textbf{Reproducibility.} The artifact includes code, result ledgers, and
+checksums. Managed-backend details that cannot be fully reproduced are treated
+as part of the treatment boundary.
+\item \textbf{Statistics.} The main held-out claim reports both the
+non-significant aggregate GSM8K comparison and paired disagreement tests.
+\item \textbf{Datasets.} GSM8K and HumanEval are public benchmarks; tool and
+browser tasks are custom/proxy setups and are labeled as such.
+\item \textbf{Ethics.} The paper is an audit of post-training methodology. It
+does not release a deployed tool-use or browser-control system and does not
+claim end-to-end autonomous competence.
+\end{enumerate}
 
 \end{document}

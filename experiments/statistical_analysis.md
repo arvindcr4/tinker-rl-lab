@@ -67,7 +67,7 @@ Every comparison in the paper is reported with (i) 95 % bootstrap CI on the effe
 
 ## Table 3 — GSM8K Scaling (Bonferroni across k = 7)
 
-| Model | Baseline | Post-RL | Δ | 95 % CI(Δ) | Cohen's *d* | *d* 95 % CI | p (raw) | p (Bonf.) |
+| Model | Baseline | Post-training score | Δ | 95 % CI(Δ) | Cohen's *d* | *d* 95 % CI | p (raw) | p (Bonf.) |
 |:------|--------:|--------:|---:|:-----------|------------:|:------------|--------:|----------:|
 | Qwen3-0.6B | 59.6 | 73.5 | +13.9 | [11.9, 15.9] | 5.18 | [1.85, 8.51] | <0.001 | 0.002 |
 | Llama-3.2-1B | 44.4 | 56.8 | +12.4 | [10.2, 15.0] | 3.96 | [1.35, 6.57] | <0.001 | 0.006 |

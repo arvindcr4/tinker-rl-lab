@@ -43,6 +43,7 @@
 
 \newcommand{\projecttitle}{When Does a GRPO-Like Group-Relative RL Loop Have a Learning Signal?}
 \newcommand{\projectsubtitle}{A Diagnostic Audit of Reward Diversity, Evidence Calibration, and Stack-Conditioned LLM Post-Training}
+\newcommand{\ours}{\textsc{TinkerRL Audit}}
 \newcommand{\zvf}{\mathrm{ZVF}}
 \newcommand{\gu}{\mathrm{GU}}
 \newcommand{\fitdiagram}[1]{\resizebox{\textwidth}{!}{\input{#1}}}
@@ -590,7 +591,7 @@ Cookbook runs & Training objective and plumbing & Whether SFT, preference learni
 Team tool/code/math runs & Independent task implementation & Task-specific score under separate notebooks and checkpoints & Tests whether the same idea transfers outside the project lead's Tinker harness.\\
 Tinker GSM8K scaling & Model family, size, and instruction tuning & Peak reward, last-10 reward, interruption status, ZVF/GU where available & Separates base-model prior from RL update quality.\\
 Structural ceiling & Task, family, size, group, learning rate, decoder constraint & Completed 50-step reward hierarchy and gradient-utilization behavior & Provides the strongest internal evidence for where GRPO has usable signal.\\
-Stack baselines & Algorithm, backend, and implementation path & Same-task last-10 reward or replicated TRL accuracy & Prevents attributing every effect to GRPO when hidden stack variables or algorithm choice dominate.\\
+Stack baselines & Algorithm, backend, and implementation path & Same-task last-10 reward or replicated TRL verifier score & Prevents attributing every effect to GRPO when hidden stack variables or algorithm choice dominate.\\
 Held-out GSM8K & Final checkpoint versus base control & Greedy accuracy on 200 test examples per seed & Tests whether training-reward improvement survives outside the rollout distribution.\\
 \bottomrule
 \end{tabularx}
@@ -601,7 +602,7 @@ This readout logic makes failed experiments part of the result. The strict tool-
 \section{Tinker Cookbook Experiments}
 \label{sec:tinker-cookbook}
 
-The earliest experiments were deliberately simple because their purpose was stack validation rather than final benchmarking. Arithmetic RL tested the smallest possible closed-loop setting: a prompt, a model response, a deterministic reward, and a policy update. Reaching perfect accuracy in this setting showed that the reward plumbing, sampler weights, LoRA update path, and logging loop were functional before the team spent budget on larger models.
+The earliest experiments were deliberately simple because their purpose was stack validation rather than final benchmarking. Arithmetic RL tested the smallest possible closed-loop setting: a prompt, a model response, a deterministic reward, and a policy update. Reaching a perfect verifier score in this setting showed that the reward plumbing, sampler weights, LoRA update path, and logging loop were functional before the team spent budget on larger models.
 
 The supervised chat experiment served a different role. It checked whether the fine-tuning path could change conversational behavior without relying on a sparse reward signal. The preference-shorter recipe then tested a style-control objective: the desired behavior was not mathematical correctness, but a preference for shorter acceptable responses. Together, these experiments separated three mechanisms that are easy to conflate in the final system: imitation through SFT, preference shaping, and reinforcement learning against a verifier.
 
@@ -1074,7 +1075,7 @@ Experiment block & Representative models & Method & Task & Status & Mean ZVF & I
 Experiment block & Representative models & Method & Task & Status & Mean ZVF & Interpretation\\
 \midrule
 \endhead
-Arithmetic RL & Llama-3.2-1B & GRPO & Arithmetic & Complete & --- & Validated the basic RL loop and reached perfect arithmetic accuracy.\\
+Arithmetic RL & Llama-3.2-1B & GRPO & Arithmetic & Complete & --- & Validated the basic RL loop and reached a perfect toy-arithmetic verifier score.\\
 Chat supervised learning & Llama / Qwen small models & SFT & Chat & Complete & --- & Verified supervised fine-tuning pipeline.\\
 Preference shorter & Small instruct models & Preference optimization & Style control & Complete & --- & Demonstrated response-style shaping.\\
 Off-policy distillation & Teacher to student setup & SFT and distillation & Reasoning transfer & Complete & --- & Established distillation as a strong non-RL baseline.\\
@@ -1160,6 +1161,37 @@ Dissertation benchmark manifest & \path{reports/final/thesis_benchmarks/expanded
 \end{tabularx}
 \end{table}
 
+
+% --------------------------------------------------------------------------=
+% Claims we do not make (from no-go list)
+% This section explicitly enumerates claims we explicitly avoid making.
+% --------------------------------------------------------------------------=
+
+\section*{Claims We Do Not Make}
+
+We do not claim that our runner is a faithful implementation of canonical GRPO
+or that the results constitute an algorithm leaderboard: the experiments measure
+a particular stack-conditioned, group-relative policy-gradient loop with specific
+choices about masking, KL/reference handling, sampling, LoRA, optimization,
+backend, and evaluation.  We do not claim that GRPO broadly improves reasoning,
+alignment, coding, tool use, browser control, or general LLM capability, nor
+that training reward or post-selected high-reward checkpoints establish causal
+held-out gains; the only clean held-out capability check is GSM8K, where the
+82.0\% to 83.3\% lift is not statistically significant.  We do not treat
+MATH-500 or HumanEval reward-environment probes, boxed-answer rewards,
+restricted HumanEval sandboxes, JSON-schema tool rewards, or BrowserGym smoke
+tests as evidence of end-to-end generalization, execution success, or agentic
+competence.  We do not claim universal PPO/GRPO/DPO, Tinker/TRL, dense/MoE,
+base/instruct, frontier-scale, group-size, or scaling-law rankings, because
+many comparisons are single-seed, partial, post-selected, artifact-sensitive,
+closed-source, or confounded by stack details.  We do not claim that ZVF/GU
+are causal or calibrated predictors of final performance, only that they are
+useful triage diagnostics for cold-start collapse, saturation, and within-group
+reward contrast.  We do not claim that verifiable rewards eliminate reward
+hacking, that reward-stability proxies are direct KL measurements, that short
+30-step runs characterize asymptotic behavior, or that these verifiable-reward
+LoRA experiments extrapolate to human-preference RLHF, safety, truthfulness,
+real tool execution, or open-ended deployment.
 
 \section*{Acknowledgments}
 Artificial intelligence was both the topic of this manuscript and a limited tool in its preparation, which we acknowledge in the spirit of transparency and mild irony.

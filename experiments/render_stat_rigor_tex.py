@@ -180,12 +180,12 @@ def render(payload: Dict) -> str:
     lines.append("% --- Table 3 (updated): GSM8K scaling with effect sizes ---------------")
     lines.append("\\begin{table}[htbp]")
     lines.append("\\centering")
-    lines.append(f"\\caption{{\\textbf{{GSM8K Results (Table~3, rigor pass).}} Post-RL accuracy vs.\\ baseline with bootstrap 95\\,\\% CI on $\\Delta$, Cohen's $d$ for the paired effect, and Bonferroni-corrected one-sample $t$-test $p$-values across the $k={len(t3)}$ model pairs.}}")
+    lines.append(f"\\caption{{\\textbf{{GSM8K mixed-protocol summary (Table~3, rigor pass).}} Post-training harness score vs.\\ baseline, not online training reward, with bootstrap 95\\,\\% CI on $\\Delta$, Cohen's $d$ for the paired effect, and Bonferroni-corrected one-sample $t$-test $p$-values across the $k={len(t3)}$ model pairs.}}")
     lines.append("\\label{tab:results_gsm8k_stats}")
     lines.append("\\small")
     lines.append("\\begin{tabular}{@{}l r r l l c l c c@{}}")
     lines.append("\\toprule")
-    lines.append("\\textbf{Model} & \\textbf{Baseline} & \\textbf{Post-RL} & \\textbf{$\\Delta$} & \\textbf{$\\Delta$ 95\\% CI} & \\textbf{Cohen's $d$} & \\textbf{$d$ 95\\% CI} & \\textbf{$p$ (raw)} & \\textbf{$p$ (Bonf.)} \\\\")
+    lines.append("\\textbf{Model} & \\textbf{Baseline} & \\textbf{Post-training score} & \\textbf{$\\Delta$} & \\textbf{$\\Delta$ 95\\% CI} & \\textbf{Cohen's $d$} & \\textbf{$d$ 95\\% CI} & \\textbf{$p$ (raw)} & \\textbf{$p$ (Bonf.)} \\\\")
     lines.append("\\midrule")
     for r in t3:
         lines.append(
@@ -360,7 +360,7 @@ def render(payload: Dict) -> str:
     lines.append("\\paragraph{TRL-GRPO cross-seed baseline.}")
     lines.append(
         f"The TRL-GRPO reference (Qwen2.5-0.5B, 5 seeds, GSM8K, 125 steps, NVIDIA~L4)"
-        f" has mean accuracy $\\bar{{x}} = {trl['mean']:.3f}$"
+        f" has mean verifier score $\\bar{{x}} = {trl['mean']:.3f}$"
         f" (95\\,\\% bootstrap CI {fmt_ci(trl['ci95'])},"
         f" SD $= {trl['sd']:.3f}$, CV $= {trl['cv']:.3f}$)."
         f" A one-sample $t$-test against $\\mu_0 = 0.5$ gives"

@@ -1,0 +1,245 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{14}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[{ACM}(2020)]%
+        {acm2020badges}
+\bibfield{author}{\bibinfo{person}{{ACM}}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \bibinfo{title}{Artifact Review and Badging -- Version 1.1}.
+\newblock
+\urldef\tempurl%
+\url{https://www.acm.org/publications/policies/artifact-review-and-badging-current}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Accessed: 2026-04-13}.
+
+
+\bibitem[Agarwal et~al\mbox{.}(2021)]%
+        {agarwal2021deep}
+\bibfield{author}{\bibinfo{person}{Rishabh Agarwal}, \bibinfo{person}{Max
+  Schwarzer}, \bibinfo{person}{Pablo~Samuel Castro}, \bibinfo{person}{Aaron~C.
+  Courville}, {and} \bibinfo{person}{Marc Bellemare}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Deep Reinforcement Learning at the Edge of the
+  Statistical Precipice}. In \bibinfo{booktitle}{\emph{Advances in Neural
+  Information Processing Systems}}, Vol.~\bibinfo{volume}{34}.
+  \bibinfo{pages}{29304--29320}.
+\newblock
+
+
+\bibitem[Colas et~al\mbox{.}(2019)]%
+        {colas2019hitchhiker}
+\bibfield{author}{\bibinfo{person}{C{\'e}dric Colas}, \bibinfo{person}{Olivier
+  Sigaud}, {and} \bibinfo{person}{Pierre-Yves Oudeyer}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{A Hitchhiker's Guide to Statistical Comparisons of
+  Reinforcement Learning Algorithms}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint}} (\bibinfo{year}{2019}).
+\newblock
+\href{https://doi.org/10.48550/arXiv.1904.06979}{doi:\nolinkurl{10.48550/arXiv.1904.06979}}
+\newblock
+\shownote{arXiv:1904.06979}.
+
+
+\bibitem[Henderson et~al\mbox{.}(2018)]%
+        {henderson2018deep}
+\bibfield{author}{\bibinfo{person}{Peter Henderson}, \bibinfo{person}{Riashat
+  Islam}, \bibinfo{person}{Philip Bachman}, \bibinfo{person}{Joelle Pineau},
+  \bibinfo{person}{Doina Precup}, {and} \bibinfo{person}{David Meger}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Deep Reinforcement Learning That Matters}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the AAAI Conference on Artificial
+  Intelligence}} (New Orleans, LA, USA), Vol.~\bibinfo{volume}{32}.
+\newblock
+\href{https://doi.org/10.1609/aaai.v32i1.11694}{doi:\nolinkurl{10.1609/aaai.v32i1.11694}}
+
+
+\bibitem[Hu et~al\mbox{.}(2022)]%
+        {hu2022lora}
+\bibfield{author}{\bibinfo{person}{Edward~J. Hu}, \bibinfo{person}{Yelong
+  Shen}, \bibinfo{person}{Phillip Wallis}, \bibinfo{person}{Zeyuan Allen-Zhu},
+  \bibinfo{person}{Yuanzhi Li}, \bibinfo{person}{Shean Wang},
+  \bibinfo{person}{Lu Wang}, {and} \bibinfo{person}{Weizhu Chen}.}
+  \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{{LoRA}: Low-Rank Adaptation of Large Language
+  Models}. In \bibinfo{booktitle}{\emph{International Conference on Learning
+  Representations}}.
+\newblock
+\urldef\tempurl%
+\url{https://openreview.net/forum?id=nZeVKeeFYf9}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Le et~al\mbox{.}(2026)]%
+        {rlzvp2025}
+\bibfield{author}{\bibinfo{person}{Thanh-Long~V. Le}, \bibinfo{person}{Myeongho
+  Jeon}, \bibinfo{person}{Kim Vu}, \bibinfo{person}{Viet~Dac Lai}, {and}
+  \bibinfo{person}{Eunho Yang}.} \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{No Prompt Left Behind: Exploiting Zero-Variance
+  Prompts in {LLM} Reinforcement Learning via Entropy-Guided Advantage
+  Shaping}. In \bibinfo{booktitle}{\emph{International Conference on Learning
+  Representations}}.
+\newblock
+\urldef\tempurl%
+\url{https://openreview.net/forum?id=kiXFIESZKv}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{ICLR 2026 poster; arXiv:2509.21880}.
+
+
+\bibitem[Leeser(2026)]%
+        {leeser2026artifact}
+\bibfield{author}{\bibinfo{person}{Miriam Leeser}.}
+  \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{Artifact Evaluation in the {FPGA} Community and in
+  {ACM TRETS}}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Reconfigurable Technology
+  and Systems}} (\bibinfo{year}{2026}).
+\newblock
+\href{https://doi.org/10.1145/3802561}{doi:\nolinkurl{10.1145/3802561}}
+
+
+\bibitem[Lynnerup et~al\mbox{.}(2019)]%
+        {lynnerup2019survey}
+\bibfield{author}{\bibinfo{person}{Nicolai~A. Lynnerup}, \bibinfo{person}{Laura
+  Nolling}, \bibinfo{person}{Rasmus Hasle}, {and} \bibinfo{person}{John
+  Hallam}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{A Survey on Reproducibility by Evaluating Deep
+  Reinforcement Learning Algorithms on Real-World Robots}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint}} (\bibinfo{year}{2019}).
+\newblock
+\href{https://doi.org/10.48550/arXiv.1909.03772}{doi:\nolinkurl{10.48550/arXiv.1909.03772}}
+\newblock
+\shownote{arXiv:1909.03772}.
+
+
+\bibitem[Ouyang et~al\mbox{.}(2022)]%
+        {ouyang2022training}
+\bibfield{author}{\bibinfo{person}{Long Ouyang}, \bibinfo{person}{Jeffrey Wu},
+  \bibinfo{person}{Xu Jiang}, \bibinfo{person}{Diogo Almeida},
+  \bibinfo{person}{Carroll Wainwright}, \bibinfo{person}{Pamela Mishkin},
+  \bibinfo{person}{Chong Zhang}, \bibinfo{person}{Sandhini Agarwal},
+  \bibinfo{person}{Katarina Slama}, \bibinfo{person}{Alex Ray},
+  {et~al\mbox{.}}} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Training Language Models to Follow Instructions
+  with Human Feedback}.
+\newblock \bibinfo{journal}{\emph{Advances in Neural Information Processing
+  Systems}}  \bibinfo{volume}{35} (\bibinfo{year}{2022}),
+  \bibinfo{pages}{27730--27744}.
+\newblock
+
+
+\bibitem[Pineau et~al\mbox{.}(2021)]%
+        {pineau2020improving}
+\bibfield{author}{\bibinfo{person}{Joelle Pineau}, \bibinfo{person}{Philippe
+  Vincent-Lamarre}, \bibinfo{person}{Koustuv Sinha}, \bibinfo{person}{Vincent
+  Larivi{\`e}re}, \bibinfo{person}{Alina Beygelzimer},
+  \bibinfo{person}{Florence d'Alch{\'e} Buc}, \bibinfo{person}{Emily Fox},
+  {and} \bibinfo{person}{Hugo Larochelle}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Improving Reproducibility in Machine Learning
+  Research: A Report from the {NeurIPS} 2019 Reproducibility Program}.
+\newblock \bibinfo{journal}{\emph{Journal of Machine Learning Research}}
+  \bibinfo{volume}{22}, \bibinfo{number}{164} (\bibinfo{year}{2021}),
+  \bibinfo{pages}{1--20}.
+\newblock
+
+
+\bibitem[Rafailov et~al\mbox{.}(2024)]%
+        {rafailov2024direct}
+\bibfield{author}{\bibinfo{person}{Rafael Rafailov}, \bibinfo{person}{Archit
+  Sharma}, \bibinfo{person}{Eric Mitchell}, \bibinfo{person}{Stefano Ermon},
+  \bibinfo{person}{Christopher~D. Manning}, {and} \bibinfo{person}{Chelsea
+  Finn}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Direct Preference Optimization: Your Language Model
+  Is Secretly a Reward Model}. In \bibinfo{booktitle}{\emph{Advances in Neural
+  Information Processing Systems}}, Vol.~\bibinfo{volume}{36}.
+\newblock
+\urldef\tempurl%
+\url{https://proceedings.neurips.cc/paper_files/paper/2023/hash/a85b405ed65c6477a4fe8f#}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Schulman et~al\mbox{.}(2017)]%
+        {schulman2017proximal}
+\bibfield{author}{\bibinfo{person}{John Schulman}, \bibinfo{person}{Filip
+  Wolski}, \bibinfo{person}{Prafulla Dhariwal}, \bibinfo{person}{Alec Radford},
+  {and} \bibinfo{person}{Oleg Klimov}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Proximal Policy Optimization Algorithms}.
+\newblock
+\urldef\tempurl%
+\url{https://arxiv.org/abs/1707.06347}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{arXiv:1707.06347}.
+
+
+\bibitem[Shao et~al\mbox{.}(2024)]%
+        {shao2024deepseekmath}
+\bibfield{author}{\bibinfo{person}{Zhihong Shao}, \bibinfo{person}{Peiyi Wang},
+  \bibinfo{person}{Qihao Zhu}, \bibinfo{person}{Runxin Xu},
+  \bibinfo{person}{Junxiao Song}, \bibinfo{person}{Mingchuan Zhang},
+  \bibinfo{person}{Y.K. Li}, \bibinfo{person}{Y. Wu}, {and}
+  \bibinfo{person}{Daya Guo}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{DeepSeekMath}: Pushing the Limits of Mathematical
+  Reasoning in Open Language Models}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint}} (\bibinfo{year}{2024}).
+\newblock
+\href{https://doi.org/10.48550/arXiv.2402.03300}{doi:\nolinkurl{10.48550/arXiv.2402.03300}}
+\newblock
+\shownote{arXiv:2402.03300}.
+
+
+\bibitem[Yamerenko et~al\mbox{.}(2025)]%
+        {yamerenko2025generating}
+\bibfield{author}{\bibinfo{person}{Grigory Yamerenko}, \bibinfo{person}{Sinan
+  Ibrahim}, \bibinfo{person}{Francisco Moreno-Mora}, \bibinfo{person}{Pavel
+  Osinenko}, {and} \bibinfo{person}{Stefan Streif}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Generating Informative Benchmarks for Reinforcement
+  Learning}.
+\newblock \bibinfo{journal}{\emph{IEEE Control Systems Letters}}
+  (\bibinfo{year}{2025}).
+\newblock
+\href{https://doi.org/10.1109/LCSYS.2025.3573943}{doi:\nolinkurl{10.1109/LCSYS.2025.3573943}}
+
+
+\end{thebibliography}

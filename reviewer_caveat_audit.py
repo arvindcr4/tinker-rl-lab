@@ -79,9 +79,9 @@ need(
     "Report should explicitly state what code/prompts/evaluation assets are or are not released for replication.",
 )
 need(
-    "near-perfect accuracy" not in PAPER,
+    "near-perfect verifier score" not in PAPER,
     "paper.near_perfect_overclaim",
-    "Main paper should not describe GSM8K training-set reward as near-perfect accuracy.",
+    "Main paper should not describe GSM8K training-set reward as near-perfect verifier score.",
 )
 need(
     "confirming the threshold" not in REPORT and "confirms the threshold" not in REPORT,

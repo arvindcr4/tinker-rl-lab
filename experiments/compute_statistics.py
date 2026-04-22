@@ -842,7 +842,7 @@ def render_markdown(
     # Table 3
     lines.append(f"## Table 3 — GSM8K Scaling (Bonferroni across k = {len(GSM8K_SCALING)})")
     lines.append("")
-    lines.append("| Model | Baseline | Post-RL | Δ | 95 % CI(Δ) | Cohen's *d* | *d* 95 % CI | p (raw) | p (Bonf.) |")
+    lines.append("| Model | Baseline | Post-training score | Δ | 95 % CI(Δ) | Cohen's *d* | *d* 95 % CI | p (raw) | p (Bonf.) |")
     lines.append("|:------|--------:|--------:|---:|:-----------|------------:|:------------|--------:|----------:|")
     for r in t3_rows:
         lines.append(

@@ -51,3 +51,34 @@ needs the full treatment definition: model family, backend, reward parser,
 sampler, optimizer, KL/reference handling, LoRA configuration, checkpoint
 selection, and held-out evaluation.  Without those controls, ``PPO versus
 GRPO'' is not an interpretable scientific claim.
+
+% --------------------------------------------------------------------------=
+% Claims we do not make (from no-go list)
+% This section explicitly enumerates claims we explicitly avoid making.
+% --------------------------------------------------------------------------=
+
+\section*{Claims We Do Not Make}
+
+We do not claim that our runner is a faithful implementation of canonical GRPO
+or that the results constitute an algorithm leaderboard: the experiments measure
+a particular stack-conditioned, group-relative policy-gradient loop with specific
+choices about masking, KL/reference handling, sampling, LoRA, optimization,
+backend, and evaluation.  We do not claim that GRPO broadly improves reasoning,
+alignment, coding, tool use, browser control, or general LLM capability, nor
+that training reward or post-selected high-reward checkpoints establish causal
+held-out gains; the only clean held-out capability check is GSM8K, where the
+82.0\% to 83.3\% lift is not statistically significant.  We do not treat
+MATH-500 or HumanEval reward-environment probes, boxed-answer rewards,
+restricted HumanEval sandboxes, JSON-schema tool rewards, or BrowserGym smoke
+tests as evidence of end-to-end generalization, execution success, or agentic
+competence.  We do not claim universal PPO/GRPO/DPO, Tinker/TRL, dense/MoE,
+base/instruct, frontier-scale, group-size, or scaling-law rankings, because
+many comparisons are single-seed, partial, post-selected, artifact-sensitive,
+closed-source, or confounded by stack details.  We do not claim that ZVF/GU
+are causal or calibrated predictors of final performance, only that they are
+useful triage diagnostics for cold-start collapse, saturation, and within-group
+reward contrast.  We do not claim that verifiable rewards eliminate reward
+hacking, that reward-stability proxies are direct KL measurements, that short
+30-step runs characterize asymptotic behavior, or that these verifiable-reward
+LoRA experiments extrapolate to human-preference RLHF, safety, truthfulness,
+real tool execution, or open-ended deployment.

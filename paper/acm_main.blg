@@ -1,0 +1,86 @@
+This is BibTeX, Version 0.99e (TeX Live 2026)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: acm_main.aux
+The style file: ACM-Reference-Format.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Database file #1: references.bib
+Warning--I didn't find a database entry for "gao2023scaling"
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 9000 items from 6000.
+Reallocated glb_str_ptr (elt_size=4) to 20 items from 10.
+Reallocated global_strs (elt_size=200001) to 20 items from 10.
+Reallocated glb_str_end (elt_size=4) to 20 items from 10.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Warning--empty publisher in agarwal2021deep
+Warning--empty address in agarwal2021deep
+Warning--no number and no volume in colas2019hitchhiker
+Warning--page numbers missing in both pages and numpages fields in colas2019hitchhiker
+Warning--can't use both volume and number fields in henderson2018deep
+Warning--empty publisher in henderson2018deep
+Warning--empty address in henderson2018deep
+Warning--page numbers missing in both pages and numpages fields in henderson2018deep
+Warning--empty publisher in hu2022lora
+Warning--empty address in hu2022lora
+Warning--page numbers missing in both pages and numpages fields in hu2022lora
+Warning--empty publisher in rlzvp2025
+Warning--empty address in rlzvp2025
+Warning--page numbers missing in both pages and numpages fields in rlzvp2025
+Warning--no number and no volume in leeser2026artifact
+Warning--page numbers missing in both pages and numpages fields in leeser2026artifact
+Warning--no number and no volume in lynnerup2019survey
+Warning--page numbers missing in both pages and numpages fields in lynnerup2019survey
+Warning--empty publisher in rafailov2024direct
+Warning--empty address in rafailov2024direct
+Warning--page numbers missing in both pages and numpages fields in rafailov2024direct
+Warning--empty booktitle in schulman2017proximal
+Warning--empty publisher in schulman2017proximal
+Warning--empty address in schulman2017proximal
+Warning--page numbers missing in both pages and numpages fields in schulman2017proximal
+Warning--no number and no volume in shao2024deepseekmath
+Warning--page numbers missing in both pages and numpages fields in shao2024deepseekmath
+Warning--no number and no volume in yamerenko2025generating
+Warning--page numbers missing in both pages and numpages fields in yamerenko2025generating
+You've used 14 entries,
+            6273 wiz_defined-function locations,
+            1601 strings with 21672 characters,
+and the built_in function-call counts, 16603 in all, are:
+= -- 2050
+> -- 718
+< -- 0
++ -- 249
+- -- 239
+* -- 1336
+:= -- 1652
+add.period$ -- 70
+call.type$ -- 14
+change.case$ -- 132
+chr.to.int$ -- 14
+cite$ -- 43
+duplicate$ -- 1354
+empty$ -- 968
+format.name$ -- 287
+if$ -- 4014
+int.to.chr$ -- 2
+int.to.str$ -- 1
+missing$ -- 58
+newline$ -- 182
+num.names$ -- 98
+pop$ -- 638
+preamble$ -- 1
+purify$ -- 244
+quote$ -- 0
+skip$ -- 452
+stack$ -- 0
+substring$ -- 963
+swap$ -- 89
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 322
+warning$ -- 29
+while$ -- 59
+width$ -- 0
+write$ -- 325
+(There were 30 warnings)

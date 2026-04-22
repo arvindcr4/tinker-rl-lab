@@ -253,6 +253,7 @@ REPLACEMENTS: list[tuple[str, str, str]] = [
     (r"PES2PGE\d{2}DS\d{3}", "ANONYMIZED-ID", "PES student ID redacted"),
     # Emails (all team/supervisor addresses seen in the tree).
     (r"arvindcr4@gmail\.com", "anonymous@neurips.cc", "email redacted"),
+    (r"anonymous@gmail\.com", "anonymous@neurips.cc", "generic anonymous email normalized"),
     (r"sandhya\.jeyaraj2014@gmail\.com", "anonymous@neurips.cc", "email redacted"),
     (r"madhukumara1993@gmail\.com", "anonymous@neurips.cc", "email redacted"),
     (r"gmd\.rafi\.2024@gmail\.com", "anonymous@neurips.cc", "email redacted"),

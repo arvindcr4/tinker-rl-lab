@@ -172,6 +172,10 @@
 %   \label{fig:teaser}
 % \end{teaserfigure}
 
+\begin{abstract}
+This project is a systems-oriented empirical audit of critic-free, group-relative reinforcement learning. We investigate the conditions under which post-training receives a non-zero advantage signal, and demonstrate when in-domain training-reward gains fail to transfer to held-out semantic capability. Using a variant inspired by Group Relative Policy Optimization (GRPO), we evaluate tool-call emission, mathematical reasoning, and code generation across 32 controlled ablations. Our findings yield three primary contributions. First, we isolate \textit{reward contrast} as the fundamental bottleneck: a group-relative gradient requires mixed-reward sampling, $P(\text{informative group}) = 1 - p_0^{G} - (1-p_0)^{G}$. Second, we establish a \textit{reward-vs-capability separation}: structured-output format compliance (e.g., JSON schemas) improves sharply via RL, but proxy format rewards easily trigger length-bias and parser exploits without conferring semantic generalization (held-out GSM8K lift was statistically insignificant, $p=0.26$). Finally, we demonstrate \textit{stack identifiability}: algorithmic labels like "PPO" or "GRPO" are insufficiently specified experimental treatments, as their relative performance ranking reversed entirely when moving from Qwen3-8B to Llama-3.1-8B-Instruct. We conclude that Zero-Variance Fraction (ZVF) tracking is a necessary triage diagnostic for identifying cold-start collapse before interpreting reward curves.
+\end{abstract}
+
 \maketitle
 
 % Figure 1: Architecture Overview
@@ -184,9 +188,6 @@
 \end{figure}
 
 % =============================================================================
-\begin{abstract}
-This project is a systems-oriented empirical audit of critic-free, group-relative reinforcement learning. We investigate the conditions under which post-training receives a non-zero advantage signal, and demonstrate when in-domain training-reward gains fail to transfer to held-out semantic capability. Using a variant inspired by Group Relative Policy Optimization (GRPO), we evaluate tool-call emission, mathematical reasoning, and code generation across 32 controlled ablations. Our findings yield three primary contributions. First, we isolate \textit{reward contrast} as the fundamental bottleneck: a group-relative gradient requires mixed-reward sampling, $P(\text{informative group}) = 1 - p_0^{G} - (1-p_0)^{G}$. Second, we establish a \textit{reward-vs-capability separation}: structured-output format compliance (e.g., JSON schemas) improves sharply via RL, but proxy format rewards easily trigger length-bias and parser exploits without conferring semantic generalization (held-out GSM8K lift was statistically insignificant, $p=0.26$). Finally, we demonstrate \textit{stack identifiability}: algorithmic labels like "PPO" or "GRPO" are insufficiently specified experimental treatments, as their relative performance ranking reversed entirely when moving from Qwen3-8B to Llama-3.1-8B-Instruct. We conclude that Zero-Variance Fraction (ZVF) tracking is a necessary triage diagnostic for identifying cold-start collapse before interpreting reward curves.
-\end{abstract}
 
 % =============================================================================
 \section{Introduction}
@@ -519,7 +520,7 @@ Tianshou (PPO) & 0.006 $\pm$ 0.002 & [0.003, 0.009] & N/A \\
 \label{tab:results_gsm8k}
 \begin{tabular}{lccc}
 \toprule
-\textbf{Model} & \textbf{Baseline} & \textbf{Post-RL} & \textbf{$\Delta$} \\
+\textbf{Model} & \textbf{Baseline} & \textbf{Post-training score} & \textbf{$\Delta$} \\
 \midrule
 Qwen3-0.6B & 59.6 & 73.5 $\pm$ 1.2 & +13.9 \\
 Llama-3.2-1B & 44.4 & 56.8 $\pm$ 1.4 & +12.4 \\
@@ -537,7 +538,7 @@ Qwen3-30B-A3B & 91.8 & 95.4 $\pm$ 0.5 & +3.6 \\
 % Figure 6: Scaling
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{figures/scaling_plot.pdf}
+\includegraphics[width=0.85\linewidth]{figures/v2/scaling.pdf}
 \caption{Scaling: GSM8K training-reward format compliance vs. model parameters (log scale).}
 \label{fig:scaling}
 \end{figure}
@@ -580,36 +581,39 @@ for code, boxed-answer parsing for math), not as held-out capability gains.
 
 \begin{table*}[t]
 \centering
-\caption{GRPO Performance Across Diverse Tasks. Experiments conducted by team members
-on consumer-grade and cloud hardware.}
+\caption{Proxy Reward Outcomes Across Task Harnesses. Experiments conducted by team members
+on consumer-grade and cloud hardware; rows use different datasets, rewards, and harnesses and should not be read as a pooled capability claim.}
 \label{tab:task_grpo}
 \begin{tabular}{llllll}
 \toprule
-\textbf{Task} & \textbf{Model} & \textbf{Method} & \textbf{Pre-Training} & \textbf{Post-RL} & \textbf{Notes} \\
+\textbf{Task} & \textbf{Model} & \textbf{Method} & \textbf{Pre-Training} & \textbf{Post-training} & \textbf{Notes} \\
 \midrule
 Tool Call (Single-turn) & Qwen2-0.5B-Instruct & LoRA fine-tuning & --- & Functional & 20 examples, \$0.17 on vast.ai \\
 Code Reasoning (HumanEval) & Qwen3-8B & GRPO & 32\% & 86\% & 300 steps; best performer \\
 Code Reasoning (HumanEval) & Qwen2.5-Coder-1.5B & GRPO & 67\% (4/6) & 100\% (6/6) & LoRA on q\_proj/v\_proj, 20 epochs \\
 Multi-turn schema-valid JSON emission & Qwen2.5-3B & GRPO+QLoRA & Baseline & Improved & Multi-turn tool calling \\
 Multi-turn schema-valid JSON emission (SFT+GRPO) & Qwen3-8B & SFT $\to$ GRPO & 52\% arg acc. & 70\%--71\% & Schema compliance 97\%$\to$100\% \\
-Multi-stage Reasoning & Qwen3-4B-Instruct & GRPO & Baseline & Improved & Small model matches 30B performance \\
+Multi-stage prompt suite & Qwen3-4B-Instruct & GRPO & Baseline & Improved & Single setup; not architecture claim \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
 \paragraph{Training Dynamics.}
 Our experiments reveal consistent GRPO training dynamics across tasks.
-First, GRPO exhibits a two-phase learning pattern: during early steps (phases
-1--20) the model learns answer format (accuracy 0--14\%), then rapidly
-internalizes reasoning logic in later steps (phases 21--25: 14--58\%).
+First, in this task harness, reward improves in two phases: during early steps
+(phases 1--20) the model increases answer-format compliance (score 0--14\%),
+then later steps increase verifier-scored correctness on sampled prompts
+(phases 21--25: 14--58\%). We do not infer general reasoning logic from these
+reward traces alone.
 Second, a prerequisite for effective RL training is that the base model must
 already occasionally solve the target problems; without any positive reward
 signal, the RL gradient cannot propagate useful updates. Third, Mixture-of-Experts
 (MoE) models exhibit volatile training curves due to sparse routing, requiring
 careful monitoring and potentially larger batch sizes to stabilize updates.
 These findings motivate the model selection criterion of choosing Qwen3-4B-Instruct
-over a 30B MoE model for the multi-stage reasoning task, demonstrating that
-small dense models can match or exceed large MoE models when properly trained.
+over a 30B MoE model for this specific multi-stage reward harness. The result
+suggests that initialization and reward compatibility mattered in this setup;
+it does not establish a general dense-over-MoE or GRPO-trained reasoning advantage.
 
 % =============================================================================
 \section{Reproducibility}

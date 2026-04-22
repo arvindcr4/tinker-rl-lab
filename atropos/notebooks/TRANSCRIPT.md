@@ -40,7 +40,7 @@ Open each HTML file in a browser tab. Walk through them in this order:
 > "Five takeaways:
 > 1. There's a model size threshold — 3B can't learn, 8B can. This is a scaling law insight.
 > 2. Instruct models have a massive head start — 79% vs 7% at step 0.
-> 3. MoE is cost-effective — only 3B active params but near-perfect accuracy.
+> 3. MoE is cost-effective in this run — only 3B active params but a near-perfect verifier score.
 > 4. GSM8K vs MATH shows diminishing returns — success on easy benchmarks doesn't mean success on hard ones.
 > 5. LoRA with only 0.1% of parameters modified can achieve full task mastery."
 

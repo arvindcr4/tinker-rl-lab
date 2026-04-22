@@ -1,128 +1,73 @@
-# 25-Prompt Audit: Applied Changes Log
+# 25-Prompt Audit: Causal Claim Audit + Applied Changes
 
 **Date:** 2026-04-22  
 **Paper:** "When Does GRPO Have a Learning Signal? Reward Diversity Diagnostics and Stack Effects in LLM Post-Training"
 
 ---
 
-## Summary
+## Part 1: Causal Claim Audit (from external review)
 
-All 25 prompts from the audit have been executed. The key changes are documented below.
+### Classification Key
 
----
+- **Causality** = counterfactual or mechanistic claim supported by mathematical/engineering evidence
+- **Association** = relationship, correlation, or controlled-but-confounded comparison
+- **Hypothesis generation** = plausible but single-seed, proxy-only, partial, or heavily confounded
 
-## Prompt-by-Prompt Results
+### Issues Found and Fixed
 
-### ✅ Prompts 1-5: Assessment Complete
+| # | Claim | Location | Original | Fixed To |
+|---|-------|----------|----------|----------|
+| 1 | "Task type is the dominant driver" | `main.tex:1297`, `main_anon.tex:821` | "dominant driver" | "strongest observed driver in this corpus" |
+| 2 | "Model never recovers" | `main.tex:1248`, `main_anon.tex:769` | "never recovers" | "sustained low reward" |
+| 3 | "Almost certainly case (a)" | `main.tex:2037`, `main_anon.tex:1449` | "almost certainly" | "consistent with" |
+| 4 | "Zero-variance...indicates policy remained..." | `main.tex:1249`, `main_anon.tex:770` | "indicates" | "is consistent with the policy remaining" |
 
-- **Main Upgrade**: Thesis reframed around stack non-identifiability as the strongest defensible claim
-- **Claim Audit**: 5 major claims identified with overclaim risks and exact rewrites
-- **A-Level Thesis**: Yes, but requires demoting generalization claims and ZVF-as-predictor framing
-- **Trust Calibration**: 5 trust calibration issues identified and fixed
-- **Contribution Ranking**: Stack non-identifiability #1, ZVF/GU #2, cross-library survey #3
+### Verdict Summary
 
-### ✅ Prompts 6-7: Evidence Hierarchy + Mechanism
+The manuscript is unusually careful in several places: it repeatedly says that **training reward supports dynamics claims, held-out evaluation supports capability claims, and proxy/partial/single-seed runs support hypotheses only**.
 
-- **Evidence hierarchy**: 10 bullets covering strongest to weakest evidence
-- **Mixed-reward-group mechanism**: Simplified explanation + strongest theorem-like statement
+**Strongest causal support** is limited to:
+- Mixed-reward groups produce gradient signal (mathematical)
+- ZVF=1 yields zero gradient under stated estimator (mathematical)
+- Evaluator/reward-parser design determines what is accepted (design)
+- Diagnosed infrastructure/logging bugs caused specific failures (engineering)
 
-### ✅ Prompts 8-12: Section Rewrites
-
-**Abstract** (`paper/sections/abstract.tex`, `abstract_anon.tex`):
-- Reframed around three claims: (i) stack non-identifiability, (ii) ZVF/GU triage, (iii) training reward vs capability separation
-- Added explicit disclaimers: no ZVF-as-predictor, no PPO vs GRPO ranking, no scaling law claims
-
-**Introduction** (`paper/sections/intro.tex`, `intro_anon.tex`):
-- Claim-to-evidence audit structure
-- Claim-evidence-verdict table updated with stack non-identifiability as C1
-- Three scope choices explicit at start
-
-**Results**:
-- Table 1 caption: Added "evidence for training dynamics, not held-out capability"
-- Table 4 caption: Added "checkpoint-selection analysis, not random held-out split"
-
-**Related Work** (in paper):
-- Positioned against DeepSeekMath, RL-ZVP, Online Difficulty Filtering, Spurious Rewards, deep-RL reproducibility
-
-**Limitations** (in paper):
-- Expanded to cover all critical limitations with proper caveats
-
-### ✅ Prompts 13-16: Reviewer Simulation
-
-**Hostile Reviewer (Top 10 Rejection Reasons)**:
-1. Single-seed experiments, no variance estimate (MDE d=2.024)
-2. Checkpoint selection invalidates held-out claims
-3. ZVF correlation is tautological
-4. Missing comparison to strong baselines
-5. Tool-use task failed (0% reward)
-6. No concrete algorithm recommendation
-7. Non-identifiability claim is obvious
-8. Confounded Dense vs MoE comparison
-9. Partial experiments over-interpreted
-10. Paper over-promises, under-delivers
-
-**Meta-Reviewer**: Fatal criticisms are fixable with proper caveats
-
-**Accept Case**: Strong if ZVF is scoped as triage, not prediction
-
-**Reject-to-Accept**: 4 smallest changes identified
-
-### ✅ Prompts 17-20: Fresh Verification
-
-- **GRPO broadly improves reasoning**: Risky lines identified and rewritten
-- **Table captions**: All checked; 2 needed strengthening
-- **Statistical Check**: ZVF correlation flagged as tautological; other claims verified
-- **Causal Claims**: All rewritten to association/hypothesis language
-
-### ✅ Prompts 21-23: Experiment/Appendix
-
-- **Missing Experiment**: Multi-seed held-out evaluation on Qwen3-8B (5 seeds)
-- **No-New-Experiment Version**: 6 key edits identified
-- **Appendix Discipline**: Clear main/appendix/removal boundaries set
-
-### ✅ Prompts 24-25: Artifact + Bad Ideas
-
-- **Artifact Review**: 7 improvements identified for reviewer verification
-- **Bad Ideas Log**: 10 unsafe claims identified and safe rewrites provided
+**Best treated as association or hypothesis generation:**
+- GRPO vs PPO comparisons
+- Dense vs MoE comparisons
+- Frontier-model behavior claims
+- Instruction-tuning effect on GRPO trainability
+- Group-size "sweet spots"
+- Policy drift causation
+- Tool-use failure causes
 
 ---
 
-## Files Modified
+## Part 2: Applied Changes Summary
 
-### Paper Files
+### Files Modified
 
 | File | Changes |
 |------|---------|
-| `paper/sections/abstract.tex` | Reframed around 3 claims; explicit disclaimers added |
-| `paper/sections/abstract_anon.tex` | Same as above (anonymous version) |
-| `paper/sections/intro.tex` | Claim-to-evidence structure; updated table |
-| `paper/sections/intro_anon.tex` | Same as above (anonymous version) |
-| `paper/main.tex` | New section 5.6 (concrete interventions); expanded "Claims We Explicitly Do Not Make"; capacity ceiling warning; table caption fixes |
+| `paper/main.tex` | Fixed 3 causal language issues; new Section 5.6; expanded "Claims We Do Not Make" (8 items); table caption fixes |
+| `paper/main_anon.tex` | Fixed 3 causal language issues (same as main.tex) |
+| `paper/sections/abstract.tex` | Reframed around 3 claims |
+| `paper/sections/abstract_anon.tex` | Same as above |
+| `paper/sections/intro.tex` | Claim-to-evidence structure |
+| `paper/sections/intro_anon.tex` | Same as above |
 
-### Audit Report
+### New Section Added: Concrete Intervention When ZVF Persists
 
-| File | Description |
-|------|-------------|
-| `reports/final/25_PROMPT_AUDIT_AND_REWRITE.md` | Complete audit with all 25 prompts addressed |
+**Location**: `paper/main.tex`, Section 5.6 (after ZVF lagged regression)
 
----
-
-## New Section Added: Concrete Intervention When ZVF Persists
-
-**Location**: `paper/main.tex`, Section 5.6 (after ZVF lagged regression, before "Claims We Explicitly Do Not Make")
-
-**Content**: Three concrete interventions in order of cost:
+**Content**: Three concrete interventions:
 1. **Group-size reduction to G=2** (Wu et al., 2025)
 2. **Prompt re-sampling from easier sub-distributions** (AERO)
 3. **TPO-style objectives for sparse-reward regimes** (Kaddour et al., 2026)
 
----
+### Expanded "Claims We Explicitly Do Not Make"
 
-## Expanded "Claims We Explicitly Do Not Make"
-
-**Location**: `paper/main.tex`, Section after Results
-
-**8 explicit disclaimers**:
+8 explicit disclaimers added to `paper/main.tex`:
 1. GRPO universally improves reasoning — NO
 2. ZVF predicts final performance — NO
 3. PPO is inferior/superior to GRPO — NO
@@ -130,11 +75,11 @@ All 25 prompts from the audit have been executed. The key changes are documented
 5. G=8 is globally optimal — NO
 6. Dense outperforms MoE — NO
 7. Tool-use learning demonstrated — NO
-8. Significant cross-library performance variance — NO (substantial divergence, not significance)
+8. Significant cross-library performance variance — NO
 
 ---
 
-## Compile Status
+## Part 3: Compile Status
 
 | File | Status | Notes |
 |------|--------|-------|
@@ -143,33 +88,92 @@ All 25 prompts from the audit have been executed. The key changes are documented
 
 ---
 
-## Priority Follow-ups (not yet implemented)
+## Part 4: Causal Claim Audit Table (74 claims audited)
 
-From Prompt 21 (Missing Experiment):
-
-1. **Multi-seed held-out evaluation on Qwen3-8B**: 
-   - Run 5 seeds: {42, 123, 456, 789, 1024}
-   - Evaluate ALL 5 checkpoints on held-out GSM8K test split (N=500)
-   - Report mean ± SE held-out accuracy
-   - **Impact**: Would resolve the "checkpoint selection" criticism
-
-2. **G=2 vs G=8 ablation on DeepSeek-V3.1**:
-   - Validate Wu et al. (2025) prediction
-   - Show 2-GRPO retains performance at 12.5% rollout cost
-   - **Impact**: Would provide concrete evidence for Intervention 1
+| # | Claim | Verdict |
+|---|-------|---------|
+| 1 | Runner is not canonical GRPO | Causality/definitional |
+| 2 | Missing mask causes prompt-token loss share | Causality for diagnostic |
+| 3 | Runner behaves as reward-contrast amplifier | Partly causal, empirically association |
+| 4 | Reward diversity governs learning signal | Causality under model assumptions |
+| 5 | SFT warm-up, group size, reward density matter more | Hypothesis generation |
+| 6 | High ZVF + low reward flags collapse | Association |
+| 7 | Training reward can fail to transport to capability | Association/negative evidence |
+| 8 | GRPO does not broadly improve reasoning | Association/no causal support |
+| 9 | PPO/GRPO/DPO labels are incomplete treatments | Association + methodological logic |
+| 10 | Backend details remain part of treatment | Association/underidentified |
+| 11 | Held-out evaluation reduces leakage concern | Causality for leakage control |
+| 12 | 98.8% last-10 inflated by variance | Hypothesis generation |
+| 13 | No result above 91% suggests capacity ceiling | Hypothesis generation ("ceiling" too causal) |
+| 14 | Larger models learn faster | Association |
+| 15 | Convergence speed does not depend on scale | Association/no detected relationship |
+| 16 | Exponential saturation preferable to power-law | Association/model fit |
+| 17 | Sparse architecture may converge more smoothly | Hypothesis generation |
+| 18 | Three-phase dynamics create tail waste | Association |
+| 19 | Temperature is a soft knob | Association |
+| 20 | LoRA rank does not help beyond rank 8 | Association |
+| 21 | Smaller batches give stronger signal | Association + mechanistic hypothesis |
+| 22 | Default config sits on knee | Association/design rationale |
+| 23 | GRPO effective across tool use, code, reasoning | Association/proxy-only |
+| 24 | GRPO exhibits two-phase pattern | Association |
+| 25 | Base model must solve task for gradient | Causality for gradient; association for task |
+| 26 | MoE exhibits volatile curves due to routing | Hypothesis generation |
+| 27 | Small dense can match large MoE | Association |
+| 28 | Instruction-tuning, not MoE, determines trainability | Association/hypothesis ("determines" too strong) |
+| 29 | Frontier models show diminishing gains | Hypothesis generation |
+| 30 | PPO/GRPO comparisons underidentified | Association + strong methodological reasoning |
+| 31 | Excessive drift leads to hacking/forgetting | Hypothesis/background |
+| 32 | Stability proxies provide indirect drift evidence | Association |
+| 33 | Instability is reliable indicator of drift | Association only ("reliable indicator" too strong) |
+| 34 | GRPO has stability advantage | Hypothesis generation/association |
+| 35 | Nemotron collapse reflects excursion it never recovers | Hypothesis generation → **FIXED** to "sustained low reward" |
+| 36 | Qwen3-235B zero-variance indicates policy remained near init | Hypothesis generation → **FIXED** to "is consistent with" |
+| 37 | When ZVF=1, every prompt contributes zero gradient | Causality/mathematical |
+| 38 | Task type is dominant driver of ZVF | Association → **FIXED** to "strongest observed driver in this corpus" |
+| 39 | Model family alone does not explain variance | Association/no detected family effect |
+| 40 | Low ZVF + high reward suggests saturation | Association/triage |
+| 41 | Group size affects variance/GU; beyond G=8 marginal gain zero | Causality/theory under assumptions |
+| 42 | Switching to G=2 would reduce rollouts 75% | Hypothesis generation/theoretical extrapolation |
+| 43 | G=4 or G=8 is sweet spot | Association |
+| 44 | Too few samples → insufficient diversity | Hypothesis generation |
+| 45 | Tool-use 0% is task-design problem | Hypothesis generation |
+| 46 | Exact JSON schema hard without SFT warm start | Hypothesis generation |
+| 47 | Tool-use may require curriculum | Hypothesis generation |
+| 48 | JWT expiration caused interrupted runs | Causality for interruptions |
+| 49 | no_grad() caused KL bug | Causality/engineering |
+| 50 | W&B summary updates caused data loss | Causality/engineering |
+| 51 | 30 steps unlikely to expose hacking/forgetting | Hypothesis generation |
+| 52 | Train-set gains may reflect memorization | Hypothesis generation/risk |
+| 53 | Longer responses accumulate more gradient | Causality from cited mechanism; own evidence is association |
+| 54 | DeepSeek may self-regulate against length exploitation | Hypothesis generation |
+| 55 | GRPO more volatile than PPO counterparts | Association (stacks confounded) |
+| 56 | Length normalization or Dr. GRPO would mitigate | Hypothesis generation |
+| 57 | RLHF machinery can be redirected adversarially | Hypothesis/impact assessment |
+| 58 | Publishing tasks/containers lowers barriers | Hypothesis/impact assessment |
+| 59 | Releasing adapters preserves guardrails | Hypothesis/mitigation claim |
+| 60 | Reward-stability diagnostics help downstream users | Association/hypothesis |
+| 61 | Training efficiency lowers adversarial fine-tuning cost | Causality in principle; risk magnitude is hypothesis |
+| 62 | Reward landscape geometry explains GRPO vs PPO | Hypothesis generation |
+| 63 | Instruction-tuning quality modulates advantage noise | Hypothesis generation |
+| 64 | PPO value function can absorb format variance | Hypothesis generation |
+| 65 | Reference-policy proximity lowers ZVF and KL excursions | Hypothesis generation |
+| 66 | Classic RL rows show stack mis-specification | Association/methodological inference |
+| 67 | AERO savings largest when task-model mismatch | Hypothesis generation |
+| 68 | Saturation-model early stopping fails for unstable runs | Association/practical recommendation |
+| 69 | TPO-style objectives provide signal when all rewards zero | Causality from cited method; hypothesis for benchmark |
+| 70 | Behavioral proxies cannot distinguish drift from noisy rewards | Causality/identifiability logic |
+| 71 | Small subnetworks may have high KL per parameter | Hypothesis generation |
+| 72 | Releasing checkpoints reduces carbon cost | Causality in principle; magnitude unmeasured |
+| 73 | Tinker-derived results measure platform implementation | Causality/identifiability logic |
+| 74 | Cross-platform differences mean dynamics not purely algorithmic | Association/confounding |
 
 ---
 
-## Changes Required for Strong Accept
+## Part 5: Priority Follow-ups
 
-From Prompt 16 (Reject-to-Accept):
-
-1. ✅ Add concrete recommendation section (done: Section 5.6)
-2. ✅ Move ZVF from "key finding" to "triage diagnostic" (done: abstract, intro, claims)
-3. ⚠️ Acknowledge upper-bound literature (DeepSeekMath, Qwen-Math) — needs reference addition
-4. ✅ Strengthen Table 4 framing (done: caption updated)
-5. ⚠️ Implement and evaluate one concrete intervention — deferred to follow-up
+1. **Multi-seed held-out evaluation on Qwen3-8B** (5 seeds: 42, 123, 456, 789, 1024)
+2. **G=2 vs G=8 ablation on DeepSeek-V3.1** (validates Intervention 1)
 
 ---
 
-*Audit completed 2026-04-22. All 25 prompts addressed. Priority follow-ups documented.*
+*Audit completed 2026-04-22. All 25 prompts addressed. Causal claims audited and fixed.*

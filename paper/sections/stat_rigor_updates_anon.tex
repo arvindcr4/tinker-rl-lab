@@ -75,17 +75,18 @@ secondary scaling summary and treat it as hypothesis-generating evidence.
 
 \begin{table}[htbp]
 \centering
-\caption{\textbf{Secondary GSM8K summary (Table~3, rigor pass).} Post-RL
-score vs.\ baseline under mixed sources/protocols with bootstrap 95\,\% CI on
+\caption{\textbf{Secondary GSM8K mixed-protocol summary (Table~3, rigor pass).}
+Post-training harness score vs.\ baseline under mixed sources/protocols with bootstrap 95\,\% CI on
 $\Delta$, Cohen's $d$ for the paired effect, and Bonferroni-corrected
 one-sample $t$-test $p$-values across the $k=7$ model pairs.  This table is
-not the primary held-out capability claim.}
+descriptive and hypothesis-generating; it is superseded for capability
+interpretation by the held-out Qwen3-8B control.}
 \label{tab:results_gsm8k_stats}
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}
 \begin{tabular}{@{}l r r l l c l c c@{}}
 \toprule
-\textbf{Model} & \textbf{Baseline} & \textbf{Post-RL} & \textbf{$\Delta$} & \textbf{$\Delta$ 95\% CI} & \textbf{Cohen's $d$} & \textbf{$d$ 95\% CI} & \textbf{$p$ (raw)} & \textbf{$p$ (Bonf.)} \\
+\textbf{Model} & \textbf{Baseline} & \textbf{Post-training score} & \textbf{$\Delta$} & \textbf{$\Delta$ 95\% CI} & \textbf{Cohen's $d$} & \textbf{$d$ 95\% CI} & \textbf{$p$ (raw)} & \textbf{$p$ (Bonf.)} \\
 \midrule
 Qwen3-0.6B & 59.6 & 73.5$\pm$1.2 & +13.9 & [11.9, 15.9] & +5.18 & [1.85, 8.51] & $<$0.001 & 0.002$^{**}$ \\
 Llama-3.2-1B & 44.4 & 56.8$\pm$1.4 & +12.4 & [10.2, 15.0] & +3.96 & [1.35, 6.57] & $<$0.001 & 0.006$^{**}$ \\
@@ -257,6 +258,10 @@ the $k$-test family used for Bonferroni correction.
 \end{table}
 
 \paragraph{TRL-GRPO cross-seed baseline.}
-The TRL-GRPO reference (Qwen2.5-0.5B, 5 seeds, GSM8K, 125 steps, NVIDIA~L4) has mean accuracy $\bar{x} = 0.734$ (95\,\% bootstrap CI [0.672, 0.783], SD $= 0.070$, CV $= 0.096$). A one-sample $t$-test against $\mu_0 = 0.5$ gives $t(4) = 7.44$, $p = $~0.002, Cohen's $d = 3.33$ --- a very large effect that survives Bonferroni correction in the family-wide table above.
+The TRL-GRPO reference (Qwen2.5-0.5B, 5 seeds, GSM8K, 125 steps, NVIDIA~L4) has
+mean verifier score $\bar{x} = 0.734$ (95\,\% bootstrap CI [0.672, 0.783],
+SD $= 0.070$, CV $= 0.096$). We report the multi-seed spread as a reproducible
+reward-harness observation; it does not establish broad reasoning improvement
+at 0.5B scale.
 
 % --- end of stat_rigor_updates.tex ----------------------------------

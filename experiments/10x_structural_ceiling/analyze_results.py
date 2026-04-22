@@ -110,7 +110,7 @@ def generate_latex_table(df: pd.DataFrame) -> str:
         "\\begin{tabular}{@{}llcccc@{}}\n"
         "\\toprule\n"
         "\\textbf{Block} & \\textbf{Model} & \\textbf{Benchmark} & "
-        "\\textbf{Base Acc} & \\textbf{Post-RL Acc} & \\textbf{$\\Delta$} \\\\\n"
+        "\\textbf{Base score} & \\textbf{Post-training score} & \\textbf{$\\Delta$} \\\\\n"
         "\\midrule\n"
     )
     rows = ""

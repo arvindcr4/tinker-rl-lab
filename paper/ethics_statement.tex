@@ -35,8 +35,11 @@ enable, and we describe the existing guardrails and the residual risk we
 judge acceptable for publication.
 
 \paragraph{M1. Weaponisation of mathematical reasoning.}
-The most capability-relevant artefact we release is GRPO training code that
-improves grade-school arithmetic and multi-step reasoning. A malicious
+The most capability-relevant artefact we release is code for running
+GRPO-style verifier-reward experiments on grade-school arithmetic and
+multi-step prompt suites. In our clean held-out GSM8K control, the measured
+gain is small and not statistically significant, so we do not claim the code
+improves general reasoning capability. A malicious
 operator could attempt to extend this pipeline to tasks of greater
 dual-use concern, e.g., chemistry olympiad problems, cryptographic key
 recovery, or financial fraud. We judge the \emph{marginal} uplift provided
@@ -47,9 +50,9 @@ accuracy is attributable to Qwen3-8B's pretraining. Our full GRPO run only
 adds \(+1.3\) percentage points ($p{=}0.26$, not statistically significant).
 Second, the public literature already contains GRPO implementations
 \cite{shao2024deepseekmath, openrlhf2024, verl2024, trl2020} that are at
-least as capable. Third, any reasoning uplift is bounded by the rewarder:
-GSM8K rewards use exact-match against a human-written gold answer, which
-does not generalise to the domains listed above without a new reward
+least as capable. Third, any reward-harness improvement is bounded by the
+rewarder: GSM8K rewards use exact-match against a human-written gold answer
+and do not transfer to the domains listed above without a new validated reward
 signal, which itself requires expertise and labelled data.
 
 \paragraph{M2. Reward hacking and the long-term alignment risk.}

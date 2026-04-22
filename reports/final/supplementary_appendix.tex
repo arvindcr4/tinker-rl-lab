@@ -547,12 +547,14 @@ Step 1:  Reward=0.00, Loss=0.85, Output="42" (format: plain text)
 Step 5:  Reward=0.05, Loss=0.80, Output="The answer is 42." (format: text with number)
 Step 10: Reward=0.10, Loss=0.72, Output="\boxed{42}" (format: boxed answer)
 Step 15: Reward=0.14, Loss=0.65, Output="\boxed{42}" (stable format)
-Step 20: Reward=0.40, Loss=0.55, Output="\boxed{42}" (reasoning begins)
-Step 25: Reward=0.58, Loss=0.40, Output="\boxed{42}" (reasoning improves)
+Step 20: Reward=0.40, Loss=0.55, Output="\boxed{42}" (verifier score rises)
+Step 25: Reward=0.58, Loss=0.40, Output="\boxed{42}" (sampled-prompt score improves)
 Step 30: Reward=0.55, Loss=0.38, Output="\boxed{42}" (plateau)
 \end{verbatim}
 
-This trajectory illustrates the two-phase pattern: format compliance (steps 1-20) precedes reasoning improvement (steps 20-30).
+This trajectory illustrates the two-phase pattern: format compliance (steps
+1--20) precedes higher verifier-scored correctness on sampled prompts (steps
+20--30). It is not evidence by itself that general reasoning improved.
 
 % ===========================================================================
 \section{Platform and Compute Costs}

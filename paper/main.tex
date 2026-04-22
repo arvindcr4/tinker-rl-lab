@@ -556,7 +556,7 @@ details are reported, not a causal framework ranking.}
 
 \begin{table}[htbp]
 \centering
-\caption{Cross-library comparison on Math RL (Arithmetic). Mean $\pm$ SE across 5 seeds.}
+\caption{Cross-library comparison on Math RL (Arithmetic). Mean $\pm$ SE across 5 seeds. The SB3/CleanRL/Tianshou rows are \emph{sanity baselines}: classical-RL PPO on a tokenized-text task lacks the autoregressive rollout, loss masking, and reward parsing required for LLM post-training, so near-zero accuracy here is stack-mismatch evidence, not evidence that PPO-the-algorithm fails. See \S\ref{sec:discuss_impl} for the full discussion.}
 \label{tab:results_arithmetic}
 \begin{tabular}{lccc}
 \toprule
@@ -1289,6 +1289,13 @@ lags ($k{=}10$) is consistent with ZVF capturing reward-landscape flatness that
 sometimes precedes degradation.  We therefore treat ZVF/GU as early triage
 diagnostics, not as calibrated predictors of final performance, and report the
 lagged regression results alongside the zero-order association.
+A practical caveat: on the same 22-run de-duplicated validation set, a
+\emph{reward-only} rule (mean reward over the first five logged steps
+$\leq 5\%$) matches the ZVF/GU rule's collapse-detection AUC to within
+noise.  ZVF/GU's contribution over early-reward monitoring is therefore
+\emph{regime interpretation} --- separating cold-start collapse (high ZVF,
+low reward) from saturation (high ZVF, high reward) and from healthy
+contrast (low ZVF) --- not a strictly better collapse classifier.
 
 \begin{table}[htbp]
 \centering
@@ -1495,7 +1502,7 @@ substantially better (71.3\% last-10), reinforcing the stack-conditioned
 interpretation rather than a universal framework ranking.
 
 \paragraph{Base vs.~Instruct Models.}
-A clear pattern emerges: base models (Llama-3.1-70B at 36.4\%, Llama-3.1-8B at 11.5\%, DeepSeek-V3.1-Base at 57.3\%) struggle significantly compared to instruct counterparts.
+A clear pattern emerges: base models (Llama-3.1-70B at 36.4\%, Llama-3.1-8B at 11.5\%, DeepSeek-V3.1-Base at 57.3\%) struggle substantially compared to instruct counterparts (qualitative, no statistical test).
 This aligns with the GRPO-as-DPO interpretation~\cite{wu2025grpo_dpo}: GRPO requires models that already produce \emph{some} correct completions to generate meaningful preference pairs.
 Base models lacking instruction-following capability produce uniformly low-quality completions, yielding zero-variance groups that prevent learning.
 
@@ -1892,7 +1899,7 @@ tool-use experiments saturate at $\text{ZVF} = 100\%$ regardless of model size,
 while GSM8K experiments average $\text{ZVF} = 8.5\%$ across the same model
 range.
 This suggests that AERO's compute savings will be largest when the task is
-significantly mismatched to the model's prior capabilities --- precisely the
+poorly matched to the model's prior capabilities --- precisely the
 regime where standard GRPO training is most wasteful.
 Our ZVF measurements can serve as a calibration dataset for AERO's Beta prior.
 

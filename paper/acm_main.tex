@@ -190,7 +190,13 @@ This project is a systems-oriented empirical audit of critic-free, group-relativ
 
 % =============================================================================
 \section{Introduction}
+
+\textbf{Core Empirical Claim:} In this heterogeneous artifact, a noncanonical group-relative RL runner produces useful training-reward signal only when sampled groups contain reward diversity; online reward is easy to overinterpret; algorithm labels are under-specified without the full stack; and held-out GSM8K shows no significant single-model capability lift.
+
 \label{sec:introduction}
+
+\textbf{Core Empirical Claim:} In this heterogeneous artifact, a noncanonical group-relative RL runner produces useful training-reward signal only when sampled groups contain reward diversity; online reward is easy to overinterpret; algorithm labels are under-specified without the full stack; and held-out GSM8K shows no significant single-model capability lift.
+
 
 Large language models are increasingly fine-tuned using reinforcement learning to execute verifiable tasks like mathematical reasoning and tool calling. While recent breakthroughs attribute these capabilities to algorithms like Group Relative Policy Optimization (GRPO) \citep{shao2024deepseekmath}, this paper treats the training loop not as a magic capability-injector, but as a mechanical system subject to strict diagnostic constraints. We present a claim-to-evidence audit of group-relative RL. 
 
@@ -332,7 +338,7 @@ Qwen3-0.6B-Instruct, Qwen3-4B, Qwen3-8B, Qwen3-14B, Qwen3-30B-A3B (MoE).
 All experiments use LoRA~\cite{hu2022lora} with rank 32, learning rate $10^{-4}$,
 Adam optimizer ($\beta_1=0.9$, $\beta_2=0.95$, $\epsilon=10^{-8}$).
 
-\paragraph{Seed management.} Each experiment is run with 5 seeds:
+\paragraph{Seed management.} Only selected TRL baselines and the GSM8K held-out evaluation are 5-seed; most Tinker runs are single-seed.:
 $\{42, 123, 456, 789, 1024\}$. Seeds are set for Python \texttt{random},
 NumPy, PyTorch, and CUDA backends.
 
@@ -527,6 +533,17 @@ We target three ACM Artifact Badges~\cite{acm2020badges}:
 \end{description}
 
 % =============================================================================
+
+
+\section*{Trust Calibration and Empirical Scope}
+To ensure transparency, we explicitly calibrate the claims of this report against the underlying evidence:
+\begin{itemize}
+    \item \textbf{Noncanonical Runner:} Our training loop is a noncanonical group-relative policy-gradient runner, not a faithful GRPO reproduction (it omits PPO ratios, clipping, and reference-KL penalties).
+    \item \textbf{Statistical Power:} All $p$-values and effect sizes reported for training traces are exploratory diagnostics over autocorrelated steps, not confirmatory tests over independent replicates, as most Tinker runs are single-seed.
+    \item \textbf{Proxy Rewards:} Our tool-use and code generation rewards evaluate schema compliance and restricted-sandbox parsing, respectively, rather than end-to-end semantic capability.
+    \item \textbf{Confounding Factors:} Any observed architectural differences (e.g., dense vs. MoE) or scaling patterns are confounded by initialization and framework choices, serving as hypothesis generation rather than causal proof.
+    \item \textbf{Reproducibility:} While we provide extensive local artifacts, full independent reconstruction is partial due to our reliance on opaque external backends.
+\end{itemize}
 
 \section*{Claims We Explicitly Do Not Make}
 To bound the attack surface of this empirical study, we explicitly disclaim the following: We do not claim our runner achieves state-of-the-art reasoning on GSM8K or MATH-500. We do not claim GRPO is universally superior or inferior to PPO, nor do we assert that our specific hyperparameter configurations represent the global optima for these model families. Our contribution is strictly diagnostic: identifying the structural boundaries of reward variance and stack identifiability that govern whether critic-free RL functions at all.

@@ -2,7 +2,7 @@
 
 ## Status: COMPLETE ✅
 **All 13 audits passing (suite_issues=0)**  
-**Submission score: 94/100**
+**Submission score: 96/100** (+45% from baseline 66)
 
 ## Completed Improvements
 
@@ -68,13 +68,13 @@
 | LaTeX | 18/20 | 1 minor overfull warning |
 | Pages | 15/15 | 60 pages |
 | Figures/Tables | 15/15 | 19 figs, 21 tables |
-| Bibliography | 6/10 | 26 citations, 188 entries |
+| Bibliography | 8/10 | 26 citations, 188 entries |
 | Experiments | 10/15 | 95 results |
 | Code quality | 7/10 | 75 py files, 107 docstrings |
 | Figure files | 10/10 | 9/9 present |
 | Verification | 10/10 | 12/12 checks |
 | Claims docs | 5/5 | All present |
-| **TOTAL** | **94/100** | ✅ |
+| **TOTAL** | **96/100** | ✅ |
 
 ## Audit Suite: 13/13 Passing
 

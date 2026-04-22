@@ -228,17 +228,15 @@ async def run_episode(
 ) -> EpisodeResult:
     _import_benchmark(benchmark)
     t0 = time.time()
-    # Playwright sync API is thread-bound: every env.reset/step/close must run on
-    # the SAME OS thread. asyncio.to_thread uses a shared pool and picks whichever
-    # worker is idle → "cannot switch to a different thread". Pin this episode to
-    # a single-worker executor.
-    import concurrent.futures
-    _pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-    loop = asyncio.get_running_loop()
-    async def _run(fn, *fa, **fkw):
-        return await loop.run_in_executor(_pool, lambda: fn(*fa, **fkw))
-
-    env = await _run(_make_env, env_id)
+    # Playwright sync API is incompatible with running from an asyncio executor
+    # worker thread: it either errors with "cannot switch to a different thread"
+    # (when different threads serve different calls) or "no running event loop"
+    # (when the worker thread has no asyncio loop and Playwright tries to bootstrap).
+    # With --concurrency 1 we can call env.reset/step/close synchronously from
+    # this coroutine. They block the event loop briefly, but no other episode is
+    # running concurrently in this process, so that is acceptable. The only awaits
+    # needed are around sampler.sample() (LLM HTTP) which stays truly async.
+    env = _make_env(env_id)
     steps: List[StepRecord] = []
     total_reward = 0.0
     max_reward = 0.0
@@ -247,7 +245,7 @@ async def run_episode(
     valid_action_count = 0
     last_error: Optional[str] = None
     try:
-        obs, info = await _run(env.reset, seed=seed)
+        obs, info = env.reset(seed=seed)
         goal = _goal_to_str(obs)
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         for step in range(1, max_steps + 1):
@@ -268,7 +266,7 @@ async def run_episode(
                 last_error = step_error
                 break
             try:
-                obs, reward, terminated, truncated, info = await _run(env.step, action)
+                obs, reward, terminated, truncated, info = env.step(action)
                 reward_f = float(reward or 0.0)
                 valid_action_count += 1
                 total_reward += reward_f
@@ -289,10 +287,9 @@ async def run_episode(
     except Exception as exc:
         logger.exception("Episode crashed env_id=%s seed=%s: %r", env_id, seed, exc)
         try:
-            await _run(env.close)
+            env.close()
         except Exception:
             pass
-        _pool.shutdown(wait=False)
         return EpisodeResult(
             env_id=env_id, seed=seed, score=0.0, total_reward=0.0,
             terminated=False, truncated=False, num_steps=len(steps),
@@ -301,10 +298,9 @@ async def run_episode(
         )
     finally:
         try:
-            await _run(env.close)
+            env.close()
         except Exception:
             pass
-        _pool.shutdown(wait=False)
     score = max(max_reward, total_reward)
     score = max(0.0, min(1.0, float(score)))
     return EpisodeResult(

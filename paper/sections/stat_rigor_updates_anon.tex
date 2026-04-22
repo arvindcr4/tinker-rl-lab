@@ -21,7 +21,7 @@ all numbers are produced deterministically by
 % --- Table 1 (updated): Main Results with full statistics -------------
 \begin{table*}[t]
 \centering
-\caption{\textbf{Main Results (Table~1, rigor pass).} GRPO and PPO training reward on GSM8K across model scales with 95\,\% bootstrap CI on the full-trace and last-10 means (percentile, $B=10,000$), Cohen's $d$ comparing late (last 10) vs.\ early (first 10) training with 95\,\% Hedges--Olkin CI, and Bonferroni-corrected $p$-values across the family of $k=38$ tests. Stars mark Bonferroni significance ($^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$).}
+\caption{\textbf{Main Results (Table~1, rigor pass).} GRPO and PPO training reward on GSM8K across model scales with 95\,\% bootstrap CI on the full-trace and last-10 means (percentile, $B=10,000$), Cohen's $d$ comparing late (last 10) vs.\ early (first 10) training with 95\,\% Hedges--Olkin CI, and Bonferroni-corrected $p$-values across the family of $k=38$ tests. Stars mark Bonferroni significance ($^{*}p<0.05$, $^{**}p<0.01$, $^{***}p=0.0017$).}
 \label{tab:main_results_stats}
 \small
 \resizebox{\textwidth}{!}{%
@@ -70,7 +70,7 @@ Tianshou (PPO) & 5 & 0.008 [0.006, 0.011] & \textit{5 seeds} & +14.58 & [8.07, 2
 Table~\ref{tab:results_gsm8k_stats} is not part of the primary held-out
 capability claim.  These rows mix sources and protocols, and they are
 superseded for causal capability interpretation by the stricter held-out
-Qwen3-8B control ($82.0\%\!\to\!83.3\%$, $p=0.26$).  We retain the table as a
+Qwen3-8B control ($82.0\%\!\to\!83.3\%$, $p=0.26, paired per-prompt p=0.539$).  We retain the table as a
 secondary scaling summary and treat it as hypothesis-generating evidence.
 
 \begin{table}[htbp]
@@ -226,33 +226,31 @@ the $k$-test family used for Bonferroni correction.
 9 & Table 3 & Qwen3-14B: post-RL vs baseline (GSM8K) & One-sample t-test (post vs baseline) & +3.69 & 0.001 & 0.045$^{*}$ \\
 10 & Table 3 & Qwen3-4B: post-RL vs baseline (GSM8K) & One-sample t-test (post vs baseline) & +3.39 & 0.002 & 0.062 \\
 11 & Table 3 & Qwen3-30B-A3B (MoE): post-RL vs baseline (GSM8K) & One-sample t-test (post vs baseline) & +3.22 & 0.002 & 0.075 \\
-12 & Table 1 & Late-10 vs Early-10 reward (tianshou\_ppo\_math\_s42) & Mann-Whitney U (late vs early) & +1.81 & 0.002 & 0.080 \\
-13 & Table 1 & Late-10 vs Early-10 reward (sb3\_ppo\_math\_s1024) & Mann-Whitney U (late vs early) & +1.37 & 0.005 & 0.208 \\
-14 & Table 4 & Llama-3.1-8B-Inst: PPO vs GRPO (Mann-Whitney U) & Mann-Whitney U & -0.56 & 0.006 & 0.219 \\
-15 & Table 4 & Llama-3.1-8B-Inst: PPO vs GRPO (full trace, n=30) & Welch t-test & -0.56 & 0.035 & 1.000 \\
-16 & Table 1 & Late-10 vs Early-10 reward (modal\_trl\_trl\_llama32\_1b) & Mann-Whitney U (late vs early) & +0.82 & 0.084 & 1.000 \\
-17 & Table 1 & Late-10 vs Early-10 reward (scale\_gsm8k\_qwen3-8b) & Mann-Whitney U (late vs early) & +0.66 & 0.108 & 1.000 \\
-18 & Table 1 & Late-10 vs Early-10 reward (tianshou\_ppo\_math\_s456) & Mann-Whitney U (late vs early) & +0.52 & 0.246 & 1.000 \\
-19 & Table 1 & Late-10 vs Early-10 reward (sb3\_ppo\_math\_s789) & Mann-Whitney U (late vs early) & +0.51 & 0.254 & 1.000 \\
-20 & Table 1 & Late-10 vs Early-10 reward (scale\_gsm8k\_llama-8b-inst) & Mann-Whitney U (late vs early) & -0.53 & 0.271 & 1.000 \\
-21 & Table 1 & Late-10 vs Early-10 reward (sb3\_ppo\_math\_s123) & Mann-Whitney U (late vs early) & -0.44 & 0.390 & 1.000 \\
-22 & Table 1 & Late-10 vs Early-10 reward (tianshou\_ppo\_math\_s123) & Mann-Whitney U (late vs early) & +0.46 & 0.390 & 1.000 \\
-23 & Table 1 & Late-10 vs Early-10 reward (sb3\_ppo\_math\_s42) & Mann-Whitney U (late vs early) & +0.27 & 0.455 & 1.000 \\
-24 & Table 1 & Late-10 vs Early-10 reward (sb3\_ppo\_math\_s456) & Mann-Whitney U (late vs early) & -0.22 & 0.459 & 1.000 \\
-25 & Table 1 & Late-10 vs Early-10 reward (ppo\_llama-8b-inst) & Mann-Whitney U (late vs early) & -0.27 & 0.583 & 1.000 \\
-26 & Table 1 & Late-10 vs Early-10 reward (scale\_gsm8k\_qwen3.5-4b) & Mann-Whitney U (late vs early) & +0.18 & 0.633 & 1.000 \\
-27 & Table 1 & Late-10 vs Early-10 reward (modal\_trl\_trl\_llama32\_3b) & Mann-Whitney U (late vs early) & -0.33 & 0.643 & 1.000 \\
-28 & Table 1 & Late-10 vs Early-10 reward (frontier\_gsm8k\_deepseek-v3.1) & Mann-Whitney U (late vs early) & +0.09 & 0.694 & 1.000 \\
-29 & Table 4 & Qwen3-8B: PPO vs GRPO (Mann-Whitney U) & Mann-Whitney U & +0.01 & 0.709 & 1.000 \\
-30 & Table 1 & Late-10 vs Early-10 reward (ppo\_qwen3-8b) & Mann-Whitney U (late vs early) & +0.08 & 0.782 & 1.000 \\
-31 & Table 1 & Late-10 vs Early-10 reward (tianshou\_ppo\_math\_s789) & Mann-Whitney U (late vs early) & +0.00 & 0.813 & 1.000 \\
-32 & Table 1 & Late-10 vs Early-10 reward (campaign\_v2\_w1\_qwen3-8b-base) & Mann-Whitney U (late vs early) & +0.13 & 0.818 & 1.000 \\
-33 & Table 1 & Late-10 vs Early-10 reward (frontier\_gsm8k\_nemotron-120b) & Mann-Whitney U (late vs early) & -0.10 & 0.868 & 1.000 \\
-34 & Table 1 & Late-10 vs Early-10 reward (tianshou\_ppo\_math\_s1024) & Mann-Whitney U (late vs early) & +0.00 & 0.938 & 1.000 \\
-35 & Table 1 & Late-10 vs Early-10 reward (modal\_trl\_trl\_qwen3\_8b) & Mann-Whitney U (late vs early) & +0.27 & 0.957 & 1.000 \\
-36 & Table 4 & Qwen3-8B: PPO vs GRPO (full trace, n=30) & Welch t-test & +0.01 & 0.973 & 1.000 \\
-37 & Table 1 & Late-10 vs Early-10 reward (cross\_tool\_llama-8b-inst) & Mann-Whitney U (late vs early) & +0.00 & 1.000 & 1.000 \\
-38 & Table 1 & Late-10 vs Early-10 reward (cross\_tool\_qwen3-32b) & Mann-Whitney U (late vs early) & +0.00 & 1.000 & 1.000 \\
+12 & Table 1 & Late-10 vs Early-10 reward (tianshou\_ppo\_math\_s42) & Descriptive Difference (late vs early) & +1.81 & 0.002 & 0.080 \\
+13 & Table 1 & Late-10 vs Early-10 reward (sb3\_ppo\_math\_s1024) & Descriptive Difference (late vs early) & +1.37 & 0.005 & 0.208 \\
+14 & Table 4 & Llama-3.1-8B-Inst: PPO vs GRPO (Descriptive Difference) & Descriptive Difference & -0.56 & 0.006 & 0.219 \\
+16 & Table 1 & Late-10 vs Early-10 reward (modal\_trl\_trl\_llama32\_1b) & Descriptive Difference (late vs early) & +0.82 & 0.084 & 1.000 \\
+17 & Table 1 & Late-10 vs Early-10 reward (scale\_gsm8k\_qwen3-8b) & Descriptive Difference (late vs early) & +0.66 & 0.108 & 1.000 \\
+18 & Table 1 & Late-10 vs Early-10 reward (tianshou\_ppo\_math\_s456) & Descriptive Difference (late vs early) & +0.52 & 0.246 & 1.000 \\
+19 & Table 1 & Late-10 vs Early-10 reward (sb3\_ppo\_math\_s789) & Descriptive Difference (late vs early) & +0.51 & 0.254 & 1.000 \\
+20 & Table 1 & Late-10 vs Early-10 reward (scale\_gsm8k\_llama-8b-inst) & Descriptive Difference (late vs early) & -0.53 & 0.271 & 1.000 \\
+21 & Table 1 & Late-10 vs Early-10 reward (sb3\_ppo\_math\_s123) & Descriptive Difference (late vs early) & -0.44 & 0.390 & 1.000 \\
+22 & Table 1 & Late-10 vs Early-10 reward (tianshou\_ppo\_math\_s123) & Descriptive Difference (late vs early) & +0.46 & 0.390 & 1.000 \\
+23 & Table 1 & Late-10 vs Early-10 reward (sb3\_ppo\_math\_s42) & Descriptive Difference (late vs early) & +0.27 & 0.455 & 1.000 \\
+24 & Table 1 & Late-10 vs Early-10 reward (sb3\_ppo\_math\_s456) & Descriptive Difference (late vs early) & -0.22 & 0.459 & 1.000 \\
+25 & Table 1 & Late-10 vs Early-10 reward (ppo\_llama-8b-inst) & Descriptive Difference (late vs early) & -0.27 & 0.583 & 1.000 \\
+26 & Table 1 & Late-10 vs Early-10 reward (scale\_gsm8k\_qwen3.5-4b) & Descriptive Difference (late vs early) & +0.18 & 0.633 & 1.000 \\
+27 & Table 1 & Late-10 vs Early-10 reward (modal\_trl\_trl\_llama32\_3b) & Descriptive Difference (late vs early) & -0.33 & 0.643 & 1.000 \\
+28 & Table 1 & Late-10 vs Early-10 reward (frontier\_gsm8k\_deepseek-v3.1) & Descriptive Difference (late vs early) & +0.09 & 0.694 & 1.000 \\
+29 & Table 4 & Qwen3-8B: PPO vs GRPO (Descriptive Difference) & Descriptive Difference & +0.01 & 0.709 & 1.000 \\
+30 & Table 1 & Late-10 vs Early-10 reward (ppo\_qwen3-8b) & Descriptive Difference (late vs early) & +0.08 & 0.782 & 1.000 \\
+31 & Table 1 & Late-10 vs Early-10 reward (tianshou\_ppo\_math\_s789) & Descriptive Difference (late vs early) & +0.00 & 0.813 & 1.000 \\
+32 & Table 1 & Late-10 vs Early-10 reward (campaign\_v2\_w1\_qwen3-8b-base) & Descriptive Difference (late vs early) & +0.13 & 0.818 & 1.000 \\
+33 & Table 1 & Late-10 vs Early-10 reward (frontier\_gsm8k\_nemotron-120b) & Descriptive Difference (late vs early) & -0.10 & 0.868 & 1.000 \\
+34 & Table 1 & Late-10 vs Early-10 reward (tianshou\_ppo\_math\_s1024) & Descriptive Difference (late vs early) & +0.00 & 0.938 & 1.000 \\
+35 & Table 1 & Late-10 vs Early-10 reward (modal\_trl\_trl\_qwen3\_8b) & Descriptive Difference (late vs early) & +0.27 & 0.957 & 1.000 \\
+37 & Table 1 & Late-10 vs Early-10 reward (cross\_tool\_llama-8b-inst) & Descriptive Difference (late vs early) & +0.00 & 1.000 & 1.000 \\
+38 & Table 1 & Late-10 vs Early-10 reward (cross\_tool\_qwen3-32b) & Descriptive Difference (late vs early) & +0.00 & 1.000 & 1.000 \\
 \bottomrule
 \end{tabular}
 \end{table}

@@ -73,6 +73,8 @@ export TINKER_API_KEY=\$(gcloud secrets versions access latest --secret=tinker-a
 # Optional: W&B + HF Hub tokens (silently skip if secret not present)
 export WANDB_API_KEY=\$(gcloud secrets versions access latest --secret=wandb-api-key --project="\$PROJECT_ID" 2>/dev/null || echo "")
 export HF_TOKEN=\$(gcloud secrets versions access latest --secret=hf-token --project="\$PROJECT_ID" 2>/dev/null || echo "")
+# Optional: OpenAI key for BrowserGym llm_fuzzy_match judge (~15% of WebArena tasks)
+export OPENAI_API_KEY=\$(gcloud secrets versions access latest --secret=openai-api-key --project="\$PROJECT_ID" 2>/dev/null || echo "")
 if [ -z "\$WANDB_API_KEY" ]; then WANDB_PROJECT=""; fi
 if [ -z "\$HF_TOKEN" ]; then HF_REPO=""; fi
 

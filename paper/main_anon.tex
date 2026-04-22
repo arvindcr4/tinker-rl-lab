@@ -973,7 +973,7 @@ Environment task success & Not yet established & Requires a MiniWoB/WebArena sui
     \texttt{moe\_gsm8k\_qwen3-30b-moe} (partial), \texttt{moe\_gsm8k\_qwen3-30b-inst} (partial).
     Additionally, \texttt{arch\_gsm8k\_gpt-oss-20b} did not produce usable data and is excluded
     from all tables. \texttt{arch\_gsm8k\_kimi-k2} completed (20 steps; peak 100\%, last-10 95.8\%)
-    and is included in Table~\ref{tab:main_results}.
+    and is included in Table~\ref{tab:cross_arch_scaling}.
     \item[$^b$] DeepSeek-V3.1 GSM8K: 20 training steps on Tinker API;
     peak reward = 100\%, last-10 mean = 85.0\%, first-5 mean = 85.0\%.
     \item[$^h$] Direct KL divergence tracking failed due to PyTorch gradient graph error;
@@ -995,7 +995,7 @@ over this extended set.  We keep them here for the ZVF/GU diagnostic
 coverage they provide.
 
 \paragraph{New Larger Models (training-reward parser, not held-out benchmark).}
-We evaluated six previously untested models on GSM8K with GRPO (Table~\ref{tab:main_results}, Campaign Extension block).
+We evaluated six previously untested models on GSM8K with GRPO (Table~\ref{tab:cross_arch_scaling}, Campaign Extension block).
 \textbf{Kimi-K2-Thinking} had the highest sustained online reward in this block
 (peak 100\%, last-10 95.8\%), suggesting that models already specialized for
 reasoning may be better matched to this verifier-reward setup.
@@ -1028,7 +1028,7 @@ This aligns with the GRPO-as-DPO interpretation~\cite{wu2025grpo_dpo}: GRPO requ
 Base models lacking instruction-following capability produce uniformly low-quality completions, yielding zero-variance groups that prevent learning.
 
 \paragraph{Group Size Ablation.}
-We swept group size $G \in \{2, 4, 8, 16\}$ on Qwen3-8B (Table~\ref{tab:main_results}, Group Size block).
+We swept group size $G \in \{2, 4, 8, 16\}$ on Qwen3-8B (Table~\ref{tab:cross_arch_scaling}, Group Size block).
 The highest observed last-10 reward in this single-seed 30-step sweep occurs at
 $G{=}8$ (84.4\%), with $G{=}4$ second (52.1\%) and both $G{=}2$ (37.5\%) and
 $G{=}16$ (38.0\%) lower. This inverted-U pattern is consistent with a finite-group
@@ -1547,7 +1547,7 @@ including GPU types, batch sizes, and cost estimates.
 \section{Hyperparameter Tables}
 \label{app:hyperparams}
 
-Full hyperparameter sweep ranges used in sensitivity analysis (Section~\ref{fig:sensitivity}):
+Full hyperparameter sweep ranges used in sensitivity analysis (Section~\ref{sec:zvf-analysis}):
 
 \begin{table}[htbp]
 \centering
@@ -1619,7 +1619,7 @@ and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existi
         audit: (i) ZVF/GU diagnose whether group-relative RL has reward
         contrast, (ii) online reward is separated from held-out capability,
         and (iii) PPO/GRPO/DPO labels are under-specified without the full
-        post-training stack.  Section~\ref{sec:results} presents the
+        post-training stack.  Section~\ref{sec:benchmark} presents the
         supporting evidence and explicitly marks proxy rewards, partial runs,
         and stack-confounded comparisons.}
     \end{enumerate}

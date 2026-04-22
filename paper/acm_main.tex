@@ -185,65 +185,22 @@
 
 % =============================================================================
 \begin{abstract}
-% =============================================================================
-Reinforcement learning (RL) is now widely used for post-training language
-models, yet sparse verifiable rewards only produce useful GRPO updates when
-sampled groups contain reward contrast.  We present \ours{}, an exploratory
-systems study of post-training runs across tool-call formatting, GSM8K,
-MATH-style prompts, HumanEval-style verification, model families, and training
-stacks.  The contribution is not a universal algorithm leaderboard.  Instead,
-we argue that Zero-Variance Fraction (ZVF) and Gradient Utilization (GU) should
-be treated as early triage diagnostics: high ZVF with low reward flags
-cold-start collapse, high ZVF with high reward flags saturation, and low ZVF
-indicates usable within-group contrast.  The core mechanism is mixed-reward
-sampling probability, $P(\text{usable group}) = 1 - p_0^G - (1-p_0)^G$, not
-the task label.  We also show why PPO/GRPO/DPO labels are incomplete
-experimental treatments unless the full model, backend, reward parser,
-sampler, optimizer, checkpoint, and evaluation stack is reported.  Held-out
-GSM8K improves only from 82.0\% to 83.3\% ($p=0.26$), so we do not claim
-significant held-out math improvement.
-
-\textbf{Code:} \url{https://github.com/arvindcr4/tinker-rl-lab} \quad
-\textbf{Models:} \url{https://huggingface.co/tinker-rl-bench}
+This project is a systems-oriented empirical audit of critic-free, group-relative reinforcement learning. We investigate the conditions under which post-training receives a non-zero advantage signal, and demonstrate when in-domain training-reward gains fail to transfer to held-out semantic capability. Using a variant inspired by Group Relative Policy Optimization (GRPO), we evaluate tool-call emission, mathematical reasoning, and code generation across 32 controlled ablations. Our findings yield three primary contributions. First, we isolate \textit{reward contrast} as the fundamental bottleneck: a group-relative gradient requires mixed-reward sampling, $P(\text{informative group}) = 1 - p_0^{G} - (1-p_0)^{G}$. Second, we establish a \textit{reward-vs-capability separation}: structured-output format compliance (e.g., JSON schemas) improves sharply via RL, but proxy format rewards easily trigger length-bias and parser exploits without conferring semantic generalization (held-out GSM8K lift was statistically insignificant, $p=0.26$). Finally, we demonstrate \textit{stack identifiability}: algorithmic labels like "PPO" or "GRPO" are insufficiently specified experimental treatments, as their relative performance ranking reversed entirely when moving from Qwen3-8B to Llama-3.1-8B-Instruct. We conclude that Zero-Variance Fraction (ZVF) tracking is a necessary triage diagnostic for identifying cold-start collapse before interpreting reward curves.
 \end{abstract}
 
 % =============================================================================
 \section{Introduction}
-\label{sec:intro}
-% =============================================================================
+\label{sec:introduction}
 
-Reinforcement learning from human feedback (RLHF) and its variants---including
-GRPO~\cite{shao2024deepseekmath}, DPO~\cite{rafailov2024direct}, and knowledge
-distillation---have become essential for aligning language models with human
-preferences. However, the proliferation of training frameworks (TRL, OpenRLHF,
-veRL, Tinker) has made it increasingly difficult to attribute performance
-differences to algorithmic innovations versus implementation details.
+Large language models are increasingly fine-tuned using reinforcement learning to execute verifiable tasks like mathematical reasoning and tool calling. While recent breakthroughs attribute these capabilities to algorithms like Group Relative Policy Optimization (GRPO) \citep{shao2024deepseekmath}, this paper treats the training loop not as a magic capability-injector, but as a mechanical system subject to strict diagnostic constraints. We present a claim-to-evidence audit of group-relative RL. 
 
-The RL community has long recognized this reproducibility challenge.
-Henderson et al.~\cite{henderson2018deep} demonstrated that implementation
-details can cause larger performance gaps than the algorithms themselves.
-Cavenaghi et al.~\cite{cavenaghi2023systematic} conducted a systematic study
-finding that none of 60 examined RL papers met strict ACM reproducibility
-badge definitions. More recently, Jordan et al.~\cite{jordan2024benchmarking}
-argued that rigorous benchmarking in RL requires computational resources often
-exceeding what researchers can afford, leading to underpowered comparisons.
+Rather than chasing state-of-the-art benchmark superiority, we ask: under what precise conditions does the group-relative estimator receive a functional learning signal? When does it collapse? And when does a rising training reward safely predict held-out generalization? By decoupling the nominal algorithm from the base-model sampling competence, reward variance, and execution stack, we reveal that many "RL failures" are actually cold-start sampling collapses, and many "RL successes" are format-hacking exploits over the reward parser.
 
-\paragraph{Contributions.} We make the following contributions:
-\begin{enumerate}
-    \item \textbf{ZVF/GU triage}: an operational diagnostic for distinguishing
-    cold-start collapse, saturation, and usable within-group reward contrast.
-    \item \textbf{Mixed-group mechanism}: a probability model,
-    $1-p_0^G-(1-p_0)^G$, explaining why warm-starts, group size, reward density,
-    and task difficulty determine whether GRPO has signal.
-    \item \textbf{Stack-conditioned reporting}: evidence that PPO/GRPO/DPO
-    comparisons are under-specified without model, backend, reward, sampler,
-    optimizer, checkpoint, and evaluation details.
-    \item \textbf{Reproducibility artifacts}: Docker environments, run logs,
-    statistical analyses, and checkpoint metadata for independent inspection.
-\end{enumerate}
-
-% =============================================================================
 \section{Related Work}
+
+\paragraph{Reward Hacking and Difficulty Filtering.}
+Our audit extends the study of reward hacking \citep{gao2023scaling} by demonstrating how parser exploitation manifests as length bias under sparse verification. Furthermore, our formalization of informative group probability intersects with recent work on online difficulty filtering and Zero-Variance Prompts (RL-ZVP) \citep{rlzvp2025}, proving that uniform-reward batches severely degrade optimization.
+
 \label{sec:related}
 % =============================================================================
 
@@ -570,6 +527,10 @@ We target three ACM Artifact Badges~\cite{acm2020badges}:
 \end{description}
 
 % =============================================================================
+
+\section*{Claims We Explicitly Do Not Make}
+To bound the attack surface of this empirical study, we explicitly disclaim the following: We do not claim our runner achieves state-of-the-art reasoning on GSM8K or MATH-500. We do not claim GRPO is universally superior or inferior to PPO, nor do we assert that our specific hyperparameter configurations represent the global optima for these model families. Our contribution is strictly diagnostic: identifying the structural boundaries of reward variance and stack identifiability that govern whether critic-free RL functions at all.
+
 \section{Limitations}
 \label{sec:limitations}
 % =============================================================================

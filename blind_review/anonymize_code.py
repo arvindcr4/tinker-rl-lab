@@ -78,6 +78,11 @@ EXCLUDE_FILES = {
     "reports/final/capstone_final_report.docx",
     "reports/final/CONSOLIDATED_REVIEW_IMPROVEMENTS.md",
     "reports/final/PAPER_IMPROVEMENT_PLAN.md",
+    "reports/combined/interim_proposal.tex",
+    "reports/combined/combined_capstone_backup.tex",
+    "reports/combined/combined_capstone.tex",
+    "reports/final/submission_uploads/SUBMISSION_MANIFEST.md",
+    "reports/final/submission_uploads/PLAGIARISM_EMAIL_DRAFT.txt",
     "scripts/anonymize.sh",
     "verify_links_entities.txt",
     ".DS_Store",
@@ -458,15 +463,24 @@ def main() -> None:
     anon_tex = ROOT / "paper" / "main_anon.tex"
     (STAGING / "paper").mkdir(exist_ok=True, parents=True)
     shutil.copy2(anon_tex, STAGING / "paper" / "main_anon.tex")
-    # Copy style files / figures / bib that the anonymous paper depends on.
+    # Copy current anonymous paper dependencies from the working tree so the
+    # source snapshot matches the PDFs being submitted, even when final paper
+    # edits have not been committed yet.
     for rel in [
         "paper/neurips_2025.sty",
         "paper/neurips_2026.sty",
         "paper/references.bib",
+        "paper/ethics_statement_anon.tex",
     ]:
         src = ROOT / rel
         if src.exists():
             shutil.copy2(src, STAGING / rel)
+    sections_src = ROOT / "paper" / "sections"
+    sections_dst = STAGING / "paper" / "sections"
+    if sections_src.exists():
+        if sections_dst.exists():
+            shutil.rmtree(sections_dst)
+        shutil.copytree(sections_src, sections_dst)
     # Keep the figures directory for paper build.
     figs_src = ROOT / "paper" / "figures"
     figs_dst = STAGING / "paper" / "figures"

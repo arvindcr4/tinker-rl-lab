@@ -8,6 +8,8 @@ Inputs assembled from the live repo:
   reports/final/capstone_final_report.pdf -> submission/contents/report.pdf
   reports/final/grpo_agentic_llm_paper.pdf -> submission/contents/grpo_agentic_llm_paper.pdf
   reports/final/grpo_agentic_llm_paper_anonymous.pdf -> submission/contents/grpo_agentic_llm_paper_anonymous.pdf
+  reports/final/submission_uploads/final_capstone_presentation.pptx
+                                -> submission/contents/presentation.pptx
   blind_review/tinker-rl-lab-anon.tar.gz -> submission/contents/code.tar.gz
 
 Refreshes checksums.sha256 / MANIFEST.md, then zips the whole bundle.
@@ -22,6 +24,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CONTENTS = ROOT / "submission" / "contents"
 ZIP_PATH = ROOT / "submission" / "neurips2026_tinker_rl_lab.zip"
+PRESENTATION_SOURCE = (
+    ROOT / "reports" / "final" / "submission_uploads" / "final_capstone_presentation.pptx"
+)
+PRESENTATION_TARGET = CONTENTS / "presentation.pptx"
+
+PRESENTATION_REPLACEMENTS = {
+    b"Final Capstone Presentation | Group 6 | PES University": (
+        b"Final Capstone Presentation | Anonymous Submission"
+    ),
+    b"Guides: Prof. Narayana Darapaneni and Mr. Anwesh Reddy Paduri": (
+        b"Advisors: Anonymous"
+    ),
+    b"PES University": b"Anonymous Institution",
+    b"Group 6": b"Anonymous Group",
+    b"Narayana Darapaneni": b"Anonymous Advisor",
+    b"Anwesh Reddy Paduri": b"Anonymous Advisor",
+}
 
 
 SOURCES = [
@@ -64,6 +83,7 @@ BUNDLE_ORDER = [
     "grpo_agentic_llm_paper_anonymous.pdf",
     "paper.pdf",
     "paper_anon.pdf",
+    "presentation.pptx",
     "report.pdf",
     "supporting_data.tar.gz",
 ]
@@ -77,6 +97,24 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def sanitize_presentation(src: Path, dst: Path) -> None:
+    """Copy the final deck while removing blind-review identifiers in XML parts."""
+    if not src.exists():
+        raise SystemExit(f"missing source: {src}")
+    with zipfile.ZipFile(src, "r") as zin, zipfile.ZipFile(
+        dst, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+    ) as zout:
+        for info in zin.infolist():
+            data = zin.read(info.filename)
+            if info.filename.endswith((".xml", ".rels")):
+                for old, new in PRESENTATION_REPLACEMENTS.items():
+                    data = data.replace(old, new)
+            out_info = zipfile.ZipInfo(info.filename, date_time=info.date_time)
+            out_info.compress_type = zipfile.ZIP_DEFLATED
+            out_info.external_attr = info.external_attr
+            zout.writestr(out_info, data)
+
+
 def main() -> int:
     CONTENTS.mkdir(parents=True, exist_ok=True)
     for src, dst in SOURCES:
@@ -84,6 +122,11 @@ def main() -> int:
             raise SystemExit(f"missing source: {src}")
         shutil.copy2(src, dst)
         print(f"copied {src.relative_to(ROOT)} -> {dst.relative_to(ROOT)}")
+    sanitize_presentation(PRESENTATION_SOURCE, PRESENTATION_TARGET)
+    print(
+        f"sanitized {PRESENTATION_SOURCE.relative_to(ROOT)} -> "
+        f"{PRESENTATION_TARGET.relative_to(ROOT)}"
+    )
 
     for name in EXISTING_MEMBERS:
         p = CONTENTS / name

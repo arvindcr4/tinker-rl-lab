@@ -17,23 +17,25 @@ leaderboard claim about ``GRPO''; it is a diagnostic account of when a
 critic-free group-relative RL loop has a usable learning signal and when
 apparent training-reward gains fail to transport to held-out capability.
 
-First, Zero-Variance Fraction (ZVF) and Gradient Utilization (GU) are best
-treated as early triage diagnostics rather than calibrated performance
-predictors.  High ZVF with low reward flags cold-start collapse; high ZVF
-with high reward flags saturation; low ZVF indicates usable within-group
-contrast.  A fixed first-five-step rule catches both collapsed runs in a
-22-run de-duplicated validation set with no false positives, but only two
-positive failures are observed, and continuous ZVF ranking is weak.
-Second, the relevant mechanism is mixed-reward sampling probability:
+First, GRPO is best interpreted here as a reward-contrast amplifier rather
+than as a generic reasoning-improvement switch.  Under binary or verifier-like
+rewards, the relevant mechanism is mixed-reward sampling probability:
 \[
 P(\text{usable}) \approx \frac{1}{N}\sum_x \left[1 - (1-p_x)^G - p_x^G\right].
 \]
-The familiar $1/G$ rule is only an expected-one-success heuristic.  Third,
-PPO/GRPO/DPO labels are incomplete experimental treatments unless the model
-family, backend, reward parser, sampler, optimizer, checkpoint rule, and
-evaluation harness are specified.  Our Qwen PPO/GRPO comparison is
-artifact-sensitive, and our Llama comparison favors PPO; neither supports a
-universal algorithm ranking.
+The familiar $1/G$ rule is only an expected-one-success heuristic.  This
+explains why SFT warm-up, group size, reward density, and task difficulty
+matter more than task labels.  Zero-Variance Fraction (ZVF) and Gradient
+Utilization (GU) operationalize this mechanism as early triage diagnostics:
+high ZVF with low reward flags cold-start collapse; high ZVF with high reward
+flags saturation; low ZVF indicates usable within-group contrast.  A fixed
+first-five-step rule catches both collapsed runs in a 22-run de-duplicated
+validation set with no false positives, but only two positive failures are
+observed, and continuous ZVF ranking is weak.  Second, PPO/GRPO/DPO labels are
+incomplete experimental treatments unless the model family, backend, reward
+parser, sampler, optimizer, checkpoint rule, and evaluation harness are
+specified.  Our Qwen PPO/GRPO comparison is artifact-sensitive, and our Llama
+comparison favors PPO; neither supports a universal algorithm ranking.
 
 Several reward environments in this study measure proxies rather than
 end-to-end capability: the HumanEval-style sandbox executes completions with

@@ -1,6 +1,6 @@
 # Reviewer README
 
-This bundle is a current submission snapshot containing paper PDFs, the capstone report PDF, source code, and curated supporting data.
+This bundle is a current submission snapshot containing paper PDFs, the capstone report PDF, a sanitized presentation deck, source code, and curated supporting data.
 
 Start with `paper_anon.pdf` for blind review. `paper.pdf` and `report.pdf` are included for full-context assessment. `code.tar.gz` contains source and document files; `supporting_data.tar.gz` contains project-generated result artifacts, BrowserGym smoke outputs, ledgers, and local-audit manifests.
 

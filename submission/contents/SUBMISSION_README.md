@@ -8,6 +8,7 @@ This zip contains the current code, paper PDFs, capstone report PDF, and curated
 - `paper_anon.pdf`: anonymized paper build.
 - `grpo_agentic_llm_paper.pdf`: compact GRPO/agentic-LLM paper.
 - `grpo_agentic_llm_paper_anonymous.pdf`: anonymized compact paper.
+- `presentation.pptx`: sanitized final capstone presentation deck.
 - `report.pdf`: capstone final report.
 - `ethics_statement.pdf`: standalone ethics statement.
 - `code.tar.gz`: source code and document sources, excluding generated archives, private caches, checkpoints, W&B state, and secrets.

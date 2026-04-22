@@ -37,16 +37,33 @@ echo "==> Writing startup script..."
 cat > /tmp/webarena_startup.sh <<STARTUP
 #!/usr/bin/env bash
 set -euxo pipefail
-WORKER_ID=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/worker-id)
-NUM_WORKERS=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/num-workers)
-BENCHMARK=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/benchmark)
-MODEL=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/model)
-MAX_STEPS=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/max-steps)
-BUCKET=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/bucket)
-RUN_ID=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/run-id)
-WANDB_PROJECT=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/wandb-project || echo "")
-HF_REPO=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/hf-repo || echo "")
-HF_PRIVATE=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/hf-private || echo "false")
+
+# Poll metadata until worker-id is a valid integer. MIG sets worker-id via
+# per-instance metadata AFTER VM creation (gcloud compute instances
+# add-metadata), so the startup-script can fire before the metadata lands
+# and read back a 404 HTML page. Block here until worker-id is numeric.
+MD="http://metadata.google.internal/computeMetadata/v1/instance/attributes"
+_mdget() { curl -sf -H "Metadata-Flavor: Google" "\$MD/\$1" 2>/dev/null || echo ""; }
+for i in \$(seq 1 60); do
+  WORKER_ID=\$(_mdget worker-id)
+  if [[ "\$WORKER_ID" =~ ^[0-9]+\$ ]]; then break; fi
+  echo "Waiting for worker-id metadata to land (attempt \$i/60, got: '\${WORKER_ID:0:40}')..."
+  sleep 5
+done
+if ! [[ "\$WORKER_ID" =~ ^[0-9]+\$ ]]; then
+  echo "FATAL: worker-id never landed after 5 minutes; aborting startup" >&2
+  exit 1
+fi
+NUM_WORKERS=\$(_mdget num-workers)
+BENCHMARK=\$(_mdget benchmark)
+MODEL=\$(_mdget model)
+MAX_STEPS=\$(_mdget max-steps)
+BUCKET=\$(_mdget bucket)
+RUN_ID=\$(_mdget run-id)
+WANDB_PROJECT=\$(_mdget wandb-project)
+HF_REPO=\$(_mdget hf-repo)
+HF_PRIVATE=\$(_mdget hf-private)
+[ -z "\$HF_PRIVATE" ] && HF_PRIVATE=false
 
 PROJECT_ID=\$(gcloud config get-value project)
 

@@ -79,7 +79,38 @@ if [ -z "\$HF_TOKEN" ]; then HF_REPO=""; fi
 # Launch WebArena docker stack
 cd /opt/webarena-compose
 sudo docker compose up -d
-sleep 90
+# Wait for containers to stabilize (gitlab/magento are slow).
+sleep 120
+
+# Reset baked-in CMU reference URLs to localhost. WebArena images hard-code
+# http://metis.lti.cs.cmu.edu:<port> in their DB/config so a Location: 302
+# from the reference deployment follows back to CMU and dies (CMU is
+# unreachable from most GCP VMs). Do NOT skip this step — without it
+# Playwright's Page.goto gets ERR_CONNECTION_REFUSED on every shopping/
+# shopping_admin/gitlab task.
+echo "==> Resetting WebArena base URLs to localhost..."
+# Shopping (Magento OneStopShop, port 7770)
+sudo docker exec webarena-shopping /var/www/magento2/bin/magento \
+  setup:store-config:set --base-url="http://localhost:7770" 2>/dev/null || true
+sudo docker exec webarena-shopping /var/www/magento2/bin/magento \
+  setup:store-config:set --base-url-secure="http://localhost:7770" 2>/dev/null || true
+sudo docker exec webarena-shopping mysql -u magentouser -pMyPassword magentodb \
+  -e "UPDATE core_config_data SET value='http://localhost:7770/' WHERE path LIKE 'web/%/base_url';" 2>/dev/null || true
+sudo docker exec webarena-shopping /var/www/magento2/bin/magento cache:flush 2>/dev/null || true
+# Shopping Admin (Magento CMS Admin, port 7780)
+sudo docker exec webarena-shopping-admin /var/www/magento2/bin/magento \
+  setup:store-config:set --base-url="http://localhost:7780" 2>/dev/null || true
+sudo docker exec webarena-shopping-admin /var/www/magento2/bin/magento \
+  setup:store-config:set --base-url-secure="http://localhost:7780" 2>/dev/null || true
+sudo docker exec webarena-shopping-admin mysql -u magentouser -pMyPassword magentodb \
+  -e "UPDATE core_config_data SET value='http://localhost:7780/' WHERE path LIKE 'web/%/base_url';" 2>/dev/null || true
+sudo docker exec webarena-shopping-admin /var/www/magento2/bin/magento cache:flush 2>/dev/null || true
+# GitLab (port 8023)
+sudo docker exec webarena-gitlab sed -i \
+  "s|^external_url.*|external_url 'http://localhost:8023'|" /etc/gitlab/gitlab.rb 2>/dev/null || true
+sudo docker exec webarena-gitlab gitlab-ctl reconfigure >/dev/null 2>&1 || true
+echo "==> URL reset complete."
+
 
 # Site URLs — BrowserGym WebArena expects WA_* naming
 export WA_SHOPPING=http://localhost:7770

@@ -36,7 +36,7 @@ predictors.
 
 The mechanism behind that diagnostic is mixed-group probability:
 \[
-P(\text{usable group}) = 1 - p_0^G - (1-p_0)^G .
+P(\text{usable}) \approx \frac{1}{N}\sum_x \left[1 - (1-p_x)^G - p_x^G\right].
 \]
 This formula is the cleanest way to state the boundary condition.  The
 expected-one-success rule $p_0>1/G$ is only a heuristic.  Future work should

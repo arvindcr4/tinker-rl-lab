@@ -171,7 +171,7 @@ def main():
     print("Initializing GRPOTrainer for GSM8K...")
     trainer = GRPOTrainer(
         model=model,
-        config=grpo_config,
+        args=grpo_config,
         train_dataset=dataset,
         processing_class=tokenizer,
         reward_funcs=reward_fn,

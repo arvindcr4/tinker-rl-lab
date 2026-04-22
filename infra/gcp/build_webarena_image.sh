@@ -19,7 +19,7 @@ echo "==> Creating builder VM..."
 gcloud compute instances create "$BUILDER_NAME" \
   --zone="$GCP_ZONE" \
   --machine-type=e2-standard-4 \
-  --image-family=ubuntu-2404-lts \
+  --image-family=ubuntu-2404-lts-amd64 \
   --image-project=ubuntu-os-cloud \
   --boot-disk-size="${BUILDER_DISK_GB}GB" \
   --boot-disk-type=pd-balanced

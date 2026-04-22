@@ -111,6 +111,7 @@ reports/final/*.toc
 *.zip
 *.tar.gz
 reports/final/capstone_final_report_submission/
+artifacts/local_copies/
 
 wandb/
 .modal/

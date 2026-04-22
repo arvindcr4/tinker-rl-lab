@@ -220,17 +220,17 @@ def main():
         for a in attribution:
             lines.append(
                 "| " + str(a['seq']) + " | "
-                + ("%.4f" % a['full_loss']) + " | "
-                + ("%.4f" % a['completion_loss']) + " | "
-                + ("%+.4f" % a['prompt_contribution']) + " | "
-                + ("%+.3f" % a['prompt_frac_of_full']) + " |"
+                + ("{:.4f}".format(a['full_loss'])) + " | "
+                + ("{:.4f}".format(a['completion_loss'])) + " | "
+                + ("{:+.4f}".format(a['prompt_contribution'])) + " | "
+                + ("{:+.3f}".format(a['prompt_frac_of_full'])) + " |"
             )
         lines += [
             "",
             "## Verdict: **" + verdict + "**",
             "",
             "Average |prompt fraction of full-sequence loss|: "
-            + ("%.3f" % avg_prompt_frac) + ". Threshold for CLEAN: < 0.05.",
+            + ("{:.3f}".format(avg_prompt_frac)) + ". Threshold for CLEAN: < 0.05.",
             "",
             "Current runner uses full_sequence_sum. If the prompt fraction is",
             "non-trivial (>5%), the recorded GRPO loss is contaminated by",
@@ -240,7 +240,7 @@ def main():
         OUT_MD.write_text("\n".join(lines) + "\n")
         print("wrote " + str(OUT_JSON))
         print("wrote " + str(OUT_MD))
-        print("verdict: " + verdict + " (avg abs prompt frac = " + ("%.3f" % avg_prompt_frac) + ")")
+        print("verdict: " + verdict + " (avg abs prompt frac = " + ("{:.3f}".format(avg_prompt_frac)) + ")")
 
     except Exception as exc:
         result["status"] = "failed"

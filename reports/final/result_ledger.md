@@ -28,7 +28,7 @@ This ledger reconciles headline numbers used in the final capstone report. It se
 | Interrupted frontier / MoE runs | Partial | Too few steps or interrupted checkpoints | Reported only as frontier probes, not scaling-law evidence |
 | Eight-example keyword/preference pilots | Supporting-only | Data too small and metric too narrow for causal claims | Appendix or breadth evidence only |
 | `browser-control-smoke-agent-browser` | Supporting-only | Three local synthetic browser tasks are too small and non-standardized for benchmark claims | Agentic systems evidence for real browser observation/action/screenshot control |
-| `browsergym-tinker-smoke-configs` | Added scaffold | BrowserGym MiniWoB/WebArena configs and wrapper are runnable infrastructure; full benchmark runs still require MiniWoB/WebArena service setup | Reproducible path from Tinker GRPO to browser benchmark rewards |
+| `browsergym-miniwob-tinker-smoke` | Supporting-only | One-step MiniWoB smoke completed but produced all-zero rewards, two zero-advantage groups, and zero trainable datums | Reproducible evidence that Tinker GRPO can route through BrowserGym/Chromium/W&B; not learning evidence |
 
 ## Claim Rules
 

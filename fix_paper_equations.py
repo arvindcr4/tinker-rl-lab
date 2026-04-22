@@ -1,4 +1,3 @@
-import os
 import glob
 
 def fix_file(filepath):

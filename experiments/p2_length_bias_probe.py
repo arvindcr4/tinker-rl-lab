@@ -161,8 +161,8 @@ def run(args):
             return (len(xs), sum(xs) / len(xs), sorted(xs)[len(xs) // 2])
         ns, ms, meds = stats(pos)
         nf, mf, medf = stats(neg)
-        print("[" + tag + "] rewarded: n=" + str(ns) + " mean_len=" + ("%.1f" % ms) + " median=" + str(meds))
-        print("[" + tag + "] failed  : n=" + str(nf) + " mean_len=" + ("%.1f" % mf) + " median=" + str(medf))
+        print("[" + tag + "] rewarded: n=" + str(ns) + " mean_len=" + ("{:.1f}".format(ms)) + " median=" + str(meds))
+        print("[" + tag + "] failed  : n=" + str(nf) + " mean_len=" + ("{:.1f}".format(mf)) + " median=" + str(medf))
         print("wrote " + str(out_json))
         print("wrote " + str(out_csv))
 

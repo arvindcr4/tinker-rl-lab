@@ -39,6 +39,20 @@ else
     exit 1
 fi
 
+API_PORT=$(python - "$CONFIG" <<'PY'
+import sys
+from urllib.parse import urlparse
+
+import yaml
+
+with open(sys.argv[1], "r") as f:
+    cfg = yaml.safe_load(f) or {}
+
+url = cfg.get("env", {}).get("rollout_server_url", "http://localhost:8000")
+print(urlparse(url).port or 8000)
+PY
+)
+
 cleanup() {
     echo ""
     echo "Cleaning up processes..."
@@ -52,10 +66,10 @@ trap cleanup EXIT
 
 echo ""
 echo "[1/3] Starting Atropos API server..."
-run-api > "$LOG_DIR/api.log" 2>&1 &
+run-api --port "$API_PORT" > "$LOG_DIR/api.log" 2>&1 &
 API_PID=$!
 sleep 3
-echo "  Atropos API running (PID $API_PID)"
+echo "  Atropos API running on port $API_PORT (PID $API_PID)"
 
 echo "[2/3] Starting Tinker trainer..."
 python launch_training.py --config "$CONFIG" > "$LOG_DIR/trainer.log" 2>&1 &

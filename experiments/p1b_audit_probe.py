@@ -213,7 +213,7 @@ def run(args):
             if (i + 1) % 5 == 0:
                 mean_so_far = sum(p["p_x"] for p in per_prompt) / len(per_prompt)
                 print("[" + tag + "] " + str(i + 1) + "/" + str(len(examples))
-                      + " mean_p_x so far = " + ("%.3f" % mean_so_far), flush=True)
+                      + " mean_p_x so far = " + ("{:.3f}".format(mean_so_far)), flush=True)
 
         n = len(per_prompt)
         mean_p = sum(p["p_x"] for p in per_prompt) / n
@@ -239,9 +239,9 @@ def run(args):
             for p in per_prompt:
                 w.writerow([p["idx"], p["p_x"], p["n_correct"], p["n_samples"], p["zero_variance"]])
 
-        print("[" + tag + "] done. mean_p_x=" + ("%.3f" % mean_p)
-              + " predicted_usable=" + ("%.3f" % usable)
-              + " empirical_zvf=" + ("%.3f" % zvf_emp))
+        print("[" + tag + "] done. mean_p_x=" + ("{:.3f}".format(mean_p))
+              + " predicted_usable=" + ("{:.3f}".format(usable))
+              + " empirical_zvf=" + ("{:.3f}".format(zvf_emp)))
         print("wrote " + str(out_json))
         print("wrote " + str(out_csv))
         return result

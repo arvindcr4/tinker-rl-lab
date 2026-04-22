@@ -1,0 +1,31 @@
+{
+  "experiment": "browsergym_miniwob_tinker_smoke",
+  "completed_at": "2026-04-22T03:57:27Z",
+  "status": "completed",
+  "exit_code": 0,
+  "config": "atropos/configs/browsergym_miniwob_qwen_8b_smoke.yaml",
+  "environment_module": "tinker_atropos.environments.browsergym_tinker",
+  "model": "Qwen/Qwen3-8B",
+  "method": "Tinker + Atropos GRPO",
+  "browser_driver": "BrowserGym + Playwright Chromium",
+  "benchmark": "MiniWoB",
+  "env_ids": [
+    "browsergym/miniwob.click-button",
+    "browsergym/miniwob.choose-list",
+    "browsergym/miniwob.enter-text"
+  ],
+  "tinker_final_weights": "tinker://1ed9e1be-6ac9-50d0-913e-738158840d27:train:0/sampler_weights/final",
+  "wandb": {
+    "project": "tinker-agentic-smoke",
+    "group": "browsergym-tinker-smoke",
+    "trainer_run": "https://wandb.ai/arvindcr4-pes-university/tinker-agentic-smoke/runs/779whzpj",
+    "env_run": "https://wandb.ai/arvindcr4-pes-university/tinker-agentic-smoke/runs/0gruv67o"
+  },
+  "metrics": {
+    "trainer_loss": 0.0,
+    "reward_mean": 0.0,
+    "datum_objects": 0,
+    "zero_advantage_groups_skipped": 2
+  },
+  "interpretation": "Integration smoke passed: Tinker sampled through Atropos, BrowserGym executed MiniWoB tasks in Chromium, and W&B recorded trainer/env runs. This is not evidence of browser-task learning because the one-step smoke produced identical zero rewards and no trainable datums."
+}

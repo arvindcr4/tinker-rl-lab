@@ -76,6 +76,11 @@ EXCLUDE_FILES = {
     "reports/final/grpo_agentic_llm_paper.md",
     "reports/final/capstone_final_report.md",
     "reports/final/capstone_final_report.docx",
+    "reports/final/capstone_final_report.pdf",
+    "reports/final/grpo_agentic_llm_paper.pdf",
+    "submission/contents/report.pdf",
+    "submission/contents/grpo_agentic_llm_paper.pdf",
+
     "reports/final/CONSOLIDATED_REVIEW_IMPROVEMENTS.md",
     "reports/final/PAPER_IMPROVEMENT_PLAN.md",
     "reports/combined/interim_proposal.tex",

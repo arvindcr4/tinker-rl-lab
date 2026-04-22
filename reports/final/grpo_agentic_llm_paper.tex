@@ -23,7 +23,7 @@
 % ===========================================================================
 % Title
 % ===========================================================================
-\title{When Does GRPO Have a Learning Signal?\\Reward-Contrast Diagnostics and Stack-Conditioned Evidence}
+\title{When Does a Group-Relative Runner Have a Learning Signal?\\Reward-Contrast Diagnostics and Stack-Conditioned Evidence}
 
 % Authors
 \author{
@@ -56,6 +56,15 @@ This project is a systems-oriented empirical audit of critic-free, group-relativ
 % Introduction
 % ===========================================================================
 \section{Introduction}
+
+\section*{Key Definitions}
+\begin{itemize}
+    \item \textbf{Tool-use:} In this artifact, tool-use refers strictly to \textit{schema-valid JSON emission} (parsing successfully with correct keys), not semantic tool execution.
+    \item \textbf{ZVF (Zero-Variance Fraction):} The proportion of sampled groups where all completions receive identical rewards (typically zero), resulting in a zero advantage gradient.
+    \item \textbf{GU (Gradient Utilization):} The proportion of steps that produce a non-zero gradient update.
+    \item \textbf{Group-Relative Runner:} Our implementation is a GRPO-inspired variant omitting the PPO ratio, clipping, and reference-KL penalties.
+\end{itemize}
+
 
 \textbf{Core Empirical Claim:} In this heterogeneous artifact, a noncanonical group-relative RL runner produces useful training-reward signal only when sampled groups contain reward diversity; online reward is easy to overinterpret; algorithm labels are under-specified without the full stack; and held-out GSM8K shows no significant single-model capability lift.
 
@@ -405,7 +414,7 @@ Critically, we also ran $G{=}32$ on the 3B model. Zero-loss drops from 56\% ($G{
     \label{fig:synth_real}
 \end{figure}
 
-Synthetic 5-tool tasks saturate to reward $>$0.9 within 5 steps (Figure~\ref{fig:synth_real}), while xlam-60k yields 0.06--0.36 after 100 steps---a 3--8$\times$ gap consistent with known domain-transfer challenges in tool use. This is a \emph{data distribution} effect (curated vs.\ real schemas), distinct from the train-test \emph{metric} discrepancy observed for GSM8K (Section~4.4.2), which reflects decoding regime differences.
+Synthetic 5-tool tasks saturate to reward $>$0.9 within 5 steps (Figure~\ref{fig:synth_real}), while xlam-60k yields 0.06--0.36 after 100 steps---a 3--8$\times$ gap consistent with known domain-transfer challenges in schema-valid JSON emission. This is a \emph{data distribution} effect (curated vs.\ real schemas), distinct from the train-test \emph{metric} discrepancy observed for GSM8K (Section~4.4.2), which reflects decoding regime differences.
 
 \subsection{Browser-Control Smoke Test}
 

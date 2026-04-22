@@ -1,4 +1,4 @@
-\begin{thebibliography}{160}
+\begin{thebibliography}{157}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -54,15 +54,18 @@ Mohammad~Gheshlaghi Azar, Zhaohan~Daniel Guo, Bilal Piot, R{\'e}mi Munos, Mark
 \newblock 2024.
 \newblock IPO.
 
-\bibitem[Bae et~al.(2025)Bae, Hong, Lee, Kim, Nam, and Kwak]{bae2025online}
-Sanghwan Bae, Jiwoo Hong, Min~Young Lee, Hanbyul Kim, JeongYeon Nam, and
+\bibitem[Bae et~al.(2026)Bae, Hong, Lee, Kim, Nam, and Kwak]{bae2025online}
+Sanghwan Bae, Jiwoo Hong, Min~Young Lee, Hanbyul Kim, Jeongyeon Nam, and
   Donghyun Kwak.
 \newblock Online difficulty filtering for reasoning oriented reinforcement
   learning.
-\newblock \emph{arXiv preprint}, 2025.
-\newblock \doi{10.48550/arXiv.2504.03380}.
-\newblock URL \url{https://arxiv.org/abs/2504.03380}.
-\newblock arXiv:2504.03380.
+\newblock In \emph{Proceedings of the 19th Conference of the European Chapter
+  of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  pages 700--719, Rabat, Morocco, March 2026. Association for Computational
+  Linguistics.
+\newblock ISBN 979-8-89176-380-7.
+\newblock \doi{10.18653/v1/2026.eacl-long.30}.
+\newblock URL \url{https://aclanthology.org/2026.eacl-long.30/}.
 
 \bibitem[Bai et~al.(2022{\natexlab{a}})Bai, Jones, Ndousse, Askell, Chen,
   DasSarma, Drain, Fort, Ganguli, Henighan, et~al.]{bai2022hhrlhf}
@@ -91,13 +94,6 @@ Yoav Benjamini and Yosef Hochberg.
 \newblock \emph{Journal of the Royal Statistical Society: Series B
   (Methodological)}, 57\penalty0 (1):\penalty0 289--300, 1995.
 \newblock \doi{10.1111/j.2517-6161.1995.tb02031.x}.
-
-\bibitem[Bettini et~al.(2023)Bettini, Prorok, and Moens]{bettini2023benchmarl}
-Matteo Bettini, Amanda Prorok, and Vincent Moens.
-\newblock {BenchMARL}: Benchmarking multi-agent reinforcement learning.
-\newblock \emph{arXiv preprint}, 2023.
-\newblock \doi{10.48550/arXiv.2312.01472}.
-\newblock arXiv:2312.01472.
 
 \bibitem[{ByteDance Seed} et~al.(2025){ByteDance Seed}, Yue, Yuan, Yu, Zuo,
   Zhu, Xu, Chen, Wang, Fan, et~al.]{bytedance2025vapo}
@@ -247,14 +243,6 @@ Xinyu Guan, Li~Lyna Zhang, Yifei Liu, Ning Shang, Youran Sun, Yi~Zhu, Fan Yang,
 \newblock \emph{arXiv preprint}, 2025.
 \newblock \doi{10.48550/arXiv.2501.04519}.
 \newblock arXiv:2501.04519.
-
-\bibitem[Han et~al.(2026)]{han2026ebpo}
-Shuo Han et~al.
-\newblock {EBPO}: Empirical bayes policy optimization for saturated reward
-  scenarios.
-\newblock \emph{arXiv preprint}, 2026.
-\newblock \doi{10.48550/arXiv.2602.09934}.
-\newblock arXiv:2602.09934.
 
 \bibitem[Hatamizadeh et~al.(2026)Hatamizadeh, Heinrich, Han, Yin, Yang, Byeon,
   Kautz, and Molchanov]{hatamizadeh2026igrpo}
@@ -459,14 +447,13 @@ Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody~Hao Yu,
   Principles (SOSP)}, 2023.
 \newblock \doi{10.1145/3600006.3613165}.
 
-\bibitem[Le et~al.(2025)Le, Jeon, Vu, Lai, and Yang]{rlzvp2025}
-Thanh-Long~V. Le, Myeongho Jeon, Kim Vu, Viet Lai, and Eunho Yang.
+\bibitem[Le et~al.(2026)Le, Jeon, Vu, Lai, and Yang]{rlzvp2025}
+Thanh-Long~V. Le, Myeongho Jeon, Kim Vu, Viet~Dac Lai, and Eunho Yang.
 \newblock No prompt left behind: Exploiting zero-variance prompts in {LLM}
   reinforcement learning via entropy-guided advantage shaping.
-\newblock \emph{arXiv preprint}, 2025.
-\newblock \doi{10.48550/arXiv.2509.21880}.
-\newblock URL \url{https://arxiv.org/abs/2509.21880}.
-\newblock arXiv:2509.21880.
+\newblock In \emph{International Conference on Learning Representations}, 2026.
+\newblock URL \url{https://openreview.net/forum?id=kiXFIESZKv}.
+\newblock ICLR 2026 poster; arXiv:2509.21880.
 
 \bibitem[Lee et~al.(2023)Lee, Hunter, and Ruiz]{lee2023platypus}
 Ariel~N. Lee, Cole~J. Hunter, and Nataniel Ruiz.
@@ -643,15 +630,6 @@ Nicolai~A. Lynnerup, Laura Nolling, Rasmus Hasle, and John Hallam.
 \newblock \emph{arXiv preprint}, 2019.
 \newblock \doi{10.48550/arXiv.1909.03772}.
 \newblock arXiv:1909.03772.
-
-\bibitem[Madaan et~al.(2024)Madaan, Singh, Schaeffer, Poulton, Koyejo,
-  Stenetorp, Narang, and Hupkes]{zhang2024benchvariance}
-Lovish Madaan, Aaditya~K. Singh, Rylan Schaeffer, Andrew Poulton, Sanmi Koyejo,
-  Pontus Stenetorp, Sharan Narang, and Dieuwke Hupkes.
-\newblock Quantifying variance in evaluation benchmarks.
-\newblock \emph{arXiv preprint}, 2024.
-\newblock \doi{10.48550/arXiv.2406.10229}.
-\newblock arXiv:2406.10229.
 
 \bibitem[{Mathematical Association of America}(2024)]{maa2024aime}
 {Mathematical Association of America}.

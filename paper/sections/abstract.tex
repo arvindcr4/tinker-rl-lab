@@ -3,11 +3,15 @@
 % Drop-in include: \input{sections/abstract}
 % =============================================================================
 \begin{abstract}
-We present TinkerRL-Bench, a systems-oriented empirical audit of 79 post-training
-runs across tool-call formatting, GSM8K, MATH-style prompts, HumanEval-style
-verification, multiple model families, and several training stacks.  Our
-training runner is a group-relative policy-gradient variant inspired by GRPO,
-not a faithful reproduction of the canonical objective of
+This paper should be read as a claim-to-evidence audit, not as a benchmark or
+leaderboard.  We audit TinkerRL Audit Corpus, a set of 79 post-training runs
+across tool-call formatting, GSM8K, MATH-style prompts, HumanEval-style
+verification, multiple model families, and several training stacks.  The unit
+of analysis is not a score table; it is the claim that a result can support,
+the measurement that produced it, the implementation that generated the update,
+and the weaker verdict that remains after evaluator and artifact caveats are
+applied.  Our training runner is a group-relative policy-gradient variant
+inspired by GRPO, not a faithful reproduction of the canonical objective of
 \citet{shao2024deepseekmath}: it does not implement the PPO ratio and clip,
 does not retain a frozen reference policy for KL regularization, uses a
 single optimizer step per rollout batch, and does not apply a completion-only
@@ -17,17 +21,7 @@ from the completion).  The contribution is diagnostic: characterizing the
 structural boundaries of reward variance and stack identifiability that
 govern whether critic-free RL produces a learning signal at all.
 
-First, we show that GRPO hyperparameters are insufficient to specify training
-dynamics.  Under nominally matched visible configurations (Qwen3-8B, group size
-$G=8$, learning rate $10^{-5}$, GSM8K, 30 steps, seed 42), our Tinker runner
-reaches 84.4\% last-10 training reward while TRL on Modal H100 reaches 5.0\%.
-This 17$\times$ gap is not a framework ranking; it proves that backend,
-sampler, reward parser, LoRA configuration, optimizer, and evaluator are
-co-determinants of outcome in ways that hyperparameter tables do not capture.
-Algorithm labels such as PPO, GRPO, and DPO are not meaningful experimental
-treatments unless the full training stack is specified and controlled.
-
-Second, we introduce Zero-Variance Fraction (ZVF) and Gradient Utilization (GU)
+First, we introduce Zero-Variance Fraction (ZVF) and Gradient Utilization (GU)
 as actionable triage diagnostics for GRPO training signal.  ZVF measures the
 fraction of prompts where all $G$ completions receive identical rewards,
 producing zero gradient.  In our corpus, ZVF $\geq 80\%$ sustained over five
@@ -42,7 +36,7 @@ $r = 0.059$ ($p = 0.096$).  We therefore treat ZVF/GU as regime-identifying
 triage (cold-start collapse vs. saturation vs. healthy contrast), not as a
 calibrated performance predictor.
 
-Third, we show that training reward conflates with held-out capability in most
+Second, we show that training reward conflates with held-out capability in most
 prior work.  The clean held-out GSM8K control (Qwen3-8B, paired evaluation on
 a 200-example held-out slice not used during training) improves only from
 82.0\% to 83.3\% ($p = 0.26$), a small and non-significant gain.  Held-out
@@ -54,9 +48,19 @@ values range from 95.0\% to 98.1\% yet all land on 95.0\% held-out accuracy,
 demonstrating that \emph{last-10} variance reflects Monte-Carlo sampling noise
 rather than genuine generalization differences.
 
+Third, we show that GRPO hyperparameters are insufficient to specify training
+dynamics.  Under nominally matched visible configurations (Qwen3-8B, group size
+$G=8$, learning rate $10^{-5}$, GSM8K, 30 steps, seed 42), our Tinker runner
+reaches 84.4\% last-10 training reward while TRL on Modal H100 reaches 5.0\%.
+This 17$\times$ gap is not a framework ranking; it shows that backend,
+sampler, reward parser, LoRA configuration, optimizer, and evaluator are
+co-determinants of outcome in ways that hyperparameter tables do not capture.
+Algorithm labels such as PPO, GRPO, and DPO are not meaningful experimental
+treatments unless the full training stack is specified and controlled.
+
 We do not claim GRPO universally improves reasoning.  We do not claim ZVF
 predicts final performance.  We do not claim PPO is inferior to GRPO.  We do
-not claim our benchmark establishes scaling laws (the exponential saturation
+not claim this audit corpus establishes scaling laws (the exponential saturation
 fits have mean $R^2 = 0.210$ on short traces).  Our contribution is strictly
 diagnostic: the structural boundaries of reward variance and stack
 identifiability that determine whether critic-free group-relative RL produces

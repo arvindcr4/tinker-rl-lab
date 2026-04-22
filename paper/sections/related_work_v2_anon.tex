@@ -5,21 +5,28 @@
 %   (1) RL algorithms for LLMs
 %   (2) Reasoning RL (and process reward models)
 %   (3) Tool-use RL
-%   (4) Scaling laws for RL post-training
-%   (5) Frameworks, benchmarks, and reproducibility
+%   (4) Scale and reward-trajectory evidence for RL post-training
+%   (5) Frameworks, evaluation harnesses, and reproducibility
 % Every paragraph references entries defined in paper/references.bib.
 % =============================================================================
 
 \section{Related Work}
 \label{sec:related}
 
-\ours{} sits at the intersection of five rapidly evolving lines of work:
-policy-gradient \emph{algorithms} for language models, RL for \emph{reasoning}
-(including process reward models), RL for \emph{tool use} and agentic behaviour,
-empirical \emph{scaling laws} for RL post-training, and the \emph{frameworks}
-and \emph{benchmarks} that instantiate these algorithms. We situate our
-contribution against more than fifty recent works; entries marked with
-\textsuperscript{\dag} appeared at NeurIPS, ICML, or ICLR in the 2025--2026 cycle.
+\ours{} is not an optimizer paper in the style of DeepSeekMath, nor a
+new zero-variance optimizer or prompt-selection rule in the style of RL-ZVP or
+Online Difficulty Filtering.  It is a systems-oriented empirical audit of when
+group-relative LLM post-training has a usable reward-contrast signal and when
+its rewards become misleading evidence.  We therefore position the work along
+five axes: policy-gradient \emph{algorithms} for language models, RL for
+\emph{reasoning} (including process reward models and spurious-reward studies),
+RL for \emph{tool use} and agentic behaviour, descriptive scale and
+reward-trajectory studies for RL post-training, and the \emph{frameworks},
+\emph{evaluation harnesses}, and reproducibility practices that instantiate
+these algorithms.  The recurring
+claim is that an algorithm label is not the full treatment: the model family,
+reward parser, sampler, backend, mask, checkpoint rule, and evaluation split all
+condition what a reported RL gain means.
 
 % -----------------------------------------------------------------------------
 \subsection{RL Algorithms for Large Language Models}
@@ -37,11 +44,20 @@ SLiC~\cite{zhao2023slic}, all of which we consider as no-rollout baselines in
 our cross-library protocol.
 
 The current wave is defined by \emph{group-relative} policy gradient methods.
-GRPO was introduced with DeepSeekMath~\cite{shao2024deepseekmath} and
-popularised by DeepSeek-R1~\cite{guo2025deepseekr1,guo2025deepseekr1nature}, the
-first reasoning RL method published in \emph{Nature}, which showed that
-pure outcome-reward RL can elicit chain-of-thought behaviour from a base
-model without supervised cold-start data. A second wave of refinements
+DeepSeekMath~\cite{shao2024deepseekmath} introduced GRPO together with a
+7B math model trained from a math-heavy data pipeline; it framed GRPO as a
+memory-efficient PPO variant that samples multiple completions per prompt,
+uses group-relative rewards instead of a learned critic, and retains
+PPO-style ratio/clip and reference-policy regularization.  DeepSeek-R1 later
+popularised outcome-reward reasoning RL at much larger scale~\cite{guo2025deepseekr1,guo2025deepseekr1nature}.
+This paper uses DeepSeekMath as the canonical anchor for what a faithful
+``GRPO'' claim would require, but our runner is deliberately narrower: it
+preserves the critic-free, group-relative reward-contrast mechanism while
+omitting several canonical implementation choices, including probability-ratio
+clipping, a frozen-reference KL term, and completion-only masking.  Our claims
+are therefore mechanism-level and diagnostic rather than leaderboard-level: we
+study when a group-relative loop has reward diversity to amplify, not whether a
+particular DeepSeekMath recipe has been reproduced.  A second wave of refinements
 dissects the biases of vanilla GRPO. Dr.~GRPO~\cite{liu2025drgrpo} removes a
 response-length bias and a question-difficulty amplification bias by using a
 constant loss normaliser and dropping the standard-deviation denominator in the
@@ -83,34 +99,30 @@ Dr.~SAC~\cite{ahmadian2024backtobasics}; the last argues that classical
 REINFORCE with a value baseline, when carefully implemented, matches GRPO on
 several RLHF tasks.
 
-A third thread attacks the \emph{zero-variance failure mode} (ZVF) directly.
-RL-ZVP~\cite{rlzvp2025} treats all-correct and all-incorrect groups as
-recoverable training material by changing the advantage signal, while
-Online Difficulty Filtering~\cite{bae2025online} selects intermediate-difficulty
-prompts online so that sampled batches preserve useful reward variation.
-AERO~\cite{zhang2026aero} and GRESO~\cite{zhang2026greso} pre-screen prompts
-before sampling; CPPO~\cite{lin2025cppo} prunes completions post-rollout,
-giving up to $7.98\times$ speedup on GSM8K. NGRPO~\cite{nan2025ngrpo} adds
-Advantage Calibration and asymmetric clipping so that all-incorrect groups
-still carry gradient. Scaf-GRPO~\cite{zhang2025scaffgrpo} injects tiered
-scaffolding hints when learning stagnates, boosting AIME~2024 by $44.3\%$
-relative. EBPO~\cite{han2026ebpo} uses a Bayesian shrinkage estimator that
-guarantees non-vanishing penalties in saturated failure scenarios with formal
-MSE bounds. MO-GRPO~\cite{ichihara2025mogrpo} addresses vanilla GRPO's
-collapse to a single reward component under multiple objectives via
-variance-based reward re-weighting. Finally, Demystifying
-GRPO~\cite{zhou2026demystify} proves that the GRPO policy gradient is a
-$U$-statistic, deriving a universal scaling law for optimal group size;
-MinPRO~\cite{lei2026minpro} shows that token-level importance sampling in
-GRPO is only an approximation to the rigorous prefix importance ratio;
-SSPO~\cite{yang2025sspo} operates at sentence granularity to balance the
-stability of GSPO against the expressiveness of token-level GRPO, improving
-by $3.56$ points on math benchmarks.  This paper uses the same zero-variance
-condition differently: under standard GRPO, ZVF/GU become experiment-management
-signals that tell the researcher whether to stop, warm-start, densify reward,
-increase group size, or change task difficulty.  In that sense, our diagnostic
-framing complements RL-ZVP's training-algorithm framing and Zhou et al.'s
-finite-sample theory.
+The closest algorithmic relatives are works that respond directly to
+\emph{zero-variance} or zero-advantage groups.  RL-ZVP~\cite{rlzvp2025} argues
+that all-correct and all-incorrect groups need not be discarded: it reshapes the
+advantage with token-level signals so zero-variance prompts can still update the
+policy.  Online Difficulty Filtering~\cite{bae2025online} takes the complementary
+route of changing the prompt stream, selecting tasks where the current policy's
+success probability is intermediate so sampled batches maintain high reward
+variance.  These papers optimize around the same bottleneck that we measure.
+The distinction is that \ours{} does not propose a replacement optimizer or
+curriculum; it turns ZVF and Gradient Utilization (GU) into run-level diagnostics
+for ordinary group-relative experiments.  High-ZVF/low-reward runs indicate
+cold-start collapse; high-ZVF/high-reward runs indicate saturation; low ZVF
+indicates usable within-group contrast.  Thus RL-ZVP and Online Difficulty
+Filtering ask how to recover or select signal, while we ask whether a given
+stack currently has signal and what evidential status its reward curve deserves.
+Other proposals alter sampling or advantage estimation---AERO~\cite{zhang2026aero}
+and GRESO~\cite{zhang2026greso} pre-screen prompts, CPPO~\cite{lin2025cppo}
+prunes completions post-rollout, NGRPO~\cite{nan2025ngrpo} calibrates
+all-incorrect groups, Scaf-GRPO~\cite{zhang2025scaffgrpo} injects hints, and
+MO-GRPO~\cite{ichihara2025mogrpo} re-weights multi-objective rewards.  Theory
+work such as Demystifying GRPO~\cite{zhou2026demystify}, MinPRO~\cite{lei2026minpro},
+and SSPO~\cite{yang2025sspo} explains the estimator or granularity of the update;
+our contribution is the complementary experimental accounting layer that decides
+when those updates are being driven by real reward contrast.
 
 % -----------------------------------------------------------------------------
 \subsection{Reasoning RL and Process Reward Models}
@@ -139,11 +151,15 @@ verifiers~\cite{mcaleese2024criticgpt} all benefit from or substitute for
 process reward supervision. VerifyBench~\cite{zhang2025verifybench} and
 A~Sober Look~\cite{hochlehnert2025sober} warn, however, that reward hacking
 and evaluation artefacts can inflate perceived gains. Spurious
-Rewards~\cite{shao2025spurious} sharpens the warning by showing that weak or
-random reward signals can amplify model-specific pretrained behaviours on
-some math model families without proving a general capability gain. These
-results motivate our evidence hierarchy: reward improvements are dynamics
-evidence until checked against held-out or shifted evaluations.
+Rewards~\cite{shao2025spurious} is the closest negative control for our
+interpretation: it shows that RLVR can yield large math-benchmark gains on
+some model families even when the reward is random, format-only, incorrect, or
+otherwise weakly aligned with correctness, and that these effects do not
+necessarily transfer across model families.  Our proxy-reward results are read
+under the same constraint.  Online reward curves are evidence about training
+dynamics and reward-environment interaction; capability claims require held-out
+or shifted evaluations.  This evidence hierarchy is therefore not a presentation
+choice but the paper's response to the spurious-reward literature.
 
 Reasoning-specific algorithmic contributions also continue to accumulate.
 ReFT~\cite{luong2024reft} studies supervised fine-tuning versus RL for
@@ -191,14 +207,16 @@ real GitHub issues; ARTIST~\cite{singh2025artist} trains tool-integrated
 reasoning agents with GRPO; RAGEN~\cite{wang2025ragen} studies multi-turn
 RL with tool access; OpenAI's Deep Research~\cite{openai2025deepresearch}
 and Perplexity Deep Research~\cite{perplexity2025deepresearch} both report
-GRPO-style training over web-browsing traces. Our benchmark currently focuses
-on single-turn verifiable mathematical reasoning; we adopt Tinker's
+GRPO-style training over web-browsing traces. Our audit corpus currently gives
+its cleanest evidence on single-turn verifiable mathematical reasoning; tool-use
+and browser-control probes are retained as auxiliary reward-environment
+settings rather than end-to-end agentic capability claims.  We adopt Tinker's
 \texttt{message\_with\_tool} interface as the neutral substrate for future
-tool-use extensions and explicitly cite these works as concurrent settings in
-which \ours{}'s ZVF measurements will need to be re-evaluated.
+tool-use extensions and cite these works as concurrent settings in which
+\ours{}'s ZVF measurements will need to be re-evaluated.
 
 % -----------------------------------------------------------------------------
-\subsection{Scaling Laws for RL Post-Training}
+\subsection{Scale and Reward-Trajectory Evidence for RL Post-Training}
 \label{sec:related:scaling}
 
 Compute-optimal training of base language models is governed by
@@ -220,13 +238,14 @@ MiniCPM~\cite{hu2024minicpm} and the SLM survey of
 Subramanian et al.~\cite{subramanian2025slm} characterise scaling in the
 sub-8B regime that forms the bulk of our frontier. Schaeffer et
 al.~\cite{schaeffer2024emergent} caution that apparent emergent abilities may
-be metric artefacts, a concern that persists into RL. Our measurements
-extend these works by providing cross-family scaling data for RL from
-0.6B to 235B across five families and four frameworks, supplying empirical
-ground truth against which future RL scaling laws can be calibrated.
+be metric artefacts, a concern that persists into RL. Our auxiliary
+measurements are deliberately more modest: they provide descriptive
+reward-trajectory probes from 0.6B to 235B across five families and four
+frameworks.  We treat those traces as calibration context for future RL scaling
+studies, not as a validated scaling law in this paper.
 
 % -----------------------------------------------------------------------------
-\subsection{Frameworks, Benchmarks, and Reproducibility}
+\subsection{Frameworks, Evaluation Harnesses, and Reproducibility}
 \label{sec:related:frameworks}
 
 The proliferation of algorithms has been matched by a proliferation of
@@ -245,21 +264,23 @@ SGLang~\cite{zheng2024sglang} provide the rollout backends on which all
 modern frameworks depend; FlashAttention~\cite{dao2022flashattention} and
 LoRA~\cite{hu2022lora} are load-bearing kernels.
 
-In the RL \emph{benchmarking} tradition, Henderson et
-al.~\cite{henderson2018deep} first exposed the fragility of deep-RL results
-to implementation choices and seeds;
-\texttt{rliable}~\cite{agarwal2021deep} introduced interquartile-mean
-reporting and performance profiles; BenchMARL~\cite{bettini2023benchmarl}
-unified multi-agent RL benchmarks; Patterson et
-al.~\cite{patterson2024empirical} surveyed empirical design practices;
-Jordan et al.~\cite{jordan2024benchmarking} argued that most published RL
-comparisons lack statistical power; and Madaan et
-al.~\cite{zhang2024benchvariance} quantified LLM evaluation variance along
-seed, monotonicity, and scaling axes. Pineau et
-al.~\cite{pineau2020improving} formalised NeurIPS reproducibility criteria
-and ACM's Artifact Review and Badging~\cite{acm2020badges} established
-community standards for available, evaluated, and reproduced artifacts.
-Reproducibility studies in adjacent fields include
+Our methodological lineage is closest to the deep-RL
+\emph{reproducibility} literature.  Henderson et al.~\cite{henderson2018deep}
+showed that seeds, codebases, hyperparameters, and environment choices can
+reverse apparent deep-RL conclusions; \texttt{rliable}~\cite{agarwal2021deep}
+argued against relying on point estimates and introduced interval estimates,
+interquartile means, and performance profiles; Patterson et
+al.~\cite{patterson2024empirical} surveyed empirical design practices; and
+Jordan et al.~\cite{jordan2024benchmarking} argued that full benchmark claims
+are often too expensive to support with adequate power.  LLM RL post-training
+adds additional treatment variables---tokenizer and chat template, reward
+parser, verifier sandbox, rollout backend, KL/reference handling, loss mask,
+LoRA target modules, checkpoint rule, and evaluation split---so the old
+``implementation detail'' problem becomes a central scientific variable.
+Pineau et al.~\cite{pineau2020improving} formalised NeurIPS reproducibility
+criteria, and ACM's Artifact Review and Badging~\cite{acm2020badges}
+established community standards for available, evaluated, and reproduced
+artifacts.  Reproducibility studies in adjacent fields include
 \cite{cavenaghi2023systematic, lynnerup2019survey, yamerenko2025generating,
 paparella2023reproducibility, huang2022state, lopezibañez2021reproducibility,
 leeser2026artifact, sedghpour2024artifact, colas2019hitchhiker}, alongside
@@ -267,10 +288,10 @@ Hoffman et al.'s Acme~\cite{hoffman2022acme}. Classical evaluations rest on
 GSM8K~\cite{cobbe2021gsm8k}, MATH~\cite{hendrycks2021math},
 AIME~\cite{maa2024aime}, MMLU~\cite{hendrycks2021mmlu},
 HumanEval~\cite{chen2021codex}, MBPP~\cite{austin2021mbpp}, and
-BBH~\cite{suzgun2023bbh}. \ours{} ports these statistical traditions to the
-LLM RL post-training regime, contributing a stack-conditioned reporting
-protocol for GRPO-family experiments, a ZVF/GU triage diagnostic that scales
-from 0.6B to 235B parameters, and empirical grounding for the scaling laws,
-frameworks, and algorithmic refinements surveyed above.
+BBH~\cite{suzgun2023bbh}.  \ours{} ports these statistical traditions to the
+LLM RL post-training regime: rather than offering a universal PPO/GRPO/DPO
+ranking, it contributes stack-conditioned reporting, source-of-truth ledgers,
+held-out-vs.-proxy claim separation, and ZVF/GU triage diagnostics within an
+audit corpus spanning 0.6B to 235B parameters.
 
 % =============================================================================

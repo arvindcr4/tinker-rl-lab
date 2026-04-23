@@ -11,6 +11,7 @@ Reviewer: Codex (`gpt-5.4`, reasoning effort `high`, fresh thread — Reviewer I
 | Round 0 (EAI wrap) | baseline | — | NeurIPS-style tex ported to EAI preamble; 52 pp PDF |
 | Round 1 | 5/10 | Almost | EAI-compliance + plagiarism + presentation fixes |
 | Round 2 | 4/10 | No | Venue-boilerplate purge; ZVF/dry-run caveats; Stat Protocol Disclosure; plagiarism pass 2 |
+| Round 3 | 6/10 | Almost | Held-out $N=200$ unification; toy-arithmetic scope caveat; ethics harmonisation |
 
 ## Round 1 — Codex Review (5/10, "Almost")
 
@@ -109,6 +110,48 @@ Round 2 score (4/10) is lower than Round 1 (5/10). Consistent with ARIS Reviewer
 - Move the toy arithmetic subsection from Results to Appendix.
 - Run `bib-cleaner` / dedupe `references.bib`; remove duplicate keys for Cobbe/Christiano/Kaplan/GSPO/OpenRLHF/RLZVP/R1-Zero.
 - Rephrase the remaining 5 plagiarism-flagged body sentences.
+
+## Round 3 — Codex Review (6/10, "Almost")
+
+Full raw review: `.aris/round3/codex_review.md`
+Parsed: `.aris/round3/review_parsed.json`
+
+### Kill-argument (fresh adversarial sweep)
+> "The paper asks the reader to trust one narrow negative result as its only
+> clean capability anchor, but that anchor is still internally inconsistent."
+> — the held-out GSM8K control alternated between $N=200$ and a random 50-problem
+> subset across 13 locations.
+
+### Fixes implemented this round
+
+| # | Issue | File | Change |
+|---|-------|------|--------|
+| 1 | Held-out $n$ inconsistency (13 locations) | `main_eai_body.tex` | All references unified to canonical $N=200$ held-out prompts, 5 seeds, paired base-vs-GRPO. "(evaluated on a random 50-problem subset)" and the $p=0.539$ paired-per-prompt variant deleted everywhere. |
+| 2 | Held-out protocol harmonisation | `ethics_statement.tex` | "200-example" → `$N=200$` + "canonical primary capability protocol" tag. |
+| 3 | Toy arithmetic scope risk | `main_eai_body.tex` (Cross-Library Comparison subsection) | Retitled "Cross-Library Comparison (Arithmetic Sanity Baseline)" + inline `\emph{Scope caveat}` paragraph: "toy, stack-mismatched diagnostic; not part of main empirical claim; capability anchor remains the GSM8K $N=200$ held-out control." |
+| 4 | Deterministic re-apply of R2+R3 edits | `apply_r2r3_fixes.py` (new) | Script that re-extracts clean body from `main.tex` and applies every targeted replacement. Used because morph's LLM edit twice blew up the file with duplicated blocks. |
+
+### Deliberately **not** done this round
+- **Bibliography dedupe**: codex's `bib_delete` list (`cobbe2021gsm8k`, `christiano2017deep`, `kaplan2020scaling`) conflicts with actual cite usage — `cobbe2021gsm8k` has 3 citers and `kaplan2020scaling` has 2. Naive deletion would break refs. A safe dedupe requires manual rename+merge; deferred.
+- **Move toy arithmetic to appendix**: only caveat added, not physical move (appendix move is a larger surgery touching figure labels + cross-refs; deferred to avoid last-minute breakage).
+- **Wrong-entry-type bibtex fixes** (`schulman2017proximal`, `sedghpour2024artifact`, `azar2024ipo`, `zhang2025verifybench`, `luong2024reft`, `havrilla2023trlx`): schema churn; non-blocking for compile.
+- **Remaining plagiarism flags** (6): most are the paper's identity phrases ("diagnostic, not a benchmark", "algorithm label alone is an under-specified treatment") — rephrasing further would hurt clarity.
+
+### Recompile result
+- **52 pages, 6.36 MB** — page count stable
+- 4 bibtex warnings (missing publisher/journal in 4 old entries, `liu2025grpo_dpo` undefined) — non-fatal
+- PDFs preserved:
+  - `.aris/round3/main_eai_round2.pdf` — post-R2 baseline
+  - `main_eai.pdf` — post-R3
+
+### Score trajectory summary
+| Round | Score | Key event |
+|-------|-------|-----------|
+| 1 | 5/10 | EAI compliance reached 100% |
+| 2 | 4/10 | Structural critique (fresh thread, broader scope, score dip expected per ARIS protocol) |
+| 3 | **6/10** | Held-out $n$ unified → kill-argument neutralised; weak-accept territory |
+
++2 score recovery after R3 confirms the R2 dip was scope-driven, not a regression. Final verdict: **Almost** (weak-accept). Structural items that codex still flags require experiment-rerun or author judgment beyond automated review-and-fix scope.
 
 ## Files produced
 

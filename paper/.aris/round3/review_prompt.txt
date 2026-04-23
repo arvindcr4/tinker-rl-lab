@@ -1,0 +1,82 @@
+You are a senior ML reviewer performing a FRESH, ZERO-CONTEXT journal review for EAI Endorsed Transactions.
+Do NOT reference prior review rounds, fix lists, or executor explanations. Judge only the current source.
+
+Paper: "Reward Contrast, Not Algorithm Labels: A Diagnostic Audit of Critic-Free Group-Relative RL for LLMs"
+Working dir: /Users/arvind/tinker-rl-lab/paper/
+
+Read these files:
+1. main_eai.tex
+2. sections/abstract_eai.tex
+3. sections/intro.tex
+4. main_eai_body.tex              (~2015 lines -- skim headers + first/last 2 paras of each subsection)
+5. main_eai_appendix.tex
+6. sections/conclusion.tex
+7. sections/stat_rigor_updates.tex
+8. ethics_statement.tex
+9. references.bib                 (look for: duplicate keys, wrong entry types, missing fields, Vancouver compliance)
+
+DO NOT read main_eai.pdf. DO NOT modify any repo files except the review artifacts below.
+
+## Focus for Round 3 (narrowed)
+This is a final pre-submission sanity pass. Focus tightly on:
+- **Kill-argument sweep**: What is the SINGLE best attack a hostile reviewer would use to reject this paper? State it in 150 words, file-anchored.
+- **Remaining plagiarism flags**: read abstract+intro+body+conclusion; list up to 6 distinctive sentences still likely to trip Turnitin.
+- **Bibliography surgery**: give the EXACT bibtex keys to delete as duplicates (author+year+title matches) and the keys to fix (wrong entry type / missing fields).
+- **Toy-arithmetic placement**: is the toy arithmetic baseline still in the main Results? Recommend specific move (appendix section name / caveat paragraph).
+- **Single-n held-out protocol**: count the distinct sample sizes still referenced for the GSM8K held-out control (200? 50? both?). List every file:line where n is stated.
+- **Overfull hbox hot-spots**: scan main_eai.log text / tex tables; list up to 5 tables or figures most likely to overfull in EAI's column width.
+- **EAI compliance recheck**: abstract chars, keyword count, Vancouver, structured abstract.
+
+## Required output (Markdown)
+
+# ARIS Round 3 -- Pre-submission Sanity Pass
+
+## 1. Overall Score
+X/10 (6=weak accept, 7=accept)
+
+## 2. Kill Argument
+150-word hostile-reviewer attack, file-anchored.
+
+## 3. Weaknesses
+CRITICAL / MAJOR / MINOR subsections (keep short this round).
+
+## 4. Actionable Fixes (surgical, 1-line each)
+10 most impactful fixes, each: {file, line, exact change}.
+
+## 5. Bibliography Surgery
+- Keys to delete (duplicate sets): [...]
+- Keys to fix (wrong type / missing field): [...]
+
+## 6. Held-out n Locations
+file:line references where n is stated, with n value.
+
+## 7. Plagiarism Flags (up to 6)
+quote + file:line.
+
+## 8. EAI Compliance
+- abstract length (chars): X
+- keyword count: N
+- vancouver: bool
+- structured abstract: bool
+
+## 9. Verdict
+Yes / Almost / No + one sentence.
+
+## Then emit a STRICT JSON block inside a fenced json code block:
+{"score": int, "verdict": "Yes|Almost|No",
+ "kill_argument": "string (150 words max)",
+ "critical": [...], "major": [...], "minor": [...],
+ "fixes": [{"file": "...", "line": "...", "change": "..."}],
+ "bib_delete": [...], "bib_fix": [...],
+ "heldout_n_locations": [...],
+ "plagiarism_flags": [...],
+ "eai_compliance": {"abstract_length": int, "keyword_count": int, "vancouver_style": bool, "structured_abstract": bool}}
+
+## File writes
+Write verbatim to:
+  /Users/arvind/tinker-rl-lab/paper/.aris/round3/codex_review.md
+Extract JSON and save to:
+  /Users/arvind/tinker-rl-lab/paper/.aris/round3/review_parsed.json
+Print exactly: "ARIS_ROUND3_DONE score=X verdict=Y"
+
+Budget: under 2000 words. File + line anchors required.

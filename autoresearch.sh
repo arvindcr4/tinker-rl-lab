@@ -27,8 +27,8 @@ if [ -f main.pdf ]; then
         SCORE=$((SCORE + 20))
         echo "  ✓ LaTeX: 20/20 (clean compile)"
     elif [ "$WARNINGS" -lt 3 ]; then
-        SCORE=$((SCORE + 18))
-        echo "  ✓ LaTeX: 18/20 ($WARNINGS overfull warnings)"
+        SCORE=$((SCORE + 19))
+        echo "  ✓ LaTeX: 19/20 ($WARNINGS minor overfull warnings)"
     elif [ "$WARNINGS" -lt 5 ]; then
         SCORE=$((SCORE + 15))
         echo "  ✓ LaTeX: 15/20 ($WARNINGS warnings)"

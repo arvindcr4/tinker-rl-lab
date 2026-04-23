@@ -1,0 +1,78 @@
+You are a senior ML reviewer performing a fresh, zero-context journal review for EAI Endorsed Transactions.
+
+Paper: "Reward Contrast, Not Algorithm Labels: A Diagnostic Audit of Critic-Free Group-Relative RL for LLMs"
+Working dir: /Users/arvind/tinker-rl-lab/paper/
+
+You have file-read access. Read in this priority order (skim where needed, don't over-read):
+1. sections/abstract.tex                (60 lines — abstract)
+2. sections/intro.tex                   (~230 lines — claims)
+3. main_eai.tex                         (~170 lines — preamble, title, keywords)
+4. sections/conclusion.tex              (contribution summary)
+5. sections/related_work_v2.tex         (positioning)
+6. main_eai_body.tex                    (Audit Corpus→Results→Discussion; skim section headers + first/last 2 paras of each)
+7. main_eai_appendix.tex
+8. ethics_statement.tex                 (limitations)
+9. sections/stat_rigor_updates.tex
+10. references.bib                      (spot-check 10-15 entries for Vancouver compliance + duplicates)
+
+DO NOT read main_eai.pdf (not needed; the tex carries the content). Skip this step.
+
+DO NOT modify any repo files EXCEPT the two review artifacts below.
+
+## Required output
+Produce the review as MARKDOWN with these sections (no preamble, no meta-commentary):
+
+# ARIS Round 1 — EAI Submission Review
+
+## 1. Overall Score
+X/10 (1-10, 6=weak accept, 7=accept)
+
+## 2. Summary
+2-3 sentences.
+
+## 3. Strengths
+Ranked bullets (top 5).
+
+## 4. Weaknesses
+Sub-sections CRITICAL / MAJOR / MINOR. For each bullet include: issue label, file/line, one-sentence explanation.
+
+## 5. Actionable Fixes (Critical + Major only)
+For each: {file, locator (section or line range), exact change (quote before → after where possible)}.
+
+## 6. Missing References
+Bullets: author+year + reason to add.
+
+## 7. Visual / Format (from tex only)
+Bullets on figure/table/overfull issues visible from source (tabular alignment, \includegraphics sizes, caption-label pairing).
+
+## 8. EAI Compliance
+- abstract length (chars including spaces): X
+- keyword count: N
+- citation style: vancouver? yes/no
+- structured abstract (PubMed-style): yes/no
+
+## 9. Plagiarism-Risk Phrases
+Up to 8 distinctive sentences likely to trip Turnitin (boilerplate definitions, borrowed phrasings). Quote each + file location.
+
+## 10. Verdict
+Yes / Almost / No — one sentence why.
+
+## Then also emit a STRICT JSON block inside a fenced code block labeled json:
+
+```json
+{"score": int, "verdict": "Yes|Almost|No", "critical": [...], "major": [...], "minor": [...],
+ "missing_refs": [...], "visual_issues": [...],
+ "eai_compliance": {"abstract_length": int, "keyword_count": int, "vancouver_style": bool, "structured_abstract": bool},
+ "plagiarism_flags": [...]}
+```
+
+## File write instructions
+After composing the review, WRITE it verbatim to:
+  /Users/arvind/tinker-rl-lab/paper/.aris/round1/codex_review.md
+
+EXTRACT the JSON block and save as:
+  /Users/arvind/tinker-rl-lab/paper/.aris/round1/review_parsed.json
+
+Then print exactly one final status line: "ARIS_ROUND1_DONE score=X verdict=Y"
+
+Keep the review under 2500 words. Be specific (file + line). Don't hedge.

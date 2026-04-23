@@ -5,8 +5,9 @@
 \label{sec:intro}
 
 PPO~\citep{schulman2017proximal}, GRPO~\citep{shao2024deepseekmath}, and
-DPO~\citep{rafailov2024direct} are often compared as if the algorithm label
-were the full experimental treatment.  In LLM post-training, outcomes also
+DPO~\citep{rafailov2024direct} are frequently contrasted as though the
+algorithm label captures the full experimental treatment.  In LLM
+post-training, outcomes also
 depend on base model, instruction tuning, reward parser, group construction,
 sampler, backend, LoRA configuration, checkpoint selection, and evaluation
 harness.  This is the LLM post-training analogue of the reproducibility
@@ -48,7 +49,9 @@ Signal exists only when sampled groups contain reward diversity.\\
 C2: ZVF/GU provide early triage diagnostics. &
 Most operational contribution &
 First-5-step rule (ZVF $\geq 80\%$, reward $\leq 5\%$) catches all collapsed runs
-(precision 1.0, recall 1.0, 22-run validation). ZVF is task-driven. &
+in a 22-run validation set containing only 2 positive collapse cases
+(precision 1.0 and recall 1.0 are therefore power-bounded, not a measure of
+predictive strength). ZVF is task-driven. &
 Triage, not prediction. Not a calibrated performance model.\\
 C3: Training reward conflates with held-out capability. &
 Central negative result &
@@ -95,9 +98,10 @@ The mixed-group probability formula is the explanatory core; ZVF/GU is the
 operational interface.
 
 \subsection{Claim 3: Training reward is not capability.}
-Online reward curves measure the reward environment that produced the update.
-They should not be upgraded into general reasoning or tool-use claims without
-matched held-out evaluation.  The clean GSM8K control improves only
+Online reward trajectories describe the reward environment that produced the
+update, so a distinct held-out evaluation is required before upgrading them to
+reasoning or tool-use claims~\citep{lambert2024rewardbench,dubois2024lengthcontrolled}.
+The clean GSM8K control improves only
 $82.0\% \to 83.3\%$ ($p = 0.26$), so we do not claim a significant held-out
 math effect.  Held-out evaluation of the top-10 checkpoints (selected by
 training last-10 reward) yields an 87.2--95.0\% accuracy band, but this is a

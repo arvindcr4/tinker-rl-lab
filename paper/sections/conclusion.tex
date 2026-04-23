@@ -38,7 +38,8 @@ The mechanism behind that diagnostic is mixed-group probability:
 \[
 P(\text{usable}) \approx \frac{1}{N}\sum_x \left[1 - (1-p_x)^G - p_x^G\right].
 \]
-This formula is the cleanest way to state the boundary condition.  The
+This formula is the cleanest algebraic statement of the boundary condition we
+could identify.  The
 expected-one-success rule $p_0>1/G$ is only a heuristic.  Future work should
 test the three direct interventions implied by the equation: raise $p_0$ with
 SFT or easier curricula, raise $G$ where rollout cost allows, and densify the
@@ -49,8 +50,8 @@ The Qwen PPO/GRPO row is artifact-sensitive, and the Llama row favors PPO;
 neither supports a universal PPO/GRPO ordering.  A publishable comparison
 needs the full treatment definition: model family, backend, reward parser,
 sampler, optimizer, KL/reference handling, LoRA configuration, checkpoint
-selection, and held-out evaluation.  Without those controls, ``PPO versus
-GRPO'' is not an interpretable scientific claim.
+selection, and held-out evaluation.  In the absence of those controls, a bare
+``PPO versus GRPO'' comparison is not an interpretable scientific claim.
 
 % --------------------------------------------------------------------------=
 % Claims we do not make (from no-go list)

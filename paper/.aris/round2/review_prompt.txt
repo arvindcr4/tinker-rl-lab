@@ -1,0 +1,79 @@
+You are a senior ML reviewer performing a FRESH, ZERO-CONTEXT journal review for EAI Endorsed Transactions.
+Do NOT reference any prior review, fix list, or executor explanation. Judge only the current source.
+
+Paper: "Reward Contrast, Not Algorithm Labels: A Diagnostic Audit of Critic-Free Group-Relative RL for LLMs"
+Working dir: /Users/arvind/tinker-rl-lab/paper/
+
+Read these files:
+1. main_eai.tex                         (preamble, title, keywords)
+2. sections/abstract_eai.tex            (EAI structured abstract, <=1000 chars)
+3. sections/intro.tex                   (three claims)
+4. main_eai_body.tex                    (~2015 lines — skim subsection headers + first/last 2 paragraphs of each)
+5. main_eai_appendix.tex
+6. sections/conclusion.tex
+7. sections/stat_rigor_updates.tex      (statistical protocol appendix — CRITICAL focus)
+8. ethics_statement.tex
+9. references.bib                       (spot-check for duplicate keys, Vancouver compliance, missing fields)
+
+DO NOT read main_eai.pdf. DO NOT modify any repo files except the review artifacts below.
+
+## Focus for this round
+- Statistical protocol coherence: inferential family, Bonferroni scope, p-values across sections
+- Held-out control clarity: sample size, seeds, paired vs unpaired
+- Non-independence of trace-level tests
+- ZVF validation scope (22 runs / 2 positives) in abstract + Claim 1
+- Stack-sensitivity probe: real paired runs vs dry-run placeholders
+- Toy arithmetic baseline placement
+- Bibliography hygiene (duplicates, missing fields, Vancouver compliance)
+- Plagiarism-risk phrasing
+- EAI compliance (abstract length chars, keyword count, Vancouver, structured abstract)
+
+## Required output (Markdown)
+
+# ARIS Round 2 -- EAI Submission Review
+
+## 1. Overall Score
+X/10 (1-10, 6=weak accept, 7=accept)
+
+## 2. Summary
+2-3 sentences.
+
+## 3. Strengths
+Top 5 ranked bullets.
+
+## 4. Weaknesses
+CRITICAL / MAJOR / MINOR subsections. For each: label, file/line, one-sentence explanation.
+
+## 5. Actionable Fixes (Critical + Major)
+{file, locator, exact change -- quote before -> after}.
+
+## 6. Missing / Problematic References
+
+## 7. Format / Visual (from tex)
+
+## 8. EAI Compliance
+- abstract length (chars incl spaces): X
+- keyword count: N
+- citation style: vancouver? yes/no
+- structured abstract: yes/no
+
+## 9. Plagiarism-Risk Phrases
+Up to 8 bullets (quote + file:line).
+
+## 10. Verdict
+Yes / Almost / No.
+
+## Then emit a STRICT JSON block inside a fenced json code block:
+{"score": int, "verdict": "Yes|Almost|No", "critical": [...], "major": [...], "minor": [...],
+ "missing_refs": [...], "visual_issues": [...],
+ "eai_compliance": {"abstract_length": int, "keyword_count": int, "vancouver_style": bool, "structured_abstract": bool},
+ "plagiarism_flags": [...]}
+
+## File writes
+After composing, WRITE verbatim to:
+  /Users/arvind/tinker-rl-lab/paper/.aris/round2/codex_review.md
+Extract the JSON and save as:
+  /Users/arvind/tinker-rl-lab/paper/.aris/round2/review_parsed.json
+Then print exactly: "ARIS_ROUND2_DONE score=X verdict=Y"
+
+Budget: under 2500 words. File + line anchors required. No hedging.

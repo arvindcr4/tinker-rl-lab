@@ -1,0 +1,18 @@
+% EAI-compliant structured abstract (PubMed style, <=1000 chars).
+\begin{abstract}
+\noindent\textbf{Background:} Group-relative RL for LLMs (PPO, GRPO, DPO) is
+typically judged at the algorithm-label level, ignoring the
+model--reward--sampler--stack combination behind each observation.
+\textbf{Methods:} We audit the stack with two triage diagnostics:
+Zero-Variance Fraction (ZVF, the share of prompts where all $G$ samples
+receive identical reward) and Gradient Utilization $=1-$ZVF.
+\textbf{Results:} A fixed first-five-step rule (ZVF$\geq$80\%, reward$\leq$5\%)
+triages collapsed runs in a 22-run set with only 2 positive cases
+(power-bounded). Online reward and capability diverge: Qwen3-8B gains only
+82.0$\to$83.3\% on held-out GSM8K; the two real cross-stack runs (Tinker,
+TRL) differ $\approx$17$\times$ in last-10 reward; verl/OpenRLHF are
+dry-run placeholders.
+\textbf{Conclusions:} The algorithm label alone is an under-specified
+experimental treatment; usable signal must be verified per stack.
+Code released.
+\end{abstract}

@@ -7,6 +7,44 @@
 % experiments/render_stat_rigor_tex.py to refresh.
 % =====================================================================
 
+\section*{Statistical Protocol Disclosure (Authoritative)}
+\label{sec:stat_protocol_disclosure}
+
+The paper contains several correction regimes (a 5-test family-wise
+Bonferroni on the capability-claim table, a 20-test Benjamini--Hochberg
+sweep on descriptive effect sizes, a 38-test global Bonferroni on the full
+battery reported in this appendix, and a separate 5-test effect-table
+correction).  To prevent protocol ambiguity we designate the following as
+the \emph{primary inferential protocol} for claim verification:
+
+\begin{enumerate}[leftmargin=2em,itemsep=2pt]
+    \item \textbf{Primary family} (5 tests): paired held-out GSM8K control,
+    Qwen PPO-vs-GRPO last-10 contrast, Llama PPO-vs-GRPO last-10 contrast,
+    Tinker-vs-TRL matched-stack 17$\times$ gap, and TRL-GRPO seed-variance
+    check. Family-wise Bonferroni at $\alpha{=}0.05$.
+
+    \item \textbf{Exploratory sweep} (20 tests, Benjamini--Hochberg FDR
+    at $q{=}0.10$): descriptive effect sizes for saturation fits, reward
+    proxies, and auxiliary probes. These are \emph{descriptive only}: no
+    claim in the abstract or Claim 1--4 table depends on an exploratory-sweep
+    $p$-value.
+
+    \item \textbf{Global battery} (38 tests): reported for completeness in
+    Appendix~\ref{sec:stat_rigor_updates}; not used for any abstract- or
+    claim-table level assertion.
+
+    \item \textbf{Trace-level non-independence caveat}: all per-step trace
+    statistics (first-10, last-10, 30-step series) are autocorrelated.
+    We therefore report them as \emph{descriptive effect sizes only} and
+    do not invoke them as inferential evidence. Any $p$-value attached to
+    a trace-derived quantity in the body text is reported for transparency,
+    not for claim certification.
+\end{enumerate}
+
+In short: Claim 1--4 rest on the 5-test primary family; everything else is
+descriptive.  This paragraph takes precedence over any narrower protocol
+statement elsewhere in the manuscript.
+
 % --- Paragraph inserted near Section 5 (Main Results) -----------------
 \paragraph{Statistical protocol (Task~6 rigor pass).}
 For every comparison reported in Tables~\ref{tab:main_results_stats}--\ref{tab:ppo_grpo_stats},

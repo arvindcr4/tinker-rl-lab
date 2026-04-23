@@ -1,0 +1,93 @@
+% =============================================================================
+
+\section{Compute Resources}
+\label{app:compute}
+
+All experiment logs including per-step GPU utilization, memory consumption,
+and wall-clock runtimes are available on Weights \& Biases at
+\url{https://wandb.ai/tinker-rl-lab/tinker-rl-lab-world-class}.
+Model checkpoints are hosted on HuggingFace Hub at
+\url{https://huggingface.co/arvindcr4/tinker-rl-bench-*}.
+
+\begin{table}[htbp]
+\centering
+\caption{Compute allocation by platform and experiment group.}
+\small
+\begin{tabular}{@{}llcc@{}}
+\toprule
+\textbf{Platform} & \textbf{Experiment Group} & \textbf{\#} & \textbf{GPU-Hrs} \\
+\midrule
+Tinker API & Reward probes (Qwen3, Qwen3.5, Llama) & 5 & $\sim$320 \\
+Tinker API & Larger models (235B, DeepSeek, Nemotron) & 3 & $\sim$280 \\
+Tinker API & Dense/MoE initialization probes & 2 & $\sim$150 \\
+Tinker API & Cross-task tool-use & 2 & $\sim$80 \\
+Tinker API & New architectures (GPT-OSS, Kimi-K2) & 2 & $\sim$120 \\
+Modal H100 & PPO baselines (Qwen3-8B, Llama-8B) & 2 & $\sim$96 \\
+Modal H100 & Full HumanEval evaluation & 1 & $\sim$48 \\
+Modal H100 & KL divergence tracking & 1 & $\sim$40 \\
+Modal H100 & Held-out evals (Qwen3-32B, Qwen3.5-27B) & 2 & $\sim$66 \\
+\midrule
+\multicolumn{4}{@{}l}{\textit{Reference: smaller models}} \\
+Tinker API & TRL-GRPO baseline (Qwen2.5-0.5B) & 5 & $\sim$160 \\
+Modal H100 & TRL-GRPO on Llama-3.2-3B-Instruct & 2 & $\sim$48 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+See \texttt{COMPUTE.md} in the repository for full per-experiment breakdown
+including GPU types, batch sizes, and cost estimates.
+
+\section{Hyperparameter Tables}
+\label{app:hyperparams}
+
+Full hyperparameter sweep ranges used in sensitivity analysis (Section~\ref{fig:sensitivity}):
+
+\begin{table}[htbp]
+\centering
+\caption{Hyperparameter sweep ranges for sensitivity analysis.}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Parameter} & \textbf{Sweep Values} & \textbf{Default} \\
+\midrule
+Learning rate & $\{10^{-5}, 5 \times 10^{-5}, 10^{-4}, 5 \times 10^{-4}, 10^{-3}\}$ & $10^{-4}$ \\
+Clip range ($\epsilon$) & $\{0.05, 0.1, 0.2, 0.3, 0.5\}$ & 0.2 \\
+Entropy coeff. & $\{0.0, 0.001, 0.01, 0.05, 0.1\}$ & 0.01 \\
+Discount $\gamma$ & $\{0.9, 0.95, 0.99, 0.995, 1.0\}$ & 0.99 \\
+GAE $\lambda$ & $\{0.8, 0.9, 0.95, 0.98, 1.0\}$ & 0.95 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Additional Results}
+\label{app:results}
+
+% Figure 9: Comparison bars
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/v2/comparison_bars.pdf}
+\caption{Final reward by training family. Bars show mean
+$\pm 1$~standard deviation across the runs in each group; overlaid
+white dots are the individual seeds/models, and the $n$ annotation
+reports group size (TRL GRPO, legacy PPOs = 5 seeds each; Modal
+PPO-REINFORCE = 4 runs; Tinker GRPO frontier = 9 runs; team members =
+3 multi-task experiments).}
+\label{fig:comparison_bars}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.5\linewidth]{figures/v2/old_trl_seeds.pdf}
+\caption{Cross-seed reproducibility for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean verifier score 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. We report the five-seed spread rather than a null-hypothesis test: a $t$-test against $50\%$ is not an appropriate null for GSM8K (a random-guess baseline is closer to $0\%$ than $50\%$), so the low CV is the defensible finding here.}
+\label{fig:trl_seeds}
+\end{figure}
+
+See \texttt{BASELINES.md} in the repository for complete floor/ceiling baseline documentation
+and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existing RL benchmarks.
+
+% Task 6: Statistical rigor pass --- updated Tables 1--4 with 95% bootstrap CI,
+% Cohen's d, and Bonferroni-corrected p-values + Appendix G (Statistical Protocol).
+% Source: experiments/compute_statistics.py -> experiments/render_stat_rigor_tex.py
+\input{sections/stat_rigor_updates}
+
+% =============================================================================
+% =============================================================================

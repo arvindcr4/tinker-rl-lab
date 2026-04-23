@@ -1,0 +1,168 @@
+% =============================================================================
+% EAI Endorsed Transactions -- Journal Submission Draft
+% "Reward Contrast, Not Algorithm Labels" -- TinkerRL Audit
+% Format: EAI-compliant preamble (single-column, Vancouver references).
+% Drop-in replace \documentclass with the official eai_temp.cls when acquired.
+% =============================================================================
+
+\documentclass[a4paper,10pt]{article}
+
+% --- Geometry matching EAI Endorsed Transactions A4 layout ---------------------
+\usepackage[a4paper,top=2.2cm,bottom=2.4cm,left=2.0cm,right=2.0cm,headsep=0.6cm]{geometry}
+
+% --- Font / encoding -----------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}      % Times-like (EAI uses a serif body font)
+\usepackage{helvet}        % Arial/Helvetica for headings
+\usepackage{courier}
+\renewcommand{\familydefault}{\rmdefault}
+
+% --- Bibliography: Vancouver (required by EAI) ---------------------------------
+\usepackage[numbers,sort&compress,super]{natbib}
+\bibliographystyle{vancouver}
+
+% --- Standard math / graphics / tables -----------------------------------------
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{positioning,fit,arrows.meta,backgrounds,calc,shadows,shapes.geometric,shapes.misc,decorations.pathreplacing}
+
+\graphicspath{{.}{figures/}{figures/v2/}{tikz/}}
+
+% --- EAI header/footer rules ---------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small EAI Endorsed Transactions}
+\fancyhead[R]{\small Preprint Draft}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Title spacing akin to EAI journal title block ----------------------------
+\usepackage{titling}
+\setlength{\droptitle}{-1.0cm}
+
+% --- Keywords environment (EAI submission requires 3–8 keywords) --------------
+\providecommand{\keywords}[1]{\par\noindent\textbf{Keywords:} #1}
+
+% --- Custom short commands used throughout the manuscript ---------------------
+\newcommand{\tinker}{\textsc{Tinker}}
+\newcommand{\atropos}{\textsc{Atropos}}
+\newcommand{\grpo}{\textsc{Grpo}}
+\newcommand{\ours}{\textsc{TinkerRL Audit}}
+
+% --- Shim commands formerly provided by neurips_2026.sty ----------------------
+% The NeurIPS checklist is removed for the EAI format; answer macros shimmed
+% only so any stray reference still compiles.
+\newcommand{\answerYes}[1][]{\textcolor{black}{[Yes] #1}}
+\newcommand{\answerNo}[1][]{\textcolor{black}{[No] #1}}
+\newcommand{\answerNA}[1][]{\textcolor{black}{[N/A] #1}}
+\newcommand{\answerTODO}[1][]{\textcolor{black}{[TODO] #1}}
+\newcommand{\answerPartial}[1][]{\textcolor{black}{[Partial] #1}}
+\newenvironment{ack}{\section*{Acknowledgements}}{}
+
+% --- Title ---------------------------------------------------------------------
+\title{\fontsize{16pt}{18pt}\selectfont\bfseries
+Reward Contrast, Not Algorithm Labels:\\
+A Diagnostic Audit of Critic-Free Group-Relative RL for LLMs}
+
+\author{%
+  Arvind C R$^{1,\ast}$, Sandhya Jeyaraj$^{1,\ast}$, Madhu Kumara L$^{1}$,
+  Mohammad Rafi$^{1}$, Dhruva N Murthy$^{1}$, Arumugam K$^{1}$,\\
+  Anwesh Reddy Paduri$^{2}$, Narayana Darapaneni$^{3}$\\[4pt]
+  \small
+  $^{1}$PES University, Bengaluru, India \\
+  $^{2}$Great Learning / PES University, India \\
+  $^{3}$Northwestern University / Great Learning, USA \\
+  $^{\ast}$Equal contribution.\\
+  \texttt{\{arvindcr4, sandhya.jeyaraj2014, madhukumara1993, gmd.rafi.2024,
+  dhruva.n.murthy, chettyarumugam\}@gmail.com}\\
+  \texttt{anwesh@greatlearning.in}, \texttt{narayana.darapaneni@northwestern.edu}
+}
+\date{}
+
+\begin{document}
+% Removed global badness/overflow suppression (\sloppy, \hbadness=10000,
+% \vbadness=10000, \hfuzz=2pt) that masked layout issues. Individual
+% overfull boxes are now fixed locally where they occur.
+
+\maketitle
+\thispagestyle{fancy}
+
+% =============================================================================
+% Abstract + EAI required keywords
+% =============================================================================
+\input{sections/abstract_eai}
+
+\keywords{reinforcement learning, RLVR, GRPO, PPO, large language models,
+reward contrast, diagnostic audit, reproducibility}
+
+% =============================================================================
+% Body (content unchanged from main.tex)
+% =============================================================================
+\input{sections/intro}
+\input{sections/related_work_v2}
+
+\section{Audit Corpus and Evidence Design}
+\label{sec:benchmark}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{tikz/taxonomy.pdf}
+\caption{Taxonomy of RL libraries in \ours{}. The audit corpus spans LLM-native RL
+(TRL), classic online RL (SB3, CleanRL, Tianshou), high-throughput RL (PufferLib,
+rl\_games), and offline RL (d3rlpy).}
+\label{fig:taxonomy}
+\end{figure}
+
+% --- The remaining body of the manuscript is imported verbatim from main.tex ---
+% To keep the EAI variant in sync with main.tex we include its body block below.
+% (Everything between Section "Audit Corpus and Evidence Design" and
+% "\input{sections/conclusion}" plus the ethics/ack blocks.)
+
+\input{main_eai_body}
+
+% =============================================================================
+% Conclusion, Ethics, Acknowledgements
+% =============================================================================
+\input{sections/conclusion}
+\input{ethics_statement}
+
+\section*{Acknowledgements}
+We thank our project guides \textbf{Prof.~Narayana Darapaneni}
+(Northwestern University / Great Learning) and
+\textbf{Mr.~Anwesh Reddy Paduri} (Great Learning / PES University)
+for their mentorship and technical guidance throughout this capstone project.
+We thank the Tinker team for API access and the Modal team for GPU compute credits
+(H100 cluster). We thank Weights \& Biases for experiment tracking infrastructure
+and Hugging Face for model hosting. This work was supported in part by PES
+University's LLM Research Group. We are grateful to the open-source communities
+behind TRL, Stable Baselines3, CleanRL, Tianshou, OpenRLHF, veRL, and the
+broader Hugging Face ecosystem. Artificial intelligence was both the topic of
+this manuscript and a limited tool in its preparation, which we acknowledge
+in the spirit of transparency.
+
+% =============================================================================
+% References (Vancouver)
+% =============================================================================
+\bibliography{references}
+
+% =============================================================================
+% Appendices
+% =============================================================================
+\appendix
+\input{main_eai_appendix}
+
+\end{document}

@@ -17,8 +17,8 @@ P(\text{usable}) \approx \frac{1}{N}\sum_x \left[1 - (1-p_x)^G - p_x^G\right],
 where $p_x$ is the current policy's success rate on prompt $x$ and $G$ is the
 group size.  This shows that a group-relative update has usable signal only
 when the policy samples mixed-reward groups; all-identical rewards yield zero
-gradient.  The familiar $p_x > 1/G$ rule is only an expected-one-success
-heuristic, not a threshold theorem.
+gradient.  The $p_x > 1/G$ heuristic is an expected-one-success approximation
+rather than a threshold guarantee.
 
 Second, we operationalize this as Zero-Variance Fraction (ZVF) and Gradient
 Utilization (GU) as \emph{triage diagnostics}, not capability metrics.  ZVF
@@ -53,8 +53,9 @@ of outcome in ways that hyperparameter tables do not capture.
 \textbf{What we do not claim:} We do not claim this runner represents canonical
 GRPO.  We do not claim broad reasoning improvement or state-of-the-art GSM8K/MATH
 performance.  We do not claim ZVF predicts final performance.  We do not claim
-a universal PPO-versus-GRPO ranking.  We do not claim tool-execution competence;
-tool-call results measure schema compliance only.  We do not claim frontier
+a universal PPO-versus-GRPO ranking.  Tool-call results are treated as
+schema-compliance telemetry rather than evidence of tool-execution competence.
+ We do not claim frontier
 scaling laws from short, noisy training traces.
 
 Our contribution is a diagnostic protocol: how to decide whether a specific

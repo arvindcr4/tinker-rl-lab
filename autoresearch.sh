@@ -87,16 +87,22 @@ fi
 # 5. Experiment results coverage (15 points)
 echo "Checking experiment results..."
 RESULTS=$(python3 -c "import json; d=json.load(open('$REPO_DIR/experiments/master_results.json')); print(len(d.get('experiments', d) if isinstance(d, dict) else d))" 2>/dev/null || echo 0)
-if [ "$RESULTS" -ge 70 ]; then
+if [ "$RESULTS" -ge 80 ]; then
     SCORE=$((SCORE + 15))
-elif [ "$RESULTS" -ge 40 ]; then
-    SCORE=$((SCORE + 10))
-elif [ "$RESULTS" -ge 20 ]; then
-    SCORE=$((SCORE + 7))
+    echo "  ✓ Experiments: 15/15 ($RESULTS results)"
+elif [ "$RESULTS" -ge 50 ]; then
+    SCORE=$((SCORE + 12))
+    echo "  ✓ Experiments: 12/15 ($RESULTS results)"
+elif [ "$RESULTS" -ge 30 ]; then
+    SCORE=$((SCORE + 8))
+    echo "  ✓ Experiments: 8/15 ($RESULTS results)"
+elif [ "$RESULTS" -ge 15 ]; then
+    SCORE=$((SCORE + 5))
+    echo "  ⚠ Experiments: 5/15 ($RESULTS results)"
 else
     SCORE=$((SCORE + 3))
+    echo "  ⚠ Experiments: 3/15 ($RESULTS results)"
 fi
-echo "  ✓ Experiments: scored ($RESULTS results)"
 
 # 6. Figure files present (10 points)
 echo "Checking figure files..."

@@ -7,7 +7,7 @@ This repo is **multi-context**: a `CONTEXT-MAP.md` at the root points to one `CO
 ## Before exploring, read these
 
 - **`CONTEXT-MAP.md`** at the repo root — it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
-- **`docs/adr/`** at the root for system-wide decisions, and **`src/<context>/docs/adr/`** for context-scoped decisions in the area you're about to work in.
+- **`docs/adr/`** at the root for system-wide decisions, and **`src/<context>/docs/adr/`** or **`contexts/<context>/docs/adr/`** for context-scoped decisions in the area you're about to work in.
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The producer skill (`/grill-with-docs`) creates them lazily when terms or decisions actually get resolved.
 
@@ -19,13 +19,10 @@ Multi-context repo (presence of `CONTEXT-MAP.md` at the root):
 /
 ├── CONTEXT-MAP.md
 ├── docs/adr/                          ← system-wide decisions
-└── src/
-    ├── ordering/
-    │   ├── CONTEXT.md
-    │   └── docs/adr/                  ← context-specific decisions
-    └── billing/
+└── contexts/
+    └── ordering/
         ├── CONTEXT.md
-        └── docs/adr/
+        └── docs/adr/                  ← context-specific decisions
 ```
 
 ## Use the glossary's vocabulary

@@ -32,8 +32,9 @@ for row in ds:
         examples.append((prompt, tool_name, arguments))
     except: continue
 random.shuffle(examples)
-examples = examples[:3000]
-print(f"[{EXP}] {len(examples)} examples")
+train_examples = examples[:3000]
+test_examples = examples[3000:3500]
+print(f"[{EXP}] {len(train_examples)} train examples, {len(test_examples)} test examples")
 
 def reward(response, tool_name, arguments):
     m = re.search(r'\{.*\}', response.strip(), re.DOTALL)
@@ -62,7 +63,7 @@ print(f"[{EXP}] Run: {tc.model_id}")
 
 step_rewards = []
 for step in range(STEPS):
-    batch = random.sample(examples, 2)  # 2 prompts for speed
+    batch = random.sample(train_examples, 2)  # 2 prompts for speed
     all_data, all_advs, batch_r = [], [], []
     for prompt_text, tn, args in batch:
         pid = tok.encode(prompt_text, add_special_tokens=False)
@@ -90,3 +91,24 @@ for step in range(STEPS):
 tc.save_state(name="final"); f = tc.save_weights_for_sampler(name="final").result()
 last10 = step_rewards[-10:]; avg10 = sum(last10)/len(last10) if last10 else 0
 print(f"\n[{EXP}] DONE | last10={avg10:.3f} | run={tc.model_id} | path={f.path}")
+
+# ── Held-out Evaluation ──────────────────────────────────────────────────
+print(f"\n[{EXP}] Evaluating on {len(test_examples)} held-out test examples...")
+test_rewards = []
+for i in range(0, len(test_examples), 4):
+    batch = test_examples[i:i+4]
+    for prompt_text, tn, args in batch:
+        pid = tok.encode(prompt_text, add_special_tokens=False)
+        if len(pid) > 1536:
+            pid = pid[:1536]
+        sp = T.SamplingParams(max_tokens=128, temperature=0.1, top_p=0.95)
+        try:
+            resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=1, sampling_params=sp).result()
+            text = tok.decode(list(resp.sequences[0].tokens), skip_special_tokens=True)
+            test_rewards.append(reward(text, tn, args))
+        except Exception:
+            continue
+
+avg_test = sum(test_rewards) / len(test_rewards) if test_rewards else 0.0
+print(f"[{EXP}] Held-out Test Reward: {avg_test:.3f}")
+

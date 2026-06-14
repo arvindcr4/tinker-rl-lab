@@ -60,8 +60,9 @@ for row in ds:
         continue
 
 random.shuffle(examples)
-examples = examples[:2000]  # cap at 2000 for speed
-print(f"[{EXP_NAME}] Parsed {len(examples)} usable examples")
+train_examples = examples[:2000]  # cap at 2000 for speed
+test_examples = examples[2000:2500]
+print(f"[{EXP_NAME}] Parsed {len(train_examples)} train examples, {len(test_examples)} test examples")
 
 # ── Reward function ──────────────────────────────────────────────────────
 def reward(response, tool_name, arguments):
@@ -98,7 +99,7 @@ print(f"[{EXP_NAME}] Run: {tc.model_id} | LR={LR} group={GROUP_SIZE} temp={TEMP}
 # ── GRPO loop ────────────────────────────────────────────────────────────
 step_rewards = []
 for step in range(STEPS):
-    batch = random.sample(examples, 4)
+    batch = random.sample(train_examples, 4)
     all_data, all_advs, batch_rewards = [], [], []
 
     for prompt_text, tool_name, args in batch:
@@ -145,3 +146,24 @@ final = tc.save_weights_for_sampler(name="final").result()
 print(f"\n[{EXP_NAME}] DONE | avg_reward_last10={sum(step_rewards[-10:])/max(len(step_rewards[-10:]),1):.3f}")
 print(f"[{EXP_NAME}] Run ID: {tc.model_id}")
 print(f"[{EXP_NAME}] Sampler: {final.path}")
+
+# ── Held-out Evaluation ──────────────────────────────────────────────────
+print(f"\n[{EXP_NAME}] Evaluating on {len(test_examples)} held-out test examples...")
+test_rewards = []
+for i in range(0, len(test_examples), 4):
+    batch = test_examples[i:i+4]
+    for prompt_text, tn, args in batch:
+        pid = tok.encode(prompt_text, add_special_tokens=False)
+        if len(pid) > 2048:
+            pid = pid[:2048]
+        sp = T.SamplingParams(max_tokens=256, temperature=0.1, top_p=0.95)
+        try:
+            resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=1, sampling_params=sp).result()
+            text = tok.decode(list(resp.sequences[0].tokens), skip_special_tokens=True)
+            test_rewards.append(reward(text, tn, args))
+        except Exception:
+            continue
+
+avg_test = sum(test_rewards) / len(test_rewards) if test_rewards else 0.0
+print(f"[{EXP_NAME}] Held-out Test Reward: {avg_test:.3f}")
+

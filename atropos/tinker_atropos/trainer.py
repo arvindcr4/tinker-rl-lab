@@ -66,13 +66,19 @@ class TinkerAtroposTrainer:
         self.tokenizer = AutoTokenizer.from_pretrained(self.base_model)
         print(f"Loaded tokenizer for {self.base_model}")
 
-        # Create LoRA training client - use tinker_model if different from tokenizer
+        # Create training client - use tinker_model if different from tokenizer
         tinker_model = self.config.tinker_model
-        print(f"Creating training client for {tinker_model}...")
-        self.training_client = await self.service_client.create_lora_training_client_async(
-            base_model=tinker_model,
-            rank=self.lora_rank,
-        )
+        if self.config.use_lora:
+            print(f"Creating LoRA training client for {tinker_model}...")
+            self.training_client = await self.service_client.create_lora_training_client_async(
+                base_model=tinker_model,
+                rank=self.lora_rank,
+            )
+        else:
+            print(f"Creating full fine-tuning training client for {tinker_model}...")
+            self.training_client = await self.service_client.create_training_client_async(
+                base_model=tinker_model,
+            )
         print("Training client created")
 
         # Save initial weights and create sampling client

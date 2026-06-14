@@ -24,6 +24,7 @@ def parse_args():
     # Allow overriding specific config parameters via CLI
     parser.add_argument("--base-model", type=str, help="Override base model")
     parser.add_argument("--lora-rank", type=int, help="Override LoRA rank")
+    parser.add_argument("--full-finetune", action="store_true", help="Use full fine-tuning instead of LoRA")
     parser.add_argument("--learning-rate", type=float, help="Override learning rate")
     parser.add_argument("--num-steps", type=int, help="Override number of training steps")
     parser.add_argument("--batch-size", type=int, help="Override batch size")
@@ -57,6 +58,8 @@ def load_config(args) -> TinkerAtroposConfig:
         overrides["base_model"] = args.base_model
     if args.lora_rank is not None:
         overrides["lora_rank"] = args.lora_rank
+    if args.full_finetune:
+        overrides["use_lora"] = False
     if args.learning_rate is not None:
         overrides["learning_rate"] = args.learning_rate
     if args.num_steps is not None:
@@ -79,6 +82,10 @@ def load_config(args) -> TinkerAtroposConfig:
         # Handle nested config fields
         if "use_wandb" in overrides:
             config_dict["env"]["use_wandb"] = overrides.pop("use_wandb")
+        if "use_lora" in overrides:
+            config_dict["tinker"]["use_lora"] = overrides.pop("use_lora")
+        if "lora_rank" in overrides:
+            config_dict["tinker"]["lora_rank"] = overrides.pop("lora_rank")
         config_dict.update(overrides)
         config = TinkerAtroposConfig(**config_dict)
 
@@ -101,7 +108,9 @@ async def main():
     print("Training Configuration:")
     print("=" * 80)
     print(f"Base Model: {config.base_model}")
-    print(f"LoRA Rank: {config.lora_rank}")
+    print(f"LoRA Enabled: {config.use_lora}")
+    if config.use_lora:
+        print(f"LoRA Rank: {config.lora_rank}")
     print(f"Learning Rate: {config.learning_rate}")
     print(f"Training Steps: {config.num_steps}")
     print(f"Batch Size: {config.batch_size}")

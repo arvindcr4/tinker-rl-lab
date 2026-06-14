@@ -46,6 +46,7 @@ class OpenAIServerConfig(BaseModel):
 class TinkerConfig(BaseModel):
     """Tinker-specific configuration for LoRA training"""
 
+    use_lora: bool = True
     lora_rank: int = 32
     learning_rate: float = 4e-5
     max_token_trainer_length: int = 2048
@@ -162,6 +163,10 @@ class TinkerAtroposConfig(BaseModel):
     @property
     def wandb_run_suffix(self) -> str:
         return self.tinker.wandb_run_suffix
+
+    @property
+    def use_lora(self) -> bool:
+        return self.tinker.use_lora
 
     @property
     def lora_rank(self) -> int:

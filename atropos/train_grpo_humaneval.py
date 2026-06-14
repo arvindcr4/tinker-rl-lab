@@ -42,6 +42,7 @@ except Exception:
     pass
 
 import wandb
+_last_zvf = 0.0
 
 
 # ── reward: HumanEval ────────────────────────────────────────────────────────
@@ -102,7 +103,7 @@ check({entry_point})
         signal.signal(signal.SIGALRM, old)
 
 
-def make_humaneval_reward_fn(dataset):
+def make_humaneval_reward_fn(dataset, group_size: int):
     """Return a GRPOTrainer-compatible reward function for HumanEval."""
     # Build lookup: task_id → {test, entry_point}
     lookup = {
@@ -128,6 +129,16 @@ def make_humaneval_reward_fn(dataset):
             else:
                 score = 0.0
             rewards.append(score)
+                zvf_sum = 0.0
+        n_groups = len(rewards) // group_size
+        if n_groups > 0:
+            for idx in range(n_groups):
+                chunk = rewards[idx*group_size:(idx+1)*group_size]
+                mr = sum(chunk) / group_size
+                if all(abs(r - mr) < 1e-6 for r in chunk):
+                    zvf_sum += 1.0
+            global _last_zvf
+            _last_zvf = zvf_sum / n_groups
         return rewards
 
     return reward_fn
@@ -194,7 +205,7 @@ def _score_tool_call(response: str, gold_tool: str, args_ok_fn, gold_answer) -> 
     return score
 
 
-def make_tool_use_reward_fn():
+def make_tool_use_reward_fn(group_size: int):
     """Return a GRPOTrainer-compatible reward function for tool use."""
     def reward_fn(completions: List[str], prompts=None, **kwargs) -> List[float]:
         gold_tools   = kwargs.get("gold_tool",   None)
@@ -212,6 +223,16 @@ def make_tool_use_reward_fn():
                 rewards.append(_score_tool_call(text, gt, args_fn, ga))
             else:
                 rewards.append(0.0)
+                zvf_sum = 0.0
+        n_groups = len(rewards) // group_size
+        if n_groups > 0:
+            for idx in range(n_groups):
+                chunk = rewards[idx*group_size:(idx+1)*group_size]
+                mr = sum(chunk) / group_size
+                if all(abs(r - mr) < 1e-6 for r in chunk):
+                    zvf_sum += 1.0
+            global _last_zvf
+            _last_zvf = zvf_sum / n_groups
         return rewards
 
     return reward_fn
@@ -373,12 +394,12 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
     if task == "humaneval":
         dataset    = build_humaneval_dataset(tokenizer, cfg["max_token_length"])
         reward_fn  = make_humaneval_reward_fn(
-            __import__("datasets").load_dataset("openai/openai_humaneval", split="test")
+            __import__("datasets").load_dataset("openai/openai_humaneval", split="test"), cfg["group_size"]
         )
         extra_cols = ["task_id"]
     elif task == "tool_use":
         dataset    = build_tool_use_dataset(tokenizer, seed=seed)
-        reward_fn  = make_tool_use_reward_fn()
+        reward_fn  = make_tool_use_reward_fn(cfg["group_size"])
         extra_cols = ["gold_tool", "gold_answer", "gold_args"]
     else:
         raise ValueError(f"Unknown task: {task}")
@@ -422,9 +443,9 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
             mean_r = logs.get("reward/mean", logs.get("rewards/mean"))
             if mean_r is not None:
                 step_log.append(float(mean_r))
-                wandb.log({"train/percent_correct": float(mean_r), "train/step": state.global_step},
+                wandb.log({"train/percent_correct": float(mean_r), "train/step": state.global_step, "zvf": _last_zvf},
                           step=state.global_step)
-                print(f"  step {state.global_step:3d}  mean_reward={float(mean_r):.4f}")
+                print(f"  step {state.global_step:3d}  mean_reward={float(mean_r):.4f} zvf={_last_zvf:.2f}")
 
     trainer.add_callback(RewardLogCallback())
 

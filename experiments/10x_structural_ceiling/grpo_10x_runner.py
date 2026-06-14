@@ -454,6 +454,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
                 "step": step,
                 "grpo_loss": grpo_loss,
                 "mean_reward": avg_r,
+                "zvf": zvf,
             }, step=step)
 
         # Save state checkpoint (resumable) at intervals

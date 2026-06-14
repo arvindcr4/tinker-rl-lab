@@ -136,6 +136,7 @@ def run_ppo_qwen35_4b():
     for step in range(STEPS):
         batch = [examples[i % len(examples)] for i in random.sample(range(len(examples)), 2)]
         batch_rewards = []
+        batch_zvf_list = []
         total_loss = 0.0
         
         for ex in batch:
@@ -174,6 +175,7 @@ def run_ppo_qwen35_4b():
             mean_r = sum(group_rewards) / len(group_rewards)
             std_r = (sum((r - mean_r)**2 for r in group_rewards) / len(group_rewards)) ** 0.5 + 1e-8
             advantages = [(r - mean_r) / std_r for r in group_rewards]
+            batch_zvf_list.append(1.0 if all(abs(r - mean_r) < 1e-6 for r in group_rewards) else 0.0)
             
             # Policy gradient loss
             for lp, adv in zip(group_log_probs, advantages):
@@ -340,6 +342,7 @@ def run_grpo_multiseed_qwen3_8b(seed: int = 123):
     for step in range(STEPS):
         batch = [examples[i % len(examples)] for i in random.sample(range(len(examples)), 2)]
         batch_rewards = []
+        batch_zvf_list = []
         total_loss = 0.0
         
         for ex in batch:
@@ -375,6 +378,7 @@ def run_grpo_multiseed_qwen3_8b(seed: int = 123):
             mean_r = sum(group_rewards) / len(group_rewards)
             std_r = (sum((r - mean_r)**2 for r in group_rewards) / len(group_rewards)) ** 0.5 + 1e-8
             advantages = [(r - mean_r) / std_r for r in group_rewards]
+            batch_zvf_list.append(1.0 if all(abs(r - mean_r) < 1e-6 for r in group_rewards) else 0.0)
             
             for lp, adv in zip(group_log_probs, advantages):
                 total_loss += -adv * lp
@@ -388,6 +392,7 @@ def run_grpo_multiseed_qwen3_8b(seed: int = 123):
         optimizer.step()
         
         avg_reward = sum(batch_rewards) / len(batch_rewards) if batch_rewards else 0
+        avg_zvf = sum(batch_zvf_list) / len(batch_zvf_list) if batch_zvf_list else 0.0
         step_rewards.append(avg_reward)
         
         wandb.log({
@@ -395,6 +400,7 @@ def run_grpo_multiseed_qwen3_8b(seed: int = 123):
             "train/loss": total_loss.item(),
             "train/reward": avg_reward,
             "train/peak_reward": max(step_rewards),
+            "zvf": avg_zvf,
         }, step=step + 1)
         
         if (step + 1) % 5 == 0 or step == 0:

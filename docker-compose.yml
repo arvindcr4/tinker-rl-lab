@@ -1,0 +1,106 @@
+name: tinker-rl-lab
+
+services:
+  # Base service to define common configuration for all environments
+  base:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
+        GIT_REF: ${GIT_REF:-unknown}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
+    image: tinker-rl-lab:latest
+    # Use host IPC to avoid shared memory issues with PyTorch DataLoader workers
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+      - HF_TOKEN=${HF_TOKEN:-}
+      - TINKER_API_KEY=${TINKER_API_KEY:-}
+      - WANDB_MODE=${WANDB_MODE:-offline}
+      - WANDB_PROJECT=${WANDB_PROJECT:-tinker-rl-lab}
+      - SEED=${SEED:-42}
+      - OMP_NUM_THREADS=${OMP_NUM_THREADS:-8}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-all}
+      - ACCELERATE_LOG_LEVEL=${ACCELERATE_LOG_LEVEL:-info}
+    volumes:
+      # Mount the project directory to allow code edits without rebuilds
+      - .:/workspace/tinker-rl-lab
+      # Mount a results directory for model checkpoints and logs
+      - ./results:/workspace/tinker-rl-lab/results
+      # Cache huggingface models on the host to avoid re-downloading
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    # Command to keep the container running if started detached
+    command: ["sleep", "infinity"]
+
+  # Interactive shell session for development and debugging
+  shell:
+    extends:
+      service: base
+    command: ["bash"]
+    stdin_open: true
+    tty: true
+
+  # ---------------------------------------------------------
+  # Pre-defined Training Scripts
+  # ---------------------------------------------------------
+
+  train-math:
+    extends:
+      service: base
+    command: ["python", "grpo_100_math.py"]
+
+  train-synthetic:
+    extends:
+      service: base
+    command: ["python", "grpo_100_synthetic.py"]
+
+  train-xlam:
+    extends:
+      service: base
+    command: ["python", "grpo_100_xlam.py"]
+
+  train-gsm8k-base:
+    extends:
+      service: base
+    command: ["python", "grpo_gsm8k_base.py"]
+
+  train-tooluse-tinker:
+    extends:
+      service: base
+    command: ["python", "grpo_tooluse_tinker.py"]
+
+  # ---------------------------------------------------------
+  # Batch Run Scripts
+  # ---------------------------------------------------------
+
+  run-heldout-all-seeds:
+    extends:
+      service: base
+    command: ["bash", "run_heldout_all_seeds.sh"]
+
+  run-coding:
+    extends:
+      service: base
+    command: ["bash", "run_coding.sh"]
+
+  # ---------------------------------------------------------
+  # Validation / Testing
+  # ---------------------------------------------------------
+
+  smoke-test:
+    extends:
+      service: base
+    command: ["bash", "scripts/smoke_test.sh"]
+
+  run-audits:
+    extends:
+      service: base
+    command: ["python", "run_all_audits.py"]

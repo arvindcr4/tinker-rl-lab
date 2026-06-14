@@ -17,7 +17,7 @@ shift
 
 # Default seeds if none provided
 if [ $# -eq 0 ]; then
-    SEEDS=(42 123 456 789 1024)
+    SEEDS=(42 123 456 789 1024 2048 4096 8192 16384 32768)
 else
     SEEDS=("$@")
 fi

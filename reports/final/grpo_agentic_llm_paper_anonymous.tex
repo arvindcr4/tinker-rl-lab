@@ -60,7 +60,7 @@ This paper investigates GRPO across one agentic and two non-agentic transfer dom
     \item \textbf{Mathematical reasoning (transfer control):} GSM8K (grade-school) benchmark
 \end{itemize}
 
-We execute experiments across model sizes from 0.5B to 8B parameters using QLoRA on consumer GPUs and LoRA on cloud GPUs. Our contributions: (1)~demonstrating that SFT+GRPO can teach tool-calling format compliance where SFT alone fails (0\%$\rightarrow$92\% JSON validity), (2)~diagnostic analysis of \emph{why} GRPO fails on smaller models---tracing it to zero-reward group saturation, (3)~multi-seed replication on GSM8K (5 seeds, SD = 3.3\%) revealing that held-out gains are attributable to the base model ($p{=}0.26$), and (4)~descriptive observations on MoE volatility, group-size scaling, and learning dynamics, with explicit statistical caveats throughout.
+We execute experiments across model sizes from 0.5B to 8B parameters using QLoRA on consumer GPUs and LoRA on cloud GPUs. Our contributions: (1)~demonstrating that SFT+GRPO can teach tool-calling format compliance where SFT alone fails (0\%$\rightarrow$92\% JSON validity), (2)~diagnostic analysis of \emph{why} GRPO fails on smaller models---tracing it to zero-reward group saturation, (3)~multi-seed replication on GSM8K (10 seeds, SD = 3.3\%) revealing that held-out gains are attributable to the base model ($p{=}0.26$), and (4)~descriptive observations on MoE volatility, group-size scaling, and learning dynamics, with explicit statistical caveats throughout.
 
 % ===========================================================================
 % Background
@@ -233,7 +233,7 @@ These results use a \textbf{randomly sampled 50-problem subset} (bootstrap 95\% 
 
 \subsubsection{Multi-Seed Replication on GSM8K}
 
-Using Model E (8B) with LoRA rank 32, 50 steps, 5 seeds:
+Using Model E (8B) with LoRA rank 32, 50 steps, 10 seeds:
 
 \begin{table}[htbp]
     \centering
@@ -337,7 +337,7 @@ Group size has a dramatic effect: $G{=}32$ achieves 54.7\% last-10 reward and 10
         Tool (single) & JSON Validity & 0\% & 92\% & Custom \\
         Tool (multi) & Quality & 0.72 & 0.91 & Custom \\
         Code & Pass@1 & 32\% & 40\% & 50-item subset \\
-        Math (8B, 5 seeds) & Test Acc & 82.0\% (base) & 83.3\%$\pm$2.2\% & Held-out ($p{=}0.26$) \\
+        Math (8B, 10 seeds) & Test Acc & 82.0\% (base) & 83.3\%$\pm$2.2\% & Held-out ($p{=}0.26$) \\
         Math (4B, 4 seeds) & Train Reward (last-10) & --- & 84.7\%$\pm$12.0\% & Train \\
         Math (3B, $G{=}4$) & Train Reward (last-10) & --- & 2.3\% & Train \\
         Math (3B, $G{=}32$) & Train Reward (last-10) & --- & 5.0\% & Train \\
@@ -424,7 +424,7 @@ We applied GRPO to three agentic domains at low budget (25 runs). The clearest r
     \item \textbf{MoE routing volatility} (single-run observation): 2.43$\times$ higher step-to-step variance vs.\ dense models in one MoE run. \emph{Requires replication before drawing architecture-level conclusions.}
     \item \textbf{SFT+GRPO complementarity} (pilot observation, $N{=}1$ per pipeline): In two configurations, SFT-initialized GRPO produced the strongest results. \emph{Lacks matched-compute and reverse-order controls; consistent with known warm-starting effects (ReST, STaR).}
     \item \textbf{Group-size scaling} (seed-fixed ablation, $N{=}1$): For one 8B seed, $G{=}32$ achieves 54.7\% last-10 vs.\ $G{=}4$'s 23.8\%, with zero-reward steps dropping from 20\% to 0\%.
-    \item \textbf{Cross-seed stability} (methodological): GSM8K reward SD = 3.3\% across 5 seeds (8B); 4B SD = 12.0\% across 4 seeds.
+    \item \textbf{Cross-seed stability} (methodological): GSM8K reward SD = 3.3\% across 10 seeds (8B); 4B SD = 12.0\% across 4 seeds.
     \item \textbf{Confirmatory observations:} Two-phase learning (format before reasoning), synthetic--real gap (3--8$\times$), and LoRA rank--speed tradeoff are consistent with prior work and documented in the Supplementary Appendix.
 \end{enumerate}
 

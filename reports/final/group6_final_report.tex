@@ -117,7 +117,7 @@ analysis)
 \textbf{Evaluation Scope:} GSM8K training metrics (Section 4.3.2)
 measure reward on training prompts with stochastic sampling
 (\(T{=}0.8\)--\(1.0\)). Section 4.3.3 reports held-out test accuracy
-(83.3\%, 5 seeds × 200 examples, greedy decoding). Tool-use and code
+(83.3\%, 10 seeds × 200 examples, greedy decoding). Tool-use and code
 results remain training-set evaluations.
 \end{quote}
 
@@ -530,7 +530,7 @@ Only AERO consults a ZVF-style signal at runtime; Scaf-GRPO is the only
 method that alters the reward landscape itself. All other methods
 compensate \emph{after} the variance has been observed.
 
-\textbf{Head-to-head results on Qwen3-8B / GSM8K, 5 seeds, 100 steps
+\textbf{Head-to-head results on Qwen3-8B / GSM8K, 10 seeds, 100 steps
 (transcribed from \texttt{tab:variance-head2head}).}
 
 {\def\LTcaptype{none} % do not increment counter
@@ -1518,7 +1518,7 @@ seeds. Peak accuracy varies more (62.5--87.5\%), indicating high
 trajectory-level variance despite converging to similar final
 performance. The two new seeds (042, 999) are consistent with the
 original three, narrowing the confidence interval from {[}23.8\%,
-36.2\%{]} (3 seeds) to {[}26.5\%, 34.5\%{]} (5 seeds).
+36.2\%{]} (3 seeds) to {[}26.5\%, 34.5\%{]} (10 seeds).
 
 \textbf{4B Multi-Seed Replication (Qwen3.5-4B, LoRA rank 32, G=4, 50
 steps):}
@@ -1687,7 +1687,7 @@ Seeds)}\label{trl-grpo-baseline-5-seeds}
 
 To isolate the effect of the training framework from the model
 architecture, we run TRL's GRPO implementation on Qwen2.5-0.5B on GSM8K
-across 5 seeds on an NVIDIA L4 GPU (125 steps per seed):
+across 10 seeds on an NVIDIA L4 GPU (125 steps per seed):
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}ll@{}}
@@ -3078,12 +3078,12 @@ largely inherited from the pretrained model rather than introduced by
 GRPO.
 
 \textbf{TRL vs.~Tinker comparison:} Welch's t-test between TRL baseline
-(73.4\% ± 7.03\%, 5 seeds) and Tinker results (last-10 averages across
+(73.4\% ± 7.03\%, 10 seeds) and Tinker results (last-10 averages across
 completed runs, bootstrap CI {[}99.3\%, 100.0\%{]}) yields t=8.44,
 p=0.0014 --- strongly significant. This difference reflects framework
 and model differences rather than algorithmic differences alone.
 
-\textbf{Bootstrap CIs:} - TRL GRPO (Qwen2.5-0.5B, 5 seeds): 95\%
+\textbf{Bootstrap CIs:} - TRL GRPO (Qwen2.5-0.5B, 10 seeds): 95\%
 bootstrap CI {[}67.9\%, 78.9\%{]} - Tinker GRPO (all completed runs):
 95\% bootstrap CI {[}99.3\%, 100.0\%{]}
 
@@ -3248,7 +3248,7 @@ Claim}\label{what-would-upgrade-f5-to-a-robust-claim}
 
 \begin{description}
 \tightlist
-\item[A defensible replication requires **5 seeds × 200 steps × 3
+\item[A defensible replication requires **10 seeds × 200 steps × 3
 frontier sizes]
 30 runs** at (70B, 120B, 235B), with matched rollout budgets and
 held-out evaluation (not just training reward). Aggregate cost: roughly
@@ -4171,7 +4171,7 @@ the World-Class Suite frontier runs each contribute single data points
 per hyperparameter configuration.
 
 \textbf{TRL baseline (\(n = 5\) seeds).} The TRL GRPO baseline
-(Qwen2.5-0.5B, GSM8K, 5 seeds) achieves MDE \(d_{\min} = 2.024\) for
+(Qwen2.5-0.5B, GSM8K, 10 seeds) achieves MDE \(d_{\min} = 2.024\) for
 equal-\(n\) comparisons. When compared against the pooled Classic-RL
 group (\(n = 15\)), the MDE improves to \(d_{\min} = 1.530\), reflecting
 the higher effective power from the larger reference group.
@@ -5731,7 +5731,7 @@ Interpretation
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-GRPO Qwen3-8B (5 seeds) vs.~base model & One-sample t-test & t=1.32 &
+GRPO Qwen3-8B (10 seeds) vs.~base model & One-sample t-test & t=1.32 &
 0.26 & Not significant; GRPO delta +1.3pp \\
 TRL baseline vs.~Tinker GRPO & Welch's t-test & t=8.44 & 0.0014 & Highly
 significant; different frameworks + scales \\
@@ -5791,7 +5791,7 @@ Modal H100 GPU & KL tracking (failed gradient bug) & Minimal (early
 failure) \\
 Google Colab Pro (T4) & 0.5B--3B QLoRA SFT+GRPO &
 \textasciitilde\$10/person \\
-NVIDIA L4 (TRL baseline) & Qwen2.5-0.5B, 5 seeds × 125 steps &
+NVIDIA L4 (TRL baseline) & Qwen2.5-0.5B, 10 seeds × 125 steps &
 Minimal \\
 HuggingFace Hub & Model hosting (\texttt{arvindcr4/tinker-rl-bench-*}) &
 Free \\

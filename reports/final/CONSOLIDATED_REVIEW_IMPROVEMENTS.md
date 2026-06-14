@@ -83,7 +83,7 @@ Added binomial CI [0.3%, 4.4%], p=0.68 vs random baseline in main paper + practi
 **Rebuttal:** Paper frames as training-dynamics characterization study, not comparative efficiency claim. $50/person budget precludes PPO value network. REINFORCE++ comparison in progress via Colab notebook.
 
 ### "This is just a systems paper" (Q10 from original)
-**Rebuttal:** We report quantified phenomena not derivable from existing papers: (1) zero-gradient group saturation rates explaining the 3B-4B boundary, (2) Levene's test-confirmed MoE variance amplification (p=7e-6), (3) formal held-out replication across 5 seeds where most GRPO papers report single runs.
+**Rebuttal:** We report quantified phenomena not derivable from existing papers: (1) zero-gradient group saturation rates explaining the 3B-4B boundary, (2) Levene's test-confirmed MoE variance amplification (p=7e-6), (3) formal held-out replication across 10 seeds where most GRPO papers report single runs.
 
 ### "50 steps isn't meaningful RL" (Q42)
 **Rebuttal:** 50 steps x batch 2 x G=8 = 800 unique samples. The 100-step run achieves identical performance (27.5% last-10), suggesting saturation. Budget-constrained; extended run included.

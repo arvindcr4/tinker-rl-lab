@@ -62,6 +62,6 @@ for f in files:
 if accs:
     mean = statistics.mean(accs)
     std = statistics.stdev(accs) if len(accs) > 1 else 0
-    print(f'\nMean accuracy: {mean:.1%} ± {std:.1%} (5 seeds)')
-    print(f'Ready for paper: YES' if len(accs) == 5 else f'Only {len(accs)}/5 seeds done')
+    print(f'\nMean accuracy: {mean:.1%} ± {std:.1%} (10 seeds)')
+    print(f'Ready for paper: YES' if len(accs) == 10 else f'Only {len(accs)}/10 seeds done')
 "

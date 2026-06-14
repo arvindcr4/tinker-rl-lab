@@ -46,7 +46,7 @@ scaling-law claim.
 
 ##### What Would Upgrade F5 to a Robust Claim
 
-A defensible replication requires **5 seeds × 200 steps × 3 frontier sizes
+A defensible replication requires **10 seeds × 200 steps × 3 frontier sizes
 ≈ 30 runs** at (70B, 120B, 235B), with matched rollout budgets and held-out
 evaluation (not just training reward). Aggregate cost: roughly 60× the budget
 of the current single-seed short runs, i.e. on the order of 10⁴–10⁵ USD of

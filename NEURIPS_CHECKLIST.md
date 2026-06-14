@@ -25,7 +25,7 @@
   - Complete source code with pinned dependencies (requirements.txt)
   - Docker container for exact environment reproduction
   - Seed management across Python, NumPy, PyTorch, CUDA (utils/seed.py)
-  - All experiments run with 5 seeds (42, 123, 456, 789, 1024)
+  - All experiments run with 10 seeds (42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768)
   - REPRODUCE.md with exact commands for every experiment
   - YAML configs for all hyperparameters
 
@@ -42,7 +42,7 @@
 ## 7. Experiment Statistical Significance
 **Does the paper report error bars and statistical significance?**
 - [x] Yes
-- Justification: All results report mean ± standard error across 5 seeds. Learning curves include 95% confidence bands. Pairwise algorithm comparisons use Welch's t-test. We follow the methodology of Colas et al. (2019) and use rliable (Agarwal et al., 2021) for aggregate metrics.
+- Justification: All results report mean ± standard error across 10 seeds. Learning curves include 95% confidence bands. Pairwise algorithm comparisons use Welch's t-test. We follow the methodology of Colas et al. (2019) and use rliable (Agarwal et al., 2021) for aggregate metrics.
 
 ## 8. Experiments Compute Resources
 **Did you provide sufficient compute resource information?**

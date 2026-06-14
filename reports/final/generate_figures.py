@@ -67,7 +67,7 @@ def fig1_capacity_threshold():
         steps = parse_gsm8k_log(f'{log_dir}/gsm8k_8B_{seed}.log')
         all_8b.append([s['reward'] for s in steps])
     mean_8b = np.mean(all_8b, axis=0)
-    axes[0].plot(range(1, len(mean_8b)+1), mean_8b, color='#1f77b4', linewidth=2.5, label='8B mean (5 seeds)')
+    axes[0].plot(range(1, len(mean_8b)+1), mean_8b, color='#1f77b4', linewidth=2.5, label='8B mean (10 seeds)')
 
     # 4B
     steps_4b = parse_gsm8k_log(f'{log_dir}/gsm8k_4B_s137.log')

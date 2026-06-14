@@ -52,7 +52,7 @@ Establishing performance bounds is critical for meaningful benchmark evaluation
 ## Statistical Methodology
 
 All results should be reported with:
-- **5 independent seeds** (42, 123, 456, 789, 1024)
+- **10 independent seeds** (42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768)
 - **Mean ± standard error** across seeds
 - **95% confidence intervals** via bootstrap (n=2000)
 - **Interquartile mean (IQM)** as recommended by Agarwal et al. (2021)

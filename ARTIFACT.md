@@ -177,7 +177,7 @@ python grpo_gsm8k_base.py \
 
 ### 4.3 Canonical seed list
 
-`{42, 123, 456, 789, 1024}` — used for every statistical test in the paper.
+`{42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768}` — used for every statistical test in the paper.
 Ablation-only seeds (for 10× structural-ceiling blocks A/B/D/E):
 `{42001, 42002, 42003, 42004, 42005}` (see `experiments/10x_structural_ceiling/configs/`).
 

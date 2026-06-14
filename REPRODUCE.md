@@ -122,7 +122,7 @@ but still exits 0 so reviewers see the failure mode.
 
 ### 3.1 Seeds
 
-The canonical multi-seed set is **`{42, 123, 456, 789, 1024}`** (all experiments
+The canonical multi-seed set is **`{42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768}`** (all experiments
 table; see `ARTIFACT.md §4.3`). The headline single-seed run uses `seed=42`.
 
 ### 3.2 Command

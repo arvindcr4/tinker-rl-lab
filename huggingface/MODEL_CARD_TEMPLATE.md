@@ -42,7 +42,7 @@ This model is a **{METHOD}**-fine-tuned version of [{BASE_MODEL}](https://huggin
 - **Learning Rate**: {LEARNING_RATE}
 - **Batch Size**: {BATCH_SIZE}
 - **Training Steps**: {NUM_STEPS}
-- **Seeds**: 42, 123, 456, 789, 1024
+- **Seeds**: 42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768
 
 ### Training Data
 

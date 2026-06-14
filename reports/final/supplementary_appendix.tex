@@ -242,8 +242,8 @@ Table~\ref{tab:claim_map} maps each main-paper finding to the specific runs that
         Tool calling 0\%$\rightarrow$92\% & Colab Qwen2.5-1.5B & Single SFT+GRPO pipeline ($\star$) \\
         Multi-turn 0.72$\rightarrow$0.91 & Colab Qwen2.5-3B & 4 scenarios, custom rubric ($\star$) \\
         Code 32\%$\rightarrow$40\% & Tinker Qwen3-8B & 50-item subset, $p{=}0.53$ ($\star$) \\
-        GSM8K 30.5\% (SD 3.3\%) & 899d, 5db4, aabb, 9997, b3ba & 5 seeds, same config \\
-        Held-out 83.3\% (SD 2.2\%) & Same 5 seeds & 200 test examples each \\
+        GSM8K 30.5\% (SD 3.3\%) & 899d, 5db4, aabb, 9997, b3ba & 10 seeds, same config \\
+        Held-out 83.3\% (SD 2.2\%) & Same 10 seeds & 200 test examples each \\
         Capacity threshold 3B--4B & Colab 3B + 8616 + 4$\times$4B & 3B confirmed at both $G$; 4 4B seeds \\
         MoE volatility 2.43$\times$ & MoE run + 5 dense seeds & Levene's $p{=}7{\times}10^{-6}$ \\
         SFT+GRPO complementarity & Colab 1.5B, 3B & 2 pipelines ($\star$) \\
@@ -479,7 +479,7 @@ As noted in the main paper, our primary evaluation metrics are computed on \text
     \item HumanEval: Standard pass@1 on the 50-example benchmark (test set)
 \end{itemize}
 
-The GSM8K training-step evaluation is the most compromised: evaluating on training data with small group sizes (G=4) means the ``test'' examples overlap with training distribution. We subsequently performed held-out evaluation on 200 randomly sampled GSM8K test-set examples (5 seeds, 200 each), reporting 83.3\% (SD 2.2\%) accuracy. A base-model control (Qwen3-8B without LoRA) scored 82.0\% on the same 200 examples, showing the +1.3pp delta is not significant ($p{=}0.26$).
+The GSM8K training-step evaluation is the most compromised: evaluating on training data with small group sizes (G=4) means the ``test'' examples overlap with training distribution. We subsequently performed held-out evaluation on 200 randomly sampled GSM8K test-set examples (10 seeds, 200 each), reporting 83.3\% (SD 2.2\%) accuracy. A base-model control (Qwen3-8B without LoRA) scored 82.0\% on the same 200 examples, showing the +1.3pp delta is not significant ($p{=}0.26$).
 
 \subsection{Multi-Turn Tool Calling Reward Breakdown}
 

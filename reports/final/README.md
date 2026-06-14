@@ -80,7 +80,7 @@ These numbers should not all be read as standardized benchmark claims:
 ✅ **Completed**: Advanced RL notebook (Dr. GRPO, DAPO, DPO) -- `advanced_rl_colab.ipynb`  
 ✅ **Completed**: Submission Colab -- `submission_colab.ipynb`  
 ✅ **Completed**: All 13 audits passing (0 issues)  
-🔄 **In Progress**: Held-out GSM8K evaluation (5 seeds x 200 examples via Tinker API)  
+🔄 **In Progress**: Held-out GSM8K evaluation (10 seeds x 200 examples via Tinker API)  
 ⚠️ **Pending**: Standardized tool-calling evaluation / judge protocol disclosure  
 ⚠️ **Pending**: Canonical full HumanEval/MBPP evaluation  
 ⚠️ **Pending**: Reproducibility packaging for prompts, schemas, and checkpoints

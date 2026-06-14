@@ -139,7 +139,7 @@ def plot_comparison_bars():
                 f'{mean:.3f}', ha='center', va='bottom', fontsize=9, fontweight='bold')
 
     ax.set_ylabel('Final Accuracy')
-    ax.set_title('Cross-Library Comparison: Arithmetic Task (5 seeds)')
+    ax.set_title('Cross-Library Comparison: Arithmetic Task (10 seeds)')
     ax.set_ylim(0, 1.15)
     ax.grid(True, alpha=0.3, axis='y')
 

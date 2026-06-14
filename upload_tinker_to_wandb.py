@@ -139,7 +139,7 @@ def upload_run(name: str, log_file: str, group: str):
 
 
 def main():
-    print("=== Uploading Tinker GSM8K runs (5 seeds) ===")
+    print("=== Uploading Tinker GSM8K runs (10 seeds) ===")
     for seed, log_file in SEED_LOGS.items():
         name = f"gsm8k-qwen3-8b-seed{seed}-tinker"
         upload_run(name, log_file, group=GROUP)

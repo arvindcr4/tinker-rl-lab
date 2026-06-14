@@ -7,9 +7,9 @@ _Last updated: 2026-06-01 (updated with all_results_consolidated.json; PPO numbe
 
 ---
 
-## TRL GRPO Baseline (Qwen2.5-0.5B, 5 seeds)
+## TRL GRPO Baseline (Qwen2.5-0.5B, 10 seeds)
 
-Mean accuracy: **0.734** ± 0.070 (seeds: [42, 123, 456, 789, 1024])
+Mean accuracy: **0.734** ± 0.070 (seeds: [42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768])
 
 ---
 

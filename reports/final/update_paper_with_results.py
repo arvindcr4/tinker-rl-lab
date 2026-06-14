@@ -130,7 +130,7 @@ def main():
         print(f"        {name} & {r['correct']}/{r['total']} & {r['accuracy']:.1%} & {ci_str} \\\\")
     if grpo_accs:
         print(r"        \midrule")
-        print(f"        GRPO mean (5 seeds) & --- & {mean_acc:.1%} & SD={std_acc:.1%} \\\\")
+        print(f"        GRPO mean (10 seeds) & --- & {mean_acc:.1%} & SD={std_acc:.1%} \\\\")
     print(r"        \bottomrule")
     print(r"    \end{tabular}")
     print(r"    \label{tab:heldout}")

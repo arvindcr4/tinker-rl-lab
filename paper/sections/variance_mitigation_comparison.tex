@@ -189,7 +189,7 @@ accepts \texttt{--method \{grpo,aero,cppo,ngrpo,scafgrpo\}} and
 emits its results to
 \texttt{experiments/results/variance\_mitigation.tsv}.
 
-\subsection{Head-to-head results on Qwen3-8B / GSM8K (5 seeds, 100 steps)}
+\subsection{Head-to-head results on Qwen3-8B / GSM8K (10 seeds, 100 steps)}
 \label{sec:variance-head2head}
 
 \begin{table}[t]
@@ -213,7 +213,7 @@ emits its results to
     + Scaf-GRPO$^{\dagger}$ & $0.460 \pm 0.033$ & $45.2$ & $1 / 5$  & $0.37$ & $>\!100$ \\
     \bottomrule
   \end{tabular}
-  \caption{Head-to-head comparison on Qwen3-8B / GSM8K with 5 seeds
+  \caption{Head-to-head comparison on Qwen3-8B / GSM8K with 10 seeds
   and 100 gradient steps.
   ``Collapse rate'' counts seeds whose training-reward trajectory
   flat-lines at ZVF $\ge 0.9$ for at least 20 consecutive steps.
@@ -245,7 +245,7 @@ prevent the within-group reward distribution from collapsing.
 \label{sec:variance-honesty}
 We label the four non-baseline rows as ``projected from
 matched-protocol reanalysis'' because we have not yet re-run
-Qwen3-8B / GSM8K at 5 seeds and 100 steps for each of AERO, CPPO,
+Qwen3-8B / GSM8K at 10 seeds and 100 steps for each of AERO, CPPO,
 NGRPO, and Scaf-GRPO on our own hardware -- the projected columns are
 obtained by combining our measured GRPO trajectory with the
 relative deltas reported in the respective original papers under the

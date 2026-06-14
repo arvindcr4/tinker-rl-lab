@@ -9037,13 +9037,13 @@
       "norm_label": "return dict keyed by experiment name with reward traces as np arrays.      merge"
     },
     {
-      "label": "Per-seed final accuracies (5 seeds) for Table 2 libraries.      Pulls directly f",
+      "label": "Per-seed final accuracies (10 seeds) for Table 2 libraries.      Pulls directly f",
       "file_type": "rationale",
       "source_file": "experiments/compute_statistics.py",
       "source_location": "L303",
       "id": "compute_statistics_rationale_303",
       "community": 1,
-      "norm_label": "per-seed final accuracies (5 seeds) for table 2 libraries.      pulls directly f"
+      "norm_label": "per-seed final accuracies (10 seeds) for table 2 libraries.      pulls directly f"
     },
     {
       "label": "Table 1 \u2014 per-experiment CI on last-10 mean and early-vs-late Cohen's d.      We",
@@ -20237,7 +20237,7 @@
       "norm_label": "capacity threshold narrowed to 3b-4b"
     },
     {
-      "label": "Multi-seed expanded from 3 to 5 seeds",
+      "label": "Multi-seed expanded from 3 to 10 seeds",
       "file_type": "document",
       "source_file": "experiments/worklog.md",
       "source_location": null,
@@ -20247,7 +20247,7 @@
       "contributor": null,
       "id": "worklog_multi_seed_expansion",
       "community": 7,
-      "norm_label": "multi-seed expanded from 3 to 5 seeds"
+      "norm_label": "multi-seed expanded from 3 to 10 seeds"
     },
     {
       "label": "4B model all-correct saturation (opposite of 3B stalling)",
@@ -20718,7 +20718,7 @@
       "norm_label": "gsm8k benchmark (accuracy)"
     },
     {
-      "label": "Seeds 42, 123, 456, 789, 1024",
+      "label": "Seeds 42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768",
       "file_type": "document",
       "source_file": "huggingface/MODEL_CARD_TEMPLATE.md",
       "source_location": null,
@@ -20728,7 +20728,7 @@
       "contributor": null,
       "id": "huggingface_seeds_list",
       "community": 7,
-      "norm_label": "seeds 42, 123, 456, 789, 1024"
+      "norm_label": "seeds 42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768"
     },
     {
       "label": "Figure Audit (Task 13 Integrator)",

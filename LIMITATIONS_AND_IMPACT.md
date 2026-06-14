@@ -129,7 +129,7 @@ transparency but was not paid out of pocket. Dollar figures are USD.
 | Modal H100 | PPO baselines (Qwen3‑8B, Llama‑3.1‑8B) | 2 | \$12–18 |
 | Modal H100 | KL‑tracking run (failed gradient bug) | 1 | \$2–4 |
 | Google Colab Pro (T4) | 0.5B–3B QLoRA SFT+GRPO | — | \$10/person |
-| NVIDIA L4 (TRL baseline) | Qwen2.5‑0.5B GSM8K, 5 seeds × 125 steps | 5 | \$3–5 |
+| NVIDIA L4 (TRL baseline) | Qwen2.5‑0.5B GSM8K, 10 seeds × 125 steps | 5 | \$3–5 |
 | HuggingFace Hub | Model + adapter hosting | — | \$0 |
 | Weights & Biases | Experiment tracking (academic tier) | — | \$0 |
 | **Total authors' out‑of‑pocket** | | | **\$130–140** |
@@ -334,9 +334,9 @@ Modal timeouts, KL‑tracking bug, W&B step‑level data loss).
   this scale. Asymptotic claims are unsupported.
 - **Single‑seed Tinker experiments.** Each Tinker configuration ran once
   due to cost. No variance estimates, no significance tests on Tinker
-  data. Henderson et al. (2018) recommends ≥5 seeds; we hit this bar only
+  data. Henderson et al. (2018) recommends ≥10 seeds; we hit this bar only
   for the TRL baseline and the held‑out GSM8K evaluation.
-- **5 seeds on held‑out GSM8K.** Patterson et al. (2024) recommend 10+
+- **10 seeds on held‑out GSM8K.** Patterson et al. (2024) recommend 10+
   seeds for reliable RL comparisons. Compute constraints forced us to 5.
 - **Bootstrap CI assumes i.i.d.** Correlations from shared initialisation
   or data ordering could narrow true confidence intervals.

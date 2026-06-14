@@ -68,7 +68,7 @@ This paper investigates GRPO across one agentic and two non-agentic transfer dom
     \item \textbf{Mathematical reasoning (transfer control):} GSM8K (grade-school) benchmark
 \end{itemize}
 
-We execute experiments across model sizes from 0.5B to 8B parameters using QLoRA on Google Colab and LoRA on Tinker cloud GPUs (32 runs total, all 50 steps). Our contributions: (1)~demonstrating that SFT+GRPO can teach tool-calling format compliance where SFT alone fails (0\%$\rightarrow$92\% JSON validity), (2)~a novel \emph{group saturation diagnostic} measuring zero-variance fraction (ZVF) and gradient utilization across training, showing that $G{=}32$ maintains useful gradients 7$\times$ longer than $G{=}4$ (onset step 29 vs.\ 4), (3)~multi-seed replication on GSM8K (5 seeds, SD = 3.3\%) revealing that held-out gains are attributable to the base model ($p{=}0.26$), and (4)~a structural ceiling hierarchy across four benchmarks: tool-use (1.0) $>$ GSM8K (0.97) $>$ MATH-500 (0.57) $\gg$ HumanEval (0.0), with explicit statistical caveats throughout.
+We execute experiments across model sizes from 0.5B to 8B parameters using QLoRA on Google Colab and LoRA on Tinker cloud GPUs (32 runs total, all 50 steps). Our contributions: (1)~demonstrating that SFT+GRPO can teach tool-calling format compliance where SFT alone fails (0\%$\rightarrow$92\% JSON validity), (2)~a novel \emph{group saturation diagnostic} measuring zero-variance fraction (ZVF) and gradient utilization across training, showing that $G{=}32$ maintains useful gradients 7$\times$ longer than $G{=}4$ (onset step 29 vs.\ 4), (3)~multi-seed replication on GSM8K (10 seeds, SD = 3.3\%) revealing that held-out gains are attributable to the base model ($p{=}0.26$), and (4)~a structural ceiling hierarchy across four benchmarks: tool-use (1.0) $>$ GSM8K (0.97) $>$ MATH-500 (0.57) $\gg$ HumanEval (0.0), with explicit statistical caveats throughout.
 
 % ===========================================================================
 % Background
@@ -247,7 +247,7 @@ These results use a \textbf{randomly sampled 50-problem subset} (bootstrap 95\% 
 
 \subsubsection{Multi-Seed Replication on GSM8K}
 
-Using Qwen3-8B with LoRA rank 32, 50 steps, 5 seeds:
+Using Qwen3-8B with LoRA rank 32, 50 steps, 10 seeds:
 
 \begin{table}[htbp]
     \centering
@@ -442,7 +442,7 @@ We applied GRPO to three agentic domains at low budget (\$65, 32 runs, all 50 st
     \item \textbf{Benchmark hierarchy} (50-step): Tool-use format (1.0) $>$ GSM8K (0.97) $>$ MATH-500 (0.57) $\gg$ HumanEval code (0.0). \emph{GRPO learns structural/format tasks but fails on semantic reasoning tasks.}
     \item \textbf{Group saturation diagnostic} (novel): $G{=}32$ achieves the highest mean gradient utilization (54.5\%) with saturation onset at step 29, vs.\ $G{=}4$'s onset at step 4. All group sizes converge to ${\sim}$1.0 reward by step 50; differences are in compute efficiency, not final performance.
     \item \textbf{LR speed-saturation tradeoff}: LR$=10^{-5}$ is the only configuration that never saturates (ZVF$=$0.175, GU$=$82.5\% over 50 steps) but converges slowly (0.59 final). LR$=3\times10^{-4}$ recovers from apparent divergence at step 37 to 0.984 by step 50---\emph{not} unstable as partial data suggested.
-    \item \textbf{Cross-seed stability} (methodological): GSM8K reward SD = 3.3\% across 5 seeds (8B); 4B SD = 12.0\% across 4 seeds.
+    \item \textbf{Cross-seed stability} (methodological): GSM8K reward SD = 3.3\% across 10 seeds (8B); 4B SD = 12.0\% across 4 seeds.
     \item \textbf{Confirmatory observations:} Two-phase learning (format before reasoning), synthetic--real gap (3--8$\times$), constrained vs.\ unconstrained decoding (no difference), and LoRA rank--speed tradeoff are consistent with prior work and documented in the Supplementary Appendix.
 \end{enumerate}
 

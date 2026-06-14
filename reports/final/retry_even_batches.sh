@@ -64,11 +64,11 @@ print(m.group(1) if m else 'FAIL')
 }
 
 B2="NeurIPS paper on GRPO for agentic LLM fine-tuning. Answer these 5 concisely:
-Q6: Training reward 30.5% reported as single number - was it measured across 5 seeds? Is the 30.5% vs 83.3% discrepancy potentially seed-specific?
+Q6: Training reward 30.5% reported as single number - was it measured across 10 seeds? Is the 30.5% vs 83.3% discrepancy potentially seed-specific?
 Q7: 3B-4B capacity threshold from few model sizes with no parametric test - should we fit sigmoid or threshold regression with CIs on breakpoint?
 Q8: MoE routing volatility 2.43x - what denominator metric and is this statistically significant under bootstrap test?
 Q9: Code improvement 32% to 40% on 50 items = 4 problems. Fisher exact test p-value? Is this statistically significant at p<0.05?
-Q10: Cross-seed stability with 5 seeds SD=2.2% - have we compared to published GRPO baselines to show stability is meaningfully lower?"
+Q10: Cross-seed stability with 10 seeds SD=2.2% - have we compared to published GRPO baselines to show stability is meaningfully lower?"
 
 B4="NeurIPS paper on GRPO for agentic LLM fine-tuning. Answer these 5 concisely:
 Q16: Agentic LLM fine-tuning in title but never defined - provide operational definition distinguishing agentic from non-agentic in GRPO context.

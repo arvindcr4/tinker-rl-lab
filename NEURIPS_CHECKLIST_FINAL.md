@@ -91,7 +91,7 @@
 - **Justification:** Reproducibility is genuinely partial by construction.
   (a) Modal experiments are fully reproducible: §6 (p. 24) enumerates
   Docker, pinned dependencies, centralized seed management
-  (`utils/seed.py`), and 5-seed runs (seeds $\{42, 123, 456, 789, 1024\}$
+  (`utils/seed.py`), and 5-seed runs (seeds $\{42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768\}$
   per §4.2 p. 8 and §5.1 p. 11). `REPRODUCE.md` gives step-by-step
   commands. (b) Tinker API runs are *not* independently reproducible
   because GPU type, driver, and scheduler are proprietary to the Tinker
@@ -127,7 +127,7 @@
   `atropos/configs/*.yaml`
 - **Justification:** §4.2 (p. 8) states: LoRA rank 32, learning rate
   $10^{-4}$, Adam ($\beta_1{=}0.9$, $\beta_2{=}0.95$, $\epsilon{=}10^{-8}$),
-  5 seeds for Modal runs. Table 3 (p. 8) gives the cross-library
+  10 seeds for Modal runs. Table 3 (p. 8) gives the cross-library
   hyperparameter mapping. Appendix B (p. 33, Table 18) enumerates sweep
   ranges for learning rate, clip range, entropy coefficient, $\gamma$, and
   GAE $\lambda$. Per-task YAML configs are version-controlled in

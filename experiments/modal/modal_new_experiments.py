@@ -206,11 +206,13 @@ def run_ppo_qwen35_4b():
         
         avg_reward = sum(batch_rewards) / len(batch_rewards) if batch_rewards else 0
         step_rewards.append(avg_reward)
+        mean_entropy = float(-sum(lp.item() for lp in group_log_probs) / len(group_log_probs)) if group_log_probs else 0.0
         
         wandb.log({
             "step": step + 1,
             "train/loss": total_loss.item(),
             "train/reward": avg_reward,
+            "train/policy_entropy": mean_entropy,
             "train/peak_reward": max(step_rewards),
             "train/cumulative_reward": sum(step_rewards) / len(step_rewards),
         }, step=step + 1)
@@ -422,11 +424,13 @@ def run_grpo_multiseed_qwen3_8b(seed: int = 123):
         avg_reward = sum(batch_rewards) / len(batch_rewards) if batch_rewards else 0
         avg_zvf = sum(batch_zvf_list) / len(batch_zvf_list) if batch_zvf_list else 0.0
         step_rewards.append(avg_reward)
+        mean_entropy = float(-sum(lp.item() for lp in group_log_probs) / len(group_log_probs)) if group_log_probs else 0.0
         
         wandb.log({
             "step": step + 1,
             "train/loss": total_loss.item(),
             "train/reward": avg_reward,
+            "train/policy_entropy": mean_entropy,
             "train/peak_reward": max(step_rewards),
             "zvf": avg_zvf,
         }, step=step + 1)

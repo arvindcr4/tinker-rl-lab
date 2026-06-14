@@ -491,7 +491,10 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
             mean_r = logs.get("reward/mean", logs.get("rewards/mean"))
             if mean_r is not None:
                 step_log.append(float(mean_r))
-                wandb.log({"train/percent_correct": float(mean_r), "train/step": state.global_step, "zvf": _last_zvf},
+                log_dict = {"train/percent_correct": float(mean_r), "train/step": state.global_step, "zvf": _last_zvf}
+                if "objective/entropy" in logs:
+                    log_dict["train/policy_entropy"] = logs["objective/entropy"]
+                wandb.log(log_dict,
                           step=state.global_step)
                 print(f"  step {state.global_step:3d}  mean_reward={float(mean_r):.4f} zvf={_last_zvf:.2f}")
 

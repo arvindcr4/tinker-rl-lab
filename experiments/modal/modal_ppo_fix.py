@@ -126,6 +126,7 @@ def run_ppo_qwen35_4b_quantized():
     for step in range(STEPS):
         batch = random.sample(examples, BATCH * GRAD_ACCUM)
         step_rewards = []
+        step_entropies = []
         total_loss = 0.0
 
         for accum_idx in range(GRAD_ACCUM):
@@ -156,6 +157,7 @@ def run_ppo_qwen35_4b_quantized():
                 log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
                 token_log_probs = log_probs.gather(2, target.unsqueeze(-1)).squeeze(-1)
                 mean_log_prob = token_log_probs.mean()
+                step_entropies.append(-mean_log_prob.item())
 
                 # REINFORCE loss (negative because we maximize reward)
                 baseline = 0.5
@@ -170,8 +172,9 @@ def run_ppo_qwen35_4b_quantized():
         optimizer.zero_grad()
 
         mean_reward = np.mean(step_rewards)
+        mean_entropy = float(np.mean(step_entropies))
         reward_trace.append(mean_reward)
-        wandb.log({"step": step, "mean_reward": mean_reward, "batch_size": BATCH * GRAD_ACCUM})
+        wandb.log({"step": step, "mean_reward": mean_reward, "train/policy_entropy": mean_entropy, "batch_size": BATCH * GRAD_ACCUM})
         print(f"Step {step}/{STEPS}: reward={mean_reward:.3f}")
 
     # Save results

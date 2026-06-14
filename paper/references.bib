@@ -1363,38 +1363,9 @@
 % comparison table in the variance-mitigation section.
 % =====================================================================
 
-@article{cppo2024,
-  author        = {Lin, Zhihang and Lin, Mingbao and Xie, Yuan and Ji, Rongrong},
-  title         = {{CPPO}: Accelerating the Training of Group Relative Policy Optimization-Based Reasoning Models},
-  journal       = {arXiv preprint},
-  year          = {2025},
-  eprint        = {2503.22342},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.LG},
-  note          = {Prunes low-advantage completions before backpropagation to accelerate GRPO training at matched accuracy.}
-}
-
-@article{ngrpo2025,
-  author        = {Nan, Gongrui and others},
-  title         = {{NGRPO}: Negative-enhanced Group Relative Policy Optimization},
-  journal       = {arXiv preprint},
-  year          = {2025},
-  eprint        = {2509.18851},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.LG},
-  note          = {Enhances GRPO by reshaping the contribution of all-incorrect (negative) groups so they still provide learning signal when within-group reward variance collapses.}
-}
-
-@article{scafgrpo2025,
-  author        = {Zhang, Xichen and others},
-  title         = {{Scaf-GRPO}: Scaffolded Group Relative Policy Optimization for Enhancing LLM Reasoning},
-  journal       = {arXiv preprint},
-  year          = {2025},
-  eprint        = {2510.19807},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.LG},
-  note          = {Injects scaffolded hints on hard prompts so already-failing groups recover within-group reward variance and continue to provide learning signal.}
-}
+% Duplicate CPPO/NGRPO/Scaf-GRPO entries removed (round-3 dedup): canonical keys
+% are lin2025cppo / nan2025ngrpo / zhang2025scaffgrpo above (same arXiv IDs
+% 2503.22342 / 2509.18851 / 2510.19807). All \cite calls repointed to those.
 
 
 

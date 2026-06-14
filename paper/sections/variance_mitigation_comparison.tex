@@ -24,8 +24,8 @@ asking whether ZVF remains a useful diagnostic once the method is
 active. This appendix addresses both points.
 
 We consider seven recent methods:
-CPPO~\cite{cppo2024}, NGRPO~\cite{ngrpo2025},
-Scaf-GRPO~\cite{scafgrpo2025}, MC-GRPO~\cite{mcgrpo2025}
+CPPO~\cite{lin2025cppo}, NGRPO~\cite{nan2025ngrpo},
+Scaf-GRPO~\cite{zhang2025scaffgrpo}, MC-GRPO~\cite{mcgrpo2025}
 (median-centering for small group sizes), GIFT~\cite{gift2025}
 (group-implicit reward matching), AReaL~\cite{areal2025}
 (async decoupled training), and ES~\cite{es2025}
@@ -42,23 +42,23 @@ discussed in Section~\ref{sec:variance-honesty}.
 \subsection{Survey of the methods}
 \label{sec:variance-survey}
 
-\paragraph{CPPO (Completion Pruning Policy Optimization)~\cite{cppo2024}.}
-CPPO~\citep{cppo2024} targets the \emph{compute} cost of GRPO: it prunes
+\paragraph{CPPO (Completion Pruning Policy Optimization)~\cite{lin2025cppo}.}
+CPPO~\citep{lin2025cppo} targets the \emph{compute} cost of GRPO: it prunes
 completions with low absolute advantage before the backward pass, so fewer
 rollouts reach the optimizer at (the paper reports) matched accuracy. Relative
 to ZVF it is incidental---by dropping low-signal completions it changes the
 effective rollouts per step---but its stated goal is training-throughput, not
 variance control per se.
 
-\paragraph{NGRPO (Negative-enhanced GRPO)~\cite{ngrpo2025}.}
-NGRPO~\citep{ngrpo2025} reshapes the contribution of \emph{all-incorrect}
+\paragraph{NGRPO (Negative-enhanced GRPO)~\cite{nan2025ngrpo}.}
+NGRPO~\citep{nan2025ngrpo} reshapes the contribution of \emph{all-incorrect}
 (``negative'') groups. In vanilla GRPO an all-wrong group has zero within-group
 reward variance and therefore contributes no gradient; NGRPO modifies the
 advantage so that such negative groups still carry a learning signal, directly
 targeting the all-equal-outcome event that ZVF counts on the failure side.
 
-\paragraph{Scaf-GRPO (Scaffolded GRPO)~\cite{scafgrpo2025}.}
-Scaf-GRPO~\citep{scafgrpo2025} injects \emph{scaffolded hints} into prompts the
+\paragraph{Scaf-GRPO (Scaffolded GRPO)~\cite{zhang2025scaffgrpo}.}
+Scaf-GRPO~\citep{zhang2025scaffgrpo} injects \emph{scaffolded hints} into prompts the
 policy repeatedly fails, so that previously all-wrong groups begin to produce
 some correct rollouts and recover within-group reward variance. It attacks ZVF
 at its source (on hard prompts) by changing the prompt distribution rather than
@@ -124,9 +124,9 @@ and the relative compute cost per gradient step at matched $G$.
     \textbf{Compute} \\
     \midrule
     GRPO (baseline)      & no  & no  & none                    & no  & $1.00\times$ \\
-    + CPPO~\cite{cppo2024}       & no  & yes & completion pruning (compute) & no  & $0.85\times$ \\
-    + NGRPO~\cite{ngrpo2025}     & yes & no  & negative-group advantage & no  & $1.00\times$ \\
-    + Scaf-GRPO~\cite{scafgrpo2025} & yes & no  & scaffolded hints (prompt) & no  & $1.05\times$ \\
+    + CPPO~\cite{lin2025cppo}       & no  & yes & completion pruning (compute) & no  & $0.85\times$ \\
+    + NGRPO~\cite{nan2025ngrpo}     & yes & no  & negative-group advantage & no  & $1.00\times$ \\
+    + Scaf-GRPO~\cite{zhang2025scaffgrpo} & yes & no  & scaffolded hints (prompt) & no  & $1.05\times$ \\
     \bottomrule
   \end{tabular}
   \caption{Variance-mitigation methods along five comparison axes (mechanisms as
@@ -320,9 +320,12 @@ long chain-of-thought regimes where response-length bias is large. We therefore
 also ran the A/B in that regime: \texttt{Qwen2.5-1.5B-Instruct} on GSM8K with
 $200$-token chain-of-thought ($3$ seeds; artifact
 \texttt{experiments/results/drgrpo\_gsm8k\_cot.json}). Both arms produce a
-\emph{significant} measured held-out gain (GRPO $20.2\% \to 26.3\%$, Dr.\ GRPO
-$20.5\% \to 25.5\%$; per-item McNemar $p < 10^{-3}$ for each) and the two are
-statistically comparable to each other at this seed budget. Over the $30$-step
+directional measured held-out gain (GRPO $20.2\% \to 26.3\%$, Dr.\ GRPO
+$20.5\% \to 25.5\%$); reporting exact McNemar \emph{per seed} (rather than the
+pooled $p<10^{-3}$, which re-counts the same $200$ items across the three seeds
+and overstates significance), the gain is significant in $2/3$ seeds for GRPO
+($p=0.071,0.036,0.016$) and $1/3$ for Dr.\ GRPO ($p=0.122,0.017,0.122$), and the
+two arms are statistically comparable to each other at this seed budget. Over the $30$-step
 horizon neither arm inflates response length (GRPO $195 \to 180$, Dr.\ GRPO
 $194 \to 187$ tokens), so the length-bias fix that distinguishes Dr.\ GRPO has
 no visible effect here either: a longer-horizon run, where GRPO's length growth

@@ -204,18 +204,26 @@ checkpoint's pre-RL accuracy, not a separate base model), and its
 non-significance does not depend on the multiplicity correction. We note two
 power caveats on this null. First, a seed-level Welch test at $n_1{=}n_2{=}5$
 only detects effects of $|d|\gtrsim 2$, so the $+1.3$\,pp gap we observe is not
-separable from zero at this seed budget. Second, aggregating $1{,}319$ GSM8K
-items to $5$ per-seed means discards item-level power, so we ran the paired
-McNemar test on item-level pre-RL-vs-post-GRPO predictions directly. On a
-non-saturated model the held-out gain \emph{is} clearly significant: for
+separable from zero at this seed budget. Second, aggregating the $200$ held-out GSM8K
+items per seed to a single per-seed mean discards item-level power, so we also
+examined item-level pre-RL-vs-post-GRPO predictions with the McNemar test. For
 \texttt{Qwen2.5-1.5B-Instruct} on GSM8K chain-of-thought ($3$ seeds; artifact
 \texttt{experiments/results/drgrpo\_gsm8k\_cot.json}) GRPO improves held-out
-accuracy $20.2\% \to 26.3\%$ with McNemar wrong$\to$right $=63$ vs.\
-right$\to$wrong $=26$ (exact $p \approx 1\times10^{-4}$). The contrast with the
-Qwen3-8B-Instruct null is the substantive point: the held-out gain is
-\emph{headroom-dependent} -- GRPO produces a measured item-level generalization
-improvement when the base is far from ceiling, but not for the near-saturated
-$82\%$ Qwen3-8B-Instruct checkpoint. We therefore do not read the Qwen3-8B null
+accuracy $20.2\% \to 26.3\%$. We report this \emph{per seed} rather than pooling:
+the three seeds re-evaluate the \emph{same} $200$ items, so pooling their
+discordances ($63$ wrong$\to$right vs.\ $26$ right$\to$wrong) would treat $600$
+evaluations of $200$ distinct items as independent, and the resulting exact
+pooled $p \approx 1\times10^{-4}$ overstates significance by pseudoreplication.
+The honest per-seed exact McNemar $p$-values are $0.071$, $0.036$, and $0.016$
+(significant in $2$ of $3$ seeds); a seed-level one-sample test on the three
+held-out deltas ($+5.5$, $+6.0$, $+7.0$\,pp) gives $t{=}14.0$, $p\approx0.005$.
+This is consistent with (but does not isolate) a \emph{headroom-dependent}
+effect relative to the Qwen3-8B-Instruct null --- GRPO shows an item-level
+generalization improvement when the base is far from ceiling but not at the
+near-saturated $82\%$ Qwen3-8B-Instruct checkpoint. We caution that the two cases
+also differ in model family (Qwen2.5 vs.\ Qwen3), size ($1.5$B vs.\ $8$B), and
+decoding regime (short CoT vs.\ greedy), so we cannot attribute the difference to
+headroom alone. We therefore do not read the Qwen3-8B null
 as evidence of \emph{no} effect in general; we read it as: at a near-ceiling
 base, training-reward gains do not translate into a detectable held-out
 improvement at our seed budget.

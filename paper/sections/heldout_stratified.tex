@@ -45,10 +45,11 @@ selection-bias sensitivity \\
 \bottomrule
 \end{tabular}
 \caption{Only the post-hoc top-10 protocol (P1) is measured in the current
-artifact. Random and stratified checkpoint audits require additional held-out
-evaluation runs over checkpoints that were not part of the released top-10
-set, so they are left explicitly unclaimed rather than estimated with a
-surrogate.}
+artifact. Random (P2) and stratified (P3) checkpoint audits have no real
+held-out runs over the non-top-10 checkpoints; the released TSV reports them
+only as an explicitly-labelled \emph{surrogate} (every P2/P3 row carries
+\texttt{n\_measured=0}, imputed from a held-out$\sim$last-10 fit), and the paper
+makes no measured-generalization claim from them.}
 \label{tab:heldout-stratified}
 \end{table}
 
@@ -73,9 +74,13 @@ expectation.
 
 Accordingly, the main paper now treats Table~\ref{tab:heldout_gsm8k} as a
 \emph{ranking-stability} audit rather than as an unbiased generalization
-estimate. We no longer use synthetic random-checkpoint or stratified-checkpoint
-numbers, and we explicitly decline to report them unless they come from real
-held-out evaluation runs. Any broader statement about selection bias would
+estimate. We make no claim from the synthetic random-checkpoint or
+stratified-checkpoint numbers. The released file
+\texttt{experiments/results/heldout\_stratified.tsv} does contain P2/P3 rows,
+but they are an explicitly-labelled \emph{surrogate} sensitivity analysis: every
+such row carries \texttt{n\_measured=0} and is imputed from an anchored monotone
+held-out$\sim$last-10 fit (\texttt{experiments/stratified\_heldout.py}, slope
+$0.98$, intercept $0.01$); none is a real held-out evaluation. Any broader statement about selection bias would
 require evaluating additional non-top-10 checkpoints on the same held-out
 slice; that experiment is straightforward but was not completed within the
 revision window.

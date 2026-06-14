@@ -31,16 +31,18 @@ made explicit.
 \paragraph{Condition-matched audit.}
 Table~\ref{tab:paired-bi} mirrors the actually released TSV artifact
 \texttt{experiments/results/base\_instruct\_paired.tsv}. Every row uses the
-same evaluation harness and the same held-out GSM8K-500 slice where those
-numbers are available. Rows with $n_{\text{seeds}}<5$ are descriptive only.
+same evaluation harness and a fixed held-out GSM8K slice where those
+numbers are available (the inferential $5$-seed Qwen3-8B-Inst row uses a
+$200$-item slice; we release no $500$-item slice). Rows with
+$n_{\text{seeds}}<5$ are descriptive only.
 
 \begin{table*}[t]
 \centering
 \caption{\textbf{Base-vs.-instruct audit under condition-matched reporting.}
 Pre-RL and post-RL columns are taken directly from the released paired-audit
-artifact. Held-out values use greedy evaluation on a fixed 500-problem GSM8K
-slice when available. ``d.o.'' = descriptive only (insufficient seeds for
-inference).}
+artifact. Held-out values use greedy evaluation on a fixed GSM8K slice (a $200$-item
+slice for the $5$-seed Qwen3-8B-Inst row) when available. ``d.o.'' = descriptive
+only (insufficient seeds for inference).}
 \label{tab:paired-bi}
 \small
 \begin{tabular}{@{}l l l c c c c c c@{}}

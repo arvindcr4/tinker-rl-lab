@@ -225,12 +225,14 @@ class TinkerAtroposTrainer:
         all_advantages = []
         has_distil_data = False
         skipped_count = 0
+        total_trajectories = 0
         # Distil-specific tracking
         all_teacher_logprobs = []
         all_student_logprobs_for_distil = []
         all_per_token_advantages = []
 
         for item in batch:
+            total_trajectories += len(item["tokens"])
             # Calculate advantages
             scores = np.array(item["scores"])
             original_mean = np.mean(scores)
@@ -380,6 +382,13 @@ class TinkerAtroposTrainer:
         else:
             self.distil_stats = {}
 
+        if total_trajectories > 0:
+            self.erf_stats = {
+                "train/erf": float(len(datums)) / total_trajectories
+            }
+        else:
+            self.erf_stats = {}
+
         if skipped_count > 0:
             print(f"Skipped {skipped_count} groups with zero advantages")
 
@@ -523,6 +532,8 @@ class TinkerAtroposTrainer:
                 wandb_metrics.update(self.training_logprob_stats)
             if hasattr(self, "advantage_stats"):
                 wandb_metrics.update(self.advantage_stats)
+            if hasattr(self, "erf_stats"):
+                wandb_metrics.update(self.erf_stats)
 
             if has_distil:
                 wandb_metrics["distil/active"] = 1

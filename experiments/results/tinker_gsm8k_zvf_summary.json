@@ -1,0 +1,28 @@
+{
+  "model": "Qwen/Qwen3-8B",
+  "task": "GSM8K",
+  "group_size": 8,
+  "temperature": 1.0,
+  "seeds": [
+    123,
+    42
+  ],
+  "n_seeds": 2,
+  "n_problems_per_seed": 200,
+  "n_problems_total": 400,
+  "sampling_accuracy_mean": 0.7047,
+  "sampling_accuracy_per_seed": [
+    0.7125,
+    0.6969
+  ],
+  "mean_zvf": 0.16,
+  "zvf_per_seed": [
+    0.19,
+    0.13
+  ],
+  "zvf_theory_corr": 0.9322,
+  "zvf_theory_mean_abs_err": 0.1174,
+  "frac_all_correct": 0.1325,
+  "frac_all_wrong": 0.0275,
+  "frac_mixed": 0.84
+}

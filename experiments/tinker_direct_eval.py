@@ -85,7 +85,7 @@ async def evaluate_with_tinker(
     # Load GSM8K test split
     # TODO: Address "The Early-Training Snapshot Problem" and "API cost constraints" by evaluating 
     # on the full test set instead of small subsets once budget allows.
-    ds = load_dataset("gsm8k", "main", split="test")
+    ds = load_dataset("openai/gsm8k", "main", split="test")
     ds = ds.shuffle(seed=seed)
     problems = ds.select(range(min(n_problems, len(ds))))
 

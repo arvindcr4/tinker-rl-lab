@@ -61,7 +61,7 @@ exactly the runs where reward traces plateau or regress because the
 group-relative advantage has collapsed to zero. This is the operational
 meaning of ZVF in the present benchmark.
 
-\subsection{Measured Small-Scale Validation of the ZVF Formalism}
+\subsection{Measured Validation of the ZVF Formalism (Small-Scale and Frontier)}
 \label{sec:appendix:zvf-measured}
 
 To test the formalism end-to-end with fully logged rollouts we ran an
@@ -84,6 +84,22 @@ step's batch-mean reward $p$, and mean ZVF decreases monotonically in $G$
 $0.33$ at $G{=}8$), consistent with the low-temperature/correlated-completion
 boundary condition noted above: the $G$ rollouts are not independent draws, so
 the independence null is a lower bound on observed ZVF.
+
+\paragraph{The same formalism holds at frontier scale (Qwen3-8B / GSM8K).}
+We separately measured ZVF directly on the frontier model the paper studies, by
+sampling \texttt{Qwen3-8B} on a held-out GSM8K slice via the Tinker API
+($G{=}8$, temperature~$1.0$, $200$ problems $\times$ two seeds $=400$ problems;
+driver \texttt{experiments/tinker\_direct\_eval.py}, artifacts
+\texttt{experiments/results/tinker\_gsm8k\_zvf\_s*.json} and
+\texttt{tinker\_gsm8k\_zvf\_summary.json}). Per-problem observed ZVF correlates
+$r=0.93$ with the closed form $p^{G}+(1-p)^{G}$ evaluated at the problem's
+pass rate $p$---essentially the same fit as the $0.5$B arithmetic probe
+($r=0.92$), now at $8$B on real GSM8K. Mean ZVF is $0.16$ and is accounted for
+almost entirely by the saturated tails of the difficulty distribution
+($13.3\%$ of problems all-correct, $2.8\%$ all-wrong, $84\%$ mixed), exactly the
+structure $\mathrm{ZVF}(p,G)$ predicts. Two independent scales (0.5B arithmetic,
+8B GSM8K) and reward regimes thus give the same answer: ZVF is a faithful,
+cheap read-out of within-group outcome agreement.
 
 \paragraph{ZVF is not a re-expression of mean reward (W1).} On the same logged
 steps, ZVF is strongly \emph{raw}-correlated with batch-mean reward

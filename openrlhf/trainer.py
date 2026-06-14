@@ -158,6 +158,20 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
     """
     try:
         import wandb  # type: ignore
+        try:
+            import torch, wandb
+            if not getattr(wandb, '_vram_patched', False):
+                _old_log = wandb.log
+                def _vram_log(data, *args, **kwargs):
+                    if torch.cuda.is_available():
+                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                        torch.cuda.reset_peak_memory_stats()
+                    _old_log(data, *args, **kwargs)
+                wandb.log = _vram_log
+                wandb._vram_patched = True
+        except ImportError:
+            pass
         import openrlhf  # type: ignore  # noqa: F401
     except Exception as exc:
         raise RuntimeError(
@@ -229,6 +243,20 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
     reward_trace: List[float] = []
     try:
         import wandb as _wb  # type: ignore
+        try:
+            import torch, wandb
+            if not getattr(wandb, '_vram_patched', False):
+                _old_log = wandb.log
+                def _vram_log(data, *args, **kwargs):
+                    if torch.cuda.is_available():
+                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                        torch.cuda.reset_peak_memory_stats()
+                    _old_log(data, *args, **kwargs)
+                wandb.log = _vram_log
+                wandb._vram_patched = True
+        except ImportError:
+            pass
         api = _wb.Api()
         runs = api.runs(
             f"{api.default_entity}/{os.environ['WANDB_PROJECT']}",

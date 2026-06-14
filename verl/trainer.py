@@ -201,6 +201,20 @@ def run_verl_training(config: VERLConfig, output_dir: str = "/tmp/verl-run") -> 
     """
     try:
         import wandb  # type: ignore
+        try:
+            import torch, wandb
+            if not getattr(wandb, '_vram_patched', False):
+                _old_log = wandb.log
+                def _vram_log(data, *args, **kwargs):
+                    if torch.cuda.is_available():
+                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                        torch.cuda.reset_peak_memory_stats()
+                    _old_log(data, *args, **kwargs)
+                wandb.log = _vram_log
+                wandb._vram_patched = True
+        except ImportError:
+            pass
     except Exception as exc:
         raise RuntimeError("run_verl_training requires wandb") from exc
 

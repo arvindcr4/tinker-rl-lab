@@ -126,8 +126,10 @@ is regenerated directly from
 \begin{table}[ht]
 \centering
 \caption{\textbf{Survival of $F_1$--$F_5$ after Tier-C exclusion.}
-``Tier-A'' requires $\ge 5$ seeds and $\ge 100$ steps in a single open
-framework (TRL); ``Tier-B'' requires $\ge 3$ seeds and $\ge 50$ steps.
+``Tier-A'' requires $\ge 5$ seeds and $\ge 100$ steps; ``Tier-B'' requires
+$\ge 3$ seeds and $\ge 50$ steps. (Note: the only surviving finding $F_3$ pools
+its GRPO and PPO arms across frameworks rather than staying within one---see the
+caveat below.)
 BH correction applied only over Tier-A/B $p$-values. ``Survives''
 means the BH-adjusted $p$ is below $q{=}0.05$ \emph{and} the effect
 size is at least small ($|d| \ge 0.3$). Findings that do not survive
@@ -142,7 +144,7 @@ are \emph{downgraded to descriptive} in the main text (W4).}
 \midrule
 $F_1$ & ZVF diagnostic              & no  & no  & --     & --       & downgraded (Tier-C) \\
 $F_2$ & Instruct $>$ Base            & no  & no  & --     & --       & downgraded (Tier-C) \\
-$F_3$ & PPO/GRPO heterogeneity       & yes & no  & $+21.84$ & $6.7\times 10^{-11}$ & \textbf{survives} \\
+$F_3$ & PPO/GRPO heterogeneity       & yes & no  & $+21.84$ & $2.1\times 10^{-5}$ & \textbf{survives} \\
 $F_4$ & Framework gap                & no  & no  & --     & --       & downgraded (Tier-C) \\
 $F_5$ & Frontier stability           & no  & no  & --     & --       & downgraded (Tier-C) \\
 \bottomrule
@@ -150,10 +152,17 @@ $F_5$ & Frontier stability           & no  & no  & --     & --       & downgrade
 \end{table}
 
 The table is deliberately conservative. In the current release only
-$F_3$ (the large PPO-vs.-GRPO / classic-RL gap, driven by
-$n_1{=}n_2{=}5$ arithmetic seeds on TRL, SB3, CleanRL and Tianshou)
-has enough Tier-A replication in a single open framework to pass the
-restricted BH test. $F_1$ (ZVF as a diagnostic) is supported only by
+$F_3$ (the large GRPO-vs.-classic-RL gap) passes the restricted BH test, and we
+read it with care: it contrasts $5$ TRL-GRPO seeds (Qwen2.5-0.5B arithmetic)
+against $15$ pooled \emph{classic-RL} PPO seeds (SB3, CleanRL, Tianshou; $n{=}20$
+total, not a balanced $n_1{=}n_2{=}5$ design). This is a cross-framework,
+cross-paradigm contrast --- LLM-GRPO reward against gym-style PPO return --- so
+the very large $d \approx 21.8$ ($p_{\mathrm{BH}}{=}2.1\times10^{-5}$ after
+de-duplicating the records; an earlier draft reported $6.7\times10^{-11}$ from a
+loader that double-counted every run) reflects exactly the stack/implementation
+heterogeneity this paper documents, \emph{not} an algorithmic superiority of
+GRPO over PPO under matched conditions (cf.\ the same-stack null in the main
+text). $F_1$ (ZVF as a diagnostic) is supported only by
 short-horizon Tinker logs and hence cannot be tested at Tier A;
 $F_2$ (instruct $>$ base trainability) is observed across Tinker
 runs but we do not yet have paired $\ge 5$-seed $\ge 100$-step

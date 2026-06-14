@@ -4462,9 +4462,9 @@ descriptive) \\
 & --- & 0 & --- & insufficient Tier-A/B data (downgraded -\textgreater{}
 Tier-C, descriptive) \\
 \textbf{F3} & PPO/GRPO heterogeneity & \textbf{yes} & no &
-\textbf{+22.436} & {[}0.684, 0.761{]} & 40 & \(6.72 \times 10^{-11}\) &
+\textbf{+21.837} & {[}0.665, 0.774{]} & 20 & \(2.06 \times 10^{-5}\) &
 \textbf{survives restricted BH} (\(|d| \gg 0.3\),
-\(p_{\text{BH}} \ll 0.05\)) \\
+\(p_{\text{BH}} < 0.05\)) \\
 \textbf{F4} & Framework gap (Qwen3-8B four-way) & no & no & --- & --- &
 0 & --- & insufficient Tier-A/B data (downgraded -\textgreater{} Tier-C,
 descriptive) \\
@@ -4475,10 +4475,12 @@ descriptive) \\
 }
 
 The headline picture is honest and conservative: \textbf{only F3
-survives}. F3 is driven by the \(n_1{=}n_2{=}5\) arithmetic seeds on
-TRL/SB3/CleanRL/Tianshou (40 runs total); the enormous effect size
-(\(d \approx 22.4\)) reflects the near-total PPO-vs-GRPO separation
-documented in §5.15. F1/F2/F4/F5 have no Tier-A or Tier-B groups at all
+survives}. F3 contrasts 5 TRL-GRPO seeds (Qwen2.5-0.5B arithmetic) against
+15 pooled classic-RL PPO seeds (SB3/CleanRL/Tianshou) --- 20 runs total, not a
+balanced \(n_1{=}n_2{=}5\) design; the enormous effect size
+(\(d \approx 21.8\)) is a cross-framework, cross-paradigm gap (LLM-GRPO reward
+vs.\ gym-style PPO return) reflecting stack/implementation heterogeneity, not an
+algorithmic GRPO\textgreater{}PPO result under matched conditions. F1/F2/F4/F5 have no Tier-A or Tier-B groups at all
 in the current release (\texttt{n\_runs\_used\ =\ 0}) --- the tex
 appendix uses symbols ``Supported / Needs follow-up / Supported / Needs
 follow-up / Not supported'' but the TSV makes clear the underlying
@@ -4488,8 +4490,9 @@ findings, not ``partial support.''
 \textbf{Divergence note:} None. The tex appendix's Table
 \texttt{tab:survival-f1-f5} and the TSV produced by
 \texttt{experiments/survival\_analysis.py} agree: F3 survives with
-\(d{=}+22.44\), \(p_{\text{BH}}{=}6.7\times 10^{-11}\); F1/F2/F4/F5 are
-all \texttt{insufficient\ Tier-A/B\ data}. The tex's narrative
+\(d{=}+21.84\), \(p_{\text{BH}}{=}2.1\times 10^{-5}\) (after de-duplicating
+records that an earlier loader double-counted, halving \(n\) from 40 to the true
+20); F1/F2/F4/F5 are all \texttt{insufficient\ Tier-A/B\ data}. The tex's narrative
 interpretation is slightly more charitable (e.g.~``observed across
 Tinker runs'' for F2) than the TSV's flat ``no support,'' but the
 quantitative verdict is identical. This fragment reports the TSV's flat

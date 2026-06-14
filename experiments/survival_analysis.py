@@ -206,6 +206,7 @@ def load_all_runs() -> List[dict]:
 
     records: List[dict] = []
     seen: set = set()
+    seen_records: set = set()
     for src in sources:
         if not src.exists():
             continue
@@ -221,8 +222,21 @@ def load_all_runs() -> List[dict]:
             raw = _load_json_records(src)
         for r in raw:
             rec = _coerce_record(r)
-            if rec:
-                records.append(rec)
+            if not rec:
+                continue
+            # Content-level dedup. master_results.json and master_results.csv
+            # carry the SAME runs (and the *.jsonl / **/*.jsonl globs overlap),
+            # so path-only dedup double-counts every run and inflates both n and
+            # significance (e.g. F3 reported n=40 for 20 real runs, p=6.7e-11).
+            dedup_key = (
+                rec["framework"], rec["model"], rec["task"], rec["algo"],
+                rec["seed"], rec["steps"],
+                round(rec["last10"], 6) if rec["last10"] is not None else None,
+            )
+            if dedup_key in seen_records:
+                continue
+            seen_records.add(dedup_key)
+            records.append(rec)
     return records
 
 

@@ -32,8 +32,9 @@ for row in ds:
         examples.append((prompt, tool_name, arguments))
     except: continue
 random.shuffle(examples)
-examples = examples[:3000]
-print(f"[{EXP}] {len(examples)} examples")
+train_examples = examples[:3000]
+test_examples = examples[3000:3500]
+print(f"[{EXP}] {len(train_examples)} train examples, {len(test_examples)} test examples")
 
 def reward(response, tool_name, arguments):
     m = re.search(r'\{.*\}', response.strip(), re.DOTALL)
@@ -62,7 +63,7 @@ print(f"[{EXP}] Run: {tc.model_id}")
 
 step_rewards = []
 for step in range(STEPS):
-    batch = random.sample(examples, 2)  # 2 prompts for speed
+    batch = random.sample(train_examples, 2)  # 2 prompts for speed
     all_data, all_advs, batch_r = [], [], []
     for prompt_text, tn, args in batch:
         pid = tok.encode(prompt_text, add_special_tokens=False)

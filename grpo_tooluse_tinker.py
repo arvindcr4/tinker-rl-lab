@@ -83,9 +83,18 @@ def make_prompt(query):
     )
 
 
+RAW_TEST = [
+    ("3 to the power of 4", "calculator", {"expression": "3 ** 4"}),
+    ("What is the weather in Paris?", "get_weather", {"city": "Paris", "units": "metric"}),
+    ("Search for Python 3.12 release notes", "web_search", {"query": "Python 3.12 release notes"}),
+    ("Current time in Tokyo", "get_time", {"timezone": "Asia/Tokyo"}),
+    ("Remind me to buy groceries tomorrow", "set_reminder", {"task": "buy groceries", "time": "tomorrow"}),
+]
+
 examples = [(make_prompt(q), t, a) for q, t, a in RAW] * 28
 random.shuffle(examples)
-print(f"Dataset: {len(examples)} examples, {len(set(t for _, t, _ in RAW))} tools")
+test_examples = [(make_prompt(q), t, a) for q, t, a in RAW_TEST]
+print(f"Dataset: {len(examples)} train examples, {len(test_examples)} test examples")
 
 
 # ── Reward function ───────────────────────────────────────────────────────
@@ -226,4 +235,21 @@ for seed in range(NUM_SEEDS):
     print(f"Avg reward last 10: {sum(step_rewards[-10:]) / max(len(step_rewards[-10:]), 1):.3f}")
     print(f"Run ID: {tc.model_id}")
     print("Done.")
+
+    # ── Held-out Evaluation ──────────────────────────────────────────────────
+    print(f"\nEvaluating on {len(test_examples)} held-out test examples...")
+    test_rewards = []
+    for prompt_text, tn, args in test_examples:
+        pid = tok.encode(prompt_text, add_special_tokens=False)
+        sp = T.SamplingParams(max_tokens=192, temperature=0.1, top_p=0.95)
+        try:
+            resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=1, sampling_params=sp).result()
+            text = tok.decode(list(resp.sequences[0].tokens), skip_special_tokens=True)
+            test_rewards.append(reward(text, tn, args))
+        except Exception:
+            continue
+
+    avg_test = sum(test_rewards) / len(test_rewards) if test_rewards else 0.0
+    print(f"Held-out Test Reward: {avg_test:.3f}")
+
 

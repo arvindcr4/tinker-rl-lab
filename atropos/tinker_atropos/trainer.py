@@ -467,6 +467,7 @@ class TinkerAtroposTrainer:
                 "logprobs/std_training": float(np.std(training_lp_array)),
                 "logprobs/min_training": float(np.min(training_lp_array)),
                 "logprobs/p50_training": float(np.percentile(training_lp_array, 50)),
+                "train/policy_entropy": float(-np.mean(training_lp_array)),
             }
 
             # Calculate logprob drift

@@ -181,6 +181,8 @@ def load_config(path: str) -> dict:
         "wandb_group":      t.get("wandb_group",         "unsloth-runs"),
         "wandb_run_name":   t.get("wandb_run_name",      "grpo-run"),
         "checkpoint_dir":   t.get("checkpoint_dir",      "./checkpoints/run/"),
+        "early_stopping_patience": t.get("early_stopping_patience", 3),
+        "eval_steps":       t.get("eval_steps",          10),
     }
 
 
@@ -311,10 +313,12 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
 
 # ── dataset preparation ───────────────────────────────────────────────────────
 
-def prepare_dataset(tokenizer, use_prefix: bool = True, seed: int = 42):
+def prepare_dataset(tokenizer, use_prefix: bool = True, seed: int = 42, split: str = "train"):
     from datasets import load_dataset
 
-    ds = load_dataset("gsm8k", "main", split="train").shuffle(seed=seed)
+    ds = load_dataset("gsm8k", "main", split=split)
+    if split == "train":
+        ds = ds.shuffle(seed=seed)
 
     def _format(example):
         prompt = build_prompt(example["question"], tokenizer, use_prefix)
@@ -460,6 +464,13 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
         tokenizer,
         use_prefix=cfg["use_prompt_prefix"],
         seed=cfg["data_seed"],
+        split="train"
+    )
+    eval_dataset = prepare_dataset(
+        tokenizer,
+        use_prefix=cfg["use_prompt_prefix"],
+        seed=cfg["data_seed"],
+        split="test"
     )
 
     # ── GRPOTrainer ─────────────────────────────────────────────────────────
@@ -474,12 +485,18 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
         num_train_epochs=1,
         max_steps=cfg["total_steps"],
         per_device_train_batch_size=per_device_train_batch_size,
+        per_device_eval_batch_size=per_device_train_batch_size,
         gradient_accumulation_steps=gradient_accumulation_steps,
         num_generations=cfg["group_size"],
         max_completion_length=cfg["max_token_length"],
         learning_rate=cfg["learning_rate"],
         logging_steps=1,
-        save_steps=10,
+        save_steps=cfg["eval_steps"],
+        eval_strategy="steps",
+        eval_steps=cfg["eval_steps"],
+        save_strategy="steps",
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_reward/mean",
         seed=seed,
         report_to="wandb",
         run_name=cfg["wandb_run_name"],
@@ -493,12 +510,16 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
 
     reward_fn = make_reward_fn()
 
+    from transformers import EarlyStoppingCallback
+
     trainer = GRPOTrainer(
         model=model,
         args=grpo_config,
         train_dataset=dataset,
+        eval_dataset=eval_dataset,
         reward_funcs=[reward_fn],
         processing_class=tokenizer,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=cfg["early_stopping_patience"])],
     )
 
     # Attach step-level logging via callback

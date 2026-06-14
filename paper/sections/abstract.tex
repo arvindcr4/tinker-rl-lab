@@ -27,9 +27,9 @@ tested, but we do not claim a universal optimal group size. Third, PPO/GRPO
 rankings and frontier-model stability are heterogeneous across model families
 and end-to-end stacks; our single-seed API runs should be read as case studies,
 not universal laws. A separate held-out GSM8K control shows that the mean
-Qwen3-8B GRPO delta over the base model is small and not statistically
-significant (83.3\% vs.\ 82.0\%, $p{=}0.26$), while tool-use and code results
-remain limited by sparse rewards and custom evaluation.
+Qwen3-8B-Instruct GRPO delta over the same checkpoint's pre-RL held-out accuracy
+is small and not statistically significant (83.3\% vs.\ 82.0\%, $p{=}0.26$), while
+tool-use and code results remain limited by sparse rewards and custom evaluation.
 
 We release code, logs, and checkpoints at
 \url{https://github.com/arvindcr4/tinker-rl-lab}.

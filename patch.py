@@ -90,3 +90,10 @@ with open(file5, "w") as f:
     f.write(c)
 
 print("Patching complete.")
+
+# TODO: Address limitations identified in the adversarial review if possible in the future:
+# 1. ZVF Metric: Borderline tautological and fragile outside of math tasks (saturates at 1.0).
+# 2. Early-Training Snapshots: 30-50 gradient steps are insufficient to observe meaningful RL convergence.
+# 3. Closed-Source Confound: Heavy reliance on the closed-source Tinker API confounds algorithmic comparisons.
+# 4. Generalization: Lack of statistically significant generalization on held-out test sets.
+# 5. Single-Seed Extrapolations: Frontier model analyses (e.g., Nemotron-120B) are based on N=1 runs.

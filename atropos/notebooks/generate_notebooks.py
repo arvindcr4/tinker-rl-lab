@@ -16,6 +16,9 @@ CONFIGS_DIR = os.path.join(PROJECT_ROOT, "configs")
 
 def parse_log(log_path):
     """Extract step, reward, loss data from trainer log."""
+    # TODO: The ZVF metric is borderline tautological and fragile outside math tasks.
+    # Update log parsing to also extract ERF (Effective-Rollout Fraction), advantage variance, or policy entropy.
+    # TODO: Parse validation/test set metrics to prove generalization rather than just training-set memorization.
     steps, rewards, losses = [], [], []
     step_num = 0
     current_loss = None
@@ -53,6 +56,9 @@ def read_config(config_path):
 
 
 # ── Experiment definitions ──────────────────────────────────────────────
+# TODO: Address "Early-Training Snapshot" limitation by running experiments beyond 30-50 steps.
+# TODO: Address "Closed-Source Confound" by running comparative experiments with open-source libraries (e.g., TRL).
+# TODO: Address "Single-Seed Extrapolations" by supporting N>1 seeds to account for high-variance RL dynamics.
 
 experiments = {
     "gsm8k_qwen_8b": {
@@ -71,8 +77,9 @@ This experiment trains Qwen3-8B on GSM8K grade school math problems using GRPO
 **Key findings:**
 - Started at ~7% accuracy (near random for a base model on math)
 - Reached 100% reward by step 30, maintained through step 50
-- Demonstrates that even a base model can learn structured math reasoning through RL
-- The LoRA adapter only modifies ~0.1% of parameters but achieves full task mastery
+- Demonstrates that even a base model can overfit to structured math reasoning on the training distribution
+- The LoRA adapter only modifies ~0.1% of parameters to achieve 100% training-set reward
+- TODO: Fix "Failure to Prove Generalization" limitation. Evaluate on held-out test set (currently +1.3% gain, p=0.26).
 """,
     },
     "gsm8k_qwen_30b_moe": {
@@ -482,8 +489,15 @@ plt.show()
 
 ### 5. LoRA Efficiency
 - All experiments use LoRA rank 32 (~0.1% of model parameters modified)
-- Despite tiny parameter budget, achieves full task mastery on GSM8K
+- Despite tiny parameter budget, achieves high performance on the GSM8K training set
 - Cloud training via Tinker API makes this accessible without local GPUs
+
+### 6. Limitations & Caveats (To be addressed)
+- **Generalization**: High training reward reflects training-set memorization. Generalization to held-out test sets (e.g., GSM8K, HumanEval) is not statistically significant yet.
+- **Early-Training Snapshots**: 30-50 steps are insufficient to observe meaningful RL convergence or policy collapse.
+- **Closed-Source Confound**: The performance gap relies on the closed-source Tinker API. Need open-source comparisons.
+- **Single-Seed Extrapolations**: High-variance RL dynamics require multiple seeds instead of N=1 runs.
+- **ZVF Metric Fragility**: The Zero-Variance Fraction diagnostic breaks down in format-gated tasks; monitoring ERF (Effective-Rollout Fraction) is recommended.
 """))
 
     # Method section

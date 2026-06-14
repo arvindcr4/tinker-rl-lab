@@ -9,6 +9,9 @@ class CompletionRequest(BaseModel):
     temperature: float = 1.0
     stop: List[str] | None = None
     n: int = 1
+    seed: int | None = None  # Fix: Allow explicit seed to avoid single-seed extrapolations
+    # TODO: Expose parameters for micro-partitioning and reference offloading to address the "Closed-Source Confound"
+    # TODO: Add cost/budget limits to requests to help mitigate API cost constraints ("Early-Training Snapshot" problem)
 
 
 # Response format for /v1/completions endpoint.
@@ -31,6 +34,9 @@ class ChatCompletionRequest(BaseModel):
     temperature: float = 1.0
     stop: List[str] | None = None
     n: int = 1
+    seed: int | None = None  # Fix: Allow explicit seed to avoid single-seed extrapolations
+    # TODO: Expose parameters for micro-partitioning and reference offloading to address the "Closed-Source Confound"
+    # TODO: Add cost/budget limits to requests to help mitigate API cost constraints ("Early-Training Snapshot" problem)
 
 
 # Response format for /v1/chat/completions endpoint.
@@ -53,6 +59,7 @@ class GenerateRequest(BaseModel):
     return_text_in_logprobs: bool = False  # Whether to return text in logprobs
     logprob_start_len: int | None = None  # Start position for logprobs (for prompt)
     stream: bool = False  # Whether to stream responses
+    # TODO: Ensure 'seed' is explicitly supported in sampling_params to avoid single-seed extrapolations
 
 
 # Response format for /generate endpoint (SGLang compatible).
@@ -63,6 +70,7 @@ class GenerateResponse(BaseModel):
     meta_info: Dict[
         str, Any
     ]  # Contains: output_token_logprobs, finish_reason, prompt_tokens, completion_tokens
+    # TODO: Include ZVF and ERF (Effective-Rollout Fraction) diagnostics in meta_info
 
 
 class TokenLogprob(BaseModel):

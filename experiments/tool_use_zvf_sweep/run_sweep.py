@@ -15,6 +15,11 @@ Launches one run at a time. Per-run processes:
 Env vars required in caller shell:
   TINKER_API_KEY, WANDB_API_KEY, HF_TOKEN
   TINKER_RATE_SAMPLE_PER_M, TINKER_RATE_TRAIN_PER_M
+
+# TODO: The "Closed-Source Confound" - reliance on Tinker API means algorithmic gains
+# might be confounded by managed defaults. Need an open-source baseline.
+# TODO: Failure to Prove Generalization - ensure training evaluates on held-out
+# test sets to prove generalized reasoning rather than just training curve overfitting.
   (optional) TINKER_MODEL_MULT_<UPPER_TOKENIZER>
 
 The runner derives TOOL_USE_REWARD_VERSION (v1|v2) from the config filename.
@@ -100,6 +105,8 @@ def run_one(cfg: Path, atropos_dir: Path) -> int:
 
     base_env = os.environ.copy()
     base_env["TOOL_USE_REWARD_VERSION"] = rv
+    # TODO: Address ZVF metric fragility limitation. ZVF saturates at 1.0 for format-gated
+    # tasks like tool-use. Monitor ERF (Effective-Rollout Fraction) instead.
     base_env["PYTHONPATH"] = f"{atropos_dir}:{base_env.get('PYTHONPATH','')}"
 
     python = str(REPO / ".venv" / "bin" / "python")
@@ -147,6 +154,8 @@ def run_one(cfg: Path, atropos_dir: Path) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("configs", nargs="+", type=Path)
+    # TODO: "Early-Training Snapshot" limitation: strict API cost limits currently restrict
+    # training to 30-50 steps. Consider increasing budget cap for true RL convergence.
     ap.add_argument("--cap-usd", type=float, default=250.0)
     ap.add_argument("--dry-run", action="store_true",
                     help="Estimate cost only, do not launch anything.")
@@ -158,6 +167,8 @@ def main() -> int:
     # Pre-flight cost estimates
     spent = 0.0
     plan = []
+    # TODO: Run multiple seeds to avoid "Single-Seed Extrapolations" vulnerability.
+    # Currently we do N=1 runs per config which is highly variant and initialization-dependent.
     for cfg in args.configs:
         est = estimate_cost(cfg)
         plan.append((cfg, est))

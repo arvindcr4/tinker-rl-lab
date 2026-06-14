@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# TODO: Address limitations from adversarial review:
+# - ZVF Metric limitations (tautological, fragile across domains, symptom not root cause)
+# - Early-training snapshot problem (30-50 steps)
+# - Closed-source confound (Tinker API black box)
+# - Failure to prove generalization (insignificant gains)
+# - Single-seed extrapolations (N=1 runs)
+# Note: No direct fix is applicable in this script.
 from pathlib import Path
 
 script = Path("reports/final/prepare_blind_review_package.py").read_text().lower()

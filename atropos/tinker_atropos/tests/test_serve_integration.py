@@ -5,6 +5,13 @@ it with actual HTTP requests against the real tinker API.
 Requires TINKER_API_KEY to be set. Skipped if not available.
 
 Run with: .venv/bin/python -m pytest tinker_atropos/tests/test_serve_integration.py -v -s
+
+TODO(Adversarial Review Limitations):
+- The Closed-Source Confound: Tinker is a black box. No fix is applicable in these tests to
+  verify Tinker's undisclosed managed defaults, micro-partitioning, or reference offloading.
+- Single-Seed Extrapolations: No fix applicable here; RL training variance must be addressed in training scripts.
+- The "Early-Training Snapshot" Problem & Failure to Prove Generalization: No fix applicable here; requires longer RL runs and held-out evaluations.
+- ZVF Metric limitations: Not applicable to this inference integration test.
 """
 
 import os

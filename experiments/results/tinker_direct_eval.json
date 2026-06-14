@@ -1,0 +1,281 @@
+{
+  "model": "Qwen/Qwen3-8B",
+  "n_problems": 10,
+  "group_size": 8,
+  "temperature": 1.0,
+  "seed": 42,
+  "overall_accuracy": 0.6875,
+  "overall_zvf": 0.3,
+  "per_problem": [
+    {
+      "problem_id": 0,
+      "question": "Darrell and Allen's ages are in the ratio of 7:11. If their total age now is 162, calculate Allen's ",
+      "gold_answer": "109",
+      "rewards": [
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 0.625,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To solve the problem, let's start by analyzing the information given:\n\n1. The ratio of Darrell's age to Allen's age is 7:11.\n2. The total of their current ages is 162.\n3. We are asked to find Allen's",
+        " To solve this problem, let's denote their ages as follows:\n\nLet Darrell's age be $7x$ and Allen's age be $11x$, since their ages are in the ratio 7:11. \n\nThe total of their ages is given as 162. So, ",
+        " The current total age of Darrell and Allen is 162, and their ages are in the ratio of 7:11. Let me think about how to solve this step by step.\n\nFirst, let me understand the problem. We have two peopl",
+        " The total age of both people now is 162. The ratio of their ages is 7:11. First, we need to calculate the sum of the parts of the ratio, which is 7 + 11 = 18. Then, we divide the total age by the sum",
+        " Let's think first.\nOkay, so the problem says that Darrell and Allen's ages are in the ratio of 7:11, and their total age now is 162. I need to find Allen's age 10 years from now. Alright, let me try ",
+        " Let's think first.\n\nOkay, so the problem says that Darrell and Allen's ages are in the ratio of 7:11. Their total age now is 162. I need to find Allen's age 10 years from now. Alright, let me try to ",
+        " To solve this problem, we need to first determine the individual ages of Darrell and Allen based on the given ratio and their combined age. Then, we will calculate Allen's age 10 years from now.\n\n1. ",
+        " Let's think step by step. Alright, let me try to figure out this problem. So, the question says that Darrell and Allen's ages are in the ratio of 7:11. Their total age now is 162. We need to find All"
+      ]
+    },
+    {
+      "problem_id": 1,
+      "question": "Lorraine and Colleen are trading stickers for buttons. Each large sticker is worth a large button or",
+      "gold_answer": "89",
+      "rewards": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean_reward": 0.0,
+      "zvf": 1.0,
+      "completions_truncated": [
+        " Let me think about this step by step.\n\nOkay, so Lorraine is trading stickers for buttons. Let me try to figure out how many buttons she ends up with after all the trades. Let me start by understandin",
+        " To solve this problem, we need to follow all the steps of Lorraine trading stickers and convert these into the number of buttons she has at the end. Let's break it down step by step.\n\n---\n\n### **Init",
+        " \n\nOkay, let me try to figure out this sticker and button trading problem. So, Lorraine starts with 30 small stickers and 40 large stickers. The goal is to find out how many buttons she has in the end",
+        " To solve this problem, we need to determine the total number of buttons Lorraine has after trading the stickers according to the given rules. Let's break it down step by step.\n\n---\n\n### Step 1: Initi",
+        " To solve this problem, let's break down each step of the trading process carefully. Lorraine starts with a certain number of small and large stickers, and then she trades them for buttons following s",
+        " Let's write a program to solve this.\nTo solve this problem, let's first understand the value of the stickers and how trading affects Lorraine's total number of buttons.\n\n### Step 1: Understand the co",
+        " To solve this problem, we need to track Lorraine's trade of stickers for buttons, considering the value conversions given for each type of sticker and button. Let's break this down step by step.\n\n---",
+        " To solve the problem, we need to track Lorraine's stickers and buttons through the trades she makes and calculate how many buttons she ends up with. Here's the step-by-step plan:\n\n---\n\n### **Step 1: "
+      ]
+    },
+    {
+      "problem_id": 2,
+      "question": "Indras has 6 letters in her name. Her sister's name has 4 more letters than half of the letters in I",
+      "gold_answer": "13",
+      "rewards": [
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 0.875,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To solve the problem, let's break it down step by step:\n\n1. We know that Indras has 6 letters in her name.\n2. Her sister's name has 4 more letters than half of the letters in Indras' name.\n   - First",
+        " To find out the total number of letters in both names, we first need to determine the number of letters in Indras's name, which is 6. Then, we need to find out the number of letters in her sister's n",
+        " To solve this problem, let's break it down step by step.\n\nFirst, we are told that Indras has 6 letters in her name. That's straightforward \u2014 we'll keep that in mind.\n\nNext, we're told that her sister",
+        " Let's think first.\nOkay, let me try to figure out this problem. So, Indras has a name with 6 letters. Her sister's name has 4 more letters than half of the letters in Indras' name. We need to find th",
+        " First, let's determine the number of letters in the sister's name. The problem says her name has 4 more letters than half of the letters in Indras' name. \n\nIndras has 6 letters. Half of that is 6 / 2",
+        " To solve this problem, we need to determine the total number of letters in both Indras' name and her sister's name.\n\nFirst, we know that Indras has 6 letters in her name. \n\nNext, we need to calculate",
+        " Let's verify the answer by rearranging the question. The answer is the number of letters, so when we add the number of letters in Indras' name and her sister's name, what do we get? Let's confirm wit",
+        " To solve this problem, let's break it down step by step.\n\nFirst, we know that Indras has 6 letters in her name. \n\nNext, we need to find out how many letters are in her sister's name. The problem says"
+      ]
+    },
+    {
+      "problem_id": 3,
+      "question": "Bethany can run 10 laps on the track in one hour.  Trey can run 4 more laps than Bethany.  Shaelyn c",
+      "gold_answer": "5",
+      "rewards": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 1.0,
+      "zvf": 1.0,
+      "completions_truncated": [
+        " To determine how many more laps Bethany can run compared to Quinn, we need to calculate the number of laps each person can run and then find the difference between Bethany's and Quinn's laps.\n\nFirst,",
+        " First, let's find out how many laps each person can run.\n\nBethany: 10 laps per hour\nTrey: 10 + 4 = 14 laps per hour\nShaelyn: 14 / 2 = 7 laps per hour\nQuinn: 7 - 2 = 5 laps per hour\n\nTo find out how m",
+        " Let's break down the problem step by step.\n\nWe know the following:\n- Bethany runs 10 laps in one hour.\n- Trey runs 4 more laps than Bethany.\n- Shaelyn runs half as many laps as Trey.\n- Quinn runs 2 f",
+        " Let's think step by step:\n\nFirst, let's find out how many laps Trey can run. Since Bethany can run 10 laps in one hour and Trey can run 4 more laps than Bethany, Trey can run 10 + 4 = 14 laps in one ",
+        " Let's break down the problem step by step.  First, we need to determine the number of laps each person can run. We know that Bethany can run 10 laps in one hour.  Then, we need to find how many laps ",
+        " Let's break down the information given and solve the problem step by step.\n\nWe are told:\n\n- Bethany can run **10 laps** in one hour.\n- Trey can run **4 more laps** than Bethany.\n- Shaelyn can run **h",
+        " The problem gives us the number of laps each person can run in one hour and asks how many more laps Bethany can run compared to Quinn.  Let's break down the information given:\n\n* Bethany can run 10 l",
+        " To determine how many more laps Bethany can run compared to Quinn, we need to calculate the number of laps each person can run and then find the difference between Bethany\u2019s and Quinn\u2019s laps.\n\nFirst,"
+      ]
+    },
+    {
+      "problem_id": 4,
+      "question": "An ice cream truck is traveling through a neighborhood. Children from various homes have started cha",
+      "gold_answer": "25",
+      "rewards": [
+        1.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 0.625,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " Let's break down the problem step by step to find out how many children are following the truck after each street.\n\nWe start with 5 children chasing the truck at the beginning of the first street.\n\nO",
+        " And please explain your answer.\n\nOkay, so there's this ice cream truck going through a neighborhood, and kids are chasing it. Let me try to figure out how many kids are following the truck after each",
+        " Let's break down the problem step by step to determine how many children are following the truck after each street.\n\n---\n\n### **Understanding the Scenario**\n\nWe have an ice cream truck traveling thro",
+        " Let's think step by step:\nOkay, let me try to figure out this ice cream truck problem. So, the truck is going through a neighborhood, and kids are chasing it. Let me read the problem again carefully.",
+        " Let's solve this step by step.\n\nStart with 5 children.\n\nSecond street: Each child is joined by another child. That means the number of children doubles?\n\nWait, let me think again.\n\nOn the first stree",
+        " To solve this problem, let's break down the situation step by step:\n\n1. **First Street**: There are 5 children following the truck.\n\n2. **Second Street**: Each of the existing children is joined by a",
+        " To solve this problem, let's break it down step by step based on the sequence of events:\n\n---\n\n### Step 1: The First Street\n\n- The truck starts its journey.\n- By the end of the first street, **5 chil",
+        " To solve this problem, we need to keep track of the number of children following the ice cream truck as it travels through each street.\n\n1. **First Street**: There are 5 children.\n2. **Second Street*"
+      ]
+    },
+    {
+      "problem_id": 5,
+      "question": "Kim sleepwalks, to monitor her sleeping hours, she installs a camera in her room. Kim usually goes t",
+      "gold_answer": "452",
+      "rewards": [
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "mean_reward": 0.625,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To solve this problem, we need to determine the total number of minutes Kim slept on her bed that day. Let's break it down step by step.\n\nFirst, we know Kim usually sleeps from 10 p.m. to 6 a.m. That",
+        " To solve the problem, we need to determine how many minutes Kim slept on her bed that day.\n\nStep-by-step breakdown:\n\n1. **Usual Sleep Duration:**\n   - Kim goes to sleep at 10 p.m.\n   - She wakes up a",
+        " Let's think step by step.\n\nOkay, let's try to figure out how many minutes Kim slept on her bed that day. First, let me make sure I understand the problem correctly. \n\nKim usually goes to sleep at 10 ",
+        " To solve this problem, we need to calculate the total amount of time Kim spent sleeping on her bed that particular day. Let's break down the information provided:\n\n1. Kim usually sleeps from 10 p.m. ",
+        " To solve this problem, we need to determine how many minutes Kim slept on her bed that day. Let's break down the information step by step:\n\n1. Kim usually goes to sleep at 10 p.m. and wakes up at 6 a",
+        " To solve this problem, we need to figure out how many minutes Kim slept on her bed on that particular day. \n\nFirst, let's understand the given information:\n\n- Kim usually sleeps from 10 p.m. to 6 a.m",
+        " To determine how many minutes Kim slept on her bed that day, we need to carefully consider her usual sleep schedule and how the sleepwalking incident and bathroom trip affected it.\n\n---\n\n### Step 1: ",
+        " To solve this problem, we need to determine the total amount of time Kim spent sleeping on her bed that day. Let's break this down step by step.\n\n### Step 1: Understand the usual sleep pattern\nKim us"
+      ]
+    },
+    {
+      "problem_id": 6,
+      "question": "Gunther, the gorilla, had 48 bananas hidden under a fern branch.  When Gunther wasn't looking, Arnol",
+      "gold_answer": "43",
+      "rewards": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 0.875,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " Let's break down the problem step by step.  \nStart with 48 bananas.  \nThen, Arnold took half of them, so there were 48 \u00f7 2 = 24 bananas left.  \nGunther added 25 bananas, so the total became 24 + 25 =",
+        " The problem involves tracking the number of bananas in Gunther's pile over several days, with Arnold stealing bananas at different times. Let's break it down step by step:\n\n---\n\n### Initial Bananas\nG",
+        " Let's break down the problem step by step to keep track of how the number of bananas changes over time.\n\n1. **Initial number of bananas:** Gunther initially had 48 bananas.\n\n2. **First theft by Arnol",
+        " To solve this problem, we need to track the number of bananas Gunther has on each day, considering the actions of Arnold and Gunther.\n\nLet's break down the problem step by step:\n\n1. **Initial number ",
+        " Let's think first. Let's break down the problem step by step.  \nInitially, Gunther had 48 bananas. \n\nFirst, Arnold stole half of the bananas from the pile. That means Arnold took 48 / 2 = 24 bananas.",
+        " Let's break down the problem step by step:\n\n1. **Initial Bananas**: Gunther starts with 48 bananas.\n\n2. **First Theft by Arnold**: Arnold steals half of the bananas. So, Arnold takes 48 / 2 = 24 bana",
+        " To solve the problem, we need to track the number of bananas in Gunther's pile through a series of events. Let's go step by step and calculate the number of bananas at each stage.\n\n---\n\n### Step 1: I",
+        " \n\nOkay, let me try to figure out how many bananas Gunther has left after all these thefts and additions. Let me take it step by step. \n\nFirst, the original number of bananas is 48. So, Gunther starts"
+      ]
+    },
+    {
+      "problem_id": 7,
+      "question": "Jonathan has 2/3 as many measuring spoons as measuring cups. If he has two dozen cups and gifts Pedr",
+      "gold_answer": "34",
+      "rewards": [
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "mean_reward": 0.5,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " Let's think first.\nOkay, so Jonathan has some measuring spoons and measuring cups. The problem says he has 2/3 as many measuring spoons as measuring cups. Hmm, let me parse that. So if he has a certa",
+        " Jonathan has two dozen measuring cups, and each measuring cup is equivalent to 2 measuring spoons. Let's find the total number of utensils Jonathan has remaining after giving Pedro 6 measuring spoons",
+        " \n\nOkay, let me try to figure this problem out. So, Jonathan has 2/3 as many measuring spoons as measuring cups. Hmm, okay. First, I need to understand what exactly is being asked here. The question s",
+        " To solve the problem, we start by analyzing what is given:\n\n- Jonathan has 2/3 as many measuring spoons as measuring cups.\n- He has two dozen measuring cups. Since a dozen is 12, two dozen cups = 2 \u00d7",
+        " To solve this problem, let's first understand the relationships and given quantities:\n\n1. Jonathan has $ \\frac{2}{3} $ as many measuring spoons as measuring cups.\n2. He has **two dozen** measuring cu",
+        " To solve this problem, let's break it down into manageable steps:\n\n1. Determine the number of measuring spoons Jonathan has initially.\n2. Subtract the number of measuring spoons Jonathan gives to Ped",
+        " Jonathan has a total of 24 measuring cups.\n\nOkay, let me try to figure out this problem. So, Jonathan has 2/3 as many measuring spoons as measuring cups. Wait, he has two dozen measuring cups? Wait, ",
+        " Jonathan has 2/3 as many measuring spoons as measuring cups. If he has two dozen cups and gifts Pedro 6 measuring spoons for his birthday, calculate the total number of utensils Jonathan has remainin"
+      ]
+    },
+    {
+      "problem_id": 8,
+      "question": "Martha's cat is 5 times faster than her turtle. If the cat can run 15 feet/second, how many feet can",
+      "gold_answer": "120",
+      "rewards": [
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0
+      ],
+      "mean_reward": 0.75,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To solve the problem, we need to figure out the turtle's speed and then calculate how many feet it can crawl in 40 seconds.\n\nStep 1: Determine the turtle's speed.\nWe are given that the cat is 5 times",
+        " To determine how fast Martha's turtle can crawl, we start by noting that the cat is 5 times faster than the turtle. Given that the cat runs at 15 feet per second, the turtle's speed is $ \\frac{15}{5}",
+        " Let's think first.\nOkay, let's see. Martha's cat is 5 times faster than her turtle. The cat can run 15 feet per second. I need to find out how many feet the turtle can crawl in 40 seconds. Hmm.\n\nFirs",
+        " To solve this problem, we need to determine the speed of the turtle first. Since the cat is 5 times faster than the turtle, and the cat's speed is given as 15 feet per second, the turtle's speed is $",
+        " First, let's find the turtle's speed. If the cat is 5 times faster than the turtle, that means the turtle's speed is the cat's speed divided by 5.\n\nSo, turtle's speed = 15 feet/second \u00f7 5 = 3 feet/se",
+        " To solve this problem, we need to determine the speed of Martha's turtle based on the given information. We are told that the cat is 5 times faster than the turtle. The cat's speed is given as 15 fee",
+        " To find how fast the turtle is, we need to divide the cat's speed by 5 since the cat is 5 times faster. So, the turtle's speed is 15 feet/second divided by 5, which equals 3 feet/second. Then, to fin",
+        " Let's think first. Okay, let's see. The problem says Martha's cat is 5 times faster than her turtle. The cat can run 15 feet per second. We need to find out how many feet the turtle can crawl in 40 s"
+      ]
+    },
+    {
+      "problem_id": 9,
+      "question": "An airport has only 2 planes that fly multiple times a day. Each day, the first plane goes to Greece",
+      "gold_answer": "11",
+      "rewards": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 1.0,
+      "zvf": 1.0,
+      "completions_truncated": [
+        " To solve the problem, let's define the variables and relationships given:\n\nLet:\n- $ x $ be the total number of flights the first plane makes in one day.\n\nFrom the question:\n1. The first plane goes to",
+        " To solve this problem, let's break it down step by step.\n\n### Step 1: Understand the given information\n\nWe are told that there are **two planes** at the airport. The **first plane** has flights distr",
+        " To solve the problem, let's denote the total number of flights the first plane makes in one day as $ x $.\n\nAccording to the problem, each day the first plane goes to Greece for three-quarters of its ",
+        " To solve this problem, let's denote the total number of flights the first plane makes in a day as $ F $. \n\nGiven that the first plane goes to Greece for three-quarters of its flights, that means it m",
+        " To solve this problem, we need to find the number of flights to France that the first plane takes in one day. Let's break down the information given and set up the equations step by step.\n\nFirst, den",
+        " To solve this problem, we start by understanding the relationships between the number of flights each plane makes and the destinations they go to. \n\nLet the number of flights the first plane makes in",
+        " To solve this problem, we need to determine the number of flights the first plane makes to France in one day. Let's break down the problem step by step.\n\n---\n\n### Step 1: Define Variables\n\nLet\u2019s deno",
+        " Let's denote the number of flights the first plane makes in a day as F. According to the problem, the second plane makes 44 trips, and these are half the number of trips the first plane makes. Theref"
+      ]
+    }
+  ]
+}

@@ -179,11 +179,12 @@ specific main-text claims whose evidentiary status we revise:
     longer counted as observations in the paper-wide BH family.
 \end{enumerate}
 
-The negative held-out GSM8K result (Qwen3-8B post-GRPO $83.3\%$ vs.\
-base $82.0\%$, $p{=}0.26$) is unaffected: that evaluation is
-$5$-seed on TRL with a common eval harness and is Tier-A; if
-anything, its non-significance is \emph{strengthened} by restricting
-to the Tier-A/B family.
+The negative held-out GSM8K result (Qwen3-8B-Instruct post-GRPO $83.3\%$ vs.\
+the same instruction-tuned checkpoint's pre-RL held-out accuracy $82.0\%$,
+$p{=}0.26$) is unaffected: that evaluation is a $5$-seed held-out comparison
+under a common greedy eval harness (the $82.0\%$ reference is the same
+checkpoint's pre-RL accuracy, not a separate base model). Its non-significance
+does not depend on the multiplicity correction.
 
 \subsection{Reproducibility artifact}
 \label{sec:stat-rigor-addendum:repro}

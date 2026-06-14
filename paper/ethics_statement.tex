@@ -41,10 +41,11 @@ operator could attempt to extend this pipeline to tasks of greater
 dual-use concern, e.g., chemistry olympiad problems, cryptographic key
 recovery, or financial fraud. We judge the \emph{marginal} uplift provided
 by our release to be small for three reasons. First, GRPO at our training
-scale does not create new capabilities; the base-model control for GSM8K
-(Section~\ref{sec:results}, 82.0\%) shows that the bulk of held-out
-accuracy is attributable to Qwen3-8B's pretraining. Our full GRPO run only
-adds \(+1.3\) percentage points ($p{=}0.26$, not statistically significant).
+scale does not create new capabilities; the pre-RL held-out accuracy of
+Qwen3-8B-Instruct for GSM8K (Section~\ref{sec:results}, 82.0\%) shows that the
+bulk of held-out accuracy is attributable to the checkpoint's pretraining and
+instruction tuning. Our full GRPO run only adds \(+1.3\) percentage points
+($p{=}0.26$, not statistically significant).
 Second, the public literature already contains GRPO implementations
 \cite{shao2024deepseekmath, openrlhf2024, verl2024, trl2020} that are at
 least as capable. Third, any reasoning uplift is bounded by the rewarder:
@@ -121,7 +122,7 @@ Tinker SDK v0.16.1 & World-Class Suite (frontier/MoE)      & 13 & \$25--30 \\
 Modal H100         & PPO baselines (Qwen3-8B, Llama-3.1-8B)& 2  & \$12--18 \\
 Modal H100         & KL-tracking run (failed)              & 1  & \$2--4   \\
 Google Colab Pro (T4) & 0.5B--3B QLoRA SFT+GRPO            & --- & \$10/person \\
-NVIDIA L4 (TRL baseline)& Qwen2.5-0.5B GSM8K, 10 seeds      & 5  & \$3--5   \\
+NVIDIA L4 (TRL baseline)& Qwen2.5-0.5B GSM8K, 5 seeds      & 5  & \$3--5   \\
 HuggingFace Hub    & Model + adapter hosting               & --- & \$0 \\
 Weights \& Biases  & Experiment tracking (academic tier)   & --- & \$0 \\
 \midrule
@@ -402,7 +403,7 @@ LoRA-conditional.
 \paragraph{Benchmark coverage is narrow.}
 We evaluate four domains: GSM8K, MATH-500 (exploratory), HumanEval
 (subset), and synthetic/xLAM tool-use. We do not evaluate on MT-Bench,
-evaluations on ArenaHard, MT-Bench, safety benchmarks (HarmBench, ToxicChat), and truthfulness
+ArenaHard, safety benchmarks (HarmBench, ToxicChat), or truthfulness
 benchmarks (TruthfulQA). Any claim about ``reasoning'' in the paper is
 strictly a claim about the covered benchmarks.
 

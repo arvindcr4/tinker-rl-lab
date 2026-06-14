@@ -27,6 +27,10 @@ import tinker.types as T
 from transformers import AutoTokenizer
 
 # ── Config ───────────────────────────────────────────────────────────────
+# TODO (Adversarial Review): To address the "Closed-Source Confound", compare these Tinker API 
+# results with open-source baselines (e.g. TRL, OpenRLHF) to isolate algorithmic gains.
+# TODO (Adversarial Review): 200 STEPS may still be too few to observe true long-horizon convergence 
+# or policy collapse. Consider scaling up training steps to fully avoid "early-training snapshots".
 MODEL = "Qwen/Qwen3-8B"
 LORA_RANK = 32
 GROUP_SIZE = 8
@@ -227,9 +231,13 @@ for seed in range(NUM_SEEDS):
         tc.optim_step(T.AdamParams(learning_rate=LR, beta1=0.9, beta2=0.95, eps=1e-8)).result()
 
         avg_r = sum(batch_rewards) / len(batch_rewards)
+        # Calculate Effective-Rollout Fraction (ERF) to measure progress in format-gated tasks
+        # where ZVF typically saturates at 1.0 (due to base model consistently failing schema parsing).
+        # ERF is the fraction of valid JSON rollouts (reward >= 0.3)
+        erf = sum(1 for r in batch_rewards if r >= 0.3) / max(len(batch_rewards), 1)
         step_rewards.append(avg_r)
         grpo_loss_val = result.metrics.get("grpo_loss", float("nan"))
-        print(f"Step {step + 1:3d}/{STEPS} | loss={grpo_loss_val:.4f} | reward={avg_r:.3f}")
+        print(f"Step {step + 1:3d}/{STEPS} | loss={grpo_loss_val:.4f} | reward={avg_r:.3f} | erf={erf:.3f}")
 
         if (step + 1) % SAVE_EVERY == 0:
             state = tc.save_state(name=f"state_seed{seed}_{step + 1}")
@@ -247,6 +255,9 @@ for seed in range(NUM_SEEDS):
     print("Done.")
 
     # ── Held-out Evaluation ──────────────────────────────────────────────────
+    # TODO (Adversarial Review): Prove generalization by significantly expanding this held-out test set
+    # (currently only 5 examples) and conducting rigorous statistical significance tests (e.g. p-values). 
+    # Otherwise, this only demonstrates overfitting to the training distribution.
     print(f"\nEvaluating on {len(test_examples)} held-out test examples...")
     test_rewards = []
     for prompt_text, tn, args in test_examples:

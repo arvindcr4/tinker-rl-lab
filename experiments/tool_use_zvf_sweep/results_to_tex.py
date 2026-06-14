@@ -35,11 +35,13 @@ def _fmt(x: str | float, digits: int = 3) -> str:
         return "---"
 
 
-def load_csv(path: Path) -> dict[tuple[str, str, int], dict]:
+def load_csv(path: Path) -> dict[tuple[str, str, int, int], dict]:
     rows = {}
     with path.open() as f:
         for r in csv.DictReader(f):
-            key = (r["model"].strip(), r["reward"].strip().lower(), int(r["seed"]))
+            key = (r["model"].strip(), r["reward"].strip().lower(), int(r["seed"]), int(r["steps"]))
+            # TODO: ZVF saturates at 1.0 for format-gated tasks (like tool-use).
+            # We should consider reporting ERF (Effective-Rollout Fraction) instead.
             rows[key] = {
                 "zvf": _fmt(r.get("zvf_mean_last10", "")),
                 "pass": _fmt(r.get("pass_at_1", ""), digits=2),
@@ -58,7 +60,9 @@ def splice(csv_path: Path, tex_path: Path) -> None:
         if not m:
             out.append(line)
             continue
-        key = (m.group("model"), m.group("reward"), int(m.group("seed")))
+        key = (m.group("model"), m.group("reward"), int(m.group("seed")), int(m.group("steps")))
+        # TODO: Gains are often not statistically significant. We should add a 
+        # statistical significance test (p-value) aggregation step across seeds here.
         if key in results:
             r = results[key]
             out.append(f"{m.group('pre')}{r['zvf']} & {r['pass']} \\\\\n")
@@ -70,7 +74,7 @@ def splice(csv_path: Path, tex_path: Path) -> None:
     print(f"[splicer] filled {filled} row(s); "
           f"{len(still_missing)} still em-dashed")
     for k in still_missing:
-        print(f"  missing: model={k[0]} reward={k[1]} seed={k[2]}")
+        print(f"  missing: model={k[0]} reward={k[1]} seed={k[2]} steps={k[3]}")
 
 
 def main() -> None:

@@ -44,5 +44,12 @@ if "model checkpoint urls" in submission.lower():
 if re.search(r"\[x\].*9-page limit satisfied", submission):
     issues.append("submission_has_unverified_page_count_checkbox")
 
+# TODO: Add checks for the limitations identified in the adversarial review (adversarial_review.md):
+# 1. ZVF metric fragility: Not a programmatic framework; breaks down outside math tasks (saturates at 1.0 for format-gated tasks, requiring ERF).
+# 2. Early-training snapshot problem: 30-50 step training runs due to API budget constraints limit conclusions about asymptotic convergence.
+# 3. Closed-source confound: 73% performance gap with Tinker API may be due to undisclosed managed defaults, not algorithmic superiority.
+# 4. Lack of statistically significant generalization: Held-out GSM8K (+1.3%, p=0.26) and HumanEval (p=0.53) gains are not statistically significant.
+# 5. Single-seed extrapolations: Frontier model analyses (e.g., MoE routing volatility, Nemotron-120B collapse) rely on highly variant N=1 runs.
+
 print(f"METRIC claim_issues={len(issues)}")
 print("All submission claim checks passed." if not issues else "\n".join(issues))

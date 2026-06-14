@@ -12,6 +12,15 @@ import pytest
 from tinker_atropos.trainer import TinkerAtroposTrainer
 from tinker_atropos.config import TinkerAtroposConfig
 
+# TODO(adversarial_review): Address the methodological limitations from the adversarial review.
+# 1. ZVF metric fragility: ZVF is fragile outside math tasks (e.g., format-gated tasks). We should
+#    consider adding tests for ERF (Effective-Rollout Fraction) once implemented.
+# 2. General limitations (no direct fix applicable in unit tests):
+#    - Early-training snapshot problem (30-50 steps).
+#    - Closed-source confound with the Tinker API.
+#    - Failure to prove statistically significant generalization on held-out test sets.
+#    - Single-seed extrapolations vulnerability.
+
 
 @pytest.fixture
 def trainer():

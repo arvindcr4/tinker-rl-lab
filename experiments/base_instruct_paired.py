@@ -16,16 +16,6 @@ Usage:
     python experiments/base_instruct_paired.py            # write TSV + print LaTeX
     python experiments/base_instruct_paired.py --quiet    # write TSV only
 """
-
-import atexit
-try:
-    from codecarbon import EmissionsTracker
-    _tracker = EmissionsTracker()
-    _tracker.start()
-    atexit.register(_tracker.stop)
-except ImportError:
-    pass
-
 from __future__ import annotations
 
 import argparse
@@ -45,6 +35,9 @@ OUT_TSV = REPO / "experiments" / "results" / "base_instruct_paired.tsv"
 
 # The set of model families to enumerate. Only ones with at least one
 # checkpoint in the repo are included; missing ones are logged, not errored.
+# TODO(adversarial_review): "The Closed-Source Confound". The 73% performance gap between Tinker
+# and open-source libraries (like TRL) might be due to Tinker's undisclosed managed defaults.
+# We should replicate these runs on fully open-source frameworks to isolate algorithmic gains.
 MODELS: List[Tuple[str, str, str]] = [
     # (family, base_model_id, instruct_model_id)
     ("Qwen3-8B",    "Qwen/Qwen3-8B-Base",   "Qwen/Qwen3-8B"),
@@ -116,6 +109,8 @@ def train_metrics(master: List[Dict[str, Any]], model_id: str) -> Dict[str, Any]
         if not _match_model(r, model_id):
             continue
         if r.get("task") not in ("gsm8k",):
+            # TODO(adversarial_review): ZVF breaks down outside of math tasks (e.g., format-gated).
+            # We should implement and compute ERF (Effective-Rollout Fraction) for non-math tasks.
             continue
         lr = r.get("lr")
         # Prefer the identical-conditions runs (lr=1e-5, G=8) for the paired table.
@@ -157,10 +152,12 @@ def heldout_base_metric(
     pre_acc = None
     post_acc = None
     post_n_seeds = 0
-    # Pre-RL for base: use base_control if it refers to this family (only Qwen3-8B for now).
-    if base_control and family == "Qwen3-8B":
-        s = base_control.get("summary", {})
-        pre_acc = float(s.get("accuracy")) if s.get("accuracy") is not None else None
+    # NOTE: gsm8k_base_control_200.json reports config.model == "Qwen/Qwen3-8B"
+    # (the *instruct* checkpoint), so its 82.0% is the instruct model's pre-RL
+    # held-out accuracy, NOT the Qwen3-8B-Base checkpoint's. We therefore do NOT
+    # use it as the base row's pre-RL: the base checkpoint has no matched pre-RL
+    # held-out measurement, so its pre_rl stays None (delta_heldout -> NA).
+    _ = base_control  # intentionally unused for the base pre-RL (see note above)
     # Post-RL base: held-out top-10 contains Qwen3-8B-Base rows.
     matches = [
         r for r in heldout_top10
@@ -217,6 +214,8 @@ def zvf_at_100(zvf_tail_mean: Optional[float], train_post_rl: Optional[float]) -
     symmetry with the paper's main ZVF analysis and is flagged in the table
     as 'extrapolation'.
     """
+    # TODO(adversarial_review): The "Early-Training Snapshot" problem. 30 steps is insufficient
+    # to observe meaningful RL convergence. We should execute full training runs instead of extrapolating.
     if zvf_tail_mean is None or train_post_rl is None:
         return None
     # heuristic: ZVF@100 ~ tail + (1 - train_post_rl) * 0.3, clipped.
@@ -232,11 +231,63 @@ def _mean(xs: List[float]) -> float:
     return sum(xs) / len(xs) if xs else float("nan")
 
 
+def _betacf(a: float, b: float, x: float) -> float:
+    """Continued-fraction expansion for the incomplete beta function."""
+    MAXIT, EPS, FPMIN = 200, 3.0e-12, 1.0e-300
+    qab, qap, qam = a + b, a + 1.0, a - 1.0
+    c = 1.0
+    d = 1.0 - qab * x / qap
+    if abs(d) < FPMIN:
+        d = FPMIN
+    d = 1.0 / d
+    h = d
+    for m in range(1, MAXIT):
+        m2 = 2 * m
+        aa = m * (b - m) * x / ((qam + m2) * (a + m2))
+        d = 1.0 + aa * d
+        if abs(d) < FPMIN:
+            d = FPMIN
+        c = 1.0 + aa / c
+        if abs(c) < FPMIN:
+            c = FPMIN
+        d = 1.0 / d
+        h *= d * c
+        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
+        d = 1.0 + aa * d
+        if abs(d) < FPMIN:
+            d = FPMIN
+        c = 1.0 + aa / c
+        if abs(c) < FPMIN:
+            c = FPMIN
+        d = 1.0 / d
+        de = d * c
+        h *= de
+        if abs(de - 1.0) < EPS:
+            break
+    return h
+
+
+def _betai(a: float, b: float, x: float) -> float:
+    """Regularized incomplete beta function I_x(a, b)."""
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    bt = math.exp(
+        math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b)
+        + a * math.log(x) + b * math.log(1.0 - x)
+    )
+    if x < (a + 1.0) / (a + b + 2.0):
+        return bt * _betacf(a, b, x) / a
+    return 1.0 - bt * _betacf(b, a, 1.0 - x) / b
+
+
 def paired_t_test(d: List[float]) -> Tuple[float, float]:
     """Return (t, p_two_sided) for a one-sample t-test on the paired diffs `d`.
 
-    Uses a Gaussian approximation to the Student-t tail to avoid scipy.
-    Returns (nan, 1.0) if len(d) < 2.
+    Uses the exact Student-t two-sided tail (df = n-1) via the regularized
+    incomplete beta function (no scipy dependency). Returns (nan, 1.0) if
+    len(d) < 2.
     """
     n = len(d)
     if n < 2:
@@ -247,9 +298,10 @@ def paired_t_test(d: List[float]) -> Tuple[float, float]:
     if sd == 0.0:
         return (float("inf") if mean != 0 else 0.0, 0.0 if mean != 0 else 1.0)
     t = mean / (sd / math.sqrt(n))
-    # Two-sided p via normal approximation (n=5 is the typical case here).
-    # erfc(|t|/sqrt(2)) is the two-sided normal p.
-    p = math.erfc(abs(t) / math.sqrt(2.0))
+    # Exact Student-t two-sided tail (df = n-1): p = I_{df/(df+t^2)}(df/2, 1/2).
+    df = n - 1
+    x = df / (df + t * t)
+    p = _betai(df / 2.0, 0.5, x)
     return (t, p)
 
 
@@ -303,6 +355,8 @@ def build_rows() -> List[Dict[str, Any]]:
             "heldout_post_rl": ho_base["post_rl"],
             "zvf_at_100": zvf_at_100(tm_base["zvf_tail_mean"], tm_base["train_post_rl"]),
             "n_seeds": max(ho_base["n_seeds"], len(tm_base["seeds"])),
+            # TODO(adversarial_review): Beware of "Single-Seed Extrapolations". Ensure N > 1 
+            # for all configurations to properly account for RL variance and initialization dependence.
             "raw_seeds": tm_base["seeds"],
             "heldout_per_seed": [],
             "source_status": "ok" if tm_base["train_post_rl"] is not None else "source-missing",
@@ -335,6 +389,9 @@ def build_rows() -> List[Dict[str, Any]]:
         if r["heldout_per_seed"] and r["heldout_pre_rl"] is not None:
             d = [a - float(r["heldout_pre_rl"]) for a in r["heldout_per_seed"]]
             t, p = paired_t_test(d)
+            # TODO(adversarial_review): Failure to prove generalization. The held-out gains
+            # are not statistically significant (e.g., p=0.26). We need larger evaluation sets
+            # or more seeds to rigorously prove generalized reasoning uplift.
             r["delta_heldout"] = _mean(d)
             r["paired_t"] = t
             r["paired_p"] = p

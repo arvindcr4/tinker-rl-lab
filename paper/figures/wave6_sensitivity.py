@@ -43,6 +43,9 @@ def load():
 
 
 def _completed(rows, key):
+    # TODO: Address "Single-Seed Extrapolations" limitation.
+    # The current logic assumes N=1 runs per configuration. This should be updated
+    # to aggregate data across multiple seeds and compute confidence intervals/error bars.
     xs, peaks, last10s, first5s = [], [], [], []
     for r in rows:
         if r.get("status") != "completed":
@@ -95,6 +98,9 @@ def _panel(ax, xs, peaks, last10s, first5s, title, xlabel, log_x=False, xticks=N
         ax.set_xticks(xticks)
         ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
     ax.set_xlabel(xlabel)
+    # TODO: Address "Failure to Prove Generalization" limitation.
+    # The figure currently only plots training reward. We should add plots or
+    # evaluation metrics for performance on the held-out GSM8K test set.
     ax.set_ylabel("GSM8K training reward")
     ax.set_title(title)
     ax.set_ylim(0.0, 1.02)
@@ -165,6 +171,9 @@ def make_figure(data, out_png=OUT_PNG, out_pdf=OUT_PDF):
     axes[0].legend(loc="lower right", frameon=False)
 
     md = data.get("metadata", {})
+    # TODO: Address "The 'Early-Training Snapshot' Problem" limitation.
+    # The current runs use very few steps (e.g., 30 steps), which is insufficient
+    # to observe meaningful RL convergence. Experiments and plots must be extended.
     sup = (
         f"Qwen3-8B · GSM8K · seed {md.get('seed', 42)} · "
         f"steps {md.get('steps', 30)} · group G={md.get('group_size', 8)} · "

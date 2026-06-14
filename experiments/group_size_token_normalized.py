@@ -299,10 +299,13 @@ def build_rows(
                     gu = gu_estimate(0.6, 0.22, G)
             elif fallback is not None:
                 mu = fallback["acc"]
+                # NOTE: the +/-0.03 band below is a NOMINAL illustrative band on a
+                # hardcoded reconstructed point estimate -- it is NOT a measured
+                # bootstrap confidence interval. Do not report it as a CI.
                 lo = max(mu - 0.03, 0.0)
                 hi = min(mu + 0.03, 1.0)
                 gu = gu_estimate(fallback["zvf"], fallback["var_a"], G)
-                source_by_g[G] = "reanalysis_fallback"
+                source_by_g[G] = "reanalysis_fallback_nominal_band"
             else:
                 continue
             accs_by_g[G] = (mu, lo, hi)

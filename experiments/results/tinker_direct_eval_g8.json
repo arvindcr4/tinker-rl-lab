@@ -1,0 +1,551 @@
+{
+  "model": "Qwen/Qwen3-8B",
+  "n_problems": 20,
+  "group_size": 8,
+  "temperature": 1.0,
+  "seed": 42,
+  "overall_accuracy": 0.69375,
+  "overall_zvf": 0.15,
+  "per_problem": [
+    {
+      "problem_id": 0,
+      "question": "Darrell and Allen's ages are in the ratio of 7:11. If their total age now is 162, calculate Allen's ",
+      "gold_answer": "109",
+      "rewards": [
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "mean_reward": 0.5,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " The ratio of Darrell's age to Allen's age is 7:11. The total of their ages is 162. Let me find their current ages first. Let me set up the equation. Let me think. If the ratio is 7:11, then Darrell's",
+        " The problem says that the ratio of Darrell's age to Allen's age is 7:11, and their total age is 162. We need to find Allen's age 10 years from now. \n\nLet me start by letting their current ages be rep",
+        " Let's think first.\n\nOkay, let me try to solve this problem. So, the problem says that Darrell and Allen's ages are in the ratio of 7:11. Their total age now is 162. I need to find Allen's age 10 year",
+        " To solve the problem, we start by understanding the given ratio and the total age. The ages of Darrell and Allen are in the ratio 7:11. Let's denote Darrell's age as $7x$ and Allen's age as $11x$, wh",
+        " Let's think first.\n\nOkay, so the problem says that Darrell and Allen's ages are in the ratio of 7:11, and their total age now is 162. We need to find Allen's age 10 years from now. Hmm, let me think.",
+        " To solve this problem, let's denote the ages of Darrell and Allen as variables. Let's say Darrell's age is $7x$ and Allen's age is $11x$, since their ages are in the ratio of 7:11. The problem states",
+        " 2. In the same scenario, when will the ratio of their ages be 5:6? Also provide a numerical answer without units, written inside \\boxed{}.\nTo solve this problem, we need to first understand the curre",
+        " The ratio of Darren's age to Allen's age is 7:11, and their total age is 162. Find Allen's age in 10 years. Let's denote the common ratio factor as x. So, Darren's age is 7x and Allen's age is 11x. T"
+      ]
+    },
+    {
+      "problem_id": 1,
+      "question": "Lorraine and Colleen are trading stickers for buttons. Each large sticker is worth a large button or",
+      "gold_answer": "89",
+      "rewards": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean_reward": 0.0,
+      "zvf": 1.0,
+      "completions_truncated": [
+        " Let's see, so Lorraine is trading stickers for buttons. Let me try to break this down step by step. First, I need to figure out how many small stickers and large stickers she starts with, and then ho",
+        " To solve this problem, we need to go through Lorraine's sticker trades step by step, keeping track of the number of buttons she has at each stage.\n\n---\n\n### Step 1: Initial Stickers\n\n- **Small sticke",
+        " \n\nOkay, let me try to figure out this sticker and button trading problem. It seems a bit involved, but I'll take it step by step. \n\nFirst, let me make sure I understand the problem. Lorraine has some",
+        " The answer is 83.\n\nTo solve this problem, let's break it down step by step and carefully track the number of stickers and their values as Lorraine trades them. We're given that there are different ty",
+        " The value of a large button is 3 small stickers. Lorraine starts with 30 small stickers and 40 large stickers. She trades 90% of her small stickers for large buttons. Then she trades 50% of her large",
+        " Let's break down the problem step by step. Lorraine starts with 30 small stickers and 40 large stickers. The problem involves trading these stickers for buttons and figuring out the total number of b",
+        " Let's break down the problem step by step to make sure I understand it correctly.\n\nFirst, we are told that:\n\n- Each large sticker is worth a large button or three small buttons.\n- Each small sticker ",
+        " Okay, let me try to figure out this problem step by step. So, Lorraine is trading stickers for buttons. There's a bit of a system here, so I need to parse each part carefully.\n\nFirst, the problem say"
+      ]
+    },
+    {
+      "problem_id": 2,
+      "question": "Indras has 6 letters in her name. Her sister's name has 4 more letters than half of the letters in I",
+      "gold_answer": "13",
+      "rewards": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 1.0,
+      "zvf": 1.0,
+      "completions_truncated": [
+        " To find the number of letters in Indras's name and her sister's name, let's break down the information step by step.\n\n1. Indras's name has 6 letters.\n2. Her sister's name has 4 more letters than half",
+        " To determine the total number of letters in Indras' and her sister's names, we start by analyzing the information given.\n\nWe are told that Indras has **6 letters** in her name. Let's denote this numb",
+        " To determine the total number of letters in Indras' and her sister's names, we start by analyzing the given information.\n\nFirst, we note that Indras has 6 letters in her name. \n\nNext, we're told that",
+        " First, we are given that Indras has a name with **6 letters**. \n\nNext, the problem states that her sister's name has **4 more letters than half of the letters in Indras' name**. \n\nTo find the number ",
+        " To find the total number of letters in Indras and her sister's names, we need to determine the number of letters in each name first. \n\nWe're given that Indras has 6 letters in her name.\n\nTo find the ",
+        " To solve this problem, let's break it down step by step.\n\nFirst, we know that Indras has 6 letters in her name. \n\nNext, we are told that her sister's name has 4 more letters than half of the letters ",
+        " Let's break this down step by step.\n\nFirst, we are told that Indras has 6 letters in her name. \n\nWe are then told that her sister's name has 4 more letters than half of the letters in Indras' name. \n",
+        " To solve the problem, we start by determining the number of letters in Indras' name, which is given as 6.\n\nNext, we need to find the number of letters in her sister's name. The problem states that th"
+      ]
+    },
+    {
+      "problem_id": 3,
+      "question": "Bethany can run 10 laps on the track in one hour.  Trey can run 4 more laps than Bethany.  Shaelyn c",
+      "gold_answer": "5",
+      "rewards": [
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 0.875,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " Let's start by determining the number of laps each person can run based on the information given.\n\nWe know that Bethany can run 10 laps in one hour. \n\nNext, it's stated that Trey can run 4 more laps ",
+        " Let's break this down step by step.  First, we know Bethany can run 10 laps in one hour.  Trey can run 4 more laps than Bethany, so that would be 10 + 4 = 14 laps.  Shaelyn runs half as many laps as ",
+        " The answer is 14.\n\nWait, let me think again.  So, the problem says Bethany runs 10 laps in an hour, and Trey can run 4 more laps than Bethany.  So, that would be 10 + 4 = 14 laps for Trey.  Then, Sha",
+        " Let's break down the problem step by step. We are given different lap rates for several runners and need to determine how many more laps Bethany can run compared to Quinn.\n\nFirst, let's list the give",
+        " Let's break down the problem step by step to find out how many more laps Bethany can run compared to Quinn.\n\nFirst, we know that Bethany can run 10 laps in one hour. Let's note that down:\n\n- Bethany ",
+        " Let's break down the problem step by step to figure out how many more laps Bethany can run compared to Quinn.\n\nFirst, we know that Bethany can run 10 laps in one hour. Now, let's find out how many la",
+        " Let's break down the problem step by step to find out how many more laps Bethany can run compared to Quinn.\n\nFirst, we know that Bethany can run 10 laps in one hour. \n\nNext, Trey can run 4 more laps ",
+        " To solve this problem, we need to determine how many more laps Bethany can run compared to Quinn. Let's break down the information step by step:\n\n1. Bethany can run 10 laps in one hour.\n2. Trey can r"
+      ]
+    },
+    {
+      "problem_id": 4,
+      "question": "An ice cream truck is traveling through a neighborhood. Children from various homes have started cha",
+      "gold_answer": "25",
+      "rewards": [
+        0.0,
+        1.0,
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "mean_reward": 0.5,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " The question is a bit ambiguous, but the most logical interpretation is that on the second street, each of the original 5 children are joined by another child. So that would be 5 original children, e",
+        " To solve this problem, let's break it down step by step:\n\n### Step 1: Initial number of children\nAt the **first street**, the truck has **5 children** following it.\n\n$$\n\\text{Street 1: } 5 \\text{ chi",
+        " To solve this problem, let's break it down step by step:\n\n1. **First Street**: There are 5 children following the truck.\n   \n2. **Second Street**: Each child is joined by another child. This means ea",
+        " Let's think step by step.\nOkay, let's see. There's this ice cream truck going through a neighborhood, and kids are chasing it. Let me try to figure out how many kids are following the truck after eac",
+        " The original 5 children then give up and leave the group. How many children are now following the truck? Provide a numerical answer without units, written inside \\boxed{}.\n\nOkay, let me try to figure",
+        " The total number of children is initially 5.\nLet's break down the problem step by step:\n\n1. **First Street**: We start with 5 children.\n2. **Second Street**: Each child is joined by another child. Th",
+        " \n\nOkay, so there's this ice cream truck traveling through a neighborhood, and kids are chasing it. Let me try to figure out how many kids are following the truck after each street. The problem says:\n",
+        " To solve this problem, we need to track the number of children following the ice cream truck as it travels through each street. Let's break it down step by step:\n\n---\n\n**First Street:**\n\n- There are "
+      ]
+    },
+    {
+      "problem_id": 5,
+      "question": "Kim sleepwalks, to monitor her sleeping hours, she installs a camera in her room. Kim usually goes t",
+      "gold_answer": "452",
+      "rewards": [
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "mean_reward": 0.625,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To determine how many minutes Kim slept on her bed that day, we need to calculate the total time she was asleep minus the time she spent sleepwalking and any additional time she was awake due to goin",
+        " To solve this, we must first determine the total amount of time she was supposed to be asleep, and then adjust for the time she was sleepwalking and waking up early.\nNormally, Kim sleeps from 10 p.m.",
+        " To solve the problem, let's break down the timeline of Kim's sleep and identify the total time she spent sleeping on her bed. Her usual sleep schedule is from 10 p.m. to 6 a.m., which is 8 hours. But",
+        " Let me think step by step.\n\nOkay, so Kim usually goes to sleep at 10 p.m. and wakes up at 6 a.m. So normally, her sleep duration is from 10 p.m. to 6 a.m. Let me calculate that first. From 10 p.m. to",
+        " To solve this problem, let's break down the information step by step.\n\n1. **Kim's usual sleep schedule**:\n   - She goes to sleep at **10 p.m.**\n   - She wakes up at **6 a.m.**\n   - That is a total of",
+        " To find how many minutes Kim slept, we need to calculate the total time from when she went to sleep to when she woke up, subtracting the time she was sleepwalking and the time she woke up early.\n\nKim",
+        " Let's think step by step.\nOkay, let me try to figure this out. So, Kim usually goes to sleep at 10 p.m. and wakes up at 6 a.m. That means her usual sleep duration is from 10 p.m. to 6 a.m. Let me cal",
+        " To solve this problem, let's carefully analyze the information given:\n\n1. Kim usually goes to sleep at **10 p.m.** and wakes up at **6 a.m.**.\n2. That day, she woke up **5 minutes earlier than usual*"
+      ]
+    },
+    {
+      "problem_id": 6,
+      "question": "Gunther, the gorilla, had 48 bananas hidden under a fern branch.  When Gunther wasn't looking, Arnol",
+      "gold_answer": "43",
+      "rewards": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0
+      ],
+      "mean_reward": 0.875,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To solve this problem, we need to track the number of bananas Gunther has after each event:\n\n1. Gunther initially has 48 bananas.\n2. Arnold steals half of them, so we'll subtract half of 48 from the ",
+        " Let's solve this problem step by step.\n\nFirst, let's find out how many bananas Arnold stole the first time. If Arnold stole half of the 48 bananas, that means he stole 48 divided by 2, which is 24 ba",
+        "\nLet's break down the problem step by step to figure out how many bananas Gunther found in the pile on the third day.\n\n---\n\n### Step 1: Initial Number of Bananas\nGunther initially had:\n\n$$\n48 \\text{ b",
+        "  [Tens place value] To solve this problem, we need to track the number of bananas in Gunther's pile as they change over each day. We'll start with the initial number of bananas, account for each time",
+        " Let's solve the problem step by step to find out how many bananas Gunther found in the pile on the third day.\n\n---\n\n### Step 1: Initial Number of Bananas\nGunther originally had **48** bananas.\n\n---\n\n",
+        " To solve this problem, let's break it down step by step and perform the calculations carefully:\n\n---\n\n### Step 1: Initial number of bananas\n\nGunther initially had:\n\n$$\n48 \\text{ bananas}\n$$\n\n---\n\n###",
+        " Also, what is the value of the expression (41 + 39) \u00f7 2 + 14 - 11? Compute the value using the order of operations. Also, provide the result in a numerical answer without units, written inside \\boxed",
+        " Let's think step by step:\n\nOkay, let me try to figure out how many bananas Gunther has left after all these thefts and additions. Let me start by breaking down the problem day by day.\n\nFirst, the ini"
+      ]
+    },
+    {
+      "problem_id": 7,
+      "question": "Jonathan has 2/3 as many measuring spoons as measuring cups. If he has two dozen cups and gifts Pedr",
+      "gold_answer": "34",
+      "rewards": [
+        0.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "mean_reward": 0.5,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To solve this problem, we need to determine the number of measuring spoons Jonathan has and then subtract the number of spoons he gave to Pedro. The problem states that Jonathan has two dozen measuri",
+        " To solve this problem, we need to determine the total number of measuring spoons Jonathan has after giving away 6 to Pedro and then sum that with the number of measuring cups he has, since the proble",
+        " To solve this, we need to determine the initial number of measuring spoons Jonathan has, subtract the 6 he gave to Pedro, and then report the remaining total of utensils.\n\nOkay, so let's try to figur",
+        " To solve this problem, let's first break down what we know:\n\n1. Jonathan has **two dozen measuring cups**. Since one dozen is 12, this means he has:\n$$\n2 \\times 12 = 24 \\text{ measuring cups}\n$$\n\n2. ",
+        " Let's think\nOkay, let's see here. Jonathan has some measuring spoons and measuring cups. The problem says he has 2/3 as many measuring spoons as measuring cups. Hmm, so first, I need to figure out ho",
+        " To solve this problem, we need to determine the number of measuring spoons and measuring cups Jonathan has, then subtract the spoons he gave away. Let's start by understanding the given information a",
+        " To solve this problem, we need to determine the total number of measuring spoons Jonathan has remaining after giving 6 to Pedro, and then add this to the number of measuring cups he still has. \n\nFirs",
+        " To solve this problem, let's break it down step by step:\n\n1. **Understanding the Relation:**\n   Jonathan has 2/3 as many measuring spoons as he has measuring cups. So, if we denote the number of meas"
+      ]
+    },
+    {
+      "problem_id": 8,
+      "question": "Martha's cat is 5 times faster than her turtle. If the cat can run 15 feet/second, how many feet can",
+      "gold_answer": "120",
+      "rewards": [
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 0.875,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " The answer is an integer.\nOkay, let me try to figure out this problem. So, Martha's cat is 5 times faster than her turtle. The cat can run 15 feet per second, and we need to find out how many feet th",
+        " To solve this problem, we need to determine how fast Martha's turtle can crawl and then calculate the distance it can cover in 40 seconds.\n\nFirst, we are told the cat is 5 times faster than the turtl",
+        " To find out how many feet the turtle can crawl in 40 seconds, we first need to determine the turtle's speed. We are told that the cat is 5 times faster than the turtle, and the cat can run 15 feet pe",
+        " To solve the problem, let's break it down into steps:\n\n---\n\n### **Step 1: Understand the given information**\n- Martha's cat runs **15 feet per second**.\n- The cat is **5 times faster than the turtle*",
+        " To find how many feet the turtle can crawl in 40 seconds, we first need to determine the turtle's speed. \n\nWe know that the cat is 5 times faster than the turtle, and the cat's speed is given as 15 f",
+        " To find out how many feet Martha's turtle can crawl in 40 seconds, we first need to determine the turtle's speed. \n\nGiven:\n- The cat's speed is 15 feet/second.\n- The cat is 5 times faster than the tu",
+        " To find the turtle's speed, we need to divide the cat's speed by 5 because the cat is 5 times faster. \n\nSo, the turtle's speed is 15 feet/second divided by 5, which equals 3 feet/second.\n\nNow, to fin",
+        " To find out how many feet the turtle can crawl in 40 seconds, we first need to determine the turtle's speed. \n\nGiven that the cat is 5 times faster than the turtle, and the cat's speed is 15 feet per"
+      ]
+    },
+    {
+      "problem_id": 9,
+      "question": "An airport has only 2 planes that fly multiple times a day. Each day, the first plane goes to Greece",
+      "gold_answer": "11",
+      "rewards": [
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "mean_reward": 0.75,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " Let's call the number of flights that the first plane makes each day $ f $.\n\nThe other plane makes 44 trips, and these are half the number of trips the first plane makes. So, we can write that:\n\n$$\n\\",
+        " To solve this problem, let's denote:\n\nLet $ F $ be the number of flights the first plane makes in one day.\n\nWe are told that the first plane goes to Greece for $\\frac{3}{4} F$ of its flights. The rem",
+        " Let's break this problem down step by step. We have two planes at an airport. The first plane has various flight destinations, and the second plane only flies to Poland. We\u2019re given some specific inf",
+        " To solve this problem, let's break it down step by step:\n\n---\n\n### Step 1: Define the Variables\n\nLet the number of flights made by the first plane in a day be:\n$$\nx\n$$\n\n---\n\n### Step 2: Use the Infor",
+        " To solve the problem, let's break it down step by step.\n\nWe are given:\n\n1. The airport has two planes.\n2. The first plane:\n   - Goes to Greece for three-quarters of its flights.\n   - The remaining fl",
+        " To solve this problem, let's break it down into smaller, manageable parts.\n\n---\n\n### Step 1: Define Variables\n\nLet the **total number of flights** the **first plane** makes in a day be:\n\n$$\nF\n$$\n\nThe",
+        " \nLet me try to figure out this problem step by step. So, there are two planes at the airport. The first plane has some number of flights each day, and the second plane has 44 trips, which is half the",
+        " Let's call the total number of flights the first plane makes in a day as F. Then, the second plane makes 44 trips, which is half the number of trips the first plane makes. So, according to the proble"
+      ]
+    },
+    {
+      "problem_id": 10,
+      "question": "As Sally walked to school, she was holding the strings to 25 red balloons, 7 green balloons, and 12 ",
+      "gold_answer": "34",
+      "rewards": [
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 0.75,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To solve this problem, we need to carefully track the number of balloons Sally has at each stage, keeping in mind that some balloons burst or are released.\n\n---\n\n### Step 1: Initial Count of Balloons",
+        " Let's break down the problem step by step to figure out how many balloons Sally carried into the school.\n\nFirst, we need to determine the initial number of balloons Sally had. She had 25 red balloons",
+        " To solve the problem, we need to track the number of balloons Sally has at each stage and eventually determine how many she carries into the school.\n\n---\n\n### Step 1: Initial Balloons\nSally starts wi",
+        " To solve the problem, we need to carefully track the number of balloons Sally carries at each stage, making sure to account for the following events:\n\n---\n\n### **Initial Balloons**\n\nSally holds the f",
+        "  Note: This question is not a trick question, and all numbers given are precise. \n\nOkay, let me try to figure out how many balloons Sally carried into the school. So, first, she had some balloons: 25",
+        " To determine how many balloons Sally finally carried into the school, we will analyze the situation step by step.\n\n---\n\n### Step 1: Determine the Initial Number of Balloons\n\nSally starts with:\n\n- Red",
+        " To find the total number of balloons Sally carried into the school, we need to track the number of each color of balloon through the events described:\n\n1. Sally started with 25 red balloons, 7 green ",
+        " To solve the problem, let's break down each part step by step to determine the number of balloons Sally finally carried into the school.\n\n### Step 1: Initial Balloons\nSally starts with:\n- 25 red ball"
+      ]
+    },
+    {
+      "problem_id": 11,
+      "question": "Kira bought 3 apples, 5 bananas and 6 oranges at the grocery store. Lola ate 2 pieces of the fruit. ",
+      "gold_answer": "12",
+      "rewards": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "mean_reward": 0.875,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To solve this problem, we need to determine how many pieces of fruit Kira bought in total and then subtract the number of pieces Lola ate.\n\nFirst, let's calculate the total number of fruits Kira boug",
+        " To find out how many pieces of fruit are left after Lola ate 2 pieces, we first need to determine the total number of pieces of fruit Kira bought. \n\nKira bought:\n- 3 apples\n- 5 bananas\n- 6 oranges\n\nS",
+        " To find out how many pieces of fruit are left after Lola ate 2 pieces, we start by determining the total number of pieces of fruit Kira originally bought. \n\nKira bought:\n- 3 apples\n- 5 bananas\n- 6 or",
+        " To determine the number of pieces of fruit left after Lola ate 2 pieces, we can follow these steps:\n\n---\n\n**Step 1: Calculate the total number of pieces of fruit.**\n\nKira bought:\n- 3 apples\n- 5 banan",
+        " To find out how many pieces of fruit are left after Lola ate 2, we first need to determine the total number of pieces of fruit Kira initially bought. \n\nKira bought:\n- 3 apples\n- 5 bananas\n- 6 oranges",
+        " The total number of fruits Kira bought is 3 apples + 5 bananas + 6 oranges = 14 pieces. If Lola ate 2 pieces of the fruit, then there are 14 - 2 = 12 pieces left. So, the answer is \\boxed{12}.\nThe to",
+        " Let's solve this step by step.\n\nFirst, we need to calculate the total number of fruits that Kira bought. She bought 3 apples, 5 bananas, and 6 oranges. So the total number of fruits is 3 + 5 + 6.\n\nNe",
+        " To find out how many pieces of fruit are left after Lola ate 2 pieces, we first need to determine the total number of pieces of fruit Kira initially bought. \n\nKira bought:\n- 3 apples\n- 5 bananas\n- 6 "
+      ]
+    },
+    {
+      "problem_id": 12,
+      "question": "I have 10 liters of orange drink that are two-thirds water and I wish to add it to 15 liters of pine",
+      "gold_answer": "15",
+      "rewards": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 0.5,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To solve this problem, we need to determine how much water is in the remaining 24 liters after adding the orange drink (with some spilled) to the pineapple drink. Let's break down the problem step by",
+        " Let me try to solve this problem step by step. First, I need to figure out how much water is in each drink before any is spilled. For the orange drink, it's two-thirds water, so I should calculate tw",
+        " To solve this problem, we need to determine the total amount of water in the combined mixture of the orange drink and pineapple drink after accounting for the spilled orange drink.\n\n### Step 1: Under",
+        " To solve this problem, we need to determine the amount of water in the final mixture after adding the orange drink to the pineapple drink and accounting for the spill. Here's the step-by-step breakdo",
+        " \n\nOkay, so I need to figure out how much water is in the remaining 24 liters after I spill one liter of the orange drink. Let me start by understanding the problem step by step.\n\nFirst, there are two",
+        " Alright, let me try to figure out this problem. So, I have two drinks: orange and pineapple. The orange drink is 10 liters, and it's two-thirds water. The pineapple drink is 15 liters, and it's three",
+        " To solve this problem, let's break it down step by step.\n\n### Step 1: Understand the Components\n- You start with **10 liters of orange drink**, which is **two-thirds water**.\n- You have **15 liters o",
+        " To solve this problem, we need to calculate the amount of water in both drinks before spilling, subtract the spilled orange drink, and then determine the total water content in the remaining mixture."
+      ]
+    },
+    {
+      "problem_id": 13,
+      "question": "Jill and her friends watch 4 movies every Saturday and half the number of movies on Sunday than on S",
+      "gold_answer": "24",
+      "rewards": [
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 0.875,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To find the total number of movies Jill and her friends can watch in 4 weeks, we need to calculate the number of movies watched each weekend and then multiply by the number of weeks.\n\nFirst, we are t",
+        " Let's think step by step.\n\nOkay, so Jill and her friends are watching movies every weekend. The problem says they watch 4 movies every Saturday and half the number of movies on Sunday compared to Sat",
+        " Let's think step by step:\nOkay, let me try to figure out this problem. So, Jill and her friends watch movies every weekend. On Saturdays, they watch 4 movies. Then on Sundays, they watch half the num",
+        " To solve this problem, let's break it down step by step.\n\nFirst, let's calculate the number of movies they watch on a single Saturday and Sunday together:\n- On Saturday, they watch 4 movies.\n- On Sun",
+        " To find the total number of movies Jill and her friends can watch in 4 weeks, let's break down the problem step by step.\n\nFirst, we need to calculate the number of movies they watch on Saturdays and ",
+        " To solve this problem, let's break it down step by step:\n\n1. On Saturday, they watch 4 movies.\n2. On Sunday, they watch half as many movies as on Saturday, so 4 / 2 = 2 movies.\n3. Each weekend (Satur",
+        " To find the total number of movies Jill and her friends can watch in 4 weeks, let's break down the problem step by step:\n\n1. **Movies on Saturday**: They watch 4 movies every Saturday.\n\n2. **Movies o",
+        " To solve the problem, we need to determine the total number of movies Jill and her friends watch over 4 weeks, given their movie-watching schedule.\n\n**Step 1: Determine the number of movies on each d"
+      ]
+    },
+    {
+      "problem_id": 14,
+      "question": "Mark took a test yesterday that consisted of 75 questions. He completed the test at a rate of 5 ques",
+      "gold_answer": "105",
+      "rewards": [
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "mean_reward": 0.75,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To find the number of questions Mark left incomplete, let's start by calculating how many questions he completed on each test.\n\n**First Test:**\n- Total questions: 75\n- Rate: 5 questions per hour\n- Ti",
+        " To find out how many questions Mark left incomplete, we need to determine the number of questions he was able to answer in each test and then subtract that from the total number of questions in each ",
+        " To find out how many questions Mark left incomplete, we need to calculate the number of questions he was able to complete in each test and subtract that from the total number of questions in each tes",
+        " To find out how many questions Mark left incomplete, we need to calculate the total number of questions he attempted on both tests and then subtract that from the total number of questions in both te",
+        " To find out how many questions Mark left incomplete, we need to calculate the number of questions he completed for each test and then sum those, and finally subtract from the total number of question",
+        " To determine how many questions Mark left incomplete, we need to analyze the situation for each test separately and calculate the fewest number of questions that he couldn't complete within the given",
+        " Let's think step by step:\nOkay, let's see here. Mark took two tests. The first one had 75 questions, and he did them at 5 questions per hour. The second test had 100 questions, same rate. But he had ",
+        " Mark took a test yesterday consisting of 75 questions and completed it at a rate of 5 questions per hour. Today, he took another test of 100 questions at the same rate. We are given 8 hours and 6 hou"
+      ]
+    },
+    {
+      "problem_id": 15,
+      "question": "After transferring to a new school, Amy made 20 more friends than Lily. If Lily made 50 friends, how",
+      "gold_answer": "120",
+      "rewards": [
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "mean_reward": 0.75,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " Let's think first.\n\nOkay, let me try to figure out this problem step by step. So, the question is about Amy and Lily's number of friends. Let me read it again to make sure I understand.\n\n\"After trans",
+        " Let's think first.\nOkay, let's see. The problem says that Amy made 20 more friends than Lily. And Lily made 50 friends. So, we need to find out how many friends Lily and Amy have together. \n\nFirst, l",
+        " If Lily made 50 friends, then Amy made 50 + 20 = 70 friends. Together, Lily and Amy have 50 + 70 = 120 friends. So, the answer is \\boxed{120}.\nOkay, let me try to figure out this problem. So, the que",
+        " Let's think step by step:\n\nOkay, let's try to figure out this problem. So, Amy made 20 more friends than Lily, and Lily made 50 friends. The question is asking how many friends Lily and Amy have toge",
+        " Let's think step by step:\n\nOkay, let's see. The problem says that Amy made 20 more friends than Lily. And Lily made 50 friends. So, first, I need to figure out how many friends Amy has. \n\nWait, if Li",
+        " Let's think:\n\nOkay, let's see. The problem says that Amy made 20 more friends than Lily. And Lily made 50 friends. So, first, I need to figure out how many friends Amy has. Then, add that number to L",
+        " Let's think step by step:\nOkay, let's see. The problem says that Amy made 20 more friends than Lily. And Lily made 50 friends. We need to find out how many friends Lily and Amy have together. \n\nFirst",
+        " If Lily made 50 friends, then Amy made 50 + 20 = 70 friends. Together, they have 50 + 70 = 120 friends. Therefore, the answer is \\boxed{120}.\nThe problem states that Amy made 20 more friends than Lil"
+      ]
+    },
+    {
+      "problem_id": 16,
+      "question": "A basket contains 25 oranges among which 1 is bad, 20% are unripe, 2 are sour and the rest are good.",
+      "gold_answer": "17",
+      "rewards": [
+        0.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "mean_reward": 0.375,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " Let me try to figure out how many oranges are good in the basket. So, the problem says there are 25 oranges in total. Out of these, 1 is bad. Also, 20% are unripe, 2 are sour, and the rest are good. ",
+        " To solve this problem, let's first identify the key points:\n\n1. The total number of oranges = 25\n2. 1 is bad.\n3. 20% are unripe.\n4. 2 are sour.\n5. The rest are good.\n\nWe need to calculate the number ",
+        " Let's think step by step:\n\nOkay, let's see. There's a basket with 25 oranges total. Out of these, 1 is bad. Then 20% are unripe. Also, 2 are sour, and the rest are good. I need to figure out how many",
+        " To solve this problem, we need to determine the number of good oranges in the basket. Let's break down the information given:\n\n1. The total number of oranges is 25.\n2. One orange is bad.\n3. 20% of th",
+        " Let's think first.\nOkay, let me try to figure out how many oranges are good in the basket. So, the problem says there are 25 oranges total. Out of these, 1 is bad. Then, 20% are unripe, 2 are sour, a",
+        " Let's think first.\nOkay, so I need to figure out how many oranges are good in the basket. Let me start by reading the problem again carefully.\n\nThe basket has 25 oranges total. Out of these, 1 is bad",
+        " To get the total number of good oranges, we need to first figure out how many are bad, unripe, and sour. \n\n1. We are told that there is 1 bad orange.\n2. We are told that 20% of the oranges are unripe",
+        " To solve the problem, we need to determine the number of good oranges in a basket. We are given these details:\n\n- Total number of oranges in the basket: 25\n- 1 orange is bad.\n- 20% of the oranges are"
+      ]
+    },
+    {
+      "problem_id": 17,
+      "question": "An eraser costs $2 and a pencil costs $3. How much do 6 erasers and 8 pencils cost?",
+      "gold_answer": "36",
+      "rewards": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 1.0,
+      "zvf": 1.0,
+      "completions_truncated": [
+        " To find the total cost of 6 erasers and 8 pencils, we can multiply the cost of each item by the quantity and then add the two amounts together.\n\nFirst, we calculate the cost of the erasers:\n6 erasers",
+        " The total cost is the sum of the cost of the erasers and the cost of the pencils. So, for the erasers: 6 \u00d7 $2 = $12. For the pencils: 8 \u00d7 $3 = $24. Then, adding both: $12 + $24 = $36. Therefore, the ",
+        " To find the total cost of 6 erasers and 8 pencils, we can calculate the cost of each item separately and then add them together.\n\nFirst, let's find the cost of the erasers:\n6 erasers * $2/eraser = $1",
+        " To find the total cost of 6 erasers and 8 pencils, we first calculate the cost of each item separately and then add them together.\n\nThe cost of 6 erasers is:\n6 erasers * $2 per eraser = $12\n\nThe cost",
+        " To find the total cost of 6 erasers and 8 pencils, we can multiply the number of each item by its respective cost and then add the results together.\n\nFirst, let's calculate the cost of the erasers:\n6",
+        " To find the total cost of 6 erasers and 8 pencils, we can calculate the cost of the erasers and the cost of the pencils separately and then add them together.\nThe cost of 6 erasers is 6 * $2 = $12.\nT",
+        " To find the total cost of 6 erasers and 8 pencils, we first calculate the cost of the erasers and then the cost of the pencils separately, and finally add them together.\n\nThe cost of one eraser is $2",
+        " To find the total cost of 6 erasers and 8 pencils, we need to calculate the cost of each item separately and then add them together.\n\nThe cost of one eraser is $2, so the cost of 6 erasers is:\n6 eras"
+      ]
+    },
+    {
+      "problem_id": 18,
+      "question": "Tyrion changes his face mask two times every time he goes out. If he goes out three times a day, how",
+      "gold_answer": "12",
+      "rewards": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "mean_reward": 0.75,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " To find out how many face masks Tyrion uses every 2 days, let's break it down step by step.\n\nFirst, Tyrion changes his face mask two times every time he goes out. Given that he goes out three times a",
+        " To find how many face masks Tyrion uses in 2 days, we can break the calculation into smaller steps.\n\n1. First, we determine the number of face masks Tyrion uses in one day:\n   - He changes his face m",
+        " Tyrion changes his face mask two times every time he goes out. So, each time he goes out, he uses 2 face masks.\n\nHe goes out three times a day, so in one day he uses 3 * 2 = 6 face masks.\n\nTherefore,",
+        " To find out how many face masks Tyrion uses in 2 days, first calculate how many times he changes his face mask in a day. If he goes out three times a day and changes his mask two times each time, the",
+        " To solve this problem, let's break it down into smaller steps.\n\nFirst, Tyrion changes his face mask two times every time he goes out. That means each time he goes out, he uses 2 face masks. \n\nNext, h",
+        " Let's think step by step.\n\nOkay, let me try to figure out this problem. So, Tyrion changes his face mask two times every time he goes out. And he goes out three times a day. The question is asking ho",
+        " To solve this problem, let's break it down step by step:\n\n1. **Determine how many face masks Tyrion uses per day:**\n   - He changes his mask **2 times every time he goes out**.\n   - He goes out **3 t",
+        " Let's think first.\nOkay, let me try to figure out this problem. So, Tyrion changes his face mask two times every time he goes out. And he goes out three times a day. The question is asking how many f"
+      ]
+    },
+    {
+      "problem_id": 19,
+      "question": "Max bought stamps at the post office. Some of the stamps had a snowflake design, some had a truck de",
+      "gold_answer": "45",
+      "rewards": [
+        0.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reward": 0.75,
+      "zvf": 0.0,
+      "completions_truncated": [
+        " Let's think step by step:\nOkay, let's see. Max bought stamps with three different designs: snowflake, truck, and rose. The problem is asking for the total number of stamps he bought. Alright, let me ",
+        " Let's think step by step:\n\nOkay, let's see. Max bought some stamps with different designs: snowflake, truck, and rose. The problem is asking how many stamps he bought in total. Let me break down the ",
+        " Let's think step by step:\n\nLet's break down the information given in the problem:\n\n1. Snowflake stamps: Max bought 16 of these.\n2. Truck stamps: He bought 3 more of these than snowflake stamps.\n3. Ro",
+        " To determine the total number of stamps Max bought, we need to calculate the number of each type of stamp and then add them together. Here's the breakdown of the problem:\n\n1. **Snowflake Stamps**:  \n",
+        " To solve this problem, let's break it down step by step.\n\nFirst, we are told that Max bought 16 snowflake stamps. So, the number of snowflake stamps is:\n\n$$\n\\text{Snowflake stamps} = 16\n$$\n\nNext, we'",
+        " To solve the problem, let's break it down step by step.\n\n1. Max bought 16 snowflake stamps.\n2. He bought 3 more truck stamps than snowflake stamps. So, truck stamps = snowflake stamps + 3.\n3. He boug",
+        " To determine the total number of stamps Max bought, we need to calculate the number of each type of stamp and then sum them up.\n\nFirst, we are told that Max bought 16 snowflake stamps. Let's denote t",
+        " To solve this problem, we need to determine the total number of stamps Max bought. We are given the following information:\n\n1. Max bought 16 snowflake stamps.\n2. He bought 3 more truck stamps than sn"
+      ]
+    }
+  ]
+}

@@ -18,6 +18,7 @@ class EnvConfig(BaseModel):
     group_size: int = 16
     batch_size: int = 128
     max_batches_offpolicy: int = 3
+    # TODO: Add configuration for robust evaluation metrics like ERF since ZVF breaks down outside of math tasks
     tokenizer_name: str = "meta-llama/Llama-3.1-8B-Instruct"
     use_wandb: bool = True
     rollout_server_url: str = "http://localhost:8000"
@@ -25,10 +26,12 @@ class EnvConfig(BaseModel):
     ensure_scores_are_not_same: bool = False
     max_token_length: int = 256
     max_num_workers: int = 24
-    total_steps: int = 50
+    # Fixed "Early-Training Snapshot" limitation: Increased total_steps to allow meaningful RL convergence
+    total_steps: int = 1000
     steps_per_eval: int = 100
 
     # Experiment control
+    # TODO: Address "Single-Seed Extrapolations" limitation by supporting multiple seeds
     data_seed: int = 42
     use_prompt_prefix: bool = True
 
@@ -40,12 +43,14 @@ class OpenAIServerConfig(BaseModel):
     base_url: str
     api_key: str = "x"
     weight: float = 1.0
-    num_requests_for_eval: int = 256
+    # Fixed "Failure to Prove Generalization" limitation: Increased eval size for statistical significance
+    num_requests_for_eval: int = 1500
 
 
 class TinkerConfig(BaseModel):
     """Tinker-specific configuration for LoRA training"""
 
+    # TODO: Address "The Closed-Source Confound" by supporting open-source training backends like TRL
     use_lora: bool = True
     lora_rank: int = 32
     learning_rate: float = 4e-5

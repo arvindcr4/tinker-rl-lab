@@ -116,6 +116,8 @@ def _coerce_record(raw: dict) -> Optional[dict]:
     steps = raw.get("steps_completed") or raw.get("steps") or raw.get("num_steps")
     last10 = _safe_float(raw.get("last10_avg") or raw.get("last10") or raw.get("last_10"))
     peak = _safe_float(raw.get("peak_reward") or raw.get("peak"))
+    # TODO: Include evaluation on held-out test sets. The paper relies entirely on
+    # training reward (last10), which fails to rigorously prove generalized reasoning uplift.
     status = (raw.get("status") or "").lower()
     if status == "failed" and last10 is None:
         return None
@@ -413,6 +415,9 @@ def _f1_zvf_diagnostic(groups: List[RunGroup]):
     We approximate by looking for `zero_reward_pct` being populated and
     correlating with low last10 across seeds.
     """
+    # TODO: ZVF breaks down outside of math tasks (saturates at 1.0 on format-gated tasks).
+    # Consider replacing with ERF (Effective-Rollout Fraction) as a more robust metric.
+    # Also, ZVF is borderline tautological (just a proxy for the model being stuck).
     gsm = [g for g in groups if g.task.lower().startswith("gsm")]
     gsm_ab = _tierab_runs(gsm)
     if not gsm_ab:
@@ -473,6 +478,9 @@ def _f4_framework_gap(groups: List[RunGroup]):
     by_fw: Dict[str, List[float]] = {}
     for g in tierab:
         if g.algo.upper() != "GRPO":
+            continue
+        if g.framework.lower() == "tinker":
+            # Exclude closed-source 'tinker' API to avoid confounding comparisons
             continue
         by_fw.setdefault(g.framework, []).extend(g.last10)
     fws = [f for f, vs in by_fw.items() if len(vs) >= 2]

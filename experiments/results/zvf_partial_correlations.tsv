@@ -1,7 +1,11 @@
-controlling_for	r_partial	ci_low	ci_high	n_obs	delta_r2_estimate	note
-(none; raw correlation)	0.298	0.215	0.376	480	0.089	
-batch mean reward	0.236	0.147	0.319	480	0.056	
-policy entropy	NA	NA	NA	0	NA	insufficient data
-advantage variance	NA	NA	NA	0	NA	insufficient data
-KL drift to ref	NA	NA	NA	0	NA	insufficient data
-all four jointly	NA	NA	NA	0	NA	insufficient data
+# WITHDRAWN / HEADER-ONLY STUB. The ZVF partial-correlation result is withdrawn
+# pending the per-step per-group rollout-log artifact (entropy, advantage
+# variance, KL drift, final reward), which is not bundled in this release. See
+# paper/sections/appendix_zvf_formalization.tex ("What the Released Artifact
+# Establishes") and reports/final/addendum/01-zvf-formalization.md. Earlier
+# revisions populated this file from synthetic dry-run trajectories where
+# held-out accuracy was a deterministic function of ZVF; those rows had the
+# OPPOSITE (positive) sign to the paper's withdrawn negative claim and must not
+# be cited. Regenerate only from real per-group logs via
+# scripts/partial_correlation_zvf.py (lines starting with '#' are skipped by the loader).
+controlling_for	r_partial	ci_low	ci_high	n_obs	p_partial	p_bh	delta_r2	note

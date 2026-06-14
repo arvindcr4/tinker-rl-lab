@@ -44,4 +44,9 @@ content = re.sub(r'steps=30', 'steps=200', content)
 with open('experiments/tinker-runs/wave6_ablations.py', 'w') as file:
     file.write(content)
 
+# TODO: Address remaining limitations from adversarial_review.md
+# - ZVF Metric Fragility (Saturates at 1.0 for format-gated tasks): No fix applicable in this script. Needs to be addressed by using ERF.
+# - The Closed-Source Confound (Tinker API is a black box): No fix applicable.
+# - Failure to Prove Generalization (Gains on GSM8K/HumanEval not statistically significant): No fix applicable here, might require evaluating on a larger hold-out set.
+
 print("Updates applied")

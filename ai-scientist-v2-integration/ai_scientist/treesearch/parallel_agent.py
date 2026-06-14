@@ -307,6 +307,8 @@ class MinimalAgent:
 
     @property
     def _prompt_impl_guideline(self):
+        # TODO: Address the "Early-Training Snapshot" limitation (currently limited to 30-50 steps due to API cost constraints)
+        # TODO: Address the "Closed-Source Confound" limitation (Tinker API is a black box, need open-source baseline comparison)
         # Detect if the task involves Tinker SDK (remote training)
         _is_tinker_task = False
         if isinstance(self.task_desc, str) and "tinker" in self.task_desc.lower():
@@ -349,6 +351,9 @@ class MinimalAgent:
 
         impl_guideline.extend(
             [
+                "CRITICAL EVALUATION AND ROBUSTNESS REQUIREMENTS:",
+                "  - ALWAYS evaluate the final model on a held-out test set to prove generalization (do not just report training set performance).",
+                "  - ALWAYS run experiments across at least 3 random seeds to avoid single-seed extrapolations and establish statistical significance.",
                 "CRITICAL MODEL INPUT GUIDELINES:",
                 "  - Always pay extra attention to the input to the model being properly normalized",
                 "  - This is extremely important because the input to the model's forward pass directly affects the output, and the loss function is computed based on the output",

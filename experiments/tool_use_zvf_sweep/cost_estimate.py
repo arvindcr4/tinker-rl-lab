@@ -2,6 +2,13 @@
 """
 Pre-flight cost estimator for one Tinker sweep run.
 
+TODO: Address limitations raised in adversarial review:
+- ZVF saturates at 1.0 for format-gated tasks (like tool-use). We should consider 
+  sweeping ERF (Effective-Rollout Fraction) instead.
+- API cost constraints limit us to 30-50 steps (the "Early-Training Snapshot" problem), 
+  preventing observation of meaningful RL convergence. We need to budget for longer 
+  runs and multiple seeds.
+
 Computes an upper-bound token count and dollar estimate from a config YAML.
 Rates are set from TINKER_RATE_SAMPLE_PER_M and TINKER_RATE_TRAIN_PER_M env
 vars (USD per 1M tokens). If unset, the estimator aborts rather than

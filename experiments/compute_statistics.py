@@ -39,6 +39,12 @@ from scipy import stats
 
 warnings.filterwarnings("ignore")
 
+# TODO: Address limitations raised in adversarial review (no fix is applicable without more data):
+# 1. Early-Training Snapshots: 30-50 steps are insufficient to observe true RL convergence.
+# 2. Closed-Source Confound: Tinker API vs open-source gap is confounded by closed-source defaults.
+# 3. Held-out Generalization: Missing significance tests for generalization (e.g., held-out GSM8K p=0.26, HumanEval p=0.53).
+# 4. Single-Seed Extrapolations: MoE routing volatility and Nemotron-120B collapse rely on N=1 runs.
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Config
 # ──────────────────────────────────────────────────────────────────────────────

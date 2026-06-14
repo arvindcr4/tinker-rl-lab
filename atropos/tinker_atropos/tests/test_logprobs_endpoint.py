@@ -2,6 +2,12 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from fastapi.testclient import TestClient
 
+# TODO: Address the limitations raised in the adversarial review:
+# - ZVF Metric fragility: Fix logprob None->0.0 imputation causing ZVF saturation at 1.0.
+# - Closed-Source Confound: Document/open-source Tinker's managed defaults, micro-partitioning, and reference offloading.
+# - Early-Training Snapshots: Extend training runs beyond 30-50 steps to observe asymptotic RL dynamics.
+# - Generalization: Evaluate on held-out test sets to prove generalized reasoning rather than overfitting.
+# - Single-Seed Extrapolations: Run multiple seeds to ensure statistical significance.
 
 @pytest.fixture
 def mock_trainer():
@@ -110,6 +116,8 @@ class TestLogprobsEndpoint:
         assert response.status_code == 200
 
         data = response.json()
+        # TODO: Fix imputation of `None` to `0.0`. This causes the ZVF (Zero-Variance Fraction) metric 
+        # to artificially saturate at 1.0 on format-gated tasks when schema parsing fails.
         assert data["logprobs"][0]["logprob"] == 0.0  # None -> 0.0
         assert data["logprobs"][1]["logprob"] == pytest.approx(-0.5)
         assert data["logprobs"][2]["logprob"] == 0.0

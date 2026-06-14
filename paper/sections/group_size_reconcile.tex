@@ -16,27 +16,32 @@ comparison benefits small $G$; under a \emph{fixed total token budget},
 larger $G$ amortizes wasted (all-correct or all-incorrect) rollouts
 and yields higher effective gradient signal per token.
 
-\subsection{Formal Definition of Gradient Utilization}
+\subsection{Formal Definition of Token-Budget Gradient Efficiency}
 
-We define gradient utilization $\mathrm{GU}$ as the expected squared
-policy-gradient-norm contribution per unit of token budget, restricted
-to rollouts whose group advantage is nonzero:
+To analyze the token-budget tradeoff we define a \emph{token-budget gradient
+efficiency} $\mathrm{GE}_{\text{tok}}$---a per-token quantity distinct from the
+main-text gradient utilization $\mathrm{GU}{=}1{-}\mathrm{ZVF}$ (a unit-free
+fraction); we use a separate symbol to avoid conflating the two. It is the
+expected squared policy-gradient-norm contribution per unit of token budget,
+restricted to rollouts whose group advantage is nonzero:
 \begin{equation}
 \label{eq:gu}
-\mathrm{GU}(G, B) \;=\;
+\mathrm{GE}_{\text{tok}}(G, B) \;=\;
 \frac{\displaystyle\mathbb{E}\!\left[\,\|\nabla_\theta \mathcal{L}\|_2^{2}\,\cdot\,
   \mathbb{1}\!\left[A_g \ne 0\right]\,\right]}
 {\displaystyle G \cdot K \cdot \bar{L}_\text{rollout}},
 \end{equation}
 where $A_g$ is the within-group advantage, $K$ the rollouts per group,
 and $\bar{L}_\text{rollout}$ the mean rollout length.
-Intuitively, $\mathrm{GU}$ penalizes compute spent on rollouts that
+Intuitively, $\mathrm{GE}_{\text{tok}}$ penalizes compute spent on rollouts that
 contribute zero gradient ($\mathbb{1}[A_g\!=\!0]$, i.e.~ZVF-group
 members) and rewards concentrating token budget where advantage is
 informative. An estimator that avoids explicit gradient storage uses
 advantage variance as a proxy:
-$\widehat{\mathrm{GU}}(G,B) \!\propto\!
+$\widehat{\mathrm{GE}}_{\text{tok}}(G,B) \!\propto\!
  (1 - \mathrm{ZVF}) \cdot \widehat{\mathrm{Var}}_A / (G\cdot K \cdot \bar{L}_\text{rollout})$.
+Because the $G$ in the denominator grows faster than the numerator saturates,
+$\widehat{\mathrm{GE}}_{\text{tok}}$ is monotone decreasing in $G$ in our sweep.
 
 \subsection{Token-Budget-Normalized Sweep}
 
@@ -56,32 +61,40 @@ Total tokens $T$ & Metric &
 $G{=}4$ & $G{=}8$ & $G{=}16$ & $G{=}32$ & $G{=}64$ \\
 \midrule
 \multirow{2}{*}{$1\text{M}$}  & heldout acc. & $0.41$ & $\mathbf{0.48}$ & $0.47$ & $0.42$ & $0.35$ \\
-                               & $\widehat{\mathrm{GU}}$ ($\times 10^{-3}$) & $0.92$ & $\mathbf{1.12}$ & $1.05$ & $0.87$ & $0.61$ \\
+                               & $\widehat{\mathrm{GE}}_{\text{tok}}$ ($\times 10^{-3}$) & $\mathbf{1.72}$ & $1.12$ & $0.66$ & $0.34$ & $0.17$ \\
 \multirow{2}{*}{$4\text{M}$}  & heldout acc. & $0.55$ & $0.67$ & $\mathbf{0.69}$ & $0.66$ & $0.58$ \\
-                               & $\widehat{\mathrm{GU}}$ ($\times 10^{-3}$) & $1.01$ & $1.24$ & $\mathbf{1.31}$ & $1.26$ & $0.98$ \\
+                               & $\widehat{\mathrm{GE}}_{\text{tok}}$ ($\times 10^{-3}$) & $\mathbf{2.13}$ & $1.46$ & $0.87$ & $0.48$ & $0.25$ \\
 \multirow{2}{*}{$16\text{M}$} & heldout acc. & $0.63$ & $0.78$ & $0.82$ & $\mathbf{0.84}$ & $0.80$ \\
-                               & $\widehat{\mathrm{GU}}$ ($\times 10^{-3}$) & $1.08$ & $1.29$ & $1.36$ & $\mathbf{1.40}$ & $1.22$ \\
+                               & $\widehat{\mathrm{GE}}_{\text{tok}}$ ($\times 10^{-3}$) & $\mathbf{2.33}$ & $1.61$ & $0.96$ & $0.56$ & $0.29$ \\
 \multirow{2}{*}{$64\text{M}$} & heldout acc. & $0.64$ & $0.80$ & $0.85$ & $\mathbf{0.88}$ & $0.87$ \\
-                               & $\widehat{\mathrm{GU}}$ ($\times 10^{-3}$) & $1.06$ & $1.28$ & $1.38$ & $\mathbf{1.43}$ & $1.37$ \\
+                               & $\widehat{\mathrm{GE}}_{\text{tok}}$ ($\times 10^{-3}$) & $\mathbf{2.42}$ & $1.66$ & $0.99$ & $0.58$ & $0.32$ \\
 \bottomrule
 \end{tabular}
 \caption{Token-budget-normalized $G$-sweep for GRPO on Qwen3-8B / GSM8K
-($K{=}1$ rollout per sample, $\bar L = 384$; 3-seed mean).
-Bold = best in row. The GU-optimal $G$ shifts rightward with larger
-$T$: $G{=}8$ wins at $T{=}1\text{M}$ (matching Table~6), $G{=}32$ wins
-at $T{\ge}16\text{M}$ (the canonical training budget used elsewhere
-in the paper). This quadratic-in-$\log G$ envelope implies an
-inverted-U whose apex shifts with $T$. Numbers are reanalyzed
-from existing GRPO ablation logs; see
+($K{=}1$ rollout per sample, $\bar L = 384$). \emph{Illustrative reanalysis:}
+the held-out accuracy cells are reconstructed point estimates from existing GRPO
+ablation logs (the \texttt{FALLBACK\_ROWS} table in the script), \emph{not}
+freshly measured per-seed runs; per-cell seed counts are not retained and no
+measured $G\times T$ sweep over $\{4,8,16,32,64\}$ was executed. Bold in the
+accuracy row marks the per-row accuracy maximum, which shifts rightward with
+$T$: $G{=}8$ at $T{=}1\text{M}$ (matching Table~6), $G{=}16$ at $4\text{M}$, and
+$G{\approx}32$ at $T{\ge}16\text{M}$ (the canonical training budget). The
+token-budget gradient-efficiency estimator $\widehat{\mathrm{GE}}_{\text{tok}}$
+(Eq.~\ref{eq:gu}; distinct from the main-text $\mathrm{GU}{=}1{-}\mathrm{ZVF}$)
+is by contrast \emph{monotone decreasing} in $G$ at every budget (bold marks its
+maximum, always $G{=}4$): per-token gradient efficiency favors small $G$ and does
+\emph{not} on its own justify large $G$. See
 \texttt{experiments/group\_size\_token\_normalized.py}.}
 \label{tab:groupsize-tokennorm}
 \end{table}
 
-\paragraph{Inverted-U fit.}
-Fitting a quadratic in $\log_2 G$ per row yields apex
-$\log_2 G^\star(T) \approx 2.1 + 0.38\log_{10}(T/1\text{M})$
-with 95\% bootstrap CI$[0.20, 0.56]$ on the slope, confirming a
-token-budget-dependent optimum rather than a universal $G^\star$.
+\paragraph{Accuracy-optimal $G$ shifts with budget.}
+The per-row accuracy-maximizing group size increases with the token budget
+($G^\star = 8, 16, 32, 32$ at $T = 1, 4, 16, 64\,\text{M}$), so there is no
+single universal $G^\star$; the optimum is budget-dependent. We report this as a
+qualitative argmax pattern only---no committed script fits a parametric
+inverted-U envelope or its bootstrap confidence interval, so we make no such
+quantitative claim.
 
 \subsection{Reconciliation Statement}
 
@@ -91,11 +104,13 @@ Under a fixed \emph{step} budget at small total token counts,
 $G{=}8$ attains the highest last-10 reward (Table~6).
 Under fixed \emph{total tokens} at the canonical training scale
 used elsewhere in the paper ($T\!\ge\!16$M), $G{\approx}32$
-maximizes both held-out accuracy and the
-$\widehat{\mathrm{GU}}$ estimator defined in Eq.~(\ref{eq:gu}).
-The inverted-U apex in $\log G$ shifts rightward with $T$, so the
-recommended $G$ depends on the practitioner's compute budget, not on
-a universal heuristic.
+maximizes held-out accuracy in this illustrative reanalysis. (The
+per-token gradient-efficiency estimator $\widehat{\mathrm{GE}}_{\text{tok}}$ is
+\emph{not} co-maximized: it decreases monotonically in $G$, so it favors small
+$G$ and is reported only to show that the accuracy gain at large $G$ comes at a
+per-token efficiency cost.) The accuracy-optimal $G$ shifts rightward with $T$,
+so the recommended $G$ depends on the practitioner's compute budget, not on a
+universal heuristic.
 \end{quote}
 The reviewer's concern is taken seriously: the ``more rollouts is
 always better'' heuristic is false, \emph{and} the opposite heuristic

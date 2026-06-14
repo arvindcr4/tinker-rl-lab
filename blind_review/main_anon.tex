@@ -1057,7 +1057,7 @@ for task type, family alone does not explain performance variance.
 To our knowledge, this is the \textbf{first systematic cross-library, cross-scale
 measurement of ZVF prevalence in GRPO training}. We recommend monitoring
 $\mathrm{GU}_t$ in real time, with intervention triggered when $\mathrm{GU}_t < 0.5$
-for more than 10 consecutive steps~\cite{zhang2026aero,zhang2026greso}.
+for more than 10 consecutive steps~\cite{zhang2026greso}.
 
 \begin{figure}[htbp]
 \centering
@@ -1559,21 +1559,22 @@ PPO is used and verify it against a known-good LLM post-training framework.
 \subsection{Connections to Concurrent Work}
 \label{sec:discuss_related}
 
-\paragraph{AERO and ZVF as a training diagnostic.}
-\citet{zhang2026aero} motivate AERO by the prevalence of zero-advantage dead
-zones in GRPO training and propose a Bayesian posterior over prompt difficulty
-to pre-screen prompts.
+\paragraph{Selective rollouts and ZVF as a training diagnostic.}
+\citet{zhang2026greso} (GRESO) motivate selective rollouts by the prevalence of
+zero-advantage dead zones in GRPO training and skip prompts whose groups are
+predicted to collapse to zero reward variance.
 Our ZVF measurement ($r = -0.769$, $p < 0.001$ with final performance) provides
 the first cross-library, cross-scale empirical ground truth for the phenomenon
-AERO targets.
+such selective-rollout methods target.
 Importantly, our data reveal that ZVF is \emph{task-driven, not model-scale-driven}:
 tool-use experiments saturate at $\text{ZVF} = 100\%$ regardless of model size,
 while GSM8K experiments average $\text{ZVF} = 8.5\%$ across the same model
 range.
-This suggests that AERO's compute savings will be largest when the task is
-significantly mismatched to the model's prior capabilities --- precisely the
-regime where standard GRPO training is most wasteful.
-Our ZVF measurements can serve as a calibration dataset for AERO's Beta prior.
+This suggests that the compute savings from selective rollouts will be largest
+when the task is significantly mismatched to the model's prior capabilities
+--- precisely the regime where standard GRPO training is most wasteful.
+Our ZVF measurements can serve as a calibration dataset for such prompt-skipping
+criteria.
 
 \paragraph{Scaling laws: exponential saturation and its limits.}
 \citet{nimmaturi2025scalinglaws} derive a three-phase exponential saturation
@@ -1607,21 +1608,6 @@ However, the DPO equivalence also predicts that very high-accuracy models
 ($p > 0.9$) will have low gradient utilization regardless of $G$, suggesting
 that the relevant intervention at high accuracy is not group-size reduction
 but prompt re-sampling from harder sub-distributions.
-
-\paragraph{Target Policy Optimization and sparse-reward regimes.}
-The 0\% tool-use reward we observe for both Qwen3-32B and Llama-3.1-8B
-exemplifies the sparse-reward failure mode that \citet{kaddour2026tpo}
-specifically designs against: without any positive reward signal in a group,
-the advantage is uniformly zero and no gradient flows.
-TPO's target-distribution construction ($q \propto p_\text{old} \exp(u)$)
-provides a training signal even when all rollout rewards are zero, by fitting
-to the \emph{implied} contrastive distribution rather than observed rewards.
-Our tool-use results provide an empirical motivation for this class of
-approaches: the task is not unsolvable in principle (Qwen2-0.5B achieves
-functional tool calls with SFT), but it is unsolvable with binary GRPO
-rewards at 30-step horizons.
-We recommend TPO-style objectives as the first algorithm to try when
-$\text{ZVF} = 1$ persists past the first five training steps.
 
 \subsection{Limitations of Proxy Metrics and the Path to Direct KL Measurement}
 \label{sec:discuss_kl}

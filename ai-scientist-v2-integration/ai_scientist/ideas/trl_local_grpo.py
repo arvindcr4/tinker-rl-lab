@@ -47,6 +47,9 @@ warnings.filterwarnings("ignore")
 MODEL = "Qwen/Qwen2.5-0.5B-Instruct"  # Small, fast, local-runnable
 LORA_RANK = 16
 GROUP_SIZE = 4
+# TODO: Address the "Early-Training Snapshot" problem. The adversarial review notes that
+# small step counts are insufficient to observe asymptotic RL convergence or catastrophic forgetting.
+# Ensure STEPS is large enough to observe true policy dynamics.
 STEPS = 200
 LR = 5e-6
 NUM_SEEDS = 5
@@ -171,6 +174,9 @@ def run_one_seed(seed: int, examples_train: list, examples_eval: list) -> dict:
             batch_rewards.extend(rewards)
 
             # Simple policy-gradient loss (GRPO-style)
+            # TODO: The paper uses a ZVF (Zero-Variance Fraction) metric. However, the adversarial review
+            # highlights it is borderline tautological, fragile outside math tasks, and a symptom rather
+            # than a root cause. If adding ZVF monitoring, do not rely on it as a standalone causal predictor.
             for resp_text, adv in zip(responses, advs):
                 full_text = rendered + resp_text
                 full_ids = tok.encode(full_text, add_special_tokens=False)
@@ -206,15 +212,44 @@ def run_one_seed(seed: int, examples_train: list, examples_eval: list) -> dict:
     peak = float(np.max(step_accuracy)) if step_accuracy else 0.0
     loss_mean = float(np.nanmean(step_loss)) if step_loss else float("nan")
 
+    # Evaluate on held-out test set to address the "Failure to Prove Generalization" critique.
+    # The adversarial review notes that visual learning curves on training data do not prove
+    # generalized reasoning uplift without statistically significant held-out improvements.
+    print(f"  Evaluating on {len(examples_eval)} held-out examples...")
+    model.eval()
+    eval_accs = []
+    with torch.no_grad():
+        for prompt_text, reference in examples_eval:
+            messages = [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt_text},
+            ]
+            rendered = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+            prompt_ids = tok.encode(rendered, add_special_tokens=False)
+            prompt_tensor = torch.tensor([prompt_ids], device=device)
+
+            out = model.generate(
+                prompt_tensor,
+                max_new_tokens=MAX_RESPONSE_TOKENS,
+                temperature=0.0,
+                pad_token_id=tok.eos_token_id,
+            )
+            text = tok.decode(out[0][prompt_tensor.shape[1]:], skip_special_tokens=True)
+            eval_accs.append(reward_fn(text, reference))
+    
+    heldout_accuracy = float(np.mean(eval_accs)) if eval_accs else 0.0
+    model.train()
+
     print(
         f"seed={seed} done | first5={first_5:.3f} last10={last_10:.3f} peak={peak:.3f} "
-        f"loss={loss_mean:.3f} time={duration:.0f}s"
+        f"heldout={heldout_accuracy:.3f} loss={loss_mean:.3f} time={duration:.0f}s"
     )
 
     return {
         "first_5_accuracy": first_5,
         "last_10_accuracy": last_10,
         "peak_accuracy": peak,
+        "heldout_accuracy": heldout_accuracy,
         "training_loss": loss_mean,
         "duration_seconds": duration,
     }
@@ -255,6 +290,7 @@ def stat(key: str):
 keys = [
     "last_10_accuracy",
     "peak_accuracy",
+    "heldout_accuracy",
     "first_5_accuracy",
     "training_loss",
     "duration_seconds",
@@ -266,7 +302,7 @@ experiment_data = {
     "gsm8k": {
         "metrics": {
             "train": [s["last_10_accuracy"] for s in per_seed],
-            "val": [s["peak_accuracy"] for s in per_seed],
+            "val": [s["heldout_accuracy"] for s in per_seed],
         },
         "losses": {
             "train": [s["training_loss"] for s in per_seed],

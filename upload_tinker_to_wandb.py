@@ -29,6 +29,7 @@ SEED_LOGS = {
     "256": "gsm8k_8B_s256.log",
     "512": "gsm8k_8B_s512.log",
     "999": "gsm8k_8B_s999.log",
+    # TODO: Add remaining seeds to address single-seed/small-N extrapolation vulnerability
 }
 
 # Also upload experiment ablation logs
@@ -114,6 +115,11 @@ def upload_run(name: str, log_file: str, group: str):
         print(f"  SKIP {log_file} (no step data)")
         return
 
+    # TODO: Calculate and log ZVF (Zero-Variance Fraction) from reward_trace to measure gradient saturation
+    # TODO: Extend training runs beyond 30-50 steps to observe meaningful RL convergence
+    if reward_trace:
+        config["reward_trace"] = reward_trace
+
     config["tinker_run_id"] = run_id or "unknown"
     config["algorithm"] = "grpo"
     config["environment"] = "gsm8k"
@@ -147,13 +153,14 @@ def upload_run(name: str, log_file: str, group: str):
         run.summary["mean_last10_reward"] = sum(last10) / len(last10)
         run.summary["total_steps"] = len(steps)
         run.summary["tinker_run_id"] = run_id
+        # TODO: Evaluate and log held-out test set accuracy to prove true generalization
 
     run.finish()
     print(f"  OK {name}: {len(steps)} steps, final_acc={steps[-1]['accuracy']:.1f}%")
 
 
 def main():
-    print("=== Uploading Tinker GSM8K runs (10 seeds) ===")
+    print(f"=== Uploading Tinker GSM8K runs ({len(SEED_LOGS)} seeds) ===")
     for seed, log_file in SEED_LOGS.items():
         name = f"gsm8k-qwen3-8b-seed{seed}-tinker"
         upload_run(name, log_file, group=GROUP)
@@ -161,6 +168,8 @@ def main():
     print("\n=== Uploading ablation/experiment runs ===")
     for name, log_file in ABLATION_LOGS.items():
         upload_run(f"{name}-tinker", log_file, group="gsm8k-ablations")
+
+    # TODO: Include open-source baselines to address the closed-source confound of Tinker API
 
     print("\nDone! Check https://wandb.ai/ for project: tinker-rl-scaling")
 

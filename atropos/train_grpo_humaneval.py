@@ -5,6 +5,10 @@ Supports two task modes via --task flag:
   humaneval   : pass@1 on openai/openai_humaneval (code execution reward)
   tool_use    : JSON tool-call correctness reward (custom dataset)
 
+TODO: The paper's empirical claims compare this TRL baseline to the closed-source Tinker API.
+Investigate and implement open-source equivalents of Tinker's undisclosed managed defaults,
+micro-partitioning, and reference offloading to address the 73% performance gap.
+
 Usage:
     python train_grpo_humaneval.py --config configs/humaneval_qwen_8b.yaml --task humaneval
     python train_grpo_humaneval.py --config configs/tool_use_qwen_8b.yaml  --task tool_use
@@ -130,6 +134,10 @@ check({entry_point})
 
 def make_humaneval_reward_fn(dataset, group_size: int):
     """Return a GRPOTrainer-compatible reward function for HumanEval."""
+    # TODO: Failure to Prove Generalization. The code generation gains on HumanEval
+    # are not statistically significant (p=0.53). We need to evaluate on larger
+    # held-out test sets to rigorously prove generalized reasoning uplift rather than
+    # just training-set memorization dynamics.
     # Build lookup: task_id → {test, entry_point}
     lookup = {
         row["task_id"]: {
@@ -154,7 +162,8 @@ def make_humaneval_reward_fn(dataset, group_size: int):
             else:
                 score = 0.0
             rewards.append(score)
-                zvf_sum = 0.0
+        
+        zvf_sum = 0.0
         n_groups = len(rewards) // group_size
         if n_groups > 0:
             for idx in range(n_groups):
@@ -250,7 +259,11 @@ def make_tool_use_reward_fn(group_size: int):
                 rewards.append(_score_tool_call(text, gt, args_fn, ga))
             else:
                 rewards.append(0.0)
-                zvf_sum = 0.0
+        
+        # TODO: Adversarial review notes that ZVF completely breaks down outside of math tasks.
+        # In format-gated tasks (like tool-use), ZVF saturates at 1.0 because the base model
+        # consistently fails schema parsing. Replace ZVF with ERF (Effective-Rollout Fraction).
+        zvf_sum = 0.0
         n_groups = len(rewards) // group_size
         if n_groups > 0:
             for idx in range(n_groups):
@@ -308,6 +321,9 @@ def load_config(path: str) -> dict:
     oi  = (raw.get("openai") or [{}])[0]
     return {
         "model_name":              oi.get("model_name") or cfg.get("tokenizer_name"),
+        # TODO: The "Early-Training Snapshot" Problem. 30-50 steps are insufficient to
+        # observe meaningful RL convergence, long-horizon reward hacking, or true policy collapse.
+        # Increase total_steps significantly for full training runs rather than just "snapshots".
         "total_steps":             cfg.get("total_steps",       50),
         "batch_size":              cfg.get("batch_size",        128),
         "group_size":              cfg.get("group_size",        16),
@@ -491,6 +507,8 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
             mean_r = logs.get("reward/mean", logs.get("rewards/mean"))
             if mean_r is not None:
                 step_log.append(float(mean_r))
+                # TODO: ZVF is borderline tautological and a symptom, not a root cause.
+                # Consider monitoring advantage variance or policy entropy directly instead of ZVF.
                 log_dict = {"train/percent_correct": float(mean_r), "train/step": state.global_step, "zvf": _last_zvf}
                 if "objective/entropy" in logs:
                     log_dict["train/policy_entropy"] = logs["objective/entropy"]
@@ -526,6 +544,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config",    required=True)
     parser.add_argument("--task",      required=True, choices=["humaneval", "tool_use"])
+    # TODO: Single-Seed Extrapolations are a major statistical vulnerability.
+    # Extrapolating RL training dynamics from N=1 runs is highly initialization-dependent.
+    # We should run these experiments across multiple seeds (e.g. N=5) to compute variance.
     parser.add_argument("--seed",      type=int, default=42)
     parser.add_argument("--wandb_key", default=None)
     args = parser.parse_args()

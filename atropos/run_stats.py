@@ -4,8 +4,13 @@ Run all statistical tests on the three completed experiments.
 Data extracted from WandB logs in the experiment notebooks:
   - Each step mean reward = k/128  (8 groups × 16 completions = 128 binary scores)
   - 50 steps per run
-"""
 
+TODO (Adversarial Review Limitations):
+- "Early-Training Snapshot": 50 steps is insufficient to observe true RL convergence or policy collapse. Need longer horizon runs.
+- Generalization: Training curves show overfitting, but we need to include statistical tests for held-out generalization (e.g., the GSM8K test set +1.3% gain, p=0.26) to prove true reasoning uplift rather than memorization.
+- Single-Seed Vulnerability: Results rely on N=1. Need multi-seed runs to compute variance across initializations.
+- Closed-Source Confound: Tinker API vs open-source comparisons need to account for black-box optimizations.
+"""
 import sys
 import os
 sys.path.insert(0, os.path.dirname(__file__))

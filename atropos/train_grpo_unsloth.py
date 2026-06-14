@@ -194,6 +194,7 @@ def load_config(path: str) -> dict:
 
     return {
         "model_name":       oi.get("model_name") or cfg.get("tokenizer_name"),
+        # TODO: 30-50 steps is insufficient to observe meaningful RL convergence. Increase total_steps.
         "total_steps":      cfg.get("total_steps",       50),
         "batch_size":       cfg.get("batch_size",        128),
         "group_size":       cfg.get("group_size",        16),
@@ -374,6 +375,8 @@ def make_reward_fn(group_size: int):
             rewards.append(_score_response(_completion_to_text(completion), gold))
         
         # calculate zvf
+        # TODO: ZVF breaks down outside of math tasks. Implement ERF (Effective-Rollout Fraction) for format-gated tasks.
+        # TODO: Log advantage variance and policy entropy as ZVF is often just a symptom.
         zvf_sum = 0.0
         n_groups = len(rewards) // group_size
         if n_groups > 0:
@@ -505,6 +508,7 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
         seed=cfg["data_seed"],
         split="train"
     )
+    # TODO: Improve evaluation to rigorously prove generalized reasoning uplift on held-out test sets.
     eval_dataset = prepare_dataset(
         tokenizer,
         use_prefix=cfg["use_prompt_prefix"],
@@ -518,6 +522,7 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
     per_device_train_batch_size = cfg["group_size"]
     gradient_accumulation_steps = max(1, cfg["batch_size"] // per_device_train_batch_size)
 
+    # TODO: Implement micro-partitioning and reference offloading to close the performance gap with Tinker API.
     # num_generations = group_size (TRL calls it num_generations)
     grpo_config = GRPOConfig(
         output_dir=cfg["checkpoint_dir"],
@@ -611,6 +616,7 @@ if __name__ == "__main__":
         description="GRPO training with Unsloth (drop-in for Atropos+Tinker)"
     )
     parser.add_argument("--config",  required=True, help="Path to YAML config")
+    # TODO: Support multi-seed runs to avoid single-seed statistical vulnerability.
     parser.add_argument("--seed",    type=int, default=42)
     parser.add_argument("--wandb_key", default=None, help="WandB API key (or set WANDB_API_KEY)")
     args = parser.parse_args()

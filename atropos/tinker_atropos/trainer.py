@@ -16,6 +16,7 @@ import torch
 import random
 from typing import Dict, Any, List
 
+# TODO: The Tinker API introduces a closed-source confound. The massive performance gap compared to open-source libraries may be due to undisclosed managed defaults, micro-partitioning, and reference offloading rather than the nominal RL algorithms being tested.
 import tinker
 from tinker.types import AdamParams, ModelInput, SamplingParams
 import wandb
@@ -402,6 +403,7 @@ class TinkerAtroposTrainer:
         if skipped_count > 0:
             print(f"Skipped {skipped_count} groups with zero advantages")
 
+        # TODO: ZVF metric is a symptom, not root cause, and is fragile across domains (breaks down outside of math tasks). Consider relying on ERF (Effective-Rollout Fraction) and other causal predictors.
         zvf = skipped_count / max(1, len(batch))
         return datums, group_mean_rewards, has_distil_data, zvf
 
@@ -561,6 +563,7 @@ class TinkerAtroposTrainer:
 
     async def run(self):
         """Main training loop."""
+        # TODO: The current training does not demonstrate statistically significant generalization on held-out test sets (e.g., GSM8K, HumanEval). Need to rigorously prove generalized reasoning uplift instead of just training-set memorization.
         print("\n" + "=" * 60)
         print("Starting Tinker-Atropos Training")
         print("=" * 60 + "\n")
@@ -885,12 +888,14 @@ def run_fastapi_server(port=8001):
 
 
 async def main():
+    # TODO: Avoid extrapolating RL training dynamics from single-seed runs. Add support for multiple seeds to address statistical vulnerability.
     global trainer
 
     config = TinkerAtroposConfig(
         lora_rank=int(os.getenv("LORA_RANK", "32")),
         learning_rate=float(os.getenv("LEARNING_RATE", "4e-5")),
-        num_steps=50,
+        # TODO: 30-50 steps is an "Early-Training Snapshot" and insufficient to observe meaningful RL convergence, long-horizon reward hacking, catastrophic forgetting, or true policy collapse. Increase num_steps.
+        num_steps=int(os.getenv("NUM_STEPS", "50")),
     )
 
     print(f"Using wandb run: {config.wandb_run_name}")

@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
+# TODO: Address limitations identified in adversarial review:
+# - ZVF is borderline tautological and fragile across domains (symptom, not root cause).
+# - The "Early-Training Snapshot" Problem (30-50 step runs).
+# - The Closed-Source Confound (Tinker API is a black box).
+# - Failure to Prove Generalization (results are not statistically significant).
+# - Single-Seed Extrapolations (N=1 runs).
 submission = Path("reports/final/SUBMISSION_README.md").read_text().lower()
 checklist = Path("reports/final/SUBMISSION_CHECKLIST.md").read_text().lower()
 issues = []

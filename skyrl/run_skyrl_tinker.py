@@ -536,6 +536,8 @@ def train(cfg: dict, env, wandb_run):
     log_samples = log_cfg.get("log_samples", False)
 
     # Connect to Tinker
+    # TODO: Benchmark against open-source alternatives (like TRL or OpenRLHF) to control
+    # for Tinker API's closed-source confounding factors.
     print(f"Connecting to Tinker (model={model_name})...")
     base_url = tcfg.get("base_url")
     svc = tinker.ServiceClient(base_url=base_url)
@@ -557,6 +559,8 @@ def train(cfg: dict, env, wandb_run):
     print(f"  Sampler ready: {w0.path}")
 
     # Training params
+    # TODO: Run longer training schedules (beyond 30-50 step snapshots) to observe
+    # true asymptotic convergence and avoid 'Early-Training Snapshot' limitations.
     steps = trcfg["steps"]
     group_size = trcfg["group_size"]
     prompts_per_step = trcfg["prompts_per_step"]
@@ -604,6 +608,8 @@ def train(cfg: dict, env, wandb_run):
                     })
 
             # GRPO advantages
+            # TODO: Calculate Zero-Variance Fraction (ZVF) and Effective-Rollout Fraction (ERF)
+            # as diagnostics to track gradient saturation and schema parsing progression.
             mean_r = sum(rewards) / len(rewards)
             std_r = (sum((r - mean_r) ** 2 for r in rewards) / len(rewards)) ** 0.5 + 1e-8
             advs = [(r - mean_r) / std_r for r in rewards]
@@ -675,6 +681,8 @@ def train(cfg: dict, env, wandb_run):
             print(f"  -> Checkpoint saved: step_{step + 1}")
 
     # Final save
+    # TODO: Implement a robust held-out evaluation loop on unseen test sets to prove
+    # true generalization and calculate statistical significance, avoiding training-set overfitting claims.
     total_time = time.time() - train_start
     tc.save_state(name="final")
     final_ckpt = tc.save_weights_for_sampler(name="final").result()
@@ -726,6 +734,8 @@ def train(cfg: dict, env, wandb_run):
 
 
 def main():
+    # TODO: Support multi-seed training runs to address 'Single-Seed Extrapolation'
+    # vulnerability and ensure statistically significant results across runs.
     parser = argparse.ArgumentParser(description="SkyRL + Tinker Training Bridge")
     parser.add_argument("--config", required=True, help="YAML config path")
     parser.add_argument("--env", default="tool_use", help="Environment: gsm8k, math, tool_use")

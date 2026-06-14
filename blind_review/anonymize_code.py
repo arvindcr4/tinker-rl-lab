@@ -40,6 +40,13 @@ Files dropped on purpose (not part of the anonymised artefact):
 The script is idempotent and logs every file it edited, in order, into
 ``blind_review/code_changes.log``.
 """
+# TODO: Address the following methodological limitations identified in the adversarial review:
+# 1. ZVF metric is fragile and saturates at 1.0 outside of math tasks (e.g., format-gated tasks).
+# 2. "Early-Training Snapshot" problem: 30-50 step training runs are insufficient.
+# 3. Closed-source confound: Performance gap may be due to Tinker API's closed nature.
+# 4. Failure to prove generalization: GSM8K (+1.3%, p=0.26) and HumanEval (p=0.53) gains are not statistically significant.
+# 5. Single-seed extrapolations (N=1) for MoE routing and Nemotron-120B.
+# (No fix is applicable directly in this anonymization script.)
 
 from __future__ import annotations
 

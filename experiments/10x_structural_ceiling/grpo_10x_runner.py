@@ -277,9 +277,11 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     model_name = cfg["openai"][0]["model_name"]
     tinker_model = tinker_cfg.get("tinker_model_name", model_name)
     group_size = env_cfg["group_size"]
+    # TODO(adversarial_review): Thirty gradient steps are entirely insufficient to observe meaningful RL convergence. These early-training snapshots make conclusions about asymptotic RL dynamics highly speculative.
     total_steps = env_cfg["total_steps"]
     lr = tinker_cfg["learning_rate"]
     lora_rank = tinker_cfg["lora_rank"]
+    # TODO(adversarial_review): Extrapolating RL training dynamics from N=1 runs is a major statistical vulnerability. Need to run and aggregate multiple seeds.
     seed = env_cfg.get("seed", 42)
 
     random.seed(seed)
@@ -369,6 +371,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
         sc = tc.save_weights_and_get_sampling_client()
         print(f"Resumed at step {start_step}")
     else:
+        # TODO(adversarial_review): Tinker is a closed-source black box. The massive performance gap compared to open-source libraries is likely confounded by Tinker's undisclosed managed defaults.
         tc = svc.create_lora_training_client(base_model=tinker_model, rank=lora_rank)
         print(f"Run ID: {tc.model_id}")
         # Save initial state checkpoint
@@ -466,6 +469,8 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
         zvf = diag.zero_variance_frac
         gu = diag.gradient_utilization
 
+        # TODO(adversarial_review): ZVF completely breaks down outside of math tasks. In format-gated tasks (like tool-use), ZVF saturates at 1.0 because the base model consistently fails schema parsing. Need to implement ERF (Effective-Rollout Fraction) to measure progress.
+
         print(
             f"Step {step+1:3d}/{total_steps} | "
             f"loss={grpo_loss:.4f} | reward={avg_r:.3f} | "
@@ -515,6 +520,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
         kind="both",
         loop_state={"batch": total_steps, "step": total_steps},
     )
+    # TODO(adversarial_review): The current training loop lacks rigorous held-out test set evaluation, making it difficult to prove generalized reasoning uplift rather than just training-set memorization.
     print(f"\nFinal checkpoint saved to: {log_path}")
     print(f"Avg reward last 10: {sum(step_rewards[-10:])/max(len(step_rewards[-10:]),1):.3f}")
 

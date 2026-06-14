@@ -302,7 +302,10 @@ bash -c '{training_script}'
                 server_host_key_algs=[],
             ) as conn:
 
-                result = await conn.run(cmd, timeout=3600)  # 1 hour max
+                # TODO: Fix "Early-Training Snapshot" limitation.
+                # 1 hour timeout restricts training to ~30-50 steps, insufficient for convergence.
+                # Increasing timeout to allow longer training runs (requires higher API budget).
+                result = await conn.run(cmd, timeout=86400)  # 24 hours max
 
                 if result.exit_status == 0:
                     print(f"  Training completed successfully")
@@ -378,14 +381,26 @@ bash -c '{training_script}'
 
             # 6. Run training
             if training_command:
-                env_vars = {
-                    "TINKER_API_KEY": "tml-dummy",
-                    "TINKER_BASE_URL": f"http://{instance.ssh_host}:8000",
-                    "WANDB_API_KEY": os.environ.get("WANDB_API_KEY", ""),
-                    "HF_TOKEN": os.environ.get("HF_TOKEN", ""),
-                }
-
-                await self.run_training(instance, training_command, env_vars)
+                # TODO: Address "Closed-Source Confound" limitation.
+                # The managed API performance gap might be due to undocumented defaults rather than algorithmic differences.
+                
+                # TODO: Address "Failure to Prove Generalization" limitation.
+                # Ensure training_command includes evaluation on a held-out test set to prove true reasoning uplift.
+                
+                tasks = []
+                for i, inst in enumerate(ready_instances):
+                    env_vars = {
+                        "TINKER_API_KEY": "tml-dummy",
+                        "TINKER_BASE_URL": f"http://{inst.ssh_host}:8000",
+                        "WANDB_API_KEY": os.environ.get("WANDB_API_KEY", ""),
+                        "HF_TOKEN": os.environ.get("HF_TOKEN", ""),
+                        # TODO: Fix "Single-Seed Extrapolations" limitation.
+                        # We inject a unique SEED per instance so multi-instance runs are statistically sound.
+                        "SEED": str(42 + i),
+                    }
+                    tasks.append(self.run_training(inst, training_command, env_vars))
+                
+                await asyncio.gather(*tasks)
 
             print("\n" + "=" * 60)
             print("  All tasks completed!")

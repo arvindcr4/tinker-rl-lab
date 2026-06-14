@@ -1,3 +1,13 @@
+"""
+TODO(adversarial_review):
+The following limitations from the adversarial review cannot be fixed purely within this launch script and require broader experimental changes:
+1. ZVF Metric Fragility: Training should log ERF (Effective-Rollout Fraction) instead of relying solely on ZVF.
+2. The "Early-Training Snapshot" Problem: The number of training steps (num_steps) needs to be significantly increased beyond the current 30-50 step budget to observe true convergence.
+3. The Closed-Source Confound: The framework needs to support open-source backends in addition to the closed-source Tinker API to enable fair algorithmic comparisons.
+4. Failure to Prove Generalization: This script should be extended to trigger statistically significant evaluations on held-out datasets (like GSM8K and HumanEval) after training.
+5. Single-Seed Extrapolations: The launch script should be updated to natively support multi-seed sweeps (N>1) to address high variance and initialization dependence.
+"""
+
 import argparse
 import asyncio
 import sys

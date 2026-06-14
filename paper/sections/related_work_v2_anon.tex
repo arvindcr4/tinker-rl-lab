@@ -54,19 +54,7 @@ advantages to match $\mathcal{N}(0,1)$ to fix reward-topology variance in
 multimodal settings. Wu et al.~\cite{wu2025grpo_dpo} prove that GRPO is
 ``secretly DPO'' --- the group-level advantage is an implicit contrastive
 objective --- and show that 2-GRPO retains $98.1\%$ of the performance of
-16-GRPO at $12.5\%$ of the rollout budget. iGRPO~\cite{hatamizadeh2026igrpo}
-adds a two-stage self-feedback loop that conditions subsequent rollouts on the
-policy's best draft, reaching $85.6\%$ on AIME24. AERO~\cite{zhang2026aero}
-combines adaptive rollout sizing, rejection sampling, and a Bayesian posterior
-over prompt difficulty to eliminate zero-advantage dead zones, cutting RL
-compute by $48\%$. Target Policy Optimization (TPO)~\cite{kaddour2026tpo}
-decouples target-distribution construction from policy fitting: given scored
-completions, TPO builds a target $q \propto p_{\text{old}} \exp(u)$ and fits
-the policy via cross-entropy, giving a zero-gradient fixed point once the
-policy matches the target. RGRA~\cite{carrino2026rgra} shows that PPO-style
-clipping is unnecessary on top of group relative advantages, outperforming
-GRPO on 17 of 27 comparisons. EFRame~\cite{wang2025eframe} augments GRPO with
-exploration rollouts and experience replay for rare trajectories.
+16-GRPO at $12.5\%$ of the rollout budget.
 
 A parallel thread focuses on \emph{production-scale} refinements. GSPO, from
 the Qwen team~\cite{qwen2025gspo}, redefines the importance ratio at the
@@ -78,27 +66,21 @@ $50$ points on AIME~2024 with a 32B model. Kimi-K1.5~\cite{team2025kimi15,
 team2025kimik2} and DeepSeek-V3~\cite{deepseek2024v3} both report their own
 GRPO variants and online mirror-descent-style updates. Orthogonal
 production variants include
-Flow-GRPO~\cite{liu2025flowgrpo}, VAPO~\cite{bytedance2025vapo}, and
+VAPO~\cite{bytedance2025vapo} and
 Dr.~SAC~\cite{ahmadian2024backtobasics}; the last argues that classical
 REINFORCE with a value baseline, when carefully implemented, matches GRPO on
 several RLHF tasks.
 
 A third thread attacks the \emph{zero-variance failure mode} (ZVF) directly.
-AERO~\cite{zhang2026aero} and GRESO~\cite{zhang2026greso} pre-screen prompts
+GRESO~\cite{zhang2026greso} pre-screens prompts
 before sampling; CPPO~\cite{lin2025cppo} prunes completions post-rollout,
 giving up to $7.98\times$ speedup on GSM8K. NGRPO~\cite{nan2025ngrpo} adds
 Advantage Calibration and asymmetric clipping so that all-incorrect groups
 still carry gradient. Scaf-GRPO~\cite{zhang2025scaffgrpo} injects tiered
 scaffolding hints when learning stagnates, boosting AIME~2024 by $44.3\%$
-relative. EBPO~\cite{han2026ebpo} uses a Bayesian shrinkage estimator that
-guarantees non-vanishing penalties in saturated failure scenarios with formal
-MSE bounds. MO-GRPO~\cite{ichihara2025mogrpo} addresses vanilla GRPO's
+relative. MO-GRPO~\cite{ichihara2025mogrpo} addresses vanilla GRPO's
 collapse to a single reward component under multiple objectives via
-variance-based reward re-weighting. Finally, Demystifying
-GRPO~\cite{zhou2026demystify} proves that the GRPO policy gradient is a
-$U$-statistic, deriving a universal scaling law for optimal group size;
-MinPRO~\cite{lei2026minpro} shows that token-level importance sampling in
-GRPO is only an approximation to the rigorous prefix importance ratio;
+variance-based reward re-weighting. Finally,
 SSPO~\cite{yang2025sspo} operates at sentence granularity to balance the
 stability of GSPO against the expressiveness of token-level GRPO, improving
 by $3.56$ points on math benchmarks. Taken together, these results explain at

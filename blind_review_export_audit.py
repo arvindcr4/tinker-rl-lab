@@ -2,8 +2,10 @@
 from pathlib import Path
 
 script = Path("reports/final/prepare_blind_review_package.py")
-submission = Path("reports/final/SUBMISSION_README.md").read_text().lower()
-checklist = Path("reports/final/SUBMISSION_CHECKLIST.md").read_text().lower()
+submission_path = Path("reports/final/SUBMISSION_README.md")
+checklist_path = Path("reports/final/SUBMISSION_CHECKLIST.md")
+submission = submission_path.read_text().lower() if submission_path.exists() else ""
+checklist = checklist_path.read_text().lower() if checklist_path.exists() else ""
 issues = []
 
 if not script.exists():
@@ -22,5 +24,12 @@ if "prepare_blind_review_package.py" not in submission:
 if "prepare_blind_review_package.py" not in checklist:
     issues.append("submission_checklist_missing_export_script_reference")
 
+# TODO: The following methodological limitations identified in adversarial_review.md
+# cannot be automatically audited by this script and must be manually verified in the manuscript:
+# - ZVF metric fragility and reliance on ERF
+# - Early-training snapshot problem (30-50 steps)
+# - Closed-source Tinker API confound
+# - Lack of statistically significant generalization (p=0.26 and p=0.53)
+# - Single-seed extrapolations
 print(f"METRIC export_issues={len(issues)}")
 print("Blind-review export checks passed." if not issues else "\n".join(issues))

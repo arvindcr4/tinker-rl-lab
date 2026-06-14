@@ -1,4 +1,4 @@
-\begin{thebibliography}{165}
+\begin{thebibliography}{159}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -98,14 +98,6 @@ Matteo Bettini, Amanda Prorok, and Vincent Moens.
 \newblock \emph{arXiv preprint}, 2025.
 \newblock \doi{10.48550/arXiv.2504.05118}.
 \newblock arXiv:2504.05118.
-
-\bibitem[Carrino et~al.(2026)]{carrino2026rgra}
-Casimiro Carrino et~al.
-\newblock Rethinking clipping: {REINFORCE} with group relative advantage
-  matches {GRPO}.
-\newblock \emph{arXiv preprint}, 2026.
-\newblock \doi{10.48550/arXiv.2603.11882}.
-\newblock arXiv:2603.11882; RGRA.
 
 \bibitem[Cavenaghi et~al.(2023)Cavenaghi, Sottocornola, Stella, and
   Zanker]{cavenaghi2023systematic}
@@ -223,6 +215,14 @@ Kawin Ethayarajh, Winnie Xu, Niklas Muennighoff, Dan Jurafsky, and Douwe Kiela.
 \newblock {KTO}: Model alignment as prospect theoretic optimization.
 \newblock In \emph{International Conference on Machine Learning}, 2024.
 
+\bibitem[Fu et~al.(2025)]{areal2025}
+Wei Fu et~al.
+\newblock {AReaL}: A large-scale asynchronous reinforcement learning system for
+  language reasoning.
+\newblock \emph{arXiv preprint}, 2025.
+\newblock \doi{10.48550/arXiv.2505.24298}.
+\newblock arXiv:2505.24298.
+
 \bibitem[Gao et~al.(2023)Gao, Schulman, and Hilton]{gao2023reward}
 Leo Gao, John Schulman, and Jacob Hilton.
 \newblock Scaling laws for reward model overoptimization.
@@ -247,23 +247,6 @@ Xinyu Guan, Li~Lyna Zhang, Yifei Liu, Ning Shang, Youran Sun, Yi~Zhu, Fan Yang,
 \newblock \emph{arXiv preprint}, 2025.
 \newblock \doi{10.48550/arXiv.2501.04519}.
 \newblock arXiv:2501.04519.
-
-\bibitem[Han et~al.(2026)]{han2026ebpo}
-Shuo Han et~al.
-\newblock {EBPO}: Empirical bayes policy optimization for saturated reward
-  scenarios.
-\newblock \emph{arXiv preprint}, 2026.
-\newblock \doi{10.48550/arXiv.2602.09934}.
-\newblock arXiv:2602.09934.
-
-\bibitem[Hatamizadeh et~al.(2026)Hatamizadeh, Heinrich, Han, Yin, Yang, Byeon,
-  Kautz, and Molchanov]{hatamizadeh2026igrpo}
-Ali Hatamizadeh, Greg Heinrich, Wenhan Han, Hongxu Yin, Jiaming Yang, Wonmin
-  Byeon, Jan Kautz, and Pavlo Molchanov.
-\newblock {iGRPO}: Iterative group relative policy optimization for reasoning
-  language models.
-\newblock In \emph{Advances in Neural Information Processing Systems}, 2026.
-\newblock NeurIPS 2026.
 
 \bibitem[Havrilla et~al.(2023)Havrilla, Zhuravinskyi, Phung, Tiwari, Tow,
   Biderman, Anthony, and Castricato]{havrilla2023trlx}
@@ -407,14 +390,6 @@ Emma Jordan, Adam White, Bruno Castro~da Silva, Martha White, and Philip~S.
 \newblock \doi{10.48550/arXiv.2406.16241}.
 \newblock arXiv:2406.16241.
 
-\bibitem[Kaddour et~al.(2026)]{kaddour2026tpo}
-Jean Kaddour et~al.
-\newblock Target policy optimization: Decoupled target construction for
-  language model {RL}.
-\newblock \emph{arXiv preprint}, 2026.
-\newblock \doi{10.48550/arXiv.2601.12034}.
-\newblock arXiv:2601.12034; TPO.
-
 \bibitem[Kaplan et~al.(2020)Kaplan, McCandlish, Henighan, Brown, Chess, Child,
   Gray, Radford, Wu, and Amodei]{kaplan2020scalinglaws}
 Jared Kaplan, Sam McCandlish, Tom Henighan, Tom~B. Brown, Benjamin Chess, Rewon
@@ -423,6 +398,14 @@ Jared Kaplan, Sam McCandlish, Tom Henighan, Tom~B. Brown, Benjamin Chess, Rewon
 \newblock \emph{arXiv preprint}, 2020.
 \newblock \doi{10.48550/arXiv.2001.08361}.
 \newblock arXiv:2001.08361.
+
+\bibitem[Kim et~al.(2026)]{mcgrpo2025}
+Youngeun Kim et~al.
+\newblock {MC-GRPO}: Median-centered group relative policy optimization for
+  small-rollout reinforcement learning.
+\newblock \emph{arXiv preprint}, 2026.
+\newblock \doi{10.48550/arXiv.2601.22582}.
+\newblock arXiv:2601.22582.
 
 \bibitem[{Kimi Team}(2025)]{team2025kimik2}
 {Kimi Team}.
@@ -472,14 +455,6 @@ Miriam Leeser.
   2026.
 \newblock \doi{10.1145/3802561}.
 
-\bibitem[Lei et~al.(2026)]{lei2026minpro}
-Xinyu Lei et~al.
-\newblock {MinPRO}: Correcting prefix importance ratios in group-relative
-  policy optimization.
-\newblock \emph{arXiv preprint}, 2026.
-\newblock \doi{10.48550/arXiv.2602.15007}.
-\newblock arXiv:2602.15007.
-
 \bibitem[Li et~al.(2024)Li, Beeching, Tunstall, Lipkin, Soletskyi, Huang,
   Rasul, Yu, Jiang, Shen, Qin, Dong, Zhou, Fleureau, Lample, and
   Polu]{li2024numinamath}
@@ -523,42 +498,31 @@ Hunter Lightman, Vineet Kosaraju, Yura Burda, Harri Edwards, Bowen Baker, Teddy
 \newblock In \emph{International Conference on Learning Representations},
   2024{\natexlab{b}}.
 
-\bibitem[Lin et~al.(2024{\natexlab{a}})Lin, Patel, Tanaka, Suresh, and
-  Feldman]{cppo2024}
-Wei Lin, Rohan Patel, Akira Tanaka, Priya Suresh, and Daniel Feldman.
-\newblock {CPPO}: Clip-pruned {PPO} with effective sample size for
-  group-relative policy optimization.
-\newblock \emph{arXiv preprint}, 2024{\natexlab{a}}.
-\newblock Prunes rollouts whose normalized advantage falls below an $\epsilon$
-  threshold before backpropagation, recovering an
-  effective-sample-size-corrected gradient estimator that is cheaper than
-  full-group GRPO at matched variance.
+\bibitem[Lin et~al.(2025{\natexlab{a}})Lin, Lin, Xie, and Ji]{cppo2024}
+Zhihang Lin, Mingbao Lin, Yuan Xie, and Rongrong Ji.
+\newblock {CPPO}: Accelerating the training of group relative policy
+  optimization-based reasoning models.
+\newblock \emph{arXiv preprint}, 2025{\natexlab{a}}.
+\newblock Prunes low-advantage completions before backpropagation to accelerate
+  GRPO training at matched accuracy.
 
-\bibitem[Lin et~al.(2025)]{lin2025cppo}
-Zhihang Lin et~al.
-\newblock {CPPO}: Completion pruning policy optimization for efficient
-  reasoning {RL}.
-\newblock \emph{arXiv preprint}, 2025.
+\bibitem[Lin et~al.(2025{\natexlab{b}})Lin, Lin, Xie, and Ji]{lin2025cppo}
+Zhihang Lin, Mingbao Lin, Yuan Xie, and Rongrong Ji.
+\newblock {CPPO}: Accelerating the training of group relative policy
+  optimization-based reasoning models.
+\newblock \emph{arXiv preprint}, 2025{\natexlab{b}}.
 \newblock \doi{10.48550/arXiv.2503.22342}.
 \newblock arXiv:2503.22342.
 
-\bibitem[Lin et~al.(2024{\natexlab{b}})Lin, Xu, Prabhakar, Koshy, Arpit,
-  Kocielnik, Gundecha, Savarese, and Xiong]{lin2024apigen}
+\bibitem[Lin et~al.(2024)Lin, Xu, Prabhakar, Koshy, Arpit, Kocielnik, Gundecha,
+  Savarese, and Xiong]{lin2024apigen}
 Zuxin Lin, Chen Xu, Akshara Prabhakar, Anand Koshy, Devansh Arpit, Rafal
   Kocielnik, Pranav Gundecha, Silvio Savarese, and Caiming Xiong.
 \newblock {APIGen}: Automated pipeline for generating verifiable and diverse
   function-calling datasets.
-\newblock \emph{arXiv preprint}, 2024{\natexlab{b}}.
+\newblock \emph{arXiv preprint}, 2024.
 \newblock \doi{10.48550/arXiv.2406.18518}.
 \newblock arXiv:2406.18518.
-
-\bibitem[Liu et~al.(2025{\natexlab{a}})]{liu2025flowgrpo}
-Jian Liu et~al.
-\newblock Flow-{GRPO}: Streaming group-relative policy optimization at
-  inference scale.
-\newblock \emph{arXiv preprint}, 2025{\natexlab{a}}.
-\newblock \doi{10.48550/arXiv.2508.04412}.
-\newblock arXiv:2508.04412.
 
 \bibitem[Liu et~al.(2024{\natexlab{a}})Liu, Zhang, Hoang, Huang,
   et~al.]{liu2024xlam}
@@ -594,19 +558,19 @@ Yixin Liu, Hang Zhao, et~al.
 \newblock \doi{10.48550/arXiv.2602.01987}.
 \newblock arXiv:2602.01987.
 
-\bibitem[Liu et~al.(2025{\natexlab{b}})Liu, Chen, Li, Qi, Pang, Du, Lee, and
+\bibitem[Liu et~al.(2025{\natexlab{a}})Liu, Chen, Li, Qi, Pang, Du, Lee, and
   Lin]{liu2025drgrpo}
 Zichen Liu, Changyu Chen, Wenjun Li, Peiran Qi, Tianyu Pang, Chao Du, Wee~Sun
   Lee, and Min Lin.
 \newblock Understanding {R1}-zero-like training: A critical perspective.
-\newblock \emph{arXiv preprint}, 2025{\natexlab{b}}.
+\newblock \emph{arXiv preprint}, 2025{\natexlab{a}}.
 \newblock \doi{10.48550/arXiv.2503.20783}.
 \newblock arXiv:2503.20783; Dr.~GRPO.
 
-\bibitem[Liu et~al.(2025{\natexlab{c}})]{liu2025rlsubnetworks}
+\bibitem[Liu et~al.(2025{\natexlab{b}})]{liu2025rlsubnetworks}
 Zichen Liu et~al.
 \newblock {RL} fine-tuning activates a sparse subnetwork in {LLMs}.
-\newblock \emph{arXiv preprint}, 2025{\natexlab{c}}.
+\newblock \emph{arXiv preprint}, 2025{\natexlab{b}}.
 \newblock \doi{10.48550/arXiv.2510.20015}.
 \newblock arXiv:2510.20015.
 
@@ -713,23 +677,20 @@ Reiichiro Nakano, Jacob Hilton, Suchir Balaji, Jeff Wu, Long Ouyang, Christina
 \newblock \doi{10.48550/arXiv.2112.09332}.
 \newblock arXiv:2112.09332.
 
-\bibitem[Nan et~al.(2025{\natexlab{a}})Nan, Kim, Gupta, Rossi, and
-  Park]{ngrpo2025}
-Qianli Nan, Soohyun Kim, Ananya Gupta, Luca Rossi, and Jihoon Park.
-\newblock {NGRPO}: Normalized group relative policy optimization via
-  running-mean reward rescaling.
+\bibitem[Nan et~al.(2025{\natexlab{a}})]{nan2025ngrpo}
+Gongrui Nan et~al.
+\newblock {NGRPO}: Negative-enhanced group relative policy optimization.
 \newblock \emph{arXiv preprint}, 2025{\natexlab{a}}.
-\newblock Replaces the per-group reward mean used by vanilla GRPO with an
-  exponentially decayed running-mean across prompts, stabilizing the advantage
-  signal when individual groups collapse to zero variance.
+\newblock \doi{10.48550/arXiv.2509.18851}.
+\newblock arXiv:2509.18851.
 
-\bibitem[Nan et~al.(2025{\natexlab{b}})]{nan2025ngrpo}
-Yicheng Nan et~al.
-\newblock {NGRPO}: Negative-group relative policy optimization with advantage
-  calibration.
+\bibitem[Nan et~al.(2025{\natexlab{b}})]{ngrpo2025}
+Gongrui Nan et~al.
+\newblock {NGRPO}: Negative-enhanced group relative policy optimization.
 \newblock \emph{arXiv preprint}, 2025{\natexlab{b}}.
-\newblock \doi{10.48550/arXiv.2511.04321}.
-\newblock arXiv:2511.04321.
+\newblock Enhances GRPO by reshaping the contribution of all-incorrect
+  (negative) groups so they still provide learning signal when within-group
+  reward variance collapses.
 
 \bibitem[{Nexusflow}(2024)]{nexusflow2024nexusraven}
 {Nexusflow}.
@@ -862,6 +823,14 @@ Yujia Qin, Shihao Liang, Yining Ye, Kunlun Zhu, Lan Yan, Yaxi Lu, Yankai Lin,
 \newblock {ToolLLM}: Facilitating large language models to master 16000+
   real-world {APIs}.
 \newblock In \emph{International Conference on Learning Representations}, 2024.
+
+\bibitem[Qiu et~al.(2025)]{es2025}
+Xin Qiu et~al.
+\newblock Evolution strategies at scale: {LLM} fine-tuning beyond reinforcement
+  learning.
+\newblock \emph{arXiv preprint}, 2025.
+\newblock \doi{10.48550/arXiv.2509.24372}.
+\newblock arXiv:2509.24372.
 
 \bibitem[{Qwen Team} et~al.(2025){Qwen Team}, Yang, Li, Yang, Zhang, Hui,
   Zheng, Yu, Gao, Huang, et~al.]{qwen2025qwen3}
@@ -1063,13 +1032,6 @@ Leandro von Werra, Younes Belkada, Lewis Tunstall, Edward Beeching, Tristan
 \newblock {TRL}: Transformer reinforcement learning.
 \newblock \url{https://github.com/huggingface/trl}, 2022.
 
-\bibitem[Wang et~al.(2025{\natexlab{a}})]{wang2025eframe}
-Chen Wang et~al.
-\newblock {EFRame}: Exploration, filtering, and replay for group-relative {RL}.
-\newblock \emph{arXiv preprint}, 2025{\natexlab{a}}.
-\newblock \doi{10.48550/arXiv.2506.04820}.
-\newblock arXiv:2506.04820.
-
 \bibitem[Wang et~al.(2024{\natexlab{a}})Wang, Xie, Jiang, Mandlekar, Xiao, Zhu,
   Fan, and Anandkumar]{wang2023voyager}
 Guanzhi Wang, Yuqi Xie, Yunfan Jiang, Ajay Mandlekar, Chaowei Xiao, Yuke Zhu,
@@ -1106,13 +1068,21 @@ Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc Le, Ed~H. Chi, Sharan Narang,
   models.
 \newblock In \emph{International Conference on Learning Representations}, 2023.
 
-\bibitem[Wang et~al.(2025{\natexlab{b}})Wang, Li, et~al.]{wang2025madgrpo}
+\bibitem[Wang et~al.(2025{\natexlab{a}})Wang, Li, et~al.]{wang2025madgrpo}
 Yuxuan Wang, Tian Li, et~al.
 \newblock {MAD-GRPO}: Robust group-relative policy optimization with median
   absolute deviation.
-\newblock \emph{arXiv preprint}, 2025{\natexlab{b}}.
+\newblock \emph{arXiv preprint}, 2025{\natexlab{a}}.
 \newblock \doi{10.48550/arXiv.2510.12345}.
 \newblock arXiv:2510.12345.
+
+\bibitem[Wang et~al.(2025{\natexlab{b}})]{gift2025}
+Zhichao Wang et~al.
+\newblock {GIFT}: Group-relative implicit fine-tuning integrates {GRPO} with
+  {DPO} and {UNA}.
+\newblock \emph{arXiv preprint}, 2025{\natexlab{b}}.
+\newblock \doi{10.48550/arXiv.2510.23868}.
+\newblock arXiv:2510.23868.
 
 \bibitem[Wang et~al.(2025{\natexlab{c}})]{wang2025ragen}
 Zihan Wang et~al.
@@ -1131,13 +1101,15 @@ Yuxiang Wei, Olivier Duchenne, Jade Copet, Quentin Carbonneaux, Lingming Zhang,
 \newblock \doi{10.48550/arXiv.2502.18449}.
 \newblock arXiv:2502.18449.
 
-\bibitem[Wu et~al.(2025)]{wu2025grpo_dpo}
-Yue Wu et~al.
-\newblock {GRPO} is secretly {DPO}: A unified view of group-relative preference
-  optimization.
+\bibitem[Wu et~al.(2025)Wu, Ma, Ding, Li, Wang, Chen, Su, Zhang, Huang, Zhang,
+  Coates, and Nie]{wu2025grpo_dpo}
+Yihong Wu, Liheng Ma, Lei Ding, Muzhi Li, Xinyu Wang, Kejia Chen, Zhan Su,
+  Zhanguang Zhang, Chenyang Huang, Yingxue Zhang, Mark Coates, and Jian-Yun
+  Nie.
+\newblock It takes two: Your {GRPO} is secretly {DPO}.
 \newblock \emph{arXiv preprint}, 2025.
-\newblock \doi{10.48550/arXiv.2510.08765}.
-\newblock arXiv:2510.08765.
+\newblock \doi{10.48550/arXiv.2510.00977}.
+\newblock arXiv:2510.00977.
 
 \bibitem[Xia et~al.(2024)]{xia2024reasoneval}
 Shijie Xia et~al.
@@ -1236,49 +1208,31 @@ Eric Zelikman, Yuhuai Wu, Jesse Mu, and Noah~D. Goodman.
 \newblock {STaR}: Bootstrapping reasoning with reasoning.
 \newblock In \emph{Advances in Neural Information Processing Systems}, 2022.
 
-\bibitem[Zhang et~al.(2026{\natexlab{a}})Zhang, Liu, et~al.]{zhang2026greso}
-Han Zhang, Chen Liu, et~al.
-\newblock {GRESO}: Group reward-dynamics estimation for zero-variance prompt
-  skipping.
-\newblock \emph{arXiv preprint}, 2026{\natexlab{a}}.
-\newblock \doi{10.48550/arXiv.2601.08891}.
-\newblock arXiv:2601.08891.
-
-\bibitem[Zhang et~al.(2026{\natexlab{b}})Zhang, Wu, et~al.]{zhang2026aero}
-Han Zhang, Xiang Wu, et~al.
-\newblock {AERO}: Adaptive exploration and rejection for outcome-reward {RL}.
-\newblock \emph{arXiv preprint}, 2026{\natexlab{b}}.
-\newblock \doi{10.48550/arXiv.2601.07123}.
-\newblock arXiv:2601.07123.
-
-\bibitem[Zhang et~al.(2025{\natexlab{a}})]{zhang2025scaffgrpo}
-Han Zhang et~al.
-\newblock {Scaf-GRPO}: Scaffolded group relative policy optimization for the
-  learning cliff.
-\newblock \emph{arXiv preprint}, 2025{\natexlab{a}}.
-\newblock \doi{10.48550/arXiv.2509.15622}.
-\newblock arXiv:2509.15622.
-
-\bibitem[Zhang et~al.(2024{\natexlab{a}})Zhang, Da, Lee, Robinson, Wu, Song,
-  Zhao, Raja, Slack, Lyu, Hendryx, Kaplan, Lunati, and Yue]{zhang2024gsm1k}
+\bibitem[Zhang et~al.(2024)Zhang, Da, Lee, Robinson, Wu, Song, Zhao, Raja,
+  Slack, Lyu, Hendryx, Kaplan, Lunati, and Yue]{zhang2024gsm1k}
 Hugh Zhang, Jeff Da, Dean Lee, Vaughn Robinson, Catherine Wu, Will Song,
   Tiffany Zhao, Pranav Raja, Dylan Slack, Qin Lyu, Sean Hendryx, Russell
   Kaplan, Michele Lunati, and Summer Yue.
 \newblock A careful examination of large language model performance on grade
   school arithmetic.
-\newblock \emph{arXiv preprint}, 2024{\natexlab{a}}.
+\newblock \emph{arXiv preprint}, 2024.
 \newblock arXiv:2405.00332 (GSM1k).
 
-\bibitem[Zhang et~al.(2025{\natexlab{b}})Zhang, Okafor, Hernandez, Bell, and
-  Wu]{scafgrpo2025}
-Lingxi Zhang, Chidi Okafor, Mariana Hernandez, Simon Bell, and Shuting Wu.
-\newblock {Scaf-GRPO}: Scaffolded exploration for group-relative policy
-  optimization.
+\bibitem[Zhang et~al.(2025{\natexlab{a}})]{scafgrpo2025}
+Xichen Zhang et~al.
+\newblock {Scaf-GRPO}: Scaffolded group relative policy optimization for
+  enhancing llm reasoning.
+\newblock \emph{arXiv preprint}, 2025{\natexlab{a}}.
+\newblock Injects scaffolded hints on hard prompts so already-failing groups
+  recover within-group reward variance and continue to provide learning signal.
+
+\bibitem[Zhang et~al.(2025{\natexlab{b}})]{zhang2025scaffgrpo}
+Xichen Zhang et~al.
+\newblock {Scaf-GRPO}: Scaffolded group relative policy optimization for
+  enhancing {LLM} reasoning.
 \newblock \emph{arXiv preprint}, 2025{\natexlab{b}}.
-\newblock Adds an additive entropy-style exploration bonus $+\beta_e
-  H(\pi(\cdot\mid \text{prompt}))$ to the rollout reward, preventing premature
-  saturation of within-group reward variance and preserving learning signal on
-  already-solved prompts.
+\newblock \doi{10.48550/arXiv.2510.19807}.
+\newblock arXiv:2510.19807.
 
 \bibitem[Zhang et~al.(2025{\natexlab{c}})]{zhang2025rewardstep}
 Xin Zhang et~al.
@@ -1287,21 +1241,11 @@ Xin Zhang et~al.
 \newblock \doi{10.48550/arXiv.2502.02508}.
 \newblock arXiv:2502.02508.
 
-\bibitem[Zhang et~al.(2024{\natexlab{b}})Zhang, Wang, Chen, Liu, and
-  Zhou]{aero2024}
-Yifan Zhang, Hao Wang, Ming Chen, Xinyu Liu, and Jing Zhou.
-\newblock {AERO}: Adaptive rollout sizing for variance-controlled reinforcement
-  learning post-training.
-\newblock \emph{arXiv preprint}, 2024{\natexlab{b}}.
-\newblock Adapts the group size $G$ per prompt by monitoring a rolling estimate
-  of the zero-variance fraction, growing $G$ when reward dispersion collapses
-  and shrinking it when within-group variance is already high.
-
-\bibitem[Zhang et~al.(2026{\natexlab{c}})]{zhang2025verifybench}
+\bibitem[Zhang et~al.(2026)]{zhang2025verifybench}
 Yuchen Zhang et~al.
 \newblock {VerifyBench}: A systematic evaluation framework for reward model
   verification.
-\newblock 2026{\natexlab{c}}.
+\newblock 2026.
 \newblock ICLR 2026.
 
 \bibitem[Zhao et~al.(2023)Zhao, Joshi, Liu, Khalman, Saleh, and
@@ -1313,15 +1257,25 @@ Yao Zhao, Rishabh Joshi, Tianqi Liu, Misha Khalman, Mohammad Saleh, and
 \newblock \doi{10.48550/arXiv.2305.10425}.
 \newblock arXiv:2305.10425.
 
-\bibitem[Zheng et~al.(2025)Zheng, Liu, Li, Chen, Yu, Gao, Dang, Liu, Men, Yang,
-  Zhou, Zhou, and Lin]{qwen2025gspo}
+\bibitem[Zheng et~al.(2025{\natexlab{a}})Zheng, Liu, Li, Chen, Yu, Gao, Dang,
+  Liu, Men, Yang, Zhou, Zhou, and Lin]{qwen2025gspo}
 Chujie Zheng, Shixuan Liu, Mingze Li, Xiong-Hui Chen, Bowen Yu, Chang Gao, Kai
   Dang, Yuqiong Liu, Rui Men, An~Yang, Jingren Zhou, Jianwei Zhou, and Junyang
   Lin.
 \newblock Group sequence policy optimization.
-\newblock \emph{arXiv preprint}, 2025.
+\newblock \emph{arXiv preprint}, 2025{\natexlab{a}}.
 \newblock \doi{10.48550/arXiv.2507.18071}.
 \newblock arXiv:2507.18071; GSPO.
+
+\bibitem[Zheng et~al.(2025{\natexlab{b}})Zheng, Zhou, Bartoldson, Kailkhura,
+  Lai, Zhao, and Chen]{zhang2026greso}
+Haizhong Zheng, Yang Zhou, Brian~R. Bartoldson, Bhavya Kailkhura, Fan Lai,
+  Jiawei Zhao, and Beidi Chen.
+\newblock Act only when it pays: Efficient reinforcement learning for {LLM}
+  reasoning via selective rollouts.
+\newblock \emph{arXiv preprint}, 2025{\natexlab{b}}.
+\newblock \doi{10.48550/arXiv.2506.02177}.
+\newblock arXiv:2506.02177; GRESO.
 
 \bibitem[Zheng et~al.(2024)Zheng, Yin, Xie, Sun, Huang, Yu, Cao, Kozyrakis,
   Stoica, Gonzalez, Barrett, and Sheng]{zheng2024sglang}
@@ -1330,13 +1284,5 @@ Lianmin Zheng, Liangsheng Yin, Zhiqiang Xie, Chuyue Sun, Jeff Huang, Cody~Hao
   Barrett, and Ying Sheng.
 \newblock {SGLang}: Efficient execution of structured language model programs.
 \newblock In \emph{Advances in Neural Information Processing Systems}, 2024.
-
-\bibitem[Zhou et~al.(2026)]{zhou2026demystify}
-Yao Zhou et~al.
-\newblock Demystifying {GRPO}: A statistical framework for group-relative
-  policy optimization.
-\newblock \emph{arXiv preprint}, 2026.
-\newblock \doi{10.48550/arXiv.2601.14456}.
-\newblock arXiv:2601.14456.
 
 \end{thebibliography}

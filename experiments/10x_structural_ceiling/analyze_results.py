@@ -59,6 +59,8 @@ def load_wandb_runs(project: str = "tinker-structural-ceiling") -> pd.DataFrame:
                 **{f"summary_{k}": v for k, v in run.summary.items()
                    if not k.startswith("_")},
             }
+            # TODO: Address "Early-Training Snapshot Problem" - flag or filter runs with very few
+            # gradient steps (e.g., 30-50 steps) to avoid extrapolating from incomplete training dynamics.
             records.append(record)
         return pd.DataFrame(records)
     except Exception as e:
@@ -75,6 +77,11 @@ def scaling_curve(df: pd.DataFrame) -> None:
         if size_runs.empty:
             print("No size-ladder data yet.")
             return
+
+        # TODO: Address "Failure to Prove Generalization" - Compute statistical significance (e.g., p-values)
+        # for the accuracy delta on held-out test sets to prove gains are not just training set memorization noise.
+        # TODO: Address "Single-Seed Extrapolations" - Aggregate across multiple random seeds and plot
+        # confidence intervals or error bars instead of relying on highly variant N=1 runs.
 
         fig, ax = plt.subplots(figsize=(8, 5))
         ax.set_xlabel("Model Size (B params)")
@@ -98,6 +105,10 @@ def saturation_phase_diagram(df: pd.DataFrame) -> None:
         ax.set_xlabel("Group Size (G)")
         ax.set_ylabel("Mean Zero-Variance Fraction")
         ax.set_title("Group Saturation Phase Diagram")
+
+        # TODO: Address "ZVF Metric Fragility" - ZVF collapses/saturates at 1.0 for format-gated tasks.
+        # We need to fall back to calculating and plotting ERF (Effective-Rollout Fraction) instead
+        # of ZVF when dealing with non-math or schema-dependent tasks.
 
         for _, row in df.iterrows():
             label = row.get("experiment", "")
@@ -127,6 +138,9 @@ def generate_latex_table(df: pd.DataFrame) -> str:
         "\\textbf{Base Acc} & \\textbf{Post-RL Acc} & \\textbf{$\\Delta$} \\\\\n"
         "\\midrule\n"
     )
+    # TODO: Address "The Closed-Source Confound" - The table should clearly separate closed-source
+    # frameworks (like Tinker) from open-source baselines (like TRL) to isolate algorithmic gains
+    # from undisclosed managed infrastructure advantages.
     rows = ""
     footer = (
         "\\bottomrule\n"

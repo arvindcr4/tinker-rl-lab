@@ -50,7 +50,7 @@ inference).}
 \textbf{Held-out pre-RL} & \textbf{Held-out post-RL} &
 \textbf{$\Delta_{\mathrm{heldout}}$} & \textbf{$n_{\text{seeds}}$} \\
 \midrule
-Qwen3-8B     & Base & \texttt{Qwen/Qwen3-8B-Base}      & 0.8250 & 0.8562 & 0.8200 & 0.9090 & +0.0890 & 1 (d.o.) \\
+Qwen3-8B     & Base & \texttt{Qwen/Qwen3-8B-Base}      & 0.8250 & 0.8562 & ---    & 0.9090 & ---     & 1 (d.o.) \\
 Qwen3-8B     & Inst & \texttt{Qwen/Qwen3-8B}           & 0.2925 & 0.3105 & 0.8200 & 0.8330 & +0.0130 & 5 \\
 Llama-3.1-8B & Base & \texttt{meta-llama/Llama-3.1-8B} & 0.1252 & 0.1147 & ---    & ---    & ---     & 1 (d.o.) \\
 Llama-3.1-8B & Inst & \texttt{meta-llama/Llama-3.1-8B-Instruct} & 0.9500 & 0.9625 & --- & --- & --- & 1 (d.o.) \\
@@ -66,13 +66,18 @@ Llama-3.1-8B & Inst & \texttt{meta-llama/Llama-3.1-8B-Instruct} & 0.9500 & 0.962
         ``training reward'' at once.
   \item \textbf{The only inferential row in the released artifact is
         Qwen3-8B instruct.} Its held-out GSM8K gain is
-        $+0.0130$ across 10 seeds with paired $t=1.3234$ and
-        $p=0.1857$ (BH-adjusted $p=0.1857$), i.e.\ directionally positive
-        but not statistically significant at conventional thresholds.
-  \item \textbf{The Qwen3-8B base row remains descriptive only.} Its
-        held-out gain of $+0.0890$ is larger in magnitude than the instruct
-        row, but with $n=1$ it cannot support a claim that base reliably
-        outperforms instruct.
+        $+0.0130$ across 5 seeds with paired $t=1.3234$ and an exact
+        Student-$t$ two-sided $p=0.26$ (BH-adjusted $p=0.26$; an earlier draft
+        reported $0.186$ from a normal approximation, now corrected), i.e.\
+        directionally positive but not statistically significant at conventional
+        thresholds.
+  \item \textbf{The Qwen3-8B base row remains descriptive only.} The
+        \texttt{gsm8k\_base\_control\_200.json} file we previously used as the
+        base pre-RL reference in fact evaluates \texttt{Qwen/Qwen3-8B} (the
+        \emph{instruct} checkpoint, 82.0\%), so there is \emph{no} matched
+        pre-RL held-out measurement for the \texttt{Qwen3-8B-Base} checkpoint;
+        its held-out post-RL accuracy ($0.909$, $n=1$) is reported without a
+        pre-RL delta, and we make no base-vs-instruct held-out comparison.
   \item \textbf{Other families remain incomplete.} Qwen3-1.7B and Qwen3-0.6B
         are marked \texttt{source-missing} in the paired-audit TSV and are
         therefore excluded from the revised narrative rather than filled with

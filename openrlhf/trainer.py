@@ -6,6 +6,8 @@ trainer in the "ppo_ray" configuration with advantage_estimator=group_norm
 (i.e. GRPO). Training loop mirrors the TRL/Tinker loops so reward traces are
 comparable apples-to-apples.
 
+# TODO: Address the "Closed-Source Confound" limitation. The framework-gap comparison against Tinker is confounded by its closed-source managed defaults.
+
 Falls back to a seeded deterministic dryrun when openrlhf cannot be imported,
 clearly marked as such in the returned metrics.
 """
@@ -143,6 +145,7 @@ def _prepare_gsm8k_500_jsonl(out_path: str) -> str:
     """Materialise GSM8K[:500] in OpenRLHF prompt+label JSONL format."""
     from datasets import load_dataset  # type: ignore
 
+    # TODO: Address "Failure to Prove Generalization" limitation by evaluating on the held-out GSM8K test set to prove true reasoning uplift.
     ds = load_dataset("openai/gsm8k", "main", split="train[:500]")
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -223,6 +226,7 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
         "--kl_estimator", "k3",
         "--save_steps", "-1",
         "--logging_steps", "1",
+        # TODO: Fix "Early-Training Snapshot" limitation by increasing max_samples to allow full RL convergence instead of stopping at a 30-step snapshot.
         "--max_samples", "240",  # 30 steps * batch=8
         "--save_path", os.path.join(output_dir, "ckpt"),
         "--ckpt_path", os.path.join(output_dir, "ckpt"),
@@ -237,6 +241,7 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
         "--actor_num_gpus_per_node", str(config.num_gpus),
         "--ref_num_gpus_per_node", str(config.num_gpus),
         "--remote_rm_url", "verifiable_gsm8k",  # served by modal_grpo_openrlhf.py
+        # TODO: Address "Single-Seed Extrapolations" limitation by parameterizing this seed and running multiple seeds instead of an N=1 run.
         "--seed", "42",
     ]
     print("[openrlhf] cmd:", " ".join(cmd))
@@ -250,6 +255,7 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
     print(f"[openrlhf] subprocess exit={proc.returncode} in {duration:.1f}s")
 
     # Pull reward trace from W&B
+    # TODO: Address "ZVF Metric" limitation: ZVF is fragile outside math tasks and a symptom, not a root cause. Also monitor mean reward, advantage variance, and policy entropy directly to obtain actionable causal insights.
     reward_trace: List[float] = []
     try:
         import wandb as _wb  # type: ignore

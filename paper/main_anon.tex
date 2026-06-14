@@ -1196,7 +1196,7 @@ predictor of downstream performance. Our recommendation is therefore modest:
 logging ZVF/GU alongside mean reward, reward variance, and drift proxies is a
 cheap way to detect when a GRPO run is producing little usable within-group
 signal, but the current paper does not validate a universal stopping rule or
-intervention threshold~\cite{zhang2026aero,zhang2026greso}.
+intervention threshold~\cite{zhang2026greso}.
 
 \begin{figure}[htbp]
 \centering
@@ -1723,13 +1723,13 @@ PPO is used and verify it against a known-good LLM post-training framework.
 \subsection{Connections to Concurrent Work}
 \label{sec:discuss_related}
 
-\paragraph{AERO and ZVF as a training diagnostic.}
-\citet{zhang2026aero} motivate AERO by the prevalence of zero-advantage dead
-zones in GRPO training and propose a Bayesian posterior over prompt difficulty
-to pre-screen prompts.
+\paragraph{Selective rollouts and ZVF as a training diagnostic.}
+\citet{zhang2026greso} (GRESO) motivate selective rollouts by the prevalence of
+zero-advantage dead zones in GRPO training and skip prompts whose groups are
+predicted to collapse to zero reward variance.
 Our cross-library ZVF traces provide descriptive evidence about when
 within-group contrast collapses under sparse binary rewards, overlapping with
-the regime AERO aims to address.
+the regime such selective-rollout methods aim to address.
 Importantly, in this corpus ZVF varies more by task regime than by raw model
 scale: tool-use experiments saturate at $\text{ZVF} = 100\%$, while GSM8K
 experiments average $\text{ZVF} = 8.5\%$ across overlapping model scales.
@@ -1772,21 +1772,6 @@ However, under the same approximation, very high-accuracy models
 range of $G$. In that regime, prompt re-sampling from harder
 sub-distributions is one plausible intervention, but we do not isolate it
 here as uniquely optimal.
-
-\paragraph{Target Policy Optimization and sparse-reward regimes.}
-The 0\% tool-use reward we observe for both Qwen3-32B and Llama-3.1-8B
-exemplifies the sparse-reward failure mode that \citet{kaddour2026tpo}
-specifically designs against: without any positive reward signal in a group,
-the advantage is uniformly zero and no gradient flows.
-TPO's target-distribution construction ($q \propto p_\text{old} \exp(u)$)
-provides a training signal even when all rollout rewards are zero, by fitting
-to the \emph{implied} contrastive distribution rather than observed rewards.
-Our tool-use results provide an empirical motivation for this class of
-approaches: the task is not unsolvable in principle (Qwen2-0.5B achieves
-functional tool calls with SFT), but it is unsolvable with binary GRPO
-rewards at 30-step horizons.
-We recommend TPO-style objectives as the first algorithm to try when
-$\text{ZVF} = 1$ persists past the first five training steps.
 
 \subsection{Limitations of Proxy Metrics and the Path to Direct KL Measurement}
 \label{sec:discuss_kl}

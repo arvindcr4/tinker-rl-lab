@@ -62,6 +62,7 @@ USE_LORA = True
 LORA_RANK = 16
 GROUP_SIZE = 4
 STEPS = 200
+# TODO(adversarial): The "Early-Training Snapshot" Problem. 200 steps is often insufficient to observe meaningful RL convergence, catastrophic forgetting, or true policy collapse due to API cost constraints. No fix applicable.
 LR = 5e-6
 NUM_SEEDS = 5
 PROMPTS_PER_STEP = 4
@@ -130,6 +131,9 @@ def run_one_seed(seed: int, examples_train: list, examples_eval: list) -> dict:
     np.random.seed(seed)
 
     print(f"\n── seed={seed} — connecting to Tinker ──")
+    # TODO(adversarial): The "Closed-Source Confound". Tinker is a closed-source black box. 
+    # Performance differences compared to open-source libraries may be due to undisclosed 
+    # managed defaults rather than algorithmic superiority. No fix applicable.
     svc = tinker.ServiceClient(base_url=None)
     if USE_LORA:
         tc = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK)
@@ -224,15 +228,36 @@ def run_one_seed(seed: int, examples_train: list, examples_eval: list) -> dict:
     peak = float(np.max(step_accuracy)) if step_accuracy else 0.0
     loss_mean = float(np.nanmean(step_loss)) if step_loss else float("nan")
 
+    # Evaluate on held-out eval set to measure generalization
+    eval_rewards = []
+    if examples_eval:
+        print(f"  Evaluating on {len(examples_eval)} held-out problems...")
+        for prompt_text, reference in examples_eval:
+            messages = [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt_text},
+            ]
+            rendered = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+            prompt_ids = tok.encode(rendered, add_special_tokens=False)
+            prompt_mi = T.ModelInput.from_ints(prompt_ids)
+            
+            sp = T.SamplingParams(max_tokens=MAX_RESPONSE_TOKENS, temperature=0.0, top_p=1.0)
+            responses = sc.sample(prompt_mi, num_samples=1, sampling_params=sp).result()
+            text = tok.decode(list(responses.sequences[0].tokens), skip_special_tokens=True)
+            eval_rewards.append(reward_fn(text, reference))
+            
+    eval_accuracy = float(np.mean(eval_rewards)) if eval_rewards else 0.0
+
     print(
         f"seed={seed} done | first5={first_5:.3f} last10={last_10:.3f} peak={peak:.3f} "
-        f"loss={loss_mean:.3f} time={duration:.0f}s"
+        f"eval={eval_accuracy:.3f} loss={loss_mean:.3f} time={duration:.0f}s"
     )
 
     return {
         "first_5_accuracy": first_5,
         "last_10_accuracy": last_10,
         "peak_accuracy": peak,
+        "eval_accuracy": eval_accuracy,
         "training_loss": loss_mean,
         "duration_seconds": duration,
     }
@@ -251,6 +276,7 @@ if "TINKER_API_KEY" not in os.environ:
                 "last_10_accuracy_mean": 0.0,
                 "peak_accuracy_mean": 0.0,
                 "first_5_accuracy_mean": 0.0,
+                "eval_accuracy_mean": 0.0,
                 "training_loss_mean": float("nan"),
                 "duration_seconds_mean": 0.0,
             },
@@ -258,6 +284,7 @@ if "TINKER_API_KEY" not in os.environ:
                 "last_10_accuracy_stderr": 0.0,
                 "peak_accuracy_stderr": 0.0,
                 "first_5_accuracy_stderr": 0.0,
+                "eval_accuracy_stderr": 0.0,
                 "training_loss_stderr": 0.0,
                 "duration_seconds_stderr": 0.0,
             },
@@ -265,6 +292,7 @@ if "TINKER_API_KEY" not in os.environ:
                 "last_10_accuracy": [0.0],
                 "peak_accuracy": [0.0],
                 "first_5_accuracy": [0.0],
+                "eval_accuracy": [0.0],
                 "training_loss": [float("nan")],
                 "duration_seconds": [0.0],
             },
@@ -297,6 +325,7 @@ if "TINKER_API_KEY" not in os.environ:
     print("\nMETRICS SUMMARY:")
     print("- Dataset: gsm8k (placeholder)")
     print("  - last_10_accuracy: final=0.000, best=0.000")
+    print("  - eval_accuracy: final=0.000, best=0.000")
     print("  - training_loss: final=nan, best=nan")
     print("  - duration_seconds: final=0.000, best=0.000")
 else:
@@ -332,6 +361,7 @@ else:
         "last_10_accuracy",
         "peak_accuracy",
         "first_5_accuracy",
+        "eval_accuracy",
         "training_loss",
         "duration_seconds",
     ]
@@ -358,7 +388,7 @@ else:
         "gsm8k": {
             "metrics": {
                 "train": [s["last_10_accuracy"] for s in per_seed],
-                "val": [s["peak_accuracy"] for s in per_seed],
+                "val": [s["eval_accuracy"] for s in per_seed],
             },
             "losses": {
                 "train": [s["training_loss"] for s in per_seed],
@@ -377,7 +407,7 @@ else:
     print(
         f"last_10={stats['last_10_accuracy']['mean']:.3f} ± "
         f"{stats['last_10_accuracy']['stderr']:.3f}  "
-        f"peak={stats['peak_accuracy']['mean']:.3f}"
+        f"eval={stats['eval_accuracy']['mean']:.3f}"
     )
     print("\nMETRICS SUMMARY:")
     print("- Dataset: gsm8k")

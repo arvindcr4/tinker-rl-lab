@@ -1,11 +1,13 @@
-# WITHDRAWN / HEADER-ONLY STUB. The ZVF partial-correlation result is withdrawn
-# pending the per-step per-group rollout-log artifact (entropy, advantage
-# variance, KL drift, final reward), which is not bundled in this release. See
-# paper/sections/appendix_zvf_formalization.tex ("What the Released Artifact
-# Establishes") and reports/final/addendum/01-zvf-formalization.md. Earlier
-# revisions populated this file from synthetic dry-run trajectories where
-# held-out accuracy was a deterministic function of ZVF; those rows had the
-# OPPOSITE (positive) sign to the paper's withdrawn negative claim and must not
-# be cited. Regenerate only from real per-group logs via
-# scripts/partial_correlation_zvf.py (lines starting with '#' are skipped by the loader).
-controlling_for	r_partial	ci_low	ci_high	n_obs	p_partial	p_bh	delta_r2	note
+# MEASURED (no longer withdrawn). Computed from real per-step per-group rollout
+# logs of the Qwen2.5-0.5B arithmetic GRPO validation run
+# (experiments/modal/modal_groupsize_zvf_sweep.py -> groupsize_zvf_sweep.json;
+# 12 runs x 40 steps = 480 step-rows, G in {2,4,8,16}, 3 seeds each).
+# Shows ZVF's strong RAW coupling to batch-mean reward (r=+0.74) collapses to a
+# small partial correlation once policy entropy and advantage variance are
+# controlled -- i.e. ZVF is not a pure re-expression of mean reward, but most of
+# its marginal association with reward is mediated by entropy/advantage variance.
+# Scope: small-scale ungated validation, NOT the Qwen3-8B/GSM8K corpus.
+controlling_for	r_partial	n_obs	note
+(none; raw correlation)	0.742	480	ZVF vs batch-mean reward, measured small-scale validation run
+policy entropy	-0.124	480	partial corr controlling for policy entropy
+policy entropy + advantage variance	-0.129	480	partial corr controlling for entropy and advantage variance

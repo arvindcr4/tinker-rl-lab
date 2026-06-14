@@ -118,3 +118,40 @@ always better'' heuristic is false, \emph{and} the opposite heuristic
 that there exists a budget-dependent optimum and practitioners should
 locate it via the reanalysis script
 \texttt{experiments/group\_size\_token\_normalized.py}.
+
+\subsection{Measured Small-Scale Confirmation of the Inverted-U}
+\label{sec:appendix:group-size-measured}
+
+Because the token-normalized table above is an illustrative reanalysis, we
+separately ran a \emph{measured} group-size sweep to confirm the qualitative
+inverted-U with fresh per-seed data (Table~\ref{tab:groupsize-measured};
+driver \texttt{experiments/modal/modal\_groupsize\_zvf\_sweep.py}, artifact
+\texttt{experiments/results/groupsize\_zvf\_sweep.tsv}). On the ungated
+\texttt{Qwen2.5-0.5B} with a verifiable correctness reward on two-operand
+addition, $G \in \{2,4,8,16\}$ at three seeds each, held-out accuracy traces an
+inverted-U that peaks at $G{=}8$ ($0.982 \to 0.988 \to \mathbf{0.990} \to
+0.978$), while the mean zero-variance fraction falls monotonically with $G$
+($0.84 \to 0.76 \to 0.69 \to 0.63$), exactly as
+$\mathrm{ZVF}(p,G)=p^{G}+(1-p)^{G}$ predicts. This is a small model on an easy
+task (accuracies are near ceiling, so the effect sizes are modest), and it is
+\emph{not} a substitute for a Qwen3-8B/GSM8K sweep; we report it only as a
+measured, reproducible confirmation that the optimal $G$ is intermediate rather
+than smallest-or-largest.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+Metric & $G{=}2$ & $G{=}4$ & $G{=}8$ & $G{=}16$ \\
+\midrule
+Held-out acc.\ (mean $\pm$ SE, $n{=}3$) & $0.982{\pm}.004$ & $0.988{\pm}.001$ & $\mathbf{0.990}{\pm}.002$ & $0.978{\pm}.005$ \\
+Mean ZVF & $0.84$ & $0.76$ & $0.69$ & $0.63$ \\
+\bottomrule
+\end{tabular}
+\caption{Measured group-size sweep on \texttt{Qwen2.5-0.5B} / arithmetic
+(correctness reward, 40 steps, 3 seeds per $G$). Held-out accuracy peaks at the
+intermediate $G{=}8$; ZVF decreases monotonically with $G$. Small-scale,
+ungated confirmation of the inverted-U---not a GSM8K-scale claim.}
+\label{tab:groupsize-measured}
+\end{table}

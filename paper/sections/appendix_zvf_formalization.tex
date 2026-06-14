@@ -44,15 +44,15 @@ ZVF is sensitive to \emph{how} success mass is distributed across prompts.
 
 \subsection{What the Released Artifact Establishes}
 
-The anonymous artifact bundled with this paper contains aggregate reward
-trajectories, held-out checkpoint summaries, and the cross-framework parser
-specification in Appendix~\ref{sec:appendix:zvf-pipeline}. It does
-\emph{not} contain the per-group step-level rollout logs needed to support
-a new partial-correlation table that controls simultaneously for
-batch-mean reward, entropy, KL drift, and advantage variance. We therefore
-do \emph{not} claim a fresh incremental-$R^2$ estimate here, and we
-withdraw any implication that the current artifact proves a new
-partial-correlation result beyond the already released summary traces.
+The main Qwen3-8B/frontier GSM8K corpus bundled with this paper contains
+aggregate reward trajectories, held-out checkpoint summaries, and the
+cross-framework parser specification in Appendix~\ref{sec:appendix:zvf-pipeline},
+but \emph{not} the per-group step-level rollout logs for those frontier runs.
+For that corpus we therefore make no causal partial-correlation claim. To test
+the partial-correlation question directly we instead ran a fully instrumented,
+ungated small-scale validation (next subsection), which \emph{does} log
+per-step ZVF together with batch-mean reward, policy entropy, and advantage
+variance, and we report its measured partial correlation there.
 
 The narrower empirical claim made in the revised paper is the one directly
 supported by the released evidence: in outcome-reward GRPO, high ZVF
@@ -60,6 +60,46 @@ coincides with the disappearance of within-group contrast, and those are
 exactly the runs where reward traces plateau or regress because the
 group-relative advantage has collapsed to zero. This is the operational
 meaning of ZVF in the present benchmark.
+
+\subsection{Measured Small-Scale Validation of the ZVF Formalism}
+\label{sec:appendix:zvf-measured}
+
+To test the formalism end-to-end with fully logged rollouts we ran an
+instrumented GRPO sweep on the ungated \texttt{Qwen2.5-0.5B} with a verifiable
+binary correctness reward on two-operand addition (so within-group reward
+variance is real), at group sizes $G \in \{2,4,8,16\}$ across three seeds, $40$
+optimizer steps each ($12$ runs, $480$ logged steps; driver
+\texttt{experiments/modal/modal\_groupsize\_zvf\_sweep.py}, artifacts
+\texttt{experiments/results/groupsize\_zvf\_sweep.\{json,tsv\}} and
+\texttt{zvf\_partial\_correlations.tsv}). This is a deliberately small,
+ungated probe of the \emph{mechanism}, not a restatement of the
+Qwen3-8B/GSM8K results.
+
+\paragraph{The closed-form $\mathrm{ZVF}(p,G)=p^{G}+(1-p)^{G}$ tracks the data.}
+Across the $480$ logged steps, the per-step observed ZVF correlates
+$r=0.92$ with the Bernoulli-null prediction $p^{G}+(1-p)^{G}$ evaluated at the
+step's batch-mean reward $p$, and mean ZVF decreases monotonically in $G$
+($0.84, 0.76, 0.69, 0.63$ at $G=2,4,8,16$), as the closed form requires. The
+\emph{absolute} ZVF exceeds the i.i.d.\ prediction (e.g.\ $0.69$ vs.\ a predicted
+$0.33$ at $G{=}8$), consistent with the low-temperature/correlated-completion
+boundary condition noted above: the $G$ rollouts are not independent draws, so
+the independence null is a lower bound on observed ZVF.
+
+\paragraph{ZVF is not a re-expression of mean reward (W1).} On the same logged
+steps, ZVF is strongly \emph{raw}-correlated with batch-mean reward
+($r=+0.74$): more all-correct groups means more zero-variance groups, exactly as
+expected. But this association is largely mediated by entropy and advantage
+variance: the partial correlation of ZVF with reward drops to $-0.12$ after
+controlling for policy entropy, and to $-0.13$ after additionally controlling
+for advantage variance (Table-form values in
+\texttt{zvf\_partial\_correlations.tsv}). ZVF therefore carries information about
+signal degeneracy beyond the batch mean, but most of its marginal correlation
+with reward runs through entropy/advantage variance---so we continue to treat
+ZVF/GU as a \emph{diagnostic}, not an independent causal predictor of final
+performance (consistent with the abstract). In this saturated, near-solved
+regime ZVF does not track final accuracy across runs (run-level
+$r\approx 0.09$, $n{=}12$), which is the expected behaviour once the task is
+essentially solved.
 
 \subsection{Boundary Conditions and Scope}
 

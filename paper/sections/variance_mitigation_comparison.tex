@@ -316,9 +316,22 @@ We read this as a \emph{scope} result rather than a refutation of Dr.\ GRPO: on
 this near-ceiling task the policy emits $\sim$5-token answers, so the
 length-bias fix has almost nothing to act on and the std-normalization fix
 matters little once accuracy saturates. Dr.\ GRPO's documented gains arise in
-long chain-of-thought regimes where response-length bias is large, which this
-probe deliberately does not exercise; the faithful long-CoT config is provided
-in \texttt{experiments/axolotl/grpo\_gsm8k\_qwen8b\_dr\_grpo.yaml}.
+long chain-of-thought regimes where response-length bias is large. We therefore
+also ran the A/B in that regime: \texttt{Qwen2.5-1.5B-Instruct} on GSM8K with
+$200$-token chain-of-thought ($3$ seeds; artifact
+\texttt{experiments/results/drgrpo\_gsm8k\_cot.json}). Both arms produce a
+\emph{significant} measured held-out gain (GRPO $20.2\% \to 26.3\%$, Dr.\ GRPO
+$20.5\% \to 25.5\%$; per-item McNemar $p < 10^{-3}$ for each) and the two are
+statistically comparable to each other at this seed budget. Over the $30$-step
+horizon neither arm inflates response length (GRPO $195 \to 180$, Dr.\ GRPO
+$194 \to 187$ tokens), so the length-bias fix that distinguishes Dr.\ GRPO has
+no visible effect here either: a longer-horizon run, where GRPO's length growth
+becomes pronounced, is the setting that would separate them, and we provide the
+faithful config for it in
+\texttt{experiments/axolotl/grpo\_gsm8k\_qwen8b\_dr\_grpo.yaml}. Our honest
+reading is that, at the scales and horizons we can measure, Dr.\ GRPO and GRPO
+are comparable; Dr.\ GRPO's advantages are real but require the long-horizon
+length-bias regime we did not fully reach.
 
 \subsection{Summary}
 \label{sec:variance-summary}

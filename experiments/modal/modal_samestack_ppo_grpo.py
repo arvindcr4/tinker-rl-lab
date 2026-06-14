@@ -224,9 +224,9 @@ def main():
         summ[a] = {
             "n_seeds": len(rs),
             "heldout_mean": float(np.mean([r["heldout_acc"] for r in rs])),
-            "heldout_se": float(np.std([r["heldout_acc"] for r in rs]) / np.sqrt(len(rs))),
+            "heldout_se": float(np.std([r["heldout_acc"] for r in rs], ddof=1) / np.sqrt(len(rs))),
             "last10_mean": float(np.mean([r["last10_avg"] for r in rs])),
-            "last10_se": float(np.std([r["last10_avg"] for r in rs]) / np.sqrt(len(rs))),
+            "last10_se": float(np.std([r["last10_avg"] for r in rs], ddof=1) / np.sqrt(len(rs))),
         }
     # paired comparison by seed on held-out accuracy
     paired = {}

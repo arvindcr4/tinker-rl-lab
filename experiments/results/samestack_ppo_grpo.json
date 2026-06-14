@@ -3,16 +3,16 @@
     "grpo": {
       "n_seeds": 5,
       "heldout_mean": 0.9899999999999999,
-      "heldout_se": 0.003162277660168382,
+      "heldout_se": 0.0035,
       "last10_mean": 0.97890625,
-      "last10_se": 0.005949822738956174
+      "last10_se": 0.0067
     },
     "ppo": {
       "n_seeds": 5,
       "heldout_mean": 0.992,
-      "heldout_se": 0.0026832815729997497,
+      "heldout_se": 0.003,
       "last10_mean": 0.9181250000000001,
-      "last10_se": 0.044441741182980214
+      "last10_se": 0.0497
     }
   },
   "paired_grpo_vs_ppo": {

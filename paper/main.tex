@@ -537,7 +537,7 @@ GRPO & Tinker & Llama-3.1-8B & 8B & 30 & 18.8\% & 11.5\% \\
 \midrule
 GRPO & Tinker & Qwen3-8B (G=2) & 8B & 30 & 50.0\% & 37.5\% \\
 GRPO & Tinker & Qwen3-8B (G=4) & 8B & 30 & 75.0\% & 52.1\% \\
-GRPO & Tinker & Qwen3-8B (G=8) & 8B & 30 & 100\% & 84.4\% \\
+GRPO & Tinker & Qwen3-8B (G=8) & 8B & 30 & 62.5\% & 34.4\% \\
 GRPO & Tinker & Qwen3-8B (G=16) & 8B & 30 & 71.9\% & 38.0\% \\
 \midrule
 \multicolumn{7}{l}{\textit{TRL-GRPO on Modal H100 (Framework Comparison)}} \\
@@ -1273,7 +1273,7 @@ five seeds (driver
 \texttt{experiments/modal/modal\_samestack\_ppo\_grpo.py}; artifact
 \texttt{experiments/results/samestack\_ppo\_grpo.json}).
 Held-out accuracy is statistically indistinguishable between the two
-(Table~\ref{tab:samestack}): GRPO $0.990 \pm 0.003$ vs.\ PPO $0.992 \pm 0.003$,
+(Table~\ref{tab:samestack}): GRPO $0.990 \pm 0.004$ vs.\ PPO $0.992 \pm 0.003$,
 a paired difference of $-0.2$ percentage points ($t{=}{-}1.0$, $\mathrm{df}{=}4$,
 $p{=}0.37$). The only visible asymmetry is stability: GRPO's last-10 training
 reward varies less across seeds (SE $0.006$ vs.\ $0.044$ for PPO), echoing the
@@ -1290,8 +1290,8 @@ multi-seed comparison the algorithms perform the same.
 \toprule
 \textbf{Algorithm} & \textbf{Held-out acc.\ (mean $\pm$ SE)} & \textbf{Last-10 reward} & \textbf{$n$ seeds} \\
 \midrule
-GRPO (group baseline)      & $0.990 \pm 0.003$ & $0.979 \pm 0.006$ & 5 \\
-PPO (value-head baseline)  & $0.992 \pm 0.003$ & $0.918 \pm 0.044$ & 5 \\
+GRPO (group baseline)      & $0.990 \pm 0.004$ & $0.979 \pm 0.007$ & 5 \\
+PPO (value-head baseline)  & $0.992 \pm 0.003$ & $0.918 \pm 0.050$ & 5 \\
 \midrule
 \multicolumn{4}{l}{\small Paired GRPO$-$PPO held-out: $-0.002$, $t{=}{-}1.0$, $\mathrm{df}{=}4$, $p{=}0.37$ (n.s.).} \\
 \bottomrule
@@ -1385,31 +1385,6 @@ instability) rather than \emph{direct measurements} of distributional
 divergence. The corrected KL tracking implementation is included in the
 artifact release, but this paper does not yet validate the proxy--KL
 correspondence or quantify per-token divergence trajectories.
-
-\begin{figure}[htbp]
-\centering
-\IfFileExists{figures/v2/kl_proxy.pdf}{%
-\includegraphics[width=\textwidth]{figures/v2/kl_proxy.pdf}%
-}{%
-\fbox{\parbox{\textwidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: kl\_proxy.pdf pending regeneration. See \texttt{paper/sections/kl.tex}.]}\vspace{1em}}}%
-}
-\caption{Per-step ZVF heatmap. Red: ZVF$=1$ (zero gradient); blue: ZVF$=0$ (gradient
-flows); grey: no data. Experiments sorted by aggregate ZVF (descending).}
-\label{fig:zvf-heatmap}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\IfFileExists{figures/v2/zvf_correlation.pdf}{%
-\includegraphics[width=\textwidth]{figures/v2/zvf_correlation.pdf}%
-}{%
-\fbox{\parbox{\textwidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: zvf\_correlation.pdf pending regeneration. See \texttt{paper/sections/zvf.tex}.]}\vspace{1em}}}%
-}
-\caption{\textbf{Left:} ZVF vs.\ final performance scatter ($r = -0.769$,
-$p = 0.0008$). \textbf{Right:} Mean ZVF by model family. Llama's high mean
-ZVF is driven entirely by tool-use experiments.}
-\label{fig:zvf-correlation}
-\end{figure}
 
 % ---------------------------------------------------------------------------
 \subsection{Zero-Variance Fraction: Cross-Library, Cross-Scale Analysis}
@@ -1601,9 +1576,23 @@ DeepSeek & DeepSeek-V3.1 & \multicolumn{3}{c}{\textit{Not evaluated (training in
 \label{sec:saturation_power}
 % =============================================================================
 
-To rigorously validate our comparisons across algorithms and framework architectures, we perform a formal statistical power analysis. Assuming a sample size of $N=10$ independent training runs per group, we find that our protocol can reliably detect effect sizes as small as Cohen's $d = 1.325$ with 80\% power ($\alpha=0.05$). This guarantees that any framework-level differences we report are both statistically robust and practically significant.
+We report a power analysis for context, with an explicit caveat that it describes
+a \emph{hypothetical} design, not our realized one. A two-sample test at
+$N=10$ independent runs per group would detect $d \approx 1.3$ at 80\% power
+($\alpha=0.05$); however, most of our cross-stack comparisons are
+\emph{single-seed} and our multi-seed arms use $n=5$ (MDE $d_{\min}=2.024$ for
+5-vs-5, $1.530$ for 5-vs-15; Tinker-vs-TRL power only $0.65$;
+Appendix~\ref{app:stat-rigor-addendum}). We therefore do \emph{not} claim the
+framework-level differences are inferentially robust; the single-seed rows are
+descriptive case studies.
 
-Furthermore, analyzing the training trajectories using an exponential saturation model $R(t) = R_0 + (R_{max} - R_0)(1 - e^{-\lambda t})$, we observe distinct scaling dynamics. For example, frontier models like DeepSeek-v3.1 achieve high capacity and rapid saturation ($R_{max} = 0.846$, $\lambda = 0.788$). By contrast, legacy architectures using PPO across standard baselines (e.g., Stable Baselines 3, CleanRL, and Tianshou) consistently exhibit early collapse and fail to learn meaningful representations ($R_{max} < 0.01$, $\lambda \to 1.0$). This provides rigorous mathematical evidence supporting our hypothesis that architectural implementation quality functionally dominates the underlying PPO algorithm choice.
+Furthermore, analyzing the training trajectories using an exponential saturation model $R(t) = R_0 + (R_{max} - R_0)(1 - e^{-\lambda t})$, we observe distinct scaling dynamics. For example, frontier models like DeepSeek-v3.1 achieve high capacity and rapid saturation ($R_{max} = 0.846$, $\lambda = 0.788$). By contrast, the classic-RL PPO baselines (Stable Baselines 3, CleanRL, Tianshou)
+fail to learn on this arithmetic task ($R_{max} < 0.01$). As discussed in
+\S\ref{sec:discuss_impl}, this is an \emph{implementation/architecture} gap
+(those libraries run a small MLP policy on a discrete-action MDP, not an
+autoregressive LM), \emph{not} evidence about PPO as an algorithm; our same-stack
+control (Table~\ref{tab:samestack}) finds PPO and GRPO indistinguishable, so we
+do not claim implementation quality ``dominates'' the algorithm choice.
 
 \begin{figure}[h]
     \centering
@@ -1666,7 +1655,7 @@ condition.
 
 \paragraph{Group Size Ablation.}
 We swept group size $G \in \{2, 4, 8, 16\}$ on Qwen3-8B (Table~\ref{tab:main_results}, Group Size block).
-Optimal performance occurs at $G{=}8$ (84.4\% last-10), with $G{=}4$ second (52.1\%) and both $G{=}2$ (37.5\%) and $G{=}16$ (38.0\%) substantially worse.
+Optimal last-10 performance occurs at the intermediate $G{=}4$ (52.1\%); $G{=}2$ (37.5\%), $G{=}8$ (34.4\%), and $G{=}16$ (38.0\%) are lower --- an inverted-U consistent with the measured group-size sweep (Appendix~\ref{sec:appendix:group-size-measured}).
 This inverted-U pattern suggests a fundamental tension: too few samples ($G{=}2$) provide insufficient diversity for meaningful advantage estimation, while too many ($G{=}16$) dilute the signal from correct completions.
 At $G{=}16$ the model must distribute attention across 16 samples, where the majority are likely incorrect, leading to noisy gradient estimates that impede learning.
 
@@ -1836,9 +1825,9 @@ should be treated as a negative baseline rather than a performance signal.
 \paragraph{Background.}
 Standard GRPO is known to exhibit systematic \emph{length bias}: longer responses
 mechanically accumulate more gradient signal regardless of their correctness,
-as characterized formally by Liu et al.~\cite{liu2025drgrpo} and corroborated
-by the MAD~GRPO analysis~\cite{wang2025madgrpo}, which identified the related
-\emph{verbosity trap}: the model first learns that longer outputs are associated
+as characterized formally by Liu et al.~\cite{tong2025drgrpo} and corroborated
+by the MC-GRPO (median-centered advantage) analysis~\cite{mcgrpo2025}, which
+relates to the \emph{verbosity trap}: the model first learns that longer outputs are associated
 with higher rewards, rapidly increases sequence length, and then collapses as
 the reward model saturates.
 
@@ -1871,9 +1860,9 @@ train (last-10 $<5\%$); we therefore do not have a controlled
 PPO-on-LLM length-bias comparison and do not claim GRPO is more or
 less stable than PPO at the algorithmic level. A minority
 ($\sim 36\%$) of GRPO runs do exhibit the verbosity-trap
-pattern~\cite{liu2025drgrpo,wang2025madgrpo}, so direct mitigation
+pattern~\cite{tong2025drgrpo,mcgrpo2025}, so direct mitigation
 strategies --- sequence-length normalisation, token-budget penalties,
-or the ``Dr.~GRPO'' correction~\cite{liu2025drgrpo} --- remain a
+or the ``Dr.~GRPO'' correction~\cite{tong2025drgrpo} --- remain a
 natural next ablation regardless of the algorithmic contrast.
 
 \begin{figure}[htbp]

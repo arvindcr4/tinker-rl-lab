@@ -41,10 +41,11 @@ operator could attempt to extend this pipeline to tasks of greater
 dual-use concern, e.g., chemistry olympiad problems, cryptographic key
 recovery, or financial fraud. We judge the \emph{marginal} uplift provided
 by our release to be small for three reasons. First, GRPO at our training
-scale does not create new capabilities; the base-model control for GSM8K
-(Section~\ref{sec:results}, 82.0\%) shows that the bulk of held-out
-accuracy is attributable to Qwen3-8B's pretraining. Our full GRPO run only
-adds \(+1.3\) percentage points ($p{=}0.26$, not statistically significant).
+scale does not create new capabilities; the pre-RL held-out accuracy of
+Qwen3-8B-Instruct for GSM8K (Section~\ref{sec:results}, 82.0\%) shows that the
+bulk of held-out accuracy is attributable to the checkpoint's pretraining and
+instruction tuning. Our full GRPO run only adds \(+1.3\) percentage points
+($p{=}0.26$, not statistically significant).
 Second, the public literature already contains GRPO implementations
 \cite{shao2024deepseekmath, openrlhf2024, verl2024, trl2020} that are at
 least as capable. Third, any reasoning uplift is bounded by the rewarder:

@@ -42,14 +42,14 @@ popularised by DeepSeek-R1~\cite{guo2025deepseekr1,guo2025deepseekr1nature}, the
 first reasoning RL method published in \emph{Nature}, which showed that
 pure outcome-reward RL can elicit chain-of-thought behaviour from a base
 model without supervised cold-start data. A second wave of refinements
-dissects the biases of vanilla GRPO. Dr.~GRPO~\cite{liu2025drgrpo} removes a
+dissects the biases of vanilla GRPO. Dr.~GRPO~\cite{tong2025drgrpo} removes a
 response-length bias and a question-difficulty amplification bias by using a
 constant loss normaliser and dropping the standard-deviation denominator in the
 advantage. GDPO~\cite{liu2026gdpo} decouples group-relative normalisation per
 reward component, preventing advantage collapse when rewards are multi-valued.
-MAD~GRPO~\cite{wang2025madgrpo} replaces the standard-deviation advantage
-scaler with the Median Absolute Deviation for heavy-tailed reward
-distributions. G$^{2}$RPO~\cite{hu2026openvlthinker} forces per-prompt
+MC-GRPO (median-centered advantage)~\cite{mcgrpo2025} replaces the
+group-mean baseline in the advantage with the group median to stabilise
+group-relative normalisation under small rollout counts. G$^{2}$RPO~\cite{hu2026openvlthinker} forces per-prompt
 advantages to match $\mathcal{N}(0,1)$ to fix reward-topology variance in
 multimodal settings. Wu et al.~\cite{wu2025grpo_dpo} prove that GRPO is
 ``secretly DPO'' --- the group-level advantage is an implicit contrastive
@@ -130,7 +130,7 @@ and LIMR~\cite{li2025limr} each tune reasoning depth with length-aware
 rewards. Search-R1~\cite{jin2025searchr1} trains reasoning agents to
 interleave search queries with chain-of-thought. TTRL~\cite{pu2025ttrl}
 performs test-time RL against self-generated verifiers. We use the
-Dr.~GRPO~\cite{liu2025drgrpo} and GSPO~\cite{qwen2025gspo} formulations as
+Dr.~GRPO~\cite{tong2025drgrpo} and GSPO~\cite{qwen2025gspo} formulations as
 reference implementations when measuring reasoning accuracy across the
 0.6B--235B frontier.
 

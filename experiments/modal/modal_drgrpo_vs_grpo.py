@@ -207,7 +207,7 @@ def main():
         rs = by[al]
         summ[al] = {"n_seeds": len(rs),
                     "heldout_mean": float(np.mean([r["heldout_acc"] for r in rs])),
-                    "heldout_se": float(np.std([r["heldout_acc"] for r in rs]) / np.sqrt(len(rs))),
+                    "heldout_se": float(np.std([r["heldout_acc"] for r in rs], ddof=1) / np.sqrt(len(rs))),
                     "last10_mean": float(np.mean([r["last10_avg"] for r in rs])),
                     "mean_comp_len": float(np.mean([r["mean_comp_len"] for r in rs]))}
     # paired test (dr_grpo - grpo) on held-out

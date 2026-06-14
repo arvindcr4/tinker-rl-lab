@@ -224,11 +224,11 @@ def main():
         summary[g] = {
             "n_seeds": len(rs),
             "heldout_acc_mean": float(np.mean(accs)),
-            "heldout_acc_se": float(np.std(accs) / np.sqrt(len(accs))),
+            "heldout_acc_se": float(np.std(accs, ddof=1) / np.sqrt(len(accs))),
             "last10_mean": float(np.mean(l10)),
             "mean_zvf": float(np.mean(zvfs)),
         }
-        print(f"  G={g}: heldout={np.mean(accs):.3f}±{np.std(accs)/np.sqrt(len(accs)):.3f} "
+        print(f"  G={g}: heldout={np.mean(accs):.3f}±{np.std(accs,ddof=1)/np.sqrt(len(accs)):.3f} "
               f"last10={np.mean(l10):.3f} meanZVF={np.mean(zvfs):.3f} (n={len(rs)})")
 
     out = {"summary": summary, "runs": results}

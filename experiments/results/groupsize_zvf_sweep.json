@@ -3,28 +3,28 @@
     "2": {
       "n_seeds": 3,
       "heldout_acc_mean": 0.9816666666666666,
-      "heldout_acc_se": 0.0036004114991154816,
+      "heldout_acc_se": 0.0044,
       "last10_mean": 0.9770833333333333,
       "mean_zvf": 0.8380208333333333
     },
     "4": {
       "n_seeds": 3,
       "heldout_acc_mean": 0.9883333333333333,
-      "heldout_acc_se": 0.0013608276348795446,
+      "heldout_acc_se": 0.0017,
       "last10_mean": 0.9713541666666666,
       "mean_zvf": 0.7635416666666667
     },
     "8": {
       "n_seeds": 3,
       "heldout_acc_mean": 0.9899999999999999,
-      "heldout_acc_se": 0.002357022603955161,
+      "heldout_acc_se": 0.0029,
       "last10_mean": 0.9731770833333333,
       "mean_zvf": 0.6906249999999999
     },
     "16": {
       "n_seeds": 3,
       "heldout_acc_mean": 0.9783333333333332,
-      "heldout_acc_se": 0.004906533814626586,
+      "heldout_acc_se": 0.006,
       "last10_mean": 0.9837239583333334,
       "mean_zvf": 0.63125
     }

@@ -641,10 +641,11 @@ held-out accuracy is $\rho = -0.02$ ($n=8$), and the two Qwen3-8B-Base runs
 both land near 91\% held-out accuracy despite training \emph{last-10} values
 of 98.8\% and 85.6\%. Because the table is a post-hoc top-10 selection, it
 does not establish generalisation, absence of optimism, or a capacity ceiling.
-Consistent with that caution, a separate five-seed Qwen3-8B (non-Base)
-post-GRPO control run shows only a small,
-non-significant held-out advantage over the corresponding Qwen3-8B-Base arm
-(83.3\% vs.~82.0\%, $t = 1.32$, $p = 0.26$).
+Consistent with that caution, a separate five-seed Qwen3-8B-Instruct
+post-GRPO held-out evaluation shows only a small, non-significant advantage over
+the same instruction-tuned checkpoint's pre-RL held-out accuracy
+(83.3\% vs.~82.0\%, $t = 1.32$, $p = 0.26$); the 82.0\% is the pre-RL score of
+the same Qwen3-8B-Instruct checkpoint, \emph{not} a separate base model.
 
 We note two caveats inherited from this run. Qwen3.5-397B-A17B's run was
 truncated at problem 263 of 500 by a Tinker billing interruption; its
@@ -1500,8 +1501,9 @@ best practices from \citet{henderson2018deep}.
 Reported rewards are computed on the same prompt distribution used for
 training, not a held-out test split. We now include two limited GSM8K checks:
 a post-hoc top-10 checkpoint audit selected by training \emph{last-10}, and a
-separate five-seed Qwen3-8B base-model control showing 83.3\% post-GRPO
-vs.~82.0\% base ($t = 1.32$, $p = 0.26$). These checks reduce but do not
+separate five-seed Qwen3-8B-Instruct control showing 83.3\% post-GRPO
+held-out accuracy vs.~the same instruction-tuned checkpoint's 82.0\% pre-RL
+held-out accuracy ($t = 1.32$, $p = 0.26$). These checks reduce but do not
 remove the risk of over-reading generalization: the top-10 audit is
 post-selection by construction, and broader held-out evaluation without
 checkpoint cherry-picking remains future work.
@@ -1526,8 +1528,9 @@ cross-domain GRPO effectiveness.
 \paragraph{Background.}
 Standard GRPO is known to exhibit systematic \emph{length bias}: longer responses
 mechanically accumulate more gradient signal regardless of their correctness,
-as characterized formally by Liu et al.~\cite{liu2025drgrpo} and corroborated
-by the MAD~GRPO analysis~\cite{wang2025madgrpo}, which identified the related
+as characterized formally by Liu et al.~\cite{tong2025drgrpo} and corroborated
+by the MC-GRPO (median-centered advantage) analysis~\cite{mcgrpo2025}, which
+identified the related
 \emph{verbosity trap}: the model first learns that longer outputs are associated
 with higher rewards, rapidly increases sequence length, and then collapses as
 the reward model saturates.
@@ -1558,10 +1561,10 @@ pooled corpus ($0.143$ mean), not clean evidence of frontier self-regulation.
 In this heterogeneous pooled sample, GRPO-labelled runs are on average more
 volatile in the tail, more susceptible to mid-training collapse, and less
 monotonically improving than the PPO-labelled runs we logged
-~\cite{liu2025drgrpo,wang2025madgrpo}. We do not read that contrast as a
+~\cite{tong2025drgrpo,mcgrpo2025}. We do not read that contrast as a
 pure algorithm-only result because the pooled sample also differs in stack,
 model family, task, and reward design. Sequence-length normalization,
-token-budget penalties, or the ``Dr.~GRPO'' correction~\cite{liu2025drgrpo}
+token-budget penalties, or the ``Dr.~GRPO'' correction~\cite{tong2025drgrpo}
 remain plausible mitigations and natural next ablations.
 
 \begin{figure}[htbp]

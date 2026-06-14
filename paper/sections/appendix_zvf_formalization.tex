@@ -85,37 +85,40 @@ $0.33$ at $G{=}8$), consistent with the low-temperature/correlated-completion
 boundary condition noted above: the $G$ rollouts are not independent draws, so
 the independence null is a lower bound on observed ZVF.
 
-\paragraph{The same formalism holds at frontier scale (Qwen3-8B / GSM8K).}
-We separately measured ZVF directly on the frontier model the paper studies, by
+\paragraph{The closed form captures the qualitative structure at frontier scale,
+with a circularity caveat.} We measured ZVF directly on the frontier model by
 sampling \texttt{Qwen3-8B} on a held-out GSM8K slice via the Tinker API
-($G{=}8$, temperature~$1.0$, $200$ problems $\times$ three seeds $=600$ problems;
-driver \texttt{experiments/tinker\_direct\_eval.py}, artifacts
-\texttt{experiments/results/tinker\_gsm8k\_zvf\_s*.json} and
-\texttt{tinker\_gsm8k\_zvf\_summary.json}). Per-problem observed ZVF correlates
-$r=0.93$ with the closed form $p^{G}+(1-p)^{G}$ evaluated at the problem's
-pass rate $p$---essentially the same fit as the $0.5$B arithmetic probe
-($r=0.92$), now at $8$B on real GSM8K. Mean ZVF is $0.16$ and is accounted for
-almost entirely by the saturated tails of the difficulty distribution
-($12.7\%$ of problems all-correct, $3.2\%$ all-wrong, $84\%$ mixed), exactly the
-structure $\mathrm{ZVF}(p,G)$ predicts. Two independent scales (0.5B arithmetic,
-8B GSM8K) and reward regimes thus give the same answer: ZVF is a faithful,
-cheap read-out of within-group outcome agreement.
+($G{=}8$, temperature~$1.0$, $200$ problems $\times$ three seeds; driver
+\texttt{experiments/tinker\_direct\_eval.py}, artifacts
+\texttt{experiments/results/tinker\_gsm8k\_zvf\_*.json}). Mean ZVF is $0.16$,
+concentrated on the saturated tails of the difficulty distribution ($12.7\%$
+all-correct, $3.2\%$ all-wrong, $84\%$ mixed)---the qualitative structure
+$\mathrm{ZVF}(p,G)$ predicts. We caution that a per-problem Pearson correlation
+between observed ZVF and $p^{G}+(1-p)^{G}$ is \emph{mechanically} inflated: the
+per-problem observed ZVF is just the binary all-agree indicator
+$\mathbf{1}[p \in \{0,1\}]$ and the closed form is a deterministic function of
+the same $p$, so the large $r \approx 0.93$ chiefly reflects their shared
+dependence on $p$'s extremity (the rank correlation is weaker,
+$\rho \approx 0.65$). The i.i.d.-Bernoulli null is moreover only a coarse level
+estimate---here it \emph{over}-predicts mean ZVF ($\approx 0.28$ vs.\ observed
+$0.16$), the opposite-sign residual to the low-temperature $0.5$B probe. We thus
+read this as a consistency check on the \emph{shape} of the diagnostic across
+scales, not a precise quantitative fit.
 
-\paragraph{ZVF is not a re-expression of mean reward (W1).} On the same logged
-steps, ZVF is strongly \emph{raw}-correlated with batch-mean reward
-($r=+0.74$): more all-correct groups means more zero-variance groups, exactly as
-expected. But this association is largely mediated by entropy and advantage
-variance: the partial correlation of ZVF with reward drops to $-0.12$ after
-controlling for policy entropy, and to $-0.13$ after additionally controlling
-for advantage variance (Table-form values in
-\texttt{zvf\_partial\_correlations.tsv}). ZVF therefore carries information about
-signal degeneracy beyond the batch mean, but most of its marginal correlation
-with reward runs through entropy/advantage variance---so we continue to treat
-ZVF/GU as a \emph{diagnostic}, not an independent causal predictor of final
-performance (consistent with the abstract). In this saturated, near-solved
-regime ZVF does not track final accuracy across runs (run-level
-$r\approx 0.09$, $n{=}12$), which is the expected behaviour once the task is
-essentially solved.
+\paragraph{ZVF vs.\ mean reward (W1): what we can and cannot claim.} On the
+logged per-step rows ZVF is strongly correlated with batch-mean reward
+($r=+0.74$): more all-correct groups means more zero-variance groups, as
+expected. We deliberately do \emph{not} report a partial correlation
+``controlling for advantage variance'': under binary outcome rewards the
+within-group advantage variance is a deterministic transform of ZVF (it is zero
+\emph{iff} the group is zero-variance), so partialling it out regresses ZVF on a
+function of itself---a circular control. Nor do we attach a step-level
+$p$-value: the $480$ rows are $12$ runs $\times 40$ \emph{autocorrelated}
+optimizer steps (lag-1 $\approx 0.9$), not independent observations. The
+defensible statement is the descriptive one in the main text: high ZVF coincides
+with the disappearance of within-group contrast, and across runs in this
+near-solved regime ZVF does not track final accuracy ($r\approx 0.09$,
+$n{=}12$)---the expected behaviour once the task is essentially solved.
 
 \subsection{Boundary Conditions and Scope}
 

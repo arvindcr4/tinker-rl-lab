@@ -46,11 +46,31 @@ class GroupStats:
     def spread(self) -> float:
         return max(self.rewards) - min(self.rewards) if self.rewards else 0.0
 
+    @property
+    def erf(self) -> float:
+        if not self.rewards:
+            return 0.0
+        return sum(1 for r in self.rewards if r > 0.0) / len(self.rewards)
+
 
 @dataclass
 class StepDiagnostic:
     step: int
     groups: list[GroupStats] = field(default_factory=list)
+    policy_entropy: float = 0.0
+    advantage_variance: float = 0.0
+
+    @property
+    def mean_reward(self) -> float:
+        if not self.groups:
+            return 0.0
+        return statistics.mean([g.mean for g in self.groups])
+
+    @property
+    def erf(self) -> float:
+        if not self.groups:
+            return 0.0
+        return statistics.mean([g.erf for g in self.groups])
 
     @property
     def n_groups(self) -> int:
@@ -86,6 +106,10 @@ class StepDiagnostic:
             "mean_group_std": self.mean_group_std,
             "effective_groups": self.effective_groups,
             "gradient_utilization": self.gradient_utilization,
+            "erf": self.erf,
+            "mean_reward": self.mean_reward,
+            "policy_entropy": self.policy_entropy,
+            "advantage_variance": self.advantage_variance,
         }
 
 
@@ -95,9 +119,9 @@ class SaturationTracker:
     def __init__(self) -> None:
         self.history: list[StepDiagnostic] = []
 
-    def record_step(self, step: int, group_rewards: list[list[float]]) -> StepDiagnostic:
+    def record_step(self, step: int, group_rewards: list[list[float]], policy_entropy: float = 0.0, advantage_variance: float = 0.0) -> StepDiagnostic:
         groups = [GroupStats(rewards=r) for r in group_rewards]
-        diag = StepDiagnostic(step=step, groups=groups)
+        diag = StepDiagnostic(step=step, groups=groups, policy_entropy=policy_entropy, advantage_variance=advantage_variance)
         self.history.append(diag)
         return diag
 
@@ -106,12 +130,16 @@ class SaturationTracker:
             return {}
         zvf = [d.zero_variance_frac for d in self.history]
         gu = [d.gradient_utilization for d in self.history]
+        erf = [d.erf for d in self.history]
+        mean_rew = [d.mean_reward for d in self.history]
         return {
             "total_steps": len(self.history),
             "mean_zero_variance_frac": statistics.mean(zvf),
             "max_zero_variance_frac": max(zvf),
             "mean_gradient_utilization": statistics.mean(gu),
             "min_gradient_utilization": min(gu),
+            "mean_erf": statistics.mean(erf) if erf else 0.0,
+            "mean_reward_overall": statistics.mean(mean_rew) if mean_rew else 0.0,
             "saturation_onset_step": next(
                 (d.step for d in self.history if d.zero_variance_frac > 0.5), None
             ),

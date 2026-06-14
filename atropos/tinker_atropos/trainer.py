@@ -402,7 +402,8 @@ class TinkerAtroposTrainer:
         if skipped_count > 0:
             print(f"Skipped {skipped_count} groups with zero advantages")
 
-        return datums, group_mean_rewards, has_distil_data
+        zvf = skipped_count / max(1, len(batch))
+        return datums, group_mean_rewards, has_distil_data, zvf
 
     def get_data(self) -> tuple[List[tinker.Datum], bool]:
         """
@@ -424,8 +425,9 @@ class TinkerAtroposTrainer:
                 with open("temp.json", "w", encoding="utf-8") as f:
                     json.dump(data, f)
 
-                datums, group_mean_rewards, has_distil = self.pad_data_to_good_offset(data)
+                datums, group_mean_rewards, has_distil, zvf = self.pad_data_to_good_offset(data)
                 self.group_mean_rewards = group_mean_rewards
+                self.zvf = zvf
                 return datums, has_distil
             else:
                 time.sleep(1)
@@ -535,6 +537,8 @@ class TinkerAtroposTrainer:
                 "train/learning_rate": self.learning_rate,
                 "reward/mean": metrics["reward/mean"],
             }
+            if hasattr(self, "zvf"):
+                wandb_metrics["zvf"] = self.zvf
 
             if hasattr(self, "logprob_stats"):
                 wandb_metrics.update(self.logprob_stats)

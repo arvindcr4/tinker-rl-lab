@@ -191,6 +191,7 @@ def run_experiment(exp):
         for step in range(steps):
             batch = random.sample(examples, min(2, len(examples)))
             all_data, all_advs, batch_r = [], [], []
+            batch_zvf_list = []
 
             for question, ans in batch:
                 prompt = (f"<|im_start|>system\n{SYSTEM_PROMPT}<|im_end|>\n"
@@ -208,6 +209,7 @@ def run_experiment(exp):
                 sr = (sum((r - mr)**2 for r in rews) / len(rews))**0.5 + 1e-8
                 advs = [(r - mr) / sr for r in rews]
                 batch_r.extend(rews)
+                batch_zvf_list.append(1.0 if all(abs(r - mr) < 1e-6 for r in rews) else 0.0)
 
                 for r_seq, adv in zip(resp.sequences, advs):
                     rid = list(r_seq.tokens)
@@ -228,6 +230,7 @@ def run_experiment(exp):
             tc.optim_step(T.AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
 
             avg = sum(batch_r) / len(batch_r) if batch_r else 0.0
+            avg_zvf = sum(batch_zvf_list) / len(batch_zvf_list) if batch_zvf_list else 0.0
             step_rewards.append(avg)
 
             if step % 5 == 0:
@@ -235,7 +238,7 @@ def run_experiment(exp):
 
             if wb_run:
                 try:
-                    wb_run.log({"train/reward": avg, "train/step": step+1})
+                    wb_run.log({"train/reward": avg, "train/step": step+1, "zvf": avg_zvf})
                 except:
                     pass
 

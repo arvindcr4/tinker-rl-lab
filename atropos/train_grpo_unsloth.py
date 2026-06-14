@@ -69,6 +69,8 @@ try:
 except ImportError:
     pass
 
+_last_zvf = 0.0
+
 
 # ── reward helpers (verbatim logic from gsm8k_tinker.py) ────────────────────
 
@@ -356,7 +358,7 @@ def prepare_dataset(tokenizer, use_prefix: bool = True, seed: int = 42, split: s
 
 # ── reward function for GRPOTrainer ──────────────────────────────────────────
 
-def make_reward_fn():
+def make_reward_fn(group_size: int):
     """Return a reward function compatible with TRL GRPOTrainer."""
 
     def reward_fn(completions: List[str], prompts=None, **kwargs) -> List[float]:
@@ -370,6 +372,19 @@ def make_reward_fn():
             else:
                 gold = ""   # fallback (shouldn't happen)
             rewards.append(_score_response(_completion_to_text(completion), gold))
+        
+        # calculate zvf
+        zvf_sum = 0.0
+        n_groups = len(rewards) // group_size
+        if n_groups > 0:
+            for idx in range(n_groups):
+                chunk = rewards[idx*group_size:(idx+1)*group_size]
+                mr = sum(chunk) / group_size
+                if all(abs(r - mr) < 1e-6 for r in chunk):
+                    zvf_sum += 1.0
+            global _last_zvf
+            _last_zvf = zvf_sum / n_groups
+            
         return rewards
 
     return reward_fn
@@ -532,7 +547,7 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
         remove_unused_columns=False,
     )
 
-    reward_fn = make_reward_fn()
+    reward_fn = make_reward_fn(cfg["group_size"])
 
     from transformers import EarlyStoppingCallback
 
@@ -559,6 +574,10 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
             if mean_r is not None:
                 logger.step_log.append(float(mean_r))
                 logger.flush(step)
+            
+            global _last_zvf
+            if '_last_zvf' in globals():
+                wandb.log({"zvf": _last_zvf}, step=step, commit=False)
 
     trainer.add_callback(RewardLogCallback())
 

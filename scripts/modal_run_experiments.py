@@ -79,7 +79,7 @@ def run_grpo_math(seed: int) -> dict:
         tokenizer.pad_token = tokenizer.eos_token
 
     model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map="auto",
+        model_name, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto",
         trust_remote_code=True,
     )
 

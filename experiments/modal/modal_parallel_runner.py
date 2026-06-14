@@ -87,7 +87,7 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     if tokenizer.pad_token is None: tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
+        model_name, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True
     )
     lora_config = LoraConfig(
         r=32, lora_alpha=64,
@@ -212,7 +212,7 @@ def run_humaneval_eval(model_name: str = "Qwen/Qwen3-8B", num_samples: int = 5):
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     if tokenizer.pad_token is None: tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
+        model_name, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True
     )
     model.eval()  # inference-only; no gradients needed
 
@@ -283,7 +283,7 @@ def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: in
     if tokenizer.pad_token is None: tokenizer.pad_token = tokenizer.eos_token
 
     ref_model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
+        model_name, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True
     )
     ref_model.eval()
     # Freeze ref model entirely — it's monitoring-only, never needs gradients
@@ -291,7 +291,7 @@ def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: in
         p.requires_grad = False
 
     policy_model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
+        model_name, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True
     )
     lora_config = LoraConfig(r=32, lora_alpha=64, target_modules=["q_proj","v_proj"],
                               lora_dropout=0.0, bias="none", task_type="CAUSAL_LM")
@@ -375,7 +375,7 @@ def run_gsm8k_heldout_eval(model_name: str = "Qwen/Qwen3-32B", num_examples: int
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     if tokenizer.pad_token is None: tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
+        model_name, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True
     )
     model.eval()
 

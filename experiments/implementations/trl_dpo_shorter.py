@@ -127,14 +127,14 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     # Load reference model (frozen)
     ref_model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     # Create preference dataset

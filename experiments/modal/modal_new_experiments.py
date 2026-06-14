@@ -79,7 +79,7 @@ def run_ppo_qwen35_4b():
         tokenizer.pad_token = tokenizer.eos_token
 
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID, torch_dtype=torch.bfloat16, device_map="auto",
+        MODEL_ID, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto",
         trust_remote_code=True,
     )
     
@@ -287,7 +287,7 @@ def run_grpo_multiseed_qwen3_8b(seed: int = 123):
         tokenizer.pad_token = tokenizer.eos_token
 
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID, torch_dtype=torch.bfloat16, device_map="auto",
+        MODEL_ID, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto",
         trust_remote_code=True,
     )
     
@@ -509,7 +509,7 @@ def run_held_out_eval():
             tokenizer.pad_token = tokenizer.eos_token
         
         model = AutoModelForCausalLM.from_pretrained(
-            model_id, torch_dtype=torch.bfloat16, device_map="auto",
+            model_id, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto",
             trust_remote_code=True,
         )
         

@@ -96,7 +96,7 @@ def load_model(adapter_path, label):
     )
     base = AutoModelForCausalLM.from_pretrained(
         MODEL_ID, quantization_config=bnb_config,
-        device_map="auto", trust_remote_code=True, dtype=torch.bfloat16,
+        device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True, dtype=torch.bfloat16,
     )
     model = PeftModel.from_pretrained(base, adapter_path)
     model.eval()

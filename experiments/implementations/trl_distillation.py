@@ -81,7 +81,7 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
     teacher = AutoModelForCausalLM.from_pretrained(
         config.teacher_model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
     tokenizer = AutoTokenizer.from_pretrained(config.teacher_model_name)
     tokenizer.pad_token = tokenizer.eos_token
@@ -96,7 +96,7 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
     student = AutoModelForCausalLM.from_pretrained(
         config.student_model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     sft_config = SFTConfig(
@@ -174,14 +174,14 @@ def train_on_policy_distillation(config: DistillationConfig, train_dataset: Data
     teacher = AutoModelForCausalLM.from_pretrained(
         config.teacher_model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     print("Loading student model...")
     student = AutoModelForCausalLM.from_pretrained(
         config.student_model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     tokenizer = AutoTokenizer.from_pretrained(config.student_model_name)

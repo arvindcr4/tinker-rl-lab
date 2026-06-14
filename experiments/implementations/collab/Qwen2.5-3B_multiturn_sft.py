@@ -321,7 +321,7 @@ bnb_config = BitsAndBytesConfig(
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_ID,
     quantization_config=bnb_config,
-    device_map="auto",
+    device_map=None if "LOCAL_RANK" in os.environ else "auto",
     trust_remote_code=True,
     dtype=torch.bfloat16,
 )

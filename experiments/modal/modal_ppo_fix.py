@@ -79,7 +79,7 @@ def run_ppo_qwen35_4b_quantized():
 
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID, quantization_config=bnb_config,
-        device_map="auto", trust_remote_code=True,
+        device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True,
     )
     model = prepare_model_for_kbit_training(model)
     model.gradient_checkpointing_enable()

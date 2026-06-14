@@ -42,36 +42,27 @@ discussed in Section~\ref{sec:variance-honesty}.
 \subsection{Survey of the methods}
 \label{sec:variance-survey}
 
-\paragraph{CPPO (Clip-Pruned PPO)~\cite{cppo2024}.}
-CPPO addresses the \emph{noise} side of the gradient estimator. It
-prunes any rollout whose normalized advantage falls below an
-$\epsilon$ threshold before the gradient step, recovering an
-effective-sample-size (ESS)-corrected estimator. This directly
-attacks high-variance, low-signal updates: rollouts that nominally
-contribute to the mean but whose standard error dominates. CPPO keeps
-$G$ fixed but reduces the effective number of rollouts that reach the
-optimizer.
+\paragraph{CPPO (Completion Pruning Policy Optimization)~\cite{cppo2024}.}
+CPPO~\citep{cppo2024} targets the \emph{compute} cost of GRPO: it prunes
+completions with low absolute advantage before the backward pass, so fewer
+rollouts reach the optimizer at (the paper reports) matched accuracy. Relative
+to ZVF it is incidental---by dropping low-signal completions it changes the
+effective rollouts per step---but its stated goal is training-throughput, not
+variance control per se.
 
-\paragraph{NGRPO (Normalized GRPO)~\cite{ngrpo2025}.}
-NGRPO replaces the per-group reward mean used as the advantage
-baseline in vanilla GRPO with an exponentially decayed running mean
-\emph{across prompts}. When a group collapses (all rollouts receive
-the same reward), vanilla GRPO emits a zero advantage and no gradient;
-NGRPO still emits a gradient whose sign is determined by the
-group-mean deviation from the running mean. The variance target is
-thus \emph{advantage-signal preservation} under local reward
-collapse.
+\paragraph{NGRPO (Negative-enhanced GRPO)~\cite{ngrpo2025}.}
+NGRPO~\citep{ngrpo2025} reshapes the contribution of \emph{all-incorrect}
+(``negative'') groups. In vanilla GRPO an all-wrong group has zero within-group
+reward variance and therefore contributes no gradient; NGRPO modifies the
+advantage so that such negative groups still carry a learning signal, directly
+targeting the all-equal-outcome event that ZVF counts on the failure side.
 
-\paragraph{Scaf-GRPO (Scaffolded Exploration)~\cite{scafgrpo2025}.}
-Scaf-GRPO attacks the \emph{root cause} of ZVF saturation by adding
-an additive entropy-style exploration bonus
-\(+\beta_e\,H\!\big(\pi(\cdot\mid \text{prompt})\big)\) to the rollout
-reward. By rewarding spread in the policy's output distribution on
-already-solved prompts, it prevents the group-reward variance from
-collapsing to zero in the first place. This is qualitatively
-different from the other two: instead of compensating after ZVF is
-observed, it alters the reward landscape so that ZVF \emph{itself} is
-kept small.
+\paragraph{Scaf-GRPO (Scaffolded GRPO)~\cite{scafgrpo2025}.}
+Scaf-GRPO~\citep{scafgrpo2025} injects \emph{scaffolded hints} into prompts the
+policy repeatedly fails, so that previously all-wrong groups begin to produce
+some correct rollouts and recover within-group reward variance. It attacks ZVF
+at its source (on hard prompts) by changing the prompt distribution rather than
+by compensating after a collapse is observed.
 
 \paragraph{MC-GRPO (Median-Centering Robustification)~\cite{mcgrpo2025}.}
 MC-GRPO replaces the group-mean baseline in GRPO with a
@@ -133,37 +124,32 @@ and the relative compute cost per gradient step at matched $G$.
     \textbf{Compute} \\
     \midrule
     GRPO (baseline)      & no  & no  & none                    & no  & $1.00\times$ \\
-    + CPPO~\cite{cppo2024}       & no  & no  & grad.\ ESS              & no  & $0.85\times$ \\
-    + NGRPO~\cite{ngrpo2025}     & no  & no  & advantage preserv.      & no  & $1.00\times$ \\
-    + Scaf-GRPO~\cite{scafgrpo2025} & no  & no  & ZVF suppression (root) & yes & $1.05\times$ \\
+    + CPPO~\cite{cppo2024}       & no  & yes & completion pruning (compute) & no  & $0.85\times$ \\
+    + NGRPO~\cite{ngrpo2025}     & yes & no  & negative-group advantage & no  & $1.00\times$ \\
+    + Scaf-GRPO~\cite{scafgrpo2025} & yes & no  & scaffolded hints (prompt) & no  & $1.05\times$ \\
     \bottomrule
   \end{tabular}
-  \caption{Variance-mitigation methods along five comparison axes.
-  Scaf-GRPO is the only method that alters the reward landscape itself.
-  Compute is relative to baseline GRPO at matched $G$ and
-  rollout-token budget.}
+  \caption{Variance-mitigation methods along five comparison axes (mechanisms as
+  described in the cited papers). Scaf-GRPO is the only method that alters the
+  prompt distribution (scaffolded hints); NGRPO targets all-incorrect groups;
+  CPPO prunes completions for throughput. Compute is relative to baseline GRPO at
+  matched $G$.}
   \label{tab:variance-axes}
 \end{table}
 
 \subsection{Integration protocol}
 \label{sec:variance-integration}
 
-Each method is implemented as a minimal configuration override on the
-same GRPO trainer used everywhere else in this paper. The override
-hooks in the \texttt{unified/} module are:
-
-\begin{itemize}
-  \item \textbf{\texttt{advantage\_computation}} -- CPPO overrides
-  this hook to drop rollouts with \(|A_i|<\epsilon\) (default
-  \(\epsilon{=}10^{-3}\)) before the policy gradient;
-  NGRPO overrides the same hook to replace the group-mean baseline
-  \(\bar r_g\) with the EMA running mean \(\hat r_t =
-  \alpha\,\bar r_{g,t}+(1-\alpha)\,\hat r_{t-1}\),
-  \(\alpha{=}0.05\).
-  \item \textbf{\texttt{reward\_shaping}} -- Scaf-GRPO overrides this
-  hook to add \(+\beta_e H(\pi(\cdot\mid \text{prompt}))\) to each
-  rollout reward, \(\beta_e{=}0.01\).
-\end{itemize}
+For plumbing and ablation we provide \emph{simplified config-override proxies}
+on our GRPO trainer---these are \textbf{not} faithful reimplementations of the
+cited methods, and the head-to-head rows above are literature projections
+(\S\ref{sec:variance-honesty}), \emph{not} outputs of these proxies. The proxy
+hooks are: an advantage-pruning variant (a CPPO-style throughput proxy that drops
+low-$|A_i|$ completions); an EMA-baseline variant (a coarse stand-in we used to
+probe baseline shift, \emph{not} NGRPO's actual negative-group enhancement); and
+an entropy-bonus variant (a stand-in we used to probe exploration, \emph{not}
+Scaf-GRPO's actual prompt-scaffolding). We flag the mismatch explicitly so the
+proxies are not read as the published algorithms.
 
 The corresponding CLI driver is
 \texttt{experiments/variance\_mitigation\_integration.py}, which

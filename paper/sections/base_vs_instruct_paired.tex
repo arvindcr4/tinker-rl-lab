@@ -66,9 +66,11 @@ Llama-3.1-8B & Inst & \texttt{meta-llama/Llama-3.1-8B-Instruct} & 0.9500 & 0.962
         ``training reward'' at once.
   \item \textbf{The only inferential row in the released artifact is
         Qwen3-8B instruct.} Its held-out GSM8K gain is
-        $+0.0130$ across 5 seeds with paired $t=1.3234$ and an exact
-        Student-$t$ two-sided $p=0.26$ (BH-adjusted $p=0.26$; an earlier draft
-        reported $0.186$ from a normal approximation, now corrected), i.e.\
+        $+0.0130$. This is a \emph{one-sample} $t$-test of the 5 post-RL seed
+        accuracies against the single fixed pre-RL reference ($0.82$), not a
+        per-seed paired test (we lack matched per-seed pre-RL evals): $t=1.3234$,
+        exact Student-$t$ two-sided $p=0.26$ (an earlier draft reported $0.186$
+        from a normal approximation, now corrected), i.e.\
         directionally positive but not statistically significant at conventional
         thresholds.
   \item \textbf{The Qwen3-8B base row remains descriptive only.} The

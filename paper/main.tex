@@ -1496,9 +1496,11 @@ High-accuracy frontier models ($p > 0.8$) show \emph{negative} residuals
 (observed ZVF $<$ theoretical), consistent with adaptive difficulty sampling.
 Moderate-accuracy experiments ($p \approx 0.3$--$0.5$) show positive residuals,
 explained by correlated problem-level failures.
-For our G=8 DeepSeek-V3.1 run ($p \approx 0.85$), 27\% of steps were
-zero-gradient; switching to $G = 2$ would preserve all informative contrastive
-signal while reducing rollout overhead by 75\%.
+For our G=4 DeepSeek-V3.1 run ($p \approx 0.85$), 30\% of steps were
+zero-gradient (measured \texttt{zero\_loss\_pct}); the DPO equivalence predicts
+that switching to $G = 2$ would retain the within-group contrast on the
+non-degenerate steps while halving rollout overhead ($\approx 50\%$), though we
+did not run this ablation.
 However, the DPO equivalence also predicts that very high-accuracy models
 ($p > 0.9$) will have low gradient utilization regardless of $G$, suggesting
 that the relevant intervention at high accuracy is not group-size reduction
@@ -2095,9 +2097,11 @@ DPO-equivalent contrastive objective, and show empirically that 2-GRPO retains
 Our theoretical analysis confirms their prediction for the expected ZVF:
 $\mathrm{GU}(p, 2) = 2p(1-p)$, which is exactly the Bernoulli variance of
 the per-prompt accuracy $p$ and reproduces the DPO preference weighting.
-For our DeepSeek-V3.1 run ($p \approx 0.85$, $G = 8$), 27\% of steps were
-zero-gradient; switching to $G = 2$ would preserve all informative contrastive
-signal while reducing rollout overhead by 75\%.
+For our DeepSeek-V3.1 run ($p \approx 0.85$, $G = 4$), 30\% of steps were
+zero-gradient (measured \texttt{zero\_loss\_pct}); the DPO equivalence predicts
+that switching to $G = 2$ would retain the within-group contrast on the
+non-degenerate steps while halving rollout overhead ($\approx 50\%$), though we
+did not run this ablation.
 However, the DPO equivalence also predicts that very high-accuracy models
 ($p > 0.9$) will have low gradient utilization regardless of $G$, suggesting
 that the relevant intervention at high accuracy is not group-size reduction

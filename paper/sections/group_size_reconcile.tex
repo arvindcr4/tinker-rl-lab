@@ -6,8 +6,8 @@
 
 \subsection{The Apparent Contradiction}
 
-A reviewer correctly identified that Table~6 reports $G{=}8$ as the
-highest last-10 reward under a fixed-step budget, while the main text
+A reviewer correctly identified that Table~6 reports $G{=}4$ as the
+highest last-10 reward ($52.1\%$) under a fixed-step budget, while the main text
 claims that $G{\approx}32$ ``maximizes gradient utilization''. These
 observations are compatible but require the axis of comparison to be
 made explicit. Under a \emph{fixed number of optimizer steps}, larger
@@ -77,7 +77,8 @@ ablation logs (the \texttt{FALLBACK\_ROWS} table in the script), \emph{not}
 freshly measured per-seed runs; per-cell seed counts are not retained and no
 measured $G\times T$ sweep over $\{4,8,16,32,64\}$ was executed. Bold in the
 accuracy row marks the per-row accuracy maximum, which shifts rightward with
-$T$: $G{=}8$ at $T{=}1\text{M}$ (matching Table~6), $G{=}16$ at $4\text{M}$, and
+$T$: $G{=}8$ at $T{=}1\text{M}$ (near the fixed-\emph{step} optimum $G{=}4$ of
+Table~6), $G{=}16$ at $4\text{M}$, and
 $G{\approx}32$ at $T{\ge}16\text{M}$ (the canonical training budget). The
 token-budget gradient-efficiency estimator $\widehat{\mathrm{GE}}_{\text{tok}}$
 (Eq.~\ref{eq:gu}; distinct from the main-text $\mathrm{GU}{=}1{-}\mathrm{ZVF}$)
@@ -101,7 +102,7 @@ quantitative claim.
 We therefore revise the main-text claim as follows.
 \begin{quote}\itshape
 Under a fixed \emph{step} budget at small total token counts,
-$G{=}8$ attains the highest last-10 reward (Table~6).
+$G{=}4$ attains the highest last-10 reward ($52.1\%$, Table~6).
 Under fixed \emph{total tokens} at the canonical training scale
 used elsewhere in the paper ($T\!\ge\!16$M), $G{\approx}32$
 maximizes held-out accuracy in this illustrative reanalysis. (The

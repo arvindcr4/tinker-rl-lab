@@ -157,7 +157,7 @@ accepts \texttt{--method \{grpo,cppo,ngrpo,scafgrpo\}} and
 emits its results to
 \texttt{experiments/results/variance\_mitigation.tsv}.
 
-\subsection{Head-to-head results on Qwen3-8B / GSM8K (10 seeds, 100 steps)}
+\subsection{Head-to-head comparison on Qwen3-8B / GSM8K (projected, 5-seed protocol)}
 \label{sec:variance-head2head}
 
 \begin{table}[t]
@@ -172,25 +172,28 @@ emits its results to
     \textbf{Collapse rate} &
     \textbf{Mean ZVF @ step 50} &
     \textbf{Time-to-collapse} \\
-    & (mean $\pm$ 95\% CI) & (acc.\%) & (\#seeds / 5) & & (steps, median) \\
+    & (projected mean) & (acc.\%) & (\#seeds / 5) & & (steps, median) \\
     \midrule
-    GRPO baseline          & $0.412 \pm 0.038$ & $41.8$ & $3 / 5$  & $0.71$ & $62$  \\
-    + CPPO$^{\dagger}$     & $0.439 \pm 0.036$ & $43.3$ & $2 / 5$  & $0.64$ & $78$  \\
-    + NGRPO$^{\dagger}$    & $0.431 \pm 0.041$ & $42.7$ & $3 / 5$  & $0.60$ & $74$  \\
-    + Scaf-GRPO$^{\dagger}$ & $0.460 \pm 0.033$ & $45.2$ & $1 / 5$  & $0.37$ & $>\!100$ \\
+    GRPO baseline$^{\ddagger}$ & $0.412$ & $41.8$ & $3 / 5$  & $0.71$ & $62$  \\
+    + CPPO$^{\dagger}$     & $0.439$ & $43.3$ & $2 / 5$  & $0.64$ & $78$  \\
+    + NGRPO$^{\dagger}$    & $0.431$ & $42.7$ & $3 / 5$  & $0.60$ & $74$  \\
+    + Scaf-GRPO$^{\dagger}$ & $0.460$ & $45.2$ & $1 / 5$  & $0.37$ & $>\!100$ \\
     \bottomrule
   \end{tabular}
-  \caption{Head-to-head comparison on Qwen3-8B / GSM8K with 10 seeds
-  and 100 gradient steps.
+  \caption{Head-to-head comparison on Qwen3-8B / GSM8K, $5$-seed protocol.
+  \textbf{All four rows are projections, not fresh measurements}, so we omit
+  confidence intervals (none would be a valid inferential interval).
   ``Collapse rate'' counts seeds whose training-reward trajectory
   flat-lines at ZVF $\ge 0.9$ for at least 20 consecutive steps.
+  $^{\ddagger}$The GRPO baseline row is a \emph{synthetic baseline} produced by
+  the documented dry-run generator
+  (\texttt{experiments/variance\_mitigation\_integration.py --dry-run}, whose
+  per-step rows are drawn to match these target aggregates); it is \emph{not} a
+  measured run. The only genuinely measured GRPO-variant comparison in this paper
+  is the Dr.\ GRPO vs.\ GRPO control in Section~\ref{sec:variance-drgrpo}.
   Rows marked $^{\dagger}$ are \emph{projected from matched-protocol
-  reanalysis}: the method is applied atop our own GRPO configuration
-  via the \texttt{unified/} overrides listed in
-  Section~\ref{sec:variance-integration}, with method-specific
-  hyperparameters held at the defaults recommended by each paper, and
-  the columns are the projected values implied by reapplying those
-  deltas to our Qwen3-8B / GSM8K baseline. See
+  reanalysis}: the relative deltas reported by each method's original paper are
+  reapplied to that synthetic GRPO baseline. See
   Section~\ref{sec:variance-honesty} for what this projection does and
   does not claim.}
   \label{tab:variance-head2head}
@@ -209,16 +212,22 @@ prevent the within-group reward distribution from collapsing.
 \label{sec:variance-honesty}
 We label the three non-baseline rows as ``projected from
 matched-protocol reanalysis'' because we have not yet re-run
-Qwen3-8B / GSM8K at 10 seeds and 100 steps for each of CPPO,
+Qwen3-8B / GSM8K at 5 seeds and 100 steps for each of CPPO,
 NGRPO, and Scaf-GRPO on our own hardware -- the projected columns are
-obtained by combining our measured GRPO trajectory with the
+obtained by combining a calibrated GRPO trajectory with the
 relative deltas reported in the respective original papers under the
-closest-matched configuration, propagated through the same evaluation
-harness we use for all other numbers. The ordering of methods and the
-qualitative ZVF-reduction pattern are therefore well-supported, but
-the absolute numerical gaps should not be cited as new independent
-measurements. The GRPO row is measured; the others are projections
-that will be replaced by new measured runs as they complete.
+closest-matched configuration. Crucially, that GRPO trajectory is
+itself \emph{synthetic}: the released artifact
+\texttt{experiments/results/variance\_mitigation.tsv} is the output of the
+\texttt{--dry-run} generator, whose per-step rows are sampled to match the
+target aggregates in Table~\ref{tab:variance-head2head} rather than recorded
+from a training run. We therefore make \emph{no} measurement claim for any row
+of this table: it illustrates the literature-predicted \emph{ordering} of
+methods and the qualitative ZVF-reduction pattern, and the absolute numbers
+must not be cited as measurements. The one genuinely measured GRPO-variant
+result in this paper is the Dr.\ GRPO vs.\ GRPO control
+(Section~\ref{sec:variance-drgrpo}); the projected rows here would be replaced
+by measured runs as they complete.
 
 \subsection{ZVF diagnostic stress test}
 \label{sec:variance-zvf-stress}
@@ -231,11 +240,13 @@ useful diagnostic on top of the new methods; if any method destroys
 the ZVF $\to$ collapse correlation, we should flag that explicitly as
 an applicability boundary.
 
-We estimate the Spearman correlation \(\rho\) between mean
-ZVF at step 25 and a binary ``final-collapse'' indicator at step 100,
-over the same 5-seed sweep. Under baseline GRPO, this correlation is
-\(\rho \approx 0.78\) (cf.\ the ZVF validation in the main text).
-Table~\ref{tab:variance-zvf-rho} reports the same correlation after
+We \emph{project} the Spearman correlation \(\rho\) between mean
+ZVF at step 25 and a binary ``final-collapse'' indicator at step 100
+over the same synthetic 5-seed sweep (the methods were not faithfully
+re-run; see the synthetic-baseline caveat above). Under the GRPO baseline the
+diagnostic gives \(\rho \approx 0.78\), consistent with the measured ZVF
+validation in the main text.
+Table~\ref{tab:variance-zvf-rho} reports the projected correlation after
 each variance-mitigation method is applied.
 
 \begin{table}[t]
@@ -255,31 +266,34 @@ each variance-mitigation method is applied.
     + Scaf-GRPO   & $0.22$ & $0.31$ & \emph{weakens} \\
     \bottomrule
   \end{tabular}
-  \caption{ZVF at step 25 remains a strong ($\rho\ge 0.6$) predictor
+  \caption{\emph{Projected} (not measured) ZVF-vs-collapse correlations,
+  sharing the synthetic-projection caveat of Table~\ref{tab:variance-head2head}.
+  ZVF at step 25 is projected to remain a strong ($\rho\ge 0.6$) predictor
   of step-100 collapse under CPPO and NGRPO: these methods
   reduce the \emph{level} of ZVF without destroying its
   \emph{informativeness}. Under Scaf-GRPO, the correlation drops to
-  $\rho\approx 0.3$ because the added exploration bonus prevents ZVF
-  from ever saturating in the first place, so early-ZVF essentially
+  $\rho\approx 0.3$ because injecting scaffolded hints on the hardest
+  prompts keeps groups from saturating to all-wrong, so early ZVF essentially
   stops varying and can no longer separate collapsing from
   non-collapsing seeds. This is the expected applicability boundary
   of a ZVF-based diagnostic.}
   \label{tab:variance-zvf-rho}
 \end{table}
 
-The cleanest reading of Table~\ref{tab:variance-zvf-rho} is that ZVF
-generalizes across \emph{compensation-style} variance-mitigation
-methods (CPPO, NGRPO, which reduce or reweight after the fact)
-but stops being a good early-warning signal under
+The cleanest reading of Table~\ref{tab:variance-zvf-rho} is that ZVF is
+\emph{expected} to remain predictive across \emph{compensation-style}
+variance-mitigation methods (CPPO, NGRPO, which reduce or reweight after the
+fact) but to stop being a good early-warning signal under
 \emph{suppression-style} methods such as Scaf-GRPO that prevent the
-variance collapse from manifesting at all. We think this is the right
-outcome for a diagnostic claim: ZVF is a sharp indicator exactly when
-ZVF itself is allowed to vary; under a method that is designed to
-keep ZVF low by construction, the diagnostic should, and does, lose
+variance collapse from manifesting at all---a hypothesis still to be confirmed
+by measured runs, since the per-method rows above are projections. The
+underlying logic is that ZVF is a sharp indicator exactly when
+ZVF itself is allowed to vary; under a method designed to
+keep ZVF low by construction, the diagnostic should lose
 its predictive edge. The practical recommendation for practitioners
 using Scaf-GRPO-like scaffolding is to replace ZVF with a
-policy-entropy-based early-warning signal, since the entropy bonus is
-what makes ZVF uninformative.
+policy-entropy-based early-warning signal, since the scaffolding keeps ZVF
+itself from varying.
 
 \subsection{A measured Dr.\ GRPO vs.\ GRPO control}
 \label{sec:variance-drgrpo}

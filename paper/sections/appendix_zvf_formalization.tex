@@ -52,7 +52,10 @@ For that corpus we therefore make no causal partial-correlation claim. To test
 the partial-correlation question directly we instead ran a fully instrumented,
 ungated small-scale validation (next subsection), which \emph{does} log
 per-step ZVF together with batch-mean reward, policy entropy, and advantage
-variance, and we report its measured partial correlation there.
+variance, and we report its measured \emph{raw} correlation there---while
+explaining (in that subsection) why a partial correlation ``controlling for
+advantage variance'' would be circular under binary rewards and is deliberately
+not reported.
 
 The narrower empirical claim made in the revised paper is the one directly
 supported by the released evidence: in outcome-reward GRPO, high ZVF
@@ -80,10 +83,14 @@ Across the $480$ logged steps, the per-step observed ZVF correlates
 $r=0.92$ with the Bernoulli-null prediction $p^{G}+(1-p)^{G}$ evaluated at the
 step's batch-mean reward $p$, and mean ZVF decreases monotonically in $G$
 ($0.84, 0.76, 0.69, 0.63$ at $G=2,4,8,16$), as the closed form requires. The
-\emph{absolute} ZVF exceeds the i.i.d.\ prediction (e.g.\ $0.69$ vs.\ a predicted
-$0.33$ at $G{=}8$), consistent with the low-temperature/correlated-completion
-boundary condition noted above: the $G$ rollouts are not independent draws, so
-the independence null is a lower bound on observed ZVF.
+\emph{absolute} ZVF modestly exceeds the i.i.d.\ prediction once the comparison
+is done correctly: the right baseline is the per-step \emph{average} of the
+closed form, $\mathbb{E}[p^{G}+(1-p)^{G}]=0.60$ at $G{=}8$ (not the closed form
+evaluated at the pooled mean reward, $0.33$, which understates the Bernoulli
+prediction by Jensen convexity). Against the per-step-average baseline the excess
+is only $\approx 0.09$ ($0.69$ vs.\ $0.60$), so most of the apparent gap is the
+Jensen effect rather than correlated completions; we therefore do not read it as
+strong evidence that the independence null is a lower bound.
 
 \paragraph{The closed form captures the qualitative structure at frontier scale,
 with a circularity caveat.} We measured ZVF directly on the frontier model by

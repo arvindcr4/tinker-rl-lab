@@ -100,7 +100,7 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
     )
 
     sft_config = SFTConfig(
-        output_dir="./distillation_off_policy",
+        output_dir=os.environ.get("RESULTS_DIR", "./distillation_off_policy"),
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
         learning_rate=5e-5,
@@ -117,7 +117,7 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
     )
 
     print("Starting off-policy distillation...")
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
     trainer.save_model("./distillation_off_policy_final")
     return trainer
 
@@ -188,7 +188,7 @@ def train_on_policy_distillation(config: DistillationConfig, train_dataset: Data
     tokenizer.pad_token = tokenizer.eos_token
 
     training_args = TrainingArguments(
-        output_dir="./distillation_on_policy",
+        output_dir=os.environ.get("RESULTS_DIR", "./distillation_on_policy"),
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
         learning_rate=5e-5,
@@ -209,7 +209,7 @@ def train_on_policy_distillation(config: DistillationConfig, train_dataset: Data
     )
 
     print("Starting on-policy distillation (KL minimization)...")
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
     trainer.save_model("./distillation_on_policy_final")
     return trainer
 

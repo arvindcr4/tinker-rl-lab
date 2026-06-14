@@ -125,6 +125,10 @@ def run_experiment(exp_name: str, exp_file: str, seed: int) -> dict:
 
     except subprocess.TimeoutExpired:
         elapsed = time.time() - start
+        try:
+            results_vol.commit()
+        except Exception:
+            pass
         return {
             "experiment": exp_name,
             "seed": seed,
@@ -134,6 +138,10 @@ def run_experiment(exp_name: str, exp_file: str, seed: int) -> dict:
         }
     except Exception as e:
         elapsed = time.time() - start
+        try:
+            results_vol.commit()
+        except Exception:
+            pass
         return {
             "experiment": exp_name,
             "seed": seed,

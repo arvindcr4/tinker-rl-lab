@@ -114,7 +114,7 @@ def main():
 
     # GRPO Configuration (matching Tinker hyperparameters)
     grpo_config = GRPOConfig(
-        output_dir="./grpo_math_output",
+        output_dir=os.environ.get("RESULTS_DIR", "./grpo_math_output"),
 
         # Batch settings (matching Tinker: group_size=4, groups_per_batch=100)
         per_device_train_batch_size=4,
@@ -176,7 +176,7 @@ def main():
     print("Expected: reward=0.67 -> 1.0, accuracy=70% -> 100%")
     print("=" * 50)
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
 
     # Save final model
     output_dir = f"./grpo_math_final_seed{seed}"

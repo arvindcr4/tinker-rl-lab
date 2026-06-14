@@ -193,7 +193,7 @@ trainer = SFTTrainer(
 )
 
 print("\n🚀 Starting SFT training ...\n")
-trainer.train()
+trainer.train(resume_from_checkpoint=True)
 
 # ── SAVE ─────────────────────────────────────────────────────
 os.makedirs(OUTPUT_DIR, exist_ok=True)

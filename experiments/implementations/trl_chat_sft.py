@@ -74,7 +74,7 @@ def main():
 
     # SFT Configuration (matching Tinker hyperparameters)
     sft_config = SFTConfig(
-        output_dir="./chat_sft_output",
+        output_dir=os.environ.get("RESULTS_DIR", "./chat_sft_output"),
 
         # Batch settings (matching Tinker: batch_size=32)
         per_device_train_batch_size=4,
@@ -120,7 +120,7 @@ def main():
     print("Supervised fine-tuning on NoRobots dataset")
     print("=" * 50)
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
 
     # Save final model
     trainer.save_model("./chat_sft_final")

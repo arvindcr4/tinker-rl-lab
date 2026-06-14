@@ -10,8 +10,9 @@ Purpose (closes two adversarial-review gaps):
     reward, policy entropy, advantage variance), so the partial correlation can
     be computed from real per-group rollout logs.
 
-Self-contained minimal GRPO (group-relative advantage, no KL/clip; the
-"Dr.GRPO"-style A = (r - mean_g)/(std_g + eps) estimator) on the ungated
+Self-contained minimal GRPO with the canonical group-relative advantage
+A = (r - mean_g)/(std_g + eps) (i.e. WITH the std normalization; this is vanilla
+GRPO, NOT Dr. GRPO -- Dr. GRPO drops the std divisor), no KL/clip, on the ungated
 Qwen2.5-0.5B with a verifiable binary correctness reward on a+b arithmetic, so
 rewards have real within-group variance (meaningful ZVF).
 

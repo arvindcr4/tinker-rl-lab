@@ -43,7 +43,7 @@ rl_image = (
     )
 )
 
-SEEDS = [42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768]
+SEEDS = [42, 123, 456, 789, 1024]  # 5 seeds, matching the paper's cross-library table
 RESULTS_DIR = "/results"
 
 

@@ -116,6 +116,27 @@ Features:
 - Works with any HF model
 - Single GPU to multi-GPU (DeepSpeed)
 
+### 7. AI Scientist Integrations
+
+Integration with autonomous research agents (e.g., AI Scientist) providing runnable templates and tools for end-to-end RL exploration.
+
+Features:
+- `tinker_grpo_rl.py`: Remote GRPO experiments via Tinker API.
+- `trl_local_grpo.py`: Local GRPO execution without cloud API constraints.
+- Tool-use dense reward design templates.
+
+### 8. Evaluation, Telemetry & Capabilities
+
+Advanced benchmarking, evaluation, and training features ensuring statistical rigor.
+
+Features:
+- **Held-out Evaluator**: Automated robust validation on held-out test sets.
+- **Variance Mitigation**: 9 implemented baseline methods including AReaL, Evolution Strategies (ES), MC-GRPO, and GIFT.
+- **Telemetry & ZVF Diagnostics**: Zero-Variance Fraction (ZVF) telemetry and partial correlation tracking.
+- **BFCLv4 Scaffold**: Integration with Berkeley Function Calling Leaderboard v4 for comprehensive tool-use evaluation.
+- **Hyperparameter Sweeper**: Automated sweep utilities for configuration exploration.
+- **Full Fine-Tuning (FT)**: Support for full weight updates alongside existing LoRA tracks.
+
 ## Quick Start
 
 ### Prerequisites

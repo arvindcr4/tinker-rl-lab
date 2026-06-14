@@ -13,10 +13,9 @@
 TinkerRL‑Bench is an **exploratory** case study of critic‑free reinforcement
 learning (GRPO) for post‑training small and mid‑sized language models. It
 contributes (i) a multi‑platform benchmark harness that runs identical
-GRPO/PPO/DPO workloads on Tinker, Modal, TRL, and Google Colab; (ii) a set
-of diagnostic metrics (Zero‑Variance Fraction, reward stability, length
-bias); and (iii) the first systematic audit of a closed‑source RL‑training
-API against open‑source baselines on GSM8K and xLAM function calling.
+GRPO/PPO/DPO workloads on Tinker, Modal, TRL, and Google Colab; (ii) an expanded set
+of diagnostic metrics (Zero‑Variance Fraction partial correlations, reward stability, length
+bias) alongside 9 variance mitigation methods (e.g., AReaL, MC-GRPO, GIFT); (iii) comprehensive evaluations spanning GSM8K, xLAM, and the BFCLv4 scaffold; and (iv) full integration with autonomous research pipelines (AI Scientist templates) and extended training capabilities including Full Fine-Tuning (FT) and automated hyperparameter sweeping.
 
 Because the work exists at the boundary between a commercial SaaS (Tinker)
 and the open‑source RL ecosystem, a large share of this document is
@@ -68,7 +67,7 @@ to detect this (Section 4.4 of the main paper).
 
 **M3. Circumventing safety training via the tool‑use pipeline.** The
 tool‑use track teaches a base model to emit schema‑valid JSON function
-calls on a five‑tool synthetic schema. An adversary could in principle
+calls on a five‑tool synthetic schema and the BFCLv4 scaffold, utilizing dense reward designs. An adversary could in principle
 swap the schema to teach the model to emit jailbreak prompts or invoke an
 attacker‑controlled tool. Mitigations:
 
@@ -347,12 +346,9 @@ Modal timeouts, KL‑tracking bug, W&B step‑level data loss).
 
 ### 7.2 Methodological Confounds
 
-- **Train‑set reward as primary Tinker metric.** Only GSM8K was followed
-  up with held‑out evaluation. Tool‑use and xLAM remain train‑set‑only; we
-  cannot separate memorisation from generalisation on those tracks.
-- **LoRA only, no full fine‑tuning.** Rank 8–64 LoRA everywhere. We have
-  not tested whether full FT would re‑order the library/algorithm
-  comparisons.
+- **Historical Train‑set metrics.** While we have now integrated a Held-out Evaluator for robust validation across tracks, many early Tinker runs logged only train-set rewards. Time-series comparisons spanning old and new runs must account for this.
+- **LoRA vs. Full FT.** Initial phases used Rank 8–64 LoRA exclusively. While a Full FT implementer is now integrated, not all baseline library comparisons have been fully re-run under the Full FT setting.
+- **Hyperparameter tuning.** While a sweeping capability has been introduced, historical baseline comparisons use default parameters (from Tinker cookbook + TRL docs).
 - **Cross‑platform hardware confounding.** Tinker, Modal, Colab, and PES
   A100 use different accelerators, memory hierarchies, and training
   stacks. Observed differences in reward dynamics are not purely

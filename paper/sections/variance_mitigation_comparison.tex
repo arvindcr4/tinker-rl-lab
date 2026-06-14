@@ -295,6 +295,31 @@ using Scaf-GRPO-like scaffolding is to replace ZVF with a
 policy-entropy-based early-warning signal, since the entropy bonus is
 what makes ZVF uninformative.
 
+\subsection{A measured Dr.\ GRPO vs.\ GRPO control}
+\label{sec:variance-drgrpo}
+
+The head-to-head rows above are literature-projected. As the one GRPO-variant
+comparison we ran \emph{measured} end-to-end, we A/B-tested Dr.\ GRPO
+\citep{tong2025drgrpo} against vanilla GRPO under an identical harness
+(\texttt{Qwen2.5-0.5B}, verifiable arithmetic correctness reward, token-level
+clipped surrogate, group size $8$, $40$ steps, $5$ seeds; driver
+\texttt{experiments/modal/modal\_drgrpo\_vs\_grpo.py}, artifact
+\texttt{experiments/results/drgrpo\_vs\_grpo.json}). The arms differ \emph{only}
+in the two Dr.\ GRPO fixes: (i) the advantage is not divided by the group
+standard deviation ($A = r - \bar r_g$ rather than $(r - \bar r_g)/\sigma_g$),
+and (ii) the loss is normalized by a constant rather than by per-response
+length. Held-out accuracy is statistically indistinguishable (GRPO
+$0.987 \pm 0.002$ vs.\ Dr.\ GRPO $0.992 \pm 0.003$; paired
+$\Delta = +0.5$\,pp, $t = 1.05$, $\mathrm{df}=4$, $p = 0.35$), and mean
+completion length is essentially identical ($4.74$ vs.\ $4.71$ tokens).
+We read this as a \emph{scope} result rather than a refutation of Dr.\ GRPO: on
+this near-ceiling task the policy emits $\sim$5-token answers, so the
+length-bias fix has almost nothing to act on and the std-normalization fix
+matters little once accuracy saturates. Dr.\ GRPO's documented gains arise in
+long chain-of-thought regimes where response-length bias is large, which this
+probe deliberately does not exercise; the faithful long-CoT config is provided
+in \texttt{experiments/axolotl/grpo\_gsm8k\_qwen8b\_dr\_grpo.yaml}.
+
 \subsection{Summary}
 \label{sec:variance-summary}
 

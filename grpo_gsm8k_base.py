@@ -2,6 +2,16 @@
 Usage: python grpo_gsm8k_base.py --model Qwen/Qwen3-8B --seed 137 --rank 32 --steps 50
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 import os, json, re, warnings, random, argparse
 
 warnings.filterwarnings("ignore")

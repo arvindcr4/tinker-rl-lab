@@ -12,6 +12,16 @@ Usage:
   python world_class_experiments.py --experiment loss_cmp  # Loss function comparison
   python world_class_experiments.py --experiment frontier   # Frontier models (235B, 70B)
 """
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import os, json, re, warnings, random, argparse, time, traceback
 from datetime import datetime
 warnings.filterwarnings("ignore")

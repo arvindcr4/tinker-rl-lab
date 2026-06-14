@@ -25,6 +25,16 @@ Env:
                   arvindcr4-pes-university/tinker-rl-lab-world-class)
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 from __future__ import annotations
 
 import argparse

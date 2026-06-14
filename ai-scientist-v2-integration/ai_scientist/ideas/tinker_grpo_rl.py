@@ -26,6 +26,16 @@ Output: {out_dir}/final_info.json  with:
   }
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 from __future__ import annotations
 
 import json

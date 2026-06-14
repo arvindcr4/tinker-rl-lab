@@ -1,4 +1,14 @@
 """Experiment D: GRPO with Salesforce/xlam-function-calling-60k real dataset"""
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import os, json, re, warnings, random
 warnings.filterwarnings("ignore")
 os.environ.setdefault("TINKER_API_KEY", os.environ.get("TINKER_API_KEY", ""))

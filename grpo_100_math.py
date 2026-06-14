@@ -1,5 +1,15 @@
 """100-step GRPO on MATH problems — optimized for speed"""
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 import os, json, re, warnings, random, math
 
 warnings.filterwarnings("ignore")

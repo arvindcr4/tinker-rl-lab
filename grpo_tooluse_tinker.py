@@ -5,6 +5,16 @@ Task:  single-turn structured tool calling (5 tools)
 Loss:  forward_backward_custom with GRPO advantage normalization
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 import os, json, re, warnings, random, time
 
 warnings.filterwarnings("ignore")

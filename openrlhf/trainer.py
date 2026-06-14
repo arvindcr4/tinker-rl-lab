@@ -10,6 +10,16 @@ Falls back to a seeded deterministic dryrun when openrlhf cannot be imported,
 clearly marked as such in the returned metrics.
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 from __future__ import annotations
 
 import asyncio

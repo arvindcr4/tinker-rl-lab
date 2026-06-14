@@ -8,6 +8,16 @@ Usage:
     python serve.py --port 8001                        # custom port
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 import argparse
 import random
 import time

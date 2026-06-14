@@ -15,6 +15,16 @@ Shared baseline is run once and re-used across all three sweeps.
 Output: experiments/tinker-runs/results/wave6_ablations.json
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 import json
 import os
 import random

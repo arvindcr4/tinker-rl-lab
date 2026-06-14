@@ -1,3 +1,13 @@
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 from concurrent.futures import ProcessPoolExecutor
 from typing import List, Optional, Set, Any, Callable, cast, Dict, Tuple
 import random

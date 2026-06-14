@@ -10,6 +10,16 @@ Usage:
     python run_skyrl_tinker.py --config configs/tinker_hosted.yaml --model Qwen/Qwen2.5-7B-Instruct
     python run_skyrl_tinker.py --config configs/tinker_hosted.yaml --env gsm8k
 """
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import argparse
 import importlib
 import json

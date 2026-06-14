@@ -8,6 +8,16 @@ Two approaches:
 2. On-Policy: KL divergence minimization to teacher
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 import sys
 import os
 import torch

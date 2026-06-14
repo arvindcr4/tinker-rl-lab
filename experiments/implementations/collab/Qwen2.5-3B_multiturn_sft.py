@@ -374,7 +374,7 @@ print("\n🚀 Starting multi-turn SFT training ...")
 print(f"   Model  : Qwen2.5-3B")
 print(f"   Dataset: {len(dataset['train'])} examples (ToolBench + synthetic)")
 print(f"   Each example has: tool_call → tool_result → final_answer\n")
-trainer.train()
+trainer.train(resume_from_checkpoint=True)
 
 # ── SAVE ─────────────────────────────────────────────────────
 os.makedirs(OUTPUT_DIR, exist_ok=True)

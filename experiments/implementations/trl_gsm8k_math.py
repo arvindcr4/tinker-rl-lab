@@ -130,7 +130,7 @@ def main():
 
     # GRPO Configuration for GSM8K
     grpo_config = GRPOConfig(
-        output_dir="./grpo_gsm8k_output",
+        output_dir=os.environ.get("RESULTS_DIR", "./grpo_gsm8k_output"),
 
         # Batch settings
         per_device_train_batch_size=2,
@@ -182,7 +182,7 @@ def main():
     print("GSM8K is harder than arithmetic - expect slower convergence")
     print("=" * 50)
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
 
     # Save final model
     trainer.save_model("./grpo_gsm8k_final")

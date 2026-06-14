@@ -246,7 +246,7 @@ print("What GRPO does each step:")
 print("  1. Generate 4 different tool call candidates per prompt")
 print("  2. Score each with reward functions above")
 print("  3. Update model to prefer higher-scoring outputs\n")
-trainer.train()
+trainer.train(resume_from_checkpoint=True)
 
 # ── SAVE ─────────────────────────────────────────────────────
 os.makedirs(OUTPUT_DIR, exist_ok=True)

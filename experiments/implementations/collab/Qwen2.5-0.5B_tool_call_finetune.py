@@ -230,7 +230,7 @@ trainer = SFTTrainer(
 # 8. TRAIN
 # ────────────────────────────────────────────────────────────
 print("\nStarting training ...\n")
-trainer.train()
+trainer.train(resume_from_checkpoint=True)
 
 # ────────────────────────────────────────────────────────────
 # 9. SAVE ADAPTER

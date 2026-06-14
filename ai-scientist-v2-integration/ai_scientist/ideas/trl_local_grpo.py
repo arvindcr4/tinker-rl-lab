@@ -47,9 +47,9 @@ warnings.filterwarnings("ignore")
 MODEL = "Qwen/Qwen2.5-0.5B-Instruct"  # Small, fast, local-runnable
 LORA_RANK = 16
 GROUP_SIZE = 4
-STEPS = 30
+STEPS = 200
 LR = 5e-6
-NUM_SEEDS = 3
+NUM_SEEDS = 5
 PROMPTS_PER_STEP = 4
 MAX_RESPONSE_TOKENS = 512
 NUM_EVAL_PROBLEMS = 100

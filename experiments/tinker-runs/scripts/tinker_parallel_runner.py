@@ -174,7 +174,7 @@ GRPO experiment from TinkerRL-Bench world-class experiment suite.
         return None
 
 # ── Single experiment runner ─────────────────────────────────────────────
-def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, steps=30, batch=2, tag=""):
+def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, steps=200, batch=2, tag=""):
     exp = tag or f"{task}_{model_name}_s{seed}"
     rng = random.Random(seed)
 

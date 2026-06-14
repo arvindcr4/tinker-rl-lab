@@ -21,7 +21,7 @@ OUT_PATH = os.path.join(
 MODEL = "meta-llama/Llama-3.3-70B-Instruct"
 GROUP_SIZE = 8
 LR = 1e-5
-STEPS = 30
+STEPS = 200
 WAVE = "task1-llama33-70b-multiseed"
 ALL_SEEDS = [42, 123, 456, 789]
 

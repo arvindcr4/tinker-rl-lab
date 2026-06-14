@@ -39,14 +39,14 @@ MODELS = {
 }
 
 DEFAULT_MODEL = "qwen-1.5b"
-NUM_STEPS = 30
+NUM_STEPS = 200
 GROUP_SIZE = 4
 LEARNING_RATE = 5e-6
 BATCH_SIZE = 2
 LORA_RANK = 16
 MAX_PROMPT_LENGTH = 512
 MAX_COMPLETION_LENGTH = 256
-NUM_SEEDS = 3
+NUM_SEEDS = 5
 
 SYSTEM_PROMPT = (
     "You are a math assistant. Solve the problem step by step, "

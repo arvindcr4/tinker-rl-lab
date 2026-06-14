@@ -50,9 +50,9 @@ warnings.filterwarnings("ignore")
 MODEL = "Qwen/Qwen3-4B-Instruct-2507"  # Tinker catalog. Small+fast.
 LORA_RANK = 16
 GROUP_SIZE = 4
-STEPS = 30
+STEPS = 200
 LR = 5e-6
-NUM_SEEDS = 3
+NUM_SEEDS = 5
 PROMPTS_PER_STEP = 4
 MAX_RESPONSE_TOKENS = 512
 NUM_EVAL_PROBLEMS = 100

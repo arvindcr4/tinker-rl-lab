@@ -129,7 +129,7 @@ def reward_tool(response, expected):
 
 # ── GRPO Training Loop ───────────────────────────────────────────────────
 def run_grpo_experiment(model_name, model_id, task, seed=42, rank=32, lr=3e-5, 
-                         group=8, steps=30, batch=2, tag=""):
+                         group=8, steps=200, batch=2, tag=""):
     """Run a single GRPO experiment and save results."""
     random.seed(seed)
     torch.manual_seed(seed)
@@ -292,7 +292,7 @@ def run_scaling_suite():
     for name, mid in models:
         try:
             r = run_grpo_experiment(name, mid, "gsm8k", seed=42, rank=32, 
-                                     lr=3e-5, group=8, steps=30, batch=2,
+                                     lr=3e-5, group=8, steps=200, batch=2,
                                      tag=f"scale_gsm8k_{name}")
             results.append(r)
         except Exception as e:
@@ -337,7 +337,7 @@ def run_moe_comparison():
     for name, mid, desc in experiments:
         try:
             r = run_grpo_experiment(name, mid, "gsm8k", seed=42, rank=32,
-                                     lr=3e-5, group=8, steps=30, batch=2,
+                                     lr=3e-5, group=8, steps=200, batch=2,
                                      tag=f"moe_cmp_{name}")
             r["description"] = desc
             results.append(r)
@@ -360,7 +360,7 @@ def run_cross_task():
         for task in tasks:
             try:
                 r = run_grpo_experiment(name, mid, task, seed=42, rank=32,
-                                         lr=3e-5, group=8, steps=30, batch=2,
+                                         lr=3e-5, group=8, steps=200, batch=2,
                                          tag=f"cross_{task}_{name}")
                 results.append(r)
             except Exception as e:

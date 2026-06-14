@@ -14,7 +14,8 @@ EXP_NAME = "C_low_temp"
 MODEL = "Qwen/Qwen3-8B"
 LORA_RANK = 32
 GROUP_SIZE = 4
-STEPS = 30
+NUM_SEEDS = 5
+STEPS = 200
 LR = 3e-5
 TEMP = 0.4
 SAVE_EVERY = 10
@@ -108,68 +109,75 @@ def grpo_loss_fn(data, logprobs_list):
     return loss, {"grpo_loss": loss.item()}
 
 
-print(f"[{EXP_NAME}] Connecting...")
-svc = tinker.ServiceClient(base_url=None)
-tc = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK)
-tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
-w0 = tc.save_weights_for_sampler(name="step_0").result()
-sc = tc.create_sampling_client(model_path=w0.path)
-print(f"[{EXP_NAME}] Run: {tc.model_id} | LR={LR} group={GROUP_SIZE} temp={TEMP} rank={LORA_RANK}")
 
-step_rewards = []
-for step in range(STEPS):
-    batch = random.sample(examples, 4)
-    all_data, all_advs, batch_rewards = [], [], []
+for seed in range(NUM_SEEDS):
+    print(f"\n==================================================\nRunning seed {seed} ({seed+1}/{NUM_SEEDS})\n==================================================")
+    random.seed(seed)
+    torch.manual_seed(seed)
+    
+    print(f"[{EXP_NAME}] Connecting...")
+    svc = tinker.ServiceClient(base_url=None)
+    tc = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK)
+    tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
+    w0 = tc.save_weights_for_sampler(name=f"seed{seed}_step_0").result()
+    sc = tc.create_sampling_client(model_path=w0.path)
+    print(f"[{EXP_NAME}] Run: {tc.model_id} | LR={LR} group={GROUP_SIZE} temp={TEMP} rank={LORA_RANK}")
 
-    for prompt_text, tool_name, args in batch:
-        prompt_ids = tok.encode(prompt_text, add_special_tokens=False)
-        sp = T.SamplingParams(max_tokens=192, temperature=TEMP, top_p=0.95)
-        responses = sc.sample(
-            T.ModelInput.from_ints(prompt_ids), num_samples=GROUP_SIZE, sampling_params=sp
-        ).result()
-        rewards = []
-        for resp in responses.sequences:
-            text = tok.decode(list(resp.tokens), skip_special_tokens=True)
-            rewards.append(reward(text, tool_name, args))
-        mean_r = sum(rewards) / len(rewards)
-        std_r = (sum((r - mean_r) ** 2 for r in rewards) / len(rewards)) ** 0.5 + 1e-8
-        advs = [(r - mean_r) / std_r for r in rewards]
-        batch_rewards.extend(rewards)
-        for resp, adv in zip(responses.sequences, advs):
-            resp_ids = list(resp.tokens)
-            full_ids = prompt_ids + resp_ids
-            target_ids = full_ids[1:] + [0]
-            all_data.append(
-                T.Datum(
-                    model_input=T.ModelInput.from_ints(full_ids),
-                    loss_fn_inputs={
-                        "target_tokens": T.TensorData(
-                            data=target_ids, dtype="int64", shape=[len(target_ids)]
-                        )
-                    },
+    step_rewards = []
+    for step in range(STEPS):
+        batch = random.sample(examples, 4)
+        all_data, all_advs, batch_rewards = [], [], []
+
+        for prompt_text, tool_name, args in batch:
+            prompt_ids = tok.encode(prompt_text, add_special_tokens=False)
+            sp = T.SamplingParams(max_tokens=192, temperature=TEMP, top_p=0.95)
+            responses = sc.sample(
+                T.ModelInput.from_ints(prompt_ids), num_samples=GROUP_SIZE, sampling_params=sp
+            ).result()
+            rewards = []
+            for resp in responses.sequences:
+                text = tok.decode(list(resp.tokens), skip_special_tokens=True)
+                rewards.append(reward(text, tool_name, args))
+            mean_r = sum(rewards) / len(rewards)
+            std_r = (sum((r - mean_r) ** 2 for r in rewards) / len(rewards)) ** 0.5 + 1e-8
+            advs = [(r - mean_r) / std_r for r in rewards]
+            batch_rewards.extend(rewards)
+            for resp, adv in zip(responses.sequences, advs):
+                resp_ids = list(resp.tokens)
+                full_ids = prompt_ids + resp_ids
+                target_ids = full_ids[1:] + [0]
+                all_data.append(
+                    T.Datum(
+                        model_input=T.ModelInput.from_ints(full_ids),
+                        loss_fn_inputs={
+                            "target_tokens": T.TensorData(
+                                data=target_ids, dtype="int64", shape=[len(target_ids)]
+                            )
+                        },
+                    )
                 )
-            )
-            all_advs.append(adv)
+                all_advs.append(adv)
 
-    if not all_data:
-        continue
-    _advantages = all_advs
-    result = tc.forward_backward_custom(data=all_data, loss_fn=grpo_loss_fn).result()
-    tc.optim_step(T.AdamParams(learning_rate=LR, beta1=0.9, beta2=0.95, eps=1e-8)).result()
-    avg_r = sum(batch_rewards) / len(batch_rewards)
-    step_rewards.append(avg_r)
-    loss_val = result.metrics.get("grpo_loss", float("nan"))
-    print(f"[{EXP_NAME}] Step {step + 1:3d}/{STEPS} | loss={loss_val:.4f} | reward={avg_r:.3f}")
-    if (step + 1) % SAVE_EVERY == 0:
-        tc.save_state(name=f"state_{step + 1}")
-        ckpt = tc.save_weights_for_sampler(name=f"step_{step + 1}").result()
-        sc = tc.create_sampling_client(model_path=ckpt.path)
-        print(f"[{EXP_NAME}]   -> Checkpoint step_{step + 1}")
+        if not all_data:
+            continue
+        _advantages = all_advs
+        result = tc.forward_backward_custom(data=all_data, loss_fn=grpo_loss_fn).result()
+        tc.optim_step(T.AdamParams(learning_rate=LR, beta1=0.9, beta2=0.95, eps=1e-8)).result()
+        avg_r = sum(batch_rewards) / len(batch_rewards)
+        step_rewards.append(avg_r)
+        loss_val = result.metrics.get("grpo_loss", float("nan"))
+        print(f"[{EXP_NAME}] Step {step + 1:3d}/{STEPS} | loss={loss_val:.4f} | reward={avg_r:.3f}")
+        if (step + 1) % SAVE_EVERY == 0:
+            tc.save_state(name=f"state_seed{seed}_{step + 1}")
+            ckpt = tc.save_weights_for_sampler(name=f"step_seed{seed}_{step + 1}").result()
+            sc = tc.create_sampling_client(model_path=ckpt.path)
+            print(f"[{EXP_NAME}]   -> Checkpoint step_{step + 1}")
 
-tc.save_state(name="final")
-final = tc.save_weights_for_sampler(name="final").result()
-print(
-    f"\n[{EXP_NAME}] DONE | avg_reward_last10={sum(step_rewards[-10:]) / max(len(step_rewards[-10:]), 1):.3f}"
-)
-print(f"[{EXP_NAME}] Run ID: {tc.model_id}")
-print(f"[{EXP_NAME}] Sampler: {final.path}")
+    tc.save_state(name=f"seed{seed}_final")
+    final = tc.save_weights_for_sampler(name=f"seed{seed}_final").result()
+    print(
+        f"\n[{EXP_NAME}] DONE | avg_reward_last10={sum(step_rewards[-10:]) / max(len(step_rewards[-10:]), 1):.3f}"
+    )
+    print(f"[{EXP_NAME}] Run ID: {tc.model_id}")
+    print(f"[{EXP_NAME}] Sampler: {final.path}")
+

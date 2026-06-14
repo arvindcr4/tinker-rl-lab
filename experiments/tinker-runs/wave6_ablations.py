@@ -9,7 +9,7 @@ using the same GRPO training loop as campaign_v2.py:
   • LoRA rank sweep    — {4, 8, 16, 32, 64}        (at temperature=0.8, batch=2)
   • Batch size sweep   — {1, 2, 4, 8}               (at rank=32, temperature=0.8)
 
-All runs: model=Qwen/Qwen3-8B, task=GSM8K, seed=42, steps=30, group=8, lr=1e-5.
+All runs: model=Qwen/Qwen3-8B, task=GSM8K, seed=42, steps=200, group=8, lr=1e-5.
 Shared baseline is run once and re-used across all three sweeps.
 
 Output: experiments/tinker-runs/results/wave6_ablations.json
@@ -43,7 +43,7 @@ os.environ["TINKER_API_KEY"] = API_KEY
 MODEL = "Qwen/Qwen3-8B"
 MODEL_SHORT = "qwen3-8b"
 SEED = 42
-STEPS = 30
+STEPS = 200
 GROUP_SIZE = 8
 LR = 1e-5
 

@@ -613,10 +613,28 @@ listed as the top future-work item.}
 
 \subsection{Cross-Library Comparison}
 
+We compare GRPO and PPO \emph{implementations} on a common arithmetic task
+(Table~\ref{tab:results_arithmetic}). The TRL-GRPO and the three classic-RL PPO
+rows are reproduced from a fresh five-seed Modal run
+(\texttt{scripts/modal\_run\_experiments.py}; raw per-seed results in the
+released \texttt{modal\_results\_all.json}), and the reported means, standard
+errors, and 95\% intervals match that run exactly. We stress that this is a
+\emph{cross-implementation}, not a clean cross-algorithm, comparison: the
+classic-RL libraries (SB3, CleanRL, Tianshou) run a small MLP policy over a
+discrete-action arithmetic MDP, whereas the TRL/Tinker rows are an
+autoregressive 0.5B language model, so the $\approx 0.01$ accuracy of the
+classic-RL stacks reflects an architecture/task-encoding mismatch rather than a
+property of PPO as an algorithm (see \S\ref{sec:discuss_impl} and the
+incommensurable-scale caveat on the corresponding effect size in
+Table~\ref{tab:effect_sizes}).
 
 \begin{table}[htbp]
 \centering
-\caption{Cross-library comparison on Math RL (Arithmetic). Mean $\pm$ SE across 5 seeds.}
+\caption{Cross-library comparison on Math RL (Arithmetic). Mean $\pm$ SE across
+5 seeds. The TRL-GRPO and SB3/CleanRL/Tianshou-PPO rows are reproduced from a
+committed five-seed Modal run (\texttt{modal\_results\_all.json}); the
+\emph{Tinker (GRPO)} row is a separate single-stack Tinker API result and is
+\emph{not} reproduced by that open run.}
 \label{tab:results_arithmetic}
 \begin{tabular}{lccc}
 \toprule
@@ -1933,7 +1951,8 @@ correctly. Our evidence is therefore strongest for an implementation-layer gap,
 not for a categorical claim about PPO in the abstract.
 
 The practical implication is methodological, not algorithmic: our
-SB3 PPO row at $0.010 \pm 0.002$ accuracy is evidence about an
+SB3 PPO row at $0.010 \pm 0.002$ accuracy (reproduced from the committed
+five-seed Modal run, \texttt{modal\_results\_all.json}) is evidence about an
 SB3-style tokenization and rollout pipeline applied to
 autoregressive generation, and we cannot separate this structural
 failure from an algorithmic failure of PPO in the abstract.

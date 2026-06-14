@@ -6,6 +6,16 @@ Optimizations vs v1:
   - Concurrent requests — fire batches of 16 in parallel via futures
   - Total: 800 calls in ~16 parallel batches ≈ 10-15 min
 """
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 from __future__ import annotations
 import json, os, random, re, time
 from concurrent.futures import ThreadPoolExecutor, as_completed

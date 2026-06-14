@@ -4,6 +4,16 @@ BITTER LESSON CAMPAIGN v2: Correct Tinker SDK API usage.
 Uses forward_backward_custom() + optim_step() pattern.
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 import os, re, json, random, sys, time, warnings, traceback, torch
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed

@@ -1,6 +1,16 @@
 """Parallel Tinker experiment runner with W&B logging + HF Hub checkpointing.
 Launches all experiments concurrently via ThreadPoolExecutor.
 """
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import os, json, re, random, time, traceback, threading, shutil
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed

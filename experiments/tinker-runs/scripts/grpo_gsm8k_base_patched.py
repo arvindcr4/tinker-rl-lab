@@ -4,6 +4,16 @@ The installed 'triton' package is the symbolic execution library (triton_library
 not OpenAI's Triton GPU compiler that PyTorch expects. This mock replaces it with
 stubs so torch/transformers can import successfully.
 """
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import sys, types as _types
 
 class _TritonMockFinder:

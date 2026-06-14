@@ -1,4 +1,14 @@
 """Experiment A: Baseline GRPO — LR=3e-5, group=8, temp=0.8, LoRA rank=32"""
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import os, json, re, warnings, random, sys, argparse
 warnings.filterwarnings("ignore")
 os.environ.setdefault("TINKER_API_KEY", os.environ.get("TINKER_API_KEY", ""))

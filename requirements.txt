@@ -44,6 +44,7 @@ pandas>=2.1.0,<2.3.0
 
 # --- Experiment Tracking ---
 wandb>=0.18.0,<0.20.0
+codecarbon>=2.0.0
 
 # --- Web Server (Atropos) ---
 fastapi>=0.115.0,<0.116.0

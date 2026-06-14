@@ -1,3 +1,13 @@
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import pytest
 from tinker_atropos.trainer import TinkerAtroposTrainer
 from tinker_atropos.config import TinkerAtroposConfig

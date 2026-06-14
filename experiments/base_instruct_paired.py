@@ -16,6 +16,16 @@ Usage:
     python experiments/base_instruct_paired.py            # write TSV + print LaTeX
     python experiments/base_instruct_paired.py --quiet    # write TSV only
 """
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 from __future__ import annotations
 
 import argparse

@@ -1,3 +1,13 @@
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import sys
 
 # 1. ai-scientist-template/experiment.py

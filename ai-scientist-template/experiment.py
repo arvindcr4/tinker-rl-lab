@@ -15,6 +15,16 @@ Key variables an AI Scientist agent can modify:
 Output: final_info.json with GSM8K training accuracy metrics.
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 import argparse
 import json
 import os

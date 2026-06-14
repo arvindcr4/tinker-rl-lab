@@ -11,6 +11,16 @@ Usage:
   python grpo_10x_runner.py --config configs/block_g_gsm8k_group32.yaml --dry-run
   python grpo_10x_runner.py --config configs/block_g_gsm8k_group32.yaml --resume
 """
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 from __future__ import annotations
 
 import argparse

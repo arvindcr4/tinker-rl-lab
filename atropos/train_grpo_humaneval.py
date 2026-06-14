@@ -14,6 +14,16 @@ All runs log to WandB (project/group from YAML config).
 After training the LoRA adapter is pushed to HuggingFace when HF_PUSH=1.
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 from __future__ import annotations
 
 import argparse

@@ -1,4 +1,14 @@
 """100-step GRPO on xlam-60k real data — optimized for speed"""
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import os, json, re, warnings, random
 warnings.filterwarnings("ignore")
 os.environ.setdefault("TINKER_API_KEY", os.environ.get("TINKER_API_KEY", ""))

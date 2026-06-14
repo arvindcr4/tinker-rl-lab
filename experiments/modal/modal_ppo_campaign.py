@@ -94,7 +94,7 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
         model_id,
         quantization_config=quant_config,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
         trust_remote_code=True,
         peft_config=LoraConfig(
             r=32,

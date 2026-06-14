@@ -285,7 +285,7 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
     torch_dtype=torch.bfloat16,
-    device_map="auto",
+    device_map=None if "LOCAL_RANK" in os.environ else "auto",
 )
 
 # LoRA

@@ -127,7 +127,7 @@ def load_model_with_adapter(adapter_path, label):
         bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True,
     )
     base = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID, quantization_config=bnb, device_map="auto",
+        MODEL_ID, quantization_config=bnb, device_map=None if "LOCAL_RANK" in os.environ else "auto",
         trust_remote_code=True, dtype=torch.bfloat16,
     )
     model = PeftModel.from_pretrained(base, adapter_path)

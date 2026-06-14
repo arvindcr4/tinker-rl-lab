@@ -413,7 +413,7 @@ bnb_config = BitsAndBytesConfig(
 )
 base = AutoModelForCausalLM.from_pretrained(
     MODEL_ID, quantization_config=bnb_config,
-    device_map="auto", trust_remote_code=True,
+    device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True,
 )
 base.config.use_cache = False
 model = PeftModel.from_pretrained(base, SFT_ADAPTER, is_trainable=True)

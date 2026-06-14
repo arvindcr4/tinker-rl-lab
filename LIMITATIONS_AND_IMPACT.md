@@ -368,8 +368,8 @@ Modal timeouts, KL‑tracking bug, W&B step‑level data loss).
 - **Model scale.** 0.6B–235B only. 70B dense and 1T MoE extrapolations
   (beyond Kimi‑K2) unreliable.
 - **Benchmark coverage narrow.** GSM8K, MATH‑500 (exploratory), HumanEval
-  (subset), synthetic/xLAM tool‑use. No MT‑Bench, ArenaHard, HarmBench,
-  ToxicChat, or TruthfulQA.
+  (subset), synthetic/xLAM tool‑use, and ToxicChat. No MT‑Bench, ArenaHard, HarmBench,
+  or TruthfulQA.
 - **No human preference data.** Verifiable rewards only (exact‑match,
   unit‑test, schema‑validity). Findings should not be extrapolated to
   reward‑model‑based RLHF without further work.

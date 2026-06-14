@@ -129,14 +129,18 @@ driver \texttt{experiments/modal/modal\_groupsize\_zvf\_sweep.py}, artifact
 \texttt{experiments/results/groupsize\_zvf\_sweep.tsv}). On the ungated
 \texttt{Qwen2.5-0.5B} with a verifiable correctness reward on two-operand
 addition, $G \in \{2,4,8,16\}$ at three seeds each, held-out accuracy traces an
-inverted-U that peaks at $G{=}8$ ($0.982 \to 0.988 \to \mathbf{0.990} \to
-0.978$), while the mean zero-variance fraction falls monotonically with $G$
-($0.84 \to 0.76 \to 0.69 \to 0.63$), exactly as
-$\mathrm{ZVF}(p,G)=p^{G}+(1-p)^{G}$ predicts. This is a small model on an easy
-task (accuracies are near ceiling, so the effect sizes are modest), and it is
-\emph{not} a substitute for a Qwen3-8B/GSM8K sweep; we report it only as a
-measured, reproducible confirmation that the optimal $G$ is intermediate rather
-than smallest-or-largest.
+inverted-U shape with its numerical maximum at the intermediate $G{=}8$
+($0.982 \to 0.988 \to 0.990 \to 0.978$); we emphasize the apex is \emph{not}
+statistically separable from its neighbours ($G{=}4$ $0.988{\pm}.002$ vs.\
+$G{=}8$ $0.990{\pm}.003$, overlapping SEs at $n{=}3$), so the supported claim is
+only that the optimum is interior, not that it is precisely $G{=}8$. The mean
+zero-variance fraction falls monotonically with $G$ ($0.84 \to 0.76 \to 0.69 \to
+0.63$), the direction $\mathrm{ZVF}(p,G)=p^{G}+(1-p)^{G}$ predicts (the closed
+form captures the trend, not the absolute level---see the formalization
+appendix). This is a small model on an easy task (accuracies are near ceiling,
+so the effect sizes are modest) and is \emph{not} a substitute for a
+Qwen3-8B/GSM8K sweep; we report it only as a measured, reproducible indication
+that the optimal $G$ is interior rather than smallest-or-largest.
 
 \begin{table}[ht]
 \centering

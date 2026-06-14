@@ -630,23 +630,28 @@ Table~\ref{tab:effect_sizes}).
 
 \begin{table}[htbp]
 \centering
-\caption{Cross-library comparison on Math RL (Arithmetic). Mean $\pm$ SE across
-5 seeds. The TRL-GRPO and SB3/CleanRL/Tianshou-PPO rows are reproduced from a
-committed five-seed Modal run (\texttt{modal\_results\_all.json}); the
-\emph{Tinker (GRPO)} row is a separate single-stack Tinker API result and is
-\emph{not} reproduced by that open run.}
+\caption{Cross-library comparison on Math RL (Arithmetic). The TRL-GRPO and
+SB3/CleanRL/Tianshou-PPO rows are reproduced from a committed five-seed Modal run
+(\texttt{modal\_results\_all.json}); values are mean $\pm$ unbiased sample SE
+($\mathrm{ddof}{=}1$, $n{=}5$) with $95\%$ CIs from the Student-$t$ multiplier
+($t_{.975,4}{=}2.776$), so the intervals are wider than a normal approximation.
+The \emph{Tinker (GRPO)} row is a separate single-stack Tinker API result, not
+reproduced by the open run; its interval is carried from that run's original
+reporting and not recomputed under this convention.}
 \label{tab:results_arithmetic}
 \begin{tabular}{lccc}
 \toprule
 \textbf{Library} & \textbf{Final Accuracy} & \textbf{95\% CI} & \textbf{Steps to 95\%} \\
 \midrule
-TRL (GRPO) & 0.734 $\pm$ 0.028 & [0.679, 0.789] & 125 \\
-Tinker (GRPO) & 0.999 $\pm$ 0.001 & [0.993, 1.000] & 20 \\
-SB3 (PPO) & 0.010 $\pm$ 0.002 & [0.007, 0.013] & N/A \\
-CleanRL (PPO) & 0.009 $\pm$ 0.001 & [0.006, 0.012] & N/A \\
-Tianshou (PPO) & 0.006 $\pm$ 0.002 & [0.003, 0.009] & N/A \\
+TRL (GRPO) & 0.734 $\pm$ 0.031 & [0.647, 0.821] & 125 \\
+Tinker (GRPO)$^{\dagger}$ & 0.999 $\pm$ 0.001 & [0.993, 1.000] & 20 \\
+SB3 (PPO) & 0.010 $\pm$ 0.002 & [0.005, 0.015] & N/A \\
+CleanRL (PPO) & 0.009 $\pm$ 0.002 & [0.005, 0.013] & N/A \\
+Tianshou (PPO) & 0.006 $\pm$ 0.002 & [0.001, 0.011] & N/A \\
 \bottomrule
 \end{tabular}
+\\[2pt]
+{\footnotesize $^{\dagger}$Separate Tinker API result; interval as originally reported (not recomputed).}
 \end{table}
 
 % Figure 5: Learning curves
@@ -1272,16 +1277,20 @@ group-relative mean vs.\ PPO's learned value head) and PPO's value loss, across
 five seeds (driver
 \texttt{experiments/modal/modal\_samestack\_ppo\_grpo.py}; artifact
 \texttt{experiments/results/samestack\_ppo\_grpo.json}).
-Held-out accuracy is statistically indistinguishable between the two
+Held-out accuracy shows no \emph{detectable} difference between the two
 (Table~\ref{tab:samestack}): GRPO $0.990 \pm 0.004$ vs.\ PPO $0.992 \pm 0.003$,
 a paired difference of $-0.2$ percentage points ($t{=}{-}1.0$, $\mathrm{df}{=}4$,
-$p{=}0.37$). The only visible asymmetry is stability: GRPO's last-10 training
-reward varies less across seeds (SE $0.006$ vs.\ $0.044$ for PPO), echoing the
+$p{=}0.37$; $95\%$ CI on the paired difference $[-0.76,\,+0.36]$~pp). We stress
+this is a \emph{null}, not an equivalence result: both arms sit at a near-$0.99$
+ceiling, so the design is underpowered (paired MDE $\approx 0.75$~pp at $80\%$
+power) and a null is the default expectation---we can rule out held-out gaps
+larger than $\approx 0.8$~pp but did not run a TOST against a pre-specified
+margin. The only visible asymmetry is stability: GRPO's last-10 training
+reward varies less across seeds (SE $0.007$ vs.\ $0.050$ for PPO), echoing the
 lower-volatility observation above. This is a small model on an easy task and
-does not settle the question at frontier scale, but it directly supports the
-paper's central reading: the apparent ``PPO vs.\ GRPO'' differences in our
-cross-stack rows are not established as algorithmic---under a clean same-stack,
-multi-seed comparison the algorithms perform the same.
+does not settle the question at frontier scale; it is \emph{consistent with}---but,
+given the low power, not confirmatory of---the paper's reading that the apparent
+cross-stack ``PPO vs.\ GRPO'' differences are stack- rather than algorithm-driven.
 
 \begin{table}[ht]
 \centering
@@ -1298,9 +1307,11 @@ PPO (value-head baseline)  & $0.992 \pm 0.003$ & $0.918 \pm 0.050$ & 5 \\
 \end{tabular}
 \caption{\textbf{Same-stack PPO vs.\ GRPO control} on \texttt{Qwen2.5-0.5B} /
 arithmetic (40 steps, 5 seeds, identical generation/reward/eval/objective and
-compute; only the advantage baseline differs). Held-out accuracy is
-statistically indistinguishable; GRPO is more stable across seeds. A small-scale
-de-confounding control, not a frontier-scale claim.}
+compute; only the advantage baseline differs). Held-out accuracy shows no
+difference larger than $\approx 0.8$~pp ($95\%$ CI $[-0.76,+0.36]$~pp; MDE
+$\approx 0.75$~pp at $80\%$ power)---a null, not exact equivalence; GRPO is more
+stable across seeds. A small-scale de-confounding control, not a frontier-scale
+claim.}
 \label{tab:samestack}
 \end{table}
 
@@ -1947,8 +1958,10 @@ H100), so the direction on either model cannot be established from these data.
 Indeed, the small-scale same-stack control we did run (Table~\ref{tab:samestack};
 \texttt{Qwen2.5-0.5B}, five seeds, identical pipeline, only the advantage
 baseline differs) finds \emph{no} significant PPO-vs-GRPO difference in held-out
-accuracy ($p{=}0.37$), which is the outcome expected if the cross-stack
-differences were stack- rather than algorithm-driven. Reading the remaining
+accuracy ($p{=}0.37$; $95\%$ CI $[-0.76,+0.36]$~pp), consistent with---though,
+given the ceiling-induced low power (MDE $\approx 0.75$~pp), not confirmatory
+of---the reading that the cross-stack differences are stack- rather than
+algorithm-driven. Reading the remaining
 case studies charitably as a hypothesis generator, we offer three complementary
 mechanistic conjectures that a frontier-scale same-stack, multi-seed
 gradient-level analysis could test.

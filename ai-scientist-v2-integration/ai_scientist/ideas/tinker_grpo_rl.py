@@ -48,6 +48,7 @@ warnings.filterwarnings("ignore")
 
 # ── Config (agent-editable) ──────────────────────────────────────────────
 MODEL = "Qwen/Qwen3-4B-Instruct-2507"  # Tinker catalog. Small+fast.
+USE_LORA = True
 LORA_RANK = 16
 GROUP_SIZE = 4
 STEPS = 30
@@ -120,7 +121,10 @@ def run_one_seed(seed: int, examples_train: list, examples_eval: list) -> dict:
 
     print(f"\n── seed={seed} — connecting to Tinker ──")
     svc = tinker.ServiceClient(base_url=None)
-    tc = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK)
+    if USE_LORA:
+        tc = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK)
+    else:
+        tc = svc.create_training_client(base_model=MODEL)
     print(f"model_id: {tc.model_id}")
 
     tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)

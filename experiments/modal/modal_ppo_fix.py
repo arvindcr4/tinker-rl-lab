@@ -38,6 +38,20 @@ def run_ppo_qwen35_4b_quantized():
     """PPO on Qwen3.5-4B with 4-bit quantization + gradient checkpointing."""
     import torch
     import wandb
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
     from datasets import load_dataset
     from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training

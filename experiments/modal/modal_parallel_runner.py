@@ -69,6 +69,20 @@ Modal H100 GPU experiment from TinkerRL-Bench world-class suite.
 @app.function(image=image, gpu="H100", timeout=7200)
 def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int = 30):
     import torch, random, re, json, wandb, os
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from datasets import load_dataset
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from peft import LoraConfig, get_peft_model
@@ -196,6 +210,20 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
 @app.function(image=image.pip_install("human-eval"), gpu="H100", timeout=7200)
 def run_humaneval_eval(model_name: str = "Qwen/Qwen3-8B", num_samples: int = 5):
     import torch, json, wandb, os
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from human_eval.data import read_problems
     from human_eval.execution import check_correctness
@@ -265,6 +293,20 @@ def run_humaneval_eval(model_name: str = "Qwen/Qwen3-8B", num_samples: int = 5):
 @app.function(image=image, gpu="H100", timeout=7200)
 def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int = 30):
     import torch, torch.nn.functional as F, random, re, json, wandb, os
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from datasets import load_dataset
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from peft import LoraConfig, get_peft_model
@@ -361,6 +403,20 @@ def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: in
 @app.function(image=image, gpu="H100", timeout=7200)
 def run_gsm8k_heldout_eval(model_name: str = "Qwen/Qwen3-32B", num_examples: int = 200):
     import torch, re, json, random, wandb, os
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from datasets import load_dataset
     from transformers import AutoTokenizer, AutoModelForCausalLM
 

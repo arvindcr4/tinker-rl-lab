@@ -60,8 +60,12 @@ tianshou = [
 d3rlpy = [
     "d3rlpy>=2.0.0",
 ]
+eval = [
+    "fschat>=0.2.33",
+    "openai>=1.0.0",
+]
 all = [
-    "tinkerrl[trl,sb3,cleanrl,tianshou,d3rlpy]",
+    "tinkerrl[trl,sb3,cleanrl,tianshou,d3rlpy,eval]",
 ]
 dev = [
     "pytest>=7.0",

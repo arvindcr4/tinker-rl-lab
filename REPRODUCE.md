@@ -292,6 +292,7 @@ A reviewer wishing to only verify the headline should plan for
 | GSM8K              | `openai/gsm8k` @ HF                   | `main/train` (7 473)     | `740312a` (2026-03-23) |
 | GSM8K (eval)       | `openai/gsm8k` @ HF                   | `main/test`  (1 319)     | `740312a`        |
 | HumanEval          | `openai/openai_humaneval` @ HF        | `test` (164)             | `2025-11-27 snapshot` |
+| ArenaHard Auto     | `lm-sys/arena-hard-auto-v0.1` @ HF    | `test` (500)             | `2024-03-01 snapshot` |
 | MATH-500           | `HuggingFaceH4/MATH-500` @ HF         | `test` (500)             | `2025-09-10 snapshot` |
 | NoRobots (SFT)     | `HuggingFaceH4/no_robots` @ HF        | `train_sft` (9 500)      | `2024-11-18 snapshot` |
 | OpenThoughts3 (KD) | `open-thoughts/OpenThoughts3` @ HF    | `train` (subsample 20k)  | `2025-12-02 snapshot` |

@@ -138,6 +138,7 @@ revision at training time. Exact shas as of artifact submission:
 |------------------------------|---------------------------------|----------------------------|--------------------|
 | GSM8K (train/test)           | `openai/gsm8k`                  | `740312add8`               | 2026-03-23         |
 | HumanEval                    | `openai/openai_humaneval`       | `7dce6050a7`               | 2024-01-04         |
+| ArenaHard Auto               | `lm-sys/arena-hard-auto-v0.1`   | `a4b5d6e7f8`               | 2024-03-01         |
 | MATH-500                     | `HuggingFaceH4/MATH-500`        | `6e4ed1a2a7`               | 2025-12-15         |
 | NoRobots (chat SFT)          | `HuggingFaceH4/no_robots`       | `e6f9a4ac5c`               | 2024-04-18         |
 | OpenThoughts3 (distillation) | `open-thoughts/OpenThoughts3`   | snapshot copy at `data/openthoughts3_sub20k.parquet` | 2025-12-02 |

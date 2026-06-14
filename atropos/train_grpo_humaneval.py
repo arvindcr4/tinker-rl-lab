@@ -133,10 +133,12 @@ def make_humaneval_reward_fn(dataset):
     return reward_fn
 
 
-def build_humaneval_dataset(tokenizer, max_token_length: int = 1024):
+def build_humaneval_dataset(tokenizer, max_token_length: int = 1024, split: str = "train"):
     from datasets import load_dataset
 
     ds = load_dataset("openai/openai_humaneval", split="test")
+    ds = ds.train_test_split(test_size=0.1, seed=42)
+    ds = ds[split]
 
     SUFFIX = (
         "\n# Write a complete Python solution. "
@@ -217,7 +219,7 @@ def make_tool_use_reward_fn():
     return reward_fn
 
 
-def build_tool_use_dataset(tokenizer, seed: int = 42):
+def build_tool_use_dataset(tokenizer, seed: int = 42, split: str = "train"):
     from datasets import Dataset
 
     SYSTEM = (
@@ -240,6 +242,13 @@ def build_tool_use_dataset(tokenizer, seed: int = 42):
     import random
     rng = random.Random(seed)
     rng.shuffle(rows)
+    
+    split_idx = int(len(rows) * 0.9)
+    if split == "train":
+        rows = rows[:split_idx]
+    else:
+        rows = rows[split_idx:]
+        
     return Dataset.from_list(rows)
 
 
@@ -264,6 +273,8 @@ def load_config(path: str) -> dict:
         "wandb_group":             t.get("wandb_group",         "coding-scaling"),
         "wandb_run_name":          t.get("wandb_run_name",      "grpo-run"),
         "checkpoint_dir":          t.get("checkpoint_dir",      "./checkpoints/run/"),
+        "early_stopping_patience": t.get("early_stopping_patience", 3),
+        "eval_steps":              t.get("eval_steps",          10),
     }
 
 
@@ -371,13 +382,15 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
     )
 
     if task == "humaneval":
-        dataset    = build_humaneval_dataset(tokenizer, cfg["max_token_length"])
+        dataset    = build_humaneval_dataset(tokenizer, cfg["max_token_length"], split="train")
+        eval_dataset = build_humaneval_dataset(tokenizer, cfg["max_token_length"], split="test")
         reward_fn  = make_humaneval_reward_fn(
             __import__("datasets").load_dataset("openai/openai_humaneval", split="test")
         )
         extra_cols = ["task_id"]
     elif task == "tool_use":
-        dataset    = build_tool_use_dataset(tokenizer, seed=seed)
+        dataset    = build_tool_use_dataset(tokenizer, seed=seed, split="train")
+        eval_dataset = build_tool_use_dataset(tokenizer, seed=seed, split="test")
         reward_fn  = make_tool_use_reward_fn()
         extra_cols = ["gold_tool", "gold_answer", "gold_args"]
     else:
@@ -391,12 +404,18 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
         num_train_epochs=1,
         max_steps=cfg["total_steps"],
         per_device_train_batch_size=_per_device_bs,
+        per_device_eval_batch_size=_per_device_bs,
         num_generations=_num_gen,
         generation_batch_size=_per_device_bs * _num_gen,  # must be divisible by num_generations
         max_completion_length=cfg["max_token_length"],
         learning_rate=cfg["learning_rate"],
         logging_steps=1,
-        save_steps=10,
+        save_steps=cfg["eval_steps"],
+        eval_strategy="steps",
+        eval_steps=cfg["eval_steps"],
+        save_strategy="steps",
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_reward/mean",
         seed=seed,
         report_to="wandb",
         run_name=run_name,
@@ -405,11 +424,15 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
         dataloader_num_workers=0,
         remove_unused_columns=False,
     )
+    from transformers import EarlyStoppingCallback
+    
     trainer = GRPOTrainer(
         model=model, args=grpo_config,
         train_dataset=dataset,
+        eval_dataset=eval_dataset,
         reward_funcs=[reward_fn],
         processing_class=tokenizer,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=cfg["early_stopping_patience"])],
     )
 
     from transformers import TrainerCallback

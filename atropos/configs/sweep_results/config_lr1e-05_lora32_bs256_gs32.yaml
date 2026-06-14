@@ -1,0 +1,30 @@
+env:
+  batch_size: 256
+  ensure_scores_are_not_same: false
+  group_size: 32
+  max_batches_offpolicy: 3
+  max_num_workers: 24
+  max_token_length: 512
+  rollout_server_url: http://localhost:8014
+  steps_per_eval: 25
+  tokenizer_name: Qwen/Qwen3-0.6B
+  total_steps: 50
+  use_wandb: true
+  wandb_name: gsm8k-qwen3-0.6b-env
+openai:
+- api_key: x
+  base_url: http://localhost:8015/v1
+  model_name: Qwen/Qwen3-0.6B
+  num_requests_for_eval: 256
+  weight: 1.0
+slurm: false
+testing: false
+tinker:
+  checkpoint_dir: ./checkpoints/gsm8k_qwen0_6b/
+  learning_rate: 1.0e-05
+  lora_rank: 32
+  max_token_trainer_length: 2048
+  save_checkpoint_interval: 10
+  wandb_group: grpo-exhaustive-sweep
+  wandb_project: tinker-rl-scaling
+  wandb_run_name: gsm8k-qwen3-0.6b-lr1e-05-lora32-bs256-gs32

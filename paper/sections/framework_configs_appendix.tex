@@ -16,8 +16,12 @@ protocol described below.
 \subsection{What Was Held Constant Across Frameworks}
 
 \begin{itemize}[leftmargin=1.2em,itemsep=1pt]
-  \item Base model weights and tokenizer (identical SHA-256 checksum of
-        HuggingFace snapshot)
+  \item Tokenizer and prompt tokenization (identical HuggingFace tokenizer).
+        \textbf{The base \emph{weights} were not held constant}: the Tinker run
+        initialises from Qwen3-8B-Base while the TRL/veRL/OpenRLHF runs
+        initialise from the instruction-tuned Qwen3-8B. This Base-vs-Instruct
+        difference is the primary confound flagged in the main text, so the
+        four-way last-10 gap is \emph{not} a pure framework ablation.
   \item LoRA rank $r$, $\alpha$, and target-module set
   \item Surfaced optimizer family (AdamW) and requested learning rate
   \item Group size $G$ and rollouts per group $K$
@@ -54,10 +58,13 @@ released at
 \texttt{experiments/framework\_config\_dumps/README.md} for per-field
 commentary and reproduction instructions).
 Fields the Tinker API does not expose are marked
-\texttt{null\ \#\ managed\_by\_tinker}; readers can verify that, of
-the 47 hyperparameter fields we track, 31 are identical across the
-four frameworks, 11 are framework-specific but documented, and 5 are
-Tinker-managed and therefore not controlled.
+\texttt{null\ \#\ managed\_by\_tinker}; readers can verify directly from the
+released YAMLs that, of the 44 hyperparameter fields we track, 25 are identical
+across all four frameworks, 11 are serialised as
+\texttt{null\ \#\ managed\_by\_tinker} in the Tinker dump (and so are not
+controlled), and the remainder are framework-specific but documented. The base
+checkpoint (\texttt{model}/\texttt{model\_sha256}) is \emph{not} among the
+identical fields --- the Tinker run uses Qwen3-8B-Base (see above).
 
 \subsection{Measured vs.\ documented rows in the current artifact}
 

@@ -14,35 +14,36 @@ Qwen3-8B + GSM8K matched-configuration run.
 | `openrlhf_qwen3_8b_gsm8k.yaml` | OpenRLHF (vLLM + Ray)            | separate reference-serving process |
 | `verl_qwen3_8b_gsm8k.yaml`     | Bytedance veRL (Ray + vLLM)      | sharded Ray reference placement |
 
-Together these four YAMLs enumerate the 47 hyperparameter fields the
+Together these four YAMLs enumerate the 44 hyperparameter fields the
 appendix reports. Readers verify fairness by diffing them pairwise.
 
-## The 31 / 11 / 5 Split
+## The field partition (recomputable from the four YAMLs)
 
-Per Section "Complete Configuration Dumps" of the appendix:
+Per Section "Complete Configuration Dumps" of the appendix. These counts are
+derived directly from the four released YAMLs (44 tracked leaf fields total):
 
-- **31 identical** across all four frameworks: LoRA `rank`/`alpha`/
+- **25 identical** across all four frameworks: LoRA `rank`/`alpha`/
   `target_modules`/`dropout`; GRPO `group_size`/`rollouts_per_group`/
   `max_new_tokens`; sampling `temperature`/`top_p`/`top_k`/`do_sample`;
   optimizer `name`/`lr`/`weight_decay`/`betas`/`eps`; reward `type`;
-  metadata `model`/`model_sha256`/`task`/`seed`/`source_git_sha`; plus
-  runtime fields present in every framework (bf16, `tensor_parallel_size`,
-  etc.). These are the 31 cells in the four YAMLs that match byte-for-byte.
-- **11 framework-specific but documented**: KL `beta` (0.04 TRL/veRL,
-  0.02 OpenRLHF), `kl.surrogate`, `importance_sampling.granularity`
-  (token for TRL/veRL, sequence for OpenRLHF), `reference_model.placement`
+  metadata `task`/`seed`/`source_git_sha`; plus runtime fields present and
+  equal in every framework. **`model` and `model_sha256` are NOT identical:**
+  the Tinker run uses `Qwen/Qwen3-8B-Base` while TRL/veRL/OpenRLHF use the
+  instruction-tuned `Qwen/Qwen3-8B` (the Base-vs-Instruct confound the appendix
+  flags). `model_sha256` is a placeholder, not a verified checksum.
+- **11 Tinker-managed**: serialized as `null  # managed_by_tinker` in
+  `tinker_qwen3_8b_gsm8k.yaml` — `kl.beta`, `kl.surrogate`,
+  `importance_sampling.granularity`, `reference_model.offload`,
+  `reference_model.recompute`, `tokens_per_optimizer_step`,
+  `reward.broadcast_precision`, `runtime.gradient_checkpointing`,
+  `runtime.micro_batch_size`, `runtime.gradient_accumulation_steps`, and
+  `runtime.tensor_parallel_size`. These are not controlled and are the reason
+  the appendix retracts the original "byte-identical" framing.
+- **Remaining fields are framework-specific but documented**: e.g. KL `beta`
+  (0.04 TRL/veRL, 0.02 OpenRLHF), `reference_model.placement`
   (`on_device` / `separate_process` / `sharded_ray`),
-  `reference_model.offload`, `reference_model.recompute`,
-  `runtime.gradient_accumulation_steps`,
-  `runtime.inference_backend` (vLLM for OpenRLHF/veRL),
-  `runtime.gpu_memory_utilization`, `runtime.num_minibatches` (veRL
-  only), and `reward.broadcast_precision`.
-- **5 Tinker-managed**: `kl.beta`, `kl.surrogate`,
-  `importance_sampling.granularity`, `tokens_per_optimizer_step`, and
-  `reward.broadcast_precision`. All five are serialized as
-  `null  # managed_by_tinker` in `tinker_qwen3_8b_gsm8k.yaml` and are
-  the reason the appendix retracts the original "byte-identical"
-  framing.
+  `runtime.inference_backend` (vLLM for OpenRLHF/veRL), and
+  `runtime.num_minibatches` (veRL only).
 
 ## Per-YAML Notes
 
@@ -102,7 +103,7 @@ python3 -c "from verl.config import VERLConfig; \
 ```
 
 Tinker does not expose a Pydantic config; the dump is built by
-`tinker.train_config` introspection, then the five Tinker-managed
+`tinker.train_config` introspection, then the eleven Tinker-managed
 fields are hand-redacted to `null  # managed_by_tinker`.
 
 ## Validation

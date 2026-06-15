@@ -10,8 +10,8 @@
 metadata:
   framework: tinker
   framework_version: 0.2.x
-  model: Qwen/Qwen3-8B
-  model_sha256: placeholder-sha256-of-qwen3-8b-hf-snapshot
+  model: Qwen/Qwen3-8B-Base  # NOTE: base checkpoint, unlike the instruct Qwen3-8B used by the open frameworks (Base-vs-Instruct confound)
+  model_sha256: placeholder-sha256-of-qwen3-8b-base-hf-snapshot
   task: gsm8k
   seed: 42
   source_git_sha: f0edf7265b319401824d8a187df9b57befc3489f

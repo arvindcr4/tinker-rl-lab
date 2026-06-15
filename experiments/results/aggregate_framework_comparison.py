@@ -84,6 +84,11 @@ def _load_tinker() -> Dict[str, Any]:
         "framework": "Tinker",
         "mode": "real",
         **BASE_CONFIG,
+        # The Tinker framework-gap run initialises from Qwen3-8B-Base, not the
+        # instruction-tuned Qwen3-8B used by the open frameworks. Override the
+        # BASE_CONFIG default so the emitted artifact reflects the actual
+        # checkpoint and matches the Base-vs-Instruct confound noted in the paper.
+        "model": "Qwen/Qwen3-8B-Base",
         "platform": row.get("platform", "tinker"),
         "peak_reward": float(row.get("peak_reward") or (max(trace) if trace else 0)),
         "last10_avg": float(row.get("last_10_avg") or row.get("last10_avg") or _last10(trace)),

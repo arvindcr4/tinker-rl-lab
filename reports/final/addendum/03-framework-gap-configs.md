@@ -7,13 +7,13 @@
 
 #### Retraction of the "Byte-Identical" Phrasing
 
-The main text previously described the cross-framework comparison as using "byte-identical training configs." A reviewer (W6) correctly flagged this as internally inconsistent: we simultaneously acknowledged that the Tinker-managed runtime applies "managed reference-model offload and tuned rollout defaults," which cannot be byte-identical to anything. We retract the phrase. The comparison is now framed as a **matched-configuration protocol**: every hyperparameter the user can set is harmonized across frameworks, while acknowledging explicitly that five Tinker-internal fields are managed and cannot be controlled from the API. This is a behavioural, not a bit-level, matching.
+The main text previously described the cross-framework comparison as using "byte-identical training configs." A reviewer (W6) correctly flagged this as internally inconsistent: we simultaneously acknowledged that the Tinker-managed runtime applies "managed reference-model offload and tuned rollout defaults," which cannot be byte-identical to anything. We retract the phrase. The comparison is now framed as a **matched-configuration protocol**: every hyperparameter the user can set is harmonized across frameworks, while acknowledging explicitly that eleven Tinker-internal fields are managed and cannot be controlled from the API. This is a behavioural, not a bit-level, matching.
 
-#### What Was Held Constant (31 of 47 tracked fields)
+#### What Was Held Constant (25 of 44 tracked fields)
 
-Verified byte-for-byte identical across all four YAML dumps:
+Verified identical across all four YAML dumps:
 
-- Base model weights and tokenizer (same SHA-256 of the Qwen3-8B HuggingFace snapshot)
+- Tokenizer (same HuggingFace tokenizer). **The base _weights_ were NOT held constant:** the Tinker run uses `Qwen/Qwen3-8B-Base` while TRL/veRL/OpenRLHF use the instruction-tuned `Qwen/Qwen3-8B` — the Base-vs-Instruct confound flagged in the main text. (`model_sha256` is a placeholder, not a verified checksum.)
 - LoRA `rank=16`, `alpha=32`, `target_modules={q,k,v,o}_proj`, `dropout=0.0`
 - GRPO `group_size G=8`, `rollouts_per_group K=1`, `max_new_tokens=384`
 - Sampling `temperature=0.7`, `top_p=0.95`, `do_sample=true`
@@ -47,7 +47,7 @@ reference-model placement (`on_device` / `managed` / `separate_process` / `shard
 | AdamW lr | 1×10⁻⁶ | 1×10⁻⁶ | 1×10⁻⁶ | 1×10⁻⁶ |
 | tokens/optimizer step | 3072 | *managed* | 3072 | 3072 |
 
-*Italicized cells are Tinker-managed and unavailable to the user.* Full YAML dumps enumerate all 47 fields; the table above is the reviewer-facing subset.
+*Italicized cells are Tinker-managed and unavailable to the user.* Full YAML dumps enumerate all 44 fields; the table above is the reviewer-facing subset.
 
 #### Revised Interpretation
 

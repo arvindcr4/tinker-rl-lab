@@ -168,12 +168,12 @@ in the region where the hardware is believed to be located.
         1.10--1.15 \cite{google2023pue, aws2023pue}).
   \item US average grid intensity (EPA eGRID 2023): 0.367\,kg\,CO$_2$-eq / kWh
         \cite{epa2023egrid}.
-  \item Indian average grid intensity (CEA 2023): 0.716\,kg\,CO$_2$-eq / kWh
-        \cite{cea2023co2}.
+  \item Local average grid intensity (national grid operator, 2023):
+        0.716\,kg\,CO$_2$-eq / kWh.
   \item We use the US average for Modal H100 (US-East region as configured)
-        and Tinker (location undisclosed; assumed US), and the Indian
-        average for Colab Pro T4 used by authors based in Bengaluru
-        (Google Cloud asia-south1).
+        and Tinker (location undisclosed; assumed US), and the local
+        average for the Colab Pro T4 used by the authors (region withheld
+        for blind review).
 \end{itemize}
 
 \paragraph{GPU-hour estimates.}
@@ -198,7 +198,7 @@ stalled runs are included. Totals rounded to one significant figure.}
 Tinker (assumed H100)   & \textasciitilde 950 & 700 & 1.1 & \textasciitilde 732 & \textasciitilde 269 \\
 Modal H100 (US-East)    & \textasciitilde 18  & 700 & 1.1 & \textasciitilde 14  & \textasciitilde 5.1 \\
 Institutional A100 (in-kind)      & \textasciitilde 60  & 400 & 1.1 & \textasciitilde 26  & \textasciitilde 19   \\
-Colab Pro T4 (asia-south1) & \textasciitilde 40 & 70 & 1.2 & \textasciitilde 3.4 & \textasciitilde 2.4  \\
+Colab Pro T4 (region withheld) & \textasciitilde 40 & 70 & 1.2 & \textasciitilde 3.4 & \textasciitilde 2.4  \\
 NVIDIA L4 (TRL baseline)   & \textasciitilde 10 & 72 & 1.1 & \textasciitilde 0.8 & \textasciitilde 0.3  \\
 \midrule
 \textbf{Project total (best estimate)} & & & & \textasciitilde 776 & \textasciitilde 296 \\
@@ -208,8 +208,8 @@ NVIDIA L4 (TRL baseline)   & \textasciitilde 10 & 72 & 1.1 & \textasciitilde 0.8
 
 \paragraph{Interpretation and uncertainty.}
 Our best estimate of \textasciitilde 296\,kg\,CO$_2$-eq for the entire
-project is comparable to a single round-trip economy flight
-Bengaluru--Delhi (\textasciitilde 300\,kg). The dominant uncertainty is
+project is comparable to a single round-trip short-haul economy flight
+(\textasciitilde 300\,kg). The dominant uncertainty is
 the Tinker GPU-hour count: because Tinker does not expose hardware telemetry,
 a factor-of-two error in GPU-hours or TDP is plausible. Under a pessimistic
 assumption (2$\times$ GPU-hours, H100 running near 100\% TDP continuously),
@@ -439,11 +439,11 @@ Section~\ref{sec:results} are so flagged, but most of our secondary
 analyses are descriptive.
 
 \paragraph{Geographic and demographic limits.}
-All authors are based at a single institution in Bengaluru, India. Our
-choice of benchmarks, prompt phrasings, and evaluation design reflects
-that context. Independent replication by groups in other regions, on
-non-English tasks, and with non-Qwen / non-Llama families is an open
-question.
+The authors are based at a single institution (region withheld for
+blind review). Our choice of benchmarks, prompt phrasings, and
+evaluation design reflects that context. Independent replication by
+groups in other regions, on non-English tasks, and with non-Qwen /
+non-Llama families is an open question.
 
 % =============================================================================
 % End of ethics_statement.tex

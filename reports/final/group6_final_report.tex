@@ -478,18 +478,18 @@ rolling ZVF estimate and adjusts group size online, doubling \(G\) when
 ZVF exceeds 0.8 and halving it when ZVF falls below 0.3, with baseline
 \(G{=}8\), bounds \(\{4,16\}\), and a rolling window \(W{=}10\); its
 hook sits in \texttt{rollout\_sampling}. \textbf{CPPO}
-(\texttt{cppo2024}, Clip-Pruned PPO) operates later by dropping rollouts
-whose \(|A_i|\) falls below \(\varepsilon = 10^{-3}\), producing an
-ESS-corrected estimator in \texttt{advantage\_computation}.
-\textbf{NGRPO} (\texttt{ngrpo2025}, Normalized GRPO) also hooks
-\texttt{advantage\_computation}, but instead preserves gradients by
-replacing the per-group reward mean \(\bar r_g\) with an EMA baseline
-\(\hat r_t = \alpha \bar r_{g,t} + (1-\alpha)\hat r_{t-1}\) using
-\(\alpha{=}0.05\). \textbf{Scaf-GRPO} (\texttt{scafgrpo2025}) intervenes
-earliest in the loop by adding an entropy bonus
-\(+\beta_e H(\pi(\cdot\mid \text{prompt}))\) with \(\beta_e{=}0.01\)
-directly to the reward, so that within-group variance is less likely to
-saturate in the first place; its hook sits in \texttt{reward\_shaping}.
+(\texttt{lin2025cppo}, Completion Pruning Policy Optimization) targets
+compute by dropping completions with low absolute advantage before the
+backward pass.
+\textbf{NGRPO} (\texttt{nan2025ngrpo}, Negative-enhanced GRPO) reshapes
+the contribution of all-incorrect (negative) groups so they still provide
+a learning signal when within-group reward variance collapses.
+\textbf{Scaf-GRPO} (\texttt{zhang2025scaffgrpo}, Scaffolded GRPO) injects
+scaffolded hints into prompts the policy repeatedly fails, so previously
+all-wrong groups recover within-group reward variance. (An earlier draft
+mischaracterized these mechanisms; corrected here to match the cited
+papers, and the \texttt{aero2024} AERO entry was a placeholder later
+removed.)
 
 \textbf{Comparison axes (transcribed from \texttt{tab:variance-axes}).}
 

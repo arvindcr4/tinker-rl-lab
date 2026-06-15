@@ -15,9 +15,11 @@ These additions are consistent with the capstone's §2 Related Work (2.1 outcome
 **Methods benchmarked.** Each is implemented as a minimal configuration override on the shared GRPO trainer; tokenizer, sampler, optimizer, LoRA adapters, evaluation harness, and seed sweep are held identical across the five runs. Only the variance-mitigation hook differs.
 
 - **AERO** (`aero2024`, Adaptive Rollout Sizing): monitors a rolling ZVF estimate and adjusts group size $G_{t+1}$ — doubles $G$ when ZVF > 0.8, halves when ZVF < 0.3; baseline $G{=}8$, min/max $\{4,16\}$; window $W{=}10$. Hooks `rollout_sampling`.
-- **CPPO** (`cppo2024`, Clip-Pruned PPO): drops rollouts with $|A_i| < \varepsilon$ (default $\varepsilon = 10^{-3}$) before the policy-gradient step, yielding an ESS-corrected estimator. Hooks `advantage_computation`.
-- **NGRPO** (`ngrpo2025`, Normalized GRPO): replaces the per-group reward-mean baseline $\bar r_g$ with an EMA running mean $\hat r_t = \alpha\,\bar r_{g,t} + (1-\alpha)\,\hat r_{t-1}$ ($\alpha{=}0.05$) so a gradient is emitted even when a group collapses. Hooks `advantage_computation`.
-- **Scaf-GRPO** (`scafgrpo2025`, Scaffolded Exploration): adds $+\beta_e H\!\big(\pi(\cdot\mid \text{prompt})\big)$ with $\beta_e{=}0.01$ to the rollout reward, so within-group reward variance cannot saturate at zero. Hooks `reward_shaping`.
+- **CPPO** (`lin2025cppo`, Completion Pruning Policy Optimization): targets compute by pruning completions with low absolute advantage before the backward pass.
+- **NGRPO** (`nan2025ngrpo`, Negative-enhanced GRPO): reshapes the contribution of all-incorrect (negative) groups so they still provide a learning signal when within-group reward variance collapses.
+- **Scaf-GRPO** (`zhang2025scaffgrpo`, Scaffolded GRPO): injects scaffolded hints into prompts the policy repeatedly fails, so previously all-wrong groups recover within-group reward variance.
+
+  *(Correction: an earlier draft of this note mischaracterized CPPO/NGRPO/Scaf-GRPO as Clip-Pruned-PPO / Normalized-GRPO-EMA / entropy-bonus, and listed the duplicate keys `aero2024`/`cppo2024`/`ngrpo2025`/`scafgrpo2025`. The mechanisms above match the cited papers; the canonical bib keys are `lin2025cppo`/`nan2025ngrpo`/`zhang2025scaffgrpo`, and the `aero2024`/`treegrpo2025`/`stppo2025`/`dar2024` placeholders were removed.)*
 
 **Comparison axes (transcribed from `tab:variance-axes`).**
 

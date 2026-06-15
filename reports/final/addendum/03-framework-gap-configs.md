@@ -23,13 +23,12 @@ Verified identical across all four YAML dumps:
 - Total tokens seen by the optimizer (matched, not total steps)
 - Runtime fields present in every framework (`bf16=true`, `tensor_parallel_size`, etc.)
 
-#### What Was Framework-Managed (11 documented + 5 Tinker-managed)
+#### What Was Not Identical (11 Tinker-managed + framework-specific)
 
-**11 framework-specific but documented** (user-visible, intentionally different):
-reference-model placement (`on_device` / `managed` / `separate_process` / `sharded_ray`), `reference_model.offload`, `reference_model.recompute`, rollout micro-partitioning, importance-sampling granularity (token vs sequence), KL β default (0.04 vs 0.02), `kl.surrogate`, `runtime.gradient_accumulation_steps`, `runtime.inference_backend` (vLLM in OpenRLHF/veRL), `runtime.gpu_memory_utilization`, `runtime.num_minibatches` (veRL-only), and `reward.broadcast_precision`.
+**11 Tinker-managed** (serialized as `null  # managed_by_tinker` in `tinker_qwen3_8b_gsm8k.yaml`, cannot be harmonized at the API level):
+`kl.beta`, `kl.surrogate`, `importance_sampling.granularity`, `reference_model.offload`, `reference_model.recompute`, `tokens_per_optimizer_step`, `reward.broadcast_precision`, `runtime.gradient_checkpointing`, `runtime.micro_batch_size`, `runtime.gradient_accumulation_steps`, `runtime.tensor_parallel_size`.
 
-**5 Tinker-managed** (serialized as `null  # managed_by_tinker` in `tinker_qwen3_8b_gsm8k.yaml`, cannot be harmonized at the API level):
-`kl.beta`, `kl.surrogate`, `importance_sampling.granularity`, `tokens_per_optimizer_step`, `reward.broadcast_precision`.
+**The remaining framework-specific fields are user-visible and documented** (intentionally different, non-null): reference-model placement (`on_device` / `separate_process` / `sharded_ray`), KL β default (0.04 TRL/veRL vs 0.02 OpenRLHF), `runtime.inference_backend` (vLLM in OpenRLHF/veRL), `runtime.gpu_memory_utilization`, and `runtime.num_minibatches` (veRL-only).
 
 #### Per-Framework Configuration Table
 

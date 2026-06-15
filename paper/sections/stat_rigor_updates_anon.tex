@@ -90,7 +90,7 @@ Qwen3-30B-A3B (MoE) & 91.8 & 95.4$\pm$0.5 & +3.6 & [2.8, 4.5] & +3.22 & [1.04, 5
 % --- Table 4 (updated): PPO vs GRPO with CI + d + Welch/MW -----------
 \begin{table}[htbp]
 \centering
-\caption{\textbf{PPO vs.\ GRPO (Table~4, rigor pass).} Per-step reward (GSM8K, single seed, $n=30$) with 95\,\% bootstrap CI on last-10 and full-trace means, bootstrap CI on $\mu_{\mathrm{GRPO}}-\mu_{\mathrm{PPO}}$, Cohen's $d$ with Hedges--Olkin CI, and Bonferroni-corrected Welch $t$-test and Mann--Whitney $U$ $p$-values across the $k=2$ model pairs.}
+\caption{\textbf{PPO vs.\ GRPO (Table~4, rigor pass).} Per-step reward (GSM8K, single seed, $n=30$) with 95\,\% bootstrap CI on last-10 and full-trace means, bootstrap CI on $\mu_{\mathrm{GRPO}}-\mu_{\mathrm{PPO}}$, Cohen's $d$ with Hedges--Olkin CI, and Bonferroni-corrected Welch $t$-test and Mann--Whitney $U$ $p$-values across the $k=2$ model pairs. \textbf{These $p$-values are descriptive only:} the $n{=}30$ per-step rewards are autocorrelated within a single training run (not independent replicates), so the Welch/MW tests are not valid inference and the $^{\ddagger}$ marker on the Llama-3.1 row must \emph{not} be read as a significant effect---see the pseudoreplication discussion in the statistical-rigor addendum.}
 \label{tab:ppo_grpo_stats}
 \small
 \resizebox{\textwidth}{!}{%
@@ -99,7 +99,7 @@ Qwen3-30B-A3B (MoE) & 91.8 & 95.4$\pm$0.5 & +3.6 & [2.8, 4.5] & +3.22 & [1.04, 5
 \textbf{Model} & \textbf{GRPO last-10 [95\% CI]} & \textbf{PPO last-10 [95\% CI]} & \textbf{$\Delta$ [95\% CI]} & \textbf{Cohen's $d$} & \textbf{$d$ 95\% CI} & \textbf{Welch $p$} & \textbf{Welch $p$ (Bonf.)} & \textbf{MW $p$} & \textbf{MW $p$ (Bonf.)} \\
 \midrule
 Qwen3-8B & 0.344 [0.263, 0.431] & 0.350 [0.175, 0.525] & +0.002 [-0.119, 0.119] & +0.01 & [-0.50, 0.51] & 0.973 & 1.000 & 0.709 & 1.000 \\
-Llama-3.1-8B-Inst & 0.844 [0.731, 0.944] & 0.950 [0.875, 1.000] & -0.081 [-0.154, -0.010] & -0.56 & [-1.08, -0.04] & 0.035 & 0.070 & 0.006 & 0.012$^{*}$ \\
+Llama-3.1-8B-Inst & 0.844 [0.731, 0.944] & 0.950 [0.875, 1.000] & -0.081 [-0.154, -0.010] & -0.56 & [-1.08, -0.04] & 0.035 & 0.070 & 0.006 & 0.012$^{\ddagger}$ \\
 \bottomrule
 \end{tabular}%
 }

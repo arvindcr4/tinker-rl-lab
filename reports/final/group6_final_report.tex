@@ -2686,20 +2686,23 @@ because the Tinker-managed runtime applies managed reference-model
 offload and rollout defaults that cannot be controlled at the API level.
 We therefore treat the comparison as a \textbf{matched-configuration
 protocol}: every hyperparameter the user can set is harmonized across
-frameworks, while explicitly acknowledging that five Tinker-internal
+frameworks, while explicitly acknowledging that eleven Tinker-internal
 fields remain managed. This is a behavioural comparison, not a bit-level
 identity claim.
 
-\subsubsection{What Was Held Constant (31 of 47 tracked
+\subsubsection{What Was Held Constant (25 of 44 tracked
 fields)}\label{what-was-held-constant-31-of-47-tracked-fields}
 
-Verified byte-for-byte identical across all four YAML dumps:
+Verified identical across all four YAML dumps:
 
 \begin{itemize}
 \tightlist
 \item
-  Base model weights and tokenizer (same SHA-256 of the Qwen3-8B
-  HuggingFace snapshot)
+  Tokenizer (same HuggingFace tokenizer). \textbf{The base \emph{weights}
+  were NOT held constant:} the Tinker run uses \texttt{Qwen/Qwen3-8B-Base}
+  while TRL/veRL/OpenRLHF use the instruction-tuned \texttt{Qwen/Qwen3-8B}
+  --- the Base-vs-Instruct confound flagged in the main text.
+  (\texttt{model\_sha256} is a placeholder, not a verified checksum.)
 \item
   LoRA \texttt{rank=16}, \texttt{alpha=32},
   \texttt{target\_modules=\{q,k,v,o\}\_proj}, \texttt{dropout=0.0}
@@ -2724,29 +2727,27 @@ Verified byte-for-byte identical across all four YAML dumps:
   \texttt{tensor\_parallel\_size}, etc.)
 \end{itemize}
 
-\subsubsection{What Was Framework-Managed (11 documented + 5
-Tinker-managed)}\label{what-was-framework-managed-11-documented-5-tinker-managed}
+\subsubsection{What Was Not Identical (11 Tinker-managed +
+framework-specific)}\label{what-was-framework-managed-11-documented-5-tinker-managed}
 
-\textbf{11 framework-specific but documented} (user-visible,
-intentionally different): reference-model placement (\texttt{on\_device}
-/ \texttt{managed} / \texttt{separate\_process} /
-\texttt{sharded\_ray}), \texttt{reference\_model.offload},
-\texttt{reference\_model.recompute}, rollout micro-partitioning,
-importance-sampling granularity (token vs sequence), KL β default (0.04
-vs 0.02), \texttt{kl.surrogate},
-\texttt{runtime.gradient\_accumulation\_steps},
-\texttt{runtime.inference\_backend} (vLLM in OpenRLHF/veRL),
-\texttt{runtime.gpu\_memory\_utilization},
-\texttt{runtime.num\_minibatches} (veRL-only), and
-\texttt{reward.broadcast\_precision}.
-
-\textbf{5 Tinker-managed} (serialized as
+\textbf{11 Tinker-managed} (serialized as
 \texttt{null\ \#\ managed\_by\_tinker} in
 \texttt{tinker\_qwen3\_8b\_gsm8k.yaml}, cannot be harmonized at the API
 level): \texttt{kl.beta}, \texttt{kl.surrogate},
-\texttt{importance\_sampling.granularity},
-\texttt{tokens\_per\_optimizer\_step},
-\texttt{reward.broadcast\_precision}.
+\texttt{importance\_sampling.granularity}, \texttt{reference\_model.offload},
+\texttt{reference\_model.recompute}, \texttt{tokens\_per\_optimizer\_step},
+\texttt{reward.broadcast\_precision}, \texttt{runtime.gradient\_checkpointing},
+\texttt{runtime.micro\_batch\_size},
+\texttt{runtime.gradient\_accumulation\_steps}, and
+\texttt{runtime.tensor\_parallel\_size}.
+
+\textbf{The remaining framework-specific fields are user-visible and documented}
+(intentionally different, non-null): reference-model placement
+(\texttt{on\_device} / \texttt{separate\_process} / \texttt{sharded\_ray}),
+KL β default (0.04 TRL/veRL vs 0.02 OpenRLHF),
+\texttt{runtime.inference\_backend} (vLLM in OpenRLHF/veRL),
+\texttt{runtime.gpu\_memory\_utilization}, and
+\texttt{runtime.num\_minibatches} (veRL-only).
 
 \subsubsection{Per-Framework Configuration
 Table}\label{per-framework-configuration-table}
@@ -2774,7 +2775,7 @@ tokens/optimizer step & 3072 & \emph{managed} & 3072 & 3072 \\
 }
 
 \emph{Italicized cells are Tinker-managed and unavailable to the user.}
-Full YAML dumps enumerate all 47 fields; the table above highlights the
+Full YAML dumps enumerate all 44 fields; the table above highlights the
 user-visible parameters most relevant to interpretation.
 
 \subsubsection{Revised Interpretation}\label{revised-interpretation}
@@ -4581,8 +4582,8 @@ Sweep}\label{group-size-reconciliation-token-budget-normalized-sweep}
 \subsubsection{The Apparent
 Contradiction}\label{the-apparent-contradiction}
 
-An apparent inconsistency arises because Table 6 reports \textbf{G=8} as
-the highest last-10 reward under a \textbf{fixed-step} budget, while
+An apparent inconsistency arises because Table 6 reports \textbf{G=4} as
+the highest last-10 reward (52.1\%) under a \textbf{fixed-step} budget, while
 elsewhere we claim that \textbf{G\textasciitilde32} maximizes gradient
 utilization. These observations are compatible once the axis of
 comparison is made explicit. Under a \emph{fixed number of optimizer
@@ -4591,7 +4592,7 @@ step-budget comparison benefits small G. Under a \emph{fixed total token
 budget}, larger G amortizes wasted (all-correct or all-incorrect)
 rollouts and yields higher effective gradient signal per token. The
 original capstone §4.4.4 (G=32 sweet spot with GU=54.5\%, saturation
-onset step 29) and Table 6 (G=8 wins at the 50-step budget) are
+onset step 29) and Table 6 (G=4 wins at the fixed-step budget) are
 therefore \emph{both} correct --- they measure on different axes.
 
 \subsubsection{Formal Gradient
@@ -4703,11 +4704,12 @@ optimum for any specified \emph{T}.
 appendix)}\label{reconciliation-statement-verbatim-from-the-appendix}
 
 \begin{quote}
-\emph{Under a fixed} step \emph{budget at small total token counts, G=8
-attains the highest last-10 reward (Table 6). Under fixed} total tokens
+\emph{Under a fixed} step \emph{budget at small total token counts, G=4
+attains the highest last-10 reward (52.1\%, Table 6). Under fixed} total tokens
 \emph{at the canonical training scale used elsewhere in the paper (T
-\textgreater= 16M), G\textasciitilde32 maximizes both held-out accuracy
-and the ĜU estimator defined in Eq. (eq:gu). The inverted-U apex in log
+\textgreater= 16M), G\textasciitilde32 maximizes held-out accuracy in this
+illustrative reanalysis (the per-token gradient-efficiency estimator GE\_tok is
+NOT co-maximized --- it decreases monotonically in G). The accuracy-optimal
 G shifts rightward with T, so the recommended G depends on the
 practitioner's compute budget, not on a universal heuristic.}
 \end{quote}

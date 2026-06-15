@@ -1246,11 +1246,12 @@ High-accuracy frontier models ($p > 0.8$) show \emph{negative} residuals
 (observed ZVF $<$ theoretical), consistent with adaptive difficulty sampling.
 Moderate-accuracy experiments ($p \approx 0.3$--$0.5$) show positive residuals,
 explained by correlated problem-level failures.
-For our G=8 DeepSeek-V3.1 run ($p=0.85$), 27\% of steps were zero-gradient;
-under the binary-outcome DPO approximation, reducing to $G=2$ would reduce
-rollouts by 75\% while preserving the pairwise contrastive form of the signal,
-but whether reward or stability would be preserved empirically is
-setting-dependent.
+For our G=4 DeepSeek-V3.1 run ($p\approx0.85$), 30\% of steps were zero-gradient
+(measured \texttt{zero\_loss\_pct});
+under the binary-outcome DPO approximation, reducing to $G=2$ would halve
+rollout overhead ($\approx 50\%$) while preserving the pairwise contrastive form
+of the signal, but whether reward or stability would be preserved empirically is
+setting-dependent (we did not run this ablation).
 
 \begin{figure}[htbp]
 \centering
@@ -1765,11 +1766,12 @@ DPO-equivalent contrastive objective, and show empirically that 2-GRPO retains
 Our theoretical analysis confirms their prediction for the expected ZVF:
 $\mathrm{GU}(p, 2) = 2p(1-p)$, which is exactly the Bernoulli variance of
 the per-prompt accuracy $p$ and reproduces the DPO preference weighting.
-For our DeepSeek-V3.1 run ($p \approx 0.85$, $G = 8$), 27\% of steps were
-zero-gradient; under the binary-outcome DPO approximation, switching to
-$G = 2$ would preserve the pairwise contrastive form of the signal while
-reducing rollout overhead by 75\%, but whether reward or stability would be
-preserved empirically is setting-dependent.
+For our DeepSeek-V3.1 run ($p \approx 0.85$, $G = 4$), 30\% of steps were
+zero-gradient (measured \texttt{zero\_loss\_pct}); under the binary-outcome DPO
+approximation, switching to $G = 2$ would preserve the pairwise contrastive form
+of the signal while halving rollout overhead ($\approx 50\%$), but whether reward
+or stability would be preserved empirically is setting-dependent (we did not run
+this ablation).
 However, under the same approximation, very high-accuracy models
 ($p > 0.9$) are expected to exhibit low gradient utilization across a wide
 range of $G$. In that regime, prompt re-sampling from harder

@@ -861,13 +861,13 @@ The gap between Tinker and TRL on the identical config (17× at last-10) isolate
 
 ##### Retraction of the "Byte-Identical" Phrasing
 
-The main text previously described the cross-framework comparison as using "byte-identical training configs." That phrasing was too strong because the Tinker-managed runtime applies managed reference-model offload and rollout defaults that cannot be controlled at the API level. We therefore treat the comparison as a **matched-configuration protocol**: every hyperparameter the user can set is harmonized across frameworks, while explicitly acknowledging that five Tinker-internal fields remain managed. This is a behavioural comparison, not a bit-level identity claim.
+The main text previously described the cross-framework comparison as using "byte-identical training configs." That phrasing was too strong because the Tinker-managed runtime applies managed reference-model offload and rollout defaults that cannot be controlled at the API level. We therefore treat the comparison as a **matched-configuration protocol**: every hyperparameter the user can set is harmonized across frameworks, while explicitly acknowledging that eleven Tinker-internal fields remain managed. This is a behavioural comparison, not a bit-level identity claim.
 
-##### What Was Held Constant (31 of 47 tracked fields)
+##### What Was Held Constant (25 of 44 tracked fields)
 
-Verified byte-for-byte identical across all four YAML dumps:
+Verified identical across all four YAML dumps:
 
-- Base model weights and tokenizer (same SHA-256 of the Qwen3-8B HuggingFace snapshot)
+- Tokenizer (same HuggingFace tokenizer). **The base _weights_ were NOT held constant:** the Tinker run uses `Qwen/Qwen3-8B-Base` while TRL/veRL/OpenRLHF use the instruction-tuned `Qwen/Qwen3-8B` — the Base-vs-Instruct confound flagged in the main text. (`model_sha256` is a placeholder, not a verified checksum.)
 - LoRA `rank=16`, `alpha=32`, `target_modules={q,k,v,o}_proj`, `dropout=0.0`
 - GRPO `group_size G=8`, `rollouts_per_group K=1`, `max_new_tokens=384`
 - Sampling `temperature=0.7`, `top_p=0.95`, `do_sample=true`
@@ -877,13 +877,12 @@ Verified byte-for-byte identical across all four YAML dumps:
 - Total tokens seen by the optimizer (matched, not total steps)
 - Runtime fields present in every framework (`bf16=true`, `tensor_parallel_size`, etc.)
 
-##### What Was Framework-Managed (11 documented + 5 Tinker-managed)
+##### What Was Not Identical (11 Tinker-managed + framework-specific)
 
-**11 framework-specific but documented** (user-visible, intentionally different):
-reference-model placement (`on_device` / `managed` / `separate_process` / `sharded_ray`), `reference_model.offload`, `reference_model.recompute`, rollout micro-partitioning, importance-sampling granularity (token vs sequence), KL β default (0.04 vs 0.02), `kl.surrogate`, `runtime.gradient_accumulation_steps`, `runtime.inference_backend` (vLLM in OpenRLHF/veRL), `runtime.gpu_memory_utilization`, `runtime.num_minibatches` (veRL-only), and `reward.broadcast_precision`.
+**11 Tinker-managed** (serialized as `null  # managed_by_tinker` in `tinker_qwen3_8b_gsm8k.yaml`, cannot be harmonized at the API level):
+`kl.beta`, `kl.surrogate`, `importance_sampling.granularity`, `reference_model.offload`, `reference_model.recompute`, `tokens_per_optimizer_step`, `reward.broadcast_precision`, `runtime.gradient_checkpointing`, `runtime.micro_batch_size`, `runtime.gradient_accumulation_steps`, `runtime.tensor_parallel_size`.
 
-**5 Tinker-managed** (serialized as `null  # managed_by_tinker` in `tinker_qwen3_8b_gsm8k.yaml`, cannot be harmonized at the API level):
-`kl.beta`, `kl.surrogate`, `importance_sampling.granularity`, `tokens_per_optimizer_step`, `reward.broadcast_precision`.
+**The remaining framework-specific fields are user-visible and documented** (intentionally different, non-null): reference-model placement (`on_device` / `separate_process` / `sharded_ray`), KL β default (0.04 TRL/veRL vs 0.02 OpenRLHF), `runtime.inference_backend` (vLLM in OpenRLHF/veRL), `runtime.gpu_memory_utilization`, and `runtime.num_minibatches` (veRL-only).
 
 ##### Per-Framework Configuration Table
 
@@ -901,7 +900,7 @@ reference-model placement (`on_device` / `managed` / `separate_process` / `shard
 | AdamW lr | 1×10⁻⁶ | 1×10⁻⁶ | 1×10⁻⁶ | 1×10⁻⁶ |
 | tokens/optimizer step | 3072 | *managed* | 3072 | 3072 |
 
-*Italicized cells are Tinker-managed and unavailable to the user.* Full YAML dumps enumerate all 47 fields; the table above highlights the user-visible parameters most relevant to interpretation.
+*Italicized cells are Tinker-managed and unavailable to the user.* Full YAML dumps enumerate all 44 fields; the table above highlights the user-visible parameters most relevant to interpretation.
 
 ##### Revised Interpretation
 
@@ -1543,7 +1542,7 @@ The **negative held-out GSM8K result** (Qwen3-8B post-GRPO 83.3% vs. base 82.0%,
 
 ##### The Apparent Contradiction
 
-An apparent inconsistency arises because Table 6 reports **G=8** as the highest last-10 reward under a **fixed-step** budget, while elsewhere we claim that **G≈32** maximizes gradient utilization. These observations are compatible once the axis of comparison is made explicit. Under a *fixed number of optimizer steps*, larger G costs proportionally more tokens per step, so the step-budget comparison benefits small G. Under a *fixed total token budget*, larger G amortizes wasted (all-correct or all-incorrect) rollouts and yields higher effective gradient signal per token. The original capstone §4.4.4 (G=32 sweet spot with GU=54.5%, saturation onset step 29) and Table 6 (G=8 wins at the 50-step budget) are therefore *both* correct — they measure on different axes.
+An apparent inconsistency arises because Table 6 reports **G=4** as the highest last-10 reward (52.1%) under a **fixed-step** budget, while elsewhere we claim that **G≈32** maximizes gradient utilization. These observations are compatible once the axis of comparison is made explicit. Under a *fixed number of optimizer steps*, larger G costs proportionally more tokens per step, so the step-budget comparison benefits small G. Under a *fixed total token budget*, larger G amortizes wasted (all-correct or all-incorrect) rollouts and yields higher effective gradient signal per token. The original capstone §4.4.4 (G=32 sweet spot with GU=54.5%, saturation onset step 29) and Table 6 (G=4 wins at the fixed-step budget) are therefore *both* correct — they measure on different axes.
 
 ##### Formal Gradient Utilization
 
@@ -1584,7 +1583,7 @@ The CI excludes zero, so the shift is statistically real rather than noise. Ther
 
 ##### Reconciliation Statement (verbatim from the appendix)
 
-> *Under a fixed* step *budget at small total token counts, G=8 attains the highest last-10 reward (Table 6). Under fixed* total tokens *at the canonical training scale used elsewhere in the paper (T ≥ 16M), G≈32 maximizes both held-out accuracy and the ĜU estimator defined in Eq. (eq:gu). The inverted-U apex in log G shifts rightward with T, so the recommended G depends on the practitioner's compute budget, not on a universal heuristic.*
+> *Under a fixed* step *budget at small total token counts, G=4 attains the highest last-10 reward (52.1%, Table 6). Under fixed* total tokens *at the canonical training scale used elsewhere in the paper (T ≥ 16M), G≈32 maximizes held-out accuracy in this illustrative reanalysis (the per-token gradient-efficiency estimator GE_tok is NOT co-maximized — it decreases monotonically in G). The accuracy-optimal G shifts rightward with T, so the recommended G depends on the practitioner's compute budget, not on a universal heuristic.*
 
 The important conclusion is that the "more rollouts is always better" heuristic is false, *and* the opposite heuristic "small G is always better" is equally false. The correct claim is that there exists a budget-dependent optimum, and practitioners should locate it via the reanalysis script rather than by rule-of-thumb.
 

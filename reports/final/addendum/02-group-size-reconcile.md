@@ -7,7 +7,7 @@
 
 #### The Apparent Contradiction
 
-A reviewer correctly identified an apparent inconsistency: Table 6 of the main text reports **G=8** as the highest last-10 reward under a **fixed-step** budget, while elsewhere we claim that **G≈32** "maximizes gradient utilization." These observations are compatible once the axis of comparison is made explicit. Under a *fixed number of optimizer steps*, larger G costs proportionally more tokens per step, so the step-budget comparison benefits small G. Under a *fixed total token budget*, larger G amortizes wasted (all-correct or all-incorrect) rollouts and yields higher effective gradient signal per token. The original capstone §4.4.4 (G=32 sweet spot with GU=54.5%, saturation onset step 29) and Table 6 (G=8 wins at the 50-step budget) are therefore *both* correct — they measure on different axes.
+A reviewer correctly identified an apparent inconsistency: Table 6 of the main text reports **G=4** as the highest last-10 reward (52.1%) under a **fixed-step** budget, while elsewhere we claim that **G≈32** "maximizes gradient utilization." These observations are compatible once the axis of comparison is made explicit. Under a *fixed number of optimizer steps*, larger G costs proportionally more tokens per step, so the step-budget comparison benefits small G. Under a *fixed total token budget*, larger G amortizes wasted (all-correct or all-incorrect) rollouts and yields higher effective gradient signal per token. The original capstone §4.4.4 (G=32 sweet spot with GU=54.5%, saturation onset step 29) and Table 6 (G=4 wins at the fixed-step budget) are therefore *both* correct — they measure on different axes.
 
 #### Formal Gradient Utilization
 
@@ -48,6 +48,6 @@ The CI excludes zero, so the shift is statistically real rather than noise. Ther
 
 #### Reconciliation Statement (verbatim from the appendix)
 
-> *Under a fixed* step *budget at small total token counts, G=8 attains the highest last-10 reward (Table 6). Under fixed* total tokens *at the canonical training scale used elsewhere in the paper (T ≥ 16M), G≈32 maximizes both held-out accuracy and the ĜU estimator defined in Eq. (eq:gu). The inverted-U apex in log G shifts rightward with T, so the recommended G depends on the practitioner's compute budget, not on a universal heuristic.*
+> *Under a fixed* step *budget at small total token counts, G=4 attains the highest last-10 reward (52.1%, Table 6). Under fixed* total tokens *at the canonical training scale used elsewhere in the paper (T ≥ 16M), G≈32 maximizes held-out accuracy in this illustrative reanalysis (the per-token gradient-efficiency estimator GE_tok is NOT co-maximized — it decreases monotonically in G). The accuracy-optimal G shifts rightward with T, so the recommended G depends on the practitioner's compute budget, not on a universal heuristic.*
 
 The reviewer's concern is taken seriously: the "more rollouts is always better" heuristic is false, *and* the opposite heuristic "small G is always better" is equally false. The correct claim is that there exists a budget-dependent optimum, and practitioners should locate it via the reanalysis script rather than by rule-of-thumb.

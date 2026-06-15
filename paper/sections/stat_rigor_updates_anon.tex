@@ -56,11 +56,11 @@ GRPO (tool-use) & Qwen3-32B & 30 & 0.0\% [0.0\%, 0.0\%] & 0.0\% [0.0\%, 0.0\%] &
 \toprule
 \textbf{Library} & $N$ & \textbf{Mean [95\% CI]} & \textbf{Source} & \textbf{Cohen's $d$} & \textbf{$d$ 95\% CI} & \textbf{$p$ (raw)} & \textbf{$p$ (Bonf.)} \\
 \midrule
-TRL (GRPO) & 5 & 0.734 [0.673, 0.782] & \textit{10 seeds} & +0.00 & [0.00, 0.00] & --- & --- \\
+TRL (GRPO) & 5 & 0.734 [0.673, 0.782] & \textit{5 seeds} & +0.00 & [0.00, 0.00] & --- & --- \\
 Tinker (GRPO) & 5 & 0.999 [0.997, 1.000] & \textit{synth. (mean ± SE, n=5)} & -5.32 & [-7.96, -2.68] & 0.001 & 0.004$^{**}$ \\
-SB3 (PPO) & 5 & 0.009 [0.007, 0.010] & \textit{10 seeds} & +14.59 & [8.08, 21.10] & $<$0.001 & $<$0.001$^{***}$ \\
-CleanRL (PPO) & 5 & 0.007 [0.003, 0.010] & \textit{10 seeds} & +14.61 & [8.09, 21.13] & $<$0.001 & $<$0.001$^{***}$ \\
-Tianshou (PPO) & 5 & 0.008 [0.006, 0.011] & \textit{10 seeds} & +14.58 & [8.07, 21.09] & $<$0.001 & $<$0.001$^{***}$ \\
+SB3 (PPO) & 5 & 0.009 [0.007, 0.010] & \textit{5 seeds} & +14.59 & [8.08, 21.10] & $<$0.001 & $<$0.001$^{***}$ \\
+CleanRL (PPO) & 5 & 0.007 [0.003, 0.010] & \textit{5 seeds} & +14.61 & [8.09, 21.13] & $<$0.001 & $<$0.001$^{***}$ \\
+Tianshou (PPO) & 5 & 0.008 [0.006, 0.011] & \textit{5 seeds} & +14.58 & [8.07, 21.09] & $<$0.001 & $<$0.001$^{***}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -246,6 +246,6 @@ the $k$-test family used for Bonferroni correction.
 \end{table}
 
 \paragraph{TRL-GRPO cross-seed baseline.}
-The TRL-GRPO reference (Qwen2.5-0.5B, 10 seeds, GSM8K, 125 steps, NVIDIA~L4) has mean accuracy $\bar{x} = 0.734$ (95\,\% bootstrap CI [0.672, 0.783], SD $= 0.070$, CV $= 0.096$). A one-sample $t$-test against $\mu_0 = 0.5$ gives $t(4) = 7.44$, $p = $~0.002, Cohen's $d = 3.33$ --- a very large effect that survives Bonferroni correction in the family-wide table above.
+The TRL-GRPO reference (Qwen2.5-0.5B, 5 seeds, GSM8K, 125 steps, NVIDIA~L4) has mean accuracy $\bar{x} = 0.734$ (95\,\% bootstrap CI [0.672, 0.783], SD $= 0.070$, CV $= 0.096$). A one-sample $t$-test against $\mu_0 = 0.5$ gives $t(4) = 7.44$, $p = $~0.002, Cohen's $d = 3.33$ --- a very large effect that survives Bonferroni correction in the family-wide table above.
 
 % --- end of stat_rigor_updates.tex ----------------------------------

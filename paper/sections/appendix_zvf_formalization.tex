@@ -95,9 +95,12 @@ strong evidence that the independence null is a lower bound.
 \paragraph{The closed form captures the qualitative structure at frontier scale,
 with a circularity caveat.} We measured ZVF directly on the frontier model by
 sampling \texttt{Qwen3-8B} on a held-out GSM8K slice via the Tinker API
-($G{=}8$, temperature~$1.0$, $200$ problems $\times$ three seeds; driver
-\texttt{experiments/tinker\_direct\_eval.py}, artifacts
-\texttt{experiments/results/tinker\_gsm8k\_zvf\_*.json}). Mean ZVF is $0.16$,
+($G{=}8$, temperature~$1.0$, $200$ problems $\times$ three seeds), with the
+per-seed ZVF logged to
+\texttt{experiments/results/tinker\_gsm8k\_zvf\_\{s42,s123,s456\}.json} and
+aggregated in \texttt{tinker\_gsm8k\_zvf\_summary.json} (the single-config Tinker
+eval helper is \texttt{experiments/tinker\_direct\_eval.py}, which writes its own
+\texttt{tinker\_direct\_eval.json}). Mean ZVF is $0.16$,
 concentrated on the saturated tails of the difficulty distribution ($12.7\%$
 all-correct, $3.2\%$ all-wrong, $84\%$ mixed)---the qualitative structure
 $\mathrm{ZVF}(p,G)$ predicts. We caution that a per-problem Pearson correlation

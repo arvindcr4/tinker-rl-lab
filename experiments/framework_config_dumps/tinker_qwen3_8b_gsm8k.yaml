@@ -5,7 +5,7 @@
 #
 # Fields the Tinker API does not expose are marked
 # `null  # managed_by_tinker`. Per Section "What Was Not Identical"
-# of the appendix, 5 of the 47 tracked fields are Tinker-managed.
+# of the appendix, 11 of the 44 tracked fields are Tinker-managed.
 
 metadata:
   framework: tinker

@@ -57,7 +57,7 @@ derived directly from the four released YAMLs (44 tracked leaf fields total):
 * `tokens_per_optimizer_step: 3072` = `G (=8) x K (=1) x L_bar (=384)`.
 
 ### `tinker_qwen3_8b_gsm8k.yaml`
-* Five fields are `null  # managed_by_tinker` (see list above). These
+* Eleven fields are `null  # managed_by_tinker` (see list above). These
   are **not** set by the user and therefore cannot be harmonised with
   the other frameworks at the API level.
 * `reference_model.placement: managed` indicates Tinker transparently

@@ -214,7 +214,7 @@ and emerging architectures \textbf{GPT-OSS-20b} and \textbf{Kimi-K2}.
 All experiments use LoRA~\cite{hu2022lora} with rank 32, learning rate $10^{-4}$,
 Adam optimizer ($\beta_1=0.9$, $\beta_2=0.95$, $\epsilon=10^{-8}$).
 
-\paragraph{Seed management.} Each experiment is run with 10 seeds:
+\paragraph{Seed management.} Each experiment is run with 5 seeds:
 $\{42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768\}$. Seeds are set for Python \texttt{random},
 NumPy, PyTorch, and CUDA backends.
 
@@ -222,7 +222,7 @@ NumPy, PyTorch, and CUDA backends.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{tikz/pipeline.pdf}
-\caption{Experiment workflow pipeline. Each experiment runs across 10 seeds with
+\caption{Experiment workflow pipeline. Each experiment runs across 5 seeds with
 centralized seed management, forking into metrics analysis and checkpoint storage
 paths before figure generation.}
 \label{fig:pipeline}
@@ -273,7 +273,7 @@ formed.  All Tinker single-run results are treated as \emph{descriptive only} an
 are not subject to significance testing.
 
 \textbf{TRL baseline ($n = 5$ seeds).}
-The TRL-GRPO baseline (Qwen2.5-0.5B, 10 seeds) achieves MDE
+The TRL-GRPO baseline (Qwen2.5-0.5B, 5 seeds) achieves MDE
 $d_{\min} = 2.024$ for equal-$n$ comparisons.
 When compared to the pooled Classic-RL group ($n = 15$), the MDE
 improves to $d_{\min} = 1.530$,
@@ -514,7 +514,7 @@ and verl/OpenRLHF fell in between.}
 
 \begin{table}[htbp]
 \centering
-\caption{Cross-library comparison on Math RL (Arithmetic). Mean $\pm$ SE across 10 seeds.}
+\caption{Cross-library comparison on Math RL (Arithmetic). Mean $\pm$ SE across 5 seeds.}
 \label{tab:results_arithmetic}
 \begin{tabular}{lccc}
 \toprule
@@ -534,7 +534,7 @@ Tianshou (PPO) & 0.006 $\pm$ 0.002 & [0.003, 0.009] & N/A \\
 \centering
 \includegraphics[width=0.95\linewidth]{figures/v2/learning_curves.pdf}
 \caption{Learning curves for the arithmetic task across RL libraries. Shaded regions
-indicate $\pm 1$ standard deviation across 10 seeds. All curves use real experimental
+indicate $\pm 1$ standard deviation across 5 seeds. All curves use real experimental
 data from Modal GPU runs (NVIDIA L4/T4).}
 \label{fig:learning_curves}
 \end{figure}
@@ -566,7 +566,7 @@ estimate of generalisation.
 
 \begin{table}[htbp]
 \centering
-\caption{GSM8K results across model scales. Mean $\pm$ SE across 10 seeds.}
+\caption{GSM8K results across model scales. Mean $\pm$ SE across 5 seeds.}
 \label{tab:results_gsm8k}
 \begin{tabular}{lccc}
 \toprule
@@ -1901,7 +1901,7 @@ GAE $\lambda$ & $\{0.8, 0.9, 0.95, 0.98, 1.0\}$ & 0.95 \\
 \caption{Final reward by training family. Bars show mean
 $\pm 1$~standard deviation across the runs in each group; overlaid
 white dots are the individual seeds/models, and the $n$ annotation
-reports group size (TRL GRPO, legacy PPOs = 10 seeds each; Modal
+reports group size (TRL GRPO, legacy PPOs = 5 seeds each; Modal
 PPO-REINFORCE = 4 runs; Tinker GRPO frontier = 9 runs; team members =
 3 multi-task experiments).}
 \label{fig:comparison_bars}
@@ -2033,7 +2033,7 @@ and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existi
                 (\url{https://anonymous.4open.science/r/tinker-rl-lab}).
                 Modal jobs run on explicitly provisioned NVIDIA H100 SXM5
                 GPUs (80 GB) via containerised workers; all hyperparameters
-                are version-controlled.  These experiments use 10 seeds with
+                are version-controlled.  These experiments use 5 seeds with
                 mean $\pm$ SE and 95\% bootstrap CIs.
           \item \textbf{Tinker API experiments (not fully reproducible).}
                 Tinker is a closed-source API with serverless GPU dispatch.
@@ -2088,7 +2088,7 @@ and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existi
         \item Does the paper report error bars suitably and correctly
               defined or other appropriate information about the statistical
               significance of the experiments?
-        \answerPartial{For Modal/TRL experiments with 10 seeds, we report
+        \answerPartial{For Modal/TRL experiments with 5 seeds, we report
         mean $\pm$ SE with 95\% bootstrap confidence intervals via
         \texttt{rliable}~\cite{agarwal2021deep}.  Statistical analysis is
         in progress; preliminary CIs are shown where seeds have completed.

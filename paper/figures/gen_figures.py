@@ -313,7 +313,7 @@ def volatility(trace):
 
 
 # ── Per-model stats ───────────────────────────────────────────────────────────
-# Qwen2.5-0.5B (TRL GRPO, 10 seeds): only mean stats available
+# Qwen2.5-0.5B (TRL GRPO, 5 seeds): only mean stats available
 # We'll synthesise a plausible trace using the 5 seed accuracies as "steps"
 trl_accuracies = np.array([0.735, 0.81, 0.62, 0.74, 0.765])
 trl_mean = 0.734

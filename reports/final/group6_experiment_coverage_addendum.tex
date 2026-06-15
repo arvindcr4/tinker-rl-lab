@@ -72,14 +72,14 @@ group-size ablations, a lower-learning-rate control, and a TRL baseline.
 \toprule
 Experiment family & Scope & Main quantitative result & Interpretation \\
 \midrule
-Qwen3-8B multi-seed GRPO & 10 seeds, 50 steps, rank 32 & Mean last-10 reward 30.5\% $\pm$ 3.3\%, 95\% CI [26.5\%, 34.5\%], mean peak 72.5\% & Training trajectories are noisy, but the final last-10 reward is reproducible across seeds. \\
+Qwen3-8B multi-seed GRPO & 5 seeds, 50 steps, rank 32 & Mean last-10 reward 30.5\% $\pm$ 3.3\%, 95\% CI [26.5\%, 34.5\%], mean peak 72.5\% & Training trajectories are noisy, but the final last-10 reward is reproducible across seeds. \\
 Qwen3.5-4B replication & 4 seeds, 50 steps, rank 32 & Mean last-10 reward 84.7\%, SD 12.0\%, all seeds peak at 100\% & The 4B instruct model is dramatically stronger than the Qwen3-8B setup used in the original campaign. \\
 LoRA rank ablation & Ranks 8, 16, 32, 64 on Qwen3-8B & Rank 64 starts fastest (47.5\% first-5) and peaks highest (87.5\%); rank 32 remains the default multi-seed setting & More adapter capacity accelerates early learning, but does not by itself remove the task ceiling. \\
 Group-size ablation & $G=4,8,16,32$ on Qwen3-8B & Last-10 reward rises from 23.8\% at $G=4$ to 54.7\% at $G=32$; $G=32$ reaches 100\% peak and 0\% zero-reward groups & Exploration matters strongly; larger groups reduce wasted all-equal-reward batches. \\
 Low-LR extended run & Qwen3-8B, 100 steps, LR $5\times10^{-6}$ & Peak 75.0\%, last-10 27.5\% & Lower LR stabilizes but does not break the underlying reward-sparsity ceiling. \\
-Held-out GSM8K evaluation & 10 seeds, 200 test items per seed, greedy decoding & Mean held-out accuracy 83.3\%, SD 2.2\%, CI [80.6\%, 86.0\%] & Final checkpoints evaluate well on held-out greedy decoding. \\
+Held-out GSM8K evaluation & 5 seeds, 200 test items per seed, greedy decoding & Mean held-out accuracy 83.3\%, SD 2.2\%, CI [80.6\%, 86.0\%] & Final checkpoints evaluate well on held-out greedy decoding. \\
 Base-model control & Same 200 held-out items, Qwen3-8B without LoRA & 82.0\% held-out accuracy, delta +1.3pp relative to GRPO mean, $t=1.32$, $p=0.26$ & The held-out score is overwhelmingly inherited from the base model; the GRPO gain is not statistically significant. \\
-TRL baseline & Qwen2.5-0.5B, 10 seeds, 125 steps on NVIDIA L4 & Mean 73.4\% $\pm$ 7.03\%, bootstrap CI [67.9\%, 78.9\%], versus Tinker comparison $t=8.44$, $p=0.0014$ & Framework and scale matter strongly; the low-cost reference implementation underperforms the Tinker-based frontier setups. \\
+TRL baseline & Qwen2.5-0.5B, 5 seeds, 125 steps on NVIDIA L4 & Mean 73.4\% $\pm$ 7.03\%, bootstrap CI [67.9\%, 78.9\%], versus Tinker comparison $t=8.44$, $p=0.0014$ & Framework and scale matter strongly; the low-cost reference implementation underperforms the Tinker-based frontier setups. \\
 \bottomrule
 \end{tabularx}
 \end{center}

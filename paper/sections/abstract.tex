@@ -8,9 +8,11 @@ RL post-training of language models is now shaped by a small set of
 algorithms (PPO, GRPO, DPO) and a growing set of frameworks (TRL,
 \tinker{}, OpenRLHF, veRL), yet it remains unclear which empirical conclusions
 transfer across implementations, model families, and scales. We present
-\ours{}, a benchmark spanning 79 runs across 7 RL libraries, 5 model
-families, and 0.6B--$\sim$1T parameters on GSM8K, MATH-500, HumanEval, and
-synthetic tool-use tasks. The strongest evidence in the current release comes
+\ours{}, a benchmark spanning 70+ runs across 7 RL libraries and 5 model
+families (0.6B--$\sim$671B parameters) on GSM8K, HumanEval, and synthetic
+tool-use tasks. Results to date cover five end-to-end stacks (TRL, \tinker{},
+SB3, CleanRL, Tianshou); the remaining libraries are scaffolded but not yet run.
+The strongest evidence in the current release comes
 from short-horizon GSM8K training dynamics; held-out evaluation and non-math
 coverage remain narrower.
 

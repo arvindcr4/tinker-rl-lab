@@ -45,6 +45,7 @@ slice for the $5$-seed Qwen3-8B-Inst row) when available. ``d.o.'' = descriptive
 only (insufficient seeds for inference).}
 \label{tab:paired-bi}
 \small
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}l l l c c c c c c@{}}
 \toprule
 \textbf{Family} & \textbf{Ckpt} & \textbf{Model ID} &
@@ -57,7 +58,8 @@ Qwen3-8B     & Inst & \texttt{Qwen/Qwen3-8B}           & 0.2925 & 0.3105 & 0.820
 Llama-3.1-8B & Base & \texttt{meta-llama/Llama-3.1-8B} & 0.1252 & 0.1147 & ---    & ---    & ---     & 1 (d.o.) \\
 Llama-3.1-8B & Inst & \texttt{meta-llama/Llama-3.1-8B-Instruct} & 0.9500 & 0.9625 & --- & --- & --- & 1 (d.o.) \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \paragraph{What survives the matched comparison.}

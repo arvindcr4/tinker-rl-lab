@@ -22,9 +22,9 @@ def calculate_cohens_d(group1, group2):
 def run_power_analysis():
     """Run formal power analysis to determine minimum detectable effect size."""
     analysis = TTestIndPower()
-    # Assume 10 seeds per condition for Modal H100 runs
-    min_effect = analysis.solve_power(nobs1=10, alpha=0.05, power=0.80)
-    print(f"Power Analysis: For N=10, minimum detectable Cohen's d is {min_effect:.3f}")
+    # 5 seeds per condition for Modal H100 runs (matches the released design)
+    min_effect = analysis.solve_power(nobs1=5, alpha=0.05, power=0.80)
+    print(f"Power Analysis: For N=5, minimum detectable Cohen's d is {min_effect:.3f}")
 
 if __name__ == '__main__':
     print("--- Paper 1: Statistical Rigor & Power Analysis ---")

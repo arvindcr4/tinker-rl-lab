@@ -8,7 +8,7 @@ Arvind C R (PES2PGE24DS140), Sandhya Jeyaraj (PES2PGE24DS144), Arumugam Chetty K
 
 **Date:** April 19, 2026 (Updated with 16+ completed World-Class Suite results, Kimi-K2 experiment, scaling law analysis, ZVF analysis, length bias analysis, 2-GRPO hypothesis test, and enhanced statistical analysis)
 
-> **Evaluation Scope:** GSM8K training metrics (Section 4.3.2) measure reward on training prompts with stochastic sampling (\(T{=}0.8\)–\(1.0\)). Section 4.3.3 reports held-out test accuracy (83.3%, 10 seeds × 200 examples, greedy decoding). Tool-use and code results remain training-set evaluations.
+> **Evaluation Scope:** GSM8K training metrics (Section 4.3.2) measure reward on training prompts with stochastic sampling (\(T{=}0.8\)–\(1.0\)). Section 4.3.3 reports held-out test accuracy (83.3%, 5 seeds × 200 examples, greedy decoding). Tool-use and code results remain training-set evaluations.
 
 ---
 
@@ -127,7 +127,7 @@ The four interventions span distinct points in the training loop. **AERO** (`aer
 
 Only AERO consults a ZVF-style signal at runtime; Scaf-GRPO is the only method that alters the reward landscape itself. All other methods compensate *after* the variance has been observed.
 
-**Head-to-head results on Qwen3-8B / GSM8K, 10 seeds, 100 steps (transcribed from `tab:variance-head2head`).**
+**Head-to-head results on Qwen3-8B / GSM8K, 5 seeds, 100 steps (transcribed from `tab:variance-head2head`).**
 
 | Method | Last-10 reward (mean ± 95% CI) | GSM8K-500 held-out (acc. %) | Collapse rate (seeds / 5) | Mean ZVF @ step 50 | Time-to-collapse (steps, median) |
 |---|---|---|---|---|---|
@@ -491,7 +491,7 @@ Two important limitations remain. First, the code-generation headline for Madhu 
 
 #### 4.3.2 Arvind — GSM8K GRPO on Tinker (10 runs)
 
-**Multi-seed replication (Qwen3-8B, LoRA rank 32, 50 steps, 10 seeds):**
+**Multi-seed replication (Qwen3-8B, LoRA rank 32, 50 steps, 5 seeds):**
 
 | Seed | First-5 Avg | Peak Acc | Last-10 Avg | Zero-loss % | Zero-reward % |
 |------|------------|----------|-------------|-------------|---------------|
@@ -503,7 +503,7 @@ Two important limitations remain. First, the code-generation headline for Madhu 
 | **Mean** | **24.0%** | **72.5%** | **30.5%** | **20.8%** | **17.6%** |
 | **Std** | **±8.4%** | **±13.7%** | **±3.3%** | | |
 
-Cross-seed mean accuracy is 30.5% ± 3.3% (95% CI [26.5%, 34.5%]), demonstrating stability of GRPO training outcomes across 10 seeds. Peak accuracy varies more (62.5–87.5%), indicating high trajectory-level variance despite converging to similar final performance. The two new seeds (042, 999) are consistent with the original three, narrowing the confidence interval from [23.8%, 36.2%] (3 seeds) to [26.5%, 34.5%] (10 seeds).
+Cross-seed mean accuracy is 30.5% ± 3.3% (95% CI [26.5%, 34.5%]), demonstrating stability of GRPO training outcomes across 5 seeds. Peak accuracy varies more (62.5–87.5%), indicating high trajectory-level variance despite converging to similar final performance. The two new seeds (042, 999) are consistent with the original three, narrowing the confidence interval from [23.8%, 36.2%] (3 seeds) to [26.5%, 34.5%] (5 seeds).
 
 **4B Multi-Seed Replication (Qwen3.5-4B, LoRA rank 32, G=4, 50 steps):**
 
@@ -564,7 +564,7 @@ The held-out accuracy (83.3%) far exceeds the mean training reward (30.5%), but 
 
 #### 4.3.4 TRL GRPO Baseline (5 Seeds)
 
-To isolate the effect of the training framework from the model architecture, we run TRL's GRPO implementation on Qwen2.5-0.5B on GSM8K across 10 seeds on an NVIDIA L4 GPU (125 steps per seed):
+To isolate the effect of the training framework from the model architecture, we run TRL's GRPO implementation on Qwen2.5-0.5B on GSM8K across 5 seeds on an NVIDIA L4 GPU (125 steps per seed):
 
 | Seed | Accuracy |
 |------|----------|
@@ -1003,10 +1003,10 @@ Our ablation across ranks 8, 16, 32 (default), and 64 reveals:
 
 **Held-out accuracy:** Five-seed evaluation on 200 test examples per seed yields mean 83.3% ± 2.2% (95% CI [80.6%, 86.0%]). The narrow SD (2.2%) across seeds shows consistent held-out performance, though the base-model control (82.0%) indicates this consistency is largely inherited from the pretrained model rather than introduced by GRPO.
 
-**TRL vs. Tinker comparison:** Welch's t-test between TRL baseline (73.4% ± 7.03%, 10 seeds) and Tinker results (last-10 averages across completed runs, bootstrap CI [99.3%, 100.0%]) yields t=8.44, p=0.0014 — strongly significant. This difference reflects framework and model differences rather than algorithmic differences alone.
+**TRL vs. Tinker comparison:** Welch's t-test between TRL baseline (73.4% ± 7.03%, 5 seeds) and Tinker results (last-10 averages across completed runs, bootstrap CI [99.3%, 100.0%]) yields t=8.44, p=0.0014 — strongly significant. This difference reflects framework and model differences rather than algorithmic differences alone.
 
 **Bootstrap CIs:**
-- TRL GRPO (Qwen2.5-0.5B, 10 seeds): 95% bootstrap CI [67.9%, 78.9%]
+- TRL GRPO (Qwen2.5-0.5B, 5 seeds): 95% bootstrap CI [67.9%, 78.9%]
 - Tinker GRPO (all completed runs): 95% bootstrap CI [99.3%, 100.0%]
 
 **PPO vs. GRPO effect sizes:**
@@ -1085,7 +1085,7 @@ scaling-law claim.
 
 ##### What Would Upgrade F5 to a Robust Claim
 
-A defensible replication requires **10 seeds × 200 steps × 3 frontier sizes
+A defensible replication requires **5 seeds × 200 steps × 3 frontier sizes
 ≈ 30 runs** at (70B, 120B, 235B), with matched rollout budgets and held-out
 evaluation (not just training reward). Aggregate cost: roughly 60× the budget
 of the current single-seed short runs, i.e. on the order of 10⁴–10⁵ USD of
@@ -1418,7 +1418,7 @@ This falls in the *very large* effect range. Achieved power across the effect si
 
 **Single-seed Tinker experiments (\(n = 1\)).** Single-seed runs have *zero statistical power*. With only one observation per condition, no inferential test can be computed and no confidence intervals can be formed. All single-seed Tinker results (the majority of the experiment registry) are treated as **descriptive only** and are not subject to significance testing. This is the most important power limitation in the study: the 10x Structural Ceiling ablation and the World-Class Suite frontier runs each contribute single data points per hyperparameter configuration.
 
-**TRL baseline (\(n = 5\) seeds).** The TRL GRPO baseline (Qwen2.5-0.5B, GSM8K, 10 seeds) achieves MDE \(d_{\min} = 2.024\) for equal-\(n\) comparisons. When compared against the pooled Classic-RL group (\(n = 15\)), the MDE improves to \(d_{\min} = 1.530\), reflecting the higher effective power from the larger reference group.
+**TRL baseline (\(n = 5\) seeds).** The TRL GRPO baseline (Qwen2.5-0.5B, GSM8K, 5 seeds) achieves MDE \(d_{\min} = 2.024\) for equal-\(n\) comparisons. When compared against the pooled Classic-RL group (\(n = 15\)), the MDE improves to \(d_{\min} = 1.530\), reflecting the higher effective power from the larger reference group.
 
 #### 5.15.2 Benjamini-Hochberg Multiple-Comparison Correction
 
@@ -1888,7 +1888,7 @@ On the experimental side, the report now consolidates five-seed replication, LoR
 
 | Comparison | Test | Statistic | p-value | Interpretation |
 |-----------|------|-----------|---------|----------------|
-| GRPO Qwen3-8B (10 seeds) vs. base model | One-sample t-test | t=1.32 | 0.26 | Not significant; GRPO delta +1.3pp |
+| GRPO Qwen3-8B (5 seeds) vs. base model | One-sample t-test | t=1.32 | 0.26 | Not significant; GRPO delta +1.3pp |
 | TRL baseline vs. Tinker GRPO | Welch's t-test | t=8.44 | 0.0014 | Highly significant; different frameworks + scales |
 | PPO vs. GRPO on Llama-3.1-8B | Mann-Whitney U | r=0.94 | — | Large effect; PPO dominates |
 | PPO vs. GRPO on Qwen3-8B | Cohen's d | d=0.166 | — | Negligible effect size (high within-run variance) |
@@ -1913,7 +1913,7 @@ On the experimental side, the report now consolidates five-seed replication, LoR
 | Modal H100 GPU | PPO baselines (Qwen3-8B, Llama-8B; 2 completed) | Per-run H100 cost |
 | Modal H100 GPU | KL tracking (failed gradient bug) | Minimal (early failure) |
 | Google Colab Pro (T4) | 0.5B–3B QLoRA SFT+GRPO | ~$10/person |
-| NVIDIA L4 (TRL baseline) | Qwen2.5-0.5B, 10 seeds × 125 steps | Minimal |
+| NVIDIA L4 (TRL baseline) | Qwen2.5-0.5B, 5 seeds × 125 steps | Minimal |
 | HuggingFace Hub | Model hosting (`arvindcr4/tinker-rl-bench-*`) | Free |
 | Weights & Biases | Experiment tracking (project: `tinker-rl-lab-world-class`) | Free (academic) |
 

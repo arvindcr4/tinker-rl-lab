@@ -1,6 +1,6 @@
 ### 10.4 Evidence-Tier Partition and F1–F5 Survival Analysis
 
-**Addresses reviewer concerns:** W4 (single-seed short-horizon Tinker/API runs inflate headline numbers), W5 (BH corrections aggregate single-seed rows with multi-seed rows, anti-conservative for the latter), Q5 (which of F1–F5 actually survive when restricted to TRL, ≥10 seeds, ≥100 steps?).
+**Addresses reviewer concerns:** W4 (single-seed short-horizon Tinker/API runs inflate headline numbers), W5 (BH corrections aggregate single-seed rows with multi-seed rows, anti-conservative for the latter), Q5 (which of F1–F5 actually survive when restricted to TRL, ≥5 seeds, ≥100 steps?).
 
 **Paper section added:** `paper/sections/statistical_rigor_addendum.tex` (§App. Statistical Rigor Addendum, label `app:stat-rigor-addendum`).
 **Reproducibility:** `experiments/survival_analysis.py` → `experiments/results/survival_analysis.tsv` (deterministic, `MASTER_SEED = 20260506`, matches `experiments/compute_statistics.py`). Consistent with the main capstone's §5.15 (power / BH) and §5.16 (deterministic statistical rigor pass).

@@ -84,7 +84,7 @@ Every comparison in the paper is reported with (i) 95 % bootstrap CI on the effe
 | Qwen3-8B | 0.285 [0.225, 0.348] | 0.283 [0.183, 0.383] | +0.002 [-0.119, 0.119] | +0.01 | [-0.50, 0.51] | 0.973 | 1.000 | 1.000 |
 | Llama-3.1-8B-Inst | 0.869 [0.806, 0.923] | 0.950 [0.908, 0.983] | -0.081 [-0.154, -0.010] | -0.56 | [-1.08, -0.04] | 0.035 | 0.070 | 0.012 |
 
-## TRL-GRPO Cross-Seed Baseline (Qwen2.5-0.5B, 10 seeds)
+## TRL-GRPO Cross-Seed Baseline (Qwen2.5-0.5B, 5 seeds)
 
 - **Mean accuracy:** 0.734 (95 % CI [0.672, 0.783])
 - **SD:** 0.070 · **CV:** 0.096
@@ -139,4 +139,4 @@ Every comparison in the paper is reported with (i) 95 % bootstrap CI on the effe
 2. **Bootstrap.** Percentile CIs with B = 10,000; resamples drawn with replacement from the empirical trace.
 3. **Effect size.** Cohen's *d* uses pooled (Welch-neutral) SD; Hedges' *g* corrects for small-sample bias. Analytical 95 % CIs follow Hedges–Olkin (1985).
 4. **Multiple comparisons.** We report Bonferroni inside each table (local family) and globally across the full comparison set. BH-FDR is reported as a less conservative alternative.
-5. **Synthesized seed clouds.** Tables 2-3 recompute variability from the published mean ± SE (with n = 10 seeds) by generating a mean-zero, variance-matched cloud for p-value and *d* estimation; the cloud is deterministic in MASTER_SEED.
+5. **Synthesized seed clouds.** Tables 2-3 recompute variability from the published mean ± SE (with n = 5 seeds) by generating a mean-zero, variance-matched cloud for p-value and *d* estimation; the cloud is deterministic in MASTER_SEED.

@@ -266,7 +266,7 @@ for key, c in modal_failed.items():
 # GROUP 5: Old TRL / Modal – multi-seed GRPO baseline
 # ─────────────────────────────────────────────────────
 
-# TRL GRPO — 10 seeds
+# TRL GRPO — 5 seeds
 trl_data = modal_all.get("trl_grpo_math", [])
 for run in trl_data:
     record = {
@@ -297,7 +297,7 @@ for run in trl_data:
     }
     records.append(record)
 
-# SB3 PPO — 10 seeds (failed at math)
+# SB3 PPO — 5 seeds (failed at math)
 sb3_data = modal_all.get("sb3_ppo_math", [])
 sb3_accs = [r["final_accuracy"] for r in sb3_data]
 for run in sb3_data:
@@ -325,7 +325,7 @@ for run in sb3_data:
     }
     records.append(record)
 
-# CleanRL PPO — 10 seeds
+# CleanRL PPO — 5 seeds
 cleanrl_data = modal_all.get("cleanrl_ppo_math", [])
 for run in cleanrl_data:
     record = {
@@ -352,7 +352,7 @@ for run in cleanrl_data:
     }
     records.append(record)
 
-# Tianshou PPO — 10 seeds
+# Tianshou PPO — 5 seeds
 tianshou_data = modal_all.get("tianshou_ppo_math", [])
 for run in tianshou_data:
     record = {
@@ -562,7 +562,7 @@ lines.append(f"**Total experiments:** {len(records)}  ")
 lines.append(f"**W&B Project:** https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-world-class\n")
 
 # TRL baseline callout
-lines.append("## TRL GRPO Baseline (Qwen2.5-0.5B, 10 seeds)")
+lines.append("## TRL GRPO Baseline (Qwen2.5-0.5B, 5 seeds)")
 lines.append(f"Mean accuracy: **{trl_summary['mean_accuracy']:.3f}** ± {trl_summary['std_accuracy']:.3f} "
              f"(seeds: {trl_summary['seeds']})\n")
 
@@ -612,7 +612,7 @@ lines.append("- **Best overall performer:** Llama-3.1-8B-Instruct (Modal PPO) �
 lines.append("- **Best frontier model:** DeepSeek-V3.1 (Tinker GRPO) — peak **1.0**, last-10 avg **0.85**")
 lines.append("- **Best team member result:** Madhu (Qwen3-8B GRPO) — HumanEval **86%** (141/164) (Note: not statistically significant, p=0.53)")
 lines.append("- **Most improvement vs baseline:** Sandhya (3B GRPO) — **+0.19** absolute over SFT (0.72→0.91)")
-lines.append("- **TRL GRPO baseline** (Qwen2.5-0.5B, 10 seeds): mean **0.734** ± 0.065")
+lines.append("- **TRL GRPO baseline** (Qwen2.5-0.5B, 5 seeds): mean **0.734** ± 0.065")
 lines.append("- **Classical PPO (SB3/CleanRL/Tianshou)** on raw math: all < 0.02 — LLM backbone essential")
 lines.append("- **JWT failures:** 11 Tinker runs blocked by auth errors, 0 training data collected")
 lines.append("- **Tinker tool_use failure:** Llama-3.1-8B-Instruct scored 0.0 on all 30 steps — task too hard")

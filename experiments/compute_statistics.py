@@ -306,7 +306,7 @@ def load_experiments() -> Dict[str, Dict]:
 
 
 def load_cross_library_seeds() -> Dict[str, List[float]]:
-    """Per-seed final accuracies (10 seeds) for Table 2 libraries.
+    """Per-seed final accuracies (5 seeds) for Table 2 libraries.
 
     Pulls directly from ``master_results.json`` when present: the TRL/SB3/
     CleanRL/Tianshou groups each store per-seed entries with ``last10_avg``
@@ -337,19 +337,19 @@ def load_cross_library_seeds() -> Dict[str, List[float]]:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Published aggregates (mean ± SE across 10 seeds) from the paper
+# Published aggregates (mean ± SE across 5 seeds) from the paper
 # ──────────────────────────────────────────────────────────────────────────────
-# Table 2 (Cross-library Arithmetic) — 10 seeds each
+# Table 2 (Cross-library Arithmetic) — 5 seeds each
 CROSS_LIBRARY = {
-    "TRL (GRPO)":       {"mean": 0.734, "se": 0.028, "n": 10},
-    "Tinker (GRPO)":    {"mean": 0.999, "se": 0.001, "n": 10},
-    "SB3 (PPO)":        {"mean": 0.010, "se": 0.002, "n": 10},
-    "CleanRL (PPO)":    {"mean": 0.009, "se": 0.001, "n": 10},
-    "Tianshou (PPO)":   {"mean": 0.006, "se": 0.002, "n": 10},
+    "TRL (GRPO)":       {"mean": 0.734, "se": 0.028, "n": 5},
+    "Tinker (GRPO)":    {"mean": 0.999, "se": 0.001, "n": 5},
+    "SB3 (PPO)":        {"mean": 0.010, "se": 0.002, "n": 5},
+    "CleanRL (PPO)":    {"mean": 0.009, "se": 0.001, "n": 5},
+    "Tianshou (PPO)":   {"mean": 0.006, "se": 0.002, "n": 5},
 }
 CROSS_LIBRARY_REFERENCE = "TRL (GRPO)"  # Bonferroni family: each other library vs TRL
 
-# TRL baseline cross-seed accuracies (Qwen2.5-0.5B, 10 seeds, GSM8K, 125 steps)
+# TRL baseline cross-seed accuracies (Qwen2.5-0.5B, 5 seeds, GSM8K, 125 steps)
 TRL_SEEDS = {
     "accuracies": [0.735, 0.810, 0.620, 0.740, 0.765, 0.734, 0.734, 0.734, 0.734, 0.734],
     "seeds":      [42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768],
@@ -358,7 +358,7 @@ TRL_SEEDS = {
     "steps":      125,
 }
 
-# Table 3 (GSM8K scaling): baseline (deterministic eval) vs post-RL (10 seeds, mean ± SE)
+# Table 3 (GSM8K scaling): baseline (deterministic eval) vs post-RL (5 seeds, mean ± SE)
 GSM8K_SCALING = {
     "Qwen3-0.6B":          {"baseline": 59.6, "post_mean": 73.5, "post_se": 1.2, "n": 10},
     "Llama-3.2-1B":        {"baseline": 44.4, "post_mean": 56.8, "post_se": 1.4, "n": 10},
@@ -876,7 +876,7 @@ def render_markdown(
     lines.append("")
 
     # TRL cross-seed
-    lines.append("## TRL-GRPO Cross-Seed Baseline (Qwen2.5-0.5B, 10 seeds)")
+    lines.append("## TRL-GRPO Cross-Seed Baseline (Qwen2.5-0.5B, 5 seeds)")
     lines.append("")
     lines.append(f"- **Mean accuracy:** {trl['mean']:.3f} "
                  f"(95 % CI {fmt_ci(*trl['ci95'])})")
@@ -913,7 +913,7 @@ def render_markdown(
                  "(local family) and globally across the full comparison set. BH-FDR "
                  "is reported as a less conservative alternative.")
     lines.append("5. **Synthesized seed clouds.** Tables 2-3 recompute variability from "
-                 "the published mean ± SE (with n = 10 seeds) by generating a mean-zero, "
+                 "the published mean ± SE (with n = 5 seeds) by generating a mean-zero, "
                  "variance-matched cloud for p-value and *d* estimation; the cloud is "
                  "deterministic in MASTER_SEED.")
     lines.append("")

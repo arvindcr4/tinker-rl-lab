@@ -161,7 +161,7 @@ def render(payload: Dict) -> str:
     lines.append("\\textbf{Library} & $N$ & \\textbf{Mean [95\\% CI]} & \\textbf{Source} & \\textbf{Cohen's $d$} & \\textbf{$d$ 95\\% CI} & \\textbf{$p$ (raw)} & \\textbf{$p$ (Bonf.)} \\\\")
     lines.append("\\midrule")
     for r in t2:
-        source = r["source"].replace("synth", "synth.").replace("real 10 seeds", "10 seeds")
+        source = r["source"].replace("synth", "synth.").replace("real 5 seeds", "5 seeds")
         lines.append(
             f"{r['library']} & {r['n']} & "
             f"{r['mean']:.3f} {fmt_ci(r['ci95'])} & "
@@ -359,7 +359,7 @@ def render(payload: Dict) -> str:
     # TRL cross-seed summary paragraph
     lines.append("\\paragraph{TRL-GRPO cross-seed baseline.}")
     lines.append(
-        f"The TRL-GRPO reference (Qwen2.5-0.5B, 10 seeds, GSM8K, 125 steps, NVIDIA~L4)"
+        f"The TRL-GRPO reference (Qwen2.5-0.5B, 5 seeds, GSM8K, 125 steps, NVIDIA~L4)"
         f" has mean accuracy $\\bar{{x}} = {trl['mean']:.3f}$"
         f" (95\\,\\% bootstrap CI {fmt_ci(trl['ci95'])},"
         f" SD $= {trl['sd']:.3f}$, CV $= {trl['cv']:.3f}$)."

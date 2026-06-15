@@ -86,7 +86,7 @@
                 (\url{https://github.com/arvindcr4/tinker-rl-lab}).
                 Modal jobs run on explicitly provisioned NVIDIA H100 SXM5
                 GPUs (80 GB) via containerised workers; all hyperparameters
-                are version-controlled.  These experiments use 10 seeds with
+                are version-controlled.  These experiments use 5 seeds with
                 mean $\pm$ SE and 95\% bootstrap CIs.
           \item \textbf{Tinker API experiments (not fully reproducible).}
                 Tinker is a closed-source API with serverless GPU dispatch.
@@ -141,7 +141,7 @@
         \item Does the paper report error bars suitably and correctly
               defined or other appropriate information about the statistical
               significance of the experiments?
-        \answerPartial{For Modal/TRL experiments with 10 seeds, we report
+        \answerPartial{For Modal/TRL experiments with 5 seeds, we report
         mean $\pm$ SE with 95\% bootstrap confidence intervals via
         \texttt{rliable}~\cite{agarwal2021deep}.  Statistical analysis is
         in progress; preliminary CIs are shown where seeds have completed.

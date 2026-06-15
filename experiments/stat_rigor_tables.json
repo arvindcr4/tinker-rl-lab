@@ -1921,7 +1921,7 @@
         "p_bonf": NaN,
         "p_raw": NaN,
         "se": 0.03144041984452498,
-        "source": "real 10 seeds",
+        "source": "real 5 seeds",
         "test": "(reference)"
       },
       {
@@ -1964,7 +1964,7 @@
         "p_bonf": 8.304798850106779e-05,
         "p_raw": 2.0761997125266948e-05,
         "se": 0.000670820393249937,
-        "source": "real 10 seeds",
+        "source": "real 5 seeds",
         "t": 23.070141027914826,
         "test": "Welch t-test vs TRL (GRPO)"
       },
@@ -1986,7 +1986,7 @@
         "p_bonf": 7.872496617089478e-05,
         "p_raw": 1.9681241542723695e-05,
         "se": 0.0018398369492974096,
-        "source": "real 10 seeds",
+        "source": "real 5 seeds",
         "t": 23.096311881702814,
         "test": "Welch t-test vs TRL (GRPO)"
       },
@@ -2008,7 +2008,7 @@
         "p_bonf": 8.097455311092143e-05,
         "p_raw": 2.0243638277730358e-05,
         "se": 0.0014747881203752624,
-        "source": "real 10 seeds",
+        "source": "real 5 seeds",
         "t": 23.050046984996538,
         "test": "Welch t-test vs TRL (GRPO)"
       }

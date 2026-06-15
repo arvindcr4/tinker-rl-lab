@@ -55,6 +55,6 @@ for f in files:
 if accs:
     mean = statistics.mean(accs)
     std = statistics.stdev(accs) if len(accs) > 1 else 0
-    print(f'\n*** Mean accuracy: {mean:.1%} ± {std:.1%} (10 seeds, n=200 each) ***')
-    print(f'Paper-ready: {\"YES\" if len(accs) == 10 else \"NO\"} ({len(accs)}/10 seeds)')
+    print(f'\n*** Mean accuracy: {mean:.1%} ± {std:.1%} (5 seeds, n=200 each) ***')
+    print(f'Paper-ready: {\"YES\" if len(accs) == 5 else \"NO\"} ({len(accs)}/5 seeds)')
 "

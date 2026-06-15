@@ -1,7 +1,7 @@
 """
 Modal GPU Runner for Tinker RL Lab Multi-Seed Experiments
 =========================================================
-Runs all experiments across 10 seeds on Modal A10G GPUs.
+Runs all experiments across seeds on Modal A10G GPUs (SEEDS pool has 10; released runs use the first 5: 42, 123, 456, 789, 1024).
 
 Usage:
     modal run experiments/modal_runner.py               # Run all experiments

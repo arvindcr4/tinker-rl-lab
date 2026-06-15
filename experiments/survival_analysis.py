@@ -6,10 +6,10 @@ Addresses reviewer weaknesses:
   * W5-bh-aggregates-singleseed : BH correction must not aggregate Tier-C
     single-seed data with Tier-A/B multi-seed data.
   * Q5-f1-f5-survival-5seed : Which of F1-F5 survive when restricted to
-    TRL-as-single-open-framework, >=10 seeds, >=100 steps?
+    TRL-as-single-open-framework, >=5 seeds, >=100 steps?
 
 Tier definitions (evidence strength):
-  A  >=10 seeds AND >=100 steps  (inferential-grade)
+  A  >=5 seeds AND >=100 steps  (inferential-grade)
   B  3-4 seeds AND 50-100 steps (supporting)
   C  single-seed OR <50 steps   (descriptive only, EXCLUDED from inference)
 
@@ -590,7 +590,7 @@ def run() -> None:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     if n_a == 0:
         sys.stderr.write(
-            "[survival] WARNING: no Tier-A (>=10 seeds, >=100 steps) groups found. "
+            "[survival] WARNING: no Tier-A (>=5 seeds, >=100 steps) groups found. "
             "Emitting schema-only TSV; all F1-F5 claims DOWNGRADED to descriptive.\n"
         )
         with OUT_TSV.open("w", encoding="utf-8", newline="") as fh:

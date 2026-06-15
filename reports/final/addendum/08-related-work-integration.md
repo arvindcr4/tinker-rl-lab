@@ -4,7 +4,7 @@
 
 **Paper sections added:** `paper/sections/variance_mitigation_comparison.tex`, `paper/sections/extended_related_work.tex`
 **Bib fragments:** `paper/bib_fragments/variance_mitigation.bib` (`aero2024`, `cppo2024`, `ngrpo2025`, `scafgrpo2025`), `paper/bib_fragments/extended_rw.bib` (`treegrpo2025`, `lightman2023prm`, `stppo2025`, `dar2024`)
-**Reproducibility:** `experiments/variance_mitigation_integration.py` → `experiments/results/variance_mitigation.tsv` (2,500 rows; 5 methods × 10 seeds × 100 steps). CLI: `--method {grpo,aero,cppo,ngrpo,scafgrpo}`.
+**Reproducibility:** `experiments/variance_mitigation_integration.py` → `experiments/results/variance_mitigation.tsv` (2,500 rows; 5 methods × 5 seeds × 100 steps). CLI: `--method {grpo,aero,cppo,ngrpo,scafgrpo}`.
 
 These additions are consistent with the capstone's §2 Related Work (2.1 outcome-reward GRPO; 2.2 process rewards; 2.3 PPO stability; 2.4 hybrid alignment; 2.5 variance reduction; 2.6 diagnostics) and extend §2.5 with a head-to-head and §2.2–2.4 with an applicability map for the ZVF diagnostic.
 
@@ -33,7 +33,7 @@ These additions are consistent with the capstone's §2 Related Work (2.1 outcome
 
 Only AERO consults a ZVF-style signal at runtime; Scaf-GRPO is the only method that alters the reward landscape itself. All other methods compensate *after* the variance has been observed.
 
-**Head-to-head results on Qwen3-8B / GSM8K, 10 seeds, 100 steps (transcribed from `tab:variance-head2head`).**
+**Head-to-head results on Qwen3-8B / GSM8K, 5 seeds, 100 steps (transcribed from `tab:variance-head2head`).**
 
 | Method | Last-10 reward (mean ± 95% CI) | GSM8K-500 held-out (acc. %) | Collapse rate (seeds / 5) | Mean ZVF @ step 50 | Time-to-collapse (steps, median) |
 |---|---|---|---|---|---|

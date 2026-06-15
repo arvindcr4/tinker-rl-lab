@@ -40,11 +40,11 @@ same canonical script used elsewhere in this paper
 (\texttt{scripts/zvf\_compute\_cross\_framework.py}); configs live under
 \texttt{experiments/tool\_use\_zvf\_sweep/}.
 
-\subsection{Results}
-Table~\ref{tab:zvf_counterfactual} summarises per-run ZVF and pass rate.
-Rows with em-dashes indicate runs that are in progress at the time of
-submission; the sweep state is tracked at
-\texttt{experiments/tool\_use\_zvf\_sweep/manifest.tsv}.
+\subsection{Pre-registered design (not yet run)}
+This is a \emph{pre-registered protocol}, not a results table: at submission time
+no cell has been populated. Table~\ref{tab:zvf_counterfactual} fixes the design
+(models, reward versions, seeds, steps, and the planned statistic); the sweep
+state is tracked at \texttt{experiments/tool\_use\_zvf\_sweep/manifest.tsv}.
 
 \begin{table}[h]
 \centering
@@ -72,8 +72,9 @@ Qwen3-8B & v2 & 44 & 50 & --- & --- \\
 with within-group score variance below \(10^{-4}\), averaged over the final
 ten training steps. \(3\) seeds per cell; the planned summary statistic is
 paired-\(t\) on per-seed ZVF between v1 and v2 within each model. Em-dash
-rows indicate runs still in progress; values will be spliced in from
-\texttt{experiments/tool\_use\_zvf\_sweep/results.csv} on the next build.}
+cells are unrun (no results exist yet); on completion the per-seed values will be
+emitted by \texttt{experiments/tool\_use\_zvf\_sweep/run\_sweep.py} and spliced
+in.}
 \label{tab:zvf_counterfactual}
 \end{table}
 
@@ -94,5 +95,7 @@ rationalisation:
         not matter'' claim.
 \end{itemize}
 
-Reproduction instructions and raw wandb run URLs are listed in the
-repository under \texttt{experiments/tool\_use\_zvf\_sweep/README.md}.
+Reproduction: the sweep configs, cost estimate, and run state live in
+\texttt{experiments/tool\_use\_zvf\_sweep/} (\texttt{gen\_configs.py},
+\texttt{manifest.tsv}, \texttt{run\_sweep.py}); per-run wandb URLs will be
+recorded there as the runs complete.

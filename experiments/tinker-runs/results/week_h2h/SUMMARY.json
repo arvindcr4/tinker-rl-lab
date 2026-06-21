@@ -1,0 +1,33 @@
+{
+  "experiment": "tinker_h2h_qwen3.5-4b_gsm8k",
+  "model": "Qwen/Qwen3.5-4B",
+  "config": "G8 Dmedium R16 S15, seeds 42/123/456",
+  "cells": 12,
+  "cross_stack_note": "DAPO ZVF=0.58 here (closed Tinker, grpo+asym-clip surrogate) vs ~0.00 in open Colab E3 (true dynamic sampling) -- same label, different behavior; the stack determines the result.",
+  "by_arm": {
+    "grpo": {
+      "n": 3,
+      "mean_last10_reward": 0.723,
+      "mean_peak": 1.0,
+      "mean_zvf": 0.567
+    },
+    "drgrpo": {
+      "n": 3,
+      "mean_last10_reward": 0.742,
+      "mean_peak": 1.0,
+      "mean_zvf": 0.5
+    },
+    "dapo": {
+      "n": 3,
+      "mean_last10_reward": 0.744,
+      "mean_peak": 1.0,
+      "mean_zvf": 0.578
+    },
+    "gspo": {
+      "n": 3,
+      "mean_last10_reward": 0.71,
+      "mean_peak": 1.0,
+      "mean_zvf": 0.511
+    }
+  }
+}

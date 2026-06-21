@@ -1,0 +1,108 @@
+{
+  "project": "zvf-audit",
+  "entity": "arvindcr4-pes-university",
+  "total_runs": 368,
+  "states": {
+    "finished": 350,
+    "crashed": 6,
+    "failed": 12
+  },
+  "breakdowns": {
+    "model": {
+      "meta-llama/Llama-3.2-1B": {
+        "zvf": 0.973,
+        "gu": 0.989,
+        "reward": 0.006,
+        "frac_solved": 0.006,
+        "n": 102
+      },
+      "Qwen/Qwen3-30B-A3B-Instruct-2507": {
+        "zvf": 0.956,
+        "gu": 0.993,
+        "reward": 0.945,
+        "frac_solved": 0.945,
+        "n": 6
+      },
+      "meta-llama/Llama-3.2-3B": {
+        "zvf": 0.946,
+        "gu": 0.979,
+        "reward": 0.011,
+        "frac_solved": 0.011,
+        "n": 107
+      },
+      "Qwen/Qwen3-4B-Instruct-2507": {
+        "zvf": 0.868,
+        "gu": 0.939,
+        "reward": 0.86,
+        "frac_solved": 0.86,
+        "n": 107
+      },
+      "openai/gpt-oss-20b": {
+        "zvf": 0.786,
+        "gu": 0.893,
+        "reward": 0.903,
+        "frac_solved": 0.903,
+        "n": 6
+      },
+      "meta-llama/Llama-3.1-8B-Instruct": {
+        "zvf": 0.651,
+        "gu": 0.786,
+        "reward": 0.828,
+        "frac_solved": 0.828,
+        "n": 6
+      },
+      "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16": {
+        "zvf": 0.497,
+        "gu": 0.771,
+        "reward": 0.766,
+        "frac_solved": 0.766,
+        "n": 6
+      },
+      "Qwen/Qwen3-8B": {
+        "zvf": 0.288,
+        "gu": 0.666,
+        "reward": 0.502,
+        "frac_solved": 0.502,
+        "n": 6
+      },
+      "Qwen/Qwen3-32B": {
+        "zvf": 0.253,
+        "gu": 0.631,
+        "reward": 0.345,
+        "frac_solved": 0.345,
+        "n": 6
+      }
+    },
+    "group_size": {
+      "4": {
+        "zvf": 0.917,
+        "gu": 0.95,
+        "reward": 0.334,
+        "frac_solved": 0.334,
+        "n": 166
+      },
+      "8": {
+        "zvf": 0.898,
+        "gu": 0.963,
+        "reward": 0.304,
+        "frac_solved": 0.304,
+        "n": 162
+      },
+      "6": {
+        "zvf": 0.685,
+        "gu": 0.829,
+        "reward": 0.505,
+        "frac_solved": 0.505,
+        "n": 9
+      },
+      "16": {
+        "zvf": 0.68,
+        "gu": 0.887,
+        "reward": 0.679,
+        "frac_solved": 0.679,
+        "n": 15
+      }
+    },
+    "difficulty": {}
+  }
+}

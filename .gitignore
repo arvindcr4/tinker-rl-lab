@@ -125,3 +125,6 @@ University_Defense_Submission.zip
 .gemini/settings.json
 .cursor/hooks.json
 .opencode/plugins/xh-hooks.js
+
+# mail-automation (recipient emails + gmail token path) — local only, never tracked
+paper/send_eai_gmail.py

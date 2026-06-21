@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This analysis is based on a complete reading of the Sem 3_Project WhatsApp group chat (2,187 messages, Nov 2025 – Apr 2026), cross-referenced with GitHub commits, HuggingFace model cards, W&B logs, and shared artifacts. The goal: map each member's authentic contributions, identify their strengths, and allocate the world-class experiment suite so each person has a flagship result that showcases their best work.
+This analysis is based on a complete reading of the Sem 3_Project WhatsApp group chat (2,187 messages, Nov 2025 – Apr 2026), cross-referenced with GitHub commits, HuggingFace model cards, W&B logs, and shared artifacts. The goal: map each member's authentic contributions, identify their strengths, and allocate the frontier experiment suite so each person has a flagship result that showcases their best work.
 
 ---
 
@@ -32,7 +32,7 @@ This analysis is based on a complete reading of the Sem 3_Project WhatsApp group
 - **Scaling law analysis** (8B → 32B → 235B) — his signature contribution
 - **Cross-task transfer** (GSM8K → tool_use) — demonstrates generalization
 - **Frontier model evaluation** (DeepSeek-V3.1, Qwen3-235B, Nemotron-120B)
-- **World-class experiment orchestration** — the 20-experiment parallel suite itself
+- **Frontier experiment orchestration** — the 20-experiment parallel suite itself
 
 ---
 
@@ -195,7 +195,7 @@ This analysis is based on a complete reading of the Sem 3_Project WhatsApp group
 | §4.2 Algorithm Comparison | Sandhya, Dhruva | GRPO vs. DPO vs. PPO, MoE vs. Dense |
 | §4.3 Cross-Task Transfer | Arvind, Sandhya | GSM8K→tool_use generalization |
 | §4.4 Domain-Specific | Madhu (code), Mohammad (logic), Arumugam (aerospace) | Task-specific GRPO results |
-| §4.5 World-Class Suite | All 6 | 20-experiment parallel run results |
+| §4.5 Frontier Suite | All 6 | 20-experiment parallel run results |
 | §5 Analysis | Arvind (scaling laws), Sandhya (algorithm), Dhruva (baselines) | Quantitative analysis |
 | §6 Negative Results | Dhruva, Arumugam | What doesn't work and why |
 

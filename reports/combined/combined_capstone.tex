@@ -3987,7 +3987,7 @@ Smaller models show larger absolute gains but from lower baselines.
 \label{ch:elevation}
 
 This chapter presents five \emph{elevation analyses}---post-hoc diagnostic studies applied across the full
-experimental registry. These were built after the core campaigns (10x Structural Ceiling, World-Class
+experimental registry. These were built after the core campaigns (10x Structural Ceiling, Frontier
 Suite, Campaign Extension) were complete, and they re-use the reward trace data already captured on
 W\&B. All analyses treat single-seed Tinker runs as descriptive (not inferential) per the power analysis
 in \S\ref{sec:power-analysis}.
@@ -4322,7 +4322,7 @@ TRL-vs-Classic-RL ($d = 21.84$) clear this threshold; PPO-vs-GRPO Qwen3-8B ($d =
 (post-hoc power $\approx 6\%$).
 
 \textbf{Single-seed Tinker runs ($n = 1$):} Zero statistical power. Treated as \textbf{descriptive only}.
-The entire 10x Structural Ceiling ablation and World-Class Suite frontier runs contribute single data
+The entire 10x Structural Ceiling ablation and Frontier Suite frontier runs contribute single data
 points per configuration.
 
 \subsection{Benjamini-Hochberg FDR Correction}
@@ -4635,7 +4635,7 @@ completions. Synthesizing F1--F38:
 \item \textbf{10x Structural Ceiling} provides systematic evidence: capacity threshold holds across
 Qwen + Llama families; benchmark hierarchy degrades from format to reasoning; instruction tuning is
 prerequisite; group saturation (ZVF $\to 1.0$) is the mechanistic endpoint.
-\item \textbf{World-Class Suite} adds: at frontier scale, instruction-tuned MoE models (Qwen3-235B-A22B,
+\item \textbf{Frontier Suite} adds: at frontier scale, instruction-tuned MoE models (Qwen3-235B-A22B,
 DeepSeek-V3.1, Kimi-K2) converge rapidly; algorithm choice interacts with architecture; tool-use GRPO
 requires SFT categorically; Nemotron-120B introduces Mode 2b.
 \item \textbf{Elevation analyses} add: exponential saturation fits trajectories better than power law;
@@ -4645,7 +4645,7 @@ reduce rollout compute 75--87.5\%.
 only; six concurrent papers validate ZVF as the core diagnostic.
 \end{enumerate}
 
-\section{Key Findings from World-Class Suite}
+\section{Key Findings from Frontier Suite}
 \label{sec:wc-findings}
 
 \paragraph{WC1: Implementation framework matters more than algorithm design.}

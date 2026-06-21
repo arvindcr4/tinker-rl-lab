@@ -1,7 +1,7 @@
 # TinkerRL NeurIPS Paper Optimization
 
 ## Objective
-Elevate this research paper and codebase to world-class, Turing-Award-worthy standards. The project is a NeurIPS submission on GRPO (Group Relative Policy Optimization) for reasoning model alignment using the Tinker cloud RL platform.
+Improve this research paper and codebase to a rigorous, publication-ready standard. The project is a NeurIPS submission on GRPO (Group Relative Policy Optimization) for reasoning model alignment using the Tinker cloud RL platform.
 
 ## Metric
 Run `bash autoresearch.sh` — outputs `METRIC score=N` where N is 0-100. Higher is better.

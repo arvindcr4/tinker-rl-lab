@@ -1,21 +1,22 @@
-"""E5 (Pillar 2, theory): GRADIENT GEOMETRY of GRPO vs ZVF / p(1-p), measured with
-quantities that REQUIRE the open backward pass (not loggable on Tinker).
+"""E5 v4 (Pillar 2, theory): does the GRPO gradient signal track p(1-p)?
 
-Round-2 Codex fix: the first run's p was compressed to 0.12-0.27 (format-gated),
-so the p(1-p) correlation spanned almost no range. Now:
-  * FEW-SHOT scaffold removes the format confound; ERF (format rate) reported per bin.
-  * CALIBRATE prompts into 5 empirical p-bins ~[0.05,0.25,0.5,0.75,0.95] so p(1-p)
-    actually sweeps its inverted-U.
-  * Length-NORMALIZED completion log-prob for the gradient (removes the length
-    confound in gradient magnitude).
-  * Gradient slice = last TWO decoder layers (a wider proxy than one layer).
+agy (Gemini 3.1 Pro) hardening catches, all addressed here:
+  * MAX_NEW=24 truncated reasoning -> spurious 0 reward -> low-p starved of live
+    groups. -> MAX_NEW=128 + parser returns None when '####' is absent.
+  * The v3 negative corr was a SIMPSON'S-PARADOX artifact: GRPO's empirical
+    per-group std (r-m)/(s+eps) explodes the advantage of rare failures in nearly
+    saturated groups. -> POPULATION-standardized advantage (r - rbar)/sd using the
+    PILOT estimate of each prompt's reward mean/std (stable, not the tiny group's).
+  * Binary exact-match can't produce LIVE groups at low exact-match p on a 0.5B
+    model. -> CONTINUOUS partial-credit reward (1 - |ans-gold|/|gold|) so even hard
+    prompts have reward variance -> live groups across the whole difficulty range.
+  * Length-normalization is a possible confound -> kept (per-token) but mean
+    completion length is reported per bin so the confound is visible.
 
-Per live group we measure mean ||grad_i|| (first moment), mean ||grad_i||^2
-(Fisher-trace proxy), ||sum adv_i grad_i||/G (effective signal), advantage-weighted
-SNR and cosine alignment. Theory T3: signal/Fisher track p(1-p) (inverted-U) more
-than GU=1-ZVF (monotone).
+x-axis = the THEORY's quantity, exact-match p(1-p) (continuous reward only provides
+the contrast needed to measure). Per-LIVE-group regression of signal on x.
 
-Run:  colab run --gpu T4 --timeout 1500 e5_grad_geometry.py
+Run:  colab run --gpu T4 --timeout 1800 e5_grad_geometry.py
 """
 import json, re, random, statistics
 import torch, torch.nn.functional as F
@@ -23,12 +24,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
 SEED = 0
-G, MAX_NEW = 6, 24
-TARGET_PS = [0.05, 0.25, 0.5, 0.75, 0.95]
-TOL = 0.12            # bin assignment tolerance
-N_PER_BIN = 8         # calibrated prompts kept per bin
-N_PILOT = 20
-N_CANDIDATES = 130
+G, R_GROUPS, MAX_NEW = 6, 6, 128
+N_CAND, N_PILOT, N_KEEP = 80, 24, 32
+MIN_SD = 0.04          # keep prompts whose pilot reward std can yield live groups
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
 
 tok = AutoTokenizer.from_pretrained(MODEL)
@@ -43,14 +41,18 @@ FEWSHOT = [
 ]
 
 def candidate(rng):
-    r = rng.random()
-    if r < 0.4:
-        a, b = rng.randint(1, 50), rng.randint(1, 50)            # easy -> high p
-    elif r < 0.7:
-        a, b = rng.randint(10, 99), rng.randint(100, 999)        # mixed -> mid p
+    lvl = rng.randint(0, 4)
+    if lvl == 0:
+        a, b = rng.randint(1, 30), rng.randint(1, 30); op = "+"
+    elif lvl == 1:
+        a, b = rng.randint(10, 99), rng.randint(10, 99); op = "+"
+    elif lvl == 2:
+        a, b = rng.randint(100, 999), rng.randint(100, 999); op = "+"
+    elif lvl == 3:
+        a, b = rng.randint(11, 99), rng.randint(11, 99); op = "*"   # 2-digit mult
     else:
-        a, b = rng.randint(200, 999), rng.randint(200, 999)      # hard -> low p
-    return f"{a} + {b}", a + b
+        a, b = rng.randint(100, 999), rng.randint(11, 99); op = "*"  # hard mult
+    return f"{a} {op} {b}", (a + b if op == "+" else a * b)
 
 def prompt_of(q):
     msgs = FEWSHOT + [{"role": "user",
@@ -58,36 +60,46 @@ def prompt_of(q):
     return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
 
 def parse(text):
-    seg = text.split("####")
-    if len(seg) < 2:
+    if "####" not in text:
         return None, False
-    m = re.findall(r"-?\d+", seg[-1])
+    m = re.findall(r"-?\d+", text.split("####")[-1])
     return (int(m[0]) if m else None), bool(m)
 
+def reward(ans, gold):
+    """Continuous partial credit -> contrast (variance) even when exact-match p ~ 0."""
+    if ans is None:
+        return 0.0
+    if ans == gold:
+        return 1.0
+    return max(0.0, 1.0 - abs(ans - gold) / max(1, abs(gold)))
+
 @torch.no_grad()
-def pilot_p(model, prompt, gold, n):
+def pilot(model, prompt, gold, n):
     enc = tok([prompt] * n, return_tensors="pt", padding=True).to(DEV)
     out = model.generate(**enc, do_sample=True, temperature=1.0, top_p=0.95,
                          max_new_tokens=MAX_NEW, pad_token_id=PAD)
     gens = out[:, enc.input_ids.shape[1]:]
-    return statistics.mean(1.0 if parse(t)[0] == gold else 0.0
-                           for t in tok.batch_decode(gens, skip_special_tokens=True))
+    rs, ex = [], []
+    for t in tok.batch_decode(gens, skip_special_tokens=True):
+        ans, _ = parse(t)
+        rs.append(reward(ans, gold)); ex.append(1.0 if ans == gold else 0.0)
+    return rs, statistics.mean(ex)
 
 def calibrate(model, rng):
-    bins = {t: [] for t in TARGET_PS}
-    screened = 0
-    for _ in range(N_CANDIDATES):
+    kept = []
+    for _ in range(N_CAND):
         q, gold = candidate(rng)
-        ph = pilot_p(model, prompt_of(q), gold, N_PILOT)
-        screened += 1
-        t = min(TARGET_PS, key=lambda t: abs(t - ph))
-        if abs(t - ph) <= TOL and len(bins[t]) < N_PER_BIN:
-            bins[t].append((q, gold, ph))
-        if all(len(v) >= N_PER_BIN for v in bins.values()):
+        rs, exact_p = pilot(model, prompt_of(q), gold, N_PILOT)
+        rbar, sd = statistics.mean(rs), statistics.pstdev(rs)
+        if sd >= MIN_SD:                          # has contrast -> will yield live groups
+            kept.append({"q": q, "gold": gold, "exact_p": exact_p, "rbar": rbar, "sd": sd})
+        if len(kept) >= N_KEEP:
             break
-    for t in TARGET_PS:
-        print(f"[e5] bin p~{t}: {len(bins[t])} prompts (screened {screened})", flush=True)
-    return bins
+    kept.sort(key=lambda d: d["exact_p"])
+    if kept:
+        print(f"[e5] kept {len(kept)} prompts; exact_p in "
+              f"[{kept[0]['exact_p']:.2f},{kept[-1]['exact_p']:.2f}]", flush=True)
+    return kept
 
 def gen_group(model, prompt, gold):
     model.eval()
@@ -96,96 +108,100 @@ def gen_group(model, prompt, gold):
         out = model.generate(**enc, do_sample=True, temperature=1.0, top_p=0.95,
                              max_new_tokens=MAX_NEW, pad_token_id=PAD)
     gens = out[:, enc.input_ids.shape[1]:]
-    rewards, fmt = [], []
-    for t in tok.batch_decode(gens, skip_special_tokens=True):
-        ans, ok = parse(t)
-        rewards.append(1.0 if ans == gold else 0.0); fmt.append(1.0 if ok else 0.0)
-    return enc.input_ids[0], gens, rewards, fmt
+    rewards = [reward(parse(t)[0], gold)
+               for t in tok.batch_decode(gens, skip_special_tokens=True)]
+    return enc.input_ids[0], gens, rewards
 
 def rollout_grad(model, slice_params, pids, gen_row):
     gen_row = gen_row[gen_row != PAD]
     n = gen_row.numel()
     if n == 0:
-        return None
+        return None, 0
     ids = torch.cat([pids, gen_row]).unsqueeze(0)
     logits = model(ids).logits[:, :-1, :].float()
     tgt = ids[:, 1:]
     lp = F.log_softmax(logits, -1).gather(-1, tgt.unsqueeze(-1)).squeeze(-1)
-    seqlp = lp[:, pids.shape[0] - 1:].sum() / n         # LENGTH-NORMALIZED
+    seqlp = lp[:, pids.shape[0] - 1:].sum() / n        # length-normalized
     grads = torch.autograd.grad(seqlp, slice_params, allow_unused=True)
-    return torch.cat([g.reshape(-1) for g in grads if g is not None]).detach()
+    return torch.cat([g.reshape(-1) for g in grads if g is not None]).detach(), int(n)
 
-def bin_geometry(model, slice_params, prompts):
-    norms, fishers, signals, snrs, coss = [], [], [], [], []
-    rewards_all, fmt_all, n_live, n_groups = [], [], 0, 0
-    for q, gold, _ in prompts:
-        pids, gens, rewards, fmt = gen_group(model, prompt_of(q), gold)
-        rewards_all += rewards; fmt_all += fmt; n_groups += 1
-        m = sum(rewards) / G; v = statistics.pvariance(rewards)
-        if v == 0.0:
-            continue
-        n_live += 1; s = v ** 0.5
-        gs, advs = [], []
-        for i in range(G):
-            adv = (rewards[i] - m) / (s + 1e-6)
-            g = rollout_grad(model, slice_params, pids, gens[i])
-            if g is not None:
-                gs.append(g); advs.append(adv)
-        if not gs:
-            continue
-        Gmat = torch.stack(gs)
-        a = torch.tensor(advs, device=Gmat.device, dtype=Gmat.dtype)
-        wg = a.unsqueeze(1) * Gmat
-        agg = wg.sum(0)
-        per = Gmat.norm(dim=1)
-        norms.append(per.mean().item()); fishers.append((per ** 2).mean().item())
-        signals.append((agg.norm() / G).item())
-        snrs.append((agg.norm() / wg.norm(dim=1).sum().clamp_min(1e-9)).item())
-        wn = F.normalize(wg, dim=1); cm = wn @ wn.t()
-        coss.append(((cm.sum() - cm.diag().sum()) / (len(gs) * (len(gs) - 1) + 1e-9)).item())
-    p = sum(rewards_all) / len(rewards_all)
-    erf = sum(fmt_all) / len(fmt_all)
-    zvf = 1 - n_live / n_groups
-    ag = lambda xs: round(statistics.mean(xs), 5) if xs else None
-    return {"p": round(p, 3), "erf": round(erf, 3), "zvf": round(zvf, 3),
-            "p1mp": round(p * (1 - p), 4), "grad_norm": ag(norms), "fisher_trace": ag(fishers),
-            "signal_per_roll": ag(signals), "snr": ag(snrs), "cos_align": ag(coss),
-            "n_live": n_live, "n_groups": n_groups}
+def group_signal(model, slice_params, pids, gens, rewards, rbar, sd):
+    # POPULATION-standardized advantage (pilot rbar/sd) -> no small-group std explosion
+    gs, advs, lens = [], [], []
+    for i in range(G):
+        adv = (rewards[i] - rbar) / (sd + 1e-6)
+        g, n = rollout_grad(model, slice_params, pids, gens[i])
+        if g is not None:
+            gs.append(g); advs.append(adv); lens.append(n)
+    if len(gs) < 2:
+        return None
+    Gmat = torch.stack(gs)
+    a = torch.tensor(advs, device=Gmat.device, dtype=Gmat.dtype)
+    wg = a.unsqueeze(1) * Gmat
+    agg = wg.sum(0)
+    per = Gmat.norm(dim=1)
+    return {"signal": (agg.norm() / G).item(), "fisher": (per ** 2).mean().item(),
+            "snr": (agg.norm() / wg.norm(dim=1).sum().clamp_min(1e-9)).item(),
+            "mean_len": statistics.mean(lens)}
 
 def pearson(xs, ys):
-    pts = [(x, y) for x, y in zip(xs, ys) if x is not None and y is not None]
-    if len(pts) < 3:
+    if len(xs) < 3:
         return None
-    xs, ys = zip(*pts)
     mx, my = statistics.mean(xs), statistics.mean(ys)
-    num = sum((x - mx) * (y - my) for x, y in pts)
+    num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
     den = (sum((x - mx) ** 2 for x in xs) * sum((y - my) ** 2 for y in ys)) ** 0.5
     return round(num / den, 3) if den else None
+
+def ols_slope(xs, ys):
+    if len(xs) < 3:
+        return None
+    mx, my = statistics.mean(xs), statistics.mean(ys)
+    den = sum((x - mx) ** 2 for x in xs)
+    return round(sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / den, 3) if den else None
 
 def main():
     rng = random.Random(SEED); torch.manual_seed(SEED)
     model = AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).to(DEV)
     slice_params = [p for layer in model.model.layers[-2:] for p in layer.parameters() if p.requires_grad]
-    bins = calibrate(model, rng)
+    prompts = calibrate(model, rng)
+
+    rows = []
+    for d in prompts:
+        x = d["exact_p"] * (1 - d["exact_p"])        # theory's quantity
+        for _ in range(R_GROUPS):
+            pids, gens, rewards = gen_group(model, prompt_of(d["q"]), d["gold"])
+            if statistics.pvariance(rewards) <= 1e-9:
+                continue                              # dead group
+            gsig = group_signal(model, slice_params, pids, gens, rewards, d["rbar"], d["sd"])
+            if gsig is not None:
+                rows.append({"x": x, "exact_p": d["exact_p"], **gsig})
+        print(f"[e5] exact_p~{d['exact_p']:.2f} x={x:.3f} -> "
+              f"{sum(1 for r in rows if r['exact_p']==d['exact_p'])} live groups", flush=True)
+
+    xs = [r["x"] for r in rows]
     by_bin = {}
-    for t in TARGET_PS:
-        if not bins[t]:
-            continue
-        c = bin_geometry(model, slice_params, bins[t])
-        by_bin[f"p~{t}"] = c
-        print(f"[e5] p~{t}: p={c['p']:.2f} erf={c['erf']:.2f} ZVF={c['zvf']:.2f} "
-              f"signal={c['signal_per_roll']} snr={c['snr']} fisher={c['fisher_trace']}", flush=True)
-    cells = list(by_bin.values())
-    p1mp = [c["p1mp"] for c in cells]
-    gu = [1 - c["zvf"] for c in cells]
-    signal = [c["signal_per_roll"] for c in cells]
-    fisher = [c["fisher_trace"] for c in cells]
-    result = {"experiment": "E5_grad_geometry", "model": MODEL, "seed": SEED, "few_shot": True,
-              "length_normalized": True, "grad_slice": "last_2_decoder_layers",
-              "p_range": [round(min(c['p'] for c in cells), 3), round(max(c['p'] for c in cells), 3)],
-              "by_bin": by_bin,
-              "corr_signal_p1mp": pearson(signal, p1mp), "corr_signal_gu": pearson(signal, gu),
-              "corr_fisher_p1mp": pearson(fisher, p1mp)}
+    for lo, hi, lab in [(0.0, 0.08, "p1mp<0.08"), (0.08, 0.16, "0.08-0.16"),
+                        (0.16, 0.22, "0.16-0.22"), (0.22, 0.26, "p1mp>0.22")]:
+        b = [r for r in rows if lo <= r["x"] < hi]
+        if b:
+            by_bin[lab] = {"n": len(b), "mean_exact_p": round(statistics.mean(r["exact_p"] for r in b), 3),
+                           "mean_signal": round(statistics.mean(r["signal"] for r in b), 4),
+                           "mean_fisher": round(statistics.mean(r["fisher"] for r in b), 2),
+                           "mean_snr": round(statistics.mean(r["snr"] for r in b), 4),
+                           "mean_len": round(statistics.mean(r["mean_len"] for r in b), 1)}
+    result = {"experiment": "E5_grad_geometry", "model": MODEL, "seed": SEED,
+              "method": "per-group regression; continuous reward; population-standardized advantage",
+              "reward": "continuous_partial_credit", "advantage": "population_standardized_pilot",
+              "max_new": MAX_NEW, "few_shot": True, "length_normalized": True,
+              "grad_slice": "last_2_decoder_layers", "n_prompts": len(prompts),
+              "n_live_groups": len(rows),
+              "exact_p_range": [round(min(r["exact_p"] for r in rows), 3),
+                                round(max(r["exact_p"] for r in rows), 3)] if rows else None,
+              "corr_signal_p1mp": pearson(xs, [r["signal"] for r in rows]),
+              "slope_signal_p1mp": ols_slope(xs, [r["signal"] for r in rows]),
+              "corr_fisher_p1mp": pearson(xs, [r["fisher"] for r in rows]),
+              "corr_snr_p1mp": pearson(xs, [r["snr"] for r in rows]),
+              "by_p_bin": by_bin}
     print("E5_RESULT " + json.dumps(result), flush=True)
 
 main()

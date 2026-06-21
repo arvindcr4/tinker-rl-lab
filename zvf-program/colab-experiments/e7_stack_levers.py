@@ -24,7 +24,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
 SEEDS = [0, 1]
-G, BATCH, MAX_NEW, STEPS = 6, 4, 32, 10
+G, BATCH, MAX_NEW, STEPS = 6, 4, 128, 10    # MAX_NEW 128: avoid truncation -> spurious 0 reward
 HELDOUT_N = 20
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -50,7 +50,9 @@ FEWSHOT = [
 ]
 
 def problem(rng):
-    a, b = rng.randint(20, 90), rng.randint(20, 90)
+    # 3-digit addition: ~0.5-0.7 base accuracy -> headroom for precision/LR to matter
+    # (2-digit addition saturates at ~0.9, masking any lever effect).
+    a, b = rng.randint(100, 999), rng.randint(100, 999)
     return f"{a} + {b}", a + b
 
 def prompt_of(q):
@@ -100,16 +102,16 @@ def heldout_acc(model, evalset):
     return c / len(evalset)
 
 def grad_diag(model):
-    """Total grad L2 norm + count of non-finite grads."""
+    """Total grad L2 norm + count of non-finite grads. Non-finite grads PROPAGATE into
+    the norm (no skipping) so gnorm blows up exactly when instability strikes."""
     sq, nonfinite = 0.0, 0
     for p in model.parameters():
         if p.grad is not None:
             g = p.grad.detach().float()
-            nf = (~torch.isfinite(g)).sum().item()
-            nonfinite += nf
-            if nf == 0:
-                sq += (g * g).sum().item()
-    return math.sqrt(sq), nonfinite
+            nonfinite += int((~torch.isfinite(g)).sum().item())
+            sq += float((g * g).sum().item())
+    gn = math.sqrt(sq) if math.isfinite(sq) and sq >= 0 else float("inf")
+    return gn, nonfinite
 
 def run(arm, seed):
     dtype, attn, temp, top_p, lr = ARMS[arm]
@@ -171,7 +173,10 @@ for arm in ARMS:
         results.append(run(arm, seed))
 
 def ms(xs):
-    return [round(statistics.mean(xs), 3), round(statistics.pstdev(xs), 3)]
+    m = statistics.mean(xs)
+    if not math.isfinite(m):                      # non-finite gnorm -> JSON/W&B-safe sentinel
+        return ["non-finite", 0.0]
+    return [round(m, 3), round(statistics.pstdev(xs), 3)]
 ref = {s: next(r for r in results if r["arm"] == "reference" and r["seed"] == s) for s in SEEDS}
 by_lever = {}
 for arm in ARMS:

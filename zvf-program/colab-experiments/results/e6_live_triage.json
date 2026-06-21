@@ -9,99 +9,99 @@
   "frac_dead": 0.75,
   "by_arm": {
     "fixed_G": {
-      "mean_heldout_delta": 0.0,
-      "mean_zvf": 0.873,
+      "mean_heldout_delta": -0.042,
+      "mean_zvf": 0.853,
       "mean_rollouts": 432,
       "mean_opt_steps": 27,
-      "mean_dropped": 12
+      "mean_dropped": 16
     },
     "adaptiveG": {
       "mean_heldout_delta": 0.0,
-      "mean_zvf": 0.775,
-      "mean_rollouts": 436,
-      "mean_opt_steps": 17,
+      "mean_zvf": 0.841,
+      "mean_rollouts": 444,
+      "mean_opt_steps": 16.5,
       "mean_dropped": 4
     },
     "adaptiveG_drop": {
-      "mean_heldout_delta": 0.0,
-      "mean_zvf": 0.783,
-      "mean_rollouts": 438,
-      "mean_opt_steps": 17,
-      "mean_dropped": 4
+      "mean_heldout_delta": 0.021,
+      "mean_zvf": 0.835,
+      "mean_rollouts": 378,
+      "mean_opt_steps": 14.5,
+      "mean_dropped": 3
     }
   },
   "runs": [
     {
       "arm": "fixed_G",
       "seed": 0,
-      "heldout_pre": 1.0,
-      "heldout_post": 1.0,
+      "heldout_pre": 0.667,
+      "heldout_post": 0.667,
       "heldout_delta": 0.0,
-      "mean_zvf": 0.904,
+      "mean_zvf": 0.815,
       "total_rollouts": 432,
       "opt_steps": 27,
-      "dropped": 13,
-      "auto_stopped": true
+      "dropped": 15,
+      "auto_stopped": false
     },
     {
       "arm": "fixed_G",
       "seed": 1,
-      "heldout_pre": 0.958,
-      "heldout_post": 0.958,
-      "heldout_delta": 0.0,
-      "mean_zvf": 0.843,
+      "heldout_pre": 0.667,
+      "heldout_post": 0.583,
+      "heldout_delta": -0.083,
+      "mean_zvf": 0.892,
       "total_rollouts": 432,
       "opt_steps": 27,
-      "dropped": 11,
-      "auto_stopped": true
+      "dropped": 17,
+      "auto_stopped": false
     },
     {
       "arm": "adaptiveG",
       "seed": 0,
-      "heldout_pre": 1.0,
-      "heldout_post": 1.0,
-      "heldout_delta": 0.0,
-      "mean_zvf": 0.828,
-      "total_rollouts": 436,
-      "opt_steps": 16,
-      "dropped": 7,
-      "auto_stopped": true
+      "heldout_pre": 0.667,
+      "heldout_post": 0.708,
+      "heldout_delta": 0.042,
+      "mean_zvf": 0.824,
+      "total_rollouts": 444,
+      "opt_steps": 17,
+      "dropped": 5,
+      "auto_stopped": false
     },
     {
       "arm": "adaptiveG",
       "seed": 1,
-      "heldout_pre": 0.958,
-      "heldout_post": 0.958,
-      "heldout_delta": 0.0,
-      "mean_zvf": 0.722,
-      "total_rollouts": 436,
-      "opt_steps": 18,
-      "dropped": 1,
-      "auto_stopped": false
+      "heldout_pre": 0.667,
+      "heldout_post": 0.625,
+      "heldout_delta": -0.042,
+      "mean_zvf": 0.859,
+      "total_rollouts": 444,
+      "opt_steps": 16,
+      "dropped": 3,
+      "auto_stopped": true
     },
     {
       "arm": "adaptiveG_drop",
       "seed": 0,
-      "heldout_pre": 1.0,
-      "heldout_post": 1.0,
-      "heldout_delta": 0.0,
-      "mean_zvf": 0.844,
-      "total_rollouts": 440,
-      "opt_steps": 16,
-      "dropped": 7,
+      "heldout_pre": 0.667,
+      "heldout_post": 0.75,
+      "heldout_delta": 0.083,
+      "mean_zvf": 0.794,
+      "total_rollouts": 432,
+      "opt_steps": 17,
+      "dropped": 5,
       "auto_stopped": false
     },
     {
       "arm": "adaptiveG_drop",
       "seed": 1,
-      "heldout_pre": 0.958,
-      "heldout_post": 0.958,
-      "heldout_delta": 0.0,
-      "mean_zvf": 0.722,
-      "total_rollouts": 436,
-      "opt_steps": 18,
+      "heldout_pre": 0.667,
+      "heldout_post": 0.625,
+      "heldout_delta": -0.042,
+      "mean_zvf": 0.875,
+      "total_rollouts": 324,
+      "opt_steps": 12,
       "dropped": 1,
-      "auto_stopped": false
+      "auto_stopped": true
     }
   ],
   "_source": "colab run --gpu T4 (e6_run.log)",

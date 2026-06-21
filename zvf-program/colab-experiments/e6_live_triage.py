@@ -27,7 +27,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
 SEEDS = [0, 1]
-POOL_N, FRAC_DEAD, BATCH_P, MAX_NEW, LR = 48, 0.75, 4, 24, 2e-6
+POOL_N, FRAC_DEAD, BATCH_P, MAX_NEW, LR = 48, 0.75, 4, 128, 2e-6
 G0, GMIN, GMAX = 4, 2, 12
 BUDGET = 420           # total rollouts per arm (matched; lower so savings matter)
 HELDOUT_N = 24
@@ -112,8 +112,8 @@ class ZVFController:
 # ---- task / harness ----
 def make_pool(rng):
     # DEAD = 3-digit multiplication (0.5B ~never correct -> persistent zero-variance,
-    # low reward -> drop candidates). BORDERLINE = 3-digit addition (learnable, has
-    # contrast). few-shot makes addition solvable but NOT multiplication.
+    # low reward -> drop candidates). BORDERLINE = 2-digit multiplication: 0.5B gets it
+    # ~0.3 with headroom to LEARN (3-digit addition is aced natively -> no headroom).
     pool = []
     n_dead = int(POOL_N * FRAC_DEAD)
     for i in range(POOL_N):
@@ -121,14 +121,14 @@ def make_pool(rng):
             a, b = rng.randint(100, 999), rng.randint(100, 999)
             pool.append({"id": i, "q": f"{a} * {b}", "gold": a * b, "kind": "dead"})
         else:
-            a, b = rng.randint(100, 999), rng.randint(100, 999)
-            pool.append({"id": i, "q": f"{a} + {b}", "gold": a + b, "kind": "borderline"})
+            a, b = rng.randint(11, 99), rng.randint(11, 99)
+            pool.append({"id": i, "q": f"{a} * {b}", "gold": a * b, "kind": "borderline"})
     rng.shuffle(pool)
     return pool
 
-def heldout_set(rng):                        # DISJOINT borderline 3-digit additions
-    return [(f"{a} + {b}", a + b) for a, b in
-            [(rng.randint(100, 999), rng.randint(100, 999)) for _ in range(HELDOUT_N)]]
+def heldout_set(rng):                        # DISJOINT borderline 2-digit multiplications
+    return [(f"{a} * {b}", a * b) for a, b in
+            [(rng.randint(11, 99), rng.randint(11, 99)) for _ in range(HELDOUT_N)]]
 
 def prompt_of(q):
     msgs = FEWSHOT + [{"role": "user",
@@ -136,6 +136,8 @@ def prompt_of(q):
     return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
 
 def parse(text):
+    if "####" not in text:            # no marker -> not parseable (don't grab question digits)
+        return None
     m = re.findall(r"-?\d+", text.split("####")[-1])
     return int(m[0]) if m else None
 

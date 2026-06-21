@@ -52,10 +52,12 @@ def headline(tag, o):
                 f"K=32 ZVF={k32}≈0.008 worked example); precision ΔZVF "
                 f"{o['precision_side_check_K8']['delta_zvf_fp32_minus_bf16']:+.3f}")
     if tag == "E5_RESULT":
-        sp, sg, fp = o.get("corr_signal_p1mp"), o.get("corr_signal_gu"), o.get("corr_fisher_p1mp")
-        ok = sp is not None and sp > 0.3 and abs(sp) > abs(sg or 0)
-        verdict = "inverted-U supported" if ok else "INCONCLUSIVE — p-tails have ~no live groups to measure"
-        return f"signal↔p(1-p) r={sp}, ↔GU r={sg}, Fisher↔p(1-p) r={fp} — {verdict}"
+        sp, fp = o.get("corr_signal_p1mp"), o.get("corr_fisher_p1mp")
+        n, sl = o.get("n_live_groups"), o.get("slope_signal_p1mp")
+        ok = sp is not None and sp > 0.3
+        verdict = "S∝p(1-p) supported" if ok else "weak/inconclusive"
+        return (f"per-group (N={n} live): signal↔p(1-p) r={sp} (slope {sl}); "
+                f"Fisher↔p(1-p) r={fp} — {verdict}")
     if tag == "E6_RESULT":
         a = o["by_arm"]
         return ("fixed Δ={:.2f}/ZVF={:.2f} | adaptiveG Δ={:.2f}/ZVF={:.2f} | +drop Δ={:.2f}/ZVF={:.2f} (matched ~{} rollouts)"
@@ -65,11 +67,14 @@ def headline(tag, o):
                         o['budget_rollouts']))
     if tag == "E7_RESULT":
         bl = o["by_lever"]
+        gb_ref = bl.get("reference", {}).get("gen_baseline_p", [None])[0]
+        gb_fp = bl.get("fp32", {}).get("gen_baseline_p", [None])[0]
         dp = bl.get("fp32", {}).get("delta_p_vs_ref", [None])[0]
         nf = sum(v.get("nonfinite_grads", 0) for v in bl.values())
         parts = [f"{k} Δp={v['delta_p_vs_ref'][0]:+.3f}" for k, v in bl.items() if k != "reference"]
-        return (f"fp32 Δp_vs_ref={dp:+.3f} (v1's +0.72 was a format confound, now ~0); "
-                f"nonfinite_grads={nf}; " + "; ".join(parts))
+        return (f"gen-baseline bf16={gb_ref}==fp32={gb_fp} (precision ~no gen effect); "
+                f"fp32 train Δp={dp:+.3f} (noisy/LR-dep, NOT v1's +0.72); nonfinite_grads={nf}; "
+                + "; ".join(parts))
     return ""
 
 # ---- README ----

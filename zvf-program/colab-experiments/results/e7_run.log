@@ -1,6 +1,6 @@
-launch E7 v2 Sun Jun 21 17:57:33 IST 2026
-[colab] Creating session 'run-89d56c'...
-[colab] Session READY (run-89d56c). Executing zvf-program/colab-experiments/e7_stack_levers.py...
+launch E7 v3 (hardened) Sun Jun 21 20:56:50 IST 2026
+[colab] Creating session 'run-b3e3e0'...
+[colab] Session READY (run-b3e3e0). Executing zvf-program/colab-experiments/e7_stack_levers.py...
 /usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_auth.py:122: UserWarning: 
 Error while fetching `HF_TOKEN` secret value from your vault: 'Requesting secret HF_TOKEN timed out. Secrets can only be fetched when running from the Colab UI.'.
 You are not authenticated with the Hugging Face Hub in this notebook.
@@ -16,138 +16,138 @@ tokenizer.json:   0%|          | 0.00/7.03M [00:00<?, ?B/s]
 model.safetensors:   0%|          | 0.00/988M [00:00<?, ?B/s]
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
 generation_config.json:   0%|          | 0.00/242 [00:00<?, ?B/s]
-[e7:reference    s0] step= 1 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:reference    s0] step= 2 ZVF=0.25 ERF=0.92 p=0.88 gnorm=10711.1 dnorm=0.00246 nan=0
-[e7:reference    s0] step= 3 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:reference    s0] step= 4 ZVF=0.75 ERF=1.00 p=0.92 gnorm=2484.4 dnorm=0.00104 nan=0
+[e7:reference    s0] step= 1 ZVF=0.25 ERF=0.92 p=0.88 gnorm=13114.7 dnorm=0.00246 nan=0
+[e7:reference    s0] step= 2 ZVF=0.25 ERF=0.88 p=0.75 gnorm=15114.0 dnorm=0.00133 nan=0
+[e7:reference    s0] step= 3 ZVF=0.25 ERF=1.00 p=0.79 gnorm=6529.0 dnorm=0.000814 nan=0
+[e7:reference    s0] step= 4 ZVF=0.50 ERF=1.00 p=0.92 gnorm=8085.3 dnorm=0.000674 nan=0
 [e7:reference    s0] step= 5 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:reference    s0] step= 6 ZVF=0.75 ERF=0.96 p=0.79 gnorm=5873.2 dnorm=0.000773 nan=0
-[e7:reference    s0] step= 7 ZVF=1.00 ERF=1.00 p=0.75 gnorm=0.0 dnorm=0 nan=0
-[e7:reference    s0] step= 8 ZVF=0.75 ERF=0.96 p=0.96 gnorm=4547.4 dnorm=0.000666 nan=0
-[e7:reference    s0] step= 9 ZVF=0.75 ERF=1.00 p=0.96 gnorm=4855.8 dnorm=0.000624 nan=0
-[e7:reference    s0] step=10 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:reference    s0] step= 6 ZVF=0.75 ERF=0.96 p=0.96 gnorm=9415.9 dnorm=0.000625 nan=0
+[e7:reference    s0] step= 7 ZVF=0.75 ERF=0.96 p=0.92 gnorm=7444.1 dnorm=0.000566 nan=0
+[e7:reference    s0] step= 8 ZVF=0.50 ERF=0.96 p=0.92 gnorm=9212.8 dnorm=0.000533 nan=0
+[e7:reference    s0] step= 9 ZVF=0.50 ERF=1.00 p=0.92 gnorm=8781.7 dnorm=0.000506 nan=0
+[e7:reference    s0] step=10 ZVF=0.75 ERF=1.00 p=0.96 gnorm=6163.4 dnorm=0.000452 nan=0
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-[e7:reference    s1] step= 1 ZVF=0.50 ERF=0.88 p=0.83 gnorm=9291.0 dnorm=0.00246 nan=0
-[e7:reference    s1] step= 2 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:reference    s1] step= 3 ZVF=0.75 ERF=0.96 p=0.96 gnorm=5379.7 dnorm=0.00133 nan=0
-[e7:reference    s1] step= 4 ZVF=0.75 ERF=0.96 p=0.96 gnorm=3731.4 dnorm=0.000833 nan=0
+[e7:reference    s1] step= 1 ZVF=0.25 ERF=1.00 p=0.71 gnorm=11488.0 dnorm=0.00246 nan=0
+[e7:reference    s1] step= 2 ZVF=0.25 ERF=0.92 p=0.58 gnorm=12944.4 dnorm=0.00133 nan=0
+[e7:reference    s1] step= 3 ZVF=0.50 ERF=0.96 p=0.92 gnorm=11061.6 dnorm=0.000955 nan=0
+[e7:reference    s1] step= 4 ZVF=0.75 ERF=0.96 p=0.67 gnorm=4211.6 dnorm=0.00069 nan=0
 [e7:reference    s1] step= 5 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:reference    s1] step= 6 ZVF=0.75 ERF=1.00 p=0.92 gnorm=4364.8 dnorm=0.000652 nan=0
+[e7:reference    s1] step= 6 ZVF=0.50 ERF=0.96 p=0.92 gnorm=9454.8 dnorm=0.000628 nan=0
 [e7:reference    s1] step= 7 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:reference    s1] step= 8 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:reference    s1] step= 9 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:reference    s1] step=10 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:reference    s1] step= 8 ZVF=0.75 ERF=1.00 p=0.96 gnorm=2633.6 dnorm=0.000546 nan=0
+[e7:reference    s1] step= 9 ZVF=0.50 ERF=0.92 p=0.83 gnorm=8277.2 dnorm=0.000534 nan=0
+[e7:reference    s1] step=10 ZVF=0.50 ERF=0.96 p=0.88 gnorm=10212.2 dnorm=0.000531 nan=0
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-[e7:fp32         s0] step= 1 ZVF=0.50 ERF=1.00 p=0.92 gnorm=8091.4 dnorm=0.00772 nan=0
-[e7:fp32         s0] step= 2 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s0] step= 3 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s0] step= 4 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s0] step= 5 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s0] step= 6 ZVF=1.00 ERF=1.00 p=0.75 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s0] step= 7 ZVF=0.75 ERF=1.00 p=0.92 gnorm=9987.8 dnorm=0.00527 nan=0
+[e7:fp32         s0] step= 1 ZVF=0.50 ERF=1.00 p=0.92 gnorm=9846.1 dnorm=0.00772 nan=0
+[e7:fp32         s0] step= 2 ZVF=0.00 ERF=0.83 p=0.67 gnorm=15270.3 dnorm=0.0057 nan=0
+[e7:fp32         s0] step= 3 ZVF=1.00 ERF=1.00 p=0.50 gnorm=0.0 dnorm=0 nan=0
+[e7:fp32         s0] step= 4 ZVF=0.25 ERF=1.00 p=0.71 gnorm=12735.0 dnorm=0.00445 nan=0
+[e7:fp32         s0] step= 5 ZVF=0.75 ERF=1.00 p=0.88 gnorm=6361.3 dnorm=0.00359 nan=0
+[e7:fp32         s0] step= 6 ZVF=0.75 ERF=1.00 p=0.92 gnorm=37012.3 dnorm=0.00306 nan=0
+[e7:fp32         s0] step= 7 ZVF=0.75 ERF=0.96 p=0.88 gnorm=5312.7 dnorm=0.00269 nan=0
 [e7:fp32         s0] step= 8 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s0] step= 9 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s0] step=10 ZVF=0.75 ERF=1.00 p=0.88 gnorm=10932.8 dnorm=0.00408 nan=0
+[e7:fp32         s0] step= 9 ZVF=0.75 ERF=1.00 p=0.88 gnorm=3193.3 dnorm=0.00251 nan=0
+[e7:fp32         s0] step=10 ZVF=0.50 ERF=1.00 p=0.92 gnorm=4161.6 dnorm=0.00226 nan=0
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-[e7:fp32         s1] step= 1 ZVF=0.50 ERF=0.88 p=0.83 gnorm=9036.3 dnorm=0.00772 nan=0
-[e7:fp32         s1] step= 2 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:fp32         s1] step= 1 ZVF=0.25 ERF=0.96 p=0.83 gnorm=12583.1 dnorm=0.00772 nan=0
+[e7:fp32         s1] step= 2 ZVF=0.75 ERF=1.00 p=0.58 gnorm=6357.3 dnorm=0.00538 nan=0
 [e7:fp32         s1] step= 3 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s1] step= 4 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:fp32         s1] step= 4 ZVF=0.75 ERF=1.00 p=0.88 gnorm=6434.1 dnorm=0.00421 nan=0
 [e7:fp32         s1] step= 5 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s1] step= 6 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s1] step= 7 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s1] step= 8 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s1] step= 9 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32         s1] step=10 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:fp32         s1] step= 6 ZVF=0.75 ERF=1.00 p=0.96 gnorm=4198.3 dnorm=0.00349 nan=0
+[e7:fp32         s1] step= 7 ZVF=0.75 ERF=1.00 p=0.96 gnorm=4855.7 dnorm=0.00306 nan=0
+[e7:fp32         s1] step= 8 ZVF=1.00 ERF=1.00 p=0.75 gnorm=0.0 dnorm=0 nan=0
+[e7:fp32         s1] step= 9 ZVF=0.75 ERF=1.00 p=0.67 gnorm=6000.9 dnorm=0.00277 nan=0
+[e7:fp32         s1] step=10 ZVF=0.50 ERF=1.00 p=0.50 gnorm=8928.3 dnorm=0.0025 nan=0
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-[e7:bf16_lr1e-6  s0] step= 1 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:bf16_lr1e-6  s0] step= 2 ZVF=0.25 ERF=0.92 p=0.88 gnorm=10711.1 dnorm=0.000871 nan=0
-[e7:bf16_lr1e-6  s0] step= 3 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:bf16_lr1e-6  s0] step= 4 ZVF=0.75 ERF=1.00 p=0.92 gnorm=2233.6 dnorm=0.000366 nan=0
-[e7:bf16_lr1e-6  s0] step= 5 ZVF=0.75 ERF=0.96 p=0.96 gnorm=4134.7 dnorm=0.000282 nan=0
-[e7:bf16_lr1e-6  s0] step= 6 ZVF=0.25 ERF=0.92 p=0.75 gnorm=9645.9 dnorm=0.000254 nan=0
-[e7:bf16_lr1e-6  s0] step= 7 ZVF=0.50 ERF=0.96 p=0.75 gnorm=8660.3 dnorm=0.000233 nan=0
-[e7:bf16_lr1e-6  s0] step= 8 ZVF=0.50 ERF=0.92 p=0.92 gnorm=7503.6 dnorm=0.000228 nan=0
-[e7:bf16_lr1e-6  s0] step= 9 ZVF=0.75 ERF=0.96 p=0.96 gnorm=5606.1 dnorm=0.000205 nan=0
-[e7:bf16_lr1e-6  s0] step=10 ZVF=0.50 ERF=0.92 p=0.92 gnorm=6550.6 dnorm=0.000196 nan=0
+[e7:bf16_lr1e-6  s0] step= 1 ZVF=0.25 ERF=0.92 p=0.88 gnorm=13114.7 dnorm=0.000871 nan=0
+[e7:bf16_lr1e-6  s0] step= 2 ZVF=0.50 ERF=0.83 p=0.75 gnorm=9713.0 dnorm=0.00047 nan=0
+[e7:bf16_lr1e-6  s0] step= 3 ZVF=0.50 ERF=0.92 p=0.88 gnorm=11739.2 dnorm=0.000337 nan=0
+[e7:bf16_lr1e-6  s0] step= 4 ZVF=0.75 ERF=1.00 p=0.96 gnorm=5290.7 dnorm=0.000254 nan=0
+[e7:bf16_lr1e-6  s0] step= 5 ZVF=0.75 ERF=1.00 p=0.96 gnorm=5179.5 dnorm=0.00022 nan=0
+[e7:bf16_lr1e-6  s0] step= 6 ZVF=0.75 ERF=0.96 p=0.96 gnorm=10570.5 dnorm=0.000209 nan=0
+[e7:bf16_lr1e-6  s0] step= 7 ZVF=0.75 ERF=0.96 p=0.96 gnorm=10263.5 dnorm=0.000203 nan=0
+[e7:bf16_lr1e-6  s0] step= 8 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:bf16_lr1e-6  s0] step= 9 ZVF=0.50 ERF=0.96 p=0.83 gnorm=9893.9 dnorm=0.000193 nan=0
+[e7:bf16_lr1e-6  s0] step=10 ZVF=0.25 ERF=0.88 p=0.88 gnorm=11873.4 dnorm=0.000196 nan=0
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-[e7:bf16_lr1e-6  s1] step= 1 ZVF=0.50 ERF=0.88 p=0.83 gnorm=9291.0 dnorm=0.000871 nan=0
-[e7:bf16_lr1e-6  s1] step= 2 ZVF=0.50 ERF=0.92 p=0.92 gnorm=7964.6 dnorm=0.000486 nan=0
-[e7:bf16_lr1e-6  s1] step= 3 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:bf16_lr1e-6  s1] step= 4 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:bf16_lr1e-6  s1] step= 5 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:bf16_lr1e-6  s1] step= 6 ZVF=0.75 ERF=1.00 p=0.92 gnorm=4622.8 dnorm=0.000286 nan=0
-[e7:bf16_lr1e-6  s1] step= 7 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:bf16_lr1e-6  s1] step= 8 ZVF=0.50 ERF=0.96 p=0.92 gnorm=11943.4 dnorm=0.000264 nan=0
-[e7:bf16_lr1e-6  s1] step= 9 ZVF=0.75 ERF=0.96 p=0.96 gnorm=5528.2 dnorm=0.000241 nan=0
-[e7:bf16_lr1e-6  s1] step=10 ZVF=0.75 ERF=0.96 p=0.96 gnorm=5551.0 dnorm=0.000221 nan=0
+[e7:bf16_lr1e-6  s1] step= 1 ZVF=0.25 ERF=1.00 p=0.71 gnorm=11488.0 dnorm=0.000871 nan=0
+[e7:bf16_lr1e-6  s1] step= 2 ZVF=0.25 ERF=0.92 p=0.67 gnorm=11951.0 dnorm=0.000468 nan=0
+[e7:bf16_lr1e-6  s1] step= 3 ZVF=0.25 ERF=0.92 p=0.88 gnorm=11189.0 dnorm=0.000343 nan=0
+[e7:bf16_lr1e-6  s1] step= 4 ZVF=0.75 ERF=0.92 p=0.71 gnorm=2339.0 dnorm=0.000246 nan=0
+[e7:bf16_lr1e-6  s1] step= 5 ZVF=0.75 ERF=0.96 p=0.88 gnorm=7389.7 dnorm=0.000226 nan=0
+[e7:bf16_lr1e-6  s1] step= 6 ZVF=0.75 ERF=0.96 p=0.83 gnorm=3809.2 dnorm=0.000201 nan=0
+[e7:bf16_lr1e-6  s1] step= 7 ZVF=0.25 ERF=0.88 p=0.88 gnorm=17458.1 dnorm=0.000213 nan=0
+[e7:bf16_lr1e-6  s1] step= 8 ZVF=0.50 ERF=0.96 p=0.92 gnorm=9194.0 dnorm=0.0002 nan=0
+[e7:bf16_lr1e-6  s1] step= 9 ZVF=0.25 ERF=0.92 p=0.79 gnorm=12930.0 dnorm=0.000199 nan=0
+[e7:bf16_lr1e-6  s1] step=10 ZVF=0.50 ERF=1.00 p=0.92 gnorm=8576.0 dnorm=0.00018 nan=0
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-[e7:fp32_lr1e-6  s0] step= 1 ZVF=0.50 ERF=1.00 p=0.92 gnorm=8091.4 dnorm=0.00386 nan=0
-[e7:fp32_lr1e-6  s0] step= 2 ZVF=0.50 ERF=0.96 p=0.92 gnorm=7872.2 dnorm=0.00273 nan=0
-[e7:fp32_lr1e-6  s0] step= 3 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:fp32_lr1e-6  s0] step= 1 ZVF=0.50 ERF=1.00 p=0.92 gnorm=9846.1 dnorm=0.00386 nan=0
+[e7:fp32_lr1e-6  s0] step= 2 ZVF=0.00 ERF=1.00 p=0.83 gnorm=15167.9 dnorm=0.00288 nan=0
+[e7:fp32_lr1e-6  s0] step= 3 ZVF=0.50 ERF=0.96 p=0.71 gnorm=8464.2 dnorm=0.00229 nan=0
 [e7:fp32_lr1e-6  s0] step= 4 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32_lr1e-6  s0] step= 5 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32_lr1e-6  s0] step= 6 ZVF=1.00 ERF=1.00 p=0.75 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32_lr1e-6  s0] step= 7 ZVF=0.75 ERF=1.00 p=0.88 gnorm=10424.1 dnorm=0.00215 nan=0
+[e7:fp32_lr1e-6  s0] step= 5 ZVF=0.75 ERF=0.96 p=0.96 gnorm=4132.6 dnorm=0.00194 nan=0
+[e7:fp32_lr1e-6  s0] step= 6 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:fp32_lr1e-6  s0] step= 7 ZVF=0.75 ERF=0.92 p=0.92 gnorm=9327.0 dnorm=0.00184 nan=0
 [e7:fp32_lr1e-6  s0] step= 8 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32_lr1e-6  s0] step= 9 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32_lr1e-6  s0] step=10 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:fp32_lr1e-6  s0] step= 9 ZVF=0.75 ERF=1.00 p=0.88 gnorm=7378.5 dnorm=0.0016 nan=0
+[e7:fp32_lr1e-6  s0] step=10 ZVF=0.75 ERF=0.96 p=0.96 gnorm=6487.2 dnorm=0.00143 nan=0
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-[e7:fp32_lr1e-6  s1] step= 1 ZVF=0.50 ERF=0.88 p=0.83 gnorm=9036.3 dnorm=0.00386 nan=0
-[e7:fp32_lr1e-6  s1] step= 2 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32_lr1e-6  s1] step= 3 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32_lr1e-6  s1] step= 4 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32_lr1e-6  s1] step= 5 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32_lr1e-6  s1] step= 6 ZVF=0.75 ERF=1.00 p=0.92 gnorm=4697.2 dnorm=0.00263 nan=0
-[e7:fp32_lr1e-6  s1] step= 7 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32_lr1e-6  s1] step= 8 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:fp32_lr1e-6  s1] step= 1 ZVF=0.25 ERF=0.96 p=0.83 gnorm=12583.1 dnorm=0.00386 nan=0
+[e7:fp32_lr1e-6  s1] step= 2 ZVF=0.50 ERF=1.00 p=0.79 gnorm=10342.3 dnorm=0.00275 nan=0
+[e7:fp32_lr1e-6  s1] step= 3 ZVF=0.75 ERF=0.96 p=0.96 gnorm=4702.1 dnorm=0.00216 nan=0
+[e7:fp32_lr1e-6  s1] step= 4 ZVF=0.50 ERF=1.00 p=0.79 gnorm=7137.7 dnorm=0.00181 nan=0
+[e7:fp32_lr1e-6  s1] step= 5 ZVF=0.50 ERF=1.00 p=0.92 gnorm=11970.7 dnorm=0.00171 nan=0
+[e7:fp32_lr1e-6  s1] step= 6 ZVF=0.75 ERF=1.00 p=0.96 gnorm=5865.7 dnorm=0.00151 nan=0
+[e7:fp32_lr1e-6  s1] step= 7 ZVF=0.75 ERF=1.00 p=0.96 gnorm=5234.4 dnorm=0.00135 nan=0
+[e7:fp32_lr1e-6  s1] step= 8 ZVF=0.00 ERF=0.96 p=0.79 gnorm=11794.2 dnorm=0.0013 nan=0
 [e7:fp32_lr1e-6  s1] step= 9 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:fp32_lr1e-6  s1] step=10 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:fp32_lr1e-6  s1] step=10 ZVF=0.50 ERF=1.00 p=0.88 gnorm=5981.7 dnorm=0.00122 nan=0
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-[e7:eager_attn   s0] step= 1 ZVF=0.75 ERF=1.00 p=0.96 gnorm=6079.6 dnorm=0.00246 nan=0
-[e7:eager_attn   s0] step= 2 ZVF=0.50 ERF=0.92 p=0.92 gnorm=10622.3 dnorm=0.00137 nan=0
-[e7:eager_attn   s0] step= 3 ZVF=0.75 ERF=0.96 p=0.96 gnorm=7972.2 dnorm=0.000955 nan=0
-[e7:eager_attn   s0] step= 4 ZVF=0.75 ERF=0.96 p=0.96 gnorm=6261.2 dnorm=0.000787 nan=0
-[e7:eager_attn   s0] step= 5 ZVF=0.50 ERF=0.96 p=0.92 gnorm=5037.8 dnorm=0.000686 nan=0
-[e7:eager_attn   s0] step= 6 ZVF=1.00 ERF=1.00 p=0.75 gnorm=0.0 dnorm=0 nan=0
-[e7:eager_attn   s0] step= 7 ZVF=0.50 ERF=1.00 p=0.83 gnorm=11519.6 dnorm=0.000601 nan=0
+[e7:eager_attn   s0] step= 1 ZVF=0.75 ERF=1.00 p=0.96 gnorm=9032.2 dnorm=0.00246 nan=0
+[e7:eager_attn   s0] step= 2 ZVF=0.25 ERF=0.96 p=0.83 gnorm=13542.0 dnorm=0.00114 nan=0
+[e7:eager_attn   s0] step= 3 ZVF=0.25 ERF=0.96 p=0.79 gnorm=11498.0 dnorm=0.000853 nan=0
+[e7:eager_attn   s0] step= 4 ZVF=0.50 ERF=0.96 p=0.88 gnorm=11546.8 dnorm=0.000745 nan=0
+[e7:eager_attn   s0] step= 5 ZVF=0.75 ERF=0.96 p=0.96 gnorm=11612.9 dnorm=0.000683 nan=0
+[e7:eager_attn   s0] step= 6 ZVF=0.25 ERF=0.96 p=0.88 gnorm=17775.3 dnorm=0.000664 nan=0
+[e7:eager_attn   s0] step= 7 ZVF=0.50 ERF=0.96 p=0.92 gnorm=14354.2 dnorm=0.000632 nan=0
 [e7:eager_attn   s0] step= 8 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:eager_attn   s0] step= 9 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:eager_attn   s0] step=10 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:eager_attn   s0] step= 9 ZVF=0.50 ERF=1.00 p=0.79 gnorm=7802.5 dnorm=0.000586 nan=0
+[e7:eager_attn   s0] step=10 ZVF=0.75 ERF=0.96 p=0.96 gnorm=10242.9 dnorm=0.000555 nan=0
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-[e7:eager_attn   s1] step= 1 ZVF=0.50 ERF=1.00 p=0.92 gnorm=8599.0 dnorm=0.00246 nan=0
-[e7:eager_attn   s1] step= 2 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:eager_attn   s1] step= 3 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:eager_attn   s1] step= 4 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:eager_attn   s1] step= 5 ZVF=0.75 ERF=1.00 p=0.96 gnorm=4962.4 dnorm=0.00126 nan=0
-[e7:eager_attn   s1] step= 6 ZVF=0.50 ERF=1.00 p=0.92 gnorm=8924.1 dnorm=0.000904 nan=0
-[e7:eager_attn   s1] step= 7 ZVF=0.75 ERF=0.96 p=0.96 gnorm=4246.6 dnorm=0.000746 nan=0
-[e7:eager_attn   s1] step= 8 ZVF=0.75 ERF=0.92 p=0.92 gnorm=5178.8 dnorm=0.000668 nan=0
-[e7:eager_attn   s1] step= 9 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:eager_attn   s1] step=10 ZVF=0.75 ERF=1.00 p=0.92 gnorm=5223.0 dnorm=0.00061 nan=0
+[e7:eager_attn   s1] step= 1 ZVF=0.50 ERF=0.96 p=0.92 gnorm=9768.5 dnorm=0.00246 nan=0
+[e7:eager_attn   s1] step= 2 ZVF=0.00 ERF=0.92 p=0.71 gnorm=16444.4 dnorm=0.00135 nan=0
+[e7:eager_attn   s1] step= 3 ZVF=0.75 ERF=1.00 p=0.96 gnorm=3519.4 dnorm=0.000806 nan=0
+[e7:eager_attn   s1] step= 4 ZVF=0.00 ERF=0.92 p=0.62 gnorm=11659.1 dnorm=0.000741 nan=0
+[e7:eager_attn   s1] step= 5 ZVF=0.25 ERF=0.92 p=0.71 gnorm=6700.6 dnorm=0.00066 nan=0
+[e7:eager_attn   s1] step= 6 ZVF=0.25 ERF=0.92 p=0.75 gnorm=13528.0 dnorm=0.000652 nan=0
+[e7:eager_attn   s1] step= 7 ZVF=0.50 ERF=0.96 p=0.83 gnorm=14703.1 dnorm=0.000626 nan=0
+[e7:eager_attn   s1] step= 8 ZVF=0.25 ERF=0.92 p=0.83 gnorm=15728.9 dnorm=0.000619 nan=0
+[e7:eager_attn   s1] step= 9 ZVF=0.50 ERF=0.92 p=0.79 gnorm=8426.9 dnorm=0.000593 nan=0
+[e7:eager_attn   s1] step=10 ZVF=0.25 ERF=0.96 p=0.79 gnorm=11096.2 dnorm=0.000568 nan=0
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-[e7:temp_0.7     s0] step= 1 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:temp_0.7     s0] step= 2 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:temp_0.7     s0] step= 3 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:temp_0.7     s0] step= 1 ZVF=0.50 ERF=0.96 p=0.92 gnorm=12471.5 dnorm=0.00246 nan=0
+[e7:temp_0.7     s0] step= 2 ZVF=0.50 ERF=1.00 p=0.88 gnorm=5870.8 dnorm=0.00114 nan=0
+[e7:temp_0.7     s0] step= 3 ZVF=0.75 ERF=1.00 p=0.96 gnorm=11098.8 dnorm=0.000777 nan=0
 [e7:temp_0.7     s0] step= 4 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
 [e7:temp_0.7     s0] step= 5 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:temp_0.7     s0] step= 6 ZVF=0.75 ERF=1.00 p=0.79 gnorm=3819.7 dnorm=0.00246 nan=0
-[e7:temp_0.7     s0] step= 7 ZVF=0.75 ERF=1.00 p=0.79 gnorm=7321.0 dnorm=0.00115 nan=0
+[e7:temp_0.7     s0] step= 6 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:temp_0.7     s0] step= 7 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
 [e7:temp_0.7     s0] step= 8 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:temp_0.7     s0] step= 9 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:temp_0.7     s0] step=10 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:temp_0.7     s0] step= 9 ZVF=0.75 ERF=1.00 p=0.88 gnorm=4257.3 dnorm=0.00061 nan=0
+[e7:temp_0.7     s0] step=10 ZVF=0.75 ERF=0.96 p=0.96 gnorm=4727.1 dnorm=0.000583 nan=0
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-[e7:temp_0.7     s1] step= 1 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:temp_0.7     s1] step= 2 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:temp_0.7     s1] step= 1 ZVF=0.50 ERF=1.00 p=0.83 gnorm=6128.4 dnorm=0.00246 nan=0
+[e7:temp_0.7     s1] step= 2 ZVF=0.75 ERF=0.88 p=0.67 gnorm=8836.3 dnorm=0.0012 nan=0
 [e7:temp_0.7     s1] step= 3 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:temp_0.7     s1] step= 4 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:temp_0.7     s1] step= 4 ZVF=1.00 ERF=1.00 p=0.75 gnorm=0.0 dnorm=0 nan=0
 [e7:temp_0.7     s1] step= 5 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:temp_0.7     s1] step= 6 ZVF=0.75 ERF=1.00 p=0.92 gnorm=4765.7 dnorm=0.00246 nan=0
+[e7:temp_0.7     s1] step= 6 ZVF=0.50 ERF=0.96 p=0.88 gnorm=7207.3 dnorm=0.00086 nan=0
 [e7:temp_0.7     s1] step= 7 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-[e7:temp_0.7     s1] step= 8 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
+[e7:temp_0.7     s1] step= 8 ZVF=0.50 ERF=0.92 p=0.88 gnorm=9037.1 dnorm=0.000746 nan=0
 [e7:temp_0.7     s1] step= 9 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
 [e7:temp_0.7     s1] step=10 ZVF=1.00 ERF=1.00 p=1.00 gnorm=0.0 dnorm=0 nan=0
-E7_RESULT {"experiment": "E7_stack_levers", "model": "Qwen/Qwen2.5-0.5B-Instruct", "seeds": [0, 1], "reference": "bf16/sdpa/temp1.0/top_p0.95/lr2e-6", "by_lever": {"reference": {"gen_baseline_p": [0.875, 0.0], "gen_baseline_erf": [0.916, 0.041], "mean_zvf": [0.85, 0.025], "mean_erf": [0.981, 0.002], "last3_p": [0.986, 0.014], "mean_grad_norm": [2561.95, 285.25], "mean_param_delta": [0.001, 0.0], "nonfinite_grads": 0, "delta_p_vs_ref": [0.0, 0.0], "delta_zvf_vs_ref": [0.0, 0.0]}, "fp32": {"gen_baseline_p": [0.896, 0.021], "gen_baseline_erf": [0.896, 0.021], "mean_zvf": [0.925, 0.025], "mean_erf": [0.994, 0.006], "last3_p": [0.979, 0.021], "mean_grad_norm": [1902.41, 998.78], "mean_param_delta": [0.001, 0.0], "nonfinite_grads": 0, "delta_p_vs_ref": [-0.007, 0.007], "delta_zvf_vs_ref": [0.075, 0.0]}, "bf16_lr1e-6": {"gen_baseline_p": [0.875, 0.0], "gen_baseline_erf": [0.916, 0.041], "mean_zvf": [0.7, 0.075], "mean_erf": [0.96, 0.007], "last3_p": [0.938, 0.006], "mean_grad_norm": [4997.335, 507.245], "mean_param_delta": [0.0, 0.0], "nonfinite_grads": 0, "delta_p_vs_ref": [-0.048, 0.008], "delta_zvf_vs_ref": [-0.15, 0.05]}, "fp32_lr1e-6": {"gen_baseline_p": [0.896, 0.021], "gen_baseline_erf": [0.896, 0.021], "mean_zvf": [0.9, 0.025], "mean_erf": [0.992, 0.004], "last3_p": [1.0, 0.0], "mean_grad_norm": [2006.06, 632.71], "mean_param_delta": [0.001, 0.0], "nonfinite_grads": 0, "delta_p_vs_ref": [0.014, 0.014], "delta_zvf_vs_ref": [0.05, 0.0]}, "eager_attn": {"gen_baseline_p": [0.896, 0.021], "gen_baseline_erf": [0.916, 0.041], "mean_zvf": [0.788, 0.013], "mean_erf": [0.984, 0.005], "last3_p": [0.972, 0.028], "mean_grad_norm": [4231.33, 517.94], "mean_param_delta": [0.001, 0.0], "nonfinite_grads": 0, "delta_p_vs_ref": [-0.014, 0.042], "delta_zvf_vs_ref": [-0.062, 0.013]}, "temp_0.7": {"gen_baseline_p": [1.0, 0.0], "gen_baseline_erf": [1.0, 0.0], "mean_zvf": [0.962, 0.013], "mean_erf": [1.0, 0.0], "last3_p": [1.0, 0.0], "mean_grad_norm": [795.32, 318.75], "mean_param_delta": [0.0, 0.0], "nonfinite_grads": 0, "delta_p_vs_ref": [0.014, 0.014], "delta_zvf_vs_ref": [0.112, 0.013]}}, "runs": [{"arm": "reference", "seed": 0, "gen_baseline_p": 0.875, "gen_baseline_erf": 0.875, "mean_zvf": 0.825, "mean_erf": 0.983, "last3_p": 0.972, "heldout_delta": 0.0, "mean_grad_norm": 2847.2, "mean_param_delta": 0.00056, "nonfinite_grads": 0}, {"arm": "reference", "seed": 1, "gen_baseline_p": 0.875, "gen_baseline_erf": 0.958, "mean_zvf": 0.875, "mean_erf": 0.979, "last3_p": 1.0, "heldout_delta": 0.0, "mean_grad_norm": 2276.7, "mean_param_delta": 0.00053, "nonfinite_grads": 0}, {"arm": "fp32", "seed": 0, "gen_baseline_p": 0.875, "gen_baseline_erf": 0.875, "mean_zvf": 0.9, "mean_erf": 1.0, "last3_p": 0.958, "heldout_delta": -0.05, "mean_grad_norm": 2901.19, "mean_param_delta": 0.00171, "nonfinite_grads": 0}, {"arm": "fp32", "seed": 1, "gen_baseline_p": 0.917, "gen_baseline_erf": 0.917, "mean_zvf": 0.95, "mean_erf": 0.988, "last3_p": 1.0, "heldout_delta": 0.0, "mean_grad_norm": 903.63, "mean_param_delta": 0.00077, "nonfinite_grads": 0}, {"arm": "bf16_lr1e-6", "seed": 0, "gen_baseline_p": 0.875, "gen_baseline_erf": 0.875, "mean_zvf": 0.625, "mean_erf": 0.954, "last3_p": 0.931, "heldout_delta": 0.0, "mean_grad_norm": 5504.58, "mean_param_delta": 0.00026, "nonfinite_grads": 0}, {"arm": "bf16_lr1e-6", "seed": 1, "gen_baseline_p": 0.875, "gen_baseline_erf": 0.958, "mean_zvf": 0.775, "mean_erf": 0.967, "last3_p": 0.944, "heldout_delta": 0.0, "mean_grad_norm": 4490.09, "mean_param_delta": 0.00024, "nonfinite_grads": 0}, {"arm": "fp32_lr1e-6", "seed": 0, "gen_baseline_p": 0.875, "gen_baseline_erf": 0.875, "mean_zvf": 0.875, "mean_erf": 0.996, "last3_p": 1.0, "heldout_delta": 0.0, "mean_grad_norm": 2638.77, "mean_param_delta": 0.00087, "nonfinite_grads": 0}, {"arm": "fp32_lr1e-6", "seed": 1, "gen_baseline_p": 0.917, "gen_baseline_erf": 0.917, "mean_zvf": 0.925, "mean_erf": 0.988, "last3_p": 1.0, "heldout_delta": 0.05, "mean_grad_norm": 1373.35, "mean_param_delta": 0.00065, "nonfinite_grads": 0}, {"arm": "eager_attn", "seed": 0, "gen_baseline_p": 0.875, "gen_baseline_erf": 0.875, "mean_zvf": 0.775, "mean_erf": 0.979, "last3_p": 1.0, "heldout_delta": 0.0, "mean_grad_norm": 4749.27, "mean_param_delta": 0.00069, "nonfinite_grads": 0}, {"arm": "eager_attn", "seed": 1, "gen_baseline_p": 0.917, "gen_baseline_erf": 0.958, "mean_zvf": 0.8, "mean_erf": 0.988, "last3_p": 0.944, "heldout_delta": 0.0, "mean_grad_norm": 3713.39, "mean_param_delta": 0.00067, "nonfinite_grads": 0}, {"arm": "temp_0.7", "seed": 0, "gen_baseline_p": 1.0, "gen_baseline_erf": 1.0, "mean_zvf": 0.95, "mean_erf": 1.0, "last3_p": 1.0, "heldout_delta": 0.0, "mean_grad_norm": 1114.07, "mean_param_delta": 0.00036, "nonfinite_grads": 0}, {"arm": "temp_0.7", "seed": 1, "gen_baseline_p": 1.0, "gen_baseline_erf": 1.0, "mean_zvf": 0.975, "mean_erf": 1.0, "last3_p": 1.0, "heldout_delta": 0.0, "mean_grad_norm": 476.57, "mean_param_delta": 0.00025, "nonfinite_grads": 0}]}
-[colab] Stopping session 'run-89d56c'...
+E7_RESULT {"experiment": "E7_stack_levers", "model": "Qwen/Qwen2.5-0.5B-Instruct", "seeds": [0, 1], "reference": "bf16/sdpa/temp1.0/top_p0.95/lr2e-6", "by_lever": {"reference": {"gen_baseline_p": [0.812, 0.02], "gen_baseline_erf": [0.979, 0.021], "mean_zvf": [0.575, 0.025], "mean_erf": [0.967, 0.0], "last3_p": [0.91, 0.021], "mean_grad_norm": [7707.225, 678.875], "mean_param_delta": [0.001, 0.0], "nonfinite_grads": 0, "delta_p_vs_ref": [0.0, 0.0], "delta_zvf_vs_ref": [0.0, 0.0]}, "fp32": {"gen_baseline_p": [0.812, 0.062], "gen_baseline_erf": [0.938, 0.02], "mean_zvf": [0.688, 0.062], "mean_erf": [0.988, 0.009], "last3_p": [0.785, 0.146], "mean_grad_norm": [7162.51, 2226.74], "mean_param_delta": [0.003, 0.0], "nonfinite_grads": 0, "delta_p_vs_ref": [-0.125, 0.125], "delta_zvf_vs_ref": [0.112, 0.038]}, "bf16_lr1e-6": {"gen_baseline_p": [0.812, 0.02], "gen_baseline_erf": [0.979, 0.021], "mean_zvf": [0.525, 0.075], "mean_erf": [0.942, 0.0], "last3_p": [0.889, 0.014], "mean_grad_norm": [9198.11, 434.27], "mean_param_delta": [0.0, 0.0], "nonfinite_grads": 0, "delta_p_vs_ref": [-0.021, 0.007], "delta_zvf_vs_ref": [-0.05, 0.1]}, "fp32_lr1e-6": {"gen_baseline_p": [0.812, 0.062], "gen_baseline_erf": [0.938, 0.02], "mean_zvf": [0.625, 0.075], "mean_erf": [0.984, 0.005], "last3_p": [0.916, 0.027], "mean_grad_norm": [6820.77, 740.42], "mean_param_delta": [0.002, 0.0], "nonfinite_grads": 0, "delta_p_vs_ref": [0.006, 0.006], "delta_zvf_vs_ref": [0.05, 0.1]}, "eager_attn": {"gen_baseline_p": [0.833, 0.0], "gen_baseline_erf": [0.938, 0.02], "mean_zvf": [0.438, 0.113], "mean_erf": [0.954, 0.017], "last3_p": [0.862, 0.055], "mean_grad_norm": [10949.105, 208.425], "mean_param_delta": [0.001, 0.0], "nonfinite_grads": 0, "delta_p_vs_ref": [-0.048, 0.034], "delta_zvf_vs_ref": [-0.137, 0.137]}, "temp_0.7": {"gen_baseline_p": [0.938, 0.02], "gen_baseline_erf": [0.979, 0.021], "mean_zvf": [0.825, 0.0], "mean_erf": [0.984, 0.009], "last3_p": [0.951, 0.007], "mean_grad_norm": [3481.735, 360.825], "mean_param_delta": [0.001, 0.0], "nonfinite_grads": 0, "delta_p_vs_ref": [0.041, 0.028], "delta_zvf_vs_ref": [0.25, 0.025]}}, "runs": [{"arm": "reference", "seed": 0, "gen_baseline_p": 0.833, "gen_baseline_erf": 1.0, "mean_zvf": 0.55, "mean_erf": 0.967, "last3_p": 0.931, "heldout_delta": 0.0, "mean_grad_norm": 8386.1, "mean_param_delta": 0.0008, "nonfinite_grads": 0}, {"arm": "reference", "seed": 1, "gen_baseline_p": 0.792, "gen_baseline_erf": 0.958, "mean_zvf": 0.6, "mean_erf": 0.967, "last3_p": 0.889, "heldout_delta": 0.0, "mean_grad_norm": 7028.35, "mean_param_delta": 0.00077, "nonfinite_grads": 0}, {"arm": "fp32", "seed": 0, "gen_baseline_p": 0.75, "gen_baseline_erf": 0.917, "mean_zvf": 0.625, "mean_erf": 0.979, "last3_p": 0.931, "heldout_delta": -0.15, "mean_grad_norm": 9389.25, "mean_param_delta": 0.0032, "nonfinite_grads": 0}, {"arm": "fp32", "seed": 1, "gen_baseline_p": 0.875, "gen_baseline_erf": 0.958, "mean_zvf": 0.75, "mean_erf": 0.996, "last3_p": 0.639, "heldout_delta": 0.05, "mean_grad_norm": 4935.77, "mean_param_delta": 0.00291, "nonfinite_grads": 0}, {"arm": "bf16_lr1e-6", "seed": 0, "gen_baseline_p": 0.833, "gen_baseline_erf": 1.0, "mean_zvf": 0.6, "mean_erf": 0.942, "last3_p": 0.903, "heldout_delta": 0.0, "mean_grad_norm": 8763.84, "mean_param_delta": 0.0003, "nonfinite_grads": 0}, {"arm": "bf16_lr1e-6", "seed": 1, "gen_baseline_p": 0.792, "gen_baseline_erf": 0.958, "mean_zvf": 0.45, "mean_erf": 0.942, "last3_p": 0.875, "heldout_delta": 0.05, "mean_grad_norm": 9632.38, "mean_param_delta": 0.00031, "nonfinite_grads": 0}, {"arm": "fp32_lr1e-6", "seed": 0, "gen_baseline_p": 0.75, "gen_baseline_erf": 0.917, "mean_zvf": 0.7, "mean_erf": 0.979, "last3_p": 0.944, "heldout_delta": -0.05, "mean_grad_norm": 6080.35, "mean_param_delta": 0.00158, "nonfinite_grads": 0}, {"arm": "fp32_lr1e-6", "seed": 1, "gen_baseline_p": 0.875, "gen_baseline_erf": 0.958, "mean_zvf": 0.55, "mean_erf": 0.988, "last3_p": 0.889, "heldout_delta": 0.05, "mean_grad_norm": 7561.19, "mean_param_delta": 0.00177, "nonfinite_grads": 0}, {"arm": "eager_attn", "seed": 0, "gen_baseline_p": 0.833, "gen_baseline_erf": 0.958, "mean_zvf": 0.55, "mean_erf": 0.971, "last3_p": 0.917, "heldout_delta": -0.05, "mean_grad_norm": 10740.68, "mean_param_delta": 0.00083, "nonfinite_grads": 0}, {"arm": "eager_attn", "seed": 1, "gen_baseline_p": 0.833, "gen_baseline_erf": 0.917, "mean_zvf": 0.325, "mean_erf": 0.938, "last3_p": 0.806, "heldout_delta": 0.05, "mean_grad_norm": 11157.53, "mean_param_delta": 0.00091, "nonfinite_grads": 0}, {"arm": "temp_0.7", "seed": 0, "gen_baseline_p": 0.917, "gen_baseline_erf": 0.958, "mean_zvf": 0.825, "mean_erf": 0.992, "last3_p": 0.944, "heldout_delta": 0.0, "mean_grad_norm": 3842.56, "mean_param_delta": 0.00056, "nonfinite_grads": 0}, {"arm": "temp_0.7", "seed": 1, "gen_baseline_p": 0.958, "gen_baseline_erf": 1.0, "mean_zvf": 0.825, "mean_erf": 0.975, "last3_p": 0.958, "heldout_delta": 0.0, "mean_grad_norm": 3120.91, "mean_param_delta": 0.00053, "nonfinite_grads": 0}]}
+[colab] Stopping session 'run-b3e3e0'...
 [colab] Session terminated.
-=== E7 EXIT 0 Sun Jun 21 18:13:44 IST 2026 ===
+=== E7 EXIT 0 Sun Jun 21 21:26:56 IST 2026 ===

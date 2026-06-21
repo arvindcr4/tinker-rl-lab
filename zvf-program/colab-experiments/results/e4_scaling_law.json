@@ -11,7 +11,7 @@
   "n_prompts": 40,
   "n_pool": 64,
   "n_groups_per_K": 256,
-  "mean_p_hat": 0.7199,
+  "mean_p_hat": 0.7969,
   "ks": [
     2,
     4,
@@ -21,60 +21,60 @@
   ],
   "by_K": {
     "2": {
-      "emp_zvf": 0.6529,
-      "pred_zvf": 0.6522,
+      "emp_zvf": 0.7299,
+      "pred_zvf": 0.7299,
       "emp_ci95": [
-        0.6183,
-        0.6858
+        0.6984,
+        0.7618
       ],
-      "abs_err": 0.0007
+      "abs_err": 0.0
     },
     "4": {
-      "emp_zvf": 0.3653,
-      "pred_zvf": 0.3699,
+      "emp_zvf": 0.4996,
+      "pred_zvf": 0.502,
       "emp_ci95": [
-        0.3137,
-        0.4146
+        0.442,
+        0.561
       ],
-      "abs_err": 0.0045
+      "abs_err": 0.0024
     },
     "8": {
-      "emp_zvf": 0.1642,
-      "pred_zvf": 0.1617,
+      "emp_zvf": 0.2874,
+      "pred_zvf": 0.2837,
       "emp_ci95": [
-        0.1203,
-        0.2085
+        0.2311,
+        0.3437
       ],
-      "abs_err": 0.0025
+      "abs_err": 0.0037
     },
     "16": {
-      "emp_zvf": 0.0431,
-      "pred_zvf": 0.0458,
+      "emp_zvf": 0.1097,
+      "pred_zvf": 0.1121,
       "emp_ci95": [
-        0.0261,
-        0.0656
+        0.0759,
+        0.1466
       ],
-      "abs_err": 0.0027
+      "abs_err": 0.0024
     },
     "32": {
-      "emp_zvf": 0.0082,
-      "pred_zvf": 0.0074,
+      "emp_zvf": 0.0269,
+      "pred_zvf": 0.0273,
       "emp_ci95": [
-        0.002,
-        0.0172
+        0.0125,
+        0.0477
       ],
-      "abs_err": 0.0008
+      "abs_err": 0.0004
     }
   },
   "closed_form_r2": 0.9999,
   "worked_example_K8_pred_at_p0.5": 0.00781,
-  "emp_zvf_at_K8": 0.1642,
+  "emp_zvf_at_K8": 0.2874,
   "precision_side_check_K8": {
-    "bf16_zvf": 0.0609,
-    "fp32_zvf": 0.0703,
-    "delta_zvf_fp32_minus_bf16": 0.0094,
-    "bf16_p_hat": 0.6289,
-    "fp32_p_hat": 0.651
+    "bf16_zvf": 0.1576,
+    "fp32_zvf": 0.1898,
+    "delta_zvf_fp32_minus_bf16": 0.0322,
+    "bf16_p_hat": 0.6914,
+    "fp32_p_hat": 0.6862
   },
   "_source": "colab run --gpu T4 (e4_run.log)",
   "_pillar": "P1"

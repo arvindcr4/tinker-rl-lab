@@ -1,32 +1,55 @@
-launch E5 v2 Sun Jun 21 17:48:21 IST 2026
-[colab] Creating session 'run-fabd43'...
-[colab] Session READY (run-fabd43). Executing zvf-program/colab-experiments/e5_grad_geometry.py...
+launch E5 v4 (hardened) Sun Jun 21 20:30:46 IST 2026
+[colab] Creating session 'run-6e91a9'...
+[colab] Session READY (run-6e91a9). Executing zvf-program/colab-experiments/e5_grad_geometry.py...
 /usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_auth.py:122: UserWarning: 
 Error while fetching `HF_TOKEN` secret value from your vault: 'Requesting secret HF_TOKEN timed out. Secrets can only be fetched when running from the Colab UI.'.
 You are not authenticated with the Hugging Face Hub in this notebook.
 If the error persists, please let us know by opening an issue on GitHub (https://github.com/huggingface/huggingface_hub/issues/new).
   warnings.warn(
-config.json:   0%|          | 0.00/659 [00:00<?, ?B/s]
-tokenizer_config.json:   0%|          | 0.00/7.30k [00:00<?, ?B/s]
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+config.json:   0%|          | 0.00/659 [00:00<?, ?B/s]
+tokenizer_config.json:   0%|          | 0.00/7.30k [00:00<?, ?B/s]
 vocab.json:   0%|          | 0.00/2.78M [00:00<?, ?B/s]
 merges.txt:   0%|          | 0.00/1.67M [00:00<?, ?B/s]
 tokenizer.json:   0%|          | 0.00/7.03M [00:00<?, ?B/s]
 model.safetensors:   0%|          | 0.00/988M [00:00<?, ?B/s]
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
 generation_config.json:   0%|          | 0.00/242 [00:00<?, ?B/s]
-[e5] bin p~0.05: 2 prompts (screened 130)
-[e5] bin p~0.25: 2 prompts (screened 130)
-[e5] bin p~0.5: 8 prompts (screened 130)
-[e5] bin p~0.75: 8 prompts (screened 130)
-[e5] bin p~0.95: 8 prompts (screened 130)
-[e5] p~0.05: p=0.00 erf=0.92 ZVF=1.00 signal=None snr=None fisher=None
-[e5] p~0.25: p=0.25 erf=0.75 ZVF=0.00 signal=6.51562 snr=0.74805 fisher=220.5
-[e5] p~0.5: p=0.62 erf=0.81 ZVF=0.12 signal=7.92411 snr=0.67299 fisher=264.92857
-[e5] p~0.75: p=0.83 erf=0.92 ZVF=0.38 signal=7.575 snr=0.8375 fisher=183.8
-[e5] p~0.95: p=0.88 erf=0.92 ZVF=0.38 signal=13.19375 snr=0.85859 fisher=289.5
-E5_RESULT {"experiment": "E5_grad_geometry", "model": "Qwen/Qwen2.5-0.5B-Instruct", "seed": 0, "few_shot": true, "length_normalized": true, "grad_slice": "last_2_decoder_layers", "p_range": [0.0, 0.875], "by_bin": {"p~0.05": {"p": 0.0, "erf": 0.917, "zvf": 1.0, "p1mp": 0.0, "grad_norm": null, "fisher_trace": null, "signal_per_roll": null, "snr": null, "cos_align": null, "n_live": 0, "n_groups": 2}, "p~0.25": {"p": 0.25, "erf": 0.75, "zvf": 0.0, "p1mp": 0.1875, "grad_norm": 12.78125, "fisher_trace": 220.5, "signal_per_roll": 6.51562, "snr": 0.74805, "cos_align": 0.5625, "n_live": 2, "n_groups": 2}, "p~0.5": {"p": 0.625, "erf": 0.812, "zvf": 0.125, "p1mp": 0.2344, "grad_norm": 11.46429, "fisher_trace": 264.92857, "signal_per_roll": 7.92411, "snr": 0.67299, "cos_align": 0.35059, "n_live": 7, "n_groups": 8}, "p~0.75": {"p": 0.833, "erf": 0.917, "zvf": 0.375, "p1mp": 0.1389, "grad_norm": 7.19688, "fisher_trace": 183.8, "signal_per_roll": 7.575, "snr": 0.8375, "cos_align": 0.63516, "n_live": 5, "n_groups": 8}, "p~0.95": {"p": 0.875, "erf": 0.917, "zvf": 0.375, "p1mp": 0.1094, "grad_norm": 8.2125, "fisher_trace": 289.5, "signal_per_roll": 13.19375, "snr": 0.85859, "cos_align": 0.59336, "n_live": 5, "n_groups": 8}}, "corr_signal_p1mp": -0.658, "corr_signal_gu": -0.641, "corr_fisher_p1mp": 0.001}
-[colab] Stopping session 'run-fabd43'...
+[e5] kept 32 prompts; exact_p in [0.00,0.96]
+[e5] exact_p~0.00 x=0.000 -> 6 live groups
+[e5] exact_p~0.00 x=0.000 -> 12 live groups
+[e5] exact_p~0.00 x=0.000 -> 18 live groups
+[e5] exact_p~0.00 x=0.000 -> 24 live groups
+[e5] exact_p~0.00 x=0.000 -> 30 live groups
+[e5] exact_p~0.00 x=0.000 -> 36 live groups
+[e5] exact_p~0.00 x=0.000 -> 42 live groups
+[e5] exact_p~0.04 x=0.040 -> 6 live groups
+[e5] exact_p~0.04 x=0.040 -> 12 live groups
+[e5] exact_p~0.08 x=0.076 -> 6 live groups
+[e5] exact_p~0.08 x=0.076 -> 12 live groups
+[e5] exact_p~0.12 x=0.109 -> 6 live groups
+[e5] exact_p~0.12 x=0.109 -> 12 live groups
+[e5] exact_p~0.17 x=0.139 -> 6 live groups
+[e5] exact_p~0.42 x=0.243 -> 6 live groups
+[e5] exact_p~0.67 x=0.222 -> 5 live groups
+[e5] exact_p~0.71 x=0.207 -> 5 live groups
+[e5] exact_p~0.71 x=0.207 -> 11 live groups
+[e5] exact_p~0.75 x=0.188 -> 5 live groups
+[e5] exact_p~0.79 x=0.165 -> 6 live groups
+[e5] exact_p~0.88 x=0.109 -> 1 live groups
+[e5] exact_p~0.92 x=0.076 -> 3 live groups
+[e5] exact_p~0.92 x=0.076 -> 3 live groups
+[e5] exact_p~0.96 x=0.040 -> 0 live groups
+[e5] exact_p~0.96 x=0.040 -> 2 live groups
+[e5] exact_p~0.96 x=0.040 -> 6 live groups
+[e5] exact_p~0.96 x=0.040 -> 6 live groups
+[e5] exact_p~0.96 x=0.040 -> 6 live groups
+[e5] exact_p~0.96 x=0.040 -> 8 live groups
+[e5] exact_p~0.96 x=0.040 -> 9 live groups
+[e5] exact_p~0.96 x=0.040 -> 11 live groups
+[e5] exact_p~0.96 x=0.040 -> 11 live groups
+E5_RESULT {"experiment": "E5_grad_geometry", "model": "Qwen/Qwen2.5-0.5B-Instruct", "seed": 0, "method": "per-group regression; continuous reward; population-standardized advantage", "reward": "continuous_partial_credit", "advantage": "population_standardized_pilot", "max_new": 128, "few_shot": true, "length_normalized": true, "grad_slice": "last_2_decoder_layers", "n_prompts": 32, "n_live_groups": 132, "exact_p_range": [0.0, 0.958], "corr_signal_p1mp": -0.158, "slope_signal_p1mp": -8.748, "corr_fisher_p1mp": 0.035, "corr_snr_p1mp": 0.285, "by_p_bin": {"p1mp<0.08": {"n": 80, "mean_exact_p": 0.185, "mean_signal": 7.5872, "mean_fisher": 304.61, "mean_snr": 0.5836, "mean_len": 36.6}, "0.08-0.16": {"n": 19, "mean_exact_p": 0.178, "mean_signal": 4.7792, "mean_fisher": 325.66, "mean_snr": 0.6593, "mean_len": 27.0}, "0.16-0.22": {"n": 22, "mean_exact_p": 0.741, "mean_signal": 5.717, "mean_fisher": 208.62, "mean_snr": 0.6724, "mean_len": 29.1}, "p1mp>0.22": {"n": 11, "mean_exact_p": 0.53, "mean_signal": 6.7841, "mean_fisher": 515.98, "mean_snr": 0.6697, "mean_len": 26.0}}}
+[colab] Stopping session 'run-6e91a9'...
 [colab] Session terminated.
-=== E5 EXIT 0 Sun Jun 21 17:56:03 IST 2026 ===
+=== E5 EXIT 0 Sun Jun 21 20:47:07 IST 2026 ===

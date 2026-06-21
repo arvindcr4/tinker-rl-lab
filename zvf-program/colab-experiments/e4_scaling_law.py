@@ -27,7 +27,7 @@ N_CANDIDATES = 110    # candidates screened to find in-band prompts
 BAND = (0.4, 0.6)     # target p_hat band (centered on 0.5)
 KS = [2, 4, 8, 16, 32]
 N_GROUPS = 256        # bootstrap groups per prompt per K
-MAX_NEW = 24
+MAX_NEW = 128         # unchoke reasoning: 24 truncated traces -> no '####' -> spurious p=0
 PREC_PROMPTS = 12     # subset re-generated at fp32 for the precision side-check
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -59,6 +59,8 @@ def prompt_of(q):
     return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
 
 def parse(text):
+    if "####" not in text:            # no marker -> not parseable (don't grab question digits)
+        return None
     m = re.findall(r"-?\d+", text.split("####")[-1])
     return int(m[0]) if m else None
 

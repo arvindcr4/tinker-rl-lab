@@ -1,0 +1,54 @@
+agy text-only review (correct arg order) Sun Jun 21 20:23:24 IST 2026
+Here is the rigorous review of the 4 scripts. 
+
+### **E4: `e4_scaling_law.py`**
+1. **BUGS**: `parse()` uses `text.split("####")[-1]`. If `####` is missing, it falls back to the entire string and extracts the first digits it sees (the question itself). This silently guarantees the answer is wrong, forcing a deterministic 0 reward.
+2. **ROBUSTNESS**: `MAX_NEW=24` is a hard chokehold. Any reasoning trace slightly longer than trivial 2-digit sums gets truncated, lacks the `####` separator, and instantly zeroes out.
+3. **STAT soundness**: Bootstrapping over the 40 prompt-level point estimates is technically valid, but $N=40$ is too small for tight 95% CIs on the variance of a binomial variance.
+4. **RESULT-vs-CLAIM mismatch**: Claimed to probe $p \sim 0.5$, but `mean_p_hat` hit 0.72. Calibration failed because truncation forced all harder problems to $p=0$; `sorted()` merely salvaged the lowest of the saturated, trivial problems.
+* **Highest-Leverage Change**: Change to `MAX_NEW = 128` so reasoning can finish, and add `if "####" not in text: return None` to `parse()`.
+
+### **E5: `e5_grad_geometry.py`**
+1. **BUGS**: Length normalization (`seqlp.sum() / n`) mathematically shrinks policy gradients for long, rambling failures compared to terse successes, severely confounding the measured gradient norms.
+2. **ROBUSTNESS**: The `P_KEEP` interval relies on $N\_PILOT=16$. A single lucky rollout ($1/16$) yields $p=0.0625$, which is purely sampling noise for binning prompts at the extreme ends.
+3. **STAT soundness**: Simpson's paradox in the correlation. The negative correlation (-0.658) is driven by the $p \sim 0.95$ bin where rare failures get a massive empirical advantage multiplier $-(m)/s$ (since empirical $s$ is tiny), exploding their gradient norm weight. 
+4. **RESULT-vs-CLAIM mismatch**: Theory predicts signal scales $\propto p(1-p)$ for *unnormalized* binary outcomes, but GRPO uses empirical mini-batch standard deviation, which actively breaks the assumed geometry.
+* **Highest-Leverage Change**: Compute theoretical advantages `(R - p) / sqrt(p*(1-p))` instead of empirical `(R - m) / (s + 1e-6)` to accurately restore and measure the geometry.
+
+### **E6: `e6_live_triage.py`**
+1. **BUGS**: `_group_zerovar` checks `min(v) == max(v)` using exact floating-point matching. If reward logic ever slightly perturbs, this fails. Also, if all prompts drop (`keep` is empty), `ctrl.step` traps `batch_zvf` at 1.0 indefinitely.
+2. **ROBUSTNESS**: The "borderline" task (3-digit addition) is fundamentally flawed for 0.5B; the model aces it natively (`pre=1.0`), leaving absolutely zero headroom for RL to improve.
+3. **STAT soundness**: $BUDGET=420$ yields $\sim 17$ optimization steps. $HELDOUT\_N=24$ is minuscule. This predominantly measures initialization noise, not RL trajectory.
+4. **RESULT-vs-CLAIM mismatch**: Claims "triage beats baseline", but `mean_heldout_delta` is exactly 0.0 across all arms because the baseline accuracy flatlined at the 1.0 ceiling.
+* **Highest-Leverage Change**: Change the borderline/held-out task to 2-digit multiplication so the baseline accuracy drops to $\sim 0.3$, actually giving the triage controller room to show a $\Delta$.
+
+### **E7: `e7_stack_levers.py`**
+1. **BUGS**: `grad_diag` drops parameters with non-finite gradients from the L2 norm sum entirely (`if nf == 0: sq += ...`). This artificially *shrinks* `gnorm` precisely when NaN/inf instability strikes.
+2. **ROBUSTNESS**: The baseline is $p=0.875$ (2-digit addition). The network is already saturated, making it insensitive to subtle precision or LR optimization differences.
+3. **STAT soundness**: 2 seeds over 10 steps is statistical noise. The $\pm 0.01$ ERF deltas cannot confidently or rigorously separate bf16 from fp32 dynamics.
+4. **RESULT-vs-CLAIM mismatch**: The "fp32 jump" headline is confounded by ceiling effects. The deltas vs reference are within 1 standard deviation, invalidating the "real or artifact" claim.
+* **Highest-Leverage Change**: Remove `if nf == 0:` inside `grad_diag` so `gnorm` correctly blows up to `inf` when instability hits, exposing the true bf16 numerical anomalies.
+
+---
+
+### **KEY OPEN ISSUE: Low-p Live Groups & Over-shooting**
+
+**Diagnosis:** 
+`MAX_NEW=24` is a brutal bottleneck. Any prompt requiring >30 tokens to formulate a reasoning trace predictably truncates. The parser fails, the reward is deterministically mapped to `0` for all rollouts in the group, guaranteeing exactly `0` variance (all-dead groups). This artificially pulls $p \to 0$ for anything remotely complex, starving the $p < 0.375$ regime of true contrast and forcing calibration to over-index on trivial $p \sim 0.72$ prompts.
+
+**Concrete Code Fix:**
+1. **Unchoke Context**: Set `MAX_NEW = 128` (or 256) across all scripts.
+2. **Partial Credit for Contrast**: If you must test true low-p extremes ($p \sim 0.1$) on a 0.5B model using genuinely hard tasks (e.g., 3-digit multiplication), you cannot rely on binary exact-match. The model will get it 100% wrong. To guarantee live groups (variance $> 0$), **replace the binary reward with a continuous relative-error reward**:
+
+```python
+def reward_fn(ans, gold):
+    if ans is None:
+        return 0.0
+    if ans == gold:
+        return 1.0
+    # Yields continuous contrast (variance > 0) even when exact match fails
+    return max(0.0, 1.0 - abs(ans - gold) / abs(gold))
+```
+
+*Plain Statement*: For this toy setup and model scale, if the exact-match probability is truly ~0%, binary reward provides zero gradient. You *must* implement a continuous/partial-credit reward to carve out an exploitable gradient signal. Without it, measuring low-p gradient geometry is mathematically inconclusive.
+=== AGY EXIT 0 Sun Jun 21 20:25:40 IST 2026 ===

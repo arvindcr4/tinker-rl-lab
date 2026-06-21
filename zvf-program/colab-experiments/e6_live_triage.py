@@ -1,23 +1,23 @@
 """E6 (Pillar 3, operationalization): does the live ZVF-triage controller beat a
-fixed-G baseline at MATCHED total-rollout budget?
+fixed-G baseline at matched total-rollout budget?
 
-Round-2 Codex fix: the first regime was too easy (fixed-G already won; triage was
-neutral). Now the pool is TRIAGE-RELEVANT:
-  * ~75% persistent DEAD-hard prompts (3-digit sums, p~0: zero variance, low
-    reward) that only waste budget -> drop should remove them.
-  * ~25% BORDERLINE learnable prompts (2-digit sums, p~0.2-0.5) where adaptive-G
-    fishing for contrast can actually help.
-  * Held-out = DISJOINT borderline set. Lower budget so saved rollouts matter.
+The pool is built to be triage-relevant (a too-easy regime lets fixed-G win
+outright and makes triage look neutral):
+  * ~75% persistent dead-hard prompts (3-digit multiplication, p~0: zero variance,
+    low reward) that only waste budget -> drop should remove them.
+  * ~25% borderline learnable prompts (2-digit multiplication) where adaptive-G
+    fishing for contrast can help.
+  * Held-out = disjoint borderline set. Lower budget so saved rollouts matter.
 
-Also, the controller now follows the package API faithfully: `step(rewards,
-group_ids) -> decision` computes ZVF, per-prompt drop streaks, global auto-stop,
-and the smoothed-ZVF adaptive group size INTERNALLY (mirrors
-zvf_triage.controller.ZVFController; vendored because colab run ships one file).
+The controller follows the package API: `step(rewards, group_ids) -> decision`
+computes ZVF, per-prompt drop streaks, global auto-stop, and the smoothed-ZVF
+adaptive group size internally (mirrors zvf_triage.controller.ZVFController;
+vendored because colab run ships one file).
 
 Three arms separate the two effects:
   fixed_G | adaptiveG (group size only) | adaptiveG_drop (size + drop + auto-stop)
 
-Run:  colab run --gpu T4 --timeout 1500 e6_live_triage.py
+Run:  colab run --gpu T4 --timeout 1800 e6_live_triage.py
 """
 import os
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")

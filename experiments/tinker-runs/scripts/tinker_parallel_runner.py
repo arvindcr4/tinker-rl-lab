@@ -123,7 +123,7 @@ license: mit
 
 # {exp_tag}
 
-GRPO experiment from TinkerRL-Bench world-class experiment suite.
+GRPO experiment from the TinkerRL-Bench experiment suite.
 
 ## Training Details
 - **Base model:** {model_id}
@@ -167,10 +167,10 @@ GRPO experiment from TinkerRL-Bench world-class experiment suite.
 
         api.upload_folder(folder_path=tmp_dir, repo_id=repo_id, repo_type="model", token=os.environ["HF_TOKEN"])
         shutil.rmtree(tmp_dir, ignore_errors=True)
-        print(f"[HF] ✓ Uploaded {repo_id}")
+        print(f"[HF] Uploaded {repo_id}")
         return repo_id
     except Exception as e:
-        print(f"[HF] ✗ Upload failed for {exp_tag}: {e}")
+        print(f"[HF] Upload failed for {exp_tag}: {e}")
         return None
 
 # ── Single experiment runner ─────────────────────────────────────────────
@@ -187,7 +187,7 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
         reinit=True, tags=["tinker", task, model_name],
     )
 
-    print(f"[{exp}] ▶ START model={model_id} task={task}")
+    print(f"[{exp}] > START model={model_id} task={task}")
 
     examples = get_gsm8k() if task == "gsm8k" else get_tool_use()
     rfn = reward_math if task == "gsm8k" else reward_tool
@@ -200,7 +200,7 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
         w0 = tc.save_weights_for_sampler(name="s0").result()
         sc = tc.create_sampling_client(model_path=w0.path)
     except Exception as e:
-        print(f"[{exp}] ✗ INIT FAILED: {e}")
+        print(f"[{exp}] INIT FAILED: {e}")
         wb_run.finish(exit_code=1)
         return {"experiment": exp, "model": model_id, "error": str(e), "stage": "init"}
 
@@ -342,7 +342,7 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
 
     wb_run.finish()
 
-    print(f"[{exp}] ✓ DONE | last10={summary['last10_avg']*100:.1f}% peak={summary['peak']*100:.1f}%")
+    print(f"[{exp}] DONE | last10={summary['last10_avg']*100:.1f}% peak={summary['peak']*100:.1f}%")
     return summary
 
 # ── Experiment configs ───────────────────────────────────────────────────
@@ -417,11 +417,10 @@ if __name__ == "__main__":
                 r = f.result()
                 all_results.append(r)
                 status = "error" not in r
-                sym = "★" if status else "✗"
                 msg = f"last10={r['last10_avg']*100:.1f}% peak={r['peak']*100:.1f}%" if status else r.get("error","unknown")[:60]
-                print(f"\n{sym} [{tag}] {'COMPLETED' if status else 'FAILED'}: {msg}\n")
+                print(f"\n[{tag}] {'COMPLETED' if status else 'FAILED'}: {msg}\n")
             except Exception as e:
-                print(f"\n✗ [{tag}] EXCEPTION: {e}\n")
+                print(f"\n[{tag}] EXCEPTION: {e}\n")
                 all_results.append({"experiment": tag, "error": str(e)})
 
     ts = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -435,7 +434,7 @@ if __name__ == "__main__":
     print(f"{'='*70}")
     for r in all_results:
         if "error" in r:
-            print(f"  ✗ {r['experiment']}: {r['error'][:80]}")
+            print(f"{r['experiment']}: {r['error'][:80]}")
         else:
             hf = r.get('hf_repo', 'N/A')
-            print(f"  ✓ {r['experiment']}: last10={r['last10_avg']*100:.1f}% peak={r['peak']*100:.1f}% HF={hf}")
+            print(f"{r['experiment']}: last10={r['last10_avg']*100:.1f}% peak={r['peak']*100:.1f}% HF={hf}")

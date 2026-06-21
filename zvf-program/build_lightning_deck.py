@@ -175,7 +175,7 @@ para(tf, "MIN-REPORT-RL — every GRPO paper reports:", 11.5, MUTE, space_before
 for t in ["Loss form · ref policy + KL · sampler/backend",
           "Per-step ZVF/GU · group-size schedule",
           "Held-out split · decontamination probe"]:
-    para(tf, "✓  " + t, 12, INK, space_before=7, spacing=1.03)
+    para(tf, "•  " + t, 12, INK, space_before=7, spacing=1.03)
 para(tf, "+ reproducibility audit of DAPO/GSPO/Dr.GRPO/MAD-GRPO. Results + cites = TODO.",
      11, RED, bold=True, space_before=10, spacing=1.03)
 

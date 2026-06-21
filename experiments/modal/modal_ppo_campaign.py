@@ -186,7 +186,7 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
     wandb.log({"final_peak": peak, "final_last10": last10})
     wandb.finish()
     
-    print(f"  ✓ {tag} DONE: peak={peak:.3f}, last10={last10:.3f}")
+    print(f"{tag} DONE: peak={peak:.3f}, last10={last10:.3f}")
     return result
 
 
@@ -205,9 +205,9 @@ def main():
         try:
             result = f.get()
             results.append(result)
-            print(f"  ✓ Completed: {result['tag']} peak={result['peak_reward']:.3f}")
+            print(f"Completed: {result['tag']} peak={result['peak_reward']:.3f}")
         except Exception as e:
-            print(f"  ✗ Failed: {e}")
+            print(f"Failed: {e}")
             results.append({"status": "failed", "error": str(e)})
     
     # Save results

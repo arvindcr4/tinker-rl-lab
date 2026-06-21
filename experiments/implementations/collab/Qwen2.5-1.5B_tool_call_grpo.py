@@ -241,7 +241,7 @@ trainer = GRPOTrainer(
     train_dataset=grpo_dataset,
 )
 
-print("🚀 Starting GRPO (RL) training ...\n")
+print("Starting GRPO (RL) training ...\n")
 print("What GRPO does each step:")
 print("  1. Generate 4 different tool call candidates per prompt")
 print("  2. Score each with reward functions above")
@@ -252,5 +252,5 @@ trainer.train()
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 trainer.model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
-print(f"\n✅ GRPO adapter saved to {OUTPUT_DIR}")
+print(f"\nGRPO adapter saved to {OUTPUT_DIR}")
 print(f"   Files: {os.listdir(OUTPUT_DIR)}")

@@ -1,18 +1,17 @@
 """E4 (Pillar 1, empirical sweep): does measured ZVF follow the closed form
-ZVF(p,K) = p^K + (1-p)^K across a group-size sweep, PROBED AT p ~ 0.5, and does
-numerical PRECISION move the audit number?
+ZVF(p,K) = p^K + (1-p)^K across a group-size sweep, probed near p ~ 0.5, and does
+numerical precision move the audit number?
 
-Round-2 Codex fix: the first run landed at mean p_hat=0.11 (format-gated), so it
-never tested the p=0.5,K=8 -> 0.0078 crossing the worked example is about.
-  * FEW-SHOT format scaffold removes the parser/format confound.
-  * CALIBRATE: sample candidate prompts across digit regimes, measure p_hat from a
-    pilot, KEEP ONLY prompts with p_hat in [0.4,0.6]; flag the run if the band
-    cannot be populated. The scaling law is then probed where it matters.
-  * GENERATE ONCE then SUBSAMPLE >=256 size-K groups/prompt -> bootstrap CIs.
-Precision (fp32 vs bf16, the one cleanly Tinker-blocked lever here) stays a K=8
+To probe the p=0.5,K=8 -> 0.0078 crossing (and avoid a format-gated p collapse):
+  * Few-shot scaffold removes the parser/format confound.
+  * Calibrate: sample candidate prompts across digit regimes, measure p_hat from a
+    pilot, keep only prompts with p_hat in [0.4,0.6]; flag the run if the band
+    cannot be populated.
+  * Generate once, then subsample >=256 size-K groups/prompt for bootstrap CIs.
+Precision (fp32 vs bf16, the one cleanly Tinker-blocked lever here) is a K=8
 side-check.
 
-Run:  colab run --gpu T4 --timeout 1500 e4_scaling_law.py
+Run:  colab run --gpu T4 --timeout 1800 e4_scaling_law.py
 """
 import json, re, random, statistics
 import torch

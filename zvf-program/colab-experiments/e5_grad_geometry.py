@@ -1,20 +1,20 @@
-"""E5 v4 (Pillar 2, theory): does the GRPO gradient signal track p(1-p)?
+"""E5 (Pillar 2, theory): does the GRPO gradient signal track p(1-p)?
 
-agy (Gemini 3.1 Pro) hardening catches, all addressed here:
-  * MAX_NEW=24 truncated reasoning -> spurious 0 reward -> low-p starved of live
-    groups. -> MAX_NEW=128 + parser returns None when '####' is absent.
-  * The v3 negative corr was a SIMPSON'S-PARADOX artifact: GRPO's empirical
-    per-group std (r-m)/(s+eps) explodes the advantage of rare failures in nearly
-    saturated groups. -> POPULATION-standardized advantage (r - rbar)/sd using the
-    PILOT estimate of each prompt's reward mean/std (stable, not the tiny group's).
-  * Binary exact-match can't produce LIVE groups at low exact-match p on a 0.5B
-    model. -> CONTINUOUS partial-credit reward (1 - |ans-gold|/|gold|) so even hard
-    prompts have reward variance -> live groups across the whole difficulty range.
-  * Length-normalization is a possible confound -> kept (per-token) but mean
-    completion length is reported per bin so the confound is visible.
+Design choices that make the measurement sound:
+  * MAX_NEW=128 + parser returns None when '####' is absent: a 24-token cap truncated
+    reasoning -> spurious 0 reward -> low-p starved of live groups.
+  * Population-standardized advantage (r - rbar)/sd from the PILOT estimate of each
+    prompt's reward mean/std. GRPO's empirical per-group std (r-m)/(s+eps) explodes
+    the advantage of rare failures in nearly saturated groups (a Simpson's-paradox
+    trap); the population estimate is stable.
+  * Continuous partial-credit reward (1 - |ans-gold|/|gold|) so even hard prompts
+    have reward variance -> live groups across the whole difficulty range (binary
+    exact-match yields no live groups at low p on a 0.5B model).
+  * Length-normalized (per-token) log-prob; mean completion length is reported per
+    bin so any length confound is visible.
 
-x-axis = the THEORY's quantity, exact-match p(1-p) (continuous reward only provides
-the contrast needed to measure). Per-LIVE-group regression of signal on x.
+x-axis = the theory's quantity, exact-match p(1-p) (continuous reward only provides
+the contrast needed to measure). Per-live-group regression of signal on x.
 
 Run:  colab run --gpu T4 --timeout 1800 e5_grad_geometry.py
 """

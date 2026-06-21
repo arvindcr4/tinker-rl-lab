@@ -247,11 +247,11 @@ def run_experiment(exp):
         except Exception as wb_err:
             print(f"  [{tag}] W&B finish error (results saved): {wb_err}", flush=True)
 
-        print(f"  ✓ [{tag}] DONE peak={peak:.3f} last10={last10:.3f}", flush=True)
+        print(f"[{tag}] DONE peak={peak:.3f} last10={last10:.3f}", flush=True)
         return result
 
     except Exception as e:
-        print(f"  ✗ [{tag}] FAILED: {e}", flush=True)
+        print(f"[{tag}] FAILED: {e}", flush=True)
         traceback.print_exc()
         try:
             if wb_run:
@@ -286,14 +286,14 @@ def launch(max_parallel=6):
                                "total": len(EXPERIMENTS), "completed": len(results), "results": results}, f, indent=2)
                 c = len([r for r in results if r.get("status") == "completed"])
                 x = len([r for r in results if r.get("status") == "failed"])
-                print(f"  Progress: {len(results)}/{len(EXPERIMENTS)} (✓{c} ✗{x})\n", flush=True)
+                print(f"  Progress: {len(results)}/{len(EXPERIMENTS)} ({c}{x})\n", flush=True)
             except Exception as e:
                 print(f"  Future error: {e}", flush=True)
 
     c = len([r for r in results if r.get("status") == "completed"])
     x = len([r for r in results if r.get("status") == "failed"])
     print(f"\n{'='*70}")
-    print(f"CAMPAIGN COMPLETE: ✓{c} ✗{x} / {len(EXPERIMENTS)}")
+    print(f"CAMPAIGN COMPLETE:{c}{x} / {len(EXPERIMENTS)}")
     print(f"{'='*70}")
     if c > 0:
         print("\nTop results:")

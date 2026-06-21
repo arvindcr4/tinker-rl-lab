@@ -1,4 +1,4 @@
-"""World-Class Experiment Suite for NeurIPS/ICLR/ICML Submission.
+"""Experiment suite: GRPO across the Tinker model catalog.
 
 Runs GRPO experiments across the full Tinker model catalog:
 - Multi-model scaling: Qwen3-8B, Qwen3-32B, Qwen3-30B-A3B, Qwen3-235B-A22B, 

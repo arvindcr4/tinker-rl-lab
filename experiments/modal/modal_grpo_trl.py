@@ -180,7 +180,7 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
     except Exception as e:
         print(f"  HF push failed: {e}")
     
-    print(f"  ✓ {tag} DONE: peak={peak:.3f}, last10={last10:.3f}, duration={duration:.0f}s")
+    print(f"{tag} DONE: peak={peak:.3f}, last10={last10:.3f}, duration={duration:.0f}s")
     return result
 
 
@@ -199,9 +199,9 @@ def main():
         try:
             result = f.get()
             results.append(result)
-            print(f"  ✓ Completed: {result['tag']} peak={result['peak_reward']:.3f}")
+            print(f"Completed: {result['tag']} peak={result['peak_reward']:.3f}")
         except Exception as e:
-            print(f"  ✗ Failed: {e}")
+            print(f"Failed: {e}")
             results.append({"status": "failed", "error": str(e)})
     
     with open("/home/user/workspace/elevation_outputs/modal_trl_grpo.json", "w") as f:

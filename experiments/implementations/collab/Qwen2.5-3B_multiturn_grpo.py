@@ -1,7 +1,7 @@
 # ============================================================
 #  ADVANCED EXPERIMENT — STEP 2: TRUE Multi-Turn GRPO
 #
-#  🔧 FIXES vs previous version:
+# FIXES vs previous version:
 #   FIX 1 — generate_chain: wrap-up message is now injected
 #            IMMEDIATELY after all tool responses are exhausted,
 #            before the next generation — not at the last turn.
@@ -501,7 +501,7 @@ while step < TRAIN_STEPS:
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
-print(f"\n✅ GRPO adapter saved to {OUTPUT_DIR}")
+print(f"\nGRPO adapter saved to {OUTPUT_DIR}")
 print(f"   Files: {os.listdir(OUTPUT_DIR)}")
 
 # ── QUICK CHAIN TEST ──────────────────────────────────────────
@@ -518,4 +518,4 @@ for i, t in enumerate(turns):
     label = f"Tool call {i+1}" if (valid and is_tool_call(obj)) else "Final answer"
     print(f"  [{label}]: {t[:120]}")
 print(f"  Chain score: {score_full_chain(turns)}")
-print("\n✅ Step 2 complete! Run Step 3 (Eval) next.")
+print("\nStep 2 complete! Run Step 3 (Eval) next.")

@@ -73,7 +73,7 @@ def headline(tag, o):
         nf = sum(v.get("nonfinite_grads", 0) for v in bl.values())
         parts = [f"{k} Δp={v['delta_p_vs_ref'][0]:+.3f}" for k, v in bl.items() if k != "reference"]
         return (f"gen-baseline bf16={gb_ref}==fp32={gb_fp} (precision ~no gen effect); "
-                f"fp32 train Δp={dp:+.3f} (noisy/LR-dep, NOT v1's +0.72); nonfinite_grads={nf}; "
+                f"fp32 train Δp={dp:+.3f} (noisy/LR-dep, not a real precision win); nonfinite_grads={nf}; "
                 + "; ".join(parts))
     return ""
 
@@ -83,11 +83,10 @@ for tag, _, _, name, pillar in SPECS:
     if tag in results:
         rows.append(f"| {name.split('_')[0]} | {pillar} | done | {headline(tag, results[tag])} |")
 readme = ("# Colab experiment results — E2 rerun + E4–E7 batch\n\n"
-          "New Colab-only batch (each requires a capability closed/LoRA-only/fixed-stack "
-          "**Tinker** lacks), one per ZVF-Program pillar. Codex (gpt-5.5) reviewed the plan "
-          "before launch; fixes in `PLAN_E4_E7.md`. Toy 0.5B on synthetic arithmetic — "
-          "directional evidence, not publishable effect sizes. Logged to W&B `"
-          + WANDB_PROJECT + "`.\n\n"
+          "Colab-only batch (each requires a capability closed/LoRA-only/fixed-stack "
+          "**Tinker** lacks), one per ZVF-Program pillar. Design and fixes in `PLAN_E4_E7.md`. "
+          "Toy 0.5B on synthetic arithmetic — directional evidence, not publishable effect "
+          "sizes. Logged to W&B `" + WANDB_PROJECT + "`.\n\n"
           "| Exp | Pillar | Status | Headline |\n|-----|--------|--------|----------|\n"
           + "\n".join(rows) + "\n")
 (OUT / "README_E4_E7.md").write_text(readme)

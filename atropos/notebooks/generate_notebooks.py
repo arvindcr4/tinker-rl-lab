@@ -306,7 +306,7 @@ print(df[['Step', 'Reward_pct', 'Loss']].to_string(index=False))
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────┐    ┌──────────────┐    ┌───────────────────┐  │
-│  │  Atropos     │───▶│  Environment │───▶│  Tinker Trainer   │  │
+│  │  Atropos     │───>│  Environment │───>│  Tinker Trainer   │  │
 │  │  (run-api)   │    │  (GSM8K/MATH)│    │  (GRPO + LoRA)   │  │
 │  │  Coordinator │◀───│  Scoring     │◀───│  Cloud GPUs      │  │
 │  └─────────────┘    └──────────────┘    └───────────────────┘  │
@@ -566,9 +566,9 @@ def execute_and_export(nb, notebook_path, html_path):
             text=True,
         )
     if result.returncode == 0:
-        print(f"  ✓ HTML saved to {html_path}")
+        print(f"HTML saved to {html_path}")
     else:
-        print(f"  ✗ HTML conversion failed: {result.stderr[:200]}")
+        print(f"HTML conversion failed: {result.stderr[:200]}")
 
 
 if __name__ == "__main__":

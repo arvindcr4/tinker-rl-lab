@@ -433,7 +433,7 @@ def evaluate_checkpoint(
         ),
     )
     print(
-        f"[eval] ✓ {model} seed={rec.seed}  acc={acc:.3f} "
+        f"[eval] {model} seed={rec.seed}  acc={acc:.3f} "
         f"({correct}/{n}) CI95=[{lo:.3f},{hi:.3f}]  {elapsed:.0f}s",
         flush=True,
     )
@@ -538,7 +538,7 @@ def run(
                     rec, problems, max_workers=per_ckpt_workers, keep_traces=False
                 )
             except Exception as e:
-                print(f"[heldout] ✗ {rec.get('model')} failed: {e}", flush=True)
+                print(f"[heldout] {rec.get('model')} failed: {e}", flush=True)
                 return {
                     **rec,
                     "error": f"{type(e).__name__}: {e}",

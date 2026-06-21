@@ -37,7 +37,7 @@ datasets: [openai/gsm8k]
 license: mit
 ---
 # {exp_tag}
-Modal H100 GPU experiment from TinkerRL-Bench world-class suite.
+Modal H100 GPU experiment from the TinkerRL-Bench suite.
 ## Results
 ```json
 {json.dumps({k:v for k,v in results.items() if k not in ('per_problem','reward_trace','kl_trace','entropy_trace','step_log')}, indent=2)}
@@ -58,10 +58,10 @@ Modal H100 GPU experiment from TinkerRL-Bench world-class suite.
         with open(f"{tmp}/results.json", "w") as f: json.dump(results, f, indent=2)
         api.upload_folder(folder_path=tmp, repo_id=repo_id, repo_type="model", token=HF_TOKEN)
         shutil.rmtree(tmp, ignore_errors=True)
-        print(f"[HF] ✓ {repo_id}")
+        print(f"[HF] {repo_id}")
         return repo_id
     except Exception as e:
-        print(f"[HF] ✗ {exp_tag}: {e}")
+        print(f"[HF] {exp_tag}: {e}")
         return None
 
 
@@ -172,9 +172,9 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
         create_repo(repo_id, repo_type="model", exist_ok=True, token=HF_TOKEN)
         api = HfApi(token=HF_TOKEN)
         api.upload_folder(folder_path=adapter_path, repo_id=repo_id, repo_type="model", token=HF_TOKEN)
-        print(f"[HF] ✓ Uploaded adapter to {repo_id}")
+        print(f"[HF] Uploaded adapter to {repo_id}")
     except Exception as e:
-        print(f"[HF] ✗ {e}")
+        print(f"[HF] {e}")
         repo_id = None
 
     last10 = step_rewards[-10:]
@@ -460,12 +460,12 @@ def main():
         try:
             result = future.get()
             results[name] = result
-            print(f"\n★ [{name}] COMPLETED")
+            print(f"\n[{name}] COMPLETED")
             summary = {k: v for k, v in result.items()
                        if k not in ("per_problem", "reward_trace", "kl_trace", "entropy_trace")}
             print(json.dumps(summary, indent=2))
         except Exception as e:
-            print(f"\n✗ [{name}] FAILED: {e}")
+            print(f"\n[{name}] FAILED: {e}")
             results[name] = {"error": str(e)}
 
     elapsed = time.time() - start

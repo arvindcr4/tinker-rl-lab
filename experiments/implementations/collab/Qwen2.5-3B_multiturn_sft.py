@@ -4,7 +4,7 @@
 #  Dataset: tuandunghcmut/toolbench-v1 (real APIs, multi-turn)
 #  Method : SFT on multi-turn tool call chains
 #
-#  🔧 FIXES vs previous version:
+# FIXES vs previous version:
 #   FIX 1 — Parser now REQUIRES at least one tool-result turn
 #            so the model always sees [tool_call → result → answer]
 #   FIX 2 — Tool calls with empty arguments {} are skipped;
@@ -14,7 +14,7 @@
 #            even if ToolBench parsing yields few clean ones
 #   FIX 4 — finish_match checked BEFORE action_match so the final
 #            answer is never silently dropped
-#  ⚡ Runtime-safe: 3B model, 200 samples, 512 seq, 1 epoch
+# Runtime-safe: 3B model, 200 samples, 512 seq, 1 epoch
 # ============================================================
 
 # !pip install -q transformers datasets peft trl accelerate bitsandbytes
@@ -70,9 +70,9 @@ def parse_toolbench_example(row):
     Convert one ToolBench row into a fully-formed multi-turn chat string.
 
     Requirements for a row to be kept (all three must pass):
-      ✅  At least one tool call with non-empty arguments
-      ✅  At least one tool-result turn (observation/function/tool)
-      ✅  A final natural-language answer (Finish action)
+ At least one tool call with non-empty arguments
+ At least one tool-result turn (observation/function/tool)
+ A final natural-language answer (Finish action)
 
     These three together guarantee the model always trains on the
     complete pattern: tool_call → tool_result → final_answer.
@@ -370,7 +370,7 @@ trainer = SFTTrainer(
     args=sft_config,
 )
 
-print("\n🚀 Starting multi-turn SFT training ...")
+print("\nStarting multi-turn SFT training ...")
 print(f"   Model  : Qwen2.5-3B")
 print(f"   Dataset: {len(dataset['train'])} examples (ToolBench + synthetic)")
 print(f"   Each example has: tool_call → tool_result → final_answer\n")
@@ -380,7 +380,7 @@ trainer.train()
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 trainer.model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
-print(f"\n✅ Adapter saved to {OUTPUT_DIR}")
+print(f"\nAdapter saved to {OUTPUT_DIR}")
 print(f"   Files: {os.listdir(OUTPUT_DIR)}")
 
 # ── MULTI-TURN INFERENCE TEST ─────────────────────────────────
@@ -428,4 +428,4 @@ r3 = run_multiturn(history)
 print(f"\nTool   : attractions result injected")
 print(f"Model  : {r3}")
 print("=" * 60)
-print("\n✅ Step 1 complete! Run Step 2 (GRPO) next.")
+print("\nStep 1 complete! Run Step 2 (GRPO) next.")

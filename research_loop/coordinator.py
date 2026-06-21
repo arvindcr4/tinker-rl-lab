@@ -237,7 +237,7 @@ def cmd_wave_new(args) -> int:
     print(f"  {wave_path}")
     print(f"  Variant configs will land in: {variant_path}")
     print()
-    print("Next: spawn one Claude Code agent per brief.")
+    print("Next: spawn one agent per brief.")
     print("Each agent reads its brief + learnings.md, writes a variant YAML,")
     print("runs `python research_loop/run_one.py --config <variant>`,")
     print("then writes a .result.json in the same wave directory.")

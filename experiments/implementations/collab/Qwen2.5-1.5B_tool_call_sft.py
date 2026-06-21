@@ -192,14 +192,14 @@ trainer = SFTTrainer(
     args=sft_config,
 )
 
-print("\n🚀 Starting SFT training ...\n")
+print("\nStarting SFT training ...\n")
 trainer.train()
 
 # ── SAVE ─────────────────────────────────────────────────────
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 trainer.model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
-print(f"\n✅ SFT adapter saved!")
+print(f"\nSFT adapter saved!")
 print(f"   Files: {os.listdir(OUTPUT_DIR)}")
 print(f"   Path : {OUTPUT_DIR}")
 

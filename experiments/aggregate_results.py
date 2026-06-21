@@ -528,7 +528,7 @@ print(f"[OK] master_results.csv written ({len(records)} rows)")
 
 
 # ── build Markdown summary ─────────────────────────────────────────────────────
-STATUS_EMOJI = {"completed": "✅", "partial": "⚠️", "failed": "❌"}
+STATUS_EMOJI = {"completed": "", "partial": "", "failed": ""}
 
 def fmt_metric(val):
     if val is None:

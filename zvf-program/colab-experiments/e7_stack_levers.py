@@ -1,15 +1,14 @@
-"""E7 (Pillar 4, MIN-REPORT-RL): how much does flipping ONE unreported "stack"
-lever move the headline, and -- for the big bf16->fp32 effect -- IS IT REAL or a
+"""E7 (Pillar 4, MIN-REPORT-RL): how much does flipping one unreported "stack"
+lever move the headline, and -- for a large bf16->fp32 swing -- is it real or a
 training/numerics artifact?
 
-Round-2 Codex fix: the first run's fp32 jump (train reward 0.23->0.95) was
-confounded (dtype couples generation distribution, optimizer numerics, and
-possible bf16 update instability). This version DECOUPLES it:
-  * ZERO-UPDATE generation baseline per dtype (gen quality BEFORE any training).
+A naive run couples dtype with generation distribution, optimizer numerics, and
+possible bf16 update instability. This version decouples them:
+  * Zero-update generation baseline per dtype (gen quality before any training).
   * Per-step diagnostics: total grad-norm, last-layer param-delta norm, and
     non-finite-grad counts (bf16 instability detector).
-  * LR CONTRAST: bf16 and fp32 at lr in {1e-6, 2e-6} -> is bf16 just LR-sensitive?
-  * PAIRED + replicated (same prompt stream/seed per arm, 2 seeds, mean+-std).
+  * LR contrast: bf16 and fp32 at lr in {1e-6, 2e-6} -> is bf16 just LR-sensitive?
+  * Paired + replicated (same prompt stream/seed per arm, 2 seeds, mean+-std).
 Headline = ZVF / ERF / reward trajectory (held-out over 10 toy steps is too noisy).
 
 Reference = bf16 / sdpa / temp 1.0 / top_p 0.95 / lr 2e-6.

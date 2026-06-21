@@ -285,7 +285,7 @@ checklist = [
     "Decontamination probe results",
 ]
 for c in checklist:
-    para(tf, "✓  " + c, 12, INK, space_before=6)
+    para(tf, "•  " + c, 12, INK, space_before=6)
 rect(s, 7.05, 2.35, 5.73, 3.9, fill=PANEL)
 tf = box(s, 7.3, 2.55, 5.3, 3.6)
 para(tf, "Reproducibility audit", 13, AMBER, bold=True, first=True)

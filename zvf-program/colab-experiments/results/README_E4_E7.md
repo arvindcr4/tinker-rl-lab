@@ -1,6 +1,6 @@
 # Colab experiment results — E2 rerun + E4–E7 batch
 
-New Colab-only batch (each requires a capability closed/LoRA-only/fixed-stack **Tinker** lacks), one per ZVF-Program pillar. Reviewed in three rounds — Codex (gpt-5.5) on the plan, Codex on the first results, then **agy (Gemini 3.1 Pro) hardening** the implementation. Fixes in `PLAN_E4_E7.md`. Toy 0.5B on synthetic arithmetic — directional evidence, not publishable effect sizes. Logged to W&B `zvf-colab-experiments`. **Table = v3 (post-hardening) numbers.**
+New Colab-only batch (each requires a capability closed/LoRA-only/fixed-stack **Tinker** lacks), one per ZVF-Program pillar. Reviewed and hardened over three rounds (plan, first results, implementation). Fixes in `PLAN_E4_E7.md`. Toy 0.5B on synthetic arithmetic — directional evidence, not publishable effect sizes. Logged to W&B `zvf-colab-experiments`. **Table = v3 (post-hardening) numbers.**
 
 | Exp | Pillar | Status | Headline |
 |-----|--------|--------|----------|
@@ -10,9 +10,9 @@ New Colab-only batch (each requires a capability closed/LoRA-only/fixed-stack **
 | E6 | P3 | done | fixed Δ=-0.04/ZVF=0.85 | adaptiveG Δ=0.00/ZVF=0.84 | +drop Δ=0.02/ZVF=0.83 (matched ~420 rollouts) |
 | E7 | P4 | done | gen-baseline bf16=0.812==fp32=0.812 (precision ~no gen effect); fp32 train Δp=-0.125 (noisy/LR-dep, NOT v1's +0.72); nonfinite_grads=0; fp32 Δp=-0.125; bf16_lr1e-6 Δp=-0.021; fp32_lr1e-6 Δp=+0.006; eager_attn Δp=-0.048; temp_0.7 Δp=+0.041 |
 
-## Round-3 (agy / Gemini 3.1 Pro hardening) — what changed
+## Round-3 (hardening) — what changed
 
-agy found the shared root cause and per-script bugs; all fixed, then re-run (v3):
+The hardening review found the shared root cause and per-script bugs; all fixed, then re-run (v3):
 - **Root cause**: `MAX_NEW=24` truncated any reasoning trace > ~24 tokens → no `####` →
   deterministic 0 reward → hard prompts spuriously forced to p=0. Fixed: `MAX_NEW=128`
   + `parse()` returns None when `####` is absent (was grabbing the question's digits).

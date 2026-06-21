@@ -35,9 +35,9 @@ run_experiment() {
     echo "=========================================="
 
     if python "$script"; then
-        echo "✅ $name completed successfully"
+        echo "$name completed successfully"
     else
-        echo "❌ $name failed (continuing...)"
+        echo "$name failed (continuing...)"
     fi
 }
 

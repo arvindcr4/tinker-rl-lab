@@ -44,14 +44,6 @@ def enrich_slide_3():
     # 0-indexed, so slides[2] is Slide 3
     slide = prs.slides[2]
 
-    # Change bullets from '•' to '✓' to emphasize completion
-    for shape in slide.shapes:
-        if shape.has_text_frame:
-            for paragraph in shape.text_frame.paragraphs:
-                for run in paragraph.runs:
-                    if '•' in run.text:
-                        run.text = run.text.replace('•', '✓')
-
     # Colors based on the existing theme
     GREEN = RGBColor(0x3F, 0xB9, 0x50)
     TEAL = RGBColor(0x2D, 0xD4, 0xBF)

@@ -52,7 +52,7 @@ Existing: E1→P2 (grad-norm↔p(1-p)), E2→P4 (LoRA vs full-FT), E3→P3+P4 (o
 Generalize `persist_results.py` to parse `E4_RESULT`..`E7_RESULT` from each run log,
 write `results/e{4..7}_*.json`, log to W&B project `zvf-colab-experiments`, refresh `results/README.md`.
 
-## Codex review (gpt-5.5, read-only) — incorporated 2026-06-21
+## Review notes (read-only) — incorporated 2026-06-21
 Verdict: GO as-is none; fix E4/E6/E7; E5 cut *as written*, kept only redesigned around real gradients/Fisher.
 Revisions applied below:
 - **E4**: power fix — **generate-once, subsample ≥128 groups/K around p≈0.5 with bootstrap CIs** (16 groups can't resolve 0.008). Precision (fp32 vs bf16) is the *only* clean Tinker-blocked lever → demoted to a K=8 side-check, not the main grid.

@@ -152,7 +152,7 @@ def add_tinker_architecture_diagram(prs):
     cloud_label = slide.shapes.add_textbox(Inches(5.5), Inches(1.3), Inches(2), Inches(0.4))
     tf = cloud_label.text_frame
     p = tf.paragraphs[0]
-    p.text = "☁️ Tinker Cloud"
+    p.text = "Tinker Cloud"
     p.font.size = Pt(14)
     p.font.bold = True
     p.font.color.rgb = LIGHT_BLUE
@@ -356,7 +356,7 @@ def add_preference_diagram(prs):
     win_label = slide.shapes.add_textbox(Inches(6.5), Inches(4.3), Inches(0.8), Inches(0.3))
     tf = win_label.text_frame
     p = tf.paragraphs[0]
-    p.text = "✓ Win"
+    p.text = "Win"
     p.font.size = Pt(10)
     p.font.bold = True
     p.font.color.rgb = GREEN
@@ -364,7 +364,7 @@ def add_preference_diagram(prs):
     lose_label = slide.shapes.add_textbox(Inches(6.5), Inches(1.3), Inches(0.8), Inches(0.3))
     tf = lose_label.text_frame
     p = tf.paragraphs[0]
-    p.text = "✗ Lose"
+    p.text = "Lose"
     p.font.size = Pt(10)
     p.font.bold = True
     p.font.color.rgb = RED
@@ -662,12 +662,12 @@ def main():
     add_table_slide(prs, "Experiments Conducted",
         ["Recipe", "Task", "Model", "Status", "Result"],
         [
-            ["Math RL", "Arithmetic", "Llama-3.2-1B", "✓ Complete", "100% accuracy"],
-            ["Chat SL", "Conversation", "Llama-3.2-1B", "✓ Running", "NLL: 2.5→1.8"],
-            ["Preference", "Shorter", "Qwen-0.6B", "✓ Running", "37% done"],
-            ["Distill (Off)", "Reasoning", "Llama-3.2-1B", "✓ Running", "SFT active"],
-            ["Distill (On)", "KL Match", "Llama-3.2-1B", "✓ Running", "KL: 2.88"],
-            ["GSM8K", "Word Problems", "Llama-3.2-1B", "✓ Running", "Multi-step"],
+            ["Math RL", "Arithmetic", "Llama-3.2-1B", "Complete", "100% accuracy"],
+            ["Chat SL", "Conversation", "Llama-3.2-1B", "Running", "NLL: 2.5→1.8"],
+            ["Preference", "Shorter", "Qwen-0.6B", "Running", "37% done"],
+            ["Distill (Off)", "Reasoning", "Llama-3.2-1B", "Running", "SFT active"],
+            ["Distill (On)", "KL Match", "Llama-3.2-1B", "Running", "KL: 2.88"],
+            ["GSM8K", "Word Problems", "Llama-3.2-1B", "Running", "Multi-step"],
         ])
 
     # 9. Results Chart

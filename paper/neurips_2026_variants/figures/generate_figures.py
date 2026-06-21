@@ -165,7 +165,7 @@ ax.add_artist(
 plt.tight_layout()
 plt.savefig(OUTDIR + "learning_curves.png", dpi=300, bbox_inches="tight")
 plt.close()
-print("✓ learning_curves.png")
+print("learning_curves.png")
 
 # ═══════════════════════════════════════════════════════════
 # Figure 2: Grouped bar chart – peak vs last-10 accuracy
@@ -253,7 +253,7 @@ ax.legend(handles=legend_handles, loc="upper right", framealpha=0.9, fontsize=9)
 plt.tight_layout()
 plt.savefig(OUTDIR + "comparison_bars.png", dpi=300, bbox_inches="tight")
 plt.close()
-print("✓ comparison_bars.png")
+print("comparison_bars.png")
 
 # ═══════════════════════════════════════════════════════════
 # Figure 3: Scaling plot – model size vs peak accuracy
@@ -478,7 +478,7 @@ ax.legend(handles=legend_elements, loc="lower right", framealpha=0.9)
 plt.tight_layout()
 plt.savefig(OUTDIR + "scaling_plot.png", dpi=300, bbox_inches="tight")
 plt.close()
-print("✓ scaling_plot.png")
+print("scaling_plot.png")
 
 # ═══════════════════════════════════════════════════════════
 # Figure 4: PPO vs GRPO side-by-side comparison
@@ -590,7 +590,7 @@ for i, mdl in enumerate(models):
 plt.tight_layout()
 plt.savefig(OUTDIR + "ppo_vs_grpo_comparison.png", dpi=300, bbox_inches="tight")
 plt.close()
-print("✓ ppo_vs_grpo_comparison.png")
+print("ppo_vs_grpo_comparison.png")
 
 # ═══════════════════════════════════════════════════════════
 # Figure 5: Sensitivity heatmap
@@ -708,6 +708,6 @@ ax.text(
 plt.tight_layout()
 plt.savefig(OUTDIR + "sensitivity_heatmap.png", dpi=300, bbox_inches="tight")
 plt.close()
-print("✓ sensitivity_heatmap.png")
+print("sensitivity_heatmap.png")
 
 print("\nAll figures saved to", OUTDIR)

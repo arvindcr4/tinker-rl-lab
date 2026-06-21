@@ -387,14 +387,14 @@ def run_one(exp):
             pass
 
         print(
-            f"  ✓ [{tag}] DONE peak={peak:.3f} last10={last10:.3f} "
+            f"[{tag}] DONE peak={peak:.3f} last10={last10:.3f} "
             f"({result['wall_clock_sec']:.0f}s)",
             flush=True,
         )
         return result
 
     except Exception as e:
-        print(f"  ✗ [{tag}] FAILED: {e}", flush=True)
+        print(f"[{tag}] FAILED: {e}", flush=True)
         traceback.print_exc()
         try:
             if wb_run:

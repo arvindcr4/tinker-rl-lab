@@ -128,3 +128,4 @@ University_Defense_Submission.zip
 
 # mail-automation (recipient emails + gmail token path) — local only, never tracked
 paper/send_eai_gmail.py
+paper/send_eai_email.applescript

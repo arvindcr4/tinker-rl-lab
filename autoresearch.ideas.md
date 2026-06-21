@@ -1,6 +1,6 @@
 # Autoresearch Ideas - TinkerRL Submission
 
-## Status: SUBMISSION COMPLETE ✅
+## Status: SUBMISSION COMPLETE [OK]
 
 **All 13 audits passing (suite_issues=0)**
 **Submission score: 97/100** (+47% from baseline 66)
@@ -10,14 +10,14 @@
 | Component | Score | Max | Status |
 |-----------|-------|-----|--------|
 | LaTeX | 19/20 | 20 | 1 minor overfull (acceptable) |
-| Pages | 15/15 | 15 | ✅ maxed |
-| Figures/Tables | 15/15 | 15 | ✅ maxed |
+| Pages | 15/15 | 15 | [OK] maxed |
+| Figures/Tables | 15/15 | 15 | [OK] maxed |
 | Bibliography | 8/10 | 10 | 26 citations, 188 entries |
-| Experiments | 15/15 | 15 | ✅ maxed (95 results) |
-| Figure files | 10/10 | 10 | ✅ maxed |
-| Verification | 10/10 | 10 | ✅ maxed |
-| Claims docs | 5/5 | 5 | ✅ maxed |
-| **TOTAL** | **97/100** | **100** | ✅ |
+| Experiments | 15/15 | 15 | [OK] maxed (95 results) |
+| Figure files | 10/10 | 10 | [OK] maxed |
+| Verification | 10/10 | 10 | [OK] maxed |
+| Claims docs | 5/5 | 5 | [OK] maxed |
+| **TOTAL** | **97/100** | **100** | [OK] |
 
 ## Completed Improvements
 

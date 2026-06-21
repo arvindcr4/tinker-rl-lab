@@ -11,13 +11,13 @@ Use **BrowserGym/MiniWoB** for the smoke loop, **WorkArena-L1** as the dev targe
 
 | Benchmark | Max steps | Parallel seeds | Multi-tab | Cost to run | Recommendation |
 |---|---|---|---|---|---|
-| **MiniWoB** (`browsergym/miniwob.*`) | 10 | ✅ | ❌ | Local HTML, $0 | **Smoke loop.** Fastest iteration; ~125 tasks. |
-| **WorkArena-L1** (`browsergym/workarena.*`) | 15 | ✅ | ❌ | ServiceNow dev instance | **Dev target.** Realistic enterprise flows, reproducible seeds. |
-| **WorkArena-L2/L3** | 50 | ✅ | ✅ | ServiceNow | For agentic planning ablations. |
-| **WebArena** (`browsergym/webarena.*`) | 30 | ❌ | ✅ | 5 Docker containers (shopping, reddit, gitlab, cms, map) | Paper eval; 812 tasks. |
-| **WebArena-verified** | 30 | ❌ | ✅ | Same as WebArena | Preferred over raw WebArena (known task-label bugs fixed). |
-| **VisualWebArena** | 30 | ❌ | ✅ | Vision-required | Only if using a VLM. |
-| **AssistantBench** | 30 | ✅ | ✅ | Public web (flaky!) | Good real-web generalization eval. |
+| **MiniWoB** (`browsergym/miniwob.*`) | 10 | [OK] | [FAIL] | Local HTML, $0 | **Smoke loop.** Fastest iteration; ~125 tasks. |
+| **WorkArena-L1** (`browsergym/workarena.*`) | 15 | [OK] | [FAIL] | ServiceNow dev instance | **Dev target.** Realistic enterprise flows, reproducible seeds. |
+| **WorkArena-L2/L3** | 50 | [OK] | [OK] | ServiceNow | For agentic planning ablations. |
+| **WebArena** (`browsergym/webarena.*`) | 30 | [FAIL] | [OK] | 5 Docker containers (shopping, reddit, gitlab, cms, map) | Paper eval; 812 tasks. |
+| **WebArena-verified** | 30 | [FAIL] | [OK] | Same as WebArena | Preferred over raw WebArena (known task-label bugs fixed). |
+| **VisualWebArena** | 30 | [FAIL] | [OK] | Vision-required | Only if using a VLM. |
+| **AssistantBench** | 30 | [OK] | [OK] | Public web (flaky!) | Good real-web generalization eval. |
 
 **Action for this repo**: the two smoke configs already committed (`browsergym_miniwob_qwen_8b_smoke.yaml`, `browsergym_webarena_qwen_8b_smoke.yaml`) are the right shape. Add a WorkArena-L1 config next.
 

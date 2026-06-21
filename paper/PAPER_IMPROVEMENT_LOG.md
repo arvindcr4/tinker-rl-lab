@@ -69,7 +69,7 @@ Parsed: `.aris/round2/review_parsed.json`
 - **MAJOR (5)**: ZVF abstract/claim table omitted 2-positive caveat; cross-stack comparison treats dry-run placeholders as peers; toy arithmetic baseline given headline inferential weight; bibliography hygiene (ACM leftovers, duplicates, wrong entry types); venue-mismatch NeurIPS boilerplate in source.
 - **MINOR (4)**: Qwen PPO row shows two conflicting last-10 values; two overlapping stat narratives; rebuttal tone; keywords at upper bound.
 - **Plagiarism flags (8)**: 8 distinctive sentences across abstract/intro/body/conclusion.
-- **EAI compliance**: 905 chars ✓, 8 keywords (at max) ✓, Vancouver ✓, structured abstract ✓.
+- **EAI compliance**: 905 chars [OK], 8 keywords (at max) [OK], Vancouver [OK], structured abstract [OK].
 
 ### Fixes implemented this round
 

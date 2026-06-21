@@ -86,7 +86,7 @@ Our approach: **pure GRPO from a general-purpose base model** — no distillatio
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌────────────────────┐
-│  GSM8K Env       │────▶│  Atropos API      │────▶│  Tinker Trainer     │
+│  GSM8K Env       │────>│  Atropos API      │────>│  Tinker Trainer     │
 │  (rollouts +     │     │  (coordination)   │     │  (cloud GPU)       │
 │   scoring)       │◀────│                    │◀────│  LoRA + GRPO       │
 └─────────────────┘     └──────────────────┘     └────────────────────┘

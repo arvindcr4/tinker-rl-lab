@@ -51,7 +51,7 @@ python3 scripts/regenerate_figures.py --check
 **Caption in paper:**
 > "Learning curves for the arithmetic sanity task across RL libraries."
 
-**⚠️ CAPTION NOTE:** 
+**[WARN] CAPTION NOTE:** 
 The figure title says "arithmetic" but the actual input data includes GSM8K, not just arithmetic. The caption should read:
 > "Learning curves for the arithmetic sanity task and GSM8K across RL libraries."
 
@@ -88,7 +88,7 @@ python3 scripts/regenerate_figures.py --check fig_learning_curves
 **Caption:**
 > "Descriptive reward/accuracy context under the rollout/evaluation parser"
 
-**⚠️ CAPTION NOTE:** 
+**[WARN] CAPTION NOTE:** 
 "Accuracy" refers to training reward, not held-out accuracy. The figure is descriptive context, not a benchmark diagnostic.
 
 ---
@@ -147,7 +147,7 @@ python3 scripts/regenerate_figures.py --check fig_sensitivity
 **Caption:**
 > "Artifact-specific step-level reward comparison between GRPO and PPO"
 
-**⚠️ IMPORTANT NOTE:**
+**[WARN] IMPORTANT NOTE:**
 The Qwen PPO comparison is artifact-sensitive:
 - Ledger value: 0.225
 - Statistics summary: 0.350
@@ -167,7 +167,7 @@ This figure is used for reporting hygiene, NOT as directional GRPO > PPO evidenc
 
 **Finding:** G=8 empirical sweet spot (single-seed, 30 steps)
 
-**⚠️ LIMITATION:** Single-seed observation; multi-seed validation needed before calling G=8 optimal.
+**[WARN] LIMITATION:** Single-seed observation; multi-seed validation needed before calling G=8 optimal.
 
 ---
 
@@ -180,7 +180,7 @@ This figure is used for reporting hygiene, NOT as directional GRPO > PPO evidenc
 **Caption:**
 > "Exponential saturation fits to reward traces"
 
-**⚠️ IMPORTANT:**
+**[WARN] IMPORTANT:**
 - Mean R² = 0.210 (weak fit)
 - Descriptive only, NOT a validated scaling law
 - Short traces (20-30 steps)

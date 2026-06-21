@@ -50,16 +50,16 @@ These numbers should not all be read as standardized benchmark claims:
 
 ## Paper Status
 
-✅ **Completed**: Honest limitation disclosure  
-✅ **Completed**: W&B logging (17 Tinker runs uploaded to tinker-rl-scaling project)  
-✅ **Completed**: Advanced RL notebook (Dr. GRPO, DAPO, DPO) -- `advanced_rl_colab.ipynb`  
-✅ **Completed**: Submission Colab -- `submission_colab.ipynb`  
-✅ **Completed**: All 13 audits passing (0 issues)  
-✅ **Completed**: Held-out GSM8K evaluation (5 seeds x 200 examples; non-significant lift)  
-⚠️ **Pending**: Standardized tool-calling evaluation / judge protocol disclosure  
-⚠️ **Pending**: Canonical full HumanEval/MBPP evaluation  
-⚠️ **Pending**: Fully local reproduction path without hosted-service permissions  
-⚠️ **Note**: Checkpoints are available if still accessible on the platform (if checkpoint still available); availability is not guaranteed for indefinitely retained resources
+[OK] **Completed**: Honest limitation disclosure  
+[OK] **Completed**: W&B logging (17 Tinker runs uploaded to tinker-rl-scaling project)  
+[OK] **Completed**: Advanced RL notebook (Dr. GRPO, DAPO, DPO) -- `advanced_rl_colab.ipynb`  
+[OK] **Completed**: Submission Colab -- `submission_colab.ipynb`  
+[OK] **Completed**: All 13 audits passing (0 issues)  
+[OK] **Completed**: Held-out GSM8K evaluation (5 seeds x 200 examples; non-significant lift)  
+[WARN] **Pending**: Standardized tool-calling evaluation / judge protocol disclosure  
+[WARN] **Pending**: Canonical full HumanEval/MBPP evaluation  
+[WARN] **Pending**: Fully local reproduction path without hosted-service permissions  
+[WARN] **Note**: Checkpoints are available if still accessible on the platform (if checkpoint still available); availability is not guaranteed for indefinitely retained resources
 
 ## Highest-Leverage Next Step
 

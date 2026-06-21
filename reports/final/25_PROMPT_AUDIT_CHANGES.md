@@ -79,8 +79,8 @@ Based on the A-level thesis check recommending submission as an **evaluation/emp
 
 | File | Status | Notes |
 |------|--------|-------|
-| `paper/main.tex` | ✅ Compiles | 6.5MB PDF |
-| `paper/main_anon.tex` | ✅ Compiles | 1.8MB PDF |
+| `paper/main.tex` | [OK] Compiles | 6.5MB PDF |
+| `paper/main_anon.tex` | [OK] Compiles | 1.8MB PDF |
 
 ---
 

@@ -32,7 +32,7 @@ RALPH_DONE
 
 ## Total: 2,119 lines of code across 14 files
 
-## Acceptance Criteria ✅
+## Acceptance Criteria [OK]
 - [x] All Python files created
 - [x] Each implementation follows Tinker reward structure
 - [x] README documents all implementations

@@ -22,7 +22,7 @@ Any change to the paper or report is required to keep `suite_issues=0` and in pa
 
 ## Current State (as of 2026-04-22)
 
-### Score: 97/100 ✅
+### Score: 97/100 [OK]
 - LaTeX: 19/20 (1 minor overfull in author section)
 - Pages: 15/15 (60 pages)
 - Figures/Tables: 15/15 (19 figs, 21 tables)
@@ -32,7 +32,7 @@ Any change to the paper or report is required to keep `suite_issues=0` and in pa
 - Verification: 10/10 (12/12 checks)
 - Claims docs: 5/5
 
-### Audit Suite: 13/13 Passing ✅
+### Audit Suite: 13/13 Passing [OK]
 All individual audit scripts pass with suite_issues=0.
 
 ## Key Improvement Areas (if continuing)

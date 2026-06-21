@@ -375,12 +375,12 @@ The paper is admirably honest about its limitations: closed-source Tinker implem
 
 | Table | Current Caption | Issue | Fix |
 |-------|-----------------|-------|-----|
-| Table 1 | "Training-reward ledger: GRPO and PPO reward under the GSM8K rollout/evaluation parser" | ✓ Correctly labeled | None needed |
-| Table 4 | "Held-out GSM8K evaluation of the top-10 Tinker checkpoints" | ✓ Correctly labeled | Add: "Checkpoint selection by training last-10 reward, not random held-out split" |
-| Table 5 | "Cross-library comparison on Math RL (Arithmetic)" | ✓ Correctly labeled | Add: "Online training reward, not held-out accuracy" |
-| Table 6 | "Secondary GSM8K cross-source summary" | ✓ Correctly labeled | Explicitly note: "Descriptive context, not held-out claim" |
-| Table 7 | "Cross-task proxy reward summaries" | ✓ Correctly labeled | Note: "Proxy rewards (schema compliance), not capability" |
-| Table 8 | "PPO vs GRPO comparison as stack-conditioned evidence" | ✓ Correctly labeled | Note: "Single-seed training reward, not held-out" |
+| Table 1 | "Training-reward ledger: GRPO and PPO reward under the GSM8K rollout/evaluation parser" | [OK] Correctly labeled | None needed |
+| Table 4 | "Held-out GSM8K evaluation of the top-10 Tinker checkpoints" | [OK] Correctly labeled | Add: "Checkpoint selection by training last-10 reward, not random held-out split" |
+| Table 5 | "Cross-library comparison on Math RL (Arithmetic)" | [OK] Correctly labeled | Add: "Online training reward, not held-out accuracy" |
+| Table 6 | "Secondary GSM8K cross-source summary" | [OK] Correctly labeled | Explicitly note: "Descriptive context, not held-out claim" |
+| Table 7 | "Cross-task proxy reward summaries" | [OK] Correctly labeled | Note: "Proxy rewards (schema compliance), not capability" |
+| Table 8 | "PPO vs GRPO comparison as stack-conditioned evidence" | [OK] Correctly labeled | Note: "Single-seed training reward, not held-out" |
 
 ### Prompt 19: Fresh Statistical Check
 

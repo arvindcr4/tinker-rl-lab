@@ -10,12 +10,12 @@ This repository contains experiments with the [Tinker](https://thinkingmachines.
 
 | Recipe | Description | Status |
 |--------|-------------|--------|
-| Math RL (Arithmetic) | Train model to add numbers | ✅ Complete - 100% accuracy |
-| Chat SL | Supervised fine-tuning on NoRobots | ✅ Complete |
-| Preference Shorter | Train for concise responses | ✅ Complete |
-| Distillation Off-Policy | SFT on OpenThoughts3 | ✅ Complete |
-| Distillation On-Policy | KL minimization to teacher | ✅ Complete |
-| Math RL (GSM8K) | Word problem solving | ✅ Complete |
+| Math RL (Arithmetic) | Train model to add numbers | [OK] Complete - 100% accuracy |
+| Chat SL | Supervised fine-tuning on NoRobots | [OK] Complete |
+| Preference Shorter | Train for concise responses | [OK] Complete |
+| Distillation Off-Policy | SFT on OpenThoughts3 | [OK] Complete |
+| Distillation On-Policy | KL minimization to teacher | [OK] Complete |
+| Math RL (GSM8K) | Word problem solving | [OK] Complete |
 
 ## Repository Structure
 

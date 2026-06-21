@@ -1649,10 +1649,10 @@ The tool should produce copy-pasteable warnings: “Item 4 missing: no usable-si
 For papers and repos, I would make the output badge intentionally blunt:
 
 ```text
-MIN-REPORT-RL: 94/100 ✅ compliant
-MIN-REPORT-RL: 63/100 ⚠ partial; missing ZVF/GU + decontamination
-MIN-REPORT-RL: 21/100 ❌ non-compliant; stack under-specified
-MIN-REPORT-RL: 57/100 ⚠ platform-scoped; closed loss/KL
+MIN-REPORT-RL: 94/100 [OK] compliant
+MIN-REPORT-RL: 63/100 [WARN] partial; missing ZVF/GU + decontamination
+MIN-REPORT-RL: 21/100 [FAIL] non-compliant; stack under-specified
+MIN-REPORT-RL: 57/100 [WARN] platform-scoped; closed loss/KL
 ```
 
 That turns the paper’s proposed “cost is a JSON block” adoption path into a concrete automated gate: a repo either exposes the seven stack fields, or the checker tells reviewers exactly which unreported lever could be confounding the claimed GRPO gain.

@@ -1,0 +1,114 @@
+{
+  "experiment": "E6_live_triage",
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "seeds": [
+    0,
+    1
+  ],
+  "budget_rollouts": 600,
+  "by_arm": {
+    "fixed_G": {
+      "mean_heldout_delta": 0.325,
+      "mean_zvf": 0.293,
+      "mean_rollouts": 608,
+      "mean_opt_steps": 38,
+      "mean_dropped": 0
+    },
+    "adaptiveG": {
+      "mean_heldout_delta": 0.325,
+      "mean_zvf": 0.303,
+      "mean_rollouts": 608,
+      "mean_opt_steps": 41.5,
+      "mean_dropped": 0
+    },
+    "adaptiveG_drop": {
+      "mean_heldout_delta": 0.3,
+      "mean_zvf": 0.325,
+      "mean_rollouts": 608,
+      "mean_opt_steps": 40.5,
+      "mean_dropped": 2
+    }
+  },
+  "runs": [
+    {
+      "arm": "fixed_G",
+      "seed": 0,
+      "heldout_pre": 0.4,
+      "heldout_post": 0.75,
+      "heldout_delta": 0.35,
+      "mean_zvf": 0.303,
+      "total_rollouts": 608,
+      "opt_steps": 38,
+      "dropped": 0,
+      "zvf_suppress_step": 35,
+      "auto_stopped": false
+    },
+    {
+      "arm": "fixed_G",
+      "seed": 1,
+      "heldout_pre": 0.7,
+      "heldout_post": 1.0,
+      "heldout_delta": 0.3,
+      "mean_zvf": 0.283,
+      "total_rollouts": 608,
+      "opt_steps": 38,
+      "dropped": 0,
+      "zvf_suppress_step": 15,
+      "auto_stopped": false
+    },
+    {
+      "arm": "adaptiveG",
+      "seed": 0,
+      "heldout_pre": 0.4,
+      "heldout_post": 0.9,
+      "heldout_delta": 0.5,
+      "mean_zvf": 0.261,
+      "total_rollouts": 608,
+      "opt_steps": 44,
+      "dropped": 0,
+      "zvf_suppress_step": 19,
+      "auto_stopped": false
+    },
+    {
+      "arm": "adaptiveG",
+      "seed": 1,
+      "heldout_pre": 0.7,
+      "heldout_post": 0.85,
+      "heldout_delta": 0.15,
+      "mean_zvf": 0.346,
+      "total_rollouts": 608,
+      "opt_steps": 39,
+      "dropped": 0,
+      "zvf_suppress_step": null,
+      "auto_stopped": false
+    },
+    {
+      "arm": "adaptiveG_drop",
+      "seed": 0,
+      "heldout_pre": 0.4,
+      "heldout_post": 0.9,
+      "heldout_delta": 0.5,
+      "mean_zvf": 0.31,
+      "total_rollouts": 604,
+      "opt_steps": 42,
+      "dropped": 2,
+      "zvf_suppress_step": 19,
+      "auto_stopped": false
+    },
+    {
+      "arm": "adaptiveG_drop",
+      "seed": 1,
+      "heldout_pre": 0.7,
+      "heldout_post": 0.8,
+      "heldout_delta": 0.1,
+      "mean_zvf": 0.34,
+      "total_rollouts": 612,
+      "opt_steps": 39,
+      "dropped": 2,
+      "zvf_suppress_step": null,
+      "auto_stopped": false
+    }
+  ],
+  "_source": "colab run --gpu T4 (e6_run.log)",
+  "_pillar": "P3"
+}

@@ -1,0 +1,183 @@
+{
+  "experiment": "E7_stack_levers",
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "seeds": [
+    0,
+    1
+  ],
+  "reference": "bf16/sdpa/temp1.0/top_p0.95",
+  "by_lever": {
+    "reference": {
+      "mean_zvf": [
+        0.25,
+        0.025
+      ],
+      "mean_erf": [
+        0.321,
+        0.034
+      ],
+      "last3_p": [
+        0.229,
+        0.007
+      ],
+      "delta_zvf_vs_ref": [
+        0.0,
+        0.0
+      ],
+      "delta_p_vs_ref": [
+        0.0,
+        0.0
+      ],
+      "delta_heldout_vs_ref": [
+        0.0,
+        0.0
+      ]
+    },
+    "fp32": {
+      "mean_zvf": [
+        0.538,
+        0.138
+      ],
+      "mean_erf": [
+        0.831,
+        0.048
+      ],
+      "last3_p": [
+        0.945,
+        0.055
+      ],
+      "delta_zvf_vs_ref": [
+        0.288,
+        0.163
+      ],
+      "delta_p_vs_ref": [
+        0.716,
+        0.062
+      ],
+      "delta_heldout_vs_ref": [
+        -0.125,
+        0.025
+      ]
+    },
+    "eager_attn": {
+      "mean_zvf": [
+        0.2,
+        0.05
+      ],
+      "mean_erf": [
+        0.335,
+        0.027
+      ],
+      "last3_p": [
+        0.305,
+        0.041
+      ],
+      "delta_zvf_vs_ref": [
+        -0.05,
+        0.025
+      ],
+      "delta_p_vs_ref": [
+        0.076,
+        0.048
+      ],
+      "delta_heldout_vs_ref": [
+        -0.175,
+        0.025
+      ]
+    },
+    "temp_0.7": {
+      "mean_zvf": [
+        0.112,
+        0.037
+      ],
+      "mean_erf": [
+        0.408,
+        0.025
+      ],
+      "last3_p": [
+        0.389,
+        0.055
+      ],
+      "delta_zvf_vs_ref": [
+        -0.138,
+        0.012
+      ],
+      "delta_p_vs_ref": [
+        0.16,
+        0.062
+      ],
+      "delta_heldout_vs_ref": [
+        0.025,
+        0.025
+      ]
+    }
+  },
+  "runs": [
+    {
+      "arm": "reference",
+      "seed": 0,
+      "mean_zvf": 0.225,
+      "mean_erf": 0.354,
+      "last3_p": 0.222,
+      "heldout_delta": 0.6
+    },
+    {
+      "arm": "reference",
+      "seed": 1,
+      "mean_zvf": 0.275,
+      "mean_erf": 0.287,
+      "last3_p": 0.236,
+      "heldout_delta": 0.65
+    },
+    {
+      "arm": "fp32",
+      "seed": 0,
+      "mean_zvf": 0.675,
+      "mean_erf": 0.879,
+      "last3_p": 1.0,
+      "heldout_delta": 0.45
+    },
+    {
+      "arm": "fp32",
+      "seed": 1,
+      "mean_zvf": 0.4,
+      "mean_erf": 0.783,
+      "last3_p": 0.889,
+      "heldout_delta": 0.55
+    },
+    {
+      "arm": "eager_attn",
+      "seed": 0,
+      "mean_zvf": 0.15,
+      "mean_erf": 0.362,
+      "last3_p": 0.347,
+      "heldout_delta": 0.4
+    },
+    {
+      "arm": "eager_attn",
+      "seed": 1,
+      "mean_zvf": 0.25,
+      "mean_erf": 0.308,
+      "last3_p": 0.264,
+      "heldout_delta": 0.5
+    },
+    {
+      "arm": "temp_0.7",
+      "seed": 0,
+      "mean_zvf": 0.075,
+      "mean_erf": 0.433,
+      "last3_p": 0.444,
+      "heldout_delta": 0.6
+    },
+    {
+      "arm": "temp_0.7",
+      "seed": 1,
+      "mean_zvf": 0.15,
+      "mean_erf": 0.383,
+      "last3_p": 0.333,
+      "heldout_delta": 0.7
+    }
+  ],
+  "_source": "colab run --gpu T4 (e7_run.log)",
+  "_pillar": "P4"
+}

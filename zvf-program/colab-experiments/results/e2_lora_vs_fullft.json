@@ -1,0 +1,30 @@
+{
+  "experiment": "E2_lora_vs_fullft",
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "seed": 0,
+  "steps": 16,
+  "arms": [
+    {
+      "mode": "lora",
+      "trainable_params": 2162688,
+      "heldout_pre": 0.5,
+      "heldout_post": 1.0,
+      "heldout_delta": 0.5,
+      "mean_zvf": 0.125,
+      "first3_p": 0.292,
+      "last3_p": 0.833
+    },
+    {
+      "mode": "full",
+      "trainable_params": 494032768,
+      "heldout_pre": 0.5,
+      "heldout_post": 0.958,
+      "heldout_delta": 0.458,
+      "mean_zvf": 0.125,
+      "first3_p": 0.222,
+      "last3_p": 0.305
+    }
+  ],
+  "_source": "colab run --gpu T4 (e2_rerun.log)",
+  "_pillar": "P4"
+}

@@ -1,0 +1,367 @@
+relaunch E6 (OOM-fixed) Sun Jun 21 16:59:04 IST 2026
+[colab] Creating session 'run-b28378'...
+[colab] Session READY (run-b28378). Executing zvf-program/colab-experiments/e6_live_triage.py...
+/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_auth.py:122: UserWarning: 
+Error while fetching `HF_TOKEN` secret value from your vault: 'Requesting secret HF_TOKEN timed out. Secrets can only be fetched when running from the Colab UI.'.
+You are not authenticated with the Hugging Face Hub in this notebook.
+If the error persists, please let us know by opening an issue on GitHub (https://github.com/huggingface/huggingface_hub/issues/new).
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+config.json:   0%|          | 0.00/659 [00:00<?, ?B/s]
+tokenizer_config.json:   0%|          | 0.00/7.30k [00:00<?, ?B/s]
+vocab.json:   0%|          | 0.00/2.78M [00:00<?, ?B/s]
+merges.txt:   0%|          | 0.00/1.67M [00:00<?, ?B/s]
+tokenizer.json:   0%|          | 0.00/7.03M [00:00<?, ?B/s]
+model.safetensors:   0%|          | 0.00/988M [00:00<?, ?B/s]
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
+generation_config.json:   0%|          | 0.00/242 [00:00<?, ?B/s]
+[e6:fixed_G        s0] step= 1 G=4 ZVF=0.50 roll=0.50 r=0.19 roll_used=16 dropped=0
+[e6:fixed_G        s0] step= 2 G=4 ZVF=0.25 roll=0.38 r=0.19 roll_used=32 dropped=0
+[e6:fixed_G        s0] step= 3 G=4 ZVF=0.50 roll=0.42 r=0.12 roll_used=48 dropped=0
+[e6:fixed_G        s0] step= 4 G=4 ZVF=0.25 roll=0.38 r=0.19 roll_used=64 dropped=0
+[e6:fixed_G        s0] step= 5 G=4 ZVF=0.25 roll=0.35 r=0.25 roll_used=80 dropped=0
+[e6:fixed_G        s0] step= 6 G=4 ZVF=0.00 roll=0.25 r=0.38 roll_used=96 dropped=0
+[e6:fixed_G        s0] step= 7 G=4 ZVF=0.00 roll=0.20 r=0.31 roll_used=112 dropped=0
+[e6:fixed_G        s0] step= 8 G=4 ZVF=0.75 roll=0.25 r=0.12 roll_used=128 dropped=0
+[e6:fixed_G        s0] step= 9 G=4 ZVF=0.75 roll=0.35 r=0.06 roll_used=144 dropped=0
+[e6:fixed_G        s0] step=10 G=4 ZVF=0.00 roll=0.30 r=0.38 roll_used=160 dropped=0
+[e6:fixed_G        s0] step=11 G=4 ZVF=0.25 roll=0.35 r=0.31 roll_used=176 dropped=0
+[e6:fixed_G        s0] step=12 G=4 ZVF=0.50 roll=0.45 r=0.12 roll_used=192 dropped=0
+[e6:fixed_G        s0] step=13 G=4 ZVF=0.50 roll=0.40 r=0.44 roll_used=208 dropped=0
+[e6:fixed_G        s0] step=14 G=4 ZVF=0.50 roll=0.35 r=0.12 roll_used=224 dropped=0
+[e6:fixed_G        s0] step=15 G=4 ZVF=0.50 roll=0.45 r=0.19 roll_used=240 dropped=0
+[e6:fixed_G        s0] step=16 G=4 ZVF=0.25 roll=0.45 r=0.31 roll_used=256 dropped=0
+[e6:fixed_G        s0] step=17 G=4 ZVF=0.25 roll=0.40 r=0.25 roll_used=272 dropped=0
+[e6:fixed_G        s0] step=18 G=4 ZVF=0.50 roll=0.40 r=0.12 roll_used=288 dropped=0
+[e6:fixed_G        s0] step=19 G=4 ZVF=0.00 roll=0.30 r=0.38 roll_used=304 dropped=0
+[e6:fixed_G        s0] step=20 G=4 ZVF=0.00 roll=0.20 r=0.31 roll_used=320 dropped=0
+[e6:fixed_G        s0] step=21 G=4 ZVF=0.25 roll=0.20 r=0.19 roll_used=336 dropped=0
+[e6:fixed_G        s0] step=22 G=4 ZVF=0.75 roll=0.30 r=0.19 roll_used=352 dropped=0
+[e6:fixed_G        s0] step=23 G=4 ZVF=0.00 roll=0.20 r=0.44 roll_used=368 dropped=0
+[e6:fixed_G        s0] step=24 G=4 ZVF=0.25 roll=0.25 r=0.56 roll_used=384 dropped=0
+[e6:fixed_G        s0] step=25 G=4 ZVF=0.50 roll=0.35 r=0.25 roll_used=400 dropped=0
+[e6:fixed_G        s0] step=26 G=4 ZVF=0.50 roll=0.40 r=0.50 roll_used=416 dropped=0
+[e6:fixed_G        s0] step=27 G=4 ZVF=0.75 roll=0.40 r=0.12 roll_used=432 dropped=0
+[e6:fixed_G        s0] step=28 G=4 ZVF=0.00 roll=0.40 r=0.44 roll_used=448 dropped=0
+[e6:fixed_G        s0] step=29 G=4 ZVF=0.25 roll=0.40 r=0.50 roll_used=464 dropped=0
+[e6:fixed_G        s0] step=30 G=4 ZVF=0.50 roll=0.40 r=0.19 roll_used=480 dropped=0
+[e6:fixed_G        s0] step=31 G=4 ZVF=0.25 roll=0.35 r=0.38 roll_used=496 dropped=0
+[e6:fixed_G        s0] step=32 G=4 ZVF=0.25 roll=0.25 r=0.31 roll_used=512 dropped=0
+[e6:fixed_G        s0] step=33 G=4 ZVF=0.00 roll=0.25 r=0.56 roll_used=528 dropped=0
+[e6:fixed_G        s0] step=34 G=4 ZVF=0.00 roll=0.20 r=0.44 roll_used=544 dropped=0
+[e6:fixed_G        s0] step=35 G=4 ZVF=0.00 roll=0.10 r=0.50 roll_used=560 dropped=0
+[e6:fixed_G        s0] step=36 G=4 ZVF=0.25 roll=0.10 r=0.31 roll_used=576 dropped=0
+[e6:fixed_G        s0] step=37 G=4 ZVF=0.25 roll=0.10 r=0.62 roll_used=592 dropped=0
+[e6:fixed_G        s0] step=38 G=4 ZVF=0.25 roll=0.15 r=0.19 roll_used=608 dropped=0
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
+[e6:fixed_G        s1] step= 1 G=4 ZVF=0.50 roll=0.50 r=0.12 roll_used=16 dropped=0
+[e6:fixed_G        s1] step= 2 G=4 ZVF=0.00 roll=0.25 r=0.31 roll_used=32 dropped=0
+[e6:fixed_G        s1] step= 3 G=4 ZVF=1.00 roll=0.50 r=0.00 roll_used=48 dropped=0
+[e6:fixed_G        s1] step= 4 G=4 ZVF=0.50 roll=0.50 r=0.12 roll_used=64 dropped=0
+[e6:fixed_G        s1] step= 5 G=4 ZVF=0.75 roll=0.55 r=0.44 roll_used=80 dropped=0
+[e6:fixed_G        s1] step= 6 G=4 ZVF=0.50 roll=0.55 r=0.12 roll_used=96 dropped=0
+[e6:fixed_G        s1] step= 7 G=4 ZVF=0.25 roll=0.60 r=0.19 roll_used=112 dropped=0
+[e6:fixed_G        s1] step= 8 G=4 ZVF=0.00 roll=0.40 r=0.38 roll_used=128 dropped=0
+[e6:fixed_G        s1] step= 9 G=4 ZVF=0.50 roll=0.40 r=0.38 roll_used=144 dropped=0
+[e6:fixed_G        s1] step=10 G=4 ZVF=0.75 roll=0.40 r=0.06 roll_used=160 dropped=0
+[e6:fixed_G        s1] step=11 G=4 ZVF=0.25 roll=0.35 r=0.31 roll_used=176 dropped=0
+[e6:fixed_G        s1] step=12 G=4 ZVF=0.00 roll=0.30 r=0.31 roll_used=192 dropped=0
+[e6:fixed_G        s1] step=13 G=4 ZVF=0.25 roll=0.35 r=0.50 roll_used=208 dropped=0
+[e6:fixed_G        s1] step=14 G=4 ZVF=0.00 roll=0.25 r=0.50 roll_used=224 dropped=0
+[e6:fixed_G        s1] step=15 G=4 ZVF=0.00 roll=0.10 r=0.44 roll_used=240 dropped=0
+[e6:fixed_G        s1] step=16 G=4 ZVF=0.25 roll=0.10 r=0.25 roll_used=256 dropped=0
+[e6:fixed_G        s1] step=17 G=4 ZVF=0.25 roll=0.15 r=0.31 roll_used=272 dropped=0
+[e6:fixed_G        s1] step=18 G=4 ZVF=0.00 roll=0.10 r=0.50 roll_used=288 dropped=0
+[e6:fixed_G        s1] step=19 G=4 ZVF=0.50 roll=0.20 r=0.62 roll_used=304 dropped=0
+[e6:fixed_G        s1] step=20 G=4 ZVF=0.50 roll=0.30 r=0.44 roll_used=320 dropped=0
+[e6:fixed_G        s1] step=21 G=4 ZVF=0.00 roll=0.25 r=0.50 roll_used=336 dropped=0
+[e6:fixed_G        s1] step=22 G=4 ZVF=0.25 roll=0.25 r=0.38 roll_used=352 dropped=0
+[e6:fixed_G        s1] step=23 G=4 ZVF=0.50 roll=0.35 r=0.25 roll_used=368 dropped=0
+[e6:fixed_G        s1] step=24 G=4 ZVF=0.50 roll=0.35 r=0.19 roll_used=384 dropped=0
+[e6:fixed_G        s1] step=25 G=4 ZVF=0.25 roll=0.30 r=0.38 roll_used=400 dropped=0
+[e6:fixed_G        s1] step=26 G=4 ZVF=0.25 roll=0.35 r=0.56 roll_used=416 dropped=0
+[e6:fixed_G        s1] step=27 G=4 ZVF=0.25 roll=0.35 r=0.25 roll_used=432 dropped=0
+[e6:fixed_G        s1] step=28 G=4 ZVF=0.25 roll=0.30 r=0.44 roll_used=448 dropped=0
+[e6:fixed_G        s1] step=29 G=4 ZVF=0.25 roll=0.25 r=0.62 roll_used=464 dropped=0
+[e6:fixed_G        s1] step=30 G=4 ZVF=0.25 roll=0.25 r=0.31 roll_used=480 dropped=0
+[e6:fixed_G        s1] step=31 G=4 ZVF=0.25 roll=0.25 r=0.56 roll_used=496 dropped=0
+[e6:fixed_G        s1] step=32 G=4 ZVF=0.00 roll=0.20 r=0.44 roll_used=512 dropped=0
+[e6:fixed_G        s1] step=33 G=4 ZVF=0.00 roll=0.15 r=0.44 roll_used=528 dropped=0
+[e6:fixed_G        s1] step=34 G=4 ZVF=0.00 roll=0.10 r=0.44 roll_used=544 dropped=0
+[e6:fixed_G        s1] step=35 G=4 ZVF=0.50 roll=0.15 r=0.25 roll_used=560 dropped=0
+[e6:fixed_G        s1] step=36 G=4 ZVF=0.25 roll=0.15 r=0.31 roll_used=576 dropped=0
+[e6:fixed_G        s1] step=37 G=4 ZVF=0.00 roll=0.15 r=0.50 roll_used=592 dropped=0
+[e6:fixed_G        s1] step=38 G=4 ZVF=0.25 roll=0.20 r=0.56 roll_used=608 dropped=0
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
+[e6:adaptiveG      s0] step= 1 G=2 ZVF=0.50 roll=0.50 r=0.25 roll_used=8 dropped=0
+[e6:adaptiveG      s0] step= 2 G=5 ZVF=0.25 roll=0.38 r=0.20 roll_used=28 dropped=0
+[e6:adaptiveG      s0] step= 3 G=4 ZVF=0.25 roll=0.33 r=0.25 roll_used=44 dropped=0
+[e6:adaptiveG      s0] step= 4 G=4 ZVF=0.25 roll=0.31 r=0.19 roll_used=60 dropped=0
+[e6:adaptiveG      s0] step= 5 G=4 ZVF=0.50 roll=0.35 r=0.12 roll_used=76 dropped=0
+[e6:adaptiveG      s0] step= 6 G=4 ZVF=0.75 roll=0.40 r=0.06 roll_used=92 dropped=0
+[e6:adaptiveG      s0] step= 7 G=4 ZVF=0.00 roll=0.35 r=0.25 roll_used=108 dropped=0
+[e6:adaptiveG      s0] step= 8 G=4 ZVF=0.50 roll=0.40 r=0.19 roll_used=124 dropped=0
+[e6:adaptiveG      s0] step= 9 G=4 ZVF=0.25 roll=0.40 r=0.31 roll_used=140 dropped=0
+[e6:adaptiveG      s0] step=10 G=4 ZVF=0.50 roll=0.40 r=0.12 roll_used=156 dropped=0
+[e6:adaptiveG      s0] step=11 G=4 ZVF=0.50 roll=0.35 r=0.12 roll_used=172 dropped=0
+[e6:adaptiveG      s0] step=12 G=4 ZVF=0.50 roll=0.45 r=0.19 roll_used=188 dropped=0
+[e6:adaptiveG      s0] step=13 G=4 ZVF=0.25 roll=0.40 r=0.31 roll_used=204 dropped=0
+[e6:adaptiveG      s0] step=14 G=4 ZVF=0.50 roll=0.45 r=0.19 roll_used=220 dropped=0
+[e6:adaptiveG      s0] step=15 G=4 ZVF=0.25 roll=0.40 r=0.25 roll_used=236 dropped=0
+[e6:adaptiveG      s0] step=16 G=4 ZVF=0.25 roll=0.35 r=0.69 roll_used=252 dropped=0
+[e6:adaptiveG      s0] step=17 G=4 ZVF=0.00 roll=0.25 r=0.31 roll_used=268 dropped=0
+[e6:adaptiveG      s0] step=18 G=3 ZVF=0.00 roll=0.20 r=0.58 roll_used=280 dropped=0
+[e6:adaptiveG      s0] step=19 G=3 ZVF=0.00 roll=0.10 r=0.42 roll_used=292 dropped=0
+[e6:adaptiveG      s0] step=20 G=2 ZVF=0.75 roll=0.20 r=0.12 roll_used=300 dropped=0
+[e6:adaptiveG      s0] step=21 G=3 ZVF=0.25 roll=0.20 r=0.42 roll_used=312 dropped=0
+[e6:adaptiveG      s0] step=22 G=3 ZVF=0.50 roll=0.30 r=0.25 roll_used=324 dropped=0
+[e6:adaptiveG      s0] step=23 G=4 ZVF=0.00 roll=0.30 r=0.50 roll_used=340 dropped=0
+[e6:adaptiveG      s0] step=24 G=4 ZVF=0.00 roll=0.30 r=0.69 roll_used=356 dropped=0
+[e6:adaptiveG      s0] step=25 G=4 ZVF=0.00 roll=0.15 r=0.44 roll_used=372 dropped=0
+[e6:adaptiveG      s0] step=26 G=3 ZVF=0.50 roll=0.20 r=0.25 roll_used=384 dropped=0
+[e6:adaptiveG      s0] step=27 G=3 ZVF=0.00 roll=0.10 r=0.33 roll_used=396 dropped=0
+[e6:adaptiveG      s0] step=28 G=2 ZVF=1.00 roll=0.30 r=0.00 roll_used=404 dropped=0
+[e6:adaptiveG      s0] step=29 G=4 ZVF=0.25 roll=0.35 r=0.31 roll_used=420 dropped=0
+[e6:adaptiveG      s0] step=30 G=4 ZVF=0.00 roll=0.35 r=0.56 roll_used=436 dropped=0
+[e6:adaptiveG      s0] step=31 G=4 ZVF=0.25 roll=0.30 r=0.31 roll_used=452 dropped=0
+[e6:adaptiveG      s0] step=32 G=4 ZVF=0.00 roll=0.30 r=0.69 roll_used=468 dropped=0
+[e6:adaptiveG      s0] step=33 G=4 ZVF=0.00 roll=0.10 r=0.44 roll_used=484 dropped=0
+[e6:adaptiveG      s0] step=34 G=2 ZVF=0.50 roll=0.15 r=0.25 roll_used=492 dropped=0
+[e6:adaptiveG      s0] step=35 G=3 ZVF=0.25 roll=0.20 r=0.42 roll_used=504 dropped=0
+[e6:adaptiveG      s0] step=36 G=3 ZVF=0.00 roll=0.15 r=0.42 roll_used=516 dropped=0
+[e6:adaptiveG      s0] step=37 G=3 ZVF=0.25 roll=0.20 r=0.67 roll_used=528 dropped=0
+[e6:adaptiveG      s0] step=38 G=3 ZVF=0.25 roll=0.25 r=0.67 roll_used=540 dropped=0
+[e6:adaptiveG      s0] step=39 G=3 ZVF=0.00 roll=0.15 r=0.58 roll_used=552 dropped=0
+[e6:adaptiveG      s0] step=40 G=3 ZVF=0.25 roll=0.15 r=0.33 roll_used=564 dropped=0
+[e6:adaptiveG      s0] step=41 G=3 ZVF=0.00 roll=0.15 r=0.42 roll_used=576 dropped=0
+[e6:adaptiveG      s0] step=42 G=3 ZVF=0.00 roll=0.10 r=0.42 roll_used=588 dropped=0
+[e6:adaptiveG      s0] step=43 G=2 ZVF=0.50 roll=0.15 r=0.50 roll_used=596 dropped=0
+[e6:adaptiveG      s0] step=44 G=3 ZVF=0.00 roll=0.15 r=0.58 roll_used=608 dropped=0
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
+[e6:adaptiveG      s1] step= 1 G=2 ZVF=0.50 roll=0.50 r=0.25 roll_used=8 dropped=0
+[e6:adaptiveG      s1] step= 2 G=5 ZVF=0.50 roll=0.50 r=0.10 roll_used=28 dropped=0
+[e6:adaptiveG      s1] step= 3 G=5 ZVF=0.75 roll=0.58 r=0.05 roll_used=48 dropped=0
+[e6:adaptiveG      s1] step= 4 G=5 ZVF=0.25 roll=0.50 r=0.30 roll_used=68 dropped=0
+[e6:adaptiveG      s1] step= 5 G=5 ZVF=0.00 roll=0.40 r=0.35 roll_used=88 dropped=0
+[e6:adaptiveG      s1] step= 6 G=4 ZVF=0.25 roll=0.35 r=0.19 roll_used=104 dropped=0
+[e6:adaptiveG      s1] step= 7 G=4 ZVF=0.25 roll=0.30 r=0.19 roll_used=120 dropped=0
+[e6:adaptiveG      s1] step= 8 G=4 ZVF=0.25 roll=0.20 r=0.25 roll_used=136 dropped=0
+[e6:adaptiveG      s1] step= 9 G=3 ZVF=0.50 roll=0.25 r=0.25 roll_used=148 dropped=0
+[e6:adaptiveG      s1] step=10 G=3 ZVF=0.50 roll=0.35 r=0.17 roll_used=160 dropped=0
+[e6:adaptiveG      s1] step=11 G=4 ZVF=0.50 roll=0.40 r=0.12 roll_used=176 dropped=0
+[e6:adaptiveG      s1] step=12 G=4 ZVF=0.00 roll=0.35 r=0.38 roll_used=192 dropped=0
+[e6:adaptiveG      s1] step=13 G=4 ZVF=0.00 roll=0.30 r=0.25 roll_used=208 dropped=0
+[e6:adaptiveG      s1] step=14 G=4 ZVF=0.50 roll=0.30 r=0.12 roll_used=224 dropped=0
+[e6:adaptiveG      s1] step=15 G=4 ZVF=0.25 roll=0.25 r=0.38 roll_used=240 dropped=0
+[e6:adaptiveG      s1] step=16 G=3 ZVF=0.50 roll=0.25 r=0.17 roll_used=252 dropped=0
+[e6:adaptiveG      s1] step=17 G=3 ZVF=0.00 roll=0.25 r=0.50 roll_used=264 dropped=0
+[e6:adaptiveG      s1] step=18 G=3 ZVF=0.25 roll=0.30 r=0.33 roll_used=276 dropped=0
+[e6:adaptiveG      s1] step=19 G=4 ZVF=0.75 roll=0.35 r=0.06 roll_used=292 dropped=0
+[e6:adaptiveG      s1] step=20 G=4 ZVF=0.00 roll=0.30 r=0.50 roll_used=308 dropped=0
+[e6:adaptiveG      s1] step=21 G=4 ZVF=0.50 roll=0.30 r=0.44 roll_used=324 dropped=0
+[e6:adaptiveG      s1] step=22 G=4 ZVF=0.00 roll=0.30 r=0.38 roll_used=340 dropped=0
+[e6:adaptiveG      s1] step=23 G=4 ZVF=0.50 roll=0.35 r=0.12 roll_used=356 dropped=0
+[e6:adaptiveG      s1] step=24 G=4 ZVF=0.75 roll=0.35 r=0.12 roll_used=372 dropped=0
+[e6:adaptiveG      s1] step=25 G=4 ZVF=0.75 roll=0.50 r=0.31 roll_used=388 dropped=0
+[e6:adaptiveG      s1] step=26 G=5 ZVF=0.00 roll=0.40 r=0.55 roll_used=408 dropped=0
+[e6:adaptiveG      s1] step=27 G=4 ZVF=0.25 roll=0.45 r=0.38 roll_used=424 dropped=0
+[e6:adaptiveG      s1] step=28 G=4 ZVF=0.25 roll=0.40 r=0.44 roll_used=440 dropped=0
+[e6:adaptiveG      s1] step=29 G=4 ZVF=0.50 roll=0.35 r=0.50 roll_used=456 dropped=0
+[e6:adaptiveG      s1] step=30 G=4 ZVF=1.00 roll=0.40 r=0.50 roll_used=472 dropped=0
+[e6:adaptiveG      s1] step=31 G=4 ZVF=0.00 roll=0.40 r=0.50 roll_used=488 dropped=0
+[e6:adaptiveG      s1] step=32 G=4 ZVF=0.25 roll=0.40 r=0.50 roll_used=504 dropped=0
+[e6:adaptiveG      s1] step=33 G=4 ZVF=0.25 roll=0.40 r=0.38 roll_used=520 dropped=0
+[e6:adaptiveG      s1] step=34 G=4 ZVF=0.25 roll=0.35 r=0.38 roll_used=536 dropped=0
+[e6:adaptiveG      s1] step=35 G=4 ZVF=0.25 roll=0.20 r=0.31 roll_used=552 dropped=0
+[e6:adaptiveG      s1] step=36 G=3 ZVF=0.25 roll=0.25 r=0.42 roll_used=564 dropped=0
+[e6:adaptiveG      s1] step=37 G=3 ZVF=0.75 roll=0.35 r=0.67 roll_used=576 dropped=0
+[e6:adaptiveG      s1] step=38 G=4 ZVF=0.50 roll=0.40 r=0.75 roll_used=592 dropped=0
+[e6:adaptiveG      s1] step=39 G=4 ZVF=0.00 roll=0.35 r=0.44 roll_used=608 dropped=0
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
+[e6:adaptiveG_drop s0] step= 1 G=2 ZVF=0.50 roll=0.50 r=0.25 roll_used=8 dropped=0
+[e6:adaptiveG_drop s0] step= 2 G=5 ZVF=0.25 roll=0.38 r=0.20 roll_used=28 dropped=0
+[e6:adaptiveG_drop s0] step= 3 G=4 ZVF=0.25 roll=0.33 r=0.25 roll_used=44 dropped=0
+[e6:adaptiveG_drop s0] step= 4 G=4 ZVF=0.25 roll=0.31 r=0.19 roll_used=60 dropped=0
+[e6:adaptiveG_drop s0] step= 5 G=4 ZVF=0.50 roll=0.35 r=0.12 roll_used=76 dropped=0
+[e6:adaptiveG_drop s0] step= 6 G=4 ZVF=0.75 roll=0.40 r=0.06 roll_used=92 dropped=0
+[e6:adaptiveG_drop s0] step= 7 G=4 ZVF=0.00 roll=0.35 r=0.25 roll_used=108 dropped=0
+[e6:adaptiveG_drop s0] step= 8 G=4 ZVF=0.50 roll=0.40 r=0.19 roll_used=124 dropped=0
+[e6:adaptiveG_drop s0] step= 9 G=4 ZVF=0.25 roll=0.40 r=0.31 roll_used=140 dropped=0
+[e6:adaptiveG_drop s0] step=10 G=4 ZVF=0.50 roll=0.40 r=0.12 roll_used=156 dropped=0
+[e6:adaptiveG_drop s0] step=11 G=4 ZVF=0.50 roll=0.35 r=0.12 roll_used=172 dropped=0
+[e6:adaptiveG_drop s0] step=12 G=4 ZVF=0.50 roll=0.45 r=0.19 roll_used=188 dropped=0
+[e6:adaptiveG_drop s0] step=13 G=4 ZVF=0.25 roll=0.40 r=0.31 roll_used=204 dropped=0
+[e6:adaptiveG_drop s0] step=14 G=4 ZVF=0.50 roll=0.45 r=0.19 roll_used=220 dropped=0
+[e6:adaptiveG_drop s0] step=15 G=4 ZVF=0.25 roll=0.40 r=0.25 roll_used=236 dropped=0
+[e6:adaptiveG_drop s0] step=16 G=4 ZVF=0.25 roll=0.35 r=0.69 roll_used=252 dropped=1
+[e6:adaptiveG_drop s0] step=17 G=4 ZVF=0.00 roll=0.25 r=0.31 roll_used=268 dropped=1
+[e6:adaptiveG_drop s0] step=18 G=3 ZVF=0.00 roll=0.20 r=0.58 roll_used=280 dropped=1
+[e6:adaptiveG_drop s0] step=19 G=3 ZVF=0.00 roll=0.10 r=0.42 roll_used=292 dropped=1
+[e6:adaptiveG_drop s0] step=20 G=2 ZVF=0.75 roll=0.20 r=0.12 roll_used=300 dropped=1
+[e6:adaptiveG_drop s0] step=21 G=3 ZVF=0.75 roll=0.30 r=0.33 roll_used=312 dropped=1
+[e6:adaptiveG_drop s0] step=22 G=4 ZVF=0.50 roll=0.40 r=0.31 roll_used=328 dropped=1
+[e6:adaptiveG_drop s0] step=23 G=4 ZVF=0.25 roll=0.45 r=0.44 roll_used=344 dropped=1
+[e6:adaptiveG_drop s0] step=24 G=4 ZVF=0.00 roll=0.45 r=0.44 roll_used=360 dropped=1
+[e6:adaptiveG_drop s0] step=25 G=4 ZVF=0.50 roll=0.40 r=0.19 roll_used=376 dropped=1
+[e6:adaptiveG_drop s0] step=26 G=4 ZVF=0.25 roll=0.30 r=0.25 roll_used=392 dropped=1
+[e6:adaptiveG_drop s0] step=27 G=4 ZVF=0.25 roll=0.25 r=0.38 roll_used=408 dropped=1
+[e6:adaptiveG_drop s0] step=28 G=3 ZVF=0.50 roll=0.30 r=0.25 roll_used=420 dropped=1
+[e6:adaptiveG_drop s0] step=29 G=4 ZVF=0.00 roll=0.30 r=0.50 roll_used=436 dropped=1
+[e6:adaptiveG_drop s0] step=30 G=4 ZVF=0.25 roll=0.25 r=0.38 roll_used=452 dropped=1
+[e6:adaptiveG_drop s0] step=31 G=3 ZVF=0.25 roll=0.25 r=0.42 roll_used=464 dropped=1
+[e6:adaptiveG_drop s0] step=32 G=3 ZVF=0.00 roll=0.20 r=0.50 roll_used=476 dropped=1
+[e6:adaptiveG_drop s0] step=33 G=3 ZVF=1.00 roll=0.30 r=0.25 roll_used=488 dropped=2
+[e6:adaptiveG_drop s0] step=34 G=4 ZVF=0.00 roll=0.30 r=0.44 roll_used=504 dropped=2
+[e6:adaptiveG_drop s0] step=35 G=4 ZVF=0.00 roll=0.25 r=0.62 roll_used=520 dropped=2
+[e6:adaptiveG_drop s0] step=36 G=3 ZVF=0.25 roll=0.25 r=0.50 roll_used=532 dropped=2
+[e6:adaptiveG_drop s0] step=37 G=3 ZVF=0.25 roll=0.30 r=0.33 roll_used=544 dropped=2
+[e6:adaptiveG_drop s0] step=38 G=4 ZVF=0.00 roll=0.10 r=0.38 roll_used=560 dropped=2
+[e6:adaptiveG_drop s0] step=39 G=2 ZVF=0.50 roll=0.20 r=0.75 roll_used=568 dropped=2
+[e6:adaptiveG_drop s0] step=40 G=3 ZVF=0.00 roll=0.20 r=0.42 roll_used=580 dropped=2
+[e6:adaptiveG_drop s0] step=41 G=3 ZVF=0.25 roll=0.20 r=0.42 roll_used=592 dropped=2
+[e6:adaptiveG_drop s0] step=42 G=3 ZVF=0.50 roll=0.25 r=0.50 roll_used=604 dropped=2
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
+[e6:adaptiveG_drop s1] step= 1 G=2 ZVF=0.50 roll=0.50 r=0.25 roll_used=8 dropped=0
+[e6:adaptiveG_drop s1] step= 2 G=5 ZVF=0.50 roll=0.50 r=0.10 roll_used=28 dropped=0
+[e6:adaptiveG_drop s1] step= 3 G=5 ZVF=0.75 roll=0.58 r=0.05 roll_used=48 dropped=0
+[e6:adaptiveG_drop s1] step= 4 G=5 ZVF=0.25 roll=0.50 r=0.30 roll_used=68 dropped=0
+[e6:adaptiveG_drop s1] step= 5 G=5 ZVF=0.00 roll=0.40 r=0.35 roll_used=88 dropped=0
+[e6:adaptiveG_drop s1] step= 6 G=4 ZVF=0.25 roll=0.35 r=0.19 roll_used=104 dropped=0
+[e6:adaptiveG_drop s1] step= 7 G=4 ZVF=0.25 roll=0.30 r=0.19 roll_used=120 dropped=0
+[e6:adaptiveG_drop s1] step= 8 G=4 ZVF=0.25 roll=0.20 r=0.25 roll_used=136 dropped=0
+[e6:adaptiveG_drop s1] step= 9 G=3 ZVF=0.50 roll=0.25 r=0.25 roll_used=148 dropped=0
+[e6:adaptiveG_drop s1] step=10 G=3 ZVF=0.50 roll=0.35 r=0.17 roll_used=160 dropped=0
+[e6:adaptiveG_drop s1] step=11 G=4 ZVF=0.50 roll=0.40 r=0.12 roll_used=176 dropped=0
+[e6:adaptiveG_drop s1] step=12 G=4 ZVF=0.00 roll=0.35 r=0.38 roll_used=192 dropped=0
+[e6:adaptiveG_drop s1] step=13 G=4 ZVF=0.00 roll=0.30 r=0.25 roll_used=208 dropped=0
+[e6:adaptiveG_drop s1] step=14 G=4 ZVF=0.50 roll=0.30 r=0.12 roll_used=224 dropped=0
+[e6:adaptiveG_drop s1] step=15 G=4 ZVF=0.25 roll=0.25 r=0.38 roll_used=240 dropped=0
+[e6:adaptiveG_drop s1] step=16 G=3 ZVF=0.50 roll=0.25 r=0.17 roll_used=252 dropped=0
+[e6:adaptiveG_drop s1] step=17 G=3 ZVF=0.00 roll=0.25 r=0.50 roll_used=264 dropped=0
+[e6:adaptiveG_drop s1] step=18 G=3 ZVF=0.25 roll=0.30 r=0.33 roll_used=276 dropped=0
+[e6:adaptiveG_drop s1] step=19 G=4 ZVF=0.75 roll=0.35 r=0.06 roll_used=292 dropped=0
+[e6:adaptiveG_drop s1] step=20 G=4 ZVF=0.00 roll=0.30 r=0.50 roll_used=308 dropped=0
+[e6:adaptiveG_drop s1] step=21 G=4 ZVF=0.50 roll=0.30 r=0.44 roll_used=324 dropped=0
+[e6:adaptiveG_drop s1] step=22 G=4 ZVF=0.00 roll=0.30 r=0.38 roll_used=340 dropped=0
+[e6:adaptiveG_drop s1] step=23 G=4 ZVF=0.50 roll=0.35 r=0.12 roll_used=356 dropped=0
+[e6:adaptiveG_drop s1] step=24 G=4 ZVF=0.75 roll=0.35 r=0.12 roll_used=372 dropped=0
+[e6:adaptiveG_drop s1] step=25 G=4 ZVF=0.75 roll=0.50 r=0.31 roll_used=388 dropped=0
+[e6:adaptiveG_drop s1] step=26 G=5 ZVF=0.00 roll=0.40 r=0.55 roll_used=408 dropped=0
+[e6:adaptiveG_drop s1] step=27 G=4 ZVF=0.25 roll=0.45 r=0.38 roll_used=424 dropped=0
+[e6:adaptiveG_drop s1] step=28 G=4 ZVF=0.25 roll=0.40 r=0.44 roll_used=440 dropped=0
+[e6:adaptiveG_drop s1] step=29 G=4 ZVF=0.50 roll=0.35 r=0.50 roll_used=456 dropped=0
+[e6:adaptiveG_drop s1] step=30 G=4 ZVF=1.00 roll=0.40 r=0.50 roll_used=472 dropped=1
+[e6:adaptiveG_drop s1] step=31 G=4 ZVF=0.00 roll=0.40 r=0.50 roll_used=488 dropped=1
+[e6:adaptiveG_drop s1] step=32 G=4 ZVF=0.25 roll=0.40 r=0.50 roll_used=504 dropped=1
+[e6:adaptiveG_drop s1] step=33 G=4 ZVF=0.25 roll=0.40 r=0.38 roll_used=520 dropped=1
+[e6:adaptiveG_drop s1] step=34 G=4 ZVF=0.25 roll=0.35 r=0.38 roll_used=536 dropped=1
+[e6:adaptiveG_drop s1] step=35 G=4 ZVF=0.25 roll=0.20 r=0.31 roll_used=552 dropped=1
+[e6:adaptiveG_drop s1] step=36 G=3 ZVF=0.50 roll=0.30 r=0.50 roll_used=564 dropped=1
+[e6:adaptiveG_drop s1] step=37 G=4 ZVF=0.50 roll=0.35 r=0.25 roll_used=580 dropped=1
+[e6:adaptiveG_drop s1] step=38 G=4 ZVF=0.00 roll=0.30 r=0.62 roll_used=596 dropped=1
+[e6:adaptiveG_drop s1] step=39 G=4 ZVF=0.25 roll=0.30 r=0.31 roll_used=612 dropped=2
+E6_RESULT {"experiment": "E6_live_triage", "model": "Qwen/Qwen2.5-0.5B-Instruct", "seeds": [0, 1], "budget_rollouts": 600, "by_arm": {"fixed_G": {"mean_heldout_delta": 0.325, "mean_zvf": 0.293, "mean_rollouts": 608, "mean_opt_steps": 38, "mean_dropped": 0}, "adaptiveG": {"mean_heldout_delta": 0.325, "mean_zvf": 0.303, "mean_rollouts": 608, "mean_opt_steps": 41.5, "mean_dropped": 0}, "adaptiveG_drop": {"mean_heldout_delta": 0.3, "mean_zvf": 0.325, "mean_rollouts": 608, "mean_opt_steps": 40.5, "mean_dropped": 2}}, "runs": [{"arm": "fixed_G", "seed": 0, "heldout_pre": 0.4, "heldout_post": 0.75, "heldout_delta": 0.35, "mean_zvf": 0.303, "total_rollouts": 608, "opt_steps": 38, "dropped": 0, "zvf_suppress_step": 35, "auto_stopped": false}, {"arm": "fixed_G", "seed": 1, "heldout_pre": 0.7, "heldout_post": 1.0, "heldout_delta": 0.3, "mean_zvf": 0.283, "total_rollouts": 608, "opt_steps": 38, "dropped": 0, "zvf_suppress_step": 15, "auto_stopped": false}, {"arm": "adaptiveG", "seed": 0, "heldout_pre": 0.4, "heldout_post": 0.9, "heldout_delta": 0.5, "mean_zvf": 0.261, "total_rollouts": 608, "opt_steps": 44, "dropped": 0, "zvf_suppress_step": 19, "auto_stopped": false}, {"arm": "adaptiveG", "seed": 1, "heldout_pre": 0.7, "heldout_post": 0.85, "heldout_delta": 0.15, "mean_zvf": 0.346, "total_rollouts": 608, "opt_steps": 39, "dropped": 0, "zvf_suppress_step": null, "auto_stopped": false}, {"arm": "adaptiveG_drop", "seed": 0, "heldout_pre": 0.4, "heldout_post": 0.9, "heldout_delta": 0.5, "mean_zvf": 0.31, "total_rollouts": 604, "opt_steps": 42, "dropped": 2, "zvf_suppress_step": 19, "auto_stopped": false}, {"arm": "adaptiveG_drop", "seed": 1, "heldout_pre": 0.7, "heldout_post": 0.8, "heldout_delta": 0.1, "mean_zvf": 0.34, "total_rollouts": 612, "opt_steps": 39, "dropped": 2, "zvf_suppress_step": null, "auto_stopped": false}]}
+[colab] Stopping session 'run-b28378'...
+[colab] Session terminated.
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/arvind/.local/share/uv/tools/google-colab-cli/lib/python3.14/site-pac │
+│ kages/jupyter_kernel_client/wsclient.py:1353 in _recv_reply                  │
+│                                                                              │
+│   1350 │   │   │   │   if channel == "control":                              │
+│   1351 │   │   │   │   │   reply =                                           │
+│        self.control_channel.get_msg(timeout=timeout)                         │
+│   1352 │   │   │   │   else:                                                 │
+│ ❱ 1353 │   │   │   │   │   reply =                                           │
+│        self.shell_channel.get_msg(timeout=timeout)                           │
+│   1354 │   │   │   except queue.Empty as e:                                  │
+│   1355 │   │   │   │   msg = "Timeout waiting for reply"                     │
+│   1356 │   │   │   │   raise TimeoutError(msg) from e                        │
+│                                                                              │
+│ /Users/arvind/.local/share/uv/tools/google-colab-cli/lib/python3.14/site-pac │
+│ kages/jupyter_kernel_client/wsclient.py:411 in get_msg                       │
+│                                                                              │
+│    408 │   │   ------                                                        │
+│    409 │   │   Empty exception if no message is received before the timeout. │
+│    410 │   │   """                                                           │
+│ ❱  411 │   │   return self._messages.get(timeout=timeout)                    │
+│    412 │                                                                     │
+│    413 │   def get_msgs(self) -> list[dict[str, t.Any]]:                     │
+│    414 │   │   """Get all available messages.                                │
+│                                                                              │
+│ /Users/arvind/.local/share/uv/python/cpython-3.14.3-macos-aarch64-none/lib/p │
+│ ython3.14/queue.py:209 in get                                                │
+│                                                                              │
+│   206 │   │   │   │   while not self._qsize():                               │
+│   207 │   │   │   │   │   remaining = endtime - time()                       │
+│   208 │   │   │   │   │   if remaining <= 0.0:                               │
+│ ❱ 209 │   │   │   │   │   │   raise Empty                                    │
+│   210 │   │   │   │   │   self.not_empty.wait(remaining)                     │
+│   211 │   │   │   │   │   if self.is_shutdown and not self._qsize():         │
+│   212 │   │   │   │   │   │   raise ShutDown                                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Empty
+
+The above exception was the direct cause of the following exception:
+
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/arvind/.local/share/uv/tools/google-colab-cli/lib/python3.14/site-pac │
+│ kages/colab_cli/commands/run.py:392 in run_command                           │
+│                                                                              │
+│   389 │   │   state.store.add(s)                                             │
+│   390 │   │                                                                  │
+│   391 │   │   try:                                                           │
+│ ❱ 392 │   │   │   outputs = runtime.execute_code(                            │
+│   393 │   │   │   │   payload, output_hook=_make_run_output_hook(),          │
+│       timeout=timeout                                                        │
+│   394 │   │   │   )                                                          │
+│   395 │   │   except Exception:                                              │
+│                                                                              │
+│ /Users/arvind/.local/share/uv/tools/google-colab-cli/lib/python3.14/site-pac │
+│ kages/colab_cli/runtime.py:221 in execute_code                               │
+│                                                                              │
+│   218 │   │   │   │   │   │   if idx < len(outputs):                         │
+│   219 │   │   │   │   │   │   │   output_hook(outputs[idx])                  │
+│   220 │   │   │                                                              │
+│ ❱ 221 │   │   │   reply = self.kernel_client.execute_interactive(            │
+│   222 │   │   │   │   code, output_hook=wrapped_output_hook, **kwargs        │
+│   223 │   │   │   )                                                          │
+│   224 │   │   │   # execute_interactive returns the raw reply message        │
+│                                                                              │
+│ /Users/arvind/.local/share/uv/tools/google-colab-cli/lib/python3.14/site-pac │
+│ kages/jupyter_kernel_client/client.py:364 in execute_interactive             │
+│                                                                              │
+│   361 │   │   │   The reply message for this request                         │
+│   362 │   │   """                                                            │
+│   363 │   │   self._set_variables(variables)                                 │
+│ ❱ 364 │   │   return self._manager.client.execute_interactive(               │
+│   365 │   │   │   code,                                                      │
+│   366 │   │   │   silent=silent,                                             │
+│   367 │   │   │   store_history=store_history,                               │
+│                                                                              │
+│ /Users/arvind/.local/share/uv/tools/google-colab-cli/lib/python3.14/site-pac │
+│ kages/jupyter_kernel_client/wsclient.py:1112 in execute_interactive          │
+│                                                                              │
+│   1109 │   │   │   # output is done, get the reply                           │
+│   1110 │   │   │   if timeout is not None:                                   │
+│   1111 │   │   │   │   timeout = max(0, deadline - time.monotonic())         │
+│ ❱ 1112 │   │   │   return self._recv_reply(msg_id, timeout=timeout)          │
+│   1113 │                                                                     │
+│   1114 │   def is_alive(self) -> bool:                                       │
+│   1115 │   │   """Is the kernel process still running?"""                    │
+│                                                                              │
+│ /Users/arvind/.local/share/uv/tools/google-colab-cli/lib/python3.14/site-pac │
+│ kages/jupyter_kernel_client/wsclient.py:1356 in _recv_reply                  │
+│                                                                              │
+│   1353 │   │   │   │   │   reply =                                           │
+│        self.shell_channel.get_msg(timeout=timeout)                           │
+│   1354 │   │   │   except queue.Empty as e:                                  │
+│   1355 │   │   │   │   msg = "Timeout waiting for reply"                     │
+│ ❱ 1356 │   │   │   │   raise TimeoutError(msg) from e                        │
+│   1357 │   │   │   if reply["parent_header"].get("msg_id") != msg_id:        │
+│   1358 │   │   │   │   self.log.debug("Ignoring message not from request:    │
+│        %s", msg_id)                                                          │
+│   1359 │   │   │   │   continue                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+TimeoutError: Timeout waiting for reply
+=== E6 EXIT 0 Sun Jun 21 17:36:17 IST 2026 ===

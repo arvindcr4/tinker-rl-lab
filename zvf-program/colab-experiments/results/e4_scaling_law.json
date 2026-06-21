@@ -1,0 +1,74 @@
+{
+  "experiment": "E4_scaling_law",
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "seed": 0,
+  "n_prompts": 40,
+  "n_pool": 64,
+  "n_groups_per_K": 256,
+  "mean_p_hat": 0.1059,
+  "ks": [
+    2,
+    4,
+    8,
+    16,
+    32
+  ],
+  "by_K": {
+    "2": {
+      "emp_zvf": 0.8055,
+      "pred_zvf": 0.8136,
+      "emp_ci95": [
+        0.7858,
+        0.8263
+      ],
+      "abs_err": 0.0081
+    },
+    "4": {
+      "emp_zvf": 0.6468,
+      "pred_zvf": 0.6462,
+      "emp_ci95": [
+        0.6159,
+        0.6789
+      ],
+      "abs_err": 0.0006
+    },
+    "8": {
+      "emp_zvf": 0.4343,
+      "pred_zvf": 0.4284,
+      "emp_ci95": [
+        0.3933,
+        0.4727
+      ],
+      "abs_err": 0.0058
+    },
+    "16": {
+      "emp_zvf": 0.1931,
+      "pred_zvf": 0.2018,
+      "emp_ci95": [
+        0.1566,
+        0.2296
+      ],
+      "abs_err": 0.0087
+    },
+    "32": {
+      "emp_zvf": 0.0575,
+      "pred_zvf": 0.0557,
+      "emp_ci95": [
+        0.0366,
+        0.0825
+      ],
+      "abs_err": 0.0019
+    }
+  },
+  "closed_form_r2": 0.9995,
+  "worked_example_K8_pred_at_p0.5": 0.00781,
+  "precision_side_check_K8": {
+    "bf16_zvf": 0.3863,
+    "fp32_zvf": 0.3512,
+    "delta_zvf_fp32_minus_bf16": -0.0352,
+    "bf16_p_hat": 0.1187,
+    "fp32_p_hat": 0.1203
+  },
+  "_source": "colab run --gpu T4 (e4_run.log)",
+  "_pillar": "P1"
+}

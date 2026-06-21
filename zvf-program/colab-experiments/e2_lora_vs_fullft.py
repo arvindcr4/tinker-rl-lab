@@ -10,7 +10,9 @@ ONLY the LoRA<->full axis, then compare:
 Run:  colab run --gpu T4 --timeout 1200 e2_lora_vs_fullft.py
 """
 import json, re, random, statistics, subprocess, sys
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "peft"], check=False)
+# peft pulls torchao as a dep; the default 0.10.0 is import-incompatible with the
+# VM's torch (needs >=0.16). Install/upgrade torchao explicitly to avoid the crash.
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U", "peft", "torchao>=0.16"], check=False)
 import torch, torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model

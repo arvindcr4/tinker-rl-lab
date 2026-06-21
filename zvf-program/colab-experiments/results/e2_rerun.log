@@ -1,0 +1,57 @@
+launching E2 on T4 at Sun Jun 21 16:21:16 IST 2026
+[colab] Creating session 'run-41c73f'...
+[colab] Session READY (run-41c73f). Executing zvf-program/colab-experiments/e2_lora_vs_fullft.py...
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so
+/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_auth.py:122: UserWarning: 
+Error while fetching `HF_TOKEN` secret value from your vault: 'Requesting secret HF_TOKEN timed out. Secrets can only be fetched when running from the Colab UI.'.
+You are not authenticated with the Hugging Face Hub in this notebook.
+If the error persists, please let us know by opening an issue on GitHub (https://github.com/huggingface/huggingface_hub/issues/new).
+  warnings.warn(
+config.json:   0%|          | 0.00/659 [00:00<?, ?B/s]
+tokenizer_config.json:   0%|          | 0.00/7.30k [00:00<?, ?B/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+vocab.json:   0%|          | 0.00/2.78M [00:00<?, ?B/s]
+merges.txt:   0%|          | 0.00/1.67M [00:00<?, ?B/s]
+tokenizer.json:   0%|          | 0.00/7.03M [00:00<?, ?B/s]
+model.safetensors:   0%|          | 0.00/988M [00:00<?, ?B/s]
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
+generation_config.json:   0%|          | 0.00/242 [00:00<?, ?B/s]
+[e2:lora] step= 1 p=0.12 ZVF=0.50
+[e2:lora] step= 2 p=0.29 ZVF=0.00
+[e2:lora] step= 3 p=0.46 ZVF=0.00
+[e2:lora] step= 4 p=0.42 ZVF=0.00
+[e2:lora] step= 5 p=0.54 ZVF=0.00
+[e2:lora] step= 6 p=0.42 ZVF=0.00
+[e2:lora] step= 7 p=0.54 ZVF=0.00
+[e2:lora] step= 8 p=0.50 ZVF=0.00
+[e2:lora] step= 9 p=0.62 ZVF=0.00
+[e2:lora] step=10 p=0.54 ZVF=0.00
+[e2:lora] step=11 p=0.75 ZVF=0.00
+[e2:lora] step=12 p=0.67 ZVF=0.25
+[e2:lora] step=13 p=0.79 ZVF=0.25
+[e2:lora] step=14 p=0.75 ZVF=0.00
+[e2:lora] step=15 p=0.92 ZVF=0.75
+[e2:lora] step=16 p=0.83 ZVF=0.25
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
+[e2:full] step= 1 p=0.12 ZVF=0.50
+[e2:full] step= 2 p=0.25 ZVF=0.25
+[e2:full] step= 3 p=0.29 ZVF=0.00
+[e2:full] step= 4 p=0.21 ZVF=0.25
+[e2:full] step= 5 p=0.54 ZVF=0.00
+[e2:full] step= 6 p=0.46 ZVF=0.25
+[e2:full] step= 7 p=0.25 ZVF=0.00
+[e2:full] step= 8 p=0.33 ZVF=0.00
+[e2:full] step= 9 p=0.58 ZVF=0.00
+[e2:full] step=10 p=0.21 ZVF=0.00
+[e2:full] step=11 p=0.33 ZVF=0.25
+[e2:full] step=12 p=0.29 ZVF=0.00
+[e2:full] step=13 p=0.25 ZVF=0.25
+[e2:full] step=14 p=0.33 ZVF=0.00
+[e2:full] step=15 p=0.33 ZVF=0.00
+[e2:full] step=16 p=0.25 ZVF=0.25
+E2_RESULT {"experiment": "E2_lora_vs_fullft", "model": "Qwen/Qwen2.5-0.5B-Instruct", "seed": 0, "steps": 16, "arms": [{"mode": "lora", "trainable_params": 2162688, "heldout_pre": 0.5, "heldout_post": 1.0, "heldout_delta": 0.5, "mean_zvf": 0.125, "first3_p": 0.292, "last3_p": 0.833}, {"mode": "full", "trainable_params": 494032768, "heldout_pre": 0.5, "heldout_post": 0.958, "heldout_delta": 0.458, "mean_zvf": 0.125, "first3_p": 0.222, "last3_p": 0.305}]}
+[colab] Stopping session 'run-41c73f'...
+[colab] Session terminated.
+=== E2 EXIT: 0 at Sun Jun 21 16:31:42 IST 2026 ===

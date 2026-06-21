@@ -27,4 +27,4 @@ All-in-one upload archive:
 
 Plagiarism check instruction:
 
-Email the document to `pesu.eclib@pes.edu` and keep `anwesh@greatlearning.in` and `sudha.bg@greatlearning.in` in CC requesting plagiarism check before submission.
+Email the document to `[redacted]` and keep `[redacted]` and `[redacted]` in CC requesting plagiarism check before submission.

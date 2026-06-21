@@ -1,0 +1,45 @@
+% =============================================================================
+% Conclusion — workshop variant. Reframed per GPT-5.5 Pro v5 review (sec. C
+% Move D): replaces vague open-question prose with 3-5 SHARP, CONCRETE
+% workshop questions that reviewers/attendees could discuss.
+% Target: <= 0.5 page.
+% =============================================================================
+\section{Discussion and Concrete Workshop Questions}
+\label{sec:conclusion}
+
+The workshop release is deliberately exploratory. Its strongest evidence is
+short-horizon GSM8K dynamics; non-math coverage is a stress case, not a
+result. We treat ZVF as a cheap descriptive diagnostic, not a predictive
+failure detector, and we emphasize that the Qwen3-8B held-out control gives
+a small, non-significant GRPO improvement over the base.
+
+\paragraph{Five concrete questions for the workshop.}
+We invite attendees to engage with five specific, testable questions raised
+by this release rather than open-ended philosophizing:
+\begin{enumerate}[leftmargin=1.4em,topsep=2pt,itemsep=2pt]
+  \item Does step-level ZVF predict reward change \emph{within} a single
+        run, controlling for run fixed effects, on stacks beyond Tinker?
+        Our residualized within-GSM8K scatter
+        (Figure~\ref{fig:workshop-killer}c) finds $r_{\mathrm{within}}$
+        close to zero; is this a backend artifact or a general property?
+  \item What is the inverted-U apex location for token-budget--matched
+        group-size sweeps across more open stacks (TRL, OpenRLHF, veRL,
+        SkyRL) at $T{\geq}16$M tokens? Our 3-seed reanalysis
+        (Appendix~\ref{sec:appendix:group-size-reconcile}) puts the
+        apex near $G{\approx}32$ for one stack/model; the apex's
+        \emph{transferability} is the open question.
+  \item Are there tasks where high-ZVF cells \emph{do} predict downstream
+        collapse, beyond GSM8K? Tool-use is a degenerate $\mathrm{ZVF}{=}1$
+        case from step 1; the genuinely interesting test is on
+        intermediate-density tasks (MATH-500 at low temperature, code
+        with partial-credit rewards).
+  \item What minimum disclosure makes a managed-API result count as
+        benchmark evidence? Our Tinker rows are reproducible only at the
+        level of API call scripts; should the community require GRPO
+        loss / reward normalization / hardware metadata for a managed-API
+        row to count as anything beyond a case study?
+  \item Should ZVF-style diagnostic claims require raw per-group rollout
+        JSONL by default? Our release bundles step-level aggregates for
+        every run but raw JSONL only for a documented subset; we invite
+        the workshop to align on a minimum raw-artifact bar.
+\end{enumerate}

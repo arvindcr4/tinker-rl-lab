@@ -1,0 +1,179 @@
+% =============================================================================
+% Related Work -- audited 2026-04-25 (re-scoped 2026-04-25)
+%
+% This section cites only sources verified against primary publications or
+% stable project artifacts. A prior draft over-claimed external validation
+% from concurrent variance-mitigation papers; the scoped form below cites
+% those papers as MECHANISM corroboration only -- the underlying within-group
+% zero-variance failure mode is independently identified by concurrent work --
+% and explicitly does NOT claim they validate the quantitative ZVF
+% predictiveness numbers measured in our artifact.
+% =============================================================================
+
+\section{Related Work}
+\label{sec:related}
+
+\ours{} sits at the intersection of policy-gradient post-training for
+language models, reasoning supervision, tool-use agents, scaling analyses, and
+benchmark reproducibility. We use this section to define the context for our
+measurements. Where concurrent work studies the same within-group
+zero-variance phenomenon that motivates our ZVF diagnostic, we cite it as
+mechanism corroboration; we do not claim those papers independently validate
+our specific numerical ZVF results, nor do we use them as evidence for any
+projected variance-mitigation row.
+
+% -----------------------------------------------------------------------------
+\subsection{RL Algorithms for Large Language Models}
+\label{sec:related:algos}
+
+Proximal Policy Optimization (PPO)~\cite{schulman2017proximal} remains the
+standard reference point for RLHF-style post-training, including
+InstructGPT-style systems~\cite{ouyang2022training, christiano2017deeprlhf,
+stiennon2020summarize, bai2022hhrlhf, bai2022claudecai}. Direct Preference
+Optimization (DPO)~\cite{rafailov2024direct} reframed preference learning as a
+classification objective and motivated RL-free baselines such as
+IPO~\cite{azar2024ipo}, KTO~\cite{ethayarajh2024kto},
+SimPO~\cite{meng2024simpo}, ORPO~\cite{hong2024orpo}, and
+SLiC~\cite{zhao2023slic}. Our benchmark includes no-rollout baselines to keep
+the distinction between sampled policy-gradient training and preference
+classification explicit.
+
+Group Relative Policy Optimization (GRPO) was introduced with
+DeepSeekMath~\cite{shao2024deepseekmath} and popularized by
+DeepSeek-R1~\cite{guo2025deepseekr1, guo2025deepseekr1nature}. Subsequent
+public GRPO-family work studies known implementation sensitivities rather than
+establishing our measurements. Dr.~GRPO~\cite{liu2025drgrpo} analyzes length
+and difficulty biases in the standard objective. GSPO~\cite{qwen2025gspo},
+DAPO~\cite{yu2025dapo}, and VAPO~\cite{bytedance2025vapo} are useful context
+for production-scale sequence-level and large-batch reasoning RL. Back to
+Basics~\cite{ahmadian2024backtobasics} shows that carefully implemented
+REINFORCE-style methods can remain competitive. These works motivate the
+implementation and diagnostic axes we measure; they are not used as evidence
+for any numerical result in \ours{}.
+
+% -----------------------------------------------------------------------------
+\subsection{Concurrent Zero-Variance Work}
+\label{sec:related:concurrent-zv}
+
+A cluster of 2025--2026 GRPO-family papers independently identifies the same
+within-group zero-variance failure mode that motivates our Zero-Variance
+Fraction (ZVF) diagnostic: when every rollout in a group receives the same
+scalar reward, the group-relative advantage vanishes and no gradient signal
+reaches the policy. NGRPO~\cite{nan2025ngrpo} formalizes the case as
+``homogeneously correct or incorrect'' groups and proposes advantage
+calibration with a hypothesised maximum-reward virtual sample plus asymmetric
+clipping. RL-ZVP~\cite{le2025rlzvp} (ICLR 2026) names the construct
+\emph{zero-variance prompts} and shows that entropy-guided advantage shaping
+on such prompts yields up to $+8.61$ accuracy points across six math
+benchmarks over standard GRPO. Scaf-GRPO~\cite{zhang2025scafgrpo} frames the
+same phenomenon as a ``learning cliff'' where problems beyond model capability
+collapse to zero reward and zero advantage, and counters it with tiered
+in-prompt scaffolds. LENS~\cite{feng2025lens} addresses the all-wrong-group
+sub-case via confidence-reweighted penalties on negative rollouts. Hard
+Examples~\cite{pikus2025hardexamples} treats zero-variance saturation as the
+fundamental annotation-budget bottleneck and shows that training on the
+hardest examples reduces it. EBPO~\cite{han2026ebpo} proposes an empirical
+Bayes shrinkage estimator that guarantees a non-vanishing gradient even in
+saturated-failure regimes.
+
+We cite these works narrowly. They corroborate the existence and importance of
+the within-group zero-variance failure mode, and one of them (RL-ZVP) is at a
+peer-reviewed venue. They do \emph{not} validate our specific quantitative
+ZVF results -- the project's correlation $\rho$ values, step-25 to step-100
+stress-test predictiveness, or any cross-task ZVF threshold -- which remain
+internal-artifact diagnostics computed from our rollout traces. We make no
+priority claim with respect to these papers, several of which were submitted
+before our ZVF traces were complete; we are rigorous, not first.
+
+% -----------------------------------------------------------------------------
+\subsection{Reasoning RL and Process Reward Models}
+\label{sec:related:reasoning}
+
+Process supervision is a separate line from the sparse outcome-reward setting
+used in most of our GRPO runs. Let's Verify Step by Step~\cite{lightman2024stepbystep}
+showed that step-level process reward models can outperform outcome reward
+models on mathematical reasoning. Math-Shepherd~\cite{wang2024mathshepherd},
+PRM800K~\cite{uesato2022prm800k}, PRMBench~\cite{song2024prmbench},
+OmegaPRM~\cite{luo2024omegaprm}, ReasonEval~\cite{xia2024reasoneval},
+Implicit PRM~\cite{yuan2024implicitprm}, and VersaPRM~\cite{yuan2025versaprm}
+extend this supervision style across annotation sources and evaluation
+settings. Self-consistency~\cite{wang2023selfconsistency},
+tree-of-thought search~\cite{yao2024tot}, and critic-style verification
+systems~\cite{mcaleese2024criticgpt} provide complementary inference-time or
+post-hoc checking mechanisms.
+
+This distinction matters for ZVF. Dense process rewards can make exact
+within-group zero variance rare even when the policy is not learning. We
+therefore limit ZVF claims to sparse, outcome-reward GRPO unless a separate
+dense-reward diagnostic is reported.
+
+% -----------------------------------------------------------------------------
+\subsection{Tool-Use and Agentic RL}
+\label{sec:related:tooluse}
+
+Tool-use work trains or prompts models to interleave natural language with
+external actions. Toolformer~\cite{schick2023toolformer}, Gorilla~\cite{patil2023gorilla},
+ToolLLM~\cite{qin2024toolllm}, and ReAct~\cite{yao2023react} are foundational
+references for tool-call insertion, API retrieval, and reason--act--observe
+interaction. RL-specific and agentic extensions include
+ToolACE~\cite{liu2024toolace}, ToolRL~\cite{qian2025toolrl},
+ToRL~\cite{li2025torl}, APIGen~\cite{lin2024apigen},
+Nexus-Raven~\cite{nexusflow2024nexusraven}, Octopus~\cite{chen2024octopus},
+WebGPT~\cite{nakano2021webgpt}, WebShop~\cite{yao2022webshop},
+Reflexion~\cite{shinn2023reflexion}, Voyager~\cite{wang2023voyager}, and
+AgentBench~\cite{liu2024agentbench}.
+
+Public descriptions of recent agent products do not expose enough training
+detail to validate our ZVF diagnostic or any GRPO-style web-browsing claim.
+Accordingly, we treat our tool-use runs as scope probes: they show where
+format-gated rewards saturate and where an ERF-style surrogate is needed, but
+they do not establish general agentic RL behavior.
+
+% -----------------------------------------------------------------------------
+\subsection{Scaling Laws for RL Post-Training}
+\label{sec:related:scaling}
+
+Classical language-model scaling laws~\cite{kaplan2020scalinglaws,
+hoffmann2022chinchilla, muennighoff2023datascaling} and reward-model
+over-optimization analyses~\cite{gao2023reward, rafailov2024rlhfscaling}
+motivate our fit of simple learning-curve summaries. GRPO-specific scaling
+work~\cite{nimmaturi2025scalinglaws} gives a useful three-phase template, but
+our short traces and single-seed frontier runs are not sufficient to validate a
+generative law. We therefore report exponential fits as descriptive summaries
+and explicitly flag collapse trajectories where saturation models are the
+wrong abstraction.
+
+Small-model and emergent-ability studies~\cite{hu2024minicpm,
+subramanian2025slm, schaeffer2024emergent} also inform our caution around
+scale claims. In this paper, model size is entangled with family,
+instruction-tuning lineage, task type, and API/runtime constraints; it is not
+treated as a clean causal variable outside the controlled subsets.
+
+% -----------------------------------------------------------------------------
+\subsection{Frameworks, Benchmarks, and Reproducibility}
+\label{sec:related:frameworks}
+
+The practical behavior of RL post-training depends heavily on framework
+defaults. We compare or discuss TRL~\cite{vonwerra2022trl},
+OpenRLHF~\cite{hu2024openrlhf}, veRL~\cite{sheng2024verl},
+NeMo-RL~\cite{nvidia2024nemorl}, DeepSpeed-Chat~\cite{yao2023deepspeedchat},
+trlX~\cite{havrilla2023trlx}, Axolotl~\cite{axolotl2024}, and
+\tinker{}~\cite{thinkingmachines2024tinker}; rollout backends and kernels
+include vLLM~\cite{kwon2023vllm}, SGLang~\cite{zheng2024sglang},
+FlashAttention~\cite{dao2022flashattention}, and LoRA~\cite{hu2022lora}.
+
+Our reporting conventions follow the reproducibility tradition in deep
+RL~\cite{henderson2018deep, agarwal2021deep, bettini2023benchmarl,
+patterson2024empirical, jordan2024benchmarking, zhang2024benchvariance} and
+artifact-review guidance~\cite{pineau2020improving, acm2020badges}. The
+evaluation tasks are grounded in standard benchmarks such as
+GSM8K~\cite{cobbe2021training}, MATH~\cite{hendrycks2021math},
+AIME~\cite{maa2024aime}, MMLU~\cite{hendrycks2021mmlu},
+HumanEval~\cite{chen2021codex}, MBPP~\cite{austin2021mbpp}, and
+BBH~\cite{suzgun2023bbh}. \ours{} contributes a measured cross-framework
+artifact and a scoped ZVF diagnostic. The concurrent zero-variance work cited
+in Section~\ref{sec:related:concurrent-zv} corroborates the underlying failure
+mode; it does not validate the quantitative ZVF predictiveness or any
+projected variance-mitigation comparison in our artifact.
+
+% =============================================================================

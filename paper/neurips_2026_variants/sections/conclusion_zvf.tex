@@ -1,0 +1,50 @@
+% =============================================================================
+% Conclusion --- ZVF main-track variant. Headlines BOTH paired claims:
+% (i) per-step sentinel/utilization meter (positive); (ii) pooled-correlation
+% audit (negative).
+% Target: <= 0.6 page
+% =============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper makes two paired claims about Zero-Variance Fraction in GRPO
+training and audits each one explicitly.
+
+\paragraph{(i) Per-step sentinel and utilization meter (positive).}
+The mechanical claim survives at the step level: when $\mathrm{ZVF}_t = 1$,
+every rollout group in the batch has zero reward variance and therefore
+zero reward-gradient contribution; $\mathrm{GU}_t = 1-\mathrm{ZVF}_t$ is an
+online utilization meter for the reward channel of the GRPO update.
+Pairing $\mathrm{ZVF}_t$ with batch reward mean separates all-wrong
+collapse ($\mathrm{ZVF}{\approx}1$, reward $\approx 0$) from all-correct
+saturation ($\mathrm{ZVF}{\approx}1$, reward $\approx 1$) from informative
+contrast ($\mathrm{ZVF}{<}1$, intermediate reward). Our tool-use traces
+(Figure~\ref{fig:zvf-sentinel}, Qwen3-32B and Llama-3.1-8B) exhibit the
+all-wrong-collapse regime cleanly and from step~1; the contrasting GSM8K
+run shows the informative-contrast regime in the same telemetry. The
+triage table (Table~\ref{tab:zvf-triage}) records the suggested action in
+each regime.
+
+\paragraph{(ii) Pooled-correlation audit (negative).}
+The pooled cross-task ZVF--reward correlation that earlier drafts and
+concurrent work cite as evidence that ZVF predicts GRPO outcomes does
+\emph{not} survive within-task stratification. Pooled across tasks
+($r{=}-0.769$, $p{=}0.0008$, $N{=}15$; $r{=}-0.44$, $N{=}29$), the
+correlation is dominated by task identity: tool-use rows sit at
+$\mathrm{ZVF}{=}1$ and reward $0$, GSM8K rows at $\mathrm{ZVF}{\le}0.5$ and
+reward $\geq 0.3$. Within GSM8K, the sign flips ($r{=}+0.40$, $p{=}0.09$,
+$N{=}19$); restricted to model-varying GSM8K, no association is detectable
+($r{=}+0.13$, $p{=}0.79$, $N{=}7$). Cross-task pooled ZVF correlations
+should therefore not be used to rank GRPO runs. The held-out negative
+control is consistent with this reading: on a five-seed Qwen3-8B GSM8K
+held-out evaluation, the post-GRPO mean is $83.3\%$ vs.\ $82.0\%$ for the
+base model ($p{=}0.26$); strong online training reward does not by itself
+imply a held-out gain.
+
+The released artifact---step-level ZVF/GU traces, run manifest, evidence
+grade table, and analysis code---is intended to make this kind of stratified
+audit the default for follow-up GRPO failure-mode work. The most useful
+follow-up experiments are not new diagnostics but stricter tests of the
+existing ones: multi-seed within-task ZVF estimates, token-budget-matched
+PPO/GRPO comparisons in a single open stack, and held-out evaluation
+without checkpoint cherry-picking.

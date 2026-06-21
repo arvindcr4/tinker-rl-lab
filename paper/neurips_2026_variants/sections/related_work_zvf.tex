@@ -1,0 +1,88 @@
+% =============================================================================
+% Related Work -- audited 2026-04-25 (re-scoped 2026-04-25)
+%
+% This section cites only sources verified against primary publications or
+% stable project artifacts. A prior draft over-claimed external validation
+% from concurrent variance-mitigation papers; the scoped form below cites
+% those papers as MECHANISM corroboration only -- the underlying within-group
+% zero-variance failure mode is independently identified by concurrent work --
+% and explicitly does NOT claim they validate the quantitative ZVF
+% predictiveness numbers measured in our artifact.
+% =============================================================================
+
+\section{Related Work}
+\label{sec:related}
+
+\ours{} sits at the intersection of policy-gradient post-training for
+language models, reasoning supervision, tool-use agents, scaling analyses, and
+benchmark reproducibility. We use this section to define the context for our
+measurements. Where concurrent work studies the same within-group
+zero-variance phenomenon that motivates our ZVF diagnostic, we cite it as
+mechanism corroboration; we do not claim those papers independently validate
+our specific numerical ZVF results, nor do we use them as evidence for any
+projected variance-mitigation row.
+
+% -----------------------------------------------------------------------------
+\subsection{RL Algorithms for Large Language Models}
+\label{sec:related:algos}
+
+Proximal Policy Optimization (PPO)~\cite{schulman2017proximal} remains the
+standard reference point for RLHF-style post-training, including
+InstructGPT-style systems~\cite{ouyang2022training, christiano2017deeprlhf,
+stiennon2020summarize, bai2022hhrlhf, bai2022claudecai}. Direct Preference
+Optimization (DPO)~\cite{rafailov2024direct} reframed preference learning as a
+classification objective and motivated RL-free baselines such as
+IPO~\cite{azar2024ipo}, KTO~\cite{ethayarajh2024kto},
+SimPO~\cite{meng2024simpo}, ORPO~\cite{hong2024orpo}, and
+SLiC~\cite{zhao2023slic}. Our benchmark includes no-rollout baselines to keep
+the distinction between sampled policy-gradient training and preference
+classification explicit.
+
+Group Relative Policy Optimization (GRPO) was introduced with
+DeepSeekMath~\cite{shao2024deepseekmath} and popularized by
+DeepSeek-R1~\cite{guo2025deepseekr1, guo2025deepseekr1nature}. Subsequent
+public GRPO-family work studies known implementation sensitivities rather than
+establishing our measurements. Dr.~GRPO~\cite{liu2025drgrpo} analyzes length
+and difficulty biases in the standard objective. GSPO~\cite{qwen2025gspo},
+DAPO~\cite{yu2025dapo}, and VAPO~\cite{bytedance2025vapo} are useful context
+for production-scale sequence-level and large-batch reasoning RL. Back to
+Basics~\cite{ahmadian2024backtobasics} shows that carefully implemented
+REINFORCE-style methods can remain competitive. These works motivate the
+implementation and diagnostic axes we measure; they are not used as evidence
+for any numerical result in \ours{}.
+
+% -----------------------------------------------------------------------------
+\subsection{Concurrent Zero-Variance Work}
+\label{sec:related:concurrent-zv}
+
+A cluster of 2025--2026 GRPO-family papers independently identifies the same
+within-group zero-variance failure mode that motivates our Zero-Variance
+Fraction (ZVF) diagnostic: when every rollout in a group receives the same
+scalar reward, the group-relative advantage vanishes and no gradient signal
+reaches the policy. NGRPO~\cite{nan2025ngrpo} formalizes the case as
+``homogeneously correct or incorrect'' groups and proposes advantage
+calibration with a hypothesised maximum-reward virtual sample plus asymmetric
+clipping. RL-ZVP~\cite{le2025rlzvp} (ICLR 2026) names the construct
+\emph{zero-variance prompts} and shows that entropy-guided advantage shaping
+on such prompts yields up to $+8.61$ accuracy points across six math
+benchmarks over standard GRPO. Scaf-GRPO~\cite{zhang2025scafgrpo} frames the
+same phenomenon as a ``learning cliff'' where problems beyond model capability
+collapse to zero reward and zero advantage, and counters it with tiered
+in-prompt scaffolds. LENS~\cite{feng2025lens} addresses the all-wrong-group
+sub-case via confidence-reweighted penalties on negative rollouts. Hard
+Examples~\cite{pikus2025hardexamples} treats zero-variance saturation as the
+fundamental annotation-budget bottleneck and shows that training on the
+hardest examples reduces it. EBPO~\cite{han2026ebpo} proposes an empirical
+Bayes shrinkage estimator that guarantees a non-vanishing gradient even in
+saturated-failure regimes.
+
+We cite these works narrowly. They corroborate the existence and importance of
+the within-group zero-variance failure mode, and one of them (RL-ZVP) is at a
+peer-reviewed venue. They do \emph{not} validate our specific quantitative
+ZVF results -- the project's correlation $\rho$ values, step-25 to step-100
+stress-test predictiveness, or any cross-task ZVF threshold -- which remain
+internal-artifact diagnostics computed from our rollout traces. We make no
+priority claim with respect to these papers, several of which were submitted
+before our ZVF traces were complete; we are rigorous, not first.
+
+% -----------------------------------------------------------------------------

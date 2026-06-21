@@ -1,0 +1,55 @@
+{
+  "tag": "smoke_grpo_s42_r3",
+  "status": "completed",
+  "model": "Qwen/Qwen3-8B",
+  "model_short": "qwen3-8b",
+  "task": "gsm8k",
+  "seed": 42,
+  "rank": 16,
+  "group_size": 4,
+  "batch": 2,
+  "lr": 3e-05,
+  "temperature": 0.8,
+  "steps": 3,
+  "started_at": "2026-06-14T16:59:32.443214+00:00",
+  "output_path": "experiments/tinker-runs/results/smoke_grpo_s42_r3.json",
+  "run_id": "59dcc8cb-88dc-5dd7-87af-296f5e6d2de8:train:0",
+  "initial_sampler": "tinker://59dcc8cb-88dc-5dd7-87af-296f5e6d2de8:train:0/sampler_weights/s0",
+  "reward_trace": [
+    0.5,
+    0.25,
+    0.375
+  ],
+  "step_log": [
+    {
+      "step": 1,
+      "reward": 0.5,
+      "loss": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 2,
+      "reward": 0.25,
+      "loss": -3.6572036743164062,
+      "zvf": 0.5,
+      "gu": 0.5
+    },
+    {
+      "step": 3,
+      "reward": 0.375,
+      "loss": -4.0885467529296875,
+      "zvf": 0.0,
+      "gu": 1.0
+    }
+  ],
+  "last_updated_at": "2026-06-14T17:01:04.320878+00:00",
+  "checkpoint": "tinker://59dcc8cb-88dc-5dd7-87af-296f5e6d2de8:train:0/sampler_weights/final",
+  "first5_avg": 0.375,
+  "last10_avg": 0.375,
+  "peak_reward": 0.5,
+  "zero_reward_pct": 0.0,
+  "zero_loss_pct": 33.333333333333336,
+  "wall_clock_sec": 93.09609818458557,
+  "completed_at": "2026-06-14T17:01:05.539321+00:00"
+}

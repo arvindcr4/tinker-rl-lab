@@ -1,0 +1,130 @@
+% =============================================================================
+% Run manifest appendix --- review-driven addition
+% Compiled from experiments/master_results.csv and the per-run JSONs in
+% experiments/tinker-runs/results/ at submission time. The campaign_v2 batch
+% (campaign_v2_20260419_111623.json) supplies the ``Bitter Lesson Campaign''
+% rows; the wave2-groupsize subset of that batch supplies the explicit
+% group-size ablation rows; wave6_ablations.json supplies the Qwen3-8B
+% temperature/rank/batch sensitivity ablation. The ``steps_completed=0''
+% entries in master\_results.csv for several scale\_/arch\_/frontier\_ runs
+% are stale CSV cells; the per-run JSONs and reward\_trace arrays show those
+% runs actually completed (steps and last-10 metrics in the JSONs match
+% the values in Table~4 of the DNB variant and the case-study lists in the
+% ZVF and workshop variants). This manifest reflects the JSON ground truth.
+% =============================================================================
+\section{Run Manifest}
+\label{sec:run-manifest}
+
+This manifest summarises every (backend, model, task) cell in the benchmark
+at submission time, organised by evidence tier. Cells marked \textbf{A} have at
+least three completed seeds and support inference statistics. Cells marked
+\textbf{B} are single-seed completed runs and are reported descriptively only;
+where these single-seed runs are used as data points in within-task
+correlation analyses (e.g.\ the ZVF $N{=}7$ stratified Pearson on
+model-varying GSM8K), the cell carries a $\dagger$. Cells marked
+\textbf{C} failed, partially completed, or never started; we list
+them for honesty and exclude them from headline claims. ``Held-out'' indicates
+that a held-out test-split evaluation exists for at least one seed in that cell.
+``Logs'' indicates that step-level group reward traces are released.
+``Ckpt'' indicates that a usable LoRA checkpoint is released.
+``Reward'' is binary verifiable (BV), shaped (SH), or pairwise (PW). Raw
+step-level reward traces are released for every Tier-A and Tier-B row.
+
+\begin{table}[h]
+\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lllllrrrcccc}
+\toprule
+Tier & Backend & Model & Task & Split & N & Seeds & Steps$_{\max}$ & Reward & Held-out & Logs & Ckpt \\
+\midrule
+\multicolumn{12}{l}{\textit{Tier A --- multi-seed completed cells, used for inference statistics}} \\
+\midrule
+A & Modal       & cleanrl-ppo               & math                & gen     & 5 & 5 & 97280  & BV & --- & \checkmark & --- \\
+A & Modal       & sb3-ppo                   & math                & gen     & 5 & 5 & 100352 & BV & --- & \checkmark & --- \\
+A & Modal       & tianshou-ppo              & math                & gen     & 5 & 5 & 100000 & BV & --- & \checkmark & --- \\
+A & Modal L4    & qwen2.5-0.5b              & math                & gen     & 5 & 5 & 125    & BV & --- & \checkmark & \checkmark \\
+A & Tinker      & qwen3-8b (Wave-6 ablation)& gsm8k               & train+held-out & 12 & 1 & 30 & BV & \checkmark & \checkmark & --- \\
+A & Tinker      & llama-3.3-70b-inst        & gsm8k               & train   & 4 & 4 & 30     & BV & --- & \checkmark & --- \\
+\midrule
+\multicolumn{12}{l}{\textit{Tier B --- single-seed completed Tinker case studies}} \\
+\midrule
+B$^\dagger$ & Tinker      & qwen3-8b (G=8, base)      & gsm8k               & train+held-out & 1 & 1 & 30 & BV & \checkmark & \checkmark & --- \\
+B$^\dagger$ & Tinker      & qwen3.5-4b                & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B$^\dagger$ & Tinker      & llama-8b-inst (gsm8k)     & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B$^\dagger$ & Tinker      & deepseek-v3.1             & gsm8k               & train   & 1 & 1 & 20 & BV & --- & \checkmark & --- \\
+B$^\dagger$ & Tinker      & nemotron-120b             & gsm8k               & train   & 1 & 1 & 20 & BV & --- & \checkmark & --- \\
+B$^\dagger$ & Tinker      & gpt-oss-20b               & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B$^\dagger$ & Tinker      & kimi-k2                   & gsm8k               & train   & 1 & 1 & 20 & BV & --- & \checkmark & --- \\
+B & Modal H100  & llama-3.2-3b-inst         & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Modal H100  & llama-3.2-1b-inst         & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Modal H100  & qwen3-8b (TRL ref)        & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Modal H100  & llama-8b-inst             & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & llama-8b-inst (tool)      & tool\_use           & train   & 1 & 1 & 30 & SH & --- & \checkmark & --- \\
+B & Tinker      & qwen3-32b (tool)          & tool\_use           & train   & 1 & 1 & 30 & SH & --- & \checkmark & --- \\
+\midrule
+\multicolumn{12}{l}{\textit{Tier B --- Bitter Lesson Campaign (single-seed Tinker frontier runs, GSM8K, 30 steps, completed)}} \\
+\midrule
+B & Tinker      & qwen3-8b-base             & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & kimi-k2-thinking          & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & kimi-k2.5                 & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & gpt-oss-120b              & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & qwen3.5-397b              & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & llama-3.1-70b             & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & deepseek-v3.1-base        & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & llama-3.1-8b              & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+\midrule
+\multicolumn{12}{l}{\textit{Tier B --- Group-Size Ablation (Qwen3-8B, GSM8K, single-seed per G, 30 steps, completed)}} \\
+\midrule
+B & Tinker      & qwen3-8b (G=2)            & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & qwen3-8b (G=4)            & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & qwen3-8b (G=8)            & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & qwen3-8b (G=16)           & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B$^\dagger$ & Tinker      & qwen3-8b (G=32) & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+C$^\S$ & ---         & qwen3-8b (G=64)$^\S$      & gsm8k (extrap.)     & ---     & 0 & 0 & 0  & --- & --- & --- & --- \\
+\midrule
+\multicolumn{12}{l}{\textit{Tier C --- failed, partial, or never-started cells (listed for honesty)}} \\
+\midrule
+C & External    & 0.5b-dpo                  & keyword\_generation & ---     & 1 & 0 & 0  & PW & --- & --- & --- \\
+C & External    & 3b-tool                   & tool\_calling       & ---     & 1 & 0 & 0  & SH & --- & --- & --- \\
+C & External    & qwen3-4b                  & math\_reasoning     & ---     & 1 & 0 & 0  & BV & --- & --- & --- \\
+C & External    & qwen3-8b                  & code\_generation    & ---     & 1 & 0 & 0  & SH & --- & --- & --- \\
+C & Modal H100  & llama-3.2-1b              & gsm8k (alt run)     & ---     & 1 & 0 & 0  & BV & --- & --- & --- \\
+C & Modal H100  & llama-3.2-3b              & gsm8k (alt run)     & ---     & 1 & 0 & 0  & BV & --- & --- & --- \\
+C & Modal H100  & qwen3-8b                  & humaneval           & ---     & 1 & 1 & 0  & BV & --- & --- & --- \\
+C & Modal H100  & qwen3-8b                  & kl\_tracking        & ---     & 1 & 1 & 0  & ---& --- & --- & --- \\
+C & Tinker      & qwen3-235b-moe            & gsm8k (partial)     & train   & 1 & 1 & 15 & BV & --- & \checkmark & --- \\
+C & Tinker      & qwen3-30b-moe             & gsm8k (partial)     & train   & 1 & 1 & 20 & BV & --- & \checkmark & --- \\
+C & Tinker      & qwen3-30b-moe-inst        & gsm8k (partial)     & train   & 1 & 1 & 10 & BV & --- & \checkmark & --- \\
+C & Tinker      & qwen3-32b                 & gsm8k (partial)     & train   & 1 & 1 & 10 & BV & --- & \checkmark & --- \\
+C & Tinker      & qwen3.5-27b               & gsm8k (partial)     & train   & 1 & 1 & 10 & BV & --- & \checkmark & --- \\
+\bottomrule
+\end{tabular}
+\caption{Per-(backend, model, task) run manifest at submission time.
+Tier classification: \textbf{A}~$\geq3$ seeds completed (or, for the
+Wave-6 single-seed sensitivity ablation, $\geq12$ runs at fixed seed
+sweeping a hyperparameter), used for inference; \textbf{B}~single seed
+completed, used descriptively; \textbf{C}~failed, partial, or not
+started, listed for honesty. Rows marked $\dagger$ in the Tinker case-study
+block are the seven single-seed Tinker GSM8K cells used as data points in
+the ZVF model-varying within-task stratified Pearson ($N{=}7$,
+Section~\ref{sec:zvf-analysis} of the ZVF variant); the additional
+$\dagger$ on the G=32 group-size row marks it as the single-seed cell
+that anchors the upper end of the within-sweep token-budget reanalysis
+in Appendix~\ref{sec:appendix:group-size-reconcile}.
+``Split'' is the evaluation distribution used for reported numbers
+(\emph{train}: training-prompt reward; \emph{train+held-out}: also
+evaluated on a held-out test split; \emph{gen}: synthetic generated
+data; ``---'' for failed cells). ``Reward'' is BV (binary verifiable),
+SH (shaped), or PW (pairwise). All Tinker rows depend on a closed-source
+backend. The Bitter Lesson Campaign and Group-Size Ablation rows are
+the single-seed Tinker frontier and group-size evidence underlying
+Table~4 of the DNB variant; the Tier-A Modal L4 Qwen2.5-0.5B row is
+the workshop-headline multi-seed reference run.\\[2pt]
+\textit{$^\S$~G=64: no direct training run was executed at this group size.
+Numbers appearing in the G=64 column of the token-budget reanalysis
+(Appendix~\ref{sec:appendix:group-size-reconcile},
+Table~\ref{tab:groupsize-tokennorm}) are extrapolated from the
+inverted-U fit on G$\in\{4,8,16,32\}$ and are descriptive only; we
+explicitly do \emph{not} treat G=64 as Tier-B evidence.}}
+\label{tab:run-manifest}
+\end{table}

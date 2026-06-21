@@ -1,0 +1,20 @@
+{
+  "tag": "smoke_grpo_qwen3-8b_s42",
+  "status": "failed",
+  "model": "Qwen/Qwen3-8B",
+  "model_short": "qwen3-8b",
+  "task": "gsm8k",
+  "loss": "grpo",
+  "loss_arm": "grpo",
+  "difficulty": "easy",
+  "difficulty_bucket": "easy",
+  "seed": 42,
+  "group_size": 2,
+  "lr": 1e-05,
+  "steps": 1,
+  "rank": 4,
+  "sweep_cell_tag": "smoke_grpo_qwen3-8b_s42",
+  "error": "runner raised: Error code: 402 - {'detail': 'Access for  is blocked due to billing status. Please add payment at https://tinker-console.thinkingmachines.ai/billing/balance'}",
+  "failed_at": "2026-06-14T09:46:55.589682+00:00",
+  "traceback": "Traceback (most recent call last):\n  File \"/Users/arvind/Developer/tinker-rl-lab/experiments/tinker-runs/cell_runner.py\", line 390, in main\n    result = probe.run(run_args)\n  File \"/Users/arvind/Developer/tinker-rl-lab/experiments/tinker-runs/live_zvf_probe.py\", line 188, in run\n    tc = svc.create_lora_training_client(base_model=args.model, rank=args.rank)\n  File \"/Users/arvind/Developer/tinker-rl-lab/.venv-run/lib/python3.14/site-packages/tinker/lib/sync_only.py\", line 75, in wrapper\n    return func(*args, **kwargs)\n  File \"/Users/arvind/Developer/tinker-rl-lab/.venv-run/lib/python3.14/site-packages/tinker/lib/public_interfaces/service_client.py\", line 208, in create_lora_training_client\n    ).result()\n      ~~~~~~^^\n  File \"/Users/arvind/Developer/tinker-rl-lab/.venv-run/lib/python3.14/site-packages/tinker/lib/public_interfaces/api_future.py\", line 127, in result\n    return self._future.result(timeout)\n           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/_base.py\", line 450, in result\n    return self.__get_result()\n           ~~~~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/_base.py\", line 395, in __get_result\n    raise self._exception\n  File \"/Users/arvind/Developer/tinker-rl-lab/.venv-run/lib/python3.14/site-packages/tinker/lib/telemetry.py\", line 384, in _awrapper\n    return await cast(Callable[..., Awaitable[R]], func)(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/arvind/Developer/tinker-rl-lab/.venv-run/lib/python3.14/site-packages/tinker/lib/public_interfaces/service_client.py\", line 144, in _create_lora_training_client_async\n    future = await client.models.create(request=request)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/arvind/Developer/tinker-rl-lab/.venv-run/lib/python3.14/site-packages/tinker/resources/models.py\", line 61, in create\n    return await self._post(\n           ^^^^^^^^^^^^^^^^^\n    ...<4 lines>...\n    )\n    ^\n  File \"/Users/arvind/Developer/tinker-rl-lab/.venv-run/lib/python3.14/site-packages/tinker/_base_client.py\", line 1250, in post\n    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/arvind/Developer/tinker-rl-lab/.venv-run/lib/python3.14/site-packages/tinker/_base_client.py\", line 1051, in request\n    raise self._make_status_error_from_response(err.response) from None\ntinker.APIStatusError: Error code: 402 - {'detail': 'Access for  is blocked due to billing status. Please add payment at https://tinker-console.thinkingmachines.ai/billing/balance'}\n"
+}

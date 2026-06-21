@@ -1,0 +1,37 @@
+% =============================================================================
+% Conclusion — conservative, evidence-aligned framing
+% Drop-in include: \input{sections/conclusion}
+% Target: <= 0.75 page
+% =============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+\ours{} provides a shared empirical substrate for studying RL post-training
+across algorithms, frameworks, and model families, but the evidence it offers
+is narrower than a broad ``five laws'' framing. The current release most
+strongly supports three conservative claims. First, ZVF/GU are useful
+descriptive diagnostics of when binary-reward GRPO stops producing informative
+within-group signal; they should not yet be read as standalone causal or
+incrementally predictive statistics. Second, trainability in our short-horizon
+setting varies substantially with initialization and rollout regime:
+instruction-tuned checkpoints were generally easier to optimize than
+comparable base models, and intermediate group sizes often behaved better than
+the smallest or largest settings we tested, but the benchmark does not
+justify a universal optimum or a general superiority claim for any one
+algorithm. Third, PPO-vs.-GRPO rankings and frontier-run stability are
+heterogeneous across model families and stacks, so our results argue against
+one-size-fits-all recommendations rather than for a new one.
+
+The most important negative result is also the most useful one: on held-out
+GSM8K, the mean Qwen3-8B GRPO gain over the base model is small and not
+statistically significant under our current evaluation. Tool-use and code
+results are even less conclusive because they rely on sparse or custom reward
+protocols. That boundary on what we can claim is not a weakness to hide; it is
+the point of releasing the benchmark.
+
+The immediate next steps are experimental rather than rhetorical: multivariate
+tests of ZVF against reward mean, entropy, and divergence proxies; token-budget
+matched multi-seed PPO/GRPO comparisons in a single open stack; broader
+held-out evaluation without checkpoint cherry-picking; and non-math tasks with
+process rewards or richer execution-based metrics. The released traces,
+checkpoints, and scripts are intended to make that stricter follow-up easy.

@@ -1,0 +1,44 @@
+% =============================================================================
+% Artifact card / auditability matrix --- main body
+% Per-stack summary pulled from sections/run_manifest.tex (read-only).
+% =============================================================================
+\begin{table}[t]
+\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\caption{Artifact card / auditability matrix at submission time, summarised
+from the per-cell run manifest (Appendix~\ref{sec:run-manifest}). One row per
+(stack, model-class) bucket. ``Raw'' is per-group rollout JSONL; ``ZVF'' is
+step-level ZVF/GU + reward traces; ``Ckpt'' is a released LoRA adapter;
+``Held-out'' indicates a held-out test-split evaluation exists for at least
+one seed in the bucket. Tier classification follows
+Appendix~\ref{sec:run-manifest}: A = multi-seed inferential, B = single-seed
+descriptive, C = failed/partial.}
+\label{tab:artifact-card}
+\begin{tabular}{lllrcccccc}
+\toprule
+\textbf{Stack} & \textbf{Model bucket} & \textbf{Task} & \textbf{Seeds} & \textbf{Raw} & \textbf{ZVF} & \textbf{Ckpt} & \textbf{Held-out} & \textbf{Tier} \\
+\midrule
+Modal H100 / CleanRL  & PPO (synthetic math) & math gen      & 5  & \checkmark & \checkmark & ---        & ---        & A \\
+Modal H100 / SB3      & PPO (synthetic math) & math gen      & 5  & \checkmark & \checkmark & ---        & ---        & A \\
+Modal H100 / Tianshou & PPO (synthetic math) & math gen      & 5  & \checkmark & \checkmark & ---        & ---        & A \\
+Modal L4 / TRL        & Qwen2.5-0.5B         & GSM8K         & 5  & \checkmark & \checkmark & \checkmark & ---        & A \\
+Tinker (closed)       & Qwen3-8B Wave-6 ablation & GSM8K     & 12 & ---        & \checkmark & ---        & \checkmark & A \\
+Tinker (closed)       & Llama-3.3-70B-Inst   & GSM8K         & 4  & ---        & \checkmark & ---        & ---        & A \\
+\midrule
+Tinker (closed)       & Qwen3-8B (G=8, base) & GSM8K         & 1  & partial    & \checkmark & ---        & \checkmark & B \\
+Tinker (closed)       & Qwen3.5-4B / Qwen3.5-27B$^\dagger$ & GSM8K & 1 & ---  & \checkmark & ---        & ---        & B \\
+Tinker (closed)       & Llama-8B-Inst        & GSM8K         & 1  & ---        & \checkmark & ---        & ---        & B \\
+Tinker (closed)       & DeepSeek-V3.1 / V3.1-Base & GSM8K    & 1  & ---        & \checkmark & ---        & ---        & B \\
+Tinker (closed)       & Nemotron-120B / GPT-OSS-120B / Qwen3.5-397B & GSM8K & 1 & --- & \checkmark & --- & --- & B \\
+Tinker (closed)       & Kimi-K2 / Kimi-K2-Thinking / Kimi-K2.5 & GSM8K  & 1 & --- & \checkmark & ---        & ---        & B \\
+Tinker (closed)       & Qwen3-8B group-size $\{2,4,8,16,32\}$ & GSM8K   & 1 & --- & \checkmark & ---        & ---        & B \\
+Modal H100            & Llama-3.2-\{1,3\}B-Inst & GSM8K     & 1  & \checkmark & \checkmark & ---        & ---        & B \\
+Modal H100 / TRL      & Qwen3-8B reference run & GSM8K       & 1  & \checkmark & \checkmark & ---        & ---        & B \\
+Tinker (closed)       & Llama-8B-Inst, Qwen3-32B (tool-use) & tool-use & 1 & --- & \checkmark & --- & --- & B \\
+\midrule
+Tinker (closed)       & Qwen3-235B-MoE / Qwen3-30B-MoE / Qwen3-32B / Qwen3.5-27B & GSM8K (partial) & 1 & --- & partial & --- & --- & C \\
+Modal H100            & Qwen3-8B HumanEval / KL-tracking         & code/diag.    & 1  & ---        & ---        & ---        & ---        & C \\
+External collaborators & 0.5b-DPO / 3b-tool / Qwen3-4B / Qwen3-8B & misc.   & 1  & ---        & ---        & ---        & ---        & C \\
+\bottomrule
+\end{tabular}
+\end{table}

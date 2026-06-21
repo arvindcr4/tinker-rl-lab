@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zvf-triage"
+version = "0.1.0"
+description = "Zero-Variance Fraction (ZVF) triage callback for GRPO-style RL fine-tuning: a cheap, model-agnostic early-warning diagnostic that detects when group-relative advantage has collapsed to zero gradient signal."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [{ name = "ZVF Program" }]
+keywords = [
+    "grpo",
+    "rlhf",
+    "rl-post-training",
+    "telemetry",
+    "zvf",
+    "rl",
+    "reinforcement-learning",
+    "llm",
+    "fine-tuning",
+    "diagnostics",
+    "zero-variance-fraction",
+    "training-triage",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+dependencies = [
+    "numpy>=1.21",
+]
+
+[project.urls]
+# TODO: replace these placeholders with the real project URLs before publishing
+# to PyPI. They intentionally point at a reserved-invalid domain so a broken
+# link can never be mistaken for a live one.
+Homepage = "https://example.invalid/TODO-set-zvf-triage-homepage"
+Repository = "https://example.invalid/TODO-set-zvf-triage-repo"
+Issues = "https://example.invalid/TODO-set-zvf-triage-repo/issues"
+Changelog = "https://example.invalid/TODO-set-zvf-triage-repo/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+# Framework adapters. The core package never imports these at module load time;
+# they are imported lazily only when the corresponding adapter is used.
+trl = ["torch>=2.0", "transformers>=4.40", "trl>=0.9"]
+wandb = ["wandb>=0.16"]
+tensorboard = ["tensorboard>=2.12"]
+dev = [
+    "pytest>=7.0",
+    "numpy>=1.21",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+# Ship the PEP 561 marker so downstream type checkers pick up our annotations.
+zvf_triage = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

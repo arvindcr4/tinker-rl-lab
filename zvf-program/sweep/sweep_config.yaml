@@ -1,0 +1,248 @@
+# =============================================================================
+# ZVF Program — Pillar-1 / M1 Sweep Configuration
+# =============================================================================
+# Declarative grid for the ZVF/GU audit scale-up (95 -> 300-500 runs) AND the
+# matched-compute canonical-GRPO vs DAPO vs GSPO comparison.
+#
+# This file ONLY enumerates *what* to run. It does NOT launch anything and does
+# NOT contain any results. run_sweep.py expands this into a run manifest and
+# shells out to the user's EXISTING Tinker/Modal runners (it never trains here).
+#
+# Cardinality control: the full Cartesian product of every list below would be
+# far larger than 500. `sweep_design` (bottom of file) selects which axes are
+# crossed fully vs. held at a baseline, so the enumeration lands in the
+# 300-500 range. Edit `sweep_design.target_run_count` band to tune.
+#
+# Terminology (matches experiments/tinker-runs/ runners):
+#   ZVF = Zero-Variance Fraction  = fraction of prompts in a step where all G
+#         completions received identical reward (advantage collapses to 0).
+#   GU  = Gradient Utilization    = 1.0 - ZVF (fraction of prompts that produced
+#         a usable, non-zero GRPO advantage / gradient signal).
+# Both are logged PER STEP by the existing runners into the run's step_log.
+# =============================================================================
+
+sweep_name: zvf_pillar1_m1            # used to namespace result files / run tags
+schema_version: 1                     # bump if column/field layout changes
+
+# -----------------------------------------------------------------------------
+# RUNNER WIRING
+# -----------------------------------------------------------------------------
+# How run_sweep.py reaches the user's real training code. run_sweep.py does NOT
+# implement training; it builds a command from `runner.command_template` and
+# shells out. Placeholders in {curly braces} are filled per run-cell.
+#
+# The default points at the existing per-cell Tinker GRPO runner pattern used in
+# experiments/tinker-runs/ (campaign_v2.run_experiment style: one process per
+# cell, parameterised by model / seed / group_size / lr / steps / task / loss).
+# Swap `runner.kind` to "modal" to instead dispatch via experiments/modal_runner.py.
+runner:
+  kind: tinker                        # tinker | modal  (selects command_template below)
+
+  # --- Tinker path: one subprocess per run-cell ---------------------------
+  # cell_runner.py is a THIN, user-owned shim (NOT created by this harness — see
+  # README "What you must provide") that imports the existing
+  # campaign_v2.run_experiment / tinker_parallel_runner.run_single and accepts
+  # these flags. We shell out to it so the harness never touches training logic.
+  tinker:
+    interpreter: python3
+    # Path is relative to the repo root unless absolute. run_sweep.py resolves it.
+    script: experiments/tinker-runs/cell_runner.py
+    # {placeholders} are substituted from each run-cell. Unknown keys are an
+    # error. The arm-specific placeholders {clip_low}, {clip_high},
+    # {importance_level}, {dynamic_sampling} are populated by matched_compute.py
+    # for the three matched arms (grpo, dapo, gspo); for the audit cells the
+    # audit harness passes its own values (or a baseline). If the cell_runner
+    # script does not understand a placeholder, the substitution fails fast
+    # (KeyError on .format), which is the right behavior for a missing flag.
+    command_template: >-
+      {interpreter} {script}
+      --tag {tag}
+      --model "{model_id}"
+      --task {task}
+      --loss {loss}
+      --seed {seed}
+      --group-size {group_size}
+      --lr {lr}
+      --steps {steps}
+      --rank {rank}
+      --difficulty {difficulty}
+      --clip-low {clip_low}
+      --clip-high {clip_high}
+      --importance-level {importance_level}
+      --dynamic-sampling {dynamic_sampling}
+      --out {out_json}
+    # Where each cell writes its result JSON (must contain step_log w/ zvf+gu).
+    # {tag} is the unique per-cell id. Kept inside the existing results dir so
+    # aggregate_results.py and the rest of the toolchain see it unchanged.
+    results_dir: experiments/tinker-runs/results
+    out_json_template: "{results_dir}/{tag}.json"
+
+  # --- Modal path: batch dispatch via modal_runner.py ---------------------
+  # Used only if runner.kind == modal. modal_runner.py already supports --dry-run.
+  modal:
+    interpreter: modal
+    script: experiments/modal_runner.py
+    command_template: >-
+      {interpreter} run {script}
+      --exp {tag}
+      --seeds 1
+    results_dir: experiments/results/sweep_modal
+    out_json_template: "{results_dir}/{tag}/result.json"
+
+# -----------------------------------------------------------------------------
+# MODEL FAMILIES  (drawn from the user's existing corpus / model registry in
+# experiments/tinker-runs/scripts/world_class_experiments.py MODELS + campaign_v2)
+# -----------------------------------------------------------------------------
+# `tier` is metadata only: it lets sweep_design down-select cheaply (e.g. run the
+# full seed/G grid on `small` tier, a thinner grid on `frontier` tier) so the
+# total stays in 300-500 and cost stays sane.
+model_families:
+  Qwen3:
+    - {short: qwen3-8b,        model_id: "Qwen/Qwen3-8B",                              tier: small}
+    - {short: qwen3-32b,       model_id: "Qwen/Qwen3-32B",                             tier: mid}
+    - {short: qwen3-30b-moe,   model_id: "Qwen/Qwen3-30B-A3B",                         tier: mid}    # MoE
+    - {short: qwen3-235b-moe,  model_id: "Qwen/Qwen3-235B-A22B-Instruct-2507",         tier: frontier} # MoE
+  Llama-3:
+    - {short: llama-8b-inst,   model_id: "meta-llama/Llama-3.1-8B-Instruct",           tier: small}
+    - {short: llama-70b-inst,  model_id: "meta-llama/Llama-3.3-70B-Instruct",          tier: frontier}
+  DeepSeek-V3:
+    - {short: deepseek-v3.1,   model_id: "deepseek-ai/DeepSeek-V3.1",                  tier: frontier} # MoE
+  Nemotron:
+    - {short: nemotron-30b,    model_id: "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16", tier: mid}     # MoE
+    - {short: nemotron-120b,   model_id: "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16", tier: frontier} # MoE
+  GPT-OSS:
+    - {short: gpt-oss-20b,     model_id: "openai/gpt-oss-20b",                         tier: mid}      # MoE
+    - {short: gpt-oss-120b,    model_id: "openai/gpt-oss-120b",                        tier: frontier} # MoE
+
+# -----------------------------------------------------------------------------
+# RL FRAMEWORKS  (the four libraries the user's corpus targets)
+# -----------------------------------------------------------------------------
+# NOTE: the existing in-repo training cells run on Tinker's own GRPO loop. The
+# `framework` axis is recorded as metadata on every run-cell so the audit can
+# stratify ZVF/GU by framework. If/when the user wires real TRL/verl/OpenRLHF/
+# NeMo-RL backends behind cell_runner.py, set `enabled: true` for those and they
+# enter the grid. By default only the framework the user can actually launch
+# today is enabled, so dry-run shows a runnable manifest, not an aspirational one.
+rl_frameworks:
+  - {name: TRL,       enabled: true,  note: "HF TRL GRPOTrainer (and the Tinker GRPO loop used in-repo today)"}
+  - {name: verl,      enabled: false, note: "Volcano Engine RL — enable once cell_runner.py has a verl backend"}
+  - {name: OpenRLHF,  enabled: false, note: "OpenRLHF — enable once backend is wired"}
+  - {name: NeMo-RL,   enabled: false, note: "NVIDIA NeMo-RL — enable once backend is wired"}
+
+# -----------------------------------------------------------------------------
+# SEEDS  (matches the multi-seed convention already in the repo: 42,123,456,789,1024)
+# -----------------------------------------------------------------------------
+seeds: [42, 123, 456, 789, 1024]
+
+# -----------------------------------------------------------------------------
+# GROUP SIZES G  (GRPO group size; directly drives ZVF — small G => more
+# zero-variance groups. This is the primary independent variable of the audit.)
+# -----------------------------------------------------------------------------
+group_sizes: [2, 4, 8, 16]
+
+# -----------------------------------------------------------------------------
+# PROMPT DIFFICULTY BUCKETS  (used to stratify ZVF/GU by task hardness; the
+# cell_runner is expected to filter its dataset to the named bucket. Buckets are
+# labels only here — the mapping to concrete prompt subsets lives in cell_runner.)
+# -----------------------------------------------------------------------------
+difficulty_buckets:
+  - {name: easy,   note: "high base pass-rate -> ZVF dominated by all-correct groups"}
+  - {name: medium, note: "mixed pass-rate -> expected maximum GU"}
+  - {name: hard,   note: "low base pass-rate -> ZVF dominated by all-wrong groups"}
+
+# -----------------------------------------------------------------------------
+# FIXED TRAINING HYPERPARAMETERS  (held constant across the audit grid so ZVF/GU
+# differences are attributable to model x G x seed x difficulty, not to LR etc.)
+# Frontier-tier models override some of these via `tier_overrides` to stay cheap.
+# -----------------------------------------------------------------------------
+fixed:
+  task: gsm8k                         # training task for the audit (held-out evals are separate, below)
+  loss: importance_sampling           # canonical GRPO surrogate; the matched-compute study (matched_compute.py) varies this
+  lr: 1.0e-5
+  steps: 30
+  rank: 32                            # LoRA rank
+  # Audit-cell defaults for the arm-specific placeholders. Matched-compute
+  # cells (grpo/dapo/gspo) override these in matched_compute.py:arm_commands.
+  # Setting sensible defaults here lets the audit enumeration run without
+  # needing every cell to be a matched-compute arm.
+  clip_low: 0.2
+  clip_high: 0.2
+  importance_level: "token"
+  dynamic_sampling: "false"
+
+tier_overrides:
+  # Cheaper settings for big models so the sweep is affordable. Applied after `fixed`.
+  frontier:
+    steps: 20
+    rank: 16
+  mid: {}                             # inherit fixed
+  small: {}                           # inherit fixed
+
+# -----------------------------------------------------------------------------
+# SWEEP DESIGN — how axes are crossed so the manifest lands in 300-500 cells.
+# run_sweep.py reads this to decide the enumeration. We do NOT take the full
+# Cartesian product of everything (that would be thousands).
+# -----------------------------------------------------------------------------
+sweep_design:
+  target_run_count: {min: 300, max: 500}   # run_sweep.py warns if outside this band
+
+  # AUDIT BLOCK (Pillar-1a: scale ZVF/GU audit).
+  # Primary grid: cross models x seeds x group_sizes x difficulty for the
+  # `small` and `mid` tiers (cheap, high N). Frontier tier gets a thinned grid
+  # (baseline G + baseline difficulty only) to add coverage without blowing cost.
+  audit:
+    enabled: true
+    # tiers that get the FULL seed x G x difficulty cross
+    full_grid_tiers: [small, mid]
+    # tiers that get only a thin slice (baseline_group_size x baseline_difficulty x all seeds)
+    thin_grid_tiers: [frontier]
+    baseline_group_size: 8
+    baseline_difficulty: medium
+
+  # MATCHED-COMPUTE BLOCK (Pillar-1b): four loss arms (GRPO/DAPO/GSPO/Dr.GRPO) on a
+  # small fixed model set, equal total rollouts. Enumerated here for visibility,
+  # but matched_compute.py is the authoritative launcher for this block (it pins
+  # rollout/token budgets). run_sweep.py emits these cells too so the manifest is
+  # complete and resumable, tagged matched_*.
+  matched_compute:
+    enabled: true
+    models: [qwen3-8b, llama-8b-inst]      # `short` names from model_families
+    arms: [grpo, dapo, gspo, drgrpo]       # see matched_compute.py for exact configs
+    seeds: [42, 123, 456]
+    group_size: 8
+    difficulty: medium
+    # Optional YAML knobs for the matched budget. matched_compute.py
+    # reads these when present and falls back to the function
+    # defaults (2 prompts, 512 tokens) when absent. The total
+    # rollouts per arm = G * batch_prompts * steps; the token budget
+    # is held equal across arms.
+    base_batch_prompts: 2
+    max_tokens: 512
+
+# -----------------------------------------------------------------------------
+# HELD-OUT EVAL SUITE  (the splits each completed training run is scored on,
+# post-hoc, by aggregate_sweep.py — never during this sweep's training).
+# These are NAMES + loaders only. No scores live here.
+# -----------------------------------------------------------------------------
+held_out_suite:
+  GSM-Plus:
+    hf_dataset: "qintongli/GSM-Plus"
+    split: test
+    note: "Perturbation-robust GSM variant; primary math generalization split."
+  AIME-2025:
+    hf_dataset: "opencompass/AIME2025"
+    split: test
+    note: "Competition math; hard-tail generalization."
+  BFCL-v3:
+    hf_dataset: "gorilla-llm/Berkeley-Function-Calling-Leaderboard"
+    split: v3
+    note: "Tool/function-calling generalization (transfer off the math training task)."
+
+# -----------------------------------------------------------------------------
+# OUTPUT LOCATIONS  (where the manifest + status ledger live; results JSONs stay
+# in runner.*.results_dir so the rest of the repo toolchain is unaffected).
+# -----------------------------------------------------------------------------
+output:
+  manifest_path: zvf-program/sweep/run_manifest.json   # full enumerated grid (written by --dry-run too)
+  status_ledger: zvf-program/sweep/run_status.csv      # one row per cell: tag,status,started,finished,result_json
+  aggregate_table: zvf-program/sweep/aggregate_table.csv

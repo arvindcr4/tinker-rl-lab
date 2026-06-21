@@ -1,0 +1,17 @@
+% =============================================================================
+% Conclusion — D&B variant, tight
+% =============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+\ours{} is a shared empirical substrate for RL post-training across libraries,
+algorithms, and model families. The current release supports three
+conservative claims: (i) ZVF/GU are useful \emph{descriptive} diagnostics of
+when binary-reward GRPO stops producing within-group signal, but should not be
+read as causal predictors independent of reward mean and group size; (ii)
+trainability is substantially modulated by initialization and rollout regime,
+not algorithm choice alone; (iii) PPO/GRPO rankings and frontier-run stability
+are heterogeneous across stacks, so our results argue against one-size-fits-all
+recommendations. The held-out Qwen3-8B GSM8K control gives a small,
+non-significant GRPO gain over the base ($p{=}0.26$). The released traces and
+checkpoints are intended to make stricter follow-up easy.

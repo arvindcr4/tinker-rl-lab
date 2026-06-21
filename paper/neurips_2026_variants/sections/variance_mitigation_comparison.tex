@@ -1,0 +1,76 @@
+% =====================================================================
+% paper/sections/variance_mitigation_comparison.tex
+%
+% Audited 2026-04-25. Earlier drafts included projected head-to-head
+% results for named variance-mitigation methods. Those rows were not measured
+% in this repository and several source citations could not be verified. This
+% appendix now records rerun-required status instead of presenting projections.
+% =====================================================================
+
+\section{Variance-Mitigation Claims: Re-Run Required}
+\label{app:variance-mitigation}
+
+A prior version of this appendix attempted to answer reviewer questions about
+variance-aware GRPO variants by reporting projected rows for AERO, CPPO,
+NGRPO, Scaf-GRPO, MC-GRPO, GIFT, AReaL, and ES. Those rows were not produced by
+completed training runs in this repository. They combined our baseline GRPO
+trace with literature-derived or synthetic deltas and therefore cannot support
+claims about held-out reward, collapse rate, time-to-collapse, or ZVF
+predictiveness.
+
+The following claims are marked rerun-required in the paper:
+\begin{itemize}
+  \item that any variance-mitigation method was evaluated head-to-head against
+  our Qwen3-8B / GSM8K baseline at 5 seeds and 100 steps;
+  \item that all surveyed methods reduce ZVF or extend time-to-collapse under
+  our protocol;
+  \item that Scaf-GRPO, AERO, CPPO, NGRPO, or any related method is the best
+  mitigation for our traces;
+  \item that ZVF remains predictive under compensation-style mitigations or
+  weakens under suppression-style mitigations based on our data.
+\end{itemize}
+
+\subsection{What Remains Supported}
+\label{sec:variance-survey}
+
+The supported result is narrower: baseline GRPO runs in this artifact expose
+per-step reward variance, ZVF, and gradient-utilization diagnostics. These
+diagnostics can be used to design future variance-mitigation experiments, but
+they do not by themselves validate any external method.
+
+\subsection{Required Re-Run Protocol}
+\label{sec:variance-integration}
+
+Before this paper can make comparative claims about variance mitigation, each
+candidate method must be implemented as executable training code and run under
+the same protocol as the baseline:
+\begin{enumerate}
+  \item same checkpoint, tokenizer, sampler, reward function, LoRA adapter,
+  optimizer, and evaluation harness;
+  \item at least the same 5-seed Qwen3-8B / GSM8K sweep used for baseline
+  comparisons;
+  \item complete per-step logs for reward, ZVF, group size, KL/entropy where
+  available, and held-out evaluation;
+  \item a claim table generated directly from those logs, not from dry-run
+  projections or literature deltas.
+\end{enumerate}
+
+\subsection{Retired Tables}
+\label{sec:variance-head2head}
+\label{sec:variance-honesty}
+\label{sec:variance-zvf-stress}
+\label{tab:variance-axes}
+\label{tab:variance-head2head}
+\label{tab:variance-zvf-rho}
+
+The former comparison-axis table, head-to-head result table, and ZVF
+predictiveness table are intentionally omitted. Their labels are retained only
+so historical cross-references fail softly during transition; they must not be
+interpreted as evidence.
+
+\subsection{Summary}
+\label{sec:variance-summary}
+
+This appendix now makes one defensible statement: variance mitigation is a
+future-work item. The current artifact supports measuring ZVF under baseline
+GRPO, not ranking unrun mitigation methods.

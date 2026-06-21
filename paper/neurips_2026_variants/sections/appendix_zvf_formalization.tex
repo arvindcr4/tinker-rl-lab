@@ -1,0 +1,90 @@
+%REVIEW-ADDR: W1-zvf-tautology
+%REVIEW-ADDR: Q1-zvf-formalization
+\section{Formal Definition of the Zero-Variance Fraction, Non-Tautology, and Scope}
+\label{sec:appendix:zvf-formalization}
+
+\subsection{Formal Definition}
+
+Let a GRPO batch $B_t$ at optimizer step $t$ consist of $|B_t|$ prompt-groups,
+each group $g$ containing $K$ rollouts with scalar outcome rewards
+$r_{g,1}, \ldots, r_{g,K} \in \mathbb{R}$. We define the \emph{Zero-Variance
+Fraction} (ZVF) as
+\begin{equation}
+\label{eq:zvf}
+\mathrm{ZVF}_t \;=\; \frac{1}{|B_t|} \sum_{g \in B_t}
+  \mathbb{1}\!\left[\;\widehat{\mathrm{Var}}(r_{g,1}, \ldots, r_{g,K}) \le \varepsilon\;\right],
+\end{equation}
+where $\widehat{\mathrm{Var}}$ is the unbiased sample variance and
+$\varepsilon$ is a small numerical tolerance
+(we use $\varepsilon = 10^{-6}$ for rewards normalized to $[0,1]$).
+Intuitively, $\mathrm{ZVF}_t$ is the fraction of groups at step $t$ whose
+rollouts all collapsed to the same outcome; those groups contribute zero
+group-relative advantage and thus zero gradient signal to the GRPO update.
+
+\subsection{Why ZVF Is Not a Tautological Re-expression of Mean Reward}
+
+A reviewer may reasonably suspect that under binary outcome rewards
+$r \in \{0,1\}$ and group-relative advantages, $\mathrm{ZVF}_t$ is a direct
+function of the batch mean reward $\bar{r}_t$: if every group succeeds
+(or fails) uniformly, $\mathrm{ZVF}_t = 1$. This is true at the extremes
+$\bar{r}_t \in \{0,1\}$ but does \emph{not} hold at intermediate values.
+For $K$ i.i.d.~Bernoulli rollouts with prompt-specific success probability
+$p_g$, the expected ZVF under a null independence model is
+\begin{equation}
+\mathbb{E}[\mathrm{ZVF}_t] \;=\; \mathbb{E}_{p_g}\!\left[\,p_g^{K} + (1-p_g)^{K}\,\right].
+\end{equation}
+The right-hand side depends on the full prompt-difficulty distribution
+$\{p_g\}$, not only on its first moment. Two populations can therefore
+share the same mean reward $\bar r = 0.5$ yet have very different ZVF:
+a bimodal population with $p_g \in \{0,1\}$ yields $\mathrm{ZVF}=1$,
+while a uniform-hard population with all $p_g = 0.5$ and $K=8$ yields
+$\mathrm{ZVF} \approx 2 \cdot (0.5)^8 \approx 0.008$. The substantive
+claim is thus not ``high mean reward implies high ZVF,'' but rather that
+ZVF is sensitive to \emph{how} success mass is distributed across prompts.
+
+\subsection{What the Released Artifact Establishes}
+
+The released artifact bundled with this paper contains aggregate reward
+trajectories, held-out checkpoint summaries, and the cross-framework parser
+specification released with the anonymous artifact. It does
+\emph{not} contain the per-group step-level rollout logs needed to support
+a new partial-correlation table that controls simultaneously for
+batch-mean reward, entropy, KL drift, and advantage variance. We therefore
+do \emph{not} claim a fresh incremental-$R^2$ estimate here, and we mark
+any implication that the current artifact proves a new partial-correlation
+result beyond the already released summary traces as rerun required.
+
+The narrower empirical claim made in the revised paper is the one directly
+supported by the released evidence: in outcome-reward GRPO, high ZVF
+coincides with the disappearance of within-group contrast, and at any step
+where $\mathrm{ZVF}=1$ the group-relative advantage is mechanically zero so
+no gradient flows from that batch. We additionally observe co-occurrence
+between elevated ZVF and reward plateaus or regressions in some runs, but
+we do not establish a causal link: the within-task stratified analysis in
+Section~\ref{sec:zvf-analysis} does not support a within-task predictive
+relationship between mean ZVF and last-10 reward. The operational meaning
+of ZVF in the present benchmark is therefore the local mechanical claim,
+not a performance-causal one.
+
+\subsection{Boundary Conditions and Scope}
+
+We state explicitly when ZVF is \emph{not} informative, partly in response
+to the tautology concern:
+\begin{itemize}[leftmargin=1.2em,itemsep=0pt]
+  \item \textbf{Dense or continuous rewards.} When rewards are continuous
+        (e.g.,~process-reward models or graded code-execution partial credit),
+        $\widehat{\mathrm{Var}}$ is almost surely nonzero and
+        $\mathrm{ZVF} \to 0$. ZVF degenerates and must be replaced by a
+        per-step-reward-variance diagnostic or alternative diagnostic surrogates.
+  \item \textbf{$K=1$.} Group variance is undefined and ZVF is trivially $1$.
+  \item \textbf{SFT-saturated baselines.} When the policy already solves
+        the task ($\bar p_g \to 1$ for essentially every prompt),
+        $\mathrm{ZVF} \to 1$ and the diagnostic loses discriminative power;
+        in this regime RL no longer provides useful signal anyway.
+  \item \textbf{Non-outcome-reward RL.} For DPO- or regression-style
+        training there are no rollout groups and ZVF is ill-defined.
+\end{itemize}
+Within its intended scope -- outcome-reward GRPO on verifiable tasks with
+$K \ge 4$ and non-saturated reward support -- ZVF is a cheap, model-agnostic
+early-warning diagnostic. Outside that scope, the paper now recommends
+explicit surrogates instead of over-claiming portability.

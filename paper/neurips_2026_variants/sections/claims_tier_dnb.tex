@@ -1,0 +1,57 @@
+% =============================================================================
+% Main-body claims/tier/evidence/artifact/reproducibility table
+% Replaces the giant Table 4 in main body per GPT-5.5 Pro v5 review.
+% =============================================================================
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\caption{Claims hierarchy with evidence tier and artifact availability. Tier
+\textbf{A}: multi-seed completed cells used for inference. Tier \textbf{B}:
+single-seed completed case-study runs, descriptive only. Tier \textbf{C}:
+failed or partial cells listed for honesty (Appendix~\ref{sec:run-manifest}).
+``Repro.'' = reproducibility status: \emph{open} (re-runnable end-to-end via
+released code on commodity GPUs), \emph{closed-backend} (depends on the
+proprietary Tinker API), or \emph{listed} (no claim, only enumerated).}
+\label{tab:claims-tier}
+\begin{tabular}{@{}p{0.34\linewidth} c p{0.21\linewidth} c p{0.16\linewidth}@{}}
+\toprule
+\textbf{Claim} & \textbf{Tier} & \textbf{Evidence type} & \textbf{Artifact?} & \textbf{Repro.} \\
+\midrule
+Mechanical identity
+ $\mathrm{ZVF}{=}p^{G}{+}(1{-}p)^{G}$ for binary-reward GRPO
+ (Section~\ref{sec:zvf-analysis}, Appendix~\ref{sec:appendix:zvf-formalization})
+ & A & Closed-form derivation; verified against all logged groups
+ & \checkmark & open \\
+Held-out 5-seed Qwen3-8B GSM8K control
+ ($83.3\%$ vs.\ base $82.0\%$, $\Delta{=}{+}1.3$pp, $p{=}0.26$;
+ not significant; Section~\ref{sec:limitations})
+ & A & 5 seeds, paired greedy eval on held-out test split
+ & \checkmark & open \\
+Tier-A classic-RL multi-seed Modal arms
+ (CleanRL, SB3, Tianshou, Qwen2.5-0.5B, 5 seeds each;
+ Llama-3.3-70B-Inst, 4 seeds; Qwen3-8B Wave-6 ablation, 12 cells)
+ & A & Multi-seed step-level traces; mean $\pm$ SE / IQM
+ & \checkmark & open \\
+Single-seed case-study runs across model scale on Tinker
+ (8B-base through 671B / 397B MoE; Section~\ref{sec:results})
+ & B & Single-seed train-reward + ZVF traces; descriptive only
+ & \checkmark & closed-backend \\
+Single-seed Tinker group-size sweep
+ ($G\!\in\!\{2,4,8,16,32\}$, Qwen3-8B, GSM8K) and tool-use case studies
+ (Llama-3.1-8B-Inst, Qwen3-32B; reward $0$ at 30 steps)
+ & B & Single-seed traces; consistent with mechanical identity
+ & \checkmark & closed-backend \\
+Stratified ZVF-vs-performance analysis
+ (within-task Pearson $r{=}{+}0.40$, $N{=}19$;
+ model-varying $r{=}{+}0.13$, $N{=}7$;
+ see \texttt{stratified\_diagnostics} when present)
+ & B & Descriptive instrumentation, task-confounded
+ & \checkmark & closed-backend \\
+Failed/partial cells
+ (JWT-interrupted Tinker MoE runs; KL-tracking Modal H100;
+ unstarted external collaborator cells; Appendix~\ref{sec:run-manifest})
+ & C & None (listed only)
+ & --- & listed \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,32 @@
+% =============================================================================
+% Abstract — workshop variant. Reframed per GPT-5.5 Pro v5 review section C
+% as an ARTIFACT NOTE: artifact card up front, single descriptive claim,
+% one negative control, one residualized within-task ablation. No
+% benchmark-leaderboard ambition wording.
+% Target: <= 200 words.
+% =============================================================================
+\begin{abstract}
+This is an \textbf{exploratory workshop artifact note}, not a benchmark paper.
+We release step-level group reward traces, Zero-Variance Fraction (ZVF)
+traces, a parser-script bundle, a per-run manifest, and a structured evidence
+grade table for 79 GRPO-style runs across 7 RL libraries (TRL, Stable
+Baselines3, CleanRL, Tianshou, PufferLib, rl\_games, d3rlpy), the closed
+\tinker{} API, and 5 model families (total parameters 0.6B--671B; active
+0.6B--37B for the largest mixture-of-experts checkpoints). The release lives
+at an anonymous repository documented in
+Section~\ref{sec:limitations}.
+
+\textbf{Claim hierarchy (descending strength).}
+\textit{(i)} ZVF~$=1\Rightarrow$~zero gradient is mechanical
+(Appendix~\ref{sec:appendix:zvf-formalization}).
+\textit{(ii)} On a five-seed Qwen3-8B GSM8K held-out test, post-GRPO
+$83.3\%$ vs.\ base $82.0\%$ ($t{=}1.32$, $p{=}0.26$): not significant.
+\textit{(iii)} The pooled ZVF--last-10 correlation
+($r{=}{-}0.769$, $N{=}15$, $p{=}0.0008$) is task-confounded; within
+GSM8K only ($N{=}19$), $r{=}{+}0.40$ ($p{=}0.09$).
+We report ZVF as a cheap descriptive logging quantity, not as a
+predictive failure detector. Frontier-scale and tool-use rows are
+single-seed case studies, released for honesty and not as benchmark numbers.
+The rest of this artifact note is a candid evidence-grade table and three
+discussion prompts for the workshop.
+\end{abstract}

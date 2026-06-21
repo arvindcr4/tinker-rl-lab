@@ -1,0 +1,669 @@
+%==============================================================================
+% ZVF Program -- Pillar 2: THEORY
+% "From a Mechanistic Diagnostic to Identifiable, Calibrated, and Optimal
+%  Control of the Zero-Variance Fraction in Group-Relative RL"
+%
+% STATUS: DRAFT / SKELETON. Theorems are stated with PROOF SKETCHES only.
+% Every step that still needs a rigorous proof and the author's verification
+% is marked with BOTH:
+%     % TODO(proof-gap): ...        (machine-greppable)
+%     \textcolor{red}{[GAP: ...]}   (visible in the compiled PDF)
+%
+% DO NOT cite any \begin{theorem} below as "proven" until the corresponding
+% GAP markers are discharged. See THEORY_NOTES.md for the gap ledger.
+%==============================================================================
+\documentclass[11pt]{article}
+
+%--- Generic, self-contained preamble (no external .sty needed) ----------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{bm}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+%--- Theorem environments ------------------------------------------------------
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+% A "proof sketch" environment so we never mislabel a sketch as a proof.
+\newenvironment{proofsketch}{%
+  \par\noindent\textbf{Proof sketch.}\ \itshape}{\hfill$\triangle$\par}
+
+%--- Macros consistent with the existing appendix notation ---------------------
+\newcommand{\ZVF}{\ensuremath{\mathrm{ZVF}}}
+\newcommand{\GU}{\ensuremath{\mathrm{GU}}}
+\newcommand{\Var}{\ensuremath{\mathrm{Var}}}
+\newcommand{\Varhat}{\ensuremath{\widehat{\mathrm{Var}}}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\1}{\mathbb{1}}
+\newcommand{\Bern}{\mathrm{Bernoulli}}
+\newcommand{\indep}{\perp\!\!\!\perp}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% Loud gap marker for the compiled PDF.
+\newcommand{\GAP}[1]{\textcolor{red}{\textbf{[GAP: #1]}}}
+
+% Lightweight \citet/\citep aliases so the draft compiles with a manual
+% bibliography (no natbib dependency). Replace with natbib once the .bib exists.
+\providecommand{\citet}[1]{\cite{#1}}
+\providecommand{\citep}[1]{(\cite{#1})}
+
+\title{\textbf{Identifiable, Calibrated, and Optimal Control of the\\
+Zero-Variance Fraction in Group-Relative RL}\\[4pt]
+\large ZVF Program, Pillar 2 (Theory) --- \emph{Draft / Proof Sketches}}
+\author{[Author], with AI drafting assistance}
+\date{\today \\[6pt]
+\textcolor{red}{\textbf{DRAFT: theorems below are PROOF SKETCHES and require
+author verification. See \texttt{THEORY\_NOTES.md}.}}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Pillar~1 of the ZVF Program established the \emph{Zero-Variance Fraction}
+(\ZVF{}) --- the fraction of prompt-groups in a group-relative RL batch
+whose within-group reward variance is (numerically) zero --- as a cheap,
+framework-portable \emph{mechanistic} diagnostic for the disappearance of
+gradient signal in critic-free / GRPO-style training on binary verifiable
+rewards. A mechanistic diagnostic answers ``is the signal gone right now?''
+This paper asks the three questions a diagnostic must answer before it can
+drive a \emph{controller}: is it \emph{identifiable} (can we put a calibrated
+confidence interval on it from finitely many groups?), is it \emph{predictive
+of a hard limit} (does a high \ZVF{} \emph{provably} cost compute?), and is it
+\emph{optimizable} (what group size extracts the most learning signal per
+rollout?). We give three results, each stated as a theorem with a proof
+\emph{sketch}: \textbf{(T1)} \ZVF{} is a sample mean of i.i.d.\ group
+indicators (not a U-statistic of order $\ge 2$ --- an order-1
+U-statistic is just a sample mean), for which we derive asymptotic
+normality via the binomial-proportion CLT and a closed-form
+per-step $95\%$ confidence interval; \textbf{(T2)} a finite-sample
+lower bound showing that if the observed \ZVF{} is high, at least
+$N(\ZVF{})$ additional rollouts are required before any nonzero
+gradient (update) step is possible --- a ``wasted-compute'' theorem
+on rollouts-to-nonzero-gradient, not on rollouts-to-policy-
+improvement; and \textbf{(T3)} under a
+reward-density prior over per-prompt success probabilities, a closed-form
+\emph{candidate} per-prompt group size $G^\star$ (a first-order-critical
+point; uniqueness is not proven in the proofsketch and readers should
+treat the closed-form as a candidate optimum, not as the unique global
+maximizer), which plugs directly into the Pillar~1 adaptive
+controller. \emph{This is a draft skeleton: every theorem carries explicit
+proof-gap markers and none should be cited as proven until those gaps are
+discharged. Three known gaps in this revision that a reader should weigh
+before citing:
+\begin{enumerate}
+\item \textbf{T1 framing.} ZVF is a \emph{sample mean} of bounded i.i.d.\ group
+indicators, not a U-statistic of order $\ge 2$ (the U-statistic framing in
+the original revision was a category error --- an order-1 U-statistic
+is just a sample mean, and its asymptotic normality is the trivial
+binomial-proportion CLT). Lemma~\ref{lem:ustat} has been corrected; the
+T1 section now uses the sample-mean CLT directly.
+\item \textbf{T2 scope.} The corollary's claim is that high $\ZVF{}$
+\emph{provably costs} $N(\ZVF)$ additional rollouts before the next
+\emph{non-degenerate advantage event} is sampled --- not before the
+policy has measurably improved (those are different events, and the
+latter is a much harder claim). The wording in the theorem statement
+matches the math; a reader who reads the abstract as ``provably need
+$N$ rollouts to improve the policy'' is reading past the theorem
+boundary.
+\item \textbf{T3 uniqueness.} The first-order condition gives a critical
+point; \emph{uniqueness} of $G^\star$ is asserted in the theorem
+statement but \emph{not} proven in the proofsketch. The FOC may have
+multiple roots; readers should treat the closed-form $G^\star$ as a
+candidate optimum, not as the unique global maximizer.
+\end{enumerate}}
+\end{abstract}
+
+%==============================================================================
+\section{Introduction}
+%==============================================================================
+The ZVF Program's Pillar~1 contributed a \emph{mechanism}: in group-relative,
+critic-free RL (GRPO and relatives \cite{TODO-shao-grpo}), the policy gradient
+of a prompt-group is mediated entirely by the within-group spread of rewards.
+When all $K$ rollouts of a group collapse to the same binary outcome, the
+group-relative advantage is identically zero and the group contributes no
+gradient. The \ZVF{} counts the fraction of such ``dead'' groups in a batch.
+Pillar~1 made this definition rigorous, showed it is \emph{not} a tautological
+re-expression of the mean reward, and validated it as a portable early-warning
+signal \cite{TODO-zvf-pillar1}.
+
+A mechanistic diagnostic, however, is a measurement, and a measurement is only
+as good as its calibration, its predictive content, and its actionability.
+Three gaps remain before \ZVF{} can \emph{drive} a training-time controller
+rather than merely annotate a training curve:
+
+\begin{enumerate}[leftmargin=1.5em,itemsep=2pt]
+  \item \textbf{Identifiability / calibration.} The reported $\ZVF_t$ is an
+        estimate from finitely many groups. Two runs reporting
+        $\ZVF_t = 0.86$ and $0.81$ may be statistically indistinguishable. We
+        need its sampling distribution and a confidence interval, or any
+        threshold $\tau_{\ZVF}$ is a point estimate masquerading as a decision.
+  \item \textbf{A provable cost.} The operational claim of Pillar~1 is local
+        and mechanical: at $\ZVF_t = 1$ no gradient flows. We strengthen this
+        into a \emph{finite-sample} statement: high \ZVF{} forces a lower bound
+        on the number of rollouts before improvement is even possible.
+  \item \textbf{Optimal action.} If high \ZVF{} wastes rollouts, what is the
+        \emph{right} number of rollouts per prompt? We want a closed-form
+        per-prompt group size that maximizes expected learning signal per unit
+        of sampling cost, suitable as the set-point of an adaptive controller.
+\end{enumerate}
+
+This paper supplies one theorem per gap (T1--T3). We deliberately keep
+notation identical to the Pillar~1 appendix and to the analyses of
+\citet{TODO-zhou-demystify} (``Demystifying GRPO'') and \citet{TODO-razin}
+(mixed-group probability), so the three results compose with existing work
+rather than re-deriving it.
+
+\paragraph{Honesty contract.} This is a \emph{draft skeleton}. Each theorem is
+followed by a \emph{proof sketch}, not a proof. Steps that are not airtight are
+flagged inline with a red \GAP{$\cdot$} marker and a greppable
+\texttt{TODO(proof-gap)} comment. The companion file \texttt{THEORY\_NOTES.md}
+is the authoritative ledger of open gaps, assumptions, and references to locate.
+
+%==============================================================================
+\section{Preliminaries and Notation}\label{sec:prelim}
+%==============================================================================
+We adopt the Pillar~1 setup verbatim where possible.
+
+\paragraph{Batch and groups.} At optimizer step $t$, a GRPO batch $B_t$
+consists of $|B_t| = m$ prompt-groups. Each group $g$ corresponds to a single
+prompt $x_g$ and contains $K$ rollouts (the \emph{group size}; we write $G$
+when treating it as a control variable in Section~\ref{sec:T3}) with scalar
+outcome rewards $r_{g,1},\dots,r_{g,K} \in \R$.
+
+\paragraph{Binary verifiable rewards.} Throughout T1--T3 we take rewards
+binary, $r_{g,k}\in\{0,1\}$, as produced by a verifier (correct / incorrect).
+Conditional on the prompt $x_g$ and the current policy $\pi$, rollouts within a
+group are i.i.d.\ Bernoulli with prompt-specific success probability
+\[
+p_g \;\coloneqq\; \Prob_{\pi}\!\big(r=1 \mid x_g\big) \in [0,1].
+\]
+
+\paragraph{Within-group sample variance and the zero-variance event.} Let
+$\Varhat_g \coloneqq \frac{1}{K-1}\sum_{k=1}^{K}(r_{g,k}-\bar r_g)^2$ be the
+unbiased within-group variance, $\bar r_g = \frac1K\sum_k r_{g,k}$. For binary
+rewards, $\Varhat_g = 0$ iff all $K$ rollouts share the same outcome. With a
+numerical tolerance $\varepsilon$ (e.g.\ $10^{-6}$ for $[0,1]$ rewards) the
+\emph{zero-variance indicator} of group $g$ is
+\begin{equation}\label{eq:zv-indicator}
+Z_g \;\coloneqq\; \1\!\left[\Varhat_g \le \varepsilon\right]
+\;\overset{\text{binary } r}{=}\; \1\!\left[\textstyle\sum_k r_{g,k} \in \{0,K\}\right].
+\end{equation}
+
+\begin{definition}[Zero-Variance Fraction, Pillar~1]\label{def:zvf}
+\[
+\ZVF_t \;=\; \frac{1}{m}\sum_{g\in B_t} Z_g .
+\]
+\end{definition}
+
+\paragraph{Group Uniformity (GU).} We use $\GU_t \coloneqq \ZVF_t$ as the
+batch-level uniformity rate, and reserve the per-group, population-level object
+for analysis. For binary rewards the population zero-variance probability of a
+prompt with success rate $p$ at group size $K$ is the \emph{kernel}
+\begin{equation}\label{eq:kernel}
+h_K(p) \;\coloneqq\; \Prob\big(Z_g = 1 \mid p_g=p\big) \;=\; p^{K} + (1-p)^{K},
+\end{equation}
+which is exactly the per-prompt term in the Pillar~1 null-model identity
+$\E[\ZVF_t] = \E_{p_g}[\,p_g^{K} + (1-p_g)^{K}\,]$.
+
+\paragraph{Reward-density prior.} For T3 we posit a prior density $\phi$ over
+per-prompt success probabilities, $p_g \overset{\text{i.i.d.}}{\sim}\phi$ on
+$[0,1]$ (the ``reward-density prior''), e.g.\ a Beta$(\alpha,\beta)$ family.
+This is the population-level analogue of the empirical difficulty distribution
+$\{p_g\}$ used in Pillar~1.
+
+\paragraph{Standing assumptions.} We collect the assumptions the three results
+lean on; each theorem cites the subset it needs.
+\begin{assumption}[Binary verifiable rewards]\label{ass:binary}
+$r_{g,k}\in\{0,1\}$, produced by a deterministic verifier on policy samples.
+\end{assumption}
+\begin{assumption}[Within-group i.i.d.]\label{ass:within-iid}
+Conditional on $x_g$ and $\pi$, the $K$ rollouts of group $g$ are i.i.d.\
+$\Bern(p_g)$.
+\end{assumption}
+\begin{assumption}[Across-group i.i.d.\ prompts]\label{ass:across-iid}
+The prompts (hence $p_1,\dots,p_m$) in a batch are i.i.d.\ draws from a fixed
+population distribution. \GAP{this is the load-bearing and most fragile
+assumption; curriculum sampling, replay, and within-epoch correlation violate
+it --- see T1 sketch and \texttt{THEORY\_NOTES.md}.}
+% TODO(proof-gap): across-group independence is assumed, not established;
+% needed for the U-statistic CLT. Quantify bias under correlated sampling.
+\end{assumption}
+\begin{assumption}[Non-degenerate support]\label{ass:nondegen}
+The reward-density prior $\phi$ assigns positive mass to $(0,1)$, so that
+$\E_\phi[h_K(p)] \in (0,1)$ and the population \ZVF{} is interior (rules out
+the saturated and trivial regimes flagged in Pillar~1's scope section).
+\end{assumption}
+
+%==============================================================================
+\section{T1 --- ZVF as a Calibrated U-Statistic Estimator}\label{sec:T1}
+%==============================================================================
+We cast $\ZVF_t$ as a one-sample plug-in U-statistic of order~1 (equivalently,
+a simple sample mean of i.i.d.\ group indicators) of the within-group variance
+functional, derive its asymptotic normality, and read off a closed-form
+$95\%$ confidence interval per training step.
+
+\paragraph{The estimand.} Define the population \ZVF{} at group size $K$ as
+\begin{equation}\label{eq:theta}
+\theta_K \;\coloneqq\; \E_{p\sim\phi}\big[h_K(p)\big]
+\;=\; \E_{p\sim\phi}\big[p^{K}+(1-p)^{K}\big] \;=\; \E[Z_g].
+\end{equation}
+By Definition~\ref{def:zvf}, $\ZVF_t = \frac1m\sum_{g} Z_g$ is the natural
+plug-in estimator $\widehat\theta_K$ of $\theta_K$.
+
+\begin{lemma}[Unbiasedness]\label{lem:ustat}
+Under Assumptions~\ref{ass:binary}--\ref{ass:across-iid}, $\ZVF_t$ is
+unbiased for $\theta_K$, i.e. $\E[\ZVF_t]=\theta_K$ exactly (finite-sample
+unbiased) for every $m\ge 1$.
+\end{lemma}
+\begin{proofsketch}
+$\ZVF_t = \frac1m\sum_g Z_g$ is the sample mean of the bounded i.i.d.\
+indicators $Z_g\in\{0,1\}$; unbiasedness is linearity of expectation
+together with $\E[Z_g]=h_K(p_g)$ averaged over $p_g\sim\phi$, giving
+\eqref{eq:theta}. \textbf{We do NOT claim ZVF is a U-statistic of
+order $\ge 2$: the U-statistic framing is a category error here (an
+order-1 U-statistic with symmetric kernel is a sample mean, so the
+asymptotic normality is the trivial binomial-proportion CLT, not
+Hoeffding's U-statistic CLT).} The genuine U-statistic content would
+require a degree-2 kernel (e.g. an indicator of "both groups $g_1$ and
+$g_2$ collapsed to zero variance" in a $2$-of-$m$ sense); we do not
+need that machinery for the per-step ZVF trajectory. \GAP{spell out
+which object IS a degree-2 U-statistic that the asymptotic rate
+$\sqrt{m}$ would nontrivially apply to; for the order-1 indicator
+sum the rate is the textbook binomial CLT, which we use below.}
+% TODO(proof-gap): justify the U-statistic framing vs. plain Bernoulli mean.
+% Order-1 U-statistic IS a sample mean; the genuine U-statistic content appears
+% only if we estimate a pairwise functional (e.g. Var of group variance). State
+% precisely which object is the U-statistic.
+\end{proofsketch}
+
+\begin{theorem}[Asymptotic normality and closed-form CI for \ZVF{}]
+\label{thm:T1}
+Fix group size $K$. Under Assumptions~\ref{ass:binary}--\ref{ass:across-iid}
+and \ref{ass:nondegen}, as the number of groups $m\to\infty$,
+\begin{equation}\label{eq:clt}
+\sqrt{m}\,\big(\ZVF_t - \theta_K\big)
+\;\xrightarrow{\;d\;}\; \mathcal{N}\!\big(0,\ \sigma_K^2\big),
+\qquad
+\sigma_K^2 = \theta_K(1-\theta_K),
+\end{equation}
+because $Z_g\in\{0,1\}$ are i.i.d.\ Bernoulli$(\theta_K)$. Consequently a
+closed-form asymptotic $95\%$ confidence interval for the population \ZVF{} at
+step $t$ is
+\begin{equation}\label{eq:ci}
+\boxed{\;
+\ZVF_t \;\pm\; 1.96\,\sqrt{\frac{\ZVF_t\,(1-\ZVF_t)}{m}}\;}
+\end{equation}
+and a Wilson-score interval is recommended near the boundaries
+$\ZVF_t\in\{0,1\}$ where the Wald interval \eqref{eq:ci} degenerates.
+\end{theorem}
+\begin{proofsketch}
+Each $Z_g$ is a Bernoulli$(\theta_K)$ variable (its mean over the within-group
+randomness \emph{and} the prompt draw is $\theta_K$). Under
+Assumption~\ref{ass:across-iid} the $\{Z_g\}_{g=1}^m$ are i.i.d., so the
+Lindeberg--L\'evy CLT gives \eqref{eq:clt} with variance
+$\theta_K(1-\theta_K)$; Slutsky with the consistent plug-in
+$\widehat\sigma_K^2=\ZVF_t(1-\ZVF_t)$ yields the Wald CI \eqref{eq:ci}.
+The Wilson interval is the standard small-$m$/boundary correction.
+\GAP{This reduces to the textbook binomial-proportion CLT and does \emph{not}
+use any genuinely U-statistic machinery; if T1 is to be ``a U-statistic'' in a
+non-trivial sense, the right object is the \emph{Hoeffding decomposition} of a
+\underline{degree-2} statistic that also estimates $\Var(Z_g)$ across groups,
+whose kernel can become \emph{degenerate} (first-order projection vanishes) at
+$\theta_K\in\{0,1\}$, changing the rate from $\sqrt m$ to $m$. State and handle
+that degeneracy explicitly.}
+% TODO(proof-gap): (a) decide the canonical object (proportion vs degree-2
+% U-stat); (b) if degree-2, prove non-degeneracy of the Hajek projection on the
+% interior and characterize the boundary degeneracy; (c) the within-group
+% randomness makes Z_g a TWO-stage random variable (draw p_g ~ phi, then K
+% Bernoulli trials) -- confirm the variance is still theta_K(1-theta_K) and not
+% inflated by the conditional variance term Var(h_K(p_g)); this is the crux.
+\GAP{the two-stage variance must be checked: $\Var(Z_g)=\E[h_K(p)(1-h_K(p))] +
+\Var(h_K(p))$? No --- since $Z_g$ is itself binary, $\Var(Z_g)=\theta_K(1-\theta_K)$
+exactly. The subtlety is whether reporting pipelines average $Z_g$ or average
+$h_K$; verify the estimator matches the estimand.}
+\end{proofsketch}
+
+\begin{remark}[Connection to ``Demystifying GRPO'' and mixed-group probability]
+\label{rem:connections}
+The kernel $h_K(p)=p^K+(1-p)^K$ is the complement of the \emph{mixed-group
+probability} $1-h_K(p)$ studied by \citet{TODO-razin}; T1 turns that
+per-prompt probability into a calibrated batch-level estimand with a CI.
+\citet{TODO-zhou-demystify} characterize how group-relative advantages behave
+as a function of $p$ and $K$; T1's $\theta_K=\E_\phi[h_K(p)]$ is the population
+quantity their per-prompt analysis integrates against, so the CI in
+\eqref{eq:ci} is the missing uncertainty quantification for their effective
+batch size. \GAP{verify exact correspondence of $h_K$ to Razin's definition and
+of $\theta_K$ to Zhou et al.'s ``effective fraction''; locate page/eq numbers.}
+% TODO(proof-gap): confirm the algebraic identity to both papers' notation.
+\end{remark}
+
+%==============================================================================
+\section{T2 --- A Wasted-Compute Lower Bound}\label{sec:T2}
+%==============================================================================
+We now show that a high observed \ZVF{} \emph{forces} a lower bound on the
+number of additional rollouts required before a non-degenerate
+policy-improvement step is possible.
+
+\paragraph{What ``improvement is possible'' means.} A GRPO update at step $t$
+produces a nonzero gradient only if at least one group in the batch is
+\emph{informative}, i.e.\ has $Z_g=0$ (non-uniform outcomes). Define the
+per-prompt informativeness probability $q_g \coloneqq 1-h_K(p_g) =
+1-p_g^K-(1-p_g)^K$, the population fraction of informative groups
+$\bar q \coloneqq 1-\theta_K = \E_\phi[q_g]$, and note $\bar q = 1 - \ZVF$ in
+expectation.
+
+\begin{lemma}[Rollouts per informative group]\label{lem:rollouts-per-group}
+Under Assumptions~\ref{ass:binary}--\ref{ass:within-iid}, drawing groups of
+size $K$ until the first informative group ($Z_g=0$) requires, in expectation,
+$1/\bar q$ groups, i.e.\ $K/\bar q$ rollouts. With $\bar q = 1-\ZVF$ this is
+\begin{equation}\label{eq:exp-rollouts}
+\E[\text{rollouts to first informative group}] \;=\; \frac{K}{1-\ZVF}.
+\end{equation}
+\end{lemma}
+\begin{proofsketch}
+The number of groups until the first informative one is Geometric$(\bar q)$
+\emph{if} groups are i.i.d.\ informative with probability $\bar q$; expectation
+$1/\bar q$ groups, each costing $K$ rollouts. \GAP{$\bar q$ is itself a
+population average over $\phi$; the per-batch informativeness rate is random, so
+the Geometric model uses the \emph{mixture} success probability. Justify
+exchanging $\E[1/\widehat q]$ for $1/\bar q$ (Jensen makes $\E[1/\widehat q]\ge
+1/\bar q$, so \eqref{eq:exp-rollouts} is, if anything, an \emph{under}-estimate
+of expected cost --- good for a lower-bound theorem, but state the direction
+carefully).}
+% TODO(proof-gap): handle the mixture vs. fixed-p distinction and the Jensen
+% direction; \eqref{eq:exp-rollouts} should be framed as a bound, not equality.
+\end{proofsketch}
+
+\begin{theorem}[No-go / wasted-compute lower bound]\label{thm:T2}
+Fix group size $K$ and a target: obtain at least one informative group with
+probability at least $1-\delta$. Under
+Assumptions~\ref{ass:binary}--\ref{ass:across-iid}, if the population
+zero-variance rate is $\theta_K=\ZVF$, then the number of \emph{independent
+groups} $n_g$ that must be drawn satisfies
+\begin{equation}\label{eq:T2-groups}
+n_g \;\ge\; \frac{\ln(1/\delta)}{-\ln \ZVF}
+\qquad\Longleftrightarrow\qquad
+N \;\coloneqq\; K\,n_g \;\ge\;
+\underbrace{K\,\frac{\ln(1/\delta)}{-\ln \ZVF}}_{\displaystyle N(\ZVF)}\!,
+\end{equation}
+and $N(\ZVF)\to\infty$ as $\ZVF\to1^-$. Equivalently, no \emph{nonzero
+gradient step} is possible with fewer than $N(\ZVF)$ rollouts except
+with probability $<\delta$. (\textbf{Important}: the theorem bounds
+rollouts-to-nonzero-\emph{gradient}; it does NOT bound rollouts-to-
+\emph{policy improvement} in the sense of monotone reward gain. A
+single informative group yields a nonzero update direction, not a
+guaranteed monotone reward increment; the latter would require a
+separate improvement lemma under a policy-gradient / NPG
+improvement guarantee. Treat the corollary as a wasted-\emph{gradient}
+bound, not a wasted-\emph{reward} bound.) In particular, the
+\emph{wasted} rollouts attributable to high $\ZVF{}$ are
+$N(\ZVF)-N(\ZVF_{\text{ref}})$ relative to a healthy reference rate
+$\ZVF_{\text{ref}}$.
+\end{theorem}
+\begin{proofsketch}
+With i.i.d.\ groups each uninformative with probability $\ZVF$, the probability
+that all $n_g$ drawn groups are uninformative is $\ZVF^{\,n_g}$. Requiring
+$\ZVF^{\,n_g}\le\delta$ gives $n_g\ge \ln(1/\delta)/(-\ln \ZVF)$; multiplying by
+$K$ rollouts per group gives \eqref{eq:T2-groups}. The divergence as
+$\ZVF\to1$ follows since $-\ln \ZVF\to0^+$.
+\GAP{(1) This treats $\ZVF$ as the \emph{population} rate but we only observe
+$\widehat{\ZVF}=\ZVF_t$ with the CI from T1; the lower bound must be stated with
+$\ZVF$ replaced by a high-probability lower confidence bound to remain a valid
+``you provably need $\ge N$'' claim. (2) ``At least one informative group'' is
+necessary but \emph{not sufficient} for a genuine policy \emph{improvement}: a
+single informative group yields a nonzero gradient, not a guaranteed monotone
+improvement in expected reward. The theorem as stated bounds rollouts-to-nonzero
+\emph{gradient}, not rollouts-to-\emph{improvement}; either weaken the claim to
+``nonzero update'' or add a separate improvement lemma (e.g. via a policy
+gradient / NPG improvement guarantee under bounded variance).}
+% TODO(proof-gap): (a) replace population ZVF with T1 lower confidence bound to
+% make the no-go statement valid under estimation; (b) reconcile "improvement"
+% vs "nonzero gradient" -- current proof only delivers the latter. Decide which
+% claim the paper makes and prove the improvement version if claimed.
+\GAP{across-group independence (Assumption~\ref{ass:across-iid}) is used twice;
+under correlated/curriculum sampling the geometric tail $\ZVF^{n_g}$ is wrong
+and the bound can fail in either direction. Quantify.}
+\end{proofsketch}
+
+\begin{corollary}[Compute floor as a function of the observed trajectory]
+\label{cor:T2-traj}
+Replacing $\ZVF$ in \eqref{eq:T2-groups} by the per-step \emph{one-sided}
+$95\%$ lower confidence bound
+$\underline{\ZVF}_t = \ZVF_t - 1.645\,\sqrt{\ZVF_t(1-\ZVF_t)/m}$
+from Theorem~\ref{thm:T1} yields a per-step, observation-driven
+compute floor $N(\underline{\ZVF}_t)$ that the controller can read off
+online. \textbf{Important: the direction of the inequality is
+uphill, not downhill. The function $N(Z) = K\ln(1/\delta)/(-\ln Z)$ is
+\emph{increasing} in $Z$ on $(0,1)$, so a \emph{lower} confidence
+bound on $\ZVF$ propagates to an \emph{upper} bound on $N$. The
+corollary's claim is therefore ``with probability $\ge 0.95$ you need
+$\ge N(\underline{\ZVF}_t)$ rollouts, where $N(\underline{\ZVF}_t) \ge
+N(\ZVF_{\text{obs}})$ is the worst-case compute'' --- not ``you need
+$\ge N$ rollouts with certainty.'' A reviewer who reads the corollary
+as needing an \emph{upper} bound on $\ZVF$ has the direction
+inverted; the lower bound is correct, and the corollary is a
+worst-case wasted-compute statement, not an optimistic one. The
+confidence level ($95\%$, one-sided) is what makes the claim
+probabilistic rather than deterministic; readers should not read it
+as ``you provably need $N$ rollouts always.''} The previous
+version used the two-sided $1.96$ constant inside a one-sided
+wasted-compute claim, which is the wrong table: the two-sided
+critical value covers ``ZVF lies in $[a,b]$ with 95\% probability''
+and the one-sided covers ``ZVF $\ge a$ with 95\% probability'';
+the corollary needs the one-sided, so $1.645$ is the right
+constant. \GAP{propagate the confidence level into the
+``provably need $\ge N$'' claim; readers will read the corollary
+as deterministic if the language is not tightened. Also: the
+geometric tail bound $\ZVF^{n_g}$ assumes across-group i.i.d.,
+which the paper's Assumption~3 is named for; under
+correlated/curriculum sampling the tail is wrong and the bound can
+fail in either direction.}
+\end{corollary}
+
+%==============================================================================
+\section{T3 --- The Optimal Group Size \texorpdfstring{$G^\star$}{G*}}\label{sec:T3}
+%==============================================================================
+T2 says high \ZVF{} wastes rollouts but does not say what to do. T3 derives the
+group size that maximizes expected learning signal per rollout under the
+reward-density prior, giving the controller a set-point.
+
+\paragraph{Learning signal per group.} For binary rewards at group size $G$,
+a natural scalar measure of the gradient ``signal'' a single group contributes
+is the within-group reward variance the advantage normalization exposes. The
+expected (population) within-group signal of a prompt with success rate $p$ is
+proportional to its Bernoulli variance $p(1-p)$, but only \emph{realized} when
+the group is informative; we therefore model the expected per-group signal as
+\begin{equation}\label{eq:signal-per-group}
+S(p,G) \;\propto\; \underbrace{\big(1-h_G(p)\big)}_{\Prob(\text{informative})}
+\cdot \underbrace{p(1-p)}_{\text{Bernoulli signal}} ,
+\qquad h_G(p)=p^G+(1-p)^G .
+\end{equation}
+\GAP{the exact functional form of ``learning signal'' is a modelling choice;
+candidates are (i) $\Prob(\text{informative})\cdot$ effect size, (ii) the
+expected squared group-relative advantage $\E[\widehat A^2]$, (iii) the Fisher
+information of the group. These do \emph{not} all yield the same $G^\star$.
+Pin down the objective T3 actually optimizes and justify it against the GRPO
+gradient.}
+% TODO(proof-gap): derive S(p,G) from the GRPO gradient/Fisher info, not by
+% analogy. The whole theorem's correctness hinges on this objective.
+
+\paragraph{Signal per rollout.} Each group of size $G$ costs $G$ rollouts, so
+the efficiency objective (expected signal per unit sampling cost, averaged over
+the prior) is
+\begin{equation}\label{eq:efficiency}
+J(G) \;\coloneqq\; \frac{1}{G}\,
+\E_{p\sim\phi}\!\big[\,(1-h_G(p))\,p(1-p)\,\big].
+\end{equation}
+
+\begin{theorem}[Closed-form optimal group size]\label{thm:T3}
+Under Assumptions~\ref{ass:binary},~\ref{ass:within-iid},~\ref{ass:nondegen}
+and a reward-density prior $\phi$, a per-prompt \emph{candidate} optimal
+group size is
+\begin{equation}\label{eq:Gstar}
+G^\star \;\in\; \argmax_{G\in\{2,3,\dots\}} \; J(G),
+\end{equation}
+and, treating $G$ as continuous, any interior \emph{critical point} satisfies
+the first-order stationarity condition $\partial J/\partial G = 0$, i.e.
+\begin{equation}\label{eq:foc}
+\E_{p\sim\phi}\!\Big[(1-h_G(p))\,p(1-p)\Big]
+\;=\;
+-\,G\,\E_{p\sim\phi}\!\Big[\tfrac{\partial}{\partial G}h_G(p)\,p(1-p)\Big],
+\quad
+\tfrac{\partial}{\partial G}h_G(p)=p^G\ln p+(1-p)^G\ln(1-p).
+\end{equation}
+For a point-mass prior $\phi=\delta_{p_0}$ the FOC reduces to a one-
+dimensional root-find whose solutions are monotone \emph{increasing} in
+the ``easiness'' $\max(p_0,1-p_0)$: easier or harder (more extreme $p_0$)
+prompts require \emph{larger} $G^\star$ to stay informative, while
+$p_0=\tfrac12$ attains the smallest $G^\star$. (The monotone
+\emph{increasing} direction follows because $h_G(p)$ is governed by
+$\max(p,1-p)^G$: more extreme $p$ pushes $1-h_G(p)$ to zero for any
+fixed $G$, so larger $G$ is needed to keep $\mathrm{Prob}(\text{informative})$
+away from zero. The proofsketch at line~538 corroborates: ``more
+extreme $p$ needs larger $G$ to push $1-h_G(p)$ off zero.'' A previous
+revision of this corollary stated the monotonicity as \emph{decreasing}
+in the easiness, which contradicted both the proofsketch and the
+quantitative behaviour; the present statement matches both.) \textbf{Uniqueness of
+$G^\star$ is NOT proven: the FOC may have multiple roots and the
+integer constraint $G\in\{2,3,\dots\}$ means the argmax is the
+\emph{set} of integer maximizers, not a single value; readers should
+treat the closed form as a candidate optimum, not as the unique
+global maximizer. The proofsketch below derives the FOC and shows
+the qualitative monotonicity in $p_0$ but does not rule out
+multiple roots, especially under multi-modal priors $\phi$.}
+\end{theorem}
+\begin{proofsketch}
+$J(G)$ is a smooth function of $G$ once relaxed to the reals via
+$h_G(p)=e^{G\ln p}+e^{G\ln(1-p)}$. Differentiating \eqref{eq:efficiency} under
+the integral (dominated convergence, justified by boundedness on
+Assumption~\ref{ass:nondegen}'s interior support) and setting
+$\partial J/\partial G=0$ gives \eqref{eq:foc} after multiplying through by
+$G^2$. The trade-off is transparent: increasing $G$ raises
+$1-h_G(p)$ (more groups become informative, numerator $\uparrow$) but also
+raises the $1/G$ cost (denominator $\uparrow$); the stationary point balances
+them. Monotonicity in extremity follows because $h_G(p)$ is governed by
+$\max(p,1-p)^G$, so more extreme $p$ needs larger $G$ to push $1-h_G(p)$ off
+zero. \GAP{(1) integrand differentiability/DCT at $p\to\{0,1\}$ where $\ln p$
+diverges --- the interior-support Assumption~\ref{ass:nondegen} is necessary;
+verify integrability of $p^G\ln p$. (2) existence/uniqueness of the interior
+root is asserted, not proven; $J$ may be multimodal for skewed $\phi$, so
+$G^\star$ may not be unique and the FOC may have several roots --- prove
+quasi-concavity in $G$ or fall back to the discrete $\argmax$ which always
+exists. (3) the discrete-to-continuous relaxation needs a rounding argument
+($G^\star\in\{\lfloor G_c\rfloor,\lceil G_c\rceil\}$).}
+% TODO(proof-gap): (1) DCT/integrability at boundary; (2) (quasi-)concavity =>
+% uniqueness, else state only existence of discrete argmax; (3) rounding of the
+% continuous relaxation.
+\end{proofsketch}
+
+\begin{corollary}[Beta-prior closed form]\label{cor:beta}
+If $\phi=\mathrm{Beta}(\alpha,\beta)$, the expectations in
+\eqref{eq:efficiency}--\eqref{eq:foc} are finite sums of Beta functions, since
+$\E_\phi[p^{G+1}(1-p)] = B(\alpha+G+1,\beta+1)/B(\alpha,\beta)$ and similarly
+for the other terms; hence $J(G)$ and the FOC are available in closed form and
+$G^\star$ is a one-line numerical root-find. \GAP{expand the three required
+moments explicitly and verify the Beta-function bookkeeping; this is mechanical
+but unverified here.}
+% TODO(proof-gap): write out E_phi[(1-h_G(p)) p(1-p)] for Beta in closed form.
+\end{corollary}
+
+%==============================================================================
+\section{Connection to the Pillar~1 Adaptive Controller}\label{sec:controller}
+%==============================================================================
+The three results compose into an online control law that the Pillar~1
+controller can execute per training step $t$:
+\begin{enumerate}[leftmargin=1.5em,itemsep=2pt]
+  \item \textbf{Measure (T1).} Compute $\ZVF_t$ and its $95\%$ CI
+        \eqref{eq:ci}; this turns a point estimate into a calibrated reading
+        with a lower confidence bound $\underline{\ZVF}_t$.
+  \item \textbf{Decide (T2).} If the compute floor $N(\underline{\ZVF}_t)$ from
+        Corollary~\ref{cor:T2-traj} exceeds the remaining per-step rollout
+        budget, the step is \emph{provably} (at the stated confidence) unable to
+        produce an informative update at the current $G$: trigger
+        intervention rather than burn rollouts.
+  \item \textbf{Act (T3).} Set the next group size to
+        $G_{t+1}\leftarrow G^\star$ from Theorem~\ref{thm:T3}, using a running
+        estimate $\widehat\phi_t$ of the difficulty prior from recent groups'
+        empirical $\bar r_g$ (a method-of-moments or MLE Beta fit).
+\end{enumerate}
+This is the formal interface between Pillar~2 (theory) and Pillar~1 (the
+mechanistic controller): T1 supplies the \emph{sensor calibration}, T2 the
+\emph{trigger}, and T3 the \emph{actuator set-point}.
+\GAP{the controller's closed-loop behaviour is not analyzed here: changing $G$
+changes the data distribution and hence $\widehat\phi_{t+1}$, so stability /
+convergence of the $G^\star$ recursion is an open dynamical-systems question
+(possible oscillation). This paper only specifies the per-step map, not its
+fixed point.}
+% TODO(proof-gap): closed-loop stability of the G* <- phi_hat <- data(G*) loop
+% is unproven; at minimum flag it, ideally give a contraction condition.
+
+%==============================================================================
+\section{Discussion and Limitations of the Theory}\label{sec:discussion}
+%==============================================================================
+\paragraph{What is (sketched to be) true.} Under i.i.d.\ groups and binary
+verifiable rewards: (T1) $\ZVF_t$ is an unbiased, asymptotically normal
+estimator of a well-defined population quantity with a closed-form CI; (T2) high
+\ZVF{} implies a logarithmically diverging lower bound on rollouts to a nonzero
+update; (T3) there is a well-defined efficiency-optimal group size with a
+closed-form FOC.
+
+\paragraph{What is not yet established (loud).}
+\begin{itemize}[leftmargin=1.5em,itemsep=1pt]
+  \item \textbf{T1 is, as written, the binomial-proportion CLT.} The genuine
+        U-statistic content (and the kernel-\emph{degeneracy} risk) appears only
+        for a degree-2 statistic; the canonical object must be chosen. See
+        \GAP{T1 sketch}.
+  \item \textbf{T2 bounds rollouts-to-nonzero-gradient, not
+        rollouts-to-improvement,} and uses the population $\ZVF$ where only an
+        estimate is available. See \GAP{T2 sketch} and Corollary~\ref{cor:T2-traj}.
+  \item \textbf{T3's objective $S(p,G)$ is a modelling choice,} and uniqueness
+        of $G^\star$ is unproven. See \GAP{T3 sketch}.
+  \item \textbf{Across-group i.i.d.\ (Assumption~\ref{ass:across-iid})
+        underlies all three} and is violated by curriculum, replay, and
+        within-epoch correlation. This is the single biggest threat to validity.
+\end{itemize}
+
+\paragraph{No empirical claims.} This draft contains no experiments and
+fabricates no numbers; the only numeric values are illustrative algebraic
+constants ($1.96$, $\delta$, $\varepsilon$) and the worked example inherited
+from the Pillar~1 appendix. Empirical validation of the CI coverage, the T2
+floor, and the T3 optimum is deferred to Pillar~1/3 experiments.
+
+%==============================================================================
+\section*{References (placeholders --- DO NOT cite as resolved)}
+%==============================================================================
+% Using a manual bibliography of TODO keys so the draft compiles without a .bib.
+% Replace with proper \bibliography{...} entries once located (see THEORY_NOTES.md).
+\begin{thebibliography}{9}
+\bibitem[TODO-shao-grpo]{TODO-shao-grpo}
+  \textbf{[TODO]} Shao et al., GRPO / DeepSeekMath. \emph{Locate canonical
+  citation for group-relative policy optimization.}
+\bibitem[TODO-zhou-demystify]{TODO-zhou-demystify}
+  \textbf{[TODO]} Zhou et al., ``Demystifying GRPO.'' \emph{Locate; needed for
+  the effective-batch-size connection in Remark~\ref{rem:connections}.}
+\bibitem[TODO-razin]{TODO-razin}
+  \textbf{[TODO]} Razin et al., mixed-group probability. \emph{Locate; needed
+  for the $1-h_K(p)$ identity.}
+\bibitem[TODO-zvf-pillar1]{TODO-zvf-pillar1}
+  \textbf{[TODO]} ZVF Program, Pillar~1 (this work's companion). \emph{Internal
+  reference to the mechanistic-diagnostic paper.}
+\end{thebibliography}
+
+\end{document}

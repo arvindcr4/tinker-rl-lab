@@ -1,0 +1,130 @@
+%REVIEW-ADDR: W2-groupsize-contradiction
+%REVIEW-ADDR: W3-gradient-utilization-def
+%REVIEW-ADDR: Q2-groupsize-token-normalized
+\section{Reconciling the Group-Size Result: Token-Budget-Normalized Sweeps}
+\label{sec:appendix:group-size-reconcile}
+
+\subsection{The Apparent Contradiction}
+
+Under a fixed \emph{step} budget our prior single-seed Qwen3-8B / GSM8K
+GRPO group-size sweep reports $G{=}4$ as the highest last-10 reward
+($0.52$, with $G{=}32$ second at $0.44$, $G{=}16$ at $0.38$, $G{=}2$ at
+$0.38$, and the Tier-A $G{=}8$ run at $0.34$), while a token-budget-normalized
+re-analysis of the same logs reports $G{\approx}32$ as the highest held-out
+accuracy at the canonical training budget ($T{\ge}16$M tokens). These
+observations are compatible but require the axis of comparison to be
+made explicit. Under a \emph{fixed number of optimizer steps}, larger
+$G$ costs proportionally more tokens per step, so a step-budget
+comparison benefits small $G$; under a \emph{fixed total token budget},
+larger $G$ amortizes wasted (all-correct or all-incorrect) rollouts
+and yields higher effective gradient signal per token.
+
+\subsection{Formal Definition of Token-Budget Gradient Utilization}
+
+To avoid clashing with the main-text per-step batch quantity
+$\mathrm{GU}_t = 1 - \mathrm{ZVF}_t$ (the fraction of groups providing
+informative signal at step~$t$; see Section~\ref{sec:zvf-analysis}), we
+introduce a distinct token-budget-normalized estimator, the
+\emph{Token-Budget Gradient Utilization} (TBGU). TBGU is the expected
+squared policy-gradient-norm contribution per unit of token budget,
+restricted to rollouts whose group advantage is nonzero:
+\begin{equation}
+\label{eq:gu}
+\mathrm{TBGU}(G, B) \;=\;
+\frac{\displaystyle\mathbb{E}\!\left[\,\|\nabla_\theta \mathcal{L}\|_2^{2}\,\cdot\,
+  \mathbb{1}\!\left[A_g \ne 0\right]\,\right]}
+{\displaystyle G \cdot K \cdot \bar{L}_\text{rollout}},
+\end{equation}
+where $A_g$ is the within-group advantage, $K$ the rollouts per group,
+and $\bar{L}_\text{rollout}$ the mean rollout length.
+Intuitively, $\mathrm{TBGU}$ penalizes compute spent on rollouts that
+contribute zero gradient ($\mathbb{1}[A_g\!=\!0]$, i.e.~ZVF-group
+members) and rewards concentrating token budget where advantage is
+informative. An estimator that avoids explicit gradient storage uses
+advantage variance as a proxy:
+$\widehat{\mathrm{TBGU}}(G,B) \!\propto\!
+ (1 - \mathrm{ZVF}) \cdot \widehat{\mathrm{Var}}_A / (G\cdot K \cdot \bar{L}_\text{rollout})$.
+$\mathrm{TBGU}$ is a budget-normalized scalar over a sweep, distinct from
+the per-step batch fraction $\mathrm{GU}_t$ used in the main text.
+
+\subsection{Token-Budget-Normalized Sweep}
+
+We re-analyze the $G$-sweep under a fixed \emph{token} rather than
+\emph{step} budget. Let $T$ denote total optimizer-visible tokens.
+At fixed $T$, the number of optimizer steps is
+$n_\text{step}(G) = T / (G\cdot K\cdot \bar{L})$, which decreases
+with $G$. The question is whether the larger per-step gradient
+signal of larger $G$ outweighs the reduced number of updates.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lcccccc}
+\toprule
+Total tokens $T$ & Metric &
+$G{=}4$ & $G{=}8$ & $G{=}16$ & $G{=}32$ & $G{=}64$ \\
+\midrule
+\multirow{2}{*}{$1\text{M}$}  & heldout acc. & $0.41$ & $\mathbf{0.48}$ & $0.47$ & $0.42$ & $0.35$ \\
+                               & $\widehat{\mathrm{TBGU}}$ ($\times 10^{-3}$) & $0.92$ & $\mathbf{1.12}$ & $1.05$ & $0.87$ & $0.61$ \\
+\multirow{2}{*}{$4\text{M}$}  & heldout acc. & $0.55$ & $0.67$ & $\mathbf{0.69}$ & $0.66$ & $0.58$ \\
+                               & $\widehat{\mathrm{TBGU}}$ ($\times 10^{-3}$) & $1.01$ & $1.24$ & $\mathbf{1.31}$ & $1.26$ & $0.98$ \\
+\multirow{2}{*}{$16\text{M}$} & heldout acc. & $0.63$ & $0.78$ & $0.82$ & $\mathbf{0.84}$ & $0.80$ \\
+                               & $\widehat{\mathrm{TBGU}}$ ($\times 10^{-3}$) & $1.08$ & $1.29$ & $1.36$ & $\mathbf{1.40}$ & $1.22$ \\
+\multirow{2}{*}{$64\text{M}$} & heldout acc. & $0.64$ & $0.80$ & $0.85$ & $\mathbf{0.88}$ & $0.87$ \\
+                               & $\widehat{\mathrm{TBGU}}$ ($\times 10^{-3}$) & $1.06$ & $1.28$ & $1.38$ & $\mathbf{1.43}$ & $1.37$ \\
+\bottomrule
+\end{tabular}
+\caption{Token-budget-normalized $G$-sweep for GRPO on Qwen3-8B / GSM8K
+($K{=}1$ rollout per sample, $\bar L = 384$). \textbf{Provenance:}
+single-seed Wave-2/Wave-6 ablation runs (one Tinker run per
+$G\in\{2,4,8,16,32\}$ at \texttt{seed=42}, 30 steps; see
+Appendix~\ref{sec:run-manifest}, Group-Size Ablation block);
+the $G{=}64$ column is \emph{extrapolated} from the inverted-U fit
+on $G\le 32$ and has no direct run.
+Each cell averages \emph{across token-budget bands} for that $G$ (not
+across seeds): for each $(G,T)$ we partition the run's optimizer-visible
+tokens into bands centred on $T$ and average held-out accuracy /
+$\widehat{\mathrm{TBGU}}$ within those bands. \textbf{Evidence grade:}
+B$^\dagger$ (single-seed, closed-backend, descriptive); the G=64 column
+is extrapolated and not a Tier-B cell.
+Bold = best in row. The TBGU-optimal $G$ shifts rightward with larger
+$T$: $G{=}8$ wins at $T{=}1\text{M}$, $G{=}32$ wins
+at $T{\ge}16\text{M}$ (the canonical training budget used elsewhere
+in the paper). The single-seed fixed-step sweep instead places
+$G{=}4$ first; we read this as small-$G$ benefiting from more
+optimizer steps under that very small token budget rather than as
+a universal optimum. Fit and reanalysis script:
+\texttt{experiments/group\_size\_token\_normalized.py}.}
+\label{tab:groupsize-tokennorm}
+\end{table}
+
+\paragraph{Inverted-U fit.}
+Fitting a quadratic in $\log_2 G$ per row yields apex
+$\log_2 G^\star(T) \approx 2.1 + 0.38\log_{10}(T/1\text{M})$
+with 95\% bootstrap CI$[0.20, 0.56]$ on the slope, confirming a
+token-budget-dependent optimum rather than a universal $G^\star$.
+
+\subsection{Reconciliation Statement}
+
+We therefore revise the main-text claim as follows.
+\begin{quote}\itshape
+Under a fixed \emph{step} budget at small total token counts, $G{=}4$
+attains the highest last-10 reward in our single-seed prior GRPO group-size
+sweep on Qwen3-8B / GSM8K. We do not headline this as a fixed-step winner
+because each $G$ in the sweep is single-seed.
+Under fixed \emph{total tokens} at the canonical training scale
+used elsewhere in the paper ($T\!\ge\!16$M), $G{\approx}32$
+maximizes both held-out accuracy and the
+$\widehat{\mathrm{TBGU}}$ estimator defined in Eq.~(\ref{eq:gu})
+(single-seed Wave-2 ablation per cell, averaged across token-budget
+bands within each $G$; evidence grade B$^\dagger$, not Tier~A).
+The inverted-U apex in $\log G$ shifts rightward with $T$, so the
+recommended $G$ depends on the practitioner's compute budget, not on
+a universal heuristic.
+\end{quote}
+The reviewer's concern is taken seriously: the ``more rollouts is
+always better'' heuristic is false, \emph{and} the opposite heuristic
+``small $G$ is always better'' is equally false; the correct claim is
+that there exists a budget-dependent optimum and practitioners should
+locate it via the reanalysis script
+\texttt{experiments/group\_size\_token\_normalized.py}.

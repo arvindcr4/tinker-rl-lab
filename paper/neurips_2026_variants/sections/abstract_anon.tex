@@ -1,0 +1,37 @@
+% =============================================================================
+% Abstract — conservative, evidence-aligned framing
+% Drop-in include: \input{sections/abstract}
+% Target: <= 250 words
+% =============================================================================
+\begin{abstract}
+RL post-training of language models is now shaped by a small set of
+algorithms (PPO, GRPO, DPO) and a growing set of frameworks (TRL,
+\tinker{}, OpenRLHF, veRL), yet it remains unclear which empirical conclusions
+transfer across implementations, model families, and scales. We present
+\ours{}, a benchmark spanning 79 runs across 7 RL libraries, 5 model
+families, and total-parameter scales from 0.6B to 671B (active-parameter
+counts 0.6B--37B for the largest mixture-of-experts checkpoints) on GSM8K,
+MATH-500, HumanEval, and synthetic tool-use tasks. The strongest evidence in
+the current release comes from short-horizon GSM8K training dynamics; held-out
+evaluation and non-math coverage remain narrower.
+
+Three conclusions are supported conservatively. First, Zero-Variance Fraction
+(ZVF)---the share of GRPO groups with identical rewards---tracks when binary
+outcome rewards stop producing within-group learning signal. Because ZVF is
+mechanically coupled to reward sparsity, group size, and baseline accuracy, we
+use it as a descriptive diagnostic rather than a standalone causal predictor.
+Second, trainability in our current sweeps varies substantially with
+initialization and rollout regime: instruction-tuned checkpoints were
+generally easier to optimize than comparable base models, and intermediate
+group sizes often behaved better than the smallest or largest settings we
+tested, but we do not claim a universal optimal group size. Third, PPO/GRPO
+rankings and frontier-model stability are heterogeneous across model families
+and end-to-end stacks; our single-seed API runs should be read as case studies,
+not universal laws. A separate held-out GSM8K control shows that the mean
+Qwen3-8B GRPO delta over the base model is small and not statistically
+significant (83.3\% vs.\ 82.0\%, $p{=}0.26$), while tool-use and code results
+remain limited by sparse rewards and custom evaluation.
+
+We release code, logs, and checkpoints at
+\url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B}.
+\end{abstract}

@@ -1,0 +1,28 @@
+% =============================================================================
+% Abstract --- ZVF as per-step zero-gradient sentinel; pooled cross-task
+% correlation does not survive within-task stratification. Headline finding,
+% not caveat. Target: <= 200 words
+% =============================================================================
+\begin{abstract}
+Zero-Variance Fraction (ZVF) is a per-step sentinel for zero reward-gradient
+contribution under group-relative policy advantages, not a cross-task
+predictor of GRPO performance. When every rollout in a GRPO group receives
+the same scalar reward, the group-relative advantage is zero and the prompt
+contributes no gradient; ZVF measures the share of groups in this regime.
+We make two paired claims about how to use this quantity. \emph{Positive:}
+per-step ZVF (and its complement $\mathrm{GU}_t = 1-\mathrm{ZVF}_t$) is a
+mechanically interpretable online utilization meter that, paired with batch
+reward mean, distinguishes all-wrong collapse from all-correct saturation
+and from informative-contrast training; we demonstrate this with tool-use
+runs that sit at $\mathrm{ZVF}{=}1$, $\mathrm{GU}{=}0$, reward $0$ from
+step~1 (Qwen3-32B and Llama-3.1-8B), contrasted with a GSM8K run whose
+GU and reward both move. \emph{Negative:} the pooled cross-task ZVF--reward
+correlation that earlier drafts (and concurrent work) cite as evidence that
+ZVF predicts GRPO outcomes does \emph{not} survive within-task
+stratification ($r{=}-0.769$, $p{=}0.0008$, $N{=}15$ pooled $\to$ $r{=}+0.40$,
+$p{=}0.09$, $N{=}19$ within-GSM8K; $r{=}+0.13$, $N{=}7$ model-varying); it is
+confounded by task identity. We audit pooled correlations under stratification
+and partial-correlation controls and provide a regime-to-action triage table.
+We release step-level ZVF/GU traces, formalization, and analysis code at
+\url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B}.
+\end{abstract}

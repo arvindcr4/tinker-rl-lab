@@ -64,8 +64,13 @@ def test_base_adapter_process_step_runs_triage():
     a = _ListAdapter(adaptive_G=True, G0=8, Gmin=2, Gmax=32)
     d = a.process_step(_mixed())
     assert d.regime is Regime.EXPLOITABLE_CONTRAST
-    assert d.group_size == 8  # ZVF=0 -> base G
-    assert a.group_size == 8
+    # Default adaptive_fn is now BIDIRECTIONAL: at zvf=0 with the
+    # new default, G is decreased to 0.5x = 4. The old monotonic
+    # default would have left G at 8; see
+    # test_controller.py::test_adaptive_monotonic_increasing_override
+    # for the user-override path.
+    assert d.group_size == 4
+    assert a.group_size == 4
 
 
 def test_base_adapter_forwards_auto_stop():

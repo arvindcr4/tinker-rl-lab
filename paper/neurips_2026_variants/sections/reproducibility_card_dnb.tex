@@ -1,0 +1,54 @@
+% =============================================================================
+% Reproducibility / make-targets section for DNB main body.
+% Note: actual paper/Makefile is a TODO at submission time; documented as such.
+% =============================================================================
+\subsection{One-command reproducibility}
+\label{sec:repro-onecmd}
+
+The artifact ships a top-level \texttt{Makefile} with three documented
+targets that govern the open-stack reproducibility surface:
+
+\begin{itemize}\setlength\itemsep{1pt}
+  \item \texttt{make smoke-test} --- $\sim$5\,min on a single commodity
+        GPU (T4 or L4 class, 16\,GB). Verifies that the artifact installs,
+        the pinned containers launch, and the GSM8K reward harness emits a
+        non-trivial reward on a 16-prompt sanity batch. No model weights are
+        updated.
+  \item \texttt{make reproduce-main} --- end-to-end re-run of every Tier-A
+        open-stack cell in the manifest (Modal H100
+        CleanRL/SB3/Tianshou/Qwen2.5-0.5B classic-RL arms; the 5-seed
+        held-out Qwen3-8B GSM8K control). Estimated wall-clock:
+        $\sim$96 GPU-hours on H100~SXM5 (80\,GB), or
+        $\sim$3 hours per seed for the 0.5B reference. Produces the same
+        step-level ZVF/GU traces and the held-out evaluation numbers cited
+        in Table~\ref{tab:claims-tier}.
+  \item \texttt{make reproduce-appendix} --- regenerates the full results
+        table (Appendix~\ref{sec:appendix:full-results}) figures from the
+        precomputed traces shipped with the artifact, without re-running
+        any backend. Useful for reviewers who want to verify that our
+        plotting code agrees with the bundled trace files.
+\end{itemize}
+
+\paragraph{What is and is not in the make target.}
+\texttt{make reproduce-main} only re-runs A-grade open-stack cells; B-grade
+Tinker case-study runs are not re-run because the Tinker backend is
+closed-source and rate-limited (Section~\ref{sec:limitations}). For B-grade
+cells we ship the JSON step logs and the API-call scripts; replication
+requires Tinker credentials and incurs the JWT-expiry failure modes
+documented in the manifest (Appendix~\ref{sec:run-manifest}).
+
+\paragraph{Hash manifest.}
+On a successful \texttt{make reproduce-main} run, the artifact writes a
+\texttt{REPRODUCIBILITY\_HASHES.json} file containing SHA-256 digests of
+every emitted ZVF trace, reward CSV, and held-out evaluation summary.
+Reviewers can diff this against the reference manifest released with the
+artifact to confirm bit-level (where deterministic) or distributional
+(where sampling-based) agreement.
+
+\paragraph{Submission-time status.}
+At submission, the \texttt{Makefile} targets are wired to the
+already-released Modal scripts and the held-out evaluation harness; if a
+target is missing or stub-only at the time the camera-ready artifact tag
+is cut, the corresponding entry in the artifact card
+(Table~\ref{tab:artifact-card}) will be downgraded from \checkmark{} to
+``pending'' and the README will list the substitute manual command.

@@ -1,0 +1,74 @@
+% =============================================================================
+% Stratified diagnostics for ZVF (NeurIPS 2026, GPT-5.5 Pro v5 review item).
+% Auto-derived from experiments/analysis/v5/{bootstrap,partial_corr}_table.csv.
+% Random seed 42; 10k bootstrap; 10k permutation.
+% Pool sizes: pooled original N=15 (earlier-draft cells); pooled extended
+% N=29 (every cell with released step-level traces); within-GSM8K N=19;
+% GSM8K model-varying N=7.
+% =============================================================================
+\section*{Stratified Diagnostics}
+\label{sec:stratified-diagnostics}
+
+\paragraph{Bootstrap CIs and permutation tests.}
+Pearson $r$ between mean ZVF and last-10 reward on each of the four cell-pools
+used in this paper, with 10\,000-resample bootstrap 95\% CIs and
+10\,000-permutation $p$-values (Table~\ref{tab:zvf-bootstrap}). The pooled
+cross-task signal is large; the within-task subsets cross zero.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrr}
+\toprule
+Analysis & $r$ & $N$ & 95\% CI (bootstrap) & $p_{\text{perm}}$ \\
+\midrule
+Pooled original                 & $-0.769$ & $15$ & $[-0.93,\,-0.52]$ & $0.0004$ \\
+Pooled extended                  & $-0.443$ & $29$ & $[-0.69,\,+0.03]$ & $0.0146$ \\
+Within GSM8K                    & $+0.401$ & $19$ & $[-0.08,\,+0.83]$ & $0.0837$ \\
+GSM8K model-varying\textsuperscript{\dag}    & $+0.126$ & $7$  & $[-0.97,\,+1.00]$ & $0.8139$ \\
+\bottomrule
+\end{tabular}
+\caption{ZVF--last-10 reward correlations with bootstrap CIs and permutation
+$p$-values. The extended pool reports every cell whose step-level ZVF trace is
+in the released artifact. \textsuperscript{\dag}~The $N{=}7$ nonparametric CI
+is uninformative; the parametric Fisher-$z$ CI is $[-0.69,\,+0.80]$, also
+crossing zero.}
+\label{tab:zvf-bootstrap}
+\end{table}
+
+\paragraph{Partial correlations.}
+With task fixed effects, log group size, and pre-RL accuracy as controls
+(Table~\ref{tab:zvf-partials}); we never control for last-10 reward, the
+outcome. Adding task FE alone collapses the pooled $r$ from $-0.44$ to
+$-0.03$; with any combination of $\log G$ and base accuracy the partial $r$
+is between $+0.02$ and $+0.14$ and never significant.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrl}
+\toprule
+Specification & $r_{\text{partial}}$ & df & $p$ & Interpretation \\
+\midrule
+Raw pooled, no controls                          & $-0.443$ & $27$ & $0.016$ & Task is a lurking variable. \\
+$+$~task FE                                      & $-0.026$ & $26$ & $0.896$ & Task identity removes the sign. \\
+GSM8K within-task                                & $+0.401$ & $17$ & $0.088$ & Sign flips, CI crosses zero. \\
+GSM8K model-varying                              & $+0.126$ & $5$  & $0.788$ & Underpowered ($N{=}7$). \\
+Pooled $+$ task FE $+$ $\log G$                  & $+0.021$ & $25$ & $0.916$ & Group size does not rescue it. \\
+Pooled $+$ task FE $+$ base acc                  & $+0.135$ & $25$ & $0.502$ & Pre-RL ability does not rescue it. \\
+Pooled $+$ task FE $+$ $\log G$ $+$ base acc     & $+0.136$ & $24$ & $0.507$ & Joint controls; not significant. \\
+GSM8K $+$ $\log G$ $+$ base acc                  & $+0.420$ & $15$ & $0.094$ & Within-task partial agrees with raw. \\
+\bottomrule
+\end{tabular}
+\caption{Partial Pearson correlations of mean ZVF with last-10 reward
+(\texttt{pingouin.partial\_corr}). Last-10 reward is the outcome and is never
+on the right-hand side. Stack fixed effects are not reported (too little
+within-stack variation: $\le 3$ stacks with $\ge 2$ runs).}
+\label{tab:zvf-partials}
+\end{table}
+
+\paragraph{Interpretation.}
+The pooled correlation does not survive stratification: with task fixed
+effects $r$ collapses to $-0.03$, and on the largest within-task subset the
+sign flips to $+0.40$. The remaining within-GSM8K signal is underpowered,
+with a 95\% CI that crosses zero. This is not evidence of absence---it is
+evidence that the pooled monotone story is not supported once the task
+confound is removed.

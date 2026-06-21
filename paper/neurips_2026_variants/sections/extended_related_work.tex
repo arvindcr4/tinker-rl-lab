@@ -1,0 +1,97 @@
+% =============================================================================
+% Extended Related Work -- audited 2026-04-25 (re-scoped 2026-04-25)
+%
+% Earlier drafts used unverified 2025--2026 method names to map projected ZVF
+% behaviour under tree sampling, stability-aware PPO, and dual-KL training.
+% Those specific quantitative comparisons require reruns. The appendix now
+% additionally cites concurrent within-group zero-variance work as MECHANISM
+% corroboration -- the failure mode is identified independently by NGRPO,
+% RL-ZVP, Scaf-GRPO, LENS, Hard Examples, and EBPO -- without using those
+% papers as evidence for any quantitative ZVF predictiveness claim in our
+% artifact.
+% =============================================================================
+
+\section{Extended Scope Notes for ZVF}
+\label{sec:extended-related-work}
+
+\ours{} defines Zero-Variance Fraction (ZVF) for grouped rollouts with scalar
+rewards. It is informative only when within-group reward equality is a plausible
+failure mode of the optimizer. Concurrent 2025--2026
+work~\cite{nan2025ngrpo,le2025rlzvp,zhang2025scafgrpo,feng2025lens,pikus2025hardexamples,han2026ebpo}
+independently identifies and addresses the same within-group zero-variance
+failure mode, with RL-ZVP~\cite{le2025rlzvp} naming it ``zero-variance
+prompts'' in the same sense we use it. This appendix records the boundaries
+we can defend from our artifact and from established process-reward and
+concurrent zero-variance work; we do not claim those papers validate the
+specific ZVF predictiveness numbers reported here.
+
+\subsection{Sampling Structure}
+\label{sec:ext:tree-prm}
+
+The measurements in this paper use independent sampled completions within each
+GRPO group. We do not evaluate tree-structured, shared-prefix, or otherwise
+correlated group samplers. If a future sampler intentionally couples group
+members, ZVF must be reported alongside an estimate of intra-group correlation;
+otherwise a zero-variance event can reflect the sampler rather than only the
+policy or reward function.
+
+\subsection{Dense Process Rewards}
+
+Process reward models such as Let's Verify Step by Step~\cite{lightman2023prm}
+replace a single terminal outcome with step-level supervision. Under dense
+step rewards, exact equality of aggregate trajectory rewards can become rare
+even when learning is unhealthy. In that regime, ZVF can approach zero for both
+healthy and collapsed runs, so it must be replaced or augmented with a
+per-step reward-variance, effective-rollout, or effective-rank diagnostic.
+
+\subsection{PPO-Style Stability Metrics}
+\label{sec:ext:stppo}
+
+PPO-style trainers often expose token-level clip fractions, approximate KL, and
+entropy. These metrics are not substitutes for ZVF: they measure policy-update
+geometry rather than within-group reward contrast. We therefore treat them as
+complementary observables. The combined alarm that remains defensible is
+descriptive, not validated:
+\begin{equation}
+\mathcal{A}_t =
+\bigl(\mathrm{ZVF}_t > \tau_z\bigr)
+\wedge
+\bigl(\mathrm{clip\_frac}_t > \tau_c\bigr).
+\label{eq:combined}
+\end{equation}
+This rule should be calibrated before use; we do not claim a universal
+threshold or a measured false-positive rate.
+
+\subsection{RL-Free or Hybrid Alignment}
+\label{sec:ext:dar}
+
+ZVF is undefined when there are no sampled rollout groups. In RL-free
+preference-regression regimes, a possible surrogate is per-minibatch
+gradient-norm variance,
+\[
+\mathrm{GNV}_t =
+\mathrm{Var}_{i \in \mathcal{B}_t}
+\left[\,\lVert \nabla_\theta \mathcal{L}_i(\theta_t) \rVert_2\,\right].
+\]
+This is a proposal for future instrumentation, not a result measured in the
+current artifact.
+
+\subsection{Applicability Summary}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Regime & ZVF status & Supported action \\
+\midrule
+Outcome-reward GRPO & In scope & Report ZVF/GU from rollouts \\
+Correlated group sampler & Needs calibration & Add group-correlation diagnostics \\
+Dense process reward & Often degenerate & Use per-step reward variance or ERF \\
+PPO-style trainer & Complementary & Report ZVF with clip/KL/entropy \\
+RL-free preference training & Undefined & Use a non-rollout surrogate such as GNV \\
+\bottomrule
+\end{tabular}
+\caption{Audited ZVF applicability boundaries.}
+\label{tab:ext:zvf-applicability}
+\end{table}

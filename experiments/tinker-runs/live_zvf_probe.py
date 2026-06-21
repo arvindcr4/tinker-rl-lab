@@ -30,6 +30,11 @@ SYSTEM_PROMPT = (
 QUESTION_SUFFIX = " Provide the final numerical answer inside \\boxed{}."
 
 _ADVS: list[float] = []
+# Module-level flag toggling the per-group /std normalization at line ~517.
+# Default True matches vanilla GRPO / importance_sampling. Dr.GRPO (cell_runner.py
+# loss arm "drgrpo") sets this to False to remove the length bias introduced
+# by dividing by std, i.e. A = (r - mean) instead of A = (r - mean) / std.
+_ADV_NORMALIZE_STD: bool = True
 
 
 def load_env_file(path: Path) -> None:
@@ -202,7 +207,10 @@ def run(args: argparse.Namespace) -> dict:
                             },
                         )
                     )
-                    all_advs.append((reward - mean_reward) / std_reward)
+                    all_advs.append(
+            (reward - mean_reward) if not _ADV_NORMALIZE_STD
+            else (reward - mean_reward) / std_reward
+        )
 
             _ADVS.clear()
             _ADVS.extend(all_advs)

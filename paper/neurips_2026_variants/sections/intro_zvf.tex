@@ -1,0 +1,80 @@
+% =============================================================================
+% Introduction --- ZVF as per-step zero-gradient sentinel under group-relative
+% advantages, with a within-task stratified audit of the pooled correlation
+% Target: <= 1 page
+% =============================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Group-relative policy optimization (GRPO) and its descendants now underlie a
+large fraction of recent reasoning-RL pipelines~\citep{shao2024deepseekmath,%
+guo2025deepseekr1nature}, replacing the value-function critic of
+PPO~\citep{schulman2017proximal} with a leave-one-out advantage computed
+within a small group of rollouts that share a prompt. Because the advantage
+is the within-group reward minus the within-group mean (or median),
+\emph{any group in which all rollouts receive identical rewards contributes a
+zero advantage to every token} and therefore zero gradient. We call the
+share of such groups in a training batch the \textbf{Zero-Variance Fraction}
+(ZVF).
+
+\paragraph{ZVF is a per-step sentinel, not a cross-task predictor.}
+The framing we adopt in this paper is narrow and mechanical. At step~$t$,
+$\mathrm{ZVF}_t = 1$ implies that every rollout group in the batch has zero
+reward variance and therefore zero reward-gradient contribution; the
+complementary $\mathrm{GU}_t = 1-\mathrm{ZVF}_t$ is an online \emph{utilization
+meter} for the reward channel of the GRPO update. Pairing $\mathrm{ZVF}_t$
+with batch reward mean separates all-wrong collapse ($\mathrm{ZVF}{\approx}1$,
+mean reward $\approx 0$) from all-correct saturation ($\mathrm{ZVF}{\approx}1$,
+mean reward $\approx 1$) from informative-contrast training
+($\mathrm{ZVF}{<}1$, intermediate mean reward). This is the regime in which
+ZVF is genuinely useful as instrumentation, and it is what caught the
+sparse-reward tool-use failures in our benchmark, where every Tinker run
+sat at $\mathrm{ZVF}{=}1$ from step~1 (Section~\ref{sec:zvf-analysis},
+Figure~\ref{fig:zvf-sentinel}).
+
+\paragraph{The pooled cross-task correlation is task identity in disguise.}
+Earlier drafts of this paper, and several concurrent ``GRPO failure-mode''
+analyses, summarized ZVF by pooling across tasks and computing a single
+correlation between mean ZVF and final reward. Across the 15 cross-task
+runs reported in earlier drafts, mean ZVF and last-10 reward correlate at
+Pearson $r{=}-0.769$ ($p{=}0.0008$). On a larger $N{=}29$ sample with
+released step-level traces, the pooled correlation drops to $r{=}-0.44$.
+\emph{Both numbers are dominated by task identity, not by GRPO dynamics:}
+tool-use runs sit at $\mathrm{ZVF}{\approx}1$ and reward $0$, GSM8K runs
+sit at $\mathrm{ZVF}{\approx}0.085$ and reward $0.3$--$0.9$. Stratifying
+within GSM8K, the correlation flips sign to $r{=}+0.40$ ($p{=}0.09$,
+$N{=}19$); restricting to the seven GSM8K runs that vary model rather than
+hyperparameter, $r{=}+0.13$ ($p{=}0.79$). The ``ZVF predicts performance''
+story disappears under stratification and partial-correlation controls
+(Section~\ref{sec:zvf-analysis}, Table~\ref{tab:evidence-grade}).
+
+\paragraph{This paper is a focused statistical audit.}
+We do not propose a new GRPO algorithm and we do not propose ZVF as a
+benchmark scoring statistic. We make two paired claims and audit them. The
+positive claim is that per-step ZVF inside a single task is a useful
+zero-gradient sentinel and utilization meter; we provide a triage table
+mapping (ZVF, reward) regimes to suggested actions. The negative claim is
+that the pooled cross-task ZVF--reward correlation cited in earlier drafts
+and concurrent work is confounded by task identity, does not survive
+within-task stratification, and should not be used to rank GRPO runs.
+
+\paragraph{Contributions.}
+(i)~A clean formalization of ZVF and its mechanical coupling to group size
+and baseline accuracy under group-relative advantage estimators
+(Section~\ref{sec:zvf-analysis} and Appendix~\ref{sec:appendix:zvf-formalization}).
+(ii)~A positive sentinel demonstration on tool-use runs (Qwen3-32B and
+Llama-3.1-8B, $\mathrm{ZVF}{=}1$, $\mathrm{GU}{=}0$, reward $0$ from step~1)
+contrasted with a GSM8K run whose GU and reward both move, plus a triage
+table mapping (regime, ZVF, reward) to action
+(Section~\ref{sec:zvf-analysis}).
+(iii)~A stratified audit of the pooled cross-task ZVF--reward correlation:
+the pooled $r{=}-0.769$ collapses under within-task stratification on
+GSM8K to a non-significant, sign-flipped $r{=}+0.40$ (and $r{=}+0.13$,
+$N{=}7$ model-varying); we read this as a methodological warning, not a
+defeat of the mechanical claim.
+(iv)~A cross-stack benchmark of step-level ZVF traces on 79 GRPO runs across
+7 RL libraries, 5 model families, and total parameter scales 0.6B--671B
+(active 0.6B--37B for the largest mixture-of-experts checkpoints), released
+as an artifact rather than headlined as a benchmark contribution
+(Appendix~\ref{sec:run-manifest}).
+(v)~Released step-level ZVF/GU traces, formalization, and reanalysis code.

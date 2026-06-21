@@ -1,0 +1,65 @@
+% =============================================================================
+% Introduction — conservative, evidence-aligned framing
+% Drop-in include: \input{sections/intro}
+% Target: <= 1.5 pages
+% =============================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Reinforcement learning post-training now underpins much of modern
+language-model reasoning and alignment~\citep{ouyang2022training,%
+guo2025deepseekr1nature}, but empirical claims in this area are often hard to
+compare. PPO~\citep{schulman2017proximal}, GRPO~\citep{shao2024deepseekmath},
+and DPO~\citep{rafailov2024direct} are usually evaluated on different model
+families, with different framework defaults, different reward functions, and
+different notions of ``success.'' What the field needs is not another
+leaderboard but a substrate that separates algorithmic conclusions from
+implementation, initialization, and task-design effects.
+
+\ours{} is an attempt at such a substrate. It aggregates 79 runs spanning 7 RL
+libraries, 5 model families, 32+ checkpoints, and scales from 0.6B to
+$\sim$1T parameters, with common reporting conventions and released artifacts.
+At the same time, we emphasize a central caveat: the current benchmark is
+\emph{not} uniformly mature across tasks. The strongest evidence comes from
+short-horizon GSM8K experiments with verifiable binary rewards. Frontier API
+runs, tool-use experiments, and code-generation studies are useful case
+studies, but many remain single-seed, short-horizon, partially completed, or
+custom-evaluated.
+
+The first contribution of the benchmark is therefore methodological rather than
+triumphalist: it makes visible how much end-to-end stack choice matters. In our
+results, model family, initialization, rollout regime, and framework defaults
+can all change the apparent algorithm ranking. Several comparisons that look
+like ``PPO vs.\ GRPO'' are better understood as \emph{stack-level comparisons},
+because the training backends differ in tokenizer/runtime integration, managed
+defaults, and rollout plumbing. This is precisely why a shared measurement
+substrate is needed.
+
+Our second contribution is a descriptive diagnostic for sparse-reward GRPO:
+Zero-Variance Fraction (ZVF), the fraction of rollout groups with identical
+rewards, together with Gradient Utilization (GU = $1-\mathrm{ZVF}$). ZVF is
+useful because it directly reveals when within-group contrast disappears.
+However, because our main tasks use binary outcome rewards, ZVF is mechanically
+coupled to reward sparsity, group size, and baseline accuracy. We therefore use
+ZVF/GU as diagnostics of signal degeneracy, not as proof of an independent or
+causal failure mode beyond simpler observables such as reward mean, entropy,
+advantage variance, or divergence proxies.
+
+Our third contribution is a set of targeted ablations on trainability. In the
+current benchmark, trainability varies substantially with initialization and
+rollout regime: instruction-tuned checkpoints were generally easier to
+optimize than comparable base models, and intermediate rollout group sizes
+often behaved better than the smallest or largest settings we tested. These
+observations support a narrower claim: whether RL fine-tuning works at all can
+depend materially on initialization and reward-bearing rollout structure, in
+addition to the nominal RL algorithm. They do \emph{not} yet justify a
+universal optimal group size or a general ``SFT dominates RL'' law.
+
+Finally, we explicitly separate training reward from held-out generalization.
+For Qwen3-8B on GSM8K, a five-seed held-out evaluation yields 83.3\% accuracy,
+but the base model under the same greedy protocol already scores 82.0\%; the
++1.3 percentage-point delta is not statistically significant ($p{=}0.26$).
+This negative control matters: strong online reward curves do not by themselves
+establish generalization gains. We release the benchmark, step-level traces,
+and checkpoints so that stronger follow-up work can test exactly these failure
+points.

@@ -78,34 +78,24 @@ slack.har
 # Task outcomes (may contain sensitive data)
 tasks/outcome/
 
-# LaTeX build artifacts
-paper/tikz/*.aux
-paper/main.aux
-paper/main.log
-paper/main.out
-paper/main.toc
-paper/main.bbl
-paper/main.blg
-paper/main.fls
-paper/main.fdb_latexmk
-paper/main.synctex.gz
-paper/main_anon.aux
-paper/main_anon.bbl
-paper/main_anon.blg
-paper/main_anon.out
-paper/ethics_wrapper.aux
-paper/ethics_wrapper.bbl
-paper/ethics_wrapper.blg
-paper/ethics_wrapper.out
-reports/final/*.aux
-reports/final/*.bbl
-reports/final/*.blg
-reports/final/*.fdb_latexmk
-reports/final/*.fls
-reports/final/*.lof
-reports/final/*.lot
-reports/final/*.out
-reports/final/*.toc
+# LaTeX build artifacts (global)
+*.aux
+*.bbl
+*.blg
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.lof
+*.lot
+
+# Browser/tooling scratch + local databases + caches
+.playwright-mcp/
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+.pytest_cache/
 
 # Archives (too large for git)
 *.zip
@@ -129,3 +119,7 @@ University_Defense_Submission.zip
 # mail-automation (recipient emails + gmail token path) — local only, never tracked
 paper/send_eai_gmail.py
 paper/send_eai_email.applescript
+paper/send_eai_mail_app.applescript
+paper/reauth_gmail.py
+zvf-program/send_attachment.scpt
+zvf-program/send_transcript.scpt

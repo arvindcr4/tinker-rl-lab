@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-from pathlib import Path
+from utils.audit_utils import run_audit
+import re
 
-submission = Path("reports/final/SUBMISSION_README.md").read_text().lower()
-checklist = Path("reports/final/SUBMISSION_CHECKLIST.md").read_text().lower()
-issues = []
+def get_issues(ctx):
+    issues = []
+    
+    if "for blind review submissions, submit the anonymized ctx.paper source/package" not in ctx.submission:
+        issues.append("submission_readme_missing_anonymized_package_guidance")
+    if "exclude the non-anonymous ctx.paper source from blind-review bundles" not in ctx.submission:
+        issues.append("submission_readme_missing_nonanonymous_exclusion_note")
+    if "anonymous ctx.submission" in ctx.checklist and "anonymized ctx.paper source/package" not in ctx.checklist:
+        issues.append("checklist_missing_anonymized_package_note")
+    
+    return issues
 
-if "for blind review submissions, submit the anonymized paper source/package" not in submission:
-    issues.append("submission_readme_missing_anonymized_package_guidance")
-if "exclude the non-anonymous paper source from blind-review bundles" not in submission:
-    issues.append("submission_readme_missing_nonanonymous_exclusion_note")
-if "anonymous submission" in checklist and "anonymized paper source/package" not in checklist:
-    issues.append("checklist_missing_anonymized_package_note")
-
-print(f"METRIC blind_package_issues={len(issues)}")
-print("Blind-review package checks passed." if not issues else "\n".join(issues))
+if __name__ == '__main__':
+    run_audit('blind_package_issues', get_issues)

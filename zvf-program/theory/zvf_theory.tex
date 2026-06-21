@@ -252,12 +252,15 @@ the saturated and trivial regimes flagged in Pillar~1's scope section).
 \end{assumption}
 
 %==============================================================================
-\section{T1 --- ZVF as a Calibrated U-Statistic Estimator}\label{sec:T1}
+\section{T1 --- ZVF as a Calibrated Binomial-Proportion Estimator}\label{sec:T1}
 %==============================================================================
-We cast $\ZVF_t$ as a one-sample plug-in U-statistic of order~1 (equivalently,
-a simple sample mean of i.i.d.\ group indicators) of the within-group variance
-functional, derive its asymptotic normality, and read off a closed-form
-$95\%$ confidence interval per training step.
+We treat $\ZVF_t$ as the sample mean of i.i.d.\ bounded group indicators and
+derive its asymptotic normality via the binomial-proportion CLT. The result is
+a closed-form $95\%$ confidence interval per training step. (We do \emph{not}
+claim genuinely U-statistic content for the batch-level \ZVF{}; an order-1
+U-statistic is just a sample mean. A degree-2 U-statistic would be needed only
+if we estimated a second-order functional such as $\Var(Z_g)$ across groups,
+which is not required for the per-step CI.)
 
 \paragraph{The estimand.} Define the population \ZVF{} at group size $K$ as
 \begin{equation}\label{eq:theta}
@@ -321,23 +324,11 @@ Lindeberg--L\'evy CLT gives \eqref{eq:clt} with variance
 $\theta_K(1-\theta_K)$; Slutsky with the consistent plug-in
 $\widehat\sigma_K^2=\ZVF_t(1-\ZVF_t)$ yields the Wald CI \eqref{eq:ci}.
 The Wilson interval is the standard small-$m$/boundary correction.
-\GAP{This reduces to the textbook binomial-proportion CLT and does \emph{not}
-use any genuinely U-statistic machinery; if T1 is to be ``a U-statistic'' in a
-non-trivial sense, the right object is the \emph{Hoeffding decomposition} of a
-\underline{degree-2} statistic that also estimates $\Var(Z_g)$ across groups,
-whose kernel can become \emph{degenerate} (first-order projection vanishes) at
-$\theta_K\in\{0,1\}$, changing the rate from $\sqrt m$ to $m$. State and handle
-that degeneracy explicitly.}
-% TODO(proof-gap): (a) decide the canonical object (proportion vs degree-2
-% U-stat); (b) if degree-2, prove non-degeneracy of the Hajek projection on the
-% interior and characterize the boundary degeneracy; (c) the within-group
-% randomness makes Z_g a TWO-stage random variable (draw p_g ~ phi, then K
-% Bernoulli trials) -- confirm the variance is still theta_K(1-theta_K) and not
-% inflated by the conditional variance term Var(h_K(p_g)); this is the crux.
-\GAP{the two-stage variance must be checked: $\Var(Z_g)=\E[h_K(p)(1-h_K(p))] +
-\Var(h_K(p))$? No --- since $Z_g$ is itself binary, $\Var(Z_g)=\theta_K(1-\theta_K)$
-exactly. The subtlety is whether reporting pipelines average $Z_g$ or average
-$h_K$; verify the estimator matches the estimand.}
+Because $Z_g$ is binary, the two-stage randomness (draw $p_g\sim\phi$, then
+$K$ Bernoulli trials) collapses to a single Bernoulli marginal:
+$\Var(Z_g)=\theta_K(1-\theta_K)$ exactly. The only subtlety is that the
+reporting pipeline must average the group indicators $Z_g$, not the conditional
+probabilities $h_K(p_g)$; Definition~\ref{def:zvf} does the former.
 \end{proofsketch}
 
 \begin{remark}[Connection to ``Demystifying GRPO'' and mixed-group probability]
@@ -528,26 +519,25 @@ the first-order stationarity condition $\partial J/\partial G = 0$, i.e.
 \quad
 \tfrac{\partial}{\partial G}h_G(p)=p^G\ln p+(1-p)^G\ln(1-p).
 \end{equation}
-For a point-mass prior $\phi=\delta_{p_0}$ the FOC reduces to a one-
-dimensional root-find whose solutions are monotone \emph{increasing} in
-the ``easiness'' $\max(p_0,1-p_0)$: easier or harder (more extreme $p_0$)
-prompts require \emph{larger} $G^\star$ to stay informative, while
-$p_0=\tfrac12$ attains the smallest $G^\star$. (The monotone
-\emph{increasing} direction follows because $h_G(p)$ is governed by
-$\max(p,1-p)^G$: more extreme $p$ pushes $1-h_G(p)$ to zero for any
-fixed $G$, so larger $G$ is needed to keep $\mathrm{Prob}(\text{informative})$
-away from zero. The proofsketch at line~538 corroborates: ``more
-extreme $p$ needs larger $G$ to push $1-h_G(p)$ off zero.'' A previous
-revision of this corollary stated the monotonicity as \emph{decreasing}
-in the easiness, which contradicted both the proofsketch and the
-quantitative behaviour; the present statement matches both.) \textbf{Uniqueness of
-$G^\star$ is NOT proven: the FOC may have multiple roots and the
-integer constraint $G\in\{2,3,\dots\}$ means the argmax is the
-\emph{set} of integer maximizers, not a single value; readers should
-treat the closed form as a candidate optimum, not as the unique
-global maximizer. The proofsketch below derives the FOC and shows
-the qualitative monotonicity in $p_0$ but does not rule out
-multiple roots, especially under multi-modal priors $\phi$.}
+For a point-mass prior $\phi=\delta_{p_0}$ the objective becomes
+\begin{equation}\label{eq:J-pointmass}
+J(G)=\frac{1-p_0^G-(1-p_0)^G}{G}\,p_0(1-p_0),
+\end{equation}
+so the maximizing $G$ depends only on the
+informativeness-per-rollout term
+$(1-p_0^G-(1-p_0)^G)/G$.  Because this term is bounded and
+vanishes as $G\to\infty$, the discrete maximizer
+$G^\star\in\{2,3,\dots\}$ exists and can be found by evaluating
+$J(G)$ over a modest bounded range.  We do \emph{not} assert a simple
+monotonic relationship between $G^\star$ and $p_0$: very easy or very
+hard prompts (extreme $p_0$) shrink the absolute signal $p_0(1-p_0)$ and
+can favor small $G$, while intermediate $p_0$ may support somewhat
+larger $G$; the exact optimum must be read off the evaluated objective.
+\textbf{Uniqueness of $G^\star$ is NOT proven:} the FOC may have
+multiple roots and the integer constraint means the argmax is a
+\emph{set} of maximizers, not necessarily a single value; readers should
+treat the closed form as a candidate optimum, not as the unique global
+maximizer.
 \end{theorem}
 \begin{proofsketch}
 $J(G)$ is a smooth function of $G$ once relaxed to the reals via
@@ -558,9 +548,9 @@ $\partial J/\partial G=0$ gives \eqref{eq:foc} after multiplying through by
 $G^2$. The trade-off is transparent: increasing $G$ raises
 $1-h_G(p)$ (more groups become informative, numerator $\uparrow$) but also
 raises the $1/G$ cost (denominator $\uparrow$); the stationary point balances
-them. Monotonicity in extremity follows because $h_G(p)$ is governed by
-$\max(p,1-p)^G$, so more extreme $p$ needs larger $G$ to push $1-h_G(p)$ off
-zero. \GAP{(1) integrand differentiability/DCT at $p\to\{0,1\}$ where $\ln p$
+them.  For the point-mass case, $p_0(1-p_0)$ factors out and the discrete
+$\argmax$ exists because $(1-h_G(p_0))/G\to0$ as $G\to\infty$.
+\GAP{(1) integrand differentiability/DCT at $p\to\{0,1\}$ where $\ln p$
 diverges --- the interior-support Assumption~\ref{ass:nondegen} is necessary;
 verify integrability of $p^G\ln p$. (2) existence/uniqueness of the interior
 root is asserted, not proven; $J$ may be multimodal for skewed $\phi$, so
@@ -613,6 +603,72 @@ convergence of the $G^\star$ recursion is an open dynamical-systems question
 fixed point.}
 % TODO(proof-gap): closed-loop stability of the G* <- phi_hat <- data(G*) loop
 % is unproven; at minimum flag it, ideally give a contraction condition.
+
+%==============================================================================
+\section{Empirical Sanity Check: Plugging E3 Pilot Data into T1--T3}\label{sec:sanity}
+%==============================================================================
+This section is \emph{not} a formal validation of the theorems; it is a
+mechanical check that the formulas are computable and return sensible
+numbers on real data.  The data come from the open-source E3 pilot
+reported in the ZVF Program audit companion \cite{zvfaudit2026}: four
+arms (GRPO, Dr.\,GRPO, DAPO, adaptive-$G$ GRPO) trained on
+Qwen2.5-0.5B-Instruct for 10 steps with 3 prompt-groups per step and
+two seeds, giving $m=60$ observed groups per arm.
+
+\paragraph{T1 -- Wilson confidence intervals.}  Treating $\ZVF$ as the
+sample mean of $m=60$ i.i.d.\ Bernoulli group indicators, we report the
+Wilson 95\% interval for the population zero-variance rate.
+
+\paragraph{T2 -- rollouts to one informative group.}  With fixed group
+size $K=4$ and target failure probability $\delta=0.05$, the lower
+bound on rollouts required to observe at least one informative group
+with probability at least $1-\delta$ is $N=K\ln(1/\delta)/(-\ln\ZVF)$
+from Theorem~\ref{thm:T2}; we use the observed $\ZVF$ as a plug-in.
+When $\ZVF=0$ the observed rate is already below $\delta$, so we report
+$N=0$.
+
+\paragraph{T3 -- candidate optimal group size.}  We evaluate the
+point-mass objective \eqref{eq:J-pointmass} at two plausible success
+rates: $p=0.5$ (a medium-difficulty prompt) and the $p$ implied by
+solving $1-p^4-(1-p)^4=\ZVF$ for the observed arm.  In both cases the
+optimum is small (2--3), illustrating that the efficiency objective can
+favor smaller groups than the $G=4$ default used in the pilot.
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Sanity-check table (E3 pilot).}  Wilson 95\% CI for
+$\ZVF$; T2 rollouts-to-one-informative-group floor at $\delta=0.05$;
+T3 candidate $G^\star$ under a medium-difficulty $p=0.5$ prior and
+under the $p$ implied by the observed $\ZVF$ ($K=4$).}
+\label{tab:sanity}
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Arm} & \textbf{Observed $\ZVF$} & \textbf{Wilson 95\% CI} &
+\textbf{T2 floor $N$} & \textbf{T3 $G^\star$ ($p=0.5$ / implied)}\\
+\midrule
+GRPO            & $0.250$ & $[0.158,\ 0.372]$ & $8.6$ & $2$--$3$ / $3$ \\
+Dr.\,GRPO       & $0.267$ & $[0.172,\ 0.390]$ & $9.1$ & $2$--$3$ / $3$ \\
+DAPO            & $0.000$ & $[0.000,\ 0.060]$ & $0.0$ & $2$--$3$ / $2$--$3$ \\
+Adaptive-$G$ GRPO & $0.233$ & $[0.144,\ 0.354]$ & $8.2$ & $2$--$3$ / $3$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Interpretation.}  The Wilson intervals are wide because the
+pilot has only 60 independent groups per arm; a production audit would
+need an order of magnitude more groups to tighten them.  The T2 floor
+says that, \emph{under the stated assumptions}, arms with observed
+$\ZVF\approx0.25$ would require roughly $8$--$9$ rollouts just to be
+assured of one informative group at 95\% confidence.  The actual pilot
+spent 120--186 rollouts per arm, so the floor is not binding, but it
+quantifies the signal tax.  The T3 candidates (2--3) are smaller than
+the $G=4$ default and much smaller than the $G=8$--$16$ values common
+in recent GRPO papers, suggesting that current group-size defaults may
+be larger than the simple efficiency objective recommends.  These
+numbers are illustrative; formal theory validation requires a dedicated
+experiment with independent groups, known $p$ calibration, and CI
+coverage checks.
 
 %==============================================================================
 \section{Discussion and Limitations of the Theory}\label{sec:discussion}

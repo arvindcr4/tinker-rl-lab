@@ -27,6 +27,8 @@
 \usepackage{enumitem}
 \usepackage{microtype}
 \usepackage{graphicx} % for \resizebox on wide tables
+\usepackage{listings} % for JSON schema listings
+\lstset{basicstyle=\small\ttfamily,frame=single,columns=fullflexible,breaklines=true}
 
 % ---------------------------------------------------------------------------
 % TODO-citation shim. We do NOT invent bib entries with fake authors/years.
@@ -34,10 +36,11 @@
 % find and replace it with a real reference + .bib entry before submission.
 % ---------------------------------------------------------------------------
 \renewcommand{\cite}[1]{\textcolor{red}{[\textsc{cite:}\,#1]}}
-\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO:\ #1]}}}}
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO:\ #1]}}}
 \newcommand{\zvf}{\textsc{Zvf}}
 \newcommand{\gu}{\textsc{Gu}}
 \newcommand{\minreport}{\textsc{Min-Report-RL}}
+\newcommand{\grpoReg}{\textsc{GRPO-Reg}}
 
 \title{\minreport{}: Reporting the Stack, Not the Label\\
 \large A Community Minimum-Reportable-Stack Standard and
@@ -275,8 +278,8 @@ blind \cite{dar2024}.
 
 \paragraph{3. Sampler, backend, and precision.}
 \emph{Report:} the rollout engine (vLLM, SGLang, a managed API, the trainer's
-own \texttt{generate}}; decoding parameters (temperature, top-$p$,
-\texttt{max\_tokens}}; logit precision in the sampler vs.\ the trainer (bf16 /
+own \texttt{generate}; decoding parameters (temperature, top-$p$,
+\texttt{max\_tokens}; logit precision in the sampler vs.\ the trainer (bf16 /
 fp16 / fp32); and whether sampler and trainer share the same tokenizer and chat
 template. \emph{Why it can flip:} the sampler defines the rollout distribution
 that the group-relative update consumes. A managed, closed-source runner and an
@@ -489,25 +492,101 @@ designed so that the marginal cost to an author is close to zero \emph{if the
 trainers log it by default}.
 
 \paragraph{Make the trainers emit it.}
-The seven fields are already computable inside every major open trainer:
-\begin{itemize}[leftmargin=1.4em, itemsep=2pt]
-  \item \textbf{TRL.} The \texttt{GRPOTrainer} already exposes the loss form,
-        KL handling, and sampler config; \zvf{}/\gu{} is a few lines over the
-        per-prompt group rewards it already computes, logged each step. Propose
-        a \texttt{report\_min\_report\_rl=True} flag that writes the seven-field
-        block to the run config and the \zvf{}/\gu{} trajectory to the logger.
-        \todo{file TRL issue / PR; link.}
-  \item \textbf{verl.} Its rollout/actor separation makes sampler, precision,
-        and group-size schedule first-class; expose them in the run manifest
-        and add a per-step \zvf{}/\gu{} metric. \todo{file verl issue / PR;
-        link.}
-  \item \textbf{OpenRLHF.} Add the same manifest block and per-step telemetry;
-        its reference-model and KL options map directly onto item~2.
-        \todo{file OpenRLHF issue / PR; link.}
-\end{itemize}
-A shared, copy-pasteable emitter (a small library that takes a trainer's config
-and per-step group rewards and writes the \minreport{} block as JSON) lets all
-three converge on the same schema. \todo{publish the emitter package + schema.}
+The seven fields are already computable inside every major open trainer. The
+marginal work is to write them down once, in a stable schema, and to compute
+\zvf{}/\gu{} from the grouped reward tensor that GRPO already materializes.
+
+\subparagraph{A concrete TRL plugin: \texttt{trl-min-report-rl}.}
+We sketch a small TRL extension that makes adoption automatic. For every
+\texttt{GRPOTrainer.train()} call it emits a run-start JSON block containing the
+seven \minreport{} fields, then logs per-step \zvf{}/\gu{} from the actual
+grouped rewards used by GRPO. The package shape is:
+\begin{verbatim}
+trl_min_report_rl/
+  __init__.py
+  config.py              # MinReportRLConfig dataclass + CLI flags
+  callback.py            # run-start manifest + finalization
+  grpo_mixin.py          # reward-tensor hook
+  emitter.py             # JSONL + stdout + logger adapters
+  schema/
+    grpo_run_start.v0.1.json
+    grpo_step.v0.1.json
+\end{verbatim}
+The public API is a single extra argument to \texttt{GRPOConfig}:
+\begin{verbatim}
+args = GRPOConfig(..., report_min_report_rl=True)
+trainer = MinReportGRPOTrainer(
+    model=model, args=args, reward_funcs=[reward_fn],
+    train_dataset=train_ds, eval_dataset=heldout_ds,
+    processing_class=tokenizer, min_report_rl=MinReportRLConfig(...))
+\end{verbatim}
+A no-subclass adapter, \texttt{enable\_min\_report\_rl(trainer, config)}, is
+provided for compatibility with existing code.
+
+The critical hook is \texttt{on\_grpo\_rewards\_computed}, called after reward
+functions return and after distributed gather, but before advantage
+normalization. It receives \texttt{rewards\_per\_func}, \texttt{reward\_weights},
+and \texttt{num\_generations}, and computes
+\[
+\text{ZVF}_t = \frac{1}{N}\sum_{x=1}^{N}
+  \mathbf{1}\big[\operatorname{Var}(r_{x,1},\dots,r_{x,G})=0\big],
+\qquad
+\text{GU}_t = 1 - \text{ZVF}_t,
+\]
+where unusable (all-NaN) groups are counted as zero-variance. The hook logs both
+human-readable scalars (\texttt{min\_report\_rl/zvf},
+\texttt{min\_report\_rl/gu}, \texttt{min\_report\_rl/usable\_groups}) and a
+per-step JSON event.
+
+\subparagraph{Upstream surface.}
+The cleanest upstream TRL change adds three elements to \texttt{GRPOConfig}:
+\texttt{report\_min\_report\_rl}, \texttt{min\_report\_rl\_strict}, and
+\texttt{min\_report\_rl\_output\_dir}; plus two trainer methods
+(\texttt{\_emit\_min\_report\_rl\_run\_start} and
+\texttt{\_emit\_min\_report\_rl\_step}) and the reward-path hook call. That
+is the ``few lines of telemetry'' version of the standard.
+
+\subparagraph{Run-start manifest.}
+The first line of \texttt{min\_report\_rl.jsonl} is a JSON object whose
+\texttt{min\_reportable\_stack} field contains the seven items. A fragment is
+shown in Listing~\ref{lst:runstart}; the full schema is in the
+\grpoReg{} catalog paper \cite{grpoRegistry2026}.
+
+\begin{lstlisting}[language=json, caption={Fragment of the
+  \texttt{min\_report\_rl} run-start manifest.}, label={lst:runstart}]
+{
+  "event": "min_report_rl.run_start",
+  "min_reportable_stack": {
+    "1_loss_form": {"status":"known", "loss_type":"dapo", ...},
+    "2_reference_policy_kl": {"status":"known", "kl": {"enabled":false}},
+    "3_sampler_backend_precision": {"rollout_engine":"vllm", ...},
+    "4_zvf_gu_trajectory": {"enabled":true, "basis":"weighted_reward", ...},
+    "5_group_size_schedule": {"train_num_generations":8, ...},
+    "6_heldout_split": {"heldout_dataset_id":"gsm8k:test:500", ...},
+    "7_decontamination_probes": {"ngram_overlap":{"passed":true}, ...}
+  }
+}
+\end{lstlisting}
+
+\subparagraph{Other trainers.}
+verl's actor/rollout separation makes sampler, precision, and group-size
+schedule first-class; OpenRLHF's reference-model and KL options map directly
+onto item~2. Both can emit the same manifest block and per-step telemetry using
+the same shared emitter. The schema is trainer-agnostic; only the source of each
+field changes.
+
+\paragraph{Enforcement and audit tooling.}
+The same manifests feed three tools. \texttt{grpo-stackdiff}
+(\S\ref{sec:tooling}) compares two manifests and flags whether their nuisance
+differences are large enough to flip a comparison. The \texttt{MIN-REPORT-RL
+Auditor} scores an existing paper or repo against the seven-item checklist,
+assigns a 0--100 reproducibility-auditable badge, and produces a reviewer-facing
+summary \cite{zvfaudit2026}. The \texttt{MRRL-AuditRunner} turns the controlled
+single-stack audit of \S\ref{sec:audit} into a pre-registered executable
+pipeline: it locks the shared stack, expands each variant as a declared hook,
+and computes survival verdicts from paired seed-level held-out deltas
+\cite{zvfaudit2026}. Together these tools turn the abstract standard into a
+mechanical check that venues and reviewers can run in CI.
 
 \paragraph{Make the venues ask for it.}
 Add a \minreport{} block to the reproducibility checklist for the RL-for-LLM
@@ -565,6 +644,75 @@ be replaced by per-step reward variance or a gradient-norm-variance surrogate
 \cite{zvfaudit2026}. Item~4 mandates \emph{a usable-signal trajectory}, of which
 \zvf{}/\gu{} is the default; the point is that \emph{some} such telemetry must be
 reported.
+
+% =============================================================================
+\section{Companion Tooling: \texttt{grpo-stackdiff}}
+\label{sec:tooling}
+% =============================================================================
+
+A standard is easier to adopt if reviewers can check it mechanically. We sketch
+a companion CLI, \texttt{grpo-stackdiff}, that consumes two \minreport{}
+run manifests and reports whether their differences are large enough to flip a
+comparison. The tool is not a replacement for the audit of
+\S\ref{sec:audit}; it is an enforcement layer that tells a reviewer, in
+seconds, whether a head-to-head is stack-comparable.
+
+\paragraph{Manifest contract.} Each run is a YAML/JSON block containing the
+seven \minreport{} fields, plus run identity (trainer, version, seed, hardware),
+model and tokenizer hashes, LoRA configuration, optimizer settings, and results.
+The schema is the JSON block proposed in \S\ref{sec:adoption}.
+
+\paragraph{Diff taxonomy.} Every field difference receives three labels:
+\begin{itemize}[leftmargin=1.4em, itemsep=2pt]
+  \item \textbf{Lever.} One of eight lever groups: L0~run identity/provenance,
+    L1~loss form, L2~reference policy and KL handling, L3~sampler/backend/
+    precision, L4~usable-signal telemetry (\zvf/\gu{}), L5~group-size
+    schedule, L6~held-out evaluation and checkpoint selection, L7~decontamination
+    and parser robustness.
+  \item \textbf{Diff kind.} EQUAL, COSMETIC, PROVENANCE, PARAMETRIC, SCHEDULE,
+    SEMANTIC\_OBJECTIVE, DISTRIBUTIONAL, TELEMETRY, MISSING, OPAQUE, DERIVED, or
+    INVALID\_TARGET.
+  \item \textbf{Role.} TREATMENT\_DELTA if the user declares it as the
+    algorithmic delta being tested; NUISANCE\_DELTA if it is an uncontrolled
+    stack difference; COVERAGE\_GAP if the field is missing; INVALIDATOR if the
+    comparison target is not common.
+\end{itemize}
+
+\paragraph{Flip-risk classes.} The tool compares each nuisance difference to
+the reported comparison margin and classifies the overall risk as one of:
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Class} & \textbf{Meaning}\\
+\midrule
+R0 \texttt{same} & No meaningful difference.\\
+R1 \texttt{cosmetic} & Version string or comment only.\\
+R2 \texttt{small} & Estimated effect $<25\%$ of the comparison margin.\\
+R3 \texttt{material} & Effect $25$--$100\%$ of the margin; can shrink a claim.\\
+R4 \texttt{flip\_capable} & Effect bound $\	ext{\textgreater=}$ margin; can flip the ranking.\\
+R5 \texttt{invalidating} & The comparison target is not common.\\
+RU \texttt{unknown} & Missing or opaque evidence; comparison unverifiable.\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Verdict and CI integration.} The tool emits a deterministic verdict
+(\texttt{STACK\_MATCHED}, \texttt{STACK\_MATERIAL}, \texttt{STACK\_CONFOUNDED},
+\texttt{UNVERIFIABLE}, or \texttt{INVALID\_COMPARISON}) and an exit code, so a
+paper's reproducibility workflow can fail a comparison that is
+flip-capable. Example:
+\begin{verbatim}
+grpo-stackdiff compare dapo.yaml grpo.yaml \
+  --metric heldout.exact_match --claim-delta +0.024 \
+  --fail-on flip-capable
+\end{verbatim}
+
+\paragraph{Role in the \minreport{} ecosystem.} Authors emit the JSON block;
+venues ask for it; reviewers run \texttt{grpo-stackdiff}. The cost to an author
+is still a few lines of telemetry; the cost to a reviewer is one command. The
+tool turns the abstract stack-conditioning thesis of \S\ref{sec:stack} into a
+concrete, reproducible check.
 
 % =============================================================================
 \section{Conclusion}

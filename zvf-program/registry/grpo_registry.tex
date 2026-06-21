@@ -1,0 +1,588 @@
+% =============================================================================
+% GRPO-REGISTRY: A Living Catalog of Stack Fields and Variant Deltas
+% =============================================================================
+% Pillar 1 of the ZVF Program. Companion paper to MIN-REPORT-RL (position).
+%
+% This is a standalone draft. It is self-contained and should compile with a
+% plain `article` class (no external .sty or .bib required: citations are
+% rendered as inline TODO keys via a redefined \cite, and the bibliography is a
+% manual thebibliography stub). When promoting to a venue template, swap the
+% preamble for the venue .sty + \usepackage[numbers]{natbib} and replace TODO
+% keys with real \bib entries.
+% =============================================================================
+
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% ---------------------------------------------------------------------------
+% TODO-citation shim. We do NOT invent bib entries with fake authors/years.
+% Every \cite below uses a clearly-TODO key and renders in red so a human can
+% find and replace it with a real reference + .bib entry before submission.
+% ---------------------------------------------------------------------------
+\renewcommand{\cite}[1]{\textcolor{red}{[\textsc{cite:}\,#1]}}
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO:\ #1]}}}
+\newcommand{\zvf}{\textsc{Zvf}}
+\newcommand{\gu}{\textsc{Gu}}
+\newcommand{\minreport}{\textsc{Min-Report-RL}}
+\newcommand{\grpo}{\textsc{GRPO}}
+\newcommand{\grpoReg}{\textsc{GRPO-Registry}}
+
+% JSON listing style
+\lstdefinelanguage{json}{
+  basicstyle=\ttfamily\small,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=8pt,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  string=[s]{"}{"},
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  keywordstyle=\color{blue}\bfseries,
+  stringstyle=\color{teal},
+  literate={:}{{\color{orange}:}}1
+           {,}{{\color{orange},}}1
+           {\{}{{\color{purple}\{}}1
+           {\}}{{\color{purple}\}}}1
+           {[}{{\color{purple}[}}1
+           {]}{{\color{purple}]}}1,
+}
+
+\title{\grpoReg{}: A Living Catalog of Stack Fields and Variant Deltas\\
+\large Toward Machine-Readable Reporting for the \grpo{} Family}
+
+\author{Arvind C R \and the ZVF Program\thanks{Companion to the ZVF Program
+  \minreport{} position paper. Author list and affiliations \todo{finalize}.}}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+% =============================================================================
+\begin{abstract}
+% =============================================================================
+The \grpo{} family of reinforcement-learning post-training methods is now
+large enough that no single paper can keep its variants straight. Each new
+variant---DAPO, GSPO, Dr.\grpo{}, MAD-\grpo{}, AERO, CPPO, NGRPO,
+Scaf-\grpo{}, and others---is reported as a small algorithmic delta, but the
+delta is almost always confounded with changes in loss form, sampler, reference
+policy / KL handling, group-size schedule, and precision. We introduce
+\grpoReg{}, a living catalog that (i) fixes a common seven-item
+minimum-reportable-stack schema drawn from the \minreport{} standard, (ii)
+defines a machine-readable ``variant-delta'' schema that records exactly what
+changed relative to a declared baseline, and (iii) seeds the catalog with the
+best currently available descriptions of the most discussed variants. The goal
+is not to arbitrate priority but to give reviewers and re-implementers a shared
+worksheet: for any comparison, read the two stack records, read the two variant
+records, and see whether the claimed gain is still attributable once the stack
+is held fixed. We release the schema as JSON and propose a lightweight
+update protocol so the catalog can stay current without a new paper for every
+new variant.
+\end{abstract}
+
+% =============================================================================
+\section{Introduction: Why a Registry?}
+\label{sec:intro}
+% =============================================================================
+
+A reviewer reading six recent \grpo{} papers can reasonably conclude that each
+paper compares against ``GRPO.'' But the word ``GRPO'' is attached to different
+loss forms (ratio + clip, ratio + no clip, completion-only mask,
+whole-sequence mask), different reference-policy and KL treatments (frozen
+reference with KL penalty in the loss, frozen reference with KL in the reward,
+no reference at all), different samplers and precisions (vLLM bf16, vLLM fp32,
+managed API), and different group-size schedules (fixed $G=8$, adaptive,
+dynamic sampling) \cite{zvfaudit2026, dapo2025, gspo2025, drgrpo2025,
+madgrpo2025}. When the baseline is itself a moving target, a reported delta of
+$+2$ points is uninterpretable.
+
+The position paper \minreport{} \cite{minreportrl2026} argues that the first
+fix is a short, mandatory list of stack fields every paper must report. That
+fixes the ``what is the treatment?'' problem for a single paper. It does not,
+by itself, fix the cross-paper comparison problem: a reader still has to open
+every paper, extract the seven fields by hand, and decide which variant is
+which. \grpoReg{} is that extraction, maintained as a shared artifact.
+
+\paragraph{What the registry is.} \grpoReg{} has three parts:
+\begin{enumerate}[leftmargin=1.6em, itemsep=2pt]
+  \item \textbf{A stack schema} (\S\ref{sec:stack-schema}), the seven
+    \minreport{} fields, expressed as a JSON object any trainer can emit.
+  \item \textbf{A variant-delta schema} (\S\ref{sec:delta-schema}) that
+    records, relative to a named baseline, which knobs the variant touches.
+  \item \textbf{A catalog of variants} (\S\ref{sec:catalog}) populated with
+    the best available descriptions of the major \grpo{} variants; cells whose
+    exact setting is unknown are left as \todo{} placeholders.
+\end{enumerate}
+
+\paragraph{What the registry is not.} It is not a leaderboard. It does not
+score variants. It is a structured worksheet for de-confounding comparisons:
+aid the reader in asking ``did method $A$ beat method $B$, or did stack $S_A$
+beat stack $S_B$?'' \cite{zvfaudit2026}.
+
+% =============================================================================
+\section{The Stack Schema}
+\label{sec:stack-schema}
+% =============================================================================
+
+The stack schema is the seven-item \minreport{} checklist \cite{minreportrl2026},
+reformatted as named JSON fields. Table~\ref{tab:stack-schema} gives the
+human-readable mapping. The key design choice is that each field is included
+because it is a documented lever that can flip a comparison; the justification
+is in the position paper and summarized here.
+
+\begin{table}[t]
+\centering
+\caption{The \grpoReg{} stack schema. Each field is one item of the
+  \minreport{} minimum-reportable-stack standard.}
+\label{tab:stack-schema}
+\small
+\begin{tabular}{@{}lp{0.55\linewidth}l@{}}
+\toprule
+\textbf{JSON key} & \textbf{What to report} & \textbf{Flip mechanism}\\
+\midrule
+\texttt{loss\_form} & Ratio? Clip? Asymmetric clip? Token mask? Advantage norm.?
+  & Reassigns gradient; DAPO, GSPO, Dr.\grpo{} deltas live here.\\
+\texttt{reference\_kl} & Frozen ref? KL in loss / reward / absent? Coefficient &
+  Changes objective and exploration; no-ref vs.\ KL are different methods.\\
+\texttt{sampler\_backend} & Engine, decoding params, precision, tokenizer match &
+  Backend/precision drove a $\sim$17$\times$ matched-config gap
+  \cite{zvfaudit2026}.\\
+\texttt{zvf\_gu} & Per-step \zvf{} and \gu{} trajectory &
+  Reveals whether the run had usable group-relative signal.\\
+\texttt{group\_schedule} & Fixed or adaptive $G$; if adaptive, rule &
+  $G$ controls mixed-group probability; adaptive-$G$ confounds compute.\\
+\texttt{held\_out} & Disjoint eval slice, $n$, CI, reported separately &
+  Training reward is dynamics evidence, not capability evidence.\\
+\texttt{decontamination} & Overlap probe + parser behavior on format-only inputs &
+  Verifiable rewards still admit parser/format/overlap hacking.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The schema is intentionally small. A trainer that already logs its config and
+per-step group rewards can emit it with a few lines of code. The companion
+\minreport{} paper proposes default emitters for TRL, verl, and OpenRLHF
+\cite{minreportrl2026}.
+
+% =============================================================================
+\section{The Variant-Delta Schema}
+\label{sec:delta-schema}
+% =============================================================================
+
+The variant-delta schema records what changed relative to a declared baseline.
+A delta record is 	extbf{not} a full stack record; it is a patch. For example,
+DAPO's delta record says ``relative to a vanilla \grpo{} baseline, change the
+clip bound to be asymmetric and add dynamic sampling,'' while the full stack
+record still has to report the sampler, the reference/KL handling, the
+precision, and so on. This separation keeps the catalog compact and forces
+authors to state both the variant and the stack it ran on.
+
+Table~\ref{tab:delta-schema} lists the delta fields. They are chosen to cover
+the dimensions on which the current \grpo{} variants actually differ.
+
+\begin{table}[t]
+\centering
+\caption{The \grpoReg{} variant-delta schema. Each field records a change
+  relative to the variant's declared baseline. ``\texttt{null}'' means the
+  variant does not change that field.}
+\label{tab:delta-schema}
+\small
+\begin{tabular}{@{}lp{0.65\linewidth}@{}}
+\toprule
+\textbf{JSON key} & \textbf{Meaning}\\
+\midrule
+\texttt{variant\_name} & Canonical short name (e.g., ``DAPO'').\\
+\texttt{baseline} & The baseline the variant claims to improve (usually
+  ``GRPO'').\\
+\texttt{loss\_change} & Change to the objective (ratio, clip, token mask,
+  normalization).\\
+\texttt{clip\_rule} & New clip bound or asymmetric rule, if any.\\
+\texttt{sampling\_change} & Change to rollout sampling or group construction
+  (dynamic, filter, \ldots).\\
+\texttt{group\_size\_rule} & Fixed / adaptive; if adaptive, the rule.\\
+\texttt{advantage\_norm} & How advantages are normalized (per-group,
+  per-batch, running).\\
+\texttt{reference\_kl\_change} & Any change to reference policy or KL handling.\\
+\texttt{extra\_regularizer} & Additional penalty or bonus (length, diversity,
+  entropy, \ldots).\\
+\texttt{rollout\_change} & Change to generation parameters or decoding.\\
+\texttt{other\_notes} & Anything else that defines the variant.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A variant record is therefore a pair:
+\[
+\text{variant record} = \langle \text{stack schema}, \text{delta schema} \rangle .
+\]
+A fair head-to-head between two variants is a comparison of two such pairs in
+which the stack schemas are identical except where the delta explicitly changes
+them.
+
+% =============================================================================
+\section{Catalog of \grpo{} Variants}
+\label{sec:catalog}
+% =============================================================================
+
+Table~\ref{tab:catalog} is the current seed catalog. We include the best
+available description of each variant's defining delta, but we do 	extbf{not}
+fabricate stack details. Unknown stack settings are marked \todo{} so that a
+reader can see exactly what is still unspecified. The catalog is versioned;
+as papers release more detail, \todo{} cells are replaced with concrete values.
+
+\begin{longtable}{@{}p{2.1cm}p{2.4cm}p{3.0cm}p{2.0cm}p{3.3cm}@{}}
+\caption{Seed catalog of \grpo{}-family variants. Each row describes the
+  variant's delta relative to its baseline. Empty or \todo{} cells indicate
+  settings not yet reported in the source literature.}\\
+\toprule
+\textbf{Variant} & \textbf{Baseline} & \textbf{Loss / clip change} &
+\textbf{Sampling / $G$ change} & \textbf{Extra regularizer / notes}\\
+\midrule
+\endfirsthead
+\multicolumn{5}{c}{\tablename\ \thetable{} -- continued}\\
+\toprule
+\textbf{Variant} & \textbf{Baseline} & \textbf{Loss / clip change} &
+\textbf{Sampling / $G$ change} & \textbf{Extra regularizer / notes}\\
+\midrule
+\endhead
+\midrule
+\multicolumn{5}{r}{\textit{Continued on next page}}\\
+\endfoot
+\bottomrule
+\endlastfoot
+
+\grpo{} (baseline) & --- & Per-token GRPO ratio with clip; completion-only
+  mask \todo{verify} & Fixed group $G$ & KL term placement varies by
+  implementation \cite{zvfaudit2026}.\\
+\addlinespace
+
+DAPO & \grpo{} & Asymmetric clip-higher lower bound & Dynamic sampling:
+  group constructed from filtered / top-$k$ completions & Adds per-token
+  loss-clip asymmetry \cite{dapo2025}.\\
+\addlinespace
+
+GSPO & \grpo{} & Sequence-level importance-sampling ratio rather than
+  per-token ratio; clip rule \todo{} & Group-size rule \todo{} & Changes
+  importance-sampling granularity \cite{gspo2025}.\\
+\addlinespace
+
+Dr.\grpo{} & \grpo{} & Length-normalized advantage and reward terms; fixes
+  length bias in the per-token loss & Fixed or adaptive $G$ \todo{} & Removes
+  length bias in normalization \cite{drgrpo2025}.\\
+\addlinespace
+
+MAD-\grpo{} & \grpo{} & Adds multi-agent / diversity term into the group
+  advantage or reward & Group construction may be diversity-aware & Diversity
+  bonus across agents \cite{madgrpo2025}.\\
+\addlinespace
+
+AERO & \grpo{} & Usually unchanged \todo{} & Adaptive group-size / rollout
+  length based on a rolling signal estimate & Spend-more-compute-on-hard-prompts
+  rule \cite{aero2024}.\\
+\addlinespace
+
+CPPO & PPO / \grpo{} & Clip-pruned objective: tokens with large ratios are
+  dropped instead of clipped & Fixed or adaptive \todo{} & Pruning changes the
+  effective sample \cite{cppo2024}.\\
+\addlinespace
+
+NGRPO & \grpo{} & Normalized advantage / reward transform \todo{specify} &
+  Fixed or adaptive \todo{} & Normalization is the entire delta
+  \cite{ngrpo2025}.\\
+\addlinespace
+
+Scaf-\grpo{} & \grpo{} & Incorporates scaffolded exploration signal into the
+  advantage \todo{specify} & Fixed or adaptive \todo{} & Scaffolded hints shape
+  the rollout distribution \cite{scafgrpo2025}.\\
+
+\end{longtable}
+\label{tab:catalog}
+
+\paragraph{Reading the table.} A cell marked \todo{} is not a weakness of the
+registry; it is a weakness of the underlying paper's reporting. The registry
+surfaces it so that a re-implementer knows what still has to be reverse
+engineered. A fair comparison between, say, DAPO and Dr.\grpo{} requires not
+only the delta rows above but also the full stack records of the two original
+runs; only then can one tell whether the reported gap is a stack effect.
+
+% =============================================================================
+\section{How to Use the Registry to Flag Confounded Comparisons}
+\label{sec:usage}
+% =============================================================================
+
+The registry is a worksheet, not an oracle. The recommended workflow for a
+reviewer or re-implementer is:
+
+\begin{enumerate}[leftmargin=1.6em, itemsep=2pt]
+  \item \textbf{Extract the stack record} for each paper. If a paper does not
+    report one of the seven fields, mark it \todo{}.
+  \item \textbf{Extract the variant-delta record} for the method claimed. If
+    the paper does not explicitly state what changed relative to its baseline,
+    the delta is itself \todo{}.
+  \item \textbf{Align baselines.} The comparison is only meaningful if both
+    variants declare the same baseline (usually vanilla \grpo{}).
+  \item \textbf{Check for stack confounds.} Any stack field that differs
+    between the two papers and is not part of either variant's declared delta
+    is a confound.
+  \item \textbf{Check for delta overlap.} If variant $A$ changes the clip rule
+    and variant $B$ also changes the clip rule, a head-to-head is comparing two
+    clip rules, not ``method $A$ vs.\ method $B$.''
+  \item \textbf{Look at \zvf{} / \gu{}.} If one paper reports high \zvf{}
+    (low usable signal) and the other reports low \zvf{}, the comparison is
+    confounded by signal availability, not algorithmic quality.
+\end{enumerate}
+
+\subsection{Mechanical checks with \texttt{grpo-stackdiff}}
+
+The registry's records are designed to be consumed by the companion
+\texttt{grpo-stackdiff} CLI \cite{minreportrl2026}. Given two
+\grpoReg{} JSON records, \texttt{grpo-stackdiff} classifies each field
+difference by lever (L1--L7), diff kind, role (treatment, nuisance, coverage
+gap, invalidator), and flip risk (R0--RU). A comparison whose maximum nuisance
+risk is R4 (``flip-capable'') or R5 (``invalidating'') is mechanically
+flagged as \texttt{STACK\_CONFOUNDED} or \texttt{INVALID\_COMPARISON}. The
+tool therefore turns the six-step manual checklist above into a single
+command, and it can be run in CI to block confounded benchmark claims before
+they are merged.
+
+A confounded comparison is not wrong; it is underspecified. The registry makes
+the underspecification explicit so that the community can decide whether the
+available evidence is sufficient.
+
+% =============================================================================
+\section{Tooling Ecosystem: From Records to Executable Checks}
+\label{sec:tools}
+% =============================================================================
+
+The registry is the static worksheet. Three companion tools turn it into an
+enforceable workflow.
+
+\paragraph{\texttt{trl-min-report-rl}.} A small TRL extension that emits the
+run-start manifest and per-step \zvf{}/\gu{} telemetry automatically. Its
+package contains a \texttt{MinReportGRPOTrainer} (or an
+\texttt{enable\_min\_report\_rl} adapter for existing trainers), a
+reward-tensor hook, and stable JSON schemas for run-start and step events
+\cite{minreportrl2026}. The emitted manifest uses exactly the seven-item schema
+of \S\ref{sec:stack}, so a training run can populate a registry record with no
+manual transcription.
+
+\paragraph{\texttt{grpo-stackdiff}.} The companion CLI takes two registry
+records (or two run-start manifests) and classifies every field difference by
+lever, diff kind, role, and flip-risk class. It can be run in CI to block a
+confounded benchmark claim before it is merged
+(\S\ref{sec:mechanical}).
+
+\paragraph{\texttt{MIN-REPORT-RL Auditor}.} For already-published work, the
+Auditor scans a paper PDF, code release, and log artifacts; extracts evidence
+for the seven \minreport{} items; assigns a 0--10 score per item and a
+normalized 0--100 badge (Complete / Usable / Partial / Not Auditable /
+Non-compliant); and produces a reviewer-facing summary with quoted evidence,
+missing fields, and contradiction warnings \cite{zvfaudit2026}. It is the
+post-hoc enforcement layer: it tells authors exactly which fields to add before
+the paper is reproducibility-auditable.
+
+\paragraph{\texttt{MRRL-AuditRunner}.} The \minreport{} standard and the
+registry together enable a pre-registered controlled audit. The AuditRunner
+freezes a shared stack, expands each variant as a declared hook, runs the arms
+on paired seeds, and applies survival verdicts from seed-level held-out deltas
+(\cite{zvfaudit2026}; full protocol in the audit paper). Its outputs
+(Tables~A--H of the runner specification) include the pre-registration bundle,
+stack-lock table, arm registry, run ledger, survival table, telemetry summary,
+decontamination probes, and artifact index.
+
+Together these tools close the loop: trainers emit manifests, the registry
+collects them, \texttt{grpo-stackdiff} checks pairwise comparability, the
+Auditor scores legacy papers, and the AuditRunner produces controlled survival
+evidence for new claims.
+
+% =============================================================================
+\section{Machine-Readable Schema}
+\label{sec:json}
+% =============================================================================
+
+Listing~\ref{lst:schema} gives the JSON schema for a complete \grpoReg{}
+record. A record contains one stack object, one baseline object, and one delta
+object. The schema is intentionally flat: it should be easy to generate from a
+trainer's config and to diff with standard tools.
+
+\begin{lstlisting}[language=json, caption={JSON schema for a \grpoReg{}
+  record. Required fields are marked \texttt{required}; all others may be
+  \texttt{null} when not applicable.}, label={lst:schema}]
+{
+  "version": "grpo-registry-v0.1",
+  "record_type": "variant_stack_record",
+  "variant": {
+    "name": "DAPO",
+    "paper_doi_or_url": "TODO",
+    "baseline": "GRPO"
+  },
+  "stack": {
+    "loss_form": {
+      "ratio": true,
+      "clip_bounds": [0.2, 0.2],
+      "clip_asymmetric": true,
+      "token_mask": "completion-only",
+      "advantage_norm": "per-group"
+    },
+    "reference_kl": {
+      "frozen_reference": true,
+      "kl_placement": "loss",
+      "kl_coefficient": 0.01,
+      "kl_schedule": "constant"
+    },
+    "sampler_backend": {
+      "engine": "vLLM",
+      "temperature": 1.0,
+      "top_p": 1.0,
+      "max_tokens": 4096,
+      "logit_precision": "bf16",
+      "tokenizer_matches_trainer": true
+    },
+    "zvf_gu": {
+      "per_step_zvf": [0.95, 0.92, ...],
+      "per_step_gu": [0.05, 0.08, ...]
+    },
+    "group_schedule": {
+      "type": "fixed",
+      "fixed_size": 8
+    },
+    "held_out": {
+      "split": "gsm8k-test",
+      "n": 1319,
+      "metric": "pass@1",
+      "value": 0.55,
+      "ci_95": [0.52, 0.58]
+    },
+    "decontamination": {
+      "overlap_check": "n-gram-8",
+      "overlap_rate": 0.02,
+      "parser_probe": "format-only",
+      "parser_probe_pass": false
+    }
+  },
+  "delta": {
+    "loss_change": "asymmetric clip-higher",
+    "clip_rule": "lower=0.2, upper=0.28",
+    "sampling_change": "dynamic top-k group construction",
+    "group_size_rule": null,
+    "advantage_norm": null,
+    "reference_kl_change": null,
+    "extra_regularizer": null,
+    "rollout_change": null,
+    "other_notes": "DAPO paper introduces clip-higher + dynamic sampling."
+  }
+}
+\end{lstlisting}
+
+The schema is available at the repository linked in the author notes
+\todo{add repository URL}. We welcome pull requests that fill \todo{} cells or
+add new variants, provided each entry cites the source paper and does not
+invent unreported stack details.
+
+The run-start manifest emitted by \texttt{trl-min-report-rl}
+(\S\ref{sec:tools}) is a strict superset of this record: it adds run identity,
+software versions, hardware, integrity hashes, and a per-step telemetry stream.
+A registry record can therefore be generated automatically from the first line
+of \texttt{min\_report\_rl.jsonl}.
+
+% =============================================================================
+\section{Living-Update Protocol}
+\label{sec:update}
+% =============================================================================
+
+A registry that requires a new paper for every new variant will quickly become
+stale. We propose a lightweight update protocol:
+
+\begin{enumerate}[leftmargin=1.6em, itemsep=2pt]
+  \item \textbf{Versioned releases.} The catalog is released as a versioned
+    JSON file (e.g., \texttt{grpo-registry-v0.1.json}). Each release has a
+    changelog.
+  \item \textbf{Source requirement.} Every entry must cite a specific paper,
+    preprint, or code release. No entry may be added purely from a blog post or
+    social-media summary.
+  \item \textbf{Uncertainty marking.} Unknown fields are recorded as
+    \texttt{null} with a \texttt{source\_note} explaining what was not
+    reported. This preserves the honesty of the catalog.
+  \item \textbf{Community curation.} Changes are proposed via pull request and
+    reviewed by at least one maintainer for source fidelity.
+\end{enumerate}
+
+The protocol mirrors existing living artifacts such as the Papers With Code
+leaderboards, but it is organized around stack fields rather than final scores.
+
+% =============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+% =============================================================================
+
+The \grpo{} family has outgrown its own label. The registry proposed here is a
+small, practical step toward a literature in which the treatment---both the
+stack and the declared algorithmic delta---is reported clearly enough to
+compare across papers. It does not replace the \minreport{} standard; it
+depends on it. It also does not replace controlled re-implementations; it makes
+the need for them visible earlier. With the companion tooling of
+\S\ref{sec:tools}---the \texttt{trl-min-report-rl} emitter,
+\texttt{grpo-stackdiff}, the Auditor, and the AuditRunner---the registry moves
+from a static worksheet to an enforceable workflow. The immediate next step is
+to populate the catalog with the full stack records of the major variants and to
+ship default emitters so that future papers produce a \grpoReg{} record with no
+extra writing.
+
+% =============================================================================
+% Bibliography. MANUAL STUB ONLY. We do NOT invent authors/years. Every entry
+% is a TODO key to be replaced by a real citation before submission.
+% =============================================================================
+\begin{thebibliography}{9}
+
+\bibitem{zvfaudit2026}
+\todo{ZVF Program v1 audit paper. Cite the arXiv/venue version once assigned.}
+
+\bibitem{minreportrl2026}
+\todo{\minreport{} position paper. Cite the arXiv/venue version once assigned.}
+
+\bibitem{dapo2025}
+\todo{DAPO paper (clip-higher + dynamic sampling). Fill authors/venue/year.}
+
+\bibitem{gspo2025}
+\todo{GSPO paper (sequence-level importance sampling). Fill authors/venue/year.}
+
+\bibitem{drgrpo2025}
+\todo{Dr.\grpo{} paper (length/normalization fix). Fill authors/venue/year.}
+
+\bibitem{madgrpo2025}
+\todo{MAD-\grpo{} paper (multi-agent/diversity). Fill authors/venue/year.}
+
+\bibitem{aero2024}
+\todo{AERO (adaptive rollout sizing). Fill authors/venue/year.}
+
+\bibitem{cppo2024}
+\todo{CPPO (clip-pruned PPO). Fill authors/venue/year.}
+
+\bibitem{ngrpo2025}
+\todo{NGRPO (normalized GRPO). Fill authors/venue/year.}
+
+\bibitem{scafgrpo2025}
+\todo{Scaf-\grpo{} (scaffolded exploration). Fill authors/venue/year.}
+
+\end{thebibliography}
+
+\end{document}

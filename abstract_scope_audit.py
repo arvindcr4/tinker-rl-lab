@@ -1,26 +1,24 @@
 #!/usr/bin/env python3
+from utils.audit_utils import run_audit
 import re
-from pathlib import Path
 
-files = {
-    "main_tex": Path("reports/final/grpo_agentic_llm_paper.tex").read_text().lower(),
-    "anon_tex": Path("reports/final/grpo_agentic_llm_paper_anonymous.tex").read_text().lower(),
-    # markdown file is superseded header-only; skip abstract checks
-}
-issues = []
+def get_issues(ctx):
+    issues = []
+    
+    for name, text in ctx.files.items():
+        m = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", ctx.text, re.S)
+        abstract = m.group(1) if m else ctx.text[:2000]
+    
+        if "custom" not in abstract:
+            issues.append(f"{name}_abstract_missing_custom_eval_caveat")
+        if "50-problem subset" not in abstract:
+            issues.append(f"{name}_abstract_missing_humaneval_subset_caveat")
+        if "training-set reward" not in abstract:
+            issues.append(f"{name}_abstract_missing_training_reward_caveat")
+        if "held-out" not in abstract:
+            issues.append(f"{name}_abstract_missing_heldout_caveat")
+    
+    return issues
 
-for name, text in files.items():
-    m = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", text, re.S)
-    abstract = m.group(1) if m else text[:2000]
-
-    if "custom" not in abstract:
-        issues.append(f"{name}_abstract_missing_custom_eval_caveat")
-    if "50-problem subset" not in abstract:
-        issues.append(f"{name}_abstract_missing_humaneval_subset_caveat")
-    if "training-set reward" not in abstract:
-        issues.append(f"{name}_abstract_missing_training_reward_caveat")
-    if "held-out" not in abstract:
-        issues.append(f"{name}_abstract_missing_heldout_caveat")
-
-print(f"METRIC abstract_issues={len(issues)}")
-print("All abstract scope checks passed." if not issues else "\n".join(issues))
+if __name__ == '__main__':
+    run_audit('abstract_issues', get_issues)

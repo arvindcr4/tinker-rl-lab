@@ -1,0 +1,408 @@
+% =============================================================================
+% REPRODUCIBILITY-AUDIT: A Single-Stack Survival Protocol for the GRPO Family
+% =============================================================================
+% Pillar 3 of the ZVF Program. Companion to the MIN-REPORT-RL position paper
+% and the GRPO-Registry catalog.
+%
+% Self-contained draft. Compiles with plain article class; citations are TODO
+% keys; bibliography is manual thebibliography stub.
+% =============================================================================
+
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{graphicx}
+
+\renewcommand{\cite}[1]{\textcolor{red}{[\textsc{cite:}\,#1]}}
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO:\ #1]}}}
+\newcommand{\zvf}{\textsc{Zvf}}
+\newcommand{\gu}{\textsc{Gu}}
+\newcommand{\minreport}{\textsc{Min-Report-RL}}
+\newcommand{\grpo}{\textsc{GRPO}}
+\newcommand{\audit}{\textsc{GRPO-Survival-Audit}}
+\newcommand{\grpoReg}{\textsc{GRPO-Registry}}
+
+\title{\audit{}: A Single-Stack Survival Protocol for the \grpo{} Family\\
+\large Holding the Stack Fixed So Algorithmic Gains Can Be Seen}
+
+\author{Arvind C R \and the ZVF Program\thanks{Pillar~3 of the ZVF Program.
+Author list and affiliations \todo{finalize}.}}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+% =============================================================================
+\begin{abstract}
+% =============================================================================
+The \grpo{}-family literature reports head-to-head comparisons in which each
+variant runs in its own trainer, sampler, and evaluation harness. Because the
+``stack''---loss form, reference/KL handling, sampler precision, group-size
+schedule, \zvf/\gu{} trajectory, held-out split, and parser---is a documented
+flip lever \cite{minreportrl2026}, such comparisons confound algorithmic
+innovation with implementation differences. This paper proposes \audit{}, a
+single-stack reproducibility-audit protocol in which DAPO, GSPO, Dr.\grpo{},
+MAD-\grpo{}, and other variance-mitigation variants are re-implemented as
+minimal configuration overrides on one shared trainer. We specify the shared
+stack, the pre-registration rules, the survival-verdict logic, the statistical
+protocol, and the role of the companion \texttt{grpo-stackdiff} tool in
+verifying that arms are stack-matched. We also report a small open-source pilot
+on Qwen2.5-0.5B-Instruct (two seeds, T4 GPU) that demonstrates the protocol's
+feasibility and produces concrete \zvf{} and held-out-delta observations. The
+full-scale audit results are reported as placeholder tables to be filled once
+compute is budgeted; the contribution is the protocol and the pilot, not a
+final leaderboard.
+\end{abstract}
+
+% =============================================================================
+\section{Introduction: The Need for a Survival Audit}
+% =============================================================================
+
+A typical GRPO-family paper compares a new variant against ``GRPO'' by running
+each in a different codebase. The new variant may change the clip rule, the
+advantage normalization, or the group-size schedule; the baseline may use a
+different token mask, KL placement, sampler precision, or reward parser
+\cite{minreportrl2026, zvfaudit2026}. The result is a comparison of two stacks
+$S_A$ and $S_B$ that happen to be tagged ``A'' and ``B''. The algorithmic delta
+and the stack delta are inseparable.
+
+The \minreport{} position paper \cite{minreportrl2026} proposes a
+seven-item minimum-reportable-stack standard so that future papers expose the
+stack. The \grpoReg{} catalog \cite{grpoRegistry2026} records each variant's
+self-declared delta relative to a baseline. This paper closes the loop: it
+specifies a controlled, single-stack re-implementation protocol that asks,
+for each variant, \emph{what fraction of its claimed gain survives when the
+stack is held fixed?} We call the answer the variant's \emph{survival}.
+
+\paragraph{What survival is not.} A low survival verdict does not mean a
+variant is ``fake.'' It means the variant's published gain was partly or wholly
+a stack effect under the audited stack. A high survival verdict is evidence
+that the algorithmic idea is robust. Both outcomes are useful.
+
+\paragraph{Contributions.}
+\begin{enumerate}[leftmargin=1.6em, itemsep=2pt]
+  \item A concrete single-stack audit protocol with shared-stack constraints,
+    arm definitions, and pre-registration rules (\S\ref{sec:design}).
+  \item A survival-verdict logic and statistical protocol that treat seed as
+    the independent unit (\S\ref{sec:verdict}--\ref{sec:stats}).
+  \item Integration with \texttt{grpo-stackdiff} to verify stack identity
+    across arms before any result is trusted (\S\ref{sec:stackdiff}).
+  \item A small open-source pilot (\S\ref{sec:pilot}) that exercises the
+    protocol on four arms and shows that the required telemetry is obtainable
+    from a standard GRPO trainer.
+\end{enumerate}
+
+% =============================================================================
+\section{Audit Design}
+\label{sec:design}
+% =============================================================================
+
+\paragraph{Shared stack.} Every arm uses the same:
+\begin{itemize}[leftmargin=1.4em, itemsep=2pt]
+  \item base checkpoint and tokenizer revision,
+  \item LoRA target modules, rank, alpha, and dropout (if LoRA is used),
+  \item optimizer, learning-rate schedule, and gradient clipping,
+  \item rollout engine (vLLM), decoding parameters, sampler/trainer precision,
+  \item reference-policy and KL handling (placement, coefficient, schedule,
+    estimator),
+  \item token mask and advantage normalization (unless the variant explicitly
+    changes one of these),
+  \item reward parser and held-out evaluation harness,
+  \item prompt distribution and train/test split.
+\end{itemize}
+The only permitted differences are the variant's declared algorithmic deltas.
+
+\paragraph{Arms.} The primary arms are:
+\begin{itemize}[leftmargin=1.4em, itemsep=2pt]
+  \item \textbf{GRPO (baseline):} vanilla per-token GRPO with the shared stack.
+  \item \textbf{DAPO:} asymmetric clip-higher + dynamic sampling
+    \cite{dapo2025}.
+  \item \textbf{GSPO:} sequence-level importance-sampling ratio
+    \cite{gspo2025}.
+  \item \textbf{Dr.\grpo{}:} length-normalized advantage/reward terms
+    \cite{drgrpo2025}.
+  \item \textbf{MAD-\grpo{}:} multi-agent / diversity bonus
+    \cite{madgrpo2025}.
+\end{itemize}
+Optional secondary arms (AERO \cite{aero2024}, CPPO \cite{cppo2024}, NGRPO
+\cite{ngrpo2025}, Scaf-\grpo{} \cite{scafgrpo2025}) are added if compute
+permits; each is implemented as a single hook on the same shared trainer.
+
+\paragraph{Pre-registration.} Before any held-out score is observed, the audit
+fixes: the arm list, the shared stack specification, the seed sweep, the
+held-out split, the checkpoint-selection rule, the survival thresholds, and the
+primary analysis script. Pre-registration prevents the selection-by-reward
+bias that the audit is designed to diagnose \cite{zvfaudit2026}.
+
+\paragraph{Hook interface.} A variant is added by implementing a small hook
+object with the following interface:
+\begin{verbatim}
+class VariantHook:
+    def on_group_rewards(self, rewards: Tensor) -> Tensor:
+        # optionally transform per-prompt group rewards
+        return rewards
+    def on_advantage(self, advantage: Tensor) -> Tensor:
+        # optionally transform advantages
+        return advantage
+    def on_loss(self, loss_terms: Tensor, mask: Tensor) -> Tensor:
+        # optionally modify loss terms
+        return loss_terms
+    def group_size_rule(self, step: int, zvf: float) -> int:
+        # return G for this step; default is fixed G
+        return self.G
+\end{verbatim}
+All hooks are loaded into the same trainer binary, so infrastructure differences
+are impossible.
+
+% =============================================================================
+\section{Survival Verdicts}
+\label{sec:verdict}
+% =============================================================================
+
+For each variant we report two numbers:
+\begin{itemize}[leftmargin=1.4em, itemsep=2pt]
+  \item \textbf{Published $\Delta$:} the gain claimed in the original paper on
+    its own stack.
+  \item \textbf{Controlled $\Delta$:} the gain in the shared stack vs.\ the
+    shared GRPO baseline, with a 95\% confidence interval across seeds.
+\end{itemize}
+The survival verdict is then:
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Verdict} & \textbf{Rule}\\
+\midrule
+Survives & Controlled CI lower bound $>50\%$ of published $\Delta$.\\
+Shrinks & Controlled CI overlaps $(0, \text{published }\Delta)$ but does not
+  fully cover it.\\
+Disappears & Controlled CI includes zero.\\
+Reverses & Controlled CI is entirely negative.\\
+\bottomrule
+\end{tabular}
+\end{center}
+The $50\%$ survival threshold is a pre-registered convention; sensitivity
+analyses at $25\%$ and $75\%$ are reported in an appendix.
+
+% =============================================================================
+\section{Statistical Protocol}
+\label{sec:stats}
+% =============================================================================
+
+The independent unit is a seed, not a training step. Training rewards are
+autocorrelated within a trace, so inferential claims are made only across the
+seed sweep. For each metric we report the mean and standard error across seeds,
+with bootstrap 95\% confidence intervals. We control the false-discovery rate
+across the pre-registered survival tests using Benjamini--Hochberg. Single-seed
+arms are reported as descriptive only.
+
+The minimum detectable effect at the chosen seed count $S$ is reported for the
+primary held-out metric. If the published $\Delta$ is smaller than the MDE, the
+audit cannot claim disappearance; it can only claim \texttt{INCONCLUSIVE}.
+
+% =============================================================================
+\section{Using \texttt{grpo-stackdiff} to Verify Stack Identity}
+\label{sec:stackdiff}
+% =============================================================================
+
+Before interpreting any survival result, we verify that the arms are
+stack-matched. The companion \texttt{grpo-stackdiff} CLI
+\cite{minreportrl2026} takes the \minreport{} manifest of each arm and reports
+whether any unapproved lever differs. The audit proceeds only if every pairwise
+comparison returns \texttt{STACK\_MATCHED} (or \texttt{STACK\_MATERIAL} for
+levers the protocol explicitly tolerates).
+
+If a hook inadvertently changes a non-target lever---for example, a dynamic
+sampling rule that also changes the effective tokenizer chat template because
+it filters on string prefixes---\texttt{grpo-stackdiff} flags it as a
+DISTRIBUTIONAL or SEMANTIC\_OBJECTIVE diff. The hook must then be rewritten so
+that only the declared delta remains. This check is the difference between a
+``single-trainer'' audit and a genuinely ``single-stack'' audit.
+
+% =============================================================================
+\section{Primary Results Tables}
+% =============================================================================
+
+Table~\ref{tab:survival} is the headline table. All numeric cells are
+placeholders to be filled once the full-scale audit corpus is collected.
+Table~\ref{tab:telemetry} reports the \minreport{} item-4 telemetry for each
+arm.
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Controlled single-stack survival audit.} Each variant is a
+  minimal hook on the shared trainer. ``Published $\Delta$'' is the original
+  paper's claim; ``Controlled $\Delta$'' is the shared-stack gain vs.\ the
+  shared GRPO baseline. Cells are \todo{fill from full-scale audit corpus}.}
+\label{tab:survival}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Variant} & \textbf{Defining delta} & \textbf{Published $\Delta$} &
+\textbf{Controlled last-10} & \textbf{Controlled held-out} &
+\textbf{Controlled $\Delta$ (95\% CI)} & \textbf{Survival}\\
+\midrule
+GRPO (baseline) & --- & --- & \todo{} & \todo{} & $0$ (ref.) & --- \\
+DAPO     & clip-higher + dyn.\ sampling & \todo{} & \todo{} & \todo{} & \todo{} & \todo{} \\
+GSPO     & sequence-level IS ratio     & \todo{} & \todo{} & \todo{} & \todo{} & \todo{} \\
+Dr.\grpo{} & length/normalization fix   & \todo{} & \todo{} & \todo{} & \todo{} & \todo{} \\
+MAD-\grpo{} & multi-agent / diversity   & \todo{} & \todo{} & \todo{} & \todo{} & \todo{} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Per-arm telemetry.} Mean \zvf{} and \gu{} late in training,
+  collapse behavior, and group-size schedule under the shared stack. Cells are
+  \todo{fill from full-scale audit corpus}.}
+\label{tab:telemetry}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Variant} & \textbf{Mean \zvf{} @ step 25} & \textbf{Mean \gu{} @ step 25} &
+\textbf{Collapse rate} & \textbf{Median steps to collapse} &
+\textbf{Group-size schedule}\\
+\midrule
+GRPO (baseline) & \todo{} & \todo{} & \todo{} & \todo{} & fixed $G$ \\
+DAPO     & \todo{} & \todo{} & \todo{} & \todo{} & dynamic \\
+GSPO     & \todo{} & \todo{} & \todo{} & \todo{} & fixed \todo{} \\
+Dr.\grpo{} & \todo{} & \todo{} & \todo{} & \todo{} & fixed \todo{} \\
+MAD-\grpo{} & \todo{} & \todo{} & \todo{} & \todo{} & \todo{} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+% =============================================================================
+\section{Open-Source Pilot}
+\label{sec:pilot}
+% =============================================================================
+
+We ran a small pilot on a single T4 GPU to validate that the required telemetry
+can be extracted from a standard GRPO trainer and that the protocol produces
+informative stack-controlled observations. The pilot is \emph{not} the
+full-scale audit; it uses a small model and only two seeds.
+
+\paragraph{Setup.} Model: Qwen/Qwen2.5-0.5B-Instruct. Two seeds. Arms: GRPO,
+Dr.\grpo{}, DAPO, and an adaptive-$G$ GRPO baseline. The shared stack is a
+single open-source trainer with the same tokenizer, sampler, reward parser, and
+held-out split across arms.
+
+\paragraph{Pilot results.} Table~\ref{tab:pilot} shows mean held-out delta,
+mean \zvf{}, and mean rollouts per arm. Even at this scale, the stack-controlled
+observations are informative: DAPO reports zero \zvf{} but spends more rollouts
+(174 vs.\ 120), while adaptive-$G$ matches Dr.\grpo{}'s held-out delta with a
+different \zvf{} and rollout budget.
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Pilot results (Qwen2.5-0.5B-Instruct, 2 seeds, T4).} Mean
+  held-out $\Delta$, mean \zvf{}, and mean rollouts per arm.}
+\label{tab:pilot}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Arm} & \textbf{Held-out $\Delta$} & \textbf{Mean \zvf{}} &
+\textbf{Mean rollouts}\\
+\midrule
+GRPO (baseline)          & $0.500$ & $0.250$ & $120$ \\
+Dr.\grpo{}                & $0.575$ & $0.267$ & $120$ \\
+DAPO                     & $0.550$ & $0.000$ & $174$ \\
+GRPO adaptive-$G$        & $0.575$ & $0.233$ & $186$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Interpretation.} The pilot shows that the same held-out delta can
+arrive through very different signal-budget paths. DAPO eliminates zero-variance
+groups at the cost of more rollouts; adaptive-$G$ achieves the same delta as
+Dr.\grpo{} with a higher rollout budget. A head-to-head that reports only final
+reward would miss these trade-offs; the \audit{} protocol surfaces them
+explicitly.
+
+% =============================================================================
+\section{Limitations and Extensions}
+% =============================================================================
+
+\paragraph{Scope.} The audit tests survival under one shared stack. A variant
+that survives here may still fail under a different stack; the audit does not
+claim universal robustness. It claims only that the published gain is not
+purely an artifact of the original stack.
+
+\paragraph{Faithfulness of re-implementation.} A variant may depend on an
+unreported implementation detail. If a careful re-implementation cannot
+reproduce the original result from the paper, that is itself a finding about
+reporting quality, but it is not a finding about the method's intrinsic value.
+We report both readings and publish every arm's full \minreport{} block.
+
+\paragraph{Extensions.} The protocol generalizes to any family of methods that
+are small deltas on a base loop. The same hook interface can accommodate
+future variants; the same \texttt{grpo-stackdiff} check can verify that each
+new hook changes only its declared levers.
+
+% =============================================================================
+\section{Conclusion}
+% =============================================================================
+
+The \grpo{} family needs a way to separate algorithmic gains from stack
+effects. The \minreport{} standard tells authors what to report; the
+\grpoReg{} catalog records each variant's declared delta; and the \audit{}
+protocol reported here holds the stack fixed so that those deltas can be tested
+fairly. The immediate next step is to run the full-scale, multi-seed audit on a
+capable model and fill the placeholder tables. Until then, the protocol, the
+pilot, and the \texttt{grpo-stackdiff} verification step are the contribution:
+they make it possible, for the first time, to ask of a GRPO-family result not
+``did it win?'' but ``did it survive?''
+
+% =============================================================================
+\begin{thebibliography}{9}
+
+\bibitem{minreportrl2026}
+\todo{\minreport{} position paper. Cite arXiv/venue version once assigned.}
+
+\bibitem{grpoRegistry2026}
+\todo{\grpoReg{} catalog paper. Cite arXiv/venue version once assigned.}
+
+\bibitem{zvfaudit2026}
+\todo{ZVF Program v1 audit paper. Cite arXiv/venue version once assigned.}
+
+\bibitem{dapo2025}
+\todo{DAPO paper. Fill authors/venue/year.}
+
+\bibitem{gspo2025}
+\todo{GSPO paper. Fill authors/venue/year.}
+
+\bibitem{drgrpo2025}
+\todo{Dr.\grpo{} paper. Fill authors/venue/year.}
+
+\bibitem{madgrpo2025}
+\todo{MAD-\grpo{} paper. Fill authors/venue/year.}
+
+\bibitem{aero2024}
+\todo{AERO paper. Fill authors/venue/year.}
+
+\bibitem{cppo2024}
+\todo{CPPO paper. Fill authors/venue/year.}
+
+\bibitem{ngrpo2025}
+\todo{NGRPO paper. Fill authors/venue/year.}
+
+\bibitem{scafgrpo2025}
+\todo{Scaf-\grpo{} paper. Fill authors/venue/year.}
+
+\end{thebibliography}
+
+\end{document}

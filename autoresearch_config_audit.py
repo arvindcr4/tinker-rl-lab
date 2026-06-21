@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-from pathlib import Path
+from utils.audit_utils import run_audit
+import re
 
-md = Path("autoresearch.md").read_text().lower()
-issues = []
+def get_issues(ctx):
+    issues = []
+    
+    if "suite_issues" not in ctx.md:
+        issues.append("autoresearch_md_missing_suite_metric")
+    if "run_all_audits.py" not in ctx.md:
+        issues.append("autoresearch_md_missing_unified_suite_reference")
+    if "reviewer_issues" not in ctx.md:
+        issues.append("autoresearch_md_missing_primary_reviewer_metric_context")
+    
+    return issues
 
-if "suite_issues" not in md:
-    issues.append("autoresearch_md_missing_suite_metric")
-if "run_all_audits.py" not in md:
-    issues.append("autoresearch_md_missing_unified_suite_reference")
-if "reviewer_issues" not in md:
-    issues.append("autoresearch_md_missing_primary_reviewer_metric_context")
-
-print(f"METRIC config_issues={len(issues)}")
-print("Autoresearch config checks passed." if not issues else "\n".join(issues))
+if __name__ == '__main__':
+    run_audit('config_issues', get_issues)

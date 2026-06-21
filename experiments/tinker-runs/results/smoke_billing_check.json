@@ -1,0 +1,47 @@
+{
+  "tag": "smoke_billing_check",
+  "status": "completed",
+  "model": "Qwen/Qwen3.5-4B",
+  "model_short": "qwen3.5-4b",
+  "task": "gsm8k",
+  "seed": 20260422,
+  "rank": 4,
+  "group_size": 2,
+  "batch": 1,
+  "lr": 3e-05,
+  "temperature": 0.8,
+  "steps": 2,
+  "started_at": "2026-06-21T06:19:45.886330+00:00",
+  "output_path": "experiments/tinker-runs/results/smoke_billing_check.json",
+  "run_id": "543654e2-9e77-5a1c-b24a-23cb21b10918:train:0",
+  "initial_sampler": "tinker://543654e2-9e77-5a1c-b24a-23cb21b10918:train:0/sampler_weights/s0",
+  "reward_trace": [
+    0.0,
+    0.0
+  ],
+  "step_log": [
+    {
+      "step": 1,
+      "reward": 0.0,
+      "loss": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 2,
+      "reward": 0.0,
+      "loss": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    }
+  ],
+  "last_updated_at": "2026-06-21T06:20:35.061873+00:00",
+  "checkpoint": "tinker://543654e2-9e77-5a1c-b24a-23cb21b10918:train:0/sampler_weights/final",
+  "first5_avg": 0.0,
+  "last10_avg": 0.0,
+  "peak_reward": 0.0,
+  "zero_reward_pct": 100.0,
+  "zero_loss_pct": 100.0,
+  "wall_clock_sec": 52.98854470252991,
+  "completed_at": "2026-06-21T06:20:38.875022+00:00"
+}

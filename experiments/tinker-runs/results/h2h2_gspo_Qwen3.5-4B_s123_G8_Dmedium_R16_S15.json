@@ -1,0 +1,152 @@
+{
+  "tag": "h2h2_gspo_Qwen3.5-4B_s123_G8_Dmedium_R16_S15",
+  "status": "completed",
+  "model": "Qwen/Qwen3.5-4B",
+  "model_short": "qwen3.5-4b",
+  "task": "gsm8k",
+  "seed": 123,
+  "rank": 16,
+  "group_size": 8,
+  "batch": 2,
+  "lr": 1e-05,
+  "temperature": 0.8,
+  "steps": 15,
+  "started_at": "2026-06-21T07:29:23.726869+00:00",
+  "output_path": "experiments/tinker-runs/results/h2h2_gspo_Qwen3.5-4B_s123_G8_Dmedium_R16_S15.json",
+  "run_id": "01c8de98-c397-5459-85b9-36c06980b3ef:train:0",
+  "initial_sampler": "tinker://01c8de98-c397-5459-85b9-36c06980b3ef:train:0/sampler_weights/s0",
+  "reward_trace": [
+    0.5,
+    0.1875,
+    0.4375,
+    1.0,
+    0.5625,
+    0.625,
+    0.125,
+    0.625,
+    0.8125,
+    0.6875,
+    0.625,
+    0.875,
+    0.5,
+    0.8125,
+    0.6875
+  ],
+  "step_log": [
+    {
+      "step": 1,
+      "reward": 0.5,
+      "loss": 0.011638134717941284,
+      "zvf": 0.0,
+      "gu": 1.0
+    },
+    {
+      "step": 2,
+      "reward": 0.1875,
+      "loss": -0.0021366477012634277,
+      "zvf": 0.5,
+      "gu": 0.5
+    },
+    {
+      "step": 3,
+      "reward": 0.4375,
+      "loss": 0.003683023154735565,
+      "zvf": 0.0,
+      "gu": 1.0
+    },
+    {
+      "step": 4,
+      "reward": 1.0,
+      "loss": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 5,
+      "reward": 0.5625,
+      "loss": 0.0013210363686084747,
+      "zvf": 0.5,
+      "gu": 0.5
+    },
+    {
+      "step": 6,
+      "reward": 0.625,
+      "loss": -0.002562258392572403,
+      "zvf": 0.5,
+      "gu": 0.5
+    },
+    {
+      "step": 7,
+      "reward": 0.125,
+      "loss": -0.0050371550023555756,
+      "zvf": 0.5,
+      "gu": 0.5
+    },
+    {
+      "step": 8,
+      "reward": 0.625,
+      "loss": -0.00039306655526161194,
+      "zvf": 0.5,
+      "gu": 0.5
+    },
+    {
+      "step": 9,
+      "reward": 0.8125,
+      "loss": 0.0019333437085151672,
+      "zvf": 0.5,
+      "gu": 0.5
+    },
+    {
+      "step": 10,
+      "reward": 0.6875,
+      "loss": -0.0011446513235569,
+      "zvf": 0.5,
+      "gu": 0.5
+    },
+    {
+      "step": 11,
+      "reward": 0.625,
+      "loss": 0.00669454038143158,
+      "zvf": 0.0,
+      "gu": 1.0
+    },
+    {
+      "step": 12,
+      "reward": 0.875,
+      "loss": -0.0010561197996139526,
+      "zvf": 0.5,
+      "gu": 0.5
+    },
+    {
+      "step": 13,
+      "reward": 0.5,
+      "loss": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0
+    },
+    {
+      "step": 14,
+      "reward": 0.8125,
+      "loss": 0.007348939776420593,
+      "zvf": 0.5,
+      "gu": 0.5
+    },
+    {
+      "step": 15,
+      "reward": 0.6875,
+      "loss": -0.005871634930372238,
+      "zvf": 0.5,
+      "gu": 0.5
+    }
+  ],
+  "last_updated_at": "2026-06-21T07:36:58.552554+00:00",
+  "latest_sampler": "tinker://01c8de98-c397-5459-85b9-36c06980b3ef:train:0/sampler_weights/s15",
+  "checkpoint": "tinker://01c8de98-c397-5459-85b9-36c06980b3ef:train:0/sampler_weights/final",
+  "first5_avg": 0.5375,
+  "last10_avg": 0.6375,
+  "peak_reward": 1.0,
+  "zero_reward_pct": 0.0,
+  "zero_loss_pct": 13.333333333333334,
+  "wall_clock_sec": 455.92182660102844,
+  "completed_at": "2026-06-21T07:36:59.648711+00:00"
+}

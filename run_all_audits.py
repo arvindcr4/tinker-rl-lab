@@ -21,7 +21,7 @@ AUDITS = [
 
 failures = []
 for audit in AUDITS:
-    proc = subprocess.run(["python", audit], capture_output=True, text=True)
+    proc = subprocess.run(["python3", audit], capture_output=True, text=True)
     out = proc.stdout.strip()
     match = re.search(r"METRIC\s+\w+=(\d+)", out)
     metric = int(match.group(1)) if match else None

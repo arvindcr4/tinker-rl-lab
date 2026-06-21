@@ -1,17 +1,16 @@
 """E4 (Pillar 1, empirical sweep): does measured ZVF follow the closed form
-ZVF(p,K) = p^K + (1-p)^K across a group-size sweep, and does numerical PRECISION
-move the audit number?
+ZVF(p,K) = p^K + (1-p)^K across a group-size sweep, PROBED AT p ~ 0.5, and does
+numerical PRECISION move the audit number?
 
-Codex-review fixes vs the first draft:
-  * POWER: 16 prompt-groups cannot resolve the 0.008 worked example (resolution
-    1/16). We GENERATE ONCE (N_POOL rollouts/prompt) then SUBSAMPLE >=N_GROUPS
-    size-K groups per prompt -> >=128 groups/K with bootstrap CIs, no re-gen.
-  * The only clean Tinker-blocked lever here is PRECISION (Tinker pins it), so it
-    is a small K=8 side-check, not the main grid.
-
-Colab-only because: (a) fp32-vs-bf16 training/inference precision is fixed on
-Tinker; (b) the closed-form check needs the full per-prompt reward matrix at
-controlled large K, which the closed loss/sampler does not expose cleanly.
+Round-2 Codex fix: the first run landed at mean p_hat=0.11 (format-gated), so it
+never tested the p=0.5,K=8 -> 0.0078 crossing the worked example is about.
+  * FEW-SHOT format scaffold removes the parser/format confound.
+  * CALIBRATE: sample candidate prompts across digit regimes, measure p_hat from a
+    pilot, KEEP ONLY prompts with p_hat in [0.4,0.6]; flag the run if the band
+    cannot be populated. The scaling law is then probed where it matters.
+  * GENERATE ONCE then SUBSAMPLE >=256 size-K groups/prompt -> bootstrap CIs.
+Precision (fp32 vs bf16, the one cleanly Tinker-blocked lever here) stays a K=8
+side-check.
 
 Run:  colab run --gpu T4 --timeout 1500 e4_scaling_law.py
 """
@@ -21,12 +20,15 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
 SEED = 0
-N_PROMPTS = 40        # pool of prompts, difficulty tuned for p ~ 0.5
-N_POOL = 64           # rollouts generated per prompt (once, then subsampled)
+N_PROMPTS = 40        # calibrated prompts kept (p_hat in band)
+N_PILOT = 24          # rollouts to estimate p_hat during calibration
+N_POOL = 64           # rollouts per kept prompt for the scaling law
+N_CANDIDATES = 110    # candidates screened to find in-band prompts
+BAND = (0.4, 0.6)     # target p_hat band (centered on 0.5)
 KS = [2, 4, 8, 16, 32]
-N_GROUPS = 256        # bootstrap groups per prompt per K  (>=128, powered)
+N_GROUPS = 256        # bootstrap groups per prompt per K
 MAX_NEW = 24
-PREC_PROMPTS = 10     # subset re-generated at fp32 for the precision side-check
+PREC_PROMPTS = 12     # subset re-generated at fp32 for the precision side-check
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
 
 tok = AutoTokenizer.from_pretrained(MODEL)
@@ -35,15 +37,26 @@ if tok.pad_token is None:
 tok.padding_side = "left"
 PAD = tok.pad_token_id
 
-def problem():
-    # two 2-digit addends with a carry-heavy range -> base 0.5B lands near p~0.5
-    a, b = random.randint(25, 95), random.randint(25, 95)
+FEWSHOT = [
+    {"role": "user", "content": "Compute 3 + 4. Reason briefly, then put the final integer after '####'."},
+    {"role": "assistant", "content": "3 + 4 = 7.\n#### 7"},
+]
+
+def candidate(rng):
+    # mixed digit regimes so p_hat spans low..high; calibration keeps the middle
+    r = rng.random()
+    if r < 0.34:            # 2-digit (usually easy -> high p)
+        a, b = rng.randint(10, 99), rng.randint(10, 99)
+    elif r < 0.67:          # mixed 2+3 digit (the p~0.5 sweet spot)
+        a, b = rng.randint(10, 99), rng.randint(100, 999)
+    else:                   # 3-digit (hard -> low p)
+        a, b = rng.randint(100, 999), rng.randint(100, 999)
     return f"{a} + {b}", a + b
 
 def prompt_of(q):
-    return tok.apply_chat_template(
-        [{"role": "user", "content": f"Compute {q}. Reason briefly, then put the final integer after '####'."}],
-        tokenize=False, add_generation_prompt=True)
+    msgs = FEWSHOT + [{"role": "user",
+                       "content": f"Compute {q}. Reason briefly, then put the final integer after '####'."}]
+    return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
 
 def parse(text):
     m = re.findall(r"-?\d+", text.split("####")[-1])
@@ -51,7 +64,6 @@ def parse(text):
 
 @torch.no_grad()
 def reward_pool(model, prompt, gold, n):
-    """Generate n rollouts for one prompt; return list of 0/1 rewards."""
     rewards = []
     B = 32
     for i in range(0, n, B):
@@ -65,18 +77,36 @@ def reward_pool(model, prompt, gold, n):
     return rewards
 
 def empirical_zvf(pool, K, rng, n_groups):
-    """Fraction of size-K groups (subsampled w/ replacement from pool) with zero reward variance."""
-    z = 0
-    npool = len(pool)
+    z, npool = 0, len(pool)
     for _ in range(n_groups):
-        idx = [rng.randrange(npool) for _ in range(K)]
-        vals = [pool[i] for i in idx]
-        if min(vals) == max(vals):     # all identical -> zero variance -> ZVF group
+        vals = [pool[rng.randrange(npool)] for _ in range(K)]
+        if min(vals) == max(vals):
             z += 1
     return z / n_groups
 
 def predicted_zvf(p, K):
     return p ** K + (1 - p) ** K
+
+def r2(emp, pred):
+    mu = statistics.mean(emp)
+    ss_res = sum((e - p) ** 2 for e, p in zip(emp, pred))
+    ss_tot = sum((e - mu) ** 2 for e in emp) or 1e-12
+    return 1 - ss_res / ss_tot
+
+def calibrate(model, rng):
+    """Screen candidates; return prompts with p_hat in BAND (fallback: closest to 0.5)."""
+    scored = []
+    for _ in range(N_CANDIDATES):
+        q, gold = candidate(rng)
+        ph = statistics.mean(reward_pool(model, prompt_of(q), gold, N_PILOT))
+        scored.append((abs(ph - 0.5), ph, q, gold))
+        if sum(1 for s in scored if BAND[0] <= s[1] <= BAND[1]) >= N_PROMPTS:
+            break
+    in_band = [s for s in scored if BAND[0] <= s[1] <= BAND[1]]
+    ok = len(in_band) >= N_PROMPTS
+    chosen = (in_band if ok else sorted(scored))[:N_PROMPTS]
+    print(f"[e4] calibration: {len(in_band)}/{len(scored)} in band {BAND}; ok={ok}", flush=True)
+    return [(q, gold) for _, _, q, gold in chosen], ok
 
 def build_pools(model, prompts):
     pools, ps = [], []
@@ -85,44 +115,30 @@ def build_pools(model, prompts):
         pools.append(pool); ps.append(sum(pool) / len(pool))
     return pools, ps
 
-def r2(emp, pred):
-    mu = statistics.mean(emp)
-    ss_res = sum((e - p) ** 2 for e, p in zip(emp, pred))
-    ss_tot = sum((e - mu) ** 2 for e in emp) or 1e-12
-    return 1 - ss_res / ss_tot
-
 def main():
     random.seed(SEED); torch.manual_seed(SEED)
     rng = random.Random(SEED)
-    prompts = [problem() for _ in range(N_PROMPTS)]
-
     model = AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).to(DEV)
+
+    prompts, calib_ok = calibrate(model, rng)
     pools, ps = build_pools(model, prompts)
     pbar = statistics.mean(ps)
-    print(f"[e4] mean p_hat over {N_PROMPTS} prompts = {pbar:.3f}", flush=True)
+    print(f"[e4] mean p_hat over {len(prompts)} calibrated prompts = {pbar:.3f}", flush=True)
 
-    by_K = {}
-    emp_curve, pred_curve = [], []
+    by_K, emp_curve, pred_curve = {}, [], []
     for K in KS:
-        per_prompt_emp = [empirical_zvf(pool, K, rng, N_GROUPS) for pool in pools]
-        per_prompt_pred = [predicted_zvf(p, K) for p in ps]
-        emp = statistics.mean(per_prompt_emp)
-        pred = statistics.mean(per_prompt_pred)
-        # bootstrap 95% CI over prompts
-        boots = []
-        for _ in range(500):
-            samp = [per_prompt_emp[rng.randrange(N_PROMPTS)] for _ in range(N_PROMPTS)]
-            boots.append(statistics.mean(samp))
-        boots.sort()
-        ci = [round(boots[12], 4), round(boots[-13], 4)]
+        per_emp = [empirical_zvf(pool, K, rng, N_GROUPS) for pool in pools]
+        per_pred = [predicted_zvf(p, K) for p in ps]
+        emp, pred = statistics.mean(per_emp), statistics.mean(per_pred)
+        boots = sorted(statistics.mean([per_emp[rng.randrange(len(per_emp))] for _ in per_emp])
+                       for _ in range(500))
         by_K[K] = {"emp_zvf": round(emp, 4), "pred_zvf": round(pred, 4),
-                   "emp_ci95": ci, "abs_err": round(abs(emp - pred), 4)}
+                   "emp_ci95": [round(boots[12], 4), round(boots[-13], 4)],
+                   "abs_err": round(abs(emp - pred), 4)}
         emp_curve.append(emp); pred_curve.append(pred)
-        print(f"[e4] K={K:2d} emp={emp:.4f} pred={pred:.4f} ci={ci}", flush=True)
+        print(f"[e4] K={K:2d} emp={emp:.4f} pred={pred:.4f} ci={by_K[K]['emp_ci95']}", flush=True)
 
-    fit_r2 = r2(emp_curve, pred_curve)
-
-    # ---- precision side-check at K=8 (the Tinker-blocked lever) ----
+    # ---- precision side-check at K=8 ----
     sub = prompts[:PREC_PROMPTS]
     bf16_pools = pools[:PREC_PROMPTS]
     del model; torch.cuda.empty_cache()
@@ -131,19 +147,21 @@ def main():
     fp32_pools, fp32_ps = build_pools(model32, sub)
     bf16_z8 = statistics.mean(empirical_zvf(p, 8, rng, N_GROUPS) for p in bf16_pools)
     fp32_z8 = statistics.mean(empirical_zvf(p, 8, rng, N_GROUPS) for p in fp32_pools)
-    bf16_p = statistics.mean(ps[:PREC_PROMPTS]); fp32_p = statistics.mean(fp32_ps)
     del model32; torch.cuda.empty_cache()
 
     result = {
-        "experiment": "E4_scaling_law", "model": MODEL, "seed": SEED,
-        "n_prompts": N_PROMPTS, "n_pool": N_POOL, "n_groups_per_K": N_GROUPS,
+        "experiment": "E4_scaling_law", "model": MODEL, "seed": SEED, "few_shot": True,
+        "calibrated_to_p0.5": calib_ok, "band": list(BAND),
+        "n_prompts": len(prompts), "n_pool": N_POOL, "n_groups_per_K": N_GROUPS,
         "mean_p_hat": round(pbar, 4), "ks": KS, "by_K": by_K,
-        "closed_form_r2": round(fit_r2, 4),
+        "closed_form_r2": round(r2(emp_curve, pred_curve), 4),
         "worked_example_K8_pred_at_p0.5": round(predicted_zvf(0.5, 8), 5),
+        "emp_zvf_at_K8": by_K[8]["emp_zvf"],
         "precision_side_check_K8": {
             "bf16_zvf": round(bf16_z8, 4), "fp32_zvf": round(fp32_z8, 4),
             "delta_zvf_fp32_minus_bf16": round(fp32_z8 - bf16_z8, 4),
-            "bf16_p_hat": round(bf16_p, 4), "fp32_p_hat": round(fp32_p, 4)},
+            "bf16_p_hat": round(statistics.mean(ps[:PREC_PROMPTS]), 4),
+            "fp32_p_hat": round(statistics.mean(fp32_ps), 4)},
     }
     print("E4_RESULT " + json.dumps(result), flush=True)
 

@@ -1,31 +1,32 @@
-launch E5 Sun Jun 21 16:43:47 IST 2026
-[colab] Creating session 'run-2a84b1'...
-[colab] Session READY (run-2a84b1). Executing zvf-program/colab-experiments/e5_grad_geometry.py...
+launch E5 v2 Sun Jun 21 17:48:21 IST 2026
+[colab] Creating session 'run-fabd43'...
+[colab] Session READY (run-fabd43). Executing zvf-program/colab-experiments/e5_grad_geometry.py...
 /usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_auth.py:122: UserWarning: 
 Error while fetching `HF_TOKEN` secret value from your vault: 'Requesting secret HF_TOKEN timed out. Secrets can only be fetched when running from the Colab UI.'.
 You are not authenticated with the Hugging Face Hub in this notebook.
 If the error persists, please let us know by opening an issue on GitHub (https://github.com/huggingface/huggingface_hub/issues/new).
   warnings.warn(
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 config.json:   0%|          | 0.00/659 [00:00<?, ?B/s]
 tokenizer_config.json:   0%|          | 0.00/7.30k [00:00<?, ?B/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 vocab.json:   0%|          | 0.00/2.78M [00:00<?, ?B/s]
 merges.txt:   0%|          | 0.00/1.67M [00:00<?, ?B/s]
 tokenizer.json:   0%|          | 0.00/7.03M [00:00<?, ?B/s]
 model.safetensors:   0%|          | 0.00/988M [00:00<?, ?B/s]
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
 generation_config.json:   0%|          | 0.00/242 [00:00<?, ?B/s]
-[e5 s0] trivial  p=0.31 ZVF=0.00 signal=219.0 snr=0.43433 fisher=364928.0
-[e5 s0] easy     p=0.23 ZVF=0.12 signal=198.64286 snr=0.47154 fisher=305737.14286
-[e5 s0] medium   p=0.23 ZVF=0.12 signal=210.42857 snr=0.50865 fisher=293302.85714
-[e5 s0] hard     p=0.08 ZVF=0.62 signal=176.0 snr=0.44076 fisher=264874.66667
-Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-[e5 s1] trivial  p=0.23 ZVF=0.12 signal=211.14286 snr=0.48912 fisher=350354.28571
-[e5 s1] easy     p=0.21 ZVF=0.00 signal=178.8125 snr=0.46216 fisher=327552.0
-[e5 s1] medium   p=0.21 ZVF=0.25 signal=210.0 snr=0.4834 fisher=279722.66667
-[e5 s1] hard     p=0.17 ZVF=0.38 signal=204.0 snr=0.48242 fisher=250060.8
-E5_RESULT {"experiment": "E5_grad_geometry", "model": "Qwen/Qwen2.5-0.5B-Instruct", "seeds": [0, 1], "by_difficulty": {"trivial": {"p": 0.2705, "zvf": 0.0625, "p1mp": 0.1957, "grad_norm": 567.125, "fisher_trace": 357641.1429, "signal_per_roll": 215.0714, "snr": 0.4617, "cos_align": 0.053}, "easy": {"p": 0.2185, "zvf": 0.0625, "p1mp": 0.1708, "grad_norm": 536.3929, "fisher_trace": 316644.5714, "signal_per_roll": 188.7277, "snr": 0.4668, "cos_align": 0.045}, "medium": {"p": 0.2185, "zvf": 0.1875, "p1mp": 0.1708, "grad_norm": 515.2619, "fisher_trace": 286512.7619, "signal_per_roll": 210.2143, "snr": 0.496, "cos_align": 0.0728}, "hard": {"p": 0.125, "zvf": 0.5, "p1mp": 0.1076, "grad_norm": 491.7333, "fisher_trace": 257467.7333, "signal_per_roll": 190.0, "snr": 0.4616, "cos_align": 0.0197}}, "corr_signal_p1mp": 0.681, "corr_signal_gu": 0.435, "corr_fisher_p1mp": 0.889}
-[colab] Stopping session 'run-2a84b1'...
+[e5] bin p~0.05: 2 prompts (screened 130)
+[e5] bin p~0.25: 2 prompts (screened 130)
+[e5] bin p~0.5: 8 prompts (screened 130)
+[e5] bin p~0.75: 8 prompts (screened 130)
+[e5] bin p~0.95: 8 prompts (screened 130)
+[e5] p~0.05: p=0.00 erf=0.92 ZVF=1.00 signal=None snr=None fisher=None
+[e5] p~0.25: p=0.25 erf=0.75 ZVF=0.00 signal=6.51562 snr=0.74805 fisher=220.5
+[e5] p~0.5: p=0.62 erf=0.81 ZVF=0.12 signal=7.92411 snr=0.67299 fisher=264.92857
+[e5] p~0.75: p=0.83 erf=0.92 ZVF=0.38 signal=7.575 snr=0.8375 fisher=183.8
+[e5] p~0.95: p=0.88 erf=0.92 ZVF=0.38 signal=13.19375 snr=0.85859 fisher=289.5
+E5_RESULT {"experiment": "E5_grad_geometry", "model": "Qwen/Qwen2.5-0.5B-Instruct", "seed": 0, "few_shot": true, "length_normalized": true, "grad_slice": "last_2_decoder_layers", "p_range": [0.0, 0.875], "by_bin": {"p~0.05": {"p": 0.0, "erf": 0.917, "zvf": 1.0, "p1mp": 0.0, "grad_norm": null, "fisher_trace": null, "signal_per_roll": null, "snr": null, "cos_align": null, "n_live": 0, "n_groups": 2}, "p~0.25": {"p": 0.25, "erf": 0.75, "zvf": 0.0, "p1mp": 0.1875, "grad_norm": 12.78125, "fisher_trace": 220.5, "signal_per_roll": 6.51562, "snr": 0.74805, "cos_align": 0.5625, "n_live": 2, "n_groups": 2}, "p~0.5": {"p": 0.625, "erf": 0.812, "zvf": 0.125, "p1mp": 0.2344, "grad_norm": 11.46429, "fisher_trace": 264.92857, "signal_per_roll": 7.92411, "snr": 0.67299, "cos_align": 0.35059, "n_live": 7, "n_groups": 8}, "p~0.75": {"p": 0.833, "erf": 0.917, "zvf": 0.375, "p1mp": 0.1389, "grad_norm": 7.19688, "fisher_trace": 183.8, "signal_per_roll": 7.575, "snr": 0.8375, "cos_align": 0.63516, "n_live": 5, "n_groups": 8}, "p~0.95": {"p": 0.875, "erf": 0.917, "zvf": 0.375, "p1mp": 0.1094, "grad_norm": 8.2125, "fisher_trace": 289.5, "signal_per_roll": 13.19375, "snr": 0.85859, "cos_align": 0.59336, "n_live": 5, "n_groups": 8}}, "corr_signal_p1mp": -0.658, "corr_signal_gu": -0.641, "corr_fisher_p1mp": 0.001}
+[colab] Stopping session 'run-fabd43'...
 [colab] Session terminated.
-=== E5 EXIT 0 Sun Jun 21 16:48:30 IST 2026 ===
+=== E5 EXIT 0 Sun Jun 21 17:56:03 IST 2026 ===

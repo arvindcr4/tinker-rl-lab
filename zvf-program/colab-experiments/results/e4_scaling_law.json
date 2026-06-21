@@ -2,10 +2,16 @@
   "experiment": "E4_scaling_law",
   "model": "Qwen/Qwen2.5-0.5B-Instruct",
   "seed": 0,
+  "few_shot": true,
+  "calibrated_to_p0.5": false,
+  "band": [
+    0.4,
+    0.6
+  ],
   "n_prompts": 40,
   "n_pool": 64,
   "n_groups_per_K": 256,
-  "mean_p_hat": 0.1059,
+  "mean_p_hat": 0.7199,
   "ks": [
     2,
     4,
@@ -15,59 +21,60 @@
   ],
   "by_K": {
     "2": {
-      "emp_zvf": 0.8055,
-      "pred_zvf": 0.8136,
+      "emp_zvf": 0.6529,
+      "pred_zvf": 0.6522,
       "emp_ci95": [
-        0.7858,
-        0.8263
+        0.6183,
+        0.6858
       ],
-      "abs_err": 0.0081
+      "abs_err": 0.0007
     },
     "4": {
-      "emp_zvf": 0.6468,
-      "pred_zvf": 0.6462,
+      "emp_zvf": 0.3653,
+      "pred_zvf": 0.3699,
       "emp_ci95": [
-        0.6159,
-        0.6789
+        0.3137,
+        0.4146
       ],
-      "abs_err": 0.0006
+      "abs_err": 0.0045
     },
     "8": {
-      "emp_zvf": 0.4343,
-      "pred_zvf": 0.4284,
+      "emp_zvf": 0.1642,
+      "pred_zvf": 0.1617,
       "emp_ci95": [
-        0.3933,
-        0.4727
+        0.1203,
+        0.2085
       ],
-      "abs_err": 0.0058
+      "abs_err": 0.0025
     },
     "16": {
-      "emp_zvf": 0.1931,
-      "pred_zvf": 0.2018,
+      "emp_zvf": 0.0431,
+      "pred_zvf": 0.0458,
       "emp_ci95": [
-        0.1566,
-        0.2296
+        0.0261,
+        0.0656
       ],
-      "abs_err": 0.0087
+      "abs_err": 0.0027
     },
     "32": {
-      "emp_zvf": 0.0575,
-      "pred_zvf": 0.0557,
+      "emp_zvf": 0.0082,
+      "pred_zvf": 0.0074,
       "emp_ci95": [
-        0.0366,
-        0.0825
+        0.002,
+        0.0172
       ],
-      "abs_err": 0.0019
+      "abs_err": 0.0008
     }
   },
-  "closed_form_r2": 0.9995,
+  "closed_form_r2": 0.9999,
   "worked_example_K8_pred_at_p0.5": 0.00781,
+  "emp_zvf_at_K8": 0.1642,
   "precision_side_check_K8": {
-    "bf16_zvf": 0.3863,
-    "fp32_zvf": 0.3512,
-    "delta_zvf_fp32_minus_bf16": -0.0352,
-    "bf16_p_hat": 0.1187,
-    "fp32_p_hat": 0.1203
+    "bf16_zvf": 0.0609,
+    "fp32_zvf": 0.0703,
+    "delta_zvf_fp32_minus_bf16": 0.0094,
+    "bf16_p_hat": 0.6289,
+    "fp32_p_hat": 0.651
   },
   "_source": "colab run --gpu T4 (e4_run.log)",
   "_pillar": "P1"

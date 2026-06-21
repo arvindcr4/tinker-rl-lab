@@ -5,110 +5,240 @@
     0,
     1
   ],
-  "reference": "bf16/sdpa/temp1.0/top_p0.95",
+  "reference": "bf16/sdpa/temp1.0/top_p0.95/lr2e-6",
   "by_lever": {
     "reference": {
+      "gen_baseline_p": [
+        0.875,
+        0.0
+      ],
+      "gen_baseline_erf": [
+        0.916,
+        0.041
+      ],
       "mean_zvf": [
-        0.25,
+        0.85,
         0.025
       ],
       "mean_erf": [
-        0.321,
-        0.034
+        0.981,
+        0.002
       ],
       "last3_p": [
-        0.229,
-        0.007
+        0.986,
+        0.014
       ],
-      "delta_zvf_vs_ref": [
-        0.0,
+      "mean_grad_norm": [
+        2561.95,
+        285.25
+      ],
+      "mean_param_delta": [
+        0.001,
         0.0
       ],
+      "nonfinite_grads": 0,
       "delta_p_vs_ref": [
         0.0,
         0.0
       ],
-      "delta_heldout_vs_ref": [
+      "delta_zvf_vs_ref": [
         0.0,
         0.0
       ]
     },
     "fp32": {
+      "gen_baseline_p": [
+        0.896,
+        0.021
+      ],
+      "gen_baseline_erf": [
+        0.896,
+        0.021
+      ],
       "mean_zvf": [
-        0.538,
-        0.138
+        0.925,
+        0.025
       ],
       "mean_erf": [
-        0.831,
-        0.048
+        0.994,
+        0.006
       ],
       "last3_p": [
-        0.945,
-        0.055
+        0.979,
+        0.021
+      ],
+      "mean_grad_norm": [
+        1902.41,
+        998.78
+      ],
+      "mean_param_delta": [
+        0.001,
+        0.0
+      ],
+      "nonfinite_grads": 0,
+      "delta_p_vs_ref": [
+        -0.007,
+        0.007
       ],
       "delta_zvf_vs_ref": [
-        0.288,
-        0.163
+        0.075,
+        0.0
+      ]
+    },
+    "bf16_lr1e-6": {
+      "gen_baseline_p": [
+        0.875,
+        0.0
       ],
+      "gen_baseline_erf": [
+        0.916,
+        0.041
+      ],
+      "mean_zvf": [
+        0.7,
+        0.075
+      ],
+      "mean_erf": [
+        0.96,
+        0.007
+      ],
+      "last3_p": [
+        0.938,
+        0.006
+      ],
+      "mean_grad_norm": [
+        4997.335,
+        507.245
+      ],
+      "mean_param_delta": [
+        0.0,
+        0.0
+      ],
+      "nonfinite_grads": 0,
       "delta_p_vs_ref": [
-        0.716,
-        0.062
+        -0.048,
+        0.008
       ],
-      "delta_heldout_vs_ref": [
-        -0.125,
+      "delta_zvf_vs_ref": [
+        -0.15,
+        0.05
+      ]
+    },
+    "fp32_lr1e-6": {
+      "gen_baseline_p": [
+        0.896,
+        0.021
+      ],
+      "gen_baseline_erf": [
+        0.896,
+        0.021
+      ],
+      "mean_zvf": [
+        0.9,
         0.025
+      ],
+      "mean_erf": [
+        0.992,
+        0.004
+      ],
+      "last3_p": [
+        1.0,
+        0.0
+      ],
+      "mean_grad_norm": [
+        2006.06,
+        632.71
+      ],
+      "mean_param_delta": [
+        0.001,
+        0.0
+      ],
+      "nonfinite_grads": 0,
+      "delta_p_vs_ref": [
+        0.014,
+        0.014
+      ],
+      "delta_zvf_vs_ref": [
+        0.05,
+        0.0
       ]
     },
     "eager_attn": {
-      "mean_zvf": [
-        0.2,
-        0.05
+      "gen_baseline_p": [
+        0.896,
+        0.021
       ],
-      "mean_erf": [
-        0.335,
-        0.027
-      ],
-      "last3_p": [
-        0.305,
+      "gen_baseline_erf": [
+        0.916,
         0.041
       ],
-      "delta_zvf_vs_ref": [
-        -0.05,
-        0.025
+      "mean_zvf": [
+        0.788,
+        0.013
       ],
+      "mean_erf": [
+        0.984,
+        0.005
+      ],
+      "last3_p": [
+        0.972,
+        0.028
+      ],
+      "mean_grad_norm": [
+        4231.33,
+        517.94
+      ],
+      "mean_param_delta": [
+        0.001,
+        0.0
+      ],
+      "nonfinite_grads": 0,
       "delta_p_vs_ref": [
-        0.076,
-        0.048
+        -0.014,
+        0.042
       ],
-      "delta_heldout_vs_ref": [
-        -0.175,
-        0.025
+      "delta_zvf_vs_ref": [
+        -0.062,
+        0.013
       ]
     },
     "temp_0.7": {
+      "gen_baseline_p": [
+        1.0,
+        0.0
+      ],
+      "gen_baseline_erf": [
+        1.0,
+        0.0
+      ],
       "mean_zvf": [
-        0.112,
-        0.037
+        0.962,
+        0.013
       ],
       "mean_erf": [
-        0.408,
-        0.025
+        1.0,
+        0.0
       ],
       "last3_p": [
-        0.389,
-        0.055
+        1.0,
+        0.0
+      ],
+      "mean_grad_norm": [
+        795.32,
+        318.75
+      ],
+      "mean_param_delta": [
+        0.0,
+        0.0
+      ],
+      "nonfinite_grads": 0,
+      "delta_p_vs_ref": [
+        0.014,
+        0.014
       ],
       "delta_zvf_vs_ref": [
-        -0.138,
-        0.012
-      ],
-      "delta_p_vs_ref": [
-        0.16,
-        0.062
-      ],
-      "delta_heldout_vs_ref": [
-        0.025,
-        0.025
+        0.112,
+        0.013
       ]
     }
   },
@@ -116,66 +246,158 @@
     {
       "arm": "reference",
       "seed": 0,
-      "mean_zvf": 0.225,
-      "mean_erf": 0.354,
-      "last3_p": 0.222,
-      "heldout_delta": 0.6
+      "gen_baseline_p": 0.875,
+      "gen_baseline_erf": 0.875,
+      "mean_zvf": 0.825,
+      "mean_erf": 0.983,
+      "last3_p": 0.972,
+      "heldout_delta": 0.0,
+      "mean_grad_norm": 2847.2,
+      "mean_param_delta": 0.00056,
+      "nonfinite_grads": 0
     },
     {
       "arm": "reference",
       "seed": 1,
-      "mean_zvf": 0.275,
-      "mean_erf": 0.287,
-      "last3_p": 0.236,
-      "heldout_delta": 0.65
-    },
-    {
-      "arm": "fp32",
-      "seed": 0,
-      "mean_zvf": 0.675,
-      "mean_erf": 0.879,
+      "gen_baseline_p": 0.875,
+      "gen_baseline_erf": 0.958,
+      "mean_zvf": 0.875,
+      "mean_erf": 0.979,
       "last3_p": 1.0,
-      "heldout_delta": 0.45
+      "heldout_delta": 0.0,
+      "mean_grad_norm": 2276.7,
+      "mean_param_delta": 0.00053,
+      "nonfinite_grads": 0
+    },
+    {
+      "arm": "fp32",
+      "seed": 0,
+      "gen_baseline_p": 0.875,
+      "gen_baseline_erf": 0.875,
+      "mean_zvf": 0.9,
+      "mean_erf": 1.0,
+      "last3_p": 0.958,
+      "heldout_delta": -0.05,
+      "mean_grad_norm": 2901.19,
+      "mean_param_delta": 0.00171,
+      "nonfinite_grads": 0
     },
     {
       "arm": "fp32",
       "seed": 1,
-      "mean_zvf": 0.4,
-      "mean_erf": 0.783,
-      "last3_p": 0.889,
-      "heldout_delta": 0.55
+      "gen_baseline_p": 0.917,
+      "gen_baseline_erf": 0.917,
+      "mean_zvf": 0.95,
+      "mean_erf": 0.988,
+      "last3_p": 1.0,
+      "heldout_delta": 0.0,
+      "mean_grad_norm": 903.63,
+      "mean_param_delta": 0.00077,
+      "nonfinite_grads": 0
+    },
+    {
+      "arm": "bf16_lr1e-6",
+      "seed": 0,
+      "gen_baseline_p": 0.875,
+      "gen_baseline_erf": 0.875,
+      "mean_zvf": 0.625,
+      "mean_erf": 0.954,
+      "last3_p": 0.931,
+      "heldout_delta": 0.0,
+      "mean_grad_norm": 5504.58,
+      "mean_param_delta": 0.00026,
+      "nonfinite_grads": 0
+    },
+    {
+      "arm": "bf16_lr1e-6",
+      "seed": 1,
+      "gen_baseline_p": 0.875,
+      "gen_baseline_erf": 0.958,
+      "mean_zvf": 0.775,
+      "mean_erf": 0.967,
+      "last3_p": 0.944,
+      "heldout_delta": 0.0,
+      "mean_grad_norm": 4490.09,
+      "mean_param_delta": 0.00024,
+      "nonfinite_grads": 0
+    },
+    {
+      "arm": "fp32_lr1e-6",
+      "seed": 0,
+      "gen_baseline_p": 0.875,
+      "gen_baseline_erf": 0.875,
+      "mean_zvf": 0.875,
+      "mean_erf": 0.996,
+      "last3_p": 1.0,
+      "heldout_delta": 0.0,
+      "mean_grad_norm": 2638.77,
+      "mean_param_delta": 0.00087,
+      "nonfinite_grads": 0
+    },
+    {
+      "arm": "fp32_lr1e-6",
+      "seed": 1,
+      "gen_baseline_p": 0.917,
+      "gen_baseline_erf": 0.917,
+      "mean_zvf": 0.925,
+      "mean_erf": 0.988,
+      "last3_p": 1.0,
+      "heldout_delta": 0.05,
+      "mean_grad_norm": 1373.35,
+      "mean_param_delta": 0.00065,
+      "nonfinite_grads": 0
     },
     {
       "arm": "eager_attn",
       "seed": 0,
-      "mean_zvf": 0.15,
-      "mean_erf": 0.362,
-      "last3_p": 0.347,
-      "heldout_delta": 0.4
+      "gen_baseline_p": 0.875,
+      "gen_baseline_erf": 0.875,
+      "mean_zvf": 0.775,
+      "mean_erf": 0.979,
+      "last3_p": 1.0,
+      "heldout_delta": 0.0,
+      "mean_grad_norm": 4749.27,
+      "mean_param_delta": 0.00069,
+      "nonfinite_grads": 0
     },
     {
       "arm": "eager_attn",
       "seed": 1,
-      "mean_zvf": 0.25,
-      "mean_erf": 0.308,
-      "last3_p": 0.264,
-      "heldout_delta": 0.5
+      "gen_baseline_p": 0.917,
+      "gen_baseline_erf": 0.958,
+      "mean_zvf": 0.8,
+      "mean_erf": 0.988,
+      "last3_p": 0.944,
+      "heldout_delta": 0.0,
+      "mean_grad_norm": 3713.39,
+      "mean_param_delta": 0.00067,
+      "nonfinite_grads": 0
     },
     {
       "arm": "temp_0.7",
       "seed": 0,
-      "mean_zvf": 0.075,
-      "mean_erf": 0.433,
-      "last3_p": 0.444,
-      "heldout_delta": 0.6
+      "gen_baseline_p": 1.0,
+      "gen_baseline_erf": 1.0,
+      "mean_zvf": 0.95,
+      "mean_erf": 1.0,
+      "last3_p": 1.0,
+      "heldout_delta": 0.0,
+      "mean_grad_norm": 1114.07,
+      "mean_param_delta": 0.00036,
+      "nonfinite_grads": 0
     },
     {
       "arm": "temp_0.7",
       "seed": 1,
-      "mean_zvf": 0.15,
-      "mean_erf": 0.383,
-      "last3_p": 0.333,
-      "heldout_delta": 0.7
+      "gen_baseline_p": 1.0,
+      "gen_baseline_erf": 1.0,
+      "mean_zvf": 0.975,
+      "mean_erf": 1.0,
+      "last3_p": 1.0,
+      "heldout_delta": 0.0,
+      "mean_grad_norm": 476.57,
+      "mean_param_delta": 0.00025,
+      "nonfinite_grads": 0
     }
   ],
   "_source": "colab run --gpu T4 (e7_run.log)",

@@ -1,6 +1,6 @@
-launch E4 Sun Jun 21 16:43:45 IST 2026
-[colab] Creating session 'run-400a0a'...
-[colab] Session READY (run-400a0a). Executing zvf-program/colab-experiments/e4_scaling_law.py...
+launch E4 v2 Sun Jun 21 17:48:19 IST 2026
+[colab] Creating session 'run-d031cc'...
+[colab] Session READY (run-d031cc). Executing zvf-program/colab-experiments/e4_scaling_law.py...
 /usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_auth.py:122: UserWarning: 
 Error while fetching `HF_TOKEN` secret value from your vault: 'Requesting secret HF_TOKEN timed out. Secrets can only be fetched when running from the Colab UI.'.
 You are not authenticated with the Hugging Face Hub in this notebook.
@@ -16,14 +16,15 @@ tokenizer.json:   0%|          | 0.00/7.03M [00:00<?, ?B/s]
 model.safetensors:   0%|          | 0.00/988M [00:00<?, ?B/s]
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
 generation_config.json:   0%|          | 0.00/242 [00:00<?, ?B/s]
-[e4] mean p_hat over 40 prompts = 0.106
-[e4] K= 2 emp=0.8055 pred=0.8136 ci=[0.7858, 0.8263]
-[e4] K= 4 emp=0.6468 pred=0.6462 ci=[0.6159, 0.6789]
-[e4] K= 8 emp=0.4343 pred=0.4284 ci=[0.3933, 0.4727]
-[e4] K=16 emp=0.1931 pred=0.2018 ci=[0.1566, 0.2296]
-[e4] K=32 emp=0.0575 pred=0.0557 ci=[0.0366, 0.0825]
+[e4] calibration: 5/110 in band (0.4, 0.6); ok=False
+[e4] mean p_hat over 40 calibrated prompts = 0.720
+[e4] K= 2 emp=0.6529 pred=0.6522 ci=[0.6183, 0.6858]
+[e4] K= 4 emp=0.3653 pred=0.3699 ci=[0.3137, 0.4146]
+[e4] K= 8 emp=0.1642 pred=0.1617 ci=[0.1203, 0.2085]
+[e4] K=16 emp=0.0431 pred=0.0458 ci=[0.0261, 0.0656]
+[e4] K=32 emp=0.0082 pred=0.0074 ci=[0.002, 0.0172]
 Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
-E4_RESULT {"experiment": "E4_scaling_law", "model": "Qwen/Qwen2.5-0.5B-Instruct", "seed": 0, "n_prompts": 40, "n_pool": 64, "n_groups_per_K": 256, "mean_p_hat": 0.1059, "ks": [2, 4, 8, 16, 32], "by_K": {"2": {"emp_zvf": 0.8055, "pred_zvf": 0.8136, "emp_ci95": [0.7858, 0.8263], "abs_err": 0.0081}, "4": {"emp_zvf": 0.6468, "pred_zvf": 0.6462, "emp_ci95": [0.6159, 0.6789], "abs_err": 0.0006}, "8": {"emp_zvf": 0.4343, "pred_zvf": 0.4284, "emp_ci95": [0.3933, 0.4727], "abs_err": 0.0058}, "16": {"emp_zvf": 0.1931, "pred_zvf": 0.2018, "emp_ci95": [0.1566, 0.2296], "abs_err": 0.0087}, "32": {"emp_zvf": 0.0575, "pred_zvf": 0.0557, "emp_ci95": [0.0366, 0.0825], "abs_err": 0.0019}}, "closed_form_r2": 0.9995, "worked_example_K8_pred_at_p0.5": 0.00781, "precision_side_check_K8": {"bf16_zvf": 0.3863, "fp32_zvf": 0.3512, "delta_zvf_fp32_minus_bf16": -0.0352, "bf16_p_hat": 0.1187, "fp32_p_hat": 0.1203}}
-[colab] Stopping session 'run-400a0a'...
+E4_RESULT {"experiment": "E4_scaling_law", "model": "Qwen/Qwen2.5-0.5B-Instruct", "seed": 0, "few_shot": true, "calibrated_to_p0.5": false, "band": [0.4, 0.6], "n_prompts": 40, "n_pool": 64, "n_groups_per_K": 256, "mean_p_hat": 0.7199, "ks": [2, 4, 8, 16, 32], "by_K": {"2": {"emp_zvf": 0.6529, "pred_zvf": 0.6522, "emp_ci95": [0.6183, 0.6858], "abs_err": 0.0007}, "4": {"emp_zvf": 0.3653, "pred_zvf": 0.3699, "emp_ci95": [0.3137, 0.4146], "abs_err": 0.0045}, "8": {"emp_zvf": 0.1642, "pred_zvf": 0.1617, "emp_ci95": [0.1203, 0.2085], "abs_err": 0.0025}, "16": {"emp_zvf": 0.0431, "pred_zvf": 0.0458, "emp_ci95": [0.0261, 0.0656], "abs_err": 0.0027}, "32": {"emp_zvf": 0.0082, "pred_zvf": 0.0074, "emp_ci95": [0.002, 0.0172], "abs_err": 0.0008}}, "closed_form_r2": 0.9999, "worked_example_K8_pred_at_p0.5": 0.00781, "emp_zvf_at_K8": 0.1642, "precision_side_check_K8": {"bf16_zvf": 0.0609, "fp32_zvf": 0.0703, "delta_zvf_fp32_minus_bf16": 0.0094, "bf16_p_hat": 0.6289, "fp32_p_hat": 0.651}}
+[colab] Stopping session 'run-d031cc'...
 [colab] Session terminated.
-=== E4 EXIT 0 Sun Jun 21 16:47:52 IST 2026 ===
+=== E4 EXIT 0 Sun Jun 21 17:57:01 IST 2026 ===

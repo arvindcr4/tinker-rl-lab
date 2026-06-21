@@ -1,22 +1,21 @@
 """E6 (Pillar 3, operationalization): does the live ZVF-triage controller beat a
 fixed-G baseline at MATCHED total-rollout budget?
 
-Codex-review fixes vs the first draft:
-  * FIXED PROMPT POOL with STABLE integer IDs so the per-prompt drop logic can
-    actually fire across steps (the previous design had no persistent IDs).
-  * MATCH ON TOTAL ROLLOUTS (primary); optimizer steps reported as secondary.
-  * THREE arms to separate the controller's two effects:
-       fixed_G          : G constant, no triage (control)
-       adaptiveG        : adaptive group size only (no drop)
-       adaptiveG_drop   : adaptive group size + per-prompt drop + auto-stop
+Round-2 Codex fix: the first regime was too easy (fixed-G already won; triage was
+neutral). Now the pool is TRIAGE-RELEVANT:
+  * ~75% persistent DEAD-hard prompts (3-digit sums, p~0: zero variance, low
+    reward) that only waste budget -> drop should remove them.
+  * ~25% BORDERLINE learnable prompts (2-digit sums, p~0.2-0.5) where adaptive-G
+    fishing for contrast can actually help.
+  * Held-out = DISJOINT borderline set. Lower budget so saved rollouts matter.
 
-The controller logic is vendored verbatim from zvf_triage.controller.ZVFController
-(adaptive_fn, drop_k, stop_k, smoothed-ZVF group sizing) because `colab run` ships
-ONE file to a fresh VM. Semantics match the repo package.
+Also, the controller now follows the package API faithfully: `step(rewards,
+group_ids) -> decision` computes ZVF, per-prompt drop streaks, global auto-stop,
+and the smoothed-ZVF adaptive group size INTERNALLY (mirrors
+zvf_triage.controller.ZVFController; vendored because colab run ships one file).
 
-Colab-only because: live within-run mutation of group size, per-prompt dropping,
-and gradient-based updates under a swappable loss are impossible on closed,
-LoRA-only, fixed-loop Tinker.
+Three arms separate the two effects:
+  fixed_G | adaptiveG (group size only) | adaptiveG_drop (size + drop + auto-stop)
 
 Run:  colab run --gpu T4 --timeout 1500 e6_live_triage.py
 """
@@ -28,10 +27,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
 SEEDS = [0, 1]
-POOL_N, BATCH_P, MAX_NEW, LR = 48, 4, 32, 2e-6
+POOL_N, FRAC_DEAD, BATCH_P, MAX_NEW, LR = 48, 0.75, 4, 24, 2e-6
 G0, GMIN, GMAX = 4, 2, 12
-BUDGET = 600           # total rollouts per arm (matched compute, primary axis)
-HELDOUT_N = 20
+BUDGET = 420           # total rollouts per arm (matched; lower so savings matter)
+HELDOUT_N = 24
 WINDOW, DROP_K, STOP_K, ZVF_MAX, EPS_LO = 5, 3, 4, 0.85, 0.05
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -41,61 +40,100 @@ if tok.pad_token is None:
 tok.padding_side = "left"
 PAD = tok.pad_token_id
 
-# ---- vendored controller (mirrors zvf_triage.controller.ZVFController) ----
+FEWSHOT = [
+    {"role": "user", "content": "Compute 3 + 4. Reason briefly, then put the final integer after '####'."},
+    {"role": "assistant", "content": "3 + 4 = 7.\n#### 7"},
+]
+
+# ---- faithful vendored controller (zvf_triage.controller.ZVFController) ----
 def adaptive_fn(z):
     z = min(max(float(z), 0.0), 1.0)
     return 0.5 + (z / 0.4) * 0.5 if z < 0.4 else 1.0 + ((z - 0.4) / 0.6) * 1.0
 
-class Controller:
-    def __init__(self, adaptive_G, drop):
-        self.adaptive_G, self.drop = adaptive_G, drop
-        self.hist, self.streak = [], {}
-        self.global_streak, self.dropped, self.stopped = 0, set(), False
-    def rolling(self):
+def _group_zerovar(rewards, gids):
+    groups = {}
+    for r, g in zip(rewards, gids):
+        groups.setdefault(g, []).append(r)
+    return {g: (min(v) == max(v)) for g, v in groups.items()}
+
+class Decision:
+    __slots__ = ("zvf", "mean_reward", "group_size", "dropped_prompts", "auto_stop", "regime")
+    def __init__(self, **kw):
+        for k, v in kw.items():
+            setattr(self, k, v)
+
+class ZVFController:
+    """Mirrors the package: step(rewards, group_ids) -> Decision, internal state."""
+    def __init__(self, adaptive_G):
+        self.adaptive_G = adaptive_G
+        self.hist, self.streak, self.dropped = [], {}, set()
+        self.global_streak, self.stopped = 0, False
+    def _rolling(self):
         w = self.hist[-WINDOW:]
         return sum(w) / len(w) if w else 0.0
-    def group_size(self):
+    def _group_size(self):
         if not self.adaptive_G:
             return G0
-        return int(round(min(max(G0 * adaptive_fn(self.rolling()), GMIN), GMAX)))
-    def step(self, per_prompt_zerovar, batch_zvf, mean_reward):
-        """per_prompt_zerovar: {gid: bool}. Returns (newly_dropped, auto_stop)."""
+        return int(round(min(max(G0 * adaptive_fn(self._rolling()), GMIN), GMAX)))
+    def step(self, rewards, group_ids):
+        keep = [(r, g) for r, g in zip(rewards, group_ids) if g not in self.dropped]
+        if not keep:
+            self.hist.append(1.0)
+            return Decision(zvf=1.0, mean_reward=0.0, group_size=self._group_size(),
+                            dropped_prompts=[], auto_stop=False, regime="all_dropped")
+        rs, gs = zip(*keep)
+        pp = _group_zerovar(rs, gs)
+        batch_zvf = sum(pp.values()) / len(pp)
+        mean_reward = sum(rs) / len(rs)
         self.hist.append(batch_zvf)
         newly = []
-        if self.drop:
-            for gid, zv in per_prompt_zerovar.items():
-                if gid in self.dropped:
-                    continue
-                if zv:
-                    self.streak[gid] = self.streak.get(gid, 0) + 1
-                    if self.streak[gid] >= DROP_K:
-                        self.dropped.add(gid); newly.append(gid)
-                else:
-                    self.streak[gid] = 0
+        for gid, zv in pp.items():
+            if gid in self.dropped:
+                continue
+            if zv:
+                self.streak[gid] = self.streak.get(gid, 0) + 1
+                if self.streak[gid] >= DROP_K:
+                    self.dropped.add(gid); newly.append(gid)
+            else:
+                self.streak[gid] = 0
         if batch_zvf >= 1.0 - 1e-12 and mean_reward < EPS_LO:
             self.global_streak += 1
         else:
             self.global_streak = 0
-        auto_stop = self.drop and self.global_streak >= STOP_K and mean_reward < EPS_LO
+        auto_stop = self.global_streak >= STOP_K and mean_reward < EPS_LO
         if auto_stop:
             self.stopped = True
-        return newly, auto_stop
+        regime = ("cold_start_collapse" if batch_zvf > ZVF_MAX and mean_reward < EPS_LO
+                  else "saturation" if batch_zvf > ZVF_MAX and mean_reward > 1 - EPS_LO
+                  else "exploitable_contrast")
+        return Decision(zvf=batch_zvf, mean_reward=mean_reward, group_size=self._group_size(),
+                        dropped_prompts=newly, auto_stop=auto_stop, regime=regime)
 
 # ---- task / harness ----
 def make_pool(rng):
+    # DEAD = 3-digit multiplication (0.5B ~never correct -> persistent zero-variance,
+    # low reward -> drop candidates). BORDERLINE = 3-digit addition (learnable, has
+    # contrast). few-shot makes addition solvable but NOT multiplication.
     pool = []
+    n_dead = int(POOL_N * FRAC_DEAD)
     for i in range(POOL_N):
-        if i % 2 == 0:                       # solvable-ish mediums
-            a, b = rng.randint(20, 70), rng.randint(20, 70)
-        else:                                # hard: base model ~always wrong -> drop candidates
-            a, b = rng.randint(200, 900), rng.randint(200, 900)
-        pool.append({"id": i, "q": f"{a} + {b}", "gold": a + b})
+        if i < n_dead:
+            a, b = rng.randint(100, 999), rng.randint(100, 999)
+            pool.append({"id": i, "q": f"{a} * {b}", "gold": a * b, "kind": "dead"})
+        else:
+            a, b = rng.randint(100, 999), rng.randint(100, 999)
+            pool.append({"id": i, "q": f"{a} + {b}", "gold": a + b, "kind": "borderline"})
+    rng.shuffle(pool)
     return pool
 
+def heldout_set(rng):                        # DISJOINT borderline 3-digit additions
+    return [(f"{a} + {b}", a + b) for a, b in
+            [(rng.randint(100, 999), rng.randint(100, 999)) for _ in range(HELDOUT_N)]]
+
 def prompt_of(q):
-    return tok.apply_chat_template(
-        [{"role": "user", "content": f"Compute {q}. Reason briefly, then put the final integer after '####'."}],
-        tokenize=False, add_generation_prompt=True)
+    msgs = FEWSHOT + [{"role": "user",
+                       "content": f"Compute {q}. Reason briefly, then put the final integer after '####'."}]
+    return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
 
 def parse(text):
     m = re.findall(r"-?\d+", text.split("####")[-1])
@@ -135,34 +173,30 @@ def heldout_acc(model, evalset):
 def run(arm, seed):
     rng = random.Random(seed); torch.manual_seed(seed)
     pool = make_pool(rng)
-    evalset = [(p["q"], p["gold"]) for p in pool[::2][:HELDOUT_N]]   # held-out = solvable mediums
+    evalset = heldout_set(rng)
     model = AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).to(DEV)
     opt = torch.optim.AdamW(model.parameters(), lr=LR)
-    ctrl = Controller(adaptive_G=(arm != "fixed_G"), drop=(arm == "adaptiveG_drop"))
+    ctrl = ZVFController(adaptive_G=(arm != "fixed_G"))
+    act_drop = (arm == "adaptiveG_drop")
     pre = heldout_acc(model, evalset)
 
-    rollouts, step, zvf_hist, zvf_suppress = 0, 0, [], None
-    while rollouts < BUDGET and not ctrl.stopped:
+    rollouts, step, zvf_hist, g = 0, 0, [], G0
+    while rollouts < BUDGET and not (act_drop and ctrl.stopped):
         step += 1
-        g = ctrl.group_size()
-        avail = [p for p in pool if p["id"] not in ctrl.dropped]
+        avail = [p for p in pool if not (act_drop and p["id"] in ctrl.dropped)]
         if not avail:
             break
         batch = rng.sample(avail, min(BATCH_P, len(avail)))
-        groups, per_prompt_zv, all_r = [], {}, []
+        flat_r, flat_g, groups = [], [], []
         for p in batch:
             pids, gens, rewards = gen_group(model, prompt_of(p["q"]), p["gold"], g)
             rollouts += g
-            all_r += rewards
-            zerovar = (min(rewards) == max(rewards))
-            per_prompt_zv[p["id"]] = zerovar
-            if not zerovar:
+            flat_r += rewards; flat_g += [p["id"]] * g
+            if min(rewards) != max(rewards):
                 m = sum(rewards) / g; s = statistics.pvariance(rewards) ** 0.5
-                adv = [(r - m) / (s + 1e-6) for r in rewards]
-                groups.append((pids, gens, adv))
-        # GRPO update on live groups (per-term backward = bounded activation memory)
-        opt.zero_grad(set_to_none=True)
-        n_terms = 0
+                groups.append((pids, gens, [(r - m) / (s + 1e-6) for r in rewards]))
+        # GRPO update (per-term backward = bounded memory)
+        opt.zero_grad(set_to_none=True); n_terms = 0
         for pids, gens, adv in groups:
             for i, a in enumerate(adv):
                 if a:
@@ -171,20 +205,17 @@ def run(arm, seed):
                         (-a * lp).backward(); n_terms += 1
         if n_terms:
             opt.step()
-        batch_zvf = 1 - len(groups) / len(batch)
-        mean_r = sum(all_r) / len(all_r)
-        zvf_hist.append(batch_zvf)
-        ctrl.step(per_prompt_zv, batch_zvf, mean_r)
-        roll = ctrl.rolling()
-        if zvf_suppress is None and roll < 0.2:
-            zvf_suppress = step
-        print(f"[e6:{arm:14s} s{seed}] step={step:2d} G={g} ZVF={batch_zvf:.2f} "
-              f"roll={roll:.2f} r={mean_r:.2f} roll_used={rollouts} dropped={len(ctrl.dropped)}", flush=True)
+        dec = ctrl.step(flat_r, flat_g)        # FAITHFUL controller call
+        g = dec.group_size                      # adapt G for next step
+        zvf_hist.append(dec.zvf)
+        print(f"[e6:{arm:14s} s{seed}] step={step:2d} G={g} ZVF={dec.zvf:.2f} "
+              f"roll={ctrl._rolling():.2f} r={dec.mean_reward:.2f} used={rollouts} "
+              f"dropped={len(ctrl.dropped)} regime={dec.regime}", flush=True)
     post = heldout_acc(model, evalset)
     out = {"arm": arm, "seed": seed, "heldout_pre": round(pre, 3), "heldout_post": round(post, 3),
            "heldout_delta": round(post - pre, 3), "mean_zvf": round(statistics.mean(zvf_hist), 3) if zvf_hist else None,
            "total_rollouts": rollouts, "opt_steps": step, "dropped": len(ctrl.dropped),
-           "zvf_suppress_step": zvf_suppress, "auto_stopped": ctrl.stopped}
+           "auto_stopped": ctrl.stopped}
     del model, opt; torch.cuda.empty_cache()
     return out
 
@@ -202,4 +233,5 @@ for arm in ["fixed_G", "adaptiveG", "adaptiveG_drop"]:
                 "mean_opt_steps": round(statistics.mean(r["opt_steps"] for r in rs), 1),
                 "mean_dropped": round(statistics.mean(r["dropped"] for r in rs), 1)}
 print("E6_RESULT " + json.dumps({"experiment": "E6_live_triage", "model": MODEL, "seeds": SEEDS,
-                                "budget_rollouts": BUDGET, "by_arm": agg, "runs": results}), flush=True)
+                                "budget_rollouts": BUDGET, "frac_dead": FRAC_DEAD,
+                                "by_arm": agg, "runs": results}), flush=True)

@@ -1,55 +1,84 @@
 {
   "experiment": "E5_grad_geometry",
   "model": "Qwen/Qwen2.5-0.5B-Instruct",
-  "seeds": [
-    0,
-    1
+  "seed": 0,
+  "few_shot": true,
+  "length_normalized": true,
+  "grad_slice": "last_2_decoder_layers",
+  "p_range": [
+    0.0,
+    0.875
   ],
-  "by_difficulty": {
-    "trivial": {
-      "p": 0.2705,
-      "zvf": 0.0625,
-      "p1mp": 0.1957,
-      "grad_norm": 567.125,
-      "fisher_trace": 357641.1429,
-      "signal_per_roll": 215.0714,
-      "snr": 0.4617,
-      "cos_align": 0.053
+  "by_bin": {
+    "p~0.05": {
+      "p": 0.0,
+      "erf": 0.917,
+      "zvf": 1.0,
+      "p1mp": 0.0,
+      "grad_norm": null,
+      "fisher_trace": null,
+      "signal_per_roll": null,
+      "snr": null,
+      "cos_align": null,
+      "n_live": 0,
+      "n_groups": 2
     },
-    "easy": {
-      "p": 0.2185,
-      "zvf": 0.0625,
-      "p1mp": 0.1708,
-      "grad_norm": 536.3929,
-      "fisher_trace": 316644.5714,
-      "signal_per_roll": 188.7277,
-      "snr": 0.4668,
-      "cos_align": 0.045
+    "p~0.25": {
+      "p": 0.25,
+      "erf": 0.75,
+      "zvf": 0.0,
+      "p1mp": 0.1875,
+      "grad_norm": 12.78125,
+      "fisher_trace": 220.5,
+      "signal_per_roll": 6.51562,
+      "snr": 0.74805,
+      "cos_align": 0.5625,
+      "n_live": 2,
+      "n_groups": 2
     },
-    "medium": {
-      "p": 0.2185,
-      "zvf": 0.1875,
-      "p1mp": 0.1708,
-      "grad_norm": 515.2619,
-      "fisher_trace": 286512.7619,
-      "signal_per_roll": 210.2143,
-      "snr": 0.496,
-      "cos_align": 0.0728
+    "p~0.5": {
+      "p": 0.625,
+      "erf": 0.812,
+      "zvf": 0.125,
+      "p1mp": 0.2344,
+      "grad_norm": 11.46429,
+      "fisher_trace": 264.92857,
+      "signal_per_roll": 7.92411,
+      "snr": 0.67299,
+      "cos_align": 0.35059,
+      "n_live": 7,
+      "n_groups": 8
     },
-    "hard": {
-      "p": 0.125,
-      "zvf": 0.5,
-      "p1mp": 0.1076,
-      "grad_norm": 491.7333,
-      "fisher_trace": 257467.7333,
-      "signal_per_roll": 190.0,
-      "snr": 0.4616,
-      "cos_align": 0.0197
+    "p~0.75": {
+      "p": 0.833,
+      "erf": 0.917,
+      "zvf": 0.375,
+      "p1mp": 0.1389,
+      "grad_norm": 7.19688,
+      "fisher_trace": 183.8,
+      "signal_per_roll": 7.575,
+      "snr": 0.8375,
+      "cos_align": 0.63516,
+      "n_live": 5,
+      "n_groups": 8
+    },
+    "p~0.95": {
+      "p": 0.875,
+      "erf": 0.917,
+      "zvf": 0.375,
+      "p1mp": 0.1094,
+      "grad_norm": 8.2125,
+      "fisher_trace": 289.5,
+      "signal_per_roll": 13.19375,
+      "snr": 0.85859,
+      "cos_align": 0.59336,
+      "n_live": 5,
+      "n_groups": 8
     }
   },
-  "corr_signal_p1mp": 0.681,
-  "corr_signal_gu": 0.435,
-  "corr_fisher_p1mp": 0.889,
+  "corr_signal_p1mp": -0.658,
+  "corr_signal_gu": -0.641,
+  "corr_fisher_p1mp": 0.001,
   "_source": "colab run --gpu T4 (e5_run.log)",
   "_pillar": "P2"
 }

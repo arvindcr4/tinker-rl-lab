@@ -1,0 +1,1 @@
+E2 FAILED on the Colab VM: peft pulled an incompatible torchao 0.10.0 (needs >0.16). Rerun after `pip install -U 'torchao>=0.16'` or removing the peft->torchao import path.

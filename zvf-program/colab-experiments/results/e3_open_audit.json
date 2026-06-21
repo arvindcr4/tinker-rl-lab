@@ -1,0 +1,31 @@
+{
+  "experiment": "E3_open_audit",
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "seeds": [
+    0,
+    1
+  ],
+  "by_arm": {
+    "grpo": {
+      "mean_heldout_delta": 0.5,
+      "mean_zvf": 0.25,
+      "mean_rollouts": 120
+    },
+    "drgrpo": {
+      "mean_heldout_delta": 0.575,
+      "mean_zvf": 0.267,
+      "mean_rollouts": 120
+    },
+    "dapo": {
+      "mean_heldout_delta": 0.55,
+      "mean_zvf": 0.0,
+      "mean_rollouts": 174
+    },
+    "grpo_adaptiveG": {
+      "mean_heldout_delta": 0.575,
+      "mean_zvf": 0.233,
+      "mean_rollouts": 186
+    }
+  },
+  "_source": "colab run --gpu T4 (job b58dzsrjs)"
+}

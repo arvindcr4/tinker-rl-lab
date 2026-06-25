@@ -16,8 +16,8 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 MODELS = {
     "qwen3_4b": {
-        "tokenizer": "Qwen/Qwen3-4B-Instruct-2507",
-        "tinker_model_name": "Qwen/Qwen3-4B-Instruct-2507",
+        "tokenizer": "Qwen/Qwen3.5-4B",
+        "tinker_model_name": "Qwen/Qwen3.5-4B",
         "batch_size": 64,
         "max_num_workers": 16,
         "num_requests_for_eval": 100,

@@ -4,7 +4,7 @@ env:
   group_size: 8
   batch_size: 16
   max_batches_offpolicy: 2
-  tokenizer_name: "Qwen/Qwen3-4B-Instruct-2507"
+  tokenizer_name: "Qwen/Qwen3.5-4B"
   use_wandb: true
   rollout_server_url: "http://localhost:18000"
   wandb_name: "smoke-qwen3_4b-v1-env"
@@ -16,7 +16,7 @@ env:
   data_seed: 42
 
 openai:
-  - model_name: "Qwen/Qwen3-4B-Instruct-2507"
+  - model_name: "Qwen/Qwen3.5-4B"
     base_url: "http://localhost:8001/v1"
     api_key: "x"
     weight: 1.0
@@ -28,7 +28,7 @@ tinker:
   max_token_trainer_length: 512
   checkpoint_dir: "./checkpoints/tool_use_zvf_sweep/smoke_qwen3_4b_v1/"
   save_checkpoint_interval: 0
-  tinker_model_name: "Qwen/Qwen3-4B-Instruct-2507"
+  tinker_model_name: "Qwen/Qwen3.5-4B"
   wandb_project: "tinker-rl-zvf-counterfactual"
   wandb_group: "smoke"
   wandb_run_name: "smoke-qwen3_4b-v1"

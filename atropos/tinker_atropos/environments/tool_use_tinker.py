@@ -145,37 +145,70 @@ def _score(raw_text: str, predicted: Optional[Dict], expected_name: str, expecte
     return _score_tool_call(predicted, expected_name, expected_args)
 
 
+_JSON_DECODER = json.JSONDecoder()
+
+
+def _extract_json_objects(text):
+    """Pull all top-level JSON objects from a blob. The glaive-v2 'system' field
+    lists one or more function schemas as raw JSON after 'Use them if required -'."""
+    marker = "Use them if required -"
+    idx = text.find(marker)
+    seg = text[idx + len(marker):] if idx != -1 else text
+    objs = []
+    j = seg.find("{")
+    while j != -1:
+        try:
+            obj, end = _JSON_DECODER.raw_decode(seg[j:])
+            objs.append(obj)
+            j = seg.find("{", j + end)
+        except json.JSONDecodeError:
+            j = seg.find("{", j + 1)
+    return objs
+
+
 def _build_glaive_examples(raw_dataset, max_examples: int = 5000):
     """
     Parse glaive-function-calling-v2 into (system_with_tools, user_query, tool_name, tool_args) tuples.
-    The dataset has 'system' (with SYSTEM token + tool JSON) and 'chat' fields.
+    Real format: 'system' is "SYSTEM: ... Use them if required -\n{function json}" (raw JSON,
+    NOT wrapped in <tools> tags); 'chat' contains "<functioncall> {...} <|endoftext|>"
+    (no closing tag; `arguments` is a single-quoted JSON string).
     """
     examples = []
     for item in raw_dataset:
         try:
             system_text = item.get("system", "")
             chat_text = item.get("chat", "")
-            # Extract tool schema from system field: "SYSTEM: ... <tools>\n{...}\n</tools>"
-            tool_match = re.search(r"<tools>(.*?)</tools>", system_text, re.DOTALL)
-            if not tool_match:
+            # Tool schemas: raw JSON object(s) after the "Use them if required -" marker.
+            tools = _extract_json_objects(system_text)
+            if not tools:
                 continue
-            tools_json_str = tool_match.group(1).strip()
-            tools = json.loads(tools_json_str) if tools_json_str.startswith("[") else [json.loads(tools_json_str)]
 
-            # Extract first user turn and first function call from chat
+            # First user turn + first function call from chat.
             user_match = re.search(r"USER:\s*(.*?)(?=ASSISTANT:|$)", chat_text, re.DOTALL)
-            func_match = re.search(r"<functioncall>\s*(\{.*?\})\s*</functioncall>", chat_text, re.DOTALL)
+            # Real format has no closing tag; the call ends at <|endoftext|> or end-of-string.
+            func_match = re.search(
+                r"<functioncall>\s*(\{.*?\})\s*(?:<\|endoftext\|>|</functioncall>|$)",
+                chat_text, re.DOTALL,
+            )
             if not user_match or not func_match:
                 continue
             user_query = user_match.group(1).strip()
-            func_call = json.loads(func_match.group(1))
-            func_name = func_call.get("name", "")
-            func_args = func_call.get("arguments", {})
-            if isinstance(func_args, str):
-                try:
-                    func_args = json.loads(func_args)
-                except Exception:
-                    continue
+
+            # glaive wraps `arguments` in single quotes -> outer blob is invalid JSON.
+            # Extract name + arguments-string directly instead of json.loads on the whole blob.
+            blob = func_match.group(1)
+            name_match = re.search(r'"name"\s*:\s*"([^"]+)"', blob)
+            args_match = (
+                re.search(r'"arguments"\s*:\s*[\'"](\{.*\})[\'"]', blob, re.DOTALL)
+                or re.search(r'"arguments"\s*:\s*(\{.*\})', blob, re.DOTALL)
+            )
+            if not name_match or not args_match:
+                continue
+            func_name = name_match.group(1)
+            try:
+                func_args = json.loads(args_match.group(1))
+            except Exception:
+                continue
             if not func_name or not isinstance(func_args, dict):
                 continue
 
@@ -251,6 +284,11 @@ class ToolUseEnv(BaseEnv):
         self.train_examples = self.examples[:split]
         self.eval_examples = self.examples[split:]
         print(f"Loaded {len(self.train_examples)} train / {len(self.eval_examples)} eval examples")
+        if not self.train_examples:
+            raise RuntimeError(
+                "Parsed 0 training examples from glaive-function-calling-v2 — dataset "
+                "format may have changed (check _build_glaive_examples regexes)."
+            )
         self.iter = 0
 
     async def wandb_log(self, wandb_metrics=None):

@@ -1,5 +1,6 @@
-# smoke test: Qwen3-4B (0.5B unavailable on Tinker), 2 steps, tiny batch
-# validates 3-process stack + Tinker round-trip
+# smoke test: Qwen3.5-4B, v2 (6-level shaped) reward, 2 steps, tiny batch
+# v2 reward is designed to break ZVF saturation (within-group score variance)
+# validates 3-process stack + Tinker round-trip + a non-empty gradient step
 env:
   group_size: 8
   batch_size: 16
@@ -7,7 +8,7 @@ env:
   tokenizer_name: "Qwen/Qwen3.5-4B"
   use_wandb: true
   rollout_server_url: "http://localhost:18000"
-  wandb_name: "smoke-qwen3_4b-v1-env"
+  wandb_name: "smoke-qwen3_4b-v2-env"
   ensure_scores_are_not_same: false
   max_token_length: 768
   max_num_workers: 8
@@ -26,12 +27,12 @@ tinker:
   lora_rank: 16
   learning_rate: 5e-5
   max_token_trainer_length: 1024
-  checkpoint_dir: "./checkpoints/tool_use_zvf_sweep/smoke_qwen3_4b_v1/"
+  checkpoint_dir: "./checkpoints/tool_use_zvf_sweep/smoke_qwen3_4b_v2/"
   save_checkpoint_interval: 0
   tinker_model_name: "Qwen/Qwen3.5-4B"
   wandb_project: "tinker-rl-zvf-counterfactual"
   wandb_group: "smoke"
-  wandb_run_name: "smoke-qwen3_4b-v1"
+  wandb_run_name: "smoke-qwen3_4b-v2"
 
 slurm: false
 testing: false

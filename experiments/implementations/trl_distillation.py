@@ -105,7 +105,7 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
         gradient_accumulation_steps=4,
         learning_rate=5e-5,
         num_train_epochs=3,
-        max_seq_length=config.max_length,
+        max_length=config.max_length,
         logging_steps=10,
     )
 

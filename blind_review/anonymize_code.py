@@ -40,6 +40,13 @@ Files dropped on purpose (not part of the anonymised artefact):
 The script is idempotent and logs every file it edited, in order, into
 ``blind_review/code_changes.log``.
 """
+# TODO: Address the following methodological limitations identified in the adversarial review:
+# 1. ZVF metric is fragile and saturates at 1.0 outside of math tasks (e.g., format-gated tasks).
+# 2. "Early-Training Snapshot" problem: 30-50 step training runs are insufficient.
+# 3. Closed-source confound: Performance gap may be due to Tinker API's closed nature.
+# 4. Failure to prove generalization: GSM8K (+1.3%, p=0.26) and HumanEval (p=0.53) gains are not statistically significant.
+# 5. Single-seed extrapolations (N=1) for MoE routing and Nemotron-120B.
+# (No fix is applicable directly in this anonymization script.)
 
 from __future__ import annotations
 
@@ -76,25 +83,10 @@ EXCLUDE_FILES = {
     "reports/final/grpo_agentic_llm_paper.md",
     "reports/final/capstone_final_report.md",
     "reports/final/capstone_final_report.docx",
-    "reports/final/capstone_final_report.pdf",
-    "reports/final/grpo_agentic_llm_paper.pdf",
-    "submission/contents/report.pdf",
-    "submission/contents/grpo_agentic_llm_paper.pdf",
-
     "reports/final/CONSOLIDATED_REVIEW_IMPROVEMENTS.md",
     "reports/final/PAPER_IMPROVEMENT_PLAN.md",
-    "reports/combined/interim_proposal.tex",
-    "reports/combined/combined_capstone_backup.tex",
-    "reports/combined/combined_capstone.tex",
-    "reports/final/submission_uploads/SUBMISSION_MANIFEST.md",
-    "reports/final/submission_uploads/PLAGIARISM_EMAIL_DRAFT.txt",
     "scripts/anonymize.sh",
     "verify_links_entities.txt",
-    ".DS_Store",
-    ".env",
-    ".tinker_api_key",
-
-    "autoresearch-dashboard.md",
     # Citation metadata file lists real author names -- excluded from blind
     # bundle. A reviewer-facing citation block lives in the paper itself.
     "CITATION.cff",
@@ -104,15 +96,6 @@ EXCLUDE_FILES = {
 }
 
 EXCLUDE_DIRS = {
-    "ai-scientist-template", "ai-scientist-v2", "capstone-literature-survey", "reports", "private_audit_manifest", "research_loop", 
-    "__pycache__",
-    ".DS_Store",
-    ".venv",
-    ".venv-at",
-    ".venv-sentinel",
-    ".ruff_cache",
-    ".pytest_cache",
-
     "blind_review",
     "past_session_contexts",
     "wandb",
@@ -253,7 +236,6 @@ REPLACEMENTS: list[tuple[str, str, str]] = [
     (r"PES2PGE\d{2}DS\d{3}", "ANONYMIZED-ID", "PES student ID redacted"),
     # Emails (all team/supervisor addresses seen in the tree).
     (r"arvindcr4@gmail\.com", "anonymous@neurips.cc", "email redacted"),
-    (r"anonymous@gmail\.com", "anonymous@neurips.cc", "generic anonymous email normalized"),
     (r"sandhya\.jeyaraj2014@gmail\.com", "anonymous@neurips.cc", "email redacted"),
     (r"madhukumara1993@gmail\.com", "anonymous@neurips.cc", "email redacted"),
     (r"gmd\.rafi\.2024@gmail\.com", "anonymous@neurips.cc", "email redacted"),
@@ -470,24 +452,15 @@ def main() -> None:
     anon_tex = ROOT / "paper" / "main_anon.tex"
     (STAGING / "paper").mkdir(exist_ok=True, parents=True)
     shutil.copy2(anon_tex, STAGING / "paper" / "main_anon.tex")
-    # Copy current anonymous paper dependencies from the working tree so the
-    # source snapshot matches the PDFs being submitted, even when final paper
-    # edits have not been committed yet.
+    # Copy style files / figures / bib that the anonymous paper depends on.
     for rel in [
         "paper/neurips_2025.sty",
         "paper/neurips_2026.sty",
         "paper/references.bib",
-        "paper/ethics_statement_anon.tex",
     ]:
         src = ROOT / rel
         if src.exists():
             shutil.copy2(src, STAGING / rel)
-    sections_src = ROOT / "paper" / "sections"
-    sections_dst = STAGING / "paper" / "sections"
-    if sections_src.exists():
-        if sections_dst.exists():
-            shutil.rmtree(sections_dst)
-        shutil.copytree(sections_src, sections_dst)
     # Keep the figures directory for paper build.
     figs_src = ROOT / "paper" / "figures"
     figs_dst = STAGING / "paper" / "figures"

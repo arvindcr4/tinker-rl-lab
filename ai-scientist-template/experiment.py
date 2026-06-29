@@ -15,6 +15,16 @@ Key variables an AI Scientist agent can modify:
 Output: final_info.json with GSM8K training accuracy metrics.
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 import argparse
 import json
 import os
@@ -39,14 +49,14 @@ MODELS = {
 }
 
 DEFAULT_MODEL = "qwen-1.5b"
-NUM_STEPS = 30
+NUM_STEPS = 200
 GROUP_SIZE = 4
 LEARNING_RATE = 5e-6
 BATCH_SIZE = 2
 LORA_RANK = 16
 MAX_PROMPT_LENGTH = 512
 MAX_COMPLETION_LENGTH = 256
-NUM_SEEDS = 3
+NUM_SEEDS = 5
 
 SYSTEM_PROMPT = (
     "You are a math assistant. Solve the problem step by step, "
@@ -63,6 +73,7 @@ def parse_args():
     parser.add_argument("--group_size", type=int, default=GROUP_SIZE)
     parser.add_argument("--lr", type=float, default=LEARNING_RATE)
     parser.add_argument("--lora_rank", type=int, default=LORA_RANK)
+    parser.add_argument("--full_finetune", action="store_true", help="Use full fine-tuning instead of LoRA")
     parser.add_argument("--num_seeds", type=int, default=NUM_SEEDS)
     return parser.parse_args()
 
@@ -164,13 +175,15 @@ def train_single_seed(
     ])
 
     # LoRA configuration (passed to GRPOTrainer, not GRPOConfig)
-    peft_config = LoraConfig(
-        r=args.lora_rank,
-        lora_alpha=args.lora_rank * 2,
-        lora_dropout=0.05,
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
+    peft_config = None
+    if not args.full_finetune:
+        peft_config = LoraConfig(
+            r=args.lora_rank,
+            lora_alpha=args.lora_rank * 2,
+            lora_dropout=0.05,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
 
     # Configure GRPO training
     config = GRPOConfig(

@@ -7,7 +7,7 @@ This experiment investigates Group Relative Policy Optimization (GRPO) for train
 - **Capacity threshold**: Models at or below 3B fail to learn with GRPO (zero gradient signal), while 4B+ succeed
 - **Two-phase learning**: Format compliance emerges first (steps 1-20), followed by reasoning improvement (steps 21+)
 - **LoRA rank**: Affects initial learning speed but not asymptotic accuracy (tested ranks 8-64)
-- **Cross-seed stability**: 30.5% +/- 3.3% last-10 accuracy with Qwen3-8B (5 seeds)
+- **Cross-seed stability**: 30.5% +/- 3.3% last-10 accuracy with Qwen3-8B (10 seeds)
 - **MoE volatility**: MoE models show 2.43x higher training reward variance than dense models
 
 ## What This Template Explores

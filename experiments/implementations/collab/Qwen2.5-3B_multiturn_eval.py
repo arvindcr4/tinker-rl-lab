@@ -2,7 +2,7 @@
 #  ADVANCED EXPERIMENT — STEP 3: Multi-Turn Evaluation
 #  Compares SFT vs GRPO on multi-turn tool call chains
 #
-# FIXES vs previous version:
+#  🔧 FIXES vs previous version:
 #   FIX 1 — run_scenario: wrap-up message is now injected
 #            IMMEDIATELY after all scenario tool responses are
 #            consumed, before the very next generation — not at
@@ -96,7 +96,7 @@ def load_model(adapter_path, label):
     )
     base = AutoModelForCausalLM.from_pretrained(
         MODEL_ID, quantization_config=bnb_config,
-        device_map="auto", trust_remote_code=True, dtype=torch.bfloat16,
+        device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True, dtype=torch.bfloat16,
     )
     model = PeftModel.from_pretrained(base, adapter_path)
     model.eval()
@@ -323,17 +323,17 @@ print(f"{'=' * 72}")
 print(f"{'Scenario':<35} {'SFT':>8} {'GRPO':>8} {'Winner':>10}")
 print(f"{'-' * 72}")
 for sc, s, g in zip(SCENARIOS, all_sft_scores, all_grpo_scores):
-    w = "GRPO" if g > s else "SFT" if s > g else "TIE"
+    w = "GRPO ✅" if g > s else "SFT ✅" if s > g else "TIE"
     print(f"{sc['name']:<35} {s:>8.2f} {g:>8.2f} {w:>10}")
 print(f"{'-' * 72}")
 print(f"{'AVERAGE':<35} {sft_avg:>8.2f} {grpo_avg:>8.2f}")
 print(f"{'=' * 72}")
-print(f"\nOverall Winner: {'GRPO' if grpo_avg > sft_avg else 'SFT' if sft_avg > grpo_avg else 'TIE'}")
+print(f"\n🏆 Overall Winner: {'GRPO' if grpo_avg > sft_avg else 'SFT' if sft_avg > grpo_avg else 'TIE'}")
 
 print(f"\n{'─' * 72}")
 print("Chain health check (what good results look like):")
-print("Turn 1 is TOOL with populated args  e.g. get_weather({'city': 'Tokyo'})")
-print("Final turn is ANSWER, not another TOOL")
-print("Repeated calls = 0 for all scenarios")
-print("GRPO Args populated ≥ SFT Args populated")
+print("  ✅  Turn 1 is TOOL with populated args  e.g. get_weather({'city': 'Tokyo'})")
+print("  ✅  Final turn is ANSWER, not another TOOL")
+print("  ✅  Repeated calls = 0 for all scenarios")
+print("  ✅  GRPO Args populated ≥ SFT Args populated")
 print(f"{'─' * 72}")

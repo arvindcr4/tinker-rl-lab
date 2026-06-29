@@ -11,7 +11,7 @@ A complete audit of every W&B project, HuggingFace model, GitHub repo, and Tinke
 |---|---|---|---|---|---|
 | [arvindcr4/tool-call-lora-qwen0.5b](https://huggingface.co/arvindcr4/tool-call-lora-qwen0.5b) | Accessible | Qwen2-0.5B | No metrics listed on card | 1 | ~1 month ago |
 
-**Assessment:** Only one public model with no metrics on the card. This is the early proof-of-concept — the real experiments are logged to W&B under `tinker-rl-lab-world-class` and the 32+ Tinker runs are tracked via the Tinker API, not HF. The frontier experiments currently running will upload to `arvindcr4/tinker-rl-bench-*` repos.
+**Assessment:** Only one public model with no metrics on the card. This is the early proof-of-concept — the real experiments are logged to W&B under `tinker-rl-lab-world-class` and the 32+ Tinker runs are tracked via the Tinker API, not HF. The world-class experiments currently running will upload to `arvindcr4/tinker-rl-bench-*` repos.
 
 ### GitHub Repos
 | Repo | Status | Commits | Last Updated | Description |
@@ -23,7 +23,7 @@ A complete audit of every W&B project, HuggingFace model, GitHub repo, and Tinke
 ### W&B
 | Project | Status | Notes |
 |---|---|---|
-| [arvindcr4-pes-university/tinker-rl-lab-world-class](https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-world-class) | Active (online runs syncing now) | Main project for all frontier experiments |
+| [arvindcr4-pes-university/tinker-rl-lab-world-class](https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-world-class) | Active (online runs syncing now) | Main project for all world-class experiments |
 | [arvindcr4/profile](https://wandb.ai/profile/arvindcr4) | Accessible | Profile page |
 
 **Verdict: Strong proof of work.** 141 commits in main repo, active W&B project, archived old repo shows project evolution. Weakness: only 1 HF model — needs the new experiment checkpoints uploaded.
@@ -183,7 +183,7 @@ The HumanEval pass@1: 86% on the model card is self-reported. The Modal HumanEva
 Her results are strong (GRPO 0.91) but only exist on HuggingFace. No reproducibility artifacts (code, logs, configs) outside HF.
 
 ### 6. Arvind's HF Model Lacks Metrics
-The `tool-call-lora-qwen0.5b` model card has no metrics. The frontier experiments will fix this with proper benchmarking and multiple model checkpoints.
+The `tool-call-lora-qwen0.5b` model card has no metrics. The world-class experiments will fix this with proper benchmarking and multiple model checkpoints.
 
 ---
 

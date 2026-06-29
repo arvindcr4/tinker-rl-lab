@@ -4,7 +4,7 @@ Task 1 — Llama-3.3-70B-Instruct multi-seed retry on GSM8K.
 
 Reuses the run_experiment() + EXPERIMENT schema from
 experiments/tinker-runs/campaign_v2.py so behaviour is identical to
-`w1_llama33-70b-inst` from that campaign, just across seeds {42, 123, 456, 789}.
+`w1_llama33-70b-inst` from that campaign, just across seeds {42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768}.
 
 Output: experiments/tinker-runs/results/llama33_70b_seeds.json
 Then: regenerate master_results.json via experiments/aggregate_results.py
@@ -20,10 +20,10 @@ sys.path.insert(0, os.path.join(REPO_ROOT, "experiments", "tinker-runs"))
 from campaign_v2 import run_experiment  # noqa: E402
 
 MODEL = "meta-llama/Llama-3.3-70B-Instruct"
-SEEDS = [42, 123, 456, 789]
+SEEDS = [42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768]
 GROUP_SIZE = 8
 LR = 1e-5
-STEPS = 30
+STEPS = 200
 WAVE = "task1-llama33-70b-multiseed"
 
 OUT_PATH = os.path.join(

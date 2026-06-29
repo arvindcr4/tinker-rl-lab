@@ -133,7 +133,7 @@ bnb_config = BitsAndBytesConfig(
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_ID,
     quantization_config=bnb_config,
-    device_map="auto",
+    device_map=None if "LOCAL_RANK" in os.environ else "auto",
     trust_remote_code=True,
     dtype=torch.bfloat16,
 )
@@ -192,14 +192,14 @@ trainer = SFTTrainer(
     args=sft_config,
 )
 
-print("\nStarting SFT training ...\n")
-trainer.train()
+print("\n🚀 Starting SFT training ...\n")
+trainer.train(resume_from_checkpoint=True)
 
 # ── SAVE ─────────────────────────────────────────────────────
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 trainer.model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
-print(f"\nSFT adapter saved!")
+print(f"\n✅ SFT adapter saved!")
 print(f"   Files: {os.listdir(OUTPUT_DIR)}")
 print(f"   Path : {OUTPUT_DIR}")
 

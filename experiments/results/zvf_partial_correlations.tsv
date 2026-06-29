@@ -1,0 +1,18 @@
+# MEASURED, with an important caveat. Computed from real per-step per-group rollout
+# logs of the Qwen2.5-0.5B arithmetic GRPO validation run
+# (experiments/modal/modal_groupsize_zvf_sweep.py -> groupsize_zvf_sweep.json;
+# 12 runs x 40 steps = 480 step-rows, G in {2,4,8,16}, 3 seeds each).
+#
+# We report ONLY the RAW correlation: ZVF is strongly coupled to batch-mean reward
+# (r=+0.74), as expected (more all-correct groups -> more zero-variance groups).
+# We do NOT report a partial correlation "controlling for advantage variance":
+# under binary outcome rewards the within-group advantage variance is a
+# DETERMINISTIC transform of ZVF (zero iff the group is zero-variance), so
+# partialling it out is circular (regressing ZVF on a function of itself).
+# We also attach NO step-level p-value: the 480 rows are 12 runs x 40 AUTOCORRELATED
+# optimizer steps (lag-1 ~ 0.9), not independent observations.
+# Earlier revisions reported entropy/adv-var-"controlled" partials (-0.12/-0.13);
+# those are withdrawn as circular/pseudoreplicated. Scope: small-scale ungated
+# validation, NOT the Qwen3-8B/GSM8K corpus.
+controlling_for	r	n_obs	note
+(none; raw correlation)	0.742	480	ZVF vs batch-mean reward (descriptive; step-rows autocorrelated, no valid p)

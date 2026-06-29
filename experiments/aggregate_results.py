@@ -2,6 +2,13 @@
 """
 Aggregate all experiment results from multiple sources into a single authoritative
 master_results.json and master_results.csv, plus a human-readable markdown summary.
+
+TODOs from Adversarial Review:
+- ZVF Metric: ZVF (Zero-Variance Fraction) is criticized as borderline tautological, fragile across domains (e.g., tool-use), and a symptom rather than a root cause. Re-evaluate its use as a primary diagnostic.
+- The 'Early-Training Snapshot' Problem: Training runs are limited to 30-50 steps due to API costs, which is insufficient to observe meaningful RL convergence.
+- The Closed-Source Confound: The performance gap with Tinker may be due to its closed-source managed defaults rather than algorithmic superiority.
+- Failure to Prove Generalization: Gains on held-out test sets (e.g., Qwen3-8B GRPO on GSM8K +1.3%, p=0.26) are not statistically significant.
+- Single-Seed Extrapolations: Relying on N=1 runs is a major statistical vulnerability. Need to aggregate over multiple seeds.
 """
 
 import json
@@ -415,11 +422,12 @@ team_members = [
         "first5_avg"     : None,
         "status"         : "completed",
         "error_message"  : None,
-        "finding"        : "HumanEval 86% (141/164 problems) — best code-gen result in the project",
+        "finding"        : "HumanEval 86% (141/164 problems) — best code-gen result in the project (Note: gain is not statistically significant, p=0.53)",
         "wandb_run_url"  : None,
         "hf_checkpoint_url": "https://github.com/madhukumara1993/qwen3-grpo",
         "reward_trace"   : [],
         "humaneval_score": "86% (141/164)",
+        "p_value"        : 0.53,
     },
     {
         "group"          : "Team Member",
@@ -528,7 +536,7 @@ print(f"[OK] master_results.csv written ({len(records)} rows)")
 
 
 # ── build Markdown summary ─────────────────────────────────────────────────────
-STATUS_EMOJI = {"completed": "", "partial": "", "failed": ""}
+STATUS_EMOJI = {"completed": "✅", "partial": "⚠️", "failed": "❌"}
 
 def fmt_metric(val):
     if val is None:
@@ -602,12 +610,19 @@ for s, cnt in sorted(status_counts.items()):
 lines.append("\n### Key Findings\n")
 lines.append("- **Best overall performer:** Llama-3.1-8B-Instruct (Modal PPO) — last-10 avg **0.95** on GSM8K")
 lines.append("- **Best frontier model:** DeepSeek-V3.1 (Tinker GRPO) — peak **1.0**, last-10 avg **0.85**")
-lines.append("- **Best team member result:** Madhu (Qwen3-8B GRPO) — HumanEval **86%** (141/164)")
+lines.append("- **Best team member result:** Madhu (Qwen3-8B GRPO) — HumanEval **86%** (141/164) (Note: not statistically significant, p=0.53)")
 lines.append("- **Most improvement vs baseline:** Sandhya (3B GRPO) — **+0.19** absolute over SFT (0.72→0.91)")
 lines.append("- **TRL GRPO baseline** (Qwen2.5-0.5B, 5 seeds): mean **0.734** ± 0.065")
 lines.append("- **Classical PPO (SB3/CleanRL/Tianshou)** on raw math: all < 0.02 — LLM backbone essential")
 lines.append("- **JWT failures:** 11 Tinker runs blocked by auth errors, 0 training data collected")
 lines.append("- **Tinker tool_use failure:** Llama-3.1-8B-Instruct scored 0.0 on all 30 steps — task too hard")
+
+lines.append("\n### Methodological Limitations (Adversarial Review)\n")
+lines.append("- **The 'Early-Training Snapshot' Problem:** Claims rely on 30–50 step training runs due to budget, insufficient for observing asymptotic RL dynamics.")
+lines.append("- **The Closed-Source Confound:** The large performance gap with Tinker may stem from its closed-source defaults rather than the algorithm.")
+lines.append("- **Failure to Prove Generalization:** Gains on held-out sets (e.g., Qwen3-8B GRPO on GSM8K +1.3%, p=0.26) and HumanEval (p=0.53) lack statistical significance.")
+lines.append("- **Single-Seed Extrapolations:** Extrapolating RL training dynamics from single-seed runs is a major vulnerability.")
+lines.append("- **ZVF Metric:** Zero-Variance Fraction is borderline tautological, fragile across domains, and a symptom rather than root cause.")
 
 with open(OUT_MD, "w") as f:
     f.write("\n".join(lines) + "\n")

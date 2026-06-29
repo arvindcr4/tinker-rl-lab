@@ -1,15 +1,23 @@
-# Submission Manifest
+# Submission bundle MANIFEST — Tinker RL Lab (NeurIPS 2026 D&B)
 
-| File | Size | SHA-256 |
-|---|---:|---|
-| `REVIEWER_README.md` | 0.00 MiB | `19f6685686511cea0afd25e4ce7114df28840adf371a9b4259d26a20729d1192` |
-| `SUBMISSION_README.md` | 0.00 MiB | `1c5e16548f50d84cf44566002b50f8165dd3b8fe7e1d7ada28a97f54f1504a1d` |
-| `MANIFEST.md` | 0.00 MiB | `dc95682edc3b67b49f28ae3b83d29b67e56cb25517f1fcdbf481d1da702c54fb` |
-| `code.tar.gz` | 14.96 MiB | `88a4c5c3f7dc7acf5f5991b2e62531a83b57b9928c74ab4fadaa8549948d90a2` |
-| `paper_anon.pdf` | 1.76 MiB | `c0164113a7268244d876010367271167d3895f537125e93bd7db407a4e006723` |
+Every file in `neurips2026_tinker_rl_lab.zip` with SHA-256. The machine-readable
+checksum list lives in the companion file `checksums.sha256`, which is the
+authoritative input to `sha256sum -c`.
+
+```
+7316e38125fffb3ffd3f9df9a97f725b6d6b9885931378c8aef6d24d76ee6451  ethics_statement.pdf
+bc41f80541af4a838e279e45af7ee8c52744ca756a194a7d5a0aa23bd48be8a8  paper.pdf
+aeb4bdcfef725a1c951846f0a617b5bb21d508b4ca458abb644b1726016de993  paper_anon.pdf
+de8008c881b63bee1b8b2c33bfaee7445dfda63cf70d5dd43ac718502b9d91aa  code.tar.gz
+69326c6276ec871b84eb3131bebeb920708a1781c14305c816f4358ce9154199  REVIEWER_README.md
+0236e8f4547d3399e9ce66aeb4556a20a00b6d05c42a9306b3aaf496ad5c87d3  data_statement.md
+```
 
 Verify with:
 
 ```bash
+unzip neurips2026_tinker_rl_lab.zip
 sha256sum -c checksums.sha256
 ```
+
+Bundle composition: 7 files (6 data files + `checksums.sha256` / `MANIFEST.md`).

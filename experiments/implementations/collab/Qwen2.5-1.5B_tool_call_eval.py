@@ -127,7 +127,7 @@ def load_model_with_adapter(adapter_path, label):
         bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True,
     )
     base = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID, quantization_config=bnb, device_map="auto",
+        MODEL_ID, quantization_config=bnb, device_map=None if "LOCAL_RANK" in os.environ else "auto",
         trust_remote_code=True, dtype=torch.bfloat16,
     )
     model = PeftModel.from_pretrained(base, adapter_path)
@@ -210,16 +210,16 @@ for label, key in metrics:
     sv = sft_sum[key];  gv = grpo_sum[key];  n = sft_sum["n"]
     sp = f"{sv}/{n} ({100*sv/n:.0f}%)"
     gp = f"{gv}/{n} ({100*gv/n:.0f}%)"
-    w  = "GRPO" if gv > sv else ("SFT" if sv > gv else "TIE")
+    w  = "GRPO ✅" if gv > sv else ("SFT ✅" if sv > gv else "TIE")
     print(f"  {label:<23} {sp:>15} {gp:>15} {w:>12}")
 
 print("-" * 80)
 sp = str(sft_sum["avg_score"]);  gp = str(grpo_sum["avg_score"])
-w  = "GRPO" if grpo_sum["avg_score"] > sft_sum["avg_score"] else ("SFT" if sft_sum["avg_score"] > grpo_sum["avg_score"] else "TIE")
+w  = "GRPO ✅" if grpo_sum["avg_score"] > sft_sum["avg_score"] else ("SFT ✅" if sft_sum["avg_score"] > grpo_sum["avg_score"] else "TIE")
 print(f"  {'Avg Quality Score':<23} {sp:>15} {gp:>15} {w:>12}")
 print("=" * 80)
 
-print("\nInterpretation:")
+print("\n📊 Interpretation:")
 print("  JSON Valid   → Basic format learned")
 print("  Correct Tool → Model picks the right function")
 print("  Has Arguments→ Model provides required parameters")

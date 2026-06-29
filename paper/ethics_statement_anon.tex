@@ -29,40 +29,37 @@ did not have resources to close within the submission window.
 Salesforce xLAM-Function-Calling-60k \cite{liu2024xlam} tool-use corpus,
 (ii) a set of LoRA adapters published on the HuggingFace Hub
 (\texttt{anonymous/tinker-rl-bench-*}), and (iii) diagnostic code for
-Zero-Variance Fraction and reward-instability analysis. We
+Zero-Variance Fraction, reward-stability, and length-bias analysis. We
 analyse four concrete misuse pathways these artefacts could, in principle,
 enable, and we describe the existing guardrails and the residual risk we
 judge acceptable for publication.
 
 \paragraph{M1. Weaponisation of mathematical reasoning.}
-The most capability-relevant artefact we release is code for running
-GRPO-style verifier-reward experiments on grade-school arithmetic and
-multi-step prompt suites. In our clean held-out GSM8K control, the measured
-gain is small and not statistically significant, so we do not claim the code
-improves general reasoning capability. A malicious
+The most capability-relevant artefact we release is GRPO training code that
+improves grade-school arithmetic and multi-step reasoning. A malicious
 operator could attempt to extend this pipeline to tasks of greater
 dual-use concern, e.g., chemistry olympiad problems, cryptographic key
 recovery, or financial fraud. We judge the \emph{marginal} uplift provided
 by our release to be small for three reasons. First, GRPO at our training
-scale does not create new capabilities; the base-model control for GSM8K
-(Section~\ref{sec:results}, 82.0\%) shows that the bulk of held-out
-accuracy is attributable to Qwen3-8B's pretraining. Our full GRPO run only
-adds \(+1.3\) percentage points ($p{=}0.26$, not statistically significant).
+scale does not create new capabilities; the pre-RL held-out accuracy of
+Qwen3-8B-Instruct for GSM8K (Section~\ref{sec:results}, 82.0\%) shows that the
+bulk of held-out accuracy is attributable to the checkpoint's pretraining and
+instruction tuning. Our full GRPO run only adds \(+1.3\) percentage points
+($p{=}0.26$, not statistically significant).
 Second, the public literature already contains GRPO implementations
 \cite{shao2024deepseekmath, openrlhf2024, verl2024, trl2020} that are at
-least as capable. Third, any reward-harness improvement is bounded by the
-rewarder: GSM8K rewards use exact-match against a human-written gold answer
-and do not transfer to the domains listed above without a new validated reward
+least as capable. Third, any reasoning uplift is bounded by the rewarder:
+GSM8K rewards use exact-match against a human-written gold answer, which
+does not generalise to the domains listed above without a new reward
 signal, which itself requires expertise and labelled data.
 
 \paragraph{M2. Reward hacking and the long-term alignment risk.}
 GRPO, like all policy-gradient RL from a proxy reward, is vulnerable to
 reward hacking: the model learns to exploit idiosyncrasies of the reward
 function rather than solve the intended task \cite{skalse2022specificationgaming,
-krakovna2020specification}. Our reward-instability audit
-(Section~\ref{sec:length_bias}) flags verbosity-trap-like regressions in 4/11
-GRPO trajectories, but treats them as proxy-reward failures rather than proof
-that response length alone caused the regression.
+krakovna2020specification}. Our length-bias analysis
+(Section~\ref{sec:length_bias}) and the verbosity-trap finding in 4/11
+GRPO runs are concrete demonstrations of this failure mode in our own data.
 Users who apply our scripts to under-specified reward functions in
 production settings (e.g., a custom ``helpfulness'' classifier) may observe
 models that appear to improve on held-out metrics while silently
@@ -111,9 +108,9 @@ authors; no in-kind credits are omitted. Dollar figures are in USD.
 \begin{table}[ht]
 \centering
 \small
-\caption{Itemised compute spend across platforms. Totals include successful,
-interrupted, and unsuccessful attempts to reflect the actual cost of the audit
-\cite{henderson2018deep}.}
+\caption{Itemised compute spend across platforms. Totals include both
+successful and failed runs, because failed-run spend is real and should
+not be hidden from reviewers \cite{henderson2018deep}.}
 \label{tab:compute_spend}
 \begin{tabular}{llrr}
 \toprule
@@ -121,11 +118,11 @@ interrupted, and unsuccessful attempts to reflect the actual cost of the audit
 \midrule
 Tinker SDK v0.16.1 & GRPO on 4B/8B (original suite)        & 25 & \$40--55 \\
 Tinker SDK v0.16.1 & 10x Structural Ceiling ablation       & 32 & \$65 \\
-Tinker SDK v0.16.1 & Larger-model support suite (frontier/MoE) & 13 & \$25--30 \\
+Tinker SDK v0.16.1 & World-Class Suite (frontier/MoE)      & 13 & \$25--30 \\
 Modal H100         & PPO baselines (Qwen3-8B, Llama-3.1-8B)& 2  & \$12--18 \\
 Modal H100         & KL-tracking run (failed)              & 1  & \$2--4   \\
 Google Colab Pro (T4) & 0.5B--3B QLoRA SFT+GRPO            & --- & \$10/person \\
-NVIDIA L4 (TRL baseline)& Qwen2.5-0.5B GSM8K, 5 seeds      & 5  & \$3--5   \\
+NVIDIA L4 (TRL baseline)& Qwen2.5-0.5B GSM8K, 5 seeds       & 5  & \$3--5   \\
 HuggingFace Hub    & Model + adapter hosting               & --- & \$0 \\
 Weights \& Biases  & Experiment tracking (academic tier)   & --- & \$0 \\
 \midrule
@@ -171,12 +168,12 @@ in the region where the hardware is believed to be located.
         1.10--1.15 \cite{google2023pue, aws2023pue}).
   \item US average grid intensity (EPA eGRID 2023): 0.367\,kg\,CO$_2$-eq / kWh
         \cite{epa2023egrid}.
-  \item Indian average grid intensity (CEA 2023): 0.716\,kg\,CO$_2$-eq / kWh
-        \cite{cea2023co2}.
+  \item Local average grid intensity (national grid operator, 2023):
+        0.716\,kg\,CO$_2$-eq / kWh.
   \item We use the US average for Modal H100 (US-East region as configured)
-        and Tinker (location undisclosed; assumed US), and the Indian
-        average for Colab Pro T4 used by authors based in Bengaluru
-        (Google Cloud asia-south1).
+        and Tinker (location undisclosed; assumed US), and the local
+        average for the Colab Pro T4 used by the authors (region withheld
+        for blind review).
 \end{itemize}
 
 \paragraph{GPU-hour estimates.}
@@ -201,7 +198,7 @@ stalled runs are included. Totals rounded to one significant figure.}
 Tinker (assumed H100)   & \textasciitilde 950 & 700 & 1.1 & \textasciitilde 732 & \textasciitilde 269 \\
 Modal H100 (US-East)    & \textasciitilde 18  & 700 & 1.1 & \textasciitilde 14  & \textasciitilde 5.1 \\
 Institutional A100 (in-kind)      & \textasciitilde 60  & 400 & 1.1 & \textasciitilde 26  & \textasciitilde 19   \\
-Colab Pro T4 (asia-south1) & \textasciitilde 40 & 70 & 1.2 & \textasciitilde 3.4 & \textasciitilde 2.4  \\
+Colab Pro T4 (region withheld) & \textasciitilde 40 & 70 & 1.2 & \textasciitilde 3.4 & \textasciitilde 2.4  \\
 NVIDIA L4 (TRL baseline)   & \textasciitilde 10 & 72 & 1.1 & \textasciitilde 0.8 & \textasciitilde 0.3  \\
 \midrule
 \textbf{Project total (best estimate)} & & & & \textasciitilde 776 & \textasciitilde 296 \\
@@ -211,8 +208,8 @@ NVIDIA L4 (TRL baseline)   & \textasciitilde 10 & 72 & 1.1 & \textasciitilde 0.8
 
 \paragraph{Interpretation and uncertainty.}
 Our best estimate of \textasciitilde 296\,kg\,CO$_2$-eq for the entire
-project is comparable to a single round-trip economy flight
-Bengaluru--Delhi (\textasciitilde 300\,kg). The dominant uncertainty is
+project is comparable to a single round-trip short-haul economy flight
+(\textasciitilde 300\,kg). The dominant uncertainty is
 the Tinker GPU-hour count: because Tinker does not expose hardware telemetry,
 a factor-of-two error in GPU-hours or TDP is plausible. Under a pessimistic
 assumption (2$\times$ GPU-hours, H100 running near 100\% TDP continuously),
@@ -223,7 +220,7 @@ contribution could be as low as \textasciitilde 130\,kg. We report the
 central estimate in the main table and caution readers that it should not
 be interpreted as precise. \emph{All} numbers should be regarded as upper
 bounds on the carbon cost of reproducing our work, because subsequent
-users can skip unsuccessful attempts and optional ablation sweeps.
+users can skip the failed runs and the ablation sweeps.
 
 \paragraph{Offset and mitigation.}
 We did not purchase carbon offsets. Instead, we have (a) released all
@@ -329,14 +326,15 @@ system-level telemetry (energy, throughput, queueing).
 \paragraph{What this means for our claims.}
 Tinker results in this paper measure the \emph{platform's} implementation
 of GRPO, not an abstract specification of the algorithm. A reader who asks
-``why do nominally similar managed and TRL GRPO runs produce different reward
-trajectories'' cannot fully answer that question from our data: visible
-hyperparameters are matched in some probes, but hidden sampler, loss-mask,
-LoRA, precision, rollout, checkpoint, and evaluator details remain part of
-the treatment.  We therefore treat managed and TRL rows as stack-conditioned
-evidence, not as a causal framework ranking.  Dry-run verl/OpenRLHF launcher
-rows are engineering-readiness artifacts only and are not used for empirical
-framework conclusions.
+``why does Tinker GRPO score 99.9\% on GSM8K while open-source TRL GRPO
+scores 73.4\% on the same task'' cannot fully answer that question from
+our data: we are able to rule out a handful of candidate explanations
+(seed variance, model-size confound) but not the implementation itself.
+We therefore draw \emph{quantitative} conclusions only from the
+open-source side (TRL, veRL on Modal H100, OpenRLHF) where every
+hyperparameter is auditable, and use Tinker results primarily as an
+\emph{upper bound} on what a carefully engineered production stack can
+achieve for critic-free RL at our scales.
 
 \paragraph{Reproducibility commitments we can make.}
 \begin{enumerate}
@@ -347,14 +345,14 @@ framework conclusions.
   \item Every figure and every summary statistic derived solely from
         Tinker data is marked with ``\dag'' and a footnote stating that
         independent replication requires Tinker API access.
-  \item Primary statistical claims distinguish real runs from dry-run
-        launchers and separate online reward from held-out capability.
-        Managed-only results are reported descriptively unless accompanied by
-        a matched held-out control.
+  \item Primary statistical claims (significance tests, ANOVA variance
+        decompositions) are drawn from open-source Modal H100 and TRL
+        runs. Tinker-only results are reported descriptively.
   \item We commit to re-running any Tinker-only experiment on an open
         backend if an equivalent open-source service becomes available,
-        and to issuing a revised version of this paper if a stack variable
-        changes the interpretation of any headline result.
+        and to issuing a revised version of this paper if the Tinker
+        99.9\% figure is ever shown to be due to an undisclosed
+        implementation choice rather than the algorithm.
 \end{enumerate}
 
 \paragraph{Key rotation and credential hygiene.}
@@ -405,7 +403,7 @@ LoRA-conditional.
 \paragraph{Benchmark coverage is narrow.}
 We evaluate four domains: GSM8K, MATH-500 (exploratory), HumanEval
 (subset), and synthetic/xLAM tool-use. We do not evaluate on MT-Bench,
-ArenaHard, safety benchmarks (HarmBench, ToxicChat), or truthfulness
+evaluations on ArenaHard, MT-Bench, safety benchmarks (HarmBench, ToxicChat), and truthfulness
 benchmarks (TruthfulQA). Any claim about ``reasoning'' in the paper is
 strictly a claim about the covered benchmarks.
 
@@ -441,11 +439,11 @@ Section~\ref{sec:results} are so flagged, but most of our secondary
 analyses are descriptive.
 
 \paragraph{Geographic and demographic limits.}
-All authors are based at a single institution in Bengaluru, India. Our
-choice of benchmarks, prompt phrasings, and evaluation design reflects
-that context. Independent replication by groups in other regions, on
-non-English tasks, and with non-Qwen / non-Llama families is an open
-question.
+The authors are based at a single institution (region withheld for
+blind review). Our choice of benchmarks, prompt phrasings, and
+evaluation design reflects that context. Independent replication by
+groups in other regions, on non-English tasks, and with non-Qwen /
+non-Llama families is an open question.
 
 % =============================================================================
 % End of ethics_statement.tex

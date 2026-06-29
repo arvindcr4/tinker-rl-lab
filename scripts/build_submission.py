@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Build the NeurIPS 2026 blind submission bundle.
+"""Build the NeurIPS 2026 D&B submission bundle.
 
 Inputs assembled from the live repo:
-  reports/final/grpo_agentic_llm_paper_anonymous.pdf -> submission/contents/paper_anon.pdf
+  paper/main.pdf              -> submission/contents/paper.pdf
+  paper/main_anon.pdf         -> submission/contents/paper_anon.pdf
+  paper/ethics_wrapper.pdf    -> submission/contents/ethics_statement.pdf
   blind_review/tinker-rl-lab-anon.tar.gz -> submission/contents/code.tar.gz
 
 Refreshes checksums.sha256 / MANIFEST.md, then zips the whole bundle.
@@ -18,35 +20,21 @@ ROOT = Path(__file__).resolve().parent.parent
 CONTENTS = ROOT / "submission" / "contents"
 ZIP_PATH = ROOT / "submission" / "neurips2026_tinker_rl_lab.zip"
 
+
 SOURCES = [
+    (ROOT / "paper" / "main.pdf", CONTENTS / "paper.pdf"),
+    (ROOT / "paper" / "main_anon.pdf", CONTENTS / "paper_anon.pdf"),
+    (ROOT / "paper" / "ethics_wrapper.pdf", CONTENTS / "ethics_statement.pdf"),
     (
-        ROOT / "reports" / "final" / "grpo_agentic_llm_paper_anonymous.pdf",
-        CONTENTS / "paper_anon.pdf",
+        ROOT / "blind_review" / "tinker-rl-lab-anon.tar.gz",
+        CONTENTS / "code.tar.gz",
     ),
-    (ROOT / "blind_review" / "tinker-rl-lab-anon.tar.gz", CONTENTS / "code.tar.gz"),
 ]
 
-# Bundle files that live in contents/ already.
-EXISTING_MEMBERS = [
+# Non-binary bundle files that live in contents/ already (authored content).
+TEXT_MEMBERS = [
     "REVIEWER_README.md",
-    "SUBMISSION_README.md",
-]
-
-BUNDLE_ORDER = [
-    "REVIEWER_README.md",
-    "SUBMISSION_README.md",
-    "code.tar.gz",
-    "paper_anon.pdf",
-]
-
-STALE_MEMBERS = [
-    "paper.pdf",
-    "report.pdf",
-    "grpo_agentic_llm_paper.pdf",
-    "grpo_agentic_llm_paper_anonymous.pdf",
-    "presentation.pptx",
-    "ethics_statement.pdf",
-    "supporting_data.tar.gz",
+    "data_statement.md",
 ]
 
 
@@ -60,24 +48,23 @@ def sha256(path: Path) -> str:
 
 def main() -> int:
     CONTENTS.mkdir(parents=True, exist_ok=True)
-    for name in STALE_MEMBERS:
-        p = CONTENTS / name
-        if p.exists():
-            p.unlink()
-            print(f"removed stale blind-package member {p.relative_to(ROOT)}")
     for src, dst in SOURCES:
         if not src.exists():
             raise SystemExit(f"missing source: {src}")
         shutil.copy2(src, dst)
         print(f"copied {src.relative_to(ROOT)} -> {dst.relative_to(ROOT)}")
 
-    for name in EXISTING_MEMBERS:
-        p = CONTENTS / name
-        if not p.exists():
-            raise SystemExit(f"missing bundle member: {p}")
-
+    # Canonical order for checksums and manifest
+    order = [
+        "ethics_statement.pdf",
+        "paper.pdf",
+        "paper_anon.pdf",
+        "code.tar.gz",
+        "REVIEWER_README.md",
+        "data_statement.md",
+    ]
     sums = {}
-    for name in BUNDLE_ORDER:
+    for name in order:
         p = CONTENTS / name
         if not p.exists():
             raise SystemExit(f"missing bundle member: {p}")
@@ -86,26 +73,33 @@ def main() -> int:
     # Write checksums.sha256 (the authoritative sha256sum -c file).
     checksum_path = CONTENTS / "checksums.sha256"
     checksum_path.write_text(
-        "".join(f"{sums[n]}  {n}\n" for n in BUNDLE_ORDER)
+        "".join(f"{sums[n]}  {n}\n" for n in order)
     )
     print(f"wrote {checksum_path.relative_to(ROOT)}")
 
-    # Update MANIFEST.md.
+    # Update MANIFEST.md (preserve header/footer; only refresh the code block).
     manifest_path = CONTENTS / "MANIFEST.md"
-    header = "# Submission Manifest\n\n| File | Size | SHA-256 |\n|---|---:|---|\n"
-    body = ""
-    for name in BUNDLE_ORDER:
-        p = CONTENTS / name
-        size_mib = p.stat().st_size / (1024 * 1024)
-        body += f"| `{name}` | {size_mib:.2f} MiB | `{sums[name]}` |\n"
-    footer = "\nVerify with:\n\n```bash\nsha256sum -c checksums.sha256\n```\n"
+    header = "# Submission bundle MANIFEST — Tinker RL Lab (NeurIPS 2026 D&B)\n\n"
+    header += (
+        "Every file in `neurips2026_tinker_rl_lab.zip` with SHA-256. The "
+        "machine-readable\nchecksum list lives in the companion file "
+        "`checksums.sha256`, which is the\nauthoritative input to "
+        "`sha256sum -c`.\n\n```\n"
+    )
+    body = "".join(f"{sums[n]}  {n}\n" for n in order)
+    footer = (
+        "```\n\nVerify with:\n\n```bash\nunzip neurips2026_tinker_rl_lab.zip\n"
+        "sha256sum -c checksums.sha256\n```\n\n"
+        f"Bundle composition: 7 files ({len(order)} data files + "
+        "`checksums.sha256` / `MANIFEST.md`).\n"
+    )
     manifest_path.write_text(header + body + footer)
     print(f"wrote {manifest_path.relative_to(ROOT)}")
 
     # Build the zip deterministically (sorted names, no absolute paths).
     ZIP_PATH.parent.mkdir(parents=True, exist_ok=True)
     members = sorted(
-        [CONTENTS / n for n in BUNDLE_ORDER]
+        [CONTENTS / n for n in order]
         + [checksum_path, manifest_path]
     )
     with zipfile.ZipFile(

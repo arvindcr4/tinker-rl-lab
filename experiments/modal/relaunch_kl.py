@@ -11,6 +11,20 @@ image = (
 @app.function(image=image, gpu="H100", timeout=7200)
 def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int = 30):
     import torch, torch.nn.functional as F, random, wandb, os, json
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from huggingface_hub import HfApi
 
@@ -25,9 +39,9 @@ def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: in
     print(f"[{exp}] Loading model on H100...")
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     policy_model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16,
-                                                         device_map="auto", trust_remote_code=True)
+                                                         device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True)
     ref_model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16,
-                                                      device_map="auto", trust_remote_code=True)
+                                                      device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True)
     ref_model.eval()
     for p in ref_model.parameters():
         p.requires_grad = False

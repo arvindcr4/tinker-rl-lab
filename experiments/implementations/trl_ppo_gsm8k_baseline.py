@@ -121,7 +121,7 @@ def main():
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
         args.model,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
         trust_remote_code=True,
         peft_config=peft_config,
     )

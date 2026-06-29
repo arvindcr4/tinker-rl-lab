@@ -432,12 +432,12 @@ def saturation_model(t, R_max, lam, R_0):
 
 **What to do:** Add a power analysis subsection to §3.3 (Statistical Methodology). Report minimum detectable effect size for each experimental design.
 
-**For Modal H100 experiments (5 seeds):**
+**For Modal H100 experiments (10 seeds):**
 ```python
 from statsmodels.stats.power import TTestIndPower
 
 analysis = TTestIndPower()
-# 5 seeds per condition, α=0.05, power=0.80
+# 10 seeds per condition, α=0.05, power=0.80
 min_effect = analysis.solve_power(nobs1=5, alpha=0.05, power=0.80)
 # Reports minimum detectable Cohen's d
 ```

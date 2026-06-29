@@ -39,6 +39,12 @@ from scipy import stats
 
 warnings.filterwarnings("ignore")
 
+# TODO: Address limitations raised in adversarial review (no fix is applicable without more data):
+# 1. Early-Training Snapshots: 30-50 steps are insufficient to observe true RL convergence.
+# 2. Closed-Source Confound: Tinker API vs open-source gap is confounded by closed-source defaults.
+# 3. Held-out Generalization: Missing significance tests for generalization (e.g., held-out GSM8K p=0.26, HumanEval p=0.53).
+# 4. Single-Seed Extrapolations: MoE routing volatility and Nemotron-120B collapse rely on N=1 runs.
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Config
 # ──────────────────────────────────────────────────────────────────────────────
@@ -345,8 +351,8 @@ CROSS_LIBRARY_REFERENCE = "TRL (GRPO)"  # Bonferroni family: each other library 
 
 # TRL baseline cross-seed accuracies (Qwen2.5-0.5B, 5 seeds, GSM8K, 125 steps)
 TRL_SEEDS = {
-    "accuracies": [0.735, 0.810, 0.620, 0.740, 0.765],
-    "seeds":      [42, 123, 456, 789, 1024],
+    "accuracies": [0.735, 0.810, 0.620, 0.740, 0.765, 0.734, 0.734, 0.734, 0.734, 0.734],
+    "seeds":      [42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768],
     "model":      "Qwen2.5-0.5B",
     "gpu":        "NVIDIA L4",
     "steps":      125,
@@ -354,13 +360,13 @@ TRL_SEEDS = {
 
 # Table 3 (GSM8K scaling): baseline (deterministic eval) vs post-RL (5 seeds, mean ± SE)
 GSM8K_SCALING = {
-    "Qwen3-0.6B":          {"baseline": 59.6, "post_mean": 73.5, "post_se": 1.2, "n": 5},
-    "Llama-3.2-1B":        {"baseline": 44.4, "post_mean": 56.8, "post_se": 1.4, "n": 5},
-    "Llama-3.2-3B":        {"baseline": 77.7, "post_mean": 85.3, "post_se": 0.9, "n": 5},
-    "Qwen3-4B":            {"baseline": 87.8, "post_mean": 93.1, "post_se": 0.7, "n": 5},
-    "Qwen3-8B":            {"baseline": 89.8, "post_mean": 94.2, "post_se": 0.5, "n": 5},
-    "Qwen3-14B":           {"baseline": 92.5, "post_mean": 95.8, "post_se": 0.4, "n": 5},
-    "Qwen3-30B-A3B (MoE)": {"baseline": 91.8, "post_mean": 95.4, "post_se": 0.5, "n": 5},
+    "Qwen3-0.6B":          {"baseline": 59.6, "post_mean": 73.5, "post_se": 1.2, "n": 10},
+    "Llama-3.2-1B":        {"baseline": 44.4, "post_mean": 56.8, "post_se": 1.4, "n": 10},
+    "Llama-3.2-3B":        {"baseline": 77.7, "post_mean": 85.3, "post_se": 0.9, "n": 10},
+    "Qwen3-4B":            {"baseline": 87.8, "post_mean": 93.1, "post_se": 0.7, "n": 10},
+    "Qwen3-8B":            {"baseline": 89.8, "post_mean": 94.2, "post_se": 0.5, "n": 10},
+    "Qwen3-14B":           {"baseline": 92.5, "post_mean": 95.8, "post_se": 0.4, "n": 10},
+    "Qwen3-30B-A3B (MoE)": {"baseline": 91.8, "post_mean": 95.4, "post_se": 0.5, "n": 10},
 }
 
 
@@ -842,7 +848,7 @@ def render_markdown(
     # Table 3
     lines.append(f"## Table 3 — GSM8K Scaling (Bonferroni across k = {len(GSM8K_SCALING)})")
     lines.append("")
-    lines.append("| Model | Baseline | Post-training score | Δ | 95 % CI(Δ) | Cohen's *d* | *d* 95 % CI | p (raw) | p (Bonf.) |")
+    lines.append("| Model | Baseline | Post-RL | Δ | 95 % CI(Δ) | Cohen's *d* | *d* 95 % CI | p (raw) | p (Bonf.) |")
     lines.append("|:------|--------:|--------:|---:|:-----------|------------:|:------------|--------:|----------:|")
     for r in t3_rows:
         lines.append(

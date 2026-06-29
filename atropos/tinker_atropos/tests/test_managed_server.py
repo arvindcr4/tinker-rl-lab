@@ -1,3 +1,12 @@
+# TODO: Adversarial Review Limitations
+# The managed server tested here represents the Tinker API, which is a closed-source 
+# "black box". The performance gaps observed are likely due to its undisclosed 
+# managed defaults, micro-partitioning, and reference offloading. These factors 
+# confound algorithmic comparisons, and these unit tests do not capture those internal 
+# dynamics. Furthermore, empirical claims relying on this managed infrastructure are 
+# limited by API cost constraints (leading to short 30-50 step snapshots) and 
+# single-seed extrapolations.
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from fastapi.testclient import TestClient

@@ -35,6 +35,10 @@ dependencies = [
     "numpy>=1.24.0",
     "torch>=2.0.0",
     "gymnasium>=0.29.0",
+    "tinker>=0.5.0",
+    "transformers>=4.36.0",
+    "datasets>=2.14.0",
+    "codecarbon>=2.0.0",
 ]
 
 [project.optional-dependencies]
@@ -57,8 +61,12 @@ tianshou = [
 d3rlpy = [
     "d3rlpy>=2.0.0",
 ]
+eval = [
+    "fschat>=0.2.33",
+    "openai>=1.0.0",
+]
 all = [
-    "tinkerrl[trl,sb3,cleanrl,tianshou,d3rlpy]",
+    "tinkerrl[trl,sb3,cleanrl,tianshou,d3rlpy,eval]",
 ]
 dev = [
     "pytest>=7.0",

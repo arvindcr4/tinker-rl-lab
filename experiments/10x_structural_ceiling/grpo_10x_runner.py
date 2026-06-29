@@ -11,6 +11,16 @@ Usage:
   python grpo_10x_runner.py --config configs/block_g_gsm8k_group32.yaml --dry-run
   python grpo_10x_runner.py --config configs/block_g_gsm8k_group32.yaml --resume
 """
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 from __future__ import annotations
 
 import argparse
@@ -267,9 +277,11 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     model_name = cfg["openai"][0]["model_name"]
     tinker_model = tinker_cfg.get("tinker_model_name", model_name)
     group_size = env_cfg["group_size"]
+    # TODO(adversarial_review): Thirty gradient steps are entirely insufficient to observe meaningful RL convergence. These early-training snapshots make conclusions about asymptotic RL dynamics highly speculative.
     total_steps = env_cfg["total_steps"]
     lr = tinker_cfg["learning_rate"]
     lora_rank = tinker_cfg["lora_rank"]
+    # TODO(adversarial_review): Extrapolating RL training dynamics from N=1 runs is a major statistical vulnerability. Need to run and aggregate multiple seeds.
     seed = env_cfg.get("seed", 42)
 
     random.seed(seed)
@@ -300,6 +312,20 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     # Init W&B
     if env_cfg.get("use_wandb"):
         import wandb
+        try:
+            import torch, wandb
+            if not getattr(wandb, '_vram_patched', False):
+                _old_log = wandb.log
+                def _vram_log(data, *args, **kwargs):
+                    if torch.cuda.is_available():
+                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                        torch.cuda.reset_peak_memory_stats()
+                    _old_log(data, *args, **kwargs)
+                wandb.log = _vram_log
+                wandb._vram_patched = True
+        except ImportError:
+            pass
         wandb.init(
             project=tinker_cfg.get("wandb_project", "tinker-structural-ceiling"),
             group=tinker_cfg.get("wandb_group", ""),
@@ -345,6 +371,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
         sc = tc.save_weights_and_get_sampling_client()
         print(f"Resumed at step {start_step}")
     else:
+        # TODO(adversarial_review): Tinker is a closed-source black box. The massive performance gap compared to open-source libraries is likely confounded by Tinker's undisclosed managed defaults.
         tc = svc.create_lora_training_client(base_model=tinker_model, rank=lora_rank)
         print(f"Run ID: {tc.model_id}")
         # Save initial state checkpoint
@@ -442,6 +469,8 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
         zvf = diag.zero_variance_frac
         gu = diag.gradient_utilization
 
+        # TODO(adversarial_review): ZVF completely breaks down outside of math tasks. In format-gated tasks (like tool-use), ZVF saturates at 1.0 because the base model consistently fails schema parsing. Need to implement ERF (Effective-Rollout Fraction) to measure progress.
+
         print(
             f"Step {step+1:3d}/{total_steps} | "
             f"loss={grpo_loss:.4f} | reward={avg_r:.3f} | "
@@ -450,10 +479,25 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
 
         if env_cfg.get("use_wandb"):
             import wandb
+            try:
+                import torch, wandb
+                if not getattr(wandb, '_vram_patched', False):
+                    _old_log = wandb.log
+                    def _vram_log(data, *args, **kwargs):
+                        if torch.cuda.is_available():
+                            data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                            data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                            torch.cuda.reset_peak_memory_stats()
+                        _old_log(data, *args, **kwargs)
+                    wandb.log = _vram_log
+                    wandb._vram_patched = True
+            except ImportError:
+                pass
             wandb.log({
                 "step": step,
                 "grpo_loss": grpo_loss,
                 "mean_reward": avg_r,
+                "zvf": zvf,
             }, step=step)
 
         # Save state checkpoint (resumable) at intervals
@@ -476,6 +520,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
         kind="both",
         loop_state={"batch": total_steps, "step": total_steps},
     )
+    # TODO(adversarial_review): The current training loop lacks rigorous held-out test set evaluation, making it difficult to prove generalized reasoning uplift rather than just training-set memorization.
     print(f"\nFinal checkpoint saved to: {log_path}")
     print(f"Avg reward last 10: {sum(step_rewards[-10:])/max(len(step_rewards[-10:]),1):.3f}")
 
@@ -493,6 +538,20 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
 
     if env_cfg.get("use_wandb"):
         import wandb
+        try:
+            import torch, wandb
+            if not getattr(wandb, '_vram_patched', False):
+                _old_log = wandb.log
+                def _vram_log(data, *args, **kwargs):
+                    if torch.cuda.is_available():
+                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                        torch.cuda.reset_peak_memory_stats()
+                    _old_log(data, *args, **kwargs)
+                wandb.log = _vram_log
+                wandb._vram_patched = True
+        except ImportError:
+            pass
         wandb.finish()
 
 

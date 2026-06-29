@@ -313,13 +313,13 @@ def fig2_comparison_bars(data: Dict[str, Any]) -> None:
     # Aggregate into named buckets: (label, values_list, color).
     buckets: List[Tuple[str, List[float], str]] = []
 
-    # Legacy TRL GRPO on Qwen2.5-0.5B (5 seeds)
+    # Legacy TRL GRPO on Qwen2.5-0.5B (10 seeds)
     if trl.get("accuracies"):
         buckets.append(("TRL GRPO\n(Qwen2.5-0.5B)",
                         list(trl["accuracies"]),
                         OKABE_ITO["sky_blue"]))
 
-    # Legacy PPO baselines (5 seeds each)
+    # Legacy PPO baselines (10 seeds each)
     for fw, color in (("sb3-ppo",     OKABE_ITO["orange"]),
                        ("cleanrl-ppo", OKABE_ITO["reddish_purple"]),
                        ("tianshou-ppo", OKABE_ITO["bluish_green"])):

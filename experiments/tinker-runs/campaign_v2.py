@@ -4,6 +4,16 @@ BITTER LESSON CAMPAIGN v2: Correct Tinker SDK API usage.
 Uses forward_backward_custom() + optim_step() pattern.
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 import os, re, json, random, sys, time, warnings, traceback, torch
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -133,6 +143,20 @@ def run_experiment(exp):
         wb_run = None
         try:
             import wandb
+            try:
+                import torch, wandb
+                if not getattr(wandb, '_vram_patched', False):
+                    _old_log = wandb.log
+                    def _vram_log(data, *args, **kwargs):
+                        if torch.cuda.is_available():
+                            data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                            data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                            torch.cuda.reset_peak_memory_stats()
+                        _old_log(data, *args, **kwargs)
+                    wandb.log = _vram_log
+                    wandb._vram_patched = True
+            except ImportError:
+                pass
             wandb.login(key=WANDB_KEY, relogin=True)
             wb_run = wandb.init(
                 project="tinker-rl-lab-world-class",
@@ -167,6 +191,7 @@ def run_experiment(exp):
         for step in range(steps):
             batch = random.sample(examples, min(2, len(examples)))
             all_data, all_advs, batch_r = [], [], []
+            batch_zvf_list = []
 
             for question, ans in batch:
                 prompt = (f"<|im_start|>system\n{SYSTEM_PROMPT}<|im_end|>\n"
@@ -184,6 +209,7 @@ def run_experiment(exp):
                 sr = (sum((r - mr)**2 for r in rews) / len(rews))**0.5 + 1e-8
                 advs = [(r - mr) / sr for r in rews]
                 batch_r.extend(rews)
+                batch_zvf_list.append(1.0 if all(abs(r - mr) < 1e-6 for r in rews) else 0.0)
 
                 for r_seq, adv in zip(resp.sequences, advs):
                     rid = list(r_seq.tokens)
@@ -204,6 +230,7 @@ def run_experiment(exp):
             tc.optim_step(T.AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
 
             avg = sum(batch_r) / len(batch_r) if batch_r else 0.0
+            avg_zvf = sum(batch_zvf_list) / len(batch_zvf_list) if batch_zvf_list else 0.0
             step_rewards.append(avg)
 
             if step % 5 == 0:
@@ -211,7 +238,7 @@ def run_experiment(exp):
 
             if wb_run:
                 try:
-                    wb_run.log({"train/reward": avg, "train/step": step+1})
+                    wb_run.log({"train/reward": avg, "train/step": step+1, "zvf": avg_zvf})
                 except:
                     pass
 
@@ -247,11 +274,11 @@ def run_experiment(exp):
         except Exception as wb_err:
             print(f"  [{tag}] W&B finish error (results saved): {wb_err}", flush=True)
 
-        print(f"[{tag}] DONE peak={peak:.3f} last10={last10:.3f}", flush=True)
+        print(f"  ✓ [{tag}] DONE peak={peak:.3f} last10={last10:.3f}", flush=True)
         return result
 
     except Exception as e:
-        print(f"[{tag}] FAILED: {e}", flush=True)
+        print(f"  ✗ [{tag}] FAILED: {e}", flush=True)
         traceback.print_exc()
         try:
             if wb_run:
@@ -286,14 +313,14 @@ def launch(max_parallel=6):
                                "total": len(EXPERIMENTS), "completed": len(results), "results": results}, f, indent=2)
                 c = len([r for r in results if r.get("status") == "completed"])
                 x = len([r for r in results if r.get("status") == "failed"])
-                print(f"  Progress: {len(results)}/{len(EXPERIMENTS)} ({c}{x})\n", flush=True)
+                print(f"  Progress: {len(results)}/{len(EXPERIMENTS)} (✓{c} ✗{x})\n", flush=True)
             except Exception as e:
                 print(f"  Future error: {e}", flush=True)
 
     c = len([r for r in results if r.get("status") == "completed"])
     x = len([r for r in results if r.get("status") == "failed"])
     print(f"\n{'='*70}")
-    print(f"CAMPAIGN COMPLETE:{c}{x} / {len(EXPERIMENTS)}")
+    print(f"CAMPAIGN COMPLETE: ✓{c} ✗{x} / {len(EXPERIMENTS)}")
     print(f"{'='*70}")
     if c > 0:
         print("\nTop results:")

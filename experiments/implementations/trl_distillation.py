@@ -8,6 +8,16 @@ Two approaches:
 2. On-Policy: KL divergence minimization to teacher
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 import sys
 import os
 import torch
@@ -81,7 +91,7 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
     teacher = AutoModelForCausalLM.from_pretrained(
         config.teacher_model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
     tokenizer = AutoTokenizer.from_pretrained(config.teacher_model_name)
     tokenizer.pad_token = tokenizer.eos_token
@@ -96,11 +106,11 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
     student = AutoModelForCausalLM.from_pretrained(
         config.student_model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     sft_config = SFTConfig(
-        output_dir="./distillation_off_policy",
+        output_dir=os.environ.get("RESULTS_DIR", "./distillation_off_policy"),
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
         learning_rate=5e-5,
@@ -117,7 +127,7 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
     )
 
     print("Starting off-policy distillation...")
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
     trainer.save_model("./distillation_off_policy_final")
     return trainer
 
@@ -174,21 +184,21 @@ def train_on_policy_distillation(config: DistillationConfig, train_dataset: Data
     teacher = AutoModelForCausalLM.from_pretrained(
         config.teacher_model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     print("Loading student model...")
     student = AutoModelForCausalLM.from_pretrained(
         config.student_model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     tokenizer = AutoTokenizer.from_pretrained(config.student_model_name)
     tokenizer.pad_token = tokenizer.eos_token
 
     training_args = TrainingArguments(
-        output_dir="./distillation_on_policy",
+        output_dir=os.environ.get("RESULTS_DIR", "./distillation_on_policy"),
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
         learning_rate=5e-5,
@@ -209,7 +219,7 @@ def train_on_policy_distillation(config: DistillationConfig, train_dataset: Data
     )
 
     print("Starting on-policy distillation (KL minimization)...")
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
     trainer.save_model("./distillation_on_policy_final")
     return trainer
 

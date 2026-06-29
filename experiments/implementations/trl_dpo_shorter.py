@@ -127,14 +127,14 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     # Load reference model (frozen)
     ref_model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     # Create preference dataset
@@ -153,7 +153,7 @@ def main():
 
     # DPO Configuration
     dpo_config = DPOConfig(
-        output_dir="./dpo_shorter_output",
+        output_dir=os.environ.get("RESULTS_DIR", "./dpo_shorter_output"),
         beta=0.1,
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
@@ -178,7 +178,7 @@ def main():
     )
 
     print("Starting DPO training for shorter responses...")
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
     trainer.save_model("./dpo_shorter_final")
     print("Training complete!")
 

@@ -102,7 +102,7 @@ def plot_learning_curves():
     fig.savefig(OUT / 'learning_curves.pdf')
     fig.savefig(OUT / 'learning_curves.png')
     plt.close()
-    print("learning_curves")
+    print("✓ learning_curves")
 
 
 # ============================================================================
@@ -139,14 +139,14 @@ def plot_comparison_bars():
                 f'{mean:.3f}', ha='center', va='bottom', fontsize=9, fontweight='bold')
 
     ax.set_ylabel('Final Accuracy')
-    ax.set_title('Cross-Library Comparison: Arithmetic Task (5 seeds)')
+    ax.set_title('Cross-Library Comparison: Arithmetic Task (10 seeds)')
     ax.set_ylim(0, 1.15)
     ax.grid(True, alpha=0.3, axis='y')
 
     fig.savefig(OUT / 'comparison_bars.pdf')
     fig.savefig(OUT / 'comparison_bars.png')
     plt.close()
-    print("comparison_bars")
+    print("✓ comparison_bars")
 
 
 # ============================================================================
@@ -181,7 +181,7 @@ def plot_performance_profiles():
     fig.savefig(OUT / 'performance_profiles.pdf')
     fig.savefig(OUT / 'performance_profiles.png')
     plt.close()
-    print("performance_profiles")
+    print("✓ performance_profiles")
 
 
 # ============================================================================
@@ -232,7 +232,7 @@ def plot_sensitivity_heatmap():
     fig.savefig(OUT / 'sensitivity_heatmap.pdf')
     fig.savefig(OUT / 'sensitivity_heatmap.png')
     plt.close()
-    print("sensitivity_heatmap")
+    print("✓ sensitivity_heatmap")
 
 
 # ============================================================================
@@ -271,7 +271,7 @@ def plot_scaling():
     fig.savefig(OUT / 'scaling_plot.pdf')
     fig.savefig(OUT / 'scaling_plot.png')
     plt.close()
-    print("scaling_plot")
+    print("✓ scaling_plot")
 
 
 # Run all

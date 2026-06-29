@@ -46,15 +46,8 @@ grpo-results/
 
 # Secrets
 .env
-.env.*
 .secrets/
 *.key
-*.pem
-*.p12
-*.p8
-*.token
-*.secret
-.tinker_api_key
 
 # Logs
 *.log
@@ -78,48 +71,30 @@ slack.har
 # Task outcomes (may contain sensitive data)
 tasks/outcome/
 
-# LaTeX build artifacts (global)
+# LaTeX build artifacts
 *.aux
 *.bbl
 *.blg
-*.out
-*.toc
-*.fls
 *.fdb_latexmk
-*.synctex.gz
+*.fls
+*.idx
+*.ilg
+*.ind
 *.lof
 *.lot
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
 
-# Browser/tooling scratch + local databases + caches
-.playwright-mcp/
-*.sqlite3
-*.sqlite3-shm
-*.sqlite3-wal
-.pytest_cache/
+# Editor backups
+*.bak
 
-# Archives (too large for git)
-*.zip
-*.tar.gz
-reports/final/capstone_final_report_submission/
-artifacts/local_copies/
-.ai_scientist_v2_runs/
+# Repomix bundles
+repomix-output.xml
 
 wandb/
 .modal/
 node_modules/
-wandb/
-University_Defense_Submission.zip
-.xhawk/
-.claude/settings.local.json
-.codex/hooks.json
-.gemini/settings.json
-.cursor/hooks.json
-.opencode/plugins/xh-hooks.js
-
-# mail-automation (recipient emails + gmail token path) — local only, never tracked
-paper/send_eai_gmail.py
-paper/send_eai_email.applescript
-paper/send_eai_mail_app.applescript
-paper/reauth_gmail.py
-zvf-program/send_attachment.scpt
-zvf-program/send_transcript.scpt

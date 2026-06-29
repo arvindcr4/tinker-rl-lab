@@ -350,6 +350,12 @@ def run_full_analysis(
 ) -> Dict:
     """
     Run all statistical tests for one experiment.
+    
+    TODO (Adversarial Review Limitations):
+    1. Single-Seed Extrapolations: Relying on N=1 runs for RL training dynamics is a major 
+       statistical vulnerability. Enforce or warn to use `multi_seed_summary` for rigorous claims.
+    2. Early-Training Snapshot Problem: 30-50 steps are entirely insufficient to observe 
+       meaningful RL convergence, catastrophic forgetting, or true policy collapse.
 
     Parameters
     ----------
@@ -381,6 +387,10 @@ def run_full_analysis(
     results["final_ci"] = (lo, mu, hi)
 
     # -- Two-proportion z-test: step 0 vs step 49 --
+    # TODO (Adversarial Review Limitations): 
+    # This test compares the first and last *training* batches. The review notes that this 
+    # successfully demonstrates training distribution overfitting, but fails to rigorously prove 
+    # generalized reasoning uplift. Significance tests should be performed on held-out test sets.
     z, p = two_prop_ztest(rewards[0], rewards[-1], n_per_step, n_per_step)
     results["ztest_step0_vs_final"] = {"z": z, "p": p,
                                         "significant": p < 0.05}

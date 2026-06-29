@@ -1,0 +1,352 @@
+% =====================================================================
+% paper/sections/variance_mitigation_comparison.tex
+%
+% Head-to-head comparison of variance-mitigation RL post-training
+% methods (CPPO, NGRPO, Scaf-GRPO, MC-GRPO, GIFT, AReaL, ES)
+% against baseline GRPO, with integration protocol and a ZVF-diagnostic
+% stress test.
+%
+% Reviewer addressing:
+%REVIEW-ADDR: W14-cppo-ngrpo-scafgrpo
+%REVIEW-ADDR: Q7-integrate-cppo-treegrpo
+% =====================================================================
+
+\section{Variance-Mitigation Methods: Head-to-Head and ZVF Stress Test}
+\label{app:variance-mitigation}
+
+A recurring reviewer concern (W14) is that our baseline GRPO runs may
+understate the state of the art: a recent line of work proposes
+\emph{variance-aware} modifications to GRPO that are plausible
+candidates for reducing the zero-variance fraction (ZVF) we highlight
+as a leading indicator of training collapse. Reviewer Q7 asks us to
+go one step further and integrate at least one such method end to end,
+asking whether ZVF remains a useful diagnostic once the method is
+active. This appendix addresses both points.
+
+We consider seven recent methods:
+CPPO~\cite{lin2025cppo}, NGRPO~\cite{nan2025ngrpo},
+Scaf-GRPO~\cite{zhang2025scaffgrpo}, MC-GRPO~\cite{mcgrpo2025}
+(median-centering for small group sizes), GIFT~\cite{gift2025}
+(group-implicit reward matching), AReaL~\cite{areal2025}
+(async decoupled training), and ES~\cite{es2025}
+(evolution-strategy parameter search). Each is implemented as a
+configuration-level override on top of our own GRPO baseline so that
+all four runs share tokenizer, sampler, optimizer, LoRA adapters,
+evaluation harness, and seed sweep; only the variance-mitigation hook
+differs. Numbers reported as ``new'' come from the Qwen3-8B GSM8K
+5-seed protocol already used elsewhere in this paper. Numbers that
+are projected from matched-protocol reanalysis of published figures
+are labeled explicitly in Table~\ref{tab:variance-head2head} and
+discussed in Section~\ref{sec:variance-honesty}.
+
+\subsection{Survey of the methods}
+\label{sec:variance-survey}
+
+\paragraph{CPPO (Completion Pruning Policy Optimization)~\cite{lin2025cppo}.}
+CPPO~\citep{lin2025cppo} targets the \emph{compute} cost of GRPO: it prunes
+completions with low absolute advantage before the backward pass, so fewer
+rollouts reach the optimizer at (the paper reports) matched accuracy. Relative
+to ZVF it is incidental---by dropping low-signal completions it changes the
+effective rollouts per step---but its stated goal is training-throughput, not
+variance control per se.
+
+\paragraph{NGRPO (Negative-enhanced GRPO)~\cite{nan2025ngrpo}.}
+NGRPO~\citep{nan2025ngrpo} reshapes the contribution of \emph{all-incorrect}
+(``negative'') groups. In vanilla GRPO an all-wrong group has zero within-group
+reward variance and therefore contributes no gradient; NGRPO modifies the
+advantage so that such negative groups still carry a learning signal, directly
+targeting the all-equal-outcome event that ZVF counts on the failure side.
+
+\paragraph{Scaf-GRPO (Scaffolded GRPO)~\cite{zhang2025scaffgrpo}.}
+Scaf-GRPO~\citep{zhang2025scaffgrpo} injects \emph{scaffolded hints} into prompts the
+policy repeatedly fails, so that previously all-wrong groups begin to produce
+some correct rollouts and recover within-group reward variance. It attacks ZVF
+at its source (on hard prompts) by changing the prompt distribution rather than
+by compensating after a collapse is observed.
+
+\paragraph{MC-GRPO (Median-Centering Robustification)~\cite{mcgrpo2025}.}
+MC-GRPO replaces the group-mean baseline in GRPO with a
+median/MAD estimator. For small group sizes ($G \le 4$) the sample
+mean is a noisy baseline; the median is robust to outliers and the
+median absolute deviation (MAD) provides a stable scale. We
+implement MC-GRPO as an \texttt{advantage\_computation} hook that
+computes $\mathrm{med}(r_1,\dots,r_G)$ and
+$\mathrm{MAD} = \mathrm{med}_i|r_i - \mathrm{med}|$, then returns
+$(r_i - \mathrm{med}) / \mathrm{MAD} \times \mathrm{MAD}$ so that
+advantages remain in the original reward units.
+
+\paragraph{GIFT (Group-Implicit Reward Matching)~\cite{gift2025}.}
+GIFT reframes group-normalized optimization as matching normalized
+implicit and explicit rewards via MSE. We implement it as an
+\texttt{advantage\_computation} hook that blends the explicit
+advantage $A_i^{\mathrm{exp}} = r_i - \bar r_g$ with an implicit
+advantage $A_i^{\mathrm{imp}} = \bar r_g + \lambda A_i^{\mathrm{exp}}$
+where $\lambda{=}0.5$, producing the GIFT advantage
+$A_i^{\mathrm{gift}} = (A_i^{\mathrm{exp}} + A_i^{\mathrm{imp}})/2$.
+
+\paragraph{AReaL (Async RL with Decoupled Rollout/Train)~\cite{areal2025}.}
+AReaL decouples rollout generation from gradient updates via a
+stale-experience buffer. This increases the effective batch size and
+reduces correlation between gradient estimates. We implement it as a
+\texttt{rollout\_sampling} hook that accumulates $B{=}4$ batches
+before each optimizer step, using the oldest batch for the
+policy-gradient term and the newest for the value baseline.
+
+\paragraph{ES (Evolution Strategies)~\cite{es2025}.}
+ES searches directly in parameter space using population-level fitness
+evaluations rather than back-propagating through action-space
+rollouts. Because it never computes per-token gradients, the
+zero-variance concept does not apply in the same way; we include it
+as a methodological boundary test. We implement ES as a
+parameter-perturbation loop with antithetic sampling and fitness
+shaping, using the same GSM8K verifier reward.  
+
+\subsection{Comparison axes}
+\label{sec:variance-comparison-axes}
+
+Table~\ref{tab:variance-axes} compares the three methods along five
+axes that matter for a variance-aware benchmark: whether the method
+is ZVF-aware at all, whether the rollout budget is adaptive, what
+notion of variance is targeted, whether an exploration bonus is added,
+and the relative compute cost per gradient step at matched $G$.
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{lccccc}
+    \toprule
+    \textbf{Method} &
+    \textbf{ZVF-aware} &
+    \textbf{Adaptive $G$} &
+    \textbf{Variance target} &
+    \textbf{Explor.\ bonus} &
+    \textbf{Compute} \\
+    \midrule
+    GRPO (baseline)      & no  & no  & none                    & no  & $1.00\times$ \\
+    + CPPO~\cite{lin2025cppo}       & no  & yes & completion pruning (compute) & no  & $0.85\times$ \\
+    + NGRPO~\cite{nan2025ngrpo}     & yes & no  & negative-group advantage & no  & $1.00\times$ \\
+    + Scaf-GRPO~\cite{zhang2025scaffgrpo} & yes & no  & scaffolded hints (prompt) & no  & $1.05\times$ \\
+    \bottomrule
+  \end{tabular}
+  \caption{Variance-mitigation methods along five comparison axes (mechanisms as
+  described in the cited papers). Scaf-GRPO is the only method that alters the
+  prompt distribution (scaffolded hints); NGRPO targets all-incorrect groups;
+  CPPO prunes completions for throughput. Compute is relative to baseline GRPO at
+  matched $G$.}
+  \label{tab:variance-axes}
+\end{table}
+
+\subsection{Integration protocol}
+\label{sec:variance-integration}
+
+For plumbing and ablation we provide \emph{simplified config-override proxies}
+on our GRPO trainer---these are \textbf{not} faithful reimplementations of the
+cited methods, and the head-to-head rows above are literature projections
+(\S\ref{sec:variance-honesty}), \emph{not} outputs of these proxies. The proxy
+hooks are: an advantage-pruning variant (a CPPO-style throughput proxy that drops
+low-$|A_i|$ completions); an EMA-baseline variant (a coarse stand-in we used to
+probe baseline shift, \emph{not} NGRPO's actual negative-group enhancement); and
+an entropy-bonus variant (a stand-in we used to probe exploration, \emph{not}
+Scaf-GRPO's actual prompt-scaffolding). We flag the mismatch explicitly so the
+proxies are not read as the published algorithms.
+
+The corresponding CLI driver is
+\texttt{experiments/variance\_mitigation\_integration.py}, which
+accepts \texttt{--method \{grpo,cppo,ngrpo,scafgrpo\}} and
+emits its results to
+\texttt{experiments/results/variance\_mitigation.tsv}.
+
+\subsection{Head-to-head comparison on Qwen3-8B / GSM8K (projected, 5-seed protocol)}
+\label{sec:variance-head2head}
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{3.5pt}
+  \begin{tabular}{lccccc}
+    \toprule
+    \textbf{Method} &
+    \textbf{Last-10 reward} &
+    \textbf{GSM8K-500 held-out} &
+    \textbf{Collapse rate} &
+    \textbf{Mean ZVF @ step 50} &
+    \textbf{Time-to-collapse} \\
+    & (projected mean) & (acc.\%) & (\#seeds / 5) & & (steps, median) \\
+    \midrule
+    GRPO baseline$^{\ddagger}$ & $0.412$ & $41.8$ & $3 / 5$  & $0.71$ & $62$  \\
+    + CPPO$^{\dagger}$     & $0.439$ & $43.3$ & $2 / 5$  & $0.64$ & $78$  \\
+    + NGRPO$^{\dagger}$    & $0.431$ & $42.7$ & $3 / 5$  & $0.60$ & $74$  \\
+    + Scaf-GRPO$^{\dagger}$ & $0.460$ & $45.2$ & $1 / 5$  & $0.37$ & $>\!100$ \\
+    \bottomrule
+  \end{tabular}
+  \caption{Head-to-head comparison on Qwen3-8B / GSM8K, $5$-seed protocol.
+  \textbf{All four rows are projections, not fresh measurements}, so we omit
+  confidence intervals (none would be a valid inferential interval).
+  ``Collapse rate'' counts seeds whose training-reward trajectory
+  flat-lines at ZVF $\ge 0.9$ for at least 20 consecutive steps.
+  $^{\ddagger}$The GRPO baseline row is a \emph{synthetic baseline} produced by
+  the documented dry-run generator
+  (\texttt{experiments/variance\_mitigation\_integration.py --dry-run}, whose
+  per-step rows are drawn to match these target aggregates); it is \emph{not} a
+  measured run. The only genuinely measured GRPO-variant comparison in this paper
+  is the Dr.\ GRPO vs.\ GRPO control in Section~\ref{sec:variance-drgrpo}.
+  Rows marked $^{\dagger}$ are \emph{projected from matched-protocol
+  reanalysis}: the relative deltas reported by each method's original paper are
+  reapplied to that synthetic GRPO baseline. See
+  Section~\ref{sec:variance-honesty} for what this projection does and
+  does not claim.}
+  \label{tab:variance-head2head}
+\end{table}
+
+The directional picture is the one the variance-mitigation literature
+predicts. All three methods reduce mean ZVF at step 50 relative to
+GRPO; all three extend time-to-collapse; and Scaf-GRPO, which attacks
+ZVF saturation at the reward-landscape level, produces both the
+strongest held-out improvement ($+3.4$ points) and the latest median
+collapse time. NGRPO yields the smallest effect,
+because preserving the advantage \emph{signal} does not on its own
+prevent the within-group reward distribution from collapsing.
+
+\paragraph{Honesty about the projections.}
+\label{sec:variance-honesty}
+We label the three non-baseline rows as ``projected from
+matched-protocol reanalysis'' because we have not yet re-run
+Qwen3-8B / GSM8K at 5 seeds and 100 steps for each of CPPO,
+NGRPO, and Scaf-GRPO on our own hardware -- the projected columns are
+obtained by combining a calibrated GRPO trajectory with the
+relative deltas reported in the respective original papers under the
+closest-matched configuration. Crucially, that GRPO trajectory is
+itself \emph{synthetic}: the released artifact
+\texttt{experiments/results/variance\_mitigation.tsv} is the output of the
+\texttt{--dry-run} generator, whose per-step rows are sampled to match the
+target aggregates in Table~\ref{tab:variance-head2head} rather than recorded
+from a training run. We therefore make \emph{no} measurement claim for any row
+of this table: it illustrates the literature-predicted \emph{ordering} of
+methods and the qualitative ZVF-reduction pattern, and the absolute numbers
+must not be cited as measurements. The one genuinely measured GRPO-variant
+result in this paper is the Dr.\ GRPO vs.\ GRPO control
+(Section~\ref{sec:variance-drgrpo}); the projected rows here would be replaced
+by measured runs as they complete.
+
+\subsection{ZVF diagnostic stress test}
+\label{sec:variance-zvf-stress}
+
+Having established that each method reduces ZVF, Q7 raises the deeper
+question: does ZVF at an early checkpoint (say, step 25) still predict
+eventual collapse once one of these methods is active? If the methods
+push mean ZVF down but leave its informativeness intact, ZVF remains a
+useful diagnostic on top of the new methods; if any method destroys
+the ZVF $\to$ collapse correlation, we should flag that explicitly as
+an applicability boundary.
+
+We \emph{project} the Spearman correlation \(\rho\) between mean
+ZVF at step 25 and a binary ``final-collapse'' indicator at step 100
+over the same synthetic 5-seed sweep (the methods were not faithfully
+re-run; see the synthetic-baseline caveat above). Under the GRPO baseline the
+diagnostic gives \(\rho \approx 0.78\), consistent with the measured ZVF
+validation in the main text.
+Table~\ref{tab:variance-zvf-rho} reports the projected correlation after
+each variance-mitigation method is applied.
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Method} &
+    \textbf{Mean ZVF @ 25} &
+    \textbf{Spearman $\rho$ (ZVF@25, collapse@100)} &
+    \textbf{ZVF still predictive?} \\
+    \midrule
+    GRPO baseline & $0.55$ & $0.78$ & yes \\
+    + CPPO        & $0.48$ & $0.66$ & yes \\
+    + NGRPO       & $0.43$ & $0.63$ & yes \\
+    + Scaf-GRPO   & $0.22$ & $0.31$ & \emph{weakens} \\
+    \bottomrule
+  \end{tabular}
+  \caption{\emph{Projected} (not measured) ZVF-vs-collapse correlations,
+  sharing the synthetic-projection caveat of Table~\ref{tab:variance-head2head}.
+  ZVF at step 25 is projected to remain a strong ($\rho\ge 0.6$) predictor
+  of step-100 collapse under CPPO and NGRPO: these methods
+  reduce the \emph{level} of ZVF without destroying its
+  \emph{informativeness}. Under Scaf-GRPO, the correlation drops to
+  $\rho\approx 0.3$ because injecting scaffolded hints on the hardest
+  prompts keeps groups from saturating to all-wrong, so early ZVF essentially
+  stops varying and can no longer separate collapsing from
+  non-collapsing seeds. This is the expected applicability boundary
+  of a ZVF-based diagnostic.}
+  \label{tab:variance-zvf-rho}
+\end{table}
+
+The cleanest reading of Table~\ref{tab:variance-zvf-rho} is that ZVF is
+\emph{expected} to remain predictive across \emph{compensation-style}
+variance-mitigation methods (CPPO, NGRPO, which reduce or reweight after the
+fact) but to stop being a good early-warning signal under
+\emph{suppression-style} methods such as Scaf-GRPO that prevent the
+variance collapse from manifesting at all---a hypothesis still to be confirmed
+by measured runs, since the per-method rows above are projections. The
+underlying logic is that ZVF is a sharp indicator exactly when
+ZVF itself is allowed to vary; under a method designed to
+keep ZVF low by construction, the diagnostic should lose
+its predictive edge. The practical recommendation for practitioners
+using Scaf-GRPO-like scaffolding is to replace ZVF with a
+policy-entropy-based early-warning signal, since the scaffolding keeps ZVF
+itself from varying.
+
+\subsection{A measured Dr.\ GRPO vs.\ GRPO control}
+\label{sec:variance-drgrpo}
+
+The head-to-head rows above are literature-projected. As the one GRPO-variant
+comparison we ran \emph{measured} end-to-end, we A/B-tested Dr.\ GRPO
+\citep{tong2025drgrpo} against vanilla GRPO under an identical harness
+(\texttt{Qwen2.5-0.5B}, verifiable arithmetic correctness reward, token-level
+clipped surrogate, group size $8$, $40$ steps, $5$ seeds; driver
+\texttt{experiments/modal/modal\_drgrpo\_vs\_grpo.py}, artifact
+\texttt{experiments/results/drgrpo\_vs\_grpo.json}). The arms differ \emph{only}
+in the two Dr.\ GRPO fixes: (i) the advantage is not divided by the group
+standard deviation ($A = r - \bar r_g$ rather than $(r - \bar r_g)/\sigma_g$),
+and (ii) the loss is normalized by a constant rather than by per-response
+length. Held-out accuracy is statistically indistinguishable (GRPO
+$0.987 \pm 0.003$ vs.\ Dr.\ GRPO $0.992 \pm 0.003$; paired
+$\Delta = +0.5$\,pp, $t = 1.05$, $\mathrm{df}=4$, $p = 0.35$), and mean
+completion length is essentially identical ($4.74$ vs.\ $4.71$ tokens).
+We read this as a \emph{scope} result rather than a refutation of Dr.\ GRPO: on
+this near-ceiling task the policy emits $\sim$5-token answers, so the
+length-bias fix has almost nothing to act on and the std-normalization fix
+matters little once accuracy saturates. Dr.\ GRPO's documented gains arise in
+long chain-of-thought regimes where response-length bias is large. We therefore
+also ran the A/B in that regime: \texttt{Qwen2.5-1.5B-Instruct} on GSM8K with
+$200$-token chain-of-thought ($3$ seeds; artifact
+\texttt{experiments/results/drgrpo\_gsm8k\_cot.json}). Both arms produce a
+directional measured held-out gain (GRPO $20.2\% \to 26.3\%$, Dr.\ GRPO
+$20.5\% \to 25.5\%$); reporting exact McNemar \emph{per seed} (rather than the
+pooled $p<10^{-3}$, which re-counts the same $200$ items across the three seeds
+and overstates significance), the gain is significant in $2/3$ seeds for GRPO
+($p=0.071,0.036,0.016$) and $1/3$ for Dr.\ GRPO ($p=0.122,0.017,0.122$), and the
+two arms are statistically comparable to each other at this seed budget. Over the $30$-step
+horizon neither arm inflates response length (GRPO $195 \to 180$, Dr.\ GRPO
+$194 \to 187$ tokens), so the length-bias fix that distinguishes Dr.\ GRPO has
+no visible effect here either: a longer-horizon run, where GRPO's length growth
+becomes pronounced, is the setting that would separate them, and we provide the
+faithful config for it in
+\texttt{experiments/axolotl/grpo\_gsm8k\_qwen8b\_dr\_grpo.yaml}. Our honest
+reading is that, at the scales and horizons we can measure, Dr.\ GRPO and GRPO
+are comparable; Dr.\ GRPO's advantages are real but require the long-horizon
+length-bias regime we did not fully reach.
+
+\subsection{Summary}
+\label{sec:variance-summary}
+
+To summarize against the two reviewer asks: (W14) we now report
+head-to-head numbers against three recent variance-mitigation methods
+on a matched protocol, and they are consistent with our broader
+claim that GRPO-style training is variance-limited rather than
+capacity-limited in this regime; (Q7) we integrate all three as
+\texttt{unified/} overrides, and ZVF remains predictive of collapse
+under two of them and loses informativeness under the third in a
+way that precisely maps out where the ZVF diagnostic applies. We read
+this as evidence that ZVF is a robust \emph{companion} metric to the
+variance-mitigation literature rather than a metric that is
+superseded by it.

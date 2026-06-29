@@ -1,0 +1,155 @@
+%REVIEW-ADDR: W1-zvf-tautology
+%REVIEW-ADDR: Q1-zvf-formalization
+\section{Formal Definition of the Zero-Variance Fraction, Non-Tautology, and Scope}
+\label{sec:appendix:zvf-formalization}
+
+\subsection{Formal Definition}
+
+Let a GRPO batch $B_t$ at optimizer step $t$ consist of $|B_t|$ prompt-groups,
+each group $g$ containing $K$ rollouts with scalar outcome rewards
+$r_{g,1}, \ldots, r_{g,K} \in \mathbb{R}$. We define the \emph{Zero-Variance
+Fraction} (ZVF) as
+\begin{equation}
+\label{eq:zvf}
+\mathrm{ZVF}_t \;=\; \frac{1}{|B_t|} \sum_{g \in B_t}
+  \mathbb{1}\!\left[\;\widehat{\mathrm{Var}}(r_{g,1}, \ldots, r_{g,K}) \le \varepsilon\;\right],
+\end{equation}
+where $\widehat{\mathrm{Var}}$ is the unbiased sample variance and
+$\varepsilon$ is a small numerical tolerance
+(we use $\varepsilon = 10^{-6}$ for rewards normalized to $[0,1]$).
+Intuitively, $\mathrm{ZVF}_t$ is the fraction of groups at step $t$ whose
+rollouts all collapsed to the same outcome; those groups contribute zero
+group-relative advantage and thus zero gradient signal to the GRPO update.
+
+\subsection{Why ZVF Is Not a Tautological Re-expression of Mean Reward}
+
+A reviewer may reasonably suspect that under binary outcome rewards
+$r \in \{0,1\}$ and group-relative advantages, $\mathrm{ZVF}_t$ is a direct
+function of the batch mean reward $\bar{r}_t$: if every group succeeds
+(or fails) uniformly, $\mathrm{ZVF}_t = 1$. This is true at the extremes
+$\bar{r}_t \in \{0,1\}$ but does \emph{not} hold at intermediate values.
+For $K$ i.i.d.~Bernoulli rollouts with prompt-specific success probability
+$p_g$, the expected ZVF under a null independence model is
+\begin{equation}
+\mathbb{E}[\mathrm{ZVF}_t] \;=\; \mathbb{E}_{p_g}\!\left[\,p_g^{K} + (1-p_g)^{K}\,\right].
+\end{equation}
+The right-hand side depends on the full prompt-difficulty distribution
+$\{p_g\}$, not only on its first moment. Two populations can therefore
+share the same mean reward $\bar r = 0.5$ yet have very different ZVF:
+a bimodal population with $p_g \in \{0,1\}$ yields $\mathrm{ZVF}=1$,
+while a uniform-hard population with all $p_g = 0.5$ and $K=8$ yields
+$\mathrm{ZVF} \approx 2 \cdot (0.5)^8 \approx 0.008$. The substantive
+claim is thus not ``high mean reward implies high ZVF,'' but rather that
+ZVF is sensitive to \emph{how} success mass is distributed across prompts.
+
+\subsection{What the Released Artifact Establishes}
+
+The main Qwen3-8B/frontier GSM8K corpus bundled with this paper contains
+aggregate reward trajectories, held-out checkpoint summaries, and the
+cross-framework parser specification in Appendix~\ref{sec:appendix:zvf-pipeline},
+but \emph{not} the per-group step-level rollout logs for those frontier runs.
+For that corpus we therefore make no causal partial-correlation claim. To test
+the partial-correlation question directly we instead ran a fully instrumented,
+ungated small-scale validation (next subsection), which \emph{does} log
+per-step ZVF together with batch-mean reward, policy entropy, and advantage
+variance, and we report its measured \emph{raw} correlation there---while
+explaining (in that subsection) why a partial correlation ``controlling for
+advantage variance'' would be circular under binary rewards and is deliberately
+not reported.
+
+The narrower empirical claim made in the revised paper is the one directly
+supported by the released evidence: in outcome-reward GRPO, high ZVF
+coincides with the disappearance of within-group contrast, and those are
+exactly the runs where reward traces plateau or regress because the
+group-relative advantage has collapsed to zero. This is the operational
+meaning of ZVF in the present benchmark.
+
+\subsection{Measured Validation of the ZVF Formalism (Small-Scale and Frontier)}
+\label{sec:appendix:zvf-measured}
+
+To test the formalism end-to-end with fully logged rollouts we ran an
+instrumented GRPO sweep on the ungated \texttt{Qwen2.5-0.5B} with a verifiable
+binary correctness reward on two-operand addition (so within-group reward
+variance is real), at group sizes $G \in \{2,4,8,16\}$ across three seeds, $40$
+optimizer steps each ($12$ runs, $480$ logged steps; driver
+\texttt{experiments/modal/modal\_groupsize\_zvf\_sweep.py}, artifacts
+\texttt{experiments/results/groupsize\_zvf\_sweep.\{json,tsv\}} and
+\texttt{zvf\_partial\_correlations.tsv}). This is a deliberately small,
+ungated probe of the \emph{mechanism}, not a restatement of the
+Qwen3-8B/GSM8K results.
+
+\paragraph{The closed-form $\mathrm{ZVF}(p,G)=p^{G}+(1-p)^{G}$ tracks the data.}
+Across the $480$ logged steps, the per-step observed ZVF correlates
+$r=0.92$ with the Bernoulli-null prediction $p^{G}+(1-p)^{G}$ evaluated at the
+step's batch-mean reward $p$, and mean ZVF decreases monotonically in $G$
+($0.84, 0.76, 0.69, 0.63$ at $G=2,4,8,16$), as the closed form requires. The
+\emph{absolute} ZVF modestly exceeds the i.i.d.\ prediction once the comparison
+is done correctly: the right baseline is the per-step \emph{average} of the
+closed form, $\mathbb{E}[p^{G}+(1-p)^{G}]=0.60$ at $G{=}8$ (not the closed form
+evaluated at the pooled mean reward, $0.33$, which understates the Bernoulli
+prediction by Jensen convexity). Against the per-step-average baseline the excess
+is only $\approx 0.09$ ($0.69$ vs.\ $0.60$), so most of the apparent gap is the
+Jensen effect rather than correlated completions; we therefore do not read it as
+strong evidence that the independence null is a lower bound.
+
+\paragraph{The closed form captures the qualitative structure at frontier scale,
+with a circularity caveat.} We measured ZVF directly on the frontier model by
+sampling \texttt{Qwen3-8B} on a held-out GSM8K slice via the Tinker API
+($G{=}8$, temperature~$1.0$, $200$ problems $\times$ three seeds), with the
+per-seed ZVF logged to
+\texttt{experiments/results/tinker\_gsm8k\_zvf\_\{s42,s123,s456\}.json} and
+aggregated in \texttt{tinker\_gsm8k\_zvf\_summary.json} (the single-config Tinker
+eval helper is \texttt{experiments/tinker\_direct\_eval.py}, which writes its own
+\texttt{tinker\_direct\_eval.json}). Mean ZVF is $0.16$,
+concentrated on the saturated tails of the difficulty distribution ($12.7\%$
+all-correct, $3.2\%$ all-wrong, $84\%$ mixed)---the qualitative structure
+$\mathrm{ZVF}(p,G)$ predicts. We caution that a per-problem Pearson correlation
+between observed ZVF and $p^{G}+(1-p)^{G}$ is \emph{mechanically} inflated: the
+per-problem observed ZVF is just the binary all-agree indicator
+$\mathbf{1}[p \in \{0,1\}]$ and the closed form is a deterministic function of
+the same $p$, so the large $r \approx 0.93$ chiefly reflects their shared
+dependence on $p$'s extremity (the rank correlation is weaker,
+$\rho \approx 0.65$). The i.i.d.-Bernoulli null is moreover only a coarse level
+estimate---here it \emph{over}-predicts mean ZVF ($\approx 0.28$ vs.\ observed
+$0.16$), the opposite-sign residual to the low-temperature $0.5$B probe. We thus
+read this as a consistency check on the \emph{shape} of the diagnostic across
+scales, not a precise quantitative fit.
+
+\paragraph{ZVF vs.\ mean reward (W1): what we can and cannot claim.} On the
+logged per-step rows ZVF is strongly correlated with batch-mean reward
+($r=+0.74$): more all-correct groups means more zero-variance groups, as
+expected. We deliberately do \emph{not} report a partial correlation
+``controlling for advantage variance'': under binary outcome rewards the
+within-group advantage variance is a deterministic transform of ZVF (it is zero
+\emph{iff} the group is zero-variance), so partialling it out regresses ZVF on a
+function of itself---a circular control. Nor do we attach a step-level
+$p$-value: the $480$ rows are $12$ runs $\times 40$ \emph{autocorrelated}
+optimizer steps (lag-1 $\approx 0.9$), not independent observations. The
+defensible statement is the descriptive one in the main text: high ZVF coincides
+with the disappearance of within-group contrast, and across runs in this
+near-solved regime ZVF does not track final accuracy ($r\approx 0.09$,
+$n{=}12$)---the expected behaviour once the task is essentially solved.
+
+\subsection{Boundary Conditions and Scope}
+
+We state explicitly when ZVF is \emph{not} informative, partly in response
+to the tautology concern:
+\begin{itemize}[leftmargin=1.2em,itemsep=0pt]
+  \item \textbf{Dense or continuous rewards.} When rewards are continuous
+        (e.g.,~process-reward models or graded code-execution partial credit),
+        $\widehat{\mathrm{Var}}$ is almost surely nonzero and
+        $\mathrm{ZVF} \to 0$. ZVF degenerates and must be replaced by a
+        per-step-reward-variance diagnostic or the surrogates discussed in
+        Section~\ref{sec:extended-related-work}.
+  \item \textbf{$K=1$.} Group variance is undefined and ZVF is trivially $1$.
+  \item \textbf{SFT-saturated baselines.} When the policy already solves
+        the task ($\bar p_g \to 1$ for essentially every prompt),
+        $\mathrm{ZVF} \to 1$ and the diagnostic loses discriminative power;
+        in this regime RL no longer provides useful signal anyway.
+  \item \textbf{Non-outcome-reward RL.} For DPO- or regression-style
+        training there are no rollout groups and ZVF is ill-defined.
+\end{itemize}
+Within its intended scope -- outcome-reward GRPO on verifiable tasks with
+$K \ge 4$ and non-saturated reward support -- ZVF is a cheap, model-agnostic
+early-warning diagnostic. Outside that scope, the paper now recommends
+explicit surrogates instead of over-claiming portability.

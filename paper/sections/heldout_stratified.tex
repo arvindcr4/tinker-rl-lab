@@ -1,0 +1,86 @@
+%REVIEW-ADDR: W8-top10-selection-bias
+\section{Held-Out Checkpoint Selection: What Is Measured and What Is Not}
+\label{sec:heldout-stratified}
+
+Reviewer~W8 correctly notes that the GSM8K held-out table in the main paper
+is \emph{post-selection by construction}: it evaluates the ten checkpoints
+with the highest training \emph{last-10} reward, not a random sample of all
+training states. That protocol is useful for asking whether strong
+training-time checkpoints keep their relative ranking on a disjoint held-out
+slice, but it is \emph{not} an unbiased estimate of the performance a
+practitioner should expect from an arbitrary checkpoint sampled from the full
+trajectory distribution.
+
+\subsection{Revised protocol statement}
+
+The revised paper therefore makes the selection protocol explicit. Let
+$\mathcal{C}$ denote the full set of checkpoints produced by a campaign and
+$s(c)$ the training \emph{last-10} reward of checkpoint $c \in \mathcal{C}$.
+The main-table held-out audit uses only
+\[
+\mathcal{S}_{\text{top10}} = \operatorname{TopK}_{c \in \mathcal{C}}\bigl(s(c),\,10\bigr),
+\]
+then evaluates each element of $\mathcal{S}_{\text{top10}}$ greedily on a
+fixed $N=500$ slice of \texttt{openai/gsm8k[test]}. This is a
+\emph{best-checkpoint audit}. It answers the question
+``do the strongest training-time checkpoints remain strong off-policy?''
+but does \emph{not} answer the distinct question
+``what is the expected held-out performance of a random checkpoint?''
+
+\subsection{Measured vs.\ unmeasured protocols}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Protocol} & \textbf{Status in this artifact} & \textbf{Interpretation} \\
+\midrule
+P1: Top-10 by training \emph{last-10} & measured &
+best-checkpoint audit / ranking stability \\
+P2: Uniform random checkpoints & not measured &
+deployment-style expectation \\
+P3: Stratified by training-score quantile & not measured &
+selection-bias sensitivity \\
+\bottomrule
+\end{tabular}
+\caption{Only the post-hoc top-10 protocol (P1) is measured in the current
+artifact. Random (P2) and stratified (P3) checkpoint audits have no real
+held-out runs over the non-top-10 checkpoints; the released TSV reports them
+only as an explicitly-labelled \emph{surrogate} (every P2/P3 row carries
+\texttt{n\_measured=0}, imputed from a held-out$\sim$last-10 fit), and the paper
+makes no measured-generalization claim from them.}
+\label{tab:heldout-stratified}
+\end{table}
+
+\subsection{What the released artifact does support}
+
+The released file \texttt{experiments/results/heldout\_gsm8k.json} reports:
+\begin{itemize}[leftmargin=1.2em,itemsep=1pt]
+  \item 10 selected checkpoints in the top-10 pool,
+  \item 8 fully completed held-out evaluations,
+  \item 1 partial evaluation (Qwen3.5-397B-A17B, interrupted at 263/500),
+  \item 1 blocked evaluation (Llama-3.1-8B-Instruct tokenizer gating),
+  \item best completed held-out accuracy of $0.910$,
+  \item mean held-out accuracy of $0.898$ across the 8 fully completed rows.
+\end{itemize}
+These numbers support a narrow claim: among already-strong 30-step Tinker
+checkpoints, held-out GSM8K accuracy clusters tightly in the high-80s to
+low-90s. They do \emph{not} support a claim about random-checkpoint
+performance, nor do they justify interpreting $0.91$ as a deployment
+expectation.
+
+\subsection{Claim scope after the W8 revision}
+
+Accordingly, the main paper now treats Table~\ref{tab:heldout_gsm8k} as a
+\emph{ranking-stability} audit rather than as an unbiased generalization
+estimate. We make no claim from the synthetic random-checkpoint or
+stratified-checkpoint numbers. The released file
+\texttt{experiments/results/heldout\_stratified.tsv} does contain P2/P3 rows,
+but they are an explicitly-labelled \emph{surrogate} sensitivity analysis: every
+such row carries \texttt{n\_measured=0} and is imputed from an anchored monotone
+held-out$\sim$last-10 fit (\texttt{experiments/stratified\_heldout.py}, slope
+$0.98$, intercept $0.01$); none is a real held-out evaluation. Any broader statement about selection bias would
+require evaluating additional non-top-10 checkpoints on the same held-out
+slice; that experiment is straightforward but was not completed within the
+revision window.

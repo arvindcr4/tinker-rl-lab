@@ -1,0 +1,25 @@
+name: grpo-hyperparameter-sweep
+program: atropos/train_grpo_unsloth.py
+method: grid
+
+metric:
+  name: train/percent_correct
+  goal: maximize
+
+parameters:
+  learning_rate:
+    values: [1e-05, 3e-05, 0.0001]
+  lora_rank:
+    values: [8, 16, 32, 64]
+  batch_size:
+    values: [64, 128, 256]
+  group_size:
+    values: [8, 16, 32]
+
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - "--config"
+  - "atropos/configs/gsm8k_qwen_8b.yaml"
+  - ${args}

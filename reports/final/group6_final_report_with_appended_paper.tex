@@ -1,0 +1,74 @@
+\documentclass[11pt]{report}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{pdfpages}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  pdftitle={Group 6 Final Report with Appended Paper},
+  pdfauthor={Group 6}
+}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\newcommand{\groupSixPdfPath}{../../group6.pdf}
+\IfFileExists{group6.pdf}{%
+  \renewcommand{\groupSixPdfPath}{group6.pdf}%
+}
+
+\newcommand{\appendedPaperPdfPath}{../../paper/main.pdf}
+\IfFileExists{paper/main.pdf}{%
+  \renewcommand{\appendedPaperPdfPath}{paper/main.pdf}%
+}{}
+
+\title{Group 6 Final Report with Appended Paper}
+\author{Group 6}
+\date{April 20, 2026}
+
+\begin{document}
+
+\maketitle
+\clearpage
+\pagenumbering{roman}
+
+\chapter*{Assembly Note}
+\addcontentsline{toc}{chapter}{Assembly Note}
+This document is a repository-managed TeX wrapper built from the authoritative
+\texttt{group6.pdf} submission and the current paper in \texttt{paper/main.pdf}.
+The base report is preserved as-is to avoid a lossy reconstruction from the
+compiled PDF, and the paper is appended after it as a separate section of the
+same deliverable.
+
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+\IfFileExists{reports/final/group6_experiment_coverage_addendum.tex}{%
+  \input{reports/final/group6_experiment_coverage_addendum.tex}%
+}{%
+  \input{group6_experiment_coverage_addendum.tex}%
+}
+\clearpage
+
+\chapter*{Base Report}
+\addcontentsline{toc}{chapter}{Base Report: \texttt{group6.pdf}}
+{\hypersetup{pageanchor=false}
+\includepdf[pages=-,pagecommand={}]{\groupSixPdfPath}
+}
+
+\appendix
+
+\chapter*{Appended Paper}
+\addcontentsline{toc}{chapter}{Appended Paper: \texttt{paper/main.pdf}}
+{\hypersetup{pageanchor=false}
+\includepdf[pages=-,pagecommand={}]{\appendedPaperPdfPath}
+}
+
+\end{document}

@@ -38,6 +38,20 @@ def run_ppo_qwen35_4b_quantized():
     """PPO on Qwen3.5-4B with 4-bit quantization + gradient checkpointing."""
     import torch
     import wandb
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
     from datasets import load_dataset
     from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
@@ -79,7 +93,7 @@ def run_ppo_qwen35_4b_quantized():
 
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID, quantization_config=bnb_config,
-        device_map="auto", trust_remote_code=True,
+        device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True,
     )
     model = prepare_model_for_kbit_training(model)
     model.gradient_checkpointing_enable()
@@ -112,6 +126,7 @@ def run_ppo_qwen35_4b_quantized():
     for step in range(STEPS):
         batch = random.sample(examples, BATCH * GRAD_ACCUM)
         step_rewards = []
+        step_entropies = []
         total_loss = 0.0
 
         for accum_idx in range(GRAD_ACCUM):
@@ -142,6 +157,7 @@ def run_ppo_qwen35_4b_quantized():
                 log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
                 token_log_probs = log_probs.gather(2, target.unsqueeze(-1)).squeeze(-1)
                 mean_log_prob = token_log_probs.mean()
+                step_entropies.append(-mean_log_prob.item())
 
                 # REINFORCE loss (negative because we maximize reward)
                 baseline = 0.5
@@ -156,8 +172,9 @@ def run_ppo_qwen35_4b_quantized():
         optimizer.zero_grad()
 
         mean_reward = np.mean(step_rewards)
+        mean_entropy = float(np.mean(step_entropies))
         reward_trace.append(mean_reward)
-        wandb.log({"step": step, "mean_reward": mean_reward, "batch_size": BATCH * GRAD_ACCUM})
+        wandb.log({"step": step, "mean_reward": mean_reward, "train/policy_entropy": mean_entropy, "batch_size": BATCH * GRAD_ACCUM})
         print(f"Step {step}/{STEPS}: reward={mean_reward:.3f}")
 
     # Save results

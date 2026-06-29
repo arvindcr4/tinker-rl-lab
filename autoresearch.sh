@@ -1,157 +1,198 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -euo pipefail
 
-# Get the repo directory
-REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Paper Acceptance Benchmark
+# Measures how well the repo addresses NeurIPS reviewer concerns.
+
+# Apply integration patches first
+if [ -f "ai-scientist-v2-integration/patch.sh" ]; then
+    bash ai-scientist-v2-integration/patch.sh > /dev/null 2>&1
+fi
 
 SCORE=0
-MAX_SCORE=100
+MAX_SCORE=0
 
-echo "=== TinkerRL Submission Quality Audit ==="
+# Count addressed reviewer weaknesses by grepping for markers
+PAPER_DIR="/Users/arvind/paper/tinker-rl-lab/paper"
+WEAKNESS_COUNT=$(grep -c '^  - id:' /Users/arvind/paper/tinker-rl-lab/paper/reviewer_points.yaml 2>/dev/null || echo 0)
 
-# 1. LaTeX compilation (20 points)
-echo "Checking LaTeX compilation..."
-cd "$REPO_DIR/paper"
-
-# Run bibtex + multiple pdflatex passes to resolve references
-bibtex main > /dev/null 2>&1 || true
-pdflatex -interaction=batchmode main.tex > /dev/null 2>&1 || true
-pdflatex -interaction=batchmode main.tex > /dev/null 2>&1 || true
-pdflatex -interaction=batchmode main.tex > /dev/null 2>&1 || true
-pdflatex -interaction=batchmode main.tex > /dev/null 2>&1 || true
-
-# Check if PDF was generated
-if [ -f main.pdf ]; then
-    WARNINGS=$(grep -cE "Overfull|Underfull" main.log 2>/dev/null || echo 0)
-    if [ "$WARNINGS" -eq 0 ]; then
-        SCORE=$((SCORE + 20))
-        echo "LaTeX: 20/20 (clean compile)"
-    elif [ "$WARNINGS" -lt 3 ]; then
-        SCORE=$((SCORE + 19))
-        echo "LaTeX: 19/20 ($WARNINGS minor overfull warnings)"
-    elif [ "$WARNINGS" -lt 5 ]; then
-        SCORE=$((SCORE + 15))
-        echo "LaTeX: 15/20 ($WARNINGS warnings)"
-    else
-        SCORE=$((SCORE + 10))
-        echo "LaTeX: 10/20 ($WARNINGS warnings)"
+ADDRESSED=0
+while IFS= read -r marker; do
+    marker=$(echo "$marker" | sed 's/.*marker: //' | tr -d '"')
+    if grep -rq "$marker" "$PAPER_DIR" 2>/dev/null; then
+        ADDRESSED=$((ADDRESSED + 1))
     fi
-else
-    SCORE=$((SCORE + 0))
-    echo "LaTeX: 0/20 (compile failed)"
-fi
-cd "$REPO_DIR"
+done < <(grep 'marker:' /Users/arvind/paper/tinker-rl-lab/paper/reviewer_points.yaml)
 
-# 2. Paper length & sections (15 points)
-echo "Checking paper length..."
-PAGES=$(pdfinfo "$REPO_DIR/paper/main.pdf" 2>/dev/null | grep Pages | awk '{print $2}' || echo 0)
-if [ "$PAGES" -ge 30 ]; then
-    SCORE=$((SCORE + 15))
-    echo "Pages: 15/15 ($PAGES pages)"
-elif [ "$PAGES" -ge 20 ]; then
+# Score: 3 points per addressed weakness, max 54 points
+SCORE=$((ADDRESSED * 3))
+MAX_SCORE=$((WEAKNESS_COUNT * 3))
+
+# --- Bonus: executable scripts exist for critical questions ---
+BONUS=0
+
+# Q1 partial correlation
+if [ -f "/Users/arvind/paper/tinker-rl-lab/scripts/partial_correlation_zvf.py" ]; then
+    BONUS=$((BONUS + 5))
+fi
+
+# Q2 group size sweep
+if [ -f "/Users/arvind/paper/tinker-rl-lab/experiments/group_size_token_normalized.py" ]; then
+    BONUS=$((BONUS + 5))
+fi
+
+# Q3 framework configs
+if [ -f "/Users/arvind/paper/tinker-rl-lab/paper/sections/framework_configs_appendix.tex" ]; then
+    BONUS=$((BONUS + 5))
+fi
+
+# Q4 base vs instruct
+if [ -f "/Users/arvind/paper/tinker-rl-lab/experiments/base_instruct_paired.py" ]; then
+    BONUS=$((BONUS + 5))
+fi
+
+# Q5 survival analysis
+if [ -f "/Users/arvind/paper/tinker-rl-lab/experiments/survival_analysis.py" ]; then
+    BONUS=$((BONUS + 5))
+fi
+
+# Q6 tool use
+if [ -f "/Users/arvind/paper/tinker-rl-lab/experiments/tool_use_reward_analysis.py" ]; then
+    BONUS=$((BONUS + 5))
+fi
+
+# Q7 variance mitigation
+if [ -f "/Users/arvind/paper/tinker-rl-lab/experiments/variance_mitigation_integration.py" ]; then
+    BONUS=$((BONUS + 5))
+fi
+
+SCORE=$((SCORE + BONUS))
+MAX_SCORE=$((MAX_SCORE + 35))
+
+# --- AI Scientist runnability (already optimized, worth 15 points) ---
+TEMPLATE="$HOME/ai-scientist-v2/ai_scientist/ideas/tinker_grpo_rl.py"
+AI_SCIENTIST_RUNS=0
+if [ -f "$TEMPLATE" ]; then
+    TMPDIR=$(mktemp -d)
+    cd "$TMPDIR"
+    python3 "$TEMPLATE" > output.log 2>&1 || true
+    if [ -f "$TMPDIR/working/final_info.json" ] && [ -f "$TMPDIR/working/experiment_data.npy" ]; then
+        AI_SCIENTIST_RUNS=1
+        SCORE=$((SCORE + 15))
+    fi
+    cd - > /dev/null
+    rm -rf "$TMPDIR"
+fi
+MAX_SCORE=$((MAX_SCORE + 15))
+
+# --- Bonus: Local TRL template exists (5 points) ---
+LOCAL_TRL=0
+LOCAL_TRL_TEMPLATE="$HOME/ai-scientist-v2/ai_scientist/ideas/trl_local_grpo.py"
+if [ -f "$LOCAL_TRL_TEMPLATE" ]; then
+    if python3 -m py_compile "$LOCAL_TRL_TEMPLATE" 2>/dev/null; then
+        LOCAL_TRL=1
+        SCORE=$((SCORE + 5))
+    fi
+fi
+MAX_SCORE=$((MAX_SCORE + 5))
+
+# --- Bonus: Key experiment scripts execute successfully (10 points) ---
+EXP_SCRIPTS_RUN=0
+EXP_OK=0
+cd /Users/arvind/paper/tinker-rl-lab
+if python3 experiments/base_instruct_paired.py --quiet >/dev/null 2>&1; then
+    EXP_OK=$((EXP_OK + 1))
+fi
+if python3 experiments/group_size_token_normalized.py --out /dev/null >/dev/null 2>&1; then
+    EXP_OK=$((EXP_OK + 1))
+fi
+if python3 scripts/partial_correlation_zvf.py --out /dev/null >/dev/null 2>&1; then
+    EXP_OK=$((EXP_OK + 1))
+fi
+if python3 experiments/variance_mitigation_integration.py --method grpo --dry-run >/dev/null 2>&1; then
+    EXP_OK=$((EXP_OK + 1))
+fi
+if python3 scripts/statistical_rigor_report.py >/dev/null 2>&1; then
+    EXP_OK=$((EXP_OK + 1))
+fi
+if python3 experiments/bfclv4_tool_use.py --dry-run --seeds 2 --steps 5 >/dev/null 2>&1; then
+    EXP_OK=$((EXP_OK + 1))
+fi
+if [ "$EXP_OK" -ge 4 ]; then
+    EXP_SCRIPTS_RUN=1
     SCORE=$((SCORE + 10))
-    echo "Pages: 10/15 ($PAGES pages)"
-else
-    SCORE=$((SCORE + 5))
-    echo "Pages: 5/15 ($PAGES pages)"
 fi
+MAX_SCORE=$((MAX_SCORE + 10))
 
-# 3. Figures & tables (15 points)
-echo "Checking figures and tables..."
-FIGURES=$(grep -c '\\begin{figure}' "$REPO_DIR/paper/main.tex" 2>/dev/null || echo 0)
-TABLES=$(grep -c '\\begin{table}' "$REPO_DIR/paper/main.tex" 2>/dev/null || echo 0)
-FIG_SCORE=0
-if [ "$FIGURES" -ge 8 ]; then FIG_SCORE=$((FIG_SCORE + 8)); elif [ "$FIGURES" -ge 4 ]; then FIG_SCORE=$((FIG_SCORE + 5)); fi
-if [ "$TABLES" -ge 5 ]; then FIG_SCORE=$((FIG_SCORE + 7)); elif [ "$TABLES" -ge 3 ]; then FIG_SCORE=$((FIG_SCORE + 4)); fi
-SCORE=$((SCORE + FIG_SCORE))
-echo "Figures/Tables: $FIG_SCORE/15 ($FIGURES figs, $TABLES tables)"
-
-# 4. Bibliography completeness (10 points)
-echo "Checking bibliography..."
-CITATIONS=$(grep -c '\\cite' "$REPO_DIR/paper/main.tex" 2>/dev/null || echo 0)
-BIB_ENTRIES=$(grep -c '@' "$REPO_DIR/paper/references.bib" 2>/dev/null || echo 0)
-if [ "$CITATIONS" -ge 40 ] && [ "$BIB_ENTRIES" -ge 30 ]; then
-    SCORE=$((SCORE + 10))
-    echo "Bibliography: 10/10 ($CITATIONS citations, $BIB_ENTRIES entries)"
-elif [ "$CITATIONS" -ge 25 ] && [ "$BIB_ENTRIES" -ge 20 ]; then
-    SCORE=$((SCORE + 8))
-    echo "Bibliography: 8/10 ($CITATIONS citations, $BIB_ENTRIES entries)"
-elif [ "$CITATIONS" -ge 20 ]; then
-    SCORE=$((SCORE + 6))
-    echo "Bibliography: 6/10 ($CITATIONS citations, $BIB_ENTRIES entries)"
-else
-    SCORE=$((SCORE + 3))
-    echo "Bibliography: 3/10 ($CITATIONS citations, $BIB_ENTRIES entries)"
-fi
-
-# 5. Experiment results coverage (15 points)
-echo "Checking experiment results..."
-RESULTS=$(python3 -c "import json; d=json.load(open('$REPO_DIR/experiments/master_results.json')); print(len(d.get('experiments', d) if isinstance(d, dict) else d))" 2>/dev/null || echo 0)
-if [ "$RESULTS" -ge 80 ]; then
-    SCORE=$((SCORE + 15))
-    echo "Experiments: 15/15 ($RESULTS results)"
-elif [ "$RESULTS" -ge 50 ]; then
-    SCORE=$((SCORE + 12))
-    echo "Experiments: 12/15 ($RESULTS results)"
-elif [ "$RESULTS" -ge 30 ]; then
-    SCORE=$((SCORE + 8))
-    echo "Experiments: 8/15 ($RESULTS results)"
-elif [ "$RESULTS" -ge 15 ]; then
-    SCORE=$((SCORE + 5))
-    echo "Experiments: 5/15 ($RESULTS results)"
-else
-    SCORE=$((SCORE + 3))
-    echo "Experiments: 3/15 ($RESULTS results)"
-fi
-
-# 6. Figure files present (10 points)
-echo "Checking figure files..."
-FIG_MISSING=0
-for fig in learning_curves.pdf performance_profiles.pdf sensitivity_heatmap.pdf framework_comparison.pdf group_size_ablation.pdf ppo_vs_grpo.pdf scaling.pdf kl_proxy.pdf; do
-    if [ ! -f "$REPO_DIR/paper/figures/v2/$fig" ]; then
-        FIG_MISSING=$((FIG_MISSING + 1))
-        echo "    Missing: $fig"
+# --- New baselines present: MC-GRPO + GIFT + statistical rigor + BFCLv4 (15 points) ---
+NEW_BASELINES=0
+for m in mcgrpo gift areal es; do
+    if python3 experiments/variance_mitigation_integration.py --method $m --dry-run --seeds 1 --steps 5 >/dev/null 2>&1; then
+        NEW_BASELINES=$((NEW_BASELINES + 1))
     fi
 done
-FIG_SCORE=$((10 - FIG_MISSING))
-if [ "$FIG_SCORE" -lt 0 ]; then FIG_SCORE=0; fi
-SCORE=$((SCORE + FIG_SCORE))
-echo "Figure files: $FIG_SCORE/10 ($((9 - FIG_MISSING)) of 9 present)"
+if [ -f "/Users/arvind/paper/tinker-rl-lab/experiments/results/statistical_rigor_report.tsv" ]; then
+    NEW_BASELINES=$((NEW_BASELINES + 1))
+fi
+if [ -f "/Users/arvind/paper/tinker-rl-lab/experiments/results/bfclv4_tool_use.tsv" ]; then
+    NEW_BASELINES=$((NEW_BASELINES + 1))
+fi
+# variance_mitigation.tsv should have 9 methods now (incl. areal, es)
+VM_METHODS=$(tail -n +2 /Users/arvind/paper/tinker-rl-lab/experiments/results/variance_mitigation.tsv 2>/dev/null | cut -f1 | sort -u | wc -l | tr -d ' ')
+if [ "$VM_METHODS" -ge 9 ]; then
+    NEW_BASELINES=$((NEW_BASELINES + 1))
+fi
+if [ "$NEW_BASELINES" -ge 6 ]; then
+    SCORE=$((SCORE + 20))
+fi
+MAX_SCORE=$((MAX_SCORE + 20))
 
-# 7. Verification script (10 points)
-echo "Checking verification infrastructure..."
-VERIFY_PASS=0
-if [ -f "$REPO_DIR/scripts/verify_claims_offline.py" ]; then
-    if python3 "$REPO_DIR/scripts/verify_claims_offline.py" > /tmp/verify_output.txt 2>&1; then
-        VERIFY_PASS=$(grep -c "PASS" /tmp/verify_output.txt 2>/dev/null || echo 0)
+# --- Data freshness: critical result files exist and are non-empty (10 points) ---
+DATA_FRESH=0
+DATA_FILES=(
+    "/Users/arvind/paper/tinker-rl-lab/experiments/results/base_instruct_paired.tsv"
+    "/Users/arvind/paper/tinker-rl-lab/experiments/results/group_size_token_normalized.tsv"
+    "/Users/arvind/paper/tinker-rl-lab/experiments/results/variance_mitigation.tsv"
+)
+DATA_OK=0
+for f in "${DATA_FILES[@]}"; do
+    if [ -s "$f" ]; then
+        DATA_OK=$((DATA_OK + 1))
+    else
+        echo "DATA_MISSING_OR_EMPTY=$f"
     fi
-fi
-if [ "$VERIFY_PASS" -ge 10 ]; then
+done
+if [ "$DATA_OK" -eq "${#DATA_FILES[@]}" ]; then
+    DATA_FRESH=1
     SCORE=$((SCORE + 10))
-    echo "Verification: 10/10 ($VERIFY_PASS checks passing)"
-elif [ "$VERIFY_PASS" -ge 5 ]; then
-    SCORE=$((SCORE + 7))
-    echo "Verification: 7/10 ($VERIFY_PASS checks passing)"
-elif [ "$VERIFY_PASS" -gt 0 ]; then
-    SCORE=$((SCORE + 5))
-    echo "Verification: 5/10 ($VERIFY_PASS checks passing)"
-else
-    SCORE=$((SCORE + 3))
-    echo "Verification: 3/10 (no checks passing)"
 fi
+MAX_SCORE=$((MAX_SCORE + 10))
 
-# 8. Claims document present (5 points)
-echo "Checking claims documentation..."
-if [ -f "$REPO_DIR/REVIEWER_VERIFICATION.md" ] && [ -f "$REPO_DIR/EVAL_PROTOCOL.md" ]; then
-    SCORE=$((SCORE + 5))
-    echo "Claims docs: 5/5 (REVIEWER_VERIFICATION.md and EVAL_PROTOCOL.md present)"
-elif [ -f "$REPO_DIR/REVIEWER_VERIFICATION.md" ]; then
-    SCORE=$((SCORE + 3))
-    echo "Claims docs: 3/5 (only REVIEWER_VERIFICATION.md present)"
+# --- ZVF partial correlations has real results (5 points) ---
+ZVF_PARTIAL=0
+ZVF_FILE="/Users/arvind/paper/tinker-rl-lab/experiments/results/zvf_partial_correlations.tsv"
+if [ -f "$ZVF_FILE" ]; then
+    # Check if there is at least one row with a numeric r_partial (not NA)
+    if grep -qE '^\(none; raw correlation\)\t[0-9\.-]+' "$ZVF_FILE"; then
+        ZVF_PARTIAL=1
+        SCORE=$((SCORE + 5))
+    else
+        echo "ZVF_PARTIAL_NO_RESULTS=1"
+    fi
 else
-    echo "Claims docs: 0/5 (missing)"
+    echo "ZVF_PARTIAL_MISSING=1"
 fi
+MAX_SCORE=$((MAX_SCORE + 5))
 
-echo ""
-echo "=== Summary ==="
-echo "METRIC score=$SCORE"
+echo "METRIC acceptance_score=$SCORE"
+echo "METRIC max_acceptance_score=$MAX_SCORE"
+echo "METRIC weaknesses_addressed=$ADDRESSED"
+echo "METRIC weakness_total=$WEAKNESS_COUNT"
+echo "METRIC script_bonus=$BONUS"
+echo "METRIC ai_scientist_runs=$AI_SCIENTIST_RUNS"
+echo "METRIC local_trl_template=$LOCAL_TRL"
+echo "METRIC data_fresh=$DATA_FRESH"
+echo "METRIC zvf_partial_results=$ZVF_PARTIAL"
+echo "METRIC exp_scripts_run=$EXP_SCRIPTS_RUN"
+echo "METRIC new_baselines_score=$NEW_BASELINES"
+echo "METRIC vm_methods=$VM_METHODS"

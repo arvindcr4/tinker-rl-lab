@@ -9,11 +9,21 @@ using the same GRPO training loop as campaign_v2.py:
   • LoRA rank sweep    — {4, 8, 16, 32, 64}        (at temperature=0.8, batch=2)
   • Batch size sweep   — {1, 2, 4, 8}               (at rank=32, temperature=0.8)
 
-All runs: model=Qwen/Qwen3-8B, task=GSM8K, seed=42, steps=30, group=8, lr=1e-5.
+All runs: model=Qwen/Qwen3-8B, task=GSM8K, seed=42, steps=200, group=8, lr=1e-5.
 Shared baseline is run once and re-used across all three sweeps.
 
 Output: experiments/tinker-runs/results/wave6_ablations.json
 """
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 
 import json
 import os
@@ -43,7 +53,7 @@ os.environ["TINKER_API_KEY"] = API_KEY
 MODEL = "Qwen/Qwen3-8B"
 MODEL_SHORT = "qwen3-8b"
 SEED = 42
-STEPS = 30
+STEPS = 200
 GROUP_SIZE = 8
 LR = 1e-5
 
@@ -150,6 +160,20 @@ def run_one(exp):
         # W&B
         try:
             import wandb
+            try:
+                import torch, wandb
+                if not getattr(wandb, '_vram_patched', False):
+                    _old_log = wandb.log
+                    def _vram_log(data, *args, **kwargs):
+                        if torch.cuda.is_available():
+                            data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                            data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                            torch.cuda.reset_peak_memory_stats()
+                        _old_log(data, *args, **kwargs)
+                    wandb.log = _vram_log
+                    wandb._vram_patched = True
+            except ImportError:
+                pass
 
             if WANDB_KEY:
                 wandb.login(key=WANDB_KEY, relogin=True)
@@ -387,14 +411,14 @@ def run_one(exp):
             pass
 
         print(
-            f"[{tag}] DONE peak={peak:.3f} last10={last10:.3f} "
+            f"  ✓ [{tag}] DONE peak={peak:.3f} last10={last10:.3f} "
             f"({result['wall_clock_sec']:.0f}s)",
             flush=True,
         )
         return result
 
     except Exception as e:
-        print(f"[{tag}] FAILED: {e}", flush=True)
+        print(f"  ✗ [{tag}] FAILED: {e}", flush=True)
         traceback.print_exc()
         try:
             if wb_run:

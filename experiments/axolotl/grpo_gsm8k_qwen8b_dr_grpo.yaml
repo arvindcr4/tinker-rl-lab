@@ -28,11 +28,16 @@ vllm:
   dtype: auto
 
 trl:
-  # Dr. GRPO loss — fixes bias in vanilla GRPO
-  loss_type: dr_grpo
-  max_completion_length: 512
+  # Dr. GRPO ("GRPO Done Right", Liu et al. 2025) removes TWO biases in vanilla
+  # GRPO; both knobs are required for the faithful variant:
+  loss_type: dr_grpo        # length-bias fix: normalize the loss by a CONSTANT
+                            #   (batch_size * max_completion_length), not per-response length
+  scale_rewards: false      # difficulty-bias fix: do NOT divide the advantage by
+                            #   the group std  ->  A = r - mean_g  (not (r - mean_g)/std_g)
+  max_completion_length: 512  # the constant used by the dr_grpo length normalization
 
-  beta: 0.001
+  beta: 0.001               # kept equal to the GRPO baseline for a clean loss-only A/B
+                            #   (TRL's reference Dr. GRPO recipe uses beta: 0.0)
   num_generations: 16
   temperature: 1.0
 

@@ -4,6 +4,16 @@ TRL Trainer for tinker-rl-lab
 Unified interface for HuggingFace TRL (GRPO, PPO, DPO training).
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 import os
 import asyncio
 import time
@@ -285,7 +295,7 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
     torch_dtype=torch.bfloat16,
-    device_map="auto",
+    device_map=None if "LOCAL_RANK" in os.environ else "auto",
 )
 
 # LoRA

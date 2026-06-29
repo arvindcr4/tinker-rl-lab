@@ -1,7 +1,7 @@
 """
 Modal GPU Runner for Tinker RL Lab Multi-Seed Experiments
 =========================================================
-Runs all experiments across 5 seeds on Modal A10G GPUs.
+Runs all experiments across seeds on Modal A10G GPUs (SEEDS pool has 10; released runs use the first 5: 42, 123, 456, 789, 1024).
 
 Usage:
     modal run experiments/modal_runner.py               # Run all experiments
@@ -64,7 +64,7 @@ EXPERIMENTS = {
     "d3rlpy": "d3rlpy_offline.py",
 }
 
-SEEDS = [42, 123, 456, 789, 1024]
+SEEDS = [42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768]
 
 
 @app.function(
@@ -125,6 +125,10 @@ def run_experiment(exp_name: str, exp_file: str, seed: int) -> dict:
 
     except subprocess.TimeoutExpired:
         elapsed = time.time() - start
+        try:
+            results_vol.commit()
+        except Exception:
+            pass
         return {
             "experiment": exp_name,
             "seed": seed,
@@ -134,6 +138,10 @@ def run_experiment(exp_name: str, exp_file: str, seed: int) -> dict:
         }
     except Exception as e:
         elapsed = time.time() - start
+        try:
+            results_vol.commit()
+        except Exception:
+            pass
         return {
             "experiment": exp_name,
             "seed": seed,

@@ -55,9 +55,9 @@ for i in "${!PIDS[@]}"; do
     cfg=${CONFIGS[$i]}
     name=$(basename "$cfg" .yaml)
     if wait "$pid"; then
-        echo "$name (PID $pid) completed"
+        echo "  ✓ $name (PID $pid) completed"
     else
-        echo "$name (PID $pid) FAILED"
+        echo "  ✗ $name (PID $pid) FAILED"
         FAIL_COUNT=$((FAIL_COUNT + 1))
     fi
 done

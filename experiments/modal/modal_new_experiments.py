@@ -44,6 +44,20 @@ def run_ppo_qwen35_4b():
     """PPO training on Qwen3.5-4B for comparison with GRPO Tinker results."""
     import torch
     import wandb
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from datasets import load_dataset
     from peft import LoraConfig, get_peft_model
@@ -79,7 +93,7 @@ def run_ppo_qwen35_4b():
         tokenizer.pad_token = tokenizer.eos_token
 
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID, torch_dtype=torch.bfloat16, device_map="auto",
+        MODEL_ID, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto",
         trust_remote_code=True,
     )
     
@@ -136,6 +150,7 @@ def run_ppo_qwen35_4b():
     for step in range(STEPS):
         batch = [examples[i % len(examples)] for i in random.sample(range(len(examples)), 2)]
         batch_rewards = []
+        batch_zvf_list = []
         total_loss = 0.0
         
         for ex in batch:
@@ -174,6 +189,7 @@ def run_ppo_qwen35_4b():
             mean_r = sum(group_rewards) / len(group_rewards)
             std_r = (sum((r - mean_r)**2 for r in group_rewards) / len(group_rewards)) ** 0.5 + 1e-8
             advantages = [(r - mean_r) / std_r for r in group_rewards]
+            batch_zvf_list.append(1.0 if all(abs(r - mean_r) < 1e-6 for r in group_rewards) else 0.0)
             
             # Policy gradient loss
             for lp, adv in zip(group_log_probs, advantages):
@@ -190,11 +206,13 @@ def run_ppo_qwen35_4b():
         
         avg_reward = sum(batch_rewards) / len(batch_rewards) if batch_rewards else 0
         step_rewards.append(avg_reward)
+        mean_entropy = float(-sum(lp.item() for lp in group_log_probs) / len(group_log_probs)) if group_log_probs else 0.0
         
         wandb.log({
             "step": step + 1,
             "train/loss": total_loss.item(),
             "train/reward": avg_reward,
+            "train/policy_entropy": mean_entropy,
             "train/peak_reward": max(step_rewards),
             "train/cumulative_reward": sum(step_rewards) / len(step_rewards),
         }, step=step + 1)
@@ -254,6 +272,20 @@ def run_grpo_multiseed_qwen3_8b(seed: int = 123):
     """GRPO training on Qwen3-8B with different seed for variance estimation."""
     import torch
     import wandb
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from datasets import load_dataset
     from peft import LoraConfig, get_peft_model
@@ -287,7 +319,7 @@ def run_grpo_multiseed_qwen3_8b(seed: int = 123):
         tokenizer.pad_token = tokenizer.eos_token
 
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID, torch_dtype=torch.bfloat16, device_map="auto",
+        MODEL_ID, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto",
         trust_remote_code=True,
     )
     
@@ -340,6 +372,7 @@ def run_grpo_multiseed_qwen3_8b(seed: int = 123):
     for step in range(STEPS):
         batch = [examples[i % len(examples)] for i in random.sample(range(len(examples)), 2)]
         batch_rewards = []
+        batch_zvf_list = []
         total_loss = 0.0
         
         for ex in batch:
@@ -375,6 +408,7 @@ def run_grpo_multiseed_qwen3_8b(seed: int = 123):
             mean_r = sum(group_rewards) / len(group_rewards)
             std_r = (sum((r - mean_r)**2 for r in group_rewards) / len(group_rewards)) ** 0.5 + 1e-8
             advantages = [(r - mean_r) / std_r for r in group_rewards]
+            batch_zvf_list.append(1.0 if all(abs(r - mean_r) < 1e-6 for r in group_rewards) else 0.0)
             
             for lp, adv in zip(group_log_probs, advantages):
                 total_loss += -adv * lp
@@ -388,13 +422,17 @@ def run_grpo_multiseed_qwen3_8b(seed: int = 123):
         optimizer.step()
         
         avg_reward = sum(batch_rewards) / len(batch_rewards) if batch_rewards else 0
+        avg_zvf = sum(batch_zvf_list) / len(batch_zvf_list) if batch_zvf_list else 0.0
         step_rewards.append(avg_reward)
+        mean_entropy = float(-sum(lp.item() for lp in group_log_probs) / len(group_log_probs)) if group_log_probs else 0.0
         
         wandb.log({
             "step": step + 1,
             "train/loss": total_loss.item(),
             "train/reward": avg_reward,
+            "train/policy_entropy": mean_entropy,
             "train/peak_reward": max(step_rewards),
+            "zvf": avg_zvf,
         }, step=step + 1)
         
         if (step + 1) % 5 == 0 or step == 0:
@@ -453,6 +491,20 @@ def run_held_out_eval():
     from datasets import load_dataset
     import re
     import wandb
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
 
     wandb.init(
         project="tinker-rl-lab-world-class",
@@ -509,7 +561,7 @@ def run_held_out_eval():
             tokenizer.pad_token = tokenizer.eos_token
         
         model = AutoModelForCausalLM.from_pretrained(
-            model_id, torch_dtype=torch.bfloat16, device_map="auto",
+            model_id, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto",
             trust_remote_code=True,
         )
         

@@ -36,8 +36,8 @@ START_TS=$(date +%s)
 : > "$SMOKE_LOG"
 
 log()   { printf "\033[1;34m[smoke]\033[0m %s\n" "$*" | tee -a "$SMOKE_LOG"; }
-ok()    { printf "\033[1;32m \033[0m %s\n" "$*" | tee -a "$SMOKE_LOG"; }
-fail()  { printf "\033[1;31m \033[0m %s\n" "$*" | tee -a "$SMOKE_LOG"; exit 1; }
+ok()    { printf "\033[1;32m  ✓\033[0m %s\n" "$*" | tee -a "$SMOKE_LOG"; }
+fail()  { printf "\033[1;31m  ✗\033[0m %s\n" "$*" | tee -a "$SMOKE_LOG"; exit 1; }
 step()  { printf "\n\033[1;35m[%d/%d]\033[0m %s\n" "$1" "$2" "$3" | tee -a "$SMOKE_LOG"; }
 
 TOTAL=6

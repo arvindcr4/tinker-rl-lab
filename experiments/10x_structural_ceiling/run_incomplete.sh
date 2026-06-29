@@ -59,9 +59,9 @@ for cfg in "${CONFIGS[@]}"; do
     RUN_COUNT=$((RUN_COUNT + 1))
 
     if python -u grpo_10x_runner.py --config "$cfg" 2>&1 | tee "$logfile"; then
-        echo "$(date '+%H:%M:%S') DONE: $name"
+        echo "$(date '+%H:%M:%S') DONE: $name ✓"
     else
-        echo "$(date '+%H:%M:%S') FAILED: $name (see $logfile)"
+        echo "$(date '+%H:%M:%S') FAILED: $name ✗ (see $logfile)"
         FAIL_COUNT=$((FAIL_COUNT + 1))
     fi
     echo ""

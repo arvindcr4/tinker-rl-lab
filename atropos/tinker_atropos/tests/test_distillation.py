@@ -1,3 +1,13 @@
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import pytest
 from tinker_atropos.trainer import TinkerAtroposTrainer
 from tinker_atropos.config import TinkerAtroposConfig
@@ -238,6 +248,7 @@ class TestDistillValidation:
 
     def test_rejects_k_gt_1(self, trainer):
         """K>1 should raise for tinker (only supports K=1)."""
+        # TODO: Fix limitation where tinker only supports K=1. Cannot fix as Tinker is a closed-source black box.
         with pytest.raises(ValueError, match="K=2"):
             trainer._validate_distil_field([[-0.5, -0.3], [-0.2, -0.1]], "test_field", seq_len=2)
 

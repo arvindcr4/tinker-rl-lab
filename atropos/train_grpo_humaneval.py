@@ -5,6 +5,10 @@ Supports two task modes via --task flag:
   humaneval   : pass@1 on openai/openai_humaneval (code execution reward)
   tool_use    : JSON tool-call correctness reward (custom dataset)
 
+TODO: The paper's empirical claims compare this TRL baseline to the closed-source Tinker API.
+Investigate and implement open-source equivalents of Tinker's undisclosed managed defaults,
+micro-partitioning, and reference offloading to address the 73% performance gap.
+
 Usage:
     python train_grpo_humaneval.py --config configs/humaneval_qwen_8b.yaml --task humaneval
     python train_grpo_humaneval.py --config configs/tool_use_qwen_8b.yaml  --task tool_use
@@ -13,6 +17,16 @@ Usage:
 All runs log to WandB (project/group from YAML config).
 After training the LoRA adapter is pushed to HuggingFace when HF_PUSH=1.
 """
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 
 from __future__ import annotations
 
@@ -42,6 +56,22 @@ except Exception:
     pass
 
 import wandb
+try:
+    import torch, wandb
+    if not getattr(wandb, '_vram_patched', False):
+        _old_log = wandb.log
+        def _vram_log(data, *args, **kwargs):
+            if torch.cuda.is_available():
+                data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                torch.cuda.reset_peak_memory_stats()
+            _old_log(data, *args, **kwargs)
+        wandb.log = _vram_log
+        wandb._vram_patched = True
+except ImportError:
+    pass
+
+_last_zvf = 0.0
 
 
 # ── reward: HumanEval ────────────────────────────────────────────────────────
@@ -102,8 +132,12 @@ check({entry_point})
         signal.signal(signal.SIGALRM, old)
 
 
-def make_humaneval_reward_fn(dataset):
+def make_humaneval_reward_fn(dataset, group_size: int):
     """Return a GRPOTrainer-compatible reward function for HumanEval."""
+    # TODO: Failure to Prove Generalization. The code generation gains on HumanEval
+    # are not statistically significant (p=0.53). We need to evaluate on larger
+    # held-out test sets to rigorously prove generalized reasoning uplift rather than
+    # just training-set memorization dynamics.
     # Build lookup: task_id → {test, entry_point}
     lookup = {
         row["task_id"]: {
@@ -128,15 +162,28 @@ def make_humaneval_reward_fn(dataset):
             else:
                 score = 0.0
             rewards.append(score)
+        
+        zvf_sum = 0.0
+        n_groups = len(rewards) // group_size
+        if n_groups > 0:
+            for idx in range(n_groups):
+                chunk = rewards[idx*group_size:(idx+1)*group_size]
+                mr = sum(chunk) / group_size
+                if all(abs(r - mr) < 1e-6 for r in chunk):
+                    zvf_sum += 1.0
+            global _last_zvf
+            _last_zvf = zvf_sum / n_groups
         return rewards
 
     return reward_fn
 
 
-def build_humaneval_dataset(tokenizer, max_token_length: int = 1024):
+def build_humaneval_dataset(tokenizer, max_token_length: int = 1024, split: str = "train"):
     from datasets import load_dataset
 
     ds = load_dataset("openai/openai_humaneval", split="test")
+    ds = ds.train_test_split(test_size=0.1, seed=42)
+    ds = ds[split]
 
     SUFFIX = (
         "\n# Write a complete Python solution. "
@@ -194,7 +241,7 @@ def _score_tool_call(response: str, gold_tool: str, args_ok_fn, gold_answer) -> 
     return score
 
 
-def make_tool_use_reward_fn():
+def make_tool_use_reward_fn(group_size: int):
     """Return a GRPOTrainer-compatible reward function for tool use."""
     def reward_fn(completions: List[str], prompts=None, **kwargs) -> List[float]:
         gold_tools   = kwargs.get("gold_tool",   None)
@@ -212,12 +259,26 @@ def make_tool_use_reward_fn():
                 rewards.append(_score_tool_call(text, gt, args_fn, ga))
             else:
                 rewards.append(0.0)
+        
+        # TODO: Adversarial review notes that ZVF completely breaks down outside of math tasks.
+        # In format-gated tasks (like tool-use), ZVF saturates at 1.0 because the base model
+        # consistently fails schema parsing. Replace ZVF with ERF (Effective-Rollout Fraction).
+        zvf_sum = 0.0
+        n_groups = len(rewards) // group_size
+        if n_groups > 0:
+            for idx in range(n_groups):
+                chunk = rewards[idx*group_size:(idx+1)*group_size]
+                mr = sum(chunk) / group_size
+                if all(abs(r - mr) < 1e-6 for r in chunk):
+                    zvf_sum += 1.0
+            global _last_zvf
+            _last_zvf = zvf_sum / n_groups
         return rewards
 
     return reward_fn
 
 
-def build_tool_use_dataset(tokenizer, seed: int = 42):
+def build_tool_use_dataset(tokenizer, seed: int = 42, split: str = "train"):
     from datasets import Dataset
 
     SYSTEM = (
@@ -240,6 +301,13 @@ def build_tool_use_dataset(tokenizer, seed: int = 42):
     import random
     rng = random.Random(seed)
     rng.shuffle(rows)
+    
+    split_idx = int(len(rows) * 0.9)
+    if split == "train":
+        rows = rows[:split_idx]
+    else:
+        rows = rows[split_idx:]
+        
     return Dataset.from_list(rows)
 
 
@@ -253,6 +321,9 @@ def load_config(path: str) -> dict:
     oi  = (raw.get("openai") or [{}])[0]
     return {
         "model_name":              oi.get("model_name") or cfg.get("tokenizer_name"),
+        # TODO: The "Early-Training Snapshot" Problem. 30-50 steps are insufficient to
+        # observe meaningful RL convergence, long-horizon reward hacking, or true policy collapse.
+        # Increase total_steps significantly for full training runs rather than just "snapshots".
         "total_steps":             cfg.get("total_steps",       50),
         "batch_size":              cfg.get("batch_size",        128),
         "group_size":              cfg.get("group_size",        16),
@@ -264,6 +335,8 @@ def load_config(path: str) -> dict:
         "wandb_group":             t.get("wandb_group",         "coding-scaling"),
         "wandb_run_name":          t.get("wandb_run_name",      "grpo-run"),
         "checkpoint_dir":          t.get("checkpoint_dir",      "./checkpoints/run/"),
+        "early_stopping_patience": t.get("early_stopping_patience", 3),
+        "eval_steps":              t.get("eval_steps",          10),
     }
 
 
@@ -371,14 +444,16 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
     )
 
     if task == "humaneval":
-        dataset    = build_humaneval_dataset(tokenizer, cfg["max_token_length"])
+        dataset    = build_humaneval_dataset(tokenizer, cfg["max_token_length"], split="train")
+        eval_dataset = build_humaneval_dataset(tokenizer, cfg["max_token_length"], split="test")
         reward_fn  = make_humaneval_reward_fn(
-            __import__("datasets").load_dataset("openai/openai_humaneval", split="test")
+            __import__("datasets").load_dataset("openai/openai_humaneval", split="test"), cfg["group_size"]
         )
         extra_cols = ["task_id"]
     elif task == "tool_use":
-        dataset    = build_tool_use_dataset(tokenizer, seed=seed)
-        reward_fn  = make_tool_use_reward_fn()
+        dataset    = build_tool_use_dataset(tokenizer, seed=seed, split="train")
+        eval_dataset = build_tool_use_dataset(tokenizer, seed=seed, split="test")
+        reward_fn  = make_tool_use_reward_fn(cfg["group_size"])
         extra_cols = ["gold_tool", "gold_answer", "gold_args"]
     else:
         raise ValueError(f"Unknown task: {task}")
@@ -391,12 +466,18 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
         num_train_epochs=1,
         max_steps=cfg["total_steps"],
         per_device_train_batch_size=_per_device_bs,
+        per_device_eval_batch_size=_per_device_bs,
         num_generations=_num_gen,
         generation_batch_size=_per_device_bs * _num_gen,  # must be divisible by num_generations
         max_completion_length=cfg["max_token_length"],
         learning_rate=cfg["learning_rate"],
         logging_steps=1,
-        save_steps=10,
+        save_steps=cfg["eval_steps"],
+        eval_strategy="steps",
+        eval_steps=cfg["eval_steps"],
+        save_strategy="steps",
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_reward/mean",
         seed=seed,
         report_to="wandb",
         run_name=run_name,
@@ -405,11 +486,15 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
         dataloader_num_workers=0,
         remove_unused_columns=False,
     )
+    from transformers import EarlyStoppingCallback
+    
     trainer = GRPOTrainer(
         model=model, args=grpo_config,
         train_dataset=dataset,
+        eval_dataset=eval_dataset,
         reward_funcs=[reward_fn],
         processing_class=tokenizer,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=cfg["early_stopping_patience"])],
     )
 
     from transformers import TrainerCallback
@@ -422,9 +507,14 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
             mean_r = logs.get("reward/mean", logs.get("rewards/mean"))
             if mean_r is not None:
                 step_log.append(float(mean_r))
-                wandb.log({"train/percent_correct": float(mean_r), "train/step": state.global_step},
+                # TODO: ZVF is borderline tautological and a symptom, not a root cause.
+                # Consider monitoring advantage variance or policy entropy directly instead of ZVF.
+                log_dict = {"train/percent_correct": float(mean_r), "train/step": state.global_step, "zvf": _last_zvf}
+                if "objective/entropy" in logs:
+                    log_dict["train/policy_entropy"] = logs["objective/entropy"]
+                wandb.log(log_dict,
                           step=state.global_step)
-                print(f"  step {state.global_step:3d}  mean_reward={float(mean_r):.4f}")
+                print(f"  step {state.global_step:3d}  mean_reward={float(mean_r):.4f} zvf={_last_zvf:.2f}")
 
     trainer.add_callback(RewardLogCallback())
 
@@ -454,6 +544,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config",    required=True)
     parser.add_argument("--task",      required=True, choices=["humaneval", "tool_use"])
+    # TODO: Single-Seed Extrapolations are a major statistical vulnerability.
+    # Extrapolating RL training dynamics from N=1 runs is highly initialization-dependent.
+    # We should run these experiments across multiple seeds (e.g. N=5) to compute variance.
     parser.add_argument("--seed",      type=int, default=42)
     parser.add_argument("--wandb_key", default=None)
     args = parser.parse_args()

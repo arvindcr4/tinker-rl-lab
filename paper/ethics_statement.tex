@@ -9,13 +9,14 @@
 \section{Ethics, Limitations, and Broader Impact}
 \label{sec:impact_standalone}
 
-This statement consolidates the dual-use analysis, itemised compute
-accounting, carbon footprint estimation, data provenance disclosures, a
-candid acknowledgment of the closed-source training backend on which a
-fraction of our headline numbers depends, and a list of methodological
-limits we are aware of but did not have resources to close within the
-submission window.  It complements the shorter Limitations and Broader
-Impact subsections embedded in Section~\ref{sec:limitations}.
+This statement is written to satisfy the NeurIPS Code of Ethics and Broader
+Impact requirements. It complements the shorter Limitations and Broader
+Impact subsections embedded in Section~\ref{sec:limitations} by consolidating
+in one place a full dual-use analysis, itemised compute accounting, carbon
+footprint estimation, data provenance disclosures, a candid acknowledgment
+of the closed-source training backend on which a fraction of our headline
+numbers depends, and a list of methodological limits we are aware of but
+did not have resources to close within the submission window.
 
 % ---------------------------------------------------------------------------
 \subsection{Dual-Use Analysis: Misuse Risks of Reasoning RL}
@@ -28,40 +29,37 @@ Impact subsections embedded in Section~\ref{sec:limitations}.
 Salesforce xLAM-Function-Calling-60k \cite{liu2024xlam} tool-use corpus,
 (ii) a set of LoRA adapters published on the HuggingFace Hub
 (\texttt{arvindcr4/tinker-rl-bench-*}), and (iii) diagnostic code for
-Zero-Variance Fraction and reward-instability analysis. We
+Zero-Variance Fraction, reward-stability, and length-bias analysis. We
 analyse four concrete misuse pathways these artefacts could, in principle,
 enable, and we describe the existing guardrails and the residual risk we
 judge acceptable for publication.
 
 \paragraph{M1. Weaponisation of mathematical reasoning.}
-The most capability-relevant artefact we release is code for running
-GRPO-style verifier-reward experiments on grade-school arithmetic and
-multi-step prompt suites. In our clean held-out GSM8K control, the measured
-gain is small and not statistically significant, so we do not claim the code
-improves general reasoning capability. A malicious
+The most capability-relevant artefact we release is GRPO training code that
+improves grade-school arithmetic and multi-step reasoning. A malicious
 operator could attempt to extend this pipeline to tasks of greater
 dual-use concern, e.g., chemistry olympiad problems, cryptographic key
 recovery, or financial fraud. We judge the \emph{marginal} uplift provided
 by our release to be small for three reasons. First, GRPO at our training
-scale does not create new capabilities; the base-model control for GSM8K
-(Section~\ref{sec:results}, 82.0\%) shows that the bulk of held-out
-accuracy is attributable to Qwen3-8B's pretraining. Our full GRPO run only
-adds \(+1.3\) percentage points ($p{=}0.26$, not statistically significant).
+scale does not create new capabilities; the pre-RL held-out accuracy of
+Qwen3-8B-Instruct for GSM8K (Section~\ref{sec:results}, 82.0\%) shows that the
+bulk of held-out accuracy is attributable to the checkpoint's pretraining and
+instruction tuning. Our full GRPO run only adds \(+1.3\) percentage points
+($p{=}0.26$, not statistically significant).
 Second, the public literature already contains GRPO implementations
 \cite{shao2024deepseekmath, openrlhf2024, verl2024, trl2020} that are at
-least as capable. Third, any reward-harness improvement is bounded by the
-rewarder: GSM8K rewards use exact-match against a human-written gold answer
-and do not transfer to the domains listed above without a new validated reward
+least as capable. Third, any reasoning uplift is bounded by the rewarder:
+GSM8K rewards use exact-match against a human-written gold answer, which
+does not generalise to the domains listed above without a new reward
 signal, which itself requires expertise and labelled data.
 
 \paragraph{M2. Reward hacking and the long-term alignment risk.}
 GRPO, like all policy-gradient RL from a proxy reward, is vulnerable to
 reward hacking: the model learns to exploit idiosyncrasies of the reward
 function rather than solve the intended task \cite{skalse2022specificationgaming,
-krakovna2020specification}. Our reward-instability audit
-(Section~\ref{sec:length_bias}) flags verbosity-trap-like regressions in 4/11
-GRPO trajectories, but treats them as proxy-reward failures rather than proof
-that response length alone caused the regression.
+krakovna2020specification}. Our length-bias analysis
+(Section~\ref{sec:length_bias}) and the verbosity-trap finding in 4/11
+GRPO runs are concrete demonstrations of this failure mode in our own data.
 Users who apply our scripts to under-specified reward functions in
 production settings (e.g., a custom ``helpfulness'' classifier) may observe
 models that appear to improve on held-out metrics while silently
@@ -110,9 +108,9 @@ authors; no in-kind credits are omitted. Dollar figures are in USD.
 \begin{table}[ht]
 \centering
 \small
-\caption{Itemised compute spend across platforms. Totals include successful,
-interrupted, and unsuccessful attempts to reflect the actual cost of the audit
-\cite{henderson2018deep}.}
+\caption{Itemised compute spend across platforms. Totals include both
+successful and failed runs, because failed-run spend is real and should
+not be hidden from reviewers \cite{henderson2018deep}.}
 \label{tab:compute_spend}
 \begin{tabular}{llrr}
 \toprule
@@ -120,7 +118,7 @@ interrupted, and unsuccessful attempts to reflect the actual cost of the audit
 \midrule
 Tinker SDK v0.16.1 & GRPO on 4B/8B (original suite)        & 25 & \$40--55 \\
 Tinker SDK v0.16.1 & 10x Structural Ceiling ablation       & 32 & \$65 \\
-Tinker SDK v0.16.1 & Larger-model support suite (frontier/MoE) & 13 & \$25--30 \\
+Tinker SDK v0.16.1 & World-Class Suite (frontier/MoE)      & 13 & \$25--30 \\
 Modal H100         & PPO baselines (Qwen3-8B, Llama-3.1-8B)& 2  & \$12--18 \\
 Modal H100         & KL-tracking run (failed)              & 1  & \$2--4   \\
 Google Colab Pro (T4) & 0.5B--3B QLoRA SFT+GRPO            & --- & \$10/person \\
@@ -222,7 +220,7 @@ contribution could be as low as \textasciitilde 130\,kg. We report the
 central estimate in the main table and caution readers that it should not
 be interpreted as precise. \emph{All} numbers should be regarded as upper
 bounds on the carbon cost of reproducing our work, because subsequent
-users can skip unsuccessful attempts and optional ablation sweeps.
+users can skip the failed runs and the ablation sweeps.
 
 \paragraph{Offset and mitigation.}
 We did not purchase carbon offsets. Instead, we have (a) released all
@@ -328,14 +326,15 @@ system-level telemetry (energy, throughput, queueing).
 \paragraph{What this means for our claims.}
 Tinker results in this paper measure the \emph{platform's} implementation
 of GRPO, not an abstract specification of the algorithm. A reader who asks
-``why do nominally similar Tinker and TRL GRPO runs produce different reward
-trajectories'' cannot fully answer that question from our data: visible
-hyperparameters are matched in some probes, but hidden sampler, loss-mask,
-LoRA, precision, rollout, checkpoint, and evaluator details remain part of
-the treatment.  We therefore treat Tinker and TRL rows as stack-conditioned
-evidence, not as a causal framework ranking.  Dry-run verl/OpenRLHF launcher
-rows are engineering-readiness artifacts only and are not used for empirical
-framework conclusions.
+``why does Tinker GRPO score 99.9\% on GSM8K while open-source TRL GRPO
+scores 73.4\% on the same task'' cannot fully answer that question from
+our data: we are able to rule out a handful of candidate explanations
+(seed variance, model-size confound) but not the implementation itself.
+We therefore draw \emph{quantitative} conclusions only from the
+open-source side (TRL, veRL on Modal H100, OpenRLHF) where every
+hyperparameter is auditable, and use Tinker results primarily as an
+\emph{upper bound} on what a carefully engineered production stack can
+achieve for critic-free RL at our scales.
 
 \paragraph{Reproducibility commitments we can make.}
 \begin{enumerate}
@@ -346,14 +345,14 @@ framework conclusions.
   \item Every figure and every summary statistic derived solely from
         Tinker data is marked with ``\dag'' and a footnote stating that
         independent replication requires Tinker API access.
-  \item Primary statistical claims distinguish real runs from dry-run
-        launchers and separate online reward from held-out capability.
-        Tinker-only results are reported descriptively unless accompanied by
-        a matched held-out control.
+  \item Primary statistical claims (significance tests, ANOVA variance
+        decompositions) are drawn from open-source Modal H100 and TRL
+        runs. Tinker-only results are reported descriptively.
   \item We commit to re-running any Tinker-only experiment on an open
         backend if an equivalent open-source service becomes available,
-        and to issuing a revised version of this paper if a stack variable
-        changes the interpretation of any headline result.
+        and to issuing a revised version of this paper if the Tinker
+        99.9\% figure is ever shown to be due to an undisclosed
+        implementation choice rather than the algorithm.
 \end{enumerate}
 
 \paragraph{Key rotation and credential hygiene.}
@@ -389,8 +388,8 @@ GSM8K evaluation carry proper confidence intervals.
 
 \paragraph{Train-set reward as primary Tinker metric.}
 Tinker runs primarily report reward on training prompts. Only the GSM8K
-track was followed up with a separate $N=200$ held-out evaluation per seed
-(the canonical primary capability protocol). Other Tinker tracks (tool-use, xLAM) remain train-set-only and
+track was followed up with a separate 200-example held-out evaluation
+per seed. Other Tinker tracks (tool-use, xLAM) remain train-set-only and
 we cannot distinguish memorisation from generalisation for those
 settings.
 

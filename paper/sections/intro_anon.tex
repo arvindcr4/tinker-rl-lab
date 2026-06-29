@@ -1,142 +1,67 @@
 % =============================================================================
-% Introduction -- Diagnostic audit framing (anonymous)
+% Introduction — conservative, evidence-aligned framing
+% Drop-in include: \input{sections/intro}
+% Target: <= 1.5 pages
 % =============================================================================
 \section{Introduction}
 \label{sec:intro}
 
-PPO~\citep{schulman2017proximal}, GRPO~\citep{shao2024deepseekmath}, and
-DPO~\citep{rafailov2024direct} are often compared as if the algorithm label
-were the full experimental treatment.  In LLM post-training, outcomes also
-depend on base model, instruction tuning, reward parser, group construction,
-sampler, backend, LoRA configuration, checkpoint selection, and evaluation
-harness.  This is the LLM post-training analogue of the reproducibility
-concerns Henderson et al. identified for deep RL~\citep{henderson2018deep}:
-algorithm labels are under-specified unless the full training stack is fixed
-or modeled.
+Reinforcement learning post-training now underpins much of modern
+language-model reasoning and alignment~\citep{ouyang2022training,%
+guo2025deepseekr1nature}, but empirical claims in this area are often hard to
+compare. PPO~\citep{schulman2017proximal}, GRPO~\citep{shao2024deepseekmath},
+and DPO~\citep{rafailov2024direct} are usually evaluated on different model
+families, with different framework defaults, different reward functions, and
+different notions of ``success.'' What the field needs is not another
+leaderboard but a substrate that separates algorithmic conclusions from
+implementation, initialization, and task-design effects.
 
-This paper audits a group-relative RL runner inspired by GRPO, not a
-canonical GRPO reproduction.  It retains group-normalized advantages and a
-critic-free structure, but does not implement the PPO ratio and clip of
-\citet{schulman2017proximal}, does not retain a frozen reference policy for
-KL regularization, performs one optimizer step per rollout batch, and does
-not use a completion-only token mask.  A P1-A diagnostic on Qwen3.5-4B
-measures 61.6--89.6\% of the full-sequence loss magnitude from prompt tokens
-rather than completion tokens.  Claims in this paper concern this runner,
-not canonical GRPO.
+\ours{} is an attempt at such a substrate. It aggregates 70+ runs spanning 7 RL
+libraries (five with completed results), 5 model families, 32+ checkpoints, and
+scales from 0.6B to $\sim$671B parameters, with common reporting conventions and
+released artifacts.
+At the same time, we emphasize a central caveat: the current benchmark is
+\emph{not} uniformly mature across tasks. The strongest evidence comes from
+short-horizon GSM8K experiments with verifiable binary rewards. Frontier API
+runs, tool-use experiments, and code-generation studies are useful case
+studies, but many remain single-seed, short-horizon, partially completed, or
+custom-evaluated.
 
-The paper does not show that this runner broadly improves reasoning.  The
-only clean held-out capability result is a paired GSM8K 200-example evaluation
-that improves only $82.0\% \to 83.3\%$ ($p = 0.26$); we do not claim a
-significant held-out math effect.  The paper's positive contribution is a
-diagnostic protocol: how to decide whether a specific model--reward--sampler--
-stack combination has usable group-relative RL signal, and how to scope
-claims accordingly.
+The first contribution of the benchmark is therefore methodological rather than
+triumphalist: it makes visible how much end-to-end stack choice matters. In our
+results, model family, initialization, rollout regime, and framework defaults
+can all change the apparent algorithm ranking. Several comparisons that look
+like ``PPO vs.\ GRPO'' are better understood as \emph{stack-level comparisons},
+because the training backends differ in tokenizer/runtime integration, managed
+defaults, and rollout plumbing. This is precisely why a shared measurement
+substrate is needed.
 
-\begin{table}[t]
-\centering
-\caption{Claim--evidence--verdict hierarchy.}
-\label{tab:claim_evidence_verdict}
-\small
-\begin{tabular}{@{}p{0.27\linewidth}p{0.18\linewidth}p{0.33\linewidth}p{0.16\linewidth}@{}}
-\toprule
-\textbf{Claim} & \textbf{Status} & \textbf{Headline evidence} & \textbf{Verdict}\\
-\midrule
-C1: The runner is a reward-contrast amplifier. &
-Mechanistic + operational &
-Mixed-group probability formula; ZVF/GU triage (collapse/saturation/contrast). &
-Signal exists only when sampled groups contain reward diversity.\\
-C2: ZVF/GU provide early triage diagnostics. &
-Most operational contribution &
-First-5-step rule (ZVF $\geq 80\%$, reward $\leq 5\%$) catches all collapsed runs
-(precision 1.0, recall 1.0, 22-run validation). ZVF is task-driven. &
-Triage, not prediction. Not a calibrated performance model.\\
-C3: Training reward conflates with held-out capability. &
-Central negative result &
-Held-out GSM8K $82.0\% \to 83.3\%$, $p = 0.26$; checkpoint-selection over-optimism. &
-Training reward supports dynamics claims only.\\
-C4: Algorithm labels (PPO, GRPO, DPO) are under-specified. &
-Methodological warning &
-17$\times$ last-10 gap under nominally matched configs; artifact sensitivity. &
-Full-stack reporting required.\\
-\bottomrule
-\end{tabular}
-\end{table}
+Our second contribution is a descriptive diagnostic for sparse-reward GRPO:
+Zero-Variance Fraction (ZVF), the fraction of rollout groups with identical
+rewards, together with Gradient Utilization (GU = $1-\mathrm{ZVF}$). ZVF is
+useful because it directly reveals when within-group contrast disappears.
+However, because our main tasks use binary outcome rewards, ZVF is mechanically
+coupled to reward sparsity, group size, and baseline accuracy. We therefore use
+ZVF/GU as diagnostics of signal degeneracy, not as proof of an independent or
+causal failure mode beyond simpler observables such as reward mean, entropy,
+advantage variance, or divergence proxies.
 
-\subsection{Claim 1: Reward-contrast amplifier mechanism.}
-A group-relative update has useful signal only when the sampled group contains
-distinguishable reward outcomes.  Under binary or verifier-like rewards, if
-the current policy succeeds on prompt $x$ with probability $p_x$ and group size
-is $G$, the probability of a mixed, gradient-carrying group is
-\[
-P(\text{usable}) \approx \frac{1}{N}\sum_x \left[1 - (1-p_x)^G - p_x^G\right].
-\]
-The familiar $p_x > 1/G$ rule is only an expected-one-success heuristic; it
-is not a threshold theorem.  This mechanism explains why warm-starts, group
-size, reward density, and task difficulty matter more than task labels.
-When ZVF $= 1$ (all groups identical-reward), no gradient flows; when ZVF $= 0$
-(all groups mixed-reward), the update exploits within-group contrast.
+Our third contribution is a set of targeted ablations on trainability. In the
+current benchmark, trainability varies substantially with initialization and
+rollout regime: instruction-tuned checkpoints were generally easier to
+optimize than comparable base models, and intermediate rollout group sizes
+often behaved better than the smallest or largest settings we tested. These
+observations support a narrower claim: whether RL fine-tuning works at all can
+depend materially on initialization and reward-bearing rollout structure, in
+addition to the nominal RL algorithm. They do \emph{not} yet justify a
+universal optimal group size or a general ``SFT dominates RL'' law.
 
-\subsection{Claim 2: ZVF/GU as triage diagnostics.}
-Zero-Variance Fraction (ZVF) measures the fraction of prompts where all $G$
-completions receive identical rewards, producing zero gradient.
-Gradient Utilization (GU) $= 1 - $ZVF measures the fraction of prompts
-providing usable signal.  High ZVF with low reward indicates cold-start
-collapse; high ZVF with high reward indicates saturation; low ZVF indicates
-within-group contrast.  A fixed first-five-step rule (ZVF $\geq 80\%$, reward
-$\leq 5\%$) catches both collapsed runs in a 22-run de-duplicated validation
-set with no false positives, but only two positive failures are observed and
-continuous ZVF ranking is weak.  The defensible claim is triage, not
-prediction: ZVF/GU can support early decisions to stop, warm-start, densify
-reward, adjust task difficulty, or change group size.  Importantly, ZVF is
-task-driven, not model-scale-driven: tool-use experiments saturate at ZVF $= 100\%$
-regardless of model size, while GSM8K experiments average ZVF $= 8.5\%$.
-
-The mixed-group probability formula is the explanatory core; ZVF/GU is the
-operational interface.
-
-\subsection{Claim 3: Training reward is not capability.}
-Online reward curves measure the reward environment that produced the update.
-They should not be upgraded into general reasoning or tool-use claims without
-matched held-out evaluation.  The clean GSM8K control improves only
-$82.0\% \to 83.3\%$ ($p = 0.26$), so we do not claim a significant held-out
-math effect.  Held-out evaluation of the top-10 checkpoints (selected by
-training last-10 reward) yields an 87.2--95.0\% accuracy band, but this is a
-checkpoint-selection analysis: selecting by training reward introduces
-over-optimism.  Four Llama-3.3-70B-Instruct seeds range 95.0--98.1\% training
-last-10 but all land on 95.0\% held-out accuracy, showing that last-10
-variance reflects Monte-Carlo sampling noise rather than genuine
-generalization differences.
-
-Tool-use, HumanEval, and MATH rows remain lower-tier evidence: tool-use
-scores schema compliance (not executed success), the HumanEval sandbox
-removes Python built-ins, and some prompt pools come from test splits used as
-reward-environment probes.  These are useful as dynamics evidence and as sparse-
-reward failure cases, not as proof of agentic capability.
-
-\subsection{Claim 4: Algorithm labels are under-specified treatments.}
-Algorithm-level claims require full-stack specification.  Under nominally
-matched visible configurations (Qwen3-8B, $G=8$, lr$=10^{-5}$, GSM8K, 30
-steps, seed 42), the Tinker runner reaches 84.4\% last-10 reward while TRL
-on Modal H100 reaches 5.0\%.  This 17$\times$ gap does not prove Tinker is
-better than TRL; it proves that ``same GRPO config'' is under-specified unless
-backend, sampler, reward parser, LoRA configuration, optimizer,
-checkpoint-selection rule, and evaluator are reported and controlled.  Our
-Qwen PPO/GRPO comparison is artifact-sensitive (PPO last-10 differs between
-ledger and statistical summary), and the Llama comparison favors PPO but is
-single-seed and backend-confounded.  No universal PPO-versus-GRPO ranking
-is supported.
-
-\subsection{Contributions.}
-This paper contributes:
-(i)~a mixed-group probability mechanism explaining when a group-relative
-RL loop has learning signal;
-(ii)~ZVF/GU as early triage diagnostics separating cold-start collapse,
-saturation, and usable contrast;
-(iii)~a held-out GSM8K result showing that training reward conflates with
-capability ($82.0\% \to 83.3\%$, $p = 0.26$);
-(iv)~a methodological warning that PPO, GRPO, and DPO comparisons require
-full-stack specification;
-(v)~a diagnostic protocol for deciding whether a specific model--reward--
-sampler--stack combination has usable group-relative RL signal.
-We release the code, run logs, and checkpoints at
-\url{https://anonymous.4open.science/r/tinker-rl-lab}.
+Finally, we explicitly separate training reward from held-out generalization.
+For Qwen3-8B-Instruct on GSM8K, a five-seed post-GRPO held-out evaluation yields
+83.3\% accuracy, but the same instruction-tuned checkpoint's pre-RL held-out
+accuracy under the identical greedy protocol is already 82.0\%; the
++1.3 percentage-point delta is not statistically significant ($p{=}0.26$).
+This negative control matters: strong online reward curves do not by themselves
+establish generalization gains. We release the benchmark, step-level traces,
+and checkpoints so that stronger follow-up work can test exactly these failure
+points.

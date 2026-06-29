@@ -7,6 +7,16 @@ Round 2 Experiment Runner — extends grpo_10x_runner.py with:
 
 All experiments log ZVF/GU saturation diagnostics to W&B.
 """
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 from __future__ import annotations
 
 import argparse
@@ -325,6 +335,20 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     # Init W&B
     if env_cfg.get("use_wandb"):
         import wandb
+        try:
+            import torch, wandb
+            if not getattr(wandb, '_vram_patched', False):
+                _old_log = wandb.log
+                def _vram_log(data, *args, **kwargs):
+                    if torch.cuda.is_available():
+                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                        torch.cuda.reset_peak_memory_stats()
+                    _old_log(data, *args, **kwargs)
+                wandb.log = _vram_log
+                wandb._vram_patched = True
+        except ImportError:
+            pass
         wandb.init(
             project=tinker_cfg.get("wandb_project", "tinker-structural-ceiling"),
             group=tinker_cfg.get("wandb_group", ""),
@@ -531,10 +555,25 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
 
         if env_cfg.get("use_wandb"):
             import wandb
+            try:
+                import torch, wandb
+                if not getattr(wandb, '_vram_patched', False):
+                    _old_log = wandb.log
+                    def _vram_log(data, *args, **kwargs):
+                        if torch.cuda.is_available():
+                            data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                            data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                            torch.cuda.reset_peak_memory_stats()
+                        _old_log(data, *args, **kwargs)
+                    wandb.log = _vram_log
+                    wandb._vram_patched = True
+            except ImportError:
+                pass
             log_data = {
                 "step": step,
                 "grpo_loss": grpo_loss,
                 "mean_reward": avg_r,
+                "zvf": zvf,
             }
             if algorithm == "reinforce":
                 log_data["reinforce_baseline"] = reinforce_baseline
@@ -571,6 +610,20 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
 
     if env_cfg.get("use_wandb"):
         import wandb
+        try:
+            import torch, wandb
+            if not getattr(wandb, '_vram_patched', False):
+                _old_log = wandb.log
+                def _vram_log(data, *args, **kwargs):
+                    if torch.cuda.is_available():
+                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                        torch.cuda.reset_peak_memory_stats()
+                    _old_log(data, *args, **kwargs)
+                wandb.log = _vram_log
+                wandb._vram_patched = True
+        except ImportError:
+            pass
         wandb.finish()
 
 

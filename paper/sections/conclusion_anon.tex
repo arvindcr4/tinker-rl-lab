@@ -1,52 +1,37 @@
 % =============================================================================
-% Anonymous conclusion -- three-claim framing
+% Conclusion — conservative, evidence-aligned framing
+% Drop-in include: \input{sections/conclusion}
+% Target: <= 0.75 page
 % =============================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-This study does not show that GRPO generally improves reasoning, and we are
-careful not to claim that it does.  The training runner is a group-relative
-policy-gradient variant inspired by GRPO rather than a faithful implementation
-of the canonical objective (missing PPO clip, reference-KL, and completion-only
-mask; a P1-A diagnostic measures $\sim$76\% of the full-sequence loss magnitude
-to be prompt-token gradient), so algorithm-level conclusions apply to this
-runner and not to GRPO-the-algorithm.  Three of our reward environments
-(HumanEval, tool-use, and MATH) measure sandbox-restricted execution, JSON
-schema compliance, and boxed-answer formatting respectively, not end-to-end
-capability.  The MATH-500 and HumanEval prompt pools in the training loop are
-loaded from the \texttt{test} splits and function as reward-environment
-probes, not as generalization tests.  The only capability signal evaluated on
-a genuinely held-out slice is GSM8K, where the lift from $82.0\%$ to
-$83.3\%$ is not significant ($p=0.26$).  The defensible conclusion is that
-this critic-free group-relative RL loop behaves as a conditional reward-contrast
-amplifier: it can refine behavior when the current policy samples both
-successes and failures under a verifier that rewards them, and it cannot
-reliably bootstrap competence when sampled groups are flat or the verifier
-rejects legitimate completions.
+\ours{} provides a shared empirical substrate for studying RL post-training
+across algorithms, frameworks, and model families, but the evidence it offers
+is narrower than a broad ``five laws'' framing. The current release most
+strongly supports three conservative claims. First, ZVF/GU are useful
+descriptive diagnostics of when binary-reward GRPO stops producing informative
+within-group signal; they should not yet be read as standalone causal or
+incrementally predictive statistics. Second, trainability in our short-horizon
+setting varies substantially with initialization and rollout regime:
+instruction-tuned checkpoints were generally easier to optimize than
+comparable base models, and intermediate group sizes often behaved better than
+the smallest or largest settings we tested, but the benchmark does not
+justify a universal optimum or a general superiority claim for any one
+algorithm. Third, PPO-vs.-GRPO rankings and frontier-run stability are
+heterogeneous across model families and stacks, so our results argue against
+one-size-fits-all recommendations rather than for a new one.
 
-The paper's main contribution is therefore diagnostic.  ZVF and GU should be
-logged early and interpreted jointly with reward level.  High ZVF with low
-reward is a cold-start alarm; high ZVF with high reward is saturation; low ZVF
-means rollout compute is still producing contrast.  In our validation set,
-the first-five-step rule catches the two collapsed runs without false
-positives, but the low number of failures and weak continuous-ranking result
-mean ZVF/GU should be treated as triage diagnostics, not performance
-predictors.
+The most important negative result is also the most useful one: on held-out
+GSM8K, the mean Qwen3-8B GRPO gain over the base model is small and not
+statistically significant under our current evaluation. Tool-use and code
+results are even less conclusive because they rely on sparse or custom reward
+protocols. That boundary on what we can claim is not a weakness to hide; it is
+the point of releasing the benchmark.
 
-The mechanism behind that diagnostic is mixed-group probability:
-\[
-P(\text{usable}) \approx \frac{1}{N}\sum_x \left[1 - (1-p_x)^G - p_x^G\right].
-\]
-This formula is the cleanest way to state the boundary condition.  The
-expected-one-success rule $p_0>1/G$ is only a heuristic.  Future work should
-test the three direct interventions implied by the equation: raise $p_0$ with
-SFT or easier curricula, raise $G$ where rollout cost allows, and densify the
-reward so equivalent partial progress is not collapsed into all-zero groups.
-
-Finally, algorithm labels should be reported as stack-conditioned results.
-The Qwen PPO/GRPO row is artifact-sensitive, and the Llama row favors PPO;
-neither supports a universal PPO/GRPO ordering.  A publishable comparison
-needs the full treatment definition: model family, backend, reward parser,
-sampler, optimizer, KL/reference handling, LoRA configuration, checkpoint
-selection, and held-out evaluation.  Without those controls, ``PPO versus
-GRPO'' is not an interpretable scientific claim.
+The immediate next steps are experimental rather than rhetorical: multivariate
+tests of ZVF against reward mean, entropy, and divergence proxies; token-budget
+matched multi-seed PPO/GRPO comparisons in a single open stack; broader
+held-out evaluation without checkpoint cherry-picking; and non-math tasks with
+process rewards or richer execution-based metrics. The released traces,
+checkpoints, and scripts are intended to make that stricter follow-up easy.

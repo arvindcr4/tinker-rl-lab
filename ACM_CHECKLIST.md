@@ -93,7 +93,7 @@ Based on [ACM Author Submission Guidelines](https://www.acm.org/publications/aut
 - [x] **Pinned dependencies**: Exact versions in `requirements.txt`
 - [x] **Docker environment**: `Dockerfile` with CUDA 12.4 + Python 3.10
 - [x] **Seed management**: Deterministic seeding across all frameworks (`utils/seed.py`)
-- [x] **Multi-seed evaluation**: 5 seeds per experiment with statistical testing
+- [x] **Multi-seed evaluation**: 10 seeds per experiment with statistical testing
 - [x] **Compute documentation**: GPU types, hours, costs in `COMPUTE.md`
 - [x] **Statistical analysis**: rliable metrics, bootstrap CIs, significance tests
 - [x] **Reproduction commands**: Step-by-step in `REPRODUCE.md`

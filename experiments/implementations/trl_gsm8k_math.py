@@ -120,17 +120,18 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     # Load GSM8K dataset
     print("Loading GSM8K dataset...")
     dataset = load_gsm8k_dataset(split="train", num_samples=500)
+    eval_dataset = load_gsm8k_dataset(split="test", num_samples=100)
     print(f"Loaded {len(dataset)} problems")
 
     # GRPO Configuration for GSM8K
     grpo_config = GRPOConfig(
-        output_dir="./grpo_gsm8k_output",
+        output_dir=os.environ.get("RESULTS_DIR", "./grpo_gsm8k_output"),
 
         # Batch settings
         per_device_train_batch_size=2,
@@ -157,6 +158,11 @@ def main():
         num_train_epochs=2,
         logging_steps=1,
         save_steps=50,
+        eval_strategy="steps",
+        eval_steps=50,
+        save_strategy="steps",
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_reward/mean",
 
         # Optimization
         max_grad_norm=1.0,
@@ -164,17 +170,22 @@ def main():
     )
 
     # Reward function wrapper
-    def reward_fn(completions, prompts):
-        batch_answers = [dataset[i]["answer"] for i in range(len(prompts))]
-        return gsm8k_reward_function(completions, prompts, batch_answers)
+    def reward_fn(completions, prompts, **kwargs):
+        answers = kwargs.get("answer")
+        if answers and isinstance(answers[0], list):
+            answers = [a[0] for a in answers]
+        return gsm8k_reward_function(completions, prompts, answers)
 
+    from transformers import EarlyStoppingCallback
     print("Initializing GRPOTrainer for GSM8K...")
     trainer = GRPOTrainer(
         model=model,
         args=grpo_config,
         train_dataset=dataset,
+        eval_dataset=eval_dataset,
         processing_class=tokenizer,
         reward_funcs=reward_fn,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
     )
 
     print("Starting GSM8K GRPO training...")
@@ -182,7 +193,7 @@ def main():
     print("GSM8K is harder than arithmetic - expect slower convergence")
     print("=" * 50)
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
 
     # Save final model
     trainer.save_model("./grpo_gsm8k_final")

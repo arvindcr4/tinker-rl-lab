@@ -1,3 +1,13 @@
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import asyncio
 import os
 import time
@@ -6,9 +16,24 @@ import torch
 import random
 from typing import Dict, Any, List
 
+# TODO: The Tinker API introduces a closed-source confound. The massive performance gap compared to open-source libraries may be due to undisclosed managed defaults, micro-partitioning, and reference offloading rather than the nominal RL algorithms being tested.
 import tinker
 from tinker.types import AdamParams, ModelInput, SamplingParams
 import wandb
+try:
+    import torch, wandb
+    if not getattr(wandb, '_vram_patched', False):
+        _old_log = wandb.log
+        def _vram_log(data, *args, **kwargs):
+            if torch.cuda.is_available():
+                data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                torch.cuda.reset_peak_memory_stats()
+            _old_log(data, *args, **kwargs)
+        wandb.log = _vram_log
+        wandb._vram_patched = True
+except ImportError:
+    pass
 import requests
 from fastapi import FastAPI, HTTPException
 from transformers import AutoTokenizer
@@ -66,13 +91,19 @@ class TinkerAtroposTrainer:
         self.tokenizer = AutoTokenizer.from_pretrained(self.base_model)
         print(f"Loaded tokenizer for {self.base_model}")
 
-        # Create LoRA training client - use tinker_model if different from tokenizer
+        # Create training client - use tinker_model if different from tokenizer
         tinker_model = self.config.tinker_model
-        print(f"Creating training client for {tinker_model}...")
-        self.training_client = await self.service_client.create_lora_training_client_async(
-            base_model=tinker_model,
-            rank=self.lora_rank,
-        )
+        if self.config.use_lora:
+            print(f"Creating LoRA training client for {tinker_model}...")
+            self.training_client = await self.service_client.create_lora_training_client_async(
+                base_model=tinker_model,
+                rank=self.lora_rank,
+            )
+        else:
+            print(f"Creating full fine-tuning training client for {tinker_model}...")
+            self.training_client = await self.service_client.create_training_client_async(
+                base_model=tinker_model,
+            )
         print("Training client created")
 
         # Save initial weights and create sampling client
@@ -205,12 +236,14 @@ class TinkerAtroposTrainer:
         all_advantages = []
         has_distil_data = False
         skipped_count = 0
+        total_trajectories = 0
         # Distil-specific tracking
         all_teacher_logprobs = []
         all_student_logprobs_for_distil = []
         all_per_token_advantages = []
 
         for item in batch:
+            total_trajectories += len(item["tokens"])
             # Calculate advantages
             scores = np.array(item["scores"])
             original_mean = np.mean(scores)
@@ -360,10 +393,19 @@ class TinkerAtroposTrainer:
         else:
             self.distil_stats = {}
 
+        if total_trajectories > 0:
+            self.erf_stats = {
+                "train/erf": float(len(datums)) / total_trajectories
+            }
+        else:
+            self.erf_stats = {}
+
         if skipped_count > 0:
             print(f"Skipped {skipped_count} groups with zero advantages")
 
-        return datums, group_mean_rewards, has_distil_data
+        # TODO: ZVF metric is a symptom, not root cause, and is fragile across domains (breaks down outside of math tasks). Consider relying on ERF (Effective-Rollout Fraction) and other causal predictors.
+        zvf = skipped_count / max(1, len(batch))
+        return datums, group_mean_rewards, has_distil_data, zvf
 
     def get_data(self) -> tuple[List[tinker.Datum], bool]:
         """
@@ -385,8 +427,9 @@ class TinkerAtroposTrainer:
                 with open("temp.json", "w", encoding="utf-8") as f:
                     json.dump(data, f)
 
-                datums, group_mean_rewards, has_distil = self.pad_data_to_good_offset(data)
+                datums, group_mean_rewards, has_distil, zvf = self.pad_data_to_good_offset(data)
                 self.group_mean_rewards = group_mean_rewards
+                self.zvf = zvf
                 return datums, has_distil
             else:
                 time.sleep(1)
@@ -461,6 +504,7 @@ class TinkerAtroposTrainer:
                 "logprobs/std_training": float(np.std(training_lp_array)),
                 "logprobs/min_training": float(np.min(training_lp_array)),
                 "logprobs/p50_training": float(np.percentile(training_lp_array, 50)),
+                "train/policy_entropy": float(-np.mean(training_lp_array)),
             }
 
             # Calculate logprob drift
@@ -496,6 +540,8 @@ class TinkerAtroposTrainer:
                 "train/learning_rate": self.learning_rate,
                 "reward/mean": metrics["reward/mean"],
             }
+            if hasattr(self, "zvf"):
+                wandb_metrics["zvf"] = self.zvf
 
             if hasattr(self, "logprob_stats"):
                 wandb_metrics.update(self.logprob_stats)
@@ -503,6 +549,8 @@ class TinkerAtroposTrainer:
                 wandb_metrics.update(self.training_logprob_stats)
             if hasattr(self, "advantage_stats"):
                 wandb_metrics.update(self.advantage_stats)
+            if hasattr(self, "erf_stats"):
+                wandb_metrics.update(self.erf_stats)
 
             if has_distil:
                 wandb_metrics["distil/active"] = 1
@@ -515,6 +563,7 @@ class TinkerAtroposTrainer:
 
     async def run(self):
         """Main training loop."""
+        # TODO: The current training does not demonstrate statistically significant generalization on held-out test sets (e.g., GSM8K, HumanEval). Need to rigorously prove generalized reasoning uplift instead of just training-set memorization.
         print("\n" + "=" * 60)
         print("Starting Tinker-Atropos Training")
         print("=" * 60 + "\n")
@@ -839,12 +888,14 @@ def run_fastapi_server(port=8001):
 
 
 async def main():
+    # TODO: Avoid extrapolating RL training dynamics from single-seed runs. Add support for multiple seeds to address statistical vulnerability.
     global trainer
 
     config = TinkerAtroposConfig(
         lora_rank=int(os.getenv("LORA_RANK", "32")),
         learning_rate=float(os.getenv("LEARNING_RATE", "4e-5")),
-        num_steps=50,
+        # TODO: 30-50 steps is an "Early-Training Snapshot" and insufficient to observe meaningful RL convergence, long-horizon reward hacking, catastrophic forgetting, or true policy collapse. Increase num_steps.
+        num_steps=int(os.getenv("NUM_STEPS", "50")),
     )
 
     print(f"Using wandb run: {config.wandb_run_name}")

@@ -104,16 +104,17 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     # Generate dataset
     print("Generating arithmetic dataset...")
     dataset = generate_arithmetic_dataset(num_problems=1000)
+    eval_dataset = generate_arithmetic_dataset(num_problems=200)
 
     # GRPO Configuration (matching Tinker hyperparameters)
     grpo_config = GRPOConfig(
-        output_dir="./grpo_math_output",
+        output_dir=os.environ.get("RESULTS_DIR", "./grpo_math_output"),
 
         # Batch settings (matching Tinker: group_size=4, groups_per_batch=100)
         per_device_train_batch_size=4,
@@ -140,6 +141,11 @@ def main():
         num_train_epochs=1,
         logging_steps=1,
         save_steps=10,
+        eval_strategy="steps",
+        eval_steps=10,
+        save_strategy="steps",
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_reward/mean",
 
         # Optimization
         max_grad_norm=1.0,
@@ -147,18 +153,22 @@ def main():
     )
 
     # Create reward function wrapper
-    def reward_fn(completions, prompts):
-        # Get answers from dataset (in real use, this would be batched properly)
-        batch_answers = [dataset[i]["answer"] for i in range(len(prompts))]
+    def reward_fn(completions, prompts, **kwargs):
+        batch_answers = kwargs.get("answer")
+        if batch_answers and isinstance(batch_answers[0], list):
+            batch_answers = [a[0] for a in batch_answers]
         return math_reward_function(completions, prompts, batch_answers)
 
+    from transformers import EarlyStoppingCallback
     print("Initializing GRPOTrainer...")
     trainer = GRPOTrainer(
         model=model,
         args=grpo_config,
         train_dataset=dataset,
+        eval_dataset=eval_dataset,
         processing_class=tokenizer,
         reward_funcs=reward_fn,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
     )
 
     print("Starting GRPO training...")
@@ -166,7 +176,7 @@ def main():
     print("Expected: reward=0.67 -> 1.0, accuracy=70% -> 100%")
     print("=" * 50)
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
 
     # Save final model
     output_dir = f"./grpo_math_final_seed{seed}"

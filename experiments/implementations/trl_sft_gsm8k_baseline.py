@@ -89,7 +89,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
         trust_remote_code=True,
     )
 
@@ -166,7 +166,7 @@ def main():
     print(f"  Effective batch: 128")
     print("=" * 60)
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
     trainer.save_model(args.output_dir + "/final")
     print(f"SFT baseline saved to {args.output_dir}/final")
 

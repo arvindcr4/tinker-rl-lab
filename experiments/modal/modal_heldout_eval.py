@@ -25,6 +25,16 @@ Env:
                   arvindcr4-pes-university/tinker-rl-lab-world-class)
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 from __future__ import annotations
 
 import argparse
@@ -433,7 +443,7 @@ def evaluate_checkpoint(
         ),
     )
     print(
-        f"[eval] {model} seed={rec.seed}  acc={acc:.3f} "
+        f"[eval] ✓ {model} seed={rec.seed}  acc={acc:.3f} "
         f"({correct}/{n}) CI95=[{lo:.3f},{hi:.3f}]  {elapsed:.0f}s",
         flush=True,
     )
@@ -538,7 +548,7 @@ def run(
                     rec, problems, max_workers=per_ckpt_workers, keep_traces=False
                 )
             except Exception as e:
-                print(f"[heldout] {rec.get('model')} failed: {e}", flush=True)
+                print(f"[heldout] ✗ {rec.get('model')} failed: {e}", flush=True)
                 return {
                     **rec,
                     "error": f"{type(e).__name__}: {e}",
@@ -622,6 +632,20 @@ def run(
     if os.environ.get("WANDB_API_KEY"):
         try:
             import wandb
+            try:
+                import torch, wandb
+                if not getattr(wandb, '_vram_patched', False):
+                    _old_log = wandb.log
+                    def _vram_log(data, *args, **kwargs):
+                        if torch.cuda.is_available():
+                            data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                            data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                            torch.cuda.reset_peak_memory_stats()
+                        _old_log(data, *args, **kwargs)
+                    wandb.log = _vram_log
+                    wandb._vram_patched = True
+            except ImportError:
+                pass
 
             run = wandb.init(
                 project=WANDB_PROJECT,

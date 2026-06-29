@@ -562,6 +562,7 @@ def add_results_chart(prs):
     p.font.color.rgb = DARK_BLUE
 
     results = ["• 69.5% → 100%", "• Converged in 20 steps", "• ~2 min training", "• Perfect accuracy"]
+    # TODO: As per adversarial review, these are early-training snapshots (20 steps) and single-seed runs, which are insufficient to prove asymptotic RL convergence or generalization.
     for r in results:
         p = tf.add_paragraph()
         p.text = r
@@ -713,7 +714,16 @@ python -m tinker_cookbook.recipes.math_rl.train \\
         "Cloud training: Accessible without local GPUs"
     ])
 
-    # 13. Future Work
+    # 13. Limitations
+    add_content_slide(prs, "Limitations", [
+        "ZVF Metric: Fragile across domains and acts as a symptom, not root cause",
+        "Early-Training Snapshots: 30-50 steps are insufficient for asymptotic RL dynamics",
+        "Closed-Source Confound: Tinker API obscures true algorithmic gains vs open-source",
+        "Generalization: Improvements on held-out test sets lack statistical significance",
+        "Single-Seed Vulnerability: Extrapolations from N=1 runs are statistically vulnerable"
+    ])
+
+    # 14. Future Work
     add_content_slide(prs, "Future Directions", [
         "Code generation with sandbox (DeepCoder)",
         "Multi-agent RL training",
@@ -722,7 +732,7 @@ python -m tinker_cookbook.recipes.math_rl.train \\
         "Custom reward functions"
     ])
 
-    # 14. Thank You
+    # 15. Thank You
     add_title_slide(prs, "Thank You!", "Questions?\n\npes-llm-research/tinker-experiments")
 
     output_path = '/home/ubuntu/pes-llm-research/tinker-experiments/Tinker_RL_Demo.pptx'

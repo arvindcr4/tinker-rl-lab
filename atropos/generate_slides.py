@@ -130,6 +130,7 @@ add_text(slide, 0.7, 5.7, 11.9, 0.3, "KEY INSIGHT", 14, YELLOW, True)
 add_text(slide, 0.7, 6.1, 11.9, 0.7, "SOTA uses distillation from 671B teacher ($4,500+ compute). We use pure GRPO from base models on Tinker cloud — no distillation, no teacher, no GPU management. Accessible for any researcher.", 14, GRAY)
 
 # ==================== SLIDE 4: GSM8K Scaling Results ====================
+# TODO: Run multiple seeds to address the Single-Seed Extrapolations vulnerability.
 slide = prs.slides.add_slide(prs.slide_layouts[6])
 set_bg(slide)
 add_text(slide, 0.5, 0.3, 3, 0.5, "03", 14, CYAN, True)
@@ -175,6 +176,7 @@ add_text(slide, 0.7, 5.7, 11.9, 0.3, "SCALING LAW", 14, CYAN, True)
 add_text(slide, 0.7, 6.1, 11.9, 0.7, "Clear trend: model size correlates with GRPO effectiveness. 1B: 63% | 8B: 100% | 30B: 100% (faster convergence). This mirrors findings in SimpleRL-Zoo and DeepSeek-R1 literature.", 14, GRAY)
 
 # ==================== SLIDE 5: Reward Trajectories ====================
+# TODO: Address the Early-Training Snapshot limitation (30-50 steps are insufficient for true RL convergence).
 slide = prs.slides.add_slide(prs.slide_layouts[6])
 set_bg(slide)
 add_text(slide, 0.5, 0.3, 3, 0.5, "04", 14, CYAN, True)
@@ -214,6 +216,7 @@ add_text(slide, 0.7, 5.4, 5.5, 1.2, "Phase Transition Pattern:\n- Qwen3-8B: 3 ph
 add_text(slide, 6.5, 5.4, 6, 1.2, "Llama-3.2-3B (base, no instruct):\n- Stays at ~1% after 30+ steps\n- 3B base model lacks capacity for GSM8K via\n  GRPO alone (no instruct tuning)\n- Contrast: Qwen3-8B base succeeds because\n  8B params provide enough capacity\n- Finding: minimum ~8B params needed for\n  pure GRPO to work on GSM8K", 12, GRAY)
 
 # ==================== SLIDE 6: Other Experiments ====================
+# TODO: ZVF metric breaks down in format-gated tasks. Need to introduce ERF (Effective-Rollout Fraction).
 slide = prs.slides.add_slide(prs.slide_layouts[6])
 set_bg(slide)
 add_text(slide, 0.5, 0.3, 3, 0.5, "05", 14, CYAN, True)
@@ -240,6 +243,7 @@ add_card(slide, 0.5, 6.2, 12.3, 0.8)
 add_text(slide, 0.7, 6.3, 11.9, 0.5, "Total experiment matrix: 5 models x 4 benchmarks = 20 experiments. Currently 6 complete, 2 running, 12 planned.", 14, GRAY)
 
 # ==================== SLIDE 7: Technical Architecture ====================
+# TODO: Address the Closed-Source Confound (Tinker API's black box nature confounds algorithmic comparisons with open-source TRL).
 slide = prs.slides.add_slide(prs.slide_layouts[6])
 set_bg(slide)
 add_text(slide, 0.5, 0.3, 3, 0.5, "06", 14, CYAN, True)
@@ -349,10 +353,10 @@ add_text(slide, 0.5, 0.3, 3, 0.5, "09", 14, CYAN, True)
 add_text(slide, 1.2, 0.3, 10, 0.6, "Discussion & Guidance Needed", 32, WHITE, True)
 
 questions = [
-    ("Evaluation", "Training reward is 100% on GSM8K. Need proper held-out test eval. How should we structure the evaluation section?", CYAN),
-    ("Conference Angle", "Systematic GRPO scaling across families + benchmarks on cloud infra — strong enough? Suggested venues?", YELLOW),
-    ("Bigger Models", "Tinker supports Qwen3-235B and DeepSeek-V3.1. Should we attempt 70B+ for the final report?", GREEN),
-    ("Depth vs Breadth", "More benchmarks (code, IFEval) or deeper analysis on math (ablations, longer training)?", RED),
+    ("Evaluation", "Training reward is 100%, but held-out GSM8K is 83.3% (+1.3%, p=0.26) and HumanEval is p=0.53. How to address failure to prove generalization?", CYAN),
+    ("Metrics", "ZVF metric is fragile outside math tasks. Should we pivot to ERF (Effective-Rollout Fraction) as the primary diagnostic?", YELLOW),
+    ("Methodology", "How to defend early-training snapshots (30 steps), N=1 seed extrapolations, and Tinker's closed-source confound?", GREEN),
+    ("Depth vs Breadth", "More benchmarks (code, IFEval) or deeper analysis on math (ablations, longer training, multiple seeds)?", RED),
 ]
 for i, (title, desc, color) in enumerate(questions):
     x = 0.5 + (i % 2) * 6.3

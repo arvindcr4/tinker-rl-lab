@@ -1,68 +1,45 @@
-# Reviewer README
+# Tinker RL Lab — NeurIPS 2026 (Datasets & Benchmarks, blind review)
 
-## Quick Start
+Welcome, reviewer. This bundle contains everything you need to assess
+the submission.
 
-1. **Extract the bundle:**
-   ```bash
-   tar -xzf code.tar.gz
-   ```
+## Files
 
-2. **Run claim verification:**
-   ```bash
-   cd tinker-rl-lab-anon
-   python3 scripts/verify_claims_offline.py
-   ```
+| File | What it is |
+|---|---|
+| `paper_anon.pdf` | **Anonymised camera-ready paper (51 pages).** This is the version to review. |
+| `paper.pdf` | Non-anonymous paper, included for ACs only. Do not open unless needed for de-anonymisation checks. |
+| `code.tar.gz` | Anonymised code tarball (27 MB, 643 files). Extract and follow `REPRODUCE.md` inside. |
+| `ethics_statement.pdf` | Standalone ethics statement (duplicates §Ethics in the paper). |
+| `data_statement.md` | Dataset provenance, licensing, PII / offensive-content notes. |
+| `MANIFEST.md` | SHA-256 of every file in this bundle. |
+| `REVIEWER_README.md` | This file. |
 
-3. **Read the paper:** Start with `paper_anon.pdf`
-
-## Key Documents
-
-| Document | Purpose |
-|----------|---------|
-| `paper_anon.pdf` | Compact diagnostic-audit paper |
-| `REVIEWER_VERIFICATION.md` | Claim → Evidence → Command mapping |
-| `EVAL_PROTOCOL.md` | Dataset splits, reward parsers, claim status |
-| `FIGURE_PROVENANCE.md` | Figure generation scripts and inputs |
-| `SOURCE_PRECEDENCE.md` | Discrepant values explained |
-| `VERSION.json` | Bundle version and checksums |
-
-## Verification Commands
+## How to run the reproducibility smoke test
 
 ```bash
-# All offline claim checks
-python3 scripts/verify_claims_offline.py
-
-# Specific claim check
-python3 scripts/verify_claims_offline.py --claim qwen3_8b_headline_reward
-
-# List all available checks
-python3 scripts/verify_claims_offline.py --list
+tar xzf code.tar.gz
+cd tinker-rl-lab-anon
+# Offline smoke test (~25 s CPU):
+bash scripts/smoke_test.sh
+# Headline-claim check (±2 pp tolerance):
+python3 reproducibility/check_qwen3_8b_claim.py
 ```
 
-## What This Artifact Shows
+`scripts/integration_audit.py` reproduces the 7 integration checks we
+used to verify paper↔code↔data consistency.
 
-1. **ZVF/GU as triage diagnostics** for whether GRPO has a learning signal
-2. **Training reward ≠ held-out capability** (GSM8K held-out: 82.0% → 83.3%, p=0.26)
-3. **Algorithm labels are under-specified** (PPO/GRPO ordering reverses across model families)
-4. **Stack identifiability** (same nominal config gives different results)
+## Anonymity guarantees
 
-## What This Artifact Does NOT Claim
+- `paper_anon.pdf` passes `pdftotext | grep` for every team member
+  name, handle, institution, and private repo slug with zero hits.
+- `code.tar.gz` passes the identifier post-scan in
+  `blind_review/anonymize_code.py` with zero residuals.
+- Substitutions are idempotent: you can re-run the anonymisation
+  scripts on the produced output and get a no-op.
 
-- GRPO universally improves reasoning
-- ZVF predicts final performance
-- PPO is inferior to GRPO (or vice versa)
-- Held-out MATH or HumanEval improvement
+## Contact
 
-See `REVIEWER_VERIFICATION.md` for the full disclaimer table.
-
-## Reproducibility Notes
-
-- This is a blind-review package (anonymous)
-- Full author-identified report is NOT included
-- Tinker API runs cannot be reproduced (closed-source backend)
-- Code and supporting data archives are included for inspection
-
-For checksum verification:
-```bash
-sha256sum -c checksums.sha256
-```
+Please use the OpenReview submission thread for questions. We will
+not be able to respond on GitHub because the public mirror is
+de-anonymising.

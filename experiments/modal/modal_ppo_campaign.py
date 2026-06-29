@@ -44,6 +44,20 @@ PPO_EXPERIMENTS = [
 def run_ppo_experiment(tag: str, model_id: str, model_short: str):
     """Run a single PPO experiment on Modal H100."""
     import torch, wandb, json, time
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
     from datasets import load_dataset
     from trl import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
@@ -80,7 +94,7 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
         model_id,
         quantization_config=quant_config,
-        device_map="auto",
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
         trust_remote_code=True,
         peft_config=LoraConfig(
             r=32,
@@ -186,7 +200,7 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
     wandb.log({"final_peak": peak, "final_last10": last10})
     wandb.finish()
     
-    print(f"{tag} DONE: peak={peak:.3f}, last10={last10:.3f}")
+    print(f"  ✓ {tag} DONE: peak={peak:.3f}, last10={last10:.3f}")
     return result
 
 
@@ -205,9 +219,9 @@ def main():
         try:
             result = f.get()
             results.append(result)
-            print(f"Completed: {result['tag']} peak={result['peak_reward']:.3f}")
+            print(f"  ✓ Completed: {result['tag']} peak={result['peak_reward']:.3f}")
         except Exception as e:
-            print(f"Failed: {e}")
+            print(f"  ✗ Failed: {e}")
             results.append({"status": "failed", "error": str(e)})
     
     # Save results

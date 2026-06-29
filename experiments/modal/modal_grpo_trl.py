@@ -41,6 +41,20 @@ TRL_EXPERIMENTS = [
 def run_trl_grpo(tag: str, model_id: str, model_short: str):
     """Run TRL GRPOTrainer on Modal H100 for framework comparison."""
     import torch, wandb, json, re, time
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from datasets import load_dataset
     from trl import GRPOConfig, GRPOTrainer
@@ -127,24 +141,34 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
         output_dir=f"/tmp/trl-grpo-{tag}",
         learning_rate=1e-5,
         per_device_train_batch_size=8,
+        per_device_eval_batch_size=8,
         num_generations=8,  # group size
         generation_batch_size=8,
         max_completion_length=512,
         num_train_epochs=1,
         max_steps=30,
         logging_steps=1,
+        eval_strategy="steps",
+        eval_steps=5,
+        save_strategy="steps",
+        save_steps=5,
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_reward/mean",
         report_to="wandb",
         bf16=True,
         gradient_accumulation_steps=1,
-        save_strategy="no",
     )
+    
+    from transformers import EarlyStoppingCallback
     
     trainer = GRPOTrainer(
         model=model_id,
         args=training_args,
         train_dataset=dataset,
+        eval_dataset=eval_dataset,
         reward_funcs=reward_function,
         peft_config=peft_config,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
     )
     
     print(f"  Starting training for {tag}...")
@@ -180,7 +204,7 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
     except Exception as e:
         print(f"  HF push failed: {e}")
     
-    print(f"{tag} DONE: peak={peak:.3f}, last10={last10:.3f}, duration={duration:.0f}s")
+    print(f"  ✓ {tag} DONE: peak={peak:.3f}, last10={last10:.3f}, duration={duration:.0f}s")
     return result
 
 
@@ -199,9 +223,9 @@ def main():
         try:
             result = f.get()
             results.append(result)
-            print(f"Completed: {result['tag']} peak={result['peak_reward']:.3f}")
+            print(f"  ✓ Completed: {result['tag']} peak={result['peak_reward']:.3f}")
         except Exception as e:
-            print(f"Failed: {e}")
+            print(f"  ✗ Failed: {e}")
             results.append({"status": "failed", "error": str(e)})
     
     with open("/home/user/workspace/elevation_outputs/modal_trl_grpo.json", "w") as f:

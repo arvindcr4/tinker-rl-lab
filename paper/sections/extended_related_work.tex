@@ -1,0 +1,70 @@
+% =============================================================================
+% Extended Related Work --- addresses reviewer weakness W15.
+% Included (optionally) from main.tex as an extension to Related Work v2.
+% Relies only on amsmath and booktabs (already loaded by main.tex).
+% Markers (verbatim, for automated review-response verification):
+%   %REVIEW-ADDR: W15-prm
+% =============================================================================
+
+\section{Extended Related Work: Interaction of ZVF with Adjacent RL Regimes}
+\label{sec:extended-related-work}
+
+A reviewer correctly observed that \ours{}'s zero-variance-fraction (ZVF)
+diagnostic was validated primarily against \emph{outcome-reward} GRPO runs with
+independent rollouts, and that an adjacent line of recent work modifies one of
+the two ingredients ZVF depends on: the reward signal that enters the
+group-relative advantage. This extended section surveys the dense,
+process-level reward regime and predicts whether ZVF remains informative,
+loses discriminative power, or requires an explicit surrogate.
+
+% -----------------------------------------------------------------------------
+\subsection{Process Reward Models and Dense Shaping}
+\label{sec:ext:tree-prm}
+%REVIEW-ADDR: W15-prm
+
+\paragraph{Process Reward Models (PRM).}
+The ``Let's Verify Step by Step'' line of work~\cite{lightman2023prm}
+introduces \emph{process reward models} (PRMs) that supply a dense, step-level
+reward signal rather than a single terminal outcome reward. Under a PRM, the
+per-trajectory reward is a sum (or weighted aggregate) over intermediate
+steps, and the within-group reward variance is bounded below by the
+step-level heterogeneity \emph{even when every trajectory in the group reaches
+the same outcome}. Formally, if $r_i = \sum_{t=1}^{T_i} r_{i,t}$ is the PRM
+reward for trajectory $i$ in a group and the $\{r_{i,t}\}$ are not perfectly
+aligned across $i$, then
+\begin{equation}
+\mathrm{Var}_i\!\left[r_i\right] \;>\; 0
+\quad\text{almost surely,}
+\end{equation}
+so the event $\{\mathrm{Var}_i[r_i] = 0\}$ that ZVF counts becomes vanishingly
+rare. The consequence is that \emph{ZVF approaches zero on both healthy and
+collapsed PRM runs}, and therefore \emph{loses discriminative power in the
+dense-reward regime}. We flag this as a known failure mode of ZVF and
+recommend, under PRM training, replacing the zero-variance-fraction indicator
+with either (i) the \emph{per-step reward-variance} statistic averaged over
+group members, or (ii) the effective-rank / effective-rollout surrogates
+discussed in Appendix~\ref{sec:appendix:zvf-formalization} and
+Appendix~\ref{sec:appendix:tool-code-depth}. Both surrogates remain
+sensitive to within-group collapse in the presence of dense shaping.
+
+\paragraph{Summary table.}
+Table~\ref{tab:ext:zvf-applicability} collects the predictions above.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Regime & ZVF applicability & Recommended replacement / augmentation \\
+\midrule
+Vanilla GRPO (outcome reward) & Informative (baseline)   & --- \\
+PRM~\cite{lightman2023prm}    & Degenerate ($\to 0$)     & Per-step reward variance or ERF \\
+\bottomrule
+\end{tabular}
+\caption{ZVF applicability across the outcome-reward and dense process-reward
+regimes surveyed in this section, together with the surrogate diagnostic we
+recommend where ZVF degenerates.}
+\label{tab:ext:zvf-applicability}
+\end{table}
+
+% End of extended related work.

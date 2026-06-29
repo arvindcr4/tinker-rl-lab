@@ -1,19 +1,36 @@
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import tinker
 import urllib.request
 
-# Replace this with your weights path output at the end of the training run
-# <unique_id> is the Training Run ID in Tinker console
-TINKER_PATH = "tinker://<unique_id>/sampler_weights/final"
+# TODO: Address "Closed-Source Confound" by also downloading Tinker's internal configs/managed defaults (if API allows) to ensure transparent baseline comparisons.
+# TODO: Address "Early-Training Snapshot Problem" by downloading intermediate training checkpoints, not just the final snapshot.
+# TODO: Address "Failure to Prove Generalization" by ensuring these downloaded weights are subsequently evaluated on a held-out test set.
 
-OUTPUT_FILENAME = "archive.tar"
+# Add multiple Training Run IDs (seeds) here to address the "Single-Seed Extrapolations" limitation
+RUN_IDS = ["<unique_id_1>", "<unique_id_2>", "<unique_id_3>"]
 
 print("Downloading weights from Tinker...")
 
 sc = tinker.ServiceClient()
 rc = sc.create_rest_client()
-future = rc.get_checkpoint_archive_url_from_tinker_path(TINKER_PATH)
-checkpoint_archive_url_response = future.result()
 
-urllib.request.urlretrieve(checkpoint_archive_url_response.url, OUTPUT_FILENAME)
-
-print(f"Finished! Weights are available at {OUTPUT_FILENAME}")
+for run_id in RUN_IDS:
+    tinker_path = f"tinker://{run_id}/sampler_weights/final"
+    output_filename = f"archive_{run_id}.tar"
+    print(f"Fetching weights for run {run_id}...")
+    
+    future = rc.get_checkpoint_archive_url_from_tinker_path(tinker_path)
+    checkpoint_archive_url_response = future.result()
+    
+    urllib.request.urlretrieve(checkpoint_archive_url_response.url, output_filename)
+    
+    print(f"Finished! Weights for {run_id} are available at {output_filename}")

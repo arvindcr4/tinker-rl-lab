@@ -37,7 +37,7 @@ datasets: [openai/gsm8k]
 license: mit
 ---
 # {exp_tag}
-Modal H100 GPU experiment from the TinkerRL-Bench suite.
+Modal H100 GPU experiment from TinkerRL-Bench world-class suite.
 ## Results
 ```json
 {json.dumps({k:v for k,v in results.items() if k not in ('per_problem','reward_trace','kl_trace','entropy_trace','step_log')}, indent=2)}
@@ -58,10 +58,10 @@ Modal H100 GPU experiment from the TinkerRL-Bench suite.
         with open(f"{tmp}/results.json", "w") as f: json.dump(results, f, indent=2)
         api.upload_folder(folder_path=tmp, repo_id=repo_id, repo_type="model", token=HF_TOKEN)
         shutil.rmtree(tmp, ignore_errors=True)
-        print(f"[HF] {repo_id}")
+        print(f"[HF] ✓ {repo_id}")
         return repo_id
     except Exception as e:
-        print(f"[HF] {exp_tag}: {e}")
+        print(f"[HF] ✗ {exp_tag}: {e}")
         return None
 
 
@@ -69,6 +69,20 @@ Modal H100 GPU experiment from the TinkerRL-Bench suite.
 @app.function(image=image, gpu="H100", timeout=7200)
 def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int = 30):
     import torch, random, re, json, wandb, os
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from datasets import load_dataset
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from peft import LoraConfig, get_peft_model
@@ -87,7 +101,7 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     if tokenizer.pad_token is None: tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
+        model_name, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True
     )
     lora_config = LoraConfig(
         r=32, lora_alpha=64,
@@ -172,9 +186,9 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
         create_repo(repo_id, repo_type="model", exist_ok=True, token=HF_TOKEN)
         api = HfApi(token=HF_TOKEN)
         api.upload_folder(folder_path=adapter_path, repo_id=repo_id, repo_type="model", token=HF_TOKEN)
-        print(f"[HF] Uploaded adapter to {repo_id}")
+        print(f"[HF] ✓ Uploaded adapter to {repo_id}")
     except Exception as e:
-        print(f"[HF] {e}")
+        print(f"[HF] ✗ {e}")
         repo_id = None
 
     last10 = step_rewards[-10:]
@@ -196,6 +210,20 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
 @app.function(image=image.pip_install("human-eval"), gpu="H100", timeout=7200)
 def run_humaneval_eval(model_name: str = "Qwen/Qwen3-8B", num_samples: int = 5):
     import torch, json, wandb, os
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from human_eval.data import read_problems
     from human_eval.execution import check_correctness
@@ -212,7 +240,7 @@ def run_humaneval_eval(model_name: str = "Qwen/Qwen3-8B", num_samples: int = 5):
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     if tokenizer.pad_token is None: tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
+        model_name, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True
     )
     model.eval()  # inference-only; no gradients needed
 
@@ -265,6 +293,20 @@ def run_humaneval_eval(model_name: str = "Qwen/Qwen3-8B", num_samples: int = 5):
 @app.function(image=image, gpu="H100", timeout=7200)
 def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int = 30):
     import torch, torch.nn.functional as F, random, re, json, wandb, os
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from datasets import load_dataset
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from peft import LoraConfig, get_peft_model
@@ -283,7 +325,7 @@ def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: in
     if tokenizer.pad_token is None: tokenizer.pad_token = tokenizer.eos_token
 
     ref_model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
+        model_name, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True
     )
     ref_model.eval()
     # Freeze ref model entirely — it's monitoring-only, never needs gradients
@@ -291,7 +333,7 @@ def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: in
         p.requires_grad = False
 
     policy_model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
+        model_name, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True
     )
     lora_config = LoraConfig(r=32, lora_alpha=64, target_modules=["q_proj","v_proj"],
                               lora_dropout=0.0, bias="none", task_type="CAUSAL_LM")
@@ -361,6 +403,20 @@ def run_kl_tracking(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: in
 @app.function(image=image, gpu="H100", timeout=7200)
 def run_gsm8k_heldout_eval(model_name: str = "Qwen/Qwen3-32B", num_examples: int = 200):
     import torch, re, json, random, wandb, os
+    try:
+        import torch, wandb
+        if not getattr(wandb, '_vram_patched', False):
+            _old_log = wandb.log
+            def _vram_log(data, *args, **kwargs):
+                if torch.cuda.is_available():
+                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    torch.cuda.reset_peak_memory_stats()
+                _old_log(data, *args, **kwargs)
+            wandb.log = _vram_log
+            wandb._vram_patched = True
+    except ImportError:
+        pass
     from datasets import load_dataset
     from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -375,7 +431,7 @@ def run_gsm8k_heldout_eval(model_name: str = "Qwen/Qwen3-32B", num_examples: int
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     if tokenizer.pad_token is None: tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
+        model_name, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True
     )
     model.eval()
 
@@ -460,12 +516,12 @@ def main():
         try:
             result = future.get()
             results[name] = result
-            print(f"\n[{name}] COMPLETED")
+            print(f"\n★ [{name}] COMPLETED")
             summary = {k: v for k, v in result.items()
                        if k not in ("per_problem", "reward_trace", "kl_trace", "entropy_trace")}
             print(json.dumps(summary, indent=2))
         except Exception as e:
-            print(f"\n[{name}] FAILED: {e}")
+            print(f"\n✗ [{name}] FAILED: {e}")
             results[name] = {"error": str(e)}
 
     elapsed = time.time() - start

@@ -1,0 +1,17 @@
+https://huggingface.co/Balasandhya/llm-multiturn-tool-call-grpo-QloRA-Qwen2.5-3B
+https://huggingface.co/Balasandhya
+https://huggingface.co/Madhu2133/qwen3-8b-code-grpo-v10
+https://huggingface.co/Madhu2133/qwen3-8b-swe-grpo
+https://huggingface.co/Madhu2133
+https://huggingface.co/MohammadRafiML
+https://huggingface.co/arvindcr4/tool-call-lora-qwen0.5b
+https://wandb.ai/capstone-proj/qwen3-8b-tool-use
+https://wandb.ai/capstone-proj/qwen3-8b-multi-tool-use
+https://github.com/dhruvanmurthy/llm_efficiency
+https://github.com/dhruvanmurthy/capstone-trials
+https://github.com/dhruvanmurthy/Qwen3-8B-FineTuning
+https://github.com/ArumugamKrishnan/Capstone-Project-Qwen-0.5B-Agent-
+https://github.com/ArumugamKrishnan/Agentic-RLHF-for-Aerospace-using-Browser-DPO
+https://github.com/pes-llm-research/tinker-rl-lab
+https://github.com/arvindcr4/tinker-experiments
+https://github.com/arvindcr4/awesome_agents_papers

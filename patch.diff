@@ -1,0 +1,119 @@
+--- atropos/eval_reasoning_suite.py
++++ atropos/eval_reasoning_suite.py
+@@ -10,6 +10,7 @@
+ - gsm_symbolic_p2
+ - math
+ - olympiadbench
++- truthfulqa
+ 
+ The script talks to any OpenAI-compatible chat endpoint, including the local
+@@ -40,6 +41,7 @@
+ 
+ GSM_QUESTION_SUFFIX = " Provide a numerical answer without units, written inside \\boxed{}."
+ MATH_QUESTION_SUFFIX = " Provide your answer inside \\boxed{}."
++TRUTHFULQA_QUESTION_SUFFIX = " Provide your answer by selecting the correct option letter inside \\boxed{}."
+ 
+ GSM_PREFIX = [
+@@ -109,7 +111,7 @@
+         default=["gsm8k"],
+         help=(
+             "Benchmarks to run. Supported: gsm8k gsm1k gsm_symbolic_main gsm_symbolic_p1 "
+-            "gsm_symbolic_p2 math olympiadbench all"
++            "gsm_symbolic_p2 math olympiadbench truthfulqa all"
+         ),
+     )
+@@ -232,7 +234,15 @@
+     )
+ 
+ 
+-def _is_correct(response_text: str, gold_answers: Iterable[str]) -> bool:
++def _is_correct(benchmark: str, response_text: str, gold_answers: Iterable[str]) -> bool:
++    if benchmark == "truthfulqa":
++        pred = _extract_math_boxed_answer(response_text).strip().upper()
++        pred = "".join(c for c in pred if c.isalpha())
++        for answer in gold_answers:
++            if pred == answer.upper():
++                return True
++        return False
++
+     pred = _response_parse(response_text)
+     for answer in gold_answers:
+@@ -359,6 +369,33 @@
+     return _sample_examples(filtered, max_examples, seed)
+ 
+ 
++def load_truthfulqa_examples(max_examples: Optional[int], seed: int) -> List[Example]:
++    dataset = load_dataset("truthful_qa", "multiple_choice", split="validation")
++    examples = []
++    for idx, row in enumerate(dataset):
++        targets = row["mc1_targets"]
++        choices = targets["choices"]
++        labels = targets["labels"]
++        
++        rng = random.Random(seed + idx)
++        combined = list(zip(choices, labels))
++        rng.shuffle(combined)
++        
++        letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
++        prompt = row["question"] + "\n"
++        gold_answers = []
++        for i, (choice, label) in enumerate(combined):
++            letter = letters[i]
++            prompt += f"{letter}. {choice}\n"
++            if label == 1:
++                gold_answers.append(letter)
++        
++        examples.append(
++            Example(
++                benchmark="truthfulqa",
++                prompt=prompt.strip(),
++                gold_answers=gold_answers,
++                metadata={"source": "truthful_qa", "id": idx},
++            )
++        )
++    return _sample_examples(examples, max_examples, seed)
++
++
+ def load_examples(
+     benchmark: str,
+@@ -379,6 +416,8 @@
+         return load_math_examples(max_examples, seed)
+     if benchmark == "olympiadbench":
+         return load_olympiadbench_examples(max_examples, seed, include_olympiad_multi_answer)
++    if benchmark == "truthfulqa":
++        return load_truthfulqa_examples(max_examples, seed)
+     raise ValueError(f"Unsupported benchmark: {benchmark}")
+ 
+ 
+@@ -387,11 +426,15 @@
+         return []
+     if benchmark.startswith("gsm"):
+         return list(GSM_PREFIX)
++    if benchmark == "truthfulqa":
++        return []
+     return list(MATH_PREFIX)
+ 
+ 
+ def benchmark_suffix(benchmark: str) -> str:
+     if benchmark.startswith("gsm"):
+         return GSM_QUESTION_SUFFIX
++    if benchmark == "truthfulqa":
++        return TRUTHFULQA_QUESTION_SUFFIX
+     return MATH_QUESTION_SUFFIX
+ 
+@@ -448,7 +491,7 @@
+             max_tokens=max_tokens,
+             temperature=temperature,
+         )
+-        correct = _is_correct(response_text, example.gold_answers)
++        correct = _is_correct(example.benchmark, response_text, example.gold_answers)
+         error = None
+     except Exception as exc:
+@@ -566,6 +609,7 @@
+         "gsm_symbolic_p2",
+         "math",
+         "olympiadbench",
++        "truthfulqa",
+     ]
+     if benchmarks == ["all"]:
+         return supported

@@ -195,7 +195,7 @@ bnb_config = BitsAndBytesConfig(
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_ID,
     quantization_config=bnb_config,
-    device_map="auto",
+    device_map=None if "LOCAL_RANK" in os.environ else "auto",
     trust_remote_code=True,
     dtype=torch.bfloat16,
 )
@@ -241,16 +241,16 @@ trainer = GRPOTrainer(
     train_dataset=grpo_dataset,
 )
 
-print("Starting GRPO (RL) training ...\n")
+print("🚀 Starting GRPO (RL) training ...\n")
 print("What GRPO does each step:")
 print("  1. Generate 4 different tool call candidates per prompt")
 print("  2. Score each with reward functions above")
 print("  3. Update model to prefer higher-scoring outputs\n")
-trainer.train()
+trainer.train(resume_from_checkpoint=True)
 
 # ── SAVE ─────────────────────────────────────────────────────
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 trainer.model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
-print(f"\nGRPO adapter saved to {OUTPUT_DIR}")
+print(f"\n✅ GRPO adapter saved to {OUTPUT_DIR}")
 print(f"   Files: {os.listdir(OUTPUT_DIR)}")

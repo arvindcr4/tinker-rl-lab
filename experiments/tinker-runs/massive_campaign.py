@@ -249,11 +249,11 @@ def run_single_experiment(exp):
             "timestamp": datetime.utcnow().isoformat(),
         }
         
-        print(f"[{tag}] DONE: peak={peak:.3f}, last10={last10:.3f}")
+        print(f"  ✓ [{tag}] DONE: peak={peak:.3f}, last10={last10:.3f}")
         return result_data
         
     except Exception as e:
-        print(f"[{tag}] FAILED: {e}")
+        print(f"  ✗ [{tag}] FAILED: {e}")
         traceback.print_exc()
         return {
             "tag": tag,
@@ -303,7 +303,7 @@ def launch_campaign(max_parallel=8):
                 completed = len([r for r in results if r.get("status") == "completed"])
                 failed = len([r for r in results if r.get("status") == "failed"])
                 print(f"\n  Progress: {len(results)}/{len(EXPERIMENTS)} "
-                      f"({completed}{failed})\n")
+                      f"(✓{completed} ✗{failed})\n")
                 
             except Exception as e:
                 print(f"  Future error for {exp['tag']}: {e}")

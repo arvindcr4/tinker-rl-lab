@@ -20,6 +20,16 @@ Tier mapping (matches VRAM budget doc):
     30B   → A100 80 GB
 """
 
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
+
 from __future__ import annotations
 
 import argparse
@@ -44,6 +54,22 @@ except Exception:
 
 # ── WandB (required) ────────────────────────────────────────────────────────
 import wandb
+try:
+    import torch, wandb
+    if not getattr(wandb, '_vram_patched', False):
+        _old_log = wandb.log
+        def _vram_log(data, *args, **kwargs):
+            if torch.cuda.is_available():
+                data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
+                data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                torch.cuda.reset_peak_memory_stats()
+            _old_log(data, *args, **kwargs)
+        wandb.log = _vram_log
+        wandb._vram_patched = True
+except ImportError:
+    pass
+
+_last_zvf = 0.0
 
 
 # ── reward helpers (verbatim logic from gsm8k_tinker.py) ────────────────────
@@ -168,6 +194,7 @@ def load_config(path: str) -> dict:
 
     return {
         "model_name":       oi.get("model_name") or cfg.get("tokenizer_name"),
+        # TODO: 30-50 steps is insufficient to observe meaningful RL convergence. Increase total_steps.
         "total_steps":      cfg.get("total_steps",       50),
         "batch_size":       cfg.get("batch_size",        128),
         "group_size":       cfg.get("group_size",        16),
@@ -181,6 +208,8 @@ def load_config(path: str) -> dict:
         "wandb_group":      t.get("wandb_group",         "unsloth-runs"),
         "wandb_run_name":   t.get("wandb_run_name",      "grpo-run"),
         "checkpoint_dir":   t.get("checkpoint_dir",      "./checkpoints/run/"),
+        "early_stopping_patience": t.get("early_stopping_patience", 3),
+        "eval_steps":       t.get("eval_steps",          10),
     }
 
 
@@ -208,18 +237,13 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
     use_unsloth = os.environ.get("ATROPOS_USE_UNSLOTH", "0").lower() in {"1", "true", "yes"}
     if use_unsloth:
         try:
-            from unsloth import FastLanguageModel, PatchFastRL
-            PatchFastRL("GRPO", FastLanguageModel)
-            
-            import importlib.util
-            has_vllm = importlib.util.find_spec("vllm") is not None
+            from unsloth import FastLanguageModel
 
-            print(f"  Loading {model_name} with Unsloth ({params_b}B, 4-bit={load_in_4bit}, vLLM={has_vllm}) ...")
+            print(f"  Loading {model_name} with Unsloth ({params_b}B, 4-bit={load_in_4bit}) ...")
             model, tokenizer = FastLanguageModel.from_pretrained(
                 model_name=model_name,
                 max_seq_length=max_seq_len,
                 load_in_4bit=load_in_4bit,
-                fast_inference=has_vllm,
                 dtype=None,
             )
 
@@ -316,10 +340,12 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
 
 # ── dataset preparation ───────────────────────────────────────────────────────
 
-def prepare_dataset(tokenizer, use_prefix: bool = True, seed: int = 42):
+def prepare_dataset(tokenizer, use_prefix: bool = True, seed: int = 42, split: str = "train"):
     from datasets import load_dataset
 
-    ds = load_dataset("gsm8k", "main", split="train").shuffle(seed=seed)
+    ds = load_dataset("gsm8k", "main", split=split)
+    if split == "train":
+        ds = ds.shuffle(seed=seed)
 
     def _format(example):
         prompt = build_prompt(example["question"], tokenizer, use_prefix)
@@ -333,7 +359,7 @@ def prepare_dataset(tokenizer, use_prefix: bool = True, seed: int = 42):
 
 # ── reward function for GRPOTrainer ──────────────────────────────────────────
 
-def make_reward_fn():
+def make_reward_fn(group_size: int):
     """Return a reward function compatible with TRL GRPOTrainer."""
 
     def reward_fn(completions: List[str], prompts=None, **kwargs) -> List[float]:
@@ -347,6 +373,21 @@ def make_reward_fn():
             else:
                 gold = ""   # fallback (shouldn't happen)
             rewards.append(_score_response(_completion_to_text(completion), gold))
+        
+        # calculate zvf
+        # TODO: ZVF breaks down outside of math tasks. Implement ERF (Effective-Rollout Fraction) for format-gated tasks.
+        # TODO: Log advantage variance and policy entropy as ZVF is often just a symptom.
+        zvf_sum = 0.0
+        n_groups = len(rewards) // group_size
+        if n_groups > 0:
+            for idx in range(n_groups):
+                chunk = rewards[idx*group_size:(idx+1)*group_size]
+                mr = sum(chunk) / group_size
+                if all(abs(r - mr) < 1e-6 for r in chunk):
+                    zvf_sum += 1.0
+            global _last_zvf
+            _last_zvf = zvf_sum / n_groups
+            
         return rewards
 
     return reward_fn
@@ -465,6 +506,14 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
         tokenizer,
         use_prefix=cfg["use_prompt_prefix"],
         seed=cfg["data_seed"],
+        split="train"
+    )
+    # TODO: Improve evaluation to rigorously prove generalized reasoning uplift on held-out test sets.
+    eval_dataset = prepare_dataset(
+        tokenizer,
+        use_prefix=cfg["use_prompt_prefix"],
+        seed=cfg["data_seed"],
+        split="test"
     )
 
     # ── GRPOTrainer ─────────────────────────────────────────────────────────
@@ -473,22 +522,28 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
     per_device_train_batch_size = cfg["group_size"]
     gradient_accumulation_steps = max(1, cfg["batch_size"] // per_device_train_batch_size)
 
+    # TODO: Implement micro-partitioning and reference offloading to close the performance gap with Tinker API.
     # num_generations = group_size (TRL calls it num_generations)
     grpo_config = GRPOConfig(
         output_dir=cfg["checkpoint_dir"],
         num_train_epochs=1,
         max_steps=cfg["total_steps"],
         per_device_train_batch_size=per_device_train_batch_size,
+        per_device_eval_batch_size=per_device_train_batch_size,
         gradient_accumulation_steps=gradient_accumulation_steps,
         num_generations=cfg["group_size"],
         max_completion_length=cfg["max_token_length"],
         learning_rate=cfg["learning_rate"],
         logging_steps=1,
-        save_steps=10,
+        save_steps=cfg["eval_steps"],
+        eval_strategy="steps",
+        eval_steps=cfg["eval_steps"],
+        save_strategy="steps",
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_reward/mean",
         seed=seed,
         report_to="wandb",
         run_name=cfg["wandb_run_name"],
-        use_vllm=__import__("importlib.util").util.find_spec("vllm") is not None,
         # Unsloth-compatible settings
         bf16=True,
         fp16=False,
@@ -497,14 +552,18 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
         remove_unused_columns=False,
     )
 
-    reward_fn = make_reward_fn()
+    reward_fn = make_reward_fn(cfg["group_size"])
+
+    from transformers import EarlyStoppingCallback
 
     trainer = GRPOTrainer(
         model=model,
         args=grpo_config,
         train_dataset=dataset,
+        eval_dataset=eval_dataset,
         reward_funcs=[reward_fn],
         processing_class=tokenizer,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=cfg["early_stopping_patience"])],
     )
 
     # Attach step-level logging via callback
@@ -520,6 +579,10 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
             if mean_r is not None:
                 logger.step_log.append(float(mean_r))
                 logger.flush(step)
+            
+            global _last_zvf
+            if '_last_zvf' in globals():
+                wandb.log({"zvf": _last_zvf}, step=step, commit=False)
 
     trainer.add_callback(RewardLogCallback())
 
@@ -553,6 +616,7 @@ if __name__ == "__main__":
         description="GRPO training with Unsloth (drop-in for Atropos+Tinker)"
     )
     parser.add_argument("--config",  required=True, help="Path to YAML config")
+    # TODO: Support multi-seed runs to avoid single-seed statistical vulnerability.
     parser.add_argument("--seed",    type=int, default=42)
     parser.add_argument("--wandb_key", default=None, help="WandB API key (or set WANDB_API_KEY)")
     args = parser.parse_args()

@@ -1,4 +1,14 @@
 """Experiment D: GRPO with Salesforce/xlam-function-calling-60k real dataset"""
+
+import atexit
+try:
+    from codecarbon import EmissionsTracker
+    _tracker = EmissionsTracker()
+    _tracker.start()
+    atexit.register(_tracker.stop)
+except ImportError:
+    pass
+
 import os, json, re, warnings, random
 warnings.filterwarnings("ignore")
 os.environ.setdefault("TINKER_API_KEY", os.environ.get("TINKER_API_KEY", ""))
@@ -11,7 +21,8 @@ EXP_NAME   = "D_xlam"
 MODEL      = "Qwen/Qwen3-8B"
 LORA_RANK  = 32
 GROUP_SIZE = 8
-STEPS      = 30
+NUM_SEEDS = 5
+STEPS = 200
 LR         = 3e-5
 TEMP       = 0.8
 SAVE_EVERY = 10
@@ -60,8 +71,9 @@ for row in ds:
         continue
 
 random.shuffle(examples)
-examples = examples[:2000]  # cap at 2000 for speed
-print(f"[{EXP_NAME}] Parsed {len(examples)} usable examples")
+train_examples = examples[:2000]  # cap at 2000 for speed
+test_examples = examples[2000:2500]
+print(f"[{EXP_NAME}] Parsed {len(train_examples)} train examples, {len(test_examples)} test examples")
 
 # ── Reward function ──────────────────────────────────────────────────────
 def reward(response, tool_name, arguments):
@@ -87,61 +99,89 @@ def grpo_loss_fn(data, logprobs_list):
     return loss, {"grpo_loss": loss.item()}
 
 # ── Setup ────────────────────────────────────────────────────────────────
-print(f"[{EXP_NAME}] Connecting...")
-svc = tinker.ServiceClient(base_url=None)
-tc  = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK)
-tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
-w0  = tc.save_weights_for_sampler(name="step_0").result()
-sc  = tc.create_sampling_client(model_path=w0.path)
-print(f"[{EXP_NAME}] Run: {tc.model_id} | LR={LR} group={GROUP_SIZE} temp={TEMP}")
 
-# ── GRPO loop ────────────────────────────────────────────────────────────
-step_rewards = []
-for step in range(STEPS):
-    batch = random.sample(examples, 4)
-    all_data, all_advs, batch_rewards = [], [], []
+for seed in range(NUM_SEEDS):
+    print(f"\n==================================================\nRunning seed {seed} ({seed+1}/{NUM_SEEDS})\n==================================================")
+    random.seed(seed)
+    torch.manual_seed(seed)
+    
+    print(f"[{EXP_NAME}] Connecting...")
+    svc = tinker.ServiceClient(base_url=None)
+    tc  = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK)
+    tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
+    w0  = tc.save_weights_for_sampler(name=f"seed{seed}_step_0").result()
+    sc  = tc.create_sampling_client(model_path=w0.path)
+    print(f"[{EXP_NAME}] Run: {tc.model_id} | LR={LR} group={GROUP_SIZE} temp={TEMP}")
 
-    for prompt_text, tool_name, args in batch:
-        prompt_ids = tok.encode(prompt_text, add_special_tokens=False)
-        # Truncate if too long (xlam can have long tool schemas)
-        if len(prompt_ids) > 2048:
-            prompt_ids = prompt_ids[:2048]
-        sp = T.SamplingParams(max_tokens=256, temperature=TEMP, top_p=0.95)
-        responses = sc.sample(T.ModelInput.from_ints(prompt_ids), num_samples=GROUP_SIZE, sampling_params=sp).result()
-        rewards = []
-        for resp in responses.sequences:
-            text = tok.decode(list(resp.tokens), skip_special_tokens=True)
-            rewards.append(reward(text, tool_name, args))
-        mean_r = sum(rewards) / len(rewards)
-        std_r = (sum((r - mean_r)**2 for r in rewards) / len(rewards))**0.5 + 1e-8
-        advs = [(r - mean_r) / std_r for r in rewards]
-        batch_rewards.extend(rewards)
-        for resp, adv in zip(responses.sequences, advs):
-            resp_ids = list(resp.tokens)
-            full_ids = prompt_ids + resp_ids
-            target_ids = full_ids[1:] + [0]
-            all_data.append(T.Datum(
-                model_input=T.ModelInput.from_ints(full_ids),
-                loss_fn_inputs={"target_tokens": T.TensorData(data=target_ids, dtype="int64", shape=[len(target_ids)])}
-            ))
-            all_advs.append(adv)
+    # ── GRPO loop ────────────────────────────────────────────────────────────
+    step_rewards = []
+    for step in range(STEPS):
+        batch = random.sample(train_examples, 4)
+        all_data, all_advs, batch_rewards = [], [], []
 
-    if not all_data: continue
-    _advantages = all_advs
-    result = tc.forward_backward_custom(data=all_data, loss_fn=grpo_loss_fn).result()
-    tc.optim_step(T.AdamParams(learning_rate=LR, beta1=0.9, beta2=0.95, eps=1e-8)).result()
-    avg_r = sum(batch_rewards) / len(batch_rewards)
-    step_rewards.append(avg_r)
-    loss_val = result.metrics.get("grpo_loss", float("nan"))
-    print(f"[{EXP_NAME}] Step {step+1:3d}/{STEPS} | loss={loss_val:.4f} | reward={avg_r:.3f}")
-    if (step + 1) % SAVE_EVERY == 0:
-        tc.save_state(name=f"state_{step+1}")
-        ckpt = tc.save_weights_for_sampler(name=f"step_{step+1}").result()
-        sc = tc.create_sampling_client(model_path=ckpt.path)
-        print(f"[{EXP_NAME}]   -> Checkpoint step_{step+1}")
+        for prompt_text, tool_name, args in batch:
+            prompt_ids = tok.encode(prompt_text, add_special_tokens=False)
+            # Truncate if too long (xlam can have long tool schemas)
+            if len(prompt_ids) > 2048:
+                prompt_ids = prompt_ids[:2048]
+            sp = T.SamplingParams(max_tokens=256, temperature=TEMP, top_p=0.95)
+            responses = sc.sample(T.ModelInput.from_ints(prompt_ids), num_samples=GROUP_SIZE, sampling_params=sp).result()
+            rewards = []
+            for resp in responses.sequences:
+                text = tok.decode(list(resp.tokens), skip_special_tokens=True)
+                rewards.append(reward(text, tool_name, args))
+            mean_r = sum(rewards) / len(rewards)
+            std_r = (sum((r - mean_r)**2 for r in rewards) / len(rewards))**0.5 + 1e-8
+            advs = [(r - mean_r) / std_r for r in rewards]
+            batch_rewards.extend(rewards)
+            for resp, adv in zip(responses.sequences, advs):
+                resp_ids = list(resp.tokens)
+                full_ids = prompt_ids + resp_ids
+                target_ids = full_ids[1:] + [0]
+                all_data.append(T.Datum(
+                    model_input=T.ModelInput.from_ints(full_ids),
+                    loss_fn_inputs={"target_tokens": T.TensorData(data=target_ids, dtype="int64", shape=[len(target_ids)])}
+                ))
+                all_advs.append(adv)
 
-tc.save_state(name="final")
-final = tc.save_weights_for_sampler(name="final").result()
-print(f"\n[{EXP_NAME}] DONE | avg_reward_last10={sum(step_rewards[-10:])/max(len(step_rewards[-10:]),1):.3f}")
-print(f"[{EXP_NAME}] Run ID: {tc.model_id}")
-print(f"[{EXP_NAME}] Sampler: {final.path}")
+        if not all_data: continue
+        _advantages = all_advs
+        result = tc.forward_backward_custom(data=all_data, loss_fn=grpo_loss_fn).result()
+        tc.optim_step(T.AdamParams(learning_rate=LR, beta1=0.9, beta2=0.95, eps=1e-8)).result()
+        avg_r = sum(batch_rewards) / len(batch_rewards)
+        step_rewards.append(avg_r)
+        loss_val = result.metrics.get("grpo_loss", float("nan"))
+        print(f"[{EXP_NAME}] Step {step+1:3d}/{STEPS} | loss={loss_val:.4f} | reward={avg_r:.3f}")
+        if (step + 1) % SAVE_EVERY == 0:
+            tc.save_state(name=f"state_{step+1}")
+            ckpt = tc.save_weights_for_sampler(name=f"step_{step+1}").result()
+            sc = tc.create_sampling_client(model_path=ckpt.path)
+            print(f"[{EXP_NAME}]   -> Checkpoint step_{step+1}")
+
+    tc.save_state(name=f"seed{seed}_final")
+    final = tc.save_weights_for_sampler(name=f"seed{seed}_final").result()
+    print(f"\n[{EXP_NAME}] DONE | avg_reward_last10={sum(step_rewards[-10:])/max(len(step_rewards[-10:]),1):.3f}")
+    print(f"[{EXP_NAME}] Run ID: {tc.model_id}")
+    print(f"[{EXP_NAME}] Sampler: {final.path}")
+
+    # ── Held-out Evaluation ──────────────────────────────────────────────────
+    print(f"\n[{EXP_NAME}] Evaluating on {len(test_examples)} held-out test examples...")
+    test_rewards = []
+    for i in range(0, len(test_examples), 4):
+        batch = test_examples[i:i+4]
+        for prompt_text, tn, args in batch:
+            pid = tok.encode(prompt_text, add_special_tokens=False)
+            if len(pid) > 2048:
+                pid = pid[:2048]
+            sp = T.SamplingParams(max_tokens=256, temperature=0.1, top_p=0.95)
+            try:
+                resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=1, sampling_params=sp).result()
+                text = tok.decode(list(resp.sequences[0].tokens), skip_special_tokens=True)
+                test_rewards.append(reward(text, tn, args))
+            except Exception:
+                continue
+
+    avg_test = sum(test_rewards) / len(test_rewards) if test_rewards else 0.0
+    print(f"[{EXP_NAME}] Held-out Test Reward: {avg_test:.3f}")
+
+

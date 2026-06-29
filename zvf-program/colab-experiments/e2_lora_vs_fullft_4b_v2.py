@@ -59,15 +59,26 @@ PAD = tok.pad_token_id
 
 
 def problem():
-    """3-digit x 2-digit multiplication: harder than a+b on [11,60].
+    """3-digit + 3-digit addition: middle-difficulty task.
 
-    Range: a in [100, 999], b in [11, 99] -> answer in [1100, 98901]
-    Difficulty: requires multi-step carry reasoning; Qwen3-4B-2507 won't
-    saturate in 80 steps even with high temperature.
+    v1 was a+b in [11,60] -> saturated to ceiling in 1-3 steps (no signal).
+    v2 first attempt was a*b in [100,999]x[11,99] (3-digit x 2-digit) ->
+    heldout_pre=0.000, ZVF=1.0 the entire run because Qwen3-4B-2507 can't
+    generate any correct 3-digit x 2-digit completions with sampling at
+    temperature 1.0.
+    v2 second attempt was 2-digit x 1-digit (e.g., 47 x 6 = 282) -> smoke
+    test still showed pre=0.000. Multiplication at any non-trivial difficulty
+    is too hard for this 4B model in this prompt format.
+
+    v2-final: 3-digit + 3-digit. Range: a, b in [100, 999] -> answer in
+    [200, 1998]. Requires carry handling for most pairs. Should sit in the
+    medium-difficulty band: hard enough that Qwen3-4B-2507 cannot reach
+    ceiling in 80 steps, easy enough that some completions are correct
+    in early steps (live gradient signal).
     """
     a = random.randint(100, 999)
-    b = random.randint(11, 99)
-    return f"{a} * {b}", a * b
+    b = random.randint(100, 999)
+    return f"{a} + {b}", a + b
 
 
 def prompt_of(q):
@@ -222,7 +233,7 @@ summary = {
     "lr_full": LR_FULL,
     "max_new_tokens": MAX_NEW,
     "heldout_n": HELDOUT_N,
-    "task": "3-digit * 2-digit multiplication in [100,999] x [11,99]",
+    "task": "3-digit + 3-digit addition in [100,999]",
     "lora_targets": LORA_TARGETS,
     "lora": aggregate(lora_arms),
     "full": aggregate(full_arms),

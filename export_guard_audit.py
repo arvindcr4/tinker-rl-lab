@@ -4,14 +4,16 @@ import re
 
 def get_issues(ctx):
     issues = []
-    
-    if "run_all_audits.py" not in ctx.script:
+
+    # The export/bundling script must invoke the audit suite before packaging
+    # and must support a documented skip override.
+    if "run_all_audits.py" not in ctx.export_script:
         issues.append("export_script_missing_audit_guard")
-    if "--skip-audits" not in ctx.script:
+    if "--skip-audits" not in ctx.export_script:
         issues.append("export_script_missing_skip_audits_override")
-    if "subprocess.run" not in ctx.script:
+    if "subprocess.run" not in ctx.export_script:
         issues.append("export_script_not_invoking_audit_process")
-    
+
     return issues
 
 if __name__ == '__main__':

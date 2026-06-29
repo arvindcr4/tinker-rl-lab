@@ -37,6 +37,8 @@ class AuditContext:
     @property
     def readme(self): return self.read_text(self.FINAL_DIR / "README.md").lower()
     @property
+    def export_script(self): return self.read_text(self.FINAL_DIR / "prepare_blind_review_package.py").lower()
+    @property
     def script(self): return self.read_text(self.FINAL_DIR / "evaluate_gsm8k_test.py").lower()
     @property
     def submission(self): return self.read_text(self.FINAL_DIR / "SUBMISSION_README.md").lower()

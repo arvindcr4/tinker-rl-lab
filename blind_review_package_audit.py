@@ -4,14 +4,22 @@ import re
 
 def get_issues(ctx):
     issues = []
-    
-    if "for blind review submissions, submit the anonymized ctx.paper source/package" not in ctx.submission:
+
+    # Submission README must explicitly tell submitters to use the anonymized
+    # paper source/package for blind review, and to exclude the non-anonymous
+    # version from blind-review bundles.
+    submission_lc = ctx.submission
+    if "for blind review submissions" not in submission_lc or "anonymized" not in submission_lc or "source/package" not in submission_lc:
         issues.append("submission_readme_missing_anonymized_package_guidance")
-    if "exclude the non-anonymous ctx.paper source from blind-review bundles" not in ctx.submission:
+    if "exclude the non-anonymous" not in submission_lc or "blind-review bundles" not in submission_lc:
         issues.append("submission_readme_missing_nonanonymous_exclusion_note")
-    if "anonymous ctx.submission" in ctx.checklist and "anonymized ctx.paper source/package" not in ctx.checklist:
+
+    # Checklist should reference an anonymized package note when it discusses
+    # anonymous submission.
+    checklist_lc = ctx.checklist
+    if "anonymous submission" in checklist_lc and "anonymized paper source/package" not in checklist_lc:
         issues.append("checklist_missing_anonymized_package_note")
-    
+
     return issues
 
 if __name__ == '__main__':

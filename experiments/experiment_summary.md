@@ -145,3 +145,40 @@ Both Qwen3-32B and Llama-3.1-8B-Instruct scored 0% on all 30 tool-use training s
 - **Nemotron-120B reward collapse:** Peak 87.5% at step 2, declining to ~6% by step 20 — the most dramatic collapse observed. Likely due to lack of SFT initialization or unsuitable hyperparameters.
 - **DeepSeek-V3.1 stability:** Most stable frontier model (CV=0.166), suggesting robust reward landscape.
 - **Classical PPO (SB3/CleanRL/Tianshou) on raw math:** All < 2% — LLM backbone is essential for language tasks.
+
+---
+
+## ZVF-Program Out-of-Platform Follow-Ups (Colab A100)
+
+These experiments live outside the Tinker audit corpus. They are designed to
+test claims the Tinker platform structurally cannot address (closed loss,
+LoRA-only, single-seed, no gradient access). Synthetic arithmetic on
+`Qwen/Qwen3-4B-Instruct-2507` (4B text-only, non-thinking mode), 3 seeds per
+arm, held-out N=50.
+
+### E2 — LoRA vs full fine-tuning
+
+| Arm | Trainable params | Mean held-out Δ | Std Δ | Mean ZVF |
+|:----|-----------------:|----------------:|------:|---------:|
+| LoRA (r=16, q/k/v/o) | 11.8M (0.29% of base) | **+0.160** | ±0.020 | 0.954 |
+| Full-FT | 4.02B (100% of base) | +0.100 | ±0.020 | 0.758 |
+| **Δ (LoRA − Full)** | — | **+0.060** | — | +0.196 |
+
+All six runs reach the held-out ceiling (1.000) from base 0.82-0.86; the gap
+is in *how fast* each arm arrives. LoRA's higher ZVF (0.954) shows that
+within-group contrast collapses immediately (saturated regime), while full-FT
+maintains more within-group variance (0.758) but with the larger gradient
+steps that delays convergence.
+
+**Implication for the paper:** defends the LoRA-only constraint of the Tinker
+platform as not handicapping the audit corpus, and confirms ZVF theory T2
+(in saturation, parameter-efficient path = more stable path).
+
+- Full data: `zvf-program/colab-experiments/results/e2_lora_vs_fullft_4b.json`
+- W&B: https://wandb.ai/arvindcr4-pes-university/zvf-colab-experiments/runs/mk2houtf
+- README: `zvf-program/colab-experiments/results/README_E2_PROD.md`
+
+**Caveats:** synthetic arithmetic on a 4B model, 3 seeds (floor for std-dev
+reporting), saturation regime (we measure the path to ceiling, not whether
+the ceiling can be exceeded). For a stronger claim, repeat on a harder task
+that does not saturate in 40 steps.

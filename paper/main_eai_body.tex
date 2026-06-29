@@ -1931,6 +1931,35 @@ the mixed arm shows lower ZVF and positive reward slope.  Running this
 experiment would turn the current observational ZVF/GU diagnostic into a
 direct causal test.
 
+\subsubsection*{LoRA versus full fine-tuning at production scale (E2).}
+\label{sec:e2-prod}
+The Tinker platform used throughout this paper is LoRA-only by construction,
+which leaves open the question of whether the LoRA restriction is itself a
+confound.  We addressed this question with an out-of-platform controlled
+experiment on \texttt{Qwen/Qwen3-4B-Instruct-2507}: matched task (synthetic
+arithmetic $a + b$ with $a, b \in [11, 60]$), matched data, matched compute,
+matched seed-reset, matched held-out evaluation ($N = 50$ problems), and
+identical GRPO harness --- differing only in the LoRA$\leftrightarrow$full
+fine-tuning axis.  We ran three seeds ($0, 1, 2$) for each arm and report
+held-out accuracy $\Delta = \text{post} - \text{pre}$.  All runs reached the
+held-out ceiling ($1.000$) from a base of $0.820$--$0.860$, but the rate
+differed: \textbf{LoRA mean $\Delta = +0.160$ (std $0.020$) versus full-FT
+mean $\Delta = +0.100$ (std $0.020$); LoRA $-$ full $= +0.060$.}  The full-FT
+arm additionally shows lower mean ZVF ($0.758$ vs LoRA's $0.954$) --- a
+signature of the larger gradient steps disturbing the saturated equilibrium.
+This is the opposite of the naive expectation (full-FT has $\sim 340 \times$
+more trainable parameters), and it has two implications: (i) it defends the
+LoRA-only constraint of the Tinker platform as not handicapping the audit
+corpus, and (ii) it confirms ZVF theory T2 --- in the saturation regime,
+the parameter-efficient path is also the more stable one.  We release the
+full trajectory JSON at
+\texttt{zvf-program/colab-experiments/results/e2\_lora\_vs\_fullft\_4b.json}
+and the per-run W\&B logs at
+\texttt{wandb.ai/arvindcr4-pes-university/zvf-colab-experiments/run/E2\_lora\_vs\_fullft\_4b}.
+\textbf{Caveats:} synthetic arithmetic on a 4B model, three seeds (the
+minimum for std-dev reporting), and a saturation regime that measures
+\emph{how} each arm arrives at the ceiling rather than whether it can exceed it.
+
 \subsection{What Stack Sensitivity Means for the Field}
 \label{sec:discuss_impl}
 

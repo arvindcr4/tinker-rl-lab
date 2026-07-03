@@ -1,0 +1,10 @@
+# zvf_iter110_auroc.tsv -- AUROC discrimination vs is_collapse
+# on the 14-row cross-library aggregator from iter102.
+# Higher AUROC = better; direction_used reports the sign
+# of the predictor that gave the larger AUROC.
+# Bootstrap CIs: B=2000 percentile resamples.
+# Source: scripts/zvf_discrimination_iter110.py
+predictor	direction_used	auroc	ci_lo	ci_hi	n_collapse	n_other	partial_auroc_p	partial_auroc_ci_lo	partial_auroc_ci_hi	spearman_abs_vs_collapse
+zvf_emp	+	1.0	1.0	1.0	4	10	1.0	0.95	1.0	0.3626
+delta_calibration	-	1.0	1.0	1.0	4	10	1.0	0.95	1.0	0.8769
+rho_overdispersion	-	1.0	1.0	1.0	4	10	1.0	0.95	1.0	0.8989

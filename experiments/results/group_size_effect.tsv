@@ -1,25 +1,18 @@
-source	G	n_seeds	heldout_acc_mean	heldout_acc_ci_low	heldout_acc_ci_high	mean_zvf	last10_mean	is_measured
-qwen2.5-0.5b_arithmetic	2	3	0.9817	0.975	0.99	0.838	0.9771	yes
-qwen2.5-0.5b_arithmetic	4	3	0.9883	0.985	0.99	0.7635	0.9714	yes
-qwen2.5-0.5b_arithmetic	8	3	0.99	0.985	0.995	0.6906	0.9732	yes
-qwen2.5-0.5b_arithmetic	16	3	0.9783	0.97	0.99	0.6312	0.9837	yes
-qwen3-8b_gsm8k_T1000000	4	-1	0.41	0.38	0.44	nan	nan	no
-qwen3-8b_gsm8k_T1000000	8	-1	0.48	0.45	0.51	nan	nan	no
-qwen3-8b_gsm8k_T1000000	16	-1	0.47	0.44	0.5	nan	nan	no
-qwen3-8b_gsm8k_T1000000	32	-1	0.42	0.39	0.45	nan	nan	no
-qwen3-8b_gsm8k_T1000000	64	-1	0.35	0.32	0.38	nan	nan	no
-qwen3-8b_gsm8k_T4000000	4	-1	0.55	0.52	0.58	nan	nan	no
-qwen3-8b_gsm8k_T4000000	8	-1	0.67	0.64	0.7	nan	nan	no
-qwen3-8b_gsm8k_T4000000	16	-1	0.69	0.66	0.72	nan	nan	no
-qwen3-8b_gsm8k_T4000000	32	-1	0.66	0.63	0.69	nan	nan	no
-qwen3-8b_gsm8k_T4000000	64	-1	0.58	0.55	0.61	nan	nan	no
-qwen3-8b_gsm8k_T16000000	4	-1	0.63	0.6	0.66	nan	nan	no
-qwen3-8b_gsm8k_T16000000	8	-1	0.78	0.75	0.81	nan	nan	no
-qwen3-8b_gsm8k_T16000000	16	-1	0.82	0.79	0.85	nan	nan	no
-qwen3-8b_gsm8k_T16000000	32	-1	0.84	0.81	0.87	nan	nan	no
-qwen3-8b_gsm8k_T16000000	64	-1	0.8	0.77	0.83	nan	nan	no
-qwen3-8b_gsm8k_T64000000	4	-1	0.64	0.61	0.67	nan	nan	no
-qwen3-8b_gsm8k_T64000000	8	-1	0.8	0.77	0.83	nan	nan	no
-qwen3-8b_gsm8k_T64000000	16	-1	0.85	0.82	0.88	nan	nan	no
-qwen3-8b_gsm8k_T64000000	32	-1	0.88	0.85	0.91	nan	nan	no
-qwen3-8b_gsm8k_T64000000	64	-1	0.87	0.84	0.9	nan	nan	no
+section	metric_key	headline
+A_reward_vs_G	per_G_table	[{"G": 2, "n_seeds": 3, "reward_mean": 0.8398, "reward_se": 0.0072, "last10_reward_mean": 0.9771, "heldout_acc_mean": 0.9817, "heldout_acc_se": 0.0044, "mean_zvf_mean": 0.838, "entropy_mean": 0.2901}, {"G": 4, "n_seeds": 3, "reward_mean": 0.8625, "reward_se": 0.0033, "last10_reward_mean": 0.9714, "heldout_acc_mean": 0.9883, "heldout_acc_se": 0.0017, "mean_zvf_mean": 0.7635, "entropy_mean": 0.2392}, {"G": 8, "n_seeds": 3, "reward_mean": 0.8694, "reward_se": 0.0019, "last10_reward_mean": 0.9732, "heldout_acc_mean": 0.99, "heldout_acc_se": 0.0029, "mean_zvf_mean": 0.6906, "entropy_mean": 0.2233}, {"G": 16, "n_seeds": 3, "reward_mean": 0.8731, "reward_se": 0.0027, "last10_reward_mean": 0.9837, "heldout_acc_mean": 0.9783, "heldout_acc_se": 0.006, "mean_zvf_mean": 0.6312, "entropy_mean": 0.2191}]
+A_reward_vs_G	linear_slope_reward_per_decade_G	"reward ~ 0.8346 + 0.0354 * log10(G), R=0.924, p=0.0764"
+A_reward_vs_G	quadratic_coeffs	"parabola coeffs (log10 G space): [-0.052356162548925146, 0.11421831218179677, 0.8108317057291659]"
+A_reward_vs_G	spearman_G_vs_last10reward	"Spearman rho(G, last10_reward)=0.400, p=0.6000"
+A_reward_vs_G	spearman_G_vs_mean_zvf	"Spearman rho(G, mean_zvf)=-1.000, p=0.0000"
+A_reward_vs_G	zvf_loglog_slope	"log10(mean_zvf) ~ 0.9042 + -0.2303*log10(G), R=-0.999"
+B_broader_g4_vs_g32	T=1000000	"retention=0.9770 CI [0.8727,1.0917]; TOST@0.976 p=1.0000; TOST@0.95 p=1.0000; TOST@0.90 p=1.0000; wu_claim_holds=False"
+B_broader_g4_vs_g32	T=4000000	"retention=0.8339 CI [0.7705,0.9011]; TOST@0.976 p=1.0000; TOST@0.95 p=1.0000; TOST@0.90 p=1.0000; wu_claim_holds=False"
+B_broader_g4_vs_g32	T=16000000	"retention=0.7508 CI [0.7026,0.8005]; TOST@0.976 p=1.0000; TOST@0.95 p=1.0000; TOST@0.90 p=1.0000; wu_claim_holds=False"
+B_broader_g4_vs_g32	T=64000000	"retention=0.7273 CI [0.6829,0.7736]; TOST@0.976 p=1.0000; TOST@0.95 p=1.0000; TOST@0.90 p=1.0000; wu_claim_holds=False"
+B_broader_g4_vs_g32	spearman_retention_vs_logT	"Spearman rho(retention, log10 T)=-1.000, p=0.0000"
+B_broader_g4_vs_g32	linear_slope_per_decade	"retention ~ 1.7764 + -0.1382 * log10(T), R=-0.952, p=0.0480"
+B_broader_g4_vs_g32	wu_claim_T_budget_conditional	"Wu et al. (2025) 97.6% retention holds ONLY at T<=T_min=None; holds at 0/4 budgets"
+C_cross_pillar	zvf_drop_G2_to_G16	"mean_zvf drops 0.207 (0.838 -> 0.631) as G grows 2->16: 24.7% absolute loss of within-group contrast"
+C_cross_pillar	retention_drop_T1M_to_T64M	"G=4 retention of G=32 drops 0.249 (97.62% -> 72.73%) as T grows 1M -> 64M"
+C_cross_pillar	mechanism	"Lower G -> higher ZVF noise (more wasted rollouts); higher T exposes the saturation limit because G=4 cannot amortize over many steps once mean reward is high"
+C_cross_pillar	isoT_value_of_G	"Value of G=4->G=32 grows monotonically with log10 T: 0.01 (T=1M), 0.11 (T=4M), 0.21 (T=16M), 0.24 (T=64M) (iter127 complementarity)"

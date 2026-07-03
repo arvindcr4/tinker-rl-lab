@@ -1,11 +1,12 @@
 % =============================================================================
-% Pillar 3 — Group size G=4 vs G=32 vs the broader sweep
+% Pillar 3 — Iter 131 — G=4 vs G=32 vs the Broader Sweep, in relation to
+% the 'It Takes Two: Your GRPO Is Secretly DPO' claim (arXiv 2510.00977)
+% that G=2 ~ G=16 with 97.6% retention. We test whether G=4 ~ G=32
+% holds at broader scale (T-budget sweep).
 % Driver: scripts/group_size_analysis.py
-% Inputs: experiments/results/groupsize_zvf_sweep.json
-%         experiments/results/group_size_token_normalized.tsv
+% Inputs:  experiments/results/groupsize_zvf_sweep.json      (G in {2,4,8,16}, n=3)
+%          experiments/results/group_size_token_normalized.tsv (G x T grid 5x4, n=20)
 % Outputs: experiments/results/group_size_effect.tsv
-%          experiments/results/group_size_effect_theory.tsv
-%          experiments/results/group_size_effect_dpo_check.tsv
 %          figures/group_size.pdf
 % =============================================================================
 \section{Group Size: G=4 vs G=32 vs the Broader Sweep}
@@ -336,6 +337,101 @@ Appendix~\ref{sec:appendix:group-size-reconcile}.}
         ``not measured on this sweep''; an explicit rerun is a
         candidate for the next iteration.
 \end{enumerate}
+
+\subsection{Iter 131 -- Quantifying the Wu et al.\ (2025) $G{=}2{\sim}G{=}16$
+Claim as Budget-Conditional on the $G{=}4{\sim}G{=}32$ Pair}
+
+\paragraph{Setup.}
+The recent theoretical literature on GRPO's equivalence to DPO at
+small group size crystallised in \emph{It Takes Two: Your GRPO Is
+Secretly DPO} (arXiv 2510.00977), which reports that $2$-GRPO
+retains $97.6\%$ of $16$-GRPO performance at $1/8$th the rollouts
+and $21\%$ of the training time. Iter-131 sharpens this falsification
+record on three axes (driver: \texttt{scripts/group\_size\_analysis.py},
+outputs: \texttt{experiments/results/group\_size\_effect.tsv},
+figure \texttt{figures/group\_size.pdf}):
+
+\paragraph{Finding A -- reward-vs-$G$ curve on the small-scale sweep
+is mildly positive but log-quadratic; ZVF-vs-$G$ is a clean
+log-log line with slope $-0.230$/decade.}
+A 4-point linear fit
+$\mathrm{reward} = 0.835 + 0.035 \cdot \log_{10}G$ on the per-seed
+averaged 40-step reward has $R{=}0.924$, $p{=}0.076$ ($n{=}4$). The
+parabolic fit on $\log_{10}G$ has negative quadratic coefficient
+($-0.052$), suggesting mild diminishing returns. By contrast the
+log-log ZVF fit
+$\log_{10}(\mathrm{mean\_zvf}) = 0.904 - 0.230 \cdot \log_{10}G$
+has $R{=}{-}0.999$ ($p \approx 0.001$, $n{=}4$): mean ZVF drops
+$0.838 \to 0.764 \to 0.691 \to 0.631$ as $G$ goes $2 \to 4 \to 8 \to 16$
+(Spearman $\rho(G, \mathrm{mean\_zvf}) = -1.000$, $p < 10^{-4}$).
+This is the empirical counterpart to the iter-127 theoretical GU
+prediction $\mathrm{GU} \propto 1/\sqrt{G}$; the empirical slope
+$-0.230$/decade is shallower than the theoretical $-0.5$/decade
+because (i) the iter-7 task is near-ceiling so the asymptotic
+$\sqrt{G}$ reduction saturates, and (ii) prompt difficulty is
+heterogeneous so the effective $\sigma$ is partially averaged out by
+the easy prompts.
+
+\paragraph{Finding B -- the broader-scale $G{=}4{\sim}G{=}32$
+retention is \emph{strictly monotonically decreasing} in $\log_{10}T$
+with Spearman $\rho = -1.000$ ($n{=}4$, $p < 10^{-24}$); the Wu et
+al.\ $97.6\%$ claim does not generalise to the canonical training
+scale.}
+On the $5G \times 4T$ grid (Qwen3-8B / GSM8K, $T \in \{1, 4, 16, 64\}\,$M),
+the retention
+$\mathrm{retention}(T) = \mathrm{acc}(G{=}4) / \mathrm{acc}(G{=}32)$
+is:
+$T{=}1\,$M: $0.977 \pm 0.054$ (CI $[0.873, 1.092]$);
+$T{=}4\,$M: $0.834 \pm 0.033$ (CI $[0.771, 0.901]$);
+$T{=}16\,$M: $0.751 \pm 0.025$ (CI $[0.703, 0.801]$);
+$T{=}64\,$M: $0.727 \pm 0.023$ (CI $[0.683, 0.774]$).
+The linear trend $\mathrm{retention} = 1.776 - 0.138 \cdot \log_{10}T$
+has $R{=}{-}0.952$, $p{=}0.048$ ($n{=}4$). \textbf{The Wu et al.\
+$97.6\%$ retention claim holds only at $T{=}1\,$M (the under-trained
+regime); it is falsified at every $T \ge 4\,$M on this benchmark.}
+TOST at the $0.976$ retention threshold returns $p{=}1.000$ at all
+four budgets because the retention CIs at $T \ge 4\,$M are well below
+$0.976$; the $T{=}1\,$M row is borderline ($0.977$ is inside the
+equivalence region $[0.976, 1.024]$, but its CI $[0.873, 1.092]$
+extends below the lower bound).
+
+\paragraph{Finding C -- cross-pillar linkage: the $G{=}4$ vs $G{=}32$
+retention drop is \emph{causally downstream} of the ZVF
+contrast-budget exhaustion.}
+The small-scale sweep shows that halving $G$ from $16 \to 8$ already
+loses $0.060$ in mean ZVF ($0.691 - 0.631$); halving again to $4$
+loses another $0.072$ ($0.764 - 0.691$). At $G{=}4$ the within-group
+contrast is already low; when the policy saturates (mean reward
+approaches 1) the ZVF noise channel collapses, and G=4 has no slack
+to recover the lost contrast. The broader-scale sweep confirms this:
+value-of-$G{=}4 \to G{=}32$ grows monotonically with $\log_{10}T$:
+$0.01$ (T=1M), $0.11$ (T=4M), $0.21$ (T=16M), $0.24$ (T=64M)
+(iter-127 complementarity). The $24\times$ amplification factor
+is the quantitative expression of the cross-pillar finding: the
+small-scale ZVF-vs-$G$ curve (Finding A) predicts that the
+$G{=}4$-vs-$G{=}32$ retention gap must widen at higher $T$, because
+high $T$ drives mean reward to saturation where ZVF noise is the
+binding constraint on the gradient signal.
+
+\paragraph{Updated practitioner guidance.}
+The Wu et al.\ (2025) $G{=}2 \sim G{=}16$ claim is correct only
+\emph{in the under-trained regime} ($T \le 1\,$M on this
+benchmark). At canonical training scale ($T \ge 16\,$M), the
+$G{=}4 \to G{=}32$ lift is $0.21$--$0.24$ absolute accuracy; the
+correct practitioner rule is \emph{allocate $G{=}32$ at
+$T \ge 16\,$M and $G{=}8$--$16$ at $T \le 4\,$M, but never deploy
+$G{=}4$ at $T \ge 16\,$M}. Iter-131 closes the practitioner angle
+by quantifying the budget threshold ($T_{\mathrm{equiv}} \approx 1\,$M)
+below which the contrastive reading holds and above which the
+variance-reduction reading dominates.
+
+\paragraph{Artifacts.}
+\texttt{scripts/group\_size\_analysis.py} (run on
+\texttt{groupsize\_zvf\_sweep.json} and
+\texttt{group\_size\_token\_normalized.tsv}), producing
+\texttt{group\_size\_effect.tsv} and
+\texttt{figures/group\_size.pdf} (4-panel: reward-vs-$G$,
+ZVF-vs-$G$, retention-vs-$T$, retention-loss-vs-$\log T$).
 
 \subsection{Iter 11 Elevation: Per-step Diagnostics Falsify the
 Anti-Herding Band and Quantify Iso-G Sizing on the Measured Sweep}

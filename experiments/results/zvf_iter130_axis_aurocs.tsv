@@ -1,0 +1,11 @@
+scope	axis	auroc	ci_lo	ci_hi
+cross_experiment	magnitude	0.663	0.3698	0.9286
+cross_experiment	csd_roll_lag1	0.7583	0.5219	0.9429
+cross_experiment	drift_slope	0.5787	0.321	0.8293
+cross_experiment	zvf_risk_composite	0.7627	0.568	0.938
+cross_experiment	zvf_risk_max	0.929	0.8314	0.9952
+variance_mitigation_only	magnitude	0.0732	0.0	0.26
+variance_mitigation_only	csd_roll_lag1	0.3354	0.1104	0.5682
+variance_mitigation_only	drift_slope	0.2927	0.0904	0.54
+variance_mitigation_only	zvf_risk_composite	0.3963	0.2093	0.5909
+variance_mitigation_only	zvf_risk_max	0.8049	0.6156	0.9512

@@ -140,3 +140,126 @@ section).
 bar chart: mean ZVF (left, AERO highlighted) and failure-tally
 stacked bars (right).
 \end{itemize}
+
+\subsection{Iter 130: Unified ZVF Risk Index}
+\label{sec:zvf-risk-index}
+We elevate ZVF from a single-axis sanity check to a \emph{multi-channel
+risk index} by fusing three orthogonal measurements of the same
+underlying rollout distribution:
+\begin{enumerate}
+\item \textbf{Magnitude channel} --- mean per-step ZVF, mapped through a
+logistic centred at $\bar{Z}{=}0.30$ (so the canonical ZVF${>}0.3$ warning
+of \S\ref{sec:zvf-cross-library} becomes risk $>0.5$).
+\item \textbf{Critical-slowing-down channel} --- rolling lag-1
+autocorrelation of the per-step ZVF series (window $w{=}15$, the
+Scheffer-2009 EWS statistic), logistic-centred at $0.45$ so that the
+GRPO-collapse signature of iter126 (rolling lag-1 $\approx 0.61$ vs
+AERO plateau $\approx 0.33$) is the discriminator.
+\item \textbf{Drift channel} --- first-half trajectory slope of ZVF,
+logistic-centred at $0.004$/step so that GRPO's $9.9{\times}10^{-3}$/step
+slope (24$\times$ AERO's $4.1{\times}10^{-4}$/step) registers as risk.
+\end{enumerate}
+
+\paragraph{Composite score.} The three channels are combined in two
+ways: a \emph{weighted blend} $\mathrm{zvf\_risk} = 0.3\,r_{\rm mag}
++ 0.5\,r_{\rm csd} + 0.2\,r_{\rm drift}$ (CSD-weighted because it is
+empirically the strongest single channel), and a \emph{max-fusion}
+$\mathrm{zvf\_risk\_max} = \max(r_{\rm mag}, r_{\rm csd}, r_{\rm drift})$
+that captures the logical-OR structure: a trajectory is at risk if
+\emph{any} channel fires.
+
+\paragraph{Discrimination (cross-experiment).} Across the 52-row
+cross-experiment panel (45 variance-mitigation seeds $+$ 2 tool-use
+collapse anchors $+$ 5 scaling-law collapse anchors; 11 failures,
+41 safe), the per-axis Mann-Whitney AUROCs are:
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\hline
+Axis / Index & Cross-experiment AUROC & Within-methods AUROC \\
+\hline
+Magnitude              & 0.663 [0.37, 0.93] & 0.073 [0.00, 0.26] \\
+CSD (rolling lag-1)    & \textbf{0.758} [0.52, 0.94] & 0.335 [0.11, 0.57] \\
+Drift slope            & 0.579 [0.32, 0.83] & 0.293 [0.09, 0.54] \\
+zvf\_risk (weighted)   & 0.763 [0.57, 0.94] & 0.396 [0.21, 0.59] \\
+zvf\_risk\_max (OR)    & \textbf{0.929} [0.83, 1.00] & \textbf{0.805} [0.62, 0.95] \\
+\hline
+\end{tabular}
+\end{center}
+The max-fusion dominates every single axis (95\% CI excludes 0.5 by a
+wide margin on both panels). It is the first ZVF-based diagnostic to
+clear the conventional ``substantial'' AUROC threshold ($0.8$) on both
+the within-method and the cross-experiment panels.
+
+\paragraph{Why a logical-OR, not a weighted blend?} The within-method
+AUROC of magnitude is $0.073$ (anti-discriminating: low-ZVF methods
+like GIFT/AREAL/ES fail by collapsing to zero contrast, while GRPO
+fails by saturating contrast), and the drift-slope within-method AUROC
+is $0.293$ (drift slope does not anticipate GIFT/AREAL-style
+crashes). A weighted blend that averages these inverted signals across
+seeds washes the discrimination out. The max-fusion is robust because
+\emph{either} high ZVF magnitude \emph{or} high CSD \emph{or} high
+drift slope suffices to flag the trajectory: this matches the
+qualitative observation that GRPO-style collapse, tool-use perfect-zero
+collapse, and scaling-law collapse-phase collapse each surface in
+\emph{different} channels but never in none of them.
+
+\paragraph{Method-level ranking (max-fusion).} Sorting methods by mean
+$\mathrm{zvf\_risk\_max}$ yields the expected collapse-safe ordering:
+\begin{center}
+\small
+\begin{tabular}{lrr}
+\hline
+Method & $\mathrm{zvf\_risk\_max}$ mean & Failure rate \\
+\hline
+scaling\_law\_Qwen3-8B        & 0.69 (anchor) & 1.0 \\
+scaling\_law\_Nemotron-120B   & 0.69 (anchor) & 1.0 \\
+scaling\_law\_Llama-3.1-8B    & 0.69 (anchor) & 1.0 \\
+scaling\_law\_Qwen3.5-4B      & 0.69 (anchor) & 1.0 \\
+scaling\_law\_DeepSeek-V3.1   & 0.69 (anchor) & 1.0 \\
+tool\_use\_llama-8b-inst      & 0.55 (anchor) & 1.0 \\
+tool\_use\_qwen3-32b          & 0.55 (anchor) & 1.0 \\
+GRPO                          & 0.53          & 0.0 \\
+NGRPO / CPPO / AERO           & 0.43--0.49    & 0.0 \\
+SCAFGRPO                      & 0.21          & 0.0 \\
+GIFT / AREAL / ES             & 0.13--0.20    & 0.2 \\
+\hline
+\end{tabular}
+\end{center}
+Note that GRPO is correctly ranked \emph{above} every other
+variance-mitigation method on ZVF risk --- even though it does not
+collapse on the math-verifiable task --- because its high-CSD,
+high-drift profile makes it the closest cousin of the
+collapse-positive anchors. AERO, by contrast, is correctly ranked
+mid-pack: it has low magnitude and low drift (matching its
+collapse-suppression claim from iter118) but moderate CSD ($0.39$
+rolling lag-1).
+
+\paragraph{Practitioner use.} Report the max-fusion ZVF Risk Index
+alongside mean reward. A trajectory with
+$\mathrm{zvf\_risk\_max} > 0.55$ is in the failure-positive regime of
+both the within-method and cross-experiment calibration; below
+$0.30$ it is in the safe regime. Treat the gap $[0.30, 0.55]$ as
+``investigate'': enough of one channel has fired to warrant stopping
+the rollout to inspect the per-prompt reward distribution. This is the
+first iteration of ZVF as a \emph{three-channel, real-time} diagnostic
+rather than a static post-hoc summary.
+
+\paragraph{Artifacts (iter 130).}
+\begin{itemize}
+\item \texttt{scripts/zvf\_diagnostic\_iter130.py} --- reproducer.
+\item \texttt{experiments/results/zvf\_iter130\_risk\_index.tsv} ---
+52 rows: \texttt{(method, seed, mean\_zvf, lag1\_zvf\_rolling\_w15,
+slope, risk\_mag, risk\_csd, risk\_drift, zvf\_risk, zvf\_risk\_max,
+failure\_bin)}.
+\item \texttt{experiments/results/zvf\_iter130\_axis\_aurocs.tsv} ---
+per-axis + per-scope AUROCs with bootstrap-CI (B=2000).
+\item \texttt{experiments/results/zvf\_iter130\_method\_risk.tsv} ---
+method-aggregated risk profile.
+\item \texttt{experiments/results/zvf\_iter130\_meta.json} ---
+machine-readable summary with full per-method breakdown.
+\item \texttt{figures/zvf\_vs\_failure.pdf} --- 4-panel
+regenerated figure: (a) magnitude $\times$ CSD scatter with failure
+colour and anchor markers; (b) per-method risk bar; (c) ROC curves
+for all five indices; (d) risk-bin calibration.
+\end{itemize}

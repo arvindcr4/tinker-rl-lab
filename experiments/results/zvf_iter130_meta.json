@@ -1,0 +1,230 @@
+{
+  "iter": 130,
+  "pillar": "P2-ZVF",
+  "n_rows_within": 45,
+  "n_rows_cross": 52,
+  "n_failure_within": 4,
+  "n_failure_cross": 11,
+  "n_safe_within": 41,
+  "weights": {
+    "magnitude": 0.3,
+    "csd": 0.5,
+    "drift": 0.2
+  },
+  "aurocs_cross": {
+    "magnitude": {
+      "auroc": 0.663,
+      "ci_lo": 0.3698,
+      "ci_hi": 0.9286
+    },
+    "csd_roll_lag1": {
+      "auroc": 0.7583,
+      "ci_lo": 0.5219,
+      "ci_hi": 0.9429
+    },
+    "drift_slope": {
+      "auroc": 0.5787,
+      "ci_lo": 0.321,
+      "ci_hi": 0.8293
+    },
+    "zvf_risk_composite": {
+      "auroc": 0.7627,
+      "ci_lo": 0.568,
+      "ci_hi": 0.938
+    },
+    "zvf_risk_max": {
+      "auroc": 0.929,
+      "ci_lo": 0.8314,
+      "ci_hi": 0.9952
+    }
+  },
+  "aurocs_within": {
+    "magnitude": {
+      "auroc": 0.0732,
+      "ci_lo": 0.0,
+      "ci_hi": 0.26
+    },
+    "csd_roll_lag1": {
+      "auroc": 0.3354,
+      "ci_lo": 0.1104,
+      "ci_hi": 0.5682
+    },
+    "drift_slope": {
+      "auroc": 0.2927,
+      "ci_lo": 0.0904,
+      "ci_hi": 0.54
+    },
+    "zvf_risk_composite": {
+      "auroc": 0.3963,
+      "ci_lo": 0.2093,
+      "ci_hi": 0.5909
+    },
+    "zvf_risk_max": {
+      "auroc": 0.8049,
+      "ci_lo": 0.6156,
+      "ci_hi": 0.9512
+    }
+  },
+  "per_method": [
+    {
+      "method": "scaling_law_Qwen3-8B",
+      "zvf_risk_mean": 0.6898447488846503,
+      "zvf_risk_sd": NaN,
+      "mag_mean": 0.95,
+      "csd_mean": 0.85,
+      "drift_mean": 0.015,
+      "failure_rate": 1.0,
+      "n_seeds": 1
+    },
+    {
+      "method": "scaling_law_Nemotron-120B",
+      "zvf_risk_mean": 0.6898447488846503,
+      "zvf_risk_sd": NaN,
+      "mag_mean": 0.95,
+      "csd_mean": 0.85,
+      "drift_mean": 0.015,
+      "failure_rate": 1.0,
+      "n_seeds": 1
+    },
+    {
+      "method": "scaling_law_Llama-3.1-8B-Instruct",
+      "zvf_risk_mean": 0.6898447488846503,
+      "zvf_risk_sd": NaN,
+      "mag_mean": 0.95,
+      "csd_mean": 0.85,
+      "drift_mean": 0.015,
+      "failure_rate": 1.0,
+      "n_seeds": 1
+    },
+    {
+      "method": "scaling_law_Qwen3.5-4B",
+      "zvf_risk_mean": 0.6898447488846503,
+      "zvf_risk_sd": NaN,
+      "mag_mean": 0.95,
+      "csd_mean": 0.85,
+      "drift_mean": 0.015,
+      "failure_rate": 1.0,
+      "n_seeds": 1
+    },
+    {
+      "method": "scaling_law_DeepSeek-V3.1",
+      "zvf_risk_mean": 0.6898447488846503,
+      "zvf_risk_sd": NaN,
+      "mag_mean": 0.95,
+      "csd_mean": 0.85,
+      "drift_mean": 0.015,
+      "failure_rate": 1.0,
+      "n_seeds": 1
+    },
+    {
+      "method": "grpo",
+      "zvf_risk_mean": 0.5776880179873356,
+      "zvf_risk_sd": 0.11611218393258155,
+      "mag_mean": 0.48078000000000004,
+      "csd_mean": 0.53178,
+      "drift_mean": 0.0099088,
+      "failure_rate": 0.0,
+      "n_seeds": 5
+    },
+    {
+      "method": "tool_use_llama-8b-inst",
+      "zvf_risk_mean": 0.5473808273460361,
+      "zvf_risk_sd": NaN,
+      "mag_mean": 1.0,
+      "csd_mean": 0.95,
+      "drift_mean": 0.0,
+      "failure_rate": 1.0,
+      "n_seeds": 1
+    },
+    {
+      "method": "tool_use_qwen3-32b",
+      "zvf_risk_mean": 0.5473808273460361,
+      "zvf_risk_sd": NaN,
+      "mag_mean": 1.0,
+      "csd_mean": 0.95,
+      "drift_mean": 0.0,
+      "failure_rate": 1.0,
+      "n_seeds": 1
+    },
+    {
+      "method": "ngrpo",
+      "zvf_risk_mean": 0.446662878834344,
+      "zvf_risk_sd": 0.04246410441651125,
+      "mag_mean": 0.30036,
+      "csd_mean": 0.43113999999999997,
+      "drift_mean": 0.0019144000000000001,
+      "failure_rate": 0.0,
+      "n_seeds": 5
+    },
+    {
+      "method": "aero",
+      "zvf_risk_mean": 0.430050653146807,
+      "zvf_risk_sd": 0.10680097219086818,
+      "mag_mean": 0.22025999999999998,
+      "csd_mean": 0.39266,
+      "drift_mean": 0.00041279999999999995,
+      "failure_rate": 0.0,
+      "n_seeds": 5
+    },
+    {
+      "method": "cppo",
+      "zvf_risk_mean": 0.42661061087943886,
+      "zvf_risk_sd": 0.011378374478388523,
+      "mag_mean": 0.2952,
+      "csd_mean": 0.41513999999999995,
+      "drift_mean": 0.0017502,
+      "failure_rate": 0.0,
+      "n_seeds": 5
+    },
+    {
+      "method": "mcgrpo",
+      "zvf_risk_mean": 0.40341125968913405,
+      "zvf_risk_sd": 0.05983023192630892,
+      "mag_mean": 0.14604,
+      "csd_mean": 0.35144000000000003,
+      "drift_mean": 0.00015560000000000001,
+      "failure_rate": 0.2,
+      "n_seeds": 5
+    },
+    {
+      "method": "areal",
+      "zvf_risk_mean": 0.3319206130908743,
+      "zvf_risk_sd": 0.04376740696251432,
+      "mag_mean": 0.12090000000000001,
+      "csd_mean": 0.23742000000000002,
+      "drift_mean": -2.5999999999999954e-06,
+      "failure_rate": 0.2,
+      "n_seeds": 5
+    },
+    {
+      "method": "gift",
+      "zvf_risk_mean": 0.3145005437766656,
+      "zvf_risk_sd": 0.011087466508288618,
+      "mag_mean": 0.1142,
+      "csd_mean": 0.20493999999999998,
+      "drift_mean": 0.0001,
+      "failure_rate": 0.2,
+      "n_seeds": 5
+    },
+    {
+      "method": "es",
+      "zvf_risk_mean": 0.3051097720985813,
+      "zvf_risk_sd": 0.008343595603705727,
+      "mag_mean": 0.11421999999999999,
+      "csd_mean": 0.12274,
+      "drift_mean": 0.0011132,
+      "failure_rate": 0.2,
+      "n_seeds": 5
+    },
+    {
+      "method": "scafgrpo",
+      "zvf_risk_mean": 0.22532716228739566,
+      "zvf_risk_sd": 0.019291317922919618,
+      "mag_mean": 0.31664,
+      "csd_mean": 0.01686,
+      "drift_mean": 0.0018834,
+      "failure_rate": 0.0,
+      "n_seeds": 5
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+relation	intercept	slope_per_log10N	se_slope	t_slope	note
+log10(t80) ~ log10(N) | 2p	-0.8413	0.1699	0.2538	0.6695	4/5 anchored at lambda bound (iter117 verdict)
+log10(t80) ~ log10(N) | 3p	0.8065	0.5069	0.7181	0.7059	all 5 anchors informative (3p un-binds lambda)
+R_max ~ log10(N) | 3p	1.0850	-0.1724	0.1982	-0.8700	Spearman rho = -0.658, p = 0.227
+c (baseline) ~ log10(N) | 3p	0.5938	-0.0361	0.2385	-0.1512	baseline floor vs scale
+lambda ~ log10(N) | 3p	0.2040	0.0628	0.2483	0.2529	learning rate vs scale

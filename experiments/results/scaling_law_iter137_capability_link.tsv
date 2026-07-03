@@ -1,0 +1,6 @@
+test	capable_mean	incapable_mean	U_stat	p_value	note
+R_max: capable vs incapable	0.9768	0.6160	3.000	1.0000	iter133 cross-class gap propagates
+c (baseline): capable vs incapable	0.8228	0.1184	6.000	0.2000	offset diagnostic per class
+lambda: capable vs incapable	0.1619	0.4971	2.000	0.8000	learning rate diagnostic per class
+rho(R_max, log N) within capable	-0.8660	0.3333			n=3 capable anchors
+rho(R_max, log N) within incapable	nan	nan			n=2 incapable anchors

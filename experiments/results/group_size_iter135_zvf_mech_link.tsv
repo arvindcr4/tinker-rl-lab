@@ -1,0 +1,4 @@
+metric_kind	metric_key	headline
+zvf_drop_G2_G16	sweep	ZVF drops +0.2068 (from 0.8380 to 0.6312) as G grows 2->16 on Qwen2.5-0.5B / arithmetic (3 seeds); +24.7% absolute loss of within-group contrast
+retention_drop_T1M_T64M	G4_vs_G32	G=4 retention of G=32 drops +0.2489 (from 0.9762 at T=1M to 0.7273 at T=64M); ZVF drop (G=2->G=16) was 0.2068 -- retention drop / ZVF drop ratio = +1.204
+iso_G_contrast_yield	by_G	GU (group-mean ZVF-availability) by G averaged across T: G=4: mean_GU=2.1500, G=8: mean_GU=1.4605, G=16: mean_GU=0.8684, G=32: mean_GU=0.4899, G=64: mean_GU=0.2572

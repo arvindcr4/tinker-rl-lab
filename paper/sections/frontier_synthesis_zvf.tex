@@ -1,0 +1,141 @@
+% =====================================================================
+% paper/sections/frontier_synthesis_zvf.tex
+%
+% PROVENANCE. This section distills an EXTERNAL frontier-model
+% cross-examination of Pillar 2 (the Zero-Variance-Fraction / ZVF
+% diagnostic). The material below is a live 30-round cross-examination
+% of ChatGPT Pro Extended and Gemini Deep Think (P2 rounds 2, 6, 7, 11,
+% 16, 22 plus shared cross-cutting rounds 13, 19, 20, 26). These are
+% REASONING CONTRIBUTIONS -- proposed theorems, replacement diagnostics,
+% and falsifiable claims produced by the frontier models -- NOT
+% experiments this paper ran. Everything is attributed as external
+% synthesis and, where it touches our own rho=0.27 outcome-prediction
+% and temporal-stickiness results, the connection is stated in prose.
+% Source digest: frontier_calls/digests/frontier_P2.md
+% =====================================================================
+
+\subsection{Frontier-Model Cross-Examination: The ZVF Diagnostic}
+\label{sec:frontier-zvf}
+
+To stress-test the ZVF diagnostic beyond our own measurements, we
+submitted the Pillar~2 construction to an external cross-examination of
+two frontier reasoning systems (ChatGPT Pro Extended and Gemini Deep
+Think). The exchange is a source of \emph{arguments and proposed
+diagnostics}, not additional experiments; we report the sharpest
+contributions and, where they bear on our reported results---the weak
+outcome correlation ($\rho = 0.27$, Section~\ref{sec:zvf-cross-experiment})
+and the temporal stickiness / upward drift
+(Section~\ref{sec:zvf-dynamics})---we say so explicitly.
+
+\paragraph{Why $\rho = 0.27$ is structural: mastery--incapacity aliasing.}
+In an external cross-examination, both models argued that ZVF is a weak
+\emph{outcome} predictor by construction because it is an \emph{unsigned}
+saturation statistic. Writing $K_x=\sum_{i=1}^{G} R_i$ for the within-group
+success count, $\mathrm{ZVF}=\Pr(K_x=0)+\Pr(K_x=G)$ assigns the same value
+to an all-wrong group ($K_x=0$, incapacity) and an all-correct group
+($K_x=G$, mastery)---aliasing the two ends of the difficulty axis that
+have opposite outcome implications. A modest $\rho\approx0.27$ over $80$
+runs is thus the \emph{expected} behavior of a sign-blind scalar, not a
+defect of the underlying quantity (frontier synthesis). This rationalizes
+our own reading: ZVF is a mechanistic \emph{signal-availability}
+diagnostic, not a standalone performance predictor.
+
+\paragraph{A proposed ZVF Inelasticity Theorem (frontier synthesis).}
+Gemini Deep Think proposed formalizing the aliasing as a
+\emph{Combinatorial Inelasticity Theorem}. Under binary rewards, latent
+per-prompt success probability $p_x\in(0,1)$, and conditionally i.i.d.\
+rollouts (so $K_x\sim\mathrm{Binomial}(G,p_x)$), the expected
+zero-variance fraction is exactly
+\begin{equation}
+  \mathrm{ZVF}(p_x,G) \;=\; p_x^{\,G} + (1-p_x)^{\,G},
+  \label{eq:zvf-inelasticity}
+\end{equation}
+which is symmetric, $\mathrm{ZVF}(p_x,G)=\mathrm{ZVF}(1-p_x,G)$: a
+U-shaped ``topological trap'' that cannot separate zero-shot failure
+($p_x\to0$) from reward saturation ($p_x\to1$). Its payoff is the
+\emph{elasticity of gradient yield to compute} $G$: at the max-entropy
+point $p_x=\tfrac12$, $\mathrm{ZVF}=2^{1-G}$ and
+$\partial_G\ln\mathrm{ZVF}=-\ln 2$, so extra rollouts kill dead groups
+exponentially fast, whereas in the tails ($\epsilon\ll 1/G$) a Taylor
+expansion gives $\mathrm{ZVF}\approx 1-G\epsilon+O(\epsilon^2)$ and
+$\partial_G\mathrm{ZVF}\approx-\epsilon\to 0$---group-size scaling is
+crushed into a linear crawl. This is the frontier-side explanation for
+our temporal-stickiness result: as training drives $p_x\to1$ on mastered
+prompts, Eq.~\eqref{eq:zvf-inelasticity} pushes ZVF toward $1$
+\emph{and} makes it inelastic to $G$, so ZVF drifts up and does not
+return---matching the monotonic phase-1-to-phase-3 drift and high lag-1
+autocorrelation ($\rho_1\approx0.94$) we measure.
+
+\paragraph{Replacement diagnostics: PCD and a sign-resolving quality score.}
+Because ZVF measures only the \emph{existence} of contrast, the frontier
+models proposed replacements that measure its \emph{magnitude} and
+\emph{sign}. Gemini's Pairwise Contrast Density (PCD) is the expected
+within-group reward variance, equivalently the mean squared pairwise
+contrast that GRPO's baseline projection actually consumes:
+\begin{equation}
+  \mathrm{PCD}
+  \;=\; \mathbb{E}_{x}\!\big[\mathrm{Var}(r\mid x)\big]
+  \;=\; \mathbb{E}_{x}\!\Big[\tfrac{1}{G^2}\!\sum_{i<j}(r_i-r_j)^2\Big]
+  \;=\; \tfrac{G-1}{G}\,\mathbb{E}_{x}\!\big[p_x(1-p_x)\big],
+  \label{eq:pcd}
+\end{equation}
+a sharp parabola peaking at $p_x=\tfrac12$ rather than the flat plateau
+that $1-\mathrm{ZVF}$ forms over intermediate $p_x$. The models offered a
+concrete \emph{micro-jitter falsification}: injecting noise
+$\epsilon\sim U(0,10^{-4})$ into rewards (e.g.\ from a length penalty)
+makes ZVF flatline to $0$ globally---falsely reporting a fully healthy
+batch---whereas PCD is essentially invariant. ChatGPT proposed instead a
+sign-resolving scalar, Learning-Adjusted Rollout Quality,
+$\mathrm{LARQ}_\beta=\mathbb{E}_x[\hat p_x+\beta\cdot4\hat p_x(1-\hat p_x)]$
+with $\hat p_x=K_x/G$, whose first term distinguishes all-correct from
+all-wrong (curing the aliasing) while the second rewards frontier mass at
+$\hat p_x\approx\tfrac12$. Both were offered with a head-to-head protocol
+against ZVF on our $80$ anchors, with a stated target of
+$\rho\gtrsim0.45$ (frontier synthesis)---a falsifiable bar, not a claimed
+result.
+
+\paragraph{Active gradient bandwidth and group size.}
+The frontier synthesis recasts the group-size effect as a law about
+gradient utilization $\mathrm{GU}_G=1-\mathrm{ZVF}_G$. From
+Eq.~\eqref{eq:zvf-inelasticity}, the marginal group nonzero-yield gained
+per extra rollout is
+\begin{equation}
+  h_G(p)-h_{G+1}(p) \;=\; p^{\,G}(1-p) + (1-p)^{\,G}\,p,
+  \qquad h_G(p)=p^{\,G}+(1-p)^{\,G},
+  \label{eq:gu-marginal}
+\end{equation}
+which is maximized near $p_x\approx 1/G$ or $1-1/G$, \emph{not} at
+$p_x\approx\tfrac12$ (where ZVF is already tiny) nor at $p_x\approx 0,1$
+(where even large $G$ fails). This motivated the models' ``Iso-Yield''
+dynamic-grouping idea---route mastered/frontier prompts to small $G$ and
+spend the freed budget on stubborn tails---and a matching
+\emph{contrastive-yield effective compute} axis
+$C_{\mathrm{eff}} = T\cdot G\cdot \mathbb{E}_x[\,1-p_x^{\,G}-(1-p_x)^{\,G}\,]\cdot\lVert\Delta\theta\rVert_{\mathrm{KL}}$,
+in which extra samples count only insofar as they create mixed-reward
+groups. Equation~\eqref{eq:gu-marginal} is consistent with the
+$0.845\to0.631$ ZVF drop we observe as $G:2\to16$: the reduction is
+concentrated in the interior-$p_x$ prompts and saturates in the tails.
+
+\paragraph{Two caveats that sharpen our own claims.}
+First, on our anti-herding falsification: the models cautioned that the
+measured residual
+$\Delta_G=\mathrm{ZVF}^{\mathrm{obs}}_G-\mathbb{E}_x[p_x^{\,G}+(1-p_x)^{\,G}]\in[-0.23,-0.13]$
+should be read as \emph{edge-thinning / excess contrastive yield}
+($13$--$23$ percentage points fewer zero-advantage groups than the
+i.i.d.\ Bernoulli null), \emph{not} as negative pairwise rollout
+correlation. ZVF is an extreme-event statistic, whereas correlation is a
+second-moment property, and one model produced an explicit counterexample
+($G=4$, $p=\tfrac12$) with $\Delta_G<0$ yet pairwise $\rho>0$. This
+reinforces the conservative stance already taken in
+Section~\ref{sec:zvf-dynamics}. Second, and as a genuine \emph{challenge}
+to the ``zero gradient'' framing in Section~\ref{sec:zvf-gradient}: under
+a KL-penalized reward $r_i=r^{\mathrm{task}}_i-\beta\,\mathrm{KL}_i$, when
+$\mathrm{Var}(r^{\mathrm{task}})=0$ the advantage normalization cancels
+$\beta$ and yields
+$A_i=-(\mathrm{KL}_i-\overline{\mathrm{KL}})/\sigma_{\mathrm{KL}}$, so a
+zero-variance group emits not a null update but a covert, full-magnitude
+distillation pull toward the reference policy. The frontier models framed
+this as the single falsifying experiment for Pillar~2: if masking these
+updates destabilizes training, ZVF states are load-bearing regularization
+anchors rather than pure dead compute---a caveat we flag but do not
+resolve here.

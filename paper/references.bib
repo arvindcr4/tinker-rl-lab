@@ -296,12 +296,10 @@
 }
 
 @article{liu2026gdpo,
-  author    = {Liu, Yixin and Zhao, Hang and others},
-  title     = {{GDPO}: Group Decoupled Preference Optimization for Multi-Reward Reinforcement Learning},
-  journal   = {arXiv preprint},
-  year      = {2026},
-  doi       = {10.48550/arXiv.2602.01987},
-  note      = {arXiv:2602.01987}
+  author    = {Liu, Shih-Yang and Dong, Xin and Lu, Ximing and Diao, Shizhe and Belcak, Peter and Liu, Mingjie and Chen, Min-Hung and Yin, Hongxu and Wang, Yu-Chiang Frank and Cheng, Kwang-Ting and Choi, Yejin and Kautz, Jan and Molchanov, Pavlo},
+  title     = {{GDPO}: Group reward-Decoupled Normalization Policy Optimization for Multi-reward RL Optimization},
+  journal   = {arXiv preprint arXiv:2601.05242},
+  year      = {2026}
 }
 
 @article{hu2026openvlthinker,
@@ -1018,14 +1016,15 @@
   note      = {arXiv:2406.02900}
 }
 
-@article{nimmaturi2025scalinglaws,
-  author    = {Nimmaturi, Narayan and others},
-  title     = {Scaling Laws for {GRPO}: An Empirical Study of Reinforcement Learning Post-Training},
+@article{nimmaturi2025predictive,
+  author    = {Nimmaturi, Datta and Bhargava, Vaishnavi and Ghosh, Rajat and George, Johnu and Dutta, Debojyoti},
+  title     = {Predictive Scaling Laws for Efficient {GRPO} Training of Large Reasoning Models},
   journal   = {arXiv preprint},
   year      = {2025},
-  doi       = {10.48550/arXiv.2511.00213},
-  note      = {arXiv:2511.00213}
+  doi       = {10.48550/arXiv.2507.18014},
+  note      = {arXiv:2507.18014; identifies three consistent training phases: slow start, rapid improvement, plateau}
 }
+
 
 @article{liu2025rlsubnetworks,
   author    = {Liu, Zichen and others},
@@ -1264,6 +1263,15 @@
   note         = {\url{https://deepmindsafetyresearch.medium.com/specification-gaming-the-flip-side-of-ai-ingenuity-c85bdb0deeb4}}
 }
 
+@misc{le2025rlzvp,
+  author       = {Le, Thanh-Long V. and Jeon, Myeongho and Vu, Kim and Lai, Viet and Yang, Eunho},
+  title        = {No Prompt Left Behind: Exploiting Zero-Variance Prompts in {LLM} Reinforcement Learning via Entropy-Guided Advantage Shaping},
+  year         = {2025},
+  month        = sep,
+  howpublished = {arXiv preprint},
+  note         = {Also referred to as AERO / RL-ZVP in the literature; arXiv:2509.21880}
+}
+
 @misc{li2024numinamath,
   author       = {Li, Jia and Beeching, Edward and Tunstall, Lewis and Lipkin, Ben and Soletskyi, Roman and Huang, Shengyi and Rasul, Kashif and Yu, Longhui and Jiang, Albert Q. and Shen, Ziju and Qin, Zihan and Dong, Bin and Zhou, Li and Fleureau, Yann and Lample, Guillaume and Polu, Stanislas},
   title        = {{NuminaMath}: The Largest Public Dataset in {AI4Maths} with 860k Pairs of Competition Math Problems and Solutions},
@@ -1363,3 +1371,74 @@
 
 
 
+
+@article{kaplan2020scaling,
+  title={Scaling Laws for Neural Language Models},
+  author={Kaplan, Jared and McCandlish, Sam and Henighan, Tom and Brown, Tom B. and Chess, Benjamin and Child, Rewon and Gray, Scott and Radford, Alec and Wu, Jeffrey and Amodei, Dario},
+  journal={arXiv preprint arXiv:2001.08361},
+  year={2020}
+}
+
+@book{burnham2002model,
+  title={Model Selection and Multimodel Inference: A Practical Information-Theoretic Approach},
+  author={Burnham, Kenneth P. and Anderson, David R.},
+  edition={2nd},
+  publisher={Springer},
+  year={2002}
+}
+
+% --- Entries added to resolve inherited undefined citations (conservative metadata) ---
+@misc{gptoss,
+  title = {gpt-oss-120b and gpt-oss-20b},
+  author = {{OpenAI}},
+  year = {2025},
+  howpublished = {\url{https://openai.com/index/introducing-gpt-oss/}}
+}
+@misc{qwen3moe,
+  title = {Qwen3 Technical Report},
+  author = {{Qwen Team}},
+  year = {2025},
+  howpublished = {\url{https://arxiv.org/abs/2505.09388}}
+}
+@misc{kimi2025k2,
+  title = {Kimi K2},
+  author = {{Kimi Team, Moonshot AI}},
+  year = {2025},
+  howpublished = {\url{https://moonshotai.github.io/Kimi-K2/}}
+}
+@misc{kimi2025thinking,
+  title = {Kimi K2 Thinking},
+  author = {{Kimi Team, Moonshot AI}},
+  year = {2025}
+}
+@misc{kimi,
+  title = {Kimi k1.5: Scaling Reinforcement Learning with LLMs},
+  author = {{Kimi Team, Moonshot AI}},
+  year = {2025},
+  howpublished = {\url{https://arxiv.org/abs/2501.12599}}
+}
+@article{singhal2023drdrpo,
+  title = {A Long Way to Go: Investigating Length Correlations in RLHF},
+  author = {Singhal, Prasann and Goyal, Tanya and Xu, Jiacheng and Durrett, Greg},
+  journal = {arXiv preprint arXiv:2310.03716},
+  year = {2023}
+}
+@misc{frontier2026,
+  title = {Frontier-Model Cross-Examination of GRPO Post-Training},
+  author = {{TinkerRL-Bench Team}},
+  year = {2026},
+  note = {Companion cross-examination (this work); see the frontier-synthesis sections}
+}
+@misc{tinker-rl-lab-iter25,
+  title = {{TinkerRL-Bench}: Iteration-25 Scaling-Law Identifiability Analysis},
+  author = {{TinkerRL-Bench Team}},
+  year = {2026},
+  note = {Internal analysis artifact released with this benchmark (this work)}
+}
+
+@article{tan2025scalingrl,
+  title = {Scaling Behaviors of {LLM} Reinforcement Learning Post-Training: An Empirical Study in Mathematical Reasoning},
+  author = {Tan, Zelin and Geng, Hejia and Yu, Xiaohang and Zhang, Mulei and Wan, Guancheng and Zhou, Yifan and He, Qiang and Xue, Xiangyuan and Zhou, Heng and Fan, Yutao and Li, Zhongzhi and Zhang, Zaibin and Zhang, Guibin and Zhang, Chen and Yin, Zhenfei and Torr, Philip and Bai, Lei},
+  journal = {arXiv preprint arXiv:2509.25300},
+  year = {2025}
+}

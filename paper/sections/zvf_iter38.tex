@@ -1,0 +1,173 @@
+% ---------------------------------------------------------------------------
+% Pillar 2: Zero-Variance Fraction diagnostic — Iter 38 cross-library Iso-Yield
+% Elevation over \S\ref{sec:zvf-cross-library}.
+% Materialised from scripts/zvf_iter38_crosslibrary.py outputs:
+%   experiments/results/zvf_iter38_isoyield.tsv
+%   experiments/results/zvf_iter38_classifier.tsv
+%   experiments/results/zvf_iter38_summary.tsv
+%   figures/zvf_iter38.pdf
+% ---------------------------------------------------------------------------
+
+\subsection{Iso-Yield Curves Across Libraries}
+\label{sec:zvf-iso-yield}
+The cross-library comparison in \S\ref{sec:zvf-cross-library} aggregates
+ZVF as a single point estimate per library. Iter~38 elevates the
+diagnostic by inverting the question: \emph{for a target contrastive
+yield $Y_{\mathrm{target}}$, what is the minimum $G$ required, and how
+does that requirement change when we replace the i.i.d.\ baseline with
+the empirically-measured anti-herding bonus?}
+
+For a prompt of difficulty $p$, the i.i.d.\ collision probability is
+$\mathrm{ZVF}_{\mathrm{iid}}(p,G) = p^{G} + (1-p)^{G}$, and the
+i.i.d.\ contrastive yield is $Y_{\mathrm{iid}}(p,G) = 1 -
+\mathrm{ZVF}_{\mathrm{iid}}(p,G)$. With the per-prompt anti-herding
+correction $\delta_{\mathrm{div}} = \mathrm{ZVF}_{\mathrm{iid}} -
+\mathrm{ZVF}_{\mathrm{obs}}$, the empirical yield becomes
+$Y_{\mathrm{emp}}(p,G) = 1 - \max(0, \mathrm{ZVF}_{\mathrm{iid}}(p,G) -
+\delta_{\mathrm{div}})$.
+
+On the tinker\_gsm8k Qwen3-8B stream (600 prompts at $G{=}8$),
+$\delta_{\mathrm{div}} = +0.122 \pm 0.013$ (SEM, $n{=}600$ per-prompt
+decompositions from
+\texttt{experiments/results/zvf_contrastive_yield.tsv}). The bonus is
+\emph{positive}, meaning the rollout sampler anti-herds: completions
+within a group are more diverse than independent Bernoulli draws at the
+prompt difficulty would predict. We use this measured $\delta_{\mathrm{div}}$
+as the library-level correction for all nine variance-mitigation
+libraries because they share the Tinker rollout workers, reward parser,
+chat template, and $\beta{=}0$ KL coefficient.
+
+\paragraph{Iso-Yield sizing at $Y_{\mathrm{target}}{=}0.80$.}
+For each library we compute the minimum $G$ satisfying $Y(p_x,
+G) \geq Y_{\mathrm{target}}$ under both bases, then translate the
+$G$-savings into rollout-token savings at $K{=}64$ prompts,
+$\bar L{=}512$ tokens per completion.
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
+\hline
+Library  & $p_x$ & $G_{\mathrm{iid}}$ & $G_{\mathrm{emp}}$ & $\Delta G$ & Cost savings \\
+\hline
+GRPO        & 0.379 & 4 & 3 & 1 & 25.0\% \\
+AERO        & 0.399 & 4 & 3 & 1 & 25.0\% \\
+CPPO        & 0.392 & 4 & 3 & 1 & 25.0\% \\
+NGRPO       & 0.387 & 4 & 3 & 1 & 25.0\% \\
+SCAFGRPO    & 0.409 & 4 & 3 & 1 & 25.0\% \\
+MCGRPO      & 0.322 & 5 & 4 & 1 & 20.0\% \\
+GIFT        & 0.326 & 5 & 4 & 1 & 20.0\% \\
+AREAL       & 0.328 & 5 & 4 & 1 & 20.0\% \\
+ES          & 0.316 & 5 & 4 & 1 & 20.0\% \\
+\hline
+\end{tabular}
+\caption{Per-library Iso-Yield sizing at $Y_{\mathrm{target}}{=}0.80$.
+$\delta_{\mathrm{div}}{=}+0.122$ from tinker\_gsm8k per-prompt
+decomposition; $p_x$ is the library's mean last-10 accuracy. The
+anti-herding correction saves one rollout per prompt across all nine
+libraries, with the larger absolute $G_{\mathrm{iid}}$ in
+MCGRPO/GIFT/AREAL/ES translating to a 20\% cost savings and the smaller
+$G_{\mathrm{iid}}{=}4$ libraries saving 25\%. Source:
+\texttt{experiments/results/zvf_iter38_isoyield.tsv}.}
+\label{tab:zvf-isoyield-y80}
+\end{table}
+
+\paragraph{Reading the iso-yield curves.}
+Across the five representative libraries in Panel~(A) of
+\texttt{figures/zvf_iter38.pdf}, the i.i.d.\ baseline (dashed) and the
+empirical anti-herding-corrected curve (solid) diverge most at
+$Y_{\mathrm{target}} \geq 0.85$, where the i.i.d.\ requirement climbs
+steeply while the empirical curve remains bounded by the structural
+$\delta_{\mathrm{div}}{=}+0.122$ bonus. For the four low-$p_x$
+libraries (MCGRPO/GIFT/AREAL/ES) the gap is one full $G$ over the
+entire $Y \in [0.50, 0.95]$ grid, which is the origin of the
+20--25\% cost savings in Table~\ref{tab:zvf-isoyield-y80}.
+
+\paragraph{What this changes operationally.}
+The cross-library ZVF table in \S\ref{sec:zvf-cross-library} answers
+\emph{which library minimises mean ZVF at fixed $G{=}8$}; the iso-yield
+table answers the symmetric question \emph{for which $G$ does every
+library reach a fixed contrastive yield}. The two views agree on the
+ranking: AERO and SCAFGRPO remain on the cost-effective frontier at
+$Y{=}0.80$, and the four sub-vanilla libraries (MCGRPO/GIFT/AREAL/ES)
+trade one unit of $G$ for a drift-failure risk that none of the
+in-vanilla libraries carry.
+
+\subsection{ZVF as a Failure-Mode Classifier}
+\label{sec:zvf-classifier}
+We treat mean ZVF as a primary diagnostic feature and ask: how well
+does a 4-class $k$-nearest-neighbour classifier on
+(mean\_zvf, mean\_last10, mean\_peak) recover the
+heuristic failure mode on the 14 pooled cross-experiment rows?
+
+\paragraph{Truth labels.}
+The truth label is deterministic on the per-library summary:
+collapse if $\bar r_{10}{<}0.05$ or $\overline{\mathrm{ZVF}}{\geq}0.95$;
+plateau if $\bar r_{10}{<}0.6$ and $\overline{\mathrm{ZVF}}{\geq}0.10$;
+drift if $\mathrm{peak}{-}\bar r_{10}{>}0.10$ and $\overline{\mathrm{ZVF}}
+\in [0.03, 0.30]$; converged otherwise.
+
+\paragraph{LOO accuracy.}
+A leave-one-(library)-out 3-NN over the z-scored 3-feature vector
+attains 11/14 = 78.6\% accuracy. The 3 errors are concentrated in the
+collapse-vs-plateau boundary: both tool-use collapse rows are
+classified as plateau under LOO (because removing them leaves no
+collapse anchor in the training set), and one of the converged rows
+(arithmetic\_groupsize) is classified as plateau under LOO.
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrr}
+\hline
+True $\backslash$ Pred & collapse & drift & plateau & converged \\
+\hline
+collapse & 0 & 0 & 2 & 0 \\
+drift    & 0 & 0 & 0 & 0 \\
+plateau  & 0 & 0 & 9 & 0 \\
+converged & 0 & 0 & 1 & 2 \\
+\hline
+\end{tabular}
+\caption{Failure-mode LOO confusion ($k{=}3$). Pooled accuracy
+$11/14 = 78.6\%$. The plateau class dominates ($9/14$); the off-diagonal
+errors are concentrated at the collapse/plateau and converged/plateau
+boundaries. Source:
+\texttt{experiments/results/zvf_iter38_classifier.tsv}.}
+\label{tab:zvf-classifier-conf}
+\end{table}
+
+\paragraph{Honest scope.}
+The classifier is bounded by the small per-library row count
+($n{=}14$); the principal signal is that \emph{ZVF is a non-redundant
+feature for failure-mode discrimination}, since the naive last-10/peak
+rule alone places every plateau row in the same bin without
+distinguishing low-ZVF plateau (AERO, SCAFGRPO) from high-ZVF plateau
+(vanilla GRPO). The same 3-NN over (mean\_last10, mean\_peak) only
+(omitting ZVF) attains 9/14 = 64.3\% — a 14.3pp drop — confirming that
+ZVF contributes genuine discrimination on top of mean reward.
+
+\subsection{Headline Numbers and Cross-Reference}
+\label{sec:zvf-iter38-headline}
+\begin{itemize}
+\item $\delta_{\mathrm{div}}$ on tinker\_gsm8k = $+0.122$ (SEM 0.013,
+      $n{=}600$).
+\item Iso-Yield cost savings at $Y{=}0.80$: 25.0\% on the five
+      in-vanilla libraries; 20.0\% on the four sub-vanilla libraries.
+\item ZVF-as-classifier LOO accuracy: 78.6\% (11/14); ZVF contributes
+      +14.3pp over the reward-only baseline (64.3\%).
+\end{itemize}
+The Iso-Yield and classifier analyses reuse the same
+\texttt{zvf_by_library.tsv} aggregation as
+\S\ref{sec:zvf-cross-library}, so the iter~38 elevation is a strict
+extension rather than a replacement of the cross-library table.
+Panel~(C) of \texttt{figures/zvf_iter38.pdf} renders the failure-mode
+confusion matrix.
+
+\paragraph{Falsifiability.}
+The Iso-Yield savings are conditioned on the assumption that
+$\delta_{\mathrm{div}}{=}+0.122$ transfers from tinker\_gsm8k to the
+variance-mitigation libraries because the rollout workers and reward
+parser are shared. If a future AERO reimplementation uses a different
+sampling kernel, the correction may need to be re-measured. The
+classifier accuracy is bounded by $n{=}14$ rows; a future cross-library
+benchmark with $n{>}50$ rows would tighten the per-class error bars.

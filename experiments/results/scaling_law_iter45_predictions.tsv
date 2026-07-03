@@ -1,0 +1,4 @@
+prediction	value	pass	note
+P1_isocompute_NOT_invariant	0.6942	True	max|delta_Rmax|/Rmax across 5 iso-compute pairs
+P2_compute_helps_alpha_positive	3	True	alpha_dense=1.030, alpha_moe=0.057, alpha_all=0.231
+P3_chinchilla_P_star_in_range	3.46	True	P*=3.46B vs P_median=30.0B; ratio=0.115

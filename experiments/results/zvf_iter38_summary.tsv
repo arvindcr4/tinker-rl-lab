@@ -1,0 +1,14 @@
+# Iter 38 Pillar 2 one-rollup summary.
+# Source: scripts/zvf_iter38_crosslibrary.py
+metric	value	detail
+n_libraries	9	grpo, aero, cppo, ngrpo, scafgrpo, mcgrpo, gift, areal, es
+delta_div_tinker_gsm8k	0.1224	n=600 rows (frontier: real reasoning)
+delta_div_groupsize_sweep	-0.0668	n=480 rows (frontier: arithmetic small-model)
+iso_yield_y80_median_savings	0.25	median across the 9 VM libraries
+iso_yield_y80_max_savings	0.25	max library: grpo
+iso_yield_y80_min_savings	0.2	min library: mcgrpo
+failure_classifier_loo_accuracy	0.7857	11/14 correct, k=3
+per_class_recovery_collapse	0.0	true collapse=2
+per_class_recovery_drift	0.0	true drift=0
+per_class_recovery_plateau	1.0	true plateau=9
+per_class_recovery_converged	0.6666666666666666	true converged=3

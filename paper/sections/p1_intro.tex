@@ -1,0 +1,46 @@
+% Pillar-1 (scaling) standalone introduction + related work
+\section{Introduction}
+\label{sec:p1-intro}
+Reinforcement learning from verifiable rewards has become a standard final stage
+in training reasoning-capable language models, and GRPO~\citep{shao2024deepseekmath, guo2025deepseekr1} is now one of its most widely used algorithms. GRPO replaces
+the learned value function of PPO~\citep{schulman2017proximal} with a
+group-relative baseline: for each prompt it samples a group of $G$ completions,
+scores them with a verifier, and centers the rewards within the group to form
+advantages. Because it removes the critic, GRPO is cheap to run at scale, and a
+natural question follows: \emph{how does the benefit of GRPO post-training change
+as the base model grows?}
+
+Pre-training exhibits smooth power-law scaling in parameter count and data
+\citep{kaplan2020scalinglaws, hoffmann2022chinchilla}, and it is tempting to expect
+an analogous law for RL post-training. Evidence here is thinner and more
+contested~\citep{hilton2023rlscaling, rafailov2024rlhfscaling, nimmaturi2025predictive},
+in part because RL gains are entangled with the rollout stack, reward parser,
+reference policy, and evaluation protocol, so cross-paper comparisons conflate the
+algorithm with its plumbing. This paper isolates the scaling question inside a
+single, fixed benchmark.
+
+We study GRPO scaling as one pillar of \ours{}, a controlled benchmark of 70+ runs
+across seven RL libraries and five model families ($0.6$B--$\sim$671B) on GSM8K
+\citep{cobbe2021training}, HumanEval~\citep{chen2021codex}, and synthetic tool-use
+tasks. Rather than assert a new law, we report what the data will and will not
+support. Our contributions are: (i) a same-benchmark measurement showing the
+cross-scale GRPO reward-gain slope is statistically indistinguishable from zero
+over five orders of magnitude; (ii) a pre-registered falsification of a clean
+three-phase saturation hypothesis; (iii) an identifiability audit showing no
+universal saturation exponent is estimable on this data, so the defensible object
+is a local, stack-conditioned saturation law with the endpoint ceiling regressed
+on $\log_{10} N$; and (iv) a case study of the Nemotron-120B collapse as a
+distinct phase rather than trend noise. We read single-seed frontier-API runs as
+illustrative case studies, not universal laws.
+
+\subsection{Related Work}
+\label{sec:p1-related}
+Neural scaling laws for pre-training are well established~\citep{kaplan2020scalinglaws, hoffmann2022chinchilla, muennighoff2023datascaling}. Scaling behavior of RL and
+RLHF post-training has been examined more recently~\citep{hilton2023rlscaling, rafailov2024rlhfscaling, nimmaturi2025predictive}, but typically within a single
+stack, leaving open whether reported trends transfer across libraries and model
+families. GRPO and its use in reasoning models originate
+with~\citet{shao2024deepseekmath} and~\citet{guo2025deepseekr1};
+\citet{ahmadian2024backtobasics} argue that much of the benefit of heavy RL
+machinery is recoverable by simpler estimators once the stack is controlled. Our
+work complements these by fixing the benchmark and asking, conservatively, which
+scaling conclusions survive.

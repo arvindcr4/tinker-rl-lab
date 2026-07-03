@@ -1,0 +1,5 @@
+task	algo	n_seeds	sig_pearson_L_slope_R_slope	sig_p_value	sig_spearman_L_slope_R_slope
+gsm8k_cot	grpo	3	-0.5978003538237939	0.5920830944861804	-0.5
+gsm8k_cot	dr_grpo	3	-0.3738297569643044	0.7560888541277675	-0.5
+arithmetic_easy	grpo	5	-0.9280981743470718	0.02289304039805484	-0.6
+arithmetic_easy	dr_grpo	5	0.4710634637678258	0.42320927145340637	0.19999999999999998

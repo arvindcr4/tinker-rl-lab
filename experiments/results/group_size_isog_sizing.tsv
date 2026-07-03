@@ -1,0 +1,21 @@
+Y_target	p_bin	n_in_bin	G_min_iid	G_min_empirical	delta_G	p_emp_mean	delta_div_bin	iid_meets_target	emp_meets_target	interpretation
+0.5	[0.00, 0.25]	15	4	4	0	0.1945	-0.0035	yes	yes	iid: emp G = iid G
+0.6	[0.00, 0.25]	15	8	8	0	0.1945	-0.0035	yes	yes	iid: emp G = iid G
+0.7	[0.00, 0.25]	15	8	8	0	0.1945	-0.0035	yes	yes	iid: emp G = iid G
+0.8	[0.00, 0.25]	15	8	8	0	0.1945	-0.0035	yes	yes	iid: emp G = iid G
+0.9	[0.00, 0.25]	15	16	16	0	0.1945	-0.0035	yes	yes	iid: emp G = iid G
+0.5	[0.25, 0.50]	26	4	4	0	0.3613	-0.0227	yes	yes	iid: emp G = iid G
+0.6	[0.25, 0.50]	26	4	4	0	0.3613	-0.0227	yes	yes	iid: emp G = iid G
+0.7	[0.25, 0.50]	26	4	4	0	0.3613	-0.0227	yes	yes	iid: emp G = iid G
+0.8	[0.25, 0.50]	26	4	8	4	0.3613	-0.0227	yes	yes	herd: emp G > iid G (need more rollouts)
+0.9	[0.25, 0.50]	26	8	8	0	0.3613	-0.0227	yes	yes	iid: emp G = iid G
+0.5	[0.50, 0.75]	41	4	4	0	0.6183	-0.0114	yes	yes	iid: emp G = iid G
+0.6	[0.50, 0.75]	41	4	4	0	0.6183	-0.0114	yes	yes	iid: emp G = iid G
+0.7	[0.50, 0.75]	41	4	4	0	0.6183	-0.0114	yes	yes	iid: emp G = iid G
+0.8	[0.50, 0.75]	41	4	4	0	0.6183	-0.0114	yes	yes	iid: emp G = iid G
+0.9	[0.50, 0.75]	41	8	8	0	0.6183	-0.0114	yes	yes	iid: emp G = iid G
+0.5	[0.75, 1.00]	398	16	16	0	0.944	-0.0778	yes	yes	iid: emp G = iid G
+0.6	[0.75, 1.00]	398	16	32	16	0.944	-0.0778	yes	yes	herd: emp G > iid G (need more rollouts)
+0.7	[0.75, 1.00]	398	32	32	0	0.944	-0.0778	yes	yes	iid: emp G = iid G
+0.8	[0.75, 1.00]	398	32	64	32	0.944	-0.0778	yes	yes	herd: emp G > iid G (need more rollouts)
+0.9	[0.75, 1.00]	398	64	128	64	0.944	-0.0778	yes	yes	herd: emp G > iid G (need more rollouts)

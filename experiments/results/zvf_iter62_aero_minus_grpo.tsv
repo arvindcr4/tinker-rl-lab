@@ -1,0 +1,10 @@
+# AERO - GRPO ZVF delta per heldout_acc quintile
+# Negative = AERO has LOWER ZVF (better signal availability)
+# 95% bootstrap CI from B=2000 step-level resamples
+# Source: scripts/zvf_iter62.py
+quintile	aero_mean	grpo_mean	delta	delta_lo	delta_hi	n_aero	n_grpo	interpretation
+0	0.0138	0.0199	-0.0061	-0.0105	-0.0016	100	300	AERO better (CI excl 0)
+1	0.0147	0.1256	-0.1111	-0.1211	-0.1012	100	300	AERO better (CI excl 0)
+2	0.0657	0.5461	-0.4804	-0.4990	-0.4623	100	300	AERO better (CI excl 0)
+3	0.3572	0.8326	-0.4756	-0.5016	-0.4501	100	300	AERO better (CI excl 0)
+4	0.6499	0.8798	-0.2299	-0.2404	-0.2191	100	300	AERO better (CI excl 0)

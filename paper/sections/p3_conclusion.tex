@@ -1,0 +1,27 @@
+% Pillar-3 (group size) discussion + conclusion
+\section{Discussion and Limitations}
+\label{sec:p3-discussion}
+Reframing $G$ as a preference-density dial clarifies the non-monotone effect, but
+several limitations bound the claim. The held-out swings, while suggestive, are
+modest against seed and difficulty variation, so we resist naming an optimal $G$;
+our equivalence tests are powered to reject large differences, not to certify exact
+parity. The all-pairs contrast identity is validated on measured gradients for the
+runs where we could log them, not universally, and the mechanism separating
+variance-reduction from contrast-density remains only partially resolved on
+existing data---the decisive controlled experiment (a token- and step-matched
+$2{\times}2$ design that supplies contrast without variance and vice versa) is
+specified but not yet run. Finally, the GRPO$\leftrightarrow$DPO bridge is exact
+only up to a KL penalty and the projection of zero-variance groups; treating GRPO
+as literally DPO ignores stabilizing structure the group baseline may carry.
+
+\section{Conclusion}
+\label{sec:p3-conclusion}
+Group size in GRPO is best understood not as a variance knob to be maximized but as
+a dial on how much implicit preference signal each prompt contributes. On our
+benchmark its effect is non-monotone with no universal optimum, reward is retained
+almost completely across a wide range of $G$, and the signal-to-noise ratio grows
+far more slowly than $\sqrt{G}$---all consistent with a contrast-density rather than
+a pure-variance account, and with the exact sense in which the group-centered update
+is an all-pairs preference contrast. The clean causal test, and matched-budget
+multi-seed comparisons, are the natural next experiments; we release the sweeps,
+gradients, and scripts to enable them.

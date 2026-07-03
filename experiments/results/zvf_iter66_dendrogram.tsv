@@ -1,0 +1,14 @@
+# Pillar 2 Iter 66 — hierarchical clustering linkage
+# Average-linkage on the 9x9 KS distance matrix.
+# Rows are merges in chronological order; final row is the
+# root (the entire 9 libraries together).
+# Source: scripts/zvf_iter66_distshape.py
+step	merge_a	merge_b	height_D	size_a	size_b	size_merged
+0	{cppo}	{ngrpo}	0.1758	1	1	2
+1	{aero}	{grpo}	0.1980	1	1	2
+2	{areal}	{cppo}	0.2028	1	1	2
+3	{aero}	{gift}	0.2343	1	2	3
+4	{es}	{gift}	0.2539	2	3	5
+5	{cppo}	{es}	0.3034	2	5	7
+6	{aero}	{cppo}	0.4589	1	7	8
+7	{aero}	{areal}	0.6391	1	8	9

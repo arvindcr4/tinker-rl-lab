@@ -1,0 +1,11 @@
+G_a	G_b	direction	T_crossover_tokens	diff_T1M_pct	diff_T64M_pct	delta_pct
+4	8	G=8 overtakes G=4 at large T		7.0	16.0	9.0
+4	16	G=16 overtakes G=4 at large T		6.0	21.0	15.0
+4	32	G=32 overtakes G=4 at large T	1148698.0	1.0	24.0	23.0
+4	64	G=64 overtakes G=4 at large T	3428976.0	-6.0	23.0	29.0
+8	16	G=16 overtakes G=8 at large T	4000000.0	-1.0	5.0	6.0
+8	32	G=32 overtakes G=8 at large T	7245789.0	-6.0	8.0	14.0
+8	64	G=64 overtakes G=8 at large T	16000000.0	-13.0	7.0	20.0
+16	32	G=32 overtakes G=16 at large T	16000000.0	-5.0	3.0	8.0
+16	64	G=64 overtakes G=16 at large T	64000000.0	-12.0	2.0	14.0
+32	64	G=64 overtakes G=32 at large T		-7.0	-1.0	6.0

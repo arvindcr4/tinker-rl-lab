@@ -1,0 +1,10 @@
+bin	R_target	n_T_used	T_star_M_tokens	bracketed_by_M	slope	direction
+low	0.976	1	n/a	n/a	n/a	n/a
+low	0.9	1	n/a	n/a	n/a	n/a
+low	0.8	1	n/a	n/a	n/a	n/a
+mid	0.976	3	7.65	[4.0, 16.0]	-0.1342	decreasing
+mid	0.9	3	13.4766	[4.0, 16.0]	-0.1342	decreasing
+mid	0.8	3	28.3895	[4.0, 16.0]	-0.1342	decreasing
+high	0.976	2	52.6684	[16.0, 64.0]	-0.0341	decreasing
+high	0.9	2	488.1478	outside	-0.0341	decreasing
+high	0.8	2	9139.4697	outside	-0.0341	decreasing

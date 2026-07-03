@@ -1,0 +1,11 @@
+# Iter 46 pre-registered predictions (4 binary checks).
+# P1: At Y_target=0.80, mean_dG < 0 (anti-herding saves rollouts).
+# P2: At G=8, Y_uplift > 0 (anti-herding raises yield at fixed budget).
+# P3: At Y_target=0.95, mean_G_emp < mean_G_iid (savings at high yield).
+# P4: Mean G_iid at Y=0.80 is monotonic increasing in Y_target (sanity).
+# Source: scripts/zvf_iter46_isog.py
+prediction	definition	value	threshold	pass
+P1_dG_negative_at_Y80	mean_dG @ Y=0.80 < 0	-2.8139 < 0	True	True
+P2_yield_uplift_G8	Y_uplift @ G=8 > 0	0.1455 > 0	True	True
+P3_dG_negative_at_Y95	mean_G_emp @ Y=0.95 < mean_G_iid	6.6238 < 13.1188	True	True
+P4_monotone_in_Y	mean_G_iid non-decreasing in Y_target	[3.81, 5.81, 7.44, 10.56, 13.12]	True	True

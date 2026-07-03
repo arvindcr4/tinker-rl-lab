@@ -1,0 +1,13 @@
+model	params_B	arch	family	n_steps	C_proxy	log10_C	log10_P	R_max	lambda	r_mean	zero_frac	fit_ok
+Qwen3.5-4B	4.0	dense	qwen	30	61440.0	4.7885	0.6021	0.8178	3.2223	0.8167	0.0	True
+Qwen3-8B	8.0	dense	qwen	30	122880.0	5.0895	0.9031	0.3313	0.2263	0.2854	0.0667	True
+Llama-3.1-8B-Instruct	8.0	dense	llama	30	122880.0	5.0895	0.9031	0.869	5.0	0.8688	0.0	True
+Qwen3-32B	32.0	dense	qwen	3	49152.0	4.6915	1.5051	0.2501	5.0	0.2497	0.0	True
+Qwen3.5-27B	27.0	dense	qwen	3	41472.0	4.6178	1.4314	0.598	0.6799	0.4373	0.3333	True
+gpt-oss-20B	20.0	moe	gpt-oss	30	307200.0	5.4874	1.301	0.8414	2.7879	0.8396	0.0	True
+Qwen3-30B-MoE	30.0	moe	qwen	5	76800.0	4.8854	1.4771	0.3326	2.3098	0.3252	0.0	True
+Qwen3-30B-MoE-Inst	30.0	moe	qwen	3	46080.0	4.6635	1.4771	1.0017	5.0	1.0	0.0	True
+DeepSeek-V3.1	685.0	moe	deepseek	20	7014400.0	6.846	2.8357	0.844	4.7059	0.8438	0.0	True
+Nemotron-120B	120.0	dense	nemotron	20	1228800.0	6.0895	2.0792	2.0	0.0105	0.175	0.55	True
+Qwen3-235B-MoE	235.0	moe	qwen	4	481280.0	5.6824	2.3711	1.0017	5.0	1.0	0.0	True
+Kimi-K2-Thinking	1000.0	moe	kimi	20	10240000.0	7.0103	3.0	0.8503	5.0	0.85	0.0	True

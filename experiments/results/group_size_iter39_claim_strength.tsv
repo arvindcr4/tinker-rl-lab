@@ -1,0 +1,9 @@
+claim	value	denominator	fraction
+n_cells_above_wu_in_CI	18	40	0.45
+n_cells_tost_equivalent_eps0.02	0	40	0.0
+worst_cell_G4_vs_G32_T64M_R	0.7273		
+worst_cell_upper_CI_minus_Wu_threshold	-0.1878		
+worst_cell_upper_CI_excludes_Wu	True		
+pass_fraction_bootstrap_CI_low	0.3	40	
+pass_fraction_bootstrap_CI_high	0.6	40	
+pass_fraction_significantly_below_half	False		

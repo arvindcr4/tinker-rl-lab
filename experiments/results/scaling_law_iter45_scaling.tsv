@@ -1,0 +1,4 @@
+stack	n_used	alpha	intercept	spear_logC_Rmax	p_perm	spear_logP_Rmax	p_perm_logP	median_Rmax	note
+all	12	0.2307	-0.4369	0.4895	0.1072	0.4196	0.1845	0.8427	OLS on log10(C) vs R_max; alpha is the slope (compute exponent)
+dense	6	1.03	-4.4019	0.7143	0.1147	0.1429	0.7681	0.7079	OLS on log10(C) vs R_max; alpha is the slope (compute exponent)
+moe	6	0.0566	0.4857	0.1429	0.7955	0.4857	0.3691	0.8471	OLS on log10(C) vs R_max; alpha is the slope (compute exponent)

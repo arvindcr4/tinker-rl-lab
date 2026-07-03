@@ -1,0 +1,7 @@
+task	metric	n_pairs	mean_grpo	mean_drgrpo	mean_diff	ci_lo	ci_hi	p_le0	interpretation
+arithmetic_easy	slope_drho_dt	5	0.00239975	0.0025365	0.00013675	-2.103e-05	0.00024403	0.0555	inconclusive
+arithmetic_easy	delta_rho	5	0.18885892	0.18809126	-0.00076766	-0.00456553	0.0027383	0.6398	inconclusive
+arithmetic_easy	rho_last	5	0.21821451	0.2181452	-6.931e-05	-0.00301693	0.00348784	0.5824	inconclusive
+gsm8k_cot	slope_drho_dt	3	8.41e-06	4.59e-06	-3.82e-06	-1.033e-05	2.05e-06	0.8518	inconclusive
+gsm8k_cot	delta_rho	3	0.0005218	0.00048467	-3.712e-05	-0.00032434	0.00013618	0.7071	inconclusive
+gsm8k_cot	rho_last	3	0.00160193	0.00170007	9.814e-05	-0.00032434	0.00047713	0.3767	inconclusive

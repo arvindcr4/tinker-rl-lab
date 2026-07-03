@@ -1,0 +1,6 @@
+group	n	mean_R	std_R	median_R	min_R	max_R
+moe	6	0.8098	0.2276	0.8469	0.3252	1.0000
+dense	6	0.4721	0.2738	0.3614	0.1750	0.8688
+gap_moe_minus_dense	n/a	+0.3376	n/a	n/a	n/a	n/a
+perm_p_moe_greater	n/a	0.0230	n/a	n/a	n/a	n/a
+perm_p_two_sided	n/a	0.0460	n/a	n/a	n/a	n/a

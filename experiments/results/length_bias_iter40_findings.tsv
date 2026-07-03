@@ -1,0 +1,3 @@
+task	GRPO_late_beta	DrGRPO_late_beta	GRPO_antitrap_slope	DrGRPO_antitrap_slope	GRPO_r_over_l_drift	DrGRPO_r_over_l_drift	drift_diff_p_le0	antitrap_diff_p_le0	GRPO_verdict	DrGRPO_verdict
+arithmetic_easy	0.014252	-0.009184	-0.251725	-0.271634	0.144555	0.146414	1.0	0.0047	mixed	anti-trap
+gsm8k_cot	-0.004664	-0.02055	-0.004474	-0.011273	0.000686	0.000608	0.0	0.0	anti-trap	anti-trap

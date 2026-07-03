@@ -1,0 +1,35 @@
+% =============================================================================
+% STANDALONE PAPER 3 of 4 -- Pillar 3: Group size & GRPO<->DPO
+% Reuses shared preamble/author/methods; pulls the P3 section family + frontier synthesis.
+% Build: pdflatex paper_P3_group_size ; bibtex paper_P3_group_size ; pdflatex x2
+% =============================================================================
+\documentclass{article}
+\input{sections/_shared_preamble}
+\title{Group Size in GRPO:\\
+       Contrast Density and the Bridge to DPO}
+\input{sections/_shared_author}
+\begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\input{sections/p3_abstract}
+\input{sections/p3_intro}
+\input{sections/_shared_methods}
+\input{sections/p3_results_intro}
+\input{sections/group_size}
+\input{sections/group_size_reconcile}
+\input{sections/group_size_iter23}
+\input{sections/group_size_iter27}
+\input{sections/group_size_iter31}
+\input{sections/group_size_iter35}
+\input{sections/group_size_iter39}
+\input{sections/group_size_iter43}
+\input{sections/group_size_iter47}
+\input{sections/group_size_iter51}
+\input{sections/group_size_iter55}
+\input{sections/group_size_iter59}
+\input{sections/group_size_iter63}
+\input{sections/frontier_synthesis_group_size}
+\input{sections/p3_conclusion}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

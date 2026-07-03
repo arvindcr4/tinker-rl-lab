@@ -1,0 +1,5 @@
+G	p_empirical	zvf_empirical	zvf_theory_at_p	zvf_residual	gu_empirical	gu_theory_at_p	gu_residual	note
+2	0.9817	0.838	0.964	-0.126	0.162	0.036	0.126	empirical ZVF <= theory: contrastive signal is well-conditioned
+4	0.9883	0.7635	0.9541	-0.1906	0.2365	0.0459	0.1906	empirical ZVF <= theory: contrastive signal is well-conditioned
+8	0.99	0.6906	0.9227	-0.2321	0.3094	0.0773	0.2321	empirical ZVF <= theory: contrastive signal is well-conditioned
+16	0.9783	0.6312	0.7044	-0.0731	0.3688	0.2956	0.0731	empirical ZVF <= theory: contrastive signal is well-conditioned

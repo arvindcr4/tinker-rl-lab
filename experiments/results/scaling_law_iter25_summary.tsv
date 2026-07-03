@@ -1,0 +1,9 @@
+metric	value
+n_traces	5
+n_lam_at_bound_pointfit	4
+n_identifiable	0
+frac_identifiable	0.0
+n_saturation_supported	0
+frac_saturation_supported	0.0
+n_aicc_best_constant	5
+median_batch_n	16.0

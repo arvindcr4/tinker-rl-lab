@@ -1,0 +1,6 @@
+model	boot_frac_lambda_at_bound	lambda_ci10	lambda_ci90	lambda_ci_span_frac	t80_ci10	t80_ci90
+Qwen3.5-4B	0.5195	1.8621	10.0	0.8138	0.1609	0.8643
+Qwen3-8B	0.4595	0.7313	10.0	0.9269	0.1609	2.2008
+Llama-3.1-8B-Instruct	0.5415	2.0122	10.0	0.7988	0.1609	0.7998
+DeepSeek-V3.1	0.5495	1.5678	10.0	0.8432	0.1609	1.0266
+Nemotron-120B	0.1855	0.1779	10.0	0.9822	0.1609	9.0473

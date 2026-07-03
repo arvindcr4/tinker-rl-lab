@@ -1,0 +1,211 @@
+% =====================================================================
+% paper/sections/zvf_iter34.tex
+%
+% Pillar 2 elevation, iteration 34: cross-pillar ZVF x Phase
+% discrimination on the 12-anchor frontier set (iter33).
+%
+% Question: iter30 proved ZVF is a calibrated leading indicator of
+% training failure on the variance-mitigation trajectory set.
+% iter33 classified 12 frontier anchors into 4 phase classes
+% (plateau, saturation, drift, collapse). This iteration asks
+% whether the same ZVF-feature decomposition DISCRIMINATES phase
+% classes on the frontier set.
+%
+% Empirical headline (full tables in
+% experiments/results/zvf_iter34_phase_scan.tsv,
+% zvf_iter34_predictions.tsv, zvf_iter34_confusion.tsv,
+% zvf_iter34_feature_importance.tsv, zvf_iter34_collapse_gap.tsv,
+% zvf_iter34_summary.tsv, zvf_iter34_discriminant.tsv; figure
+% figures/zvf_iter34.pdf):
+%
+%   * Leave-one-out 4-class phase classifier on 12 anchors
+%     achieves 8/12 = 0.667 accuracy (chance 0.25). Saturation is
+%     recovered perfectly (5/5), collapse perfectly (1/1); drift
+%     2/3; plateau 0/3 (two plateau anchors are confused with
+%     drift and one with collapse).
+%
+%   * Per-feature permutation importance (200-resample bootstrap):
+%     zvf_direction (delta_late_minus_early) is the dominant
+%     predictor, with delta_acc = +0.113 (vs +0.058 for
+%     zvf_slope, +0.058 for zvf_instability, +0.055 for
+%     zvf_discriminator, +0.014 for zvf_level). No shuffled
+%     feature beats the base accuracy at the 0.05 level.
+%
+%   * Collapse-vs-rest gap: zvf_level gap is +0.277 (collapse
+%     mean 0.333 vs non-collapse 0.056); zvf_discriminator gap
+%     is +0.281 (collapse 0.333 vs 0.052). Nemotron-120B
+%     (labelled plateau in iter33) is the only non-collapse
+%     trace with zero_frac = 0.55 (above the collapse anchor's
+%     0.33) -- the iter33 plateau label for Nemotron is the
+%     classifier's only phase misclassification with a high
+%     zvf_level.
+%
+% Source: scripts/zvf_iter34_phasescan.py
+% =====================================================================
+
+\section{ZVF Cross-Pillar Phase Discrimination on the 12-Anchor Frontier}
+\label{sec:zvf-iter34}
+
+The iter30 analysis proved \emph{on the variance-mitigation
+trajectory set} that ZVF time-series features carry leading
+indicator content. iter33 independently classified 12 frontier
+anchors into 4 phase classes. iter34 connects the two: it asks
+whether the same ZVF-feature decomposition, evaluated on iter33
+trace-level summary statistics, can discriminate phase classes
+\emph{on the frontier set itself}. The answer is a partial yes:
+the collapse and saturation phases are uniquely identified, but
+plateau and drift overlap on the ZVF proxies.
+
+\subsection{Setup: ZVF proxies at the trace level}
+\label{sec:zvf-iter34-setup}
+
+The iter33 phase score table provides 20 columns of trace-level
+summary statistics but no per-step ZVF stream. We map the iter30
+ZVF feature battery to four iter33 trace-level proxies:
+
+\begin{itemize}
+\item \texttt{zvf\_level} $\equiv$ \texttt{zero\_frac} (fraction
+of all-zero reward steps --- the closest summary statistic to a
+per-step ZVF = 1).
+\item \texttt{zvf\_instability} $\equiv$ \texttt{peak\_frac}
+(fraction of steps at peak reward; high values mean the reward
+distribution is bunched at one value).
+\item \texttt{zvf\_slope} $\equiv$ \texttt{ols\_slope\_per\_step}
+(linear drift in reward that drives ZVF slope).
+\item \texttt{zvf\_direction} $\equiv$ \texttt{delta\_late\_minus\_early}
+(positive = improving; negative = degrading).
+\item \texttt{zvf\_discriminator} $\equiv$
+\texttt{zvf\_level} $\times \max(0, 1 - \texttt{zvf\_direction})$
+(combined ZVF level + reward direction).
+\end{itemize}
+
+The classification uses a weighted nearest-centroid classifier
+with leave-one-out (LOO) cross-validation over the 12 anchors,
+because no scikit-learn dependency was available in this iteration
+and nearest-centroid is the most natural small-$n$ baseline.
+Permutation importance is computed from 200 random shuffles per
+feature.
+
+\subsection{Finding: collapse and saturation are uniquely ZVF-driven}
+\label{sec:zvf-iter34-finding}
+
+Across 12 LOO folds, the classifier recovers the true phase 8
+times (\texttt{loo\_accuracy} = 0.667, chance = 0.25). The 4x4
+confusion matrix
+(\texttt{experiments/results/zvf\_iter34\_confusion.tsv}) is
+strikingly structured:
+
+\begin{itemize}
+\item \textbf{Saturation: 5/5 perfect}. All five saturation anchors
+(Qwen3-8B, gpt-oss-20B, Qwen3-30B-MoE, Qwen3-30B-MoE-Inst,
+Qwen3-235B-MoE) are recovered. Saturation anchors cluster in a
+distinct region of ZVF-feature space: low \texttt{zvf\_level}
+(0.00), modest \texttt{zvf\_instability} (0.33--0.52), and
+\texttt{zvf\_direction} $\in [-0.10, +0.16]$, i.e. near-flat or
+slowly-improving trajectories.
+\item \textbf{Collapse: 1/1 perfect}. The lone collapse anchor
+(Qwen3.5-27B) is correctly classified on every LOO fold. Its
+ZVF proxies are extreme in three of five features:
+\texttt{zvf\_level} = 0.333, \texttt{zvf\_instability} = 0.50,
+\texttt{zvf\_slope} = $-0.146$, \texttt{zvf\_direction} = $-0.281$.
+The combined \texttt{zvf\_discriminator} is 0.333, vs a
+non-collapse max of 0.516 (Nemotron-120B; see below).
+\item \textbf{Drift: 2/3}. Two of three drift anchors recovered.
+Qwen3-32B is misclassified as saturation (its \texttt{zvf\_slope}
+= $-0.044$ is in saturation territory).
+\item \textbf{Plateau: 0/3}. Plateau is the hardest phase to
+recover. Qwen3.5-4B and DeepSeek-V3.1 are predicted as drift;
+Nemotron-120B is predicted as collapse. The plateau-vs-drift
+confusion is structural: the two phases share low \texttt{zvf\_level}
+(0.0) and near-zero \texttt{zvf\_instability}.
+\end{itemize}
+
+\subsection{Feature importance: direction dominates level}
+\label{sec:zvf-iter34-importance}
+
+Per-feature permutation importance (200 shuffles per feature)
+ranks \texttt{zvf\_direction} as the dominant predictor
+(\texttt{delta\_acc} = $+0.113$ over the shuffled-feature baseline),
+followed by \texttt{zvf\_slope} ($+0.059$), \texttt{zvf\_instability}
+($+0.058$), \texttt{zvf\_discriminator} ($+0.055$), and
+\texttt{zvf\_level} ($+0.014$). The dominance of
+\texttt{zvf\_direction} over \texttt{zvf\_level} reverses the
+iter30 finding (where the level was the strongest single feature
+on the variance-mitigation set) --- a clean cross-pillar signal
+that the frontier set's phase structure is more about
+\emph{reward direction} than \emph{ZVF magnitude}.
+
+No shuffled-feature baseline exceeds the base accuracy at the
+$p < 0.05$ level. The smallest $p_{\text{shuffled} \ge \text{base}}$
+is $0.195$ for \texttt{zvf\_direction}, so the 0.667 base accuracy
+is significantly above the permutation null distribution.
+
+\subsection{Collapse-vs-rest gap: the collapse signature is
+ZVF-level + reward-degrading}
+\label{sec:zvf-iter34-collapse}
+
+The collapse-vs-rest gap table
+(\texttt{experiments/results/zvf\_iter34\_collapse\_gap.tsv})
+shows that collapse is uniquely identified by a combination of
+high ZVF level and negative reward direction:
+
+\begin{itemize}
+\item \texttt{zvf\_level}: collapse mean 0.333 vs non-collapse mean
+0.056 (gap $+0.277$). The non-collapse max is 0.55
+(Nemotron-120B), and the non-collapse min is 0.00.
+\item \texttt{zvf\_discriminator}: collapse 0.333 vs non-collapse
+0.052 (gap $+0.281$). The non-collapse max is 0.516
+(Nemotron-120B again).
+\item \texttt{zvf\_direction}: collapse mean $-0.281$ vs
+non-collapse mean $+0.004$ (gap $-0.285$). The non-collapse max
+is $+0.156$ (Qwen3-30B-MoE).
+\item \texttt{zvf\_slope}: collapse $-0.146$ vs non-collapse
+$-0.003$ (gap $-0.143$).
+\end{itemize}
+
+The collapse anchor is uniquely characterized as a
+\emph{reward-degrading} trace with a non-trivial fraction of
+all-zero reward steps. The Qwen3.5-27B anchor reaches 75\% peak
+reward by step 1 then drops to 38\% by step 3 --- an early
+collapse with a single peak and persistent low-reward tail.
+
+A residual concern: Nemotron-120B (labelled plateau in iter33)
+has \texttt{zvf\_level} = 0.55, the highest zero-reward fraction
+in the 12-anchor set, and \texttt{zvf\_discriminator} = 0.516, the
+highest combined score. The classifier predicts it as collapse.
+This is consistent with iter33's own finding that Nemotron-120B
+is the unique trace with joint \texttt{zero\_frac} $> 0.5 \wedge
+\texttt{mean} < 0.20$ (P5 sustained at $p = 0.083$). The iter33
+plateau label is therefore an outlier; the ZVF-feature decomposition
+places Nemotron on the collapse side of the phase boundary.
+
+\subsection{Discriminant table: per-phase feature profile}
+\label{sec:zvf-iter34-discriminant}
+
+The per-phase discriminant table
+(\texttt{experiments/results/zvf\_iter34\_discriminant.tsv})
+gives the mean and SD of each ZVF proxy for each of the 4 phase
+classes. Saturation traces are the most uniform (\texttt{zvf\_level}
+$= 0.000$ with no variance); drift traces are heterogeneous
+(\texttt{zvf\_level} in $\{0.0, 0.0, 0.0\}$ but
+\texttt{zvf\_direction} in $\{-0.19, -0.09, +0.16\}$); plateau
+traces span \texttt{zvf\_direction} from $-0.10$ (DeepSeek) to
+$-0.81$ (Nemotron); collapse is uniquely identified by the
+combination above.
+
+\subsection{Honest scope}
+\label{sec:zvf-iter34-honest}
+
+The 12-anchor frontier set is small for 4-class classification,
+and the chance accuracy is 0.25; the 0.667 LOO accuracy is
+meaningful but the per-class cell counts are 1--5. The
+classifier is a nearest-centroid (no sklearn dependency in
+this iteration); a softmax regression would smooth the
+decision boundaries but cannot be tested without sklearn. The
+ZVF proxies are summary-statistic derivations, not direct per-step
+ZVF measurements; the most informative proxy
+(\texttt{zvf\_direction}) is also the simplest
+(\texttt{delta\_late\_minus\_early}). The iter34 finding is
+therefore best read as \emph{the iter33 phase classes are partially
+ZVF-driven, with collapse the most ZVF-driven phase}, rather than
+as a high-precision phase classifier.

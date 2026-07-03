@@ -1,0 +1,14 @@
+# Pillar 2 per-library iterated bootstrap CIs (iter 22)
+# For each variance_mitigation method, B=2000 percentile bootstrap
+# CIs on mean_ZVF and on collapse_rate, with seed-level resampling.
+# Source: scripts/zvf_iter22.py
+library	n_seeds	mean_zvf	mean_zvf_ci_lo	mean_zvf_ci_hi	collapse_rate	collapse_rate_ci_lo	collapse_rate_ci_hi
+grpo	5	0.4808	0.4799	0.4818	0.1220	0.0340	0.2080
+aero	5	0.2203	0.2187	0.2217	0.0000	0.0000	0.0000
+cppo	5	0.2952	0.2932	0.2968	0.0000	0.0000	0.0000
+ngrpo	5	0.3003	0.2986	0.3021	0.0000	0.0000	0.0000
+scafgrpo	5	0.3166	0.3134	0.3200	0.0000	0.0000	0.0000
+mcgrpo	5	0.1461	0.1392	0.1512	0.0000	0.0000	0.0000
+gift	5	0.1142	0.1096	0.1171	0.0000	0.0000	0.0000
+areal	5	0.1209	0.1162	0.1238	0.0000	0.0000	0.0000
+es	5	0.1142	0.1096	0.1177	0.0000	0.0000	0.0000

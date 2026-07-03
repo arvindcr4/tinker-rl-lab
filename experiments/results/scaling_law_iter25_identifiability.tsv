@@ -1,0 +1,6 @@
+model	params_B	n_steps	batch_n	sigma_step	R_max	lambda	lam_at_bound	t80_point	identifiable	aicc_best	sat_supported	T_star_power80	T_star_gt_len
+Qwen3.5-4B	4.0	30	16	0.0804	0.8167	10.0	True	0.1609	False	constant	False	>200	True
+Qwen3-8B	8.0	30	16	0.1046	0.2854	10.0	True	0.1609	False	constant	False	>200	True
+Llama-3.1-8B-Instruct	8.0	30	16	0.0739	0.8688	10.0	True	0.1609	False	constant	False	>200	True
+DeepSeek-V3.1	685.0	20	8	0.119	0.8438	10.0	True	0.1609	False	constant	False	>200	True
+Nemotron-120B	120.0	20	8	0.1027	0.182	0.9902	False	1.6253	False	constant	False	>200	True

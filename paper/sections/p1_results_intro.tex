@@ -1,0 +1,27 @@
+% Pillar-1 (scaling) results opener
+\section{Scaling Results}
+\label{sec:p1-results}
+We organize the scaling evidence around three questions: does the GRPO gain grow
+with model size, is there a shared saturation shape across scales, and is any
+universal exponent identifiable? The short answers are \emph{no measurable
+cross-scale slope}, \emph{no clean phase structure}, and \emph{no identifiable
+exponent}. Across the frontier-scale anchors the cross-scale slope of the mean
+GRPO reward on $\log_{10} N$ is statistically indistinguishable from zero; the
+reliable structure lives not in a slope through $N$ but in the endpoint ceiling
+$R_{\max}$, which we fit per run with a saturation model and then relate to
+$\log_{10} N$.
+
+The subsections below make this precise. We first fit the canonical saturation
+model $R(t) = R_{\max}(1 - e^{-\lambda t})$ per trace and audit its
+identifiability, finding that four of the five frontier traces have $\lambda$
+pinned at the upper bound and none is identifiable (Nemotron-120B is the exception,
+with $\lambda\!\approx\!0.99$ but likewise non-identifiable), so per-trace saturation
+rates cannot be trusted. We then run a pre-registered model-selection comparison over the
+12-anchor pool that geometrically falsifies a clean three-phase hypothesis (only
+$2/12$ anchors match all criteria), and a compute-adjusted re-analysis that asks
+whether a contrastive-yield axis, rather than raw parameter count, is the correct
+abscissa. Finally, the Nemotron-120B trace is examined as a distinct collapse
+phase---peak held-out accuracy $0.875$ drifting to a late mean near $0.21$, with a
+zero-variance fraction of $0.55$ against $\le 0.067$ elsewhere---rather than as a
+smooth continuation of the trend. The final subsection adds an external
+frontier-model cross-examination of these claims.

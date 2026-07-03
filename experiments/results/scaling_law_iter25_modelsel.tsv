@@ -1,0 +1,6 @@
+model	aicc_constant	aicc_linear	aicc_saturation	w_constant	w_linear	w_saturation	aicc_best
+Qwen3.5-4B	-4.875	-2.574	-2.574	0.6125	0.1938	0.1937	constant
+Qwen3-8B	-19.117	-17.617	-16.816	0.5591	0.264	0.1769	constant
+Llama-3.1-8B-Instruct	-21.466	-20.368	-19.164	0.528	0.3049	0.167	constant
+DeepSeek-V3.1	-20.761	-18.278	-18.277	0.6338	0.1831	0.1831	constant
+Nemotron-120B	2.712	5.118	4.92	0.6129	0.184	0.2032	constant

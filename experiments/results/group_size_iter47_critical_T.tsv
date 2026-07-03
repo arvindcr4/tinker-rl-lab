@@ -1,0 +1,13 @@
+G_a	R_target	slope	intercept	T_star_M_tokens	T_star_ci_low_M	T_star_ci_high_M	bracketed_by_M	direction
+4	0.976	-0.1059	2.5941	4.3186	2.9147	5.776	[1.0, 4.0]	decreasing
+4	0.9	-0.1059	2.5941	8.8513	6.6972	11.116	[4.0, 16.0]	decreasing
+4	0.8	-0.1059	2.5941	22.7553	18.6271	28.3001	[4.0, 16.0]	decreasing
+8	0.976	-0.1108	2.8662	25.6979	21.1141	31.6762	[4.0, 16.0]	decreasing
+8	0.9	-0.1108	2.8662	51.0298	40.3263	69.458	outside	decreasing
+8	0.8	-0.1108	2.8662	125.8438	88.9096	204.3743	outside	decreasing
+16	0.976	-0.091	2.5808	45.1838	34.3425	66.0574	outside	decreasing
+16	0.9	-0.091	2.5808	104.1116	70.8436	183.468	outside	decreasing
+16	0.8	-0.091	2.5808	312.2444	175.4683	701.3022	outside	decreasing
+32	0.976	-0.0471	1.8491	110.7262	57.4	472.0903	outside	decreasing
+32	0.9	-0.0471	1.8491	555.2426	191.0872	6105.1619	outside	decreasing
+32	0.8	-0.0471	1.8491	4632.7737	875.2372	169212.0169	outside	decreasing

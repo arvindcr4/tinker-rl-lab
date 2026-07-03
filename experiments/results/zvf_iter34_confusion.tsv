@@ -1,0 +1,5 @@
+true	collapse	drift	plateau	saturation
+collapse	1	0	0	0
+drift	0	2	0	1
+plateau	1	2	0	0
+saturation	0	0	0	5

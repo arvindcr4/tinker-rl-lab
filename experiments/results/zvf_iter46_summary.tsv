@@ -1,0 +1,45 @@
+# Iter 46 Iso-G aggregate summary on tinker_gsm8k (n restricted to prompts with p_x in (0.05, 0.95)).
+# For each Y_target: mean_G_iid, mean_G_emp (over reachable prompts),
+# mean_dG = mean_G_emp - mean_G_iid (negative => anti-herding savings),
+# savings_vs_static8 = 1 - mean_G_emp/8 (vs static G=8 baseline),
+# CI95 = bootstrap 95% CI on mean_dG (B=2000, seed=20240702).
+# Y_uplift at fixed G = mean(Y_emp - Y_iid) over prompts.
+# Source: scripts/zvf_iter46_isog.py
+metric	value	n_prompts_or_G	notes
+Y=0.50_mean_G_iid	3.8079	505	reachable prompts only
+Y=0.50_mean_G_emp	2.5564	505	reachable prompts only
+Y=0.50_mean_dG	-1.2515	505	negative=anti-herding savings; CI95=[-1.4178,-1.0931]
+Y=0.50_savings_vs_static8	0.6804	505	1 - mean_G_emp/8
+Y=0.70_mean_G_iid	5.8119	505	reachable prompts only
+Y=0.70_mean_G_emp	3.6238	505	reachable prompts only
+Y=0.70_mean_dG	-2.1881	505	negative=anti-herding savings; CI95=[-2.4059,-1.9624]
+Y=0.70_savings_vs_static8	0.5470	505	1 - mean_G_emp/8
+Y=0.80_mean_G_iid	7.4376	505	reachable prompts only
+Y=0.80_mean_G_emp	4.6238	505	reachable prompts only
+Y=0.80_mean_dG	-2.8139	505	negative=anti-herding savings; CI95=[-3.1208,-2.5188]
+Y=0.80_savings_vs_static8	0.4220	505	1 - mean_G_emp/8
+Y=0.90_mean_G_iid	10.5564	505	reachable prompts only
+Y=0.90_mean_G_emp	5.9366	505	reachable prompts only
+Y=0.90_mean_dG	-4.6198	505	negative=anti-herding savings; CI95=[-4.9802,-4.2356]
+Y=0.90_savings_vs_static8	0.2579	505	1 - mean_G_emp/8
+Y=0.95_mean_G_iid	13.1188	505	reachable prompts only
+Y=0.95_mean_G_emp	6.6238	505	reachable prompts only
+Y=0.95_mean_dG	-6.4950	505	negative=anti-herding savings; CI95=[-7.0416,-5.9406]
+Y=0.95_savings_vs_static8	0.1720	505	1 - mean_G_emp/8
+
+# Y_uplift at fixed G (matched-compute)
+G=2_mean_Y_iid	0.3655	2	fixed rollout budget
+G=2_mean_Y_emp	0.5109	2	fixed rollout budget
+G=2_Y_uplift	0.1455	2	mean(Y_emp - Y_iid)
+G=4_mean_Y_iid	0.6583	4	fixed rollout budget
+G=4_mean_Y_emp	0.8037	4	fixed rollout budget
+G=4_Y_uplift	0.1455	4	mean(Y_emp - Y_iid)
+G=8_mean_Y_iid	0.8545	8	fixed rollout budget
+G=8_mean_Y_emp	1.0000	8	fixed rollout budget
+G=8_Y_uplift	0.1455	8	mean(Y_emp - Y_iid)
+G=16_mean_Y_iid	0.9598	16	fixed rollout budget
+G=16_mean_Y_emp	1.0000	16	fixed rollout budget
+G=16_Y_uplift	0.0402	16	mean(Y_emp - Y_iid)
+G=32_mean_Y_iid	0.9956	32	fixed rollout budget
+G=32_mean_Y_emp	1.0000	32	fixed rollout budget
+G=32_Y_uplift	0.0044	32	mean(Y_emp - Y_iid)

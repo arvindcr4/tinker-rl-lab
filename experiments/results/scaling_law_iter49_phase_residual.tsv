@@ -1,0 +1,5 @@
+phase	n_anchors	mean_abs_residual	median_abs_residual	max_abs_residual	bootstrap_p90	note
+collapse	1	0.0042	0.0042	0.0042	0.0042	LOO |residual| from two-param joint fit
+drift	3	0.3805	0.4737	0.5527	0.5369	LOO |residual| from two-param joint fit
+plateau	3	0.5995	0.4506	1.2016	1.0514	LOO |residual| from two-param joint fit
+saturation	5	0.3526	0.3962	0.5902	0.5637	LOO |residual| from two-param joint fit

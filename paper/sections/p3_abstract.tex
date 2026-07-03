@@ -1,0 +1,20 @@
+% Pillar-3 (group size) standalone abstract
+\begin{abstract}
+The group size $G$ is GRPO's most distinctive hyperparameter: it sets how many
+completions are sampled per prompt and, through the group-relative baseline, how
+much preference signal each prompt contributes. We study the effect of $G$ as one
+pillar of \ours{}, a benchmark of 70+ RL runs across seven libraries and five model
+families ($0.6$B--$\sim$671B) on GSM8K, HumanEval, and tool-use tasks. Two results
+anchor the pillar. First, trainability varies with $G$ in a non-monotone way:
+intermediate group sizes often behaved better than the smallest or largest we
+tested, but the data do not justify a universal optimum. A $G{=}4$ versus $G{=}32$
+sweep shows a large held-out swing yet near-complete reward retention
+($\approx 100.3\%$ between $G{=}2$ and $G{=}16$), while the effective
+signal-to-noise ratio rises only sublinearly with $G$ (about $52\%$ of the
+$\sqrt{G}$ ideal). Second, we make explicit the sense in which GRPO is
+\emph{secretly DPO}: the group-centered update is an implicit all-pairs preference
+contrast, validated against our measured gradients, with zero-variance groups
+projected out. We frame $G$ as a preference-density dial rather than a variance
+knob, test equivalence with TOST and difficulty-stratified retention, and release
+all artifacts.
+\end{abstract}

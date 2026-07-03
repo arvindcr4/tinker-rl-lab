@@ -1,0 +1,142 @@
+% =============================================================================
+% Frontier-model cross-examination synthesis --- Pillar 4 (length bias & held-out
+% generalization; Dr.GRPO vs GRPO).
+% Provenance: distilled from an EXTERNAL live cross-examination of ChatGPT Pro
+% Extended + Gemini Deep Think (frontier_calls/digests/frontier_P4.md, P4 rounds
+% 4/12/18/24/28 plus shared adversarial rounds 13/14/19). These are the frontier
+% models' proposed designs, theorems, and falsifiable claims --- NOT experiments
+% run in this paper. They EXTEND and stress-test the paper's own Pillar-4 result
+% (Sec.~\ref{sec:length-bias-pillar}): GRPO and Dr.GRPO gave near-identical
+% held-out gains with mean length \emph{falling} (no inflation) at the measured
+% horizon. All prose below is external synthesis, attributed as such.
+% =============================================================================
+
+\subsection{Frontier-Model Cross-Examination: Length Bias and Generalization}
+\label{sec:frontier-length-bias}
+
+\paragraph{Framing (external synthesis).}
+To stress-test the Pillar~4 null result we submitted it to a live
+cross-examination of two frontier reasoning systems (ChatGPT Pro Extended and
+Gemini Deep Think). Their contributions are proposed theory and experimental
+designs, not measurements we ran; we report them as adversarial extensions of
+Sec.~\ref{sec:length-bias-pillar}. The models converged on a single reframing:
+our benchmark is a \emph{negative control} for Dr.~GRPO, not a refutation of it.
+Because mean length already \emph{falls} under both algorithms (the paper's
+$193\!\to\!188$-token, no-inflation regime), length is not an active nuisance
+variable, and a length-debiasing correction can only be equivalent to GRPO where
+there is no length bias to remove.
+
+\paragraph{The regime that would reveal a Dr.~GRPO advantage (frontier synthesis).}
+ChatGPT Pro specified the missing regime as a \emph{length-confounded sparse-RLVR}
+setting in which reward discovery and length dynamics are entangled. The target
+conditions are a high length dispersion and a length--reward coupling that our
+easy/short tasks lack:
+\begin{equation}
+\mathrm{CV}(L)\ \ge\ 0.5, \qquad
+\bigl|\mathrm{corr}(L,R)\bigr|\ \ge\ 0.25, \qquad
+\mathbb{E}[L \mid A<0] - \mathbb{E}[L \mid A>0]\ \ge\ 50\text{--}100\ \text{tokens},
+\end{equation}
+instantiated on hard math, symbolic search, code-debugging, or proof-style tasks
+with a \emph{binary exact-match} reward, no length penalty, long completion caps
+($512$--$1024$), temperature $0.8$--$1.0$, $G\in\{8,16\}$, and frontier prompts
+with pass rate $p_x\in[0.1,0.4]$ so that groups mix rare successes with verbose
+failures. The decisive test is a \emph{train length-spurious / test
+length-anti-spurious} split: in training, verbose reasoning statistically helps
+stumble into reward; on held-out data the same verbosity is neutral or harmful.
+Plain GRPO should then overfit through length-mediated updates while Dr.~GRPO
+preserves reward learning with weaker length drift. The frontier decision rule
+is to declare a Dr.~GRPO advantage only at matched rollout budget and matched
+train reward when $\Delta_{\text{held-out}}\ge +2$--$5$ pp \emph{and} the length
+drift is at least $30\%$ smaller than GRPO's. This directly explains our null:
+at $30$--$40$ steps on arithmetic/GSM8K-CoT, length is already controlled, so
+equivalence is the \emph{expected} outcome, not evidence against Dr.~GRPO.
+
+\paragraph{A proposed length-normalization bias theorem (frontier synthesis).}
+ChatGPT Pro sharpened \emph{why} the two estimators can differ into a covariance
+statement. Writing $S_i=\sum_{t}\nabla_\theta\log\pi_\theta(y_{i,t}\mid x,y_{i,<t})$
+and $A_i=R_i-\bar R_G$, per-response averaging computes a length-reweighted
+covariance whereas the sequence-level object does not:
+\begin{equation}
+g_{\mathrm{GRPO}}(x)=\mathrm{Cov}_G\!\left(S/L,\,R\right),
+\qquad
+g_{\mathrm{seq}}(x)=\mathrm{Cov}_G\!\left(S,\,R\right),
+\qquad
+g_{\mathrm{Dr}}(x)=\tfrac{1}{L_{\mathrm{ref}}}\,g_{\mathrm{seq}}(x).
+\end{equation}
+Per-response normalization is harmless \emph{iff}
+$\mathbb{E}\!\left[AS\left(1/L-c\right)\mid x\right]=0$, i.e.\ when $1/L$ is
+conditionally uncorrelated with the advantage-weighted score. The frontier
+reading is that Dr.~GRPO is \emph{length-neutral, not anti-length}: it removes
+the action-dependent $1/L_i$ importance weight and restores the sequence-level
+gradient up to a global learning-rate scale. Crucially, the frontier synthesis
+\emph{reinforces} our own hedge: length dynamics are weakly identifiable in the
+current data (reward saturation fits cleanly, length saturation rarely does), so
+the defensible claim is \emph{correction of a formal gradient bias}, not
+universal held-out superiority --- exactly the posture Sec.~\ref{sec:length-bias-pillar}
+already adopts.
+
+\paragraph{The Causal Length-Mediation Protocol, CLMP (frontier synthesis).}
+Gemini Deep Think argued that marginal pass-rate tests --- including the paired
+McNemar test our section leans on --- are confounded, because a length-hacking
+policy can post held-out successes by over-generating tokens to stochastically
+stumble into reward. CLMP instead treats trajectory length $L$ as a causal
+\emph{mediator} between the algorithm $A\in\{0{:}\mathrm{GRPO},1{:}\mathrm{Dr.GRPO}\}$
+and held-out success $S$, and decomposes the total effect into a Natural Direct
+Effect (genuine deduction) and a Natural Indirect Effect (verbosity-mediated
+success). In an internal cross-critique the models rejected their own first
+proposal --- hard ``iso-brevity'' truncation at the minimal proof length --- as
+mechanistically fatal (it yields syntactically invalid, incomplete trajectories
+and both algorithms trivially fail), and replaced it with a \emph{non-destructive}
+length-stratified estimator via Pearl's mediation formula, letting each
+completion finish naturally and marginalizing over the length distribution
+$P_A(l)\equiv P(L{=}l\mid A)$:
+\begin{align}
+\mathrm{NDE} &= \sum_{l}\bigl(\mathbb{E}[S\mid A{=}1,l]-\mathbb{E}[S\mid A{=}0,l]\bigr)\,P_1(l),\\
+\mathrm{NIE} &= \sum_{l}\mathbb{E}[S\mid A{=}0,l]\,\bigl(P_1(l)-P_0(l)\bigr).
+\end{align}
+The reported summary statistic is the Generalization-to-Exploit Ratio
+$\mathrm{GER}=\mathrm{NDE}/\mathrm{TE}$; the frontier \emph{prediction} (to be
+tested, not a result here) is that in the length-confounded regime GRPO would
+show $\mathrm{GER}<0.15$ (accuracy is mostly length-mediated exploit) while
+Dr.~GRPO would show $\mathrm{GER}>0.85$. On our own data, where length is already
+compressed and $\rho(L,R)$ is negative, CLMP would report a small $\mathrm{NIE}$
+for \emph{both} algorithms --- consistent with the observed equivalence.
+
+\paragraph{A reviewer-proof memorization-vs-generalization design (frontier synthesis).}
+ChatGPT Pro proposed replacing a bare paired test with a stratified,
+memorization-controlled generalization ladder of four disjoint held-out strata:
+$S_0$ exact/near-duplicates (a contamination sentinel, excluded from the headline
+claim), $S_1$ same template with new variables, $S_2$ same skill with held-out
+template, and $S_3$ external distribution. Each eval item $x$ receives a
+train-nearest-neighbor exposure score $M(x)$ blending BM25, char/$n$-gram overlap,
+embedding similarity, and answer/template match; items are binned into
+$M$-deciles so that a \emph{memorization} account predicts gains concentrated in
+high-$M$ deciles whereas \emph{generalization} predicts nonzero gains in low-$M$,
+$S_2/S_3$ items. The flagship estimand is the adjusted low-similarity
+$S_2/S_3$ treatment effect from a logistic model with item-difficulty and
+seed random effects and a length covariate, so Dr.~GRPO ``wins'' only if its
+coefficient survives length and memorization controls. Two hard negative
+controls were specified: (i) \emph{length-matched replay} --- subsample GRPO
+outputs to match Dr.~GRPO's length distribution within each stratum and
+$M$-decile, so any residual gain is not merely a shorter/longer-decoding
+artifact; and (ii) \emph{answer-preserving perturbation} (rename variables,
+permute numbers, paraphrase) with a reported consistency
+$C=\Pr\!\left(f(x)=f(T(x))\right)$, since memorization yields high raw accuracy
+but low $C$. McNemar is demoted to a secondary check.
+
+\paragraph{Adversarial objection and the length-adversarial truncation test (frontier synthesis).}
+The sharpest reviewer objection the models raised against Dr.~GRPO is that
+removing the $1/L_i$ divisor should explode gradient variance on long chains;
+their crispest rebuttal is that the native leave-one-out control variate contains
+that variance, so the divisor is an invalid heuristic rather than a necessary
+regularizer. As the corresponding empirical probe, Gemini Deep Think proposed a
+\emph{length-adversarial truncation} test: evaluate both converged policies under
+harsh generation caps $T_{\max}\ll\mathbb{E}[|y_{\mathrm{GRPO}}|]$. If GRPO's
+held-out accuracy relies on ``stumbling into correctness'' via padding, it should
+crater non-linearly under truncation, whereas a genuinely length-invariant
+Dr.~GRPO policy should degrade gracefully --- a direct behavioral test of whether
+compressed deductive logic, rather than Markov-horizon exploitation, was
+acquired. We flag this as the single highest-value follow-up: it is one
+truncation sweep away from being executed on the checkpoints
+Sec.~\ref{sec:length-bias-pillar} already produced, and unlike the CLMP and
+stratified-ladder designs it needs no new training regime.

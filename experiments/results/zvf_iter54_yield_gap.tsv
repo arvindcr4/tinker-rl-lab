@@ -1,0 +1,6 @@
+# source | library | G | n | mean_Y_gap | median_Y_gap | std_Y_gap | ci_lo | ci_hi | median_zvf_iid | median_zvf_obs | verdict
+groupsize_zvf_sweep_agg	groupsize_G16	16	1	-0.5172	-0.5172	0.0000	-0.5172	-0.5172	0.1140	0.6312	herd
+groupsize_zvf_sweep_agg	groupsize_G2	2	1	-0.1071	-0.1071	0.0000	-0.1071	-0.1071	0.7309	0.8380	herd
+groupsize_zvf_sweep_agg	groupsize_G4	4	1	-0.2097	-0.2097	0.0000	-0.2097	-0.2097	0.5538	0.7635	herd
+groupsize_zvf_sweep_agg	groupsize_G8	8	1	-0.3642	-0.3642	0.0000	-0.3642	-0.3642	0.3264	0.6906	herd
+tinker_gsm8k	tinker_gsm8k	8	600	0.1224	0.1001	0.1373	0.1116	0.1339	0.1001	0.0000	anti-herd

@@ -1,0 +1,6 @@
+model_a	params_B_a	arch_a	logC_a	Rmax_a	model_b	params_B_b	arch_b	logC_b	Rmax_b	delta_logC	delta_Rmax	rel_delta_Rmax
+Qwen3.5-27B	27.0	dense	4.6178	0.598	Qwen3-30B-MoE-Inst	30.0	moe	4.6635	1.0017	-0.0457	-0.4037	-0.403
+Qwen3-32B	32.0	dense	4.6915	0.2501	Qwen3.5-4B	4.0	dense	4.7885	0.8178	-0.097	-0.5677	-0.6942
+Qwen3-8B	8.0	dense	5.0895	0.3313	Llama-3.1-8B-Instruct	8.0	dense	5.0895	0.869	0.0	-0.5377	-0.6188
+gpt-oss-20B	20.0	moe	5.4874	0.8414	Qwen3-235B-MoE	235.0	moe	5.6824	1.0017	-0.195	-0.1603	-0.16
+DeepSeek-V3.1	685.0	moe	6.846	0.844	Kimi-K2-Thinking	1000.0	moe	7.0103	0.8503	-0.1643	-0.0063	-0.0074

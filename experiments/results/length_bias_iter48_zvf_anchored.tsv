@@ -1,0 +1,8 @@
+task	algo	zvf_bin_at_plat	n_runs	mean_signature	sd_signature
+arithmetic_easy	grpo	mid	3	0.500925	0.174821
+arithmetic_easy	grpo	high	2	0.495566	0.013406
+arithmetic_easy	dr_grpo	high	5	0.410557	0.040441
+gsm8k_cot	grpo	mid	2	0.488269	0.343757
+gsm8k_cot	grpo	high	1	0.377378	0.0
+gsm8k_cot	dr_grpo	mid	2	0.256977	0.020893
+gsm8k_cot	dr_grpo	high	1	0.051632	0.0

@@ -1,0 +1,9 @@
+# threshold | n_below_total | n_below_converged | n_below_nonconv | n_above_total | n_above_converged | n_above_nonconv | precision_below_converged | recall_below_converged | youden_J | perfect_separator
+0.91	9	0	9	40	4	36	0.0000	0.0000	-0.2000	False
+0.92	18	0	18	31	4	27	0.0000	0.0000	-0.4000	False
+0.93	18	0	18	31	4	27	0.0000	0.0000	-0.4000	False
+0.94	36	0	36	13	4	9	0.0000	0.0000	-0.8000	False
+0.95	36	0	36	13	4	9	0.0000	0.0000	-0.8000	False
+0.96	45	0	45	4	4	0	0.0000	0.0000	-1.0000	False
+0.97	45	0	45	4	4	0	0.0000	0.0000	-1.0000	False
+0.98	45	0	45	4	4	0	0.0000	0.0000	-1.0000	False

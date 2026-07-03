@@ -1,0 +1,4 @@
+stack	n_used	alpha_logP	alpha_logC	intercept	r_squared	rmse	median_Rmax	note
+all	12	-0.087	0.2976	-0.6549	0.1839	0.3966	0.8427	OLS R_max = a*log10(P) + b*log10(C) + c on full sample
+dense	6	0.0887	0.9795	-4.256	0.779	0.2719	0.7079	OLS R_max = a*log10(P) + b*log10(C) + c on stack-conditional sample
+moe	6	0.1553	-0.052	0.7889	0.0894	0.2152	0.8471	OLS R_max = a*log10(P) + b*log10(C) + c on stack-conditional sample

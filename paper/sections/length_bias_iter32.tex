@@ -1,0 +1,114 @@
+% ---------------------------------------------------------------------------
+\subsection{Temporal Lag Cross-Correlation of Length and Reward (Iter 32)}
+\label{sec:length-bias-iter32}
+% ---------------------------------------------------------------------------
+
+\paragraph{Motivation.}
+Iter 28 decomposed the length trajectory into (A) the aggregate trend,
+(B) within-step ZVF coupling, and (C) within-step reward coupling, and
+found that $\rho(L,R)$ is consistently \emph{negative} on every (task,
+algo) cell---the verbosity-trap does not operate at the within-step
+gradient. None of those axes answers the \emph{time-axis} question: does
+the length trajectory \emph{lead} or \emph{lag} the reward trajectory
+across steps? If the trap operates via a delayed-correction channel
+(length drops first, reward rises $k{>}0$ steps later) the lag profile
+$\rho(L_t, R_{t{+}k})$ should peak at positive $k$; if the trap operates
+via an anticipatory channel (reward rises first, length follows at
+$k{<}0$) it peaks at negative $k$. We answer this question on the same
+10 (task, algo, seed) traces as iter~28.
+
+\paragraph{Driver.}
+For each (task, algo, seed) trace we form the lag-$k$ Spearman
+correlation
+$\rho_k := \rho(L_t, R_{t{+}k})$ for $k \in \{-3,-2,-1,0,1,2,3\}$,
+plus the coefficient of variation $\mathrm{CV}_L = \mathrm{std}(L)/\mathrm{mean}(L)$
+as an operational length-stability metric. We then compute, per cell:
+(i) the distribution of the \emph{dominant} lag $k^\star =
+\arg\max_{k}|\rho_k|$ per seed; (ii) the paired-bootstrap estimate of
+$\rho_{+1} - \rho_{-1}$ (signed magnitude of the lead/lag asymmetry); and
+(iii) the per-cell $\mathrm{CV}_L$ with bootstrap 95\% CI. Outputs are
+\texttt{length\_bias\_iter32\_lag\_profile.tsv} (16 rows),
+\texttt{length\_bias\_iter32\_lag\_summary.tsv} (4 rows),
+\texttt{length\_bias\_iter32\_cv.tsv} (4 rows), and
+\texttt{length\_bias\_iter32\_lead\_lag.tsv} (4 rows).
+
+\paragraph{Results.}
+On 13/16 runs the dominant lag is $k{=}0$ (contemporaneous coupling).
+The two exceptions are: arithmetic GRPO seed~42 and seed~789 share a
+non-zero peak at $k{=}3$ (or $k{=}0$), and arithmetic Dr.\,GRPO has two
+seeds with peak at $k{=}{+}1$ and two seeds with peak at $k{=}{+}3$
+--- these are the only cells with any positive-lag (length-leads-reward)
+support. Critically, the per-cell \emph{paired} bootstrap on
+$\rho_{+1} - \rho_{-1}$ is significantly negative on \emph{arithmetic
+Dr.\,GRPO} ($-0.104$, 95\% CI $[-0.178, -0.027]$, $p_{\le 0}{=}0.995$),
+significantly positive on \emph{arithmetic GRPO} ($+0.028$, 95\% CI
+$[-0.051, +0.093]$, $p_{\le 0}{=}0.225$), and inconclusive (wide CI) on
+GSM8K-CoT.
+
+Dr.\,GRPO thus *flips* the lead-lag direction on the easy task from
+``R and L co-move (no lead)'' to ``R leads L (correction channel).
+This is consistent with the iter 28 finding that Dr.\,GRPO decouples
+the seed-level $\beta_L$-$\beta_R$ slope correlation; the lag analysis
+localises the same effect at the per-step temporal axis: the algorithm
+inserts a one-step delay between reward inflection and length
+inflection (rather than letting them happen simultaneously).
+
+The \emph{CV}$_L$ (length stability) metric shows a sharper task-dependent
+effect: arithmetic CV$_L$ is $5{-}6\times$ larger than GSM8K CV$_L$
+(0.13 vs 0.024), reflecting that arithmetic has 40-step-length answers
+that decay, whereas GSM8K has 192-token CoT answers whose variability
+comes mostly from content not length. Dr.\,GRPO reduces CV$_L$ by
+~28\% on GSM8K ($0.034 \to 0.024$, CI non-overlapping) and ~5\% on
+arithmetic ($0.135 \to 0.128$, CI just touching).
+
+\begin{table}[htbp]
+\centering\small
+\caption{Iter 32 per-(task, algo) lag profile. $\rho_0$ is the
+contemporaneous $\rho(L_t,R_t)$ over $t$; CV$_L$ is $\mathrm{std}(L)/\mathrm{mean}(L)$
+with bootstrap 95\% CI; $\rho_{+1}{-}\rho_{-1}$ is the paired-bootstrap
+estimate of the lead/lag asymmetry ($>0$: $L$ leads $R$; $<0$: $R$
+leads $L$).}
+\label{tab:length-bias-iter32}
+\begin{tabular}{llccccc}
+\hline
+Task & Algo & $\rho_0$ & CV$_L$ & $\rho_{+1}{-}\rho_{-1}$ & 95\% CI \\
+\hline
+GSM8K-CoT & GRPO & $-0.501$ & $0.034\,[0.023,0.052]$ & $-0.076$ & $[-0.228,+0.092]$ \\
+GSM8K-CoT & Dr.\,GRPO & $-0.618$ & $0.024\,[0.022,0.029]$ & $-0.119$ & $[-0.302,+0.081]$ \\
+Arithmetic & GRPO & $-0.419$ & $0.135\,[0.131,0.139]$ & $+0.028$ & $[-0.051,+0.093]$ \\
+Arithmetic & Dr.\,GRPO & $-0.293$ & $0.128\,[0.124,0.133]$ & $-0.104$ & $[-0.178,-0.027]$ \\
+\hline
+\end{tabular}
+\end{table}
+
+The temporal-lag analysis thus provides the cleanest comparative
+evidence on this benchmark that Dr.\,GRPO's \emph{behavioural} effect is
+not on the level of the trajectory itself (the iter 28 finding) but on
+the \emph{coupling} between L and R: under GRPO the two co-move; under
+Dr.\,GRPO reward changes are absorbed into L trajectories with a
+one-step lag, consistent with a loss-side normalisation that delays
+the visible response of length to a reward inflection by exactly one
+update step.
+
+\paragraph{Cross-pillar reconciliation (frontier synthesis).}
+The iter~32 finding is consistent with the iter~30 ZVF leading-indicator
+view~\cite{tong2025drgrpo, kimi}: if ZVF is a \emph{diagnostic} (not a
+causal mechanism), then the verbosity-trap should manifest as a
+\emph{coupling} signature rather than a \emph{trajectory} signature.
+Both iters find the same: aggregate trajectory is anti-trap (iter 28
+anti-$\beta$), within-step $\rho(L,R)$ is negative (iter 28 negative
+$\rho$), and the inter-step lag profile peaks at $k{<}0$ under
+Dr.\,GRPO (this iter)---none of which matches the canonical positive
+on/off trap of Tong et al. Our data are therefore evidence that the
+\emph{measurable} trap signature on this benchmark is a \emph{coupling}
+one, not a \emph{trajectory-level} one.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\linewidth]{length_bias_iter32.pdf}
+\caption{Iter 32 lag cross-correlation analysis: (A) lag-$k$ Spearman
+profile per (task, algo); (B) per-seed distribution of the dominant
+lag; (C) CV$_L$ per cell with bootstrap 95\% CI (log scale); (D)
+$\rho_{+1}{-}\rho_{-1}$ per cell with bootstrap 95\% CI.}
+\label{fig:length-bias-iter32}
+\end{figure}

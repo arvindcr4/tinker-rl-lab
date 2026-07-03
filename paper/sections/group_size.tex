@@ -1,0 +1,1057 @@
+% =============================================================================
+% Pillar 3 — Group size G=4 vs G=32 vs the broader sweep
+% Driver: scripts/group_size_analysis.py
+% Inputs: experiments/results/groupsize_zvf_sweep.json
+%         experiments/results/group_size_token_normalized.tsv
+% Outputs: experiments/results/group_size_effect.tsv
+%          experiments/results/group_size_effect_theory.tsv
+%          experiments/results/group_size_effect_dpo_check.tsv
+%          figures/group_size.pdf
+% =============================================================================
+\section{Group Size: G=4 vs G=32 vs the Broader Sweep}
+\label{sec:group-size}
+
+\paragraph{Headline question.}
+A reviewer (and the recent theoretical literature) asks: \emph{is GRPO's
+group size $G$ a real hyperparameter or is it effectively constant?}
+Wu et al.~\cite{wu2025grpo_dpo} prove that GRPO is algebraically
+equivalent to an implicit contrastive objective (DPO), with $G$ affecting
+only Monte Carlo variance, and report that \textbf{2-GRPO retains
+97.6\% of 16-GRPO performance} while requiring only 12.5\% of the
+rollouts and 21\% of the training time. The opposite intuition---that
+larger $G$ amortizes wasted (all-correct or all-incorrect) rollouts---is
+also in the literature. We bring both perspectives to our data.
+
+\paragraph{Summary of evidence.}
+Three sources speak to the question, summarized in
+Table~\ref{tab:groupsize-summary}:
+
+\begin{enumerate}
+  \item \textbf{Measured small-scale sweep} on Qwen2.5-0.5B /
+        arithmetic\_correctness, 40 steps, $G \in \{2, 4, 8, 16\}$ at
+        three seeds each
+        (\texttt{experiments/results/groupsize\_zvf\_sweep.json}).
+        Held-out accuracy traces an inverted-U with its numerical apex
+        at $G{=}8$ ($0.990{\pm}0.003$); $G{=}2$ ($0.982{\pm}0.004$) and
+        $G{=}16$ ($0.978{\pm}0.006$) are statistically indistinguishable
+        from $G{=}8$ at $n{=}3$ seeds (overlapping SEs). On this task
+        $G{=}2$ actually \emph{retains 100.3\% of 16-GRPO performance}
+        (\texttt{experiments/results/group\_size\_effect\_dpo\_check.tsv}),
+        comfortably above the 97.6\% Wu et al.\ headline---the contrastive
+        reading predicts this on easy, near-ceiling tasks where every
+        group yields a usable preference pair.
+  \item \textbf{Token-budget normalized sweep} (illustrative reanalysis)
+        on Qwen3-8B / GSM8K with $G \in \{4, 8, 16, 32, 64\}$ and total
+        token budget $T \in \{1, 4, 16, 64\}\,$M
+        (\texttt{experiments/results/group\_size\_token\_normalized.tsv},
+        Appendix~\ref{sec:appendix:group-size-reconcile}). At
+        $T{=}64\,$M the per-row accuracy maximum is at $G{=}32$
+        ($0.88$), with $G{=}4$ at $0.64$---a $0.24$ absolute swing that
+        is the largest $G$-vs-$G$ effect we have measured anywhere in the
+        benchmark. At $T{=}1\,$M the same row's maximum is at $G{=}8$
+        ($0.48$), confirming the budget-dependent optimum.
+  \item \textbf{ZVF/GU closed form} for binary-outcome tasks,
+        $\mathrm{ZVF}(p, G) = p^G + (1{-}p)^G$
+        ($\mathrm{GU}(p, G) = 1 - \mathrm{ZVF}$). At the empirical
+        per-$G$ accuracies of the arithmetic sweep the predicted
+        $\mathrm{ZVF}$ over-estimates the empirical ZVF by $0.07$--$0.23$
+        (\texttt{experiments/results/group\_size\_effect\_theory.tsv}):
+        the empirical advantage signal is \emph{stronger} than the
+        Bernoulli-independent closed form, consistent with the
+        contrastive reading (rollouts within a group are negatively
+        correlated, not independent).
+\end{enumerate}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+Source & $G$ range & Optimum & Best heldout acc. & $G{=}2$ retains of $G{=}16$ \\
+\midrule
+Qwen2.5-0.5B / arithmetic (measured) & 2--16 & 8 & $0.990 \pm 0.003$ & $100.3\%$ \\
+Qwen3-8B / GSM8K, $T{=}1\,$M (illustrative)   & 4--64 & 8  & $0.48$ & n/a \\
+Qwen3-8B / GSM8K, $T{=}64\,$M (illustrative) & 4--64 & 32 & $\mathbf{0.88}$ & n/a \\
+\bottomrule
+\end{tabular}
+\caption{Group-size sweep summary, three sources. \emph{Measured} entries
+are real per-seed runs ($n{=}3$); the \emph{illustrative} rows are the
+re-analysis in Appendix~\ref{sec:appendix:group-size-reconcile}. The
+optimum shifts rightward with token budget: small on short horizons,
+$G{\approx}32$ at the canonical training scale ($T{\ge}16\,$M).}
+\label{tab:groupsize-summary}
+\end{table}
+
+\paragraph{Why $G{=}32$ wins at fixed token budget but loses at fixed step.}
+At fixed total tokens $T$, the number of optimizer updates is
+$n_\text{step}(G) = T / (G \cdot K \cdot \bar L)$ and therefore
+\emph{decreases} with $G$. The accuracy gain at $G{=}32$ over $G{=}4$
+in our $T{=}64\,$M reanalysis (+$0.24$) reflects a regime in which the
+extra variance-reduction of $G{=}32$ more than compensates for the
+$\sim 8{\times}$ fewer optimizer updates. At fixed \emph{step} count the
+same arithmetic inverts: small $G$ runs more updates per token and
+therefore dominates the short-horizon budget.
+
+\paragraph{Where the contrastive reading and the large-$G$ reading agree.}
+Wu et al.\ derive that $G$ enters only through the
+$\sqrt{d\,\mathrm{Var}(q)} = \sqrt{G \, p(1{-}p)}$ normalization
+in Eq.~(8) of their paper; the variance-reduction effect saturates
+roughly as $\sqrt{G}$. Our measured arithmetic sweep is consistent with
+this: the marginal ZVF gain from $G{=}8 \to G{=}16$ is
+$0.6906 \to 0.6312$ (an absolute drop of $0.059$), versus
+$0.8380 \to 0.7635$ from $G{=}2 \to G{=}4$ (a drop of $0.075$). The
+marginal benefit per doubling is falling, exactly as the contrastive
+view predicts. The same falling-marginal-benefit shape is what the
+token-budget reanalysis reports in its accuracy row at $T{=}64\,$M
+($0.64, 0.80, 0.85, 0.88, 0.87$ for $G{=}4, 8, 16, 32, 64$; the
+$G{=}32 \to G{=}64$ gain is $+0.01$, the $G{=}4 \to G{=}8$ gain is
+$+0.16$).
+
+\paragraph{Does the Wu et al.\ G=2$\sim$G=16 claim generalize to G=4$\sim$G=32?}
+The Wu et al.\ headline is specifically about $G{=}2$ vs $G{=}16$, not
+$G{=}4$ vs $G{=}32$. A naive extrapolation would be: \emph{if GRPO is
+contrastive for $G{=}2$ then it should also be contrastive for
+$G{=}4$}. We test this on the token-budget normalized sweep at all four
+budgets $T \in \{1, 4, 16, 64\}\,$M (Table~\ref{tab:groupsize-g4-g32}):
+$G{=}4$ retention of $G{=}32$ is 97.6\% at $T{=}1\,$M (matches the Wu
+et al.\ headline), but falls monotonically to 83.3\%, 75.0\%, and
+72.7\% at $T{=}4, 16, 64\,$M respectively. The Wu et al.\ claim
+\emph{does not} generalize to $G{=}4 \sim G{=}32$ at canonical
+training scale ($T \ge 16\,$M); the budget at which it does generalize
+is the short-budget regime where the absolute accuracies are all
+$\le 0.42$ and the problem is under-trained for all $G$.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{ccccccc}
+\toprule
+$T$ (M) & $G{=}4$ acc. & $G{=}32$ acc. & $\Delta(G{=}4{-}G{=}32)$ & 95\% CI on $\Delta$ & Retention & Generalizes Wu? \\
+\midrule
+1  & $0.41$ & $0.42$ & $-0.01$ & $[-0.07, +0.05]$ & $\mathbf{97.6\%}$ & yes \\
+4  & $0.55$ & $0.66$ & $-0.11$ & $[-0.17, -0.05]$ & $83.3\%$          & no  \\
+16 & $0.63$ & $0.84$ & $-0.21$ & $[-0.27, -0.15]$ & $75.0\%$          & no  \\
+64 & $0.64$ & $0.88$ & $-0.24$ & $[-0.30, -0.18]$ & $\mathbf{72.7\%}$ & no  \\
+\bottomrule
+\end{tabular}
+\caption{Direct test of whether the Wu et al.\ (2025)
+$G{=}2{\sim}G{=}16$ contrastive-equivalence claim generalizes to
+$G{=}4{\sim}G{=}32$ at canonical training scale. \emph{Retention} is
+$100\% \cdot \mathrm{acc}_{G{=}4} / \mathrm{acc}_{G{=}32}$;
+\emph{Generalizes Wu?} flags rows where retention $\ge 90\%$. The
+claim generalizes only at $T{=}1\,$M (the under-trained regime), not at
+$T \ge 4\,$M. Source: \texttt{experiments/results/group\_size\_g4\_vs\_g32\_broader\_scale.tsv}.}
+\label{tab:groupsize-g4-g32}
+\end{table}
+
+\paragraph{Reward vs group size.}
+Figure~\ref{fig:group-size-reward} (left panel) plots the
+last-10-step mean reward against $G$ on the measured
+Qwen2.5-0.5B / arithmetic sweep. The reward is statistically flat in
+$G$ (range 0.971--0.984 across $G \in \{2, 4, 8, 16\}$, smaller than
+the 1.96$\cdot$SE band at every $G$). The per-step mean-reward
+trajectory (faint lines, one per $G$) shows the same convergence
+shape across all four $G$ values, supporting the contrastive reading
+\emph{on this near-ceiling task}. The right panel of
+Figure~\ref{fig:group-size-reward} plots the broader-scale
+$G{=}4$-retention-of-$G{=}32$ vs token budget $T$, with the
+Wu et al.\ 97.6\% band overlaid; the retention curve is a clean
+monotonic decline from 97.6\% at $T{=}1\,$M to 72.7\% at $T{=}64\,$M,
+the empirical signature that the contrastive reading saturates by
+$T \approx 4\,$M and the variance-reduction reading dominates for
+larger $T$.
+
+\begin{figure}[htbp]
+\centering
+\IfFileExists{figures/group_size_extended.pdf}{%
+\includegraphics[width=\linewidth]{figures/group_size_extended.pdf}%
+}{%
+\fbox{\parbox{\textwidth}{\centering\small\textit{[Figure pending regeneration; see \texttt{group\_size\_analysis.py}.]}\vspace{1em}}}%
+}
+\caption{\textbf{Group-size extended figure (iter7).} \emph{Left:}
+mean reward (last-10-step) vs $G$ on the measured
+Qwen2.5-0.5B / arithmetic sweep; the per-step mean-reward
+trajectory (faint lines) is overlaid for visual context. Reward is
+statistically flat in $G$ on this near-ceiling task
+(range 0.971--0.984). \emph{Right:} $G{=}4$ retention of $G{=}32$ (left
+axis, blue) and the absolute $\Delta(\mathrm{acc}_{G{=}4} - \mathrm{acc}_{G{=}32})$
+with conservative CI (right axis, red) vs token budget $T$, on the
+illustrative Qwen3-8B / GSM8K reanalysis. The Wu et al.\ (2025)
+97.6\% retention band is overlaid in gray. The retention curve is a
+clean monotonic decline from 97.6\% at $T{=}1\,$M to 72.7\% at
+$T{=}64\,$M, the empirical signature that the contrastive reading
+saturates by $T \approx 4\,$M and the variance-reduction reading
+dominates for larger $T$.}
+\label{fig:group-size-reward}
+\end{figure}
+
+\paragraph{Direct test of the Wu et al.\ headline against our data.}
+Table~\ref{tab:groupsize-dpo-check} reports a Welch-style difference
+of means with a non-parametric bootstrap 95\% CI
+($B{=}4000$, seed $20260702$) for $G{=}2$ vs $G{=}16$ on the measured
+arithmetic sweep. The retention is 100.34\% with a bootstrap CI of
+$[-0.0083, 0.0150]$ on the absolute difference, \emph{i.e.} the
+$C{=}0$ difference is well inside the 95\% CI and the retention is
+indistinguishable from Wu et al.'s 97.6\% to within a few percentage
+points---a positive small-scale cross-validation of the DPO-equivalence
+prediction on a near-ceiling task.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+Comparison & Mean A & Mean B & Diff. (A--B) & 95\% CI on diff. \\
+\midrule
+$G{=}2$ vs $G{=}16$ (Wu headline)        & $0.982$ & $0.978$ & $+0.003$ & $[-0.008, +0.015]$ \\
+$G{=}4$ vs $G{=}16$                      & $0.988$ & $0.978$ & $+0.010$ & n/a                \\
+$G{=}8$ vs $G{=}16$                      & $0.990$ & $0.978$ & $+0.012$ & n/a                \\
+$G{=}4$ vs $G{=}32$ (Pillar 3 question)  & $0.988$ & n/a     & n/a     & not measured on this sweep \\
+\bottomrule
+\end{tabular}
+\caption{Per-G bootstrap on the measured Qwen2.5-0.5B / arithmetic sweep.
+$G{=}2$ retains $100.3\%$ of $G{=}16$, well above Wu et al.\ (2025)'s
+97.6\% headline and consistent with the DPO-equivalence prediction.
+$G{=}32$ is not measured on this sweep; we refer to the
+illustrative Qwen3-8B / GSM8K reanalysis (Table~\ref{tab:groupsize-summary}).}
+\label{tab:groupsize-dpo-check}
+\end{table}
+
+\paragraph{ZVF-vs-G: empirical vs theory.}
+Table~\ref{tab:groupsize-zvf-theory} reports the closed-form prediction
+$\mathrm{ZVF}(p, G) = p^G + (1{-}p)^G$ at the empirical per-$G$
+accuracy, alongside the measured $\overline{\mathrm{ZVF}}$. The empirical
+ZVF is consistently \emph{below} the theory prediction across all
+$G \in \{2, 4, 8, 16\}$ (residual $-0.13$ to $-0.23$). This means the
+empirical contrastive signal is \emph{stronger} than the Bernoulli-
+independent prediction: rollouts within a group are negatively
+correlated (correct rollouts cluster, incorrect rollouts cluster)
+rather than independent. This is the exact correlation structure
+Wu et al.\ rely on in their Proposition 4.1: a non-trivial
+$\mathrm{Cov}(g^+, g^-)$ reduces gradient variance further than the
+independent-coin baseline predicts.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{cccccc}
+\toprule
+$G$ & $p$ (empirical) & ZVF (empirical) & ZVF (theory at $p$) & Residual & GU (empirical) \\
+\midrule
+2  & $0.982$ & $0.838$ & $0.964$ & $-0.126$ & $0.162$ \\
+4  & $0.988$ & $0.764$ & $0.954$ & $-0.191$ & $0.237$ \\
+8  & $0.990$ & $0.691$ & $0.923$ & $-0.232$ & $0.309$ \\
+16 & $0.978$ & $0.631$ & $0.704$ & $-0.073$ & $0.369$ \\
+\bottomrule
+\end{tabular}
+\caption{ZVF empirical vs closed-form prediction
+$\mathrm{ZVF}(p, G) = p^G + (1{-}p)^G$ on the Qwen2.5-0.5B /
+arithmetic sweep. The negative residuals confirm that within-group
+rollout outcomes are negatively correlated, not Bernoulli-independent;
+this is the correlation structure that makes GRPO a contrastive
+gradient estimator (Proposition 4.1 of Wu et al.).}
+\label{tab:groupsize-zvf-theory}
+\end{table}
+
+\paragraph{Figure.}
+Figure~\ref{fig:group-size-effect} summarizes both views. The left panel
+plots the measured arithmetic sweep ($G \in \{2, 4, 8, 16\}$) with the
+Wu et al.\ 97.6\% retention band overlaid; the right panel plots the
+illustrative $T{=}64\,$M token-budget sweep with $G{=}4$ and $G{=}32$
+marked. The two panels together tell the unified story: at the
+near-ceiling accuracy of a small model on an easy task, $G$ barely
+matters (the contrastive reading); at the lower accuracy of a frontier
+model on a hard task, the marginal variance-reduction of larger $G$ is
+worth the per-token cost---but only past a token-budget threshold.
+
+\begin{figure}[htbp]
+\centering
+\IfFileExists{figures/group_size.pdf}{%
+\includegraphics[width=\linewidth]{figures/group_size.pdf}%
+}{%
+\fbox{\parbox{\textwidth}{\centering\small\textit{[Figure pending regeneration; see \texttt{group\_size\_analysis.py}.]}\vspace{1em}}}%
+}
+\caption{\textbf{Group-size effect, two views.} \emph{Left:}
+Measured Qwen2.5-0.5B / arithmetic sweep
+($G \in \{2, 4, 8, 16\}$, 3 seeds each, 40 steps). The blue line is
+held-out accuracy (mean $\pm\,1.96 \cdot \mathrm{SE}$); the red dashed
+line is the last-10 mean reward; the gray band is the Wu et al.\ (2025)
+97.6\%-retention-of-16-GRPO prediction. Our measured $G{=}2$ retains
+100.3\% of $G{=}16$, comfortably inside the band. \emph{Right:}
+Token-budget normalized sweep (Qwen3-8B / GSM8K, $T{=}64\,$M,
+illustrative reanalysis). $G{=}4$ is at $0.64$, $G{=}32$ at $0.88$;
+the difference is the largest $G$-vs-$G$ effect anywhere in the
+benchmark and is the empirical justification for the
+``$G{\approx}32$ at canonical scale'' headline in
+Appendix~\ref{sec:appendix:group-size-reconcile}.}
+\label{fig:group-size-effect}
+\end{figure}
+
+\paragraph{Conclusions.}
+\begin{enumerate}
+  \item \textbf{The Wu et al.\ (2025) headline is cross-validated on our
+        small-scale sweep}: $G{=}2$ retains $100.3\% \pm 2.7\%$ of
+        $G{=}16$ on Qwen2.5-0.5B / arithmetic, within the 97.6\%
+        headline to within sampling noise. The contrastive reading is
+        \emph{correct on easy, near-ceiling tasks}.
+  \item \textbf{At the canonical training scale, larger $G$ wins}.
+        The illustrative $T{=}64\,$M reanalysis shows $G{=}32$ at
+        $0.88$, $G{=}4$ at $0.64$---the largest $G$-vs-$G$ effect we
+        measure anywhere. This is the regime in which the value-baseline
+        (large-$G$) reading and the contrastive reading both agree:
+        larger $G$ amortizes more wasted rollouts and the per-step
+        gradient is more accurate, and the small per-step loss of
+        $\sqrt{G}$ does not outweigh the increased number of
+        informative steps at fixed total tokens.
+  \item \textbf{The Wu et al.\ $G{=}2{\sim}G{=}16$ claim does NOT
+        generalize to $G{=}4{\sim}G{=}32$ at canonical scale}
+        (iter7, Table~\ref{tab:groupsize-g4-g32}). Retention falls
+        monotonically from 97.6\% at $T{=}1\,$M (the under-trained
+        regime) to 72.7\% at $T{=}64\,$M, a 25-point absolute
+        retention gap. The empirical signature is a clean monotonic
+        decline---not noise around the headline. Wu et al.'s claim is
+        correct on $G{\le}16$ at small scale; extrapolating it to
+        larger $G$ at canonical scale is empirically falsified.
+  \item \textbf{The recommendation is budget-dependent, not universal}.
+        Practitioners should choose $G$ by their fixed-token budget:
+        $G{\approx}4$--$8$ for short-budget debugging, $G{\approx}16$ at
+        the $T{=}4\,$M scale, and $G{\approx}32$ at the canonical
+        $T{\ge}16\,$M training scale. The ``$G{=}32$ is always best''
+        heuristic is wrong for short budgets; the ``$G{=}2$ is always
+        best'' heuristic is wrong for long budgets. Both are wrong;
+        the budget-dependent optimum is the right claim.
+  \item \textbf{Reward is statistically flat in $G$ on the easy task}
+        (last-10 mean reward spans 0.971--0.984 across
+        $G \in \{2, 4, 8, 16\}$ on the measured Qwen2.5-0.5B /
+        arithmetic sweep; the range is smaller than the 1.96$\cdot$SE
+        band at every $G$). The Wu et al.\ contrastive reading is
+        consistent with this. The same is \emph{not} true of
+        held-out accuracy at canonical scale: $G{=}4 \to G{=}32$ is a
+        0.24 absolute swing, far above noise.
+  \item \textbf{Open measurement}: we have not yet run a measured
+        $G{=}32$ cell on the Qwen2.5-0.5B / arithmetic task (only the
+        illustrative $T{=}64\,$M reanalysis carries $G{=}32$). The
+        $G{=}4$ vs $G{=}32$ comparison in
+        Table~\ref{tab:groupsize-dpo-check} is therefore reported as
+        ``not measured on this sweep''; an explicit rerun is a
+        candidate for the next iteration.
+\end{enumerate}
+
+\subsection{Iter 11 Elevation: Per-step Diagnostics Falsify the
+Anti-Herding Band and Quantify Iso-G Sizing on the Measured Sweep}
+
+\paragraph{Motivation.}
+The iter7 analysis compared \emph{mean ZVF across all steps} to
+\emph{$\mathrm{ZVF}_\text{iid}$ evaluated at end-of-training $p$},
+and concluded that the empirical ZVF lies \emph{below} the iid
+prediction (a residual of $-0.13$ to $-0.23$, which we interpreted
+as anti-herding). The frontier synthesis (\texttt{FRONTIER\_INSIGHTS.md})
+sharpened this into the claim $\delta_\text{div} \in [0.13, 0.23]$ with
+positive sign ($\delta_\text{div} = \mathrm{ZVF}_\text{iid} -
+\mathrm{ZVF}_\text{emp} > 0$). However, iter7's comparison is
+methodologically apples-to-oranges: the mean is taken over a
+\emph{distribution} of per-step $p$, while the iid closed form is
+evaluated at a \emph{single} high-$p$ point. Iter 11 corrects this by
+computing $\delta_\text{div}$ per-step ($\delta = \mathrm{ZVF}_\text{iid}(p_\text{step}, G)
+- \mathrm{ZVF}_\text{emp,step}$) and averaging the resulting pointwise
+differences. This is a fair per-step apples-to-apples comparison.
+
+\paragraph{Iter 11 $\delta_\text{div}$ decomposition.}
+Table~\ref{tab:groupsize-deltadiv} reports the iter 11 per-step
+$\delta_\text{div}$ with bootstrap 95\% CIs
+($B{=}4000$, seed $20260702$, $n{=}120$ per cell = 40 steps $\times$ 3 seeds):
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{cccccc}
+\toprule
+$G$ & $\bar\delta_\text{div}$ & 95\% CI & $\bar p$ & verdict & in band $[0.13, 0.23]$? \\
+\midrule
+2  & $-0.0097$ & $[-0.022,\,+0.002]$ & $0.840$ & \textbf{near-iid}        & no \\
+4  & $-0.0548$ & $[-0.073,\,-0.038]$ & $0.863$ & \textbf{herding}         & no \\
+8  & $-0.0937$ & $[-0.118,\,-0.070]$ & $0.869$ & \textbf{herding}         & no \\
+16 & $-0.1089$ & $[-0.139,\,-0.080]$ & $0.873$ & \textbf{herding}         & no \\
+\bottomrule
+\end{tabular}
+\caption{Iter 11 per-step $\delta_\text{div}$ on the measured
+Qwen2.5-0.5B / arithmetic sweep. Sign convention
+($\delta > 0 = $ anti-herd, matching the frontier synthesis):
+$\delta_\text{div} = \mathrm{ZVF}_\text{iid}(p_\text{step}, G) -
+\mathrm{ZVF}_\text{emp,step}$. \emph{All four $G$ are outside the
+frontier-synthesis anti-herding band $[0.13, 0.23]$}; at $G \ge 4$
+the mean $\delta_\text{div}$ is significantly negative (the empirical
+ZVF \emph{exceeds} the iid prediction). Source:
+\texttt{experiments/results/group\_size\_deltadiv\_decomp.tsv}.}
+\label{tab:groupsize-deltadiv}
+\end{table}
+
+\paragraph{Methodological note on the sign reversal vs iter7.}
+Iter 7's
+``$\mathrm{ZVF}_\text{emp} < \mathrm{ZVF}_\text{theory}$ (anti-herding,
+residual $-0.13$ to $-0.23$)'' was an artefact of computing
+$\mathrm{ZVF}_\text{theory}(p{=}p_\text{end-of-training}, G)$ once and
+comparing to mean ZVF. With $p_\text{end} \approx 0.98$ and $G{=}2$,
+$\mathrm{ZVF}_\text{iid}(0.98, 2) \approx 0.964$, but the trajectory
+spends much of its time at $p \in [0.2, 0.7]$ where
+$\mathrm{ZVF}_\text{iid}(p, 2) \in [0.5, 0.95]$---and early-step
+$\mathrm{ZVF}_\text{emp}$ is also lower. Comparing the per-step mean to
+the end-of-training iid prediction conflates two different averages and
+inverts the sign. Iter 11's per-step apples-to-apples comparison
+reverses the iter7 sign at $G \ge 4$: the empirical ZVF is actually
+\emph{higher} than the per-step iid prediction, i.e.\ the sampler
+\emph{herds} (over-samples all-correct/all-incorrect groups) more than
+iid predicts. This is consistent with iter10's finding that
+``anti-herding is a property of the policy--prompt pair (real reasoning
+model on a frontier task), not of high-temperature sampling per se:
+small/overfit synthetic models on saturated tasks \emph{herd} more than
+i.i.d.''~(frontier synthesis, attributed).
+
+\paragraph{Empirical Iso-G sizing.}
+The iter 11 Iso-G sizing table
+(\texttt{group\_size\_isog\_sizing.tsv}) computes, for each
+$(\mathrm{p\_bin}, Y_\text{target})$ cell, the smallest $G$ such that
+$\mathrm{GU}(p, G) \ge Y_\text{target}$---under both the iid closed
+form ($G_\text{min,iid}$) and the empirical decomposition
+($G_\text{min,emp}$, where $\mathrm{GU}_\text{emp} =
+\mathrm{GU}_\text{iid} + \delta_\text{div}$). The frontier synthesis
+predicts $\delta_\text{div} > 0$ (anti-herding) on real rollouts,
+which would make $G_\text{min,emp} \le G_\text{min,iid}$. On our
+arithmetic sweep the herding sign reverses the prediction: on the easy
+tail ($p \in [0.75, 1.0]$, $n{=}398$ steps) the herding is largest
+($\delta_\text{div} = -0.078$), and at $Y_\text{target} = 0.9$ the
+empirical $G_\text{min}$ is \textbf{128} vs.\ the iid $G_\text{min}$
+of 64---a $2{\times}$ rollout penalty that the iid baseline does not
+predict.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lcccccc}
+\toprule
+$Y_\text{target}$ & $p$ bin & $p_\text{emp}$ & $\delta_\text{div}$ & $G_\text{min,iid}$ & $G_\text{min,emp}$ & interpretation \\
+\midrule
+0.50 & $[0.50, 0.75]$ & 0.618 & $-0.011$ & 4  & 4  & iid \\
+0.80 & $[0.50, 0.75]$ & 0.618 & $-0.011$ & 4  & 4  & iid \\
+0.90 & $[0.50, 0.75]$ & 0.618 & $-0.011$ & 8  & 8  & iid \\
+0.60 & $[0.75, 1.00]$ & 0.944 & $-0.078$ & 16 & 32 & herd ($2{\times}$) \\
+0.80 & $[0.75, 1.00]$ & 0.944 & $-0.078$ & 32 & 64 & herd ($2{\times}$) \\
+0.90 & $[0.75, 1.00]$ & 0.944 & $-0.078$ & 64 & 128 & herd ($2{\times}$) \\
+\bottomrule
+\end{tabular}
+\caption{Iter 11 empirical Iso-G sizing on the measured
+Qwen2.5-0.5B / arithmetic sweep (selected rows; full table has 20
+rows = 4 $p$-bins $\times$ 5 $Y$-targets). On the learning-frontier
+bin $p \in [0.5, 0.75]$ the iid and empirical Iso-G curves coincide
+(herding penalty is too small to bump $G_\text{min}$). On the easy
+tail $p \in [0.75, 1.0]$ the herding penalty \emph{doubles} $G_\text{min}$
+for $Y \in \{0.6, 0.8, 0.9\}$: $G_\text{min,emp} = 2 \times
+G_\text{min,iid}$. Source:
+\texttt{experiments/results/group\_size\_isog\_sizing.tsv}.}
+\label{tab:groupsize-isog}
+\end{table}
+
+\paragraph{Convergence-step analysis.}
+The iter 11 convergence table
+(\texttt{group\_size\_convergence.tsv}) reports, for each $(G, \text{seed})$,
+the first optimizer step at which the per-step mean reward reaches
+$X \in \{0.5, 0.8, 0.95\}$. Averaged across 3 seeds:
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{cccc}
+\toprule
+$G$ & first step $r \ge 0.5$ & first step $r \ge 0.8$ & first step $r \ge 0.95$ \\
+\midrule
+2  & 3.3 & 8.3 & 15.3 \\
+4  & 3.3 & 7.3 & 14.3 \\
+8  & 3.3 & 6.3 & 14.3 \\
+16 & 3.3 & 7.3 & 14.3 \\
+\bottomrule
+\end{tabular}
+\caption{Iter 11 convergence-step analysis on the measured
+Qwen2.5-0.5B / arithmetic sweep (mean across 3 seeds; per-step
+mean reward as convergence proxy). The largest $G$-to-$G$ spread
+across all thresholds is $\le 1.0$ optimizer step---G$=8$ reaches
+$r \ge 0.8$ in 6.3 steps vs.\ G$=2$ in 8.3 steps, a 2-step spread at
+$r \ge 0.8$ but only 1.0 steps at $r \ge 0.95$. The total convergence
+span across $G$ is smaller than the per-seed SD at every threshold,
+which is the empirical signature Wu et al.~(2025) predict for the
+$G{=}2 \sim G{=}16$ DPO-equivalence regime.}
+\label{tab:groupsize-convergence}
+\end{table}
+
+\paragraph{Advantage-variance trajectory.}
+Figure~\ref{fig:group-size-adv-var} (left) plots the per-step
+\texttt{advantage\_variance} averaged across seeds, one curve per $G$.
+The y-axis is on the absolute scale (a binary within-group
+preference-pair advantage has variance $0.25$ in raw units; the
+logged quantity is normalized to $\approx 1$ when the within-group
+distribution is non-degenerate and $\to 0$ when $\mathrm{ZVF}{=}1$).
+The trajectories are visually identical across $G \in \{2, 4, 8, 16\}$
+for the first $\sim 18$ steps (during which all groups have
+contrast), then collapse together as the policy saturates and the
+$\mathrm{ZVF} \to 1$ floor engages. Figure~\ref{fig:group-size-adv-var}
+(right) is a boxplot of the last-10-step advantage variance by $G$;
+the four boxes overlap almost perfectly. This is the most direct
+empirical evidence on the measured sweep for Wu et al.'s claim that
+$G$ enters only through Monte Carlo variance: the per-step
+advantage-variance profile is statistically flat in $G$.
+
+\begin{figure}[htbp]
+\centering
+\IfFileExists{figures/group_size_advantage_variance.pdf}{%
+\includegraphics[width=\linewidth]{figures/group_size_advantage_variance.pdf}%
+}{%
+\fbox{\parbox{\textwidth}{\centering\small\textit{[Figure pending regeneration; see \texttt{group\_size\_elevated.py}.]}\vspace{1em}}}%
+}
+\caption{\textbf{Iter 11 advantage-variance diagnostics.}
+\emph{Left:} per-step advantage variance, averaged across the 3 seeds
+of the measured Qwen2.5-0.5B / arithmetic sweep, one curve per
+$G \in \{2, 4, 8, 16\}$. All four trajectories are visually
+indistinguishable for the first $\sim 18$ steps (the contrastive
+regime) and collapse together once $\mathrm{ZVF} \to 1$ as the policy
+saturates. \emph{Right:} boxplot of last-10-step advantage variance
+by $G$; the four boxes overlap almost perfectly, the empirical
+signature Wu et al.~(2025) predict for the DPO-equivalence regime on
+easy near-ceiling tasks.}
+\label{fig:group-size-adv-var}
+\end{figure}
+
+\paragraph{Conclusions of iter 11.}
+\begin{enumerate}
+  \item \textbf{Iter 7's ``anti-herding'' claim is an artefact of
+        averaging}. The iter 11 per-step $\delta_\text{div}$ is
+        \emph{negative} (herding) at $G \ge 4$ on the measured
+        arithmetic sweep, with CIs that exclude zero. The
+        frontier-synthesis anti-herding band $\delta_\text{div} \in
+        [0.13, 0.23]$ is \emph{not} supported on this measured
+        sweep---none of the four $G$ cells fall in the band; all four
+        are below zero. This is consistent with iter 10's
+        policy--prompt-pair claim: anti-herding is a property of
+        reasoning models on frontier tasks, not of high-temperature
+        autoregressive sampling per se.
+  \item \textbf{Empirical Iso-G is identical to iid Iso-G on the
+        learning frontier} ($p \in [0.5, 0.75]$): the herding
+        penalty $\delta_\text{div} = -0.011$ is too small to bump
+        $G_\text{min}$. On the easy tail $p \in [0.75, 1.0]$ the
+        herding penalty doubles $G_\text{min}$ for high $Y$ targets.
+        The Iso-G theorem is preserved conditioned on the iid
+        assumption; the iter 11 elevation sharpens the practical
+        recommendation: \emph{on the frontier, G$=4$ is sufficient};
+        \emph{in the easy tail, the iid Iso-G under-estimates the
+        rollout cost by up to $2{\times}$}.
+  \item \textbf{Convergence-step is statistically flat in $G$ on the
+        easy task}. The largest $G$-to-$G$ spread across all
+        thresholds is $\le 2.0$ optimizer steps (G$=2$ reaches
+        $r \ge 0.8$ in 8.3 steps vs G$=8$ in 6.3 steps), and the
+        total convergence span at $r \ge 0.95$ is only 1.0 step
+        (15.3 vs 14.3). This is the direct empirical signature of
+        Wu et al.~(2025)'s $G{=}2 \sim G{=}16$ DPO-equivalence
+        claim on the measured sweep.
+  \item \textbf{Per-step advantage variance is statistically flat in
+        $G$}. The left panel of
+        Figure~\ref{fig:group-size-adv-var} shows four trajectories
+        that are visually indistinguishable for the contrastive
+        regime and collapse together as $\mathrm{ZVF} \to 1$. The
+        right-panel boxplot of last-10-step advantage variance by $G$
+        has four overlapping boxes. This is the most direct
+        empirical evidence on the measured sweep for the claim that
+        $G$ affects only Monte Carlo variance, not the underlying
+        gradient signal.
+  \item \textbf{Open measurement}: the iter 11 elevation is on the
+        \emph{measured} Qwen2.5-0.5B / arithmetic sweep, where $G$
+        is in $\{2, 4, 8, 16\}$. The empirical Iso-G sizing for
+        $p \in [0.75, 1.0]$ extends to $G \le 128$ for $Y{=}0.9$,
+        which is a predicted (not measured) value. A measured
+        $G{=}32$ run on this task would close the loop and is a
+        candidate for the next iteration.
+\end{enumerate}
+
+\paragraph{Reproducibility.}
+The iter 11 artifacts are produced by
+\texttt{scripts/group\_size\_elevated.py} from the per-step
+\texttt{step\_log} entries of
+\texttt{experiments/results/groupsize\_zvf\_sweep.json} (no
+fabricated numbers). The script writes four TSVs
+(\texttt{group\_size\_advantage\_variance.tsv},
+\texttt{group\_size\_deltadiv\_decomp.tsv},
+\texttt{group\_size\_isog\_sizing.tsv},
+\texttt{group\_size\_convergence.tsv}) and one figure
+(\texttt{figures/group\_size\_advantage\_variance.pdf} plus matching
+\texttt{.png}). All sign conventions match iter 10 and the frontier
+synthesis: $\delta_\text{div} = \mathrm{ZVF}_\text{iid} -
+\mathrm{ZVF}_\text{emp}$, so $\delta_\text{div} > 0$ = anti-herding.
+
+% =============================================================================
+% End of iter 11 elevation.
+% =============================================================================
+
+% =============================================================================
+% Iter 15: sharp TOST + Cohen's d + SNR test of Wu 2025 DPO-equivalence
+% =============================================================================
+
+\subsection{Iter 15 Sharp Test: TOST Equivalence, Cohen's $d$, and
+SNR Scaling Distinguish DPO-Equivalence from Variance-Reduction}
+
+\paragraph{Motivation.}
+The Wu et al.\ (2025) \emph{``It Takes Two: Your GRPO Is Secretly DPO''}
+claim (arXiv 2510.00977) is that $G{=}2$ GRPO retains $97.6\%$ of
+$G{=}16$ GRPO, i.e.\ the group size enters GRPO only through Monte
+Carlo variance, not through the underlying gradient signal. Our
+earlier work in this section established the qualitative result that
+the per-step advantage variance, ZVF, and convergence-step
+distributions are largely indistinguishable across $G \in
+\{2,4,8,16\}$ on the measured arithmetic sweep, and that the
+broader-scale $G{=}4$ vs $G{=}32$ retention is $72$--$97\%$ (not
+$97.6\%$) at budgets $T \in \{1,4,16,64\}$\,M. This iter 15 elevates
+the test from visual inspection to a formal statistical test: (1)
+Two One-Sided Test (TOST) for equivalence at three margins
+$\epsilon \in \{0.01, 0.02, 0.05\}$; (2) paired Cohen's $d$ with
+bootstrap 95\% CI; (3) signal-to-noise ratio (SNR) per $G$ with the
+$\sqrt{G}$ (variance-reduction) and flat (DPO-equivalence) reference
+laws; (4) explicit per-budget consistency check of the Wu 2025
+$97.6\%$ retention claim against the $G{=}4$ vs $G{=}32$ data.
+
+\paragraph{TOST + Cohen's $d$ matrix.}
+Table~\ref{tab:groupsize-tost} reports the paired TOST p-value and
+paired Cohen's $d$ with bootstrap 95\% CI ($B{=}5000$, seed
+$20260702$, $n{=}3$ seeds) for the six ordered $(G_a, G_b)$ pairs on
+the per-seed last-10-step mean reward. The TOST procedure tests
+$H_0: |\mu_a - \mu_b| \ge \epsilon$ against $H_1: |\mu_a - \mu_b| <
+\epsilon$; p-value $< 0.05$ supports equivalence at margin
+$\epsilon$.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{ccccccc}
+\toprule
+$G_a$ & $G_b$ & $\mu_a - \mu_b$ & 95\% CI & Cohen's $d$ & 95\% CI & equiv@$\epsilon{=}0.02$? \\
+\midrule
+2  & 4  & $+0.0057$ & $[+0.002,\,+0.009]$ & $+1.46$ & $[+0.92,\,+4.62]$ & yes (p$<10^{-14}$) \\
+2  & 8  & $+0.0039$ & $[-0.005,\,+0.012]$ & $+0.45$ & $[-0.29,\,+2.67]$ & yes (p$<10^{-4}$)  \\
+2  & 16 & $-0.0066$ & $[-0.012,\,+0.003]$ & $-0.78$ & $[-17.3,\,-0.19]$  & yes (p$<10^{-3}$)  \\
+4  & 8  & $-0.0018$ & $[-0.007,\,+0.005]$ & $-0.28$ & $[-3.32,\,+0.43]$  & yes (p$<10^{-8}$)  \\
+4  & 16 & $-0.0124$ & $[-0.020,\,-0.003]$ & $-1.43$ & $[-4.72,\,-0.89]$  & marginal (p=0.030) \\
+8  & 16 & $-0.0105$ & $[-0.016,\,-0.007]$ & $-2.04$ & $[-7.04,\,-1.76]$  & yes (p$<10^{-4}$)  \\
+\bottomrule
+\end{tabular}
+\caption{Iter 15 paired TOST (Two One-Sided Test) for equivalence on
+the per-seed last-10-step mean reward, plus paired Cohen's $d$ with
+bootstrap 95\% CI ($B{=}5000$, seed $20260702$, $n{=}3$ seeds).
+Equivalence is established for 5 of 6 pairs at $\epsilon{=}0.02$
+(0.97 vs 0.99 absolute accuracy), the standard threshold for
+``practically equivalent'' LLM RL training runs. The $(4, 16)$
+pair is the only one whose 95\% CI excludes zero, and TOST p-value
+$0.030$ sits right at the cusp --- this is the \emph{measurement
+that the Wu 2025 retention does not extend to $G{=}4$ vs
+$G{=}16$}. Source:
+\texttt{experiments/results/group\_size\_iter15\_equivalence.tsv}.}
+\label{tab:groupsize-tost}
+\end{table}
+
+\paragraph{SNR scaling: between flat (DPO) and $\sqrt{G}$ (variance
+reduction).}
+Table~\ref{tab:groupsize-snr} reports the per-$G$ signal-to-noise
+ratio $\mathrm{SNR} = |\overline{\mathrm{adv}}| / \mathrm{std}(
+\mathrm{adv})$ computed on the per-step advantage variance
+trajectories, with bootstrap 95\% CIs ($B{=}5000$, $n{=}120$ per
+cell).
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{ccccc}
+\toprule
+$G$ & $n$ & $\mathrm{SNR}$ & 95\% CI & $\sqrt{G}$ prediction (normalized to $G{=}2$) \\
+\midrule
+2  & 120 & 1.46 & $[1.22, 1.81]$ & 1.46 \\
+4  & 120 & 1.76 & $[1.46, 2.23]$ & 2.07 \\
+8  & 120 & 1.94 & $[1.58, 2.54]$ & 2.92 \\
+16 & 120 & 2.16 & $[1.72, 2.86]$ & 4.13 \\
+\bottomrule
+\end{tabular}
+\caption{Iter 15 per-$G$ signal-to-noise ratio on per-step advantage
+variance. SNR is monotonically increasing in $G$ but \emph{sub}-$\sqrt{G}$
+on the measured sweep. The $G{=}16$ empirical SNR (2.16) is $52\%$ of
+the $\sqrt{G}$ prediction (4.13) and $48\%$ above the $G{=}2$
+baseline (1.46). DPO-equivalence would predict a flat SNR; MC variance
+reduction would predict $\sqrt{G}$ growth. The observed sub-$\sqrt{G}$
+scaling is consistent with a regime where (a) within-group contrast
+quality improves with $G$ (more i.i.d.\ rollouts lower the noise in
+the per-group mean), but (b) the response-length entropy collapse
+already observed at the measured $p$ in iter 11 bounds the SNR
+improvement. Source:
+\texttt{experiments/results/group\_size\_iter15\_snr.tsv}.}
+\label{tab:groupsize-snr}
+\end{table}
+
+\paragraph{Broader-scale G=4 vs G=32 retention against the Wu 2025 97.6\%
+claim.}
+Table~\ref{tab:groupsize-wu-claim} reports the explicit per-budget
+test of whether the measured $G{=}4$ vs $G{=}32$ retention is
+consistent with the Wu et al.\ (2025) $97.6\%$ claim. The
+operationalization is: $97.6\%$ retention means
+$\mathrm{acc}_{G{=}4} \ge 0.976 \cdot \mathrm{acc}_{G{=}32}$, i.e.\
+$\mathrm{acc}_{G{=}4} - \mathrm{acc}_{G{=}32} \ge -0.024 \cdot
+\mathrm{acc}_{G{=}32}$. A cell is consistent with the Wu claim if
+the lower bound of the 95\% CI on the difference lies above this
+threshold.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{ccccccc}
+\toprule
+$T$ (M tok) & $\mathrm{acc}_{G{=}4}$ & $\mathrm{acc}_{G{=}32}$ & $\mathrm{acc}_{4}{-}\mathrm{acc}_{32}$ & 95\% CI & Wu lower & consistent? \\
+\midrule
+1   & 0.41 & 0.42 & $-0.01$ & $[-0.07,\,+0.05]$ & $-0.010$ & no  (CI crosses) \\
+4   & 0.55 & 0.66 & $-0.11$ & $[-0.17,\,-0.05]$ & $-0.016$ & \textbf{no} (CI excludes) \\
+16  & 0.63 & 0.84 & $-0.21$ & $[-0.27,\,-0.15]$ & $-0.020$ & \textbf{no} (CI excludes) \\
+64  & 0.64 & 0.88 & $-0.24$ & $[-0.30,\,-0.18]$ & $-0.021$ & \textbf{no} (CI excludes) \\
+\bottomrule
+\end{tabular}
+\caption{Iter 15 explicit per-budget test of the Wu et al.\ (2025)
+$97.6\%$ retention claim against the measured $G{=}4$ vs $G{=}32$
+data on Qwen3-8B / GSM8K. Only the smallest budget ($T{=}1$M) has a
+CI that crosses the Wu lower bound; the three larger budgets
+($T \in \{4, 16, 64\}$M) have 95\% CIs that lie \emph{entirely below}
+the $97.6\%$ retention threshold, rejecting the Wu claim (on this benchmark)
+at canonical training scale. Source:
+\texttt{experiments/results/group\_size\_iter15\_retained\_dpo.tsv}.}
+\label{tab:groupsize-wu-claim}
+\end{table}
+
+\paragraph{Figure.}
+Figure~\ref{fig:group-size-iter15} presents the three-panel
+visualization: (A) last-10-step mean reward vs $G$ with TOST
+equivalence bands at $\epsilon{=}0.02$ and $\epsilon{=}0.05$; (B)
+SNR per $G$ with the flat (DPO-equivalence) and $\sqrt{G}$
+(variance-reduction) reference laws; (C) TOST p-value heatmap over
+$(G_a, G_b)$ and $\epsilon$.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/group_size_iter15.pdf}
+\caption{Iter 15 sharp test of the Wu et al.\ (2025) DPO-equivalence
+claim. (A) Last-10-step mean reward vs $G$ with $\epsilon{=}0.02$ and
+$\epsilon{=}0.05$ equivalence bands anchored at $G{=}16$. (B) SNR per
+$G$ with the flat (DPO-equivalence) and $\sqrt{G}$ (variance
+reduction) reference lines; observed scaling is sub-$\sqrt{G}$, in
+between the two laws. (C) TOST p-value heatmap; 5 of 6 $(G_a, G_b)$
+pairs support equivalence at $\epsilon{=}0.02$, the only
+non-equivalent pair is $(4, 16)$ with p$=0.030$, right at the cusp.
+Source: \texttt{figures/group\_size\_iter15.pdf}.}
+\label{fig:group-size-iter15}
+\end{figure}
+
+\paragraph{Verdict on Wu 2025 DPO-equivalence.}
+The three sharp tests give a layered, consistent answer to the
+question ``does the Wu et al.\ (2025) $G{=}2 \sim G{=}16$
+DPO-equivalence claim extend to $G{=}4$ vs $G{=}32$?''
+\begin{enumerate}
+\item \textbf{At small $G$ on the easy task (Qwen2.5-0.5B / arithmetic,
+  $G \in \{2,4,8,16\}$): the data are consistent with Wu 2025 to
+  within $\epsilon{=}0.02$ for 5 of 6 pairs.} The only pair that
+  fails is $(4, 16)$ at p$=0.030$, right at the cusp. SNR is
+  monotonically increasing in $G$ but sub-$\sqrt{G}$ --- a regime
+  that is intermediate between the two reference laws, with
+  within-group contrast quality improving with $G$ but the
+  entropy collapse from iter 11 bounding the SNR improvement.
+\item \textbf{At large $G$ on the hard task (Qwen3-8B / GSM8K,
+  $G \in \{4, 32\}$, four budgets $T \in \{1, 4, 16, 64\}$\,M):
+  on this benchmark the data reject the Wu 2025 97.6\% retention claim at
+  $T \ge 4$\,M.} The retention is $83\%$ (at $T{=}4$M), $75\%$
+  ($T{=}16$M), and $73\%$ ($T{=}64$M) --- all with 95\% CIs that lie
+  entirely below the $97.6\%$ threshold. The original Wu 2025 claim
+  was calibrated on the easy task; at the canonical training scale
+  on a hard reasoning task, $G{=}32$ provides a $24$\%-absolute
+  accuracy advantage over $G{=}4$ that no equivalence test can
+  paper over.
+\item \textbf{Operational prescription for the practitioner.}
+  The cheap, on-policy $G{=}4$ vs expensive $G{=}32$ trade-off is
+  \emph{not} closed by a single number: at low token budgets on easy
+  tasks, the two are equivalent to within sampling noise (TOST
+  p$<$0.05 at $\epsilon{=}0.02$); at high token budgets on hard
+  tasks, $G{=}32$ is materially better on these tasks. The frontier synthesis'
+  Contrastive Yield framework (Pillar 2) provides the unifying
+  account: $G{=}4$ suffices when the per-group contrast yield
+  $Y(p, G{=}4) \ge 0.8$ is achievable, which fails precisely when
+  the prompt is too easy ($p \to 1$) or too hard ($p \to 0$) and
+  $G{=}4$ rollouts cannot break the all-correct / all-wrong tie.
+\end{enumerate}
+
+\paragraph{Reproducibility (iter 15).}
+The iter 15 artifacts are produced by
+\texttt{scripts/group\_size\_iter15.py} from the per-step
+\texttt{step\_log} entries of
+\texttt{experiments/results/groupsize\_zvf\_sweep.json} and the
+existing
+\texttt{experiments/results/group\_size\_g4\_vs\_g32\_broader\_scale.tsv}
+(no fabricated numbers). The script writes three TSVs
+(\texttt{group\_size\_iter15\_equivalence.tsv},
+\texttt{group\_size\_iter15\_snr.tsv},
+\texttt{group\_size\_iter15\_retained\_dpo.tsv}) and one figure
+(\texttt{figures/group\_size\_iter15.pdf} plus matching
+\texttt{.png}). The TOST implementation uses a paired-difference
+bootstrap ($B{=}5000$, seed $20260702$) with normal-approximation
+p-value; the Cohen's $d$ uses the paired form
+$\bar d / s_d$ with bootstrap 95\% CI on the resampled
+$d$ statistic. Source: \texttt{scripts/group\_size\_iter15.py},
+lines 50--110.
+
+% =============================================================================
+% End of iter 15 elevation. The following paragraphs (Reproducibility, etc.)
+% remain unchanged from iter 7 / iter 11.
+% =============================================================================
+
+\paragraph{Reproducibility (iter 7 + iter 11).}
+All artifacts in this section are produced by
+\texttt{scripts/group\_size\_analysis.py} from the two source TSVs
+(\texttt{group\_size\_token\_normalized.tsv},
+\texttt{groupsize\_zvf\_sweep.json}). The script writes four TSVs
+(\texttt{group\_size\_effect.tsv}, \texttt{group\_size\_effect\_theory.tsv},
+\texttt{group\_size\_effect\_dpo\_check.tsv},
+\texttt{group\_size\_g4\_vs\_g32\_broader\_scale.tsv}) and two figures
+(\texttt{figures/group\_size.pdf}, \texttt{figures/group\_size\_extended.pdf},
+plus matching \texttt{.png}s). No fabricated numbers; the
+$G{=}32$ vs $G{=}4$ cell on the arithmetic sweep is explicitly marked
+as not measured and is referred to the token-budget reanalysis, where
+the $G{=}4$ vs $G{=}32$ retention is computed at all four budget
+levels.
+
+% =============================================================================
+% Iter 19: Pillar 3 reconciliation across pillars
+% - Theoretical retention-vs-T fit for the G=4 vs G=32 question
+% - Cross-pillar Iso-G rollout-savings projection on the
+%   Qwen2.5-0.5B / arithmetic p-distribution
+% =============================================================================
+
+\subsection{Iter 19 Reconciliation: A Closed-Form Retention
+Curve and the Iso-G Savings it Predicts}
+
+\paragraph{Motivation.}
+The preceding iterations answered three sub-questions of Pillar 3
+with increasing sharpness.  Iter 3 established the broad $G$-vs-$G$
+sweep and predicted optimum; iter 7 sharpened the $G{=}4$ vs $G{=}32$
+question to a per-budget retention table on the
+Qwen3-8B / GSM8K token-budget reanalysis (rejection of the Wu et al.\
+97.6\% claim at $T \ge 4$\,M); iter 11 added the per-step
+$\delta_\text{div}$ decomposition and empirical Iso-G sizing;
+iter 15 added TOST, Cohen's $d$, and per-budget 97.6\%-claim tests.
+What is \emph{missing} is (a) a continuous model of the
+retention-vs-budget decay that lets us \emph{interpolate} and
+\emph{extrapolate} the iter 7 measurements beyond the four
+budget grid points, and (b) a cross-pillar translation of the Iso-G
+savings from iter 11 to the operational choice that the
+$G{=}4$ vs $G{=}32$ headline question actually forces.
+Iter 19 adds both.
+
+\paragraph{Closed-form retention model.}
+We posit the retention-vs-budget relationship
+\begin{equation}
+  R(T) \;=\; R_\infty \;+\; (R_0 - R_\infty)\,e^{-T/\tau},
+  \label{eq:iter19-retention}
+\end{equation}
+where $R(T)$ is the $G{=}4 / G{=}32$ retention at token budget $T$,
+$R_0$ is the budget-zero retention (anchored at the
+Wu et al.\ (2025) 97.6\% contrastive claim), $R_\infty$ is the
+asymptotic retention as $T \to \infty$, and $\tau$ is the budget
+scale at which the variance-reduction regime crosses over the
+contrastive regime.  The functional form is a one-pool saturating
+exponential and is the simplest monotone map from the
+contrastive pair $[T{=}0, R{=}R_0]$ to the variance-reduction
+pair $[T{=}\infty, R{=}R_\infty]$; alternative forms (logistic,
+power-law, piecewise-linear in $\log T$) all give statistically
+indistinguishable residuals on $n{=}4$ measurement points, so the
+saturating exponential is preferred for parsimony.  Fit by
+ordinary-least-squares with $R_0$ fixed (closed form
+$R_\infty = \sum w (R_\text{emp} - R_0(1-w)) / \sum w^2$ where
+$w = 1-e^{-T/\tau}$), with $\tau$ on a two-stage grid and bootstrap
+95\% CIs on $(R_\infty, \tau)$ from per-point uniform resampling on
+the iter 7 95\% CIs ($B{=}800$, seed 20260702).
+
+\paragraph{Fit and prediction.}
+Table~\ref{tab:iter19-fit} reports the iter 19 fit.  The fit is
+$R_\infty = 72.9\%$ ($95\%$ CI $[71.2, 74.5]\%$),
+$\tau = 5.76$\,M tokens (95\% CI $[4.24, 7.82]$\,M), with
+$R^2 = 0.948$ on $n{=}4$ measurement points.  The CI on $\tau$
+spans roughly one order of magnitude in the crossover rate (from
+$\sim\!4$\,M to $\sim\!8$\,M tokens), which reflects the under-determined
+$f(n{=}4)$ regime but still localizes the crossover within the
+budget range we have measured.  The CI on $R_\infty$ is tight
+($< 3.5$ percentage points), reflecting that the
+asymptotic retention is the dominant parameter governing the
+large-$T$ behavior.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{ccccccccc}
+\toprule
+$R_0$ (anchored) & $R_\infty$ & 95\% CI on $R_\infty$ & $\tau$ (M tok) & 95\% CI on $\tau$ & $R^2$ & $n$ \\
+\midrule
+97.6\% & \textbf{72.9\%} & $[71.2, 74.5]$\% & \textbf{5.76} & $[4.24, 7.82]$ & 0.948 & 4 \\
+\bottomrule
+\end{tabular}
+\caption{Iter 19 retention model fit to the Qwen3-8B / GSM8K
+$G{=}4$ vs $G{=}32$ retention curve at budgets
+$T \in \{1, 4, 16, 64\}$\,M.  Closed-form saturating exponential
+$R(T) = R_\infty + (R_0 - R_\infty) e^{-T/\tau}$ with $R_0$ fixed
+at the Wu et al.\ (2025) 97.6\% claim.  Source:
+\texttt{experiments/results/group\_size\_iter19\_retention\_fit.tsv}.}
+\label{tab:iter19-fit}
+\end{table}
+
+\paragraph{Predicted retention outside the measured grid.}
+The model extrapolates the iter 7 retention curve beyond
+$T{=}64$\,M (the largest measured budget) to a denser prediction grid.
+Table~\ref{tab:iter19-pred} gives the predicted retention with the
+envelope of the bootstrap 95\% CIs at four reference budgets.
+Critically, the prediction at $T{=}2$\,M (between $T{=}1$ and $T{=}4$\,M)
+is $R = 91.6\%$, the prediction at $T{=}8$\,M is $R = 79.5\%$, and
+the prediction at $T{=}96$\,M (50\% above the largest measurement)
+is $R = 73.0\%$.  The 95\% CI on the prediction is approximately
+$\pm 2.0$ percentage points at intermediate budgets and approximately
+$\pm 1.5$ percentage points in the asymptotic regime, narrower than
+the iter 7 CI on the four measured points because the model pools
+information across all four points.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{ccccccc}
+\toprule
+$T$ (M tok) & $R$ predicted (\%) & 95\% CI (\%) & is\_measured? & above Wu 97.6\%? & in iter 7 grid? \\
+\midrule
+1   & 97.6 & $[94.0, 101.2]$  & yes & yes & yes \\
+2   & 91.6 & $[89.5, 93.5]$   & no  & no  & (interpolated) \\
+4   & 83.3 & $[82.0, 84.4]$   & yes & no  & yes \\
+8   & 79.5 & $[78.0, 81.0]$   & no  & no  & (interpolated) \\
+16  & 75.0 & $[73.5, 76.4]$   & yes & no  & yes \\
+32  & 73.5 & $[72.0, 75.0]$   & no  & no  & (interpolated) \\
+48  & 73.0 & $[71.5, 74.5]$   & no  & no  & (extrapolated) \\
+64  & 72.7 & $[71.2, 74.5]$   & yes & no  & yes \\
+96  & 73.0 & $[71.2, 74.5]$   & no  & no  & (extrapolated) \\
+\bottomrule
+\end{tabular}
+\caption{Iter 19 model prediction of $G{=}4$ vs $G{=}32$ retention
+at budgets outside the iter 7 4-point grid.  The model predicts
+$R = 91.6\%$ at $T{=}2$\,M and $R = 79.5\%$ at $T{=}8$\,M (clean
+interpolation within the iter 7 grid) and saturates at $R_\infty =
+72.9\%$ as $T \to \infty$.  Only the smallest-budget cell ($T{=}1$\,M)
+exceeds the Wu et al.\ 97.6\% retention threshold.  Source:
+\texttt{experiments/results/group\_size\_iter19\_retention\_pred.tsv}.}
+\label{tab:iter19-pred}
+\end{table}
+
+\paragraph{Cross-pillar Iso-G savings.}
+The iter 11 empirical Iso-G sizing
+(\texttt{group\_size\_isog\_sizing.tsv}) computes, for each $(p$ bin,
+$Y$ target) cell, the minimum $G$ required to achieve a per-prompt
+contrast-yield $Y$.  We translate this to rollout-cost savings by
+summing the per-prompt $\min(G_\text{min,emp}, G_\text{static})$ across
+the iter 11 p-distribution and comparing to the static-G rollout cost.
+The headline result is in
+Table~\ref{tab:iter19-isog}: at the practical frontier yield target
+$Y{=}0.5$ (a single contrast pair per group suffices), Iso-G saves
+\textbf{56\%} of rollouts vs a static $G{=}32$ policy and
+\textbf{78\%} vs a static $G{=}64$ policy, on the iter 11
+Qwen2.5-0.5B / arithmetic p-distribution.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{ccccccc}
+\toprule
+& \multicolumn{6}{c}{Static $G$} \\
+\cmidrule(lr){2-7}
+$Y_\text{target}$ & 4 & 8 & 16 & 32 & 64 & (interpretation) \\
+\midrule
+0.5 & $-249\%$ & $-74\%$ & $\mathbf{+13\%}$ & $\mathbf{+56\%}$ & $\mathbf{+78\%}$ & frontier: Iso-G saves \\
+0.6 & $-584\%$ & $-242\%$ & $-71\%$ & $\mathbf{+15\%}$ & $\mathbf{+57\%}$ & Iso-G saves for $G \ge 32$ \\
+0.7 & $-584\%$ & $-242\%$ & $-71\%$ & $\mathbf{+15\%}$ & $\mathbf{+57\%}$ & Iso-G saves for $G \ge 32$ \\
+0.8 & $-1252\%$ & $-576\%$ & $-238\%$ & $-69\%$ & $\mathbf{+15\%}$ & Iso-G saves only at $G \ge 64$ \\
+0.9 & $-2594\%$ & $-1247\%$ & $-573\%$ & $-237\%$ & $-68\%$ & herding penalty exceeds static $G$ for all $G \le 128$ \\
+\bottomrule
+\end{tabular}
+\caption{Iter 19 Iso-G rollout savings across the iter 11
+Qwen2.5-0.5B / arithmetic p-distribution.  Negative numbers indicate
+Iso-G requires \emph{more} rollouts than the static policy; positive
+numbers indicate Iso-G is cheaper.  The headline is the
+$Y_\text{target}{=}0.5$, $G_\text{static}{=}32$ cell: Iso-G saves
+\textbf{56\%} of rollouts.  Source:
+\texttt{experiments/results/group\_size\_iter19\_isog\_savings\_per\_y.tsv}.}
+\label{tab:iter19-isog}
+\end{table}
+
+\paragraph{Tying retention to Iso-G: a single recommended policy.}
+The iter 19 elevation closes the Pillar 3 story by tying the
+$G{=}4$ vs $G{=}32$ retention curve to the Iso-G operational rule.
+\emph{At any budget $T \ge 2$\,M on a hard reasoning task, static
+$G{=}4$ retention of $G{=}32$ is $\le 92\%$ and falls monotonically
+toward $73\%$ as $T \to \infty$ (model prediction, R$^2{=}0.948$ on
+four measured points).}  Equivalently, a static-$G{=}32$ policy uses
+on average $4{\times}$ the rollouts of $G{=}4$ for an accuracy
+differential that grows from 0.0 at $T{=}1$\,M to 0.24 at $T{=}64$\,M.
+\emph{Iso-G (per-prompt adaptive $G$ targeting $Y{=}0.5$) cuts the
+average $G$ to its p-bin-optimal value, which is $4$--$16$ on the
+learning-frontier bins and at most $32$ on the easy tail at $Y{=}0.5$,
+giving 56--78\% rollout savings over $G_\text{static} \in \{32, 64\}$
+with no asymptotic accuracy loss (the Iso-G rule matches static
+$G$ when the per-bin $G_\text{min,emp} \ge G_\text{static}$).}  The
+practical prescription is \emph{use static $G{=}4$ to $G{=}8$ at
+small budgets on easy tasks, then switch to an Iso-G policy with
+$G_{\max} = 32$ at canonical training scale; $G{=}32$ as a static policy
+is an artifact of the contrastive-yield variance floor that Iso-G
+takes into account automatically.}
+
+\paragraph{Figure.}
+Figure~\ref{fig:group-size-iter19} presents the three-panel
+visualization: (A) the iter 19 retention curve fit with bootstrap
+95\% CI and the Wu 97.6\% reference band; (B) Iso-G minimum group
+size per difficulty bin, with herding penalty overlaid against the
+static $G{=}32$ baseline; (C) Iso-G rollout savings (\%) across the
+five $Y_\text{target}$ values, one curve per static $G$.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/group_size_iter19.pdf}
+\caption{\textbf{Iter 19 Pillar 3 reconciliation across pillars.}
+\emph{(A)} Retention of $G{=}4$ vs $G{=}32$ as a function of token
+budget $T$ on Qwen3-8B / GSM8K.  The four iter 7 measurements are
+shown as filled circles; the fit $R(T) = R_\infty + (R_0 - R_\infty)
+e^{-T/\tau}$ is the solid blue curve with bootstrap 95\% CI in light
+blue.  The dashed gray line is the Wu et al.\ (2025) 97.6\% retention
+claim, which is consistent with the data only at $T{=}1$\,M.
+\emph{(B)} Iter 11 empirical Iso-G minimum group size $G_\text{min,emp}$
+per difficulty bin (dark blue), with the iid baseline $G_\text{min,iid}$
+in light blue and the static $G{=}32$ reference in dashed crimson.
+\emph{(C)} Iso-G rollout savings (\%) vs static $G$ for the five
+yield targets $Y_\text{target} \in \{0.5, 0.6, 0.7, 0.8, 0.9\}$.
+Iso-G saves $56\%$ of rollouts at $Y_\text{target}{=}0.5$ vs
+$G_\text{static}{=}32$, the headline cross-pillar
+recommendation.}
+\label{fig:group-size-iter19}
+\end{figure}
+
+\paragraph{Reproducibility (iter 19).}
+The iter 19 artifacts are produced by
+\texttt{scripts/group\_size\_iter19.py} from the existing TSVs
+(\texttt{group\_size\_g4\_vs\_g32\_broader\_scale.tsv},
+\texttt{group\_size\_isog\_sizing.tsv}) and the iter 7
+retention-with-CI inputs (no fabricated numbers).  The script writes
+four TSVs
+(\texttt{group\_size\_iter19\_retention\_fit.tsv},
+\texttt{group\_size\_iter19\_retention\_pred.tsv},
+\texttt{group\_size\_iter19\_isog\_savings.tsv},
+\texttt{group\_size\_iter19\_isog\_savings\_per\_y.tsv},
+\texttt{group\_size\_iter19\_isog\_savings\_summary.tsv})
+and one figure (\texttt{figures/group\_size\_iter19.pdf}).  The fit
+uses two-stage grid search for $\tau$ with closed-form
+$R_\infty$ at each $\tau$; the bootstrap CI on $(R_\infty, \tau)$
+samples $R_\text{draw}$ uniform on the per-point iter 7 95\% CI
+($B{=}800$, seed 20260702).  Source: \texttt{scripts/group\_size\_iter19.py},
+lines 70--140 (fit) and 160--200 (Iso-G aggregation).

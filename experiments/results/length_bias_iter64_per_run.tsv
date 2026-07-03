@@ -1,0 +1,257 @@
+experiment	algo	seed	cell	mean_dL	n_steps
+drgrpo_gsm8k_cot	grpo	42	all_all	-0.792026	29
+drgrpo_gsm8k_cot	grpo	42	all_high	-0.791667	1
+drgrpo_gsm8k_cot	grpo	42	all_mid	-0.209135	13
+drgrpo_gsm8k_cot	grpo	42	all_low	-1.297222	15
+drgrpo_gsm8k_cot	grpo	42	pos_all	-2.366186	13
+drgrpo_gsm8k_cot	grpo	42	pos_high	-0.791667	1
+drgrpo_gsm8k_cot	grpo	42	pos_mid	-1.292969	4
+drgrpo_gsm8k_cot	grpo	42	pos_low	-3.099609	8
+drgrpo_gsm8k_cot	grpo	42	neg_all	0.486979	16
+drgrpo_gsm8k_cot	grpo	42	neg_high		0
+drgrpo_gsm8k_cot	grpo	42	neg_mid	0.272569	9
+drgrpo_gsm8k_cot	grpo	42	neg_low	0.762649	7
+drgrpo_gsm8k_cot	grpo	42	zero_all		0
+drgrpo_gsm8k_cot	grpo	42	zero_high		0
+drgrpo_gsm8k_cot	grpo	42	zero_mid		0
+drgrpo_gsm8k_cot	grpo	42	zero_low		0
+drgrpo_gsm8k_cot	dr_grpo	42	all_all	-0.386853	29
+drgrpo_gsm8k_cot	dr_grpo	42	all_high		0
+drgrpo_gsm8k_cot	dr_grpo	42	all_mid	-0.7	15
+drgrpo_gsm8k_cot	dr_grpo	42	all_low	-0.051339	14
+drgrpo_gsm8k_cot	dr_grpo	42	pos_all	-2.00558	14
+drgrpo_gsm8k_cot	dr_grpo	42	pos_high		0
+drgrpo_gsm8k_cot	dr_grpo	42	pos_mid	-2.834821	7
+drgrpo_gsm8k_cot	dr_grpo	42	pos_low	-1.176339	7
+drgrpo_gsm8k_cot	dr_grpo	42	neg_all	1.123958	15
+drgrpo_gsm8k_cot	dr_grpo	42	neg_high		0
+drgrpo_gsm8k_cot	dr_grpo	42	neg_mid	1.167969	8
+drgrpo_gsm8k_cot	dr_grpo	42	neg_low	1.073661	7
+drgrpo_gsm8k_cot	dr_grpo	42	zero_all		0
+drgrpo_gsm8k_cot	dr_grpo	42	zero_high		0
+drgrpo_gsm8k_cot	dr_grpo	42	zero_mid		0
+drgrpo_gsm8k_cot	dr_grpo	42	zero_low		0
+drgrpo_gsm8k_cot	grpo	123	all_all	-0.45986	29
+drgrpo_gsm8k_cot	grpo	123	all_high		0
+drgrpo_gsm8k_cot	grpo	123	all_mid	-0.727951	15
+drgrpo_gsm8k_cot	grpo	123	all_low	-0.172619	14
+drgrpo_gsm8k_cot	grpo	123	pos_all	-1.155048	13
+drgrpo_gsm8k_cot	grpo	123	pos_high		0
+drgrpo_gsm8k_cot	grpo	123	pos_mid	-1.833333	5
+drgrpo_gsm8k_cot	grpo	123	pos_low	-0.73112	8
+drgrpo_gsm8k_cot	grpo	123	neg_all	0.007465	15
+drgrpo_gsm8k_cot	grpo	123	neg_high		0
+drgrpo_gsm8k_cot	grpo	123	neg_mid	-0.17526	10
+drgrpo_gsm8k_cot	grpo	123	neg_low	0.372917	5
+drgrpo_gsm8k_cot	grpo	123	zero_all	1.567708	1
+drgrpo_gsm8k_cot	grpo	123	zero_high		0
+drgrpo_gsm8k_cot	grpo	123	zero_mid		0
+drgrpo_gsm8k_cot	grpo	123	zero_low	1.567708	1
+drgrpo_gsm8k_cot	dr_grpo	123	all_all	-0.252425	29
+drgrpo_gsm8k_cot	dr_grpo	123	all_high	-0.458333	1
+drgrpo_gsm8k_cot	dr_grpo	123	all_mid	-0.360447	17
+drgrpo_gsm8k_cot	dr_grpo	123	all_low	-0.066761	11
+drgrpo_gsm8k_cot	dr_grpo	123	pos_all	-1.188301	13
+drgrpo_gsm8k_cot	dr_grpo	123	pos_high		0
+drgrpo_gsm8k_cot	dr_grpo	123	pos_mid	-1.548828	8
+drgrpo_gsm8k_cot	dr_grpo	123	pos_low	-0.611458	5
+drgrpo_gsm8k_cot	dr_grpo	123	neg_all	0.507975	16
+drgrpo_gsm8k_cot	dr_grpo	123	neg_high	-0.458333	1
+drgrpo_gsm8k_cot	dr_grpo	123	neg_mid	0.695891	9
+drgrpo_gsm8k_cot	dr_grpo	123	neg_low	0.387153	6
+drgrpo_gsm8k_cot	dr_grpo	123	zero_all		0
+drgrpo_gsm8k_cot	dr_grpo	123	zero_high		0
+drgrpo_gsm8k_cot	dr_grpo	123	zero_mid		0
+drgrpo_gsm8k_cot	dr_grpo	123	zero_low		0
+drgrpo_gsm8k_cot	grpo	456	all_all	-0.099407	29
+drgrpo_gsm8k_cot	grpo	456	all_high	3.796875	1
+drgrpo_gsm8k_cot	grpo	456	all_mid	0.124863	19
+drgrpo_gsm8k_cot	grpo	456	all_low	-1.005787	9
+drgrpo_gsm8k_cot	grpo	456	pos_all	-1.61899	13
+drgrpo_gsm8k_cot	grpo	456	pos_high		0
+drgrpo_gsm8k_cot	grpo	456	pos_mid	-1.557292	7
+drgrpo_gsm8k_cot	grpo	456	pos_low	-1.690972	6
+drgrpo_gsm8k_cot	grpo	456	neg_all	1.135254	16
+drgrpo_gsm8k_cot	grpo	456	neg_high	3.796875	1
+drgrpo_gsm8k_cot	grpo	456	neg_mid	1.10612	12
+drgrpo_gsm8k_cot	grpo	456	neg_low	0.364583	3
+drgrpo_gsm8k_cot	grpo	456	zero_all		0
+drgrpo_gsm8k_cot	grpo	456	zero_high		0
+drgrpo_gsm8k_cot	grpo	456	zero_mid		0
+drgrpo_gsm8k_cot	grpo	456	zero_low		0
+drgrpo_gsm8k_cot	dr_grpo	456	all_all	-0.082435	29
+drgrpo_gsm8k_cot	dr_grpo	456	all_high	3.140625	1
+drgrpo_gsm8k_cot	dr_grpo	456	all_mid	0.447304	17
+drgrpo_gsm8k_cot	dr_grpo	456	all_low	-1.194129	11
+drgrpo_gsm8k_cot	dr_grpo	456	pos_all	-1.353795	14
+drgrpo_gsm8k_cot	dr_grpo	456	pos_high		0
+drgrpo_gsm8k_cot	dr_grpo	456	pos_mid	-1.376042	5
+drgrpo_gsm8k_cot	dr_grpo	456	pos_low	-1.341435	9
+drgrpo_gsm8k_cot	dr_grpo	456	neg_all	0.966146	14
+drgrpo_gsm8k_cot	dr_grpo	456	neg_high	3.140625	1
+drgrpo_gsm8k_cot	dr_grpo	456	neg_mid	1.04072	11
+drgrpo_gsm8k_cot	dr_grpo	456	neg_low	-0.53125	2
+drgrpo_gsm8k_cot	dr_grpo	456	zero_all	3.036458	1
+drgrpo_gsm8k_cot	dr_grpo	456	zero_high		0
+drgrpo_gsm8k_cot	dr_grpo	456	zero_mid	3.036458	1
+drgrpo_gsm8k_cot	dr_grpo	456	zero_low		0
+drgrpo_vs_grpo	grpo	42	all_all	-0.067608	39
+drgrpo_vs_grpo	grpo	42	all_high	-0.000651	32
+drgrpo_vs_grpo	grpo	42	all_mid	-0.19987	4
+drgrpo_vs_grpo	grpo	42	all_low	-0.605469	3
+drgrpo_vs_grpo	grpo	42	pos_all	-0.119022	22
+drgrpo_vs_grpo	grpo	42	pos_high	-0.000174	15
+drgrpo_vs_grpo	grpo	42	pos_mid	-0.19987	4
+drgrpo_vs_grpo	grpo	42	pos_low	-0.605469	3
+drgrpo_vs_grpo	grpo	42	neg_all	-0.016204	9
+drgrpo_vs_grpo	grpo	42	neg_high	-0.016204	9
+drgrpo_vs_grpo	grpo	42	neg_mid		0
+drgrpo_vs_grpo	grpo	42	neg_low		0
+drgrpo_vs_grpo	grpo	42	zero_all	0.015951	8
+drgrpo_vs_grpo	grpo	42	zero_high	0.015951	8
+drgrpo_vs_grpo	grpo	42	zero_mid		0
+drgrpo_vs_grpo	grpo	42	zero_low		0
+drgrpo_vs_grpo	dr_grpo	42	all_all	-0.064203	39
+drgrpo_vs_grpo	dr_grpo	42	all_high	0.012123	29
+drgrpo_vs_grpo	dr_grpo	42	all_mid	-0.134375	5
+drgrpo_vs_grpo	dr_grpo	42	all_low	-0.436719	5
+drgrpo_vs_grpo	dr_grpo	42	pos_all	-0.105054	22
+drgrpo_vs_grpo	dr_grpo	42	pos_high	0.025347	15
+drgrpo_vs_grpo	dr_grpo	42	pos_mid	-0.253906	2
+drgrpo_vs_grpo	dr_grpo	42	pos_low	-0.436719	5
+drgrpo_vs_grpo	dr_grpo	42	neg_all	-0.021267	12
+drgrpo_vs_grpo	dr_grpo	42	neg_high	-0.010127	9
+drgrpo_vs_grpo	dr_grpo	42	neg_mid	-0.054688	3
+drgrpo_vs_grpo	dr_grpo	42	neg_low		0
+drgrpo_vs_grpo	dr_grpo	42	zero_all	0.0125	5
+drgrpo_vs_grpo	dr_grpo	42	zero_high	0.0125	5
+drgrpo_vs_grpo	dr_grpo	42	zero_mid		0
+drgrpo_vs_grpo	dr_grpo	42	zero_low		0
+drgrpo_vs_grpo	grpo	123	all_all	-0.063702	39
+drgrpo_vs_grpo	grpo	123	all_high	0.001709	32
+drgrpo_vs_grpo	grpo	123	all_mid	-0.280208	5
+drgrpo_vs_grpo	grpo	123	all_low	-0.56901	2
+drgrpo_vs_grpo	grpo	123	pos_all	-0.112723	21
+drgrpo_vs_grpo	grpo	123	pos_high	0.007465	15
+drgrpo_vs_grpo	grpo	123	pos_mid	-0.335286	4
+drgrpo_vs_grpo	grpo	123	pos_low	-0.56901	2
+drgrpo_vs_grpo	grpo	123	neg_all	0.002604	11
+drgrpo_vs_grpo	grpo	123	neg_high	0.008854	10
+drgrpo_vs_grpo	grpo	123	neg_mid	-0.059896	1
+drgrpo_vs_grpo	grpo	123	neg_low		0
+drgrpo_vs_grpo	grpo	123	zero_all	-0.020833	7
+drgrpo_vs_grpo	grpo	123	zero_high	-0.020833	7
+drgrpo_vs_grpo	grpo	123	zero_mid		0
+drgrpo_vs_grpo	grpo	123	zero_low		0
+drgrpo_vs_grpo	dr_grpo	123	all_all	-0.05008	39
+drgrpo_vs_grpo	dr_grpo	123	all_high	0.007292	30
+drgrpo_vs_grpo	dr_grpo	123	all_mid	-0.173437	5
+drgrpo_vs_grpo	dr_grpo	123	all_low	-0.326172	4
+drgrpo_vs_grpo	dr_grpo	123	pos_all	-0.074978	24
+drgrpo_vs_grpo	dr_grpo	123	pos_high	0.024826	15
+drgrpo_vs_grpo	dr_grpo	123	pos_mid	-0.173437	5
+drgrpo_vs_grpo	dr_grpo	123	pos_low	-0.326172	4
+drgrpo_vs_grpo	dr_grpo	123	neg_all	0.009766	8
+drgrpo_vs_grpo	dr_grpo	123	neg_high	0.009766	8
+drgrpo_vs_grpo	dr_grpo	123	neg_mid		0
+drgrpo_vs_grpo	dr_grpo	123	neg_low		0
+drgrpo_vs_grpo	dr_grpo	123	zero_all	-0.03311	7
+drgrpo_vs_grpo	dr_grpo	123	zero_high	-0.03311	7
+drgrpo_vs_grpo	dr_grpo	123	zero_mid		0
+drgrpo_vs_grpo	dr_grpo	123	zero_low		0
+drgrpo_vs_grpo	grpo	456	all_all	-0.065004	39
+drgrpo_vs_grpo	grpo	456	all_high	-0.0063	31
+drgrpo_vs_grpo	grpo	456	all_mid	-0.132812	4
+drgrpo_vs_grpo	grpo	456	all_low	-0.452148	4
+drgrpo_vs_grpo	grpo	456	pos_all	-0.100195	20
+drgrpo_vs_grpo	grpo	456	pos_high	0.027995	12
+drgrpo_vs_grpo	grpo	456	pos_mid	-0.132812	4
+drgrpo_vs_grpo	grpo	456	pos_low	-0.452148	4
+drgrpo_vs_grpo	grpo	456	neg_all	-0.021615	10
+drgrpo_vs_grpo	grpo	456	neg_high	-0.021615	10
+drgrpo_vs_grpo	grpo	456	neg_mid		0
+drgrpo_vs_grpo	grpo	456	neg_low		0
+drgrpo_vs_grpo	grpo	456	zero_all	-0.035012	9
+drgrpo_vs_grpo	grpo	456	zero_high	-0.035012	9
+drgrpo_vs_grpo	grpo	456	zero_mid		0
+drgrpo_vs_grpo	grpo	456	zero_low		0
+drgrpo_vs_grpo	dr_grpo	456	all_all	-0.066006	39
+drgrpo_vs_grpo	dr_grpo	456	all_high	-0.003069	28
+drgrpo_vs_grpo	dr_grpo	456	all_mid	-0.063244	7
+drgrpo_vs_grpo	dr_grpo	456	all_low	-0.511393	4
+drgrpo_vs_grpo	dr_grpo	456	pos_all	-0.110904	23
+drgrpo_vs_grpo	dr_grpo	456	pos_high	-0.009215	13
+drgrpo_vs_grpo	dr_grpo	456	pos_mid	-0.064236	6
+drgrpo_vs_grpo	dr_grpo	456	pos_low	-0.511393	4
+drgrpo_vs_grpo	dr_grpo	456	neg_all	-0.0002	13
+drgrpo_vs_grpo	dr_grpo	456	neg_high	0.004557	12
+drgrpo_vs_grpo	dr_grpo	456	neg_mid	-0.057292	1
+drgrpo_vs_grpo	dr_grpo	456	neg_low		0
+drgrpo_vs_grpo	dr_grpo	456	zero_all	-0.006944	3
+drgrpo_vs_grpo	dr_grpo	456	zero_high	-0.006944	3
+drgrpo_vs_grpo	dr_grpo	456	zero_mid		0
+drgrpo_vs_grpo	dr_grpo	456	zero_low		0
+drgrpo_vs_grpo	grpo	789	all_all	-0.061599	39
+drgrpo_vs_grpo	grpo	789	all_high	-0.005166	31
+drgrpo_vs_grpo	grpo	789	all_mid	-0.215104	5
+drgrpo_vs_grpo	grpo	789	all_low	-0.388889	3
+drgrpo_vs_grpo	grpo	789	pos_all	-0.127467	19
+drgrpo_vs_grpo	grpo	789	pos_high	-0.016335	11
+drgrpo_vs_grpo	grpo	789	pos_mid	-0.215104	5
+drgrpo_vs_grpo	grpo	789	pos_low	-0.388889	3
+drgrpo_vs_grpo	grpo	789	neg_all	0.00217	9
+drgrpo_vs_grpo	grpo	789	neg_high	0.00217	9
+drgrpo_vs_grpo	grpo	789	neg_mid		0
+drgrpo_vs_grpo	grpo	789	neg_low		0
+drgrpo_vs_grpo	grpo	789	zero_all	0.0	11
+drgrpo_vs_grpo	grpo	789	zero_high	0.0	11
+drgrpo_vs_grpo	grpo	789	zero_mid		0
+drgrpo_vs_grpo	grpo	789	zero_low		0
+drgrpo_vs_grpo	dr_grpo	789	all_all	-0.060397	39
+drgrpo_vs_grpo	dr_grpo	789	all_high	-9e-05	29
+drgrpo_vs_grpo	dr_grpo	789	all_mid	-0.102083	5
+drgrpo_vs_grpo	dr_grpo	789	all_low	-0.36849	5
+drgrpo_vs_grpo	dr_grpo	789	pos_all	-0.112041	21
+drgrpo_vs_grpo	dr_grpo	789	pos_high	0.0	11
+drgrpo_vs_grpo	dr_grpo	789	pos_mid	-0.102083	5
+drgrpo_vs_grpo	dr_grpo	789	pos_low	-0.36849	5
+drgrpo_vs_grpo	dr_grpo	789	neg_all	0.014178	9
+drgrpo_vs_grpo	dr_grpo	789	neg_high	0.014178	9
+drgrpo_vs_grpo	dr_grpo	789	neg_mid		0
+drgrpo_vs_grpo	dr_grpo	789	neg_low		0
+drgrpo_vs_grpo	dr_grpo	789	zero_all	-0.014468	9
+drgrpo_vs_grpo	dr_grpo	789	zero_high	-0.014468	9
+drgrpo_vs_grpo	dr_grpo	789	zero_mid		0
+drgrpo_vs_grpo	dr_grpo	789	zero_low		0
+drgrpo_vs_grpo	grpo	1024	all_all	-0.056891	39
+drgrpo_vs_grpo	grpo	1024	all_high	-0.019334	33
+drgrpo_vs_grpo	grpo	1024	all_mid	-0.316406	2
+drgrpo_vs_grpo	grpo	1024	all_low	-0.236979	4
+drgrpo_vs_grpo	grpo	1024	pos_all	-0.115406	19
+drgrpo_vs_grpo	grpo	1024	pos_high	-0.047075	13
+drgrpo_vs_grpo	grpo	1024	pos_mid	-0.316406	2
+drgrpo_vs_grpo	grpo	1024	pos_low	-0.236979	4
+drgrpo_vs_grpo	grpo	1024	neg_all	0.001202	13
+drgrpo_vs_grpo	grpo	1024	neg_high	0.001202	13
+drgrpo_vs_grpo	grpo	1024	neg_mid		0
+drgrpo_vs_grpo	grpo	1024	neg_low		0
+drgrpo_vs_grpo	grpo	1024	zero_all	-0.005952	7
+drgrpo_vs_grpo	grpo	1024	zero_high	-0.005952	7
+drgrpo_vs_grpo	grpo	1024	zero_mid		0
+drgrpo_vs_grpo	grpo	1024	zero_low		0
+drgrpo_vs_grpo	dr_grpo	1024	all_all	-0.060296	39
+drgrpo_vs_grpo	dr_grpo	1024	all_high	-0.001428	31
+drgrpo_vs_grpo	dr_grpo	1024	all_mid	-0.19375	5
+drgrpo_vs_grpo	dr_grpo	1024	all_low	-0.446181	3
+drgrpo_vs_grpo	dr_grpo	1024	pos_all	-0.121848	19
+drgrpo_vs_grpo	dr_grpo	1024	pos_high	-0.00071	11
+drgrpo_vs_grpo	dr_grpo	1024	pos_mid	-0.19375	5
+drgrpo_vs_grpo	dr_grpo	1024	pos_low	-0.446181	3
+drgrpo_vs_grpo	dr_grpo	1024	neg_all	0.005859	8
+drgrpo_vs_grpo	dr_grpo	1024	neg_high	0.005859	8
+drgrpo_vs_grpo	dr_grpo	1024	neg_mid		0
+drgrpo_vs_grpo	dr_grpo	1024	neg_low		0
+drgrpo_vs_grpo	dr_grpo	1024	zero_all	-0.006944	12
+drgrpo_vs_grpo	dr_grpo	1024	zero_high	-0.006944	12
+drgrpo_vs_grpo	dr_grpo	1024	zero_mid		0
+drgrpo_vs_grpo	dr_grpo	1024	zero_low		0

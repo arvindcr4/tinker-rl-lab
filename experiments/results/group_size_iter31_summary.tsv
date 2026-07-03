@@ -1,0 +1,7 @@
+metric	value	detail
+easy_regime_Wu_holds	True	Wu 97.6% headline holds: all G>=4 retain >= 97.6% of G=2 on easy arithmetic; flat reward-vs-G is the canonical DPO regime.
+hard_regime_Wu_holds	False	Wu 97.6% headline fails: only 1/4 (G,T) cells retain >= 97.6%; retention drops to 0.727 at T=64M tokens (a 24.9pp gap).
+iso_token_TOST_equiv_count	0	0/4 (G=4 vs G=32) cells TOST-equivalent at eps=0.02
+iso_token_above_Wu_count	1	1/4 cells with retention >= 97.6%
+hard_regime_retention_floor	0.7273	min retention observed across (G,T) on GSM8K: 0.727
+hard_regime_retention_drop_pp	24.87	gap from Wu 97.6% baseline to measured minimum: 24.9pp

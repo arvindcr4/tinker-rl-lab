@@ -1,0 +1,13 @@
+model	params_B	n_boot	sigma	win_share_saturation	win_share_michaelis_menten	win_share_hill_n2	win_share_power_law	win_share_linear
+Qwen3.5-4B	4.0	200	0.1	0.02	0.01	0.0	0.0	0.97
+Qwen3-8B	8.0	200	0.1	0.195	0.18	0.11	0.12	0.395
+Llama-3.1-8B-Instruct	8.0	200	0.1	0.03	0.005	0.0	0.0	0.965
+Qwen3-32B	32.0	200	0.1	0.07	0.0	0.065	0.005	0.86
+Qwen3.5-27B	27.0	200	0.1	0.025	0.0	0.0	0.0	0.975
+gpt-oss-20B	20.0	200	0.1	0.12	0.225	0.035	0.025	0.595
+Qwen3-30B-MoE	30.0	200	0.1	0.115	0.01	0.145	0.02	0.71
+Qwen3-30B-MoE-Inst	30.0	200	0.1	0.205	0.015	0.025	0.0	0.755
+DeepSeek-V3.1	685.0	200	0.1	0.205	0.005	0.0	0.01	0.78
+Nemotron-120B	120.0	200	0.1	0.0	0.0	1.0	0.0	0.0
+Qwen3-235B-MoE	235.0	200	0.1	0.17	0.03	0.015	0.01	0.775
+Kimi-K2-Thinking	1000.0	200	0.1	0.0	0.0	0.0	0.0	1.0

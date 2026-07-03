@@ -1,0 +1,4 @@
+stratum	n_anchors	n_lam_at_bound	n_lam_below_bound	frac_at_bound	mean_rmse	mean_lambda	median_lambda	models
+HIGH_zvf	9	7	2	0.7777777777777778	0.15955618412435563	8.053849392539346	9.999999950652267	Qwen3.5-4B|Llama-3.1-8B-Instruct|Qwen3.5-27B|gpt-oss-20B|Qwen3-30B-MoE-Inst|DeepSeek-V3.1|Nemotron-120B|Qwen3-235B-MoE|Kimi-K2-Thinking
+LOW_zvf	3	2	1	0.6666666666666666	0.13747068631984838	6.832576027125282	9.999999996834704	Qwen3-8B|Qwen3-32B|Qwen3-30B-MoE
+ALL	12	9	3	0.75	0.1540348096732288	7.748531051185831	9.999999973743485	Qwen3.5-4B|Qwen3-8B|Llama-3.1-8B-Instruct|Qwen3-32B|Qwen3.5-27B|gpt-oss-20B|Qwen3-30B-MoE|Qwen3-30B-MoE-Inst|DeepSeek-V3.1|Nemotron-120B|Qwen3-235B-MoE|Kimi-K2-Thinking

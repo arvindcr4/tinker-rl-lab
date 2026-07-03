@@ -1,0 +1,17 @@
+task	algo	seed	model	n_steps	len_first	len_last	len_slope_per_step	predicted_t_star	horizon_class
+arithmetic_easy_qwen2.5-0.5b	grpo	42	Qwen/Qwen2.5-0.5B	40	7.9531	4.6875	-0.027657	no_horizon	no_horizon
+arithmetic_easy_qwen2.5-0.5b	grpo	123	Qwen/Qwen2.5-0.5B	40	7.875	4.5	-0.025687	no_horizon	no_horizon
+arithmetic_easy_qwen2.5-0.5b	grpo	456	Qwen/Qwen2.5-0.5B	40	7.3438	4.375	-0.02835	no_horizon	no_horizon
+arithmetic_easy_qwen2.5-0.5b	grpo	789	Qwen/Qwen2.5-0.5B	40	7.4531	4.4297	-0.03057	no_horizon	no_horizon
+arithmetic_easy_qwen2.5-0.5b	grpo	1024	Qwen/Qwen2.5-0.5B	40	7.375	4.5	-0.036097	no_horizon	no_horizon
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	42	Qwen/Qwen2.5-0.5B	40	7.7266	4.6875	-0.025846	no_horizon	no_horizon
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	123	Qwen/Qwen2.5-0.5B	40	6.8047	4.5	-0.023056	no_horizon	no_horizon
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	456	Qwen/Qwen2.5-0.5B	40	7.3438	4.4062	-0.02524	no_horizon	no_horizon
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	789	Qwen/Qwen2.5-0.5B	40	7.2891	4.4375	-0.029056	no_horizon	no_horizon
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	1024	Qwen/Qwen2.5-0.5B	40	7.5	4.5	-0.029035	no_horizon	no_horizon
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	42	Qwen/Qwen2.5-1.5B-Instruct	30	195.8906	166.8281	-0.881598	no_horizon	no_horizon
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	123	Qwen/Qwen2.5-1.5B-Instruct	30	189.8438	176.375	-0.429369	no_horizon	no_horizon
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	456	Qwen/Qwen2.5-1.5B-Instruct	30	196.125	191.9219	-0.131017	no_horizon	no_horizon
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	42	Qwen/Qwen2.5-1.5B-Instruct	30	195.6406	180.5938	-0.318069	no_horizon	no_horizon
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	123	Qwen/Qwen2.5-1.5B-Instruct	30	189.2188	180.6406	-0.276828	no_horizon	no_horizon
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	456	Qwen/Qwen2.5-1.5B-Instruct	30	196.125	191.75	-0.054157	no_horizon	no_horizon

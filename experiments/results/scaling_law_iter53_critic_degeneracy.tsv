@@ -1,0 +1,4 @@
+axis	full_rho	full_p	n_drop_collapse_rho	n_drop_collapse_p	note
+Spearman(log10_P, R_max)	0.3603	0.2449	0.3593	0.2789	Pre-reg: drop-collapse |rho| smaller than full |rho|
+Spearman(log10_C, R_max)	0.4421	0.1504	0.379	0.2619	Compute proxy should also shrink without collapse anchors
+Spearman(var_reward, R_max)	-0.1336	0.6662	n/a	n/a	Cross-check: does trajectory variance explain R_max at all?

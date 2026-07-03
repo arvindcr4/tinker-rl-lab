@@ -1,0 +1,11 @@
+task	metric	grpo_mean	drgrpo_mean	diff_grpo_minus_drgrpo	diff_lo	diff_hi	p_le0
+arithmetic_easy	beta_early	-0.080895	-0.077431	-0.003465	-0.019672	0.012742	0.6082
+arithmetic_easy	beta_late_minus_early	0.257124	0.259176	-0.002052	-0.074029	0.045042	0.5208
+arithmetic_easy	r_over_l_drift	0.144313	0.147312	-0.002999	-0.006901	-0.00035	1.0
+arithmetic_easy	r_over_l_last	0.220827	0.220067	0.00076	-0.001078	0.002251	0.1862
+arithmetic_easy	antitrap_slope	-0.246568	-0.263761	0.017192	0.003002	0.033349	0.0047
+gsm8k_cot	beta_early	-0.015932	-0.015956	2.4e-05	-0.00182	0.003654	0.2938
+gsm8k_cot	beta_late_minus_early	0.007538	-0.006848	0.014386	0.011957	0.018006	0.0
+gsm8k_cot	r_over_l_drift	0.000401	0.000316	8.5e-05	3.9e-05	0.000138	0.0
+gsm8k_cot	r_over_l_last	0.001554	0.00149	6.4e-05	-4e-06	0.000111	0.0357
+gsm8k_cot	antitrap_slope	-0.008858	-0.013821	0.004963	0.000941	0.008146	0.0

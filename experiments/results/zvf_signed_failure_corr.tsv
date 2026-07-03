@@ -1,0 +1,6 @@
+# ZVF feature separability: unhealthy {plateau,collapse,drift} vs healthy {converged}. AUC=P(unhealthy>healthy); 1.0 or 0.0 => perfect.
+# n_healthy=7 n_unhealthy=13
+feature	auc	mean_unhealthy	mean_healthy	perfect_sep_high	perfect_sep_low
+raw_zvf	0.3956	0.3690	0.4855	False	False
+zvf_neg	1.0000	0.3588	0.0294	True	False
+zvf_pos	0.0000	0.0102	0.4561	False	True

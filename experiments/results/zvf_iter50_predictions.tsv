@@ -1,0 +1,5 @@
+id	claim	value	pass	extras_json
+P1_reward_leads_zvf_lag1_grpo	vanilla GRPO Pearson(reward_t, ZVF_{t+1}) > 0 (reward leads ZVF by 1 step)	0.863996	PASS	{'n_seeds': 5}
+P2_aero_lower_lag1_corr_than_grpo	AERO r(lag=+1) < GRPO r(lag=+1) (variance mitigation lowers reward→ZVF cross-corr)	0.191017	PASS	{'n_seeds': 5}
+P3_grpo_p2_int_coll_minus_noncoll	vanilla GRPO post-peak ZVF>0.5 integral is LARGER on collapsing seeds than on non-collapsing seeds	-0.060433	FAIL	{'n_collapsed': 3, 'n_noncoll': 1}
+P4_grpo_peak_lag_positive	argmax over LAGS of vanilla GRPO |r(reward_t, ZVF_t+L)| is POSITIVE (reward leads ZVF)	10	PASS	{'all_lags_signed': {-10: 0.8548, -5: 0.8597, -1: 0.8618, 0: 0.8624, 1: 0.864, 5: 0.8713, 10: 0.8805}}

@@ -1,0 +1,28 @@
+% Pillar-4 (length bias) discussion + conclusion
+\section{Discussion and Limitations}
+\label{sec:p4-discussion}
+The central caution is that our comparison lives in a regime that is, by
+construction, unfavorable for revealing a length effect: short arithmetic chains
+with a binary exact-match reward, where completions are already brief and length is
+weakly (often negatively) coupled to reward. A null difference between GRPO and
+Dr.\,GRPO here is therefore weak evidence about length debiasing in general. Two
+further limitations matter. Held-out evaluation is single-benchmark and
+single-seed for the frontier comparison, so the non-significant GRPO gain should be
+read as a boundary on what we can claim rather than a universal result; and length
+dynamics are only weakly identifiable in this data, so mediation-style conclusions
+require the length-confounded regime we specify but do not yet run. The
+paired-outcome tests we rely on are also marginal tests, which can be confounded by
+length-mediated success---a limitation the proposed causal mediation protocol is
+designed to address.
+
+\section{Conclusion}
+\label{sec:p4-conclusion}
+In the regime we can measure, GRPO does not significantly outperform its pre-RL
+checkpoint on held-out GSM8K, Dr.\,GRPO does not outperform GRPO, and neither
+inflates length. Rather than read this as evidence against length debiasing, we
+read it as the expected outcome when there is no length pathology to correct, and
+we convert it into a concrete experimental program: a length-confounded sparse-reward
+regime, a causal length-mediation protocol separating genuine deduction from
+verbosity-mediated exploitation, and a length-adversarial truncation test on the
+released checkpoints. The most useful contribution of this pillar is thus a precise
+statement of where a Dr.\,GRPO advantage should and should not be expected.

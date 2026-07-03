@@ -1,0 +1,5 @@
+task	algo	n_seeds	mean_step_len_rho	sd_step_len_rho	mean_step_reward_rho	sd_step_reward_rho	mean_len_reward_rho	sd_len_reward_rho	mean_last10_reward	mean_last10_len	length_bias_flag_rate
+arithmetic_easy_qwen2.5-0.5b	grpo	5	-0.4046	0.1764	0.7093	0.0817	-0.4191	0.1554	0.9881	4.5064	0.0
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	5	-0.307	0.1808	0.7526	0.0739	-0.2928	0.1821	0.9881	4.5192	0.0
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	3	-0.6217	0.3009	0.0456	0.1621	-0.5013	0.2578	0.2646	184.438	0.0
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	3	-0.355	0.2546	0.0253	0.091	-0.6181	0.1181	0.2521	189.3307	0.0

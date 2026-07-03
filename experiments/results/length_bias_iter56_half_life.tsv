@@ -1,0 +1,19 @@
+task	algo	seed	rho_0	rho_half	t_half	rho_final	rho_final_over_rho0	halved
+arithmetic_easy	grpo	42	0.017682	0.008841	-1	0.213333	12.065185	False
+arithmetic_easy	grpo	123	0.029762	0.014881	-1	0.222222	7.466667	False
+arithmetic_easy	grpo	456	0.037234	0.018617	-1	0.228571	6.138776	False
+arithmetic_easy	grpo	789	0.037736	0.018868	-1	0.213404	5.655203	False
+arithmetic_easy	grpo	1024	0.024364	0.012182	-1	0.213542	8.764493	False
+arithmetic_easy	dr_grpo	42	0.025278	0.012639	-1	0.213333	8.439467	False
+arithmetic_easy	dr_grpo	123	0.026406	0.013203	-1	0.222222	8.415459	False
+arithmetic_easy	dr_grpo	456	0.037234	0.018617	-1	0.225177	6.047619	False
+arithmetic_easy	dr_grpo	789	0.033226	0.016613	-1	0.209507	6.305486	False
+arithmetic_easy	dr_grpo	1024	0.028125	0.014063	-1	0.220486	7.839506	False
+gsm8k_cot	grpo	42	0.000798	0.000399	2	0.001686	2.113571	True
+gsm8k_cot	grpo	123	0.001646	0.000823	14	0.001329	0.807273	True
+gsm8k_cot	grpo	456	0.000797	0.000398	20	0.001791	2.24818	True
+gsm8k_cot	dr_grpo	42	0.001198	0.000599	9	0.002163	1.805532	True
+gsm8k_cot	dr_grpo	123	0.001652	0.000826	14	0.00147	0.890364	True
+gsm8k_cot	dr_grpo	456	0.000797	0.000398	16	0.001467	1.841069	True
+arithmetic_easy								
+gsm8k_cot								

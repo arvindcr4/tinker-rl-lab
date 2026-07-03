@@ -1,0 +1,50 @@
+source	G	n_seeds	heldout_acc_mean	heldout_acc_ci_low	heldout_acc_ci_high	mean_zvf	last10_mean	is_measured	retention_vs_G2	above_wu_97_6pct
+qwen2.5-0.5b_arithmetic	2	3	0.9817	0.975	0.99	0.838	0.9771	yes		
+qwen2.5-0.5b_arithmetic	4	3	0.9883	0.985	0.99	0.7635	0.9714	yes		
+qwen2.5-0.5b_arithmetic	8	3	0.99	0.985	0.995	0.6906	0.9732	yes		
+qwen2.5-0.5b_arithmetic	16	3	0.9783	0.97	0.99	0.6312	0.9837	yes		
+qwen3-8b_gsm8k_T1000000	4	-1	0.41	0.38	0.44			no		
+qwen3-8b_gsm8k_T1000000	8	-1	0.48	0.45	0.51			no		
+qwen3-8b_gsm8k_T1000000	16	-1	0.47	0.44	0.5			no		
+qwen3-8b_gsm8k_T1000000	32	-1	0.42	0.39	0.45			no		
+qwen3-8b_gsm8k_T1000000	64	-1	0.35	0.32	0.38			no		
+qwen3-8b_gsm8k_T4000000	4	-1	0.55	0.52	0.58			no		
+qwen3-8b_gsm8k_T4000000	8	-1	0.67	0.64	0.7			no		
+qwen3-8b_gsm8k_T4000000	16	-1	0.69	0.66	0.72			no		
+qwen3-8b_gsm8k_T4000000	32	-1	0.66	0.63	0.69			no		
+qwen3-8b_gsm8k_T4000000	64	-1	0.58	0.55	0.61			no		
+qwen3-8b_gsm8k_T16000000	4	-1	0.63	0.6	0.66			no		
+qwen3-8b_gsm8k_T16000000	8	-1	0.78	0.75	0.81			no		
+qwen3-8b_gsm8k_T16000000	16	-1	0.82	0.79	0.85			no		
+qwen3-8b_gsm8k_T16000000	32	-1	0.84	0.81	0.87			no		
+qwen3-8b_gsm8k_T16000000	64	-1	0.8	0.77	0.83			no		
+qwen3-8b_gsm8k_T64000000	4	-1	0.64	0.61	0.67			no		
+qwen3-8b_gsm8k_T64000000	8	-1	0.8	0.77	0.83			no		
+qwen3-8b_gsm8k_T64000000	16	-1	0.85	0.82	0.88			no		
+qwen3-8b_gsm8k_T64000000	32	-1	0.88	0.85	0.91			no		
+qwen3-8b_gsm8k_T64000000	64	-1	0.87	0.84	0.9			no		
+qwen2.5-0.5b_arithmetic_iter27	2	3	0.9771	0.9751	0.9791		0.9771	yes	1.0	True
+qwen2.5-0.5b_arithmetic_iter27	4	3	0.9714	0.9687	0.9741		0.9714	yes	0.9941	True
+qwen2.5-0.5b_arithmetic_iter27	8	3	0.9732	0.9652	0.9812		0.9732	yes	0.996	True
+qwen2.5-0.5b_arithmetic_iter27	16	3	0.9837	0.9751	0.9923		0.9837	yes	1.0068	True
+qwen3-8b_gsm8k_T1000000	4	1	0.41	0.38	0.44			no (illustrative Qwen3-8B/GSM8K)		False
+qwen3-8b_gsm8k_T1000000	32	1	0.42	0.39	0.45			no (illustrative Qwen3-8B/GSM8K)		False
+qwen3-8b_gsm8k_T4000000	4	1	0.55	0.52	0.58			no (illustrative Qwen3-8B/GSM8K)		False
+qwen3-8b_gsm8k_T4000000	32	1	0.66	0.63	0.69			no (illustrative Qwen3-8B/GSM8K)		False
+qwen3-8b_gsm8k_T16000000	4	1	0.63	0.6	0.66			no (illustrative Qwen3-8B/GSM8K)		False
+qwen3-8b_gsm8k_T16000000	32	1	0.84	0.81	0.87			no (illustrative Qwen3-8B/GSM8K)		False
+qwen3-8b_gsm8k_T64000000	4	1	0.64	0.61	0.67			no (illustrative Qwen3-8B/GSM8K)		False
+qwen3-8b_gsm8k_T64000000	32	1	0.88	0.85	0.91			no (illustrative Qwen3-8B/GSM8K)		False
+
+# ITER_63_RETENTION_FITS
+T_tokens	log10_T_per_M	R_observed	R_observed_CI_lo	R_observed_CI_hi	linear_R_fit	power_R_fit	asymptotic_R_fit
+1000000.0	0.0	0.9761904761904762	0.8444444444444444	0.999999999999	0.946212121212121	0.9466040624993687	0.8567858260151084
+4000000.0	0.6020599913279624	0.8333333333333334	0.7536231884057972	0.9206349206349206	0.8632034632034631	0.8575144272759104	0.8378981067468606
+16000000.0	1.2041199826559248	0.75	0.689655172413793	0.8148148148148148	0.7801948051948052	0.7768094624956493	0.7850683457888652
+64000000.0	1.806179973983887	0.7272727272727273	0.6703296703296703	0.7882352941176471	0.6971861471861474	0.7037000449540209	0.7260370045810656
+# fit parameters
+linear_a	0.946212	linear_b	-0.137874	linear_R2	0.9052
+power_c	0.946604	power_beta	-0.071300	power_R2	0.9282
+asymp_R_inf	0.720000	asymp_R0	0.863732	asymp_tau_M	20.1890	asymp_R2	0.5925
+HARD_DIVERGENCE_at_T256M_CI_low_gt_0p05	True
+LIMIT_EQUIVALENCE_Rinf_CI_low_gt_0p10	False

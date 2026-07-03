@@ -1,0 +1,22 @@
+{
+  "n_pairs_with_fitted_retention_curve": 11,
+  "pairs_with_T_star_below_max_T": 11,
+  "iter31_G4_vs_G32_R_inf_exp": 0.7273,
+  "iter31_G4_vs_G32_Tau_M": 6.635,
+  "iter31_G4_vs_G32_T_star_M": 0.611,
+  "iter31_G4_vs_G32_T_star_lo_M": 0.322,
+  "iter31_G4_vs_G32_T_star_hi_M": 3.45,
+  "iter31_G4_vs_G32_AIC_exp_minus_AIC_sig": -16.512,
+  "iter35_40_cell_pass_fraction": 0.45,
+  "iter35_40_cell_pass_fraction_CI95": [
+    0.3,
+    0.6
+  ],
+  "iter35_40_cell_tost_equivalent_eps0.02": 0,
+  "worst_cell_G4_vs_G32_T64M": {
+    "R": 0.7273,
+    "R_upper_CI": 0.7882,
+    "above_Wu": false
+  },
+  "claim_significantly_below_50pct_pass": false
+}

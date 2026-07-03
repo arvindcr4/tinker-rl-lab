@@ -1,0 +1,6 @@
+prediction	grpo	ppo	p_value	eep_status
+E1_lambda_at_bound_rate	0/5	0/5	1.0	sustained
+E2_aicc_best_saturation_rate	5/5	0/5	0.0079	falsified
+E3_heldout_resid_sat	0.1023	0.3901	0.0537	sustained
+F1_bootstrap_ci_excludes_bound	5/5	4/5	n/a	divergent
+F2_paired_heldout_p	0.99+/-0.0035	0.992+/-0.003	0.3739	sustained

@@ -1,0 +1,20 @@
+% Pillar-1 (scaling) standalone abstract
+\begin{abstract}
+Group Relative Policy Optimization (GRPO) has become a default algorithm for
+reinforcement-learning (RL) post-training of language models, yet how its benefit
+scales with model size remains unclear and is easily confounded by implementation
+and evaluation choices. We study GRPO scaling as one pillar of \ours{}, a
+benchmark spanning 70+ runs across seven RL libraries and five model families
+($0.6$B--$\sim$671B parameters) on GSM8K, HumanEval, and synthetic tool-use tasks.
+Our central result is a conservative negative one: across five orders of magnitude
+in parameter count, the cross-scale slope of the GRPO reward gain is statistically
+indistinguishable from zero, and no single saturation exponent is identifiable
+(four of the five frontier-scale traces have their saturation rate pinned at the
+fit boundary, and none is identifiable). A pre-registered test geometrically falsifies a clean three-phase
+saturation hypothesis (only $2$ of $12$ anchors match), and the Nemotron-120B run
+is better described as a distinct collapse phase (zero-variance fraction $0.55$
+versus $\le 0.067$ elsewhere) than as a point on a smooth trend. The defensible
+object is therefore a local, stack-conditioned saturation law relating the
+endpoint ceiling to $\log_{10} N$, not a Chinchilla-style power law in $N$. We
+release all code, logs, and checkpoints.
+\end{abstract}

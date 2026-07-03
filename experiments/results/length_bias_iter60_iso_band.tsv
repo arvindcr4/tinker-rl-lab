@@ -1,0 +1,17 @@
+task	algo	seed	L_min	L_max	width	n_pts	R_max	delta
+arithmetic_easy	grpo	42	4.3125	4.7734	0.4609	23	1.0	0.02
+arithmetic_easy	grpo	123	4.1406	4.8281	0.6875	20	1.0	0.02
+arithmetic_easy	grpo	456	4.1875	4.875	0.6875	23	1.0	0.02
+arithmetic_easy	grpo	789	4.3125	4.8281	0.5156	22	1.0	0.02
+arithmetic_easy	grpo	1024	4.25	4.7109	0.4609	25	1.0	0.02
+arithmetic_easy	dr_grpo	42	4.3125	4.75	0.4375	18	1.0	0.02
+arithmetic_easy	dr_grpo	123	4.2188	4.7812	0.5625	16	1.0	0.02
+arithmetic_easy	dr_grpo	456	4.1875	4.7031	0.5156	19	1.0	0.02
+arithmetic_easy	dr_grpo	789	4.3125	4.6875	0.375	22	1.0	0.02
+arithmetic_easy	dr_grpo	1024	4.25	4.75	0.5	27	1.0	0.02
+gsm8k_cot	grpo	42	188.9219	188.9219	0.0	1	0.5	0.02
+gsm8k_cot	grpo	123	189.9844	189.9844	0.0	1	0.5469	0.02
+gsm8k_cot	grpo	456	179.4219	187.6562	8.2344	2	0.4844	0.02
+gsm8k_cot	dr_grpo	42	192.2656	192.2656	0.0	1	0.5156	0.02
+gsm8k_cot	dr_grpo	123	180.7344	180.7344	0.0	1	0.5	0.02
+gsm8k_cot	dr_grpo	456	182.2969	182.2969	0.0	1	0.5312	0.02

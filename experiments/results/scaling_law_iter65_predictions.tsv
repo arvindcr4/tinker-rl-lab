@@ -1,0 +1,9 @@
+prediction_id	claim	observed	expected	pass_fail
+P1_three_phase_majority	At least half of the 12 anchors match the canonical three-phase pattern (slow, fast, plateau).	2/12 = 0.167	>= 0.50	FAIL
+P2_nemotron_classified_collapse	Nemotron-120B is the unique 'collapse' class anchor (peak-then-decay).	nemotron_class=valley, n_collapse=0	nemotron_class == collapse and n_collapse == 1	FAIL
+P3_pci_below_3_for_most	Mean PCI across the pool is below 1.5 (most traces violate at least one phase template).	pci_mean=1.667	< 1.5	FAIL
+P4_nemotron_lowest_pci	Nemotron-120B has the lowest PCI in the 12-anchor pool.	nemotron_pci=2.000, others_median=1.500, all_pci=[1.0, 1.5, 1.0, 2.5, 2.5, 1.5, 2.0, 2.0, 1.0, 2.0, 2.0, 1.0]	nemotron_pci <= min(others)	FAIL
+P5_template_full_at_most_3	At most 3/12 anchors satisfy ALL three phase-template constraints (slow, fast, plateau).	2/12	<= 3	PASS
+P6_dense_higher_three_phase_rate	Dense models have a higher three-phase rate than MoE.	dense_3p=1/6, moe_3p=1/6	dense_3p_rate > moe_3p_rate	FAIL
+P7_pci_logparams_correlation	Spearman(params_B, PCI) is non-negative (larger models => more phase-conformity).	spearman_log=-0.464	>= 0	FAIL
+P8_drift_count_3plus	At least 3/12 anchors are 'drift' (late slope negative, no early collapse).	n_drift=0	>= 3	FAIL

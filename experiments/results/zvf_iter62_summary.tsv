@@ -1,0 +1,15 @@
+# Pillar 2 Iter 62: per-method ZVF stratification summary
+# mean_zvf_loq = mean ZVF in lowest acc quintile (hard prompts)
+# mean_zvf_hiq = mean ZVF in highest acc quintile (easy prompts)
+# delta_hiq_loq = high - low (positive => ZVF grows with accuracy)
+# Source: scripts/zvf_iter62.py
+method	n_steps	n_seeds	mean_zvf_overall	mean_zvf_loq	mean_zvf_q2	mean_zvf_q3	mean_zvf_q4	mean_zvf_hiq	delta_hiq_loq	mean_acc_overall	n_collapse_steps
+aero	500	5	0.2203	0.0138	0.0147	0.0657	0.3572	0.6499	0.6361	0.2772	0
+areal	510	5	0.1207	0.0124	0.0147	0.0200	0.1317	0.4248	0.4124	0.2752	0
+cppo	500	5	0.2952	0.0101	0.0215	0.1530	0.5420	0.7495	0.7394	0.2721	0
+es	510	5	0.1140	0.0104	0.0213	0.0874	0.2073	0.2438	0.2335	0.2661	0
+gift	510	5	0.1140	0.0129	0.0147	0.0205	0.1098	0.4123	0.3994	0.2740	0
+grpo	1500	5	0.4808	0.0199	0.1256	0.5461	0.8326	0.8798	0.8599	0.2627	183
+mcgrpo	510	5	0.1458	0.0130	0.0104	0.0248	0.1742	0.5066	0.4936	0.2704	0
+ngrpo	500	5	0.3003	0.0135	0.0244	0.1749	0.5608	0.7280	0.7145	0.2684	0
+scafgrpo	500	5	0.3166	0.2352	0.2744	0.3214	0.3563	0.3957	0.1605	0.2837	0

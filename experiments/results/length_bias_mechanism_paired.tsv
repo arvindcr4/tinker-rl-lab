@@ -1,0 +1,3 @@
+task	algo	n_seeds	mean_ols_dL_dR	sd_ols_dL_dR	mean_ts_dL_dR	sd_ts_dL_dR	mean_spearman_L_R	mean_lag1_dL_autocorr	mean_len_late_minus_early	mean_spearman_L_Z	ci_ols_lo	ci_ols_hi	p_ols	ci_ts_lo	ci_ts_hi	p_ts	ci_sp_lo	ci_sp_hi	p_sp	ci_lag_lo	ci_lag_hi	p_lag	ci_le_lo	ci_le_hi	p_le
+arithmetic_easy_qwen2.5-0.5b	drgrpo_minus_grpo	5	-0.4299	0.0	-1.1068	0.0	-0.1025	0.0082	-0.0509	nan	-0.5827	-0.2772	0.0362	-1.5886	-0.6251	0.0466	-0.1768	-0.0292	0.0872	-0.137	0.2006	0.9198	-0.099	0.0094	0.1678
+gsm8k_cot_hard_qwen2.5-1.5b	drgrpo_minus_grpo	3	4.4095	0.0	5.5437	0.0	0.1036	-0.0183	0.2278	nan	-4.5764	19.8352	0.5748	0.075	12.2381	0.2094	0.0124	0.2171	0.1926	-0.1895	0.0858	0.8002	-1.6917	3.4462	0.95

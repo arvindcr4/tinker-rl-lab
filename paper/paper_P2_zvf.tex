@@ -1,0 +1,40 @@
+% =============================================================================
+% STANDALONE PAPER 2 of 4 -- Pillar 2: Zero-Variance Fraction (ZVF) diagnostic
+% Reuses shared preamble/author/methods; pulls the P2 section family + frontier synthesis.
+% Build: pdflatex paper_P2_zvf ; bibtex paper_P2_zvf ; pdflatex x2
+% =============================================================================
+\documentclass{article}
+\input{sections/_shared_preamble}
+\title{The Zero-Variance Fraction:\\
+       A Descriptive Diagnostic for Signal Starvation in GRPO}
+\input{sections/_shared_author}
+\begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\input{sections/p2_abstract}
+\input{sections/p2_intro}
+\input{sections/_shared_methods}
+\input{sections/p2_results_intro}
+\input{sections/zvf}
+\input{sections/zvf_cross_experiment_diagnostic}
+\input{sections/zvf_dynamics}
+\input{sections/zvf_gradient}
+\input{sections/zvf_scaling}
+\input{sections/zvf_iter22}
+\input{sections/zvf_iter30}
+\input{sections/zvf_iter34}
+\input{sections/zvf_iter38}
+\input{sections/zvf_iter42}
+\input{sections/zvf_iter46}
+\input{sections/zvf_iter50}
+\input{sections/zvf_iter58}
+\input{sections/zvf_iter62}
+\input{sections/frontier_synthesis_zvf}
+\input{sections/p2_conclusion}
+\appendix
+\input{sections/appendix_zvf_formalization}
+\input{sections/zvf_counterfactual_appendix}
+\input{sections/zvf_pipeline_spec}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

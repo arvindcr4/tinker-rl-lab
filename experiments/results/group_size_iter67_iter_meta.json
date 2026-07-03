@@ -1,0 +1,30 @@
+{
+  "iteration": 67,
+  "pillar": "P3-Group-Size",
+  "inputs": [
+    "experiments/results/group_size_token_normalized.tsv"
+  ],
+  "outputs": [
+    "experiments/results/group_size_iter67_iso_acc_frontier.tsv",
+    "experiments/results/group_size_iter67_iaf_ratios.tsv",
+    "experiments/results/group_size_iter67_se_width.tsv",
+    "experiments/results/group_size_iter67_iaf_summary.tsv",
+    "figures/group_size_iter67_iaf.pdf",
+    "figures/group_size_iter67_iaf.png"
+  ],
+  "method": "Iso-Accuracy Frontier (IAF): for each target accuracy \u03b1, the minimum token budget at which each G \u2208 {4, 8, 16, 32, 64} first reaches \u03b1.  Envelope is the IAF; comparison yields wasted-token ratios and a structural-equivalence half-width.",
+  "comparison_to_arXiv_2510.00977": "ArXiv:2510.00977 reports G=2 \u2248 G=16 (structural equivalence within a 2-octave G span).  We test whether this ratio (G_max/G_min = 8) still bounds the structurally-equivalent regime in our setup.",
+  "headline_metrics": {
+    "n_target_accuracies": 8,
+    "n_Gs": 5,
+    "G_range": "4..64",
+    "operationally_optimal_G_at_each_acc": "8,16,16,16,16,16,32,32",
+    "literature_2octave_threshold_ratio": 8.0,
+    "max_waste_G4_vs_optimal": 4.1936,
+    "max_waste_G32_vs_optimal": 1.3719,
+    "max_G32_over_G4_efficiency_ratio": 3.3634905357715756,
+    "G32_over_G4_efficiency_ratio_by_acc": "{\"0.50\": 1.5358, \"0.55\": 1.8878, \"0.60\": 3.3635}",
+    "max_observed_G_ratio_in_se_test": 16.0,
+    "all_se_ratios_exceed_2octave_lit_threshold": false
+  }
+}

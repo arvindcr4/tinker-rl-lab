@@ -1,0 +1,175 @@
+% ---------------------------------------------------------------------------
+% Pillar 2: Zero-Variance Fraction diagnostic -- Iter 70
+% Failure-aware ZVF: tail density, trajectory direction, severity score.
+% Materialised from scripts/zvf_iter70.py:
+%   experiments/results/zvf_iter70_enhanced_summary.tsv   (80 rows)
+%   experiments/results/zvf_iter70_failure_severity.tsv   (15 rows)
+%   experiments/results/zvf_iter70_per_run_zvf_acc.tsv    (83 rows)
+%   experiments/results/zvf_iter70_severity_corr.tsv      (2 rows)
+%   figures/zvf_iter70_quad.pdf   (4-panel, ~44 KB)
+%   figures/zvf_vs_failure.pdf    (regenerated, 4-panel)
+% ---------------------------------------------------------------------------
+
+\subsection{Failure-Aware ZVF: Tail Density, Trajectory Direction, Severity}
+\label{sec:zvf-failure-aware}
+
+The cross-library diagnostic in \S\ref{sec:zvf-stratified} reads
+ZVF as a function of heldout-accuracy quintile and shows that AERO
+cuts ZVF in the middle quintiles. The single-scalar
+$\overline{\mathrm{ZVF}}$ in the by-library table is still a
+\emph{pooled} statistic; it cannot distinguish a trajectory that
+spiked into $\mathrm{ZVF}=1$ once from one that stayed at
+$\mathrm{ZVF}=1$ throughout. Iter 70 lifts ZVF into a
+\emph{failure-aware} diagnostic by adding four metric families the
+iter26 baseline does not produce.
+
+\paragraph{Tail density $\mathrm{ZVF}_{\mathrm{tail}}$.}
+For every per-step ZVF trace, we report
+$\Pr(\mathrm{ZVF}_t = 1)$ and $\Pr(\mathrm{ZVF}_t = 0)$ plus the
+Gini coefficient of the per-step distribution. A trajectory with
+$\Pr(\mathrm{ZVF}_t = 1) \to 1$ is \emph{stuck}; one with
+$\Pr(\mathrm{ZVF}_t = 0) \to 1$ is \emph{dead}. Both extremes are
+collapse signatures even when the pooled
+$\overline{\mathrm{ZVF}}$ looks benign: a short step trace that
+spends 30\% of its time at $\mathrm{ZVF}=1$ has the same
+$\overline{\mathrm{ZVF}}$ as one that spends 30\% at $\mathrm{ZVF}=0.7$.
+
+\paragraph{Trajectory direction $\Delta\mathrm{ZVF}$.}
+The mean of the first quartile of the step trace minus the mean of
+the last quartile measures whether ZVF is rising or falling
+\emph{within} a run. A positive $\Delta$ means the run is becoming
+\emph{more} zero-variance-dominated over time (drift toward
+saturation); a negative $\Delta$ means the run is recovering
+signal availability (a library that cures a stuck policy). Iter 70
+records both endpoints and the difference.
+
+\paragraph{Severity score $S \in \{0,1,2,3\}$.}
+We promote the four-state failure taxonomy in
+\S\ref{sec:zvf-stratified} to a numeric score: $S=3$ for
+full-collapse runs (last-10 acc $\leq 0.001$, the
+tool-use and Nemotron-120B final-trajectory regime), $S=2$ for
+the standard collapse rule (peak $\!>\!0.7$, last $\!<\!0.35$),
+$S=1$ for drift (last $\!<\!0.85 \cdot$ peak), and $S=0$ otherwise.
+This is a strict refinement of the iter26 label set: it preserves
+ordering the paper argues for, and it isolates the two
+extreme-outcome cells (tool-use 0\% and Nemotron-120B
+post-collapse) into a single severity-3 bin.
+
+\begin{table}[htbp]
+\centering\small\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrrrr}
+\hline
+Library & $n$ & $\overline{\mathrm{ZVF}}$ & $S_{\max}$ & $p_{\mathrm{tail}=1}$ & $p_{\mathrm{tail}=0}$ & rank &  \\
+\hline
+GRPO       & 5 & 0.481 & 0 & 0.000 & 0.068 & 0.000 & \\
+AERO       & 5 & 0.220 & 0 & 0.000 & 0.212 & 0.000 & \\
+CPPO       & 5 & 0.295 & 0 & 0.000 & 0.182 & 0.000 & \\
+NGRPO      & 5 & 0.300 & 0 & 0.000 & 0.140 & 0.000 & \\
+SCAFGRPO   & 5 & 0.317 & 0 & 0.000 & 0.000 & 0.000 & \\
+MCGRPO     & 5 & 0.146 & 1 & 0.000 & 0.282 & 0.200 & \\
+GIFT       & 5 & 0.114 & 1 & 0.000 & 0.242 & 0.200 & \\
+AREAL      & 5 & 0.121 & 1 & 0.000 & 0.274 & 0.200 & \\
+ES         & 5 & 0.114 & 1 & 0.000 & 0.200 & 0.200 & \\
+gsm8k\_real     & 4 & 0.158 & 0 & 0.158 & 0.842 & 0.079 & \\
+arithmetic\_gs  & 4 & 0.731 & 0 & 0.235 & 0.044 & 0.118 & \\
+scaling\_law    & 5 & NA    & 2 & NA    & NA    & 1.400 & \\
+tool\_use (qwen3-32b)  & 1 & 1.000 & 3 & 1.000 & 0.000 & 3.500 & \\
+tool\_use (llama-8b)   & 1 & 1.000 & 3 & 1.000 & 0.000 & 3.500 & \\
+\hline
+\end{tabular}
+\caption{Per-library failure-aware ZVF (iter 70).
+$\overline{\mathrm{ZVF}}$ is the pooled mean. $S_{\max}$ is the
+worst severity seen in the bucket. $p_{\mathrm{tail}=1}$ and
+$p_{\mathrm{tail}=0}$ are the per-step tail densities. Rank score
+is $\overline{S} + 0.5\,p_{\mathrm{tail}=1}$; lower-is-better.
+Source: \texttt{experiments/results/zvf\_iter70\_failure\_severity.tsv}.}
+\label{tab:zvf70-severity}
+\end{table}
+
+\paragraph{The headline cross-experiment correlation is non-significant.}
+With $n=65$ pooled rows, the Pearson correlation of
+$\overline{\mathrm{ZVF}}$ against the severity score is
+$+0.279$ (95\% CI $[-0.294, +0.545]$); Spearman is $-0.110$ (95\%
+CI $[-0.462, +0.270]$). \emph{Neither bound excludes zero.} The
+naive narrative -- "high ZVF predicts failure" -- is therefore
+\emph{not} supported as a pooled-experiment rule. The signal
+lives entirely in the tails: the two \texttt{tool\_use} buckets at
+$($ZVF$=1.0, S=3)$ and the two \texttt{gsm8k\_real} buckets at
+$($ZVF$\approx 0.16, S=0, p_{\mathrm{tail}=0}=0.84)$ are the only
+separable clusters. The 9-method variance-mitigation pool, which
+contributes 45 of the 65 rows, sits at
+$\overline{\mathrm{ZVF}}\in[0.11, 0.48]$ with $S\in\{0, 1\}$ -- a
+narrow band that does not provide enough severity contrast to
+support a correlation.
+
+\paragraph{Within-variance-mitigation, the ZVF-failure relationship
+\emph{reverses}.}
+On the 9-method slice only, mean ZVF is \emph{anti}-correlated
+with severity: the four methods with the lowest
+$\overline{\mathrm{ZVF}}$ (ES 0.114, GIFT 0.114, AREAL 0.121,
+MCGRPO 0.146) are exactly the four methods whose worst seed hits
+$S=1$ (drift). The five methods with
+$\overline{\mathrm{ZVF}}\ge 0.22$ (AERO, CPPO, NGRPO, SCAFGRPO, GRPO)
+all stay at $S=0$. This is the iter26 finding re-read under the
+severity lens: aggressive ZVF reduction (below $\sim$0.15) on the
+math-verifiable-RL suite correlates with reward-stagnation, not
+with collapse-resistance. AERO's $\overline{\mathrm{ZVF}}=0.22$ is
+the lowest \emph{that does not pay a severity tax}.
+
+\paragraph{Trajectory direction separates stuck from dead.}
+The two \texttt{tool\_use} trajectories sit at $(\mathrm{ZVF}_{\mathrm{first}}=1.0, \mathrm{ZVF}_{\mathrm{last}}=1.0, \Delta = 0)$
+on Panel~C of Figure~\ref{fig:zvf70-quad}: they are stuck from
+the first quartile. The \texttt{groupsize\_zvf\_sweep} mean is
+$(\mathrm{ZVF}_{\mathrm{first}}=0.75, \mathrm{ZVF}_{\mathrm{last}}=0.71, \Delta = -0.04)$:
+ZVF is slightly falling as the policy converges (it is gaining
+within-group contrast as the policy moves off the all-correct
+plateau). The \texttt{variance\_mitigation} family of runs
+collapses to the single point $(0.39, 0.36, \Delta = -0.03)$ on
+the figure, confirming that all nine methods have a mild
+\emph{recovering} trajectory direction on this benchmark -- the
+ZVF tail is not locked in at the start.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/zvf_iter70_quad.pdf}
+\caption{\textbf{Failure-aware ZVF diagnostic (iter 70).}
+\textbf{A:} Mean ZVF vs last-10 heldout acc across all 65 rows,
+severity-colored. The two tool-use runs at
+$($ZVF$=1.0, $ acc$=0.0)$ anchor the upper-right and
+lower-left extremes of the scatter; variance-mitigation rows
+form a tight cluster at acc $\in[0.30, 0.42]$. \textbf{B:}
+Per-library mean ZVF (gray) and mean severity (red) bars.
+Tool-use is highlighted with a red band. \textbf{C:}
+ZVF trajectory direction: first-25\% vs last-25\% of the step
+trace. Tool-use sits on the diagonal (nomovement); groupsize
+sweep and variance-mitigation both sit slightly below the
+diagonal (mild recovery). \textbf{D:} Per-run (mean ZVF,
+mean reward) pairs coloured by experiment family. The severity
+correlation in the title is the cross-experiment pooled value
+from \texttt{zvf\_iter70\_severity\_corr.tsv}.}
+\label{fig:zvf70-quad}
+\end{figure}
+
+\paragraph{Reproduction.}
+\texttt{scripts/zvf\_iter70.py} (stdlib + matplotlib; reads the
+same six JSON/TSV sources as \texttt{zvf\_diagnostic.py} plus
+\texttt{variance\_mitigation.tsv}). Severity assignment uses
+the same deterministic four-state rule as iter26 (so the
+$S=0$ bucket contains both \emph{converged} and \emph{plateau},
+which is the conservative choice); tail density and trajectory
+direction are computed on the per-step ZVF trace; bootstrap CIs
+are 2{,}000-rep resamples over the pooled severity rows. Runtime
+under $4$\,s on a single core.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/zvf_vs_failure.pdf}
+\caption{\textbf{Regenerated \texttt{zvf\_vs\_failure.pdf}.}
+The 4-panel failure-aware figure above is also written to
+\texttt{figures/zvf\_vs\_failure.pdf} (overwriting the iter26
+version). The new version adds the severity colouring, the
+per-library severity bars, the trajectory-direction panel, and
+the per-run ZVF-vs-reward scatter, so the headline figure
+automatically reflects the iter70 failure-aware analysis.}
+\label{fig:zvf-vs-failure}
+\end{figure}

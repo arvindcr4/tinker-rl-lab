@@ -1,0 +1,13 @@
+experiment	metric	n_pairs	mean_grpo	mean_drgrpo	mean_diff	ci_lo	ci_hi	p_le0	interpretation
+drgrpo_gsm8k_cot	fds_mean	3	10.333333	10.333333	0.000000	3.000000	22.000000	1.000000	first-divergence-step; same value for both algos on each seed
+drgrpo_gsm8k_cot	volatility_ratio_drgrpo_over_grpo	3	6.965713	6.271782	0.941451	0.678017	1.181314	0.740500	ratio > 1 means Dr.GRPO length trajectory is more volatile
+drgrpo_gsm8k_cot	reversal_rate_diff_drgrpo_minus_grpo	3	0.678571	0.726190	0.047619	0.000000	0.071429	0.042500	positive = Dr.GRPO flips sign(dL) more often
+drgrpo_gsm8k_cot	auc_drgrpo_minus_grpo	3	104.549479	-104.549479	-209.098958	-344.421875	-94.296875	1.000000	signed area (Dr.GRPO - GRPO); positive = Dr.GRPO trace lies above GRPO
+drgrpo_gsm8k_cot	rev_on_pos_dR_diff_drgrpo_minus_grpo	3	0.613553	0.754579	0.141026	0.016484	0.214286	0.000000	positive = Dr.GRPO flips dL direction more on this reward-sign stratum
+drgrpo_gsm8k_cot	rev_on_neg_dR_diff_drgrpo_minus_grpo	3	0.684127	0.630159	-0.053968	-0.090476	0.000000	1.000000	positive = Dr.GRPO flips dL direction more on this reward-sign stratum
+drgrpo_vs_grpo	fds_mean	5	24.400000	24.400000	0.000000	9.600000	39.000000	1.000000	first-divergence-step; same value for both algos on each seed
+drgrpo_vs_grpo	volatility_ratio_drgrpo_over_grpo	5	0.323831	0.320562	1.000692	0.875924	1.103079	0.525500	ratio > 1 means Dr.GRPO length trajectory is more volatile
+drgrpo_vs_grpo	reversal_rate_diff_drgrpo_minus_grpo	5	0.573684	0.568421	-0.005263	-0.068421	0.073684	0.612500	positive = Dr.GRPO flips sign(dL) more often
+drgrpo_vs_grpo	auc_drgrpo_minus_grpo	5	2.985937	-2.985937	-5.971875	-7.092187	-4.968750	1.000000	signed area (Dr.GRPO - GRPO); positive = Dr.GRPO trace lies above GRPO
+drgrpo_vs_grpo	rev_on_pos_dR_diff_drgrpo_minus_grpo	5	0.497778	0.505076	0.007299	-0.040317	0.072932	0.407000	positive = Dr.GRPO flips dL direction more on this reward-sign stratum
+drgrpo_vs_grpo	rev_on_neg_dR_diff_drgrpo_minus_grpo	5	0.608531	0.669814	0.061282	0.006597	0.147646	0.000000	positive = Dr.GRPO flips dL direction more on this reward-sign stratum

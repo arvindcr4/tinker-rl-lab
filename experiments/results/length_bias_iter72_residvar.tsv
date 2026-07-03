@@ -1,0 +1,17 @@
+experiment	seed	algo	phi	half_life	resid_var
+drgrpo_gsm8k_cot	42	grpo	-0.539761	0.000000	33.413607
+drgrpo_gsm8k_cot	42	drgrpo	-0.349894	0.000000	23.024037
+drgrpo_gsm8k_cot	123	grpo	-0.499127	0.000000	14.137826
+drgrpo_gsm8k_cot	123	drgrpo	-0.507767	0.000000	6.210933
+drgrpo_gsm8k_cot	456	grpo	-0.218271	0.000000	8.786862
+drgrpo_gsm8k_cot	456	drgrpo	-0.320624	0.000000	9.725625
+drgrpo_vs_grpo	42	grpo	-0.526141	0.000000	0.031342
+drgrpo_vs_grpo	42	drgrpo	-0.509267	0.000000	0.032514
+drgrpo_vs_grpo	123	grpo	-0.293064	0.000000	0.032563
+drgrpo_vs_grpo	123	drgrpo	-0.017678	0.000000	0.019425
+drgrpo_vs_grpo	456	grpo	-0.647573	0.000000	0.024200
+drgrpo_vs_grpo	456	drgrpo	-0.636651	0.000000	0.037214
+drgrpo_vs_grpo	789	grpo	-0.361691	0.000000	0.024086
+drgrpo_vs_grpo	789	drgrpo	-0.408775	0.000000	0.021295
+drgrpo_vs_grpo	1024	grpo	-0.295692	0.000000	0.020196
+drgrpo_vs_grpo	1024	drgrpo	-0.289565	0.000000	0.023647

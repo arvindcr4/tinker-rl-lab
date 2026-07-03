@@ -1,0 +1,21 @@
+metric	value
+n_rows	20
+T_REF_tokens	64000000
+G_REF	64
+additive_model	acc = 0.8833 + 0.1292*signal + -0.0421*noise + -0.2673*batch
+additive_R2	0.4827
+G4_signal_loss_pct_attr	6.38
+G4_noise_loss_pct_attr	38.77
+G4_batch_loss_pct_attr	54.85
+G4_dominant_component_pooled	batch
+max_observed_signal_loss_G4_prob	0.1845
+max_observed_noise_penalty_G4	3.0
+fixed_budget_T_REF	64000000
+fixed_budget_obs_gap_pp	23.0
+fixed_budget_signal_pp	2.38
+fixed_budget_noise_pp	-12.62
+fixed_budget_total_decomp_pp	-10.24
+fixed_budget_signal_share_pct	15.89
+fixed_budget_noise_share_pct	84.11
+fixed_budget_explained_share_pct	44.5
+fixed_budget_dominant_component	noise

@@ -1,0 +1,18 @@
+{
+  "iter": 112,
+  "pillar": "P4-LengthBias",
+  "n_w": 4,
+  "B_perm": 50000,
+  "seed_base": 20260703,
+  "tasks": [
+    "arithmetic_easy",
+    "gsm8k_cot"
+  ],
+  "algos": [
+    "grpo",
+    "dr_grpo"
+  ],
+  "consensus_spearman": -0.2136635011492595,
+  "consensus_p_param": 0.24031674016350815,
+  "n_consensus_points": 32
+}

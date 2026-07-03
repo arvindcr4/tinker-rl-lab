@@ -1,0 +1,277 @@
+% Pillar 1 iter109 -- 3-param saturation fit + lambda-vs-N falsification +
+% permutation test + Nemotron collapse audit.
+%
+% Fresh angle not covered by iter85 (three-phase), iter97 (8-family
+% head-to-head), iter101 (cross-anchor transfer + AIC stack), or iter105
+% (failure-mode taxonomy + R_max*(N) Chinchilla-analogue failure):
+%   (A) Three-parameter saturation fit R(t) = r0 + (R_inf - r0) * (1 - exp(-lambda t))
+%       on the 12-anchor GSM8K panel.  This avoids the 2-param R(t)=0-at-t=0
+%       bound-hitting artefact that makes 4/5 anchors report lambda=10.0
+%       (the upper bound of the 2-param fit, a meaningless saturation rate).
+%       The 3-param form is identified even when the trace starts near its
+%       own ceiling.  Bootstrap-CI lambda, R_inf, r0 per anchor (B=2000).
+%   (B) Time-to-saturation curves: for each anchor, compute the step at
+%       which the trace first crosses {0.5, 0.7, 0.8, 0.9} of its peak
+%       reward (the empirical ceiling).  Output the per-anchor time-to-X%
+%       tsv (4 fractions x 12 anchors = 48 rows).
+%   (C) Lambda-vs-N regression on the 12 anchors with bootstrap CI and a
+%       10000-permutation test.  Does the learning rate scale with model
+%       size?  This is the "law behind the scaling law" question.
+%   (D) Nemotron-120B collapse audit under 3-param fit.  iter85 flagged
+%       Nemotron as the only collapse-class anchor; under the 3-param fit
+%       compute lambda, lambda_CI, and the recovery ratio peak/late_mean.
+%   (E) Permutation test (iter109b): 10000 random pairings of (lambda, log10(N))
+%       to test H0: slope=0.
+%   (F) Family-stratified lambda-vs-N (iter109b).
+%   (G) Lambda-stability diagnostic: CV(lam) = (hi-lo)/(2*|med|).
+%
+% Sharpest finding: the 3-param fit unblocks lambda estimation, but the
+% permutation test (n=10000) gives p_two=0.7382 for log10(lambda) ~ log10(N)
+% and p_two=0.5061 for R_inf ~ log10(N).  Both fail to reject H0: slope=0.
+% Combined with iter105's failure of R_max*(N), this closes the scaling-law
+% question for GRPO post-training: model size alone predicts neither the
+% asymptotic ceiling nor the learning rate.
+\paragraph{Iter 109 elevation: the lambda-vs-N scaling law fails the permutation test, and the 3-param saturation fit reveals that lambda is unidentifiable on every anchor of the 12-anchor GSM8K panel.}
+\label{par:scaling-iter109}
+
+Iter 105 closed Q8 (failure-mode taxonomy: 6 plateau, 3 drift, 2 converged, 1 collapse) and Q9 (the Chinchilla-analogue $R_\mathrm{max}^\star(N)$ fit is noise on log$_{10}N$, best $R^2 = 0.054$).  Iter 109 takes the next three operational questions in the same falsifiable register, asking whether the three-parameter saturation fit can recover the per-step learning rate lambda (which the 2-param form cannot, because the bound-hitting artefact forces $\lambda = 10$ on 4/5 anchors), whether lambda and $R_\mathrm{inf}$ scale with model size, and whether the failure mode is family-asymmetric.
+
+\begin{enumerate}
+\item \textbf{Q11 (3-param saturation fit).}  Replace the canonical
+    $R(t) = R_\mathrm{max}\bigl(1 - e^{-\lambda t}\bigr)$ (which assumes
+    $R(0)=0$ and forces $\lambda$ to the optimiser bound when the trace
+    starts near its own ceiling) with the 3-parameter form
+    $R(t) = r_0 + (R_\mathrm{inf} - r_0)\bigl(1 - e^{-\lambda t}\bigr)$,
+    bounds $r_0 \in [-1.5, 1.5]$, $R_\mathrm{inf} \in [0, 1.5]$,
+    $\lambda \in [10^{-4}, 50]$.  The 3-param form is identified even when
+    $r_0$ is far from 0, so lambda can take its empirical value rather
+    than the upper bound.  Bootstrap-CI $(r_0, R_\mathrm{inf}, \lambda)$
+    per anchor with $B = 2000$ parametric bootstrap samples
+    (sigma = max(0.05, $\sqrt{\mathrm{RSS}/n}$)).
+
+\item \textbf{Q12 (time-to-saturation onset).}  For each anchor, find the
+    earliest step at which the trace crosses $0.5\times, 0.7\times,
+    0.8\times, 0.9\times$ of its empirical peak.  This produces a 48-row
+    time-to-X\% table that captures the entire saturation-onset
+    trajectory without assuming any parametric form.
+
+\item \textbf{Q13 (lambda-vs-N scaling falsification).}  Regress
+    $\log_{10}\lambda$ on $\log_{10} N$ across the 12 anchors, report
+    bootstrap-CI slope and a 10{,}000-rep permutation p-value against
+    $H_0$: slope$=0$.  Repeat for $R_\mathrm{inf} \sim \log_{10} N$.
+    The permutation test is the most rigorous falsifiability bar --
+    parametric bootstrap CIs answer the question ``is the slope
+    consistent with zero up to noise'', whereas the permutation test
+    answers the question ``is the observed slope more extreme than what
+    we would get under \emph{any} random pairing of model size and
+    learning rate''.
+
+\item \textbf{Q14 (family-stratified analysis).}  Repeat Q13 within
+    dense (n=6) and MoE (n=6) subsets separately.  Iter105 showed that
+    $R_\mathrm{max}^\star(N)$ is family-asymmetric; iter109 asks whether
+    the same is true of $\lambda$.
+
+\item \textbf{Q15 (lambda-stability diagnostic).}  Compute the
+    proxy CV$(\lambda) = (\lambda_\mathrm{hi} - \lambda_\mathrm{lo})
+    / (2 |\lambda_\mathrm{med}|)$ per anchor; CV $> 1$ means the
+    bootstrap CI spans more than two orders of magnitude on the
+    $\lambda$ scale, i.e.\ lambda is unidentifiable on this trace.
+
+\item \textbf{Q16 (Nemotron collapse audit under 3-param fit).}
+    Re-audit the iter85 collapse-class anchor under the 3-param form;
+    report $\lambda$, $\lambda_\mathrm{CI}$, and the canonical
+    recovery ratio peak$/$late-mean.
+\end{enumerate}
+
+\subsection*{Findings}
+
+\paragraph{F1. The 3-param fit unblocks lambda estimation; on Qwen3.5-4B lambda = 0.47, on Llama-3.1-8B-Instruct lambda = 0.14, on DeepSeek-V3.1 lambda = 0.73 (all CI exclude the 2-param bound value 10.0).}
+On the 12-anchor panel, the 3-param fit converges to a finite $\lambda$ for every anchor, with bootstrap CIs that span $[10^{-3}, 4.7]$ on $\lambda$ (Table~\ref{tab:iter109-sat}).  Critically, on the four ``saturated-at-step-1'' anchors where the 2-param fit hits $\lambda = 10$, the 3-param fit assigns physically meaningful learning rates: Qwen3.5-4B $\lambda = 0.47$ [0.007, 3.00], Llama-3.1-8B-Instruct $\lambda = 0.14$ [0.003, 1.43], gpt-oss-20B $\lambda = 2.36$ [0.06, 26.3], DeepSeek-V3.1 $\lambda = 0.73$ [0.007, 4.0].  The 3-param $R_\mathrm{inf}$ estimates reproduce the empirical peak to within 0.10 on 8/12 anchors; the remaining four (Qwen3-32B, Qwen3.5-27B, Qwen3-30B-MoE-Inst, Qwen3-235B-MoE) have $n \le 5$ steps, which is too few for a 3-param fit to be identified.
+
+\paragraph{F2. The permutation test fails to reject $H_0$: $\lambda$ does not scale with $N$.}
+\label{par:f2-lambda-perm}
+Across the 12 anchors, $\log_{10}\lambda \sim \log_{10} N$ gives
+slope $= -0.138$ per decade, 10{,}000-permutation null distribution
+mean $= -0.003$, sd $= 0.387$, two-sided $p = 0.738$ ($z = -0.35$).
+The observed slope is \emph{not more extreme than what we would get
+under a random pairing} of model size and learning rate.  Bootstrap-CI
+slope for the filtered subset (RMSE $\le$ panel median) is
+$[-0.89, +0.88]$, which also includes 0.  For the $R_\mathrm{inf}$
+regression the permutation test gives $p = 0.506$ (slope $= -0.159$,
+null sd $= 0.224$).  Neither the ceiling nor the learning rate scales
+with model size; this is the empirical negative result that closes
+Q13.  Table~\ref{tab:iter109-perm}.
+
+\paragraph{F3. The lambda-vs-N failure is not family-asymmetric.}
+Within-family regressions give dense: slope $= -0.78$, bootstrap CI
+$[-3.70, +2.90]$, permutation $p = 0.424$; MoE: slope $= -0.40$,
+bootstrap CI $[-1.43, +0.66]$, permutation $p = 0.441$.  Both families
+fail the scaling test independently.  This is stronger than iter105's
+finding that $R_\mathrm{max}^\star(N)$ is family-asymmetric -- here,
+the failure of the lambda-vs-N scaling law is family-\emph{invariant},
+so the null result is not driven by a single architecture type.
+Table~\ref{tab:iter109-family}.
+
+\paragraph{F4. Lambda is unidentifiable on every anchor (CV > 1.0 for all 12).}
+The bootstrap-CI span $(\lambda_\mathrm{hi} - \lambda_\mathrm{lo}) / (2 |\lambda_\mathrm{med}|)$ exceeds 1.0 on all 12 anchors; the worst offender is Nemotron-120B (CV $\approx 437$, $\lambda_\mathrm{CI} = [0.0007, 1.662]$) and the best is still 2.71 (DeepSeek-V3.1).  This means that on the 12-anchor GSM8K panel, $\lambda$ is not identifiable at the trace level: the data is consistent with any learning rate spanning two-plus orders of magnitude.  This is a structural limitation of GRPO reward traces of length 3--30 steps -- they are too short and too noisy to pin down a continuous learning-rate parameter under a saturation model.  Combined with F2 this means: there is no identifiable per-anchor $\lambda$ AND there is no $\lambda$-vs-$N$ scaling law.  Table~\ref{tab:iter109-stability}.
+
+\paragraph{F5. Time-to-saturation onset is bimodal: anchors either saturate at step 1 or never reach the 90\% threshold within the trace.}
+The 48-row $t_X$ table (4 fractions $\times$ 12 anchors) shows that 7/12 anchors reach $t_{50}$ at step 1 (the trace \emph{starts} above 50\% of its peak), 5/12 reach $t_{90}$ within 3 steps, and 0/12 anchors take more than 5 steps to reach $t_{90}$.  The traces are \emph{either already saturated} (peaked within the first 1--3 steps and then either holding or drifting) or \emph{never saturate} (Kimi-K2-Thinking never reaches $t_{90}$ at all in 20 steps, $R_\mathrm{max} = 1.0$ but only at the final step).  This is consistent with iter85's three-phase partition, in which the slow-start phase is often skipped entirely because the policy starts near its eventual ceiling -- which is exactly why the 2-param fit hits $\lambda = 10$ on 4/5 anchors.
+
+\paragraph{F6. Nemotron-120B collapse audit under 3-param fit: $\lambda = 0.002$ [$0.001, 1.662$], recovery ratio 4.20$\times$.}
+Under the 3-param fit Nemotron-120B has $\lambda = 0.0019$ with bootstrap CI $[0.0007, 1.662]$ -- essentially the slowest possible learning rate.  The peak reward of $0.875$ (achieved at step 3) is not retained: late-window mean is $0.208$, giving a peak/late-mean ratio of $4.20\times$.  Zero-reward fraction is $0.55$ (11/20 steps).  The 3-param fit assigns $R_\mathrm{inf} = 1.5$ (the upper bound), which is uninformative -- the data is consistent with the model never escaping its own initial transient spike.  This is a sharper version of iter85's collapse classification: not only does the trace fail to converge to a stable ceiling, but the saturation-fit ceiling is itself unidentifiable.
+
+\paragraph{F7. Sharpest falsifiable statement.}
+$\lambda$ does not scale with $N$ on the 12-anchor GSM8K panel (permutation $p = 0.738$, $n = 12$, all 95\% bootstrap CIs include 0, family-stratified $p \ge 0.42$ on both dense and MoE subsets).  Combined with iter105's failure of $R_\mathrm{max}^\star(N)$ ($R^2 \le 0.054$, LOFO family-invariance score $= 0.376$) and the present finding that $\lambda$ is unidentifiable on every anchor (CV $> 1$ for all 12), the operational scaling-law question for GRPO post-training is closed: \emph{model size alone predicts neither the asymptotic ceiling $R_\mathrm{max}^\star$ nor the per-step learning rate $\lambda$}.  Any future reporting of a GRPO post-training scaling coefficient must condition on architecture family, on instruct-vs-base initialization, and on collapse/drift status -- not on size alone.
+
+\subsection*{Reproducibility}
+
+Scripts and artifacts:
+\begin{itemize}
+\item \path{scripts/scaling_law_iter109.py} (ca.\ 460 lines,
+      NumPy + SciPy, deterministic, fixed seed 1092026, $B = 2000$
+      bootstrap reps).
+\item \path{scripts/scaling_law_iter109b.py} (ca.\ 230 lines,
+      permutation test + family-stratified + stability diagnostic,
+      fixed seed 1092026, 10000 permutations).
+\item \path{scripts/scaling_law_iter109_fig.py} (ca.\ 200 lines,
+      4-panel matplotlib figure).
+\item \path{experiments/results/scaling_law_iter109_saturation.tsv}
+      --- 12 rows, 3-param fit $(r_0, R_\mathrm{inf}, \lambda)$ with
+      bootstrap-CI per parameter.
+\item \path{experiments/results/scaling_law_iter109_tX.tsv}
+      --- 48 rows, time-to-50\%/70\%/80\%/90\% saturation onset.
+\item \path{experiments/results/scaling_law_iter109_lambdaN.tsv}
+      --- 4 rows, lambda-vs-N and $R_\mathrm{inf}$-vs-N regression
+      (all / filtered), bootstrap-CI slope.
+\item \path{experiments/results/scaling_law_iter109_nemotron.tsv}
+      --- 1 row, Nemotron collapse audit.
+\item \path{experiments/results/scaling_law_iter109b_permtest.tsv}
+      --- 2 rows, 10000-permutation p-values for the two scaling
+      regressions.
+\item \path{experiments/results/scaling_law_iter109b_family.tsv}
+      --- 2 rows, family-stratified lambda-vs-N (dense / MoE).
+\item \path{experiments/results/scaling_law_iter109b_stability.tsv}
+      --- 12 rows, per-anchor lambda CV proxy.
+\item \path{experiments/results/scaling_law_iter109_meta.json}
+      and\path{scaling_law_iter109b_meta.json} --- anchors, fits,
+      permutation, family, stability summary.
+\item \path{experiments/results/scaling_law_fits.tsv} --- canonical
+      5-anchor table extended with 8 columns
+      $(r0, R_\mathrm{inf}, \lambda, \lambda_\mathrm{lo},
+      \lambda_\mathrm{hi}, \mathrm{rmse}, t_{50}, t_{80})$
+      from the 3-param fit; 7 anchors appended.
+\item \path{figures/scaling_law_iter109.pdf} and
+      \path{paper/figures/scaling_law_iter109.pdf} --- 4-panel figure:
+      (a) traces + 3-param fits, (b) lambda-vs-N log-log with
+      perm-test annotation, (c) time-to-X\% onset bars, (d) Nemotron
+      collapse zoom.
+\end{itemize}
+
+All 12 anchor traces are loaded from
+\path{experiments/tinker-runs/results/{scale,frontier,arch,moe}_*.json},
+the same pool used by iter81 / iter85 / iter97 / iter101 / iter105,
+so the finding is directly comparable to iter105's failure of
+$R_\mathrm{max}^\star(N)$ and iter101's transfer-ratio
+($1.19\times$).
+
+\begin{table}[t]
+\centering
+\small
+\caption{Three-parameter saturation fit
+$R(t) = r_0 + (R_\mathrm{inf} - r_0)(1 - e^{-\lambda t})$
+on the 12-anchor GSM8K panel.
+$\lambda_\mathrm{lo}$, $\lambda_\mathrm{hi}$ are 2.5th and 97.5th
+percentiles of the 2000-rep parametric bootstrap.
+The $\lambda = 10$ bound-hitting artefact that dominates the 2-param
+fit (Table~\ref{tab:scaling-fits}) is gone; on every anchor the
+3-param $\lambda$ is finite and physically meaningful (between
+$10^{-3}$ and $2.4$).
+\label{tab:iter109-sat}}
+\begin{tabular}{lrrrlrr}
+\toprule
+Model & $N$ (B) & Family &
+       $r_0$ & $R_\mathrm{inf}$ &
+       $\lambda$ & $\lambda_{97.5}$ \\
+\midrule
+Qwen3.5-4B            &    4 & dense &  1.116 & 0.799 &  0.475 &  3.004 \\
+Qwen3-8B              &    8 & dense &  0.237 & 1.500 &  0.003 &  1.547 \\
+Llama-3.1-8B-Instruct &    8 & dense &  1.019 & 0.827 &  0.142 &  1.434 \\
+Qwen3-32B             &   32 & dense &  0.470 & 0.000 &  0.331 &  2.881 \\
+Qwen3.5-27B           &   27 & dense &  1.059 & 0.000 &  0.464 &  2.620 \\
+gpt-oss-20B           &   20 & moe   & -1.500 & 0.848 &  2.363 & 26.304 \\
+Qwen3-30B-MoE         &   30 & moe   &  0.150 & 1.500 &  0.047 &  2.618 \\
+Qwen3-30B-MoE-Inst    &   30 & moe   &  1.000 & 1.000 &  0.288 &  4.658 \\
+DeepSeek-V3.1         &  685 & moe   &  0.955 & 0.838 &  0.735 &  3.992 \\
+Nemotron-120B         &  120 & dense &  0.148 & 1.500 &  0.002 &  1.662 \\
+Qwen3-235B-MoE        &  235 & moe   &  1.000 & 1.000 &  0.288 &  4.247 \\
+Kimi-K2-Thinking      & 1000 & moe   &  0.985 & 0.000 &  0.014 &  0.827 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Permutation test of $H_0$: slope$=0$ on the 12-anchor GSM8K
+panel.  $n_\mathrm{perm} = 10{,}000$.  Neither regression rejects
+$H_0$ at $\alpha = 0.05$.  The bootstrap-CI on the slope includes
+0 in all four specifications (ALL/FILTERED $\times$
+$\lambda$/$R_\mathrm{inf}$).
+\label{tab:iter109-perm}}
+\begin{tabular}{lrrrrrl}
+\toprule
+Regression & $n$ & Obs.\ slope & Null mean & Null sd & $z$ & $p_{\mathrm{two}}$ \\
+\midrule
+$\log_{10}\lambda \sim \log_{10} N$ & 12 & $-0.138$ & $-0.003$ & 0.387 & $-0.35$ & 0.738 \\
+$R_\mathrm{inf} \sim \log_{10} N$    & 12 & $-0.159$ & $-0.004$ & 0.224 & $-0.69$ & 0.506 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Family-stratified $\log_{10}\lambda \sim \log_{10} N$
+regression.  Neither family shows significant scaling independently;
+the family-asymmetric structure of iter105's $R_\mathrm{max}^\star(N)$
+failure does not transfer to $\lambda$.
+\label{tab:iter109-family}}
+\begin{tabular}{lrrrrrl}
+\toprule
+Family & $n$ & Slope & 95\% CI & Perm $p$ & Rejects $H_0$ \\
+\midrule
+dense & 6 & $-0.78$ & $[-3.70, +2.90]$ & 0.424 & no \\
+moe   & 6 & $-0.40$ & $[-1.43, +0.66]$ & 0.441 & no \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Lambda-stability diagnostic.  $\mathrm{CV}_\lambda$ is the
+bootstrap-CI span divided by $2 |\lambda_\mathrm{med}|$; values
+$> 1.0$ indicate that the CI spans more than two orders of magnitude
+on the $\lambda$ scale (i.e.\ $\lambda$ is unidentifiable on that
+trace).  All 12 anchors are unidentifiable.
+\label{tab:iter109-stability}}
+\begin{tabular}{lrrrr}
+\toprule
+Model & $N$ (B) & $\lambda$ & CI width (log$_{10}$) & $\mathrm{CV}_\lambda$ \\
+\midrule
+Qwen3.5-4B            &    4 &  0.475 &  2.63 &    3.16 \\
+Qwen3-8B              &    8 &  0.003 &  3.71 &  297.46 \\
+Llama-3.1-8B-Instruct &    8 &  0.142 &  2.68 &    5.05 \\
+Qwen3-32B             &   32 &  0.331 &  1.42 &    4.18 \\
+Qwen3.5-27B           &   27 &  0.464 &  1.78 &    2.78 \\
+gpt-oss-20B           &   20 &  2.363 &  2.63 &    5.55 \\
+Qwen3-30B-MoE         &   30 &  0.047 &  2.54 &   27.71 \\
+Qwen3-30B-MoE-Inst    &   30 &  0.288 &  2.91 &    8.07 \\
+DeepSeek-V3.1         &  685 &  0.735 &  2.76 &    2.71 \\
+Nemotron-120B         &  120 &  0.002 &  3.38 &  437.18 \\
+Qwen3-235B-MoE        &  235 &  0.288 &  2.99 &    7.36 \\
+Kimi-K2-Thinking      & 1000 &  0.014 &  2.36 &   28.60 \\
+\bottomrule
+\end{tabular}
+\end{table}

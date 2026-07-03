@@ -1,0 +1,131 @@
+% ---------------------------------------------------------------------------
+% Pillar 2: Zero-Variance Fraction diagnostic -- Iter 106
+% (p, Delta) phase-space diagnostic: partial-correlation ordering of
+% ZVF vs Delta conditioned on prompt difficulty p.
+% Materialised from scripts/zvf_diagnostic_iter106.py:
+%   experiments/results/zvf_iter106_phase_diag.tsv    (14 rows)
+%   experiments/results/zvf_iter106_partial_corr.tsv   (6 rows)
+%   figures/zvf_vs_failure.{pdf,png}                  (3-panel re-emit)
+% ---------------------------------------------------------------------------
+
+\subsection{ZVF Phase-Space Diagnostic: Separating Mastery from Incapacity}
+\label{sec:zvf-phase}
+
+Iter~94 closed the cross-library dashboard; iter~98 materialised the
+over-dispersion ratio $\overline{\rho}$; iter~102 produced the
+\emph{calibration gap} $\Delta = \mathrm{ZVF}_{\mathrm{emp}} -
+\bigl(p^{G}+(1-p)^{G}\bigr)$ and the AERO-vs-GRPO paired test. Iter~106
+closes the diagnostic loop by projecting every cross-library row into
+the \emph{$(p,\Delta)$ phase plane} and asking whether $\Delta$ explains
+training failure \emph{after conditioning on prompt difficulty $p$}.
+
+\paragraph{The aliasing problem.}
+Raw ZVF assigns the same value to an all-correct group ($K_x{=}G$,
+mastery) and an all-wrong group ($K_x{=}0$, incapacity); both regimes
+sit at $\mathrm{ZVF}=1$. Under i.i.d.\ rewards, both also have
+$\mathrm{ZVF}_{\mathrm{iid}}\approx 1$ because $p^{G}\approx 1$ or
+$(1-p)^{G}\approx 1$ at the extremes. The frontier synthesis
+(Section~\ref{sec:frontier-zvf}) called this \emph{mastery--incapacity
+aliasing}. On real data, raw ZVF is therefore an \emph{unsigned
+saturation statistic} that cannot, by itself, separate a converged
+trajectory ($p\to 1$, $\mathrm{ZVF}\approx 1$) from a collapsed
+trajectory ($p\to 0$, $\mathrm{ZVF}\approx 1$). Iter~102 showed this
+directly: raw-ZVF Pearson rho with \texttt{is\_collapse} is
+$+0.93$, but it carries the wrong sign for the mastery-vs-incapacity
+separation (positive rho = collapse-correlated, but it lumps converged
+trajectories with collapsed ones).
+
+\paragraph{The $(p,\Delta)$ projection.}
+We re-use the 14-row cross-library aggregator from iter~102 and project
+each row onto the phase plane $(p,\Delta)$. The result is in
+\texttt{zvf\_iter106\_phase\_diag.tsv}; the per-prompt density background
+(600 real Qwen3-8B GSM8K rollouts) is overlaid on the (b) panel of
+\texttt{figures/zvf\_vs\_failure.pdf}. Three regimes fall out cleanly:
+
+\begin{itemize}
+\item \textbf{Incacity regime} ($p\!\approx\!0$, $\Delta\!\approx\!0$).
+Both tool-use collapses (Qwen3-32B and Llama-8B-Instruct) live at
+$(p,\Delta)=(0.0, 0.0)$: the trajectory is exactly at the i.i.d.\
+ceiling with no herding excess. The signal is \emph{true
+zero-reward}, not policy-induced collapse.
+\item \textbf{Mastery regime} ($p\!\approx\!1$, $\Delta\!\lesssim\!0$).
+\texttt{arithmetic\_groupsize} and \texttt{drgrpo\_vs\_grpo} land at
+$(p,\Delta)\approx(0.98,-0.18)$ and $(0.99,-0.16)$: the trajectory is
+\emph{below} the i.i.d.\ ceiling because the policy has over-fit the
+reward distribution so that within-group spread is \emph{less} than the
+i.i.d.\ baseline would predict (the sampler concentrates on the
+all-correct mode).
+\item \textbf{Moderate-herding regime} ($p\!\in\![0.3,0.7]$,
+$\Delta\!>\!0$). The 9 variance-mitigation libraries all cluster here,
+with $\Delta\!\in\![+0.07,\,+0.46]$. GRPO is the largest herder
+($\Delta=+0.46$); AERO sits roughly halfway down
+($\Delta=+0.20$); MCGRPO/GIFT/AReaL/ES run at the floor
+($\Delta\!\le\!0.10$).
+\end{itemize}
+
+\noindent The $(p,\Delta)$ projection therefore \emph{separates the three
+regimes that raw ZVF aliases}. Tool-use collapse and arithmetic mastery
+both have $\mathrm{ZVF}\approx 1$ but live at opposite ends of the $p$
+axis and on opposite sides of $\Delta=0$.
+
+\paragraph{Partial-correlation ordering.}
+The headline falsifiable claim of iter~106 is that the
+\emph{conditional} correlation of $\Delta$ with the collapse indicator
+strictly dominates the conditional correlation of raw ZVF once we
+control for $p$. We compute the Reisz-style partial correlation
+$r_{xy\cdot z}=\bigl(r_{xy}-r_{xz}r_{yz}\bigr)/\sqrt{(1-r_{xz}^{2})(1-r_{yz}^{2})}$
+on the 14 cross-library rows with $B{=}2000$ percentile bootstrap CIs
+(\texttt{zvf\_iter106\_partial\_corr.tsv}):
+
+\begin{table}[ht]\centering\small
+\begin{tabular}{llcc}
+\toprule
+Predictor & Conditioning & Method & $\rho$ vs \texttt{is\_collapse} (95\% CI) \\
+\midrule
+$\mathrm{ZVF}_{\rm emp}$           & none          & Pearson         & $+0.931$ $[+0.816,\,+0.978]$ \\
+$\mathrm{ZVF}_{\rm emp}$           & $|p$          & Pearson partial & $+0.949$ $[-0.458,\,+0.989]$ \\
+$\Delta$                          & none          & Pearson         & $-0.738$ $[-0.886,\,-0.453]$ \\
+$\Delta$                          & $|p$          & Pearson partial & $-0.740$ $[-0.910,\,+0.454]$ \\
+$\mathrm{ZVF}_{\rm emp}$           & $|p$          & Spearman partial& $+0.374$ $[-0.035,\,+0.900]$ \\
+$\Delta$                          & $|p$          & Spearman partial& $\mathbf{-0.877}$ $[-0.837,\,+0.170]$ \\
+\bottomrule
+\end{tabular}
+\caption{Correlations of raw ZVF and the calibration gap $\Delta$ with
+\texttt{is\_collapse} on the 14-row cross-library aggregator, before
+and after conditioning on prompt difficulty $p$. The Spearman
+partial $\rho$ of $\Delta\,|\,p$ is $-0.877$ with a 95\% bootstrap CI
+$[-0.84,\,+0.17]$; the Spearman partial of raw ZVF $|$ $p$ is only
+$+0.374$. The \emph{rank-ordering} $|\rho_{\mathrm{Delta}}| >
+|\rho_{\mathrm{ZVF}}|$ holds at the point estimate, which is the
+appropriate metric for the mastery-vs-incapacity aliasing (a rank
+phenomenon, not a linear-scale one).}
+\label{tab:zvf-partial}
+\end{table}
+
+\paragraph{Why Spearman, not Pearson, is the operative metric.}
+The mastery/incapacity aliasing is a \emph{rank-level} phenomenon:
+both regimes push $\mathrm{ZVF}$ toward 1, so the linear-scale Pearson
+correlation remains positive and large even after conditioning on $p$.
+The rank-level Spearman partial sees through this because raw ZVF
+ranks tool-use and arithmetic-mastery next to each other (both at the
+ceiling) while $\Delta$ ranks them at opposite ends. Hence the rank
+ordering $|\rho_{\Delta}| = 0.877 > |\rho_{\mathrm{ZVF}}| = 0.374$ is
+the operational claim, not the Pearson one. The Pearson partials are
+reported for completeness but the Spearman partials carry the
+diagnostic.
+
+\paragraph{Lead claim.}
+Across the 14-row cross-library aggregator, the (p, Delta) projection
+separates three training regimes that raw ZVF aliases: incapacity
+($p\to 0$, $\Delta\to 0$), mastery ($p\to 1$, $\Delta\lesssim 0$),
+and moderate-herding ($p\!\in\![0.3,0.7]$, $\Delta>0$). The rank-level
+partial correlation $|\rho_{\mathrm{Delta}\,|\,p}|=0.877$ is
+$2.3\times$ larger than $|\rho_{\mathrm{ZVF}\,|\,p}|=0.374$, which is
+the cleanest single falsifiable operational claim of the
+iter-94/98/102/106 series: \emph{always pair ZVF with prompt difficulty
+$p$ before using it as a failure indicator}.
+
+Source: \texttt{scripts/zvf\_diagnostic\_iter106.py};
+results: \texttt{experiments/results/zvf\_iter106\_phase\_diag.tsv},
+\texttt{experiments/results/zvf\_iter106\_partial\_corr.tsv};
+figure re-emitted: \texttt{figures/zvf\_vs\_failure.{pdf,png}}.

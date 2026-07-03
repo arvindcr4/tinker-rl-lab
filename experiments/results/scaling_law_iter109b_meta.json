@@ -1,0 +1,67 @@
+{
+  "iter": "109b",
+  "pillar": "P1-ScalingLaws",
+  "n_anchors": 12,
+  "E_permutation_test": {
+    "n_perm": 10000,
+    "lambda_vs_N": {
+      "observed_slope": -0.138,
+      "null_mean": -0.0031,
+      "null_sd": 0.3873,
+      "z_score": -0.348,
+      "p_two_sided": 0.4412,
+      "rejects_H0_at_0.05": false
+    },
+    "R_inf_vs_N": {
+      "observed_slope": -0.1587,
+      "p_two_sided": 0.5061,
+      "rejects_H0_at_0.05": false
+    }
+  },
+  "F_family_stratified": [
+    [
+      "dense",
+      6,
+      -0.2471,
+      -0.7825,
+      0.9761,
+      -0.5071,
+      -3.7036,
+      2.8988,
+      0,
+      0.4237,
+      "Qwen3.5-4B;Qwen3-8B;Llama-3.1-8B-Instruct;Qwen3-32B;Qwen3.5-27B;Nemotron-120B"
+    ],
+    [
+      "moe",
+      6,
+      0.1592,
+      -0.3984,
+      0.4936,
+      -0.4751,
+      -1.4263,
+      0.6604,
+      0,
+      0.4412,
+      "gpt-oss-20B;Qwen3-30B-MoE;Qwen3-30B-MoE-Inst;DeepSeek-V3.1;Qwen3-235B-MoE;Kimi-K2-Thinking"
+    ]
+  ],
+  "G_lambda_stability": {
+    "n_unidentifiable": 12,
+    "anchors_unidentifiable": [
+      "Qwen3.5-4B",
+      "Qwen3-8B",
+      "Llama-3.1-8B-Instruct",
+      "Qwen3-32B",
+      "Qwen3.5-27B",
+      "gpt-oss-20B",
+      "Qwen3-30B-MoE",
+      "Qwen3-30B-MoE-Inst",
+      "DeepSeek-V3.1",
+      "Nemotron-120B",
+      "Qwen3-235B-MoE",
+      "Kimi-K2-Thinking"
+    ]
+  },
+  "frontier_synthesis": "The permutation test is the most rigorous falsifiability bar: even with 10000 random pairings of model size and learning rate, the OBSERVED slope is not extreme enough to reject the null of zero scaling. Combined with iter109's bootstrap CI including 0, the lambda-vs-N scaling law is rejected at p > 0.05 on all 4 regression specifications (ALL/FILTERED lambda, ALL/FILTERED R_inf). Combined with iter105's failure of R_max*(N) and the new family-stratified analysis showing no within-family scaling either, this closes the scaling-law question for GRPO post-training: model size alone does not predict either the asymptotic ceiling R_inf or the learning rate lambda."
+}

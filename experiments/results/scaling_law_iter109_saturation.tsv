@@ -1,0 +1,13 @@
+model	params_B	family	n_steps	r0	r0_lo	r0_hi	R_inf	R_inf_lo	R_inf_hi	lambda	lambda_lo	lambda_hi	rmse	r2	ss_res	t_50	t_80	trace_file
+Qwen3.5-4B	4.0	dense	30	1.1161	-1.5	1.5	0.7993	0.0	0.895	0.4745	0.007	3.0043	0.211	0.0391	1.3358	1.4609	3.3921	scale_gsm8k_qwen3.5-4b.json
+Qwen3-8B	8.0	dense	30	0.2365	-1.2201	0.6358	1.5	0.0	1.5	0.0026	0.0003	1.5471	0.1676	0.0257	0.8424	270.5863	628.2818	scale_gsm8k_qwen3-8b.json
+Llama-3.1-8B-Instruct	8.0	dense	30	1.0189	0.7988	1.5	0.8274	0.0	0.9105	0.1417	0.003	1.4343	0.1569	0.0759	0.739	4.8928	11.3606	scale_gsm8k_llama-8b-inst.json
+Qwen3-32B	32.0	dense	3	0.4696	0.2837	1.5	0.0	0.0	0.2503	0.3314	0.1103	2.881	0.0513	0.6609	0.0079	2.0914	4.856	scale_gsm8k_qwen3-32b.json
+Qwen3.5-27B	27.0	dense	3	1.0594	-1.5	1.5	0.0	0.0	1.5	0.464	0.0431	2.6196	0.2516	0.3766	0.1899	1.4938	3.4685	scale_gsm8k_qwen3.5-27b.json
+gpt-oss-20B	20.0	moe	30	-1.5	-1.5	0.7225	0.8477	0.7843	1.0012	2.3631	0.0613	26.304	0.1886	0.0431	1.0667	0.2933	0.6811	arch_gsm8k_gpt-oss-20b.json
+Qwen3-30B-MoE	30.0	moe	5	0.15	-1.5	1.5	1.5	0.0	1.5	0.0471	0.0075	2.6178	0.1504	0.2156	0.113	14.7281	34.1977	moe_gsm8k_qwen3-30b-moe.json
+Qwen3-30B-MoE-Inst	30.0	moe	3	1.0	-1.5	1.5	1.0	0.0	1.5	0.2881	0.0057	4.6579	0.0	nan	0.0	2.4063	5.5872	moe_gsm8k_qwen3-30b-inst.json
+DeepSeek-V3.1	685.0	moe	20	0.955	-1.5	1.5	0.8384	0.0	1.1167	0.7346	0.0069	3.9924	0.1356	0.0094	0.3676	0.9436	2.1909	frontier_gsm8k_deepseek-v3.1.json
+Nemotron-120B	120.0	dense	20	0.1479	-1.5	1.5	1.5	0.0	1.5	0.0019	0.0007	1.662	0.2445	0.0037	1.1955	358.9062	833.3543	frontier_gsm8k_nemotron-120b.json
+Qwen3-235B-MoE	235.0	moe	4	1.0	-1.5	1.5	1.0	0.0	1.5	0.2884	0.0043	4.2474	0.0	nan	0.0	2.4036	5.5809	frontier_gsm8k_qwen3-235b.json
+Kimi-K2-Thinking	1000.0	moe	20	0.9851	0.8435	1.5	0.0	0.0	0.8736	0.0144	0.0036	0.8274	0.1552	0.1708	0.482	48.2287	111.9837	arch_gsm8k_kimi-k2.json

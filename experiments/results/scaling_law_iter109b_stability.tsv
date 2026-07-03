@@ -1,0 +1,13 @@
+model	params_B	family	lambda_3p	lambda_lo	lambda_hi	log10_CI_width	lambda_CV_proxy	lambda_unidentifiable
+Qwen3.5-4B	4.0	dense	0.4745	0.007	3.0043	2.6326	3.1584	1
+Qwen3-8B	8.0	dense	0.0026	0.0003	1.5471	3.7124	297.4615	1
+Llama-3.1-8B-Instruct	8.0	dense	0.1417	0.003	1.4343	2.6795	5.0505	1
+Qwen3-32B	32.0	dense	0.3314	0.1103	2.881	1.417	4.1803	1
+Qwen3.5-27B	27.0	dense	0.464	0.0431	2.6196	1.7838	2.7764	1
+gpt-oss-20B	20.0	moe	2.3631	0.0613	26.304	2.6326	5.5526	1
+Qwen3-30B-MoE	30.0	moe	0.0471	0.0075	2.6178	2.5429	27.7102	1
+Qwen3-30B-MoE-Inst	30.0	moe	0.2881	0.0057	4.6579	2.9123	8.0739	1
+DeepSeek-V3.1	685.0	moe	0.7346	0.0069	3.9924	2.7624	2.7127	1
+Nemotron-120B	120.0	dense	0.0019	0.0007	1.662	3.3755	437.1842	1
+Qwen3-235B-MoE	235.0	moe	0.2884	0.0043	4.2474	2.9947	7.3563	1
+Kimi-K2-Thinking	1000.0	moe	0.0144	0.0036	0.8274	2.3614	28.6042	1

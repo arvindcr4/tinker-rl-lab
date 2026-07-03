@@ -1,0 +1,8 @@
+model	params_B	arch	n_steps	n_violations	n_pairs	violation_rate	max_drop	binom_p_vs_0p05
+Qwen3.5-4B	4.0	dense	30	166	435	0.3816	0.7500	0.0000
+Qwen3-8B	8.0	dense	30	172	435	0.3954	0.6250	0.0000
+Llama-3.1-8B-Instruct	8.0	dense	30	201	435	0.4621	0.6250	0.0000
+gpt-oss-20B	20.0	moe	30	139	435	0.3195	0.5000	0.0000
+DeepSeek-V3.1	685.0	moe	20	69	190	0.3632	0.5000	0.0000
+Nemotron-120B	120.0	dense	20	55	190	0.2895	0.8750	0.0000
+Kimi-K2-Thinking	1000.0	moe	20	98	190	0.5158	0.6250	0.0000

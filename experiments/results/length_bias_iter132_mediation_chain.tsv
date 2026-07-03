@@ -1,0 +1,7 @@
+task	test	stat_a	stat_b	stat_c	n	value_a	value_b	value_c
+arithmetic_easy	H1_chain_window	0.090226	0.705213	0.705846	20	181.0	0.001576	0.889911
+gsm8k_cot	H1_chain_window	0.265734	0.403833	0.404772	12	43.0	0.395508	-0.008521
+arithmetic_easy	H1b_within_run_rho	0.48	0.16	-0.32	5	1.0	0.125	-0.771589
+gsm8k_cot	H1b_within_run_rho	0.466667	0.333333	-0.133333	3	1.0	0.5	-0.320256
+arithmetic_easy	H3_mediation_within_run	0.090226	0.705213	NA	20	0.023908	-0.00212	-0.088663
+gsm8k_cot	H3_mediation_within_run	0.265734	0.403833	NA	12	-0.000118	0.003423	-28.999443

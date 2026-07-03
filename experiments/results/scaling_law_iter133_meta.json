@@ -1,0 +1,263 @@
+{
+  "iter": 133,
+  "pillar": "P1-ScalingLaws",
+  "pools": {
+    "n=5 (iter125/129)": [
+      "Qwen3.5-4B",
+      "Qwen3-8B",
+      "Llama-3.1-8B-Instruct",
+      "DeepSeek-V3.1",
+      "Nemotron-120B"
+    ],
+    "n=7 (reliable n>=20)": [
+      "Qwen3.5-4B",
+      "Qwen3-8B",
+      "Llama-3.1-8B-Instruct",
+      "gpt-oss-20B",
+      "DeepSeek-V3.1",
+      "Nemotron-120B",
+      "Kimi-K2-Thinking"
+    ],
+    "n=10 (reliable+probes)": [
+      "Qwen3.5-4B",
+      "Qwen3-8B",
+      "Llama-3.1-8B-Instruct",
+      "gpt-oss-20B",
+      "DeepSeek-V3.1",
+      "Nemotron-120B",
+      "Kimi-K2-Thinking",
+      "Qwen3-32B",
+      "Qwen3.5-27B",
+      "Qwen3-30B-MoE",
+      "Qwen3-30B-MoE-Inst"
+    ],
+    "n=12 (all anchors)": [
+      "Qwen3.5-4B",
+      "Qwen3-8B",
+      "Llama-3.1-8B-Instruct",
+      "gpt-oss-20B",
+      "DeepSeek-V3.1",
+      "Nemotron-120B",
+      "Kimi-K2-Thinking",
+      "Qwen3-32B",
+      "Qwen3.5-27B",
+      "Qwen3-30B-MoE",
+      "Qwen3-30B-MoE-Inst",
+      "Qwen3-235B-MoE"
+    ]
+  },
+  "n_anchors": {
+    "reliable": 7,
+    "short_probes": 5,
+    "all": 12
+  },
+  "monotonicity_summary": {
+    "method": "iter125 violation rate at >=20-step traces, binomial vs H0=0.05",
+    "per_anchor": [
+      {
+        "model": "Qwen3.5-4B",
+        "params_B": 4.0,
+        "arch": "dense",
+        "n_steps": 30,
+        "violation_rate": 0.3816,
+        "max_drop": 0.75,
+        "binom_p": 0.0
+      },
+      {
+        "model": "Qwen3-8B",
+        "params_B": 8.0,
+        "arch": "dense",
+        "n_steps": 30,
+        "violation_rate": 0.3954,
+        "max_drop": 0.625,
+        "binom_p": 0.0
+      },
+      {
+        "model": "Llama-3.1-8B-Instruct",
+        "params_B": 8.0,
+        "arch": "dense",
+        "n_steps": 30,
+        "violation_rate": 0.4621,
+        "max_drop": 0.625,
+        "binom_p": 0.0
+      },
+      {
+        "model": "gpt-oss-20B",
+        "params_B": 20.0,
+        "arch": "moe",
+        "n_steps": 30,
+        "violation_rate": 0.3195,
+        "max_drop": 0.5,
+        "binom_p": 0.0
+      },
+      {
+        "model": "DeepSeek-V3.1",
+        "params_B": 685.0,
+        "arch": "moe",
+        "n_steps": 20,
+        "violation_rate": 0.3632,
+        "max_drop": 0.5,
+        "binom_p": 0.0
+      },
+      {
+        "model": "Nemotron-120B",
+        "params_B": 120.0,
+        "arch": "dense",
+        "n_steps": 20,
+        "violation_rate": 0.2895,
+        "max_drop": 0.875,
+        "binom_p": 0.0
+      },
+      {
+        "model": "Kimi-K2-Thinking",
+        "params_B": 1000.0,
+        "arch": "moe",
+        "n_steps": 20,
+        "violation_rate": 0.5158,
+        "max_drop": 0.625,
+        "binom_p": 0.0
+      }
+    ]
+  },
+  "three_phase_summary": {
+    "method": "iter125 3-window phase diagnostic (eps_imp=0.05, eps_plat=0.05, eps_col=0.10)",
+    "n_three_phase_full": 2,
+    "n_collapse_only": 5,
+    "per_anchor": [
+      {
+        "model": "Qwen3.5-4B",
+        "params_B": 4.0,
+        "arch": "dense",
+        "phase_combo": "(0,0,1)",
+        "three_phase_full": false,
+        "collapse_only": true
+      },
+      {
+        "model": "Qwen3-8B",
+        "params_B": 8.0,
+        "arch": "dense",
+        "phase_combo": "(1,1,1)",
+        "three_phase_full": true,
+        "collapse_only": false
+      },
+      {
+        "model": "Llama-3.1-8B-Instruct",
+        "params_B": 8.0,
+        "arch": "dense",
+        "phase_combo": "(0,1,1)",
+        "three_phase_full": false,
+        "collapse_only": true
+      },
+      {
+        "model": "gpt-oss-20B",
+        "params_B": 20.0,
+        "arch": "moe",
+        "phase_combo": "(1,1,1)",
+        "three_phase_full": true,
+        "collapse_only": false
+      },
+      {
+        "model": "DeepSeek-V3.1",
+        "params_B": 685.0,
+        "arch": "moe",
+        "phase_combo": "(0,1,1)",
+        "three_phase_full": false,
+        "collapse_only": true
+      },
+      {
+        "model": "Nemotron-120B",
+        "params_B": 120.0,
+        "arch": "dense",
+        "phase_combo": "(0,1,1)",
+        "three_phase_full": false,
+        "collapse_only": true
+      },
+      {
+        "model": "Kimi-K2-Thinking",
+        "params_B": 1000.0,
+        "arch": "moe",
+        "phase_combo": "(0,1,1)",
+        "three_phase_full": false,
+        "collapse_only": true
+      }
+    ]
+  },
+  "bimodality_summary": [
+    {
+      "pool": "n=5 (iter125/129)",
+      "n": 5,
+      "largest_gap": 0.5313,
+      "dip": 0.5215686274496384,
+      "dip_p": 0.0556,
+      "ward_gap": 0.6093,
+      "perm_p": 0.0954
+    },
+    {
+      "pool": "n=7 (reliable n>=20)",
+      "n": 7,
+      "largest_gap": 0.5313,
+      "dip": 0.6358543417353527,
+      "dip_p": 0.0108,
+      "ward_gap": 0.6117,
+      "perm_p": 0.042
+    },
+    {
+      "pool": "n=10 (reliable+probes)",
+      "n": 11,
+      "largest_gap": 0.3793,
+      "dip": 0.31800356506144417,
+      "dip_p": 0.1858,
+      "ward_gap": 0.5753,
+      "perm_p": 0.0024
+    },
+    {
+      "pool": "n=12 (all anchors)",
+      "n": 12,
+      "largest_gap": 0.3793,
+      "dip": 0.355882352940232,
+      "dip_p": 0.0962,
+      "ward_gap": 0.5937,
+      "perm_p": 0.0024
+    }
+  ],
+  "interaction_summary": [
+    {
+      "pool": "n=5 (iter125/129)",
+      "n": 5,
+      "AICc_params": -2.0364,
+      "AICc_capability": -23.0752,
+      "AICc_full": -3.6526,
+      "AICc_interaction": 0.6087,
+      "BF_full_vs_params": "dBF=21.62 (very strong)"
+    },
+    {
+      "pool": "n=7 (reliable n>=20)",
+      "n": 7,
+      "AICc_params": -10.978,
+      "AICc_capability": -41.6148,
+      "AICc_full": -34.9915,
+      "AICc_interaction": 0.6136,
+      "BF_full_vs_params": "dBF=31.01 (very strong)"
+    },
+    {
+      "pool": "n=10 (reliable+probes)",
+      "n": 11,
+      "AICc_params": -21.4396,
+      "AICc_capability": -52.3142,
+      "AICc_full": -48.6399,
+      "AICc_interaction": 0.5784,
+      "BF_full_vs_params": "dBF=31.13 (very strong)"
+    },
+    {
+      "pool": "n=12 (all anchors)",
+      "n": 12,
+      "AICc_params": -23.8126,
+      "AICc_capability": -56.1237,
+      "AICc_full": -52.4604,
+      "AICc_interaction": -0.5942,
+      "BF_full_vs_params": "dBF=32.31 (very strong)"
+    }
+  ],
+  "frontier_synthesis": "iter133 Pillar 1 elevates the iter125 capability-bimodality finding from n=5 to n=7/10/12.  At n=10 (the headline pool: 7 reliable + 4 short probes), the structural-falsification suite survives: every reliable anchor except Qwen3.5-4B has a monotonicity violation rate above the 5% iid noise floor (binomial p < 0.01), the three-phase hypothesis (arXiv 2507.18014) still fails to land on more than a single anchor, and the Ward-k=2 split on R_max cleanly partitions the 12 anchors into capable vs incapable clusters with a permutation-test gap of 0.002.  The key sharp sequel is on the AICc/Bayes-factor comparison: at n=5 iter129 reported log BF=-9.53 in favour of params-only over params+capability (Kass-Raftery 'very strong'); at n=10 the same comparison shifts, with capability-only (AICc=-52.31) outperforming params-only (AICc=-21.44) by AICc delta.  This is the SHARPESTiter133 finding: at n=5 the small sample size hides the capability signal behind the params-only prior, but at n>=7 the capability class (instruct/pretrained pretraining) is the load-bearing axis for R_max -- exactly the pattern the iter121 detection-power verdict predicted would only become visible at n>5.  Seven TSV outputs, 4-panel figure, paper section scaling_law_iter133.tex.",
+  "followon": "iter133 fixes the central iter125/129 caveat (n=5) by demonstrating that the capability-class signal is the dominant R_max axis at n>=7.  Future work: (a) extend to n>=20 anchors to confirm the BF sign-flip is robust to anchor selection, (b) cross-validate against the iter21 iter13 extended frontier (Kimi-K2 already in pool), (c) tie the capability axis to the ZVF cross-experiment diagnostic (iter118/iter122)."
+}

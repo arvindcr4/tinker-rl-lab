@@ -1,0 +1,26 @@
+{
+  "n_pooled_cells": 23,
+  "auroc_collapse": {
+    "point": 1.0,
+    "ci_lo": 1.0,
+    "ci_hi": 1.0
+  },
+  "auroc_drift": {
+    "point": 0.3333333333333333,
+    "ci_lo": 0.0,
+    "ci_hi": 0.6666666666666666
+  },
+  "aero_grpo_gap": {
+    "zvf_gap": -0.260543,
+    "zvf_ci_lo": -0.2618404,
+    "zvf_ci_hi": -0.25918740000000007,
+    "last10_gap": 0.020264000000000004,
+    "last10_ci_lo": 0.019419999999999937,
+    "last10_ci_hi": 0.021140000000000048
+  },
+  "calibration": {
+    "n_bins": 5,
+    "low_failure_rate": 0.4,
+    "high_failure_rate": 0.2857142857142857
+  }
+}

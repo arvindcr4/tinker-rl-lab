@@ -649,6 +649,185 @@ def write_extended_figure(
 # Main
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# iter111 — paired bootstrap CI on G=4 vs G=32 + iso-accuracy budget shift
+# ---------------------------------------------------------------------------
+
+def write_iter111_paired(token_norm: list[dict]) -> Path:
+    """For each budget T, bootstrap paired diff between G=4 and G=32."""
+    by_T: dict[int, dict[int, dict]] = {}
+    for r in token_norm:
+        by_T.setdefault(int(r["budget_tokens"]), {})[int(r["G"])] = r
+
+    cols = [
+        "T_tokens", "G4_acc", "G4_lo", "G4_hi", "G32_acc", "G32_lo", "G32_hi",
+        "G4_gu", "G32_gu", "delta_G32_minus_G4", "delta_ci_lo", "delta_ci_hi",
+        "p_abs_ge_observed", "within_equiv_1pct", "within_equiv_2pct",
+    ]
+    rows_out = []
+    for T in sorted(by_T.keys()):
+        g4 = by_T[T].get(4); g32 = by_T[T].get(32)
+        if g4 is None or g32 is None:
+            continue
+        a = float(g4["heldout_acc_mean"])
+        a_se = (float(g4["heldout_acc_ci_high"]) - float(g4["heldout_acc_ci_low"])) / 3.92
+        b = float(g32["heldout_acc_mean"])
+        b_se = (float(g32["heldout_acc_ci_high"]) - float(g32["heldout_acc_ci_low"])) / 3.92
+        rng = np.random.default_rng(111 + T)
+        sa = rng.normal(a, a_se, size=50)
+        sb = rng.normal(b, b_se, size=50)
+        bd = welch_diff_ci(sb, sa, b_boot=4000)  # sb - sa = delta = G32 - G4
+        delta = bd[0]; lo = bd[1]; hi = bd[2]
+        # reverse-design two-sided p: |boot - 0| >= |delta|
+        boots = (sb.mean() + 0) - (sa.mean() + 0)  # point
+        boots_arr = (rng.normal(b, b_se, size=(4000, 50)).mean(axis=1)
+                     - rng.normal(a, a_se, size=(4000, 50)).mean(axis=1))
+        p_abs = float(np.mean(np.abs(boots_arr - 0) >= abs(delta)))
+        rows_out.append({
+            "T_tokens": T,
+            "G4_acc": round(a, 4),
+            "G4_lo": round(float(g4["heldout_acc_ci_low"]), 4),
+            "G4_hi": round(float(g4["heldout_acc_ci_high"]), 4),
+            "G32_acc": round(b, 4),
+            "G32_lo": round(float(g32["heldout_acc_ci_low"]), 4),
+            "G32_hi": round(float(g32["heldout_acc_ci_high"]), 4),
+            "G4_gu": round(float(g4["gu_estimate"]), 4),
+            "G32_gu": round(float(g32["gu_estimate"]), 4),
+            "delta_G32_minus_G4": round(delta, 4),
+            "delta_ci_lo": round(lo, 4),
+            "delta_ci_hi": round(hi, 4),
+            "p_abs_ge_observed": round(p_abs, 4),
+            "within_equiv_1pct": bool(abs(delta) <= 0.01),
+            "within_equiv_2pct": bool(abs(delta) <= 0.02),
+        })
+    out = RESULTS / "group_size_iter111_paired.tsv"
+    with open(out, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
+        w.writeheader()
+        w.writerows(rows_out)
+    return out
+
+
+def write_iter111_iso_acc(token_norm: list[dict]) -> Path:
+    """For each budget T, find smallest T such that G=32 reaches acc(G=4 at T)."""
+    by_T: dict[int, dict[int, dict]] = {}
+    for r in token_norm:
+        by_T.setdefault(int(r["budget_tokens"]), {})[int(r["G"])] = r
+    budgets = sorted(by_T.keys())
+    Gs = sorted({G for T in budgets for G in by_T[T].keys()})
+    acc_table = np.zeros((len(budgets), len(Gs)))
+    for i, T in enumerate(budgets):
+        for j, G in enumerate(Gs):
+            v = by_T[T].get(G)
+            acc_table[i, j] = float(v["heldout_acc_mean"]) if v else np.nan
+    logT = np.log10(np.array(budgets, dtype=float))
+
+    def interp_acc(G: int, target_acc: float) -> float:
+        col = acc_table[:, Gs.index(G)]
+        if np.all(np.isnan(col)):
+            return float("nan")
+        # monotone via interp on (log10 T, acc), col may have ties — sort
+        order = np.argsort(col)
+        return float(np.interp(target_acc, col[order], logT[order]))
+
+    cols = ["src_T_tokens", "G4_acc", "log10_T_for_G32_to_match",
+            "T_for_G32_match", "extra_factor_ratio", "log10_factor"]
+    rows_out = []
+    for srcT in budgets:
+        g4 = by_T[srcT].get(4)
+        if g4 is None:
+            continue
+        tgt = float(g4["heldout_acc_mean"])
+        x = interp_acc(32, tgt)
+        if math.isnan(x):
+            continue
+        T_match = 10 ** x
+        ratio = T_match / srcT
+        rows_out.append({
+            "src_T_tokens": srcT,
+            "G4_acc": round(tgt, 4),
+            "log10_T_for_G32_to_match": round(x, 4),
+            "T_for_G32_match": int(round(T_match)),
+            "extra_factor_ratio": round(ratio, 3),
+            "log10_factor": round(math.log10(max(ratio, 1e-12)), 4),
+        })
+    out = RESULTS / "group_size_iter111_iso_acc.tsv"
+    with open(out, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
+        w.writeheader()
+        w.writerows(rows_out)
+    return out
+
+
+def write_iter111_slope_fit(token_norm: list[dict]) -> Path:
+    """Fit dAcc vs log G per budget; record best G + acc@G=4 + acc@G=32."""
+    by_T: dict[int, dict[int, dict]] = {}
+    for r in token_norm:
+        by_T.setdefault(int(r["budget_tokens"]), {})[int(r["G"])] = r
+    cols = [
+        "T_tokens", "n_G", "slope_dAcc_per_logG", "intercept",
+        "r2_linear_acc_vs_logG", "best_G", "best_acc", "acc_at_G4", "acc_at_G32",
+    ]
+    rows_out = []
+    for T in sorted(by_T.keys()):
+        recs = by_T[T]
+        Gs = sorted(recs.keys())
+        accs = np.array([float(recs[G]["heldout_acc_mean"]) for G in Gs])
+        logG = np.log(np.array(Gs, dtype=float))
+        coef = np.polyfit(logG, accs, deg=1)
+        pred = np.polyval(coef, logG)
+        ss_res = float(np.sum((accs - pred) ** 2))
+        ss_tot = float(np.sum((accs - accs.mean()) ** 2))
+        r2 = 1 - ss_res / ss_tot if ss_tot > 0 else float("nan")
+        best_idx = int(np.argmax(accs))
+        rows_out.append({
+            "T_tokens": T,
+            "n_G": len(Gs),
+            "slope_dAcc_per_logG": round(coef[0], 4),
+            "intercept": round(coef[1], 4),
+            "r2_linear_acc_vs_logG": round(r2, 4),
+            "best_G": Gs[best_idx],
+            "best_acc": round(float(accs[best_idx]), 4),
+            "acc_at_G4": round(float(recs[4]["heldout_acc_mean"]), 4) if 4 in recs else float("nan"),
+            "acc_at_G32": round(float(recs[32]["heldout_acc_mean"]), 4) if 32 in recs else float("nan"),
+        })
+    out = RESULTS / "group_size_iter111_slope_fit.tsv"
+    with open(out, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
+        w.writeheader()
+        w.writerows(rows_out)
+    return out
+
+
+def write_iter111_summary(slope_rows: list[dict]) -> Path:
+    cols = ["T_tokens", "best_G", "best_acc", "G4_acc", "G32_acc",
+            "delta_G32_minus_G4", "relative_pct_G32_over_G4"]
+    rows_out = []
+    for r in slope_rows:
+        g4 = float(r["acc_at_G4"]); g32 = float(r["acc_at_G32"])
+        rows_out.append({
+            "T_tokens": r["T_tokens"],"best_G": r["best_G"],
+            "best_acc": r["best_acc"], "G4_acc": g4, "G32_acc": g32,
+            "delta_G32_minus_G4": round(g32 - g4, 4),
+            "relative_pct_G32_over_G4": round(100.0 * (g32 - g4) / g4, 2),
+        })
+    arr = np.array([(float(r["acc_at_G4"]), float(r["acc_at_G32"])) for r in slope_rows])
+    rows_out.append({
+        "T_tokens": "AGG_AVG", "best_G": "—",
+        "best_acc": round(float(np.mean([float(r["best_acc"]) for r in slope_rows])), 4),
+        "G4_acc": round(float(arr[:, 0].mean()), 4),
+        "G32_acc": round(float(arr[:, 1].mean()), 4),
+        "delta_G32_minus_G4": round(float((arr[:, 1] - arr[:, 0]).mean()), 4),
+        "relative_pct_G32_over_G4": round(float(100.0 * np.mean((arr[:, 1] - arr[:, 0]) / arr[:, 0])), 2),
+    })
+    out = RESULTS / "group_size_iter111_summary.tsv"
+    with open(out, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
+        w.writeheader()
+        w.writerows(rows_out)
+    return out
+
+
 def main() -> None:
     measured = load_measured_sweep()
     token_norm = load_token_normalized()
@@ -657,16 +836,38 @@ def main() -> None:
     the_path = write_theory_tsv(measured)
     dpo_path = write_dpo_check_tsv(measured)
     g4_g32_path = write_g4_vs_g32_broader_scale_tsv(token_norm)
+    paired_path = write_iter111_paired(token_norm)
+    iso_path = write_iter111_iso_acc(token_norm)
+    slope_path = write_iter111_slope_fit(token_norm)
+    # read back slope rows for summary
+    with open(slope_path) as f:
+        slope_rows = list(csv.DictReader(f, delimiter="\t"))
+    summary_path = write_iter111_summary(slope_rows)
     fig_path = write_figure(measured, token_norm)
     # Read the retention rows back for the extended figure
     with open(g4_g32_path) as f:
         retention_rows = list(csv.DictReader(f, delimiter="\t"))
     ext_path = write_extended_figure(measured, token_norm, retention_rows)
 
+    # Meta JSON
+    meta = {
+        "iteration": 111, "pillar": 3,
+        "topic": "G=4 vs G=32 broader-scale equivalence test (Qwen3-8B/GSM8K)",
+        "n_paired_rows": len(retention_rows),
+        "slope_fit_r2": {r["T_tokens"]: float(r["r2_linear_acc_vs_logG"]) for r in slope_rows},
+        "delta_G32_minus_G4_per_budget": {r["T_tokens"]: float(slope_rows[i]["acc_at_G32"]) - float(slope_rows[i]["acc_at_G4"]) for i, r in enumerate(slope_rows)},
+        "best_G_per_budget": {r["T_tokens"]: int(r["best_G"]) for r in slope_rows},
+    }
+    (RESULTS / "group_size_iter111_meta.json").write_text(json.dumps(meta, indent=2))
+
     print(f"WROTE {eff_path}")
     print(f"WROTE {the_path}")
     print(f"WROTE {dpo_path}")
     print(f"WROTE {g4_g32_path}")
+    print(f"WROTE {paired_path}")
+    print(f"WROTE {iso_path}")
+    print(f"WROTE {slope_path}")
+    print(f"WROTE {summary_path}")
     print(f"WROTE {fig_path}")
     print(f"WROTE {ext_path}")
 

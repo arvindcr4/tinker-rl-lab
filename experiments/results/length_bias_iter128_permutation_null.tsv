@@ -1,0 +1,3 @@
+hypothesis	alternative	n_pairs	observed_stat	B	permutation_p
+H1_efficiency_pairwise	greater	8	0.022981	50000	0.007700
+H2_signed_ccf_pairwise	less	32	-0.073053	50000	0.135997

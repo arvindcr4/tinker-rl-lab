@@ -1,0 +1,81 @@
+{
+  "iter": 128,
+  "pillar": "P4-LengthBias",
+  "B_perm": 50000,
+  "seed_base": 20260703,
+  "tasks": [
+    "arithmetic_easy",
+    "gsm8k_cot"
+  ],
+  "algos": [
+    "grpo",
+    "dr_grpo"
+  ],
+  "n_seeds_arithmetic": 5,
+  "n_seeds_gsm8k": 3,
+  "n_efficiency_cells": 8,
+  "n_signed_ccf_pairs": 32,
+  "h1_paired_by_task": {
+    "arithmetic_easy": {
+      "n_pairs": 5,
+      "mean_eff_gr": 0.2763341296124132,
+      "mean_eff_dr": 0.312346940320771,
+      "mean_delta_dr_minus_gr": 0.0360128107083578,
+      "wilcoxon_W": 15.0,
+      "wilcoxon_p_one_sided": 0.03125,
+      "cohens_d": 3.6188767301470253
+    },
+    "gsm8k_cot": {
+      "n_pairs": 3,
+      "mean_eff_gr": 0.006311026527623872,
+      "mean_eff_dr": 0.007571214594222685,
+      "mean_delta_dr_minus_gr": 0.0012601880665988128,
+      "wilcoxon_W": 5.0,
+      "wilcoxon_p_one_sided": 0.25,
+      "cohens_d": 0.44038836110684026
+    }
+  },
+  "h2_paired_by_task": {
+    "arithmetic_easy": {
+      "n_pairs": 20,
+      "mean_abs_bwd_gr": 0.37064603414739655,
+      "mean_abs_bwd_dr": 0.3270573971979079,
+      "mean_delta_dr_minus_gr": -0.04358863694948868,
+      "wilcoxon_W": 99.0,
+      "wilcoxon_p_one_sided": 0.4204111099243164,
+      "cohens_d": -0.1446946390626445
+    },
+    "gsm8k_cot": {
+      "n_pairs": 12,
+      "mean_abs_bwd_gr": 0.6507490449644746,
+      "mean_abs_bwd_dr": 0.5285885862005388,
+      "mean_delta_dr_minus_gr": -0.12216045876393573,
+      "wilcoxon_W": 29.0,
+      "wilcoxon_p_one_sided": 0.23486328125,
+      "cohens_d": -0.2569810402064824
+    }
+  },
+  "h3_envelope": {
+    "arithmetic_easy": {
+      "mean_eff_gr": 0.2763341296124132,
+      "mean_eff_dr": 0.312346940320771,
+      "ratio_dr_over_gr": 1.1303234267836166,
+      "dr_minus_gr": 0.03601281070835777
+    },
+    "gsm8k_cot": {
+      "mean_eff_gr": 0.006311026527623872,
+      "mean_eff_dr": 0.007571214594222685,
+      "ratio_dr_over_gr": 1.1996803627877126,
+      "dr_minus_gr": 0.001260188066598813
+    }
+  },
+  "h5_sign_test": {
+    "n_cells": 8,
+    "n_dr_wins": 7,
+    "n_gr_wins": 1,
+    "n_ties": 0,
+    "binom_p_one_sided": 0.03515625
+  },
+  "h1_perm_p": 0.007699846003079938,
+  "h2_perm_p": 0.1359972800543989
+}

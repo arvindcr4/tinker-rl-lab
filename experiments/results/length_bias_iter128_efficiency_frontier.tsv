@@ -1,0 +1,17 @@
+task	algo	seed	n_steps	len_first5	len_last5	dL_within	rwd_first5	rwd_last5	dR_within	pre_acc	post_acc	dacc_heldout	efficiency	efficiency_metric
+arithmetic_easy	grpo	42	40	6.171875	4.596875	1.575000	0.528125	0.976562	0.448438	nan	nan	nan	0.284722	dR_within
+arithmetic_easy	grpo	123	40	6.062500	4.550000	1.512500	0.560937	0.998437	0.437500	nan	nan	nan	0.289256	dR_within
+arithmetic_easy	grpo	456	40	6.045312	4.450000	1.595312	0.559375	0.998437	0.439063	nan	nan	nan	0.275220	dR_within
+arithmetic_easy	grpo	789	40	6.167187	4.485938	1.681250	0.548438	0.989062	0.440625	nan	nan	nan	0.262082	dR_within
+arithmetic_easy	grpo	1024	40	6.262500	4.500000	1.762500	0.509375	0.985938	0.476562	nan	nan	nan	0.270390	dR_within
+arithmetic_easy	dr_grpo	42	40	6.112500	4.575000	1.537500	0.478125	0.973437	0.495312	nan	nan	nan	0.322154	dR_within
+arithmetic_easy	dr_grpo	123	40	5.964062	4.537500	1.426563	0.503125	0.990625	0.487500	nan	nan	nan	0.341731	dR_within
+arithmetic_easy	dr_grpo	456	40	5.993750	4.465625	1.528125	0.528125	0.992188	0.464063	nan	nan	nan	0.303681	dR_within
+arithmetic_easy	dr_grpo	789	40	6.137500	4.487500	1.650000	0.496875	0.984375	0.487500	nan	nan	nan	0.295455	dR_within
+arithmetic_easy	dr_grpo	1024	40	6.079688	4.500000	1.579688	0.525000	0.996875	0.471875	nan	nan	nan	0.298714	dR_within
+gsm8k_cot	grpo	42	30	195.737500	170.134375	25.603125	nan	nan	nan	0.200000	0.255000	0.055000	0.002148	dacc_heldout
+gsm8k_cot	grpo	123	30	193.728125	181.109375	12.618750	nan	nan	nan	0.200000	0.260000	0.060000	0.004755	dacc_heldout
+gsm8k_cot	grpo	456	30	195.384375	189.565625	5.818750	nan	nan	nan	0.205000	0.275000	0.070000	0.012030	dacc_heldout
+gsm8k_cot	dr_grpo	42	30	192.612500	183.756250	8.856250	nan	nan	nan	0.205000	0.250000	0.045000	0.005081	dacc_heldout
+gsm8k_cot	dr_grpo	123	30	193.290625	185.443750	7.846875	nan	nan	nan	0.205000	0.265000	0.060000	0.007646	dacc_heldout
+gsm8k_cot	dr_grpo	456	30	195.743750	191.237500	4.506250	nan	nan	nan	0.205000	0.250000	0.045000	0.009986	dacc_heldout

@@ -1,4 +1,4 @@
-metric	n_models	intercept	se_intercept	slope_per_log10N	se_slope_per_log10N	boot_slope_mean	boot_slope_lo	boot_slope_hi	n_boot	corr_logN_metric
-mean_reward	5	0.633458	0.346660	-0.024267	0.204571	-0.114125	-1.118844	0.313122	4936	-0.068327
-peak	5	0.846065	0.163408	0.036825	0.096430	-0.010136	-0.830482	0.196896	4936	0.215309
-var_reward	5	0.039625	0.017062	-0.002425	0.010069	-0.003799	-0.062983	0.027431	4936	-0.137720
+metric	n_models	intercept	slope_per_log10N	se_slope	boot_slope_mean	boot_slope_lo	boot_slope_hi	n_boot	corr_logN_metric
+mean_reward	5	0.633458	-0.024267	0.204571	-0.121881	-1.118844	0.288903	4952	-0.068327
+peak	5	0.846065	0.036825	0.096430	-0.011263	-0.830482	0.196896	4952	0.215309
+var_reward	5	0.039625	-0.002425	0.010069	-0.003225	-0.062983	0.027431	4952	-0.137720

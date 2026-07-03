@@ -1,0 +1,15 @@
+{
+  "iter": 113,
+  "pillar": "P1-ScalingLaws",
+  "n_anchors": 5,
+  "fit_form": "R(t) = R_max * (1 - exp(-lambda * t))",
+  "lambda_bound": "[1e-4, 10.0] (canonical 2-param form)",
+  "phase_classification_method": "BIC-segmentation with k in {1,2,3} constant-mean regimes; nimmaturi2025predictive three-phase criterion = (best_k == 3) AND monotone_up AND (seg1_mean < 0.15) AND (seg3_mean > 0.40) (arXiv:2507.18014).",
+  "n_three_phase_pass": 0,
+  "n_collapse": 2,
+  "n_lam_at_bound": 4,
+  "nemotron_segments": "1-2:0.000;3-3:0.875;4-20:0.154",
+  "nemotron_classification": "collapse",
+  "nemotron_violation": "Nemotron-120B is the only 5-anchor pool member that does NOT fit any of (plateau, three-phase, saturation, drift). BIC picks k=3 (best segmentation), the segment means are non-monotone (rise-then-fall), and peak segment mean exceeds late segment mean -- a textbook collapse.  This directly violates the nimmaturi2025predictive three-phase template (which requires monotone non-decreasing segment means).",
+  "frontier_synthesis": "iter113 closes the Pillar-1 scaling-law investigation by adding the missing piece: explicit changepoint-based test of the three-phase hypothesis on the 5-anchor frontier pool. Result: 0/5 anchors pass the nimmaturi2025predictive three-phase criterion; 4/5 anchors are already saturated at step 1 (best_k=1 BIC-optimal or 2 with no detectable ramp); 1/5 (Nemotron-120B) is a clear collapse with peak not retained.  Combined with iter109's lambda-vs-N null (p=0.74) and iter105's R_max*(N) failure, the Pillar-1 finding is that GRPO post-training is not scale-law-shaped on this evidence base -- the only strong signal is the absence of a scaling law."
+}

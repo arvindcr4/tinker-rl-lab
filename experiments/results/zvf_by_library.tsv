@@ -19,10 +19,10 @@ gsm8k_real	Qwen/Qwen3-8B	4	4	0.1583	0.1900	0.6987	0.6942	0	0	0	4	0.0000	0.0000	0
 arithmetic_groupsize	Qwen/Qwen2.5-0.5B	4	1	0.7308	0.8380	0.9883	0.9764	0	0	0	4	0.0000	0.0000	0.0000	1.0000	NA	experiments/results/groupsize_zvf_sweep.tsv
 tool_use	qwen3-32b	1	1	1.0000	1.0000	0.0000	0.0000	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/tool_code_reward_diagnostics.tsv
 tool_use	llama-8b-inst	1	1	1.0000	1.0000	0.0000	0.0000	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/tool_code_reward_diagnostics.tsv
-scaling_law	Qwen3.5-4B	1	1	NA	NA	1.0000	0.8500	0	0	0	1	0.0000	0.0000	0.0000	1.0000	NA	experiments/results/scaling_law_three_phase.tsv
-scaling_law	Qwen3-8B	1	1	NA	NA	0.6250	0.3438	0	1	0	0	0.0000	1.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
-scaling_law	Llama-3.1-8B-Instruct	1	1	NA	NA	1.0000	0.8438	0	1	0	0	0.0000	1.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
-scaling_law	DeepSeek-V3.1	1	1	NA	NA	1.0000	0.8125	0	1	0	0	0.0000	1.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
-scaling_law	Nemotron-120B	1	1	NA	NA	0.8750	0.2083	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
+scaling_law	Qwen3.5-4B	1	1	NA	NA	-88.2407	-88.7534	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
+scaling_law	Qwen3-8B	1	1	NA	NA	-102.2380	-102.9954	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
+scaling_law	Llama-3.1-8B-Instruct	1	1	NA	NA	-106.3609	-105.3437	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
+scaling_law	DeepSeek-V3.1	1	1	NA	NA	-75.5239	-76.7449	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
+scaling_law	Nemotron-120B	1	1	NA	NA	-54.6300	-53.2725	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
 drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	10	5	0.7941	0.8250	0.9895	0.9881	0	0	0	10	0.0000	0.0000	0.0000	1.0000	NA	experiments/results/drgrpo_vs_grpo.json
 samestack_ppo_grpo	Qwen/Qwen2.5-0.5B	10	5	NA	NA	0.9910	0.9485	0	1	0	9	0.0000	0.1000	0.0000	0.9000	NA	experiments/results/samestack_ppo_grpo.json

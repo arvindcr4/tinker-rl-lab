@@ -1,0 +1,14 @@
+# zvf_iter98_tooluse.tsv — bfclv4 tool-use rho decomposition.
+# G = n_total = 8. Tool-use 0% -> p_sparse = 0 -> zvf_iid_sparse = 1
+# -> rho_sparse = 1.0 (herding-end collapsed).
+seed	step	n_correct	n_total	success_rate	p_sparse	p_dense	zvf_sparse	zvf_dense	zvf_iid_sparse	zvf_iid_dense	rho_sparse	rho_dense
+0	0	0	8	0.0	0.0	0.0	1.0	1.0	1.0	1.0	1.0	1.0
+0	1	0	8	0.0	0.0	0.0	1.0	1.0	1.0	1.0	1.0	1.0
+0	2	2	8	0.25	0.25	0.25	0.0	0.0	0.100128	0.100128	0.0	0.0
+0	3	0	8	0.0	0.0	0.0	1.0	1.0	1.0	1.0	1.0	1.0
+0	4	0	8	0.0	0.0	0.225	1.0	0.0	1.0	0.130147	1.0	0.0
+1	0	1	8	0.125	0.125	0.3375	0.0	0.0	0.343609	0.037278	0.0	0.0
+1	1	1	8	0.125	0.125	0.3125	0.0	0.0	0.343609	0.05	0.0	0.0
+1	2	2	8	0.25	0.25	0.3625	0.0	0.0	0.100128	0.027578	0.0	0.0
+1	3	2	8	0.25	0.25	0.25	0.0	0.0	0.100128	0.100128	0.0	0.0
+1	4	1	8	0.125	0.125	0.125	0.0	0.0	0.343609	0.343609	0.0	0.0

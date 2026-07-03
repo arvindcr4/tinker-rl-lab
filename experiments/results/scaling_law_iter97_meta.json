@@ -1,0 +1,96 @@
+{
+  "iter": 97,
+  "n_anchors": 12,
+  "families_compared": [
+    "constant",
+    "1seg_ols",
+    "saturation",
+    "powerlaw",
+    "ar1",
+    "monod",
+    "gompertz",
+    "pw2seg"
+  ],
+  "new_families": [
+    "monod",
+    "gompertz",
+    "pw2seg"
+  ],
+  "consensus_winners_by_criterion": {
+    "constant": {
+      "aic": 6,
+      "bic": 9,
+      "loocv": 8,
+      "forecast": 0,
+      "rmse": 2,
+      "r2": 0
+    },
+    "1seg_ols": {
+      "aic": 2,
+      "bic": 3,
+      "loocv": 2,
+      "forecast": 0,
+      "rmse": 2,
+      "r2": 2
+    },
+    "saturation": {
+      "aic": 0,
+      "bic": 0,
+      "loocv": 0,
+      "forecast": 0,
+      "rmse": 0,
+      "r2": 0
+    },
+    "powerlaw": {
+      "aic": 0,
+      "bic": 0,
+      "loocv": 1,
+      "forecast": 2,
+      "rmse": 0,
+      "r2": 0
+    },
+    "ar1": {
+      "aic": 0,
+      "bic": 0,
+      "loocv": 1,
+      "forecast": 3,
+      "rmse": 1,
+      "r2": 1
+    },
+    "monod": {
+      "aic": 0,
+      "bic": 0,
+      "loocv": 0,
+      "forecast": 0,
+      "rmse": 0,
+      "r2": 0
+    },
+    "gompertz": {
+      "aic": 0,
+      "bic": 0,
+      "loocv": 0,
+      "forecast": 0,
+      "rmse": 0,
+      "r2": 0
+    },
+    "pw2seg": {
+      "aic": 4,
+      "bic": 0,
+      "loocv": 0,
+      "forecast": 2,
+      "rmse": 7,
+      "r2": 7
+    }
+  },
+  "variance_scaling": {
+    "alpha": 0.044245178068945845,
+    "beta": -0.007353987109119571,
+    "r2": 0.03965731926138927,
+    "beta_lo95": -0.02275977542862626,
+    "beta_hi95": 0.007754732779339947,
+    "beta_excludes_zero": false,
+    "n_bootstrap": 2000,
+    "interpretation": "If beta > 0 (CI excludes 0), per-anchor reward variance GROWS with log10(params_B) -- larger models are noisier under GRPO. If beta < 0, larger models are smoother.  If CI covers 0, the noise floor is approximately scale-invariant."
+  },
+  "new_family_wins_anchor_count": 6
+}

@@ -1,0 +1,12 @@
+# Pillar 2 iter86 OOP classification at K=5, tau=0.5.
+# class_iter78 = iter78 is_failure. class_strict = held_mean_10<0.10.
+# Source: scripts/zvf_iter86.py
+source	method	seed	class_iter78	t_stop_iter78	t_fail_iter78	class_strict	t_stop_strict	t_fail_strict
+groupsize_zvf_sweep	groupsize	42	correct_stop	9	19	false_stop	9	-1
+groupsize_zvf_sweep	groupsize	123	correct_stop	8	19	false_stop	8	-1
+groupsize_zvf_sweep	groupsize	456	correct_stop	5	19	false_stop	5	-1
+tinker_gsm8k_zvf	tinker_gsm8k	42	none	-1	-1	none	-1	-1
+tinker_gsm8k_zvf	tinker_gsm8k	123	none	-1	-1	none	-1	-1
+tinker_gsm8k_zvf	tinker_gsm8k	456	none	-1	-1	none	-1	-1
+bfclv4_tool_use	tool_use	0	none	-1	-1	missed	-1	0
+bfclv4_tool_use	tool_use	1	none	-1	-1	none	-1	-1

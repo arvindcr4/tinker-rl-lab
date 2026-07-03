@@ -1,0 +1,30 @@
+{
+  "iter": 78,
+  "pillar": "P2-ZVF",
+  "ts": "2026-07-03T15:37:42Z",
+  "seed": 20260703,
+  "W": 10,
+  "H_cutoff": 0.5,
+  "H_lo": 0.1,
+  "STUCK_W": 20,
+  "STUCK_CUTOFF": 0.5,
+  "thresholds_swept": [
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9
+  ],
+  "n_traces_loaded": 62,
+  "n_traces_with_step_data": 62,
+  "n_evaluable_traces": 37,
+  "outputs": [
+    "zvf_iter78_per_step_features.tsv",
+    "zvf_iter78_alarm_thresholds.tsv",
+    "zvf_iter78_leadtime_summary.tsv",
+    "zvf_iter78_ews_protocol.tsv",
+    "zvf_iter78_anchors.tsv",
+    "zvf_iter78_single_channel.tsv",
+    "zvf_iter78_summary.tsv"
+  ]
+}

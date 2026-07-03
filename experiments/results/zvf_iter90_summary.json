@@ -1,0 +1,24 @@
+{
+  "n_traces": 45,
+  "n_pooled_episodes": 54,
+  "n_pooled_recovered": 21,
+  "n_pooled_sustained": 33,
+  "pooled_recovery_rate": 0.3889,
+  "tau": 0.5,
+  "k_recover": 5,
+  "best_method_recovery": "gift",
+  "best_recovery_rate": 0.6364,
+  "worst_method_recovery": "grpo",
+  "worst_recovery_rate": 0.0,
+  "by_method_recovery": {
+    "grpo": 0.0,
+    "aero": 0.1667,
+    "cppo": 0.2857,
+    "ngrpo": 0.2857,
+    "scafgrpo": 0.0,
+    "mcgrpo": 0.375,
+    "gift": 0.6364,
+    "areal": 0.6,
+    "es": 0.0
+  }
+}

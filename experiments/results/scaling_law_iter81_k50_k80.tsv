@@ -1,0 +1,13 @@
+anchor	n_steps	k50	k80	best_sat_r2	best_const_r2	delta_sat_minus_const	k_best	status
+Qwen3.5-4B	30	nan	nan	-3.194336896217287e-05	-3.203895937464729e-05	9.559041247442224e-08	17	ok
+Qwen3-8B	30	nan	nan	-5.084738025296076e-06	-5.051525560961778e-06	-3.321246433429792e-08	7	ok
+Llama-3.1-8B-Instruct	30	nan	nan	-0.0018037926759322254	-0.0018044337515039643	6.410755717389804e-07	23	ok
+Qwen3-32B	3	nan	nan	nan	nan	nan	nan	skip_n_lt6
+Qwen3.5-27B	3	nan	nan	nan	nan	nan	nan	skip_n_lt6
+gpt-oss-20B	30	nan	nan	-0.00014203970774695485	-0.01605580493443881	0.015913765226691856	11	ok
+Qwen3-30B-MoE	5	nan	nan	nan	nan	nan	nan	skip_n_lt6
+Qwen3-30B-MoE-Inst	3	nan	nan	nan	nan	nan	nan	skip_n_lt6
+DeepSeek-V3.1	20	nan	nan	-3.583680019403346e-10	0.0	-3.583680019403346e-10	12	ok
+Nemotron-120B	20	nan	nan	-0.0006546910127542827	-0.0006228589224541725	-3.183209030011014e-05	13	ok
+Qwen3-235B-MoE	4	nan	nan	nan	nan	nan	nan	skip_n_lt6
+Kimi-K2-Thinking	20	nan	nan	-0.24244185238407923	-0.24242424242424243	-1.760995983679514e-05	10	ok

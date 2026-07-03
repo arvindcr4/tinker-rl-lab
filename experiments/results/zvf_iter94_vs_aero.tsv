@@ -1,0 +1,11 @@
+# zvf_iter94_vs_aero.tsv — signed gap to AERO on iter94 stability_score.
+method	stability_score	aero_gap	beats_aero
+aero	14.83	0.0	False
+areal	28.0	13.17	True
+cppo	18.28	3.45	True
+es	70.0	55.17	True
+gift	29.05	14.22	True
+grpo	10.0	-4.83	False
+mcgrpo	21.18	6.35	True
+ngrpo	18.24	3.41	True
+scafgrpo	70.0	55.17	True

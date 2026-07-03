@@ -1,0 +1,17 @@
+task	algo	seed	witness_lr	witness_rl
+arithmetic_easy	grpo	42	L2->R0=0.0708bits	L2->R0=0.1538bits
+arithmetic_easy	grpo	123	L0->R0=0.0722bits	L0->R2=0.0221bits
+arithmetic_easy	grpo	456	L2->R0=0.1374bits	L1->R2=0.1392bits
+arithmetic_easy	grpo	789	L0->R0=0.0813bits	L2->R2=0.1219bits
+arithmetic_easy	grpo	1024	L1->R0=0.0982bits	L0->R1=0.0625bits
+arithmetic_easy	dr_grpo	42	L2->R1=0.1123bits	L1->R2=0.1219bits
+arithmetic_easy	dr_grpo	123	L2->R0=0.1078bits	L0->R0=0.0450bits
+arithmetic_easy	dr_grpo	456	L2->R0=0.0816bits	L1->R2=0.1390bits
+arithmetic_easy	dr_grpo	789	L1->R0=0.0982bits	L2->R2=0.0971bits
+arithmetic_easy	dr_grpo	1024	L2->R0=0.0952bits	L0->R1=0.1627bits
+gsm8k_cot	grpo	42	L0->R1=0.1093bits	L2->R1=0.0593bits
+gsm8k_cot	grpo	123	L1->R1=0.0579bits	L2->R0=0.0807bits
+gsm8k_cot	grpo	456	L1->R0=0.1368bits	L1->R0=0.1601bits
+gsm8k_cot	dr_grpo	42	L1->R2=0.1210bits	L1->R1=0.1178bits
+gsm8k_cot	dr_grpo	123	L1->R2=0.0913bits	L2->R1=0.1034bits
+gsm8k_cot	dr_grpo	456	L0->R2=0.1018bits	L0->R1=0.1198bits

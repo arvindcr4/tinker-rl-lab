@@ -1,0 +1,18 @@
+metric	value	finding
+pareto_T1.0M_G_star	8	At T=1.0M the per-row best G is 8 (acc=0.480); envelope gap to worst G = 13.0 pp; gap from G=4 anchor = 7.0 pp.
+pareto_T4.0M_G_star	16	At T=4.0M the per-row best G is 16 (acc=0.690); envelope gap to worst G = 14.0 pp; gap from G=4 anchor = 14.0 pp.
+pareto_T16.0M_G_star	32	At T=16.0M the per-row best G is 32 (acc=0.840); envelope gap to worst G = 21.0 pp; gap from G=4 anchor = 21.0 pp.
+pareto_T64.0M_G_star	32	At T=64.0M the per-row best G is 32 (acc=0.880); envelope gap to worst G = 24.0 pp; gap from G=4 anchor = 24.0 pp.
+isocost_target_0.50_G_star	4	Target acc=0.50: cheapest G is G=4 at T=4.0M; G=4 needs T=4.0M, G=32 needs T=4.0M.
+isocost_target_0.55_G_star	4	Target acc=0.55: cheapest G is G=4 at T=4.0M; G=4 needs T=4.0M, G=32 needs T=4.0M.
+isocost_target_0.60_G_star	8	Target acc=0.60: cheapest G is G=8 at T=4.0M; G=4 needs T=16.0M, G=32 needs T=4.0M.
+isocost_target_0.65_G_star	8	Target acc=0.65: cheapest G is G=8 at T=4.0M; G=4 needs T=NoneM, G=32 needs T=4.0M.
+isocost_target_0.70_G_star	8	Target acc=0.70: cheapest G is G=8 at T=16.0M; G=4 needs T=NoneM, G=32 needs T=16.0M.
+isocost_target_0.75_G_star	8	Target acc=0.75: cheapest G is G=8 at T=16.0M; G=4 needs T=NoneM, G=32 needs T=16.0M.
+isocost_target_0.80_G_star	16	Target acc=0.80: cheapest G is G=16 at T=16.0M; G=4 needs T=NoneM, G=32 needs T=16.0M.
+isocost_target_0.85_G_star	16	Target acc=0.85: cheapest G is G=16 at T=64.0M; G=4 needs T=NoneM, G=32 needs T=64.0M.
+isocost_target_0.88_G_star	32	Target acc=0.88: cheapest G is G=32 at T=64.0M; G=4 needs T=NoneM, G=32 needs T=64.0M.
+bootstrap_T1.0M_R_point	0.976	At T=1.0M the bootstrap retention R (B=2000) has median 0.976 [0.883, 1.082]; P(R<0.976)=0.502, P(R<0.80)=0.000.
+bootstrap_T4.0M_R_point	0.833	At T=4.0M the bootstrap retention R (B=2000) has median 0.833 [0.774, 0.893]; P(R<0.976)=1.000, P(R<0.80)=0.136.
+bootstrap_T16.0M_R_point	0.750	At T=16.0M the bootstrap retention R (B=2000) has median 0.751 [0.706, 0.797]; P(R<0.976)=1.000, P(R<0.80)=0.981.
+bootstrap_T64.0M_R_point	0.727	At T=64.0M the bootstrap retention R (B=2000) has median 0.728 [0.685, 0.771]; P(R<0.976)=1.000, P(R<0.80)=1.000.

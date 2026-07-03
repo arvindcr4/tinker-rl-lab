@@ -1,0 +1,4 @@
+T_ext_tokens	T_M	T_ext_M	c_extrapolated	b_extrapolated	k_extrapolated	a_extrapolated	predicted_acc_G32_pp	predicted_acc_G4_pp	predicted_delta_G32_minus_G4_pp	monotone_c_decreasing_with_T	monotone_c_increasing_with_T
+128000000	128.0	128.0	0.9137	1.5681	1.5681	0.9017	83.56	45.99	37.57	yes	no
+256000000	256.0	256.0	0.6889	1.9306	1.9306	0.9077	73.04	16.48	56.56	yes	no
+512000000	512.0	512.0	0.464	2.3768	2.3768	0.9138	43.78	0.0	43.78	yes	no

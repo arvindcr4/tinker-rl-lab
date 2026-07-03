@@ -1,0 +1,3 @@
+task	model	small_G	large_G	ceiling_small	ceiling_large	ceiling_ratio_Rinf	task_headroom	wu_97_6pct_holds
+arithmetic(near-ceiling)	qwen2.5-0.5B	4	16	0.988	0.978	1.0102	0.022	yes
+gsm8k(headroom)	qwen3-8B	4	32	0.646	0.893	0.7230	0.107	no

@@ -1,0 +1,9 @@
+# Pillar 2 iter78 recommended ZVF EWS protocol.
+# R1: global recommended threshold; R2: composite definition;
+# R3: stuck failure criterion; R4: per-method fallback.
+# Source: scripts/zvf_iter78.py
+rule_id	method	threshold	true_alarm_rate	miss_rate	rationale
+R1_global_threshold	ALL	0.500000	1.000000	0.000000	global threshold maximizing macro true-alarm rate
+R2_composite_def	ALL	max(ar1, cusum, h_run_frac)	NA	NA	union-style composite; any channel above threshold trips
+R3_stuck_fail_def	ALL	mean(zvf[max(0,t-19)..t+1]) >= 0.5	NA	NA	20-step rolling ZVF lock-in failure criterion
+R4_per_method	see leadtime_summary	per-method	NA	NA	per-method best threshold from leadtime_summary

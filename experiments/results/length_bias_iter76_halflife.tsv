@@ -1,0 +1,17 @@
+task	algo	seed	tau_all	tau_up	tau_dn	n_shocks	n_up	n_dn
+arith_easy	dr_grpo	42	14.8816	14.8816	nan	5	5	0
+arith_easy	dr_grpo	123	6.8874	6.8874	nan	3	3	0
+arith_easy	dr_grpo	456	6.2894	6.2894	nan	1	1	0
+arith_easy	dr_grpo	789	7.5807	7.5807	nan	4	4	0
+arith_easy	dr_grpo	1024	7.9550	7.9550	nan	4	4	0
+arith_easy	grpo	42	18.3934	18.3934	nan	3	3	0
+arith_easy	grpo	123	7.6188	7.6188	nan	3	3	0
+arith_easy	grpo	456	7.4074	7.4074	nan	3	3	0
+arith_easy	grpo	789	16.3653	16.3653	nan	3	3	0
+arith_easy	grpo	1024	15.0287	15.0287	nan	4	4	0
+gsm8k_cot	dr_grpo	42	9.8437	8.3787	10.8203	5	2	3
+gsm8k_cot	dr_grpo	123	7.0460	6.4536	7.4409	5	2	3
+gsm8k_cot	dr_grpo	456	13.4510	12.1748	14.0892	3	1	2
+gsm8k_cot	grpo	42	10.5413	9.5134	11.9119	7	4	3
+gsm8k_cot	grpo	123	17.5000	10.0000	25.0000	4	2	2
+gsm8k_cot	grpo	456	8.2001	4.6003	10.0000	3	1	2

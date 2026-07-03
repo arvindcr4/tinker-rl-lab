@@ -1,0 +1,17 @@
+task	algo	seed	zeta_all	zeta_up	zeta_dn	n_shocks	n_up	n_dn
+arith_easy	dr_grpo	42	0.6718	0.6685	0.6783	3	2	1
+arith_easy	dr_grpo	123	0.3084	0.3084	nan	4	4	0
+arith_easy	dr_grpo	456	0.6158	0.5763	0.7341	8	6	2
+arith_easy	dr_grpo	789	0.5093	0.5093	nan	4	4	0
+arith_easy	dr_grpo	1024	0.3571	0.3571	nan	5	5	0
+arith_easy	grpo	42	0.1275	-0.0687	0.3236	2	1	1
+arith_easy	grpo	123	0.2448	0.2448	nan	4	4	0
+arith_easy	grpo	456	0.5926	0.5293	0.7616	11	8	3
+arith_easy	grpo	789	nan	nan	nan	0	0	0
+arith_easy	grpo	1024	0.2329	0.2329	nan	3	3	0
+gsm8k_cot	dr_grpo	42	-0.0515	0.0962	-0.1991	2	1	1
+gsm8k_cot	dr_grpo	123	0.9414	0.8314	1.0880	7	4	3
+gsm8k_cot	dr_grpo	456	nan	nan	nan	0	0	0
+gsm8k_cot	grpo	42	0.3353	0.4221	0.2050	5	3	2
+gsm8k_cot	grpo	123	0.6601	0.5779	0.9065	4	3	1
+gsm8k_cot	grpo	456	nan	nan	nan	0	0	0

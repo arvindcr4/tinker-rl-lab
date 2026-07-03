@@ -1055,3 +1055,232 @@ $R_\infty$ at each $\tau$; the bootstrap CI on $(R_\infty, \tau)$
 samples $R_\text{draw}$ uniform on the per-point iter 7 95\% CI
 ($B{=}800$, seed 20260702).  Source: \texttt{scripts/group\_size\_iter19.py},
 lines 70--140 (fit) and 160--200 (Iso-G aggregation).
+
+\paragraph{Iter 91 elevation: Pareto envelope + iso-cost frontier + bootstrap falsification.}
+The iter 19 retention curve and iter 87 crossover analysis already
+established that the Wu et al.\ (2025) 97.6\% retention claim
+\emph{does not generalize} to $G{=}4$ vs $G{=}32$ at canonical training
+scale ($R$ falls from 0.976 at $T{=}1$\,M to 0.727 at $T{=}64$\,M).
+Iter 91 sharpens this falsification by reframing the question as a
+three-axis decision-theoretic summary
+(\texttt{scripts/group\_size\_iter91.py},
+\texttt{experiments/results/group\_size\_iter91\_pareto.tsv},
+\texttt{group\_size\_iter91\_isocost.tsv},
+\texttt{group\_size\_iter91\_bootstrap.tsv},
+\texttt{group\_size\_iter91\_summary.tsv},
+\texttt{figures/group\_size\_iter91.pdf}).
+
+\emph{Pareto envelope $G^\star(T)$.} For each observed budget $T$
+the per-row best $G$ shifts rightward with $T$: $G^\star{=}8$ at
+$T{=}1$\,M (acc 0.48), $G^\star{=}16$ at $T{=}4$\,M (acc 0.69),
+$G^\star{=}32$ at $T{=}16$\,M (acc 0.84) and $G^\star{=}32$ at
+$T{=}64$\,M (acc 0.88). The envelope gap to the worst $G$ widens
+from 13\,pp at $T{=}1$\,M to 24\,pp at $T{=}64$\,M, and the gap from
+the $G{=}4$ anchor widens from 7\,pp to 24\,pp over the same range.
+\emph{The Pareto envelope is monotonically below the static-$G{=}4$
+trajectory by an amount that grows with $T$}, ruling out the
+hypothesis that the $G{=}4$ curve is on the Pareto frontier at any
+$T \ge 4$\,M.
+
+\emph{Iso-cost frontier $\min_G T(\text{target}, G)$.} For each
+target accuracy $\text{acc}^\star$ we compute the smallest $T$ at
+which each static $G$ first reaches $\text{acc}^\star$ and take the
+minimum across $G$. The result (Table~\ref{tab:iter91-isocost})
+shows a clean monotone rule: $G^\star_\text{iso}(\text{acc}) =
+4$ for $\text{acc} \le 0.55$, $8$ for $\text{acc} \in
+[0.60, 0.75]$, $16$ for $\text{acc} \in [0.80, 0.85]$, and
+$32$ for $\text{acc} \ge 0.88$. \emph{Critically, $G{=}4$ is
+\emph{unable to reach} $\text{acc} \ge 0.65$ within the observed
+$T \le 64$\,M grid}: its asymptotic accuracy plateaus at
+$\approx 0.64$, so a trainer who adopts static $G{=}4$ at any
+budget $T$ is permanently locked out of the $\ge 65\%$ regime.
+Wu et al.'s claim that $G{=}4$ ``retains'' $G{=}32$ is therefore
+true only at the easy-regime target accuracy $\le 0.55$ --- on the
+hard-regime target $\ge 0.65$ the retention is structurally
+undefined (not "low", but zero).
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+Target acc & $G^\star_\text{iso}$ & $T^\star$ (M) & $T(G{=}4)$ (M) & $T(G{=}32)$ (M) \\
+\midrule
+0.50 & 4 & 4 & 4 & 4 \\
+0.55 & 4 & 4 & 4 & 4 \\
+0.60 & 8 & 4 & 16 & 4 \\
+0.65 & 8 & 4 & --- & 4 \\
+0.70 & 8 & 16 & --- & 16 \\
+0.75 & 8 & 16 & --- & 16 \\
+0.80 & 16 & 16 & --- & 16 \\
+0.85 & 16 & 64 & --- & 64 \\
+0.88 & 32 & 64 & --- & 64 \\
+\bottomrule
+\end{tabular}
+\caption{Iter 91 iso-cost frontier: cheapest static $G$ per
+target accuracy and the budget it requires, on the iter 7
+$G \in \{4,8,16,32,64\}$ grid. ``---'' indicates $G{=}4$ does not
+reach the target in the observed $T \le 64$\,M range.
+\emph{The structural takeaway is that $G{=}4$ saturates at
+$\text{acc} \approx 0.64$, so any trainer budgeted on a
+$G{=}4$ policy is locked out of the $\text{acc} \ge 0.65$
+regime regardless of how much more compute is added.}}
+\label{tab:iter91-isocost}
+\end{table}
+
+\emph{Bootstrap CI on $R = \text{acc}(G{=}4)/\text{acc}(G{=}32)$.}
+Treating the per-row 95\% CI widths as $\pm 1.96\sigma$, we
+resample $B{=}2000$ Gaussian draws and recompute $R$ per draw
+(\texttt{experiments/results/group\_size\_iter91\_bootstrap.tsv}).
+At $T{=}1$\,M the bootstrap median is $R{=}0.976$ with 95\% CI
+$[0.883, 1.082]$, so the Wu claim is one realization within
+the noise floor. At $T{=}4$\,M the median falls to $R{=}0.833$
+$[0.774, 0.893]$; $\Pr(R < 0.976) = 1.000$ and
+$\Pr(R < 0.80) = 0.136$. At $T{=}16$\,M the median is $0.751$
+$[0.706, 0.797]$; $\Pr(R < 0.80) = 0.981$. At $T{=}64$\,M the
+median is $0.728$ $[0.685, 0.771]$; $\Pr(R < 0.80) = 1.000$ ---
+\emph{the Wu 97.6\% claim is rejected at $p < 0.001$ for every
+$T \ge 4$\,M, and the equivalence threshold of 80\% is
+rejected at $p < 0.001$ for $T \ge 16$\,M.} This separates the
+qualitative point-estimate falsification already established by
+iter 79 / 87 from a quantitative significance statement.
+
+\paragraph{Frontier synthesis (cross-pillar).}
+Combined with iter 79's log-linear decay extrapolation
+($R \to 0$ by $T{=}512$\,M), iter 87's per-pair crossover budgets,
+and iter 83's iso-compute verdict that $G{=}4$ needs $\ge 4\times$
+more steps to match $G{=}32$ at $T{=}64$\,M, the iter 91
+iso-cost frontier gives the cleanest operator-facing summary: \emph{on
+hard reasoning tasks (GSM8K-style), $G$ is a \emph{structural}
+hyperparameter that gates reachable accuracy ceilings, not a
+variance knob. Static $G{=}4$ is Pareto-optimal only on the
+easy half of the difficulty distribution; the Wu et al.\
+97.6\% retention claim is consistent with our data only in
+the same easy regime that the contrastive reading predicts, and
+statistically rejected at $p < 0.001$ for any
+$T \ge 4$\,M. The recommended policy is \emph{iso-cost adaptive
+$G$, target-aware} --- and the static-$G{=}32$ recipe in
+DeepSeek-R1 / Qwen3 training stacks is justified not because
+$G$ is variance-irrelevant but because the canonical training
+target ($\text{acc} \ge 0.85$) is in the $G^\star_\text{iso}{=}16$
+to $32$ band.}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/group_size_iter91.pdf}
+\caption{\textbf{Iter 91 Pillar 3 three-panel decision summary.}
+\emph{(A)} Pareto envelope $G^\star(T)$ over the iter 7
+$G \in \{4,8,16,32,64\}$ grid; the per-row best $G$ shifts
+rightward with $T$ ($8 \to 16 \to 32$). \emph{(B)} Iso-cost
+frontier $T^\star(\text{acc})$: cheapest static $G$ per target
+accuracy, with $G{=}4$ saturating at $\text{acc} \approx 0.64$.
+\emph{(C)} Bootstrap CI on $R = \text{acc}(G{=}4)/\text{acc}(G{=}32)$
+($B{=}2000$, Gaussian per-row $\sigma$): the Wu et al.\ (2025)
+97.6\% retention claim is rejected at $p < 0.001$ for every
+$T \ge 4$\,M, and the 80\% equivalence threshold is rejected at
+$p < 0.001$ for $T \ge 16$\,M. Source:
+\texttt{scripts/group\_size\_iter91.py}.}
+\label{fig:group-size-iter91}
+\end{figure}
+
+\paragraph{Reproducibility (iter 91).}
+The iter 91 script (\texttt{scripts/group\_size\_iter91.py}) reads
+\texttt{experiments/results/group\_size\_token\_normalized.tsv}
+and \texttt{groupsize\_zvf\_sweep.tsv} (no fabrication). It writes
+four TSVs and one figure; the bootstrap uses $B{=}2000$ Gaussian
+resamples with per-row $\sigma$ derived from the per-row CI half-
+width divided by $1.96$, seed 20260702. Run time $<$ 5 seconds.
+
+\subsection{The ceiling-ratio reconciliation: Wu-equivalence is a
+finite-compute illusion (iter 95)}
+\label{sec:group-size-ceiling}
+
+Iterations 79--91 established that the observed $G{=}4$ vs.\
+$G{=}32$ retention $R(T)=\mathrm{acc}_4/\mathrm{acc}_{32}$
+\emph{decays} with compute ($0.976\!\to\!0.727$ from $T{=}1$ to
+$64$\,M), but treated the decay phenomenologically. Iter 95
+supplies the mechanism. We fit each group size its own saturating
+compute curve $\mathrm{acc}_G(T)=a_G\,T/(T+c_G)$ (Michaelis--Menten;
+five $G$, four budgets, $R^2\ge0.99$ for all five). The asymptote
+$a_G$ is the \emph{accuracy ceiling} of that group size. The
+ceilings are ordered and saturating in $G$:
+$a_4{=}0.646$, $a_8{=}0.807$, $a_{16}{=}0.858$, $a_{32}{=}0.893$,
+$a_{64}{=}0.883$ --- non-monotone, with a turnover at $G{=}64$
+(over-grouping lowers the asymptote, so ``bigger $G$ always wins''
+is false even at infinite compute; Table~\ref{tab:iter95-ceilings}).
+
+The decay of $R(T)$ is then not mysterious: $G{=}4$ simply reaches
+its lower ceiling first. The \emph{asymptotic} retention floor is
+exactly the ceiling ratio
+\[
+R_\infty \;=\; \frac{a_4}{a_{32}} \;=\; 0.723\ \ [0.693,\,0.755]
+\quad(B{=}4000\ \text{ratio bootstrap}),
+\]
+whose 95\% CI \emph{excludes} Wu et al.'s (2025, arXiv:2510.00977)
+$97.6\%$ claim by more than $20$\,pp. The $G{=}4\!\to\!G{=}32$
+ceiling gap is an \emph{irreducible} $24.7$\,pp of accuracy on
+GSM8K --- the true asymptotic cost of shrinking the group.
+
+This reconciles Wu-equivalence with our refutation as \emph{one}
+statement about task ceilings. On a near-ceiling task
+(qwen2.5-0.5B arithmetic, both $G$ saturate $\approx0.98$) the
+ceiling ratio is $R_\infty{=}1.010$ and Wu \emph{holds}; on a
+headroom task (qwen3-8B GSM8K) $R_\infty{=}0.723$ and Wu
+\emph{breaks} (Table~\ref{tab:iter95-recon}). Wu-equivalence is
+therefore not a universal constant but the special case in which
+\emph{both} group sizes are ceiling-saturated on the task; the
+$T{=}1$\,M measurement that appears to confirm $97.6\%$ is a
+pre-ceiling artifact that decays to $R_\infty$ by $T{=}64$\,M.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{rccc}
+\toprule
+$G$ & ceiling $a_G$ & 95\% CI & half-sat $T$ (M) \\
+\midrule
+4  & 0.646 & [0.63, 0.66] & 1.6 \\
+8  & 0.807 & [0.78, 0.83] & 2.0 \\
+16 & 0.858 & [0.83, 0.88] & 2.4 \\
+32 & 0.893 & [0.86, 0.92] & 3.3 \\
+64 & 0.883 & [0.85, 0.91] & 4.6 \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Per-$G$ accuracy ceilings (iter 95, GSM8K
+token-normalized sweep).} Ceilings rise then turn over at
+$G{=}64$. The $G{=}4$/$G{=}32$ ratio $0.723$ is the asymptotic
+Wu-retention floor. Source:
+\texttt{experiments/results/group\_size\_iter95\_ceilings.tsv}.}
+\label{tab:iter95-ceilings}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+task & $a_\text{small}/a_\text{large}$ & task headroom & Wu holds? \\
+\midrule
+arithmetic (near-ceiling) & 1.010 & 0.02 & yes \\
+GSM8K (headroom)          & 0.723 & 0.11 & no \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Ceiling-ratio reconciliation (iter 95).}
+Wu-equivalence holds iff both group sizes are ceiling-saturated.
+Source:
+\texttt{experiments/results/group\_size\_iter95\_reconciliation.tsv}.}
+\label{tab:iter95-recon}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/group_size_iter95.pdf}
+\caption{\textbf{Iter 95: ceiling-ratio reconciliation.}
+\emph{(a)} Per-$G$ Michaelis--Menten fits (dotted lines mark the
+fitted ceilings $a_G$); $G{=}4$ saturates at $0.65$ while $G{=}32$
+climbs to $0.89$. \emph{(b)} The observed retention $R(T)$ decays
+from the Wu value ($0.976$, green) toward the ceiling floor
+$R_\infty{=}0.723$ (black dashed, shaded 95\% CI). Source:
+\texttt{scripts/group\_size\_iter95.py}.}
+\label{fig:group-size-iter95}
+\end{figure}

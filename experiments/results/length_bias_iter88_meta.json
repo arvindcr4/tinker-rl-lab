@@ -1,0 +1,25 @@
+{
+  "iter": 88,
+  "pillar": "P4-LengthBias",
+  "task": "Pillar 4 (Length Bias / Dr.GRPO): Quantile-regression coupling decomposition",
+  "stats": [
+    "quantile_slopes",
+    "iqr_q",
+    "tail_ratio",
+    "partial_spear_rho",
+    "monotone_q"
+  ],
+  "quantiles": [
+    0.1,
+    0.25,
+    0.5,
+    0.75,
+    0.9
+  ],
+  "inputs": [
+    "drgrpo_vs_grpo.json",
+    "drgrpo_gsm8k_cot_full.json"
+  ],
+  "n_runs": 16,
+  "n_paired_tests": 18
+}

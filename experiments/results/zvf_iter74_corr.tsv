@@ -1,0 +1,19 @@
+# Pillar 2 iter74 ZVF Markov-chain dynamics
+# Source: scripts/zvf_iter74.py
+test	n_rows	rho	ci_lo	ci_hi	method
+absorbing_H vs last10_acc	45	-0.762	-0.901	-0.57	Pearson+boot (B=2000) per-trace n=45
+absorbing_H vs last10_acc	45	-0.6203	-0.8701	-0.3563	Spearman+boot (B=2000) per-trace n=45
+selfloop_H vs last10_acc	45	-0.4686	-0.684	-0.1949	Pearson+boot (B=2000) per-trace n=45
+selfloop_H vs last10_acc	45	-0.5487	-0.7481	-0.2375	Spearman+boot (B=2000) per-trace n=45
+mean_run_H vs last10_acc	45	-0.6758	-0.7942	-0.5151	Pearson+boot (B=2000) per-trace n=45
+mean_run_H vs last10_acc	45	-0.5863	-0.8433	-0.3237	Spearman+boot (B=2000) per-trace n=45
+absorbing_H vs mean_zvf	45	0.7993	0.6001	0.9429	Pearson+boot (B=2000) per-trace n=45
+absorbing_H vs mean_zvf	45	0.6046	0.2152	0.8524	Spearman+boot (B=2000) per-trace n=45
+absorbing_H vs last10_acc	9	-0.7676	-0.9843	-0.1224	Pearson+boot (B=2000) per-method n=9
+absorbing_H vs last10_acc	9	-0.6333	-0.95	0.15	Spearman+boot (B=2000) per-method n=9
+selfloop_H vs last10_acc	9	-0.4917	-0.9434	0.2206	Pearson+boot (B=2000) per-method n=9
+selfloop_H vs last10_acc	9	-0.5167	-0.9	0.3167	Spearman+boot (B=2000) per-method n=9
+mean_run_H vs last10_acc	9	-0.6811	-0.9582	-0.1126	Pearson+boot (B=2000) per-method n=9
+mean_run_H vs last10_acc	9	-0.6333	-0.95	0.15	Spearman+boot (B=2000) per-method n=9
+absorbing_H vs mean_zvf	9	0.8005	0.1228	0.9949	Pearson+boot (B=2000) per-method n=9
+absorbing_H vs mean_zvf	9	0.6333	-0.2333	1.0	Spearman+boot (B=2000) per-method n=9

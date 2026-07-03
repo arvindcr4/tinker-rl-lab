@@ -1,0 +1,7 @@
+# Pillar 2 iter74 ZVF Markov-chain dynamics
+# Source: scripts/zvf_iter74.py
+source	n_steps	mean_zvf	max_zvf	n_H_steps	first_class	last_class	absorbing_H	exit_halflife_H	interpretation
+bfclv4_tool_use_seed0_sparse	5	0.8	1.0	4	H	H	0.8	2	working trace
+bfclv4_tool_use_seed0_dense	5	0.6	1.0	3	H	L	0.6	2	working trace
+bfclv4_tool_use_seed1_sparse	5	0.0	0.0	0	L	L	0.0	0.0	working trace
+bfclv4_tool_use_seed1_dense	5	0.0	0.0	0	L	L	0.0	0.0	working trace

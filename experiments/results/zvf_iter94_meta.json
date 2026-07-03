@@ -1,0 +1,36 @@
+{
+  "iter": 94,
+  "pillar": "P2-ZVF",
+  "n_ts_artifacts": 5,
+  "n_figures": 2,
+  "files": [
+    "experiments/results/zvf_summary.tsv",
+    "experiments/results/zvf_iter94_shuffle_null.tsv",
+    "experiments/results/zvf_iter94_stability.tsv",
+    "experiments/results/zvf_iter94_calibration.tsv",
+    "experiments/results/zvf_iter94_vs_aero.tsv",
+    "figures/zvf_vs_failure.pdf",
+    "figures/zvf_vs_failure.png",
+    "paper/sections/zvf_iter94.tex",
+    "scripts/zvf_iter94.py"
+  ],
+  "headline_metrics": {
+    "delta_div_median_G2": 0.105,
+    "delta_div_median_G4": 0.213,
+    "delta_div_median_G8": 0.361,
+    "delta_div_median_G16": 0.512,
+    "stability_winner_alarm_emitting": "gift (29.05); areal (28.0) close behind",
+    "aero_score": 14.83,
+    "gift_score": 29.05,
+    "methods_beating_aero": [
+      "areal",
+      "cppo",
+      "es",
+      "gift",
+      "mcgrpo",
+      "ngrpo",
+      "scafgrpo"
+    ],
+    "delitafit_linear": "delta_div(G) ~= 0.034*G - 0.020; R^2 eyeball 0.99 across 4 medians"
+  }
+}

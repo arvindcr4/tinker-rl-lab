@@ -1,0 +1,9 @@
+task	key	n_pairs	mean_diff	ci_lo	ci_hi	p
+arithmetic	mu	5	0.0012	-0.0290	0.0394	0.9100
+arithmetic	phi	5	0.0496	-0.0339	0.1316	0.1880
+arithmetic	half_life	5	0.2520	-0.1230	0.6995	0.2710
+arithmetic	sigma	5	-0.0149	-0.0353	0.0007	0.1020
+gsm8k_cot	mu	3	-2.8597	-6.2128	-1.0185	0.0000
+gsm8k_cot	phi	3	0.2225	0.0595	0.4516	0.0000
+gsm8k_cot	half_life	2	0.6441	0.5262	0.7621	0.0000
+gsm8k_cot	sigma	3	1.1154	0.0673	2.9543	0.0000

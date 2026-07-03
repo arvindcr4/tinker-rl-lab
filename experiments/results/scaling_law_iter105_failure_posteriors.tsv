@@ -1,0 +1,13 @@
+model	P(converged)	P(plateau)	P(drift)	P(oscillation)	P(collapse)	P(divergence)	mode
+Qwen3.5-4B	0.0	1.0	0.0	0.0	0.0	0.0	plateau
+Qwen3-8B	0.0	1.0	0.0	0.0	0.0	0.0	plateau
+Llama-3.1-8B-Instruct	0.0	1.0	0.0	0.0	0.0	0.0	plateau
+Qwen3-32B	0.0	0.3333	0.6667	0.0	0.0	0.0	drift
+Qwen3.5-27B	0.0	0.3333	0.6667	0.0	0.0	0.0	drift
+gpt-oss-20B	0.0	1.0	0.0	0.0	0.0	0.0	plateau
+Qwen3-30B-MoE	0.0	1.0	0.0	0.0	0.0	0.0	plateau
+Qwen3-30B-MoE-Inst	0.75	0.25	0.0	0.0	0.0	0.0	converged
+DeepSeek-V3.1	0.0	1.0	0.0	0.0	0.0	0.0	plateau
+Nemotron-120B	0.0	0.1176	0.0	0.2353	0.3529	0.2941	collapse
+Qwen3-235B-MoE	0.75	0.25	0.0	0.0	0.0	0.0	converged
+Kimi-K2-Thinking	0.0	0.3333	0.6667	0.0	0.0	0.0	drift

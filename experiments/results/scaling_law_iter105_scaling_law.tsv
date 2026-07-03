@@ -1,0 +1,13 @@
+model	params_B	family	R_max_star	log10_N	mode
+Qwen3.5-4B	4.0	dense	0.85	0.6020599913279624	plateau
+Qwen3-8B	8.0	dense	0.34375	0.9030899869919435	plateau
+Llama-3.1-8B-Instruct	8.0	dense	0.84375	0.9030899869919435	plateau
+Qwen3-32B	32.0	dense	0.125	1.505149978319906	drift
+Qwen3.5-27B	27.0	dense	0.0	1.4313637641589874	drift
+gpt-oss-20B	20.0	moe	0.875	1.3010299956639813	plateau
+Qwen3-30B-MoE	30.0	moe	0.438	1.4771212547196624	plateau
+Qwen3-30B-MoE-Inst	30.0	moe	1.0	1.4771212547196624	converged
+DeepSeek-V3.1	685.0	moe	0.8125	2.8356905714924254	plateau
+Nemotron-120B	120.0	dense	0.875	2.0791812460476247	collapse
+Qwen3-235B-MoE	235.0	moe	1.0	2.3710678622717363	converged
+Kimi-K2-Thinking	1000.0	moe	0.75	3.0	drift

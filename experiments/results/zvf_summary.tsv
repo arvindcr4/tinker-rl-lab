@@ -1,15 +1,13 @@
-# # zvf_summary.tsv — Pillar 2 headline ZVF dashboard (Iter 98).
-# # Re-emitted: iter94 columns + iter98 rho_global_mean/std,
-# # iter98_frac_above_1_global, iter98_auc_rho_gt_1_global,
-# # iter98_nemotron_rho_proxy_mean, iter98_collapse_auc_rho_proxy.
-# # rho_global_* averages over the 12 (Qwen2.5-0.5B, G, seed) runs.
-method	alarm_rate	recovery_rate_K5	post_recovery_ha	post_sustained_ha	delta_h_recovery_minus_sustained	stability_score	aero_gap	beats_aero	delta_div_at_mean_p_obs_G4_med	n_episodes	n_sustained	n_recovered	iter90_recovery_rate	iter98_rho_global_mean	iter98_rho_global_std	iter98_frac_above_1_global	iter98_auc_rho_gt_1_global	iter98_nemotron_rho_proxy_mean	iter98_collapse_auc_rho_proxy
-aero	1.0	0.1667	0.3886	0.4052	-0.0166	14.83	0.0	False	0.2134	6	5	1	0.1667	1.4741	0.87	0.475	0.5321	10.8196	0.6364
-areal	1.0	0.6	0.406	0.406	-0.0	28.0	13.17	True	0.2134	10	4	6	0.6000	1.4741	0.87	0.475	0.5321	10.8196	0.6364
-cppo	1.0	0.2857	0.3671	0.3962	-0.029	18.28	3.450000000000001	True	0.2134	7	5	2	0.2857	1.4741	0.87	0.475	0.5321	10.8196	0.6364
-es	0.0	0.0	nan	0.2841	nan	70.0	55.17	True	0.2134	0	0	0	0.0000	1.4741	0.87	0.475	0.5321	10.8196	0.6364
-gift	1.0	0.6364	0.405	0.409	-0.004	29.05	14.22	True	0.2134	11	4	7	0.6364	1.4741	0.87	0.475	0.5321	10.8196	0.6364
-grpo	1.0	0.0	nan	0.3828	nan	10.0	-4.83	False	0.2134	5	5	0	0.0000	1.4741	0.87	0.475	0.5321	10.8196	0.6364
-mcgrpo	1.0	0.375	0.3954	0.4027	-0.0073	21.18	6.35	True	0.2134	8	5	3	0.3750	1.4741	0.87	0.475	0.5321	10.8196	0.6364
-ngrpo	1.0	0.2857	0.3601	0.3931	-0.033	18.24	3.4099999999999984	True	0.2134	7	5	2	0.2857	1.4741	0.87	0.475	0.5321	10.8196	0.6364
-scafgrpo	0.0	0.0	nan	0.2975	nan	70.0	55.17	True	0.2134	0	0	0	0.0000	1.4741	0.87	0.475	0.5321	10.8196	0.6364
+# zvf_summary.tsv - Pillar 2 headline dashboard (iter102: +calibration columns).
+# iter94 base columns + iter98 rho + iter102 delta_calibration, rho_overdispersion,
+# delta_vs_collapse correlations and AERO-vs-GRPO paired summary. Source: scripts/zvf_iter102.py
+method	alarm_rate	recovery_rate_K5	post_recovery_ha	post_sustained_ha	delta_h_recovery_minus_sustained	stability_score	aero_gap	beats_aero	delta_div_at_mean_p_obs_G4_med	n_episodes	n_sustained	n_recovered	iter90_recovery_rate	iter98_rho_global_mean	iter98_rho_global_std	iter98_frac_above_1_global	iter98_auc_rho_gt_1_global	iter98_nemotron_rho_proxy_mean	iter98_collapse_auc_rho_proxy	iter102_delta_calibration_mean	iter102_delta_calibration_ci_lo	iter102_delta_calibration_ci_hi	iter102_rho_overdispersion_mean	iter102_zvf_iid_pred_mean
+aero	1.0	0.1667	0.3886	0.4052	-0.0166	14.83	0.0	False	0.2134	6	5	1	0.1667	1.4741	0.87	0.475	0.5321	10.8196	0.6364	0.2027	0.2027	0.2027	12.5172	0.0176
+areal	1.0	0.6	0.406	0.406	-0.0	28.0	13.17	True	0.2134	10	4	6	0.6000	1.4741	0.87	0.475	0.5321	10.8196	0.6364	0.0793	0.0793	0.0793	2.9081	0.0416
+cppo	1.0	0.2857	0.3671	0.3962	-0.029	18.28	3.450000000000001	True	0.2134	7	5	2	0.2857	1.4741	0.87	0.475	0.5321	10.8196	0.6364	0.276	0.276	0.276	15.3501	0.0192
+es	0.0	0.0	nan	0.2841	nan	70.0	55.17	True	0.2134	0	0	0	0.0000	1.4741	0.87	0.475	0.5321	10.8196	0.6364	0.0664	0.0664	0.0664	2.3869	0.0478
+gift	1.0	0.6364	0.405	0.409	-0.004	29.05	14.22	True	0.2134	11	4	7	0.6364	1.4741	0.87	0.475	0.5321	10.8196	0.6364	0.0714	0.0714	0.0714	2.6704	0.0428
+grpo	1.0	0.0	nan	0.3828	nan	10.0	-4.83	False	0.2134	5	5	0	0.0000	1.4741	0.87	0.475	0.5321	10.8196	0.6364	0.4583	0.4583	0.4583	21.3542	0.0225
+mcgrpo	1.0	0.375	0.3954	0.4027	-0.0073	21.18	6.35	True	0.2134	8	5	3	0.3750	1.4741	0.87	0.475	0.5321	10.8196	0.6364	0.1014	0.1014	0.1014	3.2674	0.0447
+ngrpo	1.0	0.2857	0.3601	0.3931	-0.033	18.24	3.4099999999999984	True	0.2134	7	5	2	0.2857	1.4741	0.87	0.475	0.5321	10.8196	0.6364	0.28	0.28	0.28	14.7629	0.0203
+scafgrpo	0.0	0.0	nan	0.2975	nan	70.0	55.17	True	0.2134	0	0	0	0.0000	1.4741	0.87	0.475	0.5321	10.8196	0.6364	0.3009	0.3009	0.3009	20.1609	0.0157

@@ -1,0 +1,6 @@
+target_acc	T_star_G4	T_star_G4_in_range	T_star_G8	T_star_G8_in_range	T_star_G16	T_star_G16_in_range	T_star_G32	T_star_G32_in_range	T_star_G64	T_star_G64_in_range	R_compute_G4_over_G32	rejects_wu_compute_equiv
+0.5	3309394.16	yes	725689.34	extrapolated_below_1M	814491.58	extrapolated_below_1M	1501885.11	yes	3169652.55	yes	2.203	True
+0.6	18432871.51	yes	3253808.39	yes	2976914.44	yes	4195855.32	yes	7253100.86	yes	4.393	True
+0.7	78740022.49	extrapolated_above_64M	11570357.78	yes	8905830.01	yes	10001462.88	yes	14604504.6	yes	7.873	True
+0.8	276979929.42	extrapolated_above_64M	34722065.84	yes	23010428.46	yes	21224931.51	yes	26778833.52	yes	13.05	True
+0.85	490289574.55	extrapolated_above_64M	57185501.2	yes	35407117.45	yes	29868198.35	yes	35264257.72	yes	16.415	True

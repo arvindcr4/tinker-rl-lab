@@ -1,0 +1,5 @@
+budget_tokens	delta_acc_G32_minus_G4	delta_boot_ci_low	delta_boot_ci_high	delta_boot_se	p_le_zero	p_under_wu_implied_delta	rejects_wu_zero_at_001	rejects_wu_zero_at_01
+1000000	0.0099	-0.0327	0.0518	0.0216	0.3229	0.1775	False	False
+4000000	0.1101	0.067	0.1529	0.0216	0.0	0.0	True	True
+16000000	0.2095	0.1667	0.252	0.0217	0.0	0.0	True	True
+64000000	0.2398	0.1973	0.2824	0.0217	0.0	0.0	True	True

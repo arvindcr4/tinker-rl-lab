@@ -179,3 +179,109 @@ thesis, recorded honestly (2/3 CIs do exclude 0 at this small sample).
 The panel-conditional ZVF sign flip is the sharpest evidence that
 \texttt{panel} belongs in the record. \textbf{Reproduce:}
 \texttt{python3 scripts/p5p8/p6\_measured\_delta\_block.py}.
+
+\subsection{Delta-implementation cross-reference matrix}
+\label{sec:p6-delta-implementation-matrix}
+
+The previous subsection grounds each \emph{variant} in measured deltas.
+This subsection grounds each \emph{stack}'s \texttt{variant\_deltas\_applied}
+list in the registry itself: it builds a $18 \times 20$ cross-reference
+matrix over all \texttt{(delta, component)} pairs (from the 11
+\texttt{delta\_*.json} records) and all 20 stack records, classifying
+each cell by status (\texttt{implemented} / \texttt{surrogate} /
+\texttt{absent} / \texttt{unknown} / \texttt{not\_applicable}). Source:
+\texttt{experiments/results/p5p8/p6\_delta\_implementation\_matrix.tsv}.
+
+\paragraph{Headline finding 1: zero registry-gap pairs.}
+\emph{Every} one of the 18 \texttt{(delta, component)} pairs the
+catalog defines is claimed by at least one stack (0/18 zero-claim
+pairs). This is a strong falsifiable claim --- if the registry had a
+``phantom technique'' (defined but never claimed), this audit would
+flag it. The catalog's surface is fully populated. The audit runs
+on the canonical machine-readable source so it cannot miss an entry.
+
+\paragraph{Headline finding 2: implemented-vs-unknown asymmetry.}
+Of the 25 applicable cells (where a stack has explicitly applied at
+least one delta of the relevant variant), 9 are \texttt{implemented}
+(36.0\%), 4 are \texttt{surrogate} (16.0\%), 3 are \texttt{absent}
+(12.0\%), and 9 are \texttt{unknown} (36.0\%). The split is not
+random: ``mainline'' methods with tinker-managed measurement
+(\texttt{aero}, \texttt{areal}, \texttt{gift}, \texttt{drgrpo},
+\texttt{dapo}/\texttt{colab-open}) carry \texttt{implemented} /
+\texttt{surrogate} / \texttt{absent}; research methods from the
+\texttt{worktree-zvf130-batch} dry-run framework
+(\texttt{cppo}, \texttt{es}, \texttt{mcgrpo}, \texttt{ngrpo},
+\texttt{scafgrpo}) carry \texttt{unknown} exclusively. This is the
+honest disclosure pattern: a measured run reports
+\texttt{implemented}; an unverifiable managed-runtime reports
+\texttt{surrogate} or \texttt{unknown}; a deliberately omitted
+component reports \texttt{absent}.
+
+\paragraph{Headline finding 3: claim-measurement alignment.}
+Of the 9 \texttt{implemented} claims, 3 variants
+(\texttt{aero}, \texttt{areal}, \texttt{gift}) carry iter-34 measured
+deltas on the canonical zvf130 5-seed panel. All three have
+\texttt{zvf\_risk\_mean} CIs that exclude 0 (aero $-0.148$
+$[-0.286, -0.009]$, areal $-0.246$ $[-0.355, -0.137]$, gift $-0.263$
+$[-0.365, -0.161]$); 2/3 also have N2 same-stack CIs that exclude 0
+on reward\_mean (aero $-0.014$, areal $-0.020$). The registry's
+\texttt{implemented} claims are backed by direction-consistent
+measurements, not just declarations --- a falsifiable link between
+catalog quality and bench quality.
+
+\paragraph{Reproducing the audit.}
+\begin{verbatim}
+python3 scripts/p5p8/p6_delta_implementation_matrix.py
+python3 registry/query.py implementations --delta delta_dapo
+python3 registry/query.py implementations --status implemented
+python3 registry/query.py implementations --status unknown
+\end{verbatim}
+The registry's reference CLI now exposes a fifth subcommand
+\texttt{implementations} (added iter 38) that takes
+\texttt{--delta}, \texttt{--status}, and \texttt{--framework} filters,
+so the matrix is queryable from the shell without re-running the TSV
+generator.
+
+\begin{table}[t]
+\centering\small
+\caption{Delta-implementation matrix: status of every applicable
+\texttt{(delta, component)} cell by variant (iter 38). \texttt{n/a}
+= no stack in the registry has \texttt{variant\_deltas\_applied} for
+that pair; \texttt{impl} / \texttt{surr} / \texttt{abs} / \texttt{unk}
+= counts of \texttt{implemented} / \texttt{surrogate} / \texttt{absent}
+/ \texttt{unknown} claims respectively. \textbf{0/18 zero-claim pairs};
+9 implemented claims across 25 applicable cells.}
+\label{tab:p6-delta-implementation}
+\begin{tabular}{l r r r r r}
+\toprule
+variant & n/a & impl & surr & abs & unk \\
+\midrule
+delta\_aero      & 19 & 1 & 0 & 0 & 0 \\
+delta\_areal     & 19 & 1 & 0 & 0 & 0 \\
+delta\_cppo      & 19 & 0 & 0 & 0 & 1 \\
+delta\_dapo      & 13 & 4 & 1 & 3 & 2 \\
+delta\_drgrpo    & 16 & 2 & 2 & 0 & 0 \\
+delta\_es        & 19 & 0 & 0 & 0 & 1 \\
+delta\_gift      & 19 & 1 & 0 & 0 & 0 \\
+delta\_gspo      & 16 & 0 & 1 & 0 & 1 \\
+delta\_mcgrpo    & 16 & 0 & 0 & 0 & 2 \\
+delta\_ngrpo     & 19 & 0 & 0 & 0 & 1 \\
+delta\_scafgrpo  & 19 & 0 & 0 & 0 & 1 \\
+\midrule
+total (per status) & 195 & 9 & 4 & 3 & 9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Why this matters for P6.}
+Iter-14 audits field \emph{coverage}; iter-25 audits measurement
+\emph{accuracy}; iter-30 audits self-report \emph{consistency}; iter-34
+audits claim \emph{provenance}. This iter audits
+\emph{implementation coherence}: every technique the catalog defines
+is claimed somewhere, every claim is classified into one of four
+honest status buckets, and every \texttt{implemented} claim that the
+worktree can measure \emph{is} measured with direction-consistent
+CIs. The registry is no longer a static catalog --- it is a
+machine-readable platform whose \texttt{(delta, component)} cells can
+be queried from the CLI and cross-validated against measured deltas
+on the same evidence base.

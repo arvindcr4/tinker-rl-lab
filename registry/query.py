@@ -122,6 +122,53 @@ def cmd_stackdiff(args):
     return level
 
 
+def cmd_implementations(args):
+    """Cross-reference: which stacks claim to implement a (delta, component)?
+
+    Usage:
+      python3 registry/query.py implementations --delta delta_dapo
+      python3 registry/query.py implementations --status implemented
+      python3 registry/query.py implementations --status unknown --framework worktree-zvf130-batch
+    """
+    recs = load("variant_delta") if args.delta else {}
+    stacks = load("stack")
+    # Build reverse index: (did, comp) -> [(stack_id, status)]
+    by_pair = {}
+    for sid, s in stacks.items():
+        for vd in s.get("variant_deltas_applied", []):
+            by_pair.setdefault((vd["delta_id"], vd["component"]), []).append(
+                (sid, vd["status"]))
+    if args.delta:
+        if args.delta not in recs:
+            print(f"unknown delta_id: {args.delta}"); return 1
+        d = recs[args.delta]
+        print(f"delta_id={args.delta} name='{d.get('name')}'")
+        for comp in d["deltas"]:
+            key = (args.delta, comp["component"])
+            claims = by_pair.get(key, [])
+            if args.status:
+                claims = [(s, st) for s, st in claims if st == args.status]
+            if args.framework:
+                claims = [(s, st) for s, st in claims
+                          if stacks[s]["framework"]["name"] == args.framework]
+            print(f"  {comp['component']:30s} {len(claims)} claim(s): "
+                  + ", ".join(f"{s}={st}" for s, st in claims) if claims
+                  else f"  {comp['component']:30s} 0 claims")
+    else:
+        # Aggregate: print per-delta, per-component counts
+        from collections import Counter
+        ctr = Counter()
+        for (did, comp), claims in by_pair.items():
+            for _, st in claims:
+                ctr[(did, comp, st)] += 1
+        for (did, comp, st), n in sorted(ctr.items()):
+            line = f"{did:18s} {comp:30s} {st:12s} {n}"
+            if args.status and st != args.status:
+                continue
+            print(line)
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -134,9 +181,17 @@ def main():
     pd = sub.add_parser("stackdiff")
     pd.add_argument("a")
     pd.add_argument("b")
+    pi = sub.add_parser("implementations")
+    pi.add_argument("--delta", default=None,
+                    help="Show stacks claiming this delta_id (e.g. delta_dapo).")
+    pi.add_argument("--status", choices=("implemented", "surrogate", "absent",
+                                          "unknown"), default=None)
+    pi.add_argument("--framework", default=None,
+                    help="Filter to stacks whose framework.name == X.")
     args = ap.parse_args()
     {"list": cmd_list, "badge": cmd_badge,
-     "query": cmd_query, "stackdiff": cmd_stackdiff}[args.cmd](args)
+     "query": cmd_query, "stackdiff": cmd_stackdiff,
+     "implementations": cmd_implementations}[args.cmd](args)
 
 
 if __name__ == "__main__":

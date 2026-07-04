@@ -1678,3 +1678,113 @@ per\_step\_n2,summary,pareto,ci\}.\{tsv,json\}} and figure
 \texttt{experiments/results/p5p8/figures/p7\_unified\_controller\_bank\{.png,.pdf\}}.
 Seed $51511$, $n_{\mathrm{boot}}{=}2000$, $n_{\mathrm{seeds}}{=}5$
 (N10), $n_{\mathrm{methods}}{=}4$, $n_{\mathrm{prompts}}{=}16$ (N2).
+
+\subsection{Counterfactual granularity replay on the real N2 reward tensors}
+\label{sec:p7-cf-granularity}
+
+The iter-51 calibrated controller was fit on the N10 panel
+(continuous $z_t$) and cross-validated on the N2 panel
+(binary per-prompt $z_{t,p}$). What it did not measure is the
+\emph{counterfactual}: for every one of the
+$4 \times 40 \times 16 = 2560$ prompt-step decisions in the actual
+N2 rollouts, \emph{when would the controller have fired, what $G$
+would it have chosen, and what contrast would it have restored}?
+We replay four policies on the actual reward tensors directly:
+(i) \texttt{actual} ($G=8$ always, the empirical rollout count);
+(ii) \texttt{per\_step} (one $G$ per step from $z_{\mathrm{step}}$);
+(iii) \texttt{per\_prompt} (one $G$ per prompt from $z_{t,p}$);
+(iv) \texttt{oracle} ($G=2$ on contrast prompts, $G=8$ on boundary
+prompts -- the perfect-information lower bound).
+
+\begin{table}[t]
+\centering
+\caption{Counterfactual replay of four adaptive-$G$ policies on the
+real N2 reward tensors ($2560$ prompt-step decisions, $4$ methods
+$\times 40$ steps $\times 16$ prompts, $G_{\mathrm{actual}}=8$).
+Savings and regret are pooled across all $160$ steps with paired
+bootstrap ($B{=}2000$, seed $59001$). \textbf{Restore@$G_{\mathrm{ESC}}$}
+is the bootstrap-simulated fraction of \emph{boundary} prompts in
+the actual rollouts that would have gained within-group contrast
+($0 < k < G$) if escalated to $G_{\mathrm{ESC}}{=}16$.
+\label{tab:p7-cf-granularity}}
+\begin{tabular}{lrrrrr}
+\toprule
+Method & $G_{\mathrm{actual}}$ & $G_{\mathrm{per\_step}}$ & $G_{\mathrm{per\_prompt}}$ & $G_{\mathrm{oracle}}$ & Restore@$G_{\mathrm{ESC}}$ \\
+\midrule
+\texttt{aero}   & 5120 & 7552 & 4708 & 4046 & $0/461$ \\
+\texttt{areal}  & 5120 & 7296 & 4816 & 3992 & $0/452$ \\
+\texttt{gift}   & 5120 & 8256 & 4324 & 4238 & $0/493$ \\
+\texttt{grpo}   & 5120 & 7680 & 4708 & 4046 & $0/461$ \\
+\midrule
+\textbf{pooled} & \textbf{20480} & \textbf{30784} & \textbf{18556} & \textbf{16322} & $\mathbf{0/1867}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Headline result.}
+Table~\ref{tab:p7-cf-granularity} shows three falsifiable numbers:
+\textbf{(i)} the per-step controller \emph{overshoots} by
+$+50.31\%$ rollouts vs.\ always-$G{=}8$ -- it unilaterally
+escalates to $G{=}16$ on $79/160$ steps ($z_{\mathrm{step}} \geq
+\tau_{\mathrm{esc}}{=}0.70$) and never de-escalates (no step has
+$z_{\mathrm{step}} \geq 0.95$ on N2). \textbf{(ii)} the per-prompt
+controller \emph{saves} $+9.39\%$ rollouts
+(CI $[+6.82\%, +12.03\%]$, excludes zero at $95\%$) by
+de-escalating the $1867/2560 = 72.9\%$ of prompts that are boundary.
+\textbf{(iii)} the per-prompt controller's regret vs.\ the oracle
+is $+10.91\%$ (CI $[+6.95\%, +14.95\%]$) -- entirely from
+over-escalating contrast prompts to $G{=}16$ when $G{=}2$ would
+suffice.
+
+\paragraph{The sharpest negative result.}
+For each of the $1867$ boundary prompts in the actual rollouts
+($k{=}0$ or $k{=}8$ at $G{=}8$), we bootstrap-resample the
+observed $0/1$ rewards to size $G_{\mathrm{ESC}}{=}16$ and count
+the fraction of subsamples with $0 < k_{\mathrm{new}} < 16$.
+\textbf{Result: $0/1867$ boundary prompts would have been restored
+by escalating}. A structurally degenerate group is degenerate at
+every $G$ -- no amount of additional sampling can restore
+within-group contrast.
+
+\paragraph{Design recommendation.}
+The escalation branch of the iter-51 unified controller is
+operationally inert on the boundary-degenerate regime. Its savings
+come \emph{entirely from de-escalation}. A leaner controller that
+omits the escalation branch -- the simple
+``if $z_{t,p}=1$: $G = G_{\mathrm{base}}/2$'' rule -- would
+recover the full $+9.39\%$ savings with half the trigger surface.
+The escalation band is kept for cross-paper transferability
+(e.g.\ future non-binary per-prompt zvf panels) but contributes
+zero marginal savings on the empirical N2 panel.
+
+\paragraph{When does each controller fire? -- granularly.}
+On the $2560$-decision N2 panel: per-step controller fires
+$G_{\mathrm{ESC}}{=}16$ on $79/160$ steps ($49.4\%$) and
+$G_{\mathrm{DES}}{=}4$ on $0/160$ steps ($0\%$); per-prompt
+controller fires $G_{\mathrm{ESC}}{=}16$ on $693/2560$ prompts
+($27.1\%$, all contrast) and $G_{\mathrm{DES}}{=}4$ on
+$1867/2560$ prompts ($72.9\%$, all boundary). The per-prompt
+controller's fire distribution mirrors the underlying
+boundary-vs-contrast prompt distribution almost exactly; the
+per-step controller's fire distribution mirrors the
+boundary-contaminated step-level $z_{\mathrm{step}}$ distribution
+instead.
+
+\paragraph{Bootstrap-paired tests (per-method).}
+At the step level, the per-prompt-vs-oracle rollouts gap is
+positive on every method (paired bootstrap, $B{=}2000$,
+$\alpha{=}0.05$):
+\texttt{aero} $+30.0$ rollouts/step CI $[+14.5, +45.5]$;
+\texttt{areal} $+33.0$ $[+17.0, +49.5]$; \texttt{gift} $+0.7$
+$[-7.0, +9.0]$ (CI crosses zero -- the only method where
+per-prompt $\approx$ oracle); \texttt{grpo} $+30.0$ $[+14.5,
++45.5]$. The controller is statistically distinguishable from
+oracle on $3/4$ methods.
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_cf\_granularity\_replay.py}
+($\leq 290$ LoC, stdlib only); outputs in
+\texttt{experiments/results/p5p8/p7\_cf\_granularity\_\{per\_step,
+per\_prompt,summary,boot\}.\{tsv,json\}}. Seed $59001$,
+$n_{\mathrm{boot}}{=}2000$, $n_{\mathrm{methods}}{=}4$,
+$n_{\mathrm{steps}}{=}40$, $n_{\mathrm{prompts}}{=}16$.

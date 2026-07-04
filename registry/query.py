@@ -311,6 +311,69 @@ def cmd_health(_):
     return rc
 
 
+def cmd_measured_coverage(args):
+    """Iter-58: print the measured-block provenance & coverage audit.
+
+    For every variant_delta record, audit the measured / expected_effects /
+    claim_validation block presence, source path resolution on disk, and the
+    cross-panel sign agreement (N2 zvf vs ZVF130 risk for entries with both).
+    Exit 0 always — this is a reporting audit, not a gate."""
+    audit_path = HERE / "measured_block_audit.json"
+    if not audit_path.exists():
+        # Self-rerun if no cache: shell out to the script.
+        import subprocess
+        target = (HERE / ".." / "scripts" / "p5p8" / "p6_measured_coverage.py").resolve()
+        subprocess.run([sys.executable, str(target)], check=True)
+    audit = json.load(open(audit_path))
+    if args.delta:
+        rows = [r for r in audit["per_entry"] if r["delta_id"] == args.delta]
+        if not rows:
+            print(f"no such delta_id: {args.delta}", file=sys.stderr)
+            return 1
+        for r in rows:
+            print(f"=== {r['delta_id']}  ({r['name']}) ===")
+            for k, v in r.items():
+                if k in ("delta_id", "name"):
+                    continue
+                print(f"  {k:24s} {v}")
+        # Print cross-panel agreement if available
+        for c in audit.get("cross_panel_agreement", []):
+            if c["delta_id"] == args.delta:
+                print(f"  cross_panel_agreement:")
+                for k, v in c.items():
+                    if k == "delta_id":
+                        continue
+                    print(f"    {k:18s} {v}")
+        return 0
+    headline = {
+        "n_deltas": audit["n_entries"],
+        "with_measured": sum(1 for r in audit["per_entry"]
+                             if r["measured_count"] > 0),
+        "empty_measured": sum(1 for r in audit["per_entry"]
+                              if r["measured_count"] == 0),
+        "verdict_totals": audit["verdict_totals"],
+        "n_cross_panel_pairs": len(audit.get("cross_panel_agreement", [])),
+        "n_cross_panel_same_sign": sum(
+            1 for r in audit.get("cross_panel_agreement", [])
+            if r["same_sign"]),
+        "n_missing_sources": audit.get("n_mismatch_audit", 0),
+    }
+    print(f"=== Iter 58 P6 — measured-block coverage audit ({headline['n_deltas']} deltas) ===")
+    for k, v in headline.items():
+        print(f"  {k:24s} {v}")
+    print("--- per-entry ---")
+    for r in audit["per_entry"]:
+        print(f"  {r['delta_id']:22s} m={r['measured_count']:2d} sig={r['n_significant']:2d} "
+              f"S={r['supports']} C={r['contradicts']} N={r['neutral']} U={r['unclaimed']}")
+    if audit.get("cross_panel_agreement"):
+        print("--- cross-panel (N2 zvf  vs  ZVF130 risk) ---")
+        for c in audit["cross_panel_agreement"]:
+            flag = "✓" if c["same_sign"] else "✗"
+            print(f"  {flag} {c['delta_id']:14s}  N2 zvf={c['n2_zvf_delta']:+.4f}  "
+                  f"Z130 risk={c['zvf130_risk_delta']:+.4f}")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -339,12 +402,17 @@ def main():
                    help="Iter-50: CI-style schema validation pass")
     sub.add_parser("health",
                    help="Iter-50: full registry health audit")
+    pmc = sub.add_parser("measured-coverage",
+                         help="Iter-58: measured-block provenance & coverage audit.")
+    pmc.add_argument("--delta", default=None,
+                     help="Filter to one delta_id (e.g. delta_aero).")
     args = ap.parse_args()
     rc = {"list": cmd_list, "badge": cmd_badge,
           "query": cmd_query, "stackdiff": cmd_stackdiff,
           "implementations": cmd_implementations, "drift": cmd_drift,
           "claim-validation": cmd_claim_validation,
-          "validate": cmd_validate, "health": cmd_health}[args.cmd](args)
+          "validate": cmd_validate, "health": cmd_health,
+          "measured-coverage": cmd_measured_coverage}[args.cmd](args)
     return 0 if rc is None else rc
 
 

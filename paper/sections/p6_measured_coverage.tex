@@ -1,0 +1,157 @@
+% Iter-58: measured-block provenance & coverage audit (MBPCA).
+\subsection{Iter-58: Measured-Block Provenance \& Coverage Audit}
+\label{sec:p6-measured-coverage}
+
+The iter-50 health audit and the iter-54 missing-delta gap together
+validated the registry against the \emph{schema} and against the
+\emph{implementation cross-reference}. This subsection closes a third,
+unaddressed vein: an audit of the \texttt{measured} block itself---
+the array that grounds every delta entry's claim in measured evidence.
+The audit answers four questions:
+
+\begin{enumerate}
+\item \textbf{Block presence}: which of the 14 \texttt{delta\_*.json}
+records carry a \texttt{measured} array, an \texttt{expected\_effects}
+array, and a \texttt{claim\_validation} array?
+\item \textbf{Source resolution}: does every measured row's
+\texttt{source} path resolve on disk, and what is the freshness
+(\texttt{mtime} age in days) of each source?
+\item \textbf{Coverage grid}: which (\texttt{panel},
+\texttt{metric}) cells are filled across the 14 entries? The panel set
+in scope is \{\texttt{n2\_same\_stack\_last10},
+\texttt{zvf130\_5seed}\}; the metric set is
+\{\texttt{zvf}, \texttt{reward\_mean},
+\texttt{zvf\_risk\_mean}, \texttt{mean\_zvf}\}.
+\item \textbf{Cross-panel agreement}: for entries with the same
+conceptual metric measured under both N2 and ZVF130, do the two
+panels agree on the direction of effect?
+\end{enumerate}
+
+\paragraph{Falsifiable headline (re-run 2026-07-05).}
+\textbf{9 of 14 deltas (64\%)} carry a non-empty \texttt{measured}
+array; \textbf{5 of 14 (36\%)} ship as provenance-only
+placeholders: \texttt{delta\_dapo}, \texttt{delta\_drgrpo},
+\texttt{delta\_gspo} (have arXiv citations and stack entries but no
+same-stack panel data on the canonical N2/Z130 source TSVs), plus
+\texttt{delta\_reinforce} and \texttt{delta\_liteppo} (the iter-54
+provenance-only additions). The registry-wide \texttt{claim\_validation}
+tally is \textbf{10 SUPPORTS, 2 CONTRADICTS, 4 NEUTRAL, 8 UNCLAIMED}
+across the 24 validation rows total. \textbf{0 measured row's source
+path is missing}---every cited \texttt{.tsv} resolves on disk and
+the audit's freshness window is bounded by the worktree's most recent
+N2/Z130 writes. The cross-panel agreement finds \textbf{2 of 3 entries
+agree on direction}: AERO (\texttt{Delta\textsubscript{N2 zvf}} =
+$-0.0250$, \texttt{Delta\textsubscript{Z130 risk}} = $-0.1476$)
+and AREAL ($-0.0563$, $-0.2458$) both push ZVF negatively on both
+panels; \textbf{GIFT is the lone cross-panel dissenter}
+($+0.1250$, $-0.2632$)---a structural disagreement that
+\secref{sec:p6-measured} reconciles (GIFT reweights groups, so raw
+N2 zvf can rise while bounded-Z130 risk falls).
+
+\begin{table}[t]
+\centering\small
+\caption{Iter-58 measured-block coverage grid (\texttt{14} deltas
+$\times$ 4 (\texttt{panel}, \texttt{metric}) cells). 1 = at least one
+measured row; 0 = empty. AERO, AREAL, and GIFT are the three entries
+with both panels populated; GIFT is the lone cross-panel dissenter.}
+\label{tab:p6-measured-coverage}
+\begin{tabular}{l c c c c c c c c}
+\toprule
+delta\_id & \multicolumn{4}{c}{\texttt{n2\_same\_last10}} & \multicolumn{4}{c}{\texttt{zvf130\_5seed}} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+ & \rotatebox{60}{zvf} & \rotatebox{60}{reward} & \rotatebox{60}{risk} & \rotatebox{60}{mag}
+ & \rotatebox{60}{zvf} & \rotatebox{60}{reward} & \rotatebox{60}{risk} & \rotatebox{60}{mag} \\
+\midrule
+adaptiveg   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+aero        & 1 & 1 & 0 & 0 & 0 & 0 & 1 & 1 \\
+areal       & 1 & 1 & 0 & 0 & 0 & 0 & 1 & 1 \\
+cppo        & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 \\
+dapo        & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+drgrpo      & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+es          & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 \\
+gift        & 1 & 1 & 0 & 0 & 0 & 0 & 1 & 1 \\
+gspo        & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+liteppo     & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+mcgrpo      & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 \\
+ngrpo       & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 \\
+reinforce   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+scafgrpo    & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 \\
+\midrule
+\textbf{total cells} & 3 & 3 & 0 & 0 & 0 & 0 & 9 & 9 \\
+\bottomrule
+\end{tabular}
+\footnotesize{Note: \texttt{adaptiveg}'s measured rows use a
+different panel (\texttt{qp7\_adaptive\_armB\_vs\_armA\_paired}), so
+it scores 0 on both canonical panels by design.}
+\end{table}
+
+\paragraph{The 36\% empty-measured gap as a quantified backlog.}
+The 5 empty-measured entries split into two structural classes:
+\textbf{(i) source-data-unavailable} ($\texttt{delta\_dapo}$,
+$\texttt{delta\_drgrpo}$, $\texttt{delta\_gspo}$)---each has a
+registered arXiv citation and at least one stack entry claiming the
+delta, but no same-stack panel run exists in
+\texttt{experiments/results/n2\_reward\_tensor\_resume/} or
+\texttt{experiments/results/zvf\_iter130\_method\_risk.tsv};
+\textbf{(ii) provenance-only design} ($\texttt{delta\_reinforce}$,
+$\texttt{delta\_liteppo}$)---the iter-54 additions deliberately
+shipped with \texttt{measured}=[] as a structural placeholder, with
+the criterion for a measured row stated in \texttt{notes}. The
+audit's \texttt{empty\_measured\_gap} list surfaces class (i) as
+the actionable backlog: 3 entries are awaiting a same-stack panel run
+on the worktree's existing N2/Z130 harness before they can carry a
+measured row.
+
+\paragraph{Why this matters.} Three reviewer-facing consequences.
+First, the audit is a one-shot script ($\sim$280\,LoC, stdlib only)
+that produces machine-readable TSVs plus a sidecar
+\texttt{registry/measured\_block\_audit.json} cache; re-running it
+takes $\leq 1$ second and the freshness window is bounded by the most
+recent N2/Z130 write. Second, the coverage grid
+(\tableref{tab:p6-measured-coverage}) maps every (\texttt{panel},
+\texttt{metric}) cell to a count of populated entries, giving the
+registry a machine-readable surface for \emph{which} cells are still
+empirically thin---e.g. the \texttt{reward\_mean} column on the
+\texttt{zvf130\_5seed} panel is $0/14$, which is a real evidence gap
+(rather than a known absence). Third, the cross-panel agreement row
+for GIFT (\texttt{same\_sign=False}, both rows individually significant)
+is the first \emph{positive finding} this iter surfaces: a
+measurement-confirmed sign disagreement between two same-method
+panels, with the GIFT reweighting story as the candidate
+explanation. This is a finding, not a regression---it is the kind
+of cross-panel consistency check that a registry without an MBPCA
+audit would silently mask.
+
+\paragraph{Cross-paper coupling.}
+The N2 panel ${}\leftrightarrow{}$ ZVF130 panel reconciliation
+sharpens the iter-34 measured block: GIFT's prior
+\texttt{claim\_validation} \texttt{zvf\_risk\_mean} verdict was
+SUPPORTS, and that verdict survives the cross-panel audit at the
+metric level (risk reduction is real) even though the raw-ZVF
+direction disagrees at the panel level. The framing for the
+canonical reader is therefore: \emph{GIFT is risk-favouring but
+ZVF-raising}---a sharper statement than the prior one-line claim
+that ``GIFT helps signal starvation''.
+
+\paragraph{Reproduction.}
+\begin{verbatim}
+python3 scripts/p5p8/p6_measured_coverage.py  # writes 4 output files
+python3 registry/query.py measured-coverage   # prints the audit
+python3 registry/query.py measured-coverage --delta delta_gift
+                                               # per-entry deep view
+\end{verbatim}
+Outputs: $\texttt{experiments/results/p5p8/p6\_measured\_coverage.tsv}$
+(14 per-entry rows); $\texttt{p6\_measured\_coverage\_grid.tsv}$
+(14 $\times$ 8 grid); $\texttt{p6\_measured\_cross\_panel.tsv}$
+(3 cross-panel rows); $\texttt{p6\_measured\_coverage\_summary.json}$
+(headline numbers). Sidecar cache:
+$\texttt{registry/measured\_block\_audit.json}$ (refreshed each run).
+
+\paragraph{Backward compatibility.}
+The audit is \emph{additive}: it reads from existing
+\texttt{measured} / \texttt{source} fields and writes a sidecar
+JSON cache plus TSV outputs. No entry is modified.
+\texttt{registry/query.py} gains \texttt{measured-coverage} as a
+third-tier reporting subcommand (additive, the existing eight
+subcommands untouched). \texttt{registry/query.py validate}
+remains at \textbf{34/34 PASS} after the registry is unchanged.

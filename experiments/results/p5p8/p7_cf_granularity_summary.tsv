@@ -1,0 +1,6 @@
+method	n_steps	total_rollouts_actual	total_rollouts_per_step	total_rollouts_per_prompt	total_rollouts_oracle	savings_per_step_pct	savings_per_prompt_pct	regret_per_prompt_pct	savings_per_prompt_mean	savings_per_prompt_ci_lo	savings_per_prompt_ci_hi	regret_per_prompt_mean	regret_per_prompt_ci_lo	regret_per_prompt_ci_hi	n_boundary_prompts_total	n_contrast_prompts_total	n_restored_at_esc	restore_rate_at_esc_mean	restore_rate_at_esc_ci_lo	restore_rate_at_esc_ci_hi	headroom_dollar_per_step
+aero	40	5120	7552	4708	4046	-47.5	8.05	12.93	0.0805	0.0359	0.1273	0.1293	0.0625	0.1961	461	179	0	0.0	0.0	0.0	0.0
+areal	40	5120	7296	4816	3992	-42.5	5.94	16.09	0.0594	0.0031	0.1086	0.1609	0.0836	0.2383	452	188	0	0.0	0.0	0.0	0.0
+gift	40	5120	8256	4324	4238	-61.25	15.55	1.68	0.1555	0.0992	0.2141	0.0168	-0.0676	0.1047	493	147	0	0.0	0.0	0.0	0.0
+grpo	40	5120	7680	4708	4046	-50.0	8.05	12.93	0.0805	0.0312	0.1297	0.1293	0.059	0.2031	461	179	0	0.0	0.0	0.0	0.0
+pooled	160	20480	30784	18556	16322	-50.31	9.39	10.91	0.0939	0.0682	0.1203	0.1091	0.0695	0.1495	1867	693	0	0.0	0.0	0.0	0.0

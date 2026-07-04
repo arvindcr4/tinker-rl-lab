@@ -1,0 +1,15 @@
+delta_id	n2_same_stack_last10|zvf	n2_same_stack_last10|reward_mean	n2_same_stack_last10|zvf_risk_mean	n2_same_stack_last10|mean_zvf	zvf130_5seed|zvf	zvf130_5seed|reward_mean	zvf130_5seed|zvf_risk_mean	zvf130_5seed|mean_zvf
+delta_adaptiveg	0	0	0	0	0	0	0	0
+delta_aero	1	1	0	0	0	0	1	1
+delta_areal	1	1	0	0	0	0	1	1
+delta_cppo	0	0	0	0	0	0	1	1
+delta_dapo	0	0	0	0	0	0	0	0
+delta_drgrpo	0	0	0	0	0	0	0	0
+delta_es	0	0	0	0	0	0	1	1
+delta_gift	1	1	0	0	0	0	1	1
+delta_gspo	0	0	0	0	0	0	0	0
+delta_liteppo	0	0	0	0	0	0	0	0
+delta_mcgrpo	0	0	0	0	0	0	1	1
+delta_ngrpo	0	0	0	0	0	0	1	1
+delta_reinforce	0	0	0	0	0	0	0	0
+delta_scafgrpo	0	0	0	0	0	0	1	1

@@ -1,0 +1,2273 @@
+{
+  "n2_baseline_method": "grpo",
+  "per_delta": [
+    {
+      "claim_summary": "off-policy reference rollouts inflate effective G; (le2025rlzvp)",
+      "delta_id": "delta_aero",
+      "method": "aero",
+      "n2_evidence_per_proxy": {
+        "cv_len": {
+          "ci_excludes_0": "yes",
+          "ci_hi": 0.0685,
+          "ci_lo": 0.0144,
+          "measured_delta": 0.0344,
+          "predicted_reason": "no claim on length variance",
+          "predicted_sign": 0,
+          "reason": "\u0394=+0.0344 (no predicted sign; within CI excludes 0)",
+          "verdict": "WEAK"
+        },
+        "loss": {
+          "ci_excludes_0": "no",
+          "ci_hi": 219.4266,
+          "ci_lo": -573.6637,
+          "measured_delta": -56.5558,
+          "predicted_reason": "no claim on loss magnitude",
+          "predicted_sign": 0,
+          "reason": "\u0394=-56.56 (no predicted sign; within noise)",
+          "verdict": "WEAK"
+        },
+        "mean_len": {
+          "ci_excludes_0": "yes",
+          "ci_hi": -23.4297,
+          "ci_lo": -41.1172,
+          "measured_delta": -31.0773,
+          "predicted_reason": "no claim on length",
+          "predicted_sign": 0,
+          "reason": "\u0394=-31.08 (no predicted sign; within CI excludes 0)",
+          "verdict": "WEAK"
+        },
+        "reward_mean": {
+          "ci_excludes_0": "no",
+          "ci_hi": 0.0391,
+          "ci_lo": 0.0,
+          "measured_delta": 0.0141,
+          "predicted_reason": "more samples + entropy guidance -> better reward (claimed)",
+          "predicted_sign": 1,
+          "reason": "\u0394=+0.0141 (sign matches predicted +1 but CI contains 0)",
+          "verdict": "WEAK"
+        },
+        "zvf": {
+          "ci_excludes_0": "no",
+          "ci_hi": 0.125,
+          "ci_lo": -0.0625,
+          "measured_delta": 0.025,
+          "predicted_reason": "inflate effective G -> fewer zero-variance groups (predicted)",
+          "predicted_sign": -1,
+          "reason": "\u0394=+0.025 (sign OPPOSES predicted -1; CI contains 0)",
+          "verdict": "OPPOSE"
+        }
+      },
+      "n2_no_data": 0,
+      "n2_oppose": 1,
+      "n2_overall": "MIXED",
+      "n2_proxies_tested": 5,
+      "n2_supports": 0,
+      "n2_verdict_counts": {
+        "OPPOSE": 1,
+        "WEAK": 4
+      },
+      "n2_weak": 4,
+      "registry_evidence": {
+        "claimers": [
+          {
+            "framework": "tinker",
+            "label_claimed": "aero",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": 8,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "GSM8K test split (benchmark protocol)",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": "std",
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": "sequence",
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": true
+              },
+              "sampler_backend": {
+                "backend": "tinker-managed sampler",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "benchmark harness on per-group rewards"
+              }
+            },
+            "openness": "managed",
+            "stack_id": "tinker_aero_qwen3.5-4b_gsm8k",
+            "status": "implemented"
+          }
+        ],
+        "frameworks": [
+          "tinker"
+        ],
+        "n_claimers": 1,
+        "opennesses": [
+          "managed"
+        ],
+        "statuses": [
+          "implemented"
+        ]
+      },
+      "registry_frameworks": "tinker",
+      "registry_n_claimers": 1,
+      "registry_opennesses": "managed",
+      "registry_statuses": "implemented",
+      "zvf130_delta": -0.26052,
+      "zvf130_evidence": {
+        "delta_zvf": -0.26052,
+        "grpo_mean_zvf": 0.48078,
+        "method_mean_zvf": 0.22025999999999998,
+        "method_n_seeds": 5,
+        "method_std_zvf": 0.0017419529270333322,
+        "pct_drop_vs_grpo": -54.18694621240484,
+        "verdict": "ZVF_BELOW_GRPO"
+      },
+      "zvf130_grpo_mean": 0.48078,
+      "zvf130_method_mean": 0.22025999999999998,
+      "zvf130_verdict": "ZVF_BELOW_GRPO"
+    },
+    {
+      "claim_summary": "decouple rollout budget from optimizer step (single-batch same-stack run isolates label)",
+      "delta_id": "delta_areal",
+      "method": "areal",
+      "n2_evidence_per_proxy": {
+        "cv_len": {
+          "ci_excludes_0": "yes",
+          "ci_hi": 0.0622,
+          "ci_lo": 0.0189,
+          "measured_delta": 0.0383,
+          "predicted_reason": "no claim on length variance",
+          "predicted_sign": 0,
+          "reason": "\u0394=+0.0383 (no predicted sign; within CI excludes 0)",
+          "verdict": "WEAK"
+        },
+        "loss": {
+          "ci_excludes_0": "no",
+          "ci_hi": 82.7854,
+          "ci_lo": -399.8169,
+          "measured_delta": -116.1528,
+          "predicted_reason": "no claim on loss",
+          "predicted_sign": 0,
+          "reason": "\u0394=-116.2 (no predicted sign; within noise)",
+          "verdict": "WEAK"
+        },
+        "mean_len": {
+          "ci_excludes_0": "yes",
+          "ci_hi": -16.25,
+          "ci_lo": -41.1016,
+          "measured_delta": -30.1258,
+          "predicted_reason": "no claim on length",
+          "predicted_sign": 0,
+          "reason": "\u0394=-30.13 (no predicted sign; within CI excludes 0)",
+          "verdict": "WEAK"
+        },
+        "reward_mean": {
+          "ci_excludes_0": "no",
+          "ci_hi": 0.0547,
+          "ci_lo": -0.0078,
+          "measured_delta": 0.0195,
+          "predicted_reason": "single-batch run: no rollout-vs-optimizer signal",
+          "predicted_sign": 0,
+          "reason": "\u0394=+0.0195 (no predicted sign; within noise)",
+          "verdict": "WEAK"
+        },
+        "zvf": {
+          "ci_excludes_0": "no",
+          "ci_hi": 0.1875,
+          "ci_lo": -0.125,
+          "measured_delta": 0.0563,
+          "predicted_reason": "single-batch static-G run: no rollout-vs-optimizer signal",
+          "predicted_sign": 0,
+          "reason": "\u0394=+0.0563 (no predicted sign; within noise)",
+          "verdict": "WEAK"
+        }
+      },
+      "n2_no_data": 0,
+      "n2_oppose": 0,
+      "n2_overall": "MIXED",
+      "n2_proxies_tested": 5,
+      "n2_supports": 0,
+      "n2_verdict_counts": {
+        "WEAK": 5
+      },
+      "n2_weak": 5,
+      "registry_evidence": {
+        "claimers": [
+          {
+            "framework": "tinker",
+            "label_claimed": "areal",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": 8,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "GSM8K test split (benchmark protocol)",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": "std",
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": "sequence",
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": true
+              },
+              "sampler_backend": {
+                "backend": "tinker-managed sampler",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "benchmark harness on per-group rewards"
+              }
+            },
+            "openness": "managed",
+            "stack_id": "tinker_areal_qwen3.5-4b_gsm8k",
+            "status": "implemented"
+          }
+        ],
+        "frameworks": [
+          "tinker"
+        ],
+        "n_claimers": 1,
+        "opennesses": [
+          "managed"
+        ],
+        "statuses": [
+          "implemented"
+        ]
+      },
+      "registry_frameworks": "tinker",
+      "registry_n_claimers": 1,
+      "registry_opennesses": "managed",
+      "registry_statuses": "implemented",
+      "zvf130_delta": -0.35988,
+      "zvf130_evidence": {
+        "delta_zvf": -0.35988,
+        "grpo_mean_zvf": 0.48078,
+        "method_mean_zvf": 0.1209,
+        "method_n_seeds": 5,
+        "method_std_zvf": 0.004641120554348919,
+        "pct_drop_vs_grpo": -74.85336328466242,
+        "verdict": "ZVF_BELOW_GRPO"
+      },
+      "zvf130_grpo_mean": 0.48078,
+      "zvf130_method_mean": 0.1209,
+      "zvf130_verdict": "ZVF_BELOW_GRPO"
+    },
+    {
+      "claim_summary": "continuity penalty discourages large log-prob jumps (CPPO)",
+      "delta_id": "delta_cppo",
+      "method": "cppo",
+      "n2_evidence_per_proxy": {
+        "cv_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on length variance",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "loss": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on loss magnitude (penalty is a regulariser)",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "mean_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on length",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "reward_mean": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "smoother optimisation -> better reward (claimed)",
+          "predicted_sign": 1,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "zvf": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on ZVF; log-prob smoothness doesn't directly change within-group contrast",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        }
+      },
+      "n2_no_data": 5,
+      "n2_oppose": 0,
+      "n2_overall": "NULL",
+      "n2_proxies_tested": 5,
+      "n2_supports": 0,
+      "n2_verdict_counts": {
+        "NO_DATA": 5
+      },
+      "n2_weak": 0,
+      "registry_evidence": {
+        "claimers": [
+          {
+            "framework": "worktree-zvf130-batch",
+            "label_claimed": "cppo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": null,
+                "initial_g": null,
+                "schedule": null
+              },
+              "heldout_split": {
+                "description": "GSM8K canonical 16-prompt fixed eval",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": null,
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": null
+              },
+              "sampler_backend": {
+                "backend": "shared zvf-iter130 batch harness (Tinker)",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf_iter130_method_risk.tsv (per-step file zvf_iter130/*)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "zvf130_cppo",
+            "status": "unknown"
+          }
+        ],
+        "frameworks": [
+          "worktree-zvf130-batch"
+        ],
+        "n_claimers": 1,
+        "opennesses": [
+          "open"
+        ],
+        "statuses": [
+          "unknown"
+        ]
+      },
+      "registry_frameworks": "worktree-zvf130-batch",
+      "registry_n_claimers": 1,
+      "registry_opennesses": "open",
+      "registry_statuses": "unknown",
+      "zvf130_delta": -0.18558000000000002,
+      "zvf130_evidence": {
+        "delta_zvf": -0.18558000000000002,
+        "grpo_mean_zvf": 0.48078,
+        "method_mean_zvf": 0.29519999999999996,
+        "method_n_seeds": 5,
+        "method_std_zvf": 0.0020268201696253176,
+        "pct_drop_vs_grpo": -38.59977536503183,
+        "verdict": "ZVF_BELOW_GRPO"
+      },
+      "zvf130_grpo_mean": 0.48078,
+      "zvf130_method_mean": 0.29519999999999996,
+      "zvf130_verdict": "ZVF_BELOW_GRPO"
+    },
+    {
+      "claim_summary": "asymmetric clip + dynamic sampling + token-level loss + overlong-reward shaping + KL removed",
+      "delta_id": "delta_dapo",
+      "method": "dapo",
+      "n2_evidence_per_proxy": {
+        "cv_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on length variance",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "loss": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on loss magnitude",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "mean_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "overlong-reward shaping penalises long completions",
+          "predicted_sign": -1,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "reward_mean": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "dynamic sampling + token-level loss -> better reward (claimed)",
+          "predicted_sign": 1,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "zvf": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "dynamic sampling zeroes degenerate groups -> lower ZVF",
+          "predicted_sign": -1,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        }
+      },
+      "n2_no_data": 5,
+      "n2_oppose": 0,
+      "n2_overall": "NULL",
+      "n2_proxies_tested": 5,
+      "n2_supports": 0,
+      "n2_verdict_counts": {
+        "NO_DATA": 5
+      },
+      "n2_weak": 0,
+      "registry_evidence": {
+        "claimers": [
+          {
+            "framework": "colab-open-trainer",
+            "label_claimed": "dapo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": false,
+                "performed": false
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": 4,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "held-out arithmetic prompts disjoint from the reward environment; held-out delta reported per arm",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": "std",
+                "clip_eps_high": 0.28,
+                "clip_eps_low": 0.2,
+                "importance_ratio_level": "token",
+                "length_normalization": true,
+                "token_mask": "completion-only"
+              },
+              "reference_kl": {
+                "kl_beta": 0.0,
+                "kl_estimator": "none",
+                "reference_policy": false
+              },
+              "sampler_backend": {
+                "backend": "hf_transformers (single-process, open backward pass)",
+                "precision": null,
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf-triage callback (live per-step ZVF/GU)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "colab-open_dapo_e3",
+            "status": "implemented"
+          },
+          {
+            "framework": "colab-open-trainer",
+            "label_claimed": "dapo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": false,
+                "performed": false
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": 4,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "held-out arithmetic prompts disjoint from the reward environment; held-out delta reported per arm",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": "std",
+                "clip_eps_high": 0.28,
+                "clip_eps_low": 0.2,
+                "importance_ratio_level": "token",
+                "length_normalization": true,
+                "token_mask": "completion-only"
+              },
+              "reference_kl": {
+                "kl_beta": 0.0,
+                "kl_estimator": "none",
+                "reference_policy": false
+              },
+              "sampler_backend": {
+                "backend": "hf_transformers (single-process, open backward pass)",
+                "precision": null,
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf-triage callback (live per-step ZVF/GU)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "colab-open_dapo_e3",
+            "status": "implemented"
+          },
+          {
+            "framework": "colab-open-trainer",
+            "label_claimed": "dapo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": false,
+                "performed": false
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": 4,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "held-out arithmetic prompts disjoint from the reward environment; held-out delta reported per arm",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": "std",
+                "clip_eps_high": 0.28,
+                "clip_eps_low": 0.2,
+                "importance_ratio_level": "token",
+                "length_normalization": true,
+                "token_mask": "completion-only"
+              },
+              "reference_kl": {
+                "kl_beta": 0.0,
+                "kl_estimator": "none",
+                "reference_policy": false
+              },
+              "sampler_backend": {
+                "backend": "hf_transformers (single-process, open backward pass)",
+                "precision": null,
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf-triage callback (live per-step ZVF/GU)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "colab-open_dapo_e3",
+            "status": "implemented"
+          },
+          {
+            "framework": "colab-open-trainer",
+            "label_claimed": "dapo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": false,
+                "performed": false
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": 4,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "held-out arithmetic prompts disjoint from the reward environment; held-out delta reported per arm",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": "std",
+                "clip_eps_high": 0.28,
+                "clip_eps_low": 0.2,
+                "importance_ratio_level": "token",
+                "length_normalization": true,
+                "token_mask": "completion-only"
+              },
+              "reference_kl": {
+                "kl_beta": 0.0,
+                "kl_estimator": "none",
+                "reference_policy": false
+              },
+              "sampler_backend": {
+                "backend": "hf_transformers (single-process, open backward pass)",
+                "precision": null,
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf-triage callback (live per-step ZVF/GU)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "colab-open_dapo_e3",
+            "status": "absent"
+          },
+          {
+            "framework": "colab-open-trainer",
+            "label_claimed": "dapo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": false,
+                "performed": false
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": 4,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "held-out arithmetic prompts disjoint from the reward environment; held-out delta reported per arm",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": "std",
+                "clip_eps_high": 0.28,
+                "clip_eps_low": 0.2,
+                "importance_ratio_level": "token",
+                "length_normalization": true,
+                "token_mask": "completion-only"
+              },
+              "reference_kl": {
+                "kl_beta": 0.0,
+                "kl_estimator": "none",
+                "reference_policy": false
+              },
+              "sampler_backend": {
+                "backend": "hf_transformers (single-process, open backward pass)",
+                "precision": null,
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf-triage callback (live per-step ZVF/GU)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "colab-open_dapo_e3",
+            "status": "implemented"
+          },
+          {
+            "framework": "tinker",
+            "label_claimed": "dapo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": null,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "GSM8K test split (benchmark protocol)",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": 0.28,
+                "clip_eps_low": 0.2,
+                "importance_ratio_level": null,
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": true
+              },
+              "sampler_backend": {
+                "backend": "tinker-managed sampler",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "benchmark harness on per-group rewards"
+              }
+            },
+            "openness": "managed",
+            "stack_id": "tinker_dapo_qwen3.5-4b_gsm8k",
+            "status": "surrogate"
+          },
+          {
+            "framework": "tinker",
+            "label_claimed": "dapo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": null,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "GSM8K test split (benchmark protocol)",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": 0.28,
+                "clip_eps_low": 0.2,
+                "importance_ratio_level": null,
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": true
+              },
+              "sampler_backend": {
+                "backend": "tinker-managed sampler",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "benchmark harness on per-group rewards"
+              }
+            },
+            "openness": "managed",
+            "stack_id": "tinker_dapo_qwen3.5-4b_gsm8k",
+            "status": "absent"
+          },
+          {
+            "framework": "tinker",
+            "label_claimed": "dapo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": null,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "GSM8K test split (benchmark protocol)",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": 0.28,
+                "clip_eps_low": 0.2,
+                "importance_ratio_level": null,
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": true
+              },
+              "sampler_backend": {
+                "backend": "tinker-managed sampler",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "benchmark harness on per-group rewards"
+              }
+            },
+            "openness": "managed",
+            "stack_id": "tinker_dapo_qwen3.5-4b_gsm8k",
+            "status": "unknown"
+          },
+          {
+            "framework": "tinker",
+            "label_claimed": "dapo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": null,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "GSM8K test split (benchmark protocol)",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": 0.28,
+                "clip_eps_low": 0.2,
+                "importance_ratio_level": null,
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": true
+              },
+              "sampler_backend": {
+                "backend": "tinker-managed sampler",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "benchmark harness on per-group rewards"
+              }
+            },
+            "openness": "managed",
+            "stack_id": "tinker_dapo_qwen3.5-4b_gsm8k",
+            "status": "absent"
+          },
+          {
+            "framework": "tinker",
+            "label_claimed": "dapo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": null,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "GSM8K test split (benchmark protocol)",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": 0.28,
+                "clip_eps_low": 0.2,
+                "importance_ratio_level": null,
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": true
+              },
+              "sampler_backend": {
+                "backend": "tinker-managed sampler",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "benchmark harness on per-group rewards"
+              }
+            },
+            "openness": "managed",
+            "stack_id": "tinker_dapo_qwen3.5-4b_gsm8k",
+            "status": "unknown"
+          }
+        ],
+        "frameworks": [
+          "colab-open-trainer",
+          "tinker"
+        ],
+        "n_claimers": 10,
+        "opennesses": [
+          "managed",
+          "open"
+        ],
+        "statuses": [
+          "absent",
+          "implemented",
+          "surrogate",
+          "unknown"
+        ]
+      },
+      "registry_frameworks": "colab-open-trainer|tinker",
+      "registry_n_claimers": 10,
+      "registry_opennesses": "managed|open",
+      "registry_statuses": "absent|implemented|surrogate|unknown",
+      "zvf130_delta": "",
+      "zvf130_evidence": {},
+      "zvf130_grpo_mean": 0.48078,
+      "zvf130_method_mean": "",
+      "zvf130_verdict": "NO_DATA"
+    },
+    {
+      "claim_summary": "remove length-normalization and advantage-std-normalization (Dr.GRPO)",
+      "delta_id": "delta_drgrpo",
+      "method": "drgrpo",
+      "n2_evidence_per_proxy": {
+        "cv_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "removing length norm -> higher within-group length variance",
+          "predicted_sign": 1,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "loss": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on loss magnitude",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "mean_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "removing length norm -> longer completions (length bias recovered)",
+          "predicted_sign": 1,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "reward_mean": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on reward",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "zvf": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "removing length norm exposes length bias -> more within-group variance",
+          "predicted_sign": 1,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        }
+      },
+      "n2_no_data": 5,
+      "n2_oppose": 0,
+      "n2_overall": "NULL",
+      "n2_proxies_tested": 5,
+      "n2_supports": 0,
+      "n2_verdict_counts": {
+        "NO_DATA": 5
+      },
+      "n2_weak": 0,
+      "registry_evidence": {
+        "claimers": [
+          {
+            "framework": "colab-open-trainer",
+            "label_claimed": "drgrpo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": false,
+                "performed": false
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": 4,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "held-out arithmetic prompts disjoint from the reward environment; held-out delta reported per arm",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": "none",
+                "clip_eps_high": 0.2,
+                "clip_eps_low": 0.2,
+                "importance_ratio_level": "token",
+                "length_normalization": false,
+                "token_mask": "completion-only"
+              },
+              "reference_kl": {
+                "kl_beta": 0.0,
+                "kl_estimator": "none",
+                "reference_policy": false
+              },
+              "sampler_backend": {
+                "backend": "hf_transformers (single-process, open backward pass)",
+                "precision": null,
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf-triage callback (live per-step ZVF/GU)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "colab-open_drgrpo_e3",
+            "status": "implemented"
+          },
+          {
+            "framework": "colab-open-trainer",
+            "label_claimed": "drgrpo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": false,
+                "performed": false
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": 4,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "held-out arithmetic prompts disjoint from the reward environment; held-out delta reported per arm",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": "none",
+                "clip_eps_high": 0.2,
+                "clip_eps_low": 0.2,
+                "importance_ratio_level": "token",
+                "length_normalization": false,
+                "token_mask": "completion-only"
+              },
+              "reference_kl": {
+                "kl_beta": 0.0,
+                "kl_estimator": "none",
+                "reference_policy": false
+              },
+              "sampler_backend": {
+                "backend": "hf_transformers (single-process, open backward pass)",
+                "precision": null,
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf-triage callback (live per-step ZVF/GU)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "colab-open_drgrpo_e3",
+            "status": "implemented"
+          },
+          {
+            "framework": "tinker",
+            "label_claimed": "drgrpo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": null,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "GSM8K test split (benchmark protocol)",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": "none",
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": null,
+                "length_normalization": false,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": true
+              },
+              "sampler_backend": {
+                "backend": "tinker-managed sampler",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "benchmark harness on per-group rewards"
+              }
+            },
+            "openness": "managed",
+            "stack_id": "tinker_drgrpo_qwen3.5-4b_gsm8k",
+            "status": "surrogate"
+          },
+          {
+            "framework": "tinker",
+            "label_claimed": "drgrpo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": null,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "GSM8K test split (benchmark protocol)",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": "none",
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": null,
+                "length_normalization": false,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": true
+              },
+              "sampler_backend": {
+                "backend": "tinker-managed sampler",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "benchmark harness on per-group rewards"
+              }
+            },
+            "openness": "managed",
+            "stack_id": "tinker_drgrpo_qwen3.5-4b_gsm8k",
+            "status": "surrogate"
+          }
+        ],
+        "frameworks": [
+          "colab-open-trainer",
+          "tinker"
+        ],
+        "n_claimers": 4,
+        "opennesses": [
+          "managed",
+          "open"
+        ],
+        "statuses": [
+          "implemented",
+          "surrogate"
+        ]
+      },
+      "registry_frameworks": "colab-open-trainer|tinker",
+      "registry_n_claimers": 4,
+      "registry_opennesses": "managed|open",
+      "registry_statuses": "implemented|surrogate",
+      "zvf130_delta": "",
+      "zvf130_evidence": {},
+      "zvf130_grpo_mean": 0.48078,
+      "zvf130_method_mean": "",
+      "zvf130_verdict": "NO_DATA"
+    },
+    {
+      "claim_summary": "replace policy-gradient with ES central-difference estimator (ES at scale)",
+      "delta_id": "delta_es",
+      "method": "es",
+      "n2_evidence_per_proxy": {
+        "cv_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on length variance",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "loss": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "ES objective differs structurally from GRPO loss; not directly comparable",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "mean_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on length",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "reward_mean": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on reward; estimator change not necessarily better",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "zvf": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "ES doesn't use within-group contrast -> ZVF irrelevant by construction",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        }
+      },
+      "n2_no_data": 5,
+      "n2_oppose": 0,
+      "n2_overall": "NULL",
+      "n2_proxies_tested": 5,
+      "n2_supports": 0,
+      "n2_verdict_counts": {
+        "NO_DATA": 5
+      },
+      "n2_weak": 0,
+      "registry_evidence": {
+        "claimers": [
+          {
+            "framework": "worktree-zvf130-batch",
+            "label_claimed": "es",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": null,
+                "initial_g": null,
+                "schedule": null
+              },
+              "heldout_split": {
+                "description": "GSM8K canonical 16-prompt fixed eval",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": null,
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": null
+              },
+              "sampler_backend": {
+                "backend": "shared zvf-iter130 batch harness (Tinker)",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf_iter130_method_risk.tsv (per-step file zvf_iter130/*)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "zvf130_es",
+            "status": "unknown"
+          }
+        ],
+        "frameworks": [
+          "worktree-zvf130-batch"
+        ],
+        "n_claimers": 1,
+        "opennesses": [
+          "open"
+        ],
+        "statuses": [
+          "unknown"
+        ]
+      },
+      "registry_frameworks": "worktree-zvf130-batch",
+      "registry_n_claimers": 1,
+      "registry_opennesses": "open",
+      "registry_statuses": "unknown",
+      "zvf130_delta": -0.36656,
+      "zvf130_evidence": {
+        "delta_zvf": -0.36656,
+        "grpo_mean_zvf": 0.48078,
+        "method_mean_zvf": 0.11422,
+        "method_n_seeds": 5,
+        "method_std_zvf": 0.00455692879031481,
+        "pct_drop_vs_grpo": -76.24277216190357,
+        "verdict": "ZVF_BELOW_GRPO"
+      },
+      "zvf130_grpo_mean": 0.48078,
+      "zvf130_method_mean": 0.11422,
+      "zvf130_verdict": "ZVF_BELOW_GRPO"
+    },
+    {
+      "claim_summary": "gamma-style per-prompt likelihood prior subtracted from advantage (GIFT/UNA+DPO)",
+      "delta_id": "delta_gift",
+      "method": "gift",
+      "n2_evidence_per_proxy": {
+        "cv_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": 0.024,
+          "ci_lo": -0.0397,
+          "measured_delta": -0.002,
+          "predicted_reason": "no claim on length variance",
+          "predicted_sign": 0,
+          "reason": "\u0394=-0.002 (no predicted sign; within noise)",
+          "verdict": "WEAK"
+        },
+        "loss": {
+          "ci_excludes_0": "yes",
+          "ci_hi": 19371.8303,
+          "ci_lo": 14911.7804,
+          "measured_delta": 16722.4088,
+          "predicted_reason": "no claim; but a constant offset WILL shift loss magnitude",
+          "predicted_sign": 0,
+          "reason": "\u0394=+1.672e+04 (no predicted sign; within CI excludes 0)",
+          "verdict": "WEAK"
+        },
+        "mean_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": 23.2188,
+          "ci_lo": -18.75,
+          "measured_delta": 3.8891,
+          "predicted_reason": "no claim on length",
+          "predicted_sign": 0,
+          "reason": "\u0394=+3.889 (no predicted sign; within noise)",
+          "verdict": "WEAK"
+        },
+        "reward_mean": {
+          "ci_excludes_0": "no",
+          "ci_hi": 0.0469,
+          "ci_lo": -0.0625,
+          "measured_delta": -0.0164,
+          "predicted_reason": "no claim on reward",
+          "predicted_sign": 0,
+          "reason": "\u0394=-0.0164 (no predicted sign; within noise)",
+          "verdict": "WEAK"
+        },
+        "zvf": {
+          "ci_excludes_0": "no",
+          "ci_hi": 0.0,
+          "ci_lo": -0.25,
+          "measured_delta": -0.125,
+          "predicted_reason": "no claim on ZVF; constant offset cancels in std",
+          "predicted_sign": 0,
+          "reason": "\u0394=-0.125 (no predicted sign; within noise)",
+          "verdict": "WEAK"
+        }
+      },
+      "n2_no_data": 0,
+      "n2_oppose": 0,
+      "n2_overall": "MIXED",
+      "n2_proxies_tested": 5,
+      "n2_supports": 0,
+      "n2_verdict_counts": {
+        "WEAK": 5
+      },
+      "n2_weak": 5,
+      "registry_evidence": {
+        "claimers": [
+          {
+            "framework": "tinker",
+            "label_claimed": "gift",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": 8,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "GSM8K test split (benchmark protocol)",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": "std",
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": "sequence",
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": true
+              },
+              "sampler_backend": {
+                "backend": "tinker-managed sampler",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "benchmark harness on per-group rewards"
+              }
+            },
+            "openness": "managed",
+            "stack_id": "tinker_gift_qwen3.5-4b_gsm8k",
+            "status": "implemented"
+          }
+        ],
+        "frameworks": [
+          "tinker"
+        ],
+        "n_claimers": 1,
+        "opennesses": [
+          "managed"
+        ],
+        "statuses": [
+          "implemented"
+        ]
+      },
+      "registry_frameworks": "tinker",
+      "registry_n_claimers": 1,
+      "registry_opennesses": "managed",
+      "registry_statuses": "implemented",
+      "zvf130_delta": -0.36658,
+      "zvf130_evidence": {
+        "delta_zvf": -0.36658,
+        "grpo_mean_zvf": 0.48078,
+        "method_mean_zvf": 0.1142,
+        "method_n_seeds": 5,
+        "method_std_zvf": 0.004548406314303943,
+        "pct_drop_vs_grpo": -76.24693206872166,
+        "verdict": "ZVF_BELOW_GRPO"
+      },
+      "zvf130_grpo_mean": 0.48078,
+      "zvf130_method_mean": 0.1142,
+      "zvf130_verdict": "ZVF_BELOW_GRPO"
+    },
+    {
+      "claim_summary": "sequence-level importance ratio + sequence-level clip (GSPO)",
+      "delta_id": "delta_gspo",
+      "method": "gspo",
+      "n2_evidence_per_proxy": {
+        "cv_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on length variance",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "loss": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on loss magnitude",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "mean_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on length",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "reward_mean": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on reward",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "zvf": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "ratio level doesn't directly change reward-variance structure",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        }
+      },
+      "n2_no_data": 5,
+      "n2_oppose": 0,
+      "n2_overall": "NULL",
+      "n2_proxies_tested": 5,
+      "n2_supports": 0,
+      "n2_verdict_counts": {
+        "NO_DATA": 5
+      },
+      "n2_weak": 0,
+      "registry_evidence": {
+        "claimers": [
+          {
+            "framework": "tinker",
+            "label_claimed": "gspo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": null,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "GSM8K test split (benchmark protocol)",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": "sequence",
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": true
+              },
+              "sampler_backend": {
+                "backend": "tinker-managed sampler",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "benchmark harness on per-group rewards"
+              }
+            },
+            "openness": "managed",
+            "stack_id": "tinker_gspo_qwen3.5-4b_gsm8k",
+            "status": "surrogate"
+          },
+          {
+            "framework": "tinker",
+            "label_claimed": "gspo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": "none",
+                "initial_g": null,
+                "schedule": "fixed"
+              },
+              "heldout_split": {
+                "description": "GSM8K test split (benchmark protocol)",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": "sequence",
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": true
+              },
+              "sampler_backend": {
+                "backend": "tinker-managed sampler",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "benchmark harness on per-group rewards"
+              }
+            },
+            "openness": "managed",
+            "stack_id": "tinker_gspo_qwen3.5-4b_gsm8k",
+            "status": "unknown"
+          }
+        ],
+        "frameworks": [
+          "tinker"
+        ],
+        "n_claimers": 2,
+        "opennesses": [
+          "managed"
+        ],
+        "statuses": [
+          "surrogate",
+          "unknown"
+        ]
+      },
+      "registry_frameworks": "tinker",
+      "registry_n_claimers": 2,
+      "registry_opennesses": "managed",
+      "registry_statuses": "surrogate|unknown",
+      "zvf130_delta": "",
+      "zvf130_evidence": {},
+      "zvf130_grpo_mean": 0.48078,
+      "zvf130_method_mean": "",
+      "zvf130_verdict": "NO_DATA"
+    },
+    {
+      "claim_summary": "MCTS-augmented rollouts + per-prompt diversity bonus (MC-GRPO)",
+      "delta_id": "delta_mcgrpo",
+      "method": "mcgrpo",
+      "n2_evidence_per_proxy": {
+        "cv_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on length variance",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "loss": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on loss",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "mean_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "MCTS continuations are typically longer",
+          "predicted_sign": 1,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "reward_mean": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "MCTS value guidance -> better reward (claimed)",
+          "predicted_sign": 1,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "zvf": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "MCTS boost could go either way; diversity bonus is meant to raise contrast",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        }
+      },
+      "n2_no_data": 5,
+      "n2_oppose": 0,
+      "n2_overall": "NULL",
+      "n2_proxies_tested": 5,
+      "n2_supports": 0,
+      "n2_verdict_counts": {
+        "NO_DATA": 5
+      },
+      "n2_weak": 0,
+      "registry_evidence": {
+        "claimers": [
+          {
+            "framework": "worktree-zvf130-batch",
+            "label_claimed": "mcgrpo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": null,
+                "initial_g": null,
+                "schedule": null
+              },
+              "heldout_split": {
+                "description": "GSM8K canonical 16-prompt fixed eval",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": null,
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": null
+              },
+              "sampler_backend": {
+                "backend": "shared zvf-iter130 batch harness (Tinker)",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf_iter130_method_risk.tsv (per-step file zvf_iter130/*)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "zvf130_mcgrpo",
+            "status": "unknown"
+          },
+          {
+            "framework": "worktree-zvf130-batch",
+            "label_claimed": "mcgrpo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": null,
+                "initial_g": null,
+                "schedule": null
+              },
+              "heldout_split": {
+                "description": "GSM8K canonical 16-prompt fixed eval",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": null,
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": null
+              },
+              "sampler_backend": {
+                "backend": "shared zvf-iter130 batch harness (Tinker)",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf_iter130_method_risk.tsv (per-step file zvf_iter130/*)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "zvf130_mcgrpo",
+            "status": "unknown"
+          }
+        ],
+        "frameworks": [
+          "worktree-zvf130-batch"
+        ],
+        "n_claimers": 2,
+        "opennesses": [
+          "open"
+        ],
+        "statuses": [
+          "unknown"
+        ]
+      },
+      "registry_frameworks": "worktree-zvf130-batch",
+      "registry_n_claimers": 2,
+      "registry_opennesses": "open",
+      "registry_statuses": "unknown",
+      "zvf130_delta": -0.33474,
+      "zvf130_evidence": {
+        "delta_zvf": -0.33474,
+        "grpo_mean_zvf": 0.48078,
+        "method_mean_zvf": 0.14604,
+        "method_n_seeds": 5,
+        "method_std_zvf": 0.007002171091882854,
+        "pct_drop_vs_grpo": -69.62436041432672,
+        "verdict": "ZVF_BELOW_GRPO"
+      },
+      "zvf130_grpo_mean": 0.48078,
+      "zvf130_method_mean": 0.14604,
+      "zvf130_verdict": "ZVF_BELOW_GRPO"
+    },
+    {
+      "claim_summary": "normalize advantage by per-prompt gradient norm (NGraPO)",
+      "delta_id": "delta_ngrpo",
+      "method": "ngrpo",
+      "n2_evidence_per_proxy": {
+        "cv_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on length variance",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "loss": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on loss",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "mean_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on length",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "reward_mean": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "better advantage normalisation -> better reward (claimed)",
+          "predicted_sign": 1,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "zvf": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on ZVF; per-prompt norm re-weights but doesn't change zero-variance count",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        }
+      },
+      "n2_no_data": 5,
+      "n2_oppose": 0,
+      "n2_overall": "NULL",
+      "n2_proxies_tested": 5,
+      "n2_supports": 0,
+      "n2_verdict_counts": {
+        "NO_DATA": 5
+      },
+      "n2_weak": 0,
+      "registry_evidence": {
+        "claimers": [
+          {
+            "framework": "worktree-zvf130-batch",
+            "label_claimed": "ngrpo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": null,
+                "initial_g": null,
+                "schedule": null
+              },
+              "heldout_split": {
+                "description": "GSM8K canonical 16-prompt fixed eval",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": null,
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": null
+              },
+              "sampler_backend": {
+                "backend": "shared zvf-iter130 batch harness (Tinker)",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf_iter130_method_risk.tsv (per-step file zvf_iter130/*)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "zvf130_ngrpo",
+            "status": "unknown"
+          }
+        ],
+        "frameworks": [
+          "worktree-zvf130-batch"
+        ],
+        "n_claimers": 1,
+        "opennesses": [
+          "open"
+        ],
+        "statuses": [
+          "unknown"
+        ]
+      },
+      "registry_frameworks": "worktree-zvf130-batch",
+      "registry_n_claimers": 1,
+      "registry_opennesses": "open",
+      "registry_statuses": "unknown",
+      "zvf130_delta": -0.18041999999999997,
+      "zvf130_evidence": {
+        "delta_zvf": -0.18041999999999997,
+        "grpo_mean_zvf": 0.48078,
+        "method_mean_zvf": 0.30036,
+        "method_n_seeds": 5,
+        "method_std_zvf": 0.0021638853943774334,
+        "pct_drop_vs_grpo": -37.5265194059653,
+        "verdict": "ZVF_BELOW_GRPO"
+      },
+      "zvf130_grpo_mean": 0.48078,
+      "zvf130_method_mean": 0.30036,
+      "zvf130_verdict": "ZVF_BELOW_GRPO"
+    },
+    {
+      "claim_summary": "scaffold-completion-quality prior up-weights low-scaffold prompts (Scaf-GRPO)",
+      "delta_id": "delta_scafgrpo",
+      "method": "scafgrpo",
+      "n2_evidence_per_proxy": {
+        "cv_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on length variance",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "loss": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on loss",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "mean_len": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no claim on length",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "reward_mean": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "up-weighting hard prompts -> better learning (claimed)",
+          "predicted_sign": 1,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        },
+        "zvf": {
+          "ci_excludes_0": "no",
+          "ci_hi": null,
+          "ci_lo": null,
+          "measured_delta": null,
+          "predicted_reason": "no direct claim on ZVF; re-weighting could go either way",
+          "predicted_sign": 0,
+          "reason": "no N2 same-stack run for this method",
+          "verdict": "NO_DATA"
+        }
+      },
+      "n2_no_data": 5,
+      "n2_oppose": 0,
+      "n2_overall": "NULL",
+      "n2_proxies_tested": 5,
+      "n2_supports": 0,
+      "n2_verdict_counts": {
+        "NO_DATA": 5
+      },
+      "n2_weak": 0,
+      "registry_evidence": {
+        "claimers": [
+          {
+            "framework": "worktree-zvf130-batch",
+            "label_claimed": "scafgrpo",
+            "min_report": {
+              "decontamination": {
+                "parser_robustness_probe": null,
+                "performed": null
+              },
+              "group_size_schedule": {
+                "adaptation_rule": null,
+                "initial_g": null,
+                "schedule": null
+              },
+              "heldout_split": {
+                "description": "GSM8K canonical 16-prompt fixed eval",
+                "disjoint_from_reward_env": true
+              },
+              "loss_form": {
+                "advantage_normalization": null,
+                "clip_eps_high": null,
+                "clip_eps_low": null,
+                "importance_ratio_level": null,
+                "length_normalization": null,
+                "token_mask": null
+              },
+              "reference_kl": {
+                "kl_beta": null,
+                "kl_estimator": null,
+                "reference_policy": null
+              },
+              "sampler_backend": {
+                "backend": "shared zvf-iter130 batch harness (Tinker)",
+                "precision": "bf16",
+                "temperature": 0.7,
+                "top_p": 0.95
+              },
+              "telemetry": {
+                "per_step_gu": true,
+                "per_step_zvf": true,
+                "source": "zvf_iter130_method_risk.tsv (per-step file zvf_iter130/*)"
+              }
+            },
+            "openness": "open",
+            "stack_id": "zvf130_scafgrpo",
+            "status": "unknown"
+          }
+        ],
+        "frameworks": [
+          "worktree-zvf130-batch"
+        ],
+        "n_claimers": 1,
+        "opennesses": [
+          "open"
+        ],
+        "statuses": [
+          "unknown"
+        ]
+      },
+      "registry_frameworks": "worktree-zvf130-batch",
+      "registry_n_claimers": 1,
+      "registry_opennesses": "open",
+      "registry_statuses": "unknown",
+      "zvf130_delta": -0.16414,
+      "zvf130_evidence": {
+        "delta_zvf": -0.16414,
+        "grpo_mean_zvf": 0.48078,
+        "method_mean_zvf": 0.31664,
+        "method_n_seeds": 5,
+        "method_std_zvf": 0.00382444767254044,
+        "pct_drop_vs_grpo": -34.14035525604226,
+        "verdict": "ZVF_BELOW_GRPO"
+      },
+      "zvf130_grpo_mean": 0.48078,
+      "zvf130_method_mean": 0.31664,
+      "zvf130_verdict": "ZVF_BELOW_GRPO"
+    }
+  ],
+  "zvf130_per_method": {
+    "aero": {
+      "max_zvf": 0.2219,
+      "mean_zvf": 0.22025999999999998,
+      "min_zvf": 0.2178,
+      "n": 5,
+      "std_zvf": 0.0017419529270333322
+    },
+    "areal": {
+      "max_zvf": 0.1241,
+      "mean_zvf": 0.1209,
+      "min_zvf": 0.1118,
+      "n": 5,
+      "std_zvf": 0.004641120554348919
+    },
+    "cppo": {
+      "max_zvf": 0.298,
+      "mean_zvf": 0.29519999999999996,
+      "min_zvf": 0.2919,
+      "n": 5,
+      "std_zvf": 0.0020268201696253176
+    },
+    "es": {
+      "max_zvf": 0.1191,
+      "mean_zvf": 0.11422,
+      "min_zvf": 0.1056,
+      "n": 5,
+      "std_zvf": 0.00455692879031481
+    },
+    "gift": {
+      "max_zvf": 0.1176,
+      "mean_zvf": 0.1142,
+      "min_zvf": 0.1053,
+      "n": 5,
+      "std_zvf": 0.004548406314303943
+    },
+    "grpo": {
+      "max_zvf": 0.4824,
+      "mean_zvf": 0.48078,
+      "min_zvf": 0.4793,
+      "n": 5,
+      "std_zvf": 0.0010342146779078283
+    },
+    "mcgrpo": {
+      "max_zvf": 0.1525,
+      "mean_zvf": 0.14604,
+      "min_zvf": 0.1332,
+      "n": 5,
+      "std_zvf": 0.007002171091882854
+    },
+    "ngrpo": {
+      "max_zvf": 0.3036,
+      "mean_zvf": 0.30036,
+      "min_zvf": 0.2975,
+      "n": 5,
+      "std_zvf": 0.0021638853943774334
+    },
+    "scafgrpo": {
+      "max_zvf": 0.3216,
+      "mean_zvf": 0.31664,
+      "min_zvf": 0.3126,
+      "n": 5,
+      "std_zvf": 0.00382444767254044
+    }
+  }
+}

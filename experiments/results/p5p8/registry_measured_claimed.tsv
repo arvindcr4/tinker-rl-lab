@@ -1,0 +1,12 @@
+delta_id	method	claim_summary	n2_proxies_tested	n2_supports	n2_weak	n2_oppose	n2_no_data	n2_overall	n2_verdict_counts	zvf130_method_mean	zvf130_grpo_mean	zvf130_delta	zvf130_verdict	registry_n_claimers	registry_statuses	registry_frameworks	registry_opennesses
+delta_aero	aero	off-policy reference rollouts inflate effective G; (le2025rlzvp)	5	0	4	1	0	MIXED	"{""OPPOSE"": 1, ""WEAK"": 4}"	0.22025999999999998	0.48078	-0.26052	ZVF_BELOW_GRPO	1	implemented	tinker	managed
+delta_areal	areal	decouple rollout budget from optimizer step (single-batch same-stack run isolates label)	5	0	5	0	0	MIXED	"{""WEAK"": 5}"	0.1209	0.48078	-0.35988	ZVF_BELOW_GRPO	1	implemented	tinker	managed
+delta_cppo	cppo	continuity penalty discourages large log-prob jumps (CPPO)	5	0	0	0	5	NULL	"{""NO_DATA"": 5}"	0.29519999999999996	0.48078	-0.18558000000000002	ZVF_BELOW_GRPO	1	unknown	worktree-zvf130-batch	open
+delta_dapo	dapo	asymmetric clip + dynamic sampling + token-level loss + overlong-reward shaping + KL removed	5	0	0	0	5	NULL	"{""NO_DATA"": 5}"		0.48078		NO_DATA	10	absent|implemented|surrogate|unknown	colab-open-trainer|tinker	managed|open
+delta_drgrpo	drgrpo	remove length-normalization and advantage-std-normalization (Dr.GRPO)	5	0	0	0	5	NULL	"{""NO_DATA"": 5}"		0.48078		NO_DATA	4	implemented|surrogate	colab-open-trainer|tinker	managed|open
+delta_es	es	replace policy-gradient with ES central-difference estimator (ES at scale)	5	0	0	0	5	NULL	"{""NO_DATA"": 5}"	0.11422	0.48078	-0.36656	ZVF_BELOW_GRPO	1	unknown	worktree-zvf130-batch	open
+delta_gift	gift	gamma-style per-prompt likelihood prior subtracted from advantage (GIFT/UNA+DPO)	5	0	5	0	0	MIXED	"{""WEAK"": 5}"	0.1142	0.48078	-0.36658	ZVF_BELOW_GRPO	1	implemented	tinker	managed
+delta_gspo	gspo	sequence-level importance ratio + sequence-level clip (GSPO)	5	0	0	0	5	NULL	"{""NO_DATA"": 5}"		0.48078		NO_DATA	2	surrogate|unknown	tinker	managed
+delta_mcgrpo	mcgrpo	MCTS-augmented rollouts + per-prompt diversity bonus (MC-GRPO)	5	0	0	0	5	NULL	"{""NO_DATA"": 5}"	0.14604	0.48078	-0.33474	ZVF_BELOW_GRPO	2	unknown	worktree-zvf130-batch	open
+delta_ngrpo	ngrpo	normalize advantage by per-prompt gradient norm (NGraPO)	5	0	0	0	5	NULL	"{""NO_DATA"": 5}"	0.30036	0.48078	-0.18041999999999997	ZVF_BELOW_GRPO	1	unknown	worktree-zvf130-batch	open
+delta_scafgrpo	scafgrpo	scaffold-completion-quality prior up-weights low-scaffold prompts (Scaf-GRPO)	5	0	0	0	5	NULL	"{""NO_DATA"": 5}"	0.31664	0.48078	-0.16414	ZVF_BELOW_GRPO	1	unknown	worktree-zvf130-batch	open

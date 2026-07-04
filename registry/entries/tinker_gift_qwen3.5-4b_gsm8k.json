@@ -71,7 +71,14 @@
     "mean_last10_train_reward": 0.8773,
     "mean_zvf": 0.9,
     "heldout_delta": null,
-    "rollouts": 8
+    "rollouts": 8,
+    "ci_method": {
+      "method": "paired_bootstrap",
+      "n_boot": 2000,
+      "seed": 0,
+      "ci_level": 0.95,
+      "source": "scripts/p5p8/registry_validate.py::bootstrap_paired_diff (percentile 2.5/97.5 over aligned per-step N2 tensors)"
+    }
   },
   "notes": "Method 'gift' measured on the same N2 four-method stack (Tinker-managed sampler, Qwen3.5-4B, GSM8K, G=8, seed=0). Last-10 reward/ZVF are within paired bootstrap noise of GRPO baseline (see registry_measured_deltas.tsv, iter 2)."
 }

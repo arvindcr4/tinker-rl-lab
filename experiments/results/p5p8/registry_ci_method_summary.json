@@ -1,0 +1,23 @@
+{
+  "n_entries": 31,
+  "n_schema_pass": 31,
+  "all_pass": true,
+  "n_self_report_ci_method": 7,
+  "ci_method_entries": [
+    "tinker_aero_qwen3.5-4b_gsm8k.json",
+    "tinker_areal_qwen3.5-4b_gsm8k.json",
+    "tinker_dapo_qwen3.5-4b_gsm8k.json",
+    "tinker_drgrpo_qwen3.5-4b_gsm8k.json",
+    "tinker_gift_qwen3.5-4b_gsm8k.json",
+    "tinker_grpo_qwen3.5-4b_gsm8k.json",
+    "tinker_gspo_qwen3.5-4b_gsm8k.json"
+  ],
+  "touched_this_run": [],
+  "ci_method_value": {
+    "method": "paired_bootstrap",
+    "n_boot": 2000,
+    "seed": 0,
+    "ci_level": 0.95,
+    "source": "scripts/p5p8/registry_validate.py::bootstrap_paired_diff (percentile 2.5/97.5 over aligned per-step N2 tensors)"
+  }
+}

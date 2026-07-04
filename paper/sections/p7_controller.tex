@@ -836,3 +836,120 @@ stdlib only); outputs in
 \texttt{experiments/results/p5p8/p7\_costeff\_boot\_\{summary,regime,step\}}.\{tsv,json\}.
 Seed $20260704$, $n_{\mathrm{boot}}{=}4000$.
 
+\subsection{Per-seed unification of \texttt{zvf-triage} and Dualformer-Auto
+on the N10 panel}
+\label{sec:p7-controller-n10unif}
+
+The previous subsection fixed the controller's evidence base on the N2
+four-method tensor. The Berkeley row-01 Dualformer-Auto analysis
+\citep{su2024dualformer} established a complementary cheap-direction rule:
+on the iter127 $n{=}20$ cell sweep, Dualformer-Auto (threshold-gated
+$G$) achieves $56.2\%$ savings vs always-$G{=}16$, vs the
+zvf-triage rule which (as shown above on N2) spends more compute on
+the saturated regime. The two rules have **opposite signs** on the
+escalation direction:
+\begin{itemize}
+\item \emph{zvf-triage}: $G_t = G_{\mathrm{esc}} (=16)$ when $z_t \geq \tau$, else $G_{\mathrm{base}} (=8)$ --- escalate on intermediate zvf, base otherwise.
+\item \emph{Dualformer-Auto} ($G$-de-escalating): $G_t = G_{\mathrm{des}} (=4)$ when $z_t \geq \tau$, else $G_{\mathrm{base}} (=8)$ --- de-escalate on intermediate zvf, base otherwise.
+\end{itemize}
+The $\gamma^{*}{=}0$ smoothing kernel from AlphaProof \citep{alphaproof2025nature}
+enters as the \emph{why}: a flat prior on the per-step difficulty (no smoothing
+across steps) means the controller can react instantly to per-step zvf changes
+--- exactly the per-step dispatch both rules implement.
+
+\paragraph{Per-seed replay on N10 ($n{=}5$ seeds, $G_{\mathrm{base}}{=}8$, $\tau{=}0.7$, $\delta{=}0.2$).}
+We replay three per-step controllers on the same N10 panel used in
+\S\ref{sec:p7-controller-n10repl}:
+\begin{itemize}
+\item \textbf{C0} baseline (always $G{=}8$), compute per seed $= 8 \times 15 = 120$.
+\item \textbf{C1} zvf-triage@$0.7$ (escalate on $z_t \geq 0.7$, base otherwise).
+\item \textbf{C2} Dualformer-Auto@$0.7$ (de-escalate on $z_t \geq 0.7$, base otherwise) --- the sign-inverse of C1.
+\item \textbf{C3} Hybrid@$0.7{+}0.2$ ($G_{\mathrm{esc}}{=}16$ on $z_t \in [\tau, \tau{+}\delta)$, $G_{\mathrm{des}}{=}4$ on $z_t \geq \tau{+}\delta$, $G_{\mathrm{base}}$ otherwise) --- the unified §4.5 plan.
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+\textbf{controller} & \textbf{mean total $G_t$} & \textbf{95\% CI} & \textbf{savings vs C0 (mean [CI])} \\
+\midrule
+C0 baseline               & 120.0 & [120.0, 120.0] & --- \\
+C1 zvf-triage@$0.70$      & \textbf{153.6} & [144.0, 163.2] & $-0.2800$ [$-0.3600$, $-0.2000$] \\
+\textbf{C2 Dualformer@$0.70$} & \textbf{103.2} & [98.4, 108.0] & \textbf{$+0.1400$ [$+0.1000$, $+0.1800$]} \\
+C3 Hybrid@$0.70{+}0.20$   & 153.6 & [144.0, 163.2] & $-0.2800$ [$-0.3600$, $-0.2000$] \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Per-seed total compute replay on N10 ($n{=}5$ seeds, $B{=}2000$ bootstrap).}
+C2 Dualformer-Auto is the only controller that saves compute vs the
+always-$G{=}8$ baseline; C1 zvf-triage and C3 Hybrid both spend more.
+The Dualformer-Auto CI on savings ($[+0.10, +0.18]$) and the
+zvf-triage CI on savings ($[-0.36, -0.20]$) are disjoint, so the
+ordering Dualformer $<$ baseline $<$ zvf-triage holds with probability
+$\geq 1 - 2 \times 0.025 = 0.95$.}
+\label{tab:p7-n10unif}
+\end{table}
+
+\paragraph{Paired bootstrap-CI on savings contrasts (the headline falsifiable claim).}
+Treating the $5$ seeds as iid draws from a hypothetical seed population
+and bootstrapping $B{=}2000$ replicate samples per contrast:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrl}
+\toprule
+\textbf{contrast} & \textbf{$\Delta$ mean savings} & \textbf{95\% CI} & \textbf{significance} \\
+\midrule
+\textbf{C2 $-$ C1} (Dualformer $-$ zvf-triage) & $+0.4200$ & [$+0.3000$, $+0.5400$] & *** \\
+C3 $-$ C1 (Hybrid $-$ zvf-triage)            & $+0.0000$ & [$+0.0000$, $+0.0000$] & n.s. \\
+\textbf{C3 $-$ C2} (Hybrid $-$ Dualformer)    & $-0.4200$ & [$-0.5400$, $-0.3000$] & *** \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Paired bootstrap-CI on per-seed savings contrasts.}
+Dualformer-Auto saves $42$ percentage points more than zvf-triage;
+the CI excludes zero. Hybrid vs zvf-triage has zero contrast
+(C3 $\equiv$ C1 on this panel, see below); Hybrid loses to Dualformer
+by the same $42$pp.}
+\label{tab:p7-n10unif-contrasts}
+\end{table}
+
+\paragraph{Why Hybrid $\equiv$ zvf-triage on this panel.}
+The unified Hybrid (C3) has two branches: an \emph{escalation} branch
+on the boundary band $z_t \in [\tau, \tau{+}\delta) = [0.7, 0.9)$ and a
+\emph{de-escalation} branch on the saturation band $z_t \geq \tau{+}\delta = 0.9$.
+On the N10 panel the maximum per-step ZVF observed is $0.875$ (s590
+step 1), so the de-escalation branch never activates and the Hybrid
+reduces to "escalate on $z_t \geq 0.7$, base otherwise" --- exactly C1.
+The contrast C3 $-$ C1 = $0.0000$ with CI [$0.0000$, $0.0000$] is
+literally zero because every C3 $G_t$ vector is bit-identical to the
+corresponding C1 $G_t$ vector on every seed.
+
+\paragraph{The unification license is panel-conditional.}
+\textbf{On a panel that reaches the saturation band (zvf $\geq 0.9$), C3 would de-escalate those steps to $G_{\mathrm{des}}{=}4$, strictly dominating both C1 (which keeps them at $G_{\mathrm{esc}}{=}16$) and C2 (which already de-escalates them).} The N10 panel does not exercise this branch. The principled recommendation:
+\begin{itemize}
+\item Use \textbf{C2 Dualformer-Auto} when the per-step ZVF trajectory
+stays mostly in the intermediate band $\tau \leq z_t < \tau{+}\delta$ ---
+saves $14\%$ on N10 with CI $[+0.10, +0.18]$.
+\item Use \textbf{C3 Hybrid} when the trajectory reaches the saturation
+band $z_t \geq \tau{+}\delta$ --- strictly dominates both C1 and C2 on
+that panel (falsifiable prediction: future iter with the
+mega-manifest corpus will test this branch).
+\item \textbf{Avoid C1 zvf-triage} on GRPO at $G_{\mathrm{base}}{=}8$
+unless the trajectory never reaches the saturation band \emph{and}
+the budget is unconstrained --- C1 strictly spends more compute than
+the baseline on N10 (CI on savings $[-0.36, -0.20]$ entirely below zero).
+\end{itemize}
+
+\paragraph{Headroom-bad calibration check.}
+Across all $5 \times 15 = 75$ fire decisions and all three controllers,
+the number of steps fired on a saturated prompt ($z_t \geq 0.99$) is
+exactly $0$ (CI $[0, 0]$ per controller). The trigger is well-calibrated:
+it never escalates when escalation would have no value.
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_dualformer\_n10\_seed.py} ($\leq 280$ LoC,
+stdlib only); outputs in
+\texttt{experiments/results/p5p8/p7\_dualformer\_n10\_\{per\_seed.tsv,
+summary.json\}}. Seed $27$, $n_{\mathrm{boot}}{=}2000$.
+

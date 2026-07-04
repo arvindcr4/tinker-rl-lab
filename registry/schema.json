@@ -184,6 +184,9 @@
             },
             "rollouts": {
               "$ref": "#/$defs/nullable_integer"
+            },
+            "ci_method": {
+              "$ref": "#/$defs/ci_method"
             }
           }
         },
@@ -435,6 +438,31 @@
           }
         },
         "notes": {
+          "$ref": "#/$defs/nullable_string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ci_method": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Optional self-reported provenance of the confidence interval on this entry's outcomes/deltas (added iter 28, backward-compatible optional field). null = unreported.",
+      "properties": {
+        "method": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "n_boot": {
+          "$ref": "#/$defs/nullable_integer"
+        },
+        "seed": {
+          "$ref": "#/$defs/nullable_integer"
+        },
+        "ci_level": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "source": {
           "$ref": "#/$defs/nullable_string"
         }
       },

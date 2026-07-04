@@ -101,3 +101,18 @@ example, records \texttt{clip_higher: surrogate},
 A reader---or a script---can now see at a glance that this stack's ``DAPO'' is
 one component out of five, without reading a paper appendix or reverse
 engineering a launcher.
+
+\paragraph{Self-reported CI provenance.} The \texttt{outcomes} block carries
+an optional \texttt{ci\_method} object (\texttt{method}, \texttt{n\_boot},
+\texttt{seed}, \texttt{ci\_level}, \texttt{source}) so an entry can declare
+\emph{how} the confidence interval on its reported telemetry was computed,
+rather than leaving a reader to guess. The field is a backward-compatible
+addition: it is optional and unconstrained by any \texttt{required} clause, so
+all $31$ existing entries continue to validate ($31/31$ schema PASS after the
+edit). It is populated on the $7$ entries derived from the N2 same-stack
+four-method run, whose intervals come from the paired bootstrap of
+\texttt{registry\_validate.py} ($n_{\text{boot}}{=}2000$, seed $0$, percentile
+$95\%$); the remaining $24$ entries leave it \texttt{null} (unreported), which
+the MIN-REPORT auditor scores as a disclosure gap rather than a virtue.
+Reproduce with \texttt{python3 scripts/p5p8/add\_ci\_method.py} (idempotent;
+outputs \texttt{registry\_ci\_method\_coverage.tsv}).

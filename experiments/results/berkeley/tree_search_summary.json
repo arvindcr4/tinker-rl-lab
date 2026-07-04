@@ -1,0 +1,19 @@
+{
+  "H1_two_walls_crossover_g": 2,
+  "H1_exact_decomp_holds": true,
+  "H2_saturation_dominates_every_g": true,
+  "H2_coverage_share_max_across_g": 0.2006,
+  "H2_original_monotone_conjecture_FALSIFIED": true,
+  "H3_hard_tertile_allwrong_share": 0.8976,
+  "H3_decisive_ge_0.80": true,
+  "H4_g_star_parallel_cov0.90": 3,
+  "H4_oracle_seq_expansions": 1.658,
+  "H4_parallel_over_seq_ratio": 1.809,
+  "H4_frac_uncoverable": 0.0317,
+  "H5_saturation_share_at_g32": 0.8027,
+  "H5_decisive_saturation_dominant_g32": true,
+  "H5_coverage_share_at_g32": 0.1973,
+  "sanity_zvf_at_g8": 0.1583,
+  "n_prompts": 600,
+  "citation": "Koh, McAleer, Fried, Salakhutdinov 2024, arXiv:2407.01476, Tree Search for Language Model Agents (SP25 L6)"
+}

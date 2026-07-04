@@ -1,0 +1,74 @@
+{
+  "n_cells": 98,
+  "sat_band_count": 98,
+  "sat_band_threshold": 0.8999999999999999,
+  "tau": 0.7,
+  "delta": 0.2,
+  "G_base": 8,
+  "pooled": {
+    "c3_minus_c1": {
+      "mean": -380.48979591836735,
+      "ci025": -444.98673469387757,
+      "ci975": -317.5489795918367,
+      "ci_excludes_zero": true,
+      "n_cells": 98
+    },
+    "c2_minus_c1": {
+      "mean": -268.0816326530612,
+      "ci025": -325.62295918367346,
+      "ci975": -216.01632653061228,
+      "ci_excludes_zero": true,
+      "n_cells": 98
+    },
+    "c3_minus_c2": {
+      "mean": -112.40816326530613,
+      "ci025": -151.22653061224491,
+      "ci975": -75.79030612244901,
+      "ci_excludes_zero": true,
+      "n_cells": 98
+    }
+  },
+  "strata": {
+    "sat_band__c3_minus_c1": {
+      "n_cells": 98,
+      "mean": -380.48979591836735,
+      "ci025": -444.98673469387757,
+      "ci975": -317.5489795918367,
+      "ci_excludes_zero": true
+    },
+    "sat_band__c2_minus_c1": {
+      "n_cells": 98,
+      "mean": -268.0816326530612,
+      "ci025": -325.62295918367346,
+      "ci975": -216.01632653061228,
+      "ci_excludes_zero": true
+    },
+    "sat_band__c3_minus_c2": {
+      "n_cells": 98,
+      "mean": -112.40816326530613,
+      "ci025": -151.22653061224491,
+      "ci975": -75.79030612244901,
+      "ci_excludes_zero": true
+    }
+  },
+  "collapse_test": {
+    "c3_eq_c1": 0,
+    "c3_lt_c1": 98,
+    "c3_gt_c1": 0
+  },
+  "falsifiable_prediction": "Hybrid C3 strictly dominates zvf-triage C1 on cells with >=1 saturation-band step (zvf >= tau+delta), collapses to C1 on cells with no saturation-band step.",
+  "headline": {
+    "pooled_c3_minus_c1_mean": -380.48979591836735,
+    "pooled_c3_minus_c1_ci": [
+      -444.98673469387757,
+      -317.5489795918367
+    ],
+    "pooled_c3_minus_c1_excludes_zero": true,
+    "sat_band_c3_minus_c1_mean": -380.48979591836735,
+    "sat_band_c3_minus_c1_ci": [
+      -444.98673469387757,
+      -317.5489795918367
+    ],
+    "no_sat_band_c3_minus_c1_mean": null
+  }
+}

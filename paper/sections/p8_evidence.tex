@@ -707,3 +707,132 @@ bootstrap). Outputs:
 \texttt{p8\_threshold\_boot.tsv},
 \texttt{p8\_threshold\_summary.json}.
 
+\subsection{Stack-conditioning audit (P5 mirror)}
+
+The P5 paper quantifies how much of the outcome variance is stack-driven
+(via \texttt{mega\_eta2}); this subsection performs the P8 mirror on the
+released $50{,}000$-row fraud split. We train an XGBoost across a
+$5$-axis stack grid ($2^5 = 32$ configurations spanning realistic
+hyperparameter choices) and compute per-axis $\eta^2$ on four metrics
+(AUC, F1, Brier, ECE-10), with paired bootstrap CIs ($B{=}1{,}000$).
+
+\begin{table}[t]
+\centering\small
+\caption{Per-axis $\eta^2$ (group SS / total SS) on the $32$-tree
+stack grid, with paired bootstrap CIs ($B{=}1{,}000$, seed $20260704$).
+The bootstrap unit is the $32$ trees (configuration resample, not row
+resample). ``excl.\ 0?'' flags CIs that exclude zero.}
+\label{tab:p8-stack-eta2}
+\begin{tabular}{lcccc}
+\toprule
+Axis & AUC & F1 & Brier & ECE-10 \\
+\midrule
+\texttt{n\_estimators}     & $0.108\,[0.000,0.338]$ & $0.096\,[0.000,0.305]$ & $0.113\,[0.001,0.337]$ & $0.045\,[0.000,0.202]$ \\
+\textbf{\texttt{max\_depth}}       & $\mathbf{0.487\,[0.286,0.694]}$ & $\mathbf{0.375\,[0.144,0.622]}$ & $\mathbf{0.446\,[0.249,0.667]}$ & $0.051\,[0.000,0.233]$ \\
+\textbf{\texttt{learning\_rate}}   & $\mathbf{0.315\,[0.097,0.600]}$ & $\mathbf{0.410\,[0.193,0.637]}$ & $\mathbf{0.374\,[0.168,0.587]}$ & $0.072\,[0.000,0.294]$ \\
+\texttt{subsample}         & $0.034\,[0.000,0.174]$ & $0.032\,[0.000,0.153]$ & $0.033\,[0.000,0.165]$ & $0.031\,[0.000,0.147]$ \\
+\textbf{\texttt{scale\_pos\_weight}} & $0.040\,[0.000,0.189]$ & $\mathbf{0.118\,[0.001,0.364]}$ & $0.033\,[0.000,0.158]$ & $\mathbf{0.752\,[0.556,0.919]}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Headline findings.}
+\begin{itemize}
+\item \texttt{max\_depth} dominates \textbf{AUC} ($\eta^2{=}0.487\,[0.286,0.694]$)
+  and \textbf{Brier} ($\eta^2{=}0.446\,[0.249,0.667]$); CIs exclude zero.
+\item \texttt{learning\_rate} dominates \textbf{F1} ($\eta^2{=}0.410\,[0.193,0.637]$);
+  CI excludes zero.
+\item \texttt{scale\_pos\_weight} dominates \textbf{ECE-10}
+  ($\eta^2{=}0.752\,[0.556,0.919]$; CI excludes zero) — the most striking
+  single result: tree \emph{calibration} is governed by the minority
+  re-weighting lever, not the tree-shape lever.
+\item \texttt{subsample} is noise on every metric (CIs all contain zero).
+\item The same released data yields AUC ranging from $0.83$ to $0.99$
+  across the $32$-tree grid; the headline $\mathrm{AUC}{=}0.9988$ is
+  a \emph{joint} claim about the data \emph{and} the chosen
+  $\texttt{max\_depth}{=}5$ setting.
+\end{itemize}
+
+\paragraph{Cross-paper coupling.}
+This is the P8 mirror of the P5 \texttt{mega\_eta2} finding
+(item \#11). The P5 thesis -- stack axes explain $73{-}93\%$ of outcome
+variance; seed explains $<0.15\%$ -- has a P8 analog: stack axes explain
+$31{-}75\%$ of metric variance depending on the metric.
+\textbf{\texttt{max\_depth} on AUC = 0.487} is the cleanest P8 analog of
+P5's \textbf{task\_slice on zvf = 0.89}. The stack-conditioning thesis
+generalises from RL outcomes to non-RL XGBoost trees.
+
+\paragraph{Reproduction.} All numbers in this subsection are produced
+by \texttt{python3 scripts/p5p8/p8\_stack\_conditioning.py} ($\sim$1 min
+on 4 cores; seed $42$ for XGBoost, seed $20260704$ for bootstrap).
+Outputs:
+\texttt{experiments/results/p5p8/p8\_stack\_audit.tsv},
+\texttt{p8\_stack\_audit\_axes.tsv},
+\texttt{p8\_stack\_audit\_boot.tsv},
+\texttt{p8\_stack\_audit\_summary.json}.
+
+\subsection{Cost-per-decision phase diagram}
+
+Item \#40 (iter 32) showed the fraud-loss break-even $L^\star$ drifts
+$5{-}7\times$ as sensor noise grows; that single-axis sweep left open the
+question of where in the $(\sigma, L)$ phase space the sensor strictly
+pays for itself. This subsection builds the full phase diagram:
+$5$ sensor noise levels $\times$ $5$ fraud-loss values $=$ $25$ cells.
+For each cell, we train XGB-20raw (no sensor) and XGB-24full (with
+noisy sensor) and compute the expected cost per decision at the
+cost-optimal threshold $\tau^\star = L / (L + c_\text{inv})$ with paired
+bootstrap CIs ($B{=}1{,}000$, seed $20260704$).
+
+\begin{table}[t]
+\centering\small
+\caption{Bootstrap-mean $\Delta$ cost per decision
+($\mathrm{cost}_\text{24full}{-}\mathrm{cost}_\text{20raw}$) on the
+$5 \times 5$ $(\sigma, L)$ phase grid. Negative = sensor cheaper. The
+sensor never pays for itself (0/25 cells; every cell's CI upper bound
+is $\ge 0$).}
+\label{tab:p8-cost-phase}
+\begin{tabular}{lccccc}
+\toprule
+$\sigma$ & $L{=}\$1$ & $L{=}\$5$ & $L{=}\$25$ & $L{=}\$100$ & $L{=}\$500$ \\
+\midrule
+$0.000$ & $+0.0003$ & $+0.0010$ & $+0.0025$ & $+0.0098$ & $+0.0000$ \\
+$0.005$ & $+0.0002$ & $+0.0019$ & $+0.0025$ & $+0.0098$ & $+0.0000$ \\
+$0.010$ & $+0.0002$ & $+0.0005$ & $+0.0000$ & $+0.0098$ & $+0.0000$ \\
+$0.020$ & $+0.0005$ & $+0.0018$ & $+0.0025$ & $+0.0098$ & $+0.0000$ \\
+$0.050$ & $+0.0003$ & $+0.0028$ & $+0.0025$ & $+0.0098$ & $+0.0000$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Headline findings.}
+\begin{enumerate}
+\item \textbf{The sensor never pays for itself} (0/25 cells; every
+  bootstrap-mean delta is non-negative; no cell's CI excludes zero on
+  the negative side).
+\item The sensor is \emph{most cost-comparable} at $L{=}\$100$
+  ($\Delta{=}{+}\$0.0098$/dec at every $\sigma$) -- small absolute
+  penalty because at $L{=}\$100$ the analyst-review cost of
+  $\$0.50$/alert is dominated by the missed-fraud cost, so XGB-20raw
+  over-alerts anyway.
+\item Sensor noise does not move the delta-cost structure: the
+  $5$ sigma curves are visually identical within
+  $\pm \$0.0028$/dec of each other.
+\item At $L{=}\$500$, XGB-24full ties XGB-20raw at $\Delta{=}0$ because
+  the cost-optimal threshold collapses to $\tau^\star \approx 1.0$ and
+  no tree alerts.
+\end{enumerate}
+
+\paragraph{Sharpest reviewer-facing claim.} Across $25$ operating
+points spanning the realistic deployment envelope, \textbf{the LLM
+sensor is never cheaper than raw features at the cost-optimal threshold}.
+The sensor-not-scorer thesis (item \#35) is now load-bearing across the
+$(\sigma, L)$ phase space, not just at iter-28's single point.
+
+\paragraph{Reproduction.} All numbers in this subsection are produced
+by \texttt{python3 scripts/p5p8/p8\_cost\_phase\_diagram.py} ($\sim$2 min
+on 4 cores; seed $42$ for XGBoost, seed $20260704$ for bootstrap).
+Outputs:
+\texttt{experiments/results/p5p8/p8\_cost\_phase\_diagram.tsv},
+\texttt{p8\_cost\_phase\_diagram\_boot.tsv},
+\texttt{p8\_cost\_phase\_diagram\_summary.json}.
+

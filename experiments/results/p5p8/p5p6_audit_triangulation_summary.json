@@ -1,0 +1,138 @@
+{
+  "n_entries_audited_B": 13,
+  "n_cells_audited_A": 98,
+  "B_match_rate_mean": 0.22115384615384615,
+  "A_mean_score_overall": 100.0,
+  "A_unique_scores": 1,
+  "A_is_ceiling": true,
+  "joint_corr_B_match_vs_n_audited": 0.22791602841244532,
+  "joint_corr_ci025": -0.2782103475032135,
+  "joint_corr_ci975": 0.941468871691272,
+  "joint_corr_excludes_zero": false,
+  "per_entry": [
+    {
+      "entry_id": "colab-open_dapo_e3",
+      "B_match_rate": 0.875,
+      "n_audited_B": 8,
+      "n_mismatch": 0,
+      "n_surrogate": 0,
+      "model_family": null,
+      "task_slice": null
+    },
+    {
+      "entry_id": "colab-open_drgrpo_e3",
+      "B_match_rate": 1.0,
+      "n_audited_B": 2,
+      "n_mismatch": 0,
+      "n_surrogate": 0,
+      "model_family": null,
+      "task_slice": null
+    },
+    {
+      "entry_id": "tinker_aero_qwen3.5-4b_gsm8k",
+      "B_match_rate": 0.0,
+      "n_audited_B": 1,
+      "n_mismatch": 0,
+      "n_surrogate": 0,
+      "model_family": null,
+      "task_slice": null
+    },
+    {
+      "entry_id": "tinker_areal_qwen3.5-4b_gsm8k",
+      "B_match_rate": 0.0,
+      "n_audited_B": 1,
+      "n_mismatch": 0,
+      "n_surrogate": 0,
+      "model_family": null,
+      "task_slice": null
+    },
+    {
+      "entry_id": "tinker_dapo_qwen3.5-4b_gsm8k",
+      "B_match_rate": 0.0,
+      "n_audited_B": 8,
+      "n_mismatch": 0,
+      "n_surrogate": 2,
+      "model_family": null,
+      "task_slice": null
+    },
+    {
+      "entry_id": "tinker_drgrpo_qwen3.5-4b_gsm8k",
+      "B_match_rate": 0.0,
+      "n_audited_B": 2,
+      "n_mismatch": 0,
+      "n_surrogate": 2,
+      "model_family": null,
+      "task_slice": null
+    },
+    {
+      "entry_id": "tinker_gift_qwen3.5-4b_gsm8k",
+      "B_match_rate": 1.0,
+      "n_audited_B": 1,
+      "n_mismatch": 0,
+      "n_surrogate": 0,
+      "model_family": null,
+      "task_slice": null
+    },
+    {
+      "entry_id": "tinker_gspo_qwen3.5-4b_gsm8k",
+      "B_match_rate": 0.0,
+      "n_audited_B": 3,
+      "n_mismatch": 0,
+      "n_surrogate": 2,
+      "model_family": null,
+      "task_slice": null
+    },
+    {
+      "entry_id": "zvf130_cppo",
+      "B_match_rate": 0.0,
+      "n_audited_B": 1,
+      "n_mismatch": 0,
+      "n_surrogate": 0,
+      "model_family": null,
+      "task_slice": null
+    },
+    {
+      "entry_id": "zvf130_es",
+      "B_match_rate": 0.0,
+      "n_audited_B": 1,
+      "n_mismatch": 0,
+      "n_surrogate": 0,
+      "model_family": null,
+      "task_slice": null
+    },
+    {
+      "entry_id": "zvf130_mcgrpo",
+      "B_match_rate": 0.0,
+      "n_audited_B": 2,
+      "n_mismatch": 0,
+      "n_surrogate": 0,
+      "model_family": null,
+      "task_slice": null
+    },
+    {
+      "entry_id": "zvf130_ngrpo",
+      "B_match_rate": 0.0,
+      "n_audited_B": 1,
+      "n_mismatch": 0,
+      "n_surrogate": 0,
+      "model_family": null,
+      "task_slice": null
+    },
+    {
+      "entry_id": "zvf130_scafgrpo",
+      "B_match_rate": 0.0,
+      "n_audited_B": 1,
+      "n_mismatch": 0,
+      "n_surrogate": 0,
+      "model_family": null,
+      "task_slice": null
+    }
+  ],
+  "headline": {
+    "B_match_rate_min": 0.0,
+    "B_match_rate_max": 1.0,
+    "B_match_rate_range_pp": 100.0,
+    "A_ceiling": true,
+    "joint_corr_significant": false
+  }
+}

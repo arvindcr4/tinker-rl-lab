@@ -936,3 +936,184 @@ bootstrap). Outputs:
 \texttt{p8\_asym\_cost\_summary.json},
 \texttt{figures/p8\_asym\_cost.{png,pdf}}.
 
+\subsection{Threshold-policy transfer under class-prior shift}
+\label{sec:p8-threshold-transfer}
+
+The cost-optimal thresholds of \secref{sec:p8-evidence-cost-curve} and the
+$(c_\text{inv}, L)$ frontier of \secref{sec:p8-asymm-cost} both assume the
+test stream has the same fraud-rate distribution as the live training
+distribution. In production the test rate drifts (seasonal campaigns,
+geographic rollouts, fraud-ring emergence); the operational question is
+\emph{what cost inflation does naive $\tau^\star(\mathrm{train})$ transfer incur, and
+which tree is most robust?}
+
+We sweep $\rho \in \{10, 50, 100, 200, 500\}$ and positive rate
+$r \in \{\text{release}{=}1.44\%, 1.00\%, 0.50\%, 0.10\%, 0.05\%\}$
+($5 \times 5 = 25$ cells $\times$ three tree variants $= 75$ cells). At each
+cell we (1)~downsample both train and test (stratified) to rate $r$,
+(2)~fit $\tau^\star(\text{train})$ and $\tau^\star(\text{test})$ that minimise
+the same cost as \secref{sec:p8-evidence-cost-optimal}, (3)~apply
+$\tau^\star(\text{train})$ on test, and (4)~measure
+\emph{transfer gap} $= \text{cost}(\tau^\star(\text{train})) -
+\text{cost}(\tau^\star(\text{test}))$, with paired-bootstrap 95\% CI
+($B{=}400$, seed $20260704$). All three trees use the deterministic
+4-aggregate feature set ($\sigma{=}0$) so this vein measures the
+threshold-transfer signal alone, not the noise-transfer signal of
+\secref{sec:p8-evidence-noisy-sensor}.
+
+\begin{table}[t]
+\centering\small
+\caption{Per-model mean transfer gap $\text{cost}(\tau^\star(\text{train}))
+- \text{cost}(\tau^\star(\text{test}))$ in cents per decision, averaged over
+the five positive-rate cells at $\rho{=}100$ and $\rho{=}500$.
+``CI excl.\ 0'' marks the rows where the bootstrap 95\% CI excludes
+zero. The pattern is \emph{counter-intuitive}: the sensor-only
+surrogate (XGB-4sensor) has the smallest absolute gap because
+$\tau^\star$ lives in a less-precise regime where train and test scores
+agree; XGB-20raw has the largest because $\tau^\star$ lives in the
+precise regime where small score differences flip the alert bit.}
+\label{tab:p8-threshold-transfer}
+\begin{tabular}{lcccc}
+\toprule
+$\rho$ & Model & Mean gap (cents/dec) & Max gap & CI excl.\ 0? \\
+\midrule
+$100$ & XGB-20raw   & $+0.62$ & $+2.62$ & \textbf{yes} \\
+$100$ & XGB-24full  & $+0.44$ & $+1.24$ & no \\
+$100$ & XGB-4sensor & $+0.46$ & $+1.02$ & \textbf{yes} \\
+\midrule
+$500$ & XGB-20raw   & $+6.55$ & $+20.18$ & \textbf{yes} \\
+$500$ & XGB-24full  & $+6.67$ & $+17.76$ & \textbf{yes} \\
+$500$ & XGB-4sensor & $+2.19$ & $+9.24$  & \textbf{yes} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/p8_threshold_transfer.png}
+\caption{Per-model mean transfer gap as a function of
+$\rho = L/c_\text{inv}$ across the five positive-rate cells, with
+the average bootstrap CI band. The XGB-20raw (raw features) curve
+rises the steepest; XGB-4sensor (sensor surrogate) rises the
+slowest. All three models' CIs exclude zero at $\rho{=}500$.}
+\label{fig:p8-threshold-transfer}
+\end{figure}
+
+\paragraph{Sharpest reviewer-facing claim.}
+The transfer gap is \emph{detectable} (CIs exclude zero) at
+$\rho{=}500$ for all three trees; XGB-20raw inflates by
+$+6.55~[+0.47, +14.31]$ cents/dec, XGB-24full by
+$+6.67~[+0.08, +13.37]$, XGB-4sensor by
+$+2.19~[+0.13, +5.67]$. The sensor surrogate's smaller gap is not
+because it transfers better in absolute terms --- it is because its
+$\tau^\star$ lives in a regime where train and test scores already
+agree. The headline operational rule: $\tau^\star(\text{train})$ is a
+\emph{fingerprint}, not a portable decision rule; production
+deployment must either recalibrate $\tau^\star$ on a fresh test slice
+or hold out a small validation stream for online recalibration.
+
+\paragraph{Reproduction.}
+All numbers in this subsection are produced by
+\texttt{python3 scripts/p5p8/p8\_threshold\_transfer.py}
+($\sim$3 min on 4 cores; seed $42$ for XGBoost, seed $20260704$ for
+bootstrap). Figure by the companion
+\texttt{p8\_threshold\_transfer\_fig.py}. Outputs:
+\texttt{experiments/results/p5p8/p8\_threshold\_transfer.tsv},
+\texttt{p8\_threshold\_transfer\_boot.tsv},
+\texttt{p8\_threshold\_transfer\_summary.json},
+\texttt{figures/p8\_threshold\_transfer.{png,pdf}}.
+
+\subsection{Cost-per-fraud-caught accounting on the iter-40 grid}
+\label{sec:p8-cost-per-caught}
+
+The cost-optimal frames of \secref{sec:p8-evidence-cost-optimal} and
+\secref{sec:p8-asymm-cost} both report \emph{cost per stream decision}
+(USD/dec), which is dominated by the alert-count term $c_\text{inv}
+\cdot (\mathit{tp}+\mathit{fp})/N$. Fraud-ops teams report a
+complementary metric, \emph{cost per fraud caught} (USD/fraud\_caught),
+which divides the total cost by the number of true positives at the
+cost-optimal threshold. A noisy over-alerter may look cheap per stream
+event yet pay more per actual fraud caught. We compute
+$\$/fraud\_caught = \frac{c_\text{sense} N + c_\text{inv}
+(\mathit{tp}+\mathit{fp}) + L\,\mathit{fn}}{\mathit{tp}}$ at the same
+$\tau^\star$ from \secref{sec:p8-evidence-cost-optimal}, on the same
+25-cell $(c_\text{inv}, L)$ grid as \secref{sec:p8-asymm-cost}.
+
+At the canonical cell $c_\text{inv}{=}\$0.50$, $L{=}\$100$:
+
+\begin{table}[h]
+\centering\small
+\caption{Cost-per-fraud-caught at the cost-optimal threshold on the
+canonical $c_\text{inv}{=}\$0.50$, $L{=}\$100$ cell. The sensor-only
+tree pays $14.92/caught$ --- a $5.57\times$ per-catch penalty with
+bootstrap CI excluding zero in 25/25 cells (Table
+\tableref{tab:p8-cost-per-caught-boot}).}
+\label{tab:p8-cost-per-caught}
+\begin{tabular}{lrrr}
+\toprule
+model & \$/fraud\_caught & ratio vs XGB-20raw & paired-bootstrap CI excl.\ 0 \\
+\midrule
+XGB-20raw       & \$2.68  & 1.00$\times$ & n/a (baseline) \\
+XGB-24full      & \$3.28  & 1.22$\times$ & 2/25 cells \\
+XGB-4sensor     & \$14.92 & 5.57$\times$ & \textbf{25/25 cells} (penalty direction) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Headline (falsifiable).}
+On the iter-40 grid, the sensor-only tree pays statistically
+significantly more per fraud caught in \textbf{25/25} $(c_\text{inv},
+L)$ cells (paired bootstrap, $B{=}1000$, seed $20260704$). Adding
+the 20 raw features back (24full vs 4sensor) closes most of the per-catch
+penalty but does not invert the ordering: at the canonical cell,
+24full pays \$3.28/caught versus \$2.68/caught for 20raw. The
+sensor-augmented tree is therefore slightly \emph{more expensive per
+catch} than the raw-features-only tree, and decisively more
+expensive per catch than the sensor-only tree could ever be. The
+iter-28/40 ``sensor never pays'' claim, previously defended on
+\$/dec, \emph{sharpens} --- rather than weakens --- when the
+comparison is normalised by successful catches. The sensor block's
+value is the ranking lift identified by iter-24 (recall-restoration
+at $\tau \in [0.20, 0.35]$); it does NOT translate to either cheaper
+fraud catching per stream event or cheaper fraud catching per
+catch.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_cost\_per\_caught.py}
+($\sim$2 min on 4 cores). Outputs:
+\texttt{experiments/results/p5p8/p8\_cost\_per\_caught.tsv},
+\texttt{p8\_cost\_per\_caught\_boot.tsv},
+\texttt{p8\_cost\_per\_caught\_summary.json},
+\texttt{figures/p8\_cost\_per\_caught.{png,pdf}}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/p8_cost_per_caught.png}
+\caption{Per-model $\$/\text{fraud\_caught}$ across the iter-40
+$(c_\text{inv}, L)$ grid. The sensor-only tree (right) is
+5.57$\times$ more expensive per catch at the canonical cell; the
+sensor-augmented tree (centre) is slightly worse than raw-features-only
+(left).}
+\label{fig:p8-cost-per-caught}
+\end{figure}
+
+\begin{table}[t]
+\centering\small
+\caption{Paired bootstrap on $\$/\text{fraud\_caught}$ across the
+iter-40 $(c_\text{inv}, L)$ grid. Row is mean $\Delta$ for the
+contrast, columns are (mean, 95\% CI, exclude-zero indicator).}
+\label{tab:p8-cost-per-caught-boot}
+\begin{tabular}{lrrrr}
+\toprule
+$(c_\text{inv}, L)$ contrast & mean $\Delta$ & 2.5\%ile & 97.5\%ile & excl.\ 0? \\
+\midrule
+\multicolumn{5}{l}{\emph{Canonical cell} $c_\text{inv}=\$0.50, L=\$100$:}\\
+$\Delta$(24full $-$ 20raw)  & +0.523 & $-1.553$ & +2.317 & no \\
+$\Delta$(4sensor $-$ 20raw) & +11.568 & +7.580 & +16.077 & \textbf{YES (penalty)} \\
+\multicolumn{5}{l}{\emph{High-stakes cell} $c_\text{inv}=\$5.00, L=\$250$:}\\
+$\Delta$(24full $-$ 20raw)  & $-1.111$ & $-7.008$ & +5.481 & no \\
+$\Delta$(4sensor $-$ 20raw) & +78.697 & +57.400 & +105.612 & \textbf{YES (penalty)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+

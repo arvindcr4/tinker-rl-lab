@@ -1,0 +1,35 @@
+{
+  "n_test": 10000,
+  "n_pos_test": 144,
+  "n_grid_cells": 75,
+  "n_boot_cells": 25,
+  "boot_seed": 20260704,
+  "n_boot": 1000,
+  "c_inv_grid": [
+    0.1,
+    0.5,
+    1.0,
+    2.5,
+    5.0
+  ],
+  "l_grid": [
+    5.0,
+    25.0,
+    100.0,
+    250.0,
+    1000.0
+  ],
+  "models": [
+    "XGB-20raw",
+    "XGB-24full",
+    "XGB-4sensor"
+  ],
+  "c_sense": 0.0035,
+  "canonical_cinv_05_l100": {
+    "XGB-20raw": 2.6795774647887325,
+    "XGB-24full": 3.2836879432624113,
+    "XGB-4sensor": 14.923913043478262
+  },
+  "cells_with_24full_minus_20raw_ci_excl0_positive": 2,
+  "cells_with_4sensor_minus_20raw_ci_excl0_positive": 25
+}

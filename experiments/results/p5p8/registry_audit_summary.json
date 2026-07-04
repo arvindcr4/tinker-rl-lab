@@ -1,0 +1,743 @@
+{
+  "counts": {
+    "n_stack_records": 20,
+    "n_variant_delta_records": 11
+  },
+  "min_report_coverage": {
+    "per_entry": {
+      "colab-open_dapo_e3": {
+        "badge": 96,
+        "frac_per_item": {
+          "decontamination": 1.0,
+          "group_size_schedule": 1.0,
+          "heldout_split": 1.0,
+          "loss_form": 1.0,
+          "reference_kl": 1.0,
+          "sampler_backend": 0.75,
+          "telemetry": 1.0
+        },
+        "framework": "colab-open-trainer",
+        "label_claimed": "dapo",
+        "openness": "open"
+      },
+      "colab-open_drgrpo_e3": {
+        "badge": 96,
+        "frac_per_item": {
+          "decontamination": 1.0,
+          "group_size_schedule": 1.0,
+          "heldout_split": 1.0,
+          "loss_form": 1.0,
+          "reference_kl": 1.0,
+          "sampler_backend": 0.75,
+          "telemetry": 1.0
+        },
+        "framework": "colab-open-trainer",
+        "label_claimed": "drgrpo",
+        "openness": "open"
+      },
+      "colab-open_grpo-adaptiveg_e3": {
+        "badge": 96,
+        "frac_per_item": {
+          "decontamination": 1.0,
+          "group_size_schedule": 1.0,
+          "heldout_split": 1.0,
+          "loss_form": 1.0,
+          "reference_kl": 1.0,
+          "sampler_backend": 0.75,
+          "telemetry": 1.0
+        },
+        "framework": "colab-open-trainer",
+        "label_claimed": "grpo",
+        "openness": "open"
+      },
+      "colab-open_grpo_e3": {
+        "badge": 96,
+        "frac_per_item": {
+          "decontamination": 1.0,
+          "group_size_schedule": 1.0,
+          "heldout_split": 1.0,
+          "loss_form": 1.0,
+          "reference_kl": 1.0,
+          "sampler_backend": 0.75,
+          "telemetry": 1.0
+        },
+        "framework": "colab-open-trainer",
+        "label_claimed": "grpo",
+        "openness": "open"
+      },
+      "openrlhf_grpo_qwen3-8b_gsm8k": {
+        "badge": 60,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 1.0,
+          "heldout_split": 1.0,
+          "loss_form": 0.1667,
+          "reference_kl": 1.0,
+          "sampler_backend": 1.0,
+          "telemetry": 0.0
+        },
+        "framework": "openrlhf",
+        "label_claimed": "grpo",
+        "openness": "open"
+      },
+      "tinker_aero_qwen3.5-4b_gsm8k": {
+        "badge": 67,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 1.0,
+          "heldout_split": 1.0,
+          "loss_form": 0.3333,
+          "reference_kl": 0.3333,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "tinker",
+        "label_claimed": "aero",
+        "openness": "managed"
+      },
+      "tinker_areal_qwen3.5-4b_gsm8k": {
+        "badge": 67,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 1.0,
+          "heldout_split": 1.0,
+          "loss_form": 0.3333,
+          "reference_kl": 0.3333,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "tinker",
+        "label_claimed": "areal",
+        "openness": "managed"
+      },
+      "tinker_dapo_qwen3.5-4b_gsm8k": {
+        "badge": 62,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 0.6667,
+          "heldout_split": 1.0,
+          "loss_form": 0.3333,
+          "reference_kl": 0.3333,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "tinker",
+        "label_claimed": "dapo",
+        "openness": "managed"
+      },
+      "tinker_drgrpo_qwen3.5-4b_gsm8k": {
+        "badge": 62,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 0.6667,
+          "heldout_split": 1.0,
+          "loss_form": 0.3333,
+          "reference_kl": 0.3333,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "tinker",
+        "label_claimed": "drgrpo",
+        "openness": "managed"
+      },
+      "tinker_gift_qwen3.5-4b_gsm8k": {
+        "badge": 67,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 1.0,
+          "heldout_split": 1.0,
+          "loss_form": 0.3333,
+          "reference_kl": 0.3333,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "tinker",
+        "label_claimed": "gift",
+        "openness": "managed"
+      },
+      "tinker_grpo_qwen3-8b_gsm8k": {
+        "badge": 62,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 1.0,
+          "heldout_split": 1.0,
+          "loss_form": 0.0,
+          "reference_kl": 0.3333,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "tinker",
+        "label_claimed": "grpo",
+        "openness": "managed"
+      },
+      "tinker_grpo_qwen3.5-4b_gsm8k": {
+        "badge": 57,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 0.6667,
+          "heldout_split": 1.0,
+          "loss_form": 0.0,
+          "reference_kl": 0.3333,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "tinker",
+        "label_claimed": "grpo",
+        "openness": "managed"
+      },
+      "tinker_gspo_qwen3.5-4b_gsm8k": {
+        "badge": 60,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 0.6667,
+          "heldout_split": 1.0,
+          "loss_form": 0.1667,
+          "reference_kl": 0.3333,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "tinker",
+        "label_claimed": "gspo",
+        "openness": "managed"
+      },
+      "trl_grpo_qwen3-8b_gsm8k": {
+        "badge": 74,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 1.0,
+          "heldout_split": 1.0,
+          "loss_form": 0.1667,
+          "reference_kl": 1.0,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "trl",
+        "label_claimed": "grpo",
+        "openness": "open"
+      },
+      "verl_grpo_qwen3-8b_gsm8k": {
+        "badge": 60,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 1.0,
+          "heldout_split": 1.0,
+          "loss_form": 0.1667,
+          "reference_kl": 1.0,
+          "sampler_backend": 1.0,
+          "telemetry": 0.0
+        },
+        "framework": "verl",
+        "label_claimed": "grpo",
+        "openness": "open"
+      },
+      "zvf130_cppo": {
+        "badge": 43,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 0.0,
+          "heldout_split": 1.0,
+          "loss_form": 0.0,
+          "reference_kl": 0.0,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "worktree-zvf130-batch",
+        "label_claimed": "cppo",
+        "openness": "open"
+      },
+      "zvf130_es": {
+        "badge": 43,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 0.0,
+          "heldout_split": 1.0,
+          "loss_form": 0.0,
+          "reference_kl": 0.0,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "worktree-zvf130-batch",
+        "label_claimed": "es",
+        "openness": "open"
+      },
+      "zvf130_mcgrpo": {
+        "badge": 43,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 0.0,
+          "heldout_split": 1.0,
+          "loss_form": 0.0,
+          "reference_kl": 0.0,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "worktree-zvf130-batch",
+        "label_claimed": "mcgrpo",
+        "openness": "open"
+      },
+      "zvf130_ngrpo": {
+        "badge": 43,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 0.0,
+          "heldout_split": 1.0,
+          "loss_form": 0.0,
+          "reference_kl": 0.0,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "worktree-zvf130-batch",
+        "label_claimed": "ngrpo",
+        "openness": "open"
+      },
+      "zvf130_scafgrpo": {
+        "badge": 43,
+        "frac_per_item": {
+          "decontamination": 0.0,
+          "group_size_schedule": 0.0,
+          "heldout_split": 1.0,
+          "loss_form": 0.0,
+          "reference_kl": 0.0,
+          "sampler_backend": 1.0,
+          "telemetry": 1.0
+        },
+        "framework": "worktree-zvf130-batch",
+        "label_claimed": "scafgrpo",
+        "openness": "open"
+      }
+    },
+    "per_framework": {
+      "colab-open-trainer": {
+        "decontamination": {
+          "filled_leaves": 8,
+          "frac": 1.0,
+          "total_leaves": 8
+        },
+        "group_size_schedule": {
+          "filled_leaves": 12,
+          "frac": 1.0,
+          "total_leaves": 12
+        },
+        "heldout_split": {
+          "filled_leaves": 8,
+          "frac": 1.0,
+          "total_leaves": 8
+        },
+        "loss_form": {
+          "filled_leaves": 24,
+          "frac": 1.0,
+          "total_leaves": 24
+        },
+        "reference_kl": {
+          "filled_leaves": 12,
+          "frac": 1.0,
+          "total_leaves": 12
+        },
+        "sampler_backend": {
+          "filled_leaves": 12,
+          "frac": 0.75,
+          "total_leaves": 16
+        },
+        "telemetry": {
+          "filled_leaves": 12,
+          "frac": 1.0,
+          "total_leaves": 12
+        }
+      },
+      "openrlhf": {
+        "decontamination": {
+          "filled_leaves": 0,
+          "frac": 0.0,
+          "total_leaves": 2
+        },
+        "group_size_schedule": {
+          "filled_leaves": 3,
+          "frac": 1.0,
+          "total_leaves": 3
+        },
+        "heldout_split": {
+          "filled_leaves": 2,
+          "frac": 1.0,
+          "total_leaves": 2
+        },
+        "loss_form": {
+          "filled_leaves": 1,
+          "frac": 0.1667,
+          "total_leaves": 6
+        },
+        "reference_kl": {
+          "filled_leaves": 3,
+          "frac": 1.0,
+          "total_leaves": 3
+        },
+        "sampler_backend": {
+          "filled_leaves": 4,
+          "frac": 1.0,
+          "total_leaves": 4
+        },
+        "telemetry": {
+          "filled_leaves": 0,
+          "frac": 0.0,
+          "total_leaves": 3
+        }
+      },
+      "tinker": {
+        "decontamination": {
+          "filled_leaves": 0,
+          "frac": 0.0,
+          "total_leaves": 16
+        },
+        "group_size_schedule": {
+          "filled_leaves": 20,
+          "frac": 0.8333,
+          "total_leaves": 24
+        },
+        "heldout_split": {
+          "filled_leaves": 16,
+          "frac": 1.0,
+          "total_leaves": 16
+        },
+        "loss_form": {
+          "filled_leaves": 11,
+          "frac": 0.2292,
+          "total_leaves": 48
+        },
+        "reference_kl": {
+          "filled_leaves": 8,
+          "frac": 0.3333,
+          "total_leaves": 24
+        },
+        "sampler_backend": {
+          "filled_leaves": 32,
+          "frac": 1.0,
+          "total_leaves": 32
+        },
+        "telemetry": {
+          "filled_leaves": 24,
+          "frac": 1.0,
+          "total_leaves": 24
+        }
+      },
+      "trl": {
+        "decontamination": {
+          "filled_leaves": 0,
+          "frac": 0.0,
+          "total_leaves": 2
+        },
+        "group_size_schedule": {
+          "filled_leaves": 3,
+          "frac": 1.0,
+          "total_leaves": 3
+        },
+        "heldout_split": {
+          "filled_leaves": 2,
+          "frac": 1.0,
+          "total_leaves": 2
+        },
+        "loss_form": {
+          "filled_leaves": 1,
+          "frac": 0.1667,
+          "total_leaves": 6
+        },
+        "reference_kl": {
+          "filled_leaves": 3,
+          "frac": 1.0,
+          "total_leaves": 3
+        },
+        "sampler_backend": {
+          "filled_leaves": 4,
+          "frac": 1.0,
+          "total_leaves": 4
+        },
+        "telemetry": {
+          "filled_leaves": 3,
+          "frac": 1.0,
+          "total_leaves": 3
+        }
+      },
+      "verl": {
+        "decontamination": {
+          "filled_leaves": 0,
+          "frac": 0.0,
+          "total_leaves": 2
+        },
+        "group_size_schedule": {
+          "filled_leaves": 3,
+          "frac": 1.0,
+          "total_leaves": 3
+        },
+        "heldout_split": {
+          "filled_leaves": 2,
+          "frac": 1.0,
+          "total_leaves": 2
+        },
+        "loss_form": {
+          "filled_leaves": 1,
+          "frac": 0.1667,
+          "total_leaves": 6
+        },
+        "reference_kl": {
+          "filled_leaves": 3,
+          "frac": 1.0,
+          "total_leaves": 3
+        },
+        "sampler_backend": {
+          "filled_leaves": 4,
+          "frac": 1.0,
+          "total_leaves": 4
+        },
+        "telemetry": {
+          "filled_leaves": 0,
+          "frac": 0.0,
+          "total_leaves": 3
+        }
+      },
+      "worktree-zvf130-batch": {
+        "decontamination": {
+          "filled_leaves": 0,
+          "frac": 0.0,
+          "total_leaves": 10
+        },
+        "group_size_schedule": {
+          "filled_leaves": 0,
+          "frac": 0.0,
+          "total_leaves": 15
+        },
+        "heldout_split": {
+          "filled_leaves": 10,
+          "frac": 1.0,
+          "total_leaves": 10
+        },
+        "loss_form": {
+          "filled_leaves": 0,
+          "frac": 0.0,
+          "total_leaves": 30
+        },
+        "reference_kl": {
+          "filled_leaves": 0,
+          "frac": 0.0,
+          "total_leaves": 15
+        },
+        "sampler_backend": {
+          "filled_leaves": 20,
+          "frac": 1.0,
+          "total_leaves": 20
+        },
+        "telemetry": {
+          "filled_leaves": 15,
+          "frac": 1.0,
+          "total_leaves": 15
+        }
+      }
+    },
+    "per_item": {
+      "decontamination": {
+        "filled_leaves": 8,
+        "frac": 0.2,
+        "total_leaves": 40
+      },
+      "group_size_schedule": {
+        "filled_leaves": 41,
+        "frac": 0.6833,
+        "total_leaves": 60
+      },
+      "heldout_split": {
+        "filled_leaves": 40,
+        "frac": 1.0,
+        "total_leaves": 40
+      },
+      "loss_form": {
+        "filled_leaves": 38,
+        "frac": 0.3167,
+        "total_leaves": 120
+      },
+      "reference_kl": {
+        "filled_leaves": 29,
+        "frac": 0.4833,
+        "total_leaves": 60
+      },
+      "sampler_backend": {
+        "filled_leaves": 76,
+        "frac": 0.95,
+        "total_leaves": 80
+      },
+      "telemetry": {
+        "filled_leaves": 54,
+        "frac": 0.9,
+        "total_leaves": 60
+      }
+    },
+    "per_openness": {
+      "managed": {
+        "decontamination": {
+          "filled_leaves": 0,
+          "frac": 0.0,
+          "total_leaves": 16
+        },
+        "group_size_schedule": {
+          "filled_leaves": 20,
+          "frac": 0.8333,
+          "total_leaves": 24
+        },
+        "heldout_split": {
+          "filled_leaves": 16,
+          "frac": 1.0,
+          "total_leaves": 16
+        },
+        "loss_form": {
+          "filled_leaves": 11,
+          "frac": 0.2292,
+          "total_leaves": 48
+        },
+        "reference_kl": {
+          "filled_leaves": 8,
+          "frac": 0.3333,
+          "total_leaves": 24
+        },
+        "sampler_backend": {
+          "filled_leaves": 32,
+          "frac": 1.0,
+          "total_leaves": 32
+        },
+        "telemetry": {
+          "filled_leaves": 24,
+          "frac": 1.0,
+          "total_leaves": 24
+        }
+      },
+      "open": {
+        "decontamination": {
+          "filled_leaves": 8,
+          "frac": 0.3333,
+          "total_leaves": 24
+        },
+        "group_size_schedule": {
+          "filled_leaves": 21,
+          "frac": 0.5833,
+          "total_leaves": 36
+        },
+        "heldout_split": {
+          "filled_leaves": 24,
+          "frac": 1.0,
+          "total_leaves": 24
+        },
+        "loss_form": {
+          "filled_leaves": 27,
+          "frac": 0.375,
+          "total_leaves": 72
+        },
+        "reference_kl": {
+          "filled_leaves": 21,
+          "frac": 0.5833,
+          "total_leaves": 36
+        },
+        "sampler_backend": {
+          "filled_leaves": 44,
+          "frac": 0.9167,
+          "total_leaves": 48
+        },
+        "telemetry": {
+          "filled_leaves": 30,
+          "frac": 0.8333,
+          "total_leaves": 36
+        }
+      }
+    }
+  },
+  "schema_validation": {
+    "failures": [],
+    "n_fail": 0,
+    "n_ok": 31,
+    "n_total": 31
+  },
+  "variant_delta_xref": {
+    "broken_refs": [],
+    "n_broken_refs": 0,
+    "n_claimed": 11,
+    "n_deltas": 11,
+    "per_delta_status_mix": {
+      "delta_aero": {
+        "n_claimants": 1,
+        "status_mix": {
+          "implemented": 1
+        },
+        "unclaimed": false
+      },
+      "delta_areal": {
+        "n_claimants": 1,
+        "status_mix": {
+          "implemented": 1
+        },
+        "unclaimed": false
+      },
+      "delta_cppo": {
+        "n_claimants": 1,
+        "status_mix": {
+          "unknown": 1
+        },
+        "unclaimed": false
+      },
+      "delta_dapo": {
+        "n_claimants": 10,
+        "status_mix": {
+          "absent": 3,
+          "implemented": 4,
+          "surrogate": 1,
+          "unknown": 2
+        },
+        "unclaimed": false
+      },
+      "delta_drgrpo": {
+        "n_claimants": 4,
+        "status_mix": {
+          "implemented": 2,
+          "surrogate": 2
+        },
+        "unclaimed": false
+      },
+      "delta_es": {
+        "n_claimants": 1,
+        "status_mix": {
+          "unknown": 1
+        },
+        "unclaimed": false
+      },
+      "delta_gift": {
+        "n_claimants": 1,
+        "status_mix": {
+          "implemented": 1
+        },
+        "unclaimed": false
+      },
+      "delta_gspo": {
+        "n_claimants": 2,
+        "status_mix": {
+          "surrogate": 1,
+          "unknown": 1
+        },
+        "unclaimed": false
+      },
+      "delta_mcgrpo": {
+        "n_claimants": 2,
+        "status_mix": {
+          "unknown": 2
+        },
+        "unclaimed": false
+      },
+      "delta_ngrpo": {
+        "n_claimants": 1,
+        "status_mix": {
+          "unknown": 1
+        },
+        "unclaimed": false
+      },
+      "delta_scafgrpo": {
+        "n_claimants": 1,
+        "status_mix": {
+          "unknown": 1
+        },
+        "unclaimed": false
+      }
+    }
+  }
+}

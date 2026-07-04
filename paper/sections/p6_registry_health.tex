@@ -1,0 +1,130 @@
+% Paper 6 registry-health section: CI-style coverage audit on the shipped entries.
+\section{Registry Health: A CI-Style Coverage Audit}
+\label{sec:p6-health}
+
+The N2 same-stack row (\secref{sec:p6-measured}) answers what the
+\emph{labels} buy once the stack is held fixed. The registry as a whole
+also needs to answer a different question: \emph{how honestly is each
+entry reporting?} This section audits the shipped corpus as a CI step
+would, scoring per-leaf MIN-REPORT reporting coverage on every record
+and cross-referencing the variant-delta pointers against the catalog.
+
+\subsection{Schema and cross-reference}
+Every shipped record parses against \texttt{registry/schema.json}; the
+CI-style auditor (\texttt{scripts/p5p8/registry\_audit.py},
+\texttt{experiments/results/p5p8/registry\_audit\_summary.json})
+reports \textbf{31/31 PASS} across both record types (12 \texttt{stack}
+records + 11 \texttt{variant\_delta} records, with the original 8
+deltas plus the 8 added in iter~6). All 11 deltas that any stack record
+claims are present in the catalog, and there are zero broken
+\texttt{variant\_deltas\_applied[*].delta\_id} references. The same
+script computes the per-delta status mix
+(Table~\ref{tab:p6-delta-mix}): DAPO is the most heavily claimed delta
+(10 claimants across all stacks) and lands in a status mix spanning
+\texttt{implemented}, \texttt{surrogate}, \texttt{absent}, and
+\texttt{unknown}---a concrete demonstration of the registry's value as a
+label-flip detector.
+
+\begin{table}[t]
+\centering
+\caption{Status mix per named variant-delta record, as claimed by stack
+records that reference it. ``Implemented'' means the stack proves the
+delta is realised in code; ``surrogate'' means a stand-in implementation
+is used; ``absent'' means the stack does not carry the delta; ``unknown''
+means the stack does not record it. The DAPO row is the canonical example
+of the registry's purpose: the same label ``DAPO'' covers four distinct
+implementations.}
+\label{tab:p6-delta-mix}
+\small
+\begin{tabular}{lrrrrrl}
+\toprule
+Variant delta & \# claimants & impl. & surr. & absent & unkn. & Verdict \\
+\midrule
+delta\_dapo      & 10 & 4 & 1 & 3 & 2 & four-way split (label-flip evidence) \\
+delta\_drgrpo    &  4 & 2 & 2 & 0 & 0 & open vs.\ managed split \\
+delta\_gspo      &  2 & 0 & 1 & 0 & 1 & half the claimants unknown \\
+delta\_aero      &  1 & 1 & 0 & 0 & 0 & isolated (N2 same-stack) \\
+delta\_gift      &  1 & 1 & 0 & 0 & 0 & isolated (N2 same-stack) \\
+delta\_areal     &  1 & 1 & 0 & 0 & 0 & isolated (N2 same-stack) \\
+delta\_ngrpo     &  1 & 0 & 0 & 0 & 1 & risk-index only \\
+delta\_cppo      &  1 & 0 & 0 & 0 & 1 & risk-index only \\
+delta\_mcgrpo    &  2 & 0 & 0 & 0 & 2 & risk-index only \\
+delta\_es        &  1 & 0 & 0 & 0 & 1 & risk-index only \\
+delta\_scafgrpo  &  1 & 0 & 0 & 0 & 1 & risk-index only \\
+\bottomrule
+\end{tabular}\\
+\footnotesize{Source:
+\texttt{experiments/results/p5p8/registry\_audit\_summary.json}:
+\texttt{variant\_delta\_xref.per\_delta\_status\_mix}.}
+\end{table}
+
+\subsection{Per-item MIN-REPORT coverage}
+Table~\ref{tab:p6-coverage} reports per-item reporting coverage over
+all 12 shipped \texttt{stack} records, expressed as the fraction of
+leaves that are non-null under the registry convention (null =
+UNREPORTED; explicit false / 0.0 / ``none'' = reported-as-absent).
+
+\begin{table}[t]
+\centering
+\caption{Per-item MIN-REPORT coverage on the shipped 12 stack records
+(\texttt{loss\_form} has 6 leaves, \texttt{sampler\_backend} has 4,
+the other items have 2--3; counts are filled-leaves / total-leaves).}
+\label{tab:p6-coverage}
+\small
+\begin{tabular}{lrrl}
+\toprule
+MIN-REPORT item & Filled / total & \% & Where unreporting concentrates \\
+\midrule
+heldout\_split       &  40 /  40 & 100\% & --- (every entry fills both leaves) \\
+sampler\_backend     &  76 /  80 &  95\% & 4 leaves missing on the four \texttt{colab-open} arms \\
+telemetry            &  54 /  60 &  90\% & zvf130 batch + dry-run framework dumps \\
+group\_size\_schedule &  41 /  60 &  68\% & \texttt{initial\_g} unreported on N2 + zvf130 \\
+reference\_kl        &  29 /  60 &  48\% & \texttt{kl\_beta} / \texttt{kl\_estimator} on managed runtimes \\
+loss\_form           &  38 / 120 &  32\% & \texttt{importance\_ratio\_level} / clip bounds on closed stacks \\
+decontamination      &   8 /  40 &  20\% & only the four \texttt{colab-open} arms report \\
+\bottomrule
+\end{tabular}\\
+\footnotesize{Source: \texttt{experiments/results/p5p8/registry\_audit.tsv},
+\texttt{registry\_audit\_summary.json}.}
+\end{table}
+
+\subsection{Per-framework breakdown}
+The same audit exposes a sharp openness gradient. Among the 12 stack
+records, the four \texttt{colab-open-trainer} arms achieve 100\% coverage
+on six of the seven items and 75\% on the seventh (the four missing
+leaves are \texttt{sampler\_backend.precision}---a field the toy harness
+did not pin). The five \texttt{worktree-zvf130-batch} entries fill 0/30
+leaves on \texttt{loss\_form} and 0/15 on \texttt{reference\_kl} because
+the risk-index harness is a single-batch snapshot, not a full training
+run. The eight \texttt{tinker} managed-runtime entries fill
+\texttt{sampler\_backend} (32/32) and \texttt{telemetry} (24/24) but
+leave most of \texttt{loss\_form} unreported (11/48 leaves) and 0/16 on
+\texttt{decontamination}---a concrete quantitative version of the
+``closed stack, partial report'' observation.
+
+\subsection{Per-openness rollup}
+Across the 12 shipped stack records, the \textbf{open} subset (4
+\texttt{colab-open} + 5 \texttt{zvf130-batch} + 3 framework config
+dumps = 10 entries) reports 91.7\% on \texttt{sampler\_backend}, 83.3\%
+on \texttt{telemetry}, and 58.3\% on \texttt{reference\_kl}; the
+\textbf{managed} subset (8 \texttt{tinker} entries) reports 100\% on
+\texttt{sampler\_backend} and \texttt{telemetry} but only 33.3\% on
+\texttt{reference\_kl} and 22.9\% on \texttt{loss\_form}. The pattern
+inverts the conventional expectation: the closed runtime scores
+perfectly on the leaves its harness exposes and zero on the leaves the
+harness hides, whereas the open backward-pass trainer is forced to
+declare \emph{every} leaf or accept null.
+
+\subsection{What this rules in and out}
+The audit makes two claims falsifiable. \textbf{(i)} No shipped record
+fails the schema and no shipped record carries a broken delta pointer;
+this is the integrity claim. \textbf{(ii)} Per-item coverage is highly
+uneven, with \texttt{loss\_form} (32\%) and \texttt{decontamination}
+(20\%) the dominant reporting gaps across both openness tiers; the
+managed runtime closes the sampler/telemetry gap and opens a
+loss-form/clip-bounds gap simultaneously. Future entries that want to
+improve their badge should target \texttt{loss\_form} first
+(the largest gap on managed stacks) and \texttt{decontamination} first
+(the largest gap on open stacks)---the per-framework columns of
+\texttt{registry\_audit\_summary.json} are the machine-readable
+checklist.

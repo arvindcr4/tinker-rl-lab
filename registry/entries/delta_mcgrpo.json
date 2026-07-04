@@ -61,5 +61,37 @@
       "source": "experiments/results/zvf_iter130_method_risk.tsv",
       "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)"
     }
+  ],
+  "expected_effects": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "rationale": "MCGRPO's Monte-Carlo advantage uses a per-prompt baseline; should reduce ZVF risk vs vanilla GRPO."
+    }
+  ],
+  "claim_validation": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "observed_delta": -0.174277,
+      "ci_low": -0.288771,
+      "ci_high": -0.059783,
+      "significant": true,
+      "verdict": "SUPPORTS",
+      "rationale": "measured delta=-0.1743 CI=[-0.2888,-0.0598] is significant and matches predicted <0"
+    },
+    {
+      "metric": "mean_zvf",
+      "panel": "zvf130_5seed",
+      "predicted_sign": null,
+      "observed_delta": -0.33474,
+      "ci_low": -0.33474,
+      "ci_high": -0.33474,
+      "significant": false,
+      "verdict": "UNCLAIMED",
+      "rationale": "no expected_effect declared for this (metric, panel) pair"
+    }
   ]
 }

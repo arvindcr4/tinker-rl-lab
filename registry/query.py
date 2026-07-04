@@ -253,6 +253,64 @@ def cmd_drift(args):
     return 0
 
 
+def cmd_claim_validation(args):
+    """Iter-46: print the (delta, metric, panel) claim-validation verdict table
+    for every variant_delta record. Optional --delta filters to one entry.
+    Verdict codes: SUPPORTS / NEUTRAL / CONTRADICTS / UNCLAIMED."""
+    from collections import Counter
+    counts = Counter()
+    for p in sorted((HERE / "entries").glob("delta_*.json")):
+        rec = json.load(open(p))
+        rows = rec.get("claim_validation", []) or []
+        if args.delta and rec["id"] != args.delta:
+            continue
+        for r in rows:
+            counts[r["verdict"]] += 1
+            if args.delta:
+                print(f"  {rec['id']:18s} {r['metric']:18s} {r['panel']:24s} "
+                      f"verdict={r['verdict']:11s} "
+                      f"observed={r['observed_delta']:+.4f} "
+                      f"CI=[{r['ci_low']:+.4f},{r['ci_high']:+.4f}]")
+    if not args.delta:
+        print(f"=== Iter 46 P6 — claim-validation verdict counts (across all {len(list((HERE / 'entries').glob('delta_*.json')))} delta_*.json) ===")
+        for k, n in sorted(counts.items()):
+            print(f"  {k:12s} {n}")
+    return 0
+
+
+def cmd_validate(_):
+    """Iter-50: CI-style schema validation pass. Returns exit code 0 iff every
+    entry parses against registry/schema.json. Stdout is one PASS/FAIL line per
+    entry; stderr is empty on full pass."""
+    try:
+        import jsonschema  # type: ignore
+    except ImportError:
+        print("FATAL: jsonschema not installed", file=sys.stderr)
+        return 2
+    schema = json.load(open(HERE / "schema.json"))
+    fails = 0
+    for p in sorted((HERE / "entries").glob("*.json")):
+        rec = json.loads(p.read_text())
+        try:
+            jsonschema.validate(rec, schema)
+            print(f"PASS  {p.name}")
+        except jsonschema.ValidationError as e:
+            fails += 1
+            print(f"FAIL  {p.name}  {str(e.message)[:140]}")
+    print(f"--- {len(list((HERE / 'entries').glob('*.json'))) - fails}/{len(list((HERE / 'entries').glob('*.json')))} pass ---")
+    return 1 if fails else 0
+
+
+def cmd_health(_):
+    """Iter-50: shell out to scripts/p5p8/p6_registry_health.py for the
+    full coverage + null-rate + verdict-signature audit. Passes the exit
+    code through unchanged so CI sees schema failures."""
+    import subprocess
+    target = (HERE / ".." / "scripts" / "p5p8" / "p6_registry_health.py").resolve()
+    rc = subprocess.run([sys.executable, str(target)]).returncode
+    return rc
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -273,11 +331,22 @@ def main():
     pi.add_argument("--framework", default=None,
                     help="Filter to stacks whose framework.name == X.")
     sub.add_parser("drift")
+    pcv = sub.add_parser("claim-validation",
+                          help="Iter-46: print (delta, metric, panel) claim-validation verdicts.")
+    pcv.add_argument("--delta", default=None,
+                     help="Filter to one delta_id (e.g. delta_aero).")
+    sub.add_parser("validate",
+                   help="Iter-50: CI-style schema validation pass")
+    sub.add_parser("health",
+                   help="Iter-50: full registry health audit")
     args = ap.parse_args()
-    {"list": cmd_list, "badge": cmd_badge,
-     "query": cmd_query, "stackdiff": cmd_stackdiff,
-     "implementations": cmd_implementations, "drift": cmd_drift}[args.cmd](args)
+    rc = {"list": cmd_list, "badge": cmd_badge,
+          "query": cmd_query, "stackdiff": cmd_stackdiff,
+          "implementations": cmd_implementations, "drift": cmd_drift,
+          "claim-validation": cmd_claim_validation,
+          "validate": cmd_validate, "health": cmd_health}[args.cmd](args)
+    return 0 if rc is None else rc
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main() or 0)

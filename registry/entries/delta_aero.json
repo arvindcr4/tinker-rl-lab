@@ -94,5 +94,71 @@
       "source": "experiments/results/zvf_iter130_method_risk.tsv",
       "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)"
     }
+  ],
+  "expected_effects": [
+    {
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": "<0",
+      "rationale": "AERO inflates the effective group size via off-policy rollouts; fewer all-same groups should lower ZVF on the same stack."
+    },
+    {
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">=0",
+      "rationale": "AERO's off-policy rollouts reuse the same stack's signal -- no reason to expect a reward loss; we expect at least parity."
+    },
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "rationale": "Same logic on the 5-seed risk panel: lower risk of zero-variance groups."
+    }
+  ],
+  "claim_validation": [
+    {
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": "<0",
+      "observed_delta": -0.025,
+      "ci_low": -0.0625,
+      "ci_high": 0.0125,
+      "significant": false,
+      "verdict": "NEUTRAL",
+      "rationale": "measured delta=-0.0250 CI=[-0.0625,+0.0125] includes 0; cannot falsify predicted <0"
+    },
+    {
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">=0",
+      "observed_delta": -0.014063,
+      "ci_low": -0.023438,
+      "ci_high": -0.005469,
+      "significant": true,
+      "verdict": "CONTRADICTS",
+      "rationale": "measured delta=-0.0141 CI=[-0.0234,-0.0055] is significant but OPPOSITE to predicted >=0"
+    },
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "observed_delta": -0.147637,
+      "ci_low": -0.285921,
+      "ci_high": -0.009354,
+      "significant": true,
+      "verdict": "SUPPORTS",
+      "rationale": "measured delta=-0.1476 CI=[-0.2859,-0.0094] is significant and matches predicted <0"
+    },
+    {
+      "metric": "mean_zvf",
+      "panel": "zvf130_5seed",
+      "predicted_sign": null,
+      "observed_delta": -0.26052,
+      "ci_low": -0.26052,
+      "ci_high": -0.26052,
+      "significant": false,
+      "verdict": "UNCLAIMED",
+      "rationale": "no expected_effect declared for this (metric, panel) pair"
+    }
   ]
 }

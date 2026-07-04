@@ -1,0 +1,23 @@
+delta_id	metric	panel	predicted_sign	observed_delta	ci_low	ci_high	significant	verdict	rationale
+delta_aero	zvf	n2_same_stack_last10	<0	-0.025	-0.0625	0.0125	False	NEUTRAL	measured delta=-0.0250 CI=[-0.0625,+0.0125] includes 0; cannot falsify predicted <0
+delta_aero	reward_mean	n2_same_stack_last10	>=0	-0.014063	-0.023438	-0.005469	True	CONTRADICTS	measured delta=-0.0141 CI=[-0.0234,-0.0055] is significant but OPPOSITE to predicted >=0
+delta_aero	zvf_risk_mean	zvf130_5seed	<0	-0.147637	-0.285921	-0.009354	True	SUPPORTS	measured delta=-0.1476 CI=[-0.2859,-0.0094] is significant and matches predicted <0
+delta_aero	mean_zvf	zvf130_5seed		-0.26052	-0.26052	-0.26052	False	UNCLAIMED	no expected_effect declared for this (metric, panel) pair
+delta_areal	zvf	n2_same_stack_last10	<0	-0.05625	-0.1125	0.00625	False	NEUTRAL	measured delta=-0.0563 CI=[-0.1125,+0.0063] includes 0; cannot falsify predicted <0
+delta_areal	reward_mean	n2_same_stack_last10	>=0	-0.019531	-0.032031	-0.007812	True	CONTRADICTS	measured delta=-0.0195 CI=[-0.0320,-0.0078] is significant but OPPOSITE to predicted >=0
+delta_areal	zvf_risk_mean	zvf130_5seed	<0	-0.245767	-0.354535	-0.137	True	SUPPORTS	measured delta=-0.2458 CI=[-0.3545,-0.1370] is significant and matches predicted <0
+delta_areal	mean_zvf	zvf130_5seed		-0.35988	-0.35988	-0.35988	False	UNCLAIMED	no expected_effect declared for this (metric, panel) pair
+delta_cppo	zvf_risk_mean	zvf130_5seed	<0	-0.151077	-0.253342	-0.048813	True	SUPPORTS	measured delta=-0.1511 CI=[-0.2533,-0.0488] is significant and matches predicted <0
+delta_cppo	mean_zvf	zvf130_5seed		-0.18558	-0.18558	-0.18558	False	UNCLAIMED	no expected_effect declared for this (metric, panel) pair
+delta_es	zvf_risk_mean	zvf130_5seed	<0	-0.272578	-0.374617	-0.170539	True	SUPPORTS	measured delta=-0.2726 CI=[-0.3746,-0.1705] is significant and matches predicted <0
+delta_es	mean_zvf	zvf130_5seed		-0.36656	-0.36656	-0.36656	False	UNCLAIMED	no expected_effect declared for this (metric, panel) pair
+delta_gift	zvf	n2_same_stack_last10	>0	0.125	0.08125	0.175	True	SUPPORTS	measured delta=+0.1250 CI=[+0.0813,+0.1750] is significant and matches predicted >0
+delta_gift	reward_mean	n2_same_stack_last10	>=0	0.016406	-0.007031	0.039844	False	NEUTRAL	measured delta=+0.0164 CI=[-0.0070,+0.0398] includes 0; cannot falsify predicted >=0
+delta_gift	zvf_risk_mean	zvf130_5seed	<0	-0.263187	-0.365427	-0.160948	True	SUPPORTS	measured delta=-0.2632 CI=[-0.3654,-0.1609] is significant and matches predicted <0
+delta_gift	mean_zvf	zvf130_5seed		-0.36658	-0.36658	-0.36658	False	UNCLAIMED	no expected_effect declared for this (metric, panel) pair
+delta_mcgrpo	zvf_risk_mean	zvf130_5seed	<0	-0.174277	-0.288771	-0.059783	True	SUPPORTS	measured delta=-0.1743 CI=[-0.2888,-0.0598] is significant and matches predicted <0
+delta_mcgrpo	mean_zvf	zvf130_5seed		-0.33474	-0.33474	-0.33474	False	UNCLAIMED	no expected_effect declared for this (metric, panel) pair
+delta_ngrpo	zvf_risk_mean	zvf130_5seed	<0	-0.131025	-0.239395	-0.022656	True	SUPPORTS	measured delta=-0.1310 CI=[-0.2394,-0.0227] is significant and matches predicted <0
+delta_ngrpo	mean_zvf	zvf130_5seed		-0.18042	-0.18042	-0.18042	False	UNCLAIMED	no expected_effect declared for this (metric, panel) pair
+delta_scafgrpo	zvf_risk_mean	zvf130_5seed	<0	-0.352361	-0.455533	-0.249189	True	SUPPORTS	measured delta=-0.3524 CI=[-0.4555,-0.2492] is significant and matches predicted <0
+delta_scafgrpo	mean_zvf	zvf130_5seed		-0.16414	-0.16414	-0.16414	False	UNCLAIMED	no expected_effect declared for this (metric, panel) pair

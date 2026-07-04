@@ -459,6 +459,26 @@
             "$ref": "#/$defs/measured_delta"
           }
         },
+        "expected_effects": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "description": "Iter-46 extension (additive, optional): a forward-referenced per-(metric, panel) tuple of {predicted_sign, rationale} that the human-readable change text implies. Entries without this block are still audited -- the audit verdict is UNCLAIMED for the (metric, panel) pairs that lack a declared prediction. This block is the human-supplied input; the audit's claim_validation block (below) is the matching machine-generated output.",
+          "items": {
+            "$ref": "#/$defs/expected_effect"
+          }
+        },
+        "claim_validation": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "description": "Iter-46 extension (additive, optional): machine-generated audit of the (measured, expected) pair per (metric, panel). Each element is a single (metric x panel) verdict: SUPPORTS / NEUTRAL / CONTRADICTS / UNCLAIMED, with the matching CI and a one-line rationale. This is the machine output that grounds a registry entry in 'what the change text claims' AND 'what was measured'.",
+          "items": {
+            "$ref": "#/$defs/claim_validation_row"
+          }
+        },
         "notes": {
           "$ref": "#/$defs/nullable_string"
         }
@@ -517,6 +537,90 @@
         },
         "note": {
           "$ref": "#/$defs/nullable_string"
+        }
+      }
+    },
+    "expected_effect": {
+      "type": "object",
+      "description": "Iter-46: human-supplied forward reference -- the predicted sign the change text implies for one (metric, panel) pair. The audit's claim_validation row for the same (metric, panel) either supports, is neutral, or contradicts this prediction.",
+      "required": [
+        "metric",
+        "panel",
+        "predicted_sign",
+        "rationale"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "type": "string"
+        },
+        "panel": {
+          "type": "string"
+        },
+        "predicted_sign": {
+          "enum": [
+            ">0",
+            "<0",
+            ">=0",
+            "<=0",
+            "=0"
+          ],
+          "description": "Operator string: '>0' = measured delta should be positive, '<0' = negative, '>=0' / '<=0' allow the boundary, '=0' = exact zero expected."
+        },
+        "rationale": {
+          "type": "string",
+          "description": "One-sentence justification of the predicted sign, citing the change text's clause."
+        }
+      }
+    },
+    "claim_validation_row": {
+      "type": "object",
+      "description": "Iter-46: machine-generated audit row matching one (metric, panel) measured entry against the declared expected_effect (if any).",
+      "required": [
+        "metric",
+        "panel",
+        "observed_delta",
+        "ci_low",
+        "ci_high",
+        "significant",
+        "verdict"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "type": "string"
+        },
+        "panel": {
+          "type": "string"
+        },
+        "predicted_sign": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "observed_delta": {
+          "type": "number"
+        },
+        "ci_low": {
+          "type": "number"
+        },
+        "ci_high": {
+          "type": "number"
+        },
+        "significant": {
+          "type": "boolean"
+        },
+        "verdict": {
+          "enum": [
+            "SUPPORTS",
+            "NEUTRAL",
+            "CONTRADICTS",
+            "UNCLAIMED"
+          ]
+        },
+        "rationale": {
+          "type": "string"
         }
       }
     },

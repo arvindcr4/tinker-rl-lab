@@ -1,0 +1,32 @@
+entry_id	record_type	framework	openness	label_claimed	min_report_badge	score_loss_form	score_reference_kl	score_sampler_backend	score_telemetry	score_group_size_schedule	score_heldout_split	score_decontamination	null_rate_loss_form	null_rate_reference_kl	null_rate_sampler_backend	null_rate_telemetry	null_rate_group_size_schedule	null_rate_heldout_split	null_rate_decontamination	n_variant_deltas	has_outcomes	has_ci_method	schema_pass	schema_err	n_measured	n_expected_effects	n_claim_validation	n_supports	n_neutral	n_contradicts	n_unclaimed
+colab-open_dapo_e3	stack	colab-open-trainer	open	dapo	96	1.0	1.0	0.75	1.0	1.0	1.0	1.0	0.0	0.0	0.25	0.0	0.0	0.0	0.0	5	True	False	True								
+colab-open_drgrpo_e3	stack	colab-open-trainer	open	drgrpo	96	1.0	1.0	0.75	1.0	1.0	1.0	1.0	0.0	0.0	0.25	0.0	0.0	0.0	0.0	2	True	False	True								
+colab-open_grpo-adaptiveg_e3	stack	colab-open-trainer	open	grpo	96	1.0	1.0	0.75	1.0	1.0	1.0	1.0	0.0	0.0	0.25	0.0	0.0	0.0	0.0	0	True	False	True								
+colab-open_grpo_e3	stack	colab-open-trainer	open	grpo	96	1.0	1.0	0.75	1.0	1.0	1.0	1.0	0.0	0.0	0.25	0.0	0.0	0.0	0.0	0	True	False	True								
+openrlhf_grpo_qwen3-8b_gsm8k	stack	openrlhf	open	grpo	60	0.1667	1.0	1.0	0.0	1.0	1.0	0.0	0.8333	0.0	0.0	1.0	0.0	0.0	1.0	0	False	False	True								
+tinker_aero_qwen3.5-4b_gsm8k	stack	tinker	managed	aero	67	0.3333	0.3333	1.0	1.0	1.0	1.0	0.0	0.6667	0.6667	0.0	0.0	0.0	0.0	1.0	1	True	True	True								
+tinker_areal_qwen3.5-4b_gsm8k	stack	tinker	managed	areal	67	0.3333	0.3333	1.0	1.0	1.0	1.0	0.0	0.6667	0.6667	0.0	0.0	0.0	0.0	1.0	1	True	True	True								
+tinker_dapo_qwen3.5-4b_gsm8k	stack	tinker	managed	dapo	65	0.5556	0.3333	1.0	1.0	0.6667	1.0	0.0	0.4444	0.6667	0.0	0.0	0.3333	0.0	1.0	5	True	True	True								
+tinker_drgrpo_qwen3.5-4b_gsm8k	stack	tinker	managed	drgrpo	62	0.3333	0.3333	1.0	1.0	0.6667	1.0	0.0	0.6667	0.6667	0.0	0.0	0.3333	0.0	1.0	2	True	True	True								
+tinker_gift_qwen3.5-4b_gsm8k	stack	tinker	managed	gift	68	0.4286	0.3333	1.0	1.0	1.0	1.0	0.0	0.5714	0.6667	0.0	0.0	0.0	0.0	1.0	1	True	True	True								
+tinker_grpo_qwen3-8b_gsm8k	stack	tinker	managed	grpo	62	0.0	0.3333	1.0	1.0	1.0	1.0	0.0	1.0	0.6667	0.0	0.0	0.0	0.0	1.0	0	False	False	True								
+tinker_grpo_qwen3.5-4b_gsm8k	stack	tinker	managed	grpo	57	0.0	0.3333	1.0	1.0	0.6667	1.0	0.0	1.0	0.6667	0.0	0.0	0.3333	0.0	1.0	0	True	True	True								
+tinker_gspo_qwen3.5-4b_gsm8k	stack	tinker	managed	gspo	61	0.2857	0.3333	1.0	1.0	0.6667	1.0	0.0	0.7143	0.6667	0.0	0.0	0.3333	0.0	1.0	2	True	True	True								
+trl_grpo_qwen3-8b_gsm8k	stack	trl	open	grpo	74	0.1667	1.0	1.0	1.0	1.0	1.0	0.0	0.8333	0.0	0.0	0.0	0.0	0.0	1.0	0	False	False	True								
+verl_grpo_qwen3-8b_gsm8k	stack	verl	open	grpo	60	0.1667	1.0	1.0	0.0	1.0	1.0	0.0	0.8333	0.0	0.0	1.0	0.0	0.0	1.0	0	False	False	True								
+zvf130_cppo	stack	worktree-zvf130-batch	open	cppo	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	False	False	True								
+zvf130_es	stack	worktree-zvf130-batch	open	es	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	False	False	True								
+zvf130_mcgrpo	stack	worktree-zvf130-batch	open	mcgrpo	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	2	False	False	True								
+zvf130_ngrpo	stack	worktree-zvf130-batch	open	ngrpo	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	False	False	True								
+zvf130_scafgrpo	stack	worktree-zvf130-batch	open	scafgrpo	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	False	False	True								
+delta_aero	variant_delta																			1	True	True	True		4	3	4	1	1	1	1
+delta_areal	variant_delta																			1	True	True	True		4	3	4	1	1	1	1
+delta_cppo	variant_delta																			1	True	True	True		2	1	2	1	0	0	1
+delta_dapo	variant_delta																			5	False	False	True		0	0	0	0	0	0	0
+delta_drgrpo	variant_delta																			2	False	False	True		0	0	0	0	0	0	0
+delta_es	variant_delta																			1	True	True	True		2	1	2	1	0	0	1
+delta_gift	variant_delta																			1	True	True	True		4	3	4	2	1	0	1
+delta_gspo	variant_delta																			2	False	False	True		0	0	0	0	0	0	0
+delta_mcgrpo	variant_delta																			2	True	True	True		2	1	2	1	0	0	1
+delta_ngrpo	variant_delta																			1	True	True	True		2	1	2	1	0	0	1
+delta_scafgrpo	variant_delta																			1	True	True	True		2	1	2	1	0	0	1

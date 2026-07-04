@@ -56,5 +56,37 @@
       "source": "experiments/results/zvf_iter130_method_risk.tsv",
       "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)"
     }
+  ],
+  "expected_effects": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "rationale": "NGRPO's noise-injection acts as exploration; should lower the risk of zero-variance starvation."
+    }
+  ],
+  "claim_validation": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "observed_delta": -0.131025,
+      "ci_low": -0.239395,
+      "ci_high": -0.022656,
+      "significant": true,
+      "verdict": "SUPPORTS",
+      "rationale": "measured delta=-0.1310 CI=[-0.2394,-0.0227] is significant and matches predicted <0"
+    },
+    {
+      "metric": "mean_zvf",
+      "panel": "zvf130_5seed",
+      "predicted_sign": null,
+      "observed_delta": -0.18042,
+      "ci_low": -0.18042,
+      "ci_high": -0.18042,
+      "significant": false,
+      "verdict": "UNCLAIMED",
+      "rationale": "no expected_effect declared for this (metric, panel) pair"
+    }
   ]
 }

@@ -1045,3 +1045,129 @@ bar are the unique-value count $k$. Four of seven bars are
 value for those items.}
 \label{fig:p5-discriminative-entropy}
 \end{figure}
+
+\subsection{Exhibit 17: MIN-REPORT manifest self-sufficiency — the standard is sufficient for the diagnostic metric, incomplete for the downstream outcome}
+\label{sec:p5-exhibit-manifest-self-suff}
+
+Exhibits~11 (\emph{coverage}),~14 (\emph{truthfulness}),~16
+(\emph{entropy}) all measure whether the manifest \emph{declares} the
+seven MIN-REPORT items; Exhibit~13 (\emph{predictive-sufficiency})
+measures how much \texttt{cells.tsv} stack columns drive outcomes. Exhibit~17
+closes the synthesis note from iter~40 ("adding the manifest-alone
+predictive axis"): the natural audit scenario is a reviewer handed
+\emph{only} the manifest JSONs (no \texttt{cells.tsv}, no cell\_id parsing,
+no model\_family column). Is the manifest \emph{self-sufficient}?
+
+\paragraph{Falsifiable claim.}
+For \emph{every} measured outcome $y$ in the corpus, the manifest
+alone captures $\geq 90\%$ of the variance that the disclosed stack
+columns in \texttt{cells.tsv} capture --- i.e. the missing-field penalty
+$R^2_\text{cells}(y) - R^2_\text{manifest}(y) \leq 0.10$ with
+bootstrap CI excluding any larger gap.
+
+\paragraph{Method.}
+For each of two outcomes ($y\in\{\textsc{ZVF},\textsc{mean\_reward}\}$)
+on the $n{=}98$ mega cells, encode two axis sets and fit in-sample
+linear regression:
+\begin{itemize}\itemsep0pt
+  \item $\mathcal{A}_\text{manifest} = \{\texttt{group\_size\_schedule},
+        \texttt{heldout\_split}, \texttt{decontamination\_notes}\}$
+        (the three manifest fields with $k\geq 2$ on this corpus).
+  \item $\mathcal{A}_\text{cells} = \{\texttt{model\_family},
+        \texttt{task\_slice}, \log_2 G, \texttt{temperature},
+        \texttt{seed}\}$ (the iter-32 stack columns).
+\end{itemize}
+Three other manifest fields
+(\texttt{loss\_form},\texttt{ref\_policy\_kl},\texttt{sampler\_backend\_precision})
+are constant ($k{=}1$) on this corpus and contribute zero to
+$R^2_\text{manifest}$. The \emph{missing-field penalty} is
+$\Delta R^2 = R^2(\mathcal{A}_\text{cells}, y) -
+R^2(\mathcal{A}_\text{manifest}, y)$. Cluster bootstrap CIs
+($B{=}2000$, over-cell resampling with replacement, seed 20260704)
+quantify the precision.
+
+\paragraph{Headline.}
+The falsifiable claim is \textbf{rejected} on
+$y{=}$\texttt{mean\_reward} and \textbf{accepted} on $y{=}$\texttt{ZVF}
+(\tableref{tab:p5-manifest-self-suff}):
+for the diagnostic signal-starvation fraction the manifest is fully
+self-sufficient (gap $=-0.003$, CI $[-0.045, +0.034]$, straddles zero);
+for the downstream final reward the manifest \emph{misses} $46\%$ of
+the variance that \texttt{cells.tsv} captures, and that gap is firmly
+statistically distinguishable from zero (gap $=+0.463$, CI
+$[+0.309, +0.564]$).
+
+\begin{table}[t]
+\centering\small
+\caption{MIN-REPORT manifest self-sufficiency at $n{=}98$ mega cells.
+$R^2$ is in-sample linear-regression on one-hot / numeric encodings of
+the indicated axis set; CIs are percentile bootstrap with
+$B{=}2000$, seed 20260704, over-cell resampling. The
+\emph{missing-field penalty} is the cells-only $R^2$ minus the
+manifest-only $R^2$; positive values mean the manifest is
+\emph{less} self-sufficient than \texttt{cells.tsv}.}
+\label{tab:p5-manifest-self-suff}
+\begin{tabular}{lcccc}
+\toprule
+outcome & $R^2_\text{manifest}$ [CI] & $R^2_\text{cells}$ [CI] & $R^2_\text{combined}$ & $\Delta R^2$ [CI] \\
+\midrule
+ZVF          & \textbf{0.776} [0.730, 0.846] & 0.773 [0.735, 0.834] & 0.790 & $-$0.003 [$-$0.045, +0.034] \\
+mean\_reward & \textbf{0.280} [0.219, 0.443] & 0.743 [0.688, 0.820] & 0.744 & \textbf{+0.463} [+0.309, +0.564] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{What the gap means for the standard.}
+The 46-percentage-point $\Delta R^2$ on $y{=}\textsc{mean\_reward}$ is
+quantitatively the \emph{inner product} of two artefacts of the same
+corpus: \texttt{cells.tsv} carries \texttt{model\_family} (the single largest
+axis on mean\_reward, $\eta^2{=}0.453$ per Exhibit~7), but the manifest
+does not. A reviewer handed only the manifest cannot recover the model
+identity from
+\texttt{heldout\_split}$\cup$\texttt{group\_size\_schedule}$\cup$\texttt{decontamination\_notes},
+because those three fields deterministically encode only
+\texttt{task\_slice} and $G$ plus a coarse decontam-note flag. The
+gap on $y{=}\textsc{mean\_reward}$ is, in plain language, the variance
+the manifest omits because it omits the model field.
+
+\paragraph{Why $y{=}\textsc{ZVF}$ does not show the gap.}
+ZVF variance is overwhelmingly driven by the $G\times\text{task}$
+interaction ($\eta^2_G{=}0.444$, $\eta^2_\text{task}{=}0.469$ per
+Exhibit~7), both of which \emph{are} recoverable from the manifest via
+\texttt{group\_size\_schedule} and \texttt{heldout\_split}. The
+manifest is therefore already self-sufficient for the diagnostic; the
+gap is purely a downstream-outcome gap, which is the right thing for a
+\emph{reporting} standard to be incomplete about --- the standard is
+designed to \emph{locate} the run, not to predict unseen outcomes.
+
+\paragraph{Schematic.}
+Three manifest fields (loss\_form, ref\_policy\_kl,
+sampler\_backend\_precision) are constant on this corpus (carrying
+zero information), and one (\texttt{model\_family}) is the largest
+variance-bearing axis downstream but absent from the manifest. The
+manifest covers $99.7\%$ of the diagnostic ZVF variance through
+$\mathcal{A}_\text{manifest}$ but only $38\%$ of the downstream
+mean\_reward variance, because \texttt{model\_family} and
+\texttt{temperature} (the two non-constant \texttt{cells.tsv} axes missing
+from the manifest) jointly carry $\eta^2{=}0.453$ on mean\_reward.
+
+\paragraph{Reproducibility.}
+\texttt{python3 scripts/p5p8/p5\_manifest\_self\_sufficiency.py}
+($\sim$3\,s). Inputs:
+\texttt{experiments/results/mega\_20260704/\texttt{cells.tsv}},
+\texttt{.../manifests/*.json}. Outputs:
+\texttt{p5\_manifest\_self\_sufficiency.tsv},
+\texttt{p5\_manifest\_self\_sufficiency.json},
+\texttt{.../figures/p5\_manifest\_r2\_gap.\{png,pdf\}}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{p5_manifest_r2_gap.pdf}
+\caption{Manifest-alone vs \texttt{cells.tsv}-alone $R^2$ on $n{=}98$ mega
+cells, in-sample linear regression. The manifest is essentially
+self-sufficient for ZVF ($R^2\,{=}\,0.776$) but loses $46$ percentage
+points ($R^2\,{=}\,0.280$ vs $0.743$) on mean\_reward --- the gap is
+the \texttt{cells.tsv} \texttt{model\_family} axis which the manifest does
+not currently carry.}
+\label{fig:p5-manifest-r2-gap}
+\end{figure}

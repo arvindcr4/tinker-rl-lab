@@ -94,5 +94,71 @@
       "source": "experiments/results/zvf_iter130_method_risk.tsv",
       "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)"
     }
+  ],
+  "expected_effects": [
+    {
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">0",
+      "rationale": "GIFT subtracts a gamma-style likelihood baseline -- a small increase in zero-variance fraction is plausible because the gamma prior regularises the group mean toward a constant."
+    },
+    {
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">=0",
+      "rationale": "GIFT's documented loss shift of +16,722 absolute loss should be at least reward-neutral on the same stack."
+    },
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "rationale": "On the 5-seed risk panel, GIFT's gamma prior reduces risk of zero-variance groups (anti-starvation)."
+    }
+  ],
+  "claim_validation": [
+    {
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">0",
+      "observed_delta": 0.125,
+      "ci_low": 0.08125,
+      "ci_high": 0.175,
+      "significant": true,
+      "verdict": "SUPPORTS",
+      "rationale": "measured delta=+0.1250 CI=[+0.0813,+0.1750] is significant and matches predicted >0"
+    },
+    {
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">=0",
+      "observed_delta": 0.016406,
+      "ci_low": -0.007031,
+      "ci_high": 0.039844,
+      "significant": false,
+      "verdict": "NEUTRAL",
+      "rationale": "measured delta=+0.0164 CI=[-0.0070,+0.0398] includes 0; cannot falsify predicted >=0"
+    },
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "observed_delta": -0.263187,
+      "ci_low": -0.365427,
+      "ci_high": -0.160948,
+      "significant": true,
+      "verdict": "SUPPORTS",
+      "rationale": "measured delta=-0.2632 CI=[-0.3654,-0.1609] is significant and matches predicted <0"
+    },
+    {
+      "metric": "mean_zvf",
+      "panel": "zvf130_5seed",
+      "predicted_sign": null,
+      "observed_delta": -0.36658,
+      "ci_low": -0.36658,
+      "ci_high": -0.36658,
+      "significant": false,
+      "verdict": "UNCLAIMED",
+      "rationale": "no expected_effect declared for this (metric, panel) pair"
+    }
   ]
 }

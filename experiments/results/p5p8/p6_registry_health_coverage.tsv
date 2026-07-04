@@ -1,0 +1,139 @@
+framework	method	n_entries	entry_ids
+colab-open-trainer	aero	0	
+colab-open-trainer	areal	0	
+colab-open-trainer	cppo	0	
+colab-open-trainer	dapo	1	colab-open_dapo_e3
+colab-open-trainer	delta_aero	1	delta:delta_aero
+colab-open-trainer	delta_areal	1	delta:delta_areal
+colab-open-trainer	delta_cppo	1	delta:delta_cppo
+colab-open-trainer	delta_dapo	1	delta:delta_dapo
+colab-open-trainer	delta_drgrpo	1	delta:delta_drgrpo
+colab-open-trainer	delta_es	1	delta:delta_es
+colab-open-trainer	delta_gift	1	delta:delta_gift
+colab-open-trainer	delta_gspo	1	delta:delta_gspo
+colab-open-trainer	delta_mcgrpo	1	delta:delta_mcgrpo
+colab-open-trainer	delta_ngrpo	1	delta:delta_ngrpo
+colab-open-trainer	delta_scafgrpo	1	delta:delta_scafgrpo
+colab-open-trainer	drgrpo	1	colab-open_drgrpo_e3
+colab-open-trainer	es	0	
+colab-open-trainer	gift	0	
+colab-open-trainer	grpo	2	colab-open_grpo-adaptiveg_e3,colab-open_grpo_e3
+colab-open-trainer	gspo	0	
+colab-open-trainer	mcgrpo	0	
+colab-open-trainer	ngrpo	0	
+colab-open-trainer	scafgrpo	0	
+openrlhf	aero	0	
+openrlhf	areal	0	
+openrlhf	cppo	0	
+openrlhf	dapo	0	
+openrlhf	delta_aero	1	delta:delta_aero
+openrlhf	delta_areal	1	delta:delta_areal
+openrlhf	delta_cppo	1	delta:delta_cppo
+openrlhf	delta_dapo	1	delta:delta_dapo
+openrlhf	delta_drgrpo	1	delta:delta_drgrpo
+openrlhf	delta_es	1	delta:delta_es
+openrlhf	delta_gift	1	delta:delta_gift
+openrlhf	delta_gspo	1	delta:delta_gspo
+openrlhf	delta_mcgrpo	1	delta:delta_mcgrpo
+openrlhf	delta_ngrpo	1	delta:delta_ngrpo
+openrlhf	delta_scafgrpo	1	delta:delta_scafgrpo
+openrlhf	drgrpo	0	
+openrlhf	es	0	
+openrlhf	gift	0	
+openrlhf	grpo	1	openrlhf_grpo_qwen3-8b_gsm8k
+openrlhf	gspo	0	
+openrlhf	mcgrpo	0	
+openrlhf	ngrpo	0	
+openrlhf	scafgrpo	0	
+tinker	aero	1	tinker_aero_qwen3.5-4b_gsm8k
+tinker	areal	1	tinker_areal_qwen3.5-4b_gsm8k
+tinker	cppo	0	
+tinker	dapo	1	tinker_dapo_qwen3.5-4b_gsm8k
+tinker	delta_aero	1	delta:delta_aero
+tinker	delta_areal	1	delta:delta_areal
+tinker	delta_cppo	1	delta:delta_cppo
+tinker	delta_dapo	1	delta:delta_dapo
+tinker	delta_drgrpo	1	delta:delta_drgrpo
+tinker	delta_es	1	delta:delta_es
+tinker	delta_gift	1	delta:delta_gift
+tinker	delta_gspo	1	delta:delta_gspo
+tinker	delta_mcgrpo	1	delta:delta_mcgrpo
+tinker	delta_ngrpo	1	delta:delta_ngrpo
+tinker	delta_scafgrpo	1	delta:delta_scafgrpo
+tinker	drgrpo	1	tinker_drgrpo_qwen3.5-4b_gsm8k
+tinker	es	0	
+tinker	gift	1	tinker_gift_qwen3.5-4b_gsm8k
+tinker	grpo	2	tinker_grpo_qwen3-8b_gsm8k,tinker_grpo_qwen3.5-4b_gsm8k
+tinker	gspo	1	tinker_gspo_qwen3.5-4b_gsm8k
+tinker	mcgrpo	0	
+tinker	ngrpo	0	
+tinker	scafgrpo	0	
+trl	aero	0	
+trl	areal	0	
+trl	cppo	0	
+trl	dapo	0	
+trl	delta_aero	1	delta:delta_aero
+trl	delta_areal	1	delta:delta_areal
+trl	delta_cppo	1	delta:delta_cppo
+trl	delta_dapo	1	delta:delta_dapo
+trl	delta_drgrpo	1	delta:delta_drgrpo
+trl	delta_es	1	delta:delta_es
+trl	delta_gift	1	delta:delta_gift
+trl	delta_gspo	1	delta:delta_gspo
+trl	delta_mcgrpo	1	delta:delta_mcgrpo
+trl	delta_ngrpo	1	delta:delta_ngrpo
+trl	delta_scafgrpo	1	delta:delta_scafgrpo
+trl	drgrpo	0	
+trl	es	0	
+trl	gift	0	
+trl	grpo	1	trl_grpo_qwen3-8b_gsm8k
+trl	gspo	0	
+trl	mcgrpo	0	
+trl	ngrpo	0	
+trl	scafgrpo	0	
+verl	aero	0	
+verl	areal	0	
+verl	cppo	0	
+verl	dapo	0	
+verl	delta_aero	1	delta:delta_aero
+verl	delta_areal	1	delta:delta_areal
+verl	delta_cppo	1	delta:delta_cppo
+verl	delta_dapo	1	delta:delta_dapo
+verl	delta_drgrpo	1	delta:delta_drgrpo
+verl	delta_es	1	delta:delta_es
+verl	delta_gift	1	delta:delta_gift
+verl	delta_gspo	1	delta:delta_gspo
+verl	delta_mcgrpo	1	delta:delta_mcgrpo
+verl	delta_ngrpo	1	delta:delta_ngrpo
+verl	delta_scafgrpo	1	delta:delta_scafgrpo
+verl	drgrpo	0	
+verl	es	0	
+verl	gift	0	
+verl	grpo	1	verl_grpo_qwen3-8b_gsm8k
+verl	gspo	0	
+verl	mcgrpo	0	
+verl	ngrpo	0	
+verl	scafgrpo	0	
+worktree-zvf130-batch	aero	0	
+worktree-zvf130-batch	areal	0	
+worktree-zvf130-batch	cppo	1	zvf130_cppo
+worktree-zvf130-batch	dapo	0	
+worktree-zvf130-batch	delta_aero	1	delta:delta_aero
+worktree-zvf130-batch	delta_areal	1	delta:delta_areal
+worktree-zvf130-batch	delta_cppo	1	delta:delta_cppo
+worktree-zvf130-batch	delta_dapo	1	delta:delta_dapo
+worktree-zvf130-batch	delta_drgrpo	1	delta:delta_drgrpo
+worktree-zvf130-batch	delta_es	1	delta:delta_es
+worktree-zvf130-batch	delta_gift	1	delta:delta_gift
+worktree-zvf130-batch	delta_gspo	1	delta:delta_gspo
+worktree-zvf130-batch	delta_mcgrpo	1	delta:delta_mcgrpo
+worktree-zvf130-batch	delta_ngrpo	1	delta:delta_ngrpo
+worktree-zvf130-batch	delta_scafgrpo	1	delta:delta_scafgrpo
+worktree-zvf130-batch	drgrpo	0	
+worktree-zvf130-batch	es	1	zvf130_es
+worktree-zvf130-batch	gift	0	
+worktree-zvf130-batch	grpo	0	
+worktree-zvf130-batch	gspo	0	
+worktree-zvf130-batch	mcgrpo	1	zvf130_mcgrpo
+worktree-zvf130-batch	ngrpo	1	zvf130_ngrpo
+worktree-zvf130-batch	scafgrpo	1	zvf130_scafgrpo

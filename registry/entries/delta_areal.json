@@ -94,5 +94,71 @@
       "source": "experiments/results/zvf_iter130_method_risk.tsv",
       "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)"
     }
+  ],
+  "expected_effects": [
+    {
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": "<0",
+      "rationale": "AREAL's decoupled rollout budget acts as a larger effective G on this single-batch run; should lower ZVF."
+    },
+    {
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">=0",
+      "rationale": "AREAL's autoscaler is statically set to 8 in our N2 run; should be at least reward-neutral on the same stack."
+    },
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "rationale": "Decoupled rollout should reduce risk of zero-variance groups."
+    }
+  ],
+  "claim_validation": [
+    {
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": "<0",
+      "observed_delta": -0.05625,
+      "ci_low": -0.1125,
+      "ci_high": 0.00625,
+      "significant": false,
+      "verdict": "NEUTRAL",
+      "rationale": "measured delta=-0.0563 CI=[-0.1125,+0.0063] includes 0; cannot falsify predicted <0"
+    },
+    {
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">=0",
+      "observed_delta": -0.019531,
+      "ci_low": -0.032031,
+      "ci_high": -0.007812,
+      "significant": true,
+      "verdict": "CONTRADICTS",
+      "rationale": "measured delta=-0.0195 CI=[-0.0320,-0.0078] is significant but OPPOSITE to predicted >=0"
+    },
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "observed_delta": -0.245767,
+      "ci_low": -0.354535,
+      "ci_high": -0.137,
+      "significant": true,
+      "verdict": "SUPPORTS",
+      "rationale": "measured delta=-0.2458 CI=[-0.3545,-0.1370] is significant and matches predicted <0"
+    },
+    {
+      "metric": "mean_zvf",
+      "panel": "zvf130_5seed",
+      "predicted_sign": null,
+      "observed_delta": -0.35988,
+      "ci_low": -0.35988,
+      "ci_high": -0.35988,
+      "significant": false,
+      "verdict": "UNCLAIMED",
+      "rationale": "no expected_effect declared for this (metric, panel) pair"
+    }
   ]
 }

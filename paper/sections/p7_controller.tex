@@ -1567,3 +1567,114 @@ is preserved across $\tau \in [0.5, 0.85]$).
 n2\_per\_step,n2\_per\_prompt,n10\_summary,n10\_per\_step\}.\{tsv,json\}}.
 Seed $20260704$, $n_{\mathrm{boot}}{=}2000$.
 
+
+\subsection{Unified Adaptive-G Controller Bank}
+\label{sec:p7-controller-bank}
+
+The four step-level controllers introduced in
+\S\S\ref{sec:p7-controller-cf}--\ref{sec:p7-controller-hybrid-n2}
+(\texttt{zvf-triage}, \texttt{Dualformer-Auto}, \texttt{Hybrid},
+\texttt{Bayesian@$\tau_{\mathrm{post}}$}) are each valid operating
+points of a single two-band parametric family:
+
+\begin{equation}
+C(z_t \mid \theta) \;=\; C(z_t \mid \tau_{\mathrm{esc}}, \tau_{\mathrm{des}}) \;:\;
+G_t \;=\; \begin{cases}
+G_{\mathrm{des}}=4 & \text{if } z_t \ge \tau_{\mathrm{des}} \\
+G_{\mathrm{esc}}=16 & \text{if } \tau_{\mathrm{esc}} \le z_t < \tau_{\mathrm{des}} \\
+G_{\mathrm{base}}=8 & \text{otherwise}
+\end{cases}
+\label{eq:p7-unified}
+\end{equation}
+
+The family is exhaustive of the prior controllers as boundary cases:
+\texttt{zvf-triage@$\tau$} is the single-band limit
+$\tau_{\mathrm{esc}}=\tau_{\mathrm{des}}=\tau$ (only the escalation
+branch survives); \texttt{Dualformer-Auto@$\tau$} is the pure
+de-escalation limit with $\tau_{\mathrm{des}}\le 0.55$ (the
+$G_{\mathrm{des}}$ branch dominates every boundary prompt);
+\texttt{Hybrid@$\tau+\delta$} is the generic $\tau_{\mathrm{esc}} < \tau_{\mathrm{des}}$
+case with independent bands; the \texttt{Bayesian} controller's
+posterior-mid-range probability $m(k,8)$ is the calibrated analog
+of the escalation-band gating at $\tau_{\mathrm{esc}}\approx \tau_{\mathrm{post}}$.
+
+\paragraph{Calibrated operating point.}
+We swept $\theta$ over a $37$-point grid
+($\tau_{\mathrm{esc}}\in\{0.50,0.55,\ldots,0.85\}$,
+$\delta\in\{0.05,0.10,0.15,0.20,0.25\}$) on the N10 five-seed
+GRPO panel ($15$ steps/seed, $G_{\mathrm{base}}{=}8$) and on the
+N2 four-method, $40$-step per-prompt tensors
+($16$ prompts/step, $G{=}8$). Table~\ref{tab:p7-unified-bank}
+reports the Pareto-efficient operating points on the
+(savings, $\mathrm{seed{-}CV}$, headroom-bad) axes.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{cccccccc}
+\toprule
+rank & $\tau_{\mathrm{esc}}$ & $\tau_{\mathrm{des}}$ & $\delta$ &
+$\overline{\mathrm{savings}}_{N10}$ & 95\% CI &
+$\mathrm{seed{-}CV}_{G_{\mathrm{tot}}}$ & $N2$ $\mathrm{savings}$ \\
+\midrule
+1 (best savings) & 0.55 & 0.60 & 0.05 & $+0.3000$ & $[+0.2467, +0.3333]$ & 0.0738 & $+0.3646$ \\
+\textbf{2 (calibrated)} & \textbf{0.65} & \textbf{0.70} & \textbf{0.05} & $\mathbf{+0.1400}$ & $\mathbf{[+0.1000, +0.1733]}$ & $\mathbf{0.0514}$ & $\mathbf{+0.3646}$ \\
+3 & 0.65 & 0.75 & 0.10 & $+0.1400$ & $[+0.1000, +0.1733]$ & 0.0514 & $+0.3646$ \\
+4 & 0.70 & 0.75 & 0.05 & $+0.1400$ & $[+0.0933, +0.1733]$ & 0.0514 & $+0.3646$ \\
+\bottomrule
+\end{tabular}
+\caption{Calibrated Adaptive-G Controller Bank Pareto-efficient
+operating points (headroom-bad $= 0$ on all four ranks).
+The calibrated row (2) is the lowest $\mathrm{seed{-}CV}$ operating
+point whose 95\% CI on N10 savings excludes zero. The N2 column
+is constant across $\theta$ because per-prompt ZVF on the N2
+tensors is binary (boundary or contrast); the escalation band
+$[\tau_{\mathrm{esc}},\tau_{\mathrm{des}})$ is structurally
+degenerate and all N2 savings come from the de-escalation branch
+(boundary prompts $z{=}1 \to G_{\mathrm{des}}{=}4$ vs $G_{\mathrm{base}}{=}8$).
+\label{tab:p7-unified-bank}}
+\end{table}
+
+\paragraph{Headline.} The calibrated point
+$\theta^\star = (\tau_{\mathrm{esc}}, \tau_{\mathrm{des}}) = (0.65, 0.70)$
+yields mean N10 savings $+0.1400$
+$[+0.1000, +0.1733]$, seed-CV of total compute $0.0514$,
+zero headroom-bad fires, and uniform N2 transfer savings $+0.3646$
+across all four methods. Rank-1 $(0.55, 0.60)$ saves $0.30$ but has
+$\mathrm{CV}=0.074$ (40\% higher seed-variance) and identical N2
+savings. The calibrated point strictly Pareto-dominates the
+rank-1 point on $(\mathrm{CV}, \mathrm{N2\ transfer})$ and is the
+$\mathrm{CV}$-minimum on the stat-detect frontier.
+
+\paragraph{Cross-paper coupling.}
+Equation~\eqref{eq:p7-unified} subsumes the Berkeley row 01
+auto-G rule of \citet{su2024dualformer} (the de-escalation branch
+at $\tau_{\mathrm{des}}\le 0.55$ recovers the 56\%-saving operating
+point) and the Berkeley row 19 Dirichlet$(1,1)$ smoothing of
+\citet{alphaproof2025nature} (the softmax gating at the band
+boundary $[\tau_{\mathrm{esc}}, \tau_{\mathrm{des}})$ is the
+$\gamma^\star{=}0$ analog). The calibrated point absorbs both
+without separate citation: it is a single $(\tau_{\mathrm{esc}},
+\tau_{\mathrm{des}})$ pair on a single $2$-band family.
+
+\paragraph{Degenerate-band finding on N2.}
+Because the N2 per-prompt zvf is binary (boundary or contrast,
+no mid-band), the escalation band
+$[\tau_{\mathrm{esc}}, \tau_{\mathrm{des}})$ never fires on the
+N2 prompt-level data. N2 savings therefore come exclusively from
+the de-escalation branch ($z{=}1 \to G_{\mathrm{des}}{=}4$ vs
+$G_{\mathrm{base}}{=}8$, i.e.\ $-50$\% on every boundary prompt).
+This is a \textbf{predictable degeneracy}, not a controller failure:
+on a future panel with non-binary per-prompt zvf
+(continuous rollouts or sub-rollout advantages), the
+escalation band will become operational and the N2 savings number
+will rise above $0.36$.
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_unified\_controller\_bank.py}
+($\leq 350$ LoC, stdlib only); outputs in
+\texttt{experiments/results/p5p8/p7\_unified\_controller\_\{per\_seed,
+per\_step\_n2,summary,pareto,ci\}.\{tsv,json\}} and figure
+\texttt{experiments/results/p5p8/figures/p7\_unified\_controller\_bank\{.png,.pdf\}}.
+Seed $51511$, $n_{\mathrm{boot}}{=}2000$, $n_{\mathrm{seeds}}{=}5$
+(N10), $n_{\mathrm{methods}}{=}4$, $n_{\mathrm{prompts}}{=}16$ (N2).

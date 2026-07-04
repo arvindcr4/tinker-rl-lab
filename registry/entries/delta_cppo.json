@@ -56,5 +56,37 @@
       "source": "experiments/results/zvf_iter130_method_risk.tsv",
       "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)"
     }
+  ],
+  "expected_effects": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "rationale": "CPPO's continuity penalty reduces abrupt policy updates; risk of ZVF collapse should be lower than vanilla GRPO."
+    }
+  ],
+  "claim_validation": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "observed_delta": -0.151077,
+      "ci_low": -0.253342,
+      "ci_high": -0.048813,
+      "significant": true,
+      "verdict": "SUPPORTS",
+      "rationale": "measured delta=-0.1511 CI=[-0.2533,-0.0488] is significant and matches predicted <0"
+    },
+    {
+      "metric": "mean_zvf",
+      "panel": "zvf130_5seed",
+      "predicted_sign": null,
+      "observed_delta": -0.18558,
+      "ci_low": -0.18558,
+      "ci_high": -0.18558,
+      "significant": false,
+      "verdict": "UNCLAIMED",
+      "rationale": "no expected_effect declared for this (metric, panel) pair"
+    }
   ]
 }

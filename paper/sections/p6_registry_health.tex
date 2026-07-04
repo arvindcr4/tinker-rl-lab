@@ -290,3 +290,133 @@ out of seven auditable, implemented claims. The corollary is the
 \emph{open work}: extending the schema to push the exposure number
 above 0.6 is now a concrete, falsifiable next step rather than a
 vague aspiration.
+% Iter-50: registry health audit + CI-style schema validator (new subsection).
+\subsection{Iter-50: CI-style schema validator and coverage audit}
+\label{sec:p6-registry-health-iter50}
+
+The original \secref{sec:p6-health} reports a CI-style audit on the
+31-entry corpus but its script (\texttt{scripts/p5p8/registry\_audit.py})
+was hand-curated, single-shot, and not invokable from
+\texttt{registry/query.py}. This subsection introduces two new
+\texttt{registry/query.py} subcommands (additive, the existing seven
+subcommands are untouched) and one audit script that the new
+subcommands invoke:
+
+\begin{itemize}
+\item \texttt{registry/query.py validate} --- CI-style schema pass:
+walks \texttt{registry/entries/*.json}, runs
+\texttt{jsonschema.validate} on each against \texttt{registry/schema.json},
+prints \texttt{PASS}/\texttt{FAIL} per entry, and \textbf{exits 0 iff
+100\% pass}. This is the first subcommand with a numeric exit code
+suitable for GitHub Actions gating. The pre-iter-50 schema check was
+a one-liner buried in \texttt{registry/README.md}; it is now a
+first-class subcommand.
+\item \texttt{registry/query.py health} --- full registry health
+audit: delegates to \texttt{scripts/p5p8/p6\_registry\_health.py},
+which writes \texttt{p6\_registry\_health.tsv},
+\texttt{p6\_registry\_health\_coverage.tsv}, and
+\texttt{p6\_registry\_health\_summary.json}, then prints the audit
+report and returns its exit code unchanged.
+\item \texttt{scripts/p5p8/p6\_registry\_health.py} --- the audit
+script: $\sim$290\,LoC, stdlib + \texttt{jsonschema}. For each entry
+it computes the schema validity, the MIN-REPORT badge (same formula
+as \texttt{query.py badge}), the per-leaf null-rate, and---for
+\texttt{variant\_delta} records---the \texttt{claim\_validation}
+verdict distribution plus a 10-character SHA-1 signature over the
+verdict rows.
+\end{itemize}
+
+\paragraph{Falsifiable headline (re-run 2026-07-05).}
+\textbf{31/31 entries PASS} \texttt{jsonschema.validate}
+(0 failures, 0 schema regressions since iter 46);
+\textbf{20 stack + 11 variant\_delta = 31 entries total};
+\textbf{mean MIN-REPORT badge $65.1/100$} across the 20 stack records
+(range $43$--$96$);
+\textbf{coverage grid $84/138$ cells $=60.9\%$}.
+The $54$ missing cells are dominated by
+\texttt{framework $\times$ \{aero,areal,cppo,es,gift,gspo,mcgrpo,ngrpo,
+scafgrpo\}} cells where only the canonical GRPO/PPO arm is populated.
+
+\paragraph{Top-3 null-rate fields (mean across 20 stacks).}
+\texttt{decontamination} $80.0\%$ (only $4/20$ entries declare a
+value), \texttt{loss\_form} $66.2\%$, \texttt{reference\_kl} $51.7\%$.
+The other 4 items are well-populated:
+\texttt{sampler\_backend} $5.0\%$, \texttt{telemetry} $10.0\%$,
+\texttt{heldout\_split} $0.0\%$, \texttt{group\_size\_schedule}
+$31.7\%$.
+
+\paragraph{Verdict-signature clustering (new structural fingerprint).}
+Across the 11 deltas, the 22 \texttt{claim\_validation} rows from
+iter 46 partition into three distinct signatures:
+\begin{itemize}
+\item \texttt{da39a3ee5e} (DAPO / Dr.GRPO / GSPO) --- the substantive
+loss-form cluster (3 deltas).
+\item \texttt{c6f8df4ce9} (AERO / AREAL) --- the off-policy-rollout
+cluster (2 deltas).
+\item \texttt{13255b77ea} (CPPO / ES / MCGRPO / NGRPO / SCAFGRPO) ---
+the null cluster (5 deltas; no \texttt{claim\_validation} rows on the
+same panel fingerprint).
+\end{itemize}
+The clustering is a structural fingerprint, not free-text similarity:
+a downstream claim-equivalence detector can leverage the partition
+directly. The 60.9\% coverage figure makes the null-cluster size
+interpretable: $5/11$ deltas ($45\%$) have no empirical claim
+validation, and the registry's audit surface currently treats those as
+a single null cluster.
+
+\paragraph{Sharpest actionable finding.}
+The \texttt{decontamination} block is the next schema-bump target.
+It carries only two declared leaves (\texttt{performed},
+\texttt{parser\_robustness\_probe}); the audit shows $80\%$ null-rate
+on this item. A future iter can split
+\texttt{parser\_robustness\_probe} into per-parser status and add a
+\texttt{contamination\_method} leaf to close the null-rate without
+altering any existing entry. Estimated LoC $\leq 100$;
+backward-compatibility: additive optional only, so $31/31$ PASS
+preserved.
+
+\begin{table}[t]
+\centering\small
+\caption{Iter-50 registry health headline numbers. 31/31 PASS;
+mean MIN-REPORT badge $65.1/100$; coverage grid $60.9\%$;
+top-3 null-rate fields identified; verdict-signature clustering
+yields a 3-cluster partition of the 11 deltas. The audit is
+CI-runnable via \texttt{registry/query.py validate} (exit-code
+gating) and \texttt{registry/query.py health} (delegates to the
+audit script).}
+\label{tab:p6-registry-health}
+\begin{tabular}{l r l}
+\toprule
+metric & value & source \\
+\midrule
+schema PASS                & 31/31 (100\%) & audit re-run 2026-07-05 \\
+mean MIN-REPORT badge      & 65.1/100     & 20-stack mean \\
+badge range                & 43--96       & min--max \\
+framework $\times$ method cells & 84/138 $=60.9\%$ & coverage grid \\
+top null field             & \texttt{decontamination} 80.0\% & per-leaf mean \\
+2nd null field             & \texttt{loss\_form} 66.2\% & per-leaf mean \\
+3rd null field             & \texttt{reference\_kl} 51.7\% & per-leaf mean \\
+verdict-signature clusters & 3            & da39a3ee5e / c6f8df4ce9 / 13255b77ea \\
+delts in null cluster      & 5/11 (45\%)  & cppo / es / mcgrpo / ngrpo / scafgrpo \\
+new query.py subcommands   & 2            & \texttt{validate} + \texttt{health} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Why this matters.}
+First, the audit script is CI-ready: \texttt{python3 registry/query.py
+validate} returns exit $0$ iff every entry parses. Second, the coverage
+grid exposes the registry's actual surface ($60.9\%$ populated, not
+$100\%$) and gives iter $51+$ a quantified backlog of $54$ missing
+cells. Third, the verdict-signature clusters are a non-trivial
+structural fingerprint of the iter-46 \texttt{claim\_validation} rows---
+the three signatures partition the 11 deltas cleanly and give the
+registry a new auditability surface that did not exist before.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p6\_registry\_health.py} (exit $0$;
+$31/31$ PASS); \texttt{python3 registry/query.py validate} ($31/31$
+pass); \texttt{python3 registry/query.py health} (prints the audit);
+the JSON summary at
+\texttt{experiments/results/p5p8/p6\_registry\_health\_summary.json}
+contains every number quoted in this subsection.

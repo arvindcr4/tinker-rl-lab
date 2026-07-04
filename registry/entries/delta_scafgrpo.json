@@ -56,5 +56,37 @@
       "source": "experiments/results/zvf_iter130_method_risk.tsv",
       "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)"
     }
+  ],
+  "expected_effects": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "rationale": "Scaffolded GRPO refactors the advantage; should be at least as ZVF-safe as vanilla GRPO."
+    }
+  ],
+  "claim_validation": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "observed_delta": -0.352361,
+      "ci_low": -0.455533,
+      "ci_high": -0.249189,
+      "significant": true,
+      "verdict": "SUPPORTS",
+      "rationale": "measured delta=-0.3524 CI=[-0.4555,-0.2492] is significant and matches predicted <0"
+    },
+    {
+      "metric": "mean_zvf",
+      "panel": "zvf130_5seed",
+      "predicted_sign": null,
+      "observed_delta": -0.16414,
+      "ci_low": -0.16414,
+      "ci_high": -0.16414,
+      "significant": false,
+      "verdict": "UNCLAIMED",
+      "rationale": "no expected_effect declared for this (metric, panel) pair"
+    }
   ]
 }

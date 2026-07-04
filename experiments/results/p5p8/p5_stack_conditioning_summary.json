@@ -1,0 +1,106 @@
+{
+  "iter": 45,
+  "pillar": "P5",
+  "vein": "(b) \u2014 stack-conditioning quantification on N2 four-method tensors",
+  "n_rows": 20480,
+  "n_cells": 2560,
+  "per_axis_eta2_cell_means": {
+    "method": 0.0005,
+    "step": 0.0625,
+    "prompt": 0.0353
+  },
+  "per_axis_eta2_raw": {
+    "method": 0.0003,
+    "step": 0.0414,
+    "prompt": 0.0233
+  },
+  "boot_ci_method": {
+    "mean": 0.0017,
+    "lo": 0.0001,
+    "hi": 0.0053,
+    "sd": 0.0013
+  },
+  "boot_ci_step": {
+    "mean": 0.0765,
+    "lo": 0.0586,
+    "hi": 0.0961,
+    "sd": 0.0099
+  },
+  "boot_ci_prompt": {
+    "mean": 0.041,
+    "lo": 0.0294,
+    "hi": 0.0548,
+    "sd": 0.0065
+  },
+  "per_method_means": {
+    "aero": 0.8275,
+    "areal": 0.8287,
+    "gift": 0.8447,
+    "grpo": 0.8342
+  },
+  "per_method_delta_vs_grpo": {
+    "aero": -0.0066,
+    "areal": -0.0055,
+    "gift": 0.0105,
+    "grpo": 0.0
+  },
+  "panel_zvf_delta_range": [
+    -0.0532,
+    -0.0394
+  ],
+  "frontier_synthesis_band_confirmed": false,
+  "headline_verdict": "DECISIVE",
+  "findings": [
+    {
+      "hypothesis": "P5 FALSIFIABLE: eta^2(method axis) <= 0.10 (algorithm label explains <=10% of variance on a fixed stack -- i.e. 'Report the Stack, Not the Label')",
+      "eta2_method_cell_means": 0.000502968135513749,
+      "eta2_method_boot_lo": 0.00013023707035352415,
+      "eta2_method_boot_hi": 0.005320594896675873,
+      "eta2_step_cell_means": 0.06254221710848192,
+      "eta2_step_boot_lo": 0.05858334430364697,
+      "eta2_step_boot_hi": 0.0961441937584135,
+      "eta2_prompt_cell_means": 0.03525224683348305,
+      "eta2_prompt_boot_lo": 0.029388014088327745,
+      "eta2_prompt_boot_hi": 0.054824880502204354,
+      "threshold": 0.1,
+      "verdict": "DECISIVE"
+    },
+    {
+      "hypothesis": "P5 PER-METHOD DELTAS on per-cell-mean reward (same stack)",
+      "grpo_mean": 0.8341796875,
+      "per_method_means": {
+        "aero": 0.8275,
+        "areal": 0.8287,
+        "gift": 0.8447,
+        "grpo": 0.8342
+      },
+      "per_method_delta_vs_grpo": {
+        "aero": -0.0066,
+        "areal": -0.0055,
+        "gift": 0.0105,
+        "grpo": 0.0
+      }
+    },
+    {
+      "hypothesis": "IID-baseline ZVF decomposition (frontier synthesis Gemini R2)",
+      "G_group": 8,
+      "per_method_delta_mean": {
+        "aero": -0.0453,
+        "areal": -0.0532,
+        "gift": -0.0394,
+        "grpo": -0.0497
+      },
+      "per_method_delta_sd": {
+        "aero": 0.0249,
+        "areal": 0.032,
+        "gift": 0.0297,
+        "grpo": 0.0227
+      },
+      "panel_delta_range": [
+        -0.0532,
+        -0.0394
+      ],
+      "synthesis_band_confirmed": false
+    }
+  ]
+}

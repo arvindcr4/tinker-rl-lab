@@ -56,6 +56,7 @@ python3 registry/query.py list
 python3 registry/query.py badge
 python3 registry/query.py query --item reference_kl
 python3 registry/query.py stackdiff colab-open_dapo_e3 tinker_dapo_qwen3.5-4b_gsm8k
+python3 registry/query.py claim-validation            # iter-46: (delta, metric, panel) audit verdicts
 ```
 
 ## Validation

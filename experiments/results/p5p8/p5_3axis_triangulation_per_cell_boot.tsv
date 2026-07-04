@@ -1,0 +1,4 @@
+pair	n_cells	pearson_r	ci_low	ci_high	excludes_zero	degenerate_reason
+A_vs_B	30				False	x_constant
+A_vs_C	98				False	x_constant
+B_vs_C	30				False	x_constant

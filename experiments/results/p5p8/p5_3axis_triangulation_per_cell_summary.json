@@ -1,0 +1,46 @@
+{
+  "n_cells": 98,
+  "n_with_A": 98,
+  "n_with_B": 30,
+  "n_with_C": 98,
+  "profile_counts": {
+    "honest_but_vacuous": 98
+  },
+  "joint_correlations": {
+    "A_vs_B": {
+      "r": "",
+      "ci_low": "",
+      "ci_high": "",
+      "excludes_zero": false,
+      "n": 30
+    },
+    "A_vs_C": {
+      "r": "",
+      "ci_low": "",
+      "ci_high": "",
+      "excludes_zero": false,
+      "n": 98
+    },
+    "B_vs_C": {
+      "r": "",
+      "ci_low": "",
+      "ci_high": "",
+      "excludes_zero": false,
+      "n": 30
+    }
+  },
+  "item_normalised_H": {
+    "loss_form": 0.0,
+    "ref_policy_kl": 0.0,
+    "sampler_backend_precision": 0.0,
+    "per_step_zvf_path": 1.0,
+    "group_size_schedule": 0.9958,
+    "heldout_split": 0.9808,
+    "decontamination_notes": 0.9313
+  },
+  "headline": {
+    "falsifiable_claim": "At the per-cell level, the per-cell 3-axis triangulation surfaces the 'honest-but-vacuous' gap as the count of cells that pass the harvest-surface truthfulness audit (A) but whose declared values are not informationally distinct from the corpus (low C).",
+    "n_honest_but_vacuous": 98,
+    "n_honest_and_informative": 0
+  }
+}

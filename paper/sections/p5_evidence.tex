@@ -1171,3 +1171,72 @@ the \texttt{cells.tsv} \texttt{model\_family} axis which the manifest does
 not currently carry.}
 \label{fig:p5-manifest-r2-gap}
 \end{figure}
+
+\subsubsection{Per-cell 3-axis triangulation: closing the honesty surface
+to a 3D point cloud}
+\label{sec:p5-3axis-per-cell}
+
+The iter-50 triangulation measured audit A (claim-vs-measurement) and
+audit B (delta-MIN-REPORT-consistency) at the ITEM level; iter-48
+measured audit C (per-item Shannon entropy) at the same level. All
+three joint correlations were NaN because audit A is uniform across
+the corpus. This subsection moves all three measurements to the
+per-cell level ($n{=}98$ mega cells from
+\texttt{experiments/results/mega\_20260704/manifests/}) so that joint
+correlations are computable in principle.
+
+\tableref{tab:p5-3axis-degenerate} reports the result: \emph{on the
+current 98-cell corpus all three per-cell joint correlations are
+mathematically degenerate}. Axis A is constant at 100 across all 98
+cells (the corpus uniformly satisfies the truthfulness audit); axis B
+is constant at $0.0625$ across the 30 cells that map to a registry
+entry (the corpus uniformly triggers 1 of 16 MATCH verdicts on the
+\texttt{(Qwen/Qwen3.5-4B, gsm8k)} bucket); the per-cell
+discriminative-entropy axis C varies in $[0.378, 0.436]$ but never
+crosses the $0.5$ threshold. The classifier therefore labels
+\textbf{98/98 cells as \texttt{honest\_but\_vacuous}} (truthfulness-pass
+but information-poor) --- the corpus uniformly satisfies the standard
+without informationally distinguishing any cell from any other.
+
+The 3 items that drive the saturation --- \texttt{loss\_form},
+\texttt{ref\_policy\_kl}, \texttt{sampler\_backend\_precision} ---
+each have $H{=}0$ bits across the 98 manifests because every cell
+reports the same value. A future iteration that adds the 11
+measured-telemetry + run-level fields already present in
+\texttt{cells.tsv} (\texttt{model\_family}, \texttt{task\_slice},
+\texttt{G}, \texttt{temperature}, \texttt{seed}, \texttt{mean\_reward},
+\texttt{zvf}, \texttt{pcd}, \texttt{mean\_len}, \texttt{std\_len},
+\texttt{sampled\_tokens}) would lift the per-cell C beyond the
+current ceiling and break the per-axis uniformity that prevents any
+correlation measurement. This is the structural confirmation of
+iter-32's recommendation to expand MIN-REPORT from 7 items to 18.
+
+\begin{table}[t]
+\centering\small
+\caption{Per-cell 3-axis joint correlations on $n{=}98$ mega cells.
+``constant'' indicates the axis has zero variance across the corpus,
+which makes Pearson $r$ undefined. The result confirms iter-50's NaN
+correlations were not a statistical artefact but a structural property
+of the 7-item MIN-REPORT standard on the current 98-cell corpus.}
+\label{tab:p5-3axis-degenerate}
+\begin{tabular}{lrll}
+\toprule
+Pair & $n$ cells & $r$ & Reason \\
+\midrule
+A (claim-alignment) vs B (registry match)    &  30 & undefined & A constant at 100, B constant at 0.0625 \\
+A (claim-alignment) vs C (per-cell entropy)  &  98 & undefined & A constant at 100 \\
+B (registry match) vs C (per-cell entropy)   &  30 & undefined & B constant at 0.0625 \\
+\midrule
+\multicolumn{4}{l}{\emph{Profile distribution: 98/98 cells labelled
+\texttt{honest\_but\_vacuous} (A$\geq$90, C$<$0.5).}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p5\_3axis\_triangulation\_per\_cell.py}
+($\sim$5\,s, stdlib + matplotlib). Outputs:
+\texttt{p5\_3axis\_triangulation\_per\_cell.tsv} (98 rows),
+\texttt{p5\_3axis\_triangulation\_per\_cell\_boot.tsv} (3 rows),
+\texttt{p5\_3axis\_triangulation\_per\_cell\_summary.json},
+\texttt{.../figures/p5\_3axis\_per\_cell.\{png,pdf\}}.

@@ -1,0 +1,19 @@
+{
+  "n_cells_tsv": 98,
+  "n_cells_done": 98,
+  "fully_covered_7_items": 0,
+  "fully_covered_18_items": 0,
+  "fully_covered_7_pct": 0.0,
+  "fully_covered_18_pct": 0.0,
+  "n_n10_runs_audited": 6,
+  "n_n10_runs_all_ok": 5,
+  "new_ambiguity_flags": [
+    "Item 2 (ref_policy_kl): 0/98 cells record a concrete kl value; the 7-item MIN-REPORT has 100% presence but 0% validated.",
+    "Item 4 (per_step_zvf_path): present in all 98 manifests but the schema does not require the file to contain a per-step ZVF array \u2014 coverage at the *path* level is not coverage at the *telemetry* level.",
+    "Item 13 (zvf in cells.tsv): 0/98 missing \u2014 but the cells.tsv zvf is the *cell-level* mean over steps, not the per-step trajectory item 4 nominally protects. Distinct quantities.",
+    "Items 8-12 (model, task_slice, G, temperature, seed): 0/98 missing in cells.tsv, but they are stored in the FILE NAME of the manifest, not in the manifest itself. A manifest differ (item 05 toolchain) reading only the JSON cannot recover them.",
+    "Item 18 (sampled_tokens): 0/98 missing in cells.tsv but is the single field that makes 'compute budget' (item dodge2019show) auditable. Not in 7-item MIN-REPORT.",
+    "N10 audit: 0/N10 records report loss_form, ref_policy_kl, sampler_backend_precision, group_size_schedule, heldout_split, or decontamination_notes. The 7-item MIN-REPORT coverage is 0/6 on the N10 corpus."
+  ],
+  "recommendation": "Expand MIN-REPORT to 18 items by adding the 11 measured-telemetry+ run-level fields the cells.tsv already records. The 7-item version is sufficient for a manifest-only audit but blind to the model_family, task_slice, G, temperature, seed, reward, zvf, pcd, and token-budget axes the iter-5 eta^2 analysis showed explain 73-93% of outcome variance."
+}

@@ -1,0 +1,77 @@
+{
+  "record_type": "stack",
+  "schema_version": "0.1.0",
+  "id": "tinker_areal_qwen3.5-4b_gsm8k",
+  "label_claimed": "areal",
+  "framework": {
+    "name": "tinker",
+    "version": "0.2.x",
+    "openness": "managed"
+  },
+  "model": "Qwen/Qwen3.5-4B",
+  "task": "gsm8k",
+  "seeds": [
+    0
+  ],
+  "provenance": {
+    "source_artifacts": [
+      "N2 same-stack four-method run (managed sampler, G=8, 1 seed(s), 40 steps); isolated variant label, see experiments/results/n2_reward_tensor_resume/areal_s0_tensors.jsonl"
+    ],
+    "wandb": null,
+    "date_recorded": "2026-07-04"
+  },
+  "variant_deltas_applied": [
+    {
+      "delta_id": "delta_areal",
+      "component": "autoscaling_Rollout",
+      "status": "implemented",
+      "note": "isolated via N2 same-stack run; managed-runtime admits only the label flip \u2014 the variant-internal machinery is closed"
+    }
+  ],
+  "min_report": {
+    "loss_form": {
+      "importance_ratio_level": "sequence",
+      "clip_eps_low": null,
+      "clip_eps_high": null,
+      "length_normalization": null,
+      "advantage_normalization": "std",
+      "token_mask": null
+    },
+    "reference_kl": {
+      "reference_policy": true,
+      "kl_beta": null,
+      "kl_estimator": null
+    },
+    "sampler_backend": {
+      "backend": "tinker-managed sampler",
+      "precision": "bf16",
+      "temperature": 0.7,
+      "top_p": 0.95
+    },
+    "telemetry": {
+      "per_step_zvf": true,
+      "per_step_gu": true,
+      "source": "benchmark harness on per-group rewards"
+    },
+    "group_size_schedule": {
+      "initial_g": 8,
+      "schedule": "fixed",
+      "adaptation_rule": "none"
+    },
+    "heldout_split": {
+      "disjoint_from_reward_env": true,
+      "description": "GSM8K test split (benchmark protocol)"
+    },
+    "decontamination": {
+      "performed": null,
+      "parser_robustness_probe": null
+    }
+  },
+  "outcomes": {
+    "mean_last10_train_reward": 0.8414,
+    "mean_zvf": 0.7188,
+    "heldout_delta": null,
+    "rollouts": 8
+  },
+  "notes": "Method 'areal' measured on the same N2 four-method stack (Tinker-managed sampler, Qwen3.5-4B, GSM8K, G=8, seed=0). Last-10 reward/ZVF are within paired bootstrap noise of GRPO baseline (see registry_measured_deltas.tsv, iter 2)."
+}

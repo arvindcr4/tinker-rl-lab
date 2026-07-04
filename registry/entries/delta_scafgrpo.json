@@ -1,0 +1,20 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_scafgrpo",
+  "name": "SCAFGRPO",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "zhang2025scaffgrpo",
+    "arxiv": "2510.19807",
+    "title": "{Scaf-GRPO}: Scaffolded Group Relative Policy Optimization for Enhancing {LLM} Reasoning"
+  },
+  "deltas": [
+    {
+      "component": "scaffold_aware_advantage",
+      "field": "see delta-list and citation",
+      "change": "modify the group advantage by a scaffold-completion-quality prior so that low-scaffold prompts are up-weighted"
+    }
+  ],
+  "notes": "Verified citation: zhang2025scaffgrpo (arXiv:2510.19807) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged."
+}

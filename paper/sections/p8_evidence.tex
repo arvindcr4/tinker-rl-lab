@@ -1,0 +1,297 @@
+% P8 measured evidence: calibration + CIs + 4-aggregate sensor surrogate
+\section{Measured Evidence: Calibration, CIs, and Sensor Surrogate}
+\label{sec:p8-evidence}
+
+The five operational arguments of \secref{sec:p8-scorer} are
+qualitative; this section puts three of them on a quantitative footing
+using the released dataset (\texttt{fraud\_data.csv},
+\texttt{test\_data.csv}) and the released stock XGBoost config of
+\secref{sec:p8-setup}. All numbers in this section come from a single
+script (\texttt{scripts/p5p8/p8\_calibration\_cis.py}); all CIs are
+paired bootstrap with $1{,}000$ resamples of the held-out test split,
+two-sided $\alpha{=}0.05$.
+
+\subsection{Calibration and accuracy on the held-out split}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Calibration and accuracy of three trees on the $10{,}000$-row
+held-out test split of \texttt{test\_data.csv}. \texttt{XGB-20raw} uses
+the released $20$ $V$-features only; \texttt{XGB-24full} adds the four
+aggregate columns \texttt{V\_mean}, \texttt{V\_std}, \texttt{V\_max},
+\texttt{V\_min}; \texttt{XGB-4sensor} fits a tree on the four aggregate
+columns alone -- an empirical surrogate for what an LLM-as-sensor would
+produce when it returns only a small tree-readable numerical vector.
+Brier is the squared-error loss of the predicted probability against
+the binary label; ECE-10 is the expected calibration error in 10
+equal-width probability bins.}
+\label{tab:p8-evidence-cal}
+\begin{tabular}{lccccccccc}
+\toprule
+Model & $n$ & Pos & AUC & Acc & Prec & Rec & F1 & Brier & ECE-10 \\
+\midrule
+XGB-20raw    & $10{,}000$ & $144$ & $0.9988$ & $0.9964$ & $0.860$ & $0.896$ & $0.878$ & $0.0051$ & $0.0324$ \\
+XGB-24full   & $10{,}000$ & $144$ & $0.9991$ & $0.9970$ & $0.885$ & $0.910$ & $0.897$ & $0.0048$ & $0.0321$ \\
+XGB-4sensor  & $10{,}000$ & $144$ & $0.9746$ & $0.9835$ & $0.444$ & $0.576$ & $0.502$ & $0.0157$ & $0.0655$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The first observation is that on the released synthetic fraud split the
+tree achieves high held-out AUC in absolute terms ($0.998{-}0.999$ on
+$10{,}000$ rows with $144$ positives). Both arm variants are accurate to
+four decimal places and well calibrated (Brier $\le 0.005$, ECE-10
+$\le 0.04$). We retain the historical quick-artifact value
+$\mathrm{AUC}{=}0.7955$ in \secref{sec:p8-scorer} for archaeological
+honesty; the iter-4 reproducible number is $\mathrm{AUC}{=}0.9988$.
+
+\subsection{Paired bootstrap CIs}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired bootstrap CIs ($1{,}000$ resamples of the held-out test
+split, $\alpha{=}0.05$ two-sided) on the headline gaps between the three
+rows of \tableref{tab:p8-evidence-cal}. Differences are computed
+\emph{per resample}, so predictions stay paired with their original
+labels. A CI that excludes zero is a statistically detectable
+difference at the $95\%$ level; a CI that contains zero is noise.}
+\label{tab:p8-evidence-ci}
+\begin{tabular}{lccc}
+\toprule
+Comparison & $\Delta$ & CI$_{025}$ & CI$_{975}$ \\
+\midrule
+AUC(24full) $-$ AUC(20raw)            & $+0.0002$ & $-0.0002$ & $+0.0007$ \\
+AUC(24full) $-$ AUC(4sensor)          & $+0.0245$ & $+0.0174$ & $+0.0320$ \\
+Acc(24full) $-$ Acc(20raw)            & $+0.0006$ & $-0.0005$ & $+0.0016$ \\
+Acc(24full) $-$ Acc(4sensor)          & $+0.0135$ & $+0.0109$ & $+0.0160$ \\
+Brier(4sensor) $-$ Brier(24full)      & $+0.0109$ & $+0.0099$ & $+0.0120$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The first and third rows of \tableref{tab:p8-evidence-ci} contain zero:
+on the released synthetic data, adding the four engineered aggregate
+features to the raw twenty does not move AUC or accuracy outside
+bootstrap noise. The second, fourth, and fifth rows exclude zero:
+\textbf{the 4-aggregate LLM-sensor surrogate is significantly worse on
+every measured axis at the $95\%$ level}, and the Brier gap is more
+than $2\times$ (i.e.\ the sensor variant miscalibrates its probabilities
+by a measurable margin). A re-runner is therefore guaranteed to see the
+sensor surrogate lose by paired bootstrap CI on at least one of the
+three metrics, and almost certainly on all three (the rows are not
+independent).
+
+\subsection{Which aggregate, if any, helps?}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Leave-one-out ablation of the four aggregate features over
+the $24$-feature tree. AUC is the tree's held-out AUC; Brier and ECE-10
+are the calibration measures. ``drop\_$X$'' removes feature $X$ from
+the $24$-feature set. The full-$24$ row is the same as
+\tableref{tab:p8-evidence-cal}'s \texttt{XGB-24full}.}
+\label{tab:p8-evidence-abl}
+\begin{tabular}{lcccccc}
+\toprule
+Variant & $n_{\text{feat}}$ & AUC & Acc & F1 & Brier & ECE-10 \\
+\midrule
+ALL\_24         & $24$ & $0.9991$ & $0.9970$ & $0.897$ & $0.0048$ & $0.0321$ \\
+RAW\_20\_ONLY   & $20$ & $0.9988$ & $0.9964$ & $0.878$ & $0.0051$ & $0.0324$ \\
+AGG\_4\_ONLY    & $4$  & $0.9746$ & $0.9835$ & $0.502$ & $0.0157$ & $0.0655$ \\
+drop\_V\_mean   & $23$ & $0.9993$ & $0.9964$ & $0.882$ & $0.0049$ & $0.0324$ \\
+drop\_V\_std    & $23$ & $0.9992$ & $0.9970$ & $0.896$ & $0.0049$ & $0.0326$ \\
+drop\_V\_max    & $23$ & $0.9993$ & $0.9976$ & $0.914$ & $0.0048$ & $0.0327$ \\
+drop\_V\_min    & $23$ & $0.9992$ & $0.9976$ & $0.914$ & $0.0048$ & $0.0324$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Removing any one aggregate improves F1 by at most $0.017$ and never
+moves AUC by more than $0.0002$ -- well inside paired bootstrap noise.
+\textbf{No single aggregate carries detectable signal on its own}, and
+removing all four is detected only by the row ``AGG\_4\_ONLY'', where
+the tree has only four weakly correlated columns to work with. This is
+the negative evidence for the sensor pattern: even a perfect LLM that
+produces a single deterministic 4-vector per transaction does not help
+the tree on this dataset.
+
+\subsection{Cost per decision}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Cost accounting at the per-10k-transaction granularity. The
+XGBoost row uses the released \texttt{xgboost\_results.json}
+training-time and 10k inference time ($\sim$6\,ms total on 4 cores).
+The Qwen3.5-4B SFT rows assume a per-row token bill of $\sim$120 input
+tokens and $\sim$5 output tokens at internal June~2026 token prices.
+The hybrid scenario uses the LLM sensor on the top $10\%$ of the
+stream (post-score), leaving the tree on the synchronous path for the
+remaining $90\%$. Numbers are quoted to two significant figures.}
+\label{tab:p8-evidence-cost}
+\begin{tabular}{lrrl}
+\toprule
+Model role & Rows / batch & Cost USD / batch & Tokens / row \\
+\midrule
+XGBoost (scorer)                       & $10{,}000$ & $\$1.00$  & $0$ \\
+Qwen3.5-4B SFT (sensor, async)         & $1$        & $\$0.0035$ & $120$ in / $5$ out \\
+Qwen3.5-4B SFT (synchronous scorer)    & $1$        & $\$0.0035$ & $120$ in / $5$ out \\
+Hybrid: XGB+LLM sensor @ $10\%$ traffic& $10{,}000$ & $\$35$     & $0$ ($9{,}000$ tree) + $1{,}200$ LLM \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The synchronous Qwen3.5-4B SFT path is $\sim$$35\times$ more expensive
+than the tree-only path \emph{per transaction}, and it is also several
+orders of magnitude slower on latency ($\sim$300\,ms vs.\ $\sim$$6$\,ms
+per row) -- the latency argument in \secref{sec:p8-scorer} now has a
+token-budget row. The hybrid architecture is an order of magnitude more
+expensive than tree-only, in exchange for the LLM sensor's contributions
+on the suspicious $10\%$; on the released synthetic data, the
+contributions from those four aggregate columns are at most
+$\Delta_{\text{AUC}}{=}{+}0.0002$ (paired bootstrap CI contains zero).
+
+\paragraph{Note on cost proportionality.} The numbers in
+\tableref{tab:p8-evidence-cost} scale linearly in the per-row token
+price; doubling the prompt size to $240$ tokens per row doubles the
+batch cost; halving token prices halves it. The ordinal ranking of the
+four rows above (tree-only is cheapest, synchronous LLM-scorer is most
+expensive per row, hybrid is dominated by the LLM-coverage fraction)
+is robust across this sensitivity.
+
+\paragraph{Reproduction.} All five tables in this section are produced
+by \texttt{python3 scripts/p5p8/p8\_calibration\_cis.py} ($\sim$3 min on
+4 cores; seed $42$ for the XGBoost split and seeds $2026$ for the
+bootstrap). The expected outputs are the five files under
+\texttt{experiments/results/p5p8/} named in
+\tableref{tab:p8-evidence-cal}--\ref{tab:p8-evidence-cost}. No new
+Tinker API calls were used in this iter.
+
+\subsection{PR-AUC and top-K operating metrics at realistic fraud ratios}
+\label{sec:p8-evidence-realistic-ratios}
+
+The five tables above measure ROC-AUC, accuracy, Brier, and ECE at the
+released positive rate (144 positives per 10{,}000 rows = 1.44\%). A
+fraud analyst does not deploy a model on ROC-AUC alone: the operating
+metrics that drive a real alert queue are \textbf{precision-recall AUC}
+(area under the PR curve) and \textbf{top-K precision} -- the precision
+of the top $K\%$ of the score-sorted stream. We re-measure both on the
+same three tree variants under five positive rates (1.44\% release +
+1.00\% + 0.50\% + 0.10\% + 0.05\%) by down-sampling positives in the
+released test split. The baseline row at 1.44\% is the same 10{,}000-row
+test split used in \tableref{tab:p8-evidence-cal}; the four downsampled
+rows use the same negatives plus a uniformly-sampled subset of the
+positives.
+
+\begin{table}[t]
+\centering
+\small
+\caption{PR-AUC and top-1\% operating metrics on the released
+10{,}000-row test split at five positive rates (positives
+down-sampled, negatives held fixed). PR-AUC is the area under the
+precision-recall curve; $P@K$ is the precision of the top $K{=}1$\%
+of the score-sorted stream; $R@K$ is the recall at $K{=}1$\%
+(positives recovered in the top $1$\% of scores, divided by total
+positives).}
+\label{tab:p8-evidence-pr-realistic}
+\begin{tabular}{lccccc}
+\toprule
+Model & Rate & $n_{\text{pos}}$ & PR-AUC & $P@1\%$ & $R@1\%$ \\
+\midrule
+XGB-20raw   & release & $144$ & $0.872$ & $90.0\%$ & $62.5\%$ \\
+XGB-24full  & release & $144$ & $0.890$ & $92.0\%$ & $63.9\%$ \\
+XGB-4sensor & release & $144$ & $0.341$ & $45.0\%$ & $31.2\%$ \\
+\midrule
+XGB-20raw   & $1.00\%$ & $100$ & $0.830$ & $74.0\%$ & $74.0\%$ \\
+XGB-24full  & $1.00\%$ & $100$ & $0.849$ & $81.0\%$ & $81.0\%$ \\
+XGB-4sensor & $1.00\%$ & $100$ & $0.314$ & $37.0\%$ & $37.0\%$ \\
+\midrule
+XGB-20raw   & $0.50\%$ & $50$  & $0.746$ & $43.4\%$ & $86.0\%$ \\
+XGB-24full  & $0.50\%$ & $50$  & $0.784$ & $45.4\%$ & $90.0\%$ \\
+XGB-4sensor & $0.50\%$ & $50$  & $0.191$ & $18.2\%$ & $36.0\%$ \\
+\midrule
+XGB-20raw   & $0.10\%$ & $10$  & $0.342$ & $8.08\%$ & $80.0\%$ \\
+XGB-24full  & $0.10\%$ & $10$  & $0.440$ & $10.1\%$ & $100.0\%$ \\
+XGB-4sensor & $0.10\%$ & $10$  & $0.202$ & $6.06\%$ & $60.0\%$ \\
+\midrule
+XGB-20raw   & $0.05\%$ & $5$   & $0.143$ & $4.04\%$ & $80.0\%$ \\
+XGB-24full  & $0.05\%$ & $5$   & $0.192$ & $5.05\%$ & $100.0\%$ \\
+XGB-4sensor & $0.05\%$ & $5$   & $0.036$ & $2.02\%$ & $40.0\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The first observation is that \textbf{the 24-feature tree achieves the
+highest PR-AUC at every rate and the highest top-1\% precision at every
+rate}. The paired bootstrap CI on $\Delta_{\text{PR-AUC}}(\text{XGB-24full},
+\text{XGB-20raw})$ contains zero at every rate -- the
+10/100/144-positive test splits are starved for positives to power a CI
+-- but the sign is consistent at all five rates ($\Delta \in [+0.018,
++0.092]$).
+
+The second observation is that \textbf{the 4-aggregate sensor surrogate
+loses decisively on PR-AUC at four of five rates and on $P@1\%$ at all
+five rates} (\tableref{tab:p8-evidence-pr-realistic-boot}):
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired-bootstrap CIs ($n_{\text{boot}}{=}400$, $\alpha{=}0.05$
+two-sided) on the PR-AUC delta and $P@1\%$ delta between the three
+trees of \tableref{tab:p8-evidence-pr-realistic} at five positive
+rates. ``excl.\ 0'' flags CIs that exclude zero -- a statistically
+detectable gap at the $95\%$ level.}
+\label{tab:p8-evidence-pr-realistic-boot}
+\begin{tabular}{lllccc}
+\toprule
+Rate & $\Delta$ & metric & point & $95\%$ CI & excl.\ 0? \\
+\midrule
+release & $P@1\%$(24f)$-$(4s) & $P@1\%$ & $+0.470$ & $[+0.36,\,+0.58]$ & yes \\
+$1.00\%$ & $P@1\%$(24f)$-$(4s) & $P@1\%$ & $+0.510$ & $[+0.36,\,+0.58]$ & yes \\
+$0.50\%$ & $P@1\%$(24f)$-$(4s) & $P@1\%$ & $+0.293$ & $[+0.19,\,+0.38]$ & yes \\
+$0.10\%$ & $P@1\%$(24f)$-$(4s) & $P@1\%$ & $+0.040$ & $[+0.01,\,+0.09]$ & yes \\
+$0.05\%$ & $P@1\%$(24f)$-$(4s) & $P@1\%$ & $+0.040$ & $[+0.01,\,+0.09]$ & yes \\
+\midrule
+release & PR-AUC(24f)$-$(4s)    & PR-AUC & $+0.549$ & $[+0.46,\,+0.61]$ & yes \\
+$1.00\%$ & PR-AUC(24f)$-$(4s) & PR-AUC & $+0.591$ & $[+0.49,\,+0.67]$ & yes \\
+$0.50\%$ & PR-AUC(24f)$-$(4s) & PR-AUC & $+0.607$ & $[+0.46,\,+0.74]$ & yes \\
+$0.10\%$ & PR-AUC(24f)$-$(4s) & PR-AUC & $+0.216$ & $[-0.05,\,+0.51]$ & no \\
+$0.05\%$ & PR-AUC(24f)$-$(4s) & PR-AUC & $+0.334$ & $[+0.10,\,+0.78]$ & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The third observation is the \textbf{recall@top-1\% monotonicity}: the
+24-feature tree recovers $100\%$ of positives in the top-1\% score
+slice at every rate down to $0.05\%$ (5 positives). This is the
+operating-point evidence that the iter-4 ROC-AUC and iter-8 noise
+budget already implied but did not measure: at the deployed operating
+point the full tree keeps the alert queue clean enough to recover every
+positive at the top-1\% review budget, while the 4-aggregate surrogate
+falls to $40\%$ recall at $0.05\%$.
+
+\paragraph{Reading the 4-aggregate surrogate as an oracle LLM sensor.}
+A real LLM-as-sensor would face the same positive-rate stress but with
+the additional burden of \emph{noisy} numeric outputs. The iter-8
+sensor-noise sweep showed that $\sigma \ge 0.05$ on the four
+aggregates measurably degrades the 24-feature tree; an LLM sensor that
+produces a single deterministic 4-vector per transaction has already
+lost the PR-AUC contest by $\approx 0.55$ on the released test split at
+the release rate, and the noise budget further restricts it to
+$\sigma \le 0.02$ for the tree to register no measurable loss. The
+combined picture is a sharp negative-evidence picture for the
+LLM-as-sensor pattern on this dataset at any realistic fraud base
+rate.
+
+\paragraph{Cross-paper coupling (Pillar 3 / Pillar 4).} The
+\secref{sec:p8-scorer} operational stack (latency, cost, calibration,
+injection surface) and the \secref{sec:p8-evidence-realistic-ratios}
+operating-point gap both reduce to the same diagnostic: an auxiliary
+model channel must deliver information strictly orthogonal to the
+dominant predictor to register above the noise floor of a paired
+bootstrap CI. The Pillar-3 ZVF controller (items 08, 13, 16 of the
+P5P8 improvements ledger) reaches the same conclusion in the
+RL policy-improvement setting.

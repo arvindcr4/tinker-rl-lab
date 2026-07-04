@@ -1,0 +1,44 @@
+{
+  "n_manifests": 98,
+  "per_field_presence_pct": {
+    "1:loss_form": 100.0,
+    "2:ref_policy_kl": 100.0,
+    "3:sampler_backend_precision": 100.0,
+    "4:per_step_zvf_path": 100.0,
+    "5:group_size_schedule": 100.0,
+    "6:heldout_split": 100.0,
+    "7:decontamination_notes": 100.0
+  },
+  "per_field_validated_pct": {
+    "1:loss_form": 100.0,
+    "2:ref_policy_kl": 0.0,
+    "3:sampler_backend_precision": 100.0,
+    "4:per_step_zvf_path": 100.0,
+    "5:group_size_schedule": 100.0,
+    "6:heldout_split": 100.0,
+    "7:decontamination_notes": 100.0
+  },
+  "fully_covered_cells": 0,
+  "fully_covered_pct": 0.0,
+  "subfield_missing_counts": {
+    "sub_ratio_level": 98,
+    "sub_clip_range": 98,
+    "sub_advantage_normalization": 98,
+    "sub_dynamic_sampling": 98,
+    "sub_token_mask": 98,
+    "sub_ref_snapshot": 98,
+    "sub_kl_coefficient": 98,
+    "sub_kl_estimator": 98,
+    "sub_precision": 98,
+    "sub_decoding_params": 98,
+    "sub_contamination_check": 98,
+    "sub_parser_probe": 98
+  },
+  "ambiguity_flags": [
+    "loss_form='n/a-sampling' is non-standard (suggests pre-RL SFT run included in corpus)",
+    "ref_policy_kl='n/a' may be correct for sampling-only but indistinguishable from bug in manifest emission",
+    "sampler_backend_precision='tinker-closed' is opaque; precision + decoding params not exposed",
+    "decontamination_notes lacks a parser-probe sub-field (item 7 partial coverage)",
+    "0/98 manifests report a concrete ref_policy_kl value (Item 2 is 100% present, 0% validated)"
+  ]
+}

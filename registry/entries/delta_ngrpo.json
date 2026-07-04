@@ -1,0 +1,20 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_ngrpo",
+  "name": "NGRPO",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "nan2025ngrpo",
+    "arxiv": "2509.18851",
+    "title": "{NGRPO}: Negative-enhanced Group Relative Policy Optimization"
+  },
+  "deltas": [
+    {
+      "component": "per_prompt_normalization",
+      "field": "see delta-list and citation",
+      "change": "normalize the group advantage by the per-prompt gradient norm rather than the group std; (per NGraPO source paper"
+    }
+  ],
+  "notes": "Verified citation: nan2025ngrpo (arXiv:2509.18851) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged."
+}

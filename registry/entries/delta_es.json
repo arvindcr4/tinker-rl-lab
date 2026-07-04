@@ -1,0 +1,20 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_es",
+  "name": "ES",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "es2025",
+    "arxiv": "2509.24372",
+    "title": "Evolution Strategies at Scale: {LLM} Fine-Tuning Beyond Reinforcement Learning"
+  },
+  "deltas": [
+    {
+      "component": "black_box_perturbation",
+      "field": "see delta-list and citation",
+      "change": "replace the policy-gradient signal with an ES-style central-difference estimator over gaussian perturbations of the parameters"
+    }
+  ],
+  "notes": "Verified citation: es2025 (arXiv:2509.24372) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged."
+}

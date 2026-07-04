@@ -1,0 +1,6 @@
+comparison	point_estimate	ci_lo_025	ci_hi_975
+AUC delta, 24features - 20raw	0.0002	-0.0002	0.0007
+AUC delta, 24features - 4sensor (LLM surrogate)	0.0245	0.0174	0.032
+Acc delta, 24 - 20 (thr-tuned)	0.0006	-0.0005	0.0016
+Acc delta, 24 - 4sensor	0.0135	0.0109	0.016
+Brier delta, 4sensor - 24features (less=better)	0.0109	0.0099	0.012

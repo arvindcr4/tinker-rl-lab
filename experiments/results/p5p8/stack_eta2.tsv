@@ -1,0 +1,10 @@
+axis	metric	n_groups	per_group_n	eta2	f_ratio	groups
+A_algorithm	zvf	4	40,40,40,40	0.0454	0.0476	g|r|p|o|,|a|e|r|o|,|g|i|f|t|,|a|r|e|a|l
+A_algorithm	pcd	4	40,40,40,40	0.0357	0.0371	g|r|p|o|,|a|e|r|o|,|g|i|f|t|,|a|r|e|a|l
+A_algorithm	reward_mean	4	40,40,40,40	0.0075	0.0075	g|r|p|o|,|a|e|r|o|,|g|i|f|t|,|a|r|e|a|l
+A_algorithm	mean_len	4	40,40,40,40	0.0631	0.0674	g|r|p|o|,|a|e|r|o|,|g|i|f|t|,|a|r|e|a|l
+A_algorithm	cv_len	4	40,40,40,40	0.0457	0.0479	g|r|p|o|,|a|e|r|o|,|g|i|f|t|,|a|r|e|a|l
+A_algorithm	loss	4	40,40,40,40	0.9867	73.9143	g|r|p|o|,|a|e|r|o|,|g|i|f|t|,|a|r|e|a|l
+B_G	mean_zvf	4	1,1,1,1	1.0	n/a (means only)	G=2|G=4|G=8|G=16
+B_G	mean_reward_train	4	1,1,1,1	1.0	n/a (means only)	G=2|G=4|G=8|G=16
+B_G	heldout_acc_mean	4	1,1,1,1	1.0	n/a (means only)	G=2|G=4|G=8|G=16

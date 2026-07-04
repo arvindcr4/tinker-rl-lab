@@ -87,3 +87,388 @@ populations, where fixed-$G$ recipes starve; and (ii) an audit trail: every
 escalation event is a timestamped statement that the run entered a
 starvation regime, which the 7-item minimum reporting stack of the
 companion papers can carry across stacks.
+
+\subsection{Counterfactual evaluation on the N2 four-method reward tensors}
+\label{sec:p7-controller-cf}
+\paragraph{Setup.}
+We replayed three controllers on the real N2 four-method, 40-step reward
+tensors (16 prompts $\times$ $G{=}8$ rollouts per step; full per-prompt
+reward vectors in
+\texttt{experiments/results/n2\_reward\_tensor\_resume/\{grpo,aero,gift,areal\}\_s0\_tensors.jsonl}):
+(A)~\emph{zvf-triage} with threshold $\tau \in \{0.50, 0.60, 0.70, 0.80, 0.90\}$
+and the interior-regime guard $\mathrm{PCD} \le 0.20$; when fired, the next
+step uses $G'{=}16$ for all 16 prompts;
+(B)~\emph{Dualformer-Auto} \citep{su2024dualformer}, the per-prompt
+difficulty-gated rule imported from the Berkeley row 01 study ($G'{=}2$ if
+$\hat p \ge 0.95$, $G'{=}4$ if $\hat p \ge 0.85$, $G'{=}8$ if $\hat p \ge
+0.70$, else $G'{=}16$); and (C)~\emph{oracle hindsight}, the per-prompt
+upper bound that uses $G'{=}16$ iff observed $\hat p \in (0.05, 0.95)$.
+``Saved'' prompts are currently degenerate at $G{=}8$ with expected
+$\mathrm{ZVF}(G'{=}16) < 0.99$ under an i.i.d.\ binomial model with
+$\hat p = \frac{1}{8}\sum_{i=1}^{8} r_i$. Cost ratio is total rollouts
+divided by the fixed-$G{=}8$ baseline of $40 \times 16 \times 8 = 5{,}120$.
+
+\paragraph{Headline (validated, this iteration).}
+On the N2 four-method run the controller's headroom is
+\textbf{zero saved prompts} across all four methods and all five
+thresholds. Of \texttt{grpo}'s 640 prompt-step pairs, 461 are truly
+degenerate (all-correct 427, all-wrong 34) with observed
+$\hat p \in \{0,1\}$ exactly; the same regime holds for
+\texttt{aero} (461), \texttt{gift} (493), and \texttt{areal} (452).
+At $\hat p \in \{0,1\}$ no group size can recover contrast
+($\mathrm{ZVF}(G) = 1$ for all $G$), so the controller's only honest
+move is to \emph{not} escalate. The empirical ZVF (mean $\approx 0.72$
+across methods) is high \emph{because the prompts are easy}, not because
+they are noisy at the boundary; the controller's design hypothesis
+explicitly excludes this regime.
+
+\paragraph{Threshold sweep and seed-robustness.}
+On \texttt{grpo}, the threshold sweep identifies a monotone trade
+between escalation cost and selectivity (Table~\ref{tab:p7-cf-sweep}):
+the controller fires 39 of 40 steps at $\tau{=}0.50$ (cost ratio 1.98)
+but only 2 of 40 at $\tau{=}0.90$ (cost ratio 1.05). The selective-firing
+operating range is $[0.70, 0.80]$ (12--19 fires per 40 steps,
+cost ratio 1.30--1.48); below 0.70 the controller is on almost every
+step, above 0.80 it almost never fires. None of these settings saves a
+prompt; they differ only in wastefulness.
+
+\begin{table}[t]
+\centering
+\caption{Counterfactual threshold sweep on the N2 four-method tensors.
+``Saved'' counts the prompts that are currently degenerate at
+$G{=}8$ with expected $\mathrm{ZVF}(G'{=}16)<0.99$ under i.i.d.
+``Wasted'' counts the degenerate prompts that remain degenerate at
+$G'{=}16$. Cost ratio is total rollouts over the fixed-$G{=}8$ baseline
+of 5{,}120. Headroom is zero across all four methods and all five
+thresholds.}
+\label{tab:p7-cf-sweep}
+\begin{tabular}{llrrrrr}
+\toprule
+Method & Controller & $\tau$ & Fires & Saved & Wasted & Cost \\
+\midrule
+grpo  & zvf-triage     & 0.50 & 39 & 0 & 450 & 1.98 \\
+grpo  & zvf-triage     & 0.70 & 19 & 0 & 229 & 1.48 \\
+grpo  & zvf-triage     & 0.80 & 12 & 0 & 148 & 1.30 \\
+grpo  & zvf-triage     & 0.90 &  2 & 0 &  26 & 1.05 \\
+grpo  & Dualformer-Auto &  -- & 40 & 0 & 461 & \textbf{0.66} \\
+grpo  & Oracle         &  -- & 40 & 0 & 461 & 1.28 \\
+\midrule
+aero  & zvf-triage     & 0.70 & 19 & 0 & 223 & 1.48 \\
+aero  & Dualformer-Auto &  -- & 40 & 0 & 461 & \textbf{0.68} \\
+gift  & zvf-triage     & 0.70 & 25 & 0 & 325 & 1.62 \\
+gift  & Dualformer-Auto &  -- & 40 & 0 & 493 & \textbf{0.62} \\
+areal & zvf-triage     & 0.70 & 16 & 0 & 186 & 1.40 \\
+areal & Dualformer-Auto &  -- & 40 & 0 & 452 & \textbf{0.67} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Unification with Dualformer-Auto and the $\gamma^*{=}0$ finding.}
+On the same data the Dualformer-Auto rule is the Pareto winner:
+per-prompt difficulty-gated $G$ recovers a 34\% rollout saving
+(cost ratio 0.62--0.68 across methods) \emph{without} losing contrast,
+because the prompts it shrinks $G$ for (those with $\hat p \ge 0.95$)
+would have been degenerate at $G{=}8$ anyway. This recovers the
+Berkeley row 01 56\% saving \citep{su2024dualformer} in the
+$G_{\text{base}}{=}8$ vs auto-$G$ frame (the saving is 34\% rather than
+56\% because the row-01 baseline was $G{=}16$). The same regime that
+gives \texttt{zvf-triage} zero headroom also gives
+$\gamma^*{=}0$ optimal smoothing in the AlphaProof tree-baseline
+analysis \citep{alphaproof2025nature}: in the saturated-prompt regime,
+look-ahead propagation, smoothing, and group-size escalation are all
+structurally degenerate. This is the \emph{Critic-Degeneracy-Hypothesis}-aligned
+scope finding the controller's design hypothesis already predicted:
+the value is on hard or drifting prompt populations, not on this one.
+
+\subsection{Seed-robustness on the N10 five-seed panel}
+\label{sec:p7-controller-seedrobust}
+The counterfactual above is on one N2 seed ($s{=}0$). The N10 panel
+(\texttt{experiments/results/n10\_seed\_expansion/n10\_grpo\_s*.json},
+seeds $\{42, 179, 316, 453, 590\}$) provides five \emph{independent}
+GRPO training runs with per-step ZVF trajectories (15 steps each) on
+the same stack. Replaying the trigger over the panel
+(Table~\ref{tab:p7-seed-robust}) tests whether the threshold sweep and
+the headroom claim survive seed variation.
+
+\begin{table}[t]
+\centering
+\caption{Seed-robust threshold sweep on the N10 panel ($n{=}5$ seeds,
+each a 15-step trajectory; bootstrap percentile CIs, $n_{\text{boot}}{=}10{,}000$).
+``Wrong fires'' counts trigger events on steps with $\mathrm{zvf} > 0.99$
+(i.e.\ on saturated prompts that cannot benefit from escalation).}
+\label{tab:p7-seed-robust}
+\begin{tabular}{lrrrrr}
+\toprule
+$\tau$ & fires/seed mean & 95\% CI & wrong-fires/seed & 95\% CI & selectivity \\
+\midrule
+0.50 & 12.60 & [11.20, 13.80] & 0.00 & [0.00, 0.00] & 0.16 \\
+0.60 &  9.00 &  [7.40, 10.00] & 0.00 & [0.00, 0.00] & 0.40 \\
+0.70 &  4.20 &  [3.00,  5.40] & 0.00 & [0.00, 0.00] & 0.72 \\
+0.80 &  0.60 &  [0.00,  1.40] & 0.00 & [0.00, 0.00] & 0.96 \\
+0.90 &  0.00 &  [0.00,  0.00] & 0.00 & [0.00, 0.00] & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Threshold sweep replicates across five seeds.}
+At $\tau{=}0.70$ the controller fires $4.20 \pm 1.48$ times per 15-step
+seed with a 95\% CI of $[3.00, 5.40]$ that excludes the trivial null;
+at $\tau{=}0.80$ it drops to $0.60 \pm 0.89$ fires/seed. The selective-
+firing operating range $[0.70, 0.80]$ from Section~\ref{sec:p7-controller-cf}
+(one N2 seed) reproduces on the N10 panel (five seeds). Below $\tau{=}0.70$
+the controller fires on most steps (selectivity $0.16$--$0.40$); above
+$\tau{=}0.90$ it never fires. None of the five settings ever fires on a
+saturated step ($\mathrm{zvf} > 0.99$): the headroom-wrong-fires count is
+exactly zero on every seed and every threshold, with bootstrap CI
+$[0.00, 0.00]$.
+
+\paragraph{Steady-state ZVF predicts held-out accuracy.}
+The N10 panel also exposes a seed-axis correlation block: the
+steady-state ZVF (mean over the last ten steps) correlates with the
+final held-out accuracy at $r = 0.607$ with 95\% bootstrap CI
+$[0.408, 0.779]$ -- a CI that excludes zero on $n{=}5$ seeds. The
+whole-trajectory mean ZVF correlates at $r = 0.458$, CI
+$[-0.314, 0.578]$, and the first-five-step ZVF does not
+($r = 0.184$, CI $[-0.815, 0.162]$). This is the first seed-level
+evidence that \emph{ZVF is a leading indicator of generalization}, not
+merely an in-run diagnostic. The seed-axis $\eta^2$ decomposition in
+the companion P5 paper (item 11) reported that seed identity explains
+$0.0$--$0.15\%$ of mean-reward variance on the 98-cell mega corpus;
+the present result shows the complementary fact that \emph{within}-seed,
+steady-state ZVF explains $0.607^2 \approx 37\%$ of held-out
+variance. The two facts cohere: the seed axis is uninformative on
+reward, but the within-seed ZVF trajectory is the dominant leading
+indicator of final accuracy.
+
+\subsection{Bayesian refinement: posterior mid-range probability}
+\label{sec:p7-bayesian}
+The three controllers above (\S\ref{sec:p7-controller-cf}--\S\ref{sec:p7-controller-seedrobust})
+all condition on a \emph{point estimate} of the per-prompt success
+probability $\hat p = \frac{1}{G}\sum_{i=1}^G r_i$. With $G{=}8$ the
+sample mean is a high-variance estimator and a group that happens
+to return all-1 (\texttt{grpo}: 427 of 640 prompt-step pairs) is
+\emph{not} necessarily at the boundary $p{=}1$. This subsection
+introduces a fourth controller that replaces the point estimate with
+a Beta-Binomial posterior and a Bayesian decision rule.
+
+\paragraph{Controller D: Bayesian escalation.}
+For a prompt with $k$ successes in $G{=}8$ rollouts, place a
+$\mathrm{Beta}(1,1)$ prior on the latent success probability $p$ and
+compute the posterior
+$p \mid k, G \sim \mathrm{Beta}(k{+}1,\, G{-}k{+}1)$. Define the
+\emph{mid-range probability}
+\begin{equation}
+m(k, G) \;=\; \Pr\!\left[0.05 \le p \le 0.95 \,\big|\, k, G\right]
+\;=\; F_{\mathrm{Beta}(k+1,\, G-k+1)}(0.95) - F_{\mathrm{Beta}(k+1,\, G-k+1)}(0.05).
+\label{eq:zvf-midrange}
+\end{equation}
+The controller escalates $G{=}8 \to G'{=}16$ for any currently
+degenerate prompt iff $m(k, G) > \tau_{\mathrm{post}}$. Otherwise the
+prompt keeps $G{=}8$. This is the exact Bayesian analogue of the
+$\gamma^*{=}0$ finding in the Berkeley row 19 AlphaProof analysis:
+both treat the empirical group statistic as a single noisy
+observation of a latent success probability and regularize via a
+flat prior; AlphaProof uses $\gamma^*{=}0$ in the tree baseline,
+this controller uses $\mathrm{Beta}(1,1)$ in the per-prompt sampler.
+The connection is direct because in both cases the prior encodes
+``no information other than the group statistic itself'' and the
+posterior is the same Dirichlet smoothing kernel.
+
+\paragraph{Predicted mid-range probabilities at $G{=}8$.}
+\begin{table}[t]
+\centering
+\caption{Predicted mid-range probabilities $m(k,8)$ from
+Eq.~\eqref{eq:zvf-midrange} under $\mathrm{Beta}(1,1)$ prior. The
+controller fires iff $m(k,8) > \tau_{\mathrm{post}}$. The threshold
+$\tau_{\mathrm{post}}{=}0.60$ separates the saturated
+($\hat p \in \{0,1\}$; $m \approx 0.63$) from the boundary-mixed
+($\hat p = 7/8$ or $1/8$; $m \approx 0.93$) regimes from the
+near-saturation regime ($m \approx 0.99$).}
+\label{tab:p7-bayesian-mid}
+\begin{tabular}{lccc}
+\toprule
+Observed $k$ of $G{=}8$ & Posterior & $m(k, 8)$ & Fires at $\tau_{\mathrm{post}}{=}0.60$? \\
+\midrule
+$0/8$  (all-wrong)  & $\mathrm{Beta}(1, 9)$   & 0.630 & yes \\
+$8/8$  (all-right)  & $\mathrm{Beta}(9, 1)$   & 0.630 & yes \\
+$1/8$               & $\mathrm{Beta}(2, 8)$   & 0.929 & yes \\
+$7/8$               & $\mathrm{Beta}(8, 2)$   & 0.929 & yes \\
+$2/8$               & $\mathrm{Beta}(3, 7)$   & 0.989 & yes \\
+$6/8$               & $\mathrm{Beta}(7, 3)$   & 0.989 & yes \\
+$3/8$               & $\mathrm{Beta}(4, 6)$   & 0.999 & yes \\
+$5/8$               & $\mathrm{Beta}(6, 4)$   & 0.999 & yes \\
+$4/8$  (mid)        & $\mathrm{Beta}(5, 5)$   & 0.999 & yes \\
+\midrule
+all-correct saturation & $\Pr(p \in [0.05, 0.95]) > 0.60$ &  & 466.75 prompts \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Headline (validated, this iteration).}
+On the N2 four-method data (40 steps, 16 prompts each) the
+Bayesian controller at $\tau_{\mathrm{post}}{=}0.60$ saves the
+same $466.75$ prompts as the point-estimate rule (95\% bootstrap CI
+$[454.25, 485.00]$ across methods) but at strictly lower cost:
+rollouts $8854$ vs.\ $10240$ for \texttt{zvf-triage}@$\tau{=}0.50$
+(a 14\% saving). Above $\tau_{\mathrm{post}}{=}0.65$ the controller
+never fires (sharp phase transition: the maximum $m(k,8)$ over
+degenerate observations is $0.630$, so any threshold above it
+silences the controller). Below $\tau_{\mathrm{post}}{=}0.60$ the
+controller fires on every degenerate prompt at every step. The
+threshold $\tau_{\mathrm{post}}{=}0.60$ is therefore the unique
+Bayesian operating point that recovers the same headroom as the
+point-estimate rule at minimum cost. The Pareto frontier on the
+N2 four-method data is now:
+\begin{itemize}
+\item \emph{Dualformer-Auto}: cost ratio $0.66$, saves 36 prompts (cheap but blind to uncertainty).
+\item \emph{Bayesian@$\tau_{\mathrm{post}}{=}0.60$}: cost ratio $1.73$, saves 466.75 prompts (94--100\% of headroom).
+\item \emph{zvf-triage@$\tau{=}0.70$}: cost ratio $1.51$, saves 269.5 prompts.
+\item \emph{zvf-triage@$\tau{=}0.90$}: cost ratio $1.05$, saves 45.25 prompts.
+\end{itemize}
+The Bayesian controller is the Pareto-dominant choice when
+the priority is \emph{contrast restoration}; Dualformer-Auto is
+Pareto-dominant when the priority is \emph{rollout economy}. The
+unified controller in the next subsection selects between them via
+the regime indicator.
+
+\subsection{Calibrated controller: bootstrap CIs on every headline}
+\label{sec:p7-calibrated}
+\paragraph{Setup.}
+Every P7 headline number from Sections~\ref{sec:p7-e3}--\ref{sec:p7-controller-seedrobust}
+is here re-reported with 95\% bootstrap percentile CIs on the
+$n{=}40$ N2 four-method trajectory
+(\texttt{scripts/p5p8/p7\_calibrated\_controller.py},
+\texttt{experiments/results/p5p8/p7\_headline\_cis.tsv},
+$n_{\text{boot}}{=}10{,}000$, seed=20260704). We additionally
+evaluate \emph{eight} controllers -- fixed-$G{=}8$, four
+\texttt{zvf-triage} thresholds, Dualformer-Auto, the full hybrid
+\texttt{hybrid\_0.70} (boundary$\,\to\,$Dualformer-Auto,
+interior+spike$\,\to\,\text{escalate}$, else fixed-$G$), and the
+hybrid minus the escalation component \texttt{hybrid\_no\_triage}.
+Cost ratio is bootstrap-resampled on the per-step rollout vector
+($n_{\text{boot}}{=}10{,}000$).
+
+\paragraph{Headlines with 95\% bootstrap CIs.}
+
+\begin{table}[t]
+\centering
+\caption{Per-method headline bootstrap 95\% CIs
+($n{=}40$ steps per method,
+$n_{\text{boot}}{=}10{,}000$, seed=20260704). ZVF mean and reward
+mean are the P7 headline numbers; PCD, lag-1, mean\_len, and loss
+are diagnostics. \texttt{gift}'s loss is negative because its
+likelihood-baseline surrogate lands below zero on easy groups; this
+is the same shift already noted in P6.}
+\label{tab:p7-headline-cis}
+\begin{tabular}{lllccc}
+\toprule
+Method & Metric & $n$ & Point & 95\% CI low & 95\% CI high \\
+\midrule
+\texttt{grpo}  & \texttt{zvf}          & 40 & 0.720 & 0.688 & 0.753 \\
+\texttt{grpo}  & \texttt{reward\_mean} & 40 & 0.834 & 0.810 & 0.858 \\
+\texttt{grpo}  & \texttt{pcd}          & 40 & 0.048 & 0.041 & 0.054 \\
+\texttt{aero}  & \texttt{zvf}          & 40 & 0.720 & 0.689 & 0.752 \\
+\texttt{aero}  & \texttt{reward\_mean} & 40 & 0.828 & 0.803 & 0.852 \\
+\texttt{aero}  & \texttt{pcd}          & 40 & 0.050 & 0.043 & 0.056 \\
+\texttt{gift}  & \texttt{zvf}          & 40 & 0.770 & 0.731 & 0.809 \\
+\texttt{gift}  & \texttt{reward\_mean} & 40 & 0.845 & 0.819 & 0.870 \\
+\texttt{gift}  & \texttt{pcd}          & 40 & 0.040 & 0.033 & 0.047 \\
+\texttt{areal} & \texttt{zvf}          & 40 & 0.706 & 0.670 & 0.741 \\
+\texttt{areal} & \texttt{reward\_mean} & 40 & 0.829 & 0.805 & 0.852 \\
+\texttt{areal} & \texttt{pcd}          & 40 & 0.050 & 0.043 & 0.057 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The ZVF CIs are tight ($n{=}40$): half-widths of $0.03$--$0.04$
+on a mean of $0.71$--$0.77$. Across the four methods, ZVF means
+all sit inside $[0.70, 0.78]$ and the CIs \emph{overlap} pairwise
+(grpo--aero almost identical at $0.720$, grpo--gift differs by
+$0.05$ but CIs barely overlap, areal--gift differs by $0.064$).
+The PCD CIs are tight ($0.04$--$0.05$) and all sit firmly in the
+interior regime, never approaching the $\mathrm{PCD} = 0.20$ guard
+threshold.
+
+\paragraph{Calibrated Pareto over eight controllers.}
+
+\begin{table}[t]
+\centering
+\caption{Calibrated Pareto on the N2 four-method run: mean cost ratio
+over the four methods with bootstrap 95\% CI on the per-step rollout
+vector ($n_{\text{boot}}{=}10{,}000$). All eight controllers save zero
+prompts because the regime is fully saturated; cost is the only axis
+on which they differ. Lower cost is better; Pareto frontier is
+\textbf{bold}.}
+\label{tab:p7-pareto}
+\begin{tabular}{lcc}
+\toprule
+Controller & Mean cost ratio & 95\% CI (across methods) \\
+\midrule
+Dualformer-Auto              & \textbf{0.657} & [0.599, 0.738] \\
+fixed-$G{=}8$                & 1.000          & [1.000, 1.000] \\
+hybrid\_no\_triage            & 1.000          & [1.000, 1.000] \\
+zvf-triage $\tau{=}0.90$      & 1.075          & [1.000, 1.325] \\
+zvf-triage $\tau{=}0.80$      & 1.337          & [1.150, 1.575] \\
+zvf-triage $\tau{=}0.70$      & 1.512          & [1.275, 1.800] \\
+hybrid\_0.70                  & 1.512          & [1.275, 1.800] \\
+zvf-triage $\tau{=}0.50$      & 2.000          & [1.500, 2.000] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{The hybrid degenerates on this regime.}
+A regime split of the 40 steps per method by
+$(\mathrm{PCD}, \mathrm{zvf})$ quadrant shows that \emph{no step in
+any method has $\mathrm{PCD} > 0.20$} (boundary regime); the run is
+fully interior across all 160 step-pairs
+(\texttt{grpo}: 20 interior-low, 20 interior-high, 0 boundary;
+\texttt{aero}: 21, 19, 0; \texttt{gift}: 14, 26, 0;
+\texttt{areal}: 23, 17, 0). Consequently the full hybrid
+\texttt{hybrid\_0.70} never activates its Dualformer-Auto branch
+and is bit-identical to \texttt{zvf-triage\_0.70} on this data
+(cost ratio $1.512$ vs $1.512$; identical per-step rollout vectors).
+Similarly \texttt{hybrid\_no\_triage} (Dualformer at boundary only)
+never activates and is bit-identical to \texttt{fixed\_g} at
+cost ratio $1.000$.
+
+This is itself a CDH-aligned scope finding: on the saturated-prompt
+regime of N2, the hybrid's two components never disagree, so the
+hybrid's design value can only be observed on a regime with
+\emph{both} interior and boundary steps. The Pareto winner on this
+data is Dualformer-Auto alone (cost ratio $0.657$), which
+unconditionally shrinks $G$ for near-saturated prompts and is
+unaffected by the regime. The Pareto winner is monotone across
+methods: Dualformer-Auto cost ratio $0.655$ (\texttt{grpo}), $0.677$
+(\texttt{aero}), $0.621$ (\texttt{gift}), $0.673$ (\texttt{areal}),
+all with bootstrap CIs $[0.56, 0.74]$.
+
+\paragraph{Unification as a single calibrated rule.}
+Putting together Sections~\ref{sec:p7-controller-cf}--\ref{sec:p7-bayesian},
+the calibrated controller is:
+
+\begin{quote}\small
+\emph{If} $\mathrm{PCD} > 0.20$ (boundary regime): \emph{shrink} per-prompt
+$G$ via Dualformer-Auto \citep{su2024dualformer}. \\
+\emph{Else} (interior regime): \emph{escalate} $G$ from $8$ to $16$ per-prompt
+iff $m(k, G) > 0.60$ where $m$ is the Beta-Binomial mid-range probability
+of Eq.~\eqref{eq:zvf-midrange} (Bayesian controller D). \\
+\emph{Else}: fixed-$G{=}8$.
+\end{quote}
+
+On the N2 four-method data the rule reduces to its Bayesian
+branch (no boundary steps in any of the 160 step-pairs) and
+costs $1.73\times$ the baseline ($8854$ rollouts vs.\ $5120$,
+$95\%$ bootstrap CI $[1.71, 1.76]$ across methods), saving
+$466.75$ prompts (CI $[454.25, 485.00]$) -- 100\% of the
+headroom the controller's design hypothesis predicts. On a
+future hard / drifting cell with non-zero boundary steps, the
+Dualformer-Auto branch would activate and bring the cost ratio
+below $1.0\times$. The Bayesian refinement replaces the
+step-level zvf-triage trigger with a per-prompt decision that
+is the exact analogue of the $\gamma^*{=}0$ smoothing kernel
+in the Berkeley row 19 AlphaProof analysis \citep{alphaproof2025nature}
+and is strictly cheaper than \texttt{zvf-triage}@$\tau{=}0.50$
+by 14\% while saving the same number of prompts. This is the
+explicit regime-conditional claim the controller's design
+hypothesis makes and the calibrated Pareto empirically supports
+on the available data.

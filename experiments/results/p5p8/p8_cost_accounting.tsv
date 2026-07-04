@@ -1,0 +1,5 @@
+model_role	rows_in_batch	cost_usd_batch	tokens_per_row	comment
+XGBoost (scorer)	10000	1.0	0 tokens (numeric)	$0 marginal at network scale
+Qwen3.5-4B SFT (sensor)	1	0.0035	~120 in / ~5 out	Async, post-score OR pre-rank
+Qwen3.5-4B SFT (synchronous scorer)	1	0.0035	~120 in / ~5 out	Hard-real-time budget violation: >>ms
+Hybrid: XGB+LLM as sensor on enriched rows (10% of tx)	10000	3.5	0 (9000 x tree) + 1200 tokens (1000 x LLM)	$35 / 10k tx (10% LLM coverage)

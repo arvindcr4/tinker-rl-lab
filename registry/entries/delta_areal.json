@@ -1,0 +1,20 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_areal",
+  "name": "AREAL",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "areal2025",
+    "arxiv": "2505.24298",
+    "title": "{AReaL}: A Large-Scale Asynchronous Reinforcement Learning System for Language Reasoning"
+  },
+  "deltas": [
+    {
+      "component": "autoscaling_Rollout",
+      "field": "see delta-list and citation",
+      "change": "decouple rollout budget from optimizer step; the variant we measured is a single-batch same-stack run so the autoscaler is statically set to 8; (per AREAL source paper"
+    }
+  ],
+  "notes": "Verified citation: areal2025 (arXiv:2505.24298) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged."
+}

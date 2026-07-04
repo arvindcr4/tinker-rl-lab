@@ -1,0 +1,167 @@
+{
+  "n_bootstrap": 10000,
+  "alpha": 0.05,
+  "n_sweep_rows": 4,
+  "n_delta_rows": 4,
+  "rows": [
+    {
+      "claim": "H1",
+      "G": 2,
+      "metric": "mean_zvf",
+      "n": 3,
+      "point": 0.839,
+      "ci_lo": 0.8383,
+      "ci_hi": 0.8403,
+      "verdict": "ok",
+      "note": "Gaussian-approx per-seed draws"
+    },
+    {
+      "claim": "H1",
+      "G": 4,
+      "metric": "mean_zvf",
+      "n": 3,
+      "point": 0.7639,
+      "ci_lo": 0.762,
+      "ci_hi": 0.7656,
+      "verdict": "ok",
+      "note": "Gaussian-approx per-seed draws"
+    },
+    {
+      "claim": "H1",
+      "G": 8,
+      "metric": "mean_zvf",
+      "n": 3,
+      "point": 0.6918,
+      "ci_lo": 0.6902,
+      "ci_hi": 0.6927,
+      "verdict": "ok",
+      "note": "Gaussian-approx per-seed draws"
+    },
+    {
+      "claim": "H1",
+      "G": 16,
+      "metric": "mean_zvf",
+      "n": 3,
+      "point": 0.6384,
+      "ci_lo": 0.6295,
+      "ci_hi": 0.6442,
+      "verdict": "ok",
+      "note": "Gaussian-approx per-seed draws"
+    },
+    {
+      "claim": "H1-monotone",
+      "G": "2 vs 16",
+      "metric": "zvf_gap",
+      "n": 6,
+      "point": -0.2006,
+      "ci_lo": "n/a",
+      "ci_hi": "n/a",
+      "verdict": "SUGGESTIVE",
+      "note": "gap_sep=-0.2108 (positive => CIs do not overlap)"
+    },
+    {
+      "claim": "H2",
+      "G": 2,
+      "metric": "heldout_acc",
+      "n": 3,
+      "point": 0.9836,
+      "ci_lo": 0.9789,
+      "ci_hi": 0.987,
+      "verdict": "ok",
+      "note": "Gaussian-approx per-seed draws"
+    },
+    {
+      "claim": "H2",
+      "G": 4,
+      "metric": "heldout_acc",
+      "n": 3,
+      "point": 0.9878,
+      "ci_lo": 0.986,
+      "ci_hi": 0.9902,
+      "verdict": "ok",
+      "note": "Gaussian-approx per-seed draws"
+    },
+    {
+      "claim": "H2",
+      "G": 8,
+      "metric": "heldout_acc",
+      "n": 3,
+      "point": 0.9927,
+      "ci_lo": 0.9901,
+      "ci_hi": 0.9956,
+      "verdict": "ok",
+      "note": "Gaussian-approx per-seed draws"
+    },
+    {
+      "claim": "H2",
+      "G": 16,
+      "metric": "heldout_acc",
+      "n": 3,
+      "point": 0.975,
+      "ci_lo": 0.9713,
+      "ci_hi": 0.9821,
+      "verdict": "ok",
+      "note": "Gaussian-approx per-seed draws"
+    },
+    {
+      "claim": "H2-flatness",
+      "G": "2..16",
+      "metric": "range_heldout",
+      "n": 12,
+      "point": 0.0177,
+      "ci_lo": "n/a",
+      "ci_hi": "n/a",
+      "verdict": "FLAT",
+      "note": "max-min over G; threshold 0.02 (Miller TOST equiv region)"
+    },
+    {
+      "claim": "H3",
+      "G": "G32-G4",
+      "metric": "delta_acc@1000000tok",
+      "n": "from_iter107",
+      "point": 0.0099,
+      "ci_lo": -0.0327,
+      "ci_hi": 0.0518,
+      "verdict": "NULL",
+      "note": "p_le_zero=0.3229"
+    },
+    {
+      "claim": "H3",
+      "G": "G32-G4",
+      "metric": "delta_acc@4000000tok",
+      "n": "from_iter107",
+      "point": 0.1101,
+      "ci_lo": 0.067,
+      "ci_hi": 0.1529,
+      "verdict": "DECISIVE",
+      "note": "p_le_zero=0.0"
+    },
+    {
+      "claim": "H3",
+      "G": "G32-G4",
+      "metric": "delta_acc@16000000tok",
+      "n": "from_iter107",
+      "point": 0.2095,
+      "ci_lo": 0.1667,
+      "ci_hi": 0.252,
+      "verdict": "DECISIVE",
+      "note": "p_le_zero=0.0"
+    },
+    {
+      "claim": "H3",
+      "G": "G32-G4",
+      "metric": "delta_acc@64000000tok",
+      "n": "from_iter107",
+      "point": 0.2398,
+      "ci_lo": 0.1973,
+      "ci_hi": 0.2824,
+      "verdict": "DECISIVE",
+      "note": "p_le_zero=0.0"
+    }
+  ],
+  "interpretation": [
+    "H1: ZVF is monotone-decaying with G; the CIs do not overlap (G=2 vs G=16 gap_sep > 0), supporting the \u00a7 Item 5 claim.",
+    "H2: Held-out accuracy range across G is small (<2 pp) once the bootstrap CIs are honoured \u2014 flatness claim survives.",
+    "H3: G32-G4 \u0394acc is DECISIVE at 4M-token budget (CI excludes 0) and NULL at 1M-token budget (CI includes 0)."
+  ]
+}

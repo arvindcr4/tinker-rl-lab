@@ -1,0 +1,59 @@
+{
+  "n_manifests": 103,
+  "corpus_sizes": {
+    "manifests": 98,
+    "quick_20260704": 5
+  },
+  "badge_mean": 55.01,
+  "badge_median": 56.7,
+  "badge_min": 35.8,
+  "badge_max": 56.7,
+  "badge_std": 3.08,
+  "tier_counts": {
+    "bronze": 99,
+    "wood": 4
+  },
+  "stratified": {
+    "by_corpus": {
+      "manifests": 55.52,
+      "quick_20260704": 45.02
+    },
+    "by_task_slice": {
+      "gsm8k_easy": 56.7,
+      "gsm8k_hard": 56.7,
+      "humaneval_subset": 53.3,
+      "?": 45.02
+    },
+    "by_model": {
+      "Qwen-Qwen3-5-4B": 55.47,
+      "meta-llama-Llama-3-2-3B": 55.57,
+      "?": 45.02
+    },
+    "by_G": {
+      "2": 55.57,
+      "32": 56.32,
+      "4": 55.34,
+      "16": 55.19,
+      "8": 55.19,
+      "0": 45.02
+    },
+    "by_temperature": {
+      "0.6": 55.61,
+      "1.0": 55.42,
+      "0.0": 45.02
+    },
+    "by_seed": {
+      "0": 54.55,
+      "1": 55.52
+    }
+  },
+  "per_item_score_pct": {
+    "1": 24.4,
+    "2": 24.4,
+    "3": 64.0,
+    "4": 49.5,
+    "5": 74.3,
+    "6": 76.2,
+    "7": 61.8
+  }
+}

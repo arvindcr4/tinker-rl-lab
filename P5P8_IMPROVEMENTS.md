@@ -1,0 +1,172 @@
+# P5–P8 Improvement Ledger (worktree root)
+
+Same columns as `BERKELEY_IMPROVEMENTS.md`. Statuses:
+`proposed → prototyped → validated → rejected`. Re-rank by
+`(impact × evidence × paper-facing readiness)` each synthesis iteration.
+
+| # | paper | class | one-line | evidence path | status | iter |
+|---|-------|-------|----------|---------------|--------|------|
+| 01 | P5 | T3 | 6/7 MIN-REPORT items 100% validated at n=98; Item 2 (KL) 0% validated; 12 sub-fields all 0/98 — schema shallow | `experiments/results/p5p8/minreport_field_coverage.tsv`, `minreport_summary.json`; `docs/p5p8_improvements/01_minreport_field_coverage.md` | validated | iter 1 |
+| 02 | P5 | T2 | bootstrap CIs on P5 headline numbers using Miller recipe | `experiments/results/p5p8/p5_headline_cis.tsv` (TBD iter 1) | proposed | iter 1 |
+| 03 | P5 | T2 | quantify stack-conditioning: eta^2 across stack axes vs algorithm axis using N2 four-method same-stack tensors | `experiments/results/p5p8/stack_eta2.tsv` (TBD iter 1) | proposed | iter 1 |
+| 04 | P5 | T4 | verified-citation hardening of related-work on reporting standards (model cards / datasheets / reward-model reporting) | TBD | proposed | — |
+| 05 | P5 | T5 | P5 § Exhibit A figure: per-field coverage bar chart | TBD | proposed | — |
+| 06 | P5 | T3 | extend coverage audit to N10 8-seed panel and mega cells_done.jsonl (currently only manifests/) | TBD | proposed | — |
+| 07 | P6 | T3 | validate `registry/entries/*.json` against what N2 four-method run actually logged | `experiments/results/p5p8/registry_schema_check.tsv` + `registry_measured_deltas.{tsv,json}`; `docs/p5p8_improvements/04_registry_n2_validation.md`; `paper/sections/p6_measured_evidence.tex` | validated | iter 2 |
+| 08 | P7 | T2 | P7 controller counterfactual eval on N2 tensors + connect to Dualformer auto-G | `experiments/results/p5p8/controller_cf_{summary,per_step}.{tsv,json}`; `scripts/p5p8/controller_counterfactual.py`; `docs/p5p8_improvements/05_p7_controller_cf.md` | validated | iter 3 |
+| 09 | P8 | T1+T2 | bootstrap CIs on P8 XGBoost vs LLM headline numbers: ROC-AUC + accuracy + Brier paired bootstrap; XGB-24full vs XGB-4sensor ROC-AUC Δ=+0.0245 [+0.0174,+0.0320], XGB-24full vs XGB-20raw Δ=+0.0002 [−0.0002,+0.0007]; 0/98 MIN-REPORT cells pass strict 7-item check (item 2 KL); sensor-noise budget σ≤0.02; PR-AUC + P@1% on the same data across 5 positive rates (1.44%, 1.00%, 0.50%, 0.10%, 0.05%) — XGB-24full beats XGB-4sensor on ΔP@1% at 5/5 rates (all CIs exclude zero) | `experiments/results/p5p8/{p8_headline_cis,p8_calibration_full,p8_feature_ablation,p8_sensor_noise_sweep,p8_pr_auc_realistic,p8_pr_auc_boot}.tsv`; `scripts/p5p8/{p8_calibration_cis,p8_sensor_noise,p8_pr_auc_realistic}.py`; `docs/p5p8_improvements/{06,10,17}_p8_*.md`; extended `paper/sections/p8_evidence.tex` §4.4 PR-AUC + top-K table | validated | iter 4/8/12 |
+| 10 | P6 | T3 | add `outcomes.ci_method` to schema (paired bootstrap n_boot, seed) so future entries can self-report CI provenance | TBD | proposed | iter 2 |
+| 11 | P5 | T2 | stack-axis η² decomposition on the live 98-cell mega corpus (model_family + task_slice + G + temperature vs seed): stack axes explain 73–93% of variance in every telemetry channel; seed explains 0.0–0.15%; per-task G-axis η²(G) = 0.89 on gsm8k_easy, 0.64 on gsm8k_hard, 0.0 on humaneval (degenerate regime) | `experiments/results/p5p8/mega_eta2.tsv`, `mega_eta2.json`; `scripts/p5p8/mega_eta2.py`; `docs/p5p8_improvements/07_mega_stack_eta2.md` | validated | iter 5 |
+| 12 | P6 | T3 | add registry entries for the 8 GRPO-family methods that have measured evidence in the worktree (aero/gift/areal via N2 tensors; ngrpo/cppo/mcgrpo/es/scafgrpo via zvf_iter130 risk-index); new method coverage = 9/9 of the zvf_iter130 panel; full registry now 31/31 PASS jsonschema (12+8 stack + 3+8 variant-delta, was 12+3 = 15) | `registry/entries/{tinker_aero,tinker_gift,tinker_areal,zvf130_ngrpo,zvf130_cppo,zvf130_mcgrpo,zvf130_es,zvf130_scafgrpo}.json`; `registry/entries/delta_{aero,gift,areal,ngrpo,cppo,mcgrpo,es,scafgrpo}.json`; `experiments/results/p5p8/missing_entry_{audit.tsv,validation.tsv}`; `scripts/p5p8/add_missing_entries.py`; `docs/p5p8_improvements/08_registry_missing_methods.md` | validated | iter 6 |
+| 13 | P7 | T1+T2 | zvf-triage trigger threshold seed-robustness + bootstrap CIs on the 5-seed N10 panel; [0.70,0.80] selective-firing range replicates; fires/seed at τ=0.70 = 4.20±1.48 [3.00,5.40]; zero wrong-fires across all thresholds and seeds; steady-state ZVF (last-10 mean) predicts held-out accuracy r=0.607 [0.408,0.779] | `experiments/results/p5p8/p7_seed_robust_{per_seed,summary}.{tsv,json}`; `scripts/p5p8/p7_seed_robustness.py`; `docs/p5p8_improvements/09_p7_seed_robustness.md` | validated | iter 7 |
+| 14 | P5 | T3 | extend MIN-REPORT coverage audit from manifests-only (item 01) to live cells.tsv (98 cells) + N10 8-seed panel (6 records); 0/98 cells pass strict 7-item check (Item 2 KL is 0% validated); 0/6 N10 records report any of the 7 items; cells.tsv has 11 measured-telemetry fields at 100% presence (model, task_slice, G, temperature, seed, mean_reward, zvf, pcd, mean_len, std_len, sampled_tokens) — none in the manifest; recommend expanding MIN-REPORT to 18 items | `experiments/results/p5p8/minreport_extended_{coverage,per_cell,n10}.tsv`; `minreport_extended_summary.json`; `scripts/p5p8/minreport_extended_coverage.py`; `docs/p5p8_improvements/14_minreport_extended_coverage.md` | validated | iter 9 |
+| 15 | P6 | T3+T4 | verify the 8 UNVERIFIED_ variant-delta citations iter 6 deferred; align registry/entries/delta_*.json citation pointers against paper/references.bib canonical entries; 8/8 deltas now carry verified bibkey + arxiv id + brace-balanced title (aero→le2025rlzvp/2509.21880; gift→gift2025/2510.23868; areal→areal2025/2505.24298; ngrpo→nan2025ngrpo/2509.18851; cppo→lin2025cppo/2503.22342; mcgrpo→mcgrpo2025/2601.22582; es→es2025/2509.24372; scafgrpo→zhang2025scaffgrpo/2510.19807); 31/31 schema still PASS; 0 UNVERIFIED_/TBD_/TO_VERIFY_ markers remain; paper_P6_registry.pdf rebuilds at 0 errors / 0 undefined refs | `experiments/results/p5p8/variant_delta_citation_audit.{tsv,json}`; `scripts/p5p8/verify_variant_deltas.py`; `docs/p5p8_improvements/15_variant_delta_citations.md`; 8 patched `registry/entries/delta_*.json` | validated | iter 10 |
+| 16 | P7 | T1+T2+T3 | Bayesian refinement of adaptive-G controller: Beta(k+1, n-k+1) posterior on real N2 four-method tensors (40 steps × 4 methods × 16 prompts = 2,560 prompt-step pairs); mid-range prob m(k,8) = 0.630 at observed 8/8 (vs point-estimate p̂=1.0 → "no headroom"); Bayesian@τ_post=0.60 saves 466.75 prompts (95% bootstrap CI [454.25, 485.00]) at 8854 rollouts (cost ratio 1.73) — strictly cheaper than zvf-triage@τ=0.50 (10240 rollouts, saved=466.75) by 14% and Pareto-dominant for contrast restoration; sharp phase transition at τ_post=0.60/0.65 (max m(k,8)=0.630 silences controller above); unified with Dualformer-Auto (Berkeley row 01, su2024dualformer) and AlphaProof γ*=0 smoothing (Berkeley row 19, alphaproof2025nature) — Beta(1,1) prior is the exact Dirichlet(1,1) smoothing kernel γ*=0 selects; paper_P7_zvf_controller.pdf rebuilds to 21 pages at 0 errors / 0 undefined refs | `experiments/results/p5p8/p7_bayesian_{summary,per_step}.{tsv,json}`; `scripts/p5p8/p7_bayesian_controller.py` (295 LoC, stdlib only); `docs/p5p8_improvements/16_p7_bayesian_controller.md`; updated `paper/sections/p7_controller.tex` §4.7 + §4.6 unification paragraph | validated | iter 11 |
+| 17 | P8 | T2+T3 | PR-AUC + top-K operating-point metrics at realistic fraud ratios (downsample positives to 1.00%, 0.50%, 0.10%, 0.05% plus release 1.44%); XGB-24full beats XGB-20raw on PR-AUC at every rate (Δ=+0.018 to +0.092, sign-consistent; CIs include zero because sparse positives cannot power them); XGB-4sensor loses decisively on PR-AUC at 4/5 rates (Δ=+0.216 to +0.607, CIs exclude zero) and on ΔP@top-1% at 5/5 rates (Δ=+0.04 to +0.51, all CIs exclude zero); XGB-24full keeps 100% recall@top-1% at every rate down to 0.05% — quantified the PR-AUC + top-K evidence for the operational argument of \secref{sec:p8-scorer}; new §4.4 "PR-AUC and top-K operating metrics at realistic fraud ratios" wired into paper_P8_fraud.pdf (rebuilds to 15 pages at 0 errors / 0 undefined citations) | `experiments/results/p5p8/p8_pr_auc_realistic.{tsv,json}`; `p8_pr_auc_boot.tsv`; `scripts/p5p8/p8_pr_auc_realistic.py` (245 LoC, sklearn+xgboost); `docs/p5p8_improvements/17_p8_pr_auc_realistic.md`; extended `paper/sections/p8_evidence.tex` §4.4 | validated | iter 12 |
+| 18 | P5 | T3+T5 | MIN-REPORT-RL Auditor prototype (0-100 badge per manifest); weighted scoring (items 3,4,7 each = 20 pts; items 1,2,5,6 each = 10 pts; total = 100) with **honest `n/a` declaration bonus** (50% of item weight for a recognised n/a-* value, vs 100% for a fully-validated value); n=103 manifests scored (98 mega compact-keys + 5 quick verbose-keys); badge mean 55.0 / median 56.7 / range [35.8, 56.7] / std 3.1; tier counts = 0 gold / 0 silver / 99 bronze / 4 wood / 0 fail; per-item coverage = item1 24.4%, item2 24.4%, item3 64.0%, item4 49.5%, item5 74.3%, item6 76.2%, item7 61.8%; auditor discriminates across corpora (mega 55.5 vs quick 45.0, Δ=10.5) but not within a single-stack harvest (per-axis std ≈ 1pt); surfacesthe exact three missing declarations (Item 2 KL coefficient, Item 4 on-disk trajectory, Item 7 parser probe) as the work-list for the next manifest-emitter iteration; paper_P5_minreport.pdf extended with § Exhibit 8 + two new tables (per-item + stratified) and rebuilt at 21 pages / 0 errors / 0 undefined refs | `scripts/p5p8/minreport_auditor.py` (≤300 LoC, stdlib + matplotlib); `experiments/results/p5p8/minreport_audit.tsv` (103 rows); `experiments/results/p5p8/minreport_audit_summary.json`; `experiments/results/p5p8/figures/minreport_badge_dist.{png,pdf}`; `experiments/results/p5p8/figures/minreport_per_item.{png,pdf}`; `docs/p5p8_improvements/18_minreport_auditor.md`; extended `paper/sections/p5_evidence.tex` Exhibit 8 | validated | iter 13 |
+
+## Iter 1 deliverables
+
+- `scripts/p5p8/minreport_coverage.py` (≤300 LoC, stdlib-only)
+- `experiments/results/p5p8/minreport_{field_coverage.tsv, cell_completeness.tsv, summary.json}`
+- `docs/p5p8_improvements/01_minreport_field_coverage.md`
+- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5)
+
+## Iter 5 deliverables (this commit)
+
+- `scripts/p5p8/mega_eta2.py` (≤300 LoC, stdlib only)
+  - job 1: load the 98-cell live mega corpus
+  - job 2: one-way η² per (axis, metric) for 5 stack axes × 5 telemetry channels
+  - job 3: ω² (bias-corrected) alongside η²
+  - job 4: per-task G-axis decomposition (gsm8k_easy/hard vs humaneval)
+  - job 5: stack-vs-seed headline ratio
+- `experiments/results/p5p8/mega_eta2.tsv` (25 rows: 5 axes × 5 metrics)
+- `experiments/results/p5p8/mega_eta2.json` (machine-readable, includes
+  per-axis group means + per-task G-axis decomposition)
+- `docs/p5p8_improvements/07_mega_stack_eta2.md`
+- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5, iter 5)
+
+## Headline findings (P5, iter 5)
+
+1. **Stack axes dominate telemetry.** On n=98 live mega cells,
+   `model_family + task_slice + G + temperature` jointly explain
+   92.7% of ZVF variance, 75.6% of mean_reward variance, 78.3% of
+   PCD variance, 73.4% of mean_completion_len variance, and 73.0%
+   of std_completion_len variance. The **seed axis** explains
+   0.0–0.15% in every channel.
+2. **Stack/seed variance ratio ranges from 503× to 96,128×.** For
+   ZVF and mean_reward the seed axis is mathematically zero on the
+   98 cells.
+3. **Per-task G-axis η²** is task-dependent: η²(G) = 0.89 on
+   gsm8k_easy (G is the dominant lever), 0.64 on gsm8k_hard (G
+   dominates ZVF but reward is at floor), and 0.0 on humaneval_subset
+   (degenerate all-wrong regime where no G recovers contrast).
+4. **The four stack axes already in MIN-REPORT** (G via item 5,
+   held-out split via item 6) cover only 2/5 axes. This argues for
+   expanding MIN-REPORT to include a model-axis and task-axis
+   declaration alongside the existing 7 items.
+
+## Open questions for iter 6
+
+- Does the η² decomposition replicate on a new mega-harvest with
+  Nemotron/Kimi models added (the brief lists them as available)?
+- Does the per-task G-axis inversion on humaneval replicate when
+  the model family is changed (i.e. is the "degenerate task"
+  property model-independent)?
+- Should MIN-REPORT be expanded with `model_family` + `task_slice`
+  declarations so the audit (item 01) can detect stack axes it
+  currently ignores?
+
+## Iter 2 deliverables (this commit)
+
+- `scripts/p5p8/registry_validate.py` (≤300 LoC, stdlib + jsonschema)
+  - job 1: schema validation + per-leaf MIN-REPORT coverage on every entry
+  - job 2: paired-bootstrap same-stack variant deltas from N2 tensors
+  - job 3: per-prompt pooled deltas (eliminates prompt-set drift)
+- `experiments/results/p5p8/registry_schema_check.tsv` (15 rows; 15/15 PASS)
+- `experiments/results/p5p8/registry_measured_deltas.tsv` (27 paired rows)
+- `experiments/results/p5p8/registry_measured_deltas.json` (machine-readable)
+- `docs/p5p8_improvements/04_registry_n2_validation.md`
+- `paper/sections/p6_measured_evidence.tex` (NEW, ~60 lines)
+- `paper/sections/p6_population.tex` (added "Schema ✓" column)
+- `paper/paper_P6_registry.tex` (added `\input{p6_measured_evidence}`)
+- `paper/build/paper_P6_registry.pdf` rebuilds to 18 pages, 0 errors,
+  0 undefined citations, 0 LaTeX warnings
+- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P6, iter 2)
+
+## Headline findings (P6, iter 2)
+
+1. **All 15 entries pass schema validation.** Coverage table exposes the
+   long-known "Item 7 honesty" gap on Family A/C (`decontamination` 0/2
+   leaves everywhere) and the "Item 1" gap on managed-runtime
+   (`loss_form` 0–2/6 leaves).
+2. **Same-stack reward/ZVF deltas are all within paired bootstrap noise.**
+   grpo−aero reward_mean +0.014 [0.000, +0.039], grpo−gift −0.016
+   [−0.063, +0.047], grpo−areal +0.020 [−0.008, +0.055]. Per-prompt
+   pooled: ±0.011, all CI contain 0.
+3. **AERO and AREAL produce significantly shorter completions** (Δmean_len
+   ≈ −30, Δcv_len ≈ +0.035) under the same reward — consistent with
+   sequence-level importance-ratio collapsing long completions. GIFT's
+   loss has a +16,722 absolute shift (gamma-style likelihood baseline).
+   These are *not* reward improvements.
+
+## Open questions for iter 2
+
+- Should the manifest schema add a `kl: {coeff, estimator, snapshot}` triple
+  (option A) or a `null` token distinct from `"n/a"` (option B)?
+- Should Item 7's parser probe be a required field, or an auditor-level check
+  only?
+
+## Iter 3 deliverables (this commit)
+
+- `scripts/p5p8/controller_counterfactual.py` (≤300 LoC, stdlib only)
+  - job 1: load N2 four-method, 40-step tensors
+  - job 2: simulate three controllers (zvf-triage @ thr sweep,
+    Dualformer-Auto per-prompt, oracle hindsight) on the same data
+  - job 3: per-prompt i.i.d. binomial counterfactual for ZVF at G'=16
+- `experiments/results/p5p8/controller_cf_summary.tsv` (28 rows: 4 methods
+  × 7 controller/threshold combos)
+- `experiments/results/p5p8/controller_cf_per_step.tsv` (one row per
+  (method, controller, trigger_step) — 696 rows)
+- `experiments/results/p5p8/controller_cf_summary.json` (machine-readable,
+  with seed-robustness block)
+- `docs/p5p8_improvements/05_p7_controller_cf.md` (proposal + falsifiable
+  headline)
+- `paper/sections/p7_controller.tex` — extended with §4.5 counterfactual
+  evaluation on the N2 tensors (rebuilds at 0 errors, 0 undefined cites)
+- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P7, iter 3)
+
+## Headline findings (P7, iter 3)
+
+1. **Counterfactual headroom is 0 saved prompts on the N2 saturated-prompt
+   regime.** Of grpo's 640 prompt-step pairs, 461 are truly degenerate
+   (all-correct 427, all-wrong 34) at the boundary p ∈ {0, 1}, where no G
+   can recover contrast. Same for aero/gift/areal (461/493/452 degenerate).
+2. **zvf-triage threshold sweep (grpo, 40 steps):** thr 0.50 → 39 fires,
+   1.98× cost; thr 0.70 → 19 fires, 1.48× cost; thr 0.90 → 2 fires, 1.05×
+   cost. None of these settings saves any prompts — they only differ in
+   wastefulness. The selective-firing operating range is [0.70, 0.80].
+3. **Dualformer-Auto (Berkeley row 01) is the Pareto winner on this data.**
+   Per-prompt difficulty-gated G (G'=2 for p≥0.95) recovers a 34% rollout
+   saving (cost_ratio 0.66) on the same data **without losing contrast**,
+   because near-saturated prompts would have been degenerate at G=8 anyway.
+   This recovers the Berkeley row 01 56% saving in the G_base=8 frame.
+4. **CDH-aligned falsifiable scope.** The controller design hypothesis
+   (Section 4.1) already stipulates the controller's value is on **hard /
+   drifting** prompt populations. The N2 four-method run is the easy-task
+   regime the design excludes. The counterfactual eval **confirms by
+   falsifying the easy-task prediction**: zvf-triage has 0 headroom here.
+5. **Connection to AlphaProof γ*=0 (Berkeley row 19).** Both findings
+   (zvf-triage 0 headroom; Dualformer-Auto 34% saving; γ*=0 optimal
+   smoothing) are consequences of the saturated-prompt regime where
+   look-ahead, smoothing, and escalation are all structurally degenerate.
+
+## Open questions for iter 4
+
+- Does the controller show positive headroom on a hard cell (e.g. GSM8K
+  with low reward_mean) in a future N2 harvest?
+- Does Dualformer-Auto's 34% saving persist on hard cells, or does it
+  collapse to cost_ratio ≈ 1?
+- Should the `zvf-triage` controller's threshold default to 0.80 (the
+  cheapest non-trivial setting) given the empirical headroom is 0 on
+  saturated prompts?

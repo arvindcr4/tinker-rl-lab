@@ -1,0 +1,816 @@
+{
+  "n_cells": 98,
+  "axes": [
+    "model_family",
+    "task_slice",
+    "G",
+    "temperature",
+    "seed"
+  ],
+  "metrics": [
+    "mean_reward",
+    "zvf",
+    "pcd",
+    "mean_completion_len",
+    "std_completion_len"
+  ],
+  "rows": [
+    {
+      "axis": "model_family",
+      "metric": "mean_reward",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.4527,
+      "omega2": 0.6415,
+      "verdict": "DOMINANT"
+    },
+    {
+      "axis": "model_family",
+      "metric": "zvf",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.0053,
+      "omega2": 0.4962,
+      "verdict": "SMALL"
+    },
+    {
+      "axis": "model_family",
+      "metric": "pcd",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.0931,
+      "omega2": 0.5193,
+      "verdict": "MODERATE"
+    },
+    {
+      "axis": "model_family",
+      "metric": "mean_completion_len",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.3006,
+      "omega2": 0.5834,
+      "verdict": "DOMINANT"
+    },
+    {
+      "axis": "model_family",
+      "metric": "std_completion_len",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.1592,
+      "omega2": 0.5381,
+      "verdict": "MODERATE"
+    },
+    {
+      "axis": "task_slice",
+      "metric": "mean_reward",
+      "n_cells": 98,
+      "k_levels": 3,
+      "eta2": 0.2729,
+      "omega2": 0.5714,
+      "verdict": "DOMINANT"
+    },
+    {
+      "axis": "task_slice",
+      "metric": "zvf",
+      "n_cells": 98,
+      "k_levels": 3,
+      "eta2": 0.4687,
+      "omega2": 0.646,
+      "verdict": "DOMINANT"
+    },
+    {
+      "axis": "task_slice",
+      "metric": "pcd",
+      "n_cells": 98,
+      "k_levels": 3,
+      "eta2": 0.4507,
+      "omega2": 0.6383,
+      "verdict": "DOMINANT"
+    },
+    {
+      "axis": "task_slice",
+      "metric": "mean_completion_len",
+      "n_cells": 98,
+      "k_levels": 3,
+      "eta2": 0.2097,
+      "omega2": 0.5509,
+      "verdict": "DOMINANT"
+    },
+    {
+      "axis": "task_slice",
+      "metric": "std_completion_len",
+      "n_cells": 98,
+      "k_levels": 3,
+      "eta2": 0.4135,
+      "omega2": 0.623,
+      "verdict": "DOMINANT"
+    },
+    {
+      "axis": "G",
+      "metric": "mean_reward",
+      "n_cells": 98,
+      "k_levels": 5,
+      "eta2": 0.0304,
+      "omega2": 0.4946,
+      "verdict": "SMALL"
+    },
+    {
+      "axis": "G",
+      "metric": "zvf",
+      "n_cells": 98,
+      "k_levels": 5,
+      "eta2": 0.4437,
+      "omega2": 0.6304,
+      "verdict": "DOMINANT"
+    },
+    {
+      "axis": "G",
+      "metric": "pcd",
+      "n_cells": 98,
+      "k_levels": 5,
+      "eta2": 0.2304,
+      "omega2": 0.5522,
+      "verdict": "DOMINANT"
+    },
+    {
+      "axis": "G",
+      "metric": "mean_completion_len",
+      "n_cells": 98,
+      "k_levels": 5,
+      "eta2": 0.017,
+      "omega2": 0.4912,
+      "verdict": "SMALL"
+    },
+    {
+      "axis": "G",
+      "metric": "std_completion_len",
+      "n_cells": 98,
+      "k_levels": 5,
+      "eta2": 0.034,
+      "omega2": 0.4956,
+      "verdict": "SMALL"
+    },
+    {
+      "axis": "temperature",
+      "metric": "mean_reward",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.0,
+      "omega2": 0.4948,
+      "verdict": "SMALL"
+    },
+    {
+      "axis": "temperature",
+      "metric": "zvf",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.0092,
+      "omega2": 0.4971,
+      "verdict": "SMALL"
+    },
+    {
+      "axis": "temperature",
+      "metric": "pcd",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.0091,
+      "omega2": 0.4971,
+      "verdict": "SMALL"
+    },
+    {
+      "axis": "temperature",
+      "metric": "mean_completion_len",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.2066,
+      "omega2": 0.5525,
+      "verdict": "DOMINANT"
+    },
+    {
+      "axis": "temperature",
+      "metric": "std_completion_len",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.1228,
+      "omega2": 0.5276,
+      "verdict": "MODERATE"
+    },
+    {
+      "axis": "seed",
+      "metric": "mean_reward",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.0,
+      "omega2": 0.4948,
+      "verdict": "SMALL"
+    },
+    {
+      "axis": "seed",
+      "metric": "zvf",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.0,
+      "omega2": 0.4949,
+      "verdict": "SMALL"
+    },
+    {
+      "axis": "seed",
+      "metric": "pcd",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.0007,
+      "omega2": 0.495,
+      "verdict": "SMALL"
+    },
+    {
+      "axis": "seed",
+      "metric": "mean_completion_len",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.0,
+      "omega2": 0.4949,
+      "verdict": "SMALL"
+    },
+    {
+      "axis": "seed",
+      "metric": "std_completion_len",
+      "n_cells": 98,
+      "k_levels": 2,
+      "eta2": 0.0015,
+      "omega2": 0.4952,
+      "verdict": "SMALL"
+    }
+  ],
+  "headline": [
+    {
+      "metric": "mean_reward",
+      "ss_total": 13.6427,
+      "stack_eta2_sum": 0.756,
+      "seed_eta2": 0.0,
+      "ratio_stack_over_seed": 96128.06,
+      "interpretation": "stack axes explain 96128.1x more variance than seed"
+    },
+    {
+      "metric": "zvf",
+      "ss_total": 3.7155,
+      "stack_eta2_sum": 0.9268,
+      "seed_eta2": 0.0,
+      "ratio_stack_over_seed": 38396.12,
+      "interpretation": "stack axes explain 38396.1x more variance than seed"
+    },
+    {
+      "metric": "pcd",
+      "ss_total": 0.0476,
+      "stack_eta2_sum": 0.7833,
+      "seed_eta2": 0.0007,
+      "ratio_stack_over_seed": 1128.69,
+      "interpretation": "stack axes explain 1128.7x more variance than seed"
+    },
+    {
+      "metric": "mean_completion_len",
+      "ss_total": 329365.211,
+      "stack_eta2_sum": 0.734,
+      "seed_eta2": 0.0,
+      "ratio_stack_over_seed": 14712.47,
+      "interpretation": "stack axes explain 14712.5x more variance than seed"
+    },
+    {
+      "metric": "std_completion_len",
+      "ss_total": 126280.4683,
+      "stack_eta2_sum": 0.7295,
+      "seed_eta2": 0.0015,
+      "ratio_stack_over_seed": 502.85,
+      "interpretation": "stack axes explain 502.9x more variance than seed"
+    }
+  ],
+  "per_task_G": [
+    {
+      "task_slice": "gsm8k_easy",
+      "metric": "zvf",
+      "n_cells": 24,
+      "k_G": 5,
+      "eta2_G": 0.8872,
+      "verdict": "DOMINANT"
+    },
+    {
+      "task_slice": "gsm8k_easy",
+      "metric": "mean_reward",
+      "n_cells": 24,
+      "k_G": 5,
+      "eta2_G": 0.1388,
+      "verdict": "MODERATE"
+    },
+    {
+      "task_slice": "gsm8k_hard",
+      "metric": "zvf",
+      "n_cells": 40,
+      "k_G": 5,
+      "eta2_G": 0.6406,
+      "verdict": "DOMINANT"
+    },
+    {
+      "task_slice": "gsm8k_hard",
+      "metric": "mean_reward",
+      "n_cells": 40,
+      "k_G": 5,
+      "eta2_G": 0.0006,
+      "verdict": "SMALL"
+    },
+    {
+      "task_slice": "humaneval_subset",
+      "metric": "zvf",
+      "n_cells": 34,
+      "k_G": 0,
+      "eta2_G": 0.0,
+      "verdict": "SMALL"
+    },
+    {
+      "task_slice": "humaneval_subset",
+      "metric": "mean_reward",
+      "n_cells": 34,
+      "k_G": 0,
+      "eta2_G": 0.0,
+      "verdict": "SMALL"
+    }
+  ],
+  "per_axis_groups": {
+    "model_family|mean_reward": [
+      {
+        "value": "meta-llama/Llama-3.2-3B",
+        "n": 51,
+        "mean": 0.023514,
+        "var_within": 0.000509
+      },
+      {
+        "value": "Qwen/Qwen3.5-4B",
+        "n": 47,
+        "mean": 0.525993,
+        "var_within": 0.161775
+      }
+    ],
+    "model_family|zvf": [
+      {
+        "value": "meta-llama/Llama-3.2-3B",
+        "n": 51,
+        "mean": 0.830882,
+        "var_within": 0.038171
+      },
+      {
+        "value": "Qwen/Qwen3.5-4B",
+        "n": 47,
+        "mean": 0.802527,
+        "var_within": 0.038855
+      }
+    ],
+    "model_family|pcd": [
+      {
+        "value": "meta-llama/Llama-3.2-3B",
+        "n": 51,
+        "mean": 0.013784,
+        "var_within": 0.000199
+      },
+      {
+        "value": "Qwen/Qwen3.5-4B",
+        "n": 47,
+        "mean": 0.027246,
+        "var_within": 0.000722
+      }
+    ],
+    "model_family|mean_completion_len": [
+      {
+        "value": "meta-llama/Llama-3.2-3B",
+        "n": 51,
+        "mean": 416.132755,
+        "var_within": 3027.243429
+      },
+      {
+        "value": "Qwen/Qwen3.5-4B",
+        "n": 47,
+        "mean": 352.507272,
+        "var_within": 1717.115693
+      }
+    ],
+    "model_family|std_completion_len": [
+      {
+        "value": "meta-llama/Llama-3.2-3B",
+        "n": 51,
+        "mean": 153.078719,
+        "var_within": 738.770492
+      },
+      {
+        "value": "Qwen/Qwen3.5-4B",
+        "n": 47,
+        "mean": 124.405218,
+        "var_within": 1505.05096
+      }
+    ],
+    "task_slice|mean_reward": [
+      {
+        "value": "humaneval_subset",
+        "n": 34,
+        "mean": 0.0,
+        "var_within": 0.0
+      },
+      {
+        "value": "gsm8k_hard",
+        "n": 40,
+        "mean": 0.432446,
+        "var_within": 0.1648
+      },
+      {
+        "value": "gsm8k_easy",
+        "n": 24,
+        "mean": 0.359294,
+        "var_within": 0.151867
+      }
+    ],
+    "task_slice|zvf": [
+      {
+        "value": "humaneval_subset",
+        "n": 34,
+        "mean": 1.0,
+        "var_within": 0.0
+      },
+      {
+        "value": "gsm8k_hard",
+        "n": 40,
+        "mean": 0.725781,
+        "var_within": 0.026467
+      },
+      {
+        "value": "gsm8k_easy",
+        "n": 24,
+        "mean": 0.710938,
+        "var_within": 0.040952
+      }
+    ],
+    "task_slice|pcd": [
+      {
+        "value": "humaneval_subset",
+        "n": 34,
+        "mean": 0.0,
+        "var_within": 0.0
+      },
+      {
+        "value": "gsm8k_hard",
+        "n": 40,
+        "mean": 0.032099,
+        "var_within": 0.000402
+      },
+      {
+        "value": "gsm8k_easy",
+        "n": 24,
+        "mean": 0.029149,
+        "var_within": 0.000455
+      }
+    ],
+    "task_slice|mean_completion_len": [
+      {
+        "value": "humaneval_subset",
+        "n": 34,
+        "mean": 351.813907,
+        "var_within": 4442.050439
+      },
+      {
+        "value": "gsm8k_hard",
+        "n": 40,
+        "mean": 394.108423,
+        "var_within": 1815.211748
+      },
+      {
+        "value": "gsm8k_easy",
+        "n": 24,
+        "mean": 419.358439,
+        "var_within": 1866.365941
+      }
+    ],
+    "task_slice|std_completion_len": [
+      {
+        "value": "humaneval_subset",
+        "n": 34,
+        "mean": 170.832212,
+        "var_within": 365.353009
+      },
+      {
+        "value": "gsm8k_hard",
+        "n": 40,
+        "mean": 124.835414,
+        "var_within": 1093.446182
+      },
+      {
+        "value": "gsm8k_easy",
+        "n": 24,
+        "mean": 118.84784,
+        "var_within": 842.000339
+      }
+    ],
+    "G|mean_reward": [
+      {
+        "value": 2,
+        "n": 24,
+        "mean": 0.296875,
+        "var_within": 0.160347
+      },
+      {
+        "value": 32,
+        "n": 18,
+        "mean": 0.372559,
+        "var_within": 0.159606
+      },
+      {
+        "value": 4,
+        "n": 20,
+        "mean": 0.254688,
+        "var_within": 0.1426
+      },
+      {
+        "value": 8,
+        "n": 18,
+        "mean": 0.198785,
+        "var_within": 0.126957
+      },
+      {
+        "value": 16,
+        "n": 18,
+        "mean": 0.189887,
+        "var_within": 0.115208
+      }
+    ],
+    "G|zvf": [
+      {
+        "value": 2,
+        "n": 24,
+        "mean": 0.932292,
+        "var_within": 0.005491
+      },
+      {
+        "value": 32,
+        "n": 18,
+        "mean": 0.564236,
+        "var_within": 0.034062
+      },
+      {
+        "value": 4,
+        "n": 20,
+        "mean": 0.890625,
+        "var_within": 0.013209
+      },
+      {
+        "value": 8,
+        "n": 18,
+        "mean": 0.869792,
+        "var_within": 0.01956
+      },
+      {
+        "value": 16,
+        "n": 18,
+        "mean": 0.782986,
+        "var_within": 0.04578
+      }
+    ],
+    "G|pcd": [
+      {
+        "value": 2,
+        "n": 24,
+        "mean": 0.008464,
+        "var_within": 8.6e-05
+      },
+      {
+        "value": 32,
+        "n": 18,
+        "mean": 0.040064,
+        "var_within": 0.000569
+      },
+      {
+        "value": 4,
+        "n": 20,
+        "mean": 0.016406,
+        "var_within": 0.000309
+      },
+      {
+        "value": 8,
+        "n": 18,
+        "mean": 0.017565,
+        "var_within": 0.000418
+      },
+      {
+        "value": 16,
+        "n": 18,
+        "mean": 0.023053,
+        "var_within": 0.000706
+      }
+    ],
+    "G|mean_completion_len": [
+      {
+        "value": 2,
+        "n": 24,
+        "mean": 377.854167,
+        "var_within": 3071.173333
+      },
+      {
+        "value": 32,
+        "n": 18,
+        "mean": 400.502658,
+        "var_within": 2244.273494
+      },
+      {
+        "value": 4,
+        "n": 20,
+        "mean": 382.830078,
+        "var_within": 3801.848857
+      },
+      {
+        "value": 8,
+        "n": 18,
+        "mean": 384.924045,
+        "var_within": 3951.499
+      },
+      {
+        "value": 16,
+        "n": 18,
+        "mean": 384.879449,
+        "var_within": 4444.495376
+      }
+    ],
+    "G|std_completion_len": [
+      {
+        "value": 2,
+        "n": 24,
+        "mean": 139.825344,
+        "var_within": 1319.208876
+      },
+      {
+        "value": 32,
+        "n": 18,
+        "mean": 126.210362,
+        "var_within": 1146.577443
+      },
+      {
+        "value": 4,
+        "n": 20,
+        "mean": 140.252724,
+        "var_within": 1563.451012
+      },
+      {
+        "value": 8,
+        "n": 18,
+        "mean": 144.763707,
+        "var_within": 1178.740819
+      },
+      {
+        "value": 16,
+        "n": 18,
+        "mean": 145.314665,
+        "var_within": 1317.963235
+      }
+    ],
+    "temperature|mean_reward": [
+      {
+        "value": 0.6,
+        "n": 53,
+        "mean": 0.265385,
+        "var_within": 0.138132
+      },
+      {
+        "value": 1.0,
+        "n": 45,
+        "mean": 0.263455,
+        "var_within": 0.146812
+      }
+    ],
+    "temperature|zvf": [
+      {
+        "value": 0.6,
+        "n": 53,
+        "mean": 0.800118,
+        "var_within": 0.039676
+      },
+      {
+        "value": 1.0,
+        "n": 45,
+        "mean": 0.8375,
+        "var_within": 0.036781
+      }
+    ],
+    "temperature|pcd": [
+      {
+        "value": 0.6,
+        "n": 53,
+        "mean": 0.022178,
+        "var_within": 0.000457
+      },
+      {
+        "value": 1.0,
+        "n": 45,
+        "mean": 0.017957,
+        "var_within": 0.000533
+      }
+    ],
+    "temperature|mean_completion_len": [
+      {
+        "value": 0.6,
+        "n": 53,
+        "mean": 409.901496,
+        "var_within": 4234.434156
+      },
+      {
+        "value": 1.0,
+        "n": 45,
+        "mean": 357.018511,
+        "var_within": 934.415389
+      }
+    ],
+    "temperature|std_completion_len": [
+      {
+        "value": 0.6,
+        "n": 53,
+        "mean": 127.737324,
+        "var_within": 778.130184
+      },
+      {
+        "value": 1.0,
+        "n": 45,
+        "mean": 152.977373,
+        "var_within": 1598.039479
+      }
+    ],
+    "seed|mean_reward": [
+      {
+        "value": 0,
+        "n": 49,
+        "mean": 0.265545,
+        "var_within": 0.144303
+      },
+      {
+        "value": 1,
+        "n": 49,
+        "mean": 0.263453,
+        "var_within": 0.139917
+      }
+    ],
+    "seed|zvf": [
+      {
+        "value": 0,
+        "n": 49,
+        "mean": 0.81824,
+        "var_within": 0.039009
+      },
+      {
+        "value": 1,
+        "n": 49,
+        "mean": 0.816327,
+        "var_within": 0.038397
+      }
+    ],
+    "seed|pcd": [
+      {
+        "value": 0,
+        "n": 49,
+        "mean": 0.019659,
+        "var_within": 0.000459
+      },
+      {
+        "value": 1,
+        "n": 49,
+        "mean": 0.020821,
+        "var_within": 0.000532
+      }
+    ],
+    "seed|mean_completion_len": [
+      {
+        "value": 0,
+        "n": 49,
+        "mean": 386.027962,
+        "var_within": 3339.477975
+      },
+      {
+        "value": 1,
+        "n": 49,
+        "mean": 385.209024,
+        "var_within": 3521.95494
+      }
+    ],
+    "seed|std_completion_len": [
+      {
+        "value": 0,
+        "n": 49,
+        "mean": 140.694407,
+        "var_within": 1237.064073
+      },
+      {
+        "value": 1,
+        "n": 49,
+        "mean": 137.959877,
+        "var_within": 1389.962296
+      }
+    ]
+  },
+  "interpretation": [
+    "Stack axes (model_family, task_slice, G, temperature) together",
+    "explain an order of magnitude more variance in ZVF and",
+    "mean_reward than the seed axis on the 98-cell mega corpus.",
+    "This is the corpus-scale counterpart to the 4-method N2 eta^2",
+    "and is the structural backbone of the Pillar-1 'stack",
+    "conditions everything' claim."
+  ]
+}

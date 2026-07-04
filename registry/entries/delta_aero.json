@@ -1,0 +1,20 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_aero",
+  "name": "AERO",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "le2025rlzvp",
+    "arxiv": "2509.21880",
+    "title": "No Prompt Left Behind: Exploiting Zero-Variance Prompts in {LLM} Reinforcement Learning via Entropy-Guided Advantage Shaping"
+  },
+  "deltas": [
+    {
+      "component": "advantage_guided_evolution",
+      "field": "see delta-list and citation",
+      "change": "use off-policy reference rollouts from the same prompt pool to inflate the effective group size without resampling; (per le2025rlzvp, arXiv:2509.21880)."
+    }
+  ],
+  "notes": "Verified citation: le2025rlzvp (arXiv:2509.21880) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged."
+}

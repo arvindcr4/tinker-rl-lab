@@ -1,0 +1,20 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_cppo",
+  "name": "CPPO",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "lin2025cppo",
+    "arxiv": "2503.22342",
+    "title": "{CPPO}: Accelerating the Training of Group Relative Policy Optimization-Based Reasoning Models"
+  },
+  "deltas": [
+    {
+      "component": "continuity_penalty",
+      "field": "see delta-list and citation",
+      "change": "add a soft penalty that discourages large log-probability jumps between optimization steps; (per CPPO source paper"
+    }
+  ],
+  "notes": "Verified citation: lin2025cppo (arXiv:2503.22342) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged."
+}

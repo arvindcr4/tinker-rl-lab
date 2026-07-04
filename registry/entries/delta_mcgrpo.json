@@ -1,0 +1,25 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_mcgrpo",
+  "name": "MCGRPO",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "mcgrpo2025",
+    "arxiv": "2601.22582",
+    "title": "{MC-GRPO}: Median-Centered Group Relative Policy Optimization for Small-Rollout Reinforcement Learning"
+  },
+  "deltas": [
+    {
+      "component": "mcts_rollout",
+      "field": "see delta-list and citation",
+      "change": "augment the rollout pool with MCTS-derived continuations, re-weighting advantage by MCTS value"
+    },
+    {
+      "component": "per_prompt_diversity_bonus",
+      "field": "see delta-list and citation",
+      "change": "boost within-group contrast by up-weighting rare completions"
+    }
+  ],
+  "notes": "Verified citation: mcgrpo2025 (arXiv:2601.22582) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged."
+}

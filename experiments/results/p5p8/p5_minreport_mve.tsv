@@ -1,0 +1,13 @@
+rank_by_delta_distinct	extension_field	H_field_minrep	n_distinct_minrep_alone	n_distinct_with_extension	delta_distinct	delta_distinct_pct	cells_with_unique_profile	H_with_extension	delta_H_bits
+1	mean_completion_len	3.778	15	98	83	84.69	98	6.6147	2.8367
+2	std_completion_len	3.778	15	98	83	84.69	98	6.6147	2.8367
+3	mean_reward	3.778	15	67	52	53.06	60	5.5739	1.7959
+4	pcd	3.778	15	66	51	52.04	58	5.5535	1.7755
+5	zvf	3.778	15	55	40	40.82	38	5.3136	1.5356
+6	seed	3.778	15	30	15	15.31	6	4.778	1.0
+7	model_family	3.778	15	28	13	13.27	2	4.7372	0.9592
+8	temperature	3.778	15	27	12	12.24	2	4.6963	0.9184
+9	task_slice	3.778	15	15	0	0.0	0	3.778	0.0
+10	G	3.778	15	15	0	0.0	0	3.778	0.0
+11	n_groups	3.778	15	15	0	0.0	0	3.778	0.0
+12	sample_errors	3.778	15	15	0	0.0	0	3.778	0.0

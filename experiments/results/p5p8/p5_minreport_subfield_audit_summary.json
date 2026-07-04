@@ -1,0 +1,52 @@
+{
+  "n_manifests_scanned": 98,
+  "n_top_items": 7,
+  "n_subfields_total": 22,
+  "n_subfields_zero_coverage": 9,
+  "n_subfields_full_coverage_vacuous": 4,
+  "n_subfields_nontrivial": 9,
+  "per_item": [
+    {
+      "item": "loss_form",
+      "n_subfields_declared": 6,
+      "n_subfields_covered": 0,
+      "item_present_pct": 100.0
+    },
+    {
+      "item": "ref_policy_kl",
+      "n_subfields_declared": 3,
+      "n_subfields_covered": 0,
+      "item_present_pct": 100.0
+    },
+    {
+      "item": "sampler_backend_precision",
+      "n_subfields_declared": 4,
+      "n_subfields_covered": 4,
+      "item_present_pct": 100.0
+    },
+    {
+      "item": "per_step_zvf_path",
+      "n_subfields_declared": 2,
+      "n_subfields_covered": 2,
+      "item_present_pct": 100.0
+    },
+    {
+      "item": "group_size_schedule",
+      "n_subfields_declared": 2,
+      "n_subfields_covered": 2,
+      "item_present_pct": 100.0
+    },
+    {
+      "item": "heldout_split",
+      "n_subfields_declared": 3,
+      "n_subfields_covered": 3,
+      "item_present_pct": 100.0
+    },
+    {
+      "item": "decontamination_notes",
+      "n_subfields_declared": 2,
+      "n_subfields_covered": 2,
+      "item_present_pct": 100.0
+    }
+  ]
+}

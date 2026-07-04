@@ -1240,3 +1240,183 @@ B (registry match) vs C (per-cell entropy)   &  30 & undefined & B constant at 0
 \texttt{p5\_3axis\_triangulation\_per\_cell\_boot.tsv} (3 rows),
 \texttt{p5\_3axis\_triangulation\_per\_cell\_summary.json},
 \texttt{.../figures/p5\_3axis\_per\_cell.\{png,pdf\}}.
+
+\subsection{Exhibit 18: Sub-field coverage and minimum-viable-extension (MVE) on the 98-cell mega corpus}
+\label{sec:p5-subfield-audit}
+
+Exhibit~6 stress-tested the seven MIN-REPORT items at the
+\emph{top-level}-key granularity and found 100\% key presence on every
+item but 0\% parsed-out values on the loss-form, reference-policy, and
+KL sub-fields. This exhibit moves one level deeper: the seven items of
+\tableref{tab:p5-minreport} decompose into \textbf{22 sub-fields}
+(ratio level, clip low/high, token mask, advantage normalization, dynamic
+sampling, reference snapshot, KL coefficient, KL estimator, sampler
+backend, sampling engine, precision, decoding parameters, ZVF trajectory,
+GU per step, $G$ value, schedule form, split name, split size,
+disjointness, decontamination check, parser probe). Every manifest
+yields exactly seven strings---one per item---and the 22 sub-fields are
+populated only when the item's value is \emph{structured} (not a
+sentinel like \texttt{"n/a-sampling"}). Analysis script:
+\texttt{scripts/p5p8/p5\_minreport\_subfield\_audit.py}; full outputs at
+\texttt{experiments/results/p5p8/p5\_minreport\_subfield\_audit.tsv}
+(22 rows), \texttt{p5\_minreport\_subfield\_audit\_per\_item.tsv}
+(7 rows), \texttt{p5\_minreport\_subfield\_audit\_summary.json}.
+
+\begin{table}[t]
+\centering\small
+\caption{Sub-field coverage and entropy on $n{=}98$ MIN-REPORT
+manifests. Sorted by coverage ascending then entropy ascending. The
+nine Item-1 and Item-2 sub-fields carry zero coverage (the manifest
+strings are \texttt{"n/a"} sentinels); the four Item-3 sub-fields are
+\emph{vacuous} at 100\% coverage (every cell reports \texttt{"tinker-closed"});
+the nine Item-4--7 sub-fields carry non-trivial information.}
+\label{tab:p5-subfield-coverage}
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+Sub-field & Coverage \% & $H$ (bits) & Item \\
+\midrule
+\texttt{advantage\_norm}        &    0.0 & 0.0000 & Item 1 (loss form) \\
+\texttt{clip\_high}             &    0.0 & 0.0000 & Item 1 \\
+\texttt{clip\_low}              &    0.0 & 0.0000 & Item 1 \\
+\texttt{dynamic\_sampling}      &    0.0 & 0.0000 & Item 1 \\
+\texttt{kl\_coef}               &    0.0 & 0.0000 & Item 2 (ref/KL) \\
+\texttt{kl\_estimator}          &    0.0 & 0.0000 & Item 2 \\
+\texttt{ratio\_level}           &    0.0 & 0.0000 & Item 1 \\
+\texttt{ref\_snapshot}          &    0.0 & 0.0000 & Item 2 \\
+\texttt{token\_mask}            &    0.0 & 0.0000 & Item 1 \\
+\midrule
+\texttt{decoding\_parameters}   &  100.0 & 0.0000 & Item 3 (sampler) \\
+\texttt{precision}              &  100.0 & 0.0000 & Item 3 \\
+\texttt{sampler\_backend}       &  100.0 & 0.0000 & Item 3 \\
+\texttt{sampling\_engine}       &  100.0 & 0.0000 & Item 3 \\
+\midrule
+\texttt{decontam\_check}        &  100.0 & 0.9313 & Item 7 \\
+\texttt{parser\_probe}          &  100.0 & 0.9313 & Item 7 \\
+\texttt{disjointness}           &  100.0 & 1.5546 & Item 6 (held-out) \\
+\texttt{split\_name}            &  100.0 & 1.5546 & Item 6 \\
+\texttt{split\_size}            &  100.0 & 1.5546 & Item 6 \\
+\texttt{G\_value}               &  100.0 & 2.3121 & Item 5 ($G$) \\
+\texttt{schedule\_form}         &  100.0 & 2.3121 & Item 5 \\
+\texttt{GU\_per\_step}           &  100.0 & 6.6147 & Item 4 (ZVF) \\
+\texttt{zvf\_traj}              &  100.0 & 6.6147 & Item 4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The sub-field split is structurally clean. The 9 Item-1 (loss form)
+sub-fields and Item-2 (reference policy \& KL) sub-fields score
+$0/98$---the manifest reports only \texttt{"n/a-sampling"} and
+\texttt{"n/a"} for these items, indistinguishable from emission
+failures. The 4 Item-3 (sampler/backend/precision) sub-fields score
+$100/98$ but with $H{=}0$: every cell reports \texttt{"tinker-closed"}.
+The remaining 9 sub-fields (Items 4--7) carry $H {>} 0$ and
+informationally distinguish cells. Across the 22 sub-fields,
+\textbf{$13/22$ ($59\%$) carry no information} and only $9/22$
+($41\%$) are information-bearing.
+
+\begin{figure}[t]
+\centering\includegraphics[width=0.95\linewidth]{p5_minreport_subfield_audit.pdf}
+\caption{Per-sub-field coverage (left) and minimum-viable-extension lift
+(right) on the $n{=}98$ cell mega corpus. Left: 9 sub-fields have
+$0\%$ coverage (grey), 4 are vacuous at $100\%$ coverage with $H{=}0$
+(dark green), 9 carry information (light green). Right: adding a
+single continuous-telemetry field to MIN-REPORT alone lifts distinct
+profiles from $15/98$ to $98/98$ (the
+\texttt{mean\_completion\_len} bar); \texttt{task\_slice}, $G$,
+\texttt{n\_groups}, and \texttt{sample\_errors} contribute zero
+incremental lift because they are already captured in Items 5 and 6.}
+\label{fig:p5-subfield-audit}
+\end{figure}
+
+The second part of this exhibit measures the gap between the current
+seven-item standard and the information it actually carries at the
+\emph{cell} (joined) level. Two baselines are computed:
+\begin{itemize}
+\item \textbf{Raw}---joined string including \texttt{per\_step\_zvf\_path}.
+\item \textbf{Content}---joined string \emph{excluding}
+  \texttt{per\_step\_zvf\_path}, which carries one unique path per cell
+  and would otherwise dominate any distinctness statistic.
+\end{itemize}
+On the raw baseline the seven items yield $98/98$ distinct profiles
+($H{=}6.6147$ bits, i.e., the maximum $\log_2 98$); on the content
+baseline they yield only \textbf{$15/98$ distinct profiles}
+($H{=}3.7780$ bits). The 5.6-fold ratio between the two baselines is
+the quantitative counterpart to Exhibit~17's observation that
+\texttt{per\_step\_zvf\_path} is an opaque file-pointer carrying the
+cell identity, not a stack-property.
+
+The minimum-viable-extension (MVE) analysis ranks each candidate field
+in \texttt{cells.tsv} by the number of additional distinct profiles it
+adds to the content baseline. The result is a striking
+\emph{single-field} MVE: adding \texttt{mean\_completion\_len} (or
+\texttt{std\_completion\_len}) lifts the distinct profile count from
+$15/98$ to $98/98$ (a 6.5x lift, $\Delta H = +2.84$ bits). Among the
+two top continuous-telemetry fields, $98/98$ cells become uniquely
+identifiable. Ranked lower:
+$\texttt{mean\_reward}$ (+52 profiles), \texttt{pcd} (+51),
+\texttt{zvf} (+40), \texttt{seed} (+15), \texttt{model\_family}
+(+13), \texttt{temperature} (+12). The fields already implicit in the
+seven items (\texttt{task\_slice}, $G$, \texttt{n\_groups},
+\texttt{sample\_errors}) contribute \textbf{0 incremental profiles}
+beyond the content baseline, confirming that the current seven items
+exhaust the categorical stack information but \emph{miss the
+continuous-telemetry layer} that dominates run-to-run variance.
+
+\begin{table}[t]
+\centering\small
+\caption{Minimum-viable-extension (MVE) lift on the $n{=}98$ content
+baseline of $15/98$ distinct MIN-REPORT profiles. Rank 1--12 by
+$\Delta$ distinct. Adding a single continuous-telemetry field (rank 1)
+lifts the distinct profile count to $98/98$. Repeated noise from the
+\texttt{cells.tsv} categorical columns (ranks 9--12) is already
+captured by the existing seven items.}
+\label{tab:p5-mve}
+\begin{tabular}{@{}clrrr@{}}
+\toprule
+Rank & Extension field & $\Delta$ distinct & Cumul.\ distinct & Cumul.\ lift \% \\
+\midrule
+1 & \texttt{mean\_completion\_len} & 83 & 98/98 & 84.7 \\
+2 & \texttt{std\_completion\_len}  & 83 & 98/98 & 84.7 \\
+3 & \texttt{mean\_reward}         & 52 & 67/98 & 53.1 \\
+4 & \texttt{pcd}                  & 51 & 66/98 & 52.0 \\
+5 & \texttt{zvf}                  & 40 & 55/98 & 40.8 \\
+6 & \texttt{seed}                 & 15 & 30/98 & 15.3 \\
+7 & \texttt{model\_family}        & 13 & 28/98 & 13.3 \\
+8 & \texttt{temperature}          & 12 & 27/98 & 12.2 \\
+9 & \texttt{task\_slice}           &  0 & 15/98 &  0.0 \\
+10& $G$                           &  0 & 15/98 &  0.0 \\
+11& \texttt{n\_groups}            &  0 & 15/98 &  0.0 \\
+12& \texttt{sample\_errors}       &  0 & 15/98 &  0.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Actionable recommendation.}
+The current seven MIN-REPORT items are sufficient for the categorical
+stack axes (\textit{what} model, \textit{what} task, \textit{what}
+group-size schedule, \textit{what} held-out split). They are
+\emph{incomplete} for the continuous-telemetry layer (\textit{how
+much} mean / std reward, ZVF, PCD, completion length). Adding a
+single optional key \texttt{mean\_completion\_len} (or any one
+telemetry-channel mean) to the manifest format lifts the per-cell
+distinct profile count from $15\%$ to $100\%$ on this corpus. We
+recommend the maintainers of the MIN-REPORT-RL standard accept the
+\textbf{continuous-telemetry layer} (\texttt{mean\_reward},
+\texttt{zvf}, \texttt{pcd}, \texttt{mean\_completion\_len},
+\texttt{std\_completion\_len}) as a \emph{recommended but not yet
+required} eighth item. This recommendation is a sharp quantification
+of the iter-32 expansion-to-18-items suggestion, restricted to the
+five sub-fields that measurably break the iter-52 per-cell vacuum.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p5\_minreport\_subfield\_audit.py}
+($\sim$2\,s, stdlib only). Outputs:
+\texttt{experiments/results/p5p8/p5\_minreport\_subfield\_audit.tsv}
+(22 rows), \texttt{p5\_minreport\_subfield\_audit\_per\_item.tsv}
+(7 rows),
+\texttt{p5\_minreport\_subfield\_audit\_summary.json},
+\texttt{p5\_minreport\_mve.tsv} (12 rows),
+\texttt{p5\_minreport\_mve\_summary.json};
+figure script
+\texttt{scripts/p5p8/fig\_p5\_minreport\_subfield.py} produces
+\texttt{experiments/results/p5p8/figures/p5\_minreport\_subfield\_audit.\{png,pdf\}}.

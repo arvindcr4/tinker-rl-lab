@@ -1,0 +1,30 @@
+{
+  "n_groups": 600,
+  "seeds": [
+    42,
+    123,
+    456
+  ],
+  "native_G": 8,
+  "H1_max_identity_err": 8.326672684688674e-17,
+  "H1_verdict": "DECISIVE",
+  "H2_bias_loglog_slope": -1.0000000000000002,
+  "H2_bias_at_G2": 0.12660778597153127,
+  "H2_bias_at_G8": 0.03165194649288282,
+  "H2_verdict": "DECISIVE",
+  "H3_zvf_invariant": true,
+  "H3_verdict": "DECISIVE",
+  "H4_amplification_G8": 1.1428571428571428,
+  "H4_verdict": "DECISIVE",
+  "H5_rescale_maxerr": 2.220446049250313e-15,
+  "H5_verdict": "DECISIVE",
+  "H6_residual_at_e0": 2.6344667188501112e-17,
+  "H6_residual_at_e20": 0.11080952380952373,
+  "H6_monotone_growth": true,
+  "H6_verdict": "DECISIVE",
+  "thesis": "CoVe factored-vs-joint verification == RLOO LOO-vs-naive baseline; for a self-consistent verifier it is an EXACT G/(G-1) step-size rescale (under-identified up to a scalar, ZVF-invariant, no tail recovery -- unlike STaR row-21); CoVe's genuine value is verifier DECORRELATION, which appears only under an independent/noisy verifier (H6).",
+  "citations": {
+    "cove": "Dhuliawala, Komeili, Xu, Raileanu, Li, Celikyilmaz (Weston). Chain-of-Verification Reduces Hallucination in LLMs. arXiv:2309.11495, EACL-F 2024.",
+    "rloo": "Ahmadian, Cremer, Galle, Fadaee, Kreutzer, Pietquin. Back to Basics: Revisiting REINFORCE Style Optimization for RLHF. arXiv:2402.14740, ACL 2024."
+  }
+}

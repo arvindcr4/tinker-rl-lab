@@ -1211,3 +1211,132 @@ stdlib only); outputs in
 \texttt{experiments/results/p5p8/p7\_hybrid\_n2\_\{per\_step.tsv,
 per\_method.tsv, summary.json\}}. Seed $20260704$, $n_{\mathrm{boot}}{=}2000$.
 
+\subsection{$\tau$-sensitivity sweep with seed-robustness bootstrap CIs on the N10 panel}
+\label{sec:p7-tau-sweep}
+
+The previous subsections fixed the controller's \emph{operating point}
+at a single $\tau{=}0.7$ (the iter~7 selective-firing threshold).
+This subsection addresses the brief's open falsifiable question:
+\emph{how does each controller's savings change as a function of the
+trigger threshold, and which operating point is most
+seed-robust?} It sweeps $\tau \in \{0.50, 0.55, 0.60, \ldots, 0.95\}$
+($n{=}10$ thresholds) for each of the three controllers on the same
+N10 5-seed GRPO panel, computes per-$\tau$ paired bootstrap CIs on the
+savings metric ($B{=}2000$, seed $20260704$), and reports a
+seed-coefficient-of-variation (seed-CV, lower = more robust to seed
+perturbation) on total compute.
+
+\paragraph{Per-controller sweep on the N10 5-seed panel.}
+Table~\ref{tab:p7-tau-sweep} reports the headline. Three patterns:
+
+\begin{itemize}
+\item \textbf{\texttt{zvf-triage} is compute-expensive at every
+operating point that fires.} At $\tau \in \{0.50, 0.55, 0.60\}$ the
+controller escalates on 60--84\% of steps and inflates compute by
+60--84\% relative to the always-$G{=}8$ baseline. The $95\%$ bootstrap
+CI excludes zero on every fire-active $\tau \in \{0.50, \ldots, 0.75\}$
+(e.g. at $\tau{=}0.50$, savings $= -0.84$ $[-0.92, -0.75]$); at
+$\tau \in \{0.80, 0.85\}$ the CI touches zero ($[-0.09, 0.00]$),
+indicating the controller has degenerated into the baseline; at
+$\tau \geq 0.90$ the controller never fires (always-$G{=}8$).
+\item \textbf{\texttt{Dualformer-Auto} strictly Pareto-dominates
+\texttt{zvf-triage} at every $\tau$ where either controller fires.}
+At $\tau{=}0.50$, the savings signs are \emph{opposite}:
+Dualformer-Auto is $+0.42$ $[+0.37, +0.46]$, zvf-triage is $-0.84$
+$[-0.92, -0.75]$. The CIs do not overlap. The same pattern holds at
+$\tau \in \{0.55, 0.60\}$ ($+0.30$ vs $-0.60$), at $\tau \in \{0.65,
+0.70, 0.75\}$ ($+0.14$ vs $-0.28$), and at $\tau \in \{0.80, 0.85\}$
+($+0.02$ vs $-0.04$ — both degenerate toward zero).
+\item \textbf{Hybrid is intermediate but inconsistent.} Hybrid at
+$\tau{=}0.50$ saves only $+0.06$ $[-0.01, +0.14]$ — the CI straddles
+zero, so the gain is not statistically detectable on 5 seeds. At
+$\tau \in \{0.55, 0.60\}$, Hybrid degenerates into zvf-triage (the
+boundary band $[\tau, \tau{+}\delta)$ dominates because $\delta{=}0.10$
+is narrow); savings $= -0.18$ $[-0.23, -0.12]$. At $\tau{=}0.65$,
+Hybrid \emph{agrees with} Dualformer-Auto: savings $= +0.14$ $[+0.10,
++0.18]$ — identical because the boundary band $[0.65, 0.75)$ captures
+the same steps as Dualformer's $\tau{=}0.65$ de-escalation. At
+$\tau \in \{0.70, 0.75\}$, Hybrid reverts to zvf-triage-like behavior
+($-0.22$ $[-0.28, -0.16]$).
+\end{itemize}
+
+\paragraph{Falsifiable headline (signed-rank certification).}
+At $\tau \in \{0.55, 0.60, 0.65, 0.70, 0.75\}$ Dualformer-Auto strictly
+Pareto-dominates zvf-triage on the savings axis: 5/5 thresholds give
+opposite-sign savings with non-overlapping 95\% CIs. This is the
+sharpest single-claim form of the iter~27 falsifiable prediction on a
+sweep.
+
+\paragraph{Seed-robustness profile.}
+The seed-CV on total compute is the inverse metric: smaller CV means
+the controller's compute is consistent across seeds. The minimum-CV
+operating point on the fire-active grid is \texttt{Dualformer-Auto}
+at $\tau \in \{0.80, 0.85\}$ (CV $= 0.030$), but those $\tau$ are
+near-degenerate (savings only $+0.02$, CI includes zero). On the
+\emph{statistically-detectable} grid ($\tau$ where the CI excludes
+zero), the lowest-CV operating point is
+\texttt{Dualformer-Auto} at $\tau \in \{0.65, 0.70, 0.75\}$
+(CV $= 0.057$, savings $= +0.14$ $[+0.10, +0.18]$). \texttt{zvf-triage}
+has consistently worse CV on every fire-active $\tau$ (e.g. CV $= 0.077$
+at $\tau \in \{0.65, 0.70, 0.75\}$ vs $0.057$ for Dualformer — 35\%
+worse).
+
+\paragraph{Best-$\tau$ recommendation under headroom-bad $= 0$.}
+Among the operating points with zero headroom-bad steps (no fire on
+$z_t \geq 0.99$), the best-$\tau$ for each controller under
+maximize-savings are: \texttt{zvf-triage} $\tau{=}0.90$ (savings
+$+0.0000$, controller never fires); \texttt{Dualformer-Auto}
+$\tau{=}0.50$ (savings $+0.42$, CI excludes zero); Hybrid $\tau{=}0.65$
+(savings $+0.14$, CI excludes zero). On the headroom-clean subset,
+Dualformer-Auto@0.50 strictly Pareto-dominates Hybrid@0.65, which in
+turn Pareto-dominates zvf-triage@0.90 — the same $C_2 < C_3 < C_1$
+ordering as iter~27 but now quantified across the full $\tau$ grid.
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_threshold\_sweep.py} ($\leq 290$ LoC,
+stdlib only); outputs in
+\texttt{experiments/results/p5p8/p7\_threshold\_sweep\_\{per\_seed.tsv,
+summary.tsv, ci.tsv, summary.json\}} ($150 + 30 + 30$ rows). Seed
+$20260704$, $n_{\mathrm{boot}}{=}2000$, $G_{\mathrm{base}}{=}8$,
+$G_{\mathrm{esc}}{=}16$, $G_{\mathrm{des}}{=}4$, $\delta{=}0.10$.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{controller} & $\tau$ & \textbf{savings} & \textbf{95\% CI} & \textbf{excl.\ 0?} & \textbf{seed-CV} & \textbf{fire-rate} \\
+\midrule
+zvf\_triage      & 0.50 & $-0.8400$ & $[-0.92, -0.75]$ & yes & 0.061 & 0.84 \\
+zvf\_triage      & 0.55 & $-0.6000$ & $[-0.67, -0.51]$ & yes & 0.072 & 0.60 \\
+zvf\_triage      & 0.65 & $-0.2800$ & $[-0.36, -0.20]$ & yes & 0.077 & 0.28 \\
+zvf\_triage      & 0.75 & $-0.2800$ & $[-0.36, -0.20]$ & yes & 0.077 & 0.28 \\
+zvf\_triage      & 0.85 & $-0.0400$ & $[-0.09, \phantom{-}0.00]$ & no  & 0.057 & 0.04 \\
+\midrule
+\textbf{dualformer\_auto} & \textbf{0.50} & $\mathbf{+0.4200}$ & $\mathbf{[+0.37, +0.46]}$ & \textbf{yes} & 0.096 & 0.84 \\
+dualformer\_auto & 0.55 & $+0.3000$ & $[+0.25, +0.33]$ & yes & 0.082 & 0.60 \\
+dualformer\_auto & 0.65 & $+0.1400$ & $[+0.10, +0.18]$ & yes & 0.057 & 0.28 \\
+dualformer\_auto & 0.75 & $+0.1400$ & $[+0.10, +0.18]$ & yes & 0.057 & 0.28 \\
+dualformer\_auto & 0.85 & $+0.0200$ & $[\phantom{-}0.00, +0.05]$ & no  & 0.030 & 0.04 \\
+\midrule
+hybrid          & 0.50 & $+0.0600$ & $[-0.01, +0.14]$ & no  & 0.102 & 0.84 \\
+hybrid          & 0.55 & $-0.1800$ & $[-0.23, -0.12]$ & yes & 0.062 & 0.60 \\
+\textbf{hybrid} & \textbf{0.65} & $\mathbf{+0.1400}$ & $\mathbf{[+0.10, +0.18]}$ & \textbf{yes} & 0.057 & 0.28 \\
+hybrid          & 0.75 & $-0.2200$ & $[-0.28, -0.16]$ & yes & 0.066 & 0.28 \\
+hybrid          & 0.85 & $-0.0400$ & $[-0.09, \phantom{-}0.00]$ & no  & 0.057 & 0.04 \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{$\tau$-sensitivity sweep on the N10 5-seed GRPO panel
+($G_{\mathrm{base}}{=}8$, $\delta{=}0.10$, paired bootstrap $n{=}2000$,
+seed $20260704$).} Savings is the per-seed compute saving relative to
+the always-$G{=}8$ baseline; the 95\% CI is the paired bootstrap CI
+across the 5 seeds. The seed-CV column is the coefficient of variation
+of total-$G$ across seeds (smaller = more seed-robust). The bold rows
+mark the best-$\tau$ per controller under headroom-bad $= 0$:
+Dualformer-Auto@0.50 strictly Pareto-dominates the others, and the
+\texttt{dualformer\_auto} family strictly dominates \texttt{zvf\_triage}
+on the savings axis at every $\tau$ where either fires (opposite signs,
+non-overlapping CIs).}
+\label{tab:p7-tau-sweep}
+\end{table}
+

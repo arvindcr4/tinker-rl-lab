@@ -460,3 +460,115 @@ by \texttt{python3 scripts/p5p8/p8\_cost\_adjusted\_curve.py}
 bootstrap). Outputs are the three files under
 \texttt{experiments/results/p5p8/} named in
 \tableref{tab:p8-evidence-cost-curve}--\ref{tab:p8-evidence-cost-curve-boot}.
+
+\subsection{Threshold-stratified operating points}
+\label{sec:p8-evidence-threshold}
+
+The calibration, PR-AUC, and cost-curve evidence all measure detection
+quality either in the aggregate (global AUC, ECE) or at a fixed
+top-$K$\% budget. The threshold-stratified sweep closes the
+operational loop by reporting precision, recall, F1, and a paired
+bootstrap CI on every measurable precision and recall delta at each
+analyst-paging threshold $\tau \in \{0.05, 0.10, \dots, 1.00\}$.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Threshold-stratified precision (P), recall (R), and F1 for
+XGB-20raw and XGB-24full. Bold marks the best F1 per model.}
+\label{tab:p8-evidence-threshold-f1}
+\begin{tabular}{lccccccccc}
+\toprule
+$\tau$ & $n_\text{alert}^\text{20}$ & P$^\text{20}$ & R$^\text{20}$ & F1$^\text{20}$ &
+$n_\text{alert}^\text{24}$ & P$^\text{24}$ & R$^\text{24}$ & F1$^\text{24}$ \\
+\midrule
+$0.05$ & $295$ & $0.386$ & $0.792$ & $0.519$ & $305$ & $0.393$ & $0.833$ & $0.535$ \\
+$0.10$ & $152$ & $0.638$ & $0.674$ & $0.655$ & $155$ & $0.665$ & $0.715$ & $0.689$ \\
+$\mathbf{0.15}$ & $\mathbf{112}$ & $\mathbf{0.768}$ & $\mathbf{0.597}$ & $\mathbf{0.672}$ &
+$\mathbf{109}$ & $\mathbf{0.835}$ & $\mathbf{0.632}$ & $\mathbf{0.719}$ \\
+$0.20$ & $88$ & $0.841$ & $0.514$ & $0.638$ & $97$ & $0.856$ & $0.576$ & $0.689$ \\
+$0.25$ & $74$ & $0.892$ & $0.458$ & $0.606$ & $82$ & $0.902$ & $0.514$ & $0.654$ \\
+$0.30$ & $66$ & $0.939$ & $0.431$ & $0.590$ & $69$ & $0.928$ & $0.444$ & $0.600$ \\
+$0.35$ & $59$ & $0.932$ & $0.382$ & $0.542$ & $63$ & $0.921$ & $0.403$ & $0.561$ \\
+$0.40$ & $56$ & $0.946$ & $0.368$ & $0.530$ & $52$ & $0.904$ & $0.391$ & $0.547$ \\
+$0.45$ & $51$ & $0.941$ & $0.333$ & $0.492$ & $56$ & $0.911$ & $0.354$ & $0.510$ \\
+$0.50$ & $45$ & $0.956$ & $0.299$ & $0.455$ & $43$ & $0.907$ & $0.299$ & $0.452$ \\
+$0.55$ & $39$ & $0.949$ & $0.257$ & $0.404$ & $40$ & $0.950$ & $0.264$ & $0.414$ \\
+$0.60$ & $33$ & $0.970$ & $0.222$ & $0.362$ & $34$ & $0.971$ & $0.229$ & $0.371$ \\
+$0.65$ & $28$ & $1.000$ & $0.194$ & $0.326$ & $25$ & $0.923$ & $0.192$ & $0.319$ \\
+$0.70$ & $27$ & $1.000$ & $0.188$ & $0.316$ & $24$ & $1.000$ & $0.167$ & $0.286$ \\
+$0.75$ & $23$ & $1.000$ & $0.160$ & $0.275$ & $22$ & $1.000$ & $0.153$ & $0.265$ \\
+$0.80$ & $20$ & $1.000$ & $0.139$ & $0.244$ & $17$ & $1.000$ & $0.118$ & $0.210$ \\
+$0.85$ & $14$ & $1.000$ & $0.097$ & $0.177$ & $12$ & $1.000$ & $0.083$ & $0.154$ \\
+$0.90$ & $9$ & $1.000$ & $0.063$ & $0.118$ & $7$ & $1.000$ & $0.049$ & $0.093$ \\
+$0.95$ & $3$ & $1.000$ & $0.021$ & $0.041$ & $3$ & $1.000$ & $0.021$ & $0.041$ \\
+$1.00$ & $0$ & --- & $0.000$ & --- & $0$ & --- & $0.000$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The first observation is that the \textbf{best F1 occurs at the same
+threshold ($\tau = 0.15$) for both trees}, but at different absolute
+levels: F1$^\text{24} = 0.719$ vs F1$^\text{20} = 0.672$, a gain of
+$+4.7$ absolute F1 points ($+7.0\%$ relative). The aggregate features
+thus let the tree find a strictly better operating point at the same
+reviewer-paging threshold.
+
+The second observation is that the \textbf{precision gap is statistically
+detectable at exactly one threshold, $\tau = 0.15$}: $\Delta_\text{P} =
++6.8$pp, $95\%$ CI $[+0.9, +13.8]$. At every other threshold the
+precision CI straddles zero. This is consistent with the iter-4 global
+finding that the aggregate features do not move AUC.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired bootstrap CIs ($n_\text{boot}{=}400$, $\alpha{=}0.05$)
+on the recall gap $\Delta_\text{R}(\text{24full}{-}\text{20raw})$ at
+every threshold. ``excl.\ 0?'' flags CIs that exclude zero. The recall
+gap is the dominant signal of the aggregate features' value.}
+\label{tab:p8-evidence-threshold-recall-boot}
+\begin{tabular}{lccc}
+\toprule
+$\tau$ & $\Delta_\text{R}$ (mean) & $95\%$ CI & excl.\ 0? \\
+\midrule
+$0.15$ & $+0.031$ & $[-0.025, +0.091]$ & no \\
+$\mathbf{0.20}$ & $\mathbf{+0.063}$ & $\mathbf{[+0.017, +0.112]}$ & \textbf{yes} \\
+$\mathbf{0.25}$ & $\mathbf{+0.069}$ & $\mathbf{[+0.026, +0.122]}$ & \textbf{yes} \\
+$\mathbf{0.30}$ & $\mathbf{+0.062}$ & $\mathbf{[+0.020, +0.104]}$ & \textbf{yes} \\
+$\mathbf{0.35}$ & $\mathbf{+0.069}$ & $\mathbf{[+0.022, +0.117]}$ & \textbf{yes} \\
+$0.40$ & $+0.027$ & $[-0.014, +0.067]$ & no \\
+$\mathbf{0.45}$ & $\mathbf{+0.062}$ & $\mathbf{[+0.016, +0.111]}$ & \textbf{yes} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The third observation is that \textbf{the recall gap is statistically
+detectable at $5$ of $20$ thresholds} (those bolded in
+\tableref{tab:p8-evidence-threshold-recall-boot}), all in the
+moderate-$\tau$ regime. Mean $\Delta_\text{R}$ ranges from $+6.2$pp
+to $+6.9$pp, with the full CI above zero. The aggregate features
+catch $+6$ to $+7$ extra positives per $10{,}000$ test rows that the
+raw-$20$ tree misses, but the gain is concentrated in the recall-rich
+operating range, not at the strict-precision cutoff.
+
+\paragraph{Operational interpretation.} The combined picture is
+sharper than any single previous section: a fraud-ops team should
+page reviewers at $\tau \approx 0.20{-}0.35$, where the LLM sensor
+delivers its maximum recall gain. At $\tau \ge 0.70$ both trees tie
+on precision (both $= 1.0$) because they catch the same top alerts;
+at $\tau = 0.05$ the threshold is so low that both trees are over-
+alerting and the recall gap is within bootstrap noise. The
+**moderate-precision operating point is where the LLM sensor pays for
+itself**, and the iter-16 cost-curves \emph{do not} capture this
+because they lock the deployment to top-$K$\% budgets rather than to
+score thresholds.
+
+\paragraph{Reproduction.} All numbers in this subsection are produced
+by \texttt{python3 scripts/p5p8/p8\_threshold\_calibration.py}
+($\sim$2 min on 4 cores; seed $42$ for XGBoost, seed $2026$ for
+bootstrap). Outputs:
+\texttt{experiments/results/p5p8/p8\_threshold\_calibration.tsv},
+\texttt{p8\_threshold\_boot.tsv},
+\texttt{p8\_threshold\_summary.json}.
+

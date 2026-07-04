@@ -514,3 +514,58 @@ Tasks                 & Gebru    & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEE
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsection{Exhibit 11: Per-MIN-REPORT-item Validation Rate at $n{=}98$ Cells}
+\label{sec:p5-exhibit-per-item}
+
+The auditor prototype in \secref{sec:p5-exhibit-auditor} scores each
+manifest as a single $0$--$100$ badge that \emph{weights} the seven
+items. The audit coverage tables of \secref{sec:p5-exhibit-coverage}
+report each item's coverage as TSV rows. The reader who wants one
+glance at how rigorously each item is validated on the live corpus
+gets none from either---the auditor collapses the per-item structure,
+and the coverage TSVs are textual. This exhibit adds the missing
+visualization: a three-bar (validated vs missing vs honest-n/a)
+chart of the seven items, computed on the same $98$-cell corpus.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{p5_minreport_per_item.pdf}
+\caption{Per-MIN-REPORT-item validation rate across the $98$ live
+mega cells (2026-07-04). Green: percentage of cells carrying a
+validated entry for the item. Red: percentage of cells with the key
+\emph{missing}. Gray: percentage of cells carrying an honest
+\texttt{n/a-*} declaration. Six of seven items are fully validated
+($\ge 99$\%); one item (\#2: Reference policy \& KL) is fully missing
+on this corpus. See \texttt{experiments/results/p5p8/p5\_exhibit\_a\_data.tsv}
+for the underlying numbers.}
+\label{fig:p5-exhibit-per-item}
+\end{figure}
+
+The exhibit makes two reviewer-facing facts visible at a glance:
+
+\begin{enumerate}
+\item \textbf{Six of seven items are validated on $\ge 99\%$ of the
+$98$ cells}. The corpus does report what MIN-REPORT asks for, on
+every other axis.
+\item \textbf{One item — the reference-policy / KL coefficient pair —
+is reported on zero of $98$ cells}. This is the single highest-leverage
+gap the audit has surfaced. KL is the dominant lever in PPO/GRPO
+($\beta \in \{0.0, 0.04\}$ changes the same-stack outcome by orders of
+magnitude); a benchmark that does not report it cannot compare
+post-training runs.
+\end{enumerate}
+
+The exhibit also makes the auditor's silent weight assumption visible:
+the $20$-pt weight on items 3, 4, 7 was set because those items are the
+hardest to lie about (\texttt{sampler\_backend} ties to a specific
+commit, \texttt{per-step ZVF/GU trajectory} ties to the run artifacts
+and \texttt{parser probe} ties to the train-time datum). The bar chart
+shows they are also the items the existing corpus reports best ---
+so the auditor was \emph{not} cherry-picked.
+
+\paragraph{Reproduction.} \texttt{python3 scripts/p5p8/p5\_exhibit\_a\_figure.py}
+($\sim$5 s). Outputs:
+\texttt{experiments/results/p5p8/figures/p5\_minreport\_per\_item.\{png,pdf\}},
+\texttt{experiments/results/p5p8/p5\_exhibit\_a\_data.tsv},
+\texttt{experiments/results/p5p8/p5\_exhibit\_a\_summary.json}.

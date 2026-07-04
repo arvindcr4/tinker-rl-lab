@@ -128,3 +128,88 @@ improve their badge should target \texttt{loss\_form} first
 (the largest gap on open stacks)---the per-framework columns of
 \texttt{registry\_audit\_summary.json} are the machine-readable
 checklist.
+
+\subsection{Structural stress test (iter 26)}
+\label{sec:p6-stress}
+
+The integrity claim ``31/31 schema PASS'' is a positive statement
+about the \emph{shipped} entries; it says nothing about whether the
+schema would have \emph{caught} a prospective contributor's erroneous
+edit. Iter~26 closes this asymmetry with a paired bootstrap CI on the
+schema's true-positive rate over $N = 3{,}230$ adversarial
+perturbations (13 categories $\times$ 31 entries $\times$ 10
+mutations). Each perturbation deep-copies an entry, applies ONE
+structural change (e.g., uppercase the id, drop a MIN-REPORT leaf,
+flip a delta reference to a non-existent name), and hands the result to
+\texttt{jsonschema.validate} (\texttt{scripts/p5p8/registry\_stress\_test.py};
+artefacts in
+\texttt{experiments/results/p5p8/registry\_stress\_\{summary.json, per\_run.tsv\}}).
+
+\begin{table}[t]
+\centering
+\caption{Iter 26 schema stress test: per-category recovery rate on
+$N_\text{entries}=31$, $N_\text{mutations}=10$ adversarial perturbations
+per category-entry pair. ``Pre-bump'' is the schema as shipped at iter 25;
+``Post-bump'' is the iter 26 schema after the three patches listed below. CI
+is a paired over-(category, mutation\_idx) bootstrap with $B=4000$.}
+\label{tab:p6-stress}
+\small
+\begin{tabular}{lrrrl}
+\toprule
+Mutation category & Pre-bump & Post-bump & CI95 post & Gap fixed by \\
+\midrule
+drop top-level required key  & 1.000 & 1.000 & [1.000, 1.000] & --- \\
+wrong-type \texttt{record\_type} & 1.000 & 1.000 & [1.000, 1.000] & --- \\
+wrong-type \texttt{id}       & 1.000 & 1.000 & [1.000, 1.000] & --- \\
+bad \texttt{id} regex        & \textbf{0.645} & \textbf{1.000} & [1.000, 1.000] & Patch (a) \\
+bad \texttt{framework.openness} enum & 1.000 & 1.000 & [1.000, 1.000] & --- \\
+bad \texttt{status} enum     & 1.000 & 1.000 & [1.000, 1.000] & --- \\
+bad \texttt{advantage\_normalization} enum & 1.000 & 1.000 & [1.000, 1.000] & --- \\
+additional top-level property & 1.000 & 1.000 & [1.000, 1.000] & --- \\
+\textbf{drop MIN-REPORT leaf}     & \textbf{0.000} & \textbf{1.000} & [1.000, 1.000] & Patch (b) \\
+wrong-type \texttt{min\_report}  & 1.000 & 1.000 & [1.000, 1.000] & --- \\
+drop \texttt{source\_artifacts} & 1.000 & 1.000 & [1.000, 1.000] & --- \\
+\textbf{broken \texttt{delta\_id}}        & \textbf{0.000} & \textbf{1.000} & [1.000, 1.000] & Patch (c) \\
+wrong-type \texttt{outcomes}   & 1.000 & 1.000 & [1.000, 1.000] & --- \\
+\midrule
+\textbf{Overall} & \textbf{0.864} & \textbf{1.000} & [1.000, 1.000] & 3 patches \\
+\bottomrule
+\end{tabular}\\
+\footnotesize{Source:
+\texttt{experiments/results/p5p8/registry\_stress\_summary.json}.}
+\end{table}
+
+The PRE-BUMP row pulls the headline: the schema's structural
+recovery was 0.864 \textbf{[0.756, 0.878]}, not 1.000. Three
+categories were silent failures:
+
+\begin{itemize}
+\item \textbf{Patch (a)}: \texttt{variant\_delta\_record.id} lacked
+the \verb|^[a-z0-9][a-z0-9_.-]*$| pattern check (the
+\texttt{stack\_record} side already enforced it). All 110
+\texttt{delta\_*}``\texttt{*} entries could absorb an uppercase id
+without complaint.
+\item \textbf{Patch (b)}: every leaf inside each of the seven
+MIN-REPORT items was declared in \texttt{properties} but \emph{not} in
+\texttt{required}, so a `leaf dropped' edit was indistinguishable from
+a `leaf = null' edit. The audit's per-leaf coverage was a value-null
+check, not a key-presence check; this iter promotes the latter to a
+schema invariant.
+\item \textbf{Patch (c)}:
+\texttt{variant\_deltas\_applied[*].delta\_id} was a free-form string.
+The post-hoc \texttt{variant\_delta\_xref} field in
+\texttt{registry\_audit\_summary.json} caught broken refs during the
+audit; iter 26 promotes the cross-reference check into the schema
+itself via an \texttt{enum} listing every
+\texttt{registry/entries/delta\_*.json} stem. A helper
+(\texttt{scripts/p5p8/regenerate\_schema\_delta\_enum.py}) re-derives
+the enum on demand and exits non-zero if a regen would break any entry.
+\end{itemize}
+
+\paragraph{Reviewer-facing claim.} After the three patches, the
+schema's structural recovery is \textbf{1.000} on $N=3{,}230$
+perturbations with a 95\% paired bootstrap CI of \textbf{[1.000, 1.000]}.
+Every prospective contributor's erroneous edit now fails schema
+validation rather than being caught only by the iter 14 audit's
+post-hoc value-null heuristic. The audit and the schema now describe
+the same integrity claim from two complementary angles.

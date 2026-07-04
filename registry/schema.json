@@ -238,6 +238,18 @@
             },
             "token_mask": {
               "$ref": "#/$defs/nullable_string"
+            },
+            "token_aggregation": {
+              "$ref": "#/$defs/nullable_string",
+              "description": "Iter-32 extension: aggregation level for the token-level loss; \"token\" for DAPO, \"sequence\" for GSPO."
+            },
+            "reward_shaping_type": {
+              "$ref": "#/$defs/nullable_string",
+              "description": "Iter-32 extension: type of reward shaping (e.g. overlong_penalty for DAPO, gamma_baseline for GIFT)."
+            },
+            "sampling_dynamic_filter": {
+              "$ref": "#/$defs/nullable_boolean",
+              "description": "Iter-32 extension: whether the sampler applies dynamic filtering (e.g. DAPO dynamic_sampling)."
             }
           },
           "required": [

@@ -35,7 +35,8 @@
       "clip_eps_high": null,
       "length_normalization": null,
       "advantage_normalization": "std",
-      "token_mask": null
+      "token_mask": null,
+      "reward_shaping_type": "gamma_baseline"
     },
     "reference_kl": {
       "reference_policy": true,

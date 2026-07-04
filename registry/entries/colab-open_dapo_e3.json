@@ -57,7 +57,9 @@
       "clip_eps_high": 0.28,
       "length_normalization": true,
       "advantage_normalization": "std",
-      "token_mask": "completion-only"
+      "token_mask": "completion-only",
+      "token_aggregation": "token",
+      "sampling_dynamic_filter": true
     },
     "reference_kl": {
       "reference_policy": false,

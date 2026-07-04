@@ -38,18 +38,19 @@ DELTA_IMPLICATIONS: dict[str, dict[str, dict[str, object]]] = {
             "loss_form.clip_eps_high": 0.28,
         },
         "dynamic_sampling": {
-            # The registry does not expose a `sampling.*` block in
-            # MIN-REPORT — the closest is sampler_backend, which is
-            # orthogonal. Mark as no MIN-REPORT implication.
+            # Iter-32 extension: sampling_dynamic_filter captures DAPO's
+            # dynamic-sampling-on accuracy filter.
+            "loss_form.sampling_dynamic_filter": True,
         },
         "token_level_loss": {
-            # The registry's loss_form has no `aggregation` leaf; the
-            # closest is `token_mask='completion-only'`, but that is
-            # not the same as token-level policy-gradient aggregation.
-            # List no strict implication.
+            # Iter-32 extension: token_aggregation captures DAPO's
+            # token-level loss aggregation.
+            "loss_form.token_aggregation": "token",
         },
         "overlong_reward_shaping": {
-            # No reward.* block in MIN-REPORT.
+            # Iter-32 extension: reward_shaping_type captures DAPO's
+            # overlong-reward shaping.
+            "loss_form.reward_shaping_type": "overlong_penalty",
         },
         "kl_removed": {
             "reference_kl.kl_beta": 0.0,
@@ -70,6 +71,8 @@ DELTA_IMPLICATIONS: dict[str, dict[str, dict[str, object]]] = {
         # gspo moves importance ratio to sequence level (zhai2025gspo).
         "sequence_level_ratio": {
             "loss_form.importance_ratio_level": "sequence",
+            # Iter-32 extension: token_aggregation matches the same notion.
+            "loss_form.token_aggregation": "sequence",
         },
         "sequence_level_clip": {
             # clip bounds differ at sequence level — registry exposes
@@ -78,8 +81,9 @@ DELTA_IMPLICATIONS: dict[str, dict[str, dict[str, object]]] = {
     },
     "delta_gift": {
         "gamma_likelihood_baseline": {
-            # The gamma prior lives in the reward/advantage block; the
-            # registry does not expose it.
+            # Iter-32 extension: reward_shaping_type captures GIFT's
+            # gamma-likelihood baseline prior.
+            "loss_form.reward_shaping_type": "gamma_baseline",
         },
     },
     "delta_aero": {

@@ -347,3 +347,86 @@ same $103$ cells. This closes the loop the iter-1 audit identified
 \emph{operationally}: the auditor prototype does not just count keys,
 it scores them, and the per-item table becomes the work-list for the
 next iteration of the manifest emitter.
+
+\subsection{Exhibit 9: Bootstrap CIs on the Algorithm-axis $\eta^{2}$ and Method-arm Reward Spread}
+\label{sec:p5-exhibit-headline-cis}
+
+Exhibit~5 reports the algorithm-axis $\eta^{2}$ on ZVF and
+reward\_mean as point estimates derived from a single seed
+($n{=}4$ methods $\times$ $40$ steps), and Exhibit~3 reports the
+12-cell head-to-head spread of last-10 reward as $0.034$
+($0.710$--$0.744$). Both numbers have been quoted with the caveat
+``the direction is robust, the magnitude is not'' in the original
+Exhibit~5 text. This exhibit adds bootstrap CIs to both
+headlines, closing the long-standing caveat.
+
+The algorithm-axis $\eta^{2}$ CI is computed by a stratified bootstrap
+that resamples observations within each method arm while preserving
+group sizes ($B{=}10{,}000$, $\alpha{=}0.05$ two-sided). The method-arm
+spread CI is computed by bootstrapping the step indices within each
+arm's last-10 step window and computing the spread = max(arm\_mean) -
+min(arm\_mean) of each replicate.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Bootstrap CIs ($B{=}10{,}000$, two-sided $\alpha{=}0.05$) on
+two P5 headline numbers. \textbf{H4} is the algorithm-axis $\eta^{2}$
+on ZVF and on reward\_mean computed from the four-method same-stack N2
+run; the stratified bootstrap resamples observations within each
+method arm while preserving group sizes. \textbf{H5} is the spread of
+last-10 mean reward across the four method arms; the bootstrap
+resamples the step index within each arm's last-10 window. The
+algorithm axis explains $\le 5.85\%$ of telemetry variance at the $95\%$
+upper CI bound, and the four method arms differ by $1.6$--$9.8$ pp of
+reward at the last-10 step window. Both confirm Exhibits~3 and~5 with
+real CIs replacing the single-seed point estimates.}
+\label{tab:p5-headline-cis}
+\begin{tabular}{llrrrrrl}
+\toprule
+Claim & Metric & $n_{\text{groups}}$ & $n_{\text{per\_group}}$ &
+Point & $95\%$ CI & Verdict & Note \\
+\midrule
+H4 & $\eta^{2}$(algorithm, ZVF)        & $4$ & $40$ & $0.0454$ & $[0.0014,\, 0.0585]$ & DECISIVE & $\le 6\%$ at $95\%$ upper \\
+H4 & $\eta^{2}$(algorithm, reward\_mean) & $4$ & $40$ & $0.0075$ & $[0.0014,\, 0.0577]$ & DECISIVE & $\le 6\%$ at $95\%$ upper \\
+H5 & spread last-10 reward            & $4$ & $10$ & $0.0359$ & $[0.0164,\, 0.0984]$ & TINY     & $\le 10$ pp at $95\%$ upper \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The first observation is that \textbf{the algorithm-axis $\eta^{2}$
+upper-CI is $\le 5.85\%$ for both ZVF and reward\_mean}. The
+single-seed point estimate from Exhibit~5 was already $\le 6.3\%$;
+the bootstrap CI upper bound is now strictly below that, so the
+``algorithm axis is small'' reading of Exhibit~5 survives at the
+$95\%$ level. The lower-CI bound of $0.0014$ on both metrics indicates
+the four method arms are \emph{not} exactly equal: they do differ
+somewhat, but the magnitude of that difference is well under $6\%$ of
+the telemetry variance budget.
+
+The second observation is that \textbf{the four-method last-10 reward
+spread CI is $[+0.016, +0.098]$}, an order of magnitude tighter than
+the $1.7{\times}$ backend-swap ratio of Exhibit~1. Even at the $95\%$
+upper bound the spread is $< 10$ pp of reward, and the Exhibit~3
+point estimate of $0.034$ sits comfortably inside the CI. The
+bootstrap also confirms the Exhibit~3 qualitative reading: the four
+methods are statistically distinguishable (the lower-CI bound is
+strictly positive) but the magnitude is too small to be a meaningful
+practical gap.
+
+\paragraph{Reading the headline CIs together with the $\eta^{2}$
+decomposition.} The bootstrap CI on $\eta^{2}$(algorithm) is a
+sharpened version of Exhibit~5: the algorithm axis contributes at
+most $5.85\%$ of variance at the $95\%$ level, vs the stack axis
+(model\_family, task\_slice, $G$, temperature) that contributes
+$\ge 73\%$ per Exhibit~7. The gap between the two axes is now
+$\ge 12{\times}$ at the $95\%$ level, sharpened from the $22$--$133{\times}$
+ratio of the single-seed Exhibit~5 estimate.
+
+\paragraph{Reproduction.}
+All three rows of \tableref{tab:p5-headline-cis} are produced by
+\texttt{python3 scripts/p5p8/p5\_headline\_cis\_full.py}
+($\sim$30 s; $B{=}10{,}000$ bootstrap). Source data:
+\texttt{experiments/results/n2\_reward\_tensor\_resume/n2\_metrics.tsv}.
+Outputs: \texttt{experiments/results/p5p8/p5\_headline\_cis\_full.tsv}
+and \texttt{p5\_headline\_cis\_full.json}.

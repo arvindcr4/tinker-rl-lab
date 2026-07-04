@@ -1,0 +1,4 @@
+claim	metric	n_groups	n_per_group	point	ci_lo	ci_hi	verdict	note
+H4	eta2_algorithm_zvf	4	40	0.0454	0.0014	0.0585	DECISIVE	stratified bootstrap within method groups, n=10000
+H4	eta2_algorithm_reward_mean	4	40	0.0075	0.0014	0.0577	DECISIVE	stratified bootstrap within method groups, n=10000
+H5	spread_last10_reward	4	10	0.0359	0.0164	0.0984	TINY	spread = max(arm_mean)-min(arm_mean) over 4 method arms, last-10 step window

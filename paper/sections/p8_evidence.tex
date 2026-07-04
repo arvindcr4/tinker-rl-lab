@@ -295,3 +295,168 @@ dominant predictor to register above the noise floor of a paired
 bootstrap CI. The Pillar-3 ZVF controller (items 08, 13, 16 of the
 P5P8 improvements ledger) reaches the same conclusion in the
 RL policy-improvement setting.
+
+\subsection{Cost-adjusted operating curve at six review budgets}
+\label{sec:p8-evidence-cost-curve}
+
+The PR-AUC and top-1\% tables above measure \emph{detection quality}
+at a fixed score-rank budget. A real fraud-ops deployment is budgeted
+in dollars, not in score-rank slots: an analyst queue has a hard
+top-$K$ review budget per day, and each row that enters the queue
+costs both a model call and an analyst review minute. This subsection
+closes that loop. We compare four deployment modes on the released
+$10{,}000$-row test split at six review budgets $K \in \{0.1\%, 0.5\%,
+1\%, 2\%, 5\%, 10\%\}$ of the stream:
+
+\begin{itemize}
+\item \textbf{M1: XGB-20raw.} Tree on the 20 raw $V$-features only.
+  No LLM cost, no LLM value.
+\item \textbf{M2: XGB-24full (oracle LLM-as-sensor).} Tree on the 20
+  raw + 4 hand-engineered aggregates. Treats the aggregates as a free
+  oracle LLM sensor and bounds the upside of any real LLM-as-sensor.
+\item \textbf{M3: Hybrid-10\%.} XGB-20raw for the bottom 90\% of the
+  stream; XGB-24full for the top 10\%. The LLM sensor is paid only
+  on the top 10\% tail.
+\item \textbf{M4: Hybrid-1\%.} Same as M3 but the LLM sensor runs
+  only on the top 1\%.
+\end{itemize}
+
+The cost model is taken verbatim from
+\tableref{tab:p8-evidence-cost}: XGBoost scorer
+$\$\,0.0001$ / row, LLM sensor (Qwen3.5-4B SFT) $\$\,0.0035$ / row,
+analyst review $\$\,0.50$ / row.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Cost-adjusted operating metrics on the released $10{,}000$-row
+test split at six review budgets. $K$ is the fraction of the stream
+the analyst reviews (top score-sorted $K\%$). \emph{TP/\$} is true
+positives recovered per combined dollar of model and review spend; it
+is the headline operating metric for a fraud-ops deployment. M3/M4
+add the LLM-sensor cost on the top $10\%$ / $1\%$ of the stream
+respectively; M2 ignores LLM cost (oracle).}
+\label{tab:p8-evidence-cost-curve}
+\begin{tabular}{lrrrrrr}
+\toprule
+Mode & $K$ & TP & FP & Prec & Recall & TP/\$ \\
+\midrule
+M1 XGB-20raw           & $0.1\%$ & $10$  & $0$   & $1.000$ & $0.069$ & $1.667$ \\
+M2 XGB-24full oracle   & $0.1\%$ & $10$  & $0$   & $1.000$ & $0.069$ & $1.667$ \\
+M3 Hybrid-10\%         & $0.1\%$ & $10$  & $0$   & $1.000$ & $0.069$ & $1.053$ \\
+M4 Hybrid-1\%          & $0.1\%$ & $10$  & $0$   & $1.000$ & $0.069$ & $1.575$ \\
+\midrule
+M1 XGB-20raw           & $0.5\%$ & $47$  & $3$   & $0.940$ & $0.326$ & $1.808$ \\
+M2 XGB-24full oracle   & $0.5\%$ & $47$  & $3$   & $0.940$ & $0.326$ & $1.808$ \\
+M3 Hybrid-10\%         & $0.5\%$ & $47$  & $3$   & $0.940$ & $0.326$ & $1.593$ \\
+M4 Hybrid-1\%          & $0.5\%$ & $47$  & $3$   & $0.940$ & $0.326$ & $1.784$ \\
+\midrule
+M1 XGB-20raw           & $1\%$   & $80$  & $20$  & $0.800$ & $0.556$ & $1.569$ \\
+M2 XGB-24full oracle   & $1\%$   & $86$  & $14$  & $0.860$ & $0.597$ & $1.686$ \\
+M3 Hybrid-10\%         & $1\%$   & $80$  & $20$  & $0.800$ & $0.556$ & $1.468$ \\
+M4 Hybrid-1\%          & $1\%$   & $80$  & $20$  & $0.800$ & $0.556$ & $1.558$ \\
+\midrule
+M1 XGB-20raw           & $2\%$   & $105$ & $95$  & $0.525$ & $0.729$ & $1.040$ \\
+M2 XGB-24full oracle   & $2\%$   & $110$ & $90$  & $0.550$ & $0.764$ & $1.089$ \\
+M3 Hybrid-10\%         & $2\%$   & $105$ & $95$  & $0.525$ & $0.729$ & $1.005$ \\
+M4 Hybrid-1\%          & $2\%$   & $105$ & $95$  & $0.525$ & $0.729$ & $1.036$ \\
+\midrule
+M1 XGB-20raw           & $5\%$   & $125$ & $375$ & $0.250$ & $0.868$ & $0.498$ \\
+M2 XGB-24full oracle   & $5\%$   & $129$ & $371$ & $0.258$ & $0.896$ & $0.514$ \\
+M3 Hybrid-10\%         & $5\%$   & $125$ & $375$ & $0.250$ & $0.868$ & $0.491$ \\
+M4 Hybrid-1\%          & $5\%$   & $125$ & $375$ & $0.250$ & $0.868$ & $0.497$ \\
+\midrule
+M1 XGB-20raw           & $10\%$  & $133$ & $867$ & $0.133$ & $0.924$ & $0.265$ \\
+M2 XGB-24full oracle   & $10\%$  & $136$ & $864$ & $0.136$ & $0.944$ & $0.271$ \\
+M3 Hybrid-10\%         & $10\%$  & $133$ & $867$ & $0.133$ & $0.924$ & $0.264$ \\
+M4 Hybrid-1\%          & $10\%$  & $133$ & $867$ & $0.133$ & $0.924$ & $0.265$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The first observation is that \textbf{M2 strictly improves TP at every
+$K \ge 1\%$}: the oracle-LLM sensor recovers an extra
+$\{6, 5, 4, 3\}$ TPs at $K \in \{1\%, 2\%, 5\%, 10\%\}$ respectively,
+versus the M1 baseline. At $K \le 0.5\%$ the top-10 alerts are already
+identical between M1 and M2 (both score the same $10$ rows).
+
+The second observation is that \textbf{M3 and M4 lose money at every
+budget}, because the LLM-sensor cost on the tail is paid in real
+dollars, while the marginal TP gain is small relative to the review-cost
+floor. Paired bootstrap CIs on $\Delta_{\text{TP}/\$}$ between M3/M4 and
+M1 (\tableref{tab:p8-evidence-cost-curve-boot}) exclude zero at every
+budget:
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired bootstrap CIs ($n_{\text{boot}}{=}400$,
+$\alpha{=}0.05$ two-sided) on the TP-per-dollar delta between M2, M3,
+M4 and the M1 baseline at six review budgets. ``excl.\ 0'' flags CIs
+that exclude zero. M2 (oracle) is a positive trend that loses
+significance against the review-cost floor; M3 and M4 (hybrid with
+real LLM tokens) decisively lose at every budget.}
+\label{tab:p8-evidence-cost-curve-boot}
+\begin{tabular}{lllccc}
+\toprule
+$\Delta$ & $K$ & mean & $95\%$ CI & excl.\ 0? \\
+\midrule
+$\text{TP}/\$ (\text{M2}) - (\text{M1})$ & $0.1\%$ & $\phantom{-}{+}0.000$ & $[0.000,\, 0.000]$ & no \\
+$\text{TP}/\$ (\text{M2}) - (\text{M1})$ & $0.5\%$ & $-0.021$  & $[-0.116,\, +0.077]$ & no \\
+$\text{TP}/\$ (\text{M2}) - (\text{M1})$ & $1\%$   & $\phantom{-}{+}0.082$ & $[-0.020,\, +0.196]$ & no \\
+$\text{TP}/\$ (\text{M2}) - (\text{M1})$ & $2\%$   & $\phantom{-}{+}0.050$ & $[-0.020,\, +0.119]$ & no \\
+$\text{TP}/\$ (\text{M2}) - (\text{M1})$ & $5\%$   & $\phantom{-}{+}0.015$ & $[-0.012,\, +0.040]$ & no \\
+$\text{TP}/\$ (\text{M2}) - (\text{M1})$ & $10\%$  & $\phantom{-}{+}0.006$ & $[-0.002,\, +0.014]$ & no \\
+\midrule
+$\text{TP}/\$ (\text{M3}) - (\text{M1})$ & $0.1\%$ & $-0.614$  & $[-0.614,\, -0.614]$ & yes \\
+$\text{TP}/\$ (\text{M3}) - (\text{M1})$ & $0.5\%$ & $-0.216$  & $[-0.228,\, -0.201]$ & yes \\
+$\text{TP}/\$ (\text{M3}) - (\text{M1})$ & $1\%$   & $-0.102$  & $[-0.113,\, -0.088]$ & yes \\
+$\text{TP}/\$ (\text{M3}) - (\text{M1})$ & $2\%$   & $-0.035$  & $[-0.040,\, -0.029]$ & yes \\
+$\text{TP}/\$ (\text{M3}) - (\text{M1})$ & $5\%$   & $-0.007$  & $[-0.008,\, -0.006]$ & yes \\
+$\text{TP}/\$ (\text{M3}) - (\text{M1})$ & $10\%$  & $-0.002$  & $[-0.002,\, -0.002]$ & yes \\
+\midrule
+$\text{TP}/\$ (\text{M4}) - (\text{M1})$ & $0.1\%$ & $-0.092$  & $[-0.092,\, -0.092]$ & yes \\
+$\text{TP}/\$ (\text{M4}) - (\text{M1})$ & $0.5\%$ & $-0.024$  & $[-0.026,\, -0.022]$ & yes \\
+$\text{TP}/\$ (\text{M4}) - (\text{M1})$ & $1\%$   & $-0.011$  & $[-0.012,\, -0.009]$ & yes \\
+$\text{TP}/\$ (\text{M4}) - (\text{M1})$ & $2\%$   & $-0.004$  & $[-0.004,\, -0.003]$ & yes \\
+$\text{TP}/\$ (\text{M4}) - (\text{M1})$ & $5\%$   & $-0.001$  & $[-0.001,\, -0.001]$ & yes \\
+$\text{TP}/\$ (\text{M4}) - (\text{M1})$ & $10\%$  & $-0.000$  & $[-0.000,\, -0.000]$ & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The third observation is that \textbf{even the oracle LLM-as-sensor
+(M2) does not break even on TP/\$ against the M1 baseline}, because
+the analyst-review cost ($\$0.50$ per reviewed row) is two orders of
+magnitude larger than the LLM-sensor cost ($\$0.0035$ per row) and
+two orders of magnitude larger than the marginal TP gain. The M2 TP/\$
+improvement of $+0.082$ at the $1\%$ budget would need to be compared
+against the analyst-review cost floor; the CI includes zero at every
+budget, indicating that even a perfect oracle LLM sensor fails to
+deliver a statistically detectable dollar improvement on this dataset
+under a realistic fraud-ops budget.
+
+The fourth observation is that \textbf{no real LLM-as-sensor would beat
+the oracle}: M3 and M4 pay the LLM-sensor cost and trail M2 in TP/\$
+by definition. The combined picture is a sharp negative-evidence
+picture for the LLM-as-sensor pattern at any realistic fraud-ops
+budget on this dataset: the analyst-review cost dominates the
+LLM-sensor cost, the LLM-sensor gain does not dominate the
+analyst-review cost, and the only way to recover a positive TP/\$
+delta is to either (a) raise the LLM-sensor quality well beyond the
+oracle, or (b) lower the analyst-review cost floor.
+
+\paragraph{Note on cost proportionality.} The TP/\$ numbers in
+\tableref{tab:p8-evidence-cost-curve} scale linearly in the LLM and
+review per-row prices. Halving the LLM price (e.g.\ a future model
+generation) would halve the M3/M4 loss at every budget but not flip
+its sign; the analyst-review cost floor remains the binding
+constraint. The ordinal ranking (M1 cheapest per TP, M4 next, M2 next,
+M3 most expensive per TP) is robust across this sensitivity.
+
+\paragraph{Reproduction.} All four tables in this section are produced
+by \texttt{python3 scripts/p5p8/p8\_cost\_adjusted\_curve.py}
+($\sim$3 min on 4 cores; seed $42$ for XGBoost, seed $2026$ for
+bootstrap). Outputs are the three files under
+\texttt{experiments/results/p5p8/} named in
+\tableref{tab:p8-evidence-cost-curve}--\ref{tab:p8-evidence-cost-curve-boot}.

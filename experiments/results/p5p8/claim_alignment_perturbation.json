@@ -1,0 +1,344 @@
+{
+  "n": 40,
+  "detected": 40,
+  "per_axis": {
+    "G": {
+      "detected": 10,
+      "total": 10
+    },
+    "temperature": {
+      "detected": 10,
+      "total": 10
+    },
+    "task": {
+      "detected": 10,
+      "total": 10
+    },
+    "seed": {
+      "detected": 10,
+      "total": 10
+    }
+  },
+  "rows": [
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea",
+      "axis": "G",
+      "perturbed_to": 4,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea",
+      "axis": "temperature",
+      "perturbed_to": 1.5,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea",
+      "axis": "task",
+      "perturbed_to": "wrong_task_xyz",
+      "orig_severity": "match",
+      "perturbed_severity": "task_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea",
+      "axis": "seed",
+      "perturbed_to": 9999,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db",
+      "axis": "G",
+      "perturbed_to": 4,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db",
+      "axis": "temperature",
+      "perturbed_to": 1.5,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db",
+      "axis": "task",
+      "perturbed_to": "wrong_task_xyz",
+      "orig_severity": "match",
+      "perturbed_severity": "task_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db",
+      "axis": "seed",
+      "perturbed_to": 10000,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42",
+      "axis": "G",
+      "perturbed_to": 4,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42",
+      "axis": "temperature",
+      "perturbed_to": 1.5,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42",
+      "axis": "task",
+      "perturbed_to": "wrong_task_xyz",
+      "orig_severity": "match",
+      "perturbed_severity": "task_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42",
+      "axis": "seed",
+      "perturbed_to": 9999,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860",
+      "axis": "G",
+      "perturbed_to": 4,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860",
+      "axis": "temperature",
+      "perturbed_to": 1.5,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860",
+      "axis": "task",
+      "perturbed_to": "wrong_task_xyz",
+      "orig_severity": "match",
+      "perturbed_severity": "task_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860",
+      "axis": "seed",
+      "perturbed_to": 10000,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5",
+      "axis": "G",
+      "perturbed_to": 64,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5",
+      "axis": "temperature",
+      "perturbed_to": 1.5,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5",
+      "axis": "task",
+      "perturbed_to": "wrong_task_xyz",
+      "orig_severity": "match",
+      "perturbed_severity": "task_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5",
+      "axis": "seed",
+      "perturbed_to": 9999,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db",
+      "axis": "G",
+      "perturbed_to": 8,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db",
+      "axis": "temperature",
+      "perturbed_to": 1.5,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db",
+      "axis": "task",
+      "perturbed_to": "wrong_task_xyz",
+      "orig_severity": "match",
+      "perturbed_severity": "task_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db",
+      "axis": "seed",
+      "perturbed_to": 9999,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03",
+      "axis": "G",
+      "perturbed_to": 8,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03",
+      "axis": "temperature",
+      "perturbed_to": 1.5,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03",
+      "axis": "task",
+      "perturbed_to": "wrong_task_xyz",
+      "orig_severity": "match",
+      "perturbed_severity": "task_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03",
+      "axis": "seed",
+      "perturbed_to": 10000,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58",
+      "axis": "G",
+      "perturbed_to": 8,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58",
+      "axis": "temperature",
+      "perturbed_to": 1.5,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58",
+      "axis": "task",
+      "perturbed_to": "wrong_task_xyz",
+      "orig_severity": "match",
+      "perturbed_severity": "task_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58",
+      "axis": "seed",
+      "perturbed_to": 9999,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10",
+      "axis": "G",
+      "perturbed_to": 16,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10",
+      "axis": "temperature",
+      "perturbed_to": 1.5,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10",
+      "axis": "task",
+      "perturbed_to": "wrong_task_xyz",
+      "orig_severity": "match",
+      "perturbed_severity": "task_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10",
+      "axis": "seed",
+      "perturbed_to": 10000,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade",
+      "axis": "G",
+      "perturbed_to": 8,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade",
+      "axis": "temperature",
+      "perturbed_to": 1.5,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade",
+      "axis": "task",
+      "perturbed_to": "wrong_task_xyz",
+      "orig_severity": "match",
+      "perturbed_severity": "task_mismatch",
+      "detected": true
+    },
+    {
+      "cell_id": "meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade",
+      "axis": "seed",
+      "perturbed_to": 10000,
+      "orig_severity": "match",
+      "perturbed_severity": "value_mismatch",
+      "detected": true
+    }
+  ]
+}

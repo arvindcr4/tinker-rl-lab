@@ -1,0 +1,37 @@
+{
+  "n_cells": 98,
+  "score_mean": 100.0,
+  "score_ci95_lo": 100.0,
+  "score_ci95_hi": 100.0,
+  "score_min": 100.0,
+  "score_max": 100.0,
+  "score_std": 0.0,
+  "per_axis_match_pct": {
+    "model": 100.0,
+    "task": 100.0,
+    "G": 100.0,
+    "temperature": 100.0,
+    "seed": 100.0,
+    "decontam": 100.0
+  },
+  "per_axis_severity_mix": {
+    "model": {
+      "match": 98
+    },
+    "task": {
+      "match": 98
+    },
+    "G": {
+      "match": 98
+    },
+    "temperature": {
+      "match": 98
+    },
+    "seed": {
+      "match": 98
+    },
+    "decontam": {
+      "declared_recognised_class": 98
+    }
+  }
+}

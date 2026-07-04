@@ -115,3 +115,67 @@ three new optional fields in \texttt{min\_report.loss\_form});
 (writes the audit results to
 \texttt{experiments/results/p5p8/delta\_minreport\_consistency.tsv}
 and \texttt{.json}; reports the schema-exposure rate).
+% P6 iter-34: measured-delta block on variant_delta_record.
+% Inputs: registry/schema.json (measured_delta $def), N2 tensors, zvf130 5-seed panel.
+\subsection{Grounding the variant catalog: a measured-delta block}
+\label{sec:p6-measured-delta-block}
+
+Through iter 33 the \texttt{variant\_delta\_record} cataloged only what a
+variant \emph{claims} to change (\texttt{deltas[]}) plus a verified
+\texttt{citation}; it carried no record of what the variant
+\emph{measurably does}. We close that gap (iter 34) with a second
+additive-optional block: an array \texttt{measured} of
+\texttt{measured\_delta} objects
+$\{\texttt{metric},\texttt{panel},\texttt{base},\texttt{delta},
+\texttt{ci\_low},\texttt{ci\_high},\texttt{n},\texttt{significant},
+\texttt{ci\_method},\texttt{source}\}$, where \texttt{panel} and
+\texttt{source} are \emph{required} so no delta enters the registry
+without saying where it was measured, and \texttt{ci\_method} reuses the
+iter-28 CI-provenance \texttt{\$def}. All 31 entries still PASS
+(additive-optional; no \texttt{required} change).
+
+We populate 8 variant records / 22 measured rows from two provenanced
+panels: \texttt{n2\_same\_stack\_last10} (N2 four-method same-stack
+reward tensors, last 10 of 40 steps, paired-by-step percentile bootstrap,
+$n_{\text{boot}}{=}2000$, seed 20260704; metrics \texttt{zvf},
+\texttt{reward\_mean}) and \texttt{zvf130\_5seed} (5-seed risk panel,
+Welch normal-approx CI on \texttt{zvf\_risk\_mean}).
+
+\begin{table}[t]
+\centering\small
+\caption{Measured-delta block (variant $-$ grpo), iter 34. On the
+canonical zvf130 5-seed panel \textbf{8/8 variants sit significantly
+below grpo} in zvf-risk (every CI excludes 0). But the \emph{sign of the
+ZVF effect is panel-conditional}: on the N2 \emph{same-stack} run GIFT
+\emph{raises} per-step zero-variance fraction ($+0.125$, CI excludes 0)
+even though it is below grpo on zvf130---so a single ``ZVF delta'' per
+variant is ill-posed, and \texttt{panel} is a required field.
+Source: \texttt{experiments/results/p5p8/p6\_measured\_delta\_block.tsv}.
+$^{\dagger}$ CI excludes 0.}
+\label{tab:p6-measured-delta}
+\begin{tabular}{l r r r}
+\toprule
+variant & N2 reward\,$\Delta$ & N2 \texttt{zvf}\,$\Delta$ & zvf130 risk\,$\Delta$ \\
+\midrule
+aero     & $-0.014^{\dagger}$ & $-0.025$            & $-0.148^{\dagger}$ \\
+areal    & $-0.020^{\dagger}$ & $-0.056$            & $-0.246^{\dagger}$ \\
+gift     & $+0.016$           & $+0.125^{\dagger}$  & $-0.263^{\dagger}$ \\
+cppo     & ---                & ---                 & $-0.151^{\dagger}$ \\
+ngrpo    & ---                & ---                 & $-0.131^{\dagger}$ \\
+mcgrpo   & ---                & ---                 & $-0.174^{\dagger}$ \\
+es       & ---                & ---                 & $-0.273^{\dagger}$ \\
+scafgrpo & ---                & ---                 & $-0.352^{\dagger}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{What this settles.} The measured block turns the registry from
+a catalog of \emph{claims} into a measurement platform: the iter-18
+loose-TSV directional reading (``variants sit below grpo in ZVF'') is now
+a CI-backed, schema-validated field on every risk-panel method, and the
+same-stack reward deltas are $\leq$2pp---direct corroboration of the
+Pillar-1 ``the label barely moves the outcome once the stack is fixed''
+thesis, recorded honestly (2/3 CIs do exclude 0 at this small sample).
+The panel-conditional ZVF sign flip is the sharpest evidence that
+\texttt{panel} belongs in the record. \textbf{Reproduce:}
+\texttt{python3 scripts/p5p8/p6\_measured\_delta\_block.py}.

@@ -16,5 +16,45 @@
       "change": "normalize the group advantage by the per-prompt gradient norm rather than the group std; (per NGraPO source paper"
     }
   ],
-  "notes": "Verified citation: nan2025ngrpo (arXiv:2509.18851) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged."
+  "notes": "Verified citation: nan2025ngrpo (arXiv:2509.18851) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged.",
+  "measured": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "base": "grpo",
+      "delta": -0.131025,
+      "ci_low": -0.239395,
+      "ci_high": -0.022656,
+      "n": 5,
+      "significant": true,
+      "ci_method": {
+        "method": "normal_approx_welch",
+        "n_boot": null,
+        "seed": null,
+        "ci_level": 0.95,
+        "source": "scripts/p5p8/p6_measured_delta_block.py"
+      },
+      "source": "experiments/results/zvf_iter130_method_risk.tsv",
+      "note": "5-seed risk index; delta vs grpo (grpo risk=0.5777)"
+    },
+    {
+      "metric": "mean_zvf",
+      "panel": "zvf130_5seed",
+      "base": "grpo",
+      "delta": -0.18042,
+      "ci_low": -0.18042,
+      "ci_high": -0.18042,
+      "n": 5,
+      "significant": false,
+      "ci_method": {
+        "method": "point_no_perseed_sd",
+        "n_boot": null,
+        "seed": null,
+        "ci_level": null,
+        "source": "scripts/p5p8/p6_measured_delta_block.py"
+      },
+      "source": "experiments/results/zvf_iter130_method_risk.tsv",
+      "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)"
+    }
+  ]
 }

@@ -449,11 +449,76 @@
             }
           }
         },
+        "measured": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "description": "Iter-34 extension (additive, optional): measured effect of this variant vs its base on a named, provenanced panel. Each element is a single (metric x panel) delta with a bootstrap/normal-approx CI. null / absent = unmeasured. This is the first block that grounds a variant_delta record in what the technique measurably does, not just what it claims to change.",
+          "items": {
+            "$ref": "#/$defs/measured_delta"
+          }
+        },
         "notes": {
           "$ref": "#/$defs/nullable_string"
         }
       },
       "additionalProperties": false
+    },
+    "measured_delta": {
+      "type": "object",
+      "required": [
+        "metric",
+        "panel",
+        "base",
+        "delta",
+        "ci_low",
+        "ci_high",
+        "significant",
+        "source"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "type": "string",
+          "description": "Measured quantity, e.g. zvf, reward_mean, zvf_risk_mean, mean_zvf."
+        },
+        "panel": {
+          "type": "string",
+          "description": "The measurement panel, e.g. n2_same_stack_last10 or zvf130_5seed."
+        },
+        "base": {
+          "type": "string",
+          "description": "Base stack the delta is computed against (must match the record's `base`)."
+        },
+        "delta": {
+          "type": "number",
+          "description": "variant minus base (signed)."
+        },
+        "ci_low": {
+          "type": "number"
+        },
+        "ci_high": {
+          "type": "number"
+        },
+        "n": {
+          "$ref": "#/$defs/nullable_integer"
+        },
+        "significant": {
+          "type": "boolean",
+          "description": "True iff the CI excludes 0."
+        },
+        "ci_method": {
+          "$ref": "#/$defs/ci_method"
+        },
+        "source": {
+          "type": "string",
+          "description": "Relative path to the artifact the delta was computed from."
+        },
+        "note": {
+          "$ref": "#/$defs/nullable_string"
+        }
+      }
     },
     "ci_method": {
       "type": [

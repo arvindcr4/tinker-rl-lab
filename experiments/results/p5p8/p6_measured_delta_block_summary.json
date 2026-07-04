@@ -1,0 +1,13 @@
+{
+  "entries_written": 8,
+  "measured_rows": 22,
+  "registry_validate": {
+    "pass": 31,
+    "fail": 0,
+    "total": 31
+  },
+  "n2_significant": 3,
+  "z130_significant": 8,
+  "seed": 20260704,
+  "n_boot": 2000
+}

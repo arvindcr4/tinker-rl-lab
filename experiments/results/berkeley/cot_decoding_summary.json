@@ -1,0 +1,131 @@
+{
+  "lecture": "F24 L1 \u2014 Denny Zhou (Google DeepMind)",
+  "citations": {
+    "wang_zhou_2024": {
+      "title": "Chain-of-Thought Reasoning Without Prompting",
+      "arxiv_id": "2402.10200",
+      "venue": "NeurIPS 2024",
+      "verified_date": "2026-07-04",
+      "verified_via": "Semantic Scholar + arXiv abs"
+    },
+    "huang_et_al_2023": {
+      "title": "Large Language Models Cannot Self-Correct Reasoning Yet",
+      "arxiv_id": "2310.01798",
+      "venue": "ICLR 2024",
+      "verified_date": "2026-07-04",
+      "verified_via": "arXiv abs scrape"
+    },
+    "chen_et_al_2024": {
+      "title": "Premise Order Matters in Reasoning with LLMs",
+      "arxiv_id": "2402.08939",
+      "venue": "ICML 2024",
+      "verified_date": "2026-07-04",
+      "verified_via": "arXiv abs HTML"
+    }
+  },
+  "h1_intrinsic_cot_acc_mono": {
+    "per_seed": {
+      "s42": {
+        "is_monotonic": true,
+        "acc_k1": 0.67,
+        "acc_k8": 0.975,
+        "ratio_k8_over_k1": 1.4552238805970148
+      },
+      "s123": {
+        "is_monotonic": true,
+        "acc_k1": 0.665,
+        "acc_k8": 0.97,
+        "ratio_k8_over_k1": 1.4586466165413532
+      },
+      "s456": {
+        "is_monotonic": true,
+        "acc_k1": 0.725,
+        "acc_k8": 0.96,
+        "ratio_k8_over_k1": 1.3241379310344827
+      }
+    },
+    "overall_monotonic": true,
+    "overall_ratio_k8_over_k1": 1.4126694760576168,
+    "verdict": "DECISIVE"
+  },
+  "h2_intrinsic_cot_zvf_mono": {
+    "per_seed": {
+      "s42": {
+        "is_monotonic": true,
+        "zvf_k1": 1.0,
+        "zvf_k8": 0.13,
+        "delta_k8_minus_k1": -0.87
+      },
+      "s123": {
+        "is_monotonic": true,
+        "zvf_k1": 1.0,
+        "zvf_k8": 0.19,
+        "delta_k8_minus_k1": -0.81
+      },
+      "s456": {
+        "is_monotonic": true,
+        "zvf_k1": 1.0,
+        "zvf_k8": 0.155,
+        "delta_k8_minus_k1": -0.845
+      }
+    },
+    "overall_monotonic": true,
+    "overall_zvf_delta": -0.8416666666666667,
+    "verdict": "DECISIVE"
+  },
+  "h3_rl_substitution_upper_bound": {
+    "rl_gain_floor": 0.1,
+    "per_seed": {
+      "s42": {
+        "headroom": 0.30499999999999994,
+        "exceeds_rl_gain_floor": true
+      },
+      "s123": {
+        "headroom": 0.30499999999999994,
+        "exceeds_rl_gain_floor": true
+      },
+      "s456": {
+        "headroom": 0.235,
+        "exceeds_rl_gain_floor": true
+      }
+    },
+    "overall_mean_headroom": 0.2816666666666666,
+    "verdict": "DECISIVE"
+  },
+  "h4_premise_order_proxy": {
+    "per_seed": {
+      "s42": {
+        "n_all_wrong_at_k8": 5,
+        "recoverable_fraction": 0.0
+      },
+      "s123": {
+        "n_all_wrong_at_k8": 6,
+        "recoverable_fraction": 0.0
+      },
+      "s456": {
+        "n_all_wrong_at_k8": 8,
+        "recoverable_fraction": 0.0
+      }
+    },
+    "overall_recoverable_fraction": 0.0,
+    "verdict": "UNDERTESTED"
+  },
+  "h5_huang_negative_control": {
+    "per_seed": {
+      "s42": {
+        "n_all_wrong_at_k4": 10,
+        "recovered_by_remaining_rollouts": 0.5
+      },
+      "s123": {
+        "n_all_wrong_at_k4": 7,
+        "recovered_by_remaining_rollouts": 0.14285714285714285
+      },
+      "s456": {
+        "n_all_wrong_at_k4": 15,
+        "recovered_by_remaining_rollouts": 0.4666666666666667
+      }
+    },
+    "overall_recovery_rate": 0.36984126984126986,
+    "verdict": "NULL"
+  }
+}

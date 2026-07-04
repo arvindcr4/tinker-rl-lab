@@ -1448,3 +1448,122 @@ step-level $\mathrm{zvf}_\text{step}$ aggregate cannot detect.
 \texttt{experiments/results/p5p8/p7\_satband\_\{per\_prompt,per\_step,
 per\_prompt\_summary,per\_step\_controllers,bootstrap\_summary,per\_prompt,bootstrap\}.\{tsv,json\}}.
 
+\subsection{Headroom-ceiling recovery ratio and the aliasing of step-level ZVF}
+\label{sec:p7-headroom-recovery}
+
+The previous subsections (§4.4--§4.13) evaluated every step-level
+controller against the fixed-$G{=}8$ baseline (cost ratio,
+headroom-bad rate, total rollouts) but never against the THEORETICAL
+CEILING of per-prompt CONTRAST RECOVERY. This subsection inverts the
+iter-35 economy-axis question and asks: on the prompts where contrast
+is theoretically improvable, what fraction of the iid-predicted
+contrast ceiling does each step-level controller actually recover?
+
+\paragraph{Definition.} For each prompt with $k$ successes out of
+$G_{\mathrm{base}}{=}8$ rollouts, the per-prompt headroom ceiling is
+$\Delta_{\mathrm{ceiling}}(k) = \mathrm{ZVF}_{\mathrm{iid}}(p_{\mathrm{hat}}, 8)
+- \mathrm{ZVF}_{\mathrm{iid}}(p_{\mathrm{hat}}, 16)$, with
+$p_{\mathrm{hat}}{=}k/8$ and
+$\mathrm{ZVF}_{\mathrm{iid}}(p, G) = p^G + (1-p)^G$. For saturated
+prompts ($k \in \{0, 8\}$), ceiling $= 0$; for mixed prompts
+($1 \le k \le 7$), ceiling $> 0$. The controller's recovery ratio is
+$\frac{\sum_{\mathrm{mixed}}(z_{\mathrm{base}} - z_{\mathrm{ctrl}})}{\sum_{\mathrm{mixed}}\Delta_{\mathrm{ceiling}}}$,
+bounded in $(-\infty, 1]$: $0$ = no change vs baseline, $1$ = full
+ceiling recovery, $< 0$ = over-de-escalation that WORSENS signal.
+
+\paragraph{N2 mixed-prompt recovery ratios (179--188 mixed prompts
+per method; bootstrap CI on block-resampled step-prompt cells,
+$n_{\mathrm{boot}}{=}2000$, seed $20260704$).}
+
+\begin{table}[t]
+\centering
+\caption{Recovery ratios on the N2 four-method mixed prompts.
+$\rho(z_{\mathrm{step}}, \mathrm{mean\_headroom\_at\_step})$ is the
+Pearson correlation between the step-level ZVF signal each step-level
+controller acts on and the per-prompt headroom ceiling that recovery
+would consume. $\rho \le 0.31$ across all four methods: the step-level
+ZVF is a POOR predictor of per-prompt headroom.}
+\label{tab:p7-headroom-recovery}
+\begin{tabular}{lrrrr}
+\toprule
+method & $n_{\mathrm{mixed}}$ & C1 zvf-triage & C2 Dualformer & C3 Hybrid \\
+\midrule
+grpo  & 179 & $\mathbf{0.7343}$ [$0.571$, $0.889$] & $\mathbf{-1.1457}$ [$-1.405$, $-0.892$] & $0.6454$ [$0.451$, $0.822$] \\
+aero  & 179 & $\mathbf{0.6344}$ [$0.465$, $0.799$] & $\mathbf{-0.9877}$ [$-1.263$, $-0.733$] & $0.6260$ [$0.457$, $0.787$] \\
+gift  & 147 & $\mathbf{0.6749}$ [$0.488$, $0.850$] & $\mathbf{-1.0839}$ [$-1.383$, $-0.798$] & $0.4553$ [$0.199$, $0.669$] \\
+areal & 188 & $\mathbf{0.6380}$ [$0.455$, $0.824$] & $\mathbf{-1.0078}$ [$-1.298$, $-0.730$] & $0.5526$ [$0.363$, $0.750$] \\
+\midrule
+\multicolumn{2}{l}{$\rho(z_{\mathrm{step}}, \mathrm{headroom})$} & $0.2339$ (grpo) & $0.3125$ (aero) & $0.0133$ (gift) / $0.2034$ (areal) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Three falsifiable findings.}
+
+\emph{First}, \textbf{zvf-triage recovers 64\%--73\% of the iid
+contrast ceiling} on the mixed prompts (all four methods, bootstrap CI
+strictly positive). zvf-triage's escalation direction ($G{=}16$) is
+the right move for contrast recovery on the mixed prompts; the cost
+(+$47$\% to +$98$\% rollout overhead, iter-27 N10 panel) is the price
+of being on the right axis.
+
+\emph{Second}, \textbf{Dualformer-Auto recovers $-100\%$ of the
+contrast ceiling} on the mixed prompts (recovery ratio $\approx -1.0$
+across all four methods, CI strictly negative). The de-escalation
+direction ($G{=}4$) WORSENS signal on the mixed prompts in the same
+saturated step. This is the iter-43 per-prompt finding \emph{quantified
+in the contrast axis}: Dualformer-Auto's per-prompt precision on
+saturated prompts costs $-100\%$ contrast recovery on the mixed
+prompts that the saturated step-level ZVF hides.
+
+\emph{Third}, \textbf{Hybrid recovers 46\%--65\% of the contrast
+ceiling}. Less than zvf-triage because the Hybrid's de-escalation
+branch fires on the saturated majority of sat-band steps (where the
+step-level ZVF is $\ge 0.9$); zvf-triage would have escalated those
+same steps (recovering the contrast).
+
+\paragraph{Step-level ZVF is a poor predictor of per-prompt headroom
+(the aliasing finding).} Across all four methods, the Pearson
+correlation between step-level $z_{\mathrm{step}}$ and the
+mean per-prompt headroom at the step is in $[+0.013, +0.313]$ --- it
+explains between 0\% (gift) and 10\% (aero) of the variance. The
+step-level ZVF is high when \emph{most} prompts at the step are
+saturated (which contributes zero headroom); a small minority of
+mixed prompts at the same step have positive headroom but their
+contribution to the step-level aggregate is buried.
+
+This aliasing is the quantitative explanation for the iter-31 finding
+that the Hybrid dominates on sat-band panels: the Hybrid's
+de-escalation is correct because the saturated step-level ZVF hides
+a low-headroom step (only saturated prompts, ceiling $\approx 0$), but
+the same signal misleads the controller on the mixed prompts in
+boundary-band steps (which DO have headroom but are aggregated with
+the saturated majority). It is also the explanation for the
+\textbf{Dualformer paradox}: Dualformer-Auto Pareto-dominates on the
+compute axis (saves 7\%--20\% on N10) but loses $-100\%$ on the
+contrast axis because both controllers act on the same step-level
+signal that is only weakly correlated with per-prompt headroom.
+
+\paragraph{Falsifiable predictions for future panels.}
+
+(i) On a future panel where per-prompt headroom is uniformly
+distributed across the difficulty spectrum (no saturation-band
+clustering), $\rho(z_{\mathrm{step}}, \mathrm{headroom})$ should
+rise above $0.5$ and step-level controllers should recover
+$\ge 90\%$ of the ceiling.
+
+(ii) On the same panel, Dualformer-Auto's contrast recovery should
+rise from $-100\%$ to $\ge 50\%$, eliminating the compute-vs-contrast
+trade-off and validating Dualformer-Auto as the default controller.
+
+(iii) The Hybrid's contrast recovery on boundary-band steps
+($45$\%--$65\%$) is robust to $\tau$ choice (the boundary-band width
+is preserved across $\tau \in [0.5, 0.85]$).
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_headroom\_recovery.py}
+($\leq 380$ LoC, stdlib only); outputs in
+\texttt{experiments/results/p5p8/p7\_headroom\_recovery\_\{n2\_summary,
+n2\_per\_step,n2\_per\_prompt,n10\_summary,n10\_per\_step\}.\{tsv,json\}}.
+Seed $20260704$, $n_{\mathrm{boot}}{=}2000$.
+

@@ -1,0 +1,13 @@
+quantity	value	note
+heldout_acc_G2	0.9817	se=0.0044
+heldout_acc_G4	0.9883	se=0.0017
+heldout_acc_G8	0.99	se=0.0029
+heldout_acc_G16	0.9783	se=0.006
+argmax_G	8	selected 'best' group size
+naive_reported_best	0.99	argmax value (winner's-cursed)
+selection_bias_est	0.00052	E[max-selected] at observed separation
+debiased_best	0.98948	selection-adjusted best-G accuracy
+bias_pp	0.052	winner's-curse inflation (pp), observed
+--	--	--
+worstcase_tied_bias_pp_Gsweep	0.386	if 4 G-arms truly tied: E[max4]*SEmean; SEmean=0.0037 -> NEGLIGIBLE
+worstcase_tied_bias_pp_toooluse	2.213	same argmax on 2-seed tool-use (SEmean=0.0392) -> ~2.2pp, comparable to the 7.4pp effect it selects

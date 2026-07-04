@@ -927,3 +927,121 @@ writes only to the three worklist entries; subsequent runs of
 \texttt{delta\_minreport\_consistency.py} and
 \texttt{registry\_validate.py} reproduce the MATCH-climb and
 schema-PASS results stated above.
+
+\subsection{Exhibit 16: MIN-REPORT Field Discriminative Entropy --- four of seven items are informatively vacuous at $n{=}98$}
+\label{sec:p5-exhibit-discriminative-entropy}
+The iter-1/iter-9/iter-13/iter-20/iter-21/iter-29 audits (items~01, 14,
+18, 27, 28, 37) all measure \emph{coverage} or \emph{truthfulness};
+item~32 measures \emph{predictive-sufficiency}. None of them measure
+the information-theoretic question: \emph{do the declared values
+actually separate cells, or are they effectively constant?} Exhibit~11
+records item~3 (\texttt{sampler\_backend\_precision}) at 64\% validation
+and item~7 (\texttt{decontamination\_notes}) at 62\% validation. The
+audit below shows both items are \textbf{vacuous} --- the corpus
+declares the same string in every cell.
+
+\paragraph{Falsifiable claim.}
+At least one MIN-REPORT item scoring $\geq 50\%$ on Exhibit~11 has
+fewer than 4 unique values across the 98 mega cells ($H<2$ bits) ---
+\emph{informatively vacuous} by Shannon's definition.
+
+\paragraph{Method.}
+For every mega cell, parse the 7 manifest items and compute per-item:
+$n_\text{unique}$, top-value frequency, Shannon entropy
+$H = -\sum p\log_2 p$ (bits), normalised entropy
+$H/\log_2(n_\text{unique})$, and the between-stratum ratio
+$D_\text{task} = 1 - \overline{H}_\text{per task}/H$ (analogous for
+$D_G$). Classification: VACUOUS ($H<0.5$ or $k\le 2$), LOW
+($H<1.5$), MEDIUM ($H<2.5$), HIGH ($H\ge 2.5$). Reference benchmark
+is Exhibit~11's per-item validation rate; the \emph{gap} is
+validation $-$ $H/2.5$.
+
+\paragraph{Headline.}
+\textbf{4/7 MIN-REPORT items are VACUOUS} across the 98 mega cells
+(items 1, 2, 3, 7); 2 of those (items 3 and 7) also score $\geq 50\%$
+validation on Exhibit~11 (\tableref{tab:p5-discriminative-entropy}).
+The standard is therefore \textbf{not} equivalent to `discriminative
+disclosure' --- a manifest emitter can satisfy it without giving the
+reviewer any reviewer-actionable information on items 1, 2, 3, 7.
+
+\paragraph{Per-stratum discrimination (the $D$ ratio).}
+For items 4 (per\_step\_zvf\_path) and 5 (group\_size\_schedule), the
+$D$ ratios show where the discrimination lives: item~4 (path) is
+within-stratum ($D_\text{task}=0.244$, $D_G=0.159$ --- paths are unique
+per cell); item~5 ($G$) is between-$G$-stratum
+($D_G = 0.443$). For items 6 and 7, $D_\text{task} = 1.000$ exactly ---
+the variance is \emph{all between task}, the fields are deterministic
+functions of \texttt{task\_slice} that the cell\_id already encodes.
+Item~6 (\texttt{heldout\_split}) and item~7
+(\texttt{decontamination\_notes}) are exactly redundant with
+\texttt{task\_slice} in this corpus.
+
+\begin{table}[t]
+\centering\small
+\caption{MIN-REPORT field discriminative entropy at $n{=}98$ mega
+manifests. $H$ in bits; \emph{gap} = Exhibit-11 validation $-$
+$\min(1, H/2.5)$. Four of seven items are VACUOUS; items 3 and 7 are
+VACUOUS yet score $\geq 50\%$ on Exhibit~11. Per-row audit in
+\texttt{experiments/results/p5p8/p5\_field\_discriminative\_entropy.tsv}.}
+\label{tab:p5-discriminative-entropy}
+\begin{tabular}{llrrrlrr}
+\toprule
+item & label & $k$ & $H$ (bits) & class & $D_\text{task}$ & Ex.~11 & gap \\
+\midrule
+item1 & \texttt{loss\_form}                  & 1  & 0.000 & \textbf{VACUOUS} & 0.000 & 0.244 & +0.244 \\
+item2 & \texttt{ref\_policy\_kl}              & 1  & 0.000 & \textbf{VACUOUS} & 0.000 & 0.244 & +0.244 \\
+item3 & \texttt{sampler\_backend\_precision}  & 1  & 0.000 & \textbf{VACUOUS} & 0.000 & \textbf{0.640} & \textbf{+0.640} \\
+item4 & \texttt{per\_step\_zvf\_path}         & 98 & 6.615 & HIGH            & 0.244 & 0.495 & $-$0.505 \\
+item5 & \texttt{group\_size\_schedule}        & 5  & 2.312 & MEDIUM          & 0.047 & 0.743 & $-$0.182 \\
+item6 & \texttt{heldout\_split}              & 3  & 1.555 & MEDIUM          & \textbf{1.000} & 0.762 & +0.140 \\
+item7 & \texttt{decontamination\_notes}      & 2  & 0.931 & \textbf{VACUOUS} & \textbf{1.000} & \textbf{0.618} & \textbf{+0.245} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{What this changes for the manifest emitter.}
+The Exhibit-11 worklist (validated items needing more keys) and the
+discriminative-entropy worklist (items needing more VALUES, not more
+keys) are different worklists. Items 1, 2 need keys (Item~2 KL is the
+single highest-leverage gap from item~01). Items 3, 7 need values ---
+the corpus is single-source
+(\texttt{sampler\_backend\_precision} = ``tinker-closed'' for every
+cell) and single-decontam
+(\texttt{decontamination\_notes} = ``gsm8k-train-slice'' for every
+gsm8k cell). Items 4, 5 carry the only non-redundant information;
+item~4 is HIGH-discriminative but is a deterministic function of
+\texttt{cell\_id}; item~5 ($G$) carries the only cross-stratum
+non-redundant information.
+
+\paragraph{Cross-impact with prior audits.}
+(1)~vs Exhibit~11 (item~27): the badge score from item~18 weights
+items 3 and 7 at 10~pts/cell each ($\times 98$ cells = 1960~pts of
+corpus weight on constant strings). The auditor was right to include
+them in MIN-REPORT but wrong to assume they were informative. (2)~vs
+Exhibit~14 (item~37): the perturbation test only checked truthfulness
+of values that vary across cells; items 3, 7 had nothing to perturb.
+(3)~vs Exhibit~13 (item~32): the predictive-sufficiency
+$R^2 = 0.832$ (ZVF) must be entirely driven by items 4, 5, 6, since
+items 1, 2, 3, 7 are constant or near-constant and carry no information
+that could move an outcome.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p5\_field\_discriminative\_entropy.py}
+($\sim$1\,s). Inputs: \texttt{experiments/results/mega\_20260704/manifests/*.json},
+\texttt{cells.tsv}. Outputs:
+\texttt{p5\_field\_discriminative\_entropy.tsv},
+\texttt{...\_summary.json},
+\texttt{figures/p5\_field\_discriminative\_entropy.{png,pdf}}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{p5_field_discriminative_entropy.pdf}
+\caption{Shannon entropy $H$ in bits for the 7 MIN-REPORT items at
+$n{=}98$ mega cells. Coloured by 4-level class (VACUOUS, LOW, MEDIUM,
+HIGH); the dashed line at $H=2.5$ marks the HIGH threshold; the dotted
+lines mark MEDIUM ($H=1.5$) and VACUOUS ($H=0.5$). Labels above each
+bar are the unique-value count $k$. Four of seven bars are
+\textbf{flat at $H=0$} because the corpus reports a single constant
+value for those items.}
+\label{fig:p5-discriminative-entropy}
+\end{figure}

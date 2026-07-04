@@ -1,0 +1,3 @@
+regime	p_true	d_bias_d_alpha	d_bias_d_beta	dominant_channel	swebench_verified_helps
+flagship_heldout	0.9910	0.0090	0.9910	beta_FN	yes (FN cleaning)
+sparse_step_reward	0.1125	0.8875	0.1125	alpha_FP	NO (Verified cleans FN, but FP dominates here)

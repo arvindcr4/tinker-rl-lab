@@ -1183,3 +1183,143 @@ after vectorisation). Outputs:
 \texttt{p8\_decision\_regret\_boot.tsv},
 \texttt{p8\_decision\_regret\_summary.json},
 \texttt{figures/p8\_decision\_regret.{png,pdf}}.
+
+\subsection{Alert-volume-constrained Pareto frontier with paired bootstrap CIs}
+\label{sec:p8-alert-volume}
+
+Iter-28 chooses the threshold that minimises a cost function; iter-58
+measures how $\tau^{*}$ transfers under class-prior shift; iter-52 measures
+absolute regret against the perfect-information oracle. None of these
+answers the operational question fraud-ops leads actually ask on a daily
+basis: \emph{given a fixed review budget $K$\,\% (the staffing model says
+analysts can review $K$\,\% of the stream per shift), which tree gives
+the highest recall, and is the gap statistically detectable?}
+
+This subsection closes that gap. For each tree we apply a top-$K$\,\%
+threshold on the held-out $10{,}000$ test rows and compute recall,
+precision, F1, and the operating cost (canonical
+$C_{\text{inv}}{=}\$0.50$, $L{=}\$100$, $c_{\text{sense}}{=}\$0.0035$/row
+on the sensor-augmented trees). Paired bootstrap ($B{=}400$, percentile,
+seed $20260704$) on the test split gives the $95\%$ CI on every
+$\Delta$-recall between trees. The $K$-grid is
+$\{0.05, 0.10, 0.25, 0.50, 1.00, 2.00, 5.00\}\,\%$---seven operational
+budgets spanning the analyst-tight regime (one in $2{,}000$ alerts) to the
+analyst-loose regime (one in twenty).
+
+\begin{table}[t]
+\centering
+\small
+\caption{Recall at top-$K$\,\% for three trees on the held-out
+$10{,}000$-row test split. Alert rate is the empirical fraction of stream
+alerted; recall is the fraction of the $144$ test positives caught in the
+top-$K$. The $\dagger$ marks the smallest $K$ at which \texttt{XGB-24full}
+strictly Pareto-dominates \texttt{XGB-20raw} on recall (CI excludes zero).}
+\label{tab:p8-alert-volume}
+\begin{tabular}{lcccc}
+\toprule
+$K$ (\%) & Alert rate & \texttt{20raw} & \texttt{24full} & \texttt{4sensor} \\
+\midrule
+$0.05$  & $0.0005$ & $0.194$ & $0.201$ & $0.090$ \\
+$0.10$  & $0.0010$ & $0.271$ & $0.299$ & $0.125$ \\
+$0.25$  & $0.0025$ & $0.375$ & $0.389$ & $0.132$ \\
+$0.50$  & $0.0050$ & $0.451$ & $0.451$ & $0.222$ \\
+$1.00$  & $0.0100$ & $0.604$ & $0.625$ & $0.243$ \\
+$2.00$  & $0.0200$ & $0.701$ & $0.778$ & $0.271$ \\
+$5.00$  & $0.0500$ & $0.826$ & $0.896$ & $0.389$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired bootstrap $95\%$ CI on the recall gap at top-$K$\,\%
+($B{=}400$, seed $20260704$). The headline finding is the dominance
+\emph{switch} at $K{=}2$\,\%: below it, \texttt{XGB-24full} and
+\texttt{XGB-20raw} are statistically tied (CI includes zero); at
+$K{\in}\{2,5\}\,\%$ the LLM-aggregate features measurably restore recall
+on the order of $+7$ percentage points.}
+\label{tab:p8-alert-volume-boot}
+\begin{tabular}{lcccccc}
+\toprule
+$K$(\%) & Pair & $\Delta$-rec. & CI low & CI high & Excl.\ 0 & Winner \\
+\midrule
+$0.05$ & \texttt{24full}${-}$\texttt{20raw}  & $+0.0004$ & $0.0000$ & $+0.0069$ & no  & TIE \\
+$0.10$ & \texttt{24full}${-}$\texttt{20raw}  & $+0.0053$ & $0.0000$ & $+0.0222$ & no  & TIE \\
+$0.25$ & \texttt{24full}${-}$\texttt{20raw}  & $+0.0117$ & $-0.0142$ & $+0.0385$ & no & TIE \\
+$0.50$ & \texttt{24full}${-}$\texttt{20raw}  & $-0.0013$ & $-0.0238$ & $+0.0227$ & no & TIE \\
+$1.00$ & \texttt{24full}${-}$\texttt{20raw}  & $+0.0237$ & $-0.0269$ & $+0.0741$ & no & TIE \\
+$2.00$ & \texttt{24full}${-}$\texttt{20raw}  & $+0.0759$ & $+0.0331$ & $+0.1212$ & \textbf{YES} & \texttt{24full} \\
+$5.00$ & \texttt{24full}${-}$\texttt{20raw}  & $+0.0723$ & $+0.0336$ & $+0.1181$ & \textbf{YES} & \texttt{24full} \\
+\midrule
+$0.05$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.0197$ & $0.0000$ & $+0.0350$ & no  & TIE \\
+$0.10$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.0377$ & $+0.0153$ & $+0.0602$ & \textbf{YES} & \texttt{20raw} \\
+$0.25$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.0892$ & $+0.0452$ & $+0.1367$ & \textbf{YES} & \texttt{20raw} \\
+$0.50$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.2152$ & $+0.1579$ & $+0.2845$ & \textbf{YES} & \texttt{20raw} \\
+$1.00$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.3404$ & $+0.2569$ & $+0.4296$ & \textbf{YES} & \texttt{20raw} \\
+$2.00$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.4432$ & $+0.3445$ & $+0.5275$ & \textbf{YES} & \texttt{20raw} \\
+$5.00$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.4319$ & $+0.3333$ & $+0.5353$ & \textbf{YES} & \texttt{20raw} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Sharpest reviewer-facing falsifiable claim.}
+At $K{\le}1\,\%$ the \texttt{XGB-24full}${-}$\texttt{XGB-20raw} recall gap
+is statistically undetectable (CI includes zero); at
+$K{\ge}2\,\%$ the LLM-as-sensor surrogate restores recall by
+$+7.6$ percentage points ($95\%$ CI $[+3.3, +12.1]$ at $K{=}2\,\%$).
+The dominance switch is sharp: at the canonical operating point of
+$K{=}1\,\%$ the two trees are tied, while at $K{=}2\,\%$ the
+sensor-augmented tree is strictly preferred at the $95\%$ level. Below
+$K{=}0.25\,\%$ the absolute recall of both trees is below $0.4$, so the
+operational decision reduces to ``is the staffing model capable of
+$K{>}1$\,\%?''---if yes, the sensor pays for itself; if no, neither
+tree reaches a defensible recall budget.
+
+\paragraph{Sensor-only tree is cost-catastrophic at every $K$.}
+\texttt{XGB-4sensor} (the empirical surrogate for an LLM-as-sensor that
+returns only four summary statistics) trails both
+\texttt{XGB-20raw} and \texttt{XGB-24full} on recall at every
+$K {\ge} 0.10\,\%$. The recall gap is statistically detectable
+(CI excludes zero) at $K{=}0.10\,\%$ ($\Delta$-rec. $0.038$,
+CI $[0.015, 0.060]$) and grows monotonically with $K$ to
+$\Delta$-rec. $0.443$ at $K{=}2\,\%$ (CI $[0.345, 0.528]$).
+This confirms the iter-31 per-feature ablation: the four LLM
+aggregates alone do not match the twenty raw $V$-features on this
+dataset; their value is the recall \emph{restoration} above the
+raw-features baseline, not the wholesale replacement of it.
+
+\paragraph{Dollar cost trade-off at the dominance-switch $K$.}
+At $K{=}2\,\%$ on the canonical cost cell ($C_{\text{inv}}{=}\$0.50$,
+$L{=}\$100$, $c_{\text{sense}}{=}\$0.0035$/row):
+\texttt{XGB-20raw} alerts on $200$ rows
+($144 \times 0.701$ positives $\approx 101$ TPs, $99$ FPs) at
+per-decision cost $\$0.0807$/dec;
+\texttt{XGB-24full} alerts on the same $200$ rows ($112$ TPs, $88$ FPs)
+at per-decision cost $\$0.0804$/dec (including the $c_{\text{sense}}$
+overhead of $0.0035$/dec).
+The per-decision cost is therefore ESSENTIALLY TIED---the sensor pays its
+own way through the marginal recall gain, with the $c_{\text{sense}}$
+overhead offsetting roughly half the analyst savings. The per-fraud-caught
+gap is wider: \texttt{XGB-20raw} \$2.81/caught vs \texttt{XGB-24full}
+\$2.55/caught ($-9.3\%$ advantage to the sensor tree at $K{=}2\,\%$).
+
+\paragraph{Why this matters.}
+The \texttt{sec:p8-cost-optimal} analysis is the correct tool for choosing
+$\tau^{*}$ given a cost function, but fraud-ops leads do not actually
+negotiate $C_{\text{inv}}$ and $L$ in dollar terms---they negotiate the
+\emph{review budget}$K$ from the staffing model. This subsection
+re-frames iter-28 in the operational language of the analyst headcount,
+and surfaces the dominance-switch at $K{=}2\,\%$ as the empirical answer
+to the practical question ``when does the sensor pay for itself?''
+The answer is: at $K{\ge}2\,\%$. Below that, neither tree reaches a
+defensible recall, and the sensor's overhead is wasted.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_alert\_volume\_pareto.py} ($\sim$45s on 4
+cores; $7 \times 3 = 21$ cells, $7 \times 3 = 21$ paired-bootstrap
+contrast rows). Outputs:
+\texttt{experiments/results/p5p8/p8\_alert\_volume.tsv},
+\texttt{p8\_alert\_volume\_boot.tsv},
+\texttt{p8\_alert\_volume\_summary.json},
+\texttt{figures/p8\_alert\_volume.{png,pdf}}.

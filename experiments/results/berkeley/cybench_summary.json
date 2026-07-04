@@ -1,0 +1,81 @@
+{
+  "iter": 140,
+  "pillar": "B-F24",
+  "source_paper": "arXiv:2408.08926 (Cybench; Zhang et al. 2024-2025; CRFM Stanford)",
+  "source_lecture": "F24 L10 -- Percy Liang (Cybench capability-graded framework)",
+  "target": "A2 (eval methodology) + A1 (scaling-law statistical rigor)",
+  "n_anchors": 5,
+  "tier_counts": {
+    "L1_Easy": 2,
+    "L2_Medium": 1,
+    "L3_Hard": 1,
+    "L4_Expert": 1
+  },
+  "per_tier": [
+    {
+      "tier": "L1_Easy",
+      "n": 2,
+      "R_mean": 0.8562514802432761,
+      "logN_mean": 1.8693902792421846,
+      "r_Rmax_logN": -1.0000000000000002,
+      "slope_Rmax_logN": -0.012935560464443161,
+      "intercept_Rmax_logN": 0.8804330912320557,
+      "members": "Llama-3.1-8B-Instruct;DeepSeek-V3.1"
+    },
+    {
+      "tier": "L2_Medium",
+      "n": 1,
+      "R_mean": 0.816667625135217,
+      "logN_mean": 0.6020599913279624,
+      "r_Rmax_logN": NaN,
+      "slope_Rmax_logN": NaN,
+      "intercept_Rmax_logN": NaN,
+      "members": "Qwen3.5-4B"
+    },
+    {
+      "tier": "L3_Hard",
+      "n": 1,
+      "R_mean": 0.2854169630330038,
+      "logN_mean": 0.9030899869919435,
+      "r_Rmax_logN": NaN,
+      "slope_Rmax_logN": NaN,
+      "intercept_Rmax_logN": NaN,
+      "members": "Qwen3-8B"
+    },
+    {
+      "tier": "L4_Expert",
+      "n": 1,
+      "R_mean": 0.18204167563556284,
+      "logN_mean": 2.0791812460476247,
+      "r_Rmax_logN": NaN,
+      "slope_Rmax_logN": NaN,
+      "intercept_Rmax_logN": NaN,
+      "members": "Nemotron-120B"
+    }
+  ],
+  "global": {
+    "r_Rmax_logN": -0.06539509522798266,
+    "slope_Rmax_logN": -0.023075192164189032
+  },
+  "tier1_frontier": {
+    "n": 2,
+    "r_Rmax_logN": -1.0000000000000002,
+    "slope_Rmax_logN": -0.012935560464443161
+  },
+  "shifts": {
+    "2tier_capable_incapable_gap": 0.6093275425396397,
+    "4tier_t1_minus_t4_gap": 0.6742098046077133,
+    "4tier_max_range": 0.6742098046077133
+  },
+  "hypotheses": {
+    "H1_within_tier_scaling_signal": false,
+    "H2_tier_frontier_exceeds_global": true,
+    "H3_bimodality_is_L2_L3_cut": true
+  },
+  "frontier_synthesis": "Iter 140 (Cybench) re-frames the iter125/129 2-tier decomposition as a 4-tier Cybench-style capability gradient. The 5-anchor pool assigns to tiers: L1=2, L2=1, L3=1, L4=1. Tier 1 frontier rho is -1.0000 (n=2); the global rho is -0.0654. Per (frontier synthesis) Round 1: Pillar-1 'scaling law' is under-identified at n=5, so a sharper test is the *gap structure*, not the slope. The 4-tier gradient gives a 3-decisive test battery (H1 within-tier, H2 tier-frontier, H3 bimodality origin) and a structural recommendation to the Pillar-1 paper: report Cybench-style tier-conditional frontier curves, not a single scaling exponent.",
+  "evidence_paths": {
+    "tier_assignment": "experiments/results/berkeley/cybench_tier_assignment.tsv",
+    "tier_scaling": "experiments/results/berkeley/cybench_tier_scaling.tsv",
+    "tier_shift": "experiments/results/berkeley/cybench_tier_shift.tsv"
+  }
+}

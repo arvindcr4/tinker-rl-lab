@@ -1,0 +1,7 @@
+tier	n	R_mean	logN_mean	r_Rmax_logN	slope_Rmax_logN	intercept_Rmax_logN	members	H1_in_tier_scaling	RQS_mean
+L1_Easy	2	0.8563	1.869	-1.0000	-0.0129	0.8804	Llama-3.1-8B-Instruct;DeepSeek-V3.1	boundary-only (n=2)	0.5962
+L2_Medium	1	0.8167	0.602	nan	nan	nan	Qwen3.5-4B	n/a (n<2)	0.7591
+L3_Hard	1	0.2854	0.903	nan	nan	nan	Qwen3-8B	n/a (n<2)	0.3534
+L4_Expert	1	0.1820	2.079	nan	nan	nan	Nemotron-120B	n/a (n<2)	0.0000
+GLOBAL_all_anchors	5	0.5993	1.465	-0.0654	-0.0231	0.6331	Qwen3.5-4B;Qwen3-8B;Llama-3.1-8B-Instruct;DeepSeek-V3.1;Nemotron-120B	global reference	0.4610
+T1_FRONTIER_only	2	0.8563	1.869	-1.0000	-0.0129	0.8804	Llama-3.1-8B-Instruct;DeepSeek-V3.1	Cybench-style tier-frontier (H2)	0.5962

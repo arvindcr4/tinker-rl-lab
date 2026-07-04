@@ -1,0 +1,592 @@
+{
+  "n_manifests": 103,
+  "n_axes_total": 15,
+  "n_axes_full_coverage": 1,
+  "n_axes_partial": 0,
+  "n_axes_zero_coverage": 14,
+  "axes": [
+    {
+      "axis_id": "mc_intended_use",
+      "axis_name": "Intended use & out-of-scope uses",
+      "source": "mitchell2019modelcards",
+      "minreport_items_partial": [],
+      "minreport_coverage": "none",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "mc_factors",
+      "axis_name": "Relevant factors & subpopulations",
+      "source": "mitchell2019modelcards",
+      "minreport_items_partial": [],
+      "minreport_coverage": "none",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "mc_metrics",
+      "axis_name": "Metrics chosen (with motivations)",
+      "source": "mitchell2019modelcards",
+      "minreport_items_partial": [],
+      "minreport_coverage": "none",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "mc_eval_data",
+      "axis_name": "Evaluation data & details",
+      "source": "mitchell2019modelcards",
+      "minreport_items_partial": [
+        6
+      ],
+      "minreport_coverage": "partial",
+      "coverage": 1.0,
+      "honest_na": 0.0,
+      "gap_score": 0.0,
+      "gap_status": "GAP_LOW"
+    },
+    {
+      "axis_id": "mc_training_data",
+      "axis_name": "Training data & details",
+      "source": "mitchell2019modelcards",
+      "minreport_items_partial": [],
+      "minreport_coverage": "none",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "mc_quant_analyses",
+      "axis_name": "Quantitative analyses (intersectional, breakdown)",
+      "source": "mitchell2019modelcards",
+      "minreport_items_partial": [
+        4
+      ],
+      "minreport_coverage": "partial",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "mc_ethical",
+      "axis_name": "Ethical considerations, risks, harms",
+      "source": "mitchell2019modelcards",
+      "minreport_items_partial": [],
+      "minreport_coverage": "none",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "mc_caveats",
+      "axis_name": "Caveats & recommendations",
+      "source": "mitchell2019modelcards",
+      "minreport_items_partial": [],
+      "minreport_coverage": "none",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "ds_motivation",
+      "axis_name": "Motivation for dataset creation",
+      "source": "gebru2021datasheets",
+      "minreport_items_partial": [],
+      "minreport_coverage": "none",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "ds_composition",
+      "axis_name": "Dataset composition (instances, splits, missingness)",
+      "source": "gebru2021datasheets",
+      "minreport_items_partial": [],
+      "minreport_coverage": "none",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "ds_collection",
+      "axis_name": "Data collection process (sampling, time period, consent)",
+      "source": "gebru2021datasheets",
+      "minreport_items_partial": [],
+      "minreport_coverage": "none",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "ds_preprocessing",
+      "axis_name": "Preprocessing, cleaning, labeling",
+      "source": "gebru2021datasheets",
+      "minreport_items_partial": [
+        7
+      ],
+      "minreport_coverage": "partial",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "ds_intended_uses",
+      "axis_name": "Intended & discouraged uses",
+      "source": "gebru2021datasheets",
+      "minreport_items_partial": [],
+      "minreport_coverage": "none",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "ds_distribution",
+      "axis_name": "Dataset distribution & maintenance",
+      "source": "gebru2021datasheets",
+      "minreport_items_partial": [],
+      "minreport_coverage": "none",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    },
+    {
+      "axis_id": "ds_tasks",
+      "axis_name": "Tasks for which the dataset is suitable",
+      "source": "gebru2021datasheets",
+      "minreport_items_partial": [],
+      "minreport_coverage": "none",
+      "coverage": 0.0,
+      "honest_na": 0.0,
+      "gap_score": 1.0,
+      "gap_status": "MIN-REPORT_NEEDED"
+    }
+  ],
+  "by_source": {
+    "mitchell2019modelcards": [
+      {
+        "axis_id": "mc_intended_use",
+        "axis_name": "Intended use & out-of-scope uses",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "mc_factors",
+        "axis_name": "Relevant factors & subpopulations",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "mc_metrics",
+        "axis_name": "Metrics chosen (with motivations)",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "mc_eval_data",
+        "axis_name": "Evaluation data & details",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [
+          6
+        ],
+        "minreport_coverage": "partial",
+        "coverage": 1.0,
+        "honest_na": 0.0,
+        "gap_score": 0.0,
+        "gap_status": "GAP_LOW"
+      },
+      {
+        "axis_id": "mc_training_data",
+        "axis_name": "Training data & details",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "mc_quant_analyses",
+        "axis_name": "Quantitative analyses (intersectional, breakdown)",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [
+          4
+        ],
+        "minreport_coverage": "partial",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "mc_ethical",
+        "axis_name": "Ethical considerations, risks, harms",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "mc_caveats",
+        "axis_name": "Caveats & recommendations",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      }
+    ],
+    "gebru2021datasheets": [
+      {
+        "axis_id": "ds_motivation",
+        "axis_name": "Motivation for dataset creation",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_composition",
+        "axis_name": "Dataset composition (instances, splits, missingness)",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_collection",
+        "axis_name": "Data collection process (sampling, time period, consent)",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_preprocessing",
+        "axis_name": "Preprocessing, cleaning, labeling",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [
+          7
+        ],
+        "minreport_coverage": "partial",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_intended_uses",
+        "axis_name": "Intended & discouraged uses",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_distribution",
+        "axis_name": "Dataset distribution & maintenance",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_tasks",
+        "axis_name": "Tasks for which the dataset is suitable",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      }
+    ]
+  },
+  "headline_gap_axes": [
+    {
+      "axis": "mc_intended_use",
+      "gap": 1.0
+    },
+    {
+      "axis": "mc_factors",
+      "gap": 1.0
+    },
+    {
+      "axis": "mc_metrics",
+      "gap": 1.0
+    },
+    {
+      "axis": "mc_training_data",
+      "gap": 1.0
+    },
+    {
+      "axis": "mc_quant_analyses",
+      "gap": 1.0
+    },
+    {
+      "axis": "mc_ethical",
+      "gap": 1.0
+    },
+    {
+      "axis": "mc_caveats",
+      "gap": 1.0
+    },
+    {
+      "axis": "ds_motivation",
+      "gap": 1.0
+    },
+    {
+      "axis": "ds_composition",
+      "gap": 1.0
+    },
+    {
+      "axis": "ds_collection",
+      "gap": 1.0
+    },
+    {
+      "axis": "ds_preprocessing",
+      "gap": 1.0
+    },
+    {
+      "axis": "ds_intended_uses",
+      "gap": 1.0
+    },
+    {
+      "axis": "ds_distribution",
+      "gap": 1.0
+    },
+    {
+      "axis": "ds_tasks",
+      "gap": 1.0
+    }
+  ],
+  "by_minreport_status": {
+    "none": [
+      {
+        "axis_id": "mc_intended_use",
+        "axis_name": "Intended use & out-of-scope uses",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "mc_factors",
+        "axis_name": "Relevant factors & subpopulations",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "mc_metrics",
+        "axis_name": "Metrics chosen (with motivations)",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "mc_training_data",
+        "axis_name": "Training data & details",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "mc_ethical",
+        "axis_name": "Ethical considerations, risks, harms",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "mc_caveats",
+        "axis_name": "Caveats & recommendations",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_motivation",
+        "axis_name": "Motivation for dataset creation",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_composition",
+        "axis_name": "Dataset composition (instances, splits, missingness)",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_collection",
+        "axis_name": "Data collection process (sampling, time period, consent)",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_intended_uses",
+        "axis_name": "Intended & discouraged uses",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_distribution",
+        "axis_name": "Dataset distribution & maintenance",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_tasks",
+        "axis_name": "Tasks for which the dataset is suitable",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [],
+        "minreport_coverage": "none",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      }
+    ],
+    "partial": [
+      {
+        "axis_id": "mc_eval_data",
+        "axis_name": "Evaluation data & details",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [
+          6
+        ],
+        "minreport_coverage": "partial",
+        "coverage": 1.0,
+        "honest_na": 0.0,
+        "gap_score": 0.0,
+        "gap_status": "GAP_LOW"
+      },
+      {
+        "axis_id": "mc_quant_analyses",
+        "axis_name": "Quantitative analyses (intersectional, breakdown)",
+        "source": "mitchell2019modelcards",
+        "minreport_items_partial": [
+          4
+        ],
+        "minreport_coverage": "partial",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      },
+      {
+        "axis_id": "ds_preprocessing",
+        "axis_name": "Preprocessing, cleaning, labeling",
+        "source": "gebru2021datasheets",
+        "minreport_items_partial": [
+          7
+        ],
+        "minreport_coverage": "partial",
+        "coverage": 0.0,
+        "honest_na": 0.0,
+        "gap_score": 1.0,
+        "gap_status": "MIN-REPORT_NEEDED"
+      }
+    ]
+  }
+}

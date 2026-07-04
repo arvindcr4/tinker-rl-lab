@@ -1,0 +1,16 @@
+axis_id	axis_name	source	minreport_items_partial	coverage	honest_na	gap_score	gap_status
+mc_intended_use	Intended use & out-of-scope uses	mitchell2019modelcards	-	0.000	0.000	1.000	MIN-REPORT_NEEDED
+mc_factors	Relevant factors & subpopulations	mitchell2019modelcards	-	0.000	0.000	1.000	MIN-REPORT_NEEDED
+mc_metrics	Metrics chosen (with motivations)	mitchell2019modelcards	-	0.000	0.000	1.000	MIN-REPORT_NEEDED
+mc_eval_data	Evaluation data & details	mitchell2019modelcards	6	1.000	0.000	0.000	GAP_LOW
+mc_training_data	Training data & details	mitchell2019modelcards	-	0.000	0.000	1.000	MIN-REPORT_NEEDED
+mc_quant_analyses	Quantitative analyses (intersectional, breakdown)	mitchell2019modelcards	4	0.000	0.000	1.000	MIN-REPORT_NEEDED
+mc_ethical	Ethical considerations, risks, harms	mitchell2019modelcards	-	0.000	0.000	1.000	MIN-REPORT_NEEDED
+mc_caveats	Caveats & recommendations	mitchell2019modelcards	-	0.000	0.000	1.000	MIN-REPORT_NEEDED
+ds_motivation	Motivation for dataset creation	gebru2021datasheets	-	0.000	0.000	1.000	MIN-REPORT_NEEDED
+ds_composition	Dataset composition (instances, splits, missingness)	gebru2021datasheets	-	0.000	0.000	1.000	MIN-REPORT_NEEDED
+ds_collection	Data collection process (sampling, time period, consent)	gebru2021datasheets	-	0.000	0.000	1.000	MIN-REPORT_NEEDED
+ds_preprocessing	Preprocessing, cleaning, labeling	gebru2021datasheets	7	0.000	0.000	1.000	MIN-REPORT_NEEDED
+ds_intended_uses	Intended & discouraged uses	gebru2021datasheets	-	0.000	0.000	1.000	MIN-REPORT_NEEDED
+ds_distribution	Dataset distribution & maintenance	gebru2021datasheets	-	0.000	0.000	1.000	MIN-REPORT_NEEDED
+ds_tasks	Tasks for which the dataset is suitable	gebru2021datasheets	-	0.000	0.000	1.000	MIN-REPORT_NEEDED

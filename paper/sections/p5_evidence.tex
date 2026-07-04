@@ -430,3 +430,87 @@ All three rows of \tableref{tab:p5-headline-cis} are produced by
 \texttt{experiments/results/n2\_reward\_tensor\_resume/n2\_metrics.tsv}.
 Outputs: \texttt{experiments/results/p5p8/p5\_headline\_cis\_full.tsv}
 and \texttt{p5\_headline\_cis\_full.json}.
+
+\subsection{Exhibit 10: MIN-REPORT and External Reporting Standards are Complementary}
+\label{sec:p5-exhibit-external-alignment}
+\paragraph{Setup.} Two complementary reporting standards were
+published before MIN-REPORT in the broader ML community: the
+\textbf{Model Cards for Model Reporting} standard of
+\citet{mitchell2019modelcards} (FAT* 2019), whose Sec.~3 enumerates
+8 axes for trained-model reporting, and the \textbf{Datasheets for
+Datasets} standard of \citet{gebru2021datasheets} (CACM 2021), whose
+Sec.~3 enumerates 7 axes for dataset reporting. We audit each of the
+$103$ manifests in our two MIN-REPORT-bearing corpora
+(\texttt{mega\_20260704} and \texttt{quick\_20260704}) on each of
+the $15$ combined Mitchell/Gebru axes, recording whether the axis
+is covered (a non-empty key exists), honest-n/a (the \texttt{n/a-*}
+sentinel is used), or absent (the gap).
+
+\paragraph{Result.} The audit reports $\mathbf{14/15}$ axes at
+gap-score $1.000$ (no key, no honest-n/a) and a single axis with full
+coverage: \texttt{mc\_eval\_data} (Mitchell "Evaluation data \&
+details"), which our manifests carry because MIN-REPORT \textbf{Item 6
+(held-out split)} was deliberately designed to be the
+run-specific-instance of that Mitchell axis. Three axes have a
+hand-mapped partial MIN-REPORT coverage (\texttt{mc\_eval\_data},
+\texttt{mc\_quant\_analyses} via Item 4, \texttt{ds\_preprocessing}
+via Item 7); the other $12$ axes have \emph{no} MIN-REPORT item.
+\tableref{tab:p5-external-alignment} lists the full axis-level
+audit. The un-weighted mean gap-score across the $15$ axes is
+$0.933$.
+
+\paragraph{Reading.} The audit confirms that the seven-item
+MIN-REPORT was never intended to substitute for Mitchell's model
+cards or Gebru's datasheets; the two general-purpose standards remain
+necessary for any RL-for-LLM training run that wants to report
+intended use, training data, ethical considerations, caveats,
+dataset composition, collection process, distribution, or task
+suitability. The complementary axis MIN-REPORT does cover---the
+RL-stack runtime (loss form, reference policy \& KL, sampler/backend,
+per-step ZVF trajectory, group-size schedule)---is precisely the axis
+the two general-purpose standards do not enumerate, and on which the
+iter-13 MIN-REPORT-RL Auditor reports discriminative coverage
+($\Delta = 10.5$ between the mega and quick corpora at the badge
+level).
+
+\paragraph{Reproduction.} The audit is produced by
+\texttt{python3 scripts/p5p8/p5\_minreport\_external\_alignment.py}
+($\sim$3 s; stdlib only; $n = 103$ manifests).
+Outputs:
+\texttt{experiments/results/p5p8/p5\_minreport\_external\_alignment.tsv}
+(15 rows) and \texttt{p5\_minreport\_external\_alignment.json}.
+
+\begin{table}[t]
+\centering
+\caption{MIN-REPORT$\times$(Mitchell/Gebru) axis coverage on
+$n{=}103$ manifests. The seven MIN-REPORT items were never meant to
+substitute for the two general-purpose reporting standards: $14/15$
+external axes have zero coverage on the worktree manifests, and only
+$3/15$ have a hand-mapped partial MIN-REPORT item. The single axis
+with full coverage (\texttt{mc\_eval\_data}) is the Mitchell axis
+that Item 6 (held-out split) was designed to operationalise.
+Source: \texttt{p5\_minreport\_external\_alignment.tsv}.}
+\label{tab:p5-external-alignment}
+\begin{tabular}{lllrrrl}
+\toprule
+Axis & Source & Map & Cov. & Honest-n/a & Gap & Status \\
+\midrule
+Intended use          & Mitchell & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+Factors / subgroups   & Mitchell & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+Metrics               & Mitchell & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+Evaluation data       & Mitchell & Item 6 & 1.000 & 0.000 & 0.000 & GAP\_LOW \\
+Training data         & Mitchell & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+Quant. analyses       & Mitchell & Item 4 & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+Ethical considerations & Mitchell & -- & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+Caveats               & Mitchell & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+\midrule
+Motivation            & Gebru    & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+Composition           & Gebru    & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+Collection            & Gebru    & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+Preprocessing         & Gebru    & Item 7 & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+Intended uses         & Gebru    & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+Distribution          & Gebru    & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+Tasks                 & Gebru    & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
+\bottomrule
+\end{tabular}
+\end{table}

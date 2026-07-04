@@ -1,0 +1,392 @@
+{
+  "config": {
+    "tau": 0.7,
+    "tau_delta": 0.2,
+    "saturation_threshold": 0.9,
+    "G_base": 8,
+    "G_esc": 16,
+    "G_des": 4,
+    "n_steps_per_method": 40,
+    "n_methods": 4,
+    "n_boot": 2000,
+    "rng_seed": 20260704
+  },
+  "per_method_summaries": {
+    "aero": {
+      "n_sat_band_steps": 1,
+      "zvf_min": 0.5625,
+      "zvf_max": 0.9375,
+      "zvf_mean": 0.7203125,
+      "controllers": {
+        "C0_baseline": {
+          "total_G": 320,
+          "total_G_lo": 320.0,
+          "total_G_hi": 320.0,
+          "savings_vs_C0": 0.0,
+          "n_fire": 0,
+          "sat_band_fired": 0,
+          "headroom_bad": 0
+        },
+        "C1_zvf_triage@0.70": {
+          "total_G": 472,
+          "total_G_lo": 424.0,
+          "total_G_hi": 520.0,
+          "savings_vs_C0": -0.475,
+          "n_fire": 19,
+          "sat_band_fired": 1,
+          "headroom_bad": 0
+        },
+        "C2_dualformer@0.70": {
+          "total_G": 244,
+          "total_G_lo": 220.0,
+          "total_G_hi": 268.0,
+          "savings_vs_C0": 0.2375,
+          "n_fire": 19,
+          "sat_band_fired": 1,
+          "headroom_bad": 0
+        },
+        "C3_hybrid@0.70+0.20": {
+          "total_G": 460,
+          "total_G_lo": 408.0,
+          "total_G_hi": 508.0,
+          "savings_vs_C0": -0.4375,
+          "n_fire": 19,
+          "sat_band_fired": 1,
+          "headroom_bad": 0
+        }
+      }
+    },
+    "areal": {
+      "n_sat_band_steps": 1,
+      "zvf_min": 0.5,
+      "zvf_max": 0.9375,
+      "zvf_mean": 0.70625,
+      "controllers": {
+        "C0_baseline": {
+          "total_G": 320,
+          "total_G_lo": 320.0,
+          "total_G_hi": 320.0,
+          "savings_vs_C0": 0.0,
+          "n_fire": 0,
+          "sat_band_fired": 0,
+          "headroom_bad": 0
+        },
+        "C1_zvf_triage@0.70": {
+          "total_G": 456,
+          "total_G_lo": 408.0,
+          "total_G_hi": 504.0,
+          "savings_vs_C0": -0.425,
+          "n_fire": 17,
+          "sat_band_fired": 1,
+          "headroom_bad": 0
+        },
+        "C2_dualformer@0.70": {
+          "total_G": 252,
+          "total_G_lo": 228.0,
+          "total_G_hi": 276.0,
+          "savings_vs_C0": 0.2125,
+          "n_fire": 17,
+          "sat_band_fired": 1,
+          "headroom_bad": 0
+        },
+        "C3_hybrid@0.70+0.20": {
+          "total_G": 444,
+          "total_G_lo": 396.0,
+          "total_G_hi": 496.0,
+          "savings_vs_C0": -0.3875,
+          "n_fire": 17,
+          "sat_band_fired": 1,
+          "headroom_bad": 0
+        }
+      }
+    },
+    "gift": {
+      "n_sat_band_steps": 8,
+      "zvf_min": 0.5625,
+      "zvf_max": 1.0,
+      "zvf_mean": 0.7703125,
+      "controllers": {
+        "C0_baseline": {
+          "total_G": 320,
+          "total_G_lo": 320.0,
+          "total_G_hi": 320.0,
+          "savings_vs_C0": 0.0,
+          "n_fire": 0,
+          "sat_band_fired": 0,
+          "headroom_bad": 0
+        },
+        "C1_zvf_triage@0.70": {
+          "total_G": 528,
+          "total_G_lo": 480.0,
+          "total_G_hi": 576.0,
+          "savings_vs_C0": -0.65,
+          "n_fire": 26,
+          "sat_band_fired": 8,
+          "headroom_bad": 1
+        },
+        "C2_dualformer@0.70": {
+          "total_G": 216,
+          "total_G_lo": 196.0,
+          "total_G_hi": 240.0,
+          "savings_vs_C0": 0.325,
+          "n_fire": 26,
+          "sat_band_fired": 8,
+          "headroom_bad": 1
+        },
+        "C3_hybrid@0.70+0.20": {
+          "total_G": 432,
+          "total_G_lo": 372.0,
+          "total_G_hi": 488.0,
+          "savings_vs_C0": -0.35,
+          "n_fire": 26,
+          "sat_band_fired": 8,
+          "headroom_bad": 1
+        }
+      }
+    },
+    "grpo": {
+      "n_sat_band_steps": 2,
+      "zvf_min": 0.5,
+      "zvf_max": 0.9375,
+      "zvf_mean": 0.7203125,
+      "controllers": {
+        "C0_baseline": {
+          "total_G": 320,
+          "total_G_lo": 320.0,
+          "total_G_hi": 320.0,
+          "savings_vs_C0": 0.0,
+          "n_fire": 0,
+          "sat_band_fired": 0,
+          "headroom_bad": 0
+        },
+        "C1_zvf_triage@0.70": {
+          "total_G": 480,
+          "total_G_lo": 432.0,
+          "total_G_hi": 528.0,
+          "savings_vs_C0": -0.5,
+          "n_fire": 20,
+          "sat_band_fired": 2,
+          "headroom_bad": 0
+        },
+        "C2_dualformer@0.70": {
+          "total_G": 240,
+          "total_G_lo": 216.0,
+          "total_G_hi": 264.0,
+          "savings_vs_C0": 0.25,
+          "n_fire": 20,
+          "sat_band_fired": 2,
+          "headroom_bad": 0
+        },
+        "C3_hybrid@0.70+0.20": {
+          "total_G": 456,
+          "total_G_lo": 404.0,
+          "total_G_hi": 508.0,
+          "savings_vs_C0": -0.425,
+          "n_fire": 20,
+          "sat_band_fired": 2,
+          "headroom_bad": 0
+        }
+      }
+    }
+  },
+  "per_controller_pooled": {
+    "C0_baseline": {
+      "n_step_units": 160,
+      "mean_G_t": 8.0,
+      "mean_G_t_lo": 32.0,
+      "mean_G_t_hi": 32.0,
+      "total_G_pooled": 1280.0,
+      "total_G_pooled_lo": 1280.0,
+      "total_G_pooled_hi": 1280.0
+    },
+    "C1_zvf_triage@0.70": {
+      "n_step_units": 160,
+      "mean_G_t": 12.1,
+      "mean_G_t_lo": 46.0,
+      "mean_G_t_hi": 51.0,
+      "total_G_pooled": 1936.0,
+      "total_G_pooled_lo": 1840.0,
+      "total_G_pooled_hi": 2040.0
+    },
+    "C2_dualformer@0.70": {
+      "n_step_units": 160,
+      "mean_G_t": 5.95,
+      "mean_G_t_lo": 22.5,
+      "mean_G_t_hi": 25.0,
+      "total_G_pooled": 952.0,
+      "total_G_pooled_lo": 900.0,
+      "total_G_pooled_hi": 1000.0
+    },
+    "C3_hybrid@0.70+0.20": {
+      "n_step_units": 160,
+      "mean_G_t": 11.2,
+      "mean_G_t_lo": 42.1,
+      "mean_G_t_hi": 47.6,
+      "total_G_pooled": 1792.0,
+      "total_G_pooled_lo": 1684.0,
+      "total_G_pooled_hi": 1904.0
+    }
+  },
+  "paired_contrasts_per_method": {
+    "aero": {
+      "C3_minus_C1": {
+        "mean_diff_total": -12.0,
+        "mean_diff_per_step": -0.3,
+        "lo": -36.0,
+        "hi": 0.0,
+        "n": 40
+      },
+      "C3_minus_C2": {
+        "mean_diff_total": 216.0,
+        "mean_diff_per_step": 5.4,
+        "lo": 144.0,
+        "hi": 288.0,
+        "n": 40
+      },
+      "C2_minus_C1": {
+        "mean_diff_total": -228.0,
+        "mean_diff_per_step": -5.7,
+        "lo": -300.0,
+        "hi": -156.0,
+        "n": 40
+      }
+    },
+    "areal": {
+      "C3_minus_C1": {
+        "mean_diff_total": -12.0,
+        "mean_diff_per_step": -0.3,
+        "lo": -36.0,
+        "hi": 0.0,
+        "n": 40
+      },
+      "C3_minus_C2": {
+        "mean_diff_total": 192.0,
+        "mean_diff_per_step": 4.8,
+        "lo": 120.0,
+        "hi": 264.0,
+        "n": 40
+      },
+      "C2_minus_C1": {
+        "mean_diff_total": -204.0,
+        "mean_diff_per_step": -5.1,
+        "lo": -276.0,
+        "hi": -132.0,
+        "n": 40
+      }
+    },
+    "gift": {
+      "C3_minus_C1": {
+        "mean_diff_total": -96.0,
+        "mean_diff_per_step": -2.4,
+        "lo": -156.0,
+        "hi": -36.0,
+        "n": 40
+      },
+      "C3_minus_C2": {
+        "mean_diff_total": 216.0,
+        "mean_diff_per_step": 5.4,
+        "lo": 144.0,
+        "hi": 288.0,
+        "n": 40
+      },
+      "C2_minus_C1": {
+        "mean_diff_total": -312.0,
+        "mean_diff_per_step": -7.8,
+        "lo": -372.0,
+        "hi": -240.0,
+        "n": 40
+      }
+    },
+    "grpo": {
+      "C3_minus_C1": {
+        "mean_diff_total": -24.0,
+        "mean_diff_per_step": -0.6,
+        "lo": -60.0,
+        "hi": 0.0,
+        "n": 40
+      },
+      "C3_minus_C2": {
+        "mean_diff_total": 216.0,
+        "mean_diff_per_step": 5.4,
+        "lo": 144.0,
+        "hi": 288.0,
+        "n": 40
+      },
+      "C2_minus_C1": {
+        "mean_diff_total": -240.0,
+        "mean_diff_per_step": -6.0,
+        "lo": -312.0,
+        "hi": -168.0,
+        "n": 40
+      }
+    }
+  },
+  "paired_contrasts_pooled": {
+    "C3_minus_C1": {
+      "mean_diff_total": -144.0,
+      "mean_diff_per_step": -0.9,
+      "lo": -228.0,
+      "hi": -72.0,
+      "n": 160
+    },
+    "C3_minus_C2": {
+      "mean_diff_total": 840.0,
+      "mean_diff_per_step": 5.25,
+      "lo": 696.0,
+      "hi": 996.0,
+      "n": 160
+    },
+    "C2_minus_C1": {
+      "mean_diff_total": -984.0,
+      "mean_diff_per_step": -6.15,
+      "lo": -1140.0,
+      "hi": -840.0,
+      "n": 160
+    }
+  },
+  "headroom_bad_per_controller": {
+    "C1_zvf_triage@0.70": {
+      "headroom_bad_total": 1,
+      "sat_band_fired_total": 12,
+      "n_sat_band_total": 12
+    },
+    "C2_dualformer@0.70": {
+      "headroom_bad_total": 1,
+      "sat_band_fired_total": 12,
+      "n_sat_band_total": 12
+    },
+    "C3_hybrid@0.70+0.20": {
+      "headroom_bad_total": 1,
+      "sat_band_fired_total": 12,
+      "n_sat_band_total": 12
+    }
+  },
+  "panel_conditional_unification_test": {
+    "n_methods_with_saturation_band": 4,
+    "saturation_band_methods": [
+      "aero",
+      "areal",
+      "gift",
+      "grpo"
+    ],
+    "interior_only_methods": [],
+    "c3_equals_c1_check": {
+      "aero": {
+        "n_steps_where_C3_differs_from_C1": 1,
+        "is_bit_identical_to_C1": false
+      },
+      "areal": {
+        "n_steps_where_C3_differs_from_C1": 1,
+        "is_bit_identical_to_C1": false
+      },
+      "gift": {
+        "n_steps_where_C3_differs_from_C1": 8,
+        "is_bit_identical_to_C1": false
+      },
+      "grpo": {
+        "n_steps_where_C3_differs_from_C1": 2,
+        "is_bit_identical_to_C1": false
+      }
+    }
+  }
+}

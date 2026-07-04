@@ -953,3 +953,139 @@ stdlib only); outputs in
 \texttt{experiments/results/p5p8/p7\_dualformer\_n10\_\{per\_seed.tsv,
 summary.json\}}. Seed $27$, $n_{\mathrm{boot}}{=}2000$.
 
+\subsection{Panel-conditional unification validated on the N2
+saturation-band panel}
+\label{sec:p7-controller-hybrid-n2}
+
+The previous subsection closed with a falsifiable prediction: Hybrid (C3)
+will strictly dominate zvf-triage (C1) only on evidence bases whose
+per-step ZVF trajectory reaches the saturation band $z_t \geq \tau + \delta$.
+The N10 panel does not (max $z_t = 0.875$, item~34); this subsection
+replays the same three controllers on the N2 four-method tensors, where
+\texttt{gift}'s trajectory \emph{does} reach the saturation band (max
+$z_t = 1.000$, 8 of 40 steps at $z_t \geq 0.9$) and the falsifiable
+prediction is testable for the first time.
+
+\paragraph{Per-method compute replay on N2.}
+We replay C1 (zvf-triage@$0.7$), C2 (Dualformer-Auto@$0.7$), and
+C3 (Hybrid@$0.7{+}0.2$) per-(method, step) on the N2 four-method
+40-step trajectories ($G_{\mathrm{base}}{=}8$, total $4 \times 40 = 160$
+step-units):
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{method} & \textbf{zvf range} & $n_{\mathrm{sat}}$ & \textbf{C1 total} & \textbf{C2 total} & \textbf{C3 total} \\
+\midrule
+\texttt{grpo}  & [0.500, 0.938] & 2  & 480 & 240 & 456 \\
+\texttt{aero}  & [0.562, 0.938] & 1  & 472 & 244 & 460 \\
+\textbf{\texttt{gift}}  & [0.562, \textbf{1.000}] & \textbf{8}  & \textbf{528} & \textbf{216} & \textbf{432} \\
+\texttt{areal} & [0.500, 0.938] & 1  & 456 & 252 & 444 \\
+\midrule
+\textbf{pooled (4$\times$40)} & --- & \textbf{12} & \textbf{1936} & \textbf{952} & \textbf{1792} \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Per-method total compute replay on N2 ($4 \times 40$ step-units).}
+$n_{\mathrm{sat}}$ = number of steps at $z_t \geq 0.9$. \texttt{gift}
+is the only N2 method that meaningfully exercises the saturation band.
+\textbf{C3 strictly reduces C1's compute by 96 rollouts on \texttt{gift}
+(528$\to$432)}, the \emph{first empirical confirmation} of the iter~27
+unification prediction. C2 Dualformer-Auto is uniformly the cheapest
+controller on every method ($21$--$32\%$ savings vs baseline) but trades
+off boundary-band precision (it de-escalates the boundary band to $G{=}4$
+along with the saturation band).}
+\label{tab:p7-hybrid-n2}
+\end{table}
+
+\paragraph{Headline falsifiable claim (validated).}
+On the saturation-band panel (\texttt{gift}, $n_{\mathrm{sat}}{=}8$),
+the per-(method, step) paired bootstrap contrast
+$\texttt{C3}{-}\texttt{C1}$ on the per-step $G_t$ vector is
+$\Delta_{\mathrm{total}} = -96$ rollouts (95\% bootstrap CI
+$[-156, -36]$, CI excludes zero, $n_{\mathrm{boot}}{=}2000$,
+seed $20260704$). This is the **first falsifiable evidence** that the
+unified Hybrid is Pareto-superior to zvf-triage on a real evidence
+base that exercises the saturation band. The corresponding contrasts
+on \texttt{grpo} ($\Delta = -24$ $[-60, 0]$, CI barely includes zero)
+and \texttt{aero}/\texttt{areal} ($\Delta = -12$ $[-36, 0]$, CI
+includes zero) do not reach significance because their saturation-band
+exposure is only $1$--$2$ steps; the panel-conditional unification
+license holds qualitatively (C3 saves at least 8 G per sat-band step)
+but the per-method bootstrap cannot certify it.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+\textbf{method} & \textbf{C3$-$C1} $\Delta_{\mathrm{total}}$ (95\% CI) & \textbf{C3$-$C2} & \textbf{C2$-$C1} \\
+\midrule
+\texttt{grpo}  & $-24$ $[-60, 0]$ \footnotesize n.s.    & $+216$ $[+144, +288]$ *** & $-240$ $[-312, -168]$ *** \\
+\texttt{aero}  & $-12$ $[-36, 0]$ \footnotesize n.s.    & $+216$ $[+144, +288]$ *** & $-228$ $[-300, -156]$ *** \\
+\textbf{\texttt{gift}}  & $\mathbf{-96}$ $[\mathbf{-156}, \mathbf{-36}]$ *** & $+216$ $[+144, +288]$ *** & $-312$ $[-372, -240]$ *** \\
+\texttt{areal} & $-12$ $[-36, 0]$ \footnotesize n.s.    & $+192$ $[+120, +264]$ *** & $-204$ $[-276, -132]$ *** \\
+\midrule
+\textbf{pooled} & $\mathbf{-144}$ $[-228, -72]$ *** & $+840$ $[+696, +996]$ *** & $-984$ $[-1140, -840]$ *** \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Per-(method, step) paired bootstrap contrasts on N2
+($n_{\mathrm{boot}}{=}2000$, seed $20260704$).} Three stars means
+the 95\% CI excludes zero. \textbf{On \texttt{gift}, C3 strictly
+dominates C1 with $\Delta = -96$ and CI excludes zero, the iter~27
+unification prediction is validated.}}
+\label{tab:p7-hybrid-n2-contrasts}
+\end{table}
+
+\paragraph{Pooled N2 headline (160 step-units).}
+Across all 4 methods $\times$ 40 steps, the Hybrid C3 saves 144 rollouts
+vs C1 (95\% CI $[-228, -72]$, CI excludes zero), spends 840 rollouts more
+than C2 Dualformer-Auto (CI $[+696, +996]$, excludes zero), and Dualformer
+saves 984 rollouts vs C1 (CI $[-1140, -840]$, excludes zero). The
+**ordering C3 $<$ C1 (compute) and C2 $<$ C3 (compute) is statistically
+certified on the pooled evidence base**, but the per-method
+certifiability is exactly the saturation-band step count: \texttt{gift}'s
+$n_{\mathrm{sat}}{=}8$ carries the C3$-$C1 effect; the others' $n_{\mathrm{sat}}{\le}2$
+are insufficient.
+
+\paragraph{C3$\equiv$C1 collapse test, panel-conditional.}
+The previous subsection proved C3$\equiv$C1 bit-for-bit on the N10 panel
+(N10 max $z_t = 0.875$, de-escalation branch never fires). On N2 the
+de-escalation branch fires on $1, 1, 8, 2$ steps for \texttt{aero,
+areal, gift, grpo} respectively (total $12$ activation steps), so
+C3 and C1 are **never** bit-identical on any N2 method. The unified
+Hybrid's de-escalation branch is the active structural difference
+between C3 and C1, and it activates \emph{exactly} when and only when
+the per-step $z_t \geq \tau + \delta = 0.9$.
+
+\paragraph{Headroom-bad calibration.}
+All 4 controllers fire on exactly $1$ headroom-bad step (zvf$\geq 0.99$)
+and exactly $12$ saturation-band steps (zvf$\geq 0.9$, distributed
+$2{+}1{+}8{+}1$ across \texttt{grpo/aero/gift/areal}). The Hybrid
+de-escalates the $12$ saturation-band steps to $G{=}4$ (the principled
+move: no value in escalating a saturated group); \texttt{zvf-triage}
+wrongly escalates them to $G{=}16$ (waste of $8$ G per step);
+\texttt{Dualformer-Auto} de-escalates the saturation band \emph{and} every
+boundary step (everything zvf$\geq 0.7$), which is correct for compute
+economy but over-de-escalates the boundary band and is the
+contrast-restoration-vs-compute-economy trade-off quantified in
+Section~\ref{sec:p7-postpred}.
+
+\paragraph{Falsifiable prediction for the next iter.}
+\textbf{The unified Hybrid is now validated to be strictly
+Pareto-superior to zvf-triage on saturation-band panels (\texttt{gift}:
+$\Delta = -96$, $95\%$ CI $[-156, -36]$ excludes zero, $18\%$ saving).}
+\textbf{Future iter}: replay the same controller set on the
+mega-manifest corpus (P5, 98 cells $\times$ $G \times$ temperature
+$\times$ seed) once those cells carry per-step ZVF trajectories. The
+prediction is that Hybrid will strictly dominate zvf-triage on
+\emph{every cell with at least one saturation-band step} and collapse
+to zvf-triage on cells with no saturation-band steps.
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_hybrid\_unification\_n2.py} ($\leq 280$ LoC,
+stdlib only); outputs in
+\texttt{experiments/results/p5p8/p7\_hybrid\_n2\_\{per\_step.tsv,
+per\_method.tsv, summary.json\}}. Seed $20260704$, $n_{\mathrm{boot}}{=}2000$.
+

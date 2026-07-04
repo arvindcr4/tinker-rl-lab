@@ -1,0 +1,57 @@
+{
+  "n_runs": 12,
+  "TOL": 0.05,
+  "W_FIX": 5,
+  "W_GRID": [
+    1,
+    2,
+    3,
+    5,
+    8,
+    13,
+    21
+  ],
+  "H1_position_cliff": {
+    "mono_ok": 12,
+    "median_late_minus_early": 1.0,
+    "decisive": true
+  },
+  "H2_effective_window": {
+    "rhos": [
+      0.2947,
+      0.1567,
+      0.1834,
+      0.3504,
+      0.6508,
+      0.8574,
+      0.4148
+    ],
+    "rho_max": 0.8574,
+    "dips": 2,
+    "W_star": 13,
+    "decisive": false
+  },
+  "H3_niah_grid": {
+    "pstar_by_W": {
+      "1": 14,
+      "2": 14,
+      "3": 13,
+      "5": 13,
+      "8": 12,
+      "13": 10,
+      "21": 7
+    },
+    "rises": 0,
+    "decisive": true
+  },
+  "H4_group_modulation": {
+    "spearman_log2G_pstar": -0.8,
+    "decisive": true,
+    "null_consistent_with_row23": false
+  },
+  "H5_middle_falsify": {
+    "monotone_wins": 12,
+    "decisive": true
+  },
+  "n_decisive": 4
+}

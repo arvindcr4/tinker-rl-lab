@@ -1,0 +1,13 @@
+run	early_rec	late_rec	late_minus_early	down_transitions	is_monotone
+G2_s42	0	1	1	0	1
+G2_s123	0	1	1	0	1
+G2_s456	0	1	1	1	1
+G4_s42	0	1	1	0	1
+G4_s123	0	1	1	0	1
+G4_s456	0	1	1	0	1
+G8_s42	0.0833	1	0.9167	0	1
+G8_s123	0	1	1	0	1
+G8_s456	0	1	1	1	1
+G16_s42	0	1	1	0	1
+G16_s123	0	1	1	0	1
+G16_s456	0	1	1	0	1

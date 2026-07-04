@@ -442,6 +442,128 @@ methods: Dualformer-Auto cost ratio $0.655$ (\texttt{grpo}), $0.677$
 (\texttt{aero}), $0.621$ (\texttt{gift}), $0.673$ (\texttt{areal}),
 all with bootstrap CIs $[0.56, 0.74]$.
 
+\subsection{Per-prompt hindsight-optimal $G'$ analysis}
+\label{sec:p7-per-prompt-optimal-g}
+
+\paragraph{Setup.}
+The counterfactual evaluations in \S\ref{sec:p7-controller-cf}--\ref{sec:p7-calibrated}
+all reason at the \emph{step} level: a step's ZVF triggers escalation
+of \emph{all} prompts in the next step. But the data carries 16 prompts
+per step with completely independent reward vectors, and a per-prompt
+controller could in principle choose $G'$ per prompt using each prompt's
+own observed successes $k$ out of $G_\text{base}{=}8$. We asked:
+\emph{given the actual observed rewards, what is the smallest $G'$
+that would have restored contrast for each prompt-step, and what does
+that imply for the truthful savings claim?}
+The replay rule
+(\texttt{scripts/p5p8/p7\_per\_prompt\_optimal\_g.py},
+$\leq 300$ LoC, stdlib only) is the i.i.d.\ binomial model
+$Z(p,G')=p^{G'}+(1-p)^{G'}$ with target $Z<0.99$, scanning
+$G' \in \{2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 48, 64\}$ downward from
+$G_\text{base}{=}8$.  For each $(\text{method}, \text{step})$ we thus
+produce a \emph{per-prompt $G^*$} and re-aggregate the four-method,
+40-step, 16-prompt-per-step corpus ($N = 4 \cdot 40 \cdot 16 = 2{,}560$
+prompt-steps).
+
+\paragraph{Headline (this iteration).}
+Across the $2{,}560$ prompt-steps the distribution of $G^*$ is
+\emph{bimodal and very tightly clustered}:
+\begin{itemize}
+\item $G^* = 8$ for \textbf{$72.9\%$ of prompt-steps (1{,}867/2{,}560)} ---
+the prompt is fully saturated at $G{=}8$ ($k = 0$ or $k = 8$), so no
+$G'$ rescues it and the controller's only honest move is to keep $G = 8$.
+\item $G^* = 2$ for \textbf{$27.1\%$ of prompt-steps (693/2{,}560)} ---
+the prompt is mixed at $G{=}8$ and is already non-degenerate at
+$G' = 2$ (a single pair of contrasts already breaks the degeneracy
+under the binomial model when $p \in \{1/8, 7/8\}$); the cost-optimal
+move is to \emph{shrink $G$}, not to escalate.
+\item \textbf{Mean $G^* = 6.376$}, \textbf{cost ratio vs $G{=}8$ =
+$0.797$}: the truthful hindsight savings is $20.3\%$
+($95\%$ bootstrap CI on the per-step rollout vector with
+$n_\text{boot}=2{,}000$ gives a cost ratio of $0.797$ with CI
+$[0.776, 0.818]$, well below $1.0$).
+\item \textbf{Mean contrast restored per prompt} = $0.000$ ZVF units
+(the data was already at $G_\text{base}{=}8$ contrast for every
+prompt-step, so the optimal controller \emph{never} improves the
+empirical ZVF per prompt; the saving is purely rollout economy).
+\item \textbf{Mean contrast lost to $G^*$ per prompt} = $0.130$ ZVF
+units --- the honest accounting of what the $20.3\%$ savings
+\emph{cost} in contrast: shrinking $G$ from $8$ to $2$ on the mixed
+prompts raises their per-prompt ZVF from $\approx 0.34$ to
+$\approx 0.78$ under the i.i.d.\ model.
+\end{itemize}
+
+\paragraph{Per-method breakdown (this iteration).}
+The mean-$G^*$ split is monotone across all four methods:
+\texttt{grpo} and \texttt{aero} both have mean $G^*=6.322$
+(cost ratio $0.790$); \texttt{gift} has mean $G^* = 6.622$ (cost
+ratio $0.828$; the most saturated method, with $493$ saturated
+prompt-steps); \texttt{areal} has mean $G^* = 6.237$
+(cost ratio $0.780$). The fraction of saturated prompt-steps is
+$0.720$ (\texttt{grpo}), $0.720$ (\texttt{aero}), $0.770$
+(\texttt{gift}), and $0.706$ (\texttt{areal}).
+
+\paragraph{Pareto frontier on a flat regime-indicator axis.}
+Re-casting the Pareto frontier of Table~\ref{tab:p7-pareto} on a
+per-prompt axis:
+
+\begin{table}[t]
+\centering
+\caption{Per-prompt hindsight-optimal $G^*$ analysis on the N2
+four-method reward tensors ($N = 2{,}560$ prompt-steps). The
+per-prompt controller (bottom row) is the strict efficiency ceiling
+under the i.i.d.\ binomial model: lower bound on rollout spend while
+preserving the per-prompt contrast the data already exposes.  The
+$P_\text{saturated}$ column is the fraction of prompt-steps that are
+all-correct or all-wrong at $G=8$, on which no escalation rule can
+fire.}
+\label{tab:p7-per-prompt-optimal}
+\begin{tabular}{lrrrrr}
+\toprule
+Controller & $N_\text{fires}$ & rollouts & ratio & saved & frac sat \\
+\midrule
+fixed-$G{=}4$  & 0  & 10{,}240 & 0.500 & 693 & 0.729 \\
+fixed-$G{=}6$  & 0  & 15{,}360 & 0.750 & 693 & 0.729 \\
+fixed-$G{=}8$  & 0  & 20{,}480 & 1.000 & 693 & 0.729 \\
+fixed-$G{=}12$ & 0  & 30{,}720 & 1.500 & 693 & 0.729 \\
+fixed-$G{=}16$ & 0  & 40{,}960 & 2.000 & 693 & 0.729 \\
+fixed-$G{=}24$ & 0  & 61{,}440 & 3.000 & 693 & 0.729 \\
+fixed-$G{=}32$ & 0  & 81{,}920 & 4.000 & 693 & 0.729 \\
+\midrule
+\textbf{per-prompt $G^*$} & 2{,}560 & \textbf{16{,}322} & \textbf{0.797} & 0 & 0.729 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{What this changes about the controller's claim.}
+The per-prompt analysis \emph{reproduces} the headline from
+\S\ref{sec:p7-controller-cf} (zero saved prompts) but gives it a
+\emph{sharper quantitative form}. Three readings:
+\emph{(i)} the per-prompt ceiling on rollout spend is $0.797\times$ the
+fixed-$G{=}8$ baseline --- not the $0.66$--$0.68$ ratio that Dualformer-Auto
+hits under the current four-bin rule, but a tighter bound that any future
+learned rule would have to beat to be a Pareto improvement on the
+compute axis; \emph{(ii)} on the saturated $72.9\%$ of prompt-steps
+\emph{no} adaptive rule can recover contrast, so the
+contrast-restoration-vs-compute-economy trade-off is determined by the
+non-saturated $27.1\%$ alone; \emph{(iii)} the per-prompt $G^*$ Pareto
+frontier has \emph{zero} contrasts-restored at zero cost --- every
+non-saturated prompt's contrast is already exposed at $G{=}8$, so the
+$20.3\%$ rollout savings is pure economy without any contrast gain.
+The Hybrid of \S\ref{sec:p7-calibrated} is the unified answer: Dualformer-Auto
+in the boundary regime (current cost ratio $0.66$--$0.68$, approaching
+the per-prompt ceiling) and Bayesian @ $\tau_\text{post} = 0.60$ in the
+interior regime (current cost ratio $1.73$, saving $100\%$ of the
+saturated-prompt headroom).
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_per\_prompt\_optimal\_g.py} ($\leq 290$ LoC,
+stdlib + matplotlib); outputs in
+\texttt{experiments/results/p5p8/p7\_per\_prompt\_optimal\_g\_\{summary.tsv,
+per\_step.tsv, per\_prompt.tsv, summary.json\}}.  Figure
+\texttt{experiments/results/p5p8/figures/p7\_per\_prompt\_g\_distribution.pdf}
+shows the per-method $G^*$ distribution.
+
 \paragraph{Unification as a single calibrated rule.}
 Putting together Sections~\ref{sec:p7-controller-cf}--\ref{sec:p7-bayesian},
 the calibrated controller is:

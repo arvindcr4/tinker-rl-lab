@@ -1,0 +1,5 @@
+condition	form	k	r2	aicc	loocv_rmse	loocv_r2
+base_library	moe?a+b*logN:d+e*logN	4	0.5603	-18.54	0.2811	0.1374
+lasr_library	a+instruct	2	0.5721	-29.867	0.2376	0.3839
+lasr_minus_concept	moe?a+b*logN:d+e*logN	4	0.5603	-18.54	0.2811	0.1374
+incumbent_gate(iter129/133)	instruct?a:b	2	0.5721	-29.867	0.2376	0.3839

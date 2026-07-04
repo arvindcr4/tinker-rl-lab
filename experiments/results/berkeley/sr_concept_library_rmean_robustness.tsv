@@ -1,0 +1,3 @@
+target	condition	form	loocv_rmse	loocv_r2
+r_mean	base	moe?a+b*logN:d+e*logN	0.28	0.1468
+r_mean	lasr	a+instruct	0.2385	0.3808

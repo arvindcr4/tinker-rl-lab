@@ -23,8 +23,9 @@ across seven RL libraries and five model families ($0.6$B--$\sim$671B) on GSM8K
 contributions are: (i) a held-out comparison showing that, in the short-horizon
 GSM8K regime, the mean Qwen3-8B-Instruct GRPO gain over the \emph{same} checkpoint's
 pre-RL held-out accuracy is small and not statistically significant (a matched pre-RL
-control for the Qwen3-8B-Base checkpoint is not available), and that GRPO and Dr.\,GRPO give statistically similar
-gains with no length inflation; (ii) evidence that the verbosity-trap signature is
+control for the Qwen3-8B-Base checkpoint is not available), and that GRPO and Dr.\,GRPO give held-out gains
+that are indistinguishable at our seed budget with no length inflation under the
+200-token GSM8K generation cap; (ii) evidence that the verbosity-trap signature is
 absent in this regime; and (iii) an argument, developed through an external
 cross-examination, that this null is the \emph{expected} result when length is
 already controlled, together with a specification of the length-confounded regime

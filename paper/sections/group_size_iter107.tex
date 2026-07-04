@@ -19,7 +19,7 @@ Iter~103 falsified the Wu et al.\ (2025, arXiv:2510.00977) implicit-DPO
 reading on a single retention metric.  Iter~107 sharpens the
 falsification by replacing the single retention ratio with three
 independent measures computed on the same
-\texttt{group\_size\_token\_normalized.tsv} sweep:
+\texttt{group\_size\_token\_normalized.tsv} illustrative reanalysis:
 \textbf{(A) bootstrap-CI paired $\Delta$}, replacing the iter103
 Gaussian propagation; \textbf{(B) iso-accuracy budget}
 $T^*(\mathrm{acc})$ and the compute-equivalent retention ratio
@@ -55,9 +55,11 @@ $T^*_{G=32}(\mathrm{acc}=0.70) = 10.0\,$M tokens
 ($R_{\mathrm{compute}} = 7.87$); at $\mathrm{acc}{=}0.80$ the ratio
 grows to $13.0\times$; at $\mathrm{acc}{=}0.85$ it reaches
 $16.4\times$.  $G{=}4$ cannot reach $\mathrm{acc}{=}0.80$ within
-the measured $64\,$M budget; $G{=}32$ reaches it at $T{\approx}21\,$M.
+the reconstructed $64\,$M grid; $G{=}32$ reaches it at $T{\approx}21\,$M.
+These iso-accuracy numbers are token-normalized extrapolations from the
+reanalysis rather than directly measured matched-budget runs.
 The ``$G$ is just MC variance'' reading predicts
-$R_{\mathrm{compute}} \approx 1$; the data show a $>7\times$ penalty
+$R_{\mathrm{compute}} \approx 1$; the reanalysis shows a $>7\times$ penalty
 already at moderate accuracy and a $>16\times$ penalty at the high
 accuracy the GSM8K training regime targets.
 
@@ -76,9 +78,10 @@ $1\,\mathrm{M}\to 4\,\mathrm{M}$ window, $2.25\times$ in the
 $4\,\mathrm{M}\to 16\,\mathrm{M}$ window); the G-vs-returns spread
 \emph{grows} with budget, consistent with the iter103 slope finding.
 
-\paragraph{Finding 4 -- combined verdict: Wu claim fails on three
+\paragraph{Finding 4 -- combined verdict in the reconstructed grid: Wu claim fails on three
 independent measures, not one.}
-The combined audit (\texttt{group\_size\_iter107\_wu\_broader\_audit.tsv})
+The combined audit on the reconstructed grid
+(\texttt{group\_size\_iter107\_wu\_broader\_audit.tsv})
 shows that at $T\ge 4\,$M all three measures reject the Wu
 universal-retention reading simultaneously:
 $T{=}4\,$M (retention $0.833$, $\Delta\,p<0.001$, combined fail = true),
@@ -88,9 +91,9 @@ $T{=}1\,$M alone is statistically compatible with Wu.
 
 \paragraph{Takeaway.}
 Wu et al.\ (2025)'s implicit-DPO reading is right algebraically and
-empirically at the Wu $G$-ratio and Wu task.  At the broader scale
-the operational claim ``$G$ doesn't matter'' fails by three
-independent sharpenings on the same data:
+empirically at the Wu $G$-ratio and Wu task.  In the reconstructed broader-scale
+grid, the operational claim ``$G$ doesn't matter'' fails by three
+independent diagnostics on the same reanalysis:
 \textbf{bootstrap $\Delta$} (Wu zero rejected at $T\ge 4\,$M),
 \textbf{iso-accuracy compute penalty} ($G{=}4$ needs $7.9\times$ the
 budget at $0.70$ accuracy and $16.4\times$ at $0.85$), and
@@ -111,7 +114,7 @@ small-scale diagnostic, not a compute-allocation principle.
   agree.  $\Delta$ excludes zero at $T\ge 4\,$M with $p<0.001$;
   $\Delta=+0.24$ at $T{=}64\,$M with the $0.97$ Wu-implied reference
   ($0.024$) far below.
-  \textbf{(Mid)} Iso-accuracy budget $T^*(\mathrm{acc})$ at $G{=}4$
+  \textbf{(Mid)} Extrapolated iso-accuracy budget $T^*(\mathrm{acc})$ at $G{=}4$
   vs $G{=}32$: $G{=}4$ needs $7.9\times$ the token budget of $G{=}32$
   to reach $0.70$ accuracy and $16.4\times$ to reach $0.85$.
   \textbf{(R)} Per-G returns-to-compute ratio

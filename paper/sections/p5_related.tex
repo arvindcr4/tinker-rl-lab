@@ -1,0 +1,52 @@
+% Pillar-5 (MIN-REPORT-RL) related work
+\section{Related Work}
+\label{sec:p5-related}
+
+\paragraph{Reproducibility crises in deep RL.} Our position is a deliberate
+echo of \citet{henderson2018deep}, who showed that deep-RL results depend on
+codebase, hyperparameters, and even the random seeds chosen, to the point
+that the same algorithm from two repositories behaves as two algorithms.
+Follow-on work built the statistical repair kit: rigorous comparison
+protocols \citep{colas2019hitchhiker} and small-sample-aware aggregate
+metrics \citep{agarwal2021deep}, and position work has questioned what RL
+benchmarking can establish at all \citep{jordan2024benchmarking}. RL-for-LLMs
+adds a new failure surface those works did not face: the sampling
+distribution is produced by a serving stack complex enough to be a research
+artifact in its own right, and often closed.
+
+\paragraph{Reporting standards in NLP and ML.} \citet{dodge2019show} argued
+that results are functions of compute budget and hyperparameter search, and
+proposed reporting expected validation performance as a function of budget;
+our manifest is the RL-for-LLM analogue, replacing ``budget'' with ``stack.''
+The NeurIPS reproducibility program \citep{pineau2020improving} demonstrated
+that checklists plus process shift community behavior---and also that
+self-attested checklists have limits, which motivates our artifact-computed
+badge (\secref{sec:p5-toolchain}). Statistical treatments of evaluation
+noise \citep{miller2024erroreval, zhang2024benchvariance} quantify the
+uncertainty floor against which our 12-cell within-noise finding
+(\secref{sec:p5-exhibit-h2h}) should be read.
+
+\paragraph{Evaluation-stack sensitivity.} The lm-evaluation-harness effort
+documented, from years of maintenance experience, that prompt formatting,
+answer extraction, and implementation details shift LLM benchmark scores by
+ranking-relevant margins, and argued for shared, versioned evaluation
+infrastructure \citep{biderman2024lessons}. Independent audits reach the same
+conclusion for reasoning evaluations specifically
+\citep{hochlehnert2025sober}, and contamination studies show the data side of
+the same coin \citep{zhang2024gsm1k, riddell2024contamination}. Our claim is
+that RL \emph{training} inherits all of this---the verifier is an evaluator
+in the loop---plus the V1--V3 vectors unique to on-policy optimization.
+
+\paragraph{The GRPO-variant explosion.} The label space we target is growing
+quickly: GRPO \citep{shao2024deepseekmath, guo2025deepseekr1}, DAPO
+\citep{yu2025dapo}, Dr.GRPO \citep{tong2025drgrpo}, GSPO \citep{qwen2025gspo},
+and a long tail of descendants \citep{liu2026gdpo, nan2025ngrpo,
+zhang2025scaffgrpo, lu2025grpolead, bytedance2025vapo}. Analyses that unify
+the family---GRPO's preference-learning reading \citep{rafailov2024direct,
+wu2025grpo_dpo} and zero-variance-prompt recovery methods \citep{le2025rlzvp}
+---support our premise that members differ by a small set of loss-form
+coordinates, which is exactly what item 1 of the manifest records. Empirical
+scaling studies of GRPO knobs \citep{tan2025scalingrl} likewise presuppose
+the per-knob disclosure the manifest mandates. The companion \ours{} pillar
+papers (P1 scaling, P2 ZVF, P3 group size, P4 length bias) provide the
+measurement substrate this position paper argues should become the norm.

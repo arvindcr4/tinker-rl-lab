@@ -1,0 +1,99 @@
+{
+  "record_type": "stack",
+  "schema_version": "0.1.0",
+  "id": "colab-open_dapo_e3",
+  "label_claimed": "dapo",
+  "framework": {
+    "name": "colab-open-trainer",
+    "version": "e3-audit",
+    "openness": "open"
+  },
+  "model": null,
+  "task": "synthetic-arithmetic (E3 audit)",
+  "seeds": null,
+  "provenance": {
+    "source_artifacts": [
+      "W&B zvf-colab-experiments / E3_open_audit"
+    ],
+    "wandb": "arvindcr4-pes-university/zvf-colab-experiments",
+    "date_recorded": "2026-06-21"
+  },
+  "variant_deltas_applied": [
+    {
+      "delta_id": "delta_dapo",
+      "component": "clip_higher",
+      "status": "implemented",
+      "note": "eps_low=0.2, eps_high=0.28"
+    },
+    {
+      "delta_id": "delta_dapo",
+      "component": "dynamic_sampling",
+      "status": "implemented",
+      "note": "zero-variance groups filtered and resampled until the batch is full (+45% rollouts vs the grpo arm)"
+    },
+    {
+      "delta_id": "delta_dapo",
+      "component": "token_level_loss",
+      "status": "implemented",
+      "note": null
+    },
+    {
+      "delta_id": "delta_dapo",
+      "component": "overlong_reward_shaping",
+      "status": "absent",
+      "note": "not applicable at toy completion lengths; recorded as absent"
+    },
+    {
+      "delta_id": "delta_dapo",
+      "component": "kl_removed",
+      "status": "implemented",
+      "note": "trainer runs without a KL term"
+    }
+  ],
+  "min_report": {
+    "loss_form": {
+      "importance_ratio_level": "token",
+      "clip_eps_low": 0.2,
+      "clip_eps_high": 0.28,
+      "length_normalization": true,
+      "advantage_normalization": "std",
+      "token_mask": "completion-only"
+    },
+    "reference_kl": {
+      "reference_policy": false,
+      "kl_beta": 0.0,
+      "kl_estimator": "none"
+    },
+    "sampler_backend": {
+      "backend": "hf_transformers (single-process, open backward pass)",
+      "precision": null,
+      "temperature": 0.7,
+      "top_p": 0.95
+    },
+    "telemetry": {
+      "per_step_zvf": true,
+      "per_step_gu": true,
+      "source": "zvf-triage callback (live per-step ZVF/GU)"
+    },
+    "group_size_schedule": {
+      "initial_g": 4,
+      "schedule": "fixed",
+      "adaptation_rule": "none"
+    },
+    "heldout_split": {
+      "disjoint_from_reward_env": true,
+      "description": "held-out arithmetic prompts disjoint from the reward environment; held-out delta reported per arm"
+    },
+    "decontamination": {
+      "performed": false,
+      "parser_robustness_probe": false
+    }
+  },
+  "outcomes": {
+    "mean_last10_train_reward": null,
+    "mean_zvf": 0.0,
+    "heldout_delta": 0.55,
+    "rollouts": 174
+  },
+  "notes": "True dynamic sampling drives batch ZVF to 0.00 by construction. Toy scale: directional evidence only."
+}

@@ -1,7 +1,7 @@
 % Pillar-1 (scaling) results opener
 \section{Scaling Results}
 \label{sec:p1-results}
-We organize the scaling evidence around three questions: does the GRPO gain grow
+We organize the scaling evidence around three questions: does the mean GRPO training reward grow
 with model size, is there a shared saturation shape across scales, and is any
 universal exponent identifiable? The short answers are \emph{no measurable
 cross-scale slope}, \emph{no clean phase structure}, and \emph{no identifiable
@@ -21,7 +21,7 @@ rates cannot be trusted. We then run a pre-registered model-selection comparison
 $2/12$ anchors match all criteria), and a compute-adjusted re-analysis that asks
 whether a contrastive-yield axis, rather than raw parameter count, is the correct
 abscissa. Finally, the Nemotron-120B trace is examined as a distinct collapse
-phase---peak held-out accuracy $0.875$ drifting to a late mean near $0.21$, with a
-zero-variance fraction of $0.55$ against $\le 0.067$ elsewhere---rather than as a
+phase---peak per-step training reward $0.875$ drifting to a late mean near $0.21$, with a
+zero-reward step fraction of $0.55$ against $\le 0.067$ elsewhere---rather than as a
 smooth continuation of the trend. The final subsection adds an external
 frontier-model cross-examination of these claims.

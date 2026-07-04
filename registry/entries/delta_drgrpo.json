@@ -1,0 +1,25 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_drgrpo",
+  "name": "Dr. GRPO",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "tong2025drgrpo",
+    "arxiv": "2503.20783",
+    "title": "Understanding R1-Zero-Like Training: A Critical Perspective"
+  },
+  "deltas": [
+    {
+      "component": "length_normalization",
+      "field": "loss_form.length_normalization",
+      "change": "remove the 1/|o_i| response-length normalization from the loss"
+    },
+    {
+      "component": "advantage_std_normalization",
+      "field": "loss_form.advantage_normalization",
+      "change": "remove the division by the within-group reward standard deviation"
+    }
+  ],
+  "notes": "Two removals that undo GRPO's length and difficulty biases."
+}

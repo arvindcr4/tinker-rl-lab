@@ -1,0 +1,931 @@
+LLM Agents
+1
+Enterprise Trends for Generative AI
+Guest Speaker: Burak Gokturk
+Instructors: Dawn Song & Xinyun Chen
+
+2
+Burak 
+Gokturk
+VP, Cloud AI and AI/ML for Developers, Google 
+Cloud
+burakg@google.com
+
+LLM Agents
+3
+Instructors: Dawn Song & Xinyun Chen
+Enterprise Trends for Generative AI
+Key Blocks to build successful agents
+What’s next?
+
+04
+Google Cloud Next ‘24
+Key Trends in 
+Generative AI
+
+Some observations
+In recent years, ML has completely changed our expectations of 
+what is possible with computers
+The kinds of computations we want to run and the hardware on 
+which we run them is changing dramatically
+Increasing scale (compute, data, model size) delivers better results
+
+A decade of amazing progress in 
+what computers can do
+Input
+Output
+Pixels: 
+Audio:
+Pixels:
+“Hello, how are you?”
+“leopard”
+“How cold is it outside?”
+“Bonjour, comment allez-vous?”
+“A cheetah lying on top of a car”
+
+A decade of amazing progress in 
+what computers can do
+Pixels: 
+Audio:
+Pixels:
+“Hello, how are you?”
+“leopard”
+“How cold is it outside?”
+“Bonjour, comment allez-vous?”
+“A cheetah lying on top of a car”
+Input
+Output
+
+“Leopard”
+90.88%
+Source: https://paperswithcode.com/sota/image-classification-on-imagenet
+50.9%
+Image Classification on ImageNet
+AlexNet: first neural net 
+used in Imagenet 
+competition
+63.3%
+
+“How cold is it outside?”
+2.5%
+Source: https://paperswithcode.com/sota/speech-recognition-on-librispeech-test-other
+13.25%
+Speech Recognition on LibriSpeech test-other
+
+Transformers + autoregressive training + massive data 
+I went to the …
+Foundation 
+Model
+Pre-training on 
+trillions of tokens
+The cat sat on the mat
+The teacher read a book
+I love to dance
+…
+conference
+Next token 
+prediction
+Backbone 
+architecture
+For tokenization: github.com/google-research/bert/blob/master/tokenization.py
+
+Towards useful AI agents
+Supervised
+Fine-Tuning (SFT)
+Reinforcement Learning from 
+Human Feedback (RLHF)
+Prompt: 
+“I have pains in my lower back while 
+sleeping. What could be causing this?”
+Output (expert response): 
+“You might be experiencing a lower 
+back strain, typically caused by lifting 
+heavy objects or abrupt movements. 
+This can lead to sharp pain in the 
+lower back, especially when moving or 
+lifting …”
+SFT model
+Reward 
+model
+RL objective
+RL-tuned 
+model
+Prompt
+
+Gemini
+Training High Quality Multimodal Models at 
+Scale
+
+13
+Project started in Feb 2023
+Many collaborators from Google DeepMind, Google Research, and rest of Google
+Goal: Train highly capable multimodal models and use them all across Google
+Initial 1.0 public release in Dec 2023, 1.5 in Feb 2024
+https://blog.google/technology/ai/google-gemini-ai 
+https://g.co/gemini 
+Gemini: A Family of Highly Capable Multimodal Models, by the Gemini Team, arxiv.org/abs/2312.11805 
+
+Gemini - Multimodal from the start
+Gemini: A Family of Highly Capable Multimodal Models, by the Gemini Team, arxiv.org/abs/2312.11805 
+
+Gemini
+Multimodal
+Reasoning
+
+Gemini 1.5: Initial release in 
+February 2024
+Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context, arxiv.org/abs/2403.05530
+Long context capability demonstrated 
+up to 10M tokens, with public preview 
+offering up to 1M tokens of text and/or 
+video 
+information in the context window is 
+“clearer” (it hasn’t been mixed 
+together/perturbed over many gradient 
+descent steps with other training data)
+⇒ less hallucination
+⇒ enables in-context learning
+
+Try it at https://ai.google.dev/
+Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context, arxiv.org/abs/2403.05530
+
+“Needle in haystack” test for text, 
+audio, and video
+Green is good, and red is not good, 
+and these are almost entirely green 
+(>99.7% recall), even out to 10M 
+tokens.
+Modeled after Greg Kamradt’s 
+github.com/gkamradt/LLMTest_NeedleI
+nAHaystack test that probes a model’s 
+ability to retrieve specific information 
+from its context.
+Gemini 1.5 Pro Long Context Evaluation
+Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context, arxiv.org/abs/2403.05530
+10 hours
+107 hours
+10M tokens
+
+Gemini 1.5 Pro-Exp-0801 evaluation
+via lmsys.org in August, 2024
+https://x.com/lmsysorg/status/181904882129454744
+1
+
+Enterprise Trends
+
+Trend 1- The obvious: AI is 
+moving so much faster 
+
+Proprietary + Confidential
+ML, Systems, and Cloud AI
+The amount of data needed 
+has come down 
+AI is moving faster…Why?
+Anyone can develop AI
+
+Trend 2- Technical Trends 
+
+Separate models for different tasks
+Single model that can generalize across 
+millions of tasks
+Where are we headed?
+
+Dense models
+Efficient sparse models 
+Where are we headed?
+
+Where are we headed?
+Single modality models
+Models that deal with many modalities
+
+Trend 3- It is the choice of 
+the platform that matters 
+
+ML, Systems, and Cloud AI
+Proprietary + Confidential
+LMSys Chat Leaderboard Ranks
+
+029
+Google Cloud Next ‘24
+Proprietary
+Key success factors for 
+generative AI 
+Access to a broad set of 
+models
+…so you can find the best model for 
+their use case and budget 
+A platform for managing 
+models in production
+…so you can deploy and manage 
+models in a scalable way 
+Ability to customize 
+models with your data
+…so you can improve the quality, 
+latency, and performance of 
+the model
+Choice and flexibility at 
+every level
+….so you can avoid vendor lock-in and 
+use the best tools for the job
+
+Trend 4- Cost of API calls is 
+approaching 0 
+
+
+Trend 5- Search 
+
+Another big realization 
+LLM and Search need 
+to come together.
+
+Trend 6- Enterprise 
+Search/Assistant 
+
+035
+Google Cloud Next ‘24
+Enterprise Learnings with 
+their AI investments
+
+036
+Google Cloud Next ‘24
+Proprietary
+Key success factors for 
+generative AI 
+Access to a broad set of 
+models
+…so you can find the best model for 
+their use case and budget 
+A platform for managing 
+models in production
+…so you can deploy and manage 
+models in a scalable way 
+Ability to customize 
+models with your data
+…so you can improve the quality, 
+latency, and performance of 
+the model
+Choice and flexibility at 
+every level
+….so you can avoid vendor lock-in and 
+use the best tools for the job
+
+
+
+Google Cloud Next
+Storyboard section 1 
+NEW / UPDATED SUN 8/20
+Vertex AI 
+Model Garden 
+130
+
+
+
+Foundation Models on Vertex AI
+Across a variety of model sizes to address use cases
+Embeddings API for 
+Text and Image
+Extract semantic information 
+from unstructured data
+Chirp for 
+Speech to Text
+Build voice enabled applications
+PaLM for Text / Chat
+Custom language tasks and 
+multi-turn conversations
+Codey for 
+Code Generation
+Improve coding and debugging
+Imagen 2.0 for Text to 
+Image
+Create and edit images from 
+simple prompts
+Gemini 1.0 Pro
+Multimodal reasoning across a wide 
+range of tasks
+GA
+Gemini 1.0 Ultra
+ Largest and most capable model 
+for highly complex tasks
+Limited 
+Private GA
+Gemini 1.5 Pro
+Multimodal reasoning for longer 
+prompts, 1 million context window
+Gemma 2B and 7B
+Family of lightweight, 
+state-of-the-art open models
+NEW
+NEW
+
+Google Cloud Next
+Storyboard section 1 
+NEW / UPDATED SUN 8/20
+
+NEW 3/28 - AS
+*Currently in Preview
+Haiku | Sonnet | Opus*
+
+045
+Google Cloud Next ‘24
+Proprietary
+ Foundation models are powerful tools, but they are only as 
+valuable as your ability to use them in context of your 
+business use case and successfully deploy them 
+to production. 
+
+NEW 3/23 - AS
+
+
+Augmentation tools to enhance capabilities of foundation models
+Tuning/Distillation
+●
+Customize based on specific data 
+and use case
+●
+Create a smaller model for 
+cost/latency purposes 
+Grounding
+●
+Combine with search to make 
+it factual
+Extensions/Function 
+Calling
+●
+Function calling to be able to 
+make LLMs on areas where 
+they perform poorly
+
+Key Components of Customizations and 
+Agent Builder
+Fine Tuning
+Distillation
+Grounding
+Function Calling
+
+Key Components of Customizations and 
+Agent Builder
+Fine Tuning
+Distillation
+Grounding
+Function Calling
+
+Google Cloud Next
+Storyboard section 1 
+NEW 3/24 - AS
+For open models
+*
+*For open models on Vertex AI
+And optimize
+
+Popular model adaptation approaches and 
+research goals
+LLM size
+All sizes; FLAN-540B is very 
+expensive.  
+Large LLM >62B. 540B
+moderate-size (e.g. T5-3B) 
+1 ~ 64B 
+64B → 1B or T5
+
+Conventional Fine-tuning
+Basic steps:
+▪
+Get a pretrained model checkpoint 
+(e.g. BERT)
+▪
+Have a new dataset/task
+▪
+Do supervised learning on new dataset 
+and update the weights of the new 
+model
+Requires:
+▪
+Modest amount of compute (e.g. xxx 
+chips for a few days for a 340B model)
+▪
+In-depth knowledge of the model 
+architecture
+
+Conventional Prompt 
+Tuning
+Basic steps:
+●
+Freeze the backbone model. 
+●
+Prepend a soft prompt (e.g. learnable) to 
+the input 
+●
+Only optimize the prompt to adapt to 
+downstream tasks. 
+Lester et al https://arxiv.org/pdf/2104.08691.pdf
+Froze
+
+Overview of Prompting 
+Advantages: 
+●
+No training, only inference  
+●
+Enables real time interaction (e.g. ChatGPT)
+●
+Lowered requirements on train dataset size or label cost:  only a few examples (<10) are enough 
+●
+Better generalization and less likely to overﬁt on the training data
+●
+In-context learning: an LLM is given a prompt 
+including a few training examples and a test 
+instance as input. 
+●
+●
+By leveraging its “autoregressive power”, LLMs 
+understand and learn from the in-context 
+examples to generate the output for the test 
+instance directly, without any update to its 
+parameters.
+●
+●
+Perform in a zero-shot/few-shot manner.
+●
+ 
+●
+Context learning is one of the most common 
+ways to use giant LLMs 
+
+What is parameter-efficient fine tuning
+Resource link
+
+Why do we need PEFT? Pros and Cons
+Resource link
+
+Key Idea
+Full fine-tuning
+LoRA
+●
+Decomposing updated parameters into a product of lower rank matrices
+Resource link
+
+Details of LoRA
+●
+This can apply to any dense layers in the foundation models.
+○
+But applying to all dense layers may not be the optimal. 
+○
+Only applying adaptation on attention weights (not on MLPs)
+Pre-trained model weight:
+Weights with LoRA tuning:
+Trainable parameters:
+Rank of trainable parameters:
+Original forward pass:
+Modified forward pass:
+Resource link
+
+Advantages of LoRA
+●
+No additional inference latency
+●
+In some cases, it shows better performance even in comparison to full fine tuning
+
+Key Components of Customizations and 
+Agent Builder
+Fine Tuning
+Distillation
+Grounding
+Function Calling
+
+Deploying LLMs continues to be challenging
+●
+Customers do not need Unicorn/Gemini-XL/GPT4 for every task
+●
+Can we reduce the serving cost & latency while maintaining high performance
+
+Memory & Compute Efficient LLM
+go/cair_eﬃcient_llm
+Speedup 6B LLM inference by 2x
+Quantization
+Retrieval
+Enhancement
+Side Tuning
+Distillation
+Model size reduction by 50x in text generation
+Avoid back-prop the backbone model
+Model size reduction & perf improvement
+
+2023
+NEW Approach
+Using teacher reasoning:
+Distillation step by step, Orca
+Present
+2015
+Distillation in NN
+2020
+DistilBERT, TinyBERT
+Self distillation
+Online distillation
+History
+Different matching
+Network augmentation
+Localization distillation
+
+Key Terms
+●
+Teacher model
+○
+The original (large model) that we want to extract the knowledge from it
+●
+Student model
+○
+The new model with smaller size
+●
+Soft labels
+○
+The output of teacher model when the Temperature is larger than 1 (T>1)
+●
+Soft predictions
+○
+The output of student model when the Temperature is larger than 1 (T>1)
+●
+Hard predictions
+○
+When regular softmax (T=1) is used in the student model
+●
+Hard labels
+○
+Ground truth label in one-hot encoding
+
+The key insights
+●
+Softmax function
+●
+Key insight
+○
+Relative similarity between other classes and this information is useful
+○
+Image of 2 may be closer or similar to an example image of 3 than it is to that of 7
+○
+How close or similar the examples are is of much importance to understand what the 
+network has actually learned
+●
+Limitation
+○
+Giving importance to the most likely class, push the rest to very small values
+
+The key insights (2): Temperature T
+●
+Softmax function with temperature to smooth the output
+
+Architecture of distillation in NN
+●
+Train smaller model based on the hard labels and the teacher soft labels`
+
+Key Components of Customizations and 
+Agent Builder
+Fine Tuning
+Distillation
+Grounding
+Function Calling
+
+Some shortcomings of LLMs 
+when it comes to factuality
+LLMs produce output that we can check that it is factually wrong
+LLMs are trained in the past
+LLMs data is frozen in past. So it 
+will not know about recent 
+developments or facts.
+LLMs hallucinate
+LLMs are creative by nature. This 
+might result in hallucinations at a 
+significant rate.
+LLMs can’t cite sources
+LLMs are good in reasoning, but 
+less so on quoting which sources 
+they used to come to a 
+conclusion..
+
+Minimizing hallucinations boils down to solving 3 problems
+Right context
+Better models
+User experience
+
+Private Documents
+Ground in data that the LLM was not trained on
+Fresh Content
+Ground in up to date content from the Web 
+Authoritative content
+Ground in content from authoritative sources
+Right context
+
+Retrieve and Generate (RAG)
+LLM
+search
+results
+Retrieve Augment 
+Generate (RAG)
+Retrieval Service 
+Response
+1: Retrieve
+2: Augment
+3: Generate
+Prompt
+
+Typical RAG/NLI based grounding architecture in a nutshell
+LLM
+Extractive 
+answer 
+(snippets)
+Grounding 
+Detection using NLI
+Report
+sent 1, score, citations
+…
+sent n, score, citations
+Prompt2Query
+ES
+Prompt
+[Pre-hoc] Response generation:
+●
+Augment input with search results (“Retrieve Augment 
+Generate” approach)
+●
+LORA/fine-tune model to ground in pre-hoc input and 
+generate citations
+[Post-hoc] Response corroboration
+●
+Use Natural Language Inference to corroborate against 
+corpus and generate/validate citations
+Response
+Pre-hoc
+Post-hoc
+Retrieval & 
+Ranking
+
+Proprietary + Conﬁdential
+Félicette was a stray Parisian cat 
+that became the first cat 
+launched into space on 16 
+October 1963 as part of the 
+French space program.
+How do you know this is true?
+User Experience 
+Metric: Attribution
+
+Félicette was a stray Parisian cat 
+that became the first cat 
+launched into space [4,5] on 16 
+October 1963 [6,7] as part of the 
+French space program [8].
+Disputed
+Supporting sources: 4/7
+Contradicting sources: 2/7
+Sources: stuartatkinson.wordpress.com, 
+en.wikipedia.org, …
+Supported
+Supporting sources: 6/8
+Contradicting sources: 0/8
+Sources: en.wikipedia.org, english.elpais.com
+Contradicted
+Supporting sources: 0/8
+Contradicting sources: 2/8
+Sources: starwalk.space, 
+en.wikipedia.org, …
+Supported
+Supporting sources: 5/11
+Contradicting sources: 0/11
+Sources: www.reddit.com, en.wikipedia.org, …
+ [1,2,3]
+
+Key Components of Customizations and 
+Agent Builder
+Fine Tuning
+Distillation
+Grounding
+Function Calling
+
+As of my limited knowledge up to April 2023 [...] it's 
+always best to check the latest rates from a reliable 
+source, such as a currency converter or a bank.
+Have you 
+ever received 
+a non-answer 
+about outdated 
+information?
+
+```
+{
+"name": "alice",
+"occupation": ["pets", "music"]
+"address": false,
+"email": "alice@example"
+}
+```
+Have you ever 
+tried to get 
+consistent 
+outputs?
+
+I am sorry, but as a language model, I do not have the 
+ability to access external websites or videos. 
+Therefore, I cannot summarize the article or the 
+YouTube video you have provided.
+Have you ever 
+tried to reference 
+an external 
+website, video, 
+or API?
+
+Limitations of 
+generative models
+   
+Inconsistent Output
+   
+Frozen in time
+   Disconnected from the world
+Large language models (LLMs) 
+lack access to information 
+after their training date, leading 
+to stale, inaccurate responses.
+LLMs have no inherent way of 
+interacting with the world. This limits their 
+ability to take action on behalf of the 
+user through interfaces like APIs.
+Even with good prompting, it’s 
+difficult to get LLMs to produce 
+consistently structured output for 
+downstream implementation.
+
+When you run 
+into limitations with 
+generative models, 
+what workarounds 
+do you try?
+
+v1
+v2
+v3
+v4
+v5
+“Please, please, please, 
+YOU MUST OUTPUT 
+VALID JSON”
+“Please omit 
+triple-backticks from 
+your response”
+“Your response should 
+incorporate content 
+from hŵps://…”
+“The output should be 
+compatible with 
+json.loads()”
+“Please output valid 
+JSON per this 
+schema”
+“The response object 
+should conform to 
+OpenAPI specification 
+3.1.0”
+“Here is messy JSON 
+from an LLM, please 
+clean it up!”
+Pleading for 
+consistent 
+outputs?
+Passing web 
+links in your 
+prompts?
+Parsing 
+responses to 
+get clean 
+JSON?
+Grounding?
+Extreme 
+prompt 
+engineering?
+Many-shot 
+prompting?
+
+But they probably didn't 
+work as expected.
+How can we solve 
+this problem?
+
+Let’s dig in…
+
+Wrap functions
+in a tool
+Define your 
+functions
+01
+02
+Call Gemini with 
+a tools argument
+03
+How Function Calling works
+
+A day in the life of a Function Call
+ Send prompt
+Gemini selects function and parameters
+API calls to external systems
+Prompt
+Gemini
+Response
+REST APIs
+Databases
+Document Repositories
+Customer management 
+systems
+Respond to user
+Function
+Function
+Tool
+1
+2
+3
+4
+
+Prompt
+Function Call
+Function 
+Response
+Model Response
+API 
+Parameters
+API Endpoint
+(BigQuery)
+API 
+Response
+Function name: sal_query
+Function parameters: ('query': 'SELECT
+ROUND((COUNT(DISTINCT IF(returned at
+IS NOT NULL. order id. NULL))
+COUNT(DISTINCT order id)) * 100 2) AS
+return_rate FROM
+thelook _ecommerce orders'
+API response:
+[Row((9.95.), freturn_rate': 03)l
+"What percentage
+of customers return
+their order?"
+"9.95% of customers 
+Return their order. This 
+information comes from 
+the
+thelook_ecommerce.order
+s
+table in BigQuery!'
+
+What can you build 
+with Function Calling?
+Lots of things!
+
+Structured
+outputs
+Employee
+search
+tool
+Real-time
+information
+retrieval
+Autonomous
+workflows
+Customer
+support
+agent
+Function calling is all about 
+developer control and flexibility
+Simple tasks
+Complex workflows
+
+   
+Finance
+   
+Business
+   Databases
+Read and write to 
+documents and 
+spreadsheets in 
+Google Drive
+Perform real-time queries 
+on datasets in BigQuery
+Fetch real-time financial 
+and currency exchange 
+information
+   Documents
+Search and summarize 
+across thousands of 
+documents
+   
+Travel
+   
+Support
+   Customers
+Retrieve messages from 
+customer support 
+ticketing systems
+Search records in 
+customer management 
+systems
+Fetch live flight and hotel 
+information from travel 
+systems
+   Inventory
+Make live queries to 
+product inventory 
+systems to check stock

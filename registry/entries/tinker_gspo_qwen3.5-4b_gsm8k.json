@@ -1,0 +1,85 @@
+{
+  "record_type": "stack",
+  "schema_version": "0.1.0",
+  "id": "tinker_gspo_qwen3.5-4b_gsm8k",
+  "label_claimed": "gspo",
+  "framework": {
+    "name": "tinker",
+    "version": "0.2.x",
+    "openness": "managed"
+  },
+  "model": "Qwen/Qwen3.5-4B",
+  "task": "gsm8k",
+  "seeds": [
+    42,
+    123,
+    456
+  ],
+  "provenance": {
+    "source_artifacts": [
+      "12-cell Tinker head-to-head (internal program records, 2026-06-21)"
+    ],
+    "wandb": "arvindcr4-pes-university/zvf-audit",
+    "date_recorded": "2026-06-21"
+  },
+  "variant_deltas_applied": [
+    {
+      "delta_id": "delta_gspo",
+      "component": "sequence_level_ratio",
+      "status": "surrogate",
+      "note": "sequence-level ratio requested via user config; managed loss internals unverifiable"
+    },
+    {
+      "delta_id": "delta_gspo",
+      "component": "sequence_level_clip",
+      "status": "unknown",
+      "note": "managed_by_tinker"
+    }
+  ],
+  "min_report": {
+    "loss_form": {
+      "importance_ratio_level": "sequence",
+      "clip_eps_low": null,
+      "clip_eps_high": null,
+      "length_normalization": null,
+      "advantage_normalization": null,
+      "token_mask": null
+    },
+    "reference_kl": {
+      "reference_policy": true,
+      "kl_beta": null,
+      "kl_estimator": null
+    },
+    "sampler_backend": {
+      "backend": "tinker-managed sampler",
+      "precision": "bf16",
+      "temperature": 0.7,
+      "top_p": 0.95
+    },
+    "telemetry": {
+      "per_step_zvf": true,
+      "per_step_gu": true,
+      "source": "benchmark harness on per-group rewards"
+    },
+    "group_size_schedule": {
+      "initial_g": null,
+      "schedule": "fixed",
+      "adaptation_rule": "none"
+    },
+    "heldout_split": {
+      "disjoint_from_reward_env": true,
+      "description": "GSM8K test split (benchmark protocol)"
+    },
+    "decontamination": {
+      "performed": null,
+      "parser_robustness_probe": null
+    }
+  },
+  "outcomes": {
+    "mean_last10_train_reward": 0.71,
+    "mean_zvf": 0.511,
+    "heldout_delta": null,
+    "rollouts": null
+  },
+  "notes": null
+}

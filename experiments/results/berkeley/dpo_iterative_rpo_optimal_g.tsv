@@ -1,0 +1,5 @@
+T	GRPO_optimal_G	Iterative_RPO_optimal_G	rationale	IrPO_uses_DPO_loss	IrPO_uses_NLL_term
+1000000	8	8	Iterative RPO draws G candidates per prompt and labels winner/loser by correctness; GRPO does the same with a group-mean baseline; both need the same number of within-group contrasts to escape ZVF.	True	True
+4000000	16	16	Iterative RPO draws G candidates per prompt and labels winner/loser by correctness; GRPO does the same with a group-mean baseline; both need the same number of within-group contrasts to escape ZVF.	True	True
+16000000	32	32	Iterative RPO draws G candidates per prompt and labels winner/loser by correctness; GRPO does the same with a group-mean baseline; both need the same number of within-group contrasts to escape ZVF.	True	True
+64000000	32	32	Iterative RPO draws G candidates per prompt and labels winner/loser by correctness; GRPO does the same with a group-mean baseline; both need the same number of within-group contrasts to escape ZVF.	True	True

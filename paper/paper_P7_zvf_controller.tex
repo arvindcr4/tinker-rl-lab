@@ -1,0 +1,31 @@
+% =============================================================================
+% STANDALONE PAPER 7 of 7 -- Pillar 7: ZVF theory + adaptive-G controller
+% Predictive/interventional sequel to Paper 2 (the descriptive ZVF diagnostic).
+% Reuses shared preamble/author/methods; pulls the P7 section family.
+% Build: pdflatex paper_P7_zvf_controller ; bibtex paper_P7_zvf_controller ; pdflatex x2
+% =============================================================================
+\documentclass{article}
+\input{sections/_shared_preamble}
+\title{From Diagnostic to Controller:\\
+       A Signal-Starvation Theory of GRPO and an Adaptive Group-Size Intervention}
+\input{sections/_shared_author}
+\begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\input{sections/p7_abstract}
+\input{sections/p7_intro}
+\input{sections/_shared_methods}
+\input{sections/p7_results_intro}
+\input{sections/p7_theory}
+\input{sections/p7_ushape}
+\input{sections/p7_e1_validation}
+\input{sections/p7_controller}
+\input{sections/p7_design_rules}
+\input{sections/p7_synthesis}
+\input{sections/p7_limitations}
+\input{sections/p7_conclusion}
+\appendix
+\input{sections/p7_appendix_derivations}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

@@ -1,0 +1,24 @@
+hypothesis	test	value	threshold	decisive
+H1_min_dim_rho	min(|rho(dim,cap)|)	0.5977	<0.65	True
+H1_dim_t1_stereotype	spearman	0.7684	—	—
+H1_dim_t2_adversarial	spearman	0.6912	—	—
+H1_dim_t3_OOD	spearman	0.6982	—	—
+H1_dim_t4_demo_robustness	spearman	0.5977	—	—
+H1_dim_t5_ethics_fairness	spearman	0.7754	—	—
+H2_row09_overlap	count	3	>=3	True
+H2_jaccard	jaccard	0.6000	—	—
+H2_intersection	set	Nemotron-120B;Qwen3-32B;Qwen3-8B	—	—
+H2_row09_hard_floor	set	Nemotron-120B;Qwen3-30B-MoE;Qwen3-32B;Qwen3-8B	—	—
+H2_bottom4_trust	set	Nemotron-120B;Qwen3-32B;Qwen3-8B;Qwen3.5-27B	—	—
+H3_T1_violation_intersection	count	1	>=1	True
+H3_violators	list	Qwen3.5-27B(cap=0.44,t1=0.36)	—	—
+H3_bottom3_T1	set	Qwen3.5-27B;Qwen3-30B-MoE;Qwen3-32B	—	—
+H4_resid_std	residual std	0.0732	>0.05	True
+H4_regression_R2	trust~capability	0.9417	—	—
+H5_union_bottom3	count	5	>=5	True
+H5_union_anchors	set	Nemotron-120B;Qwen3-30B-MoE;Qwen3-32B;Qwen3-8B;Qwen3.5-27B	—	—
+H5_bottom3_t1_stereotype	list	Qwen3.5-27B;Qwen3-30B-MoE;Qwen3-32B	—	—
+H5_bottom3_t2_adversarial	list	Qwen3.5-27B;Nemotron-120B;Qwen3-30B-MoE	—	—
+H5_bottom3_t3_OOD	list	Nemotron-120B;Qwen3.5-27B;Qwen3-8B	—	—
+H5_bottom3_t4_demo_robustness	list	Nemotron-120B;Qwen3.5-27B;Qwen3-8B	—	—
+H5_bottom3_t5_ethics_fairness	list	Qwen3.5-27B;Qwen3-30B-MoE;Nemotron-120B	—	—

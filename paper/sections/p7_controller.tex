@@ -1,0 +1,89 @@
+% Pillar-7: operationalization -- zvf-triage callback + adaptive-G controller + E3 audit
+\section{Operationalization: the \texttt{zvf-triage} Callback and the
+Adaptive-$G$ Controller}
+\label{sec:p7-controller}
+
+\subsection{Design}
+\label{sec:p7-controller-design}
+The theory suggests a minimal intervention. T2 says growing $G$ kills
+degenerate groups exponentially fast at interior $p$; T1 says it cannot help
+at the boundaries; T3 says the payoff of a rescued group scales with
+$p(1-p)$. The \texttt{zvf-triage} callback therefore watches the per-step
+ZVF trajectory (with PCD as the aliasing guard of
+Section~\ref{sec:p7-pcd}) and, when ZVF spikes above a threshold while PCD
+indicates the run is still in the interior regime, escalates the group size
+for subsequent steps. In the audited runs the schedule was $G: 4 \to 6 \to
+8$, each escalation triggered live by a ZVF spike. The controller changes
+\emph{only} the sampler budget; loss form, learning rate, data, and seeds
+are untouched, so it composes with any GRPO-family objective.
+
+The natural comparison is DAPO-style dynamic sampling \citep{yu2025dapo},
+which attacks the same degeneracy by \emph{resampling}: it discards
+zero-variance groups and draws new prompts until the batch is fully
+non-degenerate. Dynamic sampling is guaranteed to reach ZVF $= 0$; the
+question is at what rollout cost, and whether the outcome justifies it.
+A caution from the cross-stack audit applies before any such comparison:
+the recipe \emph{label} ``DAPO'' does not pin down the mechanism. On the
+closed stack, the available ``DAPO'' arm is GRPO with an asymmetric-clip
+surrogate and no dynamic sampling, and its mean ZVF is $0.58$; the same
+label in an open trainer with true dynamic sampling yields mean ZVF
+$0.00$. All four arms below therefore run in one open, auditable
+reimplementation where each mechanism is verified from the code, not the
+name.
+
+\subsection{The E3 four-arm audit}
+\label{sec:p7-e3}
+Experiment E3 (W\&B project \texttt{zvf-colab-experiments}, run family
+\texttt{E3\_open\_audit}) compares four arms in the single open trainer:
+plain GRPO \citep{shao2024deepseekmath}, Dr.~GRPO \citep{tong2025drgrpo},
+DAPO-style dynamic sampling \citep{yu2025dapo}, and GRPO with the
+adaptive-$G$ controller. Table~\ref{tab:p7-e3} reports the held-out
+improvement, mean ZVF, and total rollouts consumed.
+
+\begin{table}[t]
+\centering
+\caption{E3 four-arm open-trainer audit (single auditable reimplementation;
+same data, budget baseline of 120 rollouts, seeds shared across arms).
+Adaptive-$G$ matches the best held-out gain; dynamic sampling zeroes ZVF at
+$+45\%$ rollouts without a held-out advantage. Small-$n$, single-task ---
+see scope note.}
+\label{tab:p7-e3}
+\begin{tabular}{lccc}
+\toprule
+Arm & Held-out $\Delta$ & Mean ZVF & Rollouts \\
+\midrule
+\texttt{grpo}            & $+0.500$ & 0.25 & 120 \\
+\texttt{drgrpo}          & $+0.575$ & 0.27 & 120 \\
+\texttt{dapo} (dyn.\ sampling) & $+0.550$ & 0.00 & 174 \\
+\texttt{grpo\_adaptiveG} & $+0.575$ & 0.23 & 186 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three readings, in decreasing order of confidence. \emph{First}, the
+telemetry behaves exactly as each mechanism dictates: dynamic sampling
+reaches ZVF $= 0.00$ by construction, and the adaptive-$G$ arm lowers ZVF
+($0.25 \to 0.23$) only modestly because escalation fires late, on spikes,
+rather than continuously. \emph{Second}, the accuracy-versus-compute trade
+is explicit: DAPO buys its perfect telemetry with $174$ rollouts against the
+$120$ of the fixed arms ($+45\%$), and its held-out gain ($+0.550$) does not
+exceed the cheaper Dr.~GRPO ($+0.575$ at $120$). Zeroing ZVF is not free
+and, on this task, not necessary. The adaptive-$G$ arm spends a comparable
+overhead ($186$ rollouts, $+55\%$) but ties the best held-out result; its
+spend concentrates on the steps the triage flagged, rather than being paid
+on every batch. \emph{Third}---and most weakly---adaptive-$G$'s tie with
+Dr.~GRPO at the top is a small-$n$, single-task result; we claim only that
+the controller is \emph{competitive with, not superior to}, the best fixed
+recipe, while providing the live starvation telemetry the fixed recipes
+lack.
+
+\paragraph{What the controller is for.} The honest summary of
+Table~\ref{tab:p7-e3} is that on a task this well-conditioned, several roads
+lead to similar held-out gains---consistent with the closed-stack 12-cell
+result where all four recipe labels landed within noise. The controller's
+value is not a higher ceiling on easy tasks; it is (i) a mechanism that
+targets the failure mode T1/T2 predict for \emph{hard} or drifting prompt
+populations, where fixed-$G$ recipes starve; and (ii) an audit trail: every
+escalation event is a timestamped statement that the run entered a
+starvation regime, which the 7-item minimum reporting stack of the
+companion papers can carry across stacks.

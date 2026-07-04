@@ -5,10 +5,11 @@ We report three findings and then scope them. First, in the short-horizon GSM8K
 chain-of-thought regime, RL post-training does not deliver a significant held-out
 gain: the mean Qwen3-8B GRPO improvement over the pre-RL checkpoint on held-out
 data is small and not statistically significant under our evaluation. Second, GRPO
-and Dr.\,GRPO produce statistically similar held-out gains---removing the
-length-normalization term does not, here, change the outcome. Third, neither
-algorithm inflates length: mean completion length drifts slightly \emph{downward},
-from about $193$ to $188$ tokens, and the verbosity-trap signature (a rising
+and Dr.\,GRPO produce held-out gains that are indistinguishable at our seed
+budget---removing the length-normalization term does not, here, change the
+outcome. Third, under the 200-token GSM8K generation cap, neither algorithm
+inflates length: pooled mean completion length drifts \emph{downward}, from
+$194.4$ to $183.5$ tokens, and the verbosity-trap signature (a rising
 coupling between length and reward as training proceeds) is absent.
 
 Taken together these say that, in this regime, there is no length pathology for

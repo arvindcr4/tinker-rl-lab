@@ -1,0 +1,40 @@
+% Pillar-5 (MIN-REPORT-RL) conclusion + call to action
+\section{Conclusion: A Call to Action for Venues}
+\label{sec:p5-conclusion}
+The evidence pattern is consistent and, we argue, sufficient to change reporting
+policy: on a fixed stack, four algorithm labels landed within $0.034$ reward
+of one another; across stacks, a backend swap alone moved reward by $0.794$
+and a single label produced opposite telemetry signatures. RL-for-LLM results
+are stack-conditioned. The community's papers should say so, in a form
+machines can check.
+
+Our call to action is addressed to venues, because venues set the price of
+non-disclosure:
+\begin{enumerate}[leftmargin=1.5em, itemsep=2pt, topsep=2pt]
+\item \textbf{Require the manifest.} Any paper whose contribution depends on
+an RL-for-LLM comparison should attach one seven-item manifest
+(\tableref{tab:p5-minreport}) per compared run, as supplementary JSON.
+Auto-emission (\secref{sec:p5-toolchain}) makes this a one-line cost for
+open trainers; for closed stacks, ``provider-internal, version-dated'' is an
+acceptable and informative value---the point is that conditioning be
+declared, not that all stacks be open.
+\item \textbf{Grade the comparisons.} Reviewers should see the
+\texttt{grpo-stackdiff} grade for every headline comparison. R0--R2
+comparisons support algorithmic claims; R3--R4 comparisons should be
+rewritten as stack-conditioned observations; R5 should be treated as a
+missing-experiment flag, exactly as a missing baseline is today.
+\item \textbf{Split colliding labels.} Where the registry shows one label
+with multiple registered semantics, require the qualified form
+(``DAPO(dynamic-sampling)'') in abstracts and tables. Precedents exist: the
+field already distinguishes ``PPO'' from ``PPO-clip'' when it matters
+\citep{schulman2017proximal, henderson2018deep}.
+\item \textbf{Reward the telemetry.} Per-step ZVF/GU trajectories and
+group-size schedules should count as artifact contributions in their own
+right, as evaluation-harness versioning now does
+\citep{biderman2024lessons, pineau2020improving}.
+\end{enumerate}
+The deep-RL community needed a reporting reckoning \citep{henderson2018deep}, a
+statistics paper \citep{colas2019hitchhiker, agarwal2021deep}, and a decade
+to converge on reporting norms. RL-for-LLMs can shortcut that decade: the
+confounds are already documented, the manifest is seven items, and the
+enforcement is a diff. Report the stack, not the label.

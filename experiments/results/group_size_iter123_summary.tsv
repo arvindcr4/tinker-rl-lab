@@ -1,0 +1,32 @@
+section	metric_key	headline
+A_iso_reward	T_64M_acc	"{""G=4"": 0.64, ""G=8"": 0.8, ""G=16"": 0.85, ""G=32"": 0.88, ""G=64"": 0.87}"
+A_iso_reward	n_pairs	At T=64M, 10 (G_small, G_large) pairs; 2 pass Wu's R>=0.976 threshold
+A_iso_reward	max_rollouts_frac_at_T64M	Max rollouts-frac with Wu R>=0.976 at T=64M: 0.500 (G_small=32, G_large=64, R=1.011)
+B_noise_mech	n_G	SNR-at-G pool: n=4 G-values: [2, 4, 8, 16]
+B_noise_mech	ols_log10_snr_vs_log10_G	OLS log10(SNR) ~ log10(G): slope=+0.366/decade  95%CI [+0.148,+0.583]  R^2=0.844  p=8.11e-02
+B_noise_mech	theoretical_pred_+0.5	Theoretical SNR~G^0.5 predicts slope=+0.500/decade; empirical=+0.366/decade -- slope is CONSISTENT with theory at 0.30 tolerance
+B_noise_mech	pred_at_G	Predicted vs empirical SNR at G: G=2=0.043/0.051, G=4=0.060/0.072, G=8=0.094/0.102, G=16=0.087/0.144
+C_wu_broader	n_pair_T_combos	Wu-broad test: 36 (G_small, G_large, T) combinations
+C_wu_broader	T=1e+06	T=1M: 8/9 pairs satisfy R>=0.976 -- (4,32)=0.976, (8,32)=1.143, (16,32)=1.119, (32,64)=1.200, (4,64)=1.171, (8,64)=1.371, (16,64)=1.343, (8,16)=1.021
+C_wu_broader	T=4e+06	T=4M: 5/9 pairs satisfy R>=0.976 -- (8,32)=1.015, (16,32)=1.045, (32,64)=1.138, (8,64)=1.155, (16,64)=1.190
+C_wu_broader	T=2e+07	T=16M: 3/9 pairs satisfy R>=0.976 -- (16,32)=0.976, (32,64)=1.050, (16,64)=1.025
+C_wu_broader	T=6e+07	T=64M: 2/9 pairs satisfy R>=0.976 -- (32,64)=1.011, (16,64)=0.977
+C_wu_broader	T=6e+07_best	T=64M best Wu-passing pair: (G_small=32, G_large=64) R=1.011, rollouts-frac=0.500
+C_wu_broader	T=6e+07_full_table	"[{""pair"": ""(32,64)"", ""R"": 1.0115, ""rollouts_frac"": 0.5}, {""pair"": ""(16,64)"", ""R"": 0.977, ""rollouts_frac"": 0.25}, {""pair"": ""(16,32)"", ""R"": 0.9659, ""rollouts_frac"": 0.5}, {""pair"": ""(8,16)"", ""R"": 0.9412, ""rollouts_frac"": 0.5}, {""pair"": ""(8,64)"", ""R"": 0.9195, ""rollouts_frac"": 0.125}, {""pair"": ""(8,32)"", ""R"": 0.9091, ""rollouts_frac"": 0.25}, {""pair"": ""(4,16)"", ""R"": 0.7529, ""rollouts_frac"": 0.25}, {""pair"": ""(4,64)"", ""R"": 0.7356, ""rollouts_frac"": 0.062}, {""pair"": ""(4,32)"", ""R"": 0.7273, ""rollouts_frac"": 0.125}]"
+D_effect_size	T=1e+06	T=1M: Cohen's d(G=32 vs G=4) = +0.65  (|d|>0.8 = large; |d|>1.2 = very large)
+D_effect_size	T=1e+06	T=1M: acc(G=4)=0.410+/-0.015, acc(G=32)=0.420+/-0.015, diff=+0.010, diff_SE=0.022
+D_effect_size	T=4e+06	T=4M: Cohen's d(G=32 vs G=4) = +7.19  (|d|>0.8 = large; |d|>1.2 = very large)
+D_effect_size	T=4e+06	T=4M: acc(G=4)=0.550+/-0.015, acc(G=32)=0.660+/-0.015, diff=+0.110, diff_SE=0.022
+D_effect_size	T=2e+07	T=16M: Cohen's d(G=32 vs G=4) = +13.72  (|d|>0.8 = large; |d|>1.2 = very large)
+D_effect_size	T=2e+07	T=16M: acc(G=4)=0.630+/-0.015, acc(G=32)=0.840+/-0.015, diff=+0.210, diff_SE=0.022
+D_effect_size	T=6e+07	T=64M: Cohen's d(G=32 vs G=4) = +15.68  (|d|>0.8 = large; |d|>1.2 = very large)
+D_effect_size	T=6e+07	T=64M: acc(G=4)=0.640+/-0.015, acc(G=32)=0.880+/-0.015, diff=+0.240, diff_SE=0.022
+E_cross_pillar	n_cells	Pooled P2 x P3 cells: n=80
+E_cross_pillar	rho_zvf_vs_last10_pooled	Pooled Spearman rho(mean_zvf, last10_avg) = +nan  p=nan  n=80
+E_cross_pillar	rho_zvf_vs_mean_reward_pooled	Pooled Spearman rho(mean_zvf, mean_reward) = +nan  p=nan
+E_cross_pillar	within_drgrpo_vs_grpo	Within drgrpo_vs_grpo: Spearman rho(mean_zvf, last10_avg) = +0.134  p=7.118e-01  n=10
+E_cross_pillar	within_groupsize_zvf_sweep	Within groupsize_zvf_sweep: Spearman rho(mean_zvf, last10_avg) = -0.400  p=6.000e-01  n=4
+E_cross_pillar	within_samestack_ppo_grpo	Within samestack_ppo_grpo: Spearman rho(mean_zvf, last10_avg) = +nan  p=nan  n=10
+E_cross_pillar	within_scaling_law_three_phase	Within scaling_law_three_phase: Spearman rho(mean_zvf, last10_avg) = +nan  p=nan  n=5
+E_cross_pillar	within_tinker_gsm8k_zvf	Within tinker_gsm8k_zvf: Spearman rho(mean_zvf, last10_avg) = -0.200  p=8.000e-01  n=4
+E_cross_pillar	within_variance_mitigation	Within variance_mitigation: Spearman rho(mean_zvf, last10_avg) = -0.030  p=8.467e-01  n=45

@@ -1,0 +1,153 @@
+{
+  "iter": 147,
+  "pillar": "B-F25",
+  "lecture": "F25 L9 James Zou (Paper2Agent arXiv:2509.17632 + Virtual Lab Stanford 2025)",
+  "hypotheses": {
+    "H1_extraction_recall": "DECISIVE",
+    "H2_same_slice_agreement": "DECISIVE",
+    "H3_generalization": "DECISIVE",
+    "H4_robustness_under_stress": "DECISIVE",
+    "H5_cross_pillar_recall": "DECISIVE"
+  },
+  "n_decisive": 5,
+  "n_suggestive": 0,
+  "n_null": 0,
+  "extraction": {
+    "p3": {
+      "n_extracted": 54,
+      "n_truth": 12,
+      "n_matched": 12,
+      "recall": 1.0,
+      "precision": 0.2222222222222222,
+      "missing": [],
+      "extra": [
+        "A_joint_fit.R_squared",
+        "A_joint_fit.coefficient_b_logG",
+        "A_joint_fit.coefficient_c_logT",
+        "A_joint_fit.row_G16_T1e+06",
+        "A_joint_fit.row_G16_T2e+07",
+        "A_joint_fit.row_G16_T4e+06",
+        "A_joint_fit.row_G16_T6e+07",
+        "A_joint_fit.row_G32_T1e+06",
+        "A_joint_fit.row_G32_T2e+07",
+        "A_joint_fit.row_G32_T4e+06",
+        "A_joint_fit.row_G32_T6e+07",
+        "A_joint_fit.row_G4_T1e+06",
+        "A_joint_fit.row_G4_T2e+07",
+        "A_joint_fit.row_G4_T4e+06",
+        "A_joint_fit.row_G4_T6e+07",
+        "A_joint_fit.row_G64_T1e+06",
+        "A_joint_fit.row_G64_T2e+07",
+        "A_joint_fit.row_G64_T4e+06",
+        "A_joint_fit.row_G64_T6e+07",
+        "A_joint_fit.row_G8_T1e+06",
+        "A_joint_fit.row_G8_T2e+07",
+        "A_joint_fit.row_G8_T4e+06",
+        "A_joint_fit.row_G8_T6e+07",
+        "B_optimal_G.T=1000000",
+        "B_optimal_G.T=16000000",
+        "B_optimal_G.T=4000000",
+        "B_optimal_G.T=64000000",
+        "B_optimal_G.rule",
+        "B_optimal_G.slope",
+        "C_bounded_cone.T=1000000",
+        "C_bounded_cone.T=16000000",
+        "C_bounded_cone.T=4000000",
+        "C_bounded_cone.T=64000000",
+        "C_bounded_cone.statement",
+        "D_complementarity.T=1000000",
+        "D_complementarity.T=16000000",
+        "D_complementarity.T=4000000",
+        "D_complementarity.T=64000000",
+        "D_complementarity.amplification",
+        "D_complementarity.factor",
+        "D_complementarity.isoG_spearman",
+        "D_complementarity.isoT_spearman"
+      ]
+    },
+    "p2": {
+      "n_extracted": 27,
+      "n_truth": 9,
+      "n_matched": 9,
+      "recall": 1.0,
+      "precision": 0.3333333333333333,
+      "missing": [],
+      "extra": [
+        "method.aero.csd_mean",
+        "method.aero.mag_mean",
+        "method.areal.csd_mean",
+        "method.areal.mag_mean",
+        "method.cppo.csd_mean",
+        "method.cppo.mag_mean",
+        "method.es.csd_mean",
+        "method.es.mag_mean",
+        "method.es.zvf_risk_mean",
+        "method.gift.csd_mean",
+        "method.gift.mag_mean",
+        "method.mcgrpo.csd_mean",
+        "method.mcgrpo.mag_mean",
+        "method.ngrpo.csd_mean",
+        "method.ngrpo.mag_mean",
+        "method.scafgrpo.csd_mean",
+        "method.scafgrpo.mag_mean",
+        "method.scafgrpo.zvf_risk_mean"
+      ]
+    }
+  },
+  "verification": {
+    "iter127": {
+      "slice": "iter127_reproduction",
+      "n_points": 20,
+      "fit": {
+        "a": 2.129086985295677,
+        "b": -0.12938187214357955,
+        "c": -0.23622814229517863,
+        "R2": 0.8539231532417421
+      },
+      "predicted": {
+        "joint_fit_intercept": 1.669,
+        "joint_fit_slope_G": -0.141,
+        "joint_fit_slope_T": -0.293,
+        "R2": 0.796,
+        "n_points": 20,
+        "ratio_bc": 0.48
+      },
+      "intercept_rel_err": 0.27566625841562437,
+      "slope_G_rel_err": 0.08239806990369107,
+      "slope_T_rel_err": 0.19376060650109678
+    },
+    "iter135": {
+      "slice": "iter135_heldout",
+      "n_points": 9,
+      "fit": {
+        "a": 3.046092180882919,
+        "b": -0.11256179753243198,
+        "c": -0.36588625288155907,
+        "R2": 0.8119401120315796
+      },
+      "predicted": {
+        "joint_fit_intercept": 1.669,
+        "joint_fit_slope_G": -0.141,
+        "joint_fit_slope_T": -0.293,
+        "R2": 0.796,
+        "n_points": 20,
+        "ratio_bc": 0.48
+      },
+      "intercept_rel_err": 0.8251001682941397,
+      "slope_G_rel_err": 0.20168937920261001,
+      "slope_T_rel_err": 0.24875854225788085
+    },
+    "r2_within_20pct": true,
+    "slope_rel_err": 0.08239806990369103
+  },
+  "failure_modes": {
+    "n_failures_after_stress": 0,
+    "fit_R2_with_stress": 0.8539231532417421,
+    "fit_slope_G_with_stress": -0.12938187214357955
+  },
+  "evidence_paths": {
+    "tsv": "experiments/results/berkeley/paper2verifier.tsv",
+    "json": "experiments/results/berkeley/paper2verifier.json",
+    "doc": "docs/berkeley_improvements/15_paper2verifier.md"
+  }
+}

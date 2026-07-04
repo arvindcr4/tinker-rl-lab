@@ -5,8 +5,11 @@ Reframing $G$ as a preference-density dial clarifies the non-monotone effect, bu
 several limitations bound the claim. The held-out swings, while suggestive, are
 modest against seed and difficulty variation, so we resist naming an optimal $G$;
 our equivalence tests are powered to reject large differences, not to certify exact
-parity. The all-pairs contrast identity is validated on measured gradients for the
-runs where we could log them, not universally, and the mechanism separating
+parity. The all-pairs contrast identity is an exact algebraic rewriting whose
+observable signatures are consistent with logged per-step diagnostics
+(advantage variance, ZVF, and gradient norms); direct gradient-vector validation
+remains future work, and the
+mechanism separating
 variance-reduction from contrast-density remains only partially resolved on
 existing data---the decisive controlled experiment (a token- and step-matched
 $2{\times}2$ design that supplies contrast without variance and vice versa) is
@@ -18,10 +21,12 @@ as literally DPO ignores stabilizing structure the group baseline may carry.
 \label{sec:p3-conclusion}
 Group size in GRPO is best understood not as a variance knob to be maximized but as
 a dial on how much implicit preference signal each prompt contributes. On our
-benchmark its effect is non-monotone with no universal optimum, reward is retained
-almost completely across a wide range of $G$, and the signal-to-noise ratio grows
+benchmark its effect is non-monotone with no universal optimum, held-out
+accuracy is retained almost completely across $G{=}2$ to $G{=}16$ on the
+measured near-ceiling task (while the illustrative GSM8K reanalysis falls to
+about $73\%$ $G{=}4$/$G{=}32$ retention at $T{=}64$M), and the signal-to-noise ratio grows
 far more slowly than $\sqrt{G}$---all consistent with a contrast-density rather than
 a pure-variance account, and with the exact sense in which the group-centered update
 is an all-pairs preference contrast. The clean causal test, and matched-budget
 multi-seed comparisons, are the natural next experiments; we release the sweeps,
-gradients, and scripts to enable them.
+per-step gradient-norm logs, and scripts to enable them.

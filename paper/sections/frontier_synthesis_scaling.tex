@@ -75,15 +75,15 @@ FLOP-based scaling fit should recover log-linear geometry once compute is
 discounted to $C_{\mathrm{eff}}=\int Y_G(p)\,\mathrm{d}C$, and the
 compute-optimal group size is $G^\star = \arg\max_G [\,Y_G(p)/G\,]$. This is a
 constructive challenge to our null result: the paper's cross-scale slope on
-$\bar R$ is statistically indistinguishable from zero over five orders of
-magnitude (\tableref{tab:scaling-cross}), and the frontier reading is that a
+$\bar R$ is statistically indistinguishable from zero over the measured 2--3-decade
+parameter range (\tableref{tab:scaling-cross}), and the frontier reading is that a
 raw-$N$ axis is simply the wrong abscissa -- the gain lives on the
 contrastive-yield axis, linking Pillar 1 to the Pillar-2 \textsc{zvf}
 diagnostic and the Pillar-3 group-size geometry.
 
 \paragraph{The strongest ``estimator doesn't matter, stack does'' claim (frontier synthesis).}
 Our same-stack control found GRPO and PPO statistically indistinguishable
-(paired $\Delta = +0.001$, $p = 0.75$). The frontier models sharpened this
+(paired $\Delta = -0.002$, $p = 0.374$; \texttt{samestack\_ppo\_grpo.json}). The frontier models sharpened this
 into two falsifiable statements. ChatGPT Pro's \emph{Estimator-Equivalence
 Principle}: once the stack (rollout tensors, masking, KL, clipping, optimizer,
 reward parser, token budget) is fixed, PPO and GRPO are performance-equivalent
@@ -104,7 +104,8 @@ for sparse, terminal, binary rewards, a token-level value network minimizing
 MSE cannot extract intra-trajectory credit and collapses to a static
 prompt-difficulty regressor $V_\phi(x_{1:t}) \approx \mathbb{E}[R \mid
 x_{\mathrm{prompt}}]$, which is exactly the scalar GRPO computes statelessly
-via the group mean. Both claims support our $p=0.75$ null: the estimator label
+via the group mean. Both claims support the same-stack null (paired
+$\Delta=-0.002$, $p=0.374$): the estimator label
 is under-identified unless it changes the induced update operator.
 
 \paragraph{What breaks at 7B--30B (frontier synthesis, scaling-stress round).}

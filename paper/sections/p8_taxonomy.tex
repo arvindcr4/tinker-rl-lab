@@ -1,0 +1,97 @@
+% P8 capability-gap taxonomy: the four LLM wins (task categories, not accuracy deltas)
+\section{The Capability-Gap Taxonomy: Where the LLM Wins}
+\label{sec:p8-taxonomy}
+
+The LLM's four wins share a structure: each is a \emph{task category the tree
+cannot enter}, not an accuracy improvement on a task the tree already
+performs. A tree cannot be beaten at reading a forged utility bill, drafting a
+SAR narrative, reasoning about an unlabeled typology, or interviewing an alert
+queue---because it cannot attempt any of them. We take the four in turn.
+
+\subsection{Gap 1: Document and Image Fraud (Perception)}
+\label{sec:p8-gap-docs}
+
+A persistent channel of fraud runs through unstructured evidence:
+doctored receipts submitted in dispute claims, tampered identity documents at
+onboarding, synthetic or altered checks, screenshots fabricated for
+first-party fraud claims. These artifacts are raw pixels and embedded
+text---inputs that lie outside any tree's feature space by construction. The
+tree sees such evidence only through whatever handcrafted features an upstream
+pipeline extracts, and fraudsters attack precisely the residual the pipeline
+discards. Vision--language models change the input space itself: multimodal
+LLMs can detect and localize image forgeries while producing textual
+justifications \citep{xu2024fakeshield}, and systematic benchmarks now
+evaluate large vision--language models across more than a hundred forgery
+types \citep{wang2025forensicsbench}. The benchmark literature is equally
+clear that current VLMs are far from solved on comprehensive forgery
+detection \citep{wang2025forensicsbench}---our claim is not that the VLM is
+accurate enough to auto-decide, but that it is the \emph{only} model family in
+the pipeline that can look at the evidence at all. In the architecture of
+\secref{sec:p8-architecture} its output is a feature vector and a written
+observation, not a verdict.
+
+\subsection{Gap 2: Compliance Narration (The Scribe)}
+\label{sec:p8-gap-narration}
+
+United States banking regulation obliges institutions to produce
+\emph{prose}. A Suspicious Activity Report must be filed for qualifying
+transactions \citep{cfr1020_320}, and FinCEN's guidance is explicit that the
+narrative section must tell the who/what/when/where/why of the suspicion in
+clear, complete text \citep{fincen2003sarnarrative}. On the lending side,
+ECOA/Regulation~B requires that adverse-action notices state specific,
+principal reasons \citep{cfr1002_9}, and the CFPB has affirmed that model
+complexity is no defense \citep{cfpb2022circular}. These are text-generation
+obligations with legal force, currently discharged by analysts writing under
+backlog pressure. A tree emits a float; it cannot enter this category at any
+accuracy. An LLM conditioned on the case file, the tree's feature attributions,
+and the regulatory template can draft both document types for human review,
+and early agentic systems now target SAR-narrative drafting specifically, with
+human-in-the-loop review \citep{naik2025coinvestigator}.
+\secref{sec:p8-compliance} grounds this gap in the primary sources, because it
+is the paper's most durable claim: it survives any future accuracy result.
+
+\subsection{Gap 3: Cold-Start on Novel Typologies (Few-Shot)}
+\label{sec:p8-gap-coldstart}
+
+A supervised tree is, by definition, a summary of labeled history. When a new
+fraud typology emerges---a novel scam pattern, a new mule-recruitment
+mechanic, an exploit of a just-launched product feature---the tree has zero
+training signal until enough confirmed cases accumulate, which at fraud base
+rates and confirmation latencies \citep{dalpozzolo2018realistic} means weeks
+of unpriced exposure. An LLM can operate in exactly this window: given a
+typology description from a fraud-intelligence bulletin and a handful of
+exemplar cases, it can flag candidate matches few-shot, before any labeled
+dataset exists---the regime where LLM-over-tabular approaches are genuinely
+competitive \citep{hegselmann2023tabllm}, and where in-context reasoning over
+serialized financial evidence has shown analyst-style red-flag detection
+without task-specific training \citep{pirmorad2025icl_aml}. The LLM here is
+not a better classifier; it is a stopgap classifier \emph{that exists} during
+the label vacuum, whose flagged cases then become the seed labels that bring
+the tree up to speed.
+
+\subsection{Gap 4: Agentic Alert-Queue Investigation}
+\label{sec:p8-gap-agentic}
+
+Between the scorer's alert and the analyst's disposition sits hours of
+mechanical investigation: pulling account history, cross-referencing devices
+and merchants, checking prior disputes, summarizing the case. An LLM agent can
+execute this gather-and-summarize loop over the alert queue---the pattern
+emerging in agentic AML investigation systems \citep{naik2025coinvestigator,
+pirmorad2025icl_aml}. In our internal estimate, an agentic pass over one alert
+costs roughly $85\times$ less than the loaded cost of the equivalent
+human-analyst time; we stress that this figure is an \emph{internal, assumption-laden
+estimate} (token prices, analyst compensation, and per-alert
+investigation time as of our June~2026 records), reported to one significant
+figure and not validated against any production deployment. Even at an order
+of magnitude worse, the economics reshape the queue: the agent does not
+replace the analyst but re-sorts and pre-digests the queue so that human
+minutes land on the cases where they change the outcome. Crucially this role
+is \emph{post-score}: the agent operates on alerts the tree has already
+raised, outside the real-time path and behind the injection-hardening that
+\secref{sec:p8-scorer} argues the synchronous path must never expose.
+
+\paragraph{Summary.} The taxonomy's lesson is that ``LLM vs.\ XGBoost'' was a
+category error. The four wins are perception, narration, few-shot
+generalization, and agency---four capabilities bundled under the label ``AI''
+that the scoring benchmark never measured. The next section assembles the
+division of labor that the taxonomy implies.

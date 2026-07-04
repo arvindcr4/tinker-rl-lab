@@ -1,0 +1,600 @@
+Agentic AI
+1
+Post-Training Verifiable Agents
+Guest Speaker: Jiantao Jiao
+Disclaimer: The views expressed are solely those of the guest and are not 
+representative of their company.
+
+How Do “Agentic” Models Differ From Traditional LLMs?
+1.
+Earlier Chat Models: Human Aligned Models, designed to provide 
+interactions that maximize human preference. 
+2.
+Agentic Models: Environment Feedback Aligned Models, designed 
+to provide interactions that maximize verifiable rewards (in 
+addition to human preference). 
+3
+
+Earlier Models Were Trained To Be Great Chat-Bots
+3
+Rank Assistant 
+Responses Based on 
+Human Preference
+Reward Model
+SFT (rejection 
+sampling)
+PPO
+GRPO
+etc.
+Earlier models were optimized 
+for conversation.
+Human-Assistant Chats
+Prompts
+“Hey, how are 
+you?”
+Model that 
+maximizes 
+human 
+preferences
+
+What More Is Necessary?
+▪Conversation is not 
+verifiable, there is often no 
+clear single correct answer. 
+You need to model 
+preference.
+▪Conversation requires 
+interaction with the user 
+only.
+▪Many tasks have one (or a 
+few) correct answers, and 
+blatantly wrong ones.
+▪Require interactions with 
+many entities (user and 
+the environment) to 
+understand the full state.
+4
+
+Today’s Models Are Trained To Be Great Agents
+5
+Prompts
+“I want to achieve this”
+Rubrics
+Ground Truths
+Environment States
+Unit Tests
+Environment
+Tools
+Agentic Model that maximizes 
+correctness by interacting within 
+sandboxes with tools
+SFT (rejection 
+sampling)
+PPO
+GRPO
+etc.
+
+What is needed to train the verifiable agentic models?
+6
+Step 1: Get good verifiable training data to train these agents.
+Step 2: Verifiable agents are intelligent. We need to define what 
+intelligence is.
+Step 3: Understand how to feed the verifiable data to the model. The 
+recipes. 
+
+Step 1: Getting Good Training Data!
+7
+
+Agentic Models Maximize Verifiable Reward
+8
+Point 1 – The Environment: These models are trained to consume tokens that inform the model about 
+the environment’s current state, and the user’s intention. An environment is something like a code 
+repository, or a web browser, etc.
+Point 2 – Tools: These models are trained to generate tokens that are consumed by software tools that 
+provide additional relevant information to the model to help it maximize the reward from the verifier. 
+These software tools can be APIs that provide additional information, or tools that change the 
+environment’s state.
+Point 3 – Verifier: These models are trained to generate tokens that maximize the reward from the 
+verifier. Verifiers are unit tests for code, math checker for proofs, DOM scripts for web tasks, etc. 
+
+How Do We Train A Good Agent Model? 
+First Step: Good Training Data!
+9
+Train To Understand 
+Many Different 
+Environments
+(Point 1)
+Train To Use Many 
+Different Kinds of 
+Tools
+(Point 2)
+Train To Do Well 
+Under Many 
+Different Verifiers
+(Point 3)
+Environment and verifier diversity is critical!
+
+The Many Kinds of Environments, Tools, and 
+Verifiers! We want to train in all
+Math Environments
+Software API Tools (Weather 
+Info, News Info, etc.)
+Math-Verify Verifier
+Database Tools 
+(search_database, 
+update_database, run_sql, 
+etc..)
+Browsing Tools 
+(search_google, search_, etc.)
+Coding Tools (run_python, 
+etc.)
+Browser Environments
+Sales Assistant 
+Environments
+Coding Environments
+Proof Checker Verifier
+Unit Testing Verifier
+Ground Truth State 
+Verifier
+
+Along With Scale, Verifier Quality Is Also Extremely Important
+Verifier Quality: Make sure we have few False Positives and False Negatives!
+1.
+If there are several ways to get the right ground truth, you want the verifier to 
+reward them all. 
+a.
+“How much change will I get back if I buy a drink for fifty cents and I 
+give a dollar” →  ½, 2/4, are all correct, etc.
+2.
+You don’t want to reward wrong answers.
+a.
+“How much change will I get back if I buy a drink for fifty cents and I 
+give a dollar? Give me simplest form.” →  ½, but NOT 2/4.
+Verifier Quality Matters – This is very important for difficult prompts!
+11
+
+Step 2: Getting Good Evaluation Data!
+12
+
+Well, we have training data now. But what next?
+Build Evaluations! We won’t know what works until we know what “works” means!
+13
+Agents are 
+expected to work 
+with many 
+different tools!
+Agents are 
+expected to work 
+for many different 
+usecases!
+Agents are expected to 
+work under vaguely 
+specified instructions!
+Agents are expected 
+to work under many 
+software systems! 
+(cursor, aider, etc.)
+Agents are 
+expected to be 
+robust!
+All of these need to be quantitatively tracked!
+(1)
+(2)
+(3)
+(4)
+(5)
+
+How Do We Train A Good Agent Model? 
+Second Step: Good Evaluations!
+14
+Off-The-Shelf Benchmarks (for 
+(1), (2))  
+Agent Harnesses (for (4))
+Agentic Coding:
+-
+SWEBench
+-
+TerminalBench
+-
+AIDER 
+ToolCalling
+-
+TauBench
+-
+BFCL
+-
+ComplexFuncBench
+Knowledge
+-
+HLE
+-
+BrowserComp 
+….
+SWEBench:
+1.
+OpenHands
+2.
+MiniSWE (bash 
+only)
+3.
+OpenSWE
+4.
+Aider-SWEBench
+HLE:
+1.
+With Search 
+Harness
+2.
+Without Search
+….
+Focused “Unit-Test” 
+Evaluations (for (3), (5))
+1.
+Structured Output 
+Adherence 
+(structEval, etc.)
+2.
+Instruction 
+Following, w/ 
+Conditional 
+Instructions 
+(IFBench, etc.)
+3.
+Long Trajectories 
+(NexusBench, etc.)
+….
+
+Holistic Measurements
+15
+Humanity’s Last Exam
+AIME
+STEMQA
+Google Search Harness
+Python Code Interpreter
+OpenHands Harness
+SWEBench
+No Tools (or default tools)
+Measure many tasks.
+Measure many tasks under 
+harnesses.
+Keep the definition of 
+intelligence holistic.
+
+Good Evaluations Need To Account For ALL of This!
+16
+We should evaluate on:
+1.
+Many tasks and verifiers 
+2.
+Many different ways of letting the agent explore in the benchmarks’ sandbox by seeing how 
+the accuracy changes as we swap out the harnesses
+3.
+Many tools within each task so that the agent understands how to use tools in different 
+action spaces
+When we choose a benchmark suite, we are defining what intelligence is.
+We MUST make sure it is a holistic and good measure! 
+
+Okay, we just curate a bunch of different tasks and harnesses to 
+evaluate, is that enough? How do we even define if they’re good 
+measures of intelligence? 
+17
+
+How Do We Quantify Benchmark Quality?
+Beyond just evaluating on different verifiers and harnesses, how do 
+we measure quality of the tasks? 
+18
+Hardness
+Separability
+Diversity
+
+Step 3: Training Well!
+19
+
+But What Does “Training” an Agent Mean?
+20
+Environment
+TOOL 3
+TOOL 2
+TOOL 1
+Attempt 1
+Attempt 2
+Attempt 3
+Attempt 5
+Attempt 4
+You want the Agent LLM to attempt different actions in your environment and see what gets it to the final answer the best. 
+Whichever gets you the best results, you want the model to reinforce and repeat.
+1.
+You want each attempt to be very different from each other since you want the model to reinforce or discourage 
+many different styles of attempts since that generalizes the best.
+2.
+But each attempt costs compute to sample and process! You don’t want very silly attempts that has no change of 
+even remotely being correct.
+Attempt 1: ✅ (Cost: 2)
+Attempt 2: ✅ (Cost: 1)
+Attempt 3: ❌ (Cost: 10)
+Attempt 4: ❌ (Cost: 1)
+Attempt 5: ❌ (Cost: 5)
+Verifier
+
+But What Does “Training” an Agent Mean?
+Training an Agent means maximizing the model’s ability to use tools to achieve correctness!
+ 
+You want to train to Imitate first and then to Explore:
+1.
+SFT – Imitate demonstration trajectories that achieve correctness. Goal here is to minimize 
+any silly or non-meaningful attempts.
+2.
+RL –  Let the model explore and reinforce trajectories that achieve correctness and 
+discourage ones that do not. Goal here is to reinforce diverse, great attempts from the 
+current model. 
+21
+
+Why BOTH SFT and RL?
+22
+Maximize likelihood of sampling 
+the demonstration trajectories and 
+minimize likelihood of sampling 
+anything else (like silly attempts)
+SFT Stage
+RL Stage
+SFT is just there so that we can sample 
+meaningful trajectories during RL with tractable 
+compute!
+1.
+Demonstration samples should be 
+diverse
+2.
+SFT should be light
+We want to ensure we don’t affect diversity of 
+responses during RL by over SFT’ing on 
+non-diverse examples!
+Rollout Stage
+Sample meaningful but very 
+different actions for the task, 
+environment, and tools.
+We have limited compute 
+here, so we want to ensure 
+we get as diverse answers as 
+possible that are as 
+meaningful as possible.
+Reward and Advantage 
+Computation Stage
+Figure out how correct each action 
+sequence is, and how rare and 
+useful certain actions are!
+Backprop. Stage
+Reinforce good actions and 
+discourage bad actions!
+
+SFT is just there to discourage meaningless and low-quality answers. 
+RL is there to truly reinforce intelligence.
+23
+
+Let’s Dive Into RL!
+24
+TRAIN FOR LONGER
+TRAIN ON MORE DIFFICULT 
+PROMPTS AND TASKS
+GOOD RL
+TRAIN ON MORE DIVERSE 
+RESPONSES, WITH HIGH 
+QUALITY REWARD FEEDBACK
+Core Idea: Maintain entropy 
+balance, controlled model 
+verbosity increase 
+Core Idea: Train on tasks and 
+prompts that are related to the 
+task at hand, but that have low 
+(but NOT zero) chances of 
+success for the current model.
+Core Idea:  See as many 
+different, meaningful answers 
+per prompt as possible.
+The core of good RL algorithms focus on these three pillars!
+
+“Train Longer”
+25
+GOAL: BE ABLE TO TRAIN FOR LONGER
+https://arxiv.org/pdf/2505.22617 [Entropy Mechanism of RL]
+What is the right 
+intervention to have a 
+better trade-off between 
+entropy and reward curve? 
+
+“Train Longer”
+Question: What is the right intervention for us to be able to 
+trade-off less aggressively and be able to train longer?
+26
+Reduce Biased Updates
+Don’t do off-policy
+Balance the Update
+Clip correctly.
+https://arxiv.org/html/2505.23585v1
+On Policy RL with Optimal Reward Baseline
+https://arxiv.org/pdf/2503.14476
+DAPO
+
+Reduce Biased Updates
+27
+https://arxiv.org/html/2505.23585v1
+Better Entropy Control
+Better generalization
+
+Balance The Update Strength
+28
+ε_high allows us to leave more 
+room for the increase of 
+low-probability tokens. 
+https://arxiv.org/pdf/2503.14476
+
+“Train Longer”
+29
+Question: What is the right intervention for us to be able to 
+trade-off less aggressively and be able to train longer?
+Reduce 
+Biased 
+Updates
+Reduce 
+Biased 
+Updates
+Encourage Entropy Directly
+Add a loss
+https://arxiv.org/pdf/2505.22312
+Skywork Open Reasoner 1
+
+Encourage Entropy Directly
+30
+https://arxiv.org/pdf/2505.22312
+
+“Train On More Difficult Prompts and Tasks”
+31
+ GOAL: TRAIN ON MORE RELEVANT AND MEANINGFULLY DIFFICULT PROMPTS AND TASKS
+We can’t just dump hard prompts into the model and expect it to work. We need to ensure 
+harder prompts still improve the model by ensuring the model’s confidence is meaningfully 
+correlated with the reward!
+Proxy: Cov(pi_theta(y|x) * A(y,x), log_pi_theta (y∣x)) 
+https://arxiv.org/pdf/2505.22617 
+Entropy Mechanism
+
+32
+You can’t train on 
+anything too easy. 
+Nor can you blindly 
+throw in super hard 
+prompts.
+MATH500, AIME 24, AMC24, 
+OlympiadBench , and OMNI-MATH 
+“Train On More Difficult Prompts and Tasks”
+https://arxiv.org/pdf/2505.22617
+
+“Train On More Difficult Prompts and Tasks”
+33
+What Interventions Can We Do?
+https://arxiv.org/pdf/2504.09696
+Try to Improve Learning Signal
+
+Improve Learning Signal: Reward Harder Prompts More
+34
+https://arxiv.org/pdf/2504.09696
+
+“Sample Better”
+35
+GOAL: Sample better so we can TRAIN ON MORE DIVERSE RESPONSES, WITH HIGH QUALITY REWARD FEEDBACK
+Scale-Up Compute Per Answer (Parallel Reasoning)
+https://arxiv.org/pdf/2507.17797 GenSelect
+Beam Searching Over Reasoning 
+https://arxiv.org/pdf/2508.15260 
+DeepConf
+We want to scale compute to ensure we get good responses. 
+
+GenSelect
+36
+We throw all the sampled 
+answers and pick the best one
+
+DeepConf
+37
+Only do majority 
+voting on the sampled 
+answers that remain 
+above a threshold of 
+confidence
+
+Putting it all together: How Do We Train A Good Agent 
+Model? 
+Third Step: Good Recipes!
+38
+SFT Data
+RL Recipes
+Expert Demonstrations:
+-
+Human Curated
+-
+Synthetic (Strong Teacher 
+Models)
+Self-Distilled
+-
+Rejection Sampling (but from 
+verifier feedback)
+Train Longer: Encourage Stability 
+-
+Entropy Balance (SkyWorks, etc.)
+-
+Reward, Advantage Shaping (DAPO, 
+DrGRPO, etc.)
+Sample Better: Encourage Better Exploration
+-
+Better, Diverse Trajectories by Sampling 
+Better (DeepConf., ParaThinker, etc.) 
+Train Harder: Train on Harder Tasks
+-
+Harder Inverted Formulations (DuPO, 
+etc.)
+-
+Harder Prompts by Pass@K -> Pass@1 
+reduction (GenSelect, etc.)
+
+Step 4: How Do We Actually Do This?
+39
+
+What Comes Next?
+40
+STEP 1: Have a collection where we curate environments and verifiers to scale up intelligence.
+STEP 2: Figure out the best definition of what intelligence is.
+STEP 3: Release algorithms to train longer, on harder prompts, and with diverse responses.
+
+What Comes Next?
+41
+STEP 1: Have a collection where we curate environments and verifiers to scale up intelligence.
+1.
+Crowd-source 
+Environments/Evals/Recipes:
+a.
+From individual contributors 
+b.
+From companies
+c.
+From researchers
+d.
+From …..
+Diverse, high quality 
+signals to scale up RL in a 
+single place!
+
+What Comes Next?
+42
+STEP 2: Figure out the best definition of what intelligence is.
+STEP 1: Have a collection where we curate environments and verifiers to scale up intelligence.
+1.
+Analyze the strengths and weaknesses of benchmarks
+2.
+Include it in the collection so everyone can use it during RL scale up 
+to ensure we’re measuring intelligence holistically.
+
+What Comes Next?
+43
+STEP 1: Have a collection where we curate environments and verifiers to scale up intelligence.
+STEP 3: Release algorithms to train longer, on harder prompts, and with diverse responses.
+STEP 2: Figure out the best definition of what intelligence is.
+Create New Algorithms That Are Stable, Meaningful, and result in 
+Diverse Responses. Add it into the collection so everyone can use it 
+for all the environments we’re curating. 
+
+Open Questions
+Humans engage in many different environments, focus on some lessons more than others, learn 
+from both exploring by themselves and from teachers, and are very often evaluated for 
+intelligence for various tasks. How do we mimic this? 
+1.
+Much like humans learn from so many environments, we should have our models do the same. 
+What is the right design for this collection of open source environments, evaluations, and 
+algorithms?
+2.
+Much like humans focus on some lessons more than others, we should do the same. What is 
+the right algorithm that allow us to do so without hurting stability?
+3.
+Much like humans learn from both their own exploration and from teachers, we should do the 
+same. What is the right balance? Can we do both at the same time?
+4.
+Much like humans are evaluated for their intelligence, we should do the same. How can we 
+compare different definitions of intelligence?
+44

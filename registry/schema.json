@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/tinker-rl-lab/grpo-registry/schema.json",
+  "title": "GRPO-Registry record",
+  "description": "A machine-readable catalog record for a group-relative RL (GRPO-family) training stack, or for a variant-delta (the set of changes a named GRPO variant makes to the base algorithm). Field convention: JSON null means UNREPORTED; explicit false / 0.0 / 'none' means reported-as-absent. The MIN-REPORT auditor scores reporting coverage, not configuration virtue.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/stack_record"
+    },
+    {
+      "$ref": "#/$defs/variant_delta_record"
+    }
+  ],
+  "$defs": {
+    "nullable_number": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "nullable_string": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "nullable_boolean": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "nullable_integer": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "stack_record": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "id",
+        "label_claimed",
+        "framework",
+        "provenance",
+        "min_report"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "stack"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_.-]*$"
+        },
+        "label_claimed": {
+          "type": "string",
+          "description": "The algorithm label the stack advertises (grpo, dapo, drgrpo, gspo, ...). The registry exists because this label underdetermines the update rule."
+        },
+        "framework": {
+          "type": "object",
+          "required": [
+            "name",
+            "openness"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "openness": {
+              "enum": [
+                "open",
+                "managed",
+                "closed"
+              ]
+            }
+          }
+        },
+        "model": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "task": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "seeds": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "integer"
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "required": [
+            "source_artifacts"
+          ],
+          "properties": {
+            "source_artifacts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "wandb": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "date_recorded": {
+              "$ref": "#/$defs/nullable_string"
+            }
+          }
+        },
+        "variant_deltas_applied": {
+          "type": "array",
+          "description": "Per-delta implementation status against the named variant-delta records. This is where label flips become machine-readable.",
+          "items": {
+            "type": "object",
+            "required": [
+              "delta_id",
+              "component",
+              "status"
+            ],
+            "properties": {
+              "delta_id": {
+                "type": "string"
+              },
+              "component": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "implemented",
+                  "surrogate",
+                  "absent",
+                  "unknown"
+                ]
+              },
+              "note": {
+                "$ref": "#/$defs/nullable_string"
+              }
+            }
+          }
+        },
+        "min_report": {
+          "$ref": "#/$defs/min_report"
+        },
+        "outcomes": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Optional telemetry summary (informational; not part of the badge).",
+          "properties": {
+            "mean_last10_train_reward": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "mean_zvf": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "heldout_delta": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "rollouts": {
+              "$ref": "#/$defs/nullable_integer"
+            }
+          }
+        },
+        "notes": {
+          "$ref": "#/$defs/nullable_string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "min_report": {
+      "type": "object",
+      "description": "The seven-item minimum reportable stack (MIN-REPORT-RL).",
+      "required": [
+        "loss_form",
+        "reference_kl",
+        "sampler_backend",
+        "telemetry",
+        "group_size_schedule",
+        "heldout_split",
+        "decontamination"
+      ],
+      "properties": {
+        "loss_form": {
+          "type": "object",
+          "description": "Item 1: ratio/clip/token mask/advantage normalization.",
+          "properties": {
+            "importance_ratio_level": {
+              "enum": [
+                "token",
+                "sequence",
+                null
+              ]
+            },
+            "clip_eps_low": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "clip_eps_high": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "length_normalization": {
+              "$ref": "#/$defs/nullable_boolean"
+            },
+            "advantage_normalization": {
+              "enum": [
+                "std",
+                "none",
+                null
+              ]
+            },
+            "token_mask": {
+              "$ref": "#/$defs/nullable_string"
+            }
+          }
+        },
+        "reference_kl": {
+          "type": "object",
+          "description": "Item 2: reference policy + KL handling.",
+          "properties": {
+            "reference_policy": {
+              "$ref": "#/$defs/nullable_boolean"
+            },
+            "kl_beta": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "kl_estimator": {
+              "$ref": "#/$defs/nullable_string"
+            }
+          }
+        },
+        "sampler_backend": {
+          "type": "object",
+          "description": "Item 3: sampler / backend / precision.",
+          "properties": {
+            "backend": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "precision": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "temperature": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "top_p": {
+              "$ref": "#/$defs/nullable_number"
+            }
+          }
+        },
+        "telemetry": {
+          "type": "object",
+          "description": "Item 4: per-step ZVF / gradient-utilization trajectory.",
+          "properties": {
+            "per_step_zvf": {
+              "$ref": "#/$defs/nullable_boolean"
+            },
+            "per_step_gu": {
+              "$ref": "#/$defs/nullable_boolean"
+            },
+            "source": {
+              "$ref": "#/$defs/nullable_string"
+            }
+          }
+        },
+        "group_size_schedule": {
+          "type": "object",
+          "description": "Item 5: group-size schedule.",
+          "properties": {
+            "initial_g": {
+              "$ref": "#/$defs/nullable_integer"
+            },
+            "schedule": {
+              "enum": [
+                "fixed",
+                "adaptive",
+                null
+              ]
+            },
+            "adaptation_rule": {
+              "$ref": "#/$defs/nullable_string"
+            }
+          }
+        },
+        "heldout_split": {
+          "type": "object",
+          "description": "Item 6: held-out split disjoint from the reward environment.",
+          "properties": {
+            "disjoint_from_reward_env": {
+              "$ref": "#/$defs/nullable_boolean"
+            },
+            "description": {
+              "$ref": "#/$defs/nullable_string"
+            }
+          }
+        },
+        "decontamination": {
+          "type": "object",
+          "description": "Item 7: decontamination + parser-robustness probe.",
+          "properties": {
+            "performed": {
+              "$ref": "#/$defs/nullable_boolean"
+            },
+            "parser_robustness_probe": {
+              "$ref": "#/$defs/nullable_boolean"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "variant_delta_record": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "id",
+        "name",
+        "base",
+        "deltas",
+        "citation"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "variant_delta"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "base": {
+          "type": "string"
+        },
+        "citation": {
+          "type": "object",
+          "properties": {
+            "bibkey": {
+              "type": "string"
+            },
+            "arxiv": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          }
+        },
+        "deltas": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "component",
+              "field",
+              "change"
+            ],
+            "properties": {
+              "component": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "change": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "notes": {
+          "$ref": "#/$defs/nullable_string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

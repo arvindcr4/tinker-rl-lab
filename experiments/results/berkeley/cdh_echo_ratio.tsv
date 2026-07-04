@@ -1,0 +1,4 @@
+task	n_pairs	mean_gr_abs_rho_dR_dL	mean_dr_abs_rho_dR_dL	ratio_dr_over_gr	pre_reg_criterion	verdict
+arithmetic_easy	5	0.1978	0.1687	0.853	ratio < 1.0	FAVOURS
+gsm8k_cot	3	0.6758	0.6729	0.9957	ratio < 1.0	FAVOURS
+POOLED	8	0.377	0.3578	0.9489	ratio < 1.0	FAVOURS

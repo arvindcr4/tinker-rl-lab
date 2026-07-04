@@ -1,9 +1,6 @@
 % Iter 128 -- Pillar 4 (Length Bias / Dr.GRPO):
 % The Length-Efficiency Frontier.
-% After iter108 (|CCF| magnitudes), iter112 (severship x reward envelope),
-% iter116 (sev x ZVF, inverted dose), iter120 (sev x backward CCF,
-% rho=+0.556), and iter124 (sev x dL/dt null -- static-vs-dynamic
-% dissociation), iter128 closes the practitioner angle: at a fixed
+% After the per-window severship analyses, iter128 closes the practitioner angle: at a fixed
 % budget, IS Dr.GRPO EFFICIENT?  Concretely, does Dr.GRPO deliver
 % comparable accuracy gain with LESS length contraction?
 %
@@ -15,10 +12,9 @@
 \label{sec:length-bias-iter128}
 
 \paragraph{Motivation.}
-Iters~\ref{sec:length-bias-iter108}--\ref{sec:length-bias-iter124}
-characterised Dr.GRPO's \emph{severship} mechanism --- where it
-acts, on what BASELINE feature it conditions, and how strongly it
-de-couples length from reward at the per-window level.  The remaining
+Earlier per-window analyses characterised Dr.GRPO's \emph{severship}
+mechanism --- where it acts, on what baseline feature it conditions, and how
+strongly it de-couples length from reward at the per-window level.  The remaining
 practitioner question is the \emph{efficiency} one: at a fixed
 budget $T$, is Dr.GRPO strictly better, equivalent, or worse than
 GRPO when we price in the length it had to contract to gain the
@@ -55,7 +51,7 @@ $n{=}20$ (seed, window) pairs); on \texttt{gsm8k\_cot},
 $|\mathrm{CCF}^{GR}_{bwd}|=0.651$ vs $|\mathrm{CCF}^{DR}_{bwd}|=0.529$
 ($\Delta = -0.122$, $p = 0.235$).  The Wilcoxon does not reach
 significance at $n{=}20$ but the direction agrees across both tasks
-(panel~C); a permutation null on $n{=}40$ signed pairs yields
+(panel~C); a permutation null on $n{=}32$ signed (seed, window) pairs yields
 $p = 0.136$.
 
 \paragraph{H3 -- cross-task envelope.}
@@ -65,8 +61,8 @@ both above the GRPO baseline (panel~B).
 
 \paragraph{H4 -- heldout GSM8K trade-off frontier.}
 Per-seed heldout scatter on GSM8K (panel~D): Dr.GRPO's three runs
-cluster at smaller $|\Delta L|$ ($-7$ to $-9$ tokens) than GRPO's
-cluster ($+6$ to $+26$ tokens).  Both algorithms reach comparable
+cluster at smaller length contractions ($4.5$ to $8.9$ tokens) than GRPO's
+cluster ($5.8$ to $25.6$ tokens).  Both algorithms reach comparable
 $\Delta_{\mathrm{acc}}^{\mathrm{heldout}}$ (GR $+0.062$, DR $+0.050$,
 paired $\Delta = -0.012$, well within seed noise); the trade-off is
 that Dr.GRPO accepts a $\sim 1.2$ percentage-point accuracy
@@ -85,10 +81,10 @@ Dr.GRPO sits on (or inside) the GRPO length-efficiency frontier.
 The arithmetic\_easy effect is large ($d = +3.62$) and reaches
 conventional significance; the GSM8K effect is in the same
 direction but underpowered at $n{=}3$.  Combined with the iter120
-finding that Dr.GRPO's \emph{severship} concentrates on the
-backward-CCF-heavy windows and the iter124 null that severship is
-\emph{not} explained by active length-inflation velocity, this
-sharpens the practitioner takeaway: Dr.GRPO is a length-efficiency
+per-window evidence that Dr.GRPO's \emph{severship} is largest in
+backward-CCF-heavy windows and is not explained by active
+length-inflation velocity, this sharpens the practitioner takeaway:
+Dr.GRPO is a length-efficiency
 optimizer that pays a small accuracy tax on GSM8K-style long-CoT
 tasks in exchange for substantial length parsimony, and pays
 \emph{no} accuracy tax on short-form arithmetic tasks.
@@ -96,7 +92,7 @@ tasks in exchange for substantial length parsimony, and pays
 \paragraph{Reproducibility.}
 \verb|scripts/length_bias_iter128.py| runs on
 \verb|drgrpo_vs_grpo.json| + \verb|drgrpo_gsm8k_cot_full.json| +
-\verb|length_bias_iter108_perrun_progress.tsv|.
+the per-window progress summaries.
 Outputs land in
 \verb|experiments/results/length_bias_iter128_*.tsv| (+ meta).
 The 4-panel figure is \verb|figures/length_bias_iter128_efficiency_frontier.pdf|.

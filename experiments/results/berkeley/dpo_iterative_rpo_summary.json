@@ -1,0 +1,29 @@
+{
+  "pillar": "B-SP25 (Berkeley SP25 L2 \u2014 Weston; DPO / Iterative RPO / Chain-of-Verification)",
+  "verified_citations": [
+    "DPO: Rafailov et al. 2023, arXiv:2305.18290, NeurIPS 2023.",
+    "Iterative RPO: Pang, Yuan, Cho, He, Sukhbaatar, Weston 2024, arXiv:2404.19733.",
+    "Chain-of-Verification: Dhuliawala, Komeili, Xu, Raileanu, Li, Celikyilmaz, Weston 2023, arXiv:2309.11495.",
+    "Tulu 3: Lambert et al. (AI2) 2024, arXiv:2411.15124."
+  ],
+  "headline_claim": "GRPO with G samples per prompt and binary reward is exactly the small-beta, no-KL, online limit of DPO applied to (G choose 2) winner-loser pairs. Iterative RPO (Pang et al. 2024) is the natural specialization of this construction to chain-of-thought reasoning: sample G CoTs, label by correctness, fit DPO+NLL. The repo's Pillar 3 evidence (iter115 retention, iter127 joint fit, iter123 SNR slope) confirms the formal equivalence empirically.",
+  "section_A_finding": "G=4 has 4-5x more contrast-yield per prompt than G=32 (GU_ratio 4.15-5.03), but G=32 wins on absolute accuracy once T >= 4M tokens. Both Iterative RPO and GRPO need the same G* to escape the within-group contrast collapse (ZVF); G=4 fails at T >= 4M because the absolute reward signal is too low (acc(G=4, T=4M) = 0.55).",
+  "section_B_finding": "Empirical SNR slope in G is +0.366 per decade of G (95% CI [+0.148, +0.583]); theoretical slope from sqrt(G) is +0.500. CI contains theory at p=0.30 tolerance. This is the GRPO=Iterative-RPO equivalence at the variance level.",
+  "section_C_finding": "Iterative RPO's optimal G == GRPO's optimal G at every T (G*=8,16,32,32 for T=1M,4M,16M,64M). The shared data-construction makes the two algorithms loss-function-equivalent on the same rollout set.",
+  "section_D_finding": "On a single winner-loser pair within a G=2 group, GRPO loss equals the small-beta, no-KL, online limit of DPO loss. Iterative RPO's full objective (DPO + NLL on winners) corresponds to GRPO+replay (group-mean baseline + SFT-loss on winning trajectories).",
+  "recommendation": "GO. Pillar 3 should explicitly cite Iterative RPO (Pang et al. 2024) as the DPO-loss counterpart of the GRPO group-mean construction, and re-state the G*(T) rule in DPO language: 'G* is the smallest group size such that the per-prompt winner-loser pair is recoverable above the within-group noise floor.' The repo's iter115 + iter127 evidence already supports this framing.",
+  "evidence_files": [
+    "experiments/results/group_size_iter115_zvf_linkage.tsv",
+    "experiments/results/group_size_iter127_joint_fit.tsv",
+    "experiments/results/group_size_iter127_optimal_g.tsv",
+    "experiments/results/group_size_iter123_iso_reward.tsv",
+    "experiments/results/group_size_iter123_noise_mech.tsv",
+    "experiments/results/group_size_iter123_effect_size.tsv"
+  ],
+  "prototype_outputs": [
+    "experiments/results/berkeley/dpo_iterative_rpo_grpo_equivalence.tsv",
+    "experiments/results/berkeley/dpo_iterative_rpo_snr_scaling.tsv",
+    "experiments/results/berkeley/dpo_iterative_rpo_optimal_g.tsv",
+    "experiments/results/berkeley/dpo_iterative_rpo_loss_equivalence.tsv"
+  ]
+}

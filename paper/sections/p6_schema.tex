@@ -1,0 +1,103 @@
+% Paper 6 (GRPO-Registry) schema section
+\section{Registry Schema}
+\label{sec:p6-schema}
+
+The schema (\texttt{registry/schema.json}) defines two record types under one
+\texttt{oneOf}. Both carry a \texttt{schema_version} for forward migration
+(Section~\ref{sec:p6-governance}). A single field convention governs
+everything: \textbf{JSON \texttt{null} means \emph{unreported}}, while explicit
+\texttt{false} / \texttt{0.0} / \texttt{"none"} means
+\emph{reported-as-absent}. A stack that says ``we use no KL term'' is making a
+checkable claim; a stack that says nothing is not. The auditor badge
+(Section~\ref{sec:p6-query}) scores exactly this distinction: reporting
+coverage, not configuration virtue.
+
+\subsection{Stack Records: the Seven-Item MIN-REPORT Block}
+\label{sec:p6-schema-stack}
+A \texttt{stack} record describes one deployed GRPO-family training stack. Its
+core is the \texttt{min_report} object, one sub-object per item of the
+MIN-REPORT-RL minimum reportable stack:
+
+\begin{enumerate}[leftmargin=1.8em, itemsep=0.1em]
+  \item \textbf{loss_form}: importance-ratio level (token/sequence), clip
+        bounds ($\eps_{\text{low}}, \eps_{\text{high}}$), length
+        normalization, advantage normalization (std/none), token mask. These
+        are the fields the variant papers fight over.
+  \item \textbf{reference_kl}: whether a reference policy exists, the KL
+        coefficient $\beta$, and the estimator/surrogate used.
+  \item \textbf{sampler_backend}: backend identity, numeric precision, and
+        sampler parameters (temperature, top-$p$)---the axis along which our
+        backend-swap audit produced the $84.4\%$-vs-$5.0\%$ swing.
+  \item \textbf{telemetry}: whether the stack emits a \emph{per-step} ZVF and
+        gradient-utilization ($\mathrm{GU}=1-\mathrm{ZVF}$) trajectory, and
+        from what source. Endpoint summaries are not enough: our 368-run audit
+        found ZVF is U-shaped in accuracy, so a single mean aliases mastery
+        with incapacity (see the companion ZVF pillar paper).
+  \item \textbf{group_size_schedule}: initial $G$, fixed vs.\ adaptive, and
+        the adaptation rule if any.
+  \item \textbf{heldout_split}: whether evaluation prompts are disjoint from
+        the reward environment, and how the split was built.
+  \item \textbf{decontamination}: decontamination performed, and whether a
+        parser-robustness probe was run against the reward extractor.
+\end{enumerate}
+
+Around the \texttt{min_report} block sit provenance
+(\texttt{source_artifacts}, W\&B project, date), identity
+(\texttt{label_claimed}, framework name/version, and an
+\texttt{openness} enum: \texttt{open}/\texttt{managed}/\texttt{closed}), an
+optional \texttt{outcomes} summary (informational only---never part of the
+badge), and \texttt{variant_deltas_applied}, described next.
+
+\subsection{Variant-Delta Records}
+\label{sec:p6-schema-delta}
+A \texttt{variant_delta} record decomposes a named variant into components,
+each mapping a schema field to a change relative to base GRPO. We ship three,
+each verified against its source paper rather than against folklore:
+
+\begin{itemize}[leftmargin=1.5em, itemsep=0.15em]
+  \item \textbf{DAPO}~\citep{yu2025dapo}: five components---%
+        \texttt{clip_higher} (asymmetric/decoupled clip,
+        $\eps_{\text{low}}{=}0.2$, $\eps_{\text{high}}{=}0.28$),
+        \texttt{dynamic_sampling} (filter zero-variance groups and resample
+        until the batch is full), \texttt{token_level_loss} (token-level
+        policy-gradient aggregation), \texttt{overlong_reward_shaping} (soft
+        length-aware penalty), and \texttt{kl_removed} (the KL term is
+        excluded from the objective).
+  \item \textbf{Dr.~GRPO}~\citep{tong2025drgrpo}: two removals---the
+        $1/|o_i|$ response-length normalization in the loss, and the division
+        by the within-group reward standard deviation in the advantage.
+  \item \textbf{GSPO}~\citep{qwen2025gspo}: the importance ratio is defined on
+        (length-normalized) sequence likelihood rather than per token, with
+        clipping and optimization applied at the sequence level.
+\end{itemize}
+
+\subsection{Where Label Flips Become Machine-Readable}
+\label{sec:p6-schema-status}
+The joint between the two record types is the stack-side
+\texttt{variant_deltas_applied} array: for each component of each claimed
+delta, the stack declares a status in
+$\{\texttt{implemented}, \texttt{surrogate}, \texttt{absent},
+\texttt{unknown}\}$. The shipped ``DAPO-on-managed-runtime'' entry, for
+example, records \texttt{clip_higher: surrogate},
+\texttt{dynamic_sampling: absent}, and \texttt{token_level_loss: unknown}
+(\texttt{managed_by_tinker}):
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single,
+  caption={Excerpt from \texttt{entries/tinker_dapo_qwen3.5-4b_gsm8k.json}.},
+  label={lst:p6-dapo-entry}]
+"label_claimed": "dapo",
+"variant_deltas_applied": [
+  {"delta_id": "delta_dapo", "component": "clip_higher",
+   "status": "surrogate",
+   "note": "asymmetric clip set through the user-facing config;
+            underlying managed loss form unverifiable"},
+  {"delta_id": "delta_dapo", "component": "dynamic_sampling",
+   "status": "absent",
+   "note": "closed sampler exposes no group filter-and-resample hook"},
+  {"delta_id": "delta_dapo", "component": "token_level_loss",
+   "status": "unknown", "note": "managed_by_tinker"} ]
+\end{lstlisting}
+
+A reader---or a script---can now see at a glance that this stack's ``DAPO'' is
+one component out of five, without reading a paper appendix or reverse
+engineering a launcher.

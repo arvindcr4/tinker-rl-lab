@@ -154,7 +154,8 @@ Qwen3-235B-A22B (MoE, 22B active), DeepSeek-V3.1 ($\sim$671B total /
 $\sim$37B active MoE), Nemotron-120B (120B dense).
 Frontier models are evaluated via the Tinker API in inference mode
 with standardized generation parameters; LoRA fine-tuning at this
-scale is conducted on selected checkpoints (see Section~\ref{sec:frontier}).
+scale is conducted on selected checkpoints (see the frontier case studies
+in the companion pillar papers of \ours{}).
 
 \paragraph{Model family coverage.}
 The benchmark covers (1) \textbf{Qwen3}: a dense family from 0.6B to 32B;
@@ -180,8 +181,8 @@ baseline on Qwen2.5-0.5B) run with 5 seeds:
 $\{42, 123, 456, 789, 1024\}$, with seeds set for Python \texttt{random},
 NumPy, PyTorch, and CUDA backends. Several Tinker/API, frontier-model,
 and team-task runs are single-seed or partial and are treated as
-descriptive (Tier-C) unless explicitly marked otherwise; see
-Section~\ref{sec:stat_rigor} for the per-claim seed ledger.
+descriptive (Tier-C) unless explicitly marked otherwise; the per-claim
+seed ledger is given in the statistical-rigor addendum of \ours{}.
 
 % Figure 4: Experiment Pipeline
 \begin{figure}[t]

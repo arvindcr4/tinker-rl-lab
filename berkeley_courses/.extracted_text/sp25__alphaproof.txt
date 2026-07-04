@@ -1,0 +1,925 @@
+AlphaProof  
+When RL meets Formal Maths
+Thomas HUBERT, March 2025
+
+Mathematics  
+AlphaProof
+
+We have used maths to 
+both describe, predict 
+and shape the natural 
+world
+3
+
+Reasoning & 
+Planning
+Generalisation &
+ Abstraction
+Knowledge &
+ Creativity
+Open ended &
+ Unbounded complexity
+Mathematics, a root node to intelligence?
+Even requires an eye for beauty...
+4
+
+A Brief History of Formalisation in Mathematics 
+5
+Proofs & Axiomatisation
+Importance of proofs discovered by the 
+ancient Greeks
+Since then, what constitutes a 
+mathematical proof has evolved.
+
+A Brief History of Formalisation in Mathematics 
+6
+From words to symbols
+A square and ten times its root are equal to thirty-nine.
+Take the coefficient of the root, divide it into two parts, 
+and multiply one of them by itself.
+Add this to thirty-nine
+Take the square root of sixty-four which is eight
+Subtract from this one of the halves of the coefficient of 
+the root.
+The result is the value of the root which is three.
+Proofs & Axiomatisation
+Importance of proofs discovered by the 
+ancient Greeks
+Since then, what constitutes a 
+mathematical proof has evolved.
+
+A Brief History of Formalisation in Mathematics 
+7
+From words to symbols
+A square and ten times its root are equal to thirty-nine.
+Take the coefficient of the root, divide it into two parts, 
+and multiply one of them by itself.
+Add this to thirty-nine
+Take the square root of sixty-four which is eight
+Subtract from this one of the halves of the coefficient of 
+the root.
+The result is the value of the root which is three.
+Proofs & Axiomatisation
+Importance of proofs discovered by the 
+ancient Greeks
+Since then, what constitutes a 
+mathematical proof has evolved.
+
+A Brief History of Formalisation in Mathematics 
+1.
+Rigor and clarity
+2.
+Efficiency and Communication
+3.
+Abstraction and Generalisation
+4.
+Unification
+5.
+Created new fields
+8
+
+Computer Formalisation
+ of  Mathematics
+Mathematics in code
+9
+
+Lean
+Lean is a programming language, 
+theorem prover, and interactive proof 
+assistant.
+It has a vibrant open source community 
+of mathematicians.
+Lean has been used to formalize fields 
+medal mathematics. 
+A huge quest the community is on it to 
+build the math library of the future.
+10
+
+Mathlib
+11
+Number Theory
+Topology
+Ring Theory
+Measure Theory
+Linear Algebra
+Group Theory
+Field Theory
+Combinatorics
+Category Theory
+Analysis
+Algebra
+Built open source on own free time 
+of mathematicians! 
+It aims to be General & Unified. 
+Covers ~ 80% undergrad curriculum 
+Most of the library is above 
+undergraduate but has irregular 
+coverage with big holes.
+11
+
+Computer Formalisation unlocks enormous synergies
+Perfect Verification + Software Stack
+Instant Wins
+-
+Correctness concerns disappear
+-
+Giant Proofs can be trusted
+-
+Proof checking can be delegated entirely to the 
+computer
+Game Changer
+-
+Transforms mathematics into a video game 🎉!
+-
+For Education
+-
+All the tools of Software Engineering for Maths
+-
+Unlocks Massive Collaboration
+12
+
+Challenges for Computer Formalisation
+Only 0.1%-1% of mathematicians have adopted Lean.
+Not yet a good tool for mainstream research
+-
+Steep Learning Curve
+-
+Significant Time Investment
+-
+Tooling and Library maturity (though rapidly growing)
+-
+Perceived lack of necessity for research.
+13
+
+Demo - Infinitude of Primes
+14
+
+Demo - Infinitude of Primes
+Theorem Statement
+15
+
+Demo - Infinitude of Primes
+16
+Proof
+
+Demo - Infinitude of Primes
+Language-based, high-level syntax, mirroring normal mathematics
+17
+
+Demo - Infinitude of Primes
+18
+
+Demo - Infinitude of Primes
+19
+
+Demo - Infinitude of Primes
+20
+
+Demo - Infinitude of Primes
+��
+21
+
+Computer Formalisation
+Huge enthusiasm from a vibrant community
+Building the library of the future
+Unlocks enormous synergies
+Still has some way to go
+Belief this will inevitably play an integral role in the future of 
+Mathematics
+22
+
+Reinforcement 
+Learning
+Reward and 
+Observation
+Action
+23
+
+24
+What's RL
+RL is trial and error learning.
+An agent learns by interacting with an 
+environment to maximize reward.
+
+25
+SuperScale RL: A Proven Recipe to Superintelligence
+AlphaGo
+AlphaZero
+AlphaTensor
+AlphaGoZero
+MuZero
+Atari DQN
+AlphaStar
+AlphaDev
+Fusion
+Stratego
+
+26
+The Zero Series
+AlphaGo
+AlphaZero
+AlphaTensor
+AlphaGoZero
+MuZero
+
+27
+The Zero Philosophy
+If an agent can learn to master an environment tabula rasa, 
+then you demonstrably have a system that is discovering and 
+learning new knowledge by itself.
+It also means that this algorithm is general and should apply 
+to other domains.
+This is particularly important to advance science. 
+
+28
+AlphaGoZero & AlphaZero
+Learned simply by playing games against itself, 
+starting from completely random play.
+Rediscovered human patterns, accumulating 
+thousands of years of human knowledge in a 
+matter of days.
+Ultimately discarded some in preference of new 
+discoveries that humans don't even know 
+about.
+
+29
+AlphaTensor
+Not only board games!
+AlphaTensor discovered novel, 
+efficient, and provably correct 
+algorithms for fundamental tasks 
+such as matrix multiplication.
+Bonus: Can tackle huge action 
+spaces O(1030)
+
+30
+What made those systems Superhuman?
+Scaled up trial and error
+Grounded feedback signal
+Search
+Curriculum
+
+31
+What made those systems Superhuman?
+Scaled up trial and error
+Grounded feedback signal
+Search
+Curriculum
+✅
+
+32
+What made those systems Superhuman?
+Scaled up trial and error
+Grounded feedback signal
+Search
+Curriculum
+✅
+✅
+
+33
+What made those systems Superhuman?
+Scaled up trial and error
+Grounded feedback signal
+Search
+Curriculum
+✅
+✅
+✅
+
+34
+What made those systems Superhuman?
+Scaled up trial and error
+Grounded feedback signal
+Search
+Curriculum
+✅
+✅
+✅
+⁉
+
+35
+AlphaZero for 
+Mathematics
+When RL meets Formal 
+Maths
+
+1.
+Lean gives us a way to scale up trial and error with
+a.
+An environment to explore mathematics completely in silico
+b.
+A perfect feedback signal for proving
+2.
+We can therefore reach superhuman intelligence and discover new 
+truths, just like in Go/chess/Tensor decomposition… provided:
+●
+We can generate high enough quality + quantity problems
+●
+RL works 
+AlphaProof: Master Plan
+36
+
+1.
+Lean gives us a way to scale up trial and error with
+a.
+An environment to explore mathematics completely in silico
+b.
+A perfect feedback signal for proving
+2.
+We can therefore reach superhuman intelligence and discover new 
+truths, just like in Go/chess/Tensor decomposition… provided:
+●
+We can generate high enough quality + quantity problems
+●
+RL works 
+AlphaProof: Master Plan
+✅
+⁉
+37
+
+38
+Where do the problems come from?
+Humans deﬁne the problems
+-
+We want to help human 
+mathematics
+-
+There are already a lot of 
+problems!
+
+39
+Where do the problems come from?
+Humans deﬁne the problems
+-
+We want to help human 
+mathematics
+-
+There are already a lot of 
+problems!
+AlphaProof deﬁnes the problems
+-
+Around human mathematics
+-
+Auto-formalisation
+-
+Test-time RL
+-
+Augment human mathematics
+
+40
+Let's take a step back...
+Informal
+mathematics
+Formal
+mathematics
+Large amount of data
+Not verifiable
+Small amount of data
+Verifiable
+
+41
+Perfect verification will in the long run be the most important property 
+for mathematics.
+AlphaProof: Foundational Bet
+Informal
+mathematics
+Formal
+mathematics
+Large amount of data
+Not verifiable
+Small amount of data
+Verifiable
+
+42
+-
+We have a proven recipe to build agent that can discover 
+knowledge by themselves and reach superhuman intelligence in 
+certain domains
+-
+Key ingredients are scaled up trial and error and grounded 
+feedback
+-
+Formal Maths provides us with those key ingredients
+RL meets Formal Math
+
+43
+IMO 2024
+International Mathematics Olympiad
+
+44
+What's the IMO
+International Mathematics Olympiad
+The world-championship level event in 
+mathematics that brings together the 
+best young minds from around the 
+world.
+
+~17,000,000 
+High school students
+USA team selection
+45
+
+~17,000,000 
+High school students
+~60,000 
+AMC10 & AMC12
+USA team selection
+46
+
+~17,000,000 
+High school students
+~60,000 
+AMC10 & AMC12
+~3,000 
+AIME
+USA team selection
+47
+
+~17,000,000 
+High school students
+~60,000 
+AMC10 & AMC12
+~3,000 
+AIME
+MATH 
+benchmark
+USA team selection
+48
+
+~17,000,000 
+High school students
+~60,000 
+AMC10 & AMC12
+~3,000 
+AIME
+~250
+USAMO
+USA team selection
+49
+
+~17,000,000 
+High school students
+~60,000 
+AMC10 & AMC12
+~3,000 
+AIME
+~250
+USAMO
+20
+USA IMO camp
+50
+
+~17,000,000 
+High school students
+~60,000 
+AMC10 & AMC12
+~3,000 
+AIME
+~250
+USAMO
+6
+IMO 
+20
+USA IMO camp
+51
+
+The IMO Problems
+These are hard problems!
+-
+(Easy, Medium, Hard)
+-
+Test of reasoning, not knowledge
+-
+Take hours even for specialists
+-
+Not leaked
+Half of the participants, solve 2 or 
+less problems.
+52
+
+IMO2024
+65TH INTERNATIONAL 
+MATHEMATICAL OLYMPIAD
+16-17TH JULY 2024
+53
+
+Our IMO Participation - Apollo program
+Can we reach the moon?
+Can our system solve the 2024 IMO problems 
+at all, given 
+-
+the compute available to us.
+-
+and enough time.
+54
+
+January 2024
+We are 7 months away, we need to make a decision about Geometry:
+-
+Mathlib is very sparse in 2D euclidean geometry
+-
+Should we fill it ourselves?
+
+January 2024
+We are 7 months away, we need to make a decision about Geometry:
+-
+Mathlib is very sparse in 2D euclidean geometry
+-
+Should we fill it ourselves?
+Miraculously, another group within Google DeepMind has been working 
+on IMO Geometry problem and the system is already very strong! 
+We decide to join forces for July:
+-
+AlphaGeometry will tackle geometry 
+-
+AlphaProof will tackle algebra, number theory, combinatorics
+
+March 2024
+We have been training AlphaProof on proving theorems but not all 
+questions are of the form "Prove that". Some require an answer to be 
+determined, e.g. “Find all X such that …”
+We debate what we should do:
+Easy mode: Correct answer is given by an oracle; AI proves it is correct
+Hard mode: AI determines the answer and proves it is correct
+
+March 2024
+We have been training AlphaProof on proving theorems but not all 
+questions are of the form "Prove that". Some require an answer to be 
+determined, e.g. “Find all X such that …”
+We debate what we should do:
+Easy mode: Correct answer is given by an oracle; AI proves it is correct
+Hard mode: AI determines the answer and proves it is correct
+AlphaProof will operate in hard mode:
+-
+Generates candidate answers using Gemini
+-
+Attempts to prove/disprove all candidates
+
+Formalised Problems in Input
+We have a final debate around if the system should receive as input 
+-
+The natural language description of the problem or
+-
+A manually formalised description of the problem
+59
+
+Formalised Problems in Input
+We have a final debate around if the system should receive as input 
+-
+The natural language description of the problem or
+-
+A manually formalised description of the problem
+After concertation with our judges, we decided to give the formalised 
+problems as input to the system.
+-
+The ability we cared about was mathematical reasoning and problem 
+solving.
+-
+We asked our lean experts to manually formalise the problems for 
+the system.
+60
+
+Our Protocol
+After officially receiving the problems at 1PM,
+1.
+Lean experts manually formalize problems
+2.
+Generate O(100) answer candidates with Gemini
+3.
+Filter the easily disprovable ones
+4.
+Run test-time RL 
+
+16th July, Day 1, Tuesday
+1PM
+P1*: Algebra
+P2*: Number Theory
+P3: Combinatorics
+* require an answer to be determined
+
+16th July, Day 1, Tuesday
+1PM
+P1*: Algebra
+P2*: Number Theory
+P3: Combinatorics
+* require an answer to be determined
+Disproves 99% of guesses
+Disproves 98% of guesses 
+
+17th July, Day 2, Wednesday
+1PM
+P4: Geometry
+P5*: Combinatorics
+P6*: Algebra
+* require an answer to be determined
+
+17th July, Day 2, Wednesday
+1PM
+P4: Geometry
+P5*: Combinatorics
+P6*: Algebra
+* require an answer to be determined
+Solved in secs by AlphaGeometry
+Failed to formalise on the day
+Disproves 7% of guesses 
+
+18th July, Day 3, Thursday
+We had a way to track progress and we observe:
+-
+P1: AlphaProof solved half of the problem 3/7 points
+-
+P2: AlphaProof arguably solved the whole problem 6/7 points
+-
+P3: AlphaProof makes no progress
+Day1: 9/21 points
+
+18th July, Day 3, Thursday
+We had a way to track progress and we observe:
+-
+P1: AlphaProof solved half of the problem 3/7 points
+-
+P2: AlphaProof arguably solved the whole problem 6/7 points
+-
+P3: AlphaProof makes no progress
+-
+P4: AlphaGeometry solved in seconds 7/7 points
+-
+P5: AlphaProof makes no progress
+-
+P6: AlphaProof proves a case 2/7 points
+Day1: 9/21 points, Day2: 9/21 points, Total 18/42 points
+
+19th July, Day 4, Friday
+
+19th July, Day 4, Friday
+
+19th July, Day 4, Friday
+
+19th July, Day 4, Friday
+
+19th July, Day 4, Friday
+
+Final Results
+P1, P2, P6 fully solved by AlphaProof
+P4 fully solved by AlphaGeometry
+We keep running over the weekend in 
+the hope of getting one point on P3. 
+The agent made some progress but 
+not enough for a partial point.
+
+Final Results
+P1, P2, P6 fully solved by AlphaProof
+P4 fully solved by AlphaGeometry
+We reached the score of a Silver 
+medallist and missed the Gold 
+threshold by one point (with more 
+time and more compute!). 
+
+P6 was arguably one of the hardest problems in 
+the last 10 years at the IMO. Only 5 / 609 solved 
+the problem fully.
+"I spent a couple of hours on this problem 
+and did not solve it. [...] I find the fact that the 
+program can come up with a somewhat 
+complicated construction like this very 
+impressive"
+Prof Sir Timothy Gowers, Fields medalist and IMO 
+gold medalist
+P6
+75
+
+Challenges
+Gaps in Mathlib:
+-
+Geometry, even P1
+Combinatorics problems were difficult:
+-
+P5 was extremely hard to formalise
+-
+Did not make progress on P3 & P5.
+Used many orders of magnitude more compute than human 
+contestants:
+-
+Successfully landed on the moon
+-
+And will want to be more efficient for the next trip!
+76
+
+77
+AlphaProof 
+Methods
+
+78
+Formaliser Model
+Input: a problem/theorem 
+described in natural 
+language
+Output: a Lean 
+formalisation
+
+79
+Prover Model 
+n : ℕ
+⊢ ∃ p, n ≤ p ∧ Prime p
+state
+by contradiction
+tactic
+let p := minFac (n ! + 1)
+tactic
+Input a lean state
+Sample N tactics
+Prover 
+Model
+
+Search over actions = Lean tactic
+Compute new Lean state after every 
+action / tactic application
+Exploit high prior and high value paths 
+Explore low visited paths
+Prover Model + AlphaZero Search
+80
+
+81
+Step 1: Auto formalisation 
+1: Train a formalisation model and auto-formalise human created problems 
+Human Problem
+Auto-Formalised version of 
+the Problem
+
+82
+Step 1: Auto formalisation 
+1: Train a statement formalisation model and auto-formalise human created 
+problems
+Prover 
+Model
+Formaliser 
+Model
+O(1M)
+O(100M)
+
+83
+Step 2: Build on top of Mathlib
+2: Train the prover model supervised on Mathlib
+-
+100k definitions
+-
+200k theorems
+-
+300k lines of proofs
+Learn a good prior of actions to take.
+n : ℕ
+⊢ ∃ p, n ≤ p ∧ Prime p
+state
+let p := minFac (n ! + 1)
+tactic
+State part of a human 
+written proof
+Train towards human Tactic
+Prover 
+Model
+
+84
+Step 3: AlphaZero Reinforcement Learning  
+3: Train the prover model by RL
+For each formal problem
+-
+Generate experience of (dis)proving by searching over Lean steps.
+-
+Use Lean to verify proofs
+-
+Reinforce the prover network with each success
+Prover 
+Model
+Formaliser 
+Model
+O(1M)
+O(100M)
+
+85
+Final Step: Test-Time RL
+4: Train the prover model on specific problems by RL
+For each problem:
+-
+Generate variants of the problem
+-
+Run RL exactly as previous step
+Prover 
+Model
+
+86
+Final Step: Test-Time RL
+Generalist 
+Checkpoint
+Very hard problem
+Bubble of problems 
+the agent can solve 
+easily
+
+Generalist 
+Checkpoint
+Very hard problem
+Bubble of problems 
+the agent can solve 
+easily
+Interesting variants 
+of the "Very hard 
+problem"
+Test-Time RL
+
+Specialist 
+Checkpoint
+Very hard problem
+Bubble of problems 
+the agent can solve 
+easily
+Interesting variants 
+of the "Very hard 
+problem"
+Test-Time RL
+
+Specialist 
+Checkpoint
+Very hard problem
+Bubble of problems 
+the agent can solve 
+easily
+Interesting variants 
+of the "Very hard 
+problem"
+Test-Time RL
+
+Specialist 
+Checkpoint
+Very hard problem
+Bubble of problems 
+the agent can solve 
+easily
+Interesting variants 
+of the "Very hard 
+problem"
+Test-Time RL
+
+Specialist 
+Checkpoint
+Very hard problem
+Bubble of problems 
+the agent can solve 
+easily
+Interesting variants 
+of the "Very hard 
+problem"
+Test-Time RL
+
+92
+Challenges for AlphaProof
+Inherited challenges from Formal Mathematics
+-
+Most of human data in natural language
+-
+Cannot easily learn and work on areas not supported by Mathlib.
+Generally,
+-
+Creative building of new objects and theories, interestingness 
+and beauty in mathematics
+
+
+Warm up: back to the infinitude of primes
+
+AIME 2020 ii p10
+
+Warm up: back to the infinitude of primes
+
+Demo: Link between the Riemann Zeta and the primes
+
+Link between the Riemann Zeta 
+
+
+
+
+
+The Riemann zeta function
+
+Let's prove the finite case
+
+Final Link with the root of the zeta function
+
+Final Link with the root of the zeta function
+
+Final Link with the root of the zeta function
+
+What’s next
+
+What's Next for AlphaProof?  
+Broaden to the entire Mathematical landscape
+Contribute to the Frontiers of Research Math
+AlphaProof as a useful tool for every thinker
+
+Individually, this was 
+almost impossible
+Together, it felt 
+impossible to fail
+
+
+Thank you for 
+Listening
+Questions?

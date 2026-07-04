@@ -1,0 +1,813 @@
+      Learning to Self-Improve & Reason with LLMs 
+Jason Weston
+    Meta & NYU
+
+Goal: An AI that "trains" itself as much as possible
+- Creates new tasks to train on (challenges itself) 
+- Evaluates whether it gets them right ("self-rewarding")
+- Updates itself based on what it understood
+Research question: can this help it become superhuman?
+
+System 1: reactive and relies on 
+associations
+LLMs can be viewed as System 1 
+•
+Fixed compute per token
+•
+Directly outputs answer
+•
+Failures: learns spurious/unwanted 
+correlations: hallucination, 
+sycophancy, jailbreaking, .. 
+System 2: more deliberate and 
+effortful
+Multiple "calls" to System 1 LLM 
+• Planning, search, verifying, reasoning etc.
+• Dynamic computation 
+(e.g. chain-of-thought, ToT, ..)
+System 1 (LLM)
+System 1
+Question
+System 1
+sub-question
+System 1
+attention
+verification
+System 1
+System 1
+System 1
+Answer
+System 2
+When self-improving: two types of reasoning to improve
+
+            First, some pre-history
+                      (Pre-2020..)
+
+Language modeling 
+Standard (pre-training) trains by 
+predicting the next token only on 
+"positive examples" of language
+Images from https://lena-voita.github.io/nlp_course/language_modeling.html
+
+2003
+
+    Support Vector Machines 
+Most of the 2000s
+
+          Unlike SVMs, Neural nets can manipulate words + end-to-end
+
+
+
+
+
+
+
+
+
+2014
+LLM attention 
+mechanism is born 👶
+
+
+Transformers (Vaswani et al., 2017)           BERT (Devlin et al., 2018)   … and so much more after
+
+The ``scaling hypothesis''
+
+LLMs everywhere
+2019 – GPT-2 (OpenAI) – Pretrained LLM.
+2020 – T5 (Google) – Pretrained LLM, unified NLP tasks in a text-to-text format.
+2020 – GPT-3 (OpenAI) – Pretrained LLM, 175B parameters.
+2021 – Jurassic-1 (AI21 Labs) – Pretrained LLM with controllability features.
+2021 – Megatron-Turing NLG (NVIDIA & Microsoft) – Pretrained LLM, 530B parameters.
+2021 – Gopher (DeepMind) – Pretrained LLM with better factual knowledge.
+2022 – Chinchilla (DeepMind) – Pretrained LLM optimized for efficient scaling.
+2022 – PaLM (Google) – Pretrained LLM with strong reasoning abilities.
+2022 – OPT (Meta) – Pretrained LLM, open-source alternative to GPT-3.
+2022 – BLOOM (BigScience) – Pretrained LLM, multilingual, open-access model.
+2022 – GPT-3.5 (OpenAI) – Pretrained LLM with post-training via RLHF.
+2023 – Claude 1 & 2 (Anthropic) – Pretrained LLM with RLHF, focused on safety.
+2023 – GPT-4 (OpenAI) – Pretrained LLM with extensive RLHF for better accuracy.
+2023 – LLaMA (Meta) – Pretrained LLM, open-source, research-focused.
+2023 – Mistral 7B (Mistral AI) – Pretrained LLM, efficient and competitive.
+
+            Is just language modeling enough?
+                      (Answer:no)
+                     2020 onwards..
+
+2019
+
+Pretrain up to 9.4B LLM+supervised fine-tune 
+(SFT) on dialogue data (human annotated)
+2020
+
+LLM Post-training (pre-o1/r1)
+●
+SFT: Same as lang modeling, but on user tasks 
+●
+or RLHF:
+(Proximal Policy Optimization)
+2022
+InstructGPT 
+(SFT+RLHF on 
+175B GPT3)
+
+LLM Post-training (pre-o1/r1)
+●
+or DPO:
+2023
+
+Instruction following  (without explicit Chain-of-Thought Reasoning)
+2022
+
+Improving reasoning via System 2 (LLMs)
+            Prompting approaches 
+   (First try!  circa ancient 2022-2023)
+
+
+
+
+System 1 failures: Factuality & hallucination
+
+Chain-of Verification Reduces Hallucination in Large Language Models
+Chain-of-Verification (CoVe) variants:
+-
+Joint left-to-right generation of 
+all four steps
+-
+Factored: step (3) attends to (2) 
+but not to step (1)
+-
+Factor+ revise: Extra 
+``cross-check’’ step (see 
+tickmarks to right) where LLM 
+explicitly checks if 2 answers 
+seem to match.
+• Shehzaad Dhuliawala, Mojtaba Komeili, Jing Xu, Roberta Raileanu, Xian Li, Asli Celikyilmaz, Jason Weston
+
+Chain-of Verification Reduces Hallucination in Large Language Models
+Chain-of-Verification (CoVe) variants:
+-
+Joint left-to-right generation of 
+all four steps
+-
+Factored: step (3) attends to (2) 
+but not to step (1)
+-
+Factor+ revise: Extra 
+``cross-check’’ step (see 
+tickmarks to right) where LLM 
+explicitly checks if 2 answers 
+seem to match.
+• Shehzaad Dhuliawala, Mojtaba Komeili, Jing Xu, Roberta Raileanu, Xian Li, Asli Celikyilmaz, Jason Weston
+
+
+More failure modes of System 1
+LLMs learn spurious correlations
+Sam Liccardo’s 
+birthplace?
+Sunnyvale
+Sam Liccardo’s 
+birthplace?
+Facts about 
+Sunnyvale
+Saratoga
+Sycophancy: agrees with user’s opinion (Sharma et al, '23) 
+ 
++
+LLM
+LLM
+incorrect
+Problem: whole context affects LLM 
+output even irrelevant parts!
+Hypothesis: soft-attention inherently 
+spreads attention thin over everything.
+Also, LM objective favors correlations.
+(Gonen et al, '24) 
+ 
+(Weston & Sukhbaatar, '23) 
+ 
+
+System 2 Attention (S2A)
+Factual 
+question
+“I think it is 
+correct”
++
+Step 1 Prompt: “Rewrite while removing irrelevant/bias" 
+Factual 
+question
+Step 2 Answer given the rewritten question  
+Factual 
+question
+A: incorrect
+rewritten
+rewritten
+LLM
+LLM
+Ignores irrelevant parts + less biased answer
+Jason Weston, Sainbayar Sukhbaatar
+ Decide what to attend explicitly (system 2) by rewriting the input
+              
+Problem: whole context affects LLM 
+output even irrelevant parts!
+Hypothesis: soft-attention inherently 
+spreads attention thin over everything.
+Also, LM objective favors correlations.
+Solution: Make attention more explicit & 
+effortful → Prompt LLM to extract 
+relevant context 
+
+System 2 Attention (S2A)
+Without time to think humans make mistakes & are biased too
+We need more system 2 methods that use effortful thinking!
+Jason Weston, Sainbayar Sukhbaatar
+ Decide what to attend explicitly (system 2) by rewriting the input
+              
+
+Break down response evaluation into subproblems & fuse
+              
+Branch-Solve-Merge for Evaluating and Improving Language Generation
+Problem: 
+-
+When task is complex the instruction is 
+hard, e.g. GPT4 fails.
+Approach:
+-
+Given task, generate plan to 
+branching into subproblems
+-
+   Solve subproblems, one for each 
+branch
+-
+   Given partial solutions, merge 
+solutions
+Swarnadeep Saha, Xian Li, Omer Levy, Jason Weston, Asli Celikyilmaz
+
+Better reasoning via Self-Improvement
+             (Self-)Training methods
+Improve reasoning through optimization
+
+• Weizhe Yuan, Richard Yuanzhe Pang, Kyunghyun Cho, Xian Li, Sainbayar Sukhbaatar, Jing Xu, Jason Weston
+•   LLM improves itself by assigning rewards to own outputs and optimizing
+              
+●
+Current LLMs are approaching human-level performance on a variety of tasks.
+●
+There is reason to believe that future LLMs will surpass human performance.
+●
+The "Superalignment challenge"..?
+Reference: 
+https://openai.com/research/
+weak-to-strong-generalization
+A core challenge for aligning future superhuman AI systems 
+(superalignment) is that humans will need to supervise AI systems much 
+smarter than them.
+OpenAI
+Self-Rewarding LLMs
+2024 (Jan)
+
+Standard RLHF alignment approach: use humans in the loop
+- ﬁrst to create (X, Y) data;
+- then to collect judgments on (X, Y') data
+Image from: https://arxiv.org/pdf/2009.01325.pdf
+
+Image from: https://arxiv.org/pdf/2009.01325.pdf
+Humans need to 
+read the responses 
+carefully in order to 
+make decisions
+Standard RLHF alignment approach: use humans in the loop
+-
+ﬁrst to create (X, Y) data;
+-
+then to collect judgments on (X, Y') data
+
+Current alignment approach
+●
+However, as LLMs write better and better responses…
+○
+It becomes harder and harder for humans to process them, especially those that are 
+lengthy and require domain expertise.
+Images generated by GPT-4
+
+Research Question 🤔
+●
+How can we continue improving superhuman models?
+
+Observations 🧐
+●
+Observation 1
+○
+LLMs can continue improving if provided good judgements on response quality
+■
+Exempliﬁed by the success of iterative RLHF 
+●
+Training a Helpful and Harmless Assistant with Reinforcement Learning from 
+Human Feedback
+●
+Llama 2: Open Foundation and Fine-Tuned Chat Models
+●
+Observation 2
+○
+LLMs can provide good judgements on model generation
+■
+Exempliﬁed by the line of works that use GPT-4 for evaluation
+●
+Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena
+●
+AlpacaEval: An Automatic Evaluator of Instruction-following Models
+Then, how about combining them together? 
+
+Our approach
+●
+Self-rewarding LMs
+○
+Key idea: train a self-rewarding language model that
+■
+1) Has instruction following capability, i.e., given a user instruction, can respond to it 
+appropriately
+Can you explain contrastive learning in machine learning in simple terms 
+for someone new to the ﬁeld of ML?
+Here's a simple analogy to understand it:
+Imagine you have a basket of different fruits like apples, oranges, and 
+bananas…
+
+Our approach
+●
+Self-rewarding LMs
+○
+Key idea: train a self-rewarding language model that
+■
+1) Has instruction following capability, i.e., given a user instruction, can respond to it 
+appropriately
+■
+2) Has evaluation capability, i.e.,  given a user instruction, one or more responses, can 
+judge the quality of responses
+Here is an instruction: Can you explain contrastive learning in machine 
+learning in simple terms for someone new to the ﬁeld of ML?
+Here is the model response: <MODEL_RESPONSE>
+Can you assign a score (0 to 5) to this response based on the 
+following rubrics? <RUBRICS>
+<CoT reasoning process>
+Therefore, I would assign 3 out of 5 to this response.
+Singleton 
+Case
+
+Our approach
+●
+Self-rewarding LMs
+○
+Key idea: train a self-rewarding language model that
+■
+1) Has instruction following capability, i.e., given a user instruction, can respond to it 
+appropriately
+■
+2) Has evaluation capability, i.e.,  given a user instruction, one or more responses, can 
+judge the quality of responses
+○
+Then this base model can go through an iterative process of
+■
+data creation/curation 
+■
+training on new data
+
+Our approach
+●
+Self-rewarding LMs
+○
+Key idea: train a self-rewarding language model that
+■
+1) Has instruction following capability, i.e., given a user instruction, can respond to it 
+appropriately
+■
+2) Has evaluation capability, i.e.,  given a user instruction, one or more responses, can 
+judge the quality of responses
+○
+Then this base model can go through an iterative process of
+■
+data creation/curation 
+■
+training on new data
+○
+Hopefully, the model can get better in terms of both instruction following and 
+evaluation capabilities in each cycle
+
+Our approach
+●
+Self-rewarding LMs
+○
+Key idea: train a self-rewarding language model that
+■
+1) Has instruction following capability, i.e., given a user instruction, can respond to it 
+appropriately
+■
+2) Has evaluation capability, i.e.,  given a user instruction, one or more responses, can 
+judge the quality of responses
+○
+Then this base model can go through an iterative process of
+■
+data creation/curation 
+■
+training on new data
+○
+Hopefully, the model can get better in terms of both instruction following and 
+evaluation capabilities in each cycle
+Empirically, we have shown that this is possible !
+
+Our approach
+Recipe 󰠉: LM ﬁnetuned on small seed data.
+Iterate 2 steps:
+(1) Self-instruction creation: generate prompts, responses & self-rewards with LM
+(2) Instruction-training: Train (DPO) on selected preference pairs
+Iterations improve instruction following & reward modeling ability!
+
+Experiments
+●
+We start from M0: pre-trained LLAMA-2-70B
+
+Experiments
+●
+We start from M0: pre-trained LLAMA-2-70B
+●
+We multitask train M0 using seed IFT and EFT data
+○
+Seed IFT data: instruction following data from OpenAssistant, we only take the ﬁrst turn.
+■
+Format: 
+●
+Input: user instruction
+●
+Output: response
+
+Experiments
+●
+We start from M0: pre-trained LLAMA-70B
+●
+We multitask train M0 using seed IFT and EFT data
+○
+Seed IFT data: instruction following data from OpenAssistant, we only take the ﬁrst turn.
+■
+Format: 
+●
+Input: user instruction
+●
+Output: response
+○
+Seed EFT data: evaluation data from OpenAssistant
+■
+Format: 
+●
+Input: user instruction, model response, scoring rubrics
+●
+Output: CoT reasoning, ﬁnal score
+
+Experiments
+●
+We start from M0: pre-trained LLAMA-70B
+●
+We multitask train M0 using seed IFT and EFT data
+○
+Seed IFT data: instruction following data from OpenAssistant, we only take the ﬁrst turn.
+■
+Format: 
+●
+Input: user instruction
+●
+Output: response
+○
+Seed EFT data: evaluation data from OpenAssistant
+■
+Format: 
+●
+Input: user instruction, model response, scoring rubrics
+●
+Output: CoT reasoning, ﬁnal score
+
+Experiments
+●
+LLM-as-a-Judge prompt
+○
+Instructs the LLM to 
+evaluate the response 
+using ﬁve additive criteria 
+(relevance, coverage, 
+usefulness, clarity and 
+expertise)
+○
+Performs better than 
+multiple choice format 
+prompt
+
+Experiments
+●
+We start from M0: pre-trained LLAMA-2-70B
+●
+We multitask train M0 using seed IFT and EFT data to give M1
+○
+Seed IFT data: instruction following data from OpenAssistant, we only take the ﬁrst turn.
+■
+Format: 
+●
+Input: user instruction
+●
+Output: response
+○
+Seed EFT data: evaluation data from OpenAssistant
+■
+Format: 
+●
+Input: user instruction, model response, scoring rubrics
+●
+Output: CoT reasoning, ﬁnal score
+Since OpenAssistant only provides ranking information for different responses, we collect EFT data 
+using model generated CoT reasoning and ﬁnal scores. 
+Speciﬁcally, given an instruction and four responses, if the model assigned scores to the four responses 
+perfectly match human rankings, then we keep those four samples, otherwise, we discard all of them.
+
+Experiments
+●
+We start from M0: pre-trained LLAMA-2-70B
+●
+We multitask train M0 using seed IFT and EFT data to give M1
+●
+We then go through iterative training
+
+Experiments
+●
+We start from M0: pre-trained LLAMA-70B
+●
+We multitask train M0 using seed IFT and EFT data to give M1
+●
+We then go through iterative training
+In our experiment, we used self-instruct technique (Wang et al.) to bootstrap instructions from OpenAssistant 
+using ChatLLama-70B. Ideally, those prompts should come from real-world users interacting with LLMs.
+Assume we have a pool of 
+prompts that represent 
+user requirements. 
+
+Experiments
+●
+We start from M0: pre-trained LLAMA-70B
+●
+We multitask train M0 using seed IFT and EFT data to give M1
+●
+We then go through iterative training
+Our model in the t-th iteration (Mt) generates k (we choose k=4) candidate responses for each 
+new prompt, Mt which also predicts reward for each response via LLM-as-a-Judge prompting.
+
+Experiments
+●
+We start from M0: pre-trained LLAMA-70B
+●
+We multitask train M0 using seed IFT and EFT data to give M1
+●
+We then go through iterative training
+Given a prompt and k responses, we select the highest scoring response as the winning one, 
+and lowest scoring response as the losing one to form a preference pair. Then we conduct 
+DPO training on those pairs to get Mt+1 starting from Mt.
+
+Experiments
+●
+We start from M0: pre-trained LLAMA-70B
+●
+We multitask train M0 using seed IFT and EFT data to give M1
+●
+We then go through iterative training
+●
+We conducted two self-rewarding training loops (to give M2, and M3)
+
+Evaluation Axes
+●
+We evaluate the performance of our self-rewarding models in two axes:
+○
+Ability to follow instructions
+○
+Ability as a reward model (ability to evaluate responses)
+
+Evaluation Results
+●
+Ability to follow instructions
+○
+We have tested our models on 
+■
+Our internal instruction following test set (256 prompts from diverse sources)
+■
+AlpacaEval 2.0
+■
+MT-Bench
+
+Evaluation Results
+●
+Ability to follow instructions
+○
+We have tested our models on 
+■
+Our internal instruction following test set (256 prompts from diverse sources)
+Obtained by training the pre-trained LLAMA-70b using only seed IFT data
+Our self-reward model is continuously improved through iterative training.
+GPT-4 Evaluation
+Human Evaluation
+
+Evaluation Results
+●
+Ability to follow instructions
+○
+We have tested our models on 
+■
+Our internal instruction following test set (256 prompts from diverse sources)
+■
+AlpacaEval 2.0
+Through two self-rewarding training loops, we can almost match the performance of GPT-4 0314
+
+Evaluation Results
+●
+Ability to follow instructions
+○
+We have tested our models on 
+■
+Our internal instruction following test set (256 prompts from diverse sources)
+■
+AlpacaEval 2.0
+■
+MT-Bench
+●
+Scores are on a scale of 10
+Our self-reward model is continually improved in both types of tasks, but more in general writing tasks.
+
+
+Evaluation Results
+●
+Ability as a reward model
+○
+We tested our models on the OpenAssistant validation set
+
+Evaluation Results
+●
+Ability as a reward model
+○
+We tested our models on the OpenAssistant validation set
+■
+In particular, we use our self-rewarding models to assign score to each (instruction, 
+response) pair, and compare model judgements to human judgements
+
+Evaluation Results
+●
+Ability as a reward model
+○
+We tested our models on the OpenAssistant validation set
+■
+In particular, we use our self-rewarding models to assign score to each (instruction, 
+response) pair, and compare model judgements to human judgements
+Our self-reward model is continually improved in evaluation capabilities as well
+
+Limitations 
+One issue:
+●
+How can we make it improve more on reasoning tasks?
+
+Iterative reasoning preference optimization
+Richard, Weizhe, Cho, He, Sainaa, Jason 
+   Goal: use same self-rewarding type techniques, but for reasoning tasks..
+Start with base model & ﬁxed training set with labels.
+- Generate multiple CoTs + answers per train example with current model
+- Build preference pairs based on answer correct vs. not 
+- Train DPO + NLL term (for correct answers)
+Repeat steps with new model
+2024 (April)
+
+Key: extract the verifiable reward after "Final answer"
+
+
+
+Negative examples are crucial
+SFT assigns similar probability to chosen and rejected generations from DPO pairs
+DPO+NLL ﬁxes this, and beats SFT in task accuracy (73.1% on iteration 1 vs. 63.5%).
+
+OpenAI's 01 
+(exact method:unknown)
+2024 (September)
+
+2025 (Jan)
+& apply RL  (GRPO - Group Relative Policy Optimization)
+
+2025 (Jan)
+
+
+Thinking LLMs: General Instruction Following with Thought Generation
+   Trains LLMs to think & respond for *all* instruction following tasks, not just math
+- Introduces Thought Preference 
+Optimization (TPO)
+- Gives gains on AlpacaEval (beating 
+GPT-4 & Llama3-70b) & ArenaHard 
+🥉3rd on AlpacaEval leaderboard
+🏆 Best 8B model on ArenaHard
+Tianhao Wu, Janice Lan, Weizhe Yuan, Jiantao Jiao, Jason Weston, Sainbayar Sukhbaatar
+2024 (October)
+
+Thinking LLMs: General Instruction Following with Thought Generation
+   Trains LLMs to think & respond for *all* instruction following tasks, not just math
+Tianhao Wu, Janice Lan, Weizhe Yuan, Jiantao Jiao, Jason Weston, Sainbayar Sukhbaatar
+Initial CoT prompt doesn't give good performance – need lots of iterations to optimize CoT!
+
+Thinking LLMs: General Instruction Following with Thought Generation
+   Trains LLMs to think & respond for *all* instruction following tasks, not just math
+Tianhao Wu, Janice Lan, Weizhe Yuan, Jiantao Jiao, Jason Weston, Sainbayar Sukhbaatar
+
+Thinking LLMs: General Instruction Following with Thought Generation
+   Trains LLMs to think & respond for *all* instruction following tasks, not just math
+
+2025 (Jan)
+
+• Tianhao Wu, Weizhe Yuan, Olga Golovneva, Jing Xu, Yuandong Tian, Jiantao Jiao, Jason Weston, Sainbayar Sukhbaatar
+•   LLM improves its own judgments by (meta-)judging them 
+              
+Self-Rewarding focused on improving responses, not judgment capabilities
+-  Improvement rapidly saturated during iterative training
+Meta-Rewarding LLMs
+  Meta-Rewarding: LM is actor, judge & meta-judge
+- Meta-Judge is extra step to judge the judgments
+- Meta-Rewards add new training signal to train 
+judgments
+
+Recipe 󰠉: 
+Iterate 3 steps: 
+(1) Create Actor data: generate responses & self-rewards (judgments) with LM
+(2) Create Judge data: generate meta-rewards over judgments with LLM-as-a-Meta-Judge
+(3) Train DPO on preference pairs to both learn to act (1) AND to judge (2) 
+
+How does an LLM judge judgments? 
+We use LLM-as-a-Meta-Judge (see prompt)
+- Make N judgments for a given pair of 
+responses & calc pairwise meta-judgments
+- Compute Elo score of the judgments via 
+this matrix
+- Create LLM-as-a-judge preference 
+pairs via Elo scores
+
+We also control response length with a new LC method:  select the DPO chosen 
+that is shorter if two good responses have similar scores.
+Our method outperforms Self-Rewarding (with same LC method).
+
+We also control response length with a new LC method:  select the DPO chosen 
+that is shorter if two good responses have similar scores.
+Our method outperforms Self-Rewarding (with same LC method).
+
+Meta-rewarding also performs well compared to some production LLM models.
+
+Meta-Rewarding has higher agreement with a GPT-4 judge: its better judgments 
+can explain its improved performance at acting compared to Self-Rewarding.
+
+We can also push reasoning further 
+for the evaluation task.
+EvalPlanner – a method to train 
+o1/r1-like chain-of-thought (CoT) for 
+the evaluation / reward model task. 
+This "Thinking-LLM-as-a-Judge" learns 
+to generate planning & reasoning 
+CoTs for evaluation.
+
+By synthetically creating high & low quality responses to a prompt, evaluation 
+(which is better? A or B) can be converted to a *veriﬁable task*.
+
+
+Recipe for creating verifiable data 󰠉:
+- Generate good response y to prompt x with LLM
+- Generate similar prompt x', and good response to it y'
+Iterative training:
+- Generate judgments as reward: y should be preferred over y' 
+- Train Thinking-LLM-as-a-Judge with this data and reward
+
+How to make the similar (but different) prompt? 
+…ask the LLM to do it! 
+
+EvalPlanner thoughts with plans are important for performance:
+- Plans are superior to no thoughts
+- But for training, plans should be unconstrained, not encouraged to be e.g. lists of 
+criteria or veriﬁcation questions as in other works. Model should ﬁgure it out!
+
+SOTA performance on RewardBench across LLM-as-a-Judge models, despite 
+using only a Llama 3.1 70B base.
+
+EvalPlanner also performs very strongly on harder evaluation tasks with newer benchmarks
+
+Summary
+●
+Self-Rewarding models can train themselves to get better – path to superhuman AI?
+●
+Veriﬁable rewards help to train CoT for better reasoning (Iterative Reasoning Preference 
+Optimization, DeepSeek, O1) & evaluation ability (Thinking-LLM-as-judge).
+●
+Better judges (with CoT) can help train to think on non-veriﬁable tasks: Thinking LLMs.
+●
+Models can even improve at Meta-rewarding/reasoning (judging their judgements).
+
+Latent System 2 thoughts, not tokens? COCONUT (Hao et al., '24) 
+Future Work - a different CoT direction..
+
+  LGTM, but I would just add some more detail:
+- (Self-)Evaluation - bottlenecks performance->use more reasoning/compute. Related to "self-aware"
+- Learning from interaction (people+world/internet+itself).  Related to agents + synthetic data.
+- Improve "System 1" (better attention? world model? etc. Challenge: scalability?)
+What else comes next? (So much more exciting research to be done!)
+
+Thanks!!!

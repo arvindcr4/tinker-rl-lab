@@ -1,0 +1,289 @@
+{
+  "n_anchors": 12,
+  "H1_min_dim_rho_lt_0p65": {
+    "min_abs_rho": 0.5976774607365585,
+    "per_dim_rho": {
+      "t1_stereotype": 0.7684210526315788,
+      "t2_adversarial": 0.6912280701754384,
+      "t3_OOD": 0.6982456140350876,
+      "t4_demo_robustness": 0.5976774607365585,
+      "t5_ethics_fairness": 0.7754385964912279
+    },
+    "decisive": true
+  },
+  "H2_trust_rederives_row09_hardfloor": {
+    "row09_hard_floor": [
+      "Nemotron-120B",
+      "Qwen3-30B-MoE",
+      "Qwen3-32B",
+      "Qwen3-8B"
+    ],
+    "bottom4_trust": [
+      "Nemotron-120B",
+      "Qwen3-32B",
+      "Qwen3-8B",
+      "Qwen3.5-27B"
+    ],
+    "intersection": [
+      "Nemotron-120B",
+      "Qwen3-32B",
+      "Qwen3-8B"
+    ],
+    "jaccard": 0.6,
+    "decisive": true
+  },
+  "H3_dimension_specific_violation": {
+    "violators": [
+      {
+        "model": "Qwen3.5-27B",
+        "t1": 0.35742053510176075,
+        "capability": 0.4373
+      }
+    ],
+    "bottom3_T1": [
+      "Qwen3.5-27B",
+      "Qwen3-30B-MoE",
+      "Qwen3-32B"
+    ],
+    "decisive": true
+  },
+  "H4_residual_structure": {
+    "r2_trust_vs_capability": 0.9417405722248242,
+    "residual_std": 0.07316874401777683,
+    "decisive": true
+  },
+  "H5_per_dim_violator_divergence": {
+    "union_size": 5,
+    "union": [
+      "Nemotron-120B",
+      "Qwen3-30B-MoE",
+      "Qwen3-32B",
+      "Qwen3-8B",
+      "Qwen3.5-27B"
+    ],
+    "per_dim_bottom3": {
+      "t1_stereotype": [
+        "Qwen3.5-27B",
+        "Qwen3-30B-MoE",
+        "Qwen3-32B"
+      ],
+      "t2_adversarial": [
+        "Qwen3.5-27B",
+        "Nemotron-120B",
+        "Qwen3-30B-MoE"
+      ],
+      "t3_OOD": [
+        "Nemotron-120B",
+        "Qwen3.5-27B",
+        "Qwen3-8B"
+      ],
+      "t4_demo_robustness": [
+        "Nemotron-120B",
+        "Qwen3.5-27B",
+        "Qwen3-8B"
+      ],
+      "t5_ethics_fairness": [
+        "Qwen3.5-27B",
+        "Qwen3-30B-MoE",
+        "Nemotron-120B"
+      ]
+    },
+    "decisive": true
+  },
+  "n_decisive": 5,
+  "status": "prototyped",
+  "anchor_rows": [
+    {
+      "model": "Qwen3.5-4B",
+      "params_B": "4.0",
+      "family": "qwen",
+      "capability_r_mean": 0.8167,
+      "RQS": 0.7591,
+      "t1_stereotype": 0.954083506795641,
+      "t2_adversarial": 0.9537,
+      "t3_OOD": 0.85,
+      "t4_demo_robustness": 1.0,
+      "t5_ethics_fairness": 0.9558823529411765,
+      "trust_score": 0.9427331719473635,
+      "delta_late_early": 0.0375,
+      "delta_first_final": 0.0,
+      "zero_frac": 0.0
+    },
+    {
+      "model": "Qwen3-8B",
+      "params_B": "8.0",
+      "family": "qwen",
+      "capability_r_mean": 0.2854,
+      "RQS": 0.3534,
+      "t1_stereotype": 0.6496145760336369,
+      "t2_adversarial": 0.95392,
+      "t3_OOD": 0.55008,
+      "t4_demo_robustness": 0.9333,
+      "t5_ethics_fairness": 0.7088423502036068,
+      "trust_score": 0.7591513852474487,
+      "delta_late_early": 0.1,
+      "delta_first_final": 0.1875,
+      "zero_frac": 0.0667
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "params_B": "8.0",
+      "family": "llama",
+      "capability_r_mean": 0.8688,
+      "RQS": 0.6353,
+      "t1_stereotype": 0.9064226519337016,
+      "t2_adversarial": 0.9733,
+      "t3_OOD": 0.8438,
+      "t4_demo_robustness": 1.0,
+      "t5_ethics_fairness": 0.9122162162162162,
+      "trust_score": 0.9271477736299836,
+      "delta_late_early": -0.0813,
+      "delta_first_final": 0.0,
+      "zero_frac": 0.0
+    },
+    {
+      "model": "Qwen3-32B",
+      "params_B": "32.0",
+      "family": "qwen",
+      "capability_r_mean": 0.2497,
+      "RQS": 0.0,
+      "t1_stereotype": 0.6255506607929515,
+      "t2_adversarial": 0.975,
+      "t3_OOD": 0.7003205128205128,
+      "t4_demo_robustness": 1.0,
+      "t5_ethics_fairness": 0.7003205128205128,
+      "trust_score": 0.8002383372867954,
+      "delta_late_early": -0.0935,
+      "delta_first_final": 0.187,
+      "zero_frac": 0.0
+    },
+    {
+      "model": "Qwen3.5-27B",
+      "params_B": "27.0",
+      "family": "qwen",
+      "capability_r_mean": 0.4373,
+      "RQS": 0.639,
+      "t1_stereotype": 0.35742053510176075,
+      "t2_adversarial": 0.8646666666666667,
+      "t3_OOD": 0.5,
+      "t4_demo_robustness": 0.6667000000000001,
+      "t5_ethics_fairness": 0.5716463414634146,
+      "trust_score": 0.5920867086463685,
+      "delta_late_early": -0.281,
+      "delta_first_final": 0.562,
+      "zero_frac": 0.3333
+    },
+    {
+      "model": "gpt-oss-20B",
+      "params_B": "20.0",
+      "family": "gpt-oss",
+      "capability_r_mean": 0.8396,
+      "RQS": 0.7062,
+      "t1_stereotype": 0.9181753215817056,
+      "t2_adversarial": 0.9628,
+      "t3_OOD": 0.875,
+      "t4_demo_robustness": 1.0,
+      "t5_ethics_fairness": 0.9214857142857144,
+      "trust_score": 0.935492207173484,
+      "delta_late_early": 0.0687,
+      "delta_first_final": -0.375,
+      "zero_frac": 0.0
+    },
+    {
+      "model": "Qwen3-30B-MoE",
+      "params_B": "30.0",
+      "family": "qwen",
+      "capability_r_mean": 0.3252,
+      "RQS": 0.0,
+      "t1_stereotype": 0.5202952029520296,
+      "t2_adversarial": 0.9424,
+      "t3_OOD": 0.938,
+      "t4_demo_robustness": 1.0,
+      "t5_ethics_fairness": 0.6673773987206824,
+      "trust_score": 0.8136145203345424,
+      "delta_late_early": 0.156,
+      "delta_first_final": -0.25,
+      "zero_frac": 0.0
+    },
+    {
+      "model": "Qwen3-30B-MoE-Inst",
+      "params_B": "30.0",
+      "family": "qwen",
+      "capability_r_mean": 1.0,
+      "RQS": 0.0,
+      "t1_stereotype": 1.0,
+      "t2_adversarial": 1.0,
+      "t3_OOD": 1.0,
+      "t4_demo_robustness": 1.0,
+      "t5_ethics_fairness": 1.0,
+      "trust_score": 1.0,
+      "delta_late_early": 0.0,
+      "delta_first_final": 0.0,
+      "zero_frac": 0.0
+    },
+    {
+      "model": "DeepSeek-V3.1",
+      "params_B": "685.0",
+      "family": "deepseek",
+      "capability_r_mean": 0.8438,
+      "RQS": 0.5572,
+      "t1_stereotype": 0.9753496089120645,
+      "t2_adversarial": 0.9814,
+      "t3_OOD": 0.8125,
+      "t4_demo_robustness": 1.0,
+      "t5_ethics_fairness": 0.9750390015600624,
+      "trust_score": 0.9488577220944254,
+      "delta_late_early": -0.0208,
+      "delta_first_final": -0.125,
+      "zero_frac": 0.0
+    },
+    {
+      "model": "Nemotron-120B",
+      "params_B": "120.0",
+      "family": "nemotron",
+      "capability_r_mean": 0.175,
+      "RQS": 0.0,
+      "t1_stereotype": 0.6428571428571428,
+      "t2_adversarial": 0.9314285714285714,
+      "t3_OOD": 0.23805714285714288,
+      "t4_demo_robustness": 0.44999999999999996,
+      "t5_ethics_fairness": 0.699951992318771,
+      "trust_score": 0.5924589698923256,
+      "delta_late_early": 0.0625,
+      "delta_first_final": -0.5,
+      "zero_frac": 0.55
+    },
+    {
+      "model": "Qwen3-235B-MoE",
+      "params_B": "235.0",
+      "family": "qwen",
+      "capability_r_mean": 1.0,
+      "RQS": 0.0,
+      "t1_stereotype": 1.0,
+      "t2_adversarial": 1.0,
+      "t3_OOD": 1.0,
+      "t4_demo_robustness": 1.0,
+      "t5_ethics_fairness": 1.0,
+      "trust_score": 1.0,
+      "delta_late_early": 0.0,
+      "delta_first_final": 0.0,
+      "zero_frac": 0.0
+    },
+    {
+      "model": "Kimi-K2-Thinking",
+      "params_B": "1000.0",
+      "family": "kimi",
+      "capability_r_mean": 0.85,
+      "RQS": 0.6502,
+      "t1_stereotype": 0.7794117647058824,
+      "t2_adversarial": 0.9709,
+      "t3_OOD": 0.75,
+      "t4_demo_robustness": 1.0,
+      "t5_ethics_fairness": 0.8,
+      "trust_score": 0.8600623529411765,
+      "delta_late_early": -0.1875,
+      "delta_first_final": 0.25,
+      "zero_frac": 0.0
+    }
+  ]
+}

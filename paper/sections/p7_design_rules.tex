@@ -1,0 +1,61 @@
+% Pillar-7: controller design rules (when to escalate G, thresholds)
+\section{Controller Design Rules}
+\label{sec:p7-rules}
+The theory and the E3 audit jointly support a small set of design rules for
+group-size control. We state them as rules with their supporting evidence,
+in the spirit of engineering guidance rather than proven optima.
+
+\paragraph{Rule 1: gate on PCD, alarm on ZVF.} Escalate only when ZVF is
+high \emph{and} PCD indicates interior difficulty (PCD well above $0$, i.e.\
+a nontrivial fraction of groups carry contrast). High ZVF with PCD
+$\approx 0$ and high mean reward is mastery: escalating $G$ there buys
+improvements of only $O(\eps)$ per added rollout, since
+$h_G(p) \approx 1 - G\eps$ near the boundary
+(Appendix~\ref{sec:p7-appendix})---rollouts spent confirming what the policy
+already knows. High ZVF with PCD $\approx 0$ and near-zero mean reward is
+incapacity: no feasible $G$ rescues $p \approx 0$, and the correct
+intervention is the data (curriculum, decomposition), not the sampler.
+The U-shape of Table~\ref{tab:p7-ushape} is the population-scale picture of
+why this gate is mandatory; the micro-jitter result is why the alarm must be
+tie-based ZVF on the \emph{binary} sub-reward, computed before any dense
+shaping terms are added.
+
+\paragraph{Rule 2: escalate multiplicatively, in small steps.} T2 gives
+exponential returns in $G$ at interior $p$ (at $p = \nicefrac12$,
+$h_G = 2^{1-G}$, so each additional rollout halves the degenerate
+fraction), but linear cost. The audited schedule $4 \to 6 \to 8$ (steps of
+$\times 1.5$ and $\times 1.33$) captured most of the achievable ZVF
+reduction at $+55\%$ total rollouts; jumping straight to a large fixed $G$
+pays the overhead on every step including the healthy ones. The repo sweep
+(Table~\ref{tab:p7-gsweep}) makes the same point statically: $G{=}16$ costs
+$4\times$ the rollouts of $G{=}4$ for a ZVF drop from $0.76$ to $0.63$ and
+no held-out gain on a near-saturated task.
+
+\paragraph{Rule 3: trigger on spikes, not levels.} Pillar~2 established
+that ZVF is temporally sticky (lag-1 autocorrelation $\approx 0.94$) and
+drifts upward over training. A level threshold therefore fires either never
+or permanently. The \texttt{zvf-triage} callback triggers on upward
+\emph{spikes} relative to the run's own recent trajectory, which is what
+fired the $4 \to 6 \to 8$ escalations live in E3. Sticky drift toward high
+ZVF with rising reward is the expected saturation endgame, not an
+emergency.
+
+\paragraph{Rule 4: never compare controllers across stacks.} The
+backend-swap audit ($84.4\%$ vs $5.0\%$ with everything but the backend
+fixed) and the DAPO label flip (mean ZVF $0.58$ closed vs $0.00$ open under
+the same name) mean a controller evaluated on one stack has not been
+evaluated at all until the stack is reported. Controller comparisons should
+ship the 7-item minimum stack report of the companion papers---loss form,
+reference-policy/KL handling, sampler/backend/precision, per-step ZVF/GU
+trajectory, group-size schedule, held-out split, and
+decontamination/parser probes---with the group-size \emph{schedule} (item
+5) now carrying the controller's escalation log.
+
+\paragraph{Rule 5: treat ZVF $= 0$ as a purchase, not a prize.} Dynamic
+sampling demonstrates that perfect starvation telemetry is always available
+at $+45\%$ rollout cost. Whether to buy it is a compute-allocation
+decision, and on our task it was not the best use of the marginal rollout
+(Table~\ref{tab:p7-e3}). The controller framework makes the price explicit;
+we expect the trade to tip toward aggressive intervention on harder prompt
+populations, and flag that as the decisive open experiment
+(Section~\ref{sec:p7-limitations}).

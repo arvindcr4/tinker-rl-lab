@@ -7,7 +7,7 @@
 % efficiency is REDUCED from +0.480 (GR) to +0.160 (Dr.GR), delta=-0.320,
 % Cohen's d=-0.772 (medium-large).  Cross-task consistency: 2/2 tasks
 % have delta<0 (binomial p=0.250, n=2).  Dr.GR's CCF is genuinely less
-% bound to its cum_eff trajectory, closing the loop from iter120
+% bound to its cum_eff trajectory, closing the loop from the per-window severship evidence
 % (severship -> smaller |bwd|) and iter128 (Dr.GR Pareto-dominates the
 % run-level efficiency frontier).
 
@@ -16,10 +16,12 @@ drives Dr.GR's efficiency advantage}
 \label{sec:length-bias-iter132}
 
 \paragraph{Motivation.}
-Iter~\ref{sec:length-bias-iter120} established that
+The preceding per-window severship analysis showed that
 \emph{severship} (Dr.GR's per-prompt severity score on the original
-length) STRONGLY predicts smaller $|CCF^{GR}_{bwd}|$ -- pooled
-Spearman $\rho=+0.556$, $p<10^{-3}$ across $32$ points.
+length) predicts smaller $|CCF^{GR}_{bwd}|$ in the expected direction:
+Spearman $\rho=0.50$ on arithmetic ($n=20$, $p=0.025$) and
+$\rho=0.56$ on GSM8K-CoT ($n=12$, $p\approx0.06$). No pooled-32
+statistic is used here.
 Iter~\ref{sec:length-bias-iter128} then showed that Dr.GR
 \emph{Pareto-dominates} GR on the run-level $(\Delta L, \Delta R)$
 length-efficiency frontier, with arithmetic\_easy Cohen's $d=+3.62$.
@@ -27,8 +29,7 @@ What iter-128 did \emph{not} establish is the MECHANISM by which
 Dr.GR's CCF reduction yields its efficiency advantage.
 
 Iter-132 closes this loop with a within-run analysis at the
-per-window granularity $w\in\{0,1,2,3\}$ (the same windows as
-iter~\ref{sec:length-bias-iter108}):
+per-window granularity $w\in\{0,1,2,3\}$:
 
 \paragraph{Definition.}
 For each $(w)$ at the end of window $w$, define
@@ -98,8 +99,8 @@ the magnitudes are bounded by the small per-task $n$.
 
 \paragraph{Mechanistic reading.}
 \begin{enumerate}
-\item Iter-120: Dr.GR's severship strongly predicts smaller
-$|CCF^{GR}_{bwd}|$ across (seed, task, window).  Static mechanism.
+\item Per-window severship evidence: Dr.GR's severship predicts smaller
+$|CCF^{GR}_{bwd}|$ in the expected direction within each task.  Static mechanism.
 \item Iter-132 (this iter): in GR the residual $|CCF|$ is
 \emph{anti-decoupled} from the efficiency trajectory (rho $\approx +0.48$),
 while in Dr.GR the two are nearly orthogonal (rho $\approx +0.16$).

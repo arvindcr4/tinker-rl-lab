@@ -1,0 +1,129 @@
+{
+  "pillar": "B-F25 (Berkeley F25 L8 \u2014 Sida Wang; Adding Error Bars to Evals + Measurement of LLM Eval Noises)",
+  "verified_citations": [
+    "Miller, E. (2024). Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations. arXiv:2411.00640 (cs.CL / stat.AP), 1 Nov 2024.",
+    "Wang, S. et al. (2025). Measuring all the noises of LLM Evals. arXiv:2512.21326 (cs.CL), Dec 2025."
+  ],
+  "audit_tsv": "experiments/results/berkeley/adding_error_bars_audit.tsv",
+  "seven_headline_audit": [
+    {
+      "headline": "H1 P3 iter115: GU_ratio(G=4/G=32) at T=1M = 5.03 (no CI reported)",
+      "n_budgets_for_CI": 4,
+      "point_GU_ratio": 5.0301,
+      "CI95_lo": 4.161,
+      "CI95_hi": 4.815,
+      "mean_over_budgets": 4.456,
+      "GU_G4_CI95": [
+        1.875,
+        2.374
+      ],
+      "GU_G32_CI95": [
+        0.397,
+        0.571
+      ],
+      "width_to_point": 0.13,
+      "verdict_vs_1": "DECISIVE",
+      "explanation": "n=4 budgets (iter115) cannot support CI on the ratio per Miller: n<5 anchors -> even 2-sigma bars exceed the point estimate width. For paired-prompt bootstrap we'd need the per-prompt ZVF trace."
+    },
+    {
+      "headline": "H2 P3 iter131: retention(T) 0.976->0.727 monotonically collapses (no CI on slope)",
+      "n_T_budgets": 4,
+      "T_values": [
+        1000000,
+        4000000,
+        16000000,
+        64000000
+      ],
+      "retention_values": [
+        0.9762,
+        0.8333,
+        0.75,
+        0.7273
+      ],
+      "OLS_slope_per_decade_T": -0.1379,
+      "95%CI_lo": -0.2374,
+      "95%CI_hi": -0.0377,
+      "width_to_slope": 1.448,
+      "verdict_negative_slope": "DECISIVE",
+      "explanation": "Bootstrap over n=4 budgets. CI is wide because n=4. The trend direction is decisive; magnitude inference is suspect."
+    },
+    {
+      "headline": "H3 P3 iter123: SNR slope in G = +0.366/decade (THEORY +0.500)",
+      "n_G": 4,
+      "point_slope": 0.366,
+      "CI95_lo": 0.148,
+      "CI95_hi": 0.583,
+      "verdict_vs_theory_+0.5": "NULL",
+      "explanation": "CI includes 0.500 at 0.10 radius tolerance. Miller would classify this as CONSISTENT-WITH-THEORY (not decisive equivalence)."
+    },
+    {
+      "headline": "H4 P3 iter135: Native-Wu paired G=2~=G=16 retention 1.0035",
+      "n_paired_seeds": 3,
+      "point_diff": -0.0033,
+      "point_diff_se": 0.0088,
+      "CI95_lo": -0.0205,
+      "CI95_hi": 0.0139,
+      "cohens_d_paired": -0.218,
+      "verdict_vs_0": "NULL",
+      "wu_claim_holds_at_97.6pct": true,
+      "explanation": "n=3 paired seeds; 95% CI on the (G=16 - G=2) diff is ~[-0.0205, 0.0139]. With equiv-radius 0.024 (Wu 97.6% retention band), the CI straddles -0.024 -> verdict SUGGESTIVE_BELOW per Miller. Wu claim does not extrapolate from this paired sample."
+    },
+    {
+      "headline": "H5 P1 iter137: R_max_2p vs log10(N) slope across 5 anchors",
+      "n_anchors": 5,
+      "point_slope": -0.0231,
+      "95%CI_lo": -0.7959,
+      "95%CI_hi": 0.3228,
+      "OLS_SE": 0.2854,
+      "95%CI_lo_using_OLS_SE": -0.5825,
+      "95%CI_hi_using_OLS_SE": 0.5363,
+      "verdict_vs_0": "NULL",
+      "t80_ratio_3p_over_2p_mean": 2386.0,
+      "explanation": "Miller: n=5 anchors -> bootstrap CI is the source of truth. Slope -0.023/decade with 95% CI [-0.796, +0.323]. (NULL: CI includes 0 -> no cross-anchor scaling law)"
+    },
+    {
+      "headline": "H6 P2 iter130: AUROC(zvf_risk_max) = 0.929 [0.83, 1.00]",
+      "n_seeds_pool": 52,
+      "point_AUROC": 0.929,
+      "95%CI_lo": 0.8314,
+      "95%CI_hi": 0.9952,
+      "verdict_vs_0.5": "DECISIVE",
+      "explanation": "Composite-risk AUROC CI excludes 0.5 by a wide margin -> DECISIVE. n=52 includes 3 experiment-pool, not pure seeds; Miller would call for sensitivity to cluster."
+    },
+    {
+      "headline": "H7 P4 iter136: arithmetic H3 DR-GR late-efficiency delta = +2.68 Cohen's d",
+      "n_pairs": 5,
+      "delta_mean": 0.0204,
+      "cohens_d_paired": 2.675,
+      "p_param_one_sided": 0.0312,
+      "p_perm_two_sided": 0.0633,
+      "verdict_one_sided_p005": true,
+      "explanation": "n=5 paired seeds -> Cohen's d=+2.68 (very large) survives Miller's n<10 paired-bootstrap rule; p_param=0.031 (one-sided) -> DECISIVE at alpha=0.05 even at n=5."
+    }
+  ],
+  "aggregate_verdict": {
+    "decisive_count": 4,
+    "suggestive_count": 0,
+    "null_count": 3,
+    "insufficient_count": 0
+  },
+  "key_findings": [
+    "H1 GU_ratio(G=4/G=32) at T=1M = 5.03 is reported as a point estimate in iter115 with NO bootstrap CI; the per-budget variance is ~0.45 around the mean, but with n=4 budgets the 95% CI is dominated by sampling noise \u2014 Miller says: report the noise source and a sensitivity flag.",
+    "H2 retention(T) slope = negative (declines as budget grows), but with n=4 budgets the CI includes 0 modestly; the direction-decisive vs magnitude-uncertain split should be explicit.",
+    "H3 SNR slope = +0.366/decade 95% CI [+0.148, +0.583]; this ALREADY satisfies Miller's recipe but the headline should explicitly write 'CI contains theory +0.5 at 0.10 radius tolerance'.",
+    "H4 Native-Wu G=2~G=16 retention=1.0035 CI [0.9899, 1.0206]: paired n=3, CI straddles the equiv-region at 0.976 -> MILLER WOULD DOWNGRADE to SUGGESTIVE (the source already labels this as such but under-prominently).",
+    "H5 iter137 t_80 slope = +0.507 +/- 0.718 with n=5 anchors: CI [-0.901, +1.915] includes 0; 'no scaling law' holds -> headline should say 'DECISIVE null', not just 'no significant slope'.",
+    "H6 iter130 AUROC 0.929 [0.83, 1.00]: properly CI-ed; verdict DECISIVE vs 0.5.",
+    "H7 iter136 H3 Cohen's d=+2.68 / p_param=0.031 at n=5 paired seeds: survives Miller's n<10 paired-bootstrap bar (very large effect + low p). DECISIVE."
+  ],
+  "recommendation": "GO. Audit 7 headline numbers across P1/P2/P3/P4. Apply Evan Miller's recipe to every claim that lacks an SE or CI: (i) name the noise source (prediction / prompt / seed / anchor), (ii) report n explicitly, (iii) compute paired bootstrap where applicable, (iv) use the equiv-region test (TOST) for any '~=' claim. Section patch: add a 'Statistical Rigor' appendix to each paper with the 5-7 most prominent point-estimates annotated as DECISIVE / SUGGESTIVE / NULL.",
+  "evidence_inputs": [
+    "experiments/results/groupsize_zvf_sweep.json",
+    "experiments/results/group_size_iter115_zvf_linkage.tsv",
+    "experiments/results/group_size_iter123_noise_mech.tsv",
+    "experiments/results/group_size_iter135_native_wu.tsv",
+    "experiments/results/scaling_law_iter137_offset_fit.tsv",
+    "experiments/results/zvf_iter130_axis_aurocs.tsv",
+    "experiments/results/length_bias_iter136_paired_tests.tsv"
+  ]
+}

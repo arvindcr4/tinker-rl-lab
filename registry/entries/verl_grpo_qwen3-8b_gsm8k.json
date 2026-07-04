@@ -1,0 +1,65 @@
+{
+  "record_type": "stack",
+  "schema_version": "0.1.0",
+  "id": "verl_grpo_qwen3-8b_gsm8k",
+  "label_claimed": "grpo",
+  "framework": {
+    "name": "verl",
+    "version": "0.4.x",
+    "openness": "open"
+  },
+  "model": "Qwen/Qwen3-8B",
+  "task": "gsm8k",
+  "seeds": [
+    42
+  ],
+  "provenance": {
+    "source_artifacts": [
+      "experiments/framework_config_dumps/verl_qwen3_8b_gsm8k.yaml"
+    ],
+    "wandb": null,
+    "date_recorded": "2026-06-21"
+  },
+  "variant_deltas_applied": [],
+  "min_report": {
+    "loss_form": {
+      "importance_ratio_level": "token",
+      "clip_eps_low": null,
+      "clip_eps_high": null,
+      "length_normalization": null,
+      "advantage_normalization": null,
+      "token_mask": null
+    },
+    "reference_kl": {
+      "reference_policy": true,
+      "kl_beta": 0.04,
+      "kl_estimator": "low_var"
+    },
+    "sampler_backend": {
+      "backend": "vllm (sharded Ray reference placement)",
+      "precision": "bf16",
+      "temperature": 0.7,
+      "top_p": 0.95
+    },
+    "telemetry": {
+      "per_step_zvf": null,
+      "per_step_gu": null,
+      "source": null
+    },
+    "group_size_schedule": {
+      "initial_g": 8,
+      "schedule": "fixed",
+      "adaptation_rule": "none"
+    },
+    "heldout_split": {
+      "disjoint_from_reward_env": true,
+      "description": "GSM8K test split, disjoint from the train prompts that back the reward environment (benchmark protocol)"
+    },
+    "decontamination": {
+      "performed": null,
+      "parser_robustness_probe": null
+    }
+  },
+  "outcomes": null,
+  "notes": "Dry-run configuration only: the veRL launcher row in framework_comparison.json is a placeholder; no completed training telemetry."
+}

@@ -1,0 +1,479 @@
+Multi-Agent AI
+Noam Brown
+OpenAI
+
+Self Play
+
+The AlphaGo Analogy
+Step 1: Pretrain on high-quality human data
+Step 2: Enable large-scale inference compute
+Step 3: Recursive Self-Improvement (Self Play)
+
+Step 1: Pretrain on high-quality human data
+
+Step 2: Enable large-scale inference compute
+
+Step 3: Recursive Self-Improvement (Self Play)
+???
+
+Option 1: Someone who, over a large enough sample size, 
+wins head-to-head vs. any other player
+Option 2: Someone who makes more money playing poker 
+than anyone else
+Who is the better poker player?
+
+Option 1: Someone who, over a large enough sample size, 
+wins head-to-head vs. any other player
+Option 2: Someone who makes more money playing poker 
+than anyone else
+Who is the better poker player?
+Minimax Equilibrium
+Population Best Response
+
+Minimax Equilibrium
+Minimax Equilibrium: a set of 
+strategies in which no player can 
+improve by deviating
+In two-player zero-sum games, 
+playing a minimax equilibrium 
+ensures you will not lose in 
+expectation
+Exploitability: How much we’d 
+lose to a best response
+Round 1
+Round 2
+Round 3
+Us
+Best 
+Response
+Our Exploitability = 1
+
+Minimax Equilibrium
+Minimax Equilibrium: a set of 
+strategies in which no player can 
+improve by deviating
+In two-player zero-sum games, 
+playing a minimax equilibrium 
+ensures you will not lose in 
+expectation
+Exploitability: How much we’d 
+lose to a best response
+Round 1
+Round 2
+Round 3
+Us
+Best 
+Response
+Our Exploitability = 1
+
+Minimax Equilibrium
+Minimax Equilibrium: a set of 
+strategies in which no player can 
+improve by deviating
+In two-player zero-sum games, 
+playing a minimax equilibrium 
+ensures you will not lose in 
+expectation
+Exploitability: How much we’d 
+lose to a best response
+Critical assumption: Our strategy is common 
+knowledge, but the outcomes of random 
+processes are not common knowledge
+
+Minimax Equilibrium
+Minimax Equilibrium: a set of 
+strategies in which no player can 
+improve by deviating
+In two-player zero-sum games, 
+playing a minimax equilibrium 
+ensures you will not lose in 
+expectation
+Exploitability: How much we’d 
+lose to a best response
+Round 1
+Round 2
+Round 3
+Us
+Best 
+Response
+Our Exploitability = 0
+
+Minimax Equilibrium
+“Poker is simple, as your 
+opponents make mistakes, 
+you profit.”
+-Ryan Fee’s Poker Strategy Guide
+Round 1
+Round 2
+Round 3
+Us
+Best 
+Response
+Our Exploitability = 0
+
+Self-play in two-player zero-sum games
+▪In self-play, an agent gradually improves by playing 
+against copies of itself
+▪Initial strategy can be completely random
+▪In balanced two-player zero-sum games, sound self-play 
+provably converges to a minimax equilibrium
+▪Thus, given sufficient memory and compute, any finite 
+two-player zero-sum game can be “solved” via self-play
+
+Self-play in two-player zero-sum games
+▪In self-play, an agent gradually improves by playing 
+against copies of itself
+▪Initial strategy can be completely random
+▪In balanced two-player zero-sum games, sound self-play 
+provably converges to a minimax equilibrium
+▪Thus, given sufficient memory and compute, any finite 
+two-player zero-sum game can be “solved” via self-play
+
+Self-Play in 2p0sum Perfect-Info Games
+•Essentially just independent single-agent RL
+•If exploration > 0, will in theory converge to minimax
+
+Self-Play in 2p0sum Perfect-Info Games
+• Still may be vulnerable to adversarial 
+attacks
+• Neural net is limited in its ability to 
+approximate minimax
+• Finding an exploit is easier than 
+defending against exploits
+(especially in imperfect-info games!)
+Wang et al. ICML-23
+
+PPO in Rock-Paper-Scissors
+
+Why Imperfect-Information Games are Hard
+Rock-Paper-Scissors+
+ 
+Rock
+Scissors
+Scissors
+ 
+Rock
+Paper
+0
+-1
+2
+Scissors
+ 
+Rock
+Paper
+Scissors
+Rock
+Paper
+Paper
+ 
+ 
+ 
+1
+0
+-2
+-2
+2
+0
+ 
+
+Why Imperfect-Information Games are Hard
+Rock-Paper-Scissors+
+ 
+Rock
+Scissors
+Scissors
+ 
+Rock
+Paper
+0
+-1
+2
+Scissors
+ 
+Rock
+Paper
+Scissors
+Rock
+Paper
+Paper
+ 
+ 
+ 
+1
+0
+-2
+-2
+2
+0
+ 
+ 
+Rock
+Scissors
+Paper
+0
+0
+0
+ 
+
+Why Imperfect-Information Games are Hard
+Rock-Paper-Scissors+
+ 
+Rock
+Scissors
+Scissors
+ 
+Rock
+Paper
+0
+-1
+2
+Scissors
+ 
+Rock
+Paper
+Scissors
+Rock
+Paper
+Paper
+1
+0
+-2
+-2
+2
+0
+ 
+Rock
+Scissors
+Paper
+0
+0
+0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+Why Imperfect-Information Games are Hard
+Rock-Paper-Scissors+
+ 
+Rock
+Scissors
+Scissors
+ 
+Rock
+Paper
+0
+-1
+2
+Scissors
+ 
+Rock
+Paper
+Scissors
+Rock
+Paper
+Paper
+ 
+ 
+ 
+1
+0
+-2
+-2
+2
+0
+ 
+Rock
+Scissors
+Paper
+-1
+0
+2
+ 
+ 
+ 
+0
+0
+0
+ 
+ 
+
+Fictitious Play
+[G. W. Brown 1951]
+●Initialize strategies for all players arbitrarily
+●On each iteration, for each player:
+○Play a best response to the opponent’s average strategy over all iterations
+●The average strategy over all iterations converges to minimax
+●Rock Paper Scissors example:
+○Iteration 1: Players throw Rock (100% Rock)
+○Iteration 2: Players throw Paper (50% Rock, 50% Paper)
+○Iteration 3: Players throw Paper (33% Rock, 67% Paper)
+○Iteration 4: Players throw Scissors (25% Rock, 50% Paper, 25% Scissors)
+○…
+
+Regret Matching and Hedge
+●Fictitious Play always picks a best response to the opponent’s average
+●Regret Matching and Hedge pick regularized best responses instead
+ 
+
+Improving Regret Matching
+
+2017 Brains vs AI [Brown & Sandholm Science-17]
+•Libratus (our 2017 AI) against four of the best heads-up no-limit 
+Texas Hold’em poker pros
+•120,000 hands over 20 days in January 2017
+•$200,000 divided among the pros based on performance
+•Won with 99.98% statistical significance
+•Each human lost individually to Libratus
+
+2017 Brains vs AI [Brown & Sandholm Science-17]
+•120,000 hands of poker against a team of 
+pros trying to exploit the bot
+•Trained from self-play; no human data
+•No deep neural networks
+
+Limitations of FP / RM / Hedge
+•Poor performance in single-agent RL
+• First iteration is always random
+• Policy improvement is slower
+•Might require *many* iterations
+
+New last-iterate algorithms
+• Recent algorithms empirically converge to 
+minimax and perform well in single-agent RL
+• Regularized Nash Dynamics [Perolat et al. Science-22]
+• Magnetic Mirror Descent [Sokota et al. ICLR-23]
+• Similar to hedge but with additional 
+regularization to a “magnet” policy
+
+Aside: why haven’t we mentioned LLMs yet?
+●Theorem: In a two-player zero-sum minimax equilibrium, 
+“cheap talk” communication is useless
+●Proof intuition:
+○Every minimax equilibrium in a game results in a unique 
+value (v_1, -v_1) for players 1 and 2
+○A player 1 cheap talk action either increases v_1, 
+decreases v_1, or has no effect
+■If it increases v_1, then player 2 simply ignores it
+■If it decreases v_1, then player 1 should not say it
+
+What about non-two-player zero-sum games?
+Central Claim:
+Learning to cooperate with humans without using human data is a dead end
+
+Ultimatum Game
+• Alice is given $100
+• First, Alice offers $0 - $100 to Bob
+• Then, Bob must decide whether to accept or reject
+﹘If Bob accepts, then Alice and Bob keep their money
+﹘If Bob rejects, then Alice and Bob get nothing
+
+●A popular strategy game introduced in the 50s
+○7 players trying to conquer Europe in WW1
+○JFK and Kissinger’s favorite game
+●Each turn involves private natural language negotiation
+●Moves are done simultaneously
+●Alliances and trust-building are key!
+●Long considered a challenge problem for AI [1]
+○Research going back to the 80’s
+○Research picked up in 2019 with the rise of LLMs
+[1] Dafoe et al. “Cooperative AI: machines must learn to find common ground”. 
+Nature comment, 5/2021
+Diplomacy
+
+Support is key!
+1v1
+Fails
+2v1
+Succeeds
+2v1
+Succeeds
+
+DORA: No-press Diplomacy from Scratch [1]
+• DORA learns no-press Diplomacy through self-play
+﹘Similar to AlphaZero
+• Performance in 2-player no-press Diplomacy:
+﹘Win rate: 86.5% +- 6.1% vs human experts
+• Performance in 7-player no-press Diplomacy:
+[1] [Bakhtin, Wu, Lerer, Brown. NeurIPS 2021] 
+
+Option 1: Someone who, over a large enough sample 
+size, wins head-to-head vs. any other player
+Option 2: Someone who makes more money playing 
+poker than anyone else
+Who is the better poker player?
+Minimax Equilibrium
+Population Best Response
+
+Option 1: Someone who, over a large enough sample 
+size, wins head-to-head vs. any other player
+Option 2: Someone who makes more money playing 
+poker than anyone else
+Who is the better poker player?
+Minimax Equilibrium
+Population Best Response
+Not meaningful in general games!
+Requires data on the population 
+of players, i.e., human data
+
+Treat humans as part of the environment
+●Step 1: Collect a lot of human data and train an imitation model
+●Step 2: Scale inference-time compute to better model humans
+●Step 3: Scale RL with these human imitation models
+
+Results in No-Press Diplomacy
+[Bahktin et al. ICLR-2023 Best Paper Honorable Mention]
+Diplodocus placed 1st in a 200-game real human tournament. (50 
+games each bot).
+
+●We entered CICERO anonymously in an online natural 
+language Diplomacy league
+●CICERO placed in the top 10% of players, and 2nd of 
+19 players who played at least 5 games
+○Achieved more than 2x the average human score
+CICERO Plays with Humans
+
+Results in Hanabi
+[Hu et al. arXiv-22]
+
+Final Thoughts
+●Two-player zero-sum games are a special case
+●In general, AlphaGo-style self-play does not converge to an “optimal” policy
+●But I am optimistic about research on alternatives!
+
+Agent-Agent LLM Cooperation
+
+OpenAI o1
+
+OpenAI o1 → o3
+
+
+Multi-Agent AI: Latency
+●CoT is inherently serial
+○Latency eventually becomes a bottleneck
+●Other test-time scaling techniques are parallel
+○Best-of-N / consensus
+○Lower latency, but less compute-efficient
+
+Multi-Agent AI: Latency
+●CoT is inherently serial
+○Latency eventually becomes a bottleneck
+●Other test-time scaling techniques are parallel
+○Best-of-N / consensus
+○Lower latency, but less compute-efficient
+
+Multi-Agent AI: Diversity
+●Reasoning models can multiply
+large numbers, but why do that?
+●Diversity is a strength
+○Can use the best model for
+the particular query
+●“Routing” is already a form of
+multi-agent AI
+
+Multi-Agent Collaboration Scaffolds Today
+

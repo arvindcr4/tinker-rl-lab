@@ -39,11 +39,13 @@ AREAL            & 0.121    & 0.328  & 0/5 & 1/5 & 4/5 \\
 ES               & 0.114    & 0.316  & 0/5 & 1/5 & 4/5 \\
 \hline
 \end{tabular}
-\caption{Mean ZVF per library on the math-verifiable-RL suite
+\caption{Mean ZVF per library on the math-verifiable-RL suite simulation projection
 ($K{=}8$, 5 seeds each, 100 rollout steps). AERO halves the per-step
 zero-variance fraction relative to vanilla GRPO ($0.22$ vs $0.48$)
 and ties SCAFGRPO on last-10 accuracy ($0.399$ vs $0.409$).
-Source: \texttt{experiments/results/zvf_by_library.tsv}.}
+Source: \texttt{experiments/results/zvf_by_library.tsv}; rows derived from the
+variance-mitigation dry-run projection should be read as synthetic, not as
+independent real-library deployments.}
 \label{tab:zvf-by-library}
 \end{table}
 
@@ -70,25 +72,20 @@ variance-mitigation axis on a single math-verifiable task.
 \label{sec:zvf-residualised}
 The naive correlation between mean ZVF and last-10 accuracy
 ($r{=}0.22$ across pooled rows; bootstrap 95\% CI $[-0.29,0.94]$,
-$n{=}14$) is \emph{insignificant} once the tool-use collapse endpoints
+$n{=}23$) is \emph{insignificant} once the tool-use collapse endpoints
 are pooled with arithmetic runs --- mean reward already explains most
 of the axis. The cleaner question is whether ZVF carries
 \emph{residual} signal after regressing out mean reward.
 
-We fit, on the 14 pooled (experiment, model, group\_size) rows,
-\[
-\mathrm{last10\_avg} \;\sim\; \beta_0 + \beta_1\,\bar r + \beta_2\,\overline{\mathrm{ZVF}}
-\]
-and report $\beta_2$ in
-\texttt{experiments/results/zvf_summary.tsv} (column
-\texttt{mean_zvf}). The residual $\beta_2$ sign is \emph{negative} on every
-pooled subset that excludes the saturated tool-use rows, consistent
-with ZVF capturing the part of failure that mean reward does not:
-within arithmetic runs, a 0.1 rise in mean ZVF tracks a 0.04 drop in
-last-10 accuracy after mean-reward control. The full breakdown is in
-\texttt{experiments/results/zvf_failure_correlation.tsv}.
+The residual diagnostic that exists on disk gives the opposite caution:
+after regressing out mean reward, residualised ZVF remains \emph{positively}
+associated with last-10 accuracy within the variance-mitigation slice
+($r=+0.80$, 95\% CI $[+0.54,+1.00]$;
+\texttt{experiments/results/zvf\_iter26\_residual.tsv}). We therefore do
+not treat ZVF as an incremental predictor above reward mean; the full pooled
+correlation breakdown is in \texttt{experiments/results/zvf\_failure\_correlation.tsv}.
 
-\paragraph{Limit.} Residualised coefficient is computed on $n{=}14$
+\paragraph{Limit.} Residualised coefficients are computed on aggregated
 per-experiment rows; per-step rows are autocorrelated (lag-1
 $\rho \approx 0.9$) and were deliberately aggregated first.
 
@@ -100,10 +97,12 @@ Two consequences follow from the framing in
 \item \textbf{Symptom, not cause.} ZVF rises \emph{after} the reward
 plateau in every collapse we measured (Nemotron-120B, tool-use
 $0\%$, MCGRPO seed 0); it is not the proximal cause of collapse, but
-the earliest cheap diagnostic we have for it. The signal precedes
-the heldout-accuracy collapse by $5$--$15$ rollout steps on every
-trajectory (cross-validated lead-time reported in
-\texttt{experiments/results/zvf_leadtime_summary.tsv}).
+the earliest cheap diagnostic we have for it. On this corpus the first-passage
+lead is short: ZVF saturates above $0.8$ before the collapse flag trips, but
+only by $1$--$3$ steps in the trajectory-level lead-time artifacts
+(\texttt{experiments/results/zvf\_leadtime\_summary.tsv};
+\texttt{experiments/results/zvf\_dynamics\_leadtime.tsv}). We therefore treat
+late-phase ZVF level, not lead time, as the operational signal.
 \item \textbf{Stack-controlled confound.} AERO's halving of ZVF on our
 runtime (Table~\ref{tab:zvf-by-library}) is a real, same-stack
 measurement; we do \emph{not} claim it transfers to other RL

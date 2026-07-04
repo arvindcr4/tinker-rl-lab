@@ -1,0 +1,10 @@
+stat	value	n_or_loc
+n_anchors	5	
+sorted_R_max	0.1820;0.2854;0.8167;0.8438;0.8688	
+gaps	0.1034;0.5313;0.0271;0.0250	
+largest_gap	0.5313	1
+largest_gap_split_low_high	0.1820;0.2854|0.8167;0.8438;0.8688	
+dip_statistic	0.5216	
+dip_p_value	0.0558	5000
+cluster_capable	Qwen3.5-4B;Llama-3.1-8B-Instruct;DeepSeek-V3.1	
+cluster_incapable	Qwen3-8B;Nemotron-120B	

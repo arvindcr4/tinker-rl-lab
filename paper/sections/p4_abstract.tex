@@ -7,11 +7,13 @@ variant Dr.\,GRPO removes this per-response normalization. We study length bias 
 held-out generalization as one pillar of \ours{}, a benchmark of 70+ RL runs across
 seven libraries and five model families ($0.6$B--$\sim$671B) on GSM8K, HumanEval,
 and tool-use tasks. Our headline result is a carefully scoped negative one: in the
-regime we measure---short-horizon GSM8K chain-of-thought---the mean Qwen3-8B GRPO
+regime we measure---short-horizon GSM8K chain-of-thought with a 200-token
+generation cap---the mean Qwen3-8B GRPO
 gain over the pre-RL checkpoint on held-out data is small and not statistically
-significant, GRPO and Dr.\,GRPO produce statistically similar held-out gains, and
-neither inflates length (mean completion length drifts from $\approx 193$ to
-$\approx 188$ tokens). The verbosity-trap signature is absent. We argue this is the
+significant, GRPO and Dr.\,GRPO produce held-out gains that are indistinguishable
+at our seed budget, and neither inflates length within this capped regime (pooled
+mean completion length drifts from $194.4$ to $183.5$ tokens). The
+verbosity-trap signature is absent. We argue this is the
 \emph{expected} outcome when length is already controlled, not evidence against
 Dr.\,GRPO, and specify the length-confounded regime and causal mediation tests that
 would actually reveal a difference. We release code, logs, and checkpoints.

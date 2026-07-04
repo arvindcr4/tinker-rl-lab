@@ -1,0 +1,68 @@
+{
+  "record_type": "stack",
+  "schema_version": "0.1.0",
+  "id": "colab-open_grpo_e3",
+  "label_claimed": "grpo",
+  "framework": {
+    "name": "colab-open-trainer",
+    "version": "e3-audit",
+    "openness": "open"
+  },
+  "model": null,
+  "task": "synthetic-arithmetic (E3 audit)",
+  "seeds": null,
+  "provenance": {
+    "source_artifacts": [
+      "W&B zvf-colab-experiments / E3_open_audit"
+    ],
+    "wandb": "arvindcr4-pes-university/zvf-colab-experiments",
+    "date_recorded": "2026-06-21"
+  },
+  "variant_deltas_applied": [],
+  "min_report": {
+    "loss_form": {
+      "importance_ratio_level": "token",
+      "clip_eps_low": 0.2,
+      "clip_eps_high": 0.2,
+      "length_normalization": true,
+      "advantage_normalization": "std",
+      "token_mask": "completion-only"
+    },
+    "reference_kl": {
+      "reference_policy": false,
+      "kl_beta": 0.0,
+      "kl_estimator": "none"
+    },
+    "sampler_backend": {
+      "backend": "hf_transformers (single-process, open backward pass)",
+      "precision": null,
+      "temperature": 0.7,
+      "top_p": 0.95
+    },
+    "telemetry": {
+      "per_step_zvf": true,
+      "per_step_gu": true,
+      "source": "zvf-triage callback (live per-step ZVF/GU)"
+    },
+    "group_size_schedule": {
+      "initial_g": 4,
+      "schedule": "fixed",
+      "adaptation_rule": "none"
+    },
+    "heldout_split": {
+      "disjoint_from_reward_env": true,
+      "description": "held-out arithmetic prompts disjoint from the reward environment; held-out delta reported per arm"
+    },
+    "decontamination": {
+      "performed": false,
+      "parser_robustness_probe": false
+    }
+  },
+  "outcomes": {
+    "mean_last10_train_reward": null,
+    "mean_zvf": 0.25,
+    "heldout_delta": 0.5,
+    "rollouts": 120
+  },
+  "notes": "Single auditable reimplementation (open backward pass). Toy scale: directional evidence only."
+}

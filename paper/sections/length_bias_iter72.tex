@@ -1,7 +1,8 @@
 % Iter 72 — Pillar 4 (Length Bias / Dr.GRPO): Length-Shock Persistence
 % AR(1) decomposition of per-step ΔL trajectories; both algos are
 % anti-persistent on the steady-state window. Dr.GRPO reduces residual
-% variance by 30% after AR(1)+dR fit and shows significantly different
+% variance by 30% in point estimate after AR(1)+dR fit, with a CI that
+% includes no difference, and shows significantly different
 % lag-2 cross-correlation on GSM8K CoT (paired bootstrap p<0.001).
 
 \subsubsection{Length-shock persistence}\label{sec:lb-iter72}
@@ -22,7 +23,7 @@ length shocks carry forward (momentum); $\phi < 0$ means shocks
 immediately mean-revert (oscillate). The half-life
 $\tau = -\log 2 / \log \phi$ is well-defined only on the persistent side.
 
-\paragraph{GSM8K CoT headline: both algos are anti-persistent; Dr.GRPO halves the unexplained variance.}
+\paragraph{GSM8K CoT headline: both algos are anti-persistent; Dr.GRPO has a smaller unexplained-variance point estimate.}
 From \texttt{length\_bias\_iter72\_summary.tsv}, paired bootstrap
 ($B = 2000$, 3 seeds), tail window = 24 steps:
 \begin{itemize}
@@ -35,10 +36,11 @@ From \texttt{length\_bias\_iter72\_summary.tsv}, paired bootstrap
       the initial transient is removed.
 \item \textbf{Residual-variance ratio} $\sigma^{2,\mathrm{Dr}}_\varepsilon /
       \sigma^{2,\mathrm{GR}}_\varepsilon = 0.695$ (95\% CI on log scale
-      $[-0.823, +0.102]$; one-sided $p = 0.034$ for ratio $< 1$).
+      $[-0.823, +0.102]$).
       After accounting for $\Delta R_t$, $\Delta L_{t-1}$, and the
       intercept, Dr.GRPO's residual $\Delta L$ variance is
-      \textbf{30\% smaller} than GRPO's. Iter68's reversal-asymmetry
+      \textbf{30\% smaller} than GRPO's in point estimate, but the paired
+      CI includes a ratio of one. Iter68's reversal-asymmetry
       finding was a \emph{shape} claim; iter72 measures its
       continuous analogue and finds that the same clipping operation
       \emph{removes} unexplained noise, it does not \emph{add} it. The

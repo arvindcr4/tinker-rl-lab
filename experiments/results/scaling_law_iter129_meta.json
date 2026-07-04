@@ -1,0 +1,22 @@
+{
+  "iter": 129,
+  "pillar": "P1-ScalingLaws",
+  "n_anchors": 5,
+  "pieceswise_aic_wins": 0,
+  "pieceswise_aicc_wins": 0,
+  "pieceswise_F_wins": 0,
+  "n_total": 5,
+  "within_capable_n": 3,
+  "cap_slope_t_peak_vs_logN": 0.9453356956609521,
+  "cap_intercept_t_peak_vs_logN": 0.2987646459992037,
+  "cap_r2_t_peak_vs_logN": 0.9845835733215828,
+  "cap_r_t_peak_vs_logN": 0.99226184715601,
+  "cap_slope_gamma_vs_logN": -0.0007889991590004464,
+  "cap_r2_gamma_vs_logN": 0.17922826676732218,
+  "full_slope_t_peak_vs_logN": -0.7619191604796921,
+  "full_p_perm_t_peak_vs_logN": 0.9664033596640336,
+  "loocv_accuracy": 1.0,
+  "loocv_agree_count": 5,
+  "bf_log_bf_capability_minus_params": -9.526645317270177,
+  "frontier_synthesis": "iter129 Pillar 1 PIECEWISE SATURATE+COLLAPSE model -- the natural sequel to iter125's structural falsification.  F1 (data-resolution limit): piecewise model wins AICc in 0/5 anchors and the F-test (p<0.05) in 0/5 -- at n=20-30 traces the data are noise-dominated and even a structurally correct piecewise model fails to beat saturation by likelihood criteria.  This locks in iter117/121/'undetectable' verdict with a stronger statistical test: not just 'no slope detected', but 'no functional form -- monotone, piecewise, or otherwise -- reliably detectable at this sample size'.  F2 (within-capable, n=3 only): t_peak ~ log10(N) slope = 0.945, R^2 = 0.985; with n=3 this is necessarily close to perfect, so this is hypothesis-generating rather than confirmatory.  F3 (positive, LOOCV): cluster agreement = 1.00 (5/5) -- the iter125 capability bimodality is DESCRIPTIVELY robust to leave-one-out.  F4 (confirmatory): log BF (capability+params vs params alone) = -9.53 (Kass-Raftery: 'very strong' evidence for the simpler params-only model).  Implication: at n=5 anchors, the GRPO 'scaling law' is NOT identifiable in any parametric form, but the iter125 capability bimodality is descriptively stable -- so the iter121 'undetectable at n=5' verdict is robust to model generalization, while the iter125 'capability-not-size' claim survives leave-one-out."
+}

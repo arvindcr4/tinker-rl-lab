@@ -1,0 +1,72 @@
+% P8 experimental setup: honest description of the custom dataset + both arms
+\section{Experimental Setup}
+\label{sec:p8-setup}
+
+\paragraph{Dataset (custom, synthetic, single-configuration).}
+We are explicit up front: the benchmark is a \emph{custom synthetic dataset},
+not a public benchmark and not production data from any institution. It is
+generated with scikit-learn's \texttt{make\_classification}
+\citep{pedregosa2011sklearn} with a fixed seed (42): $50{,}000$ rows, $20$
+anonymized numeric features $V_1,\dots,V_{20}$ (10 informative, 2 redundant),
+two clusters per class, class separation $0.8$, $1\%$ label noise
+(\texttt{flip\_y}$=0.01$), and a $1\%$ positive (``fraud'') rate---the
+class-imbalance regime typical of card fraud \citep{dalpozzolo2018realistic}.
+The anonymized $V$-feature convention deliberately mirrors the PCA-transformed
+feature sets that single-institution card-fraud datasets expose after
+confidentiality processing; the reader should treat our data as a stylized
+stand-in for one institution's post-processing feature view, with none of the
+temporal drift, verification latency, or covariate shift of real transaction
+streams \citep{dalpozzolo2018realistic}. Four aggregate features are appended
+per row (mean, standard deviation, max, min of $V_1,\dots,V_{20}$), giving 24
+features total.
+
+\paragraph{Split and metric.}
+An 80/20 stratified train/test split (seed 42) yields $40{,}000$ training and
+$10{,}000$ test rows, with roughly $100$ positives in the test set. The primary
+metric is held-out ROC-AUC; F1, precision, and recall at the default threshold
+are logged alongside. Both arms consume \emph{identical} splits: the split
+files are written to disk once and the LLM arm is fine-tuned on a textual
+serialization of the same training rows.
+
+\paragraph{Scorer arm: XGBoost.}
+The tree baseline is a stock XGBoost classifier \citep{chen2016xgboost} with
+$200$ estimators, maximum depth $6$, learning rate $0.05$, subsample and
+column-subsample $0.8$, and \texttt{scale\_pos\_weight}$=7$ to counter the
+$99{:}1$ imbalance; the evaluation objective is AUC. No hyperparameter search
+was run beyond this single sensible configuration---the point of the baseline
+is what an ordinary, lightly tuned tree achieves, not a leaderboard entry. The
+full implementation is a single short script (\texttt{train\_xgboost.py},
+released with the paper) that also emits wall-clock training and per-10k-row
+inference times. One disclosure belongs here rather than in the limitations:
+the current quick artifact reports test AUC $0.7955$ for this XGBoost arm
+on $10{,}000$ held-out rows
+(\texttt{experiments/results/quick\_20260704/qp8\_fraud.tsv}). An older
+21~June~2026 internal record listed XGBoost at AUC $0.975$, but we could not
+reconstruct that environment and do not use that number as a reproducible
+headline result (\secref{sec:p8-limitations}).
+
+\paragraph{Challenger arm: fine-tuned LLM.}
+The current challenger is a Qwen3.5-4B SFT run fine-tuned on row-to-text
+serializations of the training split, in the style of TabLLM
+\citep{hegselmann2023tabllm}: each row is rendered as a feature-name/value
+string and the model is trained to emit a fraud/legitimate judgment. Because
+the natural-rate test set contains too few positives for a stable LLM AUC in
+the quick run, the evaluation uses a 500-row positive-enriched held-out subset
+with 20\% fraud, disjoint from training
+(\texttt{qp8-fraud-sft\_manifest.json}). The final quick artifact reports
+accuracy $0.792$ and AUC $0.48268$ (rounded to $0.4827$ in
+\texttt{qp8-fraud-sft.tsv}; summarized in \texttt{qp8\_fraud.tsv}). An older
+21~June~2026 internal record listed a fine-tuned LLM at AUC $0.948$, but no
+released artifact reproduces it, so we retain it only as historical provenance
+(\secref{sec:p8-limitations}).
+
+\paragraph{What this setup can and cannot support.}
+The synthetic generator gives us a clean, reproducible, shareable testbed with
+a known imbalance and noise level, and it suffices for the paper's actual
+claim: a comparison of \emph{roles} (who should hold the scorer seat, and what
+the LLM is uniquely positioned to do elsewhere in the pipeline). It cannot
+support absolute performance claims about production fraud systems, and no
+number in this paper should be quoted as an expected production AUC. Where we
+report operational quantities that depend on facts outside the dataset---
+analyst costs, latency envelopes---we scope them explicitly as internal
+estimates.

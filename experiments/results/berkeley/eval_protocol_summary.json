@@ -1,0 +1,34 @@
+{
+  "iter": 143,
+  "pillar": "B-F25",
+  "lectures": [
+    "F25 L5 Yehudai (Survey)",
+    "F25 L10 Barres+ (\u03c4\u00b2-Bench)"
+  ],
+  "data": "experiments/results/zvf_iter130_risk_index.tsv",
+  "n_methods": 9,
+  "n_seeds_per_method": 5,
+  "full_ranking": [
+    "scafgrpo",
+    "cppo",
+    "ngrpo",
+    "aero",
+    "mcgrpo",
+    "areal",
+    "es",
+    "gift",
+    "grpo"
+  ],
+  "mvsp_50": 1,
+  "mvsp_80": 1,
+  "mvsp_95": 1,
+  "n_methods_sign_stable_z": 8,
+  "n_methods_drift_dominant": 1,
+  "n_methods_mag_dominant": 8,
+  "n_methods_csd_dominant": 0,
+  "bucket_stability": {
+    "high_risk": 1.0,
+    "mid_risk": 1.0,
+    "low_risk": 1.0
+  }
+}

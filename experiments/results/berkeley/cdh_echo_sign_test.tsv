@@ -1,0 +1,2 @@
+hypothesis	n_total_cells	n_dr_smaller	n_gr_smaller	binom_p_two_sided_strict	binom_p_one_sided_signtest	predicted_direction	verdict
+H4_sign_test_pooled_8_cells	8	5	3	1.0	0.3633	Dr.GR smaller |ρ| (fixed normaliser decouples reward-length, learned would amplify)	NULL

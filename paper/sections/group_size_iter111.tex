@@ -9,7 +9,7 @@
 %          experiments/results/group_size_iter111_summary.tsv
 %          figures/group_size.pdf (refreshed)
 % =============================================================================
-\section{Iter 111 -- log-$G$ linear fit and best-$G$ scalability:
+\section{Iter 111 -- log-$G$ linear fit and reconstructed best-$G$ scalability:
 $G{=}32$ wins by 24\,pp at $T{=}64$\,M, optimal $G$ scales with budget}
 \label{sec:group-size-iter111}
 
@@ -48,7 +48,7 @@ This is the first place in the Pillar~3 record where the
 ``$G$ is just MC variance'' reading is rejected \emph{with the wrong
 sign}: at small $T$, larger $G$ actually costs accuracy.
 
-\paragraph{Finding 2 -- empirical best-$G$ scales with budget:
+\paragraph{Finding 2 -- reconstructed best-$G$ scales with budget:
 $G^* = 8\;\to\;16\;\to\;32\;\to\;32$.}
 \autoref{fig:groupsize-iter111} shows the per-budget maximum and the
 G=4 vs G=32 retention:
@@ -76,10 +76,10 @@ the four budgets, the bootstrap paired-$\Delta$ CIs
 at T{=}1M, 4M, 16M, 64M respectively, in agreement with iter~107's
 $10^4$-resample result.
 
-\paragraph{Finding 3 -- iso-accuracy budget shift: at
+\paragraph{Finding 3 -- extrapolated iso-accuracy budget shift: at
 $T{=}64\,$M, $G{=}4$ 's accuracy is reached by $G{=}32$ at only
 $5.6\%$ of the budget.}
-Mono-G interpolation on
+Mono-G interpolation on the reconstructed token-normalized grid
 $\mathrm{acc}(G{=}32, \log_{10}T)$ (\texttt{group\_size\_iter111\_iso\_acc.tsv})
 gives the smallest $T$ at which $G{=}32$ reaches $\mathrm{acc}_{G{=}4}(T)$,
 then expresses it as a ratio of the source $T$:
@@ -102,8 +102,8 @@ $G{=}4$ 's compute disadvantage grows super-linearly with accuracy
 target.
 
 \paragraph{Takeaway.}
-The Pillar~3 record now contains four independent sharpenings of the
-Wu et al.\ (2025) falsification on the same data: bootstrap
+The Pillar~3 record now contains four sharpenings of the
+Wu et al.\ (2025) extrapolation on the same reconstructed grid: bootstrap
 $\Delta$ (iter107, iter111), iso-accuracy compute penalty
 (iter107), per-budget log-$G$ linear slope with sign-inversion at
 $T{=}1\,$M (iter111), and empirical best-$G$ scalability
@@ -111,9 +111,10 @@ $T{=}1\,$M (iter111), and empirical best-$G$ scalability
 \emph{strictly local}: it applies near the small-budget, near-ceiling
 Wu regime where the contrastive pair cancellation dominates the GRPO
 update.  At the canonical training budget the operational claim
-``$G$ doesn't matter'' fails on every independent metric, and the
-optimal group size $G^*$ moves \emph{rightward} with budget -- a
-scaling law for $G$ that the contrastive reading cannot produce.
+``$G$ doesn't matter'' fails on every metric in the reconstructed grid, and
+the inferred group size $G^*$ moves \emph{rightward} with budget -- a
+scaling-law hypothesis for $G$ that still needs direct matched-budget
+measurement at $G{=}32$.
 
 \begin{figure}[ht]
   \centering

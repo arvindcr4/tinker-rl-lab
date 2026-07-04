@@ -1,0 +1,128 @@
+% Pillar-5 (MIN-REPORT-RL) appendix: worked stackdiff example
+\section{Worked Example: Two ``DAPO'' Manifests and Their Verdict}
+\label{app:p5-worked}
+This appendix instantiates the standard end-to-end on the two runs of
+Exhibit 2 (\secref{sec:p5-exhibit-label}): the same algorithm label, run on a
+closed training stack and on an open single-file trainer. Field values marked
+\texttt{"provider-internal"} illustrate the disclosure convention for closed
+stacks (\secref{sec:p5-conclusion}): a closed value is acceptable; an absent
+field is not.
+
+\subsection{Manifest A: ``DAPO'' on the Closed Tinker Stack}
+\label{app:p5-manifest-a}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize, frame=single,
+                   breaklines=true, columns=fullflexible]
+{
+  "minreport_version": "0.1",
+  "run_id": "tinker_gsm8k_dapo_s42",
+  "label_claimed": "DAPO",
+  "loss_form": {
+    "ratio_level": "token",
+    "clip": {"low": 0.20, "high": 0.28, "symmetric": false},
+    "token_mask": "response-only",
+    "advantage_norm": "group-mean-centered, std-normalized",
+    "dynamic_sampling": false,
+    "surrogate_note": "grpo + asymmetric clip; dynamic sampling not expressible on this stack"
+  },
+  "reference_policy": {
+    "type": "frozen-init",
+    "kl": {"coeff": 0.0, "estimator": "none"}
+  },
+  "sampler_backend": {
+    "trainer": "tinker (closed), accessed 2026-06",
+    "sampler": "provider-internal",
+    "precision": "provider-internal",
+    "decoding": {"temperature": 1.0, "top_p": 1.0, "max_new_tokens": 1024}
+  },
+  "zvf_gu_trace": {
+    "logged_per_step": true,
+    "artifact": "wandb://zvf-audit/tinker_gsm8k_dapo_s42/zvf_gu.jsonl",
+    "mean_zvf": 0.58
+  },
+  "group_size": {"G": 8, "schedule": "fixed"},
+  "heldout": {
+    "split": "gsm8k-test-500",
+    "disjoint_from_reward_env": true
+  },
+  "decontamination": {"performed": false, "parser_probe": "not-run"}
+}
+\end{lstlisting}
+
+\subsection{Manifest B: ``DAPO'' on an Open Single-File Trainer}
+\label{app:p5-manifest-b}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize, frame=single,
+                   breaklines=true, columns=fullflexible]
+{
+  "minreport_version": "0.1",
+  "run_id": "colab_e3_dapo_s0",
+  "label_claimed": "DAPO",
+  "loss_form": {
+    "ratio_level": "token",
+    "clip": {"low": 0.20, "high": 0.28, "symmetric": false},
+    "token_mask": "response-only",
+    "advantage_norm": "group-mean-centered, std-normalized",
+    "dynamic_sampling": true,
+    "surrogate_note": null
+  },
+  "reference_policy": {
+    "type": "frozen-init",
+    "kl": {"coeff": 0.0, "estimator": "none"}
+  },
+  "sampler_backend": {
+    "trainer": "open-colab-trainer @ git commit (single-file reimplementation)",
+    "sampler": "hf-generate",
+    "precision": "bf16",
+    "decoding": {"temperature": 1.0, "top_p": 1.0, "max_new_tokens": 1024}
+  },
+  "zvf_gu_trace": {
+    "logged_per_step": true,
+    "artifact": "wandb://zvf-colab-experiments/E3_open_audit/dapo/zvf_gu.jsonl",
+    "mean_zvf": 0.00,
+    "rollouts_total": 174
+  },
+  "group_size": {"G": 4, "schedule": "fixed (resampling via dynamic_sampling)"},
+  "heldout": {
+    "split": "gsm8k-heldout (disjoint prompt pool)",
+    "disjoint_from_reward_env": true
+  },
+  "decontamination": {
+    "performed": true,
+    "parser_probe": "micro-jitter eps ~ U(0, 1e-4): zvf-sensitive, pcd-invariant"
+  }
+}
+\end{lstlisting}
+
+\subsection{The Stackdiff Verdict}
+\label{app:p5-verdict}
+Running the differ on the two manifests:
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize, frame=single,
+                   breaklines=true, columns=fullflexible]
+$ grpo-stackdiff manifest_a.json manifest_b.json
+
+ITEM DIFF
+  1 loss_form.dynamic_sampling      false            != true          [V2]
+  1 loss_form.surrogate_note        "grpo+asym-clip" != null          [V2]
+  3 sampler_backend.trainer         tinker (closed)  != open-colab    [V1]
+  3 sampler_backend.precision       provider-internal!= bf16          [V1]
+  4 zvf_gu_trace.mean_zvf           0.58             != 0.00          [consequence]
+  5 group_size.G                    8                != 4             [V3]
+  7 decontamination.performed       false            != true          [V4]
+  7 decontamination.parser_probe    not-run          != micro-jitter  [V4]
+
+FLIP-RISK GRADE
+  R4 (label collision): same label_claimed "DAPO", divergent objective
+      semantics (dynamic_sampling). Additional R3 vectors present (V1, V3, V4).
+
+CI VERDICT: NOT-COMPARABLE
+  Do not report these runs as "DAPO vs DAPO". Qualified labels required:
+    manifest_a -> DAPO(clip-surrogate, no-dynamic-sampling)
+    manifest_b -> DAPO(dynamic-sampling)
+  A bridging run on a common stack is required before any algorithmic claim.
+\end{lstlisting}
+The diff makes Exhibit 2 mechanical: the telemetry inversion (mean ZVF $0.58$
+vs.\ $0.00$) is listed not as a difference to adjudicate but as a
+\emph{consequence} of the item-1 divergence, and the verdict line is exactly
+what a leaderboard CI job would gate on. Note also what the diff does
+\emph{not} say: it does not claim either run is wrong, or that the closed
+stack is inferior---only that the pair cannot support a label-level
+conclusion. That restraint is the entire content of the standard.

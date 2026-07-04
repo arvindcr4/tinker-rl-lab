@@ -1,0 +1,32 @@
+% =============================================================================
+% STANDALONE PAPER 6 of 7 -- Resource: GRPO-Registry, a machine-readable catalog
+% of group-relative RL stacks and variant deltas. The artifact this paper
+% describes lives at registry/ (schema.json + entries/*.json + query.py).
+% Reuses shared preamble/author/methods; all other sections are p6_*.
+% Build: pdflatex paper_P6_registry ; bibtex paper_P6_registry ; pdflatex x2
+% =============================================================================
+\documentclass{article}
+\input{sections/_shared_preamble}
+\title{GRPO-Registry: A Machine-Readable Catalog of\\
+       Group-Relative RL Stacks and Their Variant Deltas}
+\input{sections/_shared_author}
+\begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\input{sections/p6_abstract}
+\input{sections/p6_intro}
+\input{sections/_shared_methods}
+\input{sections/p6_results_intro}
+\input{sections/p6_schema}
+\input{sections/p6_population}
+\input{sections/p6_query_auditor}
+\input{sections/p6_worked_examples}
+\input{sections/p6_related_resources}
+\input{sections/p6_governance}
+\input{sections/p6_synthesis}
+\input{sections/p6_conclusion}
+\appendix
+\input{sections/p6_appendix_artifact}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

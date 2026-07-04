@@ -1,0 +1,2 @@
+test_id	description	expected	observed	verdict
+H5_eps0_identity	zvf_risk_max at eps=0 matches pre	abs_diff<=1e-6	0.0	True

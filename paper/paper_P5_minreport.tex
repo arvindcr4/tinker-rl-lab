@@ -1,0 +1,30 @@
+% =============================================================================
+% STANDALONE PAPER 5 of 7 -- Pillar 5: MIN-REPORT-RL position paper
+% "RL-for-LLM results are stack-conditioned -- report the stack, not the label."
+% Reuses shared preamble/author/methods; pulls the P5 section family.
+% Build: pdflatex paper_P5_minreport ; bibtex paper_P5_minreport ; pdflatex x2
+% =============================================================================
+\documentclass{article}
+\input{sections/_shared_preamble}
+\title{Report the Stack, Not the Label:\\
+       RL-for-LLM Results Are Stack-Conditioned}
+\input{sections/_shared_author}
+\begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\input{sections/p5_abstract}
+\input{sections/p5_intro}
+\input{sections/_shared_methods}
+\input{sections/p5_results_intro}
+\input{sections/p5_evidence}
+\input{sections/p5_stack}
+\input{sections/p5_threatmodel}
+\input{sections/p5_toolchain}
+\input{sections/p5_related}
+\input{sections/p5_limitations}
+\input{sections/p5_conclusion}
+\appendix
+\input{sections/p5_worked_example}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

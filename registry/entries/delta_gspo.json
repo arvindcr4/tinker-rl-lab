@@ -1,0 +1,25 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_gspo",
+  "name": "GSPO",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "qwen2025gspo",
+    "arxiv": "2507.18071",
+    "title": "Group Sequence Policy Optimization"
+  },
+  "deltas": [
+    {
+      "component": "sequence_level_ratio",
+      "field": "loss_form.importance_ratio_level",
+      "change": "importance ratio defined on sequence likelihood (length-normalized), not per token"
+    },
+    {
+      "component": "sequence_level_clip",
+      "field": "loss_form.clip",
+      "change": "clipping, rewarding and optimization applied at the sequence level"
+    }
+  ],
+  "notes": "Sequence-level importance ratio and clipping, per the source paper."
+}

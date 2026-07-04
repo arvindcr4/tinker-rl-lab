@@ -5,7 +5,7 @@ We evaluate ZVF along three axes: its association with training failure, its
 temporal behavior, and its coupling to nuisance variables. Pooling per-experiment
 means across the benchmark (using per-experiment rather than per-step rows, since
 per-step ZVF is autocorrelated), mean ZVF correlates with catastrophic collapse
-at Spearman $\rho \approx 0.56$--$0.62$ but with the final held-out accuracy at
+at Spearman $\rho = 0.56$ (Pearson point-biserial $0.62$) but with the final held-out accuracy at
 only $\rho \approx 0.27$. The gap is the crux of the pillar: ZVF flags when a run
 has stopped producing within-group signal, yet a low ZVF does not guarantee a
 large held-out gain, because a group can be information-rich and still fail to
@@ -15,7 +15,8 @@ The subsections that follow develop this picture. We first formalize ZVF and its
 measurement pipeline, then show it is a temporally sticky signal: across 60
 measured runs spanning nine variance-mitigation methods and the group-size sweep,
 late-phase ZVF ($0.87$--$0.97$ for GRPO) far exceeds early-phase ZVF
-($0.04$--$0.13$), with lag-1 autocorrelation $\approx 0.94$, consistent with a
+($0.04$--$0.13$ for variance-mitigation GRPO and the largest group size; smaller
+groups start at $0.25$--$0.61$), with lag-1 autocorrelation $\approx 0.94$, consistent with a
 signal-starvation trajectory rather than a property of the task. We connect ZVF to
 the gradient through the utilization identity $\mathrm{GU} = 1 - \mathrm{ZVF}$, and
 audit its coupling to reward sparsity, group size, and baseline accuracy so that

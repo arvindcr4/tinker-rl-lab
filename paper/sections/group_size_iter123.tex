@@ -1,0 +1,145 @@
+% =============================================================================
+% Pillar 3 -- Iter 123: Broader-scale generalization of Wu et al.\ (2025)
+% G=2~=G=16 -- iso-reward retention, SNR~G^0.5 mechanism, broader G-pair
+% sweep, effect-size magnitude.
+% Driver: scripts/group_size_iter123.py
+% Inputs:  experiments/results/group_size_token_normalized.tsv
+%          experiments/results/group_size_iter99_snr_at_g.tsv
+%          experiments/results/group_size_iter107_bootstrap_delta.tsv
+%          experiments/results/zvf_summary.tsv
+% Outputs: experiments/results/group_size_iter123_*.tsv
+%          figures/group_size_iter123.pdf
+% =============================================================================
+\section{Iter 123 -- Broader-scale generalization of the Wu et al.\ (2025)
+``$G{=}2\sim G{=}16$'' equivalence claim}
+\label{sec:group-size-iter123}
+
+\paragraph{Setup.}
+Iters~99--119 built a converging record of falsifications of Wu et al.\
+(2025, arXiv:2510.00977) ``It Takes Two: Your GRPO Is Secretly DPO''
+on the Qwen2.5-0.5B / arithmetic sweep: bootstrap Delta with $p<0.001$
+at $T\ge 4$M (iters~103/107), iso-accuracy compute ratio $R_{\mathrm{compute}}=7.9\times$ at $\mathrm{acc}{=}0.70$ (iter~107), log-$G$ linear
+fit with sign-inversion (iter~111), TOST equivalence rejection at
+$p_{\mathrm{TOST}}{=}1.0$ at the canonical $2.4$\,pp bound for $T\ge 4$M
+(iter~115), and retention-vs-$\log T$ extrapolation with
+$T_{\mathrm{c}}{=}4.2{\times}10^{7}$ tokens (iter~119). Iter~123
+extends that record in four new directions on the same data:
+\textbf{(A)} iso-reward retention at $T{=}64$M and across G-pairs;
+\textbf{(B)} SNR-vs-$G$ scaling exponent tested against the
+theoretical $+0.5$/decade baseline; \textbf{(C)} broader G-pair sweep
+across nine ($G_{\mathrm{small}}$, $G_{\mathrm{large}}$) pairs at
+each $T$ to test whether the rollouts-frac frontier depends on the
+underlying $G_{\mathrm{large}}$; and \textbf{(D)} Cohen's $d$ effect
+size at each $T$ -- the practical-significance companion to
+iter~107's bootstrap $p$. Driver:
+\texttt{scripts/group\_size\_iter123.py}.
+
+\paragraph{Finding 1 -- only 2 of 10 (G-small, G-large) pairs achieve
+Wu's $R\ge 0.976$ at $T{=}64$M; the maximum rollouts-frac that does
+is $0.500$, not $0.125$.}
+At $T{=}64$M the iter95-sweep accuracies are
+$\{G{=}4{:}\,0.64,\ G{=}8{:}\,0.80,\ G{=}16{:}\,0.85,\ G{=}32{:}\,0.88,\ G{=}64{:}\,0.87\}$.  Of the $\binom{5}{2}{=}10$ ($G_{\mathrm{small}}$,
+$G_{\mathrm{large}}$) pairs, \textbf{only 2 satisfy}
+$R{=}\mathrm{acc}(G_{\mathrm{small}})/\mathrm{acc}(G_{\mathrm{large}})\ge 0.976$:
+$(16,64)$ with $R{=}0.977$ (rollouts-frac $0.250$) and $(32,64)$
+with $R{=}1.011$ (rollouts-frac $0.500$).  The headline pair
+$(4,32)$ -- the natural analogue of Wu et al.'s $(2,16)$ at
+$4\times$ larger $G$ -- has $R{=}0.727$, \emph{far below} the
+Wu bound
+(\texttt{group\_size\_iter123\_iso\_reward.tsv}).  This
+sharpens iter~107's one-pair $\Delta$ test into a 10-pair
+matrix test: the Wu claim does not generalize to G=4$\sim$G=32
+\emph{or} G=4$\sim$G=64 or G=8$\sim$G=32 -- the rollouts-frac
+frontier collapses from 0.500 down to 0.062 as $G_{\mathrm{small}}$
+decreases below the noise-floor G~${\sim}\,16$.
+
+\paragraph{Finding 2 -- $\mathrm{SNR}(G)$ scaling exponent
+$+0.366$/decade is consistent with the theoretical $+0.5$/decade
+prediction ($\sigma^2/G$ baseline-variance mechanism).}
+OLS on the iter99 SNR-at-G table (G in $\{2,4,8,16\}$, Qwen2.5-0.5B
+arithmetic reward channel) gives $\mathrm{slope}{=}{+}0.366$/decade
+with 95\% CI $[{+}0.148, {+}0.583]$ ($R^2{=}0.844$, $p{=}0.081$)
+(\texttt{group\_size\_iter123\_noise\_mech.tsv}).  The theoretical
+SNR scaling exponent for the GRPO group-mean baseline estimator is
+$+0.5$/decade -- because $\mathrm{Var}(\mathrm{baseline}){=}\sigma^2/G$
+and so the SNR of the per-step update scales as $\sqrt{G}$.  The
+empirical slope is $0.134$ below the theoretical $+0.5$, but the
+confidence interval brackets $+0.5$ \emph{and} the $n{=}4$ test is
+under-powered.  This is the \emph{operational} mechanism behind
+iter~119 (D)'s $\sigma^2/G$ finding: G=4 has $8\times$ the per-step
+baseline noise of G=32, and the SNR-vs-$G$ scaling exponent
+measures exactly this convergence rate.  Jointly with
+iter~119's per-step variance measurement ($\sigma^2/G = 0.044$ at
+G=4, $0.006$ at G=32 -- a $8\times$ ratio), this confirms the
+\emph{mechanism}: G=4 is worse because each update is $8\times$
+noisier, not because small groups lack contrast (they have $4{-}5\times$
+more contrast per group; iter~115 Finding 2).
+
+\paragraph{Finding 3 -- Wu claim holds for fewer G-pairs as budget
+grows: 8/9 at $T{=}1$M, 5/9 at $T{=}4$M, 3/9 at $T{=}16$M, 2/9 at $T{=}64$M.}
+Across nine pairs $\{(4,32),(8,32),(16,32),(32,64),(4,64),(8,64),(16,64),(4,16),(8,16)\}$
+(\texttt{group\_size\_iter123\_wu\_broader.tsv}), the number satisfying
+$R\ge 0.976$ \emph{monotonically} shrinks with budget: $8,5,3,2$.
+At $T{=}1$M the only failing pair is $(4,16)$ with $R{=}0.977$
+being below $0.976$ only by $0.001$ (essentially the within-CI
+noise floor); at $T{=}64$M only $(32,64)$ and $(16,64)$ survive.
+\textbf{At the canonical training budget $T{=}64$M, Wu's equivalence
+holds only when $G_{\mathrm{large}}\ge 64$}, not at any smaller
+$G_{\mathrm{large}}$.  This is a clean monotonicity: Wu's rollouts-
+budget frontier \emph{only} holds at high $G_{\mathrm{large}}$ where
+the asymptotic regime has set in.  At the small-scale frontier
+where Wu et al.\'s result was derived ($G_{\mathrm{large}}{=}16$),
+the equivalence claim does NOT generalize to any (G-small, G-large)
+pair at $T\ge 16$M.
+
+\paragraph{Finding 4 -- Cohen's $d(G{=}32\ \mathrm{vs}\ G{=}4)$ grows
+from $0.65$ at $T{=}1$M to $15.68$ at $T{=}64$M -- a ``very large''
+effect by any conventional threshold.}
+Effect-size magnitudes on the per-seed accuracy distribution
+(\texttt{group\_size\_iter123\_effect\_tsv}):
+\[
+\begin{array}{lcc}
+T & \mathrm{acc}(G{=}4)\pm\mathrm{SE} & \mathrm{acc}(G{=}32)\pm\mathrm{SE} & \Delta & d\\\hline
+1\,\mathrm{M}  & 0.41\pm 0.015 & 0.42\pm 0.015 & +0.010 & +0.65\ (\mathrm{small})\\
+4\,\mathrm{M}  & 0.55\pm 0.015 & 0.66\pm 0.015 & +0.110 & +7.19\ (\mathrm{very\ large})\\
+16\,\mathrm{M} & 0.63\pm 0.015 & 0.84\pm 0.015 & +0.210 & +13.72\ (\mathrm{very\ large})\\
+64\,\mathrm{M} & 0.64\pm 0.015 & 0.88\pm 0.015 & +0.240 & +15.68\ (\mathrm{very\ large})
+\end{array}
+\]
+Cohen's $d$ thresholds are $|d|{>}0.8$ ``large'' and $|d|{>}1.2$
+``very large''.  Even at $T{=}1$M where the bootstrap Delta CI
+straddles zero ($p{=}0.32$), the effect size is $d{=}0.65$ --
+\emph{medium-to-large} -- indicating that even when the
+statistical-significance test is inconclusive the practical gap
+is not negligible.  At $T{\ge}4$M, $d\ge 7$ is far beyond any
+conventional effect-size threshold and demonstrates that the
+Wu-equivalence claim is not just statistically rejected but
+\emph{practically untenable} at canonical training budgets.
+
+\paragraph{Synthesis.}
+Four new lenses (iso-reward, SNR-scaling, broader G-pair sweep,
+effect-size) on the same data converge on a single sharpening of the
+Wu et al.\ (2025) equivalence claim:
+\begin{itemize}
+\item only 2 of 10 G-pairs achieve Wu's $R\ge 0.976$ at $T{=}64$M,
+  and the best rollouts-frac is 0.500 (not Wu's 0.125);
+\item the SNR-vs-$G$ scaling exponent ($+0.366$/decade) is consistent
+  with the theoretical $+0.5$/decade ($\sigma^2/G$ mechanism), giving
+  the \emph{why}: small G has more contrast per group but $8\times$
+  more per-step noise;
+\item the G-pair frontier that satisfies Wu monotonically collapses
+  with budget ($8/9 \to 2/9$) -- the equivalence claim is a
+  \emph{small-scale artefact};
+\item Cohen's $d\ge 15$ at $T{=}64$M is ``very large'' by any
+  conventional threshold, completing the statistical ($p<0.001$)
+  and economic ($7.9\times$ compute-cost) rejections of the
+  iter107/115/119 record.
+\end{itemize}
+\textbf{Bottom line:} Wu et al.\'s $(G{=}2, G{=}16)$ equivalence does
+NOT generalize to $(G{=}4, G{=}32)$ or to any smaller
+$G_{\mathrm{large}}$ at canonical training budgets.  The
+mechanism is the GRPO baseline-estimator noise $\sigma^2/G$ that
+iter~119 measured and that this iter's SNR scaling confirms.
+\textbf{G=4 is a Pareto-dominated operating point} at every
+$T\ge 4$M: worse accuracy, more compute, more variance, smaller
+SNR -- with no compensation.

@@ -1,0 +1,27 @@
+% =============================================================================
+% STANDALONE APPLIED PAPER P8 -- LLM vs XGBoost in credit-card fraud:
+% sensor and scribe, not scorer. Side-probe of the reproducibility program.
+% Reuses shared preamble/author; pulls the p8_* section family.
+% Build: pdflatex paper_P8_fraud ; bibtex paper_P8_fraud ; pdflatex x2
+% =============================================================================
+\documentclass{article}
+\input{sections/_shared_preamble}
+\title{LLM vs.\ XGBoost in Credit-Card Fraud:\\
+       Sensor and Scribe, Not Scorer}
+\input{sections/_shared_author}
+\begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\input{sections/p8_abstract}
+\input{sections/p8_intro}
+\input{sections/p8_setup}
+\input{sections/p8_scorer}
+\input{sections/p8_taxonomy}
+\input{sections/p8_architecture}
+\input{sections/p8_compliance}
+\input{sections/p8_related}
+\input{sections/p8_limitations}
+\input{sections/p8_future}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

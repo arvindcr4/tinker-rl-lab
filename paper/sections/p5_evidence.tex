@@ -1,0 +1,89 @@
+% Pillar-5 (MIN-REPORT-RL) evidence exhibits
+\section{Evidence: The Stack Moves More Than the Label}
+\label{sec:p5-evidence}
+
+\subsection{Exhibit 1: A 17$\times$ Flip from Swapping Only the Backend}
+\label{sec:p5-exhibit-backend}
+In a backend-swap audit (Stratum B), we held the model, group size $G$, learning
+rate, dataset, prompt template, and random seed fixed, and exchanged only the
+training backend. Final reward moved from $5.0\%$ on one backend to $84.4\%$ on
+the other---a $17\times$ ratio produced by zero algorithmic changes. Nothing in
+the run's algorithm label, hyperparameter table, or seed disclosure would let a
+reader anticipate this; the difference lives entirely in the substrate
+(sampling engine, numerics/precision, loss implementation details, and masking
+conventions). For calibration, this single infrastructure swing is an order of
+magnitude larger than any label-vs-label gap we measured
+(\secref{sec:p5-exhibit-h2h}), and is consistent with the broader observation
+that seemingly minor evaluation and serving details shift LLM results by
+margins that would be headline findings if attributed to algorithms
+\citep{biderman2024lessons, hochlehnert2025sober}.
+
+\subsection{Exhibit 2: The Same Label Denotes Different Experiments}
+\label{sec:p5-exhibit-label}
+DAPO~\citep{yu2025dapo} is defined by decoupled (asymmetric) clipping
+\emph{plus} dynamic sampling: groups whose completions are all-correct or
+all-incorrect are resampled, which by construction drives the Zero-Variance
+Fraction (the share of groups with identical within-group rewards; see the
+companion Pillar-2 paper of \ours{}) toward zero. In our cross-stack audit
+(Stratum B), ``DAPO'' run on an open Colab trainer with true dynamic sampling
+produced mean ZVF $0.00$, exactly as the algorithm's definition requires. The
+same label run on a closed training stack---where dynamic sampling is not
+expressible and the practitioner substitutes the standard surrogate of GRPO
+with asymmetric clipping---produced mean ZVF $0.58$. Same label, opposite
+telemetry: one run never wastes a group, the other spends more than half its
+groups on zero-gradient updates. Any downstream comparison citing both runs as
+``DAPO'' is comparing two different objects. This is not an indictment of
+either stack; it is an indictment of the label as an experimental
+specification.
+
+\subsection{Exhibit 3: Four Labels Within Noise on One Fixed Stack}
+\label{sec:p5-exhibit-h2h}
+Conversely, when the stack \emph{is} held fixed, labels stop separating. In a
+12-cell head-to-head on the Tinker stack (Qwen3.5-4B, GSM8K, three seeds per
+arm; Stratum B), the four labeled arms landed within noise of one another
+(\tableref{tab:p5-h2h}): the full spread in mean last-10 training reward is
+$0.034$ ($0.710$--$0.744$), comparable to seed-level variation under the
+\ours{} seed policy (\secref{sec:setup}). Mean ZVF varies somewhat more
+($0.500$--$0.578$) but with no arm approaching the ZVF~$0.00$ that true dynamic
+sampling produces (Exhibit 2)---consistent with all four arms being, at this
+stack's level of description, minor variations of one group-relative loss. The
+juxtaposition of Exhibits 1--3 is the core of our position: a factor the field
+reports meticulously (the label) moved outcomes by $\leq 0.034$ reward on a
+fixed stack, while a factor the field routinely omits (the backend) moved
+outcomes by $0.794$.
+
+\begin{table}[t]
+\centering
+\caption{12-cell head-to-head on one fixed stack (Tinker; Qwen3.5-4B; GSM8K;
+3 seeds per arm; internal program records, June 2026). Arms are within noise
+of one another on final reward; no arm reaches the ZVF regime that the same
+labels produce on stacks where their defining mechanisms are actually
+expressible.}
+\label{tab:p5-h2h}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Arm (label as configured) & Mean last-10 reward & Mean ZVF \\
+\midrule
+dapo (asymmetric-clip surrogate) & 0.744 & 0.578 \\
+drgrpo                           & 0.742 & 0.500 \\
+grpo                             & 0.723 & 0.567 \\
+gspo                             & 0.710 & 0.511 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Exhibit 4: Cross-Library Variation in the Benchmark Itself}
+\label{sec:p5-exhibit-library}
+The pattern is not unique to our audits. Within \ours{} (Stratum A), the
+companion Pillar-2 paper documents per-library ZVF aggregations across the
+GRPO-family implementations of the benchmark roster
+(\tableref{tab:implementations}), with collapse, drift, and plateau rates that
+vary by library under matched task and model settings; the released
+matched-configuration dumps (one exact hyperparameter dump per framework for
+the canonical Qwen3-8B\,+\,GSM8K run) exist precisely because ``the same
+configuration'' across frameworks required a nontrivial mapping exercise to
+even define. The same-stack PPO-vs-GRPO isolation runs in the benchmark make
+the complementary point: once the stack is pinned, algorithm effects can be
+measured cleanly---which is the outcome our reporting standard is designed to
+make routine rather than exceptional.

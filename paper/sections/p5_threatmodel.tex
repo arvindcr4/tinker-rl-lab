@@ -1,0 +1,76 @@
+% Pillar-5 (MIN-REPORT-RL) threat model: confound vectors + flip-risk grades
+\section{The RL-Reproducibility Threat Model}
+\label{sec:p5-threat}
+Security engineering made progress on reproducible claims by naming the ways a
+claim can fail. We do the same. The \emph{threat} is a ranking flip: a
+published comparison (``A beats B'') that inverts or dissolves when the
+undisclosed parts of the stack change. The \emph{adversary} need not be
+malicious; the ordinary incentive gradient---publish the configuration that
+worked---produces the same selection effects that motivated expected-validation
+reporting in NLP \citep{dodge2019show} and environment-and-seed audits in deep
+RL \citep{henderson2018deep}.
+
+\subsection{Confound Vectors}
+\label{sec:p5-vectors}
+A confound vector is a class of undisclosed stack variation capable of
+carrying a flip. Our taxonomy has five, each anchored to documented evidence:
+\begin{description}[leftmargin=1.5em, itemsep=2pt, topsep=2pt]
+\item[V1 --- Numerics and serving.] Backend, sampling engine, kernels,
+precision, decoding parameters. Documented magnitude: $17\times$
+(\secref{sec:p5-exhibit-backend}). The dominant vector in our corpus.
+\item[V2 --- Objective semantics under a shared label.] Loss-form divergence
+hidden by a common name: clip asymmetry, dynamic sampling, normalization,
+ratio level. Documented magnitude: qualitative telemetry inversion (mean ZVF
+$0.00$ vs.\ $0.58$; \secref{sec:p5-exhibit-label}).
+\item[V3 --- Signal geometry.] Group size and its schedule, advantage
+normalization, and the accuracy regime relative to the ZVF U-shape.
+Documented magnitude: mean ZVF $0.33 \to 0.08$ moving $G$ from 4 to 16 on
+Qwen3-32B (\tableref{tab:p5-gsize}); regime aliasing per
+\tableref{tab:p5-ushape}.
+\item[V4 --- Environment and data.] Contamination of the training or
+evaluation pool and parser/verifier idiosyncrasies. Documented magnitude:
+contamination-driven score inflation \citep{zhang2024gsm1k,
+riddell2024contamination}; sub-resolution reward jitter zeroing a telemetry
+channel (\secref{sec:p5-item7}).
+\item[V5 --- Evaluation protocol.] Held-out split identity, prompt template,
+answer extraction. Documented magnitude: protocol-level variance large enough
+to reorder leaderboards in independent audits \citep{biderman2024lessons,
+hochlehnert2025sober, zhang2024benchvariance}.
+\end{description}
+
+\subsection{Flip-Risk Grades R0--R5}
+\label{sec:p5-grades}
+Given two runs' manifests (\secref{sec:p5-toolchain}), we grade the risk that
+a comparison between them is confounded. The grade is determined by the most
+severe difference found across the seven items of
+\tableref{tab:p5-minreport}.
+\begin{description}[leftmargin=1.5em, itemsep=2pt, topsep=2pt]
+\item[R0 --- Replicate.] All seven items identical; runs differ at most in
+hardware instance. Comparison measures noise floor.
+\item[R1 --- Seed-only.] Items identical; seeds differ under a declared seed
+policy. Comparison is the intended unit of statistical analysis
+\citep{colas2019hitchhiker, agarwal2021deep}; report dispersion, not a single
+delta.
+\item[R2 --- Declared-knob.] Items differ only in declared, quantitatively
+reported knobs (learning rate, steps, $G$ with fixed schedule form).
+Comparable, with the knob difference stated as a caveat or bridged by a
+matched run.
+\item[R3 --- Stack-vector.] At least one V1/V3/V4/V5 vector differs
+(backend, precision, parser, split, schedule form). Documented flip
+magnitudes reach $17\times$; algorithmic conclusions require a bridging run
+on a common stack before they are admissible.
+\item[R4 --- Label collision.] The same algorithm label with different
+objective semantics (V2): the comparison is between stacks wearing one name.
+Verdict: \textsc{not-comparable}; the label must be split (e.g.,
+``DAPO(dynamic-sampling)'' vs.\ ``DAPO(clip-surrogate)'').
+\item[R5 --- Undeclared.] One or more of the seven items is missing from
+either manifest. Verdict: \textsc{unverifiable}; no grade can be assigned,
+which is itself the finding.
+\end{description}
+Two consequences follow. First, most cross-paper comparisons in today's
+RL-for-LLM literature are R3--R5 by construction, because items 3, 4, and 7
+are almost never reported; the literature's aggregate ranking of GRPO-family
+algorithms is therefore an average over unmodeled stacks. Second, the grading
+is mechanical---it requires no judgment call beyond the manifest contents---
+which is what makes it suitable for continuous integration
+(\secref{sec:p5-toolchain}) rather than for post-hoc reviewer heroics.

@@ -1,0 +1,72 @@
+{
+  "record_type": "stack",
+  "schema_version": "0.1.0",
+  "id": "tinker_grpo_qwen3.5-4b_gsm8k",
+  "label_claimed": "grpo",
+  "framework": {
+    "name": "tinker",
+    "version": "0.2.x",
+    "openness": "managed"
+  },
+  "model": "Qwen/Qwen3.5-4B",
+  "task": "gsm8k",
+  "seeds": [
+    42,
+    123,
+    456
+  ],
+  "provenance": {
+    "source_artifacts": [
+      "12-cell Tinker head-to-head (internal program records, 2026-06-21)"
+    ],
+    "wandb": "arvindcr4-pes-university/zvf-audit",
+    "date_recorded": "2026-06-21"
+  },
+  "variant_deltas_applied": [],
+  "min_report": {
+    "loss_form": {
+      "importance_ratio_level": null,
+      "clip_eps_low": null,
+      "clip_eps_high": null,
+      "length_normalization": null,
+      "advantage_normalization": null,
+      "token_mask": null
+    },
+    "reference_kl": {
+      "reference_policy": true,
+      "kl_beta": null,
+      "kl_estimator": null
+    },
+    "sampler_backend": {
+      "backend": "tinker-managed sampler",
+      "precision": "bf16",
+      "temperature": 0.7,
+      "top_p": 0.95
+    },
+    "telemetry": {
+      "per_step_zvf": true,
+      "per_step_gu": true,
+      "source": "benchmark harness on per-group rewards"
+    },
+    "group_size_schedule": {
+      "initial_g": null,
+      "schedule": "fixed",
+      "adaptation_rule": "none"
+    },
+    "heldout_split": {
+      "disjoint_from_reward_env": true,
+      "description": "GSM8K test split (benchmark protocol)"
+    },
+    "decontamination": {
+      "performed": null,
+      "parser_robustness_probe": null
+    }
+  },
+  "outcomes": {
+    "mean_last10_train_reward": 0.723,
+    "mean_zvf": 0.567,
+    "heldout_delta": null,
+    "rollouts": null
+  },
+  "notes": "Baseline arm of the 12-cell head-to-head; the four arms are within noise on last-10 reward."
+}

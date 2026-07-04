@@ -6,8 +6,8 @@
 % leaving the lower quantiles unchanged -> negative asymmetry.
 % Result: the asymmetry (slope_q90 - slope_q10) is POSITIVE on all 16 (task, algo,
 % seed) runs and Dr.GRPO SIGNIFICANTLY strengthens it on both tasks
-% (arithmetic +0.0052 [0.000, +0.012], p=0.03; GSM8K +0.0008 [-0.0004, +0.0019],
-% p=0.034). Cross-pillar ZVF bin interaction: in the contrast-rich (zvf>=0.5)
+% (arithmetic +0.0052 [-0.0001, +0.0119], one-sided p=0.03; GSM8K +0.0008
+% [-0.0004, +0.0019], one-sided p=0.034). Cross-pillar ZVF bin interaction: in the contrast-rich (zvf>=0.5)
 % arithmetic regime, the ols slope FLIPS from -0.010 (GRPO) to +0.033 (Dr.GRPO),
 % meaning Dr.GRPO's anti-trap length-response reverses in the easy/contrast regime.
 
@@ -15,10 +15,10 @@
 
 The verbosity-trap literature predicts that longer responses inflate the
 denominator of $R/L$ without raising $R$ itself, producing a positive length
-bias. Iter~\ref{sec:lb-iter28} used OLS on $\E[R\mid L]$ and reported a
+bias. Iter~\ref{sec:length-bias-iter28} used OLS on $\E[R\mid L]$ and reported a
 strongly anti-trap signature (negative $\beta_{R\mid L}$) on every
-(\task, \algo, \seed) run. Iter~\ref{sec:lb-iter36} showed $L$ and $R$ share
-a common saturation scale, and iter~\ref{sec:lb-iter40} stratified the slope
+(\task, \algo, \seed) run. Iter~\ref{sec:length-bias-iter36} showed $L$ and $R$ share
+a common saturation scale, and iter~\ref{sec:length-bias-iter40} stratified the slope
 into training phases. None of those decompositions, however, asked whether the
 $\E[R\mid L]$ slope hides \emph{asymmetric} length-response at different
 quantiles of $R$. This iter addresses that gap.
@@ -45,10 +45,11 @@ and $0.0034$ on \texttt{gsm8k\_cot} (\texttt{length\_bias\_iter44\_asymmetry.tsv
 \paragraph{Dr.GRPO strengthens the asymmetry.}
 A 4000-rep paired bootstrap on the per-seed asymmetry (Dr.GRPO $-$ GRPO)
 gives $\Delta = +0.0052$ on \texttt{arithmetic\_easy}, $95\%$\,CI
-$[+0.0001, +0.0119]$, $p(\Delta \le 0) = 0.030$; and $\Delta = +0.0008$ on
+$[-0.0001, +0.0119]$, $p(\Delta \le 0) = 0.030$; and $\Delta = +0.0008$ on
 \texttt{gsm8k\_cot}, $95\%$\,CI $[-0.0004, +0.0019]$, $p(\Delta \le 0) =
-0.034$ (\texttt{length\_bias\_iter44\_grpo\_vs\_drgrpo.tsv}). Both tasks
-reject the null of equal asymmetry at the 5\% level. Dr.GRPO therefore
+0.034$ (\texttt{length\_bias\_iter44\_grpo\_vs\_drgrpo.tsv}). The one-sided
+tests support the predicted direction, although the two-sided 95\% CIs
+marginally include zero. Dr.GRPO therefore directionally
 increases the conditional upper-quantile length-response on both tasks,
 strengthening (not suppressing) the anti-trap signature.
 
@@ -97,7 +98,7 @@ gsm8k\_cot       & grpo    & $+0.0010$ & $+0.0011$ & $+0.0040$ & $+0.0030$ \\
 gsm8k\_cot       & dr\_grpo & $-0.0005$ & $-0.0007$ & $+0.0033$ & $+0.0038$ \\
 \midrule
 \multicolumn{6}{l}{\emph{Paired bootstrap on $\delta_{R \mid L}$:}} \\
-\multicolumn{6}{l}{arithmetic\_easy: $\Delta = +0.0052$, 95\%\,CI $[+0.0001, +0.0119]$, $p(\Delta \le 0) = 0.030$} \\
+\multicolumn{6}{l}{arithmetic\_easy: $\Delta = +0.0052$, 95\%\,CI $[-0.0001, +0.0119]$, $p(\Delta \le 0) = 0.030$} \\
 \multicolumn{6}{l}{gsm8k\_cot:       $\Delta = +0.0008$, 95\%\,CI $[-0.0004, +0.0019]$, $p(\Delta \le 0) = 0.034$} \\
 \bottomrule
 \end{tabular}

@@ -1,0 +1,2 @@
+hypothesis	n_pairs	mean_gr	mean_dr	mean_dr_minus_gr	W_minus_one_sided	n_pred_one_sided	cohens_d_paired	predicted_direction	verdict
+H1_pooled_DR_smaller	8	0.377	0.3578	-0.0193	18.0	5	-0.118	Dr.GR smaller (fixed normaliser decouples, learned break does not)	NULL

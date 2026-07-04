@@ -58,7 +58,8 @@ effect: arithmetic CV$_L$ is $5{-}6\times$ larger than GSM8K CV$_L$
 (0.13 vs 0.024), reflecting that arithmetic has 40-step-length answers
 that decay, whereas GSM8K has 192-token CoT answers whose variability
 comes mostly from content not length. Dr.\,GRPO reduces CV$_L$ by
-~28\% on GSM8K ($0.034 \to 0.024$, CI non-overlapping) and ~5\% on
+~28\% on GSM8K in point estimate ($0.034 \to 0.024$), but the bootstrap
+CIs overlap, so we treat this as directional; it reduces CV$_L$ by ~5\% on
 arithmetic ($0.135 \to 0.128$, CI just touching).
 
 \begin{table}[htbp]

@@ -12,8 +12,8 @@
 
 \subsubsection{Plateau-anchored length-drift decomposition}\label{sec:lb-iter48}
 
-Iter~\ref{sec:lb-iter28} regressed $\E[R\mid L]$, iter~\ref{sec:lb-iter36}
-jointly saturated $R$ and $L$ on a shared scale, iter~\ref{sec:lb-iter40}
+Iter~\ref{sec:length-bias-iter28} regressed $\E[R\mid L]$, iter~\ref{sec:length-bias-iter36}
+jointly saturated $R$ and $L$ on a shared scale, iter~\ref{sec:length-bias-iter40}
 stratified by training phase, and iter~\ref{sec:lb-iter44} decomposed the
 conditional $R\mid L$ into quantiles. All four decompose the within-step
 coupling between reward and length. None of them anchor the decomposition at
@@ -64,7 +64,7 @@ gap is significant with bootstrap CIs that exclude zero.
 Stratifying by the ZVF bin at the plateau step (Table
 \texttt{length\_bias\_iter48\_zvf\_anchored.tsv}) shows that the arithmetic
 plateau sits in the high-ZVF regime (0.5+) for \emph{every} Dr.GRPO seed and
-in mid/high for GRPO -- consistent with iter~\ref{sec:lb-iter40}'s stage
+in mid/high for GRPO -- consistent with iter~\ref{sec:length-bias-iter40}'s stage
 stratification and consistent with the cross-pillar claim that Dr.GRPO's
 length bias only activates once within-group contrast has collapsed.
 

@@ -15,10 +15,12 @@ are decoupled in Dr.GR on every (task, hypothesis) cell}
 \label{sec:length-bias-iter136}
 
 \paragraph{Motivation.}
-Iter~\ref{sec:length-bias-iter108} measured the GR-vs-DR gap at the
-10-step WINDOW level (backward / forward CCF).
-Iter~\ref{sec:length-bias-iter120} showed severship strongly predicts
-smaller $|CCF^{GR}_{bwd}|$ (pooled $\rho=+0.556$).
+Earlier per-window analyses measured the GR-vs-DR gap at the
+10-step window level (backward / forward CCF).
+The severship analysis showed smaller $|CCF^{GR}_{bwd}|$ in the expected
+direction within task ($\rho=0.50$, $n=20$, $p=0.025$ on arithmetic;
+$\rho=0.56$, $n=12$, $p\approx0.06$ on GSM8K-CoT), without relying on a
+pooled-32 statistic.
 Iter~\ref{sec:length-bias-iter128} showed Dr.GR Pareto-dominates GR on
 the run-level $(\Delta L, \Delta R)$ frontier with arithmetic\_easy
 $d=+3.62$.
@@ -108,13 +110,13 @@ Dr.GR have step-velocity co-movement of equal magnitude.
 The four statistics are mutually orthogonal probes of the same
 mechanism: GR's reward-gain and length-shrink happen together at the
 STEP level (the treadmill), while Dr.GR's happen on independent
-axes.  The mechanism is consistent with iter-108's window-level
+axes.  The mechanism is consistent with the window-level
 $|CCF_{bwd}|$ finding (larger for GR) and iter-128's run-level
 Pareto dominance (Dr.GR strictly better on both axes), but the
 step-level granularity adds an important new piece of evidence:
 \textbf{the decoupling is present in the per-step velocity itself,
 not just in the cumulative statistic.}
-Per Pillar 2's ZVF-trajectory EWS (iter~\ref{sec:zvf-iter126}), GR's
+Per Pillar 2's ZVF-trajectory early-warning analysis, GR's
 negative ZVF--length co-movement is the within-collapse signature;
 Dr.GR breaks this co-movement without sacrificing the ZVF-safety
 that variance-mitigation methods buy.

@@ -1,0 +1,191 @@
+% Pillar-5 (MIN-REPORT-RL) central standard: the 7-item minimum reportable stack
+\section{The Seven-Item Minimum Reportable Stack}
+\label{sec:p5-stack}
+A reporting standard survives only if it is short, checkable, and every item is
+load-bearing. We therefore admit an item to the minimum reportable stack only
+if we can point to a \emph{documented lever}: evidence that varying the item,
+with the rest held fixed, moved or flipped a reported outcome or its
+telemetry. \tableref{tab:p5-minreport} is the standard; the subsections justify
+each row. Items 1--3 specify what objective was optimized and on what
+substrate; items 4--5 specify the signal geometry of group-relative training;
+items 6--7 specify what the headline number can legitimately claim.
+
+\begin{table}[t]
+\centering
+\caption{The seven-item minimum reportable stack. Each item earns its place
+via a documented lever---evidence that the item alone can move or flip a
+reported result. Provenance strata as defined in \secref{sec:p5-results}.}
+\label{tab:p5-minreport}
+\footnotesize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}cp{2.4cm}p{4.4cm}p{5.6cm}@{}}
+\toprule
+\# & Item & What must be reported & Documented lever \\
+\midrule
+1 & Loss form & Ratio level (token/sequence), clip values and asymmetry,
+    token mask, advantage normalization, dynamic-sampling status &
+    Same label, opposite ZVF telemetry across loss forms
+    (0.00 vs.\ 0.58, \secref{sec:p5-exhibit-label}); normalization biases
+    \citep{tong2025drgrpo} \\
+2 & Reference policy \& KL & Reference snapshot, KL coefficient and estimator,
+    or explicit ``no KL'' &
+    Distinguishes GRPO-family members that are otherwise conflated
+    \citep{shao2024deepseekmath, yu2025dapo}; silently alters the objective \\
+3 & Sampler / backend / precision & Training backend, sampling engine,
+    precision, decoding parameters &
+    $17\times$ outcome flip from a backend swap alone
+    (\secref{sec:p5-exhibit-backend}) \\
+4 & Per-step ZVF/GU trajectory & Per-step zero-variance fraction and gradient
+    utilization $\mathrm{GU} = 1-\mathrm{ZVF}$ &
+    ZVF is U-shaped in accuracy (\tableref{tab:p5-ushape}): a mean hides
+    whether signal starved from mastery or incapacity \\
+5 & Group-size schedule & $G$ per step, including adaptive escalation rules &
+    ZVF falls systematically with $G$ (\tableref{tab:p5-gsize}); theory:
+    $\E[\mathrm{ZVF}] = p^G + (1-p)^G$ at per-prompt accuracy $p$ \\
+6 & Held-out split & Split identity, size, and disjointness from the reward
+    environment &
+    Train reward and held-out accuracy dissociate; reward-side
+    overoptimization is well documented \citep{gao2023reward} \\
+7 & Decontamination \& parser probe & Contamination check performed;
+    sensitivity of reward/telemetry to parser perturbation &
+    Benchmark contamination shifts headline scores \citep{zhang2024gsm1k,
+    riddell2024contamination}; micro-jitter $\epsilon \sim U(0,10^{-4})$
+    collapses batch ZVF $0.158 \to 0.000$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Item 1: Loss Form}
+\label{sec:p5-item1}
+The label is not the loss. ``DAPO'' with and without dynamic sampling are
+different optimizers with opposite ZVF signatures
+(\secref{sec:p5-exhibit-label}); Dr.GRPO exists because GRPO's
+std-normalization and length terms bias the update \citep{tong2025drgrpo};
+GSPO moves the importance ratio from token to sequence level
+\citep{qwen2025gspo}; and the group-relative loss family is close enough to
+preference optimization that GRPO admits a DPO reading
+\citep{rafailov2024direct, wu2025grpo_dpo}, making the exact contrast structure
+part of the objective's identity. The reportable unit is therefore the tuple
+(ratio level, clip low/high, token mask, advantage normalization,
+dynamic-sampling status), not the name.
+
+\subsection{Item 2: Reference Policy and KL Handling}
+\label{sec:p5-item2}
+Whether a run regularizes toward a frozen reference, a moving reference, or
+nothing at all changes what is being optimized; GRPO as introduced carries a
+KL term \citep{shao2024deepseekmath} that many descendants drop or re-estimate
+differently. Because the KL term interacts with the clip range in determining
+how far the policy can move per step, two runs labeled identically but
+differing in KL handling can occupy different stability regimes. This item is
+cheap to report (three fields) and its omission is unrecoverable post hoc.
+
+\subsection{Item 3: Sampler, Backend, and Precision}
+\label{sec:p5-item3}
+Exhibit 1 is the lever: a backend swap alone produced the largest effect in
+our entire corpus ($5.0\% \to 84.4\%$). Serving engines differ in kernel
+selection, batching, and numerics \citep{kwon2023vllm, zheng2024sglang,
+dao2022flashattention}, and in on-policy RL these differences compound: the
+sampler's distribution \emph{is} the data distribution. A closed backend is
+not disqualifying---but it must be named, versioned where possible, and its
+precision and decoding parameters stated, so that a reader knows the result is
+conditioned on it.
+
+\subsection{Item 4: The Per-Step ZVF/GU Trajectory}
+\label{sec:p5-item4}
+A single summary number cannot substitute for the trajectory, because ZVF
+aliases opposite regimes. Across a 368-run audit (Stratum B; drawn from a
+790-run corpus), mean ZVF is U-shaped in accuracy (\tableref{tab:p5-ushape}):
+near-zero-reward runs and near-saturated runs both show ZVF near $0.9$--$1.0$,
+while mid-accuracy runs sit near $0.25$. Theory makes the aliasing exact: with
+per-prompt accuracy $p$ and binary rewards, the expected zero-variance
+indicator is $p^G + (1-p)^G$, symmetric in $p \leftrightarrow 1-p$, and the
+usable signal scales as $p(1-p)$ (validated directionally at toy scale,
+Stratum C: corr(grad\_norm, $p(1-p)$) $= +0.71$ on a 0.5B model with an open
+backward pass---an effect direction, not a publishable effect size). Reporting
+the per-step trajectory (and $\mathrm{GU} = 1 - \mathrm{ZVF}$) lets readers
+see \emph{which} arm of the U a run occupied; the companion Pillar-2 paper
+develops the diagnostic and its failure modes in full.
+
+\begin{table}[t]
+\centering
+\caption{ZVF is U-shaped in accuracy (368-run audit; internal program
+records, June 2026). Mean reward and mean ZVF per model; ZVF is high at both
+extremes and lowest mid-scale, so a run's mean ZVF is uninterpretable without
+its accuracy regime.}
+\label{tab:p5-ushape}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Model & Mean reward & Mean ZVF \\
+\midrule
+Llama-3.2-1B        & 0.01 & 0.97 \\
+Llama-3.2-3B        & 0.01 & 0.95 \\
+Qwen3-32B           & 0.35 & 0.25 \\
+Qwen3-8B            & 0.50 & 0.29 \\
+Nemotron-30B        & 0.77 & 0.50 \\
+Qwen3-4B-Instruct   & 0.86 & 0.87 \\
+Qwen3-30B-Instruct  & 0.95 & 0.96 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Item 5: Group-Size Schedule}
+\label{sec:p5-item5}
+Group size is a signal-geometry knob, not a throughput knob: larger $G$ lowers
+the probability that a group is degenerate (from the same expression
+$p^G + (1-p)^G$), and the effect is large in practice
+(\tableref{tab:p5-gsize}). Because adaptive schedules now exist---our
+open-trainer audit escalated $G$ from 4 to 6 to 8 live on ZVF spikes
+(\secref{sec:p5-toolchain})---reporting a single scalar $G$ is no longer
+sufficient; the schedule is part of the optimizer. The companion Pillar-3
+paper of \ours{} treats group size in depth, including the rollout-budget
+trade-off highlighted by 2-GRPO-style analyses \citep{wu2025grpo_dpo,
+tan2025scalingrl}.
+
+\begin{table}[t]
+\centering
+\caption{Mean ZVF by model and group size $G$ (internal program records,
+June 2026; ``--'' = not run). Larger $G$ lowers ZVF where accuracy is
+intermediate, as theory predicts; near the extremes of the U-shape the effect
+compresses.}
+\label{tab:p5-gsize}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Model & $G=4$ & $G=8$ & $G=16$ \\
+\midrule
+Llama-3.2-1B      & 0.98 & 0.97 & --   \\
+Qwen3-4B-Instruct & 0.89 & 0.84 & 0.91 \\
+Llama-3.1-8B      & 0.76 & 0.65 & 0.47 \\
+Qwen3-8B          & 0.36 & 0.27 & 0.21 \\
+Qwen3-32B         & 0.33 & 0.18 & 0.08 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Item 6: A Held-Out Split Disjoint from the Reward Environment}
+\label{sec:p5-item6}
+Training reward is measured inside the same apparatus that generates the
+learning signal, so it inherits every quirk of that apparatus---parser
+leniency, template artifacts, reward misspecification
+\citep{gao2023reward, krakovna2020specification}. In the \ours{} group-size
+sweep, train-side telemetry moved substantially while held-out accuracy was
+flat, a dissociation that would be invisible without a disjoint split. The
+requirement is deliberately minimal: name the split, state its size, and
+certify it is disjoint from the prompts and the verifier loop used for
+training.
+
+\subsection{Item 7: Decontamination and a Parser-Robustness Probe}
+\label{sec:p5-item7}
+Contamination inflates headline numbers \citep{zhang2024gsm1k,
+riddell2024contamination}; that much is standard. The less familiar half of
+this item is the parser probe: because rewards are computed by string-level
+verifiers, sub-reward perturbations can flip telemetry wholesale. In our
+convergent repository experiment, adding micro-jitter
+$\epsilon \sim U(0, 10^{-4})$ to rewards collapsed batch ZVF from $0.158$ to
+$0.000$ while a magnitude-aware alternative (pairwise contrast density,
+$\mathrm{PCD} = \frac{G-1}{G}\,\E[p(1-p)]$) moved by $3\times 10^{-7}$. A
+diagnostic that a parser's rounding behavior can zero out is a diagnostic
+whose reported value is a stack property. The probe we ask for is one line:
+perturb rewards below the verifier's resolution and report which telemetry
+survives.

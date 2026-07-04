@@ -1,0 +1,40 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_dapo",
+  "name": "DAPO",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "yu2025dapo",
+    "arxiv": "2503.14476",
+    "title": "DAPO: An Open-Source LLM Reinforcement Learning System at Scale"
+  },
+  "deltas": [
+    {
+      "component": "clip_higher",
+      "field": "loss_form.clip_eps_high",
+      "change": "asymmetric (decoupled) clip: eps_low=0.2, eps_high=0.28"
+    },
+    {
+      "component": "dynamic_sampling",
+      "field": "sampling.dynamic_sampling",
+      "change": "filter prompts whose groups have zero reward variance and resample until the batch is full"
+    },
+    {
+      "component": "token_level_loss",
+      "field": "loss_form.aggregation",
+      "change": "token-level policy-gradient loss (mean over all tokens in the batch rather than per-sequence averaging)"
+    },
+    {
+      "component": "overlong_reward_shaping",
+      "field": "reward.overlong_shaping",
+      "change": "soft length-aware penalty for truncated/overlong completions"
+    },
+    {
+      "component": "kl_removed",
+      "field": "reference_kl",
+      "change": "KL regularization term removed from the objective"
+    }
+  ],
+  "notes": "Four named techniques plus removal of the KL term, per the source paper."
+}

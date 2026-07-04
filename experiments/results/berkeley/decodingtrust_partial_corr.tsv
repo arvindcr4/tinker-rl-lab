@@ -1,0 +1,6 @@
+dim	partial_r_dim_cap_given_trust
+t1_stereotype	0.3532303228047302
+t2_adversarial	-0.4399466987070475
+t3_OOD	-0.12090083699060708
+t4_demo_robustness	-0.485068650299601
+t5_ethics_fairness	0.4993173152640943

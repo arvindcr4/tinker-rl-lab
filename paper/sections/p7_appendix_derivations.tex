@@ -1,0 +1,119 @@
+% Pillar-7 appendix: derivations for T1-T3, PCD expectation, micro-jitter
+\section{Derivations}
+\label{sec:p7-appendix}
+Throughout, a group is $G$ conditionally i.i.d.\ binary rewards
+$R_1, \dots, R_G \sim \mathrm{Bernoulli}(p)$ for a prompt with latent
+success probability $p$; $K = \sum_i R_i \sim \mathrm{Binomial}(G, p)$ and
+$\hat p = K/G$.
+
+\subsection{T1: expected ZVF indicator}
+\label{sec:p7-appendix-t1}
+The within-group sample variance is zero iff all rewards agree, i.e.\
+$K = 0$ or $K = G$. These events are disjoint, so
+\begin{equation}
+  \E[\mathbf{1}\{\text{degenerate}\}]
+  \;=\; \Pr(K = 0) + \Pr(K = G)
+  \;=\; (1-p)^G + p^G
+  \;=\; h_G(p).
+\end{equation}
+For a prompt population $\mathcal{D}$ with per-prompt success probabilities
+$p_x$, linearity of expectation gives
+$\E[\mathrm{ZVF}] = \E_{x \sim \mathcal{D}}[h_G(p_x)]$. Note the Jensen gap
+used in Section~\ref{sec:p7-t1}: since $h_G$ is convex near the endpoints
+and the population mixes prompts of heterogeneous difficulty,
+$\E_x[h_G(p_x)] \geq h_G(\E_x[p_x])$ whenever mass sits at the extremes,
+which is why measured run-level ZVF exceeds $h_G(\bar p)$ in
+Table~\ref{tab:p7-gsweep}. \hfill$\square$
+
+\subsection{T2: monotonicity in $G$}
+\label{sec:p7-appendix-t2}
+For $p \in (0,1)$, both $p < 1$ and $1-p < 1$, so $p^{G+1} < p^G$ and
+$(1-p)^{G+1} < (1-p)^G$ strictly; summing,
+$h_{G+1}(p) < h_G(p)$. The decay is exponential with rate set by the larger
+term: $h_G(p) = \max(p, 1-p)^G\,[1 + o(1)]$, so
+$-\frac{1}{G}\ln h_G(p) \to -\ln \max(p, 1-p)$. Two regimes matter for
+control. At $p = \nicefrac12$, $h_G = 2^{1-G}$: each additional rollout
+halves the degenerate fraction (an $e$-folding of $h_G$ costs
+$1/\ln 2 \approx 1.44$ rollouts). Near the boundary, $p = 1 - \eps$ with
+$\eps \ll 1/G$: $h_G(p) = (1-\eps)^G + \eps^G \approx 1 - G\eps$, so the
+marginal rollout recovers only $O(\eps)$ of signal---escalation is
+exponentially effective in the interior and linearly futile at the edges,
+which is Rule~1 of Section~\ref{sec:p7-rules}. \hfill$\square$
+
+\subsection{T3: advantage mass}
+\label{sec:p7-appendix-t3}
+With unnormalized group-centered advantages $A_i = R_i - \hat p$, a group
+with $K$ successes has $K$ advantages equal to $1 - \hat p$ and $G - K$
+equal to $-\hat p$. Hence
+\begin{equation}
+  \frac{1}{G} \sum_{i=1}^{G} |A_i|
+  \;=\; \hat p (1 - \hat p) + (1 - \hat p)\, \hat p
+  \;=\; 2\, \hat p (1 - \hat p),
+\end{equation}
+and the summed advantage magnitude is $2 G \hat p(1-\hat p)$, i.e.\
+proportional to the within-group contrast. The policy-gradient norm also
+carries the score-function factor
+$\nabla_\theta \log \pi_\theta(y_i \mid x)$, which is policy- and
+sequence-dependent; T3 therefore predicts a monotone association between
+$\|\nabla\|$ and $\hat p(1-\hat p)$, not proportionality---this is what E1
+tests ($\mathrm{corr} = +0.71$, Section~\ref{sec:p7-e1}). Under
+std-normalized advantages (dividing by
+$\sqrt{\hat p(1-\hat p)}$), the mean absolute advantage becomes
+$2\sqrt{\hat p(1-\hat p)}$: normalization flattens but does not remove the
+$p(1-p)$ dependence, and it leaves the degenerate case (undefined $0/0$,
+masked in practice) untouched. \hfill$\square$
+
+\subsection{PCD expectation}
+\label{sec:p7-appendix-pcd}
+The population variance of the group, $\hat p(1-\hat p)$, has expectation
+\begin{equation}
+  \E[\hat p(1-\hat p)]
+  \;=\; \E[\hat p] - \E[\hat p^2]
+  \;=\; p - \Bigl(\frac{p(1-p)}{G} + p^2\Bigr)
+  \;=\; \Bigl(1 - \frac{1}{G}\Bigr) p (1-p)
+  \;=\; \frac{G-1}{G}\, p(1-p),
+\end{equation}
+using $\mathrm{Var}(\hat p) = p(1-p)/G$. Averaging over prompts yields
+Eq.~\eqref{eq:p7-pcd}. Equivalently, $\hat p(1-\hat p)$ equals
+$\frac{1}{G^2} \cdot K(G-K)$, i.e.\ (up to the factor $2/G^2$) the number of
+discordant correct/incorrect \emph{pairs} in the group---hence
+``pairwise-contrast density,'' and hence the connection to the
+pairwise-preference reading of group-relative objectives
+\citep{wu2025grpo_dpo, rafailov2024direct}: PCD counts, per unit of rollout
+budget, exactly the pairs from which a DPO-style contrast could be formed.
+\hfill$\square$
+
+\subsection{Micro-jitter proposition}
+\label{sec:p7-appendix-jitter}
+Let $R'_i = R_i + \eps_i$ with $\eps_i \stackrel{\text{iid}}{\sim}
+\mathrm{U}(0, \delta)$, $\delta = 10^{-4}$. (i) \emph{ZVF collapses:} the
+jittered rewards are almost surely pairwise distinct (ties have Lebesgue
+measure zero), so every group has nonzero sample variance and the tie-based
+ZVF indicator is $0$ for all groups. (ii) \emph{PCD is stable:} in
+expectation the within-group variance shifts by exactly
+$\mathrm{Var}(\eps) = \delta^2/12 \leq 8.4 \times 10^{-10}$; per-group
+sample cross terms between $R$ and $\eps$ are $O(\delta)$ in standard
+deviation but zero-mean, so they average out over a batch. Empirically
+(\texttt{scripts/pcd\_vs\_zvf.py}, $600$ groups): ZVF $0.1583 \to 0.0000$,
+PCD $0.153802 \to 0.153802$ (shift below $10^{-6}$). The practical
+corollary is stated in Section~\ref{sec:p7-jitter}: any dense sub-reward of
+amplitude $\geq$ machine-distinguishable scale performs this transformation
+implicitly, so tie-based ZVF must be computed on the binary verifier output
+alone, or replaced by PCD. \hfill$\square$
+
+\subsection{Provenance of the empirical tables}
+\label{sec:p7-appendix-provenance}
+Table~\ref{tab:p7-modelG} and Table~\ref{tab:p7-ushape} aggregate the
+368-run audit in W\&B project \texttt{zvf-audit} (790-run corpus; entity
+\texttt{arvindcr4-pes-university}); per-model means are computed over all
+completed runs of the named model, and the $G$-grid restricts to runs where
+only $G$ varies. Table~\ref{tab:p7-gsweep} is
+\texttt{experiments/results/groupsize\_zvf\_sweep.tsv} (12 runs: 4 values
+of $G$ $\times$ 3 seeds, full per-run records in the adjacent
+\texttt{.json}). The binned
+shape and jitter numbers are
+\texttt{experiments/results/pcd\_vs\_zvf\_shape.tsv} and
+\texttt{pcd\_vs\_zvf\_summary.tsv}, regenerable via
+\texttt{scripts/pcd\_vs\_zvf.py} from the released per-group reward
+tensors. E1 and E3 live in W\&B project \texttt{zvf-colab-experiments}
+(run families \texttt{E1\_grad\_signal}, \texttt{E3\_open\_audit}).

@@ -1,0 +1,5 @@
+T	acc_G4	acc_G32	retention_G4_over_G32	GU_ratio	iterative_rpo_feasible_at_G4	iterative_rpo_feasible_at_G32	note
+1000000	0.41	0.42	0.9762	5.0301	True	True	GRPO/Iterative-RPO both need within-group contrast; G=4 has 4-5x more contrast-yield per prompt, but G=32 wins on absolute accuracy once retention matters.
+4000000	0.55	0.66	0.8333	4.473	True	True	GRPO/Iterative-RPO both need within-group contrast; G=4 has 4-5x more contrast-yield per prompt, but G=32 wins on absolute accuracy once retention matters.
+16000000	0.63	0.84	0.75	4.1679	True	True	GRPO/Iterative-RPO both need within-group contrast; G=4 has 4-5x more contrast-yield per prompt, but G=32 wins on absolute accuracy once retention matters.
+64000000	0.64	0.88	0.7273	4.1548	True	True	GRPO/Iterative-RPO both need within-group contrast; G=4 has 4-5x more contrast-yield per prompt, but G=32 wins on absolute accuracy once retention matters.

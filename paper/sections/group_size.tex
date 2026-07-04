@@ -36,7 +36,7 @@ Table~\ref{tab:groupsize-summary}:
         at $G{=}8$ ($0.990{\pm}0.003$); $G{=}2$ ($0.982{\pm}0.004$) and
         $G{=}16$ ($0.978{\pm}0.006$) are statistically indistinguishable
         from $G{=}8$ at $n{=}3$ seeds (overlapping SEs). On this task
-        $G{=}2$ actually \emph{retains 100.3\% of 16-GRPO performance}
+        $G{=}2$ actually \emph{retains 100.3\% of 16-GRPO held-out accuracy}
         (\texttt{experiments/results/group\_size\_effect\_dpo\_check.tsv}),
         comfortably above the 97.6\% Wu et al.\ headline---the contrastive
         reading predicts this on easy, near-ceiling tasks where every
@@ -46,10 +46,10 @@ Table~\ref{tab:groupsize-summary}:
         token budget $T \in \{1, 4, 16, 64\}\,$M
         (\texttt{experiments/results/group\_size\_token\_normalized.tsv},
         Appendix~\ref{sec:appendix:group-size-reconcile}). At
-        $T{=}64\,$M the per-row accuracy maximum is at $G{=}32$
+        $T{=}64\,$M the reconstructed per-row accuracy maximum is at $G{=}32$
         ($0.88$), with $G{=}4$ at $0.64$---a $0.24$ absolute swing that
-        is the largest $G$-vs-$G$ effect we have measured anywhere in the
-        benchmark. At $T{=}1\,$M the same row's maximum is at $G{=}8$
+        is the largest $G$-vs-$G$ effect in this token-normalized
+        reanalysis. At $T{=}1\,$M the same row's maximum is at $G{=}8$
         ($0.48$), confirming the budget-dependent optimum.
   \item \textbf{ZVF/GU closed form} for binary-outcome tasks,
         $\mathrm{ZVF}(p, G) = p^G + (1{-}p)^G$
@@ -78,8 +78,9 @@ Qwen3-8B / GSM8K, $T{=}64\,$M (illustrative) & 4--64 & 32 & $\mathbf{0.88}$ & n/
 \caption{Group-size sweep summary, three sources. \emph{Measured} entries
 are real per-seed runs ($n{=}3$); the \emph{illustrative} rows are the
 re-analysis in Appendix~\ref{sec:appendix:group-size-reconcile}. The
-optimum shifts rightward with token budget: small on short horizons,
-$G{\approx}32$ at the canonical training scale ($T{\ge}16\,$M).}
+optimum shifts rightward in the reconstructed token-budget grid: small on
+short horizons, $G{\approx}32$ at the canonical training scale
+($T{\ge}16\,$M).}
 \label{tab:groupsize-summary}
 \end{table}
 
@@ -280,10 +281,11 @@ line is the last-10 mean reward; the gray band is the Wu et al.\ (2025)
 97.6\%-retention-of-16-GRPO prediction. Our measured $G{=}2$ retains
 100.3\% of $G{=}16$, comfortably inside the band. \emph{Right:}
 Token-budget normalized sweep (Qwen3-8B / GSM8K, $T{=}64\,$M,
-illustrative reanalysis). $G{=}4$ is at $0.64$, $G{=}32$ at $0.88$;
-the difference is the largest $G$-vs-$G$ effect anywhere in the
-benchmark and is the empirical justification for the
-``$G{\approx}32$ at canonical scale'' headline in
+illustrative reanalysis; $G{=}32$ was not directly measured in the matched
+small-scale sweep). $G{=}4$ is at $0.64$, $G{=}32$ at $0.88$;
+the difference is the largest $G$-vs-$G$ effect in this reconstructed
+grid and motivates, but does not by itself measure,
+``$G{\approx}32$ at canonical scale'' in
 Appendix~\ref{sec:appendix:group-size-reconcile}.}
 \label{fig:group-size-effect}
 \end{figure}
@@ -297,8 +299,8 @@ Appendix~\ref{sec:appendix:group-size-reconcile}.}
         \emph{correct on easy, near-ceiling tasks}.
   \item \textbf{At the canonical training scale, larger $G$ wins}.
         The illustrative $T{=}64\,$M reanalysis shows $G{=}32$ at
-        $0.88$, $G{=}4$ at $0.64$---the largest $G$-vs-$G$ effect we
-        measure anywhere. This is the regime in which the value-baseline
+        $0.88$, $G{=}4$ at $0.64$---the largest $G$-vs-$G$ effect in the
+        reconstructed token-normalized grid. This is the regime in which the value-baseline
         (large-$G$) reading and the contrastive reading both agree:
         larger $G$ amortizes more wasted rollouts and the per-step
         gradient is more accurate, and the small per-step loss of
@@ -312,23 +314,25 @@ Appendix~\ref{sec:appendix:group-size-reconcile}.}
         retention gap. The empirical signature is a clean monotonic
         decline---not noise around the headline. Wu et al.'s claim is
         correct on $G{\le}16$ at small scale; extrapolating it to
-        larger $G$ at canonical scale is empirically falsified.
+        larger $G$ at canonical scale is contradicted by the reconstructed
+        grid and remains a priority for direct measurement.
   \item \textbf{The recommendation is budget-dependent, not universal}.
-        Practitioners should choose $G$ by their fixed-token budget:
+        As a qualitative rule from the reconstructed fixed-token grid,
+        practitioners should choose $G$ by their budget:
         $G{\approx}4$--$8$ for short-budget debugging, $G{\approx}16$ at
         the $T{=}4\,$M scale, and $G{\approx}32$ at the canonical
         $T{\ge}16\,$M training scale. The ``$G{=}32$ is always best''
         heuristic is wrong for short budgets; the ``$G{=}2$ is always
         best'' heuristic is wrong for long budgets. Both are wrong;
-        the budget-dependent optimum is the right claim.
+        the budget-dependent optimum is the right hypothesis to test directly.
   \item \textbf{Reward is statistically flat in $G$ on the easy task}
         (last-10 mean reward spans 0.971--0.984 across
         $G \in \{2, 4, 8, 16\}$ on the measured Qwen2.5-0.5B /
         arithmetic sweep; the range is smaller than the 1.96$\cdot$SE
         band at every $G$). The Wu et al.\ contrastive reading is
         consistent with this. The same is \emph{not} true of
-        held-out accuracy at canonical scale: $G{=}4 \to G{=}32$ is a
-        0.24 absolute swing, far above noise.
+        the illustrative held-out-accuracy grid at canonical scale:
+        $G{=}4 \to G{=}32$ is a 0.24 absolute swing.
   \item \textbf{Open measurement}: we have not yet run a measured
         $G{=}32$ cell on the Qwen2.5-0.5B / arithmetic task (only the
         illustrative $T{=}64\,$M reanalysis carries $G{=}32$). The
@@ -352,21 +356,22 @@ outputs: \texttt{experiments/results/group\_size\_effect.tsv},
 figure \texttt{figures/group\_size.pdf}):
 
 \paragraph{Finding A -- reward-vs-$G$ curve on the small-scale sweep
-is mildly positive but log-quadratic; ZVF-vs-$G$ is a clean
-log-log line with slope $-0.230$/decade.}
+is mildly positive but log-quadratic; ZVF-vs-$\log_{10}G$ is a clean
+linear trend with slope $-0.230$/decade.}
 A 4-point linear fit
 $\mathrm{reward} = 0.835 + 0.035 \cdot \log_{10}G$ on the per-seed
 averaged 40-step reward has $R{=}0.924$, $p{=}0.076$ ($n{=}4$). The
 parabolic fit on $\log_{10}G$ has negative quadratic coefficient
 ($-0.052$), suggesting mild diminishing returns. By contrast the
-log-log ZVF fit
-$\log_{10}(\mathrm{mean\_zvf}) = 0.904 - 0.230 \cdot \log_{10}G$
+linear ZVF fit
+$\mathrm{mean\_zvf} = 0.904 - 0.230 \cdot \log_{10}G$
 has $R{=}{-}0.999$ ($p \approx 0.001$, $n{=}4$): mean ZVF drops
 $0.838 \to 0.764 \to 0.691 \to 0.631$ as $G$ goes $2 \to 4 \to 8 \to 16$
-(Spearman $\rho(G, \mathrm{mean\_zvf}) = -1.000$, $p < 10^{-4}$).
+(Spearman $\rho(G, \mathrm{mean\_zvf}) = -1.000$, $n{=}4$; exact
+permutation $p{=}0.083$, reported descriptively).
 This is the empirical counterpart to the iter-127 theoretical GU
 prediction $\mathrm{GU} \propto 1/\sqrt{G}$; the empirical slope
-$-0.230$/decade is shallower than the theoretical $-0.5$/decade
+$-0.230$/decade in the linear fit is shallower than the iid heuristic
 because (i) the iter-7 task is near-ceiling so the asymptotic
 $\sqrt{G}$ reduction saturates, and (ii) prompt difficulty is
 heterogeneous so the effective $\sigma$ is partially averaged out by
@@ -374,10 +379,12 @@ the easy prompts.
 
 \paragraph{Finding B -- the broader-scale $G{=}4{\sim}G{=}32$
 retention is \emph{strictly monotonically decreasing} in $\log_{10}T$
-with Spearman $\rho = -1.000$ ($n{=}4$, $p < 10^{-24}$); the Wu et
+with Spearman $\rho = -1.000$ ($n{=}4$; exact permutation $p{=}0.083$,
+reported descriptively); the Wu et
 al.\ $97.6\%$ claim does not generalise to the canonical training
 scale.}
-On the $5G \times 4T$ grid (Qwen3-8B / GSM8K, $T \in \{1, 4, 16, 64\}\,$M),
+On the reconstructed $5G \times 4T$ grid (Qwen3-8B / GSM8K,
+$T \in \{1, 4, 16, 64\}\,$M),
 the retention
 $\mathrm{retention}(T) = \mathrm{acc}(G{=}4) / \mathrm{acc}(G{=}32)$
 is:
@@ -388,7 +395,7 @@ $T{=}64\,$M: $0.727 \pm 0.023$ (CI $[0.683, 0.774]$).
 The linear trend $\mathrm{retention} = 1.776 - 0.138 \cdot \log_{10}T$
 has $R{=}{-}0.952$, $p{=}0.048$ ($n{=}4$). \textbf{The Wu et al.\
 $97.6\%$ retention claim holds only at $T{=}1\,$M (the under-trained
-regime); it is falsified at every $T \ge 4\,$M on this benchmark.}
+regime); it is contradicted at every $T \ge 4\,$M in this reconstructed grid.}
 TOST at the $0.976$ retention threshold returns $p{=}1.000$ at all
 four budgets because the retention CIs at $T \ge 4\,$M are well below
 $0.976$; the $T{=}1\,$M row is borderline ($0.977$ is inside the
@@ -396,14 +403,14 @@ equivalence region $[0.976, 1.024]$, but its CI $[0.873, 1.092]$
 extends below the lower bound).
 
 \paragraph{Finding C -- cross-pillar linkage: the $G{=}4$ vs $G{=}32$
-retention drop is \emph{causally downstream} of the ZVF
-contrast-budget exhaustion.}
+retention drop is not explained by simple ZVF contrast starvation alone.}
 The small-scale sweep shows that halving $G$ from $16 \to 8$ already
 loses $0.060$ in mean ZVF ($0.691 - 0.631$); halving again to $4$
 loses another $0.072$ ($0.764 - 0.691$). At $G{=}4$ the within-group
 contrast is already low; when the policy saturates (mean reward
 approaches 1) the ZVF noise channel collapses, and G=4 has no slack
-to recover the lost contrast. The broader-scale sweep confirms this:
+to recover the lost contrast. The broader-scale reconstructed grid shows the
+same direction:
 value-of-$G{=}4 \to G{=}32$ grows monotonically with $\log_{10}T$:
 $0.01$ (T=1M), $0.11$ (T=4M), $0.21$ (T=16M), $0.24$ (T=64M)
 (iter-127 complementarity). The $24\times$ amplification factor
@@ -411,19 +418,21 @@ is the quantitative expression of the cross-pillar finding: the
 small-scale ZVF-vs-$G$ curve (Finding A) predicts that the
 $G{=}4$-vs-$G{=}32$ retention gap must widen at higher $T$, because
 high $T$ drives mean reward to saturation where ZVF noise is the
-binding constraint on the gradient signal.
+binding constraint on the gradient signal. Iter~115 adds an important
+qualification: the GU ratio remains $>4\times$ in favor of $G{=}4$ while
+retention still collapses, so the synthetic/token-normalized grid is more
+consistent with a gradient-noise or amortization penalty than with contrast
+starvation by itself.
 
 \paragraph{Updated practitioner guidance.}
-The Wu et al.\ (2025) $G{=}2 \sim G{=}16$ claim is correct only
-\emph{in the under-trained regime} ($T \le 1\,$M on this
-benchmark). At canonical training scale ($T \ge 16\,$M), the
-$G{=}4 \to G{=}32$ lift is $0.21$--$0.24$ absolute accuracy; the
-correct practitioner rule is \emph{allocate $G{=}32$ at
-$T \ge 16\,$M and $G{=}8$--$16$ at $T \le 4\,$M, but never deploy
-$G{=}4$ at $T \ge 16\,$M}. Iter-131 closes the practitioner angle
-by quantifying the budget threshold ($T_{\mathrm{equiv}} \approx 1\,$M)
-below which the contrastive reading holds and above which the
-variance-reduction reading dominates.
+The Wu et al.\ (2025) $G{=}2 \sim G{=}16$ claim is supported on the
+measured near-ceiling task but does not transfer cleanly to the reconstructed
+$G{=}4 \sim G{=}32$ fixed-token grid. At canonical training scale
+($T \ge 16\,$M), that grid shows a $0.21$--$0.24$ absolute accuracy lift for
+$G{=}32$ over $G{=}4$; the practitioner rule should therefore be read as
+qualitative until a directly measured $G{=}32$ cell exists: prefer
+$G{\approx}32$ in this regime, and treat $G{=}4$ as a short-budget/debugging
+setting rather than a default.
 
 \paragraph{Artifacts.}
 \texttt{scripts/group\_size\_analysis.py} (run on
@@ -1001,9 +1010,9 @@ at the Wu et al.\ (2025) 97.6\% claim.  Source:
 \label{tab:iter19-fit}
 \end{table}
 
-\paragraph{Predicted retention outside the measured grid.}
+\paragraph{Predicted retention outside the reconstructed grid.}
 The model extrapolates the iter 7 retention curve beyond
-$T{=}64$\,M (the largest measured budget) to a denser prediction grid.
+$T{=}64$\,M (the largest reconstructed grid budget) to a denser prediction grid.
 Table~\ref{tab:iter19-pred} gives the predicted retention with the
 envelope of the bootstrap 95\% CIs at four reference budgets.
 Critically, the prediction at $T{=}2$\,M (between $T{=}1$ and $T{=}4$\,M)
@@ -1335,11 +1344,11 @@ pre-ceiling artifact that decays to $R_\infty$ by $T{=}64$\,M.
 \toprule
 $G$ & ceiling $a_G$ & 95\% CI & half-sat $T$ (M) \\
 \midrule
-4  & 0.646 & [0.63, 0.66] & 1.6 \\
-8  & 0.807 & [0.78, 0.83] & 2.0 \\
-16 & 0.858 & [0.83, 0.88] & 2.4 \\
-32 & 0.893 & [0.86, 0.92] & 3.3 \\
-64 & 0.883 & [0.85, 0.91] & 4.6 \\
+4  & 0.646 & [0.63, 0.66] & 0.593 \\
+8  & 0.807 & [0.78, 0.83] & 0.705 \\
+16 & 0.858 & [0.83, 0.88] & 0.858 \\
+32 & 0.893 & [0.86, 0.92] & 1.208 \\
+64 & 0.883 & [0.85, 0.91] & 1.750 \\
 \bottomrule
 \end{tabular}
 \caption{\textbf{Per-$G$ accuracy ceilings (iter 95, GSM8K

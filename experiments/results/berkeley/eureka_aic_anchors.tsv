@@ -1,0 +1,6 @@
+model	log10(N)	RQS	capable	R_max
+Qwen3.5-4B	0.6021	0.7591	1	0.8167
+Qwen3-8B	0.9031	0.3534	0	0.2854
+Llama-3.1-8B-Instruct	0.9031	0.6353	1	0.8688
+DeepSeek-V3.1	2.8357	0.5572	1	0.8438
+Nemotron-120B	2.0792	0.0000	0	0.1820

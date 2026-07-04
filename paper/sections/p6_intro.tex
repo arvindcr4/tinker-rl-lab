@@ -1,0 +1,72 @@
+% Paper 6 (GRPO-Registry) standalone introduction + related work
+\section{Introduction}
+\label{sec:p6-intro}
+Group Relative Policy Optimization~\citep{shao2024deepseekmath, guo2025deepseekr1}
+has spawned a family of variants at a pace that outstrips the community's
+bookkeeping. DAPO changes the clip asymmetry, the sampling loop, the loss
+aggregation, and the reward shaping in one release~\citep{yu2025dapo}; Dr.~GRPO
+deletes two normalization terms~\citep{tong2025drgrpo}; GSPO moves the
+importance ratio from tokens to sequences~\citep{qwen2025gspo}; and a long tail
+of further variants adjusts baselines, curricula, or advantage estimators
+\citep{lin2025cppo, nan2025ngrpo, zhang2025scaffgrpo, mcgrpo2025, gift2025,
+liu2026gdpo, ichihara2025mogrpo, lu2025grpolead, bytedance2025vapo,
+hu2026openvlthinker, le2025rlzvp}. Each delta is documented---but in prose, in
+an appendix, in a YAML default, or in a code path that a framework may or may
+not implement. There is no machine-readable place to ask: \emph{which changes
+does this stack actually make to base GRPO, and which of them does my launcher
+actually execute?}
+
+This gap is not cosmetic. Across the \ours{} program we repeatedly measured the
+same algorithm label producing different updates. Holding model, group size,
+learning rate, data, and seed fixed and swapping only the backend moved final
+GSM8K reward from $84.4\%$ to $5.0\%$---a $17\times$ swing under an identical
+label. Running ``DAPO'' on an open Colab trainer whose dynamic sampling
+demonstrably filters zero-variance groups produced mean ZVF $0.00$; running
+``DAPO'' on a closed managed stack, where only an asymmetric-clip surrogate is
+user-settable, produced mean ZVF $0.58$. Same label, opposite telemetry. When
+labels underdetermine update rules, empirical rankings of ``GRPO vs.\ DAPO
+vs.\ GSPO'' are rankings of stacks, not algorithms---a confound our companion
+pillar papers (P1 scaling, P2 ZVF, P3 group size, P4 length bias) hit from four
+different directions.
+
+We respond with a \emph{resource}, not another variant:
+\textsc{GRPO-Registry}, a machine-readable catalog with two record types.
+A \emph{stack record} describes one deployed training stack via the seven-item
+minimum reportable stack (MIN-REPORT-RL): (1) loss form, (2) reference policy
+and KL handling, (3) sampler/backend/precision, (4) per-step ZVF/GU telemetry,
+(5) group-size schedule, (6) held-out split disjoint from the reward
+environment, and (7) decontamination plus parser-robustness probes. A
+\emph{variant-delta record} pins down, component by component, what a named
+variant changes relative to base GRPO, verified against the source paper; stack
+records then declare per-component implementation status
+(\texttt{implemented} / \texttt{surrogate} / \texttt{absent} / \texttt{unknown}),
+which is exactly where label flips become visible to a script.
+
+Our contributions are:
+(i) the schema (Section~\ref{sec:p6-schema});
+(ii) verified delta records for DAPO, Dr.~GRPO, and GSPO;
+(iii) twelve seed entries populated from real artifacts of this benchmark---the
+released per-framework config dumps, an open-trainer audit, and a
+managed-runtime head-to-head (Section~\ref{sec:p6-population});
+(iv) a query API, a 0--100 MIN-REPORT auditor badge, and a \texttt{stackdiff}
+tool that converts a pair of entries into a flip-risk verdict on the R0--R5
+ladder (Section~\ref{sec:p6-query}); and
+(v) worked examples in which the registry flags, \emph{before any GPU time is
+spent}, the label-flip risk that our experiments later confirmed empirically
+(Section~\ref{sec:p6-worked}).
+
+\subsection{Related Work}
+\label{sec:p6-related}
+Structured reporting artifacts exist for models and
+datasets---model cards~\citep{mitchell2019modelcards} and
+datasheets~\citep{gebru2021datasheets}---and evaluation has consolidated around
+shared harnesses and living benchmarks such as HELM~\citep{liang2022helm} and
+the LM Evaluation Harness~\citep{gao2021harness, biderman2024lessons}. Papers
+with Code catalogued paper--code--leaderboard linkage at
+scale~\citep{paperswithcode2025}. None of these describes the \emph{training
+stack} of an RL fine-tuning run: what loss form, KL handling, and sampling loop
+were in force. Analyses that reduce GRPO variants to a shared functional core
+\citep{wu2025grpo_dpo, liu2026gdpo} are complementary: they say when two update
+rules are equivalent in theory, while the registry records which rule a stack
+runs in practice. Section~\ref{sec:p6-related-resources} gives a fuller
+comparison.

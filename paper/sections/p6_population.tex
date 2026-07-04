@@ -1,0 +1,83 @@
+% Paper 6 (GRPO-Registry) population section
+\section{Populating the Registry from Real Artifacts}
+\label{sec:p6-population}
+
+A registry seeded with hypothetical entries would not test the artifact against
+real reporting gaps. All twelve seed stack records derive from concrete
+artifacts of this program, in three families (Table~\ref{tab:p6-entries}).
+
+\begin{table}[t]
+\centering
+\caption{The twelve seed stack entries. Badge = MIN-REPORT auditor score
+(0--100; Section~\ref{sec:p6-query}), computed by
+\texttt{registry/query.py badge} on the shipped entries. Mean ZVF is the
+informational \texttt{outcomes} field where a completed run exists. Colab
+entries are toy-scale (directional only).}
+\label{tab:p6-entries}
+\small
+\begin{tabular}{llllr}
+\toprule
+Entry (registry id, abbreviated) & Label & Openness & Mean ZVF & Badge \\
+\midrule
+\multicolumn{5}{l}{\emph{Family A: framework config dumps (Qwen3-8B, GSM8K, seed 42)}}\\
+trl_grpo & grpo & open & --- & 74 \\
+verl_grpo & grpo & open & (dry run) & 60 \\
+openrlhf_grpo & grpo & open & (dry run) & 60 \\
+tinker_grpo (8B) & grpo & managed & --- & 62 \\
+\midrule
+\multicolumn{5}{l}{\emph{Family B: open Colab trainer, E3 audit (toy scale, directional)}}\\
+colab-open_grpo & grpo & open & 0.25 & 96 \\
+colab-open_drgrpo & drgrpo & open & 0.27 & 96 \\
+colab-open_dapo & dapo & open & 0.00 & 96 \\
+colab-open_grpo-adaptiveg & grpo & open & 0.23 & 96 \\
+\midrule
+\multicolumn{5}{l}{\emph{Family C: managed-runtime head-to-head (Qwen3.5-4B, GSM8K, 3 seeds)}}\\
+tinker_grpo (4B) & grpo & managed & 0.567 & 57 \\
+tinker_dapo & dapo & managed & 0.578 & 62 \\
+tinker_drgrpo & drgrpo & managed & 0.500 & 62 \\
+tinker_gspo & gspo & managed & 0.511 & 60 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Family A: the released config dumps.}
+The four entries \texttt{trl/verl/openrlhf/tinker_grpo_qwen3-8b_gsm8k} are
+mechanical translations of the 44-field per-framework dumps shipped at
+\texttt{experiments/framework_config_dumps/} for the canonical matched-config
+run (\secref{sec:setup}). Translation preserved every honesty marker in the
+dumps: the eleven \texttt{managed_by_tinker} nulls (including \texttt{kl.beta}
+and \texttt{importance_sampling.granularity}), the genuine OpenRLHF deviations
+($\beta{=}0.02$; sequence-level importance granularity), the Base-vs-Instruct
+model confound on the managed runtime, and the fact that the veRL and OpenRLHF
+rows of \texttt{framework_comparison.json} are dry-run placeholders (their
+\texttt{telemetry} item is therefore null and their \texttt{outcomes} empty).
+
+\paragraph{Family B: the open Colab trainer (E3 audit).}
+Four entries record the arms of the E3 open-trainer audit (W\&B project
+\texttt{zvf-colab-experiments}): base GRPO, Dr.~GRPO (both deltas
+implemented), DAPO (clip-higher, dynamic sampling, token-level loss, and KL
+removal implemented; overlong shaping recorded as \texttt{absent} because it
+is inapplicable at toy completion lengths), and an adaptive-$G$ arm whose
+\texttt{group_size_schedule} records the live escalation rule ($G$
+$4{\to}6{\to}8$ on ZVF spikes). These runs are toy-scale and their outcome
+fields (held-out delta $+0.50$ to $+0.575$; the DAPO arm's mean ZVF $0.00$ at
+$+45\%$ rollouts) are directional evidence only---but the \emph{records} are
+exact, because the trainer's backward pass is open.
+
+\paragraph{Family C: the managed-runtime head-to-head.}
+Four entries record the 12-cell head-to-head (Qwen3.5-4B, GSM8K, three seeds
+per arm) in which the four variant labels landed within noise on last-10
+training reward ($0.710$--$0.744$) while their delta status arrays differ
+sharply from Family B's: every claimed delta on the closed stack is
+\texttt{surrogate} or \texttt{unknown}, never fully \texttt{implemented}.
+
+\paragraph{What population taught us about our own reporting.}
+The badge column is itself a finding. Our config dumps---built for a
+reviewer-requested fairness audit---score only 57--74: they nail items 2, 3,
+and 5 (KL, backend, group size) but expose item 1 only partially (a launcher
+YAML records \texttt{importance_sampling.granularity}, not clip bounds or
+advantage normalization) and items 6--7 not at all. The open Colab arms score
+96 not because the runs are better but because an open backward pass plus an
+explicit ``no KL, no decontamination'' declaration makes every field
+\emph{reportable}. Reproducibility supplements of the kind commonly shipped
+with RL papers, ours included, do not automatically satisfy MIN-REPORT.

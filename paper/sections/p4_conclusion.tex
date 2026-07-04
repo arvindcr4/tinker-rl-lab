@@ -3,12 +3,15 @@
 \label{sec:p4-discussion}
 The central caution is that our comparison lives in a regime that is, by
 construction, unfavorable for revealing a length effect: short arithmetic chains
-with a binary exact-match reward, where completions are already brief and length is
-weakly (often negatively) coupled to reward. A null difference between GRPO and
+with a binary exact-match reward, and GSM8K-CoT sampled with a 200-token cap where
+step-0 completions are already near the cap and length is weakly (often
+negatively) coupled to reward. A null difference between GRPO and
 Dr.\,GRPO here is therefore weak evidence about length debiasing in general. Two
 further limitations matter. Held-out evaluation is single-benchmark and
-single-seed for the frontier comparison, so the non-significant GRPO gain should be
-read as a boundary on what we can claim rather than a universal result; and length
+the top-10-checkpoint frontier comparison is single-seed (the pre-RL-vs-post
+Qwen3-8B-Instruct comparison uses five seeds), so the non-significant GRPO gain
+should be read as a boundary on what we can claim rather than a universal result;
+and length
 dynamics are only weakly identifiable in this data, so mediation-style conclusions
 require the length-confounded regime we specify but do not yet run. The
 paired-outcome tests we rely on are also marginal tests, which can be confounded by
@@ -17,9 +20,11 @@ designed to address.
 
 \section{Conclusion}
 \label{sec:p4-conclusion}
-In the regime we can measure, GRPO does not significantly outperform its pre-RL
-checkpoint on held-out GSM8K, Dr.\,GRPO does not outperform GRPO, and neither
-inflates length. Rather than read this as evidence against length debiasing, we
+In the near-ceiling Qwen3-8B-Instruct evaluation, GRPO does not significantly
+outperform its pre-RL checkpoint on held-out GSM8K; in the Qwen2.5-1.5B
+comparison, Dr.\,GRPO does not outperform GRPO at our seed budget; and under the
+200-token GSM8K cap neither algorithm inflates length. Rather than read this as
+evidence against length debiasing, we
 read it as the expected outcome when there is no length pathology to correct, and
 we convert it into a concrete experimental program: a length-confounded sparse-reward
 regime, a causal length-mediation protocol separating genuine deduction from

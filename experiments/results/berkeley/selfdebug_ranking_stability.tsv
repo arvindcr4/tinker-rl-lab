@@ -1,0 +1,4 @@
+hypothesis	metric	pre_value	post_value	verdict
+H3_OPRO_stability	spearman	1.0	1.0	True
+H4_compositional_bucket	n_methods_preserved	9	9	True
+H5_calibration_eps0	max_abs_dev	0.0	0.0	True

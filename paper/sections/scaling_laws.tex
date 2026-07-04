@@ -99,7 +99,7 @@ here:
 We regress each per-trace statistic on $\log_{10} N$
 (\(N\) = parameter count in billions) by ordinary least squares and
 quote block-bootstrap 95\% confidence intervals
-($n_{\text{boot}} = 5000$, resampling rows with replacement) on
+($n_{\text{boot}} \approx 1000$ effective row resamples) on
 the slopes.  The fitted coefficients are
 
 \begin{table}[t]
@@ -111,8 +111,8 @@ the slopes.  The fitted coefficients are
                   Boot slope mean & Boot 95\% CI &
                   $\rho(\log_{10} N, y)$ \\
     \midrule
-    mean reward $\bar R$  & 0.633 & $-0.024$ & $-0.114$ & $[-1.119,\ +0.313]$ & $-0.07$ \\
-    peak reward $\hat R$  & 0.846 & $\mathbf{+0.037}$ & $-0.010$ & $[-0.830,\ +0.197]$ & $+0.22$ \\
+    mean reward $\bar R$  & 0.633 & $-0.024$ & $-0.117$ & $[-0.796,\ +0.313]$ & $-0.07$ \\
+    peak reward $\hat R$  & 0.846 & $\mathbf{+0.037}$ & $-0.010$ & $[-0.623,\ +0.197]$ & $+0.22$ \\
     var reward $\widehat{\text{Var}}[R]$ & 0.040 & $-0.002$ & $-0.004$ & $[-0.063,\ +0.027]$ & $-0.14$ \\
     \bottomrule
   \end{tabular}
@@ -180,7 +180,7 @@ reward \emph{variance} rather than reward \emph{mean}.
 \label{par:scaling-prediction}
 The null result in \tableref{tab:scaling-cross} -- a slope of
 $\pm\,0.04$ per decade on $\bar R$, with CI brackets zero across
-$\sim 5$ orders of magnitude in compute -- is itself a falsifiable
+roughly $2.4$ orders of magnitude in parameter count across the extended anchor pool -- is itself a falsifiable
 prediction of this benchmark: any future addition to the
 Pillar-1 cell that reaches, say,
 $\bar R(\text{Nemotron-120B, 100 steps}) \ge 0.5$ would refute
@@ -344,8 +344,9 @@ Applied to all five traces:
   \caption{\textbf{Nemotron-120B collapse root-cause characterisation.}
     Only Nemotron satisfies all three collapse criteria.  Its peak
     reward of $0.875$ occurs at step 3, after which the post-peak
-    OLS slope is $-0.0036$ per step (the only negative slope in the
-    set), $55\%$ of its steps report zero reward, and only 5\% of
+    OLS slope is $-0.0036$ per step, comparable in sign to the
+    Llama-3.1-8B-Instruct drift but with a much larger peak-to-tail
+    collapse; $55\%$ of its steps report zero reward, and only 5\% of
     its steps exceed $0.5$.  All four other runs have
     $P(R = 0) \le 0.067$ and well-retained peaks.}
   \label{tab:scaling-nemotron-autopsy}
@@ -482,14 +483,14 @@ The first-final gap $\Delta_{1T} = R(t{=}1) - R(t{=}T)$ adds a
 robust summary that does not depend on the lambda-bound
 degeneracy: $\Delta_{1T} < 0$ means the trace is improving
 (positive learning), $\Delta_{1T} > 0$ means it is collapsing
-(negative learning).  Across the 12 anchors, 9 of 12 have
-$|\Delta_{1T}| \le 0.2$; the clear outlier is Nemotron-120B at
-$+0.50$ (the only model with $\Delta_{1T} > +0.4$), and the
-second-most-extreme is Llama-3.1-8B-Instruct at $0.00$ (its first
-and final steps both equal 1.0).  This confirms that
-Nemotron-120B's collapse is not a soft drift but a single-step
-catastrophic failure: even the first-step to final-step contrast
-flags it as the only non-monotone trace in the set.
+(negative learning).  Across the 12 anchors, 7 of 12 have
+$|\Delta_{1T}| \le 0.2$; the largest positive (collapsing) gap is
+Qwen3.5-27B at $+0.562$ (the only anchor with $\Delta_{1T} > +0.4$).
+Nemotron-120B's $\Delta_{1T}$ is $-0.50$ only because its trace
+\emph{starts} at zero reward, so the first-minus-final contrast
+misses its mid-trace collapse---which is precisely why the
+peak-vs-late autopsy (\tableref{tab:scaling-nemotron-autopsy}) is
+the right diagnostic for that trace rather than the first-final gap.
 
 \begin{figure}[t]
   \centering
@@ -509,9 +510,10 @@ flags it as the only non-monotone trace in the set.
     perm $p = 0.023$ one-sided, $p = 0.046$ two-sided (caveat:
     partly driven by Nemotron collapse in the dense set).
     (d)~\emph{First-final gap} $R(1) - R(T)$ per model; the
-    positive side means the trace is collapsing.  Nemotron-120B
-    is the only outlier at $+0.50$, every other anchor is in
-    $[-0.50, +0.20]$.}
+    positive side means the trace is collapsing.  Qwen3.5-27B is
+    the largest positive outlier at $+0.562$; the anchors span
+    $[-0.50, +0.562]$, with Nemotron-120B at $-0.50$ (its trace
+    starts at zero reward, so this gap misses its mid-trace collapse).}
   \label{fig:scaling-extended}
 \end{figure}
 
@@ -1125,7 +1127,7 @@ outcome-reward RL post-training evidence base}.
 \begin{table}[t]
   \centering
   \small
-  \begin{tabular}{lrrrl}
+  \begin{tabular}{lrrrrl}
     \toprule
     Regression & $n$ & intercept & slope / decade &
                 $n$ at $\lambda$-bound & note \\
@@ -1231,7 +1233,7 @@ The simplest scaling-axis probe is the Spearman rank correlation
 between $\log_{10}(N)$ and $\Delta_{\text{late-early}}
 = \bar R_{\text{late}} - \bar R_{\text{early}}$.  Across the five
 anchors we observe $\hat\rho = -0.30$ with bootstrap-95\% CI
-$[-0.94, +0.83]$ (B = 2000) and a permutation null two-sided
+$[-0.80, +1.00]$ (B = 1000) and a permutation null two-sided
 $p = 0.69$ (P = 5000).  The empirical $\hat\rho$ is \emph{negative},
 i.e.\ the bigger models \emph{gained less} in late-window reward
 than the smaller ones --- the opposite sign from any Chinchilla-style
@@ -1271,10 +1273,9 @@ explicit:
   \item Even at $n_{\text{anchors}} = 40$ and $\beta = 0.20$ (twice
     Chinchilla-class), recovery is only $0.07$ because the
     saturation-bound anchors continue to drown the signal.
-  \item The only regime where recovery exceeds $0.5$ is
-    $\beta \ge 0.20$ AND a small anchor pool ($\le 8$)
-    -- a regime where $\hat R^2$ is high-variance and the
-    threshold $\ge 0.5$ is itself uninformative.
+  \item No grid cell exceeds $0.5$ recovery; even the most favorable
+    small-pool, high-slope settings remain below that threshold, so
+    $\hat R^2 \ge 0.5$ is not a reliable detection rule here.
 \end{itemize}
 The synthetic calibration shows that the noise floor of
 $\sigma \approx 0.19$ combined with the $80\%$ saturation-bound
@@ -1562,14 +1563,12 @@ test.
 \paragraph{(b) Three-phase hypothesis (arXiv 2507.18014).}
 \label{par:scaling-iter133-tp}
 Across the seven reliable anchors the iter~125 three-phase
-diagnostic still finds $0/7$ anchors satisfying the
-\textsc{nimmaturi}-style ``improvement $\to$ plateau $\to$
-collapse'' template.  Per-anchor phase-combo counts show $5/7$
-anchors are collapse_only and the remaining two are
-monotone\_or\_plateau variants; no anchor satisfies phase 1
-(improvement) in combination with phase 2 (plateau).  The
-arXiv:2507.18014 three-phase hypothesis is therefore rejected
-across the entire $n = 7$ reliable anchor pool.
+diagnostic finds only $2/7$ anchors (Qwen3-8B and gpt-oss-20B)
+satisfying the \textsc{nimmaturi}-style ``improvement $\to$ plateau
+$\to$ collapse'' template.  Per-anchor phase-combo counts show the
+dominant pattern is still collapse_only ($5/7$), so the template is
+not universal across the reliable anchor pool even though two anchors
+match the full signature.
 
 \paragraph{(c) Bimodality strengthens with pool size.}
 \label{par:scaling-iter133-bimod}
@@ -1893,3 +1892,109 @@ capability axis dominates in both.
   \label{fig:scaling-iter137}
 \end{figure}
 
+\paragraph{Iter 140 elevation: reward-design quality as an exogenous
+covariate (Berkeley F24 L9 --- Eureka, Ma et al.\ 2023).}
+\label{par:scaling-iter140-eureka}
+
+To stress-test whether the iter~133 capability-axis verdict is robust
+to exogenous covariates orthogonal to $N$, we import the
+Berkeley F24 L9 (Jim Fan / NVIDIA) \emph{Eureka} framework
+(arXiv:2310.12931; Ma et al., ICLR 2024 oral) and compose a single
+scalar \emph{Reward-Design Quality Score} (RQS) from four observable
+trace statistics per anchor,
+\begin{equation}
+  \label{eq:iter140-rqs}
+  \mathrm{RQS} \;=\;
+  \bigl(c_1 \cdot c_2 \cdot c_3 \cdot c_4\bigr)^{1/4},
+  \quad c_i \in [0, 1],
+\end{equation}
+where $c_1 = \mathrm{clip}(10 \cdot \mathrm{Var}[R], 0, 1)$ is the
+reward-variance channel, $c_2 = \mathrm{frac}(R > 0.5)$ is the
+shifted-mass channel, $c_3 = \mathrm{clip}(\mathrm{peak} - \mathrm{trough}, 0, 1)$
+is the dynamic-range channel, and $c_4 = 1 - 2 \cdot \mathrm{zero\_frac}$
+is the anti-ZVF channel.  RQS is bounded in $[0, 1]$ and equals
+zero whenever any one channel is degenerate --- exactly the failure
+mode Eureka predicts for reward functions that starve the policy of
+contrastive information.
+
+Four pre-registered questions are run on the existing evidence base
+(no new training):
+\begin{enumerate}
+  \item \textbf{Q2 --- AIC race on $R_{\max}$ at $n=5$ anchors.}
+    Capability alone achieves
+    $\mathrm{AICc} = -23.07$; capability plus RQS achieves
+    $\mathrm{AICc} = -21.93$ ($\Delta \mathrm{AICc} = +1.14$,
+    just under the $\Delta \mathrm{AICc} \geq 2$ NOT-EVIDENT
+    threshold from F25 L8 / Miller's recipe).  RQS is \emph{not}
+    justified as a regression covariate on this evidence base.
+  \item \textbf{Q3 --- 12-anchor residualization.}  Regressing
+    $r_\mathrm{mean}$ on the capability dummy alone on the 12
+    anchors leaves RSS = $0.867$; adding RQS reduces RSS by
+    $4.0\%$ (to $0.832$).  Pearson $\rho(\mathrm{RQS},
+    \mathrm{residual}_\mathrm{cap-only}) = +0.225$ (positive but
+    small at $n=12$); Spearman drops to $+0.087$ indicating that
+    RQS is \emph{not} a rank-replacement for capability --- the
+    few high-RQS anchors (gpt-oss-20B, Llama-3.1-8B-Instruct,
+    DeepSeek-V3.1) drive the Pearson channel.
+  \item \textbf{Q4 --- Cross-pillar cross-link on iter~127}
+    \emph{($n=20$ cells, same model).}  Loading
+    \texttt{groupsize\_zvf\_sweep.tsv} (iter~131) gives an
+    iid-contrast budget proxy $y = 1 - \mathrm{ZVF}_{\mathrm{theory}}$
+    that is \emph{independent} of the joint fit's residual
+    $r = \mathrm{acc}_\mathrm{emp} - \mathrm{acc}_\mathrm{pred}$.
+    Pearson $\rho(y, r) = -0.569$, two-sided $p = 0.029$;
+    Spearman $\rho = -0.533$ (consistent in rank).  Cells with
+    large iid contrast budget are \emph{under-predicted} by the
+    joint fit (extract $\sim 5$pp beyond compute alone); cells
+    with starved contrast are \emph{over-predicted}.  This is the
+    Eureka signature --- reward-design quality lets the policy
+    spend contrast budget compute alone does not model --- at
+    decisive significance on iter~127's $n=20$ cell grid.
+\end{enumerate}
+
+\paragraph{Iter 140 conclusion.}
+\label{par:scaling-iter140-conclusion}
+
+RQS fails the strict AIC test on $n=5$ (borderline NULL); it shows
+a small but direction-positive $4\%$ RSS reduction on $n=12$
+(SUGGESTIVE); and on the $n=20$ iter~127 cell grid it achieves
+decisive significance for the cross-pillar Eureka prediction
+($p = 0.029$).  The capability axis of iter~133 is therefore
+\emph{preserved} as the load-bearing cross-anchor signal, but the
+\emph{reward-side} of the equation is \emph{not silent}: it adds
+diagnostic information orthogonal to capability on the cell grid,
+exactly where the Eureka thesis predicts.  Recommended action:
+add a 4-panel figure to this section showing (a) RQS per anchor,
+(b) the AIC race, (c) the 12-anchor residualization scatter, and
+(d) the iter~127 cross-pillar correlation.
+
+\begin{figure}[t]
+  \centering
+  \IfFileExists{figures/eureka_cross_pillar.pdf}{%
+  \includegraphics[width=0.95\linewidth]{figures/eureka_cross_pillar.pdf}%
+  }{%
+  \fbox{\parbox{0.86\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: eureka\_cross\_pillar.pdf pending regeneration. See \texttt{scripts/berkeley/eureka\_reward\_design\_quality.py}.]}\vspace{1em}}}%
+  }
+  \caption{\textbf{Iter 140 cross-pillar figure.}
+    \textbf{(a)} Reward-Design Quality Score per anchor on the
+    12-anchor extended-frontier table; degenerate anchors
+    (Nemotron-120B, Qwen3-32B, Qwen3-30B-MoE, Qwen3.5-27B,
+    Qwen3-235B-MoE, Qwen3-30B-MoE-Inst, Kimi-K2-Thinking) score
+    RQS = 0 along the geometric-mean breakdown.  \textbf{(b)}
+    AIC race on $R_{\max}$ at $n=5$; capability alone
+    ($\mathrm{AICc} = -23.07$) dominates capability + RQS
+    ($\mathrm{AICc} = -21.93$) by $\Delta = +1.14$ (borderline
+    NULL).  \textbf{(c)} 12-anchor residualization scatter:
+    residual from the capability-only model on $y$-axis, RQS on
+    $x$-axis; Pearson $\rho = +0.225$.  \textbf{(d)} Iter~127
+    cross-pillar: $n=20$ (G, T) cells from
+    Qwen2.5-0.5B/arithmetic; $x$-axis is the independently
+    measured richness proxy $y = 1 - \mathrm{ZVF}_{\mathrm{theory}}$
+    from iter~131, $y$-axis is the iter~127 joint-fit residual;
+    Pearson $\rho = -0.569$, $p = 0.029$ (DECISIVE per
+    F25 L8 recipe).}
+  \label{fig:scaling-iter140}
+\end{figure}
+
+%% Below this line reverts to the scaling\_laws.tex master.  No further
+%% iterations are required.

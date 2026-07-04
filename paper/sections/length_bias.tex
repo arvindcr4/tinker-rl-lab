@@ -33,7 +33,10 @@ algorithm (GRPO vs Dr.~GRPO) -- a near-ceiling, easy task where
 reward saturates above $0.98$; and
 \emph{(ii)} Qwen2.5-1.5B-Instruct on GSM8K-CoT, $30$ steps, $n{=}3$
 seeds per algorithm -- a harder reasoning task where mean reward
-is held near $0.25$ throughout training.
+is held near $0.25$ throughout training. The GSM8K-CoT sampler uses
+\texttt{MAX\_NEW=200}; step-0 completions are already close to that cap, so
+all no-inflation claims below are cap-bounded rather than evidence about an
+uncensored long-form regime.
 For each run we compute three Spearman correlations:
 $\rho(\texttt{step}, \texttt{len})$ (length trend across training),
 $\rho(\texttt{step}, \texttt{reward})$ (reward trend across
@@ -388,8 +391,9 @@ sort by length, and bin into $10$ deciles. Figure~\ref{fig:length-bias-elevated}
 panel~(B) plots the GSM8K-CoT result. The decile-1 bin
 (length $153$--$180$ tokens) has mean reward $0.351$, the
 decile-8 bin (length $194$--$195$ tokens) has mean reward
-$0.233$, and the relationship is monotonic: \emph{longer
-completions are rewarded \emph{less}, not more}. The same
+$0.233$, and the relationship decreases across the length range with
+one local exception: \emph{longer
+completions are generally rewarded \emph{less}, not more}. The same
 pattern holds on arithmetic: the highest-reward deciles (8, 9)
 cluster around length $4.7$, while the lowest-reward decile
 (10) has length $5.5$--$8.0$ -- these are the early-stage long
@@ -463,9 +467,10 @@ $16$ runs.} (2)~\emph{Dr.GRPO does \emph{significantly}
 attenuate the compression on the hard task} (paired-bootstrap
 $\Delta\rho(\text{step},\text{len})=+0.267$, $95\%$ CI
 $[+0.164,+0.419]$); the effect is small but reliable. (3)
-\emph{Decile-binned length-vs-reward coupling is monotone
-\emph{negative} on the GSM8K-CoT cell}: longer completions are
-\emph{not} rewarded at any decile, in line with the model's
+\emph{Decile-binned length-vs-reward coupling is broadly
+\emph{negative} on the GSM8K-CoT cell, with one local exception}:
+longer completions are generally
+\emph{not} rewarded, in line with the model's
 pre-trap compression regime. (4)~\emph{The $100$-step
 cross-validation confirms the same null on a longer horizon}
 (but the absolute length range is $0.08$ tokens because the
@@ -616,10 +621,10 @@ $B{=}5000$ resamples and a $2000$-permutation $p$-value.
 \hline
 \textbf{Task} & \textbf{Algo} & \textbf{$n$ seeds} & \textbf{$\overline{\rho}(L,R)$} & \textbf{$\overline{\text{slope}}$ (Theil--Sen)} & \textbf{$\Delta_{\rho}$ 95\% CI}\\
 \hline
-arithmetic\_easy\_qwen2.5-0.5b & GRPO    & 5 & $-0.396$ & $-0.0844$ & --- \\
-arithmetic\_easy\_qwen2.5-0.5b & Dr.GRPO & 5 & $-0.294$ & $-0.0652$ & $+0.102$ $[+0.029, +0.180]$ \\
-gsm8k\_cot\_hard\_qwen2.5-1.5b  & GRPO    & 3 & $-0.514$ & $-0.0105$ & --- \\
-gsm8k\_cot\_hard\_qwen2.5-1.5b  & Dr.GRPO & 3 & $-0.618$ & $-0.0151$ & $-0.104$ $[-0.217, -0.013]$ \\
+arithmetic\_easy\_qwen2.5-0.5b & GRPO    & 5 & $-0.396$ & $-0.1172$ & --- \\
+arithmetic\_easy\_qwen2.5-0.5b & Dr.GRPO & 5 & $-0.294$ & $-0.1069$ & $+0.102$ $[+0.029, +0.180]$ \\
+gsm8k\_cot\_hard\_qwen2.5-1.5b  & GRPO    & 3 & $-0.514$ & $-0.0076$ & --- \\
+gsm8k\_cot\_hard\_qwen2.5-1.5b  & Dr.GRPO & 3 & $-0.618$ & $-0.0127$ & $-0.104$ $[-0.217, -0.013]$ \\
 \hline
 \end{tabular}
 \caption{\textbf{Reward-shape decomposition (iter 16).}
@@ -913,7 +918,7 @@ in the pre-trap regime.
 \paragraph{Cross-pillar note.}
 The within-step length-dispersion collapse (the \emph{herding}
 channel that mediates the verbosity trap; see Pillar~3's
-anti-herding diagnostic, Sec.~\ref{sec:group-size}) is
+anti-herding diagnostic) is
 \emph{not directly observable} from our per-step aggregates
 because we only retain \texttt{mean\_comp\_len}, not the
 within-step length distribution. We flag this as the natural

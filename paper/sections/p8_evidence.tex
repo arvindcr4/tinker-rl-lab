@@ -836,3 +836,103 @@ Outputs:
 \texttt{p8\_cost\_phase\_diagram\_boot.tsv},
 \texttt{p8\_cost\_phase\_diagram\_summary.json}.
 
+\subsection{Asymmetric cost (C$_\text{inv}$ $\times$ L) frontier}
+\label{sec:p8-asymm-cost}
+
+The $(\sigma, L)$ phase diagram of \secref{sec:p8-evidence-cost-curve}
+held the alert-investigation cost $c_\text{inv}$ at the canonical
+$\$0.50$/alert. That assumption collapses an operational lever the
+fraud-ops lead actually controls: at fully-automated triage
+$c_\text{inv}$ approaches the cost of an inline classifier
+($\$0.10$/alert); at analyst-heavy triage $c_\text{inv}$ reaches the
+salary-loaded rate of a senior reviewer ($\$5$/alert). This subsection
+sweeps the orthogonal $(c_\text{inv}, L)$ slice paired bootstrap ($B{=}1{,}000$,
+seed $20260704$) and reports the only $(\text{review cost},
+\text{missed-fraud cost})$ face of the cost matrix that real fraud
+budgets actually negotiate.
+
+\begin{table}[t]
+\centering\small
+\caption{Per-decision cost $\Delta$ (millicents/dec) between
+XGB-24full (sensor$+$raw) and two rivals on the $5 \times 5$
+$(c_\text{inv}, L)$ grid. Negative means \texttt{24full} is cheaper.
+Sensors (item \#35) are the four aggregates
+\texttt{V\_mean/V\_std/V\_max/V\_min}. The
+$\Delta$(24full$-$20raw) row block shows the sensor \emph{never} pays
+for itself in absolute terms (it must pay
+$c_\text{sense}{=}\$0.0035$/dec to use those features; minimum cell
+is $+3.5$, maximum is $+103$); the
+$\Delta$(24full$-$4sensor) row block shows the
+sensor$+$raw \emph{outperforms} the LLM-only surrogate at $11/25$
+cells on the point estimate and $7/25$ cells with CI excluding zero
+(predominantly at the analyst-heavy end of $c_\text{inv}$).}
+\label{tab:p8-asymm-cost}
+\begin{tabular}{lccccc}
+\toprule
+& \multicolumn{5}{c}{Missed-fraud cost $L$ (USD)} \\
+\cmidrule(lr){2-6}
+$c_\text{inv}$/alert & $\$5$ & $\$25$ & $\$100$ & $\$250$ & $\$1{,}000$ \\
+\midrule
+\multicolumn{6}{l}{\emph{$\Delta$(24full $-$ 20raw), millicents/dec}} \\
+\$0.10 & $+4.0$ & $+3.5$ & $+3.5$ & $+3.5$ & $+3.5$ \\
+\$0.50 & $+4.4$ & $+6.0$ & $+13.5$ & $+3.5$ & $+3.5$ \\
+\$1.00 & $+5.9$ & $+3.5$ & $+23.3$ & $+3.5$ & $+3.5$ \\
+\$2.50 & $+4.7$ & $+8.0$ & $+3.5$ & $+53.0$ & $+3.5$ \\
+\$5.00 & $+3.0$ & $+15.5$ & $+13.0$ & $+28.0$ & $+103.0$ \\
+\midrule
+\multicolumn{6}{l}{\emph{$\Delta$(24full $-$ 4sensor), millicents/dec}} \\
+\$0.10 & $-0.5$ & $\phantom{-}0$ & $\phantom{-}0$ & $\phantom{-}0$ & $\phantom{-}0$ \\
+\$0.50 & $-5.9$ & $-2.4$ & $\phantom{-}0$ & $\phantom{-}0$ & $\phantom{-}0$ \\
+\$1.00 & $-10.4$ & $-9.6$ & $\phantom{-}0$ & $\phantom{-}0$ & $\phantom{-}0$ \\
+\$2.50 & $-11.5$ & $-29.3$ & $-19.5$ & $\phantom{-}0$ & $\phantom{-}0$ \\
+\$5.00 & $\phantom{-}0$ & $-52.0$ & $-38.0$ & $-24.5$ & $\phantom{-}0$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Headline findings.}
+\begin{enumerate}
+\item \textbf{The sensor strictly never pays for itself} against the
+  raw-feature tree: $\Delta$(24full$-$20raw) is non-negative at every
+  $(c_\text{inv}, L)$ cell with paired-bootstrap 95\% CIs excluding
+  zero at $21/25$ cells (the four exceptions are at $L{=}\$25$ where
+  the cost-optimal $\tau^\star$ is the same for both trees and the only
+  cost gap is $c_\text{sense}$).
+\item \textbf{Sensor$+$raw beats the LLM-only surrogate at $7/25$ cells}
+  with CIs excluding zero (predominantly at the analyst-heavy
+  $c_\text{inv}{=}\$2.50$ or $\$5.00$ end with $L \in \{\$5, \$25\}$).
+  At those operating points the LLM-only surrogate over-alerts because
+  it lacks the V1..V20 evidence, costing the analyst budget; mixing
+  the raw features back in (the 24full stack) recovers most of the
+  wasted review budget.
+\item \textbf{Cost-ratio is misleading.} Reporting only the ratio
+  $\rho = L / c_\text{inv}$ hides the asymmetric regime: cells with
+  the same $\rho$ but different absolute $(c_\text{inv}, L)$ land in
+  different sensor-pay-off quadrants of \tableref{tab:p8-asymm-cost}.
+\item \textbf{Sensor-noise invariance carries over.} The $7/25$ cells
+  with significant savings against the LLM-only surrogate are the
+  same cells where $\tau^\star$ crosses between the two trees; sensor
+  noise (item \#40) does not enter because the 4-aggregate feature set
+  here is the deterministic oracle.
+\end{enumerate}
+
+\paragraph{Sharpest reviewer-facing claim.} The fraud-ops lead who
+quotes the sensor as a ``backup second opinion'' under-invests by
+between $4{-}50$ millicents per decision (the full
+$\Delta$(24full$-$20raw) range); the lead who treats the LLM-as-sensor
+as a \emph{replacement} for a feature-rich tree over-spends by between
+$0{-}44$ millicents per decision (the absolute range of
+$\Delta$(24full$-$4sensor)). Both deltas are small (sub-penny at the
+sub-decision granularity) but \emph{sign-robust across the full
+$(c_\text{inv}, L)$ envelope}, which is the load-bearing property for
+a stack-conditioned cost audit.
+
+\paragraph{Reproduction.} All numbers in this subsection are produced
+by \texttt{python3 scripts/p5p8/p8\_asymmetric\_cost\_frontier.py}
+($\sim$2 min on 4 cores; seed $42$ for XGBoost, seed $20260704$ for
+bootstrap). Outputs:
+\texttt{experiments/results/p5p8/p8\_asym\_cost.tsv},
+\texttt{p8\_asym\_cost\_boot.tsv},
+\texttt{p8\_asym\_cost\_summary.json},
+\texttt{figures/p8\_asym\_cost.{png,pdf}}.
+

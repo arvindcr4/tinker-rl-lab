@@ -1,0 +1,5 @@
+axis	y_metric	n	intercept	slope_per_log10x	se_slope	r2	spearman_rho	spearman_p	models
+R_max ~ log10(params_B)	R_max_3p	5	0.82295	0.00753	0.23616	0.0003	-0.6579	0.2275	deepseek-v3.1,nemotron-120b,llama-8b-inst,qwen3-8b,qwen3.5-4b
+R_max ~ log10(C_eff)	R_max_3p	5	3.88513	-1.08550	1.51593	0.1460	-0.2052	0.7406	deepseek-v3.1,nemotron-120b,llama-8b-inst,qwen3-8b,qwen3.5-4b
+delta_R_max ~ log10(params_B)	delta_R_max	5	0.44383	-0.12050	0.17709	0.1337	-0.6669	0.2189	deepseek-v3.1,nemotron-120b,llama-8b-inst,qwen3-8b,qwen3.5-4b
+delta_R_max ~ log10(C_eff)	delta_R_max	5	-1.05687	0.47945	1.29206	0.0439	0.2000	0.7471	deepseek-v3.1,nemotron-120b,llama-8b-inst,qwen3-8b,qwen3.5-4b

@@ -1,0 +1,73 @@
+name	id	state	createdAt	model	algorithm	group_size	dataset	max_steps	lr	final_reward
+gsm8k-gemma2-9b	uwq1v2xa	failed	2026-04-05T01:42:41Z	google/gemma-2-9b-it		16			4e-05	
+gsm8k-qwen3-8b-g4	7sd2bgrh	failed	2026-04-05T01:42:43Z	Qwen/Qwen3-8B		4			4e-05	1
+gsm8k-qwen3-0.6b	l75fznth	failed	2026-04-05T01:43:03Z	Qwen/Qwen3-0.6B		16			5e-05	
+tool-use-qwen3-8b-unconstrained	tz9y73d5	finished	2026-04-05T01:43:06Z	Qwen/Qwen3-8B		16			4e-05	1
+gsm8k-llama3.1-8b	g9by488d	failed	2026-04-05T01:45:24Z	NousResearch/Meta-Llama-3.1-8B-Instruct		16			4e-05	0.96875
+gsm8k-llama3.2-1b	wzrmtarp	finished	2026-04-05T01:45:27Z	meta-llama/Llama-3.2-1B		16			5e-05	0
+gsm8k-qwen3-1.7b	2gcm9l93	failed	2026-04-05T01:45:30Z	Qwen/Qwen3-1.7B		16			4e-05	
+gsm8k-qwen3-8b-g32	bzsu4ven	failed	2026-04-05T01:45:34Z	Qwen/Qwen3-8B		32			4e-05	0.9921875
+math-qwen3-8b	db69fahg	failed	2026-04-05T01:45:38Z	Qwen/Qwen3-8B		16			4e-05	
+gsm8k-qwen3-8b-lr1e-4	8f667vum	finished	2026-04-05T01:45:41Z	Qwen/Qwen3-8B		16			0.0001	1
+gsm8k-llama3.2-3b-ladder	o7wddit7	failed	2026-04-05T01:48:52Z	unsloth/Llama-3.2-3B		16			4e-05	0.109375
+math-qwen3-8b	3dcw1s1z	failed	2026-04-05T01:48:55Z	Qwen/Qwen3-8B		16			4e-05	0.5359375
+gsm8k-llama3.1-8b-ladder	1kkx18lp	failed	2026-04-05T01:48:58Z	meta-llama/Llama-3.1-8B		16			4e-05	0.03125
+gsm8k-qwen3-8b-g64	4utgw5pv	failed	2026-04-05T01:49:01Z	Qwen/Qwen3-8B		64			4e-05	0.984375
+gsm8k-qwen3-8b-lr1e-5	9omyye45	failed	2026-04-05T01:49:05Z	Qwen/Qwen3-8B		16			1e-05	0.296875
+gsm8k-qwen3-8b-lr3e-4	relyr3v9	failed	2026-04-05T01:49:09Z	Qwen/Qwen3-8B		16			0.0003	0.21875
+gsm8k-qwen3-8b-seed4	au00ld7t	failed	2026-04-05T01:49:38Z	Qwen/Qwen3-8B		16			4e-05	1
+gsm8k-qwen3-8b-seed5	wods392r	failed	2026-04-05T01:49:41Z	Qwen/Qwen3-8B		16			4e-05	0.75
+gsm8k-llama3.2-3b	jk0a4wum	failed	2026-04-05T01:49:45Z	unsloth/Llama-3.2-3B		16			4e-05	0.015625
+gsm8k-llama3.1-8b-base	ru80tpg3	failed	2026-04-05T01:49:48Z	meta-llama/Llama-3.1-8B		16			4e-05	0.046875
+tool-use-qwen3-8b-constrained	4cvz8ahi	finished	2026-04-05T01:49:51Z	Qwen/Qwen3-8B		16			4e-05	1
+humaneval-qwen3-8b	11vcrboh	failed	2026-04-05T01:49:54Z	Qwen/Qwen3-8B		16			4e-05	0
+tool-use-llama3.1-8b-instruct	dhkz7541	finished	2026-04-05T01:49:57Z	NousResearch/Meta-Llama-3.1-8B-Instruct		16			4e-05	0.103125
+tool-use-llama3.1-8b	tk9ti3py	finished	2026-04-05T01:50:00Z	NousResearch/Meta-Llama-3.1-8B-Instruct		16			4e-05	0
+gsm8k-llama3.1-8b-instruct-ladder	75nsn3zf	failed	2026-04-05T01:50:03Z	NousResearch/Meta-Llama-3.1-8B-Instruct		16			4e-05	0.515625
+gsm8k-qwen3-8b-g4	lb94hq0l	crashed	2026-04-05T02:38:59Z	Qwen/Qwen3-8B		4			4e-05	0.5625
+gsm8k-qwen3-8b-g32	xcry21oz	crashed	2026-04-05T02:39:03Z	Qwen/Qwen3-8B		32			4e-05	0.6875
+gsm8k-qwen3-8b-g64	fi4gcgun	crashed	2026-04-05T02:39:07Z	Qwen/Qwen3-8B		64			4e-05	0.08203125
+gsm8k-llama3.1-8b	vmgstu8n	crashed	2026-04-05T02:39:10Z	NousResearch/Meta-Llama-3.1-8B-Instruct		16			4e-05	0.75
+gsm8k-llama3.1-8b-base	ns2dmy6g	crashed	2026-04-05T02:39:14Z	meta-llama/Llama-3.1-8B		16			4e-05	0.015625
+math-qwen3-8b	l6c44kki	crashed	2026-04-05T02:39:17Z	Qwen/Qwen3-8B		16			4e-05	0.459375
+humaneval-qwen3-8b	b29zvtgw	crashed	2026-04-05T02:39:20Z	Qwen/Qwen3-8B		16			4e-05	0
+gsm8k-qwen3-8b-seed4	3xzfjinb	crashed	2026-04-05T02:39:23Z	Qwen/Qwen3-8B		16			4e-05	0.53125
+gsm8k-qwen3-8b-seed5	g9s1d6kj	crashed	2026-04-05T02:39:26Z	Qwen/Qwen3-8B		16			4e-05	0.40625
+gsm8k-qwen3-8b-lr1e-5	e3mvvyiq	crashed	2026-04-05T02:39:29Z	Qwen/Qwen3-8B		16			1e-05	0.296875
+gsm8k-qwen3-8b-lr3e-4	8fxjhbem	crashed	2026-04-05T02:39:33Z	Qwen/Qwen3-8B		16			0.0003	0.59375
+gsm8k-llama3.2-3b-ladder	1bwrtm80	crashed	2026-04-05T02:39:37Z	unsloth/Llama-3.2-3B		16			4e-05	0.015625
+gsm8k-llama3.2-3b	olk6ridp	crashed	2026-04-05T02:39:40Z	unsloth/Llama-3.2-3B		16			4e-05	0
+gsm8k-llama3.1-8b-ladder	6esoa405	crashed	2026-04-05T02:39:43Z	meta-llama/Llama-3.1-8B		16			4e-05	0
+gsm8k-llama3.1-8b-instruct-ladder	fqy0suhh	crashed	2026-04-05T02:39:47Z	NousResearch/Meta-Llama-3.1-8B-Instruct		16			4e-05	0.84375
+gsm8k-llama3.1-8b	bah3v16s	crashed	2026-04-05T03:24:23Z	NousResearch/Meta-Llama-3.1-8B-Instruct		16			4e-05	0.9375
+gsm8k-qwen3-8b-g64	ypoxiv77	crashed	2026-04-05T03:36:09Z	Qwen/Qwen3-8B		64			4e-05	
+gsm8k-qwen3-8b-g64	yczw852g	crashed	2026-04-05T03:36:45Z	Qwen/Qwen3-8B		64			4e-05	0.34375
+gsm8k-qwen3-8b-g64	4sj6ngi2	finished	2026-04-05T03:44:58Z	Qwen/Qwen3-8B		64			4e-05	1
+humaneval-qwen3-8b	qruyd8fv	finished	2026-04-05T04:15:38Z	Qwen/Qwen3-8B		16			4e-05	0
+gsm8k-qwen3-8b-lr1e-5	t7yem05i	finished	2026-04-05T04:15:38Z	Qwen/Qwen3-8B		16			1e-05	0.59375
+gsm8k-qwen3-8b-seed4	19j7l8nz	finished	2026-04-05T04:15:39Z	Qwen/Qwen3-8B		16			4e-05	0.984375
+gsm8k-qwen3-8b-g32	5jpkrt7c	finished	2026-04-05T04:15:39Z	Qwen/Qwen3-8B		32			4e-05	1
+gsm8k-llama3.2-1b	dzi4qv32	finished	2026-04-05T04:15:39Z	meta-llama/Llama-3.2-1B		16			5e-05	0.015625
+gsm8k-qwen3-8b-lr3e-4	o5ug7kjl	finished	2026-04-05T04:15:39Z	Qwen/Qwen3-8B		16			0.0003	0.984375
+gsm8k-qwen3-8b-g4	pb6nlxre	finished	2026-04-05T04:15:39Z	Qwen/Qwen3-8B		4			4e-05	1
+gsm8k-llama3.2-3b-ladder	xqglqxyl	finished	2026-04-05T04:15:39Z	unsloth/Llama-3.2-3B		16			4e-05	0.015625
+gsm8k-qwen3-8b-seed5	401km939	finished	2026-04-05T04:15:40Z	Qwen/Qwen3-8B		16			4e-05	0.921875
+math-qwen3-8b	jkhu9wzy	finished	2026-04-05T04:15:40Z	Qwen/Qwen3-8B		16			4e-05	0.7203125
+gsm8k-qwen3-8b-g32	ibm4my2m	crashed	2026-04-05T04:56:52Z	Qwen/Qwen3-8B		32			4e-05	
+block_e_dpo_qwen8b_gsm8k	ldv3nmul	finished	2026-04-05T05:40:07Z	Qwen/Qwen3-8B				50	2e-05	0.99609375
+gsm8k-qwen3-8b-reinforce	gfnn8ski	failed	2026-04-05T06:49:00Z	Qwen/Qwen3-8B	reinforce	16			4e-05	0.421875
+math500-qwen3-8b-300step	k4wnuznd	failed	2026-04-05T06:49:00Z	Qwen/Qwen3-8B	grpo	16			4e-05	0.3671875
+gsm8k-qwen3-8b-lr1e-5-300step	m7aqw7nr	failed	2026-04-05T06:49:00Z	Qwen/Qwen3-8B	grpo	16			1e-05	0.65625
+humaneval-qwen3-8b-200step	r42lztk3	failed	2026-04-05T06:49:00Z	Qwen/Qwen3-8B	grpo	16			4e-05	0.96875
+gsm8k-phase-hard	574m06vf	failed	2026-04-05T06:49:06Z	Qwen/Qwen3-8B	grpo	16			4e-05	
+humaneval-dense-reward	6lepd7co	failed	2026-04-05T06:49:06Z	Qwen/Qwen3-8B	grpo	16			4e-05	0
+gsm8k-phase-mid	puw5qm3c	failed	2026-04-05T06:49:06Z	Qwen/Qwen3-8B	grpo	16			4e-05	
+gsm8k-phase-easy	r3lr8g9d	failed	2026-04-05T06:49:06Z	Qwen/Qwen3-8B	grpo	16			4e-05	
+gsm8k-phase-hard	6c799epy	finished	2026-04-05T09:53:00Z	Qwen/Qwen3-8B	grpo	16			4e-05	1
+gsm8k-phase-easy	apq65fnt	finished	2026-04-05T09:53:00Z	Qwen/Qwen3-8B	grpo	16			4e-05	1
+math500-qwen3-8b-300step	azw8cyq5	finished	2026-04-05T09:53:00Z	Qwen/Qwen3-8B	grpo	16			4e-05	0.5484375
+gsm8k-qwen3-8b-reinforce	cwr3hwmi	finished	2026-04-05T09:53:00Z	Qwen/Qwen3-8B	reinforce	16			4e-05	0.734375
+gsm8k-qwen3-8b-lr1e-5-300step	dhm20bk0	crashed	2026-04-05T09:53:00Z	Qwen/Qwen3-8B	grpo	16			1e-05	1
+gsm8k-phase-mid	hki79k0h	finished	2026-04-05T09:53:00Z	Qwen/Qwen3-8B	grpo	16			4e-05	1
+humaneval-qwen3-8b-200step	mwdkesn2	finished	2026-04-05T09:53:00Z	Qwen/Qwen3-8B	grpo	16			4e-05	1
+humaneval-dense-reward	spblag1r	finished	2026-04-05T09:53:01Z	Qwen/Qwen3-8B	grpo	16			4e-05	1

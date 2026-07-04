@@ -1,0 +1,2 @@
+seed	step	reward_mean	zvf	frac_all_zero	frac_all_one	pcd	mean_len	n_groups	loss
+0	0	0.0	1.0	1.0	0.0	0.0	128.0	4	None

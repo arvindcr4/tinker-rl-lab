@@ -1,0 +1,3 @@
+model	split	n	accuracy	auc
+xgboost	test	10000	NA	0.7955
+Qwen/Qwen3.5-4B-sft	test_enriched20pct	500	0.7920	0.4827

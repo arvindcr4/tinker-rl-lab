@@ -1,0 +1,130 @@
+{
+  "experiment": "N10",
+  "algo": "grpo",
+  "seed": 179,
+  "model": "Qwen/Qwen3.5-4B",
+  "rank": 16,
+  "group": 8,
+  "batch": 8,
+  "steps": 15,
+  "lr": 1e-05,
+  "max_tokens": 256,
+  "heldout_acc": 0.5859375,
+  "n_eval": 128,
+  "first5_avg_reward": 0.178125,
+  "last10_avg_reward": 0.284375,
+  "mean_zvf": 0.6083333333333333,
+  "mean_len_first5": 252.396875,
+  "mean_len_last5": 247.76875,
+  "elapsed_seconds": 957.0104012489319,
+  "run_id": "1773660e-5a4d-513a-a540-754dd79612d5:train:0",
+  "wandb_run_path": "arvindcr4-pes-university/tinker-new-research/xkwom3d2",
+  "step_log": [
+    {
+      "step": 1,
+      "loss": 128.66395568847656,
+      "reward": 0.09375,
+      "zvf": 0.75,
+      "mean_len": 253.90625
+    },
+    {
+      "step": 2,
+      "loss": 17.814346313476562,
+      "reward": 0.171875,
+      "zvf": 0.5,
+      "mean_len": 255.625
+    },
+    {
+      "step": 3,
+      "loss": -140.91596221923828,
+      "reward": 0.03125,
+      "zvf": 0.75,
+      "mean_len": 250.03125
+    },
+    {
+      "step": 4,
+      "loss": 84.97602844238281,
+      "reward": 0.25,
+      "zvf": 0.5,
+      "mean_len": 254.0625
+    },
+    {
+      "step": 5,
+      "loss": 221.74539947509766,
+      "reward": 0.34375,
+      "zvf": 0.625,
+      "mean_len": 248.359375
+    },
+    {
+      "step": 6,
+      "loss": 32.109375,
+      "reward": 0.15625,
+      "zvf": 0.625,
+      "mean_len": 254.546875
+    },
+    {
+      "step": 7,
+      "loss": -15.102256774902344,
+      "reward": 0.109375,
+      "zvf": 0.5,
+      "mean_len": 256.0
+    },
+    {
+      "step": 8,
+      "loss": 1.036376953125,
+      "reward": 0.421875,
+      "zvf": 0.75,
+      "mean_len": 239.5625
+    },
+    {
+      "step": 9,
+      "loss": -9.345626831054688,
+      "reward": 0.5625,
+      "zvf": 0.5,
+      "mean_len": 226.640625
+    },
+    {
+      "step": 10,
+      "loss": 23.593673706054688,
+      "reward": 0.125,
+      "zvf": 0.75,
+      "mean_len": 254.765625
+    },
+    {
+      "step": 11,
+      "loss": -2.6733627319335938,
+      "reward": 0.265625,
+      "zvf": 0.625,
+      "mean_len": 249.484375
+    },
+    {
+      "step": 12,
+      "loss": 5.017791748046875,
+      "reward": 0.421875,
+      "zvf": 0.625,
+      "mean_len": 245.328125
+    },
+    {
+      "step": 13,
+      "loss": 67.97377014160156,
+      "reward": 0.1875,
+      "zvf": 0.625,
+      "mean_len": 253.375
+    },
+    {
+      "step": 14,
+      "loss": 106.37492370605469,
+      "reward": 0.203125,
+      "zvf": 0.625,
+      "mean_len": 252.40625
+    },
+    {
+      "step": 15,
+      "loss": 27.254234313964844,
+      "reward": 0.390625,
+      "zvf": 0.375,
+      "mean_len": 238.25
+    }
+  ],
+  "timestamp": "2026-07-04T13:14:48.089435"
+}

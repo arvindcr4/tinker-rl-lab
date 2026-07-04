@@ -1,0 +1,10 @@
+name	id	state	createdAt	model	algorithm	group_size	dataset	max_steps	lr	final_metric
+smoke-qwen3_4b-v1-trainer-sfie	5re2um0q	crashed	2026-04-19T20:23:31Z							
+smoke-qwen3_4b-v1-trainer-2xj8	xvaljrz9	crashed	2026-04-19T20:25:18Z							
+smoke-qwen3_4b-v1-env-2026-04-20-ybuhch	3d2x9e1l	failed	2026-04-19T20:25:19Z			8				
+smoke-qwen3_4b-v1-trainer-7zux	migzg6om	finished	2026-06-26T04:43:25Z							
+smoke-qwen3_4b-v1-env-2026-06-26-ytnyey	7ekz17sg	crashed	2026-06-26T04:43:41Z			8				
+smoke-qwen3_4b-v1-trainer-ipil	a3il4jp9	finished	2026-06-26T04:47:17Z							
+smoke-qwen3_4b-v1-env-2026-06-26-hjjiag	bn0v3blu	crashed	2026-06-26T04:47:17Z			8				
+smoke-qwen3_4b-v2-env-2026-06-26-kzoxrl	izh1t445	finished	2026-06-26T06:19:28Z			8				
+smoke-qwen3_4b-v2-trainer-bjql	uaf815be	finished	2026-06-26T06:19:28Z							

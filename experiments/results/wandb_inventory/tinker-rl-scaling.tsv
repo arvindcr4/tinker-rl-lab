@@ -1,0 +1,89 @@
+name	id	state	createdAt	model	algorithm	group_size	dataset	max_steps	lr	final_metric
+gsm8k-qwen3-0.6b	bqe71khg	failed	2026-03-24T12:38:35Z	Qwen/Qwen3-0.6B		16			6e-05	
+gsm8k-qwen3-1.7b	mhjy4wd2	failed	2026-03-24T12:38:42Z	Qwen/Qwen3-1.7B		16			5e-05	
+gsm8k-qwen3-4b	2e3oe0g5	failed	2026-03-24T12:38:50Z	Qwen/Qwen3-4B		16			5e-05	
+gsm8k-llama3.1-8b-base	egtoggo8	failed	2026-03-24T12:38:58Z	meta-llama/Llama-3.1-8B		16			4e-05	
+gsm8k-qwen3-14b	j90ayrlc	failed	2026-03-24T12:39:06Z	Qwen/Qwen3-14B		16			3e-05	
+gsm8k-qwen3-30b-moe	yk5ibzt1	failed	2026-03-24T12:39:14Z	Qwen/Qwen3-30B-A3B		16			3e-05	
+gsm8k-qwen3-0.6b	66q4inwy	failed	2026-03-24T12:40:55Z	Qwen/Qwen3-0.6B		16			6e-05	
+gsm8k-qwen3-1.7b	y969zk7q	failed	2026-03-24T12:41:03Z	Qwen/Qwen3-1.7B		16			5e-05	
+gsm8k-qwen3-4b	ckc5ws5u	failed	2026-03-24T12:41:11Z	Qwen/Qwen3-4B		16			5e-05	
+gsm8k-llama3.1-8b-base	0l5zf5us	failed	2026-03-24T12:41:20Z	meta-llama/Llama-3.1-8B		16			4e-05	
+gsm8k-qwen3-14b	iwj89rgq	failed	2026-03-24T12:41:28Z	Qwen/Qwen3-14B		16			3e-05	
+gsm8k-qwen3-30b-moe	kxul6wwv	failed	2026-03-24T12:41:37Z	Qwen/Qwen3-30B-A3B		16			3e-05	
+gsm8k-qwen3-14b	0bkugoil	failed	2026-03-24T12:54:06Z	Qwen/Qwen3-14B		16			3e-05	
+gsm8k-qwen3-14b	28ua2omd	failed	2026-03-24T13:12:31Z	Qwen/Qwen3-14B		16			3e-05	
+humaneval-qwen3-8b	0q49y25k	failed	2026-03-24T13:15:28Z	Qwen/Qwen3-8B		16	humaneval		4e-05	
+tool-use-qwen3-8b	fujwilwz	failed	2026-03-24T13:15:37Z	Qwen/Qwen3-8B		16	tool_use		4e-05	
+tool-use-qwen0.5b	q7kaf2i7	failed	2026-03-24T13:15:46Z	Qwen/Qwen2.5-0.5B-Instruct		16	tool_use		5e-05	
+gsm8k-qwen3-30b-moe	7r4jy8rr	failed	2026-03-24T13:16:20Z	Qwen/Qwen3-30B-A3B		16			3e-05	
+gsm8k-qwen3-14b	gus40obh	crashed	2026-03-24T13:25:49Z	Qwen/Qwen3-14B		16			3e-05	
+gsm8k-qwen3-30b-moe	qkdq84no	crashed	2026-03-24T13:26:13Z	Qwen/Qwen3-30B-A3B		16			3e-05	
+gsm8k-qwen3-30b-moe	izi07zuv	failed	2026-03-24T13:44:40Z	Qwen/Qwen3-30B-A3B		16			3e-05	
+humaneval-qwen3-8b	nh95c6yl	failed	2026-03-24T13:48:15Z	Qwen/Qwen3-8B		16	humaneval		4e-05	
+gsm8k-qwen3-30b-moe	w9xuz02h	failed	2026-03-24T13:50:32Z	Qwen/Qwen3-30B-A3B		16			3e-05	
+tool-use-qwen3-8b	aexycyg4	failed	2026-03-24T13:51:01Z	Qwen/Qwen3-8B		16	tool_use		4e-05	
+tool-use-qwen0.5b	aoqb52sg	failed	2026-03-24T13:51:30Z	Qwen/Qwen2.5-0.5B-Instruct		16	tool_use		5e-05	
+gsm8k-qwen3-30b-moe	98nysxnj	failed	2026-03-24T13:54:24Z	Qwen/Qwen3-30B-A3B		16			3e-05	
+gsm8k-qwen3-30b-moe	jogtp86w	failed	2026-03-24T13:59:21Z	Qwen/Qwen3-30B-A3B		16			3e-05	
+gsm8k-qwen3-30b-moe	ydley7g8	failed	2026-03-24T13:59:36Z	Qwen/Qwen3-30B-A3B		16			3e-05	
+gsm8k-qwen3-30b-moe	9ng94s9w	failed	2026-03-24T14:09:49Z	Qwen/Qwen3-30B-A3B		16			3e-05	
+gsm8k-qwen3-4b	nb0hoy1w	crashed	2026-03-24T14:10:13Z	Qwen/Qwen3-4B		16			5e-05	
+gsm8k-qwen3-4b	lk0yk6aa	crashed	2026-03-24T14:10:17Z	Qwen/Qwen3-4B		16			5e-05	
+gsm8k-qwen3-0.6b	wep70lqw	failed	2026-03-24T14:28:25Z	Qwen/Qwen3-0.6B		16			6e-05	
+gsm8k-llama3.1-8b-base	ivuclzrz	failed	2026-03-24T14:28:40Z	meta-llama/Llama-3.1-8B		16			4e-05	
+humaneval-qwen3-8b	p3z5szlm	failed	2026-03-24T14:28:55Z	Qwen/Qwen3-8B		16	humaneval	50	4e-05	
+gsm8k-qwen3-1.7b	9gxxkfgv	failed	2026-03-24T14:29:06Z	Qwen/Qwen3-1.7B		16			5e-05	
+gsm8k-qwen3-0.6b	46pzjs35	failed	2026-03-24T14:31:45Z	Qwen/Qwen3-0.6B		16			6e-05	
+gsm8k-llama3.1-8b-base	u4yd6vbc	failed	2026-03-24T14:31:53Z	meta-llama/Llama-3.1-8B		16			4e-05	
+gsm8k-qwen3-1.7b	nbtt6glr	failed	2026-03-24T14:32:09Z	Qwen/Qwen3-1.7B		16			5e-05	
+gsm8k-qwen3-0.6b	skyb9znw	failed	2026-03-24T14:35:22Z	Qwen/Qwen3-0.6B		16			6e-05	
+gsm8k-llama3.1-8b-base	597tpqr2	failed	2026-03-24T14:35:24Z	meta-llama/Llama-3.1-8B		16			4e-05	
+gsm8k-qwen3-1.7b	gg3687gz	failed	2026-03-24T14:35:46Z	Qwen/Qwen3-1.7B		16			5e-05	
+gsm8k-qwen3-30b-moe	nv31plg0	failed	2026-03-24T14:35:48Z	Qwen/Qwen3-30B-A3B		16			3e-05	
+gsm8k-qwen3-4b	mw6wxrh0	crashed	2026-03-24T14:36:10Z	Qwen/Qwen3-4B		16			5e-05	
+tool-use-qwen3-8b	zn0klg12	failed	2026-03-24T14:37:56Z	Qwen/Qwen3-8B		16	tool_use	50	4e-05	0.375
+gsm8k-llama3.1-8b-base	qyx3a8kc	failed	2026-03-24T14:41:01Z	meta-llama/Llama-3.1-8B		16			4e-05	
+gsm8k-qwen3-0.6b	ukg5o7w3	failed	2026-03-24T14:41:01Z	Qwen/Qwen3-0.6B		16			6e-05	
+gsm8k-qwen3-1.7b	lj7816yb	failed	2026-03-24T14:41:24Z	Qwen/Qwen3-1.7B		16			5e-05	
+gsm8k-qwen3-0.6b	5tzhnzru	failed	2026-03-24T14:45:47Z	Qwen/Qwen3-0.6B		16			6e-05	
+gsm8k-llama3.1-8b-base	mb2dkm45	failed	2026-03-24T14:45:48Z	meta-llama/Llama-3.1-8B		16			4e-05	
+gsm8k-llama3.1-8b-base	5jk78t4a	failed	2026-03-24T14:46:07Z	meta-llama/Llama-3.1-8B		16			4e-05	
+gsm8k-qwen3-0.6b	f7e9chzo	failed	2026-03-24T14:46:12Z	Qwen/Qwen3-0.6B		16			6e-05	
+gsm8k-qwen3-1.7b	tgg704b4	failed	2026-03-24T14:46:40Z	Qwen/Qwen3-1.7B		16			5e-05	
+gsm8k-qwen3-1.7b	d1ny7hw8	failed	2026-03-24T14:46:55Z	Qwen/Qwen3-1.7B		16			5e-05	
+gsm8k-qwen3-0.6b	t0w9ym4v	failed	2026-03-24T14:50:38Z	Qwen/Qwen3-0.6B		16			6e-05	
+gsm8k-llama3.1-8b-base	oxvkfwnx	failed	2026-03-24T14:50:40Z	meta-llama/Llama-3.1-8B		16		50	4e-05	0.15625
+gsm8k-qwen3-1.7b	xpvdmxn6	failed	2026-03-24T14:51:06Z	Qwen/Qwen3-1.7B		16			5e-05	
+gsm8k-qwen3-0.6b	znavwveb	failed	2026-03-24T14:53:57Z	Qwen/Qwen3-0.6B		16		50	6e-05	
+gsm8k-qwen3-0.6b	gpzpnc0c	failed	2026-03-24T14:54:11Z	Qwen/Qwen3-0.6B		16		50	6e-05	
+gsm8k-qwen3-1.7b	61mhv17k	failed	2026-03-24T14:55:03Z	Qwen/Qwen3-1.7B		16		50	5e-05	
+tool-use-qwen0.5b	ck2htzpi	failed	2026-03-24T14:55:11Z	Qwen/Qwen2.5-0.5B-Instruct		16	tool_use	50	5e-05	0.3671875
+gsm8k-qwen3-1.7b	plh04u18	failed	2026-03-24T14:55:16Z	Qwen/Qwen3-1.7B		16		50	5e-05	
+gsm8k-qwen3-30b-moe	xji5tmy4	failed	2026-03-24T14:58:07Z	Qwen/Qwen3-30B-A3B		16			3e-05	
+gsm8k-qwen3-30b-moe	hfpkzo2i	failed	2026-03-24T14:58:52Z	Qwen/Qwen3-30B-A3B		16		50	3e-05	0
+gsm8k-qwen3-0.6b	r5r1ryr6	failed	2026-03-24T15:05:25Z	Qwen/Qwen3-0.6B		16		50	6e-05	
+humaneval-qwen3-8b	9bb5tt58	failed	2026-03-24T15:05:42Z	Qwen/Qwen3-8B		16	humaneval	50	4e-05	
+gsm8k-qwen3-1.7b	fu5ulaim	failed	2026-03-24T15:07:08Z	Qwen/Qwen3-1.7B		16		50	5e-05	
+tool-use-qwen3-8b	2d2p8y9t	finished	2026-03-24T15:14:59Z	Qwen/Qwen3-8B		16	tool_use	50	4e-05	0.375
+tool-use-qwen0.5b	wj2tjpqx	finished	2026-03-24T15:32:27Z	Qwen/Qwen2.5-0.5B-Instruct		16	tool_use	50	5e-05	0.375
+grpo-run	pa9k1vm4	failed	2026-03-24T16:21:29Z			16			4e-05	
+gsm8k-qwen3-1.7b-small-batch	v4k7iwvs	failed	2026-03-24T16:23:05Z	Qwen/Qwen3-1.7B		16		50	5e-05	
+gsm8k-qwen3-1.7b-4bit	oo99wdbu	failed	2026-03-24T16:35:22Z	Qwen/Qwen3-1.7B		16		50	5e-05	
+gsm8k-qwen3-1.7b	5dnzv1tp	failed	2026-03-24T16:36:39Z	Qwen/Qwen3-1.7B		16		50	5e-05	
+gsm8k-qwen3-8b-seed042-tinker	7azu6q2p	finished	2026-04-04T08:35:46Z	Qwen/Qwen3-8B	grpo				3e-05	0.5
+gsm8k-qwen3-8b-seed137-tinker	d5to7cef	finished	2026-04-04T08:35:48Z	Qwen/Qwen3-8B	grpo				3e-05	0.375
+gsm8k-qwen3-8b-seed256-tinker	4ncwubzc	finished	2026-04-04T08:35:50Z	Qwen/Qwen3-8B	grpo				3e-05	0
+gsm8k-qwen3-8b-seed512-tinker	n2u3w64a	finished	2026-04-04T08:35:52Z	Qwen/Qwen3-8B	grpo				3e-05	0.125
+gsm8k-qwen3-8b-seed999-tinker	uimxa7eu	finished	2026-04-04T08:35:55Z	Qwen/Qwen3-8B	grpo				3e-05	0.375
+gsm8k_100step-tinker	lqpiwl6g	finished	2026-04-04T08:35:57Z	Qwen/Qwen3-8B	grpo				5e-06	0.25
+gsm8k_rank8-tinker	l9ka6klx	finished	2026-04-04T08:35:59Z	Qwen/Qwen3-8B	grpo				3e-05	0.5
+gsm8k_rank16-tinker	ahmv6yu0	finished	2026-04-04T08:36:01Z	Qwen/Qwen3-8B	grpo				3e-05	0.125
+gsm8k_rank64-tinker	k4bwbnb8	finished	2026-04-04T08:36:04Z	Qwen/Qwen3-8B	grpo				3e-05	0.25
+gsm8k_4B_s137-tinker	erbijgzr	finished	2026-04-04T08:36:06Z	Qwen/Qwen3.5-4B	grpo				3e-05	1
+scarlet-snow-83	dkgwkmqb	finished	2026-04-04T10:32:57Z	gpt2				20000	5e-06	
+efficient-thunder-84	exyu1fbx	crashed	2026-04-04T10:35:52Z	gpt2				20000	5e-06	
+pleasant-rain-85	ztl5374n	crashed	2026-04-04T13:28:51Z	gpt2				20000	5e-06	
+sage-surf-86	f2fl8myp	crashed	2026-04-04T17:21:20Z	gpt2				20000	5e-06	
+final-roddenberry-87	d4nawn8m	finished	2026-04-05T07:32:00Z	gpt2				20000	5e-06	
+crusher-spot-88	ovofpj7r	crashed	2026-04-05T11:06:31Z	gpt2				50	5e-05	

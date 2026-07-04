@@ -1,0 +1,106 @@
+{
+  "experiment": "N10",
+  "model": "Qwen/Qwen3.5-4B",
+  "seeds": [
+    42,
+    179,
+    316,
+    453,
+    590,
+    727,
+    864,
+    1001
+  ],
+  "algos": [
+    "grpo",
+    "dr_grpo"
+  ],
+  "started_at": "2026-07-04T12:26:07.170124",
+  "runs": [
+    {
+      "algo": "grpo",
+      "seed": 42,
+      "status": "ok",
+      "steps": 15,
+      "heldout_acc": 0.375
+    },
+    {
+      "algo": "grpo",
+      "seed": 179,
+      "status": "in_progress",
+      "steps": 1
+    },
+    {
+      "algo": "grpo",
+      "seed": 316,
+      "status": "pending"
+    },
+    {
+      "algo": "grpo",
+      "seed": 453,
+      "status": "pending"
+    },
+    {
+      "algo": "grpo",
+      "seed": 590,
+      "status": "pending"
+    },
+    {
+      "algo": "grpo",
+      "seed": 727,
+      "status": "pending"
+    },
+    {
+      "algo": "grpo",
+      "seed": 864,
+      "status": "pending"
+    },
+    {
+      "algo": "grpo",
+      "seed": 1001,
+      "status": "pending"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 42,
+      "status": "pending"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 179,
+      "status": "pending"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 316,
+      "status": "pending"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 453,
+      "status": "pending"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 590,
+      "status": "pending"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 727,
+      "status": "pending"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 864,
+      "status": "pending"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 1001,
+      "status": "pending"
+    }
+  ],
+  "updated_at": "2026-07-04T13:13:08.836555",
+  "note": "Regenerated manually on 2026-07-04. s42 JSON is complete; s179 JSON is at step 1 and process is running."
+}

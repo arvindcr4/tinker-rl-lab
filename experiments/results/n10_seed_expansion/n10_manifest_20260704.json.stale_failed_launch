@@ -1,0 +1,40 @@
+{
+  "experiment": "N10",
+  "model": "Qwen/Qwen3.5-4B",
+  "seeds": [
+    42,
+    179
+  ],
+  "algos": [
+    "grpo",
+    "dr_grpo"
+  ],
+  "started_at": "2026-07-04T12:26:07.170124",
+  "runs": [
+    {
+      "algo": "grpo",
+      "seed": 42,
+      "status": "failed",
+      "error": "The api_key client option must be set either by passing api_key to the client or by setting the TINKER_API_KEY environment variable"
+    },
+    {
+      "algo": "grpo",
+      "seed": 179,
+      "status": "failed",
+      "error": "The api_key client option must be set either by passing api_key to the client or by setting the TINKER_API_KEY environment variable"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 42,
+      "status": "failed",
+      "error": "The api_key client option must be set either by passing api_key to the client or by setting the TINKER_API_KEY environment variable"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 179,
+      "status": "failed",
+      "error": "The api_key client option must be set either by passing api_key to the client or by setting the TINKER_API_KEY environment variable"
+    }
+  ],
+  "finished_at": "2026-07-04T12:26:17.073745"
+}

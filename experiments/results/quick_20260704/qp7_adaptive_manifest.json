@@ -1,0 +1,29 @@
+{
+  "experiment": "qp7-adaptive-g",
+  "date": "2026-07-04",
+  "model": "Qwen/Qwen3.5-4B",
+  "loss_form": "Tinker built-in loss_fn='importance_sampling': token-level IS-weighted policy gradient; advantages = r_i - group_mean(r) (GRPO-style mean baseline, no std normalization, no clipping param exposed client-side)",
+  "ref_policy_kl_handling": "none: no KL penalty or reference-policy term; pure reward with group-mean baseline",
+  "sampler_backend_precision": "unknown/closed-stack (Tinker managed sampler)",
+  "per_step_zvf_path": "computed client-side each step: fraction of the step's prompt groups whose G rewards have zero variance; written to zvf column of qp7_adaptive.tsv and W&B",
+  "group_size_schedule": "arm A: fixed G=4 all 16 steps; arm B: start G=4, after each step ZVF>0.5 escalates one ladder level (4->6->8, cap 8), ZVF<0.2 de-escalates one level (floor 4); ladder [4,6,8]",
+  "heldout_split": "none: training reward only, on a fixed 128-prompt pool from GSM8K train (seed 42 shuffle); no heldout eval in this quick run",
+  "decontamination_notes": "GSM8K train via HF openai/gsm8k 'main'; no additional decontamination performed; base model pretraining overlap with GSM8K unknown/closed-stack",
+  "config": {
+    "model": "Qwen/Qwen3.5-4B",
+    "rank": 32,
+    "seed": 42,
+    "steps": 16,
+    "pool": 128,
+    "prompts_per_step": 16,
+    "lr": 1e-05,
+    "temp": 0.8,
+    "top_p": 0.95,
+    "max_tokens": 512,
+    "max_prompt_tokens": 1024,
+    "wandb_project": "tinker-new-research",
+    "run_name": "qp7-adaptive-g-20260704",
+    "out_dir": "/home/claude/tinker-rl-lab/experiments/results/quick_20260704",
+    "smoke": false
+  }
+}

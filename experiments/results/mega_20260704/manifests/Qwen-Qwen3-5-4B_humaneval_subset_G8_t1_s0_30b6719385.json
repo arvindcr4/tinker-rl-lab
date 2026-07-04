@@ -1,0 +1,10 @@
+{
+  "cell_id": "Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385",
+  "loss_form": "n/a-sampling",
+  "ref_policy_kl": "n/a",
+  "sampler_backend_precision": "tinker-closed",
+  "per_step_zvf_path": "/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385.json",
+  "group_size_schedule": "fixed-G=8",
+  "heldout_split": "humaneval_subset",
+  "decontamination_notes": "humaneval-openai-subset"
+}

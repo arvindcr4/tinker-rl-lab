@@ -1,0 +1,27 @@
+name	id	state	createdAt	model	algorithm	group_size	dataset	max_steps	lr	final_metric
+webarena-20260422-143813-w0	zv260fry	failed	2026-04-22T14:46:49Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w9	bnjfmbiv	finished	2026-04-22T14:53:43Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w0	fuydbudz	finished	2026-04-22T14:53:43Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w2	yxfpxg5z	finished	2026-04-22T14:53:43Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w7	oqnoftbk	finished	2026-04-22T14:53:48Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w8	lkggpjqt	finished	2026-04-22T14:53:49Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w3	gx2tvzgj	finished	2026-04-22T14:53:52Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w1	kqm1xxze	finished	2026-04-22T14:53:52Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w5	larw6gk4	finished	2026-04-22T14:53:52Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w6	ttet206b	finished	2026-04-22T14:54:00Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w0	5lsiiibf	finished	2026-04-22T15:04:49Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w6	9dd1t30g	finished	2026-04-22T15:04:51Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w8	a9w66q7s	finished	2026-04-22T15:04:51Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w1	dplo6v85	finished	2026-04-22T15:04:52Z	Qwen/Qwen3-8B				30		
+webarena-20260422-143813-w9	o73dpvzy	finished	2026-04-22T15:04:52Z	Qwen/Qwen3-8B				30		
+webarena-20260422-151046-w0	254cviu3	finished	2026-04-22T15:13:40Z	Qwen/Qwen3-8B				30		
+webarena-20260422-151046-w2	fe076gh0	finished	2026-04-22T15:13:45Z	Qwen/Qwen3-8B				30		
+webarena-20260422-151046-w1	ksincxw8	finished	2026-04-22T15:13:51Z	Qwen/Qwen3-8B				30		
+webarena-20260422-151046-w3	ebg9mc4b	finished	2026-04-22T15:13:52Z	Qwen/Qwen3-8B				30		
+webarena-20260422-152217-w0	n4r9g9jo	finished	2026-04-22T17:05:44Z	Qwen/Qwen3-8B				30		
+webarena-20260422-152217-w0	oocxmb27	finished	2026-04-22T17:24:50Z	Qwen/Qwen3-8B				30		
+webarena-20260422-152217-w1	e565grlr	finished	2026-04-22T17:24:58Z	Qwen/Qwen3-8B				30		
+webarena-20260422-152217-w3	0dy9uexq	finished	2026-04-22T17:25:09Z	Qwen/Qwen3-8B				30		
+webarena-20260422-152217-w5	e9rd0oj2	finished	2026-04-22T17:25:24Z	Qwen/Qwen3-8B				30		
+webarena-20260422-152217-w7	t34qc0q6	finished	2026-04-22T17:25:38Z	Qwen/Qwen3-8B				30		
+webarena-20260422-152217-w9	6uqw1bps	finished	2026-04-22T17:25:52Z	Qwen/Qwen3-8B				30		

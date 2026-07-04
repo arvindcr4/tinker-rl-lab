@@ -1,0 +1,23 @@
+{
+  "exp": "qp4-truncation",
+  "date": "20260704",
+  "model": "Qwen/Qwen3.5-4B",
+  "loss_form": "none \u2014 sampling-only evaluation, no training loss",
+  "ref_policy_kl_handling": "n/a \u2014 no training, no reference policy or KL term",
+  "sampler_backend_precision": "unknown/closed-stack (Tinker hosted sampler; precision not exposed)",
+  "per_step_zvf_path": "n/a \u2014 no RL steps; TSV rows are cumulative eval batches per cap",
+  "group_size_schedule": "n/a \u2014 fixed num_samples=1 per problem at every cap",
+  "heldout_split": "openai/gsm8k main test[:200] (prior RL runs trained on train split only)",
+  "decontamination_notes": "GSM8K test is public; pretraining contamination of the base model is unknown/closed-stack. Zero overlap with our RL training prompts, which come exclusively from the GSM8K train split.",
+  "sampling": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "caps": [
+      64,
+      128,
+      256,
+      512
+    ],
+    "n_problems": 200
+  }
+}

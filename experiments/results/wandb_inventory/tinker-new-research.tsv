@@ -1,0 +1,10 @@
+name	id	state	createdAt	model	algorithm	group_size	dataset	max_steps	lr	final_metric
+n8-passrate-spectrum-qwen3-8b-k64-20260704-smoke	crxnjfxt	finished	2026-07-04T09:22:56Z	Qwen/Qwen3-8B						0.375
+n8-passrate-spectrum-qwen3-8b-k64-20260704	q61zvzt3	finished	2026-07-04T09:23:36Z	Qwen/Qwen3-8B						0.7381810897435898
+n2-reward-tensor_grpo-aero-gift-areal_s0_20260704_smoke	9gp1ojsp	finished	2026-07-04T09:27:18Z	Qwen/Qwen3.5-4B				2	1e-05	0
+qp12-zvf-dense-20260704	ku25x46q	finished	2026-07-04T09:28:17Z	Qwen/Qwen3.5-4B				16	1e-05	0.5625
+qp4-truncation-20260704	a52g04w0	finished	2026-07-04T09:28:58Z	Qwen/Qwen3.5-4B						0.125
+qp7-adaptive-g-20260704	07gr53c8	running	2026-07-04T09:29:02Z	Qwen/Qwen3.5-4B				16	1e-05	4
+qp3-gsweep-20260704	51hz4afs	finished	2026-07-04T09:29:48Z	Qwen/Qwen3.5-4B				16	1e-05	0.5
+n2-reward-tensor_grpo-aero-gift-areal_s0_20260704	09zdaztp	running	2026-07-04T09:30:13Z	Qwen/Qwen3.5-4B				40	1e-05	0.24105897071434343
+qp8-fraud-sft-20260704	ek1b2cxn	finished	2026-07-04T09:34:17Z	Qwen/Qwen3.5-4B					0.0001	0.792

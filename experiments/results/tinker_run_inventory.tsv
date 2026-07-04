@@ -1,0 +1,1077 @@
+training_run_id	base_model	is_lora	lora_rank	corrupted	last_request_time	checkpoint_id	checkpoint_type	checkpoint_time	tinker_path	size_bytes	public	expires_at	is_latest_sampler_checkpoint
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step0	sampler	2026-07-04 09:35:11.907967+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step0	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step1	sampler	2026-07-04 09:35:28.835485+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step1	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step2	sampler	2026-07-04 09:35:48.140394+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step2	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step3	sampler	2026-07-04 09:36:07.592787+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step3	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step4	sampler	2026-07-04 09:36:25.392264+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step4	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step5	sampler	2026-07-04 09:36:44.290752+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step5	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step6	sampler	2026-07-04 09:37:03.115834+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step6	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step7	sampler	2026-07-04 09:37:22.224035+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step7	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step8	sampler	2026-07-04 09:37:39.286172+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step8	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step9	sampler	2026-07-04 09:37:56.285892+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step9	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step10	sampler	2026-07-04 09:38:14.031888+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step10	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step11	sampler	2026-07-04 09:38:32.097901+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step11	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step12	sampler	2026-07-04 09:38:50.459469+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step12	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step13	sampler	2026-07-04 09:39:07.647384+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step13	291856262	False		True
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:07.112318+00:00	sampler_weights/g8_step14	sampler	2026-07-04 09:39:24.245568+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:1/sampler_weights/g8_step14	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.381539+00:00	sampler_weights/qp7B_s0	sampler	2026-07-04 09:34:54.719986+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:1/sampler_weights/qp7B_s0	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.381539+00:00	sampler_weights/qp7B_s1	sampler	2026-07-04 09:36:20.154708+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:1/sampler_weights/qp7B_s1	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.381539+00:00	sampler_weights/qp7B_s2	sampler	2026-07-04 09:36:59.454824+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:1/sampler_weights/qp7B_s2	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.381539+00:00	sampler_weights/qp7B_s3	sampler	2026-07-04 09:37:47.855469+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:1/sampler_weights/qp7B_s3	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.381539+00:00	sampler_weights/qp7B_s4	sampler	2026-07-04 09:38:34.124326+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:1/sampler_weights/qp7B_s4	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.381539+00:00	sampler_weights/qp7B_s5	sampler	2026-07-04 09:39:11.171622+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:1/sampler_weights/qp7B_s5	291856262	False		True
+a0d888b9-1e38-5934-ace1-a2862a9ab786:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-07-04 09:34:21.997318+00:00								
+7465986e-84b7-5dbd-859b-83064a4f9f12:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-07-04 09:39:12.583105+00:00	sampler_weights/eval_0	sampler	2026-07-04 09:34:33.244432+00:00	tinker://7465986e-84b7-5dbd-859b-83064a4f9f12:train:0/sampler_weights/eval_0	146038655	False		False
+7465986e-84b7-5dbd-859b-83064a4f9f12:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-07-04 09:39:12.583105+00:00	sampler_weights/eval_16	sampler	2026-07-04 09:35:47.673182+00:00	tinker://7465986e-84b7-5dbd-859b-83064a4f9f12:train:0/sampler_weights/eval_16	146038655	False		False
+7465986e-84b7-5dbd-859b-83064a4f9f12:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-07-04 09:39:12.583105+00:00	sampler_weights/eval_32	sampler	2026-07-04 09:36:55.538848+00:00	tinker://7465986e-84b7-5dbd-859b-83064a4f9f12:train:0/sampler_weights/eval_32	146038655	False		False
+7465986e-84b7-5dbd-859b-83064a4f9f12:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-07-04 09:39:12.583105+00:00	sampler_weights/eval_48	sampler	2026-07-04 09:38:03.998621+00:00	tinker://7465986e-84b7-5dbd-859b-83064a4f9f12:train:0/sampler_weights/eval_48	146038655	False		False
+7465986e-84b7-5dbd-859b-83064a4f9f12:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-07-04 09:39:12.583105+00:00	sampler_weights/eval_63	sampler	2026-07-04 09:39:13.017244+00:00	tinker://7465986e-84b7-5dbd-859b-83064a4f9f12:train:0/sampler_weights/eval_63	146038655	False		True
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step0	sampler	2026-07-04 09:34:02.018082+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step0	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step1	sampler	2026-07-04 09:34:21.245790+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step1	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step2	sampler	2026-07-04 09:34:41.056817+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step2	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step3	sampler	2026-07-04 09:34:59.276808+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step3	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step4	sampler	2026-07-04 09:35:17.169228+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step4	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step5	sampler	2026-07-04 09:35:35.414684+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step5	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step6	sampler	2026-07-04 09:35:55.215149+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step6	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step7	sampler	2026-07-04 09:36:13.435284+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step7	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step8	sampler	2026-07-04 09:36:32.541290+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step8	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step9	sampler	2026-07-04 09:36:52.273974+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step9	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step10	sampler	2026-07-04 09:37:10.333923+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step10	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step11	sampler	2026-07-04 09:37:28.851852+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step11	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step12	sampler	2026-07-04 09:37:45.750551+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step12	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step13	sampler	2026-07-04 09:38:05.199305+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step13	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step14	sampler	2026-07-04 09:38:23.596335+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step14	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:38:57.235510+00:00	sampler_weights/s1_step15	sampler	2026-07-04 09:38:40.615187+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:1/sampler_weights/s1_step15	291856262	False		True
+7b18be15-c219-5e72-a926-8cf15c799c1a:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-07-04 09:33:25.921209+00:00	sampler_weights/eval_0	sampler	2026-07-04 09:33:02.498095+00:00	tinker://7b18be15-c219-5e72-a926-8cf15c799c1a:train:0/sampler_weights/eval_0	146038655	False		False
+7b18be15-c219-5e72-a926-8cf15c799c1a:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-07-04 09:33:25.921209+00:00	sampler_weights/eval_1	sampler	2026-07-04 09:33:15.381458+00:00	tinker://7b18be15-c219-5e72-a926-8cf15c799c1a:train:0/sampler_weights/eval_1	146038655	False		False
+7b18be15-c219-5e72-a926-8cf15c799c1a:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-07-04 09:33:25.921209+00:00	sampler_weights/eval_2	sampler	2026-07-04 09:33:26.408163+00:00	tinker://7b18be15-c219-5e72-a926-8cf15c799c1a:train:0/sampler_weights/eval_2	146038655	False		True
+c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:08.712741+00:00	sampler_weights/grpo_s0	sampler	2026-07-04 09:30:35.310985+00:00	tinker://c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1/sampler_weights/grpo_s0	291856262	False		False
+c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:08.712741+00:00	sampler_weights/grpo_s1	sampler	2026-07-04 09:32:29.922957+00:00	tinker://c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1/sampler_weights/grpo_s1	291856262	False		False
+c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:08.712741+00:00	sampler_weights/grpo_s2	sampler	2026-07-04 09:33:26.674255+00:00	tinker://c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1/sampler_weights/grpo_s2	291856262	False		False
+c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:08.712741+00:00	sampler_weights/grpo_s3	sampler	2026-07-04 09:35:25.312932+00:00	tinker://c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1/sampler_weights/grpo_s3	291856262	False		False
+c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:08.712741+00:00	sampler_weights/grpo_s4	sampler	2026-07-04 09:36:20.247151+00:00	tinker://c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1/sampler_weights/grpo_s4	291856262	False		False
+c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:08.712741+00:00	sampler_weights/grpo_s5	sampler	2026-07-04 09:36:59.370796+00:00	tinker://c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1/sampler_weights/grpo_s5	291856262	False		False
+c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:08.712741+00:00	sampler_weights/grpo_s6	sampler	2026-07-04 09:37:52.141812+00:00	tinker://c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1/sampler_weights/grpo_s6	291856262	False		False
+c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:08.712741+00:00	sampler_weights/grpo_s7	sampler	2026-07-04 09:38:34.214518+00:00	tinker://c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1/sampler_weights/grpo_s7	291856262	False		False
+c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:39:08.712741+00:00	sampler_weights/grpo_s8	sampler	2026-07-04 09:39:15.255476+00:00	tinker://c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:1/sampler_weights/grpo_s8	291856262	False		True
+c74f5f69-9987-5b25-8a4e-b2e606f27ca6:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:30:17.210109+00:00								
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step0	sampler	2026-07-04 09:30:04.652574+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step0	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step1	sampler	2026-07-04 09:30:22.650205+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step1	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step2	sampler	2026-07-04 09:30:42.433424+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step2	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step3	sampler	2026-07-04 09:31:04.198035+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step3	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step4	sampler	2026-07-04 09:31:21.437443+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step4	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step5	sampler	2026-07-04 09:31:38.994879+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step5	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step6	sampler	2026-07-04 09:31:58.907060+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step6	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step7	sampler	2026-07-04 09:32:17.415489+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step7	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step8	sampler	2026-07-04 09:32:37.033572+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step8	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step9	sampler	2026-07-04 09:32:54.979786+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step9	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step10	sampler	2026-07-04 09:33:14.106717+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step10	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step11	sampler	2026-07-04 09:33:32.586573+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step11	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step12	sampler	2026-07-04 09:33:50.173320+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step12	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step13	sampler	2026-07-04 09:34:09.507220+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step13	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step14	sampler	2026-07-04 09:34:26.247502+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step14	291856262	False		False
+81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:35:02.325390+00:00	sampler_weights/g4_step15	sampler	2026-07-04 09:34:44.477153+00:00	tinker://81aa65f5-f17f-562c-ae2d-b00e8931675d:train:0/sampler_weights/g4_step15	291856262	False		True
+49b99db4-a762-510b-a5ee-0a04d543113b:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:29:12.993957+00:00	sampler_weights/g8_step0	sampler	2026-07-04 09:29:20.905711+00:00	tinker://49b99db4-a762-510b-a5ee-0a04d543113b:train:1/sampler_weights/g8_step0	291856262	False		True
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s0	sampler	2026-07-04 09:29:14.674950+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s0	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s1	sampler	2026-07-04 09:29:36.342818+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s1	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s2	sampler	2026-07-04 09:29:56.055294+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s2	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s3	sampler	2026-07-04 09:30:19.508267+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s3	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s4	sampler	2026-07-04 09:30:36.063556+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s4	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s5	sampler	2026-07-04 09:30:55.113100+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s5	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s6	sampler	2026-07-04 09:31:18.880774+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s6	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s7	sampler	2026-07-04 09:31:36.679930+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s7	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s8	sampler	2026-07-04 09:32:00.353973+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s8	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s9	sampler	2026-07-04 09:32:20.858191+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s9	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s10	sampler	2026-07-04 09:32:40.144289+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s10	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s11	sampler	2026-07-04 09:32:57.541508+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s11	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s12	sampler	2026-07-04 09:33:16.417746+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s12	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s13	sampler	2026-07-04 09:33:35.108355+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s13	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s14	sampler	2026-07-04 09:33:50.503083+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s14	291856262	False		False
+8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:34:22.839659+00:00	sampler_weights/qp7A_s15	sampler	2026-07-04 09:34:07.410698+00:00	tinker://8c0018a3-b25b-5252-bf6a-e07b28203cd4:train:0/sampler_weights/qp7A_s15	291856262	False		True
+0922e77d-759d-5a2d-8602-56ee8c31cf72:train:4	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:29:03.311940+00:00	sampler_weights/areal_s0	sampler	2026-07-04 09:29:18.997468+00:00	tinker://0922e77d-759d-5a2d-8602-56ee8c31cf72:train:4/sampler_weights/areal_s0	291856262	False		True
+49b99db4-a762-510b-a5ee-0a04d543113b:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:28:57.458723+00:00	sampler_weights/g4_step0	sampler	2026-07-04 09:29:02.791026+00:00	tinker://49b99db4-a762-510b-a5ee-0a04d543113b:train:0/sampler_weights/g4_step0	291856262	False		True
+0922e77d-759d-5a2d-8602-56ee8c31cf72:train:3	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:28:53.212022+00:00	sampler_weights/gift_s0	sampler	2026-07-04 09:28:40.907241+00:00	tinker://0922e77d-759d-5a2d-8602-56ee8c31cf72:train:3/sampler_weights/gift_s0	291856262	False		False
+0922e77d-759d-5a2d-8602-56ee8c31cf72:train:3	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:28:53.212022+00:00	sampler_weights/gift_s1	sampler	2026-07-04 09:28:53.739452+00:00	tinker://0922e77d-759d-5a2d-8602-56ee8c31cf72:train:3/sampler_weights/gift_s1	291856262	False		True
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step0	sampler	2026-07-04 09:28:34.388310+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step0	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step1	sampler	2026-07-04 09:28:53.801749+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step1	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step2	sampler	2026-07-04 09:29:12.672099+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step2	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step3	sampler	2026-07-04 09:29:37.144300+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step3	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step4	sampler	2026-07-04 09:29:56.873579+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step4	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step5	sampler	2026-07-04 09:30:20.016782+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step5	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step6	sampler	2026-07-04 09:30:38.712972+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step6	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step7	sampler	2026-07-04 09:30:57.341919+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step7	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step8	sampler	2026-07-04 09:31:19.220010+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step8	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step9	sampler	2026-07-04 09:31:38.493357+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step9	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step10	sampler	2026-07-04 09:32:00.146975+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step10	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step11	sampler	2026-07-04 09:32:20.215896+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step11	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step12	sampler	2026-07-04 09:32:39.613016+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step12	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step13	sampler	2026-07-04 09:32:58.396386+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step13	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step14	sampler	2026-07-04 09:33:17.937214+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step14	291856262	False		False
+d0b02522-7455-520e-974d-808b258aa0ba:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:33:50.338888+00:00	sampler_weights/s0_step15	sampler	2026-07-04 09:33:35.481097+00:00	tinker://d0b02522-7455-520e-974d-808b258aa0ba:train:0/sampler_weights/s0_step15	291856262	False		True
+a9284595-60f4-5315-a3ee-81e3c1e3a2e0:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:28:12.810941+00:00	sampler_weights/qp7B_s0	sampler	2026-07-04 09:28:27.591913+00:00	tinker://a9284595-60f4-5315-a3ee-81e3c1e3a2e0:train:1/sampler_weights/qp7B_s0	291856262	False		True
+0922e77d-759d-5a2d-8602-56ee8c31cf72:train:2	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:28:26.219511+00:00	sampler_weights/aero_s0	sampler	2026-07-04 09:28:12.811877+00:00	tinker://0922e77d-759d-5a2d-8602-56ee8c31cf72:train:2/sampler_weights/aero_s0	291856262	False		False
+0922e77d-759d-5a2d-8602-56ee8c31cf72:train:2	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:28:26.219511+00:00	sampler_weights/aero_s1	sampler	2026-07-04 09:28:26.754167+00:00	tinker://0922e77d-759d-5a2d-8602-56ee8c31cf72:train:2/sampler_weights/aero_s1	291856262	False		True
+a9284595-60f4-5315-a3ee-81e3c1e3a2e0:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:27:59.271618+00:00	sampler_weights/qp7A_s0	sampler	2026-07-04 09:28:00.827915+00:00	tinker://a9284595-60f4-5315-a3ee-81e3c1e3a2e0:train:0/sampler_weights/qp7A_s0	291856262	False		True
+422f3dfe-daaa-5d30-93fd-ec0eee729bb1:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:27:48.660818+00:00	sampler_weights/s0_step0	sampler	2026-07-04 09:27:52.580054+00:00	tinker://422f3dfe-daaa-5d30-93fd-ec0eee729bb1:train:0/sampler_weights/s0_step0	291856262	False		True
+0922e77d-759d-5a2d-8602-56ee8c31cf72:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:27:53.600898+00:00	sampler_weights/grpo_s0	sampler	2026-07-04 09:27:41.069198+00:00	tinker://0922e77d-759d-5a2d-8602-56ee8c31cf72:train:1/sampler_weights/grpo_s0	291856262	False		False
+0922e77d-759d-5a2d-8602-56ee8c31cf72:train:1	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:27:53.600898+00:00	sampler_weights/grpo_s1	sampler	2026-07-04 09:27:54.194867+00:00	tinker://0922e77d-759d-5a2d-8602-56ee8c31cf72:train:1/sampler_weights/grpo_s1	291856262	False		True
+0922e77d-759d-5a2d-8602-56ee8c31cf72:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-07-04 09:27:21.156013+00:00								
+83308b57-05ed-5a56-b067-c8f038e7a6ee:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-26 06:19:50.087134+00:00	sampler_weights/step_0	sampler	2026-06-26 06:19:24.580370+00:00	tinker://83308b57-05ed-5a56-b067-c8f038e7a6ee:train:0/sampler_weights/step_0	146038655	False		False
+83308b57-05ed-5a56-b067-c8f038e7a6ee:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-26 06:19:50.087134+00:00	sampler_weights/step_1	sampler	2026-06-26 06:19:44.386660+00:00	tinker://83308b57-05ed-5a56-b067-c8f038e7a6ee:train:0/sampler_weights/step_1	146038655	False		False
+83308b57-05ed-5a56-b067-c8f038e7a6ee:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-26 06:19:50.087134+00:00	sampler_weights/step_2	sampler	2026-06-26 06:19:50.644506+00:00	tinker://83308b57-05ed-5a56-b067-c8f038e7a6ee:train:0/sampler_weights/step_2	146038655	False		True
+6c193192-ca79-5e92-a2c2-fed0f1084bd2:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-26 04:47:03.811887+00:00	sampler_weights/step_0	sampler	2026-06-26 04:47:13.249476+00:00	tinker://6c193192-ca79-5e92-a2c2-fed0f1084bd2:train:0/sampler_weights/step_0	146038655	False		True
+5b00afdf-934c-5e54-88af-001bed1311ee:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-26 04:43:17.984732+00:00	sampler_weights/step_0	sampler	2026-06-26 04:43:20.959550+00:00	tinker://5b00afdf-934c-5e54-88af-001bed1311ee:train:0/sampler_weights/step_0	146038655	False		True
+8df5a7e0-7899-5acd-8152-36fd5dad41c1:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:42:06.230957+00:00	sampler_weights/s0	sampler	2026-06-21 07:37:21.937746+00:00	tinker://8df5a7e0-7899-5acd-8152-36fd5dad41c1:train:0/sampler_weights/s0	146038457	False		False
+8df5a7e0-7899-5acd-8152-36fd5dad41c1:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:42:06.230957+00:00	sampler_weights/s5	sampler	2026-06-21 07:38:59.466669+00:00	tinker://8df5a7e0-7899-5acd-8152-36fd5dad41c1:train:0/sampler_weights/s5	146038457	False		False
+8df5a7e0-7899-5acd-8152-36fd5dad41c1:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:42:06.230957+00:00	sampler_weights/s10	sampler	2026-06-21 07:40:31.602745+00:00	tinker://8df5a7e0-7899-5acd-8152-36fd5dad41c1:train:0/sampler_weights/s10	146038457	False		False
+8df5a7e0-7899-5acd-8152-36fd5dad41c1:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:42:06.230957+00:00	sampler_weights/s15	sampler	2026-06-21 07:42:05.185461+00:00	tinker://8df5a7e0-7899-5acd-8152-36fd5dad41c1:train:0/sampler_weights/s15	146038457	False		False
+8df5a7e0-7899-5acd-8152-36fd5dad41c1:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:42:06.230957+00:00	sampler_weights/final	sampler	2026-06-21 07:42:06.663478+00:00	tinker://8df5a7e0-7899-5acd-8152-36fd5dad41c1:train:0/sampler_weights/final	146038457	False		True
+01c8de98-c397-5459-85b9-36c06980b3ef:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:36:58.879054+00:00	sampler_weights/s0	sampler	2026-06-21 07:29:38.237034+00:00	tinker://01c8de98-c397-5459-85b9-36c06980b3ef:train:0/sampler_weights/s0	146038457	False		False
+01c8de98-c397-5459-85b9-36c06980b3ef:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:36:58.879054+00:00	sampler_weights/s5	sampler	2026-06-21 07:31:16.807028+00:00	tinker://01c8de98-c397-5459-85b9-36c06980b3ef:train:0/sampler_weights/s5	146038457	False		False
+01c8de98-c397-5459-85b9-36c06980b3ef:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:36:58.879054+00:00	sampler_weights/s10	sampler	2026-06-21 07:33:25.235758+00:00	tinker://01c8de98-c397-5459-85b9-36c06980b3ef:train:0/sampler_weights/s10	146038457	False		False
+01c8de98-c397-5459-85b9-36c06980b3ef:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:36:58.879054+00:00	sampler_weights/s15	sampler	2026-06-21 07:36:57.846009+00:00	tinker://01c8de98-c397-5459-85b9-36c06980b3ef:train:0/sampler_weights/s15	146038457	False		False
+01c8de98-c397-5459-85b9-36c06980b3ef:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:36:58.879054+00:00	sampler_weights/final	sampler	2026-06-21 07:36:59.336388+00:00	tinker://01c8de98-c397-5459-85b9-36c06980b3ef:train:0/sampler_weights/final	146038457	False		True
+d779d57c-0457-5dc9-b1a9-85d9785d657b:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:29:19.117832+00:00	sampler_weights/s0	sampler	2026-06-21 07:24:27.352505+00:00	tinker://d779d57c-0457-5dc9-b1a9-85d9785d657b:train:0/sampler_weights/s0	146038457	False		False
+d779d57c-0457-5dc9-b1a9-85d9785d657b:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:29:19.117832+00:00	sampler_weights/s5	sampler	2026-06-21 07:25:58.889044+00:00	tinker://d779d57c-0457-5dc9-b1a9-85d9785d657b:train:0/sampler_weights/s5	146038457	False		False
+d779d57c-0457-5dc9-b1a9-85d9785d657b:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:29:19.117832+00:00	sampler_weights/s10	sampler	2026-06-21 07:27:41.422980+00:00	tinker://d779d57c-0457-5dc9-b1a9-85d9785d657b:train:0/sampler_weights/s10	146038457	False		False
+d779d57c-0457-5dc9-b1a9-85d9785d657b:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:29:19.117832+00:00	sampler_weights/s15	sampler	2026-06-21 07:29:18.143331+00:00	tinker://d779d57c-0457-5dc9-b1a9-85d9785d657b:train:0/sampler_weights/s15	146038457	False		False
+d779d57c-0457-5dc9-b1a9-85d9785d657b:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:29:19.117832+00:00	sampler_weights/final	sampler	2026-06-21 07:29:20.399649+00:00	tinker://d779d57c-0457-5dc9-b1a9-85d9785d657b:train:0/sampler_weights/final	146038457	False		True
+8e08e377-f2f6-5d24-b48e-c276ae4ec773:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:24:06.933555+00:00	sampler_weights/s0	sampler	2026-06-21 07:19:02.060543+00:00	tinker://8e08e377-f2f6-5d24-b48e-c276ae4ec773:train:0/sampler_weights/s0	146038457	False		False
+8e08e377-f2f6-5d24-b48e-c276ae4ec773:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:24:06.933555+00:00	sampler_weights/s5	sampler	2026-06-21 07:20:47.929171+00:00	tinker://8e08e377-f2f6-5d24-b48e-c276ae4ec773:train:0/sampler_weights/s5	146038457	False		False
+8e08e377-f2f6-5d24-b48e-c276ae4ec773:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:24:06.933555+00:00	sampler_weights/s10	sampler	2026-06-21 07:22:31.462158+00:00	tinker://8e08e377-f2f6-5d24-b48e-c276ae4ec773:train:0/sampler_weights/s10	146038457	False		False
+8e08e377-f2f6-5d24-b48e-c276ae4ec773:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:24:06.933555+00:00	sampler_weights/s15	sampler	2026-06-21 07:24:05.963320+00:00	tinker://8e08e377-f2f6-5d24-b48e-c276ae4ec773:train:0/sampler_weights/s15	146038457	False		False
+8e08e377-f2f6-5d24-b48e-c276ae4ec773:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:24:06.933555+00:00	sampler_weights/final	sampler	2026-06-21 07:24:07.378784+00:00	tinker://8e08e377-f2f6-5d24-b48e-c276ae4ec773:train:0/sampler_weights/final	146038457	False		True
+f2ba763e-915f-5e92-964c-ac7e8114a079:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:18:41.120482+00:00	sampler_weights/s0	sampler	2026-06-21 07:13:51.736431+00:00	tinker://f2ba763e-915f-5e92-964c-ac7e8114a079:train:0/sampler_weights/s0	146038457	False		False
+f2ba763e-915f-5e92-964c-ac7e8114a079:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:18:41.120482+00:00	sampler_weights/s5	sampler	2026-06-21 07:15:28.348295+00:00	tinker://f2ba763e-915f-5e92-964c-ac7e8114a079:train:0/sampler_weights/s5	146038457	False		False
+f2ba763e-915f-5e92-964c-ac7e8114a079:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:18:41.120482+00:00	sampler_weights/s10	sampler	2026-06-21 07:17:06.370658+00:00	tinker://f2ba763e-915f-5e92-964c-ac7e8114a079:train:0/sampler_weights/s10	146038457	False		False
+f2ba763e-915f-5e92-964c-ac7e8114a079:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:18:41.120482+00:00	sampler_weights/s15	sampler	2026-06-21 07:18:40.069510+00:00	tinker://f2ba763e-915f-5e92-964c-ac7e8114a079:train:0/sampler_weights/s15	146038457	False		False
+f2ba763e-915f-5e92-964c-ac7e8114a079:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:18:41.120482+00:00	sampler_weights/final	sampler	2026-06-21 07:18:41.640849+00:00	tinker://f2ba763e-915f-5e92-964c-ac7e8114a079:train:0/sampler_weights/final	146038457	False		True
+4c6556f4-81fd-5e3a-8514-984ea9dbe718:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:13:31.651896+00:00	sampler_weights/s0	sampler	2026-06-21 07:08:31.523313+00:00	tinker://4c6556f4-81fd-5e3a-8514-984ea9dbe718:train:0/sampler_weights/s0	146038457	False		False
+4c6556f4-81fd-5e3a-8514-984ea9dbe718:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:13:31.651896+00:00	sampler_weights/s5	sampler	2026-06-21 07:10:13.926331+00:00	tinker://4c6556f4-81fd-5e3a-8514-984ea9dbe718:train:0/sampler_weights/s5	146038457	False		False
+4c6556f4-81fd-5e3a-8514-984ea9dbe718:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:13:31.651896+00:00	sampler_weights/s10	sampler	2026-06-21 07:11:48.241971+00:00	tinker://4c6556f4-81fd-5e3a-8514-984ea9dbe718:train:0/sampler_weights/s10	146038457	False		False
+4c6556f4-81fd-5e3a-8514-984ea9dbe718:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:13:31.651896+00:00	sampler_weights/s15	sampler	2026-06-21 07:13:30.405928+00:00	tinker://4c6556f4-81fd-5e3a-8514-984ea9dbe718:train:0/sampler_weights/s15	146038457	False		False
+4c6556f4-81fd-5e3a-8514-984ea9dbe718:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:13:31.651896+00:00	sampler_weights/final	sampler	2026-06-21 07:13:32.096693+00:00	tinker://4c6556f4-81fd-5e3a-8514-984ea9dbe718:train:0/sampler_weights/final	146038457	False		True
+22ec613a-4879-53de-909d-ea1bc9d92a25:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:08:16.268847+00:00	sampler_weights/s0	sampler	2026-06-21 07:03:21.197866+00:00	tinker://22ec613a-4879-53de-909d-ea1bc9d92a25:train:0/sampler_weights/s0	146038457	False		False
+22ec613a-4879-53de-909d-ea1bc9d92a25:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:08:16.268847+00:00	sampler_weights/s5	sampler	2026-06-21 07:05:12.079039+00:00	tinker://22ec613a-4879-53de-909d-ea1bc9d92a25:train:0/sampler_weights/s5	146038457	False		False
+22ec613a-4879-53de-909d-ea1bc9d92a25:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:08:16.268847+00:00	sampler_weights/s10	sampler	2026-06-21 07:06:43.720253+00:00	tinker://22ec613a-4879-53de-909d-ea1bc9d92a25:train:0/sampler_weights/s10	146038457	False		False
+22ec613a-4879-53de-909d-ea1bc9d92a25:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:08:16.268847+00:00	sampler_weights/s15	sampler	2026-06-21 07:08:15.274790+00:00	tinker://22ec613a-4879-53de-909d-ea1bc9d92a25:train:0/sampler_weights/s15	146038457	False		False
+22ec613a-4879-53de-909d-ea1bc9d92a25:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:08:16.268847+00:00	sampler_weights/final	sampler	2026-06-21 07:08:16.707306+00:00	tinker://22ec613a-4879-53de-909d-ea1bc9d92a25:train:0/sampler_weights/final	146038457	False		True
+41e16d1f-2b6a-5c5b-a3da-c9bbe1637508:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:03:06.671435+00:00	sampler_weights/s0	sampler	2026-06-21 06:58:21.610657+00:00	tinker://41e16d1f-2b6a-5c5b-a3da-c9bbe1637508:train:0/sampler_weights/s0	146038457	False		False
+41e16d1f-2b6a-5c5b-a3da-c9bbe1637508:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:03:06.671435+00:00	sampler_weights/s5	sampler	2026-06-21 06:59:59.001070+00:00	tinker://41e16d1f-2b6a-5c5b-a3da-c9bbe1637508:train:0/sampler_weights/s5	146038457	False		False
+41e16d1f-2b6a-5c5b-a3da-c9bbe1637508:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:03:06.671435+00:00	sampler_weights/s10	sampler	2026-06-21 07:01:32.875448+00:00	tinker://41e16d1f-2b6a-5c5b-a3da-c9bbe1637508:train:0/sampler_weights/s10	146038457	False		False
+41e16d1f-2b6a-5c5b-a3da-c9bbe1637508:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:03:06.671435+00:00	sampler_weights/s15	sampler	2026-06-21 07:03:05.723722+00:00	tinker://41e16d1f-2b6a-5c5b-a3da-c9bbe1637508:train:0/sampler_weights/s15	146038457	False		False
+41e16d1f-2b6a-5c5b-a3da-c9bbe1637508:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 07:03:06.671435+00:00	sampler_weights/final	sampler	2026-06-21 07:03:07.152151+00:00	tinker://41e16d1f-2b6a-5c5b-a3da-c9bbe1637508:train:0/sampler_weights/final	146038457	False		True
+2781cc05-097a-5006-a389-3703828becc2:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:58:04.811171+00:00	sampler_weights/s0	sampler	2026-06-21 06:52:30.353695+00:00	tinker://2781cc05-097a-5006-a389-3703828becc2:train:0/sampler_weights/s0	146038457	False		False
+2781cc05-097a-5006-a389-3703828becc2:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:58:04.811171+00:00	sampler_weights/s5	sampler	2026-06-21 06:54:45.727139+00:00	tinker://2781cc05-097a-5006-a389-3703828becc2:train:0/sampler_weights/s5	146038457	False		False
+2781cc05-097a-5006-a389-3703828becc2:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:58:04.811171+00:00	sampler_weights/s10	sampler	2026-06-21 06:56:27.272518+00:00	tinker://2781cc05-097a-5006-a389-3703828becc2:train:0/sampler_weights/s10	146038457	False		False
+2781cc05-097a-5006-a389-3703828becc2:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:58:04.811171+00:00	sampler_weights/s15	sampler	2026-06-21 06:58:03.689053+00:00	tinker://2781cc05-097a-5006-a389-3703828becc2:train:0/sampler_weights/s15	146038457	False		False
+2781cc05-097a-5006-a389-3703828becc2:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:58:04.811171+00:00	sampler_weights/final	sampler	2026-06-21 06:58:05.451546+00:00	tinker://2781cc05-097a-5006-a389-3703828becc2:train:0/sampler_weights/final	146038457	False		True
+e37ef832-d9da-595c-a1df-fa0b953ed025:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:52:14.490797+00:00	sampler_weights/s0	sampler	2026-06-21 06:33:50.135928+00:00	tinker://e37ef832-d9da-595c-a1df-fa0b953ed025:train:0/sampler_weights/s0	146038457	False		False
+e37ef832-d9da-595c-a1df-fa0b953ed025:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:52:14.490797+00:00	sampler_weights/s5	sampler	2026-06-21 06:35:28.630402+00:00	tinker://e37ef832-d9da-595c-a1df-fa0b953ed025:train:0/sampler_weights/s5	146038457	False		False
+e37ef832-d9da-595c-a1df-fa0b953ed025:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:52:14.490797+00:00	sampler_weights/s10	sampler	2026-06-21 06:47:03.245417+00:00	tinker://e37ef832-d9da-595c-a1df-fa0b953ed025:train:0/sampler_weights/s10	146038457	False		False
+e37ef832-d9da-595c-a1df-fa0b953ed025:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:52:14.490797+00:00	sampler_weights/s15	sampler	2026-06-21 06:52:13.443597+00:00	tinker://e37ef832-d9da-595c-a1df-fa0b953ed025:train:0/sampler_weights/s15	146038457	False		False
+e37ef832-d9da-595c-a1df-fa0b953ed025:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:52:14.490797+00:00	sampler_weights/final	sampler	2026-06-21 06:52:14.945685+00:00	tinker://e37ef832-d9da-595c-a1df-fa0b953ed025:train:0/sampler_weights/final	146038457	False		True
+fae28299-45a5-53d9-8d09-34d4e9edacf0:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:33:30.597897+00:00	sampler_weights/s0	sampler	2026-06-21 06:28:20.234324+00:00	tinker://fae28299-45a5-53d9-8d09-34d4e9edacf0:train:0/sampler_weights/s0	146038457	False		False
+fae28299-45a5-53d9-8d09-34d4e9edacf0:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:33:30.597897+00:00	sampler_weights/s5	sampler	2026-06-21 06:30:06.338985+00:00	tinker://fae28299-45a5-53d9-8d09-34d4e9edacf0:train:0/sampler_weights/s5	146038457	False		False
+fae28299-45a5-53d9-8d09-34d4e9edacf0:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:33:30.597897+00:00	sampler_weights/s10	sampler	2026-06-21 06:31:54.420045+00:00	tinker://fae28299-45a5-53d9-8d09-34d4e9edacf0:train:0/sampler_weights/s10	146038457	False		False
+fae28299-45a5-53d9-8d09-34d4e9edacf0:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:33:30.597897+00:00	sampler_weights/s15	sampler	2026-06-21 06:33:29.561549+00:00	tinker://fae28299-45a5-53d9-8d09-34d4e9edacf0:train:0/sampler_weights/s15	146038457	False		False
+fae28299-45a5-53d9-8d09-34d4e9edacf0:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:33:30.597897+00:00	sampler_weights/final	sampler	2026-06-21 06:33:31.052418+00:00	tinker://fae28299-45a5-53d9-8d09-34d4e9edacf0:train:0/sampler_weights/final	146038457	False		True
+b83ff41b-ae67-5e27-abe9-1a26ecce7171:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:27:58.672876+00:00	sampler_weights/s0	sampler	2026-06-21 06:22:27.635128+00:00	tinker://b83ff41b-ae67-5e27-abe9-1a26ecce7171:train:0/sampler_weights/s0	146038457	False		False
+b83ff41b-ae67-5e27-abe9-1a26ecce7171:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:27:58.672876+00:00	sampler_weights/s5	sampler	2026-06-21 06:24:05.917993+00:00	tinker://b83ff41b-ae67-5e27-abe9-1a26ecce7171:train:0/sampler_weights/s5	146038457	False		False
+b83ff41b-ae67-5e27-abe9-1a26ecce7171:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:27:58.672876+00:00	sampler_weights/s10	sampler	2026-06-21 06:26:17.817923+00:00	tinker://b83ff41b-ae67-5e27-abe9-1a26ecce7171:train:0/sampler_weights/s10	146038457	False		False
+b83ff41b-ae67-5e27-abe9-1a26ecce7171:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:27:58.672876+00:00	sampler_weights/s15	sampler	2026-06-21 06:27:57.592037+00:00	tinker://b83ff41b-ae67-5e27-abe9-1a26ecce7171:train:0/sampler_weights/s15	146038457	False		False
+b83ff41b-ae67-5e27-abe9-1a26ecce7171:train:0	Qwen/Qwen3.5-4B	True	16	False	2026-06-21 06:27:58.672876+00:00	sampler_weights/final	sampler	2026-06-21 06:27:59.114985+00:00	tinker://b83ff41b-ae67-5e27-abe9-1a26ecce7171:train:0/sampler_weights/final	146038457	False		True
+543654e2-9e77-5a1c-b24a-23cb21b10918:train:0	Qwen/Qwen3.5-4B	True	4	False	2026-06-21 06:20:35.371507+00:00	sampler_weights/s0	sampler	2026-06-21 06:20:06.981466+00:00	tinker://543654e2-9e77-5a1c-b24a-23cb21b10918:train:0/sampler_weights/s0	36674643	False		False
+543654e2-9e77-5a1c-b24a-23cb21b10918:train:0	Qwen/Qwen3.5-4B	True	4	False	2026-06-21 06:20:35.371507+00:00	sampler_weights/final	sampler	2026-06-21 06:20:38.418127+00:00	tinker://543654e2-9e77-5a1c-b24a-23cb21b10918:train:0/sampler_weights/final	36674643	False		True
+2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:25:45.283398+00:00	sampler_weights/s0	sampler	2026-06-14 19:14:17.354628+00:00	tinker://2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0/sampler_weights/s0	184790205	False		False
+2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:25:45.283398+00:00	sampler_weights/s5	sampler	2026-06-14 19:16:10.809874+00:00	tinker://2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0/sampler_weights/s5	184790205	False		False
+2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:25:45.283398+00:00	sampler_weights/s10	sampler	2026-06-14 19:18:09.542005+00:00	tinker://2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0/sampler_weights/s10	184790205	False		False
+2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:25:45.283398+00:00	sampler_weights/s15	sampler	2026-06-14 19:20:01.223589+00:00	tinker://2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0/sampler_weights/s15	184790205	False		False
+2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:25:45.283398+00:00	sampler_weights/s20	sampler	2026-06-14 19:21:52.540803+00:00	tinker://2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0/sampler_weights/s20	184790205	False		False
+2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:25:45.283398+00:00	sampler_weights/s25	sampler	2026-06-14 19:23:45.242362+00:00	tinker://2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0/sampler_weights/s25	184790205	False		False
+2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:25:45.283398+00:00	sampler_weights/s30	sampler	2026-06-14 19:25:44.229407+00:00	tinker://2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0/sampler_weights/s30	184790205	False		False
+2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:25:45.283398+00:00	sampler_weights/final	sampler	2026-06-14 19:25:45.809595+00:00	tinker://2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0/sampler_weights/final	184790205	False		True
+1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:13:55.776536+00:00	sampler_weights/s0	sampler	2026-06-14 19:02:36.672715+00:00	tinker://1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0/sampler_weights/s0	184790205	False		False
+1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:13:55.776536+00:00	sampler_weights/s5	sampler	2026-06-14 19:04:28.987332+00:00	tinker://1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0/sampler_weights/s5	184790205	False		False
+1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:13:55.776536+00:00	sampler_weights/s10	sampler	2026-06-14 19:06:19.025849+00:00	tinker://1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0/sampler_weights/s10	184790205	False		False
+1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:13:55.776536+00:00	sampler_weights/s15	sampler	2026-06-14 19:08:14.476834+00:00	tinker://1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0/sampler_weights/s15	184790205	False		False
+1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:13:55.776536+00:00	sampler_weights/s20	sampler	2026-06-14 19:10:06.224390+00:00	tinker://1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0/sampler_weights/s20	184790205	False		False
+1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:13:55.776536+00:00	sampler_weights/s25	sampler	2026-06-14 19:12:03.674107+00:00	tinker://1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0/sampler_weights/s25	184790205	False		False
+1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:13:55.776536+00:00	sampler_weights/s30	sampler	2026-06-14 19:13:54.782825+00:00	tinker://1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0/sampler_weights/s30	184790205	False		False
+1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:13:55.776536+00:00	sampler_weights/final	sampler	2026-06-14 19:13:56.277690+00:00	tinker://1e2d6706-c61a-5fae-972c-ed06fa701a18:train:0/sampler_weights/final	184790205	False		True
+2828c545-040b-5105-99c7-e274bde7cf8f:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:02:16.147657+00:00	sampler_weights/s0	sampler	2026-06-14 18:50:55.029564+00:00	tinker://2828c545-040b-5105-99c7-e274bde7cf8f:train:0/sampler_weights/s0	184790205	False		False
+2828c545-040b-5105-99c7-e274bde7cf8f:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:02:16.147657+00:00	sampler_weights/s5	sampler	2026-06-14 18:52:56.057010+00:00	tinker://2828c545-040b-5105-99c7-e274bde7cf8f:train:0/sampler_weights/s5	184790205	False		False
+2828c545-040b-5105-99c7-e274bde7cf8f:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:02:16.147657+00:00	sampler_weights/s10	sampler	2026-06-14 18:54:46.287000+00:00	tinker://2828c545-040b-5105-99c7-e274bde7cf8f:train:0/sampler_weights/s10	184790205	False		False
+2828c545-040b-5105-99c7-e274bde7cf8f:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:02:16.147657+00:00	sampler_weights/s15	sampler	2026-06-14 18:56:41.092617+00:00	tinker://2828c545-040b-5105-99c7-e274bde7cf8f:train:0/sampler_weights/s15	184790205	False		False
+2828c545-040b-5105-99c7-e274bde7cf8f:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:02:16.147657+00:00	sampler_weights/s20	sampler	2026-06-14 18:58:35.953727+00:00	tinker://2828c545-040b-5105-99c7-e274bde7cf8f:train:0/sampler_weights/s20	184790205	False		False
+2828c545-040b-5105-99c7-e274bde7cf8f:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:02:16.147657+00:00	sampler_weights/s25	sampler	2026-06-14 19:00:25.413502+00:00	tinker://2828c545-040b-5105-99c7-e274bde7cf8f:train:0/sampler_weights/s25	184790205	False		False
+2828c545-040b-5105-99c7-e274bde7cf8f:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:02:16.147657+00:00	sampler_weights/s30	sampler	2026-06-14 19:02:15.126932+00:00	tinker://2828c545-040b-5105-99c7-e274bde7cf8f:train:0/sampler_weights/s30	184790205	False		False
+2828c545-040b-5105-99c7-e274bde7cf8f:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 19:02:16.147657+00:00	sampler_weights/final	sampler	2026-06-14 19:02:18.518584+00:00	tinker://2828c545-040b-5105-99c7-e274bde7cf8f:train:0/sampler_weights/final	184790205	False		True
+d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:50:40.546701+00:00	sampler_weights/s0	sampler	2026-06-14 18:39:04.275456+00:00	tinker://d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0/sampler_weights/s0	184790205	False		False
+d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:50:40.546701+00:00	sampler_weights/s5	sampler	2026-06-14 18:40:53.352600+00:00	tinker://d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0/sampler_weights/s5	184790205	False		False
+d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:50:40.546701+00:00	sampler_weights/s10	sampler	2026-06-14 18:42:43.654127+00:00	tinker://d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0/sampler_weights/s10	184790205	False		False
+d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:50:40.546701+00:00	sampler_weights/s15	sampler	2026-06-14 18:44:36.615591+00:00	tinker://d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0/sampler_weights/s15	184790205	False		False
+d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:50:40.546701+00:00	sampler_weights/s20	sampler	2026-06-14 18:46:31.709352+00:00	tinker://d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0/sampler_weights/s20	184790205	False		False
+d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:50:40.546701+00:00	sampler_weights/s25	sampler	2026-06-14 18:48:39.075295+00:00	tinker://d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0/sampler_weights/s25	184790205	False		False
+d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:50:40.546701+00:00	sampler_weights/s30	sampler	2026-06-14 18:50:39.469695+00:00	tinker://d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0/sampler_weights/s30	184790205	False		False
+d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:50:40.546701+00:00	sampler_weights/final	sampler	2026-06-14 18:50:41.097447+00:00	tinker://d6ea2a4c-1681-5e06-aeaa-e3e240dfe0e2:train:0/sampler_weights/final	184790205	False		True
+419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:38:48.634353+00:00	sampler_weights/s0	sampler	2026-06-14 18:26:53.233692+00:00	tinker://419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0/sampler_weights/s0	184790205	False		False
+419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:38:48.634353+00:00	sampler_weights/s5	sampler	2026-06-14 18:28:44.550707+00:00	tinker://419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0/sampler_weights/s5	184790205	False		False
+419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:38:48.634353+00:00	sampler_weights/s10	sampler	2026-06-14 18:30:47.826813+00:00	tinker://419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0/sampler_weights/s10	184790205	False		False
+419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:38:48.634353+00:00	sampler_weights/s15	sampler	2026-06-14 18:32:59.223752+00:00	tinker://419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0/sampler_weights/s15	184790205	False		False
+419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:38:48.634353+00:00	sampler_weights/s20	sampler	2026-06-14 18:34:59.879748+00:00	tinker://419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0/sampler_weights/s20	184790205	False		False
+419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:38:48.634353+00:00	sampler_weights/s25	sampler	2026-06-14 18:36:53.109835+00:00	tinker://419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0/sampler_weights/s25	184790205	False		False
+419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:38:48.634353+00:00	sampler_weights/s30	sampler	2026-06-14 18:38:47.515946+00:00	tinker://419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0/sampler_weights/s30	184790205	False		False
+419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:38:48.634353+00:00	sampler_weights/final	sampler	2026-06-14 18:38:49.197027+00:00	tinker://419ba5a1-716a-5033-8ec8-9f3c40c01709:train:0/sampler_weights/final	184790205	False		True
+210f18c4-9977-5b5c-8e81-299d0de74246:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:26:36.070854+00:00	sampler_weights/s0	sampler	2026-06-14 18:15:14.203721+00:00	tinker://210f18c4-9977-5b5c-8e81-299d0de74246:train:0/sampler_weights/s0	184790205	False		False
+210f18c4-9977-5b5c-8e81-299d0de74246:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:26:36.070854+00:00	sampler_weights/s5	sampler	2026-06-14 18:17:12.476793+00:00	tinker://210f18c4-9977-5b5c-8e81-299d0de74246:train:0/sampler_weights/s5	184790205	False		False
+210f18c4-9977-5b5c-8e81-299d0de74246:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:26:36.070854+00:00	sampler_weights/s10	sampler	2026-06-14 18:19:08.774131+00:00	tinker://210f18c4-9977-5b5c-8e81-299d0de74246:train:0/sampler_weights/s10	184790205	False		False
+210f18c4-9977-5b5c-8e81-299d0de74246:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:26:36.070854+00:00	sampler_weights/s15	sampler	2026-06-14 18:20:58.639465+00:00	tinker://210f18c4-9977-5b5c-8e81-299d0de74246:train:0/sampler_weights/s15	184790205	False		False
+210f18c4-9977-5b5c-8e81-299d0de74246:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:26:36.070854+00:00	sampler_weights/s20	sampler	2026-06-14 18:22:51.818675+00:00	tinker://210f18c4-9977-5b5c-8e81-299d0de74246:train:0/sampler_weights/s20	184790205	False		False
+210f18c4-9977-5b5c-8e81-299d0de74246:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:26:36.070854+00:00	sampler_weights/s25	sampler	2026-06-14 18:24:40.378824+00:00	tinker://210f18c4-9977-5b5c-8e81-299d0de74246:train:0/sampler_weights/s25	184790205	False		False
+210f18c4-9977-5b5c-8e81-299d0de74246:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:26:36.070854+00:00	sampler_weights/s30	sampler	2026-06-14 18:26:35.048022+00:00	tinker://210f18c4-9977-5b5c-8e81-299d0de74246:train:0/sampler_weights/s30	184790205	False		False
+210f18c4-9977-5b5c-8e81-299d0de74246:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:26:36.070854+00:00	sampler_weights/final	sampler	2026-06-14 18:26:36.611639+00:00	tinker://210f18c4-9977-5b5c-8e81-299d0de74246:train:0/sampler_weights/final	184790205	False		True
+4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:14:49.577195+00:00	sampler_weights/s0	sampler	2026-06-14 18:03:23.041557+00:00	tinker://4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0/sampler_weights/s0	184790205	False		False
+4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:14:49.577195+00:00	sampler_weights/s5	sampler	2026-06-14 18:05:20.237578+00:00	tinker://4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0/sampler_weights/s5	184790205	False		False
+4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:14:49.577195+00:00	sampler_weights/s10	sampler	2026-06-14 18:07:23.112527+00:00	tinker://4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0/sampler_weights/s10	184790205	False		False
+4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:14:49.577195+00:00	sampler_weights/s15	sampler	2026-06-14 18:09:11.423143+00:00	tinker://4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0/sampler_weights/s15	184790205	False		False
+4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:14:49.577195+00:00	sampler_weights/s20	sampler	2026-06-14 18:11:04.099999+00:00	tinker://4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0/sampler_weights/s20	184790205	False		False
+4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:14:49.577195+00:00	sampler_weights/s25	sampler	2026-06-14 18:12:52.334355+00:00	tinker://4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0/sampler_weights/s25	184790205	False		False
+4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:14:49.577195+00:00	sampler_weights/s30	sampler	2026-06-14 18:14:48.518082+00:00	tinker://4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0/sampler_weights/s30	184790205	False		False
+4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:14:49.577195+00:00	sampler_weights/final	sampler	2026-06-14 18:14:50.112351+00:00	tinker://4fef3fd8-7a4e-549b-8fe7-13b774bf54d0:train:0/sampler_weights/final	184790205	False		True
+1ec785d1-65f4-511b-8d4f-691861367fcb:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:02:59.559846+00:00	sampler_weights/s0	sampler	2026-06-14 17:51:22.100538+00:00	tinker://1ec785d1-65f4-511b-8d4f-691861367fcb:train:0/sampler_weights/s0	184790205	False		False
+1ec785d1-65f4-511b-8d4f-691861367fcb:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:02:59.559846+00:00	sampler_weights/s5	sampler	2026-06-14 17:53:17.534296+00:00	tinker://1ec785d1-65f4-511b-8d4f-691861367fcb:train:0/sampler_weights/s5	184790205	False		False
+1ec785d1-65f4-511b-8d4f-691861367fcb:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:02:59.559846+00:00	sampler_weights/s10	sampler	2026-06-14 17:55:19.029387+00:00	tinker://1ec785d1-65f4-511b-8d4f-691861367fcb:train:0/sampler_weights/s10	184790205	False		False
+1ec785d1-65f4-511b-8d4f-691861367fcb:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:02:59.559846+00:00	sampler_weights/s15	sampler	2026-06-14 17:57:07.208764+00:00	tinker://1ec785d1-65f4-511b-8d4f-691861367fcb:train:0/sampler_weights/s15	184790205	False		False
+1ec785d1-65f4-511b-8d4f-691861367fcb:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:02:59.559846+00:00	sampler_weights/s20	sampler	2026-06-14 17:58:57.879721+00:00	tinker://1ec785d1-65f4-511b-8d4f-691861367fcb:train:0/sampler_weights/s20	184790205	False		False
+1ec785d1-65f4-511b-8d4f-691861367fcb:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:02:59.559846+00:00	sampler_weights/s25	sampler	2026-06-14 18:00:55.675982+00:00	tinker://1ec785d1-65f4-511b-8d4f-691861367fcb:train:0/sampler_weights/s25	184790205	False		False
+1ec785d1-65f4-511b-8d4f-691861367fcb:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:02:59.559846+00:00	sampler_weights/s30	sampler	2026-06-14 18:02:58.498069+00:00	tinker://1ec785d1-65f4-511b-8d4f-691861367fcb:train:0/sampler_weights/s30	184790205	False		False
+1ec785d1-65f4-511b-8d4f-691861367fcb:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 18:02:59.559846+00:00	sampler_weights/final	sampler	2026-06-14 18:03:00.224869+00:00	tinker://1ec785d1-65f4-511b-8d4f-691861367fcb:train:0/sampler_weights/final	184790205	False		True
+0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:51:06.606398+00:00	sampler_weights/s0	sampler	2026-06-14 17:39:20.911804+00:00	tinker://0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0/sampler_weights/s0	184790205	False		False
+0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:51:06.606398+00:00	sampler_weights/s5	sampler	2026-06-14 17:41:15.170149+00:00	tinker://0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0/sampler_weights/s5	184790205	False		False
+0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:51:06.606398+00:00	sampler_weights/s10	sampler	2026-06-14 17:43:16.636116+00:00	tinker://0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0/sampler_weights/s10	184790205	False		False
+0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:51:06.606398+00:00	sampler_weights/s15	sampler	2026-06-14 17:45:25.123751+00:00	tinker://0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0/sampler_weights/s15	184790205	False		False
+0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:51:06.606398+00:00	sampler_weights/s20	sampler	2026-06-14 17:47:20.088726+00:00	tinker://0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0/sampler_weights/s20	184790205	False		False
+0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:51:06.606398+00:00	sampler_weights/s25	sampler	2026-06-14 17:49:11.022885+00:00	tinker://0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0/sampler_weights/s25	184790205	False		False
+0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:51:06.606398+00:00	sampler_weights/s30	sampler	2026-06-14 17:51:05.653431+00:00	tinker://0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0/sampler_weights/s30	184790205	False		False
+0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:51:06.606398+00:00	sampler_weights/final	sampler	2026-06-14 17:51:07.150018+00:00	tinker://0b2bf93d-1e41-5def-8cd1-ed16627f18da:train:0/sampler_weights/final	184790205	False		True
+e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:38:52.644820+00:00	sampler_weights/s0	sampler	2026-06-14 17:26:41.339947+00:00	tinker://e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0/sampler_weights/s0	184790205	False		False
+e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:38:52.644820+00:00	sampler_weights/s5	sampler	2026-06-14 17:28:41.372407+00:00	tinker://e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0/sampler_weights/s5	184790205	False		False
+e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:38:52.644820+00:00	sampler_weights/s10	sampler	2026-06-14 17:30:40.587124+00:00	tinker://e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0/sampler_weights/s10	184790205	False		False
+e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:38:52.644820+00:00	sampler_weights/s15	sampler	2026-06-14 17:32:41.218983+00:00	tinker://e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0/sampler_weights/s15	184790205	False		False
+e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:38:52.644820+00:00	sampler_weights/s20	sampler	2026-06-14 17:34:37.409922+00:00	tinker://e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0/sampler_weights/s20	184790205	False		False
+e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:38:52.644820+00:00	sampler_weights/s25	sampler	2026-06-14 17:36:35.823944+00:00	tinker://e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0/sampler_weights/s25	184790205	False		False
+e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:38:52.644820+00:00	sampler_weights/s30	sampler	2026-06-14 17:38:51.376371+00:00	tinker://e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0/sampler_weights/s30	184790205	False		False
+e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:38:52.644820+00:00	sampler_weights/final	sampler	2026-06-14 17:38:53.194524+00:00	tinker://e827ab96-eb0a-5e3e-acf3-13bf6ab4308a:train:0/sampler_weights/final	184790205	False		True
+f904a9fe-f663-544b-8ce1-b488623cd758:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:26:24.025008+00:00	sampler_weights/s0	sampler	2026-06-14 17:14:41.501716+00:00	tinker://f904a9fe-f663-544b-8ce1-b488623cd758:train:0/sampler_weights/s0	184790205	False		False
+f904a9fe-f663-544b-8ce1-b488623cd758:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:26:24.025008+00:00	sampler_weights/s5	sampler	2026-06-14 17:16:41.297118+00:00	tinker://f904a9fe-f663-544b-8ce1-b488623cd758:train:0/sampler_weights/s5	184790205	False		False
+f904a9fe-f663-544b-8ce1-b488623cd758:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:26:24.025008+00:00	sampler_weights/s10	sampler	2026-06-14 17:18:36.551597+00:00	tinker://f904a9fe-f663-544b-8ce1-b488623cd758:train:0/sampler_weights/s10	184790205	False		False
+f904a9fe-f663-544b-8ce1-b488623cd758:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:26:24.025008+00:00	sampler_weights/s15	sampler	2026-06-14 17:20:32.772000+00:00	tinker://f904a9fe-f663-544b-8ce1-b488623cd758:train:0/sampler_weights/s15	184790205	False		False
+f904a9fe-f663-544b-8ce1-b488623cd758:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:26:24.025008+00:00	sampler_weights/s20	sampler	2026-06-14 17:22:29.897136+00:00	tinker://f904a9fe-f663-544b-8ce1-b488623cd758:train:0/sampler_weights/s20	184790205	False		False
+f904a9fe-f663-544b-8ce1-b488623cd758:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:26:24.025008+00:00	sampler_weights/s25	sampler	2026-06-14 17:24:28.454174+00:00	tinker://f904a9fe-f663-544b-8ce1-b488623cd758:train:0/sampler_weights/s25	184790205	False		False
+f904a9fe-f663-544b-8ce1-b488623cd758:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:26:24.025008+00:00	sampler_weights/s30	sampler	2026-06-14 17:26:22.979117+00:00	tinker://f904a9fe-f663-544b-8ce1-b488623cd758:train:0/sampler_weights/s30	184790205	False		False
+f904a9fe-f663-544b-8ce1-b488623cd758:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:26:24.025008+00:00	sampler_weights/final	sampler	2026-06-14 17:26:25.858219+00:00	tinker://f904a9fe-f663-544b-8ce1-b488623cd758:train:0/sampler_weights/final	184790205	False		True
+a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:14:17.162418+00:00	sampler_weights/s0	sampler	2026-06-14 17:01:47.359086+00:00	tinker://a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0/sampler_weights/s0	184790205	False		False
+a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:14:17.162418+00:00	sampler_weights/s5	sampler	2026-06-14 17:03:47.959484+00:00	tinker://a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0/sampler_weights/s5	184790205	False		False
+a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:14:17.162418+00:00	sampler_weights/s10	sampler	2026-06-14 17:06:02.430485+00:00	tinker://a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0/sampler_weights/s10	184790205	False		False
+a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:14:17.162418+00:00	sampler_weights/s15	sampler	2026-06-14 17:07:55.929176+00:00	tinker://a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0/sampler_weights/s15	184790205	False		False
+a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:14:17.162418+00:00	sampler_weights/s20	sampler	2026-06-14 17:10:05.193350+00:00	tinker://a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0/sampler_weights/s20	184790205	False		False
+a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:14:17.162418+00:00	sampler_weights/s25	sampler	2026-06-14 17:12:11.462216+00:00	tinker://a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0/sampler_weights/s25	184790205	False		False
+a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:14:17.162418+00:00	sampler_weights/s30	sampler	2026-06-14 17:14:15.924855+00:00	tinker://a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0/sampler_weights/s30	184790205	False		False
+a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:14:17.162418+00:00	sampler_weights/final	sampler	2026-06-14 17:14:17.778887+00:00	tinker://a2c3d718-61cb-5b27-a3bf-4a541f3f2ea0:train:0/sampler_weights/final	184790205	False		True
+59dcc8cb-88dc-5dd7-87af-296f5e6d2de8:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:01:04.613902+00:00	sampler_weights/s0	sampler	2026-06-14 16:59:52.355698+00:00	tinker://59dcc8cb-88dc-5dd7-87af-296f5e6d2de8:train:0/sampler_weights/s0	184790205	False		False
+59dcc8cb-88dc-5dd7-87af-296f5e6d2de8:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-14 17:01:04.613902+00:00	sampler_weights/final	sampler	2026-06-14 17:01:05.169341+00:00	tinker://59dcc8cb-88dc-5dd7-87af-296f5e6d2de8:train:0/sampler_weights/final	184790205	False		True
+ba1cf6b0-2636-567c-ac0a-5ec3739afbd6:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:32:17.535872+00:00								
+3521a53b-68a5-5f9a-9b67-3a0a56db7ee7:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:32:03.997225+00:00								
+acccf1d4-aeb7-5894-8518-94aabd2fdbe1:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:31:53.778163+00:00								
+7a261028-3fa5-5f0b-96ab-6b6869796743:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:31:41.697763+00:00								
+85767ab0-a686-57e2-a492-2ea300e45ba3:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:31:13.775681+00:00								
+4ef4ed82-47f1-5cf6-97b7-f10b82a2ea03:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:31:06.100038+00:00								
+a7496647-20a9-5bef-ac07-66a732b5f1b6:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:31:02.446483+00:00								
+c214cf82-fa38-5254-904c-d0293c7225d3:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:31:05.461924+00:00								
+a7afeb29-fd49-5ed5-ae8b-c1c153b906f4:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:31:01.986136+00:00								
+2664ad45-c774-537f-948b-2cc643d82d9f:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:30:50.340216+00:00								
+53e629a4-d2e5-51e9-b2f7-8c3622d85c27:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:30:32.717080+00:00								
+6b7ca393-450c-5f76-963c-fb3bdc984eb1:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:30:23.023543+00:00								
+f8fbbd72-f7c3-570d-b785-184b5bf329de:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:30:08.301881+00:00								
+203a0dbe-37b7-580e-bece-3302c1e51d93:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:29:58.916900+00:00								
+6f0ff343-eaf9-5c45-92fb-8881b3f41efa:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:29:52.103467+00:00								
+5146d9d7-1faa-5161-8e05-9e245affdad4:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:29:46.305511+00:00								
+3a54e703-ffbd-5b94-a38f-c2ef8c46f0dc:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:29:44.193597+00:00								
+44291f71-e0fe-5dbd-b8b7-76874ebbac31:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:29:56.147545+00:00								
+e21cece2-434e-52d6-9398-ec8814a15058:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:29:36.938245+00:00								
+1074fc30-af98-5535-be06-5bfd7c3f0e2e:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:29:03.206653+00:00								
+50837d8f-c150-5489-8815-8d01be92947c:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:28:43.103171+00:00								
+1ddb6529-7d5b-5983-b783-2cf5caf18574:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:29:00.058598+00:00								
+19c04cf7-fab2-5b7e-bc11-34780f94936a:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:28:38.159176+00:00								
+cea7e254-1749-5aa2-9eae-f4876faaf609:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:28:51.762215+00:00								
+01b47037-fb76-55c5-9375-0639be642f2b:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:28:44.027260+00:00								
+564fcc81-e912-50ad-9648-953463f96831:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:28:27.392003+00:00								
+f3f1443b-0dda-5de7-b4d4-a328ce125e59:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:28:21.842177+00:00								
+8148fe3c-f52a-5875-aacc-da3d6619f29b:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:28:04.463084+00:00								
+7bb4e241-80e2-5f85-80f2-9868a8c743bc:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:27:37.093168+00:00								
+5d802499-8379-5e3d-bd49-a88af71c3706:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:27:33.113960+00:00								
+a544af52-31e8-5a19-8391-cc9cbb592482:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:27:33.627216+00:00								
+72a4a872-12e8-5598-a7f1-cd52ab8aca03:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:27:37.821765+00:00								
+5db50e23-915c-52f7-bc0a-785fb5384e85:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:27:35.346907+00:00								
+7cea025c-a6ff-5b4a-a9f5-20b663e7e4a0:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:27:33.174168+00:00								
+59dffa66-ab91-5f44-bf28-83f0d7e1c181:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:27:08.487366+00:00								
+e5bbd1e0-cf2b-545c-b247-03cd9f660847:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:27:02.682022+00:00								
+9bd287f3-5210-5639-b655-5dded9431b4c:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:26:44.987630+00:00								
+eca9d27d-250d-5aff-8c15-b5e2864e30d3:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:26:21.630568+00:00								
+d3a25ff7-b64d-549e-9a0a-26e1a66659eb:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:26:26.853179+00:00								
+00c9682a-e900-57a0-9dfd-abcc62df7fc7:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:26:37.338676+00:00								
+0f3327d4-8636-5afb-88b7-a371a1970361:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:26:17.562360+00:00								
+738b2253-6c73-54fa-850b-c27520693375:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:26:27.564466+00:00								
+a5e7a715-a7e3-507a-982d-aac7c6effb6f:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:26:11.374896+00:00								
+1b6d9636-7b61-51c7-92db-cd4cdc88c3d4:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:25:48.833149+00:00								
+2086144e-419e-5c46-a3d1-5f41810b73e2:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:25:22.192078+00:00								
+616b3ed1-80c3-5a7d-b6b8-6273f5d05817:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:25:32.430501+00:00								
+9e3ed484-ca01-519a-b03d-0e1cefb5818b:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:25:07.057440+00:00								
+2a2d7d59-3e70-5547-b907-56fa0f0b4174:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:25:30.130299+00:00								
+3bd33f83-3e8f-523c-98b7-849d2c59a765:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:25:18.087923+00:00								
+fd2ccfac-33db-57c7-9686-2275fd2c018a:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:25:13.229903+00:00								
+88d42041-d309-5a70-80d5-c68ec8d666a7:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:24:51.215130+00:00								
+aab3f5ea-e15a-5b84-8c10-986f25d43d13:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:24:44.065702+00:00								
+578a4f60-5ce4-5156-9962-46d1cc5927a8:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:24:16.246996+00:00								
+06ea0714-a2e2-59a8-a8e2-013a237ba0cc:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:24:27.401067+00:00								
+6a062e97-2c03-5cc8-85d1-5ddbde0af602:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:24:21.135446+00:00								
+c1900b96-19a5-58ee-bbd8-279b580e8813:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:24:10.557412+00:00								
+ace3d86e-920c-5e2e-be0b-1e7b894163fb:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:24:05.094440+00:00								
+136cdd3f-cd21-5b45-af35-34f9bfbcb84d:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:24:06.098156+00:00								
+31230f76-1d80-5b41-9877-6a5ac09de003:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:23:33.065242+00:00								
+8d4cd45e-e08a-5ccb-ace3-a3e8b3372e2b:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:23:39.047168+00:00								
+b377ff68-ce4a-5def-8f31-5b67184c2cea:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:23:19.775709+00:00								
+84ac2a16-b454-554c-b69c-4de085872b90:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:23:13.409629+00:00								
+303702af-fed2-5879-a02d-9c94fb782d2d:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:23:15.139184+00:00								
+beec502f-44d3-5f99-9a78-0b80618991da:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:23:01.624395+00:00								
+781b623a-f0b4-5b27-a41f-b3a5fd425acc:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:22:51.263124+00:00								
+6ab1a164-fc57-578e-851f-a9edb849dafc:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:23:06.490093+00:00								
+a1bcc681-03cd-51b4-9afc-ae4414ec9b2e:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:22:27.154700+00:00								
+1010b327-a554-5bbe-a019-b37cce912cc0:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:22:12.200255+00:00								
+5bdb615e-1fec-57b7-8dfc-909ca38e8502:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:22:29.144311+00:00								
+6fb042c9-29a3-59e9-a6d9-c07db28e29c5:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:22:07.476839+00:00								
+5fa2e260-2494-55ef-bb85-7ac1e91ce46d:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:21:45.400028+00:00								
+f09c287e-efcd-5bd1-9952-8bf2e128c8f5:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:21:44.292019+00:00								
+d8aeb4b7-f102-55da-ba39-a36eb188c0aa:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:21:54.707036+00:00								
+3517b851-c2cc-5769-9179-77c4d27eed40:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:21:46.821472+00:00								
+71b6eeaf-05c7-5599-b815-3c5540d0ac8a:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:21:12.698659+00:00								
+c30373e2-65f1-5c70-8107-31a67fdf6032:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:21:17.141606+00:00								
+2eaeb1f5-75dc-5f09-911d-ffe0409969ad:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:21:03.896258+00:00								
+e3d049cf-e7b2-55d5-a92b-db05a862e98f:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:20:48.266691+00:00								
+083b388f-e3dc-55da-997e-f921028b7581:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:20:55.391123+00:00								
+f1ef86f9-4a06-5f6d-a674-1b20a496439b:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:20:36.695588+00:00								
+072ffe25-615e-5245-8d14-42012986ed27:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:20:34.921331+00:00								
+1124a2b9-d98a-58e8-88c9-67aa734859dc:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:20:41.953471+00:00								
+3270e165-610d-5564-9a79-668e87095c11:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:20:07.741240+00:00								
+b4679f68-f116-5d9d-9ebf-ef16a5e50b00:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:19:54.779087+00:00								
+34a85821-a6f4-5781-b5f6-c6262afcb022:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:20:04.719341+00:00								
+d50af5a7-55a0-513a-8d62-c4a5a0a4e9f8:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:19:30.960781+00:00								
+59aa53f3-e502-5c89-8490-63eebdc3538a:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:19:38.246682+00:00								
+2a6e1066-037d-5f7d-8957-bca7544e527c:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:19:21.725368+00:00								
+92993f9c-1e1e-561c-9368-a9ff6784d3f7:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:19:29.530675+00:00								
+4f06458f-d590-56c7-867b-486165156a8b:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:19:32.532568+00:00								
+13d93b75-bcc7-5c32-922f-5dc4322cf1f8:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:19:03.259515+00:00								
+7ce63cd9-aadd-5ea6-8690-094163ba511a:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:18:48.894842+00:00								
+eb74d7ed-9527-5846-bdb4-098f266153bd:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:18:41.208724+00:00								
+895ffd06-2fc5-5a95-ad39-ad931feb100d:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:18:37.951282+00:00								
+24232a1c-fdf4-51f3-b20c-936b11997ef5:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:18:24.099465+00:00								
+3b0be8d0-921c-5241-a285-66bf7b4842ba:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:18:17.752282+00:00								
+4c43fe4c-09ee-57e3-a562-a9e5c8baa951:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:18:23.681743+00:00								
+c63c50fc-9bd4-5f35-a031-e9d7acf435bd:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:18:18.088092+00:00								
+2ce02995-6fca-52c4-843a-f2022bd6baba:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:17:56.666495+00:00								
+0fce1537-84a6-5cb8-97ec-11ac74b6e81a:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:18:01.260383+00:00								
+634d1495-f248-504f-bdb7-c17fff090f90:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:17:33.142038+00:00								
+538b0753-b713-52f5-83c3-b2955a41ef9a:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:17:27.380035+00:00								
+b68b1d3f-f69e-5402-844a-fe39d72a5a44:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:17:28.997098+00:00								
+a29a676f-d6bd-5c46-b049-3d7f18162364:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:17:14.043863+00:00								
+fc88fe2b-19d9-5cab-beaa-cd33b0ad1ada:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:17:05.793911+00:00								
+91771597-5666-51d5-941c-49b10d3c1124:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:17:04.555218+00:00								
+628e9ed8-2ce7-5971-b564-789e0fdc9820:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:16:41.698807+00:00								
+236e315d-40c2-5655-8a42-0f936461d2aa:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:16:43.663907+00:00								
+093cd713-130d-5556-94cd-8214e28d96dd:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:16:33.797404+00:00								
+d6b2aa6f-6746-51bb-b905-eb9bf9e3d59f:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:16:10.664629+00:00								
+374c3927-b688-5b84-a87c-41463e1a25d2:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:16:08.052898+00:00								
+7f67aa28-fdfa-5508-bb10-627cb50f0ecc:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:16:14.924545+00:00								
+fe8d45eb-c157-5f8a-b52b-0914a5a0fc62:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:15:45.709138+00:00								
+ac33bd37-a095-5c5c-89bf-ac5013fb2978:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:16:02.452379+00:00								
+08f0c2de-0a22-5f99-bff6-d5cc1667183a:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:15:40.839876+00:00								
+2efc8bd0-da82-55f8-88d0-f20d1208c4d9:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:15:36.369394+00:00								
+de4fd671-08bb-552e-8e9e-5fe0bda9496b:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:15:25.405659+00:00								
+572e5ec5-37e5-5a74-ba35-7d845e9b2481:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:15:16.559816+00:00								
+3e9770ee-907d-5159-9e27-ba2bb42f3fe9:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:14:49.918023+00:00								
+b27f94ed-fe9d-5f32-bfd8-c4ffe36ee586:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:14:59.053295+00:00								
+5c139f97-2be5-520c-a1c7-de84bffb92d8:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:15:16.296310+00:00								
+4b41e44e-9034-5f68-aa5b-800a8baa7325:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:14:47.490705+00:00								
+530d7889-4ea1-5ff2-a07e-f34ef5bad5f0:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:14:28.250277+00:00								
+b4470901-02f7-5033-9c7e-515789708cba:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:14:34.530826+00:00								
+b78b0890-a625-51b0-ab84-89213e189a22:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:14:18.396885+00:00								
+662e6128-46a0-53b6-8b63-0429d54a9b21:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:13:54.866489+00:00								
+315e7a32-26eb-5152-b65c-c0098799abb5:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:13:54.489921+00:00								
+ec84f986-8097-5583-9388-6c5cb65b2446:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:14:03.596215+00:00								
+dce2fd8a-8805-5f5f-b3e6-420c8d8af43e:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:13:39.772224+00:00								
+c1a3825d-f4c4-5786-8451-e1f1c1464039:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:13:54.739433+00:00								
+0fc2be40-75dc-56ca-a56c-92ccba8d59ea:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:13:21.698528+00:00								
+47fda7e3-e254-5638-ad6a-e094c1fc6c52:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:13:19.515899+00:00								
+bd22b318-76e7-597e-8fa2-d2e213f3d13c:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:12:54.326704+00:00								
+4b72237e-be08-53fe-b59d-8bf2668de1c5:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:12:50.217534+00:00								
+94dadf65-6b77-5a49-883a-051c3599da2f:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:12:44.354668+00:00								
+98746ee3-0f3c-5ecb-b7a8-141da3e80a98:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:12:56.673644+00:00								
+72997284-0889-52d4-ad06-1851d79da96f:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:12:44.031477+00:00								
+ec694b39-528d-5143-8d9c-76aca794375c:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:12:31.391685+00:00								
+22cb2214-3eb0-584a-96a5-4802bd7a1976:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:12:27.482472+00:00								
+3ffce24b-b4a9-5b06-9d75-e17c50758075:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:12:12.767590+00:00								
+75c04dc8-cab0-546a-87d0-476a984b451d:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:11:35.359227+00:00								
+b836df1c-7f47-5f90-85c9-1daf23ee5d51:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:11:34.312435+00:00								
+82f5741b-eb9e-5793-8e95-3ec07bbf4233:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:11:38.460189+00:00								
+91983a30-0889-5ef7-a054-40ba094bb093:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:11:23.154428+00:00								
+9cd077af-9c3e-52fe-8ba9-d619226f3450:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:11:47.720507+00:00								
+1aa95e40-6a2f-566d-b8e5-c4e350464c1a:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:11:20.897106+00:00								
+e76a81f6-d343-587c-9dc7-15d8829c4907:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:11:25.779117+00:00								
+7479f4fd-f892-5117-9093-721337ffaae2:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:11:06.585665+00:00								
+715b8e20-0a9c-5ea5-b45a-c75240b77954:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:10:25.803649+00:00								
+92c4691c-b49a-5d12-865d-14a349ddb3bb:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:10:32.184029+00:00								
+f85afb48-f52c-5a03-8bf1-d2c06e0a7aa3:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:10:28.175767+00:00								
+d4b917f9-1cbd-5733-9f2e-29cfe0e38154:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:10:19.563979+00:00								
+f9c03ce5-263f-595b-b921-de1b9a4fa60b:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:10:15.225615+00:00								
+8a81650c-3897-5bf1-b268-1215cab9d85c:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:10:32.661091+00:00								
+5e2570bd-930a-5039-b1cf-32b1d31a6858:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:10:17.635479+00:00								
+c54d3dd3-6073-5aea-baf8-9d239d24b218:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:10:05.916143+00:00								
+a1d3bdc5-bb44-5491-9e4b-fff65bdb0724:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:09:21.746892+00:00								
+b87a051d-342b-586b-b92e-80afb6bf435f:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:09:10.384538+00:00								
+40ee9dc5-5989-56ec-a321-615b015de355:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:09:29.039231+00:00								
+a244f9cd-e5f0-5d0c-84c2-61da99904465:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:09:20.154827+00:00								
+28a646b7-c727-5b45-85b4-9932a55465a0:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:09:00.474658+00:00								
+86927875-7528-5da2-af30-c2b53a38ccaa:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:09:09.620341+00:00								
+affe1d21-5714-5420-be04-4873967d8382:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:09:20.683806+00:00								
+75e30c44-21ee-5da5-92d9-76cbe6b93096:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:09:03.057379+00:00								
+4da9ba2c-0d1d-59fc-a458-cd46dc9a8692:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:08:11.920369+00:00								
+f32c8865-ca5e-5b0f-84a9-b1fd0096b4b0:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:08:10.775763+00:00								
+60840645-8e8d-5284-9990-bc1ea02d1476:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:08:01.657236+00:00								
+9aa3c884-5df1-54ed-9f75-80bf673dca45:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:08:07.567412+00:00								
+e2e50ba3-d5a4-57e7-81fb-ab759793dd5a:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:07:59.341155+00:00								
+d5702626-3548-5332-8b5f-4bbe60c66391:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:07:52.613330+00:00								
+3b8b0caf-29b3-572d-9d56-658052ae6d25:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:07:58.129651+00:00								
+067f9de5-d8bb-548f-90d9-9d5dfd0c396b:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:08:09.451790+00:00								
+48fba909-24f2-5b95-b7d4-34fcbc63314c:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:06:53.227012+00:00								
+70f85927-a45a-50e7-971a-140ed1ec9270:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:06:56.278844+00:00								
+fa234d32-831d-547f-a525-2db1cd849ddf:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:06:51.442094+00:00								
+a829ad45-aef7-541a-bb63-1f6bf9f0ef85:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:06:50.350732+00:00								
+6c50a2f8-13c7-5c49-805e-9ccbca1191aa:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:07:00.489230+00:00								
+09b1ba7b-b084-5843-bb44-576151fdbd0f:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:07:18.242316+00:00								
+229529a5-67a0-55f1-9705-46f21710844a:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:07:08.170246+00:00								
+0f01cefa-0e3f-5aea-b44e-bc0c01678bad:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:07:03.667914+00:00								
+5f4e5328-113b-5303-9ece-66e6de03f642:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:05:16.853427+00:00								
+848ad8ed-4e11-55c5-b878-55585bb98ca4:train:0	meta-llama/Llama-3.2-3B	True	8	True	2026-06-07 06:04:30.051477+00:00								
+f665dac5-0a75-5821-a9a5-df4df60e310f:train:0	meta-llama/Llama-3.2-3B	True	8	True	2026-06-07 06:03:53.157791+00:00								
+1e658c76-7cad-544c-bee1-7901d82d1096:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:03:26.021698+00:00								
+1f350eca-f506-5f81-8411-b83cd2e4864d:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:03:24.593077+00:00								
+41b29253-dc26-59f8-a54e-0a66b8c5eb6c:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:03:23.428098+00:00								
+bc61e935-b66f-570d-ad75-e047e00cc061:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	True	2026-06-07 06:03:21.780560+00:00								
+0a0ceb48-cc4d-5ce7-bd50-81b39409dbce:train:0	meta-llama/Llama-3.2-1B	True	8	True	2026-06-07 06:03:21.181652+00:00								
+14b061f2-ef72-5fed-bb3d-8c1f22eba34d:train:0	meta-llama/Llama-3.2-3B	True	8	True	2026-06-07 06:03:17.543137+00:00								
+e3ffb514-e7ea-51a5-a029-6e246bd10f11:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	True	2026-06-07 06:03:16.678103+00:00								
+106d8f89-4200-5cef-8566-21098625d556:train:0	meta-llama/Llama-3.2-1B	True	8	True	2026-06-07 06:03:14.344996+00:00								
+8ecef228-6cd2-58e0-8a44-5eeafcb1143d:train:0	meta-llama/Llama-3.2-3B	True	16	True	2026-06-07 06:03:12.023845+00:00								
+e44cbdd3-79b7-523c-9346-6904247aa759:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	True	2026-06-07 06:03:09.245748+00:00								
+4658ae6c-97a2-562a-a1c3-f01a061ff84c:train:0	meta-llama/Llama-3.2-1B	True	8	True	2026-06-07 06:03:08.157749+00:00								
+a041b718-2898-58a8-9edf-6f64bfdbfe4f:train:0	meta-llama/Llama-3.2-3B	True	8	True	2026-06-07 06:03:05.336449+00:00								
+f2ca584c-29a1-571b-b5c8-fc823f6ccec2:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	True	2026-06-07 06:03:03.223928+00:00								
+8bc539ce-f26a-5bad-bbf3-ea2e0b79f31d:train:0	meta-llama/Llama-3.2-1B	True	16	True	2026-06-07 06:03:00.426197+00:00								
+214dc274-c1ec-5508-8014-0fb135cc855b:train:0	meta-llama/Llama-3.2-3B	True	16	True	2026-06-07 06:02:59.508280+00:00								
+4bab03f5-b2de-5806-9e54-ee1d4825e1ad:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:02:50.741087+00:00								
+dd75390c-1e13-5c8d-be60-bcff5195a836:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:03:20.894679+00:00								
+170b9fcd-b994-5d67-8dfe-28d9ea5c0087:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:03:25.291757+00:00								
+78dcd728-e9d0-5d47-846e-92b3a05e5315:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:03:15.851582+00:00								
+23d3cb9a-f60b-5c7e-a0ee-dcba40bbdf8a:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:03:13.403828+00:00								
+977add67-1bf5-523d-acd7-2ff44ab05d61:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:02:51.904907+00:00								
+3b533184-53a9-522a-b68a-3fb2ae099e66:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:02:56.748795+00:00								
+6b702d26-a882-567b-b18e-95f910cbd430:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:02:46.895080+00:00								
+0e54d5c8-a9dc-5246-81bf-d4f6330f57be:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:02:35.808890+00:00								
+28542284-c2d9-5d39-a61f-31079622eadc:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:02:37.259521+00:00								
+34aef538-9e95-544f-b09a-e2d6136597af:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:02:23.606254+00:00								
+1d6b1649-c365-5984-921c-02a81b043555:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:02:02.752729+00:00								
+acfe2e45-27f8-5ac7-a734-708046887e11:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:02:03.197529+00:00								
+5567d86a-5211-599d-88df-15654226451f:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:01:46.354125+00:00								
+82b9a878-3475-5660-b6b4-669e1794c6bd:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:01:42.537302+00:00								
+ec22b98a-98ed-5c64-82cb-a3ce8d0f93b3:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:01:52.817401+00:00								
+fd13997f-2821-5698-a91c-45304ba99b01:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:01:31.443332+00:00								
+dabb3471-d36d-5d8e-8b2c-3345b8cbd319:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:01:18.401001+00:00								
+6e3d6a94-d510-5539-9761-6c7bfab90754:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:01:25.462216+00:00								
+33b4e43c-fb3b-5c3c-9c14-2c42d69c1e32:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:00:49.643264+00:00								
+3f0945c5-74b8-5efe-ad45-81ad254c753c:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 06:00:48.882015+00:00								
+4b8d2144-4aee-50bb-bfcc-6072f151e048:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 06:00:56.506307+00:00								
+3744e1f8-911c-5eb0-95e5-01c471ac26fd:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 06:00:35.357114+00:00								
+ee70eb27-c683-565a-bfc6-6b3069fcdccb:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 06:00:47.268753+00:00								
+1c0755a9-cef1-5c9e-8c12-46b138659d85:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 06:00:28.064697+00:00								
+65f5398a-9a04-5c07-ab1f-aeeeae0b87bd:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 06:00:13.742312+00:00								
+1c8d3a24-ee2b-5b32-b308-07635e464d54:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:59:59.634901+00:00								
+6f502e3d-bc5e-5870-b2d6-bf0d78c14a1d:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:59:53.476189+00:00								
+a154de30-5f32-5f8d-8190-6cb6ca6af4f2:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:59:37.434002+00:00								
+736232fa-ab58-560b-a97a-da5eb1b5671f:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:59:28.759327+00:00								
+ffa5f7b8-d412-5c1d-9d0b-683347e6f6a3:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:59:45.595244+00:00								
+a66fde1c-2ea5-532a-9d3c-39ae92470a94:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:59:22.650157+00:00								
+f09387eb-9530-5568-9b04-b964f3b6691d:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:59:07.290297+00:00								
+14ea1dc0-dc0f-5720-b91f-11f0d928b86f:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:59:33.341389+00:00								
+2bf506a8-791a-5085-b53e-8ed89b76e3b3:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:58:56.161244+00:00								
+677dfcc8-fca6-520d-bab0-0e93a77008b0:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:58:46.320106+00:00								
+41c20b2a-c7fe-5493-89e2-bdfeea1c58c5:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:58:31.757914+00:00								
+74020c20-c252-5c76-8925-b132812e4ac9:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:58:27.149646+00:00								
+4d126792-d2f2-51da-a942-4938a1587e25:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:58:20.837421+00:00								
+c85978a0-5942-561d-b399-c63c37d35ec9:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:58:07.954227+00:00								
+e80cc4b9-f734-51f5-9123-95fddcbdadac:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:58:06.036006+00:00								
+e20e6b58-f1d9-5bde-93ef-381c4c0f6dd3:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:58:24.610849+00:00								
+a7bd2db0-b8ba-5514-9cfb-a2810e4b7c55:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:57:54.252114+00:00								
+2e40c6cc-b9d0-5322-8240-bdf0098da538:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:57:24.565429+00:00								
+957aaa85-a22d-5880-91e6-59ae59b35a47:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:57:12.551390+00:00								
+2e3e10e4-5aea-5b4a-8339-42c77671292f:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:57:15.121264+00:00								
+79e70e10-8ba0-5311-a7fd-bc50087bb85b:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:57:12.390501+00:00								
+2898b805-c49c-55c9-ab68-37c617240a52:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:56:59.158145+00:00								
+fe9166eb-20a1-55dc-a029-89df2494a9d1:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:57:12.651147+00:00								
+c5fca8f2-9106-5a2e-a660-9038c9ff5b0f:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:57:00.486125+00:00								
+855ae585-3bb4-535a-ae38-5873af7342ba:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:56:38.220162+00:00								
+db610045-00a1-5127-ba55-6b2fd983ae47:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:56:18.045367+00:00								
+55ef2df6-f3c0-5331-9b30-828049ea9ea8:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:56:07.039259+00:00								
+59925587-e300-57c3-a535-c2ed90fcda56:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:55:55.686813+00:00								
+301eb9b4-155b-5fd6-b07c-f717c63ac1bc:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:56:12.109962+00:00								
+81515f9c-1859-5407-90af-f160326f358a:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:55:48.205062+00:00								
+c242f480-7937-5fa4-95df-b6c5dbce0c5c:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:55:52.394133+00:00								
+d7f91387-186a-584c-b741-6438177b6f1f:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:56:01.617769+00:00								
+602b6cea-81a5-5374-b136-11b004f430c8:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:55:43.236153+00:00								
+9bc1655b-145f-58b6-afe8-be04401dd11d:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:55:14.673004+00:00								
+f0edccda-cea8-5668-a1f6-9b5790a23f37:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:54:59.013781+00:00								
+9b4e6188-fdb2-5979-86b0-1b42865ab9d3:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:55:03.292233+00:00								
+3481e8d1-a1d5-504d-bff0-043e5466b263:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:54:46.872048+00:00								
+219f3e10-fc5c-5e5c-bc6a-282223bf52eb:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:54:53.827707+00:00								
+38776e8a-0348-5288-9484-49b93b34a816:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:54:39.775248+00:00								
+085e26bd-e13d-5314-919d-7c47d06c9345:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:55:02.387397+00:00								
+d9300965-1291-5ffd-8d9b-b69d420b39bf:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:54:50.044279+00:00								
+eee397b0-e90e-5587-b0c5-d509dfe3ad66:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:53:37.971312+00:00								
+46a3adf2-b743-529a-913a-3a7c0a811b8a:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:53:55.623109+00:00								
+f0c2f4b3-e76b-52e2-81e2-aa45f54d4cb3:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:53:45.549858+00:00								
+fcf271a9-ca13-55da-816c-0caab1b6653c:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:53:53.420268+00:00								
+19c6ec42-746d-57fe-a1fd-125f52b35734:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:53:36.746274+00:00								
+b0c3e14a-a3ee-5dfb-acfd-19fa9324f03e:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:53:35.886831+00:00								
+fbb7d9f8-cac0-5e5d-b2f1-99391cd6521a:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:53:45.717221+00:00								
+8e9e7337-cb7f-5c3f-b9ea-a58e2a3a571d:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:53:38.081560+00:00								
+d5e409ca-90ee-5f4e-8f3a-fe6771d5bc7b:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:52:23.856502+00:00								
+9307b0ff-e686-5eb1-8cda-a767516653dc:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:52:23.401241+00:00								
+87d49837-5c6d-5c49-b6fa-7534c63a8c33:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:52:17.169759+00:00								
+e515e642-b7dd-58b5-abf4-52478c5e6e8c:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:52:15.826708+00:00								
+79031da5-3e9d-5398-b69b-7592f0a9ca72:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:52:11.868007+00:00								
+2523847e-0c71-5c02-83c6-2cb6a5c86af9:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:52:24.802283+00:00								
+84b470a4-7f95-57fc-8ad1-2ed346e67427:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:52:21.130796+00:00								
+2610ffc9-e3ed-5725-bab0-56ec9b4505ca:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:52:18.405072+00:00								
+605c06e5-36e0-58bd-bda1-1f148bd32838:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:52:12.333361+00:00								
+718c2d22-076f-5266-90f7-216038148747:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:52:11.982745+00:00								
+285dd997-4fd0-5c1d-a253-43cc988a84e4:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:52:00.826800+00:00								
+8a34ea9f-545f-5141-8795-7882ebc99829:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:52:08.816904+00:00								
+d4758232-a8d5-5914-986b-d856526cc09f:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:51:56.644725+00:00								
+e3f74a17-9d92-5027-b695-9156d73abfd7:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:51:43.546606+00:00								
+0681c96d-998f-5608-8a60-09619ac992d1:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:51:48.002904+00:00								
+e1c00dec-9b5c-5276-b211-50e8048fc9a3:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:51:37.581695+00:00								
+5f6dd5c9-0a91-5882-8ad8-864145ccbd53:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:50:55.750540+00:00								
+0224a0e4-e765-5a16-a5c8-c66db2627bbd:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:51:14.775072+00:00								
+cca25178-066e-5961-9910-cb96d1d46088:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:51:08.322016+00:00								
+a88257c0-851a-5109-9c29-7e85f86dd6ed:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:51:03.340452+00:00								
+4528a7b0-fa50-5913-82c4-1dbb83166fb5:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:50:55.955231+00:00								
+71cd3552-af93-520c-b259-95d16a29575d:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:50:37.318770+00:00								
+ae12628b-9800-543b-a6c3-6b09fe3fdc2c:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:50:33.517153+00:00								
+09eaafed-d7c4-51fa-814a-1b4f97f15aa7:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:50:37.799913+00:00								
+784de8bd-9b6b-5480-b171-efbc795c7c51:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:49:49.166125+00:00								
+93ae1e46-2b34-55ef-8006-3f9752a6eca4:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:49:54.884273+00:00								
+8e435548-cae0-52a5-92b5-de9a26b337a5:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:49:57.538729+00:00								
+06e79ade-ba1a-5939-b511-4991e065ca09:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:49:57.535044+00:00								
+a77c7e4c-a42d-5e6b-9d8f-33f944000f15:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:49:54.654076+00:00								
+d27cf7f7-fd6f-5f04-a331-4b9849cd1260:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:49:53.263606+00:00								
+adda265c-7d94-5525-996f-67f88a9a8148:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:49:42.530421+00:00								
+ab90b821-9337-5db8-85ce-479657b90832:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:49:38.263087+00:00								
+22631381-9e4b-5d6f-8b01-47dd11cf5a5f:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:48:58.418432+00:00								
+4d67713c-6dec-5c21-a283-208b2f8e0f43:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:48:38.469696+00:00								
+cee63af4-c1bb-51c3-ba80-0f258add5d3e:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:48:46.710878+00:00								
+6f43fd77-f273-52e8-9952-8d4392bf27e9:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:48:47.086635+00:00								
+24c66d92-34f8-598b-9274-3ddb929536f0:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:48:44.303679+00:00								
+1b39884e-6746-5dc8-ad93-23d39d49497c:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:48:28.194157+00:00								
+e4748726-d2d5-51c5-a9ea-afaf85b18077:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:48:21.522984+00:00								
+330b78ae-3cc1-5499-8a80-104db5970451:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:48:32.698562+00:00								
+1620bfda-b28c-5c89-97f3-fce766ceb784:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:47:34.947015+00:00								
+ce2f6598-d13c-558e-b4a8-018a95ab442a:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:47:45.663711+00:00								
+042be16a-90d8-5b1a-a470-a77447742f6b:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:47:39.735915+00:00								
+a1ecc3f1-a384-5863-90bf-c856c0fee923:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:47:37.940900+00:00								
+db924b85-6c14-5c3e-ad26-3ca45922814c:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:47:22.141241+00:00								
+752c77ff-5d17-5701-bcf5-74e270c0031f:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:47:45.117763+00:00								
+7d878b70-4d2d-5b3f-907f-bad96c123919:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:47:26.476660+00:00								
+7e66fcf4-afa4-5998-a4c9-f8da194a33c2:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 05:47:19.013206+00:00								
+2cd528ce-a25b-5666-9f1a-7b346c8732a9:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-06-07 05:46:33.665974+00:00								
+02f1ec45-d01e-5ea6-ba26-e49d78fefc18:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:46:18.395746+00:00								
+b68adf34-441e-5395-9644-5adb38fca914:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:46:16.038887+00:00								
+951e6e59-9604-5b8b-b026-e8d18882f932:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:46:17.432460+00:00								
+a1943f3f-7c62-59fc-8807-2ad0978343c8:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:46:10.892046+00:00								
+15b55ee2-7564-576c-a6fd-576d8b1c28cc:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:46:17.585284+00:00								
+15dfc4c1-a9e2-514b-b903-74d6b418bf5a:train:0	meta-llama/Llama-3.2-3B	True	8	False	2026-06-07 05:46:08.277894+00:00								
+60418d3c-b078-507e-9665-acf317bff0a3:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-06-07 05:46:15.579801+00:00								
+6ea608ef-7b4d-55ee-96c4-4079cdea789e:train:0	meta-llama/Llama-3.2-1B	True	8	False	2026-06-07 05:44:55.726076+00:00								
+526362b5-8a20-564d-945d-1d2a352e070c:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-06-07 05:47:44.889264+00:00								
+83fc7728-d736-5853-8b28-bc52b794d0c5:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 05:44:44.526574+00:00								
+e2722312-7917-554e-ae65-0d4e41e0145b:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-06-07 05:45:06.229017+00:00								
+b8bee1a4-0e22-5c79-82fc-4b393120409f:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-06-07 05:45:46.993283+00:00								
+f566683f-e23a-5238-a48e-5e0700a29e09:train:0	openai/gpt-oss-20b	True	32	False	2026-06-07 05:44:32.379244+00:00								
+0ca5ca2f-ea04-5c96-a32c-6e7cf1e696c2:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-06-07 05:41:59.158058+00:00								
+0feef46d-3d1e-5a87-b0e4-bf18466af08a:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 05:41:31.682026+00:00								
+af4130be-41a9-5908-8f76-49ce7cea17d9:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 05:41:31.915934+00:00								
+4f1027d2-d58a-524d-9247-88d6ef86f31c:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	16	False	2026-06-07 05:43:17.705366+00:00								
+f1faeed2-64c7-52c5-8758-657edf511aa4:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 05:41:37.751339+00:00								
+88afcdd5-ddee-5d08-90be-9aa28d2186d0:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:36:40.767753+00:00								
+a4bbc660-ac53-5062-a641-6b89e5ff34a4:train:0	meta-llama/Llama-3.1-8B-Instruct	True	16	False	2026-06-07 05:33:01.552628+00:00								
+6129a234-31e7-5824-94c9-c8d36bacd7bb:train:0	Qwen/Qwen3-4B-Instruct-2507	True	32	False	2026-06-07 05:32:26.755021+00:00								
+55152c3c-0e39-5ca5-bf3d-bb9241fc4667:train:0	Qwen/Qwen3-32B	True	16	False	2026-06-07 05:36:58.130433+00:00								
+c408bb85-681f-50fc-8a70-36acb7b75736:train:0	Qwen/Qwen3-30B-A3B-Instruct-2507	True	32	False	2026-06-07 05:36:50.099553+00:00								
+74887064-6381-52de-ba78-dd0c3aa1b3fa:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 05:29:44.674203+00:00								
+344851cd-ef0b-55d6-b32b-84cdff21bee7:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-06-07 05:29:44.468501+00:00								
+7f377c2d-807e-58e7-ac54-b92ca7b4fe3e:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-06-07 05:29:44.219249+00:00								
+731daf0f-acf8-59df-b9fc-e85dfca49461:train:0	openai/gpt-oss-20b	True	32	False	2026-06-07 05:29:43.980704+00:00								
+1b39472a-6d01-5f6a-9d28-1f89dc18c927:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-06-07 05:29:43.743172+00:00								
+abbbcbb0-016c-5054-a10e-a1e25fcd2d78:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 05:29:37.429117+00:00								
+3b508ff7-0166-5a3a-a25b-457213ca7e37:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 05:29:37.244649+00:00								
+23405e83-9e5e-5a5b-950e-6186945fda3c:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-06-07 05:29:37.209791+00:00								
+ebc05a35-1e13-5a0f-a2c0-657e4cbceffb:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 05:29:37.199305+00:00								
+e7b8bd93-5ae7-58b4-bc98-198884aacc83:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	16	False	2026-06-07 05:29:36.947201+00:00								
+59aba08e-dc2d-59eb-a8fb-247bc5da8140:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:29:27.724001+00:00								
+5a11619c-0ca6-58f9-8b2a-76a946f9a691:train:0	meta-llama/Llama-3.1-8B-Instruct	True	16	False	2026-06-07 05:10:02.649149+00:00								
+6addd47f-986c-552f-a6cf-67a10bec4c2a:train:0	Qwen/Qwen3-4B-Instruct-2507	True	32	False	2026-06-07 05:10:06.328697+00:00								
+4c986393-e662-5dcd-a922-2f2a8a935b9e:train:0	Qwen/Qwen3-32B	True	16	False	2026-06-07 05:09:57.568198+00:00								
+28b8e5dc-1f0b-5d9d-b972-9e52a7962bd9:train:0	Qwen/Qwen3-30B-A3B-Instruct-2507	True	32	False	2026-06-07 05:10:09.385978+00:00								
+d6d3d823-f0f4-5e99-9ed3-eed6fd4b9cb4:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-06-07 05:06:37.051655+00:00								
+d26401bf-bd14-5490-bca5-ad67bbe2998f:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 05:06:31.405702+00:00								
+6bd2a760-cb34-5aad-82dc-29437ef88aae:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 05:09:43.942396+00:00								
+24751c71-8520-5bf8-b901-eee270383902:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-07 05:08:02.344745+00:00								
+86c4250f-e114-5e85-aa54-4760037c093d:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-06-07 05:06:26.952593+00:00								
+727cde4c-fd7a-5378-b884-13783e5b00b5:train:0	Qwen/Qwen3-4B-Instruct-2507	True	32	False	2026-06-07 05:06:16.094511+00:00								
+546e9c62-85c6-59fe-8ae7-0812ce5ef401:train:0	Qwen/Qwen3-32B	True	16	False	2026-06-07 05:08:51.650152+00:00								
+44c6ed49-0c49-5b32-bd56-99bf181b6d26:train:0	Qwen/Qwen3-30B-A3B-Instruct-2507	True	16	False	2026-06-07 05:09:13.768273+00:00								
+1555e9d7-dc2b-50b2-80f7-5c8702e8c53b:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-06-07 05:00:37.126840+00:00								
+32e58166-767e-59d5-9ecb-15d257efe412:train:0	openai/gpt-oss-20b	True	32	False	2026-06-07 05:00:31.847989+00:00								
+d404bd23-bc72-54fd-b829-8fda92a448c3:train:0	meta-llama/Llama-3.2-3B	True	32	False	2026-06-07 05:03:35.730000+00:00								
+b87a9769-2d0c-5503-a914-500ef0e45010:train:0	Qwen/Qwen3-8B	True	32	False	2026-06-07 05:03:44.117750+00:00								
+4722409b-1453-55fe-b7bc-bce09d6cd4b3:train:0	meta-llama/Llama-3.1-8B-Instruct	True	16	False	2026-06-07 05:00:26.454157+00:00								
+ac71a3fe-41cf-5a09-8315-5bd134aae3ff:train:0	Qwen/Qwen3-4B-Instruct-2507	True	32	False	2026-06-07 04:59:58.731669+00:00								
+db7b2f86-a837-5e1b-af92-69a228364662:train:0	Qwen/Qwen3-32B	True	32	False	2026-06-07 05:03:41.157333+00:00								
+2f34c703-6b3f-5202-a452-c7cd2b3909cc:train:0	Qwen/Qwen3-30B-A3B-Instruct-2507	True	16	False	2026-06-07 05:02:30.477123+00:00								
+47cbec54-9c8c-59a2-a41c-bb1565e6ace4:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-06-07 04:54:39.517847+00:00								
+f945462c-1421-59a6-87f3-e611d0a8ea5a:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 04:54:33.498016+00:00								
+c8b5f769-ff7a-5434-9e8e-f0de63c5e105:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 04:56:20.590050+00:00								
+91052fa7-3543-5c4d-9412-5f2f5a6c9a77:train:0	Qwen/Qwen3-8B	True	32	False	2026-06-07 04:57:16.977900+00:00								
+abe0277c-24c6-5f02-bd13-795178fc81ac:train:0	meta-llama/Llama-3.1-8B-Instruct	True	16	False	2026-06-07 04:53:34.356557+00:00								
+524e3ba2-9123-5cfa-b013-a33bdc1791fb:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 04:53:19.129590+00:00								
+218254d4-0d29-571a-9225-5a1686d55029:train:0	Qwen/Qwen3-32B	True	16	False	2026-06-07 04:58:08.308677+00:00								
+75c40c7a-3c32-5351-8e9a-e3948d27616a:train:0	Qwen/Qwen3-30B-A3B-Instruct-2507	True	16	False	2026-06-07 05:00:02.145613+00:00								
+74503f36-3259-505d-b164-972062d585cd:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-06-07 04:49:53.957115+00:00								
+f14f3fe9-d96a-59eb-bc35-1cd24d455c79:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 04:49:48.228781+00:00								
+0a731e9e-8fcc-532f-9ae0-57d0d59c675d:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 04:50:56.617514+00:00								
+9e9569fc-50a3-5fd8-bdd0-1a79870dfcc7:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-07 04:50:51.253387+00:00								
+6b387479-44cf-5898-9f2f-21f009df5cbf:train:0	meta-llama/Llama-3.1-8B-Instruct	True	16	False	2026-06-07 04:49:44.344881+00:00								
+6170a6fa-8745-53a6-a604-cb5f4a8c7ac6:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 04:47:22.608853+00:00								
+b98edab8-c42f-53d4-8f7a-128d2e4a37ad:train:0	Qwen/Qwen3-32B	True	16	False	2026-06-07 04:51:06.877454+00:00								
+f50ad03f-8857-5406-bbe1-53ad62222f73:train:0	Qwen/Qwen3-30B-A3B-Instruct-2507	True	32	False	2026-06-07 04:54:03.462638+00:00								
+ca034350-fee1-5394-ae5f-d556a314aaef:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	16	False	2026-06-07 04:44:31.095535+00:00								
+b7c7d39e-ee05-5dc6-a008-5bed69360170:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 04:47:00.886976+00:00								
+f9964856-df7e-51d9-bfb4-72d9ff0160cc:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 04:44:31.056763+00:00								
+c612c226-58be-515d-bb97-06177befc351:train:0	Qwen/Qwen3-8B	True	32	False	2026-06-07 04:47:53.594025+00:00								
+e4e85602-cb0c-523a-9c30-9d07d723df5d:train:0	Qwen/Qwen3-30B-A3B-Instruct-2507	True	16	False	2026-06-07 04:43:17.464501+00:00								
+b17a7153-8ec7-5afb-b92b-9d8c4f9bd8db:train:0	meta-llama/Llama-3.2-3B	True	16	False	2026-06-07 04:42:54.941857+00:00								
+772de34b-985d-5eb2-bb4f-32e39f49e3f7:train:0	openai/gpt-oss-20b	True	16	False	2026-06-07 04:43:06.128042+00:00								
+82fa60e9-543a-5409-a525-c4001c9d7798:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	16	False	2026-06-07 04:43:05.655661+00:00								
+adb53cd8-9043-5a3a-b93a-025a8e522a9f:train:0	Qwen/Qwen3-8B	True	16	False	2026-06-07 04:43:04.962992+00:00								
+924a9a37-7361-5386-847d-9272c599147c:train:0	Qwen/Qwen3-32B	True	16	False	2026-06-07 04:43:30.687164+00:00								
+d123d425-b228-50f9-b451-1f6e293adcf8:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 04:42:51.886693+00:00								
+88fa01fa-afd5-548a-9511-039a09ea8165:train:0	meta-llama/Llama-3.1-8B-Instruct	True	16	False	2026-06-07 04:43:01.510995+00:00								
+6012303a-ee05-560e-b1d1-7f84fcf790f8:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-06-07 04:40:13.684130+00:00								
+5dc31b0e-d659-5ec2-b04f-f1693fd1be2f:train:0	meta-llama/Llama-3.2-1B	True	32	False	2026-05-03 15:06:20.661789+00:00								
+2640ddbe-7621-5849-b18e-d6c9c7b086d3:train:0	Qwen/Qwen3-8B	True	32	False	2026-05-03 14:51:46.724612+00:00								
+1ed9e1be-6ac9-50d0-913e-738158840d27:train:0	Qwen/Qwen3-8B	True	16	False	2026-04-22 03:56:55.491866+00:00								
+bd7fe40f-b711-533e-b193-62cf7cb56d11:train:0	Qwen/Qwen3-8B	True	16	False	2026-04-22 03:55:08.082602+00:00								
+b8d29624-c314-5213-b53b-6dcbb4f46d2e:train:0	Qwen/Qwen3-8B	True	16	False	2026-04-22 03:54:14.260361+00:00								
+bf77225a-12f0-5773-bae8-6c8af10c63ca:train:0	meta-llama/Llama-3.2-1B	True	4	False	2026-04-22 03:26:09.986188+00:00								
+9565282d-0cd9-555a-bcd3-5964dcb3cf75:train:0	Qwen/Qwen3.5-4B	True	4	False	2026-04-22 03:25:13.666245+00:00								
+d438940b-e800-5c51-ba0a-d6bf04aeafeb:train:0	meta-llama/Llama-3.1-8B-Instruct	True	4	True	2026-04-22 03:17:32.185933+00:00								
+a5df3e9e-1ba9-55a2-8da2-6523854de84a:train:0	Qwen/Qwen3-8B	True	4	True	2026-04-22 03:17:24.098534+00:00								
+b079e75a-0673-54f7-8816-b63beec7cd22:train:0	Qwen/Qwen3-8B	True	16	False	2026-04-22 03:17:03.963458+00:00								
+93657ad2-7f91-5454-b4ef-b28019bbc6c9:train:0	Qwen/Qwen3-8B	True	16	False	2026-04-22 03:15:50.669713+00:00								
+2e353025-a959-5fa3-b75e-ef0ef9d10917:train:0	Qwen/Qwen3-8B	True	16	False	2026-04-22 03:13:48.861676+00:00								
+9ceceddf-d278-5bc4-93cd-1370d30a3986:train:0	Qwen/Qwen3-8B	True	16	False	2026-04-22 03:11:40.925019+00:00								
+efcd0489-19f3-581b-ba46-36a557e42d8c:train:0	Qwen/Qwen3-8B	True	16	False	2026-04-22 03:09:37.826098+00:00								
+134e0fc2-0d15-58b4-b8d6-140f35891321:train:0	Qwen/Qwen3.5-4B	True	4	False	2026-04-22 02:59:12.049112+00:00								
+baefba55-f865-5a8d-93ee-274648925525:train:0	Qwen/Qwen3.5-4B	True	4	False	2026-04-22 02:58:04.305799+00:00								
+89a21c7a-ba76-57e5-9056-ed343893df86:train:0	meta-llama/Llama-3.2-1B	True	4	True	2026-04-22 02:57:30.987878+00:00								
+8c778082-2fa2-5666-8344-62f5e7749cf3:train:0	Qwen/Qwen3-8B	True	4	False	2026-04-22 02:57:39.977351+00:00								
+37cbfc96-f3af-5cf3-b675-2fde7767b48c:train:0	Qwen/Qwen3-8B	True	4	False	2026-04-22 02:57:32.932462+00:00								
+27eea422-f9b0-5ac5-8664-e46b0046d5ce:train:0	meta-llama/Llama-3.1-8B-Instruct	True	4	False	2026-04-22 02:57:26.633986+00:00								
+3964a70c-8e91-5c3e-95f5-29e86b928f8b:train:0	meta-llama/Llama-3.1-8B	True	4	False	2026-04-22 02:57:20.377377+00:00								
+74e61e21-cebd-56eb-9344-4efc24f77165:train:0	Qwen/Qwen3.5-4B	True	4	False	2026-04-22 02:56:56.742703+00:00								
+c2997a1c-77a4-537c-a2ec-39a535a3c1a5:train:0	Qwen/Qwen3.5-4B	True	4	False	2026-04-22 02:53:20.769397+00:00								
+c0447b06-1926-517e-ae14-d11228d5c227:train:0	Qwen/Qwen3.5-4B	True	4	False	2026-04-21 19:57:14.870674+00:00								
+a7ee0f4f-e7d7-58ac-9bbf-563e8acfc800:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-20 07:05:37.820172+00:00								
+44859302-7cb8-57d1-ada1-d5b40cc77950:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-20 07:02:35.826781+00:00								
+f3937e9e-71f2-5270-83f3-ee7ca0cc9cd8:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-20 06:44:44.184825+00:00								
+ec0c5aa0-0601-5bd4-838a-13a60e7f7377:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 22:23:56.795561+00:00								
+bb74911a-bc8f-5bdb-8f54-84b21762a53e:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 22:20:15.783182+00:00								
+d4c7179b-de04-5918-b7d0-48655b695b37:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 22:18:32.966466+00:00								
+68bd7001-1cb5-5df3-bc17-3ed561dc0551:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 22:14:04.661201+00:00								
+b50bf5e6-82ea-5e3e-966a-5541e476b5b1:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 22:09:52.513827+00:00								
+29de9291-86ec-5d9b-a0a9-8b975e2bc1ac:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 22:08:20.659596+00:00								
+45873c54-37ce-5c28-97a7-82de39e6d4cd:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 22:05:06.205380+00:00								
+a0f46261-1410-5a5b-b8dd-ee78da7d078e:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 22:04:01.091906+00:00								
+3bf01b20-e833-5221-b2ce-db45de6ad022:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 21:55:20.379516+00:00								
+f7800e2d-8a00-5b17-a8b8-fde20118a0a9:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 21:52:31.941287+00:00								
+fdae45d2-6017-5ae8-8352-9d24a681f355:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 21:41:52.976464+00:00								
+d168c44d-ce2c-505d-93cf-90750897aa59:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 21:39:45.243197+00:00								
+b31843ce-5dcb-554f-afb2-d63900cdb341:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 21:25:24.279125+00:00								
+09383cb2-52d0-5c00-ba26-e9200bdec25c:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 20:25:15.923008+00:00								
+0941de70-382f-53da-951f-47d857f6d4c8:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 20:23:26.214769+00:00								
+4e5fa873-4f82-5a12-861b-76c33943a36d:train:0	Qwen/Qwen3-4B-Instruct-2507	True	16	False	2026-04-19 20:03:07.815227+00:00								
+63e1c283-bd11-57eb-b8b1-538a91226d1d:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	False	2026-04-19 15:43:36.295380+00:00								
+0b72cafc-0123-5405-8034-b69f9e64c2ec:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	False	2026-04-19 15:41:06.483776+00:00								
+b3ce6b4d-6571-5f5f-9a70-fdc29b10e8bb:train:0	Qwen/Qwen3-8B	True	64	False	2026-04-19 15:40:16.461101+00:00								
+0b5457f3-e254-5457-b859-50d264855b27:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 15:54:00.110279+00:00								
+deebbc82-10b8-57eb-bb0d-89d1895e592f:train:0	Qwen/Qwen3-8B	True	8	False	2026-04-19 15:39:12.248197+00:00								
+2b4c11f8-ec55-5265-b6ba-0ec1850dc81b:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 16:16:21.394001+00:00								
+d5d4bf4c-6430-5083-a3a8-648c79dc00b5:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 15:31:27.601026+00:00								
+bd1a8d2c-52f8-52c1-b764-4ff045286650:train:0	Qwen/Qwen3-8B	True	16	False	2026-04-19 15:39:03.447987+00:00								
+3d610aae-9d2a-51bc-8770-080badc94a31:train:0	Qwen/Qwen3-8B	True	8	False	2026-04-19 15:20:23.424279+00:00								
+aef9f2ca-c5c3-524d-9c02-71e47d67e692:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	True	2026-04-19 15:12:17.705928+00:00								
+47ce857c-70fe-5a23-b958-69463707121a:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	True	2026-04-19 15:12:30.337253+00:00								
+5e33e9ce-704f-5eae-94f9-76c2424bca12:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-19 15:11:19.156824+00:00								
+2dd2a57c-8e91-5edb-9644-d4b9471f6785:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-19 15:12:17.824626+00:00								
+94bd5b45-eacc-5998-8be5-6da721d20f2b:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-19 15:12:30.284509+00:00								
+41ff7d1c-16c2-5a2d-97e3-a5eec98963d2:train:0	Qwen/Qwen3-8B	True	64	True	2026-04-19 15:12:33.483798+00:00								
+d4be0f47-f985-537c-b2e7-932268ac5ff6:train:0	Qwen/Qwen3-8B	True	16	True	2026-04-19 15:12:19.654520+00:00								
+9ef95c3c-16bb-5d96-8b49-86cc95a7502a:train:0	Qwen/Qwen3-8B	True	8	True	2026-04-19 15:12:22.735460+00:00								
+ca715b8e-ce87-5d1c-8ca5-652be62476cb:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-19 15:03:01.038473+00:00								
+863f06bd-ffd4-534b-be7f-3e10f9a0f86f:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-19 15:03:34.471464+00:00								
+34f61bac-a9d5-57b8-8167-d11c8ca0e454:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-19 15:02:34.719117+00:00								
+34500c82-2e58-502f-84aa-9d917ed59d83:train:0	Qwen/Qwen3-8B	True	4	True	2026-04-19 15:03:29.088532+00:00								
+01848b9b-a1df-5337-967f-72aa89574fca:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-19 15:03:31.728628+00:00								
+8f6c11c9-4ac6-5e4b-80c8-abc6ae27badc:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-19 15:02:58.423052+00:00								
+782afa1d-7715-5de8-b1d6-7c3d8c075682:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	True	2026-04-19 15:05:38.295176+00:00								
+55b12edb-e3af-5bfe-b0f8-7134ea717f5f:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	True	2026-04-19 15:04:30.895379+00:00								
+f20e286c-8ae9-58c5-868d-0f26304e04d3:train:0	Qwen/Qwen3-8B	True	4	False	2026-04-19 14:44:13.218585+00:00								
+9808f0ff-6c22-5a7e-81a2-d358cd0426fa:train:0	meta-llama/Llama-3.1-70B	True	32	False	2026-04-19 14:27:28.975650+00:00								
+b3093e7c-1b3f-529e-8784-9e016c41aaf1:train:0	Qwen/Qwen3-8B	True	64	False	2026-04-19 14:23:09.996710+00:00								
+99c7e34e-94ab-59d5-bd01-0e66af263470:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 14:27:13.203197+00:00								
+5afd351b-7eb8-5bed-9349-82c1e48c5d6a:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-04-19 14:27:13.547007+00:00								
+07c73744-cab5-5092-851e-b3ea58d35a5d:train:0	Qwen/Qwen3-8B	True	8	False	2026-04-19 14:23:08.567719+00:00								
+c070ed2c-becf-5109-8b16-ec218098c4c5:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 14:22:45.741383+00:00								
+2e5b10f8-27e2-5c38-948f-07bd16d0a061:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 14:17:49.610037+00:00								
+54fa4a29-5660-5d76-8496-b42431f80d73:train:0	meta-llama/Llama-3.1-70B	True	32	False	2026-04-19 14:27:32.883504+00:00								
+1075d19d-d1a7-5285-9da7-e01b188ec8d4:train:0	moonshotai/Kimi-K2.5	True	32	False	2026-04-19 14:27:14.624499+00:00								
+9e6c47cb-f513-53dd-bae0-4377a1d05afd:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 14:23:34.537296+00:00								
+5f202164-ccc3-50ba-9ace-1d73401dfb6b:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 14:13:12.071782+00:00								
+5ec6cd03-82ad-5074-a1fa-68073be0a79a:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	False	2026-04-19 14:14:38.171310+00:00								
+9804562a-9df5-5bc5-a19e-2b9ad9777a03:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 14:04:54.729561+00:00								
+76717be2-b05c-5d12-8f5a-60c398544b42:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 14:02:08.248137+00:00								
+97c1be1b-c3af-554d-b7f0-87be996559d7:train:0	Qwen/Qwen3-30B-A3B-Instruct-2507	True	32	False	2026-04-19 14:08:18.255068+00:00								
+d819181c-0081-55b8-9571-6caa5e48fb36:train:0	Qwen/Qwen3-4B-Instruct-2507	True	32	False	2026-04-19 13:46:11.297987+00:00								
+feb1dc64-5958-5e8e-9e51-ad816ec2ea37:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	False	2026-04-19 13:53:50.593942+00:00								
+10b020fa-ca52-58fa-acdf-9075cc7a2256:train:0	meta-llama/Llama-3.2-3B	True	32	False	2026-04-19 13:49:01.191683+00:00								
+227c8bac-ef8f-5501-90a9-bbc8c3bd4fe8:train:0	meta-llama/Llama-3.2-1B	True	32	False	2026-04-19 13:43:26.228929+00:00								
+37e20bba-4d01-588a-a47a-7905a8ef82e1:train:0	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	True	32	False	2026-04-19 13:56:40.358143+00:00								
+6667faa1-cac8-5328-81ec-ba14a458dd56:train:0	Qwen/Qwen3.5-35B-A3B	True	32	False	2026-04-19 14:01:58.242293+00:00								
+1e04b0d0-17b0-514d-92d8-8ec3a962a4fd:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 14:08:25.925786+00:00								
+b378ef49-51b2-5fc5-91d0-b453e78e56cf:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	False	2026-04-19 13:32:50.127102+00:00								
+a862a70e-3af8-5a6a-943a-1104d0c372ce:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	False	2026-04-19 13:09:46.333708+00:00								
+6d734114-ee79-5e81-ae42-651c79d91147:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	False	2026-04-19 13:07:27.829197+00:00								
+1e2361ca-bb3a-5ee3-b998-20fec2267244:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	False	2026-04-19 13:06:11.527878+00:00								
+d78d223b-53b5-5bfd-b99e-9d76785193c3:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	False	2026-04-19 13:01:33.421312+00:00								
+8654f65b-61cc-5bb9-b6e1-a155f6563298:train:0	Qwen/Qwen3-235B-A22B-Instruct-2507	True	32	False	2026-04-19 13:28:54.480830+00:00								
+0b9165d8-f402-5905-9e33-27d0b2d56ce1:train:0	Qwen/Qwen3-235B-A22B-Instruct-2507	True	32	False	2026-04-19 13:18:27.879120+00:00								
+6d8738fd-5f45-56c9-90f2-3e2d39924316:train:0	Qwen/Qwen3-235B-A22B-Instruct-2507	True	32	False	2026-04-19 13:14:20.722906+00:00								
+26dac38a-d51a-59f7-b872-088c58ac06e8:train:0	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16	True	32	False	2026-04-19 13:35:28.581167+00:00								
+d8d3ddb0-933c-5c5c-9714-7ebd10788012:train:0	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16	True	32	False	2026-04-19 13:32:30.811321+00:00								
+272a9a06-435e-5aa0-9cf7-d970476c37f8:train:0	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16	True	32	False	2026-04-19 13:31:01.435139+00:00								
+3fd600fd-6982-5061-8edc-c2da2c7f2f0e:train:0	deepseek-ai/DeepSeek-V3.1	True	32	False	2026-04-19 12:49:58.812277+00:00								
+0416d5d1-161b-5264-8b69-4612314d3b41:train:0	deepseek-ai/DeepSeek-V3.1	True	32	False	2026-04-19 12:49:54.422388+00:00								
+c589e374-95d8-520d-8a4e-1b688bc5550f:train:0	deepseek-ai/DeepSeek-V3.1	True	32	False	2026-04-19 12:32:48.392245+00:00								
+5761c236-774f-5b29-926e-13bd6af310b1:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 12:17:44.416010+00:00								
+c82c876f-b1ff-517c-b19b-472b3df8e4b4:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 12:19:36.943768+00:00								
+16d810a0-9818-5f4c-820c-23fc91270769:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 12:15:17.583865+00:00								
+472ed7e8-5289-58cb-bb46-cc0091de7688:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	False	2026-04-19 11:45:11.883868+00:00								
+de39d965-b3f3-5317-b4e7-259a9472f2e0:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 11:56:50.302120+00:00								
+0290b1b0-bd3a-5b99-99ca-f9557a57d184:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	False	2026-04-19 11:40:51.361080+00:00								
+789144b4-3e18-52f6-afc6-1646fd9db2b5:train:0	meta-llama/Llama-3.3-70B-Instruct	True	32	False	2026-04-19 11:38:32.364350+00:00								
+57f4d068-2997-577c-895e-05f2265935a5:train:0	meta-llama/Llama-3.1-8B	True	32	False	2026-04-19 11:51:01.909136+00:00								
+200252fc-0649-5b39-8030-ba0fa5d07e84:train:0	deepseek-ai/DeepSeek-V3.1-Base	True	32	False	2026-04-19 12:15:21.424685+00:00								
+a0d96a00-54e1-569c-a56c-98520819f14f:train:0	openai/gpt-oss-120b	True	32	False	2026-04-19 11:36:53.504348+00:00								
+a1d398a3-cea7-55fd-97d9-8b61001550b2:train:0	moonshotai/Kimi-K2.5	True	32	False	2026-04-19 11:40:42.850284+00:00								
+a5715c67-65ef-5db8-a5ce-6d115a04b874:train:0	moonshotai/Kimi-K2-Thinking	True	32	False	2026-04-19 11:56:38.901824+00:00								
+b39ea661-c094-5ecb-bed7-925c3e22f285:train:0	meta-llama/Llama-3.1-70B	True	32	False	2026-04-19 11:48:23.831307+00:00								
+9f27c001-b92c-55a7-9e12-1a8bd858e16d:train:0	Qwen/Qwen3-8B-Base	True	32	False	2026-04-19 11:31:32.599786+00:00								
+7040f210-e755-5f8d-bd1a-5cb6f3ab33f8:train:0	Qwen/Qwen3.5-397B-A17B	True	32	False	2026-04-19 12:21:18.515555+00:00								
+6d4b9b82-8419-55a6-998f-5a09e424ea9d:train:0	deepseek-ai/DeepSeek-V3.1	True	32	False	2026-04-19 10:09:10.351598+00:00								
+2c70d207-b648-52b5-9db4-ad9890980ade:train:0	deepseek-ai/DeepSeek-V3.1	True	32	False	2026-04-19 10:08:44.683952+00:00								
+18310c8f-c544-58d1-8fed-79c40a50ba04:train:0	deepseek-ai/DeepSeek-V3.1	True	32	False	2026-04-19 10:08:48.558755+00:00								
+22faaf02-867b-5bad-bf6f-1ca373cbdae9:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 10:09:29.619423+00:00								
+8a13f6c3-ff8a-51f1-acbb-8ced11d96345:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 10:08:45.946366+00:00								
+f44fbf7a-1991-55e2-a68d-1c912998d7d9:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 10:05:38.574509+00:00								
+31f3b5bb-2186-519e-ba85-4c737319edcd:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 10:03:26.688692+00:00								
+50d3cbf4-c95a-57ad-86e0-6cbe0231b7eb:train:0	meta-llama/Llama-3.1-8B	True	32	False	2026-04-19 10:00:44.947335+00:00								
+a4bbfdd1-a683-53cd-9818-1f4d2bc57e24:train:0	deepseek-ai/DeepSeek-V3.1-Base	True	32	False	2026-04-19 10:08:32.720453+00:00								
+8fd9b30d-5768-5860-840d-28e453983b10:train:0	moonshotai/Kimi-K2.5	True	32	False	2026-04-19 09:46:27.141476+00:00								
+475c0744-8c33-50f9-9fed-5a09413e3f7f:train:0	meta-llama/Llama-3.1-70B	True	32	False	2026-04-19 09:42:49.210732+00:00								
+5b1014c9-e726-564c-a7ae-53c96d7c7f53:train:0	openai/gpt-oss-120b	True	32	False	2026-04-19 09:48:04.629884+00:00								
+ca0d6a00-3a4c-5a24-8b8d-f9d69db9609e:train:0	Qwen/Qwen3-8B-Base	True	32	False	2026-04-19 09:26:09.963020+00:00								
+d59f452f-7a16-5e1d-a7fb-e435383c7d42:train:0	Qwen/Qwen3.5-397B-A17B	True	32	False	2026-04-19 10:09:15.797599+00:00								
+07a99189-d92f-558d-96df-ebd5c46f78cc:train:0	moonshotai/Kimi-K2-Thinking	True	32	False	2026-04-19 09:51:08.892006+00:00								
+97991322-0a68-5759-915a-e6b499a577bc:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 09:07:04.316900+00:00								
+24e1644f-e0e9-573c-b2be-174dd224845f:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 08:54:34.237713+00:00								
+9e53e72c-9cbf-5f70-9784-8441a197897d:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 08:51:47.800895+00:00								
+1346e385-b691-58bf-9359-024b7e429696:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 08:51:00.318329+00:00								
+82ca0c57-4810-5a11-a642-af3350b812b8:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 08:34:09.832925+00:00								
+edcac83b-f876-54e3-b3e1-63528aa58fcd:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 08:18:11.579611+00:00								
+367a8384-e9b7-5d8b-89ce-50cdf36fbe80:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 08:18:06.985166+00:00								
+45cade24-3db1-5199-aa5c-4530e2467760:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-19 08:18:04.753392+00:00								
+c465d654-a00f-5821-9c11-0e40f0eecf9f:train:0	openai/gpt-oss-20b	True	32	False	2026-04-19 06:35:28.503744+00:00								
+51a8ef9e-15ef-5f8f-bda1-78ee51387a12:train:0	moonshotai/Kimi-K2-Thinking	True	16	False	2026-04-19 06:48:09.609070+00:00								
+ced567a0-b8e4-5a94-83a7-11027e432610:train:0	Qwen/Qwen3-32B	True	32	False	2026-04-19 05:14:14.749364+00:00								
+377c6f60-4a6a-57ad-a7ac-ca5d3adb5f9c:train:0	Qwen/Qwen3.5-27B	True	32	False	2026-04-19 05:14:52.406090+00:00								
+eef1b7d6-4807-5165-960b-61c0051427a8:train:0	Qwen/Qwen3.5-27B	True	32	False	2026-04-19 04:49:04.870289+00:00								
+78f9dd47-dbca-5325-a51a-e9af1a9d7330:train:0	Qwen/Qwen3-32B	True	32	False	2026-04-19 04:48:54.258043+00:00								
+2c63a926-0878-535a-895d-4ab807cd83f3:train:0	moonshotai/Kimi-K2-Thinking	True	16	False	2026-04-19 04:35:59.132688+00:00								
+e335b9d6-35d1-57b2-8284-a092608e9fbd:train:0	openai/gpt-oss-20b	True	32	False	2026-04-19 04:12:12.086729+00:00								
+cdb003a1-9b81-5078-92ed-6f1f5b57ce66:train:0	Qwen/Qwen3.5-27B	True	32	False	2026-04-19 04:12:25.389547+00:00								
+bcea41bf-532b-5cbf-a74f-e446023aed8c:train:0	Qwen/Qwen3-30B-A3B-Instruct-2507	True	32	False	2026-04-19 04:13:24.792682+00:00								
+c5fd85c9-aa1d-50cf-b56e-5abb66f6d2d3:train:0	Qwen/Qwen3-32B	True	32	False	2026-04-19 04:12:47.189362+00:00								
+8124d464-99f2-5cd2-b907-26b533df498f:train:0	Qwen/Qwen3-30B-A3B	True	32	False	2026-04-19 04:12:01.039732+00:00								
+488bbb2e-aa35-5431-b4a5-793f68b6bc49:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-04-19 04:11:37.638199+00:00								
+eb01734d-43f5-5ce1-8bd3-283f2397472f:train:0	Qwen/Qwen3-235B-A22B-Instruct-2507	True	16	False	2026-04-19 04:11:59.337247+00:00								
+44f883ac-0a6b-5ac8-85c2-dd00d26dc847:train:0	moonshotai/Kimi-K2-Thinking	True	16	False	2026-04-19 03:02:37.316388+00:00								
+e31e35cb-3b7e-5d17-bfed-de47f2622f2a:train:0	openai/gpt-oss-20b	True	32	False	2026-04-19 03:02:06.669465+00:00								
+73ff186a-d8e3-50c3-afb8-2b863cd09579:train:0	Qwen/Qwen3-32B	True	32	False	2026-04-19 03:41:31.264000+00:00								
+3879bf29-433d-56a7-838c-a0ec7357ab13:train:0	Qwen/Qwen3-235B-A22B-Instruct-2507	True	16	False	2026-04-19 03:01:39.415465+00:00								
+657a920a-9e74-55d2-9354-71a6ec2f1f61:train:0	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16	True	16	False	2026-04-19 03:31:44.336076+00:00								
+04586874-659b-5c51-af13-b3d8993d875b:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-04-19 03:01:36.067886+00:00								
+a62c464a-6786-52d0-8ae9-5cf13ad54fe4:train:0	Qwen/Qwen3.5-27B	True	32	False	2026-04-19 03:01:44.746532+00:00								
+6cd2b002-4b89-5181-aec8-5be0fd7b17ac:train:0	Qwen/Qwen3-32B	True	32	False	2026-04-19 03:01:37.919338+00:00								
+200e4983-3e9d-5176-87d0-c55dd3c73539:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-04-19 03:34:19.083518+00:00								
+6a31a6f9-e362-574c-b260-70db96730157:train:0	moonshotai/Kimi-K2-Thinking	True	16	False	2026-04-18 15:42:55.434310+00:00								
+1825db2c-26b8-5a89-abe8-bd9f0065964f:train:0	openai/gpt-oss-20b	True	32	False	2026-04-18 15:42:52.982834+00:00								
+ca2e3a24-7401-5770-af34-a0d27177aeaa:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-04-18 16:01:46.374142+00:00								
+f26a9527-fc0c-5bd1-b024-2385f2c9791b:train:0	Qwen/Qwen3-32B	True	32	False	2026-04-18 17:05:30.866745+00:00								
+6bf01103-da63-5731-b3e8-256105e72fe7:train:0	Qwen/Qwen3-30B-A3B	True	32	False	2026-04-18 15:42:23.363173+00:00								
+a942bd36-0ee1-5ba0-8fd7-9a3d53fb848e:train:0	Qwen/Qwen3-30B-A3B-Instruct-2507	True	32	False	2026-04-18 15:42:28.855051+00:00								
+0722c213-537e-599d-b450-66c152d4629a:train:0	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16	True	16	False	2026-04-18 15:42:21.674063+00:00								
+56b99b24-03bd-5d00-ae23-831933ef53b2:train:0	deepseek-ai/DeepSeek-V3.1	True	16	False	2026-04-18 16:05:38.446066+00:00								
+fadc3c69-4eb3-5d88-b16f-887d5db3f797:train:0	Qwen/Qwen3-32B	True	32	False	2026-04-18 15:42:03.881404+00:00								
+0deead04-f77a-59ab-b6bb-bf230828e7ab:train:0	Qwen/Qwen3-235B-A22B-Instruct-2507	True	16	False	2026-04-18 15:42:03.852630+00:00								
+033655f4-6177-5a2d-b518-d3f5a154dcf1:train:0	Qwen/Qwen3.5-27B	True	32	False	2026-04-18 15:42:00.298244+00:00								
+a06b9649-12ff-5f2b-810f-e9e9ce2e3640:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-04-18 15:41:55.622519+00:00								
+3154dee5-4fd7-59b6-ba3b-721eef675bfc:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-18 16:31:08.133030+00:00								
+0ae3a18b-84ac-59a1-bf18-5d22f3a384f0:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-04-18 15:41:52.273046+00:00								
+6f2ceba2-0627-509e-a565-cf9e48a17350:train:0	Qwen/Qwen3-32B	True	32	False	2026-04-18 15:37:50.719958+00:00								
+4ea168d9-123d-590f-92a7-0d9c3ef7a744:train:0	Qwen/Qwen3-30B-A3B-Instruct-2507	True	32	False	2026-04-18 15:37:50.332484+00:00								
+c8a68765-cef5-5425-bfee-b3df17b250c4:train:0	Qwen/Qwen3-30B-A3B	True	32	False	2026-04-18 15:37:45.814139+00:00								
+3b7baf59-8ad6-5451-81c3-dcd99b9a8ac0:train:0	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16	True	16	False	2026-04-18 15:37:42.222587+00:00								
+0ef59237-82ae-5e22-b789-61da6a6a85c8:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-04-18 15:37:18.859846+00:00								
+60f51b92-4f0b-5e6c-abe5-a10157a1722e:train:0	deepseek-ai/DeepSeek-V3.1	True	16	False	2026-04-18 15:37:18.748467+00:00								
+e29e6621-d89a-53a2-9caa-f1afd66a685c:train:0	Qwen/Qwen3-235B-A22B-Instruct-2507	True	16	False	2026-04-18 15:37:15.449963+00:00								
+ecc026c0-5de1-5830-ac5b-59d32a52ed78:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-18 15:37:24.532264+00:00								
+78e2d35b-d7ae-5b92-81e8-7a1a2ff294d3:train:0	Qwen/Qwen3.5-27B	True	32	False	2026-04-18 15:37:20.935883+00:00								
+0dfee749-2c83-50b8-95bf-b96e04ca51eb:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-04-18 15:37:57.284330+00:00								
+3cb71294-88be-5484-bf38-de3f3d9ebd21:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-18 15:28:06.397621+00:00								
+92cb3829-c74c-514a-ba93-884226cef785:train:0	Qwen/Qwen3.5-4B	True	16	True	2026-04-11 19:41:01.137584+00:00								
+46150432-f2ea-540b-887e-65fbbd9e8804:train:0	Qwen/Qwen3.5-4B	True	16	True	2026-04-11 19:41:33.463307+00:00								
+179a0701-d2c3-5a1a-b5d1-51c7789fd5d1:train:0	Qwen/Qwen3.5-4B	True	16	True	2026-04-11 19:40:41.770820+00:00								
+61308aad-616f-50eb-ad5a-419ffb86834c:train:0	Qwen/Qwen3.5-4B	True	16	True	2026-04-11 19:41:29.207633+00:00								
+116aa334-c173-516d-883e-4d0689eddddc:train:0	Qwen/Qwen3.5-4B	True	16	True	2026-04-11 19:39:57.716532+00:00								
+affe93a5-04d1-530a-9fe5-37791b263e69:train:0	Qwen/Qwen3.5-4B	True	16	True	2026-04-11 19:40:53.097386+00:00								
+cf739eee-161a-5d1a-be2f-bf1108832f60:train:0	Qwen/Qwen3.5-4B	True	16	True	2026-04-11 19:41:42.254081+00:00								
+92b7e1e1-b9f4-5814-9388-94acad86a461:train:0	Qwen/Qwen3.5-4B	True	16	True	2026-04-11 19:41:23.506099+00:00								
+2a5ef251-57d2-551c-8814-0e1a75978be1:train:0	Qwen/Qwen3.5-4B	True	8	False	2026-04-11 19:31:14.250376+00:00								
+fafb2be3-6fd9-5456-9b32-9f9e19c02466:train:0	Qwen/Qwen3-4B-Instruct-2507	True	8	False	2026-04-11 19:27:22.243431+00:00								
+c68f598c-2fb5-5f49-b543-bfd9f099bf38:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 12:25:25.987791+00:00								
+f273ba1c-9895-5839-9b37-b5d13d32d44a:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 11:04:29.446734+00:00								
+191807de-6b47-5bfd-be2e-d50f23960204:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 10:14:26.922894+00:00								
+6681ccfe-cd04-5cf3-a525-3b4c36362c9c:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 12:47:44.480234+00:00								
+db9f9598-0e4c-548d-a371-0eb58249da44:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 11:35:20.636515+00:00								
+6f1af455-c60a-53eb-97d8-094407b75cfd:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 11:31:26.138488+00:00								
+c9fe9825-27d6-5ee6-9a9d-1d785be8bb0d:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 11:54:48.019234+00:00								
+3034fb71-e310-59af-92f0-98d5d1239b39:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 11:35:14.222936+00:00								
+68317e22-6603-5dad-97d0-cd38a964d088:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 09:49:39.395876+00:00								
+fd778598-6093-5632-b958-9918e81f5ab0:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 09:34:10.748511+00:00								
+6b2436f4-6a2d-5f96-bc5f-71a0f7d951f6:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 09:31:53.381040+00:00								
+bb6db9e9-d511-5f4b-80ec-75bffa5399a5:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 06:49:29.204195+00:00								
+df59a131-3caf-5c92-9513-cc5e396d98a8:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 06:49:38.001359+00:00								
+b0753a2a-fba9-5ff2-87f0-e4d2f62d139a:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 06:49:28.093434+00:00								
+a8f77311-3103-58f8-9261-f9d7fef4ce16:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 07:26:14.195097+00:00								
+ee1a3fe0-892b-5112-ba1b-6bcc5413fefc:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 07:26:04.887345+00:00								
+b5820b45-5886-5737-83b3-2d695da340d1:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 07:25:50.832598+00:00								
+cc62b7bd-dd14-590d-9cab-8793d2ddff50:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 07:26:13.512811+00:00								
+cb1976bd-171f-5649-baf4-20820eb2cf2e:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 07:25:54.524106+00:00								
+39c3c528-fa41-5f9a-ba6d-622dbba46d61:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 05:48:21.390750+00:00								
+bef56848-4a64-5794-a8c8-0881e1246cf1:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 05:39:20.156572+00:00								
+ea467455-6042-5206-ae91-f4a6dee9fc43:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 04:58:37.696561+00:00								
+13f13951-c828-59ce-9c02-1317d02ea002:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 05:07:22.565859+00:00								
+9d06814a-eb2c-5036-8ab7-a0e9555fdafc:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 05:08:37.405986+00:00								
+cb9b016f-b27f-509c-b663-2be8c8150e2a:train:0	meta-llama/Llama-3.2-3B	True	32	False	2026-04-05 05:09:45.043288+00:00								
+bdbd6b3f-7c01-5a2e-99dc-ec84b5a6c864:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-04-05 04:49:00.401948+00:00								
+e5ae7e73-9b5b-5406-9652-d5666980b677:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 05:06:56.179740+00:00								
+83bd52df-355a-517b-8653-b5c132bdf8cb:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 05:13:20.590667+00:00								
+31115bb9-950e-5e00-a594-aff77f2af6a6:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 05:08:32.680766+00:00								
+b34d0c9e-7112-5143-a945-f661a6ccce29:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 05:04:45.122669+00:00								
+1e192a82-2fa1-551e-8d01-e195d83b5c06:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 05:10:26.391339+00:00								
+064deac5-f634-59c1-b7eb-d7956f7bce03:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 05:08:57.570109+00:00								
+967ae627-43a2-5a6c-a3d5-a2fb6b4cc6cd:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 04:56:42.097085+00:00								
+1a914c78-6697-5082-8937-c4217e0a4b67:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 03:43:43.147877+00:00								
+e648a0e6-9d07-5272-aa92-75fdf2f4c60c:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 03:42:01.055637+00:00								
+0be57ae9-b61e-5a50-82bc-f2271c883ca1:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 03:36:14.413482+00:00								
+25abc453-caac-53ff-bdeb-3d37579fb778:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-04-05 03:35:38.031222+00:00								
+64459ee9-eb85-5b8d-911c-b771ec40825a:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-04-05 02:53:38.773447+00:00								
+e2142590-562c-57da-acda-a5b3a7be28c2:train:0	meta-llama/Llama-3.1-8B	True	32	False	2026-04-05 02:52:44.208041+00:00								
+9b281bcd-df7d-5b52-a025-a73c33cf8b65:train:0	meta-llama/Llama-3.2-3B	True	32	False	2026-04-05 02:54:12.682117+00:00								
+0752d409-df6e-5738-a62b-ab73d3a27da6:train:0	meta-llama/Llama-3.2-3B	True	32	False	2026-04-05 02:53:58.851997+00:00								
+374c1635-604b-5ad7-9dfd-fc6abc634355:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 02:53:45.550559+00:00								
+92ee273f-2309-5555-ab88-76b834d03746:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 02:54:06.821638+00:00								
+409a3e7c-c0d0-503e-b77a-ef557208f77e:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 02:53:10.771552+00:00								
+779e4f5d-96fa-53fb-81cc-3d8886f1b5a4:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 02:53:29.732114+00:00								
+c1a342a3-88cc-52cd-8754-3c65ffde9726:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 02:53:59.577023+00:00								
+5c9034dd-c8d8-5e25-b97d-7c5df3778047:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 02:54:12.850601+00:00								
+09a15f2c-20b6-5d6d-ad9f-da6379335c07:train:0	meta-llama/Llama-3.1-8B	True	32	False	2026-04-05 02:53:27.711707+00:00								
+a5fd1051-fdc4-5f38-8621-c477fa71d86f:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-04-05 02:54:07.253214+00:00								
+e96f237c-4aeb-52be-8a30-5b1f9141978b:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 02:54:12.060860+00:00								
+b72ccb09-1e30-5e21-82ff-13d06fe67431:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 02:53:33.898806+00:00								
+bb1786b9-fbe3-58ef-85b9-2fb71e4ccdf3:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 02:53:32.242318+00:00								
+26585161-affe-531a-b868-73df5bbf10f3:train:0	Qwen/Qwen3-8B	True	8	False	2026-04-05 02:38:27.840172+00:00								
+aa7a86fd-26fa-57bf-946d-bcead2e09fad:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	True	2026-04-05 02:27:53.388995+00:00								
+26e31dfa-98a8-551e-8484-06570adddb8c:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-04-05 02:14:19.643909+00:00								
+b707eb5b-0493-5f19-bbfc-bfc5eacbd4cf:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-04-05 02:13:21.337604+00:00								
+1a493e3c-10e3-51ce-be46-4e8a613fa571:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 02:27:01.709684+00:00								
+24eef771-abb2-5d06-8c43-e1b3047ce396:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 02:11:59.791679+00:00								
+a8fd22a5-c761-5387-95d0-3484615e50fc:train:0	meta-llama/Llama-3.1-8B	True	32	True	2026-04-05 02:27:11.922772+00:00								
+4c951338-d8e2-5cf3-81fe-972195f1f13e:train:0	meta-llama/Llama-3.2-3B	True	32	True	2026-04-05 02:27:14.280007+00:00								
+6b81a88c-cf83-5908-ac42-41dc47347ce8:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 02:27:14.790860+00:00								
+18a58f50-1e05-5104-a964-351ba4357af6:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 02:27:29.400624+00:00								
+08e666cb-d5c0-5456-adde-c1f90683187d:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 02:27:41.722145+00:00								
+01b5117c-f16e-5f87-a852-35c24c252a8c:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 02:27:45.173458+00:00								
+ef5d60d9-a129-58be-93a0-d6cc6577e93c:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 02:27:19.286716+00:00								
+2ef413db-a02f-5735-baf5-c172fe643a6a:train:0	meta-llama/Llama-3.1-8B	True	32	True	2026-04-05 02:27:52.286989+00:00								
+d3545d69-d8fe-5d62-b008-a9fef613cb42:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 02:27:19.129690+00:00								
+5121dad7-ba24-57e5-bb6c-f467106fa04e:train:0	meta-llama/Llama-3.2-3B	True	32	True	2026-04-05 02:27:09.470943+00:00								
+29614d5f-ad3e-5c00-92cc-57af8e5637fc:train:7	meta-llama/Llama-3.2-1B	True	8	False	2026-04-05 01:47:31.881221+00:00								
+29614d5f-ad3e-5c00-92cc-57af8e5637fc:train:6	meta-llama/Llama-3.2-3B	True	8	False	2026-04-05 01:47:12.912002+00:00								
+29614d5f-ad3e-5c00-92cc-57af8e5637fc:train:5	meta-llama/Llama-3.1-8B	True	8	False	2026-04-05 01:46:53.459433+00:00								
+29614d5f-ad3e-5c00-92cc-57af8e5637fc:train:4	meta-llama/Llama-3.1-8B-Instruct	True	8	False	2026-04-05 01:46:38.490737+00:00								
+29614d5f-ad3e-5c00-92cc-57af8e5637fc:train:0	Qwen/Qwen3-8B	True	8	False	2026-04-05 01:46:19.872117+00:00								
+455eb703-36f0-5849-a24e-d1ea3922ae78:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 02:20:23.977937+00:00								
+ddc397e7-60db-52e3-97e0-b5a680a80c68:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 02:27:29.408522+00:00								
+349738e4-c2ce-505a-8aab-934ee46eccd7:train:0	meta-llama/Llama-3.2-1B	True	16	False	2026-04-05 02:20:57.370164+00:00								
+06674625-e5e0-51d3-bfa4-a3dfca8dddf5:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	True	2026-04-05 02:27:33.448094+00:00								
+2523f214-c29b-5c31-9e44-cbd828465cea:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-05 02:05:20.945449+00:00								
+feca483d-5cc3-59d6-ae69-2ed080c831d8:train:0	Qwen/Qwen3-8B	True	32	True	2026-04-05 02:27:16.298764+00:00								
+86162fb1-53f8-5bdf-a03b-bc8103c9185c:train:0	meta-llama/Llama-3.2-3B	True	32	False	2026-04-04 16:11:57.778753+00:00								
+b6e8e70d-2eff-5f4a-83ec-2d7d0ec403d4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-04-04 15:19:42.117063+00:00								
+a00e78da-4037-5ce1-8b85-2536044ee924:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-04-04 15:19:22.808703+00:00								
+ae5c6287-01f8-5f46-a4aa-ff32dcf73ee6:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-04 15:04:26.378454+00:00								
+cd17f565-07f0-504d-87f9-da2f5812fcbf:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-04-04 15:18:47.186289+00:00								
+6e2f0d73-13c5-5a45-aee5-364763ae69da:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-04 15:06:14.861844+00:00								
+8c42a6aa-b24e-5ff5-b1e7-1b6b2e0b5949:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-04 15:02:56.984326+00:00								
+a13b85f7-a85c-5e4f-8bf2-e4b6335a699a:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-04 15:02:18.281240+00:00								
+f47ed04d-a35c-5908-922d-fb67775c97f9:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-04-04 14:37:26.965442+00:00								
+63133a5e-bb01-59da-9a2e-30ff35e64cda:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-04-04 14:38:03.034865+00:00								
+3fa0787f-c650-53f1-9afd-860c1111417d:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-04-04 14:37:39.534889+00:00								
+6f5e8944-29a9-5721-ac2a-d66904ba9a39:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-04 14:37:49.436655+00:00								
+b81ef704-dab5-581b-ac0f-436a4303dfde:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-04 14:37:47.759302+00:00								
+42459443-44b1-533c-80ad-fba5527f34ba:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-04 14:37:53.808208+00:00								
+42948a2a-9aa8-5784-8bed-6a276c43111c:train:0	Qwen/Qwen3-8B	True	32	False	2026-04-04 14:37:46.222672+00:00								
+eab60069-db43-5f60-bc58-4164bf576056:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-29 21:22:13.866003+00:00								
+bb229991-d7f1-5935-b825-0b75d8e306c3:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-29 21:19:13.465702+00:00								
+97edd7e0-bb8f-5519-ad67-13a4d822fe56:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-29 21:15:39.105090+00:00								
+2881f5fe-4c24-50f0-a609-cb491675d1e2:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-29 17:23:18.072912+00:00								
+3615bdd2-d5db-5882-b9f7-4d330c2e13ca:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-29 17:20:35.809809+00:00								
+ae1b5cb1-0da0-51ab-8e01-a161da9e41e4:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-29 17:18:25.314192+00:00								
+9c078373-95c2-5331-b3be-4f390be9391b:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-29 17:16:13.732882+00:00								
+847ae2af-4bfd-5af6-b5b2-965d683314ff:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-29 17:14:34.611768+00:00								
+49c25f6c-4aa6-5c1c-bace-6ffaabbaa6d1:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-29 17:11:33.735350+00:00								
+b3ba8df6-753b-545a-816d-0cbff0b059f7:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 14:51:29.354749+00:00								
+899d909e-7821-5b2b-a8d9-d8b3113ebd64:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 14:48:38.335784+00:00								
+566747c0-b9a6-5a8c-9352-4b477bb919d4:train:0	Qwen/Qwen3.5-4B	True	32	False	2026-03-28 14:52:55.599928+00:00								
+d4e52dd6-a62c-59bd-a820-e96fad45b098:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 14:09:15.871991+00:00								
+a57ce240-2877-51f4-b3d7-d2228224d62e:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 14:08:55.144891+00:00								
+1cc20cec-d27d-5546-962a-4c3bcbc84d9b:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 11:35:17.189473+00:00								
+9219771c-5e67-5f51-96e2-b83b53e60743:train:0	Qwen/Qwen3-8B	True	64	False	2026-03-28 11:13:17.901818+00:00								
+92ebcc48-d019-517b-badb-af14ec5ff339:train:0	Qwen/Qwen3-8B	True	16	False	2026-03-28 11:12:11.587148+00:00								
+ba2a1694-f294-5015-b22b-6a5983a3bd5b:train:0	Qwen/Qwen3-8B	True	8	False	2026-03-28 11:12:01.070851+00:00								
+99971b26-f228-5726-88c7-ab92c73b72ec:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 11:12:56.639431+00:00								
+aabb48cb-cb8b-5ebb-85f8-ccd6443eff00:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 11:12:28.443118+00:00								
+5db4e965-07f3-575c-a806-2578d230a30d:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 11:13:33.502597+00:00								
+1b01abef-0dc8-537f-a6f0-ff74056e0199:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 07:24:11.884926+00:00								
+386273f4-8caf-5534-a13f-f6e75d95e412:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 07:12:09.978924+00:00								
+f63b618c-8fa5-57cb-9177-57538114d3cf:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 07:13:43.289949+00:00								
+22e9e5fd-e7d8-5b00-8ba7-70dedf9b9251:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:57:36.149014+00:00								
+5569c1fa-e21d-5aef-aece-dfc2ed86ec42:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:45:18.082209+00:00								
+2d488a85-203b-5da1-aff1-b8eed35a1199:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:46:49.201308+00:00								
+88ed2271-a4f3-5696-884f-a107df5993e6:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:46:41.766007+00:00								
+0c229594-b5d9-5eb4-a831-788c02d19b71:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:33:17.670565+00:00								
+64b0f0a1-0d10-51f7-aa4f-7941a8244b9f:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:28:55.878741+00:00								
+dbe4d48e-9491-5bf0-8fb5-7728d67958ec:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:23:28.721517+00:00								
+54340c41-325c-5976-bab7-4b068d87f4f9:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:21:57.275394+00:00								
+68016695-8361-509c-9333-87b92f41f81d:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:21:31.770818+00:00								
+277c167a-3eb2-5b27-8dbd-3d6461b4f4fc:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:21:13.809985+00:00								
+afd09702-25a1-5768-9ee8-02ee17d2eeb1:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:20:17.836754+00:00								
+0704d39c-68d1-5ab9-a69f-85f4dea6f770:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:19:02.877180+00:00								
+e60aea5b-257e-5be0-a1e9-849f87244eee:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:18:23.651921+00:00								
+ba9bb2dd-6c6d-5edb-8ada-66ef14897f45:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:16:43.206827+00:00								
+4894de33-cee4-5038-8f59-76268ac019a6:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:11:31.543418+00:00								
+201dcd05-11c3-5b77-ad19-43e05253322c:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:10:21.521059+00:00								
+91cbba49-972a-5e92-8718-8f80299c208a:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:08:56.440876+00:00								
+bfe561da-ed26-5134-a028-a0ba11579fb3:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:08:30.330266+00:00								
+742be768-cf00-536e-82df-70a83c96e8c0:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:07:34.358534+00:00								
+59d34fc6-f7b1-528f-8be2-26b6296936d9:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:04:44.130131+00:00								
+fdcb0465-b90e-5163-8a5f-7f802f7cc100:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:04:07.847670+00:00								
+e3a96b93-8d87-5c51-9b9b-5fffa0e4b31c:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:03:31.232030+00:00								
+ec4877c5-6ab2-5286-8133-f15219ec8f0e:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-28 06:01:28.773268+00:00								
+a4205dd9-f895-5a80-a359-5a2c36ce0088:train:0	Qwen/Qwen3-8B	True	32	True	2026-03-07 09:37:29.801125+00:00								
+97d44ae4-8122-50af-9e19-4c57d11242ae:train:0	Qwen/Qwen3-8B	True	32	True	2026-03-07 09:37:17.524352+00:00								
+6a822fce-c8b7-5dc6-b543-254802be931b:train:0	Qwen/Qwen3-8B	True	32	True	2026-03-07 09:37:02.946765+00:00								
+c7c756e3-c7a8-5d56-93a7-7e235a782cff:train:0	Qwen/Qwen3.5-35B-A3B	True	32	False	2026-03-07 09:29:08.078917+00:00								
+15d55fa4-182a-5c9c-9dc5-052acf484693:train:0	Qwen/Qwen3-32B	True	32	True	2026-03-07 09:37:37.328952+00:00								
+ff421522-8fdc-5fc0-a6c7-b2e25ab1bc61:train:0	Qwen/Qwen3-32B	True	32	False	2026-03-07 09:00:54.115241+00:00								
+05c4c4b3-6aff-5426-897f-e88baacc87a5:train:0	Qwen/Qwen3-32B	True	32	False	2026-03-07 09:01:06.385602+00:00								
+bcd2ca7b-d24c-5b0e-879e-cf800aa0b730:train:0	Qwen/Qwen3-32B	True	32	False	2026-03-07 09:00:57.618760+00:00								
+87f928f2-e8a9-534a-9ed3-4c1627aeb075:train:0	Qwen/Qwen3-32B	True	32	False	2026-03-07 09:01:02.455449+00:00								
+5060c4a4-fcba-508a-bb46-09cc7d7669f4:train:0	Qwen/Qwen3-32B	True	32	False	2026-03-07 09:00:54.222102+00:00								
+763b8929-356b-54a3-886a-c1d44eee73bd:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-03-07 09:03:50.863562+00:00								
+3ea6e52a-3889-566c-87a1-907157e80df9:train:0	Qwen/Qwen3-30B-A3B	True	32	False	2026-03-07 09:04:53.375604+00:00								
+8ac43805-ede9-5851-a1cb-3651bd8f3583:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-07 08:36:48.977467+00:00								
+f23877e6-7f4d-527d-8d3e-2d8ee5a6b207:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-07 08:08:58.107317+00:00								
+c09e7504-7b97-5b7a-8c46-d861cde4ddf5:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-07 08:06:46.915825+00:00								
+9f0806e3-9aa7-56cd-8d7a-caab37ac911a:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-03-01 05:16:01.318647+00:00								
+9e1840ec-abb0-5f56-85d3-54d0d7a12176:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-01 05:23:40.676086+00:00								
+9f53109d-1cdf-5e3e-a04b-a0c933878f51:train:0	meta-llama/Llama-3.1-8B-Instruct	True	32	False	2026-03-01 05:00:46.370682+00:00								
+03d1371d-b661-5ed9-b992-c2f1479303de:train:0	meta-llama/Llama-3.2-3B	True	32	False	2026-03-01 05:05:03.037569+00:00								
+f48983ea-36ee-519c-8a7c-fa40be4e34e7:train:0	Qwen/Qwen3-30B-A3B	True	32	False	2026-03-01 04:38:16.482742+00:00								
+380ee7fe-a0fc-5224-b755-49256a020831:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-01 04:30:21.745359+00:00								
+a5d56408-e610-56d8-964a-1f082596e9a5:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-01 04:11:23.971795+00:00								
+201aa59c-1c9c-56b6-83b8-c31add97fece:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-01 03:51:19.919975+00:00								
+b02195d7-a696-5c39-b9b2-bb2c2fcc500a:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-01 03:50:20.616976+00:00								
+fbd8941a-72e9-51e1-96ae-e41fb6f84dd0:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-01 03:46:54.961014+00:00								
+4a7034c2-7c17-5900-8002-10e13c35ac77:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-01 03:46:02.835250+00:00								
+f9c9138b-0cb9-5951-acb7-14c9c2b661d2:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-01 03:44:07.634029+00:00								
+6dd0a0f9-fa92-585c-9239-31a38a7841b9:train:0	Qwen/Qwen3-8B	True	32	False	2026-03-01 03:42:36.042395+00:00								
+a9503074-c9d4-51d3-9155-4e46c73fbf9a:train:0	meta-llama/Llama-3.2-1B	True	32	False	2026-01-25 04:10:29.665628+00:00								
+592c9a3d-ad36-545f-a9a4-9b2ebb1acd1b:train:0	meta-llama/Llama-3.2-1B	True	32	False	2026-01-25 04:09:35.220064+00:00								
+f73748ae-b754-5c1a-9369-e2bb08513af0:train:0	meta-llama/Llama-3.2-1B	True	32	False	2026-01-25 05:58:49.312767+00:00								
+a28eb4f6-6544-5b15-a8be-bd235ec6cb3c:train:0	Qwen/Qwen3-4B-Instruct-2507	True	32	False	2026-01-25 04:20:45.186565+00:00								
+38d13280-7597-5485-ac06-0427525fc7ae:train:0	meta-llama/Llama-3.2-1B	True	32	False	2026-01-25 06:00:48.385894+00:00								
+afcf506f-e999-5caf-8d23-68c3dc6ed1fc:train:0	meta-llama/Llama-3.2-1B	True	32	False	2026-01-25 04:14:47.939557+00:00								
+39aa5eb2-e234-5a95-ab68-896e4cac8c45:train:0	meta-llama/Llama-3.2-1B	True	32	False	2026-01-25 04:07:40.532575+00:00								
+c4e1bbba-8b25-50fc-84d4-e10df97ff208:train:0	Qwen/Qwen3-VL-30B-A3B-Instruct	True	32	False	2026-01-12 16:56:29.881147+00:00								
+93e96315-2e2f-51e9-8860-36a75630af7f:train:0	Qwen/Qwen3-VL-30B-A3B-Instruct	True	32	False	2026-01-12 16:54:20.715661+00:00								
+a4ddf703-727a-5ae9-bb57-8c88aaf1b309:train:0	Qwen/Qwen3-VL-30B-A3B-Instruct	True	32	False	2026-01-12 16:52:30.860792+00:00								
+e08908e6-d23b-53cd-b9b0-4c5e57b977f9:train:0	Qwen/Qwen3-VL-30B-A3B-Instruct	True	32	False	2026-01-12 16:52:07.912676+00:00								
+d9deffb4-8cc6-556b-8fb0-1384fd3a105e:train:0	Qwen/Qwen3-VL-30B-A3B-Instruct	True	32	False	2026-01-12 16:50:59.480953+00:00								
+7d5c9293-c690-5434-9082-54b41ab6a074:train:0	Qwen/Qwen3-VL-30B-A3B-Instruct	True	32	False	2026-01-12 16:49:49.295336+00:00								
+e6ca7b0d-4cae-5ae4-9371-33fef5847480:train:0	Qwen/Qwen3-VL-30B-A3B-Instruct	True	32	False	2026-01-12 16:48:42.866147+00:00								
+3bbe89c2-9300-5556-b735-4c1d9b21e091:train:0	Qwen/Qwen3-VL-30B-A3B-Instruct	True	32	False	2026-01-12 16:46:41.573632+00:00								
+8dfa7af9-7891-5484-8625-ded951751f98:train:0	Qwen/Qwen3-VL-30B-A3B-Instruct	True	32	False	2026-01-12 16:46:09.976971+00:00								
+f90ab12b-88ec-5116-a6f6-eac02054fa11:train:0	Qwen/Qwen3-VL-30B-A3B-Instruct	True	32	False	2026-01-12 16:45:22.155269+00:00								
+0453224d-f5a6-57d7-9b4b-10f278576a38:train:0	meta-llama/Llama-3.1-70B	True	32	False	2026-01-08 05:13:51.731347+00:00								
+b6f141d9-e02f-5225-9cac-e646d2bafa09:train:0	meta-llama/Llama-3.1-70B	True	32	False	2026-01-08 04:55:18.876133+00:00								

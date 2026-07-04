@@ -1,0 +1,133 @@
+{
+  "n_cells": 98,
+  "axes": [
+    "G",
+    "model",
+    "seed",
+    "task",
+    "temperature"
+  ],
+  "outcomes": [
+    "mean_reward",
+    "zvf"
+  ],
+  "per_axis": [
+    {
+      "outcome": "mean_reward",
+      "axis": "model",
+      "k": 2,
+      "n_cells": 98,
+      "eta_sq": 0.452667,
+      "ci_lo": 0.314397,
+      "ci_hi": 0.6328,
+      "ci_excludes_zero": true
+    },
+    {
+      "outcome": "mean_reward",
+      "axis": "task",
+      "k": 3,
+      "n_cells": 98,
+      "eta_sq": 0.27286,
+      "ci_lo": 0.188046,
+      "ci_hi": 0.414827,
+      "ci_excludes_zero": true
+    },
+    {
+      "outcome": "mean_reward",
+      "axis": "G",
+      "k": 5,
+      "n_cells": 98,
+      "eta_sq": 0.030434,
+      "ci_lo": 0.011549,
+      "ci_hi": 0.176641,
+      "ci_excludes_zero": true
+    },
+    {
+      "outcome": "mean_reward",
+      "axis": "temperature",
+      "k": 2,
+      "n_cells": 98,
+      "eta_sq": 7e-06,
+      "ci_lo": 9e-06,
+      "ci_hi": 0.055602,
+      "ci_excludes_zero": true
+    },
+    {
+      "outcome": "mean_reward",
+      "axis": "seed",
+      "k": 2,
+      "n_cells": 98,
+      "eta_sq": 8e-06,
+      "ci_lo": 9e-06,
+      "ci_hi": 0.051299,
+      "ci_excludes_zero": true
+    },
+    {
+      "outcome": "zvf",
+      "axis": "model",
+      "k": 2,
+      "n_cells": 98,
+      "eta_sq": 0.005293,
+      "ci_lo": 2.3e-05,
+      "ci_hi": 0.078099,
+      "ci_excludes_zero": true
+    },
+    {
+      "outcome": "zvf",
+      "axis": "task",
+      "k": 3,
+      "n_cells": 98,
+      "eta_sq": 0.468691,
+      "ci_lo": 0.367461,
+      "ci_hi": 0.589499,
+      "ci_excludes_zero": true
+    },
+    {
+      "outcome": "zvf",
+      "axis": "G",
+      "k": 5,
+      "n_cells": 98,
+      "eta_sq": 0.443657,
+      "ci_lo": 0.267541,
+      "ci_hi": 0.629579,
+      "ci_excludes_zero": true
+    },
+    {
+      "outcome": "zvf",
+      "axis": "temperature",
+      "k": 2,
+      "n_cells": 98,
+      "eta_sq": 0.009153,
+      "ci_lo": 3e-05,
+      "ci_hi": 0.080185,
+      "ci_excludes_zero": true
+    },
+    {
+      "outcome": "zvf",
+      "axis": "seed",
+      "k": 2,
+      "n_cells": 98,
+      "eta_sq": 2.4e-05,
+      "ci_lo": 1.1e-05,
+      "ci_hi": 0.053345,
+      "ci_excludes_zero": true
+    }
+  ],
+  "sum_stack_eta_sq": {
+    "mean_reward": 0.755976,
+    "zvf": 0.926818
+  },
+  "headline": {
+    "falsifiable_claim": "P5 thesis operationalised at 98-cell mega scale: sum(eta^2 stack axes) on mean_reward > 0.50 (when only the stack varies, the stack explains > 50% of outcome variance).",
+    "mean_reward_sum_eta_sq": 0.755976,
+    "zvf_sum_eta_sq": 0.926818,
+    "threshold": 0.5,
+    "verdict_mean_reward": "PASS",
+    "verdict_zvf": "PASS",
+    "n_zero_mean_reward_cells": 35,
+    "zero_task_counts": {
+      "humaneval_subset": 34,
+      "gsm8k_easy": 1
+    }
+  }
+}

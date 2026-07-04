@@ -1,0 +1,11 @@
+outcome	axis	eta_sq	ci_lo	ci_hi
+mean_reward	model	0.452667	0.314397	0.6328
+mean_reward	task	0.27286	0.188046	0.414827
+mean_reward	G	0.030434	0.011549	0.176641
+mean_reward	temperature	7e-06	9e-06	0.055602
+mean_reward	seed	8e-06	9e-06	0.051299
+zvf	model	0.005293	2.3e-05	0.078099
+zvf	task	0.468691	0.367461	0.589499
+zvf	G	0.443657	0.267541	0.629579
+zvf	temperature	0.009153	3e-05	0.080185
+zvf	seed	2.4e-05	1.1e-05	0.053345

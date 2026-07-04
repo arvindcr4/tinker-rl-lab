@@ -1,0 +1,3 @@
+delta_id	metric	panel	delta	ci_low	ci_high	n	significant	source
+delta_adaptiveg	reward_mean	qp7_adaptive_armB_vs_armA_paired	-0.007812	-0.023926	0.009277	16	False	experiments/results/quick_20260704/qp7_adaptive.tsv
+delta_adaptiveg	zvf	qp7_adaptive_armB_vs_armA_paired	-0.074219	-0.121094	-0.03125	16	True	experiments/results/quick_20260704/qp7_adaptive.tsv

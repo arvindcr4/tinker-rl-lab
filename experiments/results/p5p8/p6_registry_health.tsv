@@ -19,6 +19,7 @@ zvf130_es	stack	worktree-zvf130-batch	open	es	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0
 zvf130_mcgrpo	stack	worktree-zvf130-batch	open	mcgrpo	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	2	False	False	True								
 zvf130_ngrpo	stack	worktree-zvf130-batch	open	ngrpo	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	False	False	True								
 zvf130_scafgrpo	stack	worktree-zvf130-batch	open	scafgrpo	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	False	False	True								
+delta_adaptiveg	variant_delta																			1	True	True	True		2	2	2	1	1	0	0
 delta_aero	variant_delta																			1	True	True	True		4	3	4	1	1	1	1
 delta_areal	variant_delta																			1	True	True	True		4	3	4	1	1	1	1
 delta_cppo	variant_delta																			1	True	True	True		2	1	2	1	0	0	1
@@ -27,6 +28,8 @@ delta_drgrpo	variant_delta																			2	False	False	True		0	0	0	0	0	0	0
 delta_es	variant_delta																			1	True	True	True		2	1	2	1	0	0	1
 delta_gift	variant_delta																			1	True	True	True		4	3	4	2	1	0	1
 delta_gspo	variant_delta																			2	False	False	True		0	0	0	0	0	0	0
+delta_liteppo	variant_delta																			2	False	False	True		0	0	0	0	0	0	0
 delta_mcgrpo	variant_delta																			2	True	True	True		2	1	2	1	0	0	1
 delta_ngrpo	variant_delta																			1	True	True	True		2	1	2	1	0	0	1
+delta_reinforce	variant_delta																			2	False	False	True		0	0	0	0	0	0	0
 delta_scafgrpo	variant_delta																			1	True	True	True		2	1	2	1	0	0	1

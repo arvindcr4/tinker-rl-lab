@@ -1,17 +1,17 @@
 {
   "badge_max": 96,
   "badge_min": 43,
-  "cells_with_entry": 84,
+  "cells_with_entry": 102,
   "claim_validation_distribution": {
     "CONTRADICTS": 2,
-    "NEUTRAL": 3,
-    "SUPPORTS": 9,
+    "NEUTRAL": 4,
+    "SUPPORTS": 10,
     "UNCLAIMED": 8
   },
   "claim_validation_significant_share": 0.5,
-  "claim_validation_total": 22,
-  "coverage_rate": 0.6087,
-  "framework_x_method_cells": 138,
+  "claim_validation_total": 24,
+  "coverage_rate": 0.6538,
+  "framework_x_method_cells": 156,
   "frameworks": [
     "colab-open-trainer",
     "openrlhf",
@@ -36,6 +36,7 @@
     "areal",
     "cppo",
     "dapo",
+    "delta_adaptiveg",
     "delta_aero",
     "delta_areal",
     "delta_cppo",
@@ -44,8 +45,10 @@
     "delta_es",
     "delta_gift",
     "delta_gspo",
+    "delta_liteppo",
     "delta_mcgrpo",
     "delta_ngrpo",
+    "delta_reinforce",
     "delta_scafgrpo",
     "drgrpo",
     "es",
@@ -56,13 +59,13 @@
     "ngrpo",
     "scafgrpo"
   ],
-  "methods_count": 23,
-  "n_delta_records": 11,
-  "n_entries_total": 31,
+  "methods_count": 26,
+  "n_delta_records": 14,
+  "n_entries_total": 34,
   "n_stack_records": 20,
   "schema_fail_count": 0,
   "schema_fail_ids": [],
-  "schema_pass_count": 31,
+  "schema_pass_count": 34,
   "stacks_with_ci_method": 7,
   "stacks_with_outcomes": 11,
   "top5_null_fields": [
@@ -102,7 +105,9 @@
     "da39a3ee5e": [
       "delta_dapo",
       "delta_drgrpo",
-      "delta_gspo"
+      "delta_gspo",
+      "delta_liteppo",
+      "delta_reinforce"
     ]
   }
 }

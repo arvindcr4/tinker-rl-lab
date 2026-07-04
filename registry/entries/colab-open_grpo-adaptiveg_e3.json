@@ -18,7 +18,14 @@
     "wandb": "arvindcr4-pes-university/zvf-colab-experiments",
     "date_recorded": "2026-06-21"
   },
-  "variant_deltas_applied": [],
+  "variant_deltas_applied": [
+    {
+      "delta_id": "delta_adaptiveg",
+      "component": "zvf_driven_group_size_ladder",
+      "status": "implemented",
+      "note": "iter-54 cross-link: this stack IS the live implementation of delta_adaptiveg (schedule='adaptive', initial_g=4, ladder 4->6->8 on ZVF>0.5 with de-escalation on ZVF<0.2). The measured block in delta_adaptiveg.json pairs this arm against the fixed-G=4 arm from the same harness."
+    }
+  ],
   "min_report": {
     "loss_form": {
       "importance_ratio_level": "token",

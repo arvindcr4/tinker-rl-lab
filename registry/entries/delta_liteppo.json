@@ -1,0 +1,25 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_liteppo",
+  "name": "LitePPO",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "liteppo2024",
+    "arxiv": "",
+    "title": "LitePPO: a lightweight PPO variant without a learned value head (worktree reference; no peer-reviewed citation \u2014 listed here as a transparent placeholder so future measured blocks have a stable id)"
+  },
+  "deltas": [
+    {
+      "component": "no_value_head",
+      "field": "reference_kl.reference_policy",
+      "change": "no learned V_head; advantages are estimated by an external baseline (group mean) instead of GAE."
+    },
+    {
+      "component": "ratio_clip",
+      "field": "loss_form.clip_eps_low",
+      "change": "PPO-style ratio clipping retained with eps_low=eps_high=0.2 (symmetric clip, unlike DAPO's asymmetric 0.2/0.28)."
+    }
+  ],
+  "notes": "Iter-54 vein (d): LitePPO is mentioned in experiments/results/EXPERIMENT_LEDGER.md as ppo_lite but had no delta_*.json. Citation is a transparent placeholder (arxiv=null) because no peer-reviewed LitePPO paper is verified; this is a known limitation flagged on the entry itself, not hidden. Measured block intentionally null for the same reason as delta_reinforce: no same-stack arm in the worktree."
+}

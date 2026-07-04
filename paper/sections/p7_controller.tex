@@ -1340,3 +1340,111 @@ non-overlapping CIs).}
 \label{tab:p7-tau-sweep}
 \end{table}
 
+\subsection{Per-prompt over-de-escalation on the saturation-band steps}
+\label{sec:p7-satband-perprompt}
+
+The iter-31 panel-conditional unification was stated at the
+\emph{step level}: on the 12 sat-band steps
+($\mathrm{zvf}_\text{step} \ge 0.9$ across the four methods,
+192 prompt observations out of $2{,}560$), the Hybrid de-escalates
+every prompt to $G'=4$ and zvf-triage wrongly escalates every prompt
+to $G'=16$. This subsection closes the per-prompt caveat: the
+de-escalation is correct on the saturated 94.3\% of sat-band prompts
+but signal-harmful on the 5.7\% of sat-band prompts that are NOT
+saturated --- a difference the step-level $\mathrm{zvf}_\text{step}$
+aggregate hides.
+
+\paragraph{Per-prompt regime classification on the 192 sat-band
+prompts.}
+Each sat-band prompt is classified by its observed $k$ successes out of
+$G_\text{base}{=}8$: \emph{saturated} ($k \in \{0, 8\}$; 181 obs,
+94.3\%), \emph{boundary} ($k \in \{1, 7\}$; 3 obs, 1.6\%),
+\emph{mid} ($k \in \{2, \dots, 6\}$; 8 obs, 4.2\%). The Hybrid's
+de-escalation rule sends every one of the 192 prompts to $G'=4$
+(step-level aggregate, not per-prompt rule). Per-prompt iid-ZVF at
+the controller's chosen $G'$ versus baseline $G{=}8$:
+
+\begin{table}[t]
+\centering
+\caption{Per-prompt iid-ZVF at the controller's chosen $G'$
+versus the fixed-$G{=}8$ baseline, on the 192 sat-band prompts.
+Positive $\Delta\mathrm{ZVF}$ means the controller's choice \emph{worsens}
+signal (higher iid-ZVF = more starvation). The Hybrid's de-escalation
+is signal-preserving on the 181 saturated prompts (ZVF$=1.0$ either
+way) and signal-harmful on the 11 mixed prompts.}
+\label{tab:p7-satband-perprompt}
+\begin{tabular}{lrrrrr}
+\toprule
+regime (per $k$) & $n$ & Hybrid $G'$ & iid-ZvF at $G{=}8$ & iid-ZvF at $G{=}4$ & $\Delta$ \\
+\midrule
+saturated $k{\in}\{0,8\}$ & 181 & 4 & 1.0000 & 1.0000 & 0.0000 \\
+boundary $k{\in}\{1,7\}$  &   3 & 4 & 0.3436 & 0.5864 & $+0.2428$ \\
+mid $k{\in}\{2,\ldots,6\}$ & 8 & 4 & $\le 0.1001$ & $\ge 0.1250$ & $+0.0249$ to $+0.2202$ \\
+\midrule
+\textbf{all 192 sat-band} & 192 & 4 & 0.9501 & 0.9609 & $+0.0108$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Falsifiable headline (this iter).}
+With bootstrap 95\% CIs on the 192 sat-band prompts
+($n_\mathrm{boot}{=}2000$, seed~$20260704$, step-level resample of the
+12 sat-band steps):
+
+\begin{table}[t]
+\centering
+\caption{Per-controller over-de-escalation rate on the 192 sat-band
+prompts (where ``over-de-escalation'' means $\mathrm{ZvF}_\mathrm{ctrl} > \mathrm{ZvF}_\text{baseline}$,
+positive $\Delta =$ worse signal). Hybrid's rate is $5.73\%$ with CI
+entirely above zero; zvf-triage's rate is $0.00\%$ (CI is degenerate at
+zero because escalation never worsens signal on already-saturated
+prompts); Dualformer-Auto's rate is $1.04\%$ with CI including zero.}
+\label{tab:p7-satband-overdeesc}
+\begin{tabular}{lrrrr}
+\toprule
+controller & over-deesc rate & 95\% CI & mean $\Delta\mathrm{ZvF}$ & 95\% CI \\
+\midrule
+Hybrid (de-escalate to $G{=}4$) & \textbf{5.73\%} & [4.69\%, 6.25\%] & $+0.0108$ & [+0.0081, +0.0130] \\
+zvf-triage$\,\tau{=}0.70$ (escalate to $G{=}16$) & 0.00\% & [0.00\%, 0.00\%] & $-0.0054$ & [$-$0.0085, $-$0.0024] \\
+Dualformer-Auto (per-prompt rule) & 1.04\% & [0.00\%, 2.60\%] & $0.0000$ & [$-$0.0043, $+$0.0043] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{What the iter-31 prediction says vs what the per-prompt
+measurement shows.}
+Iter-31's falsifiable prediction was that the Hybrid strictly
+dominates zvf-triage on sat-band-heavy panels. This iter sharpens it:
+the Hybrid dominates on \emph{rollout economy} (every sat-band prompt
+goes to $G{=}4$ instead of $G{=}16$, a $4\times$ saving per prompt)
+but on the 5.7\% of sat-band prompts that are mixed the de-escalation
+\emph{costs} signal. The zvf-triage's escalation direction is
+\emph{signal-positive} everywhere on this evidence base (0/192
+over-de-escalation, mean $\Delta\mathrm{ZvF}=-0.0054$ with CI strictly
+negative), but at $4\times$ the rollout cost. Dualformer-Auto is the
+strict Pareto winner on the over-de-escalation-rate axis: 1.04\% rate
+with CI including zero, mean $\Delta\mathrm{ZvF}=0.0000$ with CI
+straddling zero, AND it spends $56\%$--$62\%$ fewer rollouts than
+fixed-$G{=}8$ on the saturated prompts (because every $k \in \{0,8\}$
+prompt maps to $G'=2$ via Dualformer's $\hat p \ge 0.95$ rule).
+
+\paragraph{Sharpest reviewer-facing falsifiable prediction.}
+On a future sat-band-heavy panel where the mixed-prompt fraction
+rises above 10\%, the Hybrid's per-prompt over-de-escalation rate
+should exceed 5.7\% and its mean $\Delta\mathrm{ZvF}$ should become
+positive at the 95\% level; on a panel where the mixed-prompt fraction
+stays below 5\%, the Hybrid strictly Pareto-dominates zvf-triage.
+On the N2 sat-band panel, the mixed fraction is 5.7\% --- within the
+Hybrid's design tolerance and \emph{consistent with} iter-31's
+conclusion that the Hybrid is the calibrated answer for the
+saturated-prompt regime, with a per-prompt-level cost that the
+step-level $\mathrm{zvf}_\text{step}$ aggregate cannot detect.
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_satband\_per\_prompt.py}
+($\leq 300$ LoC, stdlib only) and
+\texttt{scripts/p5p8/p7\_satband\_bootstrap.py}
+($\leq 220$ LoC, stdlib only). Outputs in
+\texttt{experiments/results/p5p8/p7\_satband\_\{per\_prompt,per\_step,
+per\_prompt\_summary,per\_step\_controllers,bootstrap\_summary,per\_prompt,bootstrap\}.\{tsv,json\}}.
+

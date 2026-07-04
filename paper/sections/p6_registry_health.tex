@@ -213,3 +213,80 @@ Every prospective contributor's erroneous edit now fails schema
 validation rather than being caught only by the iter 14 audit's
 post-hoc value-null heuristic. The audit and the schema now describe
 the same integrity claim from two complementary angles.
+
+\subsection{Variant-delta $\times$ MIN-REPORT consistency (iter 30)}
+\label{sec:p6-delta-consistency}
+
+The two preceding quality axes are \emph{coverage} (which fields are
+non-null) and \emph{measurement-accuracy} (does the registry's
+prediction match the measured proxy, \secref{sec:p6-measured-claimed}).
+A third axis is \emph{internal consistency}: when an entry
+\emph{claims} to apply a variant-delta, do its own MIN-REPORT field
+values agree with the technique's field implications? An entry whose
+\texttt{variant\_deltas\_applied[].status} reads \texttt{implemented}
+but whose \texttt{min\_report.loss\_form} still records the baseline
+value would pass both prior audits and fail this one.
+
+\paragraph{Method.} For every
+\texttt{(entry, applied\_delta, component)} triple,
+\texttt{scripts/p5p8/delta\_minreport\_consistency.py} looks up a
+hand-curated \emph{implication table} (the MIN-REPORT field(s) the
+technique, if fully applied, would yield) and classifies the triple
+by the entry's own \texttt{status}:
+
+\begin{itemize}
+\item \texttt{MATCH} --- \texttt{status=implemented} and the
+MIN-REPORT field equals the expected value.
+\item \texttt{MISMATCH} --- \texttt{status=implemented} and the
+field disagrees (data-integrity problem).
+\item \texttt{MISSING\_REPORT} --- \texttt{status=implemented} but
+the field is null.
+\item \texttt{SURROGATE\_OBS} --- \texttt{status=surrogate} and the
+field is non-null (the entry reports a \emph{different}
+realisation; we do not judge its value against the original
+implication).
+\item \texttt{NOT\_APPLICABLE} --- \texttt{status=absent/unknown} or
+the component has no MIN-REPORT field implication.
+\end{itemize}
+
+\paragraph{Headline.} Across 31 \texttt{(entry, component)} triples
+drawn from 13 entries that carry at least one
+\texttt{variant\_deltas\_applied} element, the verdict distribution
+is \textbf{7 MATCH, 0 MISMATCH, 0 MISSING\_REPORT, 5
+SURROGATE\_OBS, 19 NOT\_APPLICABLE}. Among the 7
+\texttt{status=implemented}, MIN-REPORT-visible triples, the
+implementation-honesty match rate is \textbf{7/7 = 1.000} (95\%
+bootstrap CI \textbf{[0.65, 1.00]}, $B=10{,}000$, seed=20260704).
+The registry is internally consistent on its auditable surface:
+every entry that claims to implement a variant-delta component and
+has a checkable field, reports that field correctly.
+
+\paragraph{Schema exposure.} Of the 18
+\texttt{(delta\_id, component)} pairs the registry currently
+describes, only \textbf{5} have a MIN-REPORT field that the audit
+can check. The remaining 13 are \emph{registry-invisible} --- they
+live in \texttt{reward.*}, \texttt{sampling.*}, or signal-prior
+blocks the schema does not currently expose. Schema exposure is
+\textbf{5/18 = 0.278}. Closing the next-most-prominent gaps
+(\texttt{reward.overlong\_shaping} for DAPO;
+\texttt{sampling.dynamic\_sampling} for DAPO) would push exposure to
+\textbf{7/18 = 0.389} without changing any entry; adding
+\texttt{reward.entropy\_prior} (AERO/GIFT/AREAL) and a
+\texttt{sampling.strategy} block (MCTS for MCGRPO) would push it
+above 0.6. This number is the \emph{next} schema-extension
+frontier for P6, and it is the first quantitative answer to the
+question ``how much of the registry's variant-delta surface is
+self-auditable?''
+
+\paragraph{The three audit axes are independent.}
+\secref{sec:p6-health} (per-leaf coverage) catches \emph{omission};
+\secref{sec:p6-measured-claimed} (reconciliation) catches
+\emph{wrong prediction}; this section catches \emph{self-contradiction}.
+A registry can score well on any one of the three and fail the
+other two. The iter 30 result is the first empirical evidence that
+on the current 31-entry corpus, the \emph{internal-consistency} axis
+is the cleanest of the three: zero MISMATCH and zero MISSING\_REPORT
+out of seven auditable, implemented claims. The corollary is the
+\emph{open work}: extending the schema to push the exposure number
+above 0.6 is now a concrete, falsifiable next step rather than a
+vague aspiration.

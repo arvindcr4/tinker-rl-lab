@@ -1,0 +1,211 @@
+{
+  "by_delta_verdict": {
+    "delta_aero": {
+      "NOT_APPLICABLE": 1
+    },
+    "delta_areal": {
+      "NOT_APPLICABLE": 1
+    },
+    "delta_cppo": {
+      "NOT_APPLICABLE": 1
+    },
+    "delta_dapo": {
+      "MATCH": 5,
+      "NOT_APPLICABLE": 9,
+      "SURROGATE_OBS": 2
+    },
+    "delta_drgrpo": {
+      "MATCH": 2,
+      "SURROGATE_OBS": 2
+    },
+    "delta_es": {
+      "NOT_APPLICABLE": 1
+    },
+    "delta_gift": {
+      "NOT_APPLICABLE": 1
+    },
+    "delta_gspo": {
+      "NOT_APPLICABLE": 1,
+      "SURROGATE_OBS": 1
+    },
+    "delta_mcgrpo": {
+      "NOT_APPLICABLE": 2
+    },
+    "delta_ngrpo": {
+      "NOT_APPLICABLE": 1
+    },
+    "delta_scafgrpo": {
+      "NOT_APPLICABLE": 1
+    }
+  },
+  "by_entry_verdict": {
+    "colab-open_dapo_e3": {
+      "MATCH": 5,
+      "NOT_APPLICABLE": 3
+    },
+    "colab-open_drgrpo_e3": {
+      "MATCH": 2
+    },
+    "tinker_aero_qwen3.5-4b_gsm8k": {
+      "NOT_APPLICABLE": 1
+    },
+    "tinker_areal_qwen3.5-4b_gsm8k": {
+      "NOT_APPLICABLE": 1
+    },
+    "tinker_dapo_qwen3.5-4b_gsm8k": {
+      "NOT_APPLICABLE": 6,
+      "SURROGATE_OBS": 2
+    },
+    "tinker_drgrpo_qwen3.5-4b_gsm8k": {
+      "SURROGATE_OBS": 2
+    },
+    "tinker_gift_qwen3.5-4b_gsm8k": {
+      "NOT_APPLICABLE": 1
+    },
+    "tinker_gspo_qwen3.5-4b_gsm8k": {
+      "NOT_APPLICABLE": 1,
+      "SURROGATE_OBS": 1
+    },
+    "zvf130_cppo": {
+      "NOT_APPLICABLE": 1
+    },
+    "zvf130_es": {
+      "NOT_APPLICABLE": 1
+    },
+    "zvf130_mcgrpo": {
+      "NOT_APPLICABLE": 2
+    },
+    "zvf130_ngrpo": {
+      "NOT_APPLICABLE": 1
+    },
+    "zvf130_scafgrpo": {
+      "NOT_APPLICABLE": 1
+    }
+  },
+  "by_field_verdict": {
+    "loss_form.advantage_normalization": {
+      "MATCH": 1,
+      "SURROGATE_OBS": 1
+    },
+    "loss_form.clip_eps_high": {
+      "MATCH": 1,
+      "SURROGATE_OBS": 1
+    },
+    "loss_form.clip_eps_low": {
+      "MATCH": 1,
+      "SURROGATE_OBS": 1
+    },
+    "loss_form.importance_ratio_level": {
+      "SURROGATE_OBS": 1
+    },
+    "loss_form.length_normalization": {
+      "MATCH": 1,
+      "SURROGATE_OBS": 1
+    },
+    "reference_kl.kl_beta": {
+      "MATCH": 1,
+      "NOT_APPLICABLE": 1
+    },
+    "reference_kl.kl_estimator": {
+      "MATCH": 1,
+      "NOT_APPLICABLE": 1
+    },
+    "reference_kl.reference_policy": {
+      "MATCH": 1,
+      "NOT_APPLICABLE": 1
+    }
+  },
+  "by_status_verdict": {
+    "absent": {
+      "NOT_APPLICABLE": 3
+    },
+    "implemented": {
+      "MATCH": 7,
+      "NOT_APPLICABLE": 5
+    },
+    "surrogate": {
+      "SURROGATE_OBS": 5
+    },
+    "unknown": {
+      "NOT_APPLICABLE": 11
+    }
+  },
+  "by_verdict": {
+    "MATCH": 7,
+    "NOT_APPLICABLE": 19,
+    "SURROGATE_OBS": 5
+  },
+  "implementation_honesty": {
+    "consistent_rate": 0.5833,
+    "match_rate": 0.5833,
+    "mismatch_rate": 0.0,
+    "missing_report_rate": 0.0,
+    "n_match": 7,
+    "n_mismatch": 0,
+    "n_missing_report": 0
+  },
+  "implication_table": {
+    "delta_aero": {
+      "advantage_guided_evolution": {}
+    },
+    "delta_areal": {
+      "autoscaling_Rollout": {}
+    },
+    "delta_cppo": {
+      "continuity_penalty": {}
+    },
+    "delta_dapo": {
+      "clip_higher": {
+        "loss_form.clip_eps_high": 0.28,
+        "loss_form.clip_eps_low": 0.2
+      },
+      "dynamic_sampling": {},
+      "kl_removed": {
+        "reference_kl.kl_beta": 0.0,
+        "reference_kl.kl_estimator": "none",
+        "reference_kl.reference_policy": false
+      },
+      "overlong_reward_shaping": {},
+      "token_level_loss": {}
+    },
+    "delta_drgrpo": {
+      "advantage_std_normalization": {
+        "loss_form.advantage_normalization": "none"
+      },
+      "length_normalization": {
+        "loss_form.length_normalization": false
+      }
+    },
+    "delta_es": {
+      "black_box_perturbation": {}
+    },
+    "delta_gift": {
+      "gamma_likelihood_baseline": {}
+    },
+    "delta_gspo": {
+      "sequence_level_clip": {},
+      "sequence_level_ratio": {
+        "loss_form.importance_ratio_level": "sequence"
+      }
+    },
+    "delta_mcgrpo": {
+      "mcts_rollout": {},
+      "per_prompt_diversity_bonus": {}
+    },
+    "delta_ngrpo": {
+      "per_prompt_normalization": {}
+    },
+    "delta_scafgrpo": {
+      "scaffold_aware_advantage": {}
+    }
+  },
+  "n_entries_with_deltas": 13,
+  "n_implemented_triples": 12,
+  "n_triples": 31,
+  "schema_exposure": {
+    "components_with_minreport_implication": 5,
+    "exposure_rate": 0.2778,
+    "total_components": 18
+  },
+  "ts": "2026-07-04T19:04:35Z"
+}

@@ -656,3 +656,96 @@ items $\times$ 7 axes $\times$ axis values),
 \texttt{experiments/results/p5p8/minreport\_stratified\_summary.json},
 \texttt{experiments/results/p5p8/figures/minreport\_stratified\_heatmap.\{png,pdf\}},
 \texttt{experiments/results/p5p8/figures/minreport\_stratified\_contrast.\{png,pdf\}}.
+
+\subsection{Exhibit 13: Which Stack Fields Are Load-Bearing? A Predictive-Sufficiency Test}
+\label{sec:p5-exhibit-field-suff}
+Exhibits~5 and~7 established, via \emph{univariate} one-way $\eta^{2}$, that
+stack axes dominate outcome variance in isolation. They cannot answer the
+question a practitioner actually faces when deciding what to disclose:
+\emph{if I omit this one MIN-REPORT field, how much of my ability to predict
+the reported outcome do I lose, once the other fields are already reported?}
+That is a \emph{joint, multivariate} question---it must net out redundancy and
+interactions between fields, which per-axis $\eta^{2}$ cannot.
+
+We operationalize the paper's title claim as a \textbf{predictive-sufficiency
+test}. On the 98-cell mega corpus we fit a random forest
+($200$ trees, \texttt{min\_samples\_leaf}$=3$) predicting per-cell telemetry
+(\texttt{zvf}, \texttt{mean\_reward}) from the disclosed stack fields
+(\texttt{model\_family}, \texttt{task\_slice} one-hot; $\log_{2}G$;
+\texttt{temperature}), scored by out-of-fold $R^{2}$ ($8$-fold CV averaged over
+$8$ fold seeds). For each field $f$ we report the \emph{regret of omission}
+$\Delta R^{2}=R^{2}_{\text{full}}-R^{2}_{\text{drop }f}$ with a paired
+case-resampling (over-cell) bootstrap CI ($B{=}2000$); a field is
+\textbf{load-bearing} iff its $\Delta R^{2}$ CI excludes zero. The
+\emph{label-only} baseline predicts the corpus mean (all $98$ cells share one
+sampling label) and so has $R^{2}=0$ by construction.
+
+\begin{table}[t]
+\centering
+\caption{MIN-REPORT field predictive-sufficiency on $n{=}98$ mega cells.
+Full-stack $R^{2}$ vs the label-only baseline ($R^{2}{=}0$), and per-field
+regret of omission $\Delta R^{2}$ with paired bootstrap 95\% CIs
+($B{=}2000$). Bold = load-bearing (CI excludes $0$) with
+$\Delta R^{2}{\ge}0.10$. The nuisance \texttt{seed} axis, added \emph{on top}
+of the full stack, has strictly negative $\Delta R^{2}$ in both channels.}
+\label{tab:p5-field-suff}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+ & \texttt{zvf} $\Delta R^{2}$ [95\% CI] & \texttt{mean\_reward} $\Delta R^{2}$ [95\% CI] \\
+\midrule
+\emph{full-stack} $R^{2}$ & $0.832$ $[0.772,0.879]$ & $0.993$ $[0.990,0.996]$ \\
+\emph{label-only} $R^{2}$ & $0.000$ & $0.000$ \\
+\midrule
+model\_family & $0.025$ $[0.007,0.049]$ & $\mathbf{0.942}$ $[0.809,1.129]$ \\
+task\_slice   & $\mathbf{0.513}$ $[0.356,0.752]$ & $\mathbf{0.656}$ $[0.497,0.889]$ \\
+$G$           & $\mathbf{0.441}$ $[0.324,0.581]$ & $0.001$ $[-0.001,0.002]$ \\
+temperature   & $0.011$ $[-0.003,0.025]$ & $0.001$ $[0.000,0.001]$ \\
+\midrule
+$+$seed (nuisance) & $-0.015$ $[-0.022,-0.006]$ & $-0.004$ $[-0.006,-0.002]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.98\linewidth]{p5_field_sufficiency.pdf}
+\caption{Regret of omission $\Delta R^{2}$ per disclosed stack field, both
+telemetry channels, with paired bootstrap 95\% CIs. Blue bars are
+load-bearing (CI excludes $0$); grey are not. The load-bearing set is
+\emph{channel-specific}: $G$ is load-bearing for \texttt{zvf} but inert for
+\texttt{mean\_reward}.}
+\label{fig:p5-field-suff}
+\end{figure}
+
+\paragraph{What the table licenses.} Three findings sharpen the thesis.
+\emph{(i) The label predicts nothing; the stack predicts almost everything.}
+The disclosed stack recovers $R^{2}{=}0.83$ (ZVF) and $0.99$ (reward), while
+the algorithm label---identical across all $98$ cells---recovers exactly
+$0.0$. This is the paper's title in one measurement.
+\emph{(ii) Load-bearing-ness is outcome-specific.} For the contrastive-signal
+channel, \texttt{task\_slice} and $G$ dominate ($\Delta R^{2}{=}0.51,0.44$);
+for accuracy, \texttt{model\_family} and \texttt{task\_slice} dominate
+($0.94,0.66$). Crucially $G$ is load-bearing for \texttt{zvf} yet
+statistically inert for \texttt{mean\_reward} ($\Delta R^{2}{=}0.0005$, CI
+straddles $0$)---the joint, interaction-aware confirmation of Exhibit~7's
+univariate observation that $G$ drives ZVF but not reward. A blanket ``report
+the important fields'' rule is therefore ill-posed: which stack fields are
+load-bearing depends on which telemetry channel a claim rests on, so
+\textbf{MIN-REPORT must require the full stack rather than a claim-specific
+subset}. \emph{(iii) The seed axis is not merely uninformative---conditioning
+on it is actively harmful} ($\Delta R^{2}<0$, CI excludes $0$ in both
+channels), the strongest possible statement that seed is a noise axis and not
+a stack axis. We note $\Delta R^{2}$ does not sum to full $R^{2}$ (ZVF:
+$0.99>0.83$) because leave-one-field-out on a joint predictor captures
+redundancy, not an orthogonal ANOVA partition---precisely why this test adds
+information beyond Exhibit~7. This mirrors, at the reporting-field level, the
+\citet{henderson2018deep} finding that implementation and configuration
+choices---not the nominal algorithm---govern reported RL outcomes.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p5\_field\_sufficiency.py} ($\sim$60\,s). Input:
+\texttt{experiments/results/mega\_20260704/cells.tsv}. Outputs:
+\texttt{experiments/results/p5p8/p5\_field\_sufficiency.tsv},
+\texttt{p5\_field\_sufficiency\_summary.json}, and
+\texttt{figures/p5\_field\_sufficiency.\{png,pdf\}}.

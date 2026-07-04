@@ -1,0 +1,15 @@
+target	model	field_omitted	r2	dr2	dr2_lo	dr2_hi	r2_ci_lo	r2_ci_hi
+zvf	full_stack	(none)	0.8323	0.0			0.7717	0.8792
+zvf	drop_model_family	model_family	0.807	0.0254	0.0068	0.0488		
+zvf	drop_task_slice	task_slice	0.3194	0.5129	0.3558	0.7515		
+zvf	drop_G	G	0.3915	0.4408	0.3242	0.5805		
+zvf	drop_temperature	temperature	0.8216	0.0107	-0.0026	0.0253		
+zvf	full_stack+seed	(+seed)	0.8176	-0.0147	-0.0224	-0.0057		
+zvf	label_only	(all stack)	0.0	0.8323				
+mean_reward	full_stack	(none)	0.993	0.0			0.9897	0.9956
+mean_reward	drop_model_family	model_family	0.0511	0.9419	0.8093	1.1291		
+mean_reward	drop_task_slice	task_slice	0.3374	0.6556	0.4973	0.889		
+mean_reward	drop_G	G	0.9925	0.0005	-0.0008	0.0018		
+mean_reward	drop_temperature	temperature	0.9924	0.0006	0.0	0.0012		
+mean_reward	full_stack+seed	(+seed)	0.9892	-0.0038	-0.0061	-0.0017		
+mean_reward	label_only	(all stack)	0.0	0.993				

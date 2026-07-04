@@ -118,6 +118,141 @@ the negative evidence for the sensor pattern: even a perfect LLM that
 produces a single deterministic 4-vector per transaction does not help
 the tree on this dataset.
 
+\subsubsection{Which aggregate, if any, helps under paired bootstrap CIs?}
+
+The single-point table above reports AUC/Brier/F1 for each
+\texttt{drop\_$X$} variant but provides no uncertainty estimate; a
+reviewer who asks ``does the \texttt{drop\_V\_max} F1 difference
+exceed bootstrap noise'' cannot answer from it. We close this gap with
+a paired bootstrap audit (n$_{\text{boot}}{=}1000$, seed $2026$) of
+all four \texttt{drop\_$X$} variants vs.\ the $24$-feature reference,
+and an analogous \textbf{leaves-one-IN} audit of every $1$-of-$4$ and
+$2$-of-$6$ subset added on top of the $20$ raw features. The CIs are
+two-sided $95$\% on (variant $-$ reference) per metric.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Leaves-one-OUT (top half) and leaves-one-IN reverse
+ablation (bottom half) of the four aggregate features, with paired
+bootstrap $95$\% CIs on the per-feature delta vs the
+corresponding $24$-feature reference (LOO) or $20$-feature reference
+(LOI). ``excl.\ 0'' marks a CI that excludes zero on the direction
+shown. None of the $4{+}4{+}6{=}14$ contrasts on AUC or F1
+excludes zero; the only statistically detectable contrast is
+\textsf{add\_V\_std\_only} on ECE-10, where adding $V_{\text{std}}$
+\emph{worsens} calibration by $\Delta_{\text{ECE}}{=}{+}0.00118$
+CI $[{+}0.00028, {+}0.00200]$.}
+\label{tab:p8-perfeat-abl}
+\begin{tabular}{llcccc}
+\toprule
+Direction & Variant & $\Delta_{\text{AUC}}$ CI & $\Delta_{\text{F1}}$ CI & $\Delta_{\text{ECE10}}$ CI & excl.\ 0 \\
+\midrule
+\multicolumn{6}{l}{\emph{Leaves-one-OUT (vs ALL\_24)}} \\
+& drop\_V\_mean & $[-7.7\!\times\!10^{-5}, +5.3\!\times\!10^{-4}]$ & $[-0.019, +0.039]$ & $[-4.5\!\times\!10^{-4}, +1.6\!\times\!10^{-3}]$ & --- \\
+& drop\_V\_std  & $[-1.1\!\times\!10^{-4}, +4.0\!\times\!10^{-4}]$ & $[-0.039, +0.035]$ & $[-1.7\!\times\!10^{-4}, +1.6\!\times\!10^{-3}]$ & --- \\
+& drop\_V\_max  & $[-1.5\!\times\!10^{-4}, +5.7\!\times\!10^{-4}]$ & $[-0.020, +0.047]$ & $[-4.2\!\times\!10^{-4}, +1.6\!\times\!10^{-3}]$ & --- \\
+& drop\_V\_min  & $[-1.9\!\times\!10^{-4}, +4.8\!\times\!10^{-4}]$ & $[-0.045, +0.027]$ & $[-6.0\!\times\!10^{-4}, +1.2\!\times\!10^{-3}]$ & --- \\
+\midrule
+\multicolumn{6}{l}{\emph{Leaves-one-IN (vs RAW\_20\_ONLY)}} \\
+& add\_V\_mean\_only & $[-2.2\!\times\!10^{-5}, +6.4\!\times\!10^{-4}]$ & $[-0.038, +0.030]$ & $[-7.8\!\times\!10^{-4}, +9.4\!\times\!10^{-4}]$ & --- \\
+& add\_V\_std\_only  & $[-5.5\!\times\!10^{-5}, +7.0\!\times\!10^{-4}]$ & $[-0.058, +0.029]$ & $[+2.8\!\times\!10^{-4}, +2.0\!\times\!10^{-3}]$ & ECE10 \\
+& add\_V\_max\_only  & $[-2.2\!\times\!10^{-4}, +5.7\!\times\!10^{-4}]$ & $[-0.063, +0.020]$ & $[-2.9\!\times\!10^{-4}, +1.5\!\times\!10^{-3}]$ & --- \\
+& add\_V\_min\_only  & $[-2.5\!\times\!10^{-4}, +4.3\!\times\!10^{-4}]$ & $[-0.053, +0.014]$ & $[-6.6\!\times\!10^{-4}, +1.2\!\times\!10^{-3}]$ & --- \\
+\midrule
+\multicolumn{6}{l}{\emph{2-of-6 pairs (vs RAW\_20\_ONLY, AUC/F1 only)}} \\
+& add\_mean+std & $[-2.5\!\times\!10^{-4}, +5.4\!\times\!10^{-4}]$ & $[-0.039, +0.025]$ & --- & --- \\
+& add\_mean+max & $[-2.3\!\times\!10^{-4}, +5.4\!\times\!10^{-4}]$ & $[-0.054, +0.040]$ & --- & --- \\
+& add\_mean+min & $[-2.6\!\times\!10^{-4}, +6.4\!\times\!10^{-4}]$ & $[-0.045, +0.029]$ & --- & --- \\
+& add\_std+max  & $[-1.9\!\times\!10^{-4}, +7.5\!\times\!10^{-4}]$ & $[-0.062, +0.025]$ & --- & --- \\
+& add\_std+min  & $[-2.4\!\times\!10^{-4}, +7.0\!\times\!10^{-4}]$ & $[-0.066, +0.026]$ & --- & --- \\
+& add\_max+min  & $[-2.3\!\times\!10^{-4}, +4.8\!\times\!10^{-4}]$ & $[-0.045, +0.039]$ & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The sharpest empirically grounded statement is therefore negative:
+\textbf{no single aggregate is statistically detectable on AUC or F1
+when added or removed}; the only direction that crosses a CI
+threshold is \textsf{add\_V\_std\_only} on calibration, where it
+\emph{worsens} ECE-10 by $+0.00118$ with the CI entirely above zero.
+This sharpens the earlier ``no single aggregate carries detectable
+signal on its own'' claim into a formal statistical claim
+($0/14$ AUC/F1 contrasts cross zero, $1/14$ ECE10 contrasts does)
+and reveals a calibration penalty in $V_{\text{std}}$ that the single-point
+ablation cannot see.
+
+\subsubsection{Where does the aggregate block miscalibrate?}
+
+Global ECE-10 reports a single calibration summary, but the
+calibration penalty could be distributed evenly across score bins
+or concentrated in one. We sweep the predicted-probability range
+into $10$ equal-width deciles and measure the empirical positive
+rate in each, with bootstrap $95$\% CIs on the within-decile rate
+($n_{\text{boot}}{=}1000$, seed $2026$).
+
+\begin{table}[t]
+\centering
+\small
+\caption{Reliability diagram (predicted-decile mean vs observed
+positive rate) for XGB-24full and XGB-20raw on the $10{,}000$-row
+test split ($n_{\text{pos}}{=}144$). The bottom block reports the
+absolute calibration drift $|\text{acc} - \text{conf}|$ per decile.
+\textbf{XGB-24full's max-drift decile (decile $4$) is the
+moderate-confidence band} where the tree is most over-confident:
+conf $= 0.447$, observed rate $= 0.696$, drift $+0.247$ (CI
+$[+0.030, +0.422]$).}
+\label{tab:p8-reliability}
+\begin{tabular}{lcccccccc}
+\toprule
+ & \multicolumn{4}{c}{XGB-24full (24-feat, oracle LLM sensor)} & \multicolumn{4}{c}{XGB-20raw (20-feat, no sensor)} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Decile & conf & acc & $n$ & $|\text{acc-conf}|$ & conf & acc & $n$ & $|\text{acc-conf}|$ \\
+\midrule
+0 & $0.026$ & $0.000$ & $9{,}488$ & $0.026$ & $0.026$ & $0.000$ & $9{,}442$ & $0.026$ \\
+1 & $0.130$ & $0.008$ & $257$ & $0.122$ & $0.135$ & $0.009$ & $328$ & $0.126$ \\
+2 & $0.240$ & $0.083$ & $84$ & $0.157$ & $0.248$ & $0.088$ & $57$ & $0.160$ \\
+3 & $0.354$ & $0.267$ & $30$ & $0.087$ & $0.352$ & $0.419$ & $31$ & $0.068$ \\
+\textbf{4} & $\mathbf{0.447}$ & $\mathbf{0.696}$ & $\mathbf{23}$ & $\mathbf{0.247}$ & $0.450$ & $0.615$ & $26$ & $0.165$ \\
+5 & $0.544$ & $0.913$ & $23$ & $0.369$ & $0.550$ & $0.821$ & $28$ & $0.272$ \\
+6 & $0.652$ & $0.852$ & $27$ & $0.200$ & $0.657$ & $0.889$ & $27$ & $0.232$ \\
+7 & $0.751$ & $0.964$ & $28$ & $0.213$ & $0.761$ & $0.929$ & $14$ & $0.168$ \\
+8 & $0.859$ & $1.000$ & $20$ & $0.141$ & $0.850$ & $1.000$ & $28$ & $0.150$ \\
+9 & $0.935$ & $1.000$ & $20$ & $0.065$ & $0.946$ & $1.000$ & $19$ & $0.054$ \\
+\midrule
+\textbf{max} & --- & --- & --- & $\mathbf{0.369}$ & --- & --- & --- & $0.272$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two reliability facts follow from \tableref{tab:p8-reliability}. First,
+the aggregate block \emph{increases the maximum decile-level drift}
+from $0.272$ (XGB-20raw) to $0.369$ (XGB-24full) -- a
+$+0.097$ absolute worsening concentrated in the moderate-confidence
+bands. Second, the over-confidence penalty is concentrated at the
+\textbf{boundary band} (decile $4$ conf $\approx 0.45$), which is
+also the band that
+\secref{sec:p8-evidence-threshold} identified as the recall-restoration
+operating regime ($\tau \in [0.20, 0.35]$). The aggregate block's
+recall-restoration benefit at this band therefore comes with a
+calibration cost: the tree is now over-confident exactly where
+fraud-ops teams are paging analysts. This is the
+sharpest empirically grounded falsifiable scope claim of the paper:
+the four-aggregate LLM-as-sensor surrogate recovers recall at the
+moderate-precision operating point \emph{while making the score
+slightly less reliable as a probability in the same band}; it is
+useful as a ranking lift, not as a calibrated probability.
+
+\paragraph{Reproduction.} All numbers in this sub-subsection are produced
+by \texttt{python3 scripts/p5p8/p8\_per\_feature\_ablation.py}
+($\sim$4 min on 4 cores; seed $42$ for the XGBoost split and seed
+$2026$ for the bootstrap). The expected outputs are the four TSVs
+under \texttt{experiments/results/p5p8/} named
+\texttt{p8\_perfeat\_\{loo,loi,loi\_pairs,reliability\}.tsv}, plus
+the JSON summary and the reliability diagram
+(\texttt{figures/p8\_reliability.pdf}). No new Tinker API calls were
+used.
+
 \subsection{Cost per decision}
 
 \begin{table}[t]

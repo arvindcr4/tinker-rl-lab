@@ -569,3 +569,90 @@ so the auditor was \emph{not} cherry-picked.
 \texttt{experiments/results/p5p8/figures/p5\_minreport\_per\_item.\{png,pdf\}},
 \texttt{experiments/results/p5p8/p5\_exhibit\_a\_data.tsv},
 \texttt{experiments/results/p5p8/p5\_exhibit\_a\_summary.json}.
+
+\subsection{Exhibit 12: Stack-axis-stratified MIN-REPORT Coverage is Stack-invariant}
+\label{sec:p5-exhibit-stratified}
+The auditor's per-axis summary (\secref{sec:p5-exhibit-auditor}) gives a
+one-line per-stratum mean, hiding which (item, axis) cells drive the
+variance. This exhibit decomposes the per-(item, axis) coverage on the
+98 mega_20260704 manifests and asks: \emph{does the manifest emitter
+treat every stack uniformly, or does coverage differ by model / task /
+G / temperature / seed?}
+(\tableref{tab:p5-stratified-eta2}; analysed by
+\texttt{scripts/p5p8/minreport\_stratified\_audit.py}; see
+\texttt{experiments/results/p5p8/minreport\_stratified.tsv}).
+
+\begin{table}[t]
+\centering
+\caption{$\eta^{2}$ of per-cell \texttt{item\_score} across stack axes
+on $n{=}98$ mega_20260704 manifests, 7 items $\times$ 5 stack axes
+(plus reward and ZVF quartiles as outcome-stratified sanity checks).
+NaN entries (items 1--6 on every axis) are \emph{not} missing values:
+they are the strongest possible stack-invariance signal --- every cell
+in every stratum receives the same per-item score ($std=0$,
+$SS_{\text{total}}=0$), so $\eta^{2}$ is undefined by
+zero-within-variance division. Item 7 is the only item with non-zero
+stack-axis $\eta^{2}$ (task\_slice $\eta^{2}=1.000$, contrast
+$3.33$pp; the decontam note takes one of two task-dependent values).}
+\label{tab:p5-stratified-eta2}
+\small
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+item & \rotatebox{60}{model\_family} & \rotatebox{60}{task\_slice} & \rotatebox{60}{G} & \rotatebox{60}{temperature} & \rotatebox{60}{seed} & \rotatebox{60}{reward\_quartile} & \rotatebox{60}{zvf\_quartile} \\
+\midrule
+1 loss\_form       & --- & --- & --- & --- & --- & --- & --- \\
+2 ref\_policy\_kl   & --- & --- & --- & --- & --- & --- & --- \\
+3 sampler\_backend & --- & --- & --- & --- & --- & --- & --- \\
+4 per\_step\_zvf    & --- & --- & --- & --- & --- & --- & --- \\
+5 group\_size      & --- & --- & --- & --- & --- & --- & --- \\
+6 heldout\_split   & --- & --- & --- & --- & --- & --- & --- \\
+7 decontam\_parser & 0.0009 & 1.0000 & 0.0632 & 0.0036 & 0.0000 & 0.9563 & 0.6005 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{What the table licenses.}
+The manifest emitter is stack-blind for items 1--6: every cell in every
+stratum carries the same value the same way, so the auditor's per-item
+score has \emph{zero} within-stratum variance. The coverage gap is
+\emph{corpus-wide}, not stratified --- ``add the missing fields'' (Item 1
+loss\_form, Item 2 KL coefficient, Item 4 trajectory, Item 7 parser
+probe) is the same fix on every (model, task, G, temperature, seed)
+cell. There is no per-stratum ``the Llama cells are particularly bad''
+finding to chase: a schema change that lifts coverage on a Llama
+manifest will lift it on every Llama manifest; a fix on a Qwen manifest
+will lift it on every Qwen manifest. No stratified validation is
+required.
+
+\paragraph{Complement to Exhibits 5 and 7.}
+Exhibits 5 and 7 showed that \emph{outcome} variance (ZVF, mean\_reward,
+PCD, completion length) is overwhelmingly stack-conditioned:
+stack axes explain 73--93\% of outcome variance, while the seed axis
+explains 0.0--0.15\%. This exhibit shows the \emph{reporting-coverage}
+variance is \emph{not} stack-conditioned on items 1--6 --- the stack
+explains 0\% of coverage variance where the data have any variance at
+all. The reporting gap is uniformly present, uniformly fixable, and
+unrelated to the stack axis that the field routinely attributes
+variance to (the algorithm label).
+
+\paragraph{Item 7's task-axis $\eta^{2}=1.000$ is a value-level
+property, not a coverage problem.}
+The decontam note takes one of two task-dependent values
+(\texttt{gsm8k-train-slice} for both gsm8k splits,
+\texttt{humaneval-openai-subset} for humaneval); the \emph{coverage} is
+100\% concrete in every stratum, but the \emph{value} is task-dependent
+by design. Similarly, the strong reward-quartile / zvf-quartile
+$\eta^{2}$ on Item 7 is a \emph{correlation} artifact: reward and ZVF
+are themselves task-stratified (humaneval is all-wrong $\Rightarrow$
+reward$=0$, ZVF$=1.0$; gsm8k is mixed).
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/minreport\_stratified\_audit.py}
+($\sim$3 s). Inputs:
+\texttt{experiments/results/p5p8/minreport\_audit.tsv} (iter-18
+auditor output). Outputs:
+\texttt{experiments/results/p5p8/minreport\_stratified.tsv} (147 rows: 7
+items $\times$ 7 axes $\times$ axis values),
+\texttt{experiments/results/p5p8/minreport\_stratified\_summary.json},
+\texttt{experiments/results/p5p8/figures/minreport\_stratified\_heatmap.\{png,pdf\}},
+\texttt{experiments/results/p5p8/figures/minreport\_stratified\_contrast.\{png,pdf\}}.

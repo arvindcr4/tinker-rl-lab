@@ -262,3 +262,16 @@ regenerated figure: (a) magnitude $\times$ CSD scatter with failure
 colour and anchor markers; (b) per-method risk bar; (c) ROC curves
 for all five indices; (d) risk-bin calibration.
 \end{itemize}
+
+% Berkeley harvest row 22 (HippoRAG, SP25 L3 Yu Su) -- retrieval-scaffold
+% stabilizer; evidence: experiments/results/berkeley/hipporag_eval.tsv
+A HippoRAG-style KG+PPR retrieval scaffold~\citep{gutierrez2024hipporag}
+over this artifact corpus (67 passages, 21-entity knowledge graph)
+matches BM25's recall with a 60\% smaller working set
+(recall@10 $= 0.667 =$ BM25 recall@25) and beats random retrieval
+decisively (MRR $0.554$ vs.\ $0.248$), but does not beat BM25
+head-to-head at this corpus scale (MRR $0.554$ vs.\ $0.569$). At
+$N \approx 67$ artifacts, flat lexical retrieval is sufficient; we
+retain the scaffold as documentation infrastructure rather than adopt
+it as a default
+(\texttt{experiments/results/berkeley/hipporag\_eval.tsv}).

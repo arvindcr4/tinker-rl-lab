@@ -5,7 +5,23 @@ Reframing $G$ as a preference-density dial clarifies the non-monotone effect, bu
 several limitations bound the claim. The held-out swings, while suggestive, are
 modest against seed and difficulty variation, so we resist naming an optimal $G$;
 our equivalence tests are powered to reject large differences, not to certify exact
-parity. The all-pairs contrast identity is an exact algebraic rewriting whose
+parity. Read through the four-axis pipeline factorization of
+\citet{ivison2024unpacking}, applied here to verifiable-reward stacks in the
+RLVR paradigm of \citet{lambert2024tulu3}, the same-stack audit places the
+algorithm axis as residual ($\eta^2{=}0.023$; paired
+$\Delta_{\text{GRPO}-\text{PPO}}{=}-0.002$, permutation $p{=}0.62$) while the
+$G$ axis dominates the variance budget ($\eta^2{=}0.54$ on terminal accuracy,
+$0.63$ on gradient norm; Cohen's $d{=}-1.47$ for $G{=}2{\to}16$;
+\texttt{experiments/results/berkeley/unpacking\_dpo\_ppo\_factorization.json}).
+An independent Miller-style error-bars audit \citep{miller2024erroreval} of the
+four Pillar-3 headline claims sharpens the same scoping: the
+$G{=}4/G{=}32$ GU-ratio (audit H1, bootstrap CI $[4.16, 4.82]$) and the
+negative retention-vs-$T$ slope (H2, CI $[-0.237, -0.038]$) are DECISIVE,
+whereas the SNR-slope-vs-theory comparison (H3; CI $[+0.148, +0.583]$
+contains the theoretical $+0.500$) and the native-Wu $G{=}2 \approx G{=}16$
+equivalence claim (H4; $n{=}3$ paired seeds, equivalence region straddled)
+are NULL
+(\texttt{experiments/results/berkeley/adding\_error\_bars\_summary.json}). The all-pairs contrast identity is an exact algebraic rewriting whose
 observable signatures are consistent with logged per-step diagnostics
 (advantage variance, ZVF, and gradient norms); direct gradient-vector validation
 remains future work, and the
@@ -29,4 +45,13 @@ far more slowly than $\sqrt{G}$---all consistent with a contrast-density rather 
 a pure-variance account, and with the exact sense in which the group-centered update
 is an all-pairs preference contrast. The clean causal test, and matched-budget
 multi-seed comparisons, are the natural next experiments; we release the sweeps,
-per-step gradient-norm logs, and scripts to enable them.
+per-step gradient-norm logs, and scripts to enable them. As a reproducibility
+check on the released artifacts, an automated extract-and-verify pass in the
+style of Paper2Agent \citep{miao2025paper2agent} recovers the analysis recipe
+from the Pillar-3 headline TSVs with full field recall ($1.000$), reproduces
+the published joint fit ($R^2{=}0.854$ vs.\ the published $0.796$), and
+transfers to a held-out slice ($R^2{=}0.812$). The recipe also survives
+deletion of a fitted field (zero failures; the slope is re-recovered from the
+data alone), so the released TSVs are sufficient to reconstruct the paper's
+central fit without human intervention
+(\texttt{experiments/results/berkeley/paper2verifier.json}).

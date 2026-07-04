@@ -1,0 +1,40 @@
+% ---------------------------------------------------------------------------
+% Pillar 2: Zero-Variance Fraction diagnostic -- eval-protocol hardening
+% Berkeley harvest row 11 (validated): Yehudai et al. survey (F25 L5) +
+% tau^2-Bench ablation discipline (F25 L10) applied to the iter130 per-seed
+% risk-index data, plus the P2-facing slice of the Miller error-bars audit
+% (row 07).
+% Evidence: experiments/results/berkeley/eval_protocol_*.tsv,
+%           experiments/results/berkeley/adding_error_bars_audit.tsv
+% ---------------------------------------------------------------------------
+\subsection{How Many Seeds Does the Headline Need? Eval-Protocol Hardening}
+\label{sec:zvf-eval-protocol}
+
+Applying the cost-efficiency lens of \citet{yehudai2025survey} and the
+fine-grained-ablation discipline of $\tau^2$-Bench~\citep{barres2025tau2}
+to the iter130 per-seed risk data (9 variance-mitigation methods
+$\times$ 5 seeds), we ask how much of the evaluation budget the headline
+claims actually require. The top-1 headline (``which method minimises
+risk'') is fully seed-robust: the top-1 match rate is $1.00$ across all
+$\binom{5}{k}$ seed subsets for every $k$, so the minimum viable seed
+panel at the 95\% stability level is $k{=}1$ --- a five-fold evaluation
+saving for that specific claim. Finer-grained claims are more expensive:
+the top-3 \emph{set} reaches 80\% stability only at $k{=}4$ (top-3 match
+rate $0.4$ at $k{=}1$ rising to $0.8$ at $k{=}4$), and the sign of each
+method's $z$-score against \texttt{grpo} is leave-one-seed-out stable
+for 8/8 non-baseline methods. Decomposing the risk index by channel,
+8/9 methods are magnitude-dominant while \texttt{grpo} itself is
+drift-dominant --- variance mitigation acts chiefly by suppressing the
+magnitude channel --- and the best-3/mid-3/worst-3 partition is
+$1.0$-stable under leave-one-seed-out re-ranking
+(\texttt{experiments/results/berkeley/eval\_protocol\_summary.json}).
+
+An independent audit of seven portfolio headline numbers under the
+statistical recipe of \citet{miller2024errorbars} (paired and non-paired
+bootstrap plus TOST equivalence testing) confirms that the Pillar-2
+headline survives: $\mathrm{AUROC}(\texttt{zvf\_risk\_max}) = 0.929$
+with bootstrap CI $[0.83, 1.00]$, decisive against the $0.5$ null
+(\texttt{experiments/results/berkeley/adding\_error\_bars\_audit.tsv}).
+Four of the seven audited headlines across the portfolio were decisive
+and three were null; the null verdicts are reported in the papers they
+concern.

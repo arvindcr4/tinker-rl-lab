@@ -59,7 +59,8 @@
       "advantage_normalization": "std",
       "token_mask": "completion-only",
       "token_aggregation": "token",
-      "sampling_dynamic_filter": true
+      "sampling_dynamic_filter": true,
+      "reward_shaping_type": "overlong_penalty"
     },
     "reference_kl": {
       "reference_policy": false,

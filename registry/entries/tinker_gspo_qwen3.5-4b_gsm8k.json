@@ -43,7 +43,8 @@
       "clip_eps_high": null,
       "length_normalization": null,
       "advantage_normalization": null,
-      "token_mask": null
+      "token_mask": null,
+      "token_aggregation": "sequence"
     },
     "reference_kl": {
       "reference_policy": true,

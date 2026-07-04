@@ -3,7 +3,7 @@ colab-open_dapo_e3	delta_dapo	clip_higher	implemented	loss_form.clip_eps_low	0.2
 colab-open_dapo_e3	delta_dapo	clip_higher	implemented	loss_form.clip_eps_high	0.28	0.28	MATCH
 colab-open_dapo_e3	delta_dapo	dynamic_sampling	implemented	loss_form.sampling_dynamic_filter	True	True	MATCH
 colab-open_dapo_e3	delta_dapo	token_level_loss	implemented	loss_form.token_aggregation	token	token	MATCH
-colab-open_dapo_e3	delta_dapo	overlong_reward_shaping	absent	loss_form.reward_shaping_type	overlong_penalty		NOT_APPLICABLE
+colab-open_dapo_e3	delta_dapo	overlong_reward_shaping	absent	loss_form.reward_shaping_type	overlong_penalty	overlong_penalty	NOT_APPLICABLE
 colab-open_dapo_e3	delta_dapo	kl_removed	implemented	reference_kl.kl_beta	0.0	0.0	MATCH
 colab-open_dapo_e3	delta_dapo	kl_removed	implemented	reference_kl.kl_estimator	none	none	MATCH
 colab-open_dapo_e3	delta_dapo	kl_removed	implemented	reference_kl.reference_policy	False	False	MATCH
@@ -13,9 +13,9 @@ tinker_aero_qwen3.5-4b_gsm8k	delta_aero	advantage_guided_evolution	implemented	(
 tinker_areal_qwen3.5-4b_gsm8k	delta_areal	autoscaling_Rollout	implemented	(no_minreport_implication)	(none)	(none)	NOT_APPLICABLE
 tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	clip_higher	surrogate	loss_form.clip_eps_low	0.2	0.2	SURROGATE_OBS
 tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	clip_higher	surrogate	loss_form.clip_eps_high	0.28	0.28	SURROGATE_OBS
-tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	dynamic_sampling	absent	loss_form.sampling_dynamic_filter	True		NOT_APPLICABLE
-tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	token_level_loss	unknown	loss_form.token_aggregation	token		NOT_APPLICABLE
-tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	overlong_reward_shaping	absent	loss_form.reward_shaping_type	overlong_penalty		NOT_APPLICABLE
+tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	dynamic_sampling	absent	loss_form.sampling_dynamic_filter	True	True	NOT_APPLICABLE
+tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	token_level_loss	unknown	loss_form.token_aggregation	token	token	NOT_APPLICABLE
+tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	overlong_reward_shaping	absent	loss_form.reward_shaping_type	overlong_penalty	overlong_penalty	NOT_APPLICABLE
 tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	kl_removed	unknown	reference_kl.kl_beta	0.0		NOT_APPLICABLE
 tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	kl_removed	unknown	reference_kl.kl_estimator	none		NOT_APPLICABLE
 tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	kl_removed	unknown	reference_kl.reference_policy	False	True	NOT_APPLICABLE
@@ -23,7 +23,7 @@ tinker_drgrpo_qwen3.5-4b_gsm8k	delta_drgrpo	length_normalization	surrogate	loss_
 tinker_drgrpo_qwen3.5-4b_gsm8k	delta_drgrpo	advantage_std_normalization	surrogate	loss_form.advantage_normalization	none	none	SURROGATE_OBS
 tinker_gift_qwen3.5-4b_gsm8k	delta_gift	gamma_likelihood_baseline	implemented	loss_form.reward_shaping_type	gamma_baseline	gamma_baseline	MATCH
 tinker_gspo_qwen3.5-4b_gsm8k	delta_gspo	sequence_level_ratio	surrogate	loss_form.importance_ratio_level	sequence	sequence	SURROGATE_OBS
-tinker_gspo_qwen3.5-4b_gsm8k	delta_gspo	sequence_level_ratio	surrogate	loss_form.token_aggregation	sequence		NOT_APPLICABLE
+tinker_gspo_qwen3.5-4b_gsm8k	delta_gspo	sequence_level_ratio	surrogate	loss_form.token_aggregation	sequence	sequence	SURROGATE_OBS
 tinker_gspo_qwen3.5-4b_gsm8k	delta_gspo	sequence_level_clip	unknown	(no_minreport_implication)	(none)	(none)	NOT_APPLICABLE
 zvf130_cppo	delta_cppo	continuity_penalty	unknown	(no_minreport_implication)	(none)	(none)	NOT_APPLICABLE
 zvf130_es	delta_es	black_box_perturbation	unknown	(no_minreport_implication)	(none)	(none)	NOT_APPLICABLE

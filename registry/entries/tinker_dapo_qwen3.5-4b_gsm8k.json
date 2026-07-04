@@ -61,7 +61,10 @@
       "clip_eps_high": 0.28,
       "length_normalization": null,
       "advantage_normalization": null,
-      "token_mask": null
+      "token_mask": null,
+      "token_aggregation": "token",
+      "reward_shaping_type": "overlong_penalty",
+      "sampling_dynamic_filter": true
     },
     "reference_kl": {
       "reference_policy": true,

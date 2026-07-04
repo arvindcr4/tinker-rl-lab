@@ -25,8 +25,8 @@
       "MATCH": 1
     },
     "delta_gspo": {
-      "NOT_APPLICABLE": 2,
-      "SURROGATE_OBS": 1
+      "NOT_APPLICABLE": 1,
+      "SURROGATE_OBS": 2
     },
     "delta_mcgrpo": {
       "NOT_APPLICABLE": 2
@@ -63,8 +63,8 @@
       "MATCH": 1
     },
     "tinker_gspo_qwen3.5-4b_gsm8k": {
-      "NOT_APPLICABLE": 2,
-      "SURROGATE_OBS": 1
+      "NOT_APPLICABLE": 1,
+      "SURROGATE_OBS": 2
     },
     "zvf130_cppo": {
       "NOT_APPLICABLE": 1
@@ -112,7 +112,8 @@
     },
     "loss_form.token_aggregation": {
       "MATCH": 1,
-      "NOT_APPLICABLE": 2
+      "NOT_APPLICABLE": 1,
+      "SURROGATE_OBS": 1
     },
     "reference_kl.kl_beta": {
       "MATCH": 1,
@@ -136,8 +137,7 @@
       "NOT_APPLICABLE": 2
     },
     "surrogate": {
-      "NOT_APPLICABLE": 1,
-      "SURROGATE_OBS": 5
+      "SURROGATE_OBS": 6
     },
     "unknown": {
       "NOT_APPLICABLE": 11
@@ -145,8 +145,8 @@
   },
   "by_verdict": {
     "MATCH": 10,
-    "NOT_APPLICABLE": 17,
-    "SURROGATE_OBS": 5
+    "NOT_APPLICABLE": 16,
+    "SURROGATE_OBS": 6
   },
   "implementation_honesty": {
     "consistent_rate": 0.8333,
@@ -229,5 +229,5 @@
     "exposure_rate": 0.5,
     "total_components": 18
   },
-  "ts": "2026-07-04T19:23:41Z"
+  "ts": "2026-07-04T19:32:22Z"
 }

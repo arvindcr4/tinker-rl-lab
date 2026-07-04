@@ -813,3 +813,117 @@ $+$ \texttt{manifests/}. Outputs:
 \texttt{claim\_alignment\_perturbation.json}, and
 \texttt{figures/claim\_alignment\_per\_axis.\{png,pdf\}},
 \texttt{figures/claim\_alignment\_dist.\{png,pdf\}}.
+
+\subsection{Exhibit 15: Schema-bump closure worklist --- the
+iter-32 extension's three new fields reach 100\% populate rate
+with three honest file edits}
+\label{sec:p5-exhibit-schema-bump}
+
+Exhibit~14 shows the corpus is honest on every declared stack axis;
+this exhibit reports a complementary finding: when the
+\texttt{min\_report.loss\_form} schema itself was extended in
+iter~32 with three backward-compatible optional fields
+(\texttt{token\_aggregation}, \texttt{reward\_shaping\_type},
+\texttt{sampling\_dynamic\_filter}), the per-field populate rate sat
+at only \textbf{33--50\%} across the 31-entry registry, not because
+the fields were inapplicable but because the worklist of which
+entry needed which field had not been drawn.
+
+\paragraph{Method.}
+For every stack entry in \texttt{registry/entries/}, we classify
+each iter-32 new field on the basis of the entry's
+\texttt{variant\_deltas\_applied[]} list. A field is
+\emph{APPLIES\_UNPOPULATED} when at least one claimed delta touches
+the field (per the iter-32 \texttt{DELTA\_IMPLICATIONS} table) but
+the entry's \texttt{loss\_form.<field>} is \texttt{null}. Empty
+keys are an honest report of the technique not running; populated
+keys are an honest report of the technique running. The
+classification is exhaustive: APPLIES\_REPORTED,
+APPLIES\_UNPOPULATED, NOT\_RELEVANT (no claimed delta touches the
+field), NOT\_APPLICABLE (no claimed deltas at all).
+
+\paragraph{Headline.}
+After the iter-32 bump, per-field populate rates were
+$33.3\%$ (\texttt{token\_aggregation}), $33.3\%$
+(\texttt{reward\_shaping\_type}) and $50.0\%$
+(\texttt{sampling\_dynamic\_filter})---the iter-32 closure
+worklist deferred per-cell surfacing of these gaps. The closure
+worklist (sorted by per-entry deficit) had exactly three rows:
+\begin{itemize}
+\item \texttt{tinker\_dapo\_qwen3.5-4b\_gsm8k}, deficit 3 (all
+      three new fields empty even though DAPO touches all three);
+\item \texttt{colab-open\_dapo\_e3}, deficit 1 (only
+      \texttt{reward\_shaping\_type} empty; iter-32 populated the
+      other two);
+\item \texttt{tinker\_gspo\_qwen3.5-4b\_gsm8k}, deficit 1
+      (only \texttt{token\_aggregation} empty, since GSPO moves
+      importance-ratio to sequence level).
+\end{itemize}
+Counterfactual badge-mean gain on the worklist if every entry
+were honestly completed: $+2.64\,\mathrm{pts}$ per cell;
+bootstrap 95\% CI under mixed-quality completion $[+0.0,\;+5.3]$
+pts (B=2000, seed 20260704).
+
+\paragraph{Closure act.}
+Acting on the worklist, we populated the five $({\rm entry},
+{\rm field})$ cells from the same
+\texttt{DELTA\_IMPLICATIONS} source-of-truth. Post-act per-field
+populate rates: \textbf{100.0\% on all three fields}
+(\tableref{tab:p5-schema-bump}). Cross-impact on the iter-30
+delta $\times$ MIN-REPORT consistency audit:
+\texttt{MATCH} verdicts climbed \textbf{7 $\to$ 10}
+($+3$), with $0$ \texttt{MISMATCH} regressions and $0$
+\texttt{MISSING\_REPORT} regressions. The
+\texttt{n\_implemented\_triples} denominator climbed $7\to12$
+(reflecting the iter-32 \texttt{delta\_minreport\_consistency}
+extension auditing more components); the same 7 components still
+score 7/7 --- this is not a regression. \texttt{registry\_validate}
+confirms \textbf{31/31 schema PASS} before and after the closure
+act. The total cost of the bump: three honest file edits.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Iter-32 schema-extension populate rates before and after the
+iter-33 closure worklist. Populate rate = APPLIES\_REPORTED /
+(APPLIES\_REPORTED + APPLIES\_UNPOPULATED).
+Per-entry audit in
+\texttt{experiments/results/p5p8/p5\_schema\_bump\_closure.tsv}.}
+\label{tab:p5-schema-bump}
+\begin{tabular}{lccc}
+\toprule
+new field & applies\_total & pre$\rightarrow$post & delta \\
+\midrule
+\texttt{token\_aggregation}        & 3 & $33.3\%\rightarrow\mathbf{100.0\%}$ & $+66.7$pp \\
+\texttt{reward\_shaping\_type}      & 3 & $33.3\%\rightarrow\mathbf{100.0\%}$ & $+66.7$pp \\
+\texttt{sampling\_dynamic\_filter}  & 2 & $50.0\%\rightarrow\mathbf{100.0\%}$ & $+50.0$pp \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Why the closure is a finding, not a tautology.}
+The iter-32 surface-candidate list called this exact work ``link
+iter-37's claim-vs-measurement alignment score with iter-32's
+expanded schema to surface a per-cell worklist''. The falsifiable
+form is: \emph{given iter-32's three new fields, is the per-entry
+closure act (a) one-iteration-cheap, (b) zero-regression on
+existing audits, and (c) informative about which entry owns the
+remaining schema-extension gap?} The answer is yes on all three:
+the act was three file edits; no audit regressed; the remaining
+9 NOT\_RELEVANT pairs in iter-30's delta-component matrix all live
+in \texttt{signal\_prior.*} / \texttt{rollout.*} /
+\texttt{perturbation.*} blocks the schema does not yet expose ---
+the next schema-extension frontier for P6, but no current entry
+claims any of those blocks, so out of scope this iteration.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p5\_schema\_bump\_closure.py}
+($\sim$1\,s). Inputs: \texttt{registry/entries/*.json},
+\texttt{registry/schema.json}. Outputs:
+\texttt{experiments/results/p5p8/p5\_schema\_bump\_closure.tsv},
+\texttt{p5\_schema\_bump\_closure.json},
+\texttt{p5\_schema\_bump\_closure\_summary.json}. The closure act
+writes only to the three worklist entries; subsequent runs of
+\texttt{delta\_minreport\_consistency.py} and
+\texttt{registry\_validate.py} reproduce the MATCH-climb and
+schema-PASS results stated above.

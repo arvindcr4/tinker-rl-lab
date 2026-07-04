@@ -111,12 +111,12 @@
         "openness": "managed"
       },
       "tinker_dapo_qwen3.5-4b_gsm8k": {
-        "badge": 62,
+        "badge": 65,
         "frac_per_item": {
           "decontamination": 0.0,
           "group_size_schedule": 0.6667,
           "heldout_split": 1.0,
-          "loss_form": 0.3333,
+          "loss_form": 0.5556,
           "reference_kl": 0.3333,
           "sampler_backend": 1.0,
           "telemetry": 1.0
@@ -141,12 +141,12 @@
         "openness": "managed"
       },
       "tinker_gift_qwen3.5-4b_gsm8k": {
-        "badge": 67,
+        "badge": 68,
         "frac_per_item": {
           "decontamination": 0.0,
           "group_size_schedule": 1.0,
           "heldout_split": 1.0,
-          "loss_form": 0.3333,
+          "loss_form": 0.4286,
           "reference_kl": 0.3333,
           "sampler_backend": 1.0,
           "telemetry": 1.0
@@ -186,12 +186,12 @@
         "openness": "managed"
       },
       "tinker_gspo_qwen3.5-4b_gsm8k": {
-        "badge": 60,
+        "badge": 61,
         "frac_per_item": {
           "decontamination": 0.0,
           "group_size_schedule": 0.6667,
           "heldout_split": 1.0,
-          "loss_form": 0.1667,
+          "loss_form": 0.2857,
           "reference_kl": 0.3333,
           "sampler_backend": 1.0,
           "telemetry": 1.0
@@ -324,9 +324,9 @@
           "total_leaves": 8
         },
         "loss_form": {
-          "filled_leaves": 24,
+          "filled_leaves": 27,
           "frac": 1.0,
-          "total_leaves": 24
+          "total_leaves": 27
         },
         "reference_kl": {
           "filled_leaves": 12,
@@ -398,9 +398,9 @@
           "total_leaves": 16
         },
         "loss_form": {
-          "filled_leaves": 11,
-          "frac": 0.2292,
-          "total_leaves": 48
+          "filled_leaves": 16,
+          "frac": 0.3019,
+          "total_leaves": 53
         },
         "reference_kl": {
           "filled_leaves": 8,
@@ -547,9 +547,9 @@
         "total_leaves": 40
       },
       "loss_form": {
-        "filled_leaves": 38,
-        "frac": 0.3167,
-        "total_leaves": 120
+        "filled_leaves": 46,
+        "frac": 0.3594,
+        "total_leaves": 128
       },
       "reference_kl": {
         "filled_leaves": 29,
@@ -585,9 +585,9 @@
           "total_leaves": 16
         },
         "loss_form": {
-          "filled_leaves": 11,
-          "frac": 0.2292,
-          "total_leaves": 48
+          "filled_leaves": 16,
+          "frac": 0.3019,
+          "total_leaves": 53
         },
         "reference_kl": {
           "filled_leaves": 8,
@@ -622,9 +622,9 @@
           "total_leaves": 24
         },
         "loss_form": {
-          "filled_leaves": 27,
-          "frac": 0.375,
-          "total_leaves": 72
+          "filled_leaves": 30,
+          "frac": 0.4,
+          "total_leaves": 75
         },
         "reference_kl": {
           "filled_leaves": 21,

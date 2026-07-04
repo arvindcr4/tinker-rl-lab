@@ -1,0 +1,47 @@
+{
+  "ts": "2026-07-04T17:00:00+00:00",
+  "iter": 23,
+  "lecture": "F25 L6 Weizhu Chen (Microsoft, CoreAI Post-training team, 'Challenges and Lessons from Training Agentic Models', 2025-10-13)",
+  "citations": {
+    "arXiv:2404.07965": "Lin, Gou, Gong, Liu, Shen, Xu, Lin, Yang, Jiao, Duan, Chen. 'Rho-1: Not All Tokens Are What You Need' (2024, v4 2025-01-08)",
+    "arXiv:2507.20534": "Kimi Team. 'Kimi K2: Open Agentic Intelligence' (2025-07-28)"
+  },
+  "verified_via": "arxiv.org/abs/2404.07965 (Rho-1), arxiv.org/abs/2507.20534 (Kimi K2); both titles/authors/years confirmed 2026-07-04",
+  "n_perrun_cells": 16,
+  "n_bfcl_steps": 10,
+  "hypotheses": {
+    "H1_length_explosion": {
+      "n_explosion": 1,
+      "n_controlled": 15,
+      "delta_zvf_controlled_minus_explosion": 0.24937453333333337,
+      "delta_acc_controlled_minus_explosion": 0.5104171333333334,
+      "verdict": "DECISIVE"
+    },
+    "H2_implied_beta": {
+      "beta_mean": 0.20972024733378225,
+      "beta_median": 0.2925870194695841,
+      "beta_pct_positive": 0.875,
+      "verdict": "DECISIVE"
+    },
+    "H3_rho1_projection": {
+      "apt_median_overall": 0.21640217375704185,
+      "mean_acc_drop_per_task": {
+        "arithmetic_easy_qwen2.5-0.5b": 0.0004818454284398088,
+        "gsm8k_cot_hard_qwen2.5-1.5b": 0.07700254279225886
+      },
+      "verdict": "DECISIVE"
+    },
+    "H4_pareto": {
+      "n_pareto": 3,
+      "n_total": 16,
+      "verdict": "DECISIVE"
+    },
+    "H5_bfcl_sampling": {
+      "sparse_density": 0.6,
+      "dense_density": 0.7,
+      "delta_density": 0.09999999999999998,
+      "delta_mean_reward": 0.07375,
+      "verdict": "DECISIVE"
+    }
+  }
+}

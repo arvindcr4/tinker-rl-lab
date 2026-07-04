@@ -1,0 +1,5 @@
+G	delta_div_mean	delta_div_ci_low	delta_div_ci_high	zvf_emp	zvf_iid	direction	sign_stable_negative
+2	-0.0097	-0.0216	+0.0022	0.8380	0.8283	herd (emp < iid)	yes
+4	-0.0548	-0.0725	-0.0382	0.7635	0.7087	herd (emp < iid)	yes
+8	-0.0937	-0.1184	-0.0698	0.6906	0.5969	herd (emp < iid)	yes
+16	-0.1089	-0.1394	-0.0802	0.6312	0.5223	herd (emp < iid)	yes

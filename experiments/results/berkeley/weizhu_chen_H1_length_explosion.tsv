@@ -1,0 +1,17 @@
+task	algo	seed	len_half_delta	rew_slope	mean_zvf	last10_reward	class
+arithmetic_easy_qwen2.5-0.5b	grpo	42	-0.4023	0.008663	0.825	0.978906	Controlled
+arithmetic_easy_qwen2.5-0.5b	grpo	123	-0.2855	0.0084	0.810937	0.985938	Controlled
+arithmetic_easy_qwen2.5-0.5b	grpo	456	-0.4262	0.008617	0.809375	0.989844	Controlled
+arithmetic_easy_qwen2.5-0.5b	grpo	789	-0.4648	0.008597	0.8125	0.994531	Controlled
+arithmetic_easy_qwen2.5-0.5b	grpo	1024	-0.5824	0.00901	0.817187	0.991406	Controlled
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	42	-0.3738	0.009845	0.770312	0.971094	Controlled
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	123	-0.2953	0.009857	0.764062	0.9875	Controlled
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	456	-0.3578	0.009958	0.746875	0.991406	Controlled
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	789	-0.4375	0.00995	0.771875	0.992188	Controlled
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	1024	-0.4504	0.009247	0.8125	0.998437	Controlled
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	42	-13.0208	0.002343	0.304167	0.273438	Controlled
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	123	-6.7031	-0.000706	0.333333	0.2625	Controlled
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	456	-0.6323	0.00082	0.366667	0.257812	Controlled
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	42	-4.9146	0.001338	0.320833	0.25625	Controlled
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	123	-4.3	-0.000122	0.35	0.264062	Controlled
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	456	0.8021	0.000302	0.391667	0.235937	Explosion

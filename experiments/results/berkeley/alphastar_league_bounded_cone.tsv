@@ -1,0 +1,5 @@
+T	delta_G64_G32	non_positive	alphastar_pluribus_predict
+1000000	-0.0700	yes	G* saturated past league size
+4000000	-0.0800	yes	G* saturated past league size
+16000000	-0.0400	yes	G* saturated past league size
+64000000	-0.0100	yes	G* saturated past league size

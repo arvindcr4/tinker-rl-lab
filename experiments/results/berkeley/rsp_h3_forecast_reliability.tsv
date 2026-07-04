@@ -1,0 +1,6 @@
+model	t80_mean	t80_lo	t80_hi	rel_ci_width	lam_at_bound_rate	gate
+Qwen3.5-4B	0.6059	0.1609	2.4330	3.750	0.599	forecastable
+Qwen3-8B	1.4225	0.1609	7.6193	5.243	0.468	UNFORECASTABLE
+Llama-3.1-8B-Instruct	0.4593	0.1609	1.9815	3.964	0.595	forecastable
+DeepSeek-V3.1	0.4743	0.1609	1.5252	2.876	0.548	forecastable
+Nemotron-120B	17.8676	0.1609	161.3899	9.024	0.277	UNFORECASTABLE

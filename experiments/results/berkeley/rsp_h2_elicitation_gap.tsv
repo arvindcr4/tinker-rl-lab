@@ -1,0 +1,6 @@
+model	R_max_observed	R_max_policy	elicitation_gap	RQS	one_minus_RQS
+Qwen3.5-4B	0.8180	1.0000	0.1820	0.7591	0.2409
+Qwen3-8B	0.2894	0.8076	0.5182	0.3534	0.6466
+Llama-3.1-8B-Instruct	0.8687	1.0000	0.1313	0.6353	0.3647
+DeepSeek-V3.1	0.8469	1.0000	0.1531	0.5572	0.4428
+SPEARMAN_gap_vs_(1-RQS)	rho=0.4000	n=4			

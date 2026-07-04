@@ -285,3 +285,46 @@ CIs. The registry is no longer a static catalog --- it is a
 machine-readable platform whose \texttt{(delta, component)} cells can
 be queried from the CLI and cross-validated against measured deltas
 on the same evidence base.
+
+
+\paragraph{Iter-42 -- delta \texttt{field:} self-claim drift audit.}
+The four prior P6 veins audit the \emph{stack $\leftrightarrow$ schema} axis;
+the orthogonal \emph{variant-delta $\leftrightarrow$ schema} axis only had the
+hand-curated \texttt{DELTA\_IMPLICATIONS} Python table in
+\texttt{delta\_minreport\_consistency.py}, leaving the delta entry's
+own \texttt{field:} self-claim unchecked against the schema.
+\texttt{registry/query.py drift} closes that gap: every
+\texttt{(delta\_id, component)} pair's \texttt{field:} claim is classified
+against the real \texttt{min\_report.\{item\}.\{leaf\}} surface, with verdicts
+\texttt{OK / BLOCK\_NOT\_IN\_MIN\_REPORT / LEAF\_NOT\_IN\_SCHEMA /
+AMBIGUOUS\_REFERENCE / SEE\_CITATION}.
+\emph{Headline:} before repair, 4/14 schema-anchored components were
+\texttt{OK} and 5/14 had drift (27.8\%); after repairing one DAPO row
+(\texttt{dynamic\_sampling} $\to$ \texttt{loss\_form.sampling\_dynamic\_filter},
+the iter-41 leaf) and three more DAPO rows (\texttt{token\_level\_loss},
+\texttt{overlong\_reward\_shaping}, \texttt{kl\_removed}), and honestly deferring
+one GSPO row (\texttt{sequence\_level\_clip}, no MIN-REPORT leaf yet), the
+post-repair drift rate is $0/14 = 0.0\%$ on a fresh re-run. \texttt{31/31}
+schema \texttt{PASS} preserved.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+delta\_id & component & old \texttt{field:} & new \texttt{field:} \\
+\midrule
+\texttt{delta\_dapo} & \texttt{dynamic\_sampling} & \texttt{sampling.dynamic\_sampling} & \texttt{loss\_form.sampling\_dynamic\_filter} \\
+\texttt{delta\_dapo} & \texttt{token\_level\_loss} & \texttt{loss\_form.aggregation} & \texttt{loss\_form.token\_aggregation} \\
+\texttt{delta\_dapo} & \texttt{overlong\_reward\_shaping} & \texttt{reward.overlong\_shaping} & \texttt{loss\_form.reward\_shaping\_type} \\
+\texttt{delta\_dapo} & \texttt{kl\_removed} & \texttt{reference\_kl} & \texttt{reference\_kl.kl\_beta} \\
+\texttt{delta\_gspo} & \texttt{sequence\_level\_clip} & \texttt{loss\_form.clip} & \texttt{see delta-list and citation} \\
+\bottomrule
+\end{tabular}
+\caption{Iter-42 drift repair table. The five drift rows from the
+delta-$\leftrightarrow$-schema audit (which run on the 14/18 schema-anchored
+components; the other 4 are \texttt{see delta-list and citation} placeholders).
+Four DAPO rows absorb the iter-41 schema-bump leaves; one GSPO row honestly
+defers because no MIN-REPORT leaf exists for sequence-level clipping yet.}
+\label{tab:p6-delta-field-drift}
+\end{table}

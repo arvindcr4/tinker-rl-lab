@@ -1,0 +1,55 @@
+{
+  "date": "2026-07-04",
+  "per_delta_drift": {},
+  "repair_proposals": [
+    {
+      "component": "dynamic_sampling",
+      "current_field": "loss_form.sampling_dynamic_filter",
+      "delta_id": "delta_dapo",
+      "proposed_field": "loss_form.sampling_dynamic_filter",
+      "rationale": "iter-42 drift audit"
+    },
+    {
+      "component": "token_level_loss",
+      "current_field": "loss_form.token_aggregation",
+      "delta_id": "delta_dapo",
+      "proposed_field": "loss_form.token_aggregation",
+      "rationale": "iter-42 drift audit"
+    },
+    {
+      "component": "overlong_reward_shaping",
+      "current_field": "loss_form.reward_shaping_type",
+      "delta_id": "delta_dapo",
+      "proposed_field": "loss_form.reward_shaping_type",
+      "rationale": "iter-42 drift audit"
+    },
+    {
+      "component": "kl_removed",
+      "current_field": "reference_kl.kl_beta",
+      "delta_id": "delta_dapo",
+      "proposed_field": "reference_kl.kl_beta",
+      "rationale": "iter-42 drift audit"
+    },
+    {
+      "component": "sequence_level_clip",
+      "current_field": "see delta-list and citation",
+      "delta_id": "delta_gspo",
+      "proposed_field": "see delta-list and citation",
+      "rationale": "iter-42 drift audit"
+    }
+  ],
+  "rows": 18,
+  "schema_block_leaf_counts": {
+    "decontamination": 2,
+    "group_size_schedule": 3,
+    "heldout_split": 2,
+    "loss_form": 9,
+    "reference_kl": 3,
+    "sampler_backend": 4,
+    "telemetry": 3
+  },
+  "verdict_counts": {
+    "OK": 8,
+    "SEE_CITATION": 10
+  }
+}

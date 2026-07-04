@@ -17,8 +17,8 @@
     },
     {
       "component": "sequence_level_clip",
-      "field": "loss_form.clip",
-      "change": "clipping, rewarding and optimization applied at the sequence level"
+      "field": "see delta-list and citation",
+      "change": "clipping, rewarding and optimization applied at the sequence level (no MIN-REPORT leaf for sequence-level clip; deferred to source paper until a future schema bump exposes the field)"
     }
   ],
   "notes": "Sequence-level importance ratio and clipping, per the source paper."

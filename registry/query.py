@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GRPO-Registry reference CLI: list / query / badge / stackdiff.
+"""GRPO-Registry reference CLI: list / query / badge / stackdiff / drift.
 
 Stdlib only. Field convention (see schema.json): JSON null = unreported;
 explicit false / 0.0 / "none" = reported-as-absent. The MIN-REPORT badge
@@ -10,6 +10,7 @@ Usage:
   python3 registry/query.py query --item reference_kl [--full]
   python3 registry/query.py badge [entry_id]
   python3 registry/query.py stackdiff <entry_id_a> <entry_id_b>
+  python3 registry/query.py drift  # iter-42: schema-anchored `field:` claims
 """
 import argparse
 import json
@@ -169,6 +170,89 @@ def cmd_implementations(args):
     return 0
 
 
+def cmd_drift(args):
+    """Iter-42: walk every delta_*.json component's `field:` claim, classify
+    it against the actual schema MIN-REPORT surface. Verdict counts and
+    per-row table mirror scripts/p5p8/p6_delta_field_drift_audit.py."""
+    import importlib.util
+    audit = pathlib.Path(__file__).resolve().parents[1] / "scripts/p5p8" / "p6_delta_field_drift_audit.py"
+    spec = importlib.util.spec_from_file_location("audit", audit)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    schema = json.load(open(HERE / "schema.json"))
+    defs = schema.get("$defs", {})
+
+    def deref(node):
+        if isinstance(node, dict):
+            if "$ref" in node and isinstance(node["$ref"], str):
+                if node["$ref"].startswith("#/$defs/"):
+                    return deref(defs[node["$ref"].split("/")[-1]])
+            return {k: deref(v) for k, v in node.items() if k != "$ref"}
+        if isinstance(node, list):
+            return [deref(x) for x in node]
+        return node
+
+    stack_def = deref(schema["$defs"]["stack_record"])
+    min_report = stack_def["properties"]["min_report"]["properties"]
+    block_leaves = {}
+    for item_name, item_def in min_report.items():
+        out = set()
+        def walk(o):
+            if not isinstance(o, dict):
+                return
+            for k, v in o.items():
+                if k == "properties" and isinstance(v, dict):
+                    for kk, vv in v.items():
+                        if isinstance(vv, dict) and "properties" in vv:
+                            walk(vv)
+                        elif isinstance(vv, dict):
+                            out.add(kk)
+        walk(item_def)
+        block_leaves[item_name] = out
+
+    counts = {"OK": 0, "SEE_CITATION": 0,
+              "BLOCK_NOT_IN_MIN_REPORT": 0,
+              "LEAF_NOT_IN_SCHEMA": 0, "AMBIGUOUS_REFERENCE": 0}
+    n_rows = 0
+    drifts = []
+    for p in sorted((HERE / "entries").glob("delta_*.json")):
+        d = json.load(open(p))
+        for c in d.get("deltas", []):
+            n_rows += 1
+            field = c.get("field", "")
+            comp = c["component"]
+            if not field:
+                v, r = "EMPTY", "no field declared"
+            elif field == "see delta-list and citation":
+                v, r = "SEE_CITATION", "deferred to source paper"
+            elif "." not in field:
+                v, r = "AMBIGUOUS_REFERENCE", f"block-only reference: {field!r}"
+            else:
+                block, leaf = field.split(".", 1)
+                if block not in block_leaves:
+                    v, r = "BLOCK_NOT_IN_MIN_REPORT", f"block {block!r} not in MIN-REPORT"
+                elif leaf not in block_leaves[block]:
+                    v, r = "LEAF_NOT_IN_SCHEMA", f"leaf {leaf!r} missing from MIN-REPORT.{block}"
+                else:
+                    v, r = "OK", f"{block}.{leaf}"
+            counts[v] = counts.get(v, 0) + 1
+            if v not in ("OK", "SEE_CITATION"):
+                drifts.append((d["id"], comp, field, v, r))
+    print(f"delta-schema drift audit (iter-42): {n_rows} (delta, component) pairs")
+    drift_n = sum(c for k, c in counts.items() if k not in ("OK", "SEE_CITATION"))
+    print(f"  drift rate: {drift_n/max(1,n_rows):.3f}  ({drift_n}/{n_rows})")
+    print()
+    print(f"  {'verdict':24s} count")
+    for k, n in sorted(counts.items()):
+        print(f"  {k:24s} {n}")
+    if drifts:
+        print()
+        print(f"  drift rows ({len(drifts)}):")
+        for d, c, f, v, r in drifts:
+            print(f"    {d:14s} {c:30s} field={f!r:40s} -> {v}")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -188,10 +272,11 @@ def main():
                                           "unknown"), default=None)
     pi.add_argument("--framework", default=None,
                     help="Filter to stacks whose framework.name == X.")
+    sub.add_parser("drift")
     args = ap.parse_args()
     {"list": cmd_list, "badge": cmd_badge,
      "query": cmd_query, "stackdiff": cmd_stackdiff,
-     "implementations": cmd_implementations}[args.cmd](args)
+     "implementations": cmd_implementations, "drift": cmd_drift}[args.cmd](args)
 
 
 if __name__ == "__main__":

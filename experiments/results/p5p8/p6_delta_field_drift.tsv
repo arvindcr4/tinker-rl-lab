@@ -1,0 +1,19 @@
+delta_id	component	field_claim	verdict	reason	change_text
+delta_aero	advantage_guided_evolution	see delta-list and citation	SEE_CITATION	deferred to source paper	use off-policy reference rollouts from the same prompt pool to inflate the effective group size without resampling; (per
+delta_areal	autoscaling_Rollout	see delta-list and citation	SEE_CITATION	deferred to source paper	decouple rollout budget from optimizer step; the variant we measured is a single-batch same-stack run so the autoscaler 
+delta_cppo	continuity_penalty	see delta-list and citation	SEE_CITATION	deferred to source paper	add a soft penalty that discourages large log-probability jumps between optimization steps; (per CPPO source paper
+delta_dapo	clip_higher	loss_form.clip_eps_high	OK	loss_form.clip_eps_high	asymmetric (decoupled) clip: eps_low=0.2, eps_high=0.28
+delta_dapo	dynamic_sampling	loss_form.sampling_dynamic_filter	OK	loss_form.sampling_dynamic_filter	filter prompts whose groups have zero reward variance and resample until the batch is full (iter-41 schema bump captured
+delta_dapo	token_level_loss	loss_form.token_aggregation	OK	loss_form.token_aggregation	token-level policy-gradient loss (mean over all tokens in the batch rather than per-sequence averaging)
+delta_dapo	overlong_reward_shaping	loss_form.reward_shaping_type	OK	loss_form.reward_shaping_type	soft length-aware penalty for truncated/overlong completions (iter-41 schema bump captured this on loss_form.reward_shap
+delta_dapo	kl_removed	reference_kl.kl_beta	OK	reference_kl.kl_beta	KL regularization term removed from the objective (canonical leaf pinned at kl_beta=0.0)
+delta_drgrpo	length_normalization	loss_form.length_normalization	OK	loss_form.length_normalization	remove the 1/|o_i| response-length normalization from the loss
+delta_drgrpo	advantage_std_normalization	loss_form.advantage_normalization	OK	loss_form.advantage_normalization	remove the division by the within-group reward standard deviation
+delta_es	black_box_perturbation	see delta-list and citation	SEE_CITATION	deferred to source paper	replace the policy-gradient signal with an ES-style central-difference estimator over gaussian perturbations of the para
+delta_gift	gamma_likelihood_baseline	see delta-list and citation	SEE_CITATION	deferred to source paper	subtract a gamma-style per-prompt likelihood prior from the group-normalized advantage, instead of using the group mean 
+delta_gspo	sequence_level_ratio	loss_form.importance_ratio_level	OK	loss_form.importance_ratio_level	importance ratio defined on sequence likelihood (length-normalized), not per token
+delta_gspo	sequence_level_clip	see delta-list and citation	SEE_CITATION	deferred to source paper	clipping, rewarding and optimization applied at the sequence level (no MIN-REPORT leaf for sequence-level clip; deferred
+delta_mcgrpo	mcts_rollout	see delta-list and citation	SEE_CITATION	deferred to source paper	augment the rollout pool with MCTS-derived continuations, re-weighting advantage by MCTS value
+delta_mcgrpo	per_prompt_diversity_bonus	see delta-list and citation	SEE_CITATION	deferred to source paper	boost within-group contrast by up-weighting rare completions
+delta_ngrpo	per_prompt_normalization	see delta-list and citation	SEE_CITATION	deferred to source paper	normalize the group advantage by the per-prompt gradient norm rather than the group std; (per NGraPO source paper
+delta_scafgrpo	scaffold_aware_advantage	see delta-list and citation	SEE_CITATION	deferred to source paper	modify the group advantage by a scaffold-completion-quality prior so that low-scaffold prompts are up-weighted

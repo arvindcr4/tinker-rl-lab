@@ -17,24 +17,24 @@
     },
     {
       "component": "dynamic_sampling",
-      "field": "sampling.dynamic_sampling",
-      "change": "filter prompts whose groups have zero reward variance and resample until the batch is full"
+      "field": "loss_form.sampling_dynamic_filter",
+      "change": "filter prompts whose groups have zero reward variance and resample until the batch is full (iter-41 schema bump captured this on loss_form.sampling_dynamic_filter)"
     },
     {
       "component": "token_level_loss",
-      "field": "loss_form.aggregation",
+      "field": "loss_form.token_aggregation",
       "change": "token-level policy-gradient loss (mean over all tokens in the batch rather than per-sequence averaging)"
     },
     {
       "component": "overlong_reward_shaping",
-      "field": "reward.overlong_shaping",
-      "change": "soft length-aware penalty for truncated/overlong completions"
+      "field": "loss_form.reward_shaping_type",
+      "change": "soft length-aware penalty for truncated/overlong completions (iter-41 schema bump captured this on loss_form.reward_shaping_type, value 'overlong_penalty')"
     },
     {
       "component": "kl_removed",
-      "field": "reference_kl",
-      "change": "KL regularization term removed from the objective"
+      "field": "reference_kl.kl_beta",
+      "change": "KL regularization term removed from the objective (canonical leaf pinned at kl_beta=0.0)"
     }
   ],
-  "notes": "Four named techniques plus removal of the KL term, per the source paper."
+  "notes": "Four named techniques plus removal of the KL term, per the source paper. field: paths now anchored on iter-41 schema leaves (iter-42 drift audit: previous sampling.* and reward.* references were blocks the schema never exposed)."
 }

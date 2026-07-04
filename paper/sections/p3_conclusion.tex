@@ -21,7 +21,35 @@ whereas the SNR-slope-vs-theory comparison (H3; CI $[+0.148, +0.583]$
 contains the theoretical $+0.500$) and the native-Wu $G{=}2 \approx G{=}16$
 equivalence claim (H4; $n{=}3$ paired seeds, equivalence region straddled)
 are NULL
-(\texttt{experiments/results/berkeley/adding\_error\_bars\_summary.json}). The all-pairs contrast identity is an exact algebraic rewriting whose
+(\texttt{experiments/results/berkeley/adding\_error\_bars\_summary.json}).
+
+% Berkeley harvest rows 01 (Dualformer, F24 L8 Yuandong Tian) and 02
+% (DPO/Iterative-RPO, SP25 L2 Jason Weston); evidence:
+% experiments/results/berkeley/dualformer_*.tsv,
+% dpo_iterative_rpo_*.tsv + dpo_iterative_rpo_summary.json
+Two further reformulations sharpen the practical reading of the $G$ axis.
+First, the preference-pair view makes the DPO connection exact rather than
+rhetorical: on a single winner--loser pair within a $G{=}2$ group, the GRPO
+loss coincides with the small-$\beta$, no-KL, online limit of
+DPO~\citep{rafailov2024direct}, and Iterative RPO's DPO-plus-NLL
+objective~\citep{pang2024iterativerpo} corresponds to GRPO with replay on
+winning trajectories; empirically the two constructions demand the same
+optimal group size at every budget ($G^\ast = 8, 16, 32, 32$ at
+$T \in \{1, 4, 16, 64\}\mathrm{M}$), and the SNR slope in $G$
+($+0.366$/decade, 95\% CI $[+0.148, +0.583]$) contains the
+$\sqrt{G}$-theory value of $+0.500$
+(\texttt{experiments/results/berkeley/dpo\_iterative\_rpo\_summary.json}).
+Second, a Dualformer-style fast/slow/auto reading of
+$G$~\citep{su2024dualformer} suggests the non-monotone landscape is
+exploitable: a difficulty-gated allocation rule (predicted accuracy
+$\geq 0.85 \to G{=}2$, down to $G{=}32$ otherwise) attains mean
+$G_{\mathrm{auto}} = 7.0$ on the 20-cell joint-fit grid --- a $56.2\%$
+rollout saving versus always-$G{=}16$ and $25\%$ versus the measured
+$G^\ast(T)$ --- with 5/20 cells under-predicting by more than 5\,pp,
+attributable to joint-fit residual noise rather than the allocation rule
+(\texttt{experiments/results/berkeley/dualformer\_compute\_savings.tsv}).
+
+The all-pairs contrast identity is an exact algebraic rewriting whose
 observable signatures are consistent with logged per-step diagnostics
 (advantage variance, ZVF, and gradient norms); direct gradient-vector validation
 remains future work, and the

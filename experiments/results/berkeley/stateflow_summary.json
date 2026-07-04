@@ -1,0 +1,48 @@
+{
+  "citation": "Wu et al., StateFlow (arXiv:2403.11322, 2024); F24 L3 Chi Wang",
+  "n_runs": 12,
+  "theta": [
+    0.5,
+    0.9
+  ],
+  "H1_state_validity": {
+    "median_step_match": 0.925,
+    "mean_boundary_offset": 1.4583333333333333,
+    "decisive": true
+  },
+  "H2_transition_order": {
+    "both_monotone": 12,
+    "n": 12,
+    "decisive": true
+  },
+  "H3_state_aware_stop": {
+    "mean_retain_rewardstop": 0.9815208341838315,
+    "mean_saved_rewardstop": 0.7208333333333333,
+    "mean_retain_gradstop": 1.001401758531143,
+    "mean_saved_gradstop": 0.43958333333333327,
+    "fixed_step": 21,
+    "mean_retain_fixed": 1.001211795390685,
+    "fixed_competitive": true,
+    "decisive": true
+  },
+  "H4_group_size_schedule": {
+    "spearman_log2G_b2": -0.1420955977531898,
+    "perG": {
+      "2": 10.0,
+      "4": 11.0,
+      "8": 10.333333333333334,
+      "16": 9.333333333333334
+    },
+    "decisive": false
+  },
+  "H5_conv_grad_lag": {
+    "lag_positive": 12,
+    "n": 12,
+    "median_lag": 12.0,
+    "loci_outside_converge": 12,
+    "mean_conv_adv_var": 0.6811419199348058,
+    "decisive": true
+  },
+  "n_decisive": 4,
+  "verdict": "DECISIVE"
+}

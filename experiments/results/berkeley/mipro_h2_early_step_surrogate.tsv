@@ -1,0 +1,36 @@
+feature	step	spearman_vs_heldout	top1_match
+zvf	0	0.2	0
+zvf	4	0.2	0
+zvf	9	0.2	0
+zvf	19	0.4	0
+zvf	29	1.0	1
+zvf	39	-0.8	0
+zvf	first_stable_top1(win5)		-1
+mean_reward	0	1.0	1
+mean_reward	4	0.8	1
+mean_reward	9	-0.4	0
+mean_reward	19	-0.2	1
+mean_reward	29	1.0	1
+mean_reward	39	-0.8	0
+mean_reward	first_stable_top1(win5)		-1
+entropy	0	-0.8	0
+entropy	4	-0.4	0
+entropy	9	0.4	0
+entropy	19	0.2	0
+entropy	29	0.2	0
+entropy	39	0.4	0
+entropy	first_stable_top1(win5)		-1
+advantage_variance	0	0.2	0
+advantage_variance	4	-0.8	0
+advantage_variance	9	0.2	0
+advantage_variance	19	0.6	0
+advantage_variance	29	-0.8	0
+advantage_variance	39	0.8	1
+advantage_variance	first_stable_top1(win5)		-1
+grad_norm	0	0.4	1
+grad_norm	4	-0.2	0
+grad_norm	9	0.4	1
+grad_norm	19	-0.4	0
+grad_norm	29	-1.0	0
+grad_norm	39	0.8	1
+grad_norm	first_stable_top1(win5)		-1

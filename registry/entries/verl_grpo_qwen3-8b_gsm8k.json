@@ -60,6 +60,15 @@
       "parser_robustness_probe": null
     }
   },
-  "outcomes": null,
-  "notes": "Dry-run configuration only: the veRL launcher row in framework_comparison.json is a placeholder; no completed training telemetry."
+  "notes": "Dry-run configuration only: the veRL launcher row in framework_comparison.json is a placeholder; no completed training telemetry.",
+  "outcomes": {
+    "coverage": {
+      "min_report_coverage": 0.7143,
+      "declared_deltas_coverage": 0.0,
+      "measured_coverage": 0.0,
+      "ci_method_present": false,
+      "audit_source": "scripts/p5p8/p6_outcomes_coverage_block.py",
+      "audit_date": "2026-07-05"
+    }
+  }
 }

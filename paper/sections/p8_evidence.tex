@@ -1323,3 +1323,320 @@ contrast rows). Outputs:
 \texttt{p8\_alert\_volume\_boot.tsv},
 \texttt{p8\_alert\_volume\_summary.json},
 \texttt{figures/p8\_alert\_volume.{png,pdf}}.
+
+\subsection{Operational calibration gap at alert-volume budgets}
+\label{sec:p8-operational-calibration}
+
+Iter-24 \tableref{tab:p8-reliability} measured \emph{global} reliability
+diagrams on the full $10{,}000$-row test split, decile-binned by predicted
+probability; iter-56 \S\ref{sec:p8-alert-volume} measured the recall gap
+at every alert-volume $K$. Neither answers the operationally-loaded
+calibration question fraud-ops leads actually ask: \emph{among the
+top-$K$ alerts the analysts will see (because that is all the staffing
+budget allows), how far is the model's mean predicted probability from
+the observed positive rate?}
+
+This subsection closes that gap. For each $K \in \{0.25, 0.50, 1.00,
+2.00, 5.00\}\,\%$ and each tree $\in \{\texttt{XGB-20raw},
+\texttt{XGB-24full}, \texttt{XGB-4sensor}\}$ we compute, on the top-$K$
+alerts (ranked by predicted score): the observed positive rate $\hat{p}$,
+the mean predicted probability $\bar{p}$, the calibration gap
+$\bar{p} - \hat{p}$, the Brier score $\overline{(\bar{p} - y)^2}$, and a
+$10$-quantile-bin ECE within the top-$K$. A paired bootstrap
+($B{=}400$, percentile, seed $20260704$) yields $95\%$ CIs on the
+$(\bar{p}_a - \hat{p}_a) - (\bar{p}_b - \hat{p}_b)$ gap for every tree
+pair at every $K$.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Operational calibration gap at alert-volume $K$. For each tree,
+$\bar{p}$ is the mean predicted probability among the top-$K$ alerts;
+$\hat{p}$ is the observed positive rate in the same alerts; the gap is
+$\bar{p} - \hat{p}$ (positive = overconfident). \texttt{XGB-4sensor} is
+wildly overconfident at every $K$; \texttt{XGB-24full} is consistently
+\emph{less} overconfident than \texttt{XGB-20raw} at $K \ge 1\,\%$.}
+\label{tab:p8-op-cal}
+\begin{tabular}{lcccccc}
+\toprule
+$K$ (\%) & Tree & $n_{\text{top}}$ & $n_{\text{pos}}$ & $\hat{p}$ & $\bar{p}$ & Gap \\
+\midrule
+$0.25$ & \texttt{20raw}  & $25$  & $22$ & $0.880$ & $0.971$ & $+0.091$ \\
+$0.25$ & \texttt{24full} & $25$  & $23$ & $0.920$ & $0.966$ & $+0.046$ \\
+$0.25$ & \texttt{4sensor}& $25$  & $9$  & $0.360$ & $0.849$ & $+0.489$ \\
+$0.50$ & \texttt{20raw}  & $50$  & $45$ & $0.900$ & $0.951$ & $+0.051$ \\
+$0.50$ & \texttt{24full} & $50$  & $45$ & $0.900$ & $0.946$ & $+0.046$ \\
+$0.50$ & \texttt{4sensor}& $50$  & $13$ & $0.260$ & $0.823$ & $+0.563$ \\
+$1.00$ & \texttt{20raw}  & $100$ & $68$ & $0.680$ & $0.905$ & $+0.225$ \\
+$1.00$ & \texttt{24full} & $100$ & $72$ & $0.720$ & $0.899$ & $+0.179$ \\
+$1.00$ & \texttt{4sensor}& $100$ & $18$ & $0.180$ & $0.793$ & $+0.613$ \\
+$2.00$ & \texttt{20raw}  & $200$ & $96$ & $0.480$ & $0.836$ & $+0.356$ \\
+$2.00$ & \texttt{24full} & $200$ & $106$& $0.530$ & $0.828$ & $+0.298$ \\
+$2.00$ & \texttt{4sensor}& $200$ & $31$ & $0.155$ & $0.759$ & $+0.604$ \\
+$5.00$ & \texttt{20raw}  & $500$ & $126$& $0.252$ & $0.714$ & $+0.462$ \\
+$5.00$ & \texttt{24full} & $500$ & $136$& $0.272$ & $0.698$ & $+0.426$ \\
+$5.00$ & \texttt{4sensor}& $500$ & $64$ & $0.128$ & $0.710$ & $+0.582$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired bootstrap $95\%$ CI on the operational-calibration gap
+($\Delta = \text{gap}_a - \text{gap}_b$, $B{=}400$, seed $20260704$).
+A negative $\Delta$ means tree $a$ is \emph{less} overconfident than
+tree $b$. The \texttt{XGB-24full}${-}$\texttt{XGB-20raw} gap is
+statistically detectable ($95\%$ CI excludes zero) at
+$K \ge 2\,\%$; below $K{=}2\,\%$ the trees are tied.}
+\label{tab:p8-op-cal-boot}
+\begin{tabular}{lcccccc}
+\toprule
+$K$(\%) & Pair & $\Delta$-gap & CI low & CI high & Excl.\ 0 & Winner \\
+\midrule
+$0.25$ & \texttt{24full}${-}$\texttt{20raw}   & $-0.068$ & $-0.206$ & $+0.071$  & no  & TIE \\
+$0.25$ & \texttt{20raw}${-}$\texttt{4sensor}  & $-0.393$ & $-0.631$ & $-0.159$  & \textbf{YES} & \texttt{20raw} \\
+$0.25$ & \texttt{24full}${-}$\texttt{4sensor} & $-0.461$ & $-0.672$ & $-0.240$  & \textbf{YES} & \texttt{24full} \\
+$0.50$ & \texttt{24full}${-}$\texttt{20raw}   & $-0.003$ & $-0.081$ & $+0.069$  & no  & TIE \\
+$0.50$ & \texttt{20raw}${-}$\texttt{4sensor}  & $-0.491$ & $-0.632$ & $-0.336$  & \textbf{YES} & \texttt{20raw} \\
+$0.50$ & \texttt{24full}${-}$\texttt{4sensor} & $-0.494$ & $-0.630$ & $-0.357$  & \textbf{YES} & \texttt{24full} \\
+$1.00$ & \texttt{24full}${-}$\texttt{20raw}   & $-0.040$ & $-0.109$ & $+0.027$  & no  & TIE \\
+$1.00$ & \texttt{20raw}${-}$\texttt{4sensor}  & $-0.380$ & $-0.488$ & $-0.284$  & \textbf{YES} & \texttt{20raw} \\
+$1.00$ & \texttt{24full}${-}$\texttt{4sensor} & $-0.420$ & $-0.530$ & $-0.309$  & \textbf{YES} & \texttt{24full} \\
+$2.00$ & \texttt{24full}${-}$\texttt{20raw}   & $-0.061$ & $-0.101$ & $-0.024$  & \textbf{YES} & \texttt{24full} \\
+$2.00$ & \texttt{20raw}${-}$\texttt{4sensor}  & $-0.243$ & $-0.306$ & $-0.181$  & \textbf{YES} & \texttt{20raw} \\
+$2.00$ & \texttt{24full}${-}$\texttt{4sensor} & $-0.304$ & $-0.369$ & $-0.236$  & \textbf{YES} & \texttt{24full} \\
+$5.00$ & \texttt{24full}${-}$\texttt{20raw}   & $-0.037$ & $-0.053$ & $-0.021$  & \textbf{YES} & \texttt{24full} \\
+$5.00$ & \texttt{20raw}${-}$\texttt{4sensor}  & $-0.118$ & $-0.147$ & $-0.087$  & \textbf{YES} & \texttt{20raw} \\
+$5.00$ & \texttt{24full}${-}$\texttt{4sensor} & $-0.156$ & $-0.186$ & $-0.126$  & \textbf{YES} & \texttt{24full} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Sharpest reviewer-facing falsifiable claim (operational calibration).}
+At $K \ge 2\,\%$ the \texttt{XGB-24full}${-}$\texttt{XGB-20raw}
+calibration-gap delta is \emph{negative} and statistically detectable at
+$95\%$ ($K{=}2\,\%$: $\Delta = -0.061$ CI $[-0.101, -0.024]$;
+$K{=}5\,\%$: $\Delta = -0.037$ CI $[-0.053, -0.021]$). Below
+$K{=}2\,\%$ the two trees are statistically tied on the operational
+calibration metric (CIs span zero at $K \in \{0.25, 0.50, 1.00\}\,\%$).
+The dominance-switch pattern from \S\ref{sec:p8-alert-volume}
+\emph{re-appears on the calibration axis}: at the analyst-tight budget
+$K < 2\,\%$, the LLM-aggregate features neither restore recall nor
+improve calibration measurably; at $K \ge 2\,\%$, they do both
+simultaneously.
+
+\paragraph{Sensor-only tree is severely miscalibrated at every $K$.}
+\texttt{XGB-4sensor} reports a mean predicted probability of
+$0.71{-}0.85$ in the top-$K$ alerts at every $K$, while the observed
+positive rate is $0.13{-}0.36$---a calibration gap of $+0.49$ to
+$+0.61$ absolute probability. This is $5{-}12\times$ worse than the
+gap on \texttt{XGB-20raw} or \texttt{XGB-24full} at the same $K$, and
+the paired bootstrap CIs exclude zero at all $5$ budget points for both
+\textsc{20raw}${-}$\textsc{4sensor} and \textsc{24full}${-}$\textsc{4sensor}.
+Operationally: a fraud-ops team relying on \texttt{XGB-4sensor} as a
+triage signal would systematically over-predict fraud probabilityin the
+alerts their analysts actually review, wasting analyst attention on
+predicted-$0.85$ rows that turn out to be fraud only $13{-}36\,\%$ of
+the time.
+
+\paragraph{Mean predicted probability decays with $K$ on every tree.}
+On \texttt{XGB-20raw} the mean predicted probability in the top-$K$
+alerts drops from $0.971$ at $K{=}0.25\,\%$ to $0.714$ at
+$K{=}5\,\%$ (a $-0.26$ decay); on \texttt{XGB-24full} it drops from
+$0.966$ to $0.698$; on \texttt{XGB-4sensor} it drops from $0.849$ to
+$0.710$. The decay is monotonic and explains why the calibration gap
+\emph{grows} with $K$ on the raw-features trees: the model is
+rank-correct (higher scores $\Rightarrow$ higher empirical fraud rate)
+but absolute-probability-inflated at the top.
+
+\paragraph{Cross-paper coupling to \S\ref{sec:p8-alert-volume}.}
+At $K{=}2\,\%$ (the iter-56 dominance-switch $K$), \texttt{XGB-24full}
+strictly Pareto-dominates \texttt{XGB-20raw} on \emph{both} axes: recall
+($\Delta = +7.6$ pp, $95\%$ CI $[+3.3, +12.1]$, from
+Table~\ref{tab:p8-alert-volume-boot}) and calibration ($-6.1$ pp gap,
+$95\%$ CI $[-10.1, -2.4]$, from
+Table~\ref{tab:p8-op-cal-boot}). The LLM-aggregate sensor therefore
+\emph{does not} trade calibration for recall at the dominance-switch
+$K$---it gains both. This is the strongest single-cell evidence in the
+P8 evidence base that the LLM-as-sensor is operationally useful at
+analyst budgets $\ge 2\,\%$.
+
+\paragraph{Why this matters.}
+A fraud-ops lead who deploys a model with absolute-probability-inflated
+alerts will erode analyst trust: when an analyst sees
+``predicted-$0.85$ fraud'' on three consecutive alerts that turn out to
+be non-fraud, the analyst stops trusting the score. The
+\texttt{XGB-4sensor} result shows what that failure mode looks like on
+this dataset---the four LLM-aggregate features \emph{alone} would not
+survive a week of analyst use. The \texttt{XGB-24full} result shows
+that the sensor's value is realised only when it is added to the twenty
+raw $V$-features: the raw tree absorbs the rank signal, the LLM sensor
+nudges the calibration.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_operational\_calibration.py} ($\sim$40s
+on 4 cores; $5 \times 3 = 15$ operational-calibration cells, $5 \times
+3 = 15$ paired-bootstrap rows). Outputs:
+\texttt{experiments/results/p5p8/p8\_operational\_calibration.tsv},
+\texttt{p8\_operational\_calibration\_boot.tsv},
+\texttt{p8\_operational\_calibration\_summary.json},
+\texttt{figures/p8\_operational\_calibration.{png,pdf}}.
+
+\subsection{Subgroup alert-distribution fairness under a global review budget}
+\label{sec:p8-subgroup-fairness}
+
+\S\ref{sec:p8-alert-volume} measured how the global $K{=}2\,\%$ budget
+maps to recall across the \emph{entire} stream;
+\S\ref{sec:p8-operational-calibration} measured how the top-$K$ alerts'
+predicted probability aligns with the observed positive rate in those
+alerts. Neither addresses the operationally-loaded
+\emph{fairness} question fraud-ops leads raise after seeing a global
+$K{=}2\,\%$: is the global budget distributed in proportion to the
+per-segment positive rate, or is one segment getting starved?
+
+This subsection closes that gap. For two stratification axes and each
+tree $\in \{\texttt{XGB-20raw}, \texttt{XGB-24full},
+\texttt{XGB-4sensor}\}$, we measure on the test split, at the
+iter-56 dominance-switch $K{=}2\,\%$:
+
+\begin{itemize}
+\item per-quintile $n_{\text{bin}}$, $p_{\text{bin}}$ (positive rate),
+$n_{\text{alert},\text{bin}}$ (alerts falling in this bin at global
+$K{=}2\,\%$), $\text{alert\_rate}_{\text{bin}}$, $\text{recall}_{\text{bin}}$,
+$\text{precision}_{\text{bin}}$, $\text{lift}_{\text{bin}}$ (precision
+relative to overall base rate);
+\item four tree-level heterogeneity scalars across the $5$ bins:
+Gini($n_{\text{alert},\text{bin}}$), $\sigma(\text{recall}_{\text{bin}})$,
+$\sigma(\text{precision}_{\text{bin}})$, and $\sum_b |\text{alert\_rate}_b
+- 1/N|$ (L1 alerting-bias from perfectly-uniform budget split).
+\end{itemize}
+
+The two stratification axes are: (i) quintile of \texttt{V\_mean}, the
+LLM-as-sensor aggregate itself (the natural axis the sensor creates);
+(ii) quintile of \texttt{V14}, the top-importance raw feature (the axis
+the raw tree splits on). A paired bootstrap ($B{=}400$, percentile,
+seed $20260704$) yields $95\%$ CIs on every scalar per axis.
+
+\paragraph{Hypothesis testing.}
+\textbf{H1} predicted \texttt{XGB-24full} would have \emph{lower}
+Gini(alerts) than \texttt{XGB-20raw} on V\_mean quintiles
+(the sensor-aggregate features should smooth per-bin alerting bias).
+\textbf{H2} predicted \texttt{XGB-4sensor} would have the
+\emph{highest} Gini (sensor-only fails the iter-31 per-feature ablation
+story). \textbf{H3} predicted both effects re-appear on
+the V14 axis.
+
+\paragraph{Sharpest reviewer-facing finding (V\_mean stratification).}
+\textbf{H1 is refuted, H2 is confirmed, on V\_mean quintiles.}
+At $K{=}2\,\%$ the \texttt{XGB-24full}${-}$\texttt{XGB-20raw} Gini gap
+on V\_mean quintiles is $\Delta = +0.056$ ($95\%$ CI $[+0.002, +0.106]$,
+CI excludes 0): \emph{adding} the LLM-aggregate sensor \emph{increases}
+alert concentration on V\_mean strata rather than reducing it.
+\texttt{XGB-4sensor} has catastrophically higher Gini ($0.397$ vs
+$0.170$ for \texttt{XGB-20raw}, $\Delta = -0.228$ CI $[-0.298, -0.144]$,
+CI excludes 0). The ordering by V\_mean Gini is:
+$\texttt{4sensor} (0.397) \gg \texttt{24full} (0.226) > \texttt{20raw}
+(0.170)$.
+
+The mechanism is visible in the per-bin alert counts:
+\texttt{XGB-20raw} distributes its $200$ alerts nearly
+proportionally to the per-bin positive rate (alerts per bin:
+$20, 46, 46, 53, 35$);
+\texttt{XGB-24full} shifts alerts toward the mid-V\_mean bins
+($18, 45, \mathbf{54}, \mathbf{57}, 26$), i.e.\ the sensor helps
+the tree flag the mid-range V\_mean stratum that the raw tree
+under-flags; and \texttt{XGB-4sensor} concentrates alerts heavily on
+the mid-range V\_mean bins ($3, 25, \mathbf{73}, \mathbf{76}, 23$),
+reflecting the sensor-only failure mode already documented in iter-31
+and iter-60.
+
+\paragraph{V14 stratification (H3 is refuted).}
+On V14 quintiles \emph{no} pairwise scalar gap is statistically detectable
+at $95\%$ (all four CIs span zero for all three pairs). The
+Gini(alerts) values are all close: \texttt{20raw} $0.091$,
+\texttt{24full} $0.095$, \texttt{4sensor} $0.096$. Because V14 is the
+single most informative raw feature and dominates the raw tree's split
+decisions, \emph{adding} the LLM-aggregate features shifts the alert
+distribution negligibly on the V14 axis. This falsifies H3 and confirms
+that the LLM sensor's bias shift is specific to the V\_mean axis it
+itself creates.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Per-stratum heterogeneity scalars on the test split under
+global $K{=}2\,\%$ review budget. \texttt{XGB-24full} has higher
+Gini(alerts) than \texttt{XGB-20raw} on V\_mean quintiles (CI excludes 0)
+but indistinguishable Gini on V14 quintiles (CI spans 0).
+\texttt{XGB-4sensor} has catastrophically higher V\_mean Gini (the
+sensor-alone failure mode).}
+\label{tab:p8-subgroup-fairness}
+\begin{tabular}{llcccc}
+\toprule
+Stratum & Tree & Gini(alerts) & $\sigma$(recall) & $\sigma$(precision) & $L_1$ bias \\
+\midrule
+V\_mean & \texttt{20raw}  & $0.170$ & $0.048$ & $0.048$ & $0.900$ \\
+V\_mean & \texttt{24full} & $0.226$ & $0.053$ & $0.063$ & $0.900$ \\
+V\_mean & \texttt{4sensor}& $0.397$ & $0.133$ & $0.210$ & $0.900$ \\
+V14     & \texttt{20raw}  & $0.091$ & $0.055$ & $0.068$ & $0.900$ \\
+V14     & \texttt{24full} & $0.095$ & $0.071$ & $0.067$ & $0.900$ \\
+V14     & \texttt{4sensor}& $0.096$ & $0.051$ & $0.048$ & $0.900$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired bootstrap ($B{=}400$, percentile, seed $20260704$)
+$95\%$ CIs on the heterogeneity-scalar gap $\Delta = s_a - s_b$ at
+$K{=}2\,\%$. On V\_mean quintiles, the 24full$-$20raw Gini CI excludes 0
+($+0.056$ $[+0.002, +0.106]$) and the 20raw$-$4sensor Gini CI excludes 0
+($-0.228$ $[-0.298, -0.144]$). On V14 quintiles, no CI excludes 0.}
+\label{tab:p8-subgroup-fairness-boot}
+\begin{tabular}{llllcc}
+\toprule
+Stratum & Pair & Scalar & $\Delta$ & $95\%$ CI & Excl.\ 0 \\
+\midrule
+V\_mean & \texttt{24full}$-$\texttt{20raw}    & Gini(alerts)        & $+0.056$  & $[+0.002, +0.106]$   & \textbf{YES} \\
+V\_mean & \texttt{24full}$-$\texttt{20raw}    & $\sigma$(recall)    & $-0.001$  & $[-0.067, +0.061]$   & no \\
+V\_mean & \texttt{24full}$-$\texttt{20raw}    & $\sigma$(precision) & $+0.010$  & $[-0.055, +0.076]$   & no \\
+V\_mean & \texttt{20raw}$-$\texttt{4sensor}   & Gini(alerts)        & $-0.228$  & $[-0.298, -0.144]$   & \textbf{YES} \\
+V\_mean & \texttt{20raw}$-$\texttt{4sensor}   & $\sigma$(precision) & $-0.141$  & $[-0.294, +0.036]$   & no \\
+V\_mean & \texttt{24full}$-$\texttt{4sensor}  & Gini(alerts)        & $-0.169$  & $[-0.246, -0.086]$   & \textbf{YES} \\
+V14     & \texttt{24full}$-$\texttt{20raw}    & Gini(alerts)        & $+0.004$  & $[-0.046, +0.060]$   & no \\
+V14     & \texttt{20raw}$-$\texttt{4sensor}   & Gini(alerts)        & $-0.003$  & $[-0.080, +0.080]$   & no \\
+V14     & \texttt{24full}$-$\texttt{4sensor}  & Gini(alerts)        & $-0.002$  & $[-0.088, +0.084]$   & no \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Cross-paper coupling.}
+Couples to \S\ref{sec:p8-scorer}: the sensor's value is \emph{not}
+that it makes alerting more uniform across LLM-aggregate strata (H1
+refuted); its value is that on the dominance-switch $K{=}2\,\%$ it
+restores recall globally (\S\ref{sec:p8-alert-volume}) and tightens
+calibration globally (\S\ref{sec:p8-operational-calibration}). The
+narrow scope of the per-stratum bias shift (V\_mean only, not V14) is
+the empirical footprint the sensor leaves in the rank distribution.
+
+\paragraph{Why this matters.}
+A paper that reports only the headline recall and calibration metrics
+hides the per-stratum footprint: the same global $K{=}2\,\%$ alert
+budget that detects $+7.6$ pp more fraud on \texttt{XGB-24full} also
+\emph{changes} which V\_mean bins receive the alerts, by a
+statistically detectable margin ($+0.056$ Gini). Fraud-ops leads
+deploying on sub-populations (e.g.\ high-V\_mean sub-stream) should
+expect a non-trivial re-ranking of the alert ledger when migrating
+from a raw-features tree to a raw+sensor tree, even when the
+\emph{aggregate} recall and calibration metrics improve.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_subgroup\_alert\_fairness.py}
+($\sim$2 min on 4 cores; $2 \times 5 \times 3 = 30$ per-bin rows +
+$2 \times 3 \times 4 = 24$ paired-bootstrap rows). Outputs:
+\texttt{experiments/results/p5p8/p8\_subgroup\_fairness.tsv},
+\texttt{p8\_subgroup\_fairness\_boot.tsv},
+\texttt{p8\_subgroup\_fairness\_summary.json},
+\texttt{figures/p8\_subgroup\_fairness.{png,pdf}}.

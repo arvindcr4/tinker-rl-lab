@@ -190,6 +190,122 @@
             },
             "ci_method": {
               "$ref": "#/$defs/ci_method"
+            },
+            "coverage": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Iter-62: self-reported coverage of the entry's reporting blocks. All fields nullable; null = not yet audited. min_report_coverage is the fraction of7 MIN-REPORT items with at least one sub-field populated. declared_deltas_coverage is the fraction of variant_deltas_applied entries with status in {implemented, surrogate}. measured_coverage is variant: measured_rows / delta_components, or stack: outcomes_fields_populated / 5. ci_method_present mirrors outcomes.ci_method being non-null. audit_source is the script path that produced the block.",
+              "properties": {
+                "min_report_coverage": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "declared_deltas_coverage": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "measured_coverage": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "ci_method_present": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "audit_source": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "audit_date": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "zvf_antiherding": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Iter-66: Contrastive Yield (Y = 1 - ZVF) + anti-herding residual delta_div = ZVF_iid - ZVF_obs (frontier synthesis: Gemini Deep Think Round 2), measured on the N2 same-stack reward tensor corpus. All fields nullable. Y is the fraction of groups GRPO can still assign within-group credit to; delta_div >= 0 if sampling anti-herds. ci_method.source is the audit script that produced the block.",
+              "properties": {
+                "delta_div_mean": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "delta_div_lo": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "delta_div_hi": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "y_obs_mean": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "y_iid_mean": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "zvf_obs_mean": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "zvf_iid_mean": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "G": {
+                  "$ref": "#/$defs/nullable_integer"
+                },
+                "panel": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "n_steps": {
+                  "$ref": "#/$defs/nullable_integer"
+                },
+                "ci_method": {
+                  "$ref": "#/$defs/ci_method"
+                },
+                "audit_source": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "audit_date": {
+                  "$ref": "#/$defs/nullable_string"
+                }
+              },
+              "additionalProperties": false
             }
           }
         },
@@ -481,6 +597,82 @@
           "items": {
             "$ref": "#/$defs/claim_validation_row"
           }
+        },
+        "measured_yield_residual": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Iter-66: Contrastive-Yield residual (frontier synthesis: Gemini Deep Think Round 2) for this variant vs its declared base. delta_div_delta = (delta_div in variant) - (delta_div in base); negative means the variant reduces the structural diversity bonus, i.e. its sampling policy herds more than GRPO's. y_obs_delta is the same comparison on the Contrastive Yield axis (positive = more within-group credit available). All fields nullable; null = not yet audited.",
+          "properties": {
+            "delta_div_delta": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "delta_div_lo": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "delta_div_hi": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "y_obs_delta": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "y_obs_variant": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "y_obs_base": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "G": {
+              "$ref": "#/$defs/nullable_integer"
+            },
+            "panel": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "n_steps": {
+              "$ref": "#/$defs/nullable_integer"
+            },
+            "significant": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "p_two_sided": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci_method": {
+              "$ref": "#/$defs/ci_method"
+            },
+            "audit_source": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "audit_date": {
+              "$ref": "#/$defs/nullable_string"
+            }
+          },
+          "additionalProperties": false
         },
         "notes": {
           "$ref": "#/$defs/nullable_string"

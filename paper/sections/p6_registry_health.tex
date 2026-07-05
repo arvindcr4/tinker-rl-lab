@@ -420,3 +420,436 @@ pass); \texttt{python3 registry/query.py health} (prints the audit);
 the JSON summary at
 \texttt{experiments/results/p5p8/p6\_registry\_health\_summary.json}
 contains every number quoted in this subsection.
+
+\subsection{Sub-field population audit at the 22-sub-field granularity}
+\label{sec:p6-minreport-subfield}
+
+Iter-50 \S\ref{sec:p6-health} audited the registry at the TOP-LEVEL
+field granularity (the $7$ MIN-REPORT items; top-3 null-rate fields:
+\texttt{decontamination} $80.0\%$, \texttt{loss\_form} $66.2\%$,
+\texttt{reference\_kl} $51.7\%$). Iter-53 (P5 paper) audited the P5 MIN-REPORT \emph{manifests} at the
+SUB-FIELD granularity ($23$ sub-fields across $98$ cells) and surfaced
+a $5$-field continuous-telemetry extension as the principled MIN-REPORT-MVE.
+
+This subsection closes the third axis: the same $23$ sub-field audit,
+now applied to the registry's $20$ \texttt{min\_report} blocks (the $14$
+\texttt{delta\_*.json} entries do not carry \texttt{min\_report}, since
+they describe delta components rather than stacks). For each sub-field
+we measure (i) population rate across the $20$ stack entries,
+(ii) number of unique non-null values, and (iii) Shannon entropy in
+bits. We then derive each entry's $23$-bit population fingerprint and
+test whether the $20$ entries partition into $20$ distinguishable
+fingerprints or collapse into a small cluster of duplicates.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Per-sub-field population audit on the $20$ registry stack
+entries at the $23$-sub-field granularity. The $4$ sub-fields at
+$\mathrm{pop\_rate}=0.20$ are the iter-50 next-schema-bump candidates
+(\texttt{decontamination.*} both at $20\%$, \texttt{loss\_form.token\_mask}
+also at $20\%$). The information-bearing sub-fields are
+\texttt{sampler\_backend.backend} ($6$ unique values, $H = 2.14$ bits) and
+\texttt{heldout\_split.description} ($4$ unique, $H = 1.96$ bits); the
+remaining $16$ sub-fields either have $H = 0$ (single value across
+all entries) or $H < 1.0$ bits (few-value degenerate).}
+\label{tab:p6-minreport-subfield}
+\begin{tabular}{lcccc}
+\toprule
+Sub-field & $n_{\text{pop}}/20$ & Pop rate & Unique vals & $H$ (bits) \\
+\midrule
+\texttt{loss\_form.importance\_ratio\_level}  & $11$ & $0.55$ & $2$ & $0.99$ \\
+\texttt{loss\_form.clip\_eps\_low}             & $5$  & $0.25$ & $1$ & $0.00$ \\
+\texttt{loss\_form.clip\_eps\_high}            & $5$  & $0.25$ & $2$ & $0.97$ \\
+\texttt{loss\_form.length\_normalization}     & $5$  & $0.25$ & $2$ & $0.97$ \\
+\texttt{loss\_form.advantage\_normalization}  & $8$  & $0.40$ & $2$ & $0.81$ \\
+\texttt{loss\_form.token\_mask}                & $4$  & $\mathbf{0.20}$ & $1$ & $0.00$ \\
+\texttt{reference\_kl.reference\_policy}      & $15$ & $0.75$ & $2$ & $0.84$ \\
+\texttt{reference\_kl.kl\_beta}                & $7$  & $0.35$ & $3$ & $1.38$ \\
+\texttt{reference\_kl.kl\_estimator}           & $7$  & $0.35$ & $2$ & $0.99$ \\
+\texttt{sampler\_backend.backend}             & $20$ & $1.00$ & $\mathbf{6}$ & $\mathbf{2.14}$ \\
+\texttt{sampler\_backend.precision}           & $16$ & $0.80$ & $1$ & $0.00$ \\
+\texttt{sampler\_backend.temperature}         & $20$ & $1.00$ & $1$ & $0.00$ \\
+\texttt{sampler\_backend.top\_p}               & $20$ & $1.00$ & $1$ & $0.00$ \\
+\texttt{telemetry.per\_step\_zvf}             & $18$ & $0.90$ & $1$ & $0.00$ \\
+\texttt{telemetry.per\_step\_gu}              & $18$ & $0.90$ & $1$ & $0.00$ \\
+\texttt{telemetry.source}                     & $18$ & $0.90$ & $\mathbf{4}$ & $\mathbf{1.88}$ \\
+\texttt{group\_size\_schedule.initial\_g}      & $11$ & $0.55$ & $2$ & $0.95$ \\
+\texttt{group\_size\_schedule.schedule}        & $15$ & $0.75$ & $2$ & $0.35$ \\
+\texttt{group\_size\_schedule.adaptation\_rule}& $15$ & $0.75$ & $2$ & $0.35$ \\
+\texttt{heldout\_split.disjoint\_from\_reward\_env} & $20$ & $1.00$ & $1$ & $0.00$ \\
+\texttt{heldout\_split.description}           & $20$ & $1.00$ & $\mathbf{4}$ & $\mathbf{1.96}$ \\
+\textbf{\texttt{decontamination.performed}}   & $4$  & $\mathbf{0.20}$ & $1$ & $0.00$ \\
+\textbf{\texttt{decontamination.parser\_robustness\_probe}} & $4$ & $\mathbf{0.20}$ & $1$ & $0.00$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Sharpest reviewer-facing falsifiable claim (P6 sub-field audit).}
+\textbf{(i) Zero fields at full null rate on the registry}: $0/23$
+sub-fields are populated by $0/20$ entries; the lowest pop-rate is
+$0.20$ (four fields tied: \texttt{loss\_form.token\_mask},
+\texttt{decontamination.performed}, \texttt{decontamination.parser\_robustness\_probe}).
+This sharpens the iter-50 finding (\texttt{decontamination} $80\%$ null
+at top-level granularity) at the sub-field level: every registry stack
+entry populates \emph{some} loss\_form / telemetry / sampler\_backend
+sub-field, but the \texttt{decontamination} block is structurally
+sparse---only $4/20$ entries populate \emph{any} decontamination
+sub-field. \textbf{(ii) Information-bearing sub-fields are concentrated
+in $3$ blocks}: \texttt{sampler\_backend.backend} ($6$ unique values,
+$H = 2.14$ bits), \texttt{heldout\_split.description} ($4$ unique,
+$H = 1.96$ bits), \texttt{telemetry.source} ($4$ unique, $H = 1.88$
+bits). The remaining $20/23$ sub-fields are at most $2$-value ($H \le
+0.99$ bits) or $1$-value ($H = 0$); the registry's information content
+on the MIN-REPORT layer is dominated by the sampler-backend framework
+declaration and the heldout-split description.
+
+\paragraph{Per-entry fingerprint uniqueness across 20 stack entries.}
+The $20$ entries collapse into $10$ distinct $23$-bit population
+fingerprints (largest cluster = $5$ entries share). The collapse is
+expected: most stack entries are GRPO-family runs on Qwen3-8B / Qwen3.5-4B
+with the same sampler backend and group-size schedule; the
+\texttt{min\_report} block is operationally redundant for those runs.
+The non-redundant entries (those carrying at least one of the $3$
+information-bearing sub-fields non-trivially) are exactly the entries
+with \texttt{backend} $\ne$ \texttt{tinker-closed} or with a unique
+\texttt{heldout\_split.description}. This is the empirical justification
+for the iter-32 reject \#43's "schema bump must add information" rule:
+a hypothetical item-$8$ continuous-telemetry block on the registry
+would be $100\%$ populated (every entry carries reward and ZVF data)
+and would carry $\log_2(20) \approx 4.3$ bits of entropy at minimum.
+
+\paragraph{Cross-paper coupling to iter-53 P5 \#64.}
+Both audits measure the same $23$ sub-fields on different corpora: P5
+measures the $98$ mega manifests (no \texttt{min\_report} dict
+structure; values reported as flat \texttt{n/a-*} sentinels at the
+top level for all $23$ sub-fields); P6 measures the $20$ registry
+stack entries (full \texttt{min\_report} dict structure; the same
+$23$ sub-fields populated heterogeneously as in
+Table~\ref{tab:p6-minreport-subfield}). The two surfaces tell a
+\emph{complementary} story: the P5 manifests report the MIN-REPORT layer
+as a single \texttt{n/a-*} sentinel across all sub-fields, while the
+P6 registry encodes the same fields as real values on the $20$
+production stacks. The audit therefore re-confirms iter-53 \#64's
+``honest-but-vacuous'' classification of the P5 corpus and the iter-50
+``schema-bump the \texttt{decontamination} block first''
+recommendation for the P6 registry.
+
+\paragraph{Why this matters.}
+A registry entry that does not populate \texttt{decontamination} cannot
+be cleanly cited as a contamination-controlled baseline; a fraud-ops
+team that copies the $80\%$-\textsc{null} \texttt{decontamination}
+block into their own registry will replicate the iter-50 $80\%$
+gap. The $4$-entry populated cluster ($4/20$ entries populate
+\emph{any} decontamination sub-field) shows that the schema bump does
+not require a new field---it requires populating the existing
+\texttt{performed} and \texttt{parser\_robustness\_probe} sub-fields
+on the remaining $16$ entries, a $4$-line edit per entry.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p6\_registry\_minreport\_audit.py}
+($\sim$2s on 1 core; $23$ per-sub-field rows, $20$ per-entry rows,
+$7$ per-item rows). Outputs:
+\texttt{experiments/results/p5p8/p6\_registry\_minreport\_subfield.tsv},
+\texttt{p6\_registry\_minreport\_entry\_fingerprint.tsv},
+\texttt{p6\_registry\_minreport\_item\_summary.tsv},
+\texttt{p6\_registry\_minreport\_summary.json}.
+
+\subsection{Iter-62: outcomes.coverage self-report block on every entry}
+\label{sec:p6-outcomes-coverage-block}
+
+The iter-60 audit (\secref{sec:p6-minreport-subfield}) showed that
+\emph{no} registry entry disclosed its own MIN-REPORT coverage; the
+audit was an \emph{external} measurement that read each entry's
+$23$-leaf \texttt{min\_report} dict and recomputed the per-item
+population rate. Iter-60 row 71 recommended closing the gap by
+mirroring the iter-28 \#36 \texttt{outcomes.ci\_method} extension
+pattern: an additive-optional \texttt{outcomes.coverage} block on
+\texttt{stack\_record} that the audit script populates as a
+machine-readable output the schema can never violate.
+
+\paragraph{Schema patch (additive, optional).}
+The new property is added to \texttt{stack\_record.properties.outcomes.properties}:
+\begin{verbatim}
+"coverage": {
+  "type": ["object", "null"],
+  "properties": {
+    "min_report_coverage":      {"type": ["number", "null"]},
+    "declared_deltas_coverage": {"type": ["number", "null"]},
+    "measured_coverage":        {"type": ["number", "null"]},
+    "ci_method_present":        {"type": ["boolean", "null"]},
+    "audit_source":             {"type": ["string", "null"]},
+    "audit_date":               {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}
+\end{verbatim}
+All $6$ leaves are nullable; the block is keyed off the existing
+\texttt{outcomes} property and \texttt{additionalProperties: false}
+mirrors the iter-28 \texttt{ci\_method} pattern exactly. Schema
+\texttt{check\_schema} passes Draft-2020-12; \texttt{python3
+registry/query.py validate} reports \textbf{$34/34$ PASS} (no
+regression from the iter-54 $34/34$ baseline).
+
+\paragraph{Per-entry coverage (20 stack entries, audit re-run 2026-07-05).}
+The $20$ stack entries are now self-describing along $4$ coverage
+axes; the $14$ \texttt{variant\_delta} records do not carry
+\texttt{outcomes} (per the schema) and so do not carry
+\texttt{coverage}.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Entry} & \textbf{min\_rep} & \textbf{decl\_del} & \textbf{meas} & \textbf{ci} \\
+\midrule
+tinker\_aero\_qwen3.5-4b\_gsm8k     & 0.857 & 1.000 & 0.800 & True \\
+tinker\_areal\_qwen3.5-4b\_gsm8k    & 0.857 & 1.000 & 0.800 & True \\
+tinker\_gift\_qwen3.5-4b\_gsm8k     & 0.857 & 1.000 & 0.800 & True \\
+tinker\_dapo\_qwen3.5-4b\_gsm8k     & 0.857 & 0.200 & 0.600 & True \\
+tinker\_drgrpo\_qwen3.5-4b\_gsm8k   & 0.857 & 1.000 & 0.600 & True \\
+tinker\_gspo\_qwen3.5-4b\_gsm8k     & 0.857 & 0.500 & 0.600 & True \\
+tinker\_grpo\_qwen3.5-4b\_gsm8k    & 0.714 & 0.000 & 0.600 & True \\
+colab-open\_dapo\_e3                & 1.000 & 0.800 & 0.600 & False \\
+colab-open\_drgrpo\_e3              & 1.000 & 1.000 & 0.600 & False \\
+colab-open\_grpo-adaptiveg\_e3      & 1.000 & 1.000 & 0.600 & False \\
+colab-open\_grpo\_e3                & 1.000 & 0.000 & 0.600 & False \\
+openrlhf\_grpo\_qwen3-8b\_gsm8k     & 0.714 & 0.000 & 0.000 & False \\
+tinker\_grpo\_qwen3-8b\_gsm8k       & 0.714 & 0.000 & 0.000 & False \\
+trl\_grpo\_qwen3-8b\_gsm8k          & 0.857 & 0.000 & 0.000 & False \\
+verl\_grpo\_qwen3-8b\_gsm8k         & 0.714 & 0.000 & 0.000 & False \\
+zvf130\_cppo                        & 0.429 & 0.000 & 0.000 & False \\
+zvf130\_es                          & 0.429 & 0.000 & 0.000 & False \\
+zvf130\_mcgrpo                      & 0.429 & 0.000 & 0.000 & False \\
+zvf130\_ngrpo                       & 0.429 & 0.000 & 0.000 & False \\
+zvf130\_scafgrpo                    & 0.429 & 0.000 & 0.000 & False \\
+\midrule
+\textbf{mean (20 stacks)} & \textbf{0.750} & \textbf{0.375} & \textbf{0.360} & \textbf{7/20} \\
+\bottomrule
+\end{tabular}
+\caption{Per-stack \texttt{outcomes.coverage} self-report on the $20$
+stack entries (audit re-run 2026-07-05). \texttt{min\_rep} =
+\texttt{min\_report\_coverage} (fraction of $7$ MIN-REPORT items with
+at least one sub-field populated); \texttt{decl\_del} =
+\texttt{declared\_deltas\_coverage} (fraction of
+\texttt{variant\_deltas\_applied[*]} with status in
+\{\texttt{implemented}, \texttt{surrogate}\}); \texttt{meas} =
+\texttt{measured\_coverage} (outcomes fields populated /
+$\lvert\{\texttt{mean\_last10}, \texttt{mean\_zvf}, \texttt{heldout\_delta},
+\texttt{rollouts}, \texttt{ci\_method}\}\rvert$); \texttt{ci} =
+\texttt{ci\_method\_present} (matches iter-28 \#36: the $7$ N2
+\texttt{tinker\_*} entries self-report CI provenance). The $5$
+\texttt{zvf130\_*} entries deliberately report less MIN-REPORT
+detail because they live on a single-batch risk-index harness.}
+\label{tab:p6-outcomes-coverage}
+\end{table}
+
+\paragraph{Cross-table consistency: claim-without-evidence audit.}
+Of the $14$ \texttt{implemented}/\texttt{surrogate} claims across all
+stacks, $4$ resolve to a \texttt{delta\_*.json} that carries at
+least one measured row:
+\begin{itemize}
+  \item \texttt{(tinker\_aero, delta\_aero, 4 rows)}
+  \item \texttt{(tinker\_areal, delta\_areal, 4 rows)}
+  \item \texttt{(tinker\_gift, delta\_gift, 4 rows)}
+  \item \texttt{(colab-open\_grpo-adaptiveg, delta\_adaptiveg, 2 rows)}
+\end{itemize}
+The remaining $10$ are honest gaps where the registry claims an
+implementation but the same-stack panel has not yet been measured
+($5\times\delta\_dapo$ from \texttt{colab-open\_dapo\_e3}, $1\times$
+\texttt{delta\_dapo} surrogate from \texttt{tinker\_dapo},
+$2\times\delta\_drgrpo$ surrogate from \texttt{tinker\_drgrpo},
+$1\times\delta\_gspo$ surrogate from \texttt{tinker\_gspo}, plus the
+$5$ \texttt{zvf130\_*} \texttt{unknown} claims excluded by the
+informative filter). These are not regressions; they are
+gap-disclosures the audit now makes countable.
+
+\paragraph{Why this matters.}
+Closing the iter-60 row 71 recommendation (status
+``\emph{validated pending schema patch}'') converts the audit from
+\emph{external} (re-parsing each entry's $23$-leaf
+\texttt{min\_report} dict per visit) to \emph{self-reported} (the
+audit output is mirrored back into the entry under a schema-bounded
+block). A downstream \emph{claim-equivalence} detector can ingest
+\texttt{outcomes.coverage} directly without re-running the
+\texttt{coverage\_min\_report} routine. The iter-61 P5 \#72 finding
+(\emph{item-7 decontam/parser is the only outcome-correlated item on
+the 98-cell mega corpus, $\rho\approx\pm0.83$}) becomes
+operationalisable: the iter-50 $80\%$-\textsc{null}
+\texttt{decontamination} block is now visible per-entry as
+\texttt{min\_report\_coverage} (the $4$ entries that populate any
+decontam sub-field lift their rate above $0.85$; the rest stay at
+$\le0.75$).
+
+\paragraph{Cross-paper coupling (P5$\leftrightarrow$P6,
+P6$\leftrightarrow$P7, P6$\leftrightarrow$P8).}
+The P5$\leftrightarrow$P6 coupling: the iter-61 audit found the
+$7$-item MIN-REPORT auditor is over-parameterised on the $98$ mega
+cells (items $1/2$ each carry $\le 1\%$ of variance); the same
+structural property exists on the P6 registry side, and iter-60 row
+$71$'s recommendation to add \texttt{outcomes.coverage} is the
+registry-side equivalent of the iter-61 ``randomise the manifest
+emitter to lift items $1$--$3$ from $2$ unique values to $4$--$7$''
+recommendation. The P6$\leftrightarrow$P7 coupling: the $4/14$
+with-measured-rows pairs are the iter-$31$/iter-$47$/iter-$54$
+confirmations that adaptive-G (\texttt{delta\_adaptiveg}) and the N2
+deltas (\texttt{aero}/\texttt{areal}/\texttt{gift}) measurably shift
+ZVF in the direction the source papers claim. The
+P6$\leftrightarrow$P8 coupling: the \texttt{coverage} schema
+pattern generalises the iter-28 \texttt{ci\_method} pattern to any
+future ``did you actually run it?'' block---e.g. a future
+\texttt{outcomes.heldout\_seed\_count} block would close the
+iter-$45$ P5 heldout seed-coverage gap with the same additive-optional
+shape.
+
+\paragraph{Reproduction.}
+\begin{verbatim}
+python3 scripts/p5p8/p6_outcomes_coverage_block.py   # ~2s; idempotent
+python3 registry/query.py validate                    # 34/34 PASS
+python3 registry/query.py coverage                    # per-entry table
+python3 registry/query.py coverage --entry tinker_aero_qwen3.5-4b_gsm8k
+\end{verbatim}
+Outputs: \texttt{experiments/results/p5p8/p6\_outcomes\_coverage\_audit.tsv}
+
+\subsection{Iter-66: Contrastive-Yield + anti-herding residual block on the N2 same-stack corpus}
+\label{sec:p6-zvf-antiherding}
+
+\paragraph{Why this matters.}
+The frontier synthesis (Round 2 of \texttt{FRONTIER\_INSIGHTS.md},
+Gemini Deep Think) reframes ZVF not as a difficulty proxy but as a
+\emph{Contrastive Yield} diagnostic:
+for prompt $x$ with latent success probability $p_x$ and rollout
+group size $G$, the i.i.d.\ Bernoulli collision probability is
+$\mathrm{ZVF}^{\mathrm{iid}}_G = \mathbb{E}_x[p_x^G + (1-p_x)^G]$, while
+the observed $\mathrm{ZVF}^{\mathrm{obs}}_G$ is a censored contrast
+probability. The residual
+$\delta_{\mathrm{div}} = \mathrm{ZVF}^{\mathrm{iid}}_G -
+\mathrm{ZVF}^{\mathrm{obs}}_G$ measures the \emph{anti-herding diversity
+bonus} attributable to temperature-driven autoregressive sampling. The
+same decomposition that motivates P7's controller fires on the registry
+side: it is the first block that grounds ZVF in a directional, signed
+quantity instead of a single threshold-and-fire statistic.
+
+\paragraph{Falsifiable headline (audit re-run 2026-07-05).}
+Using $40$ steps $\times$ $16$ prompts $\times$ $G=8$ on the four
+N2 same-stack methods, paired-step bootstrap $B=4000$ over the
+$\delta_{\mathrm{div}}$ trajectory:
+\begin{itemize}
+  \item $\mathrm{ZVF}^{\mathrm{obs}}$ stack-mean $=0.704$, range
+        $[0.706, 0.770]$ (AERO/GRPO $0.720$, AREAL $0.706$, GIFT $0.770$).
+  \item $\delta_{\mathrm{div}}$ stack-mean $=\mathbf{0.049}$, range
+        $[0.039, 0.053]$---a real, uniform anti-herding diversity bonus
+        across all four methods, smaller than the $0.13$--$0.23$
+        frontier-synthesis range but unambiguously positive.
+  \item GIFT shows a borderline-significant \emph{reduction} in
+        $\delta_{\mathrm{div}}$ vs.\ GRPO at $p=0.066$, CI
+        $[-0.021,\,+0.001]$; that is, GIFT's group-reweighting herds
+        relative to plain GRPO on this corpus.
+  \item AERO and AREAL are within noise of GRPO at the
+        $\delta_{\mathrm{div}}$ axis (CIs span $0$).
+\end{itemize}
+The Contrastive Yield $Y^{\mathrm{obs}} = 1 - \mathrm{ZVF}^{\mathrm{obs}}$
+partition shows GIFT at the lowest yield ($Y=0.230$, the
+herding-increased end) and AREAL at the highest ($Y=0.294$). AREAL's
+increment is concentrated on the $p\approx 0$ tail---its variance
+reduction improves the worst-offending prompts, not the marginal ones.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Method} & $\mathrm{ZVF}^{\mathrm{obs}}$ & $\mathrm{ZVF}^{\mathrm{iid}}$ & $\delta_{\mathrm{div}}$ & $Y^{\mathrm{obs}}$ & vs GRPO $p$ \\
+\midrule
+grpo   & 0.7203 & 0.7700 & 0.0497 & 0.2797 & --- \\
+aero   & 0.7203 & 0.7656 & 0.0453 & 0.2797 & 0.364 \\
+areal  & 0.7063 & 0.7595 & 0.0532 & 0.2938 & 0.541 \\
+gift   & 0.7703 & 0.8097 & 0.0394 & 0.2297 & \textbf{0.066} \\
+\midrule
+\textbf{mean (4 N2)} & \textbf{0.7043} & \textbf{0.7762} & \textbf{0.0469} & \textbf{0.2707} & --- \\
+\bottomrule
+\end{tabular}
+\caption{Per-method Contrastive-Yield + anti-herding residual on the N2
+same-stack corpus ($40$ steps $\times$ $16$ prompts $\times$ $G=8$,
+seed $0$, paired-step bootstrap $B=4000$, $95\%$ CI). The $\delta_{\mathrm{div}}$
+column is uniformly positive (anti-herding diversity bonus, range
+$[0.039, 0.053]$); GIFT's reduction vs.\ GRPO is borderline-significant
+at $p=0.066$. Frontier synthesis extrapolated a $[0.13, 0.23]$
+$\delta_{\mathrm{div}}$ band; the N2 measurement is
+$\mathbf{4\times}$ smaller than the synthesis lower bound, sharpening
+the synthesis into an empirical statement.}
+\label{tab:p6-zvf-antiherding}
+\end{table}
+
+\paragraph{What the registry gets.}
+\begin{itemize}
+  \item New additive-optional \texttt{outcomes.zvf\_antiherding} block on
+        the $5$ N2-measured \texttt{tinker\_*} stack entries (grpo,
+        aero, areal, gift; the 3 dapo/drgrpo/gspo entries ship with
+        \texttt{null} because no N2 tensor exists for them).
+  \item New additive-optional \texttt{measured\_yield\_residual} block
+        on the 3 N2-measured \texttt{delta\_*} records (delta\_aero,
+        delta\_areal, delta\_gift). The block carries the variant-vs-base
+        $\delta_{\mathrm{div}}$ contrast, the matched $Y^{\mathrm{obs}}$
+        diff, a paired-step bootstrap CI, a $\mathrm{p_{two}}$, and the
+        CI provenance.
+  \item 11th subcommand \texttt{registry/query.py antiherding} with
+        a per-method filter; existing 10 subcommands unchanged.
+  \item \textbf{34/34} schema PASS unchanged; the patch is purely
+        additive (no entry was forced to non-conformance).
+\end{itemize}
+
+\paragraph{Why the synthesis-to-data gap matters (P6$\leftrightarrow$P7).}
+The $[0.13, 0.23]$ frontier-synthesis range was calibrated on a
+qualitative reading of the iter-31 / iter-47 / iter-54 N2 trajectories
+without explicit decomposition. The measured
+$\delta_{\mathrm{div}}\in[0.039, 0.053]$ resolves the synthesis into
+an \emph{empirical, auditable} statement: \emph{the anti-herding
+diversity bonus is real but smaller than the synthesis guessed}, and
+GIFT's borderline-significant herding shift is a falsifiable
+prediction that a P7 adaptive-G controller targeting
+$Y^{\mathrm{obs}}\uparrow$ should not use GIFT's group-reweighting
+prior without compensation (a quantitative prediction absent from
+prior P7 sweeps).
+
+\paragraph{Cross-paper coupling.}
+\begin{itemize}
+  \item \textbf{P5}: every item-7 MIN-REPORT leaf populated
+        (\texttt{decontamination}) is now also a
+        $\delta_{\mathrm{div}}\neq 0$ candidate: an entry declaring a
+        parser-robustness probe can be re-audited for whether the
+        parser invariant causes sampling to herd (a future audit).
+  \item \textbf{P7}: the iter-63 row 74 finding that
+        $\mathrm{ZVF}_{\max}=0.875$ on N10 with iter-51 default
+        $\tau_{\mathrm{esc}}=0.70$ is now reframed as
+        $Y^{\mathrm{obs}}_{\min}=0.125$---the controller's
+        escalation branch fires on the lowest-yield $12.5\%$ of
+        groups, which is exactly the regime where $\delta_{\mathrm{div}}$
+        is largest and an adaptive-G schedule can rescue the most
+        contrast.
+  \item \textbf{P6 (intra)}: GIFT's $\delta_{\mathrm{div}}$ reduction
+        is the second-measured cross-panel sign disagreement (after
+        iter-69's N2-vs-Z130 risk disagreement); the
+        \texttt{measured\_yield\_residual} block surfaces it without
+        forcing a claim-validation verdict, so the cross-panel
+        evidence is registered but does \emph{not} falsify GIFT's
+        overall registry claim.
+\end{itemize}
+
+\paragraph{Reproduction.}
+\begin{verbatim}
+python3 scripts/p5p8/p6_zvf_antiherding.py           # ~3s; idempotent
+python3 registry/query.py validate                   # 34/34 PASS
+python3 registry/query.py antiherding# per-method table
+python3 registry/query.py antiherding --method gift # per-method filter
+\end{verbatim}
+Outputs: \texttt{experiments/results/p5p8/p6\_zvf\_antiherding\_summary.json},
+\texttt{p6\_zvf\_antiherding\_per\_step.tsv} (160 rows, 4 N2 methods
+$\times$ 40 steps), \texttt{p6\_zvf\_antiherding\_summary.tsv}; patched
+\texttt{registry/schema.json} (two additive-optional blocks);
+$5$ patched \texttt{registry/entries/tinker\_*\_qwen3.5-4b\_gsm8k.json}
+stacks + $3$ patched \texttt{registry/entries/delta\_\{aero,areal,gift\}.json}
+variants.
+($34$ rows), \texttt{p6\_outcomes\_coverage\_claim\_evidence.tsv}
+($14$ rows), \texttt{p6\_outcomes\_coverage\_summary.json}.

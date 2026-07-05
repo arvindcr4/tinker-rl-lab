@@ -96,7 +96,15 @@
     "mean_last10_train_reward": null,
     "mean_zvf": 0.0,
     "heldout_delta": 0.55,
-    "rollouts": 174
+    "rollouts": 174,
+    "coverage": {
+      "min_report_coverage": 1.0,
+      "declared_deltas_coverage": 0.8,
+      "measured_coverage": 0.6,
+      "ci_method_present": false,
+      "audit_source": "scripts/p5p8/p6_outcomes_coverage_block.py",
+      "audit_date": "2026-07-05"
+    }
   },
   "notes": "True dynamic sampling drives batch ZVF to 0.00 by construction. Toy scale: directional evidence only."
 }

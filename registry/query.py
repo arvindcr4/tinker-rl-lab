@@ -374,6 +374,105 @@ def cmd_measured_coverage(args):
     return 0
 
 
+def cmd_coverage(args):
+    """Iter-62: print the outcomes.coverage self-report block per stack entry.
+
+    Reads the audit TSV cached by scripts/p5p8/p6_outcomes_coverage_block.py
+    if present, otherwise shells out to regenerate it. Exit 0 always.
+    """
+    audit_path = HERE / ".." / "experiments" / "results" / "p5p8" / "p6_outcomes_coverage_audit.tsv"
+    audit_path = audit_path.resolve()
+    if not audit_path.exists():
+        import subprocess
+        target = (HERE / ".." / "scripts" / "p5p8" / "p6_outcomes_coverage_block.py").resolve()
+        subprocess.run([sys.executable, str(target)], check=True)
+    # parse the TSV
+    with audit_path.open() as fh:
+        header = fh.readline().rstrip("\n").split("\t")
+        idx = {h: i for i, h in enumerate(header)}
+        rows = [line.rstrip("\n").split("\t") for line in fh]
+    if args.entry:
+        rows = [r for r in rows if r[idx["entry_id"]] == args.entry]
+        if not rows:
+            print(f"no such entry_id: {args.entry}", file=sys.stderr)
+            return 1
+    # headline
+    n_total = len(rows)
+    n_stack = sum(1 for r in rows if r[idx["record_type"]] == "stack")
+    n_with_cov_block = 0
+    recs = load()
+    for r in rows:
+        eid = r[idx["entry_id"]]
+        if eid not in recs:
+            continue
+        cov = recs[eid].get("outcomes", {})
+        if isinstance(cov, dict) and "coverage" in cov:
+            n_with_cov_block += 1
+    print(f"=== Iter 62 P6 — outcomes.coverage self-report ({n_total} entries) ===")
+    print(f"  n_with_coverage_block: {n_with_cov_block}/{n_total}")
+    print(f"  n_stack: {n_stack}, n_delta: {n_total - n_stack}")
+    print("--- per entry ---")
+    if args.entry:
+        # full dict for one entry
+        eid = args.entry
+        rec = recs.get(eid)
+        if rec:
+            out = rec.get("outcomes", {}) or {}
+            cov = out.get("coverage") or {}
+            print(f"  {eid}")
+            for k, v in cov.items():
+                print(f"    {k:30s} {v}")
+        return 0
+    for r in rows:
+        eid = r[idx["entry_id"]]
+        mr = float(r[idx["min_report_coverage"]])
+        dd = float(r[idx["declared_deltas_coverage"]])
+        me = float(r[idx["measured_coverage"]])
+        ci = r[idx["ci_method_present"]]
+        rt = r[idx["record_type"]]
+        print(f"  {eid:38s} {rt:14s} min={mr:.3f} decl={dd:.3f} meas={me:.3f} ci={ci}")
+    return 0
+
+
+def cmd_antiherding(args):
+    """Iter-66: print outcomes.zvf_antiherding per stack + measured_yield_residual per delta.
+
+    Reads experiments/results/p5p8/p6_zvf_antiherding_summary.tsv (regenerated
+    by scripts/p5p8/p6_zvf_antiherding.py if missing). Exit 0 always.
+    """
+    audit_path = HERE / ".." / "experiments" / "results" / "p5p8" / "p6_zvf_antiherding_summary.tsv"
+    audit_path = audit_path.resolve()
+    if not audit_path.exists():
+        import subprocess
+        target = (HERE / ".." / "scripts" / "p5p8" / "p6_zvf_antiherding.py").resolve()
+        subprocess.run([sys.executable, str(target)], check=True)
+    with audit_path.open() as fh:
+        header = fh.readline().rstrip("\n").split("\t")
+        idx = {h: i for i, h in enumerate(header)}
+        rows = [line.rstrip("\n").split("\t") for line in fh]
+    if args.method:
+        rows = [r for r in rows if r[idx["method"]] == args.method]
+        if not rows:
+            print(f"no such method: {args.method}", file=sys.stderr)
+            return 1
+    print(f"  {'method':8s} {'G':>3s} {'zvf_obs':>8s} {'zvf_iid':>8s} {'delta_div':>9s} {'Y_obs':>7s}  vs_grpo [lo,hi]  sig  p")
+    for r in rows:
+        m = r[idx["method"]]
+        G = r[idx["G"]]
+        zo = float(r[idx["zvf_obs_mean"]])
+        zi = float(r[idx["zvf_iid_mean"]])
+        dd = float(r[idx["delta_div_mean"]])
+        yo = float(r[idx["y_obs_mean"]])
+        dv = float(r[idx["delta_div_vs_grpo"]])
+        lo = float(r[idx["ci_low"]])
+        hi = float(r[idx["ci_high"]])
+        sig = r[idx["significant"]]
+        p = float(r[idx["p_two_sided"]])
+        print(f"  {m:8s} {G:>3s} {zo:>8.4f} {zi:>8.4f} {dd:>9.4f} {yo:>7.4f}  "
+              f"{dv:+.4f} [{lo:+.4f},{hi:+.4f}]  {sig[:1]}   {p:.3f}")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -406,13 +505,23 @@ def main():
                          help="Iter-58: measured-block provenance & coverage audit.")
     pmc.add_argument("--delta", default=None,
                      help="Filter to one delta_id (e.g. delta_aero).")
+    pcov = sub.add_parser("coverage",
+                          help="Iter-62: print outcomes.coverage self-report block per entry.")
+    pcov.add_argument("--entry", default=None,
+                      help="Filter to one entry_id.")
+    pah = sub.add_parser("antiherding",
+                         help="Iter-66: print Contrastive Yield / anti-herding residual per N2 method.")
+    pah.add_argument("--method", default=None,
+                     help="Filter to one method (grpo, aero, areal, gift).")
     args = ap.parse_args()
     rc = {"list": cmd_list, "badge": cmd_badge,
           "query": cmd_query, "stackdiff": cmd_stackdiff,
           "implementations": cmd_implementations, "drift": cmd_drift,
           "claim-validation": cmd_claim_validation,
           "validate": cmd_validate, "health": cmd_health,
-          "measured-coverage": cmd_measured_coverage}[args.cmd](args)
+          "measured-coverage": cmd_measured_coverage,
+          "coverage": cmd_coverage,
+          "antiherding": cmd_antiherding}[args.cmd](args)
     return 0 if rc is None else rc
 
 

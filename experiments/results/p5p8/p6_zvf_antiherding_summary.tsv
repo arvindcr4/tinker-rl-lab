@@ -1,0 +1,5 @@
+method	panel	G	n_steps	zvf_obs_mean	zvf_iid_mean	delta_div_mean	y_obs_mean	delta_div_vs_grpo	ci_low	ci_high	significant	p_two_sided	ci_level	n_boot
+grpo	n2_same_stack_40step	8	40	0.720313	0.769998	0.049686	0.279687	0.0	0.0	0.0	False	1.0	0.95	4000
+aero	n2_same_stack_40step	8	40	0.720313	0.765629	0.045316	0.279687	-0.004369	-0.013779	0.004857	False	0.364	0.95	4000
+areal	n2_same_stack_40step	8	40	0.70625	0.759454	0.053204	0.29375	0.003518	-0.007692	0.015416	False	0.5415	0.95	4000
+gift	n2_same_stack_40step	8	40	0.770312	0.809738	0.039426	0.229687	-0.01026	-0.021006	0.00076	False	0.0655	0.95	4000

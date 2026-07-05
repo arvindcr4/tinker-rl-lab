@@ -1,0 +1,14 @@
+{
+  "k_global_pct": 2.0,
+  "n_bins": 5,
+  "n_boot": 400,
+  "seed": 20260704,
+  "rows_a": 36,
+  "rows_boot": 24,
+  "excludes_zero_counts": {
+    "XGB-24full-20raw": 0,
+    "XGB-20raw-4sensor": 0,
+    "XGB-24full-4sensor": 0
+  },
+  "headline": "Tree-level per-stratum alert-distribution heterogeneity"
+}

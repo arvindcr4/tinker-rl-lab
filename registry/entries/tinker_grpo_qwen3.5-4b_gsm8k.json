@@ -73,6 +73,35 @@
       "seed": 0,
       "ci_level": 0.95,
       "source": "scripts/p5p8/registry_validate.py::bootstrap_paired_diff (percentile 2.5/97.5 over aligned per-step N2 tensors)"
+    },
+    "coverage": {
+      "min_report_coverage": 0.7143,
+      "declared_deltas_coverage": 0.0,
+      "measured_coverage": 0.6,
+      "ci_method_present": true,
+      "audit_source": "scripts/p5p8/p6_outcomes_coverage_block.py",
+      "audit_date": "2026-07-05"
+    },
+    "zvf_antiherding": {
+      "delta_div_mean": 0.049686,
+      "delta_div_lo": 0.0,
+      "delta_div_hi": 0.0,
+      "y_obs_mean": 0.279687,
+      "y_iid_mean": 0.230002,
+      "zvf_obs_mean": 0.720313,
+      "zvf_iid_mean": 0.769998,
+      "G": 8,
+      "panel": "n2_same_stack_40step",
+      "n_steps": 40,
+      "ci_method": {
+        "method": "paired_step_bootstrap_pct",
+        "n_boot": 4000,
+        "seed": 20260705,
+        "ci_level": 0.95,
+        "source": "scripts/p5p8/p6_zvf_antiherding.py"
+      },
+      "audit_source": "scripts/p5p8/p6_zvf_antiherding.py",
+      "audit_date": "2026-07-05"
     }
   },
   "notes": "Baseline arm of the 12-cell head-to-head; the four arms are within noise on last-10 reward."

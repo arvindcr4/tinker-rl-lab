@@ -1,0 +1,51 @@
+{
+  "n_registry_entries": 34,
+  "n_stack_entries": 20,
+  "n_delta_entries": 14,
+  "headline": {
+    "description": "Per-sub-field population audit on the 20 stack entries at the 22-sub-field granularity",
+    "n_subfields_audit": 23,
+    "n_subfields_at_0pct_pop": 0,
+    "n_subfields_with_2plus_unique_values": 13,
+    "n_unique_fingerprints": 10,
+    "max_fingerprint_count": 5,
+    "n_entries_with_same_fingerprint_as_largest_cluster": 5
+  },
+  "top3_null_subfields": [
+    {
+      "item": "loss_form",
+      "sub_field": "token_mask",
+      "pop_rate": 0.2
+    },
+    {
+      "item": "decontamination",
+      "sub_field": "performed",
+      "pop_rate": 0.2
+    },
+    {
+      "item": "decontamination",
+      "sub_field": "parser_robustness_probe",
+      "pop_rate": 0.2
+    }
+  ],
+  "top3_informative_subfields": [
+    {
+      "item": "sampler_backend",
+      "sub_field": "backend",
+      "n_unique_values": 6,
+      "entropy_bits": 2.1414
+    },
+    {
+      "item": "telemetry",
+      "sub_field": "source",
+      "n_unique_values": 4,
+      "entropy_bits": 1.8776
+    },
+    {
+      "item": "heldout_split",
+      "sub_field": "description",
+      "n_unique_values": 4,
+      "entropy_bits": 1.9589
+    }
+  ]
+}

@@ -60,6 +60,15 @@
       "parser_robustness_probe": null
     }
   },
-  "outcomes": null,
-  "notes": "Matched-config fairness-audit run; loss-form internals (clip, length/advantage normalization) are not surfaced by the 44-field config dump and are therefore null (= unreported)."
+  "notes": "Matched-config fairness-audit run; loss-form internals (clip, length/advantage normalization) are not surfaced by the 44-field config dump and are therefore null (= unreported).",
+  "outcomes": {
+    "coverage": {
+      "min_report_coverage": 0.8571,
+      "declared_deltas_coverage": 0.0,
+      "measured_coverage": 0.0,
+      "ci_method_present": false,
+      "audit_source": "scripts/p5p8/p6_outcomes_coverage_block.py",
+      "audit_date": "2026-07-05"
+    }
+  }
 }

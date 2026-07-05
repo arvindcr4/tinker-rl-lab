@@ -67,7 +67,7 @@
   "schema_fail_ids": [],
   "schema_pass_count": 34,
   "stacks_with_ci_method": 7,
-  "stacks_with_outcomes": 11,
+  "stacks_with_outcomes": 20,
   "top5_null_fields": [
     {
       "item": "decontamination",

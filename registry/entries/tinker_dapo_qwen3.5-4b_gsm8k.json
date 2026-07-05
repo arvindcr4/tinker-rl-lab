@@ -107,6 +107,14 @@
       "seed": 0,
       "ci_level": 0.95,
       "source": "scripts/p5p8/registry_validate.py::bootstrap_paired_diff (percentile 2.5/97.5 over aligned per-step N2 tensors)"
+    },
+    "coverage": {
+      "min_report_coverage": 0.8571,
+      "declared_deltas_coverage": 0.2,
+      "measured_coverage": 0.6,
+      "ci_method_present": true,
+      "audit_source": "scripts/p5p8/p6_outcomes_coverage_block.py",
+      "audit_date": "2026-07-05"
     }
   },
   "notes": "The label-flip exhibit: same 'dapo' label as colab-open_dapo_e3 but only an asymmetric-clip surrogate is actually in force; mean ZVF 0.578 vs 0.00 on the open stack."

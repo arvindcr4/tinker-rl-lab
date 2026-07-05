@@ -696,6 +696,111 @@ fire on high-ZVF steps? yes, on both bases) and scopes its
 deployment (mid-range-prompt distributions reduce the controller
 to a budget toggle).
 
+\subsection{Per-step decision-stability vs aggregate stability on N10}
+\label{sec:p7-tau-decision-stability}
+
+The cross-base replication above measures
+\emph{aggregate} seed-robustness: does the per-seed firing
+\emph{rate} replicate?  This subsection sharpens the
+question to \emph{per-step} seed-robustness: at the iter-51
+default $\tau{=}0.70$, do the five seeds fire on the same
+\emph{steps} or on different steps?  The two layers of
+stability can decouple, and on N10 they do.
+
+\paragraph{Per-step decisions are not seed-stable at the
+iter-51 default.}
+On the N10 five-seed panel ($\{42, 179, 316, 453, 590\}$, 15
+steps each) at $\tau_{\mathrm{esc}}{=}0.70$ with
+$\tau_{\mathrm{des}}{=}0.95$, the cross-seed
+\emph{fire-set Jaccard} is $0.133$ and the \emph{per-step
+full agreement} is $0.133$ (i.e.\ $13.3\%$ of steps see all
+five seeds pick the same $G$; $86.7\%$ see at least one
+seed disagree with the others;
+\texttt{p7\_tau\_seed\_stability.tsv}).
+Meanwhile the aggregate firing rate is stable at
+$4.20 \pm 1.33$ fires/seed (CI $[3.00, 5.40]$, reproducing
+the iter-51 \S\ref{sec:p7-controller-seedrobust} headline).
+\emph{The firing-rate is seed-stable; the firing
+\emph{location} is not.}
+
+\paragraph{Mechanism: cross-seed ZVF trajectories are
+uncorrelated.}
+The mean cross-seed Kendall-$\tau$ of per-step ZVF
+trajectories is $-0.060$ (min $-0.336$, max $+0.327$, 10
+seed-pairs).  Two seeds with Kendall-$\tau = -0.336$ mean:
+when seed $A$ has a high-ZVF step, seed $B$ is more likely
+to have a low-ZVF step at the same training step.
+Training-step index is a meaningless axis for the ZVF
+signal across seeds, so per-step threshold crossings are
+also meaningless across seeds, and the only thing that
+can be expected to replicate is the aggregate rate.
+This explains the per-step vs.\ aggregate decoupling
+mechanically.
+
+\paragraph{N10 is an escalation-only panel.}
+The global ZVF max across all five seeds $\times$ 15 steps
+is $0.875$ (no step ever saturates; the iter-51
+$\tau_{\mathrm{des}}{=}0.95$ de-escalation branch \emph{never
+fires} on N10).  Hence on N10 the controller is
+\emph{escalation-only} and all savings are non-positive
+(\texttt{p7\_tau\_two\_threshold\_sweep.tsv}).  The only
+positive-savings cell in the $(\tau_{\mathrm{esc}},
+\tau_{\mathrm{des}})$ grid is at
+$\tau_{\mathrm{esc}} \geq 0.80$ and $\tau_{\mathrm{des}}
+\leq 0.85$: the controller de-escalates the three
+zvf${=}0.875$ steps from $G{=}8$ to $G{=}4$ and never
+escalates, giving savings $\mathbf{+2.00\%}$ rollouts.
+\textbf{N10 is the wrong panel to validate the iter-51
+controller's headline savings claim;} that claim rests
+on the N2 four-method counterfactual
+(\S\ref{sec:p7-cf-granularity}).  The de-escalation
+branch's $+9.39\%$ N2 savings number cannot be reproduced
+on N10; the $+2.00\%$ is the N10-specific upper bound.
+
+\begin{table}[t]
+\centering
+\caption{Per-step decision-stability sweep on the N10 five-seed
+panel ($n{=}5$ seeds $\times$ 15 steps; bootstrap percentile CIs,
+$n_{\text{boot}}{=}10{,}000$).  At the iter-51 default
+$\tau_{\mathrm{esc}}{=}0.70$, fire-set Jaccard is $0.133$ and
+per-step full agreement is $0.133$ --- the five seeds fire on
+\emph{completely different steps} even though the aggregate
+firing rate is stable at $4.20 \pm 1.33$.  Per-step stability
+is decoupled from aggregate stability on this panel.}
+\label{tab:p7-tau-decision-stability}
+\begin{tabular}{lrrrrr}
+\toprule
+$\tau_{\mathrm{esc}}$ & fires/seed & 95\% CI & Jaccard & step-agr.\ & savings\% \\
+\midrule
+0.50 & 12.60 & [11.20, 13.80] & 0.726 & 0.467 & $-84.00$ \\
+0.60 &  9.00 &  [7.40, 10.00] & 0.402 & 0.000 & $-60.00$ \\
+0.70 &  4.20 &  [3.00,  5.40] & \textbf{0.133} & \textbf{0.133} & $-28.00$ \\
+0.80 &  0.60 &  [0.00,  1.40] & 0.300 & 0.800 &  $-4.00$ \\
+0.90 &  0.00 &  [0.00,  0.00] & 1.000 & 1.000 &  $+0.00$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Cross-paper coupling.}
+\textbf{(a)} The Dualformer auto-$G$ rule
+\citep{su2024dualformer} conditions on a per-prompt /
+per-step signal and would suffer the same per-step
+non-stability on N10; the per-step vs.\ aggregate
+decoupling generalises: any per-step RL controller on
+this panel has the same property.  \textbf{(b)} The
+AlphaProof $\gamma^*{=}0$ smoother \citep{alphaproof2025nature}
+coincides with the iter-51 escalation branch on the
+``no contrast, no update'' regime; on N10 both
+mechanisms are mostly inert (the iter-51 escalation
+branch has $0/75$ saturating fires across 5 seeds
+$\times$ 15 steps).  \textbf{(c)} The P6
+\texttt{delta\_adaptiveg} registry entry
+(Iter 54 row 65) gets its third empirical
+confirmation (after iter 31 and iter 59); the new
+contribution is the explicit per-step vs.\ aggregate
+partition of seed-robustness, which the existing
+registry row does not distinguish.
+
 \subsection{Posterior-predictive contrast-restoration: a Pareto-reversing
 closed-form benefit metric}
 \label{sec:p7-postpred}

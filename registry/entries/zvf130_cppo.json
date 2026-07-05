@@ -75,7 +75,15 @@
     "mean_last10_train_reward": null,
     "mean_zvf": null,
     "heldout_delta": null,
-    "rollouts": null
+    "rollouts": null,
+    "coverage": {
+      "min_report_coverage": 0.4286,
+      "declared_deltas_coverage": 0.0,
+      "measured_coverage": 0.0,
+      "ci_method_present": false,
+      "audit_source": "scripts/p5p8/p6_outcomes_coverage_block.py",
+      "audit_date": "2026-07-05"
+    }
   },
   "notes": "Method 'cppo' measured only on the zvf_iter130 risk-index batch. Last-10 reward and per-step mean ZVF are not on the same single-stack budget as the N2 methods; use the per-method zvf_risk_mean column to compare across the 9-method panel. zvf_risk_mean=0.4266 (sd 0.0114 on n_seeds=5)."
 }

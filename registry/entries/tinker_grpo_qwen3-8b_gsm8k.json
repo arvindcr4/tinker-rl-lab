@@ -60,6 +60,15 @@
       "parser_robustness_probe": null
     }
   },
-  "outcomes": null,
-  "notes": "Managed runtime: 11 of the 44 tracked fields are serialized as null (managed_by_tinker), including kl.beta, kl.surrogate and importance_sampling.granularity; also note the Base-vs-Instruct model confound flagged in the dump."
+  "notes": "Managed runtime: 11 of the 44 tracked fields are serialized as null (managed_by_tinker), including kl.beta, kl.surrogate and importance_sampling.granularity; also note the Base-vs-Instruct model confound flagged in the dump.",
+  "outcomes": {
+    "coverage": {
+      "min_report_coverage": 0.7143,
+      "declared_deltas_coverage": 0.0,
+      "measured_coverage": 0.0,
+      "ci_method_present": false,
+      "audit_source": "scripts/p5p8/p6_outcomes_coverage_block.py",
+      "audit_date": "2026-07-05"
+    }
+  }
 }

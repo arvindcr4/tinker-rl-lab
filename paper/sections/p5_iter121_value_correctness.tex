@@ -8,9 +8,10 @@
 
 A presence-only audit (``is field $X$ present in the manifest?'') can pass
 on a manifest whose values are silently wrong. The value-correctness
-auditor (10 checks, see Section~\ref{sec:p5-iter117-structural}) must be
-tested against controlled perturbations to quantify: (a) detection rate
-for each mutation class, (b) blind spots (mutations that pass the auditor
+auditor (10 checks, extending the iter-113 emit-gap audit in
+Section~\ref{sec:p5-iter113-v22-recovery}) must be tested against
+controlled perturbations to quantify: (a) detection rate for each
+mutation class, (b) blind spots (mutations that pass the auditor
 unchanged), and (c) the check-fanout structure (which check fires on
 which mutation).
 
@@ -73,7 +74,7 @@ mutation class that the current auditor does not catch.
 \begin{itemize}
   \item \textbf{H1 REFUTED.} M1 and M2 are caught on 0/98 cells. The
         auditor has blind spots. The unmutated corpus passes $100\%$
-        on all $10$ checks (see Section~\ref{sec:p5-iter117-structural}),
+        on all $10$ checks (per the iter-113 emit-gap baseline),
         but the auditor does not validate the cell\_id hash suffix
         against a known-registry (M1) and does not cross-validate
         filename model\_family against the cells.tsv model\_family

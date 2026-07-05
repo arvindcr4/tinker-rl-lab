@@ -1,0 +1,47 @@
+entry_id	record_type	valid	n_errors	errors
+colab-open_dapo_e3	stack	yes	0	-
+colab-open_drgrpo_e3	stack	yes	0	-
+colab-open_grpo-adaptiveg_e3	stack	yes	0	-
+colab-open_grpo_e3	stack	yes	0	-
+delta_adaptiveg	variant_delta	yes	0	-
+delta_aero	variant_delta	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/3: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_areal	variant_delta	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/3: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_cppo	variant_delta	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/1: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_dapo	variant_delta	yes	0	-
+delta_drgrpo	variant_delta	yes	0	-
+delta_es	variant_delta	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/1: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_gift	variant_delta	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/3: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_gspo	variant_delta	yes	0	-
+delta_liteppo	variant_delta	yes	0	-
+delta_mcgrpo	variant_delta	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/1: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_ngrpo	variant_delta	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/1: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_ppo	variant_delta	yes	0	-
+delta_ppo_reinforce	variant_delta	yes	0	-
+delta_reinforce	variant_delta	yes	0	-
+delta_scafgrpo	variant_delta	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/1: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_tool_use_llama-8b-inst	variant_delta	no	3	citation/arxiv: None is not of type 'string'; citation/bibkey: None is not of type 'string'; measured/0: Additional properties are not allowed ('evidence_deferred_until' was unexpected)
+delta_tool_use_qwen3-32b	variant_delta	no	3	citation/arxiv: None is not of type 'string'; citation/bibkey: None is not of type 'string'; measured/0: Additional properties are not allowed ('evidence_deferred_until' was unexpected)
+openrlhf_grpo_qwen3-8b_gsm8k	stack	yes	0	-
+tinker_aero_qwen3.5-4b_gsm8k	stack	yes	0	-
+tinker_areal_qwen3.5-4b_gsm8k	stack	yes	0	-
+tinker_dapo_qwen3.5-4b_gsm8k	stack	yes	0	-
+tinker_drgrpo_qwen3.5-4b_gsm8k	stack	yes	0	-
+tinker_gift_qwen3.5-4b_gsm8k	stack	yes	0	-
+tinker_grpo_qwen3-8b_gsm8k	stack	yes	0	-
+tinker_grpo_qwen3.5-4b_gsm8k	stack	yes	0	-
+tinker_gspo_qwen3.5-4b_gsm8k	stack	yes	0	-
+trl_grpo_qwen3-8b_gsm8k	stack	yes	0	-
+verl_grpo_qwen3-8b_gsm8k	stack	yes	0	-
+wandb_ppo_reinforce_llama318b-inst_gsm8k	stack	yes	0	-
+wandb_ppo_reinforce_qwen38b_gsm8k	stack	yes	0	-
+zvf130_aero	stack	yes	0	-
+zvf130_areal	stack	yes	0	-
+zvf130_cppo	stack	yes	0	-
+zvf130_es	stack	yes	0	-
+zvf130_gift	stack	yes	0	-
+zvf130_grpo	stack	yes	0	-
+zvf130_mcgrpo	stack	yes	0	-
+zvf130_ngrpo	stack	yes	0	-
+zvf130_scafgrpo	stack	yes	0	-
+zvf130_tool_use_llama-8b-inst	stack	no	1	variant_deltas_applied/0/status: 'single-seed; same-stack isolation not run' is not one of ['implemented', 'surrogate', 'absent', 'unknown']
+zvf130_tool_use_qwen3-32b	stack	no	1	variant_deltas_applied/0/status: 'single-seed; same-stack isolation not run' is not one of ['implemented', 'surrogate', 'absent', 'unknown']

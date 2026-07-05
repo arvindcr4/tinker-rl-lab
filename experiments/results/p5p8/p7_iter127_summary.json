@@ -1,0 +1,212 @@
+{
+  "iter": 127,
+  "timestamp": "2026-07-05",
+  "n_rows": 160,
+  "n_methods": 4,
+  "methods": [
+    "aero",
+    "areal",
+    "gift",
+    "grpo"
+  ],
+  "rules_reused": [
+    "iter-119 CCC unification (FAST/BASELINE/DEGENERATE)",
+    "Berkeley row 01 dualformer_auto_acc",
+    "iter-111 closed-form Bernoulli inversion",
+    "iter-115 G-star candidates (16, 32, 64) with G=32 cap"
+  ],
+  "H1_spread": {
+    "spread": 5.400000000000002,
+    "rank_G_ccc": [
+      "gift",
+      "grpo",
+      "aero",
+      "areal"
+    ],
+    "verdict": "PASS"
+  },
+  "H2_most_aggressive": {
+    "method": "gift",
+    "mean_G_ccc": 23.6,
+    "n_escalate": 26,
+    "mean_contrast_delta": -0.19801254266103924,
+    "verdict": "PASS"
+  },
+  "H3_reward_rank": {
+    "rank": [
+      "gift",
+      "grpo",
+      "areal",
+      "aero"
+    ],
+    "ranks_match_G_rank": false,
+    "verdict": "REPORTED"
+  },
+  "H4_ci_top_vs_bottom": {
+    "top": "gift",
+    "top_mean_G": 23.6,
+    "top_ci": [
+      20.0,
+      27.2
+    ],
+    "bot": "areal",
+    "bot_mean_G": 18.2,
+    "bot_ci": [
+      14.6,
+      22.4
+    ],
+    "non_overlap": false,
+    "verdict": "TENSION"
+  },
+  "paired_aero_basis": {
+    "n_paired": 120,
+    "mean_G_diff_aero_minus_other": -1.2,
+    "regime_match_fraction": 0.6833333333333333
+  },
+  "per_method": [
+    {
+      "method": "aero",
+      "n_steps": 40,
+      "mean_G_ccc": 19.4,
+      "mean_G_ccc_ci_lo": 15.8,
+      "mean_G_ccc_ci_hi": 23.0,
+      "mean_contrast_delta": -0.17415962218087538,
+      "contrast_delta_ci_lo": -0.23197822569854173,
+      "contrast_delta_ci_hi": -0.11609115599005201,
+      "n_fast": 0,
+      "n_baseline": 21,
+      "n_degenerate": 19,
+      "frac_fast": 0.0,
+      "frac_degenerate": 0.475,
+      "n_escalate": 19,
+      "n_save": 0,
+      "n_equal": 21,
+      "n_pcd": 8,
+      "mean_reward": 0.8275390625
+    },
+    {
+      "method": "areal",
+      "n_steps": 40,
+      "mean_G_ccc": 18.2,
+      "mean_G_ccc_ci_lo": 14.6,
+      "mean_G_ccc_ci_hi": 22.4,
+      "mean_contrast_delta": -0.15455055233787146,
+      "contrast_delta_ci_lo": -0.2131069182744066,
+      "contrast_delta_ci_hi": -0.09959526060424392,
+      "n_fast": 0,
+      "n_baseline": 23,
+      "n_degenerate": 17,
+      "frac_fast": 0.0,
+      "frac_degenerate": 0.425,
+      "n_escalate": 17,
+      "n_save": 0,
+      "n_equal": 23,
+      "n_pcd": 8,
+      "mean_reward": 0.8287109375
+    },
+    {
+      "method": "gift",
+      "n_steps": 40,
+      "mean_G_ccc": 23.6,
+      "mean_G_ccc_ci_lo": 20.0,
+      "mean_G_ccc_ci_hi": 27.2,
+      "mean_contrast_delta": -0.19801254266103924,
+      "contrast_delta_ci_lo": -0.2529495238071004,
+      "contrast_delta_ci_hi": -0.14174919121356605,
+      "n_fast": 0,
+      "n_baseline": 14,
+      "n_degenerate": 26,
+      "frac_fast": 0.0,
+      "frac_degenerate": 0.65,
+      "n_escalate": 26,
+      "n_save": 0,
+      "n_equal": 14,
+      "n_pcd": 3,
+      "mean_reward": 0.8447265625
+    },
+    {
+      "method": "grpo",
+      "n_steps": 40,
+      "mean_G_ccc": 20.0,
+      "mean_G_ccc_ci_lo": 16.4,
+      "mean_G_ccc_ci_hi": 23.6,
+      "mean_contrast_delta": -0.1847496032566493,
+      "contrast_delta_ci_lo": -0.24668731689364137,
+      "contrast_delta_ci_hi": -0.12332992553607533,
+      "n_fast": 0,
+      "n_baseline": 20,
+      "n_degenerate": 20,
+      "frac_fast": 0.0,
+      "frac_degenerate": 0.5,
+      "n_escalate": 20,
+      "n_save": 0,
+      "n_equal": 20,
+      "n_pcd": 7,
+      "mean_reward": 0.8341796875
+    }
+  ],
+  "regime_mix": [
+    {
+      "method": "aero",
+      "regime": "FAST",
+      "n": 0
+    },
+    {
+      "method": "aero",
+      "regime": "BASELINE",
+      "n": 21
+    },
+    {
+      "method": "aero",
+      "regime": "DEGENERATE",
+      "n": 19
+    },
+    {
+      "method": "areal",
+      "regime": "FAST",
+      "n": 0
+    },
+    {
+      "method": "areal",
+      "regime": "BASELINE",
+      "n": 23
+    },
+    {
+      "method": "areal",
+      "regime": "DEGENERATE",
+      "n": 17
+    },
+    {
+      "method": "gift",
+      "regime": "FAST",
+      "n": 0
+    },
+    {
+      "method": "gift",
+      "regime": "BASELINE",
+      "n": 14
+    },
+    {
+      "method": "gift",
+      "regime": "DEGENERATE",
+      "n": 26
+    },
+    {
+      "method": "grpo",
+      "regime": "FAST",
+      "n": 0
+    },
+    {
+      "method": "grpo",
+      "regime": "BASELINE",
+      "n": 20
+    },
+    {
+      "method": "grpo",
+      "regime": "DEGENERATE",
+      "n": 20
+    }
+  ],
+  "bootstrap_seed": 20260705,
+  "B": 2000
+}

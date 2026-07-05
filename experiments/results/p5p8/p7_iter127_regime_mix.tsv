@@ -1,0 +1,13 @@
+method	regime	n
+aero	FAST	0
+aero	BASELINE	21
+aero	DEGENERATE	19
+areal	FAST	0
+areal	BASELINE	23
+areal	DEGENERATE	17
+gift	FAST	0
+gift	BASELINE	14
+gift	DEGENERATE	26
+grpo	FAST	0
+grpo	BASELINE	20
+grpo	DEGENERATE	20

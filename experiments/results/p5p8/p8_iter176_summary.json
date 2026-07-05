@@ -1,0 +1,65 @@
+{
+  "iter": 176,
+  "job": "P8 sensor/scribe/scorer 3-way + ablations + cost",
+  "n_seeds": 5,
+  "n_boot": 2000,
+  "n_train": 50000,
+  "n_test": 10000,
+  "pos_train": 719,
+  "pos_test": 144,
+  "ece_wb_means_K2": {
+    "20raw": 0.17711999999999997,
+    "24full": 0.15525999999999998,
+    "4sensor": 0.44048
+  },
+  "p1_means": {
+    "20raw": 0.8860000000000001,
+    "24full": 0.916,
+    "4sensor": 0.336
+  },
+  "pair_deltas": [
+    {
+      "comparison": "auc_24_vs_20",
+      "point": 0.0008194388077200632,
+      "lo": 0.0003319522659938068,
+      "hi": 0.0014319748580695624,
+      "note": "AUC: 24full over 20raw (sensor contribution)"
+    },
+    {
+      "comparison": "auc_24_vs_4sensor",
+      "point": 0.03360403702200576,
+      "lo": 0.02637040426035464,
+      "hi": 0.041357701902222876,
+      "note": "AUC: 24full over 4sensor (sensor-vs-full LLM surrogate)"
+    },
+    {
+      "comparison": "auc_20_vs_4sensor",
+      "point": 0.0327845982142857,
+      "lo": 0.025592189064811643,
+      "hi": 0.04052786155120636,
+      "note": "AUC: 20raw over 4sensor (raw-only vs LLM surrogate)"
+    },
+    {
+      "comparison": "brier_24_vs_20",
+      "point": -0.0029179640114307404,
+      "lo": -0.003721006214618683,
+      "hi": -0.0021326709538698196,
+      "note": "Brier: 24full over 20raw (positive=24full has higher Brier; less=better)"
+    },
+    {
+      "comparison": "brier_24_vs_4sensor",
+      "point": -0.10743089765310287,
+      "lo": -0.10989452339708805,
+      "hi": -0.10497754625976086,
+      "note": "Brier: 24full over 4sensor"
+    }
+  ],
+  "hypotheses": {
+    "H1_24full_over_20raw_AUC": true,
+    "H2_24full_over_4sensor_AUC": true,
+    "H3_20raw_over_4sensor_AUC": true,
+    "H4_within_budget_ECE_monotone_K2": true,
+    "H5_P_at_K1_monotone": true,
+    "H6_hybrid_cost_below_10c_per_10k": true
+  }
+}

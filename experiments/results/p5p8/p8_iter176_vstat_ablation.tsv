@@ -1,0 +1,5 @@
+variant	n_feat	auc_base	auc_minus	delta_auc	ece_base	ece_minus	delta_ece	p1_base	p1_minus	delta_p1
+drop_V_mean	23	0.9987	0.9984	0.0003	0.1579	0.1603	-0.0024	0.9	0.91	-0.01
+drop_V_std	23	0.9987	0.9986	0.0001	0.1579	0.1508	0.007	0.9	0.92	-0.02
+drop_V_max	23	0.9987	0.9981	0.0006	0.1579	0.1531	0.0048	0.9	0.9	0.0
+drop_V_min	23	0.9987	0.9982	0.0005	0.1579	0.1548	0.003	0.9	0.91	-0.01

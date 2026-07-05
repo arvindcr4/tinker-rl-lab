@@ -1,0 +1,17 @@
+trigger	tau	top_seed	top_n_fire	bottom_seed	bottom_n_fire	rank_spread
+T1_zvf	0.5	179	14	42	10	4
+T1_zvf	0.6	179	10	42	6	4
+T1_zvf	0.7	453	6	42	2	4
+T1_zvf	0.8	590	2	42	0	2
+T1_zvf	0.9	179	0	590	0	0
+T2_yobs	0.2	179	15	590	13	2
+T2_yobs	0.3	42	13	453	9	4
+T2_yobs	0.4	42	9	590	5	4
+T2_yobs	0.5	42	9	590	5	4
+T2_yobs	0.6	42	5	453	1	4
+T3_ddiv	0.03	42	1	590	0	1
+T3_ddiv	0.04	42	1	590	0	1
+T3_ddiv	0.05	179	0	590	0	0
+T3_ddiv	0.06	179	0	590	0	0
+T3_ddiv	0.07	179	0	590	0	0
+T_joint		42	11	179	9	2

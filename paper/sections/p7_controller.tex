@@ -595,6 +595,83 @@ explicit regime-conditional claim the controller's design
 hypothesis makes and the calibrated Pareto empirically supports
 on the available data.
 
+\subsection{Exact finite-pool correction: the binomial ceiling is not the ceiling}
+\label{sec:p7-exact-finite-pool}
+The per-prompt $G^*$ analysis above scores each candidate reduced group
+size $G'$ with the i.i.d.\ binomial collision model
+$\mathrm{CP}_\text{binom}(G'\!\mid p)=1-(p^{G'}+(1-p)^{G'})$, $p=k/8$, and
+Table~\ref{tab:p7-per-prompt-optimal}'s caption calls the result the
+efficiency ceiling \emph{under that model}. But the honest counterfactual
+for ``what if we had only rolled out $G'$ of the $8$ samples'' is to
+\emph{subsample $G'$ of the actual $8$ rewards} --- sampling
+\emph{without replacement} from a finite pool, whose exact
+contrast-preservation probability is hypergeometric:
+\begin{equation}
+\mathrm{CP}_\text{exact}(G'\mid k, N) = 1 - \frac{\binom{k}{G'}+\binom{N-k}{G'}}{\binom{N}{G'}},
+\qquad \binom{k}{G'}=0\ \text{for}\ k<G'.
+\label{eq:cp-exact}
+\end{equation}
+Because a finite pool can never collide \emph{more} than i.i.d.\ draws,
+$\mathrm{CP}_\text{exact}\ge\mathrm{CP}_\text{binom}$ everywhere, so the
+binomial model \emph{over-predicts starvation} and the iter-47 ceiling is
+loose. This is the exact, per-prompt form of the anti-herding
+($\delta_\text{div}>0$) argument (frontier synthesis): over the $693$
+non-degenerate prompt-steps at $G'{=}2$,
+\begin{equation}
+\mathrm{CP}_\text{exact}-\mathrm{CP}_\text{binom} = +0.0494\ [+0.0481, +0.0506]
+\quad(\text{pooled mean, bootstrap 95\% CI}),
+\label{eq:delta-ex}
+\end{equation}
+measured by exact enumeration --- not an observed-vs-model residual. We
+validate Eq.~\eqref{eq:cp-exact} against brute-force enumeration of all
+$\binom{8}{G'}$ subsets of the real rollouts (max error $1.1\times
+10^{-16}$). Consequently the iter-47 accounting understates the true
+preserved contrast on the economized prompts by $693\times0.0494\approx
+34.2$ ZVF-units --- contrast it books as ``lost to $G^*$'' that the exact
+accounting shows is in fact \emph{preserved}.
+
+Rebuilding the per-prompt allocator with exact scoring
+(Table~\ref{tab:p7-exact-finite-pool}) tightens the ceiling: at a target
+contrast $\tau_c{=}0.5$ the exact cost ratio is $0.834$ versus the
+binomial $0.868$ (extra $3.46\%$, $709$ rollouts saved), and at
+$\tau_c{=}0.7$ it is $0.881$ versus $0.918$ while additionally recovering
+$287$ ``phantom-starved'' prompts the binomial model wrongly holds at
+$G{=}8$. The per-method extra-saving bootstrap CI excludes zero for all
+four methods at both operating points. The correction is small in
+absolute compute ($3$--$4\%$) but exact and directional, and it converts
+the qualitative anti-herding argument into a per-prompt number with a CI.
+It also isolates which iter-47 headline is model-free and which is not:
+the ``zero contrast restored'' result is a property of $G{=}8$ saturation
+(model-independent), whereas the ``$0.130$ ZVF/prompt lost to $G^*$''
+figure is the binomial approximation and is biased high.
+
+\begin{table}[t]
+\centering
+\caption{Exact finite-pool (hypergeometric, Eq.~\eqref{eq:cp-exact})
+versus i.i.d.\ binomial scoring of the per-prompt Iso-G allocator on the
+N2 four-method tensors ($2{,}560$ prompt-steps). Both allocators pick the
+smallest $G'\in\{2,\dots,7\}$ with $\mathrm{CP}\ge\tau_c$ else keep
+$G{=}8$; preserved contrast is always scored with the model-free
+$\mathrm{CP}_\text{exact}$. ``Extra saving'' is binomial minus exact
+rollout spend; ``phantom'' is prompts the binomial model wrongly labels
+un-economizable that exact accounting recovers.}
+\label{tab:p7-exact-finite-pool}
+\begin{tabular}{lrrrr}
+\toprule
+$\tau_c$ & ratio (binom) & ratio (exact) & extra saving & phantom recovered \\
+\midrule
+$0.3$ & $0.811$ & $0.811$ & $0.0\%$ ($0$) & $0$ \\
+$0.5$ & $0.868$ & $\mathbf{0.834}$ & $\mathbf{3.46\%}$ ($709$) & $0$ \\
+$0.7$ & $0.918$ & $\mathbf{0.881}$ & $\mathbf{3.66\%}$ ($749$) & $\mathbf{287}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_exact\_finite\_pool\_g.py} (stdlib only); outputs
+\texttt{experiments/results/p5p8/p7\_exact\_finite\_pool\_\{per\_prompt.tsv,
+summary.tsv, summary.json\}}.
+
 \subsection{Cross-base replication on the N10 five-seed panel}
 \label{sec:p7-controller-n10repl}
 The previous subsections built the controller's evidence on the N2

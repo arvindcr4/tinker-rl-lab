@@ -1,0 +1,265 @@
+{
+  "n_methods": 4,
+  "n_steps": 40,
+  "n_prompts_per_step": 16,
+  "N_pool": 8,
+  "candidate_g": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "tau_c": [
+    0.3,
+    0.5,
+    0.7
+  ],
+  "nboot": 2000,
+  "seed": 20260705,
+  "exact_formula_max_err_vs_bruteforce": 1.1102230246251565e-16,
+  "anti_herding_bonus_g2": {
+    "n_nondegenerate": 693,
+    "mean_delta_exact_minus_binom": 0.04941,
+    "ci95": [
+      0.048128,
+      0.050569
+    ],
+    "interpretation": "CP_exact - CP_binom at G'=2, pooled over non-degenerate prompts; >0 confirms finite-pool anti-herding"
+  },
+  "pooled": {
+    "0.3": {
+      "rollouts_exact": 16609,
+      "rollouts_binom": 16609,
+      "rollouts_g8": 20480,
+      "cost_ratio_exact": 0.811,
+      "cost_ratio_binom": 0.811,
+      "extra_saves_exact_vs_binom": 0,
+      "pct_extra_saving": 0.0,
+      "phantom_starved_prompts": 0
+    },
+    "0.5": {
+      "rollouts_exact": 17071,
+      "rollouts_binom": 17780,
+      "rollouts_g8": 20480,
+      "cost_ratio_exact": 0.8335,
+      "cost_ratio_binom": 0.8682,
+      "extra_saves_exact_vs_binom": 709,
+      "pct_extra_saving": 3.462,
+      "phantom_starved_prompts": 0
+    },
+    "0.7": {
+      "rollouts_exact": 18051,
+      "rollouts_binom": 18800,
+      "rollouts_g8": 20480,
+      "cost_ratio_exact": 0.8814,
+      "cost_ratio_binom": 0.918,
+      "extra_saves_exact_vs_binom": 749,
+      "pct_extra_saving": 3.657,
+      "phantom_starved_prompts": 287
+    }
+  },
+  "method_stats": {
+    "grpo": {
+      "0.3": {
+        "method": "grpo",
+        "tau": 0.3,
+        "n_prompts": 640,
+        "rollouts_exact": 4121,
+        "rollouts_binom": 4121,
+        "rollouts_g8": 5120,
+        "cost_ratio_exact": 0.8049,
+        "cost_ratio_binom": 0.8049,
+        "extra_saves_exact_vs_binom": 0,
+        "extra_saves_ci_lo": 0,
+        "extra_saves_ci_hi": 0,
+        "preserved_contrast_exact": 79.125,
+        "preserved_contrast_binom": 79.125,
+        "phantom_starved_prompts": 0
+      },
+      "0.5": {
+        "method": "grpo",
+        "tau": 0.5,
+        "n_prompts": 640,
+        "rollouts_exact": 4247,
+        "rollouts_binom": 4429,
+        "rollouts_g8": 5120,
+        "cost_ratio_exact": 0.8295,
+        "cost_ratio_binom": 0.865,
+        "extra_saves_exact_vs_binom": 182,
+        "extra_saves_ci_lo": 156,
+        "extra_saves_ci_hi": 210,
+        "preserved_contrast_exact": 99.429,
+        "preserved_contrast_binom": 126.75,
+        "phantom_starved_prompts": 0
+      },
+      "0.7": {
+        "method": "grpo",
+        "tau": 0.7,
+        "n_prompts": 640,
+        "rollouts_exact": 4501,
+        "rollouts_binom": 4702,
+        "rollouts_g8": 5120,
+        "cost_ratio_exact": 0.8791,
+        "cost_ratio_binom": 0.9184,
+        "extra_saves_exact_vs_binom": 201,
+        "extra_saves_ci_lo": 175,
+        "extra_saves_ci_hi": 229,
+        "preserved_contrast_exact": 140.036,
+        "preserved_contrast_binom": 164.25,
+        "phantom_starved_prompts": 75
+      }
+    },
+    "aero": {
+      "0.3": {
+        "method": "aero",
+        "tau": 0.3,
+        "n_prompts": 640,
+        "rollouts_exact": 4114,
+        "rollouts_binom": 4114,
+        "rollouts_g8": 5120,
+        "cost_ratio_exact": 0.8035,
+        "cost_ratio_binom": 0.8035,
+        "extra_saves_exact_vs_binom": 0,
+        "extra_saves_ci_lo": 0,
+        "extra_saves_ci_hi": 0,
+        "preserved_contrast_exact": 81.179,
+        "preserved_contrast_binom": 81.179,
+        "phantom_starved_prompts": 0
+      },
+      "0.5": {
+        "method": "aero",
+        "tau": 0.5,
+        "n_prompts": 640,
+        "rollouts_exact": 4228,
+        "rollouts_binom": 4397,
+        "rollouts_g8": 5120,
+        "cost_ratio_exact": 0.8258,
+        "cost_ratio_binom": 0.8588,
+        "extra_saves_exact_vs_binom": 169,
+        "extra_saves_ci_lo": 138,
+        "extra_saves_ci_hi": 202,
+        "preserved_contrast_exact": 99.536,
+        "preserved_contrast_binom": 125.375,
+        "phantom_starved_prompts": 0
+      },
+      "0.7": {
+        "method": "aero",
+        "tau": 0.7,
+        "n_prompts": 640,
+        "rollouts_exact": 4475,
+        "rollouts_binom": 4657,
+        "rollouts_g8": 5120,
+        "cost_ratio_exact": 0.874,
+        "cost_ratio_binom": 0.9096,
+        "extra_saves_exact_vs_binom": 182,
+        "extra_saves_ci_lo": 154,
+        "extra_saves_ci_hi": 211,
+        "preserved_contrast_exact": 141.089,
+        "preserved_contrast_binom": 163.018,
+        "phantom_starved_prompts": 68
+      }
+    },
+    "gift": {
+      "0.3": {
+        "method": "gift",
+        "tau": 0.3,
+        "n_prompts": 640,
+        "rollouts_exact": 4298,
+        "rollouts_binom": 4298,
+        "rollouts_g8": 5120,
+        "cost_ratio_exact": 0.8395,
+        "cost_ratio_binom": 0.8395,
+        "extra_saves_exact_vs_binom": 0,
+        "extra_saves_ci_lo": 0,
+        "extra_saves_ci_hi": 0,
+        "preserved_contrast_exact": 65.821,
+        "preserved_contrast_binom": 65.821,
+        "phantom_starved_prompts": 0
+      },
+      "0.5": {
+        "method": "gift",
+        "tau": 0.5,
+        "n_prompts": 640,
+        "rollouts_exact": 4396,
+        "rollouts_binom": 4543,
+        "rollouts_g8": 5120,
+        "cost_ratio_exact": 0.8586,
+        "cost_ratio_binom": 0.8873,
+        "extra_saves_exact_vs_binom": 147,
+        "extra_saves_ci_lo": 115,
+        "extra_saves_ci_hi": 181,
+        "preserved_contrast_exact": 81.464,
+        "preserved_contrast_binom": 103.696,
+        "phantom_starved_prompts": 0
+      },
+      "0.7": {
+        "method": "gift",
+        "tau": 0.7,
+        "n_prompts": 640,
+        "rollouts_exact": 4603,
+        "rollouts_binom": 4761,
+        "rollouts_g8": 5120,
+        "cost_ratio_exact": 0.899,
+        "cost_ratio_binom": 0.9299,
+        "extra_saves_exact_vs_binom": 158,
+        "extra_saves_ci_lo": 123,
+        "extra_saves_ci_hi": 193,
+        "preserved_contrast_exact": 115.411,
+        "preserved_contrast_binom": 134.482,
+        "phantom_starved_prompts": 60
+      }
+    },
+    "areal": {
+      "0.3": {
+        "method": "areal",
+        "tau": 0.3,
+        "n_prompts": 640,
+        "rollouts_exact": 4076,
+        "rollouts_binom": 4076,
+        "rollouts_g8": 5120,
+        "cost_ratio_exact": 0.7961,
+        "cost_ratio_binom": 0.7961,
+        "extra_saves_exact_vs_binom": 0,
+        "extra_saves_ci_lo": 0,
+        "extra_saves_ci_hi": 0,
+        "preserved_contrast_exact": 83.679,
+        "preserved_contrast_binom": 83.679,
+        "phantom_starved_prompts": 0
+      },
+      "0.5": {
+        "method": "areal",
+        "tau": 0.5,
+        "n_prompts": 640,
+        "rollouts_exact": 4200,
+        "rollouts_binom": 4411,
+        "rollouts_g8": 5120,
+        "cost_ratio_exact": 0.8203,
+        "cost_ratio_binom": 0.8615,
+        "extra_saves_exact_vs_binom": 211,
+        "extra_saves_ci_lo": 176,
+        "extra_saves_ci_hi": 248,
+        "preserved_contrast_exact": 102.75,
+        "preserved_contrast_binom": 135.268,
+        "phantom_starved_prompts": 0
+      },
+      "0.7": {
+        "method": "areal",
+        "tau": 0.7,
+        "n_prompts": 640,
+        "rollouts_exact": 4472,
+        "rollouts_binom": 4680,
+        "rollouts_g8": 5120,
+        "cost_ratio_exact": 0.8734,
+        "cost_ratio_binom": 0.9141,
+        "extra_saves_exact_vs_binom": 208,
+        "extra_saves_ci_lo": 173,
+        "extra_saves_ci_hi": 246,
+        "preserved_contrast_exact": 146.982,
+        "preserved_contrast_binom": 172.268,
+        "phantom_starved_prompts": 84
+      }
+    }
+  }
+}

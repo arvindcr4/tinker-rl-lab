@@ -1,0 +1,90 @@
+{
+  "iter": 155,
+  "n_seeds": 5,
+  "n_steps_per_seed": 15,
+  "panel_total_step_observations": 75,
+  "taus_swept": [
+    0.3,
+    0.35,
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8
+  ],
+  "tau_070_anchor": {
+    "mean_fire_rate": 0.72,
+    "ci_lo": 0.6533,
+    "ci_hi": 0.8,
+    "cv_across_seeds": 0.1373,
+    "min_fr": 0.6,
+    "max_fr": 0.8667
+  },
+  "per_seed_heldout": {
+    "42": 0.375,
+    "179": 0.5859375,
+    "316": 0.4765625,
+    "453": 0.4296875,
+    "590": 0.40625
+  },
+  "per_seed_mean_zvf": {
+    "42": 0.49166666666666664,
+    "179": 0.6083333333333333,
+    "316": 0.5916666666666667,
+    "453": 0.6333333333333333,
+    "590": 0.6083333333333333
+  },
+  "per_seed_last5_zvf": {
+    "42": 0.475,
+    "179": 0.575,
+    "316": 0.55,
+    "453": 0.6,
+    "590": 0.575
+  },
+  "correlations": {
+    "r_heldout_vs_last5_zvf": 0.4299,
+    "r_heldout_vs_last5_zvf_ci": [
+      -1.0,
+      1.0
+    ],
+    "r_heldout_vs_last10_zvf": 0.607,
+    "r_heldout_vs_mean_zvf": 0.4581,
+    "r_heldout_vs_last10_reward": -0.0295
+  },
+  "hypotheses": {
+    "H1_tau070_stable_cv_lt_030": {
+      "verdict": "PASS",
+      "cv": 0.1373,
+      "bar": 0.3
+    },
+    "H2_plateau_060_070_narrow": {
+      "verdict": "FAIL",
+      "band_max_min_spread": 0.2667,
+      "bar_spread": 0.2
+    },
+    "H3_tau070_anchor_in_020_040": {
+      "verdict": "FAIL",
+      "mean_fire_rate": 0.72,
+      "ci": [
+        0.6533,
+        0.8
+      ],
+      "band": [
+        0.2,
+        0.4
+      ]
+    },
+    "H4_steady_state_predicts_heldout": {
+      "verdict": "FAIL",
+      "r": 0.4299,
+      "ci_lo": -1.0,
+      "bar_one_sided": 0.0
+    }
+  },
+  "n_boot": 2000,
+  "boot_seed": 20260705
+}

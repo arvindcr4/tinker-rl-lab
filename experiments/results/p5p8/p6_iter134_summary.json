@@ -1,0 +1,18 @@
+{
+  "iter": 134,
+  "pillar": "P6",
+  "n_variant_delta_entries": 15,
+  "n_total_measured_rows": 38,
+  "ci_method_diversity": {
+    "paired_step_bootstrap_pct": 14,
+    "normal_approx_welch": 8,
+    "bootstrap_paired_5seed": 13,
+    "welch_pooled_task_mean": 3
+  },
+  "n_seed_inconsistency_rows": 16,
+  "n_ci_shape_violations": 0,
+  "n_xpanel_companion_rows": 6,
+  "n_empty_measured_entries": 5,
+  "n_empty_with_expected_effects": 3,
+  "n_empty_without_expected_effects": 2
+}

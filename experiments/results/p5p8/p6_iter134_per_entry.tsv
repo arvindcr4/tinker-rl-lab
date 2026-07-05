@@ -1,0 +1,16 @@
+id	record_type	n_measured_rows	metric_present	metric_null	panel_present	panel_null	base_present	base_null	delta_present	delta_null	ci_low_present	ci_low_null	ci_high_present	ci_high_null	n_present	n_null	significant_present	significant_null	ci_method_present	ci_method_null	source_present	source_null	note_present	note_null	window_sensitivity_present	window_sensitivity_null	robust_panel_present	robust_panel_null	welch_ci_low_present	welch_ci_low_null	welch_ci_high_present	welch_ci_high_null	welch_sig_present	welch_sig_null	sig_robust_bootstrap_and_welch_present	sig_robust_bootstrap_and_welch_null	sig_robust_note_present	sig_robust_note_null	xpanel_verdict_present	xpanel_verdict_null	xpanel_method_present	xpanel_method_null	n_ci_consistent	n_ci_inconsistent	n_src_present	n_src_missing
+delta_adaptiveg	variant_delta	2	2	0	2	0	2	0	2	0	2	0	2	0	2	0	2	0	2	0	2	0	2	0	0	2	0	2	0	2	0	2	0	2	0	2	0	2	0	2	0	2	2	0	2	0
+delta_aero	variant_delta	6	6	0	6	0	6	0	6	0	6	0	6	0	6	0	6	0	6	0	6	0	6	0	2	4	2	4	1	5	1	5	1	5	1	5	1	5	0	6	0	6	6	0	6	0
+delta_areal	variant_delta	6	6	0	6	0	6	0	6	0	6	0	6	0	6	0	6	0	6	0	6	0	6	0	2	4	2	4	1	5	1	5	1	5	1	5	1	5	0	6	0	6	6	0	6	0
+delta_cppo	variant_delta	3	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	0	3	0	3	1	2	1	2	1	2	1	2	1	2	0	3	0	3	3	0	3	0
+delta_dapo	variant_delta	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+delta_drgrpo	variant_delta	3	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	3	0	3	0
+delta_es	variant_delta	3	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	0	3	0	3	1	2	1	2	1	2	1	2	1	2	0	3	0	3	3	0	3	0
+delta_gift	variant_delta	6	6	0	6	0	6	0	6	0	6	0	6	0	6	0	6	0	6	0	6	0	6	0	2	4	2	4	1	5	1	5	1	5	1	5	1	5	0	6	0	6	6	0	6	0
+delta_gspo	variant_delta	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+delta_liteppo	variant_delta	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+delta_mcgrpo	variant_delta	3	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	0	3	0	3	1	2	1	2	1	2	1	2	1	2	0	3	0	3	3	0	3	0
+delta_ngrpo	variant_delta	3	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	0	3	0	3	1	2	1	2	1	2	1	2	1	2	0	3	0	3	3	0	3	0
+delta_ppo	variant_delta	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+delta_reinforce	variant_delta	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+delta_scafgrpo	variant_delta	3	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	0	3	0	3	1	2	1	2	1	2	1	2	1	2	0	3	0	3	3	0	3	0

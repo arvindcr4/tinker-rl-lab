@@ -1,0 +1,205 @@
+% paper/sections/p6_iter134_field_completeness.tex
+% Iter-134 P6 audit: per-row field-completeness + ci_method shape audit.
+% Closes brief veins (a)+(b) at the measured-row granularity:
+%   "validate existing entries against measured behavior; the N2 tensors
+%    give same-stack GRPO/AERO/GIFT/AREAL deltas, the zvf_iter130 risk
+%    index covers 9 methods."
+%
+% Key findings:
+%   - 38/38 measured rows have all 11 base fields populated.
+%   - 38/38 CI-consistent and 38/38 source-provenance linked.
+%   - 8 rows had ci_method shape violations (string instead of object);
+%     all 8 patched in place.
+%   - 5/15 variant_deltas have ZERO measured rows; 3 of those declare
+%     expected_effects.
+%   - 4 distinct ci_methods across 38 rows; no single method dominates.
+%
+% Reproducibility:
+%   python3 scripts/p5p8/p6_iter134_measured_field_completeness.py
+%   python3 scripts/p5p8/p6_iter134_extended_audit.py
+%   python3 scripts/p5p8/p6_iter134_patch_ci_shape.py
+
+\subsection{Per-row measured-field completeness audit (iter 134)}
+\label{sec:p6-iter134-field-completeness}
+
+Iter-126 classified each of the 15 variant-delta entries by the \emph{evidence
+tier} its measured rows attain. Iter-134 audits the same measured rows at a
+finer granularity: for every one of 38 measured rows, classify each of 11
+base fields plus 9 extension fields as PRESENT / NULL; verify CI consistency
+($\mathit{ci\_low} \leq \mathit{delta} \leq \mathit{ci\_high}$); verify
+provenance (the \texttt{source} path resolves to a real file on disk); and
+classify each row's \texttt{ci\_method} as either a proper object or a
+shape-violating string.
+
+\subsubsection{Base-field completeness is 100\%}
+\label{sec:p6-iter134-base-fields}
+
+Per-row audit results, aggregated across all 38 measured rows:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrr}
+\toprule
+\textbf{Field} & \textbf{Present} & \textbf{Frac} \\
+\midrule
+\texttt{metric}        & 38/38 & 100.0\% \\
+\texttt{panel}         & 38/38 & 100.0\% \\
+\texttt{base}          & 38/38 & 100.0\% \\
+\texttt{delta}         & 38/38 & 100.0\% \\
+\texttt{ci\_low}       & 38/38 & 100.0\% \\
+\texttt{ci\_high}      & 38/38 & 100.0\% \\
+\texttt{n}             & 38/38 & 100.0\% \\
+\texttt{significant}   & 38/38 & 100.0\% \\
+\texttt{ci\_method}    & 38/38 & 100.0\% \\
+\texttt{source}        & 38/38 & 100.0\% \\
+\texttt{note}          & 38/38 & 100.0\% \\
+\bottomrule
+\end{tabular}
+\caption{Base-field completeness of all 38 measured rows across 15
+$\texttt{variant\_delta}$ entries. All 11 base fields are populated on
+every measured row.}
+\label{tab:p6-iter134-base-fields}
+\end{table}
+
+\textbf{H1 (PASS)} --- every measured row is semantically complete on the
+11 base fields. This is a stronger claim than iter-130's
+schema-level parse\_ok / schema\_ok (which only confirmed the JSON
+parses); iter-134 confirms the rows are \emph{semantically} complete.
+
+\subsubsection{CI consistency and provenance integrity}
+\label{sec:p6-iter134-integrity}
+
+Two integrity checks per measured row: (i) the 95\% CI brackets the point
+estimate ($\mathit{ci\_low} \leq \mathit{delta} \leq \mathit{ci\_high}$);
+(ii) the \texttt{source} path resolves to a real file on disk.
+\textbf{H2 (PASS)} --- 38/38 measured rows pass both checks. Of 38 rows,
+\textbf{21 (55.3\%) are significant} ($\mathit{significant} = \mathit{true}$);
+the remaining 17 are null-effects or directional-but-noisy.
+
+\subsubsection{Ci-method shape violations and the iter-134 patch}
+\label{sec:p6-iter134-ci-method-shape}
+
+The schema's \texttt{\$defs/ci\_method} declares $\texttt{type: [object, null]}$.
+Iter-130's stale-CI patch refreshed the point estimates and CIs of 5
+\texttt{mag\_mean} rows but did not promote the \texttt{ci\_method} field
+from a string to a canonical object. Iter-134 finds \textbf{8 measured rows
+where \texttt{ci\_method} is a string} (\texttt{"bootstrap\_paired\_5seed"})
+rather than $\{method, n\_boot, seed, ci\_level, source\}$. All 8 are
+patched in place using the iter-130 paired-seed bootstrap provenance:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lllr}
+\toprule
+\textbf{Entry} & \textbf{Metric} & \textbf{Panel} & \textbf{Row} \\
+\midrule
+$\texttt{delta\_aero}$     & \texttt{mean\_zvf} & \texttt{zvf130\_5seed} & 3 \\
+$\texttt{delta\_areal}$    & \texttt{mean\_zvf} & \texttt{zvf130\_5seed} & 3 \\
+$\texttt{delta\_cppo}$     & \texttt{mean\_zvf} & \texttt{zvf130\_5seed} & 1 \\
+$\texttt{delta\_es}$       & \texttt{mean\_zvf} & \texttt{zvf130\_5seed} & 1 \\
+$\texttt{delta\_gift}$     & \texttt{mean\_zvf} & \texttt{zvf130\_5seed} & 3 \\
+$\texttt{delta\_mcgrpo}$   & \texttt{mean\_zvf} & \texttt{zvf130\_5seed} & 1 \\
+$\texttt{delta\_ngrpo}$    & \texttt{mean\_zvf} & \texttt{zvf130\_5seed} & 1 \\
+$\texttt{delta\_scafgrpo}$ & \texttt{mean\_zvf} & \texttt{zvf130\_5seed} & 1 \\
+\bottomrule
+\end{tabular}
+\caption{8 ci\_method shape-violating rows patched in iter-134.}
+\label{tab:p6-iter134-ci-shape}
+\end{table}
+
+\textbf{H3 (PATCHED)} --- \texttt{n\_ci\_shape\_violations} drops from
+8 to 0 after the in-place patch; CI values are unchanged. Post-patch
+audit: parse\_ok = 39/39, schema\_ok = 39/39, total significant = 21/38
+(un-changed).
+
+\subsubsection{Empty-measured-row action gap}
+\label{sec:p6-iter134-empty-action-gap}
+
+\textbf{H4 (REPORTED)} --- 5 of 15 \texttt{variant\_delta} entries have
+ZERO measured rows: \texttt{delta\_dapo} (yu2025dapo, arXiv 2503.14476),
+\texttt{delta\_gspo} (qwen2025gspo, arXiv 2507.18071),
+\texttt{delta\_liteppo} (liteppo2024, no peer-reviewed citation),
+\texttt{delta\_ppo} (schulman2017ppo, arXiv 1707.06347), and
+\texttt{delta\_reinforce} (williams1992reinforce, no arXiv).
+\textbf{3 of those 5} (\texttt{delta\_dapo}, \texttt{delta\_gspo},
+\texttt{delta\_ppo}) declare \texttt{expected\_effects} and need only a
+same-stack run to populate. \textbf{2 of those 5}
+(\texttt{delta\_liteppo}, \texttt{delta\_reinforce}) lack both
+\texttt{expected\_effects} AND \texttt{measured} --- these are the
+deepest evidence gaps in the registry today.
+
+\subsubsection{CI-method diversity}
+\label{sec:p6-iter134-ci-method-diversity}
+
+\textbf{H5 (PASS)} --- 4 distinct ci\_methods span 38 rows:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrl}
+\toprule
+\textbf{ci\_method} & \textbf{n\_rows} & \textbf{Entries} \\
+\midrule
+\texttt{paired\_step\_bootstrap\_pct} & 14 & aero, areal, gift, adaptiveg \\
+\texttt{bootstrap\_paired\_5seed}     & 13 & aero, areal, cppo, es, gift, \\
+                                       &    & mcgrpo, ngrpo, scafgrpo \\
+\texttt{normal\_approx\_welch}       & 8  & aero, areal, cppo, es, gift, \\
+                                       &    & mcgrpo, ngrpo, scafgrpo \\
+\texttt{welch\_pooled\_task\_mean}   & 3  & drgrpo \\
+\bottomrule
+\end{tabular}
+\caption{CI-method diversity across 38 measured rows. No single method
+dominates; each delta's CI is selected to match the natural pairing
+unit (per-step for N2, per-seed for zvf130, per-task for Dr.GRPO).}
+\label{tab:p6-iter134-ci-diversity}
+\end{table}
+
+\subsubsection{Cross-panel companion and seed inconsistency}
+\label{sec:p6-iter134-xpanel-companion}
+
+Iter-110 produced a cross-panel xpanel verdict TSV but could not embed
+verdicts in the registry because the schema's
+\texttt{variant\_delta\_record} has $\texttt{additionalProperties: false}$.
+Iter-134 emits
+$\texttt{p6\_iter134\_cross\_panel\_companion.tsv}$ --- 6 rows keyed by
+$\texttt{delta\_id}$ that record the iter-110 verdict outside the schema
+constraint. Future iters can re-derive without needing a schema change.
+
+\textbf{16 seed-inconsistency rows} are reported but NOT patched: 8 use
+$\texttt{seed=20260704}$ (predates the canonical 20260705; numerical CIs
+unchanged); 8 use \texttt{seed=None} because \texttt{normal\_approx\_welch}
+legitimately has no bootstrap seed (Welch's t).
+
+\subsubsection{Cross-paper coupling and operational recommendation}
+\label{sec:p6-iter134-coupling}
+
+\textbf{Cross-paper coupling}:
+(i)~\textbf{P6 iter-130 (row 145)} --- iter-130's stale-CI patch left 8
+ci\_method strings in place; iter-134 closes that residual gap.
+(ii)~\textbf{P6 iter-126 (row 139)} --- tier classification (A/B/C/D) is
+orthogonal to field completeness; iter-134 adds the missing primitive
+(per-field PRESENT/NULL table).
+(iii)~\textbf{P6 iter-110 (xpanel verdict)} --- iter-134 emits a shadow
+ledger until the schema allows a top-level $\texttt{cross\_panel\_audit}$
+block.
+(iv)~\textbf{FRONTIER\_INSIGHTS Round 1 (Critic Degeneracy Hypothesis)} ---
+$\texttt{delta\_ppo}$ (value\_head) is in the empty-measured list; the
+frontier synthesis predicts the value head collapses to the group-mean
+estimator under sparse terminal reward. A measured same-stack PPO arm
+would directly test this prediction.
+
+\textbf{Operational recommendation}:
+(a)~\textbf{ADOPT} $\texttt{p6\_iter134\_measured\_field\_completeness.py}$
++ $\texttt{p6\_iter134\_extended\_audit.py}$ as the registry-side CI gate
+($\texttt{n\_ci\_shape\_violations == 0}$ and
+$\texttt{n\_src\_missing == 0}$).
+(b)~\textbf{PRIORITIZE} $\texttt{delta\_dapo}$ and $\texttt{delta\_gspo}$
+for same-stack measured-row population --- both are highly-cited 2025
+variants with \texttt{expected\_effects} already declared.
+(c)~\textbf{Track} the empty-measured count: iter-134 = 5/15 = 33.3\%;
+target $\leq 3/15$ by iter-150.
+(d)~\textbf{Maintain} $\texttt{p6\_iter134\_cross\_panel\_companion.tsv}$
+as a shadow cross-panel ledger until the schema allows a top-level
+$\texttt{cross\_panel\_audit}$ block on $\texttt{variant\_delta\_record}$.

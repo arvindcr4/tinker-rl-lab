@@ -1,0 +1,33 @@
+{
+  "n_audited": 19,
+  "n_decisive_P7_headlines": 4,
+  "n_tension": 1,
+  "n_regress": 0,
+  "n_insufficient": 9,
+  "n_reported_only": 5,
+  "by_class": {
+    "C1_N10_multiseed": {
+      "n": 5,
+      "verdict": {
+        "PASS": 4,
+        "TENSION": 1
+      }
+    },
+    "C2_N2_four_method": {
+      "n": 5,
+      "verdict": {
+        "REPORTED": 5
+      }
+    },
+    "C3_single_seed": {
+      "n": 9,
+      "verdict": {
+        "INSUFFICIENT_N": 9
+      }
+    }
+  },
+  "B": 2000,
+  "seed": 20260705,
+  "ci": 0.95,
+  "timestamp": "2026-07-05"
+}

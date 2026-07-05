@@ -306,6 +306,74 @@
                 }
               },
               "additionalProperties": false
+            },
+            "controller_predicted_savings_per_rollout": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Iter-70: per-(method \u00d7 trigger \u00d7 threshold) controller savings predictions for the iter-51 adaptive-G controller on this stack. All fields nullable; null = not yet audited. Sourced from iter-67 p7_antiherding_controller_cf_summary.tsv.",
+              "properties": {
+                "panel": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "G": {
+                  "$ref": "#/$defs/nullable_integer"
+                },
+                "n_steps": {
+                  "$ref": "#/$defs/nullable_integer"
+                },
+                "audit_source": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "audit_date": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "predictions": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "description": "Per-(trigger, threshold) controller prediction. Each element: trigger (str), threshold (num), fires/saved/missed (int), saved_per_fire (num), savings_per_rollout_pt/lo/hi (num, bootstrap percentile), cost_ratio_pt (num). Source: iter-67 p7_antiherding_controller_cf_summary.tsv.",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "trigger": {
+                        "type": "string"
+                      },
+                      "threshold": {
+                        "type": "number"
+                      },
+                      "fires": {
+                        "type": "integer"
+                      },
+                      "saved": {
+                        "type": "integer"
+                      },
+                      "missed": {
+                        "type": "integer"
+                      },
+                      "saved_per_fire": {
+                        "type": "number"
+                      },
+                      "savings_per_rollout_pt": {
+                        "type": "number"
+                      },
+                      "savings_per_rollout_lo": {
+                        "type": "number"
+                      },
+                      "savings_per_rollout_hi": {
+                        "type": "number"
+                      },
+                      "cost_ratio_pt": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
             }
           }
         },
@@ -676,6 +744,74 @@
         },
         "notes": {
           "$ref": "#/$defs/nullable_string"
+        },
+        "controller_predicted_savings_per_rollout": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Iter-70: per-(trigger \u00d7 threshold) controller savings predictions for the variant on the N2 same-stack corpus. Inherits from the variant's measured method; predictions carry the iter-67 saved_per_fire and savings_per_rollout paired-bootstrap estimates.",
+          "properties": {
+            "panel": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "G": {
+              "$ref": "#/$defs/nullable_integer"
+            },
+            "n_steps": {
+              "$ref": "#/$defs/nullable_integer"
+            },
+            "audit_source": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "audit_date": {
+              "$ref": "#/$defs/nullable_string"
+            },
+            "predictions": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "description": "Per-(trigger, threshold) controller prediction. Each element: trigger (str), threshold (num), fires/saved/missed (int), saved_per_fire (num), savings_per_rollout_pt/lo/hi (num, bootstrap percentile), cost_ratio_pt (num). Source: iter-67 p7_antiherding_controller_cf_summary.tsv.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "trigger": {
+                    "type": "string"
+                  },
+                  "threshold": {
+                    "type": "number"
+                  },
+                  "fires": {
+                    "type": "integer"
+                  },
+                  "saved": {
+                    "type": "integer"
+                  },
+                  "missed": {
+                    "type": "integer"
+                  },
+                  "saved_per_fire": {
+                    "type": "number"
+                  },
+                  "savings_per_rollout_pt": {
+                    "type": "number"
+                  },
+                  "savings_per_rollout_lo": {
+                    "type": "number"
+                  },
+                  "savings_per_rollout_hi": {
+                    "type": "number"
+                  },
+                  "cost_ratio_pt": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

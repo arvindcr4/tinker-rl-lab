@@ -1,0 +1,19 @@
+{
+  "n_domains": 7,
+  "n_pairs": 21,
+  "n_pairs_ci_excl_1": 19,
+  "frac_pairs_excl_1": 0.9047619047619048,
+  "iter141_eta2_method": 0.0005,
+  "d7_canonical_density": 0.015625,
+  "d7_k": 10,
+  "d7_n": 640,
+  "low_cluster_pair_count": 6,
+  "low_cluster_pairs_excl_1": 2,
+  "low_ids": [
+    "D1",
+    "D6",
+    "D7@0.500"
+  ],
+  "boot_seed": 20260705,
+  "n_boot": 2000
+}

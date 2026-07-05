@@ -1,0 +1,11 @@
+domain_id	domain	n	k	density	wilson_lo	wilson_hi	source
+D1	P8 grad-band firing (per-row)	840	7	0.008333	0.004042	0.017101	iter-120 table
+D2	P7 step rejection (per-step)	160	80	0.5	0.423438	0.576562	iter-124
+D3	P5 cells (per-cell)	98	36	0.367347	0.278587	0.466114	iter-124 cells.tsv
+D4	P7 per-prompt boundary	2560	1867	0.729297	0.711751	0.746156	iter-131
+D5	P8 iso ECE>0.10 (cohort cell)	60	60	1.0	0.939826	1.0	iter-136
+D6	P8 sensor-firing flip (per (rate x fset) cell)	148767	789	0.005304	0.004947	0.005686	iter-140 firing_agreement.tsv (15 cells)
+D7@0.000	N2 algorithm-axis spread > 0.000 (per (step, prompt))	640	264	0.4125	0.3749923415201428	0.4510518283502104	iter-141 η²(method)=0.0005 + N2 panel 40x16
+D7@0.125	N2 algorithm-axis spread > 0.125 (per (step, prompt))	640	144	0.225	0.19434326813720365	0.2589384085981922	iter-141 η²(method)=0.0005 + N2 panel 40x16
+D7@0.500	N2 algorithm-axis spread > 0.500 (per (step, prompt))	640	10	0.015625	0.008508840208386109	0.028521385859640563	iter-141 η²(method)=0.0005 + N2 panel 40x16
+D7@0.875	N2 algorithm-axis spread > 0.875 (per (step, prompt))	640	0	0.0	0.0	0.0059666849734468855	iter-141 η²(method)=0.0005 + N2 panel 40x16

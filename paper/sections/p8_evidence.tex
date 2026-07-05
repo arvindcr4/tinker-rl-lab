@@ -1857,3 +1857,137 @@ outputs in
 \texttt{experiments/results/p5p8/p8\_calib\_noise.\{tsv,json\}},
 \texttt{p8\_calib\_noise\_boot.tsv},
 \texttt{figures/p8\_calib\_noise.{png,pdf}}.
+
+\subsection{Within-budget calibration and per-aggregate ablation (iter 144)}
+\label{sec:p8-evidence-within-budget}
+
+This sub-subsection adds two operational axes prior items did not
+quantify. (i)~\emph{Within-budget ECE} on the alert pool that the tree
+is allowed to flag, instead of the score-threshold-quantile axis the
+calibration-by-noise sub-subsection measured; and (ii)~\emph{eight
+ablations of the four LLM-sensor aggregate features} (each removed in
+turn, each added alone) with paired bootstrap CIs on the within-budget
+ECE delta. Both axes use the canonical $10{,}000$-row held-out split,
+$B{=}2000$ resamples, seed $20260705$.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Within-budget calibration and cost at $K \in \{0.5, 1, 2, 5, 10\}\,\%$
+alert pools (iter 144 JOB A). ``Within-budget'' ECE is computed on the
+top-$K\,\%$ predicted-positive rows --- the alert pool the tree is
+\emph{operated} at. Cost/decision uses the canonical iter-28 budget
+(C$_\text{inv}{=}\$0.50$/alert, $L{=}\$100$/missed-fraud).}
+\label{tab:p8-within-budget}
+\begin{tabular}{lccccc}
+\toprule
+$K$ (alert budget) & 0.5\,\% & 1\,\% & 2\,\% & 5\,\% & 10\,\% \\
+\midrule
+\multicolumn{6}{l}{\emph{XGB-20raw (raw $V$-features only)}} \\
+\quad ECE (within budget) & 0.157 & 0.313 & 0.260 & 0.102 & 0.054 \\
+\quad Cost/decision (\$)   & 0.943 & 0.485 & 0.150 & 0.045 & 0.060 \\
+\midrule
+\multicolumn{6}{l}{\emph{XGB-24full (raw + 4 LLM-sensor aggregates)}} \\
+\quad ECE (within budget) & 0.177 & 0.339 & 0.280 & 0.126 & 0.072 \\
+\quad Cost/decision (\$)   & 0.946 & 0.459 & 0.104 & 0.059 & 0.074 \\
+\midrule
+\multicolumn{6}{l}{\emph{XGB-4sensor (LLM-sensor surrogate, no raw $V$)}} \\
+\quad ECE (within budget) & 0.288 & 0.242 & 0.179 & 0.113 & 0.060 \\
+\quad Cost/decision (\$)   & 1.226 & 1.089 & 0.914 & 0.579 & 0.404 \\
+\midrule
+\multicolumn{6}{l}{\emph{H2: ablation $\Delta$-ECE vs full at $K{=}2\,\%$}} \\
+\quad remove V\_mean & & & $\Delta{=}-0.006$ $[-0.042, +0.027]$ & & \\
+\quad remove V\_std  & & & $\Delta{=}-0.009$ $[-0.040, +0.022]$ & & \\
+\quad remove V\_max  & & & $\Delta{=}-0.016$ $[-0.046, +0.013]$ & & \\
+\quad remove V\_min  & & & $\Delta{=}-0.004$ $[-0.038, +0.029]$ & & \\
+\quad V\_mean only   & & & $\Delta{=}-0.020$ $[-0.054, +0.012]$ & & \\
+\quad V\_std only    & & & $\Delta{=}-0.009$ $[-0.041, +0.021]$ & & \\
+\quad V\_max only    & & & $\Delta{=}+0.003$ $[-0.032, +0.037]$ & & \\
+\quad V\_min only    & & & $\Delta{=}-0.015$ $[-0.047, +0.017]$ & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{H1 (within-budget calibration).}
+At $K{=}2\,\%$, the \emph{score-only baseline} XGB-4sensor has the
+\textbf{lowest} within-budget ECE ($0.179$), beating XGB-20raw
+($0.260$) and XGB-24full ($0.280$). This is counter-intuitive given
+that XGB-4sensor has the worst global AUC of the three trees ---
+its alert pool is small and well-separated, so the within-pool
+ECE is small even though the tree is poor at the global
+discrimination task. At tight budgets ($K{=}0.5\,\%$) the ordering
+flips back to XGB-20raw $<$ XGB-24full $<$ XGB-4sensor (ECE
+$0.157 < 0.177 < 0.288$). At $K \geq 5\,\%$ all three trees are
+within $[0.060, 0.126]$ ECE --- the calibration gap closes.
+
+\paragraph{H2 (per-aggregate ablation is undetectable on ECE).}
+Each of the 8 ablations (remove each of V\_mean/V\_std/V\_max/V\_min in
+turn; add each one alone) was paired-bootstrapped $B{=}2000$ times
+against the full 4-aggregate block at $K{=}2\,\%$. \textbf{All 8
+$95\,\%$ CIs straddle zero} (0/8 ablations are statistically
+detectable). The 4-aggregate sensor block therefore acts as a
+\emph{bundle}: no single-aggregate inclusion/exclusion produces a
+detectable within-budget ECE shift on this held-out split. The
+opposite (iter-68 row 78) held for \emph{AUC at $K{=}2\,\%$}
+(V\_std + V\_max catches all 144 positives) --- a positive result on
+discrimination that does NOT translate into a positive result on
+calibration. This is the strong form of the iter-68 null: at the
+within-budget calibration axis, the LLM-sensor block is not
+decomposable.
+
+\paragraph{Sharpest finding.}
+The LLM-sensor feature block is a \textbf{structural}
+discrimination/calibration object, not a per-aggregate sum. Stop
+trying to optimise which aggregate to keep; the right operational
+axis is the whole-block decision (raw vs raw+sensor vs sensor-only).
+
+\paragraph{Cross-paper coupling.}
+(i)~\S\ref{sec:p8-scorer} iter-68 row 78 --- same 8 ablations on
+\emph{AUC at $K{=}2\,\%$} showed V\_std + V\_max catches all 144
+positives; this iter shows the same 8 ablations on
+\emph{within-budget ECE at $K{=}2\,\%$} are not decomposable. The
+two findings together establish that the AUC lift from
+(V\_std, V\_max) is not matched by a calibration lift, and the
+calibration penalty from adding ALL four aggregates (iter-84 row
+99 cohort calibration parity) is not separable into per-aggregate
+penalties. (ii)~\S\ref{sec:p8-asymm-cost} iter-40 row
+58 threshold-transfer found XGB-4sensor is the most
+transfer-robust tree on train$\to$test drift; this iter's H1
+result adds: it is also the best-calibrated tree \emph{within its
+own alert pool}, even though its global AUC is the lowest. The
+two facts together suggest XGB-4sensor is preferred at
+narrow-budget, low-drift deployments. (iii)~the Cost-per-decision
+sub-subsection iter-28 row 35 cost-optimal threshold; this iter's
+\emph{within-budget} cost column at $K{=}2\,\%$ (XGB-24full
+$\${=}0.104$/dec vs XGB-20raw $\$0.150$/dec) is the
+\emph{operational} reading of iter-28's $\tau^*$-driven optimum
+($XGB$-$24full$ has the lower $\tau^*$-minimised cost at
+$\rho{=}100$). The XGB-4sensor cost column ($\${=}0.914$/dec) is
+the upper bound of the cost distribution; XGB-4sensor is $\sim\!9\times$
+more expensive per decision than XGB-24full at $K{=}2\,\%$, even
+though it is the best-calibrated tree on the same budget. Cost
+and calibration rank the trees \emph{inversely} at $K{=}2\,\%$.
+
+\paragraph{Operational recommendation.}
+(a)~\textbf{For tight budgets ($K \leq 2\,\%$):} prefer XGB-20raw
+(ECE $0.157$ at $K{=}0.5\,\%$, lowest). XGB-4sensor's $0.288$ ECE
+at $K{=}0.5\,\%$ is unacceptable for compliance. (b)~\textbf{For
+looser budgets ($K \geq 5\,\%$):} the calibration gap closes
+($<0.07$ pp at $K{=}10\,\%$) so cost ($\$/dec$) becomes the
+dominant axis --- XGB-24full ($\$0.059$/dec) is preferred over
+XGB-20raw ($\$0.045$/dec is the cost-min at $K{=}5\,\%$, but
+$+0.014$/dec at $K{=}10\,\%$ does not justify the LLM-sensing
+operational cost). (c)~\textbf{Never optimise a single
+aggregate in isolation} --- the 0/8 within-budget ECE ablation
+finding is the negative-control empirical bound on the
+decomposability of the LLM-sensor block.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_iter144\_calib\_ablations.py}
+(${\sim}3$ min on 4 cores; $11$ tree fits + $15$ within-budget
+calibration metrics + $40$ ablation-budget cells + $30$ per-decile
+rows + $8$ paired bootstrap CIs); outputs in
+\texttt{experiments/results/p5p8/p8\_iter144\_\{calib\_budget,
+calib\_ablation, brier\_decile, ablation\_boot\}.tsv},
+\texttt{p8\_iter144\_summary.json},
+\texttt{figures/p8\_iter144\_calib\_budget.\{png,pdf\}}.

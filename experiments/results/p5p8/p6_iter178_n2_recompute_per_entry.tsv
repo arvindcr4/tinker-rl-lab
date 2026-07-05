@@ -1,0 +1,4 @@
+entry	n_rows	n_point_match_1e-6	n_width_match_5pct	n_direction_match	point_match_rate	width_match_rate	direction_match_rate
+aero	4	4	4	4	1.0	1.0	1.0
+gift	4	4	3	4	1.0	0.75	1.0
+areal	4	4	4	4	1.0	1.0	1.0

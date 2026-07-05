@@ -89,19 +89,14 @@
       "panel": "zvf130_5seed",
       "base": "grpo",
       "delta": -0.26052,
-      "ci_low": -0.26052,
-      "ci_high": -0.26052,
+      "ci_low": -0.26234,
+      "ci_high": -0.25882,
       "n": 5,
       "significant": false,
-      "ci_method": {
-        "method": "point_no_perseed_sd",
-        "n_boot": null,
-        "seed": null,
-        "ci_level": null,
-        "source": "scripts/p5p8/p6_measured_delta_block.py"
-      },
+      "ci_method": "bootstrap_paired_5seed",
       "source": "experiments/results/zvf_iter130_method_risk.tsv",
-      "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)"
+      "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)",
+      "iter_recomputed": 128
     },
     {
       "metric": "pcd",
@@ -714,5 +709,6 @@
         "source": "iter-72 row 85 p7_joint_controller.py"
       }
     }
-  }
+  },
+  "iter128_recompute_note": "Patched by iter 128 JOB B: recomputed mean_zvf CI on zvf130_5seed panel from raw zvf_iter130_risk_index.tsv (per-seed n=5) with paired bootstrap (B=2000, seed=20260705). Old ci_method=point_no_perseed_sd (CI width=0) replaced with bootstrap_paired_5seed (mean CI width=0.00352)."
 }

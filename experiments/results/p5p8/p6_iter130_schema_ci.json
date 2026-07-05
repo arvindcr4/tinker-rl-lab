@@ -1,0 +1,24 @@
+{
+  "badges": {
+    "?": 0,
+    "A": 9,
+    "B": 1,
+    "C": 0,
+    "D": 29
+  },
+  "by_type": {
+    "other": 0,
+    "stack": 24,
+    "variant_delta": 15
+  },
+  "n_entries": 39,
+  "parse_ok": 39,
+  "schema_health": "PASS",
+  "schema_ok": 39,
+  "stale_action_required": false,
+  "totals": {
+    "measured_rows": 38,
+    "significant_rows": 21,
+    "stale_method_rows": 0
+  }
+}

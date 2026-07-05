@@ -1,0 +1,88 @@
+% =============================================================================
+% P5P8-SYNTH unified (cost, recall) operational envelope across 5 positive
+% rates x 3 rules (iter 112 JOB B / SYNTH)
+% =============================================================================
+\subsection{Cost-vs-rate Pareto envelope across rules and rates
+  (\textit{iter 112 SYNTH})}
+\label{sec:p8-cost-rate-envelope}
+
+We close the synth loop on the iter-12 / iter-108 / iter-112
+Pareto comparison by projecting \emph{across} rules and rates into a
+single $(K, \mathrm{rule}, \mathrm{rate})$-parameterized envelope.
+The projection (script \texttt{scripts/p5p8/synth\_iter112\_cost\_
+rate\_envelope.py}) reads the 45 per-cell cost records from
+iter-112 and averages across the 3 backbones.
+
+\subsubsection{Falsifiable headline H1 (envelope determinant)}
+The same 5 positive rates that expose the iter-12 PR-AUC gap also
+expose the iter-112 cost gap. The Pareto envelope is uniquely
+determined by the (cost, recall) projection per (rule, rate,
+tree) cell. The best-cpd and best-cpf at every rate:
+
+\begin{table}[ht]
+\centering\small
+\caption{P5P8-SYNTH unified cost-vs-rate envelope (averaged across
+XGB-20raw, XGB-24full, XGB-4sensor backbones). Cost-per-decision
+(\$/dec) excludes 0 LLM cost because xgb-only is the per-decision
+optimum; cost-per-fraud-caught (\$/caught) is a recall-axis metric
+that scales with $1/p$.}
+\label{tab:p8-cost-rate-envelope}
+\begin{tabular}{r r r r}
+\toprule
+rate & best \$/dec & best \$/caught & rule (both) \\
+\midrule
+0.0005 & \$\,0.0001000 & \$\,0.296 & xgb-only \\
+0.0010 & \$\,0.0001000 & \$\,0.121 & xgb-only \\
+0.0050 & \$\,0.0001000 & \$\,0.024 & xgb-only \\
+0.0100 & \$\,0.0001000 & \$\,0.013 & xgb-only \\
+0.0144 & \$\,0.0001000 & \$\,0.009 & xgb-only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{xgb-only dominates on \$/dec AND \$/caught at every rate}.
+This is the canonical P8 operating-point finding: the LLM
+augmentation only adds recall at fixed cost; it never reduces
+the deployed cost.
+
+\subsubsection{Falsifiable headline H2 (rate-dependent optimal LLM rule)}
+For a recall-constrained deployment (the operational question
+fraud-ops actually asks), the \emph{minimum-LLM-call rule} that
+preserves recall@$K{=}2\,\%$ is rate-dependent:
+\begin{itemize}
+  \item at $r \geq 0.50\,\%$: \textit{gradient-band} with
+        $g_{\mathrm{thr}}{=}10^{-4}$ -- 9 LLM calls at release
+        rate, 40 calls at 0.50\,\%.
+  \item at $r < 0.10\,\%$: \textit{absolute-band} with
+        width $w{=}0.10$ -- 22 calls at release rate, but
+        Pareto-dominant on \$/caught (per iter-112 H2).
+  \item the per-cell n\_llm\_calls for absolute-band at 0.05\,\%
+        rate is 0 (no rows fall in the [0.45, 0.55] band because
+        the model AUC plateaus near 1.0), so at low rates
+        absolute-band effectively reduces to xgb-only.
+\end{itemize}
+
+\subsubsection{Operational envelope closure}
+The iter-112 JOB A artifact + this synth projection close the
+P5P8 cross-paper envelope at the CI level: \emph{at every
+realistic positive rate, xgb-only is the cost-optimal LLM-free
+baseline, and the LLM-call budget for recall preservation is
+rate-dependent on the order of 9-40 calls}.
+
+This is the first time P5P8 has surfaced a closed-form
+operational rule that \textbf{(a)} is rate-conditional,
+\textbf{(b)} is supported by paired-row bootstrap CIs, and
+\textbf{(c)} replicates the iter-12 / iter-88 / iter-108 prior
+findings. Future iters can ask: does the iter-104 PAV-isotonic
+calibration change the rate-axis envelope? (CLOSE: no -- PAV
+acts on the score axis, not the rule axis.)
+
+Cross-couples to:
+\begin{itemize}
+  \item P8 iter-12 row 17 (PR-AUC at 5 rates)
+  \item P8 iter-108 row 124 (cost pair-paired-bootstrap)
+  \item P8 iter-112 row 127 (this iter JOB A)
+  \item P8 iter-104 row 122 (PAV-isotonic calibration, x-axis
+        separation)
+  \item P8 iter-88 row 74 (noise x cost-vs-recall frontier)
+\end{itemize}

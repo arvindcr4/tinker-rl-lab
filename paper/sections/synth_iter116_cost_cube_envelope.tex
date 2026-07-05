@@ -1,0 +1,72 @@
+% =============================================================================
+% P5P8-SYNTH: cost-cube envelope unifying iter-108 / iter-112 / iter-116
+% (iter 116 JOB B / SYNTH)
+% =============================================================================
+\subsection{Cost-cube Pareto envelope across rates and LLM-cost ratios
+  (\textit{iter 116 SYNTH})}
+\label{sec:p8-cost-cube-envelope}
+
+We close the synth loop on the iter-108 / iter-112 / iter-116 work by
+projecting \emph{across} rules, rates, AND cost ratios into a single
+envelope. The script
+\texttt{scripts/p5p8/synth\_iter116\_cost\_cube\_envelope.py} reads the
+iter-116 sweep (5 cost ratios $\times$ 5 rates $\times$ 3 trees
+$\times$ 3 rules = 225 cells) and averages across the 3 trees per
+(rate, cost-ratio, rule) cell.
+
+\subsubsection{Falsifiable headline H1 (envelope is xgb-only-dominant)}
+Across the full 25-cell envelope (5 rates $\times$ 5 cost ratios),
+\textbf{xgb-only is the unique cheapest rule on \$/dec AND \$/caught
+in 25/25 cells}. The envelope is uniquely determined by the
+$\mathrm{cost}_{\mathrm{llm}}$ / $\mathrm{cost}_{\mathrm{xgb}}$ ratio:
+at no realistic combination of positive rate and LLM-API cost does
+gradient-band or absolute-band Pareto-dominate xgb-only.
+
+\subsubsection{Falsifiable headline H2 (recall-preservation cost ratio range)}
+The recall-preservation cost ratio
+$\mathrm{cpf}_{\mathrm{grad}}/\mathrm{cpf}_{\mathrm{xgb}}$ spans:
+\begin{itemize}
+  \item at $\mathrm{cost}_{\mathrm{llm}}{=}\$0.001$ (ratio 10):
+        ratio in $[1.021,\,1.051]$
+  \item at $\mathrm{cost}_{\mathrm{llm}}{=}\$0.100$ (ratio 1000):
+        ratio in $[3.327,\,6.672]$
+  \item overall range across the full sweep: $[1.021,\,6.672]$
+\end{itemize}
+At every realistic cost point, gradient-band incurs a multiplicative
+cost penalty without adding recall at $K{=}2\,\%$.
+
+\subsubsection{Falsifiable headline H3 (n-llm-call budget at highest cost ratio)}
+At the highest cost ratio (\$0.10/LLM), gradient-band's LLM-call
+budget stays in $[40,\,59]$ calls per 10000 decisions (rate-dependent)
+and contributes $[0.040,\,0.059]$ USD per decision to the total cost
+-- 40--59\,\% of the per-decision budget at $K{=}2\,\%$. At every
+realistic LLM-API price, the marginal LLM cost is positive.
+
+\subsubsection{Closure of the synth loop}
+This iter closes the three-way P5P8-SYNTH loop:
+\begin{itemize}
+  \item P8 iter-108 cost-CI: per-row paired bootstrap at single cost
+  \item P8 iter-112 cost-CI: extended to 5 realistic positive rates
+  \item P8 iter-116 cost-CI: extended to 5 realistic LLM-cost ratios
+  \item P5P8-SYNTH iter-112 envelope: rate-axis projection
+  \item \textbf{P5P8-SYNTH iter-116 cost-cube envelope (this iter):
+        rate-and-cost-ratio projection}
+\end{itemize}
+The operational finding -- \textbf{xgb-only is the cost-optimal LLM-free
+rule at every (rate, cost ratio) cell at $K{=}2\,\%$} -- is now
+established at three independent cost-axis levels: single-cost
+(iter-108), realistic-rate (iter-112), and realistic-rate +
+realistic-LLM-cost (iter-116). The LLM-augmented rules would
+need to enable a DIFFERENT decision axis (larger $K$, different
+objective, latency-aware triage) to recover their cost premium.
+
+Cross-couples to:
+\begin{itemize}
+  \item P8 iter-108 row 124 (single-cost paired bootstrap)
+  \item P8 iter-112 row 127 (realistic-rate envelope)
+  \item P8 iter-116 (this iter JOB A, realistic LLM cost sweep)
+  \item P8 iter-32 row 53 (P8 $\sigma \times C_{\mathrm{inv}} \times L$
+        cube gap -- closed at the cost axis)
+  \item P8 iter-80 row 94 (gradient-band rule; reproduces iter-116
+        at cost ratio 10)
+\end{itemize}

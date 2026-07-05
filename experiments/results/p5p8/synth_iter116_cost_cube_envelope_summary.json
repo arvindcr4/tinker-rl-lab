@@ -1,0 +1,24 @@
+{
+  "iter": 116,
+  "pillar": "P5P8-SYNTH",
+  "n_rates": 5,
+  "n_cost_ratios": 5,
+  "n_cells": 25,
+  "n_xgb_only_best_cpd": 25,
+  "n_xgb_only_best_cpf": 25,
+  "cpf_ratio_grad_over_xgb_range": [
+    1.0209654377880184,
+    6.6721
+  ],
+  "cpf_ratio_grad_over_xgb_at_lowest_cost": [
+    1.0209654377880184,
+    1.0511
+  ],
+  "cpf_ratio_grad_over_xgb_at_highest_cost": [
+    3.327163594470046,
+    6.6721
+  ],
+  "p8_iter116_link": "experiments/results/p5p8/p8_iter116_cost_llm_sweep.tsv",
+  "p8_iter108_link": "experiments/results/p5p8/p8_iter108_cost_decision_cis_summary.json",
+  "p8_iter112_link": "experiments/results/p5p8/p8_iter112_cost_cis_realistic_rates_summary.json"
+}

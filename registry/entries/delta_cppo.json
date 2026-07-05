@@ -58,8 +58,8 @@
         "ci_level": 0.95,
         "source": "scripts/p5p8/p6_iter130_patch_stale_mag.py"
       },
-      "source": "experiments/results/zvf_iter130_method_risk.tsv",
-      "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)",
+      "source": "experiments/results/zvf_iter130_risk_index.tsv",
+      "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI) | iter-146 provenance-recompute audit: stored delta matches recompute from experiments/results/zvf_iter130_risk_index.tsv; source path was misattributed to experiments/results/zvf_iter130_method_risk.tsv; patched in iter-146",
       "iter_recomputed": 128
     },
     {
@@ -78,8 +78,8 @@
         "ci_level": 0.95,
         "source": "scripts/p5p8/p6_iter130_patch_stale_mag.py"
       },
-      "source": "experiments/results/zvf_iter130_risk_index.tsv",
-      "note": "recomputed iter-130 paired-seed bootstrap on mean_zvf; method=cppo, n_seeds=5, B=2000, seed=20260705",
+      "source": "experiments/results/zvf_iter130_method_risk.tsv",
+      "note": "recomputed iter-130 paired-seed bootstrap on mean_zvf; method=cppo, n_seeds=5, B=2000, seed=20260705 | iter-146 provenance-recompute audit: stored delta matches recompute from experiments/results/zvf_iter130_method_risk.tsv; source path was misattributed to experiments/results/zvf_iter130_risk_index.tsv; patched in iter-146",
       "synth_from_agg": false
     }
   ],

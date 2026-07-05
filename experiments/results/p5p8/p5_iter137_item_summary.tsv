@@ -1,0 +1,19 @@
+item_id	item_name	mode_mega	mode_n10	mode_n2	n_distinct_modes	shannon_entropy	any_recoverable	evi_mega	evi_n10	evi_n2
+1	model_family	IM	EX	AB	3	0.613	1	98/n=98 model present in filename+cells_tsv, 0/n in manifest JSON	5/n=5 per-seed JSON has 'model' field	N2 has 0 manifest fields; model implicit (aero only)
+2	ref_policy_kl	EX	NA	NA	2	0.355	1	98/n=98 explicit_json_key=ref_policy_kl	N10 uses tinker-closed sampling (no KL); ref_policy_kl=N/A by construction	N2 GRPO-family without KL term; ref_policy_kl=N/A
+3	reward_model_signature	AB	AB	AB	1	0.000	0	no reward_model emitted on mega corpus	no reward_model_signature emitted on N10	no reward_model_signature emitted on N2
+4	rollout_temperature	IM	AB	AB	2	0.355	1	98/n=98 t in filename+cells_tsv; 0/n in manifest JSON	rollout_temperature not emitted on N10 per-seed files; recoverable from experiment config if added	rollout_temperature not declared on N2; recoverable if experiment config added
+5	group_size	EX	EX	EX	1	0.000	1	98/n=98 group_size_schedule explicit + cells_tsv + filename	5/n=5 per-seed 'group' field = group_size	4 methods x 40 steps: group_size field present in every row
+6	heldout_split	EX	AB	AB	2	0.355	1	98/n=98 explicit_json_key=heldout_split	heldout_acc=5/n=5 emitted but split NAME not declared	no heldout_split on N2; tensor-only corpus
+7	decontamination_notes	EX	AB	AB	2	0.355	1	98/n=98 explicit_json_key=decontamination_notes	no decontamination_notes emitted on N10	no decontamination_notes on N2
+8	loss_form	EX	AB	TS	3	0.613	1	98/n=98 explicit_json_key=loss_form	per-step 'loss' emitted (5/n=5 runs with step_log) but loss_form NOT declared	method field acts as loss_form proxy for 4 methods: ['aero', 'areal', 'gift', 'grpo']
+9	sampler_backend_precision	EX	AB	AB	2	0.355	1	98/n=98 explicit_json_key=sampler_backend_precision	sampler_backend_precision not declared on N10 (only tinker-closed implicit)	sampler_backend_precision not declared on N2
+10	advantage_baseline	AB	AB	AB	1	0.000	0	no advantage_baseline emitted on mega	no advantage_baseline declared on N10	no advantage_baseline declared on N2
+11	token_mask	AB	AB	AB	1	0.000	0	no token_mask emitted on mega	no token_mask declared on N10	no token_mask declared on N2
+12	kl_beta	AB	NA	NA	2	0.355	0	no kl_beta emitted on mega; ref_policy_kl='n/a' for tinker-closed	N10 uses tinker-closed sampling (no KL); kl_beta=N/A by construction	N2 GRPO-family without KL; kl_beta=N/A
+13	zvf_per_step	EX	TS	EX	2	0.355	1	98/n=98 explicit_json_key=per_step_zvf_path (path only)	5/n=5 per-seed 'step_log[*].zvf' is cells_or_metrics_tsv-like	160/160 rows have zvf field
+14	K_variance_residual	TD	AB	TD	2	0.355	1	98/n=98 recoverable from group_tensor reward_vec	no group_tensor reward vectors on N10 (only aggregate step_log)	recoverable from N2 rewards arrays (n_prompts x G) on 160 rows
+15	K_unique_count	TD	AB	TD	2	0.355	1	98/n=98 |K| unique-count derivable	no group_tensor reward vectors on N10	|K| unique-count derivable on 160 N2 rows
+16	max_K_share_PLACEBO	TD	AB	TD	2	0.355	1	98/n=98 max_k share derivable (placebo per iter-81)	no group_tensor reward vectors on N10 (placebo anyway)	max_k share derivable on N2 rows (placebo per iter-81)
+17	prompt_p_hat_var	TD	AB	TD	2	0.355	1	98/n=98 Var(K/G) derivable	no group_tensor reward vectors on N10	Var(K/G) derivable on 160 N2 rows
+18	zvf130_risk_residual	AB	NA	NA	2	0.355	0	mega cells have 1 step each; zvf130 requires 130-step ZVF series	N10 runs are 15 steps (not 130); zvf130 undefined for this corpus	N2 has 40 steps per method (not 130); zvf130 undefined

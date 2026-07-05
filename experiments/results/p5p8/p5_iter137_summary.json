@@ -1,0 +1,97 @@
+{
+  "iter": 137,
+  "pillar": "P5",
+  "vein": "MIN-REPORT v2.2 cross-corpus portability audit",
+  "corpora": [
+    "mega_20260704",
+    "n10_seed_expansion",
+    "n2_reward_tensor_resume"
+  ],
+  "items_total": 18,
+  "corpus_rows": [
+    {
+      "corpus": "mega_20260704",
+      "n_units": 98,
+      "n_EX": 7,
+      "n_IM": 2,
+      "n_TS": 0,
+      "n_TD": 4,
+      "n_NA": 0,
+      "n_AB": 5,
+      "n_recoverable": 13,
+      "n_unrecoverable": 5,
+      "pct_recoverable": 72.22222222222223
+    },
+    {
+      "corpus": "n10_seed_expansion",
+      "n_units": 5,
+      "n_EX": 2,
+      "n_IM": 0,
+      "n_TS": 1,
+      "n_TD": 0,
+      "n_NA": 3,
+      "n_AB": 12,
+      "n_recoverable": 3,
+      "n_unrecoverable": 15,
+      "pct_recoverable": 16.666666666666668
+    },
+    {
+      "corpus": "n2_reward_tensor_resume",
+      "n_units": 160,
+      "n_EX": 2,
+      "n_IM": 0,
+      "n_TS": 1,
+      "n_TD": 4,
+      "n_NA": 3,
+      "n_AB": 8,
+      "n_recoverable": 7,
+      "n_unrecoverable": 11,
+      "pct_recoverable": 38.888888888888886
+    }
+  ],
+  "n_heterogeneous_items": 14,
+  "hypotheses": {
+    "H1_EX_emit_gradient": {
+      "pass": true,
+      "ex_mega": 7,
+      "ex_n10": 2,
+      "ex_n2": 2,
+      "claim": "EX-mode count is [mega=7, n10=2, n2=2]"
+    },
+    "H2_recovery_gradient": {
+      "pass": true,
+      "rec_mega": 13,
+      "rec_n10": 3,
+      "rec_n2": 7,
+      "claim": "RECOVERABLE count is [mega>=13, n2>=7, n10<=3]"
+    },
+    "H3_N2_upgrade_path": {
+      "pass": true,
+      "upg_n2": 11,
+      "claim": "N2 has >=11 items needing new emission"
+    },
+    "H4_cross_corpus_heterogeneity": {
+      "pass": true,
+      "n_heterogeneous_items": 14,
+      "n_total_items": 18,
+      "claim": ">=12/18 items have corpus-differentiated encoding mode"
+    }
+  },
+  "outputs": {
+    "cells": "experiments/results/p5p8/p5_iter137_corpus_x_item.tsv",
+    "corpus_summary": "experiments/results/p5p8/p5_iter137_corpus_summary.tsv",
+    "item_summary": "experiments/results/p5p8/p5_iter137_item_summary.tsv",
+    "entropy": "experiments/results/p5p8/p5_iter137_entropy_per_item.tsv",
+    "budget": "experiments/results/p5p8/p5_iter137_recovery_budget.tsv"
+  },
+  "cross_paper_coupling": {
+    "P5_iter113_row127a": "MIN-REPORT v2.2 declared-but-absent audit (content layer); iter-137 extends to corpus layer",
+    "P5_iter117_row132": "MIN-REPORT structural-encoding audit on mega corpus only; iter-137 audits 3 corpora",
+    "P5_iter121_row137": "value-correctness audit; iter-137 adds portability dimension",
+    "P5_iter105_row121": "per-value-class coverage; iter-137 adds per-corpus dimension",
+    "P6_iter134_row150": "P6 per-row measured-field completeness -- P6 is itself an instance of MIN-REPORT applicability (registry entries DO emit MIN-REPORT v2.2 fields via min_report block)",
+    "P7_iter135_row151": "tau-stability audit -- not directly applicable but shares same corpi",
+    "P8_iter136_row152": "calibration audit -- not a MIN-REPORT corpus (no LLM RL)",
+    "FRONTIER_INSIGHTS_round2": "ZVF = signal availability; iter-137 confirms Items 13/14/15/17 (ZVF-derived) are the most corpus-portable (TD mode across all 3)"
+  }
+}

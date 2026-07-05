@@ -16,7 +16,7 @@
       "change": "use off-policy reference rollouts from the same prompt pool to inflate the effective group size without resampling; (per le2025rlzvp, arXiv:2509.21880)."
     }
   ],
-  "notes": "Verified citation: le2025rlzvp (arXiv:2509.21880) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged.; iter-82 (window-sensitivity): CI overlap with fresh full40 paired-bootstrap (B=2000) reported in experiments/results/p5p8/p6_n2_registry_vs_measured.tsv",
+  "notes": "Verified citation: le2025rlzvp (arXiv:2509.21880) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged.; iter-82 (window-sensitivity): CI overlap with fresh full40 paired-bootstrap (B=2000) reported in experiments/results/p5p8/p6_n2_registry_vs_measured.tsv  iter-84: window-sensitivity backfill on every measured[] row of panel=n2_same_stack_*: STABLE / FRAGILE-SIGN-FLIP / STABLE-DIRECTION-MAG-SHIFT classification + robust_panel recorded based on the iter-82 re-measurement (experiments/results/p5p8/p6_n2_window_deltas.tsv + p6_n2_window_sensitivity.json, B=2000 paired-step bootstrap).",
   "measured": [
     {
       "metric": "zvf",
@@ -35,7 +35,9 @@
         "source": "scripts/p5p8/p6_measured_delta_block.py"
       },
       "source": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
-      "note": "last 10 of 40 steps, G=8, seed 0, same stack"
+      "note": "last 10 of 40 steps, G=8, seed 0, same stack",
+      "window_sensitivity": "STABLE-DIRECTION-MAG-SHIFT",
+      "robust_panel": "none"
     },
     {
       "metric": "reward_mean",
@@ -54,7 +56,9 @@
         "source": "scripts/p5p8/p6_measured_delta_block.py"
       },
       "source": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
-      "note": "last 10 of 40 steps, G=8, seed 0, same stack"
+      "note": "last 10 of 40 steps, G=8, seed 0, same stack",
+      "window_sensitivity": "STABLE-DIRECTION-MAG-SHIFT",
+      "robust_panel": "last10"
     },
     {
       "metric": "zvf_risk_mean",

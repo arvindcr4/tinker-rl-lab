@@ -1,0 +1,667 @@
+{
+  "n_methods": 4,
+  "n_steps": 40,
+  "n_configs": 12,
+  "B": 4000,
+  "seed": 20260705,
+  "configs": [
+    {
+      "name": "C_raw_tau_0.70",
+      "tau": 0.7,
+      "k_up": 1,
+      "k_dn": 1
+    },
+    {
+      "name": "C_hyst_0.70_2_2",
+      "tau": 0.7,
+      "k_up": 2,
+      "k_dn": 2
+    },
+    {
+      "name": "C_hyst_0.70_3_2",
+      "tau": 0.7,
+      "k_up": 3,
+      "k_dn": 2
+    },
+    {
+      "name": "C_hyst_0.70_3_3",
+      "tau": 0.7,
+      "k_up": 3,
+      "k_dn": 3
+    },
+    {
+      "name": "C_hyst_0.70_4_3",
+      "tau": 0.7,
+      "k_up": 4,
+      "k_dn": 3
+    },
+    {
+      "name": "C_hyst_0.75_2_2",
+      "tau": 0.75,
+      "k_up": 2,
+      "k_dn": 2
+    },
+    {
+      "name": "C_hyst_0.75_3_2",
+      "tau": 0.75,
+      "k_up": 3,
+      "k_dn": 2
+    },
+    {
+      "name": "C_hyst_0.75_3_3",
+      "tau": 0.75,
+      "k_up": 3,
+      "k_dn": 3
+    },
+    {
+      "name": "C_hyst_0.75_4_3",
+      "tau": 0.75,
+      "k_up": 4,
+      "k_dn": 3
+    },
+    {
+      "name": "C_hyst_0.80_2_2",
+      "tau": 0.8,
+      "k_up": 2,
+      "k_dn": 2
+    },
+    {
+      "name": "C_hyst_0.80_3_2",
+      "tau": 0.8,
+      "k_up": 3,
+      "k_dn": 2
+    },
+    {
+      "name": "C_hyst_0.80_3_3",
+      "tau": 0.8,
+      "k_up": 3,
+      "k_dn": 3
+    }
+  ],
+  "by_method": {
+    "grpo": {
+      "C_raw_tau_0.70": {
+        "tau": 0.7,
+        "k_up": 1,
+        "k_dn": 1,
+        "n_fires": 8,
+        "n_flips": 15,
+        "flip_rate_per_fire": 1.875,
+        "mean_dwell": 2.5,
+        "cost_ratio": 1.5,
+        "delta_yield": 8.2989,
+        "yield_per_1000_extra": 3.242
+      },
+      "C_hyst_0.70_2_2": {
+        "tau": 0.7,
+        "k_up": 2,
+        "k_dn": 2,
+        "n_fires": 3,
+        "n_flips": 5,
+        "flip_rate_per_fire": 1.667,
+        "mean_dwell": 6.67,
+        "cost_ratio": 1.45,
+        "delta_yield": 8.1505,
+        "yield_per_1000_extra": 3.538
+      },
+      "C_hyst_0.70_3_2": {
+        "tau": 0.7,
+        "k_up": 3,
+        "k_dn": 2,
+        "n_fires": 2,
+        "n_flips": 3,
+        "flip_rate_per_fire": 1.5,
+        "mean_dwell": 10.0,
+        "cost_ratio": 1.35,
+        "delta_yield": 6.9438,
+        "yield_per_1000_extra": 3.875
+      },
+      "C_hyst_0.70_3_3": {
+        "tau": 0.7,
+        "k_up": 3,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.425,
+        "delta_yield": 8.1394,
+        "yield_per_1000_extra": 3.741
+      },
+      "C_hyst_0.70_4_3": {
+        "tau": 0.7,
+        "k_up": 4,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.4,
+        "delta_yield": 7.8237,
+        "yield_per_1000_extra": 3.82
+      },
+      "C_hyst_0.75_2_2": {
+        "tau": 0.75,
+        "k_up": 2,
+        "k_dn": 2,
+        "n_fires": 3,
+        "n_flips": 5,
+        "flip_rate_per_fire": 1.667,
+        "mean_dwell": 6.67,
+        "cost_ratio": 1.45,
+        "delta_yield": 8.1505,
+        "yield_per_1000_extra": 3.538
+      },
+      "C_hyst_0.75_3_2": {
+        "tau": 0.75,
+        "k_up": 3,
+        "k_dn": 2,
+        "n_fires": 2,
+        "n_flips": 3,
+        "flip_rate_per_fire": 1.5,
+        "mean_dwell": 10.0,
+        "cost_ratio": 1.35,
+        "delta_yield": 6.9438,
+        "yield_per_1000_extra": 3.875
+      },
+      "C_hyst_0.75_3_3": {
+        "tau": 0.75,
+        "k_up": 3,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.425,
+        "delta_yield": 8.1394,
+        "yield_per_1000_extra": 3.741
+      },
+      "C_hyst_0.75_4_3": {
+        "tau": 0.75,
+        "k_up": 4,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.4,
+        "delta_yield": 7.8237,
+        "yield_per_1000_extra": 3.82
+      },
+      "C_hyst_0.80_2_2": {
+        "tau": 0.8,
+        "k_up": 2,
+        "k_dn": 2,
+        "n_fires": 2,
+        "n_flips": 4,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 8.0,
+        "cost_ratio": 1.275,
+        "delta_yield": 5.2652,
+        "yield_per_1000_extra": 3.74
+      },
+      "C_hyst_0.80_3_2": {
+        "tau": 0.8,
+        "k_up": 3,
+        "k_dn": 2,
+        "n_fires": 2,
+        "n_flips": 4,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 8.0,
+        "cost_ratio": 1.15,
+        "delta_yield": 3.1288,
+        "yield_per_1000_extra": 4.074
+      },
+      "C_hyst_0.80_3_3": {
+        "tau": 0.8,
+        "k_up": 3,
+        "k_dn": 3,
+        "n_fires": 2,
+        "n_flips": 4,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 8.0,
+        "cost_ratio": 1.2,
+        "delta_yield": 4.2198,
+        "yield_per_1000_extra": 4.121
+      }
+    },
+    "aero": {
+      "C_raw_tau_0.70": {
+        "tau": 0.7,
+        "k_up": 1,
+        "k_dn": 1,
+        "n_fires": 9,
+        "n_flips": 18,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 2.11,
+        "cost_ratio": 1.475,
+        "delta_yield": 7.0413,
+        "yield_per_1000_extra": 2.895
+      },
+      "C_hyst_0.70_2_2": {
+        "tau": 0.7,
+        "k_up": 2,
+        "k_dn": 2,
+        "n_fires": 2,
+        "n_flips": 4,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 8.0,
+        "cost_ratio": 1.4,
+        "delta_yield": 6.9603,
+        "yield_per_1000_extra": 3.399
+      },
+      "C_hyst_0.70_3_2": {
+        "tau": 0.7,
+        "k_up": 3,
+        "k_dn": 2,
+        "n_fires": 1,
+        "n_flips": 2,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 13.33,
+        "cost_ratio": 1.25,
+        "delta_yield": 4.5664,
+        "yield_per_1000_extra": 3.568
+      },
+      "C_hyst_0.70_3_3": {
+        "tau": 0.7,
+        "k_up": 3,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 2,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 13.33,
+        "cost_ratio": 1.275,
+        "delta_yield": 5.2586,
+        "yield_per_1000_extra": 3.735
+      },
+      "C_hyst_0.70_4_3": {
+        "tau": 0.7,
+        "k_up": 4,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 2,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 13.33,
+        "cost_ratio": 1.25,
+        "delta_yield": 4.7997,
+        "yield_per_1000_extra": 3.75
+      },
+      "C_hyst_0.75_2_2": {
+        "tau": 0.75,
+        "k_up": 2,
+        "k_dn": 2,
+        "n_fires": 2,
+        "n_flips": 4,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 8.0,
+        "cost_ratio": 1.4,
+        "delta_yield": 6.9603,
+        "yield_per_1000_extra": 3.399
+      },
+      "C_hyst_0.75_3_2": {
+        "tau": 0.75,
+        "k_up": 3,
+        "k_dn": 2,
+        "n_fires": 1,
+        "n_flips": 2,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 13.33,
+        "cost_ratio": 1.25,
+        "delta_yield": 4.5664,
+        "yield_per_1000_extra": 3.568
+      },
+      "C_hyst_0.75_3_3": {
+        "tau": 0.75,
+        "k_up": 3,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 2,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 13.33,
+        "cost_ratio": 1.275,
+        "delta_yield": 5.2586,
+        "yield_per_1000_extra": 3.735
+      },
+      "C_hyst_0.75_4_3": {
+        "tau": 0.75,
+        "k_up": 4,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 2,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 13.33,
+        "cost_ratio": 1.25,
+        "delta_yield": 4.7997,
+        "yield_per_1000_extra": 3.75
+      },
+      "C_hyst_0.80_2_2": {
+        "tau": 0.8,
+        "k_up": 2,
+        "k_dn": 2,
+        "n_fires": 2,
+        "n_flips": 4,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 8.0,
+        "cost_ratio": 1.3,
+        "delta_yield": 4.9722,
+        "yield_per_1000_extra": 3.237
+      },
+      "C_hyst_0.80_3_2": {
+        "tau": 0.8,
+        "k_up": 3,
+        "k_dn": 2,
+        "n_fires": 2,
+        "n_flips": 4,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 8.0,
+        "cost_ratio": 1.175,
+        "delta_yield": 3.1813,
+        "yield_per_1000_extra": 3.551
+      },
+      "C_hyst_0.80_3_3": {
+        "tau": 0.8,
+        "k_up": 3,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 2,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 13.33,
+        "cost_ratio": 1.275,
+        "delta_yield": 5.2586,
+        "yield_per_1000_extra": 3.735
+      }
+    },
+    "gift": {
+      "C_raw_tau_0.70": {
+        "tau": 0.7,
+        "k_up": 1,
+        "k_dn": 1,
+        "n_fires": 8,
+        "n_flips": 15,
+        "flip_rate_per_fire": 1.875,
+        "mean_dwell": 2.67,
+        "cost_ratio": 1.65,
+        "delta_yield": 6.6199,
+        "yield_per_1000_extra": 1.989
+      },
+      "C_hyst_0.70_2_2": {
+        "tau": 0.7,
+        "k_up": 2,
+        "k_dn": 2,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.45,
+        "delta_yield": 3.7351,
+        "yield_per_1000_extra": 1.621
+      },
+      "C_hyst_0.70_3_2": {
+        "tau": 0.7,
+        "k_up": 3,
+        "k_dn": 2,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.425,
+        "delta_yield": 3.4865,
+        "yield_per_1000_extra": 1.602
+      },
+      "C_hyst_0.70_3_3": {
+        "tau": 0.7,
+        "k_up": 3,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.425,
+        "delta_yield": 3.4865,
+        "yield_per_1000_extra": 1.602
+      },
+      "C_hyst_0.70_4_3": {
+        "tau": 0.7,
+        "k_up": 4,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.4,
+        "delta_yield": 3.2378,
+        "yield_per_1000_extra": 1.581
+      },
+      "C_hyst_0.75_2_2": {
+        "tau": 0.75,
+        "k_up": 2,
+        "k_dn": 2,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.45,
+        "delta_yield": 3.7351,
+        "yield_per_1000_extra": 1.621
+      },
+      "C_hyst_0.75_3_2": {
+        "tau": 0.75,
+        "k_up": 3,
+        "k_dn": 2,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.425,
+        "delta_yield": 3.4865,
+        "yield_per_1000_extra": 1.602
+      },
+      "C_hyst_0.75_3_3": {
+        "tau": 0.75,
+        "k_up": 3,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.425,
+        "delta_yield": 3.4865,
+        "yield_per_1000_extra": 1.602
+      },
+      "C_hyst_0.75_4_3": {
+        "tau": 0.75,
+        "k_up": 4,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.4,
+        "delta_yield": 3.2378,
+        "yield_per_1000_extra": 1.581
+      },
+      "C_hyst_0.80_2_2": {
+        "tau": 0.8,
+        "k_up": 2,
+        "k_dn": 2,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.425,
+        "delta_yield": 3.4865,
+        "yield_per_1000_extra": 1.602
+      },
+      "C_hyst_0.80_3_2": {
+        "tau": 0.8,
+        "k_up": 3,
+        "k_dn": 2,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.4,
+        "delta_yield": 3.2378,
+        "yield_per_1000_extra": 1.581
+      },
+      "C_hyst_0.80_3_3": {
+        "tau": 0.8,
+        "k_up": 3,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.4,
+        "delta_yield": 3.2378,
+        "yield_per_1000_extra": 1.581
+      }
+    },
+    "areal": {
+      "C_raw_tau_0.70": {
+        "tau": 0.7,
+        "k_up": 1,
+        "k_dn": 1,
+        "n_fires": 9,
+        "n_flips": 17,
+        "flip_rate_per_fire": 1.889,
+        "mean_dwell": 2.22,
+        "cost_ratio": 1.425,
+        "delta_yield": 6.0372,
+        "yield_per_1000_extra": 2.774
+      },
+      "C_hyst_0.70_2_2": {
+        "tau": 0.7,
+        "k_up": 2,
+        "k_dn": 2,
+        "n_fires": 2,
+        "n_flips": 3,
+        "flip_rate_per_fire": 1.5,
+        "mean_dwell": 10.0,
+        "cost_ratio": 1.375,
+        "delta_yield": 6.894,
+        "yield_per_1000_extra": 3.591
+      },
+      "C_hyst_0.70_3_2": {
+        "tau": 0.7,
+        "k_up": 3,
+        "k_dn": 2,
+        "n_fires": 1,
+        "n_flips": 2,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 13.33,
+        "cost_ratio": 1.25,
+        "delta_yield": 4.6665,
+        "yield_per_1000_extra": 3.646
+      },
+      "C_hyst_0.70_3_3": {
+        "tau": 0.7,
+        "k_up": 3,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.4,
+        "delta_yield": 8.0887,
+        "yield_per_1000_extra": 3.95
+      },
+      "C_hyst_0.70_4_3": {
+        "tau": 0.7,
+        "k_up": 4,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.275,
+        "delta_yield": 7.0483,
+        "yield_per_1000_extra": 5.006
+      },
+      "C_hyst_0.75_2_2": {
+        "tau": 0.75,
+        "k_up": 2,
+        "k_dn": 2,
+        "n_fires": 2,
+        "n_flips": 3,
+        "flip_rate_per_fire": 1.5,
+        "mean_dwell": 10.0,
+        "cost_ratio": 1.375,
+        "delta_yield": 6.894,
+        "yield_per_1000_extra": 3.591
+      },
+      "C_hyst_0.75_3_2": {
+        "tau": 0.75,
+        "k_up": 3,
+        "k_dn": 2,
+        "n_fires": 1,
+        "n_flips": 2,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 13.33,
+        "cost_ratio": 1.25,
+        "delta_yield": 4.6665,
+        "yield_per_1000_extra": 3.646
+      },
+      "C_hyst_0.75_3_3": {
+        "tau": 0.75,
+        "k_up": 3,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.4,
+        "delta_yield": 8.0887,
+        "yield_per_1000_extra": 3.95
+      },
+      "C_hyst_0.75_4_3": {
+        "tau": 0.75,
+        "k_up": 4,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 1,
+        "flip_rate_per_fire": 1.0,
+        "mean_dwell": 20.0,
+        "cost_ratio": 1.275,
+        "delta_yield": 7.0483,
+        "yield_per_1000_extra": 5.006
+      },
+      "C_hyst_0.80_2_2": {
+        "tau": 0.8,
+        "k_up": 2,
+        "k_dn": 2,
+        "n_fires": 1,
+        "n_flips": 2,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 13.33,
+        "cost_ratio": 1.2,
+        "delta_yield": 2.4024,
+        "yield_per_1000_extra": 2.346
+      },
+      "C_hyst_0.80_3_2": {
+        "tau": 0.8,
+        "k_up": 3,
+        "k_dn": 2,
+        "n_fires": 1,
+        "n_flips": 2,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 13.33,
+        "cost_ratio": 1.175,
+        "delta_yield": 2.0636,
+        "yield_per_1000_extra": 2.303
+      },
+      "C_hyst_0.80_3_3": {
+        "tau": 0.8,
+        "k_up": 3,
+        "k_dn": 3,
+        "n_fires": 1,
+        "n_flips": 2,
+        "flip_rate_per_fire": 2.0,
+        "mean_dwell": 13.33,
+        "cost_ratio": 1.2,
+        "delta_yield": 3.5069,
+        "yield_per_1000_extra": 3.425
+      }
+    }
+  }
+}

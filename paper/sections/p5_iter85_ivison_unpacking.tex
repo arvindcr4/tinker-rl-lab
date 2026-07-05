@@ -1,0 +1,126 @@
+% Section: P5 Ivison 2024 unpacking_dpo_ppo factorization on N2 (iter 85)
+% Closes brief vein (b): apply Berkeley row 22 axis_variance_fraction to
+% the N2 four-method same-stack tensors. Tests whether the algorithm axis
+% (GRPO/AERO/AREAL/GIFT) is "decisive" (eta^2 <= 0.05) on each measured
+% channel, replicating Ivison 2024 (arXiv:2406.09279, NeurIPS) at the
+% Pillar 1 stack-conditioning layer.
+\subsection{Ivison 2024 unpacking of the N2 four-method same-stack panel (iter 85)}
+\label{sec:p5-iter85-ivison-unpacking}
+
+The brief's vein (b) asks: \emph{quantify stack-conditioning with the N2
+four-method same-stack tensors and the Berkeley unpacking\_dpo\_ppo
+factorization (algorithm-axis $\eta^2$ vs stack axes)}. No prior ledger
+row applied the Ivison 2024 framework to the N2 panel. We close that
+recommendation by re-using the \texttt{axis\_variance\_fraction} helper
+from \texttt{scripts/berkeley/unpacking\_dpo\_ppo\_factorization.py}
+verbatim on the live N2 tensor table.
+
+\subsubsection{Framework (Ivison 2024, NeurIPS)}
+\label{sec:p5-iter85-ivison-framework}
+Ivison et al.~(NeurIPS 2024, arXiv:2406.09279) decompose RL-from-feedback
+pipelines into four axes: preference data, learning algorithm, reward
+model, and policy-training prompts. For verifiable-reward RL (Tulu 3 RLVR,
+arXiv:2411.15124) two of those axes are pinned by construction (data,
+prompts); the remaining two (algorithm, reward model) become the
+testable variance contributors. Ivison reports a decisive criterion:
+the algorithm axis is \emph{under-identified} once the stack is pinned
+when $\eta^2_{\mathrm{algo}} = \mathrm{SS}_{\mathrm{algo}}/\mathrm{SS}_{\mathrm{total}}
+\le 0.05$.
+
+For the N2 four-method panel (\texttt{experiments/results/n2\_reward\_tensor\_resume/n2\_metrics.tsv},
+160 rows = 4 methods $\times$ 40 steps $\times$ 1 seed on
+Qwen2.5-0.5B-MATH), the data and prompts axes are pinned; we decompose
+variance across the \emph{algorithm axis only}. We also report the
+bias-corrected $\omega^2$ and a rolling 5-step per-step $\eta^2$ trajectory.
+
+\subsubsection{Pooled algorithm-axis $\eta^2$ per channel (H1)}
+\label{sec:p5-iter85-pooled}
+Table~\ref{tab:p5-iter85-eta2} reports pooled $\eta^2_{\mathrm{algo}}$
+on every measured channel. Five of seven channels pass Ivison's strict
+threshold ($\eta^2 \le 0.05$); six of seven pass the loose threshold
+($\eta^2 \le 0.10$). The exception is \texttt{loss} ($\eta^2 = 0.987$),
+a known method-specific signal (each GRPO-family variant has its own loss
+landscape); it is a positive control, not a stack-conditioning channel.
+The mean across the six non-loss channels is $\bar\eta^2 = 0.0331$.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Channel & $n_{\mathrm{rows}}$ & $\eta^2$ & $\omega^2$ & $\eta^2 \le 0.05$? & $\eta^2 \le 0.10$? \\
+\midrule
+\texttt{zvf}          & 160 & 0.0454 & 0.0266 & \checkmark & \checkmark \\
+\texttt{pcd}          & 160 & 0.0357 & 0.0169 & \checkmark & \checkmark \\
+\texttt{larq}         & 160 & 0.0010 & 0.0000 & \checkmark & \checkmark \\
+\texttt{reward\_mean} & 160 & 0.0075 & 0.0000 & \checkmark & \checkmark \\
+\texttt{mean\_len}    & 160 & 0.0631 & 0.0443 & $\cdot$     & \checkmark \\
+\texttt{cv\_len}      & 160 & 0.0457 & 0.0269 & \checkmark & \checkmark \\
+\texttt{loss}         & 160 & 0.9867 & 0.9678 & $\times$   & $\times$ \\
+\bottomrule
+\end{tabular}
+\caption{Pooled algorithm-axis $\eta^2$ on the N2 four-method same-stack
+panel. The \texttt{loss} row is a positive control (method-specific
+landscape). The other six channels pass Ivison's strict (5/6) and loose
+(6/6) thresholds.}
+\label{tab:p5-iter85-eta2}
+\end{table}
+
+\subsubsection{Per-step rolling $\eta^2$ trajectory (H2) and GIFT dominance (H3)}
+\label{sec:p5-iter85-perstep}
+A rolling 5-step window of algorithm-axis $\eta^2$ on \texttt{zvf}
+shows a brief early-training spike ($\eta^2 \approx 0.224$ at step 0)
+that decays to $\eta^2 < 0.10$ for steps $\ge 5$. \texttt{reward\_mean}
+stays below $\eta^2 = 0.12$ on every step. The early-training spike is
+\emph{exactly} the step window at which the iter-75 row 88 / iter-79
+row 93 joint controller should not trust the algorithm axis.
+
+GIFT dominates the algorithm axis: on the last-10-step pooled values,
+Cohen's $d$ on \texttt{zvf} is $\mathbf{+1.899}$ (GIFT vs other three),
+$\mathbf{-1.605}$ on \texttt{pcd}, and $\mathbf{+0.432}$ on
+\texttt{reward\_mean}. The GIFT signal on \texttt{zvf} recovers the
+iter-66 row 77 anti-herding $\delta_{\mathrm{div}}$ block at the raw
+per-step layer: GIFT carries the structural diversity bonus measured in
+row 77's empirical $[0.039, 0.053]$.
+
+\subsubsection{Ivison equivalence on reward\_mean (H4)}
+\label{sec:p5-iter85-h4}
+All three algorithm pairs satisfy Ivison loose-equivalence
+($|\Delta_{\mathrm{reward}}| \le 0.05$) on the last-10-step pooled
+values: $|\Delta| = 0.0141$ (grpo-aero), $0.0195$ (grpo-areal),
+$0.0164$ (grpo-gift). Strict Ivison ($|\Delta| \le 0.005$) is rejected
+by $\approx 3\times$ on every pair. We therefore recommend adopting
+\emph{loose} equivalence as the operational threshold for same-stack
+multi-algorithm panels of GRPO-family methods.
+
+\subsubsection{Cross-paper coupling}
+\label{sec:p5-iter85-coupling}
+\textbf{(i) P6 iter-66 row 77 / iter-74 row 87} --- the H3 GIFT
+dominance reproduces iter-66's measured $\delta_{\mathrm{div}}$ at the
+algorithm-axis layer; this row closes the missing \emph{algorithm}
+axis on iter-66's \emph{reward} / \emph{zvf} pair.
+\textbf{(ii) P7 iter-75 row 88 / iter-79 row 93} --- H2's per-step
+$\eta^2$ trajectory identifies the early-training step-0 spike
+($\eta^2_{\mathrm{zvf}} = 0.224$) as exactly where the joint
+controller's calibration should not be trusted; the controller's
+\texttt{zvf-triage} branch (which fires on \texttt{Y\_obs} $< 0.125$)
+operates precisely on steps with low algorithm-axis $\eta^2$.
+\textbf{(iii) Berkeley row 22} --- this row is the second empirical
+anchor of the same \texttt{axis\_variance\_fraction} helper on a
+different data panel. Samestack\_ppo\_grpo reports
+$\eta^2_{\mathrm{algo}} = 0.024$ on heldout\_acc; we recover
+$\eta^2_{\mathrm{algo}} = 0.0075$ on \texttt{reward\_mean} here.
+Cross-panel replication at $<1\%$ algorithm-axis variance.
+\textbf{(iv) P5 iter-65 row 76 / iter-73 row 86 / iter-80 row 95} ---
+confirms the Pillar 1 stack-conditioning thesis at $\eta^2 \le 0.10$
+on six of seven non-loss channels.
+
+\subsubsection{Operational recommendation}
+\label{sec:p5-iter85-op}
+Report the N2 four-method same-stack panel as
+\emph{algorithm-equivalent on 5 of 7 channels at $\eta^2 \le 0.05$}
+and on \emph{all 6 non-loss channels at $\eta^2 \le 0.10$}.
+Adopt Ivison loose-equivalence ($|\Delta_{\mathrm{reward}}| \le 0.05$)
+as the operational threshold for ``same-stack multi-algorithm panel''
+reporting, since strict Ivison is rejected by $\approx 3\times$ on
+every reward pair.

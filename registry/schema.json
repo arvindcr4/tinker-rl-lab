@@ -919,6 +919,26 @@
         },
         "note": {
           "$ref": "#/$defs/nullable_string"
+        },
+        "window_sensitivity": {
+          "type": "string",
+          "enum": [
+            "STABLE",
+            "STABLE-DIRECTION-MAG-SHIFT",
+            "FRAGILE-SIGN-FLIP"
+          ],
+          "description": "iter-84: window-sensitivity verdict of this (metric, panel) row under remeasurement on full40 / last10 / last5 (paired bootstrap B=2000, seed 20260705); see docs/p5p8_improvements/97_p6_n2_window_sensitivity.md."
+        },
+        "robust_panel": {
+          "type": "string",
+          "enum": [
+            "full40",
+            "last20",
+            "last10",
+            "last5",
+            "none"
+          ],
+          "description": "iter-84: largest-window panel at which the same-sign significance holds; 'none' if no panel is significant."
         }
       }
     },

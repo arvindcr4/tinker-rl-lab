@@ -1,0 +1,441 @@
+{
+  "n_test": 10000,
+  "n_pos": 144,
+  "cells": [
+    {
+      "cohort": "v_mean",
+      "stratum": 0,
+      "tree": "XGB-20raw",
+      "n": 2000,
+      "pos": 16,
+      "ece10": 0.06977333675207048,
+      "brier": 0.015564964256051963,
+      "calib_gap": 0.06925556991876511,
+      "mean_pred": 0.0772555699187651,
+      "obs_rate": 0.008,
+      "recall_at_K_2pct": 0.6875
+    },
+    {
+      "cohort": "v_mean",
+      "stratum": 1,
+      "tree": "XGB-20raw",
+      "n": 2000,
+      "pos": 34,
+      "ece10": 0.09872252856705745,
+      "brier": 0.027060313329280394,
+      "calib_gap": 0.09763586210225185,
+      "mean_pred": 0.11463586210225185,
+      "obs_rate": 0.017,
+      "recall_at_K_2pct": 0.7058823529411765
+    },
+    {
+      "cohort": "v_mean",
+      "stratum": 2,
+      "tree": "XGB-20raw",
+      "n": 2000,
+      "pos": 30,
+      "ece10": 0.11487603343582303,
+      "brier": 0.03348150450276296,
+      "calib_gap": 0.11441180140829237,
+      "mean_pred": 0.12941180140829237,
+      "obs_rate": 0.015,
+      "recall_at_K_2pct": 0.4666666666666667
+    },
+    {
+      "cohort": "v_mean",
+      "stratum": 3,
+      "tree": "XGB-20raw",
+      "n": 2000,
+      "pos": 43,
+      "ece10": 0.11022716196234976,
+      "brier": 0.0329494990576308,
+      "calib_gap": 0.11006142010148323,
+      "mean_pred": 0.13156142010148322,
+      "obs_rate": 0.0215,
+      "recall_at_K_2pct": 0.5116279069767442
+    },
+    {
+      "cohort": "v_mean",
+      "stratum": 4,
+      "tree": "XGB-20raw",
+      "n": 2000,
+      "pos": 21,
+      "ece10": 0.09371278671623441,
+      "brier": 0.01922135176291742,
+      "calib_gap": 0.09210539434553357,
+      "mean_pred": 0.10260539434553356,
+      "obs_rate": 0.0105,
+      "recall_at_K_2pct": 0.9523809523809523
+    },
+    {
+      "cohort": "v_mean",
+      "stratum": 0,
+      "tree": "XGB-24full",
+      "n": 2000,
+      "pos": 16,
+      "ece10": 0.07220380474191916,
+      "brier": 0.01418335906709747,
+      "calib_gap": 0.07220380474191915,
+      "mean_pred": 0.08020380474191915,
+      "obs_rate": 0.008,
+      "recall_at_K_2pct": 1.0
+    },
+    {
+      "cohort": "v_mean",
+      "stratum": 1,
+      "tree": "XGB-24full",
+      "n": 2000,
+      "pos": 34,
+      "ece10": 0.11798899158101996,
+      "brier": 0.030732085932098946,
+      "calib_gap": 0.11731932308536487,
+      "mean_pred": 0.13431932308536487,
+      "obs_rate": 0.017,
+      "recall_at_K_2pct": 0.9117647058823529
+    },
+    {
+      "cohort": "v_mean",
+      "stratum": 2,
+      "tree": "XGB-24full",
+      "n": 2000,
+      "pos": 30,
+      "ece10": 0.15667359152948482,
+      "brier": 0.047138489068734385,
+      "calib_gap": 0.15667359152948485,
+      "mean_pred": 0.17167359152948483,
+      "obs_rate": 0.015,
+      "recall_at_K_2pct": 0.8333333333333334
+    },
+    {
+      "cohort": "v_mean",
+      "stratum": 3,
+      "tree": "XGB-24full",
+      "n": 2000,
+      "pos": 43,
+      "ece10": 0.15035878058581145,
+      "brier": 0.04341625744040049,
+      "calib_gap": 0.14944701077847278,
+      "mean_pred": 0.17094701077847277,
+      "obs_rate": 0.0215,
+      "recall_at_K_2pct": 0.7906976744186046
+    },
+    {
+      "cohort": "v_mean",
+      "stratum": 4,
+      "tree": "XGB-24full",
+      "n": 2000,
+      "pos": 21,
+      "ece10": 0.08940711950170224,
+      "brier": 0.02026280923958656,
+      "calib_gap": 0.08885691409217543,
+      "mean_pred": 0.09935691409217542,
+      "obs_rate": 0.0105,
+      "recall_at_K_2pct": 1.0
+    },
+    {
+      "cohort": "amount",
+      "stratum": 0,
+      "tree": "XGB-20raw",
+      "n": 2000,
+      "pos": 27,
+      "ece10": 0.17643310203007417,
+      "brier": 0.05425755033413318,
+      "calib_gap": 0.17627441968373023,
+      "mean_pred": 0.18977441968373024,
+      "obs_rate": 0.0135,
+      "recall_at_K_2pct": 0.5185185185185185
+    },
+    {
+      "cohort": "amount",
+      "stratum": 1,
+      "tree": "XGB-20raw",
+      "n": 2000,
+      "pos": 34,
+      "ece10": 0.1177774032629095,
+      "brier": 0.0296005880634973,
+      "calib_gap": 0.11676797488098965,
+      "mean_pred": 0.13376797488098965,
+      "obs_rate": 0.017,
+      "recall_at_K_2pct": 0.6764705882352942
+    },
+    {
+      "cohort": "amount",
+      "stratum": 2,
+      "tree": "XGB-20raw",
+      "n": 2000,
+      "pos": 22,
+      "ece10": 0.09247661137784598,
+      "brier": 0.022068267321693646,
+      "calib_gap": 0.09183667010272621,
+      "mean_pred": 0.10283667010272621,
+      "obs_rate": 0.011,
+      "recall_at_K_2pct": 0.5909090909090909
+    },
+    {
+      "cohort": "amount",
+      "stratum": 3,
+      "tree": "XGB-20raw",
+      "n": 2000,
+      "pos": 30,
+      "ece10": 0.06314231406920591,
+      "brier": 0.014183261753873227,
+      "calib_gap": 0.06171976333134807,
+      "mean_pred": 0.07671976333134807,
+      "obs_rate": 0.015,
+      "recall_at_K_2pct": 0.8333333333333334
+    },
+    {
+      "cohort": "amount",
+      "stratum": 4,
+      "tree": "XGB-20raw",
+      "n": 2000,
+      "pos": 31,
+      "ece10": 0.042100383464625336,
+      "brier": 0.008167965435446192,
+      "calib_gap": 0.03687121987753199,
+      "mean_pred": 0.05237121987753199,
+      "obs_rate": 0.0155,
+      "recall_at_K_2pct": 0.9354838709677419
+    },
+    {
+      "cohort": "amount",
+      "stratum": 0,
+      "tree": "XGB-24full",
+      "n": 2000,
+      "pos": 27,
+      "ece10": 0.15258442388568072,
+      "brier": 0.04397207482778398,
+      "calib_gap": 0.1524265677789226,
+      "mean_pred": 0.16592656777892262,
+      "obs_rate": 0.0135,
+      "recall_at_K_2pct": 0.9259259259259259
+    },
+    {
+      "cohort": "amount",
+      "stratum": 1,
+      "tree": "XGB-24full",
+      "n": 2000,
+      "pos": 34,
+      "ece10": 0.1359524149085046,
+      "brier": 0.03672522781916582,
+      "calib_gap": 0.1351912028575898,
+      "mean_pred": 0.1521912028575898,
+      "obs_rate": 0.017,
+      "recall_at_K_2pct": 0.8529411764705882
+    },
+    {
+      "cohort": "amount",
+      "stratum": 2,
+      "tree": "XGB-24full",
+      "n": 2000,
+      "pos": 22,
+      "ece10": 0.11948402819235346,
+      "brier": 0.031671136702533575,
+      "calib_gap": 0.11948402819235344,
+      "mean_pred": 0.13048402819235344,
+      "obs_rate": 0.011,
+      "recall_at_K_2pct": 0.9545454545454546
+    },
+    {
+      "cohort": "amount",
+      "stratum": 3,
+      "tree": "XGB-24full",
+      "n": 2000,
+      "pos": 30,
+      "ece10": 0.10295138424687322,
+      "brier": 0.026343866309999908,
+      "calib_gap": 0.10295138424687321,
+      "mean_pred": 0.11795138424687321,
+      "obs_rate": 0.015,
+      "recall_at_K_2pct": 0.9666666666666667
+    },
+    {
+      "cohort": "amount",
+      "stratum": 4,
+      "tree": "XGB-24full",
+      "n": 2000,
+      "pos": 31,
+      "ece10": 0.07528405632932846,
+      "brier": 0.01702069508843457,
+      "calib_gap": 0.074447461151678,
+      "mean_pred": 0.089947461151678,
+      "obs_rate": 0.0155,
+      "recall_at_K_2pct": 1.0
+    },
+    {
+      "cohort": "time",
+      "stratum": 0,
+      "tree": "XGB-20raw",
+      "n": 3333,
+      "pos": 51,
+      "ece10": 0.12900553789683664,
+      "brier": 0.0379868015980554,
+      "calib_gap": 0.1288367490238354,
+      "mean_pred": 0.1441382791768507,
+      "obs_rate": 0.0153015301530153,
+      "recall_at_K_2pct": 0.5882352941176471
+    },
+    {
+      "cohort": "time",
+      "stratum": 1,
+      "tree": "XGB-20raw",
+      "n": 3333,
+      "pos": 44,
+      "ece10": 0.09637131430366033,
+      "brier": 0.023771818890902435,
+      "calib_gap": 0.09612588473045247,
+      "mean_pred": 0.10932720486246567,
+      "obs_rate": 0.013201320132013201,
+      "recall_at_K_2pct": 0.7045454545454546
+    },
+    {
+      "cohort": "time",
+      "stratum": 2,
+      "tree": "XGB-20raw",
+      "n": 3334,
+      "pos": 49,
+      "ece10": 0.06662780392673764,
+      "brier": 0.01521109289969725,
+      "calib_gap": 0.06512886546179086,
+      "mean_pred": 0.07982592604967328,
+      "obs_rate": 0.014697060587882423,
+      "recall_at_K_2pct": 0.7755102040816326
+    },
+    {
+      "cohort": "time",
+      "stratum": 0,
+      "tree": "XGB-24full",
+      "n": 3333,
+      "pos": 51,
+      "ece10": 0.13304835360124131,
+      "brier": 0.037517943005714274,
+      "calib_gap": 0.13304835360124134,
+      "mean_pred": 0.14834988375425665,
+      "obs_rate": 0.0153015301530153,
+      "recall_at_K_2pct": 0.8823529411764706
+    },
+    {
+      "cohort": "time",
+      "stratum": 1,
+      "tree": "XGB-24full",
+      "n": 3333,
+      "pos": 44,
+      "ece10": 0.11906831216785652,
+      "brier": 0.030452412192158072,
+      "calib_gap": 0.11898935420072496,
+      "mean_pred": 0.13219067433273815,
+      "obs_rate": 0.013201320132013201,
+      "recall_at_K_2pct": 0.9545454545454546
+    },
+    {
+      "cohort": "time",
+      "stratum": 2,
+      "tree": "XGB-24full",
+      "n": 3334,
+      "pos": 49,
+      "ece10": 0.09895387355514189,
+      "brier": 0.02547114805678679,
+      "calib_gap": 0.09866814887548904,
+      "mean_pred": 0.11336520946337146,
+      "obs_rate": 0.014697060587882423,
+      "recall_at_K_2pct": 0.9795918367346939
+    }
+  ],
+  "n_bin": 10,
+  "boot_seed": 20260705,
+  "boot_B": 400,
+  "H1_ece_spread_across_cohorts": {
+    "max_min_ece_per_cohort_tree": {
+      "amount__XGB-20raw": {
+        "max": 0.17643,
+        "min": 0.0421,
+        "spread": 0.13433
+      },
+      "amount__XGB-24full": {
+        "max": 0.15258,
+        "min": 0.07528,
+        "spread": 0.0773
+      },
+      "time__XGB-20raw": {
+        "max": 0.12901,
+        "min": 0.06663,
+        "spread": 0.06238
+      },
+      "time__XGB-24full": {
+        "max": 0.13305,
+        "min": 0.09895,
+        "spread": 0.03409
+      },
+      "v_mean__XGB-20raw": {
+        "max": 0.11488,
+        "min": 0.06977,
+        "spread": 0.0451
+      },
+      "v_mean__XGB-24full": {
+        "max": 0.15667,
+        "min": 0.0722,
+        "spread": 0.08447
+      }
+    }
+  },
+  "H2_24full_minus_20raw_ece_delta": {
+    "v_mean": {
+      "n_strata": 5,
+      "obs_mean_delta": 0.01986,
+      "ci_lo": 0.01742,
+      "ci_hi": 0.02215,
+      "excl_zero": true
+    },
+    "amount": {
+      "n_strata": 5,
+      "obs_mean_delta": 0.01887,
+      "ci_lo": 0.01634,
+      "ci_hi": 0.02074,
+      "excl_zero": true
+    },
+    "time": {
+      "n_strata": 3,
+      "obs_mean_delta": 0.01969,
+      "ci_lo": 0.01729,
+      "ci_hi": 0.02224,
+      "excl_zero": true
+    }
+  },
+  "H3_eta2_calib_gap": {
+    "v_mean": {
+      "XGB-20raw": 0.9736,
+      "XGB-24full": 0.92644
+    },
+    "amount": {
+      "XGB-20raw": 0.80172,
+      "XGB-24full": 0.94995
+    },
+    "time": {
+      "XGB-20raw": 0.93251,
+      "XGB-24full": 0.98563
+    }
+  },
+  "H4_worst_cohort_ece_24full": {
+    "v_mean": {
+      "worst_stratum": 2,
+      "worst_ece10": 0.15667,
+      "worst_n_stratum": 2000,
+      "worst_pos_stratum": 30,
+      "well_calibrated": false
+    },
+    "amount": {
+      "worst_stratum": 0,
+      "worst_ece10": 0.15258,
+      "worst_n_stratum": 2000,
+      "worst_pos_stratum": 27,
+      "well_calibrated": false
+    },
+    "time": {
+      "worst_stratum": 0,
+      "worst_ece10": 0.13305,
+      "worst_n_stratum": 3333,
+      "worst_pos_stratum": 51,
+      "well_calibrated": false
+    }
+  }
+}

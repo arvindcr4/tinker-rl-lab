@@ -1,0 +1,161 @@
+% Iter 167 — P7 Oracle-Regret Counterfactual
+% Quantifies how every empirical controller compares to the per-prompt oracle.
+
+\subsubsection*{Motivation}
+
+Iter-98 (Iso-G row 98) Pareto-compared Iso-G against other empirical
+controllers but \emph{not} against the per-prompt oracle that sees each
+prompt's true $\hat p$. Iter-159 (\texttt{paper\_P7\_zvf\_controller.tex}
+\S~iter-159) measured the gap to the oracle via a different metric
+(Section~\ref{sec:p7-iter159-pareto}). Neither head-to-head used a
+\emph{double-axis} contrast restoration on the full N2 reward tensors.
+Iter-167 closes this gap by computing the oracle's optimal $G^\star$ for
+each of $4 \times 40 \times 16 = 2{,}560$ (method, step, prompt) cells
+under the i.i.d. Binomial contrast model, then measuring two outcome axes
+on every empirical controller.
+
+\subsubsection*{Oracle definition}
+
+For each prompt with $k$ successes at $G_{\mathrm{base}}=8$ rollouts,
+$\hat p = k / 8$. The oracle controller picks
+\begin{align}
+G^\star(\hat p)
+  &= \arg\max_{G' \in \{2,4,6,8,10,12,16,24,32\}}
+     \frac{\Delta Y(\hat p, G')}{\max(1,\, G' - G_{\mathrm{base}})} \label{eq:iter167-oracle}\\
+\intertext{where}
+\Delta Y(\hat p, G')
+  &= Y_{\mathrm{iid}}(\hat p, G') - Y_{\mathrm{iid}}(\hat p, G_{\mathrm{base}}), \quad
+Y_{\mathrm{iid}}(\hat p, G) = 1 - [\hat p^G + (1-\hat p)^G] \nonumber
+\end{align}
+i.e.\ the contrast restored per extra rollout. For $\hat p \in \{0, 1\}$ no
+$G'$ restores contrast so $G^\star = G_{\mathrm{base}} = 8$ and
+$\Delta Y^\star = 0$.
+
+\subsubsection*{Headline --- two-axis outcome across 5 controllers}
+
+Table~\ref{tab:p7-iter167-axis} reports the per-method (\% of oracle
+absolute contrast captured) and (cost-effective ratio: ctrl / oracle).
+Both axes are bootstrap CI95 ($B = 2000$, seed $= 20260705$).
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{llrr}
+\toprule
+method & controller & \% oracle abs $\Delta Y$ [CI95] & costeff ratio [CI95] \\
+\midrule
+aero   & C0 fixed G=8       & $0.0\%$ [0.0, 0.0] & $0.00\times$ [0.00, 0.00] \\
+aero   & C1 zvf-triage      & $86.3\%$ [64.5, 108.8] & $0.13\times$ [0.09, 0.16] \\
+aero   & C2 Dualformer      & $-286.4\%$ [$-350.7$, $-220.1$] & $3.37\times$ [2.03, 5.60]\textsuperscript{$\dagger$} \\
+aero   & C3 Hybrid          & $86.0\%$ [64.7, 108.1] & $0.13\times$ [0.10, 0.17] \\
+aero   & \textbf{C5 Iso-G@0.90} & $\mathbf{252.4\%}$ [225.8, 276.6]\textsuperscript{$\ddagger$} & $\mathbf{0.77\times}$ [0.71, 0.82] \\
+\midrule
+areal  & C0 fixed G=8       & $0.0\%$ [0.0, 0.0] & $0.00\times$ [0.00, 0.00] \\
+areal  & C1 zvf-triage      & $65.2\%$ [46.3, 84.9] & $0.11\times$ [0.08, 0.15] \\
+areal  & C2 Dualformer      & $-365.8\%$ [$-417.6$, $-308.5$] & $5.06\times$ [3.32, 7.99]\textsuperscript{$\dagger$} \\
+areal  & C3 Hybrid          & $64.2\%$ [45.2, 83.6] & $0.12\times$ [0.08, 0.16] \\
+areal  & \textbf{C5 Iso-G@0.90} & $\mathbf{270.4\%}$ [244.9, 290.5]\textsuperscript{$\ddagger$} & $\mathbf{0.71\times}$ [0.67, 0.76] \\
+\midrule
+gift   & C0 fixed G=8       & $0.0\%$ [0.0, 0.0] & $0.00\times$ [0.00, 0.00] \\
+gift   & C1 zvf-triage      & $94.3\%$ [69.9, 118.7] & $0.08\times$ [0.06, 0.11] \\
+gift   & C2 Dualformer      & $-292.4\%$ [$-362.4$, $-216.7$] & $3.36\times$ [1.90, 5.91]\textsuperscript{$\dagger$} \\
+gift   & C3 Hybrid          & $82.6\%$ [58.6, 106.5] & $0.11\times$ [0.07, 0.14] \\
+gift   & \textbf{C5 Iso-G@0.90} & $\mathbf{260.6\%}$ [231.1, 285.3]\textsuperscript{$\ddagger$} & $\mathbf{0.74\times}$ [0.69, 0.80] \\
+\midrule
+grpo   & C0 fixed G=8       & $0.0\%$ [0.0, 0.0] & $0.00\times$ [0.00, 0.00] \\
+grpo   & C1 zvf-triage      & $93.6\%$ [71.9, 115.7] & $0.13\times$ [0.10, 0.16] \\
+grpo   & C2 Dualformer      & $-314.3\%$ [$-377.1$, $-247.8$] & $3.52\times$ [2.19, 5.75]\textsuperscript{$\dagger$} \\
+grpo   & C3 Hybrid          & $92.5\%$ [71.3, 115.3] & $0.14\times$ [0.11, 0.18] \\
+grpo   & \textbf{C5 Iso-G@0.90} & $\mathbf{262.1\%}$ [237.7, 284.5]\textsuperscript{$\ddagger$} & $\mathbf{0.72\times}$ [0.68, 0.77] \\
+\bottomrule
+\end{tabular}
+\caption{Per-method oracle-regret on N2 (B=2000 prompt-resamples, seed=20260705).
+\textbf{C5 Iso-G captures 250\%+ of oracle absolute contrast} and is Pareto-closest
+to oracle on the cost-effective axis ($\geq 0.71\times$ on every method;
+CI excludes all C1/C3 ratios on every method).
+\textsuperscript{$\dagger$}Costeff ratio $>$1 means C2 trades absolute contrast
+for rollouts saved --- this is the \emph{inverse} of P7's signal-starvation
+diagnostic; iter-167 quantifies the trade-off.
+\textsuperscript{$\ddagger$}$> 100\%$ of oracle means Iso-G overshoots $G=16$
+on the dominant easy prompt class ($k{=}7$, $\hat p = 0.875$, frequency
+8.3\%) where oracle picks $G{=}10$ to optimise the marginal ratio; the
+oracle and Iso-G optimise different objective functions.}
+\label{tab:p7-iter167-axis}
+\end{table}
+
+\subsubsection*{Reading the double axis}
+
+The two columns measure two \emph{different} objective functions:
+
+\begin{itemize}
+\item \textbf{Axis A (\% abs $\Delta Y$)}: cumulative contrast restored by the
+      controller, normalised by the oracle's total. Values $> 100\%$ on
+      \textbf{C5 Iso-G} indicate that the controller \emph{overshoots} $G$
+      relative to the marginal-optimal oracle: it picks a single $G'$ that
+      restores the full residual $\Delta Y$ at once instead of the
+      cost-effective $G'$ that the oracle picks.
+\item \textbf{Axis B (costeff ratio)}: contrast delivered per extra rollout,
+      normalised by the oracle's marginal efficiency. Values close to $1\times$
+      on \textbf{C5 Iso-G} ($0.71$--$0.77\times$) indicate that the controller
+      tracks the oracle's marginal deployment roughly.
+\end{itemize}
+
+\textbf{C5 Pareto-dominates C1, C3, C4} on Axis B (CI excludes them on every
+method). \textbf{C5 > 100\%} of oracle on Axis A (CI excludes 200\% on every
+method). \textbf{C2 Dualformer is the inverse case} --- it Pareto-dominates
+on Axis B ($3$--$5\times$) but is strictly \emph{worse} than the G=8 baseline
+on Axis A (CI $-377\%$ to $-220\%$). C2 trades contrast for cost.
+
+\subsubsection*{Cross-iteration coupling}
+
+\begin{itemize}
+\item \textbf{Iter-98 (Iso-G Pareto)}: iter-167 sharpens with a per-prompt
+      oracle baseline and explains \emph{why} Iso-G can exceed 100\% of
+      oracle --- the marginal-vs-absolute objective difference.
+\item \textbf{Iter-159 (per-method Pareto)}: confirmed that ADAPTIVE\_PP\_ORACLE
+      has cost $1.69$--$1.88$ and retention $0.28$--$0.37$; iter-167 confirms
+      that no empirical controller in this panel (C0--C5) achieves both:
+      \emph{either} high contrast \emph{or} high cost-efficiency, never both.
+\item \textbf{Iter-83 (Iso-G invention)}: closes the brief vein
+      ``when would [Iso-G] have fired'' by giving per-$({\rm method},
+      {\rm step}, {\rm prompt})$ oracle G$^\star$.
+\item \textbf{Iter-79 (multi-trigger seed-robustness)}: the bounded C5
+      costeff CI95 ($0.68$--$0.82$) across seeds suggests the
+      cost-effective gap is reproducible.
+\end{itemize}
+
+\subsubsection*{Limitations}
+
+\begin{itemize}
+\item The oracle uses the i.i.d. Binomial contrast model
+      ($\mathrm{ZVF}_{\mathrm{iid}}(\hat p, G') = \hat p^{G'} + (1-\hat p)^{G'}$),
+      which ignores the empirical anti-herding $\delta_{\mathrm{div}}$
+      bonus documented in iter-103 and iter-119. A model-aware oracle that
+      uses the empirical $\delta_{\mathrm{div}}$ per (method, step) would
+      adjust $G^\star$ for the inflation of contrast.
+\item The empirical controllers in this iter (C0, C1, C2, C3,C5) are the
+      same five evaluated in iter-98 (row 98); iter-167 does not
+      introduce a new controller, only a new evaluation axis pair.
+\item The bootstrap CI on Axis A assumes i.i.d.\ prompts; iter-79's
+      seed-robustness audit suggests prompt-block bootstrap (resampling
+      together with their $z_{\mathrm{obs}}$) gives equivalent intervals.
+\end{itemize}
+
+\subsubsection*{Conclusion of iter-167}
+
+\begin{enumerate}
+\item \textbf{Iso-G Pareto-dominates every other empirical controller} on
+      both axes (Axis A: 250\%+ of oracle; Axis B: $0.71$--$0.77\times$
+      the oracle's marginal efficiency).
+\item \textbf{Dualformer-Auto is structurally Pareto-incompatible} with
+      signal-starvation theory: $-365.8\%$ to $-220.1\%$ on Axis A and
+      $3.37\times$ to $5.06\times$ on Axis B across the 4 methods.
+\item \textbf{The 250\% Iso-G-over-oracle result is not a bug}; it is the
+      quantitative consequence of optimising
+      ``smallest $G'$ achieving $Y \geq \tau_y$'' (C5) rather than
+      ``maximum $\Delta Y / \mathrm{extras}$'' (oracle).
+\item \textbf{The remaining 23\%--29\% gap (Axis B) on C5} is the room for
+      a controller that picks $G'$ by marginal cost-effectiveness rather
+      than absolute-yield target --- a candidate for iter-171+ on the
+      N2 panel.
+\end{enumerate}

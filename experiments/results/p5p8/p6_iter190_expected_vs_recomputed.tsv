@@ -1,0 +1,32 @@
+delta_id	name	method	metric	panel_expected	predicted_sign	panel_used	recomputed_delta	recomputed_ci_low	recomputed_ci_high	recomputed_significant	verdict
+delta_adaptiveg	Adaptive-G (ZVF-driven)	adaptiveg	reward_mean	qp7_adaptive_armB_vs_armA_paired	>=0	NONE					UNMEASURABLE
+delta_adaptiveg	Adaptive-G (ZVF-driven)	adaptiveg	zvf	qp7_adaptive_armB_vs_armA_paired	<0	NONE					UNMEASURABLE
+delta_aero	AERO	aero	zvf	n2_same_stack_last10	<0	RECOMPUTED	-0.025	-0.0625	0.0125	False	SUPPORTS_NS
+delta_aero	AERO	aero	reward_mean	n2_same_stack_last10	>=0	RECOMPUTED	-0.014063	-0.023438	-0.005469	True	CONTRADICTS
+delta_aero	AERO	aero	zvf_risk_mean	zvf130_5seed	<0	RECOMPUTED	-0.147637	-0.285921	-0.009354	True	SUPPORTS
+delta_areal	AREAL	areal	zvf	n2_same_stack_last10	<0	RECOMPUTED	-0.05625	-0.1125	0.0	False	SUPPORTS_NS
+delta_areal	AREAL	areal	reward_mean	n2_same_stack_last10	>=0	RECOMPUTED	-0.019531	-0.032031	-0.007812	True	CONTRADICTS
+delta_areal	AREAL	areal	zvf_risk_mean	zvf130_5seed	<0	RECOMPUTED	-0.245767	-0.354535	-0.137	True	SUPPORTS
+delta_cppo	CPPO	cppo	zvf_risk_mean	zvf130_5seed	<0	RECOMPUTED	-0.151077	-0.253342	-0.048813	True	SUPPORTS
+delta_dapo	DAPO	dapo	zvf	n2_same_stack_last10	<0	NONE					UNMEASURABLE
+delta_dapo	DAPO	dapo	mean_len	length_bias_iter60_grpo_vs_drgrpo_paired	<0	NONE					UNMEASURABLE
+delta_dapo	DAPO	dapo	reward_mean	n2_same_stack_last10	>0	NONE					UNMEASURABLE
+delta_drgrpo	Dr. GRPO	drgrpo	neg_frac	length_bias_iter60_grpo_vs_drgrpo_paired	<0	NONE					UNMEASURABLE
+delta_drgrpo	Dr. GRPO	drgrpo	pos_frac	length_bias_iter60_grpo_vs_drgrpo_paired	>0	NONE					UNMEASURABLE
+delta_drgrpo	Dr. GRPO	drgrpo	L_star	length_bias_iter60_grpo_vs_drgrpo_paired	<0	NONE					UNMEASURABLE
+delta_es	ES	es	zvf_risk_mean	zvf130_5seed	<0	RECOMPUTED	-0.272578	-0.374617	-0.170539	True	SUPPORTS
+delta_gift	GIFT	gift	zvf	n2_same_stack_last10	>0	RECOMPUTED	0.125	0.08125	0.18125	True	SUPPORTS
+delta_gift	GIFT	gift	reward_mean	n2_same_stack_last10	>=0	RECOMPUTED	0.016406	-0.00625	0.038281	False	SUPPORTS_NS
+delta_gift	GIFT	gift	zvf_risk_mean	zvf130_5seed	<0	RECOMPUTED	-0.263187	-0.365427	-0.160948	True	SUPPORTS
+delta_gspo	GSPO	gspo	zvf	n2_same_stack_last10	<0	NONE					UNMEASURABLE
+delta_gspo	GSPO	gspo	reward_mean	n2_same_stack_last10	>=0	NONE					UNMEASURABLE
+delta_gspo	GSPO	gspo	mean_len	length_bias_iter60_grpo_vs_drgrpo_paired	<0	NONE					UNMEASURABLE
+delta_mcgrpo	MCGRPO	mcgrpo	zvf_risk_mean	zvf130_5seed	<0	RECOMPUTED	-0.174277	-0.288771	-0.059783	True	SUPPORTS
+delta_ngrpo	NGRPO	ngrpo	zvf_risk_mean	zvf130_5seed	<0	RECOMPUTED	-0.131025	-0.239395	-0.022656	True	SUPPORTS
+delta_ppo	PPO	ppo	zvf	n2_same_stack_last10	<0	NONE					UNMEASURABLE
+delta_ppo	PPO	ppo	reward_mean	n2_same_stack_last10	>=0	NONE					UNMEASURABLE
+delta_ppo	PPO	ppo	zvf_risk_mean	zvf130_5seed	<0	NONE					UNMEASURABLE
+delta_ppo_reinforce	PPO+REINFORCE	ppo_reinforce	zvf	n2_same_stack_last10	>0	NONE					UNMEASURABLE
+delta_ppo_reinforce	PPO+REINFORCE	ppo_reinforce	reward_mean	n2_same_stack_last10	>=0	NONE					UNMEASURABLE
+delta_ppo_reinforce	PPO+REINFORCE	ppo_reinforce	zvf_risk_mean	zvf130_5seed	>0	NONE					UNMEASURABLE
+delta_scafgrpo	SCAFGRPO	scafgrpo	zvf_risk_mean	zvf130_5seed	<0	RECOMPUTED	-0.352361	-0.455533	-0.249189	True	SUPPORTS

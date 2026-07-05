@@ -1,0 +1,76 @@
+{
+  "iter": 95,
+  "vein": "P7 closed-form Pareto frontier over G' in {16, 32, 64, 128} + N10 5-seed stability",
+  "cross_method_pareto": [
+    {
+      "G_prime": 16,
+      "fires_4_methods": 30,
+      "sum_zvf_drop_4_methods": 1.8429,
+      "extra_rollouts_4_methods": 3840,
+      "benefit_per_1k": 7.6787
+    },
+    {
+      "G_prime": 32,
+      "fires_4_methods": 61,
+      "sum_zvf_drop_4_methods": 4.447,
+      "extra_rollouts_4_methods": 23424,
+      "benefit_per_1k": 3.0376
+    },
+    {
+      "G_prime": 64,
+      "fires_4_methods": 67,
+      "sum_zvf_drop_4_methods": 4.9126,
+      "extra_rollouts_4_methods": 60032,
+      "benefit_per_1k": 1.3093
+    },
+    {
+      "G_prime": 128,
+      "fires_4_methods": 67,
+      "sum_zvf_drop_4_methods": 4.915,
+      "extra_rollouts_4_methods": 128640,
+      "benefit_per_1k": 0.6113
+    }
+  ],
+  "saturating_curve_fit": {
+    "a": 15.3574,
+    "b": 0.001,
+    "G_90": 2302.59
+  },
+  "dualformer_escalation_cross_method": {
+    "sum_drop": 1.6876,
+    "escalation_cost": 4152,
+    "benefit_per_1k": 6.5033
+  },
+  "dualformer_original_cross_method": {
+    "sum_drop": -1.5295,
+    "escalation_cost": 4152,
+    "benefit_per_1k": -5.894
+  },
+  "n10_seed_stability": {
+    "n_seeds": 5,
+    "seeds": [
+      42,
+      179,
+      316,
+      453,
+      590
+    ],
+    "mean_fire_set_jaccard": 0.7264,
+    "benefit_cv": 0.0809
+  },
+  "iter91_winner_controller": {
+    "controller": "zvf_then_drop",
+    "tau": 0.5,
+    "eta_min": 0.05,
+    "G_prime_at_iter91": 16
+  },
+  "headline_findings": {
+    "H1_saturate_G": 16,
+    "H1_peak_G": 16,
+    "H1_peak_benefit_per_1k": 7.6787,
+    "H2_dualformer_escalation_vs_zvf_then_drop": "zvf_then_drop@16: 7.6787 vs Dualformer-escalation: 6.5033 (1.1754 delta)",
+    "H2_dualformer_original_vs_zvf_then_drop": "zvf_then_drop@16: 7.6787 vs Dualformer-original: -5.8940 (13.5727 delta)",
+    "H3_n10_jaccard": 0.7264,
+    "H3_n10_benefit_cv": 0.0809
+  }
+}

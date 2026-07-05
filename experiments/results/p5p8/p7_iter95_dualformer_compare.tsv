@@ -1,0 +1,11 @@
+method	controller	n_steps	sum_drop	escalation_cost	compute_saving	benefit_per_1k	mean_step_drop
+grpo	dualformer_original	40	-0.3836	1016	2782	-6.0417	-0.0096
+aero	dualformer_original	40	-0.2582	1096	2750	-3.7699	-0.0065
+gift	dualformer_original	40	-0.2314	952	2894	-3.8898	-0.0058
+areal	dualformer_original	40	-0.6563	1088	2760	-9.6518	-0.0164
+grpo	dualformer_escalation	40	0.451	1016	0	7.1029	0.0113
+aero	dualformer_escalation	40	0.455	1096	0	6.6428	0.0114
+gift	dualformer_escalation	40	0.3908	952	0	6.5677	0.0098
+areal	dualformer_escalation	40	0.3908	1088	0	5.7475	0.0098
+ALL_METHODS	dualformer_original	160	-1.5295	4152	11186	-5.8940	-0.0096
+ALL_METHODS	dualformer_escalation	160	1.6876	4152	0	6.5033	0.0105

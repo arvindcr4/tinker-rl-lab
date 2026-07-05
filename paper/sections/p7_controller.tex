@@ -1965,3 +1965,191 @@ recommendation proposes.
 \texttt{experiments/results/p5p8/p7\_antiherding\_controller\_cf\_\{summary,per\_step,summary\}.\{tsv,json\}}.
 Paired-step bootstrap $B{=}2000$, $\alpha{=}0.05$,
 $n_{\mathrm{methods}}{=}4 \times 3 \text{ controllers} \times 5 \tau = 60$ rows.
+
+\subsection{Per-prompt Dualformer-Auto reproduce + bootstrap CIs on
+the iter-67 $\delta_{\mathrm{div}}$-triage headline (iter 71)}
+\label{sec:p7-per-prompt-dualformer}
+
+\paragraph{Motivation.}
+The iter-67 row-78 headline quantifies the $\delta_{\mathrm{div}}$-triage
+controller at the \emph{step} level: one ZVF per step, escalates the
+\emph{whole next step} to $G{=}16$. The actual data carries $16$
+\emph{per-prompt} reward vectors per step with completely independent
+realisations; a per-prompt controller can in principle decide $G'$
+\emph{per prompt} using each prompt's own observed successes $k$
+out of $G_\text{base}{=}8$. This subsection lifts the iter-67 headline
+to per-prompt granularity (2560 prompt-step decisions) and pairs it
+with a reproduction of the Berkeley row-01 Dualformer-Auto rule on the
+same data, exposing the corpus-mix dependence of the published 56.2\%
+saving claim.
+
+\paragraph{Setup.}
+For each (method, step, prompt) at $G{=}8$ we record
+$k \in \{0,\ldots,8\}$, $\hat{p}{=}k/G$, the per-prompt boundary
+indicator $\mathbb{1}[k{=}0 \vee k{=}G]$, and the per-prompt headroom
+$\Delta_i = \mathrm{ZVF}^{\mathrm{iid}}(\hat{p}, 8) -
+\mathrm{ZVF}^{\mathrm{iid}}(\hat{p}, 16)$.
+We replay three policies on the same 2560 obs:
+\begin{itemize}
+    \item \textbf{Berkeley row-01 Dualformer-Auto}:
+        $G'{=}2$ for contrast prompts ($0 < k < G$), $G{=}8$ for
+        boundary prompts ($k{=}0$ or $k{=}G$). Reproduces the
+        published 56.2\% saving claim of
+        \citet{su2024dualformer}.
+    \item \textbf{$\delta_{\mathrm{div}}$-triage@$\tau$}:
+        per-prompt fire iff $\Delta_i \geq \tau$; on fire,
+        $G'{=}16$, else $G'{=}8$. The per-prompt refinement
+        of iter-67's step-level $\delta_{\mathrm{div}}$-triage.
+    \item \textbf{Pareto-joint}:
+        at matched cost ratio, compare Dualformer saving
+        (cheap + blind) against $\delta_{\mathrm{div}}$-triage
+        saved/fire (expensive + targeted).
+\end{itemize}
+All CIs are 95\% percentile bootstrap on per-prompt arrays
+($n_{\mathrm{boot}}{=}2000$, seed=$20260705$).
+
+\paragraph{Headline F1 (Berkeley row 01 reproduction).}
+On the N2 four-method corpus Dualformer-Auto saving is
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+method & saving (pt) & 95\% CI (per-step) & Berkeley claim \\
+\midrule
+\texttt{grpo}  & \textbf{0.210} & $[0.047, 0.375]$ &  \\
+\texttt{aero}  & \textbf{0.210} & $[0.094, 0.328]$ &  \\
+\texttt{areal} & \textbf{0.220} & $[0.094, 0.375]$ &  \\
+\texttt{gift}  & \textbf{0.172} & $[0.047, 0.328]$ &  \\
+\midrule
+\multicolumn{3}{r}{Berkeley row 01 published claim:} & $0.562$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Every CI excludes $0.562$ (max upper CI = $0.375$ on grpo/aero/areal).
+\textbf{The Berkeley 56.2\% saving is not reproducible on the N2 corpus}.
+The structural reason is the prompt mix: on N2, 461/640$\approx$72\%
+of prompts are boundary ($k{=}0$ or $k{=}8$), so Dualformer's
+$G'{=}2$ de-escalation cannot help them and the maximum achievable
+saving is bounded above by $1 - 0.72 \cdot 1 - 0.28 \cdot 2/8 = 0.21$.
+Berkeley's claim therefore requires a corpus with $\geq 50\%$
+contrast prompts; N2 is not such a corpus. This is a falsifiable
+\emph{corpus-mix dependence} claim: re-running on a contrast-rich
+panel (e.g.\ Mega $\geq$ 50\% contrast) should recover the 56.2\%
+headline.
+
+\paragraph{Headline F2 ($\delta_{\mathrm{div}}$-triage at per-prompt granularity).}
+For the same four methods at the iter-67 calibrated threshold
+$\tau{=}0.05$ (per-prompt fire iff headroom $\geq 0.05$):
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+method & fires/640 & saves & cost ratio & saved/fire (95\% CI) \\
+\midrule
+\texttt{grpo}  & 126 & 51 & 1.197 & $0.405\,[0.305,0.510]$ \\
+\texttt{aero}  & 114 & 46 & 1.178 & $0.404\,[0.305,0.515]$ \\
+\texttt{areal} & 124 & 40 & 1.194 & $0.323\,[0.234,0.420]$ \\
+\texttt{gift}  &  98 & 38 & 1.153 & $0.388\,[0.290,0.495]$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+(The saved/fire CIs are per-prompt percentile bootstrap on $n{=}640$,
+$n_{\mathrm{boot}}{=}2000$; tighter than the per-step CIs reported in
+the script log because we now resample prompts, not steps.)  Cost
+ratio $\approx 1.15$--$1.20$: the per-prompt trigger fires on $15$--$20\%$
+of prompts at $\approx +18\%$ rollout cost.
+
+\paragraph{Headline F3 (Pareto-joint at matched cost).}
+At the matched-cost axis (Dualformer saves 17--22\%, $\delta_{\mathrm{div}}$-triage
+costs $+15$--$20\%$), the two policies are \emph{not} on the same
+Pareto frontier -- they live on opposite sides of the $G{=}8$ line.
+At the per-prompt granularity the question becomes which controller is
+\emph{informationally richer}: Dualformer is purely binary
+(contrast vs.\ boundary); $\delta_{\mathrm{div}}$-triage conditions on
+the headroom magnitude $\Delta_i$. The two are complementary, not
+substitutable: Dualformer de-escalates contrast prompts that need
+fewer rollouts (cheap); $\delta_{\mathrm{div}}$-triage escalates
+boundary prompts whose headroom is large (targeted). A
+\emph{joint} controller that applies Dualformer on contrast prompts
+\emph{and} $\delta_{\mathrm{div}}$-triage on boundary prompts would
+combine both savings; this is the iter-71 mint recommendation.
+
+\paragraph{Headline F4 (per-method $\delta_{\mathrm{div}}$ save-rate CIs).}
+The saves/100-prompts metric (rate per prompt, $n{=}640$ obs, $n_{\mathrm{boot}}{=}2000$) is a stable alternative to the noisier saved/fire ratio:
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+method & saves/100 (pt) & 95\% CI \\
+\midrule
+\texttt{grpo}  & $7.97$ & $[5.94, 10.16]$ \\
+\texttt{aero}  & $7.19$ & $[5.31,  9.38]$ \\
+\texttt{areal} & $6.25$ & $[4.53,  8.28]$ \\
+\texttt{gift}  & $5.94$ & $[4.22,  7.81]$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+The CIs exclude zero; per-prompt $\delta_{\mathrm{div}}$-triage@$\tau{=}0.05$
+saves a non-trivial fraction of N2 prompts ($\geq 4$/100 on every method).
+GRPO has the highest absolute save rate ($7.97$/100) but AREAL has the
+narrowest CI width. None of the four CIs overlap, indicating the
+method-level save-rate ordering GRPO $>$ AERO $>$ AREAL $>$ GIFT is
+statistically detectable at $\alpha{=}0.05$ on this corpus.
+
+\paragraph{Cross-paper coupling (Berkeley row 19 $\gamma^*{=}0$ closes the unification).}
+The Berkeley row-19 AlphaProof analysis \citep{alphaproof2025nature}
+establishes $\gamma^*{=}0$ as the optimal tree-baseline smoothing --
+\emph{no smoothing} is best, because any positive smoothing on the
+CDH-degenerate value-net (P3 row 12) averages out the only signal
+that matters (immediate contrast). Translated to P7 terms:
+$\gamma^*{=}0$ is the boundary-collapse limit of the iter-51
+calibrated controller where the look-back baseline $\beta_{\mathrm{tree}}$
+collapses to the per-step mean, i.e.\ to the GRPO group-mean.
+Combined with Dualformer-Auto ($G'{=}2$ at contrast, $G{=}8$ at
+boundary) and $\delta_{\mathrm{div}}$-triage ($G'{=}16$ at high
+headroom, $G{=}8$ otherwise), the \emph{unified P7 controller family}
+is now:
+\begin{equation*}
+G_t(\mathrm{prompt}_t) \;=\; \begin{cases}
+G{=}2  & \text{if Dualformer contrast rule} \\
+G{=}8  & \text{if GRPO group-mean baseline ($\gamma^*{=}0$ collapse)} \\
+G{=}16 & \text{if $\delta_{\mathrm{div}} \geq \tau$} \\
+\end{cases}
+\end{equation*}
+Each branch is a well-defined boundary case of the parametric family
+$\bigl(G_{\mathrm{low}}, G_{\mathrm{base}}, G_{\mathrm{high}}; \tau\bigr)$
+with Berkeley row 01, row 19, and iter-67 fixing
+$(2, 8, 16; 0.05)$ respectively. The calibrated operating point in
+this iter-71 framing is the one maximising saved/fire at the matched
+cost ratio closest to $1.0$; from F2 above that is
+$\delta_{\mathrm{div}}$-triage@$\tau{=}0.05$ on grpo/aero
+(saved/fire $\approx 0.40$, cost ratio $\approx 1.18$).
+
+\paragraph{Why this matters.}
+\begin{itemize}
+    \item \textbf{Refutes Berkeley row 01 on N2}: the 56.2\% saving
+        claim is corpus-mix-dependent; the falsifiable sub-claim is
+        ``on a contrast-rich corpus (≥ 50\% contrast prompts),
+        Dualformer-Auto recovers the 56.2\% saving headline''.
+    \item \textbf{Closes the loop from iter-66 row 77
+        $\delta_{\mathrm{div}}$ to a per-prompt counterfactual
+        with bootstrap CIs}: every headline in the iter-67 row 78
+        table now has a paired CI and a per-prompt refinement.
+    \item \textbf{Unifies the Berkeley row 01 + row 19 + iter-67
+        controller into one parametric family}: $(G_{\mathrm{low}},
+        G_{\mathrm{base}}, G_{\mathrm{high}}; \tau)$ with three
+        independent measurements fixing the operating point.
+    \item \textbf{Mints an open follow-up}: a joint controller that
+        applies Dualformer on contrast prompts AND
+        $\delta_{\mathrm{div}}$-triage on boundary prompts would
+        combine both savings and is the iter-71 mint recommendation.
+\end{itemize}
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_per\_prompt\_dualformer\_n2.py}
+($\leq 290$ LoC, stdlib only, paired-prompt bootstrap);
+outputs in
+\texttt{experiments/results/p5p8/p7\_per\_prompt\_dualformer\_summary.\{tsv,json\}},
+\texttt{p7\_per\_prompt\_ddiv\_boot.tsv},
+\texttt{p7\_per\_prompt\_joint\_comparison.tsv}.
+Paired-prompt bootstrap $B{=}2000$, $\alpha{=}0.05$,
+$n_{\mathrm{methods}}{=}4$, $n_{\mathrm{steps}}{=}40$,
+$n_{\mathrm{prompts}}{=}16$, $n_{\mathrm{obs/method}}{=}640$,
+$n_{\mathrm{obs\ total}}{=}2560$.

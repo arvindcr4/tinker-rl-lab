@@ -1,0 +1,53 @@
+section	method	tau	n_prompts	n_contrast	n_boundary	n_fires	n_saves	cost_ratio	saved_per_fire	metric	value
+A_dualformer_per_prompt	grpo		640	179	461	179		0.790234375		saving	0.20976562499999996
+A_dualformer_per_prompt	aero		640	179	461	179		0.790234375		saving	0.20976562499999996
+A_dualformer_per_prompt	areal		640	188	452	188		0.7796875		saving	0.22031250000000002
+A_dualformer_per_prompt	gift		640	147	493	147		0.827734375		saving	0.17226562499999998
+A_dualformer_boot	grpo									saving_ci_pt=0.2098	lo=0.0469 hi=0.3750
+A_dualformer_boot	aero									saving_ci_pt=0.2098	lo=0.0938 hi=0.3281
+A_dualformer_boot	areal									saving_ci_pt=0.2203	lo=0.0938 hi=0.3750
+A_dualformer_boot	gift									saving_ci_pt=0.1723	lo=0.0469 hi=0.3281
+B_ddiv_per_prompt_boot	grpo	0.03	640			126	51		pt=0.4048	spf_ci_lo=0.3190	hi=0.4930
+B_ddiv_per_prompt_boot	grpo	0.05	640			126	51		pt=0.4048	spf_ci_lo=0.3200	hi=0.4959
+B_ddiv_per_prompt_boot	grpo	0.08	640			126	51		pt=0.4048	spf_ci_lo=0.3193	hi=0.4889
+B_ddiv_per_prompt_boot	grpo	0.1	640			75	0		pt=0.0000	spf_ci_lo=0.0000	hi=0.0000
+B_ddiv_per_prompt_boot	grpo	0.12	640			75	0		pt=0.0000	spf_ci_lo=0.0000	hi=0.0000
+B_ddiv_per_prompt_boot	aero	0.03	640			114	46		pt=0.4035	spf_ci_lo=0.3145	hi=0.4961
+B_ddiv_per_prompt_boot	aero	0.05	640			114	46		pt=0.4035	spf_ci_lo=0.3120	hi=0.4957
+B_ddiv_per_prompt_boot	aero	0.08	640			114	46		pt=0.4035	spf_ci_lo=0.3130	hi=0.4951
+B_ddiv_per_prompt_boot	aero	0.1	640			68	0		pt=0.0000	spf_ci_lo=0.0000	hi=0.0000
+B_ddiv_per_prompt_boot	aero	0.12	640			68	0		pt=0.0000	spf_ci_lo=0.0000	hi=0.0000
+B_ddiv_per_prompt_boot	areal	0.03	640			124	40		pt=0.3226	spf_ci_lo=0.2381	hi=0.4062
+B_ddiv_per_prompt_boot	areal	0.05	640			124	40		pt=0.3226	spf_ci_lo=0.2424	hi=0.4098
+B_ddiv_per_prompt_boot	areal	0.08	640			124	40		pt=0.3226	spf_ci_lo=0.2435	hi=0.4054
+B_ddiv_per_prompt_boot	areal	0.1	640			84	0		pt=0.0000	spf_ci_lo=0.0000	hi=0.0000
+B_ddiv_per_prompt_boot	areal	0.12	640			84	0		pt=0.0000	spf_ci_lo=0.0000	hi=0.0000
+B_ddiv_per_prompt_boot	gift	0.03	640			98	38		pt=0.3878	spf_ci_lo=0.2917	hi=0.4907
+B_ddiv_per_prompt_boot	gift	0.05	640			98	38		pt=0.3878	spf_ci_lo=0.2927	hi=0.4842
+B_ddiv_per_prompt_boot	gift	0.08	640			98	38		pt=0.3878	spf_ci_lo=0.2959	hi=0.4845
+B_ddiv_per_prompt_boot	gift	0.1	640			60	0		pt=0.0000	spf_ci_lo=0.0000	hi=0.0000
+B_ddiv_per_prompt_boot	gift	0.12	640			60	0		pt=0.0000	spf_ci_lo=0.0000	hi=0.0000
+C_ddiv_vs_dualformer_paired	grpo	0.05							pt=0.1869	diff_lo=0.1049	hi=0.2811 p=0.0000
+C_ddiv_vs_dualformer_paired	aero	0.05							pt=0.2082	diff_lo=0.0861	hi=0.3313 p=0.0000
+C_ddiv_vs_dualformer_paired	areal	0.05							pt=0.1472	diff_lo=0.0421	hi=0.2612 p=0.0050
+C_ddiv_vs_dualformer_paired	gift	0.05							pt=0.1541	diff_lo=0.0566	hi=0.2629 p=0.0020
+B_ddiv_save_rate_boot	grpo	0.03	640			126	51		rate_pt=7.9687	rate_lo=5.7812	hi=10.1562
+B_ddiv_save_rate_boot	grpo	0.05	640			126	51		rate_pt=7.9687	rate_lo=5.9375	hi=10.1562
+B_ddiv_save_rate_boot	grpo	0.08	640			126	51		rate_pt=7.9687	rate_lo=5.9375	hi=10.1562
+B_ddiv_save_rate_boot	grpo	0.1	640			75	0		rate_pt=0.0000	rate_lo=0.0000	hi=0.0000
+B_ddiv_save_rate_boot	grpo	0.12	640			75	0		rate_pt=0.0000	rate_lo=0.0000	hi=0.0000
+B_ddiv_save_rate_boot	aero	0.03	640			114	46		rate_pt=7.1875	rate_lo=5.1562	hi=9.3750
+B_ddiv_save_rate_boot	aero	0.05	640			114	46		rate_pt=7.1875	rate_lo=5.3125	hi=9.3750
+B_ddiv_save_rate_boot	aero	0.08	640			114	46		rate_pt=7.1875	rate_lo=5.3125	hi=9.2188
+B_ddiv_save_rate_boot	aero	0.1	640			68	0		rate_pt=0.0000	rate_lo=0.0000	hi=0.0000
+B_ddiv_save_rate_boot	aero	0.12	640			68	0		rate_pt=0.0000	rate_lo=0.0000	hi=0.0000
+B_ddiv_save_rate_boot	areal	0.03	640			124	40		rate_pt=6.2500	rate_lo=4.5312	hi=8.2812
+B_ddiv_save_rate_boot	areal	0.05	640			124	40		rate_pt=6.2500	rate_lo=4.5312	hi=8.1250
+B_ddiv_save_rate_boot	areal	0.08	640			124	40		rate_pt=6.2500	rate_lo=4.3750	hi=8.2812
+B_ddiv_save_rate_boot	areal	0.1	640			84	0		rate_pt=0.0000	rate_lo=0.0000	hi=0.0000
+B_ddiv_save_rate_boot	areal	0.12	640			84	0		rate_pt=0.0000	rate_lo=0.0000	hi=0.0000
+B_ddiv_save_rate_boot	gift	0.03	640			98	38		rate_pt=5.9375	rate_lo=4.0625	hi=7.8125
+B_ddiv_save_rate_boot	gift	0.05	640			98	38		rate_pt=5.9375	rate_lo=4.2188	hi=7.8125
+B_ddiv_save_rate_boot	gift	0.08	640			98	38		rate_pt=5.9375	rate_lo=4.2188	hi=7.9687
+B_ddiv_save_rate_boot	gift	0.1	640			60	0		rate_pt=0.0000	rate_lo=0.0000	hi=0.0000
+B_ddiv_save_rate_boot	gift	0.12	640			60	0		rate_pt=0.0000	rate_lo=0.0000	hi=0.0000

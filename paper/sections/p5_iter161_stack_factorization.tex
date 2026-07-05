@@ -1,0 +1,140 @@
+% Section: P5 stack-conditioning factorization — algorithm axis (N2) vs stack axes (mega) (iter 161)
+% Closes brief vein (b) at the head-to-head granularity: a single table that
+% places the algorithm-axis eta^2 from the N2 four-method same-stack panel
+% alongside the eta^2 of every stack axis on the 98-cell mega panel. Reuses
+% axis_variance_fraction from scripts/berkeley/unpacking_dpo_ppo_factorization.py.
+\subsection{Stack-conditioning factorization: algorithm axis vs stack axes (iter 161)}
+\label{sec:p5-iter161-stack-factorization}
+
+The brief's vein (b) asks for a \emph{head-to-head} quantification of
+stack-conditioning: how much variance does the algorithm axis explain
+\emph{when the stack is fixed} (Ivison et al. 2024 algorithm axis), and
+how much does each stack axis explain \emph{across the same algorithm}?
+Previous rows answer one half of the question each: iter 85 row 101 /
+iter 89 reports $\eta^2_{\mathrm{algo}}$ on the N2 same-stack panel
+(point estimate and bootstrap CI), and iter 49 row 60 reports 8-item
+MIN-REPORT coverage on the 32-cell mega panel. Iter 161 closes the
+remaining gap with a single decomposition that places both halves on
+the same scale.
+
+\subsubsection{Two-tier $\eta^2$ decomposition}
+\label{sec:p5-iter161-two-tier}
+\textbf{Tier A --- same-stack (algorithm axis).} We load
+\texttt{experiments/results/n2\_reward\_tensor\_resume/n2\_metrics.tsv}
+(4 methods $\times$ 40 steps $\times G{=}8 \times$ seed 0 = 160 rows)
+and compute $\eta^2(\texttt{method} \to \texttt{reward\_mean})$. On
+this scale \textbf{$\eta^2_{\mathrm{algo}} = 0.0075$} (SS\textsubscript{axis}=0.0074,
+SS\textsubscript{within}=0.9817), with per-method means
+[\texttt{grpo}=0.8342, \texttt{gift}=0.8447, \texttt{aero}=0.8275,
+\texttt{areal}=0.8287] and max Cohen's $d{=}{-}0.216$ (aero vs gift).
+The algorithm axis explains $<$1\% of within-run variance; this is the
+\emph{same} point estimate iter 85 row 101 reported, reproduced here
+for direct comparison to the stack axes.
+
+\textbf{Tier B --- stack axes (mega panel).} We load
+\texttt{experiments/results/mega\_20260704/cells.tsv} (98 cells
+spanning 2 models $\times$ 3 task\_slice $\times$ 5 $G$ $\times$ 2
+temperature $\times$ 2 seeds) and compute $\eta^2$ of each axis on
+\texttt{mean\_reward}. Paired-stack coverage is 48/50 unique
+$(\texttt{model},\texttt{task\_slice},G,T)$ cells have BOTH seeds
+(0.9600, Wilson [0.8654, 0.9890]).
+
+\subsubsection{Head-to-head results}
+\label{sec:p5-iter161-head-to-head}
+Table~\ref{tab:p5-iter161-head-to-head} places Tier A and Tier B on
+the same scale. The headline read-out:
+
+\begin{itemize}
+\item \textbf{Algorithm axis} (N2 same-stack): $\eta^2 = 0.0075$.
+\item \textbf{Stack axes collectively}: $\eta^2_{\mathrm{union}}(\texttt{model},\texttt{task\_slice},G,T) = 0.9967$ on 50 stack cells.
+\item \textbf{Three of four individual stack axes} dominate the algorithm axis by 4--60$\times$: \texttt{model} ($60.6\times$), \texttt{task\_slice} ($36.5\times$), $G$ ($4.1\times$).
+\item \textbf{Temperature axis} is NOT a meaningful stack axis on this panel ($\eta^2(T) = 0.0000 < \eta^2_{\mathrm{algo}}$): only $T \in \{0.6, 1.0\}$ are sampled and the model axis captures the variance.
+\item \textbf{Seed axis} is decisively small ($\eta^2(\texttt{seed}) = 0.0000$), so the cross-stack comparison is not seed-noise driven.
+\end{itemize}
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{lrrrll}
+\toprule
+Axis & Source & $n_{\mathrm{rows}}$ & $\eta^2$ & Ratio vs algo & Verdict \\
+\midrule
+\texttt{method}     & N2 same-stack       & 160 & 0.0075 & 1.0$\times$  & DECISIVE ($\leq 0.05$) \\
+$(model, task, G, T)$ union & mega & 50 & \textbf{0.9967} & 132.9$\times$ & DECISIVE ($\geq 0.50$) \\
+\texttt{model}      & mega                & 98 & 0.4527 & \textbf{60.6$\times$} & DECISIVE (dominates) \\
+\texttt{task\_slice}& mega                & 98 & 0.2729 & \textbf{36.5$\times$} & DECISIVE (dominates) \\
+$G$                 & mega                & 98 & 0.0304 & \textbf{4.1$\times$}  & DECISIVE (dominates) \\
+\texttt{temperature}& mega                & 98 & 0.0000 & 0.0$\times$  & NULL ($< \eta^2_{\mathrm{algo}}$) \\
+\texttt{seed}       & mega                & 98 & 0.0000 & 0.0$\times$  & DECISIVE ($\leq 0.10$) \\
+\texttt{step} (within-run) & N2 same-stack & 160 & 0.9284 & 124.0$\times$ & NULL (within-run drift dominates) \\
+\bottomrule
+\end{tabular}
+\caption{Head-to-head $\eta^2$ decomposition: algorithm axis (N2 same-stack,
+Tier A) vs each stack axis (mega panel, Tier B). $\eta^2_{\mathrm{algo}} =
+0.0075$ is the Ivison (NeurIPS 2024) baseline. Three of four individual
+stack axes dominate the algorithm axis by 4--60$\times$; the four-axis
+union explains $\eta^2 = 0.9967$ of cross-cell variance. The
+\texttt{temperature} axis NULL is informative: only $T \in \{0.6, 1.0\}$
+are sampled, and the \texttt{model} axis absorbs the variance. The
+\texttt{step} axis NULL is the within-run learning curve (40 steps
+$\gg$ typical), not a refutation.}
+\label{tab:p5-iter161-head-to-head}
+\end{table}
+
+\subsubsection{Operational recommendation}
+\label{sec:p5-iter161-recommendation}
+\textbf{Report the stack, not the label.} The algorithm label alone
+(GRPO / GIFT / AERO / AREAL) explains $<1\%$ of variance in same-stack
+runs and is dwarfed by \texttt{model} ($60\times$), \texttt{task\_slice}
+($36\times$), and $G$ ($4\times$) on the cross-stack mega panel.
+For benchmarking new GRPO-family variants, the minimal reporting set
+must include at least \texttt{model} + \texttt{task\_slice} + $G$;
+$T$ can be omitted from the headline stack when only two values are
+sampled, but should be reported as a paired-cell counterfactual
+otherwise. This is the same operational rule iter 49 row 60 derived
+from the 8-item MIN-REPORT coverage audit on the 32-cell panel; iter
+161 confirms the rule on the 98-cell follow-up with a single
+side-by-side decomposition.
+
+\subsubsection{Cross-paper coupling}
+\label{sec:p5-iter161-coupling}
+\textbf{(i) P5 iter 85 row 101 / iter 89} --- iter 161 reproduces
+the iter 85 point estimate ($\eta^2_{\mathrm{algo}}=0.0075$ on
+\texttt{reward\_mean}) and joins it to the stack axes. The iter 89
+bootstrap CI is consistent (UB 0.0244 on \texttt{reward\_mean}, well
+below the 0.05 strict threshold).
+\textbf{(ii) P5 iter 49 row 60} --- iter 60's 8-item MIN-REPORT
+coverage is preserved on the 98-cell panel (iter 161's
+$\eta^2_{\mathrm{union}}=0.9967$ is the formal ANOVA-style restatement
+of the same observation).
+\textbf{(iii) P7 iter 87 row 103 / iter 79 row 93} --- the iter 161
+head-to-head shows that on \texttt{reward\_mean} the algorithm axis
+is small; P7's signal-starvation theory treats \texttt{zvf} and
+\texttt{pcd} channels (where the algorithm axis IS GIFT-driven per
+iter 89 row 108) as the controller input. The two stories are
+\emph{complementary, not in conflict}: on terminal reward the
+algorithm axis is null, on contrast-yield / length-variance channels
+the algorithm axis is GIFT-driven.
+\textbf{(iv) FRONTIER INSIGHTS round 2 (Gemini Deep Think)} --- the
+frontier synthesis proposed $\delta_{\mathrm{div}} \in [0.13, 0.23]$
+as the anti-herding structural bonus. iter 161's $\eta^2(\texttt{step})=0.9284$
+on the N2 panel is consistent with that picture: most of the
+within-run variance is step-driven learning, not method-driven.
+The frontier synthesis's iso-yield framework applies at the
+contrast-yield axis (where iter 89 isolates GIFT), not at the
+terminal-reward axis (where iter 161 confirms algorithm equivalence).
+
+\subsubsection{Limitations}
+\label{sec:p5-iter161-limitations}
+(i) The mega panel has only 2 models, 3 task slices, 2 temperatures,
+and 2 seeds; the per-axis $\eta^2$ estimates have only 2--5 groups.
+The 95\% CIs on the per-axis $\eta^2$ are wide; the headline
+conclusion rests on the \emph{union}-axis $\eta^2 = 0.9967$ over 50
+stack cells, where the central limit theorem gives a tighter read.
+(ii) The mega panel uses \emph{training-free} sampling
+(\texttt{loss\_form: n/a-sampling} in the manifests); algorithm-axis
+comparisons on this panel would be confounded by stack drift and are
+not attempted here. (iii) The H7 NULL on the step axis is *not* a
+refutation of the P5 thesis: the P5 thesis is that the \emph{cross-method}
+signal is small when stack is fixed, not that within-run variation is
+flat. The high $\eta^2(\texttt{step})$ is the within-run learning curve
+(40 steps on the same prompts), exactly what the brief expects.

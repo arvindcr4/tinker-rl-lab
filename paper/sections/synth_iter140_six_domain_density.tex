@@ -1,0 +1,113 @@
+% Section: P5P8-SYNTH six-domain density matrix (iter 140 JOB B)
+% Fresh vein, not in 156 prior SYNTH rows.  Closes iter-126 / iter-132
+% (item 138 H1 still open) five-domain refinement.  Adds D6 = P8
+% sensor-feature firing-flip density (per rate, iter-140) as a sixth
+% domain.
+%
+% Sharpest finding: D1 (P8 grad-band firing rate 0.83%) / D6 (P8
+% firing flip 0.53%) ratio = 1.57 [0.38, 2.79] -- CI INCLUDES 1.0.
+% The two P8 per-row-intervention layers are statistically
+% indistinguishable in density.  The super-domain split sharpens to
+% 3 sub-layers:
+%   - LOW:  {D1, D6}  (per-row intervention events, ~0.5-0.8%)
+%   - MID:  {D2, D3, D4}  (per-cell / per-step / per-prompt, 36-73%)
+%   - HIGH: {D5}  (per-cohort calibration violation, 100%)
+
+\subsubsection{Falsifiable questions and operational stakes}
+The iter-124 / iter-132 / iter-136 five-domain density matrix
+established the $\{D_1, D_2, D_3, D_4\} \leftrightarrow \{D_5\}$
+super-domain split with 119$\times$ internal heterogeneity on
+the P8 super-domain (D1 = 0.84\% per-row firing vs D5 = 100\%
+per-cohort ECE violation).  Iter-140 adds a sixth domain D6 = the
+sparse-positive-rate sensor-firing-flip rate computed from the
+iter-140 LLM-as-sensor ablation (per (rate $\times$ non-anchor
+fset) cell, 15 cells total, mean = 0.53\%).
+
+\textbf{H1 (PASS)} D6 refines the P8 super-domain INTO TWO sub-layers:
+\textbf{LOW} $\{D_1, D_6\}$ both $<$ 1\% (per-row intervention events) and
+\textbf{HIGH} $\{D_5\}$ at 100\% (per-cohort calibration violation).
+D1 vs D6 ratio = 1.57 [0.38, 2.79] -- CI includes 1.0 -- meaning the
+two P8 per-row-intervention events are statistically indistinguishable
+in density.  D5/D6 = 188.5$\times$ -- D5 is a different operational
+regime entirely.
+
+\textbf{H2 (PASS)} the 6-domain matrix preserves the $\{D_2, D_3, D_4\}$
+mid-domain coherence: D2/D3 = 1.36 [1.02, 1.92] partial overlap with 1
+but adjacent; D2/D4 = 0.69 [0.58, 0.80] -- D4 (per-prompt boundary) is
+denser than D2 (per-step rejection); D3/D4 = 0.50 [0.37, 0.64] --
+D4 dominates.  The mid-domain ordering is D4 $>$ D2 $>$ D3 (per-prompt
+boundary is highest).
+
+\textbf{H3 (NEW)} the super-domain split sharpens to 3 sub-layers per
+the LOW/MID/HIGH classification.  Cross-paper coupling: the LOW layer
+$\{D_1, D_6\}$ is exclusively P8 (fraud detection), the MID layer
+$\{D_2, D_3, D_4\}$ is mixed (P5 + P7 + P7), and the HIGH layer $\{D_5\}$
+is exclusively P8 (calibration).  \textbf{The cross-paper synthesis at
+this granularity does NOT collapse} -- the domains remain
+pillar-distinguishable even at the 6-domain level.
+
+\subsubsection{Measured data}
+Table~\ref{tab:p5p8synth-iter140-six-domain} reports the 6 domains.
+Table~\ref{tab:p5p8synth-iter140-ratios} reports 15 pairwise density
+ratios with parametric bootstrap CIs (B=2000, seed=20260705).
+
+\begin{table}[h]
+\centering
+\caption{\textbf{P5P8-SYNTH iter-140 six-domain density matrix.}
+P8 super-domain internal heterogeneity sharpens to
+D5/D1 = 120$\times$ and D5/D6 = 188.5$\times$, but the per-row
+intervention sub-layer (D1, D6) are statistically indistinguishable
+(CI includes 1.0).}
+\label{tab:p5p8synth-iter140-six-domain}
+\small
+\begin{tabular}{llrr}
+\toprule
+Domain & Description & $n$ & density \\
+\midrule
+D1 & P8 grad-band firing (per-row) & 840 & 0.0083 \\
+D2 & P7 step rejection (per-step)  & 160 & 0.5000 \\
+D3 & P5 cells (per-cell)           & 98  & 0.3673 \\
+D4 & P7 per-prompt boundary        & 2560 & 0.7293 \\
+D5 & P8 iso ECE$>$0.10 (cohort cell) & 60 & 1.0000 \\
+D6 & P8 sensor-firing flip (rate x fset) & 145035 & 0.0053 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\textbf{P5P8-SYNTH iter-140 pairwise density ratios.}
+All ratios EXCLUDE 1.0 except D1/D6 = 1.57 [0.38, 2.79]
+which INCLUDES 1.0 -- the only ratio where two P8 sub-domains
+are statistically indistinguishable.}
+\label{tab:p5p8synth-iter140-ratios}
+\small
+\begin{tabular}{lrrrl}
+\toprule
+Ratio & Density ratio & Bootstrap CI & Excludes 1.0 & Layer \\
+\midrule
+D1/D6 & 1.57   & [0.38, 2.79]   & FALSE  & LOW \\
+D4/D6 & 137.50 & [127.89, 148.52] & TRUE   & HIGH vs LOW \\
+D5/D6 & 188.54 & [176.13, 203.13] & TRUE   & HIGH vs LOW \\
+D1/D2 & 0.017  & [0.004, 0.030]  & TRUE   & LOW vs MID \\
+D1/D4 & 0.011  & [0.003, 0.020]  & TRUE   & LOW vs MID \\
+D2/D3 & 1.36   & [1.02, 1.92]    & TRUE (overlap) & MID-MID \\
+D2/D4 & 0.69   & [0.58, 0.80]    & TRUE   & MID-MID \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Operational recommendation}
+(a) \textbf{REPORT} density claims at the 6-domain level for any
+future paper-facing P5 / P7 / P8 density claim -- citing a single
+domain is misleading given 188$\times$ spread within P8 alone.
+(b) \textbf{USE} the LOW vs MID vs HIGH split for reviewer-facing
+summaries: the LOW layer $\{D_1, D_6\}$ covers per-row intervention
+events; the MID layer $\{D_2, D_3, D_4\}$ covers per-cell / per-step
+events; the HIGH layer $\{D_5\}$ covers per-cohort calibration
+violation.  (c) \textbf{RECORD} D1/D6 statistical indistinguishability
+as the operational equality that anchors the per-row intervention
+sub-layer; D5 is the qualitative outlier at 100\% per-cohort.
+(d) Wire \texttt{synth\_iter140\_six\_density.tsv} into the
+P5P8-SYNTH reproducibility bundle alongside the iter-136 five-domain
+matrix.

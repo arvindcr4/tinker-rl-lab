@@ -94,5 +94,5 @@
       "rationale": "significant, matches predicted <0"
     }
   ],
-  "notes": "Iter-54 vein (d): added because the worktree carries a real adaptive-G arm (qp7_adaptive.tsv, n=16 paired steps, G=4 fixed vs 4->6->8 adaptive ladder) but no delta_*.json existed. Measured on n=16 paired-by-step observations."
+  "notes": "Iter-54 vein (d): added because the worktree carries a real adaptive-G arm (qp7_adaptive.tsv, n=16 paired steps, G=4 fixed vs 4->6->8 adaptive ladder) but no delta_*.json existed. Measured on n=16 paired-by-step observations. | iter-94 transparent-placeholder-marker: Citation: bibkey=tinker2026adaptiveg is a transparent placeholder because Adaptive-G is a worktree implementation (live in colab-open_grpo-adaptiveg_e3 and iter-47/51 P7 unified controller bank), not a peer-reviewed paper. No arXiv id exists for this implementation. Future work: replace with verified citation when an external artifact lands."
 }

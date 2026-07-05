@@ -36,7 +36,7 @@
       "change": "KL regularization term removed from the objective (canonical leaf pinned at kl_beta=0.0)"
     }
   ],
-  "notes": "Four named techniques plus removal of the KL term, per the source paper. field: paths now anchored on iter-41 schema leaves (iter-42 drift audit: previous sampling.* and reward.* references were blocks the schema never exposed).",
+  "notes": "Four named techniques plus removal of the KL term, per the source paper. field: paths now anchored on iter-41 schema leaves (iter-42 drift audit: previous sampling.* and reward.* references were blocks the schema never exposed). | iter-94 surrogate-marker: The tinker_dapo_qwen3.5-4b_gsm8k stack record is a LABEL-FLIP SURROGATE only: variant_deltas_applied enumerates clip_higher as 'surrogate' (asymmetric clip enforced via user config, managed loss internals unverifiable), dynamic_sampling as 'absent' (no group filter-and-resample hook), token_level_loss as 'unknown' (managed_by_tinker), overlong_reward_shaping as 'absent' (no length-aware penalty), and kl_removed as 'unknown' (kl_beta managed). Adding a measured row sourced from that stack record would advertise the surrogate as the real DAPO algorithm. Measured block intentionally null: same-stack DAPO arm (with all five components enforced) does not exist in the worktree. To be measured once a same-stack arm lands (criterion: same model + task + sampler + RLHF pipeline with all five DAPO components actually enforced, not just label-named).",
   "expected_effects": [
     {
       "metric": "zvf",

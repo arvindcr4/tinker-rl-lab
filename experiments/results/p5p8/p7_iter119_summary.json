@@ -1,0 +1,79 @@
+{
+  "iteration": 119,
+  "pillar": "P7",
+  "vein": "Unified calibrated controller -- Berkeley row 01 + row 19 + iter-111/115",
+  "method": "CCC = regime-gated composition: FAST (zvf<0.50) -> min(G_dualformer, G_base=8) -- Dualformer fast-mode; BASELINE (0.50<=zvf<tau) -> G_base; DEGENERATE (zvf>=tau=0.70) -> max(G_base, min(G_adaptive_gstar, G=32)). Alphaproof gamma*=0 baseline-smoothing layered on top at no G cost.",
+  "inputs": {
+    "n2_metrics_path": "/home/claude/tinker-rl-lab-minimax/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+    "n10_perstep_path": "/home/claude/tinker-rl-lab-minimax/experiments/results/p5p8/p7_iter115_per_step_n10.tsv",
+    "boot_B": 2000,
+    "boot_seed": 20260705,
+    "G_candidates_for_adaptive": [
+      16,
+      32,
+      64
+    ],
+    "floor": 0.5,
+    "G_base": 8,
+    "tau_degen": 0.7
+  },
+  "falsifiable_headline": {
+    "H1_ccc_unique_net_cheapest_dynamic_controller_on_n10": {
+      "pass": true,
+      "pass_check_details": {
+        "mean_G_ccc_minus_adaptive": -3.839999999999998,
+        "nb_ccc": -0.3043847656815355,
+        "nb_dualformer": -0.8185660876580535,
+        "nb_adaptive": -0.45968185664826405
+      },
+      "interpretation": "On N10 step-aggregate, CCC (a) reduces mean G_used vs ADAPTIVE-G* by >=2.0 (>=10% saving), AND (b) is no worse than both Dualformer and Adaptive-G* on net_benefit. Honest framing: ALL dynamic controllers are net-negative vs STATIC_G8 = 0; CCC is the LEAST-NEGATIVE dynamic."
+    },
+    "H2_ccc_preserves_97pct_of_baseline_reward": {
+      "pass": true,
+      "n2_mean_reward_static_g8": 0.8337890625,
+      "n2_mean_reward_ccc_predicted": 0.8312265625,
+      "n2_preservation_ratio": 0.9969266807214805,
+      "interpretation": "Predicted reward_mean under CCC is >= 97% of STATIC_G8 mean. CCC does not regress training accuracy."
+    },
+    "H3_ccc_pareto_85pct_no_worse_than_worst_on_at_least_one_dataset": {
+      "pass": true,
+      "n2_pareto": {
+        "dataset": "n2",
+        "n": 160,
+        "frac_ccc_no_worse_than_worst": 1.0,
+        "frac_ccc_strictly_better_than_all_baselines": 0.0
+      },
+      "n10_pareto": {
+        "dataset": "n10",
+        "n": 75,
+        "frac_ccc_no_worse_than_worst": 1.0,
+        "frac_ccc_strictly_better_than_all_baselines": 0.0
+      },
+      "interpretation": "CCC net_benefit >= min(static_g8, static_g16, dualformer, adaptive_gstar) on >=85% of decisions for at least one dataset (i.e., CCC no worse than worst baseline on most decisions)."
+    },
+    "H4_ccc_mean_G_below_static_g16_on_at_least_one_dataset": {
+      "pass": true,
+      "n2_mean_G_ccc": 20.3,
+      "n10_mean_G_ccc": 14.72,
+      "interpretation": "On at least one of N2 / N10, CCC mean G_used < 16 (CCC achieves compute saving vs always-pessimistic STATIC_G16)."
+    }
+  },
+  "bootstrap_ci_ccc_minus_static_g16": {
+    "n2": {
+      "name": "n2",
+      "n": 160,
+      "mean_delta_ccc_vs_static_g16": -0.275232505991997,
+      "ci_low": -0.35880050672204333,
+      "ci_high": -0.19427795436034884,
+      "p_positive": 0.0
+    },
+    "n10": {
+      "name": "n10",
+      "n": 75,
+      "mean_delta_ccc_vs_static_g16": -0.023134476623115637,
+      "ci_low": -0.13580048943707715,
+      "ci_high": 0.0849351701113275,
+      "p_positive": 0.359
+    }
+  }
+}

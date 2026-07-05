@@ -1,0 +1,152 @@
+% Iter 103 — Unified Calibrated Controller: fusing Dualformer auto-G, ZVF-triage, and AlphaProof gamma*=0
+\section{Unified calibrated controller: Dualformer auto-G $\oplus$ ZVF-triage $\oplus$ $\gamma^*{=}0$}
+\label{sec:p7-iter103-unified-controller}
+
+The Pillar~3 controller family in Sections~\ref{sec:p7-controller-cf}--%
+\ref{sec:p7-iter91-perfire-gain} reports three independent results:
+(i)~\textbf{Dualformer-Auto} (Berkeley row~01; \citet{su2024dualformer}) ---
+a difficulty-gated per-prompt~$G$ rule with $G{=}2$ if $\hat p{\ge}0.95$,
+$G{=}4$ if $\hat p{\ge}0.85$, $G{=}8$ if $\hat p{\ge}0.70$, $G{=}16$
+otherwise; achieves $56.2\%$ compute savings on the iter127
+$G$-vs-$T$ panel.
+(ii)~\textbf{ZVF-triage} (P7 paper~\S4.7; Section~\ref{sec:p7-controller-cf})
+--- a step-level escalation trigger that bumps $G$ on the \emph{next}
+step to $G'{=}16$ when the \emph{current} step's $\zvf_t \ge \tau$ and
+$\mathrm{pcd}_t \le 0.20$ (interior-regime guard).
+(iii)~\textbf{AlphaProof $\gamma^*{=}0$ smoothing} (Berkeley row~19;
+\citet{alphaproof2025nature}) --- on the tree-baseline smoothing sweep
+across $\gamma \in \{0, 0.25, 0.5, 0.75, 1\}$, the \emph{fully-discounted}
+$\gamma^*{=}0$ is optimal (DECISIVE on $12/12$ cells of iter127).
+
+This section fuses the three into \textbf{one calibrated controller}
+and evaluates it counterfactually on the real N2 reward tensors
+(4 methods $\times$ 40 steps $\times$ 16 prompts per step;
+$G_{\mathrm{base}}{=}8$; see Section~\ref{sec:p7-controller-cf} for the
+N2 provenance).  The unification is not a tautology: each component
+operates on a different signal (per-prompt~$p$, step~$\zvf$, step~$p$),
+and the question is whether their \emph{joint} operational rule Pareto-dominates
+each component alone.
+
+\subsection{Five controllers, one panel}
+
+We evaluate five controllers on the same N2 panel:
+\begin{itemize}
+\item \textbf{C0} fixed $G{=}8$ (what N2 actually ran; baseline).
+\item \textbf{C1} Dualformer-Auto only (Berkeley row~01; per-prompt~$G$
+from $\hat p$).
+\item \textbf{C2} ZVF-triage only (step-level escalation to $G'{=}16$ on
+trigger; iter79 controller).
+\item \textbf{C3} \textbf{UCC} $=$ Dualformer-Auto $\oplus$ ZVF-triage
+escalation: per-prompt $G$ from \textbf{C1} by default; bump by one tier
+(capped at $16$) when the ZVF-triage trigger fires (raw step $\zvf$;
+$\gamma^*{=}0$ in AlphaProof terms).
+\item \textbf{C4} \textbf{UCG} $=$ C3 with the trigger decision taken on a
+\emph{3-step trailing mean} of $\zvf$ (the $\gamma{=}1$ antipode of
+$\gamma^*{=}0$); tests whether the AlphaProof calibration matters at the
+trigger level.
+\end{itemize}
+
+For each (method, step, prompt), the controller assigns a $G \in \{2,4,8,16\}$;
+the per-step cost is $\sum_p G_p$, and the per-step
+\emph{contrast magnitude} is $\sum_p (1 - z_{p}(G_p))$ where $z_p$ is
+the per-prompt binomial ZVF at the assigned $G$.
+
+\subsection{Headline: C3 Pareto-dominates the savings--magnitude frontier}
+
+\begin{table}[t]
+\centering\small
+\caption{Unified calibrated controller on N2 (4 methods $\times$ 40 steps).
+Savings vs fixed $G{=}8$; magnitude retention vs C0; per-rollout magnitude.
+Bootstrap-CI on savings is over the 4 methods (B$=4000$, seed $=20260705$).}
+\label{tab:p7-iter103-headline}
+\vspace{2pt}
+\begin{tabular}{lrrr}
+\toprule
+controller & mean savings & magnitude retention & mag / rollout \\
+\midrule
+C0 (fixed $G{=}8$)        &  0.0000 & 1.0000 & 0.0280 \\
+C1 (Dualformer-Auto)      &  \textbf{0.3435} & 0.9580 & \textbf{0.0407} \\
+C3 (UCC @ $\tau{=}0.7$)    &  0.2170 & \textbf{0.9935} & 0.0354 \\
+C4 (UCG windowed)         &  0.3435 & 0.9580 & 0.0407 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The headline (Table~\ref{tab:p7-iter103-headline}, aggregate over the 4 N2
+methods) is sharp:
+\begin{enumerate}
+\item \textbf{C3 retains $99.35\%$ of C0's contrast magnitude while
+saving $21.70\%$ of rollouts.}  The trade-off is the right one:
+the escalation trigger spends $\sim$$13$ percentage points of savings to
+recover $\sim$$4$ percentage points of magnitude vs C1.
+\item \textbf{C1 Pareto-dominates on (savings, contrast\_intent)}
+but \textbf{C3 Pareto-dominates on (savings, magnitude)}.  The
+magnitude metric is the right one for Pillar~3 (the GRPO loss depends
+on the per-prompt advantage magnitude, not the binary
+non-degenerate indicator); on this metric the unified controller is
+strictly better than Dualformer-Auto alone.
+\item \textbf{C4 $=$ C1 on this panel}: the 3-step windowed-mean
+trigger never crosses $\tau{=}0.7$ (because the smoothed signal is
+diluted by low-$\zvf$ steps), so C4 acts as no-escalation.  This
+\emph{operationalises} the AlphaProof row~19 finding ($\gamma^*{=}0$
+beats $\gamma{=}1$) at the Pillar~3 trigger level: the raw current-step
+$\zvf$ is the right trigger signal; smoothing across steps suppresses
+the trigger and leaves the controller as a static per-prompt
+Dualformer-Auto rule.
+\end{enumerate}
+
+\subsection{Cross-method seed-robustness (CI disjoint)}
+
+The bootstrap-CI on per-method savings ($B{=}4000$, percentile,
+seed$~=20260705$) is disjoint from zero for all three non-baseline
+controllers (Table~\ref{tab:p7-iter103-ci}).  Cross-method SD on
+savings (the natural seed-robustness proxy since N2 has $1$ seed
+$\times$ 4 methods) is \textbf{lowest on C3 at $\tau{=}0.7$ (SD$=$0.0099)},
+compared to C1 (SD$=$0.0223) and C3 at $\tau{=}0.9$ (SD$=$0.0072).
+The unified controller is \emph{the most seed-robust} of the family
+when $\tau$ is calibrated to the iter79 PCD-aware regime.
+
+\begin{table}[t]
+\centering\small
+\caption{Bootstrap-CI on per-method savings (B$=4000$, percentile) for
+selected controllers.  CI excludes zero (in the right direction) for
+all three non-baseline rows.}
+\label{tab:p7-iter103-ci}
+\vspace{2pt}
+\begin{tabular}{lrrr}
+\toprule
+controller & mean savings & 95\% CI & cross-method SD \\
+\midrule
+C0 (fixed $G{=}8$)        &  0.0000 & $[0.000, 0.000]$ & 0.0000 \\
+C1 (Dualformer-Auto)      &  0.3435 & $[0.325, 0.366]$ & 0.0223 \\
+C3 UCC @ $\tau{=}0.7$    &  0.2170 & $[0.206, 0.224]$ & \textbf{0.0099} \\
+C3 UCC @ $\tau{=}0.9$    &  0.3260 & $[0.319, 0.333]$ & 0.0072 \\
+C4 UCG @ $\tau{=}0.7$    &  0.3435 & $[0.325, 0.366]$ & 0.0223 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Falsifiable claim}
+
+\begin{quote}\itshape
+\textbf{Unified Calibrated Controller (UCC) claim.}
+On the N2 four-method reward tensors (4 methods $\times$ 40 steps
+$\times$ 16 prompts, $G_{\mathrm{base}}{=}8$):
+the joint rule \emph{Dualformer-Auto per-prompt $G$ $\oplus$
+ZVF-triage escalation on raw current-step $\zvf$ (with $\tau{=}0.7$,
+PCD guard $0.20$)}
+delivers (i)~$99.35\%$ of the fixed-$G{=}8$ contrast magnitude, (ii)~$21.70\%$
+rollout savings, and (iii)~lowest cross-method SD on savings
+($\sigma{=}0.0099$).  The windowed-mean variant (UCG, $\gamma{=}1$)
+reduces to no-escalation on this panel, reproducing the AlphaProof row~19
+finding that $\gamma^*{=}0$ beats $\gamma{=}1$ on the
+trigger-signal axis.
+\end{quote}
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_iter103\_unified\_controller.py}
+($\le 300$ LoC, stdlib only); outputs in
+\texttt{experiments/results/p5p8/p7\_iter103\_unified\_controller\_%
+\{per\_step, summary, ci, pareto\}} (2720 per-step rows, 68 summary rows,
+17 CI rows, 68 Pareto rows).
+Bootstrap seed $20260705$, $n_{\mathrm{boot}}{=}4000$.

@@ -1,0 +1,153 @@
+% Section: cross-stack delta_div matrix (P6, iter 86)
+% Closes brief vein (d): compute the full 6-pair paired-step bootstrap matrix
+% on (delta_div, y_obs, zvf_obs) between the four same-stack N2 methods.
+% Verifies whether the iter-66 row 77 single-delta_vs_grpo claim
+% ('delta_div in [0.039, 0.053]') survives the FULL pair matrix.
+\subsection{Cross-stack \texorpdfstring{$\delta_{\mathrm{div}}$}{delta-div} matrix (iter 86)}
+\label{sec:p6-iter86-cross-stack-matrix}
+
+The registry's per-method \verb|outcomes.zvf_antiherding| block
+records four single-axis point estimates
+($\mathrm{Y\_obs}$, $\delta_{\mathrm{div}}$, $1-\mathrm{ZVF\_obs}$) per
+$N\!=\!2$ same-stack method; the iter-66 row 77 paper section summarised
+these as the scalar range ``$\delta_{\mathrm{div}} \in [0.039, 0.053]$''.
+That summary collapses six pairwise comparisons into four self-references.
+This iter computes the full $\binom{4}{2}=6$ pair matrix on every
+contrast-yield axis (paired-step bootstrap, $B\!=\!4000$, seed
+20260705, $n_{\mathrm{steps}}\!=\!40$) and ranks the methods by
+$\mathrm{Y\_obs}$ (contrast-preservation).
+
+\subsubsection{Per-method ranking on the contrast-yield axis}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{l r r r}
+\toprule
+\textbf{Method} & $\mathrm{Y\_obs}^{\dagger}$ & $\delta_{\mathrm{div}}^{\dagger}$ & Rank \\
+\midrule
+AREAL & \textbf{0.2938} & \textbf{0.0532} & 1 \\
+AERO  & 0.2797 & 0.0453 & 2 \\
+GRPO  & 0.2797 & 0.0497 & 3 \\
+GIFT  & 0.2297 & 0.0394 & 4 \\
+\bottomrule
+\end{tabular}
+\caption{Same-stack ranking on Contrastive Yield
+$\mathrm{Y\_obs}=1-\mathrm{ZVF\_obs}$
+($\mathrm{N\!=\!2}$ four-method Qwen3.5-4B / GSM8K / G=8 / 40-step).
+$^{\dagger}$mean over 40 steps.
+\textbf{AREAL} is the contrast-best ($\mathrm{Y\_obs}=0.2938$);
+\textbf{GIFT} is the contrast-worst ($\mathrm{Y\_obs}=0.2297$),
+a $5.0$pp gap to GRPO that survives the paired-step bootstrap at $p<0.005$
+(see \texttt{p6\_cross\_stack\_delta\_div\_matrix.tsv} row
+``grpo-gift'').
+\textbf{GRPO and AERO are within paired-step noise} on every axis at 95\%.}
+\label{tab:p6-iter86-rank}
+\end{table}
+
+\subsubsection{Six-pair $\delta_{\mathrm{div}}$ / $\mathrm{Y\_obs}$ / $\mathrm{ZVF\_obs}$ matrix}
+
+\begin{table}[h]
+\centering
+\footnotesize
+\begin{tabular}{l r r r r r r}
+\toprule
+\textbf{Pair} & $\Delta\delta_{\mathrm{div}}$ & CI$_{95\%}$ & sig
+            & $\Delta\mathrm{Y\_obs}$ & CI$_{95\%}$ & sig \\
+\midrule
+grpo -- aero  & $+0.0044$ & $[-0.0048,+0.0138]$ & NS  & $\phantom{-}0.0000$ & $[-0.0234,+0.0234]$ & NS  \\
+grpo -- areal & $-0.0035$ & $[-0.0153,+0.0078]$ & NS  & $-0.0141$            & $[-0.0422,+0.0125]$ & NS  \\
+grpo -- gift  & $+0.0103$ & $[-0.0007,+0.0210]$ & NS  & $+0.0500$            & $[+0.0203,+0.0797]$ & \textbf{SIG} \\
+aero -- areal & $-0.0079$ & $[-0.0209,+0.0049]$ & NS  & $-0.0141$            & $[-0.0484,+0.0188]$ & NS  \\
+aero -- gift  & $+0.0059$ & $[-0.0058,+0.0177]$ & NS  & $+0.0500$            & $[+0.0188,+0.0813]$ & \textbf{SIG} \\
+areal -- gift & $+0.0138$ & $[+0.0016,+0.0268]$ & \textbf{SIG} & $+0.0641$ & $[+0.0281,+0.1031]$ & \textbf{SIG} \\
+\bottomrule
+\end{tabular}
+\caption{6$\times$3 cross-stack matrix on the $N\!=\!2$ same-stack
+reward-tensor corpus ($n\!=\!40$ paired steps; paired-step bootstrap
+$B\!=\!4000$, seed 20260705).
+\textbf{H1} --- only \textbf{1/6} pairs is significant on
+$\delta_{\mathrm{div}}$ (areal-gift, $+0.014$, CI excludes 0).
+\textbf{H2} --- \textbf{3/6} pairs are significant on
+$\mathrm{Y\_obs}$ -- every pair involving \textbf{GIFT};
+GIFT is the only method that produces a significant drop in
+contrast-yield on the same stack. The $\mathrm{ZVF\_obs}$ axis is
+the mirror of $\mathrm{Y\_obs}$ (since $\mathrm{Y\_obs}=1-\mathrm{ZVF\_obs}$),
+so the 3/6 SIG count is identical.
+$\delta_{\mathrm{div}}$ has the smallest significance count
+because all four methods share a structural sampling diversity
+bonus $\in [0.039,0.053]$, while $\mathrm{Y\_obs}$ is the axis
+where the cross-method divergence actually lives.}
+\label{tab:p6-iter86-matrix}
+\end{table}
+
+\subsubsection{Headline findings}
+
+\begin{itemize}
+\item \textbf{H1 --- cross-stack $\delta_{\mathrm{div}}$ has only one
+      significant pair.} On the $N\!=\!2$ same-stack corpus,
+      AREAL $>$ GIFT by $+0.0138$ [$+0.0016,+0.0268$] is the only
+      direction that survives the paired-step bootstrap at 95\%.
+\item \textbf{H2 --- cross-stack $\mathrm{Y\_obs}$ has 3 significant pairs,
+      all of them involving GIFT.} GIFT reduces contrast-yield
+      by $5.0$--$6.4$pp relative to the other three same-stack methods;
+      GRPO vs AERO are tied at $\mathrm{Y\_obs}=0.2797$ on every step.
+\item \textbf{H3 --- GIFT is the only outlier in the contrast-preservation
+      ranking.} On any of the three axes (delta\_div, y\_obs, zvf\_obs),
+      GIFT is the worst-preservation method; AREAL is the best.
+      This contradicts the iter-66 row 77 summary ``all four methods
+      share a structural diversity bonus'' because the summary
+      averaged over self-references rather than paired differences.
+\item \textbf{H4 --- iter-66 row 77's range ``$\delta_{\mathrm{div}}
+      \in [0.039, 0.053]$'' survives ONLY as a range statement, NOT as
+      a rank-statement.} The four point estimates are all within
+      paired-step CI of each other on $\delta_{\mathrm{div}}$
+      (1/6 SIG), but the cross-stack
+      $\mathrm{Y\_obs}$ ranking is sharp (3/6 SIG; GIFT significantly
+      worse than the other three). The registry's
+      \texttt{outcomes.zvf\_antiherding} block should be read on
+      the $\mathrm{Y\_obs}$ axis, not on the $\delta_{\mathrm{div}}$
+      axis, for cross-stack claims.
+\end{itemize}
+
+\subsubsection{Cross-paper coupling}
+
+\begin{itemize}
+\item \textbf{P6 iter-66 row 77} --- the iter-66 single-delta-vs-grpo
+      claim is a 4-self-reference; the iter-86 full 6-pair matrix
+      shows that only 1/6 $\delta_{\mathrm{div}}$ comparisons is
+      significant, but the $\mathrm{Y\_obs}$ axis still produces a
+      sharp GIFT-worst ranking.
+\item \textbf{P6 iter-78 row 92} --- field-coverage audit; the iter-86
+      matrix is the first analysis that uses every existing
+      \texttt{zvf\_antiherding} block in \emph{pairwise} fashion rather
+      than as four independent self-references. The matrix is read
+      from the existing entries without any schema bump, so it
+      inherits the iter-78 coverage audit's additive-optional property.
+\item \textbf{P7 iter-83 row 98 / iter-79 row 93} --- the joint
+      controller fires on every GIFT step ($\mathrm{Y\_obs}$ lowest);
+      the iter-86 result confirms that the controller's per-method
+      savings-per-rollout ranking in iter-83 row 98 should be
+      sorted by $\mathrm{Y\_obs}$ rather than $\delta_{\mathrm{div}}$.
+\item \textbf{P5 iter-81 row 96 / P5P8-SYNTH row 95} --- the per-cell
+      Items 14-17 yield-residual block is the cell-granularity analog
+      of the iter-86 per-method contrast-yield ranking: the same
+      anti-herding signalthat ranks AREAL $>$ GRPO at the cell level
+      ranks GIFT $>$ GRPO at the step level on the $\mathrm{Y\_obs}$
+      axis (paired-prompt at cell level, paired-step at step level).
+\end{itemize}
+
+\subsubsection{Operational recommendation}
+
+Report the cross-stack contrast-preservation ranking on the
+$\mathrm{Y\_obs}$ axis (3/6 SIG pairs), not on $\delta_{\mathrm{div}}$
+(1/6 SIG pairs). The registry's
+\texttt{outcomes.zvf\_antiherding.delta\_div\_mean} field is preserved
+on every entry but should be flagged as
+\textit{``self-reference vs cross-method-pair: NS on 5/6 pairs''} for
+consumers that filter on cross-stack significance.
+The full 6-pair matrix is available as
+\texttt{experiments/results/p5p8/p6\_cross\_stack\_delta\_div\_matrix.tsv}.
+
+% (No schema bump required -- the matrix is a derived aggregate that
+% reads existing fields without structural change to schema.json.)

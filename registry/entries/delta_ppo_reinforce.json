@@ -1,0 +1,55 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_ppo_reinforce",
+  "name": "PPO+REINFORCE",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "schulman2017proximal_williams1992reinforce_combo",
+    "arxiv": "1707.06347",
+    "title": "PPO-style ratio clipping + REINFORCE-style no-baseline (composed from PPO and REINFORCE leaves in registry)"
+  },
+  "deltas": [
+    {
+      "component": "ratio_clip",
+      "field": "loss_form.clip_eps_low",
+      "change": "PPO-style ratio clipping r_t(theta) in [1-eps, 1+eps] with eps=0.2 symmetric (canonical leaf pinned at clip_eps_low=0.2, clip_eps_high=0.2). Inherited from delta_ppo.json; the value_head is REMOVED in this composition (see next row)."
+    },
+    {
+      "component": "no_baseline",
+      "field": "reference_kl.reference_policy",
+      "change": "No group-mean or value baseline; raw reward r_i is the advantage (A_i = r_i). Inherited from delta_reinforce. Unlike PPO, no learned V_head; unlike REINFORCE, the ratio clip IS retained."
+    },
+    {
+      "component": "no_value_head",
+      "field": "reference_kl.reference_policy",
+      "change": "No learned state-value V_head and no GAE. The ratio clip is the only variance-control mechanism. Composition of (delta_ppo.ratio_clip + delta_reinforce.no_baseline)."
+    },
+    {
+      "component": "epoch_k",
+      "field": "loss_form.epochs_per_prompt",
+      "change": "K=1 epoch (single pass over rollout buffer per gradient step) \u2014 REINFORCE-default, NOT PPO-default K=4. The 4-wandb-run population all use max_steps=30 with no explicit K override; the canonical leaf is epochs_per_prompt=1."
+    }
+  ],
+  "notes": "Iter-182 vein (d): ppo_reinforce was identified by the missing-method audit as the highest-priority method with 4 wandb runs in tinker-rl-lab-world-class (ri2pajjl, vrb9zxql on Qwen/Qwen3-8B; wni44rkq, dshd5xxm on meta-llama/Llama-3.1-8B-Instruct, all gsm8k with max_steps=30) and ZERO registry presence.  All four runs are finished per wandb.  The 4-run cross-stack panel spans {Qwen3-8B, Llama-3.1-8B-Instruct} x 2 seeds; same-stack relative to the registry's Qwen3-8B grpo_wandb entry is gated by same-sampler + same-RLHF-pipeline confirmation (TBD: world-class project is a different sampler than tinker-managed).  Measured block intentionally null: same-stack arm criterion (same model + task + sampler + RLHF pipeline with only the value_head removed from PPO) is NOT yet met on this corpus.  Adding measured rows would be fabricatory.  Expected-effects block carries paper-derived predictions so future auditors can score (expected, measured) once a same-stack ppo_reinforce arm lands.",
+  "expected_effects": [
+    {
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">0",
+      "rationale": "ppo_reinforce has neither a value-head baseline nor a group-mean baseline; with raw reward as advantage, within-group reward variance dominates and ZVF is predicted HIGHER than PPO and HIGHER than GRPO."
+    },
+    {
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">=0",
+      "rationale": "REINFORCE-without-baseline has higher variance than GRPO; combined with ratio clip, expected reward is at-best neutral vs GRPO."
+    },
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": ">0",
+      "rationale": "Without any baseline, the fraction of zero-variance groups should be HIGHER than GRPO; same direction as REINFORCE alone."
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+algorithm	canonical_id	project	run_id	run_name	model	dataset	group_size	state	stack_entry_exists
+grpo	grpo	skyrl-tinker	tfb2qsru	Qwen3-8B-tool_use-20260329-211346	Qwen/Qwen3-8B		8	failed	1
+grpo	grpo	skyrl-tinker	as3gfob0	Qwen3-8B-tool_use-20260329-211710	Qwen/Qwen3-8B		8	failed	1
+grpo	grpo	skyrl-tinker	68h67x6y	Qwen3-8B-tool_use-20260329-212008	Qwen/Qwen3-8B		8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	snm9mxni	grpo_qwen3-8b_gsm8k_seed123	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	q33egfyb	grpo_qwen3-8b_gsm8k_seed456	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	k6cmc7gi	grpo_qwen3-8b_gsm8k_seed789	Qwen/Qwen3-8B	gsm8k	8	crashed	1
+grpo	grpo	tinker-rl-lab-world-class	9lleqd1g	grpo_qwen3-8b_gsm8k_seed123	Qwen/Qwen3-8B	gsm8k	8	failed	1
+grpo	grpo	tinker-rl-lab-world-class	c1zca2qb	grpo_qwen3-8b_gsm8k_seed123	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	igejxwwl	grpo_qwen3-8b_gsm8k_seed456	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	28bzhlsa	grpo_qwen3-8b_gsm8k_seed789	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	oeidbyzx	campaign_w1_kimi-k2-thinking	moonshotai/Kimi-K2-Thinking	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	27ymnugp	campaign_w1_qwen35-397b	Qwen/Qwen3.5-397B-A17B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	bxe5um4k	campaign_w1_llama31-70b-base	meta-llama/Llama-3.1-70B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	v3ur5b1w	campaign_w1_gpt-oss-120b	openai/gpt-oss-120b	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	xmot42ot	campaign_w1_qwen3-8b-base	Qwen/Qwen3-8B-Base	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	hiy9w3wo	campaign_w1_kimi-k25	moonshotai/Kimi-K2.5	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	njrt2no3	campaign_w1_deepseek-v31-base	deepseek-ai/DeepSeek-V3.1-Base	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	7bn59gdn	campaign_w1_llama31-8b-base	meta-llama/Llama-3.1-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	wv5ssnmp	campaign_w2_qwen3-8b_G2	Qwen/Qwen3-8B	gsm8k	2	finished	1
+grpo	grpo	tinker-rl-lab-world-class	lpxrbgw2	campaign_w2_qwen3-8b_G4	Qwen/Qwen3-8B	gsm8k	4	finished	1
+grpo	grpo	tinker-rl-lab-world-class	ao38u7bu	campaign_w2_qwen3-8b_G16	Qwen/Qwen3-8B	gsm8k	16	finished	1
+grpo	grpo	tinker-rl-lab-world-class	v1ttydp0	campaign_w2_qwen3-8b_G32	Qwen/Qwen3-8B	gsm8k	32	finished	1
+grpo	grpo	tinker-rl-lab-world-class	inatk9re	campaign_w3_dsv31_s123	deepseek-ai/DeepSeek-V3.1	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	j0xgk0eo	campaign_w3_dsv31_s456	deepseek-ai/DeepSeek-V3.1	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	d4wr8xqk	campaign_w3_dsv31_s789	deepseek-ai/DeepSeek-V3.1	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	9w7gizec	campaign_w1_kimi-k25	moonshotai/Kimi-K2.5	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	ee20882i	campaign_w1_kimi-k2-thinking	moonshotai/Kimi-K2-Thinking	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	pyy1y27m	campaign_w1_qwen3-8b-base	Qwen/Qwen3-8B-Base	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	qepg9b0r	campaign_w1_llama31-70b-base	meta-llama/Llama-3.1-70B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	sdul6wv8	campaign_w1_qwen35-397b	Qwen/Qwen3.5-397B-A17B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	x29gchbr	campaign_w1_gpt-oss-120b	openai/gpt-oss-120b	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	kqncve9u	campaign_w1_deepseek-v31-base	deepseek-ai/DeepSeek-V3.1-Base	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	vi4ay2yi	campaign_w1_llama31-8b-base	meta-llama/Llama-3.1-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	9x0u2bcj	campaign_w2_qwen3-8b_G2	Qwen/Qwen3-8B	gsm8k	2	finished	1
+grpo	grpo	tinker-rl-lab-world-class	u6iqve7o	campaign_w2_qwen3-8b_G4	Qwen/Qwen3-8B	gsm8k	4	finished	1
+grpo	grpo	tinker-rl-lab-world-class	6pwbiixh	campaign_w2_qwen3-8b_G16	Qwen/Qwen3-8B	gsm8k	16	finished	1
+grpo	grpo	tinker-rl-lab-world-class	xa88u4zz	campaign_w2_qwen3-8b_G32	Qwen/Qwen3-8B	gsm8k	32	finished	1
+grpo	grpo	tinker-rl-lab-world-class	rhxacq0y	campaign_w3_dsv31_s123	deepseek-ai/DeepSeek-V3.1	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	6c6qjy9t	campaign_w3_dsv31_s456	deepseek-ai/DeepSeek-V3.1	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	j23m5clr	campaign_w3_dsv31_s789	deepseek-ai/DeepSeek-V3.1	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	s9wzsofo	campaign_w3_nem120b_s123	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	ycvx1tpu	campaign_w3_nem120b_s456	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	t80dkvup	campaign_w3_nem120b_s789	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	lasgrb5p	campaign_w3_q235b_s123	Qwen/Qwen3-235B-A22B-Instruct-2507	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	credw6a1	campaign_w3_q235b_s456	Qwen/Qwen3-235B-A22B-Instruct-2507	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	k6fzommw	campaign_w3_q235b_s789	Qwen/Qwen3-235B-A22B-Instruct-2507	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	ot1mxw3t	llama33_70b_s42	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	crashed	1
+grpo	grpo	tinker-rl-lab-world-class	kf2obth6	llama33_70b_s42	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	2lw7gx59	campaign_w5_q8b_100s	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	talygl4q	campaign_w1_qwen35-35b-moe	Qwen/Qwen3.5-35B-A3B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	7rigsas7	campaign_w1_nemotron3-nano-30b	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	l4jhzkxm	campaign_w1_llama32-1b	meta-llama/Llama-3.2-1B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	lihw3pot	campaign_w1_llama32-3b	meta-llama/Llama-3.2-3B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	elb6c34k	llama33_70b_s123	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	ey7dy864	campaign_w1_qwen3-4b-inst-2507	Qwen/Qwen3-4B-Instruct-2507	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	sas2shvn	campaign_w1_qwen3-30b-inst-2507	Qwen/Qwen3-30B-A3B-Instruct-2507	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	ga5nopor	campaign_w4_q8b_lr5e-06	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	eaf7c1s3	campaign_w4_q8b_lr3e-05	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	nh1t54ta	llama33_70b_s456	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	5c5ae695	campaign_w4_q8b_lr0.0001	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	2439l9ft	wave6_w6_kimik25_s123	moonshotai/Kimi-K2.5	gsm8k	8	crashed	1
+grpo	grpo	tinker-rl-lab-world-class	5vajtfpv	wave6_w6_q8b_temp10	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	exqu93nw	wave6_w6_llama31_8b_inst	meta-llama/Llama-3.1-8B-Instruct	gsm8k	8	crashed	1
+grpo	grpo	tinker-rl-lab-world-class	fpeeck8o	wave6_w6_q8b_rank64	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	msc7bnas	wave6_w6_q8b_batch1	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	ncls3l15	wave6_w6_q8b_temp06	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	pi0fllee	wave6_w6_llama31_70b_s123	meta-llama/Llama-3.1-70B	gsm8k	8	crashed	1
+grpo	grpo	tinker-rl-lab-world-class	rnehw7b7	wave6_w6_llama31_70b_s456	meta-llama/Llama-3.1-70B	gsm8k	8	crashed	1
+grpo	grpo	tinker-rl-lab-world-class	v482m025	wave6_w6_q8b_rank8	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	zvr7v6ay	wave6_w6_q8b_batch4	Qwen/Qwen3-8B	gsm8k	8	crashed	1
+grpo	grpo	tinker-rl-lab-world-class	3zwb7akd	campaign_w1_llama33-70b-inst_s42	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	rr9b9tn0	campaign_w1_llama33-70b-inst_s123	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	5coydety	wave6_w6_temp0.6_r32_b2	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	4f92b75c	wave6_w6_base_r32_t0.8_b2	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	4tupvr8a	wave6_w6_temp0.4_r32_b2	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	58ux2839	wave6_w6_temp1.0_r32_b2	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	7o5i9958	wave6_w6_temp0.2_r32_b2	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	xqtlwvcq	wave6_w6_rank4_t0.8_b2	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	0k4bpdox	wave6_w6_rank8_t0.8_b2	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	3lq8sa6c	wave6_w6_rank16_t0.8_b2	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	up9fagie	wave6_w6_rank64_t0.8_b2	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	3iwj9kn4	wave6_w6_batch1_r32_t0.8	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	cyscp586	wave6_w6_batch4_r32_t0.8	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	ubkpnhjj	wave6_w6_batch8_r32_t0.8	Qwen/Qwen3-8B	gsm8k	8	failed	1
+grpo	grpo	tinker-rl-lab-world-class	a499yg52	campaign_w1_llama33-70b-inst_s456	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	63uucd3s	campaign_w1_llama33-70b-inst_s789	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	failed	1
+grpo	grpo	tinker-rl-lab-world-class	6o5nyzbi	wave6_w6_batch1_r32_t0.8	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	8nlvecol	wave6_w6_rank16_t0.8_b2	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	icwke1dk	wave6_w6_batch4_r32_t0.8	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	nvfc9uny	wave6_w6_rank64_t0.8_b2	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	ve8ib5la	wave6_w6_batch8_r32_t0.8	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	x7m9trov	wave6_w6_rank8_t0.8_b2	Qwen/Qwen3-8B	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	0orv0eyr	campaign_w1_llama33-70b-inst_s456	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-lab-world-class	3eryah20	campaign_w1_llama33-70b-inst_s789	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	finished	1
+grpo	grpo	tinker-rl-scaling	7azu6q2p	gsm8k-qwen3-8b-seed042-tinker	Qwen/Qwen3-8B			finished	1
+grpo	grpo	tinker-rl-scaling	d5to7cef	gsm8k-qwen3-8b-seed137-tinker	Qwen/Qwen3-8B			finished	1
+grpo	grpo	tinker-rl-scaling	4ncwubzc	gsm8k-qwen3-8b-seed256-tinker	Qwen/Qwen3-8B			finished	1
+grpo	grpo	tinker-rl-scaling	n2u3w64a	gsm8k-qwen3-8b-seed512-tinker	Qwen/Qwen3-8B			finished	1
+grpo	grpo	tinker-rl-scaling	uimxa7eu	gsm8k-qwen3-8b-seed999-tinker	Qwen/Qwen3-8B			finished	1
+grpo	grpo	tinker-rl-scaling	lqpiwl6g	gsm8k_100step-tinker	Qwen/Qwen3-8B			finished	1
+grpo	grpo	tinker-rl-scaling	l9ka6klx	gsm8k_rank8-tinker	Qwen/Qwen3-8B			finished	1
+grpo	grpo	tinker-rl-scaling	ahmv6yu0	gsm8k_rank16-tinker	Qwen/Qwen3-8B			finished	1
+grpo	grpo	tinker-rl-scaling	k4bwbnb8	gsm8k_rank64-tinker	Qwen/Qwen3-8B			finished	1
+grpo	grpo	tinker-rl-scaling	erbijgzr	gsm8k_4B_s137-tinker	Qwen/Qwen3.5-4B			finished	1
+grpo	grpo	tinker-structural-ceiling	k4wnuznd	math500-qwen3-8b-300step	Qwen/Qwen3-8B		16	failed	1
+grpo	grpo	tinker-structural-ceiling	m7aqw7nr	gsm8k-qwen3-8b-lr1e-5-300step	Qwen/Qwen3-8B		16	failed	1
+grpo	grpo	tinker-structural-ceiling	r42lztk3	humaneval-qwen3-8b-200step	Qwen/Qwen3-8B		16	failed	1
+grpo	grpo	tinker-structural-ceiling	574m06vf	gsm8k-phase-hard	Qwen/Qwen3-8B		16	failed	1
+grpo	grpo	tinker-structural-ceiling	6lepd7co	humaneval-dense-reward	Qwen/Qwen3-8B		16	failed	1
+grpo	grpo	tinker-structural-ceiling	puw5qm3c	gsm8k-phase-mid	Qwen/Qwen3-8B		16	failed	1
+grpo	grpo	tinker-structural-ceiling	r3lr8g9d	gsm8k-phase-easy	Qwen/Qwen3-8B		16	failed	1
+grpo	grpo	tinker-structural-ceiling	6c799epy	gsm8k-phase-hard	Qwen/Qwen3-8B		16	finished	1
+grpo	grpo	tinker-structural-ceiling	apq65fnt	gsm8k-phase-easy	Qwen/Qwen3-8B		16	finished	1
+grpo	grpo	tinker-structural-ceiling	azw8cyq5	math500-qwen3-8b-300step	Qwen/Qwen3-8B		16	finished	1
+grpo	grpo	tinker-structural-ceiling	dhm20bk0	gsm8k-qwen3-8b-lr1e-5-300step	Qwen/Qwen3-8B		16	crashed	1
+grpo	grpo	tinker-structural-ceiling	hki79k0h	gsm8k-phase-mid	Qwen/Qwen3-8B		16	finished	1
+grpo	grpo	tinker-structural-ceiling	mwdkesn2	humaneval-qwen3-8b-200step	Qwen/Qwen3-8B		16	finished	1
+grpo	grpo	tinker-structural-ceiling	spblag1r	humaneval-dense-reward	Qwen/Qwen3-8B		16	finished	1
+ppo_reinforce	ppo-reinforce	tinker-rl-lab-world-class	ri2pajjl	ppo_gsm8k_Qwen3-8B_s42	Qwen/Qwen3-8B	gsm8k		finished	1
+ppo_reinforce	ppo-reinforce	tinker-rl-lab-world-class	wni44rkq	ppo_gsm8k_Llama-3.1-8B-Instruct_s42	meta-llama/Llama-3.1-8B-Instruct	gsm8k		finished	1
+ppo_reinforce	ppo-reinforce	tinker-rl-lab-world-class	vrb9zxql	ppo_gsm8k_Qwen3-8B_s42	Qwen/Qwen3-8B	gsm8k		finished	1
+ppo_reinforce	ppo-reinforce	tinker-rl-lab-world-class	dshd5xxm	ppo_gsm8k_Llama-3.1-8B-Instruct_s42	meta-llama/Llama-3.1-8B-Instruct	gsm8k		finished	1
+GRPO	grpo	tinker-rl-lab-world-class	3abllmqk	grpo_qwen3-8b_gsm8k_s123	Qwen/Qwen3-8B	gsm8k		finished	1
+GRPO	grpo	tinker-rl-lab-world-class	caxo9cs5	campaign_w1_llama33-70b-inst	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	failed	1
+GRPO	grpo	tinker-rl-lab-world-class	0sastqzp	campaign_w1_llama33-70b-inst_v2	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	failed	1
+GRPO	grpo	tinker-rl-lab-world-class	dlilh2jb	campaign_w1_llama33-70b-inst_v3	meta-llama/Llama-3.3-70B-Instruct	gsm8k	8	failed	1
+PPO	ppo	tinker-rl-lab-world-class	v9eesnqc	ppo_qwen3.5-4b_gsm8k_s42	Qwen/Qwen3.5-4B	gsm8k		finished	0
+TRL-GRPO	trl-grpo	tinker-rl-lab-world-class	7kgeas83	modal-trl_llama32_3b	meta-llama/Llama-3.2-3B-Instruct	gsm8k		finished	0
+TRL-GRPO	trl-grpo	tinker-rl-lab-world-class	ilp9ipus	modal-trl_qwen3_8b	Qwen/Qwen3-8B	gsm8k		finished	0
+TRL-GRPO	trl-grpo	tinker-rl-lab-world-class	8oxg8rgg	modal-trl_llama32_1b	meta-llama/Llama-3.2-1B-Instruct	gsm8k		finished	0
+TRL-GRPO	trl-grpo	tinker-rl-lab-world-class	q25vuhef	modal-trl_qwen3_8b	Qwen/Qwen3-8B	gsm8k		finished	0
+TRL-GRPO	trl-grpo	tinker-rl-lab-world-class	ioiqdj7b	modal-trl_llama32_3b	meta-llama/Llama-3.2-3B-Instruct	gsm8k		finished	0
+TRL-GRPO	trl-grpo	tinker-rl-lab-world-class	zbwp8w7e	modal-trl_llama32_1b	meta-llama/Llama-3.2-1B-Instruct	gsm8k		finished	0
+TRL-GRPO	trl-grpo	tinker-rl-lab-world-class	cj3csn5e	modal-trl_llama32_3b	meta-llama/Llama-3.2-3B-Instruct	gsm8k	8	finished	0
+TRL-GRPO	trl-grpo	tinker-rl-lab-world-class	w83mv3ok	modal-trl_qwen3_8b	Qwen/Qwen3-8B	gsm8k	8	finished	0
+TRL-GRPO	trl-grpo	tinker-rl-lab-world-class	gc3awqof	modal-trl_llama32_1b	meta-llama/Llama-3.2-1B-Instruct	gsm8k	8	finished	0
+reinforce	reinforce	tinker-structural-ceiling	gfnn8ski	gsm8k-qwen3-8b-reinforce	Qwen/Qwen3-8B		16	failed	0
+reinforce	reinforce	tinker-structural-ceiling	cwr3hwmi	gsm8k-qwen3-8b-reinforce	Qwen/Qwen3-8B		16	finished	0
+per-group regression; continuous reward; population-standardized advantage	gspo	zvf-colab-experiments	ufm2i07t	E5_grad_geometry	Qwen/Qwen2.5-0.5B-Instruct			finished	1

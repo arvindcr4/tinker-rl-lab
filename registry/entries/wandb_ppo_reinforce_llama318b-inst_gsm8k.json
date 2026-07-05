@@ -1,0 +1,89 @@
+{
+  "record_type": "stack",
+  "schema_version": "0.1.0",
+  "id": "wandb_ppo_reinforce_llama318b-inst_gsm8k",
+  "label_claimed": "ppo-reinforce",
+  "framework": {
+    "name": "tinker",
+    "version": "0.22.x",
+    "openness": "managed"
+  },
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "task": "gsm8k",
+  "seeds": [
+    42
+  ],
+  "provenance": {
+    "source_artifacts": [
+      "experiments/results/wandb_inventory/tinker-rl-lab-world-class.tsv"
+    ],
+    "wandb": "https://wandb.ai/tinker-rl-lab-world-class/runs/wni44rkq",
+    "date_recorded": "2026-04-18"
+  },
+  "variant_deltas_applied": [
+    {
+      "delta_id": "delta_ppo_reinforce",
+      "component": "ratio_clip",
+      "status": "implemented",
+      "note": "clip_eps_low=0.2/clip_eps_high=0.2 surfaced from the wandb-side config; inherited from delta_ppo_reinforce."
+    },
+    {
+      "delta_id": "delta_ppo_reinforce",
+      "component": "no_baseline",
+      "status": "implemented",
+      "note": "raw reward r_i is the advantage; no group-mean baseline (REINFORCE side of the composition)."
+    },
+    {
+      "delta_id": "delta_ppo_reinforce",
+      "component": "no_value_head",
+      "status": "implemented",
+      "note": "no learned V_head; composition of (delta_ppo + delta_reinforce) minus the value_head."
+    },
+    {
+      "delta_id": "delta_ppo_reinforce",
+      "component": "epoch_k",
+      "status": "surrogate",
+      "note": "K=1 inferred from REINFORCE-default; the wandb inventory does not expose epochs_per_prompt so the status is 'surrogate' rather than 'implemented'."
+    }
+  ],
+  "min_report": {
+    "loss_form": {
+      "importance_ratio_level": "token",
+      "clip_eps_low": 0.2,
+      "clip_eps_high": 0.2,
+      "length_normalization": null,
+      "advantage_normalization": null,
+      "token_mask": null
+    },
+    "reference_kl": {
+      "reference_policy": false,
+      "kl_beta": null,
+      "kl_estimator": null
+    },
+    "sampler_backend": {
+      "backend": "wandb-logged (managed; sampler unspecified)",
+      "precision": "bf16",
+      "temperature": null,
+      "top_p": null
+    },
+    "telemetry": {
+      "per_step_zvf": false,
+      "per_step_gu": false,
+      "source": "wandb inventory only; per-step telemetry not exposed"
+    },
+    "group_size_schedule": {
+      "initial_g": null,
+      "schedule": "fixed",
+      "adaptation_rule": "none"
+    },
+    "heldout_split": {
+      "disjoint_from_reward_env": null,
+      "description": "gsm8k run; heldout split not declared"
+    },
+    "decontamination": {
+      "performed": null,
+      "parser_robustness_probe": null
+    }
+  },
+  "notes": "Iter-182 vein (d) prototype: stack entry for the meta-llama/Llama-3.1-8B-Instruct ppo_reinforce run (wni44rkq). Only wandb-managed fields are populated; the per-step ZVF/gu telemetry is null because the wandb inventory does not expose it. The 2-run Qwen3-8B + 2-run Llama-3.1-8B-Instruct panel are cross-stack relative to the registry's tinker_*_qwen3.5-4b_gsm8k entries (different model family AND different sampler). The pair {ri2pajjl, vrb9zxql} and {wni44rkq, dshd5xxm} share seed=42 but different wandb ids (each a separate finished run)."
+}

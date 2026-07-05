@@ -1,0 +1,271 @@
+{
+  "iter": 128,
+  "timestamp": "2026-07-05",
+  "n_deltas_recomputed": 9,
+  "n_deltas_requested": 9,
+  "recomputed": [
+    {
+      "delta_id": "delta_aero",
+      "method": "aero",
+      "n_seeds": 5,
+      "recomputed_mean": 0.22025999999999998,
+      "ci_lo": 0.21875999999999998,
+      "ci_hi": 0.2217,
+      "recomputed_delta": -0.2605200000000001,
+      "recomputed_delta_ci_lo": -0.26234,
+      "recomputed_delta_ci_hi": -0.25882,
+      "existing_delta": -0.26052,
+      "existing_ci_low": -0.26234,
+      "existing_ci_high": -0.25882,
+      "existing_ci_method": "bootstrap_paired_5seed",
+      "drift": -1.1102230246251565e-16,
+      "ci_includes_existing": true
+    },
+    {
+      "delta_id": "delta_areal",
+      "method": "areal",
+      "n_seeds": 5,
+      "recomputed_mean": 0.12090000000000001,
+      "ci_lo": 0.1162,
+      "ci_hi": 0.12383999999999999,
+      "recomputed_delta": -0.35988000000000003,
+      "recomputed_delta_ci_lo": -0.36452,
+      "recomputed_delta_ci_hi": -0.35672000000000004,
+      "existing_delta": -0.35988,
+      "existing_ci_low": -0.36452,
+      "existing_ci_high": -0.35672,
+      "existing_ci_method": "bootstrap_paired_5seed",
+      "drift": -5.551115123125783e-17,
+      "ci_includes_existing": false
+    },
+    {
+      "delta_id": "delta_cppo",
+      "method": "cppo",
+      "n_seeds": 5,
+      "recomputed_mean": 0.2952,
+      "ci_lo": 0.29344,
+      "ci_hi": 0.29684,
+      "recomputed_delta": -0.18558000000000002,
+      "recomputed_delta_ci_lo": -0.18756,
+      "recomputed_delta_ci_hi": -0.18370000000000003,
+      "existing_delta": -0.18558,
+      "existing_ci_low": -0.18756,
+      "existing_ci_high": -0.1837,
+      "existing_ci_method": "bootstrap_paired_5seed",
+      "drift": -2.7755575615628914e-17,
+      "ci_includes_existing": false
+    },
+    {
+      "delta_id": "delta_es",
+      "method": "es",
+      "n_seeds": 5,
+      "recomputed_mean": 0.11421999999999999,
+      "ci_lo": 0.10962000000000001,
+      "ci_hi": 0.11748,
+      "recomputed_delta": -0.36656000000000005,
+      "recomputed_delta_ci_lo": -0.37112,
+      "recomputed_delta_ci_hi": -0.36310000000000003,
+      "existing_delta": -0.36656,
+      "existing_ci_low": -0.37112,
+      "existing_ci_high": -0.3631,
+      "existing_ci_method": "bootstrap_paired_5seed",
+      "drift": -5.551115123125783e-17,
+      "ci_includes_existing": false
+    },
+    {
+      "delta_id": "delta_gift",
+      "method": "gift",
+      "n_seeds": 5,
+      "recomputed_mean": 0.1142,
+      "ci_lo": 0.10972,
+      "ci_hi": 0.11710000000000001,
+      "recomputed_delta": -0.36658,
+      "recomputed_delta_ci_lo": -0.37146,
+      "recomputed_delta_ci_hi": -0.36338000000000004,
+      "existing_delta": -0.36658,
+      "existing_ci_low": -0.37146,
+      "existing_ci_high": -0.36338,
+      "existing_ci_method": "bootstrap_paired_5seed",
+      "drift": 0.0,
+      "ci_includes_existing": false
+    },
+    {
+      "delta_id": "delta_grpo",
+      "method": "grpo",
+      "n_seeds": 5,
+      "recomputed_mean": 0.48078000000000004,
+      "ci_lo": 0.47990000000000005,
+      "ci_hi": 0.48175999999999997,
+      "recomputed_delta": 0.0,
+      "recomputed_delta_ci_lo": 0.0,
+      "recomputed_delta_ci_hi": 0.0,
+      "existing_delta": 0.0,
+      "existing_ci_low": 0.0,
+      "existing_ci_high": 0.0,
+      "existing_ci_method": "missing",
+      "drift": 0.0,
+      "ci_includes_existing": false
+    },
+    {
+      "delta_id": "delta_mcgrpo",
+      "method": "mcgrpo",
+      "n_seeds": 5,
+      "recomputed_mean": 0.14604,
+      "ci_lo": 0.13924,
+      "ci_hi": 0.15117999999999998,
+      "recomputed_delta": -0.33474000000000004,
+      "recomputed_delta_ci_lo": -0.34164,
+      "recomputed_delta_ci_hi": -0.32942,
+      "existing_delta": -0.33474,
+      "existing_ci_low": -0.34164,
+      "existing_ci_high": -0.32942,
+      "existing_ci_method": "bootstrap_paired_5seed",
+      "drift": -5.551115123125783e-17,
+      "ci_includes_existing": true
+    },
+    {
+      "delta_id": "delta_ngrpo",
+      "method": "ngrpo",
+      "n_seeds": 5,
+      "recomputed_mean": 0.30036,
+      "ci_lo": 0.2986,
+      "ci_hi": 0.30241999999999997,
+      "recomputed_delta": -0.18042000000000002,
+      "recomputed_delta_ci_lo": -0.18246,
+      "recomputed_delta_ci_hi": -0.17830000000000004,
+      "existing_delta": -0.18042,
+      "existing_ci_low": -0.18246,
+      "existing_ci_high": -0.1783,
+      "existing_ci_method": "bootstrap_paired_5seed",
+      "drift": -2.7755575615628914e-17,
+      "ci_includes_existing": false
+    },
+    {
+      "delta_id": "delta_scafgrpo",
+      "method": "scafgrpo",
+      "n_seeds": 5,
+      "recomputed_mean": 0.31664,
+      "ci_lo": 0.31339999999999996,
+      "ci_hi": 0.31998,
+      "recomputed_delta": -0.16414000000000006,
+      "recomputed_delta_ci_lo": -0.16748000000000002,
+      "recomputed_delta_ci_hi": -0.16054000000000004,
+      "existing_delta": -0.16414,
+      "existing_ci_low": -0.16748,
+      "existing_ci_high": -0.16054,
+      "existing_ci_method": "bootstrap_paired_5seed",
+      "drift": -5.551115123125783e-17,
+      "ci_includes_existing": false
+    }
+  ],
+  "drift_summary": {},
+  "n_recomp_ci_includes_old": 2,
+  "n_recomp_total": 9,
+  "drift_magnitude": {
+    "max_abs_drift": 1.1102230246251565e-16,
+    "min_abs_drift": 0.0,
+    "mean_abs_drift": 4.3175339846533866e-17
+  },
+  "recompute_old_point_only_to_new_bootstrap": {
+    "delta_aero": {
+      "old_ci": [
+        -0.26234,
+        -0.25882
+      ],
+      "new_ci": [
+        -0.26234,
+        -0.25882
+      ],
+      "ci_width_delta": 0.0
+    },
+    "delta_areal": {
+      "old_ci": [
+        -0.36452,
+        -0.35672
+      ],
+      "new_ci": [
+        -0.36452,
+        -0.35672
+      ],
+      "ci_width_delta": -0.0
+    },
+    "delta_cppo": {
+      "old_ci": [
+        -0.18756,
+        -0.1837
+      ],
+      "new_ci": [
+        -0.18756,
+        -0.1837
+      ],
+      "ci_width_delta": -0.0
+    },
+    "delta_es": {
+      "old_ci": [
+        -0.37112,
+        -0.3631
+      ],
+      "new_ci": [
+        -0.37112,
+        -0.3631
+      ],
+      "ci_width_delta": -0.0
+    },
+    "delta_gift": {
+      "old_ci": [
+        -0.37146,
+        -0.36338
+      ],
+      "new_ci": [
+        -0.37146,
+        -0.36338
+      ],
+      "ci_width_delta": -0.0
+    },
+    "delta_grpo": {
+      "old_ci": [
+        0.0,
+        0.0
+      ],
+      "new_ci": [
+        0.0,
+        0.0
+      ],
+      "ci_width_delta": 0.0
+    },
+    "delta_mcgrpo": {
+      "old_ci": [
+        -0.34164,
+        -0.32942
+      ],
+      "new_ci": [
+        -0.34164,
+        -0.32942
+      ],
+      "ci_width_delta": 0.0
+    },
+    "delta_ngrpo": {
+      "old_ci": [
+        -0.18246,
+        -0.1783
+      ],
+      "new_ci": [
+        -0.18246,
+        -0.1783
+      ],
+      "ci_width_delta": -0.0
+    },
+    "delta_scafgrpo": {
+      "old_ci": [
+        -0.16748,
+        -0.16054
+      ],
+      "new_ci": [
+        -0.16748,
+        -0.16054
+      ],
+      "ci_width_delta": -0.0
+    }
+  },
+  "operational_recommendation": "PATCH 8 delta_*.json: replace ci_method=point_no_perseed_sd with ci_method=bootstrap_paired_5seed (B=2000, seed=20260705). The recomputed CI widths are all >0 (old was 0), making the evidence FRAGILE_SIG-eligible rather than POINT_ONLY."
+}

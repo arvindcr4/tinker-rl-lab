@@ -1,0 +1,151 @@
+% §4.19 -- Iter 131 -- Per-prompt Adaptive-G* counterfactual simulation on N2 reward tensors
+% \label{sec:p7-iter131-per-prompt-adaptive-gstar}
+%
+% The iter-119 CCC bank (§4.17) and iter-127 method-axis audit (§4.18)
+% evaluate the controller at STEP-AGGREGATE granularity (160 step-method rows).
+% This section evaluates the same Adaptive-G* family at PER-PROMPT granularity
+% on the real N2 reward tensors: for each (method, step, prompt) cell of
+% (4 × 40 × 16 = 2560 prompt cells), independently run the per-prompt
+% controller rule and predict the per-prompt zvf at the recommended G*.
+%
+% The motivation is that GRPO's per-prompt advantage
+% $A_i = (r_i - \mu_g)/\sigma_g$ depends on the per-prompt within-group
+% contrast, not on the step aggregate. Step-aggregate zvf averages over
+% the 16 prompts in a step and masks the per-prompt contrast loss;
+% per-prompt zvf is the operational scale at which the GRPO update
+% actually fires.
+
+\subsection*{Per-prompt Adaptive-G* counterfactual simulation}
+
+We compare five controllers on the 2,560 (method, step, prompt) cells of
+the N2 reward tensors. For each cell, the observed $k_p \in \{0, \ldots, 8\}$
+is the number of correct rollouts among the $G_{\mathrm{base}}{=}8$ samples.
+The empirical success probability is $\hat{p} = k_p / G_{\mathrm{base}}$.
+The closed-form Bernoulli prediction at group size $G$ is
+$z(\hat{p}, G) = \hat{p}^G + (1-\hat{p})^G$, and the contrast magnitude is
+$1 - z(\hat{p}, G)$. Boundary prompts ($k_p \in \{0, 8\}$) have
+$z(\hat{p}, G) = 1$ for all $G$ (boundary is absorbing under the iid model).
+
+\paragraph{Controllers (5).}
+
+\begin{itemize}
+\item \textbf{STATIC\_G8} — baseline (what N2 actually ran).
+\item \textbf{STATIC\_G16} — always pay $2\times$ cost.
+\item \textbf{ADAPTIVE\_PP} — per-prompt $G^* = \min G \in \{8,16,32,64\}$
+      such that $z(\hat{p}, G) < z(\hat{p}, G_{\mathrm{base}}) / 2$
+      (halve the contrast loss from baseline); refuse to escalate boundary
+      prompts.
+\item \textbf{ADAPTIVE\_PP\_ORACLE} — per-prompt $G^* = \min G \in \{8,16,32,64\}$
+      that \emph{minimizes} $z(\hat{p}, G)$ (max salvage); refuse boundary.
+\item \textbf{DUALFORMER\_PP} — Berkeley row~01 per-prompt auto-$G$ rule:
+      $G^*=2$ if $\hat{p}\geq 0.95$; $4$ if $\geq 0.85$; $8$ if $\geq 0.70$;
+      $16$ if $\geq 0.50$; $32$ otherwise.
+\end{itemize}
+
+\paragraph{Per-prompt $G^*$ distribution (all 2,560 cells).}
+
+\begin{table}[h]
+\centering\small
+\caption{Per-prompt $G^*$ distribution across all 2,560 (method, step, prompt)
+cells on the N2 reward tensors. ADAPTIVE\_PP uses only $G^* \in \{8, 16\}$;
+$G^*=32$ is never chosen at per-prompt granularity on N2.}
+\label{tab:p7-iter131-gstar-dist}
+\begin{tabular}{lrrrrrr}
+\toprule
+controller & $G^*=2$ & $G^*=4$ & $G^*=8$ & $G^*=16$ & $G^*=32$ & $G^*=64$ \\
+\midrule
+STATIC\_G8               & 0    & 0    & 2560 & 0    & 0    & 0    \\
+STATIC\_G16              & 0    & 0    & 0    & 2560 & 0    & 0    \\
+\textbf{ADAPTIVE\_PP}    & 0    & 0    & 1867 & 693  & 0    & 0    \\
+ADAPTIVE\_PP\_ORACLE     & 0    & 0    & 1867 & 0    & 0    & 693  \\
+DUALFORMER\_PP           & 1723 & 212  & 106  & 181  & 338  & 0    \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Bootstrap CI on per-step contrast\_restored net of cost
+(B=2000, seed=20260705).}
+
+\begin{table}[h]
+\centering\small
+\caption{Per-step contrast\_restored minus 0.5\,$\times$(cost\_ratio$-1$),
+pooled across 160 (method, step) rows. ADAPTIVE\_PP is the only controller
+with mean net $>$ 0 and CI excluding zero at per-prompt granularity.}
+\label{tab:p7-iter131-bootstrap-ci}
+\begin{tabular}{lrrrr}
+\toprule
+controller & mean net & CI lo & CI hi & excludes zero \\
+\midrule
+STATIC\_G8               & +0.0000 & +0.0000 & +0.0000 & (baseline) \\
+STATIC\_G16              & +0.0273 & $-0.2760$ & +0.2552 & no          \\
+\textbf{ADAPTIVE\_PP}    & \textbf{+0.3919} & \textbf{+0.1667} & \textbf{+0.5911} & \textbf{YES} \\
+ADAPTIVE\_PP\_ORACLE     & $-0.1973$ & $-0.5390$ & $-0.0224$ & YES (negative) \\
+DUALFORMER\_PP           & $-0.0599$ & $-0.2857$ & +0.2560 & no \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Per-method cost-equivalent contrast ranking.}
+
+\begin{table}[h]
+\centering\small
+\caption{Per-method ADAPTIVE\_PP contrast\_magnitude per unit cost
+(contrast\_mag / total\_rollouts) on the N2 four-method panel. The per-prompt
+ranking areal $>$ aero $>$ grpo $>$ gift is \emph{reversed} relative to the
+iter-127 step-aggregate CCC ranking (gift $>$ grpo $>$ aero $>$ areal).}
+\label{tab:p7-iter131-method-ranking}
+\begin{tabular}{lrrrrr}
+\toprule
+method & boundary\_rate & ADAPTIVE\_PP $G^*=16$ & rollouts & contrast/unit\_cost & iter-127 rank \\
+\midrule
+areal  & 0.7063 & 188 / 640 & 6624 & \textbf{0.02682} & 4 \\
+aero   & 0.7203 & 179 / 640 & 6552 & 0.02602         & 3 \\
+grpo   & 0.7203 & 179 / 640 & 6552 & 0.02589         & 2 \\
+gift   & 0.7703 & 147 / 640 & 6296 & 0.02216         & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Headline (paper-grade).}
+
+> \emph{Per-prompt Adaptive-G* achieves mean per-step contrast\_restored
+> net of cost = $+0.39$ (CI $[+0.17, +0.59]$, excludes zero) on the N2
+> four-method panel, at 64\% of the cost of STATIC\_G16 and with
+> 1.56$\times$ higher contrast\_magnitude per rollout. ADAPTIVE\_PP
+> uses only $G^* \in \{8, 16\}$ on N2 — the iter-111 candidate set
+> $\{16, 32, 64\}$ is over-allocated at per-prompt granularity.}
+
+\paragraph{Operational recommendation.}
+
+\begin{enumerate}
+\item Adopt ADAPTIVE\_PP as the recommended P7 controller for binary-reward
+      GRPO-family training when per-prompt $z_{\mathrm{obs}}$ telemetry
+      is available.
+\item Refuse to escalate boundary prompts ($k \in \{0, 8\}$) in any future
+      P7 controller — the honest policy.
+\item Use $G^* \in \{8, 16\}$ only at per-prompt granularity on N2-like
+      panels; the iter-111 $\{16, 32, 64\}$ candidate set was over-allocated.
+\item Report per-method cost-equivalent contrast ranking alongside the
+      step-aggregate CCC ranking in §4.17/§4.18. The two rankings measure
+      different things (compute recommendation vs cost-efficient
+      deployment) and are complementary.
+\item Berkeley row~01 Dualformer-Auto underperforms at N2 granularity
+      (mean net = $-0.06$, CI includes zero); the rule was designed for
+      cost-saving on high-$\hat{p}$ prompts, not for contrast restoration.
+\end{enumerate}
+
+\paragraph{Cross-paper coupling.}
+
+This section closes brief vein (a) (counterfactual evaluation of the
+adaptive-G controller on the real N2 reward tensors with exact per-prompt
+ZVF). It extends iter-111 (per-step $G^*$ on N2) to per-prompt granularity
+(2,560 decisions vs 160); extends iter-115 (N10 step-aggregate G*=64
+pessimal) to N2 per-prompt (ORACLE G*=64 has mean net $-0.20$, confirms
+G*=64 is over-allocation); inverts iter-127 method-axis CCC ranking
+(gift $>$ grpo $>$ aero $>$ areal $\to$ areal $>$ aero $>$ grpo $>$ gift at
+per-prompt granularity); and operationalizes the FRONTIER\_INSIGHTS Round~2
+ZVF-as-signal framing (closed-form Bernoulli inversion, no posterior
+update). The H4 ranking reversal is the new empirical finding: per-prompt
+granularity rewards low-boundary-rate methods (areal 0.7063 has the most
+salvageable prompts); step-aggregate CCC granularity rewards high-CCC
+aggressiveness (gift has the highest mean $G_{\mathrm{ccc}}$).

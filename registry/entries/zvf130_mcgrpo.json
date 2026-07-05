@@ -109,5 +109,5 @@
       "seed": 20260705
     }
   },
-  "notes": "Method 'mcgrpo' measured only on the zvf_iter130 risk-index batch. Last-10 reward and per-step mean ZVF are not on the same single-stack budget as the N2 methods; use the per-method zvf_risk_mean column to compare across the 9-method panel. zvf_risk_mean=0.4034 (sd 0.0598 on n_seeds=5)."
+  "notes": "Method 'mcgrpo' measured only on the zvf_iter130 risk-index batch. Last-10 reward and per-step mean ZVF are not on the same single-stack budget as the N2 methods; use the per-method zvf_risk_mean column to compare across the 9-method panel. zvf_risk_mean=0.4034 (sd 0.0598 on n_seeds=5).\n\niter-98-redflag-backfill: 7 loss-form/KL leaves (loss_form.clip_eps_{low,high}, length_normalization, token_mask, advantage_normalization, reference_kl.kl_{beta,estimator}) are null because the zvf-iter130 single-batch risk-index harness is managed-by-tinker and does not expose loss-form internals; reported-as-unknown on purpose, not as oversight.\n\niter-98-redflag-backfill: 2 decontamination leaves (performed, parser_robustness_probe) are null across all zvf130_* entries because the field was added in iter-94 after these entries were frozen; reported-as-unknown with provenance tied to iter-94."
 }

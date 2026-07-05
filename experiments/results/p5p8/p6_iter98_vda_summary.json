@@ -1,0 +1,38 @@
+{
+  "summary": {
+    "n_stack_records": 20,
+    "n_delta_records": 15,
+    "n_total_vda_components_declared": 26,
+    "implemented": 10,
+    "surrogate": 4,
+    "absent": 3,
+    "unknown": 9,
+    "managed_by_tinker": 0,
+    "reproducible_fraction": 0.5385,
+    "unverified_fraction": 0.3462,
+    "explicit_absent_fraction": 0.1154,
+    "n_stale_audit_discrepancies": 1,
+    "audit_refresh_path": "registry/measured_block_audit_refresh.json",
+    "stale_audit_path": "registry/measured_block_audit.json"
+  },
+  "crosscheck": {
+    "stale_audit_path": "registry/measured_block_audit.json",
+    "refresh_audit_path": "registry/measured_block_audit_refresh.json",
+    "discrepancies": [
+      {
+        "entry": "delta_drgrpo",
+        "stale_audit_measured_count": 0,
+        "refreshed_measured_count": 3,
+        "stale_audit_panels": "",
+        "refreshed_panels": "length_bias_iter60_grpo_vs_drgrpo_paired",
+        "interpretation": "audit is STALE; entry has new measured rows"
+      }
+    ]
+  },
+  "overall_status": {
+    "implemented": 10,
+    "absent": 3,
+    "surrogate": 4,
+    "unknown": 9
+  }
+}

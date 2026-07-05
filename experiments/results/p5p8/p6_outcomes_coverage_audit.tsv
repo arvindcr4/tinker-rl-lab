@@ -8,13 +8,14 @@ delta_aero	variant_delta	0.0	0	7	0.0	0	0	0	4.0	4	1	False
 delta_areal	variant_delta	0.0	0	7	0.0	0	0	0	4.0	4	1	False
 delta_cppo	variant_delta	0.0	0	7	0.0	0	0	0	2.0	2	1	False
 delta_dapo	variant_delta	0.0	0	7	0.0	0	0	0	0.0	0	5	False
-delta_drgrpo	variant_delta	0.0	0	7	0.0	0	0	0	0.0	0	2	False
+delta_drgrpo	variant_delta	0.0	0	7	0.0	0	0	0	1.5	3	2	False
 delta_es	variant_delta	0.0	0	7	0.0	0	0	0	2.0	2	1	False
 delta_gift	variant_delta	0.0	0	7	0.0	0	0	0	4.0	4	1	False
 delta_gspo	variant_delta	0.0	0	7	0.0	0	0	0	0.0	0	2	False
 delta_liteppo	variant_delta	0.0	0	7	0.0	0	0	0	0.0	0	2	False
 delta_mcgrpo	variant_delta	0.0	0	7	0.0	0	0	0	1.0	2	2	False
 delta_ngrpo	variant_delta	0.0	0	7	0.0	0	0	0	2.0	2	1	False
+delta_ppo	variant_delta	0.0	0	7	0.0	0	0	0	0.0	0	4	False
 delta_reinforce	variant_delta	0.0	0	7	0.0	0	0	0	0.0	0	2	False
 delta_scafgrpo	variant_delta	0.0	0	7	0.0	0	0	0	2.0	2	1	False
 openrlhf_grpo_qwen3-8b_gsm8k	stack	0.7143	5	7	0.0	0	0	0	0.0	0	5	False

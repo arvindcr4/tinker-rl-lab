@@ -1,0 +1,56 @@
+{
+  "iteration": 99,
+  "pillar": "P7",
+  "vein": "iter-99 seed-robustness of trigger threshold + bootstrap CIs",
+  "panels": {
+    "n2_four_method": {
+      "grpo": 40,
+      "aero": 40,
+      "gift": 40,
+      "areal": 40
+    },
+    "n10_5_seeds": [
+      42,
+      179,
+      316,
+      453,
+      590
+    ]
+  },
+  "tau_grid": [
+    0.3,
+    0.35,
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8
+  ],
+  "boot_B": 2000,
+  "G_base": 8,
+  "G_des": 4,
+  "rows": {
+    "per_step_n2": 1760,
+    "per_seed_n10": 55,
+    "summary": 11
+  },
+  "calibrated_tau": 0.3,
+  "calibrated_point": {
+    "tau": 0.3,
+    "n10_mean_savings": 0.4666666666666667,
+    "n10_ci_lo": 0.42,
+    "n10_ci_hi": 0.5,
+    "n10_ci_width": 0.08000000000000002,
+    "n10_excludes_zero": true,
+    "n10_cv_savings": 0.1237179148263484,
+    "n2_method_cv": 0.038579417472670775
+  },
+  "headroom_threshold": 0.99,
+  "all_taus_have_headroom_bad_zero": true,
+  "ci_excludes_zero_count": 10,
+  "best_n2_method_savings_spread": 0.0
+}

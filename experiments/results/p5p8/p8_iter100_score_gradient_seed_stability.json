@@ -1,0 +1,26 @@
+{
+  "n_test": 10000,
+  "k_top": 200,
+  "k_pct": 2.0,
+  "seeds_compared": [
+    20260705,
+    42
+  ],
+  "n_boot": 600,
+  "headline_gradient_band_xgb20raw_orig": {
+    "n_caught_at_K2": 141,
+    "n_llm_calls": 9,
+    "recall_at_K2": 0.9791666666666666
+  },
+  "headline_gradient_band_xgb20raw_seed42": {
+    "n_caught_at_K2": 143,
+    "n_llm_calls": 5,
+    "recall_at_K2": 0.9930555555555556
+  },
+  "headline_seed_pass": true,
+  "max_abs_delta_recall_across_backbones_rules": 0.01108345922903738,
+  "max_abs_delta_n_llm_across_backbones_rules": 4,
+  "n_rule_backbone_cells": 8,
+  "verdict": "GRADIENT-BAND HEADLINE SEED-STABLE",
+  "key_finding": "Gradient-band selective-LLM (g_thr=0.0001, XGB-20raw backbone) catches >=141 of 144 positives at K=2% with <=12 LLM calls at BOTH seed=20260705 and seed=42; the iter-80 row 94 headline is seed-falsifiable and seed-stable. At seed={SEED_NEW} the rule is even MORE selective: 5 LLM calls recover 143 positives (vs 9 calls recovering 141 at the original seed); the rule is robust because it targets score-stream plateau rows, which are an intrinsic property of the score distribution rather than a seed artefact."
+}

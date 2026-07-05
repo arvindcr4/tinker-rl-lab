@@ -1,0 +1,82 @@
+{
+  "aero": {
+    "delta": -0.147637,
+    "welch_lo": -0.310562,
+    "welch_hi": 0.015287,
+    "welch_sig": false,
+    "boot_lo": -0.285921,
+    "boot_hi": -0.009354,
+    "boot_sig": true,
+    "sig_robust": false
+  },
+  "areal": {
+    "delta": -0.245767,
+    "welch_lo": -0.387655,
+    "welch_hi": -0.103879,
+    "welch_sig": true,
+    "boot_lo": -0.354535,
+    "boot_hi": -0.137,
+    "boot_sig": true,
+    "sig_robust": true
+  },
+  "cppo": {
+    "delta": -0.151077,
+    "welch_lo": -0.295095,
+    "welch_hi": -0.007059,
+    "welch_sig": true,
+    "boot_lo": -0.253342,
+    "boot_hi": -0.048813,
+    "boot_sig": true,
+    "sig_robust": true
+  },
+  "es": {
+    "delta": -0.272578,
+    "welch_lo": -0.416658,
+    "welch_hi": -0.128498,
+    "welch_sig": true,
+    "boot_lo": -0.374617,
+    "boot_hi": -0.170539,
+    "boot_sig": true,
+    "sig_robust": true
+  },
+  "gift": {
+    "delta": -0.263187,
+    "welch_lo": -0.407212,
+    "welch_hi": -0.119163,
+    "welch_sig": true,
+    "boot_lo": -0.365427,
+    "boot_hi": -0.160948,
+    "boot_sig": true,
+    "sig_robust": true
+  },
+  "mcgrpo": {
+    "delta": -0.174277,
+    "welch_lo": -0.317333,
+    "welch_hi": -0.03122,
+    "welch_sig": true,
+    "boot_lo": -0.288771,
+    "boot_hi": -0.059783,
+    "boot_sig": true,
+    "sig_robust": true
+  },
+  "ngrpo": {
+    "delta": -0.131025,
+    "welch_lo": -0.272826,
+    "welch_hi": 0.010776,
+    "welch_sig": false,
+    "boot_lo": -0.239395,
+    "boot_hi": -0.022656,
+    "boot_sig": true,
+    "sig_robust": false
+  },
+  "scafgrpo": {
+    "delta": -0.352361,
+    "welch_lo": -0.496105,
+    "welch_hi": -0.208617,
+    "welch_sig": true,
+    "boot_lo": -0.455533,
+    "boot_hi": -0.249189,
+    "boot_sig": true,
+    "sig_robust": true
+  }
+}

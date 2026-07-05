@@ -14,8 +14,12 @@ tinker_grpo_qwen3.5-4b_gsm8k	stack	tinker	managed	grpo	57	0.0	0.3333	1.0	1.0	0.6
 tinker_gspo_qwen3.5-4b_gsm8k	stack	tinker	managed	gspo	61	0.2857	0.3333	1.0	1.0	0.6667	1.0	0.0	0.7143	0.6667	0.0	0.0	0.3333	0.0	1.0	2	True	True	True								
 trl_grpo_qwen3-8b_gsm8k	stack	trl	open	grpo	74	0.1667	1.0	1.0	1.0	1.0	1.0	0.0	0.8333	0.0	0.0	0.0	0.0	0.0	1.0	0	True	False	True								
 verl_grpo_qwen3-8b_gsm8k	stack	verl	open	grpo	60	0.1667	1.0	1.0	0.0	1.0	1.0	0.0	0.8333	0.0	0.0	1.0	0.0	0.0	1.0	0	True	False	True								
+zvf130_aero	stack	worktree-zvf130-batch	open	aero	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	True	False	True								
+zvf130_areal	stack	worktree-zvf130-batch	open	areal	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	True	False	True								
 zvf130_cppo	stack	worktree-zvf130-batch	open	cppo	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	True	False	True								
 zvf130_es	stack	worktree-zvf130-batch	open	es	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	True	False	True								
+zvf130_gift	stack	worktree-zvf130-batch	open	gift	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	True	False	True								
+zvf130_grpo	stack	worktree-zvf130-batch	open	grpo	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	0	True	False	True								
 zvf130_mcgrpo	stack	worktree-zvf130-batch	open	mcgrpo	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	2	True	False	True								
 zvf130_ngrpo	stack	worktree-zvf130-batch	open	ngrpo	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	True	False	True								
 zvf130_scafgrpo	stack	worktree-zvf130-batch	open	scafgrpo	43	0.0	0.0	1.0	1.0	0.0	1.0	0.0	1.0	1.0	0.0	0.0	1.0	0.0	1.0	1	True	False	True								
@@ -23,13 +27,14 @@ delta_adaptiveg	variant_delta																			1	True	True	True		2	2	2	1	1	0	0
 delta_aero	variant_delta																			1	True	True	True		4	3	4	1	1	1	1
 delta_areal	variant_delta																			1	True	True	True		4	3	4	1	1	1	1
 delta_cppo	variant_delta																			1	True	True	True		2	1	2	1	0	0	1
-delta_dapo	variant_delta																			5	False	False	True		0	0	0	0	0	0	0
-delta_drgrpo	variant_delta																			2	False	False	True		0	0	0	0	0	0	0
+delta_dapo	variant_delta																			5	False	False	True		0	3	0	0	0	0	0
+delta_drgrpo	variant_delta																			2	True	True	True		3	3	3	0	2	1	0
 delta_es	variant_delta																			1	True	True	True		2	1	2	1	0	0	1
 delta_gift	variant_delta																			1	True	True	True		4	3	4	2	1	0	1
-delta_gspo	variant_delta																			2	False	False	True		0	0	0	0	0	0	0
+delta_gspo	variant_delta																			2	False	False	True		0	3	0	0	0	0	0
 delta_liteppo	variant_delta																			2	False	False	True		0	0	0	0	0	0	0
 delta_mcgrpo	variant_delta																			2	True	True	True		2	1	2	1	0	0	1
 delta_ngrpo	variant_delta																			1	True	True	True		2	1	2	1	0	0	1
+delta_ppo	variant_delta																			4	False	False	True		0	3	0	0	0	0	0
 delta_reinforce	variant_delta																			2	False	False	True		0	0	0	0	0	0	0
 delta_scafgrpo	variant_delta																			1	True	True	True		2	1	2	1	0	0	1

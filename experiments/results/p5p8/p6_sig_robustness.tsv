@@ -1,0 +1,9 @@
+method	delta_vs_grpo	welch_lo	welch_hi	welch_sig	bootstrap_sig	sig_robust
+aero	-0.147637	-0.310562	0.015287	False	True	False
+areal	-0.245767	-0.387655	-0.103879	True	True	True
+cppo	-0.151077	-0.295095	-0.007059	True	True	True
+es	-0.272578	-0.416658	-0.128498	True	True	True
+gift	-0.263187	-0.407212	-0.119163	True	True	True
+mcgrpo	-0.174277	-0.317333	-0.03122	True	True	True
+ngrpo	-0.131025	-0.272826	0.010776	False	True	False
+scafgrpo	-0.352361	-0.496105	-0.208617	True	True	True

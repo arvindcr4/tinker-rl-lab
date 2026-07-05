@@ -15,6 +15,7 @@ colab-open-trainer	delta_gspo	1	delta:delta_gspo
 colab-open-trainer	delta_liteppo	1	delta:delta_liteppo
 colab-open-trainer	delta_mcgrpo	1	delta:delta_mcgrpo
 colab-open-trainer	delta_ngrpo	1	delta:delta_ngrpo
+colab-open-trainer	delta_ppo	1	delta:delta_ppo
 colab-open-trainer	delta_reinforce	1	delta:delta_reinforce
 colab-open-trainer	delta_scafgrpo	1	delta:delta_scafgrpo
 colab-open-trainer	drgrpo	1	colab-open_drgrpo_e3
@@ -41,6 +42,7 @@ openrlhf	delta_gspo	1	delta:delta_gspo
 openrlhf	delta_liteppo	1	delta:delta_liteppo
 openrlhf	delta_mcgrpo	1	delta:delta_mcgrpo
 openrlhf	delta_ngrpo	1	delta:delta_ngrpo
+openrlhf	delta_ppo	1	delta:delta_ppo
 openrlhf	delta_reinforce	1	delta:delta_reinforce
 openrlhf	delta_scafgrpo	1	delta:delta_scafgrpo
 openrlhf	drgrpo	0	
@@ -67,6 +69,7 @@ tinker	delta_gspo	1	delta:delta_gspo
 tinker	delta_liteppo	1	delta:delta_liteppo
 tinker	delta_mcgrpo	1	delta:delta_mcgrpo
 tinker	delta_ngrpo	1	delta:delta_ngrpo
+tinker	delta_ppo	1	delta:delta_ppo
 tinker	delta_reinforce	1	delta:delta_reinforce
 tinker	delta_scafgrpo	1	delta:delta_scafgrpo
 tinker	drgrpo	1	tinker_drgrpo_qwen3.5-4b_gsm8k
@@ -93,6 +96,7 @@ trl	delta_gspo	1	delta:delta_gspo
 trl	delta_liteppo	1	delta:delta_liteppo
 trl	delta_mcgrpo	1	delta:delta_mcgrpo
 trl	delta_ngrpo	1	delta:delta_ngrpo
+trl	delta_ppo	1	delta:delta_ppo
 trl	delta_reinforce	1	delta:delta_reinforce
 trl	delta_scafgrpo	1	delta:delta_scafgrpo
 trl	drgrpo	0	
@@ -119,6 +123,7 @@ verl	delta_gspo	1	delta:delta_gspo
 verl	delta_liteppo	1	delta:delta_liteppo
 verl	delta_mcgrpo	1	delta:delta_mcgrpo
 verl	delta_ngrpo	1	delta:delta_ngrpo
+verl	delta_ppo	1	delta:delta_ppo
 verl	delta_reinforce	1	delta:delta_reinforce
 verl	delta_scafgrpo	1	delta:delta_scafgrpo
 verl	drgrpo	0	
@@ -129,8 +134,8 @@ verl	gspo	0
 verl	mcgrpo	0	
 verl	ngrpo	0	
 verl	scafgrpo	0	
-worktree-zvf130-batch	aero	0	
-worktree-zvf130-batch	areal	0	
+worktree-zvf130-batch	aero	1	zvf130_aero
+worktree-zvf130-batch	areal	1	zvf130_areal
 worktree-zvf130-batch	cppo	1	zvf130_cppo
 worktree-zvf130-batch	dapo	0	
 worktree-zvf130-batch	delta_adaptiveg	1	delta:delta_adaptiveg
@@ -145,12 +150,13 @@ worktree-zvf130-batch	delta_gspo	1	delta:delta_gspo
 worktree-zvf130-batch	delta_liteppo	1	delta:delta_liteppo
 worktree-zvf130-batch	delta_mcgrpo	1	delta:delta_mcgrpo
 worktree-zvf130-batch	delta_ngrpo	1	delta:delta_ngrpo
+worktree-zvf130-batch	delta_ppo	1	delta:delta_ppo
 worktree-zvf130-batch	delta_reinforce	1	delta:delta_reinforce
 worktree-zvf130-batch	delta_scafgrpo	1	delta:delta_scafgrpo
 worktree-zvf130-batch	drgrpo	0	
 worktree-zvf130-batch	es	1	zvf130_es
-worktree-zvf130-batch	gift	0	
-worktree-zvf130-batch	grpo	0	
+worktree-zvf130-batch	gift	1	zvf130_gift
+worktree-zvf130-batch	grpo	1	zvf130_grpo
 worktree-zvf130-batch	gspo	0	
 worktree-zvf130-batch	mcgrpo	1	zvf130_mcgrpo
 worktree-zvf130-batch	ngrpo	1	zvf130_ngrpo

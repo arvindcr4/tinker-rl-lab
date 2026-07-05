@@ -1,0 +1,137 @@
+{
+  "n_real_methods": 9,
+  "methods": [
+    "aero",
+    "areal",
+    "cppo",
+    "es",
+    "gift",
+    "grpo",
+    "mcgrpo",
+    "ngrpo",
+    "scafgrpo"
+  ],
+  "checks_pass": 40,
+  "checks_fail": 0,
+  "stack_coverage": "9/9",
+  "stack_present": [
+    "aero",
+    "areal",
+    "cppo",
+    "es",
+    "gift",
+    "grpo",
+    "mcgrpo",
+    "ngrpo",
+    "scafgrpo"
+  ],
+  "stack_missing": [],
+  "delta_coverage": "8/8",
+  "delta_missing": [],
+  "ground_truth": "/home/claude/tinker-rl-lab-minimax/experiments/results/zvf_iter130_method_risk.tsv",
+  "sig_robustness": {
+    "aero": {
+      "delta_vs_grpo": -0.147637,
+      "welch_lo": -0.310562,
+      "welch_hi": 0.015287,
+      "welch_sig": false,
+      "bootstrap_sig": true
+    },
+    "areal": {
+      "delta_vs_grpo": -0.245767,
+      "welch_lo": -0.387655,
+      "welch_hi": -0.103879,
+      "welch_sig": true,
+      "bootstrap_sig": true
+    },
+    "cppo": {
+      "delta_vs_grpo": -0.151077,
+      "welch_lo": -0.295095,
+      "welch_hi": -0.007059,
+      "welch_sig": true,
+      "bootstrap_sig": true
+    },
+    "es": {
+      "delta_vs_grpo": -0.272578,
+      "welch_lo": -0.416658,
+      "welch_hi": -0.128498,
+      "welch_sig": true,
+      "bootstrap_sig": true
+    },
+    "gift": {
+      "delta_vs_grpo": -0.263187,
+      "welch_lo": -0.407212,
+      "welch_hi": -0.119163,
+      "welch_sig": true,
+      "bootstrap_sig": true
+    },
+    "mcgrpo": {
+      "delta_vs_grpo": -0.174277,
+      "welch_lo": -0.317333,
+      "welch_hi": -0.03122,
+      "welch_sig": true,
+      "bootstrap_sig": true
+    },
+    "ngrpo": {
+      "delta_vs_grpo": -0.131025,
+      "welch_lo": -0.272826,
+      "welch_hi": 0.010776,
+      "welch_sig": false,
+      "bootstrap_sig": true
+    },
+    "scafgrpo": {
+      "delta_vs_grpo": -0.352361,
+      "welch_lo": -0.496105,
+      "welch_hi": -0.208617,
+      "welch_sig": true,
+      "bootstrap_sig": true
+    }
+  },
+  "welch_recompute": {
+    "aero": {
+      "zvf_risk_mean": 0.430051,
+      "delta_vs_grpo": -0.147637,
+      "sig": false
+    },
+    "areal": {
+      "zvf_risk_mean": 0.331921,
+      "delta_vs_grpo": -0.245767,
+      "sig": true
+    },
+    "cppo": {
+      "zvf_risk_mean": 0.426611,
+      "delta_vs_grpo": -0.151077,
+      "sig": true
+    },
+    "es": {
+      "zvf_risk_mean": 0.30511,
+      "delta_vs_grpo": -0.272578,
+      "sig": true
+    },
+    "gift": {
+      "zvf_risk_mean": 0.314501,
+      "delta_vs_grpo": -0.263187,
+      "sig": true
+    },
+    "grpo": {
+      "zvf_risk_mean": 0.577688,
+      "delta_vs_grpo": 0.0,
+      "sig": false
+    },
+    "mcgrpo": {
+      "zvf_risk_mean": 0.403411,
+      "delta_vs_grpo": -0.174277,
+      "sig": true
+    },
+    "ngrpo": {
+      "zvf_risk_mean": 0.446663,
+      "delta_vs_grpo": -0.131025,
+      "sig": false
+    },
+    "scafgrpo": {
+      "zvf_risk_mean": 0.225327,
+      "delta_vs_grpo": -0.352361,
+      "sig": true
+    }
+  }
+}

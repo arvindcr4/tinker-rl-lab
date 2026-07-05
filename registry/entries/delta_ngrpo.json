@@ -35,7 +35,12 @@
         "source": "scripts/p5p8/p6_measured_delta_block.py"
       },
       "source": "experiments/results/zvf_iter130_method_risk.tsv",
-      "note": "5-seed risk index; delta vs grpo (grpo risk=0.5777)"
+      "note": "5-seed risk index; delta vs grpo (grpo risk=0.5777)",
+      "welch_ci_low": -0.272826,
+      "welch_ci_high": 0.010776,
+      "welch_sig": false,
+      "sig_robust_bootstrap_and_welch": false,
+      "sig_robust_note": "iter102: bootstrap-significant but Welch-NS -- NOT sig-robust"
     },
     {
       "metric": "mean_zvf",

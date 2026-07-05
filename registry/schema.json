@@ -939,6 +939,22 @@
             "none"
           ],
           "description": "iter-84: largest-window panel at which the same-sign significance holds; 'none' if no panel is significant."
+        },
+        "welch_ci_low": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "welch_ci_high": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "welch_sig": {
+          "$ref": "#/$defs/nullable_boolean"
+        },
+        "sig_robust_bootstrap_and_welch": {
+          "$ref": "#/$defs/nullable_boolean",
+          "description": "iter102: significance survives BOTH the paired Gaussian-residual bootstrap AND a conservative Welch two-sample t-test on the 5-seed risk index. Guards against optimistic single-method significance."
+        },
+        "sig_robust_note": {
+          "$ref": "#/$defs/nullable_string"
         }
       }
     },

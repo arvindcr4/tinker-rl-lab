@@ -1,17 +1,17 @@
 {
   "badge_max": 96,
   "badge_min": 43,
-  "cells_with_entry": 102,
+  "cells_with_entry": 112,
   "claim_validation_distribution": {
-    "CONTRADICTS": 2,
-    "NEUTRAL": 4,
+    "CONTRADICTS": 3,
+    "NEUTRAL": 6,
     "SUPPORTS": 10,
     "UNCLAIMED": 8
   },
-  "claim_validation_significant_share": 0.5,
-  "claim_validation_total": 24,
-  "coverage_rate": 0.6538,
-  "framework_x_method_cells": 156,
+  "claim_validation_significant_share": 0.4815,
+  "claim_validation_total": 27,
+  "coverage_rate": 0.6914,
+  "framework_x_method_cells": 162,
   "frameworks": [
     "colab-open-trainer",
     "openrlhf",
@@ -21,15 +21,15 @@
     "worktree-zvf130-batch"
   ],
   "frameworks_count": 6,
-  "mean_min_report_badge": 65.1,
+  "mean_min_report_badge": 61.42,
   "mean_null_rate_per_item": {
-    "decontamination": 0.8,
-    "group_size_schedule": 0.3167,
+    "decontamination": 0.8333,
+    "group_size_schedule": 0.4306,
     "heldout_split": 0.0,
-    "loss_form": 0.6615,
-    "reference_kl": 0.5167,
-    "sampler_backend": 0.05,
-    "telemetry": 0.1
+    "loss_form": 0.7179,
+    "reference_kl": 0.5972,
+    "sampler_backend": 0.0417,
+    "telemetry": 0.0833
   },
   "methods": [
     "aero",
@@ -48,6 +48,7 @@
     "delta_liteppo",
     "delta_mcgrpo",
     "delta_ngrpo",
+    "delta_ppo",
     "delta_reinforce",
     "delta_scafgrpo",
     "drgrpo",
@@ -59,35 +60,35 @@
     "ngrpo",
     "scafgrpo"
   ],
-  "methods_count": 26,
-  "n_delta_records": 14,
-  "n_entries_total": 34,
-  "n_stack_records": 20,
+  "methods_count": 27,
+  "n_delta_records": 15,
+  "n_entries_total": 39,
+  "n_stack_records": 24,
   "schema_fail_count": 0,
   "schema_fail_ids": [],
-  "schema_pass_count": 34,
+  "schema_pass_count": 39,
   "stacks_with_ci_method": 7,
-  "stacks_with_outcomes": 20,
+  "stacks_with_outcomes": 24,
   "top5_null_fields": [
     {
       "item": "decontamination",
-      "mean_null_rate": 0.8
+      "mean_null_rate": 0.8333
     },
     {
       "item": "loss_form",
-      "mean_null_rate": 0.6615
+      "mean_null_rate": 0.7179
     },
     {
       "item": "reference_kl",
-      "mean_null_rate": 0.5167
+      "mean_null_rate": 0.5972
     },
     {
       "item": "group_size_schedule",
-      "mean_null_rate": 0.3167
+      "mean_null_rate": 0.4306
     },
     {
       "item": "telemetry",
-      "mean_null_rate": 0.1
+      "mean_null_rate": 0.0833
     }
   ],
   "verdict_signature_clusters": {
@@ -104,9 +105,9 @@
     ],
     "da39a3ee5e": [
       "delta_dapo",
-      "delta_drgrpo",
       "delta_gspo",
       "delta_liteppo",
+      "delta_ppo",
       "delta_reinforce"
     ]
   }

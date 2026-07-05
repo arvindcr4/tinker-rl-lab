@@ -1,0 +1,88 @@
+% P5 iter-157 — MIN-REPORT v2.4 self-application: paper_P5 claim-traceability audit
+\subsection{MIN-REPORT v2.4 self-application: does paper\_P5 walk its own talk?}
+\label{sec:p5-iter157-v24-self-app}
+
+Iter-153 row 170 audited three live artefact layers under MIN-REPORT v2.4
+(bib, manifests, cells.tsv) and reported 100\% coverage on all three.
+Iter-157 adds a fourth layer: \emph{paper\_P5's own empirical claims}. A
+paper that champions the MIN-REPORT standard must itself be a model citizen:
+every numerical claim reported in the paper must be reproducible from the
+cited source plus the listed MIN-REPORT v2.4 fields alone.
+
+We catalogue \textbf{22 empirical point-estimates} from
+\texttt{paper/sections/p5\_iter*.tex}, classify each by source corpus
+(mega\_20260704 / n2\_reward\_tensor\_resume / n10\_seed\_expansion /
+paper/references.bib), determine the MIN-REPORT v2.4 fields required to
+reproduce it, and check field-presence against the cited source.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\hline
+\textbf{Source corpus} & \textbf{$n_{\text{claims}}$} & \textbf{$n_{\text{rows}}$} & \textbf{$n_{\text{pass}}$} & \textbf{coverage [Wilson 95\% CI]} \\
+\hline
+paper/references.bib                          & 2  & 422 & 422 & 100.0\% [99.1, 100.0] \\
+mega\_20260704 (cells + manifests)             & 10 & 980 & 980 & 100.0\% [99.6, 100.0] \\
+n10\_seed\_expansion (per-step rows)            & 4  & 300 & 300 & 100.0\% [98.7, 100.0] \\
+n2\_reward\_tensor\_resume (per-step rows)      & 6  & 960 & 960 & 100.0\% [99.6, 100.0] \\
+\hline
+\textbf{Total}                                 & \textbf{22} & \textbf{2662} & \textbf{2662} & \textbf{100.0\%} \\
+\hline
+\end{tabular}
+\caption{P5 MIN-REPORT v2.4 self-application coverage per source corpus.
+Every one of the 22 paper\_P5 empirical claims has 100\% field-coverage on
+the cited source rows (2662/2662 pass).}
+\label{tab:p5-v24-self-app}
+\end{table}
+
+\textbf{Four hypotheses (4/4 PASS).}
+\begin{itemize}
+\item \textbf{H1 PASS} --- every one of 22 claims has a citation that
+  resolves to a real file/dir on disk. The 22 citations span 4 corpora
+  (bib, mega, n10, n2); each path passes an \texttt{os.path.exists} check.
+\item \textbf{H2 PASS} --- every claim has 100\% field coverage on cited
+  source rows: 22/22 = 100.0\%. No claim has a partial-coverage defect.
+\item \textbf{H3 PASS} --- per-source coverage is 100\% across all four
+  corpora (Table~\ref{tab:p5-v24-self-app}). Total 2662 source rows audited.
+\item \textbf{H4 PASS} --- top-3 fields \{zvf=9, cell\_id=8,
+  manifest\_path=6\} account for 23/68 = 33.8\% of all claim-field-uses;
+  \texttt{zvf} alone is required for 9/22 = \textbf{40.9\%} of claims ---
+  the single most informative MIN-REPORT field on P5.
+\end{itemize}
+
+\textbf{Sharpest finding: zvf is the canonical signal-availability
+field on P5.} Of the 20 distinct MIN-REPORT v2.4 / cells.tsv / manifest /
+tensor / bib fields required across the 22 claims, \texttt{zvf} alone is
+required for 40.9\% --- more than any other field. The identifier-stamp
+fields \texttt{cell\_id} (36.4\%) and \texttt{manifest\_path} (27.3\%) are
+the next-most-loaded, consistent with iter-153 row 170's identification of
+the v2.4 identifier-stamp anchors. Per-claim required-field-set sizes are
+small (median 3, max 7); no claim relies on a phantom field.
+
+\textbf{Cross-paper coupling.} Iter-157 extends iter-153's 3-layer audit
+(bib, manifests, cells.tsv) to a 4th layer (paper\_P5 claims). Iter-137
+audited cross-corpus portability at the v2.2 item layer; iter-157 audits
+cross-paper-claim portability at the v2.4 identifier-stamp layer; the
+per-source coverage rate is the analogue of iter-137's per-corpus
+recoverable count. Iter-145's manifest-schema ground-truth (8
+cross-reference checks) is the substrate that paper\_P5's citations land
+on. Iter-117's structural-ambiguity rates per MIN-REPORT item are the
+inverse lens of iter-157's per-field discriminative-power ranking. The
+40.9\% zvf concentration is consistent with FRONTIER\_INSIGHTS Round~2
+(frontier synthesis): ZVF is the P5 paper's signal-availability proxy.
+
+\textbf{Operational.} Wire \texttt{p5\_iter157\_v24\_self\_application.py}
+as a CI pre-commit gate on new paper\_P5 sections (every new claim-table
+row needs citation + required-field-set). Promote the per-field
+discriminative-power ranking as the canonical MIN-REPORT field priority
+list (any field below 5\% usage is candidate for demotion to optional).
+Wire \texttt{p5\_iter157\_summary.json} as the audit trail for paper\_P5
+reproducibility claims. Extend to P6/P7/P8 in future synthesis iters
+using the 22-claim $\times$ 5-iter-family template.
+
+The full claim inventory, per-source coverage matrix, and per-field
+discriminative ranking are at
+\texttt{experiments/results/p5p8/p5\_iter157\_\{claim\_inventory,
+source\_coverage, field\_discriminative\}.tsv} and
+\texttt{p5\_iter157\_summary.json}.

@@ -1,0 +1,243 @@
+{
+  "n_manifests": 98,
+  "checks": {
+    "check1_cellid_parses": {
+      "pass": 98,
+      "fail": 0,
+      "skip": 0,
+      "fail_examples": []
+    },
+    "check2_hash_unique": {
+      "pass": 98,
+      "fail": 0,
+      "skip": 0,
+      "fail_examples": []
+    },
+    "check3_tensor_exists": {
+      "pass": 98,
+      "fail": 0,
+      "skip": 0,
+      "fail_examples": []
+    },
+    "check4_tensor_G_match": {
+      "pass": 98,
+      "fail": 0,
+      "skip": 0,
+      "fail_examples": []
+    },
+    "check5_tensor_model_match": {
+      "pass": 98,
+      "fail": 0,
+      "skip": 0,
+      "fail_examples": []
+    },
+    "check6_heldout_matches_task": {
+      "pass": 98,
+      "fail": 0,
+      "skip": 0,
+      "fail_examples": []
+    },
+    "check7_decontam_matches_task": {
+      "pass": 98,
+      "fail": 0,
+      "skip": 0,
+      "fail_examples": []
+    },
+    "check8_gss_matches_G": {
+      "pass": 98,
+      "fail": 0,
+      "skip": 0,
+      "fail_examples": []
+    }
+  },
+  "overall_pass_rate": 1.0,
+  "overall_pass_count": 784,
+  "overall_fail_count": 0,
+  "overall_skip_count": 0,
+  "total_checks": 784,
+  "fully_consistent_manifests": 98,
+  "fully_consistent_rate": 1.0,
+  "perturbation_test": {
+    "n_perturbations": 20,
+    "n_detected": 20,
+    "detect_rate": 1.0,
+    "examples": [
+      {
+        "manifest": ".tmp_perturb_75.json",
+        "cell_id": "meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9",
+        "check1_cellid_parses": "PASS",
+        "check2_hash_unique": "PASS",
+        "check3_tensor_exists": "PASS",
+        "check4_tensor_G_match": "PASS",
+        "check5_tensor_model_match_strict": "FAIL:naming_drift cell_id='meta-llama-Llama-3-2-3B' vs tensor='meta-llama/Llama-3.2-3B'",
+        "check5_tensor_model_match_canon": "PASS",
+        "check5_tensor_model_match": "PASS",
+        "check6_heldout_matches_task": "FAIL:heldout='humaneval_subset' vs task='gsm8k_hard'",
+        "check7_decontam_matches_task": "PASS",
+        "check8_gss_matches_G": "PASS",
+        "perturb_field": "heldout_split",
+        "perturb_value": "humaneval_subset",
+        "original_manifest": "meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9.json"
+      },
+      {
+        "manifest": ".tmp_perturb_42.json",
+        "cell_id": "Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035",
+        "check1_cellid_parses": "PASS",
+        "check2_hash_unique": "PASS",
+        "check3_tensor_exists": "PASS",
+        "check4_tensor_G_match": "PASS",
+        "check5_tensor_model_match_strict": "FAIL:naming_drift cell_id='Qwen-Qwen3-5-4B' vs tensor='Qwen/Qwen3.5-4B'",
+        "check5_tensor_model_match_canon": "PASS",
+        "check5_tensor_model_match": "PASS",
+        "check6_heldout_matches_task": "PASS",
+        "check7_decontam_matches_task": "PASS",
+        "check8_gss_matches_G": "FAIL:gss_G=2 vs cell_id_G=4",
+        "perturb_field": "group_size_schedule",
+        "perturb_value": "fixed-G=2",
+        "original_manifest": "Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035.json"
+      },
+      {
+        "manifest": ".tmp_perturb_77.json",
+        "cell_id": "meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73",
+        "check1_cellid_parses": "PASS",
+        "check2_hash_unique": "FAIL:tensor basename='does-not-exist.json' vs manifest='meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73.json'",
+        "check3_tensor_exists": "FAIL:path='/tmp/does-not-exist.json'",
+        "check4_tensor_G_match": "SKIP",
+        "check5_tensor_model_match": "SKIP",
+        "check5_tensor_model_match_strict": "SKIP",
+        "check5_tensor_model_match_canon": "SKIP",
+        "check6_heldout_matches_task": "PASS",
+        "check7_decontam_matches_task": "PASS",
+        "check8_gss_matches_G": "PASS",
+        "perturb_field": "per_step_zvf_path",
+        "perturb_value": "/tmp/does-not-exist.json",
+        "original_manifest": "meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73.json"
+      },
+      {
+        "manifest": ".tmp_perturb_35.json",
+        "cell_id": "Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9",
+        "check1_cellid_parses": "PASS",
+        "check2_hash_unique": "FAIL:tensor basename='does-not-exist.json' vs manifest='Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9.json'",
+        "check3_tensor_exists": "FAIL:path='/tmp/does-not-exist.json'",
+        "check4_tensor_G_match": "SKIP",
+        "check5_tensor_model_match": "SKIP",
+        "check5_tensor_model_match_strict": "SKIP",
+        "check5_tensor_model_match_canon": "SKIP",
+        "check6_heldout_matches_task": "PASS",
+        "check7_decontam_matches_task": "PASS",
+        "check8_gss_matches_G": "PASS",
+        "perturb_field": "per_step_zvf_path",
+        "perturb_value": "/tmp/does-not-exist.json",
+        "original_manifest": "Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9.json"
+      },
+      {
+        "manifest": ".tmp_perturb_22.json",
+        "cell_id": "Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9",
+        "check1_cellid_parses": "PASS",
+        "check2_hash_unique": "PASS",
+        "check3_tensor_exists": "PASS",
+        "check4_tensor_G_match": "PASS",
+        "check5_tensor_model_match_strict": "FAIL:naming_drift cell_id='Qwen-Qwen3-5-4B' vs tensor='Qwen/Qwen3.5-4B'",
+        "check5_tensor_model_match_canon": "PASS",
+        "check5_tensor_model_match": "PASS",
+        "check6_heldout_matches_task": "FAIL:heldout='humaneval_subset' vs task='gsm8k_hard'",
+        "check7_decontam_matches_task": "PASS",
+        "check8_gss_matches_G": "PASS",
+        "perturb_field": "heldout_split",
+        "perturb_value": "humaneval_subset",
+        "original_manifest": "Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9.json"
+      },
+      {
+        "manifest": ".tmp_perturb_40.json",
+        "cell_id": "Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065",
+        "check1_cellid_parses": "PASS",
+        "check2_hash_unique": "PASS",
+        "check3_tensor_exists": "PASS",
+        "check4_tensor_G_match": "PASS",
+        "check5_tensor_model_match_strict": "FAIL:naming_drift cell_id='Qwen-Qwen3-5-4B' vs tensor='Qwen/Qwen3.5-4B'",
+        "check5_tensor_model_match_canon": "PASS",
+        "check5_tensor_model_match": "PASS",
+        "check6_heldout_matches_task": "PASS",
+        "check7_decontam_matches_task": "FAIL:decontam='gsm8k-train-slice' vs expected='humaneval-openai-subset' for task='humaneval_subset'",
+        "check8_gss_matches_G": "PASS",
+        "perturb_field": "decontamination_notes",
+        "perturb_value": "gsm8k-train-slice",
+        "original_manifest": "Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065.json"
+      },
+      {
+        "manifest": ".tmp_perturb_56.json",
+        "cell_id": "meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb",
+        "check1_cellid_parses": "PASS",
+        "check2_hash_unique": "PASS",
+        "check3_tensor_exists": "PASS",
+        "check4_tensor_G_match": "PASS",
+        "check5_tensor_model_match_strict": "FAIL:naming_drift cell_id='meta-llama-Llama-3-2-3B' vs tensor='meta-llama/Llama-3.2-3B'",
+        "check5_tensor_model_match_canon": "PASS",
+        "check5_tensor_model_match": "PASS",
+        "check6_heldout_matches_task": "FAIL:heldout='humaneval_subset' vs task='gsm8k_easy'",
+        "check7_decontam_matches_task": "PASS",
+        "check8_gss_matches_G": "PASS",
+        "perturb_field": "heldout_split",
+        "perturb_value": "humaneval_subset",
+        "original_manifest": "meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb.json"
+      },
+      {
+        "manifest": ".tmp_perturb_9.json",
+        "cell_id": "Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db",
+        "check1_cellid_parses": "PASS",
+        "check2_hash_unique": "FAIL:tensor basename='does-not-exist.json' vs manifest='Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db.json'",
+        "check3_tensor_exists": "FAIL:path='/tmp/does-not-exist.json'",
+        "check4_tensor_G_match": "SKIP",
+        "check5_tensor_model_match": "SKIP",
+        "check5_tensor_model_match_strict": "SKIP",
+        "check5_tensor_model_match_canon": "SKIP",
+        "check6_heldout_matches_task": "PASS",
+        "check7_decontam_matches_task": "PASS",
+        "check8_gss_matches_G": "PASS",
+        "perturb_field": "per_step_zvf_path",
+        "perturb_value": "/tmp/does-not-exist.json",
+        "original_manifest": "Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db.json"
+      },
+      {
+        "manifest": ".tmp_perturb_30.json",
+        "cell_id": "Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e",
+        "check1_cellid_parses": "PASS",
+        "check2_hash_unique": "PASS",
+        "check3_tensor_exists": "PASS",
+        "check4_tensor_G_match": "PASS",
+        "check5_tensor_model_match_strict": "FAIL:naming_drift cell_id='Qwen-Qwen3-5-4B' vs tensor='Qwen/Qwen3.5-4B'",
+        "check5_tensor_model_match_canon": "PASS",
+        "check5_tensor_model_match": "PASS",
+        "check6_heldout_matches_task": "PASS",
+        "check7_decontam_matches_task": "FAIL:decontam='gsm8k-train-slice' vs expected='humaneval-openai-subset' for task='humaneval_subset'",
+        "check8_gss_matches_G": "PASS",
+        "perturb_field": "decontamination_notes",
+        "perturb_value": "gsm8k-train-slice",
+        "original_manifest": "Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e.json"
+      },
+      {
+        "manifest": ".tmp_perturb_14.json",
+        "cell_id": "Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274",
+        "check1_cellid_parses": "PASS",
+        "check2_hash_unique": "PASS",
+        "check3_tensor_exists": "PASS",
+        "check4_tensor_G_match": "PASS",
+        "check5_tensor_model_match_strict": "FAIL:naming_drift cell_id='Qwen-Qwen3-5-4B' vs tensor='Qwen/Qwen3.5-4B'",
+        "check5_tensor_model_match_canon": "PASS",
+        "check5_tensor_model_match": "PASS",
+        "check6_heldout_matches_task": "FAIL:heldout='humaneval_subset' vs task='gsm8k_hard'",
+        "check7_decontam_matches_task": "PASS",
+        "check8_gss_matches_G": "PASS",
+        "perturb_field": "heldout_split",
+        "perturb_value": "humaneval_subset",
+        "original_manifest": "Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274.json"
+      }
+    ]
+  },
+  "naming_drift_without_canonicalization": {
+    "n_strict_fail": 98,
+    "n_strict_pass": 0,
+    "strict_fail_rate": 1.0,
+    "canonicalization_rule": "lower-case + replace / with - + replace . with -"
+  }
+}

@@ -898,3 +898,4 @@ After iter 83 drove row 98 (P7 Iso-G controller prototype) to validated, the led
 4. **areal is the unique beneficiary at K=3**: delta-yield rises +34% vs raw because persistence catches areal's late-training ZVF climb.
 5. **gift is the worst case**: yield retention drops to 53-56% due to GIFT's steep local ZVF drops; motivates asymmetric K_up=1, K_dn=4 gift-specific rule (flagged as follow-up).
 6. **Operational recommendation**: deploy hysteresis@τ=0.70, K_up=2, K_dn=2 as the **default zvf-triage filter** on the N2 corpus; flip-count drops to 22-33% of raw, yield retention ≥95% on grpo/aero/areal.
+echo done

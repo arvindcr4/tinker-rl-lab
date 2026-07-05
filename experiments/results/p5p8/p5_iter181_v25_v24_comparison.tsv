@@ -1,0 +1,3 @@
+spec	n_required_keys	n_manifests_pass	n_total_manifests	pass_rate
+v2.4	8	98	98	1.0000
+v2.5	21	98	98	1.0000

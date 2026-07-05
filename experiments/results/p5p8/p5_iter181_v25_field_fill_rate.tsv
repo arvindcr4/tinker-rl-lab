@@ -1,0 +1,14 @@
+field	family	type	src	n_filled	n_valid	n_total	fill_rate	fill_lo	fill_hi	valid_rate	h_bits	n_unique
+model	identity	str	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	0.9988	2
+task_slice	identity	str	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	1.5546	3
+G	identity	int	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	2.3121	5
+temperature	identity	float	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	0.9952	2
+seed	identity	int	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	1.0000	2
+mean_reward	rollout_outcomes	float	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	4.4178	48
+zvf	rollout_outcomes	float	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	3.5534	20
+pcd	rollout_outcomes	float	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	4.5573	56
+n_groups	rollout_outcomes	int	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	0.0000	1
+sample_errors	rollout_outcomes	int	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	0.0000	1
+mean_completion_len	rollout_outcomes	float	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	6.6147	98
+std_completion_len	rollout_outcomes	float	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	6.6147	98
+sampled_tokens	operational	int	cells.tsv	98	98	98	1.0000	0.9623	1.0000	1.0000	6.6147	98

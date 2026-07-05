@@ -1,0 +1,247 @@
+{
+  "iter": 168,
+  "job": "P5P8-SYNTH twelve-domain density matrix (D12 + D13)",
+  "n_d12_cells": 100,
+  "n_d13_cells": 100,
+  "d12_overall": {
+    "k": 0,
+    "n": 100,
+    "p": 0.0,
+    "lo": 0.0,
+    "hi": 0.03699480747600191,
+    "layer": "LOW"
+  },
+  "d12_per_tier": {
+    "cheap_heuristic": {
+      "k": 0,
+      "n": 20,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.16113012549493322
+    },
+    "small_open": {
+      "k": 0,
+      "n": 20,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.16113012549493322
+    },
+    "iter120_default": {
+      "k": 0,
+      "n": 20,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.16113012549493322
+    },
+    "mid_tier": {
+      "k": 0,
+      "n": 20,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.16113012549493322
+    },
+    "frontier_gpt4": {
+      "k": 0,
+      "n": 20,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.16113012549493322
+    }
+  },
+  "d12_per_rate": {
+    "1.44": {
+      "k": 0,
+      "n": 4,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.48990002040399916
+    },
+    "1.0": {
+      "k": 0,
+      "n": 4,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.48990002040399916
+    },
+    "0.5": {
+      "k": 0,
+      "n": 4,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.48990002040399916
+    },
+    "0.1": {
+      "k": 0,
+      "n": 4,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.48990002040399916
+    },
+    "0.05": {
+      "k": 0,
+      "n": 4,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.48990002040399916
+    }
+  },
+  "d12_per_fset": {
+    "24full": {
+      "k": 0,
+      "n": 5,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.43449149475208104
+    },
+    "20raw": {
+      "k": 0,
+      "n": 5,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.43449149475208104
+    },
+    "20raw+minmax": {
+      "k": 0,
+      "n": 5,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.43449149475208104
+    },
+    "20raw+stat": {
+      "k": 0,
+      "n": 5,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.43449149475208104
+    }
+  },
+  "d13_overall": {
+    "k": 0,
+    "n": 100,
+    "p": 0.0,
+    "lo": 0.0,
+    "hi": 0.03699480747600191,
+    "layer": "LOW"
+  },
+  "d13_per_tier": {
+    "cheap_heuristic": {
+      "k": 0,
+      "n": 20,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.16113012549493322
+    },
+    "small_open": {
+      "k": 0,
+      "n": 20,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.16113012549493322
+    },
+    "iter120_default": {
+      "k": 0,
+      "n": 20,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.16113012549493322
+    },
+    "mid_tier": {
+      "k": 0,
+      "n": 20,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.16113012549493322
+    },
+    "frontier_gpt4": {
+      "k": 0,
+      "n": 20,
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.16113012549493322
+    }
+  },
+  "twelve_domain_summary": [
+    {
+      "domain": "D1",
+      "label": "P8_grad_band_firing",
+      "density": 0.0083,
+      "layer": "LOW"
+    },
+    {
+      "domain": "D2",
+      "label": "P7_step_rejection",
+      "density": 0.5,
+      "layer": "MID"
+    },
+    {
+      "domain": "D3",
+      "label": "P5_cells_with_seed_pass",
+      "density": 0.3673,
+      "layer": "MID"
+    },
+    {
+      "domain": "D4",
+      "label": "P7_per_prompt_boundary",
+      "density": 0.7293,
+      "layer": "MID"
+    },
+    {
+      "domain": "D5",
+      "label": "P8_iso_ECE_gt_010",
+      "density": 1.0,
+      "layer": "HIGH"
+    },
+    {
+      "domain": "D6",
+      "label": "P8_sensor_firing_flip",
+      "density": 0.0053,
+      "layer": "LOW"
+    },
+    {
+      "domain": "D7",
+      "label": "N2_algo_axis_spread_gt_500",
+      "density": 0.0156,
+      "layer": "LOW"
+    },
+    {
+      "domain": "D8",
+      "label": "P7_UNIFIED_C4_FIRE_density",
+      "density": 0.0914,
+      "layer": "MID"
+    },
+    {
+      "domain": "D9",
+      "label": "P7_UNIFIED_C4_contrast_recov",
+      "density": 0.0914,
+      "layer": "MID"
+    },
+    {
+      "domain": "D10",
+      "label": "P8_operationally_actionable",
+      "density": 0.78,
+      "layer": "HIGH"
+    },
+    {
+      "domain": "D11",
+      "label": "P8_escalation_value_density",
+      "density": 1.0,
+      "layer": "HIGH"
+    },
+    {
+      "domain": "D12",
+      "label": "P8_achievable_precision_frontier",
+      "density": 0.0,
+      "layer": "LOW"
+    },
+    {
+      "domain": "D13",
+      "label": "P8_threshold_sweep_rescue",
+      "density": 0.0,
+      "layer": "LOW"
+    }
+  ],
+  "h1_pass": false,
+  "h2_pass": true,
+  "h3_pass": false,
+  "h4_pass": true
+}

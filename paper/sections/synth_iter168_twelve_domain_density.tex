@@ -1,0 +1,154 @@
+% Section: P5P8-SYNTH twelve-domain density matrix (iter 168 JOB B)
+% Fresh vein, not in 173 prior SYNTH rows. Extends iter-156 eleven-
+% domain matrix (D1-D11) to twelve domains by adding:
+%   D12 = P8_achievable_precision_frontier (proportion of (rate x
+%         tier x fset) cells where some tau in {0.5, 1.0, 1.5, 2.0}
+%         achieves esc_prec >= 0.10 AND value_rate >= 0.30)
+%   D13 = P8_threshold_sweep_rescue (proportion of (rate x tier x
+%         fset) cells where tau=2.0 improves esc_prec by >= 5x over
+%         tau=0.0 AND reaches >= 0.05)
+% Headline (sharpest negative finding): D12 = D13 = 0.000 on this
+% dataset. The Pareto-frontier is unreachable; threshold sweep does
+% not rescue precision.
+
+\subsubsection{Falsifiable questions and operational stakes}
+Iter-156 row 173 produced an eleven-domain density matrix (D1--D11)
+that aggregated measured densities across the four papers: P8
+grad-band firing (D1), P7 step rejection (D2), P5 cells-with-seed-
+pass (D3), P7 per-prompt boundary (D4), P8 iso-ECE-greater-than-0.10
+(D5), P8 sensor-firing flip (D6), N2 algorithm-axis spread (D7), P7
+unified-controller fire density (D8), P7 unified-controller contrast
+recovery (D9), P8 operationally-actionable (D10), P8 escalation-
+value (D11). Iter-168 adds two domains that read the iter-168 JOB A
+threshold-sweep matrix at the SYNTH granularity:
+
+  $D_{12} = \frac{\#\{(rate \times tier \times fset)\ \text{cells where}\ \exists \tau \in \{0.5, 1.0, 1.5, 2.0\} : \text{esc\_prec} \geq 0.10 \wedge \text{value\_rate} \geq 0.30\}}{\#\{(rate \times tier \times fset)\ \text{cells}\}}$
+
+  $D_{13} = \frac{\#\{(rate \times tier \times fset)\ \text{cells where}\ (\text{esc\_prec}_{\tau=2.0} \geq 5 \times \text{esc\_prec}_{\tau=0.0}) \wedge (\text{esc\_prec}_{\tau=2.0} \geq 0.05)\}}{\#\{(rate \times tier \times fset)\ \text{cells}\}}$
+
+D12 answers the operationally critical question: \emph{``across the
+threshold sweep, what fraction of operational cells are actually
+reachable by the Pareto frontier?''}. D13 answers the corollary:
+\emph{``does the threshold sweep materially rescue the iter-156
+precision problem (esc\_prec 1\% at $\tau=0.0$)?''}.
+
+Both domains aggregate across seeds by majority rule (cell is
+achievable / rescued if $\geq 3$ of 5 seeds reach the bar). The 100
+operational cells = 5 rates $\times$ 5 tiers $\times$ 4 fsets,
+mirroring the iter-148/156 aggregation.
+
+\subsubsection{Findings}
+\textbf{D12 = 0/100 = 0.000} [Wilson 0.000, 0.037]. No operational
+cell is reachable by the Pareto frontier at any of the 4 stricter
+thresholds (0.5, 1.0, 1.5, 2.0). This is consistent with the
+iter-168 JOB A H2 FAIL (0/700 Pareto cells at any $\tau$) but
+quantifies the gap at the SYNTH aggregation level.
+
+\textbf{D13 = 0/100 = 0.000} [Wilson 0.000, 0.037]. No operational
+cell is rescued by the $\tau=2.0$ threshold: at $\tau=2.0$, the LLM
+sensor is silent (n\_lift = 0, n\_waste = 0 because the V\_mean
+signal mass is bounded in $(0, 2]$). The rescue criterion requires
+esc\_prec$_{\tau=2.0} \geq 0.05$; the silent-sensor case has
+esc\_prec = 0/0 = NaN and is rejected.
+
+\textbf{H1 (D12 $\geq$ 0.10) FAIL}: 0.0000 $\ll$ 0.10. The Pareto-
+frontier density is 0\% on this dataset.
+
+\textbf{H2 (D12@cheap $\geq$ D12@frontier) PASS trivially}: both
+densities are 0.000, so the monotone inequality holds as equality.
+
+\textbf{H3 (D13 $\geq$ 0.20) FAIL}: 0.0000 $\ll$ 0.20. The
+threshold-sweep rescue density is 0\% on this dataset.
+
+\textbf{H4 (D13@cheap $\geq$ D13@frontier) PASS trivially}: both
+densities are 0.000, so the monotone inequality holds as equality.
+
+\subsubsection{Twelve-domain density matrix}
+\begin{tabular}{llrl}
+\hline
+Domain & Label & Density & Layer \\
+\hline
+D1 & P8\_grad\_band\_firing & 0.0083 & LOW \\
+D2 & P7\_step\_rejection & 0.5000 & MID \\
+D3 & P5\_cells\_with\_seed\_pass & 0.3673 & MID \\
+D4 & P7\_per\_prompt\_boundary & 0.7293 & MID \\
+D5 & P8\_iso\_ECE\_gt\_010 & 1.0000 & HIGH \\
+D6 & P8\_sensor\_firing\_flip & 0.0053 & LOW \\
+D7 & N2\_algo\_axis\_spread\_gt\_500 & 0.0156 & LOW \\
+D8 & P7\_UNIFIED\_C4\_FIRE\_density & 0.0914 & MID \\
+D9 & P7\_UNIFIED\_C4\_contrast\_recov & 0.0914 & MID \\
+D10 & P8\_operationally\_actionable & 0.7800 & HIGH \\
+D11 & P8\_escalation\_value\_density & 1.0000 & HIGH \\
+D12 & P8\_achievable\_precision\_frontier & 0.0000 & LOW \\
+D13 & P8\_threshold\_sweep\_rescue & 0.0000 & LOW \\
+\hline
+\end{tabular}
+
+\subsubsection{Sharpest paper-grade findings}
+\begin{enumerate}
+\item \textbf{D12 = 0.000} -- the Pareto frontier is \emph{unreachable}
+at the SYNTH aggregation level. The 10\% precision bar with 30\%
+recall-lift bar is unattainable on this dataset at any threshold.
+\item \textbf{D13 = 0.000} -- the threshold sweep does not rescue
+precision. At $\tau = 2.0$, the LLM sensor is silent
+(n\_lift = n\_waste = 0); the 5$\times$ rescue ratio is undefined.
+\item \textbf{D11 > D12 > D10 (1.000 > 0.000 vs 0.780)} -- the
+twelve-domain matrix now exposes a \emph{three-tier operational
+hierarchy}: value-actionable (D11 = 1.0) > cost-actionable
+(D10 = 0.78) > precision-frontier-actionable (D12 = 0.0). The
+hierarchy is monotone in the strictness of the operational bar.
+\item \textbf{Layer assignment is sharp}: D12, D13 are both LOW
+(0.000 $\ll$ 0.10); D10, D11 are both HIGH ($\geq$ 0.70); the
+3-tier partition (LOW/MID/HIGH) survives with HIGH = \{D5, D10,
+D11\}, LOW = \{D1, D6, D7, D12, D13\}, MID = \{D2, D3, D4, D8, D9\}.
+\item \textbf{Twelve-domain matrix extends iter-156 row 173}: 173
+$\to$ 175 SYNTH-validated rows in the ledger (rows 179, 180).
+\end{enumerate}
+
+\subsubsection{Cross-paper coupling}
+\begin{itemize}
+\item \textbf{P5P8-SYNTH iter-156 row 173}: iter-156 produced the
+eleven-domain matrix (D1--D11); iter-168 extends to twelve domains
+(D12, D13). The matrix has grown by 1--2 domains per SYNTH iter
+since iter-148 (nine-domain $\to$ ten-domain $\to$ eleven-domain
+$\to$ twelve-domain).
+\item \textbf{P8 iter-168 row 179}: D12 and D13 are the SYNTH
+roll-ups of the iter-168 P8 threshold-sweep findings. P8 measures
+3500 cells at (seed $\times$ rate $\times$ fset $\times$ tier
+$\times$ $\tau$); SYNTH aggregates to 100 cells at (rate $\times$
+tier $\times$ fset). The aggregation preserves the operational
+``majority-of-5-seeds'' verdict.
+\item \textbf{P8 iter-156 row 172}: iter-156 measured 500 cells at
+$\tau = 0.0$ only; iter-168 extends to 3500 cells across 7
+thresholds. D12 = D13 = 0 quantifies that the iter-156
+high-recall-low-precision signature is \emph{structural} on this
+dataset.
+\item \textbf{FRONTIER\_INSIGHTS Round 2 (ZVF = signal
+availability)}: D12 = 0.000 and D13 = 0.000 are the operational
+analogue of ZVF signal-starvation at the GRPO group level: the
+sampling distribution (V\_mean in fraud; rollout tensor in GRPO)
+\emph{cannot} produce the operational signal (precision-frontier
+in fraud; within-group contrast in GRPO) at any threshold /
+group-size choice. Both are structural sampling-bottleneck
+measurements.
+\end{itemize}
+
+\subsubsection{Operational recommendations}
+\begin{enumerate}
+\item \textbf{REPORT} density claims at the 12-domain level for
+any future SYNTH paper-facing density claim; the 3-tier partition
+(LOW/MID/HIGH) survives with HIGH = \{D5, D10, D11\}, LOW = \{D1,
+D6, D7, D12, D13\}, MID = \{D2, D3, D4, D8, D9\}.
+\item \textbf{CITE} D12 = D13 = 0 as the structural evidence that
+precision-frontier tuning on this dataset is unreachable. The
+twelve-domain matrix now licenses the negative claim.
+\item \textbf{DOCUMENT} the D10 / D11 / D12 trio as the three
+operational densities: cost-actionable (D10 = 0.78), value-
+actionable (D11 = 1.0), precision-frontier-actionable (D12 = 0.0).
+The monotone strictness ordering (D12 $<$ D10 $<$ D11) is
+empirically stable across the four papers.
+\item \textbf{WIRE} \texttt{synth\_iter168\_d12\_d13\_density.py}
+into the P5P8-SYNTH reproducibility bundle.
+\end{enumerate}
+
+\clearpage

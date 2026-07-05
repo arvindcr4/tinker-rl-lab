@@ -1,0 +1,18 @@
+{
+  "iter": 168,
+  "job": "P8 V_mean threshold sweep -- precision-recall Pareto frontier",
+  "n_seeds": 5,
+  "n_taus": 7,
+  "n_total_cells": 3500,
+  "value_per_catch_dollars": 50.0,
+  "h1_pass": false,
+  "h1_esc_prec_pass_rate": 0.0,
+  "h1_n_pass": 0,
+  "h1_n_total": 500,
+  "h2_pass": false,
+  "h2_n_pareto_cells": 0,
+  "h3_pass": true,
+  "h3_pass_rate": 1.0,
+  "h4_pass": true,
+  "h4_pass_rate": 1.0
+}

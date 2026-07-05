@@ -1,0 +1,78 @@
+entry_id	layer	field	value	ok	note
+delta_adaptiveg	citation	citation.bibkey	tinker2026adaptiveg	PASS	
+delta_adaptiveg	source_path	measured[0].source	experiments/results/quick_20260704/qp7_adaptive.tsv	PASS	
+delta_adaptiveg	source_path	measured[1].source	experiments/results/quick_20260704/qp7_adaptive.tsv	PASS	
+delta_aero	citation	citation.bibkey	le2025rlzvp	PASS	
+delta_aero	source_path	measured[0].source	experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	PASS	
+delta_aero	source_path	measured[1].source	experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	PASS	
+delta_aero	source_path	measured[2].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_aero	source_path	measured[3].source	experiments/results/zvf_iter130_risk_index.tsv	PASS	
+delta_aero	source_path	measured[4].source	experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	PASS	
+delta_aero	source_path	measured[5].source	experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	PASS	
+delta_areal	citation	citation.bibkey	areal2025	PASS	
+delta_areal	source_path	measured[0].source	experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	PASS	
+delta_areal	source_path	measured[1].source	experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	PASS	
+delta_areal	source_path	measured[2].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_areal	source_path	measured[3].source	experiments/results/zvf_iter130_risk_index.tsv	PASS	
+delta_areal	source_path	measured[4].source	experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	PASS	
+delta_areal	source_path	measured[5].source	experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	PASS	
+delta_cppo	citation	citation.bibkey	lin2025cppo	PASS	
+delta_cppo	source_path	measured[0].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_cppo	source_path	measured[1].source	experiments/results/zvf_iter130_risk_index.tsv	PASS	
+delta_cppo	source_path	measured[2].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_dapo	citation	citation.bibkey	yu2025dapo	PASS	
+delta_drgrpo	citation	citation.bibkey	tong2025drgrpo	PASS	
+delta_drgrpo	source_path	measured[0].source	experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv	PASS	
+delta_drgrpo	source_path	measured[1].source	experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv	PASS	
+delta_drgrpo	source_path	measured[2].source	experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv	PASS	
+delta_es	citation	citation.bibkey	es2025	PASS	
+delta_es	source_path	measured[0].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_es	source_path	measured[1].source	experiments/results/zvf_iter130_risk_index.tsv	PASS	
+delta_es	source_path	measured[2].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_gift	citation	citation.bibkey	gift2025	PASS	
+delta_gift	source_path	measured[0].source	experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	PASS	
+delta_gift	source_path	measured[1].source	experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	PASS	
+delta_gift	source_path	measured[2].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_gift	source_path	measured[3].source	experiments/results/zvf_iter130_risk_index.tsv	PASS	
+delta_gift	source_path	measured[4].source	experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	PASS	
+delta_gift	source_path	measured[5].source	experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	PASS	
+delta_gspo	citation	citation.bibkey	qwen2025gspo	PASS	
+delta_liteppo	citation	citation.bibkey	liteppo2024	PASS	
+delta_mcgrpo	citation	citation.bibkey	mcgrpo2025	PASS	
+delta_mcgrpo	source_path	measured[0].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_mcgrpo	source_path	measured[1].source	experiments/results/zvf_iter130_risk_index.tsv	PASS	
+delta_mcgrpo	source_path	measured[2].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_ngrpo	citation	citation.bibkey	nan2025ngrpo	PASS	
+delta_ngrpo	source_path	measured[0].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_ngrpo	source_path	measured[1].source	experiments/results/zvf_iter130_risk_index.tsv	PASS	
+delta_ngrpo	source_path	measured[2].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_ppo	citation	citation.bibkey	schulman2017proximal	PASS	
+delta_reinforce	citation	citation.bibkey	williams1992reinforce	PASS	
+delta_scafgrpo	citation	citation.bibkey	zhang2025scaffgrpo	PASS	
+delta_scafgrpo	source_path	measured[0].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_scafgrpo	source_path	measured[1].source	experiments/results/zvf_iter130_risk_index.tsv	PASS	
+delta_scafgrpo	source_path	measured[2].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_tool_use_llama-8b-inst	citation	citation.bibkey		NA	bibkey not in paper/references.bib
+delta_tool_use_llama-8b-inst	source_path	measured[0].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+delta_tool_use_qwen3-32b	citation	citation.bibkey		NA	bibkey not in paper/references.bib
+delta_tool_use_qwen3-32b	source_path	measured[0].source	experiments/results/zvf_iter130_method_risk.tsv	PASS	
+zvf130_aero	zvf_value	outcomes.zvf_risk_mean	0.430051	PASS	|stored - gt|=3.46853e-07, |sd_diff|=2.78091e-08
+zvf130_aero	zvf_value_sd	outcomes.zvf_risk_sd	0.106801	PASS	|sd - gt_sd|=2.78091e-08
+zvf130_areal	zvf_value	outcomes.zvf_risk_mean	0.331921	PASS	|stored - gt|=3.86909e-07, |sd_diff|=4.06963e-07
+zvf130_areal	zvf_value_sd	outcomes.zvf_risk_sd	0.043767	PASS	|sd - gt_sd|=4.06963e-07
+zvf130_cppo	zvf_value	outcomes.zvf_risk_mean	0.426611	PASS	|stored - gt|=3.89121e-07, |sd_diff|=3.74478e-07
+zvf130_cppo	zvf_value_sd	outcomes.zvf_risk_sd	0.011378	PASS	|sd - gt_sd|=3.74478e-07
+zvf130_es	zvf_value	outcomes.zvf_risk_mean	0.30511	PASS	|stored - gt|=2.27901e-07, |sd_diff|=4.04396e-07
+zvf130_es	zvf_value_sd	outcomes.zvf_risk_sd	0.008344	PASS	|sd - gt_sd|=4.04396e-07
+zvf130_gift	zvf_value	outcomes.zvf_risk_mean	0.314501	PASS	|stored - gt|=4.56223e-07, |sd_diff|=4.66508e-07
+zvf130_gift	zvf_value_sd	outcomes.zvf_risk_sd	0.011087	PASS	|sd - gt_sd|=4.66508e-07
+zvf130_grpo	zvf_value	outcomes.zvf_risk_mean	0.577688	PASS	|stored - gt|=1.79873e-08, |sd_diff|=1.83933e-07
+zvf130_grpo	zvf_value_sd	outcomes.zvf_risk_sd	0.116112	PASS	|sd - gt_sd|=1.83933e-07
+zvf130_mcgrpo	zvf_value	outcomes.zvf_risk_mean	0.403411	PASS	|stored - gt|=2.59689e-07, |sd_diff|=2.31926e-07
+zvf130_mcgrpo	zvf_value_sd	outcomes.zvf_risk_sd	0.05983	PASS	|sd - gt_sd|=2.31926e-07
+zvf130_ngrpo	zvf_value	outcomes.zvf_risk_mean	0.446663	PASS	|stored - gt|=1.21166e-07, |sd_diff|=1.04417e-07
+zvf130_ngrpo	zvf_value_sd	outcomes.zvf_risk_sd	0.042464	PASS	|sd - gt_sd|=1.04417e-07
+zvf130_scafgrpo	zvf_value	outcomes.zvf_risk_mean	0.225327	PASS	|stored - gt|=1.62287e-07, |sd_diff|=3.17923e-07
+zvf130_scafgrpo	zvf_value_sd	outcomes.zvf_risk_sd	0.019291	PASS	|sd - gt_sd|=3.17923e-07
+zvf130_tool_use_llama-8b-inst	zvf_value	outcomes.zvf_risk_mean	0.547381	PASS	|stored - gt|=1.72654e-07
+zvf130_tool_use_qwen3-32b	zvf_value	outcomes.zvf_risk_mean	0.547381	PASS	|stored - gt|=1.72654e-07

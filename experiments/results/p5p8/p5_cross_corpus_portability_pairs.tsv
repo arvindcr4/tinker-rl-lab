@@ -1,0 +1,8 @@
+corpus_id	n_records	mean_hamming	hamming_ci_lo	hamming_ci_hi
+C1_mega_20260704	98	1.891	1.838	1.98
+C2_n2_reward_tensor	4	1.0	0.688	0.76
+C3_n10_seed_expansion	16	1.7163	1.52	1.646
+C4_base_instruct_paired	8	0.555	0.452	0.538
+C5_group_size_iter111	4	1.0	0.686	0.762
+C6_length_bias_iter	20	1.213	1.128	1.244
+C7_zvf_iter118	8	1.4725	1.178	1.298

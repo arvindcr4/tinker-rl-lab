@@ -1,0 +1,14 @@
+section	item	classification	H_bits	stack_discriminative_bits	n_unique	top_value	top_freq	fraction_na	uplift_bits	notes
+v1_current	loss_form	PLACEBO	0.0000	0.0000	1	n/a-sampling	98	1.0000	0.0	iter-65 row 76 confirmed (live measurement)
+v1_current	ref_policy_kl	PLACEBO	0.0000	0.0000	1	n/a	98	1.0000	0.0	iter-65 row 76 confirmed (live measurement)
+v1_current	sampler_backend_precision	PLACEBO	0.0000	0.0000	1	tinker-closed	98	0.0000	0.0	iter-65 row 76 confirmed (live measurement)
+v1_current	per_step_zvf_path	CELL_IDENTIFIER	6.6147	0.0000	98	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59.json	1	0.0000	0.0	iter-65 row 76 confirmed (live measurement)
+v1_current	group_size_schedule	VARYING_STACK_DESCRIPTOR	2.3121	2.3121	5	fixed-G=2	24	0.0000	0.0	iter-65 row 76 confirmed (live measurement)
+v1_current	heldout_split	VARYING_STACK_DESCRIPTOR	1.5546	1.5546	3	gsm8k_hard	40	0.0000	0.0	iter-65 row 76 confirmed (live measurement)
+v1_current	decontamination_notes	VARYING_STACK_DESCRIPTOR	0.9313	0.9313	2	gsm8k-train-slice	64	0.0000	0.0	iter-65 row 76 confirmed (live measurement)
+v2_projected	kl_coefficient	WOULD-BE PLACEBO (single-stack corpus)	0.0000	0.0000	1	0.0 (Tinker-closed RLVR default)	-	0.0000	0.0000	projection under current corpus experimental design
+v2_projected	clip_range_low	WOULD-BE PLACEBO (single-stack corpus)	0.0000	0.0000	1	0.2 (PPO/GRPO default)	-	0.0000	0.0000	projection under current corpus experimental design
+v2_projected	advantage_normalization	WOULD-BE PLACEBO (single-stack corpus)	0.0000	0.0000	1	per-group (GRPO default)	-	0.0000	0.0000	projection under current corpus experimental design
+v2_projected	mini_batch_size	WOULD-BE PLACEBO (single-stack corpus)	0.0000	0.0000	1	1 (Tinker RLVR per-step default)	-	0.0000	0.0000	projection under current corpus experimental design
+v2_projected	temperature_schedule	WOULD VARY (corpus-controlled)	0.9952	0.9952	2	varies T in {0.6, 1.0}	-	0.0000	0.9952	projection under current corpus experimental design
+v2_projected	model_family_label	WOULD VARY but REDUNDANT (already in cells.tsv)	0.9988	0.0000	2	varies model in {llama, qwen}	-	0.0000	0.0000	projection under current corpus experimental design

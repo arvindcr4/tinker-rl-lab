@@ -231,3 +231,46 @@ operational recommendation that falls out of this measurement is
 additive: tag each emit with the set of stack axes it varies on, so
 downstream consumers can automatically report the axis-discrimination
 ceiling alongside the badge.
+
+\subsection{The Placebo-Replacement Bound: Why the Schema Is Not the Constraint}
+\label{sec:p5-placebo-bound}
+The 4-of-7 placebo pattern could be read two ways: (A) the schema picks
+the wrong items and a redesigned v2 schema would escape the placebo
+problem; or (B) any stack-descriptor schema would be a placebo on a
+single-stack corpus, and the binding constraint is the experimental
+design. We test (A) on the live corpus by projecting six v2 candidates
+(analysed by
+\texttt{scripts/p5p8/p5\_placebo\_replacement\_analysis.py}, see
+\texttt{experiments/results/p5p8/p5\_placebo\_replacement\.*}). Of the
+six candidates, four are GRPO/PPO hyperparameters from the canonical
+RL-for-LLM literature --- \textit{kl\_coefficient}
+\citep{schulman2017proximal, lambert2024tulu3}, \textit{clip\_range\_low}
+\citep{schulman2017proximal}, \textit{advantage\_normalization}
+\citep{shao2024deepseekmath, yu2025dapo}, and
+\textit{mini\_batch\_size} \citep{ivison2024unpacking, lambert2024tulu3}.
+All four project to \emph{n\_unique}=1 on the live 98-cell corpus
+because the corpus is a single-stack Tinker-closed campaign that does
+not vary these axes; the projected info-budget uplift is exactly
+$\Delta\text{bits} = 0$ with a $95\%$ bootstrap CI (B=2000,
+seed=20260705) that excludes any positive gain. Adding all four to the
+v2 schema would replicate the iter-65 4-placebo problem at higher
+cardinality without escaping it. The remaining two candidates are
+corpus-controlled: \textit{temperature\_schedule} (cells.tsv varies
+$T \in \{0.6, 1.0\}$; H\_bits $= 0.995$ on the live corpus) would add
+one varying item to the v2 schema and lift total info budget from
+$11.41$ to $12.41$ bits; \textit{model\_family\_label} is redundant
+because it is already a column of cells.tsv (H\_bits $= 0.999$ but
+net-new info $= 0$). The $\eta^2$ variance partition at the
+manifest-vs-cells.tsv granularity (Berkeley row
+\textit{unpacking\_dpo\_ppo\_factorization} recipe replayed on this
+corpus) confirms the reading: stack axes ($G$, task\_slice,
+temperature, model\_family) explain $94.7\%$ of ZVF variance on the
+$98$ cells ($\eta^2_{\text{stack}} = 0.947$, $25$ unique buckets),
+while $\eta^2_{\text{algo}} = 0$ by construction (single-algorithm
+campaign). The remaining $5.3\%$ is seed-level residual. Reading (A)
+is therefore refuted: the schema is not the binding constraint, the
+corpus is. The sharp operational recommendation: add
+\textit{temperature\_schedule} to the v2 MIN-REPORT schema and
+document the four GRPO/PPO hyperparameter items as
+\textit{deferred-to-cross-stack-campaign} until a v2 mega-campaign
+varies the relevant axes.

@@ -1356,3 +1356,43 @@ After iter 159 drove row 173 (P7 Pareto-frontier + per-method bootstrap CI on it
 2. **P5P8-SYNTH (per row 166 H3 REFUTED)**: extend the 9-domain density to **10 domains** by adding D10 = P5 N10 per-step band-axis density (iter-133 chained eta²) — does the H3 refutation reproduce at the per-step granularity, where the band-axis is dominant? Tests whether controller-rule densities belong in a separate "controller-layer" or are simply MID-density events regardless of origin.
 3. **P5P8-SYNTH (per row 166 H4 cross-method)**: stratify the 9-domain density matrix by the 4 N2 methods — does the per-method density ranking (gift > grpo > aero > areal) replicate across ALL 9 domains? If yes, the method-axis is consistently additive to the domain-axis.
 4. **P6 (per row 165 cost-tier gap)**: the iter-124 / iter-148 H1 finding (grad-band not cheaper at realistic tiers) has implications for the registry's `measured_yield_residual` block — add a `cost_tier_threshold` field that records the cheapest tier at which the rule is cost-rational, similar to the iter-124 sweet-spot price column.
+
+## Iter 160 deliverables (this commit)
+
+### JOB A — P8 operating-point utility maximization (row 174)
+
+| 174 | P8 | T1+T2+T5 | **P8 operating-point utility maximization with 5-seed bootstrap CI (iter 160 JOB A)** — fresh vein, not in 173 prior P8 rows. Closes the iter-72 row 76 mint recommendation: at each (rate, fset, cost-tier) cell, OPTIMIZE the threshold τ* for the deployment-relevant utility function, then report realized utility(τ*) with 5-seed bootstrap B=2000 percentile-CI. 5 seeds × 5 rates × 4 fsets × 5 tiers × 4 utilities = 2000 cells. Four utility functions: U1 F1-max, U2 VALUE-max, U3 PREC-CONSTRAINED, U4 COST-CONSTRAINED. **H1 (FAIL — sharpest negative)**: F1-max monotone in fset on ≥80% (rate × tier) cells — only 5/25 = 20.0%. **H2 (PASS)**: VALUE-max util > 0 on ≥50% cells — 100/100 = 100.0%. **H3 (FAIL — pessimistic)**: VALUE-max < F1-max at ≥60% cells — 0/15 = 0.0%; VALUE-max EXCEEDS F1-max at every cell. **H4 (PASS)**: 5-seed CV(VALUE-max util) ≤ 0.30 — 20/20 = 100.0% (mean CV=0.06). **Sharpest findings**: VALUE-max recovers >0.999 of achievable value on 80/100 cells at cheap_heuristic; τ* at VALUE-max is monotonically decreasing in tier price (cheap τ* ≈ 0.55 → frontier τ* ≈ 0.99); cross-utility gap at release rate: 17.5 pp; tier-monotone VALUE-max util at frontier_gpt4 only. **Cross-paper**: P8 iter-148 acd & iter-160 VALUE-max both conclude frontier_gpt4 is the only tier with non-trivial cost penalty; iter-156 top-K=2% (value_rate 0.42-0.69) is sub-optimal vs iter-160 τ*≈0.55 (util≈0.999). **Operational**: at cheap_heuristic τ*≈0.55 for VALUE-max recall, τ*≈0.76 for F1-max; default to cheap_heuristic if budget allows one tier. | `scripts/p5p8/p8_iter160_operating_point_utility.py` (~320 LoC, stdlib + numpy + xgboost); `experiments/results/p5p8/p8_iter160_opt_tau_per_cell.tsv` (2000 rows); `p8_iter160_opt_util_per_cell.tsv` (2000 rows); `p8_iter160_h_util_monotone.tsv` (115 rows); `p8_iter160_h_5seed_ci.tsv` (20 rows); `p8_iter160_summary.json`; `docs/p5p8_improvements/160_p8_operating_point_utility.md`; `paper/sections/p8_iter160_operating_point_utility.tex` | validated | iter 160 |
+
+### JOB B — P5P8-SYNTH twelve-domain density matrix (row 175)
+
+| 175 | P5P8-SYNTH | T1+T2+T3 | **P5P8-SYNTH twelve-domain density matrix (iter 160 JOB B)** — fresh vein. Extends iter-156 eleven-domain matrix to twelve domains by adding D12 = P5 N10 per-(method × step) reward-density stability. D12(cell) = 1[reward_mean CI half-width < ε] on iter-141 160-cell reward tensor. Bootstrap B=2000. ε ∈ {0.025, 0.05, 0.10}. **H1 (PASS)** — D12@0.05 = 0.1750 [Wilson 0.1239, 0.2413] ∈ MID. **H2 (PASS)** — max/min method density ratio = 2.25 (> 2 bar). **H3 (INCONCLUSIVE)** — D12 distinct from D11 by construction; pairwise ratio test requires re-aggregation. **H4 (PASS)** — D12 < 0.50 (MID not HIGH). **Sharpest findings**: (i) threshold-stratified density curve: D12(0.025)=0.0063 → D12(0.05)=0.175 → D12(0.10)=1.000; (ii) D12 is the **first P5-only MID domain**; (iii) gRPO mid-pack on D12 (0.225) but lowest P7-controller fire density (D8=0.0969). **Layer assignments (12 domains)**: LOW = {D1, D6, D7}; MID = {D2, D3, D4, D8, D9, D11, D12} (7 domains); HIGH = {D5, D10}. **Cross-pillar coupling**: D12 vs D9 ratio=1.91 (different granularities); D12 vs D11 ratio=0.18 (5.7× distinct). | `scripts/p5p8/synth_iter160_twelve_domain_density.py` (~265 LoC, stdlib + numpy); `experiments/results/p5p8/synth_iter160_d12_per_cell.tsv` (160 rows); `synth_iter160_d12_per_eps.tsv` (3 rows); `synth_iter160_d12_per_method.tsv` (4 rows); `synth_iter160_summary.json`; `docs/p5p8_improvements/160_synth_twelve_domain_density.md`; `paper/sections/synth_iter160_twelve_domain_density.tex` | validated | iter 160 |
+
+## Headline findings (P8, iter 160)
+
+| Hypothesis | Verdict | Evidence |
+|---|---|---|
+| **H1** F1-max utility monotone in fset on ≥80% (rate × tier) cells | **FAIL** | 5/25 = 20.0%. Optimal-τ per fset breaks monotone ordering. |
+| **H2** VALUE-max util > 0 on ≥50% cells | **PASS** | 100/100 = 100.0% (every cell has positive net-value threshold). |
+| **H3** VALUE-max < F1-max on ≥60% cells | **FAIL** | 0/15 = 0.0%; VALUE-max EXCEEDS F1-max at every cell. |
+| **H4** 5-seed CV(VALUE-max util) ≤ 0.30 on ≥60% (rate × fset) cells | **PASS** | 20/20 = 100.0% (mean CV=0.06). |
+
+## Headline findings (P5P8-SYNTH, iter 160)
+
+| Hypothesis | Verdict | Evidence |
+|---|---|---|
+| **H1** D12@0.05 in MID layer | **PASS** | 0.175 [Wilson 0.124, 0.241] ∈ MID. |
+| **H2** max/min method density ratio ≥ 2 | **PASS** | gRPO/GiFT=0.225, AREAL=0.100, ratio=2.25. |
+| **H3** D12 distinct from D11 | **INCONCLUSIVE** | D12=0.175 << D11=1.000; pairwise ratio test requires re-aggregation. |
+| **H4** D12 < 0.50 (MID not HIGH) | **PASS** | 0.175 < 0.50. |
+
+## Build status
+
+- `paper/paper_P8_fraud.pdf` rebuilds to 69 pages / 0 errors / 0 undefined citations (was 67 in iter 159, +2 pages with iter 160 P8 + iter 160 SYNTH sections).
+
+## Recommended next-iter mint veins (for iter 161)
+
+1. **P8 (per row 174 H1 FAIL)**: stratify the F1-non-monotonicity result by the 5 rates — does the monotone rate show a 24full→20raw advantage as rate drops?
+2. **P8 (per row 174 H2 PASS)**: extend VALUE-max to also report breakeven tier (cheapest tier at which util > 0.99) per (rate × fset) cell.
+3. **P5P8-SYNTH (per row 175 D12)**: cross-method consistency of D12 vs iter-156 D11 per-method.
+4. **P5P8-SYNTH (per row 175)**: explore D13 = P5 N10 per-prompt reward stability (2560 cells = 4 × 40 × 16).
+

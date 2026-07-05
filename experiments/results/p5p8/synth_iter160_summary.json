@@ -1,0 +1,86 @@
+{
+  "iter": 160,
+  "pillar": "P5P8-SYNTH",
+  "n_domains": 12,
+  "d12": {
+    "per_eps": {
+      "0.025": {
+        "n_stable": 1,
+        "n_total": 160,
+        "density": 0.00625,
+        "wilson_lo": 0.00110410335439148,
+        "wilson_hi": 0.03454984533751582
+      },
+      "0.050": {
+        "n_stable": 28,
+        "n_total": 160,
+        "density": 0.175,
+        "wilson_lo": 0.12394120470168268,
+        "wilson_hi": 0.2412993691208385
+      },
+      "0.100": {
+        "n_stable": 160,
+        "n_total": 160,
+        "density": 1.0,
+        "wilson_lo": 0.9765529633499672,
+        "wilson_hi": 1.0
+      }
+    },
+    "per_method": {
+      "aero": {
+        "n_stable": 6,
+        "n_total": 40,
+        "density": 0.15,
+        "wilson_lo": 0.07061091708507435,
+        "wilson_hi": 0.2907262603902003
+      },
+      "areal": {
+        "n_stable": 4,
+        "n_total": 40,
+        "density": 0.1,
+        "wilson_lo": 0.03957888759557486,
+        "wilson_hi": 0.23052074380473897
+      },
+      "gift": {
+        "n_stable": 9,
+        "n_total": 40,
+        "density": 0.225,
+        "wilson_lo": 0.1231595325467853,
+        "wilson_hi": 0.3750339640409305
+      },
+      "grpo": {
+        "n_stable": 9,
+        "n_total": 40,
+        "density": 0.225,
+        "wilson_lo": 0.1231595325467853,
+        "wilson_hi": 0.3750339640409305
+      }
+    },
+    "canonical_eps": 0.05,
+    "canonical_density": 0.175,
+    "wilson_lo": 0.12394120470168268,
+    "wilson_hi": 0.2412993691208385,
+    "layer": "MID"
+  },
+  "h1_d12_in_mid_layer": {
+    "pass": true,
+    "density": 0.175,
+    "verdict": "PASS"
+  },
+  "h2_method_density_spread": {
+    "pass": true,
+    "ratio": 2.25,
+    "verdict": "PASS"
+  },
+  "h3_distinct_from_d11": {
+    "pass": null,
+    "d12": 0.175,
+    "d11_cheap": null,
+    "verdict": "UNKNOWN"
+  },
+  "h4_d12_mid_not_high": {
+    "pass": true,
+    "density": 0.175,
+    "verdict": "PASS"
+  }
+}

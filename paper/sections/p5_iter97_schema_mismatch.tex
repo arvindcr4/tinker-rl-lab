@@ -1,0 +1,110 @@
+% =============================================================================
+% P5-114 — Manifest schema vs cells.tsv schema mismatch audit (iter 97)
+% =============================================================================
+\subsection{Manifest Schema vs cells.tsv Schema Mismatch Audit}
+\label{sec:p5-iter97-schema-mismatch}
+
+Prior P5 iters audited (i) boolean presence per MIN-REPORT item
+(iter 01/14), (ii) sub-field structured coverage (iter 53, all 20
+sub-fields 0\% populated), (iii) per-item information-budget
+contribution (iter 65: 4/7 items placebo on this corpus). Iter 97
+audits a fourth, orthogonal angle: \textbf{schema-vs-corpus-schema
+mismatch} --- for each stack axis that \emph{actually varies} on the
+98-cell corpus, is the axis declared as a manifest schema field? The
+analysis runs on
+\texttt{scripts/p5p8/p5\_manifest\_schema\_mismatch.py}; outputs at
+\texttt{experiments/results/p5p8/p5\_iter97\_schema\_mismatch\{.tsv,
+\_missing\_fields.tsv, \_ambiguous\_fields.tsv, \_summary.json\}}.
+
+\paragraph{H1 --- 3 of 5 actually-varying stack axes are ABSENT from
+the manifest schema.}
+The five stack axes that vary on the live 98-cell corpus are
+\textsf{model\_family} (2 unique), \textsf{task\_slice} (3),
+\textsf{G} (5), \textsf{temperature} (2), \textsf{seed} (2). The
+manifest schema covers 2/5 with clean equivalence (\textsf{G}
+$\leftrightarrow$ \textsf{group\_schedule\_size} at captured\_fraction
+$=1.000$ CI $[1.000, 1.000]$; \textsf{task\_slice} $\leftrightarrow$
+\textsf{heldout\_split} at captured\_fraction $=1.000$); the other
+3/5 (\textsf{model\_family}, \textsf{temperature}, \textsf{seed})
+are \textbf{ABSENT} from the manifest schema
+(captured\_fraction $=0.000$, CI $[0.000, 0.000]$). All three are
+recoverable from the manifest's \texttt{cell\_id} string via
+deterministic parsing, but the schema does not declare them. This
+is the missing-fields gap.
+
+\paragraph{H2 --- Manifest descriptor uniqueness rises $15 \to 98$
+($6.5\times$) when the 3 missing axes are added.}
+Excluding \texttt{cell\_id} and \texttt{per\_step\_zvf\_path} (which
+are unique pointers, not stack descriptors), the manifest's 5
+stack-declared fields + \textsf{decontamination\_notes} produce
+only \textbf{15 distinct strings on $n{=}98$ cells} --- the corpus
+is severely under-described by the manifest schema alone. Augmenting
+with the 3 missing axes recovered from cell\_id parsing yields
+\textbf{98 distinct strings} (one per cell). Augmentation
+$\Delta = 83$ ($84.7\%$ of cells were indistinguishable without
+the augmentation). The manifest is a fingerprint, not a stack
+specification.
+
+\paragraph{H3 --- P6 registry schema and MIN-REPORT manifest schema
+are disjoint (0 keys overlap).}
+P6 registry's \texttt{stack\_record.properties} has 13 keys
+(\textsf{framework, id, label\_claimed, min\_report, model, notes,
+outcomes, provenance, record\_type, schema\_version, seeds, task,
+variant\_deltas\_applied}). MIN-REPORT manifest schema has 8 keys
+(\textsf{cell\_id, decontamination\_notes, group\_size\_schedule,
+heldout\_split, loss\_form, per\_step\_zvf\_path, ref\_policy\_kl,
+sampler\_backend\_precision}). \textbf{Intersection size: 0}. The
+two schemas describe different objects (P6 = a stack record;
+MIN-REPORT = a per-cell manifest fingerprint), but the registry's
+\textsf{min\_report} field embeds the 7-item MIN-REPORT content as
+a sub-block while the manifest has no field linking back to a
+registry \textsf{id}. There is no machine-readable bridge between
+per-cell manifest and per-stack registry record.
+
+\paragraph{H4 --- 7 of 8 manifest keys are machine-parseable, but
+only 3 are stack-discriminative on this corpus.}
+Per-key parseability: \textsf{loss\_form, ref\_policy\_kl,
+sampler\_backend\_precision, group\_size\_schedule, heldout\_split}
+are uniquely parseable (5 keys); \textsf{decontamination\_notes} is
+the lone \textbf{ambiguous} key --- its value strings
+(\texttt{gsm8k-train-slice}, \texttt{humaneval-openai-subset})
+implicitly encode \textsf{task\_slice} via string prefix but the
+schema does not declare this encoding. \textsf{cell\_id} and
+\textsf{per\_step\_zvf\_path} are cell pointers, not stack
+descriptors.
+
+\paragraph{Operational recommendations.}
+Four concrete schema extensions to v2 MIN-REPORT:
+\begin{enumerate}
+\item \textbf{Add three fields} --- \textsf{model\_family},
+\textsf{temperature}, \textsf{seed} --- to the manifest schema.
+All three are recoverable from cell\_id today; declaring them
+explicitly raises descriptor uniqueness from $15/98$ to $98/98$
+($6.5\times$).
+\item \textbf{Add a \textsf{registry\_id}} that links a manifest
+to its P6 stack\_record. Closes the disjoint-schema gap (H3).
+\item \textbf{Either split \textsf{decontamination\_notes} into
+\textsf{decontamination\_check} (clean) + a structured prefix rule,
+or rename the field to encode \textsf{task\_slice} explicitly.}
+The current single field is the lone ambiguous key (H4).
+\item \textbf{Bound the per-cell discriminative power at the schema
+level}: even with all 4 fixes, the corpus has 1 algorithm
+(Tinker-closed) and a single sampler\_backend --- adding those axes
+to the schema does not increase discriminative power on THIS
+corpus. The fixes only pay off on a future multi-stack
+mega-campaign.
+\end{enumerate}
+
+\paragraph{Cross-paper coupling.}
+P5 iter 65 measured the manifest fingerprint carries $11.4$ bits
+total on $n{=}98$, with 4 items contributing 0 bits (placebo).
+\textbf{This iter (97) explains WHY}: 3 of those 4 items are
+placebos because the schema does not capture the actually-varying
+axes (\textsf{model\_family, temperature, seed}). P5 iter 53
+(sub-field audit) reported 0/20 sub-fields populated; this iter
+quantifies the consequence: $15/98 = 15.3\%$ cells have a unique
+manifest descriptor \emph{before} sub-field consideration. P6 iter
+90 row 107 (zvf130 measured-vs-claimed) found 5 entries with null
+outcomes; this iter shows the two schemas (P5 manifest + P6
+registry) are disjoint at the key level and cannot be
+cross-validated without a bridge field.

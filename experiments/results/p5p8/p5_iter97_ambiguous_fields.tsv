@@ -1,0 +1,7 @@
+field	n_unique_manifest_values	encodes_axes	uniquely_parseable	parseable_to_axis
+decontamination_notes	2	task_slice (implicit)	False	task_slice (implicit via prefix)
+group_size_schedule	5	G	True	G (clean)
+heldout_split	3	task_slice	True	task_slice (clean)
+loss_form	1	none	True	placeholder
+ref_policy_kl	1	none	True	placeholder (n/a)
+sampler_backend_precision	1	openness	True	openness (single value)

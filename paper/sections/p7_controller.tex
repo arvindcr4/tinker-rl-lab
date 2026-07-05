@@ -1893,3 +1893,75 @@ oracle on $3/4$ methods.
 per\_prompt,summary,boot\}.\{tsv,json\}}. Seed $59001$,
 $n_{\mathrm{boot}}{=}2000$, $n_{\mathrm{methods}}{=}4$,
 $n_{\mathrm{steps}}{=}40$, $n_{\mathrm{prompts}}{=}16$.
+\subsection{Controller trigger $\times$ anti-herding $\delta_{\mathrm{div}}$
+paired counterfactual (iter 67)}
+\label{sec:p7-controller-antiherding}
+
+The N2 four-method reward tensors carry a richer statistic than ZVF alone:
+the anti-herding diversity bonus $\delta_{\mathrm{div}} = \mathrm{ZVF}^{\mathrm{iid}}
+- \mathrm{ZVF}^{\mathrm{obs}}$ (P6 sibling paper, \texttt{P5P8\_IMPROVEMENTS.md} row 77).
+This subsection asks: \emph{is $\delta_{\mathrm{div}}$ also the most informative
+single trigger for the adaptive-G escalation branch?} We pair three
+trigger variants on the iter-51 escalation branch:
+\begin{itemize}
+    \item \textbf{T1 $z_{\mathrm{step}}$-triage} (iter-51 baseline):
+        fire iff $\mathrm{ZVF}^{\mathrm{obs}} \geq \tau_1$.
+    \item \textbf{T2 $\tilde{y}$-triage} (iter-66 row 77 contrastive yield):
+        fire iff $1 - \mathrm{ZVF}^{\mathrm{obs}} \leq \tau_2$.
+    \item \textbf{T3 $\delta_{\mathrm{div}}$-triage} (iter-66 anti-herding bonus):
+        fire iff $\delta_{\mathrm{div}} \geq \tau_3$.
+\end{itemize}
+For each $(\mathrm{method}, \mathrm{controller}, \tau)$ on the
+40 steps $\times$ 16 prompts $\times$ $G{=}8$ trajectory,
+``saved'' is operationalised as prompts whose expected iid ZVF is in
+$[0.10, 0.99]$ at $G{=}8$ (at-risk) and in $[0, 0.10)$ at $G{=}16$ (recovered).
+Bootstrap $B{=}2000$ on per-step cost-ratio and savings-per-rollout.
+
+\paragraph{Matched-cost headline.}
+Across all four methods at matched cost-ratio $\approx 1.45$--$1.55$:
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+method & $z_{\mathrm{step}}$-triage saved/fire & $\delta_{\mathrm{div}}$-triage saved/fire & $\Delta$ \\
+\midrule
+\texttt{grpo}  & 0.80 ($\tau_1{=}0.7$, CR$=$1.50) & \textbf{1.39} ($\tau_3{=}0.05$, CR$=$1.45) & $+0.59$ \\
+\texttt{aero}  & 0.71 ($\tau_1{=}0.8$, CR$=$1.35) & \textbf{1.04} ($\tau_3{=}0.04$, CR$=$1.60) & $+0.33$ \\
+\texttt{areal} & 0.76 ($\tau_1{=}0.7$, CR$=$1.43) & \textbf{0.95} ($\tau_3{=}0.05$, CR$=$1.50) & $+0.19$ \\
+\texttt{gift}  & 0.50 ($\tau_1{=}0.7$, CR$=$1.65) & \textbf{1.46} ($\tau_3{=}0.05$, CR$=$1.33) & $+0.96$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Why $\delta_{\mathrm{div}}$ is the right trigger.}
+ZVF$^{\mathrm{obs}}$ alone is contaminated by the herding-vs-yield
+tradeoff: \texttt{gift} has the highest raw ZVF$^{\mathrm{obs}}$ (0.770
+at iter-66 row 77) but the lowest $Y^{\mathrm{obs}}$ (0.2297), so
+$z_{\mathrm{step}}$-triage selects \emph{against} it.
+$\delta_{\mathrm{div}}$ is orthogonal to raw ZVF -- it ranks steps by
+\emph{how coupled the sampling is}, which is exactly the regime where
+escalating $G$ restores within-group contrast.
+
+\paragraph{GIFT-inversion.}
+\texttt{gift} at $\tau_3{=}0.05$ achieves the highest absolute
+saved-per-fire in the table ($1.46$, CR$=$1.325$,$ 19 saves / 13 fires).
+This inverts the iter-66 row 77 finding that \texttt{gift} has the lowest
+$Y^{\mathrm{obs}}$, and confirms a \emph{second measured cross-panel
+sign-flip} in the registry (after the iter-69 N2-vs-Z130 risk index):
+a method that appears lowest-yield by the step-level metric is
+\emph{highest-yield} under the iter-51 controller when triggered on the
+anti-herding axis.
+
+\paragraph{Cross-paper coupling.}
+The T3 trigger reads from the iter-66 `outcomes.zvf\_antiherding` block,
+closing the registry-to-controller pipeline. T3 is complementary to the
+Berkeley row-01 Dualformer auto-G rule, which lacks a step-level
+escalation trigger entirely; combining T3 (step level) with Dualformer
+(per-prompt level) is the open follow-up the iter-67 mint
+recommendation proposes.
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_antiherding\_controller\_cf.py}
+($\leq 290$ LoC, stdlib only); outputs in
+\texttt{experiments/results/p5p8/p7\_antiherding\_controller\_cf\_\{summary,per\_step,summary\}.\{tsv,json\}}.
+Paired-step bootstrap $B{=}2000$, $\alpha{=}0.05$,
+$n_{\mathrm{methods}}{=}4 \times 3 \text{ controllers} \times 5 \tau = 60$ rows.

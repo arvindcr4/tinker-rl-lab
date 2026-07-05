@@ -1,0 +1,570 @@
+{
+  "iter": 147,
+  "pillar": "P7",
+  "vein": "(b) Counterfactual C4 unified controller at per-prompt granularity on N2 (extends iter131 family + iter119 C4 unification)",
+  "n_cells": 2560,
+  "methods": [
+    "grpo",
+    "aero",
+    "gift",
+    "areal"
+  ],
+  "controllers": [
+    "STATIC_G8",
+    "STATIC_G16",
+    "DUALFORMER_PP",
+    "ADAPTIVE_PP_ORACLE",
+    "UNIFIED_C4"
+  ],
+  "G_base": 8,
+  "G_candidates": [
+    4,
+    8,
+    16,
+    32
+  ],
+  "tau_degen": 0.7,
+  "gamma_star": 0.0,
+  "rho_sat": 0.85,
+  "headline_overall": {
+    "STATIC_G8": {
+      "n_cells": 2560,
+      "mean_cost_ratio": 1.0,
+      "mean_contrast_mag": 0.2237952289171517,
+      "contrast_retention": 1.0,
+      "ci95_cost": [
+        1.0,
+        1.0
+      ],
+      "ci95_contrast_mag": [
+        0.20987105155363678,
+        0.23828512942418456
+      ],
+      "ci95_retention": [
+        1.0,
+        1.0
+      ],
+      "mag_per_cost": 0.2237952289171517
+    },
+    "STATIC_G16": {
+      "n_cells": 2560,
+      "mean_cost_ratio": 2.0,
+      "mean_contrast_mag": 0.25675181943223363,
+      "contrast_retention": 1.1472622569951316,
+      "ci95_cost": [
+        2.0,
+        2.0
+      ],
+      "ci95_contrast_mag": [
+        0.24153329969424459,
+        0.2729998919633525
+      ],
+      "ci95_retention": [
+        1.1372964216505528,
+        1.1571523109063646
+      ],
+      "mag_per_cost": 0.12837590971611682
+    },
+    "DUALFORMER_PP": {
+      "n_cells": 2560,
+      "mean_cost_ratio": 1.0,
+      "mean_contrast_mag": 0.2237952289171517,
+      "contrast_retention": 1.0,
+      "ci95_cost": [
+        1.0,
+        1.0
+      ],
+      "ci95_contrast_mag": [
+        0.20984601005911827,
+        0.2381942629814148
+      ],
+      "ci95_retention": [
+        1.0,
+        1.0
+      ],
+      "mag_per_cost": 0.2237952289171517
+    },
+    "ADAPTIVE_PP_ORACLE": {
+      "n_cells": 2560,
+      "mean_cost_ratio": 1.812109375,
+      "mean_contrast_mag": 0.2691334562023605,
+      "contrast_retention": 1.2025879975394511,
+      "ci95_cost": [
+        1.7640625,
+        1.863671875
+      ],
+      "ci95_contrast_mag": [
+        0.25316715304781695,
+        0.2861954397703146
+      ],
+      "ci95_retention": [
+        1.187652670690943,
+        1.2178717183956809
+      ],
+      "mag_per_cost": 0.1485194326100545
+    },
+    "UNIFIED_C4": {
+      "n_cells": 2560,
+      "mean_cost_ratio": 1.09140625,
+      "mean_contrast_mag": 0.2347316841798644,
+      "contrast_retention": 1.0488681341225614,
+      "ci95_cost": [
+        1.08046875,
+        1.102734375
+      ],
+      "ci95_contrast_mag": [
+        0.22000792342776732,
+        0.24923641363544824
+      ],
+      "ci95_retention": [
+        1.041700100988908,
+        1.0558122299684005
+      ],
+      "mag_per_cost": 0.21507269559787148
+    }
+  },
+  "headline_by_method": {
+    "grpo": {
+      "STATIC_G8": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.0,
+        "mean_contrast_mag": 0.23000180516391994,
+        "contrast_retention": 1.0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_contrast_mag": [
+          0.20282835960388185,
+          0.26047273986041547
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "mag_per_cost": 0.23000180516391994
+      },
+      "STATIC_G16": {
+        "n_cells": 640,
+        "mean_cost_ratio": 2.0,
+        "mean_contrast_mag": 0.26502472356273,
+        "contrast_retention": 1.1522723631401484,
+        "ci95_cost": [
+          2.0,
+          2.0
+        ],
+        "ci95_contrast_mag": [
+          0.23084828198661328,
+          0.29959245919331884
+        ],
+        "ci95_retention": [
+          1.1324304406161407,
+          1.1730777875136689
+        ],
+        "mag_per_cost": 0.132512361781365
+      },
+      "DUALFORMER_PP": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.0,
+        "mean_contrast_mag": 0.23000180516391994,
+        "contrast_retention": 1.0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_contrast_mag": [
+          0.20139306653290986,
+          0.2596096348017454
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "mag_per_cost": 0.23000180516391994
+      },
+      "ADAPTIVE_PP_ORACLE": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.8390625,
+        "mean_contrast_mag": 0.2780459058355118,
+        "contrast_retention": 1.208885754776365,
+        "ci95_cost": [
+          1.7359375,
+          1.9515625
+        ],
+        "ci95_contrast_mag": [
+          0.24375897523481901,
+          0.3152193464792306
+        ],
+        "ci95_retention": [
+          1.1793801024373238,
+          1.239596873764986
+        ],
+        "mag_per_cost": 0.15118893775252978
+      },
+      "UNIFIED_C4": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.096875,
+        "mean_contrast_mag": 0.24296883084805954,
+        "contrast_retention": 1.0563779300553668,
+        "ci95_cost": [
+          1.075,
+          1.1203125
+        ],
+        "ci95_contrast_mag": [
+          0.21148576822645954,
+          0.27371496347673013
+        ],
+        "ci95_retention": [
+          1.041584430866222,
+          1.0725366647690768
+        ],
+        "mag_per_cost": 0.22151004521760412
+      }
+    },
+    "aero": {
+      "STATIC_G8": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.0,
+        "mean_contrast_mag": 0.23437101151794196,
+        "contrast_retention": 1.0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_contrast_mag": [
+          0.20570524055510758,
+          0.2629811063408852
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "mag_per_cost": 0.23437101151794196
+      },
+      "STATIC_G16": {
+        "n_cells": 640,
+        "mean_cost_ratio": 2.0,
+        "mean_contrast_mag": 0.2663930120654217,
+        "contrast_retention": 1.1366295274321003,
+        "ci95_cost": [
+          2.0,
+          2.0
+        ],
+        "ci95_contrast_mag": [
+          0.23106262402638975,
+          0.30022259869005785
+        ],
+        "ci95_retention": [
+          1.1166030836293626,
+          1.1569462185831734
+        ],
+        "mag_per_cost": 0.13319650603271085
+      },
+      "DUALFORMER_PP": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.0,
+        "mean_contrast_mag": 0.23437101151794196,
+        "contrast_retention": 1.0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_contrast_mag": [
+          0.20572176706045867,
+          0.2652189671993256
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "mag_per_cost": 0.23437101151794196
+      },
+      "ADAPTIVE_PP_ORACLE": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.8390625,
+        "mean_contrast_mag": 0.27819915712050636,
+        "contrast_retention": 1.1870032702368107,
+        "ci95_cost": [
+          1.7265625,
+          1.9421875
+        ],
+        "ci95_contrast_mag": [
+          0.24083109921378204,
+          0.3122253491116232
+        ],
+        "ci95_retention": [
+          1.1573664090092246,
+          1.2170949485024363
+        ],
+        "mag_per_cost": 0.15127226895252682
+      },
+      "UNIFIED_C4": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.0890625,
+        "mean_contrast_mag": 0.24537308153477436,
+        "contrast_retention": 1.0469429642581465,
+        "ci95_cost": [
+          1.06875,
+          1.1140625
+        ],
+        "ci95_contrast_mag": [
+          0.21504274404385515,
+          0.2794937117538477
+        ],
+        "ci95_retention": [
+          1.0350224956070122,
+          1.0606853195322254
+        ],
+        "mag_per_cost": 0.22530670327439825
+      }
+    },
+    "gift": {
+      "STATIC_G8": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.0,
+        "mean_contrast_mag": 0.19026174116879702,
+        "contrast_retention": 1.0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_contrast_mag": [
+          0.16393938921391965,
+          0.2183522753417492
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "mag_per_cost": 0.19026174116879702
+      },
+      "STATIC_G16": {
+        "n_cells": 640,
+        "mean_cost_ratio": 2.0,
+        "mean_contrast_mag": 0.21799969357165355,
+        "contrast_retention": 1.1457883872630383,
+        "ci95_cost": [
+          2.0,
+          2.0
+        ],
+        "ci95_contrast_mag": [
+          0.1874069777240656,
+          0.2487625913783052
+        ],
+        "ci95_retention": [
+          1.1237195176993535,
+          1.1694742588855815
+        ],
+        "mag_per_cost": 0.10899984678582678
+      },
+      "DUALFORMER_PP": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.0,
+        "mean_contrast_mag": 0.19026174116879702,
+        "contrast_retention": 1.0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_contrast_mag": [
+          0.16400721948593855,
+          0.21894037164747715
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "mag_per_cost": 0.19026174116879702
+      },
+      "ADAPTIVE_PP_ORACLE": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.6890625,
+        "mean_contrast_mag": 0.22837466350113997,
+        "contrast_retention": 1.2003183724600197,
+        "ci95_cost": [
+          1.590625,
+          1.7875
+        ],
+        "ci95_contrast_mag": [
+          0.1956941065091327,
+          0.2610558464840979
+        ],
+        "ci95_retention": [
+          1.1677240068747907,
+          1.2344780641684612
+        ],
+        "mag_per_cost": 0.135207941388279
+      },
+      "UNIFIED_C4": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.1,
+        "mean_contrast_mag": 0.20060536576984261,
+        "contrast_retention": 1.0543652367391556,
+        "ci95_cost": [
+          1.0765625,
+          1.121875
+        ],
+        "ci95_contrast_mag": [
+          0.17109280944674946,
+          0.2309238238574738
+        ],
+        "ci95_retention": [
+          1.039823210027099,
+          1.0707983497353444
+        ],
+        "mag_per_cost": 0.18236851433622053
+      }
+    },
+    "areal": {
+      "STATIC_G8": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.0,
+        "mean_contrast_mag": 0.24054635781794786,
+        "contrast_retention": 1.0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_contrast_mag": [
+          0.21182534266263248,
+          0.2699896635487676
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "mag_per_cost": 0.24054635781794786
+      },
+      "STATIC_G16": {
+        "n_cells": 640,
+        "mean_cost_ratio": 2.0,
+        "mean_contrast_mag": 0.2775898485291293,
+        "contrast_retention": 1.153997304499688,
+        "ci95_cost": [
+          2.0,
+          2.0
+        ],
+        "ci95_contrast_mag": [
+          0.24327557594626606,
+          0.3101051808123301
+        ],
+        "ci95_retention": [
+          1.1350507638542335,
+          1.1744076662215337
+        ],
+        "mag_per_cost": 0.13879492426456466
+      },
+      "DUALFORMER_PP": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.0,
+        "mean_contrast_mag": 0.24054635781794786,
+        "contrast_retention": 1.0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_contrast_mag": [
+          0.2104266185313463,
+          0.27049261052161455
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "mag_per_cost": 0.24054635781794786
+      },
+      "ADAPTIVE_PP_ORACLE": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.88125,
+        "mean_contrast_mag": 0.29191409835228377,
+        "contrast_retention": 1.2135461164338743,
+        "ci95_cost": [
+          1.76875,
+          1.9890625
+        ],
+        "ci95_contrast_mag": [
+          0.25461028702842725,
+          0.3275684426544804
+        ],
+        "ci95_retention": [
+          1.1819220499582124,
+          1.2461460521059529
+        ],
+        "mag_per_cost": 0.15517028483842327
+      },
+      "UNIFIED_C4": {
+        "n_cells": 640,
+        "mean_cost_ratio": 1.0796875,
+        "mean_contrast_mag": 0.24997945856678105,
+        "contrast_retention": 1.0392153131496276,
+        "ci95_cost": [
+          1.059375,
+          1.103125
+        ],
+        "ci95_contrast_mag": [
+          0.21979794463366492,
+          0.28158802074358213
+        ],
+        "ci95_retention": [
+          1.026936973394703,
+          1.05370955182395
+        ],
+        "mag_per_cost": 0.23152945511250345
+      }
+    }
+  },
+  "headline_falsifiable_claims": [
+    {
+      "id": "H1",
+      "claim": "UNIFIED_C4 dominates STATIC_G8 on contrast retention (C4 >= G8)",
+      "c4_retention": 1.0488681341225614,
+      "g8_retention": 1.0,
+      "c4_ci95": [
+        1.041700100988908,
+        1.0558122299684005
+      ],
+      "g8_ci95": [
+        1.0,
+        1.0
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "H2",
+      "claim": "UNIFIED_C4 mean cost < STATIC_G16 (=2.0)",
+      "c4_cost": 1.09140625,
+      "s16_cost": 2.0,
+      "c4_ci95": [
+        1.08046875,
+        1.102734375
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "H3",
+      "claim": "UNIFIED_C4 mag-per-cost > STATIC_G8 mag-per-cost (efficiency gain)",
+      "c4_mpc": 0.21507269559787148,
+      "g8_mpc": 0.2237952289171517,
+      "verdict": "FAIL"
+    },
+    {
+      "id": "H4",
+      "claim": "UNIFIED_C4 cost CI95 excludes 1.0 (statistically differs from STATIC_G8)",
+      "c4_ci95": [
+        1.08046875,
+        1.102734375
+      ],
+      "excludes_unity": true,
+      "verdict": "PASS"
+    },
+    {
+      "id": "H5",
+      "claim": "UNIFIED_C4 never strictly dominates and is never strictly dominated by ADAPTIVE_PP_ORACLE on any cell (defensive composition)",
+      "n_oracle_strictly_better": 0,
+      "n_c4_strictly_better": 0,
+      "n_tie": 2560,
+      "n_total": 2560,
+      "verdict": "PASS"
+    }
+  ]
+}

@@ -805,9 +805,60 @@
                   },
                   "cost_ratio_pt": {
                     "type": "number"
+                  },
+                  "net_saves": {
+                    "$ref": "#/$defs/nullable_integer"
+                  },
+                  "n_contrast_prompts": {
+                    "$ref": "#/$defs/nullable_integer"
+                  },
+                  "n_fired_steps": {
+                    "$ref": "#/$defs/nullable_integer"
+                  },
+                  "n_zvf_saved": {
+                    "$ref": "#/$defs/nullable_integer"
+                  },
+                  "n_rollout_saves": {
+                    "$ref": "#/$defs/nullable_integer"
+                  },
+                  "g_total": {
+                    "$ref": "#/$defs/nullable_integer"
+                  },
+                  "source_iter": {
+                    "$ref": "#/$defs/nullable_string"
                   }
                 },
                 "additionalProperties": false
+              }
+            },
+            "joint_controller": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Iter-76 (P5P8 SYNTH / JOB B): cost-adjusted joint-controller predictions per method x tau (extension of iter-70 row 82 block; pairs with iter-72 row 85 joint_controller.py outputs).",
+              "properties": {
+                "panel": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "predictions": {
+                  "type": [
+                    "array",
+                    "null"
+                  ]
+                },
+                "audit_source": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "audit_date": {
+                  "$ref": "#/$defs/nullable_string"
+                },
+                "ci_method": {
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                }
               }
             }
           },

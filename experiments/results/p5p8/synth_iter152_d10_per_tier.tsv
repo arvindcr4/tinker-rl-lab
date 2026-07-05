@@ -1,0 +1,6 @@
+tier	n_actionable	n_total	D10_tier	wilson_lo	wilson_hi
+cheap_heuristic	20	20	1.0	0.8389	1.0
+frontier_gpt4	0	20	0.0	0.0	0.1611
+iter120_default	20	20	1.0	0.8389	1.0
+mid_tier	18	20	0.9	0.699	0.9721
+small_open	20	20	1.0	0.8389	1.0

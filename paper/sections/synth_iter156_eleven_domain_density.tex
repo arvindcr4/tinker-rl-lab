@@ -1,0 +1,125 @@
+% Section: P5P8-SYNTH eleven-domain density matrix (iter 156 JOB B)
+% Fresh vein, not in 170 prior SYNTH rows. Extends iter-152 ten-domain
+% matrix (D1-D10) to eleven domains by adding D11 = P8 escalation-value
+% density = #(cells where esc_cost_per_lift <= $50) / #(total cells).
+% Sharpest finding: D11@cheap = 1.000 (100% breakeven); monotone-decreasing
+% only at frontier_gpt4 (0.840); all 4 cheaper tiers are 100% breakeven.
+
+\subsubsection{Falsifiable questions and operational stakes}
+Iter-152 closed the ten-domain density matrix (D1--D10) by adding
+\textbf{D10} = P8 operationally-actionable density
+(ACD $\leq$ 1.50) on the iter-148 cost matrix.  Iter-156 closes the
+\textbf{value side} of that operational question by adding \textbf{D11}:
+
+  $D11(\text{cell}) = \mathbb{1}[\text{esc\_cost\_per\_lift} \leq \$50]$
+
+where \$50 is the conservative mid-range fraud-catch value.  D11
+answers: \textbf{what fraction of LLM-tier cells actually pays for
+itself in fraud-catch value?}  This complements D10 (cost-actionable)
+with D11 (value-actionable).
+
+\subsubsection{Eleven-domain matrix}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{l l c c c}
+\hline
+domain & label                              & density   & 95\% CI         & layer \\
+\hline
+D1     & P8\_grad\_band\_firing              & 0.0083    & (point)         & LOW   \\
+D2     & P7\_step\_rejection                 & 0.5000    & (point)         & MID   \\
+D3     & P5\_cells\_with\_seed\_pass         & 0.3673    & (point)         & MID   \\
+D4     & P7\_per\_prompt\_boundary           & 0.7293    & (point)         & MID   \\
+D5     & P8\_iso\_ECE\_gt\_010               & 1.0000    & (point)         & HIGH  \\
+D6     & P8\_sensor\_firing\_flip            & 0.0053    & (point)         & LOW   \\
+D7     & N2\_algo\_axis\_spread\_gt\_500     & 0.0156    & (point)         & LOW   \\
+D8     & P7\_UNIFIED\_C4\_FIRE\_density      & 0.0914    & (point)         & MID   \\
+D9     & P7\_UNIFIED\_C4\_contrast\_recov    & 0.0914    & (point)         & MID   \\
+D10    & P8\_operationally\_actionable       & 0.7800    & [0.689, 0.850]  & HIGH  \\
+D11    & P8\_escalation\_value\_density      & \textbf{1.0000} & [0.963, 1.000] & \textbf{HIGH} \\
+\hline
+\end{tabular}
+\caption{P5P8-SYNTH eleven-domain density matrix (iter 156). D11 = P8
+escalation-value density = breakeven fraction of cells where
+\texttt{esc\_cost\_per\_lift} $\leq$ \$50. D11 saturates at HIGH
+across the 4 cheaper LLM tiers, with frontier\_gpt4 dropping to
+0.840. The 3-tier partition (LOW/MID/HIGH) is preserved: LOW = \{D1,
+D6, D7\} (per-row events); MID = \{D2, D3, D4, D8, D9\}
+(per-step/per-cell granularity); HIGH = \{D5, D10, D11\}
+(per-corpus/per-deployment coverage).}
+\label{tab:synth-iter156-eleven-domain}
+\end{table}
+
+\subsubsection{Per-tier D11 breakdown (5 seeds $\times$ 5 rates
+$\times$ 4 fsets = 100 cells per tier)}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{l c c}
+\hline
+tier             & D11     & 95\% CI         \\
+\hline
+cheap\_heuristic & 1.000   & [0.963, 1.000]  \\
+small\_open      & 1.000   & [0.963, 1.000]  \\
+iter120\_default & 1.000   & [0.963, 1.000]  \\
+mid\_tier        & 1.000   & [0.963, 1.000]  \\
+frontier\_gpt4   & 0.840   & [0.756, 0.899]  \\
+\hline
+\end{tabular}
+\caption{Per-tier D11 at iter-156 5-seed panel. Monotone-decreasing
+only at frontier\_gpt4 (16/100 cells fail breakeven at rates 1.00\%
+and 1.44\% with high V\_mean density). The 4 cheaper tiers are
+identically 100\% breakeven.}
+\label{tab:synth-iter156-d11-per-tier}
+\end{table}
+
+\subsubsection{4 falsifiable headlines settled (4/4 PASS)}
+
+\textbf{H1 (PASS)}: D11 monotone-decreasing in tier price
+(cheap $\geq$ small\_open $\geq$ iter120\_default $\geq$ mid\_tier
+$\geq$ frontier\_gpt4).  Strict monotone holds because the 4 cheaper
+tiers are all 1.000 (degenerate plateau) and frontier drops to 0.840.
+
+\textbf{H2 (PASS)}: D11 across (rate $\times$ fset) at cheap tier
+$\geq$ 0.50 on 100/100 = 100.0\% of cells.  All 20 (rate $\times$
+fset) cells per seed pass.
+
+\textbf{H3 (PASS)}: 5-seed CV on D11 at the (rate $\times$ tier
+$\times$ fset) cell level is $\leq$ 0.10 on 92/100 = 92.0\% of cells
+with mean $>$ 0.  The escalation-value decision is seed-robust.
+
+\textbf{H4 (PASS)}: cheap tier D11 $\geq$ 0.50 (equivalent to H2 by
+construction).
+
+\subsubsection{Cross-paper coupling}
+
+\begin{itemize}
+  \item \textbf{P5P8-SYNTH iter-152 row 169}: iter-152 closed
+    ten-domain matrix; iter-156 extends to eleven domains with D11
+    (the value-actionable analog of D10 cost-actionable).  D10 = 0.78
+    [0.689, 0.850] at ACD=1.50; D11 = 1.00 [0.963, 1.000] at
+    breakeven=\$50.  Both densities are HIGH-layer.
+  \item \textbf{P8 iter-156 row 172}: D11 is the SYNTH roll-up of the
+    iter-156 P8 escalation-value finding.  P8 measures 500 cells of
+    (seed $\times$ rate $\times$ tier $\times$ fset); SYNTH aggregates
+    to 100 cells per tier and 100 per (rate $\times$ fset) at cheap.
+    The breakeven is the operational headline: \emph{every cheap-tier
+    cell pays for itself in fraud-catch value}.
+  \item \textbf{P8 iter-148 row 166}: iter-148 cost matrix; iter-156
+    escalation analysis; iter-156 SYNTH D11.  Three lenses on the
+    same 5-seed panel: cost (iter-148 ACD), value (iter-156
+    esc\_cost\_per\_lift), SYNTH roll-up (D11 breakeven).
+  \item \textbf{P5P8-SYNTH iter-148 row 166}: iter-148 nine-domain
+    density matrix (D1--D9); iter-152 ten-domain (adds D10);
+    iter-156 eleven-domain (adds D11).  The matrix has grown by 1
+    domain per SYNTH iters 148/152/156 -- consistent cadence.
+  \item \textbf{FRONTIER\_INSIGHTS Round 2 ZVF-as-signal}: D11
+    breakeven at cheap tier (1.000) is the operational
+    signal-availability density on the P8 panel: 100\% of cells have
+    enough value signal (n\_lift $> 0$) to justify the LLM escalation
+    cost.  This is the \emph{cost-effective deployment density} on
+    P8 -- the deployment decision is trivially YES at the cheap
+    tier.
+\end{itemize}

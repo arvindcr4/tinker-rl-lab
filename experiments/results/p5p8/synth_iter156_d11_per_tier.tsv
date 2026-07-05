@@ -1,0 +1,6 @@
+tier	n_breakeven	n_total	d11	wilson_lo	wilson_hi
+cheap_heuristic	100	100	1.0000	0.9630	1.0000
+small_open	100	100	1.0000	0.9630	1.0000
+iter120_default	100	100	1.0000	0.9630	1.0000
+mid_tier	100	100	1.0000	0.9630	1.0000
+frontier_gpt4	84	100	0.8400	0.7558	0.8990

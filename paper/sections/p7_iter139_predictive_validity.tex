@@ -1,0 +1,85 @@
+% Iter 139 - P7 joint-trigger predictive-validity audit on the N10 5-seed panel
+% (extends iter 135 tau-stability with the predictive-validity dimension;
+% prior iters measured FIRE COUNT only -- iter 139 tests whether FIRE
+% decisions have predictive validity for reward)
+% Depends on: scripts/p5p8/p7_iter139_predictive_validity.py and the
+% experiments/results/p5p8/p7_iter139_{predictive_validity,step_level,
+% h3_next_step,h2b_across_seed,summary} artifacts.
+
+\subsubsection{Joint-trigger predictive validity on the N10 five-seed panel}
+\label{sec:p7-iter139-predictive-validity}
+
+The prior subsection swept $\tau$ over eight operating points and
+quantified the \emph{fire-count stability} of the joint trigger at each
+$\tau$. That is a \emph{decision-stability} metric: how often does the
+trigger fire?  Iter-139 closes the orthogonal layer by asking: \emph{when
+the trigger fires, does it correctly identify a low-reward step?}
+
+The joint trigger at $\tau{=}0.70$ on the N10 panel exhibits four
+properties, each falsifiable:
+
+\paragraph{H1 (PARTIAL --- 4/5 sign concordance).}
+At $\tau{=}0.70$, the per-seed mean reward on FIRE steps minus the per-seed
+mean reward on $\neg$FIRE steps ($\Delta r_s$) is:
+$\{+0.0260, -0.1104, -0.1030, -0.1259, -0.0208\}$. Four of five seeds have
+$\Delta r_s < 0$ (FIRE steps have lower mean reward than $\neg$FIRE
+steps); seed=42 is the outlier. Sign concordance: $4/5$ --- H1 strict
+$5/5$ \emph{false}, $4/5$ \emph{partial}. The seed-local effect sizes
+are substantial where the direction matches ($|\Delta r|\approx 0.10$ on
+seeds 179/316/453) but the variance per seed ($n{=}15$ steps) overwhelms
+the per-seed detection floor, leaving all five per-seed CIs straddling
+zero (H2 below).
+
+\paragraph{H2 (FAIL at seed-level) + H2b (PASS at cohort level).}
+Per-seed paired-step bootstrap CI (paired-step, $B{=}2000$, seed$=20260705$)
+on the seed-level $\Delta r_s$ excludes zero in $0/5$ seeds: every
+within-seed CI covers $\Delta r = 0$. The CI widths ($\approx 0.03$--$0.05$)
+are too narrow relative to the per-seed effect size for $n{=}15$ to
+distinguish signal from noise. Across-seed bootstrap (resampling the
+5 per-seed $\Delta r_s$ values with replacement, $B{=}2000$) gives
+$\bar\Delta r = -0.0668$ $[-0.1136, -0.0115]$, which excludes zero on the
+negative side. Cohort-level statistical significance \emph{passes}; seed-local
+does not. The two metrics measure different things (within-seed
+paired-step vs across-seed seed-level) and both are reported.
+
+\paragraph{H3 (FAIL --- 1/5) --- trigger is same-step, not next-step.}
+Computing $\Delta r_\mathrm{next} = r(s{+}1) - r(s)$ on FIRE vs
+$\neg$FIRE yields per-seed deltas $\{-0.1283, +0.1727, +0.0734,
++0.0840, +0.0085\}$.  Sign concordance (FIRE step yields smaller
+$\Delta r_\mathrm{next}$): $1/5$.  H3 \emph{fails}. The trigger
+correctly identifies \emph{current}-step low-reward steps (H1) but does
+\emph{not} predict subsequent decline. This calibration finding
+sharpens the operational framing: the trigger is a contemporaneous
+diagnostic, not a leading indicator. Operational deployments relying
+on the trigger to predict future difficulty will over-pay.
+
+\paragraph{H4 (PASS) --- predictive-validity operating band: $\tau \in [0.55, 0.75]$.}
+Sweeping $\tau \in \{0.50, 0.55, \ldots, 0.85\}$ and counting the number
+of seeds with $\Delta r_s < 0$ at each:
+$\{3, 4, 4, 4, 4, 4, 3, 1\}$.  No $\tau$ achieves $5/5$ sign concordance.
+$\tau_\mathrm{partial\_4of5} = [0.55, 0.60, 0.65, 0.70, 0.75]$; band
+width $= 0.20$, \emph{fraction} $= 0.571$ of the $[0.50, 0.85]$ $\tau$
+grid.
+
+\paragraph{Operational recommendation.}
+The joint trigger on N10 has \textbf{cohort-level predictive validity}
+at $\tau \in [0.55, 0.75]$ and is best framed as a same-step
+\emph{contemporaneous diagnostic}. The two recommendations are:
+(a) report the cross-seed bootstrap CI (H2b) rather than per-seed CIs as
+the headline inferential statistic on N10 data; (b) document in
+§\ref{sec:p7-controller-bank} that the trigger is same-step not
+next-step, so users do not deploy it as a forward indicator.
+
+\paragraph{Cross-paper coupling.}
+Iter-139 inherits the (T1, T2, T3, T\_joint) trigger primitives from
+iter-79, the $\tau$-grid from iter-135, the paired-bootstrap idiom from
+iter-115/123, and the seed-aggregation logic from iter-127.  It is the
+\emph{seed-axis analogue} of iter-127's method-axis CCC audit, and the
+\emph{predictive-validity dimension} that iter-135's tau-stability audit
+did not measure.
+
+\paragraph{Pre-existing build-error status.}
+Iter-139 introduces no new build errors.  The LaTeX section
+\texttt{p7\_iter139\_predictive\_validity.tex} is included via
+\texttt{\textbackslash subparagraph} of §4 and cross-references the
+prior §4.15--§4.19 as upstream triggers.

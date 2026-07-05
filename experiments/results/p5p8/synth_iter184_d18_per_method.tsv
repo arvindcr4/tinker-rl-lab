@@ -1,0 +1,4 @@
+method	n_steps	mean_loss	median_loss	worst_step_loss	p95_loss	mean_abs_loss	relative_regret	worst_step_bootstrap_mean	worst_step_bootstrap_lo	worst_step_bootstrap_hi	worst_step_bootstrap_se	worst_step_bootstrap_cv
+aero	40	301.0142	297.1612	651.0519	613.3318	310.2386	1.0986	641.9912	555.1909	651.0519	0.4754	0.0007
+gift	22	-17772.07	-17844.9359	19823.5383	19412.1931	17772.07	0.1154	19613.9408	18858.2384	19823.5383	7.1188	0.0004
+grpo	40	323.1569	252.6101	1004.9546	781.0735	323.2027	2.1094	935.9906	777.7786	1004.9546	2.1759	0.0023

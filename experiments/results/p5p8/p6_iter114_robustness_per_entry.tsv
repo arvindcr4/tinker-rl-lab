@@ -1,0 +1,16 @@
+delta_id	name	total_rows	load_bearing	fragile_sig	fragile_ns	underpowered	point_only	degenerate	groundedness_score	n_panels	n_expected_effects	expected_unmeasured	theoretical_only	citation_arxiv
+delta_adaptiveg	Adaptive-G (ZVF-driven)	2	0	1	1	0	0	0	0.3750	1	2	0	0	
+delta_aero	AERO	6	1	1	2	1	1	0	0.3500	2	3	0	0	2509.21880
+delta_areal	AREAL	6	1	1	2	1	1	0	0.3500	2	3	0	0	2505.24298
+delta_gift	GIFT	6	0	2	2	1	1	0	0.2667	2	3	0	0	2510.23868
+delta_drgrpo	Dr. GRPO	3	0	0	0	3	0	0	0.1000	1	3	0	0	2503.20783
+delta_cppo	CPPO	2	0	0	0	1	1	0	0.0500	1	1	0	0	2503.22342
+delta_es	ES	2	0	0	0	1	1	0	0.0500	1	1	0	0	2509.24372
+delta_mcgrpo	MCGRPO	2	0	0	0	1	1	0	0.0500	1	1	0	0	2601.22582
+delta_ngrpo	NGRPO	2	0	0	0	1	1	0	0.0500	1	1	0	0	2509.18851
+delta_scafgrpo	SCAFGRPO	2	0	0	0	1	1	0	0.0500	1	1	0	0	2510.19807
+delta_dapo	DAPO	0	0	0	0	0	0	0	0.0000	0	3	3	1	2503.14476
+delta_gspo	GSPO	0	0	0	0	0	0	0	0.0000	0	3	3	1	2507.18071
+delta_liteppo	LitePPO	0	0	0	0	0	0	0	0.0000	0	0	0	0	
+delta_ppo	PPO	0	0	0	0	0	0	0	0.0000	0	3	3	1	1707.06347
+delta_reinforce	REINFORCE	0	0	0	0	0	0	0	0.0000	0	0	0	0	

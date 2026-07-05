@@ -1,5 +1,5 @@
 {
-  "n_entries": 15,
+  "n_entries": 17,
   "per_entry": [
     {
       "delta_id": "delta_adaptiveg",
@@ -285,8 +285,46 @@
       "panels": "zvf130_5seed",
       "metrics": "mean_zvf|zvf_risk_mean",
       "citation_arxiv": "2510.19807"
+    },
+    {
+      "delta_id": "delta_tool_use_llama-8b-inst",
+      "name": "TOOL_USE_LLAMA-8B-INST",
+      "measured_count": 1,
+      "validated_count": 0,
+      "n_significant": 0,
+      "pct_significant": 0.0,
+      "min_n": 1,
+      "max_n": 1,
+      "supports": 0,
+      "contradicts": 0,
+      "neutral": 0,
+      "unclaimed": 1,
+      "n_src_resolved_ok": 1,
+      "n_src_missing": 0,
+      "panels": "zvf130_1seed_tooluse",
+      "metrics": "zvf_risk_mean",
+      "citation_arxiv": ""
+    },
+    {
+      "delta_id": "delta_tool_use_qwen3-32b",
+      "name": "TOOL_USE_QWEN3-32B",
+      "measured_count": 1,
+      "validated_count": 0,
+      "n_significant": 0,
+      "pct_significant": 0.0,
+      "min_n": 1,
+      "max_n": 1,
+      "supports": 0,
+      "contradicts": 0,
+      "neutral": 0,
+      "unclaimed": 1,
+      "n_src_resolved_ok": 1,
+      "n_src_missing": 0,
+      "panels": "zvf130_1seed_tooluse",
+      "metrics": "zvf_risk_mean",
+      "citation_arxiv": ""
     }
   ],
   "audit_date": "2026-07-05",
-  "audit_source": "scripts/p5p8/p6_iter98_vda_validator.py"
+  "audit_source": "scripts/p5p8/p6_iter138_missing_method_audit.py"
 }

@@ -1,0 +1,17 @@
+method	verdict	zvf_risk_mean	n_seeds	failure_rate	registry_id_present	iter138_action
+scaling_law_Qwen3-8B	ANCHOR_ROW	0.6898447488846503	1	1.0	False	skip — not a GRPO method (scaling-law anchor)
+scaling_law_Nemotron-120B	ANCHOR_ROW	0.6898447488846503	1	1.0	False	skip — not a GRPO method (scaling-law anchor)
+scaling_law_Llama-3.1-8B-Instruct	ANCHOR_ROW	0.6898447488846503	1	1.0	False	skip — not a GRPO method (scaling-law anchor)
+scaling_law_Qwen3.5-4B	ANCHOR_ROW	0.6898447488846503	1	1.0	False	skip — not a GRPO method (scaling-law anchor)
+scaling_law_DeepSeek-V3.1	ANCHOR_ROW	0.6898447488846503	1	1.0	False	skip — not a GRPO method (scaling-law anchor)
+grpo	PRESENT	0.5776880179873356	5	0.0	True	none
+tool_use_llama-8b-inst	MISSING_GRPO_METHOD	0.5473808273460361	1	1.0	False	create zvf130_tool_use_llama-8b-inst.json + delta_tool_use_llama-8b-inst.json
+tool_use_qwen3-32b	MISSING_GRPO_METHOD	0.5473808273460361	1	1.0	False	create zvf130_tool_use_qwen3-32b.json + delta_tool_use_qwen3-32b.json
+ngrpo	PRESENT	0.446662878834344	5	0.0	True	none
+aero	PRESENT	0.430050653146807	5	0.0	True	none
+cppo	PRESENT	0.42661061087943886	5	0.0	True	none
+mcgrpo	PRESENT	0.40341125968913405	5	0.2	True	none
+areal	PRESENT	0.3319206130908743	5	0.2	True	none
+gift	PRESENT	0.3145005437766656	5	0.2	True	none
+es	PRESENT	0.3051097720985813	5	0.2	True	none
+scafgrpo	PRESENT	0.22532716228739566	5	0.0	True	none

@@ -1,0 +1,124 @@
+% paper/sections/p6_iter138_missing_method_entries.tex
+% Iter-138 P6 audit: missing-method registry entries (brief vein (d)).
+% Closes the registry coverage gap at the *method-identity* layer:
+%   9 zvf130 stack entries existed (grpo/aero/areal/gift/ngrpo/cppo/
+%   mcgrpo/es/scafgrpo); 11 zvf130 method rows exist in the source
+%   per_method JSON. The 2 missing real GRPO-family methods are
+%   `tool_use_llama-8b-inst` and `tool_use_qwen3-32b` (n_seeds=1,
+%   BFCL tool-use task, failure_rate=1.0).
+%
+% Key findings:
+%   - 16 methods present in zvf130 data; 5 are anchor rows (scaling-law)
+%     not GRPO methods; 9 were in registry; 2 were missing.
+%   - Both missing methods added as tier-D coverage records (n_seeds=1
+%     precludes paired-seed bootstrap CI; no peer-reviewed citation
+%     verified at iter-138).
+%   - Registry: 39 -> 43 entries (+2 stack, +2 delta).
+%   - Schema CI: parse_ok=43/43, schema_ok=43/43.
+%
+% Reproducibility:
+%   python3 scripts/p5p8/p6_iter138_missing_method_audit.py
+
+\subsection{Missing-method registry entries (iter 138)}
+\label{sec:p6-iter138-missing-method}
+
+Iter-130 closed brief vein (c) by adding a schema-CI validator.
+Iter-126 closed (a) at the tier-classification layer. Iter-134 closed
+(b) at the measured-row field-completeness layer. Iter-138 closes the
+remaining vein (d): \emph{add registry entries for GRPO-family methods
+that are present in the measured data but absent from the catalog}.
+
+\paragraph{Method-identity coverage scan.}
+The registry should record every GRPO-family method that appears in
+any canonical measured panel. The iter-130 zvf130 batch harness
+produced 16 distinct method rows (recorded in
+\texttt{zvf\_iter130\_meta.json["per\_method"]}): 5
+scaling-law anchor rows (\texttt{scaling\_law\_Qwen3-8B},
+\texttt{Nemotron-120B}, \texttt{Llama-3.1-8B-Instruct},
+\texttt{Qwen3.5-4B}, \texttt{DeepSeek-V3.1}), 9 real GRPO-family
+methods already in the registry, and 2 real GRPO-family methods
+\emph{not} in the registry:
+\texttt{tool\_use\_llama-8b-inst} and \texttt{tool\_use\_qwen3-32b}.
+Both missing entries were measured under the same zvf130 batch harness
+with $n_{\text{seeds}}=1$, $z\_vf\_risk\_mean = 0.5474$ (vs
+grpo=0.5777), $\mathit{mag\_mean}=1.0$, $\mathit{csd\_mean}=0.95$,
+$\mathit{failure\_rate}=1.0$, on the BFCL tool-use task (a sparse 0/1
+outcome-reward domain).
+
+\paragraph{Classification rule.}
+We classify every method present in the measured data into one of three
+verdicts:
+\begin{itemize}
+\item \textbf{PRESENT} --- a registry entry already exists (either
+  \texttt{zvf130\_<m>.json} or \texttt{delta\_<m>.json});
+\item \textbf{ANCHOR\_ROW} --- a scaling-law anchor used as a
+  reference point in the iter-130 risk index; not a GRPO method, so
+  receives no registry entry;
+\item \textbf{MISSING\_GRPO\_METHOD} --- a real GRPO-family method
+  that lacks a registry entry; receives both a stack and a
+  variant-delta entry at iter-138.
+\end{itemize}
+The audit script is
+\texttt{scripts/p5p8/p6\_iter138\_missing\_method\_audit.py} and
+emits \texttt{experiments/results/p5p8/p6\_iter138\_missing\_method\_audit.tsv}
+(16 rows $\times$ 7 cols).
+
+\paragraph{Provenance discipline for the new entries.}
+Iter-126 documented that 5/15 (33.3\%) of pre-existing variant-delta
+entries were tier-D (citation-only, $\mathit{measured}: \mathit{null}$).
+The two new \texttt{tool\_use\_*} entries are \emph{not} tier-D in the
+citation-only sense --- they carry a real $\mathit{measured}$ row
+backed by a real TSV path. They \emph{are} tier-D in the paired-CI
+sense: $n_{\text{seeds}}=1$ precludes the paired-seed bootstrap CI
+that the iter-130 paired-bootstrap template requires. Both entries
+therefore record:
+\begin{itemize}
+\item a \texttt{ci\_method} of
+  \texttt{\{method: "point\_only\_no\_per\_seed\_sd", n\_boot: null,
+  seed: null, ci\_level: null\}},
+\item a \texttt{significant: false} flag (point estimate is
+  honest-as-non-significant; no CI to flip),
+\item an \texttt{evidence\_deferred\_until} field stating the
+  multi-seed reproduction + verified-arXiv conditions under which
+  the entry will be promoted out of tier-D.
+\end{itemize}
+No fabricated citation. No fabricated CI. The entry exists to close
+the registry's method-identity coverage gap --- a coverage record,
+not an effect claim.
+
+\paragraph{Results.}
+After iter-138:
+\begin{itemize}
+\item Registry entry count: 39 $\to$ 43
+  ($+2$ stack \texttt{zvf130\_tool\_use\_*},
+  $+2$ variant-delta \texttt{delta\_tool\_use\_*}).
+\item \texttt{python3 scripts/p5p8/p6\_iter130\_schema\_ci.py} reports
+  \texttt{parse\_ok=43/43}, \texttt{schema\_ok=43/43},
+  $\mathit{n\_stale\_method\_rows}=0$.
+\item \texttt{python3 registry/query.py list} now includes both
+  \texttt{zvf130\_tool\_use\_llama-8b-inst} and
+  \texttt{zvf130\_tool\_use\_qwen3-32b}.
+\item The \texttt{measured\_block\_audit\_refresh.json} delta-entry
+  roster grows from 15 to 17 (tool\_use rows added with
+  $n_{\text{measured}}=1$, $n_{\text{significant}}=0$).
+\end{itemize}
+
+\paragraph{Cross-paper coupling.}
+\textbf{(i)} Iter-126 (row 142) introduced the tier-A/B/C/D
+classification; iter-138's two new entries sit in tier-D by paired-CI
+depth but in tier-B by evidence-presence (they have a real measured
+row, not just a citation). Iter-138 therefore sharpens the tier rule:
+\emph{tier-D is now defined as paired-CI-impossible OR
+citation-only}. \textbf{(ii)} Iter-130 (row 145) introduced the
+paired-seed bootstrap CI template that the tool\_use entries cannot
+satisfy; iter-138 makes that limitation explicit by carrying
+\texttt{evidence\_deferred\_until}. \textbf{(iii)} Iter-134 (row 150)
+audited 38 measured rows; iter-138 brings that count to 40 measured
+rows (2 new $\times$ 1 row each, on the new \texttt{zvf130\_1seed\_tooluse}
+panel). \textbf{(iv)} FRONTIER\_INSIGHTS Round 1 Critic-Degeneracy
+Hypothesis (frontier synthesis): the tool\_use methods register
+$\mathit{mag\_mean}=1.0$ and $\mathit{failure\_rate}=1.0$ --- a
+fully-degenerate ZVF pattern consistent with the (frontier synthesis)
+prediction that token-level credit assignment collapses under sparse
+terminal reward, but here on a different task domain (tool-use
+sparse 0/1, not GSM8K arithmetic).

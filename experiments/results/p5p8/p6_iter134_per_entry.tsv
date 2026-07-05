@@ -14,3 +14,5 @@ delta_ngrpo	variant_delta	3	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	0	3	0	3	
 delta_ppo	variant_delta	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
 delta_reinforce	variant_delta	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
 delta_scafgrpo	variant_delta	3	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	3	0	0	3	0	3	1	2	1	2	1	2	1	2	1	2	0	3	0	3	3	0	3	0
+delta_tool_use_llama-8b-inst	variant_delta	1	1	0	1	0	1	0	1	0	0	1	0	1	1	0	1	0	1	0	1	0	1	0	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	0	1	0
+delta_tool_use_qwen3-32b	variant_delta	1	1	0	1	0	1	0	1	0	0	1	0	1	1	0	1	0	1	0	1	0	1	0	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	0	1	0

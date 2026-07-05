@@ -1,0 +1,42 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_tool_use_qwen3-32b",
+  "name": "tool_use_qwen3-32b",
+  "base": "grpo",
+  "citation": {
+    "bibkey": null,
+    "arxiv": null,
+    "title": "tool_use_qwen3-32b: GRPO applied to BFCL tool-use task; no peer-reviewed source identified at iter-138 \u2014 evidence-deferred"
+  },
+  "deltas": [
+    {
+      "component": "task_substitution",
+      "field": "see note",
+      "change": "GRPO base loss-form retargeted to BFCL tool-use task (sparse 0/1 outcome reward) instead of GSM8K; no algorithmic delta vs GRPO is claimed at iter-138 \u2014 this entry is a coverage record, not a variant claim"
+    }
+  ],
+  "measured": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_1seed_tooluse",
+      "base": "grpo",
+      "delta": -0.030307,
+      "ci_low": null,
+      "ci_high": null,
+      "n": 1,
+      "significant": false,
+      "ci_method": {
+        "method": "point_only_no_per_seed_sd",
+        "n_boot": null,
+        "seed": null,
+        "ci_level": null,
+        "source": "scripts/p5p8/p6_iter138_missing_method_audit.py"
+      },
+      "source": "experiments/results/zvf_iter130_method_risk.tsv",
+      "note": "1-seed pointestimate (zvf_risk_mean=0.5474 vs grpo=0.5777); n_seeds=1 precludes paired-seed bootstrap CI. Tier-D coverage record, not a significant-effect claim.",
+      "evidence_deferred_until": "multi-seed same-stack reproduction on BFCL tool-use task (n_seeds>=5) AND verified peer-reviewed citation"
+    }
+  ],
+  "notes": "Tier-D coverage record (iter-138). Method 'tool_use_qwen3-32b' is present in zvf130 measured data but no GRPO-tool-use arXiv citation has been verified at iter-138. The measured row is a single-seed point estimate (no per-seed distribution), so the paired-seed bootstrap CI is null and `significant: false` is reported honestly. The entry exists to close the method-identity coverage gap in the registry; it carries evidence_deferred_until rather than fabricated provenance. DO NOT cite this entry as a measured-effect claim."
+}

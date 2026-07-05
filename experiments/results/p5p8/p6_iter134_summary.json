@@ -1,18 +1,151 @@
 {
-  "iter": 134,
-  "pillar": "P6",
-  "n_variant_delta_entries": 15,
-  "n_total_measured_rows": 38,
-  "ci_method_diversity": {
-    "paired_step_bootstrap_pct": 14,
-    "normal_approx_welch": 8,
-    "bootstrap_paired_5seed": 13,
-    "welch_pooled_task_mean": 3
-  },
-  "n_seed_inconsistency_rows": 16,
-  "n_ci_shape_violations": 0,
-  "n_xpanel_companion_rows": 6,
-  "n_empty_measured_entries": 5,
-  "n_empty_with_expected_effects": 3,
-  "n_empty_without_expected_effects": 2
+  "n_entries": 17,
+  "n_measured_rows": 40,
+  "n_ci_consistent": 38,
+  "n_ci_inconsistent": 0,
+  "n_src_present": 40,
+  "n_src_missing": 0,
+  "n_significant_true": 21,
+  "per_field_coverage": [
+    {
+      "field": "metric",
+      "n_rows": 40,
+      "n_present": 40,
+      "n_null": 0,
+      "present_frac": 1.0
+    },
+    {
+      "field": "panel",
+      "n_rows": 40,
+      "n_present": 40,
+      "n_null": 0,
+      "present_frac": 1.0
+    },
+    {
+      "field": "base",
+      "n_rows": 40,
+      "n_present": 40,
+      "n_null": 0,
+      "present_frac": 1.0
+    },
+    {
+      "field": "delta",
+      "n_rows": 40,
+      "n_present": 40,
+      "n_null": 0,
+      "present_frac": 1.0
+    },
+    {
+      "field": "ci_low",
+      "n_rows": 40,
+      "n_present": 38,
+      "n_null": 2,
+      "present_frac": 0.95
+    },
+    {
+      "field": "ci_high",
+      "n_rows": 40,
+      "n_present": 38,
+      "n_null": 2,
+      "present_frac": 0.95
+    },
+    {
+      "field": "n",
+      "n_rows": 40,
+      "n_present": 40,
+      "n_null": 0,
+      "present_frac": 1.0
+    },
+    {
+      "field": "significant",
+      "n_rows": 40,
+      "n_present": 40,
+      "n_null": 0,
+      "present_frac": 1.0
+    },
+    {
+      "field": "ci_method",
+      "n_rows": 40,
+      "n_present": 40,
+      "n_null": 0,
+      "present_frac": 1.0
+    },
+    {
+      "field": "source",
+      "n_rows": 40,
+      "n_present": 40,
+      "n_null": 0,
+      "present_frac": 1.0
+    },
+    {
+      "field": "note",
+      "n_rows": 40,
+      "n_present": 40,
+      "n_null": 0,
+      "present_frac": 1.0
+    },
+    {
+      "field": "window_sensitivity",
+      "n_rows": 40,
+      "n_present": 6,
+      "n_null": 34,
+      "present_frac": 0.15
+    },
+    {
+      "field": "robust_panel",
+      "n_rows": 40,
+      "n_present": 6,
+      "n_null": 34,
+      "present_frac": 0.15
+    },
+    {
+      "field": "welch_ci_low",
+      "n_rows": 40,
+      "n_present": 8,
+      "n_null": 32,
+      "present_frac": 0.2
+    },
+    {
+      "field": "welch_ci_high",
+      "n_rows": 40,
+      "n_present": 8,
+      "n_null": 32,
+      "present_frac": 0.2
+    },
+    {
+      "field": "welch_sig",
+      "n_rows": 40,
+      "n_present": 8,
+      "n_null": 32,
+      "present_frac": 0.2
+    },
+    {
+      "field": "sig_robust_bootstrap_and_welch",
+      "n_rows": 40,
+      "n_present": 8,
+      "n_null": 32,
+      "present_frac": 0.2
+    },
+    {
+      "field": "sig_robust_note",
+      "n_rows": 40,
+      "n_present": 8,
+      "n_null": 32,
+      "present_frac": 0.2
+    },
+    {
+      "field": "xpanel_verdict",
+      "n_rows": 40,
+      "n_present": 0,
+      "n_null": 40,
+      "present_frac": 0.0
+    },
+    {
+      "field": "xpanel_method",
+      "n_rows": 40,
+      "n_present": 0,
+      "n_null": 40,
+      "present_frac": 0.0
+    }
+  ]
 }

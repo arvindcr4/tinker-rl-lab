@@ -311,6 +311,66 @@ def cmd_health(_):
     return rc
 
 
+def cmd_validate_strict(args):
+    """Iter-122: integrate the iter-118 strict validator as a CI gate.
+
+    Returns exit code 0 if and only if there are zero ERROR-severity findings
+    (orphan delta_id, missing source on disk, bad arxiv id, bad bibkey, schema
+    validation failures). WARN and INFO findings (fully-unknown MIN-REPORT
+    items, missing optional items, etc.) print to stdout but do NOT block.
+
+    The gate contract: ``orphan_deltas == 0 AND missing_sources == 0 AND
+    schema_pass == True`` ⇒ exit 0; otherwise exit 1.
+
+    Use::
+
+        python3 registry/query.py validate-strict      # CI gate (default)
+        python3 registry/query.py validate-strict --include-warn  # also fail on warn
+    """
+    import subprocess
+    # First: schema validation (same as cmd_validate).
+    try:
+        import jsonschema  # type: ignore
+    except ImportError:
+        print("FATAL: jsonschema not installed", file=sys.stderr)
+        return 2
+    schema = json.load(open(HERE / "schema.json"))
+    schema_fails = []
+    for p in sorted((HERE / "entries").glob("*.json")):
+        rec = json.loads(p.read_text())
+        try:
+            jsonschema.validate(rec, schema)
+        except jsonschema.ValidationError as e:
+            schema_fails.append((p.name, str(e.message)[:140]))
+    # Second: shell out to p6_iter118_strict_validator.py for orphan/source checks.
+    target = (HERE / ".." / "scripts" / "p5p8" / "p6_iter118_strict_validator.py").resolve()
+    rc = subprocess.run([sys.executable, str(target)], capture_output=True, text=True)
+    sys.stdout.write(rc.stdout)
+    # Parse the JSON the script wrote.
+    audit_json = HERE / ".." / "experiments" / "results" / "p5p8" / "p6_iter118_strict_audit.json"
+    audit_json = audit_json.resolve()
+    audit = json.loads(audit_json.read_text())
+    error_findings = [f for f in audit["findings"] if f.get("severity") == "error"]
+    warn_findings = [f for f in audit["findings"] if f.get("severity") == "warn"]
+    info_findings = [f for f in audit["findings"] if f.get("severity") == "info"]
+    # CI gate contract.
+    n_errors = len(error_findings) + len(schema_fails)
+    print(f"--- validate-strict summary ---")
+    print(f"  n_entries           {audit['n_stack_entries']}")
+    print(f"  n_deltas            {audit['n_deltas']}")
+    print(f"  schema_fails        {len(schema_fails)}")
+    print(f"  error_findings      {len(error_findings)}")
+    print(f"  warn_findings       {len(warn_findings)}")
+    print(f"  info_findings       {len(info_findings)}")
+    if n_errors == 0:
+        print("CI GATE: PASS")
+    else:
+        print(f"CI GATE: FAIL ({n_errors} blocking findings)")
+    if args.include_warn:
+        return 1 if (n_errors + len(warn_findings)) else 0
+    return 1 if n_errors else 0
+
+
 def cmd_measured_coverage(args):
     """Iter-58: print the measured-block provenance & coverage audit.
 
@@ -501,6 +561,10 @@ def main():
                    help="Iter-50: CI-style schema validation pass")
     sub.add_parser("health",
                    help="Iter-50: full registry health audit")
+    pvs = sub.add_parser("validate-strict",
+                         help="Iter-122: schema + orphan-delta + missing-source CI gate")
+    pvs.add_argument("--include-warn", action="store_true",
+                     help="Also fail on warn-severity findings (default: warn/info are non-blocking)")
     pmc = sub.add_parser("measured-coverage",
                          help="Iter-58: measured-block provenance & coverage audit.")
     pmc.add_argument("--delta", default=None,
@@ -519,6 +583,7 @@ def main():
           "implementations": cmd_implementations, "drift": cmd_drift,
           "claim-validation": cmd_claim_validation,
           "validate": cmd_validate, "health": cmd_health,
+          "validate-strict": cmd_validate_strict,
           "measured-coverage": cmd_measured_coverage,
           "coverage": cmd_coverage,
           "antiherding": cmd_antiherding}[args.cmd](args)

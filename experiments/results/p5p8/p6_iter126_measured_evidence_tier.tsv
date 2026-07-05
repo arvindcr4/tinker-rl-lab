@@ -1,0 +1,16 @@
+delta_id	name	base	n_measured_rows	n_significant_rows	pct_significant	median_ci_width	n_zero_ci	direction_spread	n_panels	panels	n_metrics	metrics	median_n_per_row	evidence_tier	citation_arxiv
+delta_aero	AERO	grpo	6	3	50.0	0.0465	2	31.3379	2	n2_same_stack_last10;zvf130_5seed	6	mean_len;mean_zvf;pcd;reward_mean;zvf;zvf_risk_mean	10.0	A	2509.21880
+delta_areal	AREAL	grpo	6	3	50.0	0.0715	2	30.4857	2	n2_same_stack_last10;zvf130_5seed	6	mean_len;mean_zvf;pcd;reward_mean;zvf;zvf_risk_mean	10.0	A	2505.24298
+delta_gift	GIFT	grpo	6	3	50.0	0.0703	2	4.0141	2	n2_same_stack_last10;zvf130_5seed	6	mean_len;mean_zvf;pcd;reward_mean;zvf;zvf_risk_mean	10.0	A	2510.23868
+delta_cppo	CPPO	grpo	3	1	33.3	0.1023	0	0.0345	1	zvf130_5seed	3	mag_mean;mean_zvf;zvf_risk_mean	5	B	2503.22342
+delta_drgrpo	Dr. GRPO	grpo	3	1	33.3	0.2172	2	44.3504	1	length_bias_iter60_grpo_vs_drgrpo_paired	3	L_star;neg_frac;pos_frac	2	B	2503.20783
+delta_es	ES	grpo	3	1	33.3	0.102	0	0.094	1	zvf130_5seed	3	mag_mean;mean_zvf;zvf_risk_mean	5	B	2509.24372
+delta_mcgrpo	MCGRPO	grpo	3	1	33.3	0.1145	0	0.1605	1	zvf130_5seed	3	mag_mean;mean_zvf;zvf_risk_mean	5	B	2601.22582
+delta_ngrpo	NGRPO	grpo	3	1	33.3	0.1084	0	0.0494	1	zvf130_5seed	3	mag_mean;mean_zvf;zvf_risk_mean	5	B	2509.18851
+delta_scafgrpo	SCAFGRPO	grpo	3	1	33.3	0.1032	0	0.1882	1	zvf130_5seed	3	mag_mean;mean_zvf;zvf_risk_mean	5	B	2510.19807
+delta_adaptiveg	Adaptive-G (ZVF-driven)	grpo	2	1	50.0	0.0615	1	0.0664	1	qp7_adaptive_armB_vs_armA_paired	2	reward_mean;zvf	16.0	B	
+delta_dapo	DAPO	grpo	0	0	0.0		0		0		0			D	2503.14476
+delta_gspo	GSPO	grpo	0	0	0.0		0		0		0			D	2507.18071
+delta_liteppo	LitePPO	grpo	0	0	0.0		0		0		0			D	
+delta_ppo	PPO	grpo	0	0	0.0		0		0		0			D	1707.06347
+delta_reinforce	REINFORCE	grpo	0	0	0.0		0		0		0			D	

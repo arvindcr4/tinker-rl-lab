@@ -1,0 +1,117 @@
+{
+  "n_deltas": 15,
+  "tier_counts": {
+    "A": 3,
+    "B": 7,
+    "D": 5
+  },
+  "n_total_measured_rows": 38,
+  "n_total_significant_rows": 16,
+  "pct_d_overall": 33.3,
+  "d_tier_ids": [
+    "delta_dapo",
+    "delta_gspo",
+    "delta_liteppo",
+    "delta_ppo",
+    "delta_reinforce"
+  ],
+  "a_tier_ids": [
+    "delta_aero",
+    "delta_areal",
+    "delta_gift"
+  ],
+  "ranking_top10": [
+    {
+      "delta_id": "delta_aero",
+      "tier": "A",
+      "n_sig": 3,
+      "n_total": 6
+    },
+    {
+      "delta_id": "delta_areal",
+      "tier": "A",
+      "n_sig": 3,
+      "n_total": 6
+    },
+    {
+      "delta_id": "delta_gift",
+      "tier": "A",
+      "n_sig": 3,
+      "n_total": 6
+    },
+    {
+      "delta_id": "delta_cppo",
+      "tier": "B",
+      "n_sig": 1,
+      "n_total": 3
+    },
+    {
+      "delta_id": "delta_drgrpo",
+      "tier": "B",
+      "n_sig": 1,
+      "n_total": 3
+    },
+    {
+      "delta_id": "delta_es",
+      "tier": "B",
+      "n_sig": 1,
+      "n_total": 3
+    },
+    {
+      "delta_id": "delta_mcgrpo",
+      "tier": "B",
+      "n_sig": 1,
+      "n_total": 3
+    },
+    {
+      "delta_id": "delta_ngrpo",
+      "tier": "B",
+      "n_sig": 1,
+      "n_total": 3
+    },
+    {
+      "delta_id": "delta_scafgrpo",
+      "tier": "B",
+      "n_sig": 1,
+      "n_total": 3
+    },
+    {
+      "delta_id": "delta_adaptiveg",
+      "tier": "B",
+      "n_sig": 1,
+      "n_total": 2
+    }
+  ],
+  "ranking_bottom5": [
+    {
+      "delta_id": "delta_dapo",
+      "tier": "D",
+      "n_sig": 0,
+      "n_total": 0
+    },
+    {
+      "delta_id": "delta_gspo",
+      "tier": "D",
+      "n_sig": 0,
+      "n_total": 0
+    },
+    {
+      "delta_id": "delta_liteppo",
+      "tier": "D",
+      "n_sig": 0,
+      "n_total": 0
+    },
+    {
+      "delta_id": "delta_ppo",
+      "tier": "D",
+      "n_sig": 0,
+      "n_total": 0
+    },
+    {
+      "delta_id": "delta_reinforce",
+      "tier": "D",
+      "n_sig": 0,
+      "n_total": 0
+    }
+  ]
+}

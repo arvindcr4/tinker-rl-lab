@@ -874,9 +874,6 @@
         "panel",
         "base",
         "delta",
-        "ci_low",
-        "ci_high",
-        "significant",
         "source"
       ],
       "additionalProperties": false,
@@ -894,21 +891,21 @@
           "description": "Base stack the delta is computed against (must match the record's `base`)."
         },
         "delta": {
-          "type": "number",
-          "description": "variant minus base (signed)."
+          "$ref": "#/$defs/nullable_number",
+          "description": "variant minus base (signed). Null = unmeasured (backfilled point, see synth_from_agg)."
         },
         "ci_low": {
-          "type": "number"
+          "$ref": "#/$defs/nullable_number"
         },
         "ci_high": {
-          "type": "number"
+          "$ref": "#/$defs/nullable_number"
         },
         "n": {
           "$ref": "#/$defs/nullable_integer"
         },
         "significant": {
-          "type": "boolean",
-          "description": "True iff the CI excludes 0."
+          "$ref": "#/$defs/nullable_boolean",
+          "description": "True iff the CI excludes 0; null = CI is degenerate (point estimate, see synth_from_agg)."
         },
         "ci_method": {
           "$ref": "#/$defs/ci_method"
@@ -955,6 +952,10 @@
         },
         "sig_robust_note": {
           "$ref": "#/$defs/nullable_string"
+        },
+        "synth_from_agg": {
+          "$ref": "#/$defs/nullable_boolean",
+          "description": "iter-122: True if this row was synthesized from an aggregate (point) statistic rather than per-seed data; CI is then not meaningful. Set by scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py when backfilling from mag_mean / mean_zvf aggregates whose per-seed sd was not stored."
         }
       }
     },
@@ -998,9 +999,6 @@
         "metric",
         "panel",
         "observed_delta",
-        "ci_low",
-        "ci_high",
-        "significant",
         "verdict"
       ],
       "additionalProperties": false,
@@ -1018,16 +1016,16 @@
           ]
         },
         "observed_delta": {
-          "type": "number"
+          "$ref": "#/$defs/nullable_number"
         },
         "ci_low": {
-          "type": "number"
+          "$ref": "#/$defs/nullable_number"
         },
         "ci_high": {
-          "type": "number"
+          "$ref": "#/$defs/nullable_number"
         },
         "significant": {
-          "type": "boolean"
+          "$ref": "#/$defs/nullable_boolean"
         },
         "verdict": {
           "enum": [
@@ -1039,6 +1037,18 @@
         },
         "rationale": {
           "type": "string"
+        },
+        "audit_source": {
+          "$ref": "#/$defs/nullable_string",
+          "description": "iter-122: audit-script path that produced this row, e.g. 'scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py'. Optional; absent for human-written entries."
+        },
+        "audit_date": {
+          "$ref": "#/$defs/nullable_string",
+          "description": "iter-122: ISO date the audit script produced this row, e.g. '2026-07-05'. Optional."
+        },
+        "synth_from_agg": {
+          "$ref": "#/$defs/nullable_boolean",
+          "description": "iter-122: True if this row was synthesized from an aggregate (point) statistic rather than per-seed data. CI is then not meaningful. Set true by scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py when it backfills a measured row from mag_mean / mean_zvf aggregates whose per-seed sd was not stored."
         }
       }
     },

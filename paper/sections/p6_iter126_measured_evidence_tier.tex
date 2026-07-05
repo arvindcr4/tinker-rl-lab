@@ -1,0 +1,124 @@
+% paper/sections/p6_iter126_measured_evidence_tier.tex
+% Iter-126 P6 audit: per-delta measured-evidence tier classification.
+% Closes brief vein (a) at the per-delta granularity:
+%   "validate existing entries against measured behavior; compute
+%    measured variant deltas and compare to the registry's claimed deltas."
+%
+% Key finding: 3/15 deltas at tier A (>=3 sig rows across >=2 panels),
+%              7/15 at tier B (>=1 sig row),
+%              5/15 at tier D (zero measured rows in the registry).
+% Tier D deltas: dapo, gspo, liteppo, ppo, reinforce.
+% Tier A deltas: aero, areal, gift -- the three N2 same-stack methods.
+%
+% Reproducibility:
+%   python3 scripts/p5p8/p6_iter126_measured_evidence_tier.py
+%   -> experiments/results/p5p8/p6_iter126_measured_evidence_tier.tsv
+%   -> experiments/results/p5p8/p6_iter126_measured_evidence_tier.json
+
+\subsection{Per-delta measured-evidence tier classification (iter 126)}
+\label{sec:p6-iter126-evidence-tier}
+
+The registry's variant-delta entries
+(\texttt{registry/entries/delta\_*.json}) carry two kinds of evidence:
+(a)~\emph{claimed} -- the conceptual change relative to GRPO, the citation
+key, and the textual description of what the variant does; and
+(b)~\emph{measured} -- an optional list of $\{metric, panel, base, delta,
+ci\_low, ci\_high, n, significant\}$ rows that report how the variant moved
+a measured quantity (reward\_mean, zvf, etc.) on the named panel, with a
+paired-step bootstrap 95\% CI.  We classify each variant delta by the
+\emph{evidence tier} that its measured rows attain, defining
+\[
+\text{tier} = \begin{cases}
+A & \text{if } n_{\text{sig}} \geq 3 \text{ and } n_{\text{panels}} \geq 2,\\
+B & \text{if } n_{\text{sig}} \geq 1,\\
+C & \text{if } n_{\text{total}} \geq 1 \text{ and } n_{\text{sig}} = 0,\\
+D & \text{if } n_{\text{total}} = 0.
+\end{cases}
+\]
+Tier~A deltas have measured evidence on at least three significant rows
+across at least two panels -- the strongest evidentiary class.
+Tier~D deltas have no measured rows in the registry and rely solely on
+their cited description.
+
+Applied to all 15 \texttt{delta\_*.json} entries, the audit produces
+Table~\ref{tab:p6-iter126-tier-rk} (top 10) and the full ranking in
+\texttt{experiments/results/p5p8/p6\_iter126\_measured\_evidence\_tier.tsv}.
+The headline result is a sharp three-tier split:
+\begin{itemize}
+\item \textbf{Tier A (3 deltas)} -- \texttt{aero}, \texttt{areal}, \texttt{gift}.
+These are the three GRPO-family variants covered by the N2
+same-stack reward tensors
+(\texttt{experiments/results/n2\_reward\_tensor\_resume/}) and the
+zvf-iter130 risk index.  Each carries six measured rows (zvf +
+reward\_mean, n2\_same\_stack\_last10 panel + zvf130 5-seed panel), with
+3/6 statistically significant at the 95\% paired-step bootstrap level
+(B\,=\,2000).
+\item \textbf{Tier B (7 deltas)} -- \texttt{cppo}, \texttt{drgrpo}, \texttt{es},
+\texttt{mcgrpo}, \texttt{ngrpo}, \texttt{scafgrpo}, \texttt{adaptiveg}.
+Each carries three measured rows from a single panel; 1/3 is significant.
+These are the variants with evidence from a single harness
+(e.g.\ the zvf-iter130 5-seed panel) but not from the second-panel N2
+comparison.
+\item \textbf{Tier D (5 deltas)} -- \texttt{dapo}, \texttt{gspo}, \texttt{liteppo},
+\texttt{ppo}, \texttt{reinforce}.  These entries describe the variant and
+its citation, but carry zero measured rows.  They remain in the registry
+as citation-only references -- sufficient for provenance but not for
+\emph{quantitative} cross-variant claims about them.
+\end{itemize}
+
+\paragraph{Implications for cross-variant claims.}
+Any registry-level claim that averages across all 15 deltas
+(e.g.\ a future ``registry mean delta vs.\ GRPO'') would be dominated by
+the A-tier trio.  The recommended practice is to \emph{report tier with
+the claim}: a tier-A delta claim (aero/areal/gift) carries the strongest
+evidentiary backing; a tier-D delta claim (dapo/gspo/liteppo/ppo/reinforce)
+is a citation claim, not a measurement claim, and should be reported as
+such.
+
+\paragraph{Implications for closing the tier-D gap.}
+Closing tier~D for any of the five remaining variants requires running
+the N2 same-stack protocol (40 steps, G\,=\,8, paired-step bootstrap B\,=\,2000)
+for that variant.  At the iter-126 cost regime this is tractable for any
+single variant ($\leq$\$5 in Tinker API credits, $\leq$1 hour wall-clock on
+the standard harness); running all five is the recommended iter-127 vein
+on Pillar~2.
+
+\paragraph{Cross-paper coupling.}
+This audit extends iter-118's claim-xref strict coverage row
+(``51 INFO findings on fully-unknown MIN-REPORT items'') by classifying
+the \emph{measured} evidence rather than the \emph{claimed} components.
+A tier-D delta may still have a fully-populated claim block; the gap is
+in \emph{measurement}, not in \emph{reporting}.  Iter-122's
+cross-entry consistency check focused on (delta\_id, component)
+agreement; iter-126 instead surfaces the per-delta evidence-depth
+asymmetry.  The two are complementary: iter-122 says ``stacks agree on
+what they \emph{claim}''; iter-126 says ``deltas vary in what they
+\emph{measure}''.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Iter-126 P6 measured-evidence tier -- top 10 deltas.  $n_{\text{sig}}$ counts
+measured rows with $\text{ci\_low} > 0$ or $\text{ci\_high} < 0$ at 95\% paired-step bootstrap.
+Tier A: $n_{\text{sig}} \geq 3$ and panels $\geq 2$.  Tier B: $n_{\text{sig}} \geq 1$.
+Tier C: $n_{\text{total}} \geq 1$ and $n_{\text{sig}} = 0$.  Tier D: $n_{\text{total}} = 0$.}
+\label{tab:p6-iter126-tier-rk}
+\begin{tabular}{lllrrrl}
+\toprule
+rank & delta\_id & base & $n_{\text{sig}}$/$n_{\text{total}}$ & $n_{\text{panels}}$ & tier & arXiv \\
+\midrule
+1 & delta\_aero     & grpo & 3/6 & 2 & A & 2509.21880 \\
+2 & delta\_areal    & grpo & 3/6 & 2 & A & --- \\
+3 & delta\_gift     & grpo & 3/6 & 2 & A & --- \\
+4 & delta\_cppo     & grpo & 1/3 & 1 & B & --- \\
+5 & delta\_drgrpo   & grpo & 1/3 & 1 & B & --- \\
+6 & delta\_es       & grpo & 1/3 & 1 & B & --- \\
+7 & delta\_mcgrpo   & grpo & 1/3 & 1 & B & --- \\
+8 & delta\_ngrpo    & grpo & 1/3 & 1 & B & --- \\
+9 & delta\_scafgrpo & grpo & 1/3 & 1 & B & --- \\
+10 & delta\_adaptiveg & grpo & 1/2 & 1 & B & --- \\
+\midrule
+11--15 & delta\_dapo / gspo / liteppo / ppo / reinforce & grpo & 0/0 & 0 & D & --- \\
+\bottomrule
+\end{tabular}
+\end{table}

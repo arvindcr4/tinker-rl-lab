@@ -1,0 +1,46 @@
+entry_id	gap_type	metric	panel	predicted_sign	rationale	severity
+delta_aero	MEASURED_WITHOUT_EXPECTED	mean_len	n2_same_stack_last10		measured delta=31.077344	medium
+delta_aero	MEASURED_WITHOUT_EXPECTED	mean_zvf	zvf130_5seed		measured delta=-0.26052	medium
+delta_aero	MEASURED_WITHOUT_EXPECTED	pcd	n2_same_stack_last10		measured delta=0.00293	medium
+delta_areal	MEASURED_WITHOUT_EXPECTED	mean_len	n2_same_stack_last10		measured delta=30.125781	medium
+delta_areal	MEASURED_WITHOUT_EXPECTED	mean_zvf	zvf130_5seed		measured delta=-0.35988	medium
+delta_areal	MEASURED_WITHOUT_EXPECTED	pcd	n2_same_stack_last10		measured delta=0.007324	medium
+delta_cppo	MEASURED_WITHOUT_EXPECTED	mag_mean	zvf130_5seed		measured delta=-0.18558	medium
+delta_cppo	MEASURED_WITHOUT_EXPECTED	mean_zvf	zvf130_5seed		measured delta=-0.18558	medium
+delta_dapo	EXPECTED_WITHOUT_CV	mean_len	length_bias_iter60_grpo_vs_drgrpo_paired	<0	DAPO's overlong_reward_shaping soft-penalizes truncated completions; predicted lower mean_len on the same stack (Yu et a	high
+delta_dapo	EXPECTED_WITHOUT_CV	reward_mean	n2_same_stack_last10	>0	DAPO's clip_higher (asymmetric 0.2/0.28) prevents premature convergence on low-entropy prompts while permitting explorat	high
+delta_dapo	EXPECTED_WITHOUT_CV	zvf	n2_same_stack_last10	<0	DAPO's dynamic_sampling filter explicitly resamples zero-variance groups; predicted lower ZVF than GRPO on the same stac	high
+delta_dapo	EXPECTED_WITHOUT_MEASURED	mean_len	length_bias_iter60_grpo_vs_drgrpo_paired	<0	DAPO's overlong_reward_shaping soft-penalizes truncated completions; predicted lower mean_len on the same stack (Yu et a	medium
+delta_dapo	EXPECTED_WITHOUT_MEASURED	reward_mean	n2_same_stack_last10	>0	DAPO's clip_higher (asymmetric 0.2/0.28) prevents premature convergence on low-entropy prompts while permitting explorat	medium
+delta_dapo	EXPECTED_WITHOUT_MEASURED	zvf	n2_same_stack_last10	<0	DAPO's dynamic_sampling filter explicitly resamples zero-variance groups; predicted lower ZVF than GRPO on the same stac	medium
+delta_es	MEASURED_WITHOUT_EXPECTED	mag_mean	zvf130_5seed		measured delta=-0.36656	medium
+delta_es	MEASURED_WITHOUT_EXPECTED	mean_zvf	zvf130_5seed		measured delta=-0.36656	medium
+delta_gift	MEASURED_WITHOUT_EXPECTED	mean_len	n2_same_stack_last10		measured delta=-3.889063	medium
+delta_gift	MEASURED_WITHOUT_EXPECTED	mean_zvf	zvf130_5seed		measured delta=-0.36658	medium
+delta_gift	MEASURED_WITHOUT_EXPECTED	pcd	n2_same_stack_last10		measured delta=-0.018457	medium
+delta_gspo	EXPECTED_WITHOUT_CV	mean_len	length_bias_iter60_grpo_vs_drgrpo_paired	<0	Length normalization in the importance ratio reduces the implicit length-bias GRPO inherits from per-token averaging; pr	high
+delta_gspo	EXPECTED_WITHOUT_CV	reward_mean	n2_same_stack_last10	>=0	GSPO is documented as reward-neutral or slightly positive on Qwen3 dense models; the sequence-level ratio is variance-re	high
+delta_gspo	EXPECTED_WITHOUT_CV	zvf	n2_same_stack_last10	<0	GSPO's sequence-level (length-normalized) importance ratio reduces per-token variance amplification that drives zero-var	high
+delta_gspo	EXPECTED_WITHOUT_MEASURED	mean_len	length_bias_iter60_grpo_vs_drgrpo_paired	<0	Length normalization in the importance ratio reduces the implicit length-bias GRPO inherits from per-token averaging; pr	medium
+delta_gspo	EXPECTED_WITHOUT_MEASURED	reward_mean	n2_same_stack_last10	>=0	GSPO is documented as reward-neutral or slightly positive on Qwen3 dense models; the sequence-level ratio is variance-re	medium
+delta_gspo	EXPECTED_WITHOUT_MEASURED	zvf	n2_same_stack_last10	<0	GSPO's sequence-level (length-normalized) importance ratio reduces per-token variance amplification that drives zero-var	medium
+delta_liteppo	DELTAS_WITHOUT_EXPECTED	?	?		no_value_head: no learned V_head; advantages are estimated by an external baseline (group mean)	high
+delta_liteppo	DELTAS_WITHOUT_EXPECTED	?	?		ratio_clip: PPO-style ratio clipping retained with eps_low=eps_high=0.2 (symmetric clip, unl	high
+delta_mcgrpo	MEASURED_WITHOUT_EXPECTED	mag_mean	zvf130_5seed		measured delta=-0.33474	medium
+delta_mcgrpo	MEASURED_WITHOUT_EXPECTED	mean_zvf	zvf130_5seed		measured delta=-0.33474	medium
+delta_ngrpo	MEASURED_WITHOUT_EXPECTED	mag_mean	zvf130_5seed		measured delta=-0.18042	medium
+delta_ngrpo	MEASURED_WITHOUT_EXPECTED	mean_zvf	zvf130_5seed		measured delta=-0.18042	medium
+delta_ppo	EXPECTED_WITHOUT_CV	reward_mean	n2_same_stack_last10	>=0	PPO with K=4 epochs over the same buffer should be at least reward-neutral vs GRPO K=1; the value head adds variance red	high
+delta_ppo	EXPECTED_WITHOUT_CV	zvf	n2_same_stack_last10	<0	PPO's learned V_head reduces within-group zero-variance probability because GAE reweights per-token advantages rather th	high
+delta_ppo	EXPECTED_WITHOUT_CV	zvf_risk_mean	zvf130_5seed	<0	On the 5-seed risk panel, PPO's learned baseline should reduce risk of zero-variance groups (variance reduction); same p	high
+delta_ppo	EXPECTED_WITHOUT_MEASURED	reward_mean	n2_same_stack_last10	>=0	PPO with K=4 epochs over the same buffer should be at least reward-neutral vs GRPO K=1; the value head adds variance red	medium
+delta_ppo	EXPECTED_WITHOUT_MEASURED	zvf	n2_same_stack_last10	<0	PPO's learned V_head reduces within-group zero-variance probability because GAE reweights per-token advantages rather th	medium
+delta_ppo	EXPECTED_WITHOUT_MEASURED	zvf_risk_mean	zvf130_5seed	<0	On the 5-seed risk panel, PPO's learned baseline should reduce risk of zero-variance groups (variance reduction); same p	medium
+delta_reinforce	DELTAS_WITHOUT_EXPECTED	?	?		no_baseline: no group-mean or value baseline; raw reward r_i is the advantage (A_i = r_i); no	high
+delta_reinforce	DELTAS_WITHOUT_EXPECTED	?	?		no_clipping: no PPO-style ratio clipping (canonical leaf pinned at clip_eps_low=null, clip_ep	high
+delta_scafgrpo	MEASURED_WITHOUT_EXPECTED	mag_mean	zvf130_5seed		measured delta=-0.16414	medium
+delta_scafgrpo	MEASURED_WITHOUT_EXPECTED	mean_zvf	zvf130_5seed		measured delta=-0.16414	medium
+delta_tool_use_llama-8b-inst	MEASURED_WITHOUT_EXPECTED	zvf_risk_mean	zvf130_1seed_tooluse		measured delta=-0.030307	medium
+delta_tool_use_llama-8b-inst	DELTAS_WITHOUT_EXPECTED	?	?		task_substitution: GRPO base loss-form retargeted to BFCL tool-use task (sparse 0/1 outcome reward)	high
+delta_tool_use_qwen3-32b	MEASURED_WITHOUT_EXPECTED	zvf_risk_mean	zvf130_1seed_tooluse		measured delta=-0.030307	medium
+delta_tool_use_qwen3-32b	DELTAS_WITHOUT_EXPECTED	?	?		task_substitution: GRPO base loss-form retargeted to BFCL tool-use task (sparse 0/1 outcome reward)	high

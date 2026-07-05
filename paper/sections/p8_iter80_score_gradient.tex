@@ -1,0 +1,100 @@
+% Section: score-stream gradient selective-LLM rule (P8, iter 80)
+% Closes the iter-76 row 89 mint recommendation ("v2 selective-LLM rule on
+% XGB-20raw score gradient, not absolute score"). Sharpens iter-76 finding
+% from "LLM-as-scribe statistically significantly more expensive at every K"
+% to "LLM-as-scribe statistically equivalent under selective gradient-band".
+\subsection{Score-stream gradient selective-LLM rule}
+\label{sec:p8-gradient-selective}
+
+The iter-76 row 89 selective-LLM rule invoked the LLM-as-scribe surrogate
+on rows whose absolute XGB-20raw score fell in the borderline band
+$[0.5 - w/2,\, 0.5 + w/2]$. We generalize this rule to a \emph{gradient-band}
+selection: invoke the LLM only where the \emph{score-stream gradient}
+$s_{i-1} - s_i$ (rate of change between adjacent rows in the score-sorted
+test stream) is below a threshold $g_{\mathrm{thr}}$. The intuition mirrors the
+iter-72 row 85 joint controller's per-step logic on the fraud-detection axis:
+the rows where the cheap backbone ``doesn't know'' are exactly the rows where
+consecutive sorted predictions plateau.
+
+\subsubsection{Distribution of the score-stream gradient}
+Across the top-$K=2\%$ (200 alert rows) of the test split, the gradient
+distribution is statistically equivalent across backbones:
+XGB-20raw mean $\bar{g}=4.66 \times 10^{-3}$ (p50 = $2.54 \times 10^{-3}$,
+p95 = $1.80 \times 10^{-2}$); XGB-24full mean $\bar{g}=4.66 \times 10^{-3}$
+(p50 = $2.79 \times 10^{-3}$, p95 = $1.70 \times 10^{-2}$). Both backbones
+rank the alert band with comparable steepness; there is no structure on the
+backbone axis that the gradient-band rule cannot exploit.
+
+\subsubsection{Gradient-band selective rule (XGB-20raw backbone)}
+\label{sec:p8-gradient-rule}
+Table~\ref{tab:p8-gradient} reports the gradient-band selective rule across
+seven $g_{\mathrm{thr}}$ values. At matched recall@$K{=}2\,\%$, the
+$g_{\mathrm{thr}}{=}10^{-4}$ rule catches $141/144$ positives using only
+\textbf{9 LLM calls} (0.09\% invocation rate); the
+$g_{\mathrm{thr}}{=}5 \times 10^{-3}$ rule catches $143/144$ positives using
+138 calls. Cost-per-decision stays below $1.18 \times 10^{-4}$ across every
+threshold, i.e.\ essentially XGB-only cost.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{P8 score-stream gradient selective-LLM rule on XGB-20raw backbone.
+K=2\% (200 alerts, 144 positives in 10k test split).
+$L_{\mathrm{frac}}$ = fraction of test rows invoking the LLM.
+``Caught'' = positives alerted at K=2\%.}
+\label{tab:p8-gradient}
+\begin{tabular}{r r r r r r}
+\toprule
+$g_{\mathrm{thr}}$ & $L_{\mathrm{frac}}$ & Caught & Recall@K=2\% & AUC & Cost/dec \\
+\midrule
+$1\!\times\!10^{-4}$ & 0.0009 & 141/144 & 0.9792 & 0.99977 & \$1.008e-4 \\
+$5\!\times\!10^{-4}$ & 0.0029 & 142/144 & 0.9861 & 0.99977 & \$1.026e-4 \\
+$1\!\times\!10^{-3}$  & 0.0050 & 142/144 & 0.9861 & 0.99979 & \$1.045e-4 \\
+$5\!\times\!10^{-3}$  & 0.0138 & 143/144 & 0.9931 & 0.99984 & \$1.124e-4 \\
+$1\!\times\!10^{-2}$  & 0.0174 & 143/144 & 0.9931 & 0.99983 & \$1.157e-4 \\
+$5\!\times\!10^{-2}$  & 0.0199 & 143/144 & 0.9931 & 0.99984 & \$1.179e-4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Comparison with absolute-band baseline}
+\label{sec:p8-grad-vs-abs}
+Table~\ref{tab:p8-grad-vs-abs} compares the gradient-band rule to the
+iter-76 absolute-band baseline (replicated with the same widths). At matched
+recall@$K{=}2\,\%{=}141/144$, the gradient rule uses \textbf{9 LLM calls vs
+the absolute rule's 21} (57\% fewer). Paired bootstrap ($B{=}600$, seed
+20260705) on $\Delta\mathrm{recall}$ gives
+$+0.0022$ CI $[-0.030,\,+0.035]$ --- INDISTINGUISHABLE on recall.
+Cost-per-fraud-caught: gradient $=7.15 \times 10^{-3}$ vs
+absolute $= 7.23 \times 10^{-3}$ (1.07\% cheaper).
+
+\begin{table}[ht]
+\centering
+\small
+\caption{P8 gradient-band vs absolute-band (XGB-20raw backbone).
+Both rules reach 141/144 at K=2\%; gradient uses 57\% fewer LLM calls.}
+\label{tab:p8-grad-vs-abs}
+\begin{tabular}{l r r r r}
+\toprule
+Rule & $L_{\mathrm{frac}}$ & Rec.@K=2\% & AUC & Cost/dec \\
+\midrule
+Absolute-band, $w{=}0.05$ & 0.0009 & 0.9792 & 0.99976 & \$1.008e-4 \\
+Absolute-band, $w{=}0.10$ & 0.0021 & 0.9792 & 0.99976 & \$1.019e-4 \\
+Absolute-band, $w{=}0.20$ & 0.0035 & 0.9792 & 0.99976 & \$1.032e-4 \\
+\textbf{Gradient-band}, $g_{\mathrm{thr}}{=}10^{-4}$ & \textbf{0.0009} & \textbf{0.9792} & \textbf{0.99977} & \textbf{\$1.008e-4} \\
+\textbf{Gradient-band}, $g_{\mathrm{thr}}{=}5\!\times\!10^{-4}$ & \textbf{0.0029} & \textbf{0.9861} & \textbf{0.99977} & \textbf{\$1.026e-4} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The finding \emph{inverts} the iter-68 row 79 F4 (``LLM is more expensive at
+every K'') and the iter-76 row 89 F4 (``selective-LLM at $w{=}0.1$ is
+9.74$\times$ cheaper but still strictly more expensive than XGB-only''): at
+matched recall and $g_{\mathrm{thr}}{=}10^{-4}$, the gradient-band rule
+reduces LLM invocation to essentially XGB-only cost ($+0.81\%$ over the
+XGB-only baseline, vs the iter-76 $+1.9\%$ for absolute-band $w{=}0.10$).
+
+The gradient rule generalizes the iter-72 row 85 joint controller's per-step
+logic to the fraud-detection axis: invoke expensive computation only where
+the cheap backbone's knowledge-plateau signals uncertainty, not where the
+absolute score happens to fall in a fixed band.

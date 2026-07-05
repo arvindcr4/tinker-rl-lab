@@ -1,0 +1,56 @@
+{
+  "iter": 101,
+  "pillar": "P5",
+  "panel_size_full": 45,
+  "panel_size_n2subset": 20,
+  "n_methods_full": 9,
+  "n_methods_n2subset": 4,
+  "n_seeds": 5,
+  "metrics": [
+    "zvf_risk",
+    "mean_zvf",
+    "lag1_zvf_rolling_w15",
+    "slope",
+    "risk_mag",
+    "risk_csd",
+    "risk_drift"
+  ],
+  "N_perm": 2000,
+  "seed": 20260705,
+  "headlines": {
+    "H1_full9_large": true,
+    "H1_full9_point": 0.763,
+    "H1_full9_lomo_range": [
+      0.6835,
+      0.8274
+    ],
+    "H2_n2_subset_large": true,
+    "H2_n2_subset_point": 0.6698,
+    "H2_n2_subset_lomo_range": [
+      0.4191,
+      0.7772
+    ],
+    "H3_algo_dominates_seed": true,
+    "H3_algo_point": 0.763,
+    "H3_seed_point": 0.0071,
+    "H4_permutation_sig": true,
+    "H4_permutation_p_full9": 0.0,
+    "H4_permutation_p_n2": 0.0015,
+    "H4_permutation_obs_full9": 0.763,
+    "H4_permutation_null_mean_full9": 0.1822,
+    "H5_scafgrpo_most_load_bearing": true,
+    "H5_most_load_bearing_method": "scafgrpo",
+    "H5_most_load_bearing_rel_drop": -0.1042,
+    "H6_add_es_stable": true,
+    "H6_grp7_point": 0.6336,
+    "H6_grp7_es_point": 0.6835,
+    "H6_delta": 0.049899999999999944
+  },
+  "artifacts": {
+    "full9": "/home/claude/tinker-rl-lab-minimax/experiments/results/p5p8/p5_iter101_zvf130_eta2_full9.tsv",
+    "n2subset": "/home/claude/tinker-rl-lab-minimax/experiments/results/p5p8/p5_iter101_zvf130_eta2_n2subset.tsv",
+    "lomo": "/home/claude/tinker-rl-lab-minimax/experiments/results/p5p8/p5_iter101_zvf130_lomo.tsv",
+    "family_subset": "/home/claude/tinker-rl-lab-minimax/experiments/results/p5p8/p5_iter101_zvf130_family_subset.tsv",
+    "permutation": "/home/claude/tinker-rl-lab-minimax/experiments/results/p5p8/p5_iter101_zvf130_permutation.tsv"
+  }
+}

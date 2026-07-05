@@ -1,0 +1,15 @@
+panel	axis	metric	n_rows	eta2_point	eta2_lomo_min	eta2_lomo_max	lomo_range
+full9	method	zvf_risk	45	0.763	0.6835	0.8274	0.1439
+full9	method	mean_zvf	45	0.9989	0.9976	0.9992	0.0016
+full9	method	lag1_zvf_rolling_w15	45	0.8222	0.8018	0.8451	0.0432
+full9	method	slope	45	0.994	0.925	0.9966	0.0716
+full9	method	risk_mag	45	0.9991	0.9981	0.9994	0.0013
+full9	method	risk_csd	45	0.7884	0.7557	0.8469	0.0913
+full9	method	risk_drift	45	0.9943	0.9194	0.9974	0.078
+full9	seed	zvf_risk	45	0.0071	0.0008	0.0093	0.0085
+full9	seed	mean_zvf	45	0.0003	0.0	0.0004	0.0004
+full9	seed	lag1_zvf_rolling_w15	45	0.0123	0.0078	0.017	0.0091
+full9	seed	slope	45	0.0017	0.0005	0.0021	0.0016
+full9	seed	risk_mag	45	0.0002	0.0	0.0003	0.0002
+full9	seed	risk_csd	45	0.0064	0.0017	0.0082	0.0065
+full9	seed	risk_drift	45	0.0015	0.0005	0.0018	0.0014

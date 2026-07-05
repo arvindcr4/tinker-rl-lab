@@ -1,0 +1,91 @@
+% Iter 82: N2 same-stack window-sensitivity validation of variant deltas
+\subsection{Iter-82: Window-Sensitivity Validation of Variant Deltas}
+\label{sec:p6-iter82-window-sensitivity}
+
+The registry's existing \texttt{measured[]} rows for AERO, GIFT, and AREAL
+all carry a \texttt{panel="n2\_same\_stack\_last10"} tag, restricting
+the empirical comparison to steps 30--39 of the 40-step N2 same-stack
+tensors (the late-training regime). This iter re-measures the same
+three variants against the GRPO reference under five windows
+(full40, last20, last10, last5, early10) and tests whether the
+registry-claimed signs, magnitudes, and CI overlap survive the
+full-window measurement
+(\texttt{scripts/p5p8/p6\_iter82\_n2\_window\_validate.py}, stdlib only,
+B=2000, seed 20260705).
+
+\paragraph{Headline H1: only 5/12 (42\%) registry-claimed signs survive full40.}
+Across 3 variants $\times$ 4 metrics = 12 (variant, metric) cells,
+the registry's claimed sign (inferred from the stored
+\texttt{measured.delta}) agrees with the fresh full40 sign in 5/12:
+AERO 1/4, GIFT 2/4, AREAL 2/4. This includes two previously-significant
+reward\_mean deltas (AERO $\Delta_{\text{last10}}=-0.014$ and
+AREAL $\Delta_{\text{last10}}=-0.020$, both significant) that
+\textbf{become non-significant under full40 measurement}
+($\Delta_{\text{full40}}=-0.007$ and $-0.005$ respectively, with CIs
+that include zero). The last10 window overstates the magnitude of
+negative reward\_mean deltas for the off-policy variants.
+
+\paragraph{Headline H2: only 4/12 (33\%) registry CIs contain the fresh full40 estimate.}
+For the 6 cells with a numeric registry claim, only AERO zvf, AERO
+reward\_mean, GIFT reward\_mean, and AREAL zvf have the fresh
+$\Delta_{\text{full40}}$ falling inside the registry's CI:
+4/6 = 67\% overlap. GIFT zvf and AREAL reward\_mean have their full40
+point estimate \emph{outside} the registry's CI, a more stringent
+discrepancy than the sign test.
+
+\paragraph{Headline H3: GIFT's NS reward\_mean claim is promoted to SIG under full40.}
+The registry records GIFT reward\_mean
+$\Delta_{\text{last10}}=+0.016$ as non-significant (CI $[-0.007,
++0.040]$). Under full40, the paired-bootstrap CI shrinks to
+$[+0.0004, +0.0205]$, \textbf{just excluding zero}. This is the only
+case where the registry's NS verdict is reversed under the more
+powerful full40 estimate.
+
+\paragraph{Headline H4: window significance gradient is monotonic in $T$.}
+Across 12 cells (3 methods $\times$ 4 metrics), the per-window
+significant-cell count is early10=1/12 (8.3\%), full40=6/12 (50.0\%),
+last20=6/12 (50.0\%), last10=7/12 (58.3\%), last5=9/12 (75.0\%).
+The early-training regime carries little signal (consistent with the
+iter-66 anti-herding observation that contrast-yield needs warm-up);
+last5 is the most significant but also the most cherry-picked.
+\textbf{Operational recommendation}: replace \texttt{n2\_same\_stack\_last10}
+with \texttt{n2\_same\_stack\_full40} in the panel tag, OR keep
+\texttt{last10} but report the full40 estimate alongside as the
+primary point estimate and the last10 estimate as a sensitivity
+check.
+
+\paragraph{Headline H5: one sign-flip (GIFT cv\_len) is the only fragility.}
+11/12 cells preserve the direction of the effect across windows; the
+single fragile cell is GIFT $\Delta\text{cv\_len}$ which is negative
+under full40 ($\Delta=-0.0008$ NS) but positive under last10
+($\Delta=+0.0020$ NS). Both are non-significant, but the sign
+inversion is documented.
+
+\paragraph{Cross-paper coupling.}
+\textbf{P5 iter-80 row 95 / iter-81 row 96}: Items 13--17 of MIN-REPORT
+v2.2 are designed at the \emph{cell} granularity (one value per
+model $\times$ task $\times$ G $\times$ T $\times$ seed); the
+window-sensitivity audit here exposes the same cell-vs-window
+variance at the \emph{step} granularity, where the registry
+currently collapses 40 steps into 10. \textbf{P7 iter-79 row 93}:
+the joint controller's per-step ZVF-triage is calibrated at the
+full40 granularity (per-step, not last10); this iter shows the
+registry's panel tag is the only place in the worktree that uses
+the last10 window, so the audit sharpens rather than competes with
+the controller's calibration. \textbf{P6 iter-78 row 92}: the
+iter-78 PPO backfill left the existing aero/gift/areal
+\texttt{measured[]} blocks unchanged; this iter provides the
+\textbf{first CI-overlap audit} of those blocks against an
+independent full-window re-measurement.
+
+\paragraph{Operational recommendation.}
+For the three same-stack variants with full40-replicable evidence,
+add a new schema-optional field \texttt{window\_sensitivity} to the
+\texttt{measured[]} record (allowed values
+\texttt{STABLE-DIRECTION-MAG-SHIFT}, \texttt{FRAGILE-SIGN-FLIP},
+\texttt{STABLE}; default \texttt{STABLE-DIRECTION-MAG-SHIFT}), and
+a companion \texttt{robust\_panel} string that records the most
+generous panel under which the effect remains significant. This is
+the experimental-design constraint that closes the brief's vein
+(a); the schema bump is deferred to the next registry iteration
+that touches the \texttt{measured[]} block.

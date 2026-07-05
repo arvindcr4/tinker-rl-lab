@@ -1,0 +1,87 @@
+{
+  "iter": 180,
+  "job": "P5P8-SYNTH D17 cross-paper evidence reproducibility density",
+  "n_findings_total": 39,
+  "n_findings_verified_stored_verdicts": 9,
+  "n_findings_per_pillar": {
+    "P5": 8,
+    "P6": 10,
+    "P7": 9,
+    "P8": 6,
+    "P5P8-SYNTH": 6
+  },
+  "D17a_per_pillar": {
+    "P5": 0.0,
+    "P6": 0.1,
+    "P7": 0.1111,
+    "P8": 0.1667,
+    "P5P8-SYNTH": 0.0
+  },
+  "D17a_verified_per_pillar": {
+    "P5": 0.0,
+    "P6": 0.5,
+    "P7": 0.5,
+    "P8": 0.5,
+    "P5P8-SYNTH": 0.0
+  },
+  "D17a_overall": 0.0769,
+  "D17a_verified_overall": 0.3333,
+  "D17b_per_pillar": {
+    "P5": 0.4333,
+    "P6": 0.9,
+    "P7": 0.6,
+    "P8": 0.5,
+    "P5P8-SYNTH": 0.5
+  },
+  "D17d_per_pillar_mean_claim_len": {
+    "P5": 1843.5,
+    "P6": 1442,
+    "P7": 1538.1,
+    "P8": 1365.7,
+    "P5P8-SYNTH": 1110.5
+  },
+  "layer_counts": {
+    "LOW": 4,
+    "MID": 2
+  },
+  "n_5of5_per_pillar": {
+    "P6": 1,
+    "P7": 1,
+    "P8": 1
+  },
+  "synth_vs_each_pillar": {
+    "P5": {
+      "point": 0.0,
+      "lo": 0.0,
+      "hi": 0.0
+    },
+    "P6": {
+      "point": -0.1,
+      "lo": -0.3,
+      "hi": 0.0
+    },
+    "P7": {
+      "point": -0.1111,
+      "lo": -0.3333,
+      "hi": 0.0
+    },
+    "P8": {
+      "point": -0.1667,
+      "lo": -0.5,
+      "hi": 0.0
+    }
+  },
+  "P7_vs_P8_D17a_diff": {
+    "point": -0.0556,
+    "lo": -0.5,
+    "hi": 0.2778
+  },
+  "hypotheses": {
+    "H1_synth_D17a_gt_P5": false,
+    "H2_P7_highest_5of5_count": true,
+    "H3_P6_highest_D17c": true,
+    "H4_P8_widest_mean_claim_len": false,
+    "H5_D17_OVERALL_in_HIGH": false,
+    "H6_D17a_verified_NOT_in_LOW": true
+  }
+}

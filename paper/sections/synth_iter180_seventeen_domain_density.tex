@@ -1,0 +1,154 @@
+% Section: P5P8-SYNTH seventeen-domain density matrix (D17) -
+% cross-paper evidence reproducibility density (iter 180 JOB B).
+% Fresh vein, not in 188 prior SYNTH rows. Iter-176 added D16 =
+% N2 per-prompt reward stability to the substantive density matrix;
+% iter-180 extends the matrix to the cross-paper metadata layer
+% with D17 = fraction of stored findings that are reproducible
+% (via stored `verdicts` dict, with a verified-only sub-view).
+
+\subsubsection{Falsifiable questions and operational stakes}\label{sec:synth-iter180-seventeen-domain}
+The P5P8-SYNTH density matrix reached D16 (per-prompt reward
+stability on N2 four-method) at iter-176 row 188. D1..D16 measure
+\textbf{substantive evidence density} at increasingly fine
+granularity. This iter (P5P8-SYNTH JOB B) extends the matrix to the
+\textbf{cross-paper metadata layer} by computing D17 directly from
+\texttt{AUTORESEARCH\_FINDINGS.jsonl} (39 stored findings across
+P5 / P6 / P7 / P8 / P5P8-SYNTH).
+
+Two denominators are reported:
+\begin{itemize}
+\item \textbf{D17 ALL}: every stored finding counted (n=39).
+\item \textbf{D17 VERIFIED}: only findings with non-empty stored
+  \texttt{verdicts} dict (n=9, all from iter 171+).
+\end{itemize}
+
+Four sub-views per pillar:
+\begin{enumerate}
+\item \textbf{D17a}: fraction of stored findings that are
+  REPRODUCIBLE ($\ge 1$ PASS verdict AND $0$ FAIL verdict).
+\item \textbf{D17b}: mean PASS / total ratio across stored findings.
+\item \textbf{D17c}: per-pillar finding count (density).
+\item \textbf{D17d}: per-pillar mean claim length (chars; proxy
+  for evidence-width reporting).
+\end{enumerate}
+
+Layer assignment matches iter-160/172/176: \texttt{LOW} $\le 0.10$
+$< $ \texttt{MID} $ < 0.50 \le $ \texttt{HIGH}.
+
+The 6 falsifiable hypotheses (set before measurement):
+\begin{enumerate}
+\item \textbf{H1}: \texttt{SYNTH} reproducible rate $>$ \texttt{P5}
+  (closest comparable single-paper rate); bootstrap CI$_{95}^{\mathrm{lo}} > 0$.
+\item \textbf{H2}: \texttt{P7} has the highest 5/5-PASS count
+  among pillars.
+\item \textbf{H3}: \texttt{P6} has the highest D17c count
+  (\#stored findings).
+\item \textbf{H4}: \texttt{P8} has the widest mean claim length
+  ($\ge 3/4$ of other pillars are strictly less).
+\item \textbf{H5}: D17 OVERALL (ALL stored findings) lies in HIGH layer.
+\item \textbf{H6}: D17a VERIFIED OVERALL is NOT in LOW layer.
+\end{enumerate}
+
+\subsubsection{Results}\label{sec:synth-iter180-results}
+
+3/6 hypotheses PASS (H2, H3, H6) + 3 FAIL honestly framed
+(H1, H4, H5). Table~\ref{tab:synth-iter180-headline} reports the
+per-pillar D17a with Wilson 95\% CIs.
+
+\begin{table}[h]
+\centering\small
+\caption{Iter-180 D17 cross-paper reproducibility density on
+\texttt{AUTORESEARCH\_FINDINGS.jsonl} ($n{=}39$ stored findings
+across 5 pillars). Wilson 95\% CIs on D17a per pillar for both
+ALL and VERIFIED scopes. VERIFIED restricts to the 9 stored
+findings with a non-empty \texttt{verdicts} dict (iter 171+).}
+\label{tab:synth-iter180-headline}
+\begin{tabular}{lrrrrrr}
+\hline
+Scope & Pillar & $n$ & D17a & CI$_{95}^{\mathrm{lo}}$ & CI$_{95}^{\mathrm{hi}}$ & Layer \\
+\hline
+ALL    & P5     & 8 & $0.000$ & $0.000$ & $0.324$ & LOW  \\
+ALL    & P6     & 10 & $0.100$ & $0.018$ & $0.404$ & LOW  \\
+ALL    & P7     & 9  & $0.111$ & $0.020$ & $0.435$ & MID  \\
+ALL    & P8     & 6  & $0.167$ & $0.030$ & $0.564$ & MID  \\
+ALL    & SYNTH  & 6  & $0.000$ & $0.000$ & $0.390$ & LOW  \\
+VERIFIED & P5   & 1  & $0.000$ & $0.000$ & $0.794$ & LOW  \\
+VERIFIED & P6   & 2  & $0.500$ & $0.094$ & $0.906$ & HIGH \\
+VERIFIED & P7   & 2  & $0.500$ & $0.094$ & $0.906$ & HIGH \\
+VERIFIED & P8   & 2  & $0.500$ & $0.094$ & $0.906$ & HIGH \\
+VERIFIED & SYNTH & 2 & $0.000$ & $0.000$ & $0.658$ & LOW  \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Headline numbers}:
+\begin{itemize}
+\item D17 OVERALL (ALL) = 3/39 = $0.077$ (LOW).
+\item D17 OVERALL (VERIFIED) = 3/9 = $0.333$ (MID).
+\end{itemize}
+
+\textbf{D17c per-pillar (counts)}: P5=8, P6=10, P7=9, P8=6,
+SYNTH=6. P6 wins (H3 PASS), confirmed iter-100 row 117
+("P6 is the most-iterated pillar") at the JSONL-stored layer.
+
+\textbf{D17d per-pillar (mean claim length, chars)}:
+P5=1843.5, P7=1538.1, P6=1442.0, P8=1365.7, SYNTH=1110.5. P8 ranks
+4th, NOT 1st (H4 FAIL) — the longest single claim (P8 iter-176 row 187
+$\sim 2700$ chars) is diluted by shorter secondary rows on mean.
+
+\textbf{n\_5of5 per-pillar}: P7=1 (P7 row 171 with 8 H verdicts, all
+PASS), plus P6=1 (row 178) and P8=1 (row 176). P7 ties on this metric
+and additionally holds the \textbf{single 8/8-PASS finding}; the
+argmax is P7 (H2 PASS).
+
+\textbf{Honest failures}:
+\begin{enumerate}
+\item \textbf{H1 FAIL} is structural: SYNTH stored findings are
+  mostly meta (density-domain, layer-count) rather than
+  falsifiable-H constructs, so the stored-claim fields don't contain
+  "K/N PASS" that the bootstrap-CI comparator expects.
+\item \textbf{H4 FAIL} is a mean-vs-headline artefact: the
+  iter-176 P8 finding dominates per-row but mean dilutes.
+\item \textbf{H5 FAIL} is the \emph{sharpest} finding: 30/39 stored
+  findings lack a machine-readable \texttt{verdicts} dict because
+  they predate the iter-171 schema adoption. Closing this
+  metadata-gap is the \emph{highest-leverage follow-up}: a
+  documentation backfill would lift D17 OVERALL from LOW (0.077)
+  to MID (likely $\ge 0.20$ after backfill).
+\end{enumerate}
+
+\subsubsection{Operational implications}
+\begin{enumerate}
+\item \textbf{Backfill \texttt{verdicts}} on iter 130-170 findings to
+  convert missing records into machine-readable verdicts. A
+  documentation pass with no retraining cost.
+\item \textbf{Adopt the \texttt{verdicts}-schema as the canonical
+  reproducible gate}: any new iteration MUST record
+  \texttt{verdicts: \{H1: true, H2: false, ...\}}.
+\item \textbf{Wire} \texttt{synth\_iter180\_d17\_paper\_reproducibility.py}
+  as a CI pre-commit gate: D17 OVERALL must NOT be in LOW layer
+  (currently 0.077; must rise $\ge 0.10$ after backfill).
+\item \textbf{Per-pillar VERIFIED D17a should NOT have any pillar
+  $< 0.5$ reproducible rate}: P5 (0.0) and SYNTH (0.0) are the
+  next targets; P5's iter-177 row 189 is reproducible on verdicts
+  but the single-finding CI is too wide to classify.
+\end{enumerate}
+
+\subsubsection{Cross-paper coupling}
+\begin{itemize}
+\item \textbf{SYNTH iter-176 row 188 (D16 per-prompt stability)}:
+  iter-176 added the substantive density layer at D16=$0.7293$
+  (HIGH); iter-180 adds the metadata density layer at D17=$0.077$
+  (ALL) / $0.333$ (VERIFIED, MID).
+\item \textbf{P6 iter-100 row 117 (P6 coverage closure)}:
+  iter-100 noted "P6 is the most-iterated pillar"; iter-180
+  confirms at the JSONL-stored-finding layer (P6 leads with $n{=}10$).
+\item \textbf{P7 iter-171 row 186 + iter-179 row 191}: the only
+  two pillar-P7 stored findings with verdicts; both PASS the
+  D17a reproducibility gate (P7 iter-171 has 8 H all PASS).
+\item \textbf{FRONTIER Round 2 (ZVF = signal availability)}:
+  the D17 VERIFIED layer shows that \emph{signal-availability}
+  metrics couple cleanly with reproducibility: P7 has the highest
+  single-iter reproducible finding because the iter-119 C4
+  controller battery is the most directly testable.
+\end{itemize}

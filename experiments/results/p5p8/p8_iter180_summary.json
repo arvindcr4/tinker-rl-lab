@@ -1,0 +1,92 @@
+{
+  "iter": 180,
+  "job": "P8 calibration slope + curvature analysis",
+  "n_seeds": 5,
+  "n_boot": 2000,
+  "n_train": 50000,
+  "n_test": 10000,
+  "pos_train": 719,
+  "pos_test": 144,
+  "pre_brier_means": {
+    "20raw": 0.03381877765059471,
+    "24full": 0.03098949044942856,
+    "4sensor": 0.13795665204524993
+  },
+  "slope_means": {
+    "20raw": 1.154503953220193,
+    "24full": 1.2247609781133053,
+    "4sensor": 0.5218584302100087
+  },
+  "slope_dev_from_1": {
+    "20raw": 0.15450395322019306,
+    "24full": 0.2247609781133053,
+    "4sensor": 0.47814156978999134
+  },
+  "monotone_pre_brier": true,
+  "monotone_slope_dev": false,
+  "ci_rows": [
+    {
+      "comparison": "iso_minus_pre_brier_24full",
+      "point": 0.0255,
+      "lo": 0.0242,
+      "hi": 0.02684,
+      "note": "positive=iso lowers Brier (lower=better); CI excludes 0"
+    },
+    {
+      "comparison": "iso_minus_pre_brier_20raw",
+      "point": 0.02782,
+      "lo": 0.02636,
+      "hi": 0.02922,
+      "note": "iso lowers Brier on raw-20 too"
+    },
+    {
+      "comparison": "iso_minus_pre_brier_4sensor",
+      "point": 0.12364,
+      "lo": 0.12046,
+      "hi": 0.12688,
+      "note": "iso lowers Brier on LLM-as-sensor surrogate"
+    },
+    {
+      "comparison": "platt_minus_iso_brier_24full",
+      "point": 0.00106,
+      "lo": 0.00071,
+      "hi": 0.00141,
+      "note": "positive=platt higher Brier than iso"
+    },
+    {
+      "comparison": "iso_minus_pre_eceK1_24full",
+      "point": -0.08907,
+      "lo": -0.15349,
+      "hi": 0.01538,
+      "note": "positive=iso lowers within-budget ECE@K=1% on 24full"
+    },
+    {
+      "comparison": "iso_24full_minus_iso_20raw_brier",
+      "point": -0.00059,
+      "lo": -0.00096,
+      "hi": -0.0002,
+      "note": "negative=24full lower Brier than 20raw after iso"
+    },
+    {
+      "comparison": "iso_24full_minus_iso_4sensor_brier",
+      "point": -0.00928,
+      "lo": -0.01113,
+      "hi": -0.00753,
+      "note": "negative=24full lower Brier than 4sensor after iso"
+    },
+    {
+      "comparison": "abs_curv_K1_pre_minus_iso_24full",
+      "point": -0.08907,
+      "lo": -0.15398,
+      "hi": 0.03142,
+      "note": "positive=|curv| shrinks after iso; smaller=|better|"
+    }
+  ],
+  "hypotheses": {
+    "H1_isotonic_lowers_brier_on_3of3": true,
+    "H2_isotonic_lowers_eceK1_24full": false,
+    "H3_post_iso_24full_brier_le_20raw": true,
+    "H4_post_iso_24full_brier_lt_4sensor": true,
+    "H5_abs_curv_K1_shrinks_24full": false
+  }
+}

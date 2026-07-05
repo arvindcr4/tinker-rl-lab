@@ -1,0 +1,4 @@
+method	adv_kl_full40_mean	adv_kl_last10_mean	adv_w1_last10_mean	adv_var_ratio_last10_mean	registry_zvf_delta	registry_zvf_sig	registry_reward_mean_delta	registry_reward_mean_sig	adv_div_inert_flag
+aero	1.681127882757552	1.0323461700171335	0.02890625	1.2177148463520877	-0.025	False	-0.014063	True	False
+gift	12.601417284430987	10.121747540723751	0.443701171875	1.0522077110033394	0.125	True	0.016406	False	False
+areal	1.9517008811424337	0.8551283818672024	0.037109375	1.3836993052632722	-0.05625	False	-0.019531	True	False

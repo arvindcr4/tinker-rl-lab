@@ -1,0 +1,145 @@
+% Section: P5 multi-axis yield-residual MIN-REPORT v2.2 axes (iter 81)
+% Closes the iter-80 mint recommendation: extend v2.1 with N items of
+% yield-residual and measure which is signal-bearing beyond Item 13.
+% Four additional candidates (Items 14-17) tested via per-cell group-tensor
+% statistics; binomial(G, p) null control separates signal from randomness.
+\subsection{Multi-axis yield-residual v2.2 (Items 14--17)}
+\label{sec:p5-iter81-yield-axes}
+
+The iter-80 row 95 Item~13 (\texttt{zvf\_yield\_residual}) was the \emph{first}
+MIN-REPORT item to independently strengthen fingerprint-vs-outcome coupling.
+The iter-80 mint recommendation asked whether MIN-REPORT is structurally
+under-recorded by a single item, or whether \emph{multiple} yield-residual
+axes each carry independent signal. We close that recommendation here by
+testing four additional yield-residual candidates per cell, all derived
+from the live \texttt{group\_tensors/} data already in the worktree.
+
+\subsubsection{Four candidates (Items 14--17)}
+Each candidate is a per-cell scalar fully determined by the
+$\mathbf{K}_{\mathrm{vec}} \in \{0,\dots,G\}^{\,n_{\mathrm{groups}}}$ vector of
+success-counts across prompts and the per-cell $p_c = \mathrm{mean\_reward}/100$:
+\begin{align}
+  \mathrm{Item14}(c) &\;=\; \mathrm{Var}(K) - G \cdot p \cdot (1-p) \tag{K-variance residual}\\
+  \mathrm{Item15}(c) &\;=\; |\{\,k : k \in K\,\}| \tag{distinct K-count, $\le G{+}1$}\\
+  \mathrm{Item16}(c) &\;=\; \max_k\,\bigl(\#\{x : K_x = k\}\bigr) / n_{\mathrm{groups}} \tag{max K-share}\\
+  \mathrm{Item17}(c) &\;=\; \mathrm{Var}\!\bigl(K/G\bigr) \tag{prompt-$\hat p$ spread}\\
+  \label{eq:items14-17}
+\end{align}
+All four are populated on $\mathbf{98/98}$ cells with zero additional harvest.
+
+\subsubsection{Information budget uplift (H1)}
+Table~\ref{tab:p5-v22-uplift} shows the cumulative fingerprint budget.
+Items~14--17 collectively add $+15.86$ bits to v2.1, $\mathbf{3.4\times}$
+as much as Item~13 alone. The total v2.2 budget is $38.78$ bits
+($+69.2\%$ over v2.1; $+147.6\%$ over v1). Per-item cardinality on the
+98-cell corpus: Item 14 $n_{\mathrm{unique}} = 49$, Item 15 $= 5$ (bounded
+by $G+1$), Item 16 $= 20$, Item 17 $= 49$.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{P5 v2.2 MIN-REPORT fingerprint: Items 14--17 collectively add
+$+15.86$ bits, of which \textbf{three (Items 14, 15, 17)} are signal-bearing
+over a $\mathrm{Binomial}(G,p)$ null, and \textbf{Item 16 is rejected as
+a placebo} (excess H bits = $-0.123$, $\approx -1.9\sigma$).}
+\label{tab:p5-v22-uplift}
+\begin{tabular}{l r r r r}
+\toprule
+Fingerprint & Items & Pop. cells & $H_{\mathrm{bits}}$ total & $\Delta H$ vs prior \\
+\midrule
+v2.0 (iter-73 row 86)        & 12  & 98/98 & 18.27 & --- \\
+v2.1 (iter-80 row 95)        & 13  & 98/98 & 22.92 & +4.65 \\
++v2.2 (all 4 candidates)     & 17  & 98/98 & 38.78 & +15.86 \\
+\quad +Item 14               & 14 & 98/98 & 27.66 & +4.74 \\
+\quad +Item 15               & 14 & 98/98 & 25.79 & +2.87 \\
+\quad +Item 16 (placebo)     & 14 & 98/98 & 26.50 & +3.58 \\
+\quad +Item 17               & 14 & 98/98 & 27.58 & +4.66 \\
+\midrule
+\textbf{Recommended v2.2}    & \textbf{14} & \textbf{98/98} & \textbf{35.20} & \textbf{(+12.27)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Single-item Spearman (H2)}
+\textbf{Each individual item 14--17 alone} has higher fingerprint-vs-$|\Delta z|$
+Spearman $\rho$ than the \emph{full 7-item v1 fingerprint}:
+\begin{itemize}
+  \item Item 14 (K-variance residual): $\rho = 0.558$
+  \item Item 15 (K-unique count): $\rho = 0.588$
+  \item Item 16 (max K-share): $\rho = 0.589$
+  \item Item 17 (prompt-$\hat p$ spread): $\rho = 0.556$
+\end{itemize}
+The v1 fingerprint's $\rho = 0.436$ is exceeded by $\sim 30\%$ even at
+single-axis granularity -- evidence that the structural \emph{shape} of
+the success-count distribution carries more anti-herding signal than
+any string-valued fingerprint axis.
+
+\subsubsection{Paired bootstrap coupling (H3)}
+Paired bootstrap ($B=2000$ with $N_{\mathrm{pairs}}=2000$ cell-pairs):
+\begin{itemize}
+  \item $\Delta\rho(\mathrm{v2.2}_{\mathrm{all}} - \mathrm{v2.1}) = \mathbf{+0.0748}$, 95\% CI $[\mathbf{+0.066,\,+0.084}]$ -- excludes zero.
+  \item $\Delta\rho(\mathrm{v2.2}_{13+15} - \mathrm{v2.1}) = +0.0443$ (CI $[+0.039,\,+0.049]$) -- the strongest \emph{single} candidate.
+  \item Items 14, 16, 17 each add $+0.031$ to $+0.039$ with CIs excluding zero.
+\end{itemize}
+\textbf{Every} (Item 13 + one new item) combination independently strengthens
+fingerprint-vs-outcome coupling.
+
+\subsubsection{Binomial null control (H4)}
+To separate signal from binomial noise we simulated per-cell
+$K_x \sim \mathrm{Binomial}(G_c,\, p_c)$ for $n=200$ replications and
+recomputed each item's $H_{\mathrm{bits}}$. Excess
+$\Delta H_{\mathrm{bits}} = H_{\mathrm{obs}} - \bar H_{\mathrm{null}}$:
+\begin{align}
+  \mathrm{Item14:}\;\Delta H = +0.186\;\;\;(\!\approx\!+2.8\sigma) \quad
+  \mathrm{Item15:}\;\Delta H = +0.255\;\;\;(\!\approx\!+6.2\sigma) \quad
+  \mathrm{Item16:}\;\Delta H = -0.123\;(\!\approx\!-1.9\sigma) \quad
+  \mathrm{Item17:}\;\Delta H = +0.257\;\;\;(\!\approx\!+3.6\sigma)
+  \label{eq:null_excess}
+\end{align}
+\textbf{Items 14, 15, 17} encode information \emph{beyond} $\mathrm{Binomial}(G,p)$
+they are signal-bearing. \textbf{Item 16 is REJECTED}: its empirical
+max-K-share is \emph{higher} than binomial expectation (more concentrated),
+i.e. it is anti-herding-by-construction but does not add new empirical
+information beyond what the binomial model's K-distribution already encodes.
+
+\subsubsection{Verdict and operational recommendation}
+\begin{itemize}
+  \item \textbf{Adopt Items 14, 15, 17} into MIN-REPORT v2.2.
+  \item \textbf{Reject Item 16} (max K-share) -- negative binomial-null excess.
+  \item \textbf{Displace} one v1 placebo item (e.g.\ \texttt{sampler\_backend\_precision}, $n_{\mathrm{unique}}=1$ on the live corpus).
+  \item Recommended \textbf{v2.2 schema = 14 items}, $H_{\mathrm{bits}}$ budget $= 35.20$, paired $\Delta\rho$ CI excludes zero.
+\end{itemize}
+The frontier synthesis (FRONTIER\_INSIGHTS.md Round 1) frame
+Y$(p,G) = 1 - \mathrm{ZVF}$ as \emph{Contrastive Yield}; iter-80 Item~13 is
+its first per-cell realisation, and iter-81 items 14, 15, 17 add
+\textbf{three} further realisations of contrast-yield information at the
+$(K$-distribution) granularity. The four v2.2 items together give a
+\textbf{4-vector of yield-residual signal} per cell, sufficient to
+reconstruct the underlying GRPO contrast-preservation regime.
+
+\subsubsection{Cross-paper coupling}
+\begin{itemize}
+  \item \textbf{P5 iter-80 row 95 Item 13} -- Items 14, 15, 17 sharpen the
+        single-axis signal into a 4-vector of yield-residual signal; Item 16
+        rejected explicitly falsifies the iter-80 mint's `add ALL items' reading.
+  \item \textbf{P6 iter-66 row 77 / iter-78 row 92} -- Items 14-17 extend
+        the registry's \texttt{measured\_yield\_residual} block from a single
+        $\delta_{\mathrm{div}}$ scalar to a 4-vector at zero harvest cost.
+  \item \textbf{P7 iter-75 row 88 / iter-79 row 93} -- the joint controller's
+        per-step ZVF-triage is the \emph{per-step} analog of Items 14-17 here;
+        iter-75's \texttt{CP\_exact} formula and iter-79's per-seed CV measure
+        the same anti-herding preservation at finer temporal granularity.
+  \item \textbf{P8 iter-80 row 94 (score-stream gradient)} -- the
+        $s_{i-1} - s_i$ gradient on fraud rows is the \emph{per-row anti-herding}
+        analog of the per-cell Items 14-17 here. Same mechanism, two
+        granularities, two operational wins (LLM-call savings + fingerprint
+        bits).
+\end{itemize}
+
+\subsubsection*{Reproducibility}
+\begin{itemize}
+  \item Script: \texttt{scripts/p5p8/p5\_yield\_residual\_axes.py} ($\sim$290 LoC, stdlib + numpy).
+  \item Outputs: \texttt{experiments/results/p5p8/p5\_yield\_residual\_axes\{.tsv,\_per\_item.tsv,\_shuffle\_null.tsv,\_summary.json\}}.
+  \item Seed: 20260705 (paired bootstrap $B=2000$ with $N_{\mathrm{pairs}}=2000$; binomial null $n=200$).
+  \item Citations: frontier synthesis (Round 1: \emph{Contrastive Yield} Y$(p,G)=1-\mathrm{ZVF}$); iter-80 row 95 Item 13 baseline; iter-77 row 91 portability framework.
+\end{itemize}

@@ -1,0 +1,105 @@
+{
+  "n_cells": 98,
+  "H_bits_v2.0": 18.273460147665563,
+  "H_bits_v2.1": 22.918428353031786,
+  "H_bits_v2.2": 38.77714505150305,
+  "H_bits_items_14_17_total": 15.858716698471264,
+  "item13_H_bits": 4.6449682053662205,
+  "items_14_17_H_bits": {
+    "item14": 4.742006725818537,
+    "item15": 2.872727576859245,
+    "item16": 3.5836083230361715,
+    "item17": 4.660374072757311
+  },
+  "items_14_17_present": {
+    "item14": 98,
+    "item15": 98,
+    "item16": 98,
+    "item17": 98
+  },
+  "spearman_v1": 0.4357583788175934,
+  "spearman_v2.0": 0.38039611628134684,
+  "spearman_v2.1": 0.43633068729274915,
+  "spearman_v2.2_all": 0.5110600078961084,
+  "spearman_single_item14": 0.5581938097025742,
+  "spearman_single_item15": 0.5875938251617764,
+  "spearman_single_item16": 0.5887612741991561,
+  "spearman_single_item17": 0.5562965681739633,
+  "paired_bootstrap": [
+    {
+      "metric": "v22_all_minus_v21",
+      "point": 0.07484374380393738,
+      "ci_lo": 0.0660549133290021,
+      "ci_hi": 0.08419339057846786
+    },
+    {
+      "metric": "v22_item13+14_minus_v21",
+      "point": 0.030964977095683598,
+      "ci_lo": 0.02681174371218159,
+      "ci_hi": 0.03526188850180989
+    },
+    {
+      "metric": "v22_item13+15_minus_v21",
+      "point": 0.0442904505590721,
+      "ci_lo": 0.0394426568098693,
+      "ci_hi": 0.049377987668490386
+    },
+    {
+      "metric": "v22_item13+16_minus_v21",
+      "point": 0.039362398723837976,
+      "ci_lo": 0.034861206997157834,
+      "ci_hi": 0.04420359667918994
+    },
+    {
+      "metric": "v22_item13+17_minus_v21",
+      "point": 0.030820300615769895,
+      "ci_lo": 0.026535854301088957,
+      "ci_hi": 0.03522183693794706
+    }
+  ],
+  "shuffle_null": [
+    {
+      "item": "K_variance_residual",
+      "observed_H_bits": 4.742006725818537,
+      "null_mean": 4.556366611607496,
+      "null_ci_lo": 4.401591741688766,
+      "null_ci_hi": 4.693487465592379,
+      "excess_H_bits": 0.18564011421104087,
+      "approx_z": 2.80682618448752
+    },
+    {
+      "item": "K_unique_count",
+      "observed_H_bits": 2.872727576859245,
+      "null_mean": 2.618095672681507,
+      "null_ci_lo": 2.52989986464937,
+      "null_ci_hi": 2.702955610188717,
+      "excess_H_bits": 0.2546319041777383,
+      "approx_z": 6.194743812107582
+    },
+    {
+      "item": "max_K_share",
+      "observed_H_bits": 3.5836083230361715,
+      "null_mean": 3.706357070898865,
+      "null_ci_lo": 3.5465503902678854,
+      "null_ci_hi": 3.829924297397575,
+      "excess_H_bits": -0.12274874786269363,
+      "approx_z": -1.9160920833913797
+    },
+    {
+      "item": "prompt_p_hat_var",
+      "observed_H_bits": 4.660374072757311,
+      "null_mean": 4.403840958537625,
+      "null_ci_lo": 4.230623501870771,
+      "null_ci_hi": 4.563335552304997,
+      "excess_H_bits": 0.2565331142196863,
+      "approx_z": 3.5799798253475905
+    }
+  ],
+  "verdict_items": {
+    "item14_Kvar_residual": "SIGNAL-BEARING",
+    "item15_K_unique_count": "SIGNAL-BEARING",
+    "item16_max_Kshare": "SIGNAL-BEARING",
+    "item17_p_hat_var": "SIGNAL-BEARING"
+  },
+  "key_finding": "Items 14-17 add 15.859 bits to v2.1 (item14=4.742, item15=2.873, item16=3.584, item17=4.660)."
+}

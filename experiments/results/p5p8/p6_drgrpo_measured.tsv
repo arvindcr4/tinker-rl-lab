@@ -1,0 +1,9 @@
+task	metric	kind	n_pairs	mean_grpo	mean_drgrpo	mean_diff	ci_lo	ci_hi	p_le0	interpretation
+arithmetic_easy	pos_frac	elasticity	5	0.373846	0.3291092	-0.0447368	-0.1278206	0.0279622	0.859	inconclusive
+arithmetic_easy	neg_frac	elasticity	5	0.4798716	0.5631784	0.0833068	0.0057158	0.163462	0.0162	Dr.GRPO more negative-elasticity steps
+arithmetic_easy	L_star	curvature	5	-14.0375032	-6.5748738	7.4626294	-12.2202522	27.574617	0.2089	inconclusive
+arithmetic_easy	R_max_fit	curvature	5	3.1336958	2.334032	-0.7996638	-3.3514304	1.6402456	0.7398	inconclusive
+gsm8k_cot	pos_frac	elasticity	3	0.411111	0.25555533	-0.15555567	-0.233333	-0.066667	1.0	Dr.GRPO fewer positive-elasticity steps
+gsm8k_cot	neg_frac	elasticity	3	0.588889	0.711111	0.122222	0.066667	0.166666	0.0002	Dr.GRPO more negative-elasticity steps
+gsm8k_cot	L_star	curvature	3	175.20574767	256.24380833	81.03806067	12.16922	194.766172	0.0002	Dr.GRPO optimal length L* larger
+gsm8k_cot	R_max_fit	curvature	3	0.38012033	-0.11931533	-0.49943567	-1.091914	-0.016799	1.0	inconclusive

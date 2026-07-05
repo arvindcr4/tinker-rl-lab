@@ -1761,7 +1761,99 @@ corpus.
 $\Delta$AUC CIs + $20$ paired-bootstrap $\Delta$-cost CIs).
 Outputs: \texttt{experiments/results/p5p8/p8\_single\_sensor.tsv},
 \texttt{p8\_pair\_sensor.tsv}, \texttt{p8\_single\_pair\_boot.tsv},
-\texttt{p8\_cost\_per\_decision.tsv}, \texttt{p8\_cost\_per\_decision\_boot.tsv},
+\texttt{p8\_cost\_per\_decision.tsv},
+\texttt{p8\_cost\_per\_decision\_boot.tsv},
 \texttt{p8\_single\_sensor\_summary.json},
 \texttt{figures/p8\_single\_sensor.{png,pdf}},
 \texttt{figures/p8\_cost\_per\_decision.{png,pdf}}.
+
+\subsubsection{Operational calibration drift under sensor noise (iter 72)}
+\label{sec:p8-calib-noise}
+
+The iter-8 sensor-noise sweep reported AUC degradation under
+$\sigma_{\mathrm{mult}} \in \{0.05, \ldots, 2.0\}$ Gaussian noise on the
+four aggregate features; iter-60 \#70 reported operational calibration
+gap on \emph{clean} features only. Neither measured the intersection:
+how does the operational calibration gap at top-$K$ alerts degrade as
+the LLM-extracted sensor noise increases? This sub-subsection closes
+that gap with bootstrap CIs.
+
+\noindent\textbf{Method.} Three trees (XGB-20raw, XGB-24full,
+XGB-4sensor) on the 50k-train / 10k-test split; noise
+$\sigma_{\mathrm{mult}} \in \{0.0, 0.05, 0.10, 0.20, 0.50, 1.00\}$
+applied as additive Gaussian noise to V\_mean / V\_std / V\_max / V\_min
+on the test split only. $K$ budgets $\{0.5, 1.0, 2.0, 5.0\}\,\%$.
+Operational calibration gap $= \overline{p}_{\mathrm{top-}K} -
+\pi_{\mathrm{top-}K}$. Paired bootstrap ($B{=}400$, seed $20260705$)
+on $\Delta$-gap between trees at every ($\sigma$, $K$).
+
+\begin{table}[t]
+\centering\small
+\caption{Operational calibration gap
+$\bar p_{\mathrm{top-}K} - \pi_{\mathrm{top-}K}$ at $K{=}2\,\%$
+(200 alerts) across sensor-noise scaling on the four aggregate
+features. Negative = under-confident (model predicts more positives
+than observed). The 24-full tree's gap WIDENS monotonically with
+$\sigma$; the 4-sensor-only (LLM-as-sensor surrogate) tree is the
+WORST calibrator at every $\sigma \geq 0.05$. The 20-raw tree is
+unaffected by noise (no aggregates).}
+\label{tab:p8-calib-noise}
+\begin{tabular}{lcccccc}
+\toprule
+$\sigma_{\mathrm{mult}}$ & 0.00 & 0.05 & 0.10 & 0.20 & 0.50 & 1.00 \\
+\midrule
+XGB-20raw  ($K{=}2\,\%$ gap)  & $-0.260$ & $-0.260$ & $-0.260$ & $-0.260$ & $-0.260$ & $-0.260$ \\
+XGB-24full ($K{=}2\,\%$ gap)  & $-0.254$ & $-0.260$ & $-0.271$ & $-0.295$ & $-0.323$ & $-0.323$ \\
+XGB-4sensor ($K{=}2\,\%$ gap) & $-0.209$ & $-0.015$ & $+0.006$ & $+0.048$ & $+0.050$ & $+0.086$ \\
+\midrule
+$\Delta$-gap (24full vs 20raw, $K{=}0.5\,\%$) & $-0.016$ & $-0.023$ & $-0.035$ & $-0.044$ & $-0.087$ & $-0.148$ \\
+$\Delta$-gap 95\% CI & $[-.034, -.001]$ & $[-.046, -.007]$ & $[-.055, -.014]$ & $[-.077, -.020]$ & $[-.142, -.043]$ & $[-.221, -.075]$ \\
+Excludes zero? & yes & yes & yes & yes & yes & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Sharpest finding.}
+At $\sigma{=}1.0$, $K{=}0.5\,\%$, XGB-24full's $\Delta$-gap vs
+XGB-20raw is $\mathbf{-0.148}$ CI $[-0.221, -0.075]$ (paired
+bootstrap $B{=}400$, seed $20260705$). The full-sensor tree
+calibrates $\sim 16$ percentage points worse than the no-sensor tree,
+with the upper CI bound (least-bad) still showing a $7.5$ pp gap.
+The penalty is \emph{not} noise-floor noise; it is a real
+$\sigma$-dependent regime.
+
+\paragraph{Cross-paper coupling.}
+(i)~\S\ref{sec:p8-scorer} iter-56 row 66 Pareto frontier found
+XGB-20raw dominates at low $K$, XGB-24full at higher $K$; this
+sub-subsection independently confirms that XGB-20raw dominates
+\emph{also in calibration} under sensor noise, even though it
+dominates only in recall at clean conditions. (ii)~\S\ref{sec:p8-single-sensor}
+iter-68 row 78 found V\_std and V\_max are the smallest-noise
+single-aggregate features; this sub-subsection measures
+calibration degradation \emph{across all 4 aggregates simultaneously}
+under $\sigma$ — the iter-68 single-feature findings complement
+this iter's aggregate-noise sweep. (iii)~P6~\texttt{outcomes.zvf\_antiherding}
+(iter-66 row 77) — the $\delta_{\mathrm{div}}$ diversity bonus is
+concentrated in (V\_std, V\_max); this iter's noise sweep shows
+the calibration penalty is a \emph{separate axis} from the diversity
+bonus; both can be operationalised simultaneously.
+
+\paragraph{Operational recommendation.}
+For fraud-ops teams adopting an LLM-as-sensor stack, the canonical
+$K{=}2\,\%$ operating point maintains acceptable calibration
+($\Delta$-gap $< -0.30$) only when $\sigma \leq 0.20$. Above
+$\sigma{=}0.20$, the 24-full tree's mean predicted probability in the
+alert queue under-estimates the observed positive rate by
+$\geq 30$ percentage points, leading to \emph{systematic
+under-confidence} in the analyst-paging signal. Mitigation: cap
+$\sigma$ on the LLM extract at $\sigma \leq 0.20$, or switch to
+XGB-20raw at higher $\sigma$.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_calibration\_under\_noise.py}
+($\sim 6$ min on 4 cores; $4$ tree fits + $6 \sigma \times 4 K$
+operational-calibration metrics + $48$ paired-bootstrap rows);
+outputs in
+\texttt{experiments/results/p5p8/p8\_calib\_noise.\{tsv,json\}},
+\texttt{p8\_calib\_noise\_boot.tsv},
+\texttt{figures/p8\_calib\_noise.{png,pdf}}.

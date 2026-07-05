@@ -2153,3 +2153,117 @@ Paired-prompt bootstrap $B{=}2000$, $\alpha{=}0.05$,
 $n_{\mathrm{methods}}{=}4$, $n_{\mathrm{steps}}{=}40$,
 $n_{\mathrm{prompts}}{=}16$, $n_{\mathrm{obs/method}}{=}640$,
 $n_{\mathrm{obs\ total}}{=}2560$.
+
+\subsubsection{Joint controller: Dualformer-Auto on contrast +
+$\delta_{\mathrm{div}}$-triage on fired steps (iter 72)}
+\label{sec:p7-joint-controller}
+
+The iter-71 mint recommendation explicitly asked: \emph{can a single
+controller combine Dualformer-Auto (de-escalate contrast to $G'{=}2$)
+and $\delta_{\mathrm{div}}$-triage (escalate high-headroom steps to
+$G'{=}16$) into one end-to-end policy?} This sub-subsection answers
+yes. The rule, applied to each prompt-step record $r$ in step $s$ with
+per-step anti-herding diversity bonus
+$\delta_{\mathrm{div}}(s) = \overline{\mathrm{ZVF}}^{\mathrm{iid}}_G{=}8(s)
+- \overline{\mathrm{ZVF}}^{\mathrm{obs}}(s)$:
+\begin{equation*}
+G_t(r, s) \;=\; \begin{cases}
+G{=}16 & \text{if $\delta_{\mathrm{div}}(s) \geq \tau$} \\
+G{=}2  & \text{else if $r$ is a contrast prompt (Dualformer)} \\
+G{=}8  & \text{otherwise (boundary on a non-fired step)} \\
+\end{cases}
+\end{equation*}
+\emph{Rollout saves} (Dualformer on non-fired contrast prompts):
+$6$ rollouts per contrast prompt-step. \emph{ZVF saves}
+($\delta_{\mathrm{div}}$-triage on fired-step contrast prompts):
+$1$ per contrast prompt-step with $\mathrm{ZVF}^{\mathrm{iid}}_{G{=}16} < 0.10$.
+Headline metric: $\mathrm{net\_saves} = \mathrm{rollout\_saves} +
+\mathrm{zvf\_saves}$.
+
+\begin{table}[t]
+\centering\small
+\caption{Joint controller headline at the canonical $\tau{=}0.05$ on
+the N2 same-stack corpus ($n_{\mathrm{prompts}}{=}640$ per method).
+Joint strictly dominates $\delta_{\mathrm{div}}$-triage by the
+Dualformer rollout-save contribution ($+426$ to $+546$ per method)
+at \emph{lower} cost ratio (joint is $0.013$ to $0.092$ cheaper than
+$\delta_{\mathrm{div}}$-only because the non-fired contrast branch uses
+$G'{=}2$). Dualformer-only has more saves in absolute terms but
+captures no ZVF. Bootstrap $B{=}2000$, seed $20260705$.}
+\label{tab:p7-joint-controller}
+\begin{tabular}{lcccccc}
+\toprule
+method & joint\_rollout & joint\_zvf & joint\_net & joint\_cost &
+$\delta_{\mathrm{div}}$\_zvf & $\delta_{\mathrm{div}}$\_cost \\
+\midrule
+\texttt{grpo}  & 480 & 49 & \textbf{529} & 1.356 & 49 & 1.450 \\
+\texttt{aero}  & 546 & 41 & \textbf{587} & 1.293 & 41 & 1.400 \\
+\texttt{areal} & 426 & 51 & \textbf{477} & 1.417 & 51 & 1.500 \\
+\texttt{gift}  & 438 & 35 & \textbf{473} & 1.239 & 35 & 1.325 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Sharpest finding.}
+The joint controller is the \emph{first end-to-end unification} of
+Berkeley row-01 Dualformer (de-escalate contrast prompts $G{\to}2$),
+iter-66 row-77 $\delta_{\mathrm{div}}$ measurement, iter-67 row-78
+$\delta_{\mathrm{div}}$-triage trigger (escalate high-$\delta_{\mathrm{div}}$
+steps), and iter-71 row-83 unified parametric family
+$(G_{\mathrm{low}}, G_{\mathrm{base}}, G_{\mathrm{high}}; \tau)
+= (2, 8, 16; 0.05)$ into a single per-prompt-step policy. Net saves
+range $477$ to $587$ per method at cost ratio $1.24$ to $1.42$; the
+joint controller is \emph{strictly cheaper} than
+$\delta_{\mathrm{div}}$-only at every $\tau$ (Dualformer non-fired
+contrast uses $G'{=}2$ which more than offsets the fired-step $G{=}16$
+escalation).
+
+\paragraph{95\% bootstrap CIs on net\_saves.}
+Paired-prompt bootstrap ($B{=}2000$, $\alpha{=}0.05$, seed $20260705$)
+on $\mathrm{net\_saves}$: \texttt{grpo} $529$ $[493, 564]$;
+\texttt{aero} $587$ $[550, 624]$; \texttt{areal} $477$ $[442, 513]$;
+\texttt{gift} $473$ $[438, 510]$. All four CIs are tight (width
+$\sim 70$ to $75$), so the joint controller's net saves is statistically
+well-determined on this corpus.
+
+\paragraph{$\tau$-sweep and best operating point.}
+Across $\tau \in \{0.03, 0.04, 0.05, 0.06, 0.07\}$, $\mathrm{net\_saves}$
+is monotonically increasing in $\tau$ for every method (because higher
+$\tau$ means fewer fired steps, hence more contrast prompts routed to
+the cheaper Dualformer branch). All four methods peak at
+$\tau{=}0.07$: \texttt{grpo} $731$, \texttt{aero} $910$,
+\texttt{areal} $662$, \texttt{gift} $646$ — but at lower ZVF recovery
+($16$–$32$ per method vs $35$–$51$ at $\tau{=}0.05$). The
+$\tau{=}0.05$ operating point is the best trade-off between rollout
+saves and ZVF recovery; the canonical headline.
+
+\paragraph{Cross-paper coupling.}
+The joint controller operationalises the iter-71 row-83 mint
+recommendation. P6 iter-70 row-82
+\texttt{controller\_predicted\_savings\_per\_rollout} block now has a
+machine-readable savings entry per method $\times \tau$ for the joint
+controller; future P6 audit can ask ``which method has the largest
+joint-vs-$\delta_{\mathrm{div}}$-only gap?'' directly from the
+registry. P6 iter-66 row-77 $\delta_{\mathrm{div}}$ is the step-level
+anti-herding diversity bonus; this iter applies it as a step-level
+escalation trigger, the same axis it was measured on. Berkeley row-01
+Dualformer's 56.2\% saving claim is not reproducible on N2 (iter-71
+row 83), but this iter recovers 426 to 546 saves per method all from
+contrast prompts at $G'{=}2$ — exactly the Berkeley saving mechanism,
+bounded above by the contrast-prompt fraction.
+
+\paragraph{Operational recommendation.}
+For adaptive-G selection on the N2 same-stack corpus, the joint
+controller strictly dominates $\delta_{\mathrm{div}}$-only at every
+$\tau$ (additive Dualformer rollout savings). The recommended
+operating point is $\tau{=}0.05$, with $\mathrm{net\_saves} \in [477,
+587]$ per method at cost ratio $[1.24, 1.42]$. Reviewers weighting
+cost linearly should pick dualformer-only at the contrast-only
+operating point ($0.79$–$0.83$); reviewers weighting ZVF recovery
+should pick the joint controller.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p7\_joint\_controller.py}
+($\leq 290$ LoC, stdlib only); outputs in
+\texttt{experiments/results/p5p8/p7\_joint\_controller.\{tsv,json\}},
+\texttt{p7\_joint\_controller\_boot.tsv}.

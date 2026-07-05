@@ -1,0 +1,167 @@
+{
+  "iter": 163,
+  "pillar": "P7",
+  "vein": "step-aggregate Pareto + per-method bootstrap CI on N2 reward tensors",
+  "n_step_method_decisions": 160,
+  "n_methods": 4,
+  "n_controllers": 5,
+  "boot_n": 2000,
+  "boot_seed": 20260705,
+  "agg_overall": {
+    "STATIC_G4": {
+      "n": 160,
+      "mean_cost_ratio": 0.5,
+      "ci95_cost": [
+        0.5,
+        0.5
+      ],
+      "mean_contrast_retention": 0.7461739600849361,
+      "ci95_retention": [
+        0.7350691009220421,
+        0.7558288577338961
+      ],
+      "mean_fire_rate": 1,
+      "ci95_fire_rate": [
+        1,
+        1
+      ],
+      "mean_g": 4
+    },
+    "STATIC_G8": {
+      "n": 160,
+      "mean_cost_ratio": 1.0,
+      "ci95_cost": [
+        1.0,
+        1.0
+      ],
+      "mean_contrast_retention": 0.99375,
+      "ci95_retention": [
+        0.98125,
+        1.0
+      ],
+      "mean_fire_rate": 0,
+      "ci95_fire_rate": [
+        0,
+        0
+      ],
+      "mean_g": 8
+    },
+    "STATIC_G16": {
+      "n": 160,
+      "mean_cost_ratio": 2.0,
+      "ci95_cost": [
+        2.0,
+        2.0
+      ],
+      "mean_contrast_retention": 1.1480820614386418,
+      "ci95_retention": [
+        1.1312648835001318,
+        1.1625523062735637
+      ],
+      "mean_fire_rate": 1,
+      "ci95_fire_rate": [
+        1,
+        1
+      ],
+      "mean_g": 16
+    },
+    "DUALFORMER_STEP": {
+      "n": 160,
+      "mean_cost_ratio": 1.50625,
+      "ci95_cost": [
+        1.35625,
+        1.65625
+      ],
+      "mean_contrast_retention": 1.0276231959142712,
+      "ci95_retention": [
+        1.0106245851063216,
+        1.04466475758501
+      ],
+      "mean_fire_rate": 0.16875,
+      "ci95_fire_rate": [
+        0.11875,
+        0.21875
+      ],
+      "mean_g": 12.05
+    },
+    "UNIFIED_STEP_C4": {
+      "n": 160,
+      "mean_cost_ratio": 1.5125,
+      "ci95_cost": [
+        1.45,
+        1.575
+      ],
+      "mean_contrast_retention": 1.0719186319453697,
+      "ci95_retention": [
+        1.054550570355976,
+        1.088368157264956
+      ],
+      "mean_fire_rate": 0.5125,
+      "ci95_fire_rate": [
+        0.45,
+        0.575
+      ],
+      "mean_g": 12.1
+    }
+  },
+  "pareto_frontier_count": 10,
+  "pareto_frontier_controllers_per_method": {
+    "grpo": [
+      "DUALFORMER_STEP",
+      "STATIC_G8",
+      "UNIFIED_STEP_C4"
+    ],
+    "aero": [
+      "STATIC_G4",
+      "STATIC_G8",
+      "UNIFIED_STEP_C4"
+    ],
+    "gift": [],
+    "areal": [
+      "DUALFORMER_STEP",
+      "STATIC_G16",
+      "STATIC_G8",
+      "UNIFIED_STEP_C4"
+    ]
+  },
+  "headline": {
+    "H1_C4_retention_gt_STATIC_G8_passes": 4,
+    "H1_threshold": 4,
+    "H1_verdict": "PASS",
+    "H2_C4_cost_lt_STATIC_G16_passes": 4,
+    "H2_threshold": 4,
+    "H2_verdict": "PASS",
+    "H3_STATIC_G16_not_dominated_methods_at_step_level": 4,
+    "H3_threshold": 4,
+    "H3_verdict": "PASS",
+    "H4_C4_cross_method_cost_sd": 0.08385254915624206,
+    "H4_threshold": 0.1,
+    "H4_verdict": "PASS",
+    "H5_C4_mpc_gt_DUALFORMER_mpc_passes": 4,
+    "H5_C4_mpc": {
+      "grpo": 0.05607224034427757,
+      "aero": 0.05032584953849216,
+      "gift": 0.03930564209799853,
+      "areal": 0.04524998577830783
+    },
+    "H5_DF_mpc": {
+      "grpo": 0.012908616587518329,
+      "aero": 0.008033688211667424,
+      "gift": 0.026327492668736893,
+      "areal": 0.02130649268889684
+    },
+    "H5_threshold": 4,
+    "H5_verdict": "PASS",
+    "H6_C4_on_frontier_methods": 3,
+    "H6_threshold": 3,
+    "H6_verdict": "PASS",
+    "H7_C4_cost_CI95_lower_bound": 1.45,
+    "H7_threshold": 1.0,
+    "H7_verdict": "PASS",
+    "H8_granularity_crossover": "STATIC_G16 dominated at per-prompt (iter-159) but NOT at step level (iter-163)",
+    "H8_threshold": "confirmed",
+    "H8_verdict": "PASS"
+  },
+  "n_passes": 8,
+  "n_hypotheses": 8
+}

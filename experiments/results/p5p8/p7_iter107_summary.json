@@ -1,0 +1,213 @@
+{
+  "ts": "2026-07-05",
+  "iter": 107,
+  "method_optimal_tau": {
+    "grpo": 0.9,
+    "aero": 0.9,
+    "gift": 0.9,
+    "areal": 0.9
+  },
+  "canonical_tau_for_taxonomy": 0.9,
+  "in_method_optimal_tau_per_method": {
+    "grpo": 0.9,
+    "aero": 0.9,
+    "gift": 0.9,
+    "areal": 0.9
+  },
+  "transfer_rows": [
+    {
+      "source_method": "grpo",
+      "target_method": "grpo",
+      "tau_used": 0.9,
+      "kind": "IN_METHOD",
+      "savings_frac": 0.332421875,
+      "magnitude_retention": 0.9589118046498242,
+      "fires": 2
+    },
+    {
+      "source_method": "aero",
+      "target_method": "grpo",
+      "tau_used": 0.9,
+      "kind": "TRANSFER",
+      "savings_frac": 0.332421875,
+      "magnitude_retention": 0.9589118046498242,
+      "fires": 2
+    },
+    {
+      "source_method": "gift",
+      "target_method": "grpo",
+      "tau_used": 0.9,
+      "kind": "TRANSFER",
+      "savings_frac": 0.332421875,
+      "magnitude_retention": 0.9589118046498242,
+      "fires": 2
+    },
+    {
+      "source_method": "areal",
+      "target_method": "grpo",
+      "tau_used": 0.9,
+      "kind": "TRANSFER",
+      "savings_frac": 0.332421875,
+      "magnitude_retention": 0.9589118046498242,
+      "fires": 2
+    },
+    {
+      "source_method": "aero",
+      "target_method": "aero",
+      "tau_used": 0.9,
+      "kind": "IN_METHOD",
+      "savings_frac": 0.3171875,
+      "magnitude_retention": 0.9724539166067689,
+      "fires": 1
+    },
+    {
+      "source_method": "grpo",
+      "target_method": "aero",
+      "tau_used": 0.9,
+      "kind": "TRANSFER",
+      "savings_frac": 0.3171875,
+      "magnitude_retention": 0.9724539166067689,
+      "fires": 1
+    },
+    {
+      "source_method": "gift",
+      "target_method": "aero",
+      "tau_used": 0.9,
+      "kind": "TRANSFER",
+      "savings_frac": 0.3171875,
+      "magnitude_retention": 0.9724539166067689,
+      "fires": 1
+    },
+    {
+      "source_method": "areal",
+      "target_method": "aero",
+      "tau_used": 0.9,
+      "kind": "TRANSFER",
+      "savings_frac": 0.3171875,
+      "magnitude_retention": 0.9724539166067689,
+      "fires": 1
+    },
+    {
+      "source_method": "gift",
+      "target_method": "gift",
+      "tau_used": 0.9,
+      "kind": "IN_METHOD",
+      "savings_frac": 0.33359375,
+      "magnitude_retention": 0.9735773135156043,
+      "fires": 8
+    },
+    {
+      "source_method": "grpo",
+      "target_method": "gift",
+      "tau_used": 0.9,
+      "kind": "TRANSFER",
+      "savings_frac": 0.33359375,
+      "magnitude_retention": 0.9735773135156043,
+      "fires": 8
+    },
+    {
+      "source_method": "aero",
+      "target_method": "gift",
+      "tau_used": 0.9,
+      "kind": "TRANSFER",
+      "savings_frac": 0.33359375,
+      "magnitude_retention": 0.9735773135156043,
+      "fires": 8
+    },
+    {
+      "source_method": "areal",
+      "target_method": "gift",
+      "tau_used": 0.9,
+      "kind": "TRANSFER",
+      "savings_frac": 0.33359375,
+      "magnitude_retention": 0.9735773135156043,
+      "fires": 8
+    },
+    {
+      "source_method": "areal",
+      "target_method": "areal",
+      "tau_used": 0.9,
+      "kind": "IN_METHOD",
+      "savings_frac": 0.320703125,
+      "magnitude_retention": 0.9317885192443773,
+      "fires": 1
+    },
+    {
+      "source_method": "grpo",
+      "target_method": "areal",
+      "tau_used": 0.9,
+      "kind": "TRANSFER",
+      "savings_frac": 0.320703125,
+      "magnitude_retention": 0.9317885192443773,
+      "fires": 1
+    },
+    {
+      "source_method": "aero",
+      "target_method": "areal",
+      "tau_used": 0.9,
+      "kind": "TRANSFER",
+      "savings_frac": 0.320703125,
+      "magnitude_retention": 0.9317885192443773,
+      "fires": 1
+    },
+    {
+      "source_method": "gift",
+      "target_method": "areal",
+      "tau_used": 0.9,
+      "kind": "TRANSFER",
+      "savings_frac": 0.320703125,
+      "magnitude_retention": 0.9317885192443773,
+      "fires": 1
+    }
+  ],
+  "failure_counts_per_method": {
+    "grpo": {
+      "A_HIT": 2,
+      "B_FN_BDRY": 0,
+      "C_FN_DRIFT": 38,
+      "D_FP_BDRY": 0,
+      "E_TN": 0,
+      "_total": 40
+    },
+    "aero": {
+      "A_HIT": 1,
+      "B_FN_BDRY": 0,
+      "C_FN_DRIFT": 39,
+      "D_FP_BDRY": 0,
+      "E_TN": 0,
+      "_total": 40
+    },
+    "gift": {
+      "A_HIT": 7,
+      "B_FN_BDRY": 0,
+      "C_FN_DRIFT": 32,
+      "D_FP_BDRY": 1,
+      "E_TN": 0,
+      "_total": 40
+    },
+    "areal": {
+      "A_HIT": 1,
+      "B_FN_BDRY": 0,
+      "C_FN_DRIFT": 39,
+      "D_FP_BDRY": 0,
+      "E_TN": 0,
+      "_total": 40
+    }
+  },
+  "failure_pooled_shares": {
+    "A_HIT": 0.06875,
+    "B_FN_BDRY": 0.0,
+    "C_FN_DRIFT": 0.925,
+    "D_FP_BDRY": 0.00625,
+    "E_TN": 0.0
+  },
+  "n_steps_per_method": {
+    "grpo": 40,
+    "aero": 40,
+    "gift": 40,
+    "areal": 40
+  },
+  "headline_holders": {
+    "PLACEHOLDER": []
+  }
+}

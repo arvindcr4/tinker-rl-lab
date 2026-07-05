@@ -1,0 +1,27 @@
+{
+  "audit_date": "2026-07-05",
+  "iter": 110,
+  "pillar": "P6",
+  "vein": "a (cross-panel paired-bootstrap agreement)",
+  "bootstrap": {
+    "method": "paired_step_or_seed_pct",
+    "B": 4000,
+    "seed": 20260705,
+    "ci_level": 0.95
+  },
+  "n_methods": 3,
+  "n_pairs": 6,
+  "verdict_counts": {
+    "BOTH_NONSIG": 1,
+    "PARTIAL_ONE_SIG": 3,
+    "DIVERGE_BOTH_SIG": 2
+  },
+  "n_agree_both_sig": 0,
+  "n_diverge_both_sig": 2,
+  "n_partial": 3,
+  "registry_patches": [
+    "delta_aero.json",
+    "delta_gift.json",
+    "delta_areal.json"
+  ]
+}

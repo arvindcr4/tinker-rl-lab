@@ -1,0 +1,6 @@
+domain	pillar	granularity	n_fire	n_total	rate	ci_lo	ci_hi
+D1	P8	per-row	84	10000	0.008400	0.006700	0.010200
+D2	P7	per-step	20	40	0.500000	0.350000	0.650000
+D3	P5	per-cell	36	98	0.367347	0.275510	0.469388
+D4	P7	per-prompt	1867	2560	0.729297	0.712891	0.746484
+D5	P8	per-cohort-cell	26	26	1.000000	1.000000	1.000000

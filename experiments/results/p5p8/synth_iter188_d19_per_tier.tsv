@@ -1,0 +1,13 @@
+method	tier	n_steps	mean_eta	lo	hi
+grpo	low_regret	11	0.936646	0.934396	0.939046
+grpo	mid_regret	16	0.925545	0.924662	0.926437
+grpo	high_regret	13	0.917038	0.914581	0.919035
+aero	low_regret	14	0.935494	0.933179	0.937983
+aero	mid_regret	16	0.925746	0.924669	0.926921
+aero	high_regret	10	0.915264	0.912570	0.917799
+gift	low_regret	16	0.939388	0.933505	0.948539
+gift	mid_regret	9	0.924392	0.923135	0.925804
+gift	high_regret	15	0.913669	0.911374	0.916096
+areal	low_regret	13	0.936987	0.934384	0.939409
+areal	mid_regret	13	0.925540	0.924276	0.926823
+areal	high_regret	14	0.917684	0.915829	0.919682

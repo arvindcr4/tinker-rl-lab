@@ -1,0 +1,10 @@
+method	zvf_risk_mean	zvf_risk_sd	n_seeds	failure_rate	delta_vs_grpo_mean	delta_vs_grpo_lo	delta_vs_grpo_hi	delta_vs_grpo_sig	claim_delta_count	claim_components	zvf130_entry_present	registry_outcomes_zvf_risk_mean_populated
+aero	0.430051	0.106801	5	0.0000	-0.147637	-0.282293	-0.009067	1	1	advantage_guided_evolution	0	0
+areal	0.331921	0.043767	5	0.2000	-0.245767	-0.355393	-0.135679	1	1	autoscaling_Rollout	0	0
+cppo	0.426611	0.011378	5	0.0000	-0.151077	-0.257385	-0.049510	1	1	continuity_penalty	1	0
+es	0.305110	0.008344	5	0.2000	-0.272578	-0.374871	-0.169558	1	1	black_box_perturbation	1	0
+gift	0.314501	0.011087	5	0.2000	-0.263187	-0.367135	-0.159317	1	1	gamma_likelihood_baseline	0	0
+grpo	0.577688	0.116112	5	0.0000	0.000000	0.000000	0.000000	0	0	(none)	0	0
+mcgrpo	0.403411	0.059830	5	0.2000	-0.174277	-0.285084	-0.059092	1	2	mcts_rollout;per_prompt_diversity_bonus	1	0
+ngrpo	0.446663	0.042464	5	0.0000	-0.131025	-0.240804	-0.026451	1	1	per_prompt_normalization	1	0
+scafgrpo	0.225327	0.019291	5	0.0000	-0.352361	-0.458802	-0.247191	1	1	scaffold_aware_advantage	1	0

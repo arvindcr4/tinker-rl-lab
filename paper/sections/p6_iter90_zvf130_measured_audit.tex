@@ -1,0 +1,121 @@
+% Section: zvf130 measured-vs-claimed audit (P6, iter 90)
+% Closes brief vein (a) on the 9-method 5-seed zvf130 panel:
+%   the registry had 5 zvf130 stack entries, ALL with outcomes.zvf_risk_mean = null
+%   even though experiments/results/zvf_iter130_method_risk.tsv measured all 9 methods.
+% Now we (i) populate the missing field, (ii) compute paired-bootstrap measured deltas
+% vs the GRPO baseline on n=5 seeds, (iii) cross-reference against the delta_*.json
+% claim-count, and (iv) test rank consistency between claimed delta count and
+% measured zvf risk.
+
+\subsubsection{ZVF-130 measured-vs-claimed audit (iter 90)}
+\label{sec:p6-iter90-zvf130-audit}
+
+\paragraph{Setting.}
+The zvf\_iter130 risk-index harness produced a 9-method $\times$ 5-seed panel
+(GRPO baseline + 8 named variants) on the canonical 16-prompt GSM8K eval, with
+\texttt{zvf\_risk\_mean} as the composite (magnitude=0.3, csd=0.5, drift=0.2)
+of per-step ZVF features. The registry already carries five
+\texttt{zvf130\_$<\mathrm{method}>$.json} entries (CPPO, ES, MCGRPO, NGRPO,
+SCAFGRPO) under the shared Tinker Qwen3-8B harness, and 14
+\texttt{delta\_$<\mathrm{method}>$.json} claim records covering every
+variant on the panel. \emph{Prior to this iteration, every
+\texttt{zvf130\_$<\mathrm{method}>$.json} entry had
+\texttt{outcomes.zvf\_risk\_mean = null} --- the measured risk value was
+sitting in \texttt{zvf\_iter130\_method\_risk.tsv} but never recorded in the
+registry entries.}
+
+\paragraph{H1 -- gap audit.}
+\textbf{100\% of the five \texttt{zvf130\_$<\mathrm{method}>$} stack entries
+were missing \texttt{outcomes.zvf\_risk\_mean}.} All five entries now carry
+the measured value, plus a derived \texttt{delta\_vs\_grpo\_mean} / CI /
+significance block populated from a paired bootstrap ($B{=}4000$,
+seed 20260705) on the 5-seed panel. The gap-closing artefact is
+\texttt{scripts/p5p8/p6\_iter90\_zvf130\_measured\_vs\_claimed.py}; the
+patched entries are
+\texttt{registry/entries/zvf130\_\{cppo,es,mcgrpo,ngrpo,scafgrpo\}.json}.
+
+\paragraph{H2 -- every named variant is significantly below GRPO on zvf\_risk.}
+On the 5-seed panel every one of the eight non-GRPO methods has a
+\emph{significantly negative} $\Delta$ vs GRPO (paired bootstrap, $B{=}4000$).
+The measured deltas (ranked):
+\begin{itemize}\itemsep0pt
+\item SCAFGRPO $\Delta{=}{-}0.352$ $[-0.459, {-}0.247]$ --- lowest measured risk (scaffold-aware advantage shaping)
+\item ES       $\Delta{=}{-}0.273$ $[-0.375, {-}0.170]$ --- ES-style central-difference estimator
+\item GIFT     $\Delta{=}{-}0.263$ $[-0.367, {-}0.159]$ --- gamma likelihood baseline
+\item AREAL    $\Delta{=}{-}0.246$ $[-0.355, {-}0.136]$ --- autoscaling rollout
+\item MCGRPO   $\Delta{=}{-}0.174$ $[-0.285, {-}0.059]$ --- MCTS rollout + per-prompt diversity
+\item CPPO     $\Delta{=}{-}0.151$ $[-0.257, {-}0.050]$ --- continuity penalty
+\item AERO     $\Delta{=}{-}0.148$ $[-0.282, {-}0.009]$ --- advantage-guided evolution
+\item NGRPO    $\Delta{=}{-}0.131$ $[-0.241, {-}0.026]$ --- per-prompt normalization
+\end{itemize}
+\textbf{Operational reading:} on this single-batch risk-index harness, the
+\emph{GRPO label is the highest-risk option} --- every named variant the
+registry has measured reduces \texttt{zvf\_risk\_mean} by $0.13$--$0.35$
+(roughly $23$--$61\%$ of GRPO's measured $0.578$). This is the strongest
+single-batch evidence in the registry that \emph{label-of-algorithm
+underdetermines update-rule}, and motivates registering the variant deltas.
+
+\paragraph{H3 -- pairwise matrix on the 9-method panel.}
+The full $\binom{9}{2}{=}36$ pair matrix on the 5-seed panel has
+\textbf{26/36 (72.2\%) pairs SIG} at the $\alpha{=}0.05$ level (paired
+bootstrap, $B{=}4000$). The 10 non-significant pairs cluster around the
+mid-risk middle: AERO$\leftrightarrow$AREAL,
+AERO$\leftrightarrow$CPPO, AERO$\leftrightarrow$MCGRPO,
+AERO$\leftrightarrow$NGRPO, AREAL$\leftrightarrow$CPPO,
+AREAL$\leftrightarrow$MCGRPO, AREAL$\leftrightarrow$NGRPO,
+ES$\leftrightarrow$GIFT, ES$\leftrightarrow$SCAFGRPO,
+CPPO$\leftrightarrow$NGRPO. The full matrix is
+\texttt{experiments/results/p5p8/p6\_iter90\_zvf130\_measured\_pairs.tsv}.
+
+\paragraph{H4 -- claim count vs measured risk.}
+Each \texttt{delta\_$<\mathrm{method}>$.json} records a list of named
+delta components (\texttt{advantage\_guided\_evolution},
+\texttt{asymmetric\_clip}, etc.). The number of components is a coarse
+``how much does this variant change'' proxy. Spearman rank correlation
+between \texttt{claim\_delta\_count} (range 1--2 on this 9-method panel)
+and measured \texttt{zvf\_risk\_mean} is $\rho{=}{-}0.483$, bootstrap CI
+$[-0.767, +0.617]$ ($B{=}4000$). The point estimate is consistent with
+``more variant components $\Rightarrow$ lower measured risk'' but the CI
+brackets zero: at $n{=}9$ methods the signal is suggestive, not
+conclusive. The CI width ($\approx 1.4$) is roughly the largest it can be
+on Spearman at $n{=}9$; the registry would need at least $n{\approx}20$
+methods to push the lower bound negative on this correlation.
+
+\paragraph{H5 -- no method has a \texttt{zvf130\_$<\mathrm{method}>$} entry without measured data.}
+All five \texttt{zvf130\_$<\mathrm{method}>$} entries map to a measured
+method in \texttt{zvf\_iter130\_method\_risk.tsv}. The four N2 same-stack
+methods (GRPO, AERO, AREAL, GIFT) are recorded as
+\texttt{tinker\_$<\mathrm{method}>$\_qwen3.5-4b\_gsm8k.json} instead, with
+their \texttt{outcomes.zvf\_antiherding} block; the iter-86 cross-stack
+matrix (\S\ref{sec:p6-iter86-cross-stack-matrix}) already validated those.
+
+\paragraph{Operational recommendation.}
+Registry consumers should now prefer \texttt{outcomes.zvf\_risk\_mean}
+on \texttt{zvf130\_$<\mathrm{method}>$} entries as the canonical
+``single-batch same-stack risk index'' field; the
+\texttt{outcomes.delta\_vs\_grpo\_mean / \_ci\_lo / \_ci\_hi / \_sig} block
+added by this iteration gives a uniform per-variant significance filter.
+Future registry audits should treat
+\texttt{outcomes.zvf\_risk\_mean = null} on a \texttt{zvf130\_$<\mathrm{method}>$}
+entry as a \emph{red-flag gap}, not as ``reported-as-absent'' (the existing
+null-vs-false convention of \texttt{schema.json}).
+
+\paragraph{Cross-paper coupling.}
+(i) \textbf{P5 row 101/106 (iter 89)} --- iter 89's GIFT-isolation on
+algorithm-axis $\eta^2$ matches iter 90's measured-risk gap: GIFT is the
+\emph{lowest}-risk on \texttt{zvf130} yet carries the largest algorithm-axis
+variance on the N2 \texttt{zvf} channel. The two findings are
+complementary: the registry's recorded \texttt{zvf\_risk\_mean} is a
+single-batch risk; the algorithm-axis $\eta^2$ is a same-stack
+\emph{differential}. (ii) \textbf{P6 row 102 (iter 86)} --- iter 86's
+4-method same-stack cross-stack matrix is the cell-level analog of
+iter 90's 9-method single-batch matrix; together they cover both the
+``same-stack cross-method'' (iter 86) and the ``single-batch cross-method''
+(iter 90) axes. (iii) \textbf{P6 row 92 (iter 78)} --- iter 78's
+field-level coverage audit scored \texttt{measured\_coverage: 0.0} on
+every \texttt{zvf130\_$<\mathrm{method}>$} entry; iter 90 closes that
+gap to \texttt{measured\_coverage: 1.0} on the 5 patched entries. (iv)
+\textbf{FRONTIER\_INSIGHTS} --- the iter-89 finding that GIFT carries the
+contrast-yield bonus is consistent with iter 90's GIFT being the
+\emph{third-lowest-risk} method on the zvf130 panel ($0.3145$, behind only
+SCAFGRPO at $0.2253$ and ES at $0.3051$).

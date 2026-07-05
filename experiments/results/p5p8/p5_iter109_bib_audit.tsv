@@ -1,0 +1,5 @@
+cite_key	doi	present_in_bib	has_doi	has_year	has_volume_or_number	has_pages	cited_in_p5_related	missing_fields	verdict
+mitchell2019modelcards	10.1145/3287560.3287596	True	True	True	False	True	False	volume_or_number	ALREADY_PRESENT_NOT_CITED
+gebru2021datasheets	10.1145/3458723	True	True	True	True	True	False		ALREADY_PRESENT_NOT_CITED
+bender2018datastatements	10.1162/tacl_a_00041	True	True	True	True	True	False		ALREADY_PRESENT_NOT_CITED
+pushkarna2022datacards	10.1145/3531146.3533231	True	True	True	False	True	False	volume_or_number	ALREADY_PRESENT_NOT_CITED

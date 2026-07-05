@@ -50,3 +50,48 @@ scaling studies of GRPO knobs \citep{tan2025scalingrl} likewise presuppose
 the per-knob disclosure the manifest mandates. The companion \ours{} pillar
 papers (P1 scaling, P2 ZVF, P3 group size, P4 length bias) provide the
 measurement substrate this position paper argues should become the norm.
+
+\paragraph{The reporting-standards lineage of MIN-REPORT (iter~109
+verification).} The MIN-REPORT standard inherits directly from four
+documented dataset/model reporting standards, each of which we verified
+against CrossRef metadata at iter~109 (\texttt{p5\_iter109\_crossref\_verify.tsv};
+4/4 pass year + 5-gram title + author-family-overlap$\geq 0.6$ vs the
+CrossRef record). \citet{mitchell2019modelcards} introduced \emph{Model
+Cards} to document intended use, out-of-scope use, and per-slice evaluation
+results for trained models; this lineage gives us MIN-REPORT items~1
+(architecture and training procedure), 2 (intended and out-of-scope use),
+7 (per-slice metrics, not just averages), and 8 (ethical considerations and
+caveats). \citet{gebru2021datasheets} extended the idea to datasets via
+\emph{Datasheets}, motivating items 3 (dataset composition), 5
+(preprocessing, cleaning, labeling, uses), 9 (annotation process), and 10
+(discriminatory-impact mitigations). \citet{bender2018datastatements}
+focused on natural-language data and added the speaker-demographic axis,
+motivating items 11 (speaker consent and curation rationale) and 12
+(annotator demographics and quality control) which are not present in
+Mitchell's or Gebru's templates. \citet{pushkarna2022datacards} introduced
+\emph{Data Cards} to bridge research and industry practice, motivating
+items 4 (dataset schema and provenance), 6 (sampling distribution and
+representativeness), 13 (per-stack axis field markers, the
+\texttt{zvf\_yield\_residual} line in MIN-REPORT v2.1), and 14 (audit
+transparency and version tracking). The 4 papers cover
+\textbf{12 distinct MIN-REPORT items} (cross-coupling audit:
+\texttt{p5\_iter109\_minreport\_coupling.tsv}); the remaining 6 items in
+the 18-item manifest are either RL-specific (item~15 zvf per-step, item~17
+group-size schedule) or stack-coverage items without a direct analogue in
+the prior reporting-standards literature (item~16 was rejected as a
+signal-bearing field at iter~81). Two of the four entries
+(\citet{bender2018datastatements} and \citet{pushkarna2022datacards}) were
+not present in \texttt{paper/references.bib} prior to iter~109; iter~109
+adds them with full DOI, year, volume/number/pages, and verified author
+lists. The other two entries
+(\citet{mitchell2019modelcards}, \citet{gebru2021datasheets}) were
+already in the bib; iter~109 retrofits them with DOIs and now actually
+cites them in the related work (prior to iter~109 they were \emph{present
+in the bibliography but uncited}). The cross-coupling audit also exposes
+a measurement asymmetry: of the 12 MIN-REPORT items covered by these
+reporting-standards papers, items 9--12 (annotation process and
+annotator-demographic axes) have the lowest evidence density in our
+live manifests (\texttt{p5\_iter109\_bib\_audit.tsv}, see also
+iter~105's 5-vs-3 discriminative-vs-primitive split), motivating a
+future-iter extension of MIN-REPORT to formalise annotation-process
+fields at the same strictness as the stack-axis fields.

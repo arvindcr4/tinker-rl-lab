@@ -1,0 +1,13 @@
+field_group	n_fields	channel	n_obs	n_groups	eta_sq	omega_sq	epsilon_sq
+manifest_discriminating_3	3	zvf	98	15	0.871573	0.848598	0.849911
+manifest_discriminating_3	3	mean_reward	98	15	0.30867	0.190474	0.192061
+manifest_discriminating_3	3	pcd	98	15	0.659627	0.599755	0.602214
+manifest_discriminating_3	3	mean_completion_len	98	15	0.259546	0.13346	0.13465
+cells_all_5	5	zvf	98	98	1.0	0.0	0.0
+cells_all_5	5	mean_reward	98	98	1.0	0.0	0.0
+cells_all_5	5	pcd	98	98	1.0	0.0	0.0
+cells_all_5	5	mean_completion_len	98	98	1.0	0.0	0.0
+manifest_plus_temp_seed	5	zvf	98	52	0.913397	0.815844	0.81738
+manifest_plus_temp_seed	5	mean_reward	98	52	0.311125	-0.445949	-0.452627
+manifest_plus_temp_seed	5	pcd	98	52	0.714271	0.39503	0.397484
+manifest_plus_temp_seed	5	mean_completion_len	98	52	0.443161	-0.172121	-0.174205

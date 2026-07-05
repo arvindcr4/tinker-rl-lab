@@ -1,0 +1,85 @@
+{
+  "iter": 132,
+  "pillar": "P8",
+  "seed_main": 20260705,
+  "n_boot": 400,
+  "epsilon_grid": [
+    0.0,
+    0.005,
+    0.01,
+    0.02,
+    0.05
+  ],
+  "c_inv_canonical_USD": 0.5,
+  "L_canonical_USD": 100.0,
+  "c_sense_USD": 0.0035,
+  "K_operating": 0.02,
+  "operating_point_metrics_at_each_eps": {
+    "0.0": {
+      "raw_auc": 0.9999267225829725,
+      "full_auc": 0.9999506786616162,
+      "raw_cost_per_dec": 0.01095,
+      "full_cost_per_dec": 0.011,
+      "raw_caught_K2pct": 1.0,
+      "full_caught_K2pct": 1.0
+    },
+    "0.005": {
+      "raw_auc": 0.9988797010281385,
+      "full_auc": 0.9990030043740982,
+      "raw_cost_per_dec": 0.0131,
+      "full_cost_per_dec": 0.0136,
+      "raw_caught_K2pct": 1.0,
+      "full_caught_K2pct": 0.9930555555555556
+    },
+    "0.01": {
+      "raw_auc": 0.9968695041937229,
+      "full_auc": 0.9971048374368687,
+      "raw_cost_per_dec": 0.0171,
+      "full_cost_per_dec": 0.0178,
+      "raw_caught_K2pct": 0.8472222222222222,
+      "full_caught_K2pct": 0.8611111111111112
+    },
+    "0.02": {
+      "raw_auc": 0.9886575013528138,
+      "full_auc": 0.9854255445075758,
+      "raw_cost_per_dec": 0.054,
+      "full_cost_per_dec": 0.04295,
+      "raw_caught_K2pct": 0.7083333333333334,
+      "full_caught_K2pct": 0.7291666666666666
+    },
+    "0.05": {
+      "raw_auc": 0.9787065690386003,
+      "full_auc": 0.9799367841360029,
+      "raw_cost_per_dec": 0.09175,
+      "full_cost_per_dec": 0.09695,
+      "raw_caught_K2pct": 0.5347222222222222,
+      "full_caught_K2pct": 0.5694444444444444
+    }
+  },
+  "bootstrap_CI_at_eps_5pct": {
+    "auc": 0.001324131544592297,
+    "brier": -0.00261889411136508,
+    "caught_K2pct": 0.031021642361078152,
+    "caught_ci_lo": -0.026490066225165587,
+    "caught_ci_hi": 0.09103362391033615
+  },
+  "headline_falsifiable": {
+    "H1_dominance_emerges_at_eps_1pct": true,
+    "gap_per_eps_24full_minus_20raw_caught_K2pct": {
+      "0.0": 0.0,
+      "0.005": -0.00694444444444442,
+      "0.01": 0.01388888888888895,
+      "0.02": 0.02083333333333326,
+      "0.05": 0.03472222222222221
+    },
+    "H2_24full_auc_at_5pct_in_safe_band": true,
+    "H3_cost_degrades_monotonic_raw": 0.9999999999999999,
+    "H3_cost_degrades_monotonic_full": 0.9999999999999999,
+    "H4_caught_K2pct_degrades_raw": -0.9746794344808964,
+    "H4_caught_K2pct_degrades_full": -0.9999999999999999,
+    "H5_gap_strengthens_with_eps": true,
+    "rho_gap_vs_eps": 1.0
+  },
+  "n_test": 10000,
+  "n_test_pos": 144
+}

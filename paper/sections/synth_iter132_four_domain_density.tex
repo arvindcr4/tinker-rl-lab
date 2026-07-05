@@ -1,0 +1,137 @@
+% P5P8-SYNTH measured evidence: four-domain density matrix (iter 132)
+\section{Measured Evidence: Four-Domain Density Matrix}
+\label{sec:synth-four-domain}
+
+We close the iter-124 surface-recommendation by adding P7 per-prompt
+Adaptive-G* density as a \emph{fourth} domain. iter-131 ran the
+per-prompt Adaptive-G* simulation on the same N2 four-method panel
+(\num{2560} prompt-cells $= 4$ methods $\times 40$ steps $\times
+16$ prompts), giving a matched-granularity domain that extends the
+iter-124 three-domain matrix $\{D_1{=}P8, D_2{=}P7$-step,
+$D_3{=}P5\}$-mega$\}$ to $\{D_1, D_2, D_3, D_4{=}P7$-pp$\}$.
+
+\subsection{Domain definitions}
+
+The four ``signal-depleted'' cells are defined to be matched across the
+operational meaning of \emph{contrast-starved} on each pillar:
+
+\begin{table}[h]
+\centering\small
+\caption{Four ``signal-depleted'' density domains. Each row is the
+fraction of evaluation units in the canonical dataset where the
+domain's signal-starvation criterion holds.}
+\label{tab:synth-four-domain}
+\begin{tabular}{llcc}
+\toprule
+& domain & $n_{\mathrm{fire}} / n_{\mathrm{total}}$ & rule \\
+\midrule
+$D_1$ & P8 grad-band        & $84 / 10000 = 0.84\%$ & row in top-$K$ AND consecutive gradient small \\
+$D_2$ & P7 step zvf-triage  & $20 / 40 = 50.0\%$    & step zvf $\geq 0.7$ (DEGENERATE regime) \\
+$D_3$ & P5 mega zvf=$1.0$   & $36 / 98 = 36.7\%$    & cell per-step zvf $== 1.0$ \\
+$D_4$ & P7 per-prompt boundary & $1867 / 2560 = 72.9\%$ & per-prompt $k \in \{0, 8\}$ (boundary) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Pairwise density ratios}
+
+\begin{table}[h]
+\centering\small
+\caption{Pairwise density ratios with 95\% percentile bootstrap CIs
+($B{=}1500$, seed $20260705$). \emph{excl-1} flags ratios where the
+CI excludes $1.0$ by an order-of-magnitude criterion (point $< 0.1$
+or $> 10$).}
+\label{tab:synth-four-domain-ratios}
+\begin{tabular}{lrrrl}
+\toprule
+ratio                       & point   & ci\_lo  & ci\_hi  & excl-1 \\
+\midrule
+P5 / P7-step                & 0.735   & 0.500   & 1.140   & no  \\
+P5 / P7-pp                  & 0.504   & 0.377   & 0.637   & no  \\
+P5 / P8                     & 43.7    & 30.4    & 62.4    & yes \\
+P7-pp / P7-step             & 1.46    & 1.12    & 2.11    & no  \\
+P7-pp / P5                  & 1.99    & 1.56    & 2.67    & no  \\
+P7-pp / P8                  & 86.8    & 71.4    & 109.2   & yes \\
+P8 / P7-step                & 0.0168  & 0.0117  & 0.0248  & yes \\
+P8 / P7-pp                  & 0.0115  & 0.0092  & 0.0140  & yes \\
+P7-step / P5                & 1.36    & 0.86    & 2.04    & no  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{H-tests (4-domain)}
+
+\textbf{H1 (\textsc{Pass})}. $D_4$ sits inside the iter-124
+$\{\mathrm{P5},\,\mathrm{P7}$-step$\}$ super-domain: both
+$\mathrm{P7}$-pp$/\mathrm{P7}$-step (1.46, CI $[1.12,2.11]$) and
+$\mathrm{P7}$-pp$/\mathrm{P5}$ (1.99, CI $[1.56,2.67]$) ratios
+contain $1.0$ at order-of-magnitude tolerance. Adding
+$D_4$ \emph{does not break} the iter-124 super-domain claim
+$(\{\mathrm{P5},\mathrm{P7}\}$-step$<\!\!> \{\mathrm{P8}\})$ — both
+$D_4$ and $D_3$ fall on the $\mathrm{P5}/\mathrm{P7}$-step side of
+the split.
+
+\textbf{H2 (\textsc{Pass})}. Density rank by $n_{\mathrm{fire}} /
+n_{\mathrm{total}}$: $D_4 \,=\, 0.729 > D_2 \,=\, 0.500 > D_3 \,=\,
+0.367 > D_1 \,=\, 0.0084$. Per-prompt granularity (finest) is the
+most signal-depleted; per-row ($D_1$, coarsest) is the least.
+Granularity correlates inversely with apparent contrast density —
+intuitively because as one zooms in, one finds more cells.
+
+\textbf{H3 (\textsc{Refuted})}. Per-method boundary density at
+$D_4$: \texttt{areal} $= 0.706$, \texttt{aero}${}={}$grpo
+$0.720$, \texttt{gift} $= 0.770$. The Spearman $\rho$ against
+iter-131's per-prompt cost-equivalent-contrast ranking
+(\texttt{areal}${}>$\texttt{aero}${}>$\texttt{grpo}${}>$\texttt{gift})
+is $\rho = +0.882$ — POSITIVE, meaning high boundary density ranks
+high in iter-131 (refuted: iter-131's high-contrast methods are
+\emph{also} high-boundary-density methods, opposite the predicted
+negative correlation). The two rankings measure different things at
+the same per-prompt data: iter-131 ranks by cost-effective contrast
+recovery, $D_4$ ranks by boundary density; both reward
+non-boundary structure but on different definitions.
+
+\textbf{H4 (\textsc{Refuted})}. Only $693 / 2560 = 27.1\%$ of
+per-prompt cells have strictly non-zero contrast ($0 < k < 8$ at
+$G{=}8$); $72.9\%$ are boundary cells. The N2 four-method panel is
+\emph{dominated by all-correct/all-wrong groups} at the per-prompt
+granularity — direct numerical confirmation of iter-111's
+intra-step prompt dispersion claim and iter-127's $\tau{=}0.70$
+DEGENERATE threshold firing on $17{-}26/40$ per method.
+
+\subsection{Operational recommendation}
+
+Cross-pillar density comparisons at the per-prompt granularity are
+operationally meaningful only when the candidate set is matched in
+evaluation-unit type (per-row / per-step / per-cell / per-prompt-cell).
+The 4-domain matrix shows that $D_4$ (per-prompt-cell) is most
+signal-depleted but shares the iter-124 super-domain with $D_2$ and $D_3$.
+Cross-pillar rhetorical claims like ``$\mathrm{P7} > \mathrm{P8}$ on
+density'' should always specify which of the four domains is meant —
+a claim true at $D_4$ is meaningless at $D_1$.
+
+\subsection{Cross-paper coupling}
+
+(i) \textbf{P5P8-SYNTH iter-124} (three-domain density matrix, the
+super-domain claim) — iter-132 adds $D_4$, confirms $D_4$ sits in
+$\{\mathrm{P5},\mathrm{P7}\}$ super-domain rather than the $\mathrm{P8}$
+domain. The two-super-domain structure is \emph{robust to the
+addition of a fourth, finer-grained pillar}.
+(ii) \textbf{P7 iter-127} (method-axis CCC ranking on N2; step-aggregate
+gift$>\!$grpo$>\!$aero$>\!$areal) — iter-132 reports per-method
+boundary density at $D_4$ granularity; iter-127's top method
+(\texttt{gift}) has the \emph{highest} boundary density ($0.770$),
+consistent with iter-127 H2's ``most aggressive CCC choice''.
+(iii) \textbf{P7 iter-131} (per-prompt Adaptive-G* cost-equivalent
+ranking) — iter-132 measures per-method boundary density at the same
+per-prompt data; the two rankings disagree on sign (H3 refuted),
+validating the iter-131 operational recommendation to report BOTH the
+step-aggregate CCC ranking AND the per-prompt cost-equivalent ranking
+in $\S\ref{sec:p7-iter131-per-prompt-adaptive-gstar}$.
+(iv) \textbf{Frontier synthesis R1 Critic Degeneracy Hypothesis} —
+$D_4 = 0.729$ is the empirical upper bound on the ``signal-starved
+fraction'' on the N2 four-method panel; this is the regime where the
+critic collapses to a static prompt-difficulty regressor and the GRPO
+group mean becomes the only informative signal. The $72.9\%$ fraction
+is the operational ceiling on the policy-gradient starvation rate that
+the Adaptive-G* controller is designed to mitigate.

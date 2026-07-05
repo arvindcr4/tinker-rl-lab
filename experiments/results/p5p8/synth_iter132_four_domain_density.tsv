@@ -1,0 +1,5 @@
+domain	n_fire	n_total	rate	ci_lo	ci_hi	rule
+D1_P8_grad_band	84	10000	0.008400	0.006700	0.010200	P8 grad-band: row in top-K AND consecutive gradient small
+D2_P7_step_zvf_triage	20	40	0.500000	0.350000	0.650000	P7 step zvf>=0.7 (DEGENERATE regime)
+D3_P5_mega_zvf_eq_1	36	98	0.367347	0.275510	0.459184	P5 mega cell per-step zvf == 1.0
+D4_P7_perprompt_boundary	1867	2560	0.729297	0.711719	0.745908	P7 per-prompt is_boundary==1 (k in {0,8})

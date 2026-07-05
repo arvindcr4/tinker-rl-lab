@@ -1,0 +1,122 @@
+{
+  "iter": 135,
+  "pillar": "P7",
+  "vein": "tau-stability on N10 5-seed panel",
+  "n_seeds": 5,
+  "n_steps": 15,
+  "n_grid": 8,
+  "tau_grid": [
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8,
+    0.85
+  ],
+  "canonical_tau": 0.7,
+  "h1_replication": {
+    "per_seed_n_fire": {
+      "42": {
+        "n_fire": 2,
+        "mean_per_step": 0.1333
+      },
+      "179": {
+        "n_fire": 4,
+        "mean_per_step": 0.2667
+      },
+      "316": {
+        "n_fire": 4,
+        "mean_per_step": 0.2667
+      },
+      "453": {
+        "n_fire": 6,
+        "mean_per_step": 0.4
+      },
+      "590": {
+        "n_fire": 5,
+        "mean_per_step": 0.3333
+      }
+    },
+    "mean_n_fire_per_seed": 4.2,
+    "stdev_n_fire_across_seeds": 1.3266,
+    "pooled_per_step_fire_rate": 0.28,
+    "iter99_anchor": "fires/seed = 4.20 +/- 1.48 (15 steps, tau=0.70)",
+    "replicate_pass": true
+  },
+  "h2_stable_band": {
+    "n_universal_fire": 3,
+    "n_universal_no_fire": 12,
+    "n_partial": 60,
+    "frac_universal_fire": 0.04,
+    "frac_universal_no_fire": 0.16,
+    "frac_partial": 0.8,
+    "verdict": "PASS"
+  },
+  "h3_sigmoid_slope_at_070": 0.0,
+  "h4_pairwise_slopes": {
+    "0.6": -6.4,
+    "0.7": 0.0,
+    "0.75": -4.8
+  },
+  "h4_max_slope": 0.0,
+  "h4_at_070": 0.0,
+  "h4_pass": false,
+  "h5_inflection_taus": [
+    {
+      "tau_lo": 0.6,
+      "tau_hi": 0.65,
+      "slope": 6.4
+    },
+    {
+      "tau_lo": 0.5,
+      "tau_hi": 0.55,
+      "slope": 4.8
+    },
+    {
+      "tau_lo": 0.75,
+      "tau_hi": 0.8,
+      "slope": 4.8
+    },
+    {
+      "tau_lo": 0.55,
+      "tau_hi": 0.6,
+      "slope": 0.0
+    },
+    {
+      "tau_lo": 0.65,
+      "tau_hi": 0.7,
+      "slope": 0.0
+    },
+    {
+      "tau_lo": 0.7,
+      "tau_hi": 0.75,
+      "slope": 0.0
+    },
+    {
+      "tau_lo": 0.8,
+      "tau_hi": 0.85,
+      "slope": 0.0
+    }
+  ],
+  "h5_inflection_tau": {
+    "tau_lo": 0.6,
+    "tau_hi": 0.65,
+    "slope": 6.4
+  },
+  "h5_verdict": "PASS",
+  "h6_mean_flip_reward": 0.2344,
+  "h6_mean_noflip_reward": 0.3344,
+  "h6_delta": -0.1,
+  "pooled_fire_rate_curve": {
+    "0.5": 0.84,
+    "0.55": 0.6,
+    "0.6": 0.6,
+    "0.65": 0.28,
+    "0.7": 0.28,
+    "0.75": 0.28,
+    "0.8": 0.04,
+    "0.85": 0.04
+  }
+}

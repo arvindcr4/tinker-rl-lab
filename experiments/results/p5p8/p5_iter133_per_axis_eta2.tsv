@@ -1,0 +1,13 @@
+channel	axis	eta2_point	ci_lo	ci_hi	n_obs	B
+zvf	seed	0.1025	0.0022	0.1574	75	2000
+zvf	band	0.0346	0.0228	0.1768	75	2000
+reward	seed	0.0494	0.0071	0.0638	75	2000
+reward	band	0.1468	0.1017	0.2404	75	2000
+mean_len	seed	0.0447	0.0003	0.0733	75	2000
+mean_len	band	0.142	0.1025	0.2546	75	2000
+loss	seed	0.0716	0.0078	0.0905	75	2000
+loss	band	0.0151	0.0055	0.1492	75	2000
+zvf	residual	0.8629	0.8629	0.8629	75	2000
+reward	residual	0.8039	0.8039	0.8039	75	2000
+mean_len	residual	0.8133	0.8133	0.8133	75	2000
+loss	residual	0.9133	0.9133	0.9133	75	2000

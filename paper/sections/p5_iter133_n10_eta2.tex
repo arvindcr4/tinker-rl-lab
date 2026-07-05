@@ -1,0 +1,127 @@
+% =============================================================================
+% P5-133 — N10 5-seed GRPO panel: per-axis η² + chained-R portability audit
+% =============================================================================
+\subsection{N10 5-seed GRPO panel: per-axis $\eta^2$ and chained-R portability audit (iter 133)}
+\label{sec:p5-iter133-n10-eta2}
+
+Iter 125 chained the mega-98 stack-axis $\eta^2_{\mathrm{stack}}$ with the
+N2 algorithm-axis $\eta^2_{\mathrm{algo}}$ and reported dominance ratios
+$R = \eta^2_{\mathrm{stack}} / \eta^2_{\mathrm{algo}} \in [6.4, 12.6]$ on
+the four dominant (axis, metric) pairings. The remaining open question is
+\emph{cross-corpus portability}: does that ratio survive on a panel with
+\emph{no} stack variation at all?
+
+The \texttt{n10\_seed\_expansion/} corpus (Qwen/Qwen3.5-4B, GRPO G=8,
+$lr=10^{-5}$, $max\_tokens=256$, 5 of 8 seeds completed as of iter 133,
+s$\in\{42,179,316,453,590\}$, 15 steps per seed, $N=75$) is the
+single-stack / single-algorithm panel that closes this leg. Iter 133
+re-runs the same per-channel $\eta^2$ decomposition on axes
+$\{\mathrm{seed}, \mathrm{step\_band}\}$ with paired-seed cluster-bootstrap
+($B=2000$, $seed=20260705$) and reports $R = \eta^2_{\mathrm{step\_band}} / \eta^2_{\mathrm{seed}}$.
+
+\subsubsection{Per-axis $\eta^2$ with bootstrap CI}
+\label{sec:p5-iter133-per-axis}
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lcccccc}
+\toprule
+channel & $\eta^2_{\mathrm{seed}}$ & 95\% CI & $\eta^2_{\mathrm{band}}$ & 95\% CI & winner & $R_{\mathrm{band/seed}}$\\
+\midrule
+zvf       & \textbf{0.1025} & [0.002, 0.157] & 0.0346 & [0.023, 0.177] & seed & 0.34\\
+reward    & 0.0494 & [0.007, 0.064] & \textbf{0.1468} & [0.102, 0.240] & band & 2.97\\
+mean\_len & 0.0447 & [0.000, 0.073] & \textbf{0.1420} & [0.103, 0.255] & band & 3.17\\
+loss      & \textbf{0.0716} & [0.008, 0.091] & 0.0151 & [0.006, 0.149] & seed & 0.21\\
+\bottomrule
+\end{tabular}
+\caption{N10 per-axis $\eta^2$ for the 4 channels; cluster-bootstrap CI over
+seeds ($B=2000$).  Channels split into ``band-dominant'' (reward, mean\_len)
+and ``seed-dominant'' (zvf, loss).}
+\label{tab:p5-iter133-eta2}
+\end{table}
+
+The per-axis $\eta^2$ split (Table~\ref{tab:p5-iter133-eta2}) reveals that
+on this single-stack / single-algo panel, the 4 channels fall into two
+regimes:
+\begin{itemize}
+\item \textbf{band-dominant} (reward, mean\_len): $\eta^2_{\mathrm{band}}$
+  exceeds $\eta^2_{\mathrm{seed}}$; the curriculum-like trajectory explains
+  $14\%$--$15\%$ of variance versus $5\%$ explained by seed.
+\item \textbf{seed-dominant} (zvf, loss): $\eta^2_{\mathrm{seed}}$ exceeds
+  $\eta^2_{\mathrm{band}}$; zvf at $\eta^2_{\mathrm{seed}}=0.10$ is the
+  largest seed-axis variance share on the panel.
+\end{itemize}
+
+\subsubsection{Headline hypotheses (H1--H4)}
+\label{sec:p5-iter133-headlines}
+\textbf{H1 (PASS)} --- $\eta^2(\mathrm{step\_band})$ exceeds $\eta^2(\mathrm{seed})$
+on $\geq 2$ of 4 channels (curriculum-trajectory dominance on the channels
+that exhibit it). On N10 the 2/4 partition is exactly $\{$
+reward, mean\_len$\}$.
+
+\textbf{H2 (PASS)} --- the ratio $R = \eta^2_{\mathrm{band}} / \eta^2_{\mathrm{seed}}$
+exceeds 1 with CI-lo $>1$ on $\geq 2/4$ channels. Reward $R=2.97$
+$[2.25, 28.95]$, mean\_len $R=3.17$ $[1.88, 881.98]$ --- both
+$P(R>1)=1.0$; zvf and loss have $R<1$ with $P(R>1)\approx 0.34$.
+
+\textbf{H3 (REFUTED)} --- the iter-125 cross-corpus portability claim
+$R \geq 4$ on the zvf channel does NOT transfer from mega-98 to N10.
+On mega-98 multi-stack panel, $R_{\mathrm{zvf}}^{\mathrm{stack/algo}}=10.32$;
+on N10 single-stack panel, $R_{\mathrm{zvf}}^{\mathrm{band/seed}}=0.34$.
+\underline{The 10.32-vs-0.34 inversion is the first measured refusal of
+cross-corpus portability on the contrast-signal channel.} reward and
+mean\_len carry the cross-corpus invariant (both regimes show band-curriculum
+dominance); the zvf/stack behaviour is corpus-shape-dependent.
+
+\textbf{H4 (INSUFFICIENT)} --- $\eta^2(\mathrm{step\_band}, \mathrm{zvf}) = 0.035$
+does NOT meet the operational gate $\geq 0.10$ that the iter-119 / iter-131
+controllers implicitly assume. P7 controllers should adopt
+$\eta^2(\mathrm{step\_band}, \mathrm{zvf}) \geq 0.10$ as a per-corpus
+eligibility check; the N10 panel fails it.
+
+\subsubsection{Cross-paper coupling and operational recommendation}
+\label{sec:p5-iter133-coupling}
+
+\textbf{Coupling to iter-7 row-13:} iter 7 reported steady-state zvf predicts
+held-out accuracy $r=0.607$ $[0.408, 0.779]$ across N10 seeds --- \emph{seed
+is the principal axis of zvf variation that predicts the external outcome}.
+Iter 133 confirms that finding at the per-channel level: on N10, zvf is
+seed-dominated ($\eta^2_{\mathrm{seed}}=0.10$), not step-band-dominated.
+
+\textbf{Coupling to iter-119 / iter-131 controllers:} both controllers treat
+step-level zvf as a per-step control signal. On a corpus where zvf is
+seed-dominated (N10), step-level decisions are noisy proxies for
+seed-level decisions. The H4 gate
+$\eta^2_{\mathrm{step\_band}, \mathrm{zvf}} \geq 0.10$ would have flagged
+N10 as controller-ineligible.
+
+\textbf{Coupling to iter-125 chained-R:} iter-125's ``$R \geq 4$ on zvf''
+finds corpus-shape-invariant interpretation at the multi-stack level.
+iter-133's $R=0.34$ on N10 is the corresponding measurement on a
+single-stack panel with seed as the noise axis. \emph{The two corpora
+are two regimes, not one}: mega-98 multi-stack responds to systematic
+variance sources; N10 single-stack responds to seed-noise variance.
+
+\textbf{Operational recommendation:} (a) cross-corpus P5 claims must
+specify which axes are swept in each corpus; (b) cross-corpus portability
+of dominance ratios is \emph{not} automatic --- report both absolute
+$\eta^2$ per axis per channel (corpus-comparable) AND relative $R$
+(corpus-shape-relative); (c) P7 controllers should require
+$\eta^2_{\mathrm{step\_band}, \mathrm{zvf}} \geq 0.10$ as a per-corpus
+eligibility check before applying step-level zvf-based firing rules.
+
+\noindent\textbf{Artifacts.}\;
+\texttt{scripts/p5p8/p5\_iter133\_n10\_eta2\_bootstrap.py}$\;(\leq\!282\,\mathrm{LoC})$;\\
+\texttt{experiments/results/p5p8/p5\_iter133\_per\_axis\_eta2.tsv}
+(12 rows, 3 axes $\times$ 4 channels);\\
+\texttt{experiments/results/p5p8/p5\_iter133\_chained\_R.tsv} (4 rows);\\
+\texttt{experiments/results/p5p8/p5\_iter133\_step\_band.tsv} (20 rows,\\
+5 bands $\times$ 4 channels);\\
+\texttt{experiments/results/p5p8/p5\_iter133\_summary.json}
+(verdicts + cross-corpus portability table).
+
+\noindent\textbf{Cross-paper coupling.}\; Iter-7 (N10 zvf $\to$ acc),
+Iter-89 (N2 algo-axis $\eta^2$), Iter-93 (mega-98 stack-axis $\eta^2$),
+Iter-101 (zvf130 risk-index $\eta^2$), Iter-125 (chained $R$ across
+mega/N2), Iter-129 (P5 headline-CI audit), FRONTIER-INSIGHTS
+Round 1 Critic-Degeneracy Hypothesis.

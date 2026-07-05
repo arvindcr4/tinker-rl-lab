@@ -1236,6 +1236,33 @@ After iter 131 drove row 146 (P7 per-prompt Adaptive-G* simulation) to validated
 
 After iter 132 drove rows 147 (P8 mislabel-noise robustness) and 148 (P5P8-SYNTH four-domain density) to validated, the ledger is now at **148 validated rows, 0 open proposed rows, 2 historical rejects**.
 
+## Iter 133 deliverables (this commit)
+
+- `scripts/p5p8/p5_iter133_n10_eta2_bootstrap.py` (282 LoC, stdlib only, paired-seed cluster bootstrap)
+- `experiments/results/p5p8/p5_iter133_per_axis_eta2.tsv` (12 rows: 4 channels × 3 axes {seed, band, residual})
+- `experiments/results/p5p8/p5_iter133_chained_R.tsv` (4 rows: per-channel R = η²_band/η²_seed)
+- `experiments/results/p5p8/p5_iter133_step_band.tsv` (20 rows: 5 bands × 4 channels)
+- `experiments/results/p5p8/p5_iter133_summary.json` (verdicts + portability table)
+- `paper/sections/p5_iter133_n10_eta2.tex` (new §sec:p5-iter133-n10-eta2, ~115 lines, 1 table, 4 H sub-sections, 7 cross-paper coupling bullets)
+- `paper/paper_P5_minreport.pdf` rebuilds to **55 pages / 0 errors / 0 undefined citations** (was 54, +1 page)
+- `docs/p5p8_improvements/149_p5_n10_eta2.md`
+- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5, iter 133)
+
+## Headline findings (P5, iter 133)
+
+| Hypothesis | Verdict | Evidence |
+|---|---|---|
+| **H1** η²(step_band) > η²(seed) on ≥ 2/4 channels (curriculum-trajectory dominance) | **PASS** | band-dom on reward (η²=0.147 > seed 0.049) + mean_len (0.142 > 0.045); seed-dom on zvf (0.103 > 0.035) + loss (0.072 > 0.015). The 2/4 partition separates "curriculum-trajectory" (reward, mean_len) from "noise-floor" channels (zvf, loss). |
+| **H2** R = η²_band/η²_seed ≥ 1 with CI-lo > 1 on ≥ 2/4 channels | **PASS** | reward R=2.97 [2.25, 28.95] (P(R>1)=1.0); mean_len R=3.17 [1.88, 881.98] (P(R>1)=1.0). Cross-corpus invariant on the curriculum-trajectory channels. |
+| **H3** iter-125 chained-R(zvf, stack/algo)=10.32 generalises to N10 (cross-corpus portability) | **REFUTED** | N10 R(zvf, band/seed)=**0.34** [0.25, 27.11], P(R>1)=0.34. The mega-98 R≥4 is corpus-shape-dependent (multi-stack), NOT corpus-agnostic. N10 single-stack reverts zvf to seed-noise-dominated. |
+| **H4** η²(step_band, zvf) ≥ 0.10 ⇒ controller-eligibility coherence | **INSUFFICIENT** | N10 η²(step_band, zvf)=0.035 < 0.10; P7 controllers (iter-119/iter-131) implicitly assume this gate. Recommendation: add η²(step_band, zvf) ≥ 0.10 as a per-corpus eligibility check. |
+
+## Recommended next-iter mint veins (for iter 134)
+
+1. **P5 (per row 149 H3 REFUTED + H4 INSUFFICIENT)**: combine the η²(step_band, zvf) ≥ 0.10 eligibility check with the iter-131 controller rule; re-run iter-131 ADAPTIVE_PP on a corpus that PASSES the gate (mega-98 or N2) and quantify how much of the contrast_restored net transfers vs. evaporates with the H4 gate.
+2. **P5 (per row 149 H1 channels split)**: the {reward, mean_len} band-dom vs {zvf, loss} seed-dom partition suggests a 2-component "curriculum-vs-noise-floor" factor model — explicitly fit (mean_len, reward) vs (zvf, loss) on a 2-factor varimax on N10 + N2 + zvf130 data; does a clean 2-factor structure emerge?
+3. **P5P8-SYNTH (per row 149 H3)**: extend the iter-148 four-domain density matrix with N10 as a fifth domain (D5 = per-step seed-axis on n10 panel); does the two-super-domain split {P5, P7-step} ↔ {P8} ↔ {N10-seed} hold?
+
 ## Recommended next-iter mint veins (for iter 133)
 
 1. **P8 (per item 147 H1 dominance emergence)**: replicate iter-132 mislabel sweep on a different fraud dataset (e.g., PaySim or a synthetic generation with controlled noise injection) — does the iter-132 "gap strengthens with noise" finding generalize off the released synthetic split?

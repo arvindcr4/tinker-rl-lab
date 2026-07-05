@@ -1,0 +1,17 @@
+method	controller_x	delta_ret_c4_minus_x	ci95_dret_lo	ci95_dret_hi	delta_cost_c4_minus_x	ci95_dcost_lo	ci95_dcost_hi	c4_strictly_dominates	c4_strictly_dominated	c4_pareto_dominates	c4_pareto_dominated
+grpo	STATIC_G8	0.0186	0.0137	0.0238	0.0969	0.0781	0.1172	False	False	False	False
+grpo	STATIC_G16	-0.0311	-0.0371	-0.0251	-0.9031	-0.9219	-0.8828	False	False	False	False
+grpo	DUALFORMER_PP	0.0186	0.0137	0.0238	0.0969	0.0781	0.1172	False	False	False	False
+grpo	ADAPTIVE_PP_ORACLE	-0.0506	-0.0593	-0.0417	-0.7422	-0.8219	-0.6625	False	False	False	False
+aero	STATIC_G8	0.0155	0.0111	0.0203	0.0891	0.0703	0.1094	False	False	False	False
+aero	STATIC_G16	-0.0298	-0.0358	-0.0238	-0.9109	-0.9297	-0.8906	False	False	False	False
+aero	DUALFORMER_PP	0.0155	0.0111	0.0203	0.0891	0.0703	0.1094	False	False	False	False
+aero	ADAPTIVE_PP_ORACLE	-0.0475	-0.0565	-0.0385	-0.75	-0.8344	-0.6641	False	False	False	False
+gift	STATIC_G8	0.0146	0.0103	0.0191	0.1	0.0813	0.1219	False	False	False	False
+gift	STATIC_G16	-0.0248	-0.0308	-0.019	-0.9	-0.9187	-0.8781	False	False	False	False
+gift	DUALFORMER_PP	0.0146	0.0103	0.0191	0.1	0.0813	0.1219	False	False	False	False
+gift	ADAPTIVE_PP_ORACLE	-0.0404	-0.0491	-0.032	-0.5891	-0.6656	-0.5156	False	False	False	False
+areal	STATIC_G8	0.0133	0.0091	0.0176	0.0797	0.0625	0.0984	False	False	False	False
+areal	STATIC_G16	-0.0399	-0.0473	-0.0332	-0.9203	-0.9375	-0.9016	False	False	False	False
+areal	DUALFORMER_PP	0.0133	0.0091	0.0176	0.0797	0.0625	0.0984	False	False	False	False
+areal	ADAPTIVE_PP_ORACLE	-0.0614	-0.0724	-0.0511	-0.8016	-0.8828	-0.7188	False	False	False	False

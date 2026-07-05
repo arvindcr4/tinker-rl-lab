@@ -1,0 +1,5 @@
+method	n_steps	r_zvf_vs_reward	ci95_lo	ci95_hi
+grpo	40	0.6014	0.4396	0.7471
+aero	40	0.7459	0.6104	0.8488
+gift	40	0.708	0.5475	0.8303
+areal	40	0.4097	0.169	0.626

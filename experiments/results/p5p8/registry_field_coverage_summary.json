@@ -1,0 +1,96 @@
+{
+  "audit_date": "2026-07-05",
+  "iter": 78,
+  "n_entries": 35,
+  "n_stacks": 20,
+  "n_variants": 15,
+  "n_variants_measured": 10,
+  "n_variants_with_expected_effects": 13,
+  "n_variants_with_claim_validation": 10,
+  "record_type_counts": {
+    "stack": 20,
+    "variant_delta": 15
+  },
+  "record_type_avg_field_population_pct": {
+    "variant_delta": 52.0,
+    "stack": 90.0
+  },
+  "framework_counts_stack": {
+    "colab-open-trainer": 4,
+    "openrlhf": 1,
+    "tinker": 8,
+    "trl": 1,
+    "verl": 1,
+    "worktree-zvf130-batch": 5
+  },
+  "methods_only_in_ledger_normalized": [
+    "",
+    "pergroupregression;continuousreward;populationstandardizedadvantage",
+    "pporeinforce",
+    "trlgrpo",
+    "unknown"
+  ],
+  "methods_only_in_registry_normalized": [
+    "adaptiveg(zvfdriven)",
+    "aero",
+    "areal",
+    "cppo",
+    "dapo",
+    "dr.grpo",
+    "drgrpo",
+    "es",
+    "gift",
+    "gspo",
+    "liteppo",
+    "mcgrpo",
+    "ngrpo",
+    "scafgrpo"
+  ],
+  "methods_in_both_normalized": [
+    "grpo",
+    "ppo",
+    "reinforce"
+  ],
+  "n_methods_in_ledger_raw": 9,
+  "n_methods_in_registry_normalized": 17,
+  "n_methods_overlap_normalized": 3,
+  "all_frameworks": [
+    "colab-open-trainer",
+    "openrlhf",
+    "tinker",
+    "trl",
+    "verl",
+    "wandb",
+    "worktree-zvf130-batch"
+  ],
+  "all_methods_in_ledger_raw": [
+    "",
+    "GRPO",
+    "PPO",
+    "TRL-GRPO",
+    "UNKNOWN",
+    "grpo",
+    "per-group regression; continuous reward; population-standardized advantage",
+    "ppo_reinforce",
+    "reinforce"
+  ],
+  "all_methods_in_registry_normalized": [
+    "adaptiveg(zvfdriven)",
+    "aero",
+    "areal",
+    "cppo",
+    "dapo",
+    "dr.grpo",
+    "drgrpo",
+    "es",
+    "gift",
+    "grpo",
+    "gspo",
+    "liteppo",
+    "mcgrpo",
+    "ngrpo",
+    "ppo",
+    "reinforce",
+    "scafgrpo"
+  ]
+}

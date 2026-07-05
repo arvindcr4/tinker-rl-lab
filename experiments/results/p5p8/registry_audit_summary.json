@@ -1,7 +1,7 @@
 {
   "counts": {
     "n_stack_records": 20,
-    "n_variant_delta_records": 11
+    "n_variant_delta_records": 15
   },
   "min_report_coverage": {
     "per_entry": {
@@ -647,15 +647,22 @@
   "schema_validation": {
     "failures": [],
     "n_fail": 0,
-    "n_ok": 31,
-    "n_total": 31
+    "n_ok": 35,
+    "n_total": 35
   },
   "variant_delta_xref": {
     "broken_refs": [],
     "n_broken_refs": 0,
-    "n_claimed": 11,
-    "n_deltas": 11,
+    "n_claimed": 12,
+    "n_deltas": 15,
     "per_delta_status_mix": {
+      "delta_adaptiveg": {
+        "n_claimants": 1,
+        "status_mix": {
+          "implemented": 1
+        },
+        "unclaimed": false
+      },
       "delta_aero": {
         "n_claimants": 1,
         "status_mix": {

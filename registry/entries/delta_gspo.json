@@ -21,5 +21,25 @@
       "change": "clipping, rewarding and optimization applied at the sequence level (no MIN-REPORT leaf for sequence-level clip; deferred to source paper until a future schema bump exposes the field)"
     }
   ],
-  "notes": "Sequence-level importance ratio and clipping, per the source paper."
+  "notes": "Sequence-level importance ratio and clipping, per the source paper.",
+  "expected_effects": [
+    {
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": "<0",
+      "rationale": "GSPO's sequence-level (length-normalized) importance ratio reduces per-token variance amplification that drives zero-variance groups; predicted lower ZVF than GRPO on the same stack (Qwen team 2025, Section 3)."
+    },
+    {
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">=0",
+      "rationale": "GSPO is documented as reward-neutral or slightly positive on Qwen3 dense models; the sequence-level ratio is variance-reducing and should not regress final reward (Qwen team 2025, Table 1)."
+    },
+    {
+      "metric": "mean_len",
+      "panel": "length_bias_iter60_grpo_vs_drgrpo_paired",
+      "predicted_sign": "<0",
+      "rationale": "Length normalization in the importance ratio reduces the implicit length-bias GRPO inherits from per-token averaging; predicted lower mean_len than GRPO on the same stack."
+    }
+  ]
 }

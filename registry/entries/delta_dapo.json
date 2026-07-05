@@ -36,5 +36,25 @@
       "change": "KL regularization term removed from the objective (canonical leaf pinned at kl_beta=0.0)"
     }
   ],
-  "notes": "Four named techniques plus removal of the KL term, per the source paper. field: paths now anchored on iter-41 schema leaves (iter-42 drift audit: previous sampling.* and reward.* references were blocks the schema never exposed)."
+  "notes": "Four named techniques plus removal of the KL term, per the source paper. field: paths now anchored on iter-41 schema leaves (iter-42 drift audit: previous sampling.* and reward.* references were blocks the schema never exposed).",
+  "expected_effects": [
+    {
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": "<0",
+      "rationale": "DAPO's dynamic_sampling filter explicitly resamples zero-variance groups; predicted lower ZVF than GRPO on the same stack (Yu et al. 2025, Section 3.2)."
+    },
+    {
+      "metric": "mean_len",
+      "panel": "length_bias_iter60_grpo_vs_drgrpo_paired",
+      "predicted_sign": "<0",
+      "rationale": "DAPO's overlong_reward_shaping soft-penalizes truncated completions; predicted lower mean_len on the same stack (Yu et al. 2025, Section 3.4)."
+    },
+    {
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">0",
+      "rationale": "DAPO's clip_higher (asymmetric 0.2/0.28) prevents premature convergence on low-entropy prompts while permitting exploration on high-entropy ones; predicted higher reward_mean on the same stack (Yu et al. 2025, Table 2)."
+    }
+  ]
 }

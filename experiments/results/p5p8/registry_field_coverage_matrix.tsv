@@ -1,0 +1,36 @@
+id	record_type	framework	label	claim_validation	controller_predicted_savings_per_rollout	expected_effects	measured	measured_yield_residual	min_report	notes	outcomes	variant_deltas_applied	n_populated	n_total	coverage_pct	citation_arxiv
+colab-open_dapo_e3	stack	colab-open-trainer	dapo						1	1	1	1	4	4	100.0	
+colab-open_drgrpo_e3	stack	colab-open-trainer	drgrpo						1	1	1	1	4	4	100.0	
+colab-open_grpo-adaptiveg_e3	stack	colab-open-trainer	grpo						1	1	1	1	4	4	100.0	
+colab-open_grpo_e3	stack	colab-open-trainer	grpo						1	1	1	0	3	4	75.0	
+delta_adaptiveg	variant_delta	grpo_variant	Adaptive-G (ZVF-driven)	1	0	1	1	0					3	5	60.0	
+delta_aero	variant_delta	grpo_variant	AERO	1	1	1	1	1					5	5	100.0	2509.21880
+delta_areal	variant_delta	grpo_variant	AREAL	1	1	1	1	1					5	5	100.0	2505.24298
+delta_cppo	variant_delta	grpo_variant	CPPO	1	0	1	1	0					3	5	60.0	2503.22342
+delta_dapo	variant_delta	grpo_variant	DAPO	0	0	1	0	0					1	5	20.0	2503.14476
+delta_drgrpo	variant_delta	grpo_variant	Dr. GRPO	1	0	1	1	0					3	5	60.0	2503.20783
+delta_es	variant_delta	grpo_variant	ES	1	0	1	1	0					3	5	60.0	2509.24372
+delta_gift	variant_delta	grpo_variant	GIFT	1	1	1	1	1					5	5	100.0	2510.23868
+delta_gspo	variant_delta	grpo_variant	GSPO	0	0	1	0	0					1	5	20.0	2507.18071
+delta_liteppo	variant_delta	grpo_variant	LitePPO	0	0	0	0	0					0	5	0.0	
+delta_mcgrpo	variant_delta	grpo_variant	MCGRPO	1	0	1	1	0					3	5	60.0	2601.22582
+delta_ngrpo	variant_delta	grpo_variant	NGRPO	1	0	1	1	0					3	5	60.0	2509.18851
+delta_ppo	variant_delta	grpo_variant	PPO	0	0	1	0	0					1	5	20.0	1707.06347
+delta_reinforce	variant_delta	grpo_variant	REINFORCE	0	0	0	0	0					0	5	0.0	
+delta_scafgrpo	variant_delta	grpo_variant	SCAFGRPO	1	0	1	1	0					3	5	60.0	2510.19807
+openrlhf_grpo_qwen3-8b_gsm8k	stack	openrlhf	grpo						1	1	1	0	3	4	75.0	
+tinker_aero_qwen3.5-4b_gsm8k	stack	tinker	aero						1	1	1	1	4	4	100.0	
+tinker_areal_qwen3.5-4b_gsm8k	stack	tinker	areal						1	1	1	1	4	4	100.0	
+tinker_dapo_qwen3.5-4b_gsm8k	stack	tinker	dapo						1	1	1	1	4	4	100.0	
+tinker_drgrpo_qwen3.5-4b_gsm8k	stack	tinker	drgrpo						1	0	1	1	3	4	75.0	
+tinker_gift_qwen3.5-4b_gsm8k	stack	tinker	gift						1	1	1	1	4	4	100.0	
+tinker_grpo_qwen3-8b_gsm8k	stack	tinker	grpo						1	1	1	0	3	4	75.0	
+tinker_grpo_qwen3.5-4b_gsm8k	stack	tinker	grpo						1	1	1	0	3	4	75.0	
+tinker_gspo_qwen3.5-4b_gsm8k	stack	tinker	gspo						1	0	1	1	3	4	75.0	
+trl_grpo_qwen3-8b_gsm8k	stack	trl	grpo						1	1	1	0	3	4	75.0	
+verl_grpo_qwen3-8b_gsm8k	stack	verl	grpo						1	1	1	0	3	4	75.0	
+zvf130_cppo	stack	worktree-zvf130-batch	cppo						1	1	1	1	4	4	100.0	
+zvf130_es	stack	worktree-zvf130-batch	es						1	1	1	1	4	4	100.0	
+zvf130_mcgrpo	stack	worktree-zvf130-batch	mcgrpo						1	1	1	1	4	4	100.0	
+zvf130_ngrpo	stack	worktree-zvf130-batch	ngrpo						1	1	1	1	4	4	100.0	
+zvf130_scafgrpo	stack	worktree-zvf130-batch	scafgrpo						1	1	1	1	4	4	100.0	

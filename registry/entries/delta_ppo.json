@@ -1,0 +1,55 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_ppo",
+  "name": "PPO",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "schulman2017ppo",
+    "arxiv": "1707.06347",
+    "title": "Proximal Policy Optimization Algorithms"
+  },
+  "deltas": [
+    {
+      "component": "value_head",
+      "field": "reference_kl.reference_policy",
+      "change": "introduce a learned state-value V_head (or shared critic) to compute Generalized Advantage Estimation (GAE); advantages A_t = sum_{l=0}^{T-t} (gamma*lambda)^l delta_{t+l} where delta_t = r_t + gamma*V(s_{t+1}) - V(s_t); the group-mean baseline of GRPO is REPLACED by V(s_t)."
+    },
+    {
+      "component": "gae_lambda",
+      "field": "loss_form.advantage_lambda",
+      "change": "lambda in (0,1] GAE bias-variance trade-off; typical value 0.95. GRPO has no lambda (group mean is the baseline; advantage is r - mean(r_group))."
+    },
+    {
+      "component": "ratio_clip",
+      "field": "loss_form.clip_eps_low",
+      "change": "PPO-style ratio clipping r_t(theta) in [1-eps, 1+eps] with eps=0.2 symmetric (canonical leaf pinned at clip_eps_low=0.2, clip_eps_high=0.2); same as REINFORCE+clip, but the value head provides the variance-reduction that REINFORCE lacks."
+    },
+    {
+      "component": "epoch_k",
+      "field": "loss_form.epochs_per_prompt",
+      "change": "K=4 epochs over the same rollout buffer per gradient step (canonical leaf pinned at epochs_per_prompt=4); GRPO uses K=1 by default."
+    }
+  ],
+  "notes": "Iter-78 vein (d): PPO appears in experiments/results/experiment_ledger.tsv (1 wandb run, tinker-rl-lab-world-class / v9eesnqc / Qwen3.5-4B / gsm8k / G=30) but had no delta_*.json entry. PPO is the grandparent algorithm of GRPO: GRPO is essentially PPO with the value head removed and replaced by a per-prompt group-mean baseline, the ratio clip retained, and K=1 epoch. The 'base' field is set to 'grpo' for registry consistency (every entry declares a base) even though semantically GRPO is a SPECIALIZATION of PPO. Measured block intentionally null: only 1 wandb PPO run exists in the worktree (Qwen3.5-4B / gsm8k), and it is cross-stack relative to the N2 GRPO reference run (different project, different sampler, no paired-arm counterfactual); same-stack arm criterion (same model + task + sampler + RLHF pipeline with only the V_head added) is not yet met. Adding a measured row would be fabricatory. Expected-effects block below carries the registry's paper-derived predictions so future auditors can score the (expected, measured) pair once a same-stack PPO arm lands.",
+  "expected_effects": [
+    {
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": "<0",
+      "rationale": "PPO's learned V_head reduces within-group zero-variance probability because GAE reweights per-token advantages rather than collapsing to a scalar group mean; predicted lower ZVF (more within-group dispersion) on the same stack."
+    },
+    {
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">=0",
+      "rationale": "PPO with K=4 epochs over the same buffer should be at least reward-neutral vs GRPO K=1; the value head adds variance reduction that should not regress final reward."
+    },
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "rationale": "On the 5-seed risk panel, PPO's learned baseline should reduce risk of zero-variance groups (variance reduction); same prediction as REINFORCE-with-baseline."
+    }
+  ]
+}

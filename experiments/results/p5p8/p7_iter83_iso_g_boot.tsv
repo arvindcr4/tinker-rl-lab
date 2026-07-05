@@ -1,0 +1,5 @@
+method	iso_yield_mean	iso_ci_lo	iso_ci_hi	zvf_yield_mean	zvf_ci_lo	zvf_ci_hi	ratio_mean	ratio_ci_lo	ratio_ci_hi	excludes_1.0
+grpo	19.4275	19.2832	19.6032	3.2393	2.6018	3.8862	6.0601	4.9947	7.5012	yes
+aero	19.6319	19.3721	20.0038	2.8917	2.2900	3.5289	6.8774	5.5425	8.6307	yes
+gift	19.5107	19.2695	19.8361	1.9964	1.4942	2.5748	9.9674	7.5708	13.2058	yes
+areal	19.3325	19.1862	19.5269	2.7586	2.1376	3.3431	7.0987	5.7823	9.0894	yes

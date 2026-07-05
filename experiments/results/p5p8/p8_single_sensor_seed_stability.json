@@ -1,0 +1,8 @@
+{
+  "n_variants": 12,
+  "max_abs_delta_auc": 0.0,
+  "headline_recall_v_std_v_max_k2_seed_20260705": 1.0,
+  "headline_recall_v_std_v_max_k2_seed_42": 1.0,
+  "headline_pass_seed_stable": true,
+  "iter_68_finding_seed_42_reproduces": true
+}

@@ -1640,3 +1640,128 @@ $2 \times 3 \times 4 = 24$ paired-bootstrap rows). Outputs:
 \texttt{p8\_subgroup\_fairness\_boot.tsv},
 \texttt{p8\_subgroup\_fairness\_summary.json},
 \texttt{figures/p8\_subgroup\_fairness.{png,pdf}}.
+
+\subsubsection{Single-sensor ablation: which aggregates carry signal alone?}
+\label{sec:p8-single-sensor}
+
+The per-feature ablation of \S\ref{sec:p8-evidence} asks which aggregate
+\emph{hurts when removed} from the 24-feature tree. The complementary
+question fraud-ops leads raise after seeing that table is sharper:
+\emph{does each aggregate carry ANY signal by itself} when grafted onto
+the 20-raw tree? This sub-subsection answers it directly: $4$ single-
+aggregate trees, $6$ pair-aggregate trees, all vs the 20-raw baseline.
+
+\begin{table}[t]
+\centering\small
+\caption{Single- and pair-aggregate tree ablation ($n_{\text{train}}{=}50{,}000$,
+$n_{\text{test}}{=}10{,}000$). AUC is computed on the test split with the
+Mann-Whitney $U$ statistic; the bootstrap is paired ($B{=}600$, percentile,
+seed $20260705$) on the $\Delta$-AUC vs \texttt{XGB-24full}.}
+\label{tab:p8-single-sensor}
+\begin{tabular}{lccc}
+\toprule
+Variant & $n_{\text{feats}}$ & AUC & $\Delta$AUC vs 24full \\
+\midrule
+\texttt{XGB-20raw}                 & 20 & 0.9995 & $-0.0002$ $[-0.0005,+0.0000]$ \\
+\texttt{XGB-24full}                & 24 & 0.9996 & ---                    \\
+\texttt{XGB-20raw+V\_mean}         & 21 & 0.9993 & $\mathbf{-0.0003}$ $\mathbf{[-0.0007,-0.0000]}$ \\
+\texttt{XGB-20raw+V\_std}          & 21 & 0.9998 & $+0.0001$ $[-0.0001,+0.0004]$ \\
+\texttt{XGB-20raw+V\_max}          & 21 & 0.9995 & $\mathbf{-0.0002}$ $\mathbf{[-0.0004,-0.0000]}$ \\
+\texttt{XGB-20raw+V\_min}          & 21 & 0.9996 & $-0.0000$ $[-0.0003,+0.0002]$ \\
+\texttt{XGB-20raw+V\_mean+V\_std}  & 22 & 0.9996 & $+0.0000$ $[-0.0001,+0.0001]$ \\
+\texttt{XGB-20raw+V\_mean+V\_max}  & 22 & 0.9995 & $-0.0002$ $[-0.0005,+0.0000]$ \\
+\texttt{XGB-20raw+V\_mean+V\_min}  & 22 & 0.9996 & $-0.0001$ $[-0.0004,+0.0003]$ \\
+\texttt{XGB-20raw+V\_std+V\_max}   & 22 & \textbf{0.9998} & $+0.0002$ $[-0.0001,+0.0005]$ \\
+\texttt{XGB-20raw+V\_std+V\_min}   & 22 & 0.9998 & $+0.0001$ $[-0.0001,+0.0004]$ \\
+\texttt{XGB-20raw+V\_max+V\_min}   & 22 & 0.9996 & $-0.0000$ $[-0.0002,+0.0001]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Sharpest finding.}
+Two of the four single-aggregate augmentations ($\texttt{V\_mean}$,
+$\texttt{V\_max}$) carry NEGATIVE signal at the 95\% CI threshold:
+their $\Delta$AUC CI excludes zero in the negative direction. The
+other two ($\texttt{V\_std}$, $\texttt{V\_min}$) sit at parity with
+\texttt{XGB-24full} (their CIs include zero on both sides). Of the
+six pair-aggregate trees, every $\texttt{V\_std}$-bearing pair matches
+or exceeds \texttt{XGB-24full} AUC; the best pair is
+$(\texttt{V\_std}, \texttt{V\_max})$ at $\Delta$AUC $= +0.0002$.
+
+\paragraph{Recall@$K{=}2\,\%$.}
+The aggregate-level AUC story does not translate to the recall-at-K
+operating point. At $K{=}2\,\%$ (200 alerts), the $(\texttt{V\_std},
+\texttt{V\_max})$ pair tree catches \emph{all 144 positives}
+(recall $= 1.0000$, TP$ = 144$), whereas \texttt{XGB-24full},
+\texttt{XGB-20raw}, and the $(\texttt{V\_mean}, \texttt{V\_max})$
+pair all miss exactly one fraud (recall $= 0.9931$, TP$ = 143$).
+At $K{=}5\,\%$ (500 alerts) every variant reaches recall $= 1.0$;
+the gap closes.
+
+\begin{table}[t]
+\centering\small
+\caption{Cost-per-fraud-caught across $K \in \{0.5, 1, 2, 3, 5\}\,\%$
+alert budgets. XGB-only variants at $\$0.0001$/decision are
+statistically indistinguishable from each other at every $K$
+($\Delta$-cost CI includes zero). The LLM-as-scribe surrogate
+($\$0.001$/decision) is statistically significantly more expensive
+than every XGB-only variant at every $K$ (CI excludes zero). $n_{\text{test}}{=}10{,}000$, paired bootstrap $B{=}600$.}
+\label{tab:p8-cost-per-decision}
+\begin{tabular}{llccccc}
+\toprule
+Model & Cost/decision & $K{=}0.5\,\%$ & $K{=}1\,\%$ & $K{=}2\,\%$ & $K{=}3\,\%$ & $K{=}5\,\%$ \\
+\midrule
+\texttt{XGB-20raw}            & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0002$ & $\$0.0003$ \\
+\texttt{XGB-24full}           & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0002$ & $\$0.0003$ \\
+\texttt{XGB-20raw+V\_std}     & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0002$ & $\$0.0003$ \\
+\texttt{XGB-20raw+V\_std+V\_max} & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0002$ & $\$0.0003$ \\
+LLM-as-scribe (24full tree)   & $\$0.0010$ & $\$0.0010$ & $\$0.0010$ & $\$0.0014$ & $\$0.0021$ & $\$0.0035$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Cost-per-caught $\Delta$ vs \texttt{XGB-24full}.}
+Across all 5 budgets, the $\Delta$-cost CI vs \texttt{XGB-24full}
+includes zero for every XGB-only variant (they are cost-equivalent at
+the per-decision level). The LLM-as-scribe surrogate's $\Delta$-cost
+CI excludes zero at every $K$: $-\$0.0009$ at $K{=}0.5\,\%$,
+$-\$0.0009$ at $K{=}1\,\%$, $-\$0.0013$ at $K{=}2\,\%$,
+$-\$0.0019$ at $K{=}3\,\%$, and $-\$0.0031$ at $K{=}5\,\%$
+(paired bootstrap $B{=}600$, seed $20260705$). All five CIs
+\textbf{exclude zero}.
+
+\paragraph{Cross-paper coupling.}
+The $(\texttt{V\_std}, \texttt{V\_max})$ pair is the smallest sensor
+block that strictly dominates \texttt{XGB-24full} at the
+recall@$K{=}2\,\%$ operating point, catching one fraud the full
+24-feature tree misses. Couples to (i)~\tableref{tab:p8-evidence-abl}
+where the same pair was the only pair with the smallest noise
+drop in the iter-24 leave-one-OUT sweep; (ii)~\S\ref{sec:p8-subgroup-fairness}
+where $\texttt{V\_mean}$ was identified as the aggregate that
+\emph{concentrates} alerts on the LLM-aggregate axis -- this
+sub-subsection independently confirms that $\texttt{V\_mean}$ ALONE
+is the \emph{weakest} augmentation ($\Delta$AUC $=-0.0003$, CI
+excludes zero); (iii)~P6~\texttt{outcomes.zvf\_antiherding} block
+(row~77), the structural diversity bonus is concentrated in the
+$(\texttt{V\_std}, \texttt{V\_max})$ pair, not in $\texttt{V\_mean}$
+alone.
+
+\paragraph{Operational recommendation.}
+For the canonical fraud-ops decision (K$ = 2\,\%$, base rate
+$\approx 1.44\,\%$), the recommended operating tree is the
+$(\texttt{V\_std}, \texttt{V\_max})$ pair-sensor tree (recall$ = 1.0$,
+AUC$ = 0.9998$, cost$ = \$0.0001$/decision). It is the smallest
+sensor block that captures all positives; the $\texttt{V\_mean}$
+and $\texttt{V\_min}$ aggregates are \emph{not necessary} on this
+corpus.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_single\_sensor\_ablation.py}
+($\sim$4 min on 4 cores; $12$ tree fits + $11$ paired-bootstrap
+$\Delta$AUC CIs + $20$ paired-bootstrap $\Delta$-cost CIs).
+Outputs: \texttt{experiments/results/p5p8/p8\_single\_sensor.tsv},
+\texttt{p8\_pair\_sensor.tsv}, \texttt{p8\_single\_pair\_boot.tsv},
+\texttt{p8\_cost\_per\_decision.tsv}, \texttt{p8\_cost\_per\_decision\_boot.tsv},
+\texttt{p8\_single\_sensor\_summary.json},
+\texttt{figures/p8\_single\_sensor.{png,pdf}},
+\texttt{figures/p8\_cost\_per\_decision.{png,pdf}}.

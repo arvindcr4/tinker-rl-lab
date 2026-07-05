@@ -1,0 +1,12 @@
+variant	auc	auc_24full	delta_auc	ci_lo	ci_hi	excludes_zero
+XGB-20raw	0.9995	0.9996	-0.0002	-0.0005	0.0	no
+XGB-20raw+V_mean	0.9993	0.9996	-0.0003	-0.0007	-0.0	yes
+XGB-20raw+V_std	0.9998	0.9996	0.0001	-0.0001	0.0004	no
+XGB-20raw+V_max	0.9995	0.9996	-0.0002	-0.0004	-0.0	yes
+XGB-20raw+V_min	0.9996	0.9996	-0.0	-0.0003	0.0002	no
+XGB-20raw+V_mean+V_std	0.9996	0.9996	0.0	-0.0001	0.0001	no
+XGB-20raw+V_mean+V_max	0.9995	0.9996	-0.0002	-0.0005	0.0	no
+XGB-20raw+V_mean+V_min	0.9996	0.9996	-0.0001	-0.0004	0.0003	no
+XGB-20raw+V_std+V_max	0.9998	0.9996	0.0002	-0.0001	0.0005	no
+XGB-20raw+V_std+V_min	0.9998	0.9996	0.0001	-0.0001	0.0004	no
+XGB-20raw+V_max+V_min	0.9996	0.9996	-0.0	-0.0002	0.0001	no

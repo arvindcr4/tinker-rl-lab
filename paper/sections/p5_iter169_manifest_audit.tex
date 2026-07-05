@@ -1,0 +1,42 @@
+% Section: P5 MIN-REPORT manifest ground-truth audit on the 98 live mega manifests (iter 169)
+% Targets the brief vein (a) at the actual JSON manifest files on disk
+% (NOT cells.tsv aggregates, NOT curated subsets) --- per-key leaf-presence,
+% type-correctness, value-plausibility, path-truthiness, schema/data coherence
+% via the cells.tsv cross-reference layer.
+\subsection{Manifest ground-truth audit on the 98 live mega JSON manifests (iter 169)}
+\label{sec:p5-iter169-manifest-audit}
+
+The iter-14 row 14 audit inspected the \texttt{cells.tsv} aggregate; iter-1 inspected a curated subset; iter-145 row 32 cross-referenced the cells.tsv schema ground truth. None of those audits inspected the actual JSON manifest files in \texttt{experiments/results/mega\_20260704/manifests/}. Iter 169 closes that gap by reading all 98 JSON files on disk verbatim, checking per-leaf presence, value-plausibility, on-disk path truthiness, and cells.tsv cross-coherence.
+
+\subsubsection{Five falsifiable hypotheses (5/5 PASS)}
+\label{sec:p5-iter169-hypotheses}
+
+\textbf{H1 (PASS, decisive)}. Each of the seven v1 MIN-REPORT items has leaf-presence $\ge 98/98$ in the manifest files. \emph{Evidence}: all 7 items present on all 98 manifests (counts: \texttt{loss\_form}=98, \texttt{ref\_policy\_kl}=98, \texttt{sampler\_backend\_precision}=98, \texttt{per\_step\_zvf\_path}=98, \texttt{group\_size\_schedule}=98, \texttt{heldout\_split}=98, \texttt{decontamination\_notes}=98). All 7 items are strings, with lengths matching the expected pattern (e.g.\ \texttt{per\_step\_zvf\_path} $\ge 80$ chars across the 98 manifests).
+
+\textbf{H2 (PASS, decisive)}: $\ge 3$ of the seven v1 items are PLACEBO (zero stack-discriminative bits at the manifest layer). \emph{Evidence}: exactly \textbf{3 placebo items}: \texttt{loss\_form} $=$ constant \texttt{"n/a-sampling"}, \texttt{ref\_policy\_kl} $=$ constant \texttt{"n/a"}, \texttt{sampler\_backend\_precision} $=$ constant \texttt{"tinker-closed"}. The remaining 4 items carry variance: \texttt{group\_size\_schedule} ($H{=}2.312$ bits, 5 values: fixed-G=\{2,4,8,16,32\}), \texttt{heldout\_split} ($H{=}1.555$ bits, 3 values: gsm8k\_easy/hard/humaneval\_subset), \texttt{decontamination\_notes} ($H{=}0.931$ bits, 2 values), \texttt{per\_step\_zvf\_path} ($H{=}6.614$ bits, file pointer; log2(98)).
+
+\textbf{H3 (PASS, decisive)}: \texttt{per\_step\_zvf\_path} resolves to an existing JSON file on $\ge 98\%$ of manifests; the basename equals the \texttt{cell\_id}. \emph{Evidence}: 98/98 (100\%) resolve to an existing JSON in \texttt{experiments/results/mega\_20260704/group\_tensors/}; 98/98 (100\%) have basename matching \texttt{cell\_id} (i.e.\ the file pointer is a \emph{verifiable claim} about on-disk state, not just a label).
+
+\textbf{H4 (PASS, decisive)}: manifest's declared \texttt{group\_size\_schedule} matches the $G$ parsed out of \texttt{cell\_id} on $\ge 98\%$ of manifests; \texttt{heldout\_split} matches the task\_slice parsed from \texttt{cell\_id} on $\ge 98\%$ of manifests. \emph{Evidence}: $G$ match 98/98 (100\%); heldout match 98/98 (100\%). The manifest declarations are internally coherent with the \texttt{cell\_id} axis encoding.
+
+\textbf{H5 (PASS, decisive)}: every (model\_family, task\_slice, G, temperature, seed) axis parsed out of \texttt{cell\_id} matches the corresponding \texttt{cells.tsv} ground-truth column on $\ge 98\%$ of cells (across encoding normalizations). \emph{Evidence}: match-model-vendor 98/98, match-task 98/98, match-G 98/98, match-temp 98/98, match-seed 98/98, match-zvf-path-basename 98/98. The \texttt{cell\_id} encoding carries \emph{all} the v2 stack-axis entropy present in cells.tsv, and every manifest's declared \texttt{per\_step\_zvf\_path} basename matches the corresponding \texttt{cells.tsv::tensor\_path} basename.
+
+\subsubsection{Structural finding --- Placebo-triple + 3-discriminator split}
+\label{sec:p5-iter169-placebo-triple}
+
+The v1 MIN-REPORT schema decomposes into 3 PLACEBO items (constant across the 98 manifests) and 3 stack-discriminating descriptors (carry variance) plus a 4th item that is a file pointer. At the manifest layer:
+\begin{itemize}
+  \item \textbf{Placebo triple}: \texttt{loss\_form}, \texttt{ref\_policy\_kl}, \texttt{sampler\_backend\_precision} carry zero information about which stack produced the run, and \emph{cannot} be used to discriminate across the 98 manifests. They are honest declarations of stack properties that happen to be the same for every tinker-closed Qwen/Llama GRPO run in this corpus.
+  \item \textbf{3 stack-discriminating items}: \texttt{group\_size\_schedule} ($H{=}2.31$ bits), \texttt{heldout\_split} ($H{=}1.55$ bits), \texttt{decontamination\_notes} ($H{=}0.93$ bits) --- jointly $H{=}4.80$ bits of stack-discriminating entropy.
+  \item \textbf{1 file pointer}: \texttt{per\_step\_zvf\_path} ($H{=}6.61$ bits = log2(98)) is a verifiable on-disk claim, not a stack descriptor.
+\end{itemize}
+
+\subsubsection{v2 expansion potential: +2.99 bits of fresh entropy}
+\label{sec:p5-iter169-v2-expansion}
+
+The v2 schema expansion (adding \texttt{model\_family}, \texttt{task\_slice}, \texttt{G}, \texttt{temperature}, \texttt{seed} as explicit fields) would carry a total of $H{=}6.86$ bits at the manifest layer. Of those, \texttt{task\_slice} and \texttt{G} are already captured by the v1 \texttt{heldout\_split} and \texttt{group\_size\_schedule} fields. The TRULY fresh bits are \texttt{model\_family} ($H{=}1.00$ bits), \texttt{temperature} ($H{=}0.995$ bits), and \texttt{seed} ($H{=}1.00$ bits) --- jointly $H{=}2.99$ bits. The v2 schema expansion thus adds \textbf{+62\%} entropy over the v1 stack-discriminating subset ($2.99 / 4.80$).
+
+\subsubsection{Cross-paper coupling and operational recommendations}
+\label{sec:p5-iter169-coupling}
+
+(i) \textbf{P5 iter-14 row 14} performed a cells.tsv leaf-coverage audit on 11 measured-telemetry fields; iter-169 inspects the source-of-truth manifest layer and finds 100\% leaf-presence on the 7-item v1 schema (a different question: did the manifest layer record what was required, not did the cells.tsv emit what was measured). (ii) \textbf{P5 iter-73 row 11 stack\_axis\_minreport.py}: iter-73 measured that v1 stack-discriminative bits $= 4.798$ across the same 98 manifests; iter-169 reproduces that number ($4.798$) exactly. The v2 expansion potential (+$2.994$ bits) corroborates iter-73's quantitative justification for moving from v1 $\to$ v2. (iii) \textbf{P5 iter-145 row 32 schema-groundtruth audit}: iter-145 audited the schema field names against \texttt{registry/schema.json}; iter-169 audits the actual file-level declarations. (iv) \textbf{FRONTIER\_INSIGHTS Round 2 (ZVF = observed signal availability)}: the placebo triple (3/7 items constant on this corpus) suggests MIN-REPORT-7 has a structural underuse rate of 3/7 $= 0.43$ at the present run-mix --- a quantitative signal that the v2 expansion is overdue. \textbf{Operational}: (a) WIRE \texttt{p5\_iter169\_manifest\_audit.py} as a pre-commit gate that fails any new manifest whose 7-item leaf-presence drops below 100\%; (b) ADD a \texttt{model\_family}/\texttt{temperature}/\texttt{seed} triplet to the manifest emitter so the v2 schema is achieved organically without breaking v1 backward compatibility; (c) REPORT the placebo-triple fact in the paper's MIN-REPORT discussion as the structural justification for the v2 schema expansion; (d) USE the cells.tsv cross-coherence (98/98 on 6 axes) as the validator of manifest $\Leftrightarrow$ cells.tsv agreement on every future mega harvest.

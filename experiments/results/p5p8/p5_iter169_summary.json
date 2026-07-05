@@ -1,0 +1,171 @@
+{
+  "H1_leaf_presence_ge_98pct": true,
+  "H1_per_key_present_counts": {
+    "decontamination_notes": 98,
+    "group_size_schedule": 98,
+    "heldout_split": 98,
+    "loss_form": 98,
+    "per_step_zvf_path": 98,
+    "ref_policy_kl": 98,
+    "sampler_backend_precision": 98
+  },
+  "H2_n_placebo": 3,
+  "H2_placebo_keys": [
+    "loss_form",
+    "ref_policy_kl",
+    "sampler_backend_precision"
+  ],
+  "H2_placebo_keys_ge_3": true,
+  "H3_n_basename_match_cell_id": 98,
+  "H3_n_path_exists": 98,
+  "H3_path_exists_ge_98pct": true,
+  "H4_gs_matches_g_and_heldout_matches_task": true,
+  "H4_n_gs_match": 98,
+  "H4_n_heldout_match": 98,
+  "H5_cells_tsv_axis_match_all_5_axes_on_all_98": true,
+  "H5_per_axis_match_counts": {
+    "match_G": 98,
+    "match_model_vendor": 98,
+    "match_seed": 98,
+    "match_task": 98,
+    "match_temp": 98,
+    "match_zvf_path_basename": 98
+  },
+  "iter": 169,
+  "n_cells_tsv_rows": 98,
+  "n_discriminative_v1_keys": 3,
+  "n_manifests": 98,
+  "n_placebo_v1_keys": 3,
+  "v1_discriminative_h_bits": 4.798034542439858,
+  "v1_key_summary": {
+    "decontamination_notes": {
+      "h_bits": 0.9313043685793763,
+      "is_placebo": false,
+      "n_populated": 98,
+      "n_unique": 2,
+      "top_value": "gsm8k-train-slice",
+      "top_value_freq": 0.6530612244897959
+    },
+    "group_size_schedule": {
+      "h_bits": 2.31212196663623,
+      "is_placebo": false,
+      "n_populated": 98,
+      "n_unique": 5,
+      "top_value": "fixed-G=2",
+      "top_value_freq": 0.24489795918367346
+    },
+    "heldout_split": {
+      "h_bits": 1.5546082072242515,
+      "is_placebo": false,
+      "n_populated": 98,
+      "n_unique": 3,
+      "top_value": "gsm8k_hard",
+      "top_value_freq": 0.40816326530612246
+    },
+    "loss_form": {
+      "h_bits": 0.0,
+      "is_placebo": true,
+      "n_populated": 98,
+      "n_unique": 1,
+      "top_value": "n/a-sampling",
+      "top_value_freq": 1.0
+    },
+    "per_step_zvf_path": {
+      "h_bits": 6.614709844115218,
+      "is_placebo": false,
+      "n_populated": 98,
+      "n_unique": 98,
+      "top_value": "/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59.json",
+      "top_value_freq": 0.01020408163265306
+    },
+    "ref_policy_kl": {
+      "h_bits": 0.0,
+      "is_placebo": true,
+      "n_populated": 98,
+      "n_unique": 1,
+      "top_value": "n/a",
+      "top_value_freq": 1.0
+    },
+    "sampler_backend_precision": {
+      "h_bits": 0.0,
+      "is_placebo": true,
+      "n_populated": 98,
+      "n_unique": 1,
+      "top_value": "tinker-closed",
+      "top_value_freq": 1.0
+    }
+  },
+  "v1_total_h_bits": 11.412744386555076,
+  "v2_axis_layer_h_bits_per_axis": {
+    "G": 2.31212196663623,
+    "model_family": 0.9987979209581139,
+    "seed": 1.0,
+    "task_slice": 1.5546082072242515,
+    "temperature": 0.9951876662918927
+  },
+  "v2_axis_layer_total_h_bits_if_added": 6.860715761110488,
+  "v2_axis_layer_unique_counts": {
+    "G": 5,
+    "model_family": 2,
+    "seed": 2,
+    "task_slice": 3,
+    "temperature": 2
+  },
+  "v2_axis_summary": {
+    "G": {
+      "h_bits": 2.31212196663623,
+      "n_populated": 98,
+      "n_unique": 5,
+      "vals_top5": [
+        "2",
+        "4",
+        "32",
+        "16",
+        "8"
+      ]
+    },
+    "model_family": {
+      "h_bits": 0.9987979209581139,
+      "n_populated": 98,
+      "n_unique": 2,
+      "vals_top5": [
+        "meta-llama-Llama-3-2-3B",
+        "Qwen-Qwen3-5-4B"
+      ]
+    },
+    "seed": {
+      "h_bits": 1.0,
+      "n_populated": 98,
+      "n_unique": 2,
+      "vals_top5": [
+        "0",
+        "1"
+      ]
+    },
+    "task_slice": {
+      "h_bits": 1.5546082072242515,
+      "n_populated": 98,
+      "n_unique": 3,
+      "vals_top5": [
+        "gsm8k_hard",
+        "humaneval_subset",
+        "gsm8k_easy"
+      ]
+    },
+    "temperature": {
+      "h_bits": 0.9951876662918927,
+      "n_populated": 98,
+      "n_unique": 2,
+      "vals_top5": [
+        "0.6",
+        "1"
+      ]
+    }
+  },
+  "v2_truly_fresh_h_bits": 2.9939855872500067,
+  "v2_truly_fresh_h_bits_per_axis": {
+    "model_family": 0.9987979209581139,
+    "seed": 1.0,
+    "temperature": 0.9951876662918927
+  }
+}

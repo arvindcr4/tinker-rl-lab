@@ -1,0 +1,57 @@
+{
+  "hypotheses": {
+    "H1_value_correctness_strict": "100.0% of cells pass ALL 10 value-consistency checks",
+    "H2_perfect_rate_floor": "perfect-rate = 100.0%",
+    "H3_silent_inconsistency": "silently-wrong cells present (score < 1.0)"
+  },
+  "mean_score": 1.0,
+  "n_cells": 98,
+  "per_item": {
+    "C01": {
+      "fail": 0,
+      "pass": 98
+    },
+    "C02": {
+      "fail": 0,
+      "pass": 98
+    },
+    "C03": {
+      "fail": 0,
+      "pass": 98
+    },
+    "C04": {
+      "fail": 0,
+      "pass": 98
+    },
+    "C05": {
+      "fail": 0,
+      "pass": 98
+    },
+    "C06": {
+      "fail": 0,
+      "pass": 98
+    },
+    "C07": {
+      "fail": 0,
+      "pass": 98
+    },
+    "C08": {
+      "fail": 0,
+      "pass": 98
+    },
+    "C09": {
+      "fail": 0,
+      "pass": 98
+    },
+    "C10": {
+      "fail": 0,
+      "pass": 98
+    }
+  },
+  "tier_counts": {
+    "perfect": 98
+  },
+  "tier_pct": {
+    "perfect": 100.0
+  }
+}

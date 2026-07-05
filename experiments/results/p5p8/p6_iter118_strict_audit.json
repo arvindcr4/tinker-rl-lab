@@ -1,0 +1,366 @@
+{
+  "n_findings": 51,
+  "findings": [
+    {
+      "kind": "fully_unknown_item",
+      "entry": "openrlhf_grpo_qwen3-8b_gsm8k",
+      "item": "telemetry",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.telemetry"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "openrlhf_grpo_qwen3-8b_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "tinker_aero_qwen3.5-4b_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "tinker_areal_qwen3.5-4b_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "tinker_dapo_qwen3.5-4b_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "tinker_drgrpo_qwen3.5-4b_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "tinker_gift_qwen3.5-4b_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "tinker_grpo_qwen3-8b_gsm8k",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "tinker_grpo_qwen3-8b_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "tinker_grpo_qwen3.5-4b_gsm8k",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "tinker_grpo_qwen3.5-4b_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "tinker_gspo_qwen3.5-4b_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "trl_grpo_qwen3-8b_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "verl_grpo_qwen3-8b_gsm8k",
+      "item": "telemetry",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.telemetry"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "verl_grpo_qwen3-8b_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_aero",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_aero",
+      "item": "reference_kl",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.reference_kl"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_aero",
+      "item": "group_size_schedule",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.group_size_schedule"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_aero",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_areal",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_areal",
+      "item": "reference_kl",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.reference_kl"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_areal",
+      "item": "group_size_schedule",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.group_size_schedule"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_areal",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_cppo",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_cppo",
+      "item": "reference_kl",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.reference_kl"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_cppo",
+      "item": "group_size_schedule",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.group_size_schedule"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_cppo",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_es",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_es",
+      "item": "reference_kl",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.reference_kl"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_es",
+      "item": "group_size_schedule",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.group_size_schedule"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_es",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_gift",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_gift",
+      "item": "reference_kl",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.reference_kl"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_gift",
+      "item": "group_size_schedule",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.group_size_schedule"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_gift",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_grpo",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_grpo",
+      "item": "reference_kl",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.reference_kl"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_grpo",
+      "item": "group_size_schedule",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.group_size_schedule"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_grpo",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_mcgrpo",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_mcgrpo",
+      "item": "reference_kl",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.reference_kl"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_mcgrpo",
+      "item": "group_size_schedule",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.group_size_schedule"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_mcgrpo",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_ngrpo",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_ngrpo",
+      "item": "reference_kl",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.reference_kl"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_ngrpo",
+      "item": "group_size_schedule",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.group_size_schedule"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_ngrpo",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_scafgrpo",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_scafgrpo",
+      "item": "reference_kl",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.reference_kl"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_scafgrpo",
+      "item": "group_size_schedule",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.group_size_schedule"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_scafgrpo",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    }
+  ],
+  "n_deltas": 15,
+  "n_stack_entries": 24,
+  "audit_date": "2026-07-05",
+  "audit_source": "scripts/p5p8/p6_iter118_strict_validator.py"
+}

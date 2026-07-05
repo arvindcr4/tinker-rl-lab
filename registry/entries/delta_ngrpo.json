@@ -60,6 +60,26 @@
       },
       "source": "experiments/results/zvf_iter130_method_risk.tsv",
       "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)"
+    },
+    {
+      "metric": "mag_mean",
+      "panel": "zvf130_5seed",
+      "base": "grpo",
+      "delta": -0.18042,
+      "ci_low": null,
+      "ci_high": null,
+      "n": 5,
+      "significant": null,
+      "ci_method": {
+        "method": "point_no_perseed_sd",
+        "n_boot": null,
+        "seed": null,
+        "ci_level": null,
+        "source": "scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py"
+      },
+      "source": "experiments/results/zvf_iter130_method_risk.tsv",
+      "note": "mag_mean: per-seed sd not stored; point estimate only",
+      "synth_from_agg": true
     }
   ],
   "expected_effects": [
@@ -92,6 +112,20 @@
       "significant": false,
       "verdict": "UNCLAIMED",
       "rationale": "no expected_effect declared for this (metric, panel) pair"
+    },
+    {
+      "metric": "mag_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": null,
+      "observed_delta": -0.18042,
+      "ci_low": null,
+      "ci_high": null,
+      "significant": null,
+      "verdict": "UNCLAIMED",
+      "rationale": "",
+      "audit_source": "scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
+      "audit_date": "2026-07-05",
+      "synth_from_agg": true
     }
   ]
 }

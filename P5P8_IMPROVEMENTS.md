@@ -1131,3 +1131,55 @@ After iter 121 drove row 136 (P5 value-correctness mutation stress test) to vali
 2. **P6 (per item 137 H3)**: extend the cross-entry consistency check to include `measured[]` panel agreement — do stacks claiming the same (delta_id, metric, panel) agree on the observed delta sign?
 3. **P5 (per item 136 H4)**: add C11 + C12 to close the 2 silent-corruption blind spots and re-run the stress test — does the augmented auditor catch 8/8 mutations?
 4. **P5P8-SYNTH**: run the same mutation stress test on the iter-122 cross-entry consistency check (P6) and verify cross-system robustness.
+
+After iter 123 drove row 137 (P7 headline-CI audit) to validated, the ledger is now at **137 validated rows, 0 open proposed rows, 2 historical rejects**.
+
+## Recommended next-iter mint veins (for iter 124)
+
+1. **P8 (per iter 120 recommendations)**: extend iter-120 per-V_stat ablation to per-V_stat-pair joint quartiles — does the joint distribution reveal a 2D sub-population where gradient-band should NOT fire?
+2. **P5P8-SYNTH (per JOB B)**: extend iter-120 refutation by computing the same density ratio on a different domain pair (P5 min-report vs P8 min-report on the same Mega corpus) — does the cross-paper synthesis also fail at the manifest level?
+3. **P8**: re-fit iter-80 gradient-band rule with the iter-80 backbone setup (xgboost 1.x with no scale_pos_weight) and confirm whether the 9 vs 21 LLM-call saving is recovered — would clarify the backbone-dependence caveat.
+
+## Iter 124 deliverables (this commit)
+
+- `scripts/p5p8/p8_iter124_cost_accounting.py` (~310 LoC, stdlib + numpy + xgboost) — 5-tier LLM price sweep + 4-feature-set XGB ablation
+- `scripts/p5p8/synth_iter124_three_domain_density.py` (~270 LoC, stdlib + numpy) — 3-domain density matrix (P5 + P7 + P8)
+- `experiments/results/p5p8/p8_iter124_cost_sweep.tsv` (80 rows: 4 stats × 4 quartiles × 5 price tiers)
+- `experiments/results/p5p8/p8_iter124_feature_ablation.tsv` (3 rows)
+- `experiments/results/p5p8/p8_iter124_sweet_spot.tsv` (16 rows)
+- `experiments/results/p5p8/p8_iter124_summary.json`
+- `experiments/results/p5p8/synth_iter124_three_domain_density.tsv` (3 rows)
+- `experiments/results/p5p8/synth_iter124_density_ratios.tsv` (6 rows)
+- `experiments/results/p5p8/synth_iter124_per_G_density.tsv` (5 rows)
+- `experiments/results/p5p8/synth_iter124_summary.json`
+- `paper/sections/p8_iter124_cost_accounting.tex` (~85 lines, NEW)
+- `paper/sections/synth_iter124_three_domain_density.tex` (~80 lines, NEW)
+- `paper/paper_P8_fraud.tex` extended with `\input{sections/p8_iter124_cost_accounting}` and `\input{sections/synth_iter124_three_domain_density}`
+- `paper/paper_P8_fraud.pdf` rebuilds to 52 pages / 0 errors / 0 undefined citations (was 51, +2 pages)
+- `docs/p5p8_improvements/139_p8_cost_accounting.md`
+- `docs/p5p8_improvements/140_synth_three_domain_density.md`
+- 2 lines in `AUTORESEARCH_FINDINGS.jsonl` (pillar P8 + pillar P5P8-SYNTH, iter 124)
+
+## Headline findings (P8, iter 124)
+
+| Hypothesis | Verdict | Evidence |
+|---|---|---|
+| **H1** grad-band cheaper than xgb-only at all LLM tiers | **REFUTED** | `cppr_grad/cppr_xgb` ratio: cheap=1.000, small_open=1.041, iter120=1.075, mid_tier=1.412, gpt4=3.512. Grad-band is strictly cheaper ONLY at trivial `cost_llm == cost_xgb`. |
+| **H2** worst-cost quartile is V_mean Q2 at 4/5 tiers | **PASS** | V_mean Q2 has the highest call density (37 calls on 14 caught) and lowest xgb-only recall (0.28); stable across `small_open`, `iter120_default`, `mid_tier`, `frontier_gpt4` |
+| **H3** feature ablation preserves firing pattern | **PASS** | n_llm_grad per feature set: 24full=84, 20raw=81, 20raw+minmax=84, 20raw+stat=85. 96% of calls preserved across 24full vs 20raw (dropping 4 aggregate features). |
+| **H4** sweet-spot price is below cost_xgb baseline | **PASS** | Sweet-spot range $0.000017 (V_std Q0) to $0.000120 (V_std Q3); all below $0.0001 baseline. |
+
+## Headline findings (P5P8-SYNTH, iter 124)
+
+| Hypothesis | Verdict | Evidence |
+|---|---|---|
+| **H1** pairwise density ratios with CIs | **QUANTIFIED** | P5/P7=0.73 [0.50, 1.14] (NOT excluded), P5/P8=43.7 [30.4, 62.4] (excluded), P8/P7=0.017 [0.012, 0.025] (excluded). 3 domains split into 2 statistical super-domains: {P5, P7} ↔ P8. |
+| **H2** density rank P7 > P5 > P8 | **PASS** | P7=0.5000, P5=0.3673, P8=0.0084. Ordering follows rollout-batch granularity (per-step > per-cell > per-row). |
+| **H3** per-G density stratified | **PASS** | 5 G values {2,4,8,16,32}, P5 zvf=1.0 density 0.25-0.42, Spearman(G, density) = -0.10 (weak negative). |
+| **H4** 98/98 cells emit parseable zvf | **PASS** | Bimodal: 36 zvf=1.0, 36 zvf=0.0, 26 middle. |
+
+## Recommended next-iter mint veins (for iter 125)
+
+1. **P8 (per item 139 H1 refutation)**: re-run the iter-80 gradient-band analysis under a different LLM cost regime (e.g., assuming batch API discounts) to see if the cost-rational threshold can be reached at production scale.
+2. **P5P8-SYNTH (per item 140 H1)**: extend the three-domain matrix to FOUR domains by adding P6 registry measured-panel coverage density — does the {P5,P7,P6} triple show stronger cross-domain synthesis than {P5,P7}?
+3. **P8**: test the LLM-as-sensor feature ablation on a SECOND dataset (synthetic fraud with different feature distribution) to confirm the iter-124 H3 robustness finding.

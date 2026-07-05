@@ -1,0 +1,166 @@
+{
+  "iter": 124,
+  "n_test": 10000,
+  "n_pos_total": 144,
+  "feat_summary": {
+    "24full": {
+      "n_feats": 24,
+      "xgb_only_recall_K2": 0.3680555555555556,
+      "n_llm_grad": 84,
+      "n_pos_total": 144,
+      "n_pos_caught_xgb": 53
+    },
+    "20raw": {
+      "n_feats": 20,
+      "xgb_only_recall_K2": 0.3680555555555556,
+      "n_llm_grad": 81,
+      "n_pos_total": 144,
+      "n_pos_caught_xgb": 53
+    },
+    "20raw+minmax": {
+      "n_feats": 22,
+      "xgb_only_recall_K2": 0.3472222222222222,
+      "n_llm_grad": 84,
+      "n_pos_total": 144,
+      "n_pos_caught_xgb": 50
+    },
+    "20raw+stat": {
+      "n_feats": 22,
+      "xgb_only_recall_K2": 0.3472222222222222,
+      "n_llm_grad": 85,
+      "n_pos_total": 144,
+      "n_pos_caught_xgb": 50
+    }
+  },
+  "h3_feature_ablation": [
+    {
+      "fset": "20raw",
+      "n_fires_anchor": 84,
+      "n_fires_fset": 81,
+      "n_both": 19,
+      "n_anchor_only": 65,
+      "n_test_only": 62,
+      "n_neither": 9854,
+      "agreement": 0.9873,
+      "mwu_U": 50015000.0,
+      "mwu_z": 0.03674142761753864
+    },
+    {
+      "fset": "20raw+minmax",
+      "n_fires_anchor": 84,
+      "n_fires_fset": 84,
+      "n_both": 31,
+      "n_anchor_only": 53,
+      "n_test_only": 53,
+      "n_neither": 9863,
+      "agreement": 0.9894,
+      "mwu_U": 50000000.0,
+      "mwu_z": 0.0
+    },
+    {
+      "fset": "20raw+stat",
+      "n_fires_anchor": 84,
+      "n_fires_fset": 85,
+      "n_both": 26,
+      "n_anchor_only": 58,
+      "n_test_only": 59,
+      "n_neither": 9857,
+      "agreement": 0.9883,
+      "mwu_U": 49995000.0,
+      "mwu_z": -0.012247142539179547
+    }
+  ],
+  "h1_5tier_verdict": {
+    "cheap_heuristic": {
+      "cost_llm_per_call": 0.0001,
+      "cppr_xgb_global": 0.019417475728155338,
+      "cppr_grad_global": 0.019417475728155338,
+      "grad_cheaper": true,
+      "ratio_cppr_grad_over_xgb": 1.0
+    },
+    "small_open": {
+      "cost_llm_per_call": 0.0006,
+      "cppr_xgb_global": 0.019417475728155338,
+      "cppr_grad_global": 0.020233009708737863,
+      "grad_cheaper": false,
+      "ratio_cppr_grad_over_xgb": 1.042
+    },
+    "iter120_default": {
+      "cost_llm_per_call": 0.001,
+      "cppr_xgb_global": 0.019417475728155338,
+      "cppr_grad_global": 0.020885436893203886,
+      "grad_cheaper": false,
+      "ratio_cppr_grad_over_xgb": 1.0756000000000003
+    },
+    "mid_tier": {
+      "cost_llm_per_call": 0.005,
+      "cppr_xgb_global": 0.019417475728155338,
+      "cppr_grad_global": 0.027409708737864077,
+      "grad_cheaper": false,
+      "ratio_cppr_grad_over_xgb": 1.4116
+    },
+    "frontier_gpt4": {
+      "cost_llm_per_call": 0.03,
+      "cppr_xgb_global": 0.019417475728155338,
+      "cppr_grad_global": 0.0681864077669903,
+      "grad_cheaper": false,
+      "ratio_cppr_grad_over_xgb": 3.5116000000000005
+    }
+  },
+  "h2_worst_quartile_per_tier": {
+    "cheap_heuristic": {
+      "stat": "V_mean",
+      "quartile": 0,
+      "cppr_grad": 0.019230769230769232,
+      "cppr_xgb": 0.019230769230769232
+    },
+    "small_open": {
+      "stat": "V_mean",
+      "quartile": 2,
+      "cppr_grad": 0.01917857142857143,
+      "cppr_xgb": 0.017857142857142856
+    },
+    "iter120_default": {
+      "stat": "V_mean",
+      "quartile": 2,
+      "cppr_grad": 0.020235714285714284,
+      "cppr_xgb": 0.017857142857142856
+    },
+    "mid_tier": {
+      "stat": "V_mean",
+      "quartile": 2,
+      "cppr_grad": 0.03080714285714286,
+      "cppr_xgb": 0.017857142857142856
+    },
+    "frontier_gpt4": {
+      "stat": "V_mean",
+      "quartile": 2,
+      "cppr_grad": 0.09687857142857144,
+      "cppr_xgb": 0.017857142857142856
+    }
+  },
+  "llm_price_tiers": [
+    {
+      "tier": "cheap_heuristic",
+      "cost_per_call": 0.0001
+    },
+    {
+      "tier": "small_open",
+      "cost_per_call": 0.0006
+    },
+    {
+      "tier": "iter120_default",
+      "cost_per_call": 0.001
+    },
+    {
+      "tier": "mid_tier",
+      "cost_per_call": 0.005
+    },
+    {
+      "tier": "frontier_gpt4",
+      "cost_per_call": 0.03
+    }
+  ],
+  "n_boot": 1500,
+  "seed": 20260705
+}

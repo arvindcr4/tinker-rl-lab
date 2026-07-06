@@ -1,0 +1,83 @@
+{
+  "iter": 204,
+  "vein": "P8 per-V_mean-decile cost-asymmetric savings (extends iter-192 + iter-188 with 5 cost ratios and 10 V_mean deciles on the same pool)",
+  "n_fsets": 3,
+  "n_seeds": 5,
+  "n_deciles": 10,
+  "cost_ratios": [
+    1,
+    10,
+    100,
+    1000,
+    10000
+  ],
+  "n_per_decile": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "pos_per_decile": [
+    5,
+    11,
+    15,
+    19,
+    17,
+    13,
+    23,
+    20,
+    12,
+    9
+  ],
+  "h1_global_gap_within_001_of_iter188": false,
+  "h1_global_gap_c100": -0.012940000000000002,
+  "h1_global_ci_c100": {
+    "mean": -0.012940000000000002,
+    "lo": -0.01814,
+    "hi": -0.006619999999999999
+  },
+  "h1_iter188_reference": -0.01116,
+  "h1_decile_weighted_gap_c100": -0.0054399999999999995,
+  "h2_per_decile_non_monotone": true,
+  "h3_top1_share_c10000_ge_30pct": true,
+  "h3_top1_share_c10000": 0.4595588235294118,
+  "h4_top1_share_c100_ge_30pct": true,
+  "h4_top1_share_c100": 0.4595588235294118,
+  "h5_4sensor_strictly_negative_per_decile": false,
+  "h5_pass_count": 9,
+  "h5_total_deciles": 10,
+  "per_decile_gaps_c100": [
+    -0.0024000000000000002,
+    -0.0004,
+    -0.024999999999999998,
+    -0.006799999999999999,
+    -0.0032,
+    -0.0024,
+    -0.0012000000000000003,
+    -0.0027999999999999995,
+    -0.005599999999999999,
+    -0.0046
+  ],
+  "per_decile_gaps_c10000": [
+    -0.0024000000000000002,
+    -0.0004,
+    -0.024999999999999998,
+    -0.006799999999999999,
+    -0.0032,
+    -0.0024,
+    -0.0012000000000000003,
+    -0.0027999999999999995,
+    -0.005599999999999999,
+    -0.0046
+  ],
+  "verdict_counts": {
+    "PASS": 3,
+    "FAIL": 2
+  }
+}

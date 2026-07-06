@@ -1,0 +1,11 @@
+decile	rho_P5P6	rho_P5P7	rho_P5P8	rho_P6P7	rho_P6P8	rho_P7P8	best_P5	best_P6	best_P7	best_P8
+1	0.4000	1.0000	1.0000	0.4000	0.4000	1.0000	aero	aero	aero	aero
+2	-0.8000	0.8000	0.0000	-1.0000	-0.4000	0.4000	aero	grpo	aero	aero
+3	0.2000	0.8000	0.8000	-0.4000	-0.4000	1.0000	grpo	aero	grpo	grpo
+4	-0.8000	0.8000	-0.4000	-0.4000	0.2000	-0.8000	aero	grpo	areal	grpo
+5	-0.8000	-0.2000	1.0000	0.4000	-0.8000	-0.2000	gift	grpo	areal	gift
+6	0.4000	0.8000	-0.4000	-0.2000	-1.0000	0.2000	aero	areal	aero	grpo
+7	-0.2000	0.2000	-0.2000	0.6000	-0.6000	-1.0000	gift	areal	gift	grpo
+8	0.4000	-1.0000	0.4000	-0.4000	-0.6000	-0.4000	grpo	areal	gift	grpo
+9	-0.4000	-0.6000	1.0000	-0.4000	-0.4000	-0.6000	gift	grpo	areal	gift
+10	0.8000	0.8000	-0.4000	0.4000	0.2000	-0.8000	areal	grpo	areal	grpo

@@ -18,7 +18,7 @@ _Last updated: 2026-07-06 (after "finish remaining"). Owner: **[you]** = needs A
 
 | # | Task | Owner | Status |
 |---|------|-------|--------|
-| 8 | P1: scaled layer-freeze run | [me] | ⚠️ **blocked by Colab session instability** (3 attempts: torchao→fixed, connection drop, VM reclaimed mid-run). Script ready + hardened (`p1_layer_profile_scaled.py`, writes result to file). **1.5B result stands** (overlap=1.0). Retry needs a stable GPU (vast.ai runner, or a monitored `colab new` session, not one-shot `colab run`). |
+| 8 | P1: scaled layer-freeze run | [me] | ✅ **DONE — and it REVERSED the claim.** Completed on persistent `colab new`+ADC L4 (after fixing a CUDA-OOM: `log_softmax(logits.float())` → logsumexp). Qwen2.5-3B, real GSM8K, 10 steps, 2 seeds: **step-1→final overlap = 0.11 (≈chance), vs 1.0 at 1.5B** → predictive layer-freezing does NOT survive scaling; concentration (0.39) holds. Reports corrected (P1 no longer "strongest positive"; P5 stands alone as flagship). `scaled_result.json`. Infra note: instability was one-shot `colab run`, not the tier — persistent session + ADC is stable. |
 | 9 | P2/P3: token-budget-optimal curriculum | [me] | ⏳ next experiment (the better lever) |
 | 10 | P4: length-bias / KL-surprise mask | [me] | ⏳ designed only |
 | 11 | P5: sign provenance + CI gate | [me] | ✅ `registry/provenance/sign.py` (ed25519, tamper→FAIL) + `minreport.py --strict` gate |

@@ -250,9 +250,10 @@ are wasted on zero-variance prompt groups (P2); there is \emph{no} robust
 group-size sweet spot once multiple seeds are used (P3); a curriculum that
 mechanically eliminates the wasted gradient does \emph{not} beat a matched
 baseline across three seeds ($+0.028$ vs.\ $-0.028$ held-out, within noise) and
-costs ${\sim}5$--$6\times$ more sampling (curriculum campaign); the strongest
-positive result is that per-layer adaptation under GRPO is \emph{predictable from
-the first step} (top-$k$ overlap $=1.0$, P1); and a telemetry-based integrity
+costs ${\sim}5$--$6\times$ more sampling (curriculum campaign); the apparent
+step-1 predictability of per-layer adaptation (P1: top-$k$ overlap $=1.0$ at 1.5B)
+does \emph{not} survive a scaled 3B multi-seed re-test (overlap $0.11$, ${\approx}$chance);
+the clearest surviving positive is that a telemetry-based integrity
 auditor reaches AUROC $0.84$ versus $0.43$ for a reward-only baseline (P8). All
 findings were independently re-checked by two frontier models (kimi, codex),
 which flagged several early single-seed conclusions as underpowered---prompting
@@ -365,7 +366,7 @@ integrity benchmark currently exists.
 \toprule
 \textbf{P\#} & \textbf{Closest prior art} & \textbf{Our narrowed axis} \\
 \midrule
-P1 & whole-model scaling / saturation laws & \emph{per-layer} adaptation is predictable from step 1 (predictive freezing) \\
+P1 & whole-model scaling / saturation laws & \emph{per-layer} adaptation is moderately concentrated (step-1 predictability does \emph{not} survive scaling) \\
 P2 & DAPO dynamic sampling, GVPO, AERO/NGRPO & \emph{measure} ZVF and show re-baselining cannot recover gradient \\
 P3 & integer-$G$ sweeps, MC-GRPO & token/compute-bounded group sizing (not integer $G$) \\
 P4 & Dr.\ GRPO, $\lambda$-GRPO length fixes & semantic-density token weighting (\emph{designed}) \\
@@ -523,9 +524,9 @@ summary; the paragraphs below give the detail and the caveats.
 \textbf{Study} & \textbf{Setup} & \textbf{Key result} & \textbf{Verdict} \\
 \midrule
 P1 layer-freeze
-& Qwen2.5-1.5B, L4, 5 steps, 28 layers
-& step-1$\to$final top-$k$ overlap $=1.0$; top-25\% share $0.476$
-& \textbf{positive} \\
+& 1.5B/5-step \emph{vs.} 3B/10-step/2-seed
+& overlap $1.0$ (1.5B) $\to$ $0.11$ (3B, ${\approx}$chance); concentration $0.48{\to}0.39$ holds
+& \textbf{null (pred.)} \\
 P2 ZVF
 & 4 methods, 40 steps, $16\times8$, GSM8K
 & mean ZVF $0.72$--$0.77$; all-correct $0.65$--$0.71$
@@ -649,22 +650,28 @@ fixed); the held-out gains and oversample factors are the valid signals.}
 \label{tab:campaign}
 \end{table}
 
-\subsection{P1 --- the strongest positive: adaptation is predictable from step 1}
+\subsection{P1 --- step-1 predictability holds at toy scale but collapses at 3B}
 \input{tikz/fig4.tex}
-The white-box layer profile (Qwen2.5-1.5B, 28 layers, 5 GRPO-style steps) gives
-the clearest positive result in the portfolio. The set of top-$k$
-highest-gradient layers identified after a \emph{single} step is identical to the
-top-$k$ over all steps: \texttt{step1\_predicts\_final\_topk\_overlap} $=1.0$.
-In other words, one can decide what to freeze after \emph{one} update---this is
-the ``predictive'' premise that differentiates predictive layer-freezing from
-methods that select layers \emph{during} training. Honestly, adaptation is only
+The white-box layer profile at toy scale (Qwen2.5-1.5B, 28 layers, 5 GRPO-style
+steps, a hardcoded arithmetic set) initially looked like the clearest positive in
+the portfolio: the top-$k$ highest-gradient layers after a \emph{single} step were
+identical to the top-$k$ over all steps (\texttt{step1\_predicts\_final\_topk\_overlap}
+$=1.0$), suggesting one could decide what to freeze after one update---the
+``predictive'' premise that would differentiate predictive layer-freezing from
+methods that select layers \emph{during} training. \textbf{This did not survive
+scaling.} A powered re-test (Qwen2.5-3B, 36 layers, 10 steps, \emph{real} GSM8K,
+seeds $\{0,1\}$) drops the step-1$\to$final overlap to $0.11$ on both seeds---i.e.\
+${\approx}$chance, with only layer~0 persisting. The mid-late band that dominates by
+end-of-training \emph{emerges} over steps and is invisible at step~1, so the apparent
+predictability was an artifact of the toy setup. Honestly, adaptation is only
 \emph{moderately} concentrated: the top $25\%$ of layers carry ${\sim}48\%$ of the
 total gradient norm (\texttt{concentration\_top25pct\_share} $=0.476$), not the
 $>90\%$ that a ``freeze almost everything'' story would need. Layer~0 dominates
 (grad-norm $\approx 63$ vs $6$--$17$ elsewhere), with a secondary mid-late band
-(layers 17--23) also adapting. The defensible lever is therefore
-\emph{predictability} of the reliably-cold layers, not extreme sparsity;
-aggressive freezing would discard real signal. This is a small proof-of-concept
+(layers 17--23) also adapting. With step-1 predictability gone at scale, the only remaining (weaker) lever is the
+\emph{emerged} concentration---and it is only moderate (top-25\% share $0.48$ at 1.5B,
+$0.39$ at 3B, so it \emph{does} hold across scales), meaning aggressive freezing would
+discard real signal in any case. This is a small proof-of-concept
 (1.5B model, 5 steps, a tiny arithmetic set) that establishes the mechanism; the
 quantitative FLOP saving from freezing needs a scaled run.
 
@@ -675,9 +682,10 @@ $\bar{g}=11.0$ (median $8.5$), strongly skewed by layer~0 ($g_0=63.0$). Treating
 layer as \emph{reliably cold} when its grad-norm falls below a fixed fraction of
 $\bar{g}$, a conservative cut ($g<0.6\,\bar{g}$) flags $5/28$ layers ($18\%$) that
 together carry only $\sim\!9.5\%$ of the total grad-norm, while a moderate cut
-($g<0.7\,\bar{g}$) flags $11/28$ layers ($39\%$) carrying $\sim\!23\%$. Since the
-top-$k$ high-gradient layers at step~1 coincide exactly with the top-$k$ over all
-steps (overlap $=1.0$), this cold set is decidable after a single step.
+($g<0.7\,\bar{g}$) flags $11/28$ layers ($39\%$) carrying $\sim\!23\%$. At 1.5B the step-1 top-$k$ coincided with the overall top-$k$, but at 3B it does
+not (overlap $0.11$), so this cold set is \emph{not} decidable from a single step---these
+freeze fractions would have to be read off the emerged (late-training) profile, not
+predicted at step~1.
 
 \begin{table}[h]
 \centering
@@ -788,12 +796,13 @@ those negatives---rather than the cherry-picked single-seed positives---is the
 contribution: it is what makes the portfolio defensible and the benchmark
 trustworthy.
 
-\paragraph{Where the original value is.} The two strongest \emph{original} bets
-are (i) \textbf{P1 predictive layer-freezing}---adaptation is predictable from
-step~1 (overlap $=1.0$), a genuinely different axis from during-training layer
-selection---and (ii) \textbf{P5, a GRPO provenance / reporting standard}, which
-the literature scan confirms as open white space (no GRPO-specific
-machine-readable datasheet or rollout-provenance protocol exists).
+\paragraph{Where the original value is.} The strongest \emph{original} bet is
+\textbf{P5, a GRPO provenance / reporting standard}, which the literature scan
+confirms as open white space (no GRPO-specific machine-readable datasheet or
+rollout-provenance protocol exists). The earlier second bet---\textbf{P1 predictive
+layer-freezing}---is now weakened: its step-1 predictability held at 1.5B but collapsed
+to chance ($0.11$) on the scaled 3B multi-seed re-test, so any freeze schedule would
+have to rest on the \emph{emerged} band rather than a step-1 predictor.
 
 \paragraph{Phase-2 plan.}
 \begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
@@ -802,9 +811,10 @@ machine-readable datasheet or rollout-provenance protocol exists).
   explicit token budget with staleness bounds, tested multi-seed from the start.
   The Phase-1 null tells us the lever must be \emph{budget-aware}, not just
   waste-eliminating.
-  \item \textbf{Scaled P1.} Run predictive layer-freezing on a larger model and
-  GSM8K with more steps and multiple seeds, to quantify the freeze-able fraction
-  and the actual FLOP saving (the Phase-1 result establishes only the mechanism).
+  \item \textbf{Re-examine P1.} The scaled 3B / multi-seed re-test (now run) shows
+  step-1 predictability does \emph{not} hold (overlap $0.11$); the open question is whether
+  the \emph{emerged} mid-late band supports any FLOP-saving freeze schedule when read off
+  late-training gradients rather than step~1.
   \item \textbf{The P5 protocol.} Specify and implement the GRPO post-training
   datasheet plus cryptographic rollout provenance, and dogfood it on the harness's
   own runs so every benchmark result ships with a verifiable provenance record.

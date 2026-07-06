@@ -54,8 +54,8 @@ MODEL_NAME = "Qwen/Qwen2.5-3B-Instruct"
 N_PROBLEMS = 24
 N_STEPS = 10
 SEEDS = [0, 1]
-GROUP_SIZE = 6          # rollouts per problem (GRPO group)
-MAX_NEW_TOKENS = 256
+GROUP_SIZE = 4          # rollouts per problem (GRPO group) — trimmed to fit L4 24GB
+MAX_NEW_TOKENS = 192
 LR = 1e-4
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -173,8 +173,11 @@ def grpo_step(model, tokenizer, problem):
     out = model(input_ids=seqs, attention_mask=attn)
     logits = out.logits[:, :-1, :]
     targets = seqs[:, 1:]
-    logp = torch.log_softmax(logits.float(), dim=-1)
-    tok_logp = logp.gather(-1, targets.unsqueeze(-1)).squeeze(-1)
+    # Memory-efficient token log-prob (the L4 OOM culprit was log_softmax(logits.float())
+    # which materializes a full-vocab float32 tensor). log p(t) = logit_t - logsumexp(logits),
+    # computed in the model dtype without a (G, L, V) float32 intermediate.
+    tok_logp = (logits.gather(-1, targets.unsqueeze(-1)).squeeze(-1)
+                - torch.logsumexp(logits, dim=-1))
 
     # Mask to completion tokens only.
     comp_mask = torch.zeros_like(targets, dtype=torch.float32)

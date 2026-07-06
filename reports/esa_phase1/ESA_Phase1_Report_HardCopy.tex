@@ -1,12 +1,18 @@
 %=====================================================================
 % PES University — M.Tech Project Phase 1 (UE20CS971)
-% ESA Phase-1 Report (DRAFT)
-% Compile: pdflatex ESA_Phase1_Report_DRAFT.tex  (run twice for refs)
-% Packages kept standard: article + amsmath + graphicx + booktabs + hyperref + xcolor
+% ESA Phase-1 Report — HARD-COPY / BOUND-THESIS FORMAT
+% Compile: pdflatex ESA_Phase1_Report_HardCopy.tex  (run TWICE for refs/TOC)
+% Formatting: A4, 1.5 line spacing, binding margin (left 1.5in, others 1in),
+%   Cover/Title + Certificate + Declaration + Table of Contents, then body.
+% Body content reproduced from ESA_Phase1_Report_DRAFT.tex (same tikz figures).
 %=====================================================================
-\documentclass[11pt,a4paper]{article}
+\documentclass[12pt,a4paper]{report}
 
-\usepackage[margin=1in]{geometry}
+% ---- binding margin: extra room on the left (spine) side --------------
+\usepackage[a4paper,left=1.5in,right=1in,top=1in,bottom=1in]{geometry}
+\usepackage{setspace}
+\onehalfspacing                 % 1.5 line spacing (thesis requirement)
+
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{array}
@@ -20,7 +26,7 @@
 \pgfplotsset{compat=1.18}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,decorations.pathreplacing}
 
-% ---- shared styles ----
+% ---- shared tikz styles (identical to draft) ----
 \tikzset{
   blk/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
               minimum height=8mm, minimum width=20mm, align=center, font=\small},
@@ -35,6 +41,7 @@
 \definecolor{good}{RGB}{34,139,34}
 \definecolor{bad}{RGB}{178,34,34}
 \definecolor{warn}{RGB}{218,165,32}
+\definecolor{pesblue}{RGB}{0,45,98}
 % ---- honest "value I do not have yet" marker -------------------------
 \newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
 \newcommand{\zvf}{\mathrm{ZVF}}
@@ -43,24 +50,184 @@
 \setlength{\parindent}{0pt}
 \setlength{\emergencystretch}{3em} % absorb unbreakable \texttt / slashed tokens
 
-\title{\textbf{A Unified Benchmark for RL Post-Training of Language Models}\\[0.3em]
-\large A Portfolio of Eight Studies (P1--P8) on GRPO / RLVR\\
-\normalsize Measurement, Diagnostics, and Reproducibility Tooling}
-
-\author{
-Arvind C R\\
-\small Student, M.Tech\\[0.4em]
-\textbf{Project Guide:} Ramesh Prakash\\
-\small Course: UE20CS971 -- Project Phase 1\\
-\small Department of Computer Science and Engineering\\
-\small PES University, Bengaluru}
-
-\date{July 2026}
-
 \begin{document}
-\maketitle
 
 %=====================================================================
+% COVER / TITLE PAGE
+%=====================================================================
+\begin{titlepage}
+\centering
+\thispagestyle{empty}
+\vspace*{0.3in}
+
+{\Large\bfseries A Unified Benchmark for RL Post-Training of\\[0.3em]
+Language Models\par}
+\vspace{0.6em}
+{\large A Portfolio of Eight Studies (P1--P8) on GRPO / RLVR\par}
+\vspace{0.3em}
+{\normalsize Measurement, Diagnostics, and Reproducibility Tooling\par}
+
+\vfill
+
+{\large A Project Phase-1 Report\par}
+\vspace{0.4em}
+{\normalsize submitted in partial fulfilment of the requirements for the\\[0.2em]
+award of the degree of\par}
+\vspace{0.6em}
+{\large\bfseries Master of Technology\par}
+\vspace{0.3em}
+{\normalsize in\par}
+\vspace{0.3em}
+{\large Computer Science and Engineering\par}
+
+\vfill
+
+{\normalsize Submitted by\par}
+\vspace{0.4em}
+{\large\bfseries Arvind C R\par}
+\vspace{0.6em}
+{\normalsize Under the guidance of\par}
+\vspace{0.3em}
+{\large\bfseries Ramesh Prakash\par}
+{\normalsize Project Guide\par}
+
+\vfill
+
+{\normalsize Course: UE20CS971 --- Project Phase-1\par}
+\vspace{0.8em}
+
+{\large\bfseries DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
+\vspace{0.3em}
+{\large PES UNIVERSITY\par}
+{\normalsize (Established under Karnataka Act No.\ 16 of 2013)\\
+100-ft Ring Road, Banashankari Stage III, Bengaluru --- 560085\par}
+\vspace{0.6em}
+{\large\bfseries 2026\par}
+
+\end{titlepage}
+
+%=====================================================================
+% CERTIFICATE PAGE
+%=====================================================================
+\thispagestyle{empty}
+\begin{center}
+{\large PES UNIVERSITY, BENGALURU\par}
+{\normalsize DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
+\vspace{1.0em}
+{\Large\bfseries CERTIFICATE\par}
+\end{center}
+\vspace{1.0em}
+
+This is to certify that the Project Phase-1 report entitled
+\textbf{``A Unified Benchmark for RL Post-Training of Language Models''}
+is a bona fide record of the work carried out by \textbf{Arvind C R},
+a student of the Master of Technology programme in Computer Science and
+Engineering, PES University, in partial fulfilment of the requirements for the
+course \textbf{UE20CS971 --- Project Phase-1}, during the academic year 2025--2026.
+
+\vspace{0.6em}
+
+The work presented in this report has been carried out under my supervision and
+guidance. To the best of my knowledge, the contents of this report, in full or
+in parts, have not been submitted to any other institute or university for the
+award of any degree or diploma.
+
+\vspace{3.0em}
+
+\noindent
+\begin{minipage}[t]{0.48\linewidth}
+\centering
+\rule{5cm}{0.4pt}\\
+\textbf{Ramesh Prakash}\\
+Project Guide\\
+Dept.\ of Computer Science and Engineering\\
+PES University
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\centering
+\rule{5cm}{0.4pt}\\
+\textbf{Chairperson}\\
+Dept.\ of Computer Science and Engineering\\
+PES University
+\end{minipage}
+
+\vspace{3.0em}
+
+\begin{center}
+\textbf{External Viva}
+\end{center}
+\vspace{0.3em}
+\noindent
+\begin{minipage}[t]{0.48\linewidth}
+\centering
+\rule{5cm}{0.4pt}\\
+Name and Signature of Examiner~1
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\centering
+\rule{5cm}{0.4pt}\\
+Name and Signature of Examiner~2
+\end{minipage}
+
+%=====================================================================
+% DECLARATION PAGE
+%=====================================================================
+\clearpage
+\thispagestyle{empty}
+\begin{center}
+{\Large\bfseries DECLARATION\par}
+\end{center}
+\vspace{1.0em}
+
+I, \textbf{Arvind C R}, hereby declare that the Project Phase-1 report entitled
+\textbf{``A Unified Benchmark for RL Post-Training of Language Models''},
+submitted in partial fulfilment of the requirements for the course
+\textbf{UE20CS971 --- Project Phase-1} of the Master of Technology programme in
+Computer Science and Engineering, is an original piece of work carried out by me
+under the guidance of \textbf{Ramesh Prakash}.
+
+\vspace{0.6em}
+
+I further declare that the matter embodied in this report has not been submitted,
+in full or in parts, to any other institute or university for the award of any
+degree or diploma. All sources of information and prior work drawn upon have been
+duly acknowledged and cited. The empirical findings reported herein --- including
+the negative and null results --- are reported honestly and reflect the actual
+outcomes of the experiments conducted.
+
+\vspace{3.0em}
+
+\noindent
+\begin{minipage}[t]{0.5\linewidth}
+Place: Bengaluru\\[0.4em]
+Date: \rule{3cm}{0.4pt}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\linewidth}
+\centering
+\vspace{1.2em}
+\rule{5cm}{0.4pt}\\
+\textbf{Arvind C R}\\
+M.Tech, Computer Science and Engineering
+\end{minipage}
+
+%=====================================================================
+% TABLE OF CONTENTS
+%=====================================================================
+\clearpage
+\pagenumbering{roman}
+\setcounter{page}{1}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+%=====================================================================
+% BODY (reproduced from ESA_Phase1_Report_DRAFT.tex)
+%=====================================================================
+
 \begin{abstract}
 \noindent
 Reinforcement learning with verifiable rewards (RLVR), and in particular Group

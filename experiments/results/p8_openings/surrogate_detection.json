@@ -1,0 +1,5 @@
+{
+  "n": 160,
+  "auroc_full_telemetry": 0.628125,
+  "auroc_reward_only": 0.3536458333333333
+}

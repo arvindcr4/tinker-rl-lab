@@ -1,10 +1,9 @@
 {
-  "launched": 14,
-  "completed_this_process": 11,
-  "failed_this_process": 3,
-  "cumulative_sampled_tokens": 57534,
-  "cells_tsv": "experiments/results/mega_20260704/cells.tsv",
-  "done_jsonl": "experiments/results/mega_20260704/cells_done.jsonl",
-  "failed_jsonl": "experiments/results/mega_20260704/cells_failed.jsonl",
-  "note": "Reconciled manually on 2026-07-04 after process restart; original per-process counters reset."
+  "launched": 506,
+  "completed_this_process": 109,
+  "failed_this_process": 397,
+  "cumulative_sampled_tokens": 15683925,
+  "cells_tsv": "/home/claude/tinker-rl-lab/experiments/results/mega_20260704/cells.tsv",
+  "done_jsonl": "/home/claude/tinker-rl-lab/experiments/results/mega_20260704/cells_done.jsonl",
+  "failed_jsonl": "/home/claude/tinker-rl-lab/experiments/results/mega_20260704/cells_failed.jsonl"
 }

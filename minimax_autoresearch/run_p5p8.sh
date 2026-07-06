@@ -13,7 +13,7 @@ REPO="$(dirname "$HERE")"
 WORKTREE="${WORKTREE:-/home/claude/tinker-rl-lab-minimax}"
 MAX_HOURS="${1:-35}"
 PILLARS="${2:-all}"
-ROUND_CAP="${ROUND_CAP:-50}"
+ROUND_CAP="${ROUND_CAP:-100}"
 MAX_COST_USD="${MAX_COST_USD:-0}"   # 0 = no cost ceiling (wall-clock bound only)
 
 if [[ ! -f "$REPO/.env.minimax" ]]; then

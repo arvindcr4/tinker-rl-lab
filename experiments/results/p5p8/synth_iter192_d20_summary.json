@@ -1,0 +1,87 @@
+{
+  "n_methods": 4,
+  "n_pillars": 4,
+  "n_steps_per_method": 40,
+  "headline_per_method_per_pillar": {
+    "grpo|P5": 0.8341796875,
+    "grpo|P6": -0.7203125,
+    "grpo|P7": 10.643474798531708,
+    "grpo|P8": 0.0024062398600613534,
+    "aero|P5": 0.8275390625,
+    "aero|P6": -0.7203125,
+    "aero|P7": 10.340031009273165,
+    "aero|P8": 0.0022824656458549615,
+    "areal|P5": 0.8287109375,
+    "areal|P6": -0.70625,
+    "areal|P7": 10.683409592504955,
+    "areal|P8": 0.0022826565158683173,
+    "gift|P5": 0.8447265625,
+    "gift|P6": -0.7703125,
+    "gift|P7": 10.391542621612098,
+    "gift|P8": 0.002442013108112548
+  },
+  "ranks_per_method_per_pillar": {
+    "grpo|P5": 2,
+    "grpo|P6": 2,
+    "grpo|P7": 2,
+    "grpo|P8": 2,
+    "aero|P5": 4,
+    "aero|P6": 3,
+    "aero|P7": 4,
+    "aero|P8": 4,
+    "areal|P5": 3,
+    "areal|P6": 1,
+    "areal|P7": 1,
+    "areal|P8": 3,
+    "gift|P5": 1,
+    "gift|P6": 4,
+    "gift|P7": 3,
+    "gift|P8": 1
+  },
+  "spearman_per_pair": {
+    "P5-P6": -0.39999999999999997,
+    "P5-P7": 0.19999999999999998,
+    "P5-P8": 1.0,
+    "P6-P7": 0.7999999999999999,
+    "P6-P8": -0.39999999999999997,
+    "P7-P8": 0.19999999999999998
+  },
+  "mean_spearman": 0.23333333333333336,
+  "per_pillar_gap_ci": {
+    "P5": {
+      "mean": 0.018730859375000002,
+      "lo": 0.008984375000000044,
+      "hi": 0.028906250000000022,
+      "point_diff": 0.017187500000000022
+    },
+    "P6": {
+      "mean": 0.06660546875,
+      "lo": 0.03437499999999993,
+      "hi": 0.10312500000000002,
+      "point_diff": 0.06406249999999991
+    },
+    "P7": {
+      "mean": 0.3582399633790459,
+      "lo": 0.24331098316053215,
+      "hi": 0.4759079680980233,
+      "point_diff": 0.3433785832317895
+    },
+    "P8": {
+      "mean": 0.00016536519584799006,
+      "lo": 0.00011195572970950938,
+      "hi": 0.0002232248114745301,
+      "point_diff": 0.00015954746225758628
+    }
+  },
+  "h1_max_spearman_gt_0_5": true,
+  "h1_max_spearman_value": 1.0,
+  "h2_mean_spearman_gt_0": true,
+  "h2_mean_spearman_value": 0.23333333333333336,
+  "h3_p5_p6_concordance": false,
+  "h3_p5_winner": "gift",
+  "h3_p6_winner": "areal",
+  "h4_all_pillars_discriminating": true,
+  "h4_pillars_with_ci_excludes_zero": 4,
+  "h5_p5_p8_concordance_gt_0": true,
+  "h5_p5_p8_spearman": 1.0
+}

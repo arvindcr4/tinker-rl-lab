@@ -1,0 +1,55 @@
+{
+  "n_test": 10000,
+  "n_pos_test": 144,
+  "n_deciles": 10,
+  "decile_sizes": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "decile_hit_rates": [
+    0.005,
+    0.011,
+    0.015,
+    0.019,
+    0.017,
+    0.013,
+    0.023,
+    0.02,
+    0.012,
+    0.009
+  ],
+  "h1_low_vmean_more_help": false,
+  "h1_low_mean_gap": -0.004682080807153463,
+  "h1_high_mean_gap": -0.006053729529399897,
+  "h2_high_vstd_more_help": false,
+  "h2_low_abs": 0.004682080807153463,
+  "h2_high_abs": 0.006053729529399897,
+  "h3_broad_lift_24full_count": 7,
+  "h3_broad_lift_pass": false,
+  "h4_ece_lift_24full_count": 6,
+  "h4_ece_lift_pass": true,
+  "h5_best_decile": 10,
+  "h5_best_decile_gap": -0.009105634398156431,
+  "h5_maxent_decile": 7,
+  "h5_maxent_decile_hit_rate": 0.023,
+  "h5_match": false,
+  "best_decile": {
+    "decile": 10,
+    "brier_24": 0.008770331741740574,
+    "brier_20": 0.017875966139897004,
+    "brier_gap": -0.009105634398156431,
+    "hit_rate": 0.009,
+    "n_pos": 9
+  },
+  "worst_decile": {
+    "decile": 7
+  }
+}

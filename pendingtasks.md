@@ -19,8 +19,8 @@ _Last updated: 2026-07-06 (after "finish remaining"). Owner: **[you]** = needs A
 | # | Task | Owner | Status |
 |---|------|-------|--------|
 | 8 | P1: scaled layer-freeze run | [me] | ✅ **DONE — and it REVERSED the claim.** Completed on persistent `colab new`+ADC L4 (after fixing a CUDA-OOM: `log_softmax(logits.float())` → logsumexp). Qwen2.5-3B, real GSM8K, 10 steps, 2 seeds: **step-1→final overlap = 0.11 (≈chance), vs 1.0 at 1.5B** → predictive layer-freezing does NOT survive scaling; concentration (0.39) holds. Reports corrected (P1 no longer "strongest positive"; P5 stands alone as flagship). `scaled_result.json`. Infra note: instability was one-shot `colab run`, not the tier — persistent session + ADC is stable. |
-| 9 | P2/P3: token-budget-optimal curriculum | [me] | 🔄 **running** — `token_budget.py`: baseline vs curriculum at MATCHED 30k-token budget × 3 seeds. Tests if difficulty-targeting wins at equal cost (not 5×). |
-| 10 | P4: length-bias / KL-surprise mask | [me] | 🔄 **running** — `p4_surprise.py`: sum (std) vs mean (Dr.GRPO) vs surprise-weighted loss × 2 seeds; tracks held-out + completion-length trajectory. |
+| 9 | P2/P3: token-budget-optimal curriculum | [me] | ✅ **null** — at MATCHED 30k tokens, curriculum TIES baseline exactly (+0.028 vs +0.028). Token-budget framing does not rescue it → difficulty-filtering is a dead end. |
+| 10 | P4: length-bias / KL-surprise mask | [me] | ✅ **null** — standard `sum` (if anything) best; completions didn't inflate, so little length bias to fix; mean/surprise didn't beat it (n=2, within noise). |
 | 11 | P5: sign provenance + CI gate | [me] | ✅ `registry/provenance/sign.py` (ed25519, tamper→FAIL) + `minreport.py --strict` gate |
 | 12 | P7: ZVF controller | [me] | ✅ `p7_zvf_controller.py` — drives ZVF 0.49→0.30 in 4 steps (1.2–1.4× grad-bearing) |
 | 13 | P8: reproducible eval | [me] | ✅ `p8_detector.py` — AUROC **0.838±0.010 (5 seeds)** vs reward-only 0.426 (supersedes prose 0.63) |

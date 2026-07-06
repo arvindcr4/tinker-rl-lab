@@ -1,0 +1,80 @@
+[
+  {
+    "name": "sum-s0",
+    "loss_mode": "sum",
+    "seed": 0,
+    "heldout_before": 0.75,
+    "heldout_after": 0.8333333333333334,
+    "heldout_gain": 0.08333333333333337,
+    "len_before": 345.8333333333333,
+    "len_after": 342.1666666666667,
+    "len_delta": -3.6666666666666288,
+    "train_len_first": 391.625,
+    "train_len_last": 393.875
+  },
+  {
+    "name": "mean-s0",
+    "loss_mode": "mean",
+    "seed": 0,
+    "heldout_before": 0.75,
+    "heldout_after": 0.75,
+    "heldout_gain": 0.0,
+    "len_before": 345.8333333333333,
+    "len_after": 351.5833333333333,
+    "len_delta": 5.75,
+    "train_len_first": 375.375,
+    "train_len_last": 406.875
+  },
+  {
+    "name": "surprise-s0",
+    "loss_mode": "surprise",
+    "seed": 0,
+    "heldout_before": 0.75,
+    "heldout_after": 0.75,
+    "heldout_gain": 0.0,
+    "len_before": 345.8333333333333,
+    "len_after": 343.3333333333333,
+    "len_delta": -2.5,
+    "train_len_first": 371.625,
+    "train_len_last": 386.875
+  },
+  {
+    "name": "sum-s1",
+    "loss_mode": "sum",
+    "seed": 1,
+    "heldout_before": 0.5,
+    "heldout_after": 0.6666666666666666,
+    "heldout_gain": 0.16666666666666663,
+    "len_before": 427.6666666666667,
+    "len_after": 399.3333333333333,
+    "len_delta": -28.33333333333337,
+    "train_len_first": 363.5,
+    "train_len_last": 423.5
+  },
+  {
+    "name": "mean-s1",
+    "loss_mode": "mean",
+    "seed": 1,
+    "heldout_before": 0.5,
+    "heldout_after": 0.5,
+    "heldout_gain": 0.0,
+    "len_before": 427.6666666666667,
+    "len_after": 406.5833333333333,
+    "len_delta": -21.08333333333337,
+    "train_len_first": 363.25,
+    "train_len_last": 445.875
+  },
+  {
+    "name": "surprise-s1",
+    "loss_mode": "surprise",
+    "seed": 1,
+    "heldout_before": 0.5,
+    "heldout_after": 0.5833333333333334,
+    "heldout_gain": 0.08333333333333337,
+    "len_before": 427.6666666666667,
+    "len_after": 426.25,
+    "len_delta": -1.4166666666666856,
+    "train_len_first": 348.25,
+    "train_len_last": 446.125
+  }
+]

@@ -1,0 +1,101 @@
+[
+  {
+    "name": "baseline-G4-s0",
+    "mode": "baseline",
+    "G": 4,
+    "seed": 0,
+    "zero_loss_frac": 1.0,
+    "oversample": 1.0,
+    "heldout_before": 0.75,
+    "heldout_after": 0.75,
+    "heldout_gain": 0.0
+  },
+  {
+    "name": "curriculum-G4-s0",
+    "mode": "curriculum",
+    "G": 4,
+    "seed": 0,
+    "zero_loss_frac": 1.0,
+    "oversample": 6.0,
+    "heldout_before": 0.75,
+    "heldout_after": 0.9166666666666666,
+    "heldout_gain": 0.16666666666666663
+  },
+  {
+    "name": "baseline-G4-s1",
+    "mode": "baseline",
+    "G": 4,
+    "seed": 1,
+    "zero_loss_frac": 1.0,
+    "oversample": 1.0,
+    "heldout_before": 0.5,
+    "heldout_after": 0.6666666666666666,
+    "heldout_gain": 0.16666666666666663
+  },
+  {
+    "name": "curriculum-G4-s1",
+    "mode": "curriculum",
+    "G": 4,
+    "seed": 1,
+    "zero_loss_frac": 0.875,
+    "oversample": 5.230769230769231,
+    "heldout_before": 0.5,
+    "heldout_after": 0.4166666666666667,
+    "heldout_gain": -0.08333333333333331
+  },
+  {
+    "name": "baseline-G4-s2",
+    "mode": "baseline",
+    "G": 4,
+    "seed": 2,
+    "zero_loss_frac": 1.0,
+    "oversample": 1.0,
+    "heldout_before": 0.8333333333333334,
+    "heldout_after": 0.75,
+    "heldout_gain": -0.08333333333333337
+  },
+  {
+    "name": "curriculum-G4-s2",
+    "mode": "curriculum",
+    "G": 4,
+    "seed": 2,
+    "zero_loss_frac": 1.0,
+    "oversample": 5.266666666666667,
+    "heldout_before": 0.8333333333333334,
+    "heldout_after": 0.6666666666666666,
+    "heldout_gain": -0.16666666666666674
+  },
+  {
+    "name": "baseline-G2-s0",
+    "mode": "baseline",
+    "G": 2,
+    "seed": 0,
+    "zero_loss_frac": 1.0,
+    "oversample": 1.0,
+    "heldout_before": 0.75,
+    "heldout_after": 0.8333333333333334,
+    "heldout_gain": 0.08333333333333337
+  },
+  {
+    "name": "baseline-G8-s0",
+    "mode": "baseline",
+    "G": 8,
+    "seed": 0,
+    "zero_loss_frac": 1.0,
+    "oversample": 1.0,
+    "heldout_before": 0.75,
+    "heldout_after": 0.8333333333333334,
+    "heldout_gain": 0.08333333333333337
+  },
+  {
+    "name": "baseline-G16-s0",
+    "mode": "baseline",
+    "G": 16,
+    "seed": 0,
+    "zero_loss_frac": 1.0,
+    "oversample": 1.0,
+    "heldout_before": 0.75,
+    "heldout_after": 0.8333333333333334,
+    "heldout_gain": 0.08333333333333337
+  }
+]

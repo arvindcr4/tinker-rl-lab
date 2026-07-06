@@ -1,0 +1,38 @@
+{
+  "baseline": {
+    "mode": "baseline",
+    "zero_loss_frac": 0.5,
+    "oversample_factor": 1.0,
+    "heldout_before": 0.8,
+    "heldout_after": 0.85,
+    "heldout_gain": 0.04999999999999993,
+    "step_rewards": [
+      1.0,
+      1.0,
+      0.75,
+      0.875,
+      1.0,
+      0.375,
+      0.375,
+      0.5
+    ]
+  },
+  "curriculum": {
+    "mode": "curriculum",
+    "zero_loss_frac": 0.0,
+    "oversample_factor": 4.8125,
+    "heldout_before": 0.8,
+    "heldout_after": 0.85,
+    "heldout_gain": 0.04999999999999993,
+    "step_rewards": [
+      0.5,
+      0.5,
+      0.75,
+      0.625,
+      0.5,
+      0.375,
+      0.5,
+      0.625
+    ]
+  }
+}

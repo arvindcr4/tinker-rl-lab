@@ -1,0 +1,4 @@
+{"model": "Qwen/Qwen2.5-1.5B-Instruct", "n_layers": 28, "steps": 5,
+ "mean_gradnorm_by_layer": [63.03,9.99,6.65,6.45,6.27,8.66,6.64,6.98,8.36,7.17,6.75,8.22,8.58,10.47,12.81,7.50,9.37,12.35,14.38,17.69,7.88,6.12,15.26,11.36,9.88,9.28,4.79,5.64],
+ "top_layers_overall": [0,19,22,18,14,17,23,13], "concentration_top25pct_share": 0.476,
+ "step1_predicts_final_topk_overlap": 1.0, "compute": "Colab L4 (colab run), 2026-07-06"}

@@ -1,0 +1,63 @@
+{
+  "run_id": "p3-sweep-singleseed",
+  "spec_version": "MIN-REPORT-RL/1.0",
+  "min_report_rl": {
+    "loss_form": {
+      "importance_ratio_level": "token",
+      "advantage_normalization": "std",
+      "length_normalization": false,
+      "clip_eps_low": null,
+      "clip_eps_high": null
+    },
+    "reference_kl": {
+      "beta": 0.0,
+      "note": "no KL penalty (pure advantage-weighted)"
+    },
+    "sampler_backend": "tinker",
+    "telemetry": [
+      "reward",
+      "loss",
+      "collapsed",
+      "heldout"
+    ],
+    "group_size_schedule": {
+      "G": 4,
+      "schedule": "constant"
+    },
+    "heldout_split": {
+      "n": 8,
+      "disjoint": true,
+      "eval": "greedy"
+    },
+    "decontamination": {
+      "method": "index-disjoint from train pool",
+      "verified": true
+    }
+  },
+  "provenance": {
+    "git_sha": "de9bcba",
+    "code_file": "experiments/openings/parallel_sweep.py",
+    "code_hash": "sha256:b422bb606d042b3b",
+    "reward_fn_hash": "sha256:b422bb606d042b3b",
+    "data_hash": "sha256:8c4bcfcab83f9986",
+    "config_hash": "sha256:47600e84d8bf2969"
+  },
+  "rigor": {
+    "n_seeds": 1,
+    "seeds": [
+      0
+    ],
+    "reports_heldout": true,
+    "heldout_disjoint": true,
+    "reports_ci": false
+  },
+  "results": {
+    "G4_gain": 0.125,
+    "note": "single seed, n=8 heldout"
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "pubkey": "7df3cdbacee790be074d9e54f1ec308254fd2687974044006695c49e0388b0ef",
+    "sig": "9045c0776efdb525481d5e2de308e106c4e74e076b390d59f7573077a408aa524a4b16f177924212119b97ef2853e547b530479aadb6493a840f06adac0dda05"
+  }
+}

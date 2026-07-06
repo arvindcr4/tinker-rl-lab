@@ -1,0 +1,21 @@
+\begin{figure}[h]\centering
+\begin{tikzpicture}[node distance=7mm and 12mm]
+\node[io] (task) {Task\\\footnotesize GSM8K / HumanEval};
+\node[io, below=of task] (rew) {Verifiable\\reward};
+\node[io, below=of rew] (dec) {Decoding\\\footnotesize $T,p,G$};
+\node[blk, right=18mm of rew, minimum height=26mm, fill=blue!10] (harness) {Unified\\GRPO\\harness};
+\node[proc, right=of harness, yshift=12mm] (tk) {Tinker};
+\node[proc, right=of harness, yshift=4mm] (trl) {TRL};
+\node[proc, right=of harness, yshift=-4mm] (verl) {veRL};
+\node[proc, right=of harness, yshift=-12mm] (orl) {OpenRLHF};
+\node[blk, right=30mm of trl, fill=orange!10, minimum height=26mm] (tel) {Per-step\\telemetry\\\footnotesize reward, ZVF,\\ \footnotesize GU, entropy, KL};
+\node[blk, right=of tel, fill=violet!10, minimum height=26mm] (studies) {8 studies\\P1--P8};
+\foreach \s in {task,rew,dec} \draw[ar] (\s) -- (harness);
+\foreach \d in {tk,trl,verl,orl} \draw[ar] (harness) -- (\d);
+\draw[ar] (tk) -- (tel); \draw[ar] (orl) -- (tel);
+\draw[ar] (tel) -- (studies);
+\node[lbl, above=1mm of harness] {one config};
+\node[lbl, above=1mm of tel] {logged to W\&B};
+\end{tikzpicture}
+\caption{System architecture: one task/reward/decoding config drives any framework backend; uniform per-step telemetry feeds the eight studies P1--P8. Differences are attributable to the \emph{stack}, not the experiment.}
+\end{figure}

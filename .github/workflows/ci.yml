@@ -143,3 +143,21 @@ jobs:
             exit 1
           fi
           echo "Found $count experiment implementations"
+
+  minreport-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify provenance records
+        run: |
+          for f in registry/provenance/*.provenance.json; do
+            if [ -f "$f" ]; then
+              echo "Verifying $f..."
+              python registry/provenance/minreport.py verify "$f" --strict
+            fi
+          done
+

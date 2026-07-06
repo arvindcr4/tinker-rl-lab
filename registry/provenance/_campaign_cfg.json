@@ -1,0 +1,4 @@
+{"code_file":"experiments/openings/campaign.py","G":4,"heldout_n":12,
+ "data":"openai/gsm8k:main:train",
+ "rigor":{"n_seeds":3,"seeds":[0,1,2],"reports_heldout":true,"heldout_disjoint":true,"reports_ci":false},
+ "results":{"baseline_G4_mean_gain":0.028,"curriculum_G4_mean_gain":-0.028,"sd":0.12,"verdict":"no significant difference"}}

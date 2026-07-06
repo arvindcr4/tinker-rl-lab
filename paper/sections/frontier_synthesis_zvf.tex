@@ -34,8 +34,9 @@ saturation statistic. Writing $K_x=\sum_{i=1}^{G} R_i$ for the within-group
 success count, $\mathrm{ZVF}=\Pr(K_x=0)+\Pr(K_x=G)$ assigns the same value
 to an all-wrong group ($K_x=0$, incapacity) and an all-correct group
 ($K_x=G$, mastery)---aliasing the two ends of the difficulty axis that
-have opposite outcome implications. A modest $\rho\approx0.27$ over $80$
-runs is thus the \emph{expected} behavior of a sign-blind scalar, not a
+have opposite outcome implications. A modest $\rho\approx0.27$ over the
+$23$ pooled (experiment, model, $G$) cells is thus the \emph{expected}
+behavior of a sign-blind scalar, not a
 defect of the underlying quantity (frontier synthesis). This rationalizes
 our own reading: ZVF is a mechanistic \emph{signal-availability}
 diagnostic, not a standalone performance predictor.
@@ -90,7 +91,7 @@ $\mathrm{LARQ}_\beta=\mathbb{E}_x[\hat p_x+\beta\cdot4\hat p_x(1-\hat p_x)]$
 with $\hat p_x=K_x/G$, whose first term distinguishes all-correct from
 all-wrong (curing the aliasing) while the second rewards frontier mass at
 $\hat p_x\approx\tfrac12$. Both were offered with a head-to-head protocol
-against ZVF on our $80$ anchors, with a stated target of
+against ZVF on our $23$ pooled cells, with a stated target of
 $\rho\gtrsim0.45$ (frontier synthesis)---a falsifiable bar, not a claimed
 result.
 
@@ -128,7 +129,7 @@ second-moment property, and one model produced an explicit counterexample
 ($G=4$, $p=\tfrac12$) with $\Delta_G<0$ yet pairwise $\rho>0$. This
 reinforces the conservative stance already taken in
 Section~\ref{sec:zvf-dynamics}. Second, and as a genuine \emph{challenge}
-to the ``zero gradient'' framing in Section~\ref{sec:zvf-gradient}: under
+to the ``zero gradient'' framing in Section~the companion paper on ZVF gradients: under
 a KL-penalized reward $r_i=r^{\mathrm{task}}_i-\beta\,\mathrm{KL}_i$, when
 $\mathrm{Var}(r^{\mathrm{task}})=0$ the advantage normalization cancels
 $\beta$ and yields

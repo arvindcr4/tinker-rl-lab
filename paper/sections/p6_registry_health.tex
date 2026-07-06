@@ -13,7 +13,7 @@ and cross-referencing the variant-delta pointers against the catalog.
 Every shipped record parses against \texttt{registry/schema.json}; the
 CI-style auditor (\texttt{scripts/p5p8/registry\_audit.py},
 \texttt{experiments/results/p5p8/registry\_audit\_summary.json})
-reports \textbf{31/31 PASS} across both record types (12 \texttt{stack}
+reports \textbf{31/31 PASS} across both record types (20 \texttt{stack}
 records + 11 \texttt{variant\_delta} records, with the original 8
 deltas plus the 8 added in iter~6). All 11 deltas that any stack record
 claims are present in the catalog, and there are zero broken
@@ -60,13 +60,13 @@ delta\_scafgrpo  &  1 & 0 & 0 & 0 & 1 & risk-index only \\
 
 \subsection{Per-item MIN-REPORT coverage}
 Table~\ref{tab:p6-coverage} reports per-item reporting coverage over
-all 12 shipped \texttt{stack} records, expressed as the fraction of
+all 20 shipped \texttt{stack} records, expressed as the fraction of
 leaves that are non-null under the registry convention (null =
 UNREPORTED; explicit false / 0.0 / ``none'' = reported-as-absent).
 
 \begin{table}[t]
 \centering
-\caption{Per-item MIN-REPORT coverage on the shipped 12 stack records
+\caption{Per-item MIN-REPORT coverage on the shipped 20 stack records
 (\texttt{loss\_form} has 6 leaves, \texttt{sampler\_backend} has 4,
 the other items have 2--3; counts are filled-leaves / total-leaves).}
 \label{tab:p6-coverage}
@@ -89,11 +89,11 @@ decontamination      &   8 /  40 &  20\% & only the four \texttt{colab-open} arm
 \end{table}
 
 \subsection{Per-framework breakdown}
-The same audit exposes a sharp openness gradient. Among the 12 stack
+The same audit exposes a sharp openness gradient. Among the 20 stack
 records, the four \texttt{colab-open-trainer} arms achieve 100\% coverage
 on six of the seven items and 75\% on the seventh (the four missing
 leaves are \texttt{sampler\_backend.precision}---a field the toy harness
-did not pin). The five \texttt{worktree-zvf130-batch} entries fill 0/30
+did not pin). The five \texttt{repository-zvf130-batch} entries fill 0/30
 leaves on \texttt{loss\_form} and 0/15 on \texttt{reference\_kl} because
 the risk-index harness is a single-batch snapshot, not a full training
 run. The eight \texttt{tinker} managed-runtime entries fill
@@ -103,9 +103,9 @@ leave most of \texttt{loss\_form} unreported (11/48 leaves) and 0/16 on
 ``closed stack, partial report'' observation.
 
 \subsection{Per-openness rollup}
-Across the 12 shipped stack records, the \textbf{open} subset (4
+Across the 20 shipped stack records, the \textbf{open} subset (4
 \texttt{colab-open} + 5 \texttt{zvf130-batch} + 3 framework config
-dumps = 10 entries) reports 91.7\% on \texttt{sampler\_backend}, 83.3\%
+dumps = 12 entries) reports 91.7\% on \texttt{sampler\_backend}, 83.3\%
 on \texttt{telemetry}, and 58.3\% on \texttt{reference\_kl}; the
 \textbf{managed} subset (8 \texttt{tinker} entries) reports 100\% on
 \texttt{sampler\_backend} and \texttt{telemetry} but only 33.3\% on
@@ -193,7 +193,7 @@ without complaint.
 MIN-REPORT items was declared in \texttt{properties} but \emph{not} in
 \texttt{required}, so a `leaf dropped' edit was indistinguishable from
 a `leaf = null' edit. The audit's per-leaf coverage was a value-null
-check, not a key-presence check; this iter promotes the latter to a
+check, not a key-presence check; this iteration promotes the latter to a
 schema invariant.
 \item \textbf{Patch (c)}:
 \texttt{variant\_deltas\_applied[*].delta\_id} was a free-form string.

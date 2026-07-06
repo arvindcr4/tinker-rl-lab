@@ -82,14 +82,14 @@ registry's auditability: a 27.8\% exposure rate means 13 of 18
 claimed delta components were structurally invisible. The iter-32 bump
 closes the largest cluster of those gaps (those that map to a
 specific \emph{loss-form} leaf) and lifts exposure to 50.0\%. The
-remaining 9 invisible pairs (not closed by this iter) all live in
+remaining 9 invisible pairs (not closed by this iteration) all live in
 \emph{blocks the schema does not yet expose}: signal priors
 (\texttt{entropy prior} for AERO, \texttt{per-prompt diversity bonus}
 for MC-GRPO, \texttt{scaffold-aware advantage} for SCAF-GRPO),
 rollout-budget decoupling (AREAL), MCTS rollouts (MC-GRPO), and
 central-difference perturbations (ES). These require a future
 schema bump that adds \texttt{signal\_prior} or \texttt{rollout}
-blocks---not done in this iter because no current entry claims such
+blocks---not done in this iteration because no current entry claims such
 blocks and the bump would be speculative.
 
 \paragraph{Why the implementation-honesty match rate dropped from 7/7
@@ -209,7 +209,7 @@ random: ``mainline'' methods with tinker-managed measurement
 (\texttt{aero}, \texttt{areal}, \texttt{gift}, \texttt{drgrpo},
 \texttt{dapo}/\texttt{colab-open}) carry \texttt{implemented} /
 \texttt{surrogate} / \texttt{absent}; research methods from the
-\texttt{worktree-zvf130-batch} dry-run framework
+\texttt{repository-zvf130-batch} dry-run framework
 (\texttt{cppo}, \texttt{es}, \texttt{mcgrpo}, \texttt{ngrpo},
 \texttt{scafgrpo}) carry \texttt{unknown} exclusively. This is the
 honest disclosure pattern: a measured run reports
@@ -280,7 +280,7 @@ audits claim \emph{provenance}. This iter audits
 \emph{implementation coherence}: every technique the catalog defines
 is claimed somewhere, every claim is classified into one of four
 honest status buckets, and every \texttt{implemented} claim that the
-worktree can measure \emph{is} measured with direction-consistent
+repository can measure \emph{is} measured with direction-consistent
 CIs. The registry is no longer a static catalog --- it is a
 machine-readable platform whose \texttt{(delta, component)} cells can
 be queried from the CLI and cross-validated against measured deltas

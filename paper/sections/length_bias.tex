@@ -14,7 +14,8 @@
 
 \paragraph{Headline question.}
 The Dr.~GRPO thesis~\cite{tong2025drgrpo} and the broader
-verbosity-trap literature~\cite{mcgrpo2025} predict that GRPO
+length-bias / reward-hacking literature~\cite{ouyang2022training, christiano2017deeprlhf}
+predict that GRPO
 \emph{systematically} inflates response length during training:
 longer outputs mechanically accumulate more gradient signal
 regardless of correctness, the model first learns to associate length
@@ -147,7 +148,6 @@ Dr.~GRPO ends with a slightly larger length on the hard task
 \IfFileExists{figures/length_vs_reward.pdf}{%
 \includegraphics[width=0.95\linewidth]{figures/length_vs_reward.pdf}%
 }{%
-\fbox{\parbox{0.85\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: \texttt{figures/length\_vs\_reward.pdf} pending regeneration.]}\vspace{1em}}}%
 }
 \caption{Per-step trajectories of $(\texttt{mean\_comp\_len}, \texttt{mean\_reward})$ for all
 five GRPO seeds (blue) and five Dr.~GRPO seeds (red) on Qwen2.5-0.5B / arithmetic (right panel)
@@ -441,7 +441,6 @@ possibility of inflation.
 \IfFileExists{figures/length_vs_reward_elevated.pdf}{%
 \includegraphics[width=0.98\linewidth]{figures/length_vs_reward_elevated.pdf}%
 }{%
-\fbox{\parbox{0.85\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: \texttt{figures/length\_vs\_reward\_elevated.pdf} pending regeneration.]}\vspace{1em}}}%
 }
 \caption{Elevation of Pillar~4. \textbf{(A)}~Sliding-window
 trap-onset detection ($W{=}10$, $\rho_\text{len}>0.3$,
@@ -571,7 +570,6 @@ neither Pillar~2 nor Pillar~4 alone can produce.
 \IfFileExists{figures/length_zvf_coupling.pdf}{%
 \includegraphics[width=0.98\linewidth]{figures/length_zvf_coupling.pdf}%
 }{%
-\fbox{\parbox{0.85\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: \texttt{figures/length\_zvf\_coupling.pdf} pending regeneration.]}\vspace{1em}}}%
 }
 \caption{Cross-pillar coupling of length and ZVF
 (iter~12). \textbf{(A)} Per-(task, algo) Spearman
@@ -661,7 +659,6 @@ underlying task distribution.
 \IfFileExists{figures/length_bias_reward_shape.pdf}{%
 \includegraphics[width=0.98\linewidth]{figures/length_bias_reward_shape.pdf}%
 }{%
-\fbox{\parbox{0.85\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: \texttt{figures/length\_bias\_reward\_shape.pdf} pending regeneration.]}\vspace{1em}}}%
 }
 \caption{Reward-shape decomposition $E[R \mid L]$ on the per-step
 trajectories (iter~16). \textbf{(Left)} arithmetic\_easy
@@ -769,7 +766,6 @@ linking Pillar~2's ZVF diagnostic to Pillar~4's length-bias decomposition.
 \IfFileExists{figures/length_bias_mechanism.pdf}{%
 \includegraphics[width=0.98\linewidth]{figures/length_bias_mechanism.pdf}%
 }{%
-\fbox{\parbox{0.85\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: \texttt{figures/length\_bias\_mechanism.pdf} pending regeneration.]}\vspace{1em}}}%
 }
 \caption{Mechanism test for Dr.GRPO (iter~20).
 \textbf{(A)} Per-step scatter of mean completion length $L_t$ vs mean
@@ -935,7 +931,6 @@ from being executed.
 \IfFileExists{figures/length_bias_iter24.pdf}{%
 \includegraphics[width=0.95\linewidth]{figures/length_bias_iter24.pdf}%
 }{%
-\fbox{\parbox{0.85\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: \texttt{figures/length\_bias\_iter24.pdf} pending regeneration.]}\vspace{1em}}}%
 }
 \caption{Iter~24 drift and forecast test. \textbf{(A)}~Sliding-window Spearman
 $\rho_w(\mathrm{len}, R)$ at $w{=}10$, split into early / mid / late windows per

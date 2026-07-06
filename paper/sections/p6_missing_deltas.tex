@@ -9,11 +9,11 @@ Three were closed by the same iter (CI-style validator, coverage grid,
 verdict-signature clustering); the fourth --- ``add new entries for
 the missing framework $\times$ method cells'' --- was deferred because
 ``the entry would require measured data on a new cell that is not
-currently in the worktree'' (Section~\ref{sec:p6-registry-health-iter50}).
+currently in the repository'' (Section~\ref{sec:p6-registry-health-iter50}).
 This subsection
 closes the fourth vein: three new $\texttt{delta\_*.json}$ ship this
 iter, two of them as honest provenance-only placeholders and the
-third as a measured same-stack delta on the worktree's own
+third as a measured same-stack delta on the repository's own
 $\texttt{qp7\_adaptive.tsv}$ panel.
 
 \paragraph{New entries.}
@@ -46,7 +46,7 @@ entry itself rather than hidden.
 \paragraph{Cross-reference audit ($\texttt{missing\_delta\_audit.tsv}$).}
 For every $\texttt{(stack, variant\_deltas\_applied[*].delta\_id)}$
 pair, check whether $\texttt{registry/entries/\textless delta\_id \textgreater.json}$
-exists. Before this iter, the audit could not run; after this iter it
+exists. Before this iteration, the audit could not run; after this iteration it
 audits \textbf{26 (stack, delta) claims} and finds \textbf{0
 CLAIMED\_BUT\_MISSING} --- every delta claimed by a stack now
 resolves to a registered entry. The new
@@ -71,7 +71,7 @@ $\Delta_{\text{zvf}} = \mathbf{-0.0742}$ [$95\%$ CI $-0.1211$,
 $-0.0312$] (SUPPORTS predicted $<0$, CI excludes 0). This is the
 first machine-readable evidence that the ZVF-driven adaptive
 group-size schedule (the iter-47/51 P7 unified controller bank's
-escalation branch) measurably reduces ZVF on the worktree's own
+escalation branch) measurably reduces ZVF on the repository's own
 live same-stack panel.
 \item \textbf{Coverage grid 102/156 = 65.4\%} (was 84/138 = 60.9\%
 at iter 50; the +18 cells come from the 3 new methods appearing in
@@ -89,7 +89,7 @@ $\texttt{delta\_adaptiveg}$ forms its own singleton cluster.
 \begin{table}[t]
 \centering\small
 \caption{Iter-54 new $\texttt{delta\_*.json}$ summary. The Adaptive-G
-delta carries a measured block on a real worktree panel; the other two
+delta carries a measured block on a real repository panel; the other two
 are honest provenance-only placeholders with $\texttt{measured}=[]$
 (their $\texttt{notes}$ field states the criterion for adding a
 measured row).}
@@ -121,7 +121,7 @@ make the missing-data surface machine-readable, not hidden.
 \paragraph{Cross-paper coupling.}
 The $\Delta_{\text{zvf}}$ SUPPORTS verdict is the \emph{third}
 empirical confirmation (after iter-31 and iter-47) that
-ZVF-driven adaptive group-size reduces ZVF on a real worktree panel;
+ZVF-driven adaptive group-size reduces ZVF on a real repository panel;
 the chain predicted-effect $\to$ measured-effect on the same panel
 is now a closed loop for the adaptive-G delta. The
 $\Delta_{\text{reward\_mean}}$ NEUTRAL on 16 obs is informative on

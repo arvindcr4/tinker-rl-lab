@@ -1,0 +1,55 @@
+% Pillar-5 (MIN-REPORT-RL) reference verifier: from checklist to executable CI gate
+\section{A Reference Verifier: MIN-REPORT-RL as an Executable Gate}
+\label{sec:p5-verifier}
+The toolchain of \secref{sec:p5-toolchain} is a specification; a standard is
+only enforceable once a machine can reject a non-compliant run without a human
+in the loop. We therefore implement a reference verifier
+(\texttt{registry/provenance/minreport.py}, stdlib-only) that turns the
+seven-item block from a descriptive checklist into an automated gate. This is
+the load-bearing distinction from the GRPO-Registry of \tableref{tab:implementations}
+and the P6 catalog: a registry \emph{catalogs} what a run declares; the verifier
+\emph{recomputes} and \emph{rejects}.
+
+\paragraph{The record.} A run emits a provenance record
+(\texttt{*.provenance.json}) with four blocks: \texttt{min\_report\_rl} (the
+seven reportable items---loss form, reference-KL, sampler backend, telemetry,
+group-size schedule, held-out split, decontamination); \texttt{provenance}
+(cryptographic anchors: \texttt{git\_sha}, \texttt{code\_file} with its
+\texttt{code\_hash}, \texttt{reward\_fn\_hash}, \texttt{data\_hash},
+\texttt{config\_hash}); \texttt{rigor} (\texttt{n\_seeds}, the seed list,
+\texttt{reports\_heldout}, \texttt{heldout\_disjoint}, \texttt{reports\_ci});
+and \texttt{results}. The emitter generates the record from the same config the
+trainer executes, so the manifest is a build artifact rather than a writing
+task.
+
+\paragraph{Three grading axes.} \texttt{minreport.py verify} scores a run on a
+weighted rubric and returns a reproducibility badge \textbf{A--F}.
+\emph{Completeness}: all seven MIN-REPORT items are present and non-null.
+\emph{Integrity}: the provenance hashes exist and, crucially, the recorded
+\texttt{code\_hash} is \emph{recomputed against the live source file}, catching
+code drift between the run and the claim. \emph{Rigor}: the check hard-\textsc{fails}
+when \texttt{n\_seeds}${}<3$ (the single-seed trap), and further requires a
+disjoint held-out split with uncertainty reported. Weights concentrate on the
+axes that ordinary checklists never test---the seed-power gate carries the
+heaviest weight, and \texttt{verify --strict} exits non-zero below grade~B so a
+continuous-integration job can block a merge.
+
+\paragraph{The A-vs-FAIL demonstration, on this repo's own runs.} Run against
+our multi-seed campaign (three seeds, disjoint held-out, \texttt{code\_hash}
+verified against live source), the verifier awards \textbf{A (100\%)}. Run
+against the original single-seed sweep that produced the same headline numbers,
+it \textbf{FAILS the rigor axis}: \texttt{n\_seeds}${}=1$ trips the underpowered
+gate automatically. The verifier flags, in one command, exactly the weakness a
+careful manual reviewer would catch by hand---which is the point of making the
+standard executable rather than aspirational.
+
+\paragraph{Tamper-evidence.} A companion signer
+(\texttt{registry/provenance/sign.py}) produces a detached ed25519 signature
+over the canonicalized record (keys ordered, whitespace normalized, every value
+significant). Its self-test signs a record, verifies the pristine copy
+(\textsc{pass}), mutates one field---a forged \texttt{git\_sha}---and re-verifies
+against the same signature (\textsc{fail}), so any post-hoc edit to a published
+provenance record is detectable; where the \texttt{cryptography} library is
+absent it degrades to an HMAC-SHA256 MAC and records that the fallback gives
+tamper-evidence but not non-repudiation. Together the verifier and signer move
+MIN-REPORT-RL from a norm authors may follow to a gate a repository can enforce.

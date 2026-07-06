@@ -51,7 +51,7 @@ reuses it.
 \end{enumerate}
 
 The audit (\texttt{scripts/p5p8/p6\_iter162\_registry\_groundtruth\_audit.py})
-joins each entry's claims against the worktree's ground-truth at these three
+joins each entry's claims against the repository's ground-truth at these three
 layers, surfaces the gap count per layer and per entry, and computes a per-
 entry \texttt{registry\_integrity\_score} (fraction of the applicable
 ground-truth checks that pass).
@@ -72,7 +72,7 @@ which was absent from \texttt{references.bib}.
 \paragraph{Fix applied.} \texttt{delta\_ppo} was updated to use the
 canonical \texttt{schulman2017proximal} key. The other three bibkeys
 (representing either canonical papers whose bibkey had never been added or
-worktree-internal placeholders) were added to \texttt{paper/references.bib}
+repository-internal placeholders) were added to \texttt{paper/references.bib}
 as \texttt{@misc} entries with full author/title/year/note provenance,
 including a \texttt{note} field pointing to the canonical source paper for
 the underlying algorithm.

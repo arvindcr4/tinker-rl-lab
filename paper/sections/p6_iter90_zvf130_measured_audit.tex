@@ -18,7 +18,7 @@ of per-step ZVF features. The registry already carries five
 \texttt{zvf130\_$<\mathrm{method}>$.json} entries (CPPO, ES, MCGRPO, NGRPO,
 SCAFGRPO) under the shared Tinker Qwen3-8B harness, and 14
 \texttt{delta\_$<\mathrm{method}>$.json} claim records covering every
-variant on the panel. \emph{Prior to this iteration, every
+variant on the panel. \emph{Prior to this iterationation, every
 \texttt{zvf130\_$<\mathrm{method}>$.json} entry had
 \texttt{outcomes.zvf\_risk\_mean = null} --- the measured risk value was
 sitting in \texttt{zvf\_iter130\_method\_risk.tsv} but never recorded in the
@@ -94,7 +94,7 @@ Registry consumers should now prefer \texttt{outcomes.zvf\_risk\_mean}
 on \texttt{zvf130\_$<\mathrm{method}>$} entries as the canonical
 ``single-batch same-stack risk index'' field; the
 \texttt{outcomes.delta\_vs\_grpo\_mean / \_ci\_lo / \_ci\_hi / \_sig} block
-added by this iteration gives a uniform per-variant significance filter.
+added by this iterationation gives a uniform per-variant significance filter.
 Future registry audits should treat
 \texttt{outcomes.zvf\_risk\_mean = null} on a \texttt{zvf130\_$<\mathrm{method}>$}
 entry as a \emph{red-flag gap}, not as ``reported-as-absent'' (the existing

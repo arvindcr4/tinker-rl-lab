@@ -9,7 +9,8 @@ generated with scikit-learn's \texttt{make\_classification}
 \citep{pedregosa2011sklearn} with a fixed seed (42): $50{,}000$ rows, $20$
 anonymized numeric features $V_1,\dots,V_{20}$ (10 informative, 2 redundant),
 two clusters per class, class separation $0.8$, $1\%$ label noise
-(\texttt{flip\_y}$=0.01$), and a $1\%$ positive (``fraud'') rate---the
+(\texttt{flip\_y}$=0.01$), and a $1\%$ target positive (``fraud'') rate
+(realized $1.44\%$ after the label noise)---the
 class-imbalance regime typical of card fraud \citep{dalpozzolo2018realistic}.
 The anonymized $V$-feature convention deliberately mirrors the PCA-transformed
 feature sets that single-institution card-fraud datasets expose after
@@ -22,7 +23,10 @@ features total.
 
 \paragraph{Split and metric.}
 An 80/20 stratified train/test split (seed 42) yields $40{,}000$ training and
-$10{,}000$ test rows, with roughly $100$ positives in the test set. The primary
+$10{,}000$ test rows, with $144$ positives in the test set (a realized
+$1.44\%$ fraud rate: the generator targets $1\%$ but the
+\texttt{flip\_y}$=0.01$ label noise raises the realized positive rate to
+$1.44\%$ across the full $50{,}000$ rows). The primary
 metric is held-out ROC-AUC; F1, precision, and recall at the default threshold
 are logged alongside. Both arms consume \emph{identical} splits: the split
 files are written to disk once and the LLM arm is fine-tuned on a textual
@@ -40,7 +44,10 @@ released with the paper) that also emits wall-clock training and per-10k-row
 inference times. One disclosure belongs here rather than in the limitations:
 the current quick artifact reports test AUC $0.7955$ for this XGBoost arm
 on $10{,}000$ held-out rows
-(\texttt{experiments/results/quick\_20260704/qp8\_fraud.tsv}). An older
+(\texttt{experiments/results/quick\_20260704/qp8\_fraud.tsv}); the released
+script's own output (\texttt{xgboost\_results.json}) logs
+$\mathrm{AUC}{=}0.7942$ under a slightly different feature/library
+configuration, i.e.\ the two released artifacts agree to two decimals. An older
 21~June~2026 internal record listed XGBoost at AUC $0.975$, but we could not
 reconstruct that environment and do not use that number as a reproducible
 headline result (\secref{sec:p8-limitations}).

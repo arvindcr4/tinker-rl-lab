@@ -1,14 +1,15 @@
 % Paper 6 measured-vs-claimed reconciliation section. Iter 18.
 % For each of the 11 registry variant-delta records, score the agreement
 % between the registry's qualitative claim (parsed from claim_summary)
-% and the measured proxies available in the worktree (N2 same-stack
+% and the measured proxies available in the repository (N2 same-stack
 % four-method tensors + zvf130 5-seed risk index + registry-side claimant
 % stacks).
 \section{Measured-vs-Claimed Variant-Delta Reconciliation}
 \label{sec:p6-measured-claimed}
 
 The previous section established that the registry's same-stack reward
-deltas are all within paired bootstrap noise. That finding isolates the
+deltas are all $\leq 2$pp in magnitude (with the AERO and AREAL
+decreases statistically significant). That finding isolates the
 reward axis; this section asks the broader question: \emph{for each
 named variant delta, does the registry's qualitative claim survive
 quantitative scrutiny on every measurable proxy available?}
@@ -23,7 +24,7 @@ each, build three evidence bases:
     \texttt{zvf}, \texttt{loss}, \texttt{mean\_len}, \texttt{cv\_len},
     \texttt{reward\_mean}.
   \item \textbf{zvf130 5-seed risk index} --- mean ZVF across 5 seeds
-    on the worktree's canonical prompt distribution, for 9 of the 11
+    on the repository's canonical prompt distribution, for 9 of the 11
     variants. The variants not covered by this panel are
     \texttt{dapo}, \texttt{drgrpo}, \texttt{gspo}.
   \item \textbf{Registry-side claimant stacks} --- the number and status
@@ -122,8 +123,9 @@ Three things it rules out:
 \begin{itemize}
   \item The reward-axis claim (\emph{``variant $X$ improves reward''})
     is not supported on the N2 same-stack data for any of the 4
-    measured variants --- every reward CI contains 0. The iter-2
-    finding stands.
+    measured variants --- the largest effect is a $2$pp reward
+    \emph{decrease} (AERO $-0.014$, AREAL $-0.020$, both CIs exclude 0),
+    so no variant improves reward and two significantly lower it.
   \item The within-group-contrast claim (\emph{``variant $X$ raises
     within-group contrast''}) is contradicted by the zvf130 panel for
     every variant that makes such a claim.

@@ -5,7 +5,7 @@
 The brief's vein (b) calls for an explicit coverage audit at
 \emph{field-level} granularity across all registry entries: which optional
 blocks are populated vs null, which framework$\times$method cells carry
-entries, and which methods appear in the worktree's experiment ledger
+entries, and which methods appear in the repository's experiment ledger
 but not in the registry. This subsection reports that audit
 (\texttt{scripts/p5p8/p6\_registry\_field\_coverage.py}, stdlib only,
 B=0; pure structural pass over \texttt{registry/entries/*.json} plus
@@ -32,7 +32,7 @@ criterion: a single paired run with only the named variant change
 applied. This is the \emph{experimental-design} constraint that the
 iter-74 row 87 audit identified; closing it requires a 5+ method
 Tinker panel (DAPO/GSPO/LitePPO/REINFORCE/PPO with only the named
-change vs the N2 GRPO reference). The information gain this iter is
+change vs the N2 GRPO reference). The information gain this iteration is
 narrower: 3 of 5 zero-measured variants (DAPO, GSPO, PPO) now carry
 \texttt{expected\_effects[]} rows sourced from the respective arXiv
 papers (2503.14476, 2507.18071, 1707.06347), so the future auditor
@@ -63,7 +63,7 @@ wandb run, Qwen3.5-4B / gsm8k / G=30) is now closed.
 The audit confirms the iter-74 row 87 experimental-design
 constraint: the remaining 5 zero-measured variants close \emph{only}
 with a new 5+ method Tinker panel. Adding \texttt{expected\_effects}
-to those entries (3 of 5 done in this iter) is necessary but not
+to those entries (3 of 5 done in this iteration) is necessary but not
 sufficient -- a registry entry can carry predicted signs from the
 source paper and still need a same-stack measured block before the
 \texttt{claim\_validation} verdict can move from \texttt{UNCLAIMED}

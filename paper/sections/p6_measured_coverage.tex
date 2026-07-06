@@ -38,7 +38,7 @@ provenance-only additions). The registry-wide \texttt{claim\_validation}
 tally is \textbf{10 SUPPORTS, 2 CONTRADICTS, 4 NEUTRAL, 8 UNCLAIMED}
 across the 24 validation rows total. \textbf{0 measured row's source
 path is missing}---every cited \texttt{.tsv} resolves on disk and
-the audit's freshness window is bounded by the worktree's most recent
+the audit's freshness window is bounded by the repository's most recent
 N2/Z130 writes. The cross-panel agreement finds \textbf{2 of 3 entries
 agree on direction}: AERO (\texttt{Delta\textsubscript{N2 zvf}} =
 $-0.0250$, \texttt{Delta\textsubscript{Z130 risk}} = $-0.1476$)
@@ -99,7 +99,7 @@ shipped with \texttt{measured}=[] as a structural placeholder, with
 the criterion for a measured row stated in \texttt{notes}. The
 audit's \texttt{empty\_measured\_gap} list surfaces class (i) as
 the actionable backlog: 3 entries are awaiting a same-stack panel run
-on the worktree's existing N2/Z130 harness before they can carry a
+on the repository's existing N2/Z130 harness before they can carry a
 measured row.
 
 \paragraph{Why this matters.} Three reviewer-facing consequences.
@@ -115,7 +115,7 @@ empirically thin---e.g. the \texttt{reward\_mean} column on the
 \texttt{zvf130\_5seed} panel is $0/14$, which is a real evidence gap
 (rather than a known absence). Third, the cross-panel agreement row
 for GIFT (\texttt{same\_sign=False}, both rows individually significant)
-is the first \emph{positive finding} this iter surfaces: a
+is the first \emph{positive finding} this iteration surfaces: a
 measurement-confirmed sign disagreement between two same-method
 panels, with the GIFT reweighting story as the candidate
 explanation. This is a finding, not a regression---it is the kind

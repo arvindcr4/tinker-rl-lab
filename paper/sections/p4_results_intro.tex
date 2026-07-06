@@ -1,10 +1,15 @@
 % Pillar-4 (length bias) results opener
 \section{Length Bias and Generalization: Results}
 \label{sec:p4-results}
-We report three findings and then scope them. First, in the short-horizon GSM8K
-chain-of-thought regime, RL post-training does not deliver a significant held-out
-gain: the mean Qwen3-8B GRPO improvement over the pre-RL checkpoint on held-out
-data is small and not statistically significant under our evaluation. Second, GRPO
+We report three findings and then scope them. First, in our near-ceiling
+Qwen3-8B-Instruct evaluation, GRPO post-training does not deliver a significant
+held-out gain: the mean improvement over the pre-RL checkpoint on held-out data is
+small ($+0.013$) and not statistically significant (paired $p=0.256$, $n{=}5$). We
+stress that this is a property of the near-ceiling regime, not of RL in general---in
+the lower-accuracy Qwen2.5-1.5B-Instruct GSM8K-CoT experiment analyzed throughout
+the length sections, both GRPO and Dr.\,GRPO \emph{do} produce significant
+pre$\to$post held-out gains ($+6.2$pp, McNemar exact $p=1.1\times10^{-4}$;
+$+5.0$pp, $p=7.6\times10^{-4}$). Second, GRPO
 and Dr.\,GRPO produce held-out gains that are indistinguishable at our seed
 budget---removing the length-normalization term does not, here, change the
 outcome. Third, under the 200-token GSM8K generation cap, neither algorithm

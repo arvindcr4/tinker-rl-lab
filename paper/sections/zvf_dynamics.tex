@@ -82,8 +82,8 @@ training-time property and not a task property.
 
 \paragraph{(iii) Late-phase minus early-phase drift ranks the methods.}
 The ``training drift'' $\bar z_l - \bar z_e$ is positive for every
-method and is largest for Scaf-GRPO ($+0.13$), CPPO ($+0.68$),
-NGRPO ($+0.67$), and GRPO ($+0.83$); smallest for ES ($+0.22$) and
+method and is largest for GRPO ($+0.83$), CPPO ($+0.68$), and
+NGRPO ($+0.67$); smallest for Scaf-GRPO ($+0.13$), ES ($+0.22$), and
 GIFT ($+0.29$). Notably even though CPPO and NGRPO have lower
 \emph{mean} ZVF than GRPO, they have comparable late-phase ZVF
 ($\bar z_l \approx 0.69$): they start cleaner but converge to the
@@ -200,11 +200,7 @@ robustly.
 
 \begin{figure}[htbp]
 \centering
-\IfFileExists{figures/zvf_dynamics_phase.pdf}{%
-\includegraphics[width=0.85\linewidth]{figures/zvf_dynamics_phase.pdf}%
-}{%
-\fbox{\parbox{0.85\linewidth}{\centering\small\vspace{1em}\textit{[Figure pending regeneration: \texttt{paper/figures/zvf\_dynamics\_phase.pdf}.]}\vspace{1em}}}%
-}
+\includegraphics[width=0.85\linewidth]{figures/zvf_dynamics_phase.pdf}
 \caption{Per-method phase-decomposed ZVF, 5 seeds pooled. Red bars
 (late-phase) dominate green (early-phase) in every method. Numerical
 $\Delta = \bar z_l - \bar z_e$ above each method. GRPO's late bar
@@ -214,11 +210,7 @@ reaches $0.87$, an unmistakable signal-starvation plateau.}
 
 \begin{figure}[htbp]
 \centering
-\IfFileExists{figures/zvf_dynamics_leadtime.pdf}{%
-\includegraphics[width=0.75\linewidth]{figures/zvf_dynamics_leadtime.pdf}%
-}{%
-\fbox{\parbox{0.75\linewidth}{\centering\small\vspace{1em}\textit{[Figure pending regeneration: \texttt{paper/figures/zvf\_dynamics\_leadtime.pdf}.]}\vspace{1em}}}%
-}
+\includegraphics[width=0.75\linewidth]{figures/zvf_dynamics_leadtime.pdf}
 \caption{First-passage step $\tau(\theta; z)$ vs.\ first collapse-flag
 step $t_{\text{collapse}}$ for the 3 (method, seed) collapse events
 we register. Lines parallel to $y=x$ indicate a 1-3 step gap between

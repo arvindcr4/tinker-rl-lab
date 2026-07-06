@@ -42,7 +42,7 @@ On the initial run the validator surfaced 4 MEDIUM-severity gaps: 2
 (notes did not flag as intentional-null) and 2 \texttt{CITATION-INCOMPLETE}
 on \texttt{delta\_adaptiveg} and \texttt{delta\_reinforce} (bibkey present but
 arxiv missing and notes did not flag as transparent-placeholder).
-\textbf{All 4 were closed this iteration on real evidence.}
+\textbf{All 4 were closed this iterationation on real evidence.}
 For DAPO and GSPO: \texttt{scripts/p5p8/p6\_iter94\_close\_surrogate\_gaps.py}
 patches each entry's \texttt{notes} with a surrogate-marker that cites the
 existing \texttt{tinker\_dapo\_qwen3.5-4b\_gsm8k} / \texttt{tinker\_gspo\_qwen3.5-4b\_gsm8k}
@@ -53,7 +53,7 @@ row sourced from that stack would \emph{advertise the surrogate as the real
 algorithm}. For \texttt{delta\_reinforce}: the Williams 1992 REINFORCE paper
 predates arXiv (founded 1991, mainstream 2000s) so no arXiv id is canonical;
 \texttt{notes} is patched with the canonical journal DOI surface
-(10.1007/BF00992696). For \texttt{delta\_adaptiveg}: Adaptive-G is a worktree
+(10.1007/BF00992696). For \texttt{delta\_adaptiveg}: Adaptive-G is a repository
 implementation (live in \texttt{colab-open\_grpo-adaptiveg\_e3} and the P7
 unified controller bank from iter 47/51), not a peer-reviewed paper;
 \texttt{notes} is patched with a future-criterion pointer.

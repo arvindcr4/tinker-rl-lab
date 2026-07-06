@@ -21,11 +21,11 @@ mixed-reward groups.
 We study $G$ as one pillar of \ours{}, a controlled benchmark of 70+ runs across
 seven RL libraries and five model families ($0.6$B--$\sim$671B) on GSM8K
 \citep{cobbe2021training}, HumanEval~\citep{chen2021codex}, and tool-use tasks. Our
-contributions are: (i) a measurement showing the effect of $G$ is non-monotone,
-with intermediate sizes often best and no universal optimum, quantified by a
-$G{=}4$ versus $G{=}32$ sweep with near-complete reward retention and a
-signal-to-noise ratio that grows at only $\approx 52\%$ of the $\sqrt{G}$ ideal;
-(ii) an explicit validation, against measured gradients, that the group-centered
+contributions are: (i) an illustrative reconstruction showing the effect of $G$ is non-monotone,
+with intermediate sizes often best and no universal optimum, illustrated by a
+$G{=}4$ versus $G{=}32$ comparison with near-complete reward retention and an
+estimated signal-to-noise ratio that grows at only $\approx 52\%$ of the $\sqrt{G}$ ideal;
+(ii) an explicit validation, via observable signatures in logged diagnostics, that the group-centered
 update is an all-pairs preference contrast---the ``GRPO is secretly DPO'' bridge;
 and (iii) equivalence and difficulty-stratified analyses (TOST) that separate a
 variance-reduction reading of the $G$ effect from a preference-density one. We make
@@ -39,5 +39,5 @@ The preference-learning view descends from
 DPO~\citep{rafailov2024direct} and its relatives~\citep{azar2024ipo, ethayarajh2024kto, hong2024orpo}, and the GRPO$\leftrightarrow$DPO correspondence has been examined
 directly~\citep{wu2025grpo_dpo, liu2026gdpo}. Our contribution is empirical: rather
 than derive the bridge in isolation, we validate the all-pairs contrast identity
-against measured GRPO gradients and connect the group-size effect to preference
+against logged GRPO diagnostic signatures and connect the group-size effect to preference
 density on a fixed benchmark.

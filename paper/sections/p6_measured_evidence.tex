@@ -14,8 +14,8 @@ step (\texttt{experiments/results/n2\_reward\_tensor\_resume/}).
 Every shipped record parses against the registry schema. The CI-style
 auditor (\texttt{scripts/p5p8/registry\_validate.py},
 \texttt{experiments/results/p5p8/registry\_schema\_check.tsv}) reports
-\textbf{15/15 entries pass}: 12 \texttt{stack} records (badges $57$--$96$)
-and 3 \texttt{variant\_delta} records.
+\textbf{31/31 entries pass}: 20 \texttt{stack} records (badges $43$--$96$)
+and 11 \texttt{variant\_delta} records.
 
 \subsection{Measured deltas on the same stack}
 Table~\ref{tab:p6-measured-deltas} reports paired bootstrap means and
@@ -26,31 +26,34 @@ prompt-set drift.
 
 \begin{table}[t]
 \centering
-\caption{Same-stack variant deltas from the N2 four-method run
-(seed $0$, $G{=}8$, last-10 steps; paired bootstrap CI on per-step
-scalar, then per-prompt pooled). All reward deltas are within paired
-bootstrap noise; the only significant deltas are length / length-CV
-(AERO, AREAL shorten completions) and the GIFT additive-constant shift
-in the loss (its gamma-style likelihood baseline).}
+\caption{Same-stack variant deltas ($\Delta = \text{variant} - \texttt{grpo}$)
+from the N2 four-method run (seed $0$, $G{=}8$, last-10 steps; paired
+bootstrap CI on per-step scalar, then per-prompt pooled). The reward
+deltas are all $\leq 2$pp in magnitude; AERO and AREAL show small but
+statistically significant reward \emph{decreases}. The largest effects
+are on the length distribution: AERO and AREAL \emph{lengthen}
+completions by $\sim$31 tokens and reduce length-CV. GIFT raises ZVF
+($+0.125$) and shifts the loss by its gamma-style additive baseline
+constant.}
 \label{tab:p6-measured-deltas}
 \small
 \begin{tabular}{lllrrr}
 \toprule
 Metric (scope)        & variant & grpo mean & var. mean & $\Delta$ & 95\% CI \\
 \midrule
-reward\_mean (last-10) & aero    & 0.851 & 0.865 & $+0.014$  & $[+0.000,\,+0.039]$ \\
-reward\_mean (last-10) & gift    & 0.851 & 0.834 & $-0.016$  & $[-0.063,\,+0.047]$ \\
-reward\_mean (last-10) & areal   & 0.851 & 0.871 & $+0.020$  & $[-0.008,\,+0.055]$ \\
-zvf (last-10)          & gift    & 0.86  & 0.74  & $-0.125$  & $[-0.250,\,+0.000]$ \\
-mean\_len (last-10)    & aero    & 332.0 & 300.9 & $-31.08$  & $[-41.12,\,-23.43]^{\dagger}$ \\
-mean\_len (last-10)    & areal   & 332.0 & 301.9 & $-30.13$  & $[-41.10,\,-16.25]^{\dagger}$ \\
-cv\_len (last-10)      & aero    & 0.327 & 0.362 & $+0.034$  & $[+0.014,\,+0.069]^{\dagger}$ \\
-cv\_len (last-10)      & areal   & 0.327 & 0.366 & $+0.038$  & $[+0.019,\,+0.062]^{\dagger}$ \\
-loss (last-10)         & gift    & $-1.7\!\times\!10^{4}$ & $-2.4\!\times\!10^{2}$ & $+1.67\!\times\!10^{4}$ & $[+1.49\!\times\!10^{4},\,+1.94\!\times\!10^{4}]^{\dagger}$ \\
+reward\_mean (last-10) & aero    & 0.861 & 0.847 & $-0.014$  & $[-0.023,\,-0.005]^{\dagger}$ \\
+reward\_mean (last-10) & gift    & 0.861 & 0.877 & $+0.016$  & $[-0.007,\,+0.040]$ \\
+reward\_mean (last-10) & areal   & 0.861 & 0.841 & $-0.020$  & $[-0.032,\,-0.008]^{\dagger}$ \\
+zvf (last-10)          & gift    & 0.775 & 0.900 & $+0.125$  & $[+0.081,\,+0.175]^{\dagger}$ \\
+mean\_len (last-10)    & aero    & 319.6 & 350.7 & $+31.08$  & $[+27.38,\,+35.09]^{\dagger}$ \\
+mean\_len (last-10)    & areal   & 319.6 & 349.7 & $+30.13$  & $[+25.17,\,+34.60]^{\dagger}$ \\
+cv\_len (last-10)      & aero    & 0.325 & 0.291 & $-0.034$  & $[-0.069,\,-0.014]^{\dagger}$ \\
+cv\_len (last-10)      & areal   & 0.325 & 0.287 & $-0.038$  & $[-0.062,\,-0.019]^{\dagger}$ \\
+loss (last-10)         & gift    & $+2.3\!\times\!10^{2}$ & $-1.6\!\times\!10^{4}$ & $-1.67\!\times\!10^{4}$ & $[-1.94\!\times\!10^{4},\,-1.49\!\times\!10^{4}]^{\dagger}$ \\
 \midrule
-reward\_mean (per-prompt, $n{=}16$) & aero  & --- & --- & $+0.007$ & $[-0.028,\,+0.050]$ \\
-reward\_mean (per-prompt, $n{=}16$) & gift  & --- & --- & $-0.011$ & $[-0.031,\,+0.013]$ \\
-reward\_mean (per-prompt, $n{=}16$) & areal & --- & --- & $+0.006$ & $[-0.016,\,+0.044]$ \\
+reward\_mean (per-prompt, $n{=}16$) & aero  & --- & --- & $-0.007$ & $[-0.050,\,+0.028]$ \\
+reward\_mean (per-prompt, $n{=}16$) & gift  & --- & --- & $+0.011$ & $[-0.013,\,+0.031]$ \\
+reward\_mean (per-prompt, $n{=}16$) & areal & --- & --- & $-0.006$ & $[-0.044,\,+0.016]$ \\
 \bottomrule
 \end{tabular}\\
 \footnotesize{$^{\dagger}$ CI excludes $0$; per-prompt means omitted
@@ -59,13 +62,20 @@ reward\_mean (per-prompt, $n{=}16$) & areal & --- & --- & $+0.006$ & $[-0.016,\,
 \end{table}
 
 \subsection{What this rules in and out}
-The measured reward deltas are all within paired bootstrap noise at the
-same stack---direct quantitative corroboration of the Pillar-1
-``algorithm does not move outcome once stack is fixed'' reading. The
-length / length-CV deltas for AERO and AREAL are real, but they are
-\emph{not} reward improvements: they are different prompt--completion
-distributions under the same reward, consistent with sequence-level
-importance-ratio methods collapsing long completions. GIFT's loss
+The measured reward deltas are all $\leq 2$pp in magnitude at the same
+stack---direct quantitative corroboration of the Pillar-1 ``algorithm
+barely moves outcome once stack is fixed'' reading. Two of the three
+(AERO $-0.014$ and AREAL $-0.020$) are statistically significant on the
+last-10 per-step scalar (CI excludes $0$; corroborated by the iter-190
+raw-recompute audit in Sec.~\ref{sec:p6-iter190-raw-recompute}), but both are tiny
+reward \emph{decreases}, not improvements, so the magnitude thesis holds
+while the ``all within noise'' claim does not. The length / length-CV
+deltas for AERO and AREAL are the largest same-stack effects, but they
+are \emph{not} reward improvements: they are different
+prompt--completion distributions under the same reward, with AERO and
+AREAL \emph{lengthening} completions ($\sim$31 tokens) and tightening
+the length-CV, consistent with sequence-level importance-ratio methods
+reshaping the length distribution rather than the outcome. GIFT's loss
 additive shift is a baseline constant, not an outcome.
 
 The registry's job is to make these distinctions visible. An entry that

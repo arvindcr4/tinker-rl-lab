@@ -10,7 +10,7 @@ importance ratio from tokens to sequences~\citep{qwen2025gspo}; and a long tail
 of further variants adjusts baselines, curricula, or advantage estimators
 \citep{lin2025cppo, nan2025ngrpo, zhang2025scaffgrpo, mcgrpo2025, gift2025,
 liu2026gdpo, ichihara2025mogrpo, lu2025grpolead, bytedance2025vapo,
-hu2026openvlthinker, le2025rlzvp}. Each delta is documented---but in prose, in
+le2025rlzvp}. Each delta is documented---but in prose, in
 an appendix, in a YAML default, or in a code path that a framework may or may
 not implement. There is no machine-readable place to ask: \emph{which changes
 does this stack actually make to base GRPO, and which of them does my launcher
@@ -19,7 +19,7 @@ actually execute?}
 This gap is not cosmetic. Across the \ours{} program we repeatedly measured the
 same algorithm label producing different updates. Holding model, group size,
 learning rate, data, and seed fixed and swapping only the backend moved final
-GSM8K reward from $84.4\%$ to $5.0\%$---a $17\times$ swing under an identical
+GSM8K reward from $85.6\%$ to $5.0\%$---a $17\times$ swing under an identical
 label. Running ``DAPO'' on an open Colab trainer whose dynamic sampling
 demonstrably filters zero-variance groups produced mean ZVF $0.00$; running
 ``DAPO'' on a closed managed stack, where only an asymmetric-clip surrogate is
@@ -45,9 +45,10 @@ which is exactly where label flips become visible to a script.
 Our contributions are:
 (i) the schema (Section~\ref{sec:p6-schema});
 (ii) verified delta records for DAPO, Dr.~GRPO, and GSPO;
-(iii) twelve seed entries populated from real artifacts of this benchmark---the
-released per-framework config dumps, an open-trainer audit, and a
-managed-runtime head-to-head (Section~\ref{sec:p6-population});
+(iii) twenty seed entries populated from real artifacts of this benchmark---the
+released per-framework config dumps, an open-trainer audit, a
+managed-runtime head-to-head, a same-stack four-method run, and a five-seed
+risk-index batch (Section~\ref{sec:p6-population});
 (iv) a query API, a 0--100 MIN-REPORT auditor badge, and a \texttt{stackdiff}
 tool that converts a pair of entries into a flip-risk verdict on the R0--R5
 ladder (Section~\ref{sec:p6-query}); and

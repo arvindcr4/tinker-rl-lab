@@ -38,13 +38,24 @@ XGB-4sensor  & $10{,}000$ & $144$ & $0.9746$ & $0.9835$ & $0.444$ & $0.576$ & $0
 \end{tabular}
 \end{table}
 
-The first observation is that on the released synthetic fraud split the
-tree achieves high held-out AUC in absolute terms ($0.998{-}0.999$ on
-$10{,}000$ rows with $144$ positives). Both arm variants are accurate to
-four decimal places and well calibrated (Brier $\le 0.005$, ECE-10
-$\le 0.04$). We retain the historical quick-artifact value
-$\mathrm{AUC}{=}0.7955$ in \secref{sec:p8-scorer} for archaeological
-honesty; the iter-4 reproducible number is $\mathrm{AUC}{=}0.9988$.
+The tables in this section report AUC $0.998{-}0.999$ for the tree on
+$10{,}000$ rows with $144$ positives, but this figure must be read as a
+\emph{within-protocol relative} comparison, not an absolute operating
+number. The calibration and robustness pipeline that produces these tables
+fits on the full \texttt{fraud\_data.csv} and scores
+\texttt{test\_data.csv}, whose rows are a \emph{subset} of
+\texttt{fraud\_data.csv}; the training set therefore overlaps the
+evaluation rows, which inflates the absolute AUC toward $1.0$ and drives
+top-$2\%$ caught-recall to $1.000$. The leakage-free release split
+(\texttt{train\_data.csv}$\to$\texttt{test\_data.csv}, disjoint by
+construction) reproduces the headline $\mathrm{AUC}{=}0.7955$ of
+\secref{sec:p8-scorer}, with top-$2\%$ caught-recall $\approx 0.40$. We
+therefore treat $0.7955$ as the tree's reproducible absolute performance
+and read the $0.998{-}0.999$ tables below strictly as \emph{relative}
+comparisons among tree variants (raw-20 vs.\ 24-full vs.\ 4-sensor) under a
+common shared-split protocol, in which the aggregate-feature deltas
+($\Delta_{\mathrm{AUC}}$, $\Delta_{\mathrm{F1}}$, $\Delta_{\mathrm{ECE}}$)
+remain the interpretable quantities.
 
 \subsection{Paired bootstrap CIs}
 
@@ -303,7 +314,7 @@ by \texttt{python3 scripts/p5p8/p8\_calibration\_cis.py} ($\sim$3 min on
 bootstrap). The expected outputs are the five files under
 \texttt{experiments/results/p5p8/} named in
 \tableref{tab:p8-evidence-cal}--\ref{tab:p8-evidence-cost}. No new
-Tinker API calls were used in this iter.
+Tinker API calls were used in this iteration.
 
 \subsection{PR-AUC and top-K operating metrics at realistic fraud ratios}
 \label{sec:p8-evidence-realistic-ratios}
@@ -747,10 +758,11 @@ Axis & AUC & F1 & Brier & ECE-10 \\
   single result: tree \emph{calibration} is governed by the minority
   re-weighting lever, not the tree-shape lever.
 \item \texttt{subsample} is noise on every metric (CIs all contain zero).
-\item The same released data yields AUC ranging from $0.83$ to $0.99$
-  across the $32$-tree grid; the headline $\mathrm{AUC}{=}0.9988$ is
-  a \emph{joint} claim about the data \emph{and} the chosen
-  $\texttt{max\_depth}{=}5$ setting.
+\item The same overlapping-split protocol yields AUC ranging from $0.83$
+  to $0.99$ across the $32$-tree grid; the $\mathrm{AUC}{=}0.9988$ figure
+  is a \emph{joint} claim about that split \emph{and} the chosen
+  $\texttt{max\_depth}{=}5$ setting, not the leakage-free release number
+  ($\mathrm{AUC}{=}0.7955$; \secref{sec:p8-scorer}).
 \end{itemize}
 
 \paragraph{Cross-paper coupling.}
@@ -1832,9 +1844,9 @@ iter-68 row 78 found V\_std and V\_max are the smallest-noise
 single-aggregate features; this sub-subsection measures
 calibration degradation \emph{across all 4 aggregates simultaneously}
 under $\sigma$ — the iter-68 single-feature findings complement
-this iter's aggregate-noise sweep. (iii)~P6~\texttt{outcomes.zvf\_antiherding}
+this iteration's aggregate-noise sweep. (iii)~P6~\texttt{outcomes.zvf\_antiherding}
 (iter-66 row 77) — the $\delta_{\mathrm{div}}$ diversity bonus is
-concentrated in (V\_std, V\_max); this iter's noise sweep shows
+concentrated in (V\_std, V\_max); this iteration's noise sweep shows
 the calibration penalty is a \emph{separate axis} from the diversity
 bonus; both can be operationalised simultaneously.
 
@@ -1944,7 +1956,7 @@ axis is the whole-block decision (raw vs raw+sensor vs sensor-only).
 \paragraph{Cross-paper coupling.}
 (i)~\S\ref{sec:p8-scorer} iter-68 row 78 --- same 8 ablations on
 \emph{AUC at $K{=}2\,\%$} showed V\_std + V\_max catches all 144
-positives; this iter shows the same 8 ablations on
+positives; this iteration shows the same 8 ablations on
 \emph{within-budget ECE at $K{=}2\,\%$} are not decomposable. The
 two findings together establish that the AUC lift from
 (V\_std, V\_max) is not matched by a calibration lift, and the
@@ -1952,12 +1964,12 @@ calibration penalty from adding ALL four aggregates (iter-84 row
 99 cohort calibration parity) is not separable into per-aggregate
 penalties. (ii)~\S\ref{sec:p8-asymm-cost} iter-40 row
 58 threshold-transfer found XGB-4sensor is the most
-transfer-robust tree on train$\to$test drift; this iter's H1
+transfer-robust tree on train$\to$test drift; this iteration's H1
 result adds: it is also the best-calibrated tree \emph{within its
 own alert pool}, even though its global AUC is the lowest. The
 two facts together suggest XGB-4sensor is preferred at
 narrow-budget, low-drift deployments. (iii)~the Cost-per-decision
-sub-subsection iter-28 row 35 cost-optimal threshold; this iter's
+sub-subsection iter-28 row 35 cost-optimal threshold; this iteration's
 \emph{within-budget} cost column at $K{=}2\,\%$ (XGB-24full
 $\${=}0.104$/dec vs XGB-20raw $\$0.150$/dec) is the
 \emph{operational} reading of iter-28's $\tau^*$-driven optimum

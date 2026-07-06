@@ -68,19 +68,31 @@ paper-embedded table is collapsed for space).
 \toprule
 Failure label & $n$ rows & median mean-ZVF & median peak & median last10 \\
 \midrule
-collapse  &  3 & 1.0000 & 0.8750 & 0.0000 \\
-drift     &  9 & 0.1285 & 0.4083 & 0.0215 \\
-plateau   & 41 & 0.4820 & 0.3840 & 0.3792 \\
-converged & 27 & 0.6555 & 0.9890 & 0.9771 \\
+collapse  &  3 & 1.0000 & 0.0000 & 0.0000 \\
+drift     &  5 & 0.1087 & 0.4083 & 0.0215 \\
+plateau   & 42 & 0.2219 & 0.4040 & 0.3972 \\
+converged & 30 & 0.7672 & 0.9850 & 0.9765 \\
 \midrule
-all 80 rows & -- & 0.4810 & 0.9870 & 0.8630 \\
+all 80 rows & -- & 0.2964 & 0.4111 & 0.4034 \\
 \bottomrule
 \end{tabular}
 \caption{Cross-experiment failure counts over the full 80-row
 \texttt{zvf\_summary.tsv} (the per-\emph{seed} long-form). The
 23-cell correlation table in \S\ref{sec:zvf-cross-experiment:corr}
 pools those 80 rows down to one cell per (experiment, model, $G$).
-Generated from \texttt{scripts/zvf\_diagnostic.py}.}
+The five \texttt{scaling\_law\_three\_phase} rows are three-phase
+segmentation summaries; we classify them on their peak/late
+segment-mean accuracies (from
+\texttt{scaling\_law\_three\_phase.tsv}, columns
+\texttt{peak\_segment\_mean}/\texttt{late\_segment\_mean}) rather than
+on the segmentation BIC that the merged summary stores in the shared
+peak/last10 columns, which places one (Nemotron-120B) in
+\texttt{collapse}, one (Qwen3-8B) in \texttt{plateau}, and three
+(Qwen3.5-4B, Llama-3.1-8B, DeepSeek-V3.1) in \texttt{converged}. The
+collapse-row medians of $0$ for peak/last10 reflect the two tool-use
+zero-signal cells (peak $=$ last10 $= 0$); Nemotron is the only
+collapse row with a nonzero peak. Generated from
+\texttt{scripts/zvf\_diagnostic.py}.}
 \label{tab:zvf-failure-counts}
 \end{table}
 
@@ -97,13 +109,17 @@ emit reward $= 0.0$ on every rollout of every step: $\mathrm{ZVF}_t
 30-step window. Under the taxonomy they fall in
 \texttt{collapse} (peak $= 0$, last10 $= 0$).
 
-\paragraph{Nemotron-120B collapse (peak $0.875 \to$ last10 $0.208$).}
+\paragraph{Nemotron-120B collapse (peak $0.875 \to$ late $0.154$).}
 The five-model three-phase scaling-law table
 (\texttt{experiments/results/scaling\_law\_three\_phase.tsv})
-contains one row with $p = 0.875, \ell = 0.2083$; under
-Eq.~\ref{eq:collapse} this is \texttt{collapse}. Per-step ZVF was not
-recorded for this run, so the row carries \texttt{NA} in the ZVF
-columns but is preserved in the taxonomy for cross-reference.
+contains one row whose peak segment-mean accuracy is $p = 0.875$ and
+whose late segment-mean accuracy is $\ell = 0.1544$; under
+Eq.~\ref{eq:collapse} this is \texttt{collapse}. It is the \emph{only}
+one of the five scaling-law rows that collapses: the other four recover
+to their peak (three \texttt{converged}, one \texttt{plateau}) on their
+segment-mean accuracies. Per-step ZVF was not recorded for this run, so
+the row carries \texttt{NA} in the ZVF columns but is preserved in the
+taxonomy for cross-reference.
 
 \paragraph{MCGRPO / GIFT / AReaL / ES drift.}
 All four methods in \texttt{experiments/results/variance\_mitigation.tsv}
@@ -112,7 +128,7 @@ reach $\ell < 0.03$ from a peak $p \approx 0.40$, so they are
 $\approx 30$ steps. Mean-ZVF over the trajectory averages
 $0.10$–$0.13$, well below the GRPO baseline ($0.48$) on the same
 data; we discuss the implication in
-Section~\ref{sec:variance-honesty}.
+the companion paper on variance honesty.
 
 \subsection{Correlation With Heldout Outcome}
 \label{sec:zvf-cross-experiment:corr}
@@ -178,7 +194,7 @@ which the underlying per-step \texttt{collapse} flag ever fires
 deterministic-tally last-10-window mean heldout accuracy. Generated
 by \texttt{scripts/zvf\_diagnostic.py}. Source TSV:
 \texttt{experiments/results/zvf\_by\_library.tsv}.}
-\label{tab:zvf-by-library}
+\label{tab:zvf-by-library-diagnostic}
 \end{table}
 
 The headline read of Table~\ref{tab:zvf-by-library} is the
@@ -256,11 +272,13 @@ a useful diagnostic for a given RL post-training run:
       recipe is conservative: it flags only the regime where most
       prompts are no longer informative.
 \end{enumerate}
-The four \texttt{plateau} cells in our matrix (median
-$\ell = 0.38$, median ZVF $= 0.48$) all sit above the threshold;
-the three \texttt{collapse} cells all reach ZVF $\geq 0.95$. The
-diagnostic is therefore loud on collapse and silent on plateau --
-the asymmetry matches the gating behavior of GRPO at ceiling accuracy.
+The 42 \texttt{plateau} rows in our matrix (median
+$\ell = 0.40$, median ZVF $= 0.22$) sit below the $0.6$
+trailing-window trigger, so the recipe stays silent on them; the
+collapse rows with recorded per-step ZVF (the two tool-use cells)
+reach ZVF $= 1.0$. The diagnostic is therefore loud on collapse and
+silent on plateau -- the asymmetry matches the gating behavior of GRPO
+at ceiling accuracy.
 
 \paragraph{Why this is evidence and not a circular claim.}
 The collapse label is computed only from peak vs.\ last-10, never

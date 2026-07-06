@@ -33,9 +33,11 @@ rhetorical: on a single winner--loser pair within a $G{=}2$ group, the GRPO
 loss coincides with the small-$\beta$, no-KL, online limit of
 DPO~\citep{rafailov2024direct}, and Iterative RPO's DPO-plus-NLL
 objective~\citep{pang2024iterativerpo} corresponds to GRPO with replay on
-winning trajectories; empirically the two constructions demand the same
+winning trajectories; by analytical construction the two share the same
 optimal group size at every budget ($G^\ast = 8, 16, 32, 32$ at
-$T \in \{1, 4, 16, 64\}\mathrm{M}$), and the SNR slope in $G$
+$T \in \{1, 4, 16, 64\}\mathrm{M}$, where the $G{=}32$ optima at high $T$
+are joint-fit extrapolations---no $G{=}32$ cell and no Iterative-RPO run
+was trained), and the SNR slope in $G$
 ($+0.366$/decade, 95\% CI $[+0.148, +0.583]$) contains the
 $\sqrt{G}$-theory value of $+0.500$
 (\texttt{experiments/results/berkeley/dpo\_iterative\_rpo\_summary.json}).
@@ -44,8 +46,9 @@ $G$~\citep{su2024dualformer} suggests the non-monotone landscape is
 exploitable: a difficulty-gated allocation rule (predicted accuracy
 $\geq 0.85 \to G{=}2$, down to $G{=}32$ otherwise) attains mean
 $G_{\mathrm{auto}} = 7.0$ on the 20-cell joint-fit grid --- a $56.2\%$
-rollout saving versus always-$G{=}16$ and $25\%$ versus the measured
-$G^\ast(T)$ --- with 5/20 cells under-predicting by more than 5\,pp,
+rollout saving versus always-$G{=}16$ and a further $\approx 42\%$ versus
+the measured $G^\ast(T)$ schedule (mean $G{=}12.0$, itself a $25\%$
+saving versus always-$G{=}16$) --- with 5/20 cells under-predicting by more than 5\,pp,
 attributable to joint-fit residual noise rather than the allocation rule
 (\texttt{experiments/results/berkeley/dualformer\_compute\_savings.tsv}).
 

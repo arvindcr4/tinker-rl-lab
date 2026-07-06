@@ -135,8 +135,11 @@ is not.)
 
 \subsection{Exhibit 6: MIN-REPORT Field Coverage at $n=98$ Manifests}
 \label{sec:p5-exhibit-coverage}
-To stress-test the standard at scale, we audited every manifest in
-\texttt{experiments/results/mega\_20260704/manifests/} ($n=98$ cells) for
+To stress-test the standard at scale, we audited every manifest in the frozen
+2026-07-04 snapshot of
+\texttt{experiments/results/mega\_20260704/manifests/} ($n=98$ cells; the live
+directory has since grown, so figures here and in Exhibits~7--20 are against the
+released $n=98$ snapshot) for
 the seven MIN-REPORT items of \secref{sec:p5-stack} using
 \texttt{scripts/p5p8/minreport\_coverage.py}; full table at
 \texttt{experiments/results/p5p8/minreport\_field\_coverage.tsv}:
@@ -180,9 +183,15 @@ Exhibit~5 used the 4-method same-stack N2 run to compare the algorithm axis
 against the group-size axis ($n=160$ per-step observations, one seed). To test
 whether the same direction holds at corpus scale---and across the full
 multifactor stack---we ran a one-way $\eta^{2}$ decomposition on the live
-mega-campaign ledger (\texttt{experiments/results/mega\_20260704/cells.tsv};
-$n=98$ cells = $2$ models $\times$ $3$ task slices $\times$ $5$ $G$ values
-$\times$ $2$ temperatures $\times$ $2$ seeds). The five axes analysed are
+mega-campaign ledger (a frozen $n=98$-cell snapshot of
+\texttt{experiments/results/mega\_20260704/cells.tsv} over $2$ model families,
+Llama-3.2-3B and Qwen3.5-4B, as of 2026-07-04; the live ledger has since been
+extended with additional cells, e.g.\ a Qwen3-8B family, so reproduction should
+target the released $n=98$ analysis TSV rather than the current ledger).
+The snapshot is an \emph{unbalanced partial grid}: $98$ of the
+$2 \times 3 \times 5 \times 2 \times 2 = 120$ full-factorial cells over model
+family, task slice ($3$), $G$ ($5$ values), temperature ($2$), and seed ($2$)
+are populated (task slices $24/40/34$; $G$ levels $24/20/18/18/18$). The five axes analysed are
 four \emph{stack} axes (model\_family, task\_slice, $G$, temperature) and one
 \emph{noise} axis (seed). Analysis script:
 \texttt{scripts/p5p8/mega\_eta2.py}; full output at
@@ -213,8 +222,10 @@ seed           & 0.000          & 0.000 & 0.001 & 0.000 & 0.002 \\
 The four stack axes jointly explain $73\%$--$93\%$ of the variance in every
 telemetry channel; the seed axis explains $0.0$--$0.15\%$. The
 stack-vs-seed $\eta^{2}$ ratio ranges from $503\times$ (\texttt{std\_len})
-to $96{,}128\times$ (\texttt{reward}) and is effectively infinite for
-\texttt{zvf} and \texttt{reward} (seed $\eta^{2}=0$ exactly on the 98 cells).
+to $96{,}128\times$ (\texttt{reward}); the seed axis $\eta^{2}$ rounds to
+$0.000$ in every channel at the 4-decimal display of
+\tableref{tab:p5-mega-eta2} but is small-yet-nonzero at full precision, so
+all five ratios are finite and $\ge 500\times$ (\texttt{zvf} $= 38{,}396\times$).
 
 The per-task $G$-axis decomposition sharpens the picture: $\eta^{2}(G)$
 for \texttt{zvf} is $0.89$ on \texttt{gsm8k\_easy}, $0.64$ on
@@ -243,7 +254,7 @@ axes that explain the most variance in \texttt{reward} and \texttt{len}.
 To close the gap between ``we ask for seven items'' and ``we can verify
 that seven items were reported,'' we prototyped the
 \textsc{Min-Report-RL Auditor} of \secref{sec:p5-toolchain} and ran it
-across every manifest in the worktree
+across every manifest in the repository
 ($n=103$ = $98$ mega-campaign manifests $+5$ quick $2026$-$07$-$04$
 manifests; script \texttt{scripts/p5p8/minreport\_auditor.py}, full
 output at
@@ -319,14 +330,14 @@ axis & $n$ & mean badge \\
 \quad mega (compact keys)        & 98 & 55.5 \\
 \quad quick (verbose keys)        &  5 & 45.0 \\
 \textit{by task\_slice} &             & \\
-\quad \texttt{gsm8k\_easy}        & 32 & 56.7 \\
-\quad \texttt{gsm8k\_hard}        & 32 & 56.7 \\
-\quad \texttt{humaneval\_subset} & 32 & 53.3 \\
+\quad \texttt{gsm8k\_easy}        & 24 & 56.7 \\
+\quad \texttt{gsm8k\_hard}        & 40 & 56.7 \\
+\quad \texttt{humaneval\_subset} & 34 & 53.3 \\
 \textit{by $G$}        &             & \\
-\quad $G=2$                       & 20 & 55.6 \\
-\quad $G=32$                      & 20 & 56.3 \\
+\quad $G=2$                       & 24 & 55.6 \\
+\quad $G=32$                      & 18 & 56.3 \\
 \quad $G=4$                       & 20 & 55.3 \\
-\quad $G=16$                      & 20 & 55.2 \\
+\quad $G=16$                      & 18 & 55.2 \\
 \quad $G=8$                       & 18 & 55.2 \\
 \bottomrule
 \end{tabular}
@@ -406,7 +417,7 @@ the telemetry variance budget.
 
 The second observation is that \textbf{the four-method last-10 reward
 spread CI is $[+0.016, +0.098]$}, an order of magnitude tighter than
-the $1.7{\times}$ backend-swap ratio of Exhibit~1. Even at the $95\%$
+the $17{\times}$ backend-swap ratio of Exhibit~1. Even at the $95\%$
 upper bound the spread is $< 10$ pp of reward, and the Exhibit~3
 point estimate of $0.034$ sits comfortably inside the CI. The
 bootstrap also confirms the Exhibit~3 qualitative reading: the four
@@ -485,7 +496,7 @@ Outputs:
 \caption{MIN-REPORT$\times$(Mitchell/Gebru) axis coverage on
 $n{=}103$ manifests. The seven MIN-REPORT items were never meant to
 substitute for the two general-purpose reporting standards: $14/15$
-external axes have zero coverage on the worktree manifests, and only
+external axes have zero coverage on the repository manifests, and only
 $3/15$ have a hand-mapped partial MIN-REPORT item. The single axis
 with full coverage (\texttt{mc\_eval\_data}) is the Mitchell axis
 that Item 6 (held-out split) was designed to operationalise.
@@ -914,7 +925,7 @@ the act was three file edits; no audit regressed; the remaining
 in \texttt{signal\_prior.*} / \texttt{rollout.*} /
 \texttt{perturbation.*} blocks the schema does not yet expose ---
 the next schema-extension frontier for P6, but no current entry
-claims any of those blocks, so out of scope this iteration.
+claims any of those blocks, so out of scope this iterationation.
 
 \paragraph{Reproduction.}
 \texttt{python3 scripts/p5p8/p5\_schema\_bump\_closure.py}

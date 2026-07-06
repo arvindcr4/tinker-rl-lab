@@ -32,16 +32,16 @@ test positives caught in the top-200 (highest-scoring) rows.}
 \toprule
 $\varepsilon$ & tree       & AUC    & F1@0.5 & Brier & ECE-10 & cost/dec (\$) & caught@$K{=}2\%$ \\
 \midrule
-0.000 & XGB-20raw  & 0.9999 & 0.880  & 0.0051 & 0.0324 & 0.01095 & 1.000 \\
-0.000 & XGB-24full & 0.9999 & 0.897  & 0.0048 & 0.0321 & 0.01100 & 1.000 \\
-0.005 & XGB-20raw  & 0.9989 & 0.880  & 0.0055 & 0.0331 & 0.01310 & 1.000 \\
-0.005 & XGB-24full & 0.9990 & 0.886  & 0.0054 & 0.0328 & 0.01360 & 0.993 \\
-0.010 & XGB-20raw  & 0.9969 & 0.878  & 0.0061 & 0.0340 & 0.01710 & 0.847 \\
-0.010 & XGB-24full & 0.9971 & 0.886  & 0.0058 & 0.0335 & 0.01780 & 0.861 \\
-0.020 & XGB-20raw  & 0.9887 & 0.872  & 0.0089 & 0.0357 & 0.05400 & 0.708 \\
-0.020 & XGB-24full & 0.9854 & 0.876  & 0.0095 & 0.0363 & 0.04295 & 0.729 \\
-0.050 & XGB-20raw  & 0.9787 & 0.852  & 0.0148 & 0.0412 & 0.09175 & 0.535 \\
-0.050 & XGB-24full & 0.9799 & 0.860  & 0.0145 & 0.0408 & 0.09695 & 0.569 \\
+0.000 & XGB-20raw  & 0.9999 & 0.847  & 0.0091 & 0.0542 & 0.01095 & 1.000 \\
+0.000 & XGB-24full & 0.9999 & 0.845  & 0.0085 & 0.0527 & 0.01100 & 1.000 \\
+0.005 & XGB-20raw  & 0.9989 & 0.708  & 0.0227 & 0.1020 & 0.01310 & 1.000 \\
+0.005 & XGB-24full & 0.9990 & 0.716  & 0.0227 & 0.1036 & 0.01360 & 0.993 \\
+0.010 & XGB-20raw  & 0.9969 & 0.584  & 0.0383 & 0.1441 & 0.01710 & 0.847 \\
+0.010 & XGB-24full & 0.9971 & 0.606  & 0.0373 & 0.1440 & 0.01780 & 0.861 \\
+0.020 & XGB-20raw  & 0.9887 & 0.450  & 0.0685 & 0.2148 & 0.05400 & 0.708 \\
+0.020 & XGB-24full & 0.9854 & 0.444  & 0.0676 & 0.2147 & 0.04295 & 0.729 \\
+0.050 & XGB-20raw  & 0.9787 & 0.258  & 0.1240 & 0.3173 & 0.09175 & 0.535 \\
+0.050 & XGB-24full & 0.9799 & 0.251  & 0.1214 & 0.3139 & 0.09695 & 0.569 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -80,6 +80,18 @@ caught@$K{=}2\%$ gap \emph{strengthens} monotonically with $\varepsilon$
 The aggregate block's marginal value \emph{grows} with label noise,
 not shrinks — exactly the property one wants from a recall-restoration
 sensor on noisy training labels.
+
+\textbf{Threshold-metric caveat.} The robustness above holds for the
+\emph{rank-based} operating point (AUC and top-$K$ caught-recall). The
+\emph{fixed-threshold} and \emph{probability-scale} metrics do not: as
+$\varepsilon$ rises from $0$ to $0.05$, F1@$\tau{=}0.5$ collapses from
+$\approx 0.85$ to $\approx 0.25$, ECE-10 rises from $\approx 0.05$ to
+$\approx 0.32$, and Brier rises $\approx 0.009 \to 0.12$
+(Table~\ref{tab:p8-mislabel-main}). Label noise corrupts the calibrated
+\emph{probability scale} well before it corrupts the \emph{ranking}: a
+deployment that consumes the raw score as a probability at a fixed cutoff
+must re-calibrate under label noise, even though the rank-based
+$K{=}2\%$ operating point is comparatively robust.
 
 \subsection{Bootstrap confidence}
 

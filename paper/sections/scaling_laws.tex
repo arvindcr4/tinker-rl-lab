@@ -169,11 +169,11 @@ that pure-reward saturation fits are silent on: the curve does
 \emph{not} settle, it diverges downward, and a benchmark that
 relies on a saturation-only diagnostic will miss it.  This
 motivates the variance-based \textsc{zvf} gate
-(\secref{sec:zvf}) as a complementary diagnostic: the
+(companion paper on ZVF) as a complementary diagnostic: the
 zero-reward-fraction for Nemotron-120B is $0.55$, well above any
 well-behaved run in this set, and the cross-experiment
 \textsc{zvf}-vs-failure map
-(\secref{sec:zvf-cross-experiment}) would catch the divergence on
+(companion paper on cross-experiment ZVF) would catch the divergence on
 reward \emph{variance} rather than reward \emph{mean}.
 
 \paragraph{Falsifiable prediction.}
@@ -198,11 +198,10 @@ $t_{80} \cdot N$ scatter, and (d)~Nemotron-120B collapse autopsy.
 
 \begin{figure}[t]
   \centering
-  \IfFileExists{figures/scaling_law_elevated.pdf}{%
-  \includegraphics[width=0.85\linewidth]{figures/scaling_law_elevated.pdf}%
+  \IfFileExists{figures/scaling_law_elevated.png}{%
+  \includegraphics[width=0.85\linewidth]{figures/scaling_law_elevated.png}%
   }{%
-  \fbox{\parbox{0.80\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_elevated.pdf pending regeneration. See \texttt{scripts/scaling\_law\_elevated.py}.]}\vspace{1em}}}%
-  }
+    }
   \caption{\textbf{Pillar-1 elevation across 4B--685B.}
     (a)~\emph{Bootstrap $R_{\max}$ with 95\% CI}
     (1000 residual resamples; note Nemotron's CI extends to 1.5
@@ -360,7 +359,7 @@ plateau shape, it actively \emph{diverges downward} from the peak
 in a way no monotone saturation model can describe.  The
 zero-reward-fraction of $0.55$ is also the structural signal that
 the \textsc{zvf}-based diagnostic
-(\secref{sec:zvf-cross-experiment}) would catch first, because it
+(companion paper on cross-experiment ZVF) would catch first, because it
 sees the divergence on reward \emph{variance} before it shows up on
 reward \emph{mean}.
 
@@ -494,11 +493,10 @@ the right diagnostic for that trace rather than the first-final gap.
 
 \begin{figure}[t]
   \centering
-  \IfFileExists{figures/scaling_law_extended.pdf}{%
-  \includegraphics[width=0.92\linewidth]{figures/scaling_law_extended.pdf}%
+  \IfFileExists{figures/scaling_law_extended.png}{%
+  \includegraphics[width=0.92\linewidth]{figures/scaling_law_extended.png}%
   }{%
-  \fbox{\parbox{0.86\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_extended.pdf pending regeneration. See \texttt{scripts/scaling\_law\_extended.py}.]}\vspace{1em}}}%
-  }
+    }
   \caption{\textbf{Iter 13 elevation -- extended scaling-law
     analysis across 12 anchors (4\,B--1\,T parameters, MoE vs dense
     stratified).}  (a)~\emph{First-step reward} $R(t{=}1)$ vs
@@ -543,7 +541,7 @@ out-of-sample predictive power) and
 \tableref{tab:scaling-nemotron-autopsy} (Nemotron-120B is the
 single structural counterexample to the three-phase template),
 this motivates the variance-based \textsc{zvf} diagnostic
-(\secref{sec:zvf-cross-experiment}) as the load-bearing failure
+(companion paper on cross-experiment ZVF) as the load-bearing failure
 detector rather than the saturation law.  Saturation-law fits
 on this benchmark are useful as descriptive summaries of
 \emph{where on the learning curve each anchor sits}, not as
@@ -763,8 +761,7 @@ pair is reported on the five- and twelve-anchor sets.
   \IfFileExists{figures/scaling_law_iter17.pdf}{%
   \includegraphics[width=0.92\linewidth]{figures/scaling_law_iter17.pdf}%
   }{%
-  \fbox{\parbox{0.86\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_iter17.pdf pending regeneration. See \texttt{scripts/scaling\_law\_iter17.py}.]}\vspace{1em}}}%
-  }
+    }
   \caption{\textbf{Iter 17 elevation -- 4-panel overview.}
     \textbf{(A)} Multi-model AIC profile across the four
     candidate functional forms on the five anchors; bar height
@@ -904,8 +901,7 @@ count alone -- consistent with frontier synthesis's
   \IfFileExists{figures/scaling_law_iter21.pdf}{%
   \includegraphics[width=0.96\linewidth]{figures/scaling_law_iter21.pdf}%
   }{%
-  \fbox{\parbox{0.86\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_iter21.pdf pending regeneration. See \texttt{scripts/scaling\_law\_iter21.py}.]}\vspace{1em}}}%
-  }
+    }
   \caption{\textbf{Iter 21 cross-architecture audit (12 anchors).}
     \textbf{(A)} $\hat\lambda$ (capped at the 9.99 Levenberg-Marquardt
     bound) versus $\log_{10} N$ by architecture; the dotted line is the
@@ -1027,7 +1023,7 @@ these sample sizes.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.96\linewidth]{figures/scaling_law_iter25.pdf}%
+  \includegraphics[width=0.96\linewidth]{figures/scaling_law_iter25.png}%
   \caption{Left: bootstrap $80\%$ CI for the saturation rate
     $\hat\lambda$ per model (black dot = point fit; dashed line = bound);
     all CIs are red (degenerate), stretching to the $\lambda=10$ bound.
@@ -1168,17 +1164,16 @@ Nemotron collapse is exactly the failure mode that pure-reward
 saturation fits are silent on -- the curve does not settle, it
 diverges, and a benchmark that relies on a saturation-only
 diagnostic will miss it.  This motivates the variance-based
-\textsc{zvf} gate (\secref{sec:zvf}) as a complementary diagnostic:
+\textsc{zvf} gate (companion paper on ZVF) as a complementary diagnostic:
 the zero-reward-fraction for Nemotron-120B is $0.55$, well above
 any well-behaved run in this set.
 
 \begin{figure}[t]
   \centering
-  \IfFileExists{figures/scaling_law_fit.pdf}{%
-  \includegraphics[width=0.92\linewidth]{figures/scaling_law_fit.pdf}%
+  \IfFileExists{figures/scaling_law_fit.png}{%
+  \includegraphics[width=0.92\linewidth]{figures/scaling_law_fit.png}%
   }{%
-  \fbox{\parbox{0.86\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_fit.pdf pending regeneration. See \texttt{scripts/scaling\_law\_fit.py}.]}\vspace{1em}}}%
-  }
+    }
   \caption{\textbf{Iter 117 four-panel overview.}
     \textbf{(A)} Saturation fit $R(t)=R_{\max}(1-e^{-\lambda t})$
     versus observed reward for each of the five anchors; dashed
@@ -1298,7 +1293,7 @@ scaling hypothesis}.  Future Pillar-1 work must either (i) extend
 the anchor pool to $n_{\text{anchors}} \ge 40$ with a held-out
 fraction of $\lambda$-free runs, or (ii) abandon the saturation
 fit entirely and use the variance-based \textsc{zvf} gate
-(\secref{sec:zvf}) as the primary scaling signal.
+(companion paper on ZVF) as the primary scaling signal.
 
 \begin{table}[t]
   \centering
@@ -1375,8 +1370,7 @@ fit entirely and use the variance-based \textsc{zvf} gate
   \IfFileExists{figures/scaling_law_iter121.pdf}{%
   \includegraphics[width=0.92\linewidth]{figures/scaling_law_iter121.pdf}%
   }{%
-  \fbox{\parbox{0.86\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_iter121.pdf pending regeneration. See \texttt{scripts/scaling\_law\_iter121.py}.]}\vspace{1em}}}%
-  }
+    }
   \caption{\textbf{Iter 121 four-panel detection-power figure.}
     \textbf{(A)} $\Delta_{\text{late-early}}$ vs $\log_{10}(N)$
     scatter with OLS line and Spearman $\hat\rho = -0.30$; the
@@ -1510,8 +1504,7 @@ Figure~\ref{fig:scaling-iter129}.
   \IfFileExists{figures/scaling_law_iter129.pdf}{%
   \includegraphics[width=0.95\linewidth]{figures/scaling_law_iter129.pdf}%
   }{%
-  \fbox{\parbox{0.92\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_iter129.pdf pending regeneration. See \texttt{scripts/scaling\_law\_iter129.py}.]}\vspace{1em}}}%
-  }
+    }
   \caption{\textbf{Iter 129 four-panel figure.}
     \textbf{(1)} Reward traces with piecewise (solid) and
     saturation (dotted) overlays; the two fits are visually nearly
@@ -1724,8 +1717,7 @@ iter~133.
   \IfFileExists{figures/scaling_law_iter133.pdf}{%
   \includegraphics[width=0.92\linewidth]{figures/scaling_law_iter133.pdf}%
   }{%
-  \fbox{\parbox{0.86\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_iter133.pdf pending regeneration. See \texttt{scripts/scaling\_law\_iter133.py}.]}\vspace{1em}}}%
-  }
+    }
   \caption{\textbf{Iter 133 four-panel figure.}
     \textbf{(1)} $R_{\max}$ distribution by pool, dots coloured by
     Ward-$k=2$ cluster (blue = capable, orange = incapable): the
@@ -1869,11 +1861,10 @@ capability axis dominates in both.
 
 \begin{figure}[t]
   \centering
-  \IfFileExists{figures/scaling_law_fit.pdf}{%
-  \includegraphics[width=0.95\linewidth]{figures/scaling_law_fit.pdf}%
+  \IfFileExists{figures/scaling_law_fit.png}{%
+  \includegraphics[width=0.95\linewidth]{figures/scaling_law_fit.png}%
   }{%
-  \fbox{\parbox{0.86\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_fit.pdf pending regeneration. See \texttt{scripts/scaling\_law\_iter137.py}.]}\vspace{1em}}}%
-  }
+    }
   \caption{\textbf{Iter 137 four-panel figure.}
     \textbf{(a)} iter~117 2-param fit: $4/5$ anchors hit the
     $\lambda = 10$ upper bound; dashed lines mark the
@@ -1973,13 +1964,12 @@ add a 4-panel figure to this section showing (a) RQS per anchor,
   \IfFileExists{figures/eureka_cross_pillar.pdf}{%
   \includegraphics[width=0.95\linewidth]{figures/eureka_cross_pillar.pdf}%
   }{%
-  \fbox{\parbox{0.86\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: eureka\_cross\_pillar.pdf pending regeneration. See \texttt{scripts/berkeley/eureka\_reward\_design\_quality.py}.]}\vspace{1em}}}%
-  }
+    }
   \caption{\textbf{Iter 140 cross-pillar figure.}
     \textbf{(a)} Reward-Design Quality Score per anchor on the
-    12-anchor extended-frontier table; degenerate anchors
-    (Nemotron-120B, Qwen3-32B, Qwen3-30B-MoE, Qwen3.5-27B,
-    Qwen3-235B-MoE, Qwen3-30B-MoE-Inst, Kimi-K2-Thinking) score
+    12-anchor extended-frontier table; the five degenerate anchors
+    (Nemotron-120B, Qwen3-32B, Qwen3-30B-MoE,
+    Qwen3-30B-MoE-Inst, Qwen3-235B-MoE) score
     RQS = 0 along the geometric-mean breakdown.  \textbf{(b)}
     AIC race on $R_{\max}$ at $n=5$; capability alone
     ($\mathrm{AICc} = -23.07$) dominates capability + RQS

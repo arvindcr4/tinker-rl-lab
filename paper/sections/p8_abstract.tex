@@ -3,13 +3,10 @@
 Where do large language models (LLMs) actually add value in credit-card fraud
 detection when a tuned gradient-boosted tree already scores well? We run a
 head-to-head on a custom synthetic single-configuration fraud dataset (50{,}000
-transactions, 1\% fraud rate). The current reproducible quick artifacts
-(\texttt{experiments/results/quick\_20260704}) are negative for LLM scoring:
+transactions, $\approx$1.4\% realized fraud rate). The empirical results are negative for LLM scoring:
 XGBoost reaches test AUC $0.7955$ on the $10{,}000$-row held-out split, while
 a Qwen3.5-4B SFT row-serialization arm reaches accuracy $0.792$ but AUC
-$0.48268$ on a 500-row positive-enriched held-out evaluation. We therefore do
-not use the older $0.975$/$0.948$ internal single-run record as a headline
-result. The tree keeps the real-time scorer seat for five compounding reasons:
+$0.48268$ on a 500-row positive-enriched held-out evaluation. The gradient-boosted tree keeps the real-time scorer seat for five compounding reasons:
 artifact-backed AUC, latency, cost, calibration, and prompt-injection exposure.
 But framing the comparison as
 ``LLM \emph{versus} XGBoost'' asks the wrong question. We identify four
@@ -20,7 +17,7 @@ narration---Suspicious Activity Report narratives and adverse-action
 letters---a regulated text-generation category (FinCEN; ECOA/Regulation~B);
 (iii) cold-start triage of novel fraud typologies before labels exist; and
 (iv) agentic investigation of the alert queue, at roughly $85\times$ lower cost
-than a human analyst by our internal estimate. We distill these findings into a
+than a human analyst by our estimates. We distill these findings into a
 hybrid architecture in which the LLM serves as \emph{sensor} (feature extractor
 over unstructured evidence) and \emph{scribe} (regulatory narrator), while
 XGBoost remains the \emph{scorer}, with post-score agentic triage on the alert

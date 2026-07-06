@@ -165,11 +165,7 @@ larger $T$.
 
 \begin{figure}[htbp]
 \centering
-\IfFileExists{figures/group_size_extended.pdf}{%
-\includegraphics[width=\linewidth]{figures/group_size_extended.pdf}%
-}{%
-\fbox{\parbox{\textwidth}{\centering\small\textit{[Figure pending regeneration; see \texttt{group\_size\_analysis.py}.]}\vspace{1em}}}%
-}
+\includegraphics[width=\linewidth]{figures/group_size_extended.pdf}
 \caption{\textbf{Group-size extended figure (iter7).} \emph{Left:}
 mean reward (last-10-step) vs $G$ on the measured
 Qwen2.5-0.5B / arithmetic sweep; the per-step mean-reward
@@ -268,11 +264,7 @@ worth the per-token cost---but only past a token-budget threshold.
 
 \begin{figure}[htbp]
 \centering
-\IfFileExists{figures/group_size.pdf}{%
-\includegraphics[width=\linewidth]{figures/group_size.pdf}%
-}{%
-\fbox{\parbox{\textwidth}{\centering\small\textit{[Figure pending regeneration; see \texttt{group\_size\_analysis.py}.]}\vspace{1em}}}%
-}
+\includegraphics[width=\linewidth]{figures/group_size.pdf}
 \caption{\textbf{Group-size effect, two views.} \emph{Left:}
 Measured Qwen2.5-0.5B / arithmetic sweep
 ($G \in \{2, 4, 8, 16\}$, 3 seeds each, 40 steps). The blue line is
@@ -606,11 +598,7 @@ advantage-variance profile is statistically flat in $G$.
 
 \begin{figure}[htbp]
 \centering
-\IfFileExists{figures/group_size_advantage_variance.pdf}{%
-\includegraphics[width=\linewidth]{figures/group_size_advantage_variance.pdf}%
-}{%
-\fbox{\parbox{\textwidth}{\centering\small\textit{[Figure pending regeneration; see \texttt{group\_size\_elevated.py}.]}\vspace{1em}}}%
-}
+\includegraphics[width=\linewidth]{figures/group_size_advantage_variance.pdf}
 \caption{\textbf{Iter 11 advantage-variance diagnostics.}
 \emph{Left:} per-step advantage variance, averaged across the 3 seeds
 of the measured Qwen2.5-0.5B / arithmetic sweep, one curve per

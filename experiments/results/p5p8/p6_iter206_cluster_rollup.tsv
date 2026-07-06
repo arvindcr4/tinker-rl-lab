@@ -1,0 +1,16 @@
+label	n_entries	n_frameworks	frameworks	mean_badge	min_badge	max_badge	n_fields_total	n_fields_reporting	mean_disagree	mean_disagree_basis_n	n_pairs_total	n_disagree_total
+dapo	2	2	colab-open-trainer,tinker	0.9285	0.8571	1.0	23	13	0.3077	13	13	4
+drgrpo	2	2	colab-open-trainer,tinker	0.9285	0.8571	1.0	23	13	0.3077	13	13	4
+grpo	8	6	colab-open-trainer,openrlhf,tinker,trl,verl,worktree-zvf130-batch	0.7679	0.4286	1.0	23	16	0.3667	16	161	56
+aero	2	2	tinker,worktree-zvf130-batch	0.6428	0.4286	0.8571	23	9	0.3333	9	9	3
+areal	2	2	tinker,worktree-zvf130-batch	0.6428	0.4286	0.8571	23	9	0.3333	9	9	3
+gift	2	2	tinker,worktree-zvf130-batch	0.6428	0.4286	0.8571	23	9	0.3333	9	9	3
+gspo	1	1	tinker	0.8571	0.8571	0.8571	23	0		0	0	0
+ppo-reinforce	2	1	tinker	0.0			23	0		0	0	0
+cppo	1	1	worktree-zvf130-batch	0.4286	0.4286	0.4286	23	0		0	0	0
+es	1	1	worktree-zvf130-batch	0.4286	0.4286	0.4286	23	0		0	0	0
+mcgrpo	1	1	worktree-zvf130-batch	0.4286	0.4286	0.4286	23	0		0	0	0
+ngrpo	1	1	worktree-zvf130-batch	0.4286	0.4286	0.4286	23	0		0	0	0
+scafgrpo	1	1	worktree-zvf130-batch	0.4286	0.4286	0.4286	23	0		0	0	0
+tool_use_llama-8b-inst	1	1	worktree-zvf130-batch	0.4286	0.4286	0.4286	23	0		0	0	0
+tool_use_qwen3-32b	1	1	worktree-zvf130-batch	0.4286	0.4286	0.4286	23	0		0	0	0

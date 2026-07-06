@@ -1,0 +1,5 @@
+quartile	n_clusters	labels	badge_min	badge_max	mean_disagree
+1	1	aero	0.6428	0.6428	0.3333
+2	1	areal	0.6428	0.6428	0.3333
+3	1	gift	0.6428	0.6428	0.3333
+4	3	grpo,dapo,drgrpo	0.7679	0.9285	0.3274

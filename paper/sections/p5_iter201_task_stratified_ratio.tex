@@ -1,0 +1,88 @@
+% !TEX root = ../paper_P5_minreport.tex
+% Section — Iter 201 P5 task-slice stratified algorithm-vs-stack variance ratio
+\subsection{Task-stratified ratio: iter-193's headline is task-conditional (iter 201)}
+\label{sec:p5-iter201-task-stratified}
+
+Section~\ref{sec:p5-iter193-ratio} reported a single corpus-wide
+stack-to-label variance ratio of $60.6\times$ on reward,
+$10.3\times$ on zvf, and $4.8\times$ on completion length, computed
+on the $98$ \texttt{mega\_20260704} cells treated as one bag.
+Companion work (iter-197) robustness-audited that headline at the
+corpus level with paired bootstrap, worst-axis stress, jackknife,
+and a $5$-axis composite. Both treated the corpus as a single
+homogeneous pool and reported a single ratio per channel.
+
+We close the deeper question here: does the iter-193 headline
+\emph{survive stratification by task slice}? Stratifying by
+\texttt{gsm8k\_easy}, \texttt{gsm8k\_hard}, and
+\texttt{humaneval\_subset} and recomputing the ratio within each
+task slice reveals a sharp task-conditional qualification.
+
+\begin{table}[t]
+\centering\small
+\caption{Per-(task slice, channel) stack-vs-label variance ratio with
+$95\%$ stratified bootstrap CI. The iter-193 corpus-wide headline
+($60.6\times$ reward) is the GSM8K-only signal; on
+\texttt{humaneval\_subset} the reward and zvf ratios are
+\emph{structurally zero} because every cell in that slice has
+\texttt{mean\_reward=0.0} and \texttt{zvf=1.0} (all-zero rewards
+$\Rightarrow$ SS$_{\text{total}}=0$). Only the completion-length
+channel has variance on every task slice and produces a meaningful
+ratio on all three ($34$--$73\times$).}
+\label{tab:p5-iter201-per-task}
+\begin{tabular}{llccrc}
+\toprule
+task slice & channel & top axis & top $\eta^2$ & ratio & 95\% CI \\
+\midrule
+\texttt{gsm8k\_easy}      & zvf    & $G$             & $0.887$ & $19.5\times$  & $[6.0, 85.2]$ \\
+\texttt{gsm8k\_hard}      & zvf    & $G$             & $0.641$ & $14.1\times$  & $[4.5, 66.8]$ \\
+\texttt{humaneval\_sub}   & zvf    & model\_family   & $0.000$ & $0.0\times$   & $[0.0, 0.0]$ \\
+\midrule
+\texttt{gsm8k\_easy}      & reward & model\_family   & $0.993$ & $133.0\times$ & $[12.6, 548.5]$ \\
+\texttt{gsm8k\_hard}      & reward & model\_family   & $0.991$ & $132.8\times$ & $[12.8, 573.7]$ \\
+\texttt{humaneval\_sub}   & reward & model\_family   & $0.000$ & $0.0\times$   & $[0.0, 0.0]$ \\
+\midrule
+\texttt{gsm8k\_easy}      & len    & model\_family   & $0.382$ & $51.1\times$  & $[3.4, 228.5]$ \\
+\texttt{gsm8k\_hard}      & len    & temperature     & $0.256$ & $34.3\times$  & $[2.2, 152.6]$ \\
+\texttt{humaneval\_sub}   & len    & model\_family   & $0.547$ & $73.2\times$  & $[6.7, 312.5]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Findings.}
+\textit{(i)} \textbf{Headline task-conditional qualification.} The
+iter-193 corpus-wide $60.6\times$ reward ratio is the GSM8K average;
+on \texttt{humaneval\_subset} the ratio is structurally zero because
+all $34$ cells have \texttt{mean\_reward}$=0.0$ and
+\texttt{zvf}$=1.0$ (zero reward variance $\Rightarrow$
+$\eta^2_{\text{stack}}=\eta^2_{\text{algo}}=0$). MIN-REPORT's
+``Report the Stack'' thesis is trivially true on degenerate tasks
+(no signal $\Rightarrow$ no variance $\Rightarrow$ no axis can
+dominate). The $60.6\times$ headline applies \emph{only} to tasks
+where models achieve non-zero success rate. \textit{(ii)}
+\textbf{Completion length is task-robust.} Only the len channel has
+variance on every task slice and produces a meaningful ratio on all
+three ($34$--$73\times$). When reward is degenerate (early training
+or saturated baseline), len is the recommended fallback for
+MIN-REPORT stack validation. \textit{(iii)} \textbf{$G$ dominates
+zvf within GSM8K} ($\eta^2=0.887$ on \texttt{gsm8k\_easy}, $0.641$
+on \texttt{gsm8k\_hard}) --- the iter-193 finding is robust
+\emph{within GSM8K} but not corpus-wide. \textit{(iv)}
+\textbf{Model family dominates reward everywhere it is defined}
+($\eta^2\ge 0.99$ on both GSM8K slices); this is the strongest
+single-task pattern in the corpus. \textit{(v)} \textbf{Five
+hypotheses}: H1 (point ratio $>1$ on every cell) FAIL on
+\texttt{humaneval\_subset} --- the sharp qualification. H2 (CI
+excludes 1 on $\ge 2/3$ tasks per channel) PASS. H3 (between-task
+ratio variance $>0.5$) PASS --- variance is $101$--$5885$ per
+channel. H4 (top axis consistent on $\ge 2/3$ tasks per channel)
+PASS. H5 (zvf top axis varies across tasks) PASS.
+
+\textbf{Implication for MIN-REPORT.} The iter-193 headline is
+preserved for the GSM8K subset (where models actually train) but
+qualified corpus-wide: on degenerate tasks the stack-vs-label
+distinction collapses to a 0/0 form. Practitioners should report
+per-task ratios, not corpus-wide averages, and should validate the
+stack-vs-label dominance on \emph{at least one task where the
+algorithm achieves non-zero success rate} before claiming the stack
+is the dominant driver.

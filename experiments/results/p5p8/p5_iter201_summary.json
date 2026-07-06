@@ -1,0 +1,162 @@
+{
+  "n_mega_cells": 98,
+  "n_n2_cells": 160,
+  "task_slices_seen": [
+    "gsm8k_easy",
+    "gsm8k_hard",
+    "humaneval_subset"
+  ],
+  "channels": [
+    "zvf",
+    "mean_reward",
+    "mean_completion_len"
+  ],
+  "stack_axes": [
+    "model_family",
+    "G",
+    "temperature",
+    "seed"
+  ],
+  "n_boot": 2000,
+  "seed": 20260706,
+  "h1_strict_per_task_ratio": false,
+  "h2_boot_ci_excludes_1_per_chan": {
+    "zvf": 3,
+    "mean_reward": 3,
+    "mean_completion_len": 3
+  },
+  "h2_pass": true,
+  "h3_between_task_ratio_var": {
+    "zvf": 101.67586609333333,
+    "mean_reward": 5885.174153623334,
+    "mean_completion_len": 381.78480916333325
+  },
+  "h3_pass": true,
+  "h4_top_axis_consistency": {
+    "zvf": 0.6666666666666666,
+    "mean_reward": 1.0,
+    "mean_completion_len": 0.6666666666666666
+  },
+  "h4_pass": true,
+  "h5_zvf_consistency": 0.6666666666666666,
+  "h5_pass": true,
+  "per_task": [
+    {
+      "channel": "zvf",
+      "task_slice": "gsm8k_easy",
+      "top_axis": "G",
+      "top_axis_eta2": "0.887247",
+      "algo_eta2": "0.045418",
+      "point_ratio": "19.5352",
+      "boot_lo": "5.9979",
+      "boot_hi": "85.2308",
+      "boot_median": "15.8015",
+      "ci_excludes_1": "yes",
+      "n_task_cells": 24
+    },
+    {
+      "channel": "zvf",
+      "task_slice": "gsm8k_hard",
+      "top_axis": "G",
+      "top_axis_eta2": "0.640602",
+      "algo_eta2": "0.045418",
+      "point_ratio": "14.1046",
+      "boot_lo": "4.4605",
+      "boot_hi": "66.7544",
+      "boot_median": "11.8223",
+      "ci_excludes_1": "yes",
+      "n_task_cells": 40
+    },
+    {
+      "channel": "zvf",
+      "task_slice": "humaneval_subset",
+      "top_axis": "model_family",
+      "top_axis_eta2": "0.000000",
+      "algo_eta2": "0.045418",
+      "point_ratio": "0.0000",
+      "boot_lo": "0.0000",
+      "boot_hi": "0.0000",
+      "boot_median": "0.0000",
+      "ci_excludes_1": "yes",
+      "n_task_cells": 34
+    },
+    {
+      "channel": "mean_reward",
+      "task_slice": "gsm8k_easy",
+      "top_axis": "model_family",
+      "top_axis_eta2": "0.992909",
+      "algo_eta2": "0.007466",
+      "point_ratio": "132.9833",
+      "boot_lo": "12.6241",
+      "boot_hi": "548.5286",
+      "boot_median": "47.3871",
+      "ci_excludes_1": "yes",
+      "n_task_cells": 24
+    },
+    {
+      "channel": "mean_reward",
+      "task_slice": "gsm8k_hard",
+      "top_axis": "model_family",
+      "top_axis_eta2": "0.991276",
+      "algo_eta2": "0.007466",
+      "point_ratio": "132.7646",
+      "boot_lo": "12.8199",
+      "boot_hi": "573.6716",
+      "boot_median": "47.4338",
+      "ci_excludes_1": "yes",
+      "n_task_cells": 40
+    },
+    {
+      "channel": "mean_reward",
+      "task_slice": "humaneval_subset",
+      "top_axis": "model_family",
+      "top_axis_eta2": "0.000000",
+      "algo_eta2": "0.007466",
+      "point_ratio": "0.0000",
+      "boot_lo": "0.0000",
+      "boot_hi": "0.0000",
+      "boot_median": "0.0000",
+      "ci_excludes_1": "yes",
+      "n_task_cells": 34
+    },
+    {
+      "channel": "mean_completion_len",
+      "task_slice": "gsm8k_easy",
+      "top_axis": "model_family",
+      "top_axis_eta2": "0.381680",
+      "algo_eta2": "0.007466",
+      "point_ratio": "51.1196",
+      "boot_lo": "3.3642",
+      "boot_hi": "228.5164",
+      "boot_median": "18.4872",
+      "ci_excludes_1": "yes",
+      "n_task_cells": 24
+    },
+    {
+      "channel": "mean_completion_len",
+      "task_slice": "gsm8k_hard",
+      "top_axis": "temperature",
+      "top_axis_eta2": "0.255865",
+      "algo_eta2": "0.007466",
+      "point_ratio": "34.2688",
+      "boot_lo": "2.2213",
+      "boot_hi": "152.6060",
+      "boot_median": "12.0845",
+      "ci_excludes_1": "yes",
+      "n_task_cells": 40
+    },
+    {
+      "channel": "mean_completion_len",
+      "task_slice": "humaneval_subset",
+      "top_axis": "model_family",
+      "top_axis_eta2": "0.546760",
+      "algo_eta2": "0.007466",
+      "point_ratio": "73.2293",
+      "boot_lo": "6.7409",
+      "boot_hi": "312.4682",
+      "boot_median": "26.1920",
+      "ci_excludes_1": "yes",
+      "n_task_cells": 34
+    }
+  ]
+}

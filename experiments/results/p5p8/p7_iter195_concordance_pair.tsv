@@ -1,0 +1,16 @@
+method	pair	n	kappa	agree	fA	fB
+grpo	agxdf	40	0.0000	20	20	40
+grpo	agxap	40	0.0000	20	20	0
+grpo	dfxap	40	0.0000	0	40	0
+aero	agxdf	40	0.0000	19	19	40
+aero	agxap	40	0.0000	21	19	0
+aero	dfxap	40	0.0000	0	40	0
+gift	agxdf	40	-0.0490	25	26	39
+gift	agxap	40	0.0000	14	26	0
+gift	dfxap	40	-0.0000	1	39	0
+areal	agxdf	40	0.0000	17	17	40
+areal	agxap	40	0.0000	23	17	0
+areal	dfxap	40	0.0000	0	40	0
+POOLED	agxdf	160	-0.0125	81	82	159
+POOLED	agxap	160	-0.0000	78	82	0
+POOLED	dfxap	160	0.0000	1	159	0

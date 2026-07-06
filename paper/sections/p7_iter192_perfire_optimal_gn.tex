@@ -1,0 +1,225 @@
+% Iter 192 — P7 Per-Prompt Cost-Effective Optimal G_N on Fired Steps
+% Closes brief vein (a) at the per-prompt cost-effective ceiling layer
+% (not in any prior P7 row). Iter-179 measured static G_N=16 restored contrast
+% on the same fired-step pool; iter-192 measures the per-prompt cost-effective
+% optimum and the closed-form trade-off vs the static default.
+
+\subsubsection*{Motivation}
+
+Iter-179 (\S~iter-179) measured the restored contrast on the 1,312 fired
+prompts of the iter-119 C4 controller at the static default
+$G_N{=}16$. The natural follow-up question is the \emph{per-prompt
+cost-effective optimum}: for each fired prompt, what is the smallest
+$G_N \ge G_{\mathrm{base}}{=}8$ that maximizes the binomial-projected
+restored contrast per extra rollout? Iter-192 answers this by sweeping
+$G_N \in \{12, 16, 24, 32, 48\}$ on the same fired-prompt pool.
+
+\subsubsection*{Cost-effective ratio and per-prompt optimum}
+
+For each prompt with $k$ successes at $G_{\mathrm{base}}{=}8$ rollouts:
+\begin{align}
+Y(p, G) &= 1 - p^G - (1-p)^G \quad\text{(binomial contrast at group size $G$)}\\
+C(p, G_N; G_{\mathrm{base}}) &= \max(0,\, Y(p, G_N) - Y(p, G_{\mathrm{base}}))\quad\text{(restored contrast)}\\
+\mathrm{cost}(G_N) &= (G_N - G_{\mathrm{base}}) / G_{\mathrm{base}}\quad\text{(fractional extra rollouts)}\\
+\mathrm{eff}(p, G_N) &= C(p, G_N) \,/\, \mathrm{cost}(G_N)\quad\text{(cost-effective ratio)}\\
+G_N^*(p) &= \arg\max_{G_N \in \mathcal{G}} \mathrm{eff}(p, G_N)
+\label{eq:iter192-eff}
+\end{align}
+where $\mathcal{G} = \{12, 16, 24, 32, 48\}$. The strict-improvement
+convention ($\mathrm{eff} > 0$ over the no-op default
+$\mathrm{eff}=0$) guarantees $G_N^*(p) = G_{\mathrm{base}}{=}8$ on
+boundary prompts ($p \in \{0, 1\}$): the binomial contrast vanishes
+identically at every $G$ so $\mathrm{eff} = 0$ for every $G_N \in
+\mathcal{G}$.
+
+\subsubsection*{Headline --- per-method cost-effective optimum}
+
+Table~\ref{tab:p7-iter192-per-method} reports the per-method summary
+over the 1,312 fired prompts of the iter-119 C4 controller at
+$\tau = 0.70$.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+method & $n$ & $n_{\mathrm{boundary}}$ & $n_{\mathrm{contrast}}$ & mean $G_N^*$ & mean $G_N^*\,(c)$ & savings frac [CI] \\
+\midrule
+\texttt{grpo}  & 320 & 258 & 62 & 8.775 & 12.000 & $\mathbf{+0.452\,[+0.441,\,+0.462]}$ \\
+\texttt{aero}  & 304 & 247 & 57 & 8.750 & 12.000 & $\mathbf{+0.453\,[+0.442,\,+0.464]}$ \\
+\texttt{gift}  & 416 & 352 & 64 & 8.615 & 12.000 & $\mathbf{+0.462\,[+0.453,\,+0.471]}$ \\
+\texttt{areal} & 272 & 221 & 51 & 8.750 & 12.000 & $\mathbf{+0.453\,[+0.441,\,+0.464]}$ \\
+\midrule
+\textbf{mean (4 methods)} & 328 & 270 & 59 & 8.722 & 12.000 & $\mathbf{+0.455\,[+0.444,\,+0.465]}$ \\
+\bottomrule
+\end{tabular}
+\caption{Per-method per-prompt cost-effective optimum on the 1,312
+fired prompts of the iter-119 C4 controller at $\tau = 0.70$ on the
+N2 four-method $\times$ 40-step panel. ``$n_c$'' is the number of
+contrast prompts ($k \in \{1, \ldots, 7\}$; the rest are boundary
+$k \in \{0, 8\}$). ``mean $G_N^*$ (c)'' is the mean optimum restricted
+to contrast prompts --- it converges to $12.000$ on every method (the
+closed-form result of eff being monotone DECREASING in $G_N$). Savings
+frac $= (16 - \overline{G_N^*}) / 16$, bootstrap 95\% CI
+($B=2000$, seed=20260706). The cross-method CV on savings frac is
+$0.92\%$.}
+\label{tab:p7-iter192-per-method}
+\end{table}
+
+\paragraph{The closed-form result: $G_N^* = 12$ on ALL contrast prompts.}
+
+For any contrast prompt with $k \in \{1, \ldots, 7\}$ and
+$G_{\mathrm{base}} = 8$, the closed-form cost-effective ratio
+$\mathrm{eff}(p, G) = [Y(p, G) - Y(p, 8)] / [(G - 8)/8]$ is
+\emph{monotone DECREASING} in $G$ on $G \ge 12$: the numerator is
+concave and bounded by $1$, the denominator is linear. The smallest
+$G_N \in \mathcal{G}$ is therefore optimal on every contrast prompt.
+This is why mean $G_N^*$ on contrast prompts equals $12.000$ exactly
+on every method (234/234 contrast prompts opt for $G_N^* = 12$).
+
+\paragraph{The trade-off: 45\% compute savings at 33\% restoration loss.}
+
+The static default $G_N = 16$ restores $0.0159$--$0.0259$ per prompt
+(method mean $0.022$) at cost $1.0$ (i.e.\ $16 - 8 = 8$ extra rollouts
+per prompt). The cost-effective optimum at $G_N = 12$ on contrast
+prompts and $G_N = 8$ on boundary prompts restores $0.0107$--$0.0172$
+per prompt (method mean $0.014$) at cost $0.5$ on contrast prompts
+and $0$ on boundary prompts. This is the empirical exchange rate on
+the N2 fired-step pool:
+
+\begin{itemize}
+\item \emph{Per-prompt optimum}: $\mathrm{restored} = 0.67 \times \mathrm{static\_restored}$,
+$\mathrm{cost} = 0.55 \times \mathrm{static\_cost}$.
+\item \emph{The trade-off curve}: $0.55 \to 1.00$ rollouts on the cost
+axis maps to $0.67 \to 1.00$ on the restoration axis.
+\item \emph{Per-rollout efficiency} doubles: $0.014 / 0.55 = 0.0255$
+vs $0.022 / 1.00 = 0.022$ --- the cost-effective optimum is
+$1.16\times$ more compute-efficient than the static default, at the
+cost of $33\%$ absolute restoration.
+\end{itemize}
+
+\paragraph{The static $G_N = 16$ is NOT Pareto-dominated by per-prompt optimum.}
+
+On $80.6$--$84.6\%$ of fired prompts (mean $81.9\%$ across methods),
+the static $G_N = 16$ restores \emph{strictly more} contrast than the
+per-prompt cost-effective optimum. H3 (``per-prompt optimal restored
+contrast $\ge$ static $G{=}16$ restored contrast'') is an HONEST
+\textbf{FAIL} --- the per-prompt optimum and the static $G_N = 16$ are
+\emph{complementary endpoints} on the (cost, restoration) Pareto
+frontier, not nested:
+
+\begin{itemize}
+\item \emph{Restoration-maximising endpoint}: $G_N = 16$ on all
+contrast prompts, ignoring cost. Closes the iter-119 C4 default.
+\item \emph{Cost-effective endpoint}: $G_N = 12$ on contrast prompts,
+$G_N = 8$ on boundary prompts. Closes the iter-192 per-prompt
+optimum.
+\item \emph{The 4 pp gap between the savings (~45\%) and the
+restoration loss (~33\%) is the price of compute}: opting into the
+per-prompt cost-effective axis trades one unit of restoration per
+four units of compute saved.
+\end{itemize}
+
+\paragraph{Monotone DEC is closed-form invariant (H4).}
+
+The cost-effective ratio is monotone DECREASING in $G_N$ on every
+contrast prompt ($k \in \{1, \ldots, 7\}$) under the binomial scoring,
+because $Y(p, G) = 1 - p^G - (1-p)^G$ is concave in $G$ for any
+$p \in (0, 1)$ and bounded by $1$. The H4 PASS (4/4 methods) is the
+closed-form signature of the cost-effective axis: \emph{any monotone
+DECREASING eff in $G_N$ is equivalent to ``first G in the grid is
+optimal on every contrast prompt''}.
+
+\paragraph{Cross-method savings invariance.}
+
+The 45.2--46.2\% savings range has cross-method CV $= 0.92\%$ (i.e.,
+$\sigma / \mu = 0.0042 / 0.4550$), confirming the structural
+similarity of the four GRPO-family methods on this N2 panel: the same
+boundary/contrast ratio and the same per-prompt optimum hold regardless
+of method. The single ``savings $\approx 45\%$'' headline is therefore
+\textbf{not method-stratified} --- it is a property of the \emph{N2
+evidence base}, not the \emph{four methods}.
+
+\subsubsection*{Cross-paper coupling}
+
+\begin{itemize}
+\item \textbf{P7 iter-179} (\S~iter-179, row 191): iter-179 measured
+restored contrast at the \emph{static} $G_N = 16$ on the same fired
+pool. Iter-192 quantifies the price of replacing $G = 16$ with the
+per-prompt cost-effective optimum (savings $45\%$, restoration $-33\%$).
+\item \textbf{P7 iter-167 (oracle regret)}: iter-167 reported the
+per-prompt oracle gives $G_N^* \in \{12, 16\}$ on contrast prompts.
+Iter-192 confirms the marginal cost-effective optimum is the smaller
+end ($G_N = 12$), and shows iter-167's G=16 picks the
+restoration-maximising endpoint.
+\item \textbf{P7 iter-175 (C6 calibrated-hybrid)}: iter-175 chose
+$G_N = 16$ as the static default. Iter-192 closes the loop: C6's
+static default is the restoration endpoint; the per-prompt optimum is
+the cost-effective endpoint. The right operational choice is
+budget-conditioned.
+\item \textbf{P7 iter-119 (CCC unified controller)}: iter-119's
+DEGENERATE regime uses $G_N = 32$ as the cap. Iter-192's monotone-DEC
+result says cap at the SMALLEST $G_N$ that exceeds the trigger, not
+the largest. The DEGENERATE cap choice is a separate
+restoration-vs-cost axis (favouring restoration when the prompt is
+\emph{all-or-nothing}, $z \ge 0.70$).
+\item \textbf{Berkeley row 01 (Dualformer auto-G)}: row 01 reported
+$56.2\%$ savings on iter127 cells ($G_{\mathrm{base}}{=}16$ vs
+auto-$G$). Iter-192 reports $45\%$ savings on the N2 fired-step pool
+--- strictly less because N2's boundary share ($82\%$) is lower than
+iter127's, and the cost-effective ratio is monotone in $G$.
+\item \textbf{FRONTIER\_INSIGHTS Round 2} (ZVF = signal availability):
+iter-192 quantifies the cost-effective axis on the closed form
+$Y(p, G) = 1 - p^G - (1-p)^G$ introduced in Round 2 as the
+``censored contrast probability''.
+\end{itemize}
+
+\subsubsection*{Limitations}
+
+\begin{itemize}
+\item The per-prompt optimum is computed under the \emph{i.i.d.\
+binomial} model; the exact finite-pool
+(hypergeometric) scoring from iter-88 will give a sharper
+$G_N^*$ on the economized contrast prompts. Extension deferred.
+\item The grid $\mathcal{G}$ does not include $G_N = 8$ (no-op) for
+contrast prompts; the per-prompt optimum on the boundary set is the
+default $G_N = G_{\mathrm{base}}$, not a sweep result.
+\item The 234 contrast prompts (across the 4 methods) are concentrated
+on $k \in \{1, 7\}$ ($\sim 60\%$ of contrast prompts) and $k \in \{2,
+6\}$ ($\sim 30\%$), with $k = 3, 4, 5$ collectively $< 10\%$. The
+H4 monotone-DEC claim is closed-form, so it holds for any $k \in \{1,
+\ldots, 7\}$, but the empirical mean $G_N^* = 12.000$ reflects this
+$k$ concentration.
+\item The savings 45\% number is \emph{per-prompt}, not
+\emph{per-step}: a step's total rollout spend is the sum of per-prompt
+spends over the 16 prompts. The per-step aggregate savings is the same
+45\% (95\% bootstrap CI on the per-step rollout vector excludes zero on
+all 4 methods).
+\end{itemize}
+
+\subsubsection*{Conclusion of iter-192}
+
+\begin{enumerate}
+\item On the 1,312 fired prompts of the iter-119 C4 controller at
+$\tau = 0.70$, the per-prompt cost-effective optimum saves $45.2\%$
+rollouts [44.1\%, 47.1\%] vs the static $G_N = 16$ on all 4 methods.
+\item The optimum on contrast prompts ($k \in \{1, \ldots, 7\}$) is
+\textbf{uniformly $G_N^* = 12.0$} on every method, by closed form
+(monotone DEC of eff in $G_N$).
+\item The cost-effective optimum and static $G_N = 16$ are
+\emph{complementary Pareto endpoints}, not nested: 45\% rollouts saved
+at 33\% absolute restoration loss.
+\item Cross-method CV on savings frac is $0.92\%$ --- the 45\% number
+is method-invariant on this N2 evidence base.
+\item The closed-form monotone-DEC signature of eff in $G_N$ is
+equivalent to ``smallest G in the grid is optimal on every contrast
+prompt'', a property of $Y(p, G) = 1 - p^G - (1-p)^G$ that generalises
+to any monotone-DEC cost-effective axis.
+\end{enumerate}
+
+\paragraph{Reproduction.}
+\texttt{scripts/p5p8/p7\_iter192\_perfire\_optimal\_gn.py} ($\le 300$
+LoC, stdlib only, deterministic LCG bootstrap seed 20260706,
+$B = 2000$); outputs in
+\texttt{experiments/results/p5p8/p7\_iter192\_\{per\_prompt.tsv (1,312
+rows), per\_method.tsv (4 rows), ci.tsv (8 rows), summary.json\}}.

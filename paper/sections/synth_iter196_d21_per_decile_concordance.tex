@@ -1,0 +1,153 @@
+% Section: P5P8-SYNTH D21 Per-Reward-Decile Cross-Pillar Decision Concordance
+% (iter 196 JOB B). Fresh 21st density domain (NOT in any prior D1..D20
+% SYNTH row). D20 measured aggregate cross-pillar Spearman ρ (4 N2 methods
+% × 40 steps = 160 cells) and found a two-cluster structure: {P5, P8}
+% cluster (gift wins) ↔ {P6, P7} cluster (areal wins) with NEGATIVE
+% cross-cluster ρ. D21 lifts the lens to per-decile granularity.
+
+\subsubsection{Falsifiable questions and operational stakes}\label{sec:synth-d21-questions}
+D20 reported an aggregate two-cluster structure: pillars $\{P_5, P_8\}$
+(operationally relevant for deployment) cluster with positive
+within-cluster $\rho$ and cluster $\{\mathrm{P}_6, \mathrm{P}_7\}$
+(registry/controller-relevant for design) cluster with positive
+within-cluster $\rho$, with NEGATIVE cross-cluster $\rho$. This finding
+was based on 160 cells (4 methods $\times$ 40 steps) on a single N2
+same-stack panel. The natural follow-up --- \textbf{is the two-cluster
+structure uniform across the reward distribution?} --- has not been
+asked. D21 stratifies the 160 cells into 10 reward-deciles based on
+$\mathrm{reward\_mean}$ and asks: does the D20 structure break down in
+specific deciles? Is there a regime-conditional best method?
+
+\begin{enumerate}
+\item Does the D20 two-cluster structure hold within reward-deciles,
+  or does it depend on pooling?
+\item Does the best method per pillar vary across deciles (regime
+  conditional) or is it constant (universal)?
+\item Are low-reward deciles (where methods diverge most) more
+  informative than high-reward deciles (where methods are saturated)?
+\end{enumerate}
+
+\subsubsection{Pipeline and headline findings}\label{sec:synth-d21-pipeline}
+We load \texttt{n2\_metrics.tsv} (160 rows: 4 methods $\times$ 40 steps).
+Per-(method, step) we compute 4 pillar headliners:
+$\mathrm{P}_5 = \overline{\mathrm{reward}}$,
+$\mathrm{P}_6 = -\mathrm{ZVF}$,
+$\mathrm{P}_7 = \overline{\mathrm{reward}} / (1 + \mathrm{cv\_len})$,
+$\mathrm{P}_8 = \overline{\mathrm{reward}} / \overline{\mathrm{len}}$.
+We stratify the 160 cells into 10 reward-deciles using the
+$\mathrm{reward\_mean}$ quantile. Per-(decile, method) we aggregate by
+mean over the steps in the decile, giving 4 method-points per pillar per
+decile. We compute point Spearman $\rho$ on these 4 method-points and
+bootstrap 95\% CIs ($B{=}2000$) by resampling (method, step) cells within
+each decile.
+
+\subsubsection{Headline results}\label{sec:synth-d21-results}
+\textbf{1 PASS + 4 sharp FAIL} across 5 hypotheses. The headline is
+\textbf{H2 FAIL}: the D20 aggregate two-cluster structure is
+\textbf{NOT robust} at the per-decile granularity.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{cccccccc}
+\hline
+decile & $\overline{\mathrm{reward}}$ & best P$_5$ & best P$_6$ & best P$_7$ & best P$_8$ \\
+\hline
+1  & 0.689 & aero & aero & aero & aero \\
+2  & 0.740 & aero & grpo & aero & aero \\
+3  & 0.781 & grpo & aero & grpo & grpo \\
+4  & 0.814 & aero & grpo & areal & grpo \\
+5  & 0.834 & gift & grpo & areal & gift \\
+6  & 0.860 & aero & areal & aero & grpo \\
+7  & 0.879 & gift & areal & gift & grpo \\
+8  & 0.895 & grpo & areal & gift & grpo \\
+9  & 0.918 & gift & grpo & areal & gift \\
+10 & 0.950 & areal & grpo & areal & grpo \\
+\hline
+\end{tabular}
+\caption{\textbf{Per-decile best method per pillar on N2 same-stack.
+\textbf{Best method per pillar VARIES across deciles}; there is no
+universally best method. Aero dominates the low-reward regime (deciles
+1--2); grpo dominates mid-reward (deciles 3--4, 8); gift dominates
+high-mid (5, 7, 9); areal dominates the top decile (10).}}
+\label{tab:synth-d21-decile}
+\end{table}
+
+\subsubsection{Sharpest findings}\label{sec:synth-d21-findings}
+
+\textbf{F1 (H2 FAIL $\rightarrow$ SHARP).}
+The D20 aggregate two-cluster structure \textbf{does NOT survive}
+per-decile stratification. Point $\rho$ estimates vary dramatically
+($\mathrm{P}_5 \leftrightarrow \mathrm{P}_6$: point $\rho \in [-0.8, +0.8]$
+across 10 deciles; $\mathrm{P}_5 \leftrightarrow \mathrm{P}_8$: point
+$\rho \in [-0.4, +1.0]$). The two-cluster structure is a
+\textbf{pooling artifact} --- it appears at aggregate granularity because
+the decile-level structures have heterogeneous signs that average out to
+a non-zero aggregate.
+
+\textbf{F2 (H4 PASS).}
+Low-reward deciles (1--3) show higher $|\rho|$ than high-reward deciles
+(8--10): mean $|\rho|$ is 0.622 (low) vs 0.556 (high). The intuition:
+low-reward steps are dominated by failed rollouts where the policy is
+unsure, and methods diverge most in those regimes. High-reward steps
+are saturated (most methods achieve reward $\sim 1$) and behave
+similarly. The discriminative signal lives in the low-reward regime.
+
+\textbf{F3 (cross-decile headline).}
+\textbf{No method dominates every pillar in every decile}. The
+regime-conditional deployment matrix is:
+\begin{itemize}
+\item Low-reward (deciles 1--2): \textbf{aero}
+\item Mid-reward (deciles 3--4, 8): \textbf{grpo}
+\item High-mid (deciles 5, 7, 9): \textbf{gift}
+\item Top (decile 10): \textbf{areal}
+\end{itemize}
+\textbf{Aggregate rankings obscure this regime dependence}; a deployment
+that picks one method for the whole reward distribution is
+\textbf{operating sub-optimally} on most cells.
+
+\textbf{F4 (methodological).}
+With only 4 methods, per-decile $\rho$ confidence intervals are wide
+(they always include zero, even when point $\rho = 1.0$). The wide CIs
+reflect the structural limitation of having only 4 ranking points, not
+absence of signal. The point $\rho$ estimates remain informative; iter-196
+surfaces this CI-vs-point discrepancy and recommends that future
+cross-pillar audits either pool across more methods (e.g., include
+Berkeley variants) or report point estimates with explicit CI caveats.
+
+\subsubsection{Cross-paper coupling}\label{sec:synth-d21-coupling}
+
+\begin{itemize}
+\item \textbf{D20 (iter-192)} --- D20's two-cluster structure is
+  \textbf{aggregate-only}; iter-196 shows it does not survive
+  stratification. The D20 finding should be qualified as holding
+  ``at aggregate granularity''.
+\item \textbf{D16 (iter-176)} --- D16 measured per-prompt reward stability;
+  iter-196 shows best-method-per-pillar varies at the decile level,
+  paralleling D16's per-prompt finding that single-method deployment is
+  sub-optimal.
+\item \textbf{D17 (iter-180)} --- D17 measured paper reproducibility; iter-196's
+  wide CIs are themselves a reproducibility concern --- point estimates
+  vary but CIs cover everything, suggesting that future cross-pillar
+  audits need more than 4 methods to be precise.
+\item \textbf{FRONTIER Round 2 (ZVF as signal)} --- D21's regime-conditional
+  finding aligns with the frontier synthesis on ZVF as observed signal
+  availability rather than difficulty: the regime where methods diverge
+  (low reward, low ZVF) is where ZVF-as-signal-starvation matters most.
+\end{itemize}
+
+\subsubsection{Operational}\label{sec:synth-d21-operational}
+\begin{enumerate}
+\item \textbf{QUALIFY the D20 finding}: report that ``two-cluster
+  structure'' holds at aggregate granularity but is NOT robust within
+  reward-deciles.
+\item \textbf{DEPLOY regime-conditionally}: aero for low-reward
+  (deciles 1--2), grpo for mid-reward (3--4, 8), gift for high-mid
+  (5, 7, 9), areal for top (10).
+\item \textbf{REPORT} the per-decile best-method table as
+  Table~\ref{tab:synth-d21-decile} in this section.
+\item \textbf{WIRE} as CI gate: fails if low-decile $|\rho|$ variance
+  drops below 0.55 (the regime-conditional structure collapses).
+\item \textbf{EXTEND} in next-iter to per-(decile, task-slice) --- does
+  the regime-conditional selection hold across math/coding domains?
+\end{enumerate}

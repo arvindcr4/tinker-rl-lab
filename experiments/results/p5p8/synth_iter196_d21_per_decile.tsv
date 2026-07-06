@@ -1,0 +1,11 @@
+decile	n_cells	mean_reward	best_P5	best_P6	best_P7	best_P8	rho_P5P6	lo_P5P6	hi_P5P6	rho_P5P8	lo_P5P8	hi_P5P8
+1	18	0.6886	aero	aero	aero	aero	0.4000	-0.8000	1.0000	1.0000	0.0000	1.0000
+2	14	0.7397	aero	grpo	aero	aero	-0.8000	-1.0000	0.4000	0.0000	-0.8000	1.0000
+3	17	0.7809	grpo	aero	grpo	grpo	0.2000	-1.0000	0.8000	0.8000	-0.8000	1.0000
+4	16	0.8144	aero	grpo	areal	grpo	-0.8000	-1.0000	0.6000	-0.4000	-1.0000	0.8000
+5	17	0.8344	gift	grpo	areal	gift	-0.8000	-1.0000	0.8000	1.0000	0.0000	1.0000
+6	18	0.8596	aero	areal	aero	grpo	0.4000	-0.8000	0.8000	-0.4000	-1.0000	0.8000
+7	15	0.8795	gift	areal	gift	grpo	-0.2000	-0.8000	0.8000	-0.2000	-1.0000	-0.2000
+8	13	0.8953	grpo	areal	gift	grpo	0.4000	-0.8000	1.0000	0.4000	-0.8000	1.0000
+9	17	0.9184	gift	grpo	areal	gift	-0.4000	-1.0000	0.6000	1.0000	-0.4000	1.0000
+10	15	0.9497	areal	grpo	areal	grpo	0.8000	-1.0000	1.0000	-0.4000	-1.0000	0.8000

@@ -1,0 +1,11 @@
+variant	metric	panel	window	step_lo	step_hi	delta	ci_low	ci_high	significant	direction	contradicts_predicted_sign_ge_0
+aero	reward_mean	n2_same_stack_last5	5	35	39	-0.020313	-0.035937	-0.004687	True	negative	True
+aero	reward_mean	n2_same_stack_last10	10	30	39	-0.014063	-0.023438	-0.005469	True	negative	True
+aero	reward_mean	n2_same_stack_last15	15	25	39	-0.010937	-0.021875	-0.000521	True	negative	True
+aero	reward_mean	n2_same_stack_last20	20	20	39	-0.005859	-0.016016	0.004297	False	negative	False
+aero	reward_mean	n2_same_stack_last25	25	15	39	-0.004375	-0.015	0.006875	False	negative	False
+areal	reward_mean	n2_same_stack_last5	5	35	39	-0.020313	-0.0375	-0.00625	True	negative	True
+areal	reward_mean	n2_same_stack_last10	10	30	39	-0.019531	-0.032031	-0.007812	True	negative	True
+areal	reward_mean	n2_same_stack_last15	15	25	39	-0.013542	-0.024479	-0.001563	True	negative	True
+areal	reward_mean	n2_same_stack_last20	20	20	39	-0.009375	-0.019922	0.000781	False	negative	False
+areal	reward_mean	n2_same_stack_last25	25	15	39	-0.010313	-0.019688	-0.000937	True	negative	True

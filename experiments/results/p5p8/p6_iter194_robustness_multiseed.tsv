@@ -1,0 +1,11 @@
+variant	metric	panel	seed	delta	ci_low	ci_high	significant
+aero	reward_mean	n2_same_stack_last10	20260706	-0.014063	-0.023438	-0.005469	True
+aero	reward_mean	n2_same_stack_last10	20260707	-0.014063	-0.023438	-0.005469	True
+aero	reward_mean	n2_same_stack_last10	20260708	-0.014063	-0.023438	-0.00625	True
+aero	reward_mean	n2_same_stack_last10	20260709	-0.014063	-0.023438	-0.005469	True
+aero	reward_mean	n2_same_stack_last10	20260710	-0.014063	-0.023438	-0.00625	True
+areal	reward_mean	n2_same_stack_last10	20260706	-0.019531	-0.032031	-0.007812	True
+areal	reward_mean	n2_same_stack_last10	20260707	-0.019531	-0.032031	-0.007812	True
+areal	reward_mean	n2_same_stack_last10	20260708	-0.019531	-0.032031	-0.007812	True
+areal	reward_mean	n2_same_stack_last10	20260709	-0.019531	-0.03125	-0.007031	True
+areal	reward_mean	n2_same_stack_last10	20260710	-0.019531	-0.032031	-0.007812	True

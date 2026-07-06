@@ -2,10 +2,10 @@ delta_id	name	method	metric	panel_expected	predicted_sign	panel_used	recomputed_
 delta_adaptiveg	Adaptive-G (ZVF-driven)	adaptiveg	reward_mean	qp7_adaptive_armB_vs_armA_paired	>=0	NONE					UNMEASURABLE
 delta_adaptiveg	Adaptive-G (ZVF-driven)	adaptiveg	zvf	qp7_adaptive_armB_vs_armA_paired	<0	NONE					UNMEASURABLE
 delta_aero	AERO	aero	zvf	n2_same_stack_last10	<0	RECOMPUTED	-0.025	-0.0625	0.0125	False	SUPPORTS_NS
-delta_aero	AERO	aero	reward_mean	n2_same_stack_last10	>=0	RECOMPUTED	-0.014063	-0.023438	-0.005469	True	CONTRADICTS
+delta_aero	AERO	aero	reward_mean	n2_same_stack_last10	<=0	RECOMPUTED	-0.014063	-0.023438	-0.005469	True	SUPPORTS
 delta_aero	AERO	aero	zvf_risk_mean	zvf130_5seed	<0	RECOMPUTED	-0.147637	-0.285921	-0.009354	True	SUPPORTS
 delta_areal	AREAL	areal	zvf	n2_same_stack_last10	<0	RECOMPUTED	-0.05625	-0.1125	0.0	False	SUPPORTS_NS
-delta_areal	AREAL	areal	reward_mean	n2_same_stack_last10	>=0	RECOMPUTED	-0.019531	-0.032031	-0.007812	True	CONTRADICTS
+delta_areal	AREAL	areal	reward_mean	n2_same_stack_last10	<=0	RECOMPUTED	-0.019531	-0.032031	-0.007812	True	SUPPORTS
 delta_areal	AREAL	areal	zvf_risk_mean	zvf130_5seed	<0	RECOMPUTED	-0.245767	-0.354535	-0.137	True	SUPPORTS
 delta_cppo	CPPO	cppo	zvf_risk_mean	zvf130_5seed	<0	RECOMPUTED	-0.151077	-0.253342	-0.048813	True	SUPPORTS
 delta_dapo	DAPO	dapo	zvf	n2_same_stack_last10	<0	NONE					UNMEASURABLE

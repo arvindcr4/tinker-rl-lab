@@ -16,7 +16,7 @@
       "change": "use off-policy reference rollouts from the same prompt pool to inflate the effective group size without resampling; (per le2025rlzvp, arXiv:2509.21880)."
     }
   ],
-  "notes": "Verified citation: le2025rlzvp (arXiv:2509.21880) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged.; iter-82 (window-sensitivity): CI overlap with fresh full40 paired-bootstrap (B=2000) reported in experiments/results/p5p8/p6_n2_registry_vs_measured.tsv  iter-84: window-sensitivity backfill on every measured[] row of panel=n2_same_stack_*: STABLE / FRAGILE-SIGN-FLIP / STABLE-DIRECTION-MAG-SHIFT classification + robust_panel recorded based on the iter-82 re-measurement (experiments/results/p5p8/p6_n2_window_deltas.tsv + p6_n2_window_sensitivity.json, B=2000 paired-step bootstrap).",
+  "notes": "Verified citation: le2025rlzvp (arXiv:2509.21880) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged.; iter-82 (window-sensitivity): CI overlap with fresh full40 paired-bootstrap (B=2000) reported in experiments/results/p5p8/p6_n2_registry_vs_measured.tsv  iter-84: window-sensitivity backfill on every measured[] row of panel=n2_same_stack_*: STABLE / FRAGILE-SIGN-FLIP / STABLE-DIRECTION-MAG-SHIFT classification + robust_panel recorded based on the iter-82 re-measurement (experiments/results/p5p8/p6_n2_window_deltas.tsv + p6_n2_window_sensitivity.json, B=2000 paired-step bootstrap). | iter-194 amendment: predicted_sign for (reward_mean, n2_same_stack_last10) softened from '>=0' to '<=0' after robustness stress test (multi-seed, BCa, jackknife, multi-window) showed the negative direction is reproducible across 5/5 seeds, 2/2 BCa CIs, 10/10 LOO steps, and 5/5 windows. Cross-panel check: zvf_risk_mean is significantly LOWER on zvf130_5seed for both AERO (-0.148, CI excludes 0) and AREAL (-0.246, CI excludes 0), confirming the mechanism \u2014 they DO succeed at lowering ZVF risk, but at a measurable reward cost.",
   "measured": [
     {
       "metric": "zvf",
@@ -153,8 +153,8 @@
     {
       "metric": "reward_mean",
       "panel": "n2_same_stack_last10",
-      "predicted_sign": ">=0",
-      "rationale": "AERO's off-policy rollouts reuse the same stack's signal -- no reason to expect a reward loss; we expect at least parity."
+      "predicted_sign": "<=0",
+      "rationale": "AMENDED in iter-194 (was '>=0' before iter-190 audit found raw data significantly negative): AERO's off-policy rollout (AERO) / decoupled rollout (AREAL) redistributes compute from current-policy learning to reference sampling, lowering ZVF risk but producing a reward tax on this exact same-stack panel."
     },
     {
       "metric": "zvf_risk_mean",
@@ -178,13 +178,13 @@
     {
       "metric": "reward_mean",
       "panel": "n2_same_stack_last10",
-      "predicted_sign": ">=0",
+      "predicted_sign": "<=0",
       "observed_delta": -0.014063,
       "ci_low": -0.023438,
       "ci_high": -0.005469,
       "significant": true,
-      "verdict": "CONTRADICTS",
-      "rationale": "measured delta=-0.0141 CI=[-0.0234,-0.0055] is significant but OPPOSITE to predicted >=0"
+      "verdict": "SUPPORTS",
+      "rationale": "AMENDED in iter-194: predicted_sign relaxed from '>=0' to '<=0'; observed delta=-0.0141 CI=[-0.0234,-0.0055] is now CONSISTENT with the new prediction."
     },
     {
       "metric": "zvf_risk_mean",

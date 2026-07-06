@@ -1,0 +1,191 @@
+{
+  "n_manifests": 98,
+  "n_subfields": 23,
+  "n_items": 7,
+  "hypotheses": {
+    "H1_per_item_non_zero": false,
+    "H2_at_least_3_items_over_50pct": false,
+    "H3_mean_coverage_at_least_bronze": true,
+    "H4_uniform_across_mf_x_task": true,
+    "H5_zero_platinum": true,
+    "H6_at_most_10pct_fail": true,
+    "H7_at_least_5_permanently_ambiguous_subfields": true,
+    "H8_zero_atomic_full_pass": true
+  },
+  "mean_coverage": 11.0,
+  "n_platinum": 0,
+  "n_fail": 0,
+  "n_ambiguous_perm": 12,
+  "n_atomically_pass": 0,
+  "spread_max_minus_min_cell_means": 0.0,
+  "missing_fields": [],
+  "ambiguous_fields": [
+    {
+      "item": "decontamination",
+      "sub_field": "parser_robustness_probe",
+      "n_ambiguous": 98
+    },
+    {
+      "item": "group_size_schedule",
+      "sub_field": "adaptation_rule",
+      "n_ambiguous": 98
+    },
+    {
+      "item": "loss_form",
+      "sub_field": "clip_eps_high",
+      "n_ambiguous": 98
+    },
+    {
+      "item": "loss_form",
+      "sub_field": "clip_eps_low",
+      "n_ambiguous": 98
+    },
+    {
+      "item": "loss_form",
+      "sub_field": "importance_ratio_level",
+      "n_ambiguous": 98
+    },
+    {
+      "item": "loss_form",
+      "sub_field": "length_normalization",
+      "n_ambiguous": 98
+    },
+    {
+      "item": "loss_form",
+      "sub_field": "token_mask",
+      "n_ambiguous": 98
+    },
+    {
+      "item": "reference_kl",
+      "sub_field": "kl_beta",
+      "n_ambiguous": 98
+    },
+    {
+      "item": "reference_kl",
+      "sub_field": "kl_estimator",
+      "n_ambiguous": 98
+    },
+    {
+      "item": "reference_kl",
+      "sub_field": "reference_policy",
+      "n_ambiguous": 98
+    },
+    {
+      "item": "sampler_backend",
+      "sub_field": "top_p",
+      "n_ambiguous": 98
+    },
+    {
+      "item": "telemetry",
+      "sub_field": "per_step_gu",
+      "n_ambiguous": 98
+    }
+  ],
+  "per_item": [
+    {
+      "item": "decontamination",
+      "n_subfields": 2,
+      "n_subfields_full_coverage": 1,
+      "manifests_passing_item": 0,
+      "manifests_passing_pct": 0.0
+    },
+    {
+      "item": "group_size_schedule",
+      "n_subfields": 3,
+      "n_subfields_full_coverage": 2,
+      "manifests_passing_item": 0,
+      "manifests_passing_pct": 0.0
+    },
+    {
+      "item": "heldout_split",
+      "n_subfields": 2,
+      "n_subfields_full_coverage": 2,
+      "manifests_passing_item": 98,
+      "manifests_passing_pct": 100.0
+    },
+    {
+      "item": "loss_form",
+      "n_subfields": 6,
+      "n_subfields_full_coverage": 1,
+      "manifests_passing_item": 0,
+      "manifests_passing_pct": 0.0
+    },
+    {
+      "item": "reference_kl",
+      "n_subfields": 3,
+      "n_subfields_full_coverage": 0,
+      "manifests_passing_item": 0,
+      "manifests_passing_pct": 0.0
+    },
+    {
+      "item": "sampler_backend",
+      "n_subfields": 4,
+      "n_subfields_full_coverage": 3,
+      "manifests_passing_item": 0,
+      "manifests_passing_pct": 0.0
+    },
+    {
+      "item": "telemetry",
+      "n_subfields": 3,
+      "n_subfields_full_coverage": 2,
+      "manifests_passing_item": 0,
+      "manifests_passing_pct": 0.0
+    }
+  ],
+  "stratified": [
+    {
+      "model_family": "Qwen/Qwen3.5-4B",
+      "task_slice": "gsm8k_easy",
+      "n_manifests": 10,
+      "mean_subfields_covered": 11.0,
+      "ci_lo": 11.0,
+      "ci_hi": 11.0,
+      "frac_above_15": 0.0
+    },
+    {
+      "model_family": "Qwen/Qwen3.5-4B",
+      "task_slice": "gsm8k_hard",
+      "n_manifests": 20,
+      "mean_subfields_covered": 11.0,
+      "ci_lo": 11.0,
+      "ci_hi": 11.0,
+      "frac_above_15": 0.0
+    },
+    {
+      "model_family": "Qwen/Qwen3.5-4B",
+      "task_slice": "humaneval_subset",
+      "n_manifests": 17,
+      "mean_subfields_covered": 11.0,
+      "ci_lo": 11.0,
+      "ci_hi": 11.0,
+      "frac_above_15": 0.0
+    },
+    {
+      "model_family": "meta-llama/Llama-3.2-3B",
+      "task_slice": "gsm8k_easy",
+      "n_manifests": 14,
+      "mean_subfields_covered": 11.0,
+      "ci_lo": 11.0,
+      "ci_hi": 11.0,
+      "frac_above_15": 0.0
+    },
+    {
+      "model_family": "meta-llama/Llama-3.2-3B",
+      "task_slice": "gsm8k_hard",
+      "n_manifests": 20,
+      "mean_subfields_covered": 11.0,
+      "ci_lo": 11.0,
+      "ci_hi": 11.0,
+      "frac_above_15": 0.0
+    },
+    {
+      "model_family": "meta-llama/Llama-3.2-3B",
+      "task_slice": "humaneval_subset",
+      "n_manifests": 17,
+      "mean_subfields_covered": 11.0,
+      "ci_lo": 11.0,
+      "ci_hi": 11.0,
+      "frac_above_15": 0.0
+    }
+  ]
+}

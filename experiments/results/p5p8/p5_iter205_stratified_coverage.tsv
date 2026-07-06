@@ -1,0 +1,7 @@
+model_family	task_slice	n_manifests	mean_subfields_covered	ci_lo	ci_hi	frac_above_15
+Qwen/Qwen3.5-4B	gsm8k_easy	10	11.0	11.0	11.0	0.0
+Qwen/Qwen3.5-4B	gsm8k_hard	20	11.0	11.0	11.0	0.0
+Qwen/Qwen3.5-4B	humaneval_subset	17	11.0	11.0	11.0	0.0
+meta-llama/Llama-3.2-3B	gsm8k_easy	14	11.0	11.0	11.0	0.0
+meta-llama/Llama-3.2-3B	gsm8k_hard	20	11.0	11.0	11.0	0.0
+meta-llama/Llama-3.2-3B	humaneval_subset	17	11.0	11.0	11.0	0.0

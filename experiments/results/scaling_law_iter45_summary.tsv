@@ -1,0 +1,2 @@
+n_anchors	n_fits_ok	L_bar_tokens	n_iso_compute_pairs	n_predictions	n_predictions_pass	alpha_dense	alpha_moe	spear_logC_Rmax_dense	spear_logC_Rmax_moe	max_abs_rel_delta_Rmax_iso	median_abs_rel_delta_Rmax_iso
+12	12	512.0	5	3	3	1.03	0.0566	0.7143	0.1429	0.6942	0.403

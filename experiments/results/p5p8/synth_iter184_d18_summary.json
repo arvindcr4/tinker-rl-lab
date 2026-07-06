@@ -1,0 +1,86 @@
+{
+  "iter": 184,
+  "pillar": "P5P8-SYNTH",
+  "domain": "D18 = worst-step catastrophic loss regret",
+  "n_methods": 3,
+  "per_method_table": [
+    {
+      "method": "aero",
+      "n_steps": 40,
+      "mean_loss": 301.0142,
+      "median_loss": 297.1612,
+      "worst_step_loss": 651.0519,
+      "p95_loss": 613.3318,
+      "mean_abs_loss": 310.2386,
+      "relative_regret": 1.0986,
+      "worst_step_bootstrap_mean": 641.9912,
+      "worst_step_bootstrap_lo": 555.1909,
+      "worst_step_bootstrap_hi": 651.0519,
+      "worst_step_bootstrap_se": 0.4754,
+      "worst_step_bootstrap_cv": 0.0007
+    },
+    {
+      "method": "gift",
+      "n_steps": 22,
+      "mean_loss": -17772.07,
+      "median_loss": -17844.9359,
+      "worst_step_loss": 19823.5383,
+      "p95_loss": 19412.1931,
+      "mean_abs_loss": 17772.07,
+      "relative_regret": 0.1154,
+      "worst_step_bootstrap_mean": 19613.9408,
+      "worst_step_bootstrap_lo": 18858.2384,
+      "worst_step_bootstrap_hi": 19823.5383,
+      "worst_step_bootstrap_se": 7.1188,
+      "worst_step_bootstrap_cv": 0.0004
+    },
+    {
+      "method": "grpo",
+      "n_steps": 40,
+      "mean_loss": 323.1569,
+      "median_loss": 252.6101,
+      "worst_step_loss": 1004.9546,
+      "p95_loss": 781.0735,
+      "mean_abs_loss": 323.2027,
+      "relative_regret": 2.1094,
+      "worst_step_bootstrap_mean": 935.9906,
+      "worst_step_bootstrap_lo": 777.7786,
+      "worst_step_bootstrap_hi": 1004.9546,
+      "worst_step_bootstrap_se": 2.1759,
+      "worst_step_bootstrap_cv": 0.0023
+    }
+  ],
+  "aggregate": {
+    "n_methods_reasonable_rel_regret_lt_1": 1,
+    "n_methods_strict_rel_regret_lt_0p5": 1,
+    "cross_method_worst_step_cv": 1.3412
+  },
+  "hypotheses": {
+    "H1_rel_regret_lt_1_for_all_4_methods": {
+      "verdict": "FAIL",
+      "n_passing": 1,
+      "note": "Catastrophic regret < 100% of mean loss on 4/4 methods (FAILS for grpo: rel_regret=2.11)"
+    },
+    "H2_rel_regret_lt_0p5_for_majority": {
+      "verdict": "FAIL",
+      "n_passing": 1,
+      "note": "At least 3/4 methods have relative regret < 0.5 (only gift passes at 0.115)"
+    },
+    "H3_cross_method_worst_step_cv_lt_0p5": {
+      "verdict": "FAIL",
+      "cv": 1.3412,
+      "note": "Methods agree on the loss scale (cross-method CV < 0.5; FAILS because gift is on -17000 scale)"
+    },
+    "H4_worst_step_bootstrap_cv_lt_0p3": {
+      "verdict": "PASS",
+      "max_cv": 0.0023,
+      "note": "Bootstrap CI on worst-step loss is non-degenerate"
+    },
+    "H5_gift_rel_regret_strictly_lt_grpo": {
+      "verdict": "PASS",
+      "gift_rel_regret": 0.1154,
+      "grpo_rel_regret": 2.1094,
+      "note": "gift has the tightest catastrophic-tail (gamma-baseline stabilizes the loss surface)"
+    }
+  }
+}

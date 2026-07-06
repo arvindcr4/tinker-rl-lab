@@ -1,0 +1,36 @@
+{
+  "n_test": 10000,
+  "n_pos_test": 300,
+  "noise_levels": [
+    0.0,
+    0.05,
+    0.1,
+    0.25,
+    0.5
+  ],
+  "k_grid_pct": [
+    0.1,
+    0.5,
+    1.0,
+    1.5,
+    2.0,
+    3.0,
+    5.0,
+    7.0
+  ],
+  "C_inv": 0.5,
+  "L_miss": 100.0,
+  "rho": 200.0,
+  "cohorts": [
+    "V_mean_q",
+    "Amount_q",
+    "Time_t"
+  ],
+  "n_cohort_cells": 440,
+  "n_boot": 800,
+  "n_boot_cells_evaluated": 165,
+  "n_unfavorable_cells": 0,
+  "first_unfavorable_sigma_per_cohort": {},
+  "iter99_amount_q0_first_flip_sigma": null,
+  "iter99_vmean_q2_first_flip_sigma": null
+}

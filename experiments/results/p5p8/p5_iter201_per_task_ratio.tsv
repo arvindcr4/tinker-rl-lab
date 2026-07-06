@@ -1,0 +1,10 @@
+channel	task_slice	top_axis	top_axis_eta2	algo_eta2	point_ratio	boot_lo	boot_hi	boot_median	ci_excludes_1	n_task_cells
+zvf	gsm8k_easy	G	0.887247	0.045418	19.5352	5.9979	85.2308	15.8015	yes	24
+zvf	gsm8k_hard	G	0.640602	0.045418	14.1046	4.4605	66.7544	11.8223	yes	40
+zvf	humaneval_subset	model_family	0.000000	0.045418	0.0000	0.0000	0.0000	0.0000	yes	34
+mean_reward	gsm8k_easy	model_family	0.992909	0.007466	132.9833	12.6241	548.5286	47.3871	yes	24
+mean_reward	gsm8k_hard	model_family	0.991276	0.007466	132.7646	12.8199	573.6716	47.4338	yes	40
+mean_reward	humaneval_subset	model_family	0.000000	0.007466	0.0000	0.0000	0.0000	0.0000	yes	34
+mean_completion_len	gsm8k_easy	model_family	0.381680	0.007466	51.1196	3.3642	228.5164	18.4872	yes	24
+mean_completion_len	gsm8k_hard	temperature	0.255865	0.007466	34.2688	2.2213	152.6060	12.0845	yes	40
+mean_completion_len	humaneval_subset	model_family	0.546760	0.007466	73.2293	6.7409	312.4682	26.1920	yes	34

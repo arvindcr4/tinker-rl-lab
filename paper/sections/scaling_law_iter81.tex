@@ -1,0 +1,161 @@
+\paragraph{Iter 81 elevation: compute-axis invariance, arch stratification, and the
+operational horizon of the saturation law.}
+\label{par:scaling-iter81}
+Iter 73 (AIC model-selection) and iter 77 (prefix-only fit, suffix-holdout
+$R^2$) jointly established that the saturation law
+$R(t) = R_\mathrm{max} \cdot (1 - e^{-\lambda t})$ is neither the
+parsimonious family nor a useful forecaster across the 12-anchor pool.
+What remained untested were three operationally distinct questions:
+(i) \emph{compute-axis invariance} -- does the family-selection verdict
+change when we re-fit on the compute axis $C_k = k \cdot G \cdot B$
+(tokens) instead of the step axis $t$?  (ii) \emph{arch stratification}
+-- can we \emph{predict} which family wins from observable anchor
+properties (arch, param-bracket, trace length, early reward)?  (iii)
+\emph{operational $k_{50}/k_{80}$} -- the smallest prefix length $k$
+such that suffix-holdout $R^2 \ge 0.5$ / $0.8$, which iter 77 left
+blank.
+
+\paragraph{Compute-axis invariance.}
+\label{par:scaling-iter81-compute}
+The step axis $t \in \{1,\dots,n\}$ and the compute axis
+$C_k = k \cdot G \cdot B$ (with $G=8$, $B=512$ prompts, so each step is
+$\approx 4.1 \mathrm{k}$ tokens) are affine reparameterisations of the
+sample index.  Refitting all five families (saturation, power-law,
+linear, log-linear, zero) on both axes shows that the \emph{best family
+is identical on both axes for every anchor} (12/12 agree;
+\tableref{tab:iter81-refit}).  This sharpens iter 73's falsification:
+the family-selection verdict is \emph{not} an artefact of choosing the
+step axis.  However, the saturation family's AIC degrades sharply when
+the upper-bound $R_\mathrm{max} \le 1.0$ interacts with the unbounded
+compute axis (e.g.\ Qwen3.5-4B saturation AIC jumps from $-3.0$ on the
+step axis to $+45.6$ on the compute axis); the other families'
+ranking is stable.
+
+\paragraph{Arch stratification predicts zero-mean dominance.}
+\label{par:scaling-iter81-stratum}
+Aggregating per-anchor winners by single-axis strata (arch, param
+bracket, trace bracket, early-reward bracket) yields 12 strata, of
+which \textbf{11/12} have \emph{zero} (constant-mean, $k=1$) as the
+majority AIC winner (\tableref{tab:iter81-strat-lift}).  The single
+exception is the $\{1000\mathrm{B}+\}$ stratum (only Kimi-K2-Thinking,
+where linear wins).  This is a sharper structural finding than iter
+73: not only is saturation not the parsimonious family, but the
+\emph{zero model is}.  Across every observable anchor property we
+stratify by -- dense vs MoE, 4-9B vs 20-32B vs 120-685B vs 1000B+,
+short vs medium vs long traces, high vs mid vs low early reward --
+the reward trace is best described as noise around a constant.
+No 2-parameter family (saturation, power-law, linear, log-linear)
+recovers enough curvature to beat the 1-parameter constant baseline.
+
+\paragraph{Operational $k_{50}/k_{80}$ horizon is empty.}
+\label{par:scaling-iter81-horizon}
+For the 7 anchors with $n \ge 6$, we fit the saturation model on the
+prefix $t = 1, \dots, k$ for $k = 3, \dots, n-3$ and evaluate
+suffix-holdout $R^2$ on $t = k+1, \dots, n$.  The operational
+$k_{50}$ -- smallest prefix $k$ such that suffix $R^2 \ge 0.5$ -- is
+\textbf{finite for 0/12 anchors}; $k_{80}$ is also 0/12.  The best
+suffix $R^2$ across prefixes is $\le 0$ for every anchor
+(\tableref{tab:iter81-horizon}), with the maximum achieved at $k=23$
+on Llama-3.1-8B-Instruct ($R^2 = -1.8 \times 10^{-3}$) and at $k=11$
+on gpt-oss-20B ($R^2 = -1.4 \times 10^{-4}$).  Iter 77's negative
+result on operational forecasting is therefore \emph{strict}: the
+saturation law cannot forecast 50\% of suffix variance at \emph{any}
+prefix length on this anchor pool.  The mean $\Delta R^2$ between
+saturation and the constant-mean baseline is $+0.002$ across the 7
+valid anchors, so saturation provides a marginal but real improvement
+over predicting the prefix mean -- but it cannot forecast at any
+useful threshold.
+
+\paragraph{Operational interpretation.}
+\label{par:scaling-iter81-ops}
+The three findings together license a sharper version of the iter 73
+falsification.  \emph{Compute allocation rules based on the saturation
+law cannot survive a forecast-utility test on this anchor pool}, and
+the family-selection verdict is invariant to whether the underlying
+axis is measured in steps or in tokens.  The strongest parsimonious
+description of the GRPO reward traces at the 20-30 step budget is a
+constant-mean with stochastic deviation -- the traces do not exhibit
+the curvature required for any 2-parameter scaling family to win
+AIC.  Compute allocation must therefore be planned without reference
+to the saturation-law framework, or with reference to it only as a
+heuristic that is provably non-identifiable in this regime.
+
+\begin{table}[h]
+\centering
+\small
+\caption{iter 81 compute-axis refit.  Best-family AIC selection is
+identical on the step axis and the compute axis for all 12 anchors;
+the saturation AIC degrades sharply on the compute axis because the
+upper-bound $R_\mathrm{max} \le 1.0$ interacts with the unbounded
+$C_k$, but the \emph{winner} is invariant.}
+\label{tab:iter81-refit}
+\begin{tabular}{lrrlrrrrr}
+\hline
+anchor & $n$ & axis & best\_family & sat & pow & lin & log & zero \\
+\hline
+Qwen3.5-4B & 30 & step & zero & $-3.0$ & $-3.4$ & $-3.0$ & $-2.1$ & $\mathbf{-5.0}$ \\
+Qwen3.5-4B & 30 & compute & zero & $+45.6$ & $-3.4$ & $-3.0$ & $-2.1$ & $\mathbf{-5.0}$ \\
+Qwen3-8B & 30 & step & zero & $-17.3$ & $-17.5$ & $-18.1$ & -- & $\mathbf{-19.3}$ \\
+Llama-3.1-8B-Inst & 30 & step & power\_law & $-19.6$ & $\mathbf{-21.6}$ & $-20.8$ & $-20.4$ & $-21.6$ \\
+gpt-oss-20B & 30 & step & zero & $-10.9$ & $-10.2$ & $-10.4$ & $-9.9$ & $\mathbf{-11.6}$ \\
+DeepSeek-V3.1 & 20 & step & zero & $-19.0$ & $-19.0$ & $-19.0$ & $-18.8$ & $\mathbf{-21.0}$ \\
+Nemotron-120B & 20 & step & zero & $+4.2$ & $+4.4$ & $+4.4$ & -- & $\mathbf{+2.5}$ \\
+Kimi-K2-Thinking & 20 & step & linear & $-10.0$ & $-13.2$ & $\mathbf{-13.8}$ & $-13.4$ & $-12.0$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\small
+\caption{iter 81 stratum aggregation.  Majority AIC winner across
+single-axis strata; zero-mean dominates in 11/12 strata.  The single
+exception is the $\{1000\mathrm{B}+\}$ bracket (Kimi-K2-Thinking only,
+$n=1$ anchor).  Lift = winner mean AIC minus runner-up mean AIC;
+positive lift means the majority winner is genuinely better.}
+\label{tab:iter81-strat-lift}
+\begin{tabular}{lllrrr}
+\hline
+stratum\_axis & stratum\_value & $n$ & majority\_winner & runner-up & lift \\
+\hline
+arch & dense & 6 & zero & power\_law & $+1.77$ \\
+arch & moe & 6 & zero & linear & $+0.56$ \\
+param\_bracket & 4-9B & 3 & zero & power\_law & $+1.13$ \\
+param\_bracket & 20-32B & 5 & zero & linear & $+0.08$ \\
+param\_bracket & 120-685B & 3 & zero & zero & $+9.55$ \\
+param\_bracket & 1000B+ & 1 & linear & log\_linear & $+0.35$ \\
+trace\_bracket & short\_n\_le5 & 5 & zero & power\_law & $+0.08$ \\
+trace\_bracket & medium\_n\_6\_20 & 3 & zero & zero & $+5.93$ \\
+trace\_bracket & long\_n\_ge21 & 4 & zero & power\_law & $+1.20$ \\
+early\_bracket & high\_first5\_ge0.8 & 7 & zero & power\_law & $+0.77$ \\
+early\_bracket & mid\_first5\_0.4\_0.8 & 1 & zero & power\_law & -- \\
+early\_bracket & low\_first5\_lt0.4 & 4 & zero & linear & $+0.78$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\small
+\caption{iter 81 operational horizon.  $k_{50}$ and $k_{80}$ are the
+smallest prefix $k$ such that suffix-holdout $R^2 \ge 0.5$ / $0.8$
+respectively.  $k_{50}$ and $k_{80}$ are non-finite for every anchor:
+the saturation law cannot forecast 50\% of suffix variance at any
+prefix length.  Best suffix $R^2$ is $\le 0$ for every anchor;
+$\Delta = \mathrm{sat} - \mathrm{const}$ is the saturation fit's lift
+over the constant-mean baseline.}
+\label{tab:iter81-horizon}
+\begin{tabular}{lrrrrrr}
+\hline
+anchor & $n$ & $k_{50}$ & $k_{80}$ & best sat $R^2$ & best const $R^2$ & $\Delta$ \\
+\hline
+Qwen3.5-4B & 30 & -- & -- & $-3.2\mathrm{e}{-5}$ & $-3.2\mathrm{e}{-5}$ & $+9.6\mathrm{e}{-8}$ \\
+Qwen3-8B & 30 & -- & -- & $-5.1\mathrm{e}{-6}$ & $-5.1\mathrm{e}{-6}$ & $-3.3\mathrm{e}{-8}$ \\
+Llama-3.1-8B-Inst & 30 & -- & -- & $-1.8\mathrm{e}{-3}$ & $-1.8\mathrm{e}{-3}$ & $+6.4\mathrm{e}{-7}$ \\
+gpt-oss-20B & 30 & -- & -- & $-1.4\mathrm{e}{-4}$ & $-1.6\mathrm{e}{-2}$ & $+1.6\mathrm{e}{-2}$ \\
+DeepSeek-V3.1 & 20 & -- & -- & $-3.6\mathrm{e}{-10}$ & $0$ & $-3.6\mathrm{e}{-10}$ \\
+Nemotron-120B & 20 & -- & -- & $-6.5\mathrm{e}{-4}$ & $-6.2\mathrm{e}{-4}$ & $-3.2\mathrm{e}{-5}$ \\
+Kimi-K2-Thinking & 20 & -- & -- & $-2.4\mathrm{e}{-1}$ & $-2.4\mathrm{e}{-1}$ & $-1.8\mathrm{e}{-5}$ \\
+\hline
+\end{tabular}
+\end{table}

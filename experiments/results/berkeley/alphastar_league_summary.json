@@ -1,0 +1,63 @@
+{
+  "ts": "2026-07-04T11:26:24.603950+00:00",
+  "iter": 23,
+  "lecture": "F25 L11 Oriol Vinyals (Multi-Agent Systems in the Era of LLMs)",
+  "citations": {
+    "arXiv:1708.04782": "Vinyals et al. 'StarCraft II: A New Challenge for Reinforcement Learning' (SC2LE, 2017)",
+    "Nature 2019": "Vinyals et al. 'Grandmaster level in StarCraft II using multi-agent RL' (AlphaStar, 2019, no arXiv)",
+    "arXiv:1912.06680": "Berner et al. 'Dota 2 with Large Scale Deep RL' (OpenAI Five, 2019)"
+  },
+  "all_verified_via": "arxiv.org/abs/1708.04782 + arxiv.org/abs/1912.06680 (Nature 2019 is open access DOI 10.1038/s41586-019-1724-z)",
+  "hypotheses": {
+    "H1_league_size_law": {
+      "slope_b_per_decade": "0.5000",
+      "intercept_a": "-2.0969",
+      "n_saturated_at_G32": 2,
+      "verdict": "DECISIVE"
+    },
+    "H2_bounded_cone_Gstar": {
+      "n_nonpositive_deltas": "4/4",
+      "all_Gstar_saturated_at_32": true,
+      "verdict": "DECISIVE"
+    },
+    "H3_league_diversity_bonus": {
+      "n_negative_delta_div": "4/4",
+      "mean_delta_div": "-0.0668",
+      "verdict": "DECISIVE"
+    },
+    "H4_complementarity": {
+      "spearman_isoG": "1.0000",
+      "spearman_isoT": "1.0000",
+      "amplification_factor": "2.26x",
+      "verdict": "DECISIVE"
+    },
+    "H5_throughput_decay": {
+      "per_rollout_R_C_G16": "0.00396",
+      "per_rollout_R_C_G64": "0.00135",
+      "ratio_G64_to_G16": "0.342",
+      "decay_G64_lt_G16": true,
+      "late_R_C_gain_G64_vs_G32": "+0.0150",
+      "bounded_cone_penalty_T16M": "0.0400",
+      "net_league_cost_G64": "-0.0250",
+      "verdict": "DECISIVE"
+    }
+  },
+  "verdict_counts": {
+    "DECISIVE": 5,
+    "TOTAL": 5
+  },
+  "outputs": {
+    "h1": "experiments/results/berkeley/alphastar_league_law.tsv",
+    "h2": "experiments/results/berkeley/alphastar_league_bounded_cone.tsv",
+    "h3": "experiments/results/berkeley/alphastar_league_diversity_bonus.tsv",
+    "h4": "experiments/results/berkeley/alphastar_league_complementarity.tsv",
+    "h5": "experiments/results/berkeley/alphastar_league_throughput.tsv"
+  },
+  "data_inputs": [
+    "experiments/results/group_size_iter127_optimal_g.tsv",
+    "experiments/results/group_size_iter127_bounded_cone.tsv",
+    "experiments/results/group_size_iter127_complementarity.tsv",
+    "experiments/results/group_size_iter107_returns_to_compute.tsv",
+    "experiments/results/group_size_deltadiv_decomp.tsv"
+  ]
+}

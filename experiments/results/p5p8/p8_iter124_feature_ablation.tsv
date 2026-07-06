@@ -1,0 +1,4 @@
+fset	n_fires_anchor	n_fires_fset	n_both	n_anchor_only	n_test_only	n_neither	agreement	mwu_U	mwu_z
+20raw	84	81	19	65	62	9854	0.9873	50015000.0	0.03674142761753864
+20raw+minmax	84	84	31	53	53	9863	0.9894	50000000.0	0.0
+20raw+stat	84	85	26	58	59	9857	0.9883	49995000.0	-0.012247142539179547

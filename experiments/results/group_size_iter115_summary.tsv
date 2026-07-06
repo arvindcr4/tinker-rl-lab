@@ -1,0 +1,11 @@
+metric_kind	metric_key	headline
+tost_Wu_bound	T=1M	T=1M: TOST Delta=+0.0102 [-0.032,+0.053], p_TOST=0.2613 -> INCONCLUSIVE (CI spans bound)
+tost_strict_bound	T=1M	T=1M (1pp strict): p_TOST=0.5048 -> FAILS equivalence (Delta=+0.010 > +0.01)
+tost_Wu_bound	T=4M	T=4M: TOST Delta=+0.1101 [+0.069,+0.152], p_TOST=1.0000 -> FAILS equivalence (Delta=+0.110 > +0.024)
+tost_strict_bound	T=4M	T=4M (1pp strict): p_TOST=1.0000 -> FAILS equivalence (Delta=+0.110 > +0.01)
+tost_Wu_bound	T=16M	T=16M: TOST Delta=+0.2098 [+0.166,+0.253], p_TOST=1.0000 -> FAILS equivalence (Delta=+0.210 > +0.024)
+tost_strict_bound	T=16M	T=16M (1pp strict): p_TOST=1.0000 -> FAILS equivalence (Delta=+0.210 > +0.01)
+tost_Wu_bound	T=64M	T=64M: TOST Delta=+0.2401 [+0.199,+0.283], p_TOST=1.0000 -> FAILS equivalence (Delta=+0.240 > +0.024)
+tost_strict_bound	T=64M	T=64M (1pp strict): p_TOST=1.0000 -> FAILS equivalence (Delta=+0.240 > +0.01)
+cross_pillar_linkage	spearman_logT	Spearman rho(retention, log10 T)=-1.0000, permutation p=0.0834 -- retention monotonically collapses as budget grows
+compute_cost	acc=0.70	acc=0.70: G=4 needs 1367 GPU-hr ($157); G=32 needs 174 GPU-hr ($20); G=4 costs 137 USD more (7.9x tokens)

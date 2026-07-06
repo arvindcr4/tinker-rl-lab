@@ -1,0 +1,121 @@
+% Section: P5 MIN-REPORT v2.2 value-correctness mutation stress test (iter 121)
+% Closes the AUDITOR-ROBUSTNESS gap by testing the iter-121 value-correctness
+% auditor against 8 controlled mutations applied to the n=98 live mega
+% corpus. Iter-97/105/113/117 audited manifest CONTENTS at schema/value/content/
+% structural layers. None of them stress-tested the AUDITORS THEMSELVES.
+\subsection{MIN-REPORT v2.2 value-correctness mutation stress test}
+\label{sec:p5-iter121-value-correctness}
+
+A presence-only audit (``is field $X$ present in the manifest?'') can pass
+on a manifest whose values are silently wrong. The value-correctness
+auditor (10 checks, extending the iter-113 emit-gap audit in
+Section~\ref{sec:p5-iter113-v22-recovery}) must be tested against
+controlled perturbations to quantify: (a) detection rate for each
+mutation class, (b) blind spots (mutations that pass the auditor
+unchanged), and (c) the check-fanout structure (which check fires on
+which mutation).
+
+\subsubsection{Method}
+We load the $n{=}98$ live mega manifests and apply $8$ controlled
+mutations per cell. Each mutation corrupts a known MIN-REPORT v2.2 item
+by flipping the value to a known-wrong one (preserving format but
+breaking semantics): \textbf{M1} cell\_id hash swap; \textbf{M2}
+model\_family swap; \textbf{M3} task\_slice swap;
+\textbf{M4} $G$ swap; \textbf{M5} temperature swap;
+\textbf{M6} seed swap; \textbf{M7} heldout\_split JSON swap;
+\textbf{M8} per\_step\_zvf\_path break. We then re-run the
+$10$-check value-correctness audit; a mutation is ``caught'' if at
+least one check flips from \textsc{pass} to \textsc{fail}.
+
+\subsubsection{Hypotheses}
+\begin{itemize}
+  \item \textbf{H1 (falsifiable)}: every mutation is caught on $\geq 1$
+        check (auditor is complete; no silent corruption).
+  \item \textbf{H2 (falsifiable)}: every mutation has a stable dedicated
+        check with detection-rate $\geq 0.95$ (one-to-one
+        M$_i \leftrightarrow$ C$_j$ mapping).
+  \item \textbf{H3 (falsifiable)}: cell\_id mutations flip C01; JSON-body
+        mutations flip C07/C10.
+  \item \textbf{H4 (falsifiable)}: there exists at least one mutation
+        class with detection-rate $0.0$ (auditor has blind spots).
+\end{itemize}
+
+\subsubsection{Measured results}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{l l r r r l r}
+\toprule
+mut & name & n\_cells & n\_caught & det\_rate & top\_check & top\_count \\
+\midrule
+M1 & cell\_id\_swap\_hash        & 98 &  \textbf{0} & \textbf{0.000} & C01 & 0  \\
+M2 & model\_family\_swap         & 98 &  \textbf{0} & \textbf{0.000} & C01 & 0  \\
+M3 & task\_slice\_swap           & 98 & 98 & \textbf{1.000} & C03 & 98 \\
+M4 & G\_swap                     & 98 & 98 & \textbf{1.000} & C04 & 98 \\
+M5 & temperature\_swap           & 98 & 98 & \textbf{1.000} & C05 & 98 \\
+M6 & seed\_swap                  & 98 & 98 & \textbf{1.000} & C06 & 98 \\
+M7 & heldout\_split\_swap        & 98 & 98 & \textbf{1.000} & C07 & 98 \\
+M8 & per\_step\_zvf\_path\_break & 98 & 98 & \textbf{1.000} & C10 & 98 \\
+\bottomrule
+\end{tabular}
+\caption{P5 iter-121 mutation stress test (n=98 cells, 8 mutations = 784
+evaluations). H1 REFUTED: M1 and M2 are caught on 0/98 cells.}
+\label{tab:p5-iter121-mutation}
+\end{table}
+
+Per-check fanout across all 784 evaluations: C03, C04, C05, C06, C07, C10
+each fire on $98$ mutation-evaluations ($12.5\%$ of the $784$). C01, C02,
+C08, C09 fire on $0$ evaluations --- each is the dedicated check for a
+mutation class that the current auditor does not catch.
+
+\subsubsection{Verdicts}
+
+\begin{itemize}
+  \item \textbf{H1 REFUTED.} M1 and M2 are caught on 0/98 cells. The
+        auditor has blind spots. The unmutated corpus passes $100\%$
+        on all $10$ checks (per the iter-113 emit-gap baseline),
+        but the auditor does not validate the cell\_id hash suffix
+        against a known-registry (M1) and does not cross-validate
+        filename model\_family against the cells.tsv model\_family
+        ground-truth (M2).
+  \item \textbf{H2 PARTIALLY PASS.} $6/8$ mutations have a stable
+        dedicated check with detection-rate $1.0$ (M3$\to$C03,
+        M4$\to$C04, M5$\to$C05, M6$\to$C06, M7$\to$C07,
+        M8$\to$C10). The remaining $2$ (M1, M2) have NO check.
+  \item \textbf{H3 REFUTED for M1.} M1 (cell\_id hash swap) does NOT
+        flip C01 because the cell\_id JSON-basename match passes
+        regardless of the hash suffix value. M2 (model\_family swap)
+        also does NOT flip C02 because C02 only validates the model
+        token against a $2$-element canonical set, not against
+        cells.tsv ground-truth.
+  \item \textbf{H4 CONFIRMED.} M1 and M2 are silent-corruption blind
+        spots with detection-rate $0.0$ across $98$ cells (combined
+        $0/196 = 0.0\%$).
+\end{itemize}
+
+\subsubsection{Cross-paper coupling}
+
+The value-correctness audit (passes $100\%$ on the unmutated corpus)
+and the mutation stress test (REFUTES H1, CONFIRMS H4) jointly
+establish: (i) the unmutated corpus is internally consistent
+($10/10$ checks pass on $98/98$ cells, strict-pass rate $100.0\%$);
+(ii) the auditor has $2$ specific silent-corruption blind spots
+(cell\_id hash suffix, model\_family cross-validation); (iii) the
+detection fanout is mostly one-to-one (M$_i \leftrightarrow$ C$_j$),
+which is a positive structural property for future extension.
+\textbf{Operational recommendation}: add \texttt{C11} (cell\_id hash
+matches a known-registry hash) and \texttt{C12} (model\_family
+filename token matches cells.tsv model\_family) to close the H4
+blind spots; wire into a CI gate in \texttt{registry\_validate.py}.
+
+\subsubsection{Recommended next-iter veins}
+
+\textbf{(a)} Compute the auditor's \emph{type-I} false-positive rate
+on a corpus with random benign perturbations (single-character typos
+in non-key fields). \textbf{(b)} Compute the auditor's \emph{type-II}
+miss rate on a corpus with all $8$ mutations applied simultaneously
+(does the auditor still find at least one?). \textbf{(c)} Extend the
+mutation set to $16$ by adding the $8$ iter-117 ``structural'' blind
+spots (e.g., flip cell\_id filename to a non-canonical task\_slice that
+breaks \texttt{parse\_filename} entirely).

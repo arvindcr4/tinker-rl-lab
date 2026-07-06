@@ -1,0 +1,44 @@
+{
+  "iter": 96,
+  "K_lags": 3,
+  "B_bootstrap": 2000,
+  "n_runs": 16,
+  "tasks": [
+    "arithmetic_easy",
+    "gsm8k_cot"
+  ],
+  "algos": [
+    "grpo",
+    "dr_grpo"
+  ],
+  "inputs": [
+    "/home/claude/tinker-rl-lab-minimax/experiments/results/drgrpo_vs_grpo.json",
+    "/home/claude/tinker-rl-lab-minimax/experiments/results/drgrpo_gsm8k_cot_full.json"
+  ],
+  "outputs": [
+    "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter96_perrun.tsv",
+    "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter96_paired.tsv",
+    "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter96_summary.tsv"
+  ],
+  "key_metrics": [
+    "phi_L",
+    "phi_R",
+    "fwd",
+    "bwd",
+    "fwd_signed",
+    "bwd_signed",
+    "ai",
+    "fb_ratio",
+    "F_lr",
+    "p_lr",
+    "r2_lr",
+    "ccf_k=+1",
+    "ccf_k=+2",
+    "ccf_k=+3",
+    "ccf_k=-1",
+    "ccf_k=-2",
+    "ccf_k=-3",
+    "ccf_k=+0"
+  ],
+  "notes": "ICCA = innovation cross-correlation asymmetry on AR(1)-filtered (L_t, R_t).  AI > 0 => L leads R in innovation space; AI < 0 => R leads L.  Dr.GRPO prediction: AI rises (sever R->L feedback), F/B ratio rises, residual Granger F_lr rises."
+}

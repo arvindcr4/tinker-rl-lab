@@ -1,0 +1,14 @@
+# zvf_iter102_aero_test.tsv - per-method mean ZVF, predicted ZVF_iid,
+# and calibration gap on variance_mitigation runs (G=8 assumed).
+# Last row is the paired AERO-vs-GRPO summary. Source: scripts/zvf_iter102.py
+method	n_seeds	zvf_emp_mean	zvf_iid_pred_mean	delta_mean	rho_mean	raw_zvf_above_iid_pct
+aero	5	0.2203	0.0477	0.1726	4.6229	100.0
+areal	5	0.1209	0.049	0.0719	2.5111	100.0
+cppo	5	0.2952	0.0517	0.2434	5.7073	100.0
+es	5	0.1142	0.0544	0.0599	2.1263	100.0
+gift	5	0.1142	0.0494	0.0648	2.3536	100.0
+grpo	5	0.4808	0.0643	0.4165	7.4869	100.0
+mcgrpo	5	0.1461	0.0519	0.0942	2.8686	100.0
+ngrpo	5	0.3003	0.0555	0.2448	5.4119	100.0
+scafgrpo	5	0.3166	0.0437	0.2729	7.2389	100.0
+__PAIRED_AERO_VS_GRPO__	5			-0.2439		5/5 below

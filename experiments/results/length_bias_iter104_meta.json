@@ -1,0 +1,17 @@
+{
+  "iter": 104,
+  "pillar": "P4-LengthBias",
+  "K": 3,
+  "n_q": 5,
+  "B": 2000,
+  "seed_base": 20260703,
+  "n_runs": 16,
+  "tasks": [
+    "arithmetic_easy",
+    "gsm8k_cot"
+  ],
+  "algos": [
+    "dr_grpo",
+    "grpo"
+  ]
+}

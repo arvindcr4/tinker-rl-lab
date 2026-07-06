@@ -1,0 +1,13 @@
+entry_id	total	match	drift	missing	pct_match
+delta_adaptiveg	2	2	0	0	100.0
+delta_aero	6	4	1	1	66.7
+delta_areal	6	4	1	1	66.7
+delta_cppo	3	0	1	2	0.0
+delta_drgrpo	3	3	0	0	100.0
+delta_es	3	0	1	2	0.0
+delta_gift	6	4	1	1	66.7
+delta_mcgrpo	3	0	1	2	0.0
+delta_ngrpo	3	0	1	2	0.0
+delta_scafgrpo	3	0	1	2	0.0
+delta_tool_use_llama-8b-inst	1	0	0	0	0.0
+delta_tool_use_qwen3-32b	1	0	0	0	0.0

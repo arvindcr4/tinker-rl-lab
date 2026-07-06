@@ -1,0 +1,256 @@
+{
+  "iter": 184,
+  "n_train": 50000,
+  "n_test": 10000,
+  "n_quartiles": 4,
+  "k1_pct": 1.0,
+  "n_seeds": 5,
+  "quartile_sizes": [
+    2500,
+    2500,
+    2500,
+    2500
+  ],
+  "per_fset_per_q_p_at_1": {
+    "20raw_0": 0.656,
+    "20raw_1": 0.864,
+    "20raw_2": 0.928,
+    "20raw_3": 0.984,
+    "24full_0": 0.896,
+    "24full_1": 0.872,
+    "24full_2": 0.912,
+    "24full_3": 0.992,
+    "4sensor_0": 0.544,
+    "4sensor_1": 0.496,
+    "4sensor_2": 0.32,
+    "4sensor_3": 0.328
+  },
+  "per_fset_per_q_hit_at_1": {
+    "20raw_0": 0.4686,
+    "20raw_1": 0.6171,
+    "20raw_2": 0.6105,
+    "20raw_3": 0.6833,
+    "24full_0": 0.64,
+    "24full_1": 0.6229,
+    "24full_2": 0.6,
+    "24full_3": 0.6889,
+    "4sensor_0": 0.3886,
+    "4sensor_1": 0.3543,
+    "4sensor_2": 0.2105,
+    "4sensor_3": 0.2278
+  },
+  "per_fset_per_q_auc": {
+    "20raw_0": 0.9918,
+    "20raw_1": 0.9969,
+    "20raw_2": 0.9989,
+    "20raw_3": 0.9997,
+    "24full_0": 0.9975,
+    "24full_1": 0.9977,
+    "24full_2": 0.9984,
+    "24full_3": 0.9998,
+    "4sensor_0": 0.9747,
+    "4sensor_1": 0.9616,
+    "4sensor_2": 0.9456,
+    "4sensor_3": 0.963
+  },
+  "gap_rows": [
+    {
+      "contrast": "24full_minus_20raw",
+      "quartile": 0,
+      "gap_p_at_1_mean": 0.24,
+      "gap_p_at_1_lo": 0.192,
+      "gap_p_at_1_hi": 0.288,
+      "gap_hit_mean": 0.171429,
+      "gap_hit_lo": 0.137143,
+      "gap_hit_hi": 0.205714,
+      "gap_auc_mean": 0.005781,
+      "gap_auc_lo": 0.005241,
+      "gap_auc_hi": 0.006291
+    },
+    {
+      "contrast": "24full_minus_20raw",
+      "quartile": 1,
+      "gap_p_at_1_mean": 0.008,
+      "gap_p_at_1_lo": -0.024,
+      "gap_p_at_1_hi": 0.048,
+      "gap_hit_mean": 0.005714,
+      "gap_hit_lo": -0.017143,
+      "gap_hit_hi": 0.034286,
+      "gap_auc_mean": 0.000737,
+      "gap_auc_lo": 0.000572,
+      "gap_auc_hi": 0.000893
+    },
+    {
+      "contrast": "24full_minus_20raw",
+      "quartile": 2,
+      "gap_p_at_1_mean": -0.016,
+      "gap_p_at_1_lo": -0.04,
+      "gap_p_at_1_hi": 0.016,
+      "gap_hit_mean": -0.010526,
+      "gap_hit_lo": -0.026316,
+      "gap_hit_hi": 0.010526,
+      "gap_auc_mean": -0.000566,
+      "gap_auc_lo": -0.000761,
+      "gap_auc_hi": -0.000374
+    },
+    {
+      "contrast": "24full_minus_20raw",
+      "quartile": 3,
+      "gap_p_at_1_mean": 0.008,
+      "gap_p_at_1_lo": -0.016,
+      "gap_p_at_1_hi": 0.032,
+      "gap_hit_mean": 0.005555,
+      "gap_hit_lo": -0.01125,
+      "gap_hit_hi": 0.022222,
+      "gap_auc_mean": 8.8e-05,
+      "gap_auc_lo": -5.2e-05,
+      "gap_auc_hi": 0.000196
+    },
+    {
+      "contrast": "24full_minus_4sensor",
+      "quartile": 0,
+      "gap_p_at_1_mean": 0.352,
+      "gap_p_at_1_lo": 0.28,
+      "gap_p_at_1_hi": 0.416,
+      "gap_hit_mean": 0.251428,
+      "gap_hit_lo": 0.2,
+      "gap_hit_hi": 0.297142,
+      "gap_auc_mean": 0.022801,
+      "gap_auc_lo": 0.019438,
+      "gap_auc_hi": 0.026958
+    },
+    {
+      "contrast": "24full_minus_4sensor",
+      "quartile": 1,
+      "gap_p_at_1_mean": 0.376,
+      "gap_p_at_1_lo": 0.32,
+      "gap_p_at_1_hi": 0.432,
+      "gap_hit_mean": 0.268571,
+      "gap_hit_lo": 0.228571,
+      "gap_hit_hi": 0.308571,
+      "gap_auc_mean": 0.03604,
+      "gap_auc_lo": 0.03034,
+      "gap_auc_hi": 0.042381
+    },
+    {
+      "contrast": "24full_minus_4sensor",
+      "quartile": 2,
+      "gap_p_at_1_mean": 0.592,
+      "gap_p_at_1_lo": 0.552,
+      "gap_p_at_1_hi": 0.64,
+      "gap_hit_mean": 0.389474,
+      "gap_hit_lo": 0.357895,
+      "gap_hit_hi": 0.421052,
+      "gap_auc_mean": 0.052743,
+      "gap_auc_lo": 0.044371,
+      "gap_auc_hi": 0.062564
+    },
+    {
+      "contrast": "24full_minus_4sensor",
+      "quartile": 3,
+      "gap_p_at_1_mean": 0.664,
+      "gap_p_at_1_lo": 0.648,
+      "gap_p_at_1_hi": 0.68,
+      "gap_hit_mean": 0.461111,
+      "gap_hit_lo": 0.45,
+      "gap_hit_hi": 0.472222,
+      "gap_auc_mean": 0.036875,
+      "gap_auc_lo": 0.034111,
+      "gap_auc_hi": 0.039098
+    },
+    {
+      "contrast": "4sensor_minus_20raw",
+      "quartile": 0,
+      "gap_p_at_1_mean": -0.112,
+      "gap_p_at_1_lo": -0.16,
+      "gap_p_at_1_hi": -0.064,
+      "gap_hit_mean": -0.08,
+      "gap_hit_lo": -0.114285,
+      "gap_hit_hi": -0.045714,
+      "gap_auc_mean": -0.01702,
+      "gap_auc_lo": -0.020871,
+      "gap_auc_hi": -0.014122
+    },
+    {
+      "contrast": "4sensor_minus_20raw",
+      "quartile": 1,
+      "gap_p_at_1_mean": -0.368,
+      "gap_p_at_1_lo": -0.432,
+      "gap_p_at_1_hi": -0.312,
+      "gap_hit_mean": -0.262857,
+      "gap_hit_lo": -0.308571,
+      "gap_hit_hi": -0.222857,
+      "gap_auc_mean": -0.035303,
+      "gap_auc_lo": -0.041523,
+      "gap_auc_hi": -0.029705
+    },
+    {
+      "contrast": "4sensor_minus_20raw",
+      "quartile": 2,
+      "gap_p_at_1_mean": -0.608,
+      "gap_p_at_1_lo": -0.632,
+      "gap_p_at_1_hi": -0.584,
+      "gap_hit_mean": -0.4,
+      "gap_hit_lo": -0.41579,
+      "gap_hit_hi": -0.38421,
+      "gap_auc_mean": -0.053309,
+      "gap_auc_lo": -0.063318,
+      "gap_auc_hi": -0.044668
+    },
+    {
+      "contrast": "4sensor_minus_20raw",
+      "quartile": 3,
+      "gap_p_at_1_mean": -0.656,
+      "gap_p_at_1_lo": -0.688,
+      "gap_p_at_1_hi": -0.624,
+      "gap_hit_mean": -0.455556,
+      "gap_hit_lo": -0.477778,
+      "gap_hit_hi": -0.433333,
+      "gap_auc_mean": -0.036787,
+      "gap_auc_lo": -0.038972,
+      "gap_auc_hi": -0.034035
+    }
+  ],
+  "hypotheses": {
+    "H1_24full_minus_20raw_hit_rate_Q0_gt_0": {
+      "verdict": "PASS",
+      "gap_lo": 0.192,
+      "gap_mean": 0.24,
+      "note": "24full > 20raw on hit_rate in Q0 (low V_std) -- V-stat features add value where raw features agree"
+    },
+    "H2_gap_monotone_decreasing_in_V_std_quartile": {
+      "verdict": "FAIL",
+      "gap_means": [
+        0.24,
+        0.008,
+        -0.016,
+        0.008
+      ],
+      "note": "gap(24full-20raw) is LARGEST in Q0, SMALLEST in Q3 (V-stat features help most when raw features agree)"
+    },
+    "H3_4sensor_strictly_worse_than_20raw_in_every_Q": {
+      "verdict": "PASS",
+      "gap_means": [
+        -0.112,
+        -0.368,
+        -0.608,
+        -0.656
+      ],
+      "note": "4sensor alone strictly loses to 20raw everywhere -- V-stat cannot replace raw granularity"
+    },
+    "H4_24full_minus_20raw_AUC_in_Q0_gte_001": {
+      "verdict": "PASS",
+      "gap_auc_q0_mean": 0.0058,
+      "note": "V-stat adds AUC headroom in low-V_std regime where raw-feature ranking is weak"
+    },
+    "H5_24full_strictly_dominates_4sensor_in_every_Q": {
+      "verdict": "PASS",
+      "note": "24full strictly beats 4sensor alone on hit_rate in every quartile"
+    },
+    "H6_24full_hit_rate_cross_quartile_spread_lt_10pp": {
+      "verdict": "PASS",
+      "spread_pp": 8.89,
+      "note": "XGB-24full is V_std-fair: hit_rate spread across quartiles < 10 pp"
+    }
+  }
+}

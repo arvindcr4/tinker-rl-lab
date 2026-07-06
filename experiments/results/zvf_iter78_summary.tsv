@@ -1,0 +1,16 @@
+# Pillar 2 iter78 top-level summary.
+# Source: scripts/zvf_iter78.py
+key	value
+n_traces_total	62
+n_traces_with_failure	37
+n_evaluable_traces	37
+n_traces_with_alarm	57
+n_canonical_anchors	22
+n_anchors_protocol_works	17
+recommended_threshold	0.500000
+macro_true_alarm_rate	1.000000
+macro_miss_rate	0.000000
+W_trailing_window	10
+H_cutoff	0.500000
+STUCK_W	20
+STUCK_CUTOFF	0.500000

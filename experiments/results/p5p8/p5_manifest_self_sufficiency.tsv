@@ -1,0 +1,25 @@
+target	model	n_axes	r2	r2_ci_lo	r2_ci_hi	note
+zvf	manifest_only	3	0.7759	0.73	0.8455	
+zvf	cells_only	5	0.7732	0.735	0.8345	
+zvf	manifest+cells	8	0.7903			
+zvf	GAP(cells-manifest)		-0.0026	-0.0446	0.0339	missing-field penalty on this outcome
+zvf	eta_man/group_size_schedule	1	0.4437			manifest-only eta^2
+zvf	eta_man/heldout_split	1	0.4687			manifest-only eta^2
+zvf	eta_man/decontamination_notes	1	0.4678			manifest-only eta^2
+zvf	eta_cel/model_family	1	0.0053			cells-only eta^2
+zvf	eta_cel/task_slice	1	0.4687			cells-only eta^2
+zvf	eta_cel/G	1	0.4437			cells-only eta^2
+zvf	eta_cel/temperature	1	0.0092			cells-only eta^2
+zvf	eta_cel/seed	1	0.0			cells-only eta^2
+mean_reward	manifest_only	3	0.2798	0.2192	0.443	
+mean_reward	cells_only	5	0.743	0.688	0.82	
+mean_reward	manifest+cells	8	0.7438			
+mean_reward	GAP(cells-manifest)		0.4632	0.3092	0.5644	missing-field penalty on this outcome
+mean_reward	eta_man/group_size_schedule	1	0.0304			manifest-only eta^2
+mean_reward	eta_man/heldout_split	1	0.2729			manifest-only eta^2
+mean_reward	eta_man/decontamination_notes	1	0.267			manifest-only eta^2
+mean_reward	eta_cel/model_family	1	0.4527			cells-only eta^2
+mean_reward	eta_cel/task_slice	1	0.2729			cells-only eta^2
+mean_reward	eta_cel/G	1	0.0304			cells-only eta^2
+mean_reward	eta_cel/temperature	1	0.0			cells-only eta^2
+mean_reward	eta_cel/seed	1	0.0			cells-only eta^2

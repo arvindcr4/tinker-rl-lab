@@ -1,0 +1,44 @@
+entry_id	record_type	n_artifacts	n_path_ok	n_path_missing	n_desc_path_ok	n_desc_path_partial	n_desc_path_missing	n_desc	n_wandb	n_empty	artifact_resolvability_score	citation_score	has_cite_bibkey	has_cite_arxiv	provenance_completeness_score
+colab-open_dapo_e3	stack	1	0	0	0	0	0	0	1	0	0.0	0.0	0	0	0.0
+colab-open_drgrpo_e3	stack	1	0	0	0	0	0	0	1	0	0.0	0.0	0	0	0.0
+colab-open_grpo-adaptiveg_e3	stack	1	0	0	0	0	0	0	1	0	0.0	0.0	0	0	0.0
+colab-open_grpo_e3	stack	1	0	0	0	0	0	0	1	0	0.0	0.0	0	0	0.0
+delta_adaptiveg	variant_delta	0	0	0	0	0	0	0	0	0		0.6667	1	0	0.6667
+delta_aero	variant_delta	0	0	0	0	0	0	0	0	0		1.0	1	1	1.0
+delta_areal	variant_delta	0	0	0	0	0	0	0	0	0		1.0	1	1	1.0
+delta_cppo	variant_delta	0	0	0	0	0	0	0	0	0		1.0	1	1	1.0
+delta_dapo	variant_delta	0	0	0	0	0	0	0	0	0		1.0	1	1	1.0
+delta_drgrpo	variant_delta	0	0	0	0	0	0	0	0	0		1.0	1	1	1.0
+delta_es	variant_delta	0	0	0	0	0	0	0	0	0		1.0	1	1	1.0
+delta_gift	variant_delta	0	0	0	0	0	0	0	0	0		1.0	1	1	1.0
+delta_gspo	variant_delta	0	0	0	0	0	0	0	0	0		1.0	1	1	1.0
+delta_liteppo	variant_delta	0	0	0	0	0	0	0	0	0		0.6667	1	0	0.6667
+delta_mcgrpo	variant_delta	0	0	0	0	0	0	0	0	0		1.0	1	1	1.0
+delta_ngrpo	variant_delta	0	0	0	0	0	0	0	0	0		1.0	1	1	1.0
+delta_ppo	variant_delta	0	0	0	0	0	0	0	0	0		1.0	1	1	1.0
+delta_reinforce	variant_delta	0	0	0	0	0	0	0	0	0		0.6667	1	0	0.6667
+delta_scafgrpo	variant_delta	0	0	0	0	0	0	0	0	0		1.0	1	1	1.0
+delta_tool_use_llama-8b-inst	variant_delta	0	0	0	0	0	0	0	0	0		0.3333	0	0	0.3333
+delta_tool_use_qwen3-32b	variant_delta	0	0	0	0	0	0	0	0	0		0.3333	0	0	0.3333
+openrlhf_grpo_qwen3-8b_gsm8k	stack	1	1	0	0	0	0	0	0	0	1.0	0.0	0	0	0.7
+tinker_aero_qwen3.5-4b_gsm8k	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+tinker_areal_qwen3.5-4b_gsm8k	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+tinker_dapo_qwen3.5-4b_gsm8k	stack	1	0	0	0	0	0	1	0	0	0.0	0.0	0	0	0.0
+tinker_drgrpo_qwen3.5-4b_gsm8k	stack	1	0	0	0	0	0	1	0	0	0.0	0.0	0	0	0.0
+tinker_gift_qwen3.5-4b_gsm8k	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+tinker_grpo_qwen3-8b_gsm8k	stack	1	1	0	0	0	0	0	0	0	1.0	0.0	0	0	0.7
+tinker_grpo_qwen3.5-4b_gsm8k	stack	1	0	0	0	0	0	1	0	0	0.0	0.0	0	0	0.0
+tinker_gspo_qwen3.5-4b_gsm8k	stack	1	0	0	0	0	0	1	0	0	0.0	0.0	0	0	0.0
+trl_grpo_qwen3-8b_gsm8k	stack	1	1	0	0	0	0	0	0	0	1.0	0.0	0	0	0.7
+verl_grpo_qwen3-8b_gsm8k	stack	1	1	0	0	0	0	0	0	0	1.0	0.0	0	0	0.7
+zvf130_aero	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+zvf130_areal	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+zvf130_cppo	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+zvf130_es	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+zvf130_gift	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+zvf130_grpo	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+zvf130_mcgrpo	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+zvf130_ngrpo	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+zvf130_scafgrpo	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+zvf130_tool_use_llama-8b-inst	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7
+zvf130_tool_use_qwen3-32b	stack	1	0	0	1	0	0	0	0	0	1.0	0.0	0	0	0.7

@@ -1,0 +1,31 @@
+{
+  "iter": 125,
+  "pillar": "P5",
+  "n_n2_rows": 160,
+  "n_mega_cells": 98,
+  "b_n2": 4000,
+  "b_mega": 2000,
+  "seed": 20260705,
+  "alpha": 0.05,
+  "headline_hypotheses": {
+    "H1_5_chained_ratios": {
+      "H_zvf_model_family": "FAIL",
+      "H_pcd_model_family": "FAIL",
+      "H_zvf_task_slice": "PASS",
+      "H_pcd_task_slice": "PASS",
+      "H_zvf_G": "PASS",
+      "H_pcd_G": "PASS",
+      "H_zvf_temperature": "FAIL",
+      "H_pcd_temperature": "FAIL",
+      "H_zvf_seed": "FAIL",
+      "H_pcd_seed": "FAIL"
+    },
+    "H7_eta2_algo_strict_ub_le_0.05_all_7_channels": false,
+    "H8_stack_axis_zvf_dominant": true,
+    "H9_eta2_algo_le_eta2_seed": false
+  },
+  "n_h_pass": 5,
+  "n_h_total": 13,
+  "n_n2_rows_strict_pass": 2,
+  "n_mega_cells_dominant": 10
+}

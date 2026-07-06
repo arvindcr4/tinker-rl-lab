@@ -1,0 +1,13 @@
+model	params_B	R_max_actual	R_max_predicted	rank_actual	rank_predicted	rank_diff	abs_rank_diff	phase
+Nemotron-120B	120.0	2.0	0.7984	1	5	-4	4	plateau
+Qwen3-235B-MoE	235.0	1.0017	0.7776	2	6	-4	4	saturation
+Qwen3-30B-MoE-Inst	30.0	1.0017	0.4777	3	12	-9	9	saturation
+Llama-3.1-8B-Instruct	8.0	0.869	0.7538	4	7	-3	3	drift
+Kimi-K2-Thinking	1000.0	0.8503	1.403	5	1	4	4	drift
+DeepSeek-V3.1	685.0	0.844	1.2946	6	2	4	4	plateau
+gpt-oss-20B	20.0	0.8414	0.8701	7	4	3	3	saturation
+Qwen3.5-4B	4.0	0.8178	0.6716	8	10	-2	2	plateau
+Qwen3.5-27B	27.0	0.598	0.5938	9	11	-2	2	collapse
+Qwen3-30B-MoE	30.0	0.3326	0.7288	10	8	2	2	saturation
+Qwen3-8B	8.0	0.3313	0.9215	11	3	8	8	saturation
+Qwen3-32B	32.0	0.2501	0.7238	12	9	3	3	drift

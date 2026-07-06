@@ -1,0 +1,79 @@
+{
+  "iter": 148,
+  "n_matrix_cells": 100,
+  "n_boot": 1000,
+  "seed": 20260706,
+  "h1_replicated_at_realistic_rates": true,
+  "h1_rows_with_grad_cheaper": [
+    {
+      "rate_pct": 1.44,
+      "tier": "cheap_heuristic",
+      "cost_llm_per_call": 0.0001,
+      "cppr_xgb_mean_across_fsets": 0.020208333333333335,
+      "cppr_grad_mean_across_fsets": 0.020208333333333335,
+      "acd_mean": 1.0,
+      "acd_boot_lo": 1.0,
+      "acd_boot_hi": 1.0,
+      "grad_cheaper": true
+    },
+    {
+      "rate_pct": 1.0,
+      "tier": "cheap_heuristic",
+      "cost_llm_per_call": 0.0001,
+      "cppr_xgb_mean_across_fsets": 0.02809523052464229,
+      "cppr_grad_mean_across_fsets": 0.02809523052464229,
+      "acd_mean": 1.0,
+      "acd_boot_lo": 1.0,
+      "acd_boot_hi": 1.0,
+      "grad_cheaper": true
+    },
+    {
+      "rate_pct": 0.5,
+      "tier": "cheap_heuristic",
+      "cost_llm_per_call": 0.0001,
+      "cppr_xgb_mean_across_fsets": 0.04462524350649351,
+      "cppr_grad_mean_across_fsets": 0.04462524350649351,
+      "acd_mean": 1.0,
+      "acd_boot_lo": 1.0,
+      "acd_boot_hi": 1.0,
+      "grad_cheaper": true
+    },
+    {
+      "rate_pct": 0.1,
+      "tier": "cheap_heuristic",
+      "cost_llm_per_call": 0.0001,
+      "cppr_xgb_mean_across_fsets": 0.5755166666666667,
+      "cppr_grad_mean_across_fsets": 0.5755166666666667,
+      "acd_mean": 1.0,
+      "acd_boot_lo": 1.0,
+      "acd_boot_hi": 1.0,
+      "grad_cheaper": true
+    },
+    {
+      "rate_pct": 0.05,
+      "tier": "cheap_heuristic",
+      "cost_llm_per_call": 0.0001,
+      "cppr_xgb_mean_across_fsets": 0.26706875,
+      "cppr_grad_mean_across_fsets": 0.26706875,
+      "acd_mean": 1.0,
+      "acd_boot_lo": 1.0,
+      "acd_boot_hi": 1.0,
+      "grad_cheaper": true
+    }
+  ],
+  "h2_cheapest_cell": {
+    "rate_pct": 1.44,
+    "tier": "cheap_heuristic",
+    "fset": "24full",
+    "acd": 1.0,
+    "cppr_grad": 0.020833333333333332,
+    "cppr_xgb": 0.020833333333333332
+  },
+  "h3_cheapest_fset_per_rate": {
+    "1.44": "20raw",
+    "1.0": "20raw",
+    "0.5": "20raw+stat",
+    "0.1": "20raw",
+    "0.05": "20raw"
+  }
+}

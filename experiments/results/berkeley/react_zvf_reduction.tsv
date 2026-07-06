@@ -1,0 +1,5 @@
+metric	value	interpretation
+zvf_sparse_mean	0.4	
+zvf_dense_mean	0.3	
+zvf_drop	0.1	
+interpret	DECISIVE	

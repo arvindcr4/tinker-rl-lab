@@ -1,0 +1,73 @@
+{
+  "artifacts": {
+    "per_entry": "experiments/results/p5p8/p6_iter174_per_entry.tsv",
+    "per_entry_panel": "experiments/results/p5p8/p6_iter174_per_entry_panel.tsv",
+    "per_metric": "experiments/results/p5p8/p6_iter174_per_metric.tsv",
+    "tier_summary": "experiments/results/p5p8/p6_iter174_tier_summary.tsv"
+  },
+  "elapsed_sec": 0.005,
+  "hypotheses": {
+    "H1_tierA_sig_rate_gt_tierB": {
+      "pass": false,
+      "tierA_sr": 0.5,
+      "tierB_sr": 0.6
+    },
+    "H2_tierA_n_panels_ge_2_tierB_le_1": {
+      "pass": true,
+      "tierA_panels": [
+        2,
+        2,
+        2
+      ],
+      "tierB_panels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "H3_n2_reward_mean_sig_gt_zvf": {
+      "pass": true,
+      "reward_mean_sr": 0.6666666666666666,
+      "zvf_sr": 0.3333333333333333
+    },
+    "H4_tierA_mean_ciw_lt_tierB": {
+      "pass": true,
+      "tierA_ciw": 1.778624777777778,
+      "tierB_ciw": 7.28762725
+    },
+    "H5_tierD_exists": {
+      "pass": true,
+      "tierD_count": 7,
+      "tierD_wilson_ci95": [
+        0.21610786039131383,
+        0.6399492561448447
+      ]
+    }
+  },
+  "iter": 174,
+  "n2_reward_mean_rows": 3,
+  "n2_reward_mean_sig_rate": 0.6666666666666666,
+  "n2_zvf_rows": 3,
+  "n2_zvf_sig_rate": 0.3333333333333333,
+  "n_entries": 17,
+  "pillar": "P6",
+  "tier_a_mean_ciw": 1.778624777777778,
+  "tier_a_sig_rate": 0.5,
+  "tier_b_mean_ciw": 7.28762725,
+  "tier_b_sig_rate": 0.6,
+  "tier_counts": {
+    "A": 3,
+    "B": 7,
+    "D": 7
+  },
+  "tier_d_fraction": 0.4117647058823529,
+  "tier_d_wilson_ci95": [
+    0.21610786039131383,
+    0.6399492561448447
+  ],
+  "vein": "tier-stratified metric-coverage audit"
+}

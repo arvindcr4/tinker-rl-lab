@@ -1,0 +1,6 @@
+model	params_B	R_max_2p	mean_reward	agentless_tier
+Qwen3.5-4B	4.0	0.8167	0.8167	reachable (ACI-bounded or ceiling)
+Qwen3-8B	8.0	0.2854	0.2854	hard_floor (collapse)
+Llama-3.1-8B-Instruct	8.0	0.8688	0.8688	reachable (ACI-bounded or ceiling)
+DeepSeek-V3.1	685.0	0.8438	0.8438	reachable (ACI-bounded or ceiling)
+Nemotron-120B	120.0	0.182	0.175	hard_floor (collapse)

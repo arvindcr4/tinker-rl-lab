@@ -1,0 +1,129 @@
+{
+  "config": {
+    "tau": 0.7,
+    "tau_delta": 0.2,
+    "G_base": 8,
+    "G_esc": 16,
+    "G_des": 4,
+    "n_steps_per_seed": 15,
+    "n_seeds": 5,
+    "n_boot": 2000,
+    "rng_seed": 27
+  },
+  "per_controller_total_G_boot_ci": {
+    "C0_baseline": {
+      "mean": 120,
+      "lo": 120.0,
+      "hi": 120.0,
+      "sd": 0.0,
+      "n": 5
+    },
+    "C1_zvf_triage@0.70": {
+      "mean": 153.6,
+      "lo": 144.0,
+      "hi": 163.2,
+      "sd": 11.865917579353061,
+      "n": 5
+    },
+    "C2_dualformer@0.70": {
+      "mean": 103.2,
+      "lo": 98.4,
+      "hi": 108.0,
+      "sd": 5.932958789676531,
+      "n": 5
+    },
+    "C3_hybrid@0.70+0.20": {
+      "mean": 153.6,
+      "lo": 144.0,
+      "hi": 163.2,
+      "sd": 11.865917579353061,
+      "n": 5
+    }
+  },
+  "per_controller_savings_boot_ci": {
+    "C1_zvf_triage@0.70": {
+      "mean": -0.28,
+      "lo": -0.36,
+      "hi": -0.2,
+      "sd": 0.09888264649460884,
+      "n": 5
+    },
+    "C2_dualformer@0.70": {
+      "mean": 0.14,
+      "lo": 0.1,
+      "hi": 0.18,
+      "sd": 0.04944132324730442,
+      "n": 5
+    },
+    "C3_hybrid@0.70+0.20": {
+      "mean": -0.28,
+      "lo": -0.36,
+      "hi": -0.2,
+      "sd": 0.09888264649460884,
+      "n": 5
+    }
+  },
+  "paired_contrasts_savings": {
+    "C2_minus_C1": {
+      "mean_diff": 0.42000000000000004,
+      "lo": 0.3,
+      "hi": 0.54,
+      "n": 5
+    },
+    "C3_minus_C1": {
+      "mean_diff": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "n": 5
+    },
+    "C3_minus_C2": {
+      "mean_diff": -0.42000000000000004,
+      "lo": -0.54,
+      "hi": -0.3,
+      "n": 5
+    }
+  },
+  "per_seed_table": "experiments/results/p5p8/p7_dualformer_n10_per_seed.tsv",
+  "headroom_bad_per_controller": {
+    "C0_baseline": {
+      "sum": 0,
+      "per_seed": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "C1_zvf_triage@0.70": {
+      "sum": 0,
+      "per_seed": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "C2_dualformer@0.70": {
+      "sum": 0,
+      "per_seed": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "C3_hybrid@0.70+0.20": {
+      "sum": 0,
+      "per_seed": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  }
+}

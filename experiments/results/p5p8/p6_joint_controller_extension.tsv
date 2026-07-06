@@ -1,0 +1,21 @@
+trigger	threshold	n_contrast_prompts	n_fired_steps	n_zvf_saved	n_rollout_saves	net_saves	g_total	cost_ratio_pt	savings_per_rollout_pt	source_iter
+joint_dualformer_ddiv	0.03	23	512	85	138	223	9078	1.77305	24.5649	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.03	42	448	73	252	325	8452	1.65078	38.4524	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.03	38	464	70	228	298	8604	1.68047	34.6351	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.03	35	352	60	210	270	7726	1.50898	34.9469	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.04	46	432	67	276	343	8300	1.62109	41.3253	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.04	58	384	61	348	409	7844	1.53203	52.1418	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.04	56	400	56	336	392	7984	1.55937	49.0982	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.04	54	288	45	324	369	7100	1.38672	51.9718	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.05	80	288	49	480	529	6944	1.35625	76.1809	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.05	91	256	41	546	587	6622	1.29336	88.6439	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.05	71	320	51	426	477	7254	1.4168	65.7568	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.05	73	208	35	438	473	6346	1.23945	74.5351	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.06	114	176	29	684	713	5844	1.14141	122.005	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.06	122	176	20	732	752	5796	1.13203	129.745	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.06	100	224	34	600	634	6312	1.23281	100.444	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.06	95	144	21	570	591	5702	1.11367	103.648	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.07	117	160	29	702	731	5698	1.11289	128.291	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.07	150	80	10	900	910	4860	0.949219	187.243	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.07	105	208	32	630	662	6154	1.20195	107.572	iter-72 row 85 joint controller
+joint_dualformer_ddiv	0.07	105	112	16	630	646	5386	1.05195	119.941	iter-72 row 85 joint controller

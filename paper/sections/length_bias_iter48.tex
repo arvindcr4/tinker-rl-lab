@@ -1,0 +1,93 @@
+% Iter 48 — Pillar 4 (Length Bias / Dr.GRPO): Plateau-Anchored Length-Bias Decomposition
+% Splits every per-seed (R_t, L_t) trajectory at the FIRST step where the 3-step
+% smoothed R crosses 0.90 * R_max. Compares the OLS slope dL/dt BEFORE the
+% plateau (rising phase) vs AFTER the plateau (plateau phase), per algo.
+% Result: on arithmetic_easy Dr.GRPO and GRPO diverge CLEANLY in the post-plateau
+% drift (plat_slope = +0.0015 vs -0.0013, paired diff = -0.0028, 95% CI
+% [-0.0045, -0.0014]) -- Dr.GRPO is the only algorithm whose length keeps
+% drifting UP after reward has saturated. On gsm8k_cot the divergence is in the
+% RISING phase: GRPO compresses length at slope -0.451, Dr.GRPO only at -0.189
+% (paired diff = -0.263, 95% CI [-0.554, -0.093]) -- Dr.GRPO reaches plateau
+% with substantially more tokens already spent.
+
+\subsubsection{Plateau-anchored length-drift decomposition}\label{sec:lb-iter48}
+
+Iter~\ref{sec:length-bias-iter28} regressed $\E[R\mid L]$, iter~\ref{sec:length-bias-iter36}
+jointly saturated $R$ and $L$ on a shared scale, iter~\ref{sec:length-bias-iter40}
+stratified by training phase, and iter~\ref{sec:lb-iter44} decomposed the
+conditional $R\mid L$ into quantiles. All four decompose the within-step
+coupling between reward and length. None of them anchor the decomposition at
+the moment reward stops improving, which is the moment the Dr.GRPO length
+trap is mechanistically most active. Iter~\ref{sec:lb-iter48} closes that gap.
+
+\paragraph{Plateau definition.}
+For every (\task, \algo, \seed) trajectory we compute
+$R_{\max} = \max_t R_t$, smooth $R_t$ with a 3-step centered moving average,
+and let $\tplat$ be the first step at which the smoothed $R_t$ crosses
+$0.90 \cdot R_{\max}$. The trajectory is then split into a \emph{rising}
+phase $[0, \tplat)$ and a \emph{plateau} phase $[\tplat, T)$. We fit OLS
+$\frac{dL}{dt}$ on each phase; the \emph{signature} is the marginal length
+tax incurred \emph{after} reward saturates,
+$\signature = (\tfrac{dL}{dt})_{\text{plat}} - (\tfrac{dL}{dt})_{\text{rise}}$.
+
+\paragraph{Post-plateau drift on \texttt{arithmetic\_easy}.}
+The cleanest Dr.GRPO signature appears here. GRPO's plateau-phase
+$\tfrac{dL}{dt}$ is $-0.0013$ (length still slowly \emph{compressing}); Dr.GRPO's
+is $+0.0015$ (length \emph{expanding}). The paired difference is
+$-0.0028$, $95\%$ bootstrap CI $[-0.0045, -0.0014]$, entirely below zero.
+\emph{Dr.GRPO is the only algorithm whose length keeps drifting up after
+reward has saturated on arithmetic\_easy.} Figure~\ref{fig:lb-iter48-plat}
+displays this with a side-by-side bar.
+
+\paragraph{Pre-plateau compression on \texttt{gsm8k\_cot}.}
+GSM8K CoT trajectories are longer (mean completion length $\approx 195$ tokens
+vs $\approx 5$ tokens on arithmetic), so the relevant budget is the
+\emph{pre}-plateau compression rate. GRPO compresses at $\tfrac{dL}{dt} = -0.451$
+tokens/step, Dr.GRPO at only $-0.189$. Paired difference $-0.263$, $95\%$ CI
+$[-0.554, -0.093]$. By the time GSM8K trajectories hit their (lower) reward
+ceiling, Dr.GRPO has spent $60{+} \approx 60$ extra tokens per prompt on
+average -- the same "stay-longer" trap, surfaced through the rising phase
+because GSM8K's plateau is too short (only $\sim 1$ step) for a
+post-plateau drift to manifest.
+
+\paragraph{Two-task synthesis.}
+The two findings are not contradictions but two views of the same Dr.GRPO
+mechanism, surfaced at different time-horizons. On the short, dense
+arithmetic trajectory the trap fires \emph{after} the policy has solved the
+task (no further reward gradient, but length still drifts up). On the long
+GSM8K CoT trajectory the trap fires \emph{before} the policy has solved the
+task: Dr.GRPO's flattened group baseline blunts the length-compression signal
+that GRPO receives from correct rollouts. In both cases the cross-algorithm
+gap is significant with bootstrap CIs that exclude zero.
+
+\paragraph{Cross-pillar with the ZVF proxy.}
+Stratifying by the ZVF bin at the plateau step (Table
+\texttt{length\_bias\_iter48\_zvf\_anchored.tsv}) shows that the arithmetic
+plateau sits in the high-ZVF regime (0.5+) for \emph{every} Dr.GRPO seed and
+in mid/high for GRPO -- consistent with iter~\ref{sec:length-bias-iter40}'s stage
+stratification and consistent with the cross-pillar claim that Dr.GRPO's
+length bias only activates once within-group contrast has collapsed.
+
+\paragraph{Reproducibility.}
+Driver: \texttt{scripts/length\_bias\_iter48.py} (also produces
+\texttt{length\_bias\_iter48\_plateau.tsv},
+\texttt{length\_bias\_iter48\_grpo\_vs\_drgrpo.tsv},
+\texttt{length\_bias\_iter48\_rising\_vs\_plateau.tsv},
+\texttt{length\_bias\_iter48\_zvf\_anchored.tsv},
+\texttt{length\_bias\_iter48\_summary.tsv}).
+Figure: \texttt{figures/length\_plateau\_slopes.pdf},
+script \texttt{scripts/length\_bias\_iter48\_fig.py}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/length_plateau_slopes.pdf}
+\caption{Plateau-anchored length-drift decomposition. \textbf{Left:}
+\texttt{arithmetic\_easy} post-plateau $\tfrac{dL}{dt}$ (tokens / step). GRPO
+continues to \emph{compress} very slightly; Dr.GRPO \emph{expands}. Paired
+diff $-0.0028$, $95\%$ CI $[-0.0045, -0.0014]$. \textbf{Right:}
+\texttt{gsm8k\_cot} pre-plateau $\tfrac{dL}{dt}$. GRPO compresses at
+$-0.451$ tokens / step; Dr.GRPO only at $-0.189$. Paired diff $-0.263$,
+$95\%$ CI $[-0.554, -0.093]$. The two panels are two views of the same
+mechanism at different time-horizons.}
+\label{fig:lb-iter48-plat}
+\end{figure}

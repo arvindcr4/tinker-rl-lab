@@ -1,0 +1,656 @@
+Towards a unified framework of 
+Neural and Symbolic Decision 
+Making 
+Yuandong Tian
+Research Scientist Director
+Meta AI (FAIR)
+
+Large Language Models (LLMs)
+Conversational AI
+Content Generation
+AI Agents
+Reasoning
+Planning
+
+Large Language Models (LLMs)
+Conversational AI
+Content Generation
+AI Agents
+Reasoning
+Planning
+
+What LLMs cannot do well yet?
+Travel planning
+[J. Xie et al, TravelPlanner: A Benchmark for Real-World Planning with Language Agents, ICML’24 (Spotlight)]
+
+What LLMs cannot do well yet?
+[J. Xie et al, TravelPlanner: A Benchmark for Real-World Planning with Language Agents, ICML’24 (Spotlight)]
+
+Using SoTA LLMs for Travel Planning (not 
+great)
+First tool use, 
+Then plan the travel 
+Ground-truth tool use, 
+Then plan the travel 
+Even SoTA LLMs struggle for such hard planning problems
+[J. Xie et al, TravelPlanner: A Benchmark for Real-World Planning with Language Agents, ICML’24 (Spotlight)]
+
+GPT-4-turbo
+%
+[J. Xie et al, TravelPlanner: A Benchmark for Real-World Planning with Language Agents, ICML’24 (Spotlight)]
+How about o1?
+
+LLM planning is still a hard problem
+Number of Cities
+Number of People
+Trip planning
+Meeting planning
+[H. S. Zheng et al, NATURAL PLAN: Benchmarking LLMs on Natural Language Planning, arXiv’24]
+
+What are the Solutions?
+
+What are the 
+Solutions?
+Option One: Scaling Law
+Option Two: Hybrid System
+Deep 
+Models
+Solver
+End2end
+Deep 
+Models
+Solver
+Provide 
+data
+Deep 
+Models
+Solver
+Call deep models
+(policy, values)
+Option Three: Emerging Symbolic 
+Structure from Neural network
+
+Option One: The Scaling Law
+More data
+More compute
+Larger models
+Does that work for 
+reasoning/planning?
+Very expensive
+[J. Hoffmann*, S. Borgeaud*, A. Mensch* et al, Training Compute-Optimal Large Language Models]
+
+Option Two: Hybrid Systems
+Deep Models
+Solver
+End2end
+Deep Models
+Solver
+Provide 
+data
+Deep Models
+Solver
+Tool use
+
+Option Two: Hybrid Systems
+Deep Models
+Solver
+End2end
+Deep Models
+Solver
+Provide 
+data
+Deep Models
+Solver
+Tool use
+
+Language-Driven Guaranteed Travel Planning
+LLMs can not handle too many constraints? ->  Combinatorial Solvers can! 
+• Realistic dataset: collect from the real world
+• User instruction translator: Fine-tuned LLM to convert 
+user request into symbolic description, augmented by 
+flight/hotel information from database. 
+• Impose constraints and formalize the travel planning as 
+Mixed Integer Linear Programming (MILP).
+• Build a combinatorial solver to give optimal solution.
+Ju et al, To the Globe (TTG): Towards Language-Driven Guaranteed Travel Planning (EMNLP’24 Demo) 
+
+Experiments (End-to-end Human Evaluation)
+Net Prompter Scores (NPS) and its breakdown in three dimensions: satisfaction, value and efficiency.
+Ju et al, To the Globe (TTG): Towards Language-Driven Guaranteed Travel Planning (EMNLP’24 Demo) 
+
+Multi-round Dialogs to Collect Information
+User has hidden constraints, 
+how to figure out? 
+🡪 Proactively ask!
+[Jiang et al, Towards Full Delegation: Designing Ideal Agentic Behaviors for Travel Planning] 
+(b) APEC-Travel Agent
+
+Option Two: Hybrid Systems
+Deep Models
+Solver
+End2end
+Deep Models
+Solver
+Provide 
+data
+Deep Models
+Solver
+Tool uses
+
+Searchformer: A* Search as a Token 
+Prediction Task
+0
+1
+2
+2
+1
+0
+Start
+Goal
+Plan step
+Frontier state
+Closed state
+[L. Lehnert, et al, Beyond A*: Better Planning with Transformers via Search Dynamics Bootstrapping, COLM’24]
+Wall
+
+Searchformer: A* Search as a Token 
+Prediction Task
+<trace><plan>
+bos
+create 0 2 c0 c3 close  0 2 c0 
+c3 create 0 1 c1 c2 close  0 1 
+c1 c2 create 0 0 c2 c1 create 
+1 1 c2 c1 close  0 0 c2 c1 
+create 1 0 c3 c0 close  1 0 c3 
+c0 
+plan   0 2 
+plan   0 1 
+plan   0 0 
+plan   1 0
+eos
+0
+1
+2
+2
+1
+0
+Start
+Goal
+Plan step
+Frontier state
+Closed state
+Wall
+<prompt>
+bos
+start 0 2
+goal  1 0
+wall  1 2
+wall  2 0
+eos
+
+Train a Transformer to predict the next token via teacher forcing.
+Training Method
+Encoder
+<prompt>
+<trace><plan>
+Decoder
+Encoder
+<prompt>
+<plan>
+Decoder
+Solution-Only Model
+Search-Augmented Model
+Model
+(100-400 tokens)
+(100-6500 tokens)
+
+Search-Augmented vs. Solution-Only 
+Models
+
+Search-Augmented vs. Solution-Only 
+Models
+30x30 Maze Navigation
+
+Search-Augmented vs. Solution-Only 
+Models
+30x30 Maze Navigation
+
+Search-Augmented vs. Solution-Only 
+Models
+30x30 Maze Navigation
+Search-augmented is much 
+more parameter & data efficient!
+
+Search-Augmented vs. Solution-Only 
+Models
+Search-augmented is much more parameter & data efficient!
+Sokoban
+
+How to go beyond?
+Imitation 
+Learning
+Fine-tuning
+Using solver’s trace to train the 
+Transformer with teacher forcing
+Fine-tune the model to achieve shorter 
+trace but still leads to optimal plan!
+(Reinforcement Learning task)
+Search-augmented Models
+Searchformer
+
+Beyond A*: 
+Improving search 
+dynamics via 
+bootstrapping
+
+Repeated bootstrapping increases the 
+Improved Length Ratio (ILR)
+Improving search dynamics via 
+bootstrapping
+
+Fine-tuning improves 
+performance initially.
+Improving search dynamics via 
+bootstrapping
+
+Searchformer 
+outperforms largest 
+solution-only model.
+Improving search dynamics via 
+bootstrapping
+
+DualFormer (Searchformer 
+v2)
+[D. Su et al, Dualformer: Controllable Fast and Slow Thinking by Learning with Randomized Reasoning Traces, arXiv’24]
+
+DualFormer (Searchformer 
+v2)
+Dualformer automatically switches between fast mode (System 1) and slow mode (System 2) 
+and works better for dedicated models on either modes. 
+
+Fast mode performance
+Slow mode performance
+
+Math Problems
+Baseline
+Dualformer
+
+Math Problems
+
+DualFormer
+Dualformer
+o1-preview (OpenAI)
+
+Option Two: Hybrid Systems
+Deep Models
+Solver
+End2end
+Deep Models
+Solver
+Provide 
+data
+Deep Models
+Solver
+Tool uses
+
+Nonlinear objective with combinatorial 
+constraints
+•Real-world domains:
+• Computer system 
+planning
+• Designing photonic 
+devices
+• Throughput optimization
+• Antenna design
+• Energy grid
+ 
+Combinatorial 
+feasible region
+
+Example: Embedding Table Placement
+• 
+
+Example: Embedding Table Placement
+• 
+ 
+Formulation
+ 
+
+Solve the Combinatorial Problem in the Latent 
+Space
+Original Space
+Latent Space
+ 
+ 
+Nonlinear optimization with 
+combinatorial constraints
+ 
+ 
+ 
+ 
+Surrogate optimization 
+combinatorial 
+constraints
+solved by existing combinatorial solvers
+[A. Ferber et al, SurCo: Learning Linear Surrogates For Combinatorial Nonlinear Optimization Problems, ICML’23 and outstanding paper in SODS workshop]
+
+Solve the Combinatorial Problem in the Latent 
+Space
+Original Space
+Latent Space
+ 
+ 
+Nonlinear optimization with 
+combinatorial constraints
+ 
+ 
+ 
+ 
+Surrogate optimization 
+combinatorial 
+constraints
+solved by existing combinatorial solvers
+Proposal: gradient-based optimization
+
+SurCo: Surrogate combinatorial opt
+• 
+[A. Ferber et al, SurCo: Learning Linear Surrogates For Combinatorial Nonlinear Optimization Problems, ICML’23 and outstanding paper in SODS workshop]
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+Gradient-based Optimization
+• 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Assumed 
+differentiable
+Recent work on differentiable optimization
+Differentation of blackbox optimizers
+CVXPYLayers
+MIPaaL
+Etc. 
+Assumed 
+differentiable
+ 
+
+Embedding Table Sharding
+•Public Deep Learning Recommendation Model (DLRM dataset) placing 
+between 10 to 60 tables on 4 GPUs
+•Baseline: Greedy
+•SoTA: RL approach Dreamshard1
+•SurCo: Surrogate NN model learned via CVXPYLayers (differentiable LP 
+Solver)
+1 Zha et al. NeurIPS 2022
+Dataset: https://github.com/facebookresearch/dlrm_datasets 
+
+Results – Table Sharding
+
+Inverse Photonic Design
+• 
+
+Inverse Photonic Design
+•Dataset: Ceviche Challenges1 
+•Most baselines don’t work here due to combinatorial 
+constraints
+•SoTA: Brush-based algorithm 1
+•SurCo: Surrogate learned via blackbox differentiation2 of 
+brush solver
+1Schubert et al. ACS Photonics 2022
+2Vlastelica et al. ICLR 2019
+Dataset: https://github.com/google/ceviche-challenges
+Wavelength division multiplexe
+Mode converter
+Beam splitter
+Waveguide 
+bend
+
+Inverse photonics Convergence 
+comparison + Solution example
+Takeaways:
+- SurCo-Zero finds loss-0 solutions quickly
+- SurCo-Hybrid uses offline training data to get a head start
+Wavelength division 
+multiplexer
+
+ 
+[A. Zharmagambetov et al, Landscape Surrogate: Learning Decision Losses for Mathematical Optimization Under Partial Information, NeurIPS’23]
+Limitation of SurCo
+ 
+[A. Ferber et al, GenCO: Generating Diverse Solutions to Design Problems with Combinatorial Nature, ICML’24]
+
+Option Three: Does Deep Model Actually 
+Converge to Anything Symbolic? 
+Deep Models
+Emerging Symbolic 
+Structure
+
+https://medium.com/@fenjiro/large-language-models-llms-emergent-abilities-chatgpt-talks-moroccan-dialect-as-an-example-c945f93aa63a 
+LLM shows emergent behaviors!!
+Debate: Is LLM doing retrieval or true 
+reasoning?
+
+Debate: Is LLM doing retrieval or true 
+reasoning?
+LLM is just doing retrievals!!
+
+Concrete Example: Modular Addition
+ 
+[T. Zhou et al, Pre-trained Large Language Models Use Fourier Features to Compute Addition]
+Does neural network have an implicit table to do retrieval? 
+
+Concrete Example: Modular Addition
+Learned representation = Fourier basis 🤯
+Why? 🤔 
+[T. Zhou et al, Pre-trained Large Language Models Use Fourier Features to Compute Addition]
+ 
+Does neural network have an implicit table to do retrieval? 
+
+Problem Setup
+One-hot(a)
+ 
+ 
+ 
+Bottom layer 
+Top layer 
+ 
+ 
+ 
+ 
+ 
+[Y. Tian, Composing Global Optimizers to Reasoning Tasks via Algebraic Objects in Neural Nets, arXiv’24]
+
+(Scaled) Fourier Transform
+ 
+ 
+ 
+ 
+ 
+Hermitian condition holds
+ 
+ 
+ 
+
+What a Gradient Descent Solution look 
+like?
+Frequency
+Hidden node index
+ 
+[Y. Tian, Composing Global Optimizers to Reasoning Tasks via Algebraic Objects in Neural Nets, arXiv’24]
+
+Symmetry due to
+Hermitian condition
+Order-6 
+solutions
+What a Gradient Descent Solution look 
+like?
+[Y. Tian, Composing Global Optimizers to Reasoning Tasks via Algebraic Objects in Neural Nets, arXiv’24]
+
+Order-6
+Order-4
+What a Gradient Descent Solution look 
+like?
+[Y. Tian, Composing Global Optimizers to Reasoning Tasks via Algebraic Objects in Neural Nets, arXiv’24]
+
+Order-4 and order-6 
+solutions really happen!
+More Statistics on Gradient Descent 
+Solutions
+[Y. Tian, Composing Global Optimizers to Reasoning Tasks via Algebraic Objects in Neural Nets, arXiv’24]
+
+Stronger 
+weight decay
+Effect of Weight 
+Decay
+[Y. Tian, Composing Global Optimizers to Reasoning Tasks via Algebraic Objects in Neural Nets, arXiv’24]
+
+Why? 
+🤔 
+
+Structure of Loss Functions
+ 
+ 
+ 
+[Y. Tian, Composing Global Optimizers to Reasoning Tasks via Algebraic Objects in Neural Nets, arXiv’24]
+
+Structure of Loss Functions
+ 
+ 
+Sufficient conditions of Global Optimizers:
+ 
+[Y. Tian, Composing Global Optimizers to Reasoning Tasks via Algebraic Objects in Neural Nets, arXiv’24]
+
+How to Optimize?
+The objective is highly nonlinear !!
+However, nice algebraic structures exist! 
+
+How to Optimize?
+ 
+ 
+ 
+The objective is highly nonlinear !!
+However, nice algebraic structures exist! 
+ 
+
+How to Optimize?
+ 
+ 
+ 
+The objective is highly nonlinear !!
+However, nice algebraic structures exist! 
+ 
+ 
+
+Ring Homomorphism
+ 
+
+Ring Homomorphism
+ 
+ 
+
+Ring Homomorphism
+ 
+ 
+ 
+MSE Loss
+
+Ring Homomorphism
+ 
+ 
+ 
+ 
+ 
+MSE Loss
+
+Ring Homomorphism
+ 
+ 
+ 
+ 
+ 
+ 
+MSE Loss
+
+Composing Global Optimizers from Partial 
+Ones
+[Y. Tian, Composing Global Optimizers to Reasoning Tasks via Algebraic Objects in Neural Nets, arXiv’24]
+
+ 
+Composing Global Optimizers from Partial 
+Ones
+[Y. Tian, Composing Global Optimizers to Reasoning Tasks via Algebraic Objects in Neural Nets, arXiv’24]
+
+ 
+ 
+Composing Global Optimizers from Partial 
+Ones
+[Y. Tian, Composing Global Optimizers to Reasoning Tasks via Algebraic Objects in Neural Nets, arXiv’24]
+
+Exemplar constructed global 
+optimizers
+ 
+Order-4 (2*2, mixed with order-6)
+Perfect memorization 
+(order-d per frequency)
+
+Exemplar constructed global 
+optimizers
+ 
+Perfect memorization 
+(order-d per frequency)
+ 
+
+Exemplar constructed global 
+optimizers
+Perfect memorization 
+(order-d per frequency)
+ 
+ 
+
+Gradient Descent solutions matches with 
+construction
+ 
+
+Gradient Descent solutions matches with 
+construction
+100% of the per-freq 
+solutions are order-4/6
+
+Gradient Descent solutions matches with 
+construction
+95% of the solutions are 
+factorizable into “2*3” or “2*2” 
+
+Gradient Descent solutions matches with 
+construction
+Factorization error is very small
+
+Gradient Descent solutions matches with 
+construction
+98% of the solutions can be 
+factorizable into the constructed forms
+
+Gradient Descent solutions matches with 
+construction
+Distribution of the parameters in the solutions
+
+Possible Implications
+Do neural networks end up learning more efficient 
+symbolic representations that we don’t know?
+Does gradient descent lead to a solution that 
+can be reached by advanced algebraic operations?
+Will gradient descent become obsolete, eventually?
+
+Thanks!
+87

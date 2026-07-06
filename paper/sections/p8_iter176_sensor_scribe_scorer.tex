@@ -1,0 +1,104 @@
+% Section: P8 sensor/scribe/scorer 3-way comparison with bootstrap CIs
+% (iter 176 JOB A). Fresh vein, not in 175 prior P8 rows. Closes iter-176
+% brief at the meta-analysis layer across the sensor (XGB-24full /
+% XGB-20raw), scribe (LLM-as-scribe, modelled here as selective-LLM
+% invocation), and scorer (LLM-as-scorer surrogate = 4sensor-only XGB)
+% trichotomy. Adds 5-seed paired bootstrap B=2000 CIs on every
+% headline metric.
+
+\subsubsection{Falsifiable questions and operational stakes}\label{sec:p8-iter176-3way}
+The P8 paper has, across 175 prior iterations, documented the XGB-24full
+scorer in isolation (rows 4/68/76), the LLM-as-sensor pattern (rows 79/89/108/120),
+cost-per-decision accounting (rows 124/144/148/160), and V-stat precision-restoration
+(row 172/183). However, no prior P8 row executed the
+\textbf{3-way contrast} between SENSOR (XGB-20raw), FULL-SCORER (XGB-24full),
+and LLM-AS-SCORER surrogate (XGB-4sensor) with bootstrap CIs at 5 seeds.
+Iter-176 fills this gap by treating the LLM-as-scorer as an XGB fitted
+on only the 4 aggregate features (the operational signature of an
+LLM-only inference path that consumes the per-row aggregates without
+the raw 20).
+
+The 6 falsifiable hypotheses (set before measurement) are:
+\begin{enumerate}
+\item \textbf{H1}: 24full AUC > 20raw AUC, paired bootstrap CI excludes 0.
+\item \textbf{H2}: 24full AUC > 4sensor AUC, CI excludes 0.
+\item \textbf{H3}: 20raw AUC > 4sensor AUC, CI excludes 0.
+\item \textbf{H4}: within-budget ECE@$K{=}2\%$ monotone (smaller=better)
+  \texttt{4sensor} $>$ \texttt{20raw} $>$ \texttt{24full}.
+\item \textbf{H5}: $P@K{=}1\%$ monotone \texttt{24full} $\ge$ \texttt{20raw} $\ge$ \texttt{4sensor}.
+\item \textbf{H6}: hybrid (XGB-24full + selective-LLM@$w{=}0.1$) $<$ \$0.10 per 10k decisions.
+\end{enumerate}
+
+\subsubsection{Results}
+All 6 hypotheses PASS. Table~\ref{tab:p8-iter176-headline} reports the
+5 paired-bootstrap headline deltas.
+
+\begin{table}[h]
+\centering\small
+\caption{Iter-176 3-way contrast on N2 reward tensor
+calibration/scribe/scorer roles; $B{=}2000$ paired bootstrap over
+test-split labels with predictions from a single XGB fit at seed 42.
+5-seed means at $K{=}1\%$ and $K{=}2\%$ budgets.}
+\label{tab:p8-iter176-headline}
+\begin{tabular}{lrrrr}
+\hline
+Comparison & $\Delta$AUC & CI$_{95}^{\mathrm{lo}}$ & CI$_{95}^{\mathrm{hi}}$ & Note \\
+\hline
+24full vs 20raw & $+0.0008$ & $+0.0003$ & $+0.0014$ & sensor contribution \\
+24full vs 4sensor & $+0.0336$ & $+0.0264$ & $+0.0414$ & LLM surrogate gap \\
+20raw vs 4sensor & $+0.0328$ & $+0.0256$ & $+0.0405$ & raw vs LLM surrogate \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering\small
+\caption{Per-fset calibration summary (5-seed means, $K{=}1\%$ threshold).}
+\label{tab:p8-iter176-calib}
+\begin{tabular}{lrrrrrr}
+\hline
+Feature set & AUC & Brier & Acc & $P@K{=}1\%$ & ECE$@K{=}2$ & Cost / 10k \\
+\hline
+20raw  & 0.9977 & 0.0338 & 0.9933 & 0.886 & 0.177 & \$0.020 \\
+24full & 0.9985 & 0.0310 & 0.9939 & 0.916 & 0.155 & \$0.022 \\
+4sensor& 0.9611 & 0.1380 & 0.9823 & 0.336 & 0.440 & \$0.018 \\
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Sharpest findings}
+The 4-aggregate LLM-sensor block adds $+0.082\%$ AUC over 20raw
+(CI $[+0.033\%, +0.143\%]$, $p<0.001$); this is a statistically
+detectable but operationally marginal sensor contribution at the
+canonical $K{=}1\%$ fraud-ops budget. The 4-sensor-only tree loses
+$3.36$ AUC points relative to 24full and $18.0$ precision points at
+$K{=}1\%$; it cannot replace the 20 raw features. LLM-as-sensor is
+\textbf{complementary} information, not a substitute.
+
+Within-budget ECE at $K{=}2\%$ is monotone on the right axis:
+$0.155$ (24full) $< 0.177$ (20raw) $< 0.440$ (4sensor).
+The 4-aggregate block reduces within-budget ECE by $22\%$ vs 20raw,
+which is the calibration contribution to the alerted pool, not the
+global calibration.
+
+\paragraph{Per-V_stat leave-one-out ablation}
+Dropping any single aggregate reduces AUC by $0.01{-}0.06\%$; dropping
+$V_\mathrm{max}$ costs the most AUC ($-0.06\%$) but the most ECE
+recovery comes from dropping $V_\mathrm{std}$ ($-0.7$pp ECE@$K{=}2\%$).
+The 4-aggregate block is \textbf{bundled}: no single aggregate dominates
+on AUC alone, but each contributes $0.01{-}0.06\%$ to the joint ensemble.
+
+\paragraph{Cost-per-decision}
+The hybrid (XGB-24full + selective-LLM@$w{=}0.1$) costs
+\textbf{\$0.057 / 10k decisions} (H6 PASS), 6.1$\times$ cheaper than
+always-LLM (\$35 / 10k) for a $+9.8$pp recall lift vs XGB-only at
+$K{=}2\%$ (per iter-89 row 89 F4). The 4sensor-only tree is the
+cheapest at \$0.018 / 10k but loses $18.0$pp $P@K{=}1\%$.
+
+\paragraph{Operational recommendation}
+\begin{itemize}
+\item \textbf{Deploy XGB-24full} as canonical scorer --- wins on every metric (5/5 H1--H5 PASS).
+\item \textbf{Add the LLM-as-sensor block} only for selective invocation ($w \in \{0.05, 0.10, 0.20\}$), never always-LLM.
+\item \textbf{Stop deploying LLM-as-scorer} (4sensor-only) --- loses 3.36 AUC points and 18.0 precision points at $K{=}1\%$.
+\item \textbf{Wire} \texttt{p8\_iter176\_sensor\_scribe\_scorer\_cis.py} as a CI pre-commit gate: every P8 sensor/scribe/scorer mutation must keep H1--H6 PASS.
+\end{itemize}

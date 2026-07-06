@@ -1,0 +1,5 @@
+hypothesis	n_total	n_pos	binom_p_two_sided	mean_delta	spearman_rho	spearman_p	n	mean_frac_late_nonneg_large_global	mean_frac_late_nonneg_small_global
+H1_tape_lt_global	16	10	0.454498291015625	-0.15195625000000001					
+H2_temporal_variance_positive	16	16	3.0517578125e-05						
+H3_late_lt_early	16	12	0.076812744140625						
+H4_frac_late_vs_global_rho					-0.6735683251912464	0.0006501259847475627	16	0.45454999999999995	0.023816666666666667

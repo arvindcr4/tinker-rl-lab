@@ -1,0 +1,6 @@
+model	params_B	n_steps	mean_reward	R_max_canonical	lam_at_bound	r_max_robust	q75	late_mean	rise_step	gap_canonical_minus_robust	trace_file
+Qwen3.5-4B	4.0	30	0.8167	0.8167	True	1.0000	1.0000	0.7917	1	-0.1833323750039373	scale_gsm8k_qwen3.5-4b.json
+Qwen3-8B	8.0	30	0.2854	0.2854	True	0.3750	0.3750	0.2917	1	-0.0895830370059264	scale_gsm8k_qwen3-8b.json
+Llama-3.1-8B-Instruct	8.0	30	0.8688	0.8688	True	1.0000	1.0000	0.8083	1	-0.1312488840340742	scale_gsm8k_llama-8b-inst.json
+DeepSeek-V3.1	685.0	20	0.8438	0.8438	True	1.0000	1.0000	0.8500	1	-0.15624815562559036	frontier_gsm8k_deepseek-v3.1.json
+Nemotron-120B	120.0	20	0.1750	0.1820	False	0.2812	0.2812	0.1625	1	-0.09920831223352278	frontier_gsm8k_nemotron-120b.json

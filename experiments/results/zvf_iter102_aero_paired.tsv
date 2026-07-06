@@ -1,0 +1,8 @@
+# zvf_iter102_aero_paired.tsv - per-seed AERO vs GRPO paired calibration delta
+# from variance_mitigation.tsv. Source: scripts/zvf_iter102.py
+seed	aero_zvf	aero_delta	grpo_zvf	grpo_delta	delta_aero_minus_grpo	aero_below_grpo
+0	0.22153799999999996	0.1742	0.48131	0.4167	-0.2425	True
+1	0.218538	0.1706	0.47933400000000004	0.4165	-0.2459	True
+2	0.22187600000000005	0.1757	0.480324	0.4165	-0.2409	True
+3	0.21775499999999998	0.1683	0.480633	0.4189	-0.2506	True
+4	0.22155999999999998	0.1742	0.48238099999999995	0.414	-0.2398	True

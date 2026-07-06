@@ -1,0 +1,13 @@
+entry	metric	panel	stored_measured_delta	stored_cv_observed_delta	abs_diff	match_within_1e-6
+aero	zvf	n2_same_stack_last10	-0.025	-0.025	0.0	True
+aero	reward_mean	n2_same_stack_last10	-0.014063	-0.014063	0.0	True
+aero	pcd	n2_same_stack_last10	0.00293	0.00293	0.0	True
+aero	mean_len	n2_same_stack_last10	31.077344	31.077344	0.0	True
+gift	zvf	n2_same_stack_last10	0.125	0.125	0.0	True
+gift	reward_mean	n2_same_stack_last10	0.016406	0.016406	0.0	True
+gift	pcd	n2_same_stack_last10	-0.018457	-0.018457	0.0	True
+gift	mean_len	n2_same_stack_last10	-3.889063	-3.889063	0.0	True
+areal	zvf	n2_same_stack_last10	-0.05625	-0.05625	0.0	True
+areal	reward_mean	n2_same_stack_last10	-0.019531	-0.019531	0.0	True
+areal	pcd	n2_same_stack_last10	0.007324	0.007324	0.0	True
+areal	mean_len	n2_same_stack_last10	30.125781	30.125781	0.0	True

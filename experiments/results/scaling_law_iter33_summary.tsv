@@ -1,0 +1,13 @@
+n_anchors	12
+n_dense	6
+n_moe	6
+phase_distribution	{'plateau': 3, 'saturation': 5, 'drift': 3, 'collapse': 1}
+P1_peak_after_10pct_rate	0.75
+P2_late_gt_early_rate	0.4166666666666667
+P3_plateau_holds_rate	0.5833333333333334
+P4_phase_score_mean_rho	0.0462
+P4_p_value	0.9217
+P5_nemotron_unique	True
+mannwhitney_dense_vs_moe_p	0.4755
+median_phase_score_dense	-0.7517
+median_phase_score_moe	-0.365

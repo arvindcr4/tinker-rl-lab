@@ -1,0 +1,6 @@
+section	metric_key	headline
+A_joint_fit	R2	"Joint acc(G,T) fit: R^2=0.796, n=20, log10(1-acc) = +1.669 + (-0.141)*log10(G) + (-0.293)*log10(T)"
+A_joint_fit	ratio_bc	"b/c ratio = +0.480 -- log10(G) and log10(T) contribute +0.480x differently per decade"
+B_optimal_G	slope	"G*(T) slope = +0.500/decade of T  (pre-saturation)"
+C_bounded_cone	supported	"Bounded cone (G=64 <= G=32 at every T): 4/4 non-positive"
+D_complementarity	factor	"Compute amplifies value of G by 24.0x (T=1M: 0.010 -> T=64M: 0.240)"

@@ -1,0 +1,197 @@
+{
+  "n_delta_entries": 15,
+  "n_claim_validation_rows": 27,
+  "n_measured_rows": 27,
+  "n_expected_effects_rows": 28,
+  "verdict_distribution_pre": {
+    "NEUTRAL": 6,
+    "SUPPORTS": 10,
+    "UNCLAIMED": 8,
+    "CONTRADICTS": 3
+  },
+  "verdict_distribution_post": {
+    "NEUTRAL": 6,
+    "SUPPORTS": 10,
+    "UNCLAIMED": 8,
+    "CONTRADICTS": 3,
+    "NONE": 9
+  },
+  "gap_counts": {
+    "B": 8,
+    "D": 3,
+    "A": 3,
+    "E": 2
+  },
+  "per_entry": {
+    "delta_adaptiveg": {
+      "n_measured": 2,
+      "n_claimed": 2,
+      "n_cv": 2,
+      "n_inconsistent": 0,
+      "gap_classes": []
+    },
+    "delta_aero": {
+      "n_measured": 4,
+      "n_claimed": 3,
+      "n_cv": 4,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "B"
+      ]
+    },
+    "delta_areal": {
+      "n_measured": 4,
+      "n_claimed": 3,
+      "n_cv": 4,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "B"
+      ]
+    },
+    "delta_cppo": {
+      "n_measured": 2,
+      "n_claimed": 1,
+      "n_cv": 2,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "B"
+      ]
+    },
+    "delta_dapo": {
+      "n_measured": 0,
+      "n_claimed": 3,
+      "n_cv": 0,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "A",
+        "D"
+      ]
+    },
+    "delta_drgrpo": {
+      "n_measured": 3,
+      "n_claimed": 3,
+      "n_cv": 3,
+      "n_inconsistent": 0,
+      "gap_classes": []
+    },
+    "delta_es": {
+      "n_measured": 2,
+      "n_claimed": 1,
+      "n_cv": 2,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "B"
+      ]
+    },
+    "delta_gift": {
+      "n_measured": 4,
+      "n_claimed": 3,
+      "n_cv": 4,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "B"
+      ]
+    },
+    "delta_gspo": {
+      "n_measured": 0,
+      "n_claimed": 3,
+      "n_cv": 0,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "A",
+        "D"
+      ]
+    },
+    "delta_liteppo": {
+      "n_measured": 0,
+      "n_claimed": 0,
+      "n_cv": 0,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "E"
+      ]
+    },
+    "delta_mcgrpo": {
+      "n_measured": 2,
+      "n_claimed": 1,
+      "n_cv": 2,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "B"
+      ]
+    },
+    "delta_ngrpo": {
+      "n_measured": 2,
+      "n_claimed": 1,
+      "n_cv": 2,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "B"
+      ]
+    },
+    "delta_ppo": {
+      "n_measured": 0,
+      "n_claimed": 3,
+      "n_cv": 0,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "A",
+        "D"
+      ]
+    },
+    "delta_reinforce": {
+      "n_measured": 0,
+      "n_claimed": 0,
+      "n_cv": 0,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "E"
+      ]
+    },
+    "delta_scafgrpo": {
+      "n_measured": 2,
+      "n_claimed": 1,
+      "n_cv": 2,
+      "n_inconsistent": 0,
+      "gap_classes": [
+        "B"
+      ]
+    }
+  },
+  "n2_extensions_added": 6,
+  "n2_extensions_detail": [
+    {
+      "delta_id": "delta_aero",
+      "metric": "pcd",
+      "verdict": "UNCLAIMED"
+    },
+    {
+      "delta_id": "delta_aero",
+      "metric": "mean_len",
+      "verdict": "UNCLAIMED"
+    },
+    {
+      "delta_id": "delta_gift",
+      "metric": "pcd",
+      "verdict": "UNCLAIMED"
+    },
+    {
+      "delta_id": "delta_gift",
+      "metric": "mean_len",
+      "verdict": "UNCLAIMED"
+    },
+    {
+      "delta_id": "delta_areal",
+      "metric": "pcd",
+      "verdict": "UNCLAIMED"
+    },
+    {
+      "delta_id": "delta_areal",
+      "metric": "mean_len",
+      "verdict": "UNCLAIMED"
+    }
+  ],
+  "git_sha": "iter-106 uncommitted",
+  "audit_date": "2026-07-05",
+  "audit_source": "scripts/p5p8/p6_iter106_claim_evidence_ledger.py"
+}

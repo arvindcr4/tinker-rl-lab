@@ -1,0 +1,5 @@
+estimate	model	n	note
+14.977247950697775	intercept	12	intercept
+-5.242940016361693	log10N	12	main effect of log10(N) on lambda
+-16.984115834384014	arch_moe	12	main effect of MoE dummy on lambda
+9.575559873540007	log10N_x_arch_moe	12	interaction

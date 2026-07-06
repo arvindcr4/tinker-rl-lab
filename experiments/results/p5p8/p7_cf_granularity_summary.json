@@ -1,0 +1,204 @@
+{
+  "iter": 59,
+  "panel_n2": {
+    "methods": [
+      "aero",
+      "areal",
+      "gift",
+      "grpo"
+    ],
+    "n_steps_per_method": 40,
+    "n_prompts_per_step": 16,
+    "G_actual": 8
+  },
+  "policies": {
+    "actual": "always G=8 (the empirical N2 rollout count)",
+    "per_step": "one G per (method, step) from zvf_step scalar; tau_esc=0.7, tau_des=0.95",
+    "per_prompt": "one G per prompt using per-prompt boundary indicator; contrast->G_ESC, boundary->G_DES",
+    "oracle": "G=2 for contrast prompts, G=8 for boundary prompts (perfect-information lower bound)"
+  },
+  "trigger_thresholds": {
+    "tau_esc_step": 0.7,
+    "tau_des_step": 0.95,
+    "G_ESC": 16,
+    "G_DES": 4
+  },
+  "n_decisions": 2560,
+  "headline": {
+    "pooled_savings_per_prompt_pct": 9.39,
+    "pooled_savings_ci": [
+      0.0682,
+      0.1203
+    ],
+    "pooled_regret_per_prompt_pct": 10.91,
+    "pooled_regret_ci": [
+      0.0695,
+      0.1495
+    ],
+    "pooled_restore_rate_at_esc": 0.0,
+    "pooled_restore_rate_ci": [
+      0.0,
+      0.0
+    ],
+    "total_boundary_prompts": 1867,
+    "total_restored_at_esc": 0,
+    "restore_rate_aggregate": 0.0
+  },
+  "per_method_summary": [
+    {
+      "method": "aero",
+      "n_steps": 40,
+      "total_rollouts_actual": 5120,
+      "total_rollouts_per_step": 7552,
+      "total_rollouts_per_prompt": 4708,
+      "total_rollouts_oracle": 4046,
+      "savings_per_step_pct": -47.5,
+      "savings_per_prompt_pct": 8.05,
+      "regret_per_prompt_pct": 12.93,
+      "savings_per_prompt_mean": 0.0805,
+      "savings_per_prompt_ci_lo": 0.0359,
+      "savings_per_prompt_ci_hi": 0.1273,
+      "regret_per_prompt_mean": 0.1293,
+      "regret_per_prompt_ci_lo": 0.0625,
+      "regret_per_prompt_ci_hi": 0.1961,
+      "n_boundary_prompts_total": 461,
+      "n_contrast_prompts_total": 179,
+      "n_restored_at_esc": 0,
+      "restore_rate_at_esc_mean": 0.0,
+      "restore_rate_at_esc_ci_lo": 0.0,
+      "restore_rate_at_esc_ci_hi": 0.0,
+      "headroom_dollar_per_step": 0.0
+    },
+    {
+      "method": "areal",
+      "n_steps": 40,
+      "total_rollouts_actual": 5120,
+      "total_rollouts_per_step": 7296,
+      "total_rollouts_per_prompt": 4816,
+      "total_rollouts_oracle": 3992,
+      "savings_per_step_pct": -42.5,
+      "savings_per_prompt_pct": 5.94,
+      "regret_per_prompt_pct": 16.09,
+      "savings_per_prompt_mean": 0.0594,
+      "savings_per_prompt_ci_lo": 0.0031,
+      "savings_per_prompt_ci_hi": 0.1086,
+      "regret_per_prompt_mean": 0.1609,
+      "regret_per_prompt_ci_lo": 0.0836,
+      "regret_per_prompt_ci_hi": 0.2383,
+      "n_boundary_prompts_total": 452,
+      "n_contrast_prompts_total": 188,
+      "n_restored_at_esc": 0,
+      "restore_rate_at_esc_mean": 0.0,
+      "restore_rate_at_esc_ci_lo": 0.0,
+      "restore_rate_at_esc_ci_hi": 0.0,
+      "headroom_dollar_per_step": 0.0
+    },
+    {
+      "method": "gift",
+      "n_steps": 40,
+      "total_rollouts_actual": 5120,
+      "total_rollouts_per_step": 8256,
+      "total_rollouts_per_prompt": 4324,
+      "total_rollouts_oracle": 4238,
+      "savings_per_step_pct": -61.25,
+      "savings_per_prompt_pct": 15.55,
+      "regret_per_prompt_pct": 1.68,
+      "savings_per_prompt_mean": 0.1555,
+      "savings_per_prompt_ci_lo": 0.0992,
+      "savings_per_prompt_ci_hi": 0.2141,
+      "regret_per_prompt_mean": 0.0168,
+      "regret_per_prompt_ci_lo": -0.0676,
+      "regret_per_prompt_ci_hi": 0.1047,
+      "n_boundary_prompts_total": 493,
+      "n_contrast_prompts_total": 147,
+      "n_restored_at_esc": 0,
+      "restore_rate_at_esc_mean": 0.0,
+      "restore_rate_at_esc_ci_lo": 0.0,
+      "restore_rate_at_esc_ci_hi": 0.0,
+      "headroom_dollar_per_step": 0.0
+    },
+    {
+      "method": "grpo",
+      "n_steps": 40,
+      "total_rollouts_actual": 5120,
+      "total_rollouts_per_step": 7680,
+      "total_rollouts_per_prompt": 4708,
+      "total_rollouts_oracle": 4046,
+      "savings_per_step_pct": -50.0,
+      "savings_per_prompt_pct": 8.05,
+      "regret_per_prompt_pct": 12.93,
+      "savings_per_prompt_mean": 0.0805,
+      "savings_per_prompt_ci_lo": 0.0312,
+      "savings_per_prompt_ci_hi": 0.1297,
+      "regret_per_prompt_mean": 0.1293,
+      "regret_per_prompt_ci_lo": 0.059,
+      "regret_per_prompt_ci_hi": 0.2031,
+      "n_boundary_prompts_total": 461,
+      "n_contrast_prompts_total": 179,
+      "n_restored_at_esc": 0,
+      "restore_rate_at_esc_mean": 0.0,
+      "restore_rate_at_esc_ci_lo": 0.0,
+      "restore_rate_at_esc_ci_hi": 0.0,
+      "headroom_dollar_per_step": 0.0
+    },
+    {
+      "method": "pooled",
+      "n_steps": 160,
+      "total_rollouts_actual": 20480,
+      "total_rollouts_per_step": 30784,
+      "total_rollouts_per_prompt": 18556,
+      "total_rollouts_oracle": 16322,
+      "savings_per_step_pct": -50.31,
+      "savings_per_prompt_pct": 9.39,
+      "regret_per_prompt_pct": 10.91,
+      "savings_per_prompt_mean": 0.0939,
+      "savings_per_prompt_ci_lo": 0.0682,
+      "savings_per_prompt_ci_hi": 0.1203,
+      "regret_per_prompt_mean": 0.1091,
+      "regret_per_prompt_ci_lo": 0.0695,
+      "regret_per_prompt_ci_hi": 0.1495,
+      "n_boundary_prompts_total": 1867,
+      "n_contrast_prompts_total": 693,
+      "n_restored_at_esc": 0,
+      "restore_rate_at_esc_mean": 0.0,
+      "restore_rate_at_esc_ci_lo": 0.0,
+      "restore_rate_at_esc_ci_hi": 0.0,
+      "headroom_dollar_per_step": 0.0
+    }
+  ],
+  "bootstrap_paired_tests": [
+    {
+      "method": "aero",
+      "metric": "per_prompt_minus_oracle_rollouts",
+      "obs_mean": 16.55,
+      "boot_ci_lo": 7.55,
+      "boot_ci_hi": 25.1,
+      "ci_excludes_zero": "yes"
+    },
+    {
+      "method": "areal",
+      "metric": "per_prompt_minus_oracle_rollouts",
+      "obs_mean": 20.6,
+      "boot_ci_lo": 10.7,
+      "boot_ci_hi": 30.95,
+      "ci_excludes_zero": "yes"
+    },
+    {
+      "method": "gift",
+      "metric": "per_prompt_minus_oracle_rollouts",
+      "obs_mean": 2.15,
+      "boot_ci_lo": -9.55,
+      "boot_ci_hi": 13.4,
+      "ci_excludes_zero": "no"
+    },
+    {
+      "method": "grpo",
+      "metric": "per_prompt_minus_oracle_rollouts",
+      "obs_mean": 16.55,
+      "boot_ci_lo": 7.1,
+      "boot_ci_hi": 26.0,
+      "ci_excludes_zero": "yes"
+    }
+  ],
+  "headline_text": "Counterfactual replay on N2 tensors (2560 prompt-step decisions, 4 methods x 40 steps x 16 prompts). Pooled savings per-prompt controller vs always-G=8: +9.39% CI [+0.0682, +0.1203]. Regret vs oracle: +10.91% CI [+0.0695, +0.1495]. Bootstrap-simulated restore rate at G_ESC=16 for boundary prompts: 0.0000 [0.0000, 0.0000] = 0/1867 boundary prompts would have been RESTORED by escalating to G=16."
+}

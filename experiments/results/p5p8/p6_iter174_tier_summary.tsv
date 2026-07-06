@@ -1,0 +1,4 @@
+tier	n_entries	n_total	n_sig	sig_rate	mean_abs_delta	mean_ci_width	entries
+A	3	18	9	0.5000	3.723373	1.778625	delta_aero;delta_areal;delta_gift
+B	7	20	12	0.6000	2.403971	7.287627	delta_adaptiveg;delta_cppo;delta_drgrpo;delta_es;delta_mcgrpo;delta_ngrpo;delta_scafgrpo
+D	7	0	0	NA	NA	NA	delta_dapo;delta_gspo;delta_liteppo;delta_ppo;delta_reinforce;delta_tool_use_llama-8b-inst;delta_tool_use_qwen3-32b

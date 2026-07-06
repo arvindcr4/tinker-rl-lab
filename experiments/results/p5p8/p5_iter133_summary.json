@@ -1,0 +1,216 @@
+{
+  "iter": 133,
+  "pillar": "P5",
+  "corpus": "experiments/results/n10_seed_expansion/",
+  "n_seeds_used": 5,
+  "seeds": [
+    42,
+    179,
+    316,
+    453,
+    590
+  ],
+  "n_obs": 75,
+  "channels": [
+    "zvf",
+    "reward",
+    "mean_len",
+    "loss"
+  ],
+  "B_bootstrap": 2000,
+  "boot_seed": 20260705,
+  "hypotheses": {
+    "H1": {
+      "claim": "\u03b7\u00b2(step_band) > \u03b7\u00b2(seed) on \u2265 2/4 channels (curriculum)",
+      "verdict": "PASS",
+      "band_dominant_channels": [
+        "reward",
+        "mean_len"
+      ]
+    },
+    "H2": {
+      "claim": "R \u2265 1 with CI-lo > 1 on \u2265 2/4 channels",
+      "verdict": "PASS"
+    },
+    "H3": {
+      "claim": "iter-125 R\u22654 generalises to N10 (cross-corpus portability)",
+      "verdict": "REFUTED",
+      "R_per_channel": {
+        "zvf": 0.3379,
+        "reward": 2.9728,
+        "mean_len": 3.1739,
+        "loss": 0.2113
+      },
+      "interpretation": "iter-125 multi-stack R(zvf, stack/algo)=10.32 is corpus-shape-dependent, NOT corpus-agnostic. On N10 single-stack/single-algo, zvf is SEED-dominated (R=0.34). Reward+mean_len carry the cross-corpus invariant; zvf/stack behaviour is corpus-shaping-dependent."
+    },
+    "H4": {
+      "claim": "\u03b7\u00b2(step_band, zvf) \u2265 0.1 \u21d2 controller-eligibility coherence",
+      "verdict": "INSUFFICIENT",
+      "eta2_step_band_zvf": 0.0346,
+      "interpretation": "On N10 zvf is seed-dominated, not step-band. Any P7 controller should require \u03b7\u00b2(step_band, zvf)\u22650.10 as an operational gate; N10 panel fails this gate."
+    }
+  },
+  "per_axis_eta2": [
+    {
+      "channel": "zvf",
+      "axis": "seed",
+      "eta2_point": 0.1025,
+      "ci_lo": 0.0022,
+      "ci_hi": 0.1574,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "zvf",
+      "axis": "band",
+      "eta2_point": 0.0346,
+      "ci_lo": 0.0228,
+      "ci_hi": 0.1768,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "reward",
+      "axis": "seed",
+      "eta2_point": 0.0494,
+      "ci_lo": 0.0071,
+      "ci_hi": 0.0638,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "reward",
+      "axis": "band",
+      "eta2_point": 0.1468,
+      "ci_lo": 0.1017,
+      "ci_hi": 0.2404,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "mean_len",
+      "axis": "seed",
+      "eta2_point": 0.0447,
+      "ci_lo": 0.0003,
+      "ci_hi": 0.0733,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "mean_len",
+      "axis": "band",
+      "eta2_point": 0.142,
+      "ci_lo": 0.1025,
+      "ci_hi": 0.2546,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "loss",
+      "axis": "seed",
+      "eta2_point": 0.0716,
+      "ci_lo": 0.0078,
+      "ci_hi": 0.0905,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "loss",
+      "axis": "band",
+      "eta2_point": 0.0151,
+      "ci_lo": 0.0055,
+      "ci_hi": 0.1492,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "zvf",
+      "axis": "residual",
+      "eta2_point": 0.8629,
+      "ci_lo": 0.8629,
+      "ci_hi": 0.8629,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "reward",
+      "axis": "residual",
+      "eta2_point": 0.8039,
+      "ci_lo": 0.8039,
+      "ci_hi": 0.8039,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "mean_len",
+      "axis": "residual",
+      "eta2_point": 0.8133,
+      "ci_lo": 0.8133,
+      "ci_hi": 0.8133,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "loss",
+      "axis": "residual",
+      "eta2_point": 0.9133,
+      "ci_lo": 0.9133,
+      "ci_hi": 0.9133,
+      "n_obs": 75,
+      "B": 2000
+    }
+  ],
+  "chained_R": [
+    {
+      "channel": "zvf",
+      "eta2_step_band": 0.0346,
+      "eta2_seed": 0.1025,
+      "R_step_over_seed": 0.3379,
+      "R_ci_lo": 0.2503,
+      "R_ci_hi": 27.1111,
+      "P_R_gt_1": 0.3421,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "reward",
+      "eta2_step_band": 0.1468,
+      "eta2_seed": 0.0494,
+      "R_step_over_seed": 2.9728,
+      "R_ci_lo": 2.2429,
+      "R_ci_hi": 22.6667,
+      "P_R_gt_1": 1.0,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "mean_len",
+      "eta2_step_band": 0.142,
+      "eta2_seed": 0.0447,
+      "R_step_over_seed": 3.1739,
+      "R_ci_lo": 1.876,
+      "R_ci_hi": 619.0052,
+      "P_R_gt_1": 1.0,
+      "n_obs": 75,
+      "B": 2000
+    },
+    {
+      "channel": "loss",
+      "eta2_step_band": 0.0151,
+      "eta2_seed": 0.0716,
+      "R_step_over_seed": 0.2113,
+      "R_ci_lo": 0.0977,
+      "R_ci_hi": 6.1,
+      "P_R_gt_1": 0.386,
+      "n_obs": 75,
+      "B": 2000
+    }
+  ],
+  "cross_corpus_portability": {
+    "iter_125_chain_R_zvf_task_slice": "10.32 [4.11, 32.14]",
+    "iter_125_chain_R_zvf_G": "9.77 [3.51, 32.19]",
+    "iter_133_R_step_band_over_seed_zvf": "0.3379",
+    "interpretation": "iter-125 R\u22654 is corpus-shape-dependent; N10 single-stack reverts zvf R < 1."
+  },
+  "operational_recommendation": "Report absolute \u03b7\u00b2 (corpus-comparable) AND R (corpus-shape-relative); cross-corpus claims must specify which axes are swept."
+}

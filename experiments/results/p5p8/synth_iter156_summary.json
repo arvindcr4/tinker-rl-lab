@@ -1,0 +1,187 @@
+{
+  "iter": 156,
+  "n_10domain_cells": 10,
+  "n_11domain_cells": 11,
+  "d11_overall_p": 0.968,
+  "d11_overall_lo": 0.9486546984063574,
+  "d11_overall_hi": 0.980208658648717,
+  "d11_overall_n": 500,
+  "d11_overall_k": 484,
+  "d11_per_tier": {
+    "cheap_heuristic": {
+      "k": 100,
+      "n": 100,
+      "p": 1.0,
+      "lo": 0.9630051925239981,
+      "hi": 0.9999999999999999
+    },
+    "small_open": {
+      "k": 100,
+      "n": 100,
+      "p": 1.0,
+      "lo": 0.9630051925239981,
+      "hi": 0.9999999999999999
+    },
+    "iter120_default": {
+      "k": 100,
+      "n": 100,
+      "p": 1.0,
+      "lo": 0.9630051925239981,
+      "hi": 0.9999999999999999
+    },
+    "mid_tier": {
+      "k": 100,
+      "n": 100,
+      "p": 1.0,
+      "lo": 0.9630051925239981,
+      "hi": 0.9999999999999999
+    },
+    "frontier_gpt4": {
+      "k": 84,
+      "n": 100,
+      "p": 0.84,
+      "lo": 0.7557955544110557,
+      "hi": 0.8990479765052628
+    }
+  },
+  "d11_per_rate_at_cheap": {
+    "1.44": {
+      "k": 20,
+      "n": 20,
+      "p": 1.0,
+      "lo": 0.8388698745050667,
+      "hi": 1.0
+    },
+    "1.0": {
+      "k": 20,
+      "n": 20,
+      "p": 1.0,
+      "lo": 0.8388698745050667,
+      "hi": 1.0
+    },
+    "0.5": {
+      "k": 20,
+      "n": 20,
+      "p": 1.0,
+      "lo": 0.8388698745050667,
+      "hi": 1.0
+    },
+    "0.1": {
+      "k": 20,
+      "n": 20,
+      "p": 1.0,
+      "lo": 0.8388698745050667,
+      "hi": 1.0
+    },
+    "0.05": {
+      "k": 20,
+      "n": 20,
+      "p": 1.0,
+      "lo": 0.8388698745050667,
+      "hi": 1.0
+    }
+  },
+  "d11_per_fset_at_cheap": {
+    "24full": {
+      "k": 25,
+      "n": 25,
+      "p": 1.0,
+      "lo": 0.8668035060468213,
+      "hi": 1.0
+    },
+    "20raw": {
+      "k": 25,
+      "n": 25,
+      "p": 1.0,
+      "lo": 0.8668035060468213,
+      "hi": 1.0
+    },
+    "20raw+minmax": {
+      "k": 25,
+      "n": 25,
+      "p": 1.0,
+      "lo": 0.8668035060468213,
+      "hi": 1.0
+    },
+    "20raw+stat": {
+      "k": 25,
+      "n": 25,
+      "p": 1.0,
+      "lo": 0.8668035060468213,
+      "hi": 1.0
+    }
+  },
+  "h1_pass": true,
+  "h2_pass": true,
+  "h3_pass": true,
+  "h4_pass": true,
+  "d11_layer": "HIGH",
+  "eleven_domain_summary": [
+    {
+      "domain": "D1",
+      "label": "P8_grad_band_firing",
+      "density": 0.0083,
+      "layer": "LOW"
+    },
+    {
+      "domain": "D2",
+      "label": "P7_step_rejection",
+      "density": 0.5,
+      "layer": "MID"
+    },
+    {
+      "domain": "D3",
+      "label": "P5_cells_with_seed_pass",
+      "density": 0.3673,
+      "layer": "MID"
+    },
+    {
+      "domain": "D4",
+      "label": "P7_per_prompt_boundary",
+      "density": 0.7293,
+      "layer": "MID"
+    },
+    {
+      "domain": "D5",
+      "label": "P8_iso_ECE_gt_010",
+      "density": 1.0,
+      "layer": "HIGH"
+    },
+    {
+      "domain": "D6",
+      "label": "P8_sensor_firing_flip",
+      "density": 0.0053,
+      "layer": "LOW"
+    },
+    {
+      "domain": "D7",
+      "label": "N2_algo_axis_spread_gt_500",
+      "density": 0.0156,
+      "layer": "LOW"
+    },
+    {
+      "domain": "D8",
+      "label": "P7_UNIFIED_C4_FIRE_density",
+      "density": 0.0914,
+      "layer": "MID"
+    },
+    {
+      "domain": "D9",
+      "label": "P7_UNIFIED_C4_contrast_recov",
+      "density": 0.0914,
+      "layer": "MID"
+    },
+    {
+      "domain": "D10",
+      "label": "P8_operationally_actionable",
+      "density": 0.78,
+      "layer": "HIGH"
+    },
+    {
+      "domain": "D11",
+      "label": "P8_escalation_value_density",
+      "density": 1.0,
+      "layer": "HIGH"
+    }
+  ]
+}

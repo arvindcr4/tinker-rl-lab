@@ -1,0 +1,98 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_adaptiveg",
+  "name": "Adaptive-G (ZVF-driven)",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "tinker2026adaptiveg",
+    "arxiv": "",
+    "title": "Adaptive group-size schedule driven by per-step ZVF (worktree implementation, live in colab-open_grpo-adaptiveg_e3 and iter-47/51 P7 unified controller bank)"
+  },
+  "deltas": [
+    {
+      "component": "zvf_driven_group_size_ladder",
+      "field": "group_size_schedule.schedule",
+      "change": "schedule='adaptive'; initial_g=4; adaptation_rule='escalate 4->6->8 when ZVF>0.5 (cap 8); de-escalate 8->6->4 when ZVF<0.2 (floor 4); per-step ZVF measured client-side from reward tensors' variance indicator."
+    }
+  ],
+  "measured": [
+    {
+      "metric": "reward_mean",
+      "panel": "qp7_adaptive_armB_vs_armA_paired",
+      "base": "grpo",
+      "delta": -0.007812,
+      "ci_low": -0.023926,
+      "ci_high": 0.009277,
+      "n": 16,
+      "significant": false,
+      "ci_method": {
+        "method": "paired_step_bootstrap_pct",
+        "n_boot": 2000,
+        "seed": 20260704,
+        "ci_level": 0.95,
+        "source": "scripts/p5p8/p6_add_missing_deltas.py"
+      },
+      "source": "experiments/results/quick_20260704/qp7_adaptive.tsv",
+      "note": "arm B (adaptive 4->6->8) - arm A (fixed G=4); paired by step"
+    },
+    {
+      "metric": "zvf",
+      "panel": "qp7_adaptive_armB_vs_armA_paired",
+      "base": "grpo",
+      "delta": -0.074219,
+      "ci_low": -0.121094,
+      "ci_high": -0.03125,
+      "n": 16,
+      "significant": true,
+      "ci_method": {
+        "method": "paired_step_bootstrap_pct",
+        "n_boot": 2000,
+        "seed": 20260704,
+        "ci_level": 0.95,
+        "source": "scripts/p5p8/p6_add_missing_deltas.py"
+      },
+      "source": "experiments/results/quick_20260704/qp7_adaptive.tsv",
+      "note": "arm B (adaptive 4->6->8) - arm A (fixed G=4); paired by step"
+    }
+  ],
+  "expected_effects": [
+    {
+      "metric": "reward_mean",
+      "panel": "qp7_adaptive_armB_vs_armA_paired",
+      "predicted_sign": ">=0",
+      "rationale": "adaptive G aims to spend compute on contrast-rich prompts; should be at least reward-neutral and ideally positive."
+    },
+    {
+      "metric": "zvf",
+      "panel": "qp7_adaptive_armB_vs_armA_paired",
+      "predicted_sign": "<0",
+      "rationale": "escalating G when ZVF is high reduces the fraction of all-same groups on the next step (the iter-31 unified-band controller's de-escalation branch in reverse)."
+    }
+  ],
+  "claim_validation": [
+    {
+      "metric": "reward_mean",
+      "panel": "qp7_adaptive_armB_vs_armA_paired",
+      "predicted_sign": ">=0",
+      "observed_delta": -0.007812,
+      "ci_low": -0.023926,
+      "ci_high": 0.009277,
+      "significant": false,
+      "verdict": "NEUTRAL",
+      "rationale": "CI=[-0.0239,+0.0093] includes 0"
+    },
+    {
+      "metric": "zvf",
+      "panel": "qp7_adaptive_armB_vs_armA_paired",
+      "predicted_sign": "<0",
+      "observed_delta": -0.074219,
+      "ci_low": -0.121094,
+      "ci_high": -0.03125,
+      "significant": true,
+      "verdict": "SUPPORTS",
+      "rationale": "significant, matches predicted <0"
+    }
+  ],
+  "notes": "Iter-54 vein (d): added because the worktree carries a real adaptive-G arm (qp7_adaptive.tsv, n=16 paired steps, G=4 fixed vs 4->6->8 adaptive ladder) but no delta_*.json existed. Measured on n=16 paired-by-step observations. | iter-94 transparent-placeholder-marker: Citation: bibkey=tinker2026adaptiveg is a transparent placeholder because Adaptive-G is a worktree implementation (live in colab-open_grpo-adaptiveg_e3 and iter-47/51 P7 unified controller bank), not a peer-reviewed paper. No arXiv id exists for this implementation. Future work: replace with verified citation when an external artifact lands."
+}

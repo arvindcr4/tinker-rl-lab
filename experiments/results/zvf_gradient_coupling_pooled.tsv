@@ -1,0 +1,17 @@
+G	proxy	pearson_r	ci_lo	ci_hi	n_obs	n_seeds
+2	grad_norm	-0.6405	-0.8021	-0.5126	120	3
+2	advantage_variance	-0.5882	-0.6189	-0.5521	120	3
+2	entropy	-0.8407	-0.8655	-0.8009	120	3
+2	mean_reward	0.7951	0.7663	0.8297	120	3
+4	grad_norm	-0.529	-0.7048	-0.268	120	3
+4	advantage_variance	-0.4865	-0.557	-0.4165	120	3
+4	entropy	-0.9092	-0.9565	-0.8697	120	3
+4	mean_reward	0.8479	0.8042	0.9051	120	3
+8	grad_norm	-0.5452	-0.6351	-0.4111	120	3
+8	advantage_variance	-0.468	-0.5681	-0.3517	120	3
+8	entropy	-0.9004	-0.9183	-0.8707	120	3
+8	mean_reward	0.8255	0.7844	0.8481	120	3
+16	grad_norm	-0.4856	-0.6511	-0.3889	120	3
+16	advantage_variance	-0.4539	-0.5252	-0.407	120	3
+16	entropy	-0.8822	-0.8942	-0.8695	120	3
+16	mean_reward	0.7908	0.7716	0.8118	120	3

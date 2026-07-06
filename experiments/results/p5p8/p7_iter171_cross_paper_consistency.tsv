@@ -1,0 +1,13 @@
+iter_ref	claim	evidence_metric	observed	consistent
+iter-163 row 177	zvf-triage cost < 1.50x baseline at step level	cost_ratio_hi	1.3250 (method=grpo)	True
+iter-163 row 177	zvf-triage cost < 1.50x baseline at step level	cost_ratio_hi	1.3125 (method=aero)	True
+iter-163 row 177	zvf-triage cost < 1.50x baseline at step level	cost_ratio_hi	1.4000 (method=gift)	True
+iter-163 row 177	zvf-triage cost < 1.50x baseline at step level	cost_ratio_hi	1.2875 (method=areal)	True
+iter-167 row 178	zvf-triage improves per-prompt contrast vs fixed-G baseline	contrast_gain(C1) > gain(C0) by margin	gain_C1=-0.0411 > gain_C0=-0.0497	True
+iter-167 row 178	zvf-triage improves per-prompt contrast vs fixed-G baseline	contrast_gain(C1) > gain(C0) by margin	gain_C1=-0.0380 > gain_C0=-0.0453	True
+iter-167 row 178	zvf-triage improves per-prompt contrast vs fixed-G baseline	contrast_gain(C1) > gain(C0) by margin	gain_C1=-0.0325 > gain_C0=-0.0394	True
+iter-167 row 178	zvf-triage improves per-prompt contrast vs fixed-G baseline	contrast_gain(C1) > gain(C0) by margin	gain_C1=-0.0469 > gain_C0=-0.0532	True
+FRONTIER Round 2	observed Y(G=8) > iid-projected Y(G=16) [anti-herding bonus]	y_G8_pt > y_proj_G16_pt	Y_obs(G=8)=0.2797, Y_iid(G=16)=0.2650	True
+FRONTIER Round 2	observed Y(G=8) > iid-projected Y(G=16) [anti-herding bonus]	y_G8_pt > y_proj_G16_pt	Y_obs(G=8)=0.2797, Y_iid(G=16)=0.2664	True
+FRONTIER Round 2	observed Y(G=8) > iid-projected Y(G=16) [anti-herding bonus]	y_G8_pt > y_proj_G16_pt	Y_obs(G=8)=0.2297, Y_iid(G=16)=0.2180	True
+FRONTIER Round 2	observed Y(G=8) > iid-projected Y(G=16) [anti-herding bonus]	y_G8_pt > y_proj_G16_pt	Y_obs(G=8)=0.2938, Y_iid(G=16)=0.2776	True

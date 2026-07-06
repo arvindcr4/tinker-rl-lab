@@ -1,0 +1,2 @@
+dim	value	n_entries	cov_loss_form	cov_reference_kl	cov_sampler_backend	cov_telemetry	cov_group_size_schedule	cov_heldout_split	cov_decontamination	mean_item_cov
+label	?	26	1.0	1.0	1.0	1.0	1.0	1.0	1.0	1.0

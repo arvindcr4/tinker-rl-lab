@@ -1,0 +1,37 @@
+% Pillar-7: E1 open-backward-pass gradient validation (toy scale, directional)
+\section{E1: An Open-Backward-Pass Check of T3}
+\label{sec:p7-e1}
+Theorems T1 and T2 are checkable from reward telemetry alone, but T3---that
+gradient magnitude tracks $p(1-p)$---requires seeing the gradients, which
+the closed stack used for most of the benchmark does not expose. Experiment
+E1 (W\&B project \texttt{zvf-colab-experiments}, run family
+\texttt{E1\_grad\_signal}) therefore reruns the loop in an open trainer with
+a fully instrumented backward pass: a 0.5B-parameter model on a synthetic
+arithmetic task with binary verifiable rewards, chosen so that per-step
+success probability sweeps a wide range of $p$ within a single run.
+
+At each step we log the empirical group success rate $\hat p$, the contrast
+term $\hat p(1-\hat p)$, and the global gradient norm $\|\nabla\|$ after the
+GRPO loss. The result:
+\begin{equation}
+  \mathrm{corr}\bigl(\|\nabla\|,\; \hat p(1-\hat p)\bigr) \;=\; +0.71 .
+  \label{eq:p7-e1}
+\end{equation}
+The sign and strength are what T3 predicts: steps whose groups carry more
+within-group contrast produce proportionally larger policy-gradient norms,
+and steps dominated by degenerate groups produce gradients near zero even
+when the raw batch reward is high.
+
+\paragraph{Honest scope.} We state plainly what E1 is and is not. It is a
+\emph{directional} validation on a 0.5B toy model and a synthetic arithmetic
+task---two ingredients chosen precisely to make the backward pass cheap and
+inspectable, and both far from the production regime. The $+0.71$ is a
+single-configuration correlation, not a publishable effect size: it comes
+with no confidence interval across model scales, no ablation over loss
+variants, and no evidence that the coefficient (as opposed to the sign)
+transfers to 8B--32B models or natural-language reasoning data. We use E1
+for exactly one inferential step: it makes the $p(1-p)$ factor in
+Eq.~\eqref{eq:p7-S} an observed property of at least one real backward pass
+rather than a modeling convenience. The decisive version of this
+experiment---per-group gradient attribution at production scale, across
+seeds---is specified in Section~\ref{sec:p7-limitations}.

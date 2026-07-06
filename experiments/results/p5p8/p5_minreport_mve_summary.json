@@ -1,0 +1,171 @@
+{
+  "n_cells": 98,
+  "raw_incl_path_n_distinct": 98,
+  "content_excl_path_n_distinct": 15,
+  "baseline": {
+    "raw_incl_path_n_distinct": 98,
+    "raw_incl_path_H": 6.6147,
+    "content_excl_path_n_distinct": 15,
+    "content_excl_path_H": 3.778,
+    "n_distinct_minrep_alone": 15,
+    "H_minrep": 3.778,
+    "frac_unique": 0.1531
+  },
+  "mve": {
+    "extension_fields": [
+      "mean_completion_len"
+    ],
+    "n_added_fields": 1,
+    "n_distinct_with_extension": 98,
+    "H_with_extension": 6.6147,
+    "frac_unique_with_extension": 1.0,
+    "distinct_uplift_pct": 84.69
+  },
+  "falsifiable_headline": "CONTENT baseline (MIN-REPORT excluding the unique-per-cell per_step_zvf_path) yields 15/98 distinct profiles (H=3.7780 bits). Adding the 1 MVE fields ['mean_completion_len'] lifts the distinct profile count to 98 (H=6.6147 bits, a 6.53x lift in distinct profiles).",
+  "per_field_rows": [
+    {
+      "extension_field": "mean_completion_len",
+      "H_field_minrep": 3.778,
+      "n_distinct_minrep_alone": 15,
+      "n_distinct_with_extension": 98,
+      "delta_distinct": 83,
+      "delta_distinct_pct": 84.69,
+      "cells_with_unique_profile": 98,
+      "H_with_extension": 6.6147,
+      "delta_H_bits": 2.8367,
+      "rank_by_delta_distinct": 1
+    },
+    {
+      "extension_field": "std_completion_len",
+      "H_field_minrep": 3.778,
+      "n_distinct_minrep_alone": 15,
+      "n_distinct_with_extension": 98,
+      "delta_distinct": 83,
+      "delta_distinct_pct": 84.69,
+      "cells_with_unique_profile": 98,
+      "H_with_extension": 6.6147,
+      "delta_H_bits": 2.8367,
+      "rank_by_delta_distinct": 2
+    },
+    {
+      "extension_field": "mean_reward",
+      "H_field_minrep": 3.778,
+      "n_distinct_minrep_alone": 15,
+      "n_distinct_with_extension": 67,
+      "delta_distinct": 52,
+      "delta_distinct_pct": 53.06,
+      "cells_with_unique_profile": 60,
+      "H_with_extension": 5.5739,
+      "delta_H_bits": 1.7959,
+      "rank_by_delta_distinct": 3
+    },
+    {
+      "extension_field": "pcd",
+      "H_field_minrep": 3.778,
+      "n_distinct_minrep_alone": 15,
+      "n_distinct_with_extension": 66,
+      "delta_distinct": 51,
+      "delta_distinct_pct": 52.04,
+      "cells_with_unique_profile": 58,
+      "H_with_extension": 5.5535,
+      "delta_H_bits": 1.7755,
+      "rank_by_delta_distinct": 4
+    },
+    {
+      "extension_field": "zvf",
+      "H_field_minrep": 3.778,
+      "n_distinct_minrep_alone": 15,
+      "n_distinct_with_extension": 55,
+      "delta_distinct": 40,
+      "delta_distinct_pct": 40.82,
+      "cells_with_unique_profile": 38,
+      "H_with_extension": 5.3136,
+      "delta_H_bits": 1.5356,
+      "rank_by_delta_distinct": 5
+    },
+    {
+      "extension_field": "seed",
+      "H_field_minrep": 3.778,
+      "n_distinct_minrep_alone": 15,
+      "n_distinct_with_extension": 30,
+      "delta_distinct": 15,
+      "delta_distinct_pct": 15.31,
+      "cells_with_unique_profile": 6,
+      "H_with_extension": 4.778,
+      "delta_H_bits": 1.0,
+      "rank_by_delta_distinct": 6
+    },
+    {
+      "extension_field": "model_family",
+      "H_field_minrep": 3.778,
+      "n_distinct_minrep_alone": 15,
+      "n_distinct_with_extension": 28,
+      "delta_distinct": 13,
+      "delta_distinct_pct": 13.27,
+      "cells_with_unique_profile": 2,
+      "H_with_extension": 4.7372,
+      "delta_H_bits": 0.9592,
+      "rank_by_delta_distinct": 7
+    },
+    {
+      "extension_field": "temperature",
+      "H_field_minrep": 3.778,
+      "n_distinct_minrep_alone": 15,
+      "n_distinct_with_extension": 27,
+      "delta_distinct": 12,
+      "delta_distinct_pct": 12.24,
+      "cells_with_unique_profile": 2,
+      "H_with_extension": 4.6963,
+      "delta_H_bits": 0.9184,
+      "rank_by_delta_distinct": 8
+    },
+    {
+      "extension_field": "task_slice",
+      "H_field_minrep": 3.778,
+      "n_distinct_minrep_alone": 15,
+      "n_distinct_with_extension": 15,
+      "delta_distinct": 0,
+      "delta_distinct_pct": 0.0,
+      "cells_with_unique_profile": 0,
+      "H_with_extension": 3.778,
+      "delta_H_bits": 0.0,
+      "rank_by_delta_distinct": 9
+    },
+    {
+      "extension_field": "G",
+      "H_field_minrep": 3.778,
+      "n_distinct_minrep_alone": 15,
+      "n_distinct_with_extension": 15,
+      "delta_distinct": 0,
+      "delta_distinct_pct": 0.0,
+      "cells_with_unique_profile": 0,
+      "H_with_extension": 3.778,
+      "delta_H_bits": 0.0,
+      "rank_by_delta_distinct": 10
+    },
+    {
+      "extension_field": "n_groups",
+      "H_field_minrep": 3.778,
+      "n_distinct_minrep_alone": 15,
+      "n_distinct_with_extension": 15,
+      "delta_distinct": 0,
+      "delta_distinct_pct": 0.0,
+      "cells_with_unique_profile": 0,
+      "H_with_extension": 3.778,
+      "delta_H_bits": 0.0,
+      "rank_by_delta_distinct": 11
+    },
+    {
+      "extension_field": "sample_errors",
+      "H_field_minrep": 3.778,
+      "n_distinct_minrep_alone": 15,
+      "n_distinct_with_extension": 15,
+      "delta_distinct": 0,
+      "delta_distinct_pct": 0.0,
+      "cells_with_unique_profile": 0,
+      "H_with_extension": 3.778,
+      "delta_H_bits": 0.0,
+      "rank_by_delta_distinct": 12
+    }
+  ]
+}

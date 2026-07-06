@@ -1,0 +1,5 @@
+budget_tokens	acc_G4	acc_G32	delta_G32_minus_G4	delta_ci_low	delta_ci_high	retention_G4_over_G32	retention_minus_wu0976	fails_wu_0976	headline
+1000000	0.41	0.42	0.01	-0.0324	0.0524	0.9762	0.0002	False	T=1M: G32 vs G4 Δ=+0.01 [-0.03,+0.05]; retention=0.976 vs Wu 0.976 — consistent with Wu claim
+4000000	0.55	0.66	0.11	0.0676	0.1524	0.8333	-0.1427	True	T=4M: G32 vs G4 Δ=+0.11 [+0.07,+0.15]; retention=0.833 vs Wu 0.976 — FAILS Wu claim
+16000000	0.63	0.84	0.21	0.1676	0.2524	0.75	-0.226	True	T=16M: G32 vs G4 Δ=+0.21 [+0.17,+0.25]; retention=0.750 vs Wu 0.976 — FAILS Wu claim
+64000000	0.64	0.88	0.24	0.1976	0.2824	0.7273	-0.2487	True	T=64M: G32 vs G4 Δ=+0.24 [+0.20,+0.28]; retention=0.727 vs Wu 0.976 — FAILS Wu claim

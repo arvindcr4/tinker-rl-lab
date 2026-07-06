@@ -1,0 +1,14 @@
+field	family	mega_n	mega_fill	mega_entropy	mega_verdict	n10_n	n10_fill	n10_entropy	n10_verdict	n2_n	n2_fill	n2_entropy	n2_verdict
+model	identity	98	1.0	0.9988	OK	5	1.0	0.0	GAP	3	1.0	0.0	GAP
+task_slice	identity	98	1.0	1.5546	STRONG	5	1.0	0.0	GAP	3	1.0	0.0	GAP
+G	identity	98	1.0	2.3121	STRONG	5	1.0	0.0	GAP	3	1.0	0.0	GAP
+temperature	identity	98	1.0	0.9952	OK	5	1.0	0.0	GAP	3	1.0	0.0	GAP
+seed	identity	98	1.0	1.0	OK	5	1.0	2.3219	STRONG	3	1.0	0.0	GAP
+mean_reward	rollout_outcomes	98	1.0	4.4178	STRONG	5	1.0	2.3219	STRONG	3	1.0	1.585	STRONG
+zvf	rollout_outcomes	98	1.0	3.5534	STRONG	5	1.0	1.9219	STRONG	3	1.0	0.9183	OK
+pcd	rollout_outcomes	98	1.0	4.5573	STRONG	5	0.0	0.0	GAP	3	1.0	1.585	STRONG
+n_groups	rollout_outcomes	98	1.0	0.0	GAP	5	0.0	0.0	GAP	3	1.0	0.0	GAP
+sample_errors	rollout_outcomes	98	1.0	0.0	GAP	5	1.0	0.0	GAP	3	1.0	0.0	GAP
+mean_completion_len	rollout_outcomes	98	1.0	6.6147	STRONG	5	1.0	2.3219	STRONG	3	1.0	1.585	STRONG
+std_completion_len	rollout_outcomes	98	1.0	6.6147	STRONG	5	0.0	0.0	GAP	3	1.0	1.585	STRONG
+sampled_tokens	operational	98	1.0	6.6147	STRONG	5	0.0	0.0	GAP	3	1.0	1.585	STRONG

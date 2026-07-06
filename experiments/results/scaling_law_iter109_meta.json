@@ -1,0 +1,203 @@
+{
+  "iter": 109,
+  "pillar": "P1-ScalingLaws",
+  "n_anchors": 12,
+  "fit_form": "R(t) = r0 + (R_inf - r0) * (1 - exp(-lambda * t))",
+  "lambda_bound": "[1e-4, 50.0] (vs 2-param form's [1e-4, 10.0])",
+  "bootstrap_reps": 2000,
+  "boot_seed": 1092026,
+  "anchors": [
+    {
+      "name": "Qwen3.5-4B",
+      "params_B": 4.0,
+      "family": "dense",
+      "lambda_3p": 0.4745,
+      "lambda_lo": 0.007,
+      "lambda_hi": 3.0043,
+      "R_inf": 0.7993,
+      "R_inf_lo": 0.0,
+      "R_inf_hi": 0.895,
+      "rmse": 0.211
+    },
+    {
+      "name": "Qwen3-8B",
+      "params_B": 8.0,
+      "family": "dense",
+      "lambda_3p": 0.0026,
+      "lambda_lo": 0.0003,
+      "lambda_hi": 1.5471,
+      "R_inf": 1.5,
+      "R_inf_lo": 0.0,
+      "R_inf_hi": 1.5,
+      "rmse": 0.1676
+    },
+    {
+      "name": "Llama-3.1-8B-Instruct",
+      "params_B": 8.0,
+      "family": "dense",
+      "lambda_3p": 0.1417,
+      "lambda_lo": 0.003,
+      "lambda_hi": 1.4343,
+      "R_inf": 0.8274,
+      "R_inf_lo": 0.0,
+      "R_inf_hi": 0.9105,
+      "rmse": 0.1569
+    },
+    {
+      "name": "Qwen3-32B",
+      "params_B": 32.0,
+      "family": "dense",
+      "lambda_3p": 0.3314,
+      "lambda_lo": 0.1103,
+      "lambda_hi": 2.881,
+      "R_inf": 0.0,
+      "R_inf_lo": 0.0,
+      "R_inf_hi": 0.2503,
+      "rmse": 0.0513
+    },
+    {
+      "name": "Qwen3.5-27B",
+      "params_B": 27.0,
+      "family": "dense",
+      "lambda_3p": 0.464,
+      "lambda_lo": 0.0431,
+      "lambda_hi": 2.6196,
+      "R_inf": 0.0,
+      "R_inf_lo": 0.0,
+      "R_inf_hi": 1.5,
+      "rmse": 0.2516
+    },
+    {
+      "name": "gpt-oss-20B",
+      "params_B": 20.0,
+      "family": "moe",
+      "lambda_3p": 2.3631,
+      "lambda_lo": 0.0613,
+      "lambda_hi": 26.304,
+      "R_inf": 0.8477,
+      "R_inf_lo": 0.7843,
+      "R_inf_hi": 1.0012,
+      "rmse": 0.1886
+    },
+    {
+      "name": "Qwen3-30B-MoE",
+      "params_B": 30.0,
+      "family": "moe",
+      "lambda_3p": 0.0471,
+      "lambda_lo": 0.0075,
+      "lambda_hi": 2.6178,
+      "R_inf": 1.5,
+      "R_inf_lo": 0.0,
+      "R_inf_hi": 1.5,
+      "rmse": 0.1504
+    },
+    {
+      "name": "Qwen3-30B-MoE-Inst",
+      "params_B": 30.0,
+      "family": "moe",
+      "lambda_3p": 0.2881,
+      "lambda_lo": 0.0057,
+      "lambda_hi": 4.6579,
+      "R_inf": 1.0,
+      "R_inf_lo": 0.0,
+      "R_inf_hi": 1.5,
+      "rmse": 0.0
+    },
+    {
+      "name": "DeepSeek-V3.1",
+      "params_B": 685.0,
+      "family": "moe",
+      "lambda_3p": 0.7346,
+      "lambda_lo": 0.0069,
+      "lambda_hi": 3.9924,
+      "R_inf": 0.8384,
+      "R_inf_lo": 0.0,
+      "R_inf_hi": 1.1167,
+      "rmse": 0.1356
+    },
+    {
+      "name": "Nemotron-120B",
+      "params_B": 120.0,
+      "family": "dense",
+      "lambda_3p": 0.0019,
+      "lambda_lo": 0.0007,
+      "lambda_hi": 1.662,
+      "R_inf": 1.5,
+      "R_inf_lo": 0.0,
+      "R_inf_hi": 1.5,
+      "rmse": 0.2445
+    },
+    {
+      "name": "Qwen3-235B-MoE",
+      "params_B": 235.0,
+      "family": "moe",
+      "lambda_3p": 0.2884,
+      "lambda_lo": 0.0043,
+      "lambda_hi": 4.2474,
+      "R_inf": 1.0,
+      "R_inf_lo": 0.0,
+      "R_inf_hi": 1.5,
+      "rmse": 0.0
+    },
+    {
+      "name": "Kimi-K2-Thinking",
+      "params_B": 1000.0,
+      "family": "moe",
+      "lambda_3p": 0.0144,
+      "lambda_lo": 0.0036,
+      "lambda_hi": 0.8274,
+      "R_inf": 0.0,
+      "R_inf_lo": 0.0,
+      "R_inf_hi": 0.8736,
+      "rmse": 0.1552
+    }
+  ],
+  "lambda_vs_N": {
+    "all_anchors": {
+      "n": 12,
+      "intercept": -0.715,
+      "slope": -0.1369,
+      "se_slope": 0.4029,
+      "boot_slope_mean": -0.1371,
+      "boot_slope_lo": -0.9385,
+      "boot_slope_hi": 0.7065
+    },
+    "filtered_anchors_RMSE_le_median": {
+      "n": 6,
+      "intercept": -0.4793,
+      "slope": -0.1569,
+      "se_slope": 0.4405,
+      "boot_slope_mean": 0.1761,
+      "boot_slope_lo": -0.8888,
+      "boot_slope_hi": 0.8787
+    }
+  },
+  "R_inf_vs_N": {
+    "all_anchors": {
+      "n": 12,
+      "intercept": 1.0808,
+      "slope": -0.1587,
+      "boot_slope_lo": -0.4879,
+      "boot_slope_hi": 0.279
+    },
+    "filtered_anchors_RMSE_le_median": {
+      "n": 6,
+      "intercept": 1.3159,
+      "slope": -0.2808,
+      "boot_slope_lo": -1.5027,
+      "boot_slope_hi": 0.5339
+    }
+  },
+  "nemotron_audit": {
+    "peak_R": 0.875,
+    "peak_step": 3,
+    "early_mean": 0.1458,
+    "late_mean": 0.2083,
+    "zero_frac": 0.55,
+    "lambda_3p": 0.0019,
+    "R_inf_3p": 1.5,
+    "recovery_ratio": 4.2,
+    "nimmature_collapse": true
+  },
+  "frontier_synthesis": "The 3-param form unblocks the lambda-vs-N test that iter85/iter105 could not run with the bound-hitting 2-param canonical fit. The headline lambda-vs-N regression tests the 'law behind the scaling law' -- does the per-step learning rate scale with N? Combined with the time-to-saturation t_50/t_70/t_80/t_90 progression (Chinchilla-style onset curves) this gives a two-axis summary of GRPO post-training scaling that iter105's single-axis R_max*(N) fit could not provide."
+}

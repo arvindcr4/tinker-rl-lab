@@ -1,0 +1,6 @@
+axis	manifest_key	captured	recoverable_via_cell_id	n_unique_cells	n_unique_manifest_equiv	captured_fraction	equiv_classifier	captured_fraction_ci_lo	captured_fraction_ci_hi	captured_fraction_ci_excludes_zero
+model_family	<MISSING>	False	True	2	0	0.0	ABSENT	0.0	0.0	False
+task_slice	heldout_split	True	False	3	3	1.0	EQUIV_PRESENT	1.0	1.0	True
+G	group_size_schedule	True	False	5	5	1.0	EQUIV_PRESENT	1.0	1.0	True
+temperature	<MISSING>	False	True	2	0	0.0	ABSENT	0.0	0.0	False
+seed	<MISSING>	False	True	2	0	0.0	ABSENT	0.0	0.0	False

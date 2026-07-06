@@ -1,0 +1,9 @@
+metric	value	note
+n_anchors	12	Total ranked
+kendall_tau_b_predicted_vs_actual	0.1069	Manual; average-rank tie handling
+spearman_predicted_vs_actual	0.1121	permutation p=0.7211
+mean_abs_rank_diff	4.0	Average |actual rank - predicted rank|
+median_abs_rank_diff	3.5	Median |actual rank - predicted rank|
+max_abs_rank_diff	9.0	Worst swap distance
+correct_top3	0	Anchors in actual top-3 that LOO also places in top-3
+spearman_abs_residual_rank	0.1681	Does |residual| track the magnitude of R_max?

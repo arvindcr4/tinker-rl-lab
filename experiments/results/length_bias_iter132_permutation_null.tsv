@@ -1,0 +1,6 @@
+task	test	statistic	observed	p_perm	n	B
+arithmetic_easy	H1_chain_window	rho_de_dc	0.090226	0.705846	20	50000
+gsm8k_cot	H1_chain_window	rho_de_dc	0.265734	0.404772	12	50000
+arithmetic_easy	H1b_within_run_rho	delta_rho	-0.32	0.249495	5	50000
+gsm8k_cot	H1b_within_run_rho	delta_rho	-0.133333	1.0	3	50000
+cross_task	H1c_sign_test_delta_rho_neg	n_neg	4	0.34375	6	1

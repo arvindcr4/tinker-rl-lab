@@ -1,0 +1,7 @@
+metric	value	detail
+pair_sweep_n_above_wu_97_6pct	18	18/40 (G_a, G_b, T) cells retain >= 97.6% of G_b
+pair_sweep_n_tost_equivalent_eps0.02	0	0/40 (G_a, G_b, T) cells TOST-equivalent at eps=0.02
+worst_pair_at_T64M	G=4 vs G=32	diff = -0.2400 [-0.3000, -0.1800], retention = 0.7273
+best_pair_at_T64M	G=32 vs G=64	diff = +0.0100 [-0.0500, +0.0700], retention = 1.0115, dpo_eq = 0.9886
+best_G_by_acc_per_M_at_T64M	32	G=32 has the highest acc-per-million-tokens at T=64M (most cost-effective)
+difficulty_stratified_n_above_wu_97_6pct	12	12/12 (G, difficulty_bin) cells retain >= 97.6% of G=2 on measured arithmetic

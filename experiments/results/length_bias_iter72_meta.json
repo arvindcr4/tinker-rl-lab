@@ -1,0 +1,93 @@
+{
+  "experiments": [
+    {
+      "name": "drgrpo_gsm8k_cot",
+      "n_seeds": 3
+    },
+    {
+      "name": "drgrpo_vs_grpo",
+      "n_seeds": 5
+    }
+  ],
+  "primary_metric": "phi_diff (AR(1) coefficient, drgrpo - grpo)",
+  "interpretation": {
+    "phi": "AR(1) coefficient of \u0394L regressed on (intercept, \u0394R_t, \u0394L_{t-1}); positive=shock persists, negative=mean-revert",
+    "half_life": "-log(2)/log(phi); steps for a length shock to halve",
+    "resid_var_ratio": "var(residual after AR1+dR fit) ratio Dr.GRPO / GRPO; >1 = noisier residual",
+    "lag_correlation": "pearson r between dL_t and dR_{t-lag}; lag=0 contemporaneous, lag>0 dR leads dL"
+  },
+  "outputs": {
+    "persistence": "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter72_persistence.tsv",
+    "residvar": "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter72_residvar.tsv",
+    "lagcorr": "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter72_lagcorr.tsv",
+    "summary": "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter72_summary.tsv"
+  },
+  "summary_rows": [
+    {
+      "experiment": "drgrpo_gsm8k_cot",
+      "n_pairs": 3,
+      "phi_grpo": -0.41905325203156085,
+      "phi_drgrpo": -0.3927614976480133,
+      "phi_diff": 0.02629175438354749,
+      "phi_ci_lo": -0.10235235255180403,
+      "phi_ci_hi": 0.18986765716974788,
+      "phi_p_le0": 0.403,
+      "half_life_grpo": 0.0,
+      "half_life_drgrpo": 0.0,
+      "half_life_diff": 0.0,
+      "half_life_ci_lo": 0.0,
+      "half_life_ci_hi": 0.0,
+      "half_life_p_le0": 1.0,
+      "resid_var_ratio": 0.6945529408925946,
+      "resid_var_log": -0.3644868909059718,
+      "resid_var_lo": -0.822542807282129,
+      "resid_var_hi": 0.10150658400374502,
+      "resid_var_p_le0": 0.9655,
+      "lag0_diff": -0.03940720786858224,
+      "lag0_lo": -0.2512041990713294,
+      "lag0_hi": 0.0828981088397569,
+      "lag0_p": 0.704,
+      "lag1_diff": -0.08367509725881785,
+      "lag1_lo": -0.2682932487760163,
+      "lag1_hi": 0.12989059258549673,
+      "lag1_p": 0.8555,
+      "lag2_diff": 0.0905583866286882,
+      "lag2_lo": 0.05893720404096714,
+      "lag2_hi": 0.13703945233675877,
+      "lag2_p": 0.0
+    },
+    {
+      "experiment": "drgrpo_vs_grpo",
+      "n_pairs": 5,
+      "phi_grpo": -0.42483196418203295,
+      "phi_drgrpo": -0.37238707211134137,
+      "phi_diff": 0.052444892070691564,
+      "phi_ci_lo": -0.023650451289193252,
+      "phi_ci_hi": 0.16983178112704453,
+      "phi_p_le0": 0.204,
+      "half_life_grpo": 0.0,
+      "half_life_drgrpo": 0.0,
+      "half_life_diff": 0.0,
+      "half_life_ci_lo": 0.0,
+      "half_life_ci_hi": 0.0,
+      "half_life_p_le0": 1.0,
+      "resid_var_ratio": 0.9970158048251895,
+      "resid_var_log": -0.0029886567636099315,
+      "resid_var_lo": -0.30303573719798643,
+      "resid_var_hi": 0.2651167562742865,
+      "resid_var_p_le0": 0.51,
+      "lag0_diff": -0.006018868185540499,
+      "lag0_lo": -0.21145174285759807,
+      "lag0_hi": 0.22711412494499186,
+      "lag0_p": 0.551,
+      "lag1_diff": 0.07599991937309158,
+      "lag1_lo": -0.07254752819429056,
+      "lag1_hi": 0.2564056401340624,
+      "lag1_p": 0.1885,
+      "lag2_diff": -0.13258991311988844,
+      "lag2_lo": -0.39133183606316935,
+      "lag2_hi": 0.09864492997995061,
+      "lag2_p": 0.861
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+\subsection{Iter 53 -- Rank preservation + temporal-peak coupling (negative result)}
+
+We re-use the iter49 two-parameter OLS fit and 12 LOO residuals
+(\texttt{scaling\_law\_iter49\_loo\_residuals.tsv}) but ask three pre-registered
+questions: does the LOO prediction \emph{preserve the ranking} of models;
+does the LOO residual track the \emph{temporal peak position} from iter33;
+and does dropping the \emph{collapse} anchors contract the cross-stack
+correlation between $\log_{10} P$ and $R_{\max}$ (the critic-degeneracy test
+from the frontier synthesis)? The headline answer is that \emph{none} of the
+three pre-registered primary predictions hold; iter53 is a clean
+\emph{negative result} rather than a refit.
+
+\paragraph{Rank preservation (P1).}
+Across the 12 anchors we have Kendall $\tau_b=0.107$ between LOO-predicted and
+actual $R_{\max}$ (Spearman $\rho=0.112$, permutation $p=0.721$). For a random
+ordering $\tau_b$ has mean $0$ and standard deviation $\approx 0.30$; the
+observed $\tau_b=0.107$ is essentially chance. The LOO-predicted top-3 is
+{Kimi-K2-Thinking, DeepSeek-V3.1, Qwen3-8B}; the actual top-3 by $R_{\max}$ is {Nemotron-120B, Qwen3-235B-MoE, Qwen3-30B-MoE-Inst} -- zero overlap. Mean
+$\lvert\Delta\text{rank}\rvert=4.00$, median $3.5$, worst swap $9$
+ranks. Pre-registered: $\tau_b > 0.50$ -- \textbf{FAIL}. Anchors with
+$\lvert\Delta\text{rank}\rvert \geq 4$: Nemotron-120B ($\Delta$rank=-4); Qwen3-235B-MoE ($\Delta$rank=-4); Qwen3-30B-MoE-Inst ($\Delta$rank=-9); Kimi-K2-Thinking ($\Delta$rank=+4); DeepSeek-V3.1 ($\Delta$rank=+4); Qwen3-8B ($\Delta$rank=+8). The largest single swap is
+Qwen3-30B-MoE-Inst ($\Delta\text{rank}=-9$): the OLS places it last, the
+actual order has it third. Both anchors sit at the same
+$(\log_{10} P, \log_{10} C)\approx(1.48, 4.66\text{--}4.88)$, so the swap is
+\emph{within-stack} variance that the cross-stack OLS simply cannot see.
+
+\paragraph{Temporal-peak coupling (P2).}
+\label{par:peak-coupling}
+Across the 12 anchors with finite \texttt{peak\_frac}, Spearman
+$\rho(\texttt{peak\_frac},\ \mathrm{residual})=-0.125$ (permutation $p=0.700$).
+Pre-registered: $\rho < -0.30$ -- \textbf{FAIL} (the point estimate is in
+the right direction but its magnitude is too small to clear the threshold
+and the permutation $p$-value is large). The intuition we tested: the
+saturation fit reads the peak value as $R_{\max}$; a trace peaking late
+should be systematically over-predicted by LOO. The data do not support
+this for the cross-stack pooled sample. A weaker absolute-step variant
+-- $\rho(\texttt{peak\_step},\ \mathrm{residual})=-0.250$ ($p=0.424$) --
+\emph{does} clear the $-0.20$ bar (P4), but with $n=12$ the test is
+underpowered. Conclusion: the peak-coupling hypothesis is at best weakly
+supported and certainly weaker than the cross-stack compute signal.
+
+\paragraph{Critic-degeneracy test (P3, frontier synthesis).}
+Frontier reasoning on Pillar~1 (Critic Degeneracy Hypothesis) licenses
+the prediction that the residual $R_{\max}$ variance is mostly explained
+by the static prompt-difficulty regressor (collapse regime) rather than
+by compute. The concrete test: $\rho(\log_{10} P, R_{\max})$ on the full
+sample vs.\ after dropping the \texttt{collapse} anchors. Observed
+$0.360$ vs. $0.359$ (absolute change $\Delta|\rho|=0.001$, well below the
+$0.05$ threshold). Same axis for $\log_{10} C$: $0.442 \to 0.379$. The
+cross-axis $\rho(\mathrm{var}(\mathrm{reward}), R_{\max})=-0.134$ on the full
+sample is \emph{negligible}. The Critic-Degeneracy prediction -- that
+dropping collapse should reveal a strong residual compute-R_max
+correlation that the full-sample correlation was hiding -- is
+\textbf{FAIL}: the full-sample correlation \emph{is} the drop-collapse
+correlation.
+
+\paragraph{What iter53 actually shows.}
+The iter49 two-parameter OLS fit predicts individual $R_{\max}$ values with
+RMSE $\approx 0.50$ (about half the range), but the LOO residuals are
+\emph{dominated by within-stack variance}, not by compute. For three of
+the 12 anchors the rank is swapped by $\geq 8$ positions; two of these are
+the Qwen3-30B-MoE/-Inst pair at the same $(\log P, \log C)$ -- a pure
+stack-conditional gap. The implication for paper-level claims is sharp:
+\textbf{any} cross-stack iso-FLOP prediction made by the iter49 OLS is
+essentially uninformative for individual anchors, even though it is
+\emph{rough useful} for the medians. This negative result motivates a
+\emph{hierarchical} next step: anchor a stack-conditional $R_{\max}$
+model on the existing 12 anchors before extrapolating.

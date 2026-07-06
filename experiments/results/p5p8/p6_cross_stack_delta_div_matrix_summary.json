@@ -1,0 +1,75 @@
+{
+  "audit_date": "2026-07-05",
+  "audit_source": "scripts/p5p8/p6_cross_stack_delta_div_matrix.py",
+  "n_methods": 4,
+  "n_pairs": 6,
+  "rankings": [
+    {
+      "method": "areal",
+      "y_obs_mean": 0.29375,
+      "rank": 1
+    },
+    {
+      "method": "aero",
+      "y_obs_mean": 0.279687,
+      "rank": 2
+    },
+    {
+      "method": "grpo",
+      "y_obs_mean": 0.279687,
+      "rank": 3
+    },
+    {
+      "method": "gift",
+      "y_obs_mean": 0.229687,
+      "rank": 4
+    }
+  ],
+  "rank_by_method": {
+    "areal": 1,
+    "aero": 2,
+    "grpo": 3,
+    "gift": 4
+  },
+  "headlines": {
+    "n_total_pairs": 6,
+    "n_significant_delta_div": 1,
+    "n_significant_y_obs": 3,
+    "n_significant_zvf_obs": 3,
+    "significant_pairs_delta_div": [
+      [
+        "areal",
+        "gift"
+      ]
+    ],
+    "significant_pairs_y_obs": [
+      [
+        "grpo",
+        "gift"
+      ],
+      [
+        "aero",
+        "gift"
+      ],
+      [
+        "areal",
+        "gift"
+      ]
+    ],
+    "significant_pairs_zvf_obs": [
+      [
+        "grpo",
+        "gift"
+      ],
+      [
+        "aero",
+        "gift"
+      ],
+      [
+        "areal",
+        "gift"
+      ]
+    ]
+  },
+  "interpretation": "n_significant_x = number of (a, b) pairs whose CI on the named axis excludes zero under the paired-step bootstrap. A zero in this column means every cross-stack delta on this axis is within noise; the iter-66 row 77 single-delta_vs_grpo claim is therefore NOT a rank-stability claim -- all 4 same-stack variants produce contrast-preservation values that overlap at 95%."
+}

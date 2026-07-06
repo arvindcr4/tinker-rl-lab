@@ -1,0 +1,13 @@
+anchor	params_B	n	n_holdout	stacked_MAE	best_single_fam	best_single_MAE	stacked_beats_single	delta_vs_best	w_saturation	w_ar1	w_constant
+Qwen3.5-4B	4.0	30	8	0.2557	ar1	0.2019	False	0.0537	0.0	0.038	0.2541
+Qwen3-8B	8.0	30	8	0.1522	ar1	0.145	False	0.0072	0.023	0.0737	0.4753
+Llama-3.1-8B-Instruct	8.0	30	8	0.1518	saturation	0.1413	False	0.0105	0.0	0.0149	0.101
+Qwen3-32B	32.0	3	2	0.1497	constant	0.0935	False	0.0562	0.0	0.0566	0.418
+Qwen3.5-27B	27.0	3	2	0.4038	constant	0.375	False	0.0288	0.0	0.0566	0.418
+gpt-oss-20B	20.0	30	8	0.2962	ar1	0.1516	False	0.1446	0.0	0.0319	0.4405
+Qwen3-30B-MoE	30.0	5	2	0.2996	constant	0.2397	False	0.06	0.0009	0.0596	0.4402
+Qwen3-30B-MoE-Inst	30.0	3	2	0.1794	constant	0.0	False	0.1794	0.0	0.0566	0.418
+DeepSeek-V3.1	685.0	20	5	0.21	monod	0.1448	False	0.0652	0.0	0.0098	0.072
+Nemotron-120B	120.0	20	5	0.231	monod	0.2	False	0.031	0.0	0.0266	0.1919
+Qwen3-235B-MoE	235.0	4	2	0.0	constant	0.0	False	0.0	0.0	0.0566	0.418
+Kimi-K2-Thinking	1000.0	20	5	0.8938	gompertz	0.1294	False	0.7644	0.0	0.0147	0.1062

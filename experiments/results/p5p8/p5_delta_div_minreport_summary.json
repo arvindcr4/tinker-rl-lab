@@ -1,0 +1,19 @@
+{
+  "n_cells": 98,
+  "n_item13_present": 98,
+  "H_bits_v1": 11.412744386555076,
+  "H_bits_v2_stack": 6.860715761110488,
+  "H_bits_v2_total": 18.273460147665563,
+  "H_bits_item13": 4.6449682053662205,
+  "H_bits_v21_total": 22.918428353031786,
+  "spearman_rho_v1": 0.42677602270018283,
+  "spearman_rho_v2_stack": 0.38351904089690575,
+  "spearman_rho_v21": 0.43839142064274894,
+  "delta_rho_v21_minus_v2stack_pt": 0.055916512139877625,
+  "delta_rho_v21_minus_v2stack_ci_lo": 0.049687117587465246,
+  "delta_rho_v21_minus_v2stack_ci_hi": 0.062331439997955485,
+  "item13_n_unique": 58,
+  "item13_per_cell_uplift_weight": 20.0,
+  "verdict": "SIGNAL-BEARING",
+  "key_finding": "Item 13 contributes +4.6450 bits to the v2.0 fingerprint; Spearman coupling to |dzvf| changes by +0.0559 (CI excludes zero)."
+}

@@ -1,0 +1,5 @@
+method	n_steps	mean_G_ccc	mean_G_ccc_ci_lo	mean_G_ccc_ci_hi	mean_contrast_delta	contrast_delta_ci_lo	contrast_delta_ci_hi	n_fast	n_baseline	n_degenerate	frac_fast	frac_degenerate	n_escalate	n_save	n_equal	n_pcd	mean_reward
+aero	40	19.4	15.8	23	-0.17416	-0.231978	-0.116091	0	21	19	0	0.475	19	0	21	8	0.827539
+areal	40	18.2	14.6	22.4	-0.154551	-0.213107	-0.0995953	0	23	17	0	0.425	17	0	23	8	0.828711
+gift	40	23.6	20	27.2	-0.198013	-0.25295	-0.141749	0	14	26	0	0.65	26	0	14	3	0.844727
+grpo	40	20	16.4	23.6	-0.18475	-0.246687	-0.12333	0	20	20	0	0.5	20	0	20	7	0.83418

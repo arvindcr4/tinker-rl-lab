@@ -1,0 +1,23 @@
+delta_id	component	n_stacks	n_unique_statuses	statuses	stacks	delta_has_component	verdict
+delta_adaptiveg	zvf_driven_group_size_ladder	1	1	implemented	colab-open_grpo-adaptiveg_e3	True	HOMOGENEOUS
+delta_aero	advantage_guided_evolution	1	1	implemented	tinker_aero_qwen3.5-4b_gsm8k	True	HOMOGENEOUS
+delta_aero	see delta entry	1	1	unknown	zvf130_aero	False	HOMOGENEOUS
+delta_areal	autoscaling_Rollout	1	1	implemented	tinker_areal_qwen3.5-4b_gsm8k	True	HOMOGENEOUS
+delta_areal	see delta entry	1	1	unknown	zvf130_areal	False	HOMOGENEOUS
+delta_cppo	continuity_penalty	1	1	unknown	zvf130_cppo	True	HOMOGENEOUS
+delta_dapo	clip_higher	2	2	implemented;surrogate	colab-open_dapo_e3;tinker_dapo_qwen3.5-4b_gsm8k	True	CONFLICT
+delta_dapo	dynamic_sampling	2	2	absent;implemented	colab-open_dapo_e3;tinker_dapo_qwen3.5-4b_gsm8k	True	CONFLICT
+delta_dapo	kl_removed	2	2	implemented;unknown	colab-open_dapo_e3;tinker_dapo_qwen3.5-4b_gsm8k	True	CONFLICT
+delta_dapo	overlong_reward_shaping	2	1	absent	colab-open_dapo_e3;tinker_dapo_qwen3.5-4b_gsm8k	True	HOMOGENEOUS
+delta_dapo	token_level_loss	2	2	implemented;unknown	colab-open_dapo_e3;tinker_dapo_qwen3.5-4b_gsm8k	True	CONFLICT
+delta_drgrpo	advantage_std_normalization	2	2	implemented;surrogate	colab-open_drgrpo_e3;tinker_drgrpo_qwen3.5-4b_gsm8k	True	CONFLICT
+delta_drgrpo	length_normalization	2	2	implemented;surrogate	colab-open_drgrpo_e3;tinker_drgrpo_qwen3.5-4b_gsm8k	True	CONFLICT
+delta_es	black_box_perturbation	1	1	unknown	zvf130_es	True	HOMOGENEOUS
+delta_gift	gamma_likelihood_baseline	1	1	implemented	tinker_gift_qwen3.5-4b_gsm8k	True	HOMOGENEOUS
+delta_gift	see delta entry	1	1	unknown	zvf130_gift	False	HOMOGENEOUS
+delta_gspo	sequence_level_clip	1	1	unknown	tinker_gspo_qwen3.5-4b_gsm8k	True	HOMOGENEOUS
+delta_gspo	sequence_level_ratio	1	1	surrogate	tinker_gspo_qwen3.5-4b_gsm8k	True	HOMOGENEOUS
+delta_mcgrpo	mcts_rollout	1	1	unknown	zvf130_mcgrpo	True	HOMOGENEOUS
+delta_mcgrpo	per_prompt_diversity_bonus	1	1	unknown	zvf130_mcgrpo	True	HOMOGENEOUS
+delta_ngrpo	per_prompt_normalization	1	1	unknown	zvf130_ngrpo	True	HOMOGENEOUS
+delta_scafgrpo	scaffold_aware_advantage	1	1	unknown	zvf130_scafgrpo	True	HOMOGENEOUS

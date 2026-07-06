@@ -1,0 +1,154 @@
+{
+  "iter": 43,
+  "pillar": "P7",
+  "tau": 0.7,
+  "delta": 0.2,
+  "sat_band_threshold": 0.9,
+  "g_base": 8,
+  "n_methods": 4,
+  "n_obs_per_method": 640,
+  "n_obs_total": 2560,
+  "controllers": {
+    "baseline_fixed_G=8": "always G=8 (no controller)",
+    "zvf_triage@tau=0.70": "step-level trigger, escalate to G=16",
+    "Dualformer_Auto": "per-prompt difficulty-gated G in {2,4,8,16}",
+    "Hybrid": "sat-band->G=4, tau+<=zvf<tau+delta->G=16, else G=8"
+  },
+  "per_method": [
+    {
+      "method": "grpo",
+      "n_steps": 40,
+      "n_sat_band_steps": 2,
+      "n_saturated_prompts": 461,
+      "n_boundary_prompts": 75,
+      "n_mid_prompts": 104,
+      "frac_saturated": 0.7203,
+      "frac_boundary": 0.1172,
+      "frac_mid": 0.1625,
+      "rollouts_baseline": 5120,
+      "rollouts_zvf70": 7680,
+      "rollouts_dual": 3354,
+      "rollouts_hybrid": 7296,
+      "zvf_baseline_mean": 0.77,
+      "zvf_zvf70_mean": 0.044,
+      "zvf_dual_mean": 0.0441,
+      "zvf_hybrid_mean": 0.044,
+      "sat_band_prompt_class": {
+        "saturated": 30,
+        "mid": 2
+      },
+      "sat_band_hybrid_g_dist": {
+        "4": 32
+      },
+      "sat_band_zvf70_g_dist": {
+        "16": 32
+      },
+      "sat_band_dual_g_dist": {
+        "2": 28,
+        "16": 3,
+        "8": 1
+      }
+    },
+    {
+      "method": "aero",
+      "n_steps": 40,
+      "n_sat_band_steps": 1,
+      "n_saturated_prompts": 461,
+      "n_boundary_prompts": 68,
+      "n_mid_prompts": 111,
+      "frac_saturated": 0.7203,
+      "frac_boundary": 0.1062,
+      "frac_mid": 0.1734,
+      "rollouts_baseline": 5120,
+      "rollouts_zvf70": 7552,
+      "rollouts_dual": 3466,
+      "rollouts_hybrid": 7360,
+      "zvf_baseline_mean": 0.7656,
+      "zvf_zvf70_mean": 0.0269,
+      "zvf_dual_mean": 0.0217,
+      "zvf_hybrid_mean": 0.0269,
+      "sat_band_prompt_class": {
+        "saturated": 15,
+        "mid": 1
+      },
+      "sat_band_hybrid_g_dist": {
+        "4": 16
+      },
+      "sat_band_zvf70_g_dist": {
+        "16": 16
+      },
+      "sat_band_dual_g_dist": {
+        "2": 15,
+        "16": 1
+      }
+    },
+    {
+      "method": "gift",
+      "n_steps": 40,
+      "n_sat_band_steps": 8,
+      "n_saturated_prompts": 493,
+      "n_boundary_prompts": 60,
+      "n_mid_prompts": 87,
+      "frac_saturated": 0.7703,
+      "frac_boundary": 0.0938,
+      "frac_mid": 0.1359,
+      "rollouts_baseline": 5120,
+      "rollouts_zvf70": 8448,
+      "rollouts_dual": 3178,
+      "rollouts_hybrid": 6912,
+      "zvf_baseline_mean": 0.8097,
+      "zvf_zvf70_mean": 0.0453,
+      "zvf_dual_mean": 0.0455,
+      "zvf_hybrid_mean": 0.0453,
+      "sat_band_prompt_class": {
+        "saturated": 121,
+        "mid": 4,
+        "boundary": 3
+      },
+      "sat_band_hybrid_g_dist": {
+        "4": 128
+      },
+      "sat_band_zvf70_g_dist": {
+        "16": 128
+      },
+      "sat_band_dual_g_dist": {
+        "2": 113,
+        "16": 13,
+        "4": 2
+      }
+    },
+    {
+      "method": "areal",
+      "n_steps": 40,
+      "n_sat_band_steps": 1,
+      "n_saturated_prompts": 452,
+      "n_boundary_prompts": 84,
+      "n_mid_prompts": 104,
+      "frac_saturated": 0.7063,
+      "frac_boundary": 0.1313,
+      "frac_mid": 0.1625,
+      "rollouts_baseline": 5120,
+      "rollouts_zvf70": 7296,
+      "rollouts_dual": 3448,
+      "rollouts_hybrid": 7104,
+      "zvf_baseline_mean": 0.7595,
+      "zvf_zvf70_mean": 0.044,
+      "zvf_dual_mean": 0.0441,
+      "zvf_hybrid_mean": 0.044,
+      "sat_band_prompt_class": {
+        "saturated": 15,
+        "mid": 1
+      },
+      "sat_band_hybrid_g_dist": {
+        "4": 16
+      },
+      "sat_band_zvf70_g_dist": {
+        "16": 16
+      },
+      "sat_band_dual_g_dist": {
+        "2": 15,
+        "16": 1
+      }
+    }
+  ]
+}

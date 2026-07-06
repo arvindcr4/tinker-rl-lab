@@ -1,0 +1,5 @@
+metric_kind	metric_key	headline
+snr_pool_size	n_G	SNR-at-G pool: n=4 G-values: [2, 4, 8, 16]
+snr_scaling	ols_log10_snr_vs_log10_G	OLS log10(SNR) ~ log10(G): slope=+0.366/decade  95%CI [+0.148,+0.583]  R^2=0.844  p=8.11e-02
+snr_scaling	theoretical_pred_+0.5	Theoretical SNR~G^0.5 predicts slope=+0.500/decade; empirical=+0.366/decade -- slope is CONSISTENT with theory at 0.30 tolerance
+snr_scaling	pred_at_G	Predicted vs empirical SNR at G: G=2=0.043/0.051, G=4=0.060/0.072, G=8=0.094/0.102, G=16=0.087/0.144

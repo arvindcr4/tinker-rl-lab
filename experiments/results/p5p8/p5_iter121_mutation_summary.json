@@ -1,0 +1,222 @@
+{
+  "headline_H1_every_mutation_caught": false,
+  "headline_H2_top_check_per_mutation": {
+    "M1": {
+      "top_check": "C01",
+      "top_check_rate": 0.0
+    },
+    "M2": {
+      "top_check": "C01",
+      "top_check_rate": 0.0
+    },
+    "M3": {
+      "top_check": "C03",
+      "top_check_rate": 1.0
+    },
+    "M4": {
+      "top_check": "C04",
+      "top_check_rate": 1.0
+    },
+    "M5": {
+      "top_check": "C05",
+      "top_check_rate": 1.0
+    },
+    "M6": {
+      "top_check": "C06",
+      "top_check_rate": 1.0
+    },
+    "M7": {
+      "top_check": "C07",
+      "top_check_rate": 1.0
+    },
+    "M8": {
+      "top_check": "C10",
+      "top_check_rate": 1.0
+    }
+  },
+  "n_cells": 98,
+  "n_mutations": 8,
+  "per_check_total_catches": {
+    "C01": 0,
+    "C02": 0,
+    "C03": 98,
+    "C04": 98,
+    "C05": 98,
+    "C06": 98,
+    "C07": 98,
+    "C08": 0,
+    "C09": 0,
+    "C10": 98
+  },
+  "per_mutation": {
+    "M1": {
+      "detection_rate": 0.0,
+      "n_caught": 0,
+      "n_cells": 98,
+      "n_flipped_per_mutation": 0,
+      "name": "cell_id_swap_hash",
+      "per_check_detection": {
+        "C01": 0,
+        "C02": 0,
+        "C03": 0,
+        "C04": 0,
+        "C05": 0,
+        "C06": 0,
+        "C07": 0,
+        "C08": 0,
+        "C09": 0,
+        "C10": 0
+      },
+      "top_check": "C01",
+      "top_check_count": 0
+    },
+    "M2": {
+      "detection_rate": 0.0,
+      "n_caught": 0,
+      "n_cells": 98,
+      "n_flipped_per_mutation": 0,
+      "name": "model_family_swap",
+      "per_check_detection": {
+        "C01": 0,
+        "C02": 0,
+        "C03": 0,
+        "C04": 0,
+        "C05": 0,
+        "C06": 0,
+        "C07": 0,
+        "C08": 0,
+        "C09": 0,
+        "C10": 0
+      },
+      "top_check": "C01",
+      "top_check_count": 0
+    },
+    "M3": {
+      "detection_rate": 1.0,
+      "n_caught": 98,
+      "n_cells": 98,
+      "n_flipped_per_mutation": 98,
+      "name": "task_slice_swap",
+      "per_check_detection": {
+        "C01": 0,
+        "C02": 0,
+        "C03": 98,
+        "C04": 0,
+        "C05": 0,
+        "C06": 0,
+        "C07": 0,
+        "C08": 0,
+        "C09": 0,
+        "C10": 0
+      },
+      "top_check": "C03",
+      "top_check_count": 98
+    },
+    "M4": {
+      "detection_rate": 1.0,
+      "n_caught": 98,
+      "n_cells": 98,
+      "n_flipped_per_mutation": 98,
+      "name": "G_swap",
+      "per_check_detection": {
+        "C01": 0,
+        "C02": 0,
+        "C03": 0,
+        "C04": 98,
+        "C05": 0,
+        "C06": 0,
+        "C07": 0,
+        "C08": 0,
+        "C09": 0,
+        "C10": 0
+      },
+      "top_check": "C04",
+      "top_check_count": 98
+    },
+    "M5": {
+      "detection_rate": 1.0,
+      "n_caught": 98,
+      "n_cells": 98,
+      "n_flipped_per_mutation": 98,
+      "name": "temperature_swap",
+      "per_check_detection": {
+        "C01": 0,
+        "C02": 0,
+        "C03": 0,
+        "C04": 0,
+        "C05": 98,
+        "C06": 0,
+        "C07": 0,
+        "C08": 0,
+        "C09": 0,
+        "C10": 0
+      },
+      "top_check": "C05",
+      "top_check_count": 98
+    },
+    "M6": {
+      "detection_rate": 1.0,
+      "n_caught": 98,
+      "n_cells": 98,
+      "n_flipped_per_mutation": 98,
+      "name": "seed_swap",
+      "per_check_detection": {
+        "C01": 0,
+        "C02": 0,
+        "C03": 0,
+        "C04": 0,
+        "C05": 0,
+        "C06": 98,
+        "C07": 0,
+        "C08": 0,
+        "C09": 0,
+        "C10": 0
+      },
+      "top_check": "C06",
+      "top_check_count": 98
+    },
+    "M7": {
+      "detection_rate": 1.0,
+      "n_caught": 98,
+      "n_cells": 98,
+      "n_flipped_per_mutation": 98,
+      "name": "heldout_split_swap",
+      "per_check_detection": {
+        "C01": 0,
+        "C02": 0,
+        "C03": 0,
+        "C04": 0,
+        "C05": 0,
+        "C06": 0,
+        "C07": 98,
+        "C08": 0,
+        "C09": 0,
+        "C10": 0
+      },
+      "top_check": "C07",
+      "top_check_count": 98
+    },
+    "M8": {
+      "detection_rate": 1.0,
+      "n_caught": 98,
+      "n_cells": 98,
+      "n_flipped_per_mutation": 98,
+      "name": "per_step_zvf_path_break",
+      "per_check_detection": {
+        "C01": 0,
+        "C02": 0,
+        "C03": 0,
+        "C04": 0,
+        "C05": 0,
+        "C06": 0,
+        "C07": 0,
+        "C08": 0,
+        "C09": 0,
+        "C10": 98
+      },
+      "top_check": "C10",
+      "top_check_count": 98
+    }
+  },
+  "total_evaluations": 784
+}

@@ -1,0 +1,6 @@
+budget_tokens	acc_G4	acc_G32	retention_G4_over_G32	GU_G4	GU_G32	GU_ratio_G4_over_G32	interpretation
+1000000	0.41	0.42	0.9762	1.7223	0.3424	5.0301	T=1M: retention=0.976, GU_ratio=5.03: G=4 carries 5.0x more contrast yield per group but 97.6% of G=32 accuracy; ZVF is NOT the binding constraint -- gradient noise is.
+4000000	0.55	0.66	0.8333	2.1287	0.4759	4.473	T=4M: retention=0.833, GU_ratio=4.47: G=4 carries 4.5x more contrast yield per group but 83.3% of G=32 accuracy; ZVF is NOT the binding constraint -- gradient noise is.
+16000000	0.63	0.84	0.75	2.3311	0.5593	4.1679	T=16M: retention=0.750, GU_ratio=4.17: G=4 carries 4.2x more contrast yield per group but 75.0% of G=32 accuracy; ZVF is NOT the binding constraint -- gradient noise is.
+64000000	0.64	0.88	0.7273	2.4177	0.5819	4.1548	T=64M: retention=0.727, GU_ratio=4.15: G=4 carries 4.2x more contrast yield per group but 72.7% of G=32 accuracy; ZVF is NOT the binding constraint -- gradient noise is.
+SPEARMAN_LOG_T			-1.0			0.0834	Spearman rho(retention, log10 T)=-1.0000, permutation p=0.0834 -- retention monotonically collapses as budget grows

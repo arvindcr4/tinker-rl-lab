@@ -1,0 +1,4 @@
+channel	eta2_composite_5axes	algo_eta2	composite_ratio	composite_boot_lo	composite_boot_hi	composite_ci_excludes_1
+zvf	0.04415	0.04542	0.97202	0.32061	5.16943	False
+reward	0.03158	0.00747	4.22980	0.46670	18.68554	False
+len	0.03414	0.06314	0.54070	0.20102	2.33929	False

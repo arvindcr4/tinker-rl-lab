@@ -1,0 +1,708 @@
+{
+  "data": {
+    "n_cells": 160,
+    "n_deciles": 10,
+    "n_methods": 4,
+    "n_steps": 40
+  },
+  "hypotheses": {
+    "H1_ge_3_deciles_P5P6_ci_positive": false,
+    "H2_two_cluster_in_ge_7_deciles": false,
+    "H3_P5P8_ci_positive_in_ge_9_deciles": false,
+    "H4_low_deciles_higher_rho_variance": true,
+    "H5_P7P8_ci_positive_in_ge_6_deciles": false
+  },
+  "h1_count_P5P6_positive_deciles": 0,
+  "h2_count_two_cluster_deciles": 0,
+  "h3_count_P5P8_positive_deciles": 0,
+  "h5_count_P7P8_positive_deciles": 0,
+  "low_decile_rho_abs_mean": 0.6222222222222222,
+  "high_decile_rho_abs_mean": 0.5555555555555557,
+  "rho_per_decile": {
+    "decile_1": {
+      "P5_P6": {
+        "point": 0.4,
+        "ci_lo": -0.8,
+        "ci_hi": 1.0
+      },
+      "P5_P7": {
+        "point": 1.0,
+        "ci_lo": -0.2,
+        "ci_hi": 1.0
+      },
+      "P5_P8": {
+        "point": 1.0,
+        "ci_lo": 0.0,
+        "ci_hi": 1.0
+      },
+      "P6_P7": {
+        "point": 0.4,
+        "ci_lo": -0.8,
+        "ci_hi": 1.0
+      },
+      "P6_P8": {
+        "point": 0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 1.0
+      },
+      "P7_P8": {
+        "point": 1.0,
+        "ci_lo": -0.8,
+        "ci_hi": 1.0
+      }
+    },
+    "decile_2": {
+      "P5_P6": {
+        "point": -0.8,
+        "ci_lo": -1.0,
+        "ci_hi": 0.4
+      },
+      "P5_P7": {
+        "point": 0.8,
+        "ci_lo": -0.4,
+        "ci_hi": 1.0
+      },
+      "P5_P8": {
+        "point": 0.0,
+        "ci_lo": -0.8,
+        "ci_hi": 1.0
+      },
+      "P6_P7": {
+        "point": -1.0,
+        "ci_lo": -1.0,
+        "ci_hi": 0.6
+      },
+      "P6_P8": {
+        "point": -0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      },
+      "P7_P8": {
+        "point": 0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      }
+    },
+    "decile_3": {
+      "P5_P6": {
+        "point": 0.2,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      },
+      "P5_P7": {
+        "point": 0.8,
+        "ci_lo": 0.0,
+        "ci_hi": 1.0
+      },
+      "P5_P8": {
+        "point": 0.8,
+        "ci_lo": -0.8,
+        "ci_hi": 1.0
+      },
+      "P6_P7": {
+        "point": -0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      },
+      "P6_P8": {
+        "point": -0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 0.4
+      },
+      "P7_P8": {
+        "point": 1.0,
+        "ci_lo": -0.8,
+        "ci_hi": 1.0
+      }
+    },
+    "decile_4": {
+      "P5_P6": {
+        "point": -0.8,
+        "ci_lo": -1.0,
+        "ci_hi": 0.6
+      },
+      "P5_P7": {
+        "point": 0.8,
+        "ci_lo": -0.2,
+        "ci_hi": 1.0
+      },
+      "P5_P8": {
+        "point": -0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      },
+      "P6_P7": {
+        "point": -0.4,
+        "ci_lo": -0.8,
+        "ci_hi": 0.8
+      },
+      "P6_P8": {
+        "point": 0.2,
+        "ci_lo": -1.0,
+        "ci_hi": 0.4
+      },
+      "P7_P8": {
+        "point": -0.8,
+        "ci_lo": -1.0,
+        "ci_hi": -0.2
+      }
+    },
+    "decile_5": {
+      "P5_P6": {
+        "point": -0.8,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      },
+      "P5_P7": {
+        "point": -0.2,
+        "ci_lo": -0.8,
+        "ci_hi": 0.8
+      },
+      "P5_P8": {
+        "point": 1.0,
+        "ci_lo": 0.0,
+        "ci_hi": 1.0
+      },
+      "P6_P7": {
+        "point": 0.4,
+        "ci_lo": -0.6,
+        "ci_hi": 1.0
+      },
+      "P6_P8": {
+        "point": -0.8,
+        "ci_lo": -1.0,
+        "ci_hi": 0.4
+      },
+      "P7_P8": {
+        "point": -0.2,
+        "ci_lo": -0.8,
+        "ci_hi": -0.2
+      }
+    },
+    "decile_6": {
+      "P5_P6": {
+        "point": 0.4,
+        "ci_lo": -0.8,
+        "ci_hi": 0.8
+      },
+      "P5_P7": {
+        "point": 0.8,
+        "ci_lo": -0.8,
+        "ci_hi": 1.0
+      },
+      "P5_P8": {
+        "point": -0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      },
+      "P6_P7": {
+        "point": -0.2,
+        "ci_lo": -0.8,
+        "ci_hi": 0.8
+      },
+      "P6_P8": {
+        "point": -1.0,
+        "ci_lo": -1.0,
+        "ci_hi": 0.4
+      },
+      "P7_P8": {
+        "point": 0.2,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      }
+    },
+    "decile_7": {
+      "P5_P6": {
+        "point": -0.2,
+        "ci_lo": -0.8,
+        "ci_hi": 0.8
+      },
+      "P5_P7": {
+        "point": 0.2,
+        "ci_lo": 0.0,
+        "ci_hi": 1.0
+      },
+      "P5_P8": {
+        "point": -0.2,
+        "ci_lo": -1.0,
+        "ci_hi": -0.2
+      },
+      "P6_P7": {
+        "point": 0.6,
+        "ci_lo": -0.8,
+        "ci_hi": 1.0
+      },
+      "P6_P8": {
+        "point": -0.6,
+        "ci_lo": -1.0,
+        "ci_hi": 0.6
+      },
+      "P7_P8": {
+        "point": -1.0,
+        "ci_lo": -1.0,
+        "ci_hi": -0.2
+      }
+    },
+    "decile_8": {
+      "P5_P6": {
+        "point": 0.4,
+        "ci_lo": -0.8,
+        "ci_hi": 1.0
+      },
+      "P5_P7": {
+        "point": -1.0,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      },
+      "P5_P8": {
+        "point": 0.4,
+        "ci_lo": -0.8,
+        "ci_hi": 1.0
+      },
+      "P6_P7": {
+        "point": -0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      },
+      "P6_P8": {
+        "point": -0.6,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      },
+      "P7_P8": {
+        "point": -0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      }
+    },
+    "decile_9": {
+      "P5_P6": {
+        "point": -0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 0.6
+      },
+      "P5_P7": {
+        "point": -0.6,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      },
+      "P5_P8": {
+        "point": 1.0,
+        "ci_lo": -0.4,
+        "ci_hi": 1.0
+      },
+      "P6_P7": {
+        "point": -0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 1.0
+      },
+      "P6_P8": {
+        "point": -0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 0.4
+      },
+      "P7_P8": {
+        "point": -0.6,
+        "ci_lo": -1.0,
+        "ci_hi": 0.0
+      }
+    },
+    "decile_10": {
+      "P5_P6": {
+        "point": 0.8,
+        "ci_lo": -1.0,
+        "ci_hi": 1.0
+      },
+      "P5_P7": {
+        "point": 0.8,
+        "ci_lo": 0.4,
+        "ci_hi": 1.0
+      },
+      "P5_P8": {
+        "point": -0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 0.8
+      },
+      "P6_P7": {
+        "point": 0.4,
+        "ci_lo": -1.0,
+        "ci_hi": 1.0
+      },
+      "P6_P8": {
+        "point": 0.2,
+        "ci_lo": -0.8,
+        "ci_hi": 1.0
+      },
+      "P7_P8": {
+        "point": -0.8,
+        "ci_lo": -1.0,
+        "ci_hi": 0.4
+      }
+    }
+  },
+  "best_method_per_decile_pillar": {
+    "decile_1": {
+      "P5": "aero",
+      "P6": "aero",
+      "P7": "aero",
+      "P8": "aero"
+    },
+    "decile_2": {
+      "P5": "aero",
+      "P6": "grpo",
+      "P7": "aero",
+      "P8": "aero"
+    },
+    "decile_3": {
+      "P5": "grpo",
+      "P6": "aero",
+      "P7": "grpo",
+      "P8": "grpo"
+    },
+    "decile_4": {
+      "P5": "aero",
+      "P6": "grpo",
+      "P7": "areal",
+      "P8": "grpo"
+    },
+    "decile_5": {
+      "P5": "gift",
+      "P6": "grpo",
+      "P7": "areal",
+      "P8": "gift"
+    },
+    "decile_6": {
+      "P5": "aero",
+      "P6": "areal",
+      "P7": "aero",
+      "P8": "grpo"
+    },
+    "decile_7": {
+      "P5": "gift",
+      "P6": "areal",
+      "P7": "gift",
+      "P8": "grpo"
+    },
+    "decile_8": {
+      "P5": "grpo",
+      "P6": "areal",
+      "P7": "gift",
+      "P8": "grpo"
+    },
+    "decile_9": {
+      "P5": "gift",
+      "P6": "grpo",
+      "P7": "areal",
+      "P8": "gift"
+    },
+    "decile_10": {
+      "P5": "areal",
+      "P6": "grpo",
+      "P7": "areal",
+      "P8": "grpo"
+    }
+  },
+  "ci_per_decile_pair": {
+    "decile_1_P5_P6": {
+      "lo": -0.8,
+      "hi": 1.0,
+      "mean": 0.14890000000000003
+    },
+    "decile_1_P5_P7": {
+      "lo": -0.2,
+      "hi": 1.0,
+      "mean": 0.7007000000000001
+    },
+    "decile_1_P5_P8": {
+      "lo": 0.0,
+      "hi": 1.0,
+      "mean": 0.7596
+    },
+    "decile_1_P6_P7": {
+      "lo": -0.8,
+      "hi": 1.0,
+      "mean": 0.3005
+    },
+    "decile_1_P6_P8": {
+      "lo": -1.0,
+      "hi": 1.0,
+      "mean": -0.041100000000000005
+    },
+    "decile_1_P7_P8": {
+      "lo": -0.8,
+      "hi": 1.0,
+      "mean": 0.37839999999999996
+    },
+    "decile_2_P5_P6": {
+      "lo": -1.0,
+      "hi": 0.4,
+      "mean": -0.4957
+    },
+    "decile_2_P5_P7": {
+      "lo": -0.4,
+      "hi": 1.0,
+      "mean": 0.5692999999999999
+    },
+    "decile_2_P5_P8": {
+      "lo": -0.8,
+      "hi": 1.0,
+      "mean": 0.331
+    },
+    "decile_2_P6_P7": {
+      "lo": -1.0,
+      "hi": 0.6,
+      "mean": -0.591
+    },
+    "decile_2_P6_P8": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.2851
+    },
+    "decile_2_P7_P8": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.0718
+    },
+    "decile_3_P5_P6": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.3024
+    },
+    "decile_3_P5_P7": {
+      "lo": 0.0,
+      "hi": 1.0,
+      "mean": 0.7754000000000001
+    },
+    "decile_3_P5_P8": {
+      "lo": -0.8,
+      "hi": 1.0,
+      "mean": 0.4486
+    },
+    "decile_3_P6_P7": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.3273
+    },
+    "decile_3_P6_P8": {
+      "lo": -1.0,
+      "hi": 0.4,
+      "mean": -0.5237
+    },
+    "decile_3_P7_P8": {
+      "lo": -0.8,
+      "hi": 1.0,
+      "mean": 0.21660000000000001
+    },
+    "decile_4_P5_P6": {
+      "lo": -1.0,
+      "hi": 0.6,
+      "mean": -0.4203
+    },
+    "decile_4_P5_P7": {
+      "lo": -0.2,
+      "hi": 1.0,
+      "mean": 0.6587000000000001
+    },
+    "decile_4_P5_P8": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.2755
+    },
+    "decile_4_P6_P7": {
+      "lo": -0.8,
+      "hi": 0.8,
+      "mean": -0.09620000000000001
+    },
+    "decile_4_P6_P8": {
+      "lo": -1.0,
+      "hi": 0.4,
+      "mean": -0.2556
+    },
+    "decile_4_P7_P8": {
+      "lo": -1.0,
+      "hi": -0.2,
+      "mean": -0.6794000000000001
+    },
+    "decile_5_P5_P6": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.3288
+    },
+    "decile_5_P5_P7": {
+      "lo": -0.8,
+      "hi": 0.8,
+      "mean": -0.16960000000000003
+    },
+    "decile_5_P5_P8": {
+      "lo": 0.0,
+      "hi": 1.0,
+      "mean": 0.7374
+    },
+    "decile_5_P6_P7": {
+      "lo": -0.6,
+      "hi": 1.0,
+      "mean": 0.31120000000000003
+    },
+    "decile_5_P6_P8": {
+      "lo": -1.0,
+      "hi": 0.4,
+      "mean": -0.4501
+    },
+    "decile_5_P7_P8": {
+      "lo": -0.8,
+      "hi": -0.2,
+      "mean": -0.3697000000000001
+    },
+    "decile_6_P5_P6": {
+      "lo": -0.8,
+      "hi": 0.8,
+      "mean": 0.07590000000000001
+    },
+    "decile_6_P5_P7": {
+      "lo": -0.8,
+      "hi": 1.0,
+      "mean": 0.4215
+    },
+    "decile_6_P5_P8": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": 0.0378
+    },
+    "decile_6_P6_P7": {
+      "lo": -0.8,
+      "hi": 0.8,
+      "mean": -0.0522
+    },
+    "decile_6_P6_P8": {
+      "lo": -1.0,
+      "hi": 0.4,
+      "mean": -0.5702
+    },
+    "decile_6_P7_P8": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.27130000000000004
+    },
+    "decile_7_P5_P6": {
+      "lo": -0.8,
+      "hi": 0.8,
+      "mean": 0.0884
+    },
+    "decile_7_P5_P7": {
+      "lo": 0.0,
+      "hi": 1.0,
+      "mean": 0.6865
+    },
+    "decile_7_P5_P8": {
+      "lo": -1.0,
+      "hi": -0.2,
+      "mean": -0.5910000000000001
+    },
+    "decile_7_P6_P7": {
+      "lo": -0.8,
+      "hi": 1.0,
+      "mean": 0.18309999999999998
+    },
+    "decile_7_P6_P8": {
+      "lo": -1.0,
+      "hi": 0.6,
+      "mean": -0.4515
+    },
+    "decile_7_P7_P8": {
+      "lo": -1.0,
+      "hi": -0.2,
+      "mean": -0.7604000000000001
+    },
+    "decile_8_P5_P6": {
+      "lo": -0.8,
+      "hi": 1.0,
+      "mean": 0.4052
+    },
+    "decile_8_P5_P7": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.335
+    },
+    "decile_8_P5_P8": {
+      "lo": -0.8,
+      "hi": 1.0,
+      "mean": 0.24830000000000002
+    },
+    "decile_8_P6_P7": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.404
+    },
+    "decile_8_P6_P8": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.1244
+    },
+    "decile_8_P7_P8": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.4667
+    },
+    "decile_9_P5_P6": {
+      "lo": -1.0,
+      "hi": 0.6,
+      "mean": -0.29800000000000004
+    },
+    "decile_9_P5_P7": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.358
+    },
+    "decile_9_P5_P8": {
+      "lo": -0.4,
+      "hi": 1.0,
+      "mean": 0.6244000000000001
+    },
+    "decile_9_P6_P7": {
+      "lo": -1.0,
+      "hi": 1.0,
+      "mean": -0.105
+    },
+    "decile_9_P6_P8": {
+      "lo": -1.0,
+      "hi": 0.4,
+      "mean": -0.3305
+    },
+    "decile_9_P7_P8": {
+      "lo": -1.0,
+      "hi": 0.0,
+      "mean": -0.6726
+    },
+    "decile_10_P5_P6": {
+      "lo": -1.0,
+      "hi": 1.0,
+      "mean": -0.1615
+    },
+    "decile_10_P5_P7": {
+      "lo": 0.4,
+      "hi": 1.0,
+      "mean": 0.8351000000000002
+    },
+    "decile_10_P5_P8": {
+      "lo": -1.0,
+      "hi": 0.8,
+      "mean": -0.0838
+    },
+    "decile_10_P6_P7": {
+      "lo": -1.0,
+      "hi": 1.0,
+      "mean": -0.1399
+    },
+    "decile_10_P6_P8": {
+      "lo": -0.8,
+      "hi": 1.0,
+      "mean": 0.013400000000000006
+    },
+    "decile_10_P7_P8": {
+      "lo": -1.0,
+      "hi": 0.4,
+      "mean": -0.37520000000000003
+    }
+  },
+  "verdict": 1
+}

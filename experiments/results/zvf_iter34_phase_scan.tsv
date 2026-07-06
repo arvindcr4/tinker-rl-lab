@@ -1,0 +1,13 @@
+model	arch	phase	zvf_level	zvf_instability	zvf_slope	zvf_direction	zvf_discriminator
+Qwen3.5-4B	dense	plateau	0.0	0.0345	-0.000466	0.0375	0.0
+Qwen3-8B	dense	saturation	0.0667	0.4483	0.002423	0.1	0.06003
+Llama-3.1-8B-Instruct	dense	drift	0.0	0.0345	-0.003433	-0.0813	0.0
+Qwen3-32B	dense	drift	0.0	0.5	-0.044009	-0.0935	0.0
+Qwen3.5-27B	dense	collapse	0.3333	0.5	-0.145767	-0.281	0.3333
+gpt-oss-20B	moe	saturation	0.0	0.5172	0.002263	0.0687	0.0
+Qwen3-30B-MoE	moe	saturation	0.0	0.5	-0.001619	0.156	0.0
+Qwen3-30B-MoE-Inst	moe	saturation	0.0	0.5	-0.0	0.0	0.0
+DeepSeek-V3.1	moe	plateau	0.0	0.1579	-0.004852	-0.0208	0.0
+Nemotron-120B	dense	plateau	0.55	0.1579	0.029539	0.0625	0.515625
+Qwen3-235B-MoE	moe	saturation	0.0	0.3333	0.0	0.0	0.0
+Kimi-K2-Thinking	moe	drift	0.0	0.0526	-0.011155	-0.1875	0.0

@@ -1,0 +1,153 @@
+{
+  "n_passages": 67,
+  "n_kg_nodes": 21,
+  "n_kg_edges": 29,
+  "n_queries": 12,
+  "H1_ppr_vs_bm25_delta_at_10": 0.0,
+  "H1_mrr_ppr": 0.5535714285714286,
+  "H1_mrr_bm25": 0.5694444444444444,
+  "H1_mrr_rnd": 0.24791666666666667,
+  "H1_mrr_ppr_vs_bm25": -0.015873015873015817,
+  "H2_ppr_vs_random_delta_at_10": 0.16666666666666663,
+  "H2_mrr_ppr_vs_rnd": 0.30565476190476193,
+  "H3_ppr_entity_mass_vs_rqs_pearson": -0.7071067811865476,
+  "H3_refit_capability_anchored_correct_sign": null,
+  "H4_degree_qwen3p5_4b": 3,
+  "H4_degree_qwen3_8b": 3,
+  "H5_recall_ppr_at_10": 0.6666666666666666,
+  "H5_recall_bm25_at_25": 0.6666666666666666,
+  "results": [
+    {
+      "qid": 0,
+      "query": "Qwen3.5-4B RQS r_mean r_max capable",
+      "gold": "Qwen3.5-4B",
+      "ppr_hit10": 1,
+      "ppr_rank": 1,
+      "bm25_hit10": 1,
+      "bm25_rank": 1,
+      "random_hit10": 0,
+      "random_rank": -1
+    },
+    {
+      "qid": 1,
+      "query": "Qwen3-8B RQS residualization cap+RQS",
+      "gold": "Qwen3-8B",
+      "ppr_hit10": 1,
+      "ppr_rank": 2,
+      "bm25_hit10": 1,
+      "bm25_rank": 1,
+      "random_hit10": 1,
+      "random_rank": 10
+    },
+    {
+      "qid": 2,
+      "query": "AIC compare M0 M1 M2 delta_aicc_vs_best",
+      "gold": "delta_aicc_vs_best",
+      "ppr_hit10": 0,
+      "ppr_rank": -1,
+      "bm25_hit10": 0,
+      "bm25_rank": -1,
+      "random_hit10": 0,
+      "random_rank": -1
+    },
+    {
+      "qid": 3,
+      "query": "cross_pillar G=8 T=1000000 zvf_theory",
+      "gold": "1",
+      "ppr_hit10": 1,
+      "ppr_rank": 1,
+      "bm25_hit10": 1,
+      "bm25_rank": 1,
+      "random_hit10": 1,
+      "random_rank": 1
+    },
+    {
+      "qid": 4,
+      "query": "Self-Debug grpo frac_mag_pre frac_mag_post drop_pp",
+      "gold": "grpo",
+      "ppr_hit10": 1,
+      "ppr_rank": 1,
+      "bm25_hit10": 1,
+      "bm25_rank": 1,
+      "random_hit10": 1,
+      "random_rank": 4
+    },
+    {
+      "qid": 5,
+      "query": "Self-Debug aero method reformulation eps=0.12",
+      "gold": "aero",
+      "ppr_hit10": 1,
+      "ppr_rank": 7,
+      "bm25_hit10": 1,
+      "bm25_rank": 1,
+      "random_hit10": 0,
+      "random_rank": -1
+    },
+    {
+      "qid": 6,
+      "query": "Self-Debug scafgrpo top1 ranking stability",
+      "gold": "scafgrpo",
+      "ppr_hit10": 1,
+      "ppr_rank": 1,
+      "bm25_hit10": 1,
+      "bm25_rank": 1,
+      "random_hit10": 1,
+      "random_rank": 1
+    },
+    {
+      "qid": 7,
+      "query": "Self-Debug eps sweep epsilon spearman stability",
+      "gold": "epsilon",
+      "ppr_hit10": 1,
+      "ppr_rank": 1,
+      "bm25_hit10": 1,
+      "bm25_rank": 3,
+      "random_hit10": 1,
+      "random_rank": 2
+    },
+    {
+      "qid": 8,
+      "query": "H3 ranking stability H4 compositional bucket",
+      "gold": "h3_opro_stability",
+      "ppr_hit10": 0,
+      "ppr_rank": -1,
+      "bm25_hit10": 0,
+      "bm25_rank": -1,
+      "random_hit10": 0,
+      "random_rank": -1
+    },
+    {
+      "qid": 9,
+      "query": "H4 compositional preserved 9/9 methods",
+      "gold": "h4_compositional_bucket",
+      "ppr_hit10": 0,
+      "ppr_rank": -1,
+      "bm25_hit10": 0,
+      "bm25_rank": -1,
+      "random_hit10": 0,
+      "random_rank": -1
+    },
+    {
+      "qid": 10,
+      "query": "H5 calibration eps=0 identity max abs dev",
+      "gold": "h5_eps0_identity",
+      "ppr_hit10": 0,
+      "ppr_rank": -1,
+      "bm25_hit10": 0,
+      "bm25_rank": -1,
+      "random_hit10": 0,
+      "random_rank": -1
+    },
+    {
+      "qid": 11,
+      "query": "Eureka RQS 12 anchors log10(N) r_mean_capable",
+      "gold": "Qwen3.5-4B",
+      "ppr_hit10": 1,
+      "ppr_rank": 1,
+      "bm25_hit10": 1,
+      "bm25_rank": 2,
+      "random_hit10": 1,
+      "random_rank": 8
+    }
+  ]
+}

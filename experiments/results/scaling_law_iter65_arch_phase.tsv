@@ -1,0 +1,3 @@
+arch	n_anchors	n_three_phase	frac_three_phase	n_collapse	frac_collapse	n_drift	frac_drift	n_template_full	frac_template_full	pci_mean	pci_median	class_counts
+dense	6	1	0.16666666666666666	0	0.0	0	0.0	1	0.16666666666666666	1.75	1.75	anomalous:1;three-phase:1;valley:4
+moe	6	1	0.16666666666666666	0	0.0	0	0.0	1	0.16666666666666666	1.5833333333333333	1.75	constant:2;monotonic-rising:1;three-phase:1;valley:2

@@ -1,0 +1,10 @@
+# Mann-Whitney AUC: P(ZVF_collapse > ZVF_healthy) per (method, quintile)
+# AUC > 0.5: collapsed runs have HIGHER ZVF; AUC < 0.5: lower
+# Note: many methods have 0 collapse steps; AUC = NaN there
+# Source: scripts/zvf_iter62.py
+method	quintile	auc	n_collapse	n_healthy	mean_zvf_collapse	mean_zvf_healthy
+grpo	0	nan	0	300	nan	0.0199
+grpo	1	nan	0	300	nan	0.1256
+grpo	2	nan	0	300	nan	0.5461
+grpo	3	0.8674	15	285	0.8865	0.8298
+grpo	4	0.4744	168	132	0.8777	0.8824

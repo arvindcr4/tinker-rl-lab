@@ -1,0 +1,9 @@
+# zvf_iter110_emd.tsv -- normalised 1-Wasserstein (EMD) between
+# the collapse arm and the non-collapse arm, per predictor.
+# EMD divided by the empirical range of the predictor so the
+# value sits in [0, 1] across all three predictors.
+# Source: scripts/zvf_discrimination_iter110.py
+predictor	emd_norm	emd_norm_pos	emd_norm_neg	n_collapse	n_other
+zvf_emp	0.7389	0.7389	0.7389	4	10
+delta_calibration	0.4374	0.4374	0.4374	4	10
+rho_overdispersion	0.4341	0.4341	0.4341	4	10

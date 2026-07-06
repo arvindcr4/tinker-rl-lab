@@ -1,0 +1,81 @@
+entry_id	delta_ids	field	status	actual_value
+colab-open_dapo_e3	delta_dapo	token_aggregation	APPLIES_REPORTED	token
+colab-open_dapo_e3	delta_dapo	reward_shaping_type	APPLIES_UNPOPULATED	
+colab-open_dapo_e3	delta_dapo	sampling_dynamic_filter	APPLIES_REPORTED	True
+colab-open_dapo_e3		(deficit)	2/3_populated	
+colab-open_drgrpo_e3	delta_drgrpo	token_aggregation	NOT_RELEVANT	
+colab-open_drgrpo_e3	delta_drgrpo	reward_shaping_type	NOT_RELEVANT	
+colab-open_drgrpo_e3	delta_drgrpo	sampling_dynamic_filter	NOT_RELEVANT	
+colab-open_drgrpo_e3		(deficit)	0/0_populated	
+colab-open_grpo-adaptiveg_e3		token_aggregation	NOT_APPLICABLE	
+colab-open_grpo-adaptiveg_e3		reward_shaping_type	NOT_APPLICABLE	
+colab-open_grpo-adaptiveg_e3		sampling_dynamic_filter	NOT_APPLICABLE	
+colab-open_grpo-adaptiveg_e3		(deficit)	0/0_populated	
+colab-open_grpo_e3		token_aggregation	NOT_APPLICABLE	
+colab-open_grpo_e3		reward_shaping_type	NOT_APPLICABLE	
+colab-open_grpo_e3		sampling_dynamic_filter	NOT_APPLICABLE	
+colab-open_grpo_e3		(deficit)	0/0_populated	
+openrlhf_grpo_qwen3-8b_gsm8k		token_aggregation	NOT_APPLICABLE	
+openrlhf_grpo_qwen3-8b_gsm8k		reward_shaping_type	NOT_APPLICABLE	
+openrlhf_grpo_qwen3-8b_gsm8k		sampling_dynamic_filter	NOT_APPLICABLE	
+openrlhf_grpo_qwen3-8b_gsm8k		(deficit)	0/0_populated	
+tinker_aero_qwen3.5-4b_gsm8k	delta_aero	token_aggregation	NOT_RELEVANT	
+tinker_aero_qwen3.5-4b_gsm8k	delta_aero	reward_shaping_type	NOT_RELEVANT	
+tinker_aero_qwen3.5-4b_gsm8k	delta_aero	sampling_dynamic_filter	NOT_RELEVANT	
+tinker_aero_qwen3.5-4b_gsm8k		(deficit)	0/0_populated	
+tinker_areal_qwen3.5-4b_gsm8k	delta_areal	token_aggregation	NOT_RELEVANT	
+tinker_areal_qwen3.5-4b_gsm8k	delta_areal	reward_shaping_type	NOT_RELEVANT	
+tinker_areal_qwen3.5-4b_gsm8k	delta_areal	sampling_dynamic_filter	NOT_RELEVANT	
+tinker_areal_qwen3.5-4b_gsm8k		(deficit)	0/0_populated	
+tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	token_aggregation	APPLIES_UNPOPULATED	
+tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	reward_shaping_type	APPLIES_UNPOPULATED	
+tinker_dapo_qwen3.5-4b_gsm8k	delta_dapo	sampling_dynamic_filter	APPLIES_UNPOPULATED	
+tinker_dapo_qwen3.5-4b_gsm8k		(deficit)	0/3_populated	
+tinker_drgrpo_qwen3.5-4b_gsm8k	delta_drgrpo	token_aggregation	NOT_RELEVANT	
+tinker_drgrpo_qwen3.5-4b_gsm8k	delta_drgrpo	reward_shaping_type	NOT_RELEVANT	
+tinker_drgrpo_qwen3.5-4b_gsm8k	delta_drgrpo	sampling_dynamic_filter	NOT_RELEVANT	
+tinker_drgrpo_qwen3.5-4b_gsm8k		(deficit)	0/0_populated	
+tinker_gift_qwen3.5-4b_gsm8k	delta_gift	token_aggregation	NOT_RELEVANT	
+tinker_gift_qwen3.5-4b_gsm8k	delta_gift	reward_shaping_type	APPLIES_REPORTED	gamma_baseline
+tinker_gift_qwen3.5-4b_gsm8k	delta_gift	sampling_dynamic_filter	NOT_RELEVANT	
+tinker_gift_qwen3.5-4b_gsm8k		(deficit)	1/1_populated	
+tinker_grpo_qwen3-8b_gsm8k		token_aggregation	NOT_APPLICABLE	
+tinker_grpo_qwen3-8b_gsm8k		reward_shaping_type	NOT_APPLICABLE	
+tinker_grpo_qwen3-8b_gsm8k		sampling_dynamic_filter	NOT_APPLICABLE	
+tinker_grpo_qwen3-8b_gsm8k		(deficit)	0/0_populated	
+tinker_grpo_qwen3.5-4b_gsm8k		token_aggregation	NOT_APPLICABLE	
+tinker_grpo_qwen3.5-4b_gsm8k		reward_shaping_type	NOT_APPLICABLE	
+tinker_grpo_qwen3.5-4b_gsm8k		sampling_dynamic_filter	NOT_APPLICABLE	
+tinker_grpo_qwen3.5-4b_gsm8k		(deficit)	0/0_populated	
+tinker_gspo_qwen3.5-4b_gsm8k	delta_gspo	token_aggregation	APPLIES_UNPOPULATED	
+tinker_gspo_qwen3.5-4b_gsm8k	delta_gspo	reward_shaping_type	NOT_RELEVANT	
+tinker_gspo_qwen3.5-4b_gsm8k	delta_gspo	sampling_dynamic_filter	NOT_RELEVANT	
+tinker_gspo_qwen3.5-4b_gsm8k		(deficit)	0/1_populated	
+trl_grpo_qwen3-8b_gsm8k		token_aggregation	NOT_APPLICABLE	
+trl_grpo_qwen3-8b_gsm8k		reward_shaping_type	NOT_APPLICABLE	
+trl_grpo_qwen3-8b_gsm8k		sampling_dynamic_filter	NOT_APPLICABLE	
+trl_grpo_qwen3-8b_gsm8k		(deficit)	0/0_populated	
+verl_grpo_qwen3-8b_gsm8k		token_aggregation	NOT_APPLICABLE	
+verl_grpo_qwen3-8b_gsm8k		reward_shaping_type	NOT_APPLICABLE	
+verl_grpo_qwen3-8b_gsm8k		sampling_dynamic_filter	NOT_APPLICABLE	
+verl_grpo_qwen3-8b_gsm8k		(deficit)	0/0_populated	
+zvf130_cppo	delta_cppo	token_aggregation	NOT_APPLICABLE	
+zvf130_cppo	delta_cppo	reward_shaping_type	NOT_APPLICABLE	
+zvf130_cppo	delta_cppo	sampling_dynamic_filter	NOT_APPLICABLE	
+zvf130_cppo		(deficit)	0/0_populated	
+zvf130_es	delta_es	token_aggregation	NOT_APPLICABLE	
+zvf130_es	delta_es	reward_shaping_type	NOT_APPLICABLE	
+zvf130_es	delta_es	sampling_dynamic_filter	NOT_APPLICABLE	
+zvf130_es		(deficit)	0/0_populated	
+zvf130_mcgrpo	delta_mcgrpo	token_aggregation	NOT_APPLICABLE	
+zvf130_mcgrpo	delta_mcgrpo	reward_shaping_type	NOT_APPLICABLE	
+zvf130_mcgrpo	delta_mcgrpo	sampling_dynamic_filter	NOT_APPLICABLE	
+zvf130_mcgrpo		(deficit)	0/0_populated	
+zvf130_ngrpo	delta_ngrpo	token_aggregation	NOT_APPLICABLE	
+zvf130_ngrpo	delta_ngrpo	reward_shaping_type	NOT_APPLICABLE	
+zvf130_ngrpo	delta_ngrpo	sampling_dynamic_filter	NOT_APPLICABLE	
+zvf130_ngrpo		(deficit)	0/0_populated	
+zvf130_scafgrpo	delta_scafgrpo	token_aggregation	NOT_APPLICABLE	
+zvf130_scafgrpo	delta_scafgrpo	reward_shaping_type	NOT_APPLICABLE	
+zvf130_scafgrpo	delta_scafgrpo	sampling_dynamic_filter	NOT_APPLICABLE	
+zvf130_scafgrpo		(deficit)	0/0_populated	

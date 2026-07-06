@@ -1,0 +1,87 @@
+% Pillar-7: limitations + proposed decisive experiments
+\section{Limitations and Proposed Decisive Experiments}
+\label{sec:p7-limitations}
+
+\subsection{Limitations}
+\label{sec:p7-limitations-list}
+Every interventional claim in this paper is bounded by four limitations,
+stated in load-bearing order.
+
+\emph{Single task.} The E3 audit and the E1 gradient probe each run on one
+task family (GSM8K-style and synthetic arithmetic respectively). The theory
+is task-agnostic, but the controller's measured competitiveness is not: on
+harder or drifting prompt populations the trade of
+Table~\ref{tab:p7-e3} could tip in any direction.
+
+\emph{Small $n$.} Four arms, one open trainer, shared seeds, held-out
+deltas separated by at most $0.075$: the E3 differences between the top
+arms are within the noise band the companion papers' power analysis
+(Table~\ref{tab:power-analysis}) would demand for a Tier-A claim. We
+therefore claim mechanism-consistent telemetry and competitiveness, not
+superiority.
+
+\emph{LoRA-only closed stack for one comparison arm.} The closed-stack
+telemetry cited for the label-flip caution comes from LoRA
+\citep{hu2022lora} fine-tuning on a stack whose sampler and backward pass we
+cannot inspect; the open reimplementation is the only arm-for-arm auditable
+setting, and cross-stack numbers are quoted only as motivation, never as
+controller evidence.
+
+\emph{Toy-scale gradient evidence.} T3's empirical support is the
+directional E1 result ($+0.71$ on a 0.5B model); the coefficient is not
+expected to transfer, only the sign and ordering.
+
+We also flag a provenance boundary and two scope choices. The 368-run
+audit, the model~$\times$~$G$ grid, the 12-cell head-to-head, and the
+E1/E3 runs are internal program records (W\&B projects \texttt{zvf-audit}
+and \texttt{zvf-colab-experiments}, June 2026): they were run under a
+declared protocol and are summarized faithfully, but they have not passed
+through the released-artifact pipeline that covers the repo-internal
+sweeps and reward-tensor analyses (Appendix~\ref{sec:p7-appendix},
+provenance note); the companion Pillar-5 paper flags the same records the
+same way. The scope choices: PCD is validated as a control-loop input
+(invariance, shape, aliasing resolution), \emph{not} as an outcome
+predictor; and no claim in this paper depends on the veRL/OpenRLHF rows of
+the framework comparison, which remain dry-run placeholders
+(\tableref{tab:implementations}).
+
+\subsection{Proposed decisive experiments}
+\label{sec:p7-proposed}
+The following experiments would each settle a claim this paper leaves
+directional. They extend the frontier backlog maintained in the repository
+(\texttt{experiments/FRONTIER\_EXPERIMENT\_BACKLOG.md}).
+
+\textbf{D1: The PCD horse race.} Log per-group reward tensors on
+\emph{every} anchor run (not only GSM8K), then test early-window PCD
+against held-out outcome at the pre-registered $\rho \geq 0.45$ bar, with
+mean reward as the mandatory baseline covariate. This is the experiment the
+$\rho = 0.95$ vs $0.56$ proxy result gestures at but cannot replace.
+
+\textbf{D2: Adaptive-$G$ on a hard population.} Rerun the four-arm E3
+design on a prompt population with baseline $p \in [0.05, 0.3]$ (e.g.\
+competition math), $n \geq 5$ seeds per arm, fixed total rollout budget
+rather than fixed steps. Theory predicts this is where fixed-$G$ starves
+and the controller's targeted spend should separate from both plain GRPO
+and always-on dynamic sampling; a null here would bound the controller's
+value to telemetry only.
+
+\textbf{D3: T3 at production scale.} Per-group gradient attribution on an
+8B model with an open backward pass, 3+ seeds, reporting
+$\mathrm{corr}(\|\nabla\|, \hat p(1-\hat p))$ with confidence intervals and
+an ablation over advantage normalization (plain, Dr.~GRPO-style, GSPO-style
+\citep{qwen2025gspo}). This either promotes T3 from directional to
+quantitative or localizes where the binomial model breaks.
+
+\textbf{D4: Escalate-vs-resample crossover.} A two-dimensional sweep
+(prompt difficulty $\times$ intervention aggressiveness) mapping where
+adaptive-$G$, dynamic sampling \citep{yu2025dapo}, selective rollouts
+\citep{zhang2026greso}, and zero-variance advantage shaping
+\citep{le2025rlzvp} each win per marginal rollout---turning
+Rule~5 of Section~\ref{sec:p7-rules} from a caution into a decision
+boundary.
+
+\textbf{D5: Jitter red-team.} Apply the micro-jitter probe to every
+pipeline in the registry: any stack whose reported ZVF changes by more than
+$0.05$ under $\eps \sim \mathrm{U}(0, 10^{-4})$ reward jitter is flagged as
+reporting tie-artifact telemetry. This converts the falsification of
+Section~\ref{sec:p7-jitter} into a standing audit.

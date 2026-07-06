@@ -1,0 +1,23 @@
+task	algo	seed	n_pts	centroid_L	centroid_dL	rms_radius	L_first	L_last
+arithmetic_easy	grpo	42	39	4.7456	-0.083734	0.757	7.9531	4.6875
+arithmetic_easy	grpo	123	39	4.7566	-0.086538	0.7523	7.875	4.5
+arithmetic_easy	grpo	456	39	4.6921	-0.076122	0.713	7.3438	4.375
+arithmetic_easy	grpo	789	39	4.755	-0.077524	0.6795	7.4531	4.4297
+arithmetic_easy	grpo	1024	39	4.7931	-0.073718	0.7018	7.375	4.5
+arithmetic_easy	dr_grpo	42	39	4.7173	-0.077925	0.7217	7.7266	4.6875
+arithmetic_easy	dr_grpo	123	39	4.6843	-0.059095	0.6508	6.8047	4.5
+arithmetic_easy	dr_grpo	456	39	4.7115	-0.075321	0.7227	7.3438	4.4062
+arithmetic_easy	dr_grpo	789	39	4.7508	-0.073117	0.671	7.2891	4.4375
+arithmetic_easy	dr_grpo	1024	39	4.7286	-0.076923	0.6809	7.5	4.5
+gsm8k_cot	grpo	42	29	186.9919	-1.002155	12.4236	195.8906	166.8281
+gsm8k_cot	grpo	123	29	190.0943	-0.46444	6.7638	189.8438	176.375
+gsm8k_cot	grpo	456	29	191.9978	-0.144935	8.3938	196.125	191.9219
+gsm8k_cot	dr_grpo	42	29	190.9925	-0.518858	7.7202	195.6406	180.5938
+gsm8k_cot	dr_grpo	123	29	190.4973	-0.295797	7.2703	189.2188	180.6406
+gsm8k_cot	dr_grpo	456	29	192.9159	-0.150862	8.0074	196.125	191.75
+arithmetic_easy								
+arithmetic_easy								
+arithmetic_easy								
+gsm8k_cot								
+gsm8k_cot								
+gsm8k_cot								

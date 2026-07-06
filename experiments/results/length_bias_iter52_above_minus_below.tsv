@@ -1,0 +1,5 @@
+task	algo	n_seeds	mean_above_minus_below	sd	ci_lo	ci_hi
+arithmetic_easy	grpo	5	0.044722	0.002781	0.042282	0.047163
+arithmetic_easy	dr_grpo	5	0.0571	0.016752	0.041824	0.071296
+gsm8k_cot	grpo	3	-0.083566	0.200287	-0.332566	0.15786
+gsm8k_cot	dr_grpo	3	-0.156434	0.073074	-0.222385	-0.054556

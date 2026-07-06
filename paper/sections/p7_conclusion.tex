@@ -1,0 +1,28 @@
+% Pillar-7 conclusion
+\section{Conclusion}
+\label{sec:p7-conclusion}
+The companion Pillar-2 paper ended by refusing to over-read a diagnostic;
+this paper earns the reading it withheld. A one-line binomial model,
+$S = p(1-p)(1 - h_G(p))$, predicts the ZVF phenomena Pillar~2 catalogued:
+its exact expected value (T1, matched at the endpoints and interior of the
+binned reward tensors), its monotone decline in group size (T2, confirmed
+on two independent grids), and its coupling to gradient mass through
+$p(1-p)$ (T3, directionally confirmed in an open backward pass at
+$+0.71$). The same model exposes the diagnostic's structural limit---the
+symmetry that aliases mastery with incapacity, visible as a U-shape across
+368 runs---and supplies the repair: the pairwise-contrast density
+$\mathrm{PCD} = \frac{G-1}{G}\E[p(1-p)]$, which survives the micro-jitter
+that silently zeroes ZVF in any pipeline with a dense sub-reward.
+
+Prediction enabled intervention. The \texttt{zvf-triage} callback and
+adaptive-$G$ controller act on T2 live, escalating $G$ on starvation spikes;
+in a four-arm open audit the controller matched the best fixed recipe's
+held-out gain while dynamic sampling bought perfect telemetry at $+45\%$
+rollouts with no outcome advantage. The resulting design rules are modest
+and, we believe, durable: gate on magnitude (PCD), alarm on existence
+(ZVF), escalate multiplicatively on spikes, price every intervention in
+rollouts, and never let a recipe label substitute for a stack report. What
+remains is the decisive tier---the cross-anchor PCD horse race, the
+hard-population controller test, and production-scale gradient
+attribution---which we have specified precisely so that this paper, like
+its companion, can be falsified rather than merely believed.

@@ -1,0 +1,31 @@
+{
+  "iter": 138,
+  "pillar": "P6",
+  "audit_date": "2026-07-05",
+  "n_methods_in_data": 16,
+  "n_registry_entries_before": 39,
+  "verdicts": {
+    "PRESENT": 9,
+    "ANCHOR_ROW": 5,
+    "MISSING_GRPO_METHOD": 2
+  },
+  "missing_methods": [
+    "tool_use_llama-8b-inst",
+    "tool_use_qwen3-32b"
+  ],
+  "anchor_methods": [
+    "scaling_law_Qwen3-8B",
+    "scaling_law_Nemotron-120B",
+    "scaling_law_Llama-3.1-8B-Instruct",
+    "scaling_law_Qwen3.5-4B",
+    "scaling_law_DeepSeek-V3.1"
+  ],
+  "files_created": [
+    "registry/entries/zvf130_tool_use_llama-8b-inst.json",
+    "registry/entries/delta_tool_use_llama-8b-inst.json",
+    "registry/entries/zvf130_tool_use_qwen3-32b.json",
+    "registry/entries/delta_tool_use_qwen3-32b.json"
+  ],
+  "files_skipped_existing": [],
+  "audit_source": "scripts/p5p8/p6_iter138_missing_method_audit.py"
+}

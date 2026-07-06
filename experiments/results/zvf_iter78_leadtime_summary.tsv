@@ -1,0 +1,10 @@
+# Pillar 2 iter78 best-threshold-per-method lead-time summary.
+# Selection: maximize true_alarm_rate, then mean_lead_time.
+# Source: scripts/zvf_iter78.py
+method	threshold	n_traces	n_alarm	n_alarm_before_fail	n_late_alarm	n_miss	true_alarm_rate	late_alarm_rate	miss_rate	mean_lead_time	median_lead_time	min_lead_time	max_lead_time
+aero	0.500000	5	5	5	0	0	1.000000	0.000000	0.000000	51.800000	45	37	80
+cppo	0.500000	5	5	5	0	0	1.000000	0.000000	0.000000	41.000000	34	27	74
+groupsize	0.500000	12	12	12	0	0	1.000000	0.000000	0.000000	11.750000	12.000000	4	16
+grpo	0.500000	5	5	5	0	0	1.000000	0.000000	0.000000	148.200000	149	145	150
+mcgrpo	0.500000	5	5	5	0	0	1.000000	0.000000	0.000000	64.800000	44	38	105
+ngrpo	0.500000	5	5	5	0	0	1.000000	0.000000	0.000000	37.400000	35	27	56

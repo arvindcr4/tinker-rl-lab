@@ -1,0 +1,6 @@
+Y_target	mean_dG_iid_minus_emp	overshoot_correction	tip_savings	n_prompts
+0.5	-1.2515	+1.2515	yes	505
+0.7	-2.1881	+2.1881	yes	505
+0.8	-2.8139	+2.8139	yes	505
+0.9	-4.6198	+4.6198	yes	505
+0.95	-6.4950	+6.4950	yes	505

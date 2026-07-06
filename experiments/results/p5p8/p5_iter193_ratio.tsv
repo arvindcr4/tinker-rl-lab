@@ -1,0 +1,4 @@
+channel	algo_eta2	algo_ci_lo	algo_ci_hi	top_stack_axis	top_stack_eta2	top_stack_ci_lo	top_stack_ci_hi	stack_to_label_ratio	ci_disjoint
+zvf	0.04542	0.00932	0.14370	task_slice	0.46869	0.39399	0.57722	10.31950	True
+reward	0.00747	0.00245	0.07839	model_family	0.45267	0.32044	0.60891	60.62701	True
+len	0.06314	0.01859	0.16071	model_family	0.30063	0.17917	0.44728	4.76148	True

@@ -1,0 +1,10 @@
+model	params_B	n_steps	mean_reward	var_reward	peak	trough	r_max_robust	q75	late_mean	rise_step	partial_flag	trace_file
+Qwen3.5-4B	4.0	30	0.8167	0.0463	1.0000	0.2500	1.0000	1.0000	0.7917	1	False	scale_gsm8k_qwen3.5-4b.json
+Qwen3-8B	8.0	30	0.2854	0.0288	0.6250	0.0000	0.3750	0.3750	0.2917	1	False	scale_gsm8k_qwen3-8b.json
+Llama-3.1-8B-Instruct	8.0	30	0.8688	0.0267	1.0000	0.3750	1.0000	1.0000	0.8083	1	False	scale_gsm8k_llama-8b-inst.json
+DeepSeek-V3.1	685.0	20	0.8438	0.0186	1.0000	0.5000	1.0000	1.0000	0.8500	1	False	frontier_gsm8k_deepseek-v3.1.json
+Nemotron-120B	120.0	20	0.1750	0.0600	0.8750	0.0000	0.2812	0.2812	0.1625	1	False	frontier_gsm8k_nemotron-120b.json
+Qwen3-32B	32.0	3	0.2497	0.0078	0.3120	0.1250	0.3120	0.3120	0.2185	1	True	scale_gsm8k_qwen3-32b.json
+Qwen3.5-27B	27.0	3	0.4373	0.1015	0.7500	0.0000	0.6560	0.6560	0.3750	1	True	scale_gsm8k_qwen3.5-27b.json
+Qwen3-30B-MoE	30.0	5	0.3252	0.0288	0.5000	0.0620	0.4380	0.4380	0.3333	1	True	moe_gsm8k_qwen3-30b-moe.json
+Qwen3-30B-MoE-Inst	30.0	3	1.0000	0.0000	1.0000	1.0000	1.0000	1.0000	1.0000	1	True	moe_gsm8k_qwen3-30b-inst.json

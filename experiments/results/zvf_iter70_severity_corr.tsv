@@ -1,0 +1,7 @@
+# Pillar 2 Iter 70: mean_zvf vs severity_score correlation
+# severity_score 0..3 (0=ok, 1=drift, 2=collapse, 3=full_collapse).
+# Bootstrap CIs are B=2000 percentile resamples over the pooled
+# (zvf, severity) rows. Source: scripts/zvf_iter70.py
+test	n_pooled_rows	rho	ci_lo	ci_hi	method
+mean_zvf vs severity	65	0.2788	-0.2937	0.5451	Pearson + 95% bootstrap CI
+mean_zvf vs severity	65	-0.1097	-0.4619	0.2702	Spearman + 95% bootstrap CI

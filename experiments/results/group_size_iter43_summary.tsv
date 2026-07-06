@@ -1,0 +1,14 @@
+metric	value	frac
+n_eff_zvf_cells	20	
+mean_zvf_residual	-0.0332	
+std_zvf_residual	0.08	
+frac_residual_negative	0.5	
+n_tost_cells_total	40	
+n_tost_equiv_eps0.05	11	0.275
+n_tost_equiv_eps0.10	7	0.175
+n_tost_equiv_eps0.20	0	0.0
+n_wu_97_6_in_CI	20	0.5
+G4_vs_G32_T1000000_retention	0.9762	
+G4_vs_G32_T4000000_retention	0.8333	
+G4_vs_G32_T16000000_retention	0.75	
+G4_vs_G32_T64000000_retention	0.7273	

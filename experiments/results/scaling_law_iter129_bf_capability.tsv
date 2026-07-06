@@ -1,0 +1,8 @@
+stat	value_a	value_b
+model	M=capability+params	M=params_only
+k	3	2
+rmse	0.0364	0.2871
+log_lik	9.4755	-0.8559
+BIC	-14.1226	4.9307
+logBF_cap_minus_params	-9.5266	
+favored_by_BF	M=params_only	

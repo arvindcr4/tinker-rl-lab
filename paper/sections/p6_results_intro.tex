@@ -1,0 +1,33 @@
+% Paper 6 (GRPO-Registry) resource overview / results opener
+\section{The Resource: Overview}
+\label{sec:p6-overview}
+Unlike the empirical pillar papers, the primary deliverable here is an
+artifact. It ships in the benchmark repository under \texttt{registry/}:
+
+\begin{itemize}[leftmargin=1.5em, itemsep=0.15em]
+  \item \texttt{registry/schema.json} --- a JSON Schema (draft 2020-12)
+        defining the two record types (\texttt{stack} and
+        \texttt{variant_delta});
+  \item \texttt{registry/entries/*.json} --- 12 seed stack records and 3
+        variant-delta records, every one derived from a concrete artifact of
+        this benchmark (\secref{sec:setup}) or from a source paper we verified;
+  \item \texttt{registry/query.py} --- a dependency-free reference CLI
+        implementing \texttt{list}, \texttt{query}, \texttt{badge}, and
+        \texttt{stackdiff}.
+\end{itemize}
+
+All numbers quoted from the registry in this paper (badge scores, query
+results, flip-risk verdicts) are outputs of that CLI run on the shipped
+entries, so the paper describes something the reader can re-execute in
+seconds. The sections that follow present the schema
+(Section~\ref{sec:p6-schema}), the population process and what it revealed
+about our own reporting gaps (Section~\ref{sec:p6-population}), the query and
+audit tooling (Section~\ref{sec:p6-query}), worked examples
+(Section~\ref{sec:p6-worked}), the relation to existing community resources
+(Section~\ref{sec:p6-related-resources}), and the maintenance model
+(Section~\ref{sec:p6-governance}).
+
+A scoping note: the benchmark infrastructure of \secref{sec:benchmark} supplies
+the provenance for the seed entries, but this paper makes no new empirical
+claims beyond the program measurements it cites; where a cited measurement
+comes from toy-scale Colab audits we mark it as directional.

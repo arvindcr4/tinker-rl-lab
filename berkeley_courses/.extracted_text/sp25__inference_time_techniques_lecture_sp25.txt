@@ -1,0 +1,661 @@
+Inference-Time Techniques for
+LLM Reasoning
+Xinyun Chen
+CS294/194-280: Advanced Large Language Model Agents
+
+Highlight of LLMs in 2024: the advancement of reasoning models
+OpenAI o1 started to achieve impressive performance across various challenging 
+reasoning tasks in math, coding, STEM, etc.
+https://openai.com/index/learning-to-reason-with-llms/
+
+Performance improves with more inference-time compute
+https://arcprize.org/blog/oai-o3-pub-breakthrough
+O3 achieved 87.5% 
+accuracy on ARC-AGI, with 
+>$1k test-time cost to solve 
+each task
+•
+Other existing LLMs 
+achieved <25% 
+accuracy if no special 
+inference-time 
+techniques were used
+
+OpenAI o1 demo: hidden thought before generating the solution
+User 
+query
+Summarized
+hidden
+thought 
+Model-generated response
+
+Gemini 2.0 Flash Thinking demo: generating long thought before the solution 
+https://x.com/OfficialLoganK/status/1869789822384255300
+
+Core idea: trigger the LLM to generate long chain-of-thought (CoT) 
+Wei et al., Chain-of-Thought Prompting Elicits Reasoning in Large Language Models, NeurIPS 2022.
+Nye et al., Show Your Work: Scratchpads for Intermediate Computation with Language Models, 2021.
+Thought
+Approaches to trigger CoT generation
+• Few-shot CoT prompting
+• Instruction prompting
+• Instruction tuning
+• Reinforcement learning
+This lecture: inference-time techniques 
+for scaling token budget
+
+Outline
+• Part 1: Introduction to basic prompting techniques
+• Use more token budget to generate a single solution
+• Part 2: Search and selection from multiple candidates
+• Increase the width to explore the solution space
+• Part 3: Iterative self-improvement
+• Increase the depth to reach the final solution
+
+Outline
+• Part 1: Introduction to basic prompting techniques
+• Use more token budget to generate a single solution
+• Part 2: Search and selection from multiple candidates
+• Increase the width to explore the solution space
+• Part 3: Iterative self-improvement
+• Increase the depth to reach the final solution
+
+Background: standard prompting
+Wei et al., Chain-of-Thought Prompting Elicits Reasoning in Large Language Models, NeurIPS 2022.
+Nye et al., Show Your Work: Scratchpads for Intermediate Computation with Language Models, 2021.
+Exemplar
+• Before the advancement in 
+post-training techniques, standard 
+prompting performance is poor on 
+reasoning benchmarks.
+• Issue: standard few-shot exemplars 
+only provide information on the final 
+solution format, but not the rationale 
+to derive the solution.
+
+Chain-of-thought prompting: providing thoughts in the exemplars
+Wei et al., Chain-of-Thought Prompting Elicits Reasoning in Large Language Models, NeurIPS 2022.
+Nye et al., Show Your Work: Scratchpads for Intermediate Computation with Language Models, 2021.
+Exemplar
+Thought
+
+CoT performance scales with the model size
+Wei et al., Chain-of-Thought Prompting Elicits Reasoning in Large Language Models, NeurIPS 2022.
+Wei et al., Emergent Abilities of Large Language Models, TMLR 2022.
+• CoT performance improves more significantly with the 
+increase of the model size.
+• Better models benefit more with CoT generation
+• A drastic improvement on reasoning performance 
+when the model reaches a certain scale.
+• Note: these experiments used pretrained-only LLMs
+• Recent post-trained LLMs might have different 
+scaling curves, but the main conclusions still hold.
+
+Zero-shot CoT: elicit CoT generation with an instruction
+Kojima et al., Large Language Models are Zero-Shot Reasoners, NeurIPS 2022.
+“Let’s think step by step” triggers CoT generation w/o exemplars. 
+
+Zero-shot CoT significantly outperforms zero-shot performance 
+Kojima et al., Large Language Models are Zero-Shot Reasoners, NeurIPS 2022.
+
+Issue: zero-shot CoT performance is still worse than few-shot CoT
+Kojima et al., Large Language Models are Zero-Shot Reasoners, NeurIPS 2022.
+How to improve CoT performance w/o manually labeling exemplars?
+
+Q: What is the area of the square with the four vertices at (-2, 
+2), (2, -2), (-2, -6), and (-6, -2)?
+# Instruction:
+## Recall relevant exemplars:
+## Solve the initial problem:
+Model Input
+# Relevant exemplars:
+Q: What is the area of the square with a side length of 5?
+A: The area of a square is found by squaring the length of its side. 
+So, the area of this square is 5^2 = 25.  …
+# Solve the initial problem:
+To find the area of the square, we need to find the side length. 
+The length is … \sqrt{(2 - (-2))^2 + (-2 - 2)^2} = \sqrt{32}. So, the 
+area of the square is (\sqrt{32})^2 = 32. 
+Model Output
+Prompt the LLM to first recall 
+relevant exemplars, before 
+solving the test problem.
+Analogical prompting: instruct the LLM to generate exemplars
+Yasunaga, Chen, Li, Pasupat, Leskovec, Liang, Chi, Zhou, Large Language Models as Analogical Reasoners, ICLR 2024.
+
+Q: What is the area of the square with the four vertices at (-2, 
+2), (2, -2), (-2, -6), and (-6, -2)?
+# Instruction:
+## Recall relevant exemplars:
+## Solve the initial problem:
+Model Input
+# Relevant exemplars:
+Q: What is the area of the square with a side length of 5?
+A: The area of a square is found by squaring the length of its side. 
+So, the area of this square is 5^2 = 25.  …
+# Solve the initial problem:
+To find the area of the square, we need to find the side length. 
+The length is … \sqrt{(2 - (-2))^2 + (-2 - 2)^2} = \sqrt{32}. So, the 
+area of the square is (\sqrt{32})^2 = 32. 
+Model Output
+Analogical prompting: instruct the LLM to generate exemplars
+Yasunaga, Chen, Li, Pasupat, Leskovec, Liang, Chi, Zhou, Large Language Models as Analogical Reasoners, ICLR 2024.
+Benefits
+●
+Exemplars are self-generated 
+by LLMs, no manual labeling.
+●
+Exemplars are tailored to 
+individual problems.
+
+Motivation: human analogical reasoning
+• Humans are not explicitly given demonstrations every time for a new task
+• Instead, humans intrinsically recall from past relevant experience
+How to solve it, George Pólya, 1945.
+
+Example: Codeforces (prompt)
+• Besides exemplars, the LLM can also self-generate high-level knowledge
+• The generated knowledge complements the problems with broader insights
+
+Example: Codeforces (self-generated knowledge + exemplars)
+
+Example: Codeforces (solving the initial problem)
+
+0-shot
+14.8%
+50.3%
+54.0%
+61.0%
+0-shot
+CoT
+(Kojima+22)
+Few-shot
+CoT
+(Wei+22)
+This 
+work
+Math problems
+(GSM8K, text-davinci-003)
+0-shot
+8%
+9%
+15%
+0-shot
+CoT
+(Kojima+22)
+This 
+work
+Code generation
+(Codeforces, GPT3.5 turbo)
+Temporal reasoning
+(BIG-Bench, GPT3.5 turbo)
+0-shot
+40.4%
+44.8%
+57.6%
+0-shot
+CoT
+(Kojima+22)
+This 
+work
+●
+Analogical prompting outperforms 0-shot CoT and manual few-shot CoT
+Result overview
+
+Stronger LLMs are better analogical reasoners
+• Weaker LLMs benefit less from analogical prompting, though it does not hurt 
+the zero-shot performance
+• With stronger LLMs, analogical prompting outperforms CoT with 
+manually-designed or retrieved exemplars
+○The generated CoT is more tailored to the underlying LLM
+GSM8K for math reasoning
+
+Zero-shot CoT on MultiArith with text-davinci-002
+Which instructions work for CoT generation?
+Kojima et al., Large Language Models are Zero-Shot Reasoners, NeurIPS 2022.
+●
+Current LLMs are sensitive to 
+prompt design
+●
+There is no clear principle of 
+how to write optimal prompts
+●
+How to reduce the manual 
+work for writing prompts?
+
+Large language models for prompt engineering
+Zhou et al., Large Language Models are Human-Level Prompt Engineers, ICLR 2023.
+●
+Proposal generation: 
+leverage the LLM to 
+generate initial instructions.
+●
+Scoring each instruction 
+based on the prediction 
+correctness on a small set 
+of problems.
+
+Going further: LLM as the optimizer to iteratively improve the prompt
+Yang, Wang, Lu, Liu, Le, Zhou, Chen, Large Language Models as Optimizers, ICLR 2024.
+●
+Core idea: instruct the LLM to leverage the past optimization trajectory, 
+represented as sorted (solution, score) pairs
+●
+Optimizer: the LLM to propose a new instruction given old ones and task exemplars
+●
+Evaluator: the LLM to evaluate the accuracy of an instruction
+
+Example meta-prompt for GSM8K:
+I have some texts along with their corresponding scores. The texts are arranged in ascending order
+based on their scores, where higher scores indicate better quality.
+text:
+Let’s figure it out!
+score:
+61
+text:
+Let’s solve the problem.
+score:
+63
+(. . . more instructions and scores . . . )
+The following exemplars show how to apply your text: you replace <INS> in each input with your
+text, then read the input and give an output. We say your output is wrong if your output is different
+from the given output, and we say your output is correct if they are the same.
+input:
+Q: Alannah, Beatrix, and Queen are preparing for the new school year and have been given books
+by their parents. Alannah has 20 more books than Beatrix. Queen has 1/5 times more books than
+Alannah. If Beatrix has 30 books, how many books do the three have together?
+A: <INS>
+output:
+140
+(. . . more exemplars . . . )
+Write your new text that is different from the old ones and has a score as high as possible. Write the
+text in square brackets.
+exemplars
+(top) past instructions and accuracies
+Meta-prompt for prompt optimization
+
+●
+Initial instruction for prompt optimization: “Let’s solve the problem.” with acc = 60.8%.
+●
+Our best LLM-generated prompt outperforms “Let’s think step by step” by ~8%, matching the 
+few-shot CoT accuracy (80.7%) in PaLM-2 technical report.
+Results on GSM8K
+
+The accuracy increases with more optimization steps, then plateaus. 
+scorer: PaLM 2-L 
+optimizer: PaLM 2-L-IT
+scorer: text-bison
+optimizer: PaLM 2-L-IT
+Optimization graphs
+
+Going back to CoT: what CoT brings into LLM reasoning  
+• Chain-of-thought prompting: variable computation of the thought process adapting to 
+tasks of different difficulty levels
+• More complex questions -> more reasoning steps in the chain-of-thought
+• Reasoning strategies enabled by CoT
+• Decomposition
+• Planning
+• …
+• We can explicitly instruct the LLM with the desired reasoning strategies for problem solving
+
+Least-to-most prompting: easy-to-hard generalization via decomposition
+Zhou et al., Least-to-Most Prompting Enables Complex Reasoning in Large Language Models, ICLR 2023.
+
+Example: solving the SCAN compositional generalization benchmark
+Zhou et al., Least-to-Most Prompting Enables Complex Reasoning in Large Language Models, ICLR 2023.
+• SCAN: translating synthetic natural language commands into actions sequences
+• Length split: action sequences in the test set are longer than training samples
+• Least-to-most prompting can achieve nearly perfect test accuracy with 0.1% 
+training samples as exemplars
+SCAN length split
+
+Example: solving text-to-code compositional generalization benchmarks
+Drozdov*, Scharli*, Akyurek, Scales, Song, Chen, Bousquet, Zhou, Compositional Semantic Parsing with Large Language Models, ICLR 2023.
+Keyers et al., Measuring Compositional Generalization: A Comprehensive Method on Realistic Data, ICLR 2020.  
+Question: Did M1 star M2 , star M3 , and star a art director and editor of M0?
+SPARQL:    SELECT count(*) WHERE
+   { ?x0 edited M0 . ?x0 art directed M0 . M1 starred ?x0 . M1 starred M2 . M1 starred M3 }
+Question: What was produced by a art director that M1 and M2 employed?
+SPARQL:    SELECT DISTINCT WHERE
+  { ?x0 produced by ?x1 . ?x1 a art director . M0 employed ?x1 . M1 employed ?x1 }
+Examples in CFQ (Compositional Freebase Questions) benchmark
+• Challenge: more complicated grammar with a larger vocabulary
+• A single prompt might not be enough to cover all grammar rules
+• Decomposition enables customized prompt for each subproblem
+
+Our approach: dynamic least-to-most prompting
+Drozdov*, Scharli*, Akyurek, Scales, Song, Chen, Bousquet, Zhou, Compositional Semantic Parsing with Large Language Models, ICLR 2023.
+
+Evaluation on CFQ
+Drozdov*, Scharli*, Akyurek, Scales, Song, Chen, Bousquet, Zhou, Compositional Semantic Parsing with Large Language Models, ICLR 2023.
+Keyers et al., Measuring Compositional Generalization: A Comprehensive Method on Realistic Data, ICLR 2020.  
+
+Self-Discover: instruct the LLM to compose reasoning structures for each task
+Zhou, Pujara, Ren, Chen, Cheng, Le, Chi, Zhou, Mishra, Zheng, SELF-DISCOVER: Large Language Models Self-Compose Reasoning Structures, NeurIPS 2024.
+• Different reasoning tasks require different reasoning structures, i.e., different 
+ways to decompose the task and plan for each stage.
+• Self-Discover composes task-specific reasoning structures without 
+manually-written demonstrations.
+
+Self-Discover: instruct the LLM to compose reasoning structures for each task
+Zhou, Pujara, Ren, Chen, Cheng, Le, Chi, Zhou, Mishra, Zheng, SELF-DISCOVER: Large Language Models Self-Compose Reasoning Structures, NeurIPS 2024.
+
+Summary
+• Chain-of-thought generation: variable computation of the thought process adapting to 
+tasks of different difficulty levels
+• How to improve the CoT performance at inference time
+• Few-shot prompting with labeling of thoughts
+• Instruction prompting to trigger CoT generation
+• Instruct the LLM to automate the prompt design
+• Note: the best practice to interact with LLMs evolves over time
+• The principles of how to discover good prompting strategies for reasoning hold true
+• Encourage longer CoT for complex tasks
+• Support reasoning strategies required for the task
+
+Outline
+• Part 1: Introduction to basic prompting techniques
+• Use more token budget to generate a single solution
+• Part 2: Search and selection from multiple candidates
+• Increase the width to explore the solution space
+• Part 3: Iterative self-improvement
+• Increase the depth to reach the final solution
+
+What is missing so far?
+• We should not limit the LLM to generate only one solution per problem!
+• Exploring multiple branches allows the LLM to recover from mistakes in a single generation
+• Generate multiple candidate solutions per problem
+• Generate multiple potential next reasoning steps given the current (partial) thought
+• Challenge: how to select the best response from multiple candidates?
+• In most cases, we do not have an oracle scorer at inference time
+
+Self-Consistency: select the response with the most consistent final answer
+Wang et al., Self-Consistency Improves Chain of Thought Reasoning in Language Models, ICLR 2023.
+Note: the selection is only based on the final answer, the reasoning paths do not need 
+to be the same across different sampled responses.
+
+Self-Consistency boosts the performance across models and benchmarks 
+
+Self-Consistency performance scales with more samples
+• Sample-and-Rank baseline: select the response with the highest log probability
+• Self-Consistency performance scales much better than probability-based ranking
+• Unless the model is trained to be a good verifier (will cover later)
+
+Sampling diverse responses is crucial to self-consistency
+• Beam search: keep top k paths with the highest probabilities in the decoding process
+• Ensemble baselines: apply greedy decoding for all prompt variants of a problem
+• Self-Consistency using sampling scales with more samples
+• The sampling method needs to ensure the response diversity, e.g., using a high 
+temperature, nucleus sampling, etc.
+
+Consistency is highly correlated with the accuracy
+If more sampled responses lead to 
+the same final answer:
+• The LLM is more certain with its 
+predicted conclusion
+• The aggregated solution is more 
+likely to be correct
+
+Consistency-based code selection in AlphaCode
+Li et al., Competition-level Code Generation with AlphaCode, Science 2022. 
+Clustering predicted code based on the consistency on execution results
+
+• The problem includes: (1) long and complicated text description; and (2) a few 
+input-output pairs as test cases
+• The code needs to pass both given and held-out test cases
+Problem setting: competitive programming
+Li et al., Competition-level Code Generation with AlphaCode, Science 2022. 
+
+• We can filter programs that fail the given test cases, but the remaining programs 
+might still fail on the held-out test cases
+• Train a model to generate new test inputs
+Clustering by execution on generated inputs
+• Execute sampled programs on all generated inputs
+• Cluster all programs with the same outputs together
+• Assumption: all programs in the same cluster are semantically equivalent if the 
+generated inputs are diverse and of high quality
+• Sample 1 program from each of the 10 largest clusters
+Text description
+…
+Example tests
+…
+Generated 
+Inputs
+…
+
+Results on Codeforces
+Oracle selection
+1B encoder-decoder model
+• Clustering provides additional 
+performance gain over filtering only
+• Still a gap from the oracle selection
+
+Limitation of self-consistency decoding: require an answer extraction process
+Wang et al., Self-Consistency Improves Chain of Thought Reasoning in Language Models, ICLR 2023.
+Can we enable consistency-based decoding for free-form generation?
+
+Universal self-consistency: ask the LLM to perform consistency-based selection
+Chen*, Aksitov*, Alon, Ren, Xiao, Yin, Prakash, Sutton, Wang, Zhou, Universal Self-Consistency for Large Language Model Generation, 2023. 
+
+Results
+●
+Universal Self-Consistency 
+(USC) improves the 
+performance on open-ended 
+generation (summarization, 
+QA), where the original 
+self-consistency is 
+inapplicable.
+●
+USC matches self-consistency 
+performance on math 
+reasoning and coding.
+●
+USC does not require 
+answer extraction and 
+code execution.
+●
+USC performance is bounded 
+by the long-context capability.
+
+Improve further over consistency-based selection: training LLM rankers
+Cobbe et al., Training Verifiers to Solve Math Word Problems, 2021.
+Lightman et al., Let’s Verify Step by Step, 2023.
+Two types of LLM-based verifiers/reward models
+•
+Outcome-supervised Reward Model (ORM): verify at the solution level
+•
+Process-supervised Reward Model (PRM): verify at the step level for each solution 
+
+(Strong) LLM-based verifiers outperform consistency-based selection
+Lightman et al., Let’s Verify Step by Step, 2023.
+•
+Process-supervised reward 
+model (PRM) scales better 
+with more samples
+•
+Note: the performance is 
+highly dependent on the 
+verifier quality
+•
+The same verifier might 
+not generalize across tasks
+
+So far: response selection only after the full responses are generated 
+•
+This does not fully utilize a step-wise scorer!
+•
+LLM + tree search: prioritize the exploration of more promising partial solutions
+Yao et al., Tree of Thoughts: Deliberate Problem Solving with Large Language Models, NeurIPS 2023.
+
+Tree-of-thought example: game of 24
+At each step:
+•
+Thought generation: prompt the LLM to propose possible next thinking steps
+•
+Thought evaluation: prompt the LLM to evaluate how promising the current state is 
+
+Voting-based state evaluation
+LLM selects the best state among the candidates
+•
+LLM votes multiple times, then selects the majority vote as the final choice
+
+Tree-of-thought results: game of 24
+•
+ToT with breadth-first search (BFS) scales better than standard prompting and CoT 
+w.r.t. token budget
+•
+Going further: we can integrate more advanced search algorithms, e.g., Monte-Carlo 
+Tree Search (MCTS)
+•
+Need a good LLM + prompt design for self-evaluation
+
+Summary
+• We can further scale the inference-time compute by sampling multiple branches in the 
+solution space
+• Consistency-based selection: a simple, effective and general principle
+• Self-Consistency: marginalize out reasoning paths and select based on the final answer
+• Code generation: reranking based on execution consistency
+• When LLM self-evaluation works well: search in the partial solution space can help
+
+Outline
+• Part 1: Introduction to basic prompting techniques
+• Use more token budget to generate a single solution
+• Part 2: Search and selection from multiple candidates
+• Increase the width to explore the solution space
+• Part 3: Iterative self-improvement
+• Increase the depth to reach the final solution
+
+Even the best LLMs still make (sometimes obvious) mistakes…
+• But humans also tend to make (sometimes trivial) mistakes at first thought!
+• Sampling multiple solutions can reduce mistakes from a single prediction, but it is still 
+suboptimal
+• No feedback loop to correct the mistakes after a complete solution is generated
+• Inference-time self-improvement: LLM iteratively improves its own response for the 
+given task
+
+Reflexion and Self-Refine
+Shinn et al., Reflexion: Language Agents with Verbal Reinforcement Learning, NeurIPS 2023.
+Madaan et al., Self-Refine: Iterative Refinement with Self-Feedback, NeurIPS 2023.
+•
+LLM generates feedback on its output. Use external evaluation when available.
+•
+LLM self-refines its output given both internal feedback and external evaluation.
+
+Self-reflection and self-refinement work with good (external) evaluation
+Shinn et al., Reflexion: Language Agents with Verbal Reinforcement Learning, NeurIPS 2023.
+•
+Reflexion improves on tasks with effective evaluation heuristics, e.g., ALFWorld.
+•
+On HotPotQA: the external evaluation gives the answer correctness at each reflection step.
+
+Self-debugging is a natural workflow for code generation
+Chen, Lin, Schärli, Zhou, Teaching Large Language Models to Self-Debug, ICLR 2024. 
+Code execution provides natural external feedback: humans often debug better 
+within an IDE 
+
+Simple: a short universal feedback 
+for all wrong code
+Unit test feedback: include the 
+execution results
+Code explanation: line-by-line 
+explanation of the implementation
+Trace: line-by-line simulation of 
+the execution trace
+Self-debugging with different feedback formats
+
+Self-debugging results
+●
+Self-debugging consistently boosts the performance across different LLMs
+●
+More informative feedback further improves the debugging performance
+
+How does self-correction work for QA-style reasoning tasks?
+Shinn et al., Reflexion: Language Agents with Verbal Reinforcement Learning, NeurIPS 2023.
+Kim et al., Language Models can Solve Computer Tasks, NeurIPS 2023.
+•
+Some prior work show improvement with self-correction, but using an oracle verifier.
+•
+Oracle verifier is not available in most use cases. How do LLMs perform without such 
+external feedback?
+
+Self-correction without oracle feedback hurts the reasoning performance
+Huang, Chen, Mishra, Zheng, Yu, Song, Zhou, Large Language Models Cannot Self-Correct Reasoning Yet, ICLR 2024.
+●
+Oracle: utilize the ground truth 
+answer for correction
+●
+Without oracle feedback, LLMs 
+need to judge the response 
+correctness themselves
+●
+LLMs can wrongly judge the 
+correctness of its predictions, 
+leading to worse performance 
+after self-correction
+
+General-purpose feedback prompt variants do not improve the performance
+Edit the feedback prompt affects the self-correction behavior (tendency to keep the 
+initial response), but none of them significantly improves over the initial performance.
+
+Multi-agent debate does not improve over self-consistency
+Huang, Chen, Mishra, Zheng, Yu, Song, Zhou, Large Language Models Cannot Self-Correct Reasoning Yet, ICLR 2024.
+Du et al., Improving Factuality and Reasoning in Language Models through Multiagent Debate, 2023.
+●
+Multi-agent debate: prompt the LLM 
+to review multiple responses and 
+give an updated one.
+●
+Recall: self-consistency selects the 
+response with the most common 
+final answer.
+●
+Without a good evaluator, 
+multi-agent debate does not 
+effectively utilize the token budget.
+
+Putting everything together: how to best utilize the token budget
+Snell et al., Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters, 2024. 
+●
+How to balance the inference budget for generating multiple samples
+●
+In parallel or sequentially?
+●
+This is mostly a model-specific and task-specific empirical question, depending on the 
+model’s self-reflection and correction abilities.
+
+Another factor for optimizing inference cost: model size
+Wu et al., Inference Scaling Laws: An Empirical Analysis of Compute-Optimal Inference for LLM Problem-Solving, 2024. 
+•
+With the same FLOPs budget, we can sample more solutions from a lighter model.
+•
+The optimal model with different inference budget can be different
+
+What we covered in this lecture
+• Part 1: Introduction to basic prompting techniques
+• Use more token budget to generate a single solution
+• Part 2: Search and selection from multiple candidates
+• Increase the width to explore the solution space
+• Part 3: Iterative self-improvement
+• Increase the depth to reach the final solution
+The best practice to interact with an LLM should be adapted according 
+to its capabilities.
+
+General principle of how to design effective reasoning techniques  
+• The Bitter Lesson from Richard Sutton (again) is an important guideline for designing 
+reasoning techniques, including both inference-time and training-time algorithms.
+• “One thing that should be learned from the bitter lesson is the great power of 
+general purpose methods, of methods that continue to scale with increased 
+computation even as the available computation becomes very great.”
+• “We want AI agents that can discover like we can, not which contain what 
+we have discovered. Building in our discoveries only makes it harder to see 
+how the discovering process can be done.”
+
+Thanks!
+• Part 1: Introduction to basic prompting techniques
+• Use more token budget to generate a single solution
+• Part 2: Search and selection from multiple candidates
+• Increase the width to explore the solution space
+• Part 3: Iterative self-improvement
+• Increase the depth to reach the final solution
+The best practice to interact with an LLM should be adapted according 
+to its capabilities.

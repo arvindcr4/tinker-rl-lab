@@ -1,0 +1,9 @@
+task	hypothesis	B_perm	p_perm_two_sided	p_param_one_sided	n_pairs
+arithmetic_easy	H1_abs_rho_dR_dL_DR_smaller	50000	0.8137	0.5000	5
+arithmetic_easy	H2_abs_rho_len_lag1_DR_smaller	50000	0.5004	0.4062	5
+arithmetic_easy	H3_late_eff_DR_larger	50000	0.0633	0.0312	5
+arithmetic_easy	H4_rho_dZ_dL_DR_lessneg	50000	0.6258	0.4062	5
+gsm8k_cot	H1_abs_rho_dR_dL_DR_smaller	50000	1.0000	0.6250	3
+gsm8k_cot	H2_abs_rho_len_lag1_DR_smaller	50000	0.4990	0.2500	3
+gsm8k_cot	H3_late_eff_DR_larger	50000	0.2527	0.1250	3
+gsm8k_cot	H4_rho_dZ_dL_DR_lessneg	50000	0.2519	0.1250	3

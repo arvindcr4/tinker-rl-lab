@@ -1,0 +1,6 @@
+hypothesis	n_tasks	n_favours	n_marginal	n_null	n_dir_positive	n_dir_negative	direction_consistent	binom_p_two_sided_strict	binom_p_one_sided_signtest
+H1_abs_rho_dR_dL_DR_smaller	2	0	0	2	0	2	no	1.0000	0.2500
+H2_abs_rho_len_lag1_DR_smaller	2	0	0	2	0	2	no	1.0000	0.2500
+H3_late_eff_DR_larger	2	1	0	1	2	0	yes	0.5000	0.2500
+H4_rho_dZ_dL_DR_lessneg	2	0	0	2	2	0	no	1.0000	0.2500
+GLOBAL_sign_test_over_all_8_paired	8	1	0	7	8	0	yes	0.0039	0.0039

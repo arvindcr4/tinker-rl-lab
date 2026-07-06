@@ -1,0 +1,32 @@
+{
+  "eta2_method_hi_anchor": 0.004903,
+  "eta2_method_lo_anchor": 0.000112,
+  "eta2_method_pt_anchor": 0.000503,
+  "n_declared_total": 19,
+  "n_deltas_audited": 17,
+  "n_per_rows": 38,
+  "n_sign_match_sig_total": 10,
+  "n_sign_match_total": 13,
+  "supports_rate_n2_last10": 0.16666666666666666,
+  "supports_rate_zvf130_5seed": 1.0,
+  "tier_to_verdict": {
+    "A": {
+      "CONTRADICTS": 2,
+      "NEUTRAL": 3,
+      "SUPPORTS": 4,
+      "UNCLAIMED": 9
+    },
+    "B": {
+      "CONTRADICTS": 1,
+      "NEUTRAL": 3,
+      "SUPPORTS": 6,
+      "UNCLAIMED": 10
+    }
+  },
+  "verdict_counts_global": {
+    "CONTRADICTS": 3,
+    "NEUTRAL": 6,
+    "SUPPORTS": 10,
+    "UNCLAIMED": 19
+  }
+}

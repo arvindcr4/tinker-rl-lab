@@ -1,0 +1,6 @@
+# Pillar 2 iter86 sensitivity to consecutive-step persistence K.
+# Source: scripts/zvf_iter86.py
+k_persist	tau_optimal_at_C10	n_false_stop_at_optimal	n_missed_at_optimal	n_correct_stop_at_optimal	cost	compute_saved_steps	compute_saved_frac
+1	0.6	0	2	23	2	833	0.150361
+3	0.6	0	12	13	12	589	0.106318
+5	0.5	1	0	25	10	1259	0.227256

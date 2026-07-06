@@ -1,0 +1,108 @@
+{
+  "iter": 73,
+  "n_cells": 98,
+  "v1_total_h_bits": 11.412744386555076,
+  "v1_stack_discriminative_h_bits": 4.798034542439858,
+  "v2_stack_axes_h_bits": 6.860715761110488,
+  "v2_total_h_bits": 18.273460147665563,
+  "v2_stack_discriminative_h_bits": 11.658750303550345,
+  "v2_truly_new_h_bits": 2.9939855872500067,
+  "v1_placebo_items": 3,
+  "v1_varying_items": 3,
+  "v2_total_weight_pts": 35,
+  "v2_truly_new_weight_pts": 20,
+  "spearman_v1": {
+    "zvf": 0.43524919064704104,
+    "reward": 0.2536322303439457,
+    "pcd": 0.39912422014338106,
+    "mean_len": 0.214116377288143
+  },
+  "spearman_v2": {
+    "zvf": 0.3863965114427018,
+    "reward": 0.3102250133445343,
+    "pcd": 0.3686451466889062,
+    "mean_len": 0.28365600518461725
+  },
+  "spearman_v2_tn": {
+    "zvf": 0.3366510023892854,
+    "reward": 0.3250529257046262,
+    "pcd": 0.34049033032147924,
+    "mean_len": 0.3298932469434369
+  },
+  "per_axis_1d_rho": {
+    "model_family": {
+      "n_unique": 2,
+      "rho_zvf": 0.018663278342840796,
+      "rho_reward": 0.3490241893127877,
+      "rho_pcd": 0.07481252544901598
+    },
+    "task_slice": {
+      "n_unique": 3,
+      "rho_zvf": 0.3668410490681967,
+      "rho_reward": 0.28493259003487564,
+      "rho_pcd": 0.3592334371207753
+    },
+    "G": {
+      "n_unique": 5,
+      "rho_zvf": 0.19330447298030037,
+      "rho_reward": -0.013947321180568023,
+      "rho_pcd": 0.10444674232694283
+    },
+    "temperature": {
+      "n_unique": 2,
+      "rho_zvf": 0.02309426997223101,
+      "rho_reward": 0.009727080851420511,
+      "rho_pcd": 0.04202884710949587
+    },
+    "seed": {
+      "n_unique": 2,
+      "rho_zvf": -0.044517839905442926,
+      "rho_reward": -0.026281202761198448,
+      "rho_pcd": -0.03122558475169974
+    }
+  },
+  "badge_v1_mean": 67.5,
+  "badge_v2_mean": 102.5,
+  "badge_v2_tn_mean": 87.5,
+  "badge_uplift_v2_pts": 35,
+  "badge_uplift_v2_tn_pts": 20,
+  "boot_ci": {
+    "rho_v1_zvf": [
+      0.43524919064704104,
+      -0.19770543806274832,
+      0.19466907712018933
+    ],
+    "rho_v2_zvf": [
+      0.3863965114427018,
+      -0.19839767725469373,
+      0.20282966013709774
+    ],
+    "rho_v2tn_zvf": [
+      0.3366510023892854,
+      -0.19838617728343266,
+      0.19282579597402277
+    ],
+    "rho_v1_reward": [
+      0.2536322303439457,
+      -0.19898480307138094,
+      0.2015446859777793
+    ],
+    "rho_v2_reward": [
+      0.3102250133445343,
+      -0.19008593318497616,
+      0.20186622006223545
+    ],
+    "rho_v2tn_reward": [
+      0.3250529257046262,
+      -0.19709741550070944,
+      0.200119577997148
+    ]
+  },
+  "fingerprint_length_v1": 7,
+  "fingerprint_length_v2": 12,
+  "fingerprint_length_v2_tn": 10,
+  "verdict_H1": "v2 stack axes add +6.86 bits (>0); v2 total info budget = 18.27 bits (vs v1 11.41 bits), +60.1% uplift",
+  "verdict_H2": "v2 fingerprint x |dzvf| rho = +0.3864 vs v1 = +0.4352 (delta = -0.0489); v2_tn fingerprint rho = +0.3367 (delta vs v1 = -0.0986).  Adding ALL 5 axes does NOT strengthen coupling; adding ONLY the 3 truly-new axes (model_family + temperature + seed) WEAKENS coupling by -0.0986.  The 2 redundant axes (task_slice, G) are the ones that drive any v2 coupling strength.",
+  "verdict_H3": "badge uplift is deterministic +35 pts (v2) / +20 pts (v2_tn) on every cell; bootstrap CI on per-cell uplift is degenerate.",
+  "verdict_H4_per_axis": "Per-axis 1-D Hamming rho with |dzvf|: model_family=+0.0187, task_slice=+0.3668, G=+0.1933, temperature=+0.0231, seed=-0.0445"
+}

@@ -1,0 +1,7 @@
+task_slice	metric	n_cells	eta2_G_point	eta2_G_boot_mean	eta2_G_ci_lo	eta2_G_ci_hi	sig_strict_ub_<=_0.05	sig_loose_ub_<=_0.10	verdict
+gsm8k_easy	zvf	24	0.8872	0.9076	0.8302	0.9642	no	no	DOMINANT
+gsm8k_easy	mean_reward	24	0.1388	0.2319	0.06	0.4986	no	no	MODERATE
+gsm8k_hard	zvf	40	0.6406	0.668	0.5296	0.7849	no	no	DOMINANT
+gsm8k_hard	mean_reward	40	0.0006	0.1031	0.0132	0.2728	no	no	SMALL
+humaneval_subset	zvf	34	0.0	0.0	0.0	0.0	yes	yes	SMALL
+humaneval_subset	mean_reward	34	0.0	0.0	0.0	0.0	yes	yes	SMALL

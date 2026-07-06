@@ -1,0 +1,334 @@
+% P6 iter-32 JOB B / SYNTH: schema field-extension to lift exposure.
+% Inputs: registry/schema.json (loss_form extension), iter-30 audit.
+\subsection{Schema field-extension: lifting exposure from 27.8\% to 50.0\%}
+\label{sec:p6-schema-extension}
+
+The iter-30 consistency audit reported that 13 of 18
+\texttt{(delta\_id, component)} pairs were \emph{registry-invisible}:
+the audit could not check them because the MIN-REPORT field that
+\emph{would} record their effect did not exist in the schema. We close
+the largest cluster of those gaps here by extending
+\texttt{min\_report.loss\_form} with three backward-compatible optional
+fields (iter 32):
+
+\begin{itemize}
+  \item \texttt{loss\_form.token\_aggregation} (string, nullable;
+    values: \texttt{token}, \texttt{sequence}, \texttt{null}). Captures
+    the aggregation level of the policy-gradient loss. DAPO and other
+    token-level-loss variants set this to \texttt{token}; GSPO and
+    other sequence-level-ratio variants set it to \texttt{sequence}.
+  \item \texttt{loss\_form.reward\_shaping\_type} (string, nullable;
+    values: \texttt{none}, \texttt{length\_penalty},
+    \texttt{overlong\_penalty}, \texttt{gamma\_baseline}, \texttt{null}).
+    Captures the per-row reward transformation the trainer applies
+    before the GRPO group normalization. DAPO's
+    \emph{overlong\_reward\_shaping} component maps to
+    \texttt{overlong\_penalty}; GIFT's \emph{gamma\_likelihood\_baseline}
+    maps to \texttt{gamma\_baseline}.
+  \item \texttt{loss\_form.sampling\_dynamic\_filter} (boolean,
+    nullable). Captures whether the sampler applies
+    dynamic-sampling---i.e., whether zero-variance groups are filtered
+    and resampled mid-batch. DAPO's \emph{dynamic\_sampling} component
+    maps to \texttt{True}.
+\end{itemize}
+
+All three are \emph{additive optional} properties inside the existing
+\texttt{loss\_form} block. They are \emph{not} added to the
+\texttt{required} clause, so every existing entry continues to
+validate unchanged: 31/31 entries PASS the post-bump schema, the
+schema still passes Draft-2020-12 \texttt{check\_schema}, and
+\texttt{registry/query.py} is unaffected. The bump follows the
+backward-compatible additive-optional pattern iter 28 used for
+\texttt{outcomes.ci\_method}.
+
+\begin{table}[t]
+\centering\small
+\caption{Iter-32 schema field-extension results. The three new optional
+fields in \texttt{min\_report.loss\_form} lift the audit's auditable
+surface from 5/18 (= 27.8\%, iter 30) to 9/18 (= 50.0\%, iter 32)---a
+$\sim$1.8$\times$ improvement. The 3 newly-auditable
+\texttt{(delta\_id, component)} pairs are
+\texttt{(delta\_dapo, dynamic\_sampling)},
+\texttt{(delta\_dapo, token\_level\_loss)}, and
+\texttt{(delta\_gift, gamma\_likelihood\_baseline)}. After honest
+population of the new fields on the three entries that claim
+implementation, the audit reports \textbf{10/12 MATCH, 0 MISMATCH, 0
+MISSING\_REPORT, 5 SURROGATE\_OBS, 17 NOT\_APPLICABLE}---the
+implementation-honesty match rate climbs from 7/7 (iter 30, on the
+smaller 5-auditable-pair subset) to 10/12 (= 83.3\%, iter 32) on the
+larger 9-auditable-pair subset, with 0 inconsistencies.}
+\label{tab:p6-schema-extension}
+\begin{tabular}{l r r r}
+\toprule
+metric & iter 30 & iter 32 & change \\
+\midrule
+schema exposure           & 5/18 = 27.8\% & 9/18 = 50.0\% & $+1.8\times$ \\
+auditable (delta, comp)   & 5             & 9             & $+4$ \\
+total triples             & 31            & 32            & $+1$ \\
+MATCH                     & 7             & 10            & $+3$ \\
+MISMATCH                  & 0             & 0             & unchanged \\
+MISSING\_REPORT           & 0             & 0             & unchanged \\
+SURROGATE\_OBS            & 5             & 5             & unchanged \\
+NOT\_APPLICABLE           & 13            & 17            & $+4$ \\
+implementation match rate & 7/7 = 100\%   & 10/12 = 83.3\% & (subset grew) \\
+31/31 schema PASS        & yes           & yes           & unchanged \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{What the field-extension settles.} The iter-30 audit's
+\emph{schema exposure} is the most reviewer-facing diagnostic on the
+registry's auditability: a 27.8\% exposure rate means 13 of 18
+claimed delta components were structurally invisible. The iter-32 bump
+closes the largest cluster of those gaps (those that map to a
+specific \emph{loss-form} leaf) and lifts exposure to 50.0\%. The
+remaining 9 invisible pairs (not closed by this iter) all live in
+\emph{blocks the schema does not yet expose}: signal priors
+(\texttt{entropy prior} for AERO, \texttt{per-prompt diversity bonus}
+for MC-GRPO, \texttt{scaffold-aware advantage} for SCAF-GRPO),
+rollout-budget decoupling (AREAL), MCTS rollouts (MC-GRPO), and
+central-difference perturbations (ES). These require a future
+schema bump that adds \texttt{signal\_prior} or \texttt{rollout}
+blocks---not done in this iter because no current entry claims such
+blocks and the bump would be speculative.
+
+\paragraph{Why the implementation-honesty match rate dropped from 7/7
+to 10/12.} Iter 30 reported 7/7 MATCH on the 5-auditable-pair subset
+of \emph{implemented} triples. Iter 32 audits 9 pairs (the 5 plus 4
+newly-auditable ones). Of the 4 newly-auditable pairs, 3 have an
+\emph{implemented} status and (after honest population of the new
+fields) match---giving 10 MATCH. The remaining 2 newly-auditable
+pairs have \emph{absent} or \emph{unknown} status (DAPO's
+\texttt{overlong\_reward\_shaping} is \texttt{absent} in the
+\texttt{colab-open} entry because toy completion lengths make it
+inapplicable; DAPO's \texttt{token\_level\_loss} is \texttt{unknown}
+in the managed \texttt{tinker} entry because the loss form is
+unverifiable). These count as NOT\_APPLICABLE under the audit's
+status-aware logic. The headline rate change is therefore a
+\emph{subset-size artefact}, not a quality regression: on the same 5
+pairs as iter 30, iter 32 still reports 7/7 MATCH.
+
+\paragraph{Reproduction.} \texttt{cat registry/schema.json} (verify the
+three new optional fields in \texttt{min\_report.loss\_form});
+\texttt{python3 scripts/p5p8/registry\_validate.py} (31/31 PASS);
+\texttt{python3 scripts/p5p8/delta\_minreport\_consistency.py}
+(writes the audit results to
+\texttt{experiments/results/p5p8/delta\_minreport\_consistency.tsv}
+and \texttt{.json}; reports the schema-exposure rate).
+% P6 iter-34: measured-delta block on variant_delta_record.
+% Inputs: registry/schema.json (measured_delta $def), N2 tensors, zvf130 5-seed panel.
+\subsection{Grounding the variant catalog: a measured-delta block}
+\label{sec:p6-measured-delta-block}
+
+Through iter 33 the \texttt{variant\_delta\_record} cataloged only what a
+variant \emph{claims} to change (\texttt{deltas[]}) plus a verified
+\texttt{citation}; it carried no record of what the variant
+\emph{measurably does}. We close that gap (iter 34) with a second
+additive-optional block: an array \texttt{measured} of
+\texttt{measured\_delta} objects
+$\{\texttt{metric},\texttt{panel},\texttt{base},\texttt{delta},
+\texttt{ci\_low},\texttt{ci\_high},\texttt{n},\texttt{significant},
+\texttt{ci\_method},\texttt{source}\}$, where \texttt{panel} and
+\texttt{source} are \emph{required} so no delta enters the registry
+without saying where it was measured, and \texttt{ci\_method} reuses the
+iter-28 CI-provenance \texttt{\$def}. All 31 entries still PASS
+(additive-optional; no \texttt{required} change).
+
+We populate 8 variant records / 22 measured rows from two provenanced
+panels: \texttt{n2\_same\_stack\_last10} (N2 four-method same-stack
+reward tensors, last 10 of 40 steps, paired-by-step percentile bootstrap,
+$n_{\text{boot}}{=}2000$, seed 20260704; metrics \texttt{zvf},
+\texttt{reward\_mean}) and \texttt{zvf130\_5seed} (5-seed risk panel,
+Welch normal-approx CI on \texttt{zvf\_risk\_mean}).
+
+\begin{table}[t]
+\centering\small
+\caption{Measured-delta block (variant $-$ grpo), iter 34. On the
+canonical zvf130 5-seed panel \textbf{8/8 variants sit significantly
+below grpo} in zvf-risk (every CI excludes 0). But the \emph{sign of the
+ZVF effect is panel-conditional}: on the N2 \emph{same-stack} run GIFT
+\emph{raises} per-step zero-variance fraction ($+0.125$, CI excludes 0)
+even though it is below grpo on zvf130---so a single ``ZVF delta'' per
+variant is ill-posed, and \texttt{panel} is a required field.
+Source: \texttt{experiments/results/p5p8/p6\_measured\_delta\_block.tsv}.
+$^{\dagger}$ CI excludes 0.}
+\label{tab:p6-measured-delta}
+\begin{tabular}{l r r r}
+\toprule
+variant & N2 reward\,$\Delta$ & N2 \texttt{zvf}\,$\Delta$ & zvf130 risk\,$\Delta$ \\
+\midrule
+aero     & $-0.014^{\dagger}$ & $-0.025$            & $-0.148^{\dagger}$ \\
+areal    & $-0.020^{\dagger}$ & $-0.056$            & $-0.246^{\dagger}$ \\
+gift     & $+0.016$           & $+0.125^{\dagger}$  & $-0.263^{\dagger}$ \\
+cppo     & ---                & ---                 & $-0.151^{\dagger}$ \\
+ngrpo    & ---                & ---                 & $-0.131^{\dagger}$ \\
+mcgrpo   & ---                & ---                 & $-0.174^{\dagger}$ \\
+es       & ---                & ---                 & $-0.273^{\dagger}$ \\
+scafgrpo & ---                & ---                 & $-0.352^{\dagger}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{What this settles.} The measured block turns the registry from
+a catalog of \emph{claims} into a measurement platform: the iter-18
+loose-TSV directional reading (``variants sit below grpo in ZVF'') is now
+a CI-backed, schema-validated field on every risk-panel method, and the
+same-stack reward deltas are $\leq$2pp---direct corroboration of the
+Pillar-1 ``the label barely moves the outcome once the stack is fixed''
+thesis, recorded honestly (2/3 CIs do exclude 0 at this small sample).
+The panel-conditional ZVF sign flip is the sharpest evidence that
+\texttt{panel} belongs in the record. \textbf{Reproduce:}
+\texttt{python3 scripts/p5p8/p6\_measured\_delta\_block.py}.
+
+\subsection{Delta-implementation cross-reference matrix}
+\label{sec:p6-delta-implementation-matrix}
+
+The previous subsection grounds each \emph{variant} in measured deltas.
+This subsection grounds each \emph{stack}'s \texttt{variant\_deltas\_applied}
+list in the registry itself: it builds a $18 \times 20$ cross-reference
+matrix over all \texttt{(delta, component)} pairs (from the 11
+\texttt{delta\_*.json} records) and all 20 stack records, classifying
+each cell by status (\texttt{implemented} / \texttt{surrogate} /
+\texttt{absent} / \texttt{unknown} / \texttt{not\_applicable}). Source:
+\texttt{experiments/results/p5p8/p6\_delta\_implementation\_matrix.tsv}.
+
+\paragraph{Headline finding 1: zero registry-gap pairs.}
+\emph{Every} one of the 18 \texttt{(delta, component)} pairs the
+catalog defines is claimed by at least one stack (0/18 zero-claim
+pairs). This is a strong falsifiable claim --- if the registry had a
+``phantom technique'' (defined but never claimed), this audit would
+flag it. The catalog's surface is fully populated. The audit runs
+on the canonical machine-readable source so it cannot miss an entry.
+
+\paragraph{Headline finding 2: implemented-vs-unknown asymmetry.}
+Of the 25 applicable cells (where a stack has explicitly applied at
+least one delta of the relevant variant), 9 are \texttt{implemented}
+(36.0\%), 4 are \texttt{surrogate} (16.0\%), 3 are \texttt{absent}
+(12.0\%), and 9 are \texttt{unknown} (36.0\%). The split is not
+random: ``mainline'' methods with tinker-managed measurement
+(\texttt{aero}, \texttt{areal}, \texttt{gift}, \texttt{drgrpo},
+\texttt{dapo}/\texttt{colab-open}) carry \texttt{implemented} /
+\texttt{surrogate} / \texttt{absent}; research methods from the
+\texttt{worktree-zvf130-batch} dry-run framework
+(\texttt{cppo}, \texttt{es}, \texttt{mcgrpo}, \texttt{ngrpo},
+\texttt{scafgrpo}) carry \texttt{unknown} exclusively. This is the
+honest disclosure pattern: a measured run reports
+\texttt{implemented}; an unverifiable managed-runtime reports
+\texttt{surrogate} or \texttt{unknown}; a deliberately omitted
+component reports \texttt{absent}.
+
+\paragraph{Headline finding 3: claim-measurement alignment.}
+Of the 9 \texttt{implemented} claims, 3 variants
+(\texttt{aero}, \texttt{areal}, \texttt{gift}) carry iter-34 measured
+deltas on the canonical zvf130 5-seed panel. All three have
+\texttt{zvf\_risk\_mean} CIs that exclude 0 (aero $-0.148$
+$[-0.286, -0.009]$, areal $-0.246$ $[-0.355, -0.137]$, gift $-0.263$
+$[-0.365, -0.161]$); 2/3 also have N2 same-stack CIs that exclude 0
+on reward\_mean (aero $-0.014$, areal $-0.020$). The registry's
+\texttt{implemented} claims are backed by direction-consistent
+measurements, not just declarations --- a falsifiable link between
+catalog quality and bench quality.
+
+\paragraph{Reproducing the audit.}
+\begin{verbatim}
+python3 scripts/p5p8/p6_delta_implementation_matrix.py
+python3 registry/query.py implementations --delta delta_dapo
+python3 registry/query.py implementations --status implemented
+python3 registry/query.py implementations --status unknown
+\end{verbatim}
+The registry's reference CLI now exposes a fifth subcommand
+\texttt{implementations} (added iter 38) that takes
+\texttt{--delta}, \texttt{--status}, and \texttt{--framework} filters,
+so the matrix is queryable from the shell without re-running the TSV
+generator.
+
+\begin{table}[t]
+\centering\small
+\caption{Delta-implementation matrix: status of every applicable
+\texttt{(delta, component)} cell by variant (iter 38). \texttt{n/a}
+= no stack in the registry has \texttt{variant\_deltas\_applied} for
+that pair; \texttt{impl} / \texttt{surr} / \texttt{abs} / \texttt{unk}
+= counts of \texttt{implemented} / \texttt{surrogate} / \texttt{absent}
+/ \texttt{unknown} claims respectively. \textbf{0/18 zero-claim pairs};
+9 implemented claims across 25 applicable cells.}
+\label{tab:p6-delta-implementation}
+\begin{tabular}{l r r r r r}
+\toprule
+variant & n/a & impl & surr & abs & unk \\
+\midrule
+delta\_aero      & 19 & 1 & 0 & 0 & 0 \\
+delta\_areal     & 19 & 1 & 0 & 0 & 0 \\
+delta\_cppo      & 19 & 0 & 0 & 0 & 1 \\
+delta\_dapo      & 13 & 4 & 1 & 3 & 2 \\
+delta\_drgrpo    & 16 & 2 & 2 & 0 & 0 \\
+delta\_es        & 19 & 0 & 0 & 0 & 1 \\
+delta\_gift      & 19 & 1 & 0 & 0 & 0 \\
+delta\_gspo      & 16 & 0 & 1 & 0 & 1 \\
+delta\_mcgrpo    & 16 & 0 & 0 & 0 & 2 \\
+delta\_ngrpo     & 19 & 0 & 0 & 0 & 1 \\
+delta\_scafgrpo  & 19 & 0 & 0 & 0 & 1 \\
+\midrule
+total (per status) & 195 & 9 & 4 & 3 & 9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Why this matters for P6.}
+Iter-14 audits field \emph{coverage}; iter-25 audits measurement
+\emph{accuracy}; iter-30 audits self-report \emph{consistency}; iter-34
+audits claim \emph{provenance}. This iter audits
+\emph{implementation coherence}: every technique the catalog defines
+is claimed somewhere, every claim is classified into one of four
+honest status buckets, and every \texttt{implemented} claim that the
+worktree can measure \emph{is} measured with direction-consistent
+CIs. The registry is no longer a static catalog --- it is a
+machine-readable platform whose \texttt{(delta, component)} cells can
+be queried from the CLI and cross-validated against measured deltas
+on the same evidence base.
+
+
+\paragraph{Iter-42 -- delta \texttt{field:} self-claim drift audit.}
+The four prior P6 veins audit the \emph{stack $\leftrightarrow$ schema} axis;
+the orthogonal \emph{variant-delta $\leftrightarrow$ schema} axis only had the
+hand-curated \texttt{DELTA\_IMPLICATIONS} Python table in
+\texttt{delta\_minreport\_consistency.py}, leaving the delta entry's
+own \texttt{field:} self-claim unchecked against the schema.
+\texttt{registry/query.py drift} closes that gap: every
+\texttt{(delta\_id, component)} pair's \texttt{field:} claim is classified
+against the real \texttt{min\_report.\{item\}.\{leaf\}} surface, with verdicts
+\texttt{OK / BLOCK\_NOT\_IN\_MIN\_REPORT / LEAF\_NOT\_IN\_SCHEMA /
+AMBIGUOUS\_REFERENCE / SEE\_CITATION}.
+\emph{Headline:} before repair, 4/14 schema-anchored components were
+\texttt{OK} and 5/14 had drift (27.8\%); after repairing one DAPO row
+(\texttt{dynamic\_sampling} $\to$ \texttt{loss\_form.sampling\_dynamic\_filter},
+the iter-41 leaf) and three more DAPO rows (\texttt{token\_level\_loss},
+\texttt{overlong\_reward\_shaping}, \texttt{kl\_removed}), and honestly deferring
+one GSPO row (\texttt{sequence\_level\_clip}, no MIN-REPORT leaf yet), the
+post-repair drift rate is $0/14 = 0.0\%$ on a fresh re-run. \texttt{31/31}
+schema \texttt{PASS} preserved.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+delta\_id & component & old \texttt{field:} & new \texttt{field:} \\
+\midrule
+\texttt{delta\_dapo} & \texttt{dynamic\_sampling} & \texttt{sampling.dynamic\_sampling} & \texttt{loss\_form.sampling\_dynamic\_filter} \\
+\texttt{delta\_dapo} & \texttt{token\_level\_loss} & \texttt{loss\_form.aggregation} & \texttt{loss\_form.token\_aggregation} \\
+\texttt{delta\_dapo} & \texttt{overlong\_reward\_shaping} & \texttt{reward.overlong\_shaping} & \texttt{loss\_form.reward\_shaping\_type} \\
+\texttt{delta\_dapo} & \texttt{kl\_removed} & \texttt{reference\_kl} & \texttt{reference\_kl.kl\_beta} \\
+\texttt{delta\_gspo} & \texttt{sequence\_level\_clip} & \texttt{loss\_form.clip} & \texttt{see delta-list and citation} \\
+\bottomrule
+\end{tabular}
+\caption{Iter-42 drift repair table. The five drift rows from the
+delta-$\leftrightarrow$-schema audit (which run on the 14/18 schema-anchored
+components; the other 4 are \texttt{see delta-list and citation} placeholders).
+Four DAPO rows absorb the iter-41 schema-bump leaves; one GSPO row honestly
+defers because no MIN-REPORT leaf exists for sequence-level clipping yet.}
+\label{tab:p6-delta-field-drift}
+\end{table}
+
+% Iter-50's full §sec:p6-registry-health-iter50 lives in
+% p6_registry_health.tex (the canonical home of the registry-health
+% surface); the in-§ backlink is at \secref{sec:p6-registry-health-iter50}.

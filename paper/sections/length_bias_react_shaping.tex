@@ -1,0 +1,75 @@
+% =====================================================================
+% paper/sections/length_bias_react_shaping.tex
+%
+% PROVENANCE. Berkeley B-mining ledger row 13 (iter145, 2026-07-04):
+% ReAct-style intermediate-credit-shaping diagnostic on bfclv4
+% tool-use (F24 L2, Shunyu Yao; arXiv:2210.03629).
+% Driver: scripts/berkeley/react_reasoning_act.py
+% Inputs:  experiments/results/bfclv4_tool_use.tsv
+% Outputs: experiments/results/berkeley/react_{dense_vs_sparse_step,
+%          intervention_gap,zvf_reduction}.tsv
+%          experiments/results/berkeley/react_summary.json
+%
+% Ledger verdict: SUGGESTIVE (2/4 pre-registered hypotheses DECISIVE:
+% H1 Cohen's d = 0.667, H4 ZVF drop = 0.10; H2 and H3 NULL).
+% Framed accordingly: a suggestive diagnostic, not a validated result.
+% =====================================================================
+
+\subsection{A Suggestive Tool-Use Diagnostic: ReAct-Style Intermediate-Credit Shaping}
+\label{sec:length-bias-react-shaping}
+
+ReAct~\citep{yao2023react} interleaves reasoning traces with
+task actions and attributes its gains to intermediate states
+becoming credit-bearing rather than rolling up into a single
+end-of-trajectory signal. Transcribed to RL post-training, the
+analogous intervention is \emph{intermediate-credit (dense)
+reward shaping}---directly relevant to this pillar, where
+end-anchored sparse credit is the hypothesised driver of both
+the length blow-out and the zero-signal failure modes. We test
+the transcription on the BFCLv4 tool-use rollout summary
+(Qwen~0.5B; 2~seeds, 10~step-level observations;
+\texttt{experiments/results/berkeley/react\_dense\_vs\_sparse\_step.tsv}),
+where the sparse- and dense-reward columns differ only in reward
+sparsification.
+
+\paragraph{Pre-registered hypotheses.}
+Four reward-summary-level hypotheses, with thresholds fixed
+before measurement: \textbf{H1}~dense beats sparse on average
+rollout reward (decisive iff Cohen's $d > 0.4$);
+\textbf{H2}~the first-half vs last-half reward delta is larger
+under dense (credit is used earlier); \textbf{H3}~the fraction
+of seed-trajectories with identically-zero reward drops under
+dense (decisive iff drop $> 0.05$); \textbf{H4}~the
+zero-variance fraction (ZVF; the Pillar-2 signal-availability
+variable) drops under dense (decisive iff drop $> 0.05$).
+
+\paragraph{Result: 2/4 decisive.}
+H1 is \textbf{decisive}: dense lifts the mean of seed-mean
+rewards from $0.1125$ to $0.1863$ ($\Delta = +0.074$, Cohen's
+$d = 0.667$;
+\texttt{experiments/results/berkeley/react\_intervention\_gap.tsv}).
+H4 is \textbf{decisive}: pooled ZVF drops from $0.40$ (sparse)
+to $0.30$ (dense), a reduction of $0.10$
+(\texttt{experiments/results/berkeley/react\_zvf\_reduction.tsv}).
+The other two hypotheses are \textbf{null} on this data: the H2
+half-life delta comes out $-0.044$, i.e.\ sign-opposite to the
+prediction, and H3 cannot move because no seed on this rollout
+has an identically-zero reward trace (sparse and dense zero-floor
+fractions are both $0.0$;
+\texttt{experiments/results/berkeley/react\_summary.json}).
+
+\paragraph{Scope and verdict.}
+With 2/4 hypotheses decisive, the mining ledger classifies this
+finding as \textbf{suggestive}, not decisive, and we present it
+strictly as a diagnostic. The evidence base is small ($n{=}2$
+seeds) and is a re-analysis of an existing rollout summary
+rather than a live ReAct intervention with explicit
+thought/action tokens; the pre-registered promotion criterion
+($n \ge 5$ seeds on longer trajectories, flipping H2/H3) has not
+been run. Within that scope, the two decisive results point the
+same way as this pillar's mechanism story: dense intermediate
+credit reduces signal starvation on tool-use---raising realised
+reward while restoring within-group contrast (lower ZVF)---which
+is what one expects if the length and zero-signal pathologies
+documented here are downstream of end-anchored credit
+assignment.

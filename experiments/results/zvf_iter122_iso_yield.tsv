@@ -1,0 +1,15 @@
+# Pillar 2 ZVF iso-yield curve (iter 122).
+# Per-task iso-yield table: the minimum G (linearly interpolated
+# in log2(G)) required to push mean_ZVF under tau. Source:
+# experiments/results/groupsize_zvf_sweep.tsv measured at
+# G in {2, 4, 8, 16}. Extrapolated rows flag slope-limited
+# extrapolations beyond G=16; interpolated rows flag between-point
+# linear interpolation; reachable rows flag tau met at G=2.
+# Source: scripts/zvf_iso_yield_iter122.py
+task	tau	g_min	achieved_zvf	interpolated	extrapolated	n_g_measured
+arithmetic_synthetic	0.2	inf	0.6312	0	0	4
+arithmetic_synthetic	0.25	inf	0.6312	0	0	4
+arithmetic_synthetic	0.3	inf	0.6312	0	0	4
+arithmetic_synthetic	0.4	inf	0.6312	0	0	4
+arithmetic_synthetic	0.5	73.964	0.6312	0	1	4
+arithmetic_synthetic	0.6	23.027	0.6312	0	1	4

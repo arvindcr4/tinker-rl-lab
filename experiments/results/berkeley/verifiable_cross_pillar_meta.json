@@ -1,0 +1,81 @@
+{
+  "c1_rank_shift": {
+    "n_reordering": 0,
+    "n_inversions": 0,
+    "n_bucket_reassign": 4,
+    "bucket_orig": {
+      "grpo": "converged",
+      "aero": "converged",
+      "cppo": "converged",
+      "ngrpo": "converged",
+      "scafgrpo": "converged",
+      "mcgrpo": "drift",
+      "gift": "drift",
+      "areal": "drift",
+      "es": "drift"
+    },
+    "bucket_verif": {
+      "grpo": "converged",
+      "aero": "converged",
+      "cppo": "converged",
+      "ngrpo": "converged",
+      "scafgrpo": "converged",
+      "mcgrpo": "plateau",
+      "gift": "plateau",
+      "areal": "plateau",
+      "es": "plateau"
+    },
+    "bucket_transitions": {
+      "converged->converged": 5,
+      "drift->plateau": 4
+    },
+    "rank_orig": {
+      "aero": 0,
+      "cppo": 1,
+      "ngrpo": 2,
+      "scafgrpo": 3,
+      "grpo": 4,
+      "gift": 5,
+      "es": 6,
+      "areal": 7,
+      "mcgrpo": 8
+    },
+    "rank_verif": {
+      "aero": 0,
+      "cppo": 1,
+      "ngrpo": 2,
+      "scafgrpo": 3,
+      "grpo": 4,
+      "gift": 5,
+      "es": 6,
+      "areal": 7,
+      "mcgrpo": 8
+    },
+    "rank_shift": {
+      "aero": 0,
+      "cppo": 0,
+      "ngrpo": 0,
+      "scafgrpo": 0,
+      "grpo": 0,
+      "gift": 0,
+      "es": 0,
+      "areal": 0,
+      "mcgrpo": 0
+    }
+  },
+  "c2_g_star": {
+    "n": 12,
+    "n_Gv_lt_Gn": 12,
+    "n_Gv_le_Gn": 12,
+    "delta_grader_calibrated": 0.16,
+    "Gv_at_p_0.5": 4,
+    "Gn_at_p_0.5": 6,
+    "Gv_at_p_0.05": 32,
+    "Gn_at_p_0.05": 64
+  },
+  "c3_bridge": {
+    "dualformer_auto_compatible": true,
+    "dpo_irpo_compatible": true,
+    "note": "Jiao-verifiable tax is a lower bound on the GRPO loss. Dualformer-auto (row 01) and DPO/IRPO (row 02) are both strictly within the verifiable tax, so the verifiable regime does not invalidate those two claims; it tightens them."
+  }
+}

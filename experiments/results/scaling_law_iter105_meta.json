@@ -1,0 +1,83 @@
+{
+  "iter": 105,
+  "pillar": "P1-ScalingLaws",
+  "n_anchors": 12,
+  "fresh_angles": [
+    "(A) 6-mode failure-mode classifier over 12-anchor GSM8K panel",
+    "(B) Chinchilla-analogue R_max*(N) scaling fits (loglinear / inverse / chinchilla-power)",
+    "(C) leave-one-family-out (LOFO) check of family-invariance of the scaling law"
+  ],
+  "failure_modes": [
+    "converged",
+    "plateau",
+    "drift",
+    "oscillation",
+    "collapse",
+    "divergence"
+  ],
+  "mode_counts": {
+    "plateau": 6,
+    "drift": 3,
+    "converged": 2,
+    "collapse": 1
+  },
+  "scaling_fits": [
+    {
+      "family": "loglinear",
+      "n_anchors": 12,
+      "params": "a=0.4869,b=0.1041",
+      "rss": 1.2266,
+      "mae": 0.2739,
+      "rmse": 0.3197,
+      "r2": 0.0535,
+      "aic": -23.3676
+    },
+    {
+      "family": "inverse",
+      "n_anchors": 12,
+      "params": "a=0.6512,b=0.1401",
+      "rss": 1.2948,
+      "mae": 0.2883,
+      "rmse": 0.3285,
+      "r2": 0.0009,
+      "aic": -22.7185
+    },
+    {
+      "family": "chinchilla",
+      "n_anchors": 12,
+      "params": "a=1.545,b=1.067,c=0.05",
+      "rss": 1.2324,
+      "mae": 0.2741,
+      "rmse": 0.3205,
+      "r2": 0.0491,
+      "aic": -21.3112
+    }
+  ],
+  "best_by_aic": "loglinear",
+  "best_aic": -23.36757427140715,
+  "best_r2": 0.053513787050412764,
+  "lofo_family_resid_std": {
+    "dense": 0.38594761655666465,
+    "moe": 0.19294016625172095
+  },
+  "lofo_overall_resid_std": 0.4637447008894431,
+  "family_invariance_score": 0.37585509689048424,
+  "worst_lofo_offender": "Qwen3.5-27B",
+  "worst_lofo_residual": 0.79262441614031,
+  "anchor_list": [
+    "Qwen3.5-4B",
+    "Qwen3-8B",
+    "Llama-3.1-8B-Instruct",
+    "Qwen3-32B",
+    "Qwen3.5-27B",
+    "gpt-oss-20B",
+    "Qwen3-30B-MoE",
+    "Qwen3-30B-MoE-Inst",
+    "DeepSeek-V3.1",
+    "Nemotron-120B",
+    "Qwen3-235B-MoE",
+    "Kimi-K2-Thinking"
+  ],
+  "method": "(A) Hand-crafted decision tree on (zero_frac, peak, mean, resid_var, delta_le). Soft posterior via weighted match-counts; deterministic tie-break. (B) R_max* = empirical asymptotic reward ceiling = mean(last third) for non-collapse anchors, else peak. Three forms fit by OLS-on-transformed; AIC = n ln(RSS/n) + 2k. (C) Leave-one-family-out (dense vs moe) refit on Chinchilla-power; family-invariance score = 1 - mean(|resid_std per family|) / std(all residuals).",
+  "ts": "2026-07-03T20:30:00Z"
+}

@@ -1,0 +1,81 @@
+{
+  "iteration": 115,
+  "pillar": "P7",
+  "vein": "N10 5-seed ADAPTIVE-G* counterfactual \u2014 multi-seed variance + bootstrap CI",
+  "inputs": {
+    "n10_seeds": [
+      42,
+      179,
+      316,
+      453,
+      590
+    ],
+    "G_base": 8,
+    "G_candidates": [
+      16,
+      32,
+      64
+    ],
+    "tau_points": [
+      0.55,
+      0.65,
+      0.7
+    ],
+    "boot_B": 2000,
+    "boot_seed": 20260705
+  },
+  "headline_claims": {
+    "C1_least_negative_net_benefit_at_tau_0_70_is_static_or_dualformer_d8": {
+      "pass": true,
+      "adaptive_gstar_nb_mean": -0.37468185663125086,
+      "adaptive_gstar_nb_ci": [
+        -0.5218637132633739,
+        -0.2274999999991279
+      ],
+      "static_g16_nb_mean": -0.09062499999912751,
+      "dualformer_d4_nb_mean": -0.09062499999912751,
+      "dualformer_d8_nb_mean": -0.09062499999912751,
+      "interpretation": "All escalation controllers have NEGATIVE mean net_benefit on N10 5-seed at \u03c4=0.70; fixed-G controllers equivalent and Pareto-optimal; ADAPTIVE_GSTAR is 4.1x more negative."
+    },
+    "C2_salvage_rate_cv_below_0_50_at_tau_0_70": {
+      "pass": true,
+      "salvage_cv": 0.19821693724006118,
+      "salvage_per_seed": [
+        1.0,
+        1.0,
+        1.0,
+        0.8333333333333334,
+        0.6
+      ]
+    },
+    "C3_bootstrap_ci_on_net_benefit_tight_across_tau_sweep": {
+      "pass": true,
+      "max_nb_ci_width": 0.294363713264246,
+      "nb_widths_per_tau": [
+        0.29436371326424593,
+        0.294363713264246,
+        0.294363713264246
+      ]
+    },
+    "C4_adaptive_gstar_g64_path_is_pessimal_at_tau_0_70": {
+      "pass": true,
+      "adaptive_minus_best": -0.2840568566321233,
+      "interpretation": "On the N10 panel, G=64 (4x cost) is a pessimal choice."
+    }
+  },
+  "deliverables": {
+    "per_step_tsv": "p7_iter115_per_step_n10.tsv",
+    "controller_replay_tsv": "p7_iter115_controller_replay.tsv",
+    "per_seed_summary_tsv": "p7_iter115_per_seed_summary.tsv",
+    "salvage_ci_tsv": "p7_iter115_salvage_ci.tsv",
+    "net_benefit_ci_tsv": "p7_iter115_net_benefit_ci.tsv",
+    "variance_decomp_json": "p7_iter115_variance_decomp.json"
+  },
+  "novelty_vs_prior_iters": {
+    "iter_99": "tau-trigger sweep on N10 with de-escalation only",
+    "iter_103": "unified Dualformer-Auto + ZVF-triage + gamma*=0 on N2 four-method",
+    "iter_107": "cross-method tau-transfer + 5-class failure-mode taxonomy on N2 four-method",
+    "iter_111": "ADAPTIVE-G* on N2 four-method single-seed per method, per-prompt k_p",
+    "iter_115_NOVEL": "ADAPTIVE-G* on N10 5-seed step-aggregate closed-form Bernoulli, with PER-SEED variance + bootstrap CI. Crosses iter-111 x iter-99."
+  }
+}

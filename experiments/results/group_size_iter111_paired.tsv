@@ -1,0 +1,5 @@
+T_tokens	G4_acc	G4_lo	G4_hi	G32_acc	G32_lo	G32_hi	G4_gu	G32_gu	delta_G32_minus_G4	delta_ci_lo	delta_ci_hi	p_abs_ge_observed	within_equiv_1pct	within_equiv_2pct
+1000000	0.41	0.38	0.44	0.42	0.39	0.45	1.7223	0.3424	0.0122	0.0062	0.018	0.2417	False	True
+4000000	0.55	0.52	0.58	0.66	0.63	0.69	2.1287	0.4759	0.1113	0.1053	0.1176	0.3435	False	False
+16000000	0.63	0.6	0.66	0.84	0.81	0.87	2.3311	0.5593	0.2126	0.2066	0.2184	0.193	False	False
+64000000	0.64	0.61	0.67	0.88	0.85	0.91	2.4177	0.5819	0.2421	0.2363	0.248	0.2602	False	False

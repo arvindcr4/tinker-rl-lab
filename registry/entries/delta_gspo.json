@@ -1,0 +1,45 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_gspo",
+  "name": "GSPO",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "qwen2025gspo",
+    "arxiv": "2507.18071",
+    "title": "Group Sequence Policy Optimization"
+  },
+  "deltas": [
+    {
+      "component": "sequence_level_ratio",
+      "field": "loss_form.importance_ratio_level",
+      "change": "importance ratio defined on sequence likelihood (length-normalized), not per token"
+    },
+    {
+      "component": "sequence_level_clip",
+      "field": "see delta-list and citation",
+      "change": "clipping, rewarding and optimization applied at the sequence level (no MIN-REPORT leaf for sequence-level clip; deferred to source paper until a future schema bump exposes the field)"
+    }
+  ],
+  "notes": "Sequence-level importance ratio and clipping, per the source paper. | iter-94 surrogate-marker: The tinker_gspo_qwen3.5-4b_gsm8k stack record is a LABEL-FLIP SURROGATE only: variant_deltas_applied enumerates sequence_level_ratio as 'surrogate' (sequence-level ratio requested via user config; managed loss internals unverifiable) and sequence_level_clip as 'unknown' (managed_by_tinker). The Qwen team's full GSPO (Section 3 of arXiv:2507.18071) requires both sequence-level ratio AND sequence-level clip, neither of which is verifiably enforced on the managed stack. Adding a measured row sourced from that stack record would advertise the surrogate as the real GSPO algorithm. Measured block intentionally null: same-stack GSPO arm (with both sequence-level components verifiably enforced) does not exist in the worktree. To be measured once a same-stack arm lands (criterion: same model + task + sampler + RLHF pipeline with sequence-level ratio AND sequence-level clip both actually enforced, not just label-named).",
+  "expected_effects": [
+    {
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": "<0",
+      "rationale": "GSPO's sequence-level (length-normalized) importance ratio reduces per-token variance amplification that drives zero-variance groups; predicted lower ZVF than GRPO on the same stack (Qwen team 2025, Section 3)."
+    },
+    {
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "predicted_sign": ">=0",
+      "rationale": "GSPO is documented as reward-neutral or slightly positive on Qwen3 dense models; the sequence-level ratio is variance-reducing and should not regress final reward (Qwen team 2025, Table 1)."
+    },
+    {
+      "metric": "mean_len",
+      "panel": "length_bias_iter60_grpo_vs_drgrpo_paired",
+      "predicted_sign": "<0",
+      "rationale": "Length normalization in the importance ratio reduces the implicit length-bias GRPO inherits from per-token averaging; predicted lower mean_len than GRPO on the same stack."
+    }
+  ]
+}

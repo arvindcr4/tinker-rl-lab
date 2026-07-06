@@ -1,0 +1,523 @@
+{
+  "rates": [
+    [
+      "release",
+      0.0144
+    ],
+    [
+      "1.00%",
+      0.01
+    ],
+    [
+      "0.50%",
+      0.005
+    ],
+    [
+      "0.10%",
+      0.001
+    ],
+    [
+      "0.05%",
+      0.0005
+    ]
+  ],
+  "per_cell": [
+    {
+      "model": "XGB-20raw",
+      "rate_label": "release",
+      "target_rate": 0.0144,
+      "n_test": 10000,
+      "n_pos": 144,
+      "pos_rate": 0.0144,
+      "pr_auc": 0.8722692925667792,
+      "top_frac": 0.01,
+      "n_top": 100,
+      "p_at_top": 0.9,
+      "r_at_top": 0.625
+    },
+    {
+      "model": "XGB-24full",
+      "rate_label": "release",
+      "target_rate": 0.0144,
+      "n_test": 10000,
+      "n_pos": 144,
+      "pos_rate": 0.0144,
+      "pr_auc": 0.8899606203536461,
+      "top_frac": 0.01,
+      "n_top": 100,
+      "p_at_top": 0.92,
+      "r_at_top": 0.6388888888888888
+    },
+    {
+      "model": "XGB-4sensor",
+      "rate_label": "release",
+      "target_rate": 0.0144,
+      "n_test": 10000,
+      "n_pos": 144,
+      "pos_rate": 0.0144,
+      "pr_auc": 0.341342741009523,
+      "top_frac": 0.01,
+      "n_top": 100,
+      "p_at_top": 0.45,
+      "r_at_top": 0.3125
+    },
+    {
+      "model": "XGB-20raw",
+      "rate_label": "1.00%",
+      "target_rate": 0.01,
+      "n_test": 9956,
+      "n_pos": 100,
+      "pos_rate": 0.010044194455604661,
+      "pr_auc": 0.8295198402752674,
+      "top_frac": 0.01,
+      "n_top": 100,
+      "p_at_top": 0.74,
+      "r_at_top": 0.74
+    },
+    {
+      "model": "XGB-24full",
+      "rate_label": "1.00%",
+      "target_rate": 0.01,
+      "n_test": 9956,
+      "n_pos": 100,
+      "pos_rate": 0.010044194455604661,
+      "pr_auc": 0.8493922650707076,
+      "top_frac": 0.01,
+      "n_top": 100,
+      "p_at_top": 0.81,
+      "r_at_top": 0.81
+    },
+    {
+      "model": "XGB-4sensor",
+      "rate_label": "1.00%",
+      "target_rate": 0.01,
+      "n_test": 9956,
+      "n_pos": 100,
+      "pos_rate": 0.010044194455604661,
+      "pr_auc": 0.3142996509801689,
+      "top_frac": 0.01,
+      "n_top": 100,
+      "p_at_top": 0.37,
+      "r_at_top": 0.37
+    },
+    {
+      "model": "XGB-20raw",
+      "rate_label": "0.50%",
+      "target_rate": 0.005,
+      "n_test": 9906,
+      "n_pos": 50,
+      "pos_rate": 0.005047445992327882,
+      "pr_auc": 0.7463490716408424,
+      "top_frac": 0.01,
+      "n_top": 99,
+      "p_at_top": 0.43434343434343436,
+      "r_at_top": 0.86
+    },
+    {
+      "model": "XGB-24full",
+      "rate_label": "0.50%",
+      "target_rate": 0.005,
+      "n_test": 9906,
+      "n_pos": 50,
+      "pos_rate": 0.005047445992327882,
+      "pr_auc": 0.7838347085578384,
+      "top_frac": 0.01,
+      "n_top": 99,
+      "p_at_top": 0.45454545454545453,
+      "r_at_top": 0.9
+    },
+    {
+      "model": "XGB-4sensor",
+      "rate_label": "0.50%",
+      "target_rate": 0.005,
+      "n_test": 9906,
+      "n_pos": 50,
+      "pos_rate": 0.005047445992327882,
+      "pr_auc": 0.19075279099321332,
+      "top_frac": 0.01,
+      "n_top": 99,
+      "p_at_top": 0.18181818181818182,
+      "r_at_top": 0.36
+    },
+    {
+      "model": "XGB-20raw",
+      "rate_label": "0.10%",
+      "target_rate": 0.001,
+      "n_test": 9866,
+      "n_pos": 10,
+      "pos_rate": 0.0010135819987837015,
+      "pr_auc": 0.3418999138116785,
+      "top_frac": 0.01,
+      "n_top": 99,
+      "p_at_top": 0.08080808080808081,
+      "r_at_top": 0.8
+    },
+    {
+      "model": "XGB-24full",
+      "rate_label": "0.10%",
+      "target_rate": 0.001,
+      "n_test": 9866,
+      "n_pos": 10,
+      "pos_rate": 0.0010135819987837015,
+      "pr_auc": 0.44015540015540017,
+      "top_frac": 0.01,
+      "n_top": 99,
+      "p_at_top": 0.10101010101010101,
+      "r_at_top": 1.0
+    },
+    {
+      "model": "XGB-4sensor",
+      "rate_label": "0.10%",
+      "target_rate": 0.001,
+      "n_test": 9866,
+      "n_pos": 10,
+      "pos_rate": 0.0010135819987837015,
+      "pr_auc": 0.20180423677591633,
+      "top_frac": 0.01,
+      "n_top": 99,
+      "p_at_top": 0.06060606060606061,
+      "r_at_top": 0.6
+    },
+    {
+      "model": "XGB-20raw",
+      "rate_label": "0.05%",
+      "target_rate": 0.0005,
+      "n_test": 9861,
+      "n_pos": 5,
+      "pos_rate": 0.0005070479667376534,
+      "pr_auc": 0.14299982179465684,
+      "top_frac": 0.01,
+      "n_top": 99,
+      "p_at_top": 0.04040404040404041,
+      "r_at_top": 0.8
+    },
+    {
+      "model": "XGB-24full",
+      "rate_label": "0.05%",
+      "target_rate": 0.0005,
+      "n_test": 9861,
+      "n_pos": 5,
+      "pos_rate": 0.0005070479667376534,
+      "pr_auc": 0.1918207282913165,
+      "top_frac": 0.01,
+      "n_top": 99,
+      "p_at_top": 0.050505050505050504,
+      "r_at_top": 1.0
+    },
+    {
+      "model": "XGB-4sensor",
+      "rate_label": "0.05%",
+      "target_rate": 0.0005,
+      "n_test": 9861,
+      "n_pos": 5,
+      "pos_rate": 0.0005070479667376534,
+      "pr_auc": 0.03614499760595125,
+      "top_frac": 0.01,
+      "n_top": 99,
+      "p_at_top": 0.020202020202020204,
+      "r_at_top": 0.4
+    }
+  ],
+  "bootstrap": [
+    {
+      "rate_label": "release",
+      "target_rate": 0.0144,
+      "a_minus_b": "XGB-24full-XGB-20raw",
+      "metric": "pr_auc",
+      "point_diff": 0.017691327786866884,
+      "ci_lo": -0.005786803205974054,
+      "ci_hi": 0.04032968314275264,
+      "ci_excludes_zero": false
+    },
+    {
+      "rate_label": "release",
+      "target_rate": 0.0144,
+      "a_minus_b": "XGB-24full-XGB-20raw",
+      "metric": "p_at_top",
+      "point_diff": 0.020000000000000018,
+      "ci_lo": -0.030000000000000027,
+      "ci_hi": 0.060249999999999825,
+      "ci_excludes_zero": false
+    },
+    {
+      "rate_label": "release",
+      "target_rate": 0.0144,
+      "a_minus_b": "XGB-24full-XGB-4sensor",
+      "metric": "pr_auc",
+      "point_diff": 0.5486178793441231,
+      "ci_lo": 0.4618820212401422,
+      "ci_hi": 0.6118940914433414,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "release",
+      "target_rate": 0.0144,
+      "a_minus_b": "XGB-24full-XGB-4sensor",
+      "metric": "p_at_top",
+      "point_diff": 0.47000000000000003,
+      "ci_lo": 0.36,
+      "ci_hi": 0.58,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "release",
+      "target_rate": 0.0144,
+      "a_minus_b": "XGB-20raw-XGB-4sensor",
+      "metric": "pr_auc",
+      "point_diff": 0.5309265515572562,
+      "ci_lo": 0.4359681981511915,
+      "ci_hi": 0.6131361188546083,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "release",
+      "target_rate": 0.0144,
+      "a_minus_b": "XGB-20raw-XGB-4sensor",
+      "metric": "p_at_top",
+      "point_diff": 0.45,
+      "ci_lo": 0.35,
+      "ci_hi": 0.55,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "1.00%",
+      "target_rate": 0.01,
+      "a_minus_b": "XGB-24full-XGB-20raw",
+      "metric": "pr_auc",
+      "point_diff": 0.01944490804951593,
+      "ci_lo": -0.010316785804916151,
+      "ci_hi": 0.04972838893457283,
+      "ci_excludes_zero": false
+    },
+    {
+      "rate_label": "1.00%",
+      "target_rate": 0.01,
+      "a_minus_b": "XGB-24full-XGB-20raw",
+      "metric": "p_at_top",
+      "point_diff": 0.06000000000000005,
+      "ci_lo": -0.040000000000000036,
+      "ci_hi": 0.07999999999999996,
+      "ci_excludes_zero": false
+    },
+    {
+      "rate_label": "1.00%",
+      "target_rate": 0.01,
+      "a_minus_b": "XGB-24full-XGB-4sensor",
+      "metric": "pr_auc",
+      "point_diff": 0.5911873531883548,
+      "ci_lo": 0.4873984993828415,
+      "ci_hi": 0.6730506899596314,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "1.00%",
+      "target_rate": 0.01,
+      "a_minus_b": "XGB-24full-XGB-4sensor",
+      "metric": "p_at_top",
+      "point_diff": 0.51,
+      "ci_lo": 0.36000000000000004,
+      "ci_hi": 0.58,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "1.00%",
+      "target_rate": 0.01,
+      "a_minus_b": "XGB-20raw-XGB-4sensor",
+      "metric": "pr_auc",
+      "point_diff": 0.5717424451388389,
+      "ci_lo": 0.46568428976510706,
+      "ci_hi": 0.6731098585440636,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "1.00%",
+      "target_rate": 0.01,
+      "a_minus_b": "XGB-20raw-XGB-4sensor",
+      "metric": "p_at_top",
+      "point_diff": 0.45,
+      "ci_lo": 0.35,
+      "ci_hi": 0.55,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "0.50%",
+      "target_rate": 0.005,
+      "a_minus_b": "XGB-24full-XGB-20raw",
+      "metric": "pr_auc",
+      "point_diff": 0.023118578443603544,
+      "ci_lo": -0.019550881155741964,
+      "ci_hi": 0.07026867354131604,
+      "ci_excludes_zero": false
+    },
+    {
+      "rate_label": "0.50%",
+      "target_rate": 0.005,
+      "a_minus_b": "XGB-24full-XGB-20raw",
+      "metric": "p_at_top",
+      "point_diff": 0.0,
+      "ci_lo": -0.04040404040404044,
+      "ci_hi": 0.030303030303030276,
+      "ci_excludes_zero": false
+    },
+    {
+      "rate_label": "0.50%",
+      "target_rate": 0.005,
+      "a_minus_b": "XGB-24full-XGB-4sensor",
+      "metric": "pr_auc",
+      "point_diff": 0.6067078671065005,
+      "ci_lo": 0.4578652728041068,
+      "ci_hi": 0.7367886470827268,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "0.50%",
+      "target_rate": 0.005,
+      "a_minus_b": "XGB-24full-XGB-4sensor",
+      "metric": "p_at_top",
+      "point_diff": 0.29292929292929293,
+      "ci_lo": 0.19166666666666668,
+      "ci_hi": 0.38383838383838387,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "0.50%",
+      "target_rate": 0.005,
+      "a_minus_b": "XGB-20raw-XGB-4sensor",
+      "metric": "pr_auc",
+      "point_diff": 0.5835892886628969,
+      "ci_lo": 0.41622544010968787,
+      "ci_hi": 0.7218354030254049,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "0.50%",
+      "target_rate": 0.005,
+      "a_minus_b": "XGB-20raw-XGB-4sensor",
+      "metric": "p_at_top",
+      "point_diff": 0.29292929292929293,
+      "ci_lo": 0.18181818181818185,
+      "ci_hi": 0.38383838383838387,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "0.10%",
+      "target_rate": 0.001,
+      "a_minus_b": "XGB-24full-XGB-20raw",
+      "metric": "pr_auc",
+      "point_diff": -0.006136516891324495,
+      "ci_lo": -0.11738262104774415,
+      "ci_hi": 0.13276808849424762,
+      "ci_excludes_zero": false
+    },
+    {
+      "rate_label": "0.10%",
+      "target_rate": 0.001,
+      "a_minus_b": "XGB-24full-XGB-20raw",
+      "metric": "p_at_top",
+      "point_diff": 0.0,
+      "ci_lo": 0.0,
+      "ci_hi": 0.0,
+      "ci_excludes_zero": false
+    },
+    {
+      "rate_label": "0.10%",
+      "target_rate": 0.001,
+      "a_minus_b": "XGB-24full-XGB-4sensor",
+      "metric": "pr_auc",
+      "point_diff": 0.21623156927630527,
+      "ci_lo": -0.05381471826381079,
+      "ci_hi": 0.5100562694733138,
+      "ci_excludes_zero": false
+    },
+    {
+      "rate_label": "0.10%",
+      "target_rate": 0.001,
+      "a_minus_b": "XGB-24full-XGB-4sensor",
+      "metric": "p_at_top",
+      "point_diff": 0.04040404040404041,
+      "ci_lo": 0.010101010101010097,
+      "ci_hi": 0.09090909090909091,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "0.10%",
+      "target_rate": 0.001,
+      "a_minus_b": "XGB-20raw-XGB-4sensor",
+      "metric": "pr_auc",
+      "point_diff": 0.22236808616762976,
+      "ci_lo": -0.06914858458539905,
+      "ci_hi": 0.47553053579531795,
+      "ci_excludes_zero": false
+    },
+    {
+      "rate_label": "0.10%",
+      "target_rate": 0.001,
+      "a_minus_b": "XGB-20raw-XGB-4sensor",
+      "metric": "p_at_top",
+      "point_diff": 0.04040404040404041,
+      "ci_lo": 0.009848484848484858,
+      "ci_hi": 0.08080808080808081,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "0.05%",
+      "target_rate": 0.0005,
+      "a_minus_b": "XGB-24full-XGB-20raw",
+      "metric": "pr_auc",
+      "point_diff": 0.09177489177489173,
+      "ci_lo": -0.13620238095238096,
+      "ci_hi": 0.327296626984127,
+      "ci_excludes_zero": false
+    },
+    {
+      "rate_label": "0.05%",
+      "target_rate": 0.0005,
+      "a_minus_b": "XGB-24full-XGB-20raw",
+      "metric": "p_at_top",
+      "point_diff": 0.0,
+      "ci_lo": 0.0,
+      "ci_hi": 0.0,
+      "ci_excludes_zero": false
+    },
+    {
+      "rate_label": "0.05%",
+      "target_rate": 0.0005,
+      "a_minus_b": "XGB-24full-XGB-4sensor",
+      "metric": "pr_auc",
+      "point_diff": 0.33384678168434595,
+      "ci_lo": 0.10465522561655866,
+      "ci_hi": 0.7776116205845472,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "0.05%",
+      "target_rate": 0.0005,
+      "a_minus_b": "XGB-24full-XGB-4sensor",
+      "metric": "p_at_top",
+      "point_diff": 0.0404040404040404,
+      "ci_lo": 0.010101010101010102,
+      "ci_hi": 0.0909090909090909,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "0.05%",
+      "target_rate": 0.0005,
+      "a_minus_b": "XGB-20raw-XGB-4sensor",
+      "metric": "pr_auc",
+      "point_diff": 0.24207188990945422,
+      "ci_lo": 0.061219699124094924,
+      "ci_hi": 0.5995688567305495,
+      "ci_excludes_zero": true
+    },
+    {
+      "rate_label": "0.05%",
+      "target_rate": 0.0005,
+      "a_minus_b": "XGB-20raw-XGB-4sensor",
+      "metric": "p_at_top",
+      "point_diff": 0.0404040404040404,
+      "ci_lo": 0.0101010101010101,
+      "ci_hi": 0.08080808080808081,
+      "ci_excludes_zero": true
+    }
+  ]
+}

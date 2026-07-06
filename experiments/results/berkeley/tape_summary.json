@@ -1,0 +1,53 @@
+{
+  "row_id": 17,
+  "source_lecture": "F24 L7 \u2014 Nicolas Chapados (TapeAgents, arXiv:2412.08445)",
+  "target": "A4 + A2 (tool-use / agentic RL; trajectory-level eval)",
+  "n_cells_primary_win10": 16,
+  "n_cells_total": 48,
+  "hypotheses": {
+    "H1_tape_windowed_rho_lt_global": {
+      "verdict": "NULL",
+      "n_pos": 10,
+      "n_total": 16,
+      "sign_test_p_two_sided": 0.454498291015625,
+      "mean_delta_tape_minus_global": -0.15195625000000001
+    },
+    "H2_temporal_variance_positive": {
+      "verdict": "DECISIVE",
+      "n_pos": 16,
+      "n_total": 16,
+      "sign_test_p_two_sided": 3.0517578125e-05
+    },
+    "H3_abs_late_lt_abs_early": {
+      "verdict": "DECISIVE",
+      "n_pos": 12,
+      "n_total": 16,
+      "sign_test_p_two_sided": 0.076812744140625
+    },
+    "H4_frac_late_nonneg_corr_with_rho_all": {
+      "verdict": "DECISIVE",
+      "spearman_rho": -0.6735683251912464,
+      "spearman_p": 0.0006501259847475627,
+      "n": 16,
+      "mean_frac_late_large_global": 0.45454999999999995,
+      "mean_frac_late_small_global": 0.023816666666666667
+    }
+  },
+  "decisive_count": 3,
+  "overall_status": "validated",
+  "evidence_paths": {
+    "windowed_rho": "experiments/results/berkeley/tape_windowed_rho.tsv",
+    "tape_vs_global": "experiments/results/berkeley/tape_vs_global.tsv",
+    "tape_temporal_structure": "experiments/results/berkeley/tape_temporal_structure.tsv",
+    "tape_variance_compression": "experiments/results/berkeley/tape_variance_compression.tsv"
+  },
+  "citation_ok": true,
+  "citation": {
+    "arxiv_id": "2412.08445",
+    "title": "TapeAgents: a Holistic Framework for Agent Development and Optimization",
+    "authors": "Bahdanau, Gontier, Huang, Kamalloo, Pardinas, Pich\u00e9, Scholak, Shliazhko, Tremblay, Ghanem, Parikh, Tiwari, Vohra",
+    "year": 2024,
+    "submitted": "2024-12-11",
+    "venue": "arXiv preprint"
+  }
+}

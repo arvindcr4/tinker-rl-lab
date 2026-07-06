@@ -1,0 +1,81 @@
+{
+  "corpora": [
+    {
+      "corpus_id": "C1_mega_20260704",
+      "n_records": 98,
+      "n_items_populated": 7,
+      "n_items_with_variance": 3,
+      "total_bits": 4.798,
+      "mean_hamming": 1.891,
+      "verdict": "STRONG"
+    },
+    {
+      "corpus_id": "C2_n2_reward_tensor",
+      "n_records": 4,
+      "n_items_populated": 7,
+      "n_items_with_variance": 1,
+      "total_bits": 2.0,
+      "mean_hamming": 1.0,
+      "verdict": "STRONG"
+    },
+    {
+      "corpus_id": "C3_n10_seed_expansion",
+      "n_records": 16,
+      "n_items_populated": 7,
+      "n_items_with_variance": 2,
+      "total_bits": 4.0,
+      "mean_hamming": 1.7163,
+      "verdict": "STRONG"
+    },
+    {
+      "corpus_id": "C4_base_instruct_paired",
+      "n_records": 8,
+      "n_items_populated": 2,
+      "n_items_with_variance": 1,
+      "total_bits": 0.9544,
+      "mean_hamming": 0.555,
+      "verdict": "LIMITED"
+    },
+    {
+      "corpus_id": "C5_group_size_iter111",
+      "n_records": 4,
+      "n_items_populated": 4,
+      "n_items_with_variance": 1,
+      "total_bits": 2.0,
+      "mean_hamming": 1.0,
+      "verdict": "PORTABLE"
+    },
+    {
+      "corpus_id": "C6_length_bias_iter",
+      "n_records": 20,
+      "n_items_populated": 2,
+      "n_items_with_variance": 2,
+      "total_bits": 2.5219,
+      "mean_hamming": 1.213,
+      "verdict": "LIMITED"
+    },
+    {
+      "corpus_id": "C7_zvf_iter118",
+      "n_records": 8,
+      "n_items_populated": 3,
+      "n_items_with_variance": 2,
+      "total_bits": 3.0,
+      "mean_hamming": 1.4725,
+      "verdict": "PORTABLE"
+    }
+  ],
+  "falsifiable_headlines": {
+    "H1_portability_tax": "across 7 corpora, mean n_items_populated = 4.57 [95% bootstrap CI: 3.00, 6.29] of 7 items",
+    "H2_strongest_corpus": "C1_mega_20260704 (n_items_populated=7)",
+    "H3_most_discriminating": "C1_mega_20260704 (mean_hamming=1.891; CI over corpus-means: [0.9404, 1.5777])",
+    "H4_minimal_corpus": "C6_length_bias_iter (n_items_populated=2)",
+    "H5_null_verdicts": 0,
+    "H6_portable_verdicts": 5,
+    "H7_verdict_distribution": {
+      "STRONG": 3,
+      "PORTABLE": 2,
+      "LIMITED": 2,
+      "NULL": 0
+    }
+  }
+}

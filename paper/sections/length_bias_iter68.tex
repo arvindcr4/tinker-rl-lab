@@ -1,0 +1,141 @@
+% Iter 68 — Pillar 4 (Length Bias / Dr.GRPO): Trajectory-Divergence Decomposition
+% First-divergence step + length-volatility ratio + sign-flip reversal rate,
+% conditioned on reward direction. Headline: Dr.GRPO's length trajectory flips
+% direction 14pp more often on reward-up steps (paired bootstrap p<0.001).
+
+\subsubsection{Trajectory divergence decomposition}\label{sec:lb-iter68}
+
+Iter~\ref{sec:lb-iter64} conditioned the marginal length response
+$\mathbb{E}[\Delta L \mid \mathrm{sign}(\Delta R), Z_t]$ on reward direction
+and showed that Dr.GRPO loses compression signal in the
+heterogeneous-group regime. Iter~\ref{sec:lb-iter68} instead asks a
+\emph{trajectory-shape} question: holding the (mean) length response
+fixed, is the policy's length \emph{trajectory itself} more or less
+unstable under Dr.GRPO? We decompose the per-step trajectory
+$(\Delta R_t, \Delta L_t)$ into three paired shape statistics and one
+signed magnitude.
+
+\paragraph{Shape statistic 1: reversal rate $\rho$.}
+The reversal rate
+\begin{equation}\label{eq:lb68-rho}
+\rho \;=\; \frac{1}{T-2}\sum_{t=2}^{T-1}
+\mathbf{1}\!\left[\mathrm{sign}(\Delta L_t) \neq \mathrm{sign}(\Delta L_{t-1}),\ \Delta L_t, \Delta L_{t-1} \neq 0\right]
+\end{equation}
+counts the fraction of consecutive step pairs where the per-step length
+change reverses sign. A high $\rho$ means the policy length is
+\emph{oscillating} step-to-step; a low $\rho$ means it is in a sustained
+trend. Iter~\ref{sec:lb-iter68} additionally partitions $\rho$ by the
+\emph{reward direction} of step $t$, yielding $\rho_{+}$ (restricted to
+$\Delta R_t > 0$) and $\rho_{-}$ ($\Delta R_t < 0$).
+
+\paragraph{Shape statistic 2: length-volatility ratio $\mathcal{V}$.}
+$\mathcal{V} = \sigma(\Delta L)_\mathrm{Dr.GRPO} / \sigma(\Delta L)_\mathrm{GRPO}$
+computed per-seed; the paired bootstrap is on $\log \mathcal{V}$.
+
+\paragraph{Magnitude statistic: signed AUC.}
+The trapezoidal area between the two per-step $L$ curves, signed so that
+positive area means the Dr.GRPO trace lies above the GRPO trace on
+average.
+
+\paragraph{GSM8K CoT headline: Dr.GRPO reverses 14\,pp more often on reward-up steps.}
+From \texttt{length\_bias\_iter68\_summary.tsv}, paired bootstrap
+($B=2000$, $3$ seeds):
+\begin{itemize}
+\item $\rho_{+}^{\mathrm{Dr.GRPO}} - \rho_{+}^{\mathrm{GRPO}} = +0.141$
+      (95\% CI $[+0.017,\,+0.214]$, $p < 0.001$). Dr.GRPO flips the
+      sign of $\Delta L$ \emph{14 percentage points} more often than
+      GRPO does, restricted to reward-up steps. This is exactly the
+      regime where iter64's CLRRD found Dr.GRPO loses 43\% of its
+      compression lever; the new finding is that the residual signal
+      Dr.GRPO \emph{does} produce is structurally noisier.
+\item $\rho_{-}^{\mathrm{Dr.GRPO}} - \rho_{-}^{\mathrm{GRPO}} = -0.054$
+      (95\% CI $[-0.091,\, 0.000]$, $p = 1.0$ one-sided). Dr.GRPO
+      reverses \emph{less} on reward-down steps -- but the CI just
+      touches zero. The asymmetry concentrates in $\rho_{+}$.
+\item Aggregate $\rho^{\mathrm{Dr.GRPO}} - \rho^{\mathrm{GRPO}} = +0.048$
+      (CI $[+0.000,\, +0.071]$, $p = 0.043$). The aggregate reversal
+      rate is 72.6\% (Dr.GRPO) vs 67.9\% (GRPO).
+\item $\mathcal{V}$ (volatility ratio) $= 0.94$ (CI $[0.68,\, 1.18]$):
+      inconclusive. The two algorithms have similar $\sigma(\Delta L)$
+      on GSM8K CoT -- the difference is in \emph{reversal structure},
+      not in raw volatility.
+\item Signed AUC (Dr.GRPO $-$ GRPO) $= -209.1$ token·step units
+      (CI $[-344,\, -94]$, $p = 1.0$ one-sided). On every seed the
+      GRPO trace lies above the Dr.GRPO trace; the magnitude is
+      $\approx 210$ token·step units, which is consistent with
+      iter64's $\Delta L \approx +0.21$ tokens/step drift over 30
+      steps scaled by mean $L \approx 190$.
+\item First-divergence step $\overline{T^*} = 10.3$ (CI $[3, 22]$).
+      The wide CI reflects the 3-seed ceiling; the mean sits in the
+      middle of training, indicating the Dr.GRPO-vs-GRPO length gap
+      emerges gradually over training rather than at a sharp
+      change-point.
+\end{itemize}
+
+\paragraph{Arithmetic-easy negative control.}
+The same script applied to the 5-seed arithmetic-easy comparison
+(\texttt{drgrpo\_vs\_grpo.json}, 40 steps each):
+\begin{itemize}
+\item $\rho^{\mathrm{Dr.GRPO}} - \rho^{\mathrm{GRPO}} = -0.005$
+      (CI $[-0.068,\, +0.074]$, $p = 0.61$): clean null on aggregate
+      reversal rate.
+\item $\rho_{+}$ diff $= +0.007$ (CI $[-0.040,\, +0.073]$, $p = 0.41$):
+      clean null on the reward-up conditional.
+\item $\rho_{-}$ diff $= +0.061$ (CI $[+0.007,\, +0.148]$, $p < 0.001$):
+      this is the \emph{opposite} sign from GSM8K. On the easy task,
+      Dr.GRPO reverses \emph{more} on reward-down steps -- not on
+      reward-up. The two tasks concentrate the reversal asymmetry on
+      opposite reward strata, which sharpens the GSM8K finding into a
+      \emph{task-conditional} structural effect rather than a uniform
+      Dr.GRPO property.
+\item $\mathcal{V} = 1.00$ (CI $[0.88, 1.10]$): exactly 1, no
+      volatility difference.
+\item Signed AUC $= -5.97$ (CI $[-7.09,\, -4.97]$): small but
+      consistently negative, consistent with iter60's
+      negative-elasticity-step dominance on the easy task.
+\end{itemize}
+
+\paragraph{Mechanism interpretation.}
+Dr.GRPO's clipped advantage $\hat A_i = \mathrm{clip}\!\left(\frac{r_i -
+\mu_g}{\sigma_g},\, -c,\, c\right)$ removes the magnitude contrast on
+high-reward-variance groups (the heterogeneous-group regime that GRPO
+uses as its compression lever). On reward-up steps in this regime,
+GRPO produces a sharp $\Delta L < 0$ compression response; Dr.GRPO
+produces a \emph{noisy} $\Delta L$ whose sign is not consistently
+negative because the clipped gradient still flips sign as the
+distribution over $\sigma_g$ fluctuates across groups. The reversal
+rate $\rho_+$ is the right diagnostic for this kind of structural
+gradient-magnitude loss: it does not require the mean $\Delta L$ to
+move much (it doesn't -- both algos are still negative on average),
+but it detects when the \emph{direction} of the per-step response is
+unstable. The same diagnostic correctly returns a clean null on the
+arithmetic-easy task, where the trajectory does not visit the
+heterogeneous-group regime long enough to develop this signal.
+
+\paragraph{Reproducibility.}
+Driver: \texttt{scripts/length\_bias\_iter68.py} (paired bootstrap
+$B=2000$, stdlib+numpy). For each seed and algorithm, computes
+$\sigma(\Delta L)$, reversal rate (aggregate and conditioned on
+$\mathrm{sign}(\Delta R)$), first-divergence step (threshold
+$0.5\,\sigma_{\mathrm{pool}}$, 2-step persistence), and signed AUC
+(trapezoidal). Outputs:
+\texttt{length\_bias\_iter68\_per\_run.tsv},
+\texttt{length\_bias\_iter68\_first\_div.tsv},
+\texttt{length\_bias\_iter68\_volatility.tsv},
+\texttt{length\_bias\_iter68\_reversals.tsv},
+\texttt{length\_bias\_iter68\_rev\_cond.tsv},
+\texttt{length\_bias\_iter68\_auc.tsv},
+\texttt{length\_bias\_iter68\_summary.tsv}. Figure:
+\texttt{figures/length\_bias\_iter68\_reversal.pdf} (3-panel:
+aggregate reversal, $\rho_+$ vs $\rho_{-}$, signed AUC by seed).
+Total: 6 TSV outputs (77 rows), 1 JSON meta, 1 figure.
+
+\paragraph{Falsifiability note.}
+The reversal asymmetry is a \emph{structurally weaker} signal than
+the iter64 CLRRD asymmetry: $\rho_+$ on GSM8K CoT has CI
+$[+0.017,\, +0.214]$ whose lower bound is within $\approx 0.02$ of
+zero. A larger follow-up (e.g.\ 8+ seeds, 60+ steps) is required to
+refine the CI to $[+0.05, +0.20]$. The arithmetic-easy reversal
+asymmetry on $\rho_{-}$ (CI $[+0.007,\, +0.148]$, $p < 0.001$) is the
+most robust single signal but its task-conditional sign flip
+precludes a single global Dr.GRPO claim.

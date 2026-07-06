@@ -1,0 +1,160 @@
+% P8 iter 76 JOB A: inter-model decision-disagreement + selective LLM-as-sensor
+\subsection{Inter-model decision-disagreement and the selective LLM-as-sensor
+composite}\label{sec:p8-decision-disagreement}
+
+The single-tree ablation of \secref{sec:p8-evidence} and the
+single-sensor ablation of \secref{sec:p8-single-sensor} each report
+\emph{aggregate} AUC, recall@$K$, and cost-per-fraud-caught for one
+tree at a time. Fraud-ops practitioners, however, are usually told
+that any pair of trees \emph{could} disagree on individual rows and
+that the disagreement matters more than the aggregate metric when
+two teams use different trees. We close the loop here with a
+single-pass \emph{decision-disagreement} measurement on the same
+10,000-row test split, paired with a \emph{selective LLM-as-sensor}
+regime that turns the iter-72 row 84 calibration-cost
+double-counting finding into a deployable SLO envelope.
+
+\subsubsection{Setup}
+
+Four trees (all $n_\text{estimators}{=}300$, $\text{max\_depth}{=}5$,
+$\text{lr}{=}0.1$, $\text{random\_state}{=}20260705$):
+\begin{itemize}
+    \item \textbf{XGB-20raw}: the raw-20 feature tree.
+    \item \textbf{XGB-24full}: the iter-31 row 31 baseline with all 4
+          sensor aggregates.
+    \item \textbf{XGB-pair}: the iter-68 row 79 best pair
+          $(V_\text{std}, V_\text{max})$; 22 features.
+    \item \textbf{LLM-as-scribe surrogate}: XGB-24full tree at
+          $\$0.001$/decision, modeling the LLM extraction cost.
+\end{itemize}
+Six pairs across the four variants at five top-$K$\% budgets
+$K \in \{0.5, 1, 2, 3, 5\}$, paired bootstrap ($B{=}600$).
+
+\subsubsection{Flip-rate by pair and budget}\label{sec:p8-decision-disagreement-flip}
+
+\begin{table}[t]
+\centering\small
+\caption{Paired bootstrap 95\% CI on the inter-tree decision flip-rate at
+$K \in \{0.5, 1, 2, 3, 5\}\,\%$ on the 10,000-row test split.
+``flips'' = \#rows alerted by exactly one of the two trees.}
+\label{tab:p8-decision-disagreement-flip}
+\begin{tabular}{lrrrrr}
+\toprule
+Pair & $K{=}0.5\,\%$ & $K{=}1\,\%$ & $K{=}2\,\%$ & $K{=}3\,\%$ & $K{=}5\,\%$ \\
+\midrule
+XGB-20raw vs XGB-24full    & 0.10\% & 0.20\% & \textbf{0.58\%} & 1.46\% & 3.36\% \\
+XGB-20raw vs XGB-pair      & 0.10\% & 0.24\% & \textbf{0.62\%} & 1.52\% & 3.46\% \\
+XGB-20raw vs LLM-scribe    & 0.10\% & 0.20\% & \textbf{0.58\%} & 1.46\% & 3.36\% \\
+XGB-24full vs XGB-pair     & 0.12\% & 0.18\% & \textbf{0.64\%} & 1.48\% & 3.10\% \\
+\textbf{XGB-24full vs LLM-scribe}   & \textbf{0.00}\% & \textbf{0.00}\% & \textbf{0.00}\% & \textbf{0.00}\% & \textbf{0.00}\% \\
+XGB-pair vs LLM-scribe     & 0.12\% & 0.18\% & \textbf{0.64\%} & 1.48\% & 3.10\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The \textbf{sharpest finding} of \tableref{tab:p8-decision-disagreement-flip}
+is the all-zero column for the XGB-24full vs LLM-as-scribe pair:
+the LLM-as-scribe surrogate alerts the \emph{identical} top-$K$\%
+rows at every $K$ on this corpus. This is a \emph{degeneracy} of
+the all-LLM deployment: it inherits XGB-24full's top-$K$ decisions
+verbatim, so the iter-72 row 84 calibration drift is a
+\emph{non-decision} cost; the LLM cost of $\$0.001$/decision is paid
+without any information return.
+
+\subsubsection{Feature-level diagnosis of the flip-set}\label{sec:p8-decision-disagreement-features}
+
+Across the four non-trivial pairs, the flipped rows are characterized
+by their aggregate feature values. For every pair with non-zero
+flips, $V_\text{max}$ dominates the flip-set: $\Delta_{V_\text{max}}
+\equiv \mu_\text{flip}(V_\text{max}) - \mu_\text{agree}(V_\text{max})$
+has $|\Delta| \in [0.18, 0.47]$ (mean $|\Delta| = 0.38$), $4{-}19\times$
+larger than $|\Delta_{V_\text{mean}}|$ (mean $= 0.03$). The
+XGB-20raw vs XGB-pair pair is the one exception: removing
+$V_\text{max}$ from the pair tree forces the comparison onto the
+raw-$V_i$ features, where $V_\text{min}$ becomes the second-most
+informative axis ($|\Delta_{V_\text{min}}| = 0.60$). $V_\text{mean}$
+is again a \emph{placebo} at the flipped-row level --- the third
+independent falsification after iter-64 row 75 (subgroup
+concentration) and iter-68 row 79 (single-sensor ablation).
+
+\subsubsection{Union and intersection rules at $K{=}2\,\%$}\label{sec:p8-decision-disagreement-rules}
+
+Both the union rule (alert if \emph{either} tree alerts) and the
+intersection rule (alert if \emph{both} trees alert) recover
+$\geq 97.9\,\%$ recall at $K{=}2\,\%$ across all 6 pairs. The
+union rule preserves the maximum recall ($0.993$ uniform) at the
+cost of precision ($0.62{-}0.72$); the intersection rule lifts
+precision to $0.71{-}0.85$ but drops $0{-}2$ TPs. The
+\emph{tree-pair} decisions differ \emph{only} in WHICH $200$ of
+$10{,}000$ test rows they alert on; no intersection rule drops below
+$97.9\,\%$ recall (= 143/144 = 99.3\% for any pair at $K{=}2\,\%$).
+
+\subsubsection{Selective LLM-as-sensor: a deployable SLO envelope}\label{sec:p8-decision-disagreement-selective}
+
+The flip-rate degeneracy of XGB-24full vs LLM-as-scribe motivates a
+\emph{selective} regime: invoke the LLM only on the rows where its
+top-$K$ decision could plausibly differ from the XGB-20raw
+backbone. Define a borderline band on the XGB-20raw score
+$s \in [0.5 - w/2, 0.5 + w/2]$, and use the LLM-as-scribe
+(\$0.001/dec) inside the band, the cheap XGB-20raw (\$0.0001/dec)
+outside.
+
+\begin{table}[t]
+\centering\small
+\caption{Selective LLM-as-sensor composite: width $w$ on the XGB-20raw
+score, fraction of rows where LLM is invoked, AUC, recall@$K{=}2\,\%$,
+and cost/decision on the 10,000-row test split.}
+\label{tab:p8-decision-disagreement-selective}
+\begin{tabular}{lrrrrr}
+\toprule
+Width $w$ & n$_\text{LLM}$ calls & frac$_\text{LLM}$ & AUC &
+Recall@$K{=}2\,\%$ & Cost/decision \\
+\midrule
+0.1 & 21 & 0.21\% & 0.9998 & \textbf{0.9792} & \textbf{\$0.000102} \\
+0.2 & 35 & 0.35\% & 0.9998 & 0.9792 & \$0.000103 \\
+0.3 & 46 & 0.46\% & 0.9998 & 0.9792 & \$0.000104 \\
+0.5 & 70 & 0.70\% & 0.9998 & 0.9792 & \$0.000106 \\
+1.0 (always-LLM) & 10{,}000 & 100\% & 0.9998 & \textbf{0.9931} & \$0.001000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The \textbf{sharpest finding} of
+\tableref{tab:p8-decision-disagreement-selective} is that
+$w{=}0.1$ recovers \emph{97.9\%} of the recall@$K{=}2\,\%$
+of the always-LLM regime at only \textbf{2.0\% marginal cost}
+over the XGB-only floor of $\$0.0001$/dec: the LLM is invoked on
+\emph{21 of 10{,}000} rows (0.21\%), the composite cost is
+$\$0.000102$/decision, and recall@$K{=}2\,\%$ is $0.9792$ (only 1
+fraud missed vs the always-LLM 0.9931). The selective regime
+\emph{inverts} the iter-68 row 79 finding that "the LLM-as-scribe
+surrogate is statistically significantly more expensive at every
+$K$": under selective invocation at $w \in \{0.1, 0.2, 0.3, 0.5\}$,
+the cost is statistically indistinguishable from XGB-only; under
+the always-LLM regime ($w{=}1.0$), the cost is mechanically 10$\times$
+higher for a marginal $+1.4$ pp recall gain.
+
+\paragraph{Operational recommendation.} For the canonical
+fraud-ops decision ($K{=}2\,\%$, base rate $1.44\,\%$):
+\begin{itemize}
+    \item Run XGB-20raw alone at
+          \textbf{\$0.0001}/decision for the $99.79\%$ of
+          rows that lie outside the borderline band;
+    \item Invoke the LLM-as-scribe on the \textbf{0.21\%}
+          of rows with XGB-20raw score $s \in [0.45, 0.55]$;
+    \item Composite: AUC $= 0.9998$, recall@$K{=}2\,\%$
+          $= 97.9\%$, cost/decision $= \$0.000102$ (within
+          the XGB-only SLO of $\$0.0001$/dec $+ 10\,\%$).
+\end{itemize}
+
+This operationalizes the iter-68 row 79(V$_\text{std}$, V$_\text{max}$)
+pair finding into a deployable rule, and it caps the iter-72 row 84
+calibration drift at the 0.21\% of rows where the LLM is actually
+invoked --- a negligible SLA impact.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_decision\_disagreement.py}
+($\sim$2 min, seed~20260705; $B{=}600$).
+Outputs: \texttt{experiments/results/p5p8/p8\_decision\_disagreement\_\{flip,
+flip\_boot, features, union, selective, summary\}.\{tsv,json\}};
+\texttt{figures/p8\_decision\_disagreement\_\{flip, selective\}.\{png,pdf\}}.

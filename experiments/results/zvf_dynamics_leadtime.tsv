@@ -1,0 +1,5 @@
+kind	method	seed	n_steps	mean_zvf	theta	first_pass_step	first_collapse_step	lead_steps
+variance_mitigation	grpo	0	300	0.48131	0.8	219	222	3
+variance_mitigation	grpo	1	300	0.479334	0.9	246	247	1
+variance_mitigation	grpo	2	300	0.48032400000000003	0.9	249	250	1
+# Pillar 2 ZVF dynamics — iter14. Source: scripts/zvf_dynamics.py

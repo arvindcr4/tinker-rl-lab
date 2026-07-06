@@ -1,0 +1,5 @@
+method	joint_rollout_saves	joint_zvf_saves	joint_net_saves	joint_cost_ratio	df_rollout_saves	df_cost_ratio	ddiv_zvf_saves	ddiv_rollout_saves	ddiv_cost_ratio	net_joint_minus_ddiv	net_joint_minus_df
+grpo	480	49	529	1.35625	1074	0.790234375	49	0	1.45	480	-545
+aero	546	41	587	1.293359375	1074	0.790234375	41	0	1.4	546	-487
+areal	426	51	477	1.416796875	1128	0.7796875	51	0	1.5	426	-651
+gift	438	35	473	1.239453125	882	0.827734375	35	0	1.325	438	-409

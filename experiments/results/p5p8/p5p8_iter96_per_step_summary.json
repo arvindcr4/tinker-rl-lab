@@ -1,0 +1,242 @@
+{
+  "n_records": 262,
+  "methods": [
+    "aero",
+    "areal",
+    "gift",
+    "grpo"
+  ],
+  "rho_per_method_per_item": [
+    {
+      "method": "aero",
+      "item": "item_13_step",
+      "spearman_rho": 0.4946892072498769
+    },
+    {
+      "method": "aero",
+      "item": "item_14_step",
+      "spearman_rho": 0.6484069144401391
+    },
+    {
+      "method": "aero",
+      "item": "item_15_step",
+      "spearman_rho": 0.4965187674115907
+    },
+    {
+      "method": "aero",
+      "item": "item_16_step",
+      "spearman_rho": -0.505465689891989
+    },
+    {
+      "method": "aero",
+      "item": "item_17_step",
+      "spearman_rho": 0.9321837217094171
+    },
+    {
+      "method": "areal",
+      "item": "item_13_step",
+      "spearman_rho": 0.6583122125222942
+    },
+    {
+      "method": "areal",
+      "item": "item_14_step",
+      "spearman_rho": 0.7084878156256863
+    },
+    {
+      "method": "areal",
+      "item": "item_15_step",
+      "spearman_rho": 0.3944592750068744
+    },
+    {
+      "method": "areal",
+      "item": "item_16_step",
+      "spearman_rho": -0.2689808785427236
+    },
+    {
+      "method": "areal",
+      "item": "item_17_step",
+      "spearman_rho": 0.9164360274702587
+    },
+    {
+      "method": "gift",
+      "item": "item_13_step",
+      "spearman_rho": 0.3781326348134902
+    },
+    {
+      "method": "gift",
+      "item": "item_14_step",
+      "spearman_rho": 0.49892332395430083
+    },
+    {
+      "method": "gift",
+      "item": "item_15_step",
+      "spearman_rho": 0.20292293251972324
+    },
+    {
+      "method": "gift",
+      "item": "item_16_step",
+      "spearman_rho": -0.35730323673491504
+    },
+    {
+      "method": "gift",
+      "item": "item_17_step",
+      "spearman_rho": 0.8955268993370326
+    },
+    {
+      "method": "grpo",
+      "item": "item_13_step",
+      "spearman_rho": 0.6614461221044734
+    },
+    {
+      "method": "grpo",
+      "item": "item_14_step",
+      "spearman_rho": 0.7883551375478295
+    },
+    {
+      "method": "grpo",
+      "item": "item_15_step",
+      "spearman_rho": 0.3573881006312228
+    },
+    {
+      "method": "grpo",
+      "item": "item_16_step",
+      "spearman_rho": -0.35006650714140053
+    },
+    {
+      "method": "grpo",
+      "item": "item_17_step",
+      "spearman_rho": 0.9385564910088912
+    },
+    {
+      "method": "POOLED",
+      "item": "item_13_step",
+      "spearman_rho": 0.5522090859164224
+    },
+    {
+      "method": "POOLED",
+      "item": "item_14_step",
+      "spearman_rho": 0.6769023635111625
+    },
+    {
+      "method": "POOLED",
+      "item": "item_15_step",
+      "spearman_rho": 0.36749744604270573
+    },
+    {
+      "method": "POOLED",
+      "item": "item_16_step",
+      "spearman_rho": -0.3801977293995702
+    },
+    {
+      "method": "POOLED",
+      "item": "item_17_step",
+      "spearman_rho": 0.9288150956628174
+    }
+  ],
+  "excess_signal_vs_binom_null": {
+    "aero": {
+      "item_14_step": {
+        "emp_mean": 4.375684794035655,
+        "null_mean": -0.0007759737121854377,
+        "diff": 4.37646076774784,
+        "z": 10.985218012902324
+      },
+      "item_15_step": {
+        "emp_mean": 4.85,
+        "null_mean": 4.100575,
+        "diff": 0.7494249999999996,
+        "z": 0.7187305327277508
+      },
+      "item_16_step": {
+        "emp_mean": 0.67109375,
+        "null_mean": 0.453146875,
+        "diff": 0.21794687500000004,
+        "z": 1.7571189416903974
+      },
+      "item_17_step": {
+        "emp_mean": 0.09241373697916666,
+        "null_mean": 0.016879817708333335,
+        "diff": 0.07553391927083333,
+        "z": 8.140694486037432
+      }
+    },
+    "areal": {
+      "item_14_step": {
+        "emp_mean": 4.240594025151525,
+        "null_mean": -7.861461988864251e-05,
+        "diff": 4.240672639771414,
+        "z": 10.814900912648806
+      },
+      "item_15_step": {
+        "emp_mean": 4.65,
+        "null_mean": 4.12365,
+        "diff": 0.5263500000000008,
+        "z": 0.5274560566887461
+      },
+      "item_16_step": {
+        "emp_mean": 0.646875,
+        "null_mean": 0.447234375,
+        "diff": 0.19964062499999996,
+        "z": 1.7509750719754058
+      },
+      "item_17_step": {
+        "emp_mean": 0.09179524739583333,
+        "null_mean": 0.017036328125,
+        "diff": 0.07475891927083333,
+        "z": 8.294945837964494
+      }
+    },
+    "gift": {
+      "item_14_step": {
+        "emp_mean": 4.619721019535153,
+        "null_mean": 0.0016161214927604484,
+        "diff": 4.618104898042393,
+        "z": 11.518882106645348
+      },
+      "item_15_step": {
+        "emp_mean": 4.709677419354839,
+        "null_mean": 4.085129032258065,
+        "diff": 0.6245483870967741,
+        "z": 0.6155075170297735
+      },
+      "item_16_step": {
+        "emp_mean": 0.6844758064516129,
+        "null_mean": 0.4534274193548387,
+        "diff": 0.23104838709677417,
+        "z": 1.9146097682921195
+      },
+      "item_17_step": {
+        "emp_mean": 0.09412802419354839,
+        "null_mean": 0.01673623781922043,
+        "diff": 0.07739178637432796,
+        "z": 8.576698627184044
+      }
+    },
+    "grpo": {
+      "item_14_step": {
+        "emp_mean": 4.354307576438356,
+        "null_mean": 0.005191254399355555,
+        "diff": 4.349116322039,
+        "z": 10.933299932198361
+      },
+      "item_15_step": {
+        "emp_mean": 4.8125,
+        "null_mean": 4.1177,
+        "diff": 0.6947999999999999,
+        "z": 0.688166327192925
+      },
+      "item_16_step": {
+        "emp_mean": 0.67109375,
+        "null_mean": 0.44945,
+        "diff": 0.22164375000000003,
+        "z": 1.859294110054115
+      },
+      "item_17_step": {
+        "emp_mean": 0.09306396484375,
+        "null_mean": 0.016985618489583333,
+        "diff": 0.07607834635416666,
+        "z": 8.42385544333933
+      }
+    }
+  }
+}

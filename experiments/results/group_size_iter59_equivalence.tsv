@@ -1,0 +1,8 @@
+threshold_name	threshold_R	T_min_grid_M	T_max_grid_M	T_first_below_threshold_M	T_last_above_threshold_M	equivalence_region_exists
+PRAGMATIC_0.85	0.85	1	64	4	1	yes
+OPERATIONAL_0.75	0.75	1	64	64	16	yes
+HARD_DIVERGENCE_0.70	0.7	1	64	none	64	yes
+R_observed_T1M	0.9761904761904762	1	1			
+R_observed_T4M	0.8333333333333334	4	4			
+R_observed_T16M	0.75	16	16			
+R_observed_T64M	0.7272727272727273	64	64			

@@ -1,0 +1,17 @@
+# Iter 30 Pillar 2: ZVF as a leading indicator.
+# Leave-one-(method, seed)-trajectory-out CV with a univariate
+# logistic regression on a single ZVF feature.
+# y_K{K} = 1[collapse occurs in (t, t+K]]. Source: scripts/zvf_iter30_earliness.py
+horizon_K	feature	n_rows	base_rate	roc_auc	pr_auc	brier	ece
+5	current_zvf	4500	0.0636	0.9016	0.3325	0.0485	0.0121
+5	trailing_mean_25	4500	0.0636	0.9302	0.4469	0.0443	0.0151
+5	trailing_auc_25	4455	0.0642	0.9296	0.4469	0.0448	0.0154
+5	trailing_slope_10	4455	0.0642	0.487	0.0574	0.0602	0.0005
+10	current_zvf	4500	0.1136	0.9064	0.4875	0.0741	0.0183
+10	trailing_mean_25	4500	0.1136	0.9286	0.588	0.0676	0.0212
+10	trailing_auc_25	4455	0.1147	0.928	0.5876	0.0682	0.0212
+10	trailing_slope_10	4455	0.1147	0.2674	0.0726	0.102	0.0003
+25	current_zvf	4500	0.2636	0.932	0.7915	0.0982	0.0282
+25	trailing_mean_25	4500	0.2636	0.9318	0.826	0.0968	0.0357
+25	trailing_auc_25	4455	0.2662	0.9313	0.8265	0.0976	0.0376
+25	trailing_slope_10	4455	0.2662	0.6647	0.3681	0.1872	0.0435

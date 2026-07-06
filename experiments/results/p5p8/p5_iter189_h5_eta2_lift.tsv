@@ -1,0 +1,5 @@
+channel	eta2_manifest_alone	eta2_manifest_plus_temp_seed	lift_pp	lift_relative
+zvf	0.871573	0.913397	4.182	0.048
+mean_reward	0.30867	0.311125	0.245	0.008
+pcd	0.659627	0.714271	5.464	0.0828
+mean_completion_len	0.259546	0.443161	18.362	0.7074

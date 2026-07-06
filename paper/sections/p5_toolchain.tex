@@ -1,0 +1,67 @@
+% Pillar-5 (MIN-REPORT-RL) enforceability toolchain (specification level)
+\section{The Toolchain That Makes It Enforceable}
+\label{sec:p5-toolchain}
+Checklists change practice only when compliance is cheaper than
+non-compliance. The NeurIPS reproducibility program showed that a checklist
+plus process measurably improves reporting \citep{pineau2020improving}; our
+aim is to push the marginal cost of compliance to near zero by making the
+manifest a build artifact rather than a writing task. We specify five
+components. All five are specifications with reference behavior defined by
+the audits in this paper; we are explicit below about which behaviors have
+already been exercised and which are design targets.
+
+\paragraph{\texttt{trl-min-report-rl} (manifest emitter).} A trainer plugin
+(reference target: a TRL~\citep{vonwerra2022trl} callback, with adapters for
+other frameworks in \tableref{tab:implementations}) that auto-emits the
+seven-item manifest as JSON at run start and appends the per-step ZVF/GU
+trajectory (item 4) during training. The author never writes the manifest by
+hand; it is generated from the same objects the trainer actually executes,
+closing the gap between what a paper says and what the code did. Appendix
+\ref{app:p5-worked} shows two complete manifests.
+
+\paragraph{\texttt{grpo-stackdiff} (comparability verdicts in CI).} A CLI
+that takes two manifests and returns (i) an item-by-item diff, (ii) the
+flip-risk grade R0--R5 of \secref{sec:p5-grades}, and (iii) a CI verdict:
+\textsc{comparable} (R0--R2), \textsc{not-comparable} (R3--R4), or
+\textsc{unverifiable} (R5). The intended integration point is a repository or
+leaderboard CI job: a pull request adding ``method A beats method B'' must
+attach two manifests whose stackdiff verdict is \textsc{comparable}, or the
+claim is rewritten as stack-conditioned. Appendix~\ref{app:p5-worked} walks
+one diff to its \textsc{not-comparable} verdict.
+
+\paragraph{GRPO-Registry (machine-readable stack catalog).} A registry
+mapping algorithm labels to the set of loss-form tuples published under that
+label, with one entry per (label, loss form, framework) triple. The registry
+is what turns Exhibit 2 from an anecdote into a lookup: ``DAPO'' resolves to
+at least two registered semantics, and a citation can point at the specific
+one.
+
+\paragraph{MIN-REPORT-RL Auditor (0--100 badge).} A scorer that reads a paper
+plus its artifacts and awards points per item (weighted toward items 3, 4,
+and 7, the least-reported and highest-leverage rows of
+\tableref{tab:p5-minreport}), yielding a badge suitable for OpenReview or
+repository display. Unlike a self-attested checklist, the badge is computed
+from artifacts, in the spirit of artifact-evaluation tracks.
+
+\paragraph{LeverTrace (citation-lever audit).} A tool answering a narrow
+question: when paper X is cited as evidence for lever L (``we use asymmetric
+clipping following [X]''), does X actually report the manifest items needed
+to support L? LeverTrace walks a citation graph and flags credited-but-
+unreported levers, targeting the accretion process by which a label acquires
+empirical reputation that no single stack ever demonstrated.
+
+\subsection{Feasibility Evidence: The Telemetry Is Already Actionable}
+\label{sec:p5-feasibility}
+The manifest's most novel items (4 and 5) are not merely reportable---they
+are cheap enough to compute that they can drive control decisions live, which
+we take as strong evidence that emitting them adds negligible overhead. In
+our single-file open-trainer audit (Stratum B; one auditable
+reimplementation, held-out delta / mean ZVF / rollout count per arm:
+grpo $+0.500$ / $0.25$ / $120$; drgrpo $+0.575$ / $0.27$ / $120$; dapo
+$+0.550$ / $0.00$ / $174$, i.e.\ $+45\%$ rollouts for its ZVF-$0.00$
+guarantee; adaptive-$G$ grpo $+0.575$ / $0.23$ / $186$), a
+\texttt{zvf-triage} callback escalated the group size $4 \to 6 \to 8$ during
+training in response to ZVF spikes. A quantity that can be acted on per-step
+can certainly be logged per-step; conversely, the dapo arm's rollout premium
+is exactly the kind of cost--benefit fact that only surfaces when items 4 and
+5 are reported together.

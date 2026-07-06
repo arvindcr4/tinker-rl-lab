@@ -1,0 +1,5 @@
+ci_method	n_rows	entries
+paired_step_bootstrap_pct	14	delta_adaptiveg;delta_aero;delta_areal;delta_gift
+bootstrap_paired_5seed	13	delta_aero;delta_areal;delta_cppo;delta_es;delta_gift;delta_mcgrpo;delta_ngrpo;delta_scafgrpo
+normal_approx_welch	8	delta_aero;delta_areal;delta_cppo;delta_es;delta_gift;delta_mcgrpo;delta_ngrpo;delta_scafgrpo
+welch_pooled_task_mean	3	delta_drgrpo

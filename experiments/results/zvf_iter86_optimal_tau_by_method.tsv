@@ -1,0 +1,12 @@
+# Pillar 2 iter86 optimal tau per variance-mitigation method @ C_ratio=10.
+# Source: scripts/zvf_iter86.py
+method	n_traces	tau_optimal_at_C10	cost_at_optimal	n_false_at_optimal	n_missed_at_optimal	n_correct_at_optimal
+aero	5	0.1	0	0	0	5
+areal	5	0.6	0	0	0	0
+cppo	5	0.1	0	0	0	5
+es	5	0.4	0	0	0	0
+gift	5	0.6	0	0	0	0
+grpo	5	0.1	0	0	0	5
+mcgrpo	5	0.1	0	0	0	5
+ngrpo	5	0.1	0	0	0	5
+scafgrpo	5	0.5	0	0	0	0

@@ -1,0 +1,113 @@
+{
+  "iter": 126,
+  "pillar": "P2-ZVF",
+  "n_trajectories": 45,
+  "h1_lag1": {
+    "grpo_collapse_n": 3,
+    "grpo_safe_n": 2,
+    "grpo_collapse_lag1_mean": 0.9924488288344727,
+    "grpo_safe_lag1_mean": 0.9932558924572228,
+    "grpo_collapse_roll_mean": 0.6093947402842145,
+    "grpo_safe_roll_mean": 0.41536114303997995,
+    "grpo_collapse_zmean": 0.37739678979596697,
+    "grpo_safe_zmean": 0.481507,
+    "grpo_lag1_cohen_d": -0.36993550060903724
+  },
+  "h2_leadtime": {
+    "tau_leadtime_grpo": {
+      "tau_0.4": {
+        "n": 3,
+        "mean": 35.666666666666664,
+        "min": 31,
+        "max": 39,
+        "all_non_negative": true
+      },
+      "tau_0.5": {
+        "n": 3,
+        "mean": 32.333333333333336,
+        "min": 27,
+        "max": 35,
+        "all_non_negative": true
+      },
+      "tau_0.6": {
+        "n": 3,
+        "mean": 28.666666666666668,
+        "min": 24,
+        "max": 32,
+        "all_non_negative": true
+      },
+      "tau_0.7": {
+        "n": 3,
+        "mean": 24.333333333333332,
+        "min": 19,
+        "max": 28,
+        "all_non_negative": true
+      }
+    }
+  },
+  "h3_drift": {
+    "grpo": {
+      "n_seeds": 5,
+      "mean_slope": 0.009908746218487394,
+      "max_slope": 0.010283687875150056,
+      "min_slope": 0.009519745498199277,
+      "slope_sd": 0.000246345857805799
+    },
+    "aero": {
+      "n_seeds": 5,
+      "mean_slope": 0.00041271932773109235,
+      "max_slope": 0.0006590924369747898,
+      "min_slope": 6.302040816326523e-05,
+      "slope_sd": 0.00020581921991352225
+    },
+    "cppo": {
+      "n_seeds": 5,
+      "mean_slope": 0.0017501608643457384,
+      "max_slope": 0.001950112845138055,
+      "min_slope": 0.0015349579831932772,
+      "slope_sd": 0.00013229886322296873
+    },
+    "ngrpo": {
+      "n_seeds": 5,
+      "mean_slope": 0.001914472028811524,
+      "max_slope": 0.0021726962785114045,
+      "min_slope": 0.0016574021608643454,
+      "slope_sd": 0.00018913691175484902
+    },
+    "scafgrpo": {
+      "n_seeds": 5,
+      "mean_slope": 0.0018831135654261695,
+      "max_slope": 0.0024295174069627837,
+      "min_slope": 0.0011996830732292918,
+      "slope_sd": 0.00045357083233287014
+    },
+    "mcgrpo": {
+      "n_seeds": 5,
+      "mean_slope": 0.00015534693877551018,
+      "max_slope": 0.00048819207683073224,
+      "min_slope": -0.0001432893157262906,
+      "slope_sd": 0.000205897081392125
+    },
+    "gift": {
+      "n_seeds": 5,
+      "mean_slope": 9.985978391356538e-05,
+      "max_slope": 0.0002523169267707083,
+      "min_slope": -1.8261704681872662e-05,
+      "slope_sd": 0.00011454097579516978
+    },
+    "areal": {
+      "n_seeds": 5,
+      "mean_slope": -2.591116446578641e-06,
+      "max_slope": 0.00016211284513805503,
+      "min_slope": -0.00018230012004801898,
+      "slope_sd": 0.00013380493795007566
+    },
+    "es": {
+      "n_seeds": 5,
+      "mean_slope": 0.0011131524609843935,
+      "max_slope": 0.0013852004801920765,
+      "min_slope": 0.0009156110444177669,
+      "slope_sd": 0.00017666460279162465
+    }
+  }
+}

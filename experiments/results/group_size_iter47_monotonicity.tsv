@@ -1,0 +1,5 @@
+G_a	n_budgets	budgets_M	R_at_Ts	kendall_tau	tau_ci_low	tau_ci_high	monotone	direction
+4	4	1,4,16,64	1.171,0.948,0.787,0.736	-1.0	-1.0	-0.5	yes	decreasing
+8	4	1,4,16,64	1.371,1.155,0.975,0.920	-1.0	-1.0	-0.5	yes	decreasing
+16	4	1,4,16,64	1.343,1.190,1.025,0.977	-1.0	-1.0	-0.5	yes	decreasing
+32	4	1,4,16,64	1.200,1.138,1.050,1.011	-1.0	-1.0	-0.5	yes	decreasing

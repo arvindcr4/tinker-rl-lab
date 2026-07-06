@@ -1,0 +1,80 @@
+% P8 introduction: the deployment question
+\section{Introduction}
+\label{sec:p8-intro}
+
+A bank that already runs a tuned gradient-boosted tree over its card-transaction
+stream faces a concrete deployment question when the vendor deck arrives
+promising ``AI-powered fraud detection'': what, exactly, would a large language
+model (LLM) add? The incumbent is formidable. Gradient-boosted decision trees
+remain the strongest general-purpose learners on medium-sized tabular data
+\citep{grinsztajn2022tree, shwartzziv2021tabular}, and on our own custom fraud
+benchmark a stock XGBoost \citep{chen2016xgboost} configuration recorded a
+held-out AUC of $0.7955$ in the current quick artifact-backed run
+(\texttt{experiments/results/quick\_20260704/qp8\_fraud.tsv}). Any
+proposal to replace it must beat not just that number but the operational
+envelope around it: single-digit-millisecond scoring, near-zero marginal cost
+per transaction, monotone and calibrated probability outputs that downstream
+rules consume directly, and an input surface that an adversary cannot talk to.
+
+This paper takes the question seriously rather than rhetorically. We fine-tune
+an LLM on textual serializations of the same training table---the recipe shown
+by TabLLM to be surprisingly competitive in few-shot regimes
+\citep{hegselmann2023tabllm}---and it scores below the tree in that
+head-to-head: the current Qwen3.5-4B SFT run reaches accuracy $0.792$ but AUC
+$0.48268$ on a 500-row positive-enriched held-out evaluation
+(\secref{sec:p8-scorer}). We then argue
+that this gap is the least interesting fact in the study. Scoring
+fixed-schema transactions is the one task in the fraud pipeline that is
+\emph{already solved}; the interesting question is which tasks in that pipeline
+were previously unaddressable by any model, and whether the LLM addresses them.
+
+We find four such tasks, and none of them is tabular scoring
+(\secref{sec:p8-taxonomy}). A vision--language model can read the pixels and
+text of a disputed receipt or a doctored identity document---inputs that no
+feature pipeline delivers to a tree \citep{xu2024fakeshield,
+wang2025forensicsbench}. An LLM can draft the Suspicious Activity Report (SAR)
+narrative that FinCEN requires and the adverse-action reasons that
+ECOA/Regulation~B requires \citep{fincen2003sarnarrative, cfr1002_9}---a
+regulated text-generation category in which a tree cannot compete because it
+does not produce text at all. An LLM can triage a genuinely novel fraud
+typology from a description and a handful of examples, before any labels exist
+for supervised training. And an LLM agent can work the alert queue---gathering
+context, checking consistency, drafting dispositions---at roughly $85\times$
+lower cost than a human analyst by our internal estimate.
+
+Our constructive contribution is the resulting division of labor
+(\secref{sec:p8-architecture}): the LLM as \emph{sensor} (converting
+unstructured evidence into features the tree can score) and \emph{scribe}
+(converting scores and evidence into regulated narratives), with XGBoost
+retained as the \emph{scorer} and an agentic triage loop downstream of the
+score. We ground the scribe role in the primary regulatory texts
+(\secref{sec:p8-compliance}), because the compliance argument is the one that
+survives even if future LLMs close the tabular accuracy gap.
+
+\paragraph{Program context.} This study is the deliberate side-probe of a
+reproducibility program whose thesis is ``measure capability, don't trust the
+label.'' The main program applies that discipline to reinforcement-learning
+post-training claims; here we apply it to the label ``AI'' itself. ``AI'' in a
+fraud-detection pitch bundles at least five distinct capabilities---tabular
+scoring, perception, narration, few-shot generalization, and agency---and they
+do not rise or fall together. Measured separately, one of them (scoring)
+favors a 2016-era tree in the current quick artifacts, and we argue the other four
+favor the LLM. Conflating them produces both failure
+modes we see in practice: buying an LLM to do a tree's job, and refusing an LLM
+for jobs no tree can do.
+
+\paragraph{Contributions.}
+(i) An honest head-to-head between XGBoost and a fine-tuned LLM on a custom
+fraud dataset, with the tree keeping the scorer seat on our internal accuracy
+records, the current quick artifacts, \emph{and} on
+latency, cost, calibration, and prompt-injection exposure;
+(ii) a four-way capability-gap taxonomy of where the LLM genuinely adds value,
+each gap being a task category rather than an accuracy delta;
+(iii) a hybrid sensor/scorer/scribe architecture with post-score agentic
+triage; and
+(iv) a compliance grounding of the scribe role in FinCEN SAR requirements and
+ECOA/Regulation~B adverse-action requirements, citing primary sources.
+The older $0.975$/$0.948$ pair survives only as a historical internal record;
+the scorer claims below use the current quick artifacts unless explicitly
+marked otherwise. \secref{sec:p8-limitations} states the boundaries
+explicitly.

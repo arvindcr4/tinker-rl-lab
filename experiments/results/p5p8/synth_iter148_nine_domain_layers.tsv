@@ -1,0 +1,10 @@
+domain_id	domain	density	layer
+D1	P8 grad-band firing (per-row)	0.008333333333333333	LOW
+D2	P7 step rejection (per-step)	0.5	MID
+D3	P5 cells (per-cell)	0.3673469387755102	MID
+D4	P7 per-prompt boundary	0.729296875	MID
+D5	P8 iso ECE>0.10 (cohort cell)	1.0	HIGH
+D6	P8 sensor-firing flip (per cell)	0.00530359555546593	LOW
+D7	N2 algorithm-axis spread > 0.500	0.015625	LOW
+D8	P7 UNIFIED_C4 per-cell FIRE (cost>1.0)	0.09140625	MID
+D9	P7 UNIFIED_C4 per-cell contrast recovery (cm_c4>cm_base)	0.09140625	MID

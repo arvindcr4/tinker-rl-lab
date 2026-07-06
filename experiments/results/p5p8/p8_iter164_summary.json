@@ -1,0 +1,54 @@
+{
+  "iter": 164,
+  "pillar": "P8",
+  "job": "A",
+  "vein": "iter-161 mint vein #2 \u2014 breakeven tier extension",
+  "h1_cheap_clears_target": {
+    "pass": true,
+    "n_pass": 60,
+    "n_total": 60,
+    "fraction": 1.0,
+    "bar": 0.8,
+    "verdict": "PASS"
+  },
+  "h2_small_open_clears_target": {
+    "pass": true,
+    "n_pass": 60,
+    "n_total": 60,
+    "fraction": 1.0,
+    "bar": 0.8,
+    "verdict": "PASS"
+  },
+  "h3_frontier_recovers_0p95": {
+    "pass": true,
+    "n_pass": 60,
+    "n_total": 60,
+    "fraction": 1.0,
+    "bar": 0.9,
+    "verdict": "PASS"
+  },
+  "h4_tau_monotone_in_tier": {
+    "pass": true,
+    "n_pass": 20,
+    "n_total": 20,
+    "fraction": 1.0,
+    "bar": 0.8,
+    "verdict": "PASS"
+  },
+  "h4a_breakeven_is_cheapest": {
+    "pass": true,
+    "n_pass": 60,
+    "n_total": 60,
+    "fraction": 1.0,
+    "bar": 0.8,
+    "verdict": "PASS"
+  },
+  "h5_frontier_matches_cheap_on_target": {
+    "pass": true,
+    "n_pass": 59,
+    "n_total": 60,
+    "fraction": 0.9833,
+    "bar": 0.8,
+    "verdict": "PASS"
+  }
+}

@@ -1,0 +1,7 @@
+metric_kind	metric_key	headline
+pool_size	n_seeds	Per-problem variance computed on n=3 seeds of G=8 tinker GSM8K (n=200 problems/seed)
+variance	G_measured_sigma2_within	G=8: mean within-group sigma^2 = 0.1758 (binary reward variance per group); predicted baseline variance sigma^2/G = 0.0220
+variance	G_measured_cross_problem_var	G=8: empirical var(mean_reward across 200 prompts) = 0.0585
+prediction	baseline_var_scaling	Predicted baseline variance sigma^2/G (binary sigma^2=0.1758): G=4=0.0439, G=8=0.0220, G=16=0.0110, G=32=0.0055, G=64=0.0027
+prediction	ratio_G4_over_G32	G=4 / G=32 baseline-variance ratio = 8.00x -- G=4's group-mean baseline estimator has 8x more per-step noise than G=32's
+_extras	_store	"{""sigma2_mean"": 0.1757738095238095, ""pred"": {""4"": 0.043943452380952375, ""8"": 0.021971726190476187, ""16"": 0.010985863095238094, ""32"": 0.005492931547619047, ""64"": 0.0027464657738095234}, ""records"": [{""seed"": 42, ""n_problems"": 200, ""G"": 8, ""sigma2_within_group"": 0.18401785714285715, ""predicted_baseline_var"": 0.023002232142857144, ""var_mean_reward_across_problems"": 0.05047699434673367}, {""seed"": 123, ""n_problems"": 200, ""G"": 8, ""sigma2_within_group"": 0.16982142857142854, ""predicted_baseline_var"": 0.021227678571428567, ""var_mean_reward_across_problems"": 0.056532663316582916}, {""seed"": 456, ""n_problems"": 200, ""G"": 8, ""sigma2_within_group"": 0.17348214285714283, ""predicted_baseline_var"": 0.021685267857142854, ""var_mean_reward_across_problems"": 0.06857372801507537}]}"

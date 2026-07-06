@@ -1,0 +1,400 @@
+{
+  "n_seeds": 5,
+  "n_steps_per_seed": 15,
+  "seeds": [
+    42,
+    179,
+    316,
+    453,
+    590
+  ],
+  "global_zvf_max": 0.875,
+  "interpretation": "N10 panel has global zvf max < 1.0, so the iter-51 controller is ESCALATION-ONLY (de-escalation branch never fires). All savings are non-positive on N10; the controller's de-escalation branch cannot be validated on this panel.",
+  "single_tau_sweep": [
+    {
+      "tau_esc": 0.3,
+      "fires_per_seed": 14,
+      "fires_ci": [
+        12.4,
+        15.0
+      ],
+      "savings_pct": -93.333,
+      "savings_ci": [
+        -100.0,
+        -82.667
+      ],
+      "jaccard_fire_sets": 0.867,
+      "per_step_full_agreement": 0.667
+    },
+    {
+      "tau_esc": 0.4,
+      "fires_per_seed": 12.6,
+      "fires_ci": [
+        11.2,
+        13.8
+      ],
+      "savings_pct": -84.0,
+      "savings_ci": [
+        -92.0,
+        -74.667
+      ],
+      "jaccard_fire_sets": 0.726,
+      "per_step_full_agreement": 0.467
+    },
+    {
+      "tau_esc": 0.5,
+      "fires_per_seed": 12.6,
+      "fires_ci": [
+        11.2,
+        13.8
+      ],
+      "savings_pct": -84.0,
+      "savings_ci": [
+        -92.0,
+        -74.667
+      ],
+      "jaccard_fire_sets": 0.726,
+      "per_step_full_agreement": 0.467
+    },
+    {
+      "tau_esc": 0.55,
+      "fires_per_seed": 9,
+      "fires_ci": [
+        7.4,
+        10.0
+      ],
+      "savings_pct": -60.0,
+      "savings_ci": [
+        -66.667,
+        -49.333
+      ],
+      "jaccard_fire_sets": 0.402,
+      "per_step_full_agreement": 0
+    },
+    {
+      "tau_esc": 0.6,
+      "fires_per_seed": 9,
+      "fires_ci": [
+        7.4,
+        10.0
+      ],
+      "savings_pct": -60.0,
+      "savings_ci": [
+        -66.667,
+        -49.333
+      ],
+      "jaccard_fire_sets": 0.402,
+      "per_step_full_agreement": 0
+    },
+    {
+      "tau_esc": 0.65,
+      "fires_per_seed": 4.2,
+      "fires_ci": [
+        3.0,
+        5.2
+      ],
+      "savings_pct": -28.0,
+      "savings_ci": [
+        -34.667,
+        -20.0
+      ],
+      "jaccard_fire_sets": 0.133,
+      "per_step_full_agreement": 0.133
+    },
+    {
+      "tau_esc": 0.7,
+      "fires_per_seed": 4.2,
+      "fires_ci": [
+        3.0,
+        5.2
+      ],
+      "savings_pct": -28.0,
+      "savings_ci": [
+        -34.667,
+        -20.0
+      ],
+      "jaccard_fire_sets": 0.133,
+      "per_step_full_agreement": 0.133
+    },
+    {
+      "tau_esc": 0.75,
+      "fires_per_seed": 4.2,
+      "fires_ci": [
+        3.0,
+        5.2
+      ],
+      "savings_pct": -28.0,
+      "savings_ci": [
+        -34.667,
+        -20.0
+      ],
+      "jaccard_fire_sets": 0.133,
+      "per_step_full_agreement": 0.133
+    },
+    {
+      "tau_esc": 0.8,
+      "fires_per_seed": 0.6,
+      "fires_ci": [
+        0.0,
+        1.4
+      ],
+      "savings_pct": -4.0,
+      "savings_ci": [
+        -9.333,
+        0.0
+      ],
+      "jaccard_fire_sets": 0.3,
+      "per_step_full_agreement": 0.8
+    },
+    {
+      "tau_esc": 0.85,
+      "fires_per_seed": 0.6,
+      "fires_ci": [
+        0.0,
+        1.4
+      ],
+      "savings_pct": -4.0,
+      "savings_ci": [
+        -9.333,
+        0.0
+      ],
+      "jaccard_fire_sets": 0.3,
+      "per_step_full_agreement": 0.8
+    },
+    {
+      "tau_esc": 0.9,
+      "fires_per_seed": 0,
+      "fires_ci": [
+        0.0,
+        0.0
+      ],
+      "savings_pct": 0.0,
+      "savings_ci": [
+        0.0,
+        0.0
+      ],
+      "jaccard_fire_sets": 1.0,
+      "per_step_full_agreement": 1
+    },
+    {
+      "tau_esc": 0.95,
+      "fires_per_seed": 0,
+      "fires_ci": [
+        0.0,
+        0.0
+      ],
+      "savings_pct": 0.0,
+      "savings_ci": [
+        0.0,
+        0.0
+      ],
+      "jaccard_fire_sets": 1.0,
+      "per_step_full_agreement": 1
+    }
+  ],
+  "two_threshold_grid": [
+    {
+      "tau_esc": 0.5,
+      "tau_des": 0.8,
+      "de_esc_active": false,
+      "de_esc_fires_total": 3,
+      "esc_fires_total": 60,
+      "savings_pct_mean": -78.0,
+      "savings_pct_ci_lo": -88.667,
+      "savings_pct_ci_hi": -66.667,
+      "net_savings_pct": 178.0
+    },
+    {
+      "tau_esc": 0.5,
+      "tau_des": 0.85,
+      "de_esc_active": false,
+      "de_esc_fires_total": 3,
+      "esc_fires_total": 60,
+      "savings_pct_mean": -78.0,
+      "savings_pct_ci_lo": -88.667,
+      "savings_pct_ci_hi": -66.667,
+      "net_savings_pct": 178.0
+    },
+    {
+      "tau_esc": 0.5,
+      "tau_des": 0.9,
+      "de_esc_active": false,
+      "de_esc_fires_total": 0,
+      "esc_fires_total": 63,
+      "savings_pct_mean": -84.0,
+      "savings_pct_ci_lo": -92.0,
+      "savings_pct_ci_hi": -74.667,
+      "net_savings_pct": 184.0
+    },
+    {
+      "tau_esc": 0.6,
+      "tau_des": 0.8,
+      "de_esc_active": false,
+      "de_esc_fires_total": 3,
+      "esc_fires_total": 42,
+      "savings_pct_mean": -54.0,
+      "savings_pct_ci_lo": -62.0,
+      "savings_pct_ci_hi": -45.333,
+      "net_savings_pct": 154.0
+    },
+    {
+      "tau_esc": 0.6,
+      "tau_des": 0.85,
+      "de_esc_active": false,
+      "de_esc_fires_total": 3,
+      "esc_fires_total": 42,
+      "savings_pct_mean": -54.0,
+      "savings_pct_ci_lo": -62.0,
+      "savings_pct_ci_hi": -45.333,
+      "net_savings_pct": 154.0
+    },
+    {
+      "tau_esc": 0.6,
+      "tau_des": 0.9,
+      "de_esc_active": false,
+      "de_esc_fires_total": 0,
+      "esc_fires_total": 45,
+      "savings_pct_mean": -60.0,
+      "savings_pct_ci_lo": -66.667,
+      "savings_pct_ci_hi": -49.333,
+      "net_savings_pct": 160.0
+    },
+    {
+      "tau_esc": 0.7,
+      "tau_des": 0.8,
+      "de_esc_active": false,
+      "de_esc_fires_total": 3,
+      "esc_fires_total": 18,
+      "savings_pct_mean": -22.0,
+      "savings_pct_ci_lo": -28.0,
+      "savings_pct_ci_hi": -16.0,
+      "net_savings_pct": 122.0
+    },
+    {
+      "tau_esc": 0.7,
+      "tau_des": 0.85,
+      "de_esc_active": false,
+      "de_esc_fires_total": 3,
+      "esc_fires_total": 18,
+      "savings_pct_mean": -22.0,
+      "savings_pct_ci_lo": -28.0,
+      "savings_pct_ci_hi": -16.0,
+      "net_savings_pct": 122.0
+    },
+    {
+      "tau_esc": 0.7,
+      "tau_des": 0.9,
+      "de_esc_active": false,
+      "de_esc_fires_total": 0,
+      "esc_fires_total": 21,
+      "savings_pct_mean": -28.0,
+      "savings_pct_ci_lo": -34.667,
+      "savings_pct_ci_hi": -20.0,
+      "net_savings_pct": 128.0
+    },
+    {
+      "tau_esc": 0.8,
+      "tau_des": 0.8,
+      "de_esc_active": false,
+      "de_esc_fires_total": 3,
+      "esc_fires_total": 0,
+      "savings_pct_mean": 2.0,
+      "savings_pct_ci_lo": 0.0,
+      "savings_pct_ci_hi": 4.667,
+      "net_savings_pct": 98.0
+    },
+    {
+      "tau_esc": 0.8,
+      "tau_des": 0.85,
+      "de_esc_active": false,
+      "de_esc_fires_total": 3,
+      "esc_fires_total": 0,
+      "savings_pct_mean": 2.0,
+      "savings_pct_ci_lo": 0.0,
+      "savings_pct_ci_hi": 4.667,
+      "net_savings_pct": 98.0
+    },
+    {
+      "tau_esc": 0.8,
+      "tau_des": 0.9,
+      "de_esc_active": false,
+      "de_esc_fires_total": 0,
+      "esc_fires_total": 3,
+      "savings_pct_mean": -4.0,
+      "savings_pct_ci_lo": -9.333,
+      "savings_pct_ci_hi": 0.0,
+      "net_savings_pct": 104.0
+    },
+    {
+      "tau_esc": 0.85,
+      "tau_des": 0.8,
+      "de_esc_active": false,
+      "de_esc_fires_total": 3,
+      "esc_fires_total": 0,
+      "savings_pct_mean": 2.0,
+      "savings_pct_ci_lo": 0.0,
+      "savings_pct_ci_hi": 4.667,
+      "net_savings_pct": 98.0
+    },
+    {
+      "tau_esc": 0.85,
+      "tau_des": 0.85,
+      "de_esc_active": false,
+      "de_esc_fires_total": 3,
+      "esc_fires_total": 0,
+      "savings_pct_mean": 2.0,
+      "savings_pct_ci_lo": 0.0,
+      "savings_pct_ci_hi": 4.667,
+      "net_savings_pct": 98.0
+    },
+    {
+      "tau_esc": 0.85,
+      "tau_des": 0.9,
+      "de_esc_active": false,
+      "de_esc_fires_total": 0,
+      "esc_fires_total": 3,
+      "savings_pct_mean": -4.0,
+      "savings_pct_ci_lo": -9.333,
+      "savings_pct_ci_hi": 0.0,
+      "net_savings_pct": 104.0
+    }
+  ],
+  "cross_seed_kendall_tau_zvf_trajectory": {
+    "mean": -0.06,
+    "min": -0.336,
+    "max": 0.327
+  },
+  "panel": {
+    "heldout_acc": [
+      0.375,
+      0.5859,
+      0.4766,
+      0.4297,
+      0.4062
+    ],
+    "mean_zvf": [
+      0.4917,
+      0.6083,
+      0.5917,
+      0.6333,
+      0.6083
+    ],
+    "last10_zvf": [
+      0.5,
+      0.6,
+      0.625,
+      0.5875,
+      0.5875
+    ],
+    "pearson_heldout_vs_mean_zvf": 0.458,
+    "pearson_heldout_vs_mean_zvf_ci95": [
+      -1.0,
+      1.0
+    ],
+    "pearson_heldout_vs_last10_zvf": 0.607,
+    "pearson_heldout_vs_last10_zvf_ci95": [
+      -0.048,
+      1.0
+    ]
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "n_test": 10000,
+  "k_top": 200,
+  "k_pct": 2.0,
+  "base_rate_test": 0.0144,
+  "dist_summary": [
+    {
+      "backbone": "XGB-20raw",
+      "n_top": 200,
+      "grad_mean": 0.004662690050899983,
+      "grad_p25": 0.0009853243827819824,
+      "grad_p50": 0.0025416314601898193,
+      "grad_p75": 0.0058406442403793335,
+      "grad_p95": 0.017952727526426314,
+      "grad_p99": 0.024072142839431723
+    },
+    {
+      "backbone": "XGB-24full",
+      "n_top": 200,
+      "grad_mean": 0.004660035409033298,
+      "grad_p25": 0.0009152628481388092,
+      "grad_p50": 0.00279206782579422,
+      "grad_p75": 0.0062192827463150024,
+      "grad_p95": 0.017012824118137326,
+      "grad_p99": 0.024766421914100584
+    }
+  ],
+  "best_gradient_rule": {
+    "backbone": "XGB-20raw",
+    "g_thr": 0.0001,
+    "n_llm_calls": 9,
+    "frac_llm": 0.0009,
+    "n_caught_at_K2": 141,
+    "recall_at_K2": 0.9791666666666666,
+    "precision_at_K2": 0.705,
+    "auc": 0.9997731218434344,
+    "cost_per_decision": 0.00010081,
+    "cost_per_fraud_caught": 0.007149645390070922
+  },
+  "abs_band_w010_baseline": {
+    "backbone": "XGB-20raw",
+    "width": 0.1,
+    "n_llm_calls": 21,
+    "frac_llm": 0.0021,
+    "n_caught_at_K2": 141,
+    "recall_at_K2": 0.9791666666666666,
+    "precision_at_K2": 0.705,
+    "auc": 0.9997590300324676,
+    "cost_per_decision": 0.00010188999999999999,
+    "cost_per_fraud_caught": 0.007226241134751773
+  },
+  "paired_delta_recall_at_K2": 0.002230933480990123,
+  "paired_delta_recall_ci_lo": -0.03000024398392067,
+  "paired_delta_recall_ci_hi": 0.03547374866064599,
+  "cost_per_fraud_caught_gradient": 0.007149645390070922,
+  "cost_per_fraud_caught_abs_band_w010": 0.007226241134751773,
+  "llm_calls_gradient": 9,
+  "llm_calls_abs_band_w010": 21,
+  "verdict": "INDISTINGUISHABLE-ON-RECALL-CH-LLM-CALLS-COST",
+  "key_finding": "gradient-band (g_thr=0.0001) matches absolute-band (w=0.10) recall@K=2% (141/144=97.92%) using 9 LLM calls vs 21 (57% fewer)."
+}

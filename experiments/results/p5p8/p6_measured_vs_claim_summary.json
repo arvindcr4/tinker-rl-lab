@@ -1,0 +1,63 @@
+{
+  "extended_entries": 8,
+  "iter": 46,
+  "n_measured_rows": 22,
+  "per_delta_counts": {
+    "delta_aero": {
+      "CONTRADICTS": 1,
+      "NEUTRAL": 1,
+      "SUPPORTS": 1,
+      "UNCLAIMED": 1
+    },
+    "delta_areal": {
+      "CONTRADICTS": 1,
+      "NEUTRAL": 1,
+      "SUPPORTS": 1,
+      "UNCLAIMED": 1
+    },
+    "delta_cppo": {
+      "SUPPORTS": 1,
+      "UNCLAIMED": 1
+    },
+    "delta_es": {
+      "SUPPORTS": 1,
+      "UNCLAIMED": 1
+    },
+    "delta_gift": {
+      "NEUTRAL": 1,
+      "SUPPORTS": 2,
+      "UNCLAIMED": 1
+    },
+    "delta_mcgrpo": {
+      "SUPPORTS": 1,
+      "UNCLAIMED": 1
+    },
+    "delta_ngrpo": {
+      "SUPPORTS": 1,
+      "UNCLAIMED": 1
+    },
+    "delta_scafgrpo": {
+      "SUPPORTS": 1,
+      "UNCLAIMED": 1
+    }
+  },
+  "pillar": "P6",
+  "registry_validate": {
+    "fail": 0,
+    "pass": 31,
+    "total": 31
+  },
+  "vein": "(a) measured-vs-claimed validation",
+  "verdict_counts": {
+    "CONTRADICTS": 2,
+    "NEUTRAL": 3,
+    "SUPPORTS": 9,
+    "UNCLAIMED": 8
+  },
+  "verdict_pct": {
+    "CONTRADICTS": 9.1,
+    "NEUTRAL": 13.6,
+    "SUPPORTS": 40.9,
+    "UNCLAIMED": 36.4
+  }
+}

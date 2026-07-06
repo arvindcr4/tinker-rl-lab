@@ -1,0 +1,1296 @@
+{
+  "n_methods_in_panel": 9,
+  "grpo_baseline": {
+    "n_seeds": 5,
+    "mean_zvf": 0.48078,
+    "mean_zvf_risk": 0.5776880179873355
+  },
+  "per_method_summary": {
+    "grpo": {
+      "n_seeds": 5,
+      "mean_zvf": 0.48078,
+      "std_zvf": 0.0010342146779078283,
+      "mean_zvf_risk": 0.5776880179873355,
+      "delta_zvf_vs_grpo": 0.0,
+      "effect_size_vs_grpo_sd": 0.0,
+      "delta_zvf_risk_vs_grpo": 0.0,
+      "effect_size_zvf_risk_vs_grpo_sd": 0.0,
+      "min_zvf": 0.4793,
+      "max_zvf": 0.4824
+    },
+    "aero": {
+      "n_seeds": 5,
+      "mean_zvf": 0.22025999999999998,
+      "std_zvf": 0.0017419529270333322,
+      "mean_zvf_risk": 0.43005065314680696,
+      "delta_zvf_vs_grpo": -0.26052,
+      "effect_size_vs_grpo_sd": -251.9012788785987,
+      "delta_zvf_risk_vs_grpo": -0.14763736484052853,
+      "effect_size_zvf_risk_vs_grpo_sd": -1.4215871781123406,
+      "min_zvf": 0.2178,
+      "max_zvf": 0.2219
+    },
+    "mcgrpo": {
+      "n_seeds": 5,
+      "mean_zvf": 0.14604,
+      "std_zvf": 0.007002171091882854,
+      "mean_zvf_risk": 0.40341125968913405,
+      "delta_zvf_vs_grpo": -0.33474,
+      "effect_size_vs_grpo_sd": -323.665876292884,
+      "delta_zvf_risk_vs_grpo": -0.17427675829820144,
+      "effect_size_zvf_risk_vs_grpo_sd": -1.6780955505898862,
+      "min_zvf": 0.1332,
+      "max_zvf": 0.1525
+    },
+    "ngrpo": {
+      "n_seeds": 5,
+      "mean_zvf": 0.30036,
+      "std_zvf": 0.0021638853943774334,
+      "mean_zvf_risk": 0.4466628788343441,
+      "delta_zvf_vs_grpo": -0.18041999999999997,
+      "effect_size_vs_grpo_sd": -174.4512081040871,
+      "delta_zvf_risk_vs_grpo": -0.1310251391529914,
+      "effect_size_zvf_risk_vs_grpo_sd": -1.2616295206262433,
+      "min_zvf": 0.2975,
+      "max_zvf": 0.3036
+    },
+    "cppo": {
+      "n_seeds": 5,
+      "mean_zvf": 0.29519999999999996,
+      "std_zvf": 0.0020268201696253176,
+      "mean_zvf_risk": 0.42661061087943886,
+      "delta_zvf_vs_grpo": -0.18558000000000002,
+      "effect_size_vs_grpo_sd": -179.4405010528572,
+      "delta_zvf_risk_vs_grpo": -0.15107740710789663,
+      "effect_size_zvf_risk_vs_grpo_sd": -1.454711042011817,
+      "min_zvf": 0.2919,
+      "max_zvf": 0.298
+    },
+    "areal": {
+      "n_seeds": 5,
+      "mean_zvf": 0.1209,
+      "std_zvf": 0.004641120554348919,
+      "mean_zvf_risk": 0.3319206130908743,
+      "delta_zvf_vs_grpo": -0.35988,
+      "effect_size_vs_grpo_sd": -347.9741756595659,
+      "delta_zvf_risk_vs_grpo": -0.2457674048964612,
+      "effect_size_zvf_risk_vs_grpo_sd": -2.366472687833044,
+      "min_zvf": 0.1118,
+      "max_zvf": 0.1241
+    },
+    "gift": {
+      "n_seeds": 5,
+      "mean_zvf": 0.1142,
+      "std_zvf": 0.004548406314303943,
+      "mean_zvf_risk": 0.31450054377666564,
+      "delta_zvf_vs_grpo": -0.36658,
+      "effect_size_vs_grpo_sd": -354.4525211550619,
+      "delta_zvf_risk_vs_grpo": -0.26318747421066985,
+      "effect_size_zvf_risk_vs_grpo_sd": -2.5342090004233997,
+      "min_zvf": 0.1053,
+      "max_zvf": 0.1176
+    },
+    "es": {
+      "n_seeds": 5,
+      "mean_zvf": 0.11422,
+      "std_zvf": 0.00455692879031481,
+      "mean_zvf_risk": 0.3051097720985813,
+      "delta_zvf_vs_grpo": -0.36656,
+      "effect_size_vs_grpo_sd": -354.4331828102992,
+      "delta_zvf_risk_vs_grpo": -0.2725782458887542,
+      "effect_size_zvf_risk_vs_grpo_sd": -2.624631913515658,
+      "min_zvf": 0.1056,
+      "max_zvf": 0.1191
+    },
+    "scafgrpo": {
+      "n_seeds": 5,
+      "mean_zvf": 0.31664,
+      "std_zvf": 0.00382444767254044,
+      "mean_zvf_risk": 0.22532716228739563,
+      "delta_zvf_vs_grpo": -0.16414,
+      "effect_size_vs_grpo_sd": -158.70979546727006,
+      "delta_zvf_risk_vs_grpo": -0.35236085569993986,
+      "effect_size_zvf_risk_vs_grpo_sd": -3.3928516339531676,
+      "min_zvf": 0.3126,
+      "max_zvf": 0.3216
+    }
+  },
+  "per_delta_effect": {
+    "delta_aero": {
+      "delta_id": "delta_aero",
+      "method": "aero",
+      "n_seeds": 5,
+      "mean_zvf": 0.22025999999999998,
+      "mean_zvf_risk": 0.43005065314680696,
+      "delta_zvf_vs_grpo": -0.26052,
+      "effect_size_vs_grpo_sd": -251.9012788785987,
+      "delta_zvf_risk_vs_grpo": -0.14763736484052853,
+      "verdict": "SUPPORT"
+    },
+    "delta_gift": {
+      "delta_id": "delta_gift",
+      "method": "gift",
+      "n_seeds": 5,
+      "mean_zvf": 0.1142,
+      "mean_zvf_risk": 0.31450054377666564,
+      "delta_zvf_vs_grpo": -0.36658,
+      "effect_size_vs_grpo_sd": -354.4525211550619,
+      "delta_zvf_risk_vs_grpo": -0.26318747421066985,
+      "verdict": "NO_DATA"
+    },
+    "delta_areal": {
+      "delta_id": "delta_areal",
+      "method": "areal",
+      "n_seeds": 5,
+      "mean_zvf": 0.1209,
+      "mean_zvf_risk": 0.3319206130908743,
+      "delta_zvf_vs_grpo": -0.35988,
+      "effect_size_vs_grpo_sd": -347.9741756595659,
+      "delta_zvf_risk_vs_grpo": -0.2457674048964612,
+      "verdict": "NO_DATA"
+    },
+    "delta_dapo": {
+      "delta_id": "delta_dapo",
+      "method": "dapo",
+      "n_seeds": 0,
+      "verdict": "NO_DATA"
+    },
+    "delta_drgrpo": {
+      "delta_id": "delta_drgrpo",
+      "method": "drgrpo",
+      "n_seeds": 0,
+      "verdict": "NO_DATA"
+    },
+    "delta_gspo": {
+      "delta_id": "delta_gspo",
+      "method": "gspo",
+      "n_seeds": 0,
+      "verdict": "NO_DATA"
+    },
+    "delta_cppo": {
+      "delta_id": "delta_cppo",
+      "method": "cppo",
+      "n_seeds": 5,
+      "mean_zvf": 0.29519999999999996,
+      "mean_zvf_risk": 0.42661061087943886,
+      "delta_zvf_vs_grpo": -0.18558000000000002,
+      "effect_size_vs_grpo_sd": -179.4405010528572,
+      "delta_zvf_risk_vs_grpo": -0.15107740710789663,
+      "verdict": "NO_DATA"
+    },
+    "delta_ngrpo": {
+      "delta_id": "delta_ngrpo",
+      "method": "ngrpo",
+      "n_seeds": 5,
+      "mean_zvf": 0.30036,
+      "mean_zvf_risk": 0.4466628788343441,
+      "delta_zvf_vs_grpo": -0.18041999999999997,
+      "effect_size_vs_grpo_sd": -174.4512081040871,
+      "delta_zvf_risk_vs_grpo": -0.1310251391529914,
+      "verdict": "NO_DATA"
+    },
+    "delta_mcgrpo": {
+      "delta_id": "delta_mcgrpo",
+      "method": "mcgrpo",
+      "n_seeds": 5,
+      "mean_zvf": 0.14604,
+      "mean_zvf_risk": 0.40341125968913405,
+      "delta_zvf_vs_grpo": -0.33474,
+      "effect_size_vs_grpo_sd": -323.665876292884,
+      "delta_zvf_risk_vs_grpo": -0.17427675829820144,
+      "verdict": "NO_DATA"
+    },
+    "delta_es": {
+      "delta_id": "delta_es",
+      "method": "es",
+      "n_seeds": 5,
+      "mean_zvf": 0.11422,
+      "mean_zvf_risk": 0.3051097720985813,
+      "delta_zvf_vs_grpo": -0.36656,
+      "effect_size_vs_grpo_sd": -354.4331828102992,
+      "delta_zvf_risk_vs_grpo": -0.2725782458887542,
+      "verdict": "NO_DATA"
+    },
+    "delta_scafgrpo": {
+      "delta_id": "delta_scafgrpo",
+      "method": "scafgrpo",
+      "n_seeds": 5,
+      "mean_zvf": 0.31664,
+      "mean_zvf_risk": 0.22532716228739563,
+      "delta_zvf_vs_grpo": -0.16414,
+      "effect_size_vs_grpo_sd": -158.70979546727006,
+      "delta_zvf_risk_vs_grpo": -0.35236085569993986,
+      "verdict": "NO_DATA"
+    }
+  },
+  "per_tau_firing_rates": {
+    "0.1": {
+      "delta_aero": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_gift": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_areal": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_ngrpo": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_mcgrpo": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_es": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_scafgrpo": {
+        "fires": 0,
+        "rate": 0.0
+      }
+    },
+    "0.15": {
+      "delta_aero": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_ngrpo": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_mcgrpo": {
+        "fires": 3,
+        "rate": 0.6
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 0,
+        "rate": 0.0
+      }
+    },
+    "0.2": {
+      "delta_aero": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_ngrpo": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 0,
+        "rate": 0.0
+      }
+    },
+    "0.25": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_ngrpo": {
+        "fires": 0,
+        "rate": 0.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 0,
+        "rate": 0.0
+      }
+    },
+    "0.3": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 3,
+        "rate": 0.6
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 0,
+        "rate": 0.0
+      }
+    },
+    "0.35": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      }
+    },
+    "0.4": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      }
+    },
+    "0.45": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      }
+    },
+    "0.5": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      }
+    },
+    "0.55": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      }
+    },
+    "0.6": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      }
+    },
+    "0.65": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      }
+    },
+    "0.7": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      }
+    },
+    "0.75": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      }
+    },
+    "0.8": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      }
+    },
+    "0.85": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      }
+    },
+    "0.9": {
+      "delta_aero": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_gift": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_areal": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_dapo": null,
+      "delta_drgrpo": null,
+      "delta_gspo": null,
+      "delta_cppo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_ngrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_mcgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_es": {
+        "fires": 5,
+        "rate": 1.0
+      },
+      "delta_scafgrpo": {
+        "fires": 5,
+        "rate": 1.0
+      }
+    }
+  },
+  "headline_taus": [
+    0.1,
+    0.15,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8
+  ],
+  "method_of_delta": {
+    "delta_aero": "aero",
+    "delta_gift": "gift",
+    "delta_areal": "areal",
+    "delta_dapo": "dapo",
+    "delta_drgrpo": "drgrpo",
+    "delta_gspo": "gspo",
+    "delta_cppo": "cppo",
+    "delta_ngrpo": "ngrpo",
+    "delta_mcgrpo": "mcgrpo",
+    "delta_es": "es",
+    "delta_scafgrpo": "scafgrpo"
+  },
+  "predicted_zvf_sign": {
+    "delta_aero": -1,
+    "delta_gift": 0,
+    "delta_areal": 0,
+    "delta_dapo": -1,
+    "delta_drgrpo": 1,
+    "delta_gspo": 0,
+    "delta_cppo": 0,
+    "delta_ngrpo": 0,
+    "delta_mcgrpo": 0,
+    "delta_es": 0,
+    "delta_scafgrpo": 0
+  },
+  "verdict_counts": {
+    "SUPPORT": 1,
+    "WEAK": 0,
+    "OPPOSE": 0,
+    "NO_DATA": 10
+  },
+  "controller_coupling": {
+    "delta_aero": {
+      "0.1": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.15": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.2": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.3": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.4": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.5": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.6": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.7": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.8": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      }
+    },
+    "delta_gift": {
+      "0.1": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.15": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.2": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.3": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.4": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.5": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.6": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.7": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.8": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      }
+    },
+    "delta_areal": {
+      "0.1": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.15": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.2": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.3": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.4": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.5": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.6": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.7": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.8": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      }
+    },
+    "delta_cppo": {
+      "0.1": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.15": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.2": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.3": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.4": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.5": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.6": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.7": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.8": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      }
+    },
+    "delta_ngrpo": {
+      "0.1": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.15": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.2": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.3": {
+        "variant_rate": 0.6,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.6
+      },
+      "0.4": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.5": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.6": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.7": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.8": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      }
+    },
+    "delta_mcgrpo": {
+      "0.1": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.15": {
+        "variant_rate": 0.6,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.6
+      },
+      "0.2": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.3": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.4": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.5": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.6": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.7": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.8": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      }
+    },
+    "delta_es": {
+      "0.1": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.15": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.2": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.3": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.4": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.5": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.6": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.7": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.8": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      }
+    },
+    "delta_scafgrpo": {
+      "0.1": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.15": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.2": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.3": {
+        "variant_rate": 0.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.4": {
+        "variant_rate": 1.0,
+        "grpo_rate": 0.0,
+        "delta_rate_vs_grpo": 1.0
+      },
+      "0.5": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.6": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.7": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      },
+      "0.8": {
+        "variant_rate": 1.0,
+        "grpo_rate": 1.0,
+        "delta_rate_vs_grpo": 0.0
+      }
+    }
+  },
+  "controller_verdicts": {
+    "delta_aero": "MORE_FIRE",
+    "delta_gift": "MORE_FIRE",
+    "delta_areal": "MORE_FIRE",
+    "delta_cppo": "MORE_FIRE",
+    "delta_ngrpo": "MORE_FIRE",
+    "delta_mcgrpo": "MORE_FIRE",
+    "delta_es": "MORE_FIRE",
+    "delta_scafgrpo": "MORE_FIRE"
+  },
+  "controller_verdict_counts": {
+    "MORE_FIRE": 8,
+    "LESS_FIRE": 0,
+    "TIE": 0,
+    "MIXED": 0,
+    "NO_DATA": 0
+  },
+  "figure_path": "experiments/results/p5p8/figures/registry_variant_coupling.png"
+}

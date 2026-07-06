@@ -1,0 +1,151 @@
+% Iter 54: add missing variant-delta entries + cross-reference audit
+\subsection{Iter-54: Closing the Registry's Missing-Delta Gap}
+\label{sec:p6-missing-deltas}
+
+The iter-50 audit (Section~\ref{sec:p6-registry-health-iter50})
+catalogued the registry as \textbf{31/31 entries PASS, 60.9\%
+coverage grid}, and explicitly flagged four veins for future iters.
+Three were closed by the same iter (CI-style validator, coverage grid,
+verdict-signature clustering); the fourth --- ``add new entries for
+the missing framework $\times$ method cells'' --- was deferred because
+``the entry would require measured data on a new cell that is not
+currently in the worktree'' (Section~\ref{sec:p6-registry-health-iter50}).
+This subsection
+closes the fourth vein: three new $\texttt{delta\_*.json}$ ship this
+iter, two of them as honest provenance-only placeholders and the
+third as a measured same-stack delta on the worktree's own
+$\texttt{qp7\_adaptive.tsv}$ panel.
+
+\paragraph{New entries.}
+\begin{itemize}
+\item $\texttt{delta\_adaptiveg}$ --- adaptive group-size ladder
+(4$\to$6$\to$8 on ZVF$>$0.5, de-escalate on ZVF$<$0.2). The base
+stack $\texttt{grpo}$ is the same model, task, sampler, and
+RLHF-pipeline as the fixed-G arm; the \emph{only} difference is the
+group-size schedule. Provenance is
+$\texttt{experiments/results/quick\_20260704/qp7\_adaptive.tsv}$
+(arm B adaptive 4$\to$6$\to$8 vs.\ arm A fixed $G=4$, 16 paired
+steps). The measured block carries paired bootstrap CIs
+($B=2{,}000$, $\text{seed}=20260704$) on two metrics:
+$\texttt{reward\_mean}$ and $\texttt{zvf}$.
+\item $\texttt{delta\_reinforce}$ --- REINFORCE without baseline.
+Provenance-only ($\texttt{measured}=[]$): REINFORCE is mentioned in
+$\texttt{experiments/results/EXPERIMENT\_LEDGER.md}$ (gsm8k-reinforce,
+four wandb runs on Qwen3-8B / Llama-3.1-8B-Instruct) but no
+$\texttt{delta\_*.json}$ existed. The entry closes that gap and
+provides a stable id for a future same-stack REINFORCE arm to land
+in without re-minting the entry.
+\item $\texttt{delta\_liteppo}$ --- LitePPO (no value head, symmetric
+clip). Provenance-only ($\texttt{measured}=[]$): mentioned as
+$\texttt{ppo\_lite}$ in the ledger but had no entry. Citation is a
+transparent placeholder ($\texttt{arxiv}=\text{``''}$) because no
+peer-reviewed LitePPO paper is verified; this is flagged on the
+entry itself rather than hidden.
+\end{itemize}
+
+\paragraph{Cross-reference audit ($\texttt{missing\_delta\_audit.tsv}$).}
+For every $\texttt{(stack, variant\_deltas\_applied[*].delta\_id)}$
+pair, check whether $\texttt{registry/entries/\textless delta\_id \textgreater.json}$
+exists. Before this iter, the audit could not run; after this iter it
+audits \textbf{26 (stack, delta) claims} and finds \textbf{0
+CLAIMED\_BUT\_MISSING} --- every delta claimed by a stack now
+resolves to a registered entry. The new
+$\texttt{delta\_adaptiveg}$ is also cross-linked into
+$\texttt{colab-open\_grpo-adaptiveg\_e3}$, whose
+$\texttt{variant\_deltas\_applied}$ was previously $[]$ even though
+the entry IS the live implementation of the adaptive-G delta.
+
+\paragraph{Falsifiable headline (re-run 2026-07-05).}
+\begin{itemize}
+\item \textbf{3 new $\texttt{delta\_*.json}$} shipped; registry
+now has \textbf{34 entries} total (20 stack + 14 delta).
+\item \textbf{34/34 PASS} $\texttt{jsonschema.validate}$ against
+$\texttt{registry/schema.json}$ (was 31/31 at iter 50; no
+regressions).
+\item \textbf{Adaptive-G measured block} ($n=16$ paired steps,
+$\text{arm B} - \text{arm A}$):
+$\Delta_{\text{reward\_mean}} = -0.0078$ [$95\%$ CI $-0.0239$,
+$+0.0093$] (NEUTRAL, CI includes 0 --- 16 paired obs is
+under-powered for the iter-31-predicted $+0.05$ reward gain);
+$\Delta_{\text{zvf}} = \mathbf{-0.0742}$ [$95\%$ CI $-0.1211$,
+$-0.0312$] (SUPPORTS predicted $<0$, CI excludes 0). This is the
+first machine-readable evidence that the ZVF-driven adaptive
+group-size schedule (the iter-47/51 P7 unified controller bank's
+escalation branch) measurably reduces ZVF on the worktree's own
+live same-stack panel.
+\item \textbf{Coverage grid 102/156 = 65.4\%} (was 84/138 = 60.9\%
+at iter 50; the +18 cells come from the 3 new methods appearing in
+the methods axis).
+\item \textbf{0/26 CLAIMED\_BUT\_MISSING} in
+$\texttt{missing\_delta\_audit.tsv}$.
+\item \textbf{Verdict-signature clusters}: 3 $\to$ 4 clusters.
+$\texttt{da39a3ee5e}$ grows 3 $\to$ 5 (DAPO, Dr.GRPO, GSPO,
+\textbf{LitePPO}, \textbf{REINFORCE} --- the two provenance-only
+entries share the null signature because neither carries
+$\texttt{claim\_validation}$ rows); new
+$\texttt{delta\_adaptiveg}$ forms its own singleton cluster.
+\end{itemize}
+
+\begin{table}[t]
+\centering\small
+\caption{Iter-54 new $\texttt{delta\_*.json}$ summary. The Adaptive-G
+delta carries a measured block on a real worktree panel; the other two
+are honest provenance-only placeholders with $\texttt{measured}=[]$
+(their $\texttt{notes}$ field states the criterion for adding a
+measured row).}
+\label{tab:p6-new-deltas}
+\begin{tabular}{l r l l r r}
+\toprule
+delta\_id & n\_comp & base & source panel & n\_measured & n\_cv \\
+\midrule
+delta\_adaptiveg & 1 & grpo & qp7\_adaptive (16 paired steps) & 2 & 2 \\
+delta\_reinforce  & 2 & grpo & (provenance only)         & 0 & 0 \\
+delta\_liteppo    & 2 & grpo & (provenance only)         & 0 & 0 \\
+\bottomrule
+\end{tabular}\\
+\footnotesize{Source: $\texttt{experiments/results/p5p8/p6\_new\_deltas\_audit.tsv}$
+and $\texttt{p6\_new\_deltas\_measured.tsv}$.}
+\end{table}
+
+\paragraph{Sharpest actionable finding.}
+The two new provenance-only entries ($\texttt{delta\_reinforce}$,
+$\texttt{delta\_liteppo}$) are the first entries in the registry with
+$\texttt{measured}=[]$ declared \emph{by design} rather than as a
+side-effect of unmeasured data. Their $\texttt{notes}$ field states
+the explicit criterion for adding a measured row
+(``same model + task + sampler + RLHF pipeline with only the baseline
+removed''). This is the iter-50 sharpest-finding's promised
+``backlog-with-provenance'' pattern: structural placeholders that
+make the missing-data surface machine-readable, not hidden.
+
+\paragraph{Cross-paper coupling.}
+The $\Delta_{\text{zvf}}$ SUPPORTS verdict is the \emph{third}
+empirical confirmation (after iter-31 and iter-47) that
+ZVF-driven adaptive group-size reduces ZVF on a real worktree panel;
+the chain predicted-effect $\to$ measured-effect on the same panel
+is now a closed loop for the adaptive-G delta. The
+$\Delta_{\text{reward\_mean}}$ NEUTRAL on 16 obs is informative on
+its own: at this scale, the iter-31 prediction that adaptive-G
+improves last-step reward is not falsified, just under-powered. A
+larger $n$ (or a real GSM8K cell) would push it into either
+SUPPORTS or CONTRADICTS --- the iter-31 prediction remains
+unfalsified.
+
+\paragraph{Reproduction.}
+\begin{verbatim}
+python3 scripts/p5p8/p6_add_missing_deltas.py   # exit 0; 34/34 PASS
+python3 registry/query.py validate              # 34/34 pass
+python3 scripts/p5p8/regenerate_schema_delta_enum.py  # 14 ids
+\end{verbatim}
+Outputs: $\texttt{experiments/results/p5p8/p6\_new\_deltas\_audit.tsv}$
+(3 new entries); $\texttt{p6\_new\_deltas\_measured.tsv}$ (2 measured
+rows from delta\_adaptiveg); $\texttt{p6\_new\_deltas\_summary.json}$;
+$\texttt{missing\_delta\_audit.tsv}$ (26 audited claims, 0 missing).
+
+\paragraph{Backward compatibility.}
+$\texttt{registry/schema.json}$ modified: $\texttt{delta\_id}$ enum
+extended (additive; old ids preserved, 11 $\to$ 14).
+$\texttt{registry/entries/colab-open\_grpo-adaptiveg\_e3.json}$
+modified: $\texttt{variant\_deltas\_applied}$ now declares
+$\texttt{delta\_adaptiveg}$ (was $[]$). All other entries unchanged.
+All 31/31 pre-existing entries still PASS.

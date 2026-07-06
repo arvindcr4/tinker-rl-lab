@@ -1,0 +1,6 @@
+hypothesis	n_pairs	eta2	abs_delta	cohens_d	perm_p	verdict
+H1: ALGO axis variance is small (<5%) for samestack PPO vs GRPO	5	0.0227		-0.3050		DECISIVE (algorithm axis <5% AND |delta|<=0.005)
+H2: REWARD/INTERVENTION axis variance is small (<20%)		0.1130	0.0924			DECISIVE (Ivison reward-axis is small fraction + small spread)
+H3: |delta_grpo_minus_ppo|<=0.005 (Tulu 3 RLVR-equivalence)			0.0020		0.6209	DECISIVE
+H4: convergence-rate axis variance dominates algorithm axis						NULL
+H5: grad_norm variance is G-axis-driven (CDH overlay)		0.5363				SUGGESTIVE

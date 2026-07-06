@@ -1,0 +1,14 @@
+# Pillar 2 Iter 66 — combined cross-library ZVF shape summary
+# Mean ZVF, mean acc, cluster id (k=3), KS to GRPO,
+# observed-vs-iid delta, anti-herding label.
+# Source: scripts/zvf_iter66_distshape.py
+method	n	mean_zvf	mean_acc	cluster_k3	ks_to_grpo	iid_pred_zvf	delta_obs_minus_pred	anti_herding_label
+aero	495	aero	0.2800	0	0.4121	0.0723	-0.1502	herd
+areal	503	areal	0.2790	1	0.5012	0.0731	-0.0493	herd
+cppo	495	cppo	0.2748	-1	0.3394	0.0765	-0.2214	herd
+es	503	es	0.2698	-1	0.6081	0.0809	-0.0348	herd
+gift	503	gift	0.2778	-1	0.5072	0.0741	-0.0413	herd
+grpo	1485	grpo	0.2653	-1	0.0000	0.0849	-0.4007	herd
+mcgrpo	503	mcgrpo	0.2742	-1	0.4748	0.0771	-0.0706	herd
+ngrpo	495	ngrpo	0.2711	-1	0.3697	0.0797	-0.2235	herd
+scafgrpo	495	scafgrpo	0.2866	-1	0.5475	0.0671	-0.2505	herd

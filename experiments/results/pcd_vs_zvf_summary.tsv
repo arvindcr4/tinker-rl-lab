@@ -1,0 +1,11 @@
+metric	value
+n_groups	600
+zvf_batch_before_jitter	0.1583
+zvf_batch_after_jitter	0.0000
+pcd_batch_before_jitter	0.153802
+pcd_batch_after_jitter	0.153802
+n_runs_crossrun	80
+spearman_zvf_outcome	0.5638
+spearman_meanreward_outcome	0.9527
+spearman_zvf_collapse	0.1439
+spearman_meanreward_collapse	-0.3291

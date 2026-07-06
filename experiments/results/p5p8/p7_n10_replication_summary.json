@@ -1,0 +1,188 @@
+{
+  "evidence_base": "n10_seed_expansion",
+  "n_seeds": 5,
+  "n_steps_per_seed": 15,
+  "G_base": 8,
+  "G_candidate": 16,
+  "contrast_restoration_model": {
+    "type": "empirical_groupsize_sweep",
+    "zvf_g8_emp": 0.6906,
+    "zvf_g16_emp": 0.6312,
+    "delta_zvf_abs": 0.05940000000000001,
+    "delta_zvf_se": 0.006664082832618454,
+    "delta_zvf_lo": 0.04633839764806784,
+    "delta_zvf_hi": 0.07246160235193218,
+    "n_seeds_at_each_g": 3
+  },
+  "controllers": {
+    "zvf_triage_0.5": {
+      "fires_per_seed_mean": 2.4,
+      "fires_per_seed_lo": 1.2,
+      "fires_per_seed_hi": 3.8,
+      "cost_ratio_mean": 1.16,
+      "cost_ratio_lo": 1.08,
+      "cost_ratio_hi": 1.2533333333333334,
+      "delta_zvf_mean": 0.05940000000000001,
+      "delta_zvf_lo": 0.05940000000000001,
+      "delta_zvf_hi": 0.05940000000000001,
+      "n_fired_steps": 12
+    },
+    "zvf_triage_0.6": {
+      "fires_per_seed_mean": 6.0,
+      "fires_per_seed_lo": 5.0,
+      "fires_per_seed_hi": 7.6,
+      "cost_ratio_mean": 1.4,
+      "cost_ratio_lo": 1.3333333333333333,
+      "cost_ratio_hi": 1.5066666666666666,
+      "delta_zvf_mean": 0.05940000000000001,
+      "delta_zvf_lo": 0.05940000000000001,
+      "delta_zvf_hi": 0.05940000000000001,
+      "n_fired_steps": 30
+    },
+    "zvf_triage_0.7": {
+      "fires_per_seed_mean": 10.8,
+      "fires_per_seed_lo": 9.6,
+      "fires_per_seed_hi": 12.0,
+      "cost_ratio_mean": 1.72,
+      "cost_ratio_lo": 1.6533333333333335,
+      "cost_ratio_hi": 1.8,
+      "delta_zvf_mean": 0.0594,
+      "delta_zvf_lo": 0.0594,
+      "delta_zvf_hi": 0.0594,
+      "n_fired_steps": 54
+    },
+    "zvf_triage_0.8": {
+      "fires_per_seed_mean": 14.4,
+      "fires_per_seed_lo": 13.6,
+      "fires_per_seed_hi": 15.0,
+      "cost_ratio_mean": 1.9600000000000002,
+      "cost_ratio_lo": 1.9066666666666667,
+      "cost_ratio_hi": 2.0,
+      "delta_zvf_mean": 0.05940000000000001,
+      "delta_zvf_lo": 0.05940000000000001,
+      "delta_zvf_hi": 0.05940000000000001,
+      "n_fired_steps": 72
+    },
+    "zvf_triage_0.9": {
+      "fires_per_seed_mean": 15.0,
+      "fires_per_seed_lo": 15.0,
+      "fires_per_seed_hi": 15.0,
+      "cost_ratio_mean": 2.0,
+      "cost_ratio_lo": 2.0,
+      "cost_ratio_hi": 2.0,
+      "delta_zvf_mean": 0.059400000000000015,
+      "delta_zvf_lo": 0.059400000000000015,
+      "delta_zvf_hi": 0.059400000000000015,
+      "n_fired_steps": 75
+    },
+    "bayes_midrange_0.55": {
+      "fires_per_seed_mean": 0.0,
+      "fires_per_seed_lo": 0.0,
+      "fires_per_seed_hi": 0.0,
+      "cost_ratio_mean": 1.0,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0,
+      "delta_zvf_mean": 0.0,
+      "delta_zvf_lo": 0.0,
+      "delta_zvf_hi": 0.0,
+      "n_fired_steps": 0
+    },
+    "bayes_midrange_0.6": {
+      "fires_per_seed_mean": 0.0,
+      "fires_per_seed_lo": 0.0,
+      "fires_per_seed_hi": 0.0,
+      "cost_ratio_mean": 1.0,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0,
+      "delta_zvf_mean": 0.0,
+      "delta_zvf_lo": 0.0,
+      "delta_zvf_hi": 0.0,
+      "n_fired_steps": 0
+    },
+    "bayes_midrange_0.65": {
+      "fires_per_seed_mean": 0.0,
+      "fires_per_seed_lo": 0.0,
+      "fires_per_seed_hi": 0.0,
+      "cost_ratio_mean": 1.0,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0,
+      "delta_zvf_mean": 0.0,
+      "delta_zvf_lo": 0.0,
+      "delta_zvf_hi": 0.0,
+      "n_fired_steps": 0
+    },
+    "bayes_midrange_0.7": {
+      "fires_per_seed_mean": 0.0,
+      "fires_per_seed_lo": 0.0,
+      "fires_per_seed_hi": 0.0,
+      "cost_ratio_mean": 1.0,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0,
+      "delta_zvf_mean": 0.0,
+      "delta_zvf_lo": 0.0,
+      "delta_zvf_hi": 0.0,
+      "n_fired_steps": 0
+    },
+    "bayes_midrange_0.8": {
+      "fires_per_seed_mean": 0.4,
+      "fires_per_seed_lo": 0.0,
+      "fires_per_seed_hi": 0.8,
+      "cost_ratio_mean": 1.0266666666666666,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0533333333333332,
+      "delta_zvf_mean": 0.05940000000000001,
+      "delta_zvf_lo": 0.05940000000000001,
+      "delta_zvf_hi": 0.05940000000000001,
+      "n_fired_steps": 2
+    },
+    "bayes_midrange_0.9": {
+      "fires_per_seed_mean": 2.0,
+      "fires_per_seed_lo": 1.0,
+      "fires_per_seed_hi": 2.8,
+      "cost_ratio_mean": 1.1333333333333333,
+      "cost_ratio_lo": 1.0666666666666667,
+      "cost_ratio_hi": 1.1866666666666668,
+      "delta_zvf_mean": 0.05940000000000001,
+      "delta_zvf_lo": 0.05940000000000001,
+      "delta_zvf_hi": 0.05940000000000001,
+      "n_fired_steps": 10
+    },
+    "bayes_midrange_0.95": {
+      "fires_per_seed_mean": 4.4,
+      "fires_per_seed_lo": 3.0,
+      "fires_per_seed_hi": 5.8,
+      "cost_ratio_mean": 1.2933333333333334,
+      "cost_ratio_lo": 1.2,
+      "cost_ratio_hi": 1.4,
+      "delta_zvf_mean": 0.05940000000000001,
+      "delta_zvf_lo": 0.05940000000000001,
+      "delta_zvf_hi": 0.05940000000000001,
+      "n_fired_steps": 22
+    }
+  },
+  "pareto_frontier": [
+    "zvf_triage_0.9",
+    "bayes_midrange_0.55",
+    "bayes_midrange_0.6",
+    "bayes_midrange_0.65",
+    "bayes_midrange_0.7",
+    "bayes_midrange_0.8"
+  ],
+  "n10_vs_n2_at_tau_0.70": {
+    "n10_fires_per_seed_mean": 10.8,
+    "n10_fires_per_seed_95ci": [
+      9.6,
+      12.0
+    ],
+    "n2_fires_per_seed_mean": 4.2,
+    "n2_fires_per_seed_95ci": [
+      3.0,
+      5.4
+    ],
+    "delta_n10_minus_n2": 6.6000000000000005,
+    "n10_n_steps_per_seed": 15,
+    "n2_n_steps": 40,
+    "n10_evidence": "Qwen/Qwen3.5-4B GRPO G=8 8 prompts \u00d7 15 steps \u00d7 5 seeds",
+    "n2_evidence": "Qwen3-4B GRPO-family G=8 16 prompts \u00d7 40 steps \u00d7 1 seed"
+  }
+}

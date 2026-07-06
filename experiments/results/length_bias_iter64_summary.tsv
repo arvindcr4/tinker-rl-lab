@@ -1,0 +1,15 @@
+experiment	metric	n_pairs	mean_grpo	mean_drgrpo	mean_diff	ci_lo	ci_hi	p_le0	interpretation
+drgrpo_gsm8k_cot	alignment_all	3	-2.256641	-2.381919	-0.125278	-0.533763	0.434304	0.7345	GRPO more reward-responsive than Dr.GRPO
+drgrpo_gsm8k_cot	|alignment|_all	3	2.256641	2.381919	0.125278	-0.434304	0.533763	0.2655	inconclusive
+drgrpo_gsm8k_cot	alignment_low_zvf	3	-2.340617	-1.352932	0.987685	0.105425	1.612258	0.0	inconclusive
+drgrpo_gsm8k_cot	alignment_high_zvf	3	0.0	0.0	0.0	0.0	0.0	1.0	inconclusive
+drgrpo_gsm8k_cot	raw_drift_all	3	-0.450431	-0.240571	0.20986	0.016972	0.405172	0.0	Dr.GRPO has higher baseline length drift (less compression)
+drgrpo_gsm8k_cot	compression_on_pos_dR	3	1.713408	1.515892	-0.197516	-0.360606	0.033253	0.9665	inconclusive
+drgrpo_gsm8k_cot	compression_on_neg_dR	3	-0.543233	-0.866026	-0.322794	-0.636979	0.169108	0.965	Dr.GRPO compresses less on reward-down steps
+drgrpo_vs_grpo	alignment_all	5	-0.108594	-0.106632	0.001962	-0.017687	0.019936	0.431	inconclusive
+drgrpo_vs_grpo	|alignment|_all	5	0.108594	0.106632	-0.001962	-0.019936	0.017687	0.569	Dr.GRPO has weaker reward-direction coupling
+drgrpo_vs_grpo	alignment_low_zvf	5	0.0	0.0	0.0	0.0	0.0	1.0	inconclusive
+drgrpo_vs_grpo	alignment_high_zvf	5	-0.000506	0.003203	0.003709	-0.033275	0.02918	0.3775	inconclusive
+drgrpo_vs_grpo	raw_drift_all	5	-0.062961	-0.060196	0.002764	-0.001563	0.008654	0.1795	Dr.GRPO has higher baseline length drift (less compression)
+drgrpo_vs_grpo	compression_on_pos_dR	5	0.114963	0.104965	-0.009998	-0.024444	0.004066	0.9015	inconclusive
+drgrpo_vs_grpo	compression_on_neg_dR	5	0.006368	-0.001667	-0.008036	-0.016119	-0.000295	0.981	Dr.GRPO compresses less on reward-down steps

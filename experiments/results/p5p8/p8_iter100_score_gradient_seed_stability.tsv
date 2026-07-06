@@ -1,0 +1,5 @@
+backbone	rule	recall_orig	recall_orig_ci_lo	recall_orig_ci_hi	recall_new	recall_new_ci_lo	recall_new_ci_hi	delta_recall	delta_recall_ci_lo	delta_recall_ci_hi	n_llm_orig	n_llm_new	delta_n_llm
+XGB-20raw	gradient-band	0.982048	0.954247	1	0.993125	0.978261	1	0.011077	-0.0138913	0.0389804	9	5	-4
+XGB-20raw	absolute-band	0.982048	0.954247	1	0.993131	0.978261	1	0.0110835	-0.0137955	0.0389804	21	18	-3
+XGB-24full	gradient-band	0.992175	0.973852	1	0.9939	0.975754	1	0.00172501	-0.0197809	0.0225842	9	6	-3
+XGB-24full	absolute-band	0.992175	0.973852	1	0.992603	0.974185	1	0.000428131	-0.0236821	0.0223191	22	18	-4

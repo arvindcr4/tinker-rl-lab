@@ -1,0 +1,41 @@
+{
+  "n_bibkeys_in_references_bib": 214,
+  "n_groundtruth_methods_in_tsv": 16,
+  "n_entries": 43,
+  "n_delta_entries": 17,
+  "n_stack_entries": 26,
+  "per_layer_counts": {
+    "citation_total": 15,
+    "citation_pass": 15,
+    "source_total": 40,
+    "source_pass": 40,
+    "zvf_value_total": 11,
+    "zvf_value_pass": 11,
+    "zvf_sd_total": 9,
+    "zvf_sd_pass": 9
+  },
+  "headline": {
+    "n_entries": 43,
+    "n_delta_entries": 17,
+    "n_stack_entries": 26,
+    "n_citation_checks": 15,
+    "n_citation_fail": 0,
+    "n_source_checks": 40,
+    "n_source_fail": 0,
+    "n_zvf_value_checks": 11,
+    "n_zvf_value_fail": 0,
+    "n_zvf_sd_checks": 9,
+    "n_zvf_sd_fail": 0,
+    "pct_citation_pass": 100.0,
+    "pct_source_pass": 100.0,
+    "pct_zvf_value_pass": 100.0,
+    "pct_zvf_sd_pass": 100.0,
+    "overall_integrity": 100.0,
+    "n_failed_citations": 0,
+    "n_missing_source_paths": 0,
+    "n_zvf_value_diffs": 0
+  },
+  "failed_citations": [],
+  "missing_source_paths": [],
+  "zvf_value_diffs": []
+}

@@ -1,0 +1,12 @@
+metric	value
+n_target_accuracies	8
+n_Gs	5
+G_range	4..64
+operationally_optimal_G_at_each_acc	8,16,16,16,16,16,32,32
+literature_2octave_threshold_ratio	8.0
+max_waste_G4_vs_optimal	4.1936
+max_waste_G32_vs_optimal	1.3719
+max_G32_over_G4_efficiency_ratio	3.3634905357715756
+G32_over_G4_efficiency_ratio_by_acc	"{""0.50"": 1.5358, ""0.55"": 1.8878, ""0.60"": 3.3635}"
+max_observed_G_ratio_in_se_test	16.0
+all_se_ratios_exceed_2octave_lit_threshold	False

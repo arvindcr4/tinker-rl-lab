@@ -1,0 +1,7 @@
+axis	correlation_log10var_lam	cv_full_interaction	cv_log10N_only	cv_log10N_plus_arch	cv_null	frac_degenerate_by_variance	frac_lam_at_bound	improvement_arch_vs_log10N	improvement_interaction_vs_arch	improvement_log10N_vs_null	k	n_degenerate_by_variance	n_lam_at_bound	n_traces	n_used	value
+E_lambda_audit	-0.28944141514510685					0.8333333333333334	0.5833333333333334					10	7	12		
+F_arch_regression_interaction_p																0.007198560287942412
+G_arch_kfold_5fold		97.46323495650864	330.89621979992404	429.8725455889951	231.7406462457846			-98.97632578907104	332.40931063248644	-99.15557355413944	5				8	
+H_r_max_invariant_levene_p																0.2958341021650254
+I_two_anchor_extrap_mae																4.49795375662811
+J_compute_regression_lift_share																0.6429370284011681

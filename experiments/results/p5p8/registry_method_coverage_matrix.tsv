@@ -1,0 +1,8 @@
+framework		adaptiveg(zvfdriven)	aero	areal	cppo	dapo	dr.grpo	drgrpo	es	gift	grpo	gspo	liteppo	mcgrpo	ngrpo	pergroupregression;continuousreward;populationstandardizedadvantage	ppo	pporeinforce	reinforce	scafgrpo	trlgrpo	unknown	n_in_registry	n_in_ledger	n_overlap	n_ledger_only
+colab-open-trainer						+		+			+												3	0	0	0
+openrlhf											+												1	0	0	0
+tinker			+	+		+		+		+	+	+										+	8	1	0	1
+trl											+												1	0	0	0
+verl											+												1	0	0	0
+wandb	+										+					+	+	+	+		+		7	8	3	5
+worktree-zvf130-batch					+				+					+	+					+			5	0	0	0

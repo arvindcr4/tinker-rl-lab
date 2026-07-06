@@ -1,0 +1,128 @@
+% Iter 195 — P7 Cross-Paradigm Adaptive-G Controller Concordance
+% Closes brief vein (b) by measuring (rather than asserting) the
+% rule-level concordance among Adaptive-G (iter-119), Dualformer
+% auto-mode (Berkeley row 01), and AlphaProof gamma*=0 (Berkeley
+% row 19) on the SAME N2 same-stack step-cells.  The honest
+% finding is structural disagreement: three distinct algebraic
+% reductions of the same latent signal-starvation condition
+% cannot agree at the decision-rule level.  The right unification
+% is at the latent-signal level (Bayesian, iter-171), not at the
+% decision-rule level.
+
+\subsubsection*{Motivation}
+
+Iter-83, iter-85, iter-90, and iter-187 had all imported the
+Dualformer auto-mode rule (Berkeley row 01) and the AlphaProof
+tree-baseline $\gamma^*{=}0$ smoothing (Berkeley row 19) into the
+P7 controller bank.  None of those iterations had measured the
+\emph{rule-level concordance} among the three binary fire decisions
+on the same step-cells.  Iter-195 closes that gap by computing
+three binary fire rules and their Cohen's $\kappa$ on the N2
+four-method $\times$ 40-step same-stack panel (160 step-cells).
+
+\subsubsection*{Three step-level fire rules}
+
+For each (method, step) cell we compute three binary decisions:
+
+\begin{align}
+\mathrm{AG}(s) &= \mathbf{1}\!\left[\mathrm{zvf}(s) \ge \tau\right],
+\qquad \tau = 0.70 \quad\text{(iter-119)} \\
+\mathrm{DF}(s) &= \mathbf{1}\!\left[\mathrm{has\_contrast}(s) \;\wedge\;
+\frac{\overline{r}(s)}{\sqrt{G_{\mathrm{base}}}} > \frac{\overline{r}(s)}{\sqrt{G_{\mathrm{esc}}}}\right]
+\quad\text{(Berkeley row 01)} \\
+\mathrm{AP}(s) &= \mathbf{1}\!\left[\mathrm{smoothed}(s) <
+\mathrm{naive}(s)\right], \quad
+\begin{cases}
+\mathrm{smoothed}(s) = \frac{\bar{k}^2 + (G - \bar{k})^2}{G^2} \\[2pt]
+\mathrm{naive}(s) = \frac{\bar{k}(G - \bar{k})}{G^2}
+\end{cases}
+\quad\text{(Berkeley row 19, depth-0)}
+\end{align}
+
+\noindent where $\bar{k}$ is the mean success count over contrast
+prompts in the step and $G = G_{\mathrm{base}} = 8$.  Concordance is
+Cohen's $\kappa$ on the three pairs (AG$\times$DF, AG$\times$AP,
+DF$\times$AP), with bootstrap percentile CIs (B$=2000$,
+seed$=20260706$).
+
+\subsubsection*{Headline --- structural disagreement by construction}
+
+Table~\ref{tab:p7-iter195-rates} reports the per-method fire rates
+and Table~\ref{tab:p7-iter195-kappa} reports the pooled $\kappa$.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+method & $n$ & AG-rate & DF-rate & AP-rate \\
+\midrule
+grpo  & 40 & 0.500 & 1.000 & 0.000 \\
+aero  & 40 & 0.475 & 1.000 & 0.000 \\
+gift  & 40 & 0.650 & 0.975 & 0.000 \\
+areal & 40 & 0.425 & 1.000 & 0.000 \\
+\midrule
+\textbf{POOLED} & 160 & \textbf{0.5125} & \textbf{0.9938} & \textbf{0.0000} \\
+\bottomrule
+\end{tabular}
+\caption{Per-method step-level fire rates on the N2 four-method same-stack panel.  AG fires on roughly half the steps; DF fires on essentially every step (algebraically degenerate because $\sqrt{8} < \sqrt{16}$ makes $r_{\mathrm{base}} > r_{\mathrm{esc}}$ for any positive cell reward mean); AP fires on no step (algebraically degenerate because $(k^2 + (G-k)^2)/G^2 \ge k(G-k)/G^2$ is a fixed identity, so depth-0 smoothing is equivalent to the GRPO group-mean).}
+\label{tab:p7-iter195-rates}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+pair & $\kappa$ & 95\% CI & excludes 0? \\
+\midrule
+AG $\times$ DF & $-0.0125$ & $[-0.0376,\, 0.0000]$ & NO \\
+AG $\times$ AP & $\approx 0$ & $[\approx 0,\, \approx 0]$ & NO \\
+DF $\times$ AP & $\approx 0$ & $[\approx 0,\, \approx 0]$ & NO \\
+\bottomrule
+\end{tabular}
+\caption{Pooled Cohen's $\kappa$ among the three step-level fire rules over 160 step-cells, with bootstrap percentile 95\% CIs ($B{=}2000$, seed$=20260706$).  None of the three pairs excludes zero; all 7 hypotheses on naive rule-equivalence FAIL.}
+\label{tab:p7-iter195-kappa}
+\end{table}
+
+\subsubsection*{Reconciliation --- three algebraic reductions of the same latent signal}
+
+The naive rule-equivalence hypothesis fails \emph{structurally}, not by
+chance.  The mechanism is three distinct algebraic reductions of the
+same latent signal-starvation condition:
+
+\begin{enumerate}
+\item \textbf{AG} retains the cross-prompt contrast signal: it fires on
+      steps where $\mathrm{zvf}(s) \ge 0.70$ (51.2\% of N2 cells), the
+      canonical Pillar 3 trigger (iter-119) for group-mean contrast
+      collapse.
+\item \textbf{DF} discards the cross-prompt signal: it retains only the
+      cell-mean reward and tests whether $r / \sqrt{G}$ is monotone
+      decreasing in $G$.  For any positive reward mean this is
+      $\sqrt{8} < \sqrt{16}$ and the rule is trivially satisfied on
+      99.4\% of cells --- an \emph{operational} degenerate reduction.
+\item \textbf{AP} at depth $= 0$, $w = 2$ is equivalent to the GRPO
+      group-mean: the depth-0 smoothing kernel $(k^2 + (G-k)^2)/G^2$
+      dominates the naive Bernoulli variance $k(G-k)/G^2$ by an
+      algebraic identity.  It fires on 0/160 cells --- a
+      \emph{structural} degenerate reduction.
+\end{enumerate}
+
+\noindent The information-preservation ordering
+\textbf{Bayesian (iter-171) $>$ AG $>$ DF $>$ AP} predicts the
+iter-187 N10 negative (Bayesian never fires on mid-range prompts)
+correctly and explains why AG recovers the largest signal on the
+N2 panel (where boundary cases are common).
+
+\subsubsection*{Paper-grade conclusion}
+
+The right unification is at the \textbf{latent-signal level}, not the
+\textbf{decision-rule level}.  Each rule is a valid projection of the
+latent "needs adaptive $G$" condition, but at three distinct
+information-loss rates.  We recommend the calibrated controller
+section present the three rules side-by-side with their structural
+failure modes rather than asserting interchangeability.  When the
+prompt distribution contains boundary cases (N2), the Bayesian rule
+(iter-171) is preferred; when the distribution is mid-range (N10,
+iter-187), the AG rule at $\tau = 0.70$ remains the
+information-preserving fallback.

@@ -1,0 +1,27 @@
+{
+  "C_inv_grid": [
+    0.1,
+    0.5,
+    1.0,
+    2.5,
+    5.0
+  ],
+  "L_grid": [
+    5.0,
+    25.0,
+    100.0,
+    250.0,
+    1000.0
+  ],
+  "n_cells": 25,
+  "n_boots": 1000,
+  "n_24full_cheaper_than_20raw_at_point_estimate": 0,
+  "n_4sensor_cheaper_than_24full_at_point_estimate": 0,
+  "n_24full_cheaper_than_4sensor_at_point_estimate": 11,
+  "n_24full_cheaper_than_20raw_with_ci_excl_zero": 21,
+  "n_24full_cheaper_than_4sensor_with_ci_excl_zero": 7,
+  "min_delta_24_vs_20": 0.003,
+  "max_delta_24_vs_20": 0.103,
+  "min_delta_24_vs_4s": -0.052,
+  "max_delta_24_vs_4s": 0.0
+}

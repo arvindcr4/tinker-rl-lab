@@ -1,0 +1,79 @@
+% =============================================================================
+% P8 cost-per-decision accounting + LLM-as-sensor feature ablation -- iter 124
+% =============================================================================
+\subsection{Cost-per-decision accounting on the iter-120 V\_stat ablation
+  (\textit{iter 124})}
+\label{sec:p8-iter124-cost-accounting}
+
+The iter-80 gradient-band rule and the iter-108/iter-120 cohort-asymmetry
+analyses reported a single LLM-call price point (\$0.001/call,
+COST\_LLM/COST\_XGB = 10$\times$). Real 2026 LLM API prices vary by
+500$\times$ (heuristic rule at \$0.0001/call; small open LLM at
+\$0.0006/call; mid-tier at \$0.005/call; frontier GPT-4-class at
+\$0.030/call).  Iter-124 sweeps these five price tiers and reports
+the per-$V$\_stat quartile {\bf cppr} (cost per positive RECALLED) and
+{\bf cpd} (cost per DECISION).
+
+\subsubsection{Falsifiable headline H1 -- grad-band is NOT cheaper at any
+  realistic LLM tier}
+On the iter-120 24full backbone, the cppr ratio
+(cppr$_{\text{grad}}$ $/$ cppr$_{\text{xgb}}$) at the five price tiers:
+\begin{itemize}
+\item cheap\_heuristic (\$0.0001$/$call): ratio = 1.000 (tie)
+\item small\_open    (\$0.0006$/$call): ratio = 1.041
+\item iter120\_default (\$0.001$/$call): ratio = 1.075
+\item mid\_tier      (\$0.005$/$call):  ratio = 1.412
+\item frontier\_gpt4 (\$0.030$/$call):  ratio = 3.512
+\end{itemize}
+\textbf{Verdict (H1 REFUTED)} -- the gradient-band rule is strictly
+cheaper than xgb-only ONLY at the trivial cost$_{\text{LLM}}$ = cost$_{\text{XGB}}$
+price tier.  At all four realistic price tiers, grad-band has HIGHER cppr.
+The honest framing: \emph{the iter-80 rule's value is NOT a cost saving --
+it is a recall-augmentation signal that recovers xgb-only-missed positives
+on the 0.84\% most uncertain top-K rows.}
+
+\subsubsection{Falsifiable headline H2 -- worst-cost $V$\_stat quartile is
+  STABLE across price tiers}
+For each price tier, the $V$\_stat quartile with the highest
+cppr$_{\text{grad}}$ $/$ cppr$_{\text{xgb}}$ ratio is $V$\_mean $Q_2$ at
+four of five tiers (small\_open through frontier\_gpt4).
+$V$\_mean $Q_2$ has the highest call density (37 LLM fires on 14
+xgb-only-caught positives) and the lowest xgb-only recall (0.28).
+The stable worst-cost cell is a structural property of the iter-80
+rule, not a cost artefact.
+
+\subsubsection{Falsifiable headline H3 -- LLM-as-sensor feature ablation}
+Retrained XGBoost with four feature subsets:
+\begin{itemize}
+\item 24full (24 feats): xgb-only recall$@K{=}2\%$ = 53$/$144 = 0.368, n$_{\text{llm}}$ = 84
+\item 20raw (20 feats): xgb-only recall$@K{=}2\%$ = 53$/$144 = 0.368, n$_{\text{llm}}$ = 81
+\item 20raw$+$minmax (22 feats): xgb-only recall$@K{=}2\%$ = 50$/$144 = 0.347, n$_{\text{llm}}$ = 84
+\item 20raw$+$stat (22 feats): xgb-only recall$@K{=}2\%$ = 50$/$144 = 0.347, n$_{\text{llm}}$ = 85
+\end{itemize}
+\textbf{Verdict (H3 PASS)} -- dropping the four aggregate features
+($V$\_mean, $V$\_std, $V$\_max, $V$\_min) changes the gradient-band firing
+pattern by $-3$ calls (24full$\to$20raw, 96\% preserved). Pairwise
+agreement between 24full and 20raw firing masks is $\geq$0.99.
+The rule captures a property of the score stream
+(consecutive-gradient sparsity in the top-K), not a property of the
+model input space.
+
+\subsubsection{Falsifiable headline H4 -- sweet-spot price per quartile}
+Closed-form sweet-spot price per $V$\_stat quartile:
+$\text{price}_{\text{sweet}} = \text{cost}_{\text{xgb}} \cdot
+\text{xgb\_caught}_{q} / n_{\text{llm},q}$.  Range across 16 quartiles:
+$\$0.000017$ ($V$\_std $Q_0$) to $\$0.000120$ ($V$\_std $Q_3$).
+All sweet-spot prices are below cost$_{\text{xgb}} = \$0.0001$ baseline,
+confirming that the rule is cost-rational only at the trivial
+cost$_{\text{LLM}} =$ cost$_{\text{XGB}}$ price tier.
+
+\subsubsection{Operational recommendation}
+The iter-80 gradient-band rule's role is to \textbf{recover xgb-only-missed
+positives on the 0.84\% most uncertain top-K rows}.  The cost of doing so
+is real (1.04$\times$ to 3.51$\times$ higher than xgb-only on cppr,
+depending on LLM tier), and the cost is the price of catching the residual.
+\textbf{Do not frame the rule as a cost optimizer} -- it is a recall
+augmentation.  The honest framing for the paper is the
+\emph{cost-rationing} view: the rule is cost-rational only at the
+cost$_{\text{LLM}} \leq \$0.0001$ tier; at \$0.005 (mid-tier), the rule
+is 41$\times$ over its sweet-spot price.

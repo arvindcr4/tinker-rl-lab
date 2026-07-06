@@ -1,0 +1,74 @@
+{
+  "boot_n": 2000,
+  "boot_seed": 20260705,
+  "metrics_audited": [
+    "zvf",
+    "reward_mean",
+    "mean_len",
+    "cv_len"
+  ],
+  "n_method_metric_rows": 12,
+  "per_method": {
+    "aero": {
+      "n_ci_overlap": 2,
+      "n_fragile_sign_flip": 0,
+      "n_metrics": 4,
+      "n_sign_agree": 1,
+      "n_stable": 4
+    },
+    "areal": {
+      "n_ci_overlap": 1,
+      "n_fragile_sign_flip": 0,
+      "n_metrics": 4,
+      "n_sign_agree": 2,
+      "n_stable": 4
+    },
+    "gift": {
+      "n_ci_overlap": 1,
+      "n_fragile_sign_flip": 1,
+      "n_metrics": 4,
+      "n_sign_agree": 2,
+      "n_stable": 3
+    }
+  },
+  "per_window": {
+    "early10": {
+      "n_cells": 12,
+      "n_significant": 1,
+      "pct_significant": 8.3
+    },
+    "full40": {
+      "n_cells": 12,
+      "n_significant": 6,
+      "pct_significant": 50.0
+    },
+    "last10": {
+      "n_cells": 12,
+      "n_significant": 7,
+      "pct_significant": 58.3
+    },
+    "last20": {
+      "n_cells": 12,
+      "n_significant": 6,
+      "pct_significant": 50.0
+    },
+    "last5": {
+      "n_cells": 12,
+      "n_significant": 9,
+      "pct_significant": 75.0
+    }
+  },
+  "tensors_loaded": {
+    "aero": 40,
+    "areal": 40,
+    "gift": 40,
+    "grpo": 40
+  },
+  "windows_audited": [
+    "full40",
+    "last20",
+    "last10",
+    "last5",
+    "early10"
+  ]
+}

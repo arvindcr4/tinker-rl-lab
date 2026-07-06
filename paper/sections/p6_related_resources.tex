@@ -1,0 +1,54 @@
+% Paper 6 (GRPO-Registry) comparison to related resources
+\section{Comparison to Related Resources}
+\label{sec:p6-related-resources}
+
+\paragraph{HELM.}
+HELM~\citep{liang2022helm} standardizes \emph{evaluation}: scenarios, metrics,
+and a living leaderboard over models. Its unit of description is a
+(model, scenario) cell. The registry's unit is a \emph{training stack}, and
+its fields (clip bounds, KL surrogate, dynamic-sampling status) have no HELM
+counterpart. The resources are complementary along the pipeline: HELM tells
+you how a resulting model scores; the registry tells you what update rule
+produced it and whether that rule is auditable.
+
+\paragraph{LM Evaluation Harness.}
+The harness~\citep{gao2021harness} demonstrated the payoff of a single
+executable reference for a task family, and its retrospective
+\citep{biderman2024lessons} documents how silent implementation deviations
+(prompt formatting, normalization) corrupt cross-paper comparisons of
+\emph{evaluations}. Our program observed the training-side analogue---silent
+loss-form and sampling deviations under a shared algorithm label---and the
+registry plays the same role for GRPO-family training that the harness plays
+for evaluation: a shared, versioned, machine-checkable point of reference. The
+difference in mechanism: the harness standardizes by \emph{executing} the
+evaluation itself, whereas the registry standardizes by \emph{describing}
+stacks it cannot execute (many are closed), which is why the null-vs-absent
+convention and the R5 rung exist.
+
+\paragraph{Papers with Code.}
+Papers with Code~\citep{paperswithcode2025} linked papers, code, and
+leaderboards at scale, but its linkage stopped at the repository boundary: it
+recorded \emph{that} code exists for ``DAPO'', not \emph{which} of DAPO's five
+components a given reimplementation actually runs. The registry's
+variant-delta records with per-component status are precisely the layer below
+that boundary. Papers with Code is also a governance cautionary tale: after
+its corporate steward discontinued it in July 2025, its leaderboards vanished
+from the canonical URL and survived only as community-rescued dumps. We draw
+the governance consequences in Section~\ref{sec:p6-governance}.
+
+\paragraph{Model cards and datasheets.}
+Model cards~\citep{mitchell2019modelcards} and datasheets for
+datasets~\citep{gebru2021datasheets} established the pattern the registry
+follows: a fixed, named reporting scheme whose value comes from being boring,
+uniform, and enumerable---including explicit ``not applicable / not
+performed'' answers. MIN-REPORT-RL is deliberately a datasheet for the
+training run, narrowed to the seven fields our companion pillar papers found
+to be ranking-relevant, and made machine-readable so that the auditing step
+can be a script rather than a reviewer.
+
+\paragraph{What no existing resource provides.}
+To our knowledge no existing community resource records (i) the executed loss
+form of an RL fine-tuning run at the granularity where GRPO variants differ,
+(ii) per-component implementation status against named variant papers, or
+(iii) an unauditability marker (null semantics + R5) for closed stacks. Those
+three are the registry's contribution; everything else is inherited pattern.

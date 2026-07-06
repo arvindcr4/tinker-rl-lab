@@ -1,0 +1,211 @@
+{
+  "ts": "2026-07-05",
+  "iter": 107,
+  "part": "B",
+  "n_steps_per_method": {
+    "grpo": 40,
+    "aero": 40,
+    "gift": 40,
+    "areal": 40
+  },
+  "tau_grid_fine": [
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8,
+    0.85,
+    0.9
+  ],
+  "tau_canonical": [
+    0.7,
+    0.8,
+    0.9
+  ],
+  "curve_correlations_pearson": [
+    {
+      "method_a": "grpo",
+      "method_b": "aero",
+      "r_savings_tau": 0.9914780061123991,
+      "r_retention_tau": 0.989207871378858,
+      "r_fires_tau": 0.9939179474236707
+    },
+    {
+      "method_a": "grpo",
+      "method_b": "gift",
+      "r_savings_tau": 0.9851557175543931,
+      "r_retention_tau": 0.9776617424444403,
+      "r_fires_tau": 0.9862486306870382
+    },
+    {
+      "method_a": "grpo",
+      "method_b": "areal",
+      "r_savings_tau": 0.9948331499189274,
+      "r_retention_tau": 0.9844995832221334,
+      "r_fires_tau": 0.9957896832240959
+    },
+    {
+      "method_a": "aero",
+      "method_b": "gift",
+      "r_savings_tau": 0.9898012579439692,
+      "r_retention_tau": 0.9885516101160945,
+      "r_fires_tau": 0.9879248625733267
+    },
+    {
+      "method_a": "aero",
+      "method_b": "areal",
+      "r_savings_tau": 0.9894568337745562,
+      "r_retention_tau": 0.9735810948325953,
+      "r_fires_tau": 0.9928496298361014
+    },
+    {
+      "method_a": "gift",
+      "method_b": "areal",
+      "r_savings_tau": 0.9832558978668959,
+      "r_retention_tau": 0.9782001085849384,
+      "r_fires_tau": 0.9825028254206356
+    }
+  ],
+  "operating_points": [
+    {
+      "method": "grpo",
+      "tau_best": 0.9,
+      "savings_frac": 0.332421875,
+      "magnitude_retention": 0.9589118046498242,
+      "sav_x_ret": 0.31876326006132827
+    },
+    {
+      "method": "aero",
+      "tau_best": 0.9,
+      "savings_frac": 0.3171875,
+      "magnitude_retention": 0.9724539166067689,
+      "sav_x_ret": 0.3084502266737095
+    },
+    {
+      "method": "gift",
+      "tau_best": 0.9,
+      "savings_frac": 0.33359375,
+      "magnitude_retention": 0.9735773135156042,
+      "sav_x_ret": 0.3247793069305961
+    },
+    {
+      "method": "areal",
+      "tau_best": 0.9,
+      "savings_frac": 0.320703125,
+      "magnitude_retention": 0.931788519244377,
+      "sav_x_ret": 0.29882748996079433
+    }
+  ],
+  "kappa_table": [
+    {
+      "tau": 0.7,
+      "method_a": "grpo",
+      "method_b": "aero",
+      "cohens_kappa": 0.55
+    },
+    {
+      "tau": 0.7,
+      "method_a": "grpo",
+      "method_b": "gift",
+      "cohens_kappa": 0.4634146341463415
+    },
+    {
+      "tau": 0.7,
+      "method_a": "grpo",
+      "method_b": "areal",
+      "cohens_kappa": 0.3500000000000001
+    },
+    {
+      "tau": 0.7,
+      "method_a": "aero",
+      "method_b": "gift",
+      "cohens_kappa": 0.32611311672683524
+    },
+    {
+      "tau": 0.7,
+      "method_a": "aero",
+      "method_b": "areal",
+      "cohens_kappa": 0.19395465994962208
+    },
+    {
+      "tau": 0.7,
+      "method_a": "gift",
+      "method_b": "areal",
+      "cohens_kappa": 0.39038686987104343
+    },
+    {
+      "tau": 0.8,
+      "method_a": "grpo",
+      "method_b": "aero",
+      "cohens_kappa": 0.6590909090909091
+    },
+    {
+      "tau": 0.8,
+      "method_a": "grpo",
+      "method_b": "gift",
+      "cohens_kappa": 0.4764397905759163
+    },
+    {
+      "tau": 0.8,
+      "method_a": "grpo",
+      "method_b": "areal",
+      "cohens_kappa": 0.573170731707317
+    },
+    {
+      "tau": 0.8,
+      "method_a": "aero",
+      "method_b": "gift",
+      "cohens_kappa": 0.4858611825192803
+    },
+    {
+      "tau": 0.8,
+      "method_a": "aero",
+      "method_b": "areal",
+      "cohens_kappa": 0.3641618497109826
+    },
+    {
+      "tau": 0.8,
+      "method_a": "gift",
+      "method_b": "areal",
+      "cohens_kappa": 0.4715984147952444
+    },
+    {
+      "tau": 0.9,
+      "method_a": "grpo",
+      "method_b": "aero",
+      "cohens_kappa": 0.6551724137931038
+    },
+    {
+      "tau": 0.9,
+      "method_a": "grpo",
+      "method_b": "gift",
+      "cohens_kappa": 0.35135135135135115
+    },
+    {
+      "tau": 0.9,
+      "method_a": "grpo",
+      "method_b": "areal",
+      "cohens_kappa": 0.6551724137931038
+    },
+    {
+      "tau": 0.9,
+      "method_a": "aero",
+      "method_b": "gift",
+      "cohens_kappa": 0.1884057971014489
+    },
+    {
+      "tau": 0.9,
+      "method_a": "aero",
+      "method_b": "areal",
+      "cohens_kappa": 1.0
+    },
+    {
+      "tau": 0.9,
+      "method_a": "gift",
+      "method_b": "areal",
+      "cohens_kappa": 0.1884057971014489
+    }
+  ]
+}

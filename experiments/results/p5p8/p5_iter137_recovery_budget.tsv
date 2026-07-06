@@ -1,0 +1,4 @@
+corpus	n_units	recoverable_now	needs_new_emit	n_a_sentinel	upgrade_path
+mega_20260704	98	13	5	0	add manifest JSON keys (model_family, temperature, reward_model, advantage_baseline, token_mask, kl_beta, zvf130)
+n10_seed_expansion	5	3	15	3	extend per-seed JSON + emit N10 manifest with reward_model, temp, decontam, kl, advantage_baseline, token_mask, sampler_backend, and per-prompt reward vectors for tensor_derivable items
+n2_reward_tensor_resume	160	7	11	3	EMIT n2_manifest.json with model_family, temp, decontam, sampler_backend, advantage_baseline, token_mask, kl_beta; back-fill reward_model_signature

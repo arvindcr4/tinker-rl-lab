@@ -1,0 +1,22 @@
+id	component	metric	expected_dir	measured_delta	measured_sig	verdict	prose	hits
+delta_aero	advantage_guided_evolution	zvf	+	-0.02500	False	DISAGREE	use off-policy reference rollouts from the same prompt pool to inflate the effec	off-policy inflate group -> +zvf exposure; off-policy -> +zvf
+delta_aero	advantage_guided_evolution	zvf	+	-0.02500	False	DISAGREE	use off-policy reference rollouts from the same prompt pool to inflate the effec	off-policy inflate group -> +zvf exposure; off-policy -> +zvf
+delta_areal	autoscaling_Rollout	reward_mean	ORTHOGONAL			ORTHOGONAL	decouple rollout budget from optimizer step; the variant we measured is a single	decouple rollout: orthogonal to reward
+delta_dapo	clip_higher	loss	+	NO_MEAS		PROSE_HAS_NO_MEASURE	asymmetric (decoupled) clip: eps_low=0.2, eps_high=0.28	asymmetric clip shifts loss surface
+delta_dapo	dynamic_sampling	zvf	-	NO_MEAS		PROSE_HAS_NO_MEASURE	filter prompts whose groups have zero reward variance and resample until the bat	filter zero-variance -> -zvf; filter zero-variance -> -zvf
+delta_dapo	dynamic_sampling	zvf	-	NO_MEAS		PROSE_HAS_NO_MEASURE	filter prompts whose groups have zero reward variance and resample until the bat	filter zero-variance -> -zvf; filter zero-variance -> -zvf
+delta_dapo	token_level_loss	loss	+	NO_MEAS		PROSE_HAS_NO_MEASURE	token-level policy-gradient loss (mean over all tokens in the batch rather than 	token-level mean shifts loss magnitude
+delta_dapo	overlong_reward_shaping	mean_len	-	NO_MEAS		PROSE_HAS_NO_MEASURE	soft length-aware penalty for truncated/overlong completions (iter-41 schema bum	soft length penalty -> -mean_len
+delta_dapo	kl_removed	loss	+	NO_MEAS		PROSE_HAS_NO_MEASURE	KL regularization term removed from the objective (canonical leaf pinned at kl_b	extra KL term -> +loss; KL term -> +loss
+delta_dapo	kl_removed	loss	+	NO_MEAS		PROSE_HAS_NO_MEASURE	KL regularization term removed from the objective (canonical leaf pinned at kl_b	extra KL term -> +loss; KL term -> +loss
+delta_drgrpo	length_normalization	zvf	ORTHOGONAL			ORTHOGONAL	remove the 1/|o_i| response-length normalization from the loss	per-prompt normalization orthogonal to zvf
+delta_es	black_box_perturbation	zvf	ORTHOGONAL			ORTHOGONAL	replace the policy-gradient signal with an ES-style central-difference estimator	ES perturbation orthogonal
+delta_gift	gamma_likelihood_baseline	zvf	-	+0.12500	True	DISAGREE	subtract a gamma-style per-prompt likelihood prior from the group-normalized adv	gamma-baseline prior shifts zvf distribution; likelihood prior shifts zvf
+delta_gift	gamma_likelihood_baseline	zvf	-	+0.12500	True	DISAGREE	subtract a gamma-style per-prompt likelihood prior from the group-normalized adv	gamma-baseline prior shifts zvf distribution; likelihood prior shifts zvf
+delta_gspo	sequence_level_clip	loss	+	NO_MEAS		PROSE_HAS_NO_MEASURE	clipping, rewarding and optimization applied at the sequence level (no MIN-REPOR	asymmetric clip shifts loss surface
+delta_liteppo	ratio_clip	loss	+	NO_MEAS		PROSE_HAS_NO_MEASURE	PPO-style ratio clipping retained with eps_low=eps_high=0.2 (symmetric clip, unl	asymmetric clip shifts loss surface
+delta_mcgrpo	mcts_rollout	zvf	+	NO_MEAS		PROSE_HAS_NO_MEASURE	augment the rollout pool with MCTS-derived continuations, re-weighting advantage	MCTS value bias -> +zvf via injected variance; MCTS value bias -> +zvf
+delta_mcgrpo	mcts_rollout	zvf	+	NO_MEAS		PROSE_HAS_NO_MEASURE	augment the rollout pool with MCTS-derived continuations, re-weighting advantage	MCTS value bias -> +zvf via injected variance; MCTS value bias -> +zvf
+delta_ppo	ratio_clip	loss	+	NO_MEAS		PROSE_HAS_NO_MEASURE	PPO-style ratio clipping r_t(theta) in [1-eps, 1+eps] with eps=0.2 symmetric (ca	asymmetric clip shifts loss surface
+delta_reinforce	no_clipping	loss	+	NO_MEAS		PROSE_HAS_NO_MEASURE	no PPO-style ratio clipping (canonical leaf pinned at clip_eps_low=null, clip_ep	asymmetric clip shifts loss surface
+delta_scafgrpo	scaffold_aware_advantage	zvf	+	NO_MEAS		PROSE_HAS_NO_MEASURE	modify the group advantage by a scaffold-completion-quality prior so that low-sc	scaffold-aware advantage -> +zvf contrast

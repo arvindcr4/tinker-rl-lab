@@ -1,0 +1,8 @@
+field_set	n_fields	n_classes	n_unique_cells	max_class_size	min_class_size
+manifest_all_8	8	98	98	1	1
+manifest_discriminating_3	3	15	0	8	2
+manifest_plus_cells_5	5	98	98	1	1
+cells_all_5	5	98	98	1	1
+cells_minus_seed_4	4	50	2	2	1
+cells_minus_temp_4	4	54	10	2	1
+cells_minus_model_4	4	52	6	2	1

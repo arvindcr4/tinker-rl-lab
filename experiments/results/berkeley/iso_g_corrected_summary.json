@@ -1,0 +1,62 @@
+{
+  "ts": "2026-07-04T11:49:48.321569+00:00",
+  "row_id": 23,
+  "thread": "B-SYNTH (cross-course synthesis)",
+  "title": "Iso-G corrected synthesis: Over-Herding vs Anti-Herding",
+  "extends_row": 19,
+  "key_correction": "Frontier Round-2 predicted anti-herding (delta_div > 0). Real iter107 data shows OVER-herding (delta_div < 0). Iso-G must OVERSHOOT i.i.d. (G_emp > G_iid), not undershoot.",
+  "hypotheses": {
+    "H1_overherding_monotone": {
+      "n_negative": 4,
+      "n_total": 4,
+      "monotone": true,
+      "deltas": [
+        -0.10707191999999999,
+        -0.20974604492187476,
+        -0.36419470190919356,
+        -0.5171687693055512
+      ],
+      "verdict": "DECISIVE"
+    },
+    "H2_tip_savings_monotone": {
+      "n_positive": 5,
+      "n_total": 5,
+      "monotone": true,
+      "verdict": "DECISIVE"
+    },
+    "H3_league_coupling_ratio": {
+      "ratio_G64_over_G2": "15.0986",
+      "verdict": "DECISIVE"
+    },
+    "H4_cross_pillar_mag_overherd": {
+      "spearman_rho": "+0.5000",
+      "p_one_sided": "0.0633",
+      "n_methods": 9,
+      "verdict": "NULL"
+    },
+    "H5_practitioner_iso_g": {
+      "G_iso_corrected": 5,
+      "n_close": 0,
+      "n_total": 4,
+      "verdict": "NULL"
+    }
+  },
+  "verdict_counts": {
+    "DECISIVE": 3,
+    "TOTAL": 5
+  },
+  "outputs": {
+    "h1": "experiments/results/berkeley/iso_g_corrected_overherding.tsv",
+    "h2": "experiments/results/berkeley/iso_g_corrected_tip_savings.tsv",
+    "h3": "experiments/results/berkeley/iso_g_corrected_league_coupling.tsv",
+    "h4": "experiments/results/berkeley/iso_g_corrected_cross_pillar.tsv",
+    "h5": "experiments/results/berkeley/iso_g_corrected_practitioner.tsv"
+  },
+  "data_inputs": [
+    "experiments/results/group_size_effect.tsv",
+    "experiments/results/zvf_iter46_summary.tsv",
+    "experiments/results/zvf_iter130_method_risk.tsv",
+    "experiments/results/group_size_iter127_optimal_g.tsv",
+    "experiments/results/berkeley/iso_g_anti_herding.tsv (negative prior)"
+  ]
+}

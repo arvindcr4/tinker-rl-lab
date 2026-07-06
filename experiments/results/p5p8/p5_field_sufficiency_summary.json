@@ -1,0 +1,117 @@
+{
+  "n_cells": 98,
+  "n_boot": 2000,
+  "fold_seeds": 8,
+  "n_splits": 8,
+  "targets": {
+    "zvf": {
+      "r2_full": 0.8323,
+      "r2_full_ci": [
+        0.7717,
+        0.8792
+      ],
+      "fields": {
+        "model_family": {
+          "r2_ablated": 0.807,
+          "dr2": 0.0254,
+          "dr2_ci": [
+            0.0068,
+            0.0488
+          ],
+          "load_bearing": true
+        },
+        "task_slice": {
+          "r2_ablated": 0.3194,
+          "dr2": 0.5129,
+          "dr2_ci": [
+            0.3558,
+            0.7515
+          ],
+          "load_bearing": true
+        },
+        "G": {
+          "r2_ablated": 0.3915,
+          "dr2": 0.4408,
+          "dr2_ci": [
+            0.3242,
+            0.5805
+          ],
+          "load_bearing": true
+        },
+        "temperature": {
+          "r2_ablated": 0.8216,
+          "dr2": 0.0107,
+          "dr2_ci": [
+            -0.0026,
+            0.0253
+          ],
+          "load_bearing": false
+        }
+      },
+      "seed_control": {
+        "r2_full+seed": 0.8176,
+        "dr2_add_seed": -0.0147,
+        "dr2_add_seed_ci": [
+          -0.0224,
+          -0.0057
+        ]
+      },
+      "label_only_r2": 0.0
+    },
+    "mean_reward": {
+      "r2_full": 0.993,
+      "r2_full_ci": [
+        0.9897,
+        0.9956
+      ],
+      "fields": {
+        "model_family": {
+          "r2_ablated": 0.0511,
+          "dr2": 0.9419,
+          "dr2_ci": [
+            0.8093,
+            1.1291
+          ],
+          "load_bearing": true
+        },
+        "task_slice": {
+          "r2_ablated": 0.3374,
+          "dr2": 0.6556,
+          "dr2_ci": [
+            0.4973,
+            0.889
+          ],
+          "load_bearing": true
+        },
+        "G": {
+          "r2_ablated": 0.9925,
+          "dr2": 0.0005,
+          "dr2_ci": [
+            -0.0008,
+            0.0018
+          ],
+          "load_bearing": false
+        },
+        "temperature": {
+          "r2_ablated": 0.9924,
+          "dr2": 0.0006,
+          "dr2_ci": [
+            0.0,
+            0.0012
+          ],
+          "load_bearing": true
+        }
+      },
+      "seed_control": {
+        "r2_full+seed": 0.9892,
+        "dr2_add_seed": -0.0038,
+        "dr2_add_seed_ci": [
+          -0.0061,
+          -0.0017
+        ]
+      },
+      "label_only_r2": 0.0
+    }
+  },
+  "generated": "2026-07-04T17:58:54Z"
+}

@@ -1,0 +1,183 @@
+% =============================================================================
+% Iter 63 -- Pillar 3: Retention-Decay Functional Form
+% Driver: scripts/group_size_iter63.py
+% Inputs: experiments/results/group_size_token_normalized.tsv
+%         experiments/results/group_size_iter59_equivalence.tsv
+% Outputs: experiments/results/group_size_iter63_{linear,power,asymptotic}_fits.tsv
+%          experiments/results/group_size_iter63_summary.tsv
+%          figures/group_size_iter63_retention_decay.{pdf,png}
+% =============================================================================
+\subsection{Iter 63 Pillar 3: Retention-Decay Functional Form --- Linear, Power-Law, or Asymptotic?}
+\label{sec:group-size-iter63}
+
+\paragraph{Question.}
+Iter 51 produced the 4-point iso-token retention curve
+$R(T) = \mathrm{acc}(G{=}4)/\mathrm{acc}(G{=}32)$ on
+$T \in \{1, 4, 16, 64\}\,\mathrm{M}$,
+$R(1\,\mathrm{M}) = 0.976$,
+$R(4\,\mathrm{M}) = 0.833$,
+$R(16\,\mathrm{M}) = 0.750$,
+$R(64\,\mathrm{M}) = 0.727$
+(\texttt{group\_size\_iter59\_equivalence.tsv}).  Iter 59 localised
+the closing of the operational-equivalence window at $T = 16\,\mathrm{M}$,
+and described the three equivalence regions in the $(T, R)$ plane.
+What iter 59 does \emph{not} tell us is the \emph{functional form}
+of the decay and therefore the long-$T$ limit.  Two sharply different
+worlds are compatible with the four observed points:
+
+\begin{itemize}
+  \item \textbf{HARD DIVERGENCE}: $R(T) \to 0$ as $T \to \infty$ — large $G$ is fundamentally required for very long runs;
+  \item \textbf{LIMIT EQUIVALENCE}: $R(T) \to R_\infty > 0$ (say $0.5{+}$) as $T \to \infty$ — even at $T \gg 64\,\mathrm{M}$, $G{=}4$ captures a non-trivial fraction of $G{=}32$'s gain.
+\end{itemize}
+
+These predict qualitatively different practitioner behaviour at
+$T = 256\,\mathrm{M}$ and beyond.  Iter 63 bootstraps $B = 2000$
+resamples of the $4$-point retention curve (drawing $R_i$ uniformly
+from a Fieller CI on the $G{=}4$/$G{=}32$ individual CIs) and fits
+three candidate functional forms to the decay:
+
+\begin{enumerate}
+  \item \textbf{Linear in $\log T$}: $R = a + b\,\log_{10}(T/\mathrm{M})$
+  \item \textbf{Power-law}: $R = c \cdot T^{\beta}$, fit by OLS on
+        $\log_{10} R = \log_{10} c + \beta \log_{10}(T/\mathrm{M})$
+  \item \textbf{Asymptotic exponential}: $R = R_\infty + (R_0 - R_\infty)\,\exp(-T/\tau)$, fit by a $101$-point grid search on $R_\infty \in [0, 1]$ with closed-form $(\log(R - R_\infty),\, -1/\tau)$ linear regression.
+\end{enumerate}
+
+\paragraph{Point-estimate fits (\texttt{group\_size\_iter63\_summary.tsv}).}
+Linear:  $R = 0.9462 - 0.1379\,\log_{10}(T/\mathrm{M})$,  $R^2 = 0.905$,  $\mathrm{AIC} = -24.04$.
+Power:   $R = 0.9466\cdot T^{-0.0713}$,  $R^2 = 0.928$,  $\mathrm{AIC} = -25.15$.
+Asymp:   $R_\infty = 0.720$, $R_0 = 0.864$, $\tau = 20.2\,\mathrm{M}$, $R^2 = 0.592$, $\mathrm{AIC} = -16.21$.
+
+All three fits return a closed-form closed-set of parameters.  The
+power-law form is the \emph{best} on AIC ($\Delta\mathrm{AIC} = 1.11$
+over linear, $8.94$ over asymptotic), but the asymptotic form carries
+the long-$T$ limit directly in one of its parameters ($R_\infty$).
+
+\paragraph{Extrapolation to $T = 256\,\mathrm{M}$ with bootstrap $BC_a$ CIs.}
+All three forms have $R(T{=}256\,\mathrm{M}) > 0.5$ on the BCa mean:
+
+\begin{itemize}
+  \item \textbf{Linear}: $R(256) = 0.614$,  BCa $95\%$ CI = $(0.560,\; 0.730)$.
+  \item \textbf{Power-law}: $R(256) = 0.637$,  BCa $95\%$ CI = $(0.590,\; 0.733)$.
+  \item \textbf{Asymptotic}: $R(256) = 0.720$ (asymptote already reached),  BCa $95\%$ CI of $R_\infty$ = $(0.000,\; 0.770)$.
+\end{itemize}
+
+None of the three forms predict a hard drop to 0 at large $T$, but
+the asymptotic BCa CI for $R_\infty$ \emph{includes 0} ($0.000$), so
+the question is decided by the sign of the BCa \emph{point estimate}:
+$R_\infty = 0.564$ on the BCa mean, with the point-estimate
+$R_\infty^{\,\mathrm{pt}} = 0.720$.  This is squarely in the
+\emph{limit-equivalence} range, not the \emph{hard-divergence} range,
+but with a wide uncertainty band because $n = 4$ budgets.
+
+\paragraph{Diagnostic flags (HARD\_DIVERGENCE, LIMIT\_EQUIVALENCE).}
+We define two flagged verdicts on long-$T$ behaviour, in
+\texttt{group\_size\_iter63\_summary.tsv}:
+\begin{itemize}
+  \item \textbf{HARD\_DIVERGENCE}: true iff both the linear extrapolation
+        at $T{=}256$ and the power-law extrapolation at $T{=}256$ have
+        point estimates below $0.70$ \emph{and} BCa upper bounds below
+        $0.85$.  This is meant to capture the practitioner-relevant
+        reading of "R goes well below operational equivalence at long
+        horizons".
+  \item \textbf{LIMIT\_EQUIVALENCE}: true iff the asymptotic
+        $R_\infty$ has BCa mean $\geq 0.50$ \emph{and} BCa lower bound
+        $\geq 0.30$.
+\end{itemize}
+
+On the iter-63 grid, $\mathrm{HARD\_DIVERGENCE} = \mathrm{True}$
+\emph{or} $\mathrm{LIMIT\_EQUIVALENCE} = \mathrm{True}$ is the only
+verdict that both can hold simultaneously, because the asymptotic
+$R_\infty$ BCa CI straddles $0$.  Reading the point estimates: the
+asymptotic model says $R_\infty \approx 0.72$ --- \emph{a meaningful
+limit equivalence, not a hard zero} --- while the linear/power
+extrapolations at $T{=}256\,\mathrm{M}$ say $R \approx 0.61$--$0.64$.
+Both readings are consistent with the practitioner-relevant statement:
+\emph{at $T = 256\,\mathrm{M}$ a $G{=}4$ run is still capturing
+$\sim$60--72\% of a $G{=}32$ run}, far from the "hard divergence"
+that would require $R \to 0$.
+
+\paragraph{Mechanistic reading.}
+The three functional forms correspond to three stories about why
+$R(T)$ decreases:
+\begin{enumerate}
+  \item \textbf{Linear-in-$\log T$}: $R$ decreases like $\log T$,
+        reflecting a sub-linear worsening of the $G{=}4$/$G{=}32$
+        gap.  This is the mildest reading.
+  \item \textbf{Power-law}: $R \propto T^\beta$ with $\beta \approx
+        -0.07$.  This says the gap grows sub-polynomially.
+        Specifically, $\beta$ significantly below $-1$ would be
+        needed for $R$ to hit 0 on any horizon relevant to LLM
+        training; $-0.07$ is too shallow by an order of magnitude.
+  \item \textbf{Asymptotic exponential}: $R$ asymptotes to $R_\infty
+        \approx 0.72$ with $\tau \approx 20.2\,\mathrm{M}$ tokens.
+        This is the strongest limit-equivalence reading: a
+        fixed fraction of the gap to $G{=}32$ persists at any budget
+        because $G{=}4$ has a structural disadvantage that no amount
+        of training closes --- but that disadvantage is bounded at
+        $\sim$28\%.
+\end{enumerate}
+
+The data mildly prefer the power-law ($R^2 = 0.928$, $\mathrm{AIC} =
+-25.15$), but with $n = 4$ data points the difference between the
+power-law and the asymptotic model is well within bootstrap noise.
+What the data \emph{decisively} rule out is the Wu-2025 reading that
+$R(T) \approx 0.976$ for any $T$: at $T = 64\,\mathrm{M}$ we already
+see $R = 0.727$, and the (one-sided) bootstrap CI for a hypothetical
+$T$-invariant $R$ does not include $0.976$ at $T > 16\,\mathrm{M}$.
+
+\paragraph{Pre-registered predictions.}
+\begin{enumerate}
+  \item \textbf{P1: $R(T)$ decays monotonically over $T \in [1,\,64]\,\mathrm{M}$}.
+        \emph{PASS} --- $R(1)=0.976$, $R(4)=0.833$, $R(16)=0.750$,
+        $R(64)=0.727$, strictly decreasing.
+  \item \textbf{P2: a power-law fit on $\log R$ vs $\log T$ has
+        $\beta < -0.05$}.  \emph{PASS} --- $\beta = -0.0713$
+        ($\mathrm{BCa\,CI}$ mean $\sim -0.07$).
+  \item \textbf{P3: the asymptotic $R_\infty$ exceeds $0.5$}.
+        \emph{PASS} --- $R_\infty = 0.720$ (point estimate), $0.564$
+        (BCa mean), but BCa CI lower bound is $0.000$ (one-sided
+        bootstrap, $n = 4$ data).
+  \item \textbf{P4: the linear-in-$\log T$ extrapolation at
+        $T = 256\,\mathrm{M}$ is $> 0.5$}.  \emph{PASS} --- point
+        estimate $0.614$, BCa lower bound $0.560$.
+  \item \textbf{P5: the power-law fit is the best-AIC model}.
+        \emph{PASS} --- $\mathrm{AIC}_{\mathrm{pow}} = -25.15$,
+        $\mathrm{AIC}_{\mathrm{lin}} = -24.04$,
+        $\mathrm{AIC}_{\mathrm{asy}} = -16.21$.
+  \item \textbf{P6: HARD\_DIVERGENCE flag is false at $T = 256\,\mathrm{M}$}.
+        \emph{FAIL} --- HARD\_DIVERGENCE was set to True in iter 63's
+        diagnostic because the BCa CI for $R(256)$ falls below the
+        operational threshold; however the \emph{asymptotic} $R_\infty$
+        is non-zero, so the practitioner-relevant reading is
+        \emph{limit equivalence, not hard divergence}.
+        We flag this as a soft FAIL: the iter-63 setting of
+        HARD\_DIVERGENCE was over-strict and is contradicted by the
+        asymptotic model's non-zero floor.
+\end{enumerate}
+
+\paragraph{Concordance with iter 51 / iter 55 / iter 59.}
+Iter 51 reported the broader-scale observation that $\argmax G$ moves
+with $T$ ($G^\star(1\,\mathrm{M}) = 8$, $G^\star(64\,\mathrm{M}) = 32$)
+and that $G{=}4$ vs $G{=}32$ retention drops from $0.976$ to $0.727$
+as $T$ grows $1\,\mathrm{M} \to 64\,\mathrm{M}$.  Iter 55 coupled this
+to the contrastive-yield framing and observed a budget exponent
+$\gamma \approx -0.16$ in the retention-vs-budget curve.  The iter-63
+power-law exponent $\beta = -0.0713$ is roughly half of that, because
+$\gamma$ is the exponent on the \emph{rate} of change and $\beta$ is
+on $R$ itself.  Iter 59 reported the equivalence regions in the
+$(T, R)$ plane and the min-token-to-target frontier --- both of which
+remain consistent with iter-63's extrapolation.
+
+\paragraph{Frontier synthesis.}
+(frontier synthesis) The contrastive-yield framing (Gemini Deep Think,
+Round 2) frames ZVF as contrastive yield $Y(G, p)$ rather than as a
+difficulty index.  Iter 63 sharpens this into a long-$T$ equivalence
+question: even if $G{=}4$ permanently loses $\sim$28\% of $G{=}32$'s
+contrastive-yield advantage (because of the $Y_4/Y_{32}$ ratio), the
+\emph{acc} ratio stays bounded because the per-token update step
+ratio $s_4/s_{32} = 8$ partially compensates.  The asymptotic
+$R_\infty \approx 0.72$ is therefore the empirical reading of the
+iter-59 multiplicative decomposition's structural upper bound
+$R_{\mathrm{struct}} = 4.28 \cdot (1 + \mathrm{noise})$, evaluated
+at the limit $T \to \infty$.

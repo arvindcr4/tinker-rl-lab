@@ -1,0 +1,12 @@
+# Does AERO cut the pathological ZVF- (starvation) or the benign ZVF+ (saturation)? Signed decomposition of matched-stack runs.
+method	raw_zvf	zvf_neg	zvf_pos	acc
+grpo	0.4808	0.4701	0.0107	0.3912
+aero	0.2203	0.2020	0.0183	0.4281
+cppo	0.2952	0.2778	0.0174	0.4180
+ngrpo	0.3003	0.2866	0.0138	0.4150
+scafgrpo	0.3166	0.2996	0.0170	0.4406
+mcgrpo	0.1461	0.1341	0.0120	0.4278
+gift	0.1142	0.1026	0.0116	0.4371
+areal	0.1209	0.1092	0.0117	0.4333
+es	0.1142	0.1083	0.0060	0.4176
+# AERO-GRPO: dRawZVF=-0.2605 dZVF-=-0.2682 dZVF+=0.0076 frac_of_reduction_from_ZVF-=1.029

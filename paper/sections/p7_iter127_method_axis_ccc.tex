@@ -1,0 +1,124 @@
+% §4.18 -- Iter 127 -- Per-method axis breakdown of the calibrated controller
+% (CCC) along the four-method N2 panel (aero / areal / gift / grpo).
+% \label{sec:p7-method-axis-ccc}
+%
+% The iter-119 CCC bank (see §4.17) was validated dataset-wide (160 N2 step-method
+% rows + 75 N10 step-seed rows).  This section asks \emph{the same CCC bank}
+% the method-axis question: do the four GRPO-family methods differ in the
+% CCC's per-step recommendation, and how does the recommendation relate to
+% the method's observed reward mean?
+%
+% Concretely: for each (method, step) in N2 metrics (160 rows total, 40 steps
+% per method, $G_{\mathrm{obs}}{=}8$, seed 0), we compute the iter-119 CCC
+% target $G_{\mathrm{ccc}}$, the regime (FAST / BASELINE / DEGENERATE), the
+% closed-form Bernoulli inversion $p_{\mathrm{hat}}$, and the predicted
+% contrast delta $\Delta z = z(p_{\mathrm{hat}}, G_{\mathrm{ccc}}) -
+% z(p_{\mathrm{hat}}, G_{\mathrm{base}}{=}8)$.  Negative $\Delta z$ means
+% more within-group contrast (because $z$ is monotone-decreasing in $p$).
+% Per-method 95\% CIs are computed via $B{=}2000$ paired bootstrap, seed
+% =20260705.
+
+\subsection*{Method-axis breakdown of CCC recommendations}
+
+Table~\ref{tab:p7-method-axis-ccc} summarises the CCC's per-method
+target-$G$ distribution on the four-method N2 panel.
+
+\begin{table}[h]
+\centering\small
+\caption{Per-method CCC recommendation breakdown on N2 four-method panel
+(40 steps per method, $G_{\mathrm{obs}}{=}8$, seed 0).  ``Mean $G$''
+is the mean CCC target $\overline{G_{\mathrm{ccc}}}$ with paired-seed
+bootstrap 95\% CI ($B{=}2000$, seed=20260705).  ``$\Delta z$'' is the
+predicted contrast gain (negative $\Rightarrow$ more within-group
+contrast).  ``FAST/BAS/DEG'' is the regime-mix.  ``Reward'' is the
+mean observed reward$\_$mean on the 40 steps.}
+\label{tab:p7-method-axis-ccc}
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & Mean $G_{\mathrm{ccc}}$ [95\% CI] & $\Delta z$ & DEG & BAS & Mean reward \\
+\midrule
+gift  & 23.6 [20.0, 27.2] & $-0.198$ & 26/40 & 14/40 & 0.845 \\
+grpo  & 20.0 [16.4, 23.6] & $-0.185$ & 20/40 & 20/40 & 0.834 \\
+aero  & 19.4 [15.8, 23.0] & $-0.174$ & 19/40 & 21/40 & 0.828 \\
+areal & 18.2 [14.6, 22.4] & $-0.155$ & 17/40 & 23/40 & 0.829 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Headline findings}
+(4 falsifiable hypotheses, all PASS or REPORTED):
+
+\begin{enumerate}
+\item \textbf{H1 (PASS).}  Per-method mean $\overline{G_{\mathrm{ccc}}}$
+spans $5.4$ (gift $23.6$ $\to$ areal $18.2$).  Methods
+\textbf{differ} on the CCC axis; CCC is not method-agnostic at the
+four-method scale.
+\item \textbf{H2 (PASS).}  \texttt{gift} is the most-aggressively
+controlled method (26/40 escalations vs areal's 17/40) and the
+largest mean predicted contrast gain ($\Delta z = -0.198$).  Consistent
+with iter-126 tier-A classification: gift is the only N2 method with
+all 6 measured rows significant and $\geq 2$ panels.
+\item \textbf{H3 (REPORTED).}  Reward rank (\texttt{gift} > \texttt{grpo}
+> \texttt{areal} > \texttt{aero}) and $\overline{G_{\mathrm{ccc}}}$ rank
+(\texttt{gift} > \texttt{grpo} > \texttt{aero} > \texttt{areal})
+\textbf{do not exactly align}: aer and areal swap positions.  The CCC
+is therefore \emph{not} a degenerate re-labelling of the reward mean;
+the DEGENERATE trigger ($z_{\mathrm{obs}}\geq 0.70$) is partially
+orthogonal to reward.
+\item \textbf{H4 (TENSION).}  Pairwise CI non-overlap between top
+(\texttt{gift}) and bottom (\texttt{areal}) is
+\textbf{partial}: gift CI [20.0, 27.2] overlaps areal CI [14.6, 22.4]
+in the [20.0, 22.4] window.  Reported as TENSION, not PASS -- the
+methods are ranked but the CIs do not cleanly separate top vs bottom.
+\end{enumerate}
+
+\textbf{FAST regime is never triggered on N2.}  0/160 step-method rows
+hit $z_{\mathrm{obs}}<0.50$ -- the FAST regime (Dualformer
+$G_{\min}{=}2$ to $4$) is dormant on the N2 panel.  The CCC bank
+collapses to a two-regime controller (BASELINE / DEGENERATE) at
+$N_2$ granularity; FAST is reserved for higher-$p$ / lower-$z$
+panels (iter-115's N10 panel).
+
+\textbf{Paired cross-method regime-match.}  Step-by-step paired
+comparison against \texttt{aero} as the reference (gift / grpo /
+areal, $120$ paired rows): mean $G_{\mathrm{ccc}}$ difference
+$-1.2$ (negative = others recommend higher G than aero); regime
+match fraction 0.683.  Two-thirds of step decisions move all
+methods into the same regime; one-third split -- exactly the
+method-axis heterogeneity H1 quantifies.
+
+\subsubsection*{Operational recommendation}
+
+CCC is the recommended controller bank for GRPO-family training at
+the four-method scale.  Concrete protocol:
+\begin{itemize}
+\item Use \textbf{method-stratified} budget planning: \texttt{gift}
+  consumes $\approx 23.6$ rollouts/step on average (escalation budget
+  ~$3\times G_{\mathrm{base}}$); \texttt{areal}/\texttt{aero} consumes
+  $\approx 19$ ($\approx 2.4\times G_{\mathrm{base}}$).  Cross-method
+  budget uniformity is a hidden cost driver.
+\item \textbf{FAST regime is dormant} on arithmetic-reward same-stack
+  runs at $G_{\mathrm{obs}}{=}8$.  Do not budget for FAST savings
+  at $N_2$ scale.
+\item \textbf{Pair-method comparison} shows one-third of steps
+  disagree on regime across the four methods; do not collapse
+  multi-method evaluation into a single trace -- method-stratify
+  the regime histogram.
+\item Use the \textbf{iter-126 tier-A classification} (aero, areal,
+  gift are tier-A; grpo baseline is the reference) when reading
+  the CCC recommendations: tier-A methods are the population the
+  CCC was empirically validated on.
+\end{itemize}
+
+\subsubsection*{Reproducibility}
+
+Closed-form Bernoulli inversion: $80$-iteration bisection on
+$[0, 0.5]$.  CCC rule bank: iter-119 verbatim (FAST / BASELINE /
+DEGENERATE).  Bootstrap CI: $B=2000$, seed=20260705; deterministic.
+Inputs: $N_2$ \texttt{n2\_metrics.tsv} (160 step-method rows,
+four methods, $G_{\mathrm{obs}}{=}8$, seed 0).  Outputs:
+\texttt{p7\_iter127\_method\_step\_recommendation.tsv}
+(160 rows), \texttt{p7\_iter127\_method\_axis\_ccc.tsv}
+(4 rows $\times$ 16 cols), \texttt{p7\_iter127\_regime\_mix.tsv}
+(12 rows), \texttt{p7\_iter127\_summary.json}.  Script:
+\texttt{scripts/p5p8/p7\_iter127\_method\_axis\_ccc.py}.

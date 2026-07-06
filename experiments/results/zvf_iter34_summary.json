@@ -1,0 +1,19 @@
+{
+  "n_anchors": 12,
+  "n_classes": 4,
+  "loo_accuracy": 0.6666666666666666,
+  "chance_accuracy": 0.25,
+  "per_class_recall": {
+    "collapse": 1.0,
+    "drift": 0.6666666666666666,
+    "plateau": 0.0,
+    "saturation": 1.0
+  },
+  "top_feature": "zvf_direction",
+  "top_feature_delta_acc": 0.1133333333333334,
+  "collapse_zvf_level": 0.3333,
+  "noncollapse_zvf_level": 0.056063636363636364,
+  "collapse_zvf_discriminator": 0.3333,
+  "noncollapse_zvf_discriminator": 0.05233227272727273,
+  "collapse_only_model": "Qwen3.5-27B"
+}

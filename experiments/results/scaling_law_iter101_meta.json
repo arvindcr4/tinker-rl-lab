@@ -1,0 +1,59 @@
+{
+  "iter": 101,
+  "pillar": "P1-ScalingLaws",
+  "n_anchors": 12,
+  "families_compared": [
+    "constant",
+    "1seg_ols",
+    "saturation",
+    "powerlaw",
+    "ar1",
+    "monod",
+    "gompertz",
+    "pw2seg"
+  ],
+  "Q6_cross_anchor_transfer": {
+    "n_pairs": 144,
+    "n_diagonal": 12,
+    "n_off_diagonal": 132,
+    "mean_home_mae": 0.3733455027514907,
+    "mean_off_diag_mae": 0.4456978925460081,
+    "ratio_off_vs_home": 1.1937947270324485,
+    "bands_S_S": {
+      "n": 56,
+      "mean_mae": 0.43401428571428574,
+      "median_mae": 0.40095000000000003
+    },
+    "bands_L_L": {
+      "n": 12,
+      "mean_mae": 0.43099166666666666,
+      "median_mae": 0.5043
+    },
+    "bands_S_L": {
+      "n": 32,
+      "mean_mae": 0.496284375,
+      "median_mae": 0.47485
+    },
+    "bands_L_S": {
+      "n": 32,
+      "mean_mae": 0.42105625,
+      "median_mae": 0.34255
+    }
+  },
+  "Q7_stacked_AIC_forecast": {
+    "n_anchors": 12,
+    "stacked_wins": 0,
+    "stacked_win_frac": 0.0,
+    "mean_delta": 0.11674967589817191,
+    "ties": 1,
+    "best_single_win_fams": {
+      "ar1": 3,
+      "saturation": 1,
+      "constant": 5,
+      "monod": 2,
+      "gompertz": 1
+    }
+  },
+  "method": "Q6: fit saturation R_max*(1-exp(-lambda t)) on each anchor, evaluate MAE/RMSE on every other anchor. Q7: hold out last 25% of each trace, AIC-stack {constant, 1seg_ols, saturation, powerlaw, ar1, monod, gompertz, pw2seg}, compare stacked MAE vs best single-family MAE on the holdout.",
+  "frontier_synthesis": "Stacked generalisation is the most rigorous AIC defence for not picking a single family; see breiman1996stacking, burnham2002model. hoerl1970ridge is implicit in the linearised-OLS Monod fitter.  Combined with Q6's transfer-ratio this *closes* the operational recom-mendation question left open by iter97: for between-anchor transfer use saturation (it is the only family with a meaningful parametrisa-tion); for within-anchor forecast use the AIC-stacked ensemble."
+}

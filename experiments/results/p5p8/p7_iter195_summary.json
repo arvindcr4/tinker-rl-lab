@@ -1,0 +1,131 @@
+{
+  "ts": "2026-07-06",
+  "iter": 195,
+  "pillar": "P7",
+  "n_cells_total": 160,
+  "per_method_n": {
+    "grpo": 40,
+    "aero": 40,
+    "gift": 40,
+    "areal": 40
+  },
+  "settings": {
+    "TAU": 0.7,
+    "G_BASE": 8,
+    "G_ESC": 16,
+    "N_BOOT": 2000,
+    "SEED": 20260706
+  },
+  "stratified_rates": [
+    {
+      "method": "grpo",
+      "metric": "ag_rate",
+      "value": 0.5,
+      "n": 40
+    },
+    {
+      "method": "grpo",
+      "metric": "df_rate",
+      "value": 1.0,
+      "n": 40
+    },
+    {
+      "method": "grpo",
+      "metric": "ap_rate",
+      "value": 0.0,
+      "n": 40
+    },
+    {
+      "method": "aero",
+      "metric": "ag_rate",
+      "value": 0.475,
+      "n": 40
+    },
+    {
+      "method": "aero",
+      "metric": "df_rate",
+      "value": 1.0,
+      "n": 40
+    },
+    {
+      "method": "aero",
+      "metric": "ap_rate",
+      "value": 0.0,
+      "n": 40
+    },
+    {
+      "method": "gift",
+      "metric": "ag_rate",
+      "value": 0.65,
+      "n": 40
+    },
+    {
+      "method": "gift",
+      "metric": "df_rate",
+      "value": 0.975,
+      "n": 40
+    },
+    {
+      "method": "gift",
+      "metric": "ap_rate",
+      "value": 0.0,
+      "n": 40
+    },
+    {
+      "method": "areal",
+      "metric": "ag_rate",
+      "value": 0.425,
+      "n": 40
+    },
+    {
+      "method": "areal",
+      "metric": "df_rate",
+      "value": 1.0,
+      "n": 40
+    },
+    {
+      "method": "areal",
+      "metric": "ap_rate",
+      "value": 0.0,
+      "n": 40
+    }
+  ],
+  "boots": [
+    {
+      "pair": "agxdf",
+      "point": -0.012495994873438018,
+      "lo": -0.037550897300558016,
+      "hi": 0.0,
+      "n": 160,
+      "B": 2000,
+      "excl_zero": 0
+    },
+    {
+      "pair": "agxap",
+      "point": -1.0831444142684455e-16,
+      "lo": -1.0831444142684455e-16,
+      "hi": 1.0700944815664158e-16,
+      "n": 160,
+      "B": 2000,
+      "excl_zero": 0
+    },
+    {
+      "pair": "dfxap",
+      "point": 2.269323792472804e-17,
+      "lo": -4.596464751632814e-17,
+      "hi": 4.567373202571846e-17,
+      "n": 160,
+      "B": 2000,
+      "excl_zero": 0
+    }
+  ],
+  "verdicts": {
+    "H1_AG_step_fires_when_zvf_high": 0,
+    "H2_DF_AP_concordant_at_step_level": 0,
+    "H3_AG_DF_concordant_at_step_level": 0,
+    "H4_AG_AP_concordant_at_step_level": 0,
+    "H5_pooled_AG_DF_kappa_excludes_zero": 0,
+    "H6_pooled_AG_AP_kappa_excludes_zero": 0,
+    "H7_pooled_DF_AP_kappa_excludes_zero": 0
+  }
+}

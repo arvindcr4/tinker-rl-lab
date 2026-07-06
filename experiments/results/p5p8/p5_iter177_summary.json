@@ -1,0 +1,66 @@
+{
+  "iter": 177,
+  "pillar": "P5",
+  "vein": "MIN-REPORT v2.4 -> v2.5 forward-compatibility stress test",
+  "n_sample": 20,
+  "n_mutations": 5,
+  "n_audits": 8,
+  "n_panel_rows": 800,
+  "v24_detected": 2,
+  "v24_total": 15,
+  "v24_rate": 0.13333333333333333,
+  "v25_detected": 6,
+  "v25_total": 25,
+  "v25_rate": 0.24,
+  "per_mutation": {
+    "M1_remove_field": {
+      "v24": 1,
+      "v25": 1
+    },
+    "M2_type_violation": {
+      "v24": 0,
+      "v25": 2
+    },
+    "M3_vocab_violation": {
+      "v24": 0,
+      "v25": 1
+    },
+    "M4_regex_violation": {
+      "v24": 1,
+      "v25": 1
+    },
+    "M5_na_sentinel": {
+      "v24": 0,
+      "v25": 1
+    }
+  },
+  "best_v25_audit": "v25_vocab_strict",
+  "best_v25_audit_count": 2,
+  "hypotheses": {
+    "H1_v25_catches_ge_4_mut": {
+      "bar": 4,
+      "actual": 5,
+      "verdict": "PASS"
+    },
+    "H2_v24_misses_ge_3_new": {
+      "bar": 3,
+      "actual": 3,
+      "verdict": "PASS"
+    },
+    "H3_v25_strictly_gt_v24": {
+      "v24_rate": 0.13333333333333333,
+      "v25_rate": 0.24,
+      "verdict": "PASS"
+    },
+    "H4_best_v25_catches_ge_4": {
+      "bar": 4,
+      "actual": 2,
+      "verdict": "FAIL"
+    },
+    "H5_v25_union_full_coverage": {
+      "bar": "5/5",
+      "actual": "5/5",
+      "verdict": "PASS"
+    }
+  }
+}

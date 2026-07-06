@@ -1,0 +1,12 @@
+form	linear_logT
+a_intercept	0.946212121212121
+b_slope_log10_T_M	-0.1378743965789287
+R2_point_estimate	0.9052062256235526
+AIC	-24.043744922326248
+n_budgets	4
+bootstrap_a_mean	0.9103405654144346
+bootstrap_b_mean	-0.11067162189573977
+bootstrap_R_at_T256M	0.6438167425392322
+bootstrap_R_at_T256M_ci_lo	0.5601225602429487
+bootstrap_R_at_T256M_ci_hi	0.7300011813739826
+n_bootstrap	2000

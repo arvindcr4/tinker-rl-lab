@@ -1,0 +1,83 @@
+{
+  "iter": 51,
+  "panel_n10": {
+    "n_seeds": 5,
+    "n_steps_per_seed": 15,
+    "seeds": [
+      179,
+      316,
+      42,
+      453,
+      590
+    ]
+  },
+  "panel_n2": {
+    "methods": [
+      "aero",
+      "areal",
+      "gift",
+      "grpo"
+    ],
+    "n_steps_per_method": 40,
+    "n_prompts_per_step": 16,
+    "G_per_step": 8
+  },
+  "controller_family": {
+    "tau_esc_grid": [
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85
+    ],
+    "delta_grid": [
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25
+    ],
+    "G_base": 8,
+    "G_esc": 16,
+    "G_des": 4
+  },
+  "n_points_swept": 37,
+  "n_pareto_efficient": 37,
+  "legacy_limit_recovery": {
+    "zvf_triage@0.70": [
+      0.7,
+      0.7
+    ],
+    "zvf_triage@0.50": [
+      0.5,
+      0.5
+    ],
+    "dualformer_auto@0.50": [
+      0.5,
+      0.5
+    ],
+    "hybrid@0.65": [
+      0.55,
+      0.65
+    ]
+  },
+  "best_calibrated_theta": {
+    "tau_esc": 0.65,
+    "tau_des": 0.7,
+    "delta": 0.05,
+    "mean_savings_n10": 0.14,
+    "savings_ci_lo": 0.1,
+    "savings_ci_hi": 0.1733,
+    "seed_cv_total_G": 0.0514,
+    "mean_savings_n2": 0.3646
+  },
+  "boundary_collapses": {
+    "zvf_triage": "tau_esc==tau_des single-band -> G_ESC if z>=tau",
+    "dualformer_auto": "tau_des -> G_DES branch dominates the operational point (single band covered by G_DES rule)",
+    "hybrid": "full (tau_esc < tau_des) two independent bands"
+  },
+  "headline": "Unified controller bank with 37 parametric points; Pareto-efficient subset size = 37; best_calibrated_theta = (tau_esc=0.65, tau_des=0.7) with mean_savings_n10=+0.1400 [+0.1000, +0.1733], seed_CV=0.0514."
+}

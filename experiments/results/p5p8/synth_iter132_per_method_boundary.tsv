@@ -1,0 +1,5 @@
+method	n	n_boundary	boundary_density	iter127_rank_step_ccc	iter131_rank_per_prompt
+grpo	640	461	0.720313	2	3
+aero	640	461	0.720313	3	2
+gift	640	493	0.770312	1	4
+areal	640	452	0.706250	4	1

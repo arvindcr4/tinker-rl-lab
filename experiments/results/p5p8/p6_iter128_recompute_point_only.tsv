@@ -1,0 +1,10 @@
+delta_id	method	n_seeds	recomputed_mean	ci_lo	ci_hi	recomputed_delta	recomputed_delta_ci_lo	recomputed_delta_ci_hi	existing_delta	existing_ci_low	existing_ci_high	existing_ci_method	drift	ci_includes_existing
+delta_aero	aero	5	0.22026	0.21876	0.2217	-0.26052	-0.26234	-0.25882	-0.26052	-0.26234	-0.25882	bootstrap_paired_5seed	-1.11022e-16	True
+delta_areal	areal	5	0.1209	0.1162	0.12384	-0.35988	-0.36452	-0.35672	-0.35988	-0.36452	-0.35672	bootstrap_paired_5seed	-5.55112e-17	False
+delta_cppo	cppo	5	0.2952	0.29344	0.29684	-0.18558	-0.18756	-0.1837	-0.18558	-0.18756	-0.1837	bootstrap_paired_5seed	-2.77556e-17	False
+delta_es	es	5	0.11422	0.10962	0.11748	-0.36656	-0.37112	-0.3631	-0.36656	-0.37112	-0.3631	bootstrap_paired_5seed	-5.55112e-17	False
+delta_gift	gift	5	0.1142	0.10972	0.1171	-0.36658	-0.37146	-0.36338	-0.36658	-0.37146	-0.36338	bootstrap_paired_5seed	0	False
+delta_grpo	grpo	5	0.48078	0.4799	0.48176	0	0	0	0	0	0	missing	0	False
+delta_mcgrpo	mcgrpo	5	0.14604	0.13924	0.15118	-0.33474	-0.34164	-0.32942	-0.33474	-0.34164	-0.32942	bootstrap_paired_5seed	-5.55112e-17	True
+delta_ngrpo	ngrpo	5	0.30036	0.2986	0.30242	-0.18042	-0.18246	-0.1783	-0.18042	-0.18246	-0.1783	bootstrap_paired_5seed	-2.77556e-17	False
+delta_scafgrpo	scafgrpo	5	0.31664	0.3134	0.31998	-0.16414	-0.16748	-0.16054	-0.16414	-0.16748	-0.16054	bootstrap_paired_5seed	-5.55112e-17	False

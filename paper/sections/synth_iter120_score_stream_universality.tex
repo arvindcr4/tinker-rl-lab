@@ -1,0 +1,70 @@
+% =============================================================================
+% P5P8-SYNTH iter 120 score-stream universality across P7 + P8 (JOB B)
+% =============================================================================
+\subsection{Cross-paper synthesis: score-stream universality across P7 and P8
+  (\textit{iter 120 SYNTH})}
+\label{sec:synth-score-stream-universality}
+
+The iter-80 P8 gradient-band rule (top-$K$ AND consecutive-score gradient
+$<g_\mathrm{thr}\Rightarrow$ invoke LLM on fraud rows) and the iter-75 P7
+ZVF-triage rule (per-step ZVF low $\Rightarrow$ escalate $G'$) share a
+structural analogue: both fire when the local consecutive-score gradient
+is small.  iter-120 tests whether the analogue is \emph{operational} ---
+i.e., whether the two rules fire on the same fraction of decisions,
+optimize the same objective, and act on the same time scale.
+
+\subsubsection{Falsifiable headline H1 (heavy-tailed P8 gradient)}
+On the iter-120 XGB-24full backbone, the consecutive-score gradient
+distribution on the top-$K{=}2\,\%$ of test rows is heavy-tailed:
+$P_{50}{=}4.33{\times}10^{-6}$, $P_{90}{=}8.01{\times}10^{-5}$,
+\textbf{$P_{90}/P_{50}{=}18.50$}.  This confirms the structural premise
+of the gradient-band rule --- the top-$K$ score stream has a small
+plateau tail and a steep core.
+
+\subsubsection{Falsifiable headline H2 (P7 method ranking, reproduced)}
+Across the 4 N2 methods (40 steps each), method-mean-ZVF spreads
+$0.0641$:
+AREAL $0.7063 < $ GRPO $0.7203 \approx $ AERO $0.7203 < $ GIFT
+$0.7703$.  Reproduces iter-86 row 102's finding that GIFT is the only
+outlier in contrast-preservation.
+
+\subsubsection{Falsifiable headline H3 (REFUTED: density ratio $\neq 1$)}
+The iter-80 P8 gradient-band rule fires on \textbf{0.70\,\%} of test
+decisions (70 LLM calls out of 10000).  The iter-75 P7 ZVF-triage rule
+fires on \textbf{50.00\,\%} of GRPO training steps (20/40 at
+$\mathrm{zvf}{<}0.70$).  The density ratio P8/P7 $= 0.014$
+(\textbf{P7 fires 71$\times$ more often than P8}).  Bootstrap CI
+($B{=}1000$, seed$=20260705$): P8 density $0.0070$
+$[0.0054, 0.0086]$; P7 (grpo) density $0.495$
+$[0.325, 0.650]$; density ratio $0.014$
+$[0.010, 0.023]$.  \textbf{The two rules do NOT fire on the same
+fraction of decisions.}  The ``score-stream universality'' hypothesis
+is \textbf{refuted by $\sim$71$\times$}: they exploit
+\emph{related-but-different} mechanisms --- P8 acts on the XGB score
+stream (post-training, single-pass, decision axis); P7 acts on the
+GRPO rollout pool (during-training, repeated rollout, training axis).
+
+\subsubsection{Falsifiable headline H4 (P8 backbone-specific collapse)}
+On the iter-120 XGB-24full backbone (xgboost 3.x +
+$\mathrm{scale\_pos\_weight}{=}n_\mathrm{neg}/n_\mathrm{pos}$), the
+iter-80 gradient-band rule ($g_\mathrm{thr}{=}0.001$) and
+absolute-band rule ($W_\mathrm{abs}{=}0.5$) \textbf{both fire on the
+same 70 rows} (call ratio $= 1.00$).  The iter-80 finding of
+``gradient-band uses 9 vs 21 LLM calls'' was on a backbone whose
+top-$K$ scores straddled 0.5; on the iter-120 backbone, all top-$K$
+scores lie below 0.5, so the absolute-band condition is subsumed by
+the gradient-band condition.  \textbf{The gradient-band-vs-absolute-band
+distinction is backbone-dependent} and does not replicate on
+xgboost-3.x + scale\_pos\_weight.
+
+\subsubsection{Operational recommendation}
+\textbf{(a) Reject the ``score-stream universality'' hypothesis as written}.
+The structural analogue exists at the conceptual level but the
+operational rates (P8: 0.7\,\%, P7: 50\,\%) and objectives differ by
+orders of magnitude.  The cross-paper synthesis is \emph{conceptual,
+not operational}.  \textbf{(b) Add a backbone-dependence caveat} to
+P8 \S{sec:p8-gradient-band} --- the iter-80 LLM-call saving
+(9 vs 21) is backbone-specific and does not replicate on the
+current XGBoost-3.x + scale\_pos\_weight backbone.  \textbf{(c) Keep
+P7 ZVF-triage on the training axis (per-step)} and P8 gradient-band on
+the decision axis (per-row) --- they are not interchangeable.

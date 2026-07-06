@@ -1,0 +1,37 @@
+{
+  "n_anchors": 12,
+  "group_size": 8,
+  "batch_prompts": 512,
+  "per_step_tokens": 4096,
+  "n_families": 5,
+  "n_boot": 500,
+  "families": [
+    "saturation",
+    "power_law",
+    "linear",
+    "log_linear",
+    "zero"
+  ],
+  "strata_axes": [
+    "arch",
+    "param_bracket",
+    "trace_bracket",
+    "early_bracket"
+  ],
+  "param_brackets": [
+    "4-9B",
+    "20-32B",
+    "120-685B",
+    "1000B+"
+  ],
+  "trace_brackets": [
+    "short_n_le5",
+    "medium_n_6_20",
+    "long_n_ge21"
+  ],
+  "early_brackets": [
+    "high_first5_ge0.8",
+    "mid_first5_0.4_0.8",
+    "low_first5_lt0.4"
+  ]
+}

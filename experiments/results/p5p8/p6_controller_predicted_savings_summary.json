@@ -1,0 +1,14 @@
+{
+  "panel": "n2_same_stack_40step",
+  "G": 8,
+  "n_steps": 40,
+  "n_methods": 4,
+  "n_predictions_per_method": [
+    15,
+    15,
+    15,
+    15
+  ],
+  "audit_source": "scripts/p5p8/p6_controller_predicted_savings.py",
+  "audit_date": "2026-07-05"
+}

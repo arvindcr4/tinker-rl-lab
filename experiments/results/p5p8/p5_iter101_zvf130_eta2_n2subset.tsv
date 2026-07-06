@@ -1,0 +1,15 @@
+panel	axis	metric	n_rows	eta2_point	eta2_lomo_min	eta2_lomo_max	lomo_range
+n2_subset	method	zvf_risk	20	0.6698	0.4191	0.7772	0.3581
+n2_subset	method	mean_zvf	20	0.9995	0.9936	0.9997	0.006
+n2_subset	method	lag1_zvf_rolling_w15	20	0.7383	0.5792	0.81	0.2308
+n2_subset	method	slope	20	0.9981	0.5606	0.9986	0.438
+n2_subset	method	risk_mag	20	0.9996	0.995	0.9998	0.0048
+n2_subset	method	risk_csd	20	0.7178	0.5607	0.8127	0.252
+n2_subset	method	risk_drift	20	0.9989	0.5626	0.9993	0.4367
+n2_subset	seed	zvf_risk	20	0.0309	0.0178	0.0365	0.0187
+n2_subset	seed	mean_zvf	20	0.0002	0.0	0.0003	0.0002
+n2_subset	seed	lag1_zvf_rolling_w15	20	0.0243	0.0186	0.0271	0.0085
+n2_subset	seed	slope	20	0.0006	0.0003	0.0008	0.0005
+n2_subset	seed	risk_mag	20	0.0001	0.0	0.0002	0.0001
+n2_subset	seed	risk_csd	20	0.0247	0.0149	0.0287	0.0138
+n2_subset	seed	risk_drift	20	0.0003	0.0001	0.0004	0.0003

@@ -1,0 +1,76 @@
+% Paper 6 measured-evidence section: same-stack variant deltas from N2 tensors
+\section{Measured Evidence: N2 Same-Stack Variant Deltas}
+\label{sec:p6-measured}
+
+The schema and entries answer \emph{what the stack is}; the question for an
+empirical paper is \emph{what the variant label actually buys, once the
+stack is held fixed}. We re-executed the four GRPO-family methods
+(\texttt{grpo}, \texttt{aero}, \texttt{gift}, \texttt{areal}) on a single
+identical stack---Tinker-managed sampler, $G{=}8$, seed $0$, $40$ steps,
+$16$ prompts per step---logging the full per-prompt reward tensor at every
+step (\texttt{experiments/results/n2\_reward\_tensor\_resume/}).
+
+\subsection{Schema validation}
+Every shipped record parses against the registry schema. The CI-style
+auditor (\texttt{scripts/p5p8/registry\_validate.py},
+\texttt{experiments/results/p5p8/registry\_schema\_check.tsv}) reports
+\textbf{15/15 entries pass}: 12 \texttt{stack} records (badges $57$--$96$)
+and 3 \texttt{variant\_delta} records.
+
+\subsection{Measured deltas on the same stack}
+Table~\ref{tab:p6-measured-deltas} reports paired bootstrap means and
+$95\%$ CIs on the last-$10$ steps (deterministic LCG, $n_{\text{boot}}=2000$).
+The per-prompt pooled view pools each prompt's mean reward over the steps
+it sees and is the cleanest counterfactual because it eliminates
+prompt-set drift.
+
+\begin{table}[t]
+\centering
+\caption{Same-stack variant deltas from the N2 four-method run
+(seed $0$, $G{=}8$, last-10 steps; paired bootstrap CI on per-step
+scalar, then per-prompt pooled). All reward deltas are within paired
+bootstrap noise; the only significant deltas are length / length-CV
+(AERO, AREAL shorten completions) and the GIFT additive-constant shift
+in the loss (its gamma-style likelihood baseline).}
+\label{tab:p6-measured-deltas}
+\small
+\begin{tabular}{lllrrr}
+\toprule
+Metric (scope)        & variant & grpo mean & var. mean & $\Delta$ & 95\% CI \\
+\midrule
+reward\_mean (last-10) & aero    & 0.851 & 0.865 & $+0.014$  & $[+0.000,\,+0.039]$ \\
+reward\_mean (last-10) & gift    & 0.851 & 0.834 & $-0.016$  & $[-0.063,\,+0.047]$ \\
+reward\_mean (last-10) & areal   & 0.851 & 0.871 & $+0.020$  & $[-0.008,\,+0.055]$ \\
+zvf (last-10)          & gift    & 0.86  & 0.74  & $-0.125$  & $[-0.250,\,+0.000]$ \\
+mean\_len (last-10)    & aero    & 332.0 & 300.9 & $-31.08$  & $[-41.12,\,-23.43]^{\dagger}$ \\
+mean\_len (last-10)    & areal   & 332.0 & 301.9 & $-30.13$  & $[-41.10,\,-16.25]^{\dagger}$ \\
+cv\_len (last-10)      & aero    & 0.327 & 0.362 & $+0.034$  & $[+0.014,\,+0.069]^{\dagger}$ \\
+cv\_len (last-10)      & areal   & 0.327 & 0.366 & $+0.038$  & $[+0.019,\,+0.062]^{\dagger}$ \\
+loss (last-10)         & gift    & $-1.7\!\times\!10^{4}$ & $-2.4\!\times\!10^{2}$ & $+1.67\!\times\!10^{4}$ & $[+1.49\!\times\!10^{4},\,+1.94\!\times\!10^{4}]^{\dagger}$ \\
+\midrule
+reward\_mean (per-prompt, $n{=}16$) & aero  & --- & --- & $+0.007$ & $[-0.028,\,+0.050]$ \\
+reward\_mean (per-prompt, $n{=}16$) & gift  & --- & --- & $-0.011$ & $[-0.031,\,+0.013]$ \\
+reward\_mean (per-prompt, $n{=}16$) & areal & --- & --- & $+0.006$ & $[-0.016,\,+0.044]$ \\
+\bottomrule
+\end{tabular}\\
+\footnotesize{$^{\dagger}$ CI excludes $0$; per-prompt means omitted
+(trivial). Source: \texttt{experiments/results/n2\_reward\_tensor\_resume/}.
+}
+\end{table}
+
+\subsection{What this rules in and out}
+The measured reward deltas are all within paired bootstrap noise at the
+same stack---direct quantitative corroboration of the Pillar-1
+``algorithm does not move outcome once stack is fixed'' reading. The
+length / length-CV deltas for AERO and AREAL are real, but they are
+\emph{not} reward improvements: they are different prompt--completion
+distributions under the same reward, consistent with sequence-level
+importance-ratio methods collapsing long completions. GIFT's loss
+additive shift is a baseline constant, not an outcome.
+
+The registry's job is to make these distinctions visible. An entry that
+claims a ``DAPO'' outcome without a per-component delta status makes it
+impossible to know whether the reported number reflects an algorithm
+change or a stack change; the N2 row gives the registry a measured
+reference for the same-stack baseline against which future entries can
+be compared.

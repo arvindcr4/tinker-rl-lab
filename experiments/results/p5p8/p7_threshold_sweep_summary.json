@@ -1,0 +1,54 @@
+{
+  "iter": 39,
+  "n_seeds": 5,
+  "seeds": [
+    179,
+    316,
+    42,
+    453,
+    590
+  ],
+  "taus": [
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8,
+    0.85,
+    0.9,
+    0.95
+  ],
+  "G_base": 8,
+  "G_esc": 16,
+  "G_des": 4,
+  "n_boot": 2000,
+  "n_steps_per_seed": 15,
+  "headline_best_tau_per_controller": {
+    "zvf_triage": {
+      "best_tau": 0.9,
+      "best_savings": 0.0,
+      "best_fire_rate": 0.0,
+      "best_seed_cv_total": 0.0,
+      "best_seed_cv_savings": 0.0
+    },
+    "dualformer_auto": {
+      "best_tau": 0.5,
+      "best_savings": 0.42,
+      "best_fire_rate": 0.84,
+      "best_seed_cv_total": 0.09616781914184777,
+      "best_seed_cv_savings": 0.13280317881493264
+    },
+    "hybrid": {
+      "best_tau": 0.65,
+      "best_savings": 0.14,
+      "best_fire_rate": 0.28,
+      "best_seed_cv_total": 0.057489910752679556,
+      "best_seed_cv_savings": 0.35315230890931726
+    }
+  },
+  "n_per_seed_rows": 150,
+  "n_summary_rows": 30,
+  "n_ci_rows": 30
+}

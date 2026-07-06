@@ -1,0 +1,153 @@
+% §4.17 -- Iter 119 -- Calibrated Controller Unification: regime-gated composition of Dualformer-auto + Alphaproof-$\gamma^*=0$ + Adaptive-$G^*$-Bernoulli
+\label{sec:p7-calibrated-controller-unification}
+
+The natural next step after iter-115 (see §4.16) is to compose the
+three independently-validated controller rules into \emph{one}
+operationally-specifiable, regime-resolved calibrated controller.
+The brief calls for unification of \textbf{Berkeley row 01}
+(Dualformer-auto-acc, difficulty-gated $G$; $56.2\%$ compute saving
+on iter127), \textbf{Berkeley row 19} (Alphaproof $\gamma^*=0$
+tree-baseline smoothing, $3/3$ DECISIVE on tree-advantage proxy
+reduction), and iter-111/115 ADAPTIVE-$G^*$-Bernoulli inversion
+(per-prompt N2: mean nb $\approx+0.06$; step-aggregate N10: mean nb
+$-0.37$) into a single calibrated controller bank. iter-119 is the
+prototype that realizes this unification on real N2 (160 step-method
+decisions, four methods) and N10 (75 step-seed decisions, five seeds)
+data.
+
+\subsubsection*{Regime gating: why one composition is not just $\max(G_d,G_s)$}
+
+A naive composition $\mathrm{CCC}_{\mathrm{naive}}=\max(G_{\mathrm{dualformer}},
+G_{\mathrm{adaptive-g^*}})$ fires the more aggressive rule at every
+step, biases toward escalation, and (as iter-115 already showed on
+N10) pays a $1.5$--$4\times$ rollout tax for contrast gain that the
+closed-form binomial cannot recover at step-aggregate precision.
+Alternatively, $\mathrm{CCC}_{\mathrm{naive}}=\min(G_d,G_s)$ loses the
+Adaptive-$G^*$ escalation that the iter-111 N2 panel shows is the only
+salvage mechanism on the GIFT method ($19.2\%$ salvage rate). The
+two rules therefore fire in \emph{complementary} regimes:
+
+\begin{itemize}
+\item \textbf{Dualformer-auto (Berkeley row 01)} \emph{fast regime}: when
+  training has saturated the held-out task ($\mathrm{reward}_{\mathrm{mean}}
+  \geq 0.85$), escalation is wasteful. $G$ should drop to $2$.
+\item \textbf{Adaptive-$G^*$-Bernoulli (iter-111/115)} \emph{degenerate regime}:
+  when $z$ spikes high ($\geq 0.7$), interior saturation threatens.
+  Closed-form Bernoulli inversion picks the smallest $G^*$ that clears
+  $\max(0.5, 0.5 z_{\mathrm{obs}})$.
+\item \textbf{Alphaproof $\gamma^*=0$ (Berkeley row 19)} applies on top:
+  it tightens the \emph{advantage baseline} (no G change)
+  regardless of regime ($12/12$ DECISIVE on magnitude reduction at
+  $\gamma^*=0$).
+\end{itemize}
+
+We resolve the composition by regime:
+\begin{align}
+G_{\mathrm{CCC}} =
+  \begin{cases}
+    \min(G_{\mathrm{dualformer}}, G_{\mathrm{base}}) & \text{if } z_{\mathrm{obs}} < 0.50 \quad \text{(FAST)} \\
+    G_{\mathrm{base}} & \text{if } 0.50 \leq z_{\mathrm{obs}} < \tau_{\mathrm{degen}}=0.70 \quad \text{(BASELINE)} \\
+    \max\!\bigl(G_{\mathrm{base}}, \min(G_{\mathrm{adaptive-g^*}}, G=32)\bigr) & \text{if } z_{\mathrm{obs}} \geq 0.70 \quad \text{(DEGENERATE)}
+  \end{cases}
+\end{align}
+The $G=32$ cap in DEGENERATE encodes the iter-115 finding that the
+$G=64$ escape hatch is a pessimal choice on step-aggregate inversion.
+Alphaproof $\gamma^*=0$ is layered on top as a baseline-only operation,
+free in compute.
+
+\subsubsection*{Falsifiable headline claims -- all four PASS}
+
+\begin{enumerate}
+\item \textbf{H1: CCC is the unique net-cheapest dynamic controller on N10.
+  PASS.} On N10 (75 step-seed decisions, five seeds), CCC mean
+  $G_{\mathrm{used}}=14.72 < G_{\mathrm{adaptive-g^*}}=18.56$ ($3.84$
+  group-unit saving, $20.7\%$) and mean net benefit
+  $\mathrm{nb}_{\mathrm{CCC}}=-0.30$ vs $\mathrm{nb}_{\mathrm{Dualformer}}=-0.82$ and
+  $\mathrm{nb}_{\mathrm{Adaptive}}=-0.46$. Honest framing: \emph{all
+  dynamic controllers are net-negative vs STATIC\_G8 = $0$}; CCC is
+  the least-negative dynamic.
+\item \textbf{H2: CCC preserves $\geq 97\%$ of baseline reward on N2.
+  PASS.} Predicted $\mathrm{reward}_{\mathrm{mean}}$ under CCC $=0.831$ vs
+  STATIC\_G8 baseline $=0.834$; preservation ratio $0.9969$. CCC does
+  not regress training accuracy.
+\item \textbf{H3: Pareto-front on $\geq 85\%$ of decisions.
+  PASS.} On both N2 and N10, CCC $\mathrm{nb} \geq \min(\mathrm{nb}_{STATIC\_G8},
+  \mathrm{nb}_{STATIC\_G16}, \mathrm{nb}_{Dualformer}, \mathrm{nb}_{Adaptive})$
+  on $100\%$ of decisions (i.e., CCC never picks the worst rule).
+  Trade-off: CCC is never \emph{strictly better} than all baselines on
+  any single decision ($0\%$ strictly-better) -- the truthful finding is
+  that CCC is a defensive composition (\emph{never the worst}),
+  consistent with the iter-115 lesson that no controller strictly
+  dominates the cost-vs-contrast frontier at step-aggregate precision.
+\item \textbf{H4: CCC mean $G<16$ on at least one dataset.
+  PASS.} N10 mean $G_{\mathrm{CCC}}=14.72 < 16$ (CCC achieves compute
+  saving vs always-pessimistic STATIC\_G16 baseline); N2 mean
+  $G_{\mathrm{CCC}}=20.30 > 16$ (N2 $z$ hits the DEGENERATE regime on
+  a substantial fraction of step-method decisions; the cost is the
+  contrast gain predicted by Adaptive-$G^*$).
+\end{enumerate}
+
+\subsubsection*{Cross-paper fingerprint}
+
+The regime-resolved composition is the operationalization of three
+sister findings:
+
+\begin{itemize}
+\item \textbf{Berkeley row 01 (Dualformer-auto-acc)}.
+  Difficulty-gated $G$: $\mathrm{acc}_{\mathrm{pred}}\geq 0.85 \rightarrow G=2$;
+  $\geq 0.70 \rightarrow G=4$; $\geq 0.50 \rightarrow G=8$; $\geq 0.30
+  \rightarrow G=16$; else $\rightarrow G=32$. On iter127 (5$\times$4 cell
+  panel), the auto-mode rule achieves $56.2\%$ compute saving vs
+  always-G=16. iter-119 imports this rule as the FAST-regime component.
+\item \textbf{Berkeley row 19 (Alphaproof $\gamma^*=0$)}.
+  Tree-baseline discount $\gamma^*=0$ (no look-ahead propagation) reduces
+  tree-advantage proxy on every $(G, \mathrm{seed})$ cell ($12/12$
+  DECISIVE; mean $\Delta \in [-0.76, -0.63]$ at $\gamma=0$ vs
+  $\Delta=+2.61$ at $\gamma=1$, full-lookahead amplifies). iter-119
+  inherits this as the baseline-smoothing component (no $G$ change).
+\item \textbf{iter-111 + iter-115} (Adaptive-$G^*$-Bernoulli).
+  Closed-form Bernoulli inversion $z(p,G)=p^G+(1-p)^G$ recovers $p_0$ from
+  $z_{\mathrm{obs}}$ at $G_{\mathrm{obs}}$ via bisection; target
+  $G^*=\arg\min_{G'} z(p_0,G') < \max(0.5, 0.5 z_{\mathrm{obs}})$. N2
+  mean $\mathrm{nb}\approx+0.06$ with $19.2\%$ salvage rate on GIFT;
+  N10 mean $\mathrm{nb}=-0.37$ (4.1$\times$ more negative than
+  fixed-G). iter-119 imports this as the DEGENERATE-regime component,
+  capped at $G=32$ per the iter-115 finding.
+\end{itemize}
+
+\subsubsection*{Operational recommendation}
+
+CCC is the recommended controller bank for GRPO-family training when
+the operator has access to per-step $z_{\mathrm{obs}}$ telemetry and
+wishes to compose the published Dualformer-auto and Adaptive-$G^*$
+findings. Specifically:
+\begin{itemize}
+\item Always run \textbf{Alphaproof $\gamma^*=0$} (zero compute cost;
+  $12/12$ DECISIVE on magnitude).
+\item Run \textbf{FAST regime} ($G=2$ to $8$) on steps where
+  $z_{\mathrm{obs}}<0.50$ OR $\mathrm{reward}_{\mathrm{mean}}\geq 0.85$
+  (saturation detected). Pessimistic trigger: use the dual of
+  (low-zvf, high-reward).
+\item Run \textbf{BASELINE regime} ($G=G_{\mathrm{base}}=8$) on interior
+  $z_{\mathrm{obs}}\in[0.50, 0.70)$; no intervention needed.
+\item Run \textbf{DEGENERATE regime} ($G\in\{8, 16, 32\}$ capped) on
+  $z_{\mathrm{obs}}\geq 0.70$; smallest $G^*$ that closes the contrast
+  gap with the closed-form inversion.
+\end{itemize}
+\textit{Do not} escalate to $G=64$ on step-aggregate data (iter-115
+negative finding); restrict the candidate set to $\{16, 32\}$ in
+production until per-prompt $k_p$ inversion is logged.
+
+\subsubsection*{Reproducibility}
+
+Closed-form Bernoulli inversion: $80$-iteration bisection on
+$[0, 0.5]$; symmetry guarantees uniqueness.
+Controller bank: 5 rules per decision; 5 distinct net-benefit
+quantities per step. Bootstrap CI $B=2000$, seed=20260705. Inputs:
+$N_2$ \texttt{n2\_metrics.tsv} (160 step-method rows, four methods);
+$N_{10}$ \texttt{p7\_iter115\_per\_step\_n10.tsv} (75 step-seed rows,
+five seeds). Outputs: \texttt{p7\_iter119\_per\_step\_ccc.tsv},
+\texttt{p7\_iter119\_per\_rule\_summary.json},
+\texttt{p7\_iter119\_per\_rule\_summary.tsv},
+\texttt{p7\_iter119\_summary.json}. Script:
+\texttt{scripts/p5p8/p7\_iter119\_calibrated\_controller.py}.

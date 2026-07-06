@@ -1,0 +1,21 @@
+% Pillar-2 (ZVF) standalone abstract
+\begin{abstract}
+In GRPO, a prompt produces no learning signal when all $G$ sampled completions
+receive identical rewards: the group-centered advantages are zero and the gradient
+vanishes. The \emph{Zero-Variance Fraction} (ZVF)---the share of groups in this
+degenerate state---is therefore a natural diagnostic of when binary, verifiable
+rewards stop training the policy. We study ZVF as one pillar of \ours{}, a
+benchmark of 70+ RL runs across seven libraries and five model families
+($0.6$B--$\sim$671B) on GSM8K, HumanEval, and tool-use tasks. We characterize ZVF
+descriptively and, deliberately, decline to promote it to a causal or
+incrementally predictive statistic. Empirically, ZVF tracks training-time signal
+starvation and correlates with catastrophic collapse (Spearman
+$\rho = 0.56$; Pearson point-biserial $0.62$), but only weakly with the final held-out outcome
+($\rho \approx 0.27$); it is temporally sticky (late-phase $0.87$--$0.97$, versus
+early-phase $0.04$--$0.13$ for variance-mitigation GRPO and the largest group size,
+with smaller groups starting higher at $0.25$--$0.61$; lag-1 autocorrelation $\approx 0.94$) and mechanically
+coupled to reward sparsity, group size, and baseline accuracy. A concluding
+cross-examination shows ZVF's core weakness is that it aliases mastery with
+incapacity, and motivates magnitude- and sign-aware replacements. We release code,
+logs, and per-group reward tensors.
+\end{abstract}

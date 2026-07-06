@@ -1,0 +1,40 @@
+{
+  "iteration": 142,
+  "pillar": "B-F24 (Berkeley F24 L6 -- Graham Neubig; SWE-agent/OpenHands/Agentless)",
+  "row_id": "09",
+  "source_citations": [
+    "SWE-agent: John Yang, Carlos E. Jimenez, Alexander Wettig, Kilian Lieret, Shunyu Yao, Karthik Narasimhan, Ofir Press. 'SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering'. arXiv:2405.15793, 2024 (v1 6 May 2024, current rev 11 Nov 2024).",
+    "OpenHands: Xingyao Wang et al. (24 authors incl. Graham Neubig). 'OpenHands: An Open Platform for AI Software Developers as Generalist Agents'. arXiv:2407.16741, ICLR 2025 (v1 23 Jul 2024; v3 18 Apr 2025).",
+    "Agentless: Chunqiu Steven Xia, Yinlin Deng, Soren Dunn, Lingming Zhang. 'Agentless: Demystifying LLM-based Software Engineering Agents'. arXiv:2407.01489, 2024 (v1 1 Jul 2024; v2 29 Oct 2024)."
+  ],
+  "verified_citations": [
+    "arXiv:2405.15793 -- SWE-agent",
+    "arXiv:2407.16741 -- OpenHands",
+    "arXiv:2407.01489 -- Agentless"
+  ],
+  "target": "A1 (statistical rigor) + A2 (eval methodology) + A4 (tool-use / ACI reframing)",
+  "passk_per_anchor_path": "experiments/results/berkeley/sweagent_passk_per_anchor.tsv",
+  "passk_scaling_path": "experiments/results/berkeley/sweagent_passk_scaling.tsv",
+  "aci_decomp_path": "experiments/results/berkeley/sweagent_aci_decomp.tsv",
+  "agentless_tiers_path": "experiments/results/berkeley/sweagent_agentless_tiers.tsv",
+  "key_findings": {
+    "h1_within_anchor_ci": "Pass@K=1 95% CI width per anchor (n=20-30 within-anchor step rewards): 0.20-0.34 absolute. The 0.025-0.050 R_max gaps that drive iter133's capability-class ordering are WITHIN within-anchor sampling noise. The SWE-agent/Chen-2021 Pass@K lesson applies: we would need n_steps >> 100 per anchor to resolve the gap at +/- 0.02 CI radius.",
+    "h2_cross_class_straddle_rate": "CI-straddle rate on cross-class pairs (L1 vs L2/L3/L4): 3/9 pairs. Cross-class gaps are NOT statistically resolvably under within-anchor n_steps evidence; the iter133 verdict that capability class dominates requires N>K=2x more within-anchor samples to qualify.",
+    "h3_aci_residualisation": "Re-ranking by R_max_observed / RQS produces a different ordering than R_max_observed: the deterministic component (R_max_policy_decomp) restores a strict ordering by ACI-tier (collapse < soft-floor < reachable). The R_max gap between 'hard_floor' and 'reachable' tiers is a bounded ACI ceiling, not a continuous policy-quality difference.",
+    "h4_agentless_tier_counts": "Agentless-style tiers: hard_floor=2, soft_floor=0, reachable=3 anchors (n=5). The reachable anchors are where the iter133 capability axis SHOULD be tested; below the reachable tier the gap is dominated by ACI quality, not policy."
+  },
+  "ci_pair_table_summary": {
+    "total_pairs": 10,
+    "within_class_pairs": 1,
+    "within_class_straddle_pairs": 1,
+    "cross_class_pairs": 9,
+    "cross_class_straddle_pairs": 3,
+    "straddle_rate_overall": 0.4
+  },
+  "agentless_tier_counts": {
+    "hard_floor": 2,
+    "soft_floor": 0,
+    "reachable": 3
+  },
+  "recommendation": "A1 winner: Pillar-1 headline R_max-vs-log-N slope should be re-stated with explicit Pass@K CI; the iter117/121/125/137 'no scaling law' verdicts are not strengthened by the new SWE-agent evidence (we still lack the data to resolve small R_max gaps within anchors). What IS strengthened is the Agentless/ACI reframing of WHY capable vs incapable is not the only axis: within the reachable tier, the iter133 capability-class verdict is consistent; across hard-floor anchors, R_max is bounded by parser/ACI quality, not policy. Recommended action: (i) add 1 paragraph to Pillar-1 paper section reframing R_max as Pass@K=1 with explicit CI width = f(1/sqrt(n_steps)); (ii) add 1 figure (per-anchor Pass@K CI scatter, sorted by R_max); (iii) for next data-collection wave, target n_steps >= 100 per anchor to bring the CI width below 0.05."
+}

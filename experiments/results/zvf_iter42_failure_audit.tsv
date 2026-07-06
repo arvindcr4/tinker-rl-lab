@@ -1,0 +1,19 @@
+# Iter 42 Pillar 2 per-(kind, method) early-bloom failure audit.
+# early_bloom05 = ZVF first crosses 0.5 in first half of trace.
+# early_bloom09 = ZVF first crosses 0.9 in first half of trace.
+# Source: scripts/zvf_iter42.py
+kind	method	n	n_collapse	collapse_rate	n_bloom05	n_bloom05_collapse	bloom05_collapse_rate	n_bloom09	n_bloom09_collapse	bloom09_collapse_rate	n_converged	n_converged_bloom05	mean_last10
+groupsize_zvf_sweep	grpo_G16	3	0	0.0000	3	0	0.0000	1	0	0.0000	3	3	0.9837
+groupsize_zvf_sweep	grpo_G2	3	0	0.0000	3	0	0.0000	3	0	0.0000	3	3	0.9771
+groupsize_zvf_sweep	grpo_G4	3	0	0.0000	3	0	0.0000	3	0	0.0000	3	3	0.9714
+groupsize_zvf_sweep	grpo_G8	3	0	0.0000	3	0	0.0000	3	0	0.0000	3	3	0.9732
+tinker_prompt_zvf	qwen3_8b_gsm8k	3	0	0.0000	3	0	0.0000	3	0	0.0000	3	3	0.7667
+variance_mitigation	aero	5	0	0.0000	0	0	nan	0	0	nan	0	0	0.3993
+variance_mitigation	areal	5	0	0.0000	0	0	nan	0	0	nan	0	0	0.4042
+variance_mitigation	cppo	5	0	0.0000	0	0	nan	0	0	nan	0	0	0.3920
+variance_mitigation	es	5	0	0.0000	0	0	nan	0	0	nan	0	0	0.3900
+variance_mitigation	gift	5	0	0.0000	0	0	nan	0	0	nan	0	0	0.4026
+variance_mitigation	grpo	5	0	0.0000	5	0	0.0000	0	0	nan	0	0	0.3825
+variance_mitigation	mcgrpo	5	0	0.0000	0	0	nan	0	0	nan	0	0	0.3973
+variance_mitigation	ngrpo	5	0	0.0000	0	0	nan	0	0	nan	0	0	0.3874
+variance_mitigation	scafgrpo	5	0	0.0000	0	0	nan	0	0	nan	0	0	0.4088

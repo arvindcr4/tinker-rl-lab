@@ -1,0 +1,172 @@
+% ---------------------------------------------------------------------------
+% Pillar 2: Zero-Variance Fraction diagnostic -- Iter 126
+% ZVF TRAJECTORY dynamics as early-warning signal (EWS) for GRPO collapse.
+% Three falsifiable findings:
+%   H1 - Critical slowing down (rolling lag-1 autocorrelation)
+%   H2 - Threshold-crossing lead time
+%   H3 - Method-level ZVF drift slope (ceiling)
+% Materialised from scripts/zvf_diagnostic_iter126.py:
+%   experiments/results/zvf_iter126_lag1.tsv          (45 rows: 9 methods x 5 seeds)
+%   experiments/results/zvf_iter126_leadtime.tsv      (180 rows: 9 methods x 5 seeds x 4 taus)
+%   experiments/results/zvf_iter126_drift.tsv          (45 rows: 9 methods x 5 seeds)
+%   experiments/results/zvf_iter126_meta.json
+%   figures/zvf_iter126_ews.{pdf,png}                 (4-panel)
+% ---------------------------------------------------------------------------
+
+\subsection{ZVF Trajectory Dynamics as Early-Warning Signal for GRPO Collapse}
+\label{sec:zvf-ews}
+
+The iter~118 section turned mean-ZVF into a first-class
+cross-library diagnostic (AUROC$=1.0$, paired AERO-vs-GRPO gap
+$-0.260$, bimodal dose-response). The iter~122 section added
+the iso-yield curve, per-seed AERO traceability, and the
+operating-point sweep. Both sections use a single number per
+(method, seed, group-size) cell. Iter~126 asks the natural
+next question: \emph{what does the ZVF trajectory look like
+\emph{over time}, and does it telegraph the GRPO collapse
+that the iter~118 calibration curve shows it eventually
+produces?}
+
+\paragraph{H1 -- Critical slowing down:  GRPO-collapse seeds have
+$1.5\times$ the rolling lag-1 autocorrelation of GRPO-safe seeds.}
+For each of the five GRPO seeds in the variance-mitigation
+suite, we compute the per-step ZVF trajectory over the
+\emph{pre-event window} (steps $0\,..\,(s_{\rm collapse}-1)$ for
+the three collapse seeds at $s_{\rm collapse}\in\{74,\,82,\,83\}$;
+the full 100-step window for the two safe seeds), then measure
+the lag-1 autocorrelation. A single lag-1 autocorrelation over
+the entire window is dominated by the integrated trend and is
+uninformative (GRPO-collapse $0.992\pm0.003$ vs GRPO-safe
+$0.993\pm0.000$, Cohen $d=-0.37$). The diagnostic EWS statistic
+is the \emph{rolling} lag-1 autocorrelation averaged over all
+windows of length $w{=}15$: this captures \emph{local}
+persistence, which is the dynamical-systems signature of
+critical slowing down \citep{Scheffer2009}. The result is sharp:
+GRPO-collapse seeds $0.574,\,0.607,\,0.647$ (mean $0.609$,
+SD $0.036$); GRPO-safe seeds $0.409,\,0.421$ (mean $0.415$,
+SD $0.008$); \textbf{Cohen $d = 7.3$} -- a very large effect
+size for an $n{=}3$ vs $n{=}2$ comparison. The same rolling-lag-1
+statistic across the other eight variance-mitigation methods
+falls in the safe band ($0.24$--$0.51$), placing GRPO-collapse
+above \emph{all} other (method, seed) cells in the suite. Source:
+\texttt{experiments/results/zvf\_iter126\_lag1.tsv}.
+
+\paragraph{H2 -- Threshold-crossing lead time:  ZVF crosses
+$\tau{=}0.4$ an average of $35.7$ steps before GRPO collapse.}
+For each GRPO collapse seed we record the first step at which
+ZVF crosses $\tau\in\{0.4,\,0.5,\,0.6,\,0.7\}$ and the lead time
+$\ell_\tau = s_{\rm collapse} - s_{\rm cross}$. The lead times
+are monotone decreasing in $\tau$ (as expected -- a higher
+threshold is crossed later) and \emph{all non-negative} at every
+$\tau$ across all three collapse seeds:
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{rrrrrrr}
+\hline
+$\tau$ & seed 0 & seed 1 & seed 2 & mean & min & max \\
+\hline
+$0.4$ & $31$ & $37$ & $39$ & $35.7$ & $31$ & $39$ \\
+$0.5$ & $27$ & $35$ & $35$ & $32.3$ & $27$ & $35$ \\
+$0.6$ & $24$ & $32$ & $30$ & $28.7$ & $24$ & $32$ \\
+$0.7$ & $19$ & $26$ & $28$ & $24.3$ & $19$ & $28$ \\
+\hline
+\end{tabular}
+\caption{ZVF threshold-crossing lead time (iter~126).  Each
+column is the steps from first ZVF $\ge\tau$ to the GRPO
+collapse onset step, for the three collapse seeds.  All twelve
+lead times are strictly non-negative (none of the seeds cross
+$\tau$ \emph{after} collapse), confirming ZVF is a \emph{leading}
+indicator of the collapse event under the iter~118 high-ZVF
+calibration band.  Source:
+\texttt{experiments/results/zvf\_iter126\_leadtime.tsv}.}
+\label{tab:zvf-iter126-leadtime}
+\end{table}
+
+The minimum lead time across all three seeds and four
+thresholds is $19$ steps ($\tau{=}0.7$, seed 0).  Operationally:
+\textit{a monitoring rule of the form ``abort training if
+$\ZVF_t \ge 0.7$ for $t \le s_{\rm collapse}-19$''} would fire
+\emph{at or before} the GRPO collapse onset for every observed
+collapse seed at every tested threshold, with the safety margin
+shrinking monotonically with $\tau$.  Combined with H1, the
+rolling lag-1 gives a complementary channel: at high ZVF the
+threshold rule fires (band 3 of iter~118), at low rolling
+persistence the autocorrelation rule does not fire (GRPO safe
+seeds stay below the $0.5$ threshold).  Source:
+\texttt{experiments/results/zvf\_iter126\_leadtime.tsv}.
+
+\paragraph{H3 -- ZVF drift slope is a method-level discriminator:
+GRPO is $24\times$ steeper than AERO.}
+Linear-fit slope of mean ZVF over the first half of training
+(per seed), aggregated to method means:
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrr}
+\hline
+Method & mean slope ($\times 10^{-3}$/step) & max slope & SD \\
+\hline
+\textbf{GRPO}     & \textbf{$9.91$} & $10.28$ & $0.25$ \\
+NGRPO             & $1.91$ & $2.17$ & $0.19$ \\
+SCAFGRPO          & $1.88$ & $2.43$ & $0.45$ \\
+CPPO              & $1.75$ & $1.95$ & $0.13$ \\
+ES                & $1.11$ & $1.39$ & $0.18$ \\
+AERO              & $0.41$ & $0.66$ & $0.21$ \\
+MCGRPO            & $0.16$ & $0.49$ & $0.21$ \\
+GIFT              & $0.10$ & $0.25$ & $0.11$ \\
+AREAL             & $-0.00$ & $0.16$ & $0.13$ \\
+\hline
+\end{tabular}
+\caption{ZVF drift slope (iter~126).  Mean ZVF in the first half
+of training is fit linearly; the per-method mean slope is
+tabulated.  GRPO is an outlier ($24\times$ AERO, $5\times$
+NGRPO/SCAFGRPO/CPPO).  Source:
+\texttt{experiments/results/zvf\_iter126\_drift.tsv}.}
+\label{tab:zvf-iter126-drift}
+\end{table}
+
+The slope order is the same as the iter~118 mean-ZVF order
+(rank correlation $\rho=1.0$ across the 9 methods), so the
+slope is not a fresh signal -- but the \emph{quantitative gap}
+is.  GRPO's $9.91\times 10^{-3}$/step slope corresponds to
+reaching $\ZVF\ge 0.5$ in $\sim 50$ steps from an initial
+$\ZVF\approx 0$; AERO would need $\sim\!1200$ steps.  Source:
+\texttt{experiments/results/zvf\_iter126\_drift.tsv}.
+
+\paragraph{Take-away for the paper.}
+Iter~126 closes the gap between the iter~118 calibration
+curve (``ZVF at high values predicts collapse'') and the
+iter~122 operating-point sweep (``ZVF alone is not a sufficient
+alarm'') by showing that the \emph{trajectory} of ZVF carries
+two independent early-warning channels:
+\begin{itemize}
+\item \textbf{Channel A (H1)}: rolling-window lag-1
+autocorrelation is $7\times$ larger in Cohen $d$ units on
+GRPO-collapse seeds than on GRPO-safe seeds -- a critical
+slowing-down signature that is invisible in the integrated
+single-lag-1 statistic.
+\item \textbf{Channel B (H2)}: ZVF crosses any $\tau\ge 0.4$
+\emph{before} (not after) the collapse onset in all three GRPO
+collapse seeds, with a minimum lead time of $19$ steps at
+$\tau{=}0.7$ and a maximum lead time of $39$ steps at
+$\tau{=}0.4$.
+\end{itemize}
+The drift-slope analysis (H3) adds a third diagnostic axis
+(method-level ZVF ceiling) but it is largely redundant with the
+iter~118 mean-ZVF ordering -- its value is to show that GRPO
+has a unique $24\times$ AERO drift signature, which is the
+structural reason AERO suppresses the iter~78 collapse early
+warning.  Frontier synthesis:  iter~126 elevates ZVF from a
+\emph{static} cross-library diagnostic (iter~118/iter~122) to
+a \emph{dynamical} one, where the trajectory shape
+\emph{itself} is the diagnostic.  The practical consequence is
+that the iter~122 ``two-threshold alarm'' (high $\tau$ for
+tool-use collapse, low $\tau$ for variance-mitigation drift)
+can be sharpened by adding a third channel -- rolling lag-1
+above $0.55$ -- that fires on the GRPO collapse signature
+without false-positiving on AERO plateau (rolling lag-1
+$0.24$--$0.51$) or on AREAL/GIFT drift (rolling lag-1
+$0.33$--$0.45$).

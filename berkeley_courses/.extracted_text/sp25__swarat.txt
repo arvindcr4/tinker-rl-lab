@@ -1,0 +1,1072 @@
+Abstraction and Discovery with 
+Large Language Model Agents
+Swarat Chaudhuri
+Computer Science
+The University of  Texas at Austin
+
+Mathematical discovery
+Modeling
+Conjecturing
+Reasoning
+AI for math:  Automate conjecturing and proof
+Proofs, counterexamples
+Candidate theorems
+Definitions
+
+Scientific discovery
+Data
+Hypothese
+s
+Theorizing
+Experimentation
+AI for science:  Automate hypothesis generation and experiment 
+design
+
+Key ideas
+• Systematically search spaces of hypotheses, conjectures, and proofs
+• Use prior knowledge to prioritize directions of search
+• Learn, from experience, how and how not to search
+• Discover abstract concepts and tools, speeding up both search and learning. 
+This talk:  LLM agents with all four capabilities.
+
+AI for Mathematical Discovery
+
+Are neural networks all you need?
+LLM  pretrained 
+on text and code
+Base math 
+LLM
+Finetuned 
+math LLM
+Tool-
+integrated 
+math LLM
+Math-related 
+web documents
+Problems w/ step-
+by-step solutions
+Problems w/ tool-
+integrated solutions
+Problem: Suppose that the sum of the squares of two 
+complex numbers  and  is , and the sum of their cubes 
+is 
+. List all possible values for 
+, separated by 
+commas.
+𝑥
+𝑦
+7
+10
+𝑥+ 𝑦
+           >>> [-5, -5, 1, 1, 4, 4]
+Solution: Let’s use `sympy` to calculate and print all 
+possible values for 
+.
+𝑥+ 𝑦
+Removing duplicates, the possible values for 
+ are 
+\boxed{-5, 1, 4}
+𝑥+ 𝑦
+Fleureau et al. “How NuminaMath Won the 1st AIMO Progress Prize” 
+2024
+
+Are neural networks all you need?
+Response from OpenAI o1
+Putnam 2024, Problem A2 
+
+Weaknesses of the neural-only approach
+  Open question: Will scaling solve these problems? 
+Data scarcity
+• Need traces or reward functions that enable rigorous mathematical reasoning
+• This is difficult beyond high-school or competition settings.  
+Lack of verifiability
+• Natural-language reasoning is hard to verify
+• In applications like system verification,  edge cases are especially critical. 
+
+Alternative: Formal representations
+“Prove that if a number is 
+even, its square is even as 
+well”
+Neural 
+autoformalizer
+Informal Problem  
+Statement
+Formal Problem  
+Statement
+Formal 
+proof 
+assistant
+Neural prover
+Formal Problem  
+Statement
+QED!
+
+Example: Formal Representations
+theorem mod_arith_2
+(x : ℕ) : x % 2 = 0 → (x * x) % 2 = 0 :=
+begin
+  intro h,
+  rw nat.mul_mod,
+  rw h,
+  rw nat.zero_mul,
+  refl,
+end
+1 goal
+x: ℕ
+⊢ x % 2 = 0 → x * x % 2 = 
+0
+1 goal
+x: ℕ
+h: x % 2 = 0
+⊢ x * x % 2 = 0
+1 goal
+x: ℕ
+h: x % 2 = 0
+⊢ x % 2 * (x % 2) % 2 = 0
+1 goal
+x: ℕ
+h: x % 2 = 0
+⊢ 0 * 0 % 2 = 0
+1 goal
+x: ℕ
+h: x % 2 = 0
+⊢ 0 % 2 = 0
+Goal Accomplished
+
+Autoformalization 
+[Figure from Formal Mathematical Reasoning: A New Frontier in AI.  Yang et al. 2
+
+Neural Theorem Proving
+n : ℕ 
+⊢ add 0 n = n
+⊢ add 0 0 = 0
+n’ : ℕ
+ih: add 0 n’ = n’ 
+⊢ add 0 (n’+1) = 
+n’+1
+n : ℕ
+⊢ false
+⊢ add 0 0 = 0
+n’ : ℕ
+⊢ add 0 (n’+1) = 
+n’+1
+induction n
+cases n
+exfalso
+n’ : ℕ
+ih: add 0 n’ = n’ 
+⊢ add 0 (n’+1) = 
+n’+1
+rfl
+simp [add, ih]
+n’ : ℕ
+ih: add 0 n’ = n’ 
+⊢ add 0 (n’+1) = 
+n’+1
+simp [add, ih]
+rw [ih]
+linarith
+…
+…
+…
+…
+…
+…
+…
+…
+…
+…
+Formal math library
+Local context + 
+goal
+Tactic 
+suggestion
+s
+Language 
+model
+rw [ih]
+linarith
+Tactic 
+generation
+[Figure from Formal Mathematical Reasoning: A New Frontier in AI.  Yang et al. 2
+
+Alphaproof:  Reinforcement learning for 
+theorem-proving 
+Google DeepMind "AI achieves silver-medal standard solving International Mathematical Olympiad problems”, 
+2024.
+• Learn from both successes (proofs) and failures (disproofs). 
+• Misformalized problems are still helpful for learning
+• Complement RL training with test-time RL on problem variants. 
+
+An In-Context Learning Agent for Formal 
+Theorem-Proving 
+ 
+Amitayush Thakur, George Tsoukalas, Yeming Wen, Jimmy Xin, Swarat Chaudhuri. 
+Conference on Language Models, 2024.
+Amitayush
+
+Copra:  LLM agents for formal theorem-proving
+Thakur,  Tsoukalas, Wen, Xin, and Chaudhuri. An In-Context Learning Agent  for Formal Theorem-Proving. COLM 2024. 
+ https://arxiv.org/pdf/2310.04353.pdf. 
+Frontier  
+LLM
+Proof  
+assistant
+Proof state 𝑠𝑡
+Action (tactic) 
+ 𝑎𝑡
+New proof state 𝑠𝑡+1
+Error messages, new goals
+Answer  
++ Proof
+• Immediately leverage advances in LLMs 
+• Integrate natural-language and formal reasoning
+• Applicable even if there is no corpus of training problem
+• In the longer run, source of traces for LLM finetuning. 
+
+Copra:  Theorem-proving via in-context learning 
+QED
+3. “Execute” 
+the tactic via  
+proof 
+environment 
+COPRA
+Feedback
+Formal theorem + informal hints (optional)
+1.  Prompt 
+Synthesis
+Lemma Database
+4.  Augment 
+the prompt; 
+Backtrack if 
+needed
+2. Tactic   
+Parsing
+5.  Query lemma   
+database
+
+Prompting and action parsing
+
+Copra vs. GPT-4
+A Lean theorem and a correct  
+Copra-generated proof
+A wrong “proof” generated by GPT-4
+
+Aggregate 
+Statistics
+
+Integrating natural-language and formal 
+reasoning
+Idea:  Break the problem into subproblems and solve hierarchically.
+Prove that the fraction 
+ is irreducible for every natural number .
+21 𝑛+ 4
+14𝑛+ 3
+𝑛
+IMO 1959, Problem 1:
+
+1. Ask for an informal solution
+O3-mini
+
+2. Split the theorem into relevant sub-goals
+O3-
+mini
+
+3.  Ask Copra to solve the subproblems one by one. 
+COPRA
+
+4.  Add all relevant lemmas already proved in the system 
+prompt, along with the informal proof.
+COPRA
+o3-mini cannot solve the problem after splitting it into subproblems.
+• `o3-mini` hallucinated a lemma “Nat.gcd_sub_right” while writing the proof.
+• Copra can fix this hallucination lemma using Lean feedback.
+
+Application in Formal Verification
+Formal verification: 
+•
+Mathematically model a system as a set of definitions
+•
+Model system properties as theorems involving these definitions
+•
+Prove the theorems
+
+Example: Compiler Verification
+Language: Syntax + semantics
+• Syntax: A grammar defining the form of programs
+• Semantics: Rules defining executions of programs,
+Compiler:  A set of rules translating programs from one language to another.
+Verification:  Prove that the rules preserve semantics.
+
+1. Define the source language
+(*Define the source language first*)
+Inductive binop : Set := Plus | Times.
+Inductive exp : Set := 
+ Const : nat -> exp
+  (* Binop is a function which takes exp and exp and gives 
+exp.*)
+| Binop : binop -> exp -> exp -> exp. 
+Definition binopDenote (b : binop) : nat -> nat -> nat :=
+match b with 
+    | Plus => plus
+    | Times => mult
+end.
+ 
+Fixpoint expDenote (e: exp) : nat :=
+    match e with
+    | Const n => n
+    | Binop b e1 e2 => 
+      (binopDenote b) (expDenote e1) (expDenote e2)
+    end.
+
+1. Define the source language
+(*Define the source language first*)
+Inductive binop : Set := Plus | Times.
+Inductive exp : Set := 
+ Const : nat -> exp
+  (* Binop is a function which takes exp and exp and gives 
+exp.*)
+| Binop : binop -> exp -> exp -> exp. 
+Definition binopDenote (b : binop) : nat -> nat -> nat :=
+match b with 
+    | Plus => plus
+    | Times => mult
+end.
+ 
+Fixpoint expDenote (e: exp) : nat :=
+    match e with
+    | Const n => n
+    | Binop b e1 e2 => 
+      (binopDenote b) (expDenote e1) (expDenote e2)
+    end.
+
+(*Some examples in Source Language*)
+Eval simpl in expDenote (Const 42). (* 42 *)
+Eval simpl in expDenote (Binop Plus (Const 2) (Const 2)). (* 4 *)
+Eval simpl in expDenote (Binop Times (Binop Plus (Const 2) (Const 2)) (Const 7)). (* 
+28 *)
+1. Define the source language
+
+2. Define the target language
+(*Define the target language*)
+(*Instructions can be either constants or binary operation*)
+Inductive instr: Set :=
+| iConst : nat -> instr
+| iBinop : binop -> instr. 
+Definition prog := list instr. (*Program is a list of instructions*)
+(*Instruction either pushes a constant to the stack or applies binop 
+on two elements on the stack*)
+Definition stack := list nat.  
+Definition instrDenote (i : instr) (s: stack): option stack :=
+match i with
+ | iConst n => Some (n :: s)
+ | iBinop b =>
+    match s with
+     | arg1 :: arg2 :: s' => Some ((binopDenote b) arg1 arg2 :: s')
+     | _ => None
+    end    
+end.
+
+2. Define the target language
+Fixpoint progDenote (p : prog) (s: stack) : option stack :=
+match p with (*Run instructions one by one*)
+ | nil => Some s
+ | i::p' =>
+   match instrDenote i s with
+    | None => None
+    | Some s' => progDenote p' s'
+   end
+end. 
+(*Check the execution of program once*)
+Eval simpl in progDenote (iConst 32:: iConst 42 :: iBinop Plus :: nil) 
+nil. 
+(* Some (74 :: nil) *) 
+
+3. Define the compiler
+(*Translation from source to target language i.e. Compiler*)
+Fixpoint compile (e : exp): prog := 
+    match e with
+       | Const n => iConst n::nil
+       | Binop b e1 e2 => compile e2 ++ compile e1 ++ iBinop b :: nil
+    end.
+ 
+(*Convert the source language to target assembly language *)
+Eval simpl in compile (Binop Plus (Const 2) (Const 3)).  
+(* iConst 3 :: iConst 2 :: iBinop Plus :: nil *) 
+
+4. Define a correctness theorem
+(*Ensure that the compiled program compiles correctly for all possible expr *)
+Theorem compile_correct: 
+     forall e, progDenote (compile e) nil = Some (expDenote e::nil).
+ 
+
+5. Ask Copra to produce the proof
+(*Ensure that the compiled program compiles correctly for all possible expr *)
+Theorem compile_correct: 
+     forall e, progDenote (compile e) nil = Some (expDenote e::nil).
+ 
+Failure! ❌
+
+5(a).  Ask the LLM to invent a lemma
+
+5(a).  Ask the LLM to invent a lemma
+
+5(b). Sample a proposed lemma
+(*Ensure that the compiled program compiles correctly for all possible expr *)
+Theorem compile_correct: forall e, progDenote (compile e) nil = Some (expDenote e::nil).
+ 
+ 
+Auxiliary lemma:
+(*Prove if we can compile one instruction correctly first*)
+Lemma compile_one_instr: forall e p s, progDenote (compile e ++ p) 
+s = progDenote p (expDenote e :: s).
+ 
+Target theorem:
+
+5(c). Auto-generate proof of compile_one_instr 
+Lemma compile_one_instr : forall e p s, progDenote (compile e ++ 
+p) s = progDenote p (expDenote e :: s).
+Proof.
+    induction e using exp_ind.
+    intros p s.
+    unfold progDenote, compile, expDenote.
+    simpl.
+    reflexivity.
+    intros p s.
+    simpl.
+    rewrite app_assoc_reverse.
+    rewrite <- app_assoc.
+    rewrite IHe2.
+    rewrite IHe1.
+    reflexivity.
+Qed.
+
+5(d). Now auto-generate the proof of compile_correct
+Theorem compile_correct : forall e, progDenote (compile e) nil = 
+Some (expDenote e::nil).
+Proof.
+    destruct e.
+    - simpl. reflexivity.
+    - simpl. rewrite compile_one_instr. rewrite compile_one_instr. 
+reflexivity.
+Qed.
+
+Summary: Mathematical Discovery with LLM Agents 
+Language is an extraordinary powerful tool for mathematical reasoning.
+Frontier LLMs can prove nontrivial formal theorems with proof assistant feedback.
+Future work should expand these ideas in conjecturing and modeling tasks.
+Question: Can prover-LLM interaction be entirely pushed to training 
+time? 
+• The prover teaches the LLM student about compositionality, type-safety,…
+• Eventually, the teacher “retires”. 
+
+Open Challenges and Future Directions
+https://arxiv.org/abs/2412.16075
+Dawn Song
+Gabriel  
+Poesia
+Wenda Li
+Kristin  
+Lauter
+Jingxuan He
+Kaiyu Yang
+
+Open Challenges and Future Directions
+Overcoming the shortage of high-quality proof data
+• Strategies: Synthetic data, multilingual data, crowdsourcing
+[Trinh et al., Alphageometry]
+[Thakur et al.,  Proofwala]
+
+Open Challenges and Future Directions
+Autoformalization, which is hard due to insufficient high-quality paired data
+• Strategies: Formalization with proof assistant feedback 
+[Lu et al., Process-Driven Autoformalization]
+
+Open Challenges and Future Directions
+[Poesia et al., Minimo]
+Conjeturing and open-ended exploration
+Strategy: Self-play between a conjecturer and a prover
+
+AI for Scientific Discovery
+
+Lifecycle of a scientific process
+
+Lifecycle of a scientific process
+Problem: Apparent Retrograde Planetary Motion 
+Theory: Heliocentric Model
+c.  The Astronomical Revolution: Copernicus- Kepler-Borelli
+
+Lifecycle of a scientific process
+c.  The Astronomical Revolution: Copernicus- Kepler-Borelli
+Data Collection: Sample data in regime of 
+interest.
+Tycho Brahe’s observations of the planet Mars 
+(1582-1600)
+
+Lifecycle of a scientific process
+c.  The Astronomical Revolution: Copernicus- Kepler-Borelli
+Analysis: Kepler’s Third 
+Law
+
+Lifecycle of a scientific process
+c.  The Astronomical Revolution: Copernicus- Kepler-Borelli
+Analysis: Kepler’s Third 
+Law
+Interpretation: Newton’s Law of Gravitation
+
+Symbolic regression
+Kepler’s Third Law
+c.  The Astronomical Revolution: Copernicus- Kepler-Borelli
+
+Symbolic regression algorithms
+c. PySR. Miles Cranmer
+
+Symbolic Regression with PySR
+Credit: Miles Cranmer
+
+Symbolic Regression’s impact
+Credit: Miles Cranmer
+
+Sketch of PySR’s Exploration Space
+Insight: LLMs can increase exploration in relevant parts of the search 
+space.
+Independent “islands” of 
+expressions, each 
+undergoing evolution
+
+LaSR: Symbolic Regression with a 
+Learned Concept Library 
+ 
+Arya Grayeli*, Atharva Sehgal*, Omar Costilla-Reyes, Miles Cranmer, Swarat Chaudhuri. 
+Neural Information Processing Systems, 2024.
+https://trishullab.github.io/lasr-web
+Atharva
+Arya
+
+What is a Concept? 
+Desiderata 1:  Symbolic Abstraction
+Zipf’s Law
+Moore’s Law
+Arrhenius’ Equation
+⬄“Power Law Trend”
+
+What is a Concept? 
+Desiderata II : Symbolic Guidance
+“Wave strain diminishes as 
+distance increases”
+“Wave strain has extraordinarily 
+small magnitude”
+Guide the 
+search for
+Concepts (by Physicist or LLM)
+h: strain
+r: distance between the poles
+Q: dipole moment
+
+Joint concept and program learning
+A universe  of concepts
+•
+“Wave strain diminishes as distance increases” , “power laws”, “sinusoidal functions”
+A dataset 
+A space of programmatic hypotheses 
+𝐶
+𝐷
+𝜋 
+Given
+Solve
+
+Hypothesis Evolution
+Concept Abstraction
+Concept Evolution
+Concept Library
+Hypothesis
+Evolution
+Concept 
+Abstraction
+Concept 
+Evolution
+LaSR
+
+Hypothesis Evolution
+Symbolic 
+Evolution
+or
+Hypothesis 
+Populations
+Dataset
+Best 
+Hypothesis per 
+Population
+Concept Abstraction
+Concept Evolution
+LLM 
+Evolution
+Concept 
+Library
+For 106 operations
+Concept Library
+Hypothesis
+Evolution
+Concept 
+Abstraction
+Concept 
+Evolution
+LaSR
+LLM Evolution 
+provides neural 
+guidance (over a 
+language prior)
+
+Hypothesis Evolution
+Crossover
+Symbolic 
+Crossover
+Mutation
+Symbolic 
+Mutation
+Initialization 
+Symbolic Initialize
+Other Symbolic Operations 
+ 
+Simplify Tree
+Optimize 
+Constants
+Replace Oldest
+Program
+Population
+x300 times
+Evaluate
+Best Program
+
+Hypothesis Evolution
+Crossover
+LLM Crossover
+Symbolic 
+Crossover
+Mutation
+LLM Mutation
+Symbolic 
+Mutation
+Initialization 
+LLM Initialize
+Symbolic Initialize
+Other Symbolic Operations 
+ 
+Simplify Tree
+Optimize 
+Constants
+Replace Oldest
+Program
+Population
+or
+or
+or
+x300 times
+Evaluate
+Best Program
+
+Hypothesis Evolution
+Crossover
+LLM Crossover
+Symbolic 
+Crossover
+Mutation
+LLM Mutation
+Symbolic 
+Mutation
+Initialization 
+LLM Initialize
+Symbolic Initialize
+Other Symbolic Operations 
+ 
+Simplify Tree
+Optimize 
+Constants
+Replace Oldest
+Program
+Population
+or
+or
+or
+x300 times
+Evaluate
+Concept Library
+Best Program
+
+Hypothesis Evolution
+Crossover
+LLM Crossover
+Symbolic 
+Crossover
+Mutation
+LLM Mutation
+Symbolic 
+Mutation
+Initialization 
+LLM Initialize
+Symbolic Initialize
+Other Symbolic Operations 
+ 
+Simplify Tree
+Optimize 
+Constants
+Replace Oldest
+Program
+Population
+or
+or
+or
+x300 times
+Evaluate
+Concept Library
+Best Program
+import random 
+def crossover( 
+	
+expr1: SymTree, 
+	
+expr2: SymTree) -> SymTree: 
+# Randomly choose a node in expr1 to 
+remove 
+... 
+# Randomly choose a node in expr2 
+which will be added to eq1 
+... 
+# Return new tree 
+new_expr = ... 
+return new_expr
+
+Hypothesis Evolution
+Crossover
+LLM Crossover
+Symbolic 
+Crossover
+Mutation
+LLM Mutation
+Symbolic 
+Mutation
+Initialization 
+LLM Initialize
+Symbolic Initialize
+Other Symbolic Operations 
+ 
+Simplify Tree
+Optimize 
+Constants
+Replace Oldest
+Program
+Population
+or
+or
+or
+x300 times
+Evaluate
+Concept Library
+Best Program
+
+Hypothesis Evolution
+Symbolic 
+Evolution
+or
+Hypothesis 
+Populations
+Dataset
+Best 
+Hypothesis per 
+Population
+Concept Abstraction
+Concept Evolution
+LLM Abstraction
+“exponential growth/
+decay”
+LLM 
+Evolution
+Concept 
+Library
+For 106 operations
+Concept Library
+Hypothesis
+Evolution
+Concept 
+Abstraction
+Concept 
+Evolution
+LaSR
+LLM Abstraction 
+induces useful* 
+abstractions. 
+
+Hypothesis Evolution
+Symbolic 
+Evolution
+or
+Hypothesis 
+Populations
+Dataset
+Best 
+Hypothesis per 
+Population
+Concept Abstraction
+Concept Evolution
+LLM Abstraction
+“exponential growth/
+decay”
+“exponential growth/
+decay”
+LLM Concept Crossover
+“Depends on 
+temperature”
+“Boltzmann 
+Distribution”
+LLM 
+Evolution
+Concept 
+Library
+For 106 operations
+Concept Library
+Hypothesis
+Evolution
+Concept 
+Abstraction
+Concept 
+Evolution
+LLM Concept 
+Crossover 
+evolves all 
+concepts. 
+LaSR
+
+Sketch of Search Space
+After Phase 1:  
+“Islands” of expressions
+
+Sketch of Search Space
+Sinusoidal 
+Trends
+Power Law 
+Trends
+Linear 
+Trends
+Exponential 
+Trends
+After Phase 2:  
+Concepts for each “Island”
+
+Sketch of Search Space
+Sinusoidal 
+Trends
+Power Law 
+Trends
+Linear 
+Trends
+Exponential 
+Trends
+After Phase 2:  
+Concepts expose unknown 
+islands
+
+Trignometric
+Trends
+Sketch of Search Space
+Sinusoidal 
+Trends
+Power Law 
+Trends
+Linear 
+Trends
+Exponential 
+Trends
+After Phase 3:  
+Concepts expose new 
+concepts.
+
+LaSR: Overall Performance
+• Concept Guidance  
+accelerates discovery.
+• LaSR outperforms PySR even 
+with local language models 
+(llama-3-7b, 1%)
+
+Human-provided hints
+User-provided 
+hints accelerate 
+hypothesis search
+
+Example: Coulomb’s Law
+Eq 10: Coulomb's Law
+• Inverse Square Law
+• Directly proportional to 
+charges
+• Force symmetric w.r.t 
+charges
+PySR’s Solution
+• Reduces to ground truth after 10 steps of 
+simplification.
+• Unwieldly
+• Fitting more constants => more optimization 
+errors
+
+Coulomb’s Law
+Eq 10: Coulomb's Law
+• Inverse Square Law
+• Directly proportional to 
+charges
+• Force symmetric w.r.t 
+charges
+LaSR’s Solution
+• Reduces to ground truth after 4 steps of 
+simplification
+• Smaller models synthesize simpler equations!
+
+Coulomb’s law
+Eq 10: Coulomb's Law
+• Inverse Square Law
+• Directly proportional to 
+charges
+• Force symmetric w.r.t 
+charges
+LaSR’s Concepts (Limitations)
+• Cannot guarantee factuality or correctness.
+• Good concepts depend on LLM training. 
+Concepts can mislead scientists.
+Iteration Discovered Concept
+2 The good mathematical expressions exhibit […] with a 
+focus on power functions and trigonometric functions 
+[…]
+6 The good mathematical expressions exhibit […] 
+symmetry or regularity […]
+24 The good mathematical expressions have […] with a 
+specific pattern of division and multiplication
+
+Finding LLM Scaling Laws
+Training Compute-Optimal Large Language Models, Hoffman et. al
+Step 1: Postulate Scaling 
+Law
+Step 2: Measure model 
+loss w.r.t hyper 
+parameters.
+Step 3: Fit scaling law to 
+dataset.
+Google DeepMind MassiveText
+
+Finding LLM Scaling Laws with LaSR
+Training Compute-Optimal Large Language Models, Hoffman 
+et. al
+Step 1: Measure model loss 
+w.r.t hyper parameters.
+Step 2: Use symbolic regression 
+to postulate and fit scaling laws
+Step 3: Choose the scaling law 
+that fits the data the best while 
+using the least parameters.
+Google DeepMind BIG-Bench
+(204 tasks, 55 LLMs, )
+LaSR
+
+LLM Scaling Law
+• A large number of shots gives poor results for low-capability models 
+• Once the models pass a capability threshold, having more shots helps 
+
+Qualitative Traits
+• Interaction between training hyper params (#steps) and testing hyper params 
+(#shots)
+• We can modify Chinchilla using empirical insights
+
+Self-Evolving Visual Concept Library 
+Using Vision-Language Critics  
+ 
+Atharva Sehgal, Patrick Yuan, Ziniu Hu, Yisong Yue, Jennifer J Sun, Swarat Chaudhuri. 
+Computer Vision and Pattern Recognition, 2025.
+Atharva
+
+Zero-shot transfer learning with VLMs
+Identify the adult bald eagle
+Identify the ever given.
+[Menon & Vondrick, ICLR 2023]
+VLM
+VLM
+?
+?
+
+Classification with visual concept descriptors
+Identify the ever given.
+LLM
+LLM
+VLM
+VLM
+Large wings
+Large beak
+White head
+Black body
+Container ship
+Evergreen
+Stacked containers
+[Menon & Vondrick, ICLR 2023]
+Identify the adult bald eagle
+
+Concept descriptors can be used to write code
+Is this an image of an adult 
+bald eagle?
+def is_eagle(image): 
+   image_patch = ImagePatch(image) 
+   if not image_patch.exists('bird'): 
+       return 'no' 
+   eagle_patch = image_patch.find('bird')[0] 
+   eagle_features = [ 
+"large wings", 
+"large beak", 
+"white head", 
+"black body" 
+] 
+   p_eagle = 0.0 
+   for feature in eagle_features: 
+       p_eagle += eagle_patch.exists(feature) 
+   p_eagle /= len(eagle_features) 
+   return 'yes' if p_eagle >= 0.75 else 'no' 
+GPT
+
+Concept Refinement with Evolution
+
+Concept Refinement with Evolution
+• VLM evaluates the similarity 
+between each image and its 
+associated concepts 
+compared to other images, 
+and computes a contrastive 
+score. 
+• This score is used to refine the 
+library of visual concepts. 
+
+Sample Result
+
+Summary: LLM Agents for Empirical Discovery
+LLM-directed evolution is a powerful tool for empirical scientific discovery. 
+Frontier LLMs inject prior world knowledge into mutation/crossover 
+operators.
+LLMs can be used to learn abstract concepts that accelerate evolution. 
+All this can be applied to settings with visual inputs as well. 
+
+Open Challenges
+Hypothesis and concept verification 
+Concept representations beyond natural language 
+Scaling to larger search spaces and input dimensions
+Going beyond hypothesis generation to experiment design 
+
+Scientific discovery
+Data
+Hypothese
+s
+Theorizing
+Experimentation
+LLM agents are extraordinarily powerful tools for scientific discovery.
+
+Mathematical discovery
+Modeling
+Conjecturing
+Reasoning
+AI for math:  Automate conjecturing and proof
+Proofs, counterexamples
+Candidate theorems
+Definitions
+
+Collaborators and Funders

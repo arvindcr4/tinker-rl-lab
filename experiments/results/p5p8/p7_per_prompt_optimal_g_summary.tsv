@@ -1,0 +1,33 @@
+method	controller	g_used	rollouts_total	cost_ratio_vs_g8	prompts_saved_vs_g8_observed	save_rate	mean_contrast_restored
+grpo	fixed_g4	4	2560	0.5	179	0.2797	
+grpo	fixed_g6	6	3840	0.75	179	0.2797	
+grpo	fixed_g8	8	5120	1.0	179	0.2797	
+grpo	fixed_g12	12	7680	1.5	179	0.2797	
+grpo	fixed_g16	16	10240	2.0	179	0.2797	
+grpo	fixed_g24	24	15360	3.0	179	0.2797	
+grpo	fixed_g32	32	20480	4.0	179	0.2797	
+grpo	per_prompt_optimal_gstar	varying	4046	0.7902	0	0.0	0.0
+aero	fixed_g4	4	2560	0.5	179	0.2797	
+aero	fixed_g6	6	3840	0.75	179	0.2797	
+aero	fixed_g8	8	5120	1.0	179	0.2797	
+aero	fixed_g12	12	7680	1.5	179	0.2797	
+aero	fixed_g16	16	10240	2.0	179	0.2797	
+aero	fixed_g24	24	15360	3.0	179	0.2797	
+aero	fixed_g32	32	20480	4.0	179	0.2797	
+aero	per_prompt_optimal_gstar	varying	4046	0.7902	0	0.0	0.0
+gift	fixed_g4	4	2560	0.5	147	0.2297	
+gift	fixed_g6	6	3840	0.75	147	0.2297	
+gift	fixed_g8	8	5120	1.0	147	0.2297	
+gift	fixed_g12	12	7680	1.5	147	0.2297	
+gift	fixed_g16	16	10240	2.0	147	0.2297	
+gift	fixed_g24	24	15360	3.0	147	0.2297	
+gift	fixed_g32	32	20480	4.0	147	0.2297	
+gift	per_prompt_optimal_gstar	varying	4238	0.8277	0	0.0	0.0
+areal	fixed_g4	4	2560	0.5	188	0.2938	
+areal	fixed_g6	6	3840	0.75	188	0.2938	
+areal	fixed_g8	8	5120	1.0	188	0.2938	
+areal	fixed_g12	12	7680	1.5	188	0.2938	
+areal	fixed_g16	16	10240	2.0	188	0.2938	
+areal	fixed_g24	24	15360	3.0	188	0.2938	
+areal	fixed_g32	32	20480	4.0	188	0.2938	
+areal	per_prompt_optimal_gstar	varying	3992	0.7797	0	0.0	0.0

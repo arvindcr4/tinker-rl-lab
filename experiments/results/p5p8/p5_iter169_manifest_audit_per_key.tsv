@@ -1,0 +1,8 @@
+key	n_populated	n_unique	h_bits	is_placebo	top_value	top_value_freq
+loss_form	98	1	0.000000	1	n/a-sampling	1.000000
+ref_policy_kl	98	1	0.000000	1	n/a	1.000000
+sampler_backend_precision	98	1	0.000000	1	tinker-closed	1.000000
+per_step_zvf_path	98	98	6.614710	0	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59.json	0.010204
+group_size_schedule	98	5	2.312122	0	fixed-G=2	0.244898
+heldout_split	98	3	1.554608	0	gsm8k_hard	0.408163
+decontamination_notes	98	2	0.931304	0	gsm8k-train-slice	0.653061

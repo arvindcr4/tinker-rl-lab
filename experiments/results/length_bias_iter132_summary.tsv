@@ -1,0 +1,10 @@
+task	test	stat_a	stat_b	p_perm	n	verdict
+arithmetic_easy	H1_chain_window_rho(delta_eff,delta_ccfa)>0	0.0902	0.705213	0.705846	20	null
+gsm8k_cot	H1_chain_window_rho(delta_eff,delta_ccfa)>0	0.2657	0.403833	0.404772	12	null
+arithmetic_easy	H1b_within_run_delta_rho<0	-0.32	0.125	0.249495	5	null
+gsm8k_cot	H1b_within_run_delta_rho<0	-0.1333	0.5	1.0	3	null
+cross_task	H1c_sign_test_delta_rho<0	4	6	0.34375	6	inconclusive
+arithmetic_easy	H3_mediation_within_run	0.0902	0.705213	NA	20	null
+gsm8k_cot	H3_mediation_within_run	0.2657	0.403833	NA	12	null
+cross_task	H4_consistency_h1	2	2	0.25	2	FAVOURS
+cross_task	H4_consistency_h1b	2	2	0.25	2	FAVOURS

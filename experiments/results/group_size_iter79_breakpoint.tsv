@@ -1,0 +1,8 @@
+loglinear_slope	loglinear_intercept	loglinear_pearson_r	n_observed_budgets	min_observed_R	max_observed_R	T_at_min_R_M	T_at_max_R_M	threshold_tau	first_observed_T_M_below	first_observed_R_at_break	predicted_T_M_at_tau_from_loglinear
+-0.07130008474374559	-0.05487436984439542	-0.9606434532843635	4	0.7272727272727273	0.9761904761904762	64.0	1.0				
+								0.7	nan	nan	68.91143264347043
+								0.75	64.0	0.7272727272727273	26.184857586467164
+								0.8	16.0	0.75	10.591097242177984
+								0.85	4.0	0.8333333333333334	4.525552074883223
+								0.9	4.0	0.8333333333333334	2.0300892241156934
+								0.95	4.0	0.8333333333333334	0.9510150391420007

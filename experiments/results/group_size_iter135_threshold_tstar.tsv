@@ -1,0 +1,6 @@
+metric_kind	metric_key	headline
+threshold_extrap	T50	Extrapolated T* for G=4 retention of G=32 < 0.50: log10(T*)=9.246, T*=1.764e+09 tokens (OLS retention ~ 1.776 - 0.138 log10(T) on iter131 n=4)
+threshold_extrap	T90	Extrapolated T* for G=4 retention of G=32 < 0.90: T*=2.228e+06 tokens
+threshold_extrap	T95	Extrapolated T* for G=4 retention of G=32 < 0.95 (Wu-strict bound): T*=9.672e+05 tokens
+threshold_extrap	T976	Extrapolated T* for G=4 retention of G=32 < 0.976 (Wu-native bound): T*=6.268e+05 tokens
+threshold_extrap	T10	Extrapolated T* for G=4 retention of G=32 < 0.10: T*=1.396e+12 tokens (beyond any realistic budget)

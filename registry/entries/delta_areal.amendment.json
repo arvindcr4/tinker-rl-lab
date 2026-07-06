@@ -1,0 +1,16 @@
+{
+  "iter": 194,
+  "old_predicted_sign": ">=0",
+  "new_predicted_sign": "<=0",
+  "amended_for_metric": "reward_mean",
+  "amended_for_panel": "n2_same_stack_last10",
+  "raw_observed_delta": -0.019531,
+  "robustness": {
+    "multiseed_5of5_negative": true,
+    "bca_ci_lower_lt_0": true,
+    "bca_ci_strict_lt_0": false,
+    "loo_10of10_negative": true,
+    "windows_5of5_negative": true,
+    "cross_panel_zvf_risk_significantly_lower": true
+  }
+}

@@ -1,0 +1,13 @@
+model	params_B	arch	n_steps	rss_sat	aic_sat	bic_sat	rss_pow	aic_pow	bic_pow	rss_lin	aic_lin	bic_lin	rss_zero	aic_zero	bic_zero	best_aic	best_bic
+Qwen3.5-4B	4.0	dense	30	1.3901	-3.0180	-0.2156	1.3727	-3.3967	-0.5943	1.3901	-3.0186	-0.2162	21.3984	74.9999	74.9999	power	power
+Qwen3-8B	8.0	dense	30	0.8647	-17.2602	-14.4578	0.8586	-17.4738	-14.6714	0.8419	-18.0615	-15.2591	3.3086	18.9961	18.9961	linear	linear
+Llama-3.1-8B-Instruct	8.0	dense	30	0.7996	-19.6082	-16.8058	0.7476	-21.6276	-18.8252	0.7682	-20.8120	-18.0096	23.4414	77.7355	77.7355	power	power
+Qwen3-32B	32.0	dense	3	0.0233	nan	nan	0.0108	nan	nan	0.0058	nan	nan	0.2103	0.5403	0.5403	zero	zero
+Qwen3.5-27B	27.0	dense	3	0.3046	nan	nan	0.2208	nan	nan	0.1466	nan	nan	0.8783	4.8286	4.8286	zero	zero
+gpt-oss-20B	20.0	moe	30	1.0704	-10.8574	-8.0550	1.0931	-10.2295	-7.4271	1.0865	-10.4119	-7.6095	22.2617	76.1864	76.1864	saturation	saturation
+Qwen3-30B-MoE	30.0	moe	5	0.1193	-0.4875	-1.2686	0.1143	-0.7003	-1.4814	0.1125	-0.7811	-1.5622	0.6729	4.1612	4.1612	linear	linear
+Qwen3-30B-MoE-Inst	30.0	moe	3	0.0000	nan	nan	0.0000	nan	nan	0.0000	nan	nan	3.0000	8.5136	8.5136	zero	zero
+DeepSeek-V3.1	685.0	moe	20	0.3711	-18.9830	-16.9915	0.3708	-18.9996	-17.0082	0.3711	-18.9834	-16.9920	14.6094	50.4762	50.4762	power	power
+Nemotron-120B	120.0	dense	20	1.1836	4.2139	6.2053	1.1962	4.4263	6.4178	1.1954	4.4124	6.4039	1.8125	8.7370	8.7370	saturation	saturation
+Qwen3-235B-MoE	235.0	moe	4	0.0000	-71.3435	-72.5710	0.0000	nan	nan	0.0000	-223.0127	-224.2401	4.0000	11.3515	11.3515	linear	linear
+Kimi-K2-Thinking	1000.0	moe	20	0.5813	-10.0082	-8.0167	0.4965	-13.1620	-11.1706	0.4820	-13.7542	-11.7628	15.0312	51.0455	51.0455	linear	linear

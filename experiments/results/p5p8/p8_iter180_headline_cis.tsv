@@ -1,0 +1,9 @@
+comparison	point	ci_lo	ci_hi	note
+iso_minus_pre_brier_24full	0.0255	0.0242	0.02684	positive=iso lowers Brier (lower=better); CI excludes 0
+iso_minus_pre_brier_20raw	0.02782	0.02636	0.02922	iso lowers Brier on raw-20 too
+iso_minus_pre_brier_4sensor	0.12364	0.12046	0.12688	iso lowers Brier on LLM-as-sensor surrogate
+platt_minus_iso_brier_24full	0.00106	0.00071	0.00141	positive=platt higher Brier than iso
+iso_minus_pre_eceK1_24full	-0.08907	-0.15349	0.01538	positive=iso lowers within-budget ECE@K=1% on 24full
+iso_24full_minus_iso_20raw_brier	-0.00059	-0.00096	-0.0002	negative=24full lower Brier than 20raw after iso
+iso_24full_minus_iso_4sensor_brier	-0.00928	-0.01113	-0.00753	negative=24full lower Brier than 4sensor after iso
+abs_curv_K1_pre_minus_iso_24full	-0.08907	-0.15398	0.03142	positive=|curv| shrinks after iso; smaller=|better|

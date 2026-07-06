@@ -1,0 +1,9 @@
+source	metric	value	n	scale
+Pillar2_tinker_G8	mean_zvf_per_group	0.1583	600	group_rollout
+Pillar2_tinker_G8	p_extreme_per_group	0.1584	600	group_rollout
+Pillar2_tinker_G8	p_mixed_per_group	0.8417	600	group_rollout
+Pillar1_iter61_step_zvf	mean_zvf_proxy_per_step	0.41250000000000003	198	training_step
+Pillar1_iter61_step_zvf	median_zvf_proxy_per_step	0.4166666666666667	198	training_step
+Pillar1_iter61_step_zvf	mean_p_zero_per_step	0.07916666666666666	198	training_step
+Pillar1_iter61_step_zvf	median_p_zero_per_step	0.0	198	training_step
+Prediction	step_zvf_over_rollout_zvf	2.605811749842072	0	ratio

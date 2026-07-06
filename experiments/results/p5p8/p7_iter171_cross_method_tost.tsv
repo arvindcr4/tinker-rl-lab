@@ -1,0 +1,13 @@
+metric	pair	n_pairs	delta	lo	hi	tost_pm_005_equiv
+zvf	aero-grpo	40	0.0	-0.025	0.0234	True
+zvf	aero-gift	40	-0.05	-0.0813	-0.0187	False
+zvf	aero-areal	40	0.0141	-0.0203	0.0484	True
+zvf	gift-grpo	40	0.05	0.0203	0.0797	False
+zvf	areal-grpo	40	-0.0141	-0.0422	0.0125	True
+zvf	areal-gift	40	-0.0641	-0.1031	-0.0281	False
+reward_mean	aero-grpo	40	-0.0066	-0.0166	0.0029	True
+reward_mean	aero-gift	40	-0.0172	-0.0275	-0.0072	True
+reward_mean	aero-areal	40	-0.0012	-0.0105	0.0082	True
+reward_mean	gift-grpo	40	0.0105	0.0004	0.0205	True
+reward_mean	areal-grpo	40	-0.0055	-0.0141	0.0029	True
+reward_mean	areal-gift	40	-0.016	-0.0281	-0.0043	True

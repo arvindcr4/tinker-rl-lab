@@ -1,0 +1,86 @@
+{
+  "any_validation_items": [],
+  "fully_missing_items": [],
+  "fully_validated_items": [
+    1,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "items": [
+    {
+      "item_name": "Loss form",
+      "item_no": 1,
+      "missing": 0,
+      "na_or_empty": 0,
+      "pct_missing": 0.0,
+      "pct_validated": 100.0,
+      "total": 98,
+      "validated": 98
+    },
+    {
+      "item_name": "Reference policy & KL",
+      "item_no": 2,
+      "missing": 0,
+      "na_or_empty": 98,
+      "pct_missing": 0.0,
+      "pct_validated": 0.0,
+      "total": 98,
+      "validated": 0
+    },
+    {
+      "item_name": "Sampler / backend / precision",
+      "item_no": 3,
+      "missing": 0,
+      "na_or_empty": 0,
+      "pct_missing": 0.0,
+      "pct_validated": 100.0,
+      "total": 98,
+      "validated": 98
+    },
+    {
+      "item_name": "Per-step ZVF/GU trajectory",
+      "item_no": 4,
+      "missing": 0,
+      "na_or_empty": 0,
+      "pct_missing": 0.0,
+      "pct_validated": 100.0,
+      "total": 98,
+      "validated": 98
+    },
+    {
+      "item_name": "Group-size schedule",
+      "item_no": 5,
+      "missing": 0,
+      "na_or_empty": 0,
+      "pct_missing": 0.0,
+      "pct_validated": 100.0,
+      "total": 98,
+      "validated": 98
+    },
+    {
+      "item_name": "Held-out split",
+      "item_no": 6,
+      "missing": 0,
+      "na_or_empty": 0,
+      "pct_missing": 0.0,
+      "pct_validated": 100.0,
+      "total": 98,
+      "validated": 98
+    },
+    {
+      "item_name": "Decontamination & parser probe",
+      "item_no": 7,
+      "missing": 0,
+      "na_or_empty": 0,
+      "pct_missing": 0.0,
+      "pct_validated": 100.0,
+      "total": 98,
+      "validated": 98
+    }
+  ],
+  "n_cells": 98,
+  "n_items": 7
+}

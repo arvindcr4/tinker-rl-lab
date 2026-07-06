@@ -1,0 +1,31 @@
+field	axis	n_groups	eta2	ci_lo	ci_hi
+mean_reward	model_family	2	0.4527	0.3039	0.6276
+mean_reward	task_slice	3	0.2729	0.1905	0.4142
+mean_reward	G	5	0.0304	0.0108	0.1744
+mean_reward	temperature	2	0.0	0.0	0.055
+mean_reward	seed	2	0.0	0.0	0.0571
+mean_reward	CROSS_SUM		0.756		
+zvf	model_family	2	0.0053	0.0	0.0701
+zvf	task_slice	3	0.4687	0.3733	0.5978
+zvf	G	5	0.4437	0.277	0.6355
+zvf	temperature	2	0.0092	0.0	0.0806
+zvf	seed	2	0.0	0.0	0.0511
+zvf	CROSS_SUM		0.9269		
+pcd	model_family	2	0.0931	0.0151	0.2153
+pcd	task_slice	3	0.4507	0.3619	0.579
+pcd	G	5	0.2304	0.1254	0.4258
+pcd	temperature	2	0.0091	0.0	0.0905
+pcd	seed	2	0.0007	0.0	0.0572
+pcd	CROSS_SUM		0.784		
+mean_completion_len	model_family	2	0.3006	0.1762	0.4386
+mean_completion_len	task_slice	3	0.2097	0.0812	0.4063
+mean_completion_len	G	5	0.017	0.0085	0.1454
+mean_completion_len	temperature	2	0.2066	0.0838	0.3862
+mean_completion_len	seed	2	0.0	0.0	0.0556
+mean_completion_len	CROSS_SUM		0.7339		
+std_completion_len	model_family	2	0.1592	0.0523	0.3188
+std_completion_len	task_slice	3	0.4135	0.2906	0.5687
+std_completion_len	G	5	0.034	0.0108	0.176
+std_completion_len	temperature	2	0.1228	0.0259	0.2939
+std_completion_len	seed	2	0.0015	0.0	0.0609
+std_completion_len	CROSS_SUM		0.731		

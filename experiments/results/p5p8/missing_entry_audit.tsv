@@ -1,0 +1,9 @@
+entry_id	label	leaves_populated	total_leaves	min_report_pct
+tinker_aero_qwen3.5-4b_gsm8k	aero	15	23	65.2
+tinker_gift_qwen3.5-4b_gsm8k	gift	15	23	65.2
+tinker_areal_qwen3.5-4b_gsm8k	areal	15	23	65.2
+zvf130_ngrpo	ngrpo	9	23	39.1
+zvf130_cppo	cppo	9	23	39.1
+zvf130_mcgrpo	mcgrpo	9	23	39.1
+zvf130_es	es	9	23	39.1
+zvf130_scafgrpo	scafgrpo	9	23	39.1

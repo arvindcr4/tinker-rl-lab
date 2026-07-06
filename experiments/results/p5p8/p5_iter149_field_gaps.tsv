@@ -1,0 +1,8 @@
+field	n_fail	n_total	pct_fail	ci_lo_pct	ci_hi_pct
+has_year	0	42	0.0	0.0	0.0
+has_author	0	42	0.0	0.0	0.0
+has_title	0	42	0.0	0.0	0.0
+has_venue	5	42	11.9	4.76	23.81
+has_doi	10	42	23.81	11.9	38.1
+has_arxiv	11	42	26.19	14.29	40.48
+has_volpages	33	42	78.57	66.67	90.48

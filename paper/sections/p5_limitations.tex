@@ -1,0 +1,29 @@
+% Pillar-5 (MIN-REPORT-RL) limitations
+\section{Limitations}
+\label{sec:p5-limitations}
+Position papers owe their readers an honest account of the evidence's edges;
+five limitations are load-bearing here. First, the headline exhibits
+(the $17\times$ backend flip, the cross-stack DAPO telemetry flip, the
+12-cell head-to-head, and the 368-run audit) are internal program records:
+they were run under a declared protocol and are summarized faithfully, but
+they have not undergone the full artifact-release pipeline of the \ours{}
+Stratum-A results, and the closed stack involved cannot be independently
+re-executed by readers---an irony we acknowledge and which the manifest
+standard is designed to at least make legible. Second, the gradient-signal
+validation behind item 4's theory ($\mathrm{corr} = +0.71$ between gradient
+norm and $p(1-p)$) is toy-scale---a 0.5B model on synthetic arithmetic with
+an open backward pass---and is directional evidence only; we do not report it
+as an effect size. Third, our evidence is concentrated on GSM8K-style
+verifiable-reward tasks and the GRPO family; the seven items were chosen for
+that regime, and reward-model-based RLHF stacks may need additional items
+(reward-model version and training data at minimum). Fourth, the flip-risk
+grades encode a conservative ordering (label collision graded above generic
+stack divergence) that we have validated on our own audits but not against a
+broad external corpus; the grade boundaries, especially R2 vs.\ R3, will need
+community calibration. Fifth, the toolchain of \secref{sec:p5-toolchain} is a
+specification with feasibility evidence, not a released product suite; the
+live adaptive-$G$ result shows the telemetry is cheap, but manifest adapters
+for every framework in \tableref{tab:implementations} remain to be built.
+None of these limitations weakens the central asymmetry the paper rests on:
+every documented lever we cite moved results by more than the label
+differences the field currently headlines.

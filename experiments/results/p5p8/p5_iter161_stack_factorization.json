@@ -1,0 +1,108 @@
+{
+  "ts": "2026-07-05",
+  "iteration": 161,
+  "pillar": "P5",
+  "vein": "(b) stack-conditioning factorization: N2 same-stack + mega cells",
+  "framework": "Ivison et al. 2024 (Unpacking DPO and PPO, NeurIPS 2024, arXiv:2406.09279) 4-axis decomposition; for verifiable RL stacks (data, prompts pinned), testableaxes = algorithm + reward-intervention; here we extend to stack axes (model, task, G, temperature, seed) at scale.",
+  "data_sources": {
+    "n2_panel": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv (4 methods \u00d7 40 steps \u00d7 1 seed \u00d7 G=8 = 160 rows)",
+    "mega_cells": "experiments/results/mega_20260704/cells.tsv (98 cells spanning 2 models \u00d7 3 tasks \u00d7 5 G \u00d7 2 T \u00d7 2 seeds)",
+    "manifests": "experiments/results/mega_20260704/manifests/*.json (98)"
+  },
+  "hypotheses": [
+    {
+      "hypothesis": "H1: eta^2(method|stack) <= 0.05 on N2 same-stack panel",
+      "n_rows": 160,
+      "n_groups": 4,
+      "eta2": 0.0075,
+      "ss_axis": 0.0074,
+      "ss_within": 0.9817,
+      "method_spread": 0.0172,
+      "max_cohens_d_pair": "aero_vs_gift",
+      "max_cohens_d": -0.216,
+      "per_method_mean": {
+        "grpo": 0.8342,
+        "aero": 0.8275,
+        "gift": 0.8447,
+        "areal": 0.8287
+      },
+      "verdict": "DECISIVE"
+    },
+    {
+      "hypothesis": "H7: eta^2(step -> reward_mean) <= 0.10 (within-run drift is flat)",
+      "n_steps": 40,
+      "eta2": 0.9284,
+      "verdict": "NULL"
+    },
+    {
+      "hypothesis": "H2: eta^2_union(stack) >= 0.50 on mega cells",
+      "n_stack_cells": 50,
+      "eta2_union": 0.9967,
+      "verdict": "DECISIVE"
+    },
+    {
+      "hypothesis": "H5: eta^2(model) vs eta^2(method) on mega stack",
+      "axis": "model",
+      "eta2_axis": 0.4527,
+      "eta2_method_baseline": 0.0075,
+      "ratio": 60.627,
+      "verdict": "DECISIVE"
+    },
+    {
+      "hypothesis": "H5b: eta^2(task_slice) vs eta^2(method) on mega stack",
+      "axis": "task_slice",
+      "eta2_axis": 0.2729,
+      "eta2_method_baseline": 0.0075,
+      "ratio": 36.545,
+      "verdict": "DECISIVE"
+    },
+    {
+      "hypothesis": "H3: eta^2(G) vs eta^2(method) on mega stack",
+      "axis": "G",
+      "eta2_axis": 0.0304,
+      "eta2_method_baseline": 0.0075,
+      "ratio": 4.076,
+      "verdict": "DECISIVE"
+    },
+    {
+      "hypothesis": "H4: eta^2(temperature) vs eta^2(method) on mega stack",
+      "axis": "temperature",
+      "eta2_axis": 0.0,
+      "eta2_method_baseline": 0.0075,
+      "ratio": 0.001,
+      "verdict": "NULL"
+    },
+    {
+      "hypothesis": "H6: eta^2(seed) vs eta^2(method) on mega stack",
+      "axis": "seed",
+      "eta2_axis": 0.0,
+      "eta2_method_baseline": 0.0075,
+      "ratio": 0.001,
+      "verdict": "DECISIVE"
+    }
+  ],
+  "headline": {
+    "eta2_method_N2": 0.0075,
+    "eta2_step_N2": 0.9284,
+    "eta2_union_mega_stack": 0.9967,
+    "eta2_axes_mega": {
+      "model": 0.4527,
+      "task_slice": 0.2729,
+      "G": 0.0304,
+      "temperature": 0.0,
+      "seed": 0.0
+    },
+    "n_stack_axes_dominating_algorithm": 3,
+    "n_axes_minus_seed": 4,
+    "paired_stack_coverage": {
+      "n_paired": 48,
+      "n_total_stacks": 50,
+      "fraction": 0.96,
+      "wilson_lo": 0.8654,
+      "wilson_hi": 0.989
+    },
+    "n_decisive": 6,
+    "n_suggestive": 0,
+    "n_total": 8
+  }
+}

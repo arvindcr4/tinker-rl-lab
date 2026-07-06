@@ -1,0 +1,116 @@
+{
+  "record_type": "stack",
+  "schema_version": "0.1.0",
+  "id": "zvf130_es",
+  "label_claimed": "es",
+  "framework": {
+    "name": "worktree-zvf130-batch",
+    "version": null,
+    "openness": "open"
+  },
+  "model": "Qwen/Qwen3-8B-base (shared zvf-iter130 batch harness)",
+  "task": "gsm8k (canonical 16-prompt fixed eval, zvf_iter130 spec)",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "provenance": {
+    "source_artifacts": [
+      "zvf_iter130_method_risk.tsv row method=es (zvf_risk_mean=0.3051, n_seeds=5); per-method risk index, single-batch harness"
+    ],
+    "wandb": null,
+    "date_recorded": "2026-07-04"
+  },
+  "variant_deltas_applied": [
+    {
+      "delta_id": "delta_es",
+      "component": "black_box_perturbation",
+      "status": "unknown",
+      "note": "single-batch risk-index harness; per-component isolation not run"
+    }
+  ],
+  "min_report": {
+    "loss_form": {
+      "importance_ratio_level": null,
+      "clip_eps_low": null,
+      "clip_eps_high": null,
+      "length_normalization": null,
+      "advantage_normalization": null,
+      "token_mask": null
+    },
+    "reference_kl": {
+      "reference_policy": null,
+      "kl_beta": null,
+      "kl_estimator": null
+    },
+    "sampler_backend": {
+      "backend": "shared zvf-iter130 batch harness (Tinker)",
+      "precision": "bf16",
+      "temperature": 0.7,
+      "top_p": 0.95
+    },
+    "telemetry": {
+      "per_step_zvf": true,
+      "per_step_gu": true,
+      "source": "zvf_iter130_method_risk.tsv (per-step file zvf_iter130/*)"
+    },
+    "group_size_schedule": {
+      "initial_g": null,
+      "schedule": null,
+      "adaptation_rule": null
+    },
+    "heldout_split": {
+      "disjoint_from_reward_env": true,
+      "description": "GSM8K canonical 16-prompt fixed eval"
+    },
+    "decontamination": {
+      "performed": null,
+      "parser_robustness_probe": null
+    }
+  },
+  "outcomes": {
+    "mean_last10_train_reward": null,
+    "mean_zvf": null,
+    "heldout_delta": null,
+    "rollouts": null,
+    "coverage": {
+      "min_report_coverage": 0.4286,
+      "declared_deltas_coverage": 0.0,
+      "measured_coverage": 1.0,
+      "ci_method_present": true,
+      "audit_source": "scripts/p5p8/p6_iter90_zvf130_measured_vs_claimed.py",
+      "audit_date": "2026-07-05"
+    },
+    "zvf_risk_mean": 0.30511,
+    "zvf_risk_sd": 0.008344,
+    "n_seeds": 5,
+    "failure_rate": 0.2,
+    "mag_mean": 0.11422,
+    "csd_mean": 0.12274,
+    "drift_mean": 0.001113,
+    "delta_vs_grpo_mean": -0.272578,
+    "delta_vs_grpo_ci_lo": -0.374871,
+    "delta_vs_grpo_ci_hi": -0.169558,
+    "delta_vs_grpo_sig": true,
+    "measured_block_audit_iter90": {
+      "audit_date": "2026-07-05",
+      "audit_source": "scripts/p5p8/p6_iter90_zvf130_measured_vs_claimed.py",
+      "audit_iter": 90,
+      "B": 4000,
+      "seed": 20260705
+    },
+    "delta_vs_grpo_welch_ci_lo": -0.416658,
+    "delta_vs_grpo_welch_ci_hi": -0.128498,
+    "delta_vs_grpo_welch_sig": true,
+    "sig_robust_bootstrap_and_welch": true,
+    "crossref_integrity_iter102": {
+      "audit_date": "2026-07-05",
+      "audit_source": "scripts/p5p8/p6_fill_zvf130_stack_gap.py",
+      "point_estimate_matches_tsv": true
+    }
+  },
+  "notes": "Method 'es' measured only on the zvf_iter130 risk-index batch. Last-10 reward and per-step mean ZVF are not on the same single-stack budget as the N2 methods; use the per-method zvf_risk_mean column to compare across the 9-method panel. zvf_risk_mean=0.3051 (sd 0.0083 on n_seeds=5).\n\niter-98-redflag-backfill: 7 loss-form/KL leaves (loss_form.clip_eps_{low,high}, length_normalization, token_mask, advantage_normalization, reference_kl.kl_{beta,estimator}) are null because the zvf-iter130 single-batch risk-index harness is managed-by-tinker and does not expose loss-form internals; reported-as-unknown on purpose, not as oversight.\n\niter-98-redflag-backfill: 2 decontamination leaves (performed, parser_robustness_probe) are null across all zvf130_* entries because the field was added in iter-94 after these entries were frozen; reported-as-unknown with provenance tied to iter-94."
+}

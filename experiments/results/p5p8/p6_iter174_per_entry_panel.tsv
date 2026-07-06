@@ -1,0 +1,14 @@
+entry_id	name	tier	panel	n_metrics	n_sig	sig_rate	mean_abs_delta	mean_ci_width	metrics_list
+delta_adaptiveg	Adaptive-G (ZVF-driven)	B	qp7_adaptive_armB_vs_armA_paired	2	1	0.5000	0.041015	0.061523	reward_mean;zvf
+delta_aero	AERO	A	n2_same_stack_last10	4	2	0.5000	7.779834	1.953247	mean_len;pcd;reward_mean;zvf
+delta_aero	AERO	A	zvf130_5seed	2	1	0.5000	0.204078	0.140044	mean_zvf;zvf_risk_mean
+delta_areal	AREAL	A	n2_same_stack_last10	4	2	0.5000	7.552221	2.397583	mean_len;pcd;reward_mean;zvf
+delta_areal	AREAL	A	zvf130_5seed	2	1	0.5000	0.302824	0.112668	mean_zvf;zvf_risk_mean
+delta_cppo	CPPO	B	zvf130_5seed	3	2	0.6667	0.174079	0.071030	mag_mean;mean_zvf;zvf_risk_mean
+delta_drgrpo	Dr. GRPO	B	length_bias_iter60_grpo_vs_drgrpo_paired	3	1	0.3333	14.817733	48.166233	L_star;neg_frac;pos_frac
+delta_es	ES	B	zvf130_5seed	3	2	0.6667	0.335233	0.073519	mag_mean;mean_zvf;zvf_risk_mean
+delta_gift	GIFT	A	n2_same_stack_last10	4	2	0.5000	1.012231	3.473486	mean_len;pcd;reward_mean;zvf
+delta_gift	GIFT	A	zvf130_5seed	2	1	0.5000	0.314883	0.106280	mean_zvf;zvf_risk_mean
+delta_mcgrpo	MCGRPO	B	zvf130_5seed	3	2	0.6667	0.281252	0.084649	mag_mean;mean_zvf;zvf_risk_mean
+delta_ngrpo	NGRPO	B	zvf130_5seed	3	2	0.6667	0.163955	0.074466	mag_mean;mean_zvf;zvf_risk_mean
+delta_scafgrpo	SCAFGRPO	B	zvf130_5seed	3	2	0.6667	0.226880	0.073268	mag_mean;mean_zvf;zvf_risk_mean

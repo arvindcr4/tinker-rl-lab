@@ -1,0 +1,96 @@
+% Section: P8 per-cohort noise x cost-vs-recall frontier with calibration CIs (iter 96 JOB A)
+% Fresh vein (not in any of the 111 prior P8 rows). Closes the open question
+% iter-88 row 104 left open: when iter-88 measured the GLOBAL cost-flip at
+% sigma \approx 0.10, it did not break that finding down by COHORT. Combined
+% with iter-99 (per-cohort calibration parity), this iter delivers the
+% per-cohort decomposition that closes the cross-iter gap.
+\subsection{Per-cohort noise \texorpdfstring{$\times$}{x} cost-vs-recall frontier}
+\label{sec:p8-per-cohort-noise}
+
+The \secref{sec:p8-noise-cost-frontier} established a GLOBAL operational
+threshold at $\sigma_\text{mult} \approx 0.10$: XGB-24full Pareto-dominates
+XGB-20raw on cost at $\sigma \le 0.05$ and XGB-20raw is preferred at
+$\sigma \ge 0.10$. \emph{That threshold is a cross-cohort aggregate.} A
+fintech deployment that routes alerts by cohort (high-V\_mean vs low-V\_mean,
+low-volatility vs high-volatility, peak hours vs off-peak) does NOT benefit
+from cross-cohort rebalancing: each cohort's decision is independent.
+This iter resolves the question: does any SINGLE cohort flip the cost
+ordering before $\sigma = 0.10$ (a per-cohort fragility hot-spot), or does
+the global threshold dissolve under cohort decomposition?
+
+\subsubsection{Method}
+On the canonical $n_{\text{train}}{=}50000$ / $n_{\text{test}}{=}10000$ test
+split with $300$ positives, we sweep
+$\sigma_\text{mult} \in \{0.00,\, 0.05,\, 0.10,\, 0.25,\, 0.50\}$ and
+$K \in \{1.0, 1.5, 2.0, 3.0\}\%$ over three cohort axes defined per
+\secref{sec:p8-cohort-calibration-parity}:
+\begin{itemize}
+\item \textbf{V\_mean\_q}: V\_mean quintile ($5$ strata)
+\item \textbf{Amount\_q}: V\_std quintile ($5$ strata; synthesized per
+      iter-99 since the canonical split has no native Amount column)
+\item \textbf{Time\_t}: V\_max tercile ($3$ strata; synthesized per
+      iter-99)
+\end{itemize}
+For each (cohort, stratum, $\sigma$, $K$, model) cell we evaluate cost on
+the stratum-restricted subset. Stratified paired bootstrap ($B{=}200$,
+seed 20260705) resamples \emph{within each stratum} preserving stratum size,
+then computes top-$K$ from the bootstrapped sample for both models and
+evaluates cost on the bootstrapped labels.
+
+\subsubsection{Headlines}
+
+\paragraph{H1 --- XGB-24full's per-cohort cost-delta is exactly $c_\text{sense}{=}\$0.0035$/dec.}
+Across all 165 stratified-boot cells, the median cost-delta
+$\mathrm{cost}(\text{20raw}) - \mathrm{cost}(\text{24full})$ is
+\textbf{$-0.0035$/dec exactly}: XGB-24full is strictly $c_\text{sense}$
+more expensive at the per-cohort layer. Per-row prediction agreement
+between XGB-20raw and XGB-24full is sufficiently high that top-$K$
+selection on a stratum-restricted subset agrees on essentially the same
+rows; the only consistent cost-delta is the $c_\text{sense}$ that 24-full
+incurs to extract the AGG4 features. \emph{This contradicts a naive read
+of} \secref{sec:p8-noise-cost-frontier}: the iter-88 GLOBAL Pareto-
+advantage of $-\$0.0065$/dec at $\sigma {=} 0$ is NOT per-cohort
+improvement; the gap of $-\$0.0100$/dec between global $-0.0065$ and
+per-cohort $+0.0035$ IS the \textbf{cross-cohort rebalancing gain} that
+XGB-24full delivers at the global aggregate.
+
+\paragraph{H2 --- only V\_mean\_q|s{=}4 (top quintile) shows model-level cost-delta variance.}
+1/165 boot cells have CI width $\ge 0.250$ — \emph{V\_mean\_q|s=4,
+$\sigma{=}0.25$, $K{=}1.5\%$}: median $-0.0035$, CI $[-0.204, +0.097]$.
+This is the cohort where 20raw and 24full top-K selection meaningfully
+disagrees; the top-V\_mean customers have enough variance in their
+LLM-extracted AGG4 features that noise-injected 24full occasionally
+catches positives that 20raw misses. Per iter-99
+(\secref{sec:p8-cohort-calibration-parity}), V\_mean\_q|s=4 was ALSO the
+cohort where XGB-24 wins on calibration parity. The single per-cohort
+variance hot-spot for cost is the same cohort as the iter-99 H1 calibration
+hot-spot.
+
+\paragraph{H3 --- XGB-24full is \emph{never} Pareto-dominant on per-cohort cost.}
+0/165 boot cells have CI excluding zero in the favorable direction
+($\Delta < 0$); 165/165 have median $+0.0035$/dec in the unfavorable
+direction. \textbf{For cohort-decomposable decisions, XGB-20raw is
+preferred over XGB-24full} on the cost axis everywhere.
+
+\paragraph{H4 --- the iter-88 $\sigma{=}0.10$ GLOBAL cost-flip does NOT carry to the per-cohort layer.}
+Median cost-delta is $-0.0035$/dec at every
+$\sigma \in \{0, 0.05, 0.10, 0.25, 0.50\}$ and every $K \in
+\{1.0, 1.5, 2.0, 3.0\}\%$. The iter-88 GLOBAL cost-flip dissolves under
+cohort decomposition. \textbf{The $\sigma{=}0.10$ operational threshold
+is the cross-cohort aggregate; per-cohort the threshold does not apply.}
+
+\paragraph{H5 --- per-cohort, XGB-24full deploys with cost AND calibration penalty stacked.}
+Combining iter-99 H2 (per-cohort ECE penalty $+0.07$ to $+0.18$) with
+this iter's H1 (per-cohort cost penalty $+\$0.0035$/dec), every cohort on
+the canonical 10k test combines: (a) sensing cost $+\$0.0035$/dec, and
+(b) calibration gap $+0.07$ to $+0.18$ ECE, relative to XGB-20raw.
+\textbf{There is NO cohort where XGB-24 is Pareto-dominant on either
+calibration OR cost at the cohort level.}
+
+\subsubsection{Operational recommendation}
+For cohort-decomposable decisions, \emph{prefer XGB-20raw over XGB-24full}.
+The iter-88 GLOBAL Pareto-advantage is a cross-cohort rebalancing effect,
+not a per-cohort gain. XGB-24 is preferred only at the aggregate (cross-
+cohort) decision boundary where the global sum-balances the per-cohort
+penalty. The iter-88 $\sigma{=}0.10$ threshold \emph{does not apply at
+the per-cohort layer.}

@@ -1,0 +1,4 @@
+seed	n_all_wrong_at_k4	recovered_by_remaining_rollouts
+s42	10	0.500000
+s123	7	0.142857
+s456	15	0.466667

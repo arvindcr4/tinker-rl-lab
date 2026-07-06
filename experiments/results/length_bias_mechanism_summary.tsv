@@ -1,0 +1,7 @@
+task	algo	n_seeds	mean_ols_dL_dR	sd_ols_dL_dR	mean_ts_dL_dR	sd_ts_dL_dR	mean_spearman_L_R	mean_lag1_dL_autocorr	mean_len_late_minus_early	mean_spearman_L_Z
+arithmetic_easy_qwen2.5-0.5b	grpo	5	-3.6505	0.0787	-2.6769	0.561	-0.3964	-0.0646	-0.4649	-0.4314
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	5	-3.2205	0.1519	-1.5701	1.0847	-0.2939	-0.0727	-0.4141	-0.2921
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	3	-25.7856	12.68	-26.0357	7.9316	-0.5143	-0.6064	-4.9226	0.2501
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	3	-30.1951	0.9611	-31.5794	3.973	-0.6179	-0.588	-5.1504	0.1659
+arithmetic_easy_qwen2.5-0.5b	drgrpo_minus_grpo	5	-0.4299	0.0	-1.1068	0.0	-0.1025	0.0082	-0.0509	nan
+gsm8k_cot_hard_qwen2.5-1.5b	drgrpo_minus_grpo	3	4.4095	0.0	5.5437	0.0	0.1036	-0.0183	0.2278	nan

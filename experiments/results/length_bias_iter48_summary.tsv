@@ -1,0 +1,7 @@
+task	metric	n_pairs	mean_grpo	mean_drgrpo	mean_diff_drgrpo_minus_grpo	ci_lo	ci_hi	p_le0	interpretation
+arithmetic_easy	signature	5	0.498781	0.410557	0.088225	-0.047477	0.193168	0.0647	inconclusive
+arithmetic_easy	rise_slope	5	-0.500078	-0.409059	-0.09102	-0.19756	0.045101	0.939	inconclusive
+arithmetic_easy	plat_slope	5	-0.001297	0.001498	-0.002795	-0.004499	-0.001379	1.0	GRPO > Dr.GRPO
+gsm8k_cot	signature	3	0.451306	0.188529	0.262777	0.09288	0.554156	0.0002	Dr.GRPO > GRPO
+gsm8k_cot	rise_slope	3	-0.451306	-0.188529	-0.262777	-0.554156	-0.09288	1.0	GRPO > Dr.GRPO
+gsm8k_cot	plat_slope	3	0.0	0.0	0.0	0.0	0.0	1.0	inconclusive

@@ -1,0 +1,6 @@
+model_id	n_anchors	rss	k	aicc	delta_aicc_vs_best
+M0_intercept_only	5	0.4523	2	-2.0137	21.0590
+M1_logN	5	0.4504	2	-2.0352	21.0375
+M2_capability	5	0.0067	2	-23.0727	0.0000
+M3_logN_plus_RQS	5	0.4274	2	-2.2971	20.7756
+M4_capability_plus_RQS	5	0.0084	2	-21.9317	1.1410

@@ -1,0 +1,18 @@
+# zvf_iter98_nemotron_proxy.tsv — rho_proxy for 12 models in
+# scaling_law_iter85_nemotron.tsv. p_proxy = (first5+last10)/2;
+# zvf_iid_assumed = p_proxy^8 + (1-p_proxy)^8 (G=8 default);
+# observed_zvf_prior is a phase-conditional prior calibrated from
+# the iter94 sweep (collapse=0.95, drift=0.85, sat=0.78, plateau=0.50).
+model	model_short	params_B	phase	first5_avg	last10_avg	collapse_delta	p_proxy	zvf_iid_assumed_G8	observed_zvf_prior	rho_proxy
+Qwen3.5-4B	qwen3.5-4b	4.0	drift	0.9625	0.85	-0.15	0.9062	0.454971	0.85	1.8682
+Qwen3-8B	qwen3-8b	8.0	saturation	0.3125	0.3438	-0.2812	0.3281	0.041647	0.78	18.7289
+Llama-3.1-8B-Instruct	llama-8b-inst	8.0	drift	0.975	0.8438	-0.1562	0.9094	0.467778	0.85	1.8171
+Qwen3-32B	qwen3-32b	32.0	saturation	0.2497	0.2497	-0.0623	0.2497	0.100449	0.78	7.7651
+Qwen3.5-27B	qwen3.5-27b	27.0	saturation	0.4373	0.4373	-0.3127	0.4373	0.011388	0.78	68.4904
+gpt-oss-20B	gpt-oss-20b	20.0	saturation	0.875	0.875	-0.125	0.875	0.343609	0.78	2.27
+Qwen3-30B-MoE	qwen3-30b-moe	30.0	saturation	0.3252	0.3252	-0.1748	0.3252	0.043118	0.78	18.0897
+Qwen3-30B-MoE-Inst	qwen3-30b-moe-inst	30.0	plateau	1.0	1.0	0.0	1.0	1.0	0.5	0.5
+DeepSeek-V3.1	deepseek-v3.1	685.0	saturation	0.85	0.85	-0.15	0.85	0.272491	0.78	2.8625
+Nemotron-120B	nemotron-120b	120.0	collapse	0.175	0.1625	-0.7125	0.1688	0.227958	0.95	4.1674
+Qwen3-235B-MoE	qwen3-235b-moe	235.0	plateau	1.0	1.0	0.0	1.0	1.0	0.5	0.5
+Kimi-K2-Thinking	kimi-k2	1000.0	drift	0.925	0.8	-0.2	0.8625	0.306248	0.85	2.7755

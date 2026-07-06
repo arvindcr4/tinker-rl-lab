@@ -1,0 +1,42 @@
+% =============================================================================
+% STANDALONE PAPER 4 of 4 -- Pillar 4: Length bias & held-out generalization
+% Reuses shared preamble/author/methods; pulls the P4 section family + frontier synthesis.
+% Build: pdflatex paper_P4_length_bias ; bibtex paper_P4_length_bias ; pdflatex x2
+% =============================================================================
+\documentclass{article}
+\input{sections/_shared_preamble}
+\title{Length Bias and Held-Out Generalization\\
+       in GRPO and Dr.\,GRPO}
+\input{sections/_shared_author}
+\begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\input{sections/p4_abstract}
+\input{sections/p4_intro}
+\input{sections/_shared_methods}
+\input{sections/p4_results_intro}
+\input{sections/length_bias}
+\input{sections/length_bias_iter28}
+\input{sections/length_bias_iter32}
+\input{sections/length_bias_iter36}
+\input{sections/length_bias_iter40}
+\input{sections/length_bias_iter44}
+\input{sections/length_bias_iter48}
+\input{sections/length_bias_iter52}
+\input{sections/length_bias_iter56}
+\input{sections/length_bias_iter60}
+\input{sections/length_bias_iter64}
+\input{sections/length_bias_iter68}
+\input{sections/length_bias_iter72}
+\input{sections/length_bias_iter76}
+\input{sections/length_bias_iter80}
+\input{sections/length_bias_iter128}
+\input{sections/length_bias_iter132}
+\input{sections/length_bias_iter136}
+\input{sections/cdh_echo_synthesis}
+\input{sections/length_bias_react_shaping}
+\input{sections/frontier_synthesis_length_bias}
+\input{sections/p4_conclusion}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

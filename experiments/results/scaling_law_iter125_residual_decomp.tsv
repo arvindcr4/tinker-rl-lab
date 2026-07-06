@@ -1,0 +1,6 @@
+model	params_B	family	n_steps	R_max	lambda	lam_at_bound	rmse	r2	total_resid_var	structural_var	iid_var	structural_share
+Qwen3.5-4B	4.0	dense-instruct	30	0.8167	10.0000	1	0.2153	-0.0000	0.0479	0.1145	0.0262	0.8139
+Qwen3-8B	8.0	dense-base	30	0.2854	10.0000	1	0.1698	-0.0000	0.0298	0.0000	0.0298	0.0000
+Llama-3.1-8B-Instruct	8.0	dense-instruct	30	0.8688	10.0000	1	0.1633	-0.0000	0.0276	0.0885	0.0122	0.8787
+DeepSeek-V3.1	685.0	moe-instruct	20	0.8438	10.0000	1	0.1362	-0.0000	0.0195	0.0422	0.0096	0.8149
+Nemotron-120B	120.0	dense-base	20	0.1820	0.9902	0	0.2433	0.0137	0.0623	0.2181	0.0136	0.9412

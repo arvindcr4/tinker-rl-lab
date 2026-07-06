@@ -1,0 +1,17 @@
+task	algo	seed	model	n_steps	window	rho_threshold	first_half_mean_len	trap_fired	trap_onset_step	trap_onset_rho_len	trap_onset_rho_rew	trap_onset_end_len
+arithmetic_easy_qwen2.5-0.5b	grpo	42	Qwen/Qwen2.5-0.5B	40	10	0.3	4.9453	0	-1	nan	nan	nan
+arithmetic_easy_qwen2.5-0.5b	grpo	123	Qwen/Qwen2.5-0.5B	40	10	0.3	4.893	1	23	0.5394	-0.2439	5.0781
+arithmetic_easy_qwen2.5-0.5b	grpo	456	Qwen/Qwen2.5-0.5B	40	10	0.3	4.8973	0	-1	nan	nan	nan
+arithmetic_easy_qwen2.5-0.5b	grpo	789	Qwen/Qwen2.5-0.5B	40	10	0.3	4.9793	0	-1	nan	nan	nan
+arithmetic_easy_qwen2.5-0.5b	grpo	1024	Qwen/Qwen2.5-0.5B	40	10	0.3	5.077	0	-1	nan	nan	nan
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	42	Qwen/Qwen2.5-0.5B	40	10	0.3	4.9035	0	-1	nan	nan	nan
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	123	Qwen/Qwen2.5-0.5B	40	10	0.3	4.8273	0	-1	nan	nan	nan
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	456	Qwen/Qwen2.5-0.5B	40	10	0.3	4.8828	1	19	0.4788	-0.0976	4.9141
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	789	Qwen/Qwen2.5-0.5B	40	10	0.3	4.9617	0	-1	nan	nan	nan
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	1024	Qwen/Qwen2.5-0.5B	40	10	0.3	4.948	0	-1	nan	nan	nan
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	42	Qwen/Qwen2.5-1.5B-Instruct	30	10	0.3	192.8302	0	-1	nan	nan	nan
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	123	Qwen/Qwen2.5-1.5B-Instruct	30	10	0.3	192.9885	0	-1	nan	nan	nan
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	456	Qwen/Qwen2.5-1.5B-Instruct	30	10	0.3	192.3115	1	18	0.3333	-0.8268	195.125
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	42	Qwen/Qwen2.5-1.5B-Instruct	30	10	0.3	193.1031	1	11	0.6121	-0.1515	198.8125
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	123	Qwen/Qwen2.5-1.5B-Instruct	30	10	0.3	192.3187	1	15	0.3697	-0.189	197.8281
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	456	Qwen/Qwen2.5-1.5B-Instruct	30	10	0.3	192.476	1	17	0.3212	-0.766	196.7812

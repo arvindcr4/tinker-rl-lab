@@ -1,0 +1,8 @@
+metric_kind	metric_key	headline
+wu_broader_setup	n_pair_T_combos	Wu-broad test: 36 (G_small, G_large, T) combinations
+wu_broader_at_T	T=1e+06	T=1M: 8/9 pairs satisfy R>=0.976 -- (4,32)=0.976, (8,32)=1.143, (16,32)=1.119, (32,64)=1.200, (4,64)=1.171, (8,64)=1.371, (16,64)=1.343, (8,16)=1.021
+wu_broader_at_T	T=4e+06	T=4M: 5/9 pairs satisfy R>=0.976 -- (8,32)=1.015, (16,32)=1.045, (32,64)=1.138, (8,64)=1.155, (16,64)=1.190
+wu_broader_at_T	T=2e+07	T=16M: 3/9 pairs satisfy R>=0.976 -- (16,32)=0.976, (32,64)=1.050, (16,64)=1.025
+wu_broader_at_T	T=6e+07	T=64M: 2/9 pairs satisfy R>=0.976 -- (32,64)=1.011, (16,64)=0.977
+wu_broader_at_T	T=6e+07_best	T=64M best Wu-passing pair: (G_small=32, G_large=64) R=1.011, rollouts-frac=0.500
+wu_broader_at_T	T=6e+07_full_table	"[{""pair"": ""(32,64)"", ""R"": 1.0115, ""rollouts_frac"": 0.5}, {""pair"": ""(16,64)"", ""R"": 0.977, ""rollouts_frac"": 0.25}, {""pair"": ""(16,32)"", ""R"": 0.9659, ""rollouts_frac"": 0.5}, {""pair"": ""(8,16)"", ""R"": 0.9412, ""rollouts_frac"": 0.5}, {""pair"": ""(8,64)"", ""R"": 0.9195, ""rollouts_frac"": 0.125}, {""pair"": ""(8,32)"", ""R"": 0.9091, ""rollouts_frac"": 0.25}, {""pair"": ""(4,16)"", ""R"": 0.7529, ""rollouts_frac"": 0.25}, {""pair"": ""(4,64)"", ""R"": 0.7356, ""rollouts_frac"": 0.062}, {""pair"": ""(4,32)"", ""R"": 0.7273, ""rollouts_frac"": 0.125}]"

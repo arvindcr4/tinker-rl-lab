@@ -1,0 +1,103 @@
+{
+  "iter": 189,
+  "pillar": "P5",
+  "n_cells": 98,
+  "n_manifests": 98,
+  "manifest_field_cardinality": {
+    "loss_form": 1,
+    "ref_policy_kl": 1,
+    "sampler_backend_precision": 1,
+    "group_size_schedule": 5,
+    "heldout_split": 3,
+    "decontamination_notes": 2,
+    "per_step_zvf_path": 98,
+    "cell_id": 98
+  },
+  "uniq_stats": {
+    "manifest_all_8": {
+      "n_fields": 8,
+      "n_classes": 98,
+      "n_unique_cells": 98,
+      "max_class_size": 1,
+      "min_class_size": 1
+    },
+    "manifest_discriminating_3": {
+      "n_fields": 3,
+      "n_classes": 15,
+      "n_unique_cells": 0,
+      "max_class_size": 8,
+      "min_class_size": 2
+    },
+    "manifest_plus_cells_5": {
+      "n_fields": 5,
+      "n_classes": 98,
+      "n_unique_cells": 98,
+      "max_class_size": 1,
+      "min_class_size": 1
+    },
+    "cells_all_5": {
+      "n_fields": 5,
+      "n_classes": 98,
+      "n_unique_cells": 98,
+      "max_class_size": 1,
+      "min_class_size": 1
+    },
+    "cells_minus_seed_4": {
+      "n_fields": 4,
+      "n_classes": 50,
+      "n_unique_cells": 2,
+      "max_class_size": 2,
+      "min_class_size": 1
+    },
+    "cells_minus_temp_4": {
+      "n_fields": 4,
+      "n_classes": 54,
+      "n_unique_cells": 10,
+      "max_class_size": 2,
+      "min_class_size": 1
+    },
+    "cells_minus_model_4": {
+      "n_fields": 4,
+      "n_classes": 52,
+      "n_unique_cells": 6,
+      "max_class_size": 2,
+      "min_class_size": 1
+    }
+  },
+  "greedy_min_k": 5,
+  "hypotheses": {
+    "H1": {
+      "claim": "manifest_discriminating_3 \u2192 \u2265 10/98 unique cells",
+      "observed": 0,
+      "verdict": "FAIL"
+    },
+    "H2": {
+      "claim": "manifest_discriminating_3 \u2192 \u2265 14/15 effective classes",
+      "observed": 15,
+      "verdict": "PASS"
+    },
+    "H3": {
+      "claim": "minimal-fields \u2264 5 covers all 98",
+      "observed_min_k": 5,
+      "verdict": "PASS"
+    },
+    "H4": {
+      "claim": "\u03b7\u00b2(zvf) > \u03b7\u00b2(pcd) for manifest_discriminating_3",
+      "eta2_zvf": 0.871573,
+      "eta2_pcd": 0.659627,
+      "verdict": "PASS"
+    },
+    "H5": {
+      "claim": "\u03b7\u00b2(mean_completion_len) lift >= 5pp",
+      "lift_pp": 18.362,
+      "verdict": "PASS"
+    }
+  },
+  "headline_findings": [
+    "F1: 3 manifest fields are CONSTANT (loss_form=n/a-sampling, ref_policy_kl=n/a, sampler_backend_precision=tinker-closed), so manifest alone only discriminates on 3 fields (G, task_slice, decontamination)",
+    "F2: manifest_discriminating_3 produces 15 equivalence classes (max size 8); only 0/98 cells uniquely identifiable from manifest alone",
+    "F3: minimal-fields-to-identify-all-98 = k=5 (the standard 5-tuple)",
+    "F4: MANIFEST-FIELDS \u03b7\u00b2 on telemetry \u2014 zvf=0.872, pcd=0.660, mean_reward=0.309, mean_completion_len=0.260",
+    "F5: adding temperature+seed lifts \u03b7\u00b2(mean_completion_len) by 18.36pp; the manifest is missing 2 of the 5 stack-conditioning axes"
+  ]
+}

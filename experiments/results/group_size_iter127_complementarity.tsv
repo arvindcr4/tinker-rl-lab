@@ -1,0 +1,10 @@
+section	metric_key	headline
+D_complementarity	isoG_value_table	"Value of going from T=1M to T=64M at fixed G: {'4': 0.23000000000000004, '8': 0.32000000000000006, '16': 0.38, '32': 0.46, '64': 0.52}"
+D_complementarity	isoT_value_table	"Value of going from G=4 to G=32 at fixed T: {'1000000': 0.010000000000000009, '4000000': 0.10999999999999999, '16000000': 0.20999999999999996, '64000000': 0.24}"
+D_complementarity	isoG_spearman	"Spearman rho(value-of-T, G): rho=+1.000, p=1.404e-24, n=5"
+D_complementarity	isoT_spearman	"Spearman rho(value-of-G, log10 T): rho=+1.000, p=0.000e+00, n=4"
+D_complementarity	amplification	"Value-of-G amplification (T=64M vs T=1M): 0.010 -> 0.240, factor=24.0x -- compute unlocks G"
+D_complementarity	T=1000000	"T=1e+06: acc_range=max-min=0.130, G32-G4=0.010"
+D_complementarity	T=4000000	"T=4e+06: acc_range=max-min=0.140, G32-G4=0.110"
+D_complementarity	T=16000000	"T=2e+07: acc_range=max-min=0.210, G32-G4=0.210"
+D_complementarity	T=64000000	"T=6e+07: acc_range=max-min=0.240, G32-G4=0.240"

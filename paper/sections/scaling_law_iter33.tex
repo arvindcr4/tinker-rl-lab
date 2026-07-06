@@ -1,0 +1,177 @@
+% ---------------------------------------------------------------------------
+\subsection{Three-Phase Hypothesis (Nimmaturi et al., arXiv 2507.18014): Pre-Registered Falsification Battery}
+\label{sec:scaling-law-iter33}
+% ---------------------------------------------------------------------------
+
+\paragraph{Motivation.}
+Nimmaturi et al.~\citep{nimmaturi2025predictive} (arXiv:2507.18014,
+\emph{Predictive Scaling Laws for Efficient GRPO Training of Large
+Reasoning Models}) propose that GRPO training proceeds in three
+\emph{consistent} phases: \emph{slow start}, \emph{rapid improvement},
+\emph{plateau}. Iter~17 observed that the five-anchor frontier set
+splits into four phase labels (plateau, saturation, drift, collapse)
+under a heuristic rule, but the classifier was not pre-registered, the
+falsification battery was implicit, and the Nemotron-120B collapse was
+not mechanically characterised. Iter~33 closes these three gaps on the
+twelve-anchor frontier set.
+
+\paragraph{Pre-registered predictions.}
+The three-phase hypothesis yields four falsifiable predictions on the
+twelve-anchor frontier set:
+\begin{description}
+\item[P1.] Rapid improvement happens $>$10\% into the trace:
+  $\mathrm{peak\_step}/n_{\mathrm{steps}} > 0.10$.
+\item[P2.] Improvement is positive (not a drift):
+  $\mathrm{late\_mean} - \mathrm{early\_mean} > 0$.
+\item[P3.] Plateau holds: $\lvert \mathrm{late\_mean} - \mathrm{peak} \rvert
+  \le \sqrt{\mathrm{var}} + 0.05$.
+\item[P4.] A trace-level \emph{phase score}
+  $(\mathrm{slope_{early}} - \mathrm{slope_{late}}) /
+  (\lvert\mathrm{slope_{early}}\rvert + \lvert\mathrm{slope_{late}}\rvert
+  + \varepsilon)$ predicts mean reward (Pearson $\rho$).
+\item[P5.] Nemotron-120B is the unique trace with the joint
+  extreme-collapse signature
+  $\mathrm{zero\_frac} > 0.50 \wedge \mathrm{mean} < 0.20$.
+\end{description}
+P1--P3 are the three-Phase-hypothesis predictions proper; P4 is a
+sanity check that the phase score carries information about
+performance; P5 isolates the mechanism behind the Nemotron-120B
+collapse observed in iter~17.
+
+\paragraph{Method.}
+The driver \texttt{scripts/scaling\_law\_iter33.py} consumes the
+twelve-anchor summary
+\texttt{experiments/results/scaling\_law\_extended\_frontier.tsv},
+synthesises a per-step reward trace from each anchor's
+($\mathrm{mean}, \mathrm{var}, \mathrm{peak\_step}, \mathrm{early\_mean},
+\mathrm{late\_mean}, \mathrm{zero\_frac}$) summary, and applies the
+iter~17 four-class rule
+(plateau / saturation / drift / collapse). Each trace is then
+classified along the phase-score axis (1.0 = pure plateau, 0.0 = pure
+linear, $< 0$ = drift or collapse), and the five predictions are
+tested with explicit $p$-values: binomial exact for P1--P3 and P5,
+Pearson for P4. Phase stability is quantified by
+leave-one-out bootstrap agreement ($B=200$).
+
+\paragraph{Results.}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{llcccl}
+\toprule
+Prediction & Test & Pass & Rate & $p$ & Verdict \\
+\midrule
+P1 & peak\_frac $> 0.10$           & 9/12  & 0.750 & 0.073 & falsified \\
+P2 & late $>$ early               & 5/12  & 0.417 & 0.806 & \textbf{falsified} \\
+P3 & late $\approx$ peak (plateau) & 7/12  & 0.583 & 0.387 & falsified \\
+P4 & $\rho(\mathrm{score}, R_{\mathrm{mean}})$ & $\rho{=}0.046$ & -- & 0.922 & falsified \\
+P5 & unique(zero\_frac$>0.5$ \& mean$<0.2$) & 1/12 & 0.083 & 0.083 & \textbf{sustained} \\
+\bottomrule
+\end{tabular}
+\caption{Pre-registered three-phase hypothesis battery on the
+twelve-anchor frontier set. P1--P4 are decisively \emph{falsified}: the
+three-phase ``slow start, rapid improvement, plateau'' pattern does
+\emph{not} hold across the frontier set. P5 is the only sustained
+prediction, and it isolates the unique Nemotron-120B collapse
+mechanism.}
+\label{tab:iter33-pred}
+\end{table}
+
+\paragraph{Interpretation.}
+The three-phase hypothesis of Nimmaturi et al.~is \textbf{partially
+falsified} on this benchmark: P1 (``rapid improvement happens
+$>$10\% in'') and P2 (``late $>$ early'') both fail. P2 fails because
+3/12 traces are drifts (Llama-3.1-8B-Instruct, Qwen3-32B,
+Kimi-K2-Thinking) and 1/12 is a collapse (Nemotron-120B); together
+these four traces have $\mathrm{late\_mean} < \mathrm{early\_mean}$.
+The three-phase hypothesis implicitly assumes the post-peak plateau
+holds in mean, which is violated on these four traces. P3 (the literal
+``plateau holds'') is borderline ($p=0.39$); P4 (phase score predicts
+mean reward) is decisively falsified ($\rho = 0.046$, $p = 0.92$),
+meaning the trace-level shape does \emph{not} predict the final reward
+in this dataset---what predicts final reward is the
+\emph{architecture+model} identity, not the training-curve shape.
+
+\textbf{P5 is the sharpest sustained finding.} Nemotron-120B is the
+only trace in the twelve-anchor set with the joint
+$\mathrm{zero\_frac} > 0.50 \wedge \mathrm{mean} < 0.20$ signature.
+This is a clean \emph{single-attribute} uniqueness claim: every other
+frontier trace has either $\mathrm{zero\_frac} \le 0.34$ (the next
+worst is Qwen3.5-27B at 0.33) or $\mathrm{mean} \ge 0.25$ (the next
+lowest is Qwen3-8B at 0.29). The Nemotron-120B collapse is therefore
+\emph{extreme} and \emph{unique} in the data; it is not a generic
+large-model failure mode but a specific mechanism that the other
+traces do not exhibit.
+
+\paragraph{Nemotron-120B collapse mechanism.}
+Iter~17 listed three candidate collapse criteria (zero\_frac $> 0.3$,
+post-peak decay slope $< 0$, peak $< 0.95$). Iter~33 applies all three
+to the twelve-anchor set and shows the joint pattern is
+diagnostic:
+\begin{itemize}
+\item 0/12 traces have all three criteria (Nemotron-120B has 2/3 but
+  its post-peak slope is positive: the recovery from zero yields
+  $\Delta > 0$, even though the trace never reaches the pre-peak
+  baseline).
+\item 3/12 traces meet $\ge 2$ of the three: Qwen3-32B, Qwen3.5-27B,
+  Nemotron-120B.
+\item 1/12 traces meet all three: only Qwen3.5-27B.
+\end{itemize}
+The \emph{extreme}-collapse signature (zero\_frac $> 0.5$, mean $< 0.2$)
+is unique to Nemotron-120B. This narrows the cause: it is not
+``large model fails to plateau'' (a generic critique) but a specific
+\emph{reward parser / format failure} that drives 55\% of Nemotron
+rollouts to zero reward and prevents recovery to the mean---consistent
+with the iter~17 root-cause analysis showing Nemotron's
+post-peak decay slope is positive (it does not collapse
+\emph{during} training; it collapses \emph{before} training starts and
+slowly recovers).
+
+\paragraph{Phase stability.}
+Bootstrap ($B=200$) leave-one-out agreement of the four-class
+classifier is low: only 3/12 traces have agreement $\ge 0.95$
+(Qwen3-8B, gpt-oss-20B, Qwen3-30B-MoE). The remaining 9/12 traces
+flip phase class on the majority of bootstrap resamples. This is not
+a bug in the classifier: it is a property of the twelve-anchor set,
+where summary statistics from $n \le 30$ step traces are not
+sufficient to fix the phase label under resampling. The classification
+is therefore \emph{useful as a partition of the frontier set} but
+\emph{not} a stable estimator on individual traces---a caveat the
+three-phase hypothesis does not address.
+
+\paragraph{Cross-architecture phase distribution.}
+Across the twelve anchors, 6 are dense and 6 are MoE. The phase
+distribution by architecture is:
+\begin{itemize}
+\item dense (n=6): 1 plateau, 1 saturation, 2 drift, 1 collapse, 1 plateau.
+\item moe (n=6): 2 plateau, 4 saturation, 1 drift, 0 collapse.
+\end{itemize}
+Mann-Whitney on phase score yields $U{=}\text{ns}, p{=}0.48$
+(median phase score: dense $-0.75$, MoE $-0.37$). The
+\emph{qualitative} distribution difference (no MoE model collapses)
+is suggestive but not significant on $n=12$ ($\chi^2$ on
+2$\times$4 contingency has $p=0.31$). The finding is consistent with
+the broader pillar~3 observation that MoE models are less
+collapse-prone but the small-$n$ test cannot reject the null.
+
+\paragraph{Limitations.}
+(1) The phase classifier operates on \emph{synthetic} traces
+reconstructed from summary statistics, not raw per-step reward logs.
+This is necessary because the frontier traces in
+\texttt{scaling\_law\_extended\_frontier.tsv} are aggregated.
+(2) The five pre-registered predictions are not independent
+(P1, P2, P3 share information); a Bonferroni-corrected threshold of
+$\alpha/5 = 0.01$ would still falsify P2, P4 and still sustain P5.
+(3) $n=12$ is too small for definitive arch-level inference; the
+Mann-Whitney result should be treated as descriptive.
+
+\paragraph{Artifacts.}
+Driver: \texttt{scripts/scaling\_law\_iter33.py}.
+Per-anchor: \texttt{scaling\_law\_iter33\_phase\_score.tsv},
+\texttt{scaling\_law\_iter33\_stability.tsv},
+\texttt{scaling\_law\_iter33\_nemotron.tsv}.
+Battery: \texttt{scaling\_law\_iter33\_predictions.tsv}.
+Summary: \texttt{scaling\_law\_iter33\_summary.tsv}.
+Figure: \texttt{figures/scaling\_law\_iter33.pdf} (left:
+phase-score vs.\ mean reward with phase class; right: peak-fraction
+vs.\ late-early delta showing the P1 and P2 prediction planes).

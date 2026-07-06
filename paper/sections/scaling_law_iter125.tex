@@ -1,0 +1,115 @@
+% Pillar 1 iter125 -- Structural falsification of the saturation model via
+% monotonicity, plus a formal test of the three-phase hypothesis for LLM
+% RL post-training (arXiv 2507.18014), plus an R_max bimodality diagnostic.
+% Sharpens the iter117 ``no scaling law observed'' and iter121
+% ``no scaling law detectable at this evidence base'' verdicts into a
+% STRUCTURAL claim: the saturation model is misspecified by construction
+% because it implies monotonicity, and the 5 empirical anchors are
+% comprehensive violators of monotonicity.
+\paragraph{Iter 125 elevation: the saturation model $R(t) = R_\mathrm{max} \cdot (1 - e^{-\lambda t})$ is falsified \emph{by construction} on this 5-anchor evidence base --- all five traces reject monotonicity at the per-pair level (violation rate $0.29\text{--}0.46$, every anchor $p < 0.001$ against a 5\% i.i.d.\ noise floor, majority-violate binomial $p = 0.031$); the three-phase hypothesis of \citet{arXiv2507.18014} is falsified (only $1/5$ exhibits all three phase signatures, dominant signature is collapse-only or monotone-plateau); and the $R_\mathrm{max}$ distribution is bimodal (largest gap $0.531$, Hartigan dip $0.522$, bootstrap $p = 0.056$), separating ``incapable'' ($R_\mathrm{max} \in \{0.18, 0.29\}$) from ``capable'' ($R_\mathrm{max} \in \{0.82, 0.84, 0.87\}$) clusters.}
+\label{par:scaling-iter125}
+
+iter 117 closed pillar 1 with the qualitative finding ``GRPO
+post-training on this 5-anchor evidence base is \emph{not}
+scale-law-shaped''; iter 121 sharpened that into ``\emph{no} scaling
+law is detectable at this evidence base'' via a synthetic power
+analysis showing that even at $n = 40$ anchors and a Chinchilla-class
+slope $\beta = 0.10$, the recovery rate stays below $0.5$.  This
+iteration asks the sharper structural question: \emph{is the
+saturation model itself the right model class, independent of how
+many anchors we have?}  Concretely, we ask whether the empirical
+trajectories obey the assumptions the saturation model imposes, and
+whether the trajectories exhibit the canonical three-phase structure
+that the recent LLM RL post-training literature (arXiv 2507.18014)
+predicts.
+
+\textbf{Finding 1: the saturation model is falsified by
+construction.}  The model
+$R(t) = R_\mathrm{max} \cdot (1 - e^{-\lambda t})$ has derivative
+$dR/dt = \lambda (R_\mathrm{max} - R) > 0$ for $R < R_\mathrm{max}$,
+implying strict monotonicity.  Across all
+$\binom{n}{2}$ ordered pairs in each trace, we count those with
+$R(j) < R(i)$ for $j > i$.  A strictly monotone trace has violation
+rate $0$; an i.i.d.\ trace with the empirical step distribution has
+expected violation rate near $0.05$ (1/2 minus a discrete-correction).
+We observe violation rates of $0.382, 0.395, 0.462, 0.363, 0.290$ for
+Qwen3.5-4B, Qwen3-8B, Llama-3.1-8B-Instruct, DeepSeek-V3.1, and
+Nemotron-120B respectively --- every anchor violates the 5\% noise
+floor with per-anchor binomial $p < 0.001$, and the
+majority-violates-null binomial $p = 0.0312$.  Even the
+\emph{least} violating anchor (Nemotron-120B, at $0.29$) has a
+maximum downward step of $\Delta R = 0.875$ (peak $R = 0.875$ at
+step $3$, collapsing to $R \approx 0$ by step $7$), which is
+incompatible with any monotone rise to a ceiling.
+
+\textbf{Finding 2: the three-phase hypothesis (arXiv 2507.18014)
+is falsified.}  The hypothesis predicts a three-phase trajectory of
+\emph{rapid improvement} $\to$ \emph{plateau} $\to$ \emph{collapse
+or saturation}, with each phase observable in windowed statistics.
+We test three binary signatures on equal-third windows:
+$p_1 = \mathbb{1}[\mathrm{late\_mean} > \mathrm{early\_mean} + 0.05]$
+(improvement), $p_2 = \mathbb{1}[\mathrm{middle\_window\_var} < 0.05]$
+(plateau), $p_3 = \mathbb{1}[\mathrm{peak} - \mathrm{late\_mean} > 0.10]$
+(collapse).  Counts across $5$ anchors:
+$\sum p_1 = 1$, $\sum p_2 = 4$, $\sum p_3 = 5$; the
+\emph{three-phase-full} signature $(1,1,1)$ is achieved by only
+$1/5$ anchors (Qwen3-8B, which is roughly flat-plateau so satisfies
+all three trivially).  The dominant signatures are
+\emph{collapse-only} $(0,0,1)$ or $(0,1,1)$ in $4/5$ anchors and
+\emph{monotone-or-plateau} $(0,1,1)$ in $3/5$ anchors.  None of
+the four high-R_max anchors shows the predicted improvement phase.
+This is the structural complement to the iter121 calibration: even if
+the evidence base were large enough to detect a scaling slope, the
+slope would not have the sign the three-phase hypothesis predicts.
+
+\textbf{Finding 3: the saturation residual is mostly structural,
+not i.i.d.\ noise.}  For the three capable anchors we decompose the
+residual of the saturation fit into (a) structural component:
+between-segment-mean deviation from the global fit, and (b) i.i.d.\
+component: within-segment variance.  The structural share is
+$0.81$, $0.88$, $0.81$ for Qwen3.5-4B, Llama-8B-Instruct,
+DeepSeek-V3.1 respectively, and $0.94$ for Nemotron-120B.  Even for
+Qwen3-8B (the only anchor where $k=1$ is BIC-selected and the
+saturation fit is unimodal) the residual is dominated by within-segment
+i.i.d.\ variance --- but that anchor is at the lambda bound and the
+saturation fit is non-informative (R$^{\,2} \approx 0$).  In short,
+when the saturation fit is informative it is wrong, and when it is
+right it is uninformative.
+
+\textbf{Finding 4: $R_\mathrm{max}$ is bimodal across the 5-anchor
+pool.}  Sorted $R_\mathrm{max}$ values are
+$[0.182, 0.285, 0.817, 0.844, 0.869]$, with the largest gap
+$\Delta R_\mathrm{max} = 0.531$ between indices $1$ and $2$
+(Nemotron-120B / Qwen3-8B vs.\ Qwen3.5-4B).  The gap cleanly
+separates ``incapable'' (Qwen3-8B, Nemotron-120B;
+$R_\mathrm{max} \in \{0.18, 0.29\}$) from ``capable'' (Qwen3.5-4B,
+Llama-3.1-8B-Instruct, DeepSeek-V3.1;
+$R_\mathrm{max} \in \{0.82, 0.84, 0.87\}$).  Ward-linkage 2-cluster
+agrees.  A Hartigan-dip-style bootstrap ($B = 5000$, Silverman
+bandwidth) gives dip $= 0.522$ with bootstrap $p = 0.056$ ---
+borderline-significant at $\alpha = 0.05$ given the $n=5$ sample,
+but consistent with the qualitative bimodality.
+
+\paragraph{Synthesis.}  iter125 sharpens the iter117/iter121 verdict
+in three ways.  \emph{First}, the saturation model is not just
+unidentifiable at this evidence base (iter121) --- it is misspecified
+\emph{by construction}: the 5 trajectories are not monotone, and the
+model's only shape assumption is monotonicity.  \emph{Second}, the
+recent three-phase hypothesis from the LLM RL post-training literature
+is falsified for this evidence base, with the dominant signature being
+``immediate plateau + occasional collapse'', not
+``rapid improvement + plateau + saturation''.  \emph{Third}, the
+$R_\mathrm{max}$ distribution is bimodal rather than
+scale-monotone: the dominant axis is capability-class
+(instruct/base + collapse risk), not parameter count.  Practical
+implication: when reporting cross-scale GRPO results, the most
+informative single number is not $\lambda$ or $t_{80}$ (both are at
+the bound for 4/5 anchors) but the bimodal classification itself ---
+``is this anchor in the capable class or the incapable class?''.
+% Evidence:
+%  experiments/results/scaling_law_iter125_monotonicity.tsv
+%  experiments/results/scaling_law_iter125_residual_decomp.tsv
+%  experiments/results/scaling_law_iter125_three_phase.tsv
+%  experiments/results/scaling_law_iter125_three_phase_summary.tsv
+%  experiments/results/scaling_law_iter125_bimodality.tsv
+%  figures/scaling_law_iter125.{pdf,png}

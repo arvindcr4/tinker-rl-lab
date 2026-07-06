@@ -1,0 +1,24 @@
+{
+  "n_cells": 98,
+  "encoding_mode_distribution": {
+    "n/a_sentinel": 0,
+    "implicit_filename": 0,
+    "tensor_derivable": 3,
+    "cells_tsv_only": 0,
+    "implicit_filename_AND_cells_tsv": 2,
+    "absent_no_source": 6,
+    "explicit_json_key": 7
+  },
+  "implicit_filename_items": [],
+  "rename_vulnerability": {
+    "n_perturbations": 15,
+    "json_body_alone_axes": 0,
+    "json_plus_filename_axes": 5,
+    "json_plus_cells_tsv_axes": 5
+  },
+  "hypotheses": {
+    "H1_split_schema": true,
+    "H2_json_body_silence": true,
+    "H3_remediation_count": 8
+  }
+}

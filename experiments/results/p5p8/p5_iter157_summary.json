@@ -1,0 +1,89 @@
+{
+  "iter": 157,
+  "n_claims": 22,
+  "n_field_uses": 68,
+  "n_unique_fields": 20,
+  "hypotheses": {
+    "H1_every_claim_citation_resolves": {
+      "pass": true,
+      "n_claims": 22,
+      "failed": []
+    },
+    "H2_every_claim_coverage_full": {
+      "pass": true,
+      "n_claims_full": 22,
+      "n_claims_partial": 0
+    },
+    "H3_per_source_coverage_ge_95pct": {
+      "pass": true,
+      "by_source": {
+        "bib": 1.0,
+        "mega": 1.0,
+        "n10": 1.0,
+        "n2": 1.0
+      }
+    },
+    "H4_top3_fields_share": {
+      "pass": true,
+      "top3_share": 0.3382,
+      "top3_fields": [
+        "zvf",
+        "cell_id",
+        "manifest_path"
+      ],
+      "top3_counts": [
+        9,
+        8,
+        6
+      ]
+    }
+  },
+  "field_count_top10": [
+    [
+      "zvf",
+      9
+    ],
+    [
+      "cell_id",
+      8
+    ],
+    [
+      "manifest_path",
+      6
+    ],
+    [
+      "method",
+      5
+    ],
+    [
+      "step",
+      5
+    ],
+    [
+      "reward_mean",
+      5
+    ],
+    [
+      "seed",
+      5
+    ],
+    [
+      "prompt_idx",
+      4
+    ],
+    [
+      "step_band",
+      4
+    ],
+    [
+      "tensor_path",
+      3
+    ]
+  ],
+  "source_count": {
+    "n2": 6,
+    "n10": 4,
+    "mega": 10,
+    "bib": 2
+  }
+}

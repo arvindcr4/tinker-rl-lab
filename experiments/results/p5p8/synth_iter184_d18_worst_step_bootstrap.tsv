@@ -1,0 +1,4 @@
+method	n_steps	worst_step_bootstrap_mean	worst_step_bootstrap_lo	worst_step_bootstrap_hi	worst_step_bootstrap_se	worst_step_bootstrap_cv
+aero	40	641.9912	555.1909	651.0519	0.4754	0.0007
+gift	22	19613.9408	18858.2384	19823.5383	7.1188	0.0004
+grpo	40	935.9906	777.7786	1004.9546	2.1759	0.0023

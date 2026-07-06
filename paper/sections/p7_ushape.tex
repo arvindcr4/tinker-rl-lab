@@ -1,0 +1,99 @@
+% Pillar-7: population-scale U-shape, mastery/incapacity aliasing, PCD
+\section{The U-Shape at Population Scale, and Why ZVF Cannot Steer}
+\label{sec:p7-ushape}
+
+\subsection{The 368-run audit}
+\label{sec:p7-audit}
+Theorem~1 predicts that ZVF, aggregated over a prompt population, is high
+whenever most prompts sit near $p_x \approx 0$ \emph{or} $p_x \approx 1$, and
+low only when the population mass sits at interior difficulty. At population
+scale this is a U-shape of ZVF in accuracy. A 368-run audit (W\&B project
+\texttt{zvf-audit}, drawn from a 790-run corpus spanning seven models)
+confirms it directly (Table~\ref{tab:p7-ushape}): ZVF is
+$0.95$--$0.97$ at \emph{both} extremes of the reward axis---incapable models
+(Llama-3.2-1B/3B at reward $0.01$) and saturated ones (Qwen3-30B-Instruct at
+reward $0.95$)---and bottoms out at $0.25$--$0.29$ in the mid-range of the
+reward axis (mean reward $0.35$--$0.50$), exactly where $p(1-p)$ peaks.
+
+\begin{table}[t]
+\centering
+\caption{ZVF is U-shaped in accuracy at population scale (368-run audit,
+W\&B project \texttt{zvf-audit}; per-model means, sorted by reward). Both
+ends of the accuracy axis produce near-total signal starvation; the
+interior produces the least.}
+\label{tab:p7-ushape}
+\begin{tabular}{lcc}
+\toprule
+Model & Mean reward & Mean ZVF \\
+\midrule
+Llama-3.2-1B        & 0.01 & 0.97 \\
+Llama-3.2-3B        & 0.01 & 0.95 \\
+Qwen3-32B           & 0.35 & 0.25 \\
+Qwen3-8B            & 0.50 & 0.29 \\
+Nemotron-30B        & 0.77 & 0.50 \\
+Qwen3-4B-Instruct   & 0.86 & 0.87 \\
+Qwen3-30B-Instruct  & 0.95 & 0.96 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The U-shape is a success for the theory and a disqualification for the
+statistic. A controller that observes only ZVF $= 0.95$ cannot tell whether
+its policy has mastered the task (stop training, or harden the data) or
+cannot solve it at all (soften the data, or grow $G$)---the two ends demand
+\emph{opposite} interventions. This is the mastery--incapacity aliasing that
+the companion Pillar-2 paper identified descriptively; here it becomes an
+engineering constraint: \emph{ZVF is a fine alarm but a broken steering
+signal.}
+
+\subsection{PCD: the pairwise-contrast density}
+\label{sec:p7-pcd}
+The disambiguating statistic falls out of the same model. Define the
+\emph{pairwise-contrast density} as the expected within-group reward
+variance,
+\begin{equation}
+  \mathrm{PCD} \;=\; \E_x\bigl[\hat p_x(1 - \hat p_x)\bigr],
+  \qquad
+  \E[\mathrm{PCD}] \;=\; \frac{G-1}{G}\,\E_x\bigl[p_x(1-p_x)\bigr],
+  \label{eq:p7-pcd}
+\end{equation}
+where the identity (Appendix~\ref{sec:p7-appendix}) follows from
+$\E[\hat p(1-\hat p)] = (1 - \nicefrac{1}{G})\,p(1-p)$ for a binomial
+sample. PCD measures the \emph{magnitude} of within-group contrast rather
+than its mere existence, and it is proportional to the very $p(1-p)$ factor
+that T3 ties to gradient mass: PCD is, up to the $\frac{G-1}{G}$ factor, the
+average usable contrast per prompt. On the binned GSM8K reward tensors, PCD
+traces the parabola the theory predicts (peak $0.25$ at $\hat p_x = 0.5$,
+falling symmetrically to $0$ at the endpoints) while the ZVF indicator is a
+flat $0$ everywhere in the interior and jumps to $1$ only at the endpoints
+(\texttt{experiments/results/pcd\_vs\_zvf\_shape.tsv}): ZVF sees only the
+cliff edges, PCD sees the slope.
+
+\subsection{The micro-jitter falsification}
+\label{sec:p7-jitter}
+The sharpest separation between the two statistics is an intervention, not a
+correlation. Because ZVF is defined by \emph{exact} reward ties, adding
+i.i.d.\ jitter $\eps \sim \mathrm{U}(0, 10^{-4})$ to every reward makes ties
+measure-zero and drives measured ZVF to $0$, while shifting the expected
+within-group variance by only $\mathrm{Var}(\eps) \leq 10^{-9}$
+(Appendix~\ref{sec:p7-appendix}). Running this on $600$ prompt-groups from
+the GSM8K reward tensors (\texttt{scripts/pcd\_vs\_zvf.py}): batch ZVF
+collapses $0.158 \to 0.000$, while PCD is unchanged at the reported
+precision ($0.1538$ before and after; observed shift $< 10^{-6}$). Any
+pipeline that emits a tiny dense sub-reward---a length penalty, a format
+bonus---silently performs this jitter and reports ZVF $= 0$ over a batch
+that is, for learning purposes, more than $15\%$ dead. A controller keyed to
+raw ZVF would read such a batch as healthy; one keyed to PCD would not. This
+is also our operational answer to reward-shaping ambiguity: shaped rewards
+do not invalidate the starvation theory, they merely break the ZVF
+\emph{estimator} of it, and PCD is the estimator that survives.
+
+One caveat keeps us honest about what PCD is for. On $80$ runs with
+per-run summaries, mean training reward predicts the held-out outcome far
+better (Spearman $\rho = 0.95$) than mean ZVF does ($\rho = 0.56$ on this
+subset; the companion Pillar-2 paper reports $\rho = 0.27$ on its 23-cell
+cross-experiment matrix). PCD is proposed
+as a \emph{control-loop input}---a live measure of usable contrast---not as
+an outcome predictor; the decisive predictive horse race needs per-group
+reward tensors logged for all anchors, which only the GSM8K runs currently
+carry (Section~\ref{sec:p7-limitations}).

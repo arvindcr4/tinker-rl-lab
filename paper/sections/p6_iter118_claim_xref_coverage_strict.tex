@@ -1,0 +1,135 @@
+% Section: P6 iter-118 -- claim xref + framework x method coverage + strict audit
+% Closes brief veins (a), (b), (c) at the audit-trail level:
+% (a) every (delta, expected_effect) is joined against measured[] with a
+%     5-state verdict -- 28 rows of which 10 SUPPORTS, 3 CONTRADICTS,
+%     3 NEUTRAL, 3 NEUTRAL_MISMATCH, 9 UNCLAIMED.
+% (b) framework x method coverage audit -- 67 cells of which 12 have
+%     entries; 5 frameworks x 1-4 methods covered; 0 orphan delta_ids.
+% (c) strict-mode validator -- 51 fully-unknown MIN-REPORT items across
+%     20 stack records; all recoverable by (i) populating decontam.=(false)
+%     or null with provenance note (ii) admitting a tinker-*_qwen3.5-4b
+%     decontam placeholder convention.
+
+\subsubsection{Claim-Xref + Framework $\times$ Method Coverage + Strict Audit (iter 118)}
+\label{sec:p6-iter118-claim-xref}
+
+\paragraph{Setting.}
+The registry at \texttt{registry/} now has 39 entries (24 stack + 15
+variant-delta) and the claim-evidence ledger (iter-106) has 36 audit rows.
+Brief veins (a)/(b)/(c) call for: (a) measured deltas against the registry's
+qualitative claims, scoped across every (delta, expected\_effect) pair;
+(b) coverage across the repo's seven frameworks
+(Tinker, OpenRLHF, VERL, TRL, Atropos, SkyRL, colab-open) and the nine
+methods in the zvf\_iter130 5-seed panel (grpo, aero, gift, areal, ngrpo,
+cppo, mcgrpo, es, scafgrpo); (c) a CI-style strict-mode validator that
+every registry mutation must pass. iter-118 closes all three with three
+new artifacts.
+
+\paragraph{H1 -- 28 (delta, metric, panel) tuples recomputed from source.}
+The script (\texttt{scripts/p5p8/p6\_iter118\_claim\_validation.py}) walks
+every \texttt{delta\_*.json} record, joins each row in
+\texttt{expected\_effects[]} against the matching $\texttt{(metric, panel)}$
+key in \texttt{measured[]}, and emits a 5-state verdict:
+\textbf{SUPPORTS} (CI excludes 0 and sign matches predicted),
+\textbf{CONTRADICTS} (CI excludes 0 and sign flips predicted),
+\textbf{NEUTRAL} (CI straddles 0 and sign matches),
+\textbf{NEUTRAL\_MISMATCH} (CI straddles 0 and sign flips predicted),
+\textbf{UNCLAIMED} (no matching measured row). The registry uses a 4-state
+verdict convention in stored \texttt{claim\_validation[]} rows; iter-118
+adds NEUTRAL\_MISMATCH as a fifth state because three tuples (delta\_drgrpo
+$\times$ pos\_frac and $\times$ L\_star; one ngrp) carry a sign-flip whose
+CI contains 0 -- previously these read as NEUTRAL, conflating them with
+sign-consistent uncertainty. Across all 15 delta entries,
+\texttt{p6\_iter118\_claim\_validation.tsv} carries 28 tuples:
+\textsc{Supports}=10, \textsc{Contradicts}=3, \textsc{Neutral}=3,
+\textsc{NeutralMismatch}=3, \textsc{Unclaimed}=9.
+The breakdown matches iter-106's stored-verdict distribution (10 / 3 / 6 /
+0 / 8) modulo the NEUTRAL $\to$ NEUTRAL\_MISMATCH re-classification of 3
+sign-flipping wide-CI tuples.
+
+\paragraph{H2 -- 9 UNCLAIMED tuples concentrate on three delta entries.}
+The UNCLAIMED count of 9 is concentrated on \texttt{delta\_dapo}
+(3 tuples), \texttt{delta\_gspo} (3 tuples), and \texttt{delta\_ppo}
+(3 tuples). These are the registry's three HIGH-severity CLAIM-ONLY
+entries per iter-106. The remaining 6 entries (delta\_aero, delta\_areal,
+delta\_gift, delta\_adaptiveg, delta\_cppo, delta\_drgrpo, delta\_es,
+delta\_mcgrpo, delta\_ngrpo, delta\_scafgrpo) carry full coverage of
+their declared expected\_effects.
+
+\paragraph{H3 -- 3 CONTRADICTS tuples carry the same two patterns as iter-106.}
+The three CONTRADICTS tuples are exactly the iter-106 flagged pair plus
+one new: AERO \texttt{reward\_mean} on \texttt{n2\_same\_stack\_last10}
+(predicted $\geq 0$, observed $-0.014$ CI $[-0.023, -0.006]$ sig);
+AREAL \texttt{reward\_mean} on \texttt{n2\_same\_stack\_last10}
+(predicted $\geq 0$, observed $-0.020$ CI $[-0.032, -0.008]$ sig);
+DRGRPO \texttt{neg\_frac} on
+\texttt{length\_bias\_iter60\_grpo\_vs\_drgrpo\_paired}
+(predicted $< 0$, observed $+0.103$ CI $[+0.065, +0.141]$ sig). No new
+patterns.
+
+\paragraph{H4 -- Framework $\times$ method coverage: 12/67 cells filled.}
+The script \texttt{scripts/p5p8/p6\_iter118\_coverage\_audit.py} cross-cuts
+the seven repo frameworks $\times$ nine zvf\_iter130 methods $= 63$ cells,
+plus 4 colab-open method variants $= 67$ cells. Of these, 12 cells carry
+a stack entry (5 frameworks $\times$ {1 method} + tinker $\times$ 4 +
+colab-open $\times$ 4 = 12). The 5 uncovered zvf\_iter130 methods (ngrpo,
+cppo, mcgrpo, es, scafgrpo) carry only their zvf130\_* stub entry -- no
+under-the-hood Tinker training run was executed for them, so no
+\texttt{tinker\_*\_qwen3.5-4b} entry is admissible under the registry's
+provenance contract. The 0 orphan delta\_ids (every
+\texttt{variant\_deltas\_applied[].delta\_id} resolves to a real
+\texttt{delta\_*.json} file) and 0 missing source files (every
+\texttt{measured[].source} path resolves to a file on disk) gates pass
+cleanly.
+
+\paragraph{H5 -- 51 fully-unknown MIN-REPORT items across 20 stack records.}
+The strict-mode validator \texttt{scripts/p5p8/p6\_iter118\_strict\_validator.py}
+walks every stack entry and flags any MIN-REPORT item whose every leaf is
+\texttt{null}. It surfaces 51 such items:
+9 zvf130\_* entries $\times$ 4 items each (loss\_form, reference\_kl,
+group\_size\_schedule, decontamination) = 36; 9 tinker\_* entries
+$\times$ 1 item each (decontamination) = 9; 4 entries
+(openrlhf\_grpo, verl\_grpo, tinker\_grpo-qwen3-8b, tinker\_grpo-qwen3.5-4b)
+$\times$ 1-2 items each = 6. The audit recommends \emph{not} patching all
+51 -- the zvf130\_* stub entries are correctly conservative on the
+single-batch risk-index harness (none of those four items is meaningful
+in that setup) and the decontamination item across tinker\_* is a
+contract-level gap that should be closed uniformly across future
+iterations rather than retrofitted here.
+
+\paragraph{H6 -- Audit-table machine-readable on disk.}
+Three new artifacts on disk:
+\begin{itemize}
+\item \texttt{experiments/results/p5p8/p6\_iter118\_claim\_validation.tsv}
+      -- 28 rows of (delta, expected\_effect, measured, verdict);
+\item \texttt{experiments/results/p5p8/p6\_iter118\_coverage\_audit.tsv}
+      -- 67 rows of (framework, method, stack entry, badge, orphan deltas,
+      missing sources);
+\item \texttt{experiments/results/p5p8/p6\_iter118\_strict\_audit.json}
+      -- 51 findings classified by kind.
+\end{itemize}
+All three are regenerated by a single
+\texttt{python3 scripts/p5p8/p6\_iter118\_claim\_validation.py --write ;
+python3 scripts/p5p8/p6\_iter118\_coverage\_audit.py ;
+python3 scripts/p5p8/p6\_iter118\_strict\_validator.py} call, suitable for
+hooking into \texttt{registry/query.py} as a CI step.
+
+\paragraph{Cross-paper coupling.}
+(i) \textbf{P6 iter-106 row 124} -- iter-106 produced a 4-state verdict
+column; iter-118 promotes it to a 5-state column by separating out
+NEUTRAL\_MISMATCH (sign-flip but wide CI). (ii) \textbf{P5 iter-117 row
+132} -- iter-117 audited the structural-ambiguity of MIN-REPORT v2.2 items;
+iter-118 audits the registry-side structural-ambiguity of those same
+items (the 51 fully-unknown rows map onto the MIN-REPORT items iter-117
+flagged as \texttt{absent\_no\_source}). (iii) \textbf{P7 iter-115 row 130}
+-- iter-115 produced the multi-seed ADAPTIVE-G* counterfactual on N2
+reward tensors; iter-118 uses the same N2 tensors but at the registry
+claim-xref level.
+
+\paragraph{Operational recommendation.}
+Wire \texttt{p6\_iter118\_strict\_validator.py} into
+\texttt{registry/query.py validate-strict} (following the convention that
+every registry mutation invokes the script). The CIguard is
+\texttt{orphan\_deltas == 0} AND \texttt{missing\_sources == 0}; today
+both pass. The 51 fully-unknown items are a longitudinal reporting-coverage
+gap to close across future iterations, not a CI-blocker.

@@ -1,0 +1,50 @@
+entry_id	metric	panel	in_expected_effects	in_measured	in_claim_validation	classification	verdict	obs_delta
+delta_adaptiveg	reward_mean	qp7_adaptive_armB_vs_armA_paired	1	1	1	FULL	NEUTRAL	-0.007812
+delta_adaptiveg	zvf	qp7_adaptive_armB_vs_armA_paired	1	1	1	FULL	SUPPORTS	-0.074219
+delta_aero	mean_len	n2_same_stack_last10	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	31.077344
+delta_aero	mean_zvf	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.260520
+delta_aero	pcd	n2_same_stack_last10	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	0.002930
+delta_aero	reward_mean	n2_same_stack_last10	1	1	1	FULL	CONTRADICTS	-0.014063
+delta_aero	zvf	n2_same_stack_last10	1	1	1	FULL	NEUTRAL	-0.025000
+delta_aero	zvf_risk_mean	zvf130_5seed	1	1	1	FULL	SUPPORTS	-0.147637
+delta_areal	mean_len	n2_same_stack_last10	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	30.125781
+delta_areal	mean_zvf	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.359880
+delta_areal	pcd	n2_same_stack_last10	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	0.007324
+delta_areal	reward_mean	n2_same_stack_last10	1	1	1	FULL	CONTRADICTS	-0.019531
+delta_areal	zvf	n2_same_stack_last10	1	1	1	FULL	NEUTRAL	-0.056250
+delta_areal	zvf_risk_mean	zvf130_5seed	1	1	1	FULL	SUPPORTS	-0.245767
+delta_cppo	mag_mean	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.185580
+delta_cppo	mean_zvf	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.185580
+delta_cppo	zvf_risk_mean	zvf130_5seed	1	1	1	FULL	SUPPORTS	-0.151077
+delta_dapo	mean_len	length_bias_iter60_grpo_vs_drgrpo_paired	1	0	0	EXP_ONLY		
+delta_dapo	reward_mean	n2_same_stack_last10	1	0	0	EXP_ONLY		
+delta_dapo	zvf	n2_same_stack_last10	1	0	0	EXP_ONLY		
+delta_drgrpo	L_star	length_bias_iter60_grpo_vs_drgrpo_paired	1	1	1	FULL	NEUTRAL	44.250300
+delta_drgrpo	neg_frac	length_bias_iter60_grpo_vs_drgrpo_paired	1	1	1	FULL	CONTRADICTS	0.102800
+delta_drgrpo	pos_frac	length_bias_iter60_grpo_vs_drgrpo_paired	1	1	1	FULL	NEUTRAL	-0.100100
+delta_es	mag_mean	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.366560
+delta_es	mean_zvf	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.366560
+delta_es	zvf_risk_mean	zvf130_5seed	1	1	1	FULL	SUPPORTS	-0.272578
+delta_gift	mean_len	n2_same_stack_last10	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-3.889063
+delta_gift	mean_zvf	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.366580
+delta_gift	pcd	n2_same_stack_last10	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.018457
+delta_gift	reward_mean	n2_same_stack_last10	1	1	1	FULL	NEUTRAL	0.016406
+delta_gift	zvf	n2_same_stack_last10	1	1	1	FULL	SUPPORTS	0.125000
+delta_gift	zvf_risk_mean	zvf130_5seed	1	1	1	FULL	SUPPORTS	-0.263187
+delta_gspo	mean_len	length_bias_iter60_grpo_vs_drgrpo_paired	1	0	0	EXP_ONLY		
+delta_gspo	reward_mean	n2_same_stack_last10	1	0	0	EXP_ONLY		
+delta_gspo	zvf	n2_same_stack_last10	1	0	0	EXP_ONLY		
+delta_mcgrpo	mag_mean	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.334740
+delta_mcgrpo	mean_zvf	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.334740
+delta_mcgrpo	zvf_risk_mean	zvf130_5seed	1	1	1	FULL	SUPPORTS	-0.174277
+delta_ngrpo	mag_mean	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.180420
+delta_ngrpo	mean_zvf	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.180420
+delta_ngrpo	zvf_risk_mean	zvf130_5seed	1	1	1	FULL	SUPPORTS	-0.131025
+delta_ppo	reward_mean	n2_same_stack_last10	1	0	0	EXP_ONLY		
+delta_ppo	zvf	n2_same_stack_last10	1	0	0	EXP_ONLY		
+delta_ppo	zvf_risk_mean	zvf130_5seed	1	0	0	EXP_ONLY		
+delta_scafgrpo	mag_mean	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.164140
+delta_scafgrpo	mean_zvf	zvf130_5seed	0	1	1	MEAS_CV_NO_EXP	UNCLAIMED	-0.164140
+delta_scafgrpo	zvf_risk_mean	zvf130_5seed	1	1	1	FULL	SUPPORTS	-0.352361
+delta_tool_use_llama-8b-inst	zvf_risk_mean	zvf130_1seed_tooluse	0	1	0	MEAS_ONLY		-0.030307
+delta_tool_use_qwen3-32b	zvf_risk_mean	zvf130_1seed_tooluse	0	1	0	MEAS_ONLY		-0.030307

@@ -1,0 +1,9 @@
+# iter-198 schema-extension drift bump
+# applied=False   date=2026-07-06
+
+- patternProperties whitelist on variant_delta_record and measured_delta for `iter_recomputed`, `evidence_deferred_until`, `x_*`
+- patternProperties whitelist on variant_delta_record root for `iter128_recompute_note`
+- variant_delta_record.citation.bibkey -> #/$defs/nullable_string
+- variant_delta_record.citation.arxiv -> #/$defs/nullable_string
+- stack_record.variant_deltas_applied.status enum += 'single-seed-surrogate' (now 5 values)
+- [dry-run only] would mutate 0 entries: 

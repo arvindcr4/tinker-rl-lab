@@ -1,0 +1,562 @@
+A Tale of Two Kittens
+
+A Story of Two Kittens
+Held & Hein, 1963.
+Passive
+Kitten
+Active
+Kitten
+
+A Story of Two Kittens
+Held & Hein, 1963.
+ChatGPT
+Embodied
+AI
+
+Project GR00T
+Dr. Jim Fan, NVIDIA Research
+
+
+Why Humanoid?
+
+
+
+Why Now?
+
+Tesla Optimus
+Boston Dynamics e-Atlas
+Figure F.02
+
+NVIDIA CONFIDENTIAL. DO NOT 
+DISTRIBUTE.
+Cost
+Time
+NASA Robonaut
+Willow Garage
+PR2
+Fetch
+Unitree G1
+$1.5M
+$400K
+$100K
+$30K
+2001
+2009
+2015
+2024
+
+Project GR00T
+AI Brain for Humanoid Robots
+
+
+Project GR00T
+Generalist Robot 0 0 Technology
+
+Project GR00T
+Generalist Robot 0 0 Technology
+
+Semantic
+Parsing
+Sentiment
+Analysis
+Summarization
+Information
+Retrieval
+Creative
+Writing
+Coding
+Travel
+Planning
+Apple
+Intelligence
+Specialist
+Generalist
+Specialized Generalist
+
+Specialist
+Generalist
+Specialized Generalist
+Project
+GR00T
+
+3 Principles
+Data Pyramid
+Foundation Agent
+“The Matrix”
+
+3 Principles
+Data Pyramid
+Foundation Agent
+“The Matrix”
+
+Data Pyramid
+Real Robot Data
+24 hours / robot-day
+
+
+
+Pose 
+Tracking
+Low-latency
+Streaming
+Omniverse 
+Cloud
+Teleoperate
+In sim, anywhere
+
+
+
+
+
+Data Pyramid
+Simulation Data
+TB / GPU-day
+Real Robot Data
+24 hours / robot-day
+
+Isaac Lab
+
+
+Omniverse
+
+Data Pyramid
+Internet Data
+EB / day
+Simulation Data
+TB / GPU-day
+Real Robot Data
+24 hours / robot-day
+
+Principle No. 2
+Data Pyramid
+Foundation Agent
+“The Matrix”
+
+Do we live in a simulation?
+
+Do robots live in a simulation?
+
+Why does simulation work for training robots?
+It’s easier to simulate a problem than to solve it.
+
+
+
+
+
+Framework for
+ Generally Capable Agents
+
+Self-Generated Data
+Multiply Data
+
+Reinforcement
+Learning
+Imitation
+Learning
+
+Reinforcement
+Learning
+
+How many parameters
+needed to build a Cerebellum?
+
+
+
+
+HOVER
+
+
+
+
+
+
+Isaac Lab
+
+
+
+Reinforcement
+Learning
+Imitation
+Learning
+
+
+1 human demo
+N
+???
+
+Hand-made
+Objects
+Hand-crafted
+Scenes
+What’s in a Robot Simulation?
+Hand-designed
+Tasks
+
+Xu et al. 2023
+
+Hand-made
+Objects
+What’s in a Robot Simulation?
+Generate 3D
+Text-to-3D models
+
+
+Hand-made
+Objects
+Hand-crafted
+Scenes
+What’s in a Robot Simulation?
+Generate 3D
+Generate USD
+Text-to-3D models
+Stable Diffusion
+
+
+Hand-made
+Objects
+Hand-crafted
+Scenes
+What’s in a Robot Simulation?
+Generate 3D
+Generate USD
+Text-to-3D models
+ChatUSD
+Stable Diffusion
+
+
+Hand-made
+Objects
+Hand-crafted
+Scenes
+Generate 3D
+Generate USD
+Hand-designed
+Tasks
+Generate Code
+Text-to-3D models
+ChatUSD
+Stable Diffusion
+GPT-4o Claude-3.5
+What’s in a Robot Simulation?
+
+
+RoboCasa
+
+Hand-made
+Objects
+Hand-crafted
+Scenes
+Generate 3D
+Generate USD
+Hand-designed
+Tasks
+Generate Code
+Text-to-3D models
+ChatUSD
+Stable Diffusion
+GPT-4o Claude-3.5
+RoboCasa: Generative Simulation Framework
+Nasiriany et al. RSS 2024.
+
+1 human demo
+N
+RoboCasa
+
+Nasiriany et al. RSS 2024.
+
+
+1 human demo
+N
+RoboCasa:
+Visual 
+Augmentation
+Diverse Motion
+Augmentation ??
+
+1 human demo (seed)
+Machine-generated demos
+MimicGen
+Mandlekar et al. CoRL 2023.
+
+3-Piece Assembly
+Square Insertion
+3-Cube Stacking
+Making Coffee
+Threading
+Put Mug in Drawer
+
+Panda
+Sawyer
+IIWA
+UR5e
+
+Prepare Coffee
+Kitchen Chores
+Bin Sorting
+
+
+
+
+Bimanual: parallel sub-tasks
+• Asynchronous execution
+Jiang & Xie et al. 2024.
+
+Bimanual: coordination sub-tasks
+• Must apply same transformations
+• Synchronization point
+Jiang & Xie et al. 2024.
+
+Bimanual: sequential sub-tasks
+• Ordering constraint: pre-task, post-task
+Jiang & Xie et al. 2024.
+
+Sub-task strategies can mix & match
+Parallel then Coordination.
+Jiang & Xie et al. 2024.
+
+2-Gripper Piece Assembly
+2-Gripper Transport
+2-Gripper Threading
+
+2-Hand Putting Box Lid
+2-Hand Tray Lifting
+2-Hand Drawer Cleanup
+
+Humanoid Making Coffee
+Humanoid Sorting Cans
+Humanoid Pouring
+
+DexMimicGen
+
+
+
+
+
+
+1 human demo
+N
+RoboCasa
+N x M
+MimicGen
+
+
+
+Principle No. 3
+Data Pyramid
+Foundation Agent
+“The Matrix”
+
+Embodiment
+Reality
+Skill
+
+Diverse Robot Forms (“Embodiments”)
+
+Embodiment
+Reality
+Skill
+MetaMorph
+
+MetaMorph
+
+Graph of joints
+“Kinematic tree”
+Gupta et al. ICLR 2022.
+
+Tokenize
+Gupta et al. ICLR 2022.
+
+Tokenize
+Gupta et al. ICLR 2022.
+
+MetaMorph
+Transformer
+Observation
+Action
+
+MetaMorph
+Transformer
+Observation
+Action
+
+Flat Terrain
+Obstacles
+Complex Terrain
+
+
+
+Embodiment
+Reality
+Skill
+Eureka
+MetaMorph
+MimicGen
+
+Eureka
+
+Ma et al. ICLR 2024.
+
+Coding LLM
+“To make the shadow hand spin 
+the pen to a target orientation.”
+Task Description
+Environment Code
+Reward Function
+Sample code
+
+
+Coding LLM
+Reward Candidates
+Reward Candidates
+Reward Candidates
+Reward Candidates
+Sample code
+Massively parallel,
+GPU-accelerated training
+Reward components
+Automated Feedback
+Self-Reflection
+Ma et al. ICLR 2024.
+
+
+Dexterity Benchmark
+Isaac Benchmark
+
+
+How to transfer from sim to the real world?
+
+Embodiment
+Reality
+Skill
+Eureka
+MetaMorph
+DrEureka
+MimicGen
+HOVER
+
+Domain Randomization
+Vary gravity, friction, weight, size.
+
+Coding LLM
+Reward Candidates
+Reward Candidates
+Reward Candidates
+Reward Candidates
+Sample code
+Reward components
+Automated Feedback
+Self-Reflection
+Sample configurations
+Reward Candidates
+Reward Candidates
+Reward Candidates
+Domain Randomizations
+Real World
+Ma et al, 2024
+
+Simulation
+Real World
+Ma et al, 2023
+
+Simulation
+Real World
+Ma et al, 2023
+
+
+DrEureka
+
+LLM
+Reward 
+Function
+Coding in Isaac API
+Reinforcement Learning
+Eureka
+
+LLM
+Sim2Real
+Configuration
+Coding in Isaac API
+Reinforcement Learning
+DrEureka
+
+Reinforcement Learning
+LLM
+New task
+New simulation
+Training algorithm
+Coding in Isaac API
+Eureka++
+
+GR00T
+Foundation Agent
+Embodiment
+Reality
+Skill
+Eureka
+MetaMorph
+DrEureka
+
+Text In
+ChatGPT
+Text Out
+
+Text in
+Text In
+Data
+ChatGPT
+Text in
+Text Out
+
+Embodiment
+Actions
+Instructions
+GR00T
+
+Text in
+Embodiment
+Realities
+Text in
+Actions
+Text in
+Instructions
+GR00T
+
+OVX: Generate Tokens
+RoboCasa, MimicGen, Eureka
+AGX: Deploy Tokens
+HOVER, DrEureka
+Edge inference
+Digital Twin Eval
+DGX: Learn Tokens
+Foundation Agent Models
+Synthetic data
+OSMO
+
+3 Principles
+Data Pyramid
+Foundation Agent
+“The Matrix”
+3 Computers
+OVX
+AGX
+DGX
+
+GR00T
+Foundation Agent
+
+Trillion-dollar Business
+
+(Zero) Trillion-dollar Business
+
+A Story of Two Kittens
+Held & Hein, 1963.
+Embodied
+AGI
+
+We are HIRING!!
+GEAR Lab: Generalist Embodied Agent Research 
+https://research.nvidia.com/labs/gear 
+linxif@nvidia.com
+dr.jimfan.ai@gmail.com 
+https://jimfan.me
+

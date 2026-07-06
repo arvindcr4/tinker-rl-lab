@@ -1,0 +1,7 @@
+cohort	tree	method	obs_mean_delta	ci_lo	ci_hi	excl_zero	n_boot
+v_mean	XGB-20raw	platt	0.87604	0.87259	0.87896	False	400
+v_mean	XGB-24full	platt	0.84167	0.83739	0.84571	False	400
+amount	XGB-20raw	platt	0.87631	0.87227	0.879	False	400
+amount	XGB-24full	platt	0.84055	0.83604	0.84533	False	400
+time	XGB-20raw	platt	0.87606	0.87184	0.87918	False	400
+time	XGB-24full	platt	0.83978	0.83564	0.84412	False	400

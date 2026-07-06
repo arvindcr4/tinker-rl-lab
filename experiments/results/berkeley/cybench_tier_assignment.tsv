@@ -1,0 +1,6 @@
+model	tier	params_B	logN	R_max	lambda_	lam_at_bound	family	phase_nimmaturi
+Llama-3.1-8B-Instruct	L1_Easy	8.000	0.903	0.8688	10.0000	1	dense	non_monotone
+DeepSeek-V3.1	L1_Easy	685.000	2.836	0.8438	10.0000	1	moe	non_monotone
+Qwen3.5-4B	L2_Medium	4.000	0.602	0.8167	10.0000	1	dense	non_monotone
+Qwen3-8B	L3_Hard	8.000	0.903	0.2854	10.0000	1	dense	plateau
+Nemotron-120B	L4_Expert	120.000	2.079	0.1820	0.9902	0	dense	collapse

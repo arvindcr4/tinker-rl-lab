@@ -1,0 +1,120 @@
+{
+  "iter": 131,
+  "vein": "Per-Prompt Adaptive-G* simulation on N2 reward tensors (closed-form Bernoulli per-prompt G* choice)",
+  "n_prompt_cells": 2560,
+  "n_step_summary_rows": 800,
+  "n_method_summary_rows": 20,
+  "controllers": [
+    "STATIC_G8",
+    "STATIC_G16",
+    "ADAPTIVE_PP",
+    "ADAPTIVE_PP_ORACLE",
+    "DUALFORMER_PP"
+  ],
+  "tau_target_rule": "halve zvf_obs (zvf(G) < zvf_obs/2)",
+  "gstar_distribution": {
+    "STATIC_G8": {
+      "8": 2560
+    },
+    "STATIC_G16": {
+      "16": 2560
+    },
+    "ADAPTIVE_PP": {
+      "8": 1867,
+      "16": 693
+    },
+    "ADAPTIVE_PP_ORACLE": {
+      "8": 1867,
+      "64": 693
+    },
+    "DUALFORMER_PP": {
+      "2": 1723,
+      "4": 212,
+      "8": 106,
+      "16": 181,
+      "32": 338
+    }
+  },
+  "gstar_per_method_adaptive_pp": {
+    "grpo": {
+      "8": 461,
+      "16": 179
+    },
+    "aero": {
+      "8": 461,
+      "16": 179
+    },
+    "gift": {
+      "8": 493,
+      "16": 147
+    },
+    "areal": {
+      "8": 452,
+      "16": 188
+    }
+  },
+  "boundary_rate_per_method": {
+    "grpo": 0.7203,
+    "aero": 0.7203,
+    "gift": 0.7703,
+    "areal": 0.7063
+  },
+  "h1_adaptive_recovers_somewhere": true,
+  "h2_G16_dominates_G32_in_ADAPTIVE_PP": true,
+  "h3_adaptive_beats_static16_per_unit_cost": true,
+  "h4_iter127_ranking_match": false,
+  "adaptive_pp_method_ranking_by_cost_eq_contrast": [
+    "areal",
+    "aero",
+    "grpo",
+    "gift"
+  ],
+  "iter127_method_ranking": [
+    "gift",
+    "grpo",
+    "aero",
+    "areal"
+  ],
+  "contrast_ci": [
+    {
+      "controller": "STATIC_G8",
+      "mean_net": 0.0,
+      "ci_lo": 0.0,
+      "ci_hi": 0.0,
+      "ci_excludes_zero": 0,
+      "n": 160
+    },
+    {
+      "controller": "STATIC_G16",
+      "mean_net": 0.0273,
+      "ci_lo": -0.276,
+      "ci_hi": 0.2552,
+      "ci_excludes_zero": 0,
+      "n": 160
+    },
+    {
+      "controller": "ADAPTIVE_PP",
+      "mean_net": 0.3919,
+      "ci_lo": 0.1667,
+      "ci_hi": 0.5911,
+      "ci_excludes_zero": 1,
+      "n": 160
+    },
+    {
+      "controller": "ADAPTIVE_PP_ORACLE",
+      "mean_net": -0.1973,
+      "ci_lo": -0.539,
+      "ci_hi": -0.0224,
+      "ci_excludes_zero": 1,
+      "n": 160
+    },
+    {
+      "controller": "DUALFORMER_PP",
+      "mean_net": -0.0599,
+      "ci_lo": -0.2857,
+      "ci_hi": 0.256,
+      "ci_excludes_zero": 0,
+      "n": 160
+    }
+  ]
+}

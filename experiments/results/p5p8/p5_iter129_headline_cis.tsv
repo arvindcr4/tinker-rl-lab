@@ -1,0 +1,16 @@
+id	vein	claim	published_pt	recomputed_pt	ci_lo	ci_hi	n	verdict	notes
+H01	iter-85	eta2_mean_6ch	0.0331	0.0331	0.0153	0.0498	6	PASS	6-channel mean; n=6 channels
+H02	iter-85	eta2_zvf_N2	0.0454	0.0454	0.0093	0.1464	40	PASS	N2 4-method 40-step; bootstrap B=2000
+H03	iter-85	eta2_pcd_N2	0.0357	0.0357	0.0072	0.1291	40	PASS	N2 4-method 40-step; bootstrap B=2000
+H04	iter-85	eta2_loss_positive_control	0.9867	0.9867	0.9826	0.9908	40	PASS	expected near 1.0; loss is method-specific
+H05	iter-85	cohens_d_zvf_GIFT_vs_others_last10	1.899	1.8553	1.1528	2.8835	40	PASS	last-10 pooled; bootstrap CI on resampled step indices
+H06	iter-85	cohens_d_pcd_GIFT_vs_others_last10	-1.605	-1.5628	-2.616	-0.8178	40	PASS	last-10 pooled; bootstrap CI on resampled step indices
+H07	iter-89	eta2_zvf_bootstrap_UB	0.113	0.1464	0.0093	0.1464	40	PASS	UB of bootstrap CI; exceeds Ivison 0.05
+H08	iter-101	eta2_zvf_risk_9method	0.763	0.763	0.7081	0.9185	9	PASS	zvf130 9-method; n_methods=9
+H09	iter-101	eta2_seed_zvf_risk_control	0.0071	0.0191	0.0135	0.2615	5	TENSION	seed-axis control; near 0 by design
+H10	iter-101	scafgrpo_lomo_rel_drop	-0.1042	-0.1042	-0.1042	-0.1042	5	PASS	leave-one-out deterministic
+H11	iter-125	chained_R_zvf_x_task_slice	10.32	10.3195	8.8375	12.7505	3	PASS	chained ratio; mega stack-axis by task_slice; n_axes=3
+H12	iter-125	chained_R_pcd_x_task_slice	12.62	12.6156	10.897	15.5136	3	PASS	chained ratio; mega stack-axis by task_slice; n_axes=3
+H13	iter-125	chained_R_zvf_x_G	9.77	9.7683	6.4437	13.7983	5	PASS	chained ratio; mega stack-axis by G; n_axes=5
+H14	iter-125	chained_R_pcd_x_G	6.45	6.4479	3.6923	11.7763	5	PASS	chained ratio; mega stack-axis by G; n_axes=5
+H15	iter-121	auditor_blind_spot_rate_M1M2	0.0	0.0	0.0	0.0	196	REPORTED	deterministic audit; M1 cell_id_swap_hash + M2 model_family_swap

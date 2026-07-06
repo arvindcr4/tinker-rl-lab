@@ -1,0 +1,6 @@
+metric	ratio_point	ratio_boot_mean	ratio_ci_lo	ratio_ci_hi	n_boot_inf_or_huge	frac_ratio_above_1
+mean_reward	96128.06	5961.93	14.65	49519.22	23	1.0
+zvf	38396.12	6628.31	17.92	41357.4	31	1.0
+pcd	1128.69	5721.15	15.9	41550.29	28	1.0
+mean_completion_len	14712.47	7492.33	14.51	62171.45	28	1.0
+std_completion_len	502.85	5483.58	13.07	37142.29	29	1.0

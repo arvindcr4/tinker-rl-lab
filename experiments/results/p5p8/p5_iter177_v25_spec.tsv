@@ -1,0 +1,6 @@
+audit	rule	mutation_caught
+v25_required_keys	8 v2.4 keys all present	M1_remove_field
+v25_type_strict	heldout_split is str	M2_type_violation
+v25_vocab_strict	heldout_split in fixed vocab	M3_vocab_violation
+v25_regex_strict	fixed-G=\d+ OR schedule-(fixed|adaptive)-G=\d+(-\d+)?	M4_regex_violation
+v25_na_sentinel_strict	na sentinels in canonical set	M5_na_sentinel

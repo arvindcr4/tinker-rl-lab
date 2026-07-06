@@ -1,0 +1,11 @@
+outcome	axis	k	n_cells	eta_sq	ci_lo	ci_hi	ci_excludes_zero
+mean_reward	model	2	98	0.452667	0.314397	0.6328	True
+mean_reward	task	3	98	0.27286	0.188046	0.414827	True
+mean_reward	G	5	98	0.030434	0.011549	0.176641	True
+mean_reward	temperature	2	98	7e-06	9e-06	0.055602	True
+mean_reward	seed	2	98	8e-06	9e-06	0.051299	True
+zvf	model	2	98	0.005293	2.3e-05	0.078099	True
+zvf	task	3	98	0.468691	0.367461	0.589499	True
+zvf	G	5	98	0.443657	0.267541	0.629579	True
+zvf	temperature	2	98	0.009153	3e-05	0.080185	True
+zvf	seed	2	98	2.4e-05	1.1e-05	0.053345	True

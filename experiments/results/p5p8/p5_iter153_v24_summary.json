@@ -1,0 +1,60 @@
+{
+  "iter": 153,
+  "rule": "v2.4 = year+author+title+(venue OR id); manifests = all-fields-present + id-bearing-field; cells.tsv = mandatory-ids-non-empty + paths-on-disk",
+  "layer_bib": {
+    "n": 42,
+    "n_pass": 42,
+    "rate": 1.0,
+    "wilson95_lo": 0.9161983874908382,
+    "wilson95_hi": 1.0,
+    "iter149_baseline_post_patch": 0.9285714285714286
+  },
+  "layer_manifest": {
+    "n": 98,
+    "n_pass": 98,
+    "rate": 1.0,
+    "wilson95_lo": 0.9622786759045421,
+    "wilson95_hi": 1.0
+  },
+  "layer_cells": {
+    "n": 98,
+    "n_pass": 98,
+    "rate": 1.0,
+    "wilson95_lo": 0.9622786759045421,
+    "wilson95_hi": 1.0,
+    "n_paths_on_disk": 98
+  },
+  "cross_layer_agreement": {
+    "n_total": 98,
+    "n_match": 98,
+    "rate": 1.0,
+    "wilson95_lo": 0.9622786759045421,
+    "wilson95_hi": 1.0
+  },
+  "hypotheses": {
+    "H1_layer_coverage": {
+      "pass": true,
+      "bib_rate": 1.0,
+      "manifest_rate": 1.0,
+      "cells_rate": 1.0
+    },
+    "H2_cross_layer_agreement": {
+      "pass": true,
+      "rate": 1.0
+    },
+    "H3_systematic_gaps": {
+      "pass": true,
+      "bib_fail_reasons": [],
+      "manifest_fail_reasons": [],
+      "cells_fail_reasons": []
+    },
+    "H4_v23_to_v24_lift": {
+      "pass": true,
+      "iter149_post_patch_bib": 0.9285714285714286,
+      "iter153_bib": 1.0,
+      "delta": 0.0714285714285714,
+      "n_p5_cite_keys": 42,
+      "missing_in_bib": []
+    }
+  }
+}

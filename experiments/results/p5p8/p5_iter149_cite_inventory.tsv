@@ -1,0 +1,43 @@
+cite_key	n_uses	family	in_bib	entry_type	year	title_len	n_authors	venue	doi	arxiv_id	has_year	has_author	has_title	has_venue	has_doi	has_arxiv	has_volpages	fields_present	fields_total	fully_formed
+agarwal2021deep	4	STAT	True	inproceedings	2021	68	104	Advances in Neural Information Processin	10.48550/arXiv.2108.13264	2108.13264	1	1	1	1	1	1	1	7	7	1
+bender2018datastatements	2	BASE	True	article	2018	106	36	Transactions of the Association for Comp	10.1162/tacl_a_00041		1	1	1	1	1	0	1	6	7	1
+biderman2024lessons	4	INFRA	True	article	2024	71	210	arXiv preprint arXiv:2405.14782		2405.14782	1	1	1	1	0	1	0	5	7	1
+bytedance2025vapo	1	RL-ALG	True	article	2025	82	173	arXiv preprint	10.48550/arXiv.2504.05118	2504.05118	1	1	1	1	1	1	0	6	7	1
+colas2019hitchhiker	4	STAT	True	article	2019	84	62	arXiv preprint	10.48550/arXiv.1904.06979	1904.06979	1	1	1	1	1	1	0	6	7	1
+dao2022flashattention	2	INFRA	True	inproceedings	2022	79	85	Advances in Neural Information Processin	10.48550/arXiv.2205.14135	2205.14135	1	1	1	1	1	1	0	6	7	1
+dodge2019show	2	STAT	True	inproceedings	2019	58	89	Proceedings of the 2019 Conference on Em	10.18653/v1/D19-1224		1	1	1	1	1	0	1	6	7	1
+gao2023reward	2	INFRA	True	inproceedings	2023	46	45	Proceedings of the 40th International Co	10.48550/arXiv.2210.10760	2210.10760	1	1	1	1	1	1	0	6	7	1
+gebru2021datasheets	3	BASE	True	article	2021	23	149	Communications of the ACM	10.1145/3458723		1	1	1	1	1	0	1	6	7	1
+guo2025deepseekr1	2	RL-ALG	True	article	2025	86	170	arXiv preprint	10.48550/arXiv.2501.12948	2501.12948	1	1	1	1	1	1	0	6	7	1
+henderson2018deep	6	STAT	True	inproceedings	2018	40	109	Proceedings of the AAAI Conference on Ar	10.1609/aaai.v32i1.11694		1	1	1	1	1	0	1	6	7	1
+hochlehnert2025sober	3	STAT	True	article	2025	52	31	arXiv preprint	10.48550/arXiv.2504.07086	2504.07086	1	1	1	1	1	1	0	6	7	1
+hu2024openrlhf	1	INFRA	True	article	2024	74	94	arXiv preprint	10.48550/arXiv.2405.11143	2405.11143	1	1	1	1	1	1	0	6	7	1
+ivison2024unpacking	1	RL-ALG	True	inproceedings	2024	93	167	Advances in Neural Information Processin	10.48550/arXiv.2406.09279	2406.09279	1	1	1	1	1	1	0	6	7	1
+jordan2024benchmarking	1	STAT	True	article	2024	68	95	arXiv preprint	10.48550/arXiv.2406.16241	2406.16241	1	1	1	1	1	1	0	6	7	1
+krakovna2020specification	1	INFRA	True	misc	2020	53	162				1	1	1	0	0	0	0	3	7	0
+kwon2023vllm	2	INFRA	True	inproceedings	2023	82	154	Proceedings of the 29th Symposium on Ope	10.1145/3600006.3613165		1	1	1	1	1	0	0	5	7	1
+lambert2024tulu3	2	RL-ALG	True	article	2024	62	155	arXiv preprint	10.48550/arXiv.2411.15124	2411.15124	1	1	1	1	1	1	0	6	7	1
+le2025rlzvp	1	RL-ALG	True	misc	2025	124	78			2509.21880	1	1	1	0	0	1	0	4	7	1
+liu2026gdpo	1	RL-ALG	True	article	2026	97	230	arXiv preprint arXiv:2601.05242		2601.05242	1	1	1	1	0	1	0	5	7	1
+lu2025grpolead	1	RL-ALG	True	article	2025	51	23	arXiv preprint	10.48550/arXiv.2504.09696	2504.09696	1	1	1	1	1	1	0	6	7	1
+miller2024erroreval	1	STAT	True	article	2024	80	12	arXiv preprint	10.48550/arXiv.2411.00640	2411.00640	1	1	1	1	1	1	0	6	7	1
+mitchell2019modelcards	3	BASE	True	inproceedings	2019	31	177	Proceedings of the Conference on Fairnes	10.1145/3287560.3287596		1	1	1	1	1	0	1	6	7	1
+nan2025ngrpo	1	RL-ALG	True	article	2025	61	23	arXiv preprint	10.48550/arXiv.2509.18851	2509.18851	1	1	1	1	1	1	0	6	7	1
+pineau2020improving	4	STAT	True	article	2021	112	179	Journal of Machine Learning Research	10.5555/3546258.3546422		1	1	1	1	1	0	1	6	7	1
+pushkarna2022datacards	2	BASE	True	inproceedings	2022	79	61	Proceedings of the 2022 ACM Conference o	10.1145/3531146.3533231		1	1	1	1	1	0	1	6	7	1
+qwen2025gspo	3	RL-ALG	True	article	2025	34	204	arXiv preprint	10.48550/arXiv.2507.18071	2507.18071	1	1	1	1	1	1	0	6	7	1
+rafailov2024direct	2	RL-ALG	True	inproceedings	2023	78	119	Advances in Neural Information Processin	10.48550/arXiv.2305.18290	2305.18290	1	1	1	1	1	1	1	7	7	1
+riddell2024contamination	5	STAT	True	article	2024	87	47	arXiv preprint		2403.04811	1	1	1	1	0	1	0	5	7	1
+schulman2017proximal	3	RL-ALG	True	inproceedings	2017	39	90			1707.06347	1	1	1	0	0	1	0	4	7	1
+shao2024deepseekmath	5	RL-ALG	True	article	2024	84	136	arXiv preprint	10.48550/arXiv.2402.03300	2402.03300	1	1	1	1	1	1	0	6	7	1
+sheng2024verl	1	INFRA	True	article	2024	55	142	arXiv preprint	10.48550/arXiv.2409.19256	2409.19256	1	1	1	1	1	1	0	6	7	1
+tan2025scalingrl	2	RL-ALG	True	article	2025	109	274	arXiv preprint arXiv:2509.25300		2509.25300	1	1	1	1	0	1	0	5	7	1
+thinkingmachines2024tinker	1	INFRA	True	misc	2025	42	23				1	1	1	0	0	0	0	3	7	0
+tong2025drgrpo	4	RL-ALG	True	article	2025	61	120	arXiv preprint	10.48550/arXiv.2503.20783	2503.20783	1	1	1	1	1	1	0	6	7	1
+vonwerra2022trl	2	INFRA	True	misc	2022	41	138				1	1	1	0	0	0	0	3	7	0
+wu2025grpo_dpo	3	RL-ALG	True	article	2025	43	193	arXiv preprint	10.48550/arXiv.2510.00977	2510.00977	1	1	1	1	1	1	0	6	7	1
+yu2025dapo	5	RL-ALG	True	article	2025	67	169	arXiv preprint	10.48550/arXiv.2503.14476	2503.14476	1	1	1	1	1	1	0	6	7	1
+zhang2024benchvariance	2	STAT	True	article	2024	45	156	arXiv preprint	10.48550/arXiv.2406.10229	2406.10229	1	1	1	1	1	1	0	6	7	1
+zhang2024gsm1k	5	RL-ALG	True	article	2024	84	231	arXiv preprint		2405.00332	1	1	1	1	0	1	0	5	7	1
+zhang2025scaffgrpo	1	RL-ALG	True	article	2025	88	24	arXiv preprint	10.48550/arXiv.2510.19807	2510.19807	1	1	1	1	1	1	0	6	7	1
+zheng2024sglang	2	INFRA	True	inproceedings	2024	67	215	Advances in Neural Information Processin	10.48550/arXiv.2312.07104	2312.07104	1	1	1	1	1	1	0	6	7	1

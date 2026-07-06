@@ -1,0 +1,105 @@
+{
+  "rows": [
+    {
+      "axis": "A_algorithm",
+      "metric": "zvf",
+      "n_groups": 4,
+      "per_group_n": "40,40,40,40",
+      "eta2": 0.0454,
+      "f_ratio": 0.0476,
+      "groups": "g|r|p|o|,|a|e|r|o|,|g|i|f|t|,|a|r|e|a|l"
+    },
+    {
+      "axis": "A_algorithm",
+      "metric": "pcd",
+      "n_groups": 4,
+      "per_group_n": "40,40,40,40",
+      "eta2": 0.0357,
+      "f_ratio": 0.0371,
+      "groups": "g|r|p|o|,|a|e|r|o|,|g|i|f|t|,|a|r|e|a|l"
+    },
+    {
+      "axis": "A_algorithm",
+      "metric": "reward_mean",
+      "n_groups": 4,
+      "per_group_n": "40,40,40,40",
+      "eta2": 0.0075,
+      "f_ratio": 0.0075,
+      "groups": "g|r|p|o|,|a|e|r|o|,|g|i|f|t|,|a|r|e|a|l"
+    },
+    {
+      "axis": "A_algorithm",
+      "metric": "mean_len",
+      "n_groups": 4,
+      "per_group_n": "40,40,40,40",
+      "eta2": 0.0631,
+      "f_ratio": 0.0674,
+      "groups": "g|r|p|o|,|a|e|r|o|,|g|i|f|t|,|a|r|e|a|l"
+    },
+    {
+      "axis": "A_algorithm",
+      "metric": "cv_len",
+      "n_groups": 4,
+      "per_group_n": "40,40,40,40",
+      "eta2": 0.0457,
+      "f_ratio": 0.0479,
+      "groups": "g|r|p|o|,|a|e|r|o|,|g|i|f|t|,|a|r|e|a|l"
+    },
+    {
+      "axis": "A_algorithm",
+      "metric": "loss",
+      "n_groups": 4,
+      "per_group_n": "40,40,40,40",
+      "eta2": 0.9867,
+      "f_ratio": 73.9143,
+      "groups": "g|r|p|o|,|a|e|r|o|,|g|i|f|t|,|a|r|e|a|l"
+    },
+    {
+      "axis": "B_G",
+      "metric": "mean_zvf",
+      "n_groups": 4,
+      "per_group_n": "1,1,1,1",
+      "eta2": 1.0,
+      "f_ratio": "n/a (means only)",
+      "groups": "G=2|G=4|G=8|G=16"
+    },
+    {
+      "axis": "B_G",
+      "metric": "mean_reward_train",
+      "n_groups": 4,
+      "per_group_n": "1,1,1,1",
+      "eta2": 1.0,
+      "f_ratio": "n/a (means only)",
+      "groups": "G=2|G=4|G=8|G=16"
+    },
+    {
+      "axis": "B_G",
+      "metric": "heldout_acc_mean",
+      "n_groups": 4,
+      "per_group_n": "1,1,1,1",
+      "eta2": 1.0,
+      "f_ratio": "n/a (means only)",
+      "groups": "G=2|G=4|G=8|G=16"
+    }
+  ],
+  "headline": [
+    {
+      "metric": "zvf",
+      "eta2_algorithm": 0.0454,
+      "eta2_G": 1.0,
+      "ratio_G_over_algorithm": 22.03
+    },
+    {
+      "metric": "reward_mean",
+      "eta2_algorithm": 0.0075,
+      "eta2_G": 1.0,
+      "ratio_G_over_algorithm": 133.33
+    }
+  ],
+  "interpretation": [
+    "If the Pillar-1 'stack conditions everything' claim holds, then",
+    "eta^2 across the G axis should be >> eta^2 across the algorithm",
+    "axis for the same telemetry (zvf, reward). The headline table",
+    "tests this directly on the four-method same-stack N2 data."
+  ]
+}

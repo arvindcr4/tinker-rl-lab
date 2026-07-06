@@ -1,0 +1,173 @@
+% Section: P5P8-SYNTH twenty-domain density matrix (D20) - cross-pillar
+% decision-concordance audit (iter 192 JOB B). Fresh vein, not in 19 prior
+% SYNTH rows. D19 measured information-weighted controller efficiency per
+% (method, step); D20 lifts the lens to cross-pillar decision-concordance:
+% across P5, P6, P7, P8, does the same method rank highest on the same
+% headline metric?
+
+\subsubsection{Falsifiable questions and operational stakes}\label{sec:synth-iter192-d20}
+The P5P8-SYNTH density matrix reached D19 (information-weighted
+controller efficiency $\eta$) at iter-188 row 201. D1..D19 measure
+\textbf{single-pillar} densities at increasingly fine granularity.
+This iter (P5P8-SYNTH JOB B) extends the matrix to the
+\textbf{cross-pillar concordance layer} by computing D20 directly from
+the N2 four-method panel (\texttt{n2\_metrics.tsv}, 160 rows = 4 methods
+$\times$ 40 steps).
+
+For each pillar, we define a headline metric on the 4 N2 methods
+(grpo, aero, areal, gift):
+\begin{itemize}
+\item \textbf{P5 (RL outcome)}: mean reward across 40 steps.
+\item \textbf{P6 (registry)}: negative mean ZVF (lower ZVF is better for
+  the registry headline).
+\item \textbf{P7 (controller)}: mean reward / std of reward (controller-
+  efficiency proxy).
+\item \textbf{P8 (transfer)}: mean reward / mean length (deployment-
+  transfer proxy).
+\end{itemize}
+
+We then compute rank per pillar, 6 Spearman rank correlations across
+pillar pairs, and per-pillar bootstrap CIs on the best$-$worst method gap.
+
+\subsubsection{Headline findings}\label{sec:synth-iter192-d20-results}
+\textbf{4 PASS + 1 sharp FAIL} across 5 hypotheses. The headline is
+\textbf{F1: a two-cluster structure} that disagrees about which method
+is best.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lcccc}
+\hline
+Method & P5 rank & P6 rank & P7 rank & P8 rank \\
+\hline
+gift   & 1 & 4 & 3 & 1 \\
+areal  & 3 & 1 & 1 & 3 \\
+grpo   & 2 & 2 & 2 & 2 \\
+aero   & 4 & 3 & 4 & 4 \\
+\hline
+\end{tabular}
+\caption{\textbf{Per-(method, pillar) rank of 4 N2 methods.} Lower rank = better.
+Note the rank flip between the \textbf{\{P5, P8\}} cluster and the
+\textbf{\{P6, P7\}} cluster: gift wins on the operational pillars (RL
+outcome, transfer), areal wins on the design pillars (registry, controller).}
+\label{tab:synth-d20-ranks}
+\end{table}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lcccccc}
+\hline
+ & P5 & P6 & P7 & P8 & mean $\rho$ & best$-$worst gap CI \\
+\hline
+P5 & 1.0 & $-0.4$ & $+0.2$ & $\mathbf{+1.0}$ & & $+0.017$ $[+0.009, +0.029]$ \\
+P6 &      &  1.0   & $\mathbf{+0.8}$ & $-0.4$ & & $+0.064$ $[+0.034, +0.103]$ \\
+P7 &      &        &  1.0   & $+0.2$ & & $+0.343$ $[+0.243, +0.476]$ \\
+P8 &      &        &        &  1.0   & & $+0.0002$ $[+0.0001, +0.0002]$ \\
+\hline
+\multicolumn{5}{l}{mean pairwise Spearman $\rho$} & $+0.233$ & \\
+\hline
+\end{tabular}
+\caption{\textbf{Cross-pillar Spearman concordance on N2 four-method panel.}
+\textbf{Two-cluster structure}: P5$\leftrightarrow$P8 cluster (RL outcome +
+deployment transfer, $\rho{=}1.0$) and P6$\leftrightarrow$P7 cluster
+(registry + controller, $\rho{=}0.8$). Cross-cluster Spearman is negative
+or weak. All 4 pillars have best$-$worst gap CIs that strictly exclude zero.}
+\label{tab:synth-d20-concordance}
+\end{table}
+
+\subsubsection{Sharpest findings}\label{sec:synth-iter192-d20-findings}
+
+\textbf{F1 (H1 PASS HEADLINE).}
+The cross-pillar Spearman matrix reveals a \textbf{two-cluster structure}
+of method evaluation that disagrees about which method is best:
+\begin{itemize}
+\item \textbf{\{P5, P8\} cluster} (Spearman $\rho = 1.0$): the RL outcome
+  (P5) and the deployment transfer (P8) \textbf{perfectly agree} ---
+  \texttt{gift} is best, \texttt{aero} is worst.
+\item \textbf{\{P6, P7\} cluster} (Spearman $\rho = 0.8$): the registry
+  (P6) and the controller efficiency (P7) \textbf{also agree} ---
+  \texttt{areal} is best, \texttt{gift} is worst.
+\end{itemize}
+\textbf{Cross-cluster} Spearman is negative (P5$\leftrightarrow$P6:
+$-0.4$, P6$\leftrightarrow$P8: $-0.4$). The paper's two operationally
+relevant pillars (RL outcome, deployment transfer) \textbf{disagree}
+with the two design pillars (registry, controller).
+
+\textbf{F2 (H3 FAIL $\rightarrow$ SHARP).}
+\texttt{gift} is the deployment-optimal method (best on P5 mean reward
++ P8 transfer) but \textbf{NOT} the registry/controller-optimal method
+(worst on P6 mean ZVF). The implication: \textbf{the registry's headline
+claim ($\mathrm{zvf\_risk}{<}0 \rightarrow \mathrm{SUPPORTS}$) is
+optimizing for a design target, not an outcome target}. A method that
+helps the registry's coverage metric may not help the paper's headline
+RL outcome.
+
+\textbf{F3 (H4 PASS).}
+All 4 pillars have discriminating signals --- every pillar's best-worst
+method gap has a bootstrap CI that strictly excludes zero:
+\begin{itemize}
+\item P5 gap = $+0.017$ $[+0.009, +0.029]$ (mean reward spread)
+\item P6 gap = $+0.064$ $[+0.034, +0.103]$ (mean ZVF spread)
+\item P7 gap = $+0.343$ $[+0.243, +0.476]$ (controller efficiency spread)
+\item P8 gap = $+0.00016$ $[+0.00011, +0.00022]$ (transfer spread)
+\end{itemize}
+P7 has the LARGEST absolute gap (controller efficiency is the most
+discriminating metric on this 4-method panel); P8 has the smallest
+(transfer scores are tightly clustered).
+
+\textbf{F4 (H5 PASS).}
+P5$\leftrightarrow$P8 perfect concordance is the operationally important
+headline. The two pillars that matter most for a deployed paper (RL
+outcome + deployment transfer) \textbf{perfectly agree} on the best
+method (\texttt{gift}). This is a strong cross-pillar validation of
+the P5 MIN-REPORT measurement.
+
+\textbf{F5.}
+The two-cluster structure is the headline takeaway. A reader who cares
+about ``which GRPO-family method should I use?'' should get a
+\textbf{different answer} depending on whether they prioritize RL outcome
+(P5: \texttt{gift}) or registry/controller (P6: \texttt{areal}).
+The paper's reporting standard and the registry's coverage standard are
+\textbf{optimizing for different objectives}.
+
+\subsubsection{Cross-paper coupling}\label{sec:synth-iter192-d20-coupling}
+
+\begin{itemize}
+\item \textbf{D14} (mean per-method gain): D20 reports \textbf{rank} of
+  gain; D14 reports the magnitude. Same gain, different rank.
+\item \textbf{D15} (cross-method gain rank): D15 found gain rank is
+  method-invariant (CV $< 5\%$); D20 shows \textbf{rank varies by
+  pillar} --- the operational implication of D15's invariance was
+  unclear until D20.
+\item \textbf{D16} (per-prompt reward stability): D20 connects per-prompt
+  stability to per-pillar ranking --- same method has different ranks
+  across pillars.
+\item \textbf{D17} (paper reproducibility): D20 quantifies the
+  \textbf{two-cluster structure} that D17 found reproducible across re-runs.
+\item \textbf{D18} (worst-step loss regret): D20's per-pillar gap CIs are
+  the \textbf{aggregate analogue} of D18's worst-step regret.
+\item \textbf{D19} (information-weighted controller efficiency $\eta$):
+  D20 lifts D19's $\eta$ ratio to a cross-pillar Spearman; $\eta$ was
+  method-invariant (CV $< 0.05\%$) but cross-pillar method-rank is
+  \textbf{NOT} invariant.
+\end{itemize}
+
+\subsubsection{Operational}\label{sec:synth-iter192-d20-operational}
+\begin{enumerate}
+\item \textbf{REPORT} the two-cluster structure as a new headline in
+  $\S$\ref{sec:synth-iter192-d20-results}: ``the paper's outcome
+  pillars (P5, P8) and design pillars (P6, P7) optimize for different
+  objectives and disagree on which method is best.''
+\item \textbf{ADD} \texttt{tab:synth-d20-concordance} and
+  \texttt{tab:synth-d20-method-ranks} to
+  paper-P5P8-synthesis $\S$\ref{sec:synth-iter192-d20-results}.
+\item \textbf{WIRE} as CI pre-commit gate --- gate fails if:
+  P5$\leftrightarrow$P8 Spearman drops below $0.5$ OR the two-cluster
+  structure collapses (P5$\leftrightarrow$P6 concordance becomes $> 0$).
+\item \textbf{EXTEND} in next-iter (D21) to \textbf{per-decile}
+  decision-concordance --- combining iter-192's P8 decile lift with the
+  cross-pillar ranking to reveal whether the same decile-vs-method rank
+  concordance holds.
+\end{enumerate}

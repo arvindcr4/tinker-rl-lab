@@ -1,0 +1,627 @@
+Building an 
+Multimodal Knowledge 
+Assistant
+Jerry Liu
+September 23, 2024 
+
+LlamaIndex:
+Build Production LLM Apps 
+over Enterprise Data
+LlamaIndex
+LlamaIndex helps any developer 
+build context-augmented LLM 
+apps from prototype to 
+production.
+Open-Source: Leading developer toolkit for 
+building production LLM apps over data.
+Docs: https://docs.llamaindex.ai/
+Repo: https://github.com/run-llama/llama_index
+LlamaCloud: A centralized knowledge interface 
+for your production LLM application.
+
+Link: https://cloud.llamaindex.ai/
+Evals
+Agents
+Vectors
+Semantic 
+Search
+LLMs
+Chat
+Raw Data
+Q&A
+Embedding
+Structured 
+Extraction
+
+Building a Knowledge Assistant
+LlamaIndex
+Goal: Build an interface that can take in any 
+task as input and give back an output.
+
+Input forms: simple questions, complex 
+questions, research tasks
+
+Output forms: short answer, structured 
+output, research report
+Human: 
+<Question>
+Answer:
+Sources: ...
+Knowledge
+Base
+Human: ...
+Human: ...
+Agent: ...
+Agent: ...
+
+Knowledge Assistant with Basic RAG
+Data Processing and Indexing
+Basic Retrieval and Prompting
+LlamaIndex
+⚠️ Naive data processing, primitive retrieval 
+interface
+⚠️ Poor query understanding/planning
+⚠️ No function calling or tool use
+⚠️ Stateless, no memory
+Basic Text Splitting
+Top-K = 5
+Simple QA Prompt
+Index
+Response
+Data
+
+Can we do more?
+LlamaIndex
+There’s many questions/tasks that naive 
+RAG can’t give an answer to
+ Hallucinations
+ Limited time savings
+ Limited decision-making enhancement
+How do we aim to build 
+a production-ready 
+knowledge assistant? 
+
+A Better Knowledge Assistant
+LlamaIndex
+AE High-quality Multimodal RA/
+7E Complex output generatio3
+%E Agentic reasoning over complex inputG
+.E Towards a scalable, full-stack application
+Advanced Data and Retrieval
+Data
+Index
+Agent
+Response
+Data Processing
+
+A Better Knowledge Assistant
+LlamaIndex
+,J High-quality Multimodal RA6
+:J Complex output generatio&
+(J Agentic reasoning over complex input#
+GJ Towards a scalable, full-stack application
+Action-Taking
+Report 
+Generation
+Data Analysis
+
+A Better Knowledge Assistant
+LlamaIndex
+%N High-quality Multimodal RAI
+;N Complex output generatio0
++N Agentic reasoning over complex input 
+LN Towards a scalable, full-stack application
+Tool Use
+Query Planning
+Memory
+Reflection
+Tool x
+Tool x
+Tool ds
+Tool ds
+Response
+Agent
+Other Tools
+Other Tools
+Advanced RAG and 
+Retrieval Tool
+
+A Better Knowledge Assistant
+LlamaIndex
+!M High-quality Multimodal RA<
+?M Complex output generatio0
++M Agentic reasoning over complex input5
+LM Towards a scalable, full-stack application
+User
+Message Queue
+Agent 1
+Agent 2
+Agent 3
+Orchestrator
+Control Plane
+Human-in-the-loop
+Service 
+Metadata
+Decides what happens 
+next
+
+Setting up Multimodal RAG
+
+Any LLM App is only as 
+Good as your Data
+LlamaIndex
+Garbage in = garbage out
+
+Good data quality is a necessary 
+component of any production LLM app.
+Raw Data
+Data Processing
+Clean Data
+Production LLM Apps
+Structured Extraction
+Semantic Search
+Chat
+Agents
+Q&A
+ETL for LLM 
+ Parsin
+ Chunkin
+ Indexing
+
+Case Study: Complex Documents
+LlamaIndex
+A lot of documents can be classified 
+as complex:M
+G Embedded Tables, Charts, ImageT
+G Irregular LayoutT
+G Headers/Footers
+
+Users want to ask research questions 
+over this dataO
+G Simple pointed questionT
+G Multi-document comparisonT
+G Research tasks
+
+Building a production-ready 
+knowledge assistants over this 
+complex data is challenging.
+Knowledge-Intensive LLM Applications
+Data
+Foundation Models
+Developers
+Sales
+Dev
+Legal
+Finance
+
+An LLM-Native Document Parser
+LlamaIndex
+An ideal GenAI-native parser can structure complex 
+document data for any downstream use case.
+
+
+RequirementQ
+] Parse tables accurately into text and semi-
+structured representation<
+] Parse text into semantically coherent chunk<
+] Extract visual elements (images/diagrams/charts) 
+into structured formats and return image chunksV
+] Automated metadata extraction
+
+Non-RequirementQ
+] Extract detailed JSONs for every elemen8
+] Extract bounding boxes
+PDF
+Node
+Node
+Text Chunk
+Tables
+Text Chunk
+Diagrams
+Node
+Node
+
+LlamaParse
+“As an AI Applied Data Scientist who was granted one of the 
+first ML patents in the U.S., and who is building cutting-edge AI 
+capabilities at one of the world’s largest Private Equity Funds, I 
+can confidently say that LlamaParse from LlamaIndex is 
+currently the best technology I have seen for parsing complex 
+document structures for Enterprise RAG pipelines. Its ability to 
+preserve nested tables, extract challenging spatial layouts, and 
+images is key to maintaining data integrity in advanced RAG and 
+agentic model building.”
+Dean Barr, Applied AI Lead at Carlyle
+LlamaParse
+LlamaIndex
+Advanced document parser specifically for 
+reducing LLM hallucinations
+20k+
+unique users
+25M+
+pages processed
+
+Use Cases
+LlamaIndex
+Multimodal RAG
+Annual Reports (Tables)
+Excel Sheets
+Forms
+
+Advanced Parsing + Advanced Indexing
+LlamaIndex
+You can combine parsing with hierarchical 
+indexing and retrieval to model 
+heterogeneous unstructured/tabular/
+multimodal data within a document$
+:$ Parse documents into elements: text 
+chunks, tables, images, and more$
+$ For each element, extract one or more 
+text representations that can be 
+indexed$
+$ Do recursive retrieval
+PDF
+Node
+Node
+Text Chunk
+Tables
+Text Chunk
+Diagrams
+Node
+Node
+
+Multimodal RAG Pipeline
+LlamaIndex
+Indexin=
+54 Parse document into text and image 
+chunks with LlamaPars(
+:4 Link each text chunk to image chunk 
+through metadat'
+<4 Embed and index text chunks
+
+A true multimodal RAG pipeline stores both text and image chunks for use within a multi-modal LLM
+Retrievav
+54 Retrieve text chunks by text 
+embeddingy
+:4 Feed in both text and image to 
+multimodal LLM during synthesis.
+
+
+Multimodal RAG Pipeline
+LlamaIndex
+Let’s run through a demo example of 
+building multimodal RAG over a complex 
+slide deck! 
+
+The end result is you’re able to ask 
+questions over visual data in the 
+document.
+
+https://github.com/run-llama/
+llama_parse/blob/main/examples/
+multimodal/
+multimodal_rag_slide_deck.ipynb
+
+LlamaCloud: An Enterprise RAG Platform
+LlamaIndex
+A production-ready RAG platform that allows developers to 
+easily connect their unstructured data sources to LLM agent 
+systems.
+
+ Instant Time-to-Value for building knowledge assistantL
+4 Out-of-the-box advanced RAG capabilitieL
+4 Free up developer time to rapidly iterate on higher-
+level agent use cases
+  State-of-the-Performance leads to increased 
+satisfaction and reduced compliance risk
+  Reduced maintenance cost once application is deployed
+  Enterprise-ready security like access controls
+
+
+Signup: https://cloud.llamaindex.ai/
+Data
+Ingestion
+Indexing
+Retrieval
+LlamaCloud
+
+E2E Multimodal RAG Capabilities
+LlamaIndex
+Setup multimodal indexing and retrieval in minutes
+
+Signup here: https://cloud.llamaindex.ai/
+
+LlamaIndex
+
+Report Generation
+
+Automating Decision Making
+LlamaIndex
+Action-Taking
+Agent
+Report 
+Generation
+Data Analysis
+Agents should have the capability to not only generate chatbot responses, 
+but alsn
+Gt Produce knowledge word
+]t Take actions
+
+ Action-taking and Output Generation potentially lead to much greater ROI 
+in terms of time savings and capability improvement
+
+Solution 
+: Structured Outputs and Function Calling
+
+Multimodal Report Generation
+LlamaIndex
+Generate interleaving text-and-image responses with the help 
+of structured outputs.
+
+https://github.com/run-llama/llama_parse/blob/main/examples/
+multimodal/multimodal_report_generation.ipynb
+Output Schema
+class TextBlock(BaseModel):
+    text: str
+
+class ImageBlock(BaseModel):
+    file_path: str 
+
+class ReportOutput(BaseModel):
+    blocks: ListBlock | ImageBlock]
+
+Agentic Reasoning over Complex Inputs
+
+Complex Inputs
+LlamaIndex
+Naive RAG works well for pointed questions, but fails on more complex tasks.
+
+Summarization Questions: “Give me a summary of the entire <company> 10K annual report” 
+Comparison Questions: “Compare the open-source contributions of candidate A and candidate B”
+Multi-part Questions: “Tell me about the pro-X arguments in article A, and tell me about the pro-Y 
+arguments in article B, make a table based on our internal style guide, then generate your own 
+conclusion based on these facts.”
+Research Tasks: “I want to create a research survey on current supervised fine-tuning techniques. 
+Can you help?”
+
+Tool Use
+Routing
+One-Shot Query 
+Planning
+ReAct
+Conversation 
+Memory
+Dynamic Planning + 
+Execution
+From Simple to Advanced Agents
+LlamaIndex
+Simple
+Lower Cost
+Lower Latency
+Advanced
+Higher Cost 
+Higher Latency
+Agent Ingredients
+Agent Ingredients
+
+Agentic RAG
+LlamaIndex
+Every data interface is a tool
+
+Use agent reasoning loops (sequential, 
+DAG, tree) to tackle complex tasks
+
+End Result: Build personalized QA systems 
+capable of handling complex questions! 
+Tool Use
+Query Planning
+Memory
+Reflection
+Tool x
+Tool x
+Tool ds
+Tool ds
+Response
+Agent
+Other Tools
+Other Tools
+Advanced RAG and 
+Retrieval Tool
+
+Unconstrained vs. Constrained Flows
+LlamaIndex
+More Constrained Flows
+More Reliable
+Less Expressive
+Router
+Response
+RAG Tool
+Reflection
+Task
+SQL Tool
+
+Unconstrained vs. Constrained Flows
+LlamaIndex
+Unconstrained Flows
+Less Reliable
+More Expressive
+Task
+Agent 
+Orchestrator
+RAG Tool
+SQL Tool
+Web Tool
+Response
+
+Agentic Orchestration Foundations
+LlamaIndex
+Router
+Response
+RAG Tool
+Reflection
+Task
+SQL Tool
+LlamaIndex Workflows
+We believe an agent orchestration framework should have the following properties
+ Event-Driven: Model each step as listening to input events and emitting output events
+ Composable: Piece together granular workflows into higher-level workflows
+ Flexible: Write logic through LLM calls or through plain Python 
+ Code-first: Express orchestration logic through code. Easy to read and easy to extend.
+ Debuggable and Observable: Step through and observe states 
+ Easily Deployable to Production: Translate notebook code into services that run in production.
+
+
+def generate_response(context, query): 
+    prompt = f"Question: {query}\n\nContext: {context}\n\nAnswer:" 
+    response = llm.complete(prompt) 
+    return response.text 
+# Define the pipeline
+pipeline = QueryPipeline()
+pipeline.add_modules({ 
+    "input": InputComponent(), 
+    "retriever": retriever, 
+    "reranker": reranker,
+    "response_generator": FnComponent(fn=generate_response)
+}) 
+# Define the flow
+pipeline.add_link("input", "retriever")
+pipeline.add_link("retriever", "reranker")
+pipeline.add_link("input", "response_generator", dest_key="query")
+pipeline.add_link(
+   "reranker", "response_generator", dest_key="context"
+)
+
+# Run the pipeline
+response = pipeline.run("What is the capital of France?")
+print(response)
+Compared to Graph-based Approaches
+Graph-based approaches (e.g. our deprecated Query Pipelines) can be cumbersome and non-Pythonic for complex agentic workflows.
+ Orchestration logic baked into edge§
+ More lines of code, less readabl 
+ Cumbersome to dynamically generate workflows based on runtime 
+conditions
+
+def generate_response(context, query): 
+    prompt = f"Question: {query}\n\nContext: {context}\n\nAnswer:" 
+    response = llm.complete(prompt) 
+    return response.text 
+# Define the pipeline
+pipeline = QueryPipeline()
+pipeline.add_modules({ 
+    "input": InputComponent(), 
+    "retriever": retriever, 
+    "reranker": reranker,
+    "response_generator": FnComponent(fn=generate_response)
+}) 
+# Define the flow
+pipeline.add_link("input", "retriever")
+pipeline.add_link("retriever", "reranker")
+pipeline.add_link("input", "response_generator", dest_key="query")
+pipeline.add_link(
+   "reranker", "response_generator", dest_key="context"
+)
+
+# Run the pipeline
+response = pipeline.run("What is the capital of France?")
+print(response)
+Compared to Graph-based Approaches
+Graph-based approaches (e.g. our deprecated Query Pipelines) can be cumbersome and non-Pythonic for complex agentic workflows.
+Compared to query pipelines, our workflows are more readable, and easier to maintain/scale. 
+class RAGWorkflow(Workflow): 
+    def __init__(self):
+       ...  
+    @step 
+    async def retrieve(self, query: str): 
+        return self.retriever.retrieve(query)  
+    @step 
+    async def rerank(self, retrieved_nodes): 
+        return self.reranker.postprocess_nodes(retrieved_nodes)  
+    @step 
+    async def generate_response(self, query: str, context): 
+        prompt = f"Question: {query}\n\nContext: 
+{context}\n\nAnswer:" 
+        response = await self.llm.complete(prompt) 
+        return response.text  
+    @step 
+    async def run_workflow(self, query: str): 
+        retrieved_nodes = await self.retrieve(query) 
+        reranked_nodes = await self.rerank(retrieved_nodes) 
+        response = await self.generate_response(query, 
+[node.get_content() for node in reranked_nodes]) 
+        return response
+
+Benefits and Risks
+ Action-taking and Output Generation 
+potentially lead to much greater ROI in terms 
+of time savings and capability improvement
+
+
+
+⚠️ LLMs need to achieve a greater degree of 
+reliability
+⚠️ Action-taking requires ample human-in-the-
+loop to build trust.
+LlamaIndex
+
+Multimodal Report Generation
+LlamaIndex
+Generate interleaving text-and-image responses with the help of 
+structured outputs.
+Example architecture: research and writer stepI
+LV The researcher retrieves relevant chunks and documents, and 
+puts them into a data cacheV
+:V The writer uses the data cache to generate a structured output 
+of interleaving text and image blocks.
+
+Multimodal Report Generation
+LlamaIndex
+Generate interleaving text-and-image responses with the help of 
+structured outputs.
+https://github.com/run-llama/llama_parse/blob/main/examples/
+multimodal/multimodal_report_generation_agent.ipynb
+
+Towards a Scalable, Full-Stack Application
+
+P
+Running Agents in Production
+LlamaIndex
+You need the right architecture and infra components to serve 
+complex, agentic workflows to end-users as a production application.
+
+Requirements$
+)6 Encapsulation and re-usI
+6 Standardized communication interfaces between agents and with 
+the client.9
+6 Scalability in number of users and number of agentA
+16 Human-in-the-loop for the end-use!
+6 Debugging and observability tools for the developer
+User
+Production
+Agent 1
+Agent 2
+Agent 3
+
+llama-deploy
+LlamaIndex
+Deploy agentic workflows as microservices.<
+. Model every agent workflow as a service AP-
+. All agent communication occurs via a central message queu8
+. Distributed tool-executio0
+. Human-in-the-loop as a servic8
+. Easy deployment with docker-compose and Kubernetes
+User
+Message Queue
+Agent 1
+Agent 2
+Agent 3
+Orchestrator
+Control Plane
+Service 
+Metadata
+Decides what happens 
+next
+. https://github.com/run-llama/llama_deploy
+
+Thank you!
+LlamaIndex
+September 23, 2024 

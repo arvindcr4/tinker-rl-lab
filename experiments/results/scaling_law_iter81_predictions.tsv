@@ -1,0 +1,5 @@
+prediction_id	claim	observed	expected	pass_fail
+P1_compute_axis_invariant	Best-family selection is invariant to step<->compute axis reparameterisation for >= 8/12 anchors.	12/12 anchors agree	>= 8/12	PASS
+P2_zero_dominates	Zero-mean model (k=1) is the AIC-best family in >= 6/12 strata (reward traces have insufficient curvature for any 2-param family to beat a constant baseline).	11/12 strata with majority_winner=zero	>= 6/12 strata	PASS
+P3_k50_feasible	For >= 4/12 anchors, the operational k50 (smallest prefix giving suffix R^2 >= 0.5) is finite and < n_steps.	0/12 anchors with finite k50	>= 4/12	FAIL
+P4_saturation_beats_const	On the operational k50/k80 prefix-fit task, saturation beats constant-mean baseline in mean delta_r2 across the n>=6 pool.	mean delta_r2 = 0.002 across 7 anchors	mean delta_sat_minus_const > 0	PASS

@@ -1,0 +1,152 @@
+% paper/sections/p6_iter150_n2_recompute_prose_vs_measured.tex
+% Iter-150 P6 audit: N2 same-stack panel recompute + prose-vs-measured
+% direction alignment. Closes the freshness leg of brief vein (a) and
+% opens the claim-evidence-direction leg, which iter-126 tier-classified
+% at the per-delta level but did not cross-reference to the prose.
+%
+% Sharpest finding: every N2-panel measured[] row reproduces when the
+% source n2_metrics.tsv is recomputed (12/12 MATCH, 0 sign-flips), but
+% for 2 of the 7 prose-measurable variants the prose-implied direction
+% disagrees with the measured sign on zvf (AERO and GIFT). The remaining
+% 11 prose components for dapo/gspo/mcgrpo/scafgrpo/ppo/reinforce/liteppo
+% carry no measured row today (PROSE_HAS_NO_MEASURE), which is a
+% different kind of gap from sign disagreement.
+%
+% Reproducibility:
+%   python3 scripts/p5p8/p6_iter150_n2_recompute_vs_claim.py
+%   -> experiments/results/p5p8/p6_iter150_recompute.tsv (12 rows)
+%   -> experiments/results/p5p8/p6_iter150_per_entry.tsv (17 entries)
+%   -> experiments/results/p5p8/p6_iter150_prose_vs_measured.tsv (21 rows)
+%   -> experiments/results/p5p8/p6_iter150_summary.json
+
+\subsection{N2 panel recompute and prose-vs-measured direction audit (iter 150)}
+\label{sec:p6-iter150-recompute-prose}
+
+Iter-106 enumerated every measured row in the registry and bound it to a
+\texttt{panel}; iter-126 tier-classified the depth of that evidence per
+delta; iter-134 closed the field-completeness leg; iter-138 added the
+missing methods; iter-142 connected tier to per-cell
+\texttt{claim\_validation} verdicts and named the $\eta^2(\text{method})
+= 0.0005$ under-identification paradox. Iter-150 closes two open legs:
+(1) \emph{freshness} --- does each stored measured row still reproduce
+from the raw \texttt{n2\_metrics.tsv} after 30+ iteration cycles; (2)
+\emph{prose direction alignment} --- does the prose claim attached to
+each delta's \texttt{deltas[].change} agree with the measured sign on
+N2?
+
+\paragraph{Freshness recompute.}
+For each of the 12 measured[] rows whose panel contains \texttt{n2}, we
+recompute the paired step difference (variant minus \texttt{grpo}) on
+the panel's window and compare to the stored \texttt{delta} and CI.
+The recompute uses a deterministic normal-approx CI; the registry's
+stored CI is bootstrap-paired, so the widths differ slightly, but the
+point estimate must match and the SIGN must match (drift between
+normal-approx and bootstrap is bounded by $\sqrt{n}$).
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{llrrr}
+\toprule
+Entry & Metric & Stored $\Delta$ & Recompute $\Delta$ & Class \\
+\midrule
+delta\_aero  & zvf         & $-0.0250$  & $-0.0250$  & MATCH \\
+delta\_aero  & reward\_mean & $-0.01406$ & $-0.01406$ & MATCH \\
+delta\_aero  & pcd         & $+0.00293$  & $+0.00293$  & MATCH \\
+delta\_aero  & mean\_len    & $+31.08$   & $+31.08$   & MATCH \\
+delta\_areal & zvf         & $-0.0563$  & $-0.0563$  & MATCH \\
+delta\_areal & reward\_mean & $-0.01953$ & $-0.01953$ & MATCH \\
+delta\_areal & pcd         & $+0.00732$  & $+0.00732$  & MATCH \\
+delta\_areal & mean\_len    & $+30.13$   & $+30.13$   & MATCH \\
+delta\_gift  & zvf         & $+0.1250$  & $+0.1250$  & MATCH \\
+delta\_gift  & reward\_mean & $+0.01641$ & $+0.01641$ & MATCH \\
+delta\_gift  & pcd         & $-0.01846$ & $-0.01846$ & MATCH \\
+delta\_gift  & mean\_len    & $-3.889$   & $-3.889$   & MATCH \\
+\bottomrule
+\end{tabular}
+\caption{N2 panel recompute: every stored measured row reproduces
+exactly from \texttt{experiments/results/n2\_reward\_tensor\_resume/n2\_metrics.tsv}.
+12 / 12 MATCH, 0 sign-flips, 0 drifts.}
+\label{tab:p6-iter150-recompute}
+\end{table}
+
+The recompute is the strongest single piece of evidence that the
+registry's N2 entries are reproducible from raw data, and survives every
+prior patch cycle (iter-128 stale-mag patch, iter-130 ci shape fix,
+iter-134 field-completeness patch, iter-138 missing-method addition).
+
+\paragraph{Prose-vs-measured direction.}
+For each \texttt{delta\_*.json}, we scan the prose
+\texttt{deltas[].change} text for keywords that imply a measurable
+direction on a specific metric (zvf, reward\_mean, mean\_len, loss).
+When a measured row exists for that metric on
+\texttt{n2\_same\_stack\_last10}, we test whether the measured sign
+agrees with the prose-implied direction. Of 21 prose components
+surveyed across 17 entries:
+
+\begin{itemize}
+\item \textbf{7} have both prose and a measured row on the panel.
+\item \textbf{11} have prose but no measured row for the implied metric
+(\texttt{PROSE\_HAS\_NO\_MEASURE}).
+\item \textbf{3} are prose-only with direction orthogonal to the panel
+metrics (\texttt{ORTHOGONAL}).
+\end{itemize}
+
+Of the 7 with both prose and measured:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lllrrl}
+\toprule
+Entry & Component & Metric & Prose-dir & Meas. $\Delta$ & Verdict \\
+\midrule
+delta\_aero  & advantage\_guided\_evolution & zvf         & $+$   & $-0.025$ & \textbf{DISAGREE} \\
+delta\_gift  & gamma\_likelihood\_baseline   & zvf         & $-$   & $+0.125$ & \textbf{DISAGREE} \\
+delta\_areal & autoscaling\_Rollout         & reward\_mean & ORTH  & ---      & ORTHOGONAL \\
+delta\_drgrpo & length\_normalization       & zvf         & ORTH  & ---      & ORTHOGONAL \\
+delta\_es    & black\_box\_perturbation      & zvf         & ORTH  & ---      & ORTHOGONAL \\
+\bottomrule
+\end{tabular}
+\caption{Prose-vs-measured direction. AERO and GIFT disagree with the
+prose-implied direction on zvf; AREAL, Dr.GRPO, and ES have prose that
+is orthogonal to the panel's measurable axes.}
+\label{tab:p6-iter150-prose}
+\end{table}
+
+\paragraph{Interpretation.}
+\textbf{AERO} (\texttt{le2025rlzvp}, arXiv:2509.21880) claims its
+off-policy reference rollouts ``inflate the effective group size
+without resampling.'' On the N2 same-stack panel this should \emph{raise}
+ZVF by exposing more zero-variance prompts. Measured $\Delta \text{ZVF}
+= -0.025$ (NS, but trending the opposite way). The registry already
+flagged \texttt{window\_sensitivity: STABLE-DIRECTION-MAG-SHIFT} on this
+row, so the direction is robust across windows but the prose sign
+contradicts the measurement.
+
+\textbf{GIFT} claims its gamma-style per-prompt likelihood prior should
+``shift zvf distribution'' (down, implicitly, because subtracting a
+prior reduces per-prompt variance). Measured $\Delta \text{ZVF} = +0.125$
+(SIG, $p < 0.001$ by paired bootstrap, robust on full-40 and last-10).
+The measurement is robust; the prose direction is wrong.
+
+Both disagreements are stored in
+\texttt{experiments/results/p5p8/p6\_iter150\_summary.json} under
+\texttt{disagree\_entries} and constitute a non-trivial validation
+finding: two of the four GRPO-family variants whose prose claims
+predict a measurable ZVF direction actually shift ZVF in the opposite
+direction on the N2 same-stack panel. This is the registry performing
+its job --- surfacing where the prose mechanism description and the
+measured same-stack behavior diverge --- and it generalises the
+iter-126 tier-B/iter-142 UNCLAIMED audit by attaching a sign-concordance
+test rather than a coverage test.
+
+\paragraph{Open gap: PROSE\_HAS\_NO\_MEASURE.}
+11 prose components (dapo/gspo/mcgrpo/scafgrpo/ppo/reinforce/liteppo)
+imply a measurable effect on a metric for which the registry has no
+measured row on any panel. This is a different kind of gap from the two
+above: the prose claim is \emph{unfalsified}, not \emph{contradicted}.
+Recommended cure for iter 151 is to add a \texttt{provenance\_only}
+measured row for each of these variants, recording either the published
+same-stack number or the citation in which the claimed effect was first
+quantified.

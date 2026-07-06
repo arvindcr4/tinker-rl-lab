@@ -1,0 +1,13 @@
+model	params_B	arch	phase	R_max_actual	R_max_predicted	residual	abs_residual	rel_residual	log10_P	log10_C
+Qwen3.5-4B	4.0	dense	plateau	0.8178	0.6716	0.1462	0.1462	0.2177	0.6021	4.7885
+Qwen3-8B	8.0	dense	saturation	0.3313	0.9215	-0.5902	0.5902	-0.6405	0.9031	5.0895
+Llama-3.1-8B-Instruct	8.0	dense	drift	0.869	0.7538	0.1152	0.1152	0.1529	0.9031	5.0895
+Qwen3-32B	32.0	dense	drift	0.2501	0.7238	-0.4737	0.4737	-0.6545	1.5051	4.6915
+Qwen3.5-27B	27.0	dense	collapse	0.598	0.5938	0.0042	0.0042	0.0071	1.4314	4.6178
+gpt-oss-20B	20.0	moe	saturation	0.8414	0.8701	-0.0287	0.0287	-0.033	1.301	5.4874
+Qwen3-30B-MoE	30.0	moe	saturation	0.3326	0.7288	-0.3962	0.3962	-0.5436	1.4771	4.8854
+Qwen3-30B-MoE-Inst	30.0	moe	saturation	1.0017	0.4777	0.524	0.524	1.0971	1.4771	4.6635
+DeepSeek-V3.1	685.0	moe	plateau	0.844	1.2946	-0.4506	0.4506	-0.3481	2.8357	6.846
+Nemotron-120B	120.0	dense	plateau	2.0	0.7984	1.2016	1.2016	1.5049	2.0792	6.0895
+Qwen3-235B-MoE	235.0	moe	saturation	1.0017	0.7776	0.2241	0.2241	0.2882	2.3711	5.6824
+Kimi-K2-Thinking	1000.0	moe	drift	0.8503	1.403	-0.5527	0.5527	-0.3939	3.0	7.0103

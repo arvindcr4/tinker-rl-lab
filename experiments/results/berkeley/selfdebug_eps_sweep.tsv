@@ -1,0 +1,6 @@
+epsilon	spearman_vs_pre	mean_frac_mag_across_9	top1_method
+0.0	1.0	0.5142	scafgrpo
+0.05	1.0	0.5029	scafgrpo
+0.12	1.0	0.486	scafgrpo
+0.2	1.0	0.465	scafgrpo
+0.3	1.0	0.4355	scafgrpo

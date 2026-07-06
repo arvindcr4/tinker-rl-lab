@@ -1,0 +1,46 @@
+{
+  "n_train": 50000,
+  "n_test": 10000,
+  "n_pos_test": 144,
+  "budgets_K_pct": [
+    0.5,
+    1.0,
+    2.0,
+    5.0,
+    10.0
+  ],
+  "ablations": [
+    "full_minus_Vmean",
+    "full_minus_Vstd",
+    "full_minus_Vmax",
+    "full_minus_Vmin",
+    "full_plus_Vmean_only",
+    "full_plus_Vstd_only",
+    "full_plus_Vmax_only",
+    "full_plus_Vmin_only"
+  ],
+  "boot_seed": 20260705,
+  "n_boot": 2000,
+  "H1_ece_K2_each_tree": {
+    "XGB-20raw": 0.2595426650717854,
+    "XGB-24full": 0.2798980083316565,
+    "XGB-4sensor": 0.17853846222162242
+  },
+  "H1_cpd_K2_each_tree": {
+    "XGB-20raw": 0.15,
+    "XGB-24full": 0.1035,
+    "XGB-4sensor": 0.9135
+  },
+  "H2_ece_K2_each_ablation": {
+    "full_minus_Vmean": 0.28105261549353594,
+    "full_minus_Vstd": 0.27306833487004045,
+    "full_minus_Vmax": 0.26599776193499564,
+    "full_minus_Vmin": 0.28235569432377816,
+    "full_plus_Vmean_only": 0.2579909033328295,
+    "full_plus_Vstd_only": 0.2765700670704246,
+    "full_plus_Vmax_only": 0.2834521243721247,
+    "full_plus_Vmin_only": 0.2644950922578573
+  },
+  "H4_ablations_with_ci_excl_zero": 0,
+  "H4_ablations_total": 8
+}

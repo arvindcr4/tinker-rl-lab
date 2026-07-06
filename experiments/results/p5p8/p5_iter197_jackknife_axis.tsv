@@ -1,0 +1,16 @@
+channel	dropped_axis	worst_remaining_axis	worst_remaining_eta2	point_ratio_after_drop	boot_lo	boot_hi	boot_n	ci_excludes_1
+zvf	model_family	seed	0.00002	0.00053	0.00014	1.68198	2000	False
+zvf	task_slice	seed	0.00002	0.00053	0.00016	1.60147	2000	False
+zvf	G	seed	0.00002	0.00053	0.00016	1.74183	2000	False
+zvf	temperature	seed	0.00002	0.00053	0.00023	1.46299	2000	False
+zvf	seed	model_family	0.00529	0.11654	0.00034	2.24603	2000	False
+reward	model_family	temperature	0.00001	0.00089	0.00034	7.09678	2000	False
+reward	task_slice	temperature	0.00001	0.00089	0.00039	6.84840	2000	False
+reward	G	temperature	0.00001	0.00089	0.00041	6.21956	2000	False
+reward	temperature	seed	0.00001	0.00105	0.00044	6.06107	2000	False
+reward	seed	temperature	0.00001	0.00089	0.00061	6.50622	2000	False
+len	model_family	seed	0.00005	0.00079	0.00017	0.93008	2000	False
+len	task_slice	seed	0.00005	0.00079	0.00009	0.90343	2000	False
+len	G	seed	0.00005	0.00079	0.00011	0.89028	2000	False
+len	temperature	seed	0.00005	0.00079	0.00013	1.07268	2000	False
+len	seed	G	0.01703	0.26970	0.09475	3.78982	2000	False

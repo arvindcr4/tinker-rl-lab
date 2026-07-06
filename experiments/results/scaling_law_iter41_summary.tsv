@@ -1,0 +1,2 @@
+n_anchors	n_truncations_per_anchor	n_stable	n_marginally_stable	n_unstable	n_degenerate	median_max_dlam_rel_stable	spearman_logP_s0_dense	anchors_60pct_within_10pct_rmax	anchors_60pct_ci_contains_zero	median_rel_err_60pct
+12	4	7	0	2	3	0.0	-0.4	9	7	0.0073

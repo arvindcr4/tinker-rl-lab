@@ -1,0 +1,8 @@
+item	n_subfields	n_subfields_full_coverage	manifests_passing_item	manifests_passing_pct
+decontamination	2	1	0	0.0
+group_size_schedule	3	2	0	0.0
+heldout_split	2	2	98	100.0
+loss_form	6	1	0	0.0
+reference_kl	3	0	0	0.0
+sampler_backend	4	3	0	0.0
+telemetry	3	2	0	0.0

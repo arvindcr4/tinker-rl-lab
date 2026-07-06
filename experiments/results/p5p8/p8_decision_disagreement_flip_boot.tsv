@@ -1,0 +1,31 @@
+pair	K_pct	boot_mean	ci_lo	ci_hi
+XGB-20raw vs XGB-24full	0.5	0.00100833	0.0004	0.0017
+XGB-20raw vs XGB-24full	1	0.00199383	0.0012	0.0028
+XGB-20raw vs XGB-24full	2	0.005833	0.0045	0.0073025
+XGB-20raw vs XGB-24full	3	0.0146085	0.0124	0.0168025
+XGB-20raw vs XGB-24full	5	0.0335778	0.0301	0.0372025
+XGB-20raw vs XGB-pair	0.5	0.000999667	0.0004	0.0017
+XGB-20raw vs XGB-pair	1	0.00239683	0.0015	0.0033
+XGB-20raw vs XGB-pair	2	0.00621017	0.0046	0.0078
+XGB-20raw vs XGB-pair	3	0.0152173	0.0127	0.0175
+XGB-20raw vs XGB-pair	5	0.0345727	0.0307	0.0380025
+XGB-20raw vs LLM-as-scribe (XGB-24full @ $0.001)	0.5	0.00100833	0.0004	0.0017
+XGB-20raw vs LLM-as-scribe (XGB-24full @ $0.001)	1	0.00199383	0.0012	0.0028
+XGB-20raw vs LLM-as-scribe (XGB-24full @ $0.001)	2	0.005833	0.0045	0.0073025
+XGB-20raw vs LLM-as-scribe (XGB-24full @ $0.001)	3	0.0146085	0.0124	0.0168025
+XGB-20raw vs LLM-as-scribe (XGB-24full @ $0.001)	5	0.0335778	0.0301	0.0372025
+XGB-24full vs XGB-pair	0.5	0.00118567	0.0005975	0.0019
+XGB-24full vs XGB-pair	1	0.00179067	0.001	0.0028
+XGB-24full vs XGB-pair	2	0.00633083	0.0047	0.0078
+XGB-24full vs XGB-pair	3	0.0148095	0.0125	0.0171
+XGB-24full vs XGB-pair	5	0.0309805	0.0275975	0.0343025
+XGB-24full vs LLM-as-scribe (XGB-24full @ $0.001)	0.5	0	0	0
+XGB-24full vs LLM-as-scribe (XGB-24full @ $0.001)	1	0	0	0
+XGB-24full vs LLM-as-scribe (XGB-24full @ $0.001)	2	0	0	0
+XGB-24full vs LLM-as-scribe (XGB-24full @ $0.001)	3	0	0	0
+XGB-24full vs LLM-as-scribe (XGB-24full @ $0.001)	5	0	0	0
+XGB-pair vs LLM-as-scribe (XGB-24full @ $0.001)	0.5	0.00118567	0.0005975	0.0019
+XGB-pair vs LLM-as-scribe (XGB-24full @ $0.001)	1	0.00179067	0.001	0.0028
+XGB-pair vs LLM-as-scribe (XGB-24full @ $0.001)	2	0.00633083	0.0047	0.0078
+XGB-pair vs LLM-as-scribe (XGB-24full @ $0.001)	3	0.0148095	0.0125	0.0171
+XGB-pair vs LLM-as-scribe (XGB-24full @ $0.001)	5	0.0309805	0.0275975	0.0343025

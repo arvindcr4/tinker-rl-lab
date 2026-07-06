@@ -1,0 +1,4 @@
+prediction	value	pass	note
+P1_two_param_LOO_RMSE_lt_0p30	0.5035	False	LOO RMSE = sqrt(mean((R_max - pred)**2))
+P2_collapse_largest_abs_residual	1.2016	True	max |resid| is on Nemotron-120B
+P3_optimal_P_in_4_to_30B_at_median_C	4.0	True	winner at log10_C=5.09 is Qwen3.5-4B

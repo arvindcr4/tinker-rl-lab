@@ -1,0 +1,54 @@
+% =============================================================================
+% STANDALONE PAPER 7 of 7 -- Pillar 7: ZVF theory + adaptive-G controller
+% Predictive/interventional sequel to Paper 2 (the descriptive ZVF diagnostic).
+% Reuses shared preamble/author/methods; pulls the P7 section family.
+% Build: pdflatex paper_P7_zvf_controller ; bibtex paper_P7_zvf_controller ; pdflatex x2
+% =============================================================================
+\documentclass{article}
+\input{sections/_shared_preamble}
+\title{From Diagnostic to Controller:\\
+       A Signal-Starvation Theory of GRPO and an Adaptive Group-Size Intervention}
+\input{sections/_shared_author}
+\begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\input{sections/p7_abstract}
+\input{sections/p7_intro}
+\input{sections/_shared_methods}
+\input{sections/p7_results_intro}
+\input{sections/p7_theory}
+\input{sections/p7_ushape}
+\input{sections/p7_e1_validation}
+\input{sections/p7_controller}
+\input{sections/p7_iter79_multitrigger}
+\input{sections/p7_iter83_iso_g}
+\input{sections/p7_iter87_hysteresis}
+\input{sections/p7_iter88_hysteresis_n10}
+\input{sections/p7_iter91_perfire_gain}
+\input{sections/p7_iter92_asymmetric_hysteresis}
+\input{sections/p7_iter103_unified_controller}
+\input{sections/p7_iter107_tautransfer}
+\input{sections/p7_iter115_adaptive_gstar_n10_multiseed}
+\input{sections/p7_iter119_calibrated_controller_unification}
+\input{sections/p7_iter127_method_axis_ccc}
+\input{sections/p7_iter131_per_prompt_adaptive_gstar}
+\input{sections/p7_iter135_tau_stability}
+\input{sections/p7_iter139_predictive_validity}
+\input{sections/p7_iter143_decision_concordance}
+\input{sections/p7_iter147_unified_per_prompt}
+\input{sections/p7_iter159_pareto_permethod_ci}
+\input{sections/p7_iter167_oracle_regret}
+\input{sections/p7_iter175_calibrated_hybrid}
+\input{sections/p7_iter192_perfire_optimal_gn}
+\input{sections/p7_iter195_unified_concordance}
+\input{sections/p7_iter199_closed_loop_counterfactual}
+\input{sections/p7_iter203_empirical_gprime}
+\input{sections/p7_design_rules}
+\input{sections/p7_synthesis}
+\input{sections/p7_limitations}
+\input{sections/p7_conclusion}
+\appendix
+\input{sections/p7_appendix_derivations}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

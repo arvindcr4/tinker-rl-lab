@@ -1,0 +1,23 @@
+{
+  "h1_cv_gradnorm": {
+    "grpo": 1.3473,
+    "ppo": 1.4329
+  },
+  "h2_rolling_var": {
+    "grpo": 0.00494,
+    "ppo": 0.008477
+  },
+  "h3_paired_diff_mean": "mean=0.0608 sd=0.0958 se=0.0428 p=0.1559",
+  "h4_gradnorm_vs_reward_r": {
+    "grpo": -0.553,
+    "ppo": -0.4446
+  },
+  "h5_rqs_regressor": {
+    "n": 7,
+    "slope": 1.2817,
+    "intercept": -0.0815,
+    "r2": 0.4903,
+    "resid_mean": -0.0,
+    "resid_max_abs": 0.3002
+  }
+}

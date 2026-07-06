@@ -1,0 +1,2 @@
+# n_total | n_converged | n_non_converged | zvf_crit | zvf_crit_bootstrap_ci | separator_type | min_converged_zvf | max_nonconverged_zvf | n_perfect_separators | max_zvf_crit | max_zvf_n | note
+65	18	47	0.84	[0.110,0.840]	fuzzy	0.1300	1.0000	0	0.910	49	ZVF_crit=0.840  CI=[0.110,0.840]  type=fuzzy  max_zvf_crit=0.910 (n=49); n_perfect_separators=0

@@ -1,0 +1,13 @@
+delta_id	panel	stack_status	stack_id	metric	delta	ci_low	ci_high	n	significant
+delta_aero	n2_same_stack_last10	implemented	tinker_aero_qwen3.5-4b_gsm8k	zvf	-0.025	-0.0625	0.0125	10	False
+delta_aero	n2_same_stack_last10	implemented	tinker_aero_qwen3.5-4b_gsm8k	reward_mean	-0.014063	-0.023438	-0.005469	10	True
+delta_aero	zvf130_5seed	implemented	tinker_aero_qwen3.5-4b_gsm8k	zvf_risk_mean	-0.147637	-0.285921	-0.009354	5	True
+delta_aero	zvf130_5seed	implemented	tinker_aero_qwen3.5-4b_gsm8k	mean_zvf	-0.26052	-0.26052	-0.26052	5	False
+delta_areal	n2_same_stack_last10	implemented	tinker_areal_qwen3.5-4b_gsm8k	zvf	-0.05625	-0.1125	0.00625	10	False
+delta_areal	n2_same_stack_last10	implemented	tinker_areal_qwen3.5-4b_gsm8k	reward_mean	-0.019531	-0.032031	-0.007812	10	True
+delta_areal	zvf130_5seed	implemented	tinker_areal_qwen3.5-4b_gsm8k	zvf_risk_mean	-0.245767	-0.354535	-0.137	5	True
+delta_areal	zvf130_5seed	implemented	tinker_areal_qwen3.5-4b_gsm8k	mean_zvf	-0.35988	-0.35988	-0.35988	5	False
+delta_gift	n2_same_stack_last10	implemented	tinker_gift_qwen3.5-4b_gsm8k	zvf	0.125	0.08125	0.175	10	True
+delta_gift	n2_same_stack_last10	implemented	tinker_gift_qwen3.5-4b_gsm8k	reward_mean	0.016406	-0.007031	0.039844	10	False
+delta_gift	zvf130_5seed	implemented	tinker_gift_qwen3.5-4b_gsm8k	zvf_risk_mean	-0.263187	-0.365427	-0.160948	5	True
+delta_gift	zvf130_5seed	implemented	tinker_gift_qwen3.5-4b_gsm8k	mean_zvf	-0.36658	-0.36658	-0.36658	5	False

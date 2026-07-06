@@ -1,0 +1,5 @@
+pool	n_anchors	R_max_min	R_max_max	largest_gap	largest_gap_loc	dip_statistic	dip_p_value	ward_class0_mean	ward_class1_mean	ward_gap	perm_p_ward_gap	within_class_spearman
+n=5 (iter125/129)	5	0.1820	0.8688	0.5313	1	0.5215686274496384	0.0556	0.8431	0.2337	0.6093	0.0954	(1:rho=0.500,p=0.667);(2:rho=nan,p=nan)
+n=7 (reliable n>=20)	7	0.1820	0.8688	0.5313	1	0.6358543417353527	0.0108	0.8454	0.2337	0.6117	0.0420	(1:rho=0.300,p=0.624);(2:rho=nan,p=nan)
+n=10 (reliable+probes)	11	0.1820	1.0000	0.3793	4	0.31800356506144417	0.1858	0.8712	0.2959	0.5753	0.0024	(1:rho=0.257,p=0.623);(2:rho=-0.700,p=0.188)
+n=12 (all anchors)	12	0.1820	1.0000	0.3793	4	0.355882352940232	0.0962	0.2959	0.8896	0.5937	0.0024	(1:rho=-0.700,p=0.188);(2:rho=0.234,p=0.613)

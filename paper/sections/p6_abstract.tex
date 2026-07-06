@@ -1,0 +1,27 @@
+% Paper 6 (GRPO-Registry resource) standalone abstract
+\begin{abstract}
+The deltas that define GRPO variants---DAPO's asymmetric clip, dynamic sampling,
+and token-level loss; Dr.~GRPO's dropped length and std normalization; GSPO's
+sequence-level importance ratio---live in paper appendices and framework
+defaults, not in any machine-readable form. The consequence, documented across
+the \ours{} pillar papers, is that an algorithm \emph{label} underdetermines the
+\emph{update rule} actually executed: in our audits, swapping only the backend
+under a fixed label moved final reward from $84.4\%$ to $5.0\%$ ($17\times$),
+and the same ``DAPO'' label yielded mean ZVF $0.00$ on an open trainer with true
+dynamic sampling but $0.58$ on a closed stack running an asymmetric-clip
+surrogate. These audits motivate \textsc{GRPO-Registry}, a resource that makes
+such discrepancies queryable rather than presenting a new performance result:
+(i) a JSON schema whose stack records carry the
+seven-item MIN-REPORT-RL block (loss form; reference policy and KL handling;
+sampler/backend/precision; per-step ZVF/GU telemetry; group-size schedule;
+held-out split; decontamination and parser probes) plus per-component
+variant-delta status; (ii) three variant-delta records verified against the
+DAPO, Dr.~GRPO, and GSPO papers; (iii) twelve seed stack entries derived from
+this benchmark's released config dumps, an open Colab trainer audit, and a
+managed-runtime head-to-head; and (iv) a reference CLI implementing registry
+queries, a 0--100 MIN-REPORT auditor badge, and \texttt{stackdiff}, which maps a
+pair of entries to a flip-risk verdict (R0--R5). On the seed entries the badge
+spans 57--96, and \texttt{stackdiff} flags the open-vs-closed ``DAPO'' pair as
+an R5 label-flip risk from manifests alone. The registry, schema, and CLI are
+released with the benchmark.
+\end{abstract}

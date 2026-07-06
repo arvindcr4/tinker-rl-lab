@@ -1,0 +1,44 @@
+% Pillar-4 (length bias) standalone introduction + related work
+\section{Introduction}
+\label{sec:p4-intro}
+GRPO~\citep{shao2024deepseekmath, guo2025deepseekr1} normalizes the group-relative
+advantage by response length. This introduces a potential length bias: when reward
+is sparse and binary, longer completions have more chances to stumble into a
+correct answer, and a length-dividing update can reward verbosity as a proxy for
+competence. Dr.\,GRPO~\citep{tong2025drgrpo} removes the per-response
+$1/L$ factor, restoring the sequence-level gradient up to a global scale, and is
+motivated precisely as a fix for reward hacking through length. Whether this fix
+produces better held-out generalization in practice is the question of this pillar.
+
+The concern matters because length inflation is a well-documented failure mode of
+reward optimization~\citep{ouyang2022training, christiano2017deeprlhf}, and because
+held-out gains can be manufactured by a policy that pads its outputs rather than
+reasoning better. A careful comparison must therefore control both length and
+memorization, and must distinguish a genuine direct effect on accuracy from an
+indirect effect mediated by verbosity.
+
+We study length bias as one pillar of \ours{}, a controlled benchmark of 70+ runs
+across seven RL libraries and five model families ($0.6$B--$\sim$671B) on GSM8K
+\citep{cobbe2021training}, HumanEval~\citep{chen2021codex}, and tool-use tasks. Our
+contributions are: (i) a held-out comparison showing that, in the short-horizon
+GSM8K regime, the mean Qwen3-8B-Instruct GRPO gain over the \emph{same} checkpoint's
+pre-RL held-out accuracy is small and not statistically significant (a matched pre-RL
+control for the Qwen3-8B-Base checkpoint is not available), and that GRPO and Dr.\,GRPO give held-out gains
+that are indistinguishable at our seed budget with no length inflation under the
+200-token GSM8K generation cap; (ii) evidence that the verbosity-trap signature is
+absent in this regime; and (iii) an argument, developed through an external
+cross-examination, that this null is the \emph{expected} result when length is
+already controlled, together with a specification of the length-confounded regime
+and causal length-mediation tests that would reveal a Dr.\,GRPO advantage. We frame
+the pillar as a boundary on what the current evidence supports, not a refutation of
+length debiasing.
+
+\subsection{Related Work}
+\label{sec:p4-related}
+Length bias and reward hacking are long-standing concerns in RL post-training
+\citep{ouyang2022training, christiano2017deeprlhf, ahmadian2024backtobasics}.
+Dr.\,GRPO~\citep{tong2025drgrpo} targets the length term specifically; related work
+recasts group-relative updates as preference contrasts~\citep{wu2025grpo_dpo, liu2026gdpo}, which bears on why removing the $1/L$ factor changes the gradient
+geometry. Our contribution is to test the practical consequence on a fixed
+benchmark and to scope precisely the regime in which a difference should be
+expected.

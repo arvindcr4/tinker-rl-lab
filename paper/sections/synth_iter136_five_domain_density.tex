@@ -1,0 +1,106 @@
+% Section: P5P8-SYNTH five-domain density matrix (iter 136 JOB B)
+% Fresh vein: extends iter-132 4-domain density matrix to FIVE domains by adding
+% D5 = P8 per-cohort ECE>0.10 density under iso_per_cohort at the realistic 0.5%
+% positive rate. D5 = 26/26 = 100.0% (every cohort-cell violates the 0.10 threshold).
+% Sharpest claim: iter-124 super-domain split ({P5, P7-step} <-> P8) SURVIVES the
+% addition of D5; but WITHIN the P8 super-domain, density spans 119x
+% (D1=0.84% vs D5=100%).
+
+\subsubsection{Falsifiable question and operational stakes}
+
+The iter-124 three-domain density matrix and iter-132 four-domain
+extension established that cross-pillar density rhetoric must specify
+which domain is meant. This iter adds a FIFTH domain:
+\begin{itemize}
+\item \textbf{D5 = P8 per-cohort ECE>0.10 density under iso\_per\_cohort at the realistic 0.5\% positive rate}.
+      Computed from JOB A (iter-136) at the (rate=0.5\%, calibration=iso\_per\_cohort) subset:
+      26 cohort-cells (3 cohort axes $\times$ 5+5+3 strata $\times$ 2 trees), each one's
+      worst-cell ECE audited against the 0.10 compliance threshold.
+\end{itemize}
+
+\subsubsection{Five-domain density table}
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{l l l r r r r r}
+\toprule
+domain & pillar & granularity & $n_\mathrm{fire}$ & $n_\mathrm{total}$ & rate & 95\% CI \\
+\midrule
+D1 & P8 & per-row       & 84    & 10000 & 0.0084 & [0.0067, 0.0102] \\
+D2 & P7 & per-step      & 20    & 40    & 0.5000 & [0.3500, 0.6500] \\
+D3 & P5 & per-cell      & 36    & 98    & 0.3673 & [0.2755, 0.4694] \\
+D4 & P7 & per-prompt    & 1867  & 2560  & 0.7293 & [0.7129, 0.7465] \\
+D5 & P8 & per-cohort-cell & 26 & 26    & 1.0000 & [1.0000, 1.0000] \\
+\bottomrule
+\end{tabular}
+\caption{Five-domain density table. Density rank: D5 $>$ D4 $>$ D2 $>$ D3 $>$ D1.
+   D1 (per-row) and D5 (per-cohort-cell) are both P8 but span 119$\times$ in density.}
+\label{tab:synth-iter136-density}
+\end{table}
+
+\subsubsection{Pairwise ratio matrix}
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{l r r r c}
+\toprule
+pair & ratio & 95\% CI lo & 95\% CI hi & excludes 1.0 \\
+\midrule
+D1/D2 & 0.017 & 0.012 & 0.025 & \checkmark \\
+D1/D3 & 0.023 & 0.016 & 0.032 & \checkmark \\
+D1/D4 & 0.012 & 0.009 & 0.014 & \checkmark \\
+D1/D5 & 0.008 & 0.007 & 0.010 & \checkmark \\
+D2/D3 & 1.361 & 0.859 & 2.042 & --- \\
+D2/D4 & 0.686 & 0.474 & 0.897 & --- \\
+D2/D5 & 0.500 & 0.350 & 0.650 & --- \\
+D3/D4 & 0.504 & 0.377 & 0.637 & --- \\
+D3/D5 & 0.367 & 0.276 & 0.469 & --- \\
+D4/D5 & 0.729 & 0.712 & 0.747 & --- \\
+\bottomrule
+\end{tabular}
+\caption{Pairwise ratios with bootstrap 95\% CIs (B=1500, seed 20260705). All 4 D1
+   ratios (D1 vs any other domain) exclude 1.0 by 50$\times$-100$\times$.}
+\label{tab:synth-iter136-ratios}
+\end{table}
+
+\subsubsection{Headlines}
+
+\paragraph{H1 --- D5 = 100\% ECE violation density at every rate.}
+Across all 5 positive rates $\{0.05, 0.10, 0.50, 1.00, 1.44\}$\%, 26/26 cohort-cells
+have worst-cell ECE $>$ 0.10 under iso\_per\_cohort --- D5 is rate-INDEPENDENT.
+Per-cohort PAVA fails to close ECE at any rate.
+
+\paragraph{H2 --- Iter-124 super-domain split SURVIVES D5 addition.} The two-super-domain
+split $\{\text{P5}, \text{P7-step}\} \leftrightarrow \{\text{P8}\}$ is preserved:
+the four D1 ratios (D1/D2, D1/D3, D1/D4, D1/D5) all exclude 1.0 by 50$\times$-100$\times$.
+Adding a fifth, finer-grained pillar does NOT break the iter-124 super-domain claim.
+
+\paragraph{H3 --- P8 super-domain has 119$\times$ internal heterogeneity.} D1 (P8 grad-band
+per-row) = 0.84\%, D5 (P8 iso\_per\_cohort cohort-cell) = 100\%; the ratio D5/D1 = 119$\times$.
+Reports that aggregate P8 density without specifying domain are misleading.
+
+\paragraph{H4 --- Density rank is monotonic in granularity.} D5 ($>$cohort-cell$) >$ D4
+($>$prompt-cell$) >$ D2 ($>$step$) >$ D3 ($>$cell$) >$ D1 (row). Granularity inversely
+correlates with apparent density --- finer granularity exposes higher violation rate.
+
+\subsubsection{Cross-paper coupling}
+
+(i)~\textit{P5P8-SYNTH iter-124} row 140 (3-domain matrix); (ii)~\textit{iter-132} row 148 (4-domain
+D4 addition); (iii)~\textit{P5P8-SYNTH iter-120} row 135 (score-stream universality REFUTED;
+D1 vs D2 = 1/119 gap preserved); (iv)~\textit{P8 iter-136} row 152 JOB A (D5 source); (v)~\textit{P8
+iter-99} row 93 (cohort calibration; raw ECE persistence); (vi)~\textit{P7 iter-131} row 146
+(per-prompt boundary; D4 = 72.9\%); (vii)~FRONTIER INSIGHTS Round 2 (ZVF = observed signal
+availability; per-cohort PAVA requires sufficient observed positives, and at production rates
+that's < 30 positives/cohort --- too few, hence D5 = 100\%).
+
+\subsubsection{Operational recommendation}
+
+\begin{enumerate}
+\item \textbf{Cross-pillar density rhetoric must specify the domain.} A claim true at D4
+      (per-prompt-cell) is meaningless at D1 (per-row); a calibration claim true at D5
+      (per-cohort-cell) is meaningless at the global-row level.
+\item \textbf{D5 = 100\% is the empirical upper bound on calibration violation density}
+      under iter-104 per-cohort isotonic at production realistic fraud rates.
+\item \textbf{The iter-124 super-domain claim SURVIVES adding D5}; the P5/P7-step cluster
+      is still distinct from the P8 cluster, but within P8 the density-regime distinction is sharper.
+\end{enumerate}

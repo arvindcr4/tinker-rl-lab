@@ -1,0 +1,5 @@
+task	algo	n	mean_df	frac_reject_5pct	frac_reject_1pct	crit_5pct
+arithmetic	grpo	5	-6.034	1.00	0.80	-2.93
+arithmetic	dr_grpo	5	-6.068	1.00	1.00	-2.93
+gsm8k_cot	grpo	3	-3.863	0.33	0.33	-2.93
+gsm8k_cot	dr_grpo	3	-4.848	0.67	0.67	-2.93

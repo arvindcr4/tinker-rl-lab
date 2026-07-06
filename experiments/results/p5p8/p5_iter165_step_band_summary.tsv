@@ -1,0 +1,10 @@
+band	n_steps	channel	mean_eta2	mean_boot	ci_lo_max	ci_hi_min
+early	14	reward_mean	0.005593	nan	0.000203	0.107164
+early	14	mean_len	0.001942	0.003831	0.000081	0.031037
+early	14	cv_len	0.021329	0.040318	0.000993	0.201304
+mid	13	reward_mean	0.005334	nan	0.000090	0.091006
+mid	13	mean_len	0.009569	0.013631	0.000376	0.095478
+mid	13	cv_len	0.046567	0.070552	0.000557	0.328362
+late	13	reward_mean	0.005987	nan	nan	nan
+late	13	mean_len	0.031199	0.039900	0.002353	0.163966
+late	13	cv_len	0.054940	0.084547	0.002264	0.360757

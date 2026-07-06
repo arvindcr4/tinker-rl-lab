@@ -1,0 +1,6 @@
+variant	zvf_risk_mean_pt	ci_lo	ci_hi	significant	mag_mean_delta
+ngrpo	-0.2044	-0.3843	-0.0079	True	-0.1804
+cppo	-0.2109	-0.391	-0.0757	True	-0.1856
+mcgrpo	-0.2598	-0.4185	-0.1342	True	-0.3347
+es	-0.3409	-0.5153	-0.223	True	-0.3666
+scafgrpo	-0.4174	-0.5798	-0.3036	True	-0.1641

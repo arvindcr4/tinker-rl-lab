@@ -1,0 +1,7 @@
+metric	controller	point	ci_low	ci_high
+over_deesc_rate	Hybrid	5.7292	4.6875	6.2500
+over_deesc_rate	zvf_triage_0.70	0.0000	0.0000	0.0000
+over_deesc_rate	Dualformer_Auto	1.0417	0.0000	2.6042
+mean_zvf_delta	Hybrid	1.0779	0.8115	1.3043
+mean_zvf_delta	zvf_triage_0.70	-0.5375	-0.8544	-0.2442
+mean_zvf_delta	Dualformer_Auto	-0.0028	-0.4306	0.4504

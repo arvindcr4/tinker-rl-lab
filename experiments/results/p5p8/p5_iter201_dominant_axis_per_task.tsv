@@ -1,0 +1,10 @@
+channel	task_slice	model_family_eta2	G_eta2	temperature_eta2	seed_eta2	top_axis	top_eta2
+zvf	gsm8k_easy	0.009998	0.887247	0.000778	0.000173	G	0.887247
+zvf	gsm8k_hard	0.043733	0.640602	0.017243	0.000024	G	0.640602
+zvf	humaneval_subset	0.000000	0.000000	0.000000	0.000000	model_family	0.000000
+mean_reward	gsm8k_easy	0.992909	0.138750	0.015693	0.000016	model_family	0.992909
+mean_reward	gsm8k_hard	0.991276	0.000606	0.000676	0.000017	model_family	0.991276
+mean_reward	humaneval_subset	0.000000	0.000000	0.000000	0.000000	model_family	0.000000
+mean_completion_len	gsm8k_easy	0.381680	0.308717	0.343908	0.001110	model_family	0.381680
+mean_completion_len	gsm8k_hard	0.177228	0.013149	0.255865	0.003238	temperature	0.255865
+mean_completion_len	humaneval_subset	0.546760	0.015312	0.159531	0.005779	model_family	0.546760

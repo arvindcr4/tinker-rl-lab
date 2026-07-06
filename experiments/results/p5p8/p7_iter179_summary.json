@@ -1,0 +1,65 @@
+{
+  "n_fired_rows": 1887,
+  "n_per_prompt_rows": 1312,
+  "n_summary_rows": 72,
+  "n_ci_rows": 72,
+  "B": 2000,
+  "seed": 20260705,
+  "tau_grid": [
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8
+  ],
+  "G_N_grid": [
+    12,
+    16,
+    32
+  ],
+  "methods": [
+    "grpo",
+    "aero",
+    "gift",
+    "areal"
+  ],
+  "headline_tau070_G16_per_method": [
+    {
+      "method": "grpo",
+      "n_fired_steps": 20,
+      "mean_restored_pt": 0.0259,
+      "ci_lo": 0.0189,
+      "ci_hi": 0.0333
+    },
+    {
+      "method": "aero",
+      "n_fired_steps": 19,
+      "mean_restored_pt": 0.0232,
+      "ci_lo": 0.0166,
+      "ci_hi": 0.0304
+    },
+    {
+      "method": "gift",
+      "n_fired_steps": 26,
+      "mean_restored_pt": 0.0159,
+      "ci_lo": 0.011,
+      "ci_hi": 0.0211
+    },
+    {
+      "method": "areal",
+      "n_fired_steps": 17,
+      "mean_restored_pt": 0.0222,
+      "ci_lo": 0.0157,
+      "ci_hi": 0.0298
+    }
+  ],
+  "cross_method_cv_at_tau070_G16": 0.1941,
+  "monotonic_methods_at_tau070_G12_le_G16_le_G32": 4,
+  "verdicts": {
+    "H1_mean_restored_gt0_at_tau070_G16_all4_methods": true,
+    "H2_mean_restored_ge005_at_tau070_G16_all4_methods": false,
+    "H3_cross_method_cv_lt030_at_tau070_G16": true,
+    "H4_monotonic_in_G_N_at_least_3_of_4_methods": true
+  }
+}

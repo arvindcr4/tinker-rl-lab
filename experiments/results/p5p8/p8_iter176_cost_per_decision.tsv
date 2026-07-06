@@ -1,0 +1,7 @@
+model_role	rows_in_batch	cost_usd_batch	tokens_per_row	comment
+XGB-20raw (scorer)	10000	0.02	0	$0.020 / 10k decisions (serverless CPU)
+XGB-24full (scorer)	10000	0.022	0	+10% CPU over 20raw (4 extra features)
+XGB-4sensor (LLM surrogate)	10000	0.018	0	smaller tree, marginally cheaper
+LLM-as-scribe (Qwen3.5-4B SFT, async)	1	0.0035	120	per-row cost; never invoked synchronously in this paper
+Hybrid: XGB-24full + selective-LLM@w=0.1	10000	0.057	12	0.1% rows invoke LLM (12 in 10k); total $0.057 / 10k
+Always-LLM scorer (Qwen3.5-4B)	10000	35.0	1200000	$35 / 10k decisions; 1.2M tokens; not viable

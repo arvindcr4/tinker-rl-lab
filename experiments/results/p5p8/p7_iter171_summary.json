@@ -1,0 +1,185 @@
+{
+  "n_steps_per_method": {
+    "grpo": 40,
+    "aero": 40,
+    "gift": 40,
+    "areal": 40
+  },
+  "B": 2000,
+  "seed": 20260705,
+  "tost_bound": 0.05,
+  "headline_zvf_cis": [
+    {
+      "method": "grpo",
+      "point": 0.7203,
+      "lo": 0.6875,
+      "hi": 0.7531,
+      "hw": 0.0328
+    },
+    {
+      "method": "aero",
+      "point": 0.7203,
+      "lo": 0.6891,
+      "hi": 0.7516,
+      "hw": 0.0312
+    },
+    {
+      "method": "gift",
+      "point": 0.7703,
+      "lo": 0.7328,
+      "hi": 0.8094,
+      "hw": 0.0383
+    },
+    {
+      "method": "areal",
+      "point": 0.7063,
+      "lo": 0.6734,
+      "hi": 0.7422,
+      "hw": 0.0344
+    }
+  ],
+  "y_at_g_signature": [
+    {
+      "method": "grpo",
+      "G": 2,
+      "point": 0.0954,
+      "lo": 0.0827,
+      "hi": 0.108,
+      "hw": 0.0126
+    },
+    {
+      "method": "grpo",
+      "G": 4,
+      "point": 0.1727,
+      "lo": 0.1502,
+      "hi": 0.1955,
+      "hw": 0.0226
+    },
+    {
+      "method": "grpo",
+      "G": 8,
+      "point": 0.2797,
+      "lo": 0.2469,
+      "hi": 0.3125,
+      "hw": 0.0328
+    },
+    {
+      "method": "grpo",
+      "G": 16,
+      "point": 0.265,
+      "lo": 0.2338,
+      "hi": 0.2965,
+      "hw": 0.0314
+    },
+    {
+      "method": "aero",
+      "G": 2,
+      "point": 0.0994,
+      "lo": 0.0865,
+      "hi": 0.1126,
+      "hw": 0.013
+    },
+    {
+      "method": "aero",
+      "G": 4,
+      "point": 0.1792,
+      "lo": 0.1562,
+      "hi": 0.2029,
+      "hw": 0.0234
+    },
+    {
+      "method": "aero",
+      "G": 8,
+      "point": 0.2797,
+      "lo": 0.2484,
+      "hi": 0.3109,
+      "hw": 0.0312
+    },
+    {
+      "method": "aero",
+      "G": 16,
+      "point": 0.2664,
+      "lo": 0.2369,
+      "hi": 0.2966,
+      "hw": 0.0299
+    },
+    {
+      "method": "gift",
+      "G": 2,
+      "point": 0.0797,
+      "lo": 0.0662,
+      "hi": 0.093,
+      "hw": 0.0134
+    },
+    {
+      "method": "gift",
+      "G": 4,
+      "point": 0.1441,
+      "lo": 0.1197,
+      "hi": 0.1679,
+      "hw": 0.0241
+    },
+    {
+      "method": "gift",
+      "G": 8,
+      "point": 0.2297,
+      "lo": 0.1906,
+      "hi": 0.2672,
+      "hw": 0.0383
+    },
+    {
+      "method": "gift",
+      "G": 16,
+      "point": 0.218,
+      "lo": 0.1813,
+      "hi": 0.2539,
+      "hw": 0.0363
+    },
+    {
+      "method": "areal",
+      "G": 2,
+      "point": 0.1,
+      "lo": 0.0874,
+      "hi": 0.1132,
+      "hw": 0.0129
+    },
+    {
+      "method": "areal",
+      "G": 4,
+      "point": 0.1811,
+      "lo": 0.1585,
+      "hi": 0.2046,
+      "hw": 0.0231
+    },
+    {
+      "method": "areal",
+      "G": 8,
+      "point": 0.2938,
+      "lo": 0.2594,
+      "hi": 0.3266,
+      "hw": 0.0336
+    },
+    {
+      "method": "areal",
+      "G": 16,
+      "point": 0.2776,
+      "lo": 0.2444,
+      "hi": 0.3096,
+      "hw": 0.0326
+    }
+  ],
+  "tost_equiv_pairs_zvf": 3,
+  "tost_equiv_pairs_reward": 6,
+  "consistency_pass": 12,
+  "consistency_total": 12,
+  "verdicts": {
+    "H1_zvf_ci_hw_below_010_all_methods": true,
+    "H2_y_at_g8_ci_hw_below_010_all_methods": true,
+    "H3_at_least_2_of_6_method_pairs_tost_equivalent_zvf": true,
+    "H3b_at_least_4_of_6_method_pairs_tost_equivalent_reward_mean": true,
+    "H4_zvf_triage_contrast_gain_exceeds_fixed_g_baseline": true,
+    "H5_zvf_triage_cost_hi_below_150_all_methods": true,
+    "H6_cross_paper_consistency_full_pass": true,
+    "H7_observed_y_at_g8_exceeds_iid_projection_at_g16": true
+  }
+}

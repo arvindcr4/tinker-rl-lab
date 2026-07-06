@@ -1,0 +1,9 @@
+comparison	value	interpretation
+2-tier (capable/incapable) gap	0.6093	iter125/129 reference; aggregates L1+L2 vs L3+L4
+4-tier max gap (L1 - L4)	0.6742	Cybench-style frontier-to-collapse gap (H3 candidate)
+4-tier max-range	0.6742	tier-conditional spread of R_max
+H3 boundary at 0.55?	True	is iter125's dip boundary the L2/L3 cut?
+L1 n	2	Tier 1 anchor count
+L2 n	1	Tier 2 anchor count
+L3 n	1	Tier 3 anchor count
+L4 n	1	Tier 4 anchor count

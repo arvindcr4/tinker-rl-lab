@@ -1,0 +1,13 @@
+entry	metric	stored_lo	stored_hi	fresh_lo	fresh_hi	stored_covers_zero	fresh_covers_zero	cover_zero_match
+aero	zvf	-0.0625	0.0125	-0.0625	0.0125	True	True	True
+aero	reward_mean	-0.023438	-0.005469	-0.0234375	-0.00546875	False	False	True
+aero	pcd	-0.002441	0.008984	-0.0025390625	0.00888671875	True	True	True
+aero	mean_len	27.384375	35.092969	27.4828125	34.984375	False	False	True
+gift	zvf	0.08125	0.175	0.08125	0.175	False	False	True
+gift	reward_mean	-0.007031	0.039844	-0.00703125	0.03984375	True	True	True
+gift	pcd	-0.026172	-0.010352	-0.0267578125	-0.01064453125	False	False	True
+gift	mean_len	-10.63125	3.10625	-10.509375	2.52265625	True	True	True
+areal	zvf	-0.1125	0.00625	-0.1125	0.00625	True	True	True
+areal	reward_mean	-0.032031	-0.007812	-0.03203125	-0.0078125	False	False	True
+areal	pcd	-0.000781	0.014551	-0.00146484375	0.0146484375	True	True	True
+areal	mean_len	25.170313	34.602344	25.5171875	34.7984375	False	False	True

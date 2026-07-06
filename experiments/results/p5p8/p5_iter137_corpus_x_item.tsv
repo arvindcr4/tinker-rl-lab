@@ -1,0 +1,55 @@
+corpus	n_corpus_units	item_id	item_name	encoding_mode	evidence_summary
+mega_20260704	98	1	model_family	IM	98/n=98 model present in filename+cells_tsv, 0/n in manifest JSON
+mega_20260704	98	2	ref_policy_kl	EX	98/n=98 explicit_json_key=ref_policy_kl
+mega_20260704	98	3	reward_model_signature	AB	no reward_model emitted on mega corpus
+mega_20260704	98	4	rollout_temperature	IM	98/n=98 t in filename+cells_tsv; 0/n in manifest JSON
+mega_20260704	98	5	group_size	EX	98/n=98 group_size_schedule explicit + cells_tsv + filename
+mega_20260704	98	6	heldout_split	EX	98/n=98 explicit_json_key=heldout_split
+mega_20260704	98	7	decontamination_notes	EX	98/n=98 explicit_json_key=decontamination_notes
+mega_20260704	98	8	loss_form	EX	98/n=98 explicit_json_key=loss_form
+mega_20260704	98	9	sampler_backend_precision	EX	98/n=98 explicit_json_key=sampler_backend_precision
+mega_20260704	98	10	advantage_baseline	AB	no advantage_baseline emitted on mega
+mega_20260704	98	11	token_mask	AB	no token_mask emitted on mega
+mega_20260704	98	12	kl_beta	AB	no kl_beta emitted on mega; ref_policy_kl='n/a' for tinker-closed
+mega_20260704	98	13	zvf_per_step	EX	98/n=98 explicit_json_key=per_step_zvf_path (path only)
+mega_20260704	98	14	K_variance_residual	TD	98/n=98 recoverable from group_tensor reward_vec
+mega_20260704	98	15	K_unique_count	TD	98/n=98 |K| unique-count derivable
+mega_20260704	98	16	max_K_share_PLACEBO	TD	98/n=98 max_k share derivable (placebo per iter-81)
+mega_20260704	98	17	prompt_p_hat_var	TD	98/n=98 Var(K/G) derivable
+mega_20260704	98	18	zvf130_risk_residual	AB	mega cells have 1 step each; zvf130 requires 130-step ZVF series
+n10_seed_expansion	5	1	model_family	EX	5/n=5 per-seed JSON has 'model' field
+n10_seed_expansion	5	2	ref_policy_kl	NA	N10 uses tinker-closed sampling (no KL); ref_policy_kl=N/A by construction
+n10_seed_expansion	5	3	reward_model_signature	AB	no reward_model_signature emitted on N10
+n10_seed_expansion	5	4	rollout_temperature	AB	rollout_temperature not emitted on N10 per-seed files; recoverable from experiment config if added
+n10_seed_expansion	5	5	group_size	EX	5/n=5 per-seed 'group' field = group_size
+n10_seed_expansion	5	6	heldout_split	AB	heldout_acc=5/n=5 emitted but split NAME not declared
+n10_seed_expansion	5	7	decontamination_notes	AB	no decontamination_notes emitted on N10
+n10_seed_expansion	5	8	loss_form	AB	per-step 'loss' emitted (5/n=5 runs with step_log) but loss_form NOT declared
+n10_seed_expansion	5	9	sampler_backend_precision	AB	sampler_backend_precision not declared on N10 (only tinker-closed implicit)
+n10_seed_expansion	5	10	advantage_baseline	AB	no advantage_baseline declared on N10
+n10_seed_expansion	5	11	token_mask	AB	no token_mask declared on N10
+n10_seed_expansion	5	12	kl_beta	NA	N10 uses tinker-closed sampling (no KL); kl_beta=N/A by construction
+n10_seed_expansion	5	13	zvf_per_step	TS	5/n=5 per-seed 'step_log[*].zvf' is cells_or_metrics_tsv-like
+n10_seed_expansion	5	14	K_variance_residual	AB	no group_tensor reward vectors on N10 (only aggregate step_log)
+n10_seed_expansion	5	15	K_unique_count	AB	no group_tensor reward vectors on N10
+n10_seed_expansion	5	16	max_K_share_PLACEBO	AB	no group_tensor reward vectors on N10 (placebo anyway)
+n10_seed_expansion	5	17	prompt_p_hat_var	AB	no group_tensor reward vectors on N10
+n10_seed_expansion	5	18	zvf130_risk_residual	NA	N10 runs are 15 steps (not 130); zvf130 undefined for this corpus
+n2_reward_tensor_resume	160	1	model_family	AB	N2 has 0 manifest fields; model implicit (aero only)
+n2_reward_tensor_resume	160	2	ref_policy_kl	NA	N2 GRPO-family without KL term; ref_policy_kl=N/A
+n2_reward_tensor_resume	160	3	reward_model_signature	AB	no reward_model_signature emitted on N2
+n2_reward_tensor_resume	160	4	rollout_temperature	AB	rollout_temperature not declared on N2; recoverable if experiment config added
+n2_reward_tensor_resume	160	5	group_size	EX	4 methods x 40 steps: group_size field present in every row
+n2_reward_tensor_resume	160	6	heldout_split	AB	no heldout_split on N2; tensor-only corpus
+n2_reward_tensor_resume	160	7	decontamination_notes	AB	no decontamination_notes on N2
+n2_reward_tensor_resume	160	8	loss_form	TS	method field acts as loss_form proxy for 4 methods: ['aero', 'areal', 'gift', 'grpo']
+n2_reward_tensor_resume	160	9	sampler_backend_precision	AB	sampler_backend_precision not declared on N2
+n2_reward_tensor_resume	160	10	advantage_baseline	AB	no advantage_baseline declared on N2
+n2_reward_tensor_resume	160	11	token_mask	AB	no token_mask declared on N2
+n2_reward_tensor_resume	160	12	kl_beta	NA	N2 GRPO-family without KL; kl_beta=N/A
+n2_reward_tensor_resume	160	13	zvf_per_step	EX	160/160 rows have zvf field
+n2_reward_tensor_resume	160	14	K_variance_residual	TD	recoverable from N2 rewards arrays (n_prompts x G) on 160 rows
+n2_reward_tensor_resume	160	15	K_unique_count	TD	|K| unique-count derivable on 160 N2 rows
+n2_reward_tensor_resume	160	16	max_K_share_PLACEBO	TD	max_k share derivable on N2 rows (placebo per iter-81)
+n2_reward_tensor_resume	160	17	prompt_p_hat_var	TD	Var(K/G) derivable on 160 N2 rows
+n2_reward_tensor_resume	160	18	zvf130_risk_residual	NA	N2 has 40 steps per method (not 130); zvf130 undefined

@@ -1,0 +1,51 @@
+{
+  "iter": 200,
+  "vein": "P8 base-rate stress test on V-stat feature lift (c=100, 6 rates, 5 fsets x 3 seeds x 5 resamples)",
+  "n_fsets": 5,
+  "n_rates": 6,
+  "n_seeds": 3,
+  "n_resamples": 5,
+  "cost_ratio": 100,
+  "h1_24full_lifts_at_lowest_rate_0_5pct": true,
+  "h2_24full_lifts_at_highest_rate_5_0pct": true,
+  "h3_vmax_dominates_at_every_rate": false,
+  "h3_pass_count": 5,
+  "h3_total_rates": 6,
+  "h4_lift_grows_with_rate": true,
+  "h1_gap_low": -0.007914351851851851,
+  "h1_ci_low": true,
+  "h2_gap_high": -0.018981481481481485,
+  "h2_ci_high": true,
+  "h4_gap_low_rate": -0.007914351851851851,
+  "h4_gap_high_rate": -0.018981481481481485,
+  "vmax_retention_by_rate": [
+    {
+      "rate": 0.005,
+      "retention_vmax": 0.5893536121673004
+    },
+    {
+      "rate": 0.01,
+      "retention_vmax": 0.5662225705329154
+    },
+    {
+      "rate": 0.0144,
+      "retention_vmax": 0.610376896720509
+    },
+    {
+      "rate": 0.02,
+      "retention_vmax": 0.6730213749277876
+    },
+    {
+      "rate": 0.03,
+      "retention_vmax": 0.7428139183055977
+    },
+    {
+      "rate": 0.05,
+      "retention_vmax": 0.7756097560975608
+    }
+  ],
+  "verdict_counts": {
+    "PASS": 3,
+    "FAIL": 1
+  }
+}

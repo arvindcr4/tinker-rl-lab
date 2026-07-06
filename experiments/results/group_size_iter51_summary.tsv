@@ -1,0 +1,12 @@
+metric	value
+retention_G4_vs_G32_at_T1M	0.9762
+retention_G4_vs_G32_at_T4M	0.8333
+retention_G4_vs_G32_at_T16M	0.7500
+retention_G4_vs_G32_at_T64M	0.7273
+argmax_G_at_T1M	8
+argmax_G_at_T4M	16
+argmax_G_at_T16M	32
+argmax_G_at_T64M	32
+broader_tost_pass_at_eps0.05	0/4
+n_budgets_above_wu_97_6pct	1/4
+r_logG_acc_at_T64M	0.8638

@@ -1,0 +1,146 @@
+{
+  "n_entries": 31,
+  "n_categories": 13,
+  "n_mutations_per_category": 10,
+  "n_attempts_total": 3230,
+  "n_caught_total": 3230,
+  "overall_recovery_rate": 1.0,
+  "n_misses": 0,
+  "per_category": {
+    "drop_top_required": {
+      "n": 310,
+      "n_caught": 310,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    },
+    "wrong_type_record_type": {
+      "n": 310,
+      "n_caught": 310,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    },
+    "wrong_type_id": {
+      "n": 310,
+      "n_caught": 310,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    },
+    "bad_id_pattern": {
+      "n": 310,
+      "n_caught": 310,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    },
+    "bad_framework_openness": {
+      "n": 200,
+      "n_caught": 200,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    },
+    "bad_delta_status_enum": {
+      "n": 130,
+      "n_caught": 130,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    },
+    "bad_loss_advantage_enum": {
+      "n": 200,
+      "n_caught": 200,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    },
+    "additional_top_level": {
+      "n": 310,
+      "n_caught": 310,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    },
+    "drop_min_report_leaf": {
+      "n": 200,
+      "n_caught": 200,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    },
+    "wrong_type_min_report": {
+      "n": 310,
+      "n_caught": 310,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    },
+    "drop_provenance_source_artifacts": {
+      "n": 200,
+      "n_caught": 200,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    },
+    "broken_delta_ref": {
+      "n": 130,
+      "n_caught": 130,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    },
+    "wrong_type_outcomes": {
+      "n": 310,
+      "n_caught": 310,
+      "recovery_rate": 1.0,
+      "recovery_rate_ci95": {
+        "point": 1.0,
+        "lo": 1.0,
+        "hi": 1.0
+      }
+    }
+  },
+  "overall_recovery_rate_ci95": {
+    "point": 1.0,
+    "lo": 1.0,
+    "hi": 1.0
+  }
+}

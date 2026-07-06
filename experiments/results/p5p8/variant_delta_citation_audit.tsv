@@ -1,0 +1,9 @@
+delta_id	short_label	expected_bibkey	expected_arxiv	old_bibkey	old_arxiv	bibkey_in_refs	arxiv_matches_refs	arxiv_reachable	action	new_title
+delta_aero	AERO / RL-ZVP (entropy-guided advantage)	le2025rlzvp	2509.21880	le2025rlzvp	2509.21880	yes	yes	yes	title_correction	No Prompt Left Behind: Exploiting Zero-Variance Prompts in {LLM} Reinforcement L
+delta_gift	GIFT	gift2025	2510.23868	gift2025	2510.23868	yes	yes	yes	title_correction	{GIFT}: Group-Relative Implicit Fine-Tuning Integrates {GRPO} with {DPO} and {UN
+delta_areal	AReaL	areal2025	2505.24298	areal2025	2505.24298	yes	yes	yes	title_correction	{AReaL}: A Large-Scale Asynchronous Reinforcement Learning System for Language R
+delta_ngrpo	NGRPO	nan2025ngrpo	2509.18851	nan2025ngrpo	2509.18851	yes	yes	yes	title_correction	{NGRPO}: Negative-enhanced Group Relative Policy Optimization
+delta_cppo	CPPO	lin2025cppo	2503.22342	lin2025cppo	2503.22342	yes	yes	yes	title_correction	{CPPO}: Accelerating the Training of Group Relative Policy Optimization-Based Re
+delta_mcgrpo	MC-GRPO	mcgrpo2025	2601.22582	mcgrpo2025	2601.22582	yes	yes	yes	title_correction	{MC-GRPO}: Median-Centered Group Relative Policy Optimization for Small-Rollout 
+delta_es	ES at Scale	es2025	2509.24372	es2025	2509.24372	yes	yes	yes	title_correction	Evolution Strategies at Scale: {LLM} Fine-Tuning Beyond Reinforcement Learning
+delta_scafgrpo	Scaf-GRPO	zhang2025scaffgrpo	2510.19807	zhang2025scaffgrpo	2510.19807	yes	yes	yes	title_correction	{Scaf-GRPO}: Scaffolded Group Relative Policy Optimization for Enhancing {LLM} R

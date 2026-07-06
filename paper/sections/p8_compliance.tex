@@ -1,0 +1,68 @@
+% P8 compliance grounding: SAR narratives (FinCEN) + adverse action (ECOA/Reg B)
+\section{Compliance Grounding for the Scribe}
+\label{sec:p8-compliance}
+
+The scribe role rests on two bodies of U.S. regulation that oblige financial
+institutions to produce specific prose. We cite the primary sources because
+the paper's most durable claim---that narration is a task category no tree can
+enter---is a legal fact before it is a modeling fact.
+
+\subsection{SAR Narratives (Bank Secrecy Act / FinCEN)}
+\label{sec:p8-sar}
+
+Banks must report suspicious transactions to the Financial Crimes Enforcement
+Network (FinCEN): under 31~C.F.R.~\S~1020.320, a bank must file a Suspicious
+Activity Report for transactions of at least \$5{,}000 conducted at or through
+the bank that it ``knows, suspects, or has reason to suspect'' involve illicit
+funds, are designed to evade Bank Secrecy Act requirements, or have no
+apparent lawful purpose, generally within 30 days of detection
+\citep{cfr1020_320}. The report's decisive free-text component is the
+narrative. FinCEN's guidance on preparing SAR narratives instructs filers to
+identify the essential elements of the suspicious activity---who, what, when,
+where, and why, along with the method of operation---in a complete,
+self-contained account, and emphasizes that the narrative is where the filing
+institution explains why the activity is suspicious
+\citep{fincen2003sarnarrative}. This is precisely a conditional
+text-generation task: given a case file, produce a complete, accurate,
+element-covering narrative. Analyst backlogs make it a bottleneck; its
+element-coverage structure makes it checkable; and emerging agentic systems
+target exactly this drafting task \citep{naik2025coinvestigator}. Our
+architecture keeps the human filer's judgment and signature---the LLM drafts,
+the analyst verifies against the evidence links, and the institution files.
+
+\subsection{Adverse-Action Notices (ECOA / Regulation B)}
+\label{sec:p8-adverse}
+
+When a creditor takes adverse action on a credit application, the Equal Credit
+Opportunity Act as implemented by Regulation~B requires notification including
+a statement of specific reasons (or disclosure of the right to obtain one):
+under 12~C.F.R.~\S~1002.9, the statement of reasons ``must be specific and
+indicate the principal reason(s) for the adverse action,'' and generic appeals
+to internal standards or a failing score, without more, do not suffice
+\citep{cfr1002_9}. The Consumer Financial Protection Bureau's Circular
+2022-03 addresses the machine-learning case directly: the adverse-action
+requirements apply regardless of the technology used, creditors may not rely
+on ``black-box'' complexity as a defense, and a creditor that cannot state the
+specific principal reasons behind its own model's decision is not excused but
+non-compliant \citep{cfpb2022circular}.
+
+Two design consequences follow for fraud-adjacent credit decisions. First, the
+\emph{scorer} must remain a model whose principal reasons are extractable---a
+gradient-boosted tree with feature attributions satisfies this far more
+directly than an end-to-end LLM judgment whose verbalized rationale need not
+correspond to its computation. Keeping XGBoost in the scorer seat is thus a
+compliance posture, not only a performance one. Second, the \emph{scribe} must
+be constrained to narrate the scorer's actual attributions: the LLM formats
+and phrases the principal reasons; it must not invent them. The draft is
+generated from the attribution vector, carries the attribution as provenance,
+and is reviewed by a human before issuance. An LLM that freely composed
+plausible-sounding reasons would be a Regulation~B violation generator; an LLM
+that renders the tree's true top attributions into the required specific
+statement is a compliance tool.
+
+\paragraph{Scope note.} We cite U.S. federal requirements because they are the
+sharpest published text-generation obligations in fraud and credit workflows;
+analogous obligations exist in other jurisdictions but are not analyzed here.
+Nothing in this section is legal advice; it establishes only that the
+narration category exists, is mandatory, and is textual---hence enterable by
+an LLM and not by a tree.

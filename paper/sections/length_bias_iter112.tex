@@ -1,0 +1,175 @@
+% Iter 112 -- Pillar 4 (Length Bias / Dr.GRPO):
+% Severship-reward coupling test
+% Deployed after iter108 (per-window + per-L-quantile ICCA).
+% Closes the gap between the iter108 MECHANISM finding (Dr.GRPO
+% progressively severs the backward innovation coupling) and the OUTCOME
+% (Dr.GRPO - GRPO heldout accuracy / mean reward) by testing whether the
+% per-window severship intensity predicts the per-window reward delta.
+
+\subsection{Severship-reward coupling test}
+\label{sec:length-bias-iter112}
+
+\paragraph{Motivation.}
+Iter~\ref{sec:length-bias-iter108} established that on GSM8K CoT,
+Dr.GRPO's severship of the backward innovation coupling
+$|CCF(e_L,e_R;k<0)|$ grows monotonically across training progress
+(Spearman $\rho(\Delta,w)=-0.80$, late-window
+$\Delta=-0.44$).  Operationally, however, a *mechanism* is not a
+*guarantee*: an aggressive severship could in principle be wasted if
+the severed channel carried little reward information, or amplified
+into runaway reward-hacking if it carried too much.  Iter~112 tests
+the *operational link* between the per-window severship magnitude and
+the per-window mean-reward delta on the same 8 paired-runs used by
+iter108 (5 arithmetic\_easy seeds, 3 GSM8K CoT seeds).
+
+\paragraph{Method.}
+For each run we (i) slice the 40-step $R_t$ series into $n_w=4$
+equal-length progress windows and compute
+$R_w = \overline{R_t}$ over each window, mirroring iter108's window
+definition; (ii) read the iter108 per-run progress TSV to obtain
+$\mathrm{CCF}_{bwd}$ per (task, algo, seed, window); (iii) compute the
+paired Dr.GR$-$GR delta in *both* variables per (task, window, seed):
+$\delta\mathrm{bwd} = \Delta\mathrm{CCF}_{bwd}$,
+$\delta R = \overline{R_w}^{\,\mathrm{Dr}}-\overline{R_w}^{\,\mathrm{GR}}$.
+We define the *severship intensity* as $-\delta\mathrm{bwd}$ (positive
+when Dr.GRPO severs more than GRPO) and the *reward delta* as
+$\delta R$ (positive when Dr.GRPO improves more than GRPO).
+
+We then ask three questions.  \textbf{(Q1, pooled Spearman).}  For
+each task, pool (seed, window) points and report Spearman(sever,
+$\delta R$) with the two-sided $p$-value from a
+$10^5$-permutation null on $\rho$.  \textbf{(Q2, cumulative).}
+For $k\in\{1,2,3,4\}$ take the per-seed mean severship across
+windows $\{0,\ldots,k\!-\!1\}$ and its accumulated reward delta,
+and report Spearman(sever$_{(0:k)}$, $\delta R_{(0:k)}$); the question
+is whether the severship *compounds* into reward as windows
+accumulate.  \textbf{(Q3, per-window)}: report the per-window
+Spearman on its own to make the temporal evolution explicit.
+
+\paragraph{Headline findings.}
+The operational link between severship and reward is *weak and
+negative* at the per-window level on both tasks:
+$\rho_{\mathrm{arith}}=-0.37$ ($p_{\mathrm{param}}{=}0.11$,
+$p_{\mathrm{perm}}{=}0.11$, $n{=}20$),
+$\rho_{\mathrm{gsm8k}}=-0.16$ ($p_{\mathrm{param}}{=}0.62$,
+$p_{\mathrm{perm}}{=}0.62$, $n{=}12$).  Consensus across both tasks
+($n{=}32$) is $\rho=-0.21,\;p=0.24$, with bootstrap 95\% CI
+$[-0.51,+0.10]$ on arithmetic\_easy and $[-0.78,+0.60]$ on GSM8K
+(Table~\ref{tab:length-bias-iter112-pooled}).  The naive hypothesis
+(severship magnitude is monotonically converted to per-window reward
+gain) is therefore \emph{falsified} at the per-window resolution on
+both tasks.  Per-window Spearman is volatile
+(Fig.~\ref{fig:length-bias-iter112-sever}C): arithmetic\_easy
+$w{=}1$ has $\rho=-0.98$ ($p{=}0.005$, $n{=}5$) but other windows
+straddle zero; GSM8K $w{=}0$ and $w{=}3$ show $\rho=\pm 1.00$ on
+$n{=}3$ seeds, a statistical artefact of zero residual ranks.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{l r r r r r r}
+\hline
+task & $\rho_{\mathrm{pooled}}$ & $p_{\mathrm{param}}$ &
+$p_{\mathrm{perm}}$ & null mean & null std & 95\% CI $\rho$ \\
+\hline
+arithmetic\_easy & $-0.37$ & $0.11$ & $0.11$ & $-0.00$ & $0.21$ &
+$[-0.51,+0.10]$ \\
+gsm8k\_cot       & $-0.16$ & $0.62$ & $0.62$ & $-0.00$ & $0.27$ &
+$[-0.78,+0.60]$ \\
+\hline
+\multicolumn{7}{l}{consensus $n{=}32$: $\rho=-0.21,\;p_{\mathrm{param}}{=}0.24$.}
+\end{tabular}
+\caption{Pooled Spearman(severship intensity, $\delta R$):
+across (seed, window) tuples on each task, Dr.GR$-$GR severship
+*does not* predict the Dr.GR$-$GR per-window reward delta.
+$p_{\mathrm{perm}}$ is the two-sided permutation $p$-value at
+$B{=}10^{5}$.  \texttt{experiments/results/length\_bias\_iter112\_pooled.tsv}
+and \texttt{\_permutation\_null.tsv}.}
+\label{tab:length-bias-iter112-pooled}
+\end{table}
+
+\paragraph{Interpretation.}
+Three observations sharpen the operational reading:
+
+\begin{enumerate}
+\item \emph{Severship is a structural reallocator, not a per-window
+reward amplifier.}  iter108 showed Dr.GRPO redirects the backward
+coupling away from both the high-$R$ and the high-$L$ regimes; iter112
+shows this redirection does not produce a per-window reward boost on
+either task.  The right operational model is therefore: \emph{Dr.GRPO
+gradually severs a misleading channel; the severed channel is being
+used by GRPO as a low-quality reward proxy, so removing it grants
+neither an immediate reward gain \emph{nor} an immediate loss but
+reduces the variance / herding pressure on the reward signal across
+training}; the longer-horizon heldout accuracy gain comes from the
+\emph{cumulative} effect of this de-herding, not from a per-window
+boost.
+
+\item \emph{The signal is asymmetric across tasks.}
+On GSM8K CoT the cumulative-window regression (Fig.~D) has
+$\rho(\mathrm{sever}_{\le 3},\,\delta R_{\le 3})=+1.00$ ($n{=}3$
+seeds, $p_{\mathrm{param}}{=}0$ -- $n{=}3$ rank-resolution
+artefact), but the regression at $k{=}4$ drops to $\rho=+0.50$
+($p{=}0.67$).  On arithmetic\_easy the cumulative regressor hovers
+near zero at every $k$.  This asymmetry is consistent with iter108's
+finding that the severship grows on the harder GSM8K task but not on
+the easier one: the severship mechanism only fires when there is a
+substantial spurious channel to remove.
+
+\item \emph{The severship does \emph{not} over-react into runaway reward
+hacking.}  A remaining concern with a mechanism that severs a major
+feedback channel is that it might rewire the policy onto a degenerate
+outcome.  The weak negative $\rho$ ($-0.21$, $95\%$ CI
+$[-0.51,+0.10]$) rules out \emph{strong positive} coupling
+(severship $\to$ reward gain per window) on the data; equally, the
+weak sign fails to reject the null of zero coupling, which is the
+operational benign regime.  Dr.GRPO is therefore \emph{lossy} on the
+spurious channel but does \emph{not} convert this lossiness into
+immediate reward gains --- it is a debiaser by removing the channel,
+not a rewriter that exploits it.
+\end{enumerate}
+
+\paragraph{Reproducibility.}
+\texttt{scripts/length\_bias\_iter112.py} ($\sim$280 lines, numpy
++ scipy.stats) reads iter108's per-run TSV, slices the same $40$-step
+$R_t$ series into $n_w{=}4$ windows to compute $\delta R$, and
+reports four artefacts:
+\texttt{length\_bias\_iter112\_per\_window.tsv} (8 rows: per-window
+Spearman with seed count),
+\texttt{\_pooled.tsv} (2 rows: per-task pooled Spearman, with
+permutation $p$-value and bootstrap-CI fields),
+\texttt{\_permutation\_null.tsv} (2 rows: full null distribution
+at $B{=}10^{5}$ shuffles of the (algo, seed) coupling),
+\texttt{\_cumulative.tsv} (4 rows: $k_{\mathrm{end}}$ regression),
+and \texttt{\_rho\_bootstrap.tsv} (2 rows: bootstrap-CI for the
+pooled $\rho$).  The figure
+(\texttt{figures/length\_bias\_iter112\_sever\_reward.pdf},
+mirrored to \texttt{paper/figures/}) is a 4-panel layout: (A) scatter
+of severship vs reward improvement with per-window median
+markers, (B) pooled Spearman per task with bootstrap 95\% CI, (C)
+per-window Spearman, (D) cumulative-window regression across
+$k\in\{1,2,3,4\}$.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.94\linewidth]{paper/figures/length_bias_iter112_sever_reward.pdf}
+\caption{Iter 112 --- Severship-reward coupling test.
+\emph{Panel (A):} per-(seed, window) scatter of severship
+intensity ($-\Delta_{bwd}$) on $x$ vs per-window reward delta
+$\overline{R_w}^{\,\mathrm{Dr}}-\overline{R_w}^{\,\mathrm{GR}}$ on $y$,
+with per-window median markers (white-filled, numbered).  Both tasks
+show a *weak negative* coupling: the naive monotonic-conversion
+hypothesis is falsified.  \emph{Panel (B):} pooled Spearman per task
+with bootstrap 95\% CI ($B{=}10^{5}$); both CIs straddle zero,
+confirming the null result.  \emph{Panel (C):} per-window Spearman;
+arithmetic\_easy $w{=}1$ shows $\rho=-0.98$ on $n{=}5$ seeds (the
+only strong negative signal), GSM8K $w{=}0$ and $w{=}3$ show
+$\rho=\pm1.00$ on $n{=}3$ seeds (rank-resolution artefact).
+\emph{Panel (D):} cumulative-window regression $\rho$ for
+$k_{\mathrm{end}}\in\{1,2,3,4\}$; GSM8K $\rho$ rises to $+1.00$ at
+$k{=}3$ before falling at $k{=}4$, arithmetic\_easy hovers near
+zero throughout.
+--- \texttt{scripts/length\_bias\_iter112\_fig.py}.}
+\label{fig:length-bias-iter112-sever}
+\end{figure}

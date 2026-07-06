@@ -1,0 +1,5 @@
+T	Gstar_obs	Gstar_pred	saturated	log10_T	log10_Gstar
+1000000	8	8.0	False	6.000	0.903
+4000000	16	16.0	False	6.602	1.204
+16000000	32	32.0	True	7.204	1.505
+64000000	32	32.0	True	7.806	1.505

@@ -1,0 +1,15 @@
+{
+  "iter": 120,
+  "n_test": 10000,
+  "n_pos_total": 144,
+  "xgb_only_recall_K2": 0.3680555555555556,
+  "n_llm_grad": 84,
+  "n_llm_abs": 0,
+  "H1_min_density": 0.0052,
+  "H1_max_density": 0.0148,
+  "H1_max_over_min_ratio": 2.8461538461538463,
+  "H3_xgb_perfect_quartiles": 0,
+  "H3_total_quartiles": 16,
+  "n_boot": 1500,
+  "seed": 20260705
+}

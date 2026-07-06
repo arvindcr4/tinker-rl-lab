@@ -1,0 +1,5 @@
+T_tokens	G_a	G_b	retention_measured	retention_pred_iter19_fit	retention_pred_residual	zvf_illustrative_G4	zvf_illustrative_G32	zvf_gap_pp	snr_measured_G4	snr_measured_G16_proxy_for_G32	interpretation
+1000000	4	32	0.9762	0.9367	0.0395	0.5474	0.008016	53.94	1.764	2.162	ZVF-gap low, retention within Wu 97.6%
+4000000	4	32	0.8333	0.8525	-0.0191	0.5474	0.008016	53.94	1.764	2.162	ZVF-gap high, retention well below Wu 97.6%
+16000000	4	32	0.75	0.7445	0.0055	0.5474	0.008016	53.94	1.764	2.162	ZVF-gap high, retention well below Wu 97.6%
+64000000	4	32	0.7273	0.7292	-0.0019	0.5474	0.008016	53.94	1.764	2.162	ZVF-gap high, retention well below Wu 97.6%

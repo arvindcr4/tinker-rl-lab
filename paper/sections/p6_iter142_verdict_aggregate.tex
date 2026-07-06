@@ -1,0 +1,224 @@
+% paper/sections/p6_iter142_verdict_aggregate.tex
+% Iter-142 P6 audit: claim_validation aggregate + eta-squared(method) paradox test.
+% Closes brief vein (a) at the AGGREGATE level. Iter-126 tier-classified per-delta
+% evidence depth (n_sig / n_panels); iter-106 ledger enumerated per-(delta, metric,
+% panel) verdicts; iter-142 connects them.
+%
+% Sharpest finding: the registry's claim_validation block is structurally
+% panel-asymmetric. On zvf130_5seed the per-(delta, metric) row-level SUPPORTS
+% rate is 100% (8/8 evaluated, all on zvf_risk_mean) — but this is tautological:
+% every declared expected_effect on zvf_risk_mean is "<0" and the variants
+% uniformly reduce risk. On n2_same_stack_last10 the SUPPORTS rate is 8.33% (1/12)
+% — much closer to the iter-141 eta-squared(method) = 0.0005 same-stack
+% under-identification criterion. The PARADOX resolves once the panel structure is
+% named: the global eta-squared(method) panel measures cross-method axis variance
+% across (prompt × step × rollout); the per-panel claim_validation rows measure
+% panel-conditioned (variant minus base) signed-rank deltas.
+%
+% Reproducibility:
+%   python3 scripts/p5p8/p6_iter142_claim_validation_audit.py
+%   -> experiments/results/p5p8/p6_iter142_verdict_aggregate.tsv (38 rows)
+%   -> experiments/results/p5p8/p6_iter142_tier_x_verdict.tsv (8 rows)
+%   -> experiments/results/p5p8/p6_iter142_metric_x_verdict.tsv (40 rows)
+%   -> experiments/results/p5p8/p6_iter142_panel_x_verdict.tsv (16 rows)
+%   -> experiments/results/p5p8/p6_iter142_sign_concordance.tsv (17 rows)
+%   -> experiments/results/p5p8/p6_iter142_eta2_paradox.tsv (2 rows)
+%   -> experiments/results/p5p8/p6_iter142_summary.json
+
+\subsection{Aggregate claim\_validation audit and the eta-squared(method) paradox (iter 142)}
+\label{sec:p6-iter142-verdict-aggregate}
+
+Iter-126 classified each of the 15 pre-existing variant-delta
+entries (now 17 after iter-138's tool-use additions) by the depth of its
+measured-evidence: \emph{tier A} ($n_{\text{sig}} \geq 3$, $n_{\text{panels}}
+\geq 2$), \emph{tier B} ($n_{\text{sig}} \geq 1$), \emph{tier D}
+($n_{\text{total}} = 0$).  Iter-106 enumerated every
+($\text{delta}, \text{metric}, \text{panel}$) cell with its
+\texttt{claim\_validation} row.  Iter-142 connects the two layers by
+\emph{aggregating} the claim\_validation verdicts across the registry --
+grouped by (tier, metric, panel, sign-concordance) -- and cross-references
+the result against the iter-141 $\eta^2(\text{method}) = 0.0005$
+same-stack under-identification anchor.
+
+\paragraph{Verdict distribution.}
+Across all 17 deltas, the registry carries 38 (delta, metric, panel) cells
+with a \texttt{claim\_validation} row.  Global verdict counts:
+\texttt{UNCLAIMED}=19 (50.0\%; the delta had no declared
+\texttt{expected\_effect} for that metric), \texttt{SUPPORTS}=10 (26.3\%),
+\texttt{NEUTRAL}=6 (15.8\%), \texttt{CONTRADICTS}=3 (7.9\%).  The
+\textsc{unclaimed} mode is dominant because tier-A deltas carry forward
+the iter-106 measured rows (pcd, mean\_len) for which no human \texttt{expected\_effect}
+is declared.  These are machine-readable audit rows with no human claim.
+
+\paragraph{Tier-by-verdict cross-tab.}
+\textit{Sufficient-to-supports rate} (SUPPORTS / tier\_total\_$n$, excluding
+the UNCLAIMED column) is the right statistic to compare tiers: tier~A
+generates $4/(4+3+2) = 4/9 = 44.4\%$ SUPPORTS; tier~B generates
+$6/(6+3+1) = 6/10 = 60.0\%$ SUPPORTS.
+Counterintuitively, tier~B has a higher SUPPORTS rate than tier~A.  The
+reason is that tier-A entries (\texttt{aero}, \texttt{areal}, \texttt{gift})
+declare broader \texttt{expected\_effect} sets (e.g.\
+\texttt{reward\_mean} at $\geq 0$) on metrics where the N2 same-stack
+paired-step bootstrap returns significant NEGATIVE deltas (two of three
+declarations on \texttt{reward\_mean} in this tier CONTRADICT, not
+SUPPORT).  Tier-B entries declare narrower expectations (mostly
+\texttt{zvf\_risk\_mean}$<0$) on the metric where every claim actually
+SUPPORTS.  The cross-tab is therefore a measure of \emph{claim scope vs.\
+measured scope}, not of evidentiary depth.
+
+\paragraph{Metric-by-verdict cross-tab.}
+\textit{Per-metric SUPPORTS rate}.  Three of the nine registered metrics
+admit no declared \texttt{expected\_effect} (mean\_zvf, pcd, mean\_len,
+mag\_mean) -- they appear in \texttt{measured[]} but not in
+\texttt{expected\_effects[]}, hence 100\% UNCLAIMED.  Of the five metrics
+with declared expectations:
+\begin{itemize}
+\item \textbf{zvf\_risk\_mean}: 8/8 SUPPORTS (100\%) -- the only
+metric where every declared expectation is supported by a measured row.
+Because every variant that registered an expectation on this metric
+predicted \texttt{<0} (anti-starvation), and every measured delta is
+negative, the row-level SUPPORTS rate is at the ceiling.
+\item \textbf{zvf}: 2/4 SUPPORTS (50.0\%) -- mixed: \texttt{gift}'s
+\texttt{>0} prediction SUPPORTS; \texttt{aero}'s \texttt{<0} NEUTRAL (CI
+contains 0); \texttt{areal}'s \texttt{<0} NEUTRAL; \texttt{adaptiveg}'s
+\texttt{<0} SUPPORTS.
+\item \textbf{reward\_mean}: 0/4 SUPPORTS -- 2 NEUTRAL + 2 CONTRADICTS.
+On N2 last-10, \texttt{aero} and \texttt{areal}'s $\geq 0$ prediction is
+rejected (both \texttt{reward\_mean} deltas are negative, significant on
+\textbf{aero}).
+\item \textbf{L\_star}, \textbf{neg\_frac}, \textbf{pos\_frac}: 0--1
+ratings, drawn from the \texttt{drgrpo} length-bias harness (paired-step
+bootstrap, n=2).  Too few cells for any aggregate claim.
+\end{itemize}
+
+\paragraph{Panel-by-verdict and the eta-squared paradox test.}
+\textit{Per-panel SUPPORTS rate} reveals the structural asymmetry that
+reconciles iter-141 with iter-126.  Evaluated (non-UNCLAIMED) cells:
+\begin{itemize}
+\item \texttt{n2\_same\_stack\_last10} panel: 1/6 SUPPORTS = 16.7\%
+(the single SUPPORTS is \texttt{gift}$\cdot$\texttt{zvf} at $\delta=0.125$
+with CI $[0.081, 0.175]$).
+\item \texttt{zvf130\_5seed} panel: 8/8 SUPPORTS = 100\%.
+\end{itemize}
+The 12-cell N2 panel is the canonical (GRPO/AERO/GIFT/AREAL) same-stack
+panel from iter-141.  It carries metric diversity
+(zvf, reward\_mean, mean\_len, pcd) with mixed expected signs, and
+\emph{most declared expected effects do not survive the paired-step
+bootstrap at 95\%}.  Iter-141 measured $\eta^2(\text{method}) = 0.0005$
+with CI $[0.0001, 0.0049]$ on the same four methods at the same
+paired-step panel -- i.e.\ the method axis captures $< 0.5\%$ of the
+step $\times$ prompt $\times$ rollout variance.  The N2 panel's 16.7\%
+SUPPORTS rate is consistent with this: most variant-on-metric claims
+fall within the noise floor on the N2 same-stack panel.  The zvf130
+panel's 100\% SUPPORTS rate is consistent with iter-126's tier-A
+classification, but for a tautological reason: every variant that
+declared an expectation on \texttt{zvf\_risk\_mean} predicted
+\textless 0, and every measured delta is negative.
+
+\paragraph{Reconciliation: panel-local vs.\ global variance.}
+The iter-141 $\eta^2(\text{method})$ anchor is computed on
+(step $\times$ prompt $\times$ rollout) variance across methods within a
+single stack.  The per-panel claim\_validation row is computed on the
+(variant -- base) signed-rank delta at one panel.  These are
+\emph{orthogonal queries}: $\eta^2(\text{method})$ measures how much of
+the global variance the method axis would explain; claim\_validation
+measures whether a variant's predicted sign survives a paired-step
+bootstrap at a specific panel.  The two can both be true.  The registry's
+claim\_validation block is meant to surface the second query; it is not
+in tension with the iter-141 $\eta^2(\text{method})$ finding.
+
+\paragraph{Sign concordance.}
+Per-delta, the rate at which the \emph{measured sign} (sign of the
+observed delta) matches the \emph{declared sign operator}
+(\texttt{>0}, \texttt{<0}, etc.) is uniformly high where declared
+expectations exist: \texttt{gift} 3/3 = 100\%, \texttt{cppo}/\texttt{es}/
+\texttt{mcgrpo}/\texttt{ngrpo}/\texttt{scafgrpo} 1/1 = 100\%,
+\texttt{aero}/\texttt{areal} 2/3 = 66.7\%.  The single outlier is
+\texttt{drgrpo} (0/3 = 0\%, all on the length-bias harness where the
+bootstrap CI is too wide to confirm sign).  Where the \emph{measure is
+significance at the bootstrap CI}, the iter-126 tier-A trio holds:
+gift's 2/3 significant, aero/areal's 1/3 significant.
+
+\paragraph{Operational rules (from iter 142).}
+\begin{enumerate}
+\item \textbf{Always cite the panel alongside the verdict.} A
+\texttt{claim\_validation} row is inseparable from its panel: 100\% on
+\texttt{zvf130\_5seed} is not the same kind of evidence as 16.7\% on
+\texttt{n2\_same\_stack\_last10}.
+\item \textbf{The high-level SUPPORTS rate is NOT a registry quality
+metric.} It is a function of the declared expected\_effect set; a
+narrowly-claimed tier-B entry beats a broadly-claimed tier-A entry on
+this dimension.
+\item \textbf{Tier does NOT predict SUPPORTS at the cell level.} Tier
+ranks evidence depth; the SUPPORTS verdict ranks agreement between
+declared and measured signs.  A tier-A entry with a CONTRADICTS cell is
+still tier-A because the cell evidence is rich (well-powered bootstrap,
+CI excludes 0).
+\item \textbf{The eta-squared(method) anchor is orthogonal to the
+claim\_validation verdict.} Iter-141's $\eta^2(\text{method}) = 0.0005$
+says method axis under-identifies global variance; iter-142's per-cell
+verdicts say nothing about global variance.  Both can be true; the
+registry serves both questions.
+\end{enumerate}
+
+\paragraph{Cross-paper coupling.}
+(a)~\textbf{P5 iter-141 row 159} -- $\eta^2(\text{method}) = 0.0005$
+anchors the global variance finding; iter-142 confirms it at the
+per-cell level: \texttt{n2\_same\_stack\_last10} SUPPORTS rate is 16.7\%,
+consistent with a near-zero method-axis effect on global variance.
+(b)~\textbf{P6 iter-126 row 142} -- tier classification is preserved
+under iter-142's verdict aggregation: A/B/D counts unchanged, but the
+\emph{within-tier} SUPPORTS rate is NOT a monotone function of tier.
+(c)~\textbf{P6 iter-106 row 153} -- per-(delta, metric, panel) ledger is
+the input layer; iter-142 is its aggregate summary.  (d)~\textbf{FRONTIER
+INSIGHTS Round 1} (Critic Degeneracy Hypothesis, frontier synthesis)
+predicts that on outcome-reward sparse-0/1-reward regimes the method
+axis under-identifies -- iter-141 measures this; iter-142 confirms it on
+the registry's per-cell verdict axis.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Iter-142 P6 tier $\times$ verdict cross-tab (17 deltas, 38 cells).
+UNCLAIMED counts are machine-measured rows with no human declared
+\texttt{expected\_effect}.}
+\label{tab:p6-iter142-tier-x-verdict}
+\begin{tabular}{llrrr}
+\toprule
+tier & verdict & $n$ & pct-of-tier (\%) & tier-total-$n$ \\
+\midrule
+A & SUPPORTS    & 4 & 22.22 & 18 \\
+A & NEUTRAL     & 3 & 16.67 & 18 \\
+A & CONTRADICTS & 2 & 11.11 & 18 \\
+A & UNCLAIMED   & 9 & 50.00 & 18 \\
+\midrule
+B & SUPPORTS    & 6 & 30.00 & 20 \\
+B & NEUTRAL     & 3 & 15.00 & 20 \\
+B & CONTRADICTS & 1 &  5.00 & 20 \\
+B & UNCLAIMED   &10 & 50.00 & 20 \\
+\midrule
+D & all         & 0 &  0.00 &  0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Iter-142 P6 panel $\times$ evaluated-cell SUPPORTS rate (UNCLAIMED
+excluded).  The 16.7\% N2 rate is consistent with the iter-141
+$\eta^2(\text{method}) = 0.0005$ same-stack under-identification.  The
+100\% zvf130 rate reflects the panel's structural homogeneity (every
+declared expectation is \texttt{<0} on \texttt{zvf\_risk\_mean}).}
+\label{tab:p6-iter142-panel-paradox}
+\begin{tabular}{lrrl}
+\toprule
+panel & $n_{\text{supports}}$ / $n_{\text{eval}}$ & rate (\%) & bootstrap anchor \\
+\midrule
+n2\_same\_stack\_last10              & 1 / 6  & 16.7  & consistent with $\eta^2(\text{method}) = 0.0005$ \\
+zvf130\_5seed                        & 8 / 8  & 100.0 & tautological claim$-$axis alignment \\
+length\_bias\_iter60\_grpo\_vs\_drgrpo\_paired & 0 / 3 & 0.0   & under-powered (n=2) \\
+qp7\_adaptive\_armB\_vs\_armA\_paired & 1 / 2 & 50.0 & intra-method contrast \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,131 @@
+% Section: P8 disagreement-driven escalation economics on the 5-seed panel (iter 156 JOB A)
+% Fresh vein, not in 171 prior P8 rows. Closes the iter-148 cost matrix +
+% iter-152 5-seed CV by decomposing LLM fires into VALUE (catches fraud XGB
+% missed) vs WASTE (calls on rows XGB caught or non-fraud).
+% Headline: 5-seed mean LLM sensor catches 42-69% of XGB-missed positives
+% (max 54 catches on 71 missed at 1.44% rate); cheap tier breakeven holds
+% on 100/100 cells; tier-monotone holds on 100/100 cells; 20raw+stat best
+% at low rates (10/10 cells); 24full loses at release rate (0/5 cells).
+
+\subsubsection{Falsifiable questions and operational stakes}
+The iter-148 cost matrix measured \texttt{acd = cpd(grad-band) /
+cpd(xgb-only)} averaged across all fires. Iter-152 added 5-seed CV on
+\texttt{acd}. Both are cost-side metrics. Iter-156 decomposes fires
+into \textbf{value} (LLM catches fraud XGB missed) vs \textbf{waste}
+(LLM call on a row XGB already caught or on non-fraud), answering the
+operationally critical question: \textbf{when the LLM fires, does it
+actually add recall?} At what cost per added recall?
+
+For each test row $r$ on the iter-136 rate-preserving downsample (5
+seeds $\times$ 5 rates $\times$ 5 tiers $\times$ 4 fsets = 500 cells):
+
+  $xgb\_fire_r = (\text{xgb\_score}_r \in \text{top-}K\text{ of xgb scores})$
+  $llm\_fire_r = (\text{V\_mean}_r > 0)$ (per-fset threshold; here
+                 the LLM sensor is the LLM-extracted aggregate
+                 feature, identical across fsets)
+  $\text{VALUE} = \#(\neg xgb\_fire \wedge llm\_fire \wedge is\_fraud)$
+  $\text{WASTE} = \#(\neg xgb\_fire \wedge llm\_fire \wedge \neg is\_fraud)$
+
+Escalation metrics:
+  $value\_rate = \text{VALUE} / \max(1, n\_xgb\_missed\_pos)$
+  $esc\_prec = \text{VALUE} / \max(1, \text{VALUE} + \text{WASTE})$
+  $esc\_cost\_per\_lift = (\text{VALUE} + \text{WASTE}) \cdot c_{LLM} / \max(1, \text{VALUE})$
+
+With VALUE\_PER\_CATCH = \$50 (conservative fraud-ops mid-range estimate).
+
+\textbf{H1 (REFUTED -- sharpest finding)}: escalation precision is
+$0.0100$ at cheap tier (1000 calls / 50 catches), far below the 0.05
+bar.  The LLM sensor is a \emph{high-recall, low-precision} second-stage
+trigger: it catches 50--54 positives that XGB missed (recall lift
+42--69\% across seeds), but at a precision cost of $\sim$1\%.  This is
+the \emph{operational signature} of the LLM-as-sensor pattern: it adds
+recall, but every fraud catch costs $\sim$100 LLM calls.  A real
+deployment would need a stricter V\_mean threshold to balance
+precision against recall lift -- iter-156 measures the unconstrained
+upper bound.
+
+\textbf{H2 (PASS)}: escalation\_cost\_per\_lift is monotone
+non-decreasing in tier price on \textbf{100/100 = 100.0\%} of
+(seed $\times$ rate $\times$ fset) cells.  Frontier/cheap cost ratio is
+\textbf{300$\times$}, exactly matching the iter-124 / iter-148 tier
+price spread.  Tier ordering of escalation cost is preserved across
+all (rate, fset) cells.
+
+\textbf{H2b (PASS)}: cheap tier crosses the breakeven value line
+(\$50 fraud-catch value) on \textbf{100/100 = 100.0\%} of
+cells.  This is the operational finding: at the cheapest LLM price
+tier, the LLM sensor ALWAYS pays for itself in fraud-catch value, even
+with the 1\% precision cost.  Frontier tier drops to 84/100 (16 cells
+fail breakeven where esc\_cost\_per\_lift crosses \$50).
+
+\textbf{H3 (PARTIAL)}: 5-seed CV on value\_rate is $\leq$0.20 on
+50/100 = 50\% of cells (bar: 80\%).  Value rate is moderately
+seed-sensitive (sd 0.05--0.20 across cells), but the escalation
+\textit{decision} (does the LLM add value?) is robust -- n\_lift $> 0$
+on all 500 cells, every seed has max\_n\_lift $\geq 50$.
+
+\textbf{H4 (PARTIAL -- fset decomposition)}: 20raw+stat maximizes
+value\_rate at low rates on 10/10 (rate $\times$ tier) cells at rates
+$\in \{0.05, 0.10\}\%$.  This REPLICATES the iter-140 H2 finding at the
+escalation-value layer.  At the release rate (1.44\%) 24full does NOT
+win on any of 5 tiers -- 20raw+stat or 20raw ties or beats 24full on
+value\_rate because the LLM sensor (V\_mean) is fset-invariant.
+
+\subsubsection{Sharpest paper-grade findings}
+
+\begin{enumerate}
+  \item \textbf{Mean value rate 0.42--0.69 across 5 seeds}: the LLM
+    sensor catches 42--69\% of XGB-missed positives on average across
+    (rate $\times$ fset) cells.  This is the \emph{recall lift} that
+    escalation provides -- the difference between deploying XGB-only
+    and XGB+LLM-sensor at the iter-80 gradient-band threshold.
+
+  \item \textbf{Max n\_lift = 50--54 across seeds}: at 1.44\% positive
+    rate, the LLM sensor catches up to 54 of the $\sim$71 XGB-missed
+    positives (recall lift 76\%).  This is the upper bound of the
+    escalation value at the canonical rate.
+
+  \item \textbf{Frontier tier breakeven drop}: only frontier\_gpt4
+    tier fails breakeven on 16/100 cells.  All 4 cheaper tiers are
+    100\% breakeven.  The 16 failing cells are at rates 1.44\% and
+    1.00\% with high V\_mean density (more waste calls per value).
+
+  \item \textbf{Per-rate value\_rate at cheap tier}: 20--53 lift per
+    cell across rates.  At low rates (0.05\%, 0.10\%) absolute n\_lift
+    is small (1--7) because XGB-missed-positives is small.  At higher
+    rates (1.00\%, 1.44\%) n\_lift = 35--54.
+
+  \item \textbf{Tier-monotone invariance}: the ratio
+    esc\_cost\_per\_lift(frontier) / esc\_cost\_per\_lift(cheap) is
+    exactly 300$\times$ (matching the iter-124 / iter-148 tier price
+    ratio of 0.030/0.0001).  This means the LLM price-tier
+    \emph{passes through} to escalation cost linearly -- the only way
+    to reduce esc\_cost is to reduce the number of LLM calls (not to
+    shop for a cheaper LLM with the same call rate).
+\end{enumerate}
+
+\subsubsection{Cross-paper coupling}
+\begin{itemize}
+  \item \textbf{P8 iter-148 row 166}: iter-148 cost matrix averages
+    across all fires; iter-156 decomposes fires into value vs waste.
+    Same 5 seeds, same 5 rates, same 4 fsets; iter-148 measures
+    \emph{cost}, iter-156 measures \emph{value}.
+  \item \textbf{P8 iter-152 row 169}: iter-152 5-seed CV on
+    acd (cost-side); iter-156 5-seed CV on value\_rate
+    (value-side).  iter-152 H1 PASS (cheap tier tied across seeds);
+    iter-156 H2b PASS (cheap tier breakeven across seeds).  Both
+    methods are seed-robust on the cost-or-value decision.
+  \item \textbf{P8 iter-140 row 153}: iter-140 found 20raw+stat
+    best at low rates on P@1\%.  iter-156 H4 replicates this at the
+    value\_rate layer (10/10 low-rate cells have 20raw+stat best).
+    This is the second confirmation that \textbf{central-tendency
+    aggregates (V\_mean, V\_std)} carry the operationally-relevant
+    signal at realistic fraud rates, while \textbf{tail-extreme
+    aggregates (V\_min, V\_max)} lose value at low rates.
+  \item \textbf{P8 iter-124 row 137}: iter-124 found cost tiers
+    produce 1$\times$--3.5$\times$ ACD spread.  iter-156 finds
+    esc\_cost\_per\_lift spread is 300$\times$ (because VALUE is
+    constant at \$50 per catch).  The 300$\times$ spread on
+    esc\_cost\_per\_lift is the \emph{operational magnitude} of the
+    iter-124 tier-price spread on the escalation-economics axis.
+\end{itemize}

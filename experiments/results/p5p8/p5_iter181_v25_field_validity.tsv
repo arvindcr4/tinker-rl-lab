@@ -1,0 +1,14 @@
+field	family	type	range_or_none	n_valid	valid_rate	valid_lo	valid_hi
+model	identity	str		98	1.0000	0.9623	1.0000
+task_slice	identity	str		98	1.0000	0.9623	1.0000
+G	identity	int		98	1.0000	0.9623	1.0000
+temperature	identity	float		98	1.0000	0.9623	1.0000
+seed	identity	int		98	1.0000	0.9623	1.0000
+mean_reward	rollout_outcomes	float	(0.0, 1.0)	98	1.0000	0.9623	1.0000
+zvf	rollout_outcomes	float	(0.0, 1.0)	98	1.0000	0.9623	1.0000
+pcd	rollout_outcomes	float	(0.0, 1.0)	98	1.0000	0.9623	1.0000
+n_groups	rollout_outcomes	int	(1, 10000)	98	1.0000	0.9623	1.0000
+sample_errors	rollout_outcomes	int	(0, 100000)	98	1.0000	0.9623	1.0000
+mean_completion_len	rollout_outcomes	float	(0.0, 10000.0)	98	1.0000	0.9623	1.0000
+std_completion_len	rollout_outcomes	float	(0.0, 1000.0)	98	1.0000	0.9623	1.0000
+sampled_tokens	operational	int	(0, 1000000000)	98	1.0000	0.9623	1.0000

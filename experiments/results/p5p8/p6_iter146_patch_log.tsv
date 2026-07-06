@@ -1,0 +1,14 @@
+entry	metric	panel	old_source	new_source	stored_delta	status
+delta_aero	mean_zvf	zvf130_5seed	experiments/results/zvf_iter130_method_risk.tsv	experiments/results/zvf_iter130_risk_index.tsv	-0.26052	PATCHED
+delta_areal	mean_zvf	zvf130_5seed	experiments/results/zvf_iter130_method_risk.tsv	experiments/results/zvf_iter130_risk_index.tsv	-0.35988	PATCHED
+delta_cppo	mean_zvf	zvf130_5seed	experiments/results/zvf_iter130_method_risk.tsv	experiments/results/zvf_iter130_risk_index.tsv	-0.18558	PATCHED
+delta_cppo	mag_mean	zvf130_5seed	experiments/results/zvf_iter130_risk_index.tsv	experiments/results/zvf_iter130_method_risk.tsv	-0.18558	PATCHED
+delta_es	mean_zvf	zvf130_5seed	experiments/results/zvf_iter130_method_risk.tsv	experiments/results/zvf_iter130_risk_index.tsv	-0.36656	PATCHED
+delta_es	mag_mean	zvf130_5seed	experiments/results/zvf_iter130_risk_index.tsv	experiments/results/zvf_iter130_method_risk.tsv	-0.36656	PATCHED
+delta_gift	mean_zvf	zvf130_5seed	experiments/results/zvf_iter130_method_risk.tsv	experiments/results/zvf_iter130_risk_index.tsv	-0.36658	PATCHED
+delta_mcgrpo	mean_zvf	zvf130_5seed	experiments/results/zvf_iter130_method_risk.tsv	experiments/results/zvf_iter130_risk_index.tsv	-0.33474	PATCHED
+delta_mcgrpo	mag_mean	zvf130_5seed	experiments/results/zvf_iter130_risk_index.tsv	experiments/results/zvf_iter130_method_risk.tsv	-0.33474	PATCHED
+delta_ngrpo	mean_zvf	zvf130_5seed	experiments/results/zvf_iter130_method_risk.tsv	experiments/results/zvf_iter130_risk_index.tsv	-0.18042	PATCHED
+delta_ngrpo	mag_mean	zvf130_5seed	experiments/results/zvf_iter130_risk_index.tsv	experiments/results/zvf_iter130_method_risk.tsv	-0.18042	PATCHED
+delta_scafgrpo	mean_zvf	zvf130_5seed	experiments/results/zvf_iter130_method_risk.tsv	experiments/results/zvf_iter130_risk_index.tsv	-0.16414	PATCHED
+delta_scafgrpo	mag_mean	zvf130_5seed	experiments/results/zvf_iter130_risk_index.tsv	experiments/results/zvf_iter130_method_risk.tsv	-0.16414	PATCHED

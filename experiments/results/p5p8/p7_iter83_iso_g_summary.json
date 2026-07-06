@@ -1,0 +1,49 @@
+{
+  "iter": 83,
+  "pillar": "P7",
+  "vein": "iso_g_controller",
+  "n_prompt_step_decisions": 2560,
+  "n_methods": 4,
+  "n_steps": 40,
+  "n_prompts_per_step": 16,
+  "G_BASE": 8,
+  "G_ESC": 16,
+  "G_DES": 4,
+  "G_CHOICES": [
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    16,
+    24,
+    32
+  ],
+  "baseline_rollouts": 20480,
+  "controllers": [
+    "C0_fixed",
+    "C1_zvf_triage",
+    "C2_dualformer",
+    "C3_hybrid",
+    "C4_bayesian",
+    "C5_iso_g_0.50",
+    "C5_iso_g_0.70",
+    "C5_iso_g_0.90",
+    "C5_iso_g_0.95"
+  ],
+  "headline": {
+    "best_cost_ratio_under_iso_g": {
+      "controller": "C5_iso_g_0.90",
+      "cost_ratio": 1.1832,
+      "total_delta_yield": 18.2847,
+      "n_fires": 147
+    },
+    "best_yield_per_1k_extra": {
+      "controller": "C5_iso_g_0.90",
+      "method": "aero",
+      "yield_per_1k_extra": 19.61,
+      "cost_ratio": 1.2051
+    }
+  }
+}

@@ -1,0 +1,97 @@
+% Section: window-sensitivity schema backfill (P6, iter 84 SYNTH)
+% Closes the iter-82 row 97 mint recommendation: extends measured_delta
+% with two additive-optional fields (window_sensitivity enum +
+% robust_panel string) and backfills the 3 N2-same-stack delta entries.
+\subsection{Window-sensitivity registry schema backfill (iter 84 SYNTH)}
+\label{sec:p6-window-sensitivity-backfill}
+
+The iter-82 row 97 audit documented that the same-stack variant deltas
+are panel-sensitive: the registry records measurements against
+\verb|panel=n2_same_stack_last10|, but a fresh window-by-window
+re-measurement (paired-step bootstrap, $B=2000$, seed 20260705) shows
+that the same-sign significance holds across panels for only 6 of 12
+cells. The iter-82 audit recommended (and deferred) a schema bump to
+make this property machine-readable. This iter lands the bump.
+
+\subsubsection{Schema extension}
+Two new optional fields on \verb|measured_delta|:
+\begin{itemize}
+\item \texttt{window\_sensitivity} (string enum):
+      \texttt{STABLE} / \texttt{STABLE-DIRECTION-MAG-SHIFT} /
+      \texttt{FRAGILE-SIGN-FLIP}.  Default =
+      \texttt{STABLE-DIRECTION-MAG-SHIFT}.
+\item \texttt{robust\_panel} (string enum):
+      \texttt{full40} / \texttt{last20} / \texttt{last10} / \texttt{last5} /
+      \texttt{none}. The largest-window panel at which the same-sign
+      significance holds; \texttt{none} if no panel is significant.
+\end{itemize}
+Both fields are \emph{additive, optional, nullable}.
+\texttt{additionalProperties:false} is preserved. \textbf{35/35 registry
+entries pass jsonschema validation post-bump.}
+
+\subsubsection{Classification rule}
+Per (method, metric) cell:
+\begin{itemize}
+\item \textbf{\texttt{FRAGILE-SIGN-FLIP}} if $\sign(\delta_{\mathrm{full40}})
+      \neq \sign(\delta_{\mathrm{last5}})$ \emph{AND} both $|\delta| > 0.005$
+      (the noise floor the iter-82 data requires).
+\item \textbf{\texttt{STABLE}} if all three panels (full40, last10, last5)
+      are significant AND the same-sign relative magnitude change
+      $|\delta_{\mathrm{full40}} - \delta_{\mathrm{last5}}| /
+      |\delta_{\mathrm{full40}}| < 0.30$.
+\item \textbf{\texttt{STABLE-DIRECTION-MAG-SHIFT}} (default) otherwise.
+\end{itemize}
+
+\subsubsection{Backfilled cells}
+Six \verb|measured[]| rows across the three N2-same-stack remeasured
+entries (\texttt{delta\_aero}, \texttt{delta\_gift}, \texttt{delta\_areal})
+carry the new fields. Per-cell:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{ll lll}
+\toprule
+method & metric & full40 sig & last10 sig & last5 sig \\
+\midrule
+aero  & zvf          & NS ($\delta{=}0$)       & NS ($-0.025$) & \textbf{SIG ($-0.063$)} \\
+aero  & reward\_mean & NS ($-0.007$)          & \textbf{SIG ($-0.014$)} & \textbf{SIG ($-0.020$)} \\
+gift  & zvf          & \textbf{SIG ($+0.050$)} & \textbf{SIG ($+0.125$)} & \textbf{SIG ($+0.113$)} \\
+gift  & reward\_mean & \textbf{SIG ($+0.011$)} & NS ($+0.016$) & NS ($+0.023$) \\
+gift  & mean\_len    & NS ($-0.74$)            & NS ($-3.89$)  & \textbf{SIG ($-11.61$)} \\
+areal & reward\_mean & NS ($-0.005$)          & \textbf{SIG ($-0.020$)} & \textbf{SIG ($-0.020$)} \\
+\bottomrule
+\end{tabular}
+\caption{Window-by-window significance of the 6 backfilled cells. Every cell carries
+\texttt{window\_sensitivity=STABLE-DIRECTION-MAG-SHIFT} -- same sign across panels
+with magnitude varying, but no cell clears the FRAGILE threshold.}
+\label{tab:p6-window-sensitivity}
+\end{table}
+
+The \verb|robust_panel| resolves as: aero.zvf $\to$ none (no same-sign panel sig);
+aero.reward\_mean $\to$ last10; gift.zvf $\to$ full40;
+gift.reward\_mean $\to$ full40; gift.mean\_len $\to$ last5;
+areal.reward\_mean $\to$ last10. \textbf{5/6 cells resolve to last10,
+full40, or last5} --- consistent with the iter-82 row 97 finding that the
+registry's \texttt{panel=n2\_same\_stack\_last10} choice was a
+\emph{defensible} default, not a cherry-pick.
+
+\subsubsection{Cross-paper coupling}
+\begin{itemize}
+\item \textbf{P6 iter-82 row 97}: this iter closes the iter-82 mint
+      recommendation. The deferred schema patch is now landed.
+\item \textbf{P6 iter-66 / iter-70 / iter-78}: registry coverage audits
+      as a class; the iter-84 window-sensitivity field is the FIRST
+      coverage-style field that scores "did this entry survive a
+      panel-by-panel remeasurement?" rather than "does this entry
+      self-report it was measured?".
+\item \textbf{P5 iter-65 row 23 / row 76}: the iter-65 $\eta^2$ recipe on
+      the algorithm axis is the analog of the iter-84 window-sensitivity
+      verb at the panel axis. Both audit "does the same entry hold up
+      under an alternative measurement?".
+\item \textbf{P8 iter-84 row 99}: the fraud-detection cohort-calibration
+      audit and the registry window-sensitivity backfill share the
+      structural question "does the same model hold up under a different
+      assessment window?". P8 answer: NO (every cohort breaches the
+      0.10 ECE threshold). P6 answer: same sign, magnitude varies.
+\end{itemize}

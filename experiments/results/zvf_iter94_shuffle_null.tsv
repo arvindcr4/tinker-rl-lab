@@ -1,0 +1,14 @@
+# zvf_iter94_shuffle_null.tsv — anti-herding bonus calibration. Per (model, G, seed) of groupsize_zvf_sweep; zvf_iid = p^G + (1-p)^G, delta_div = empirical ZVF − zvf_iid. delta_div > 0 means anti-herding (frontier synthesis).
+model	G	seed	mean_p	zvf_iid	zvf_emp	delta_div	abs_delta_div	last10_acc
+Qwen/Qwen2.5-0.5B	2	42	0.8273	0.7143	0.8266	0.1123	0.1123	0.9781
+Qwen/Qwen2.5-0.5B	2	123	0.8523	0.7483	0.8516	0.1033	0.1033	0.975
+Qwen/Qwen2.5-0.5B	2	456	0.8398	0.731	0.8359	0.1049	0.1049	0.9781
+Qwen/Qwen2.5-0.5B	4	42	0.8566	0.5389	0.7578	0.2189	0.2189	0.9688
+Qwen/Qwen2.5-0.5B	4	123	0.868	0.5679	0.7812	0.2134	0.2134	0.9734
+Qwen/Qwen2.5-0.5B	4	456	0.8629	0.5548	0.7516	0.1968	0.1968	0.9719
+Qwen/Qwen2.5-0.5B	8	42	0.8656	0.3152	0.7016	0.3863	0.3863	0.9727
+Qwen/Qwen2.5-0.5B	8	123	0.8711	0.3315	0.6922	0.3607	0.3607	0.9805
+Qwen/Qwen2.5-0.5B	8	456	0.8715	0.3327	0.6781	0.3454	0.3454	0.9664
+Qwen/Qwen2.5-0.5B	16	42	0.8712	0.1101	0.6219	0.5118	0.5118	0.9891
+Qwen/Qwen2.5-0.5B	16	123	0.8783	0.1254	0.6344	0.5089	0.5089	0.9871
+Qwen/Qwen2.5-0.5B	16	456	0.8697	0.1072	0.6375	0.5303	0.5303	0.975

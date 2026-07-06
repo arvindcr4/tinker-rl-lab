@@ -1,0 +1,92 @@
+{
+  "n_patched": 5,
+  "n_skipped": 0,
+  "n_targeted": 5,
+  "patch_results": [
+    {
+      "entry_id": "delta_cppo",
+      "method": "cppo",
+      "n_seeds": 5,
+      "new_ci": [
+        -0.18788,
+        -0.18318
+      ],
+      "new_delta": -0.18558,
+      "old_ci": [
+        null,
+        null
+      ],
+      "old_delta": -0.18558,
+      "significant": true,
+      "skipped": false
+    },
+    {
+      "entry_id": "delta_es",
+      "method": "es",
+      "n_seeds": 5,
+      "new_ci": [
+        -0.3715,
+        -0.36304
+      ],
+      "new_delta": -0.36656,
+      "old_ci": [
+        null,
+        null
+      ],
+      "old_delta": -0.36656,
+      "significant": true,
+      "skipped": false
+    },
+    {
+      "entry_id": "delta_mcgrpo",
+      "method": "mcgrpo",
+      "n_seeds": 5,
+      "new_ci": [
+        -0.34166,
+        -0.32892
+      ],
+      "new_delta": -0.33474,
+      "old_ci": [
+        null,
+        null
+      ],
+      "old_delta": -0.33474,
+      "significant": true,
+      "skipped": false
+    },
+    {
+      "entry_id": "delta_ngrpo",
+      "method": "ngrpo",
+      "n_seeds": 5,
+      "new_ci": [
+        -0.18166,
+        -0.17916
+      ],
+      "new_delta": -0.18042,
+      "old_ci": [
+        null,
+        null
+      ],
+      "old_delta": -0.18042,
+      "significant": true,
+      "skipped": false
+    },
+    {
+      "entry_id": "delta_scafgrpo",
+      "method": "scafgrpo",
+      "n_seeds": 5,
+      "new_ci": [
+        -0.16728,
+        -0.16076
+      ],
+      "new_delta": -0.16414,
+      "old_ci": [
+        null,
+        null
+      ],
+      "old_delta": -0.16414,
+      "significant": true,
+      "skipped": false
+    }
+  ]
+}

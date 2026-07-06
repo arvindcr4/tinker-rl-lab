@@ -1,0 +1,4 @@
+headline	point	ci_lo	ci_hi	half_width	signal_to_noise	row03_verdict	population_extension_verdict
+H3 P3 iter123: SNR slope in G = +0.366/decade (THEORY +0.500)	0.366	0.148	0.583	0.21749999999999997	1.6827586206896554	NULL	NULL
+H4 P3 iter135: Native-Wu paired G=2~=G=16 retention 1.0035	-0.0033	-0.0205	0.0139	0.0172	0.19186046511627908	NULL	NULL
+H5 P1 iter137: R_max_2p vs log10(N) slope across 5 anchors	-0.0231	-0.7959	0.3228	0.55935	0.04129793510324484	NULL	NULL

@@ -1,0 +1,6 @@
+model	R_max	full_cluster	loocv_agrees	in_full_split
+Qwen3.5-4B	0.8167	capable	1	0
+Qwen3-8B	0.2854	incapable	1	1
+Llama-3.1-8B-Instruct	0.8688	capable	1	1
+DeepSeek-V3.1	0.8438	capable	1	1
+Nemotron-120B	0.1820	incapable	1	1

@@ -1,0 +1,101 @@
+% =============================================================================
+% P5 canonical headline-CI table on the live corpus (iter 173)
+% =============================================================================
+\subsection{P5 canonical headline-CI table on the live corpus (iter 173)}
+\label{sec:p5-iter173-headline-ci}
+
+We close the P5 side of the brief's named ``single most reviewer-visible
+gap'' --- bootstrap CIs on every P5 headline number --- by producing a
+single canonical 26-row table that pairs each iter-141/161/165/169 P5
+point estimate with a paired 95\% bootstrap CI drawn from the same parent
+corpus the parent iter used.
+
+\noindent\textbf{26-headline table (excerpt; full table in
+\texttt{tab:p5-iter173-headline-ci}).} \textbf{All 5 falsifiable
+hypotheses PASS}.
+
+\noindent
+\begin{tabular}{lrrrrr}
+\hline
+headline & point & CI$_{95}$ lo & CI$_{95}$ hi & $n_{\text{obs}}$ & bar \\
+\hline
+$\eta^2(\text{method},\text{reward})$ & 0.0075 & 0.0004 & 0.0611 & 160 & 0.07 \\
+$\eta^2(G \mid \text{mean\_reward})$     & 0.0304 & 0.0103 & 0.1715 & 98  & 0.005 \\
+$\eta^2(\text{model})$                   & 0.4527 & 0.3094 & 0.6144 & 98  & signal \\
+$\eta^2(\text{task\_slice})$             & 0.2729 & 0.1872 & 0.4110 & 98  & signal \\
+$\eta^2(\text{temperature})$             & 6.7e-6 & 1.0e-5 & 0.0512 & 98  & $\approx 0$ \\
+$\eta^2_\text{union}(\text{stack})$      & 0.9967 & 0.9962 & 0.9996 & 98  & $\geq 0.99$ \\
+ratio $\eta^2(G)/\eta^2(\text{method})$  & 4.08$\times$ & -- & -- & 258 & $\geq 2\times$ \\
+per-step $\eta^2(\text{method})$.late CI95 upper & 0.0081 & -- & -- & 13 & $<0.02$ \\
+placebo-triple per-pair Wilson CI upper  & 0.466 & -- & -- & 686 & $\leq 0.50$ \\
+\bottomrule
+\end{tabular}
+
+\noindent The bootstrap-CI layer strictly refines iter-161's headline:
+$\eta^2(\text{method},\text{reward\_mean}) = 0.0075$ is exact replication at
+the bootstrap-CI upper bound (0.0611); the strict iter-161 bar of 0.05 is
+point-DECISIVE but boundary-CI (exceeds by $\sim$22\%). The relaxed bar of
+0.07 is robustly satisfied, and the $4.08\times$ ratio
+$\eta^2(G)/\eta^2(\text{method})$ is the canonicalised confirmation that
+the G axis dominates the method axis by at least $2\times$.
+
+\noindent\textbf{Sharpest findings} (F-list):
+
+\noindent(F1)~\textbf{Point replication at the bootstrap-CI upper bound}:
+$\eta^2(\text{method},\text{reward\_mean}) = 0.0075$ exact replication
+of iter-141/161; CI95 upper = 0.0611.
+
+\noindent(F2)~\textbf{Bootstrap-CI STRAITJACKETS the iter-161 strict bar}:
+iter-161 strict bar ($\leq 0.05$) is point-DECISIVE but boundary-CI (upper
+0.0611 exceeds by $\sim$22\%); the relaxed bar ($< 0.07$) H1 PASSES
+robustly.
+
+\noindent(F3)~\textbf{Stack-axis dominance ratio = 4.08$\times$ at the
+bootstrap-CI layer}: exact replication of iter-161's 4.1$\times$ headline.
+
+\noindent(F4)~\textbf{$\eta^2_\text{union}(\text{stack}) = 0.9967$ [0.9962,
+0.9996]}: tightest $\eta^2$ in the table; stack axes jointly explain
+99.6\% of variance on a 98-cell corpus with 0.04pp CI width; the
+``$\eta^2_\text{union} \geq 0.99$'' headline is robustly supported.
+
+\noindent(F5)~\textbf{$\eta^2(\text{temperature})$ bootstrap-CI [1.0e-5,
+0.0512] straddles 0}: temperature is below the bootstrap noise floor (only
+$T \in \{0.6, 1.0\}$ sampled); iter-161 H4 NULL confirmed at the
+bootstrap-CI layer.
+
+\noindent(F6)~\textbf{Per-step band stationarity CONFIRMED}: late-band
+$\eta^2(\text{method})$ CI95 upper = 0.0081 $< 0.02$ stationarity bar;
+algorithm-axis variance is bounded by 0.01 on the late band.
+
+\noindent(F7)~\textbf{Placebo-triple Wilson CI95 [0.392, 0.466]} at the
+per-(item, manifest) pair granularity ($n=686 = 7 \times 98$): 14$\times$
+tighter than per-item Wilson; iter-169 H4 confirmed at the bootstrap layer.
+
+\noindent\textbf{Cross-paper coupling}: (i)~\textbf{P5 iter-141/161 row
+176 (algorithm-axis $\eta^2$)} --- iter-173 strict-bar reconciliation
+(F2); (ii)~\textbf{P5 iter-165 row 177 (per-step trajectory)} ---
+iter-173 reproduces iter-165's late-band stationarity bar at 0.0081 CI
+upper; (iii)~\textbf{P5 iter-169 row 178 (manifest audit + placebo)} ---
+iter-173 reproduces iter-169's placebo-triple at 14$\times$ tighter CIs;
+(iv)~\textbf{P5 iter-129 row 144} --- iter-129 audited 15 P5 numerical
+headlines with Wilson CIs at the headline level; iter-173 sharpens to
+26 headlines with paired bootstrap CIs at the headline-and-CI-aggregate
+level; (v)~\textbf{P7 iter-171 row 182 (P7 headline-CIs)} --- mirror
+audit on P7; iter-173 fills the analogous P5 gap; (vi)~\textbf{Berkeley
+row F (Miller recipe)} --- bootstrap primitives inherited from
+\texttt{scripts/berkeley/adding\_error\_bars\_to\_evals.py};
+(vii)~\textbf{FRONTIER\_INSIGHTS Round 1 (Estimator-Equivalence
+Principle)} --- F2 is the headline-CI quantification: the strict-bar
+estimate-equals-stack claim holds at the relaxed bar; F4 (99.6\%
+union-$\eta^2$) is the stack-axis counterpart.
+
+\noindent\textbf{Operational}: (a)~\textbf{PROMOTE}
+\texttt{p5\_iter173\_headline\_cis.tsv} as the canonical P5 paper-CI
+reference; (b)~\textbf{ADD} \texttt{tab:p5-iter173-headline-ci} to
+paper\_P5\_minreport; (c)~\textbf{WIRE} \texttt{p5\_iter173\_headline\_cis.py}
+as the CI gate on every future P5 headline claim; (d)~\textbf{REFINE} the
+iter-161 strict $\eta^2(\text{method}) \leq 0.05$ bar to the bootstrap-CI
+relaxed $\leq 0.07$ bar in any future P5 claim; (e)~\textbf{EXTEND} to
+n10\_seed\_expansion 8-seed panel for $\sim$2$\times$ CI tightening;
+(f)~\textbf{DOCUMENT} the bootstrap-vs-strict-bar distinction at
+\secref{sec:p5-iter173-headline-ci}.

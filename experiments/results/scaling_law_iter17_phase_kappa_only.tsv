@@ -1,0 +1,7 @@
+set	pair	cohens_kappa	n
+5anchor	heuristic-vs-changepoint	0.0	5
+5anchor	heuristic-vs-aic	1.0	5
+5anchor	changepoint-vs-aic	0.0	5
+12anchor	heuristic-vs-changepoint	-0.028571428571428702	12
+12anchor	heuristic-vs-aic	0.625	12
+12anchor	changepoint-vs-aic	0.07692307692307714	12

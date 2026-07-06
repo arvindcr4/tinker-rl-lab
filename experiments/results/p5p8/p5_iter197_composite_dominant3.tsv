@@ -1,0 +1,4 @@
+channel	eta2_dom3	algo_eta2	ratio_dom3	dom3_boot_lo	dom3_boot_hi	dom3_ci_excludes_1
+zvf	0.12112	0.04542	2.66678	0.84001	14.52183	False
+reward	0.08775	0.00747	11.75245	1.20088	52.33975	True
+len	0.06405	0.06314	1.01438	0.36149	4.73301	False

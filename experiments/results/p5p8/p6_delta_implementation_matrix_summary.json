@@ -1,0 +1,278 @@
+{
+  "by_dc": {
+    "delta_aero|advantage_guided_evolution": {
+      "absent": 0,
+      "implemented": 1,
+      "not_applicable": 19,
+      "surrogate": 0,
+      "unknown": 0
+    },
+    "delta_areal|autoscaling_Rollout": {
+      "absent": 0,
+      "implemented": 1,
+      "not_applicable": 19,
+      "surrogate": 0,
+      "unknown": 0
+    },
+    "delta_cppo|continuity_penalty": {
+      "absent": 0,
+      "implemented": 0,
+      "not_applicable": 19,
+      "surrogate": 0,
+      "unknown": 1
+    },
+    "delta_dapo|clip_higher": {
+      "absent": 0,
+      "implemented": 1,
+      "not_applicable": 18,
+      "surrogate": 1,
+      "unknown": 0
+    },
+    "delta_dapo|dynamic_sampling": {
+      "absent": 1,
+      "implemented": 1,
+      "not_applicable": 18,
+      "surrogate": 0,
+      "unknown": 0
+    },
+    "delta_dapo|kl_removed": {
+      "absent": 0,
+      "implemented": 1,
+      "not_applicable": 18,
+      "surrogate": 0,
+      "unknown": 1
+    },
+    "delta_dapo|overlong_reward_shaping": {
+      "absent": 2,
+      "implemented": 0,
+      "not_applicable": 18,
+      "surrogate": 0,
+      "unknown": 0
+    },
+    "delta_dapo|token_level_loss": {
+      "absent": 0,
+      "implemented": 1,
+      "not_applicable": 18,
+      "surrogate": 0,
+      "unknown": 1
+    },
+    "delta_drgrpo|advantage_std_normalization": {
+      "absent": 0,
+      "implemented": 1,
+      "not_applicable": 18,
+      "surrogate": 1,
+      "unknown": 0
+    },
+    "delta_drgrpo|length_normalization": {
+      "absent": 0,
+      "implemented": 1,
+      "not_applicable": 18,
+      "surrogate": 1,
+      "unknown": 0
+    },
+    "delta_es|black_box_perturbation": {
+      "absent": 0,
+      "implemented": 0,
+      "not_applicable": 19,
+      "surrogate": 0,
+      "unknown": 1
+    },
+    "delta_gift|gamma_likelihood_baseline": {
+      "absent": 0,
+      "implemented": 1,
+      "not_applicable": 19,
+      "surrogate": 0,
+      "unknown": 0
+    },
+    "delta_gspo|sequence_level_clip": {
+      "absent": 0,
+      "implemented": 0,
+      "not_applicable": 19,
+      "surrogate": 0,
+      "unknown": 1
+    },
+    "delta_gspo|sequence_level_ratio": {
+      "absent": 0,
+      "implemented": 0,
+      "not_applicable": 19,
+      "surrogate": 1,
+      "unknown": 0
+    },
+    "delta_mcgrpo|mcts_rollout": {
+      "absent": 0,
+      "implemented": 0,
+      "not_applicable": 19,
+      "surrogate": 0,
+      "unknown": 1
+    },
+    "delta_mcgrpo|per_prompt_diversity_bonus": {
+      "absent": 0,
+      "implemented": 0,
+      "not_applicable": 19,
+      "surrogate": 0,
+      "unknown": 1
+    },
+    "delta_ngrpo|per_prompt_normalization": {
+      "absent": 0,
+      "implemented": 0,
+      "not_applicable": 19,
+      "surrogate": 0,
+      "unknown": 1
+    },
+    "delta_scafgrpo|scaffold_aware_advantage": {
+      "absent": 0,
+      "implemented": 0,
+      "not_applicable": 19,
+      "surrogate": 0,
+      "unknown": 1
+    }
+  },
+  "by_delta": {
+    "delta_aero": {
+      "implemented": 1,
+      "not_applicable": 19
+    },
+    "delta_areal": {
+      "implemented": 1,
+      "not_applicable": 19
+    },
+    "delta_cppo": {
+      "not_applicable": 19,
+      "unknown": 1
+    },
+    "delta_dapo": {
+      "absent": 3,
+      "implemented": 4,
+      "not_applicable": 90,
+      "surrogate": 1,
+      "unknown": 2
+    },
+    "delta_drgrpo": {
+      "implemented": 2,
+      "not_applicable": 36,
+      "surrogate": 2
+    },
+    "delta_es": {
+      "not_applicable": 19,
+      "unknown": 1
+    },
+    "delta_gift": {
+      "implemented": 1,
+      "not_applicable": 19
+    },
+    "delta_gspo": {
+      "not_applicable": 38,
+      "surrogate": 1,
+      "unknown": 1
+    },
+    "delta_mcgrpo": {
+      "not_applicable": 38,
+      "unknown": 2
+    },
+    "delta_ngrpo": {
+      "not_applicable": 19,
+      "unknown": 1
+    },
+    "delta_scafgrpo": {
+      "not_applicable": 19,
+      "unknown": 1
+    }
+  },
+  "by_stack": {
+    "colab-open_dapo_e3": {
+      "absent": 1,
+      "implemented": 4,
+      "not_applicable": 13
+    },
+    "colab-open_drgrpo_e3": {
+      "implemented": 2,
+      "not_applicable": 16
+    },
+    "colab-open_grpo-adaptiveg_e3": {
+      "not_applicable": 18
+    },
+    "colab-open_grpo_e3": {
+      "not_applicable": 18
+    },
+    "openrlhf_grpo_qwen3-8b_gsm8k": {
+      "not_applicable": 18
+    },
+    "tinker_aero_qwen3.5-4b_gsm8k": {
+      "implemented": 1,
+      "not_applicable": 17
+    },
+    "tinker_areal_qwen3.5-4b_gsm8k": {
+      "implemented": 1,
+      "not_applicable": 17
+    },
+    "tinker_dapo_qwen3.5-4b_gsm8k": {
+      "absent": 2,
+      "not_applicable": 13,
+      "surrogate": 1,
+      "unknown": 2
+    },
+    "tinker_drgrpo_qwen3.5-4b_gsm8k": {
+      "not_applicable": 16,
+      "surrogate": 2
+    },
+    "tinker_gift_qwen3.5-4b_gsm8k": {
+      "implemented": 1,
+      "not_applicable": 17
+    },
+    "tinker_grpo_qwen3-8b_gsm8k": {
+      "not_applicable": 18
+    },
+    "tinker_grpo_qwen3.5-4b_gsm8k": {
+      "not_applicable": 18
+    },
+    "tinker_gspo_qwen3.5-4b_gsm8k": {
+      "not_applicable": 16,
+      "surrogate": 1,
+      "unknown": 1
+    },
+    "trl_grpo_qwen3-8b_gsm8k": {
+      "not_applicable": 18
+    },
+    "verl_grpo_qwen3-8b_gsm8k": {
+      "not_applicable": 18
+    },
+    "zvf130_cppo": {
+      "not_applicable": 17,
+      "unknown": 1
+    },
+    "zvf130_es": {
+      "not_applicable": 17,
+      "unknown": 1
+    },
+    "zvf130_mcgrpo": {
+      "not_applicable": 16,
+      "unknown": 2
+    },
+    "zvf130_ngrpo": {
+      "not_applicable": 17,
+      "unknown": 1
+    },
+    "zvf130_scafgrpo": {
+      "not_applicable": 17,
+      "unknown": 1
+    }
+  },
+  "claim_rate_absent": 0.12,
+  "claim_rate_implemented": 0.36,
+  "claim_rate_surrogate": 0.16,
+  "claim_rate_unknown": 0.36,
+  "n_absent": 3,
+  "n_applicable_cells": 25,
+  "n_cells": 360,
+  "n_delta_components": 18,
+  "n_delta_records": 11,
+  "n_implemented": 9,
+  "n_measured_linkage_rows": 12,
+  "n_not_applicable_cells": 335,
+  "n_registry_gap_pairs": 0,
+  "n_stacks": 20,
+  "n_surrogate": 4,
+  "n_unknown": 9,
+  "n_unknown_status": 0,
+  "registry_gap_pairs": []
+}

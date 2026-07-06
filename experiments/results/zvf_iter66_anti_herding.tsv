@@ -1,0 +1,19 @@
+# Pillar 2 Iter 66 — anti-herding signature per library
+# delta_div = zvf_iid - zvf_obs (positive = anti_herd)
+# iid_pred = p^G + (1-p)^G (Binomial(G,p_bar) ZVF).
+# beta_lo_05 = 5th pct of Beta(1+n*p,1+n*(1-p))-Binomial
+# predictive over ZVF_iid(p), n=200.
+# anti_herd = observed < beta_lo_05 (sampler anti-herds)
+# herd      = observed > iid_pred (sampler over-herds)
+# neutral   = within Beta posterior interval
+# Source: scripts/zvf_iter66_distshape.py
+method	observed_zvf	mean_acc	iid_pred_zvf	beta_lo_05	delta_obs_minus_pred	delta_obs_minus_lower	signature	n
+aero	0.2225	0.2800	0.0723	0.0383	-0.1502	+0.1842	herd	495
+areal	0.1223	0.2790	0.0731	0.0387	-0.0493	+0.0836	herd	503
+cppo	0.2979	0.2748	0.0765	0.0407	-0.2214	+0.2572	herd	495
+es	0.1156	0.2698	0.0809	0.0434	-0.0348	+0.0722	herd	503
+gift	0.1153	0.2778	0.0741	0.0393	-0.0413	+0.0760	herd	503
+grpo	0.4856	0.2653	0.0849	0.0458	-0.4007	+0.4398	herd	1485
+mcgrpo	0.1477	0.2742	0.0771	0.0411	-0.0706	+0.1066	herd	503
+ngrpo	0.3032	0.2711	0.0797	0.0427	-0.2235	+0.2605	herd	495
+scafgrpo	0.3177	0.2866	0.0671	0.0354	-0.2505	+0.2823	herd	495

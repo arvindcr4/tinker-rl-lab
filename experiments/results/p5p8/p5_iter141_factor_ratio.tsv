@@ -1,0 +1,4 @@
+ratio	point	ci_lo	ci_hi	excludes_1
+step_over_method	124.3463	21.0697	552.6206	yes
+prompt_over_method	1822.4124	207.9370	8892.8367	yes
+step_over_prompt	0.0682	0.0621	0.1013	yes

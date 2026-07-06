@@ -1,0 +1,95 @@
+{
+  "n_total_rows": 12,
+  "n_point_match_within_1e-6": 12,
+  "point_match_rate": 1.0,
+  "n_width_match_within_5e-3": 11,
+  "width_match_rate": 0.9167,
+  "n_direction_match": 12,
+  "direction_match_rate": 1.0,
+  "n_cv_observed_delta_match": 12,
+  "n_cv_total_with_obs": 12,
+  "cv_consistency_rate": 1.0,
+  "h5_verdict_distribution": {
+    "SUPPORTS": 3,
+    "CONTRADICTS": 0,
+    "NEUTRAL": 3,
+    "UNCLAIMED": 6
+  },
+  "hypotheses": {
+    "H1": {
+      "claim": "every stored delta agrees with fresh recompute within 1e-6",
+      "bar": "12/12 exact",
+      "verdict": "PASS",
+      "evidence": "12/12 = 1.0000"
+    },
+    "H2": {
+      "claim": "claim_validation.observed_delta agrees with measured[].delta within 1e-6",
+      "bar": "12/12 exact",
+      "verdict": "PASS",
+      "evidence": "12/12 = 1.0000"
+    },
+    "H3": {
+      "claim": "stored CI width agrees with fresh paired-step bootstrap width within 5% relative",
+      "bar": ">= 11/12 = 91.7%",
+      "verdict": "PASS",
+      "evidence": "11/12 = 0.9167"
+    },
+    "H4": {
+      "claim": "stored CI direction (covers_zero / positive / negative) matches fresh CI direction",
+      "bar": ">= 11/12 = 91.7%",
+      "verdict": "PASS",
+      "evidence": "12/12 = 1.0000"
+    },
+    "H5": {
+      "claim": "fresh recompute does NOT contradict prose predicted_sign on more than 2 rows",
+      "bar": "<= 2 CONTRADICTS",
+      "verdict": "PASS",
+      "evidence": "n_contradicts=0/12; supports=3; neutral=3; unclaimed=6"
+    }
+  },
+  "per_entry": [
+    {
+      "entry": "aero",
+      "n_rows": 4,
+      "n_point_match_1e-6": 4,
+      "n_width_match_5pct": 4,
+      "n_direction_match": 4,
+      "point_match_rate": 1.0,
+      "width_match_rate": 1.0,
+      "direction_match_rate": 1.0
+    },
+    {
+      "entry": "gift",
+      "n_rows": 4,
+      "n_point_match_1e-6": 4,
+      "n_width_match_5pct": 3,
+      "n_direction_match": 4,
+      "point_match_rate": 1.0,
+      "width_match_rate": 0.75,
+      "direction_match_rate": 1.0
+    },
+    {
+      "entry": "areal",
+      "n_rows": 4,
+      "n_point_match_1e-6": 4,
+      "n_width_match_5pct": 4,
+      "n_direction_match": 4,
+      "point_match_rate": 1.0,
+      "width_match_rate": 1.0,
+      "direction_match_rate": 1.0
+    }
+  ],
+  "metadata": {
+    "n2_metrics_path": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+    "last_n": 10,
+    "n_boot": 2000,
+    "boot_seed": 20260704,
+    "abs_tol_point": 1e-06,
+    "rel_tol_ci_width": 0.05,
+    "registry_entries_audited": [
+      "aero",
+      "gift",
+      "areal"
+    ]
+  }
+}

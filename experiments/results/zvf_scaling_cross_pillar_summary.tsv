@@ -1,0 +1,11 @@
+test	description	n	statistic	value	method
+T1	Spearman(frac_below_0p1, is_collapse)	5	rho	0.7906	Spearman (point-biserial on binary is_collapse)
+T2	Spearman(zero_fraction, is_collapse)	5	rho	0.7906	Spearman
+T3	Spearman(frac_above_0p5, is_collapse)	5	rho	-0.7071	Spearman
+T4	Spearman((frac_below_0p1+zero_fraction)/2, is_collapse)	5	rho	0.7906	Spearman on the ZVF-proxy (mean of two all-wrong fractions)
+T5	Spearman(frac_below_0p1, late_minus_peak)	5	rho	-0.8944	Spearman
+T6-rank	ZVF-proxy rank for Qwen3.5-4B	1	rank	4.0	rank of Qwen3.5-4B on (frac_below_0p1+zero_fraction)/2
+T6-rank	ZVF-proxy rank for Qwen3-8B	1	rank	2.0	rank of Qwen3-8B on (frac_below_0p1+zero_fraction)/2
+T6-rank	ZVF-proxy rank for Llama-3.1-8B-Instruct	1	rank	4.0	rank of Llama-3.1-8B-Instruct on (frac_below_0p1+zero_fraction)/2
+T6-rank	ZVF-proxy rank for DeepSeek-V3.1	1	rank	4.0	rank of DeepSeek-V3.1 on (frac_below_0p1+zero_fraction)/2
+T6-rank	ZVF-proxy rank for Nemotron-120B	1	rank	1.0	rank of Nemotron-120B on (frac_below_0p1+zero_fraction)/2

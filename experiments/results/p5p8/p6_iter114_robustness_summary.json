@@ -1,0 +1,323 @@
+{
+  "n_delta_entries": 15,
+  "n_measured_rows": 33,
+  "n_claim_matrix_rows": 28,
+  "by_bucket": {
+    "UNDERPOWERED": 11,
+    "LOAD_BEARING": 2,
+    "FRAGILE_NS": 7,
+    "POINT_ONLY": 8,
+    "FRAGILE_SIG": 5
+  },
+  "bucket_weights": {
+    "LOAD_BEARING": 1.0,
+    "FRAGILE_SIG": 0.5,
+    "FRAGILE_NS": 0.25,
+    "UNDERPOWERED": 0.1,
+    "POINT_ONLY": 0.0,
+    "DEGENERATE": 0.0
+  },
+  "robustness_thresholds": {
+    "snr_load_bearing_min": 5.0,
+    "n_underpowered_max": 7,
+    "ci_method_point_only": "point_no_perseed_sd"
+  },
+  "entries_by_groundedness": [
+    {
+      "delta_id": "delta_adaptiveg",
+      "name": "Adaptive-G (ZVF-driven)",
+      "groundedness_score": 0.375,
+      "total_rows": 2,
+      "load_bearing": 0,
+      "theoretical_only": false
+    },
+    {
+      "delta_id": "delta_aero",
+      "name": "AERO",
+      "groundedness_score": 0.35,
+      "total_rows": 6,
+      "load_bearing": 1,
+      "theoretical_only": false
+    },
+    {
+      "delta_id": "delta_areal",
+      "name": "AREAL",
+      "groundedness_score": 0.35,
+      "total_rows": 6,
+      "load_bearing": 1,
+      "theoretical_only": false
+    },
+    {
+      "delta_id": "delta_gift",
+      "name": "GIFT",
+      "groundedness_score": 0.2667,
+      "total_rows": 6,
+      "load_bearing": 0,
+      "theoretical_only": false
+    },
+    {
+      "delta_id": "delta_drgrpo",
+      "name": "Dr. GRPO",
+      "groundedness_score": 0.1,
+      "total_rows": 3,
+      "load_bearing": 0,
+      "theoretical_only": false
+    },
+    {
+      "delta_id": "delta_cppo",
+      "name": "CPPO",
+      "groundedness_score": 0.05,
+      "total_rows": 2,
+      "load_bearing": 0,
+      "theoretical_only": false
+    },
+    {
+      "delta_id": "delta_es",
+      "name": "ES",
+      "groundedness_score": 0.05,
+      "total_rows": 2,
+      "load_bearing": 0,
+      "theoretical_only": false
+    },
+    {
+      "delta_id": "delta_mcgrpo",
+      "name": "MCGRPO",
+      "groundedness_score": 0.05,
+      "total_rows": 2,
+      "load_bearing": 0,
+      "theoretical_only": false
+    },
+    {
+      "delta_id": "delta_ngrpo",
+      "name": "NGRPO",
+      "groundedness_score": 0.05,
+      "total_rows": 2,
+      "load_bearing": 0,
+      "theoretical_only": false
+    },
+    {
+      "delta_id": "delta_scafgrpo",
+      "name": "SCAFGRPO",
+      "groundedness_score": 0.05,
+      "total_rows": 2,
+      "load_bearing": 0,
+      "theoretical_only": false
+    },
+    {
+      "delta_id": "delta_dapo",
+      "name": "DAPO",
+      "groundedness_score": 0.0,
+      "total_rows": 0,
+      "load_bearing": 0,
+      "theoretical_only": true
+    },
+    {
+      "delta_id": "delta_gspo",
+      "name": "GSPO",
+      "groundedness_score": 0.0,
+      "total_rows": 0,
+      "load_bearing": 0,
+      "theoretical_only": true
+    },
+    {
+      "delta_id": "delta_liteppo",
+      "name": "LitePPO",
+      "groundedness_score": 0.0,
+      "total_rows": 0,
+      "load_bearing": 0,
+      "theoretical_only": false
+    },
+    {
+      "delta_id": "delta_ppo",
+      "name": "PPO",
+      "groundedness_score": 0.0,
+      "total_rows": 0,
+      "load_bearing": 0,
+      "theoretical_only": true
+    },
+    {
+      "delta_id": "delta_reinforce",
+      "name": "REINFORCE",
+      "groundedness_score": 0.0,
+      "total_rows": 0,
+      "load_bearing": 0,
+      "theoretical_only": false
+    }
+  ],
+  "top_5_fragile_rows": [
+    {
+      "delta_id": "delta_adaptiveg",
+      "metric": "reward_mean",
+      "panel": "qp7_adaptive_armB_vs_armA_paired",
+      "delta": -0.007812,
+      "ci_low": -0.023926,
+      "ci_high": 0.009277,
+      "ci_half": 0.016601499999999998,
+      "abs_delta": 0.007812,
+      "n": 16,
+      "significant": 0,
+      "snr": "0.471",
+      "ci_method": "paired_step_bootstrap_pct",
+      "n_boot": 2000,
+      "bucket": "FRAGILE_NS",
+      "source": "experiments/results/quick_20260704/qp7_adaptive.tsv"
+    },
+    {
+      "delta_id": "delta_aero",
+      "metric": "pcd",
+      "panel": "n2_same_stack_last10",
+      "delta": 0.00293,
+      "ci_low": -0.002441,
+      "ci_high": 0.008984,
+      "ci_half": 0.0057125000000000006,
+      "abs_delta": 0.00293,
+      "n": 10,
+      "significant": 0,
+      "snr": "0.513",
+      "ci_method": "paired_step_bootstrap_pct",
+      "n_boot": 2000,
+      "bucket": "FRAGILE_NS",
+      "source": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+    },
+    {
+      "delta_id": "delta_gift",
+      "metric": "mean_len",
+      "panel": "n2_same_stack_last10",
+      "delta": -3.889063,
+      "ci_low": -10.63125,
+      "ci_high": 3.10625,
+      "ci_half": 6.86875,
+      "abs_delta": 3.889063,
+      "n": 10,
+      "significant": 0,
+      "snr": "0.566",
+      "ci_method": "paired_step_bootstrap_pct",
+      "n_boot": 2000,
+      "bucket": "FRAGILE_NS",
+      "source": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+    },
+    {
+      "delta_id": "delta_drgrpo",
+      "metric": "L_star",
+      "panel": "length_bias_iter60_grpo_vs_drgrpo_paired",
+      "delta": 44.2503,
+      "ci_low": -27.8523,
+      "ci_high": 116.3529,
+      "ci_half": 72.1026,
+      "abs_delta": 44.2503,
+      "n": 2,
+      "significant": 0,
+      "snr": "0.614",
+      "ci_method": "welch_pooled_task_mean",
+      "n_boot": 4000,
+      "bucket": "UNDERPOWERED",
+      "source": "experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv"
+    },
+    {
+      "delta_id": "delta_aero",
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "delta": -0.025,
+      "ci_low": -0.0625,
+      "ci_high": 0.0125,
+      "ci_half": 0.0375,
+      "abs_delta": 0.025,
+      "n": 10,
+      "significant": 0,
+      "snr": "0.667",
+      "ci_method": "paired_step_bootstrap_pct",
+      "n_boot": 2000,
+      "bucket": "FRAGILE_NS",
+      "source": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+    }
+  ],
+  "top_5_load_bearing_rows": [
+    {
+      "delta_id": "delta_aero",
+      "metric": "mean_len",
+      "panel": "n2_same_stack_last10",
+      "delta": 31.077344,
+      "ci_low": 27.384375,
+      "ci_high": 35.092969,
+      "ci_half": 3.854296999999999,
+      "abs_delta": 31.077344,
+      "n": 10,
+      "significant": 1,
+      "snr": "8.063",
+      "ci_method": "paired_step_bootstrap_pct",
+      "n_boot": 2000,
+      "bucket": "LOAD_BEARING",
+      "source": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+    },
+    {
+      "delta_id": "delta_areal",
+      "metric": "mean_len",
+      "panel": "n2_same_stack_last10",
+      "delta": 30.125781,
+      "ci_low": 25.170313,
+      "ci_high": 34.602344,
+      "ci_half": 4.716015500000001,
+      "abs_delta": 30.125781,
+      "n": 10,
+      "significant": 1,
+      "snr": "6.388",
+      "ci_method": "paired_step_bootstrap_pct",
+      "n_boot": 2000,
+      "bucket": "LOAD_BEARING",
+      "source": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+    },
+    {
+      "delta_id": "delta_scafgrpo",
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "delta": -0.352361,
+      "ci_low": -0.455533,
+      "ci_high": -0.249189,
+      "ci_half": 0.10317200000000001,
+      "abs_delta": 0.352361,
+      "n": 5,
+      "significant": 1,
+      "snr": "3.415",
+      "ci_method": "normal_approx_welch",
+      "n_boot": "",
+      "bucket": "UNDERPOWERED",
+      "source": "experiments/results/zvf_iter130_method_risk.tsv"
+    },
+    {
+      "delta_id": "delta_drgrpo",
+      "metric": "neg_frac",
+      "panel": "length_bias_iter60_grpo_vs_drgrpo_paired",
+      "delta": 0.1028,
+      "ci_low": 0.0646,
+      "ci_high": 0.1409,
+      "ci_half": 0.038149999999999996,
+      "abs_delta": 0.1028,
+      "n": 2,
+      "significant": 1,
+      "snr": "2.695",
+      "ci_method": "welch_pooled_task_mean",
+      "n_boot": 4000,
+      "bucket": "UNDERPOWERED",
+      "source": "experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv"
+    },
+    {
+      "delta_id": "delta_es",
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "delta": -0.272578,
+      "ci_low": -0.374617,
+      "ci_high": -0.170539,
+      "ci_half": 0.10203899999999999,
+      "abs_delta": 0.272578,
+      "n": 5,
+      "significant": 1,
+      "snr": "2.671",
+      "ci_method": "normal_approx_welch",
+      "n_boot": "",
+      "bucket": "UNDERPOWERED",
+      "source": "experiments/results/zvf_iter130_method_risk.tsv"
+    }
+  ],
+  "audit_source": "scripts/p5p8/p6_iter114_robustness_ledger.py",
+  "audit_date": "2026-07-05"
+}

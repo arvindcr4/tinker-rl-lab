@@ -1,0 +1,21 @@
+{
+  "iteration": 84,
+  "pillar": "P4-LengthBias",
+  "method": "DFA-Hurst + magnitude-squared spectral coherence + VAR(2) Granger F",
+  "inputs": [
+    "drgrpo_vs_grpo.json",
+    "drgrpo_gsm8k_cot_full.json"
+  ],
+  "n_runs": 16,
+  "n_per_task": {
+    "arithmetic": 10,
+    "gsm8k_cot": 6
+  },
+  "band_definitions": {
+    "vlow": "0.00-0.05 cyc/step",
+    "low": "0.05-0.15",
+    "mid": "0.15-0.30",
+    "high": "0.30-0.50"
+  },
+  "rng_seed": 84
+}

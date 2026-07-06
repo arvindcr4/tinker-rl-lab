@@ -1,0 +1,72 @@
+{
+  "iter": 159,
+  "n_cells": 2560,
+  "n_methods": 4,
+  "controllers": [
+    "STATIC_G8",
+    "STATIC_G16",
+    "DUALFORMER_PP",
+    "ADAPTIVE_PP_ORACLE",
+    "UNIFIED_C4"
+  ],
+  "bootstrap_B": 2000,
+  "seed": 20260705,
+  "pareto_frontier_controllers": [
+    "ADAPTIVE_PP_ORACLE",
+    "DUALFORMER_PP",
+    "STATIC_G8",
+    "UNIFIED_C4"
+  ],
+  "n_pareto_optimal": 5,
+  "h1_c4_retention_gt_static_g8_paired": {
+    "mean_diff": 0.0155,
+    "ci95_lo": 0.0155,
+    "ci95_hi": 0.0155,
+    "pass": true
+  },
+  "h2_c4_mpc_gt_oracle": {
+    "c4_mpc": 0.1913,
+    "oracle_mpc": 0.0673,
+    "pass": true
+  },
+  "h3_c4_retention_ci_tight": {
+    "mean_ci_half_width": 0.0334,
+    "bar": 0.05,
+    "pass": true
+  },
+  "h4_pareto_frontier_contains_c4": {
+    "frontier_controllers": [
+      "ADAPTIVE_PP_ORACLE",
+      "DUALFORMER_PP",
+      "STATIC_G8",
+      "UNIFIED_C4"
+    ],
+    "pass": true
+  },
+  "h5_c4_cost_ci_strictly_above_baseline": {
+    "per_method_ci_lo_above_1.0": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "n_methods_passing": 4,
+    "pass": true
+  },
+  "h6_c4_method_portability_2x": {
+    "c4_sd": 0.007848,
+    "oracle_sd": 0.073102,
+    "ratio": 9.31,
+    "bar": 2.0,
+    "pass": true
+  },
+  "h7_c4_dominates_static_g8_retention": {
+    "n_methods_passing": 4,
+    "pass": true
+  },
+  "h8_zvf_reward_correlation_positive": {
+    "n_positive": 4,
+    "n_total": 4,
+    "pass": true
+  }
+}

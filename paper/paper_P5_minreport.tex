@@ -1,0 +1,57 @@
+% =============================================================================
+% STANDALONE PAPER 5 of 7 -- Pillar 5: MIN-REPORT-RL position paper
+% "RL-for-LLM results are stack-conditioned -- report the stack, not the label."
+% Reuses shared preamble/author/methods; pulls the P5 section family.
+% Build: pdflatex paper_P5_minreport ; bibtex paper_P5_minreport ; pdflatex x2
+% =============================================================================
+\documentclass{article}  % iter-149 forced rebuild to pick up bib patches (9 entries: agarwal2021deep, dao2022flashattention, gao2023reward, krakovna2020specification, pineau2020improving, rafailov2024direct, thinkingmachines2024tinker, vonwerra2022trl, zheng2024sglang)
+\input{sections/_shared_preamble}
+\title{Report the Stack, Not the Label:\\
+       RL-for-LLM Results Are Stack-Conditioned}
+\input{sections/_shared_author}
+\begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\input{sections/p5_abstract}
+\input{sections/p5_intro}
+\input{sections/_shared_methods}
+\input{sections/p5_results_intro}
+\input{sections/p5_evidence}
+\input{sections/p5_stack}
+\input{sections/p5_iter77_cross_corpus}
+\input{sections/p5_iter80_delta_div}
+\input{sections/p5_iter81_yield_axes}
+\input{sections/p5_iter85_ivison_unpacking}
+\input{sections/p5_iter89_n2_bootstrap}
+\input{sections/p5_iter93_mega_eta2_bootstrap}
+\input{sections/p5_iter97_schema_mismatch}
+\input{sections/p5_iter101_zvf130_eta2}
+\input{sections/p5_iter105_live_field_coverage}
+\input{sections/p5_iter113_v22_recovery}
+\input{sections/p5_iter121_value_correctness}
+\input{sections/p5_iter125_chained_eta2}
+\input{sections/p5_iter133_n10_eta2}
+\input{sections/p5_iter137_cross_corpus}
+\input{sections/p5_iter141_algorithm_axis}
+\input{sections/p5_iter145_schema_groundtruth}
+\input{sections/p5_iter153_v24_spec}
+\input{sections/p5_iter157_v24_self_app}
+\input{sections/p5_iter161_stack_factorization}
+\input{sections/p5_iter165_per_step_trajectory}
+\input{sections/p5_iter169_manifest_audit}
+\input{sections/p5_iter173_headline_cis}
+\input{sections/p5_iter177_forward_compat}
+\input{sections/p5_iter181_v25_rollout}
+\input{sections/p5_iter185_cross_corpus}
+\input{sections/p5_iter193_algo_vs_stack_ratio}
+\input{sections/p5_iter201_task_stratified_ratio}
+\input{sections/p5_threatmodel}
+\input{sections/p5_toolchain}
+\input{sections/p5_related}
+\input{sections/p5_limitations}
+\input{sections/p5_conclusion}
+\appendix
+\input{sections/p5_worked_example}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

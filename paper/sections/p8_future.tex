@@ -1,0 +1,33 @@
+% P8 future work + closing
+\section{Future Work: Building the Hybrid}
+\label{sec:p8-future}
+
+The obvious next step is to build and measure the architecture rather than
+argue it. Our plan, in the order the seats de-risk each other:
+
+\begin{enumerate}[leftmargin=1.5em, itemsep=1pt, topsep=2pt]
+\item \textbf{Sensor first.} Attach a VLM feature extractor to a
+document-bearing subset of cases and measure the marginal AUC of
+sensor-derived features \emph{inside the existing tree}---the cleanest test,
+since the metric is the incumbent's own. This includes adversarial
+evaluation: injected instructions inside documents must degrade at worst that
+document's features \citep{greshake2023injection}.
+\item \textbf{Scribe second.} Evaluate SAR-narrative drafts against FinCEN's
+element-coverage structure (who/what/when/where/why/how)
+\citep{fincen2003sarnarrative} with analyst-grader rubrics, and
+adverse-action drafts for fidelity to the tree's actual attributions
+\citep{cfr1002_9, cfpb2022circular}---measuring time-to-file and revision
+distance, with a hard human sign-off gate.
+\item \textbf{Triage third.} Replace the internal $85\times$ estimate with
+measured per-alert token costs and analyst-minutes-saved on a live queue,
+including the ordering quality of agent-ranked versus score-ranked queues.
+\item \textbf{Cold-start last.} Simulate typology emergence by holding out a
+generator cluster as an ``unseen scheme'' and measuring few-shot LLM detection
+during the label vacuum, against the retrained tree's catch-up curve.
+\end{enumerate}
+
+Each experiment scores one seat with the seat's own metric---capability
+measured, label ignored. If the program thesis holds anywhere outside RL
+post-training, it should hold here: the pipeline that results is not ``AI
+replacing the model'' but a tree that scores, an LLM that sees and writes, and
+an analyst who decides.

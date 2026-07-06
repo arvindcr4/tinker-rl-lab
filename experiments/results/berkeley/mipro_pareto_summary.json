@@ -1,0 +1,60 @@
+{
+  "lecture": "F24 L5 Omar Khattab (MIPRO arXiv:2406.11695 EMNLP 2024)",
+  "n_anchors": 12,
+  "n_instructions": 4,
+  "eval_budget": 48,
+  "n_seeds": 5,
+  "anchors_used": [
+    "DeepSeek-V3.1",
+    "Kimi-K2-Thinking",
+    "Llama-3.1-8B-Instruct",
+    "Nemotron-120B",
+    "Qwen3-235B-MoE",
+    "Qwen3-30B-MoE",
+    "Qwen3-30B-MoE-Inst",
+    "Qwen3-32B",
+    "Qwen3-8B",
+    "Qwen3.5-27B",
+    "Qwen3.5-4B",
+    "gpt-oss-20B"
+  ],
+  "instructions": [
+    "i0_baseline",
+    "i1_step_by_step",
+    "i2_short_answer",
+    "i3_long_reasoning"
+  ],
+  "mean_latent_oracle": 0.6819418256013746,
+  "best_possible_oracle": 0.9481443298969073,
+  "H1_mipro_lt_random_regret": {
+    "rand_regret": 3.556611546391754,
+    "mipro_regret_at_RB": 3.201842422680413,
+    "relief_pct": 0.09974919079123512,
+    "decisive": true
+  },
+  "H2_mipro_budget_efficient": {
+    "mipro_best_so_far": 0.9481443298969073,
+    "grid_best_so_far": 0.9481443298969073,
+    "ratio_mipro_over_grid": 1.0,
+    "decisive": true
+  },
+  "H3_paired_mipro_gt_random": {
+    "mipro_mean": 0.9481443298969073,
+    "random_mean": 0.928233556701031,
+    "cohens_d": 8.772076903969232,
+    "decisive": true
+  },
+  "H4_mipro_50pct_budget_95pct_grid": {
+    "grid_max": 0.9481443298969073,
+    "mipro_at_24evals": 0.9481443298969073,
+    "ratio": 1.0,
+    "decisive": true
+  },
+  "H5_info_gain_posterior_var": {
+    "rand_postvar": 0.06082265682571684,
+    "mipro_postvar": 0.0008358184318205983,
+    "ratio_mipro_over_random": 0.013741892831409499,
+    "decisive": true
+  },
+  "n_decisive": 5
+}

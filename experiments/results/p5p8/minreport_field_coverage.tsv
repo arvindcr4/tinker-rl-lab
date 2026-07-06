@@ -1,0 +1,8 @@
+item_no	item_name	key	cells_total	present	validated	missing	na_or_empty	unrecognized	pct_validated	pct_missing
+1	Loss form	loss_form	98	98	98	0	0	0	100.0	0.0
+2	Reference policy & KL	ref_policy_kl	98	98	0	0	98	0	0.0	0.0
+3	Sampler / backend / precision	sampler_backend_precision	98	98	98	0	0	0	100.0	0.0
+4	Per-step ZVF/GU trajectory	per_step_zvf_path	98	98	98	0	0	0	100.0	0.0
+5	Group-size schedule	group_size_schedule	98	98	98	0	0	0	100.0	0.0
+6	Held-out split	heldout_split	98	98	98	0	0	0	100.0	0.0
+7	Decontamination & parser probe	decontamination_notes	98	98	98	0	0	0	100.0	0.0

@@ -1,0 +1,41 @@
+delta_id	metric	panel	stored_delta	recomputed_delta	delta_diff	stored_ci	recomputed_ci	in_CI_band
+delta_adaptiveg	reward_mean	qp7_adaptive_armB_vs_armA_paired	-0.007812			[-0.023926, 0.009277]	[None, None]	
+delta_adaptiveg	zvf	qp7_adaptive_armB_vs_armA_paired	-0.074219			[-0.121094, -0.03125]	[None, None]	
+delta_aero	zvf	n2_same_stack_last10	-0.025	-0.025	0.0	[-0.0625, 0.0125]	[-0.0625, 0.0125]	True
+delta_aero	reward_mean	n2_same_stack_last10	-0.014063	-0.014063	0.0	[-0.023438, -0.005469]	[-0.023438, -0.005469]	True
+delta_aero	zvf_risk_mean	zvf130_5seed	-0.147637	-0.147637	0.0	[-0.285921, -0.009354]	[-0.285921, -0.009354]	True
+delta_aero	mean_zvf	zvf130_5seed	-0.26052			[-0.26234, -0.25882]	[None, None]	
+delta_aero	pcd	n2_same_stack_last10	0.00293	0.00293	0.0	[-0.002441, 0.008984]	[-0.002539, 0.008887]	True
+delta_aero	mean_len	n2_same_stack_last10	31.077344	31.077344	0.0	[27.384375, 35.092969]	[27.283594, 35.120312]	True
+delta_areal	zvf	n2_same_stack_last10	-0.05625	-0.05625	0.0	[-0.1125, 0.00625]	[-0.1125, 0.0]	True
+delta_areal	reward_mean	n2_same_stack_last10	-0.019531	-0.019531	0.0	[-0.032031, -0.007812]	[-0.032031, -0.007812]	True
+delta_areal	zvf_risk_mean	zvf130_5seed	-0.245767	-0.245767	0.0	[-0.354535, -0.137]	[-0.354535, -0.137]	True
+delta_areal	mean_zvf	zvf130_5seed	-0.35988			[-0.36452, -0.35672]	[None, None]	
+delta_areal	pcd	n2_same_stack_last10	0.007324	0.007324	0.0	[-0.000781, 0.014551]	[-0.00127, 0.015039]	True
+delta_areal	mean_len	n2_same_stack_last10	30.125781	30.125781	0.0	[25.170313, 34.602344]	[25.489062, 34.648438]	True
+delta_cppo	zvf_risk_mean	zvf130_5seed	-0.151077	-0.151077	0.0	[-0.253342, -0.048813]	[-0.253342, -0.048813]	True
+delta_cppo	mean_zvf	zvf130_5seed	-0.18558			[-0.18756, -0.1837]	[None, None]	
+delta_cppo	mag_mean	zvf130_5seed	-0.18558	-0.18558	0.0	[-0.18788, -0.18318]	[-0.287844, -0.083316]	True
+delta_drgrpo	neg_frac	length_bias_iter60_grpo_vs_drgrpo_paired	0.1028			[0.0646, 0.1409]	[None, None]	
+delta_drgrpo	pos_frac	length_bias_iter60_grpo_vs_drgrpo_paired	-0.1001			[-0.2087, 0.0085]	[None, None]	
+delta_drgrpo	L_star	length_bias_iter60_grpo_vs_drgrpo_paired	44.2503			[-27.8523, 116.3529]	[None, None]	
+delta_es	zvf_risk_mean	zvf130_5seed	-0.272578	-0.272578	0.0	[-0.374617, -0.170539]	[-0.374617, -0.170539]	True
+delta_es	mean_zvf	zvf130_5seed	-0.36656			[-0.37112, -0.3631]	[None, None]	
+delta_es	mag_mean	zvf130_5seed	-0.36656	-0.36656	0.0	[-0.3715, -0.36304]	[-0.468599, -0.264521]	True
+delta_gift	zvf	n2_same_stack_last10	0.125	0.125	0.0	[0.08125, 0.175]	[0.08125, 0.18125]	True
+delta_gift	reward_mean	n2_same_stack_last10	0.016406	0.016406	0.0	[-0.007031, 0.039844]	[-0.00625, 0.038281]	True
+delta_gift	zvf_risk_mean	zvf130_5seed	-0.263187	-0.263187	0.0	[-0.365427, -0.160948]	[-0.365427, -0.160948]	True
+delta_gift	mean_zvf	zvf130_5seed	-0.36658			[-0.37146, -0.36338]	[None, None]	
+delta_gift	pcd	n2_same_stack_last10	-0.018457	-0.018457	0.0	[-0.026172, -0.010352]	[-0.027246, -0.010352]	True
+delta_gift	mean_len	n2_same_stack_last10	-3.889063	-3.889063	0.0	[-10.63125, 3.10625]	[-10.446875, 3.182812]	True
+delta_mcgrpo	zvf_risk_mean	zvf130_5seed	-0.174277	-0.174277	0.0	[-0.288771, -0.059783]	[-0.288771, -0.059783]	True
+delta_mcgrpo	mean_zvf	zvf130_5seed	-0.33474			[-0.34164, -0.32942]	[None, None]	
+delta_mcgrpo	mag_mean	zvf130_5seed	-0.33474	-0.33474	0.0	[-0.34166, -0.32892]	[-0.449234, -0.220246]	True
+delta_ngrpo	zvf_risk_mean	zvf130_5seed	-0.131025	-0.131025	0.0	[-0.239395, -0.022656]	[-0.239395, -0.022656]	True
+delta_ngrpo	mean_zvf	zvf130_5seed	-0.18042			[-0.18246, -0.1783]	[None, None]	
+delta_ngrpo	mag_mean	zvf130_5seed	-0.18042	-0.18042	0.0	[-0.18166, -0.17916]	[-0.28879, -0.07205]	True
+delta_scafgrpo	zvf_risk_mean	zvf130_5seed	-0.352361	-0.352361	0.0	[-0.455533, -0.249189]	[-0.455533, -0.249189]	True
+delta_scafgrpo	mean_zvf	zvf130_5seed	-0.16414			[-0.16748, -0.16054]	[None, None]	
+delta_scafgrpo	mag_mean	zvf130_5seed	-0.16414	-0.16414	0.0	[-0.16728, -0.16076]	[-0.267312, -0.060968]	True
+delta_tool_use_llama-8b-inst	zvf_risk_mean	zvf130_1seed_tooluse	-0.030307			[None, None]	[None, None]	
+delta_tool_use_qwen3-32b	zvf_risk_mean	zvf130_1seed_tooluse	-0.030307			[None, None]	[None, None]	

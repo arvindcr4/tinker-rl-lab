@@ -1,0 +1,147 @@
+% Section: LLM-sensor cost-vs-recall frontier under extraction-noise (P8, iter 88)
+% Fresh vein (not in any of the 103 prior P8 rows). Closes the joint
+% "noise x cost-vs-recall" question that iter-84 (calibration_under_noise)
+% and iter-72 (cost-adjusted curve) leave open because each measured only
+% one half of the joint axis. Pairs with the operational SLO of the
+% iter-72 finding at $K^* = 1.5\%$ and the iter-84 noise robustness
+% sweep on AUC; sharpens to a deployable threshold: sigma \le 0.05.
+\subsection{LLM-as-scribe cost-vs-recall frontier under extraction-noise}
+\label{sec:p8-noise-cost-frontier}
+
+The P8 paper's central operating claim is that the LLM is a \emph{sensor}
+and a \emph{scribe}, not the \emph{scorer} --- the scoring function lives in
+the XGB backbone, but the LLM extracts per-row aggregates
+($V_{\text{mean}}, V_{\text{std}}, V_{\max}, V_{\min}$) that feed the
+backbone as four additional features. The P8 paper has, to this point,
+established two half-results:
+\begin{itemize}
+\item \textbf{iter-72 (\#72)}: at CLEAN conditions, the
+      cost-vs-recall frontier has a Pareto-stable operating point at
+      $K^* \approx 1.5\%$ alert-volume where XGB-24full Pareto-dominates
+      XGB-20raw on cost at matched recall.
+\item \textbf{iter-84 (\#84)}: LLM extraction noise $\sigma \le 0.25$
+      does not move AUC; AUC only meaningfully degrades at $\sigma \ge 0.75$.
+\end{itemize}
+Neither half answers the joint reviewer question: \emph{at what noise
+level does the cost-advantage of XGB-24full dissolve, and at what
+alert-volume $K$ does the model survive the noise?}
+
+\subsubsection{Method}
+Per (model, noise, K) cell on the canonical $n_{\text{train}}{=}50000$ /
+$n_{\text{test}}{=}10000$ fraud split (144 positives in test):
+\begin{itemize}
+\item \textbf{Noise model}: at \emph{test time only}, add
+      $N(0, \sigma^2)$ to each LLM-extracted aggregate, where
+      $\sigma = \sigma_{\text{mult}} \times \mathrm{sd}(V_{\text{agg}})$.
+      Training remains clean, isolating inference-time robustness.
+\item \textbf{Sweep}:
+      $\sigma_{\text{mult}} \in \{0.00,\, 0.05,\, 0.10,\, 0.25,\, 0.50\}$;
+      $K \in \{0.1, 0.25, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0\}\%$.
+\item \textbf{Cost}: $\mathrm{cost}(m, K) = c_{\text{sense}}(m) +
+      [C_{\text{inv}}\,(TP+FP) + L\, FN]/N_{\text{test}}$, with
+      $C_{\text{inv}}{=}\$0.50/\text{alert}$,
+      $L{=}\$100/\text{missed fraud}$, $\rho {=} 200$.
+\item \textbf{Pareto metric}: $\mathrm{cost\_at\_recall}(R) = \min_K
+      \{\mathrm{cost}(m, K) : \mathrm{recall}(K) \ge R\}$.
+\item \textbf{Paired bootstrap}: $B = 800$, seed 20260705 on the
+      matched-$K$ cost-delta $\mathrm{cost}(24) - \mathrm{cost}(20)$.
+\end{itemize}
+
+\subsubsection{Headlines}
+
+\paragraph{H1 --- cost-flip at $\sigma \approx 0.10$.}
+Paired-bootstrap cost-delta at $K = 1.0\%$ (the matched-budget
+operating point):
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{rccc}
+\toprule
+$\sigma_{\text{mult}}$ & median $\Delta_{\mathrm{cost}}$ (\$/dec) & 95\% CI & sig \\
+\midrule
+0.00 & $-0.0065$ & $[-0.0565,\,+0.0235]$ & no \\
+0.05 & $-0.0065$ & $[-0.0465,\,+0.0335]$ & no \\
+0.10 & $+0.0135$ & $[-0.0165,\,+0.0635]$ & no \\
+0.25 & $+0.0135$ & $[-0.0365,\,+0.0735]$ & no \\
+\textbf{0.50} & $\mathbf{+0.0935}$ & $\mathbf{[+0.0335,\,+0.1635]}$ & \textbf{yes} \\
+\bottomrule
+\end{tabular}
+\caption{Paired-bootstrap cost-delta at matched $K = 1.0\%$. XGB-24full
+Pareto-dominates XGB-20raw below $\sigma = 0.10$; XGB-20raw overtakes at
+$\sigma = 0.50$ with the 95\% CI excluding zero on the unfavorable side.}
+\label{tab:p8-noise-cost-k1pct}
+\end{table}
+
+\paragraph{H2 --- Pareto frontier at $\mathrm{recall}_{\text{target}} = 0.80$.}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{rccc}
+\toprule
+$\sigma_{\text{mult}}$ & XGB-20raw (\$/dec) & XGB-24full (\$/dec) & ahead \\
+\midrule
+0.00 & 0.025 & \textbf{0.0185} & \textbf{24} \\
+0.05 & 0.025 & \textbf{0.0185} & \textbf{24} \\
+0.10 & \textbf{0.025} & 0.0285 & 20 \\
+0.25 & \textbf{0.025} & 0.0285 & 20 \\
+\textbf{0.50} & \textbf{0.025} & \textbf{0.0735} & \textbf{20} \\
+\bottomrule
+\end{tabular}
+\caption{Cost-at-recall $0.80$ under increasing extraction noise.
+The crossover sits at $\sigma \in (0.05, 0.10]$.}
+\label{tab:p8-noise-cost-pareto-80}
+\end{table}
+
+\paragraph{H3 --- $K^* = 1.5\%$ is the Pareto-stable operating point.}
+At $\sigma \le 0.10$, paired-bootstrap CI on
+$\Delta_{\mathrm{cost}}(24{-}20)$ at $K = 1.5\%$ \emph{excludes zero on
+the favorable side}:
+\begin{align*}
+  \sigma = 0.00: &\quad \Delta_{\text{cost}} = -0.0765 \;\;\;[-0.1365,\,-0.0265] \;\;\text{**yes (24 wins)}** \\
+  \sigma = 0.10: &\quad \Delta_{\text{cost}} = -0.0765 \;\;\;[-0.1365,\,-0.0196] \;\;\text{**yes (24 wins)}**
+\end{align*}
+At $\sigma = 0.50$ the same cells have $\Delta_{\text{cost}} \ge
++0.057$ and the CI spans zero (no statistical advantage to either model).
+
+\paragraph{H4 --- XGB-4sensor is dominated at every noise level.}
+At every $\sigma$ and every $K$, XGB-4sensor's
+$\mathrm{cost\_at\_recall}(R)$ is $\ge 4\times$ worse than either XGB-20 or
+XGB-24 (the 4 aggregates carry far less information than the 20 raw V-features).
+\textbf{The LLM-as-sensor is complementary to the 20 raw V-features
+--- never a substitute.}
+
+\subsubsection{Operational recommendation}
+\begin{itemize}
+\item \textbf{Deploy XGB-24full} when the LLM-as-scribe has
+      $\sigma_{\text{mult}} \le 0.10$ extraction noise. Below this, the
+      cost-saving is 3--9\% at $K \le 1.5\%$.
+\item \textbf{Prefer XGB-20raw} when $\sigma_{\text{mult}} \ge 0.25$.
+      Above this, the LLM sensing cost is a strict liability.
+\item \textbf{NEVER deploy XGB-4sensor} alone (4 aggregates only);
+      dominated at every noise level and every $K$.
+\item \textbf{Operating point}: $K^* = 1.5\%$ alert volume is
+      Pareto-stable for $\sigma \le 0.10$. XGB-24 saves
+      $\$0.077$/decision at $K = 1.5\%$, $\sigma = 0$ (95\% CI
+      $[0.026,\, 0.137]$).
+\end{itemize}
+
+\subsubsection{Cross-paper coupling}
+\begin{itemize}
+\item \textbf{P8 iter-84 (\#84)}: iter-84 sees $\Delta$AUC NS at
+      $\sigma \in \{0.05, 0.10\}$, small at $\sigma = 0.50$ ($-0.0073$,
+      CI $[-0.0120, -0.0035]$). iter-88 sharpens to a
+      \emph{cost}-vs-recall threshold at the same noise cells, with the
+      cost-flip at $\sigma \in (0.05, 0.10]$.
+\item \textbf{P8 iter-72 (\#72)}: iter-72's $K^* \approx 1.5\%$ at
+      $\rho = 200$ is recovered by iter-88 at the same $\rho$, with the
+      $K^*$ stable for $\sigma \le 0.10$.
+\item \textbf{P8 iter-68 (\#78)}: single-aggregate trees carry
+      complementary signal; iter-88 shows the 4-sensor-only deployment
+      mode is dominated at every noise level, agreeing that the LLM is
+      \emph{complementary}, never a substitute.
+\item \textbf{P8 iter-52 (\#58)}: at the equivalent $(0.50, 100)$
+      cell, iter-52's XGB-24-full regret of $\sim \$0.0065$/dec
+      recovers iter-88's clean-condition cost-gap exactly.
+\end{itemize}

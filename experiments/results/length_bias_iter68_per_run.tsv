@@ -1,0 +1,17 @@
+experiment	seed	algo	sigma_dL	reversal_rate	n_reversals	n_steps
+drgrpo_gsm8k_cot	42	grpo	8.582353	0.642857	18	30
+drgrpo_gsm8k_cot	42	dr_grpo	5.818983	0.714286	20	30
+drgrpo_gsm8k_cot	123	grpo	5.142670	0.678571	19	30
+drgrpo_gsm8k_cot	123	dr_grpo	6.075106	0.678571	19	30
+drgrpo_gsm8k_cot	456	grpo	7.172114	0.714286	20	30
+drgrpo_gsm8k_cot	456	dr_grpo	6.921258	0.785714	22	30
+drgrpo_vs_grpo	42	grpo	0.335133	0.605263	23	40
+drgrpo_vs_grpo	42	dr_grpo	0.311416	0.500000	19	40
+drgrpo_vs_grpo	123	grpo	0.365088	0.552632	21	40
+drgrpo_vs_grpo	123	dr_grpo	0.288639	0.552632	21	40
+drgrpo_vs_grpo	456	grpo	0.351995	0.657895	25	40
+drgrpo_vs_grpo	456	dr_grpo	0.369644	0.631579	24	40
+drgrpo_vs_grpo	789	grpo	0.281977	0.500000	19	40
+drgrpo_vs_grpo	789	dr_grpo	0.316628	0.631579	24	40
+drgrpo_vs_grpo	1024	grpo	0.284965	0.552632	21	40
+drgrpo_vs_grpo	1024	dr_grpo	0.316481	0.526316	20	40

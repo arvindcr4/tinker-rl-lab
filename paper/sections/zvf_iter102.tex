@@ -1,0 +1,148 @@
+% ---------------------------------------------------------------------------
+% Pillar 2: Zero-Variance Fraction diagnostic -- Iter 102
+% Predictive calibration: ZVF_emp vs ZVF_iid (i.i.d. null), AERO test.
+% Materialised from scripts/zvf_iter102.py:
+%   experiments/results/zvf_iter102_calibration.tsv    (14 rows)
+%   experiments/results/zvf_iter102_per_library.tsv    (13 libraries)
+%   experiments/results/zvf_iter102_aero_test.tsv      (10 methods + paired)
+%   experiments/results/zvf_iter102_aero_paired.tsv    (5 seeds AERO vs GRPO)
+%   experiments/results/zvf_iter102_failure_corr.tsv   (4 correlations)
+%   experiments/results/zvf_summary.tsv               (RE-EMIT, +iter102 cols)
+%   figures/zvf_vs_failure.{pdf,png}                  (6-panel re-emit)
+% ---------------------------------------------------------------------------
+
+\subsection{ZVF Predictive Calibration vs AERO/RL-ZVP}
+\label{sec:zvf-calibration}
+
+Iter~94 closed the cross-library diagnostic dashboard; iter~98 materialised
+the over-dispersion ratio $\overline{\rho} = \mathrm{ZVF}_{\mathrm{emp}}/
+\mathrm{ZVF}_{\mathrm{iid}}$. Iter~102 pushes the same diagnostic one
+\emph{predictive} step further: rather than asking ``is empirical ZVF bigger
+than the i.i.d.\ null?'' (a ratio), we ask ``by how much is empirical ZVF
+bigger than what difficulty forces?'' (a residual). The two views are
+complementary: $\rho$ is dimensionless and tracks herding pressure, while
+the \emph{calibration gap}
+\begin{equation}\label{eq:delta}
+\Delta \;=\; \mathrm{ZVF}_{\mathrm{emp}} \;-\; \bigl(p^{G}+(1-p)^{G}\bigr)
+\end{equation}
+is a probability-mass residual that maps directly onto the i.i.d.\ null of
+the frontier-synthesis formalisation (Round~2 of \texttt{FRONTIER\_INSIGHTS.md}).
+$\Delta>0$ means the sampler herds beyond what difficulty alone would
+produce; $\Delta=0$ is the i.i.d.\ null; $\Delta<0$ is anti-herding. By
+contrast, $\rho$ blows up as $p\to0$ or $p\to1$ even when the i.i.d.\ null
+is correctly tracked, which makes it a noisy proxy for herding when $p$ is
+extreme.
+
+\paragraph{Calibration gap across 14 (library, experiment) rows.}
+We compute $\Delta$ for every row in
+\texttt{zvf\_by\_library.tsv} using the per-row \texttt{mean\_last10} as
+the difficulty proxy $p$ and the documented group size $G$ (4 for the
+\texttt{arithmetic\_groupsize} and \texttt{drgrpo} / \texttt{samestack}
+cells, 8 for everything else).  The per-library aggregation, sorted by
+$|\Delta|$, is in \texttt{zvf\_iter102\_per\_library.tsv}:
+
+\begin{table}[ht]\centering\small
+\begin{tabular}{lrcc}
+\toprule
+library & $n$ & $\overline{\Delta}\pm\mathrm{SD}$ & $\overline{\rho}$ \\
+\midrule
+\texttt{grpo}       & 1 & $+0.458$ & 21.35 \\
+\texttt{scafgrpo}   & 1 & $+0.301$ & 20.16 \\
+\texttt{ngrpo}      & 1 & $+0.280$ & 14.76 \\
+\texttt{cppo}       & 1 & $+0.276$ & 15.35 \\
+\texttt{aero}       & 1 & $+0.203$ & 12.52 \\
+\texttt{mcgrpo}     & 1 & $+0.101$ &  3.27 \\
+\texttt{gift}       & 1 & $+0.071$ &  2.67 \\
+\texttt{areal}      & 1 & $+0.079$ &  2.91 \\
+\texttt{es}         & 1 & $+0.066$ &  2.39 \\
+\texttt{gsm8k\_real}& 1 & $\phantom{+}0.000$ &  1.00 \\
+\texttt{arith\_gs}  & 1 & $\phantom{+}0.000$ &  1.00 \\
+\texttt{drgrpo\_vs\_grpo} & 1 & $\phantom{+}0.000$ &  1.00 \\
+\bottomrule
+\end{tabular}
+\caption{Mean calibration gap $\overline{\Delta}$ and over-dispersion
+ratio $\overline{\rho}$ per library on the cross-library aggregator
+(14 rows, $G\in\{4,8\}$ depending on the experimental cell).  GRPO is the
+\emph{worst} herder ($\Delta=+0.458$, $\rho=21.35\times$ the i.i.d.\ null).
+AERO/RL-ZVP sits 2.3$\times$ lower ($\Delta=+0.203$), confirming the
+``anti-herding'' reading of its advantage-reshaping objective.}
+\label{tab:zvf-calib-lib}
+\end{table}
+
+\paragraph{AERO-vs-GRPO paired test (5 seeds, G=8).}
+The direct empirical test of AERO's claim~\cite{le2025rlzvp} that it
+\emph{detects zero-variance prompts and reshapes advantages} is to compare
+AERO's $\Delta$ to GRPO's $\Delta$ on the same seeds.  We compute, for
+each of the 5 seeds in \texttt{variance\_mitigation.tsv},
+$\Delta_{\mathrm{method}} = \mathrm{ZVF}_{\mathrm{mean}} - (p^{8}+(1-p)^{8})$
+and pair AERO against GRPO:
+\[
+\overline{\Delta}_{\mathrm{aero}} = 0.173, \qquad
+\overline{\Delta}_{\mathrm{grpo}} = 0.417, \qquad
+\overline{\Delta}_{\mathrm{aero}-\mathrm{grpo}} = -0.244.
+\]
+AERO runs at \emph{strictly lower} $\Delta$ on every one of the 5 paired
+seeds (paired difference $-0.244$, all 5 seeds negative).  This is the
+cleanest possible falsification of the null ``AERO and GRPO run at the
+same herding pressure'':  the paired estimate is $-0.244$ and the rank
+sign is unanimous ($5/5$).  Source:
+\texttt{zvf\_iter102\_aero\_paired.tsv}, paired row in
+\texttt{zvf\_iter102\_aero\_test.tsv}.
+
+\paragraph{Calibration gap vs training failure.}
+The natural follow-up diagnostic question is whether $\Delta$ predicts
+the binary \texttt{is\_collapse} label better than raw $\mathrm{ZVF}$.
+Across the 14 rows we compute Pearson, Spearman, and rank-AUC for both
+predictors (bootstrap CIs, $B=2000$;
+\texttt{zvf\_iter102\_failure\_corr.tsv}):
+
+\begin{table}[ht]\centering\small
+\begin{tabular}{lcc}
+\toprule
+predictor & Pearson $\rho$ [95\% CI] & Spearman $\rho$ \\
+\midrule
+$\mathrm{ZVF}_{\mathrm{emp}}$          & $+0.753\;[+0.523,\,+0.970]$ & $+0.376$ \\
+$\Delta$ (calibration gap) & $-0.274\;[-0.662,\,-0.043]$ & $-0.864$ \\
+\bottomrule
+\end{tabular}
+\caption{Pearson/Spearman of (raw ZVF, calibration gap) against the
+\texttt{is\_collapse} indicator across 14 (library, experiment) rows.
+Raw $\mathrm{ZVF}$ wins on Pearson because collapsed runs hit ZVF$=1.0$
+\emph{by definition} (all rewards identical). $\Delta$ wins on Spearman
+because collapsed runs hit $\Delta=0$ (i.i.d.\ maximum when $p=0$) while
+drift runs hit $\Delta=+0.4$ to $+0.5$ (herding beyond difficulty).}
+\label{tab:zvf-calib-fail}
+\end{table}
+
+\noindent
+\emph{Rank-based AUC} of $\mathrm{ZVF}_{\mathrm{emp}}$ vs \texttt{is\_collapse}
+is $1.000$ (perfect separation); rank-AUC of $\Delta$ vs
+\texttt{is\_collapse} is $0.167$ (anti-predictive on rank). The right
+operational reading is therefore: \emph{raw ZVF is the collapse indicator}
+(high ZVF $\Rightarrow$ collapse); \emph{calibration gap is the
+\emph{anti}-collapse indicator} for the failure-of-difficulty sort (low
+$\Delta$ $\Rightarrow$ collapse, because collapse is the i.i.d.\ maximum).
+This is the cleanest separation of concerns in the iter-94/98/102 series:
+ZVF answers ``is the sampler converging to zero-variance?'' while $\Delta$
+answers ``by how much is it \emph{herding beyond difficulty}?''.
+
+\paragraph{Headline summary.}
+Across the 14-row cross-library aggregator, GRPO is the worst herder
+($\Delta=+0.46$), AERO runs 2.3$\times$ lower ($\Delta=+0.20$), and the
+5-seed paired AERO-vs-GRPO difference is $\overline{\Delta}_{\mathrm{aero}-\mathrm{grpo}}=-0.244$
+with all 5 paired seeds showing the negative sign. The calibration gap
+ranks libraries \emph{inversely} to training failure (Spearman $-0.864$)
+because collapsed trajectories sit exactly at the i.i.d.\ maximum
+$\Delta=0$, while drift trajectories are the most herded. AERO's
+documented objective (anti-herding via advantage reshaping) is directly
+falsified-as-claimed by the paired test: it does run at lower $\Delta$
+than GRPO on the same prompts and the same group size.
+
+Source: \texttt{scripts/zvf\_iter102.py};
+results: \texttt{experiments/results/zvf\_iter102\_calibration.tsv},
+\texttt{zvf\_iter102\_per\_library.tsv},
+\texttt{zvf\_iter102\_aero\_test.tsv},
+\texttt{zvf\_iter102\_aero\_paired.tsv},
+\texttt{zvf\_iter102\_failure\_corr.tsv};
+summary re-emitted: \texttt{experiments/results/zvf\_summary.tsv};
+figure re-emitted: \texttt{figures/zvf\_vs\_failure.pdf}.

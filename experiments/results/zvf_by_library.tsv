@@ -1,0 +1,28 @@
+# Pillar 2 by-library ZVF aggregation (cross-library diagnostic)
+# One row per (library, model). Library = method for variance_mitigation rows
+# (aero, grpo, cppo, ngrpo, scafgrpo, mcgrpo, gift, areal, es) or
+# experiment family for non-variance_mitigation rows (tool_use, gsm8k_real,
+# arithmetic_groupsize, scaling_law). failure counts are computed by the
+# deterministic classify() rule (see top of this file).
+# Source: scripts/zvf_diagnostic.py
+library	model	n_rows	n_seeds	mean_zvf	max_zvf	mean_peak	mean_last10	n_collapse	n_drift	n_plateau	n_converged	collapse_rate	drift_rate	plateau_rate	converged_rate	per_step_collapse_rate	evidence_path
+grpo	GRPO	5	5	0.4808	0.4824	0.3855	0.3791	0	0	5	0	0.0000	0.0000	1.0000	0.0000	0.6000	experiments/results/variance_mitigation.tsv
+aero	AERO	5	5	0.2203	0.2219	0.4067	0.3993	0	0	5	0	0.0000	0.0000	1.0000	0.0000	0.0000	experiments/results/variance_mitigation.tsv
+cppo	CPPO	5	5	0.2952	0.2980	0.4000	0.3920	0	0	5	0	0.0000	0.0000	1.0000	0.0000	0.0000	experiments/results/variance_mitigation.tsv
+ngrpo	NGRPO	5	5	0.3003	0.3036	0.3944	0.3874	0	0	5	0	0.0000	0.0000	1.0000	0.0000	0.0000	experiments/results/variance_mitigation.tsv
+scafgrpo	SCAFGRPO	5	5	0.3166	0.3216	0.4151	0.4088	0	0	5	0	0.0000	0.0000	1.0000	0.0000	0.0000	experiments/results/variance_mitigation.tsv
+mcgrpo	MCGRPO	5	5	0.1461	0.1525	0.4040	0.3221	0	1	4	0	0.0000	0.2000	0.8000	0.0000	0.0000	experiments/results/variance_mitigation.tsv
+gift	GIFT	5	5	0.1142	0.1176	0.4099	0.3259	0	1	4	0	0.0000	0.2000	0.8000	0.0000	0.0000	experiments/results/variance_mitigation.tsv
+areal	AREAL	5	5	0.1209	0.1241	0.4101	0.3283	0	1	4	0	0.0000	0.2000	0.8000	0.0000	0.0000	experiments/results/variance_mitigation.tsv
+es	ES	5	5	0.1142	0.1191	0.3969	0.3163	0	1	4	0	0.0000	0.2000	0.8000	0.0000	0.0000	experiments/results/variance_mitigation.tsv
+gsm8k_real	Qwen/Qwen3-8B	4	4	0.1583	0.1900	0.6987	0.6942	0	0	0	4	0.0000	0.0000	0.0000	1.0000	NA	experiments/results/tinker_gsm8k_zvf_s42.json
+arithmetic_groupsize	Qwen/Qwen2.5-0.5B	4	1	0.7308	0.8380	0.9883	0.9764	0	0	0	4	0.0000	0.0000	0.0000	1.0000	NA	experiments/results/groupsize_zvf_sweep.tsv
+tool_use	qwen3-32b	1	1	1.0000	1.0000	0.0000	0.0000	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/tool_code_reward_diagnostics.tsv
+tool_use	llama-8b-inst	1	1	1.0000	1.0000	0.0000	0.0000	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/tool_code_reward_diagnostics.tsv
+scaling_law	Qwen3.5-4B	1	1	NA	NA	-88.2407	-88.7534	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
+scaling_law	Qwen3-8B	1	1	NA	NA	-102.2380	-102.9954	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
+scaling_law	Llama-3.1-8B-Instruct	1	1	NA	NA	-106.3609	-105.3437	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
+scaling_law	DeepSeek-V3.1	1	1	NA	NA	-75.5239	-76.7449	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
+scaling_law	Nemotron-120B	1	1	NA	NA	-54.6300	-53.2725	1	0	0	0	1.0000	0.0000	0.0000	0.0000	NA	experiments/results/scaling_law_three_phase.tsv
+drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	10	5	0.7941	0.8250	0.9895	0.9881	0	0	0	10	0.0000	0.0000	0.0000	1.0000	NA	experiments/results/drgrpo_vs_grpo.json
+samestack_ppo_grpo	Qwen/Qwen2.5-0.5B	10	5	NA	NA	0.9910	0.9485	0	1	0	9	0.0000	0.1000	0.0000	0.9000	NA	experiments/results/samestack_ppo_grpo.json

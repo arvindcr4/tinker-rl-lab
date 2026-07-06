@@ -1,0 +1,5 @@
+task	regime	n_pairs	mean_grpo	mean_drgrpo	mean_diff_drgrpo_minus_grpo	ci_lo	ci_hi	p_le0	interpretation
+arithmetic_easy	below	5	-0.045701	-0.056783	-0.011082	-0.026583	0.004418	0.9045	inconclusive
+arithmetic_easy	above	5	-0.000978	0.000317	0.001296	-0.000438	0.002565	0.06	inconclusive
+gsm8k_cot	below	3	-0.420869	-0.116322	0.304546	0.141409	0.498577	0.0002	Dr.GRPO > GRPO
+gsm8k_cot	above	3	-0.504434	-0.272757	0.231678	0.025038	0.608758	0.0002	Dr.GRPO > GRPO

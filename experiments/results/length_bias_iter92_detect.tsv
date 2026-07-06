@@ -1,0 +1,5 @@
+task	algo	n_seeds	frac_p_lr_lt_05	frac_p_rl_lt_05	frac_p_delta_lt_05
+arithmetic_easy	grpo	5	0.000000	0.200000	0.000000
+arithmetic_easy	dr_grpo	5	0.200000	0.200000	0.200000
+gsm8k_cot	grpo	3	0.000000	0.000000	0.000000
+gsm8k_cot	dr_grpo	3	0.333333	0.000000	0.000000

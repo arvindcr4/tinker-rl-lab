@@ -1,0 +1,17 @@
+source	target	tau_used	tau_target_opt	cost_used	cost_target_opt	transfer_penalty
+grpo	grpo	n/a	n/a	1.0000	1.0000	+0.0000
+grpo	aero	n/a	n/a	1.0000	1.0000	+0.0000
+grpo	gift	n/a	n/a	1.0000	1.0000	+0.0000
+grpo	areal	n/a	n/a	1.0000	1.0000	+0.0000
+aero	grpo	n/a	n/a	1.0000	1.0000	+0.0000
+aero	aero	n/a	n/a	1.0000	1.0000	+0.0000
+aero	gift	n/a	n/a	1.0000	1.0000	+0.0000
+aero	areal	n/a	n/a	1.0000	1.0000	+0.0000
+gift	grpo	n/a	n/a	1.0000	1.0000	+0.0000
+gift	aero	n/a	n/a	1.0000	1.0000	+0.0000
+gift	gift	n/a	n/a	1.0000	1.0000	+0.0000
+gift	areal	n/a	n/a	1.0000	1.0000	+0.0000
+areal	grpo	n/a	n/a	1.0000	1.0000	+0.0000
+areal	aero	n/a	n/a	1.0000	1.0000	+0.0000
+areal	gift	n/a	n/a	1.0000	1.0000	+0.0000
+areal	areal	n/a	n/a	1.0000	1.0000	+0.0000

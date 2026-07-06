@@ -1,0 +1,8 @@
+metric	rule	point	ci_lo	ci_hi
+recall_at_K2	gradient-band (XGB-20raw, g_thr=0.0001)	0.983874	0.958311	1
+recall_at_K2	absolute-band (XGB-20raw, w=0.10)	0.981643	0.955667	1
+delta_recall_at_K2 (gradient - absolute)	paired	0.00223093	-0.0300002	0.0354737
+cost_per_fraud_caught	gradient-band	0.00714965	0.00714965	0.00714965
+cost_per_fraud_caught	absolute-band (w=0.10)	0.00722624	0.00722624	0.00722624
+n_llm_calls	gradient-band	9	9	9
+n_llm_calls	absolute-band (w=0.10)	21	21	21

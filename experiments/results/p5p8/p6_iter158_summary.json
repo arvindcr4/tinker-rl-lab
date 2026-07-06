@@ -1,0 +1,200 @@
+{
+  "n_entries": 17,
+  "n_cells": 49,
+  "n_gaps": 45,
+  "n_joined_cells": 19,
+  "classification_counts": {
+    "FULL": 19,
+    "MEAS_CV_NO_EXP": 19,
+    "EXP_ONLY": 9,
+    "MEAS_ONLY": 2
+  },
+  "severity_counts": {
+    "medium": 30,
+    "high": 15
+  },
+  "full_cell_verdict_counts": {
+    "NEUTRAL": 6,
+    "SUPPORTS": 10,
+    "CONTRADICTS": 3
+  },
+  "per_entry_completeness": {
+    "delta_dapo": {
+      "n_deltas": 5,
+      "n_expected_effects": 3,
+      "n_measured": 0,
+      "n_claim_validation": 0,
+      "n_distinct_keys": 3,
+      "n_joined": 0,
+      "completeness": 0.0
+    },
+    "delta_gspo": {
+      "n_deltas": 2,
+      "n_expected_effects": 3,
+      "n_measured": 0,
+      "n_claim_validation": 0,
+      "n_distinct_keys": 3,
+      "n_joined": 0,
+      "completeness": 0.0
+    },
+    "delta_ppo": {
+      "n_deltas": 4,
+      "n_expected_effects": 3,
+      "n_measured": 0,
+      "n_claim_validation": 0,
+      "n_distinct_keys": 3,
+      "n_joined": 0,
+      "completeness": 0.0
+    },
+    "delta_tool_use_llama-8b-inst": {
+      "n_deltas": 1,
+      "n_expected_effects": 0,
+      "n_measured": 1,
+      "n_claim_validation": 0,
+      "n_distinct_keys": 1,
+      "n_joined": 0,
+      "completeness": 0.0
+    },
+    "delta_tool_use_qwen3-32b": {
+      "n_deltas": 1,
+      "n_expected_effects": 0,
+      "n_measured": 1,
+      "n_claim_validation": 0,
+      "n_distinct_keys": 1,
+      "n_joined": 0,
+      "completeness": 0.0
+    },
+    "delta_cppo": {
+      "n_deltas": 1,
+      "n_expected_effects": 1,
+      "n_measured": 3,
+      "n_claim_validation": 3,
+      "n_distinct_keys": 3,
+      "n_joined": 1,
+      "completeness": 0.3333333333333333
+    },
+    "delta_es": {
+      "n_deltas": 1,
+      "n_expected_effects": 1,
+      "n_measured": 3,
+      "n_claim_validation": 3,
+      "n_distinct_keys": 3,
+      "n_joined": 1,
+      "completeness": 0.3333333333333333
+    },
+    "delta_mcgrpo": {
+      "n_deltas": 2,
+      "n_expected_effects": 1,
+      "n_measured": 3,
+      "n_claim_validation": 3,
+      "n_distinct_keys": 3,
+      "n_joined": 1,
+      "completeness": 0.3333333333333333
+    },
+    "delta_ngrpo": {
+      "n_deltas": 1,
+      "n_expected_effects": 1,
+      "n_measured": 3,
+      "n_claim_validation": 3,
+      "n_distinct_keys": 3,
+      "n_joined": 1,
+      "completeness": 0.3333333333333333
+    },
+    "delta_scafgrpo": {
+      "n_deltas": 1,
+      "n_expected_effects": 1,
+      "n_measured": 3,
+      "n_claim_validation": 3,
+      "n_distinct_keys": 3,
+      "n_joined": 1,
+      "completeness": 0.3333333333333333
+    },
+    "delta_aero": {
+      "n_deltas": 1,
+      "n_expected_effects": 3,
+      "n_measured": 6,
+      "n_claim_validation": 6,
+      "n_distinct_keys": 6,
+      "n_joined": 3,
+      "completeness": 0.5
+    },
+    "delta_areal": {
+      "n_deltas": 1,
+      "n_expected_effects": 3,
+      "n_measured": 6,
+      "n_claim_validation": 6,
+      "n_distinct_keys": 6,
+      "n_joined": 3,
+      "completeness": 0.5
+    },
+    "delta_gift": {
+      "n_deltas": 1,
+      "n_expected_effects": 3,
+      "n_measured": 6,
+      "n_claim_validation": 6,
+      "n_distinct_keys": 6,
+      "n_joined": 3,
+      "completeness": 0.5
+    },
+    "delta_adaptiveg": {
+      "n_deltas": 1,
+      "n_expected_effects": 2,
+      "n_measured": 2,
+      "n_claim_validation": 2,
+      "n_distinct_keys": 2,
+      "n_joined": 2,
+      "completeness": 1.0
+    },
+    "delta_drgrpo": {
+      "n_deltas": 2,
+      "n_expected_effects": 3,
+      "n_measured": 3,
+      "n_claim_validation": 3,
+      "n_distinct_keys": 3,
+      "n_joined": 3,
+      "completeness": 1.0
+    },
+    "delta_liteppo": {
+      "n_deltas": 2,
+      "n_expected_effects": 0,
+      "n_measured": 0,
+      "n_claim_validation": 0,
+      "n_distinct_keys": 0,
+      "n_joined": 0,
+      "completeness": null
+    },
+    "delta_reinforce": {
+      "n_deltas": 2,
+      "n_expected_effects": 0,
+      "n_measured": 0,
+      "n_claim_validation": 0,
+      "n_distinct_keys": 0,
+      "n_joined": 0,
+      "completeness": null
+    }
+  },
+  "per_entry_gap_count": {
+    "delta_aero": 3,
+    "delta_areal": 3,
+    "delta_cppo": 2,
+    "delta_dapo": 6,
+    "delta_es": 2,
+    "delta_gift": 3,
+    "delta_gspo": 6,
+    "delta_liteppo": 2,
+    "delta_mcgrpo": 2,
+    "delta_ngrpo": 2,
+    "delta_ppo": 6,
+    "delta_reinforce": 2,
+    "delta_scafgrpo": 2,
+    "delta_tool_use_llama-8b-inst": 2,
+    "delta_tool_use_qwen3-32b": 2
+  },
+  "headline": {
+    "n_entries_with_deltas_but_no_expected_effects": 4,
+    "n_entries_with_expected_but_no_measured": 3,
+    "n_entries_with_expected_but_no_cv": 3,
+    "pct_full_cells": 38.78,
+    "pct_high_severity_gaps": 33.33
+  }
+}

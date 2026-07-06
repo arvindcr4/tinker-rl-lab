@@ -1,0 +1,334 @@
+{
+  "ts": "2026-07-06",
+  "iter": 199,
+  "pillar": "P7",
+  "vein": "(a) closed-loop trajectory counterfactual",
+  "settings": {
+    "G_BASE": 8,
+    "G_N_STATIC": 16,
+    "G_N_GRID_HYB": [
+      12,
+      16
+    ],
+    "TAU_TRIGGER": 0.7,
+    "N_STEPS": 40,
+    "N_PROMPTS": 16,
+    "B": 2000,
+    "SEED": 20260706
+  },
+  "verdicts": {
+    "H1_AG8_lowers_mean_zvf_vs_BASE_4of4": 4,
+    "H2_AG8_raises_mean_contrast_vs_BASE_4of4": 4,
+    "H3_AG8_cheaper_than_STATIC16_CI95_excludes_zero_4of4": 4,
+    "H4_AG8_net_benefit_vs_STATIC16_nonneg_4of4": 4,
+    "H5_AG_HYB_more_contrast_than_AG8_4of4": 0
+  },
+  "per_method": [
+    {
+      "method": "areal",
+      "policy": "BASE",
+      "mean_proj_zvf": 0.7797,
+      "mean_proj_contrast": 0.2203,
+      "mean_cost": 1.0,
+      "restored_vs_base": 0.0,
+      "restored_vs_static16": -0.062,
+      "net_benefit_vs_static16": 0.438,
+      "n_fire_steps": 0
+    },
+    {
+      "method": "areal",
+      "policy": "STATIC16",
+      "mean_proj_zvf": 0.7176,
+      "mean_proj_contrast": 0.2824,
+      "mean_cost": 2.0,
+      "restored_vs_base": 0.062,
+      "restored_vs_static16": 0.0,
+      "net_benefit_vs_static16": 0.0,
+      "n_fire_steps": 40
+    },
+    {
+      "method": "areal",
+      "policy": "AG8",
+      "mean_proj_zvf": 0.7487,
+      "mean_proj_contrast": 0.2513,
+      "mean_cost": 1.5,
+      "restored_vs_base": 0.031,
+      "restored_vs_static16": -0.031,
+      "net_benefit_vs_static16": 0.219,
+      "n_fire_steps": 20
+    },
+    {
+      "method": "areal",
+      "policy": "AG_HYB",
+      "mean_proj_zvf": 0.7597,
+      "mean_proj_contrast": 0.2403,
+      "mean_cost": 1.25,
+      "restored_vs_base": 0.0199,
+      "restored_vs_static16": -0.0421,
+      "net_benefit_vs_static16": 0.3329,
+      "n_fire_steps": 20
+    },
+    {
+      "method": "areal",
+      "policy": "BASE",
+      "mean_proj_zvf": 0.7749,
+      "mean_proj_contrast": 0.2251,
+      "mean_cost": 1.0,
+      "restored_vs_base": 0.0,
+      "restored_vs_static16": -0.0578,
+      "net_benefit_vs_static16": 0.4422,
+      "n_fire_steps": 0
+    },
+    {
+      "method": "areal",
+      "policy": "STATIC16",
+      "mean_proj_zvf": 0.7171,
+      "mean_proj_contrast": 0.2829,
+      "mean_cost": 2.0,
+      "restored_vs_base": 0.0578,
+      "restored_vs_static16": 0.0,
+      "net_benefit_vs_static16": 0.0,
+      "n_fire_steps": 40
+    },
+    {
+      "method": "areal",
+      "policy": "AG8",
+      "mean_proj_zvf": 0.7474,
+      "mean_proj_contrast": 0.2526,
+      "mean_cost": 1.475,
+      "restored_vs_base": 0.0275,
+      "restored_vs_static16": -0.0304,
+      "net_benefit_vs_static16": 0.2321,
+      "n_fire_steps": 19
+    },
+    {
+      "method": "areal",
+      "policy": "AG_HYB",
+      "mean_proj_zvf": 0.7574,
+      "mean_proj_contrast": 0.2426,
+      "mean_cost": 1.2375,
+      "restored_vs_base": 0.0175,
+      "restored_vs_static16": -0.0403,
+      "net_benefit_vs_static16": 0.3409,
+      "n_fire_steps": 19
+    },
+    {
+      "method": "areal",
+      "policy": "BASE",
+      "mean_proj_zvf": 0.7645,
+      "mean_proj_contrast": 0.2355,
+      "mean_cost": 1.0,
+      "restored_vs_base": 0.0,
+      "restored_vs_static16": -0.0132,
+      "net_benefit_vs_static16": 0.4868,
+      "n_fire_steps": 0
+    },
+    {
+      "method": "areal",
+      "policy": "STATIC16",
+      "mean_proj_zvf": 0.7513,
+      "mean_proj_contrast": 0.2487,
+      "mean_cost": 2.0,
+      "restored_vs_base": 0.0132,
+      "restored_vs_static16": 0.0,
+      "net_benefit_vs_static16": 0.0,
+      "n_fire_steps": 40
+    },
+    {
+      "method": "areal",
+      "policy": "AG8",
+      "mean_proj_zvf": 0.7559,
+      "mean_proj_contrast": 0.2441,
+      "mean_cost": 1.65,
+      "restored_vs_base": 0.0086,
+      "restored_vs_static16": -0.0046,
+      "net_benefit_vs_static16": 0.1704,
+      "n_fire_steps": 26
+    },
+    {
+      "method": "areal",
+      "policy": "AG_HYB",
+      "mean_proj_zvf": 0.7578,
+      "mean_proj_contrast": 0.2422,
+      "mean_cost": 1.325,
+      "restored_vs_base": 0.0067,
+      "restored_vs_static16": -0.0065,
+      "net_benefit_vs_static16": 0.331,
+      "n_fire_steps": 26
+    },
+    {
+      "method": "areal",
+      "policy": "BASE",
+      "mean_proj_zvf": 0.7397,
+      "mean_proj_contrast": 0.2603,
+      "mean_cost": 1.0,
+      "restored_vs_base": 0.0,
+      "restored_vs_static16": -0.0367,
+      "net_benefit_vs_static16": 0.4633,
+      "n_fire_steps": 0
+    },
+    {
+      "method": "areal",
+      "policy": "STATIC16",
+      "mean_proj_zvf": 0.703,
+      "mean_proj_contrast": 0.297,
+      "mean_cost": 2.0,
+      "restored_vs_base": 0.0367,
+      "restored_vs_static16": 0.0,
+      "net_benefit_vs_static16": 0.0,
+      "n_fire_steps": 40
+    },
+    {
+      "method": "areal",
+      "policy": "AG8",
+      "mean_proj_zvf": 0.7241,
+      "mean_proj_contrast": 0.2759,
+      "mean_cost": 1.425,
+      "restored_vs_base": 0.0156,
+      "restored_vs_static16": -0.0211,
+      "net_benefit_vs_static16": 0.2664,
+      "n_fire_steps": 17
+    },
+    {
+      "method": "areal",
+      "policy": "AG_HYB",
+      "mean_proj_zvf": 0.7292,
+      "mean_proj_contrast": 0.2708,
+      "mean_cost": 1.2125,
+      "restored_vs_base": 0.0104,
+      "restored_vs_static16": -0.0263,
+      "net_benefit_vs_static16": 0.3675,
+      "n_fire_steps": 17
+    }
+  ],
+  "cis": [
+    {
+      "method": "grpo",
+      "comparison": "AG8_minus_BASE_mean_contrast",
+      "point": 0.031,
+      "ci_lo": 0.0217,
+      "ci_hi": 0.0419,
+      "excl_zero": 1
+    },
+    {
+      "method": "grpo",
+      "comparison": "AG8_minus_STATIC16_mean_cost",
+      "point": 0.5,
+      "ci_lo": 0.35,
+      "ci_hi": 0.65,
+      "excl_zero": 1
+    },
+    {
+      "method": "grpo",
+      "comparison": "HYB_minus_AG8_mean_contrast",
+      "point": -0.0111,
+      "ci_lo": -0.0144,
+      "ci_hi": -0.0078,
+      "excl_zero": 0
+    },
+    {
+      "method": "grpo",
+      "comparison": "AG8_minus_STATIC16_net_benefit",
+      "point": 0.219,
+      "ci_lo": 0.1533,
+      "ci_hi": 0.2847,
+      "excl_zero": 1
+    },
+    {
+      "method": "aero",
+      "comparison": "AG8_minus_BASE_mean_contrast",
+      "point": 0.0275,
+      "ci_lo": 0.0188,
+      "ci_hi": 0.0361,
+      "excl_zero": 1
+    },
+    {
+      "method": "aero",
+      "comparison": "AG8_minus_STATIC16_mean_cost",
+      "point": 0.525,
+      "ci_lo": 0.375,
+      "ci_hi": 0.675,
+      "excl_zero": 1
+    },
+    {
+      "method": "aero",
+      "comparison": "HYB_minus_AG8_mean_contrast",
+      "point": -0.01,
+      "ci_lo": -0.0131,
+      "ci_hi": -0.0068,
+      "excl_zero": 0
+    },
+    {
+      "method": "aero",
+      "comparison": "AG8_minus_STATIC16_net_benefit",
+      "point": 0.2321,
+      "ci_lo": 0.1658,
+      "ci_hi": 0.2985,
+      "excl_zero": 1
+    },
+    {
+      "method": "gift",
+      "comparison": "AG8_minus_BASE_mean_contrast",
+      "point": 0.0086,
+      "ci_lo": 0.0066,
+      "ci_hi": 0.0106,
+      "excl_zero": 1
+    },
+    {
+      "method": "gift",
+      "comparison": "AG8_minus_STATIC16_mean_cost",
+      "point": 0.35,
+      "ci_lo": 0.2,
+      "ci_hi": 0.5,
+      "excl_zero": 1
+    },
+    {
+      "method": "gift",
+      "comparison": "HYB_minus_AG8_mean_contrast",
+      "point": -0.0019,
+      "ci_lo": -0.0023,
+      "ci_hi": -0.0015,
+      "excl_zero": 0
+    },
+    {
+      "method": "gift",
+      "comparison": "AG8_minus_STATIC16_net_benefit",
+      "point": 0.1704,
+      "ci_lo": 0.1095,
+      "ci_hi": 0.2434,
+      "excl_zero": 1
+    },
+    {
+      "method": "areal",
+      "comparison": "AG8_minus_BASE_mean_contrast",
+      "point": 0.0156,
+      "ci_lo": 0.0101,
+      "ci_hi": 0.0211,
+      "excl_zero": 1
+    },
+    {
+      "method": "areal",
+      "comparison": "AG8_minus_STATIC16_mean_cost",
+      "point": 0.575,
+      "ci_lo": 0.425,
+      "ci_hi": 0.725,
+      "excl_zero": 1
+    },
+    {
+      "method": "areal",
+      "comparison": "HYB_minus_AG8_mean_contrast",
+      "point": -0.0052,
+      "ci_lo": -0.007,
+      "ci_hi": -0.0033,
+      "excl_zero": 0
+    },
+    {
+      "method": "areal",
+      "comparison": "AG8_minus_STATIC16_net_benefit",
+      "point": 0.2664,
+      "ci_lo": 0.1969,
+      "ci_hi": 0.3359,
+      "excl_zero": 1
+    }
+  ]
+}

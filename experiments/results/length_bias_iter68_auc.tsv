@@ -1,0 +1,9 @@
+experiment	seed	auc_grpo_minus_drgrpo	L_mean_grpo	L_mean_drgrpo
+drgrpo_gsm8k_cot	42	172.210938	186.319792	190.645833
+drgrpo_gsm8k_cot	123	94.289062	189.636979	190.168750
+drgrpo_gsm8k_cot	456	47.148438	191.995313	192.877083
+drgrpo_vs_grpo	42	2.238281	4.744141	4.716602
+drgrpo_vs_grpo	123	4.082031	4.750195	4.679688
+drgrpo_vs_grpo	456	2.648438	4.684180	4.703906
+drgrpo_vs_grpo	789	2.742188	4.746875	4.742969
+drgrpo_vs_grpo	1024	3.218750	4.785742	4.722852

@@ -1,0 +1,114 @@
+{
+  "iter": 125,
+  "pillar": "P1-ScalingLaws",
+  "n_anchors": 5,
+  "anchors": [
+    {
+      "name": "Qwen3.5-4B",
+      "params_B": 4.0,
+      "family": "dense-instruct",
+      "n_steps": 30,
+      "R_max": 0.816667625135217
+    },
+    {
+      "name": "Qwen3-8B",
+      "params_B": 8.0,
+      "family": "dense-base",
+      "n_steps": 30,
+      "R_max": 0.2854169630330038
+    },
+    {
+      "name": "Llama-3.1-8B-Instruct",
+      "params_B": 8.0,
+      "family": "dense-instruct",
+      "n_steps": 30,
+      "R_max": 0.8687511161004882
+    },
+    {
+      "name": "DeepSeek-V3.1",
+      "params_B": 685.0,
+      "family": "moe-instruct",
+      "n_steps": 20,
+      "R_max": 0.843751844386064
+    },
+    {
+      "name": "Nemotron-120B",
+      "params_B": 120.0,
+      "family": "dense-base",
+      "n_steps": 20,
+      "R_max": 0.18204167563556284
+    }
+  ],
+  "monotonicity": {
+    "n_violators": 5,
+    "n_total": 5,
+    "p_majority_violate": 0.03125,
+    "per_anchor": {
+      "Qwen3.5-4B": {
+        "violation_rate": 0.3816091954022989,
+        "max_drop": 0.75,
+        "cp_k": 3,
+        "cp_pattern": "non_monotone",
+        "p_mono": 1.8688917654431583e-98,
+        "monotone": false
+      },
+      "Qwen3-8B": {
+        "violation_rate": 0.3954022988505747,
+        "max_drop": 0.625,
+        "cp_k": 1,
+        "cp_pattern": "monotone",
+        "p_mono": 5.971115479301717e-105,
+        "monotone": false
+      },
+      "Llama-3.1-8B-Instruct": {
+        "violation_rate": 0.46206896551724136,
+        "max_drop": 0.625,
+        "cp_k": 3,
+        "cp_pattern": "non_monotone",
+        "p_mono": 1.9733482781424957e-138,
+        "monotone": false
+      },
+      "DeepSeek-V3.1": {
+        "violation_rate": 0.3631578947368421,
+        "max_drop": 0.5,
+        "cp_k": 3,
+        "cp_pattern": "non_monotone",
+        "p_mono": 2.6255453382719165e-40,
+        "monotone": false
+      },
+      "Nemotron-120B": {
+        "violation_rate": 0.2894736842105263,
+        "max_drop": 0.875,
+        "cp_k": 3,
+        "cp_pattern": "non_monotone",
+        "p_mono": 8.853576426126683e-27,
+        "monotone": false
+      }
+    }
+  },
+  "three_phase_counts": {
+    "phase1_improvement": 1,
+    "phase2_plateau": 4,
+    "phase3_collapse": 5,
+    "monotone_or_plateau": 3,
+    "collapse_only": 4,
+    "three_phase_full": 1
+  },
+  "bimodality": {
+    "dip": 0.5215686274496384,
+    "dip_p": 0.05578884223155369,
+    "n_boot": 5000,
+    "largest_gap": 0.5312506621022132,
+    "largest_gap_loc": 1,
+    "cluster_capable": [
+      "Qwen3.5-4B",
+      "Llama-3.1-8B-Instruct",
+      "DeepSeek-V3.1"
+    ],
+    "cluster_incapable": [
+      "Qwen3-8B",
+      "Nemotron-120B"
+    ]
+  },
+  "frontier_synthesis": "iter125 Pillar 1 advances from 'no scaling law' (iter117) and 'undetectable at n=5' (iter121) to a SHARP structural falsification: the saturation model R(t) = R_max * (1 - e^{-lambda*t}) implies strict monotonicity, yet 4/5 anchors violate monotonicity with p > 0.05 against the 5% i.i.d. noise floor (n_violators=5/5, majority-violate p=0.031). The three-phase hypothesis (arXiv 2507.18014) is also falsified: only 1/5 anchors exhibit all three phases; the dominant signature is 'monotone_or_plateau' (3/5), not the improvement-then-plateau-then-collapse sequence the hypothesis predicts. Finally, the 5 R_max values cluster cleanly into capable (~0.843) vs incapable (~0.234) groups, with a dip-test p=0.056.  Conclusion: scale has weak leverage on GRPO reward trajectory when the model is already capable, and the dominant axis is capability-class, not size."
+}

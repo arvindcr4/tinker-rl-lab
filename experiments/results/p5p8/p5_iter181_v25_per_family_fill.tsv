@@ -1,0 +1,4 @@
+family	n_fields	n_filled	n_valid	n_possible	fill_rate	fill_lo	fill_hi	valid_rate
+identity	5	490	490	490	1.0000	0.9922	1.0000	1.0000
+rollout_outcomes	7	686	686	686	1.0000	0.9944	1.0000	1.0000
+operational	1	98	98	98	1.0000	0.9623	1.0000	1.0000

@@ -1,0 +1,17 @@
+experiment	seed	cell	rev_grpo	rev_drgrpo
+drgrpo_gsm8k_cot	42	rev_on_pos_dR	0.500000	0.692308
+drgrpo_gsm8k_cot	42	rev_on_neg_dR	0.733333	0.642857
+drgrpo_gsm8k_cot	123	rev_on_pos_dR	0.769231	0.785714
+drgrpo_gsm8k_cot	123	rev_on_neg_dR	0.533333	0.533333
+drgrpo_gsm8k_cot	456	rev_on_pos_dR	0.571429	0.785714
+drgrpo_gsm8k_cot	456	rev_on_neg_dR	0.785714	0.714286
+drgrpo_vs_grpo	42	rev_on_pos_dR	0.533333	0.500000
+drgrpo_vs_grpo	42	rev_on_neg_dR	0.615385	0.666667
+drgrpo_vs_grpo	123	rev_on_pos_dR	0.500000	0.476190
+drgrpo_vs_grpo	123	rev_on_neg_dR	0.533333	0.538462
+drgrpo_vs_grpo	456	rev_on_pos_dR	0.666667	0.611111
+drgrpo_vs_grpo	456	rev_on_neg_dR	0.666667	0.666667
+drgrpo_vs_grpo	789	rev_on_pos_dR	0.388889	0.526316
+drgrpo_vs_grpo	789	rev_on_neg_dR	0.500000	0.727273
+drgrpo_vs_grpo	1024	rev_on_pos_dR	0.400000	0.411765
+drgrpo_vs_grpo	1024	rev_on_neg_dR	0.727273	0.750000

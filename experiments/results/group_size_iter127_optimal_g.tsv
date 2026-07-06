@@ -1,0 +1,8 @@
+section	metric_key	headline
+B_optimal_G	slope_per_decade_T	"Pre-saturation slope(d(log10 G*)/d(log10 T)) = +0.500/decade  over n=2 T values (T<16M)"
+B_optimal_G	intercept	"Intercept at log10(T)=0: -2.097"
+B_optimal_G	rule	"Rule: log10(G*) = min(-2.097 + +0.500*log10(T), log10(32))"
+B_optimal_G	T=1000000	"T=1e+06: G*(T)=8, acc(G*)=0.480, G*(T)_pred=8.0"
+B_optimal_G	T=4000000	"T=4e+06: G*(T)=16, acc(G*)=0.690, G*(T)_pred=16.0"
+B_optimal_G	T=16000000	"T=2e+07: G*(T)=32, acc(G*)=0.840, G*(T)_pred=32.0 (SATURATED)"
+B_optimal_G	T=64000000	"T=6e+07: G*(T)=32, acc(G*)=0.880, G*(T)_pred=32.0 (SATURATED)"

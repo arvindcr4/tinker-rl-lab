@@ -1,0 +1,101 @@
+% !TEX root = ../paper_P5_minreport.tex
+\subsection{Cross-corpus portability of the v2.5 schema (iter 185)}
+
+We extend the v2.5 spec proposed in iter-181 (Section~\ref{sec:p5-iter181-v25-rollout})
+to three live corpora and audit per-corpus portability.
+
+\textbf{Corpora.}
+\textit{(i)}~\texttt{mega\_20260704} (98 cells; complete
+\texttt{cells.tsv} plus 98 manifest JSONs); \textit{(ii)}~\texttt{n10\_seed\_expansion}
+(5 cells; per-(\texttt{algo}, \texttt{seed}) JSON summaries;
+no per-step tensor files); \textit{(iii)}~\texttt{n2\_reward\_tensor\_resume}
+(3 cells; per-step tensor JSONL with 40 training steps each).
+Total: 106 v2.5 manifests actualised.
+
+\textbf{Per-corpus audit.} For each corpus, we (i) compute
+field-fill rate with Wilson 95\% CI; (ii) re-derive
+\texttt{zvf}, \texttt{mean\_reward}, \texttt{n\_groups} from raw
+\texttt{reward\_vectors} and compare to declared v2.5 values
+(value-correctness residual audit); (iii) measure per-corpus
+discriminative Shannon entropy (bits) per v2.5 field;
+(iv) emit a 13$\times$3 portability matrix.
+
+\textbf{Five hypotheses, four PASS + one sharp FAIL.}
+\emph{H1} (v2.5 fill $\geq 0.80$ on $\geq 10/13$ fields per corpus):
+mega=13/13, n10=9/13, \textbf{n2=13/13}; \emph{FAIL}: N10 has
+four structural gaps (\texttt{pcd}, \texttt{n\_groups},
+\texttt{std\_completion\_len}, \texttt{sampled\_tokens} = 0/5 filled)
+because the N10 per-seed JSON summary does not store per-step tensors.
+\emph{H2} (zvf value-correctness residual $\leq 0.05$ on $\geq 90\%$ mega cells):
+\textbf{294/294 = 100.0\%} pass (zero residual on \texttt{zvf},
+\texttt{mean\_reward}, \texttt{n\_groups} --- machine-verifiable to
+bit-precision). \emph{H3} (per-corpus total entropy monotone
+mega $\geq$ n10 $\geq$ n2): \textbf{39.23 $\geq$ 8.89 $\geq$ 8.84}.
+\emph{H4} (every corpus has $\geq 1$ STRONG field with $H_{\text{bits}} \geq 1.5$):
+mega=8, n10=4, n2=5. \emph{H5} (n10 \texttt{mean\_reward} 5-seed CI
+half-width $< 0.10$): \textbf{0.0335}.
+
+\textbf{Sharpest findings.}
+\emph{F1} --- The H1 FAIL surfaces the headline paper-grade result:
+N10's per-(\texttt{algo}, \texttt{seed}) JSON summary architecture is
+incompatible with 4 v2.5 rollout fields. Porting v2.5 to N10 requires
+extending N10 to store per-step tensors or deriving the four fields
+from the existing \texttt{step\_log} array (\texttt{step\_log} has
+\texttt{zvf} and \texttt{mean\_len} but not \texttt{pcd} or the
+per-group rewards needed for \texttt{std\_completion\_len}).
+\emph{F2} --- Value-correctness is PERFECT (294/294 = 100\%): re-deriving
+\texttt{zvf} (fraction all-zero or all-one groups), \texttt{mean\_reward}
+(mean of all rollouts), and \texttt{n\_groups} from raw
+\texttt{reward\_vectors} in the per-cell tensor JSON gives
+\textbf{exactly 0.0 residual} on every mega cell. The v2.5 spec is
+\textbf{machine-verifiable} to bit-precision on the mega corpus.
+\emph{F3} --- H3 monotone PASS confirms the corpus-diversity hierarchy:
+total entropy scales with corpus richness (39.23 vs 8.89 vs 8.84).
+\emph{F4} --- N2 beats N10 on STRONG-field count (5 vs 4) despite
+having fewer cells (3 vs 5), because N2's per-step tensors enable
+derived fields that N10 structurally cannot reproduce.
+\emph{F5} --- PLACEBO concentration on identity fields (\texttt{model},
+\texttt{temperature}, \texttt{n\_groups}, \texttt{sample\_errors})
+is robust across all three corpora, confirming iter-181's
+PLACEBO classification from mega-only.
+
+\textbf{Operational.}
+We adopt v2.5 as the cross-corpus spec with \emph{conditional}
+N10 adoption pending per-step tensor extension. The audit pipeline
+is wired as a CI pre-commit gate
+(\texttt{scripts/p5p8/p5\_iter185\_v25\_cross\_corpus.py}) that fails
+if N10 fill drops below 7/13 or value-correctness drops below 90\%.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{l r r r r r r r r r r r r}
+\toprule
+& \multicolumn{4}{c}{\textbf{mega\_20260704 (98 cells)}} & \multicolumn{4}{c}{\textbf{n10 (5 cells)}} & \multicolumn{4}{c}{\textbf{n2 (3 cells)}} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-13}
+\textbf{Field} & n & fill & $H$ & verdict & n & fill & $H$ & verdict & n & fill & $H$ & verdict \\
+\midrule
+model                & 98 & 1.00 & 1.00 & OK   & 5 & 1.00 & 0.00 & GAP    & 3 & 1.00 & 0.00 & GAP \\
+task\_slice           & 98 & 1.00 & 1.55 & STRONG & 5 & 1.00 & 0.00 & GAP    & 3 & 1.00 & 0.00 & GAP \\
+G                    & 98 & 1.00 & 2.31 & STRONG & 5 & 1.00 & 0.00 & GAP    & 3 & 1.00 & 0.00 & GAP \\
+temperature          & 98 & 1.00 & 1.00 & OK   & 5 & 1.00 & 0.00 & GAP    & 3 & 1.00 & 0.00 & GAP \\
+seed                 & 98 & 1.00 & 1.00 & OK   & 5 & 1.00 & 2.32 & STRONG & 3 & 1.00 & 0.00 & GAP \\
+mean\_reward          & 98 & 1.00 & 4.42 & STRONG & 5 & 1.00 & 2.32 & STRONG & 3 & 1.00 & 1.58 & STRONG \\
+zvf                  & 98 & 1.00 & 3.55 & STRONG & 5 & 1.00 & 1.92 & STRONG & 3 & 1.00 & 0.92 & OK \\
+pcd                  & 98 & 1.00 & 4.56 & STRONG & 5 & 0.00 & 0.00 & \textbf{GAP}    & 3 & 1.00 & 1.58 & STRONG \\
+n\_groups             & 98 & 1.00 & 0.00 & GAP  & 5 & 0.00 & 0.00 & \textbf{GAP}    & 3 & 1.00 & 0.00 & GAP \\
+sample\_errors        & 98 & 1.00 & 0.00 & GAP  & 5 & 1.00 & 0.00 & GAP    & 3 & 1.00 & 0.00 & GAP \\
+mean\_completion\_len  & 98 & 1.00 & 6.61 & STRONG & 5 & 1.00 & 2.32 & STRONG & 3 & 1.00 & 1.58 & STRONG \\
+std\_completion\_len   & 98 & 1.00 & 6.61 & STRONG & 5 & 0.00 & 0.00 & \textbf{GAP}    & 3 & 1.00 & 1.58 & STRONG \\
+sampled\_tokens       & 98 & 1.00 & 6.61 & STRONG & 5 & 0.00 & 0.00 & \textbf{GAP}    & 3 & 1.00 & 1.58 & STRONG \\
+\midrule
+\textbf{TOTAL H bits} & & & \textbf{39.23} & & & & \textbf{8.89} & & & & \textbf{8.84} & \\
+\bottomrule
+\end{tabular}
+\caption{Cross-corpus v2.5 portability matrix (13 fields $\times$ 3 corpora).
+\textbf{Bold GAPs} are the N10 structural gaps surfaced by H1 FAIL.
+Per-field verdict: STRONG ($H_{\text{bits}} \geq 1.5$ AND fill $\geq 0.80$),
+OK ($H_{\text{bits}} \geq 0.5$ AND fill $\geq 0.50$), GAP otherwise.
+Total entropy is monotone mega $\geq$ n10 $\geq$ n2 (H3 PASS).}
+\label{tab:p5-iter185-v25-cross-corpus}
+\end{table}

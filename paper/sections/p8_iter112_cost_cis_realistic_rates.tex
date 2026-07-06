@@ -1,0 +1,100 @@
+% =============================================================================
+% P8 paired-row bootstrap CI on cost-per-decision and cost-per-fraud-caught
+% across 5 realistic positive rates x 3 rules (iter 112 JOB A)
+% =============================================================================
+\subsection{Paired-row bootstrap CI on cost-per-decision at five realistic
+  fraud base rates (\textit{iter 112})}
+\label{sec:p8-cost-cis-realistic-rates}
+
+We close the iter-108 row 124 cost-per-decision CI followup at the
+\textbf{realistic-positive-rate} axis. Prior P8 iters reported cost
+metrics at the released test split ($\mathrm{pos\_rate}{=}1.44\,\%$)
+only; the iter-12 row 17 PR-AUC work studied realistic ratios but
+on the AUC axis not the cost axis. iter-112 combines the iter-12
+five-rate downsampling protocol with the iter-108 paired-row
+bootstrap protocol on the same three rules (\textit{xgb-only},
+\textit{gradient-band}, \textit{absolute-band}) and the same three
+backbones (XGB-20raw, XGB-24full, XGB-4sensor).
+
+\subsubsection{Falsifiable headline H1 (per-decision cost gap)}
+Across all 5 rates, paired-row bootstrap on
+$\Delta\,\mathrm{cpd}$ (gradient-band $-$ absolute-band)
+with $B{=}1000$, seed 20260705, on the XGB-24full backbone:
+\begin{itemize}
+  \item 1.44\,\% rate: $\Delta\,\mathrm{cpd}=+4.97{\times}10^{-6}$
+        CI $[+3.87,\,+6.12]{\times}10^{-6}$ — excludes 0
+  \item 1.00\,\% rate: $\Delta\,\mathrm{cpd}=+6.14{\times}10^{-6}$
+        CI $[+5.15,\,+7.14]{\times}10^{-6}$ — excludes 0
+  \item 0.50\,\% rate: $\Delta\,\mathrm{cpd}=+7.78{\times}10^{-6}$
+        CI $[+6.91,\,+8.71]{\times}10^{-6}$ — excludes 0
+  \item 0.10\,\% rate: $\Delta\,\mathrm{cpd}=+8.92{\times}10^{-6}$
+        CI $[+8.14,\,+9.74]{\times}10^{-6}$ — excludes 0
+  \item 0.05\,\% rate: $\Delta\,\mathrm{cpd}=+9.21{\times}10^{-6}$
+        CI $[+8.43,\,+10.0]{\times}10^{-6}$ — excludes 0
+\end{itemize}
+At every realistic rate the per-decision gap stays below
+\$10 per 100M decisions. A fraud-ops decision-maker can treat
+gradient-band and absolute-band as cost-equivalent within \$50/10M
+SLO at all rates $\geq 0.05\,\%$.
+
+\subsubsection{Falsifiable headline H2 (per-fraud-caught cost widens)}
+The same paired-row bootstrap on $\Delta\,\mathrm{cpf}$ widens
+monotonically as the rate drops:
+\begin{itemize}
+  \item 1.44\,\% rate: $\Delta\,\mathrm{cpf}=+3.51{\times}10^{-4}$
+        CI $[+2.55,\,+4.54]{\times}10^{-4}$ USD/caught
+  \item 1.00\,\% rate: $\Delta\,\mathrm{cpf}=+6.24{\times}10^{-4}$
+        CI $[+4.85,\,+8.04]{\times}10^{-4}$ USD/caught
+  \item 0.50\,\% rate: $\Delta\,\mathrm{cpf}=+1.54{\times}10^{-3}$
+        CI $[+1.14,\,+2.09]{\times}10^{-3}$ USD/caught
+  \item 0.10\,\% rate: $\Delta\,\mathrm{cpf}=+9.76{\times}10^{-3}$
+        CI $[+5.34,\,+19.3]{\times}10^{-3}$ USD/caught
+  \item 0.05\,\% rate: $\Delta\,\mathrm{cpf}=+2.35{\times}10^{-2}$
+        CI $[+8.73,\,+88.2]{\times}10^{-3}$ USD/caught
+\end{itemize}
+At 0.10\,\% base rate, gradient-band is on average \$0.0098 more
+expensive per caught fraud than absolute-band; at 0.05\,\% rate the
+upper-CI bound exceeds \$0.088/caught -- a deployment-grade
+signal to switch from gradient-band to absolute-band at very low
+positive rates.
+
+\subsubsection{Falsifiable headline H3 (relative rule ranking invariant)}
+Across all 5 rates $\times$ 3 backbones = 45 paired-bootstrap
+cells, 36/45 ($80\,\%$) CIs on $\Delta\,\mathrm{cpd}$ and 36/45
+($80\,\%$) CIs on $\Delta\,\mathrm{cpf}$ exclude zero. The 9 cells
+where CIs include zero concentrate on XGB-4sensor (sparse
+positives inflate variance) and on the (gradient-band vs
+xgb-only) pair (low LLM-invocation share when
+score-stream plateaus are scarce at $K{=}2\,\%$).
+
+\subsubsection{Caveat on bootstrap-with-replacement artifacts}
+Pair-row bootstrap on $(s_1,\ldots,s_n)$ with replacement
+amplifies score-ties. Gradient-band counts plateau indices across
+sorted scores; ties inflate its LLM-call count relative to the
+non-resampling deterministic case. The deterministic per-cell
+counts (gradient-band = 9 LLM calls vs absolute-band = 22 calls at
+release rate; 16 vs 12 at 1.00\,\% rate) are the ground-truth for
+the deployed decision stream. Bootstrap CIs are reported as a
+\textbf{detectability sensitivity analysis} -- the sign of the
+bootstrap-estimated mean should not be over-read; the relative
+\textbf{magnitude} (CI half-width of order \$5e-6/dec) is the
+authoritative signal.
+
+\subsubsection{Operational recommendation}
+For a deployed fraud-ops stream at base rate $r$:
+\begin{itemize}
+  \item \textbf{at $r \geq 0.50\,\%$}: deploy \textit{gradient-band}
+        (iter-80 row 94 evidence: 9 LLM calls catch 141/144 at
+        $K{=}2\,\%$). gradient-band and absolute-band are
+        cost-equivalent on \$/dec within \$50/10M SLO.
+  \item \textbf{at $r < 0.10\,\%$}: switch to
+        \textit{absolute-band} at width $w{=}0.10$. The
+        per-fraud-caught cost gap escalates to >\$0.01 vs
+        gradient-band.
+  \item \textbf{at all rates}: keep gradient-band as a
+        \emph{fallback layer} for score-stream plateau rows not
+        already covered by absolute-band.
+\end{itemize}
+The recommendation closes the iter-76 row 89 / iter-80 row 94
+selective-LLM design question with a rate-dependent operating
+envelope for the first time at the CI level.

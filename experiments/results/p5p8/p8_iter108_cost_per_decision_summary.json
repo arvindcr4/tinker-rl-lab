@@ -1,0 +1,69 @@
+{
+  "seed": 20260705,
+  "n_boot": 1000,
+  "k_pct": 2.0,
+  "G_THR": 0.0001,
+  "W_ABS": 0.1,
+  "COST_XGB": 0.0001,
+  "COST_LLM": 0.001,
+  "n_train": 50000,
+  "n_test": 10000,
+  "auc_20raw": 0.9997597346230159,
+  "auc_24full": 0.9998027146464646,
+  "headline": {
+    "global_cost_per_decision": {
+      "xgb_only": 0.0001,
+      "gradient_band": 0.00010081,
+      "absolute_band": 0.00010188999999999999
+    },
+    "global_cost_per_fraud_caught": {
+      "xgb_only": 0.0070921985815602835,
+      "gradient_band": 0.007149645390070922,
+      "absolute_band": 0.007226241134751773
+    },
+    "global_recall_at_K2": {
+      "xgb_only": 0.9791666666666666,
+      "gradient_band": 0.9791666666666666,
+      "absolute_band": 0.9791666666666666
+    },
+    "n_llm_calls": {
+      "gradient_band": 9,
+      "absolute_band": 21
+    },
+    "paired_bootstrap_ci": {
+      "gradient_minus_absolute": {
+        "delta_recall_mean": [
+          -0.0020449342859841704,
+          -0.015151515151515138,
+          0.0
+        ],
+        "delta_pos_at_K2_g": 141,
+        "delta_pos_at_K2_a": 141
+      },
+      "gradient_minus_xgbonly": {
+        "delta_recall_mean": [
+          -0.0020449342859841704,
+          -0.015151515151515138,
+          0.0
+        ],
+        "delta_pos_at_K2_g": 141,
+        "delta_pos_at_K2_x": 141
+      },
+      "absolute_minus_xgbonly": {
+        "delta_recall_mean": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "delta_pos_at_K2_a": 141,
+        "delta_pos_at_K2_x": 141
+      }
+    }
+  },
+  "cohort_sizes": [
+    2500,
+    2500,
+    2500,
+    2500
+  ]
+}

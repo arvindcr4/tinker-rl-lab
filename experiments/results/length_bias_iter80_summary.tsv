@@ -1,0 +1,5 @@
+task	algo	n	phi	mu	theta	half_life	sigma	df_stat	r_slope
+arithmetic	grpo	5	0.5073	4.53	0.7304	1.22	0.177	-6.034	0.0048
+arithmetic	dr_grpo	5	0.4577	4.53	0.8664	0.97	0.192	-6.068	0.0061
+gsm8k_cot	grpo	3	0.2738	187.87	0.6008	1.19	5.680	-3.863	0.0004
+gsm8k_cot	dr_grpo	3	0.0513	190.73	1.9908	0.55	4.564	-4.848	0.0002

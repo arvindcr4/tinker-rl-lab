@@ -1,0 +1,13 @@
+model	params_B	n_steps	phi_hat	phi_lo	phi_hi	ci_covers_zero	mu_hat	sigma_hat	phi_lo_excludes_zero_oneright	phi_hi_excludes_zero_oneleft
+Qwen3.5-4B	4.0	30	-0.128830	-0.370525	0.318656	True	0.816667	0.214356	False	False
+Qwen3-8B	8.0	30	-0.275854	-0.377165	0.323729	True	0.285417	0.165204	False	False
+Llama-3.1-8B-Instruct	8.0	30	-0.033501	-0.343613	0.324858	True	0.868750	0.164093	False	False
+Qwen3-32B	32.0	3	0.000000	nan	nan	True	0.249667	0.088153	False	False
+Qwen3.5-27B	27.0	3	0.000000	nan	nan	True	0.437333	0.318623	False	False
+gpt-oss-20B	20.0	30	-0.282737	-0.374338	0.336483	True	0.839583	0.183888	False	False
+Qwen3-30B-MoE	30.0	5	-0.543893	-0.933593	0.523810	True	0.325200	0.145752	False	False
+Qwen3-30B-MoE-Inst	30.0	3	0.000000	nan	nan	True	1.000000	0.000000	False	False
+DeepSeek-V3.1	685.0	20	-0.115493	-0.444907	0.363695	True	0.843750	0.138671	False	False
+Nemotron-120B	120.0	20	-0.022273	-0.414911	0.395903	True	0.175000	0.247870	False	False
+Qwen3-235B-MoE	235.0	4	0.000000	nan	nan	True	1.000000	0.000000	False	False
+Kimi-K2-Thinking	1000.0	20	-0.159737	-0.434539	0.386434	True	0.850000	0.169089	False	False

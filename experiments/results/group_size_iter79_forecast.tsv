@@ -1,0 +1,4 @@
+T_ext_tokens	T_ext_M	c_extrapolated	k_extrapolated	predicted_acc_G32_pp	predicted_acc_G4_pp	predicted_delta_pp	predicted_R_G4_over_G32	wu_retention	predicted_R_minus_wu	predicted_breaks_equivalence_80pct
+128000000	128.0	0.9137	1.5681	83.56	45.99	37.57	0.5503829583532791	0.976	-0.4256170416467209	True
+256000000	256.0	0.6889	1.9306	73.04	16.48	56.56	0.22562979189485213	0.976	-0.7503702081051479	True
+512000000	512.0	0.464	2.3768	43.78	0.0	43.78	0.0	0.976	-0.976	True

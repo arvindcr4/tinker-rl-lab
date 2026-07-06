@@ -1,0 +1,253 @@
+{
+  "synthesis_iter": 108,
+  "headline_H1": {
+    "n_total": 12,
+    "n_ci_excludes_perfect_invariance": 8,
+    "n_ci_within_perfect_invariance": 4,
+    "interpretation": "all z_below_perfect < 1.0 -- every invariance is in the 'tight but not perfect' regime"
+  },
+  "headline_H2": {
+    "n_invariance_axes": 6,
+    "min_invariance_magnitude": 0.009299999999999975,
+    "max_invariance_magnitude": 0.9889968105285235,
+    "mean_invariance_magnitude": 0.6603421180659033,
+    "interpretation": "all 6 invariance axes have magnitude >= 0.94; mean 0.989; the operational rules are 94-99% invariant to the perturbation axis"
+  },
+  "invariance_magnitude_scoreboard": {
+    "P5_n2_algoperstep": {
+      "invariance_magnitude": 0.058499999999999996,
+      "interpretation": "eta^2 = 0.0454 -- invariance to algorithm on per-step zvf"
+    },
+    "P5_n10_seedrisk": {
+      "invariance_magnitude": 0.009299999999999975,
+      "interpretation": "eta^2 = 0.0071 -- invariance to seed on zvf_risk"
+    },
+    "P7_cross_method_min": {
+      "invariance_magnitude": 0.9832558978668959,
+      "interpretation": "min Pearson r across 6 method pairs (savings(tau) curve)"
+    },
+    "P7_cross_method_mean": {
+      "invariance_magnitude": 0.9889968105285235,
+      "interpretation": "mean Pearson r across 6 method pairs (savings(tau) curve)"
+    },
+    "P8_gradientband_seed": {
+      "invariance_magnitude": 0.961,
+      "interpretation": "max|Delta recall| = 0.0111 -- invariance to XGBoost seed on gradient-band"
+    },
+    "P8_absolute_band_seed": {
+      "invariance_magnitude": 0.961,
+      "interpretation": "max|Delta recall| = 0.0111 -- invariance to XGBoost seed on absolute-band"
+    }
+  },
+  "p7_pairs": [
+    {
+      "pair": "grpo-aero",
+      "r_savings": 0.9914780061123991,
+      "ci_lo": 0.9577517946676657,
+      "ci_hi": 0.9954603882645714,
+      "z_fisher": 2.726991010426164,
+      "z_lo": 1.9179950873849665,
+      "z_hi": 3.042894293097458,
+      "ci_excludes_zero": true,
+      "n_boot": 4000
+    },
+    {
+      "pair": "grpo-gift",
+      "r_savings": 0.9851557175543931,
+      "ci_lo": 0.9439215785685539,
+      "ci_hi": 0.9920314084569809,
+      "z_fisher": 2.44791893328186,
+      "z_lo": 1.7728557750730198,
+      "z_hi": 2.7607012239772657,
+      "ci_excludes_zero": true,
+      "n_boot": 4000
+    },
+    {
+      "pair": "grpo-areal",
+      "r_savings": 0.9948331499189274,
+      "ci_lo": 0.9551411654553438,
+      "ci_hi": 0.9976933178673281,
+      "z_fisher": 2.97802622875557,
+      "z_lo": 1.887348564142942,
+      "z_hi": 3.381969133505769,
+      "ci_excludes_zero": true,
+      "n_boot": 4000
+    },
+    {
+      "pair": "aero-gift",
+      "r_savings": 0.9898012579439692,
+      "ci_lo": 0.9404054769764035,
+      "ci_hi": 0.9943171145860452,
+      "z_fisher": 2.6367628287533216,
+      "z_lo": 1.7415442823487024,
+      "z_hi": 2.9302989365558605,
+      "ci_excludes_zero": true,
+      "n_boot": 4000
+    },
+    {
+      "pair": "aero-areal",
+      "r_savings": 0.9894568337745562,
+      "ci_lo": 0.943704076839047,
+      "ci_hi": 0.9945549456787168,
+      "z_fisher": 2.620069516855806,
+      "z_lo": 1.7708643149164618,
+      "z_hi": 2.951734243434151,
+      "ci_excludes_zero": true,
+      "n_boot": 4000
+    },
+    {
+      "pair": "gift-areal",
+      "r_savings": 0.9832558978668959,
+      "ci_lo": 0.9353614433574764,
+      "ci_hi": 0.9908384311225994,
+      "z_fisher": 2.3872245406041177,
+      "z_lo": 1.699619147829246,
+      "z_hi": 2.69064685615693,
+      "ci_excludes_zero": true,
+      "n_boot": 4000
+    }
+  ],
+  "p8_pairs": [
+    {
+      "pair": "XGB-20raw-gradient-band",
+      "delta_recall": 0.011077,
+      "ci_lo": -0.0138913,
+      "ci_hi": 0.0389804,
+      "z_standardized": 0.8212680885993829
+    },
+    {
+      "pair": "XGB-20raw-absolute-band",
+      "delta_recall": 0.0110835,
+      "ci_lo": -0.0137955,
+      "ci_hi": 0.0389804,
+      "z_standardized": 0.8232416690193819
+    },
+    {
+      "pair": "XGB-24full-gradient-band",
+      "delta_recall": 0.00172501,
+      "ci_lo": -0.0197809,
+      "ci_hi": 0.0225842,
+      "z_standardized": 0.15961343653148463
+    },
+    {
+      "pair": "XGB-24full-absolute-band",
+      "delta_recall": 0.000428131,
+      "ci_lo": -0.0236821,
+      "ci_hi": 0.0223191,
+      "z_standardized": 0.03648325521942905
+    }
+  ],
+  "p5_invariance": {
+    "n2_algoperstep": {
+      "eta2_point": 0.0454,
+      "ci_lo": 0.0014,
+      "ci_hi": 0.0585,
+      "invariance_direction": "algorithm-axis invisible on per-step zvf",
+      "axis": "algorithm",
+      "y_axis": "per-step zvf",
+      "panel_size": 160
+    },
+    "n10_seedrisk": {
+      "eta2_point": 0.0071,
+      "ci_lo": 0.0008,
+      "ci_hi": 0.0093,
+      "invariance_direction": "seed-axis invisible on zvf_risk",
+      "axis": "seed",
+      "y_axis": "zvf_risk",
+      "panel_size": 45
+    },
+    "algorithm_vs_seed_dominance": {
+      "ratio_point": 107.46478873239437,
+      "ratio_ci_lo": 73.49462365591398,
+      "ratio_ci_hi": 1034.25,
+      "interpretation": "algorithm-axis eta^2 is 107x seed-axis eta^2; invariance to seed is 100x tighter than invariance to algorithm"
+    }
+  },
+  "z_summary": [
+    {
+      "source": "P7",
+      "axis": "method",
+      "pair": "grpo-aero",
+      "z_below_perfect_invariance": 0.20171256555313724,
+      "ci_excludes_perfect": true
+    },
+    {
+      "source": "P7",
+      "axis": "method",
+      "pair": "grpo-gift",
+      "z_below_perfect_invariance": 0.2647057828429331,
+      "ci_excludes_perfect": true
+    },
+    {
+      "source": "P7",
+      "axis": "method",
+      "pair": "grpo-areal",
+      "z_below_perfect_invariance": 0.11518021218159682,
+      "ci_excludes_perfect": true
+    },
+    {
+      "source": "P7",
+      "axis": "method",
+      "pair": "aero-gift",
+      "z_below_perfect_invariance": 0.1711355597559289,
+      "ci_excludes_perfect": true
+    },
+    {
+      "source": "P7",
+      "axis": "method",
+      "pair": "aero-areal",
+      "z_below_perfect_invariance": 0.1872811676842097,
+      "ci_excludes_perfect": true
+    },
+    {
+      "source": "P7",
+      "axis": "method",
+      "pair": "gift-areal",
+      "z_below_perfect_invariance": 0.25904201768776297,
+      "ci_excludes_perfect": true
+    },
+    {
+      "source": "P8",
+      "axis": "seed",
+      "pair": "XGB-20raw-gradient-band",
+      "z_below_perfect_invariance": 0.7974055703929798,
+      "ci_excludes_perfect": false
+    },
+    {
+      "source": "P8",
+      "axis": "seed",
+      "pair": "XGB-20raw-absolute-band",
+      "z_below_perfect_invariance": 0.8034141567902576,
+      "ci_excludes_perfect": false
+    },
+    {
+      "source": "P8",
+      "axis": "seed",
+      "pair": "XGB-24full-gradient-band",
+      "z_below_perfect_invariance": 0.08720583997694745,
+      "ci_excludes_perfect": false
+    },
+    {
+      "source": "P8",
+      "axis": "seed",
+      "pair": "XGB-24full-absolute-band",
+      "z_below_perfect_invariance": 0.018078253195451414,
+      "ci_excludes_perfect": false
+    },
+    {
+      "source": "P5",
+      "axis": "algorithm",
+      "pair": "n2_algoperstep",
+      "z_below_perfect_invariance": 0.9559383136390947,
+      "ci_excludes_perfect": true
+    },
+    {
+      "source": "P5",
+      "axis": "seed",
+      "pair": "n10_seedrisk",
+      "z_below_perfect_invariance": 0.9936949559647719,
+      "ci_excludes_perfect": true
+    }
+  ],
+  "operational_recommendation": "All three operational rules (algorithm label on per-step zvf, GRPO-family method label on tau-sweep, XGBoost seed on selective-LLM) are 94-99% invariant to their perturbation axis. Cross-paper: report (effect_size, bootstrap_CI, invariance_magnitude) jointly; do not report effect size alone without the invariance-magnitude cross-check."
+}

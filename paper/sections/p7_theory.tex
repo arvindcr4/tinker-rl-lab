@@ -1,0 +1,131 @@
+% Pillar-7: signal-starvation theory (T1-T3), each theorem paired with its check
+\section{A Signal-Starvation Model of Binary-Reward GRPO}
+\label{sec:p7-theory}
+
+\subsection{Setup and the usable-signal functional}
+\label{sec:p7-theory-setup}
+Fix a prompt $x$ with latent per-rollout success probability $p \in [0,1]$
+under the current policy, and let a GRPO group consist of $G$ conditionally
+i.i.d.\ binary rewards $R_1, \dots, R_G \sim \mathrm{Bernoulli}(p)$, so the
+success count is $K = \sum_i R_i \sim \mathrm{Binomial}(G, p)$. The group is
+\emph{degenerate}---zero within-group variance, zero centered advantage, zero
+gradient---iff $K \in \{0, G\}$. Define
+\begin{equation}
+  h_G(p) \;=\; p^G + (1-p)^G,
+  \label{eq:p7-hG}
+\end{equation}
+the probability of degeneracy, and model the \emph{usable learning signal}
+per prompt as
+\begin{equation}
+  S(p, G) \;=\; p(1-p)\,\bigl(1 - h_G(p)\bigr).
+  \label{eq:p7-S}
+\end{equation}
+The first factor is the contrast magnitude a non-degenerate group can carry
+(the Bernoulli variance, which also bounds the mean absolute advantage;
+Appendix~\ref{sec:p7-appendix}); the second is the probability that any
+signal survives group centering at all. Both factors vanish at $p \in
+\{0,1\}$ and peak at $p = \nicefrac{1}{2}$: GRPO learns fastest exactly where
+the policy is most uncertain, and starves at both ends. Three consequences
+follow; proofs are deferred to Appendix~\ref{sec:p7-appendix}, and each
+theorem is paired here with the measurement that could have falsified it.
+
+\subsection{T1: the expected ZVF indicator is $p^G + (1-p)^G$}
+\label{sec:p7-t1}
+\textbf{Theorem 1.} \emph{Under the binomial model, the expected value of the
+per-group ZVF indicator is exactly $h_G(p) = p^G + (1-p)^G$; aggregated over
+a prompt population $\mathcal{D}$, $\E[\mathrm{ZVF}] =
+\E_{x \sim \mathcal{D}}[\,p_x^G + (1-p_x)^G\,]$.}
+
+\emph{Empirical check.} Binning the per-group reward tensors of the GSM8K
+runs (the only runs that log full per-group tensors; $G = 8$, 3 seeds) by
+empirical success rate $\hat p_x$ reproduces the predicted profile---by
+construction at the endpoints, and empirically in the interior collapse: the
+ZVF indicator averages
+$1.000$ at $\hat p_x \in \{0, 1\}$ and $0.000$ at every interior bin
+$\hat p_x \in \{0.125, \dots, 0.875\}$
+(\texttt{experiments/results/pcd_vs_zvf_shape.tsv}). At the run level, the
+group-size sweep of Table~\ref{tab:p7-gsweep} logs the closed-form prediction
+$h_G$ evaluated at the run's mean success rate next to the measured mean ZVF:
+the two co-vary monotonically in $G$, though measured ZVF sits above the
+prediction at every $G$ because the binomial model evaluates $h_G$ at the
+\emph{mean} $p$ while the true prompt population mixes mastered and hopeless
+prompts whose $h_G \approx 1$ (Jensen gap; this is the U-shape of
+Section~\ref{sec:p7-ushape} acting within a single run).
+
+\subsection{T2: larger $G$ lowers ZVF}
+\label{sec:p7-t2}
+\textbf{Theorem 2.} \emph{For every $p \in (0,1)$, $h_G(p)$ is strictly
+decreasing in $G$; hence expected ZVF falls monotonically as group size
+grows, with exponential decay rate $-\ln\max(p, 1-p)$.}
+
+\emph{Empirical check (two independent grids).} First, a model~$\times$~$G$
+grid from the 368-run audit (Table~\ref{tab:p7-modelG}): for every model with
+an interior success rate, measured ZVF falls monotonically in $G$---most
+cleanly for Qwen3-32B ($0.33 \to 0.18 \to 0.08$) and Llama-3.1-8B
+($0.76 \to 0.65 \to 0.47$). The two boundary cases are exactly the ones the
+theory flags: Llama-3.2-1B sits at $p \approx 0$ where $h_G \approx 1$
+regardless of $G$ ($0.98 \to 0.97$), and Qwen3-4B-Instruct sits near
+saturation where the decay rate $-\ln\max(p,1-p)$ is tiny and seed noise
+dominates ($0.89 \to 0.84 \to 0.91$, the single non-monotone cell). Second,
+the repo-internal sweep at $G \in \{2,4,8,16\}$ (3 seeds each,
+Table~\ref{tab:p7-gsweep}) shows the same monotone decline, mean ZVF
+$0.838 \to 0.631$, while held-out accuracy stays flat ($\approx 0.98$
+throughout)---raising $G$ buys signal, not (on this near-saturated task)
+outcome, a point the controller design of Section~\ref{sec:p7-rules} must
+respect.
+
+\begin{table}[t]
+\centering
+\caption{T2 check 1: mean ZVF by model and group size $G$ (368-run audit,
+W\&B project \texttt{zvf-audit}). ZVF falls with $G$ wherever the success
+rate is interior; the boundary rows behave as $h_G$ predicts (see text).
+``---'' = cell not run.}
+\label{tab:p7-modelG}
+\begin{tabular}{lccc}
+\toprule
+Model & $G{=}4$ & $G{=}8$ & $G{=}16$ \\
+\midrule
+Llama-3.2-1B        & 0.98 & 0.97 & --- \\
+Qwen3-4B-Instruct   & 0.89 & 0.84 & 0.91 \\
+Llama-3.1-8B        & 0.76 & 0.65 & 0.47 \\
+Qwen3-8B            & 0.36 & 0.27 & 0.21 \\
+Qwen3-32B           & 0.33 & 0.18 & 0.08 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{T2 check 2: repo-internal group-size sweep (3 seeds per $G$;
+\texttt{experiments/results/groupsize\_zvf\_sweep.tsv}). Measured mean ZVF
+falls monotonically in $G$ and co-varies with the closed-form prediction
+$h_G(\bar p)$ evaluated at the run's mean training reward $\bar p$; held-out
+accuracy is flat because the task is near-saturated.}
+\label{tab:p7-gsweep}
+\begin{tabular}{ccccc}
+\toprule
+$G$ & Mean ZVF & $h_G(\bar p)$ & $\bar p$ (train reward) & Held-out acc.\ (SE) \\
+\midrule
+2  & 0.838 & 0.731 & 0.840 & 0.982 (0.004) \\
+4  & 0.764 & 0.554 & 0.863 & 0.988 (0.002) \\
+8  & 0.691 & 0.326 & 0.869 & 0.990 (0.003) \\
+16 & 0.631 & 0.114 & 0.873 & 0.978 (0.006) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{T3: gradient magnitude tracks $p(1-p)$}
+\label{sec:p7-t3}
+\textbf{Theorem 3.} \emph{With unnormalized group-centered advantages
+$A_i = R_i - \hat p$, the mean absolute advantage in a group is exactly
+$2\hat p(1 - \hat p)$; hence the advantage mass driving the policy gradient
+scales with the within-group contrast $\hat p(1-\hat p)$, up to the
+policy-dependent score-function factor.}
+
+\emph{Empirical check.} Theorem~3 is the load-bearing assumption behind the
+first factor of Eq.~\eqref{eq:p7-S}, and it cannot be checked on the closed
+stack, which does not expose per-group gradients. Section~\ref{sec:p7-e1}
+reports a direct open-backward-pass measurement:
+$\mathrm{corr}(\|\nabla\|, \hat p(1-\hat p)) = +0.71$ on a 0.5B model with
+synthetic arithmetic---consistent in sign and rank with T3, and scoped
+strictly as directional evidence.

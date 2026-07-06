@@ -1,0 +1,5 @@
+metric_kind	metric_key	headline
+reward_linear	logG	Linear fit reward = 0.9709 + +0.0072*log10(G), R^2=0.2629; slope bootstrap 95% CI [-0.0049, +0.0144]
+reward_quadratic	logG_logG2	Quadratic fit reward = 0.9912 + -0.0604*log10(G) + +0.0449*log10(G)^2, R^2=0.9992; leading coefficient c=+0.0449 (convex (accelerating))
+reward_paired_diff	G16_minus_G2	Paired reward diff G=16 - G=2: +0.0066 +/- 0.0049, bootstrap 95% CI [-0.0031,+0.0121], one-sided p (H0: diff<=0) = 0.0365
+zvf_loglog	log10_mean_zvf_vs_log10_G	Log-log fit log10(mean_zvf) = -0.0354 + -0.1371*log10(G), R^2=0.9996; linear fit mean_zvf = 0.9042 + -0.2303*log10(G), R^2=0.9973; observed log-log slope=-0.137 (theory: -1.0 i.i.d. Bernoulli); observed linear slope=-0.230 per decade of G (anti-herding delta_div makes |slope| << 1.0 on log-log scale)

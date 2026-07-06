@@ -1,0 +1,17 @@
+cite_key	minreport_item	minreport_role	paper_inspires_item	minreport_has_evidence	category
+mitchell2019modelcards	1	model architecture + training procedure	True	True	LITERATURE_GROUNDING
+mitchell2019modelcards	2	intended use + out-of-scope use	True	True	LITERATURE_GROUNDING
+mitchell2019modelcards	7	evaluation results (per-slice metrics, not just averages)	True	True	LITERATURE_GROUNDING
+mitchell2019modelcards	8	ethical considerations + caveats	True	True	LITERATURE_GROUNDING
+gebru2021datasheets	3	dataset composition + per-instance annotation schema	True	True	LITERATURE_GROUNDING
+gebru2021datasheets	5	preprocessing, cleaning, labeling, uses	True	True	LITERATURE_GROUNDING
+gebru2021datasheets	9	who was involved in the data and how (annotation process)	True	True	LITERATURE_GROUNDING
+gebru2021datasheets	10	potential discriminatory impacts + mitigations	True	True	LITERATURE_GROUNDING
+bender2018datastatements	3	language variety + register + demographic of speakers	True	True	LITERATURE_GROUNDING
+bender2018datastatements	5	annotator demographics + recruitment	True	True	LITERATURE_GROUNDING
+bender2018datastatements	11	intended use + speaker consent + curation rationale	True	True	LITERATURE_GROUNDING
+bender2018datastatements	12	annotation process + quality control	True	True	LITERATURE_GROUNDING
+pushkarna2022datacards	4	dataset schema + transformations + provenance	True	True	LITERATURE_GROUNDING
+pushkarna2022datacards	6	sampling distribution + representativeness	True	True	LITERATURE_GROUNDING
+pushkarna2022datacards	13	per-stack axis field markers (zvf_yield_residual)	True	True	LITERATURE_GROUNDING
+pushkarna2022datacards	14	audit transparency + version tracking + change log	True	True	LITERATURE_GROUNDING

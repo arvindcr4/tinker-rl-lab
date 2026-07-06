@@ -1,0 +1,53 @@
+% !TEX root = ../paper_P5_minreport.tex
+% Section — Iter 193 P5 algorithm-axis vs stack-axis variance ratio
+\subsection{The label explains near-zero variance: an algorithm-vs-stack
+variance ratio (iter 193)}
+\label{sec:p5-iter193-ratio}
+
+Section~\ref{sec:p5-iter141-algo-axis} measured the \emph{algorithm} axis in
+isolation on the N2 same-stack four-method panel. Here we supply the missing
+denominator: the \emph{stack} axes on the \texttt{mega\_20260704} corpus
+($98$ cells), and report the two side by side as a
+\textbf{stack-to-label variance ratio}. We reuse the Ivison
+et~al.\ pipeline-factor recipe (one-way $\eta^2 = \mathrm{SS}_{\text{axis}} /
+\mathrm{SS}_{\text{total}}$), add the unbiased $\omega^2$, and attach a
+stratified bootstrap CI ($B{=}2000$, seed $20260706$, $95\%$) to every estimate.
+The algorithm axis is the $4$ methods (grpo/aero/gift/areal) at a fixed stack;
+the stack axes are model family, task slice, group size $G$, temperature, and
+seed. Shared outcome channels are zvf, mean reward, and completion length.
+
+\begin{table}[t]
+\centering\small
+\caption{Algorithm-axis (N2 same-stack, $4$ methods) versus the strongest
+stack axis (mega, $98$ cells) on shared outcome channels. $\eta^2$ with
+$95\%$ stratified bootstrap CI. The algorithm \emph{label} explains
+$\le 6.3\%$ of variance on every channel and (after $\omega^2$ correction)
+\emph{zero} same-stack reward variance ($\omega^2 = -0.011$); the stack
+explains $45$--$47\%$. Every stack-vs-label CI pair is disjoint.}
+\label{tab:p5-iter193-ratio}
+\begin{tabular}{lccrc}
+\toprule
+channel & algo $\eta^2$ [95\% CI] & top stack axis ($\eta^2$) & ratio & CI-disjoint \\
+\midrule
+zvf    & $0.045\ [0.009,0.144]$ & task\_slice ($0.469$)   & $10.3\times$ & yes \\
+reward & $0.008\ [0.003,0.078]$ & model\_family ($0.453$) & $60.6\times$ & yes \\
+len    & $0.063\ [0.019,0.161]$ & model\_family ($0.301$) & $4.8\times$  & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Findings.} \textit{(i)} The algorithm label is a near-null predictor:
+$\eta^2 \le 0.063$ on every channel, and on reward $\omega^2 < 0$, meaning the
+label explains no same-stack reward variance beyond small-sample noise --- the
+sharpest empirical form of the Estimator-Equivalence Principle
+(Section~\ref{sec:p5-iter141-algo-axis}). \textit{(ii)} The stack explains
+$45$--$47\%$ of reward and zvf variance, a $4.8$--$60.6\times$ multiple of the
+label, with disjoint CIs. \textit{(iii)} Different outcomes are governed by
+different stack knobs: zvf is co-dominated by \emph{task slice}
+($0.469$) and $G$ ($0.444$) --- nearly tied, refining the earlier emphasis on
+$G$ alone --- while reward is dominated by model family ($0.453$) and
+completion length spreads across model, task, and temperature. No single axis is
+``the stack,'' which is precisely why a label plus one hyperparameter is an
+insufficient report and MIN-REPORT enumerates seven items. Data and audit
+script: \texttt{scripts/p5p8/p5\_iter193\_algo\_vs\_stack\_eta2.py},
+\texttt{experiments/results/p5p8/p5\_iter193\_*.tsv}.

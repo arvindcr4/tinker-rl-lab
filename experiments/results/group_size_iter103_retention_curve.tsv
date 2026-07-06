@@ -1,0 +1,5 @@
+budget_tokens	acc_G4	acc_G4_ci_low	acc_G4_ci_high	acc_G32	acc_G32_ci_low	acc_G32_ci_high	retention_G4_over_G32	retention_ci_low	retention_ci_high	retention_minus_wu0976	fails_wu_0976
+1000000	0.41	0.38	0.44	0.42	0.39	0.45	0.9762	0.8764	1.076	0.0002	False
+4000000	0.55	0.52	0.58	0.66	0.63	0.69	0.8333	0.7742	0.8925	-0.1427	True
+16000000	0.63	0.6	0.66	0.84	0.81	0.87	0.75	0.7054	0.7946	-0.226	True
+64000000	0.64	0.61	0.67	0.88	0.85	0.91	0.7273	0.6851	0.7694	-0.2487	True

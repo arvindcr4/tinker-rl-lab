@@ -1,0 +1,13 @@
+# zvf_iter98_auc.tsv — AUC sweep: (rho_proxy > t) -> collapse.
+# Also Spearman rho_proxy vs collapse_delta with bootstrap 95% CI.
+threshold_kind	threshold_value	auc	n	n_pos
+rho_proxy	1.0	0.6364	12	1
+rho_proxy>=	0.5	0.8182	12	1
+rho_proxy>=	1.0	0.9091	12	1
+rho_proxy>=	1.5	0.9091	12	1
+rho_proxy>=	2.0	0.9091	12	1
+rho_proxy>=	3.0	1.0	12	1
+rho_proxy>=	5.0	0.4545	12	1
+spearman_rho_vs_collapse_delta		-0.6713	12	1
+spearman_ci_lo		-0.8951	12	1
+spearman_ci_hi		-0.1257	12	1

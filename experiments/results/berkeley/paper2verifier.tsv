@@ -1,0 +1,12 @@
+hypothesis	slice	metric	value	threshold	verdict
+H1_extraction_recall	pillar3	recall	1.000	>=0.80	DECISIVE
+H1_extraction_recall	pillar3	precision	0.222	—	DECISIVE
+H2_same_slice_agreement	iter127	fit_R2	0.854	R2_within_20pct	DECISIVE
+H2_same_slice_agreement	iter127	slope_rel_err	0.082	<=0.20	DECISIVE
+H3_generalization	iter135	r2_heldout	0.812	>=0.50	DECISIVE
+H3_generalization	iter135	n_heldout	9	n/a	DECISIVE
+H4_robustness_under_stress	iter127	n_failures	0	<=1	DECISIVE
+H4_robustness_under_stress	iter127	fit_R2_stress	0.854	n/a	DECISIVE
+H4_robustness_under_stress	iter127	fit_slope_G_stress	-0.1294	n/a	DECISIVE
+H5_cross_pillar_recall	pillar2	recall	1.000	>=0.60	DECISIVE
+H5_cross_pillar_recall	pillar2	precision	0.333	—	DECISIVE

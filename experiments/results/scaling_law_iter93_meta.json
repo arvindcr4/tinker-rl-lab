@@ -1,0 +1,268 @@
+{
+  "iter": 93,
+  "n_anchors": 12,
+  "families_compared": [
+    "constant",
+    "1seg_ols",
+    "saturation",
+    "powerlaw",
+    "ar1"
+  ],
+  "n_bootstrap_phi": 2000,
+  "ar1_phi_anchors_with_lo_excludes_0": 0,
+  "ar1_phi_anchors_with_ci_covers_zero": 12,
+  "consensus_winners_by_criterion": {
+    "aic": {
+      "constant": {
+        "aic": 5,
+        "bic": 6,
+        "loocv": 4,
+        "forecast": 1,
+        "rmse": 0,
+        "r2": 0
+      },
+      "1seg_ols": {
+        "aic": 1,
+        "bic": 1,
+        "loocv": 1,
+        "forecast": 0,
+        "rmse": 2,
+        "r2": 2
+      },
+      "saturation": {
+        "aic": 0,
+        "bic": 0,
+        "loocv": 0,
+        "forecast": 0,
+        "rmse": 0,
+        "r2": 0
+      },
+      "powerlaw": {
+        "aic": 1,
+        "bic": 0,
+        "loocv": 1,
+        "forecast": 2,
+        "rmse": 1,
+        "r2": 1
+      },
+      "ar1": {
+        "aic": 0,
+        "bic": 0,
+        "loocv": 1,
+        "forecast": 4,
+        "rmse": 4,
+        "r2": 4
+      }
+    },
+    "bic": {
+      "constant": {
+        "aic": 5,
+        "bic": 6,
+        "loocv": 4,
+        "forecast": 1,
+        "rmse": 0,
+        "r2": 0
+      },
+      "1seg_ols": {
+        "aic": 1,
+        "bic": 1,
+        "loocv": 1,
+        "forecast": 0,
+        "rmse": 2,
+        "r2": 2
+      },
+      "saturation": {
+        "aic": 0,
+        "bic": 0,
+        "loocv": 0,
+        "forecast": 0,
+        "rmse": 0,
+        "r2": 0
+      },
+      "powerlaw": {
+        "aic": 1,
+        "bic": 0,
+        "loocv": 1,
+        "forecast": 2,
+        "rmse": 1,
+        "r2": 1
+      },
+      "ar1": {
+        "aic": 0,
+        "bic": 0,
+        "loocv": 1,
+        "forecast": 4,
+        "rmse": 4,
+        "r2": 4
+      }
+    },
+    "loocv": {
+      "constant": {
+        "aic": 5,
+        "bic": 6,
+        "loocv": 4,
+        "forecast": 1,
+        "rmse": 0,
+        "r2": 0
+      },
+      "1seg_ols": {
+        "aic": 1,
+        "bic": 1,
+        "loocv": 1,
+        "forecast": 0,
+        "rmse": 2,
+        "r2": 2
+      },
+      "saturation": {
+        "aic": 0,
+        "bic": 0,
+        "loocv": 0,
+        "forecast": 0,
+        "rmse": 0,
+        "r2": 0
+      },
+      "powerlaw": {
+        "aic": 1,
+        "bic": 0,
+        "loocv": 1,
+        "forecast": 2,
+        "rmse": 1,
+        "r2": 1
+      },
+      "ar1": {
+        "aic": 0,
+        "bic": 0,
+        "loocv": 1,
+        "forecast": 4,
+        "rmse": 4,
+        "r2": 4
+      }
+    },
+    "forecast": {
+      "constant": {
+        "aic": 5,
+        "bic": 6,
+        "loocv": 4,
+        "forecast": 1,
+        "rmse": 0,
+        "r2": 0
+      },
+      "1seg_ols": {
+        "aic": 1,
+        "bic": 1,
+        "loocv": 1,
+        "forecast": 0,
+        "rmse": 2,
+        "r2": 2
+      },
+      "saturation": {
+        "aic": 0,
+        "bic": 0,
+        "loocv": 0,
+        "forecast": 0,
+        "rmse": 0,
+        "r2": 0
+      },
+      "powerlaw": {
+        "aic": 1,
+        "bic": 0,
+        "loocv": 1,
+        "forecast": 2,
+        "rmse": 1,
+        "r2": 1
+      },
+      "ar1": {
+        "aic": 0,
+        "bic": 0,
+        "loocv": 1,
+        "forecast": 4,
+        "rmse": 4,
+        "r2": 4
+      }
+    },
+    "rmse": {
+      "constant": {
+        "aic": 5,
+        "bic": 6,
+        "loocv": 4,
+        "forecast": 1,
+        "rmse": 0,
+        "r2": 0
+      },
+      "1seg_ols": {
+        "aic": 1,
+        "bic": 1,
+        "loocv": 1,
+        "forecast": 0,
+        "rmse": 2,
+        "r2": 2
+      },
+      "saturation": {
+        "aic": 0,
+        "bic": 0,
+        "loocv": 0,
+        "forecast": 0,
+        "rmse": 0,
+        "r2": 0
+      },
+      "powerlaw": {
+        "aic": 1,
+        "bic": 0,
+        "loocv": 1,
+        "forecast": 2,
+        "rmse": 1,
+        "r2": 1
+      },
+      "ar1": {
+        "aic": 0,
+        "bic": 0,
+        "loocv": 1,
+        "forecast": 4,
+        "rmse": 4,
+        "r2": 4
+      }
+    },
+    "r2": {
+      "constant": {
+        "aic": 5,
+        "bic": 6,
+        "loocv": 4,
+        "forecast": 1,
+        "rmse": 0,
+        "r2": 0
+      },
+      "1seg_ols": {
+        "aic": 1,
+        "bic": 1,
+        "loocv": 1,
+        "forecast": 0,
+        "rmse": 2,
+        "r2": 2
+      },
+      "saturation": {
+        "aic": 0,
+        "bic": 0,
+        "loocv": 0,
+        "forecast": 0,
+        "rmse": 0,
+        "r2": 0
+      },
+      "powerlaw": {
+        "aic": 1,
+        "bic": 0,
+        "loocv": 1,
+        "forecast": 2,
+        "rmse": 1,
+        "r2": 1
+      },
+      "ar1": {
+        "aic": 0,
+        "bic": 0,
+        "loocv": 1,
+        "forecast": 4,
+        "rmse": 4,
+        "r2": 4
+      }
+    }
+  }
+}

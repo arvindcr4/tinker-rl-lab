@@ -1,0 +1,62 @@
+[
+  {
+    "name": "baseline-hard-s0",
+    "mode": "baseline",
+    "seed": 0,
+    "n_hard_pool": 40,
+    "zero_loss_frac": 0.2,
+    "heldout_before": 0.5833333333333334,
+    "heldout_after": 0.6666666666666666,
+    "heldout_gain": 0.08333333333333326
+  },
+  {
+    "name": "curriculum-hard-s0",
+    "mode": "curriculum",
+    "seed": 0,
+    "n_hard_pool": 40,
+    "zero_loss_frac": 0.0,
+    "heldout_before": 0.5833333333333334,
+    "heldout_after": 0.6666666666666666,
+    "heldout_gain": 0.08333333333333326
+  },
+  {
+    "name": "baseline-hard-s1",
+    "mode": "baseline",
+    "seed": 1,
+    "n_hard_pool": 40,
+    "zero_loss_frac": 0.1,
+    "heldout_before": 0.6666666666666666,
+    "heldout_after": 0.75,
+    "heldout_gain": 0.08333333333333337
+  },
+  {
+    "name": "curriculum-hard-s1",
+    "mode": "curriculum",
+    "seed": 1,
+    "n_hard_pool": 40,
+    "zero_loss_frac": 0.0,
+    "heldout_before": 0.75,
+    "heldout_after": 0.5833333333333334,
+    "heldout_gain": -0.16666666666666663
+  },
+  {
+    "name": "baseline-hard-s2",
+    "mode": "baseline",
+    "seed": 2,
+    "n_hard_pool": 40,
+    "zero_loss_frac": 0.1,
+    "heldout_before": 0.75,
+    "heldout_after": 0.6666666666666666,
+    "heldout_gain": -0.08333333333333337
+  },
+  {
+    "name": "curriculum-hard-s2",
+    "mode": "curriculum",
+    "seed": 2,
+    "n_hard_pool": 40,
+    "zero_loss_frac": 0.0,
+    "heldout_before": 0.75,
+    "heldout_after": 0.8333333333333334,
+    "heldout_gain": 0.08333333333333337
+  }
+]

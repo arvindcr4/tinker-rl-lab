@@ -18,7 +18,7 @@ _Last updated: 2026-07-06 (after "finish remaining"). Owner: **[you]** = needs A
 
 | # | Task | Owner | Status |
 |---|------|-------|--------|
-| 8 | P1: scaled layer-freeze run | [me] | 🔄 **running on Colab L4** (3B, real GSM8K, 2 seeds) — torchao self-install fixed |
+| 8 | P1: scaled layer-freeze run | [me] | ⚠️ **blocked by Colab session instability** (3 attempts: torchao→fixed, connection drop, VM reclaimed mid-run). Script ready + hardened (`p1_layer_profile_scaled.py`, writes result to file). **1.5B result stands** (overlap=1.0). Retry needs a stable GPU (vast.ai runner, or a monitored `colab new` session, not one-shot `colab run`). |
 | 9 | P2/P3: token-budget-optimal curriculum | [me] | ⏳ next experiment (the better lever) |
 | 10 | P4: length-bias / KL-surprise mask | [me] | ⏳ designed only |
 | 11 | P5: sign provenance + CI gate | [me] | ✅ `registry/provenance/sign.py` (ed25519, tamper→FAIL) + `minreport.py --strict` gate |

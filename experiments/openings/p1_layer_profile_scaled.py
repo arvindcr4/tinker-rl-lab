@@ -282,6 +282,11 @@ def main():
         "per_seed": per_seed,
         "compute": "Colab GPU (colab run)",
     }
+    # write to a file too, so a dropped colab-run/exec connection doesn't lose the result
+    try:
+        open("/content/p1_scaled_result.json", "w").write(json.dumps(result, indent=2))
+    except Exception:
+        pass
     print("RESULT: " + json.dumps(result))
 
 

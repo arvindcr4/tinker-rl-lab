@@ -36,14 +36,10 @@ def _pip_install():
     )
 
 
-try:
-    import torch  # noqa: F401
-    import transformers  # noqa: F401
-    import peft  # noqa: F401
-    import datasets  # noqa: F401
-    import torchao  # noqa: F401
-except Exception:
-    _pip_install()
+# Fresh Colab VMs ship torchao 0.10, which imports fine but fails transformers'
+# runtime version check (>=0.16) at model-load. So upgrade UNCONDITIONALLY before
+# importing transformers — a guard on import success is not enough.
+_pip_install()
 
 import json
 import re

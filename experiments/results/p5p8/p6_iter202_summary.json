@@ -1,0 +1,78 @@
+{
+  "iter": 202,
+  "pillar": "P6",
+  "vein": "(b) cross-framework x method coverage matrix (post-iter-198 bump)",
+  "n_registry_files": 48,
+  "n_loaded_stacks": 28,
+  "n_loaded_deltas": 18,
+  "n_frameworks": 6,
+  "frameworks": [
+    "colab-open",
+    "openrlhf",
+    "tinker",
+    "trl",
+    "verl",
+    "zvf130"
+  ],
+  "n_methods": 15,
+  "methods": [
+    "aero",
+    "areal",
+    "cppo",
+    "dapo",
+    "drgrpo",
+    "es",
+    "gift",
+    "grpo",
+    "gspo",
+    "mcgrpo",
+    "ngrpo",
+    "ppo-reinforce",
+    "scafgrpo",
+    "tool_use_llama-8b-inst",
+    "tool_use_qwen3-32b"
+  ],
+  "n_populated_cells": 25,
+  "n_unmined_cells": 65,
+  "n_cross_framework_clusters": 6,
+  "cross_framework_methods": [
+    "aero",
+    "areal",
+    "dapo",
+    "drgrpo",
+    "gift",
+    "grpo"
+  ],
+  "framework_entry_counts": {
+    "colab-open": 4,
+    "openrlhf": 1,
+    "tinker": 10,
+    "trl": 1,
+    "verl": 1,
+    "zvf130": 11
+  },
+  "method_entry_counts": {
+    "aero": 2,
+    "areal": 2,
+    "cppo": 1,
+    "dapo": 2,
+    "drgrpo": 2,
+    "es": 1,
+    "gift": 2,
+    "grpo": 8,
+    "gspo": 1,
+    "mcgrpo": 1,
+    "ngrpo": 1,
+    "ppo-reinforce": 2,
+    "scafgrpo": 1,
+    "tool_use_llama-8b-inst": 1,
+    "tool_use_qwen3-32b": 1
+  },
+  "cartesian_density_pct": 27.78,
+  "schema_bump_alignment": {
+    "iter198_total_valid": 46,
+    "iter202_files": 48,
+    "loaded_minus_bump": -18,
+    "note": "delta_*.json are variant-delta records (not stack records); iter-198's 46/46 covers both record types"
+  }
+}

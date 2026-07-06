@@ -1,0 +1,128 @@
+{
+  "iter": 203,
+  "pillar": "P7",
+  "vein": "(a) empirical counterfactual G' from real rollout pool",
+  "settings": {
+    "g_base": 8,
+    "gpr_candidates": [
+      16,
+      32,
+      64
+    ],
+    "n_steps": 40,
+    "n_prompts": 16,
+    "n_methods": 4,
+    "fire_rule": "k = 0 or k = G_BASE = 8 (saturated)"
+  },
+  "global": {
+    "n_cells": 160,
+    "chosen_g_distribution": {
+      "8": 0,
+      "16": 159,
+      "32": 1,
+      "64": 0
+    },
+    "mean_chosen_g": 16.1,
+    "mean_emp_gu_8": 0.270703125,
+    "mean_emp_gu_16": 0.546875,
+    "mean_emp_gu_32": 0.784375,
+    "mean_emp_gu_64": 0.9375,
+    "mean_gu_raised_by_chosen": 0.276953125
+  },
+  "method_stats": {
+    "grpo": {
+      "n_cells": 40,
+      "emp_gu_8_mean": 0.2796875,
+      "emp_gu_16_mean": 0.54375,
+      "emp_gu_32_mean": 0.8125,
+      "emp_gu_64_mean": 0.9625,
+      "chosen_g_distribution": {
+        "8": 0,
+        "16": 159,
+        "32": 1,
+        "64": 0
+      },
+      "mean_chosen_g": 16.0,
+      "mean_chosen_gu": 0.54375,
+      "mean_emp_gu_raised": 0.2640625,
+      "mean_fires_per_step": 11.525,
+      "mean_cost_ratio_per_obs": 1.7203125
+    },
+    "aero": {
+      "n_cells": 40,
+      "emp_gu_8_mean": 0.2796875,
+      "emp_gu_16_mean": 0.559375,
+      "emp_gu_32_mean": 0.7875,
+      "emp_gu_64_mean": 0.9375,
+      "chosen_g_distribution": {
+        "8": 0,
+        "16": 159,
+        "32": 1,
+        "64": 0
+      },
+      "mean_chosen_g": 16.0,
+      "mean_chosen_gu": 0.559375,
+      "mean_emp_gu_raised": 0.2796875,
+      "mean_fires_per_step": 11.525,
+      "mean_cost_ratio_per_obs": 1.7203125
+    },
+    "gift": {
+      "n_cells": 40,
+      "emp_gu_8_mean": 0.2296875,
+      "emp_gu_16_mean": 0.490625,
+      "emp_gu_32_mean": 0.7125,
+      "emp_gu_64_mean": 0.9,
+      "chosen_g_distribution": {
+        "8": 0,
+        "16": 159,
+        "32": 1,
+        "64": 0
+      },
+      "mean_chosen_g": 16.4,
+      "mean_chosen_gu": 0.49375,
+      "mean_emp_gu_raised": 0.2640625,
+      "mean_fires_per_step": 12.325,
+      "mean_cost_ratio_per_obs": 1.8140625
+    },
+    "areal": {
+      "n_cells": 40,
+      "emp_gu_8_mean": 0.29375,
+      "emp_gu_16_mean": 0.59375,
+      "emp_gu_32_mean": 0.825,
+      "emp_gu_64_mean": 0.95,
+      "chosen_g_distribution": {
+        "8": 0,
+        "16": 159,
+        "32": 1,
+        "64": 0
+      },
+      "mean_chosen_g": 16.0,
+      "mean_chosen_gu": 0.59375,
+      "mean_emp_gu_raised": 0.3,
+      "mean_fires_per_step": 11.3,
+      "mean_cost_ratio_per_obs": 1.70625
+    }
+  },
+  "verdicts": {
+    "H1_empGU_at_Gpr_gt_G_base": {
+      "pass": true,
+      "n_16_wins": 159,
+      "n_32_wins": 160,
+      "n_64_wins": 160,
+      "n_cells": 160
+    },
+    "H2_fire_rate_saturation": {
+      "pass": true,
+      "value": 1.0
+    },
+    "H3_pareto_Gpr_wins": {
+      "pass": true,
+      "n_escalate": 160
+    },
+    "H4_cost_efficiency": {
+      "pass": true,
+      "median_overhead": 8.0,
+      "n_escalated": 160
+    }
+  }
+}

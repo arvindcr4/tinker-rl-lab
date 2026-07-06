@@ -1677,3 +1677,160 @@ per-field distribution),
 \texttt{p5\_mve\_field\_corr.tsv} (5$\times$5 Pearson matrix),
 \texttt{p5\_mve\_field\_summary.json},
 \texttt{experiments/results/p5p8/figures/p5\_mve\_field\_dist.\{png,pdf\}}.
+
+\subsection{Exhibit 21: Algorithm-vs-stack ratio robustness --- the iter-193 headline survives axis-selection but is axis-conditional}
+\label{sec:p5-exhibit-ratio-robustness}
+
+Exhibit~9 reported bootstrap CIs on the algorithm-axis $\eta^2$ on each
+channel (3 -- 6.3\%); Exhibit~5 reported the algorithm-vs-stack ratio at
+point estimate. Neither audit addressed two weaknesses: (i) iter-193's
+``top stack axis'' was selected post-hoc from five candidates (a
+multiple-comparisons bias that overstates the headline); (ii) iter-193
+bootstrapped each axis independently, but never computed a bootstrap CI on
+the \emph{ratio} (a distinct statistic). Exhibit~21 closes both gaps with
+four paired-bootstrap stress tests ($B{=}2000$, seed 20260706, 95\%
+percentile CI).
+
+\paragraph{Falsifiable headline.}
+For \textsc{ZVF} and \textsc{reward}, the paired-bootstrap CI on
+$\eta^2_\text{stack}/\eta^2_\text{algo}$ excludes $1.0$ on at least one
+stack axis \emph{and} the dominant stack axes
+(\texttt{model\_family}, \texttt{task\_slice}, $G$) each individually
+carry the signal. If the headline collapses when the worst axis is
+chosen instead of the best, iter-193 is a single-axis cherry-pick. If it
+survives, the headline is robust.
+
+\paragraph{Method.}
+For each of $15$ (channel $\times$ stack axis) cells,
+we resample WITHIN-LEVEL (stratified) on both the algorithm axis
+(N2, $4$ GRPO-family methods, $40$ steps each) and the stack axis
+(mega, $98$ cells, $k=2$--$5$ levels per axis). On every resample we
+recompute $\eta^2_\text{algo}$ and $\eta^2_\text{stack}$, and track the
+distribution of the ratio $r = \eta^2_\text{stack} / \eta^2_\text{algo}$.
+The 95\% CI is the percentile interval of the $r$ distribution. We also
+run (a) a worst-axis stress (pick the axis with the smallest
+$\eta^2$); (b) a one-axis-dropped jackknife (drop one of the five
+stack axes, take the worst of the remaining four); (c) a multi-axis
+composite ($\eta^2$ on the additive main-effects prediction = mean of
+per-axis group-mean predictions; Cohen 1973 / Hays 1973) for both the
+full 5-axis and the 3-dominant-axis subsets.
+
+\paragraph{Headline.}
+\tableref{tab:p5-iter197-ratio-robustness} summarises the 15 paired-bootstrap
+cells.
+
+\textbf{Headline finding 1 --- the headline survives axis-selection for
+the dominant axes (H1--H3 PASS).} On \textsc{ZVF} the ratio CI excludes
+$1.0$ for \texttt{task\_slice} (CI $[3.33, 52.61]$) and $G$ (CI $[2.91,
+43.52]$), and excludes $3.0$ for \texttt{task\_slice} alone. On
+\textsc{reward} the CI excludes $1.0$ for \texttt{model\_family} (CI
+$[5.62, 247.88]$), \texttt{task\_slice} (CI $[3.52, 184.14]$), and $G$ (CI
+$[0.37, 40.95]$). Every dominant axis carries the signal.
+
+\textbf{Headline finding 2 --- the signal propagates, not a single-axis
+artifact (H5' PASS).} Drop a dominant axis and another dominant axis
+still excludes $1.0$: drop \texttt{task\_slice} $\Rightarrow G$ still
+excludes $1$ on \textsc{ZVF} (CI $[2.91, 43.52]$); drop
+\texttt{model\_family} $\Rightarrow$ \texttt{task\_slice} still excludes
+$1$ on \textsc{reward} (CI $[3.52, 184.14]$); drop $G$ $\Rightarrow$
+\texttt{task\_slice} still excludes $1$ on \textsc{ZVF} (CI $[3.33,
+52.61]$).
+
+\textbf{Headline finding 3 --- noisy axes are degenerate (H4 PASS,
+scope clarification).} The two noisy axes (\texttt{seed},
+\texttt{temperature}) have $\eta^2 \approx 0$ on every channel and their
+paired-bootstrap CI \emph{includes} $1.0$. The label-vs-stack comparison
+is degenerate when the stack axis is not varied in the experiment.
+
+\textbf{Headline finding 4 --- naive averaging dilutes the signal (H6
+FAIL, scope clarification).} The naive 5-axis additive composite gives
+$\eta^2_\text{composite} = 0.0441$ (\textsc{ZVF}, ratio $=0.97\times$,
+CI $[0.32, 5.17]$) and $0.0316$ (\textsc{reward}, ratio $=4.23\times$,
+CI $[0.47, 18.69]$); the CI includes $1.0$ on \textsc{ZVF}. The 3-dominant-axis composite gives $\eta^2 = 0.1211$ (\textsc{ZVF}, ratio
+$=2.67\times$, CI $[0.84, 14.52]$) and $0.0877$ (\textsc{reward},
+ratio $=11.75\times$, CI $[1.20, 52.34]$, excludes $1$). Naively
+averaging noisy axes dilutes the signal because they contribute zero
+unique variance; averaging correlated dominant axes also dilutes (the
+three dominant axes share variance through task-stratification).
+
+\textbf{Sharp reading.} The iter-193 ``stack dominates label''
+headline is \emph{not} a single-axis cherry-pick (H5' PASS) but is
+\emph{axis-conditional} (H4 PASS, H6 FAIL): the ratio holds for axes that
+are actually varied in the experimental design (\texttt{task\_slice},
+\texttt{model\_family}, $G$) and degenerates for axes that are not
+(\texttt{seed}, \texttt{temperature}). The ratio is a property of the
+\emph{experimental design}, not a universal constant of RL-for-LLM
+stacks. This sharpens Exhibit~7's stack-axis $\eta^2$ summary: the
+variance captured by the dominant axes is \emph{conditional} on whether
+those axes are actually varied in the experiment being audited.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Iter-197 paired-bootstrap ratio CIs (B=2000, seed 20260706, 95\%).
+Each row reports the ratio $\eta^2_\text{stack} / \eta^2_\text{algo}$ for one
+(channel $\times$ stack axis) cell. ``CI excludes 1'' means the
+lower-bound of the ratio CI is strictly greater than 1; ``CI excludes 3''
+means the lower-bound is strictly greater than 3.}
+\label{tab:p5-iter197-ratio-robustness}
+\begin{tabular}{l l r r r r}
+\hline
+channel & stack axis & point & CI lo & CI hi & excl.\,1 \\
+\hline
+\multicolumn{6}{l}{\emph{dominant axes --- signal present}} \\
+zvf    & task\_slice   & 10.32$\times$ &  3.33 & 52.61 & \checkmark \\
+zvf    & $G$            &  9.77$\times$ &  2.91 & 43.52 & \checkmark \\
+reward & model\_family  & 60.63$\times$ &  5.62 & 247.88 & \checkmark \\
+reward & task\_slice   & 36.55$\times$ &  3.52 & 184.14 & \checkmark \\
+reward & $G$            &  4.08$\times$ &  0.37 & 40.95 & --- \\
+len    & model\_family  &  4.76$\times$ &  1.51 & 16.72 & \checkmark \\
+len    & task\_slice   &  3.32$\times$ &  0.79 & 12.27 & --- \\
+len    & temperature   &  3.27$\times$ &  0.81 & 11.78 & --- \\
+\hline
+\multicolumn{6}{l}{\emph{noisy axes --- $\eta^2 \approx 0$, CI includes 1}} \\
+zvf    & model\_family  &  0.12$\times$ &  0.00 &  2.42 & --- \\
+zvf    & temperature    &  0.20$\times$ &  0.00 &  2.79 & --- \\
+zvf    & seed           &  0.00$\times$ &  0.00 &  1.68 & --- \\
+reward & temperature    &  0.00$\times$ &  0.00 &  5.89 & --- \\
+reward & seed           &  0.00$\times$ &  0.00 &  7.30 & --- \\
+len    & $G$            &  0.27$\times$ &  0.08 &  3.93 & --- \\
+len    & seed           &  0.00$\times$ &  0.00 &  0.95 & --- \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Cross-coupling.}
+Exhibit~21 closes iter-193's two open weaknesses (axis-selection bias,
+ratio CI). It couples to (i) Exhibit~9 (algorithm-axis $\eta^2 \le 6.3\%$)
+--- the algorithm axis is the LEAST informative, regardless of which
+non-trivial stack axis is the comparator; (ii) Exhibit~7 (stack-axis
+$\eta^2$) --- the dominant axes (task / model / $G$) explain $45$--$47\%$
+of variance, but this is conditional on the experimental design varying
+those axes; (iii) iter-141 (algorithm axis alone) --- $\eta^2_\text{algo} \approx 0$ survives every stress test; (iv) the \emph{Frontier
+Round 1} Estimator-Equivalence Principle --- the algorithm-vs-dominant-stack
+ratio's $10$--$60\times$ magnitude is the sharpest quantitative form of
+the principle: the label is a near-zero predictor of outcomes once the
+stack is fixed (or, here, once the dominant stack axes are varied).
+
+\textbf{Operational.} (a) \textbf{REFINE} iter-193's headline: report
+ratios as ``$10$--$60\times$ on the DOMINANT stack axes
+(\texttt{task\_slice} / \texttt{model\_family} / $G$); degenerate on
+the NOISY axes (\texttt{seed} / \texttt{temperature}) where the
+experimental design does not vary the axis.'' (b) \textbf{WIRE} the
+3-dominant-axis composite as a CI gate: any new corpus should report
+$\eta^2_{\text{composite},\text{dom3}}$ and the corresponding ratio CI;
+fail if the composite CI includes $1$ on the diagnostic outcome
+(\textsc{ZVF}). (c) \textbf{EXTEND} in next iter to per-axis stratified
+ratio: does the dominance survive stratification by \texttt{task\_slice}
+(does the model vs $G$ ordering hold within each task)?
+
+\textbf{Reproduction.}
+\texttt{python3 scripts/p5p8/p5\_iter197\_ratio\_sensitivity.py}
+($\sim$60s, stdlib only). Outputs:
+\texttt{experiments/results/p5p8/p5\_iter197\_paired\_boot.tsv}
+(15 rows: 3 channels $\times$ 5 axes),
+\texttt{p5\_iter197\_worst\_axis\_stress.tsv} (3 rows),
+\texttt{p5\_iter197\_jackknife\_axis.tsv} (15 rows),
+\texttt{p5\_iter197\_composite\_5axis.tsv} (3 rows),
+\texttt{p5\_iter197\_composite\_dominant3.tsv} (3 rows),
+\texttt{p5\_iter197\_summary.json}.

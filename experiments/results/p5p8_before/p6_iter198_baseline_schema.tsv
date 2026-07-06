@@ -1,0 +1,47 @@
+entry_id	valid	n_errors	errors
+colab-open_dapo_e3	yes	0	
+colab-open_drgrpo_e3	yes	0	
+colab-open_grpo-adaptiveg_e3	yes	0	
+colab-open_grpo_e3	yes	0	
+delta_adaptiveg	yes	0	
+delta_aero	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/3: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_areal	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/3: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_cppo	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/1: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_dapo	yes	0	
+delta_drgrpo	yes	0	
+delta_es	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/1: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_gift	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/3: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_gspo	yes	0	
+delta_liteppo	yes	0	
+delta_mcgrpo	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/1: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_ngrpo	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/1: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_ppo	yes	0	
+delta_ppo_reinforce	yes	0	
+delta_reinforce	yes	0	
+delta_scafgrpo	no	2	<root>: Additional properties are not allowed ('iter128_recompute_note' was unexpected); measured/1: Additional properties are not allowed ('iter_recomputed' was unexpected)
+delta_tool_use_llama-8b-inst	no	3	citation/arxiv: None is not of type 'string'; citation/bibkey: None is not of type 'string'; measured/0: Additional properties are not allowed ('evidence_deferred_until' was unexpected)
+delta_tool_use_qwen3-32b	no	3	citation/arxiv: None is not of type 'string'; citation/bibkey: None is not of type 'string'; measured/0: Additional properties are not allowed ('evidence_deferred_until' was unexpected)
+openrlhf_grpo_qwen3-8b_gsm8k	yes	0	
+tinker_aero_qwen3.5-4b_gsm8k	yes	0	
+tinker_areal_qwen3.5-4b_gsm8k	yes	0	
+tinker_dapo_qwen3.5-4b_gsm8k	yes	0	
+tinker_drgrpo_qwen3.5-4b_gsm8k	yes	0	
+tinker_gift_qwen3.5-4b_gsm8k	yes	0	
+tinker_grpo_qwen3-8b_gsm8k	yes	0	
+tinker_grpo_qwen3.5-4b_gsm8k	yes	0	
+tinker_gspo_qwen3.5-4b_gsm8k	yes	0	
+trl_grpo_qwen3-8b_gsm8k	yes	0	
+verl_grpo_qwen3-8b_gsm8k	yes	0	
+wandb_ppo_reinforce_llama318b-inst_gsm8k	yes	0	
+wandb_ppo_reinforce_qwen38b_gsm8k	yes	0	
+zvf130_aero	yes	0	
+zvf130_areal	yes	0	
+zvf130_cppo	yes	0	
+zvf130_es	yes	0	
+zvf130_gift	yes	0	
+zvf130_grpo	yes	0	
+zvf130_mcgrpo	yes	0	
+zvf130_ngrpo	yes	0	
+zvf130_scafgrpo	yes	0	
+zvf130_tool_use_llama-8b-inst	no	1	variant_deltas_applied/0/status: 'single-seed-surrogate' is not one of ['implemented', 'surrogate', 'absent', 'unknown']
+zvf130_tool_use_qwen3-32b	no	1	variant_deltas_applied/0/status: 'single-seed-surrogate' is not one of ['implemented', 'surrogate', 'absent', 'unknown']

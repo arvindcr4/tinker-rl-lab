@@ -24,7 +24,7 @@
     {
       "delta_id": "delta_tool_use_llama-8b-inst",
       "component": "see delta entry",
-      "status": "single-seed; same-stack isolation not run",
+      "status": "single-seed-surrogate",
       "note": "zvf130 tool-use batch harness; n_seeds=1; per-component isolation requires multi-seed reproduction"
     }
   ],

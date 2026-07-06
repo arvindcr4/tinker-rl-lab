@@ -161,8 +161,7 @@
                   "implemented",
                   "surrogate",
                   "absent",
-                  "unknown",
-                  "single-seed-surrogate"
+                  "unknown"
                 ]
               },
               "note": {
@@ -608,10 +607,10 @@
           "type": "object",
           "properties": {
             "bibkey": {
-              "$ref": "#/$defs/nullable_string"
+              "type": "string"
             },
             "arxiv": {
-              "$ref": "#/$defs/nullable_string"
+              "type": "string"
             },
             "title": {
               "type": "string"
@@ -870,15 +869,7 @@
           "additionalProperties": false
         }
       },
-      "additionalProperties": false,
-      "patternProperties": {
-        "^(iter128_recompute_note|x_)": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
+      "additionalProperties": false
     },
     "measured_delta": {
       "type": "object",
@@ -969,15 +960,6 @@
         "synth_from_agg": {
           "$ref": "#/$defs/nullable_boolean",
           "description": "iter-122: True if this row was synthesized from an aggregate (point) statistic rather than per-seed data; CI is then not meaningful. Set by scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py when backfilling from mag_mean / mean_zvf aggregates whose per-seed sd was not stored."
-        }
-      },
-      "patternProperties": {
-        "^(iter_recomputed|evidence_deferred_until|x_)": {
-          "type": [
-            "string",
-            "integer",
-            "null"
-          ]
         }
       }
     },

@@ -1,0 +1,4 @@
+channel	worst_axis	worst_axis_eta2	algo_eta2	point_ratio_worst	boot_lo	boot_hi	boot_n	ci_excludes_1
+zvf	seed	0.00002	0.04542	0.00053	0.00016	1.68229	2000	False
+reward	temperature	0.00001	0.00747	0.00089	0.00050	6.72904	2000	False
+len	seed	0.00005	0.06314	0.00079	0.00012	1.02900	2000	False

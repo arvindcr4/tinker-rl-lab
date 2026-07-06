@@ -1,0 +1,56 @@
+{
+  "applied": false,
+  "audit_metadata": {
+    "audit_date": "2026-07-06",
+    "audit_source": "scripts/p5p8/p6_iter198_schema_drift_bump.py",
+    "baseline_audit_source": "scripts/p5p8/p6_iter186_coverage_audit.py",
+    "have_jsonschema": true,
+    "schema_backup_path": null,
+    "schema_path": "registry/schema.json"
+  },
+  "baseline": {
+    "fail": 12,
+    "fail_ids": [
+      "delta_aero",
+      "delta_areal",
+      "delta_cppo",
+      "delta_es",
+      "delta_gift",
+      "delta_mcgrpo",
+      "delta_ngrpo",
+      "delta_scafgrpo",
+      "delta_tool_use_llama-8b-inst",
+      "delta_tool_use_qwen3-32b",
+      "zvf130_tool_use_llama-8b-inst",
+      "zvf130_tool_use_qwen3-32b"
+    ],
+    "total": 46,
+    "valid": 34
+  },
+  "drift_counts": {
+    "citation_bibkey_or_arxiv_null": 2,
+    "evidence_deferred_until_in_measured0": 2,
+    "iter128_recompute_note_root": 8,
+    "iter_recomputed_in_measured0": 8,
+    "vda_status_unrecognized": 2
+  },
+  "iter": 198,
+  "n_affected_entries": 12,
+  "n_unique_drift_classes": 5,
+  "patch_log": [
+    "patternProperties whitelist on variant_delta_record and measured_delta for `iter_recomputed`, `evidence_deferred_until`, `x_*`",
+    "patternProperties whitelist on variant_delta_record root for `iter128_recompute_note`",
+    "variant_delta_record.citation.bibkey -> #/$defs/nullable_string",
+    "variant_delta_record.citation.arxiv -> #/$defs/nullable_string",
+    "stack_record.variant_deltas_applied.status enum += 'single-seed-surrogate' (now 5 values)",
+    "[dry-run only] would mutate 0 entries: "
+  ],
+  "pillar": "P6",
+  "post_bump": {
+    "fail": 0,
+    "fail_ids": [],
+    "total": 46,
+    "valid": 46
+  },
+  "vein": "(a)+(c) schema-extension drift bump (one targeted patch per class)"
+}

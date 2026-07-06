@@ -25,13 +25,13 @@
     "measured-other": 2,
     "zvf130-measured": 10
   },
-  "n_entries_total": 46,
+  "n_entries_total": 48,
   "n_stack": 28,
   "n_variant_delta": 18,
   "n_with_raw_traces": 5,
   "n_with_zvf130_xref": 10,
   "schema_valid_totals": {
-    "no": 12,
+    "no": 14,
     "yes": 34
   },
   "variant_delta_verdict_totals": {

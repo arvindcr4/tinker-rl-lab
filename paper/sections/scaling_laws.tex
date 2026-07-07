@@ -12,7 +12,7 @@
 % Original canonical analysis: scripts/scaling_law_fit.py -> scaling_law_fits.tsv,
 % scaling_law_three_phase.tsv, scaling_law_cross_scale.tsv.
 
-\paragraph{Saturation model across the 4B--685B range.}
+\paragraph{Saturation model across the 4B--671B range.}
 \label{par:saturation}
 We fit the canonical saturation model
 \begin{equation}
@@ -42,11 +42,11 @@ plateau template for GRPO learning curves.
     Qwen3.5-4B             &   4.0 & 30 & 0.817 & 1.000 & 0.813 $\to$ 0.850 & $+0.0001$ & 0.817 & $10.0^{\dagger}$ & plateau \\
     Qwen3-8B               &   8.0 & 30 & 0.285 & 0.625 & 0.244 $\to$ 0.344 & $+0.0032$ & 0.285 & $10.0^{\dagger}$ & saturation \\
     Llama-3.1-8B-Instruct  &   8.0 & 30 & 0.869 & 1.000 & 0.925 $\to$ 0.844 & $-0.0037$ & 0.869 & $10.0^{\dagger}$ & drift \\
-    DeepSeek-V3.1          & 685.0 & 20 & 0.844 & 1.000 & 0.833 $\to$ 0.813 & $+0.0001$ & 0.844 & $10.0^{\dagger}$ & plateau \\
+    DeepSeek-V3.1          & 671.0 & 20 & 0.844 & 1.000 & 0.833 $\to$ 0.813 & $+0.0001$ & 0.844 & $10.0^{\dagger}$ & plateau \\
     Nemotron-120B          & 120.0 & 20 & 0.175 & 0.875 & 0.146 $\to$ 0.208 & $+0.0026$ & 0.182 & \textbf{0.99} & \textbf{collapse} \\
     \bottomrule
   \end{tabular}
-  \caption{\textbf{Saturation-model fits across 4B--685B.}
+  \caption{\textbf{Saturation-model fits across 4B--671B.}
     $\dagger$: the canonical
     $R(t) = R_{\max}(1 - e^{-\lambda t})$ fit hits the upper
     $\lambda = 10$ optimiser bound on every well-behaved run; this is
@@ -124,7 +124,7 @@ the slopes.  The fitted coefficients are
     and the within-trace OLS slopes
     ($\hat\beta_{\text{OLS}}$, \tableref{tab:scaling-fits}) are
     also null.  Reading: at this benchmark size ($4\,\text{B}
-    \le N \le 685\,\text{B}$, $T\!\le\!30$ steps), the saturation
+    \le N \le 671\,\text{B}$, $T\!\le\!30$ steps), the saturation
     model is not detectably scale-dependent, because every
     well-behaved run is already saturated within measurement noise.}
   \label{tab:scaling-cross}
@@ -202,7 +202,7 @@ $t_{80} \cdot N$ scatter, and (d)~Nemotron-120B collapse autopsy.
   \includegraphics[width=0.85\linewidth]{figures/scaling_law_elevated.png}%
   }{%
     }
-  \caption{\textbf{Pillar-1 elevation across 4B--685B.}
+  \caption{\textbf{Pillar-1 elevation across 4B--671B.}
     (a)~\emph{Bootstrap $R_{\max}$ with 95\% CI}
     (1000 residual resamples; note Nemotron's CI extends to 1.5
     because the bound-saturated refits escape the prior).
@@ -367,7 +367,7 @@ reward \emph{mean}.
 \label{par:scaling-summary}
 Across the four elevation diagnostics the headline result is a
 strengthened null: at this benchmark size
-($4\,\text{B} \le N \le 685\,\text{B}$, $T \le 30$ steps), the
+($4\,\text{B} \le N \le 671\,\text{B}$, $T \le 30$ steps), the
 canonical saturation model is unidentifiable (parametric bootstrap
 on $\lambda$ has $P(\lambda = 10) \ge 0.47$ on four of five runs),
 adds no out-of-sample predictive power (70/30 holdout improvement

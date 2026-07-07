@@ -1,17 +1,24 @@
 % P8 (fraud side-probe) standalone abstract
 \begin{abstract}
-Where do large language models (LLMs) actually add value in credit-card fraud
-detection when a tuned gradient-boosted tree already scores well? We run a
+As a deliberate cross-domain probe of the \ours{} measurement discipline
+---\emph{measure capability, do not trust the label}---this side study steps
+outside GRPO to stress-test the same principle in a setting with a strong
+non-LLM baseline. Where do large language models (LLMs) actually add value in
+credit-card fraud detection when a tuned gradient-boosted tree already scores well? We run a
 head-to-head on a custom synthetic single-configuration fraud dataset (50{,}000
 transactions, $\approx$1.4\% realized fraud rate). The empirical results are negative for LLM scoring:
 XGBoost reaches test AUC $0.7955$ on the $10{,}000$-row held-out split, while
 a Qwen3.5-4B SFT row-serialization arm reaches accuracy $0.792$ but AUC
-$0.48268$ on a 500-row positive-enriched held-out evaluation. The gradient-boosted tree keeps the real-time scorer seat for five compounding reasons:
+$0.48268$ on a 500-row positive-enriched held-out evaluation. (The two AUCs sit on
+different held-out splits and are not a like-for-like ranking comparison; the
+load-bearing point is only that the LLM scorer is at chance-level ranking, not that
+it is worse than the tree by this exact margin.) The gradient-boosted tree keeps the real-time scorer seat for five compounding reasons:
 artifact-backed AUC, latency, cost, calibration, and prompt-injection exposure.
 But framing the comparison as
 ``LLM \emph{versus} XGBoost'' asks the wrong question. We identify four
-capability gaps where the LLM contributes something the tree cannot enter at
-any accuracy: (i) document and image fraud via vision--language models, whose
+capability gaps where the LLM contributes something the tree cannot \emph{natively}
+represent or generate (even if hand-engineered features could be fed to a tree):
+(i) document and image fraud via vision--language models, whose
 raw pixel-and-text inputs lie outside any tree's feature space; (ii) compliance
 narration---Suspicious Activity Report narratives and adverse-action
 letters---a regulated text-generation category (FinCEN; ECOA/Regulation~B);

@@ -18,7 +18,9 @@ closed form, three regularities that Pillar~2 could only observe: the
 expected ZVF indicator equals $p^G + (1-p)^G$ (T1), larger $G$ lowers ZVF
 (T2), and gradient magnitude tracks the contrast term $p(1-p)$ (T3). Each
 theorem is paired with an empirical check drawn from a 368-run
-Weights~\&~Biases audit, a model~$\times$~group-size grid, and an
+Weights~\&~Biases audit (which counts \emph{all} logged runs---training,
+evaluation, and short accuracy-swept probes---and is thus a superset of the
+benchmark's 70+ core \emph{training} runs), a model~$\times$~group-size grid, and an
 open-backward-pass gradient probe. Second, \emph{intervention}: if the model
 is right, then ZVF is not fate but a control target. We build a
 \texttt{zvf-triage} callback that watches per-step ZVF and an adaptive-$G$

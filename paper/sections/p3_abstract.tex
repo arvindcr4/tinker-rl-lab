@@ -8,18 +8,22 @@ five model families ($0.6$B--$\sim$671B), centered on GSM8K with HumanEval and
 tool-use checks. Two results
 anchor the pillar. First, trainability varies with $G$ in a non-monotone way:
 intermediate group sizes often behaved better than the smallest or largest we
-tested, but the data do not justify a universal optimum. A $G{=}4$ versus $G{=}32$
-token-budget reanalysis (illustrative, reconstructed from ablation logs---no
-$G{=}32$ cell was measured; our measured equivalence tests extend only to
-$G{=}16$) shows a large held-out swing, while the measured near-ceiling
-arithmetic task shows near-complete held-out accuracy retention
-($\approx 100.3\%$ between $G{=}2$ and $G{=}16$), and the effective
-signal-to-noise ratio rises only sublinearly with $G$ (about $52\%$ of the
-$\sqrt{G}$ ideal). Second, we make explicit the sense in which GRPO is
-\emph{secretly DPO}: the group-centered update is an implicit all-pairs preference
+tested, but the data do not justify a universal optimum. Our measured equivalence
+tests extend to $G{=}16$; on the near-ceiling arithmetic task, held-out accuracy
+is essentially flat across this range---a retention \emph{ratio} of ${\approx}1.00$
+between $G{=}2$ and $G{=}16$ (i.e.\ $G{=}16$ lands within noise of $G{=}2$; this is
+a ratio, not an accuracy above $100\%$). We caution that this is a \emph{saturated}
+regime: near the ceiling, variance is compressed, so the finding is ``no detectable
+$G$ effect under saturation,'' not evidence of equivalence on harder, unsaturated
+tasks. The effective signal-to-noise ratio
+rises only sublinearly with $G$ (about $52\%$ of the $\sqrt{G}$ ideal). We do
+\emph{not} report a measured $G{=}32$ cell: any $G{=}4$ versus $G{=}32$
+token-budget comparison would extrapolate beyond our data and is left to future work. Second, we make explicit the sense in which GRPO
+\emph{admits an all-pairs preference (DPO-like) interpretation}: the group-centered
+update behaves as an implicit all-pairs preference
 contrast---consistent with logged per-step diagnostics (advantage variance,
-ZVF, and gradient norms), with direct gradient-vector validation still future
-work---with zero-variance groups
+ZVF, and gradient norms), though direct gradient-vector validation is still future
+work, so we frame this as an interpretation rather than a proven equivalence---with zero-variance groups
 projected out. We frame $G$ as a preference-density dial rather than a variance
 knob, test equivalence with TOST and difficulty-stratified retention, and release
 the in-repository artifacts used here.

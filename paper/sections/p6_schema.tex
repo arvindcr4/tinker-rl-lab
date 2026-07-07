@@ -25,9 +25,13 @@ MIN-REPORT-RL minimum reportable stack:
         are the fields the variant papers fight over.
   \item \textbf{reference_kl}: whether a reference policy exists, the KL
         coefficient $\beta$, and the estimator/surrogate used.
-  \item \textbf{sampler_backend}: backend identity, numeric precision, and
-        sampler parameters (temperature, top-$p$)---the axis along which our
-        backend-swap audit produced the $85.6\%$-vs-$5.0\%$ swing.
+  \item \textbf{sampler_backend}: backend identity, numeric precision, sampler
+        parameters (temperature, top-$p$), and the \textbf{base-checkpoint
+        identity (revision/hash)}---the axis along which our backend-swap audit
+        produced the $85.6\%$-vs-$5.0\%$ swing. We require the base-checkpoint
+        field explicitly because that audit revealed the managed backend had
+        silently pinned a different base checkpoint, so a stack record without it
+        cannot distinguish a framework effect from a model swap.
   \item \textbf{telemetry}: whether the stack emits a \emph{per-step} ZVF and
         gradient-utilization ($\mathrm{GU}=1-\mathrm{ZVF}$) trajectory, and
         from what source. Endpoint summaries are not enough: our 368-run audit

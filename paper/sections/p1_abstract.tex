@@ -5,10 +5,19 @@ reinforcement-learning (RL) post-training of language models, yet how its benefi
 scales with model size remains unclear and is easily confounded by implementation
 and evaluation choices. We study GRPO scaling as one pillar of \ours{}, a
 benchmark spanning 70+ runs across seven RL libraries and five model families
-($0.6$B--$\sim$685B parameters) on GSM8K, HumanEval, and synthetic tool-use tasks.
-Our central result is a conservative negative one: across roughly $2.4$ orders of magnitude
-in parameter count across the extended anchor pool, the cross-scale slope of the mean GRPO training reward is statistically
-indistinguishable from zero, and no single saturation exponent is identifiable
+($0.6$B--$\sim$671B parameters) on GSM8K, HumanEval, and synthetic tool-use tasks.
+Crucially, these runs use \emph{managed} and open back-ends rather than local
+frontier clusters: the frontier-scale anchors (Qwen3-235B, DeepSeek-V3.1
+$\sim$671B, Nemotron-120B) are obtained through the \textsc{Tinker} managed
+training/inference API in a single-seed, descriptive-only regime, which is what
+makes a cross-scale study tractable without owning frontier hardware (and why full
+base weights are not released for those anchors).
+Our central result is a conservative negative one: across roughly $2.4$ orders of
+magnitude in parameter count spanned by the fitted anchor pool (a subset of the
+full $0.6$B--$\sim$671B roster), the cross-scale slope of the mean GRPO training
+reward shows no reliable positive trend---flat within the (wide) uncertainty of
+these mostly single-seed anchors, which we therefore read \emph{descriptively}
+rather than as a powered significance test---and no single saturation exponent is identifiable
 (four of the five frontier-scale traces have their saturation rate pinned at the
 fit boundary, and none is identifiable). A pre-registered test geometrically falsifies a clean three-phase
 saturation hypothesis (only $2$ of $12$ anchors match), and the Nemotron-120B run
@@ -17,5 +26,7 @@ versus $\le 0.067$ elsewhere) than as a point on a smooth trend. The defensible
 object is therefore a local, stack-conditioned taxonomy of endpoint ceilings,
 with categorical capability structure carrying more signal than $\log_{10} N$,
 not a Chinchilla-style power law in $N$. We
-release all code, logs, and checkpoints.
+release all code, logs, per-step telemetry, and trained adapters; full base-model
+checkpoints are shared where model licensing permits, while the managed
+frontier-scale runs expose logs and telemetry rather than base weights.
 \end{abstract}

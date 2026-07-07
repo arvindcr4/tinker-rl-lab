@@ -12,8 +12,10 @@ generation cap---the mean Qwen3-8B GRPO
 gain over the pre-RL checkpoint on held-out data is small and not statistically
 significant, GRPO and Dr.\,GRPO produce held-out gains that are indistinguishable
 at our seed budget, and neither inflates length within this capped regime (pooled
-mean completion length drifts from $194.4$ to $183.5$ tokens). The
-verbosity-trap signature is absent. We argue this is the
+mean completion length drifts from $194.4$ to $183.5$ tokens). We stress that the
+$200$-token cap \emph{bounds} this claim: it cannot rule out length inflation in
+longer-horizon or uncapped regimes, only establish its absence where length is
+already controlled. The verbosity-trap signature is absent \emph{in this regime}. We argue this is the
 \emph{expected} outcome when length is already controlled, not evidence against
 Dr.\,GRPO, and specify the length-confounded regime and causal mediation tests that
 would actually reveal a difference. We release code, logs, and checkpoints.

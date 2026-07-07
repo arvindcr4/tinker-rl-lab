@@ -5,15 +5,19 @@ and token-level loss; Dr.~GRPO's dropped length and std normalization; GSPO's
 sequence-level importance ratio---live in paper appendices and framework
 defaults, not in any machine-readable form. The consequence, documented across
 the \ours{} pillar papers, is that an algorithm \emph{label} underdetermines the
-\emph{update rule} actually executed: in our audits, swapping only the backend
-under a fixed label moved final reward from $85.6\%$ to $5.0\%$ ($17\times$),
+\emph{update rule} actually executed: in our audits, swapping the training backend
+under a fixed label---which, undisclosed, also bundled a different base checkpoint,
+so the label alone concealed \emph{both} changes---moved final reward across a
+$17\times$ span between $85.6\%$ and $5.0\%$ (the same exhibit as the Pillar-5
+backend audit, read here in the reverse direction),
 and the same ``DAPO'' label yielded mean ZVF $0.00$ on an open trainer with true
 dynamic sampling but $0.58$ on a closed stack running an asymmetric-clip
 surrogate. These audits motivate \textsc{GRPO-Registry}, a resource that makes
 such discrepancies queryable rather than presenting a new performance result:
 (i) a JSON schema whose stack records carry the
 seven-item MIN-REPORT-RL block (loss form; reference policy and KL handling;
-sampler/backend/precision; per-step ZVF/GU telemetry; group-size schedule;
+sampler/backend/precision \textbf{including base-checkpoint identity: revision/hash};
+per-step ZVF/GU telemetry; group-size schedule;
 held-out split; decontamination and parser probes) plus per-component
 variant-delta status; (ii) three variant-delta records verified against the
 DAPO, Dr.~GRPO, and GSPO papers; (iii) twenty seed stack entries derived from

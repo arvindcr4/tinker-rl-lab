@@ -1,0 +1,12 @@
+quantity	value
+surrogate_order	8-16-4-2
+true_best_G	8
+true_best_pos_under_surrogate	1
+true_best_pos_expected_random	2.5
+SH_top1_pick_G	8
+SH_top1_is_true_best	1
+SH_top1_compute_sec	397.4
+SH_top1_saving_frac	0.501
+SH_top2_pick_G	8
+SH_top2_saving_frac	0.177
+exhaustive_compute_sec	796.5

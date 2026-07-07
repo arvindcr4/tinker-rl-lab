@@ -1,0 +1,4 @@
+correlation	spearman_rho	n	interpretation
+rho(params_B, r_max)	0.1026	n=5	scale->ceiling: RSP forecasting variable
+rho(params_B, t80)	0.0513	n=5	scale->horizon: RSP forecasting variable
+rho(RQS, r_max)	0.6000	n=5	elicitation->ceiling: stack-relative variable

@@ -1,0 +1,38 @@
+{
+  "source": "F24 L5 Omar Khattab \u2014 MIPRO arXiv:2406.11695 (EMNLP24) + FT+PO arXiv:2407.10930 (EMNLP24)",
+  "data": "groupsize_zvf_sweep.json (4G x 3seed x 40step, Qwen2.5-0.5B arithmetic)",
+  "true_best_G_heldout": 8,
+  "H1_minibatch_rank": {
+    "mean_kendall_tau_heldout": 0.4444,
+    "verdict": "SUGGESTIVE"
+  },
+  "H2_early_step_surrogate": {
+    "first_stable_top1_step": -1,
+    "of_steps": 40,
+    "stable_feature": null,
+    "note": "partial-training (STEP) axis fails on flat landscape",
+    "verdict": "NULL"
+  },
+  "H3_surrogate_search": {
+    "surrogate_order": "8-16-4-2",
+    "true_best_pos": 1,
+    "random_pos_exp": 2.5,
+    "SH_pick_true_best": 1,
+    "compute_saving": 0.501,
+    "verdict": "DECISIVE"
+  },
+  "H4_tost_equivalence": {
+    "n_equiv_pairs": "6/6",
+    "max_heldout_gap": 0.0117,
+    "eps": 0.02,
+    "verdict": "DECISIVE"
+  },
+  "H5_two_steps_together": {
+    "seed": 0.4,
+    "step": -0.2,
+    "both": 0.4,
+    "gain": 0.0,
+    "verdict": "NULL"
+  },
+  "decisive_count": "2/5"
+}

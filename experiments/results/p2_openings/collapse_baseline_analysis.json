@@ -1,0 +1,30 @@
+{
+  "aero": {
+    "mean_ZVF": 0.72,
+    "frac_all_correct": 0.667,
+    "frac_all_wrong": 0.053,
+    "naive_baseline_absadv_on_collapsed": 0.214,
+    "isocline_baseline_absadv_on_collapsed": 0.015
+  },
+  "areal": {
+    "mean_ZVF": 0.706,
+    "frac_all_correct": 0.647,
+    "frac_all_wrong": 0.059,
+    "naive_baseline_absadv_on_collapsed": 0.215,
+    "isocline_baseline_absadv_on_collapsed": 0.02
+  },
+  "gift": {
+    "mean_ZVF": 0.77,
+    "frac_all_correct": 0.711,
+    "frac_all_wrong": 0.059,
+    "naive_baseline_absadv_on_collapsed": 0.201,
+    "isocline_baseline_absadv_on_collapsed": 0.012
+  },
+  "grpo": {
+    "mean_ZVF": 0.72,
+    "frac_all_correct": 0.667,
+    "frac_all_wrong": 0.053,
+    "naive_baseline_absadv_on_collapsed": 0.207,
+    "isocline_baseline_absadv_on_collapsed": 0.016
+  }
+}

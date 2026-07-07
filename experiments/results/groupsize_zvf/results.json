@@ -1,0 +1,122 @@
+[
+  {
+    "name": "G2-s0",
+    "G": 2,
+    "seed": 0,
+    "mean_zvf": 0.9583333333333334,
+    "heldout_before": 0.8125,
+    "heldout_after": 0.875,
+    "heldout_gain": 0.0625,
+    "tokens": 16357
+  },
+  {
+    "name": "G4-s0",
+    "G": 4,
+    "seed": 0,
+    "mean_zvf": 0.9166666666666666,
+    "heldout_before": 0.8125,
+    "heldout_after": 0.8125,
+    "heldout_gain": 0.0,
+    "tokens": 32456
+  },
+  {
+    "name": "G8-s0",
+    "G": 8,
+    "seed": 0,
+    "mean_zvf": 0.8333333333333334,
+    "heldout_before": 0.8125,
+    "heldout_after": 0.75,
+    "heldout_gain": -0.0625,
+    "tokens": 66122
+  },
+  {
+    "name": "G16-s0",
+    "G": 16,
+    "seed": 0,
+    "mean_zvf": 0.7916666666666666,
+    "heldout_before": 0.8125,
+    "heldout_after": 0.8125,
+    "heldout_gain": 0.0,
+    "tokens": 129865
+  },
+  {
+    "name": "G2-s1",
+    "G": 2,
+    "seed": 1,
+    "mean_zvf": 0.9166666666666666,
+    "heldout_before": 0.625,
+    "heldout_after": 0.5625,
+    "heldout_gain": -0.0625,
+    "tokens": 19540
+  },
+  {
+    "name": "G4-s1",
+    "G": 4,
+    "seed": 1,
+    "mean_zvf": 0.7916666666666666,
+    "heldout_before": 0.625,
+    "heldout_after": 0.625,
+    "heldout_gain": 0.0,
+    "tokens": 39749
+  },
+  {
+    "name": "G8-s1",
+    "G": 8,
+    "seed": 1,
+    "mean_zvf": 0.5833333333333333,
+    "heldout_before": 0.625,
+    "heldout_after": 0.5625,
+    "heldout_gain": -0.0625,
+    "tokens": 78958
+  },
+  {
+    "name": "G16-s1",
+    "G": 16,
+    "seed": 1,
+    "mean_zvf": 0.5833333333333333,
+    "heldout_before": 0.625,
+    "heldout_after": 0.625,
+    "heldout_gain": 0.0,
+    "tokens": 155492
+  },
+  {
+    "name": "G2-s2",
+    "G": 2,
+    "seed": 2,
+    "mean_zvf": 0.9166666666666666,
+    "heldout_before": 0.8125,
+    "heldout_after": 0.8125,
+    "heldout_gain": 0.0,
+    "tokens": 17804
+  },
+  {
+    "name": "G4-s2",
+    "G": 4,
+    "seed": 2,
+    "mean_zvf": 0.75,
+    "heldout_before": 0.8125,
+    "heldout_after": 0.8125,
+    "heldout_gain": 0.0,
+    "tokens": 34641
+  },
+  {
+    "name": "G8-s2",
+    "G": 8,
+    "seed": 2,
+    "mean_zvf": 0.625,
+    "heldout_before": 0.8125,
+    "heldout_after": 0.75,
+    "heldout_gain": -0.0625,
+    "tokens": 70021
+  },
+  {
+    "name": "G16-s2",
+    "G": 16,
+    "seed": 2,
+    "mean_zvf": 0.6666666666666666,
+    "heldout_before": 0.8125,
+    "heldout_after": 0.8125,
+    "heldout_gain": 0.0,
+    "tokens": 139721
+  }
+]

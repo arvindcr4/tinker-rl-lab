@@ -53,7 +53,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 MODEL_NAME = "Qwen/Qwen2.5-3B-Instruct"
 N_PROBLEMS = 24
 N_STEPS = 10
-SEEDS = [0, 1]
+SEEDS = [0, 1, 2, 3]
 GROUP_SIZE = 4          # rollouts per problem (GRPO group) — trimmed to fit L4 24GB
 MAX_NEW_TOKENS = 192
 LR = 1e-4

@@ -1,0 +1,9 @@
+budget_M	abs_diff	se	is_selected_max
+1	0.01	0.0306	False
+4	0.11	0.0306	False
+16	0.21	0.0306	False
+64	0.24	0.0306	True
+--	--	--	--
+naive_swing	0.24		reported +24pp
+selection_bias	0.00389		well-separated arms -> tiny
+debiased_swing	0.23611		robust to selection

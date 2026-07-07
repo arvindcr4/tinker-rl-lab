@@ -1,0 +1,62 @@
+{
+  "n_tasks": 505,
+  "mu_pass1": 0.6743,
+  "sigma_p": 0.1921,
+  "var_p": 0.0369,
+  "note_truncation": "p_x restricted to (0.05,0.95): the uncertain-middle regime; H5 reconstructs the full benchmark by adding reliable (p~1) mass.",
+  "citations": {
+    "tau_bench": "arXiv:2406.12045 (Yao,Shinn,Razavi,Narasimhan 2024) -- introduced pass^k",
+    "tau2_bench": "arXiv:2506.07982 (Barres,Narasimhan et al. 2025, Sierra) -- dual-control reliability"
+  },
+  "hypotheses": {
+    "H1_reliability_decay": {
+      "verdict": "DECISIVE",
+      "pass1_mean_acc": 0.6743,
+      "pass5_reliability": 0.2353,
+      "reliability_drop_1_to_5_pp": 43.89,
+      "naive_mu5": 0.1394,
+      "jensen_excess_at_k5": 0.096,
+      "claim": "mean accuracy 0.674 collapses to pass^5=0.235: reporting only pass^1 overstates 5-trial reliability by 43.9 pp; naive mu^k UNDER-states true pass^k by 0.096 (Jensen, dispersion inflates)."
+    },
+    "H2_moment_expansion": {
+      "verdict": "DECISIVE",
+      "k3_third_order_err": 0.0,
+      "k6_naive_err": 0.09756,
+      "k6_second_order_err": 0.01683,
+      "k6_third_order_err": 0.02428,
+      "k6_variance_term_captures_frac": 0.8275,
+      "claim": "pass^k = mu^k + C(k,2)mu^{k-2}sigma^2 + C(k,3)mu^{k-3}m3 + ...; at k=3 the 3rd-order form is EXACT (err 1.1e-16, p^3 is degree-3) -- a closed validation. At k=6 the naive mu^k errs 0.0976; adding just the sigma^2 dispersion term removes 83% of that error, proving per-task variance is the first-order reliability correction, not a second-order nuisance."
+    },
+    "H3_scissor": {
+      "verdict": "DECISIVE",
+      "pass_at_5": 0.9673,
+      "pass_pow_5": 0.2353,
+      "scissor_gap_k5": 0.732,
+      "bestof_dispersion_effect_k5": -0.029,
+      "reliab_dispersion_effect_k5": 0.096,
+      "claim": "at k=5 best-of-k reaches 0.967 while reliability pass^5=0.235 (scissor gap 0.732). Dispersion is DOUBLE-EDGED with OPPOSITE signs vs the homogeneous baseline: it RAISES reliability pass^k by +0.096 (p^k convex: always-pass tasks dominate the all-k set) but LOWERS best-of pass@k by -0.029 ((1-p)^k convex: always-fail tasks can never be rescued). A benchmark that reports only the rising pass@k curve hides a brittle agent the falling pass^k exposes."
+    },
+    "H4_equal_mean_diff_var": {
+      "verdict": "DECISIVE",
+      "mu_A": 0.6743,
+      "mu_B": 0.6743,
+      "var_A": 0.0369,
+      "var_B": 0.11401,
+      "pass_pow5_A": 0.2353,
+      "pass_pow5_B": 0.5197,
+      "reliability_gap_k5": 0.2844,
+      "claim": "Two task sets with IDENTICAL mean accuracy (0.674) but variance 0.037 vs 0.114 give pass^5 = 0.235 vs 0.520: a benchmark that ranks only by mean accuracy CANNOT rank deployment reliability -- the higher-variance set is more reliable at large k (polarized into always/never), the tau2-Bench motivation for reporting pass^k."
+    },
+    "H5_full_reconstruction": {
+      "verdict": "DECISIVE",
+      "reported_mean_reward_G8": 0.8694,
+      "reconstructed_mu": 0.8694,
+      "reliable_mass_w1": 0.5991,
+      "full_pass_pow5": 0.6935,
+      "full_naive_mu5": 0.4968,
+      "full_jensen_excess_k5": 0.1967,
+      "claim": "Adding reliable (p~1) mass w1=0.60 to match the reported mean reward 0.869, the FULL-benchmark pass^5 = 0.694 while the naive mu^5 = 0.497: even at the benchmark's high accuracy, the Jensen reliability excess is 0.197 -- dispersion is a first-order term, so headline pass^1 must be paired with a pass^k reliability column (the same sigma^2_p that drives Pillar-2 ZVF collapse)."
+    }
+  },
+  "decisive_count": "5/5"
+}

@@ -1,0 +1,27 @@
+{
+  "source": "Berkeley F25 L8 Sida Wang -- Predictable Noise / Adding Error Bars to Evals",
+  "citations": {
+    "miller": "arXiv:2411.00640 Adding Error Bars to Evals (Evan Miller, 2024)",
+    "wang": "arXiv:2512.21326 Measuring all the noises of LLM Evals (Sida Wang, Dec 2025; all-pairs paired method for statistical power)"
+  },
+  "n_seeds": 5,
+  "method": "retrospective power (noncentral-t) + TOST equivalence + sample-size forecast",
+  "verdicts": {
+    "H1_heldout_well_powered": true,
+    "H2_positive_equivalence": true,
+    "H3_pooling_fabricates_power": true,
+    "H4_metric_choice_matters": true,
+    "H5_pairing_power_gain": true
+  },
+  "n_decisive": 5,
+  "headline": {
+    "heldout_mde80": 0.007522,
+    "heldout_equiv_bound": 0.006264,
+    "last10_equiv_bound": 0.162879,
+    "power_inflation_from_pooling": 3.831,
+    "icc_step": 0.7164,
+    "deff": 7.4477,
+    "paired_power_gain_heldout": 2.3184,
+    "n_seeds_for_1pt_gap": 4
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "row": 24,
+  "pillar": "B-F25",
+  "source": "Berkeley F25 L8 Sida Wang 'Adding Error Bars to Evals'; Evan Miller arXiv:2411.00640 (2024); Holm 1979; Benjamini-Hochberg 1995",
+  "H1_fwer": {
+    "K_headline": 6,
+    "K_total_reported": 16,
+    "fwer_headline_family": 0.2649,
+    "fwer_total_family": 0.5599,
+    "interp": "16 simultaneous looks -> 56% chance of >=1 false positive at per-look alpha=0.05 if all null"
+  },
+  "H2_multiplicity": {
+    "n_effect_claims": 5,
+    "raw_significant": 3,
+    "bonferroni_survivors": 3,
+    "bh_fdr_survivors": 3,
+    "fragile": [
+      "P4_toooluse_dense_gt_sparse",
+      "P3_reward_slope_logG"
+    ],
+    "robust": [
+      "P2_ZVF_decay_G2_G16",
+      "P3_reward_up_G2_G16",
+      "P3_swing_G4_vs_G32_64M"
+    ],
+    "interp": "strong physical effects (ZVF decay, +24pp swing, reward-up) survive even Bonferroni; marginal claims (tool-use dense>sparse, log-G slope) are multiplicity-fragile and must be reported as exploratory"
+  },
+  "H3_winners_curse_bestG": {
+    "argmax_G": 8,
+    "naive": 0.99,
+    "selection_bias_pp": 0.052,
+    "debiased": 0.98948,
+    "worstcase_tied_pp_Gsweep": 0.386,
+    "worstcase_tied_pp_tooluse": 2.213,
+    "interp": "reporting the argmax-G accuracy IS winner's-cursed, but on this sweep the per-G SEs are tiny so the bias is negligible (<0.4pp even if all 4 arms were tied) -> the selected best-G is trustworthy. The SAME argmax on the 2-seed tool-use pillar (SE ~10x larger) would inflate a selected-best by ~2pp, comparable to the effect it selects -> winner's curse bites exactly where SNR is low, reinforcing why tool-use claims are the fragile ones"
+  },
+  "H4_swing_selection": {
+    "naive_swing": 0.24,
+    "selection_bias": 0.00389,
+    "debiased": 0.23611,
+    "interp": "the +24pp swing selects a WELL-SEPARATED endpoint (monotone growth), so selection bias is negligible -> the swing magnitude is robust, unlike the best-G point"
+  },
+  "asymmetry": "Multiplicity correction only raises the bar to REJECT a null, so it CANNOT touch the benchmark's flagship EQUIVALENCE/null claims (GRPO~=PPO) -- those are multiplicity-immune. It disciplines only the positive 'discovery' family. Net: the benchmark's headline nulls gain credibility while two marginal positive claims are demoted to exploratory.",
+  "cross_pillar": "Same sigma^2_p dispersion that drives row-23 pass^k reliability and Pillar-2 ZVF collapse also governs the winner's-curse magnitude here (tight arms -> small bias). Complements row 20/21/22: those widen each CI; this one controls the FAMILY and the SELECTION."
+}

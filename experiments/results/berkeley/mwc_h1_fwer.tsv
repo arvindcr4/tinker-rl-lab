@@ -1,0 +1,5 @@
+family	n_comparisons	per_comp_alpha	fwer_uncorrected	expected_false_positives_if_all_null
+headline_effect_claims	6	0.05	0.2649	0.3
++group_size_pairwise	6	0.05	0.2649	0.3
++broader_scale_budgets	4	0.05	0.1855	0.2
+TOTAL_reported_family	16	0.05	0.5599	0.8

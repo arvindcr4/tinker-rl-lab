@@ -1,0 +1,4 @@
+stratum	n_prompts	all_wrong_mass_share	all_correct_mass_share
+hard(p<=1/3)	48	0.897606	0.000000
+mid(1/3<p<=2/3)	190	0.102394	0.039982
+easy(p>2/3)	362	0.000000	0.960018

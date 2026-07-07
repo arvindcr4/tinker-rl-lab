@@ -1,0 +1,66 @@
+{
+  "paper": "Grayeli, Sehgal, Costilla-Reyes, Cranmer, Chaudhuri, 'Symbolic Regression with a Learned Concept Library', NeurIPS 2024, arXiv:2409.09359",
+  "lecture": "Berkeley SP25 Advanced LLM Agents L11 (Swarat Chaudhuri)",
+  "target": "Pillar-1 R_max scaling over n=12 model anchors",
+  "n_anchors": 12,
+  "best_base_library": {
+    "form": "moe?a+b*logN:d+e*logN",
+    "k": 4,
+    "r2": 0.5603352012318277,
+    "aicc": -18.540489614337858,
+    "loocv_rmse": 0.2811492233935771
+  },
+  "best_lasr_library": {
+    "form": "a+instruct",
+    "k": 2,
+    "r2": 0.572127798627611,
+    "aicc": -29.866746328682027,
+    "loocv_rmse": 0.23760961933389815,
+    "params": [
+      0.4133,
+      0.4579
+    ]
+  },
+  "incumbent_gate": {
+    "form": "instruct?a:b",
+    "aicc": -29.867,
+    "loocv_rmse": 0.2376,
+    "params": [
+      0.8712,
+      0.4133
+    ]
+  },
+  "verdicts": {
+    "H1_lasr_beats_base_loocv": {
+      "rel_improve": 0.1549,
+      "base_loocv": 0.2811,
+      "lasr_loocv": 0.2376,
+      "decisive": false
+    },
+    "H2_size_alone_fails": {
+      "base_loocv_r2": 0.1374,
+      "best_base_form": "moe?a+b*logN:d+e*logN",
+      "decisive": true
+    },
+    "H3_sr_competitive_with_incumbent": {
+      "lasr_aicc": -29.867,
+      "incumbent_aicc": -29.867,
+      "incumbent_loocv": 0.2376,
+      "lasr_form": "a+instruct",
+      "decisive": true
+    },
+    "H4_concept_load_bearing": {
+      "lasr_loocv_r2": 0.3839,
+      "ablated_loocv_r2": 0.1374,
+      "drop": 0.2465,
+      "decisive": false
+    },
+    "H5_bimodality_preserved_oos": {
+      "spearman_loo": 0.1751,
+      "p": 0.5862,
+      "decisive": false
+    }
+  },
+  "n_decisive": 2,
+  "headline": "2/5 DECISIVE. Adding the instruction-tuned-capability concept to the SR primitive library cuts LOOCV-RMSE 15.5% vs size-only SR (base 0.281 -> LaSR 0.238); the LaSR-discovered form is AICc-competitive with the hand-picked capability gate."
+}

@@ -1,0 +1,38 @@
+{
+  "citation": "Lean-STaR arXiv:2407.10040 (2024); STaR arXiv:2203.14465 (NeurIPS 2022)",
+  "n_prompts": 600,
+  "native_G": 8,
+  "H1_starexceeds_and_identity": {
+    "passed": true,
+    "gap_pos": true,
+    "identity_max_err": 5.551115123125783e-17,
+    "gap_at_G8": 0.1266666666666667
+  },
+  "H2_easytail_concentration": {
+    "passed": true,
+    "easy_over_frontier_ratio": Infinity,
+    "easy_gap": 0.20994475138121546,
+    "frontier_gap": 0.0
+  },
+  "H3_majority_recoverable": {
+    "passed": true,
+    "recoverable_by_G": {
+      "2": 0.7994308793831464,
+      "4": 0.8524236279191468,
+      "8": 0.7999999999999999,
+      "16": 0.8203416221592613,
+      "32": 0.8026828849359282
+    }
+  },
+  "H4_nolink_guard": {
+    "passed": true,
+    "rho_gap_vs_heldout": -0.2152242931777414,
+    "note": "extra STaR signal = already-solved prompts; expected low value"
+  },
+  "H5_iso_yield": {
+    "passed": true,
+    "G_star": 2,
+    "target_Y_GRPO_G8": 0.8416666666666667
+  },
+  "n_decisive": 4
+}

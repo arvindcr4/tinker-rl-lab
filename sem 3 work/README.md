@@ -23,9 +23,8 @@ The original report prints some names with shorter or alternate spellings. The n
 ## What is in this folder
 
 - [`deliverables/group6-original-report.pdf`](deliverables/group6-original-report.pdf) — the original Group 6 report, dated April 4, 2026.
-- [`deliverables/group-benchmark-paper.pdf`](deliverables/group-benchmark-paper.pdf) — the group benchmark paper frozen at the Semester 3 capstone tag.
-- [`deliverables/group-benchmark-paper-anonymous.pdf`](deliverables/group-benchmark-paper-anonymous.pdf) — anonymous version of the same paper.
 - [`deliverables/capstone-final-report.docx`](deliverables/capstone-final-report.docx) — editable capstone report frozen at the same tag.
+- [`submissions/neurips-main-track/`](submissions/neurips-main-track/) — the Semester 3 NeurIPS main-track paper, anonymous paper, manifest, and reviewer README.
 - [`source/capstone_final_report.tex`](source/capstone_final_report.tex) — exact LaTeX source snapshot for archival inspection. It is not a standalone build bundle; the historical tag omitted a generated dashboard PDF referenced by this source.
 - [`CITATION.cff`](CITATION.cff) — the Semester 3 authorship and citation record.
 - [`CONTRIBUTIONS.md`](CONTRIBUTIONS.md) — contribution map based on the submitted report.
@@ -33,6 +32,6 @@ The original report prints some names with shorter or alternate spellings. The n
 
 ## Scope
 
-Semester 3 established the literature survey, multi-framework RL post-training repository, initial GRPO/SFT/DPO experiments, evaluation pipeline, and group report. Later solo papers and post-capstone experiments are intentionally excluded; they are collected in [`../sem 4 work/`](../sem%204%20work/).
+Semester 3 established the literature survey, multi-framework RL post-training repository, initial GRPO/SFT/DPO experiments, evaluation pipeline, group report, and NeurIPS main-track submission. The later workshop submission, solo papers, and post-capstone experiments are intentionally excluded; they are collected in [`../sem 4 work/`](../sem%204%20work/).
 
 The shared executable code remains in the repository root because both semesters depend on it. Moving thousands of interdependent source and evidence files into semester folders would break imports, LaTeX references, and reproduction commands. These folders therefore separate academic ownership and deliverables while preserving one working codebase.

@@ -10,8 +10,8 @@
 
 ## Read first (entry points)
 - `PROJECT_HISTORY.md` — semester boundary and academic ownership.
-- `sem 3 work/` — frozen six-member group deliverables and contribution record.
-- `sem 4 work/` — solo-continuation papers and source/evidence map.
+- `sem 3 work/` — frozen six-member group deliverables and NeurIPS main-track submission.
+- `sem 4 work/` — solo-continuation papers and NeurIPS workshop submission.
 - `README.md` — master overview: repo layout, the 8 components, quick-start commands, provenance.
 - `AGENTS.md` + `CONTEXT-MAP.md` — agent workflow + domain-doc routing (→ `contexts/research-engineering/CONTEXT.md`).
 - `REPRODUCE.md` — copy-pasteable reviewer commands to reproduce the headline Qwen3-8B GSM8K GRPO result.
@@ -44,8 +44,9 @@ HumanEval/logp-steering); `configs/` (per model×env YAML; `sweep_results/` = 10
 ### Paper & writing — `paper/` · `reports/` · `blind_review/` · `submission/` · `capstone-literature-survey/`
 - `paper/` — canonical LaTeX (`main.tex` + `main_anon.tex`, `sections/*.tex`, `figures/`+`figures/v2/`, `tikz/`, `reviewer_points.yaml`).
 - `reports/final/` — final capstone report, held-out GSM8K eval code + seed JSONs, reviewer-response material (`addendum/`, `chatgpt_responses/`).
-- `blind_review/` — anonymized NeurIPS package (`main_anon.pdf/.tex`, `anonymize_*.py`, `AUDIT.md`, `SUBMISSION_MANIFEST.md`).
-- `submission/contents/` — packaged reviewer bundle (MANIFEST, checksums, REVIEWER_README).
+- `blind_review/` — anonymized NeurIPS main-track package from Semester 3 (`main_anon.pdf/.tex`, `anonymize_*.py`, `AUDIT.md`, `SUBMISSION_MANIFEST.md`).
+- `submission/contents/` — Semester 3 main-track reviewer bundle metadata (MANIFEST, checksums, REVIEWER_README).
+- `paper/neurips_2026_variants/main_workshop.tex` — Semester 4 NeurIPS workshop submission source.
 - `capstone-literature-survey/` — Chapter-2 background survey (RLHF→PPO→DPO→GRPO→R1, PEFT, scaling laws).
 
 ### RL framework integrations (each wraps a different backend behind the Tinker API)

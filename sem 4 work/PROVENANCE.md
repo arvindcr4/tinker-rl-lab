@@ -20,6 +20,12 @@ Commit `282e6b4f0f158de11b3f5bb4656e2d871f68f5c0` (July 7, 2026) records the sol
 
 The eight PDFs in [`papers/`](papers/) were compiled from the current LaTeX sources at repository commit `006e90a38e4dabe2d0b4778be01dc7b27f2d3462` on July 9, 2026.
 
+## NeurIPS workshop submission
+
+The Semester 4 workshop variant is [`../paper/neurips_2026_variants/main_workshop.tex`](../paper/neurips_2026_variants/main_workshop.tex). It first appears in commit `b0ac85bf` dated June 21, 2026, after the Semester 3 boundary. The compiled anonymous workshop paper is archived in [`submissions/neurips-workshop/`](submissions/neurips-workshop/).
+
+The earlier NeurIPS main-track package is not a Semester 4 output; it is archived under [`../sem 3 work/submissions/neurips-main-track/`](../sem%203%20work/submissions/neurips-main-track/).
+
 ## Audit trail
 
 - Current author block: [`../paper/sections/_shared_author.tex`](../paper/sections/_shared_author.tex)

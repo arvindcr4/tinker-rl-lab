@@ -12,6 +12,12 @@ Semester 4 retains the shared code and Semester 3 experimental foundation, but t
 
 The continuation adds a much larger post-capstone evidence base, including automated research iterations through iteration 206, Berkeley-course-inspired audits and prototypes, expanded statistical analyses, new GRPO diagnostics and controllers, reporting/registry work, and an applied fraud-detection study.
 
+## Semester 4 submission
+
+- [`submissions/neurips-workshop/`](submissions/neurips-workshop/) — the NeurIPS workshop submission, including a freshly compiled anonymous PDF and its build/provenance notes.
+
+The NeurIPS main-track submission is not part of this semester; it is preserved under [`../sem 3 work/submissions/neurips-main-track/`](../sem%203%20work/submissions/neurips-main-track/).
+
 ## Ready-to-read papers
 
 All PDFs below were freshly compiled from the current LaTeX sources for this separation pass:

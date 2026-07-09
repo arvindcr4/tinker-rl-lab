@@ -10,8 +10,8 @@ This repository consolidates multiple research projects, spanning several RL fra
 
 This codebase spans two academic phases. They share infrastructure, but their deliverables and authorship are separated:
 
-- [`sem 3 work/`](sem%203%20work/) — frozen six-student Group 6 report, paper, capstone source, contribution record, and original citation metadata.
-- [`sem 4 work/`](sem%204%20work/) — Arvind C R's solo continuation under project guide Ramesh Prakash Guledgudd, including eight freshly compiled papers and an experiment/evidence map.
+- [`sem 3 work/`](sem%203%20work/) — frozen six-student Group 6 report, capstone artifacts, and the NeurIPS main-track submission.
+- [`sem 4 work/`](sem%204%20work/) — Arvind C R's solo continuation under project guide Ramesh Prakash Guledgudd, including the NeurIPS workshop submission, eight freshly compiled papers, and an experiment/evidence map.
 - [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) — exact boundary, ownership explanation, and rationale for retaining one reproducible codebase.
 
 ## Repository Structure

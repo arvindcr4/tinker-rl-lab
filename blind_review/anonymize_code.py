@@ -23,7 +23,7 @@ Replacement rules (order matters; longest-match first):
   * LICENSE copyright line                          ->  ``Anonymous Authors``
 
 Files dropped on purpose (not part of the anonymised artefact):
-  * team-analysis.pplx.md, team-links-audit.pplx.md      (internal team memo)
+  * archive/root-scratch/team-*.pplx.md                  (internal team memo)
   * paper/main.tex, paper/acm_main.tex                   (non-anonymous sources)
   * paper/main.pdf                                        (compiled artefact)
   * paper/main.aux/out/bbl/blg/log                        (build artefacts)
@@ -67,8 +67,8 @@ LOG = ROOT / "blind_review" / "code_changes.log"
 
 # Files we exclude from the anonymised export entirely.
 EXCLUDE_FILES = {
-    "team-analysis.pplx.md",
-    "team-links-audit.pplx.md",
+    "archive/root-scratch/team-analysis.pplx.md",
+    "archive/root-scratch/team-links-audit.pplx.md",
     "paper/main.tex",
     "paper/acm_main.tex",
     "paper/main.pdf",
@@ -86,7 +86,7 @@ EXCLUDE_FILES = {
     "reports/final/CONSOLIDATED_REVIEW_IMPROVEMENTS.md",
     "reports/final/PAPER_IMPROVEMENT_PLAN.md",
     "scripts/anonymize.sh",
-    "verify_links_entities.txt",
+    "archive/root-scratch/verify_links_entities.txt",
     # Citation metadata file lists real author names -- excluded from blind
     # bundle. A reviewer-facing citation block lives in the paper itself.
     "CITATION.cff",
@@ -96,6 +96,8 @@ EXCLUDE_FILES = {
 }
 
 EXCLUDE_DIRS = {
+    # Scratch/provenance archive; contains identity-bearing team memos.
+    "archive",
     "blind_review",
     "past_session_contexts",
     "wandb",

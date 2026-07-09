@@ -1,1 +1,0 @@
-{"ts":"2026-07-05T18:31:00","pillar":"P6","claim":"13/40 registry measured[] rows had source-path misattribution (column missing from cited file); all 13 patched; pct_match 62.5% → 75.0%","evidence_path":"experiments/results/p5p8/p6_iter146_audit_pre_patch.tsv + p6_iter146_audit_post_patch.tsv + p6_iter146_patch_log.tsv","citation_ok":true,"iter":146,"row":163}

@@ -1,5 +1,7 @@
 # Tinker RL Lab
 
+> **Academic reviewers / professors:** start at [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) for the semester boundary and ownership, then review [`sem 3 work/`](sem%203%20work/) (Group 6 capstone) and [`sem 4 work/`](sem%204%20work/) (solo continuation). Everything else in this repository is shared research infrastructure and evidence.
+
 A consolidated research repository for Reinforcement Learning experiments with Large Language Models, integrating multiple RL frameworks and compute backends.
 
 ## Overview

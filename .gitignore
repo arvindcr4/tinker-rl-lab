@@ -99,6 +99,12 @@ wandb/
 .modal/
 node_modules/
 
+# Agent/tool caches (local only, untracked)
+.firecrawl/
+.serena/
+graphify-out/
+.playwright-mcp/
+
 # MiniMax secrets (never commit)
 .env.minimax
 minimax_autoresearch/state/

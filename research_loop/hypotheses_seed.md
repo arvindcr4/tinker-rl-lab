@@ -1,6 +1,6 @@
 # Seed Hypotheses — 20 ideas for Wave 1
 
-Drawn from `autoresearch.ideas.md`, the paper's Section 7 roadmap, and the
+Drawn from `autoresearch/autoresearch.ideas.md`, the paper's Section 7 roadmap, and the
 GRPO / DAPO / RLOO literature. Each entry is a self-contained hypothesis
 that one agent can test in one Phase 1 run.
 

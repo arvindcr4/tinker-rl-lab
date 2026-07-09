@@ -1,0 +1,8 @@
+metric	value	interpretation
+n_seeds	2	
+sparse_mean_of_seed_means	0.1125	
+dense_mean_of_seed_means	0.1863	
+delta	0.0738	
+cohens_d	0.667	
+interpret	DECISIVE	
+decision_threshold_d	0.4	

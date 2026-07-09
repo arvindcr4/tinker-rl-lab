@@ -1,0 +1,65 @@
+{
+  "entries_patched": [
+    {
+      "entry": "delta_aero",
+      "rows_patched": 2
+    },
+    {
+      "entry": "delta_gift",
+      "rows_patched": 2
+    },
+    {
+      "entry": "delta_areal",
+      "rows_patched": 2
+    }
+  ],
+  "cells_patched": [
+    {
+      "entry": "delta_aero",
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "window_sensitivity": "STABLE-DIRECTION-MAG-SHIFT",
+      "robust_panel": "none"
+    },
+    {
+      "entry": "delta_aero",
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "window_sensitivity": "STABLE-DIRECTION-MAG-SHIFT",
+      "robust_panel": "last10"
+    },
+    {
+      "entry": "delta_gift",
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "window_sensitivity": "STABLE-DIRECTION-MAG-SHIFT",
+      "robust_panel": "full40"
+    },
+    {
+      "entry": "delta_gift",
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "window_sensitivity": "STABLE-DIRECTION-MAG-SHIFT",
+      "robust_panel": "full40"
+    },
+    {
+      "entry": "delta_areal",
+      "metric": "zvf",
+      "panel": "n2_same_stack_last10",
+      "window_sensitivity": "STABLE-DIRECTION-MAG-SHIFT",
+      "robust_panel": "none"
+    },
+    {
+      "entry": "delta_areal",
+      "metric": "reward_mean",
+      "panel": "n2_same_stack_last10",
+      "window_sensitivity": "STABLE-DIRECTION-MAG-SHIFT",
+      "robust_panel": "last10"
+    }
+  ],
+  "validation": {
+    "n_pass": 35,
+    "n_fail": 0,
+    "fails": []
+  }
+}

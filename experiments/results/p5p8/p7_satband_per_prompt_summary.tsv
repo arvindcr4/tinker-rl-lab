@@ -1,0 +1,5 @@
+method	n_steps	n_sat_band_steps	n_saturated_prompts	n_boundary_prompts	n_mid_prompts	frac_saturated	frac_boundary	frac_mid	rollouts_baseline	rollouts_zvf70	rollouts_dual	rollouts_hybrid	zvf_baseline_mean	zvf_zvf70_mean	zvf_dual_mean	zvf_hybrid_mean
+grpo	40	2	461	75	104	0.7203	0.1172	0.1625	5120	7680	3354	7296	0.77	0.044	0.0441	0.044
+aero	40	1	461	68	111	0.7203	0.1062	0.1734	5120	7552	3466	7360	0.7656	0.0269	0.0217	0.0269
+gift	40	8	493	60	87	0.7703	0.0938	0.1359	5120	8448	3178	6912	0.8097	0.0453	0.0455	0.0453
+areal	40	1	452	84	104	0.7063	0.1313	0.1625	5120	7296	3448	7104	0.7595	0.044	0.0441	0.044

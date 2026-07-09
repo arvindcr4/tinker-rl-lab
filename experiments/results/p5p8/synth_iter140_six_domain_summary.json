@@ -1,0 +1,198 @@
+{
+  "iter": 140,
+  "n_domains": 6,
+  "densities": {
+    "D1": {
+      "domain": "P8 grad-band firing (per-row)",
+      "n": 840,
+      "k": 7,
+      "density": 0.008333,
+      "wilson_lo": 0.004042,
+      "wilson_hi": 0.017101,
+      "source": "iter-120 table"
+    },
+    "D2": {
+      "domain": "P7 step rejection (per-step)",
+      "n": 160,
+      "k": 80,
+      "density": 0.5,
+      "wilson_lo": 0.423438,
+      "wilson_hi": 0.576562,
+      "source": "iter-124"
+    },
+    "D3": {
+      "domain": "P5 cells (per-cell)",
+      "n": 98,
+      "k": 36,
+      "density": 0.367347,
+      "wilson_lo": 0.278587,
+      "wilson_hi": 0.466114,
+      "source": "iter-124 cells.tsv"
+    },
+    "D4": {
+      "domain": "P7 per-prompt boundary",
+      "n": 2560,
+      "k": 1867,
+      "density": 0.729297,
+      "wilson_lo": 0.711751,
+      "wilson_hi": 0.746156,
+      "source": "iter-131"
+    },
+    "D5": {
+      "domain": "P8 iso ECE>0.10 (cohort cell)",
+      "n": 60,
+      "k": 60,
+      "density": 1.0,
+      "wilson_lo": 0.939826,
+      "wilson_hi": 1.0,
+      "source": "iter-136"
+    },
+    "D6": {
+      "domain": "P8 sensor-firing flip (per (rate x fset) cell)",
+      "n": 148767,
+      "k": 789,
+      "density": 0.005304,
+      "wilson_lo": 0.004947,
+      "wilson_hi": 0.005686,
+      "source": "iter-140 firing_agreement.tsv (15 cells)"
+    }
+  },
+  "ratio_count": 15,
+  "n_d1_over_d6": {
+    "numerator": "D1",
+    "denominator": "D6",
+    "numer_density": 0.008333,
+    "denom_density": 0.005304,
+    "ratio": 1.5711,
+    "boot_mean": 1.5924,
+    "boot_lo": 0.3808,
+    "boot_hi": 2.7918,
+    "ci_excludes_1": false
+  },
+  "n_d5_over_d6": {
+    "numerator": "D5",
+    "denominator": "D6",
+    "numer_density": 1.0,
+    "denom_density": 0.005304,
+    "ratio": 188.537,
+    "boot_mean": 188.8179,
+    "boot_lo": 176.1313,
+    "boot_hi": 203.1281,
+    "ci_excludes_1": true
+  },
+  "d6_per_rate": [
+    {
+      "rate": 1.44,
+      "density": 0.0055,
+      "n_flip": 55,
+      "n_test": 10000
+    },
+    {
+      "rate": 1.44,
+      "density": 0.0045,
+      "n_flip": 45,
+      "n_test": 10000
+    },
+    {
+      "rate": 1.44,
+      "density": 0.0058,
+      "n_flip": 58,
+      "n_test": 10000
+    },
+    {
+      "rate": 1.0,
+      "density": 0.005524306950582563,
+      "n_flip": 55,
+      "n_test": 9956
+    },
+    {
+      "rate": 1.0,
+      "density": 0.0044194455604660505,
+      "n_flip": 44,
+      "n_test": 9956
+    },
+    {
+      "rate": 1.0,
+      "density": 0.005524306950582563,
+      "n_flip": 55,
+      "n_test": 9956
+    },
+    {
+      "rate": 0.5,
+      "density": 0.005350292751867555,
+      "n_flip": 53,
+      "n_test": 9906
+    },
+    {
+      "rate": 0.5,
+      "density": 0.004744599232788209,
+      "n_flip": 47,
+      "n_test": 9906
+    },
+    {
+      "rate": 0.5,
+      "density": 0.005451241671714113,
+      "n_flip": 54,
+      "n_test": 9906
+    },
+    {
+      "rate": 0.1,
+      "density": 0.005371984593553618,
+      "n_flip": 53,
+      "n_test": 9866
+    },
+    {
+      "rate": 0.1,
+      "density": 0.004966551794040138,
+      "n_flip": 49,
+      "n_test": 9866
+    },
+    {
+      "rate": 0.1,
+      "density": 0.005878775592945469,
+      "n_flip": 58,
+      "n_test": 9866
+    },
+    {
+      "rate": 0.05,
+      "density": 0.005374708447419126,
+      "n_flip": 53,
+      "n_test": 9861
+    },
+    {
+      "rate": 0.05,
+      "density": 0.005374708447419126,
+      "n_flip": 53,
+      "n_test": 9861
+    },
+    {
+      "rate": 0.05,
+      "density": 0.005780346820809248,
+      "n_flip": 57,
+      "n_test": 9861
+    }
+  ],
+  "super_domain_split": {
+    "low_layer": [
+      "D1",
+      "D6"
+    ],
+    "mid_layer": [
+      "D2",
+      "D3",
+      "D4"
+    ],
+    "high_layer": [
+      "D5"
+    ]
+  },
+  "p8_internal_heterogeneity": {
+    "D1_density": 0.008333,
+    "D5_density": 1.0,
+    "D6_density": 0.005304,
+    "ratio_D5_over_D1": 120.0,
+    "ratio_D5_over_D6": 188.5
+  },
+  "n_boot": 2000,
+  "seed": 20260705
+}

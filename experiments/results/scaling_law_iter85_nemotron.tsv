@@ -1,0 +1,13 @@
+model	model_short	params_B	n_steps	first5_avg	last10_avg	peak	peak_step	collapse_delta	recovery_ratio	trailing_leading_var_ratio	decline_run_after_peak	phase_label
+Qwen3.5-4B	qwen3.5-4b	4.0	30	0.9625	0.85	1.0	1	-0.15	-3.0	1.7061	3	drift
+Qwen3-8B	qwen3-8b	8.0	30	0.3125	0.3438	0.625	13	-0.2812	0.1	0.7866	1	saturation
+Llama-3.1-8B-Instruct	llama-8b-inst	8.0	30	0.975	0.8438	1.0	1	-0.1562	-5.25	2.863	2	drift
+Qwen3-32B	qwen3-32b	32.0	3	0.2497	0.2497	0.312	1	-0.0623	0.0	8742250.0	1	saturation
+Qwen3.5-27B	qwen3.5-27b	27.0	3	0.4373	0.4373	0.75	2	-0.3127	0.0	140625000.0	1	saturation
+gpt-oss-20B	gpt-oss-20b	20.0	30	0.875	0.875	1.0	3	-0.125	0.0	1.048	2	saturation
+Qwen3-30B-MoE	qwen3-30b-moe	30.0	5	0.3252	0.3252	0.5	4	-0.1748	0.0	2.3969	1	saturation
+Qwen3-30B-MoE-Inst	qwen3-30b-moe-inst	30.0	3	1.0	1.0	1.0	1	0.0	0.0	0.0	0	plateau
+DeepSeek-V3.1	deepseek-v3.1	685.0	20	0.85	0.85	1.0	3	-0.15	0.0	1.9259	1	saturation
+Nemotron-120B	nemotron-120b	120.0	20	0.175	0.1625	0.875	3	-0.7125	-0.0179	0.459	2	collapse
+Qwen3-235B-MoE	qwen3-235b-moe	235.0	4	1.0	1.0	1.0	1	0.0	0.0	0.0	0	plateau
+Kimi-K2-Thinking	kimi-k2	1000.0	20	0.925	0.8	1.0	1	-0.2	-1.6667	3.4737	1	drift

@@ -1,0 +1,21 @@
+{
+  "n_delta_entries": 14,
+  "n_with_measured": 10,
+  "n_zero_evidence": 4,
+  "total_measured_rows": 27,
+  "total_validated_rows": 27,
+  "total_supports": 10,
+  "total_contradicts": 3,
+  "total_neutral": 6,
+  "schema_pass": 34,
+  "schema_fail": 0,
+  "schema_errs": [],
+  "zero_evidence_tsv": "/home/claude/tinker-rl-lab-minimax/experiments/results/p5p8/p6_zero_evidence_audit.tsv",
+  "summary_tsv": "/home/claude/tinker-rl-lab-minimax/experiments/results/p5p8/p6_registry_evidence_summary.tsv",
+  "zero_evidence_deltas": [
+    "delta_dapo",
+    "delta_gspo",
+    "delta_liteppo",
+    "delta_reinforce"
+  ]
+}

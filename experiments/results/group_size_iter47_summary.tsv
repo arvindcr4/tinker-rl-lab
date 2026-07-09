@@ -1,0 +1,24 @@
+metric	value
+T_star_M_tokens_G4_at_R0.976	4.3186
+T_star_M_tokens_G8_at_R0.976	25.6979
+T_star_M_tokens_G16_at_R0.976	45.1838
+T_star_M_tokens_G32_at_R0.976	110.7262
+Tstar_G4_R0.976_M	4.3186
+Tstar_G4_R0.9_M	8.8513
+Tstar_G4_R0.8_M	22.7553
+Tstar_G8_R0.976_M	25.6979
+Tstar_G8_R0.9_M	51.0298
+Tstar_G8_R0.8_M	125.8438
+Tstar_G16_R0.976_M	45.1838
+Tstar_G16_R0.9_M	104.1116
+Tstar_G16_R0.8_M	312.2444
+Tstar_G32_R0.976_M	110.7262
+Tstar_G32_R0.9_M	555.2426
+Tstar_G32_R0.8_M	4632.7737
+n_Ga_monotone_decreasing_CI_excludes_0	4
+T_star_binlow_R0.976_M	n/a
+T_star_binmid_R0.976_M	7.65
+T_star_binhigh_R0.976_M	52.6684
+wu_claim_operational_verdict	Holds at T<=1M (1/1 brackets), breaks at T=4M (0/4 bins inside Wu 97.6% CI).
+n_Ga_increasing_tau	0
+n_Ga_decreasing_tau	4

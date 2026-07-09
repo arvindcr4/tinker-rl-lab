@@ -1,0 +1,9 @@
+prediction_id	claim	observed	expected	pass_fail
+P1_cf_converges	Closed-form saturation fit converges for >= 9/12 anchors.	7/12	>= 9/12	FAIL
+P2_cf_cv_lambda_correlate	Spearman(closed-form lambda, curve_fit lambda) >= 0.5 across the finite-lambda pool.	rho=-0.833, n=3	>= 0.5	FAIL
+P3_aic_saturation_best	AIC selects saturation as best model for >= 7/12 anchors (the saturation law holds as a parsimonious family).	2/12	>= 7/12	FAIL
+P4_aic_power_alternative	AIC selects power-law as best for >= 2/12 anchors (alternative family is non-trivially alive).	3/12	>= 2/12	PASS
+P5_nemotron_collapse_violator	Peak-decay model labels Nemotron-120B as the unique collapse violator (peak before step n//2, late < 0.4 * peak).	is_collapse_violator=True	True	PASS
+P6_peak_decay_signature_alive	Peak-decay gamma > 0 for >= 5/12 anchors (the three-phase template's 'peak at end' assumption is violated broadly).	8/12	>= 5/12	PASS
+P7_three_phase_falsified	Mean PCI across the pool is < 2.5 (three-phase template is geometrically falsified, consistent with iter65).	PCI_mean=0.653	< 2.5	PASS
+P8_t80_bootstrap_ci_finite	Closed-form t_80 bootstrap CIs are finite for >= 9/12 anchors.	7/12	>= 9/12	FAIL

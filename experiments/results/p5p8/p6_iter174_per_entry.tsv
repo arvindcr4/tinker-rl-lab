@@ -1,0 +1,18 @@
+entry_id	name	tier	n_total	n_sig	n_panels	n_metrics	sig_rate	mean_abs_delta	mean_ci_width	panels	metrics
+delta_adaptiveg	Adaptive-G (ZVF-driven)	B	2	1	1	2	0.5000	0.041015	0.061523	qp7_adaptive_armB_vs_armA_paired	reward_mean;zvf
+delta_aero	AERO	A	6	3	2	6	0.5000	5.254582	1.348846	n2_same_stack_last10;zvf130_5seed	mean_len;mean_zvf;pcd;reward_mean;zvf;zvf_risk_mean
+delta_areal	AREAL	A	6	3	2	6	0.5000	5.135756	1.635945	n2_same_stack_last10;zvf130_5seed	mean_len;mean_zvf;pcd;reward_mean;zvf;zvf_risk_mean
+delta_cppo	CPPO	B	3	2	1	3	0.6667	0.174079	0.071030	zvf130_5seed	mag_mean;mean_zvf;zvf_risk_mean
+delta_dapo	DAPO	D	0	0	0	0	0.0000	0.000000	0.000000		
+delta_drgrpo	Dr. GRPO	B	3	1	1	3	0.3333	14.817733	48.166233	length_bias_iter60_grpo_vs_drgrpo_paired	L_star;neg_frac;pos_frac
+delta_es	ES	B	3	2	1	3	0.6667	0.335233	0.073519	zvf130_5seed	mag_mean;mean_zvf;zvf_risk_mean
+delta_gift	GIFT	A	6	3	2	6	0.5000	0.779782	2.351084	n2_same_stack_last10;zvf130_5seed	mean_len;mean_zvf;pcd;reward_mean;zvf;zvf_risk_mean
+delta_gspo	GSPO	D	0	0	0	0	0.0000	0.000000	0.000000		
+delta_liteppo	LitePPO	D	0	0	0	0	0.0000	0.000000	0.000000		
+delta_mcgrpo	MCGRPO	B	3	2	1	3	0.6667	0.281252	0.084649	zvf130_5seed	mag_mean;mean_zvf;zvf_risk_mean
+delta_ngrpo	NGRPO	B	3	2	1	3	0.6667	0.163955	0.074466	zvf130_5seed	mag_mean;mean_zvf;zvf_risk_mean
+delta_ppo	PPO	D	0	0	0	0	0.0000	0.000000	0.000000		
+delta_reinforce	REINFORCE	D	0	0	0	0	0.0000	0.000000	0.000000		
+delta_scafgrpo	SCAFGRPO	B	3	2	1	3	0.6667	0.226880	0.073268	zvf130_5seed	mag_mean;mean_zvf;zvf_risk_mean
+delta_tool_use_llama-8b-inst	tool_use_llama-8b-inst	D	0	0	0	0	0.0000	0.000000	0.000000		
+delta_tool_use_qwen3-32b	tool_use_qwen3-32b	D	0	0	0	0	0.0000	0.000000	0.000000		

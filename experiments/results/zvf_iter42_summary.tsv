@@ -1,0 +1,39 @@
+# Iter 42 Pillar 2 one-rollup summary.
+# Source: scripts/zvf_iter42.py
+metric	value	detail
+n_runs	60	60-row zvf_dynamics.json pool
+n_classes	2	observed in pool: plateau=45, converged=15
+loo_accuracy_per_row	1.0000	k=3, z-scored features, all 8
+loo_cluster_accuracy_early_only	0.9667	k=3, leave-one-(kind,method)-out, 6 EARLY features only
+loo_cluster_accuracy_full	0.9667	k=3, leave-one-(kind,method)-out, full 8 features
+recall_collapse	nan	n_true=0
+recall_drift	nan	n_true=0
+recall_plateau	1.0000	n_true=45
+recall_converged	1.0000	n_true=15
+or_bloom05_collapse	1.9756	95pct CI [0.0378, 103.2047]  (Haldane-Anscombe correction; a=0,b=20,c=0,d=40)
+or_bloom09_collapse	3.5185	95pct CI [0.0667, 185.7456]  (a=0,b=13,c=0,d=47)
+high_burden_collapse_rate	0.0000	top-quartile burden_05, n=15
+low_burden_collapse_rate	0.0000	bottom-quartile burden_05, n=16
+spearman_burden05_mean_zvf	0.7581	early burden vs late mean ZVF
+spearman_fp05frac_last10	-0.2743	earliness of ZVF rise vs last-10 accuracy
+auc_univariate_fp05_frac	0.0000	single-feature AUC predicting converged vs plateau
+auc_univariate_fp07_frac	0.0000	single-feature AUC predicting converged vs plateau
+auc_univariate_fp09_frac	0.0000	single-feature AUC predicting converged vs plateau
+auc_univariate_burden_05	0.9748	single-feature AUC predicting converged vs plateau
+auc_univariate_burden_07	0.9778	single-feature AUC predicting converged vs plateau
+auc_univariate_zvf_lag1	0.1052	single-feature AUC predicting converged vs plateau
+auc_univariate_mean_zvf	0.8815	single-feature AUC predicting converged vs plateau
+cluster_loo_early_groupsize_zvf_sweep_grpo_G16	1.0000	n=3 early-only; full-feature LOO=1.0000
+cluster_loo_early_groupsize_zvf_sweep_grpo_G2	1.0000	n=3 early-only; full-feature LOO=1.0000
+cluster_loo_early_groupsize_zvf_sweep_grpo_G4	1.0000	n=3 early-only; full-feature LOO=1.0000
+cluster_loo_early_groupsize_zvf_sweep_grpo_G8	1.0000	n=3 early-only; full-feature LOO=1.0000
+cluster_loo_early_tinker_prompt_zvf_qwen3_8b_gsm8k	1.0000	n=3 early-only; full-feature LOO=1.0000
+cluster_loo_early_variance_mitigation_aero	1.0000	n=5 early-only; full-feature LOO=1.0000
+cluster_loo_early_variance_mitigation_areal	1.0000	n=5 early-only; full-feature LOO=1.0000
+cluster_loo_early_variance_mitigation_cppo	1.0000	n=5 early-only; full-feature LOO=1.0000
+cluster_loo_early_variance_mitigation_es	1.0000	n=5 early-only; full-feature LOO=1.0000
+cluster_loo_early_variance_mitigation_gift	1.0000	n=5 early-only; full-feature LOO=1.0000
+cluster_loo_early_variance_mitigation_grpo	0.6000	n=5 early-only; full-feature LOO=0.6000
+cluster_loo_early_variance_mitigation_mcgrpo	1.0000	n=5 early-only; full-feature LOO=1.0000
+cluster_loo_early_variance_mitigation_ngrpo	1.0000	n=5 early-only; full-feature LOO=1.0000
+cluster_loo_early_variance_mitigation_scafgrpo	1.0000	n=5 early-only; full-feature LOO=1.0000

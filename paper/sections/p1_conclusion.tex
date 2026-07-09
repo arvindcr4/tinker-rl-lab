@@ -1,0 +1,33 @@
+% Pillar-1 (scaling) discussion + conclusion
+\section{Discussion and Limitations}
+\label{sec:p1-discussion}
+The most useful result here is a boundary on what can be claimed. On this
+benchmark, mean GRPO training reward does not exhibit a measurable, monotone dependence
+on model size, and no universal saturation exponent is identifiable; the honest
+description is a local, stack-conditioned taxonomy of endpoint behavior rather than a
+Chinchilla-style power law in $N$. Several limitations qualify even this modest
+statement. The frontier-scale anchors are single-seed API runs and should be read
+as case studies; held-out evaluation is narrower than training-dynamics coverage;
+and the strongest evidence comes from short-horizon GSM8K training, so extrapolation
+to longer-horizon or non-math tasks is unwarranted. Because the saturation rate
+$\lambda$ is non-identifiable on most traces, per-trace rate comparisons are
+excluded from our claims. Finally, the effective learning signal in GRPO depends
+on within-group reward variance, which is itself coupled to model accuracy and
+group size; disentangling ``the model is larger'' from ``the model produces fewer
+mixed-reward groups'' is a confound we can describe but not fully resolve with the
+current runs.
+
+\section{Conclusion}
+\label{sec:p1-conclusion}
+We asked whether GRPO post-training obeys a clean scaling law in model size and
+found, on a controlled cross-library benchmark, that it does not---at least not
+one identifiable from roughly $2.4$ orders of magnitude of single-benchmark evidence. The
+cross-scale mean-reward slope is statistically flat, a three-phase saturation
+hypothesis is geometrically falsified, and the Nemotron-120B trace is best treated
+as a collapse-shaped structural outlier. What survives is a taxonomic, endpoint-level
+description of the ceiling, dominated by categorical capability structure rather
+than an added $\log_{10} N$ term, and a set of falsifiable next steps:
+re-plotting the scaling axis in terms of usable contrastive compute, multi-seed
+matched-budget runs, and broader held-out evaluation without checkpoint
+cherry-picking. The released traces, telemetry, adapters, and scripts are intended to make
+that stricter follow-up straightforward.

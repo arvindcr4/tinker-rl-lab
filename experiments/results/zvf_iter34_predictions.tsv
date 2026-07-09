@@ -1,0 +1,13 @@
+model	true_phase	pred_phase
+Qwen3.5-4B	plateau	drift
+Qwen3-8B	saturation	saturation
+Llama-3.1-8B-Instruct	drift	drift
+Qwen3-32B	drift	saturation
+Qwen3.5-27B	collapse	collapse
+gpt-oss-20B	saturation	saturation
+Qwen3-30B-MoE	saturation	saturation
+Qwen3-30B-MoE-Inst	saturation	saturation
+DeepSeek-V3.1	plateau	drift
+Nemotron-120B	plateau	collapse
+Qwen3-235B-MoE	saturation	saturation
+Kimi-K2-Thinking	drift	drift

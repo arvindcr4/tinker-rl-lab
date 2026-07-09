@@ -1,0 +1,42 @@
+% Pillar-2 (ZVF) standalone introduction + related work
+\section{Introduction}
+\label{sec:p2-intro}
+GRPO~\citep{shao2024deepseekmath, guo2025deepseekr1} learns from a group-relative
+baseline: for each prompt it samples $G$ completions, scores them with a verifier,
+and centers the rewards within the group. With binary correctness rewards, a group
+whose completions are all correct or all incorrect has zero within-group variance,
+zero centered advantage, and hence contributes no gradient. As training proceeds
+and the policy masters easy prompts or stalls on hard ones, the fraction of such
+degenerate groups grows, and the effective batch that actually moves the policy
+shrinks. We call this fraction the \emph{Zero-Variance Fraction} (ZVF) and ask how
+well it diagnoses when GRPO stops learning.
+
+ZVF is attractive because it is cheap, stack-agnostic, and mechanistically
+motivated: it measures exactly the condition under which the group baseline nulls
+the update. But a diagnostic is only as good as its predictive validity, and it is
+easy to over-read a quantity that is mechanically entangled with reward sparsity,
+group size, and accuracy. This paper therefore treats ZVF conservatively---as a
+descriptive instrument whose reach we bound rather than a causal predictor.
+
+We study ZVF as one pillar of \ours{}, a controlled benchmark of 70+ runs across
+seven RL libraries and five model families ($0.6$B--$\sim$671B) on GSM8K
+\citep{cobbe2021training}, HumanEval~\citep{chen2021codex}, and tool-use tasks.
+Our contributions are: (i) a cross-library, cross-scale measurement of ZVF and its
+relationship to training failure, showing strong association with catastrophic
+collapse but only weak association with the final held-out gain; (ii) an analysis
+of ZVF \emph{dynamics}, establishing that it is temporally sticky and drifts upward
+over training; (iii) a gradient-utilization view, $\mathrm{GU} = 1 - \mathrm{ZVF}$,
+linking the diagnostic to the fraction of the batch that carries signal; and (iv) a
+cross-examination that identifies ZVF's central failure---aliasing mastery with
+incapacity---and motivates magnitude- and sign-aware replacements.
+
+\subsection{Related Work}
+\label{sec:p2-related}
+Reward sparsity and vanishing advantages are recurring obstacles in RL from
+verifiable or human feedback~\citep{christiano2017deeprlhf, ouyang2022training, ahmadian2024backtobasics}. Variants of GRPO adjust the group baseline or advantage
+normalization to preserve signal~\citep{lin2025cppo, gift2025, liu2025rlsubnetworks};
+our aim is orthogonal---not to propose a new estimator but to test how well a
+simple degeneracy statistic predicts outcomes. In relating group reward variance
+to the update, we connect to analyses that recast group-relative RL as an implicit
+contrast or preference objective~\citep{wu2025grpo_dpo, liu2026gdpo}, a link we make
+explicit when discussing gradient utilization.

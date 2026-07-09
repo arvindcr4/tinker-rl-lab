@@ -1,0 +1,44 @@
+entry_id	record_type	fname	n_citation_check	citation_ok	bibkey	n_measured	n_measured_ok	zvf_match	zvf_diff	applicable_checks	passed_checks	integrity_score
+delta_adaptiveg	variant_delta	delta_adaptiveg.json	1	PASS	tinker2026adaptiveg	2	2	NA		3	3	1.0000
+delta_aero	variant_delta	delta_aero.json	1	PASS	le2025rlzvp	6	6	NA		7	7	1.0000
+delta_areal	variant_delta	delta_areal.json	1	PASS	areal2025	6	6	NA		7	7	1.0000
+delta_cppo	variant_delta	delta_cppo.json	1	PASS	lin2025cppo	3	3	NA		4	4	1.0000
+delta_dapo	variant_delta	delta_dapo.json	1	PASS	yu2025dapo	0	0	NA		1	1	1.0000
+delta_drgrpo	variant_delta	delta_drgrpo.json	1	PASS	tong2025drgrpo	3	3	NA		4	4	1.0000
+delta_es	variant_delta	delta_es.json	1	PASS	es2025	3	3	NA		4	4	1.0000
+delta_gift	variant_delta	delta_gift.json	1	PASS	gift2025	6	6	NA		7	7	1.0000
+delta_gspo	variant_delta	delta_gspo.json	1	PASS	qwen2025gspo	0	0	NA		1	1	1.0000
+delta_liteppo	variant_delta	delta_liteppo.json	1	PASS	liteppo2024	0	0	NA		1	1	1.0000
+delta_mcgrpo	variant_delta	delta_mcgrpo.json	1	PASS	mcgrpo2025	3	3	NA		4	4	1.0000
+delta_ngrpo	variant_delta	delta_ngrpo.json	1	PASS	nan2025ngrpo	3	3	NA		4	4	1.0000
+delta_ppo	variant_delta	delta_ppo.json	1	PASS	schulman2017proximal	0	0	NA		1	1	1.0000
+delta_reinforce	variant_delta	delta_reinforce.json	1	PASS	williams1992reinforce	0	0	NA		1	1	1.0000
+delta_scafgrpo	variant_delta	delta_scafgrpo.json	1	PASS	zhang2025scaffgrpo	3	3	NA		4	4	1.0000
+delta_tool_use_llama-8b-inst	variant_delta	delta_tool_use_llama-8b-inst.json	0	NA		1	1	NA		1	1	1.0000
+delta_tool_use_qwen3-32b	variant_delta	delta_tool_use_qwen3-32b.json	0	NA		1	1	NA		1	1	1.0000
+zvf130_aero	stack	zvf130_aero.json	0	NA		0	0	PASS	3.46853e-07	1	1	1.0000
+zvf130_areal	stack	zvf130_areal.json	0	NA		0	0	PASS	3.86909e-07	1	1	1.0000
+zvf130_cppo	stack	zvf130_cppo.json	0	NA		0	0	PASS	3.89121e-07	1	1	1.0000
+zvf130_es	stack	zvf130_es.json	0	NA		0	0	PASS	2.27901e-07	1	1	1.0000
+zvf130_gift	stack	zvf130_gift.json	0	NA		0	0	PASS	4.56223e-07	1	1	1.0000
+zvf130_grpo	stack	zvf130_grpo.json	0	NA		0	0	PASS	1.79873e-08	1	1	1.0000
+zvf130_mcgrpo	stack	zvf130_mcgrpo.json	0	NA		0	0	PASS	2.59689e-07	1	1	1.0000
+zvf130_ngrpo	stack	zvf130_ngrpo.json	0	NA		0	0	PASS	1.21166e-07	1	1	1.0000
+zvf130_scafgrpo	stack	zvf130_scafgrpo.json	0	NA		0	0	PASS	1.62287e-07	1	1	1.0000
+zvf130_tool_use_llama-8b-inst	stack	zvf130_tool_use_llama-8b-inst.json	0	NA		0	0	PASS	1.72654e-07	1	1	1.0000
+zvf130_tool_use_qwen3-32b	stack	zvf130_tool_use_qwen3-32b.json	0	NA		0	0	PASS	1.72654e-07	1	1	1.0000
+colab-open_dapo_e3	stack	colab-open_dapo_e3.json	0	NA		0	0	NA		0	0	
+colab-open_drgrpo_e3	stack	colab-open_drgrpo_e3.json	0	NA		0	0	NA		0	0	
+colab-open_grpo-adaptiveg_e3	stack	colab-open_grpo-adaptiveg_e3.json	0	NA		0	0	NA		0	0	
+colab-open_grpo_e3	stack	colab-open_grpo_e3.json	0	NA		0	0	NA		0	0	
+openrlhf_grpo_qwen3-8b_gsm8k	stack	openrlhf_grpo_qwen3-8b_gsm8k.json	0	NA		0	0	NA		0	0	
+tinker_aero_qwen3.5-4b_gsm8k	stack	tinker_aero_qwen3.5-4b_gsm8k.json	0	NA		0	0	NA		0	0	
+tinker_areal_qwen3.5-4b_gsm8k	stack	tinker_areal_qwen3.5-4b_gsm8k.json	0	NA		0	0	NA		0	0	
+tinker_dapo_qwen3.5-4b_gsm8k	stack	tinker_dapo_qwen3.5-4b_gsm8k.json	0	NA		0	0	NA		0	0	
+tinker_drgrpo_qwen3.5-4b_gsm8k	stack	tinker_drgrpo_qwen3.5-4b_gsm8k.json	0	NA		0	0	NA		0	0	
+tinker_gift_qwen3.5-4b_gsm8k	stack	tinker_gift_qwen3.5-4b_gsm8k.json	0	NA		0	0	NA		0	0	
+tinker_grpo_qwen3-8b_gsm8k	stack	tinker_grpo_qwen3-8b_gsm8k.json	0	NA		0	0	NA		0	0	
+tinker_grpo_qwen3.5-4b_gsm8k	stack	tinker_grpo_qwen3.5-4b_gsm8k.json	0	NA		0	0	NA		0	0	
+tinker_gspo_qwen3.5-4b_gsm8k	stack	tinker_gspo_qwen3.5-4b_gsm8k.json	0	NA		0	0	NA		0	0	
+trl_grpo_qwen3-8b_gsm8k	stack	trl_grpo_qwen3-8b_gsm8k.json	0	NA		0	0	NA		0	0	
+verl_grpo_qwen3-8b_gsm8k	stack	verl_grpo_qwen3-8b_gsm8k.json	0	NA		0	0	NA		0	0	

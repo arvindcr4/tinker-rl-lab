@@ -1,0 +1,2 @@
+kind	n	n_nonherding	h1_pass	h1_max_abs_delta_div	h1_mean_abs_delta_div	h1_nonherding_max	h1_nonherding_mean	h2_hits	h2_frac	h2_binomial_p	h2_decisive	h2_mean_rho_sparse	h2_mean_rho_dense	h3_var_pass	h3_mean_pass	var_sparse	var_dense	mean_sparse	mean_dense
+bfclv4_G8	10	6	0	0.3436	0.1331	0.3436	0.2219	0	0.0000	1.0000	0	0.0000	0.0000	1	1	0.0120	0.0208	0.1125	0.1862

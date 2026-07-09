@@ -1,0 +1,44 @@
+{
+  "iter": 200,
+  "vein": "P5P8-SYNTH D22 cross-pillar decision rule under cost-optimal operational weighting",
+  "n_cells": 160,
+  "n_methods": 4,
+  "n_deciles": 10,
+  "ref_len": 358.652197265625,
+  "c_norm": 1.0,
+  "raw_aggregate_rho": {
+    "P5-P6": -0.6286681120356263,
+    "P5-P7": 0.9506474862299309,
+    "P5-P8": 0.9188855033399742,
+    "P6-P7": -0.6180592991913747,
+    "P6-P8": -0.6359398804640807,
+    "P7-P8": 0.790671510605883
+  },
+  "weighted_aggregate_rho": {
+    "P5-P6": -0.878559709363647,
+    "P5-P7": 0.9907857728817532,
+    "P5-P8": 0.9796583850931677,
+    "P6-P7": -0.8795060353920074,
+    "P6-P8": -0.8803908355795148,
+    "P7-P8": 0.9533077463963436
+  },
+  "h1_cost_weighting_increases_P5P8_rho": true,
+  "h1_raw_p5p8": 0.9188855033399742,
+  "h1_weighted_p5p8": 0.9796583850931677,
+  "h2_two_cluster_stronger_under_weighting": false,
+  "h2_raw_two_cluster_score": 2,
+  "h2_weighted_two_cluster_score": 2,
+  "h3_weighting_reduces_per_decile_rho_variance": true,
+  "h3_raw_variance": 0.3412666666666668,
+  "h3_weighted_variance": 0.17853333333333335,
+  "h4_low_decile_high_variance_under_weighting": false,
+  "h4_low_var_w": 0.6333333333333333,
+  "h4_high_var_w": 0.7,
+  "h5_best_method_more_stable_under_weighting": false,
+  "h5_n_changes_raw": 23,
+  "h5_n_changes_weighted": 24,
+  "verdict_counts": {
+    "PASS": 2,
+    "FAIL": 3
+  }
+}

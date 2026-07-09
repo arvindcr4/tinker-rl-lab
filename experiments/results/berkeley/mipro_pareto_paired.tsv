@@ -1,0 +1,16 @@
+seed	metric	mipro	random	delta
+0	best_so_far	0.9481	0.9322	+0.0160
+0	cum_regret	12.7777	3.3963	+9.3814
+0	postvar	0.0008	0.0610	-0.0602
+1	best_so_far	0.9481	0.9322	+0.0160
+1	cum_regret	12.7777	3.9502	+8.8275
+1	postvar	0.0008	0.0582	-0.0573
+2	best_so_far	0.9481	0.9256	+0.0225
+2	cum_regret	12.7777	2.6937	+10.0840
+2	postvar	0.0008	0.0458	-0.0450
+3	best_so_far	0.9481	0.9256	+0.0225
+3	cum_regret	12.7777	3.9115	+8.8662
+3	postvar	0.0008	0.0726	-0.0718
+4	best_so_far	0.9481	0.9256	+0.0225
+4	cum_regret	12.7777	3.8313	+8.9464
+4	postvar	0.0008	0.0664	-0.0656

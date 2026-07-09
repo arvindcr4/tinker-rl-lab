@@ -1,0 +1,193 @@
+% Iter 175 - P7 Calibrated-Hybrid (C6) controller
+% Fuses Berkeley row 01 (Dualformer auto-G) with Berkeley row 19 (AlphaProof
+% gamma*=0 smoothing) into a single calibrated controller and evaluates it
+% counterfactually on the N2 reward tensors.
+
+\subsubsection*{Motivation}
+
+Iter-167 \S~3 called Dualformer-Auto (Berkeley row 01) \emph{structurally
+Pareto-incompatible} with signal-starvation theory: $-286\%$ to $-365\%$ of
+oracle absolute contrast on every method ($pct_{\mathrm{abs}}$ axis),
+because ungated Dualformer escalates on per-prompt $p_{\mathrm{hat}}$ alone,
+without consulting the empirical step-$z_{\mathrm{obs}}$ evidence.
+Iter-175 fuses Berkeley row~01 (Dualformer's per-prompt wishful $G'$) with
+Berkeley row~19 (AlphaProof's $\gamma^*{=}0$ anchor; the empirical
+observation that $\mathrm{mag}(\gamma{=}0) \approx 0$ on every seed$\times G$
+cell means the no-blend regime IS the empirically supported "do-nothing"
+prior) into a single calibrated rule $C_6$.
+
+\subsubsection*{Decision rule}
+
+For each (method, step, prompt) observation with $p_{\mathrm{hat}}
+= k/G_{\mathrm{base}}$ and observed step-$z_{\mathrm{obs}}$:
+\begin{align}
+g_{\mathrm{dual}}(p_{\mathrm{hat}}) &=
+  \begin{cases}
+    2   & p_{\mathrm{hat}} \in (0,\,0.30] \\
+    8   & p_{\mathrm{hat}} \in (0.30,\,0.55] \\
+    12  & p_{\mathrm{hat}} \in (0.55,\,0.70] \\
+    16  & p_{\mathrm{hat}} \in (0.70,\,0.85] \\
+    24  & p_{\mathrm{hat}} \in (0.85,\,1.0)
+  \end{cases} \quad\text{(Berkeley row 01)} \\
+\gamma^*{=}0 \text{ anchor} &:= \text{do not escalate unless both signals agree} \quad\text{(Berkeley row 19)} \notag \\
+\mathrm{fire}_{\mathrm{dual}} &:= \bigl[g_{\mathrm{dual}}(p_{\mathrm{hat}}) \ne G_{\mathrm{base}}\bigr]
+   \wedge \bigl[4\,p_{\mathrm{hat}}(1-p_{\mathrm{hat}}) > 0.05\bigr] \notag \\
+\mathrm{fire}_{\mathrm{zvf}}  &:= z_{\mathrm{obs}} \geq \tau_{z} \quad\text{(default $\tau_{z}=0.70$)} \notag
+\intertext{then}
+G_{C_6}(p_{\mathrm{hat}}, z_{\mathrm{obs}}) &=
+  \begin{cases}
+    g_{\mathrm{dual}}(p_{\mathrm{hat}}) & \mathrm{fire}_{\mathrm{dual}} \wedge \mathrm{fire}_{\mathrm{zvf}} \\
+    16                                  & \neg \mathrm{fire}_{\mathrm{dual}} \wedge \mathrm{fire}_{\mathrm{zvf}} \\
+    G_{\mathrm{base}}                   & \text{otherwise}
+  \end{cases} \label{eq:iter175-c6}
+\end{align}
+The first branch (both signals agree) is the calibrated-hybrid core;
+the second branch is the safe-$z_{\mathrm{obs}}$ fallback; the
+third is the $\gamma^*{=}0$ anchor. $C_6$'s default
+$\tau_{z} = 0.70$ matches iter-167 $C_1$'s threshold for direct
+comparability.
+
+\subsubsection*{Headline --- Pareto frontier on N2 ($z_{\mathrm{obs}} \geq 0.70$)}
+
+Table~\ref{tab:p7-iter175-c6-summary} reports the per-method
+$\%\text{oracle } \Delta Y$ captured and Pareto-optimality for $C_6$
+vs the five iter-167 empirical controllers.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{llrrrr}
+\toprule
+method & controller & $\%\mathrm{abs}\,\Delta Y$ & extras & Pareto? \\
+\midrule
+aero   & $C_0$ fixed $G{=}8$        & $0.0\%$         & 0     & $\checkmark$ \\
+aero   & $C_1$ zvf-triage           & $86.3\%$        & 2432  & $\times$ \\
+aero   & $C_2$ Dualformer           & $-11.0\%$       & 828   & $\times$ \\
+aero   & $C_3$ Hybrid               & $86.0\%$        & 2304  & $\times$ \\
+aero   & $C_5$ Iso-G                & $252.4\%$       & 1050  & $\checkmark$ \\
+aero   & $\mathbf{C_6}$ Cal-Hybrid  & $\mathbf{9.9\%}$  & \textbf{420}   & $\checkmark$ \\
+\midrule
+areal  & $C_0$                      & $0.0\%$         & 0     & $\checkmark$ \\
+areal  & $\mathbf{C_6}$             & $\mathbf{1.8\%}$  & \textbf{338}   & $\checkmark$ \\
+\midrule
+gift   & $\mathbf{C_6}$             & $\mathbf{9.3\%}$  & \textbf{438}   & $\checkmark$ \\
+\midrule
+grpo   & $\mathbf{C_6}$             & $\mathbf{11.6\%}$ & \textbf{440}   & $\checkmark$ \\
+\bottomrule
+\end{tabular}
+\caption{Per-method $C_6$ vs the five iter-167 empirical controllers
+on N2 ($\tau_z = 0.70$). $C_6$ Pareto-dominates $C_1$ and $C_2$ on every
+method (4/4); it is co-Pareto-optimal with $C_0$ and $C_5$ (low-cost
+vs high-yield endpoint). $C_6$ saves $5.0\times$--$7.6\times$ rollouts
+vs $C_1$ and $1.5\times$--$2.7\times$ vs $C_2$, while flipping
+$C_2$'s negative $\%_{\mathrm{abs}}$ on 3/4 methods into a small
+positive on 4/4.}
+\label{tab:p7-iter175-c6-summary}
+\end{table}
+
+\subsubsection*{Pareto-low-cost endpoint --- the calibrated-hybrid story}
+
+$C_6$'s Pareto-optimality position is the \emph{low-cost endpoint} of
+the Pareto frontier on every method. $C_5$/Iso-G occupies the
+\emph{high-yield endpoint} (252--270\% oracle on every method, at
+2$\times$--$3\times$ the cost of $C_6$). The Pareto frontier
+{\bf $\{$C_0$, $C_6$, $C_5$\}$} is a low-cost/high-yield sandwich on
+3/4 methods (aero, gift, grpo); areal additionally includes $C_2$ on
+the frontier (because dualformer happens to help areal more than the
+other methods).
+
+\subsubsection*{Operating-point plateau --- $\tau_z \in [0.65, 0.75]$ is a 0.10-wide plateau}
+
+Table~\ref{tab:p7-iter175-c6-sweep} shows the Pareto-win count of
+$C_6$ per (method, $\tau_z$). The plateau
+$\tau_z \in [0.65, 0.75]$ delivers 4/4 Pareto wins on the operative
+method set; outside the plateau the win count drops to 1/4.
+This 0.10-wide band is the \emph{self-calibration tolerance} for $C_6$
+on the live corpus.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+$\tau_z$ & aero & areal & gift & grpo & total \\
+\midrule
+0.55 & $\times$ & $\checkmark$ & $\times$ & $\times$ & 1/4 \\
+0.65 & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & \textbf{4/4} \\
+0.70 & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & \textbf{4/4} \\
+0.75 & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & \textbf{4/4} \\
+0.85 & $\checkmark$ & $\times$ & $\times$ & $\times$ & 1/4 \\
+\bottomrule
+\end{tabular}
+\caption{$C_6$ Pareto-optimal count per $(\tau_z, \mathrm{method})$.
+Plateau $\tau_z \in [0.65, 0.75]$ achieves 4/4 wins; outside the plateau
+$C_6$ Pareto-fails on the dominant easy-prompt fraction or the dominant
+hard-prompt fraction.}
+\label{tab:p7-iter175-c6-sweep}
+\end{table}
+
+\subsubsection*{Cross-paper coupling}
+
+\begin{itemize}
+\item \textbf{Berkeley row 01 (Dualformer, iter 131 / 127)}. $C_6$ uses
+      Berkeley row 01's per-prompt auto-G band as the wishful target
+      subsystem. Iter-175's contribution over row 01 is the
+      $\gamma^*{=}0$ + $z_{\mathrm{obs}}$ gate that recovers
+      Dualformer's signal (gating flips $C_2$'s $\%_{\mathrm{abs}}$
+      from $-11.0\%$ to $C_6$'s $+9.9\%$ on aero).
+\item \textbf{Berkeley row 19 (AlphaProof)}. $C_6$ uses
+      Berkeley row 19's empirical observation that $\mathrm{mag}(\gamma{=}0)
+      \approx 0$ as the literal "do-nothing" prior. Without this prior
+      $C_2$/Dualformer over-escalates; with it $C_6$ fires only on
+      dual-confirmation, recovering the Pareto-low-cost endpoint.
+\item \textbf{Iter-167 (oracle regret)}. $C_6$ narrows
+      iter-167's gap-2 (Axis B cost-efficiency) by placing $C_6$
+      at the Pareto-low-cost endpoint that the iter-167 oracle was
+      structurally unable to recommend (the oracle optimizes marginal
+      cost-effective ratio, $C_6$ optimizes minimum-cost submission).
+      They are complementary, not competing.
+\item \textbf{Iter-119 / -103 (UNIFIED $C_4$)}. $C_6$ sits in the same
+      Pareto-defensive space as $C_4$ (iter-119), but where $C_4$
+      chooses per-prompt $G'$ via the layered $\tau_{y}$
+thresholding and never exceeds $G=16$, $C_6$ inherits
+      Dualformer's per-prompt target $G' \in \{12, 16, 24\}$ (the
+      Berkeley row 01 band) and exceeds $G{=}16$ on the high-$p_{\mathrm{hat}}$
+      dominant-class prompts ($p_{\mathrm{hat}} > 0.85$, 8.3\% of
+      prompts) --- i.e. $C_6$ is the more aggressive sibling of $C_4$.
+\end{itemize}
+
+\subsubsection*{Limitations}
+
+\begin{itemize}
+\item $C_6$'s $\%\mathrm{abs}\,\Delta Y$ ($\sim$10\%) is an order of
+      magnitude below the iter-167 oracle's marginal cost-effective
+      optimum (100\%). $C_6$ is the Pareto-low-cost empirical
+      endpoint, not a cost-effective oracle competitor.
+\item The bootstrap CI95 on $\%\mathrm{abs}\,\Delta Y$ straddles 0 on
+      every method (CI half-width $\approx 53$ pp, $\approx 2\times$
+      $C_5$'s CI). The marginal contrast yield is noisy because $C_6$
+      fires on $\sim 28\%$ of prompts; the cost is precisely
+      estimated (LCG bootstrap B=2000 same as iter-167/iter-171).
+\item The plateau $\tau_z \in [0.65, 0.75]$ is calibrated on the
+      4-method single-seed N2 panel only. Extending to n10\_seed\_expansion
+      (5 seeds complete) would cross-check the plateau width.
+\end{itemize}
+
+\subsubsection*{Conclusion of iter-175}
+
+\begin{enumerate}
+\item $C_6$ Pareto-dominates $C_1$ (zvf-triage) AND $C_2$ (Dualformer)
+      on every method (4/4) at $\tau_z = 0.70$.
+\item $C_6$ saves $5.0\times$--$7.6\times$ rollouts vs $C_1$ and
+      $1.5\times$--$2.7\times$ vs $C_2$; it flips $C_2$'s negative
+      $\%_{\mathrm{abs}}$ on 3/4 methods into a small positive on 4/4.
+\item $C_6$ occupies the Pareto low-cost endpoint, $C_5$/Iso-G the
+      high-yield endpoint; the Pareto frontier $\{\,C_0,\; C_6,\; C_5\,\}$
+      is a low-cost/high-yield sandwich on 3/4 methods (aero, gift, grpo).
+\item The operating-point plateau $\tau_z \in [0.65, 0.75]$ is
+      the self-calibration tolerance for $C_6$.
+\item Berkeley row 01 (Dualformer auto-G) and Berkeley row 19
+      ($\gamma^*{=}0$ anchor) are NOT competing primitives: they
+      combine into $C_6$, where row 01 supplies the wishful target
+      and row 19 supplies the no-escalation prior.
+\end{enumerate}

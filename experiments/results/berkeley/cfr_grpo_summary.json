@@ -1,0 +1,57 @@
+{
+  "ts": "2026-07-04T10:53:30.408262+00:00",
+  "iter": 19,
+  "lecture": "F25 L7 Noam Brown (multi-agent AI / Libratus / Pluribus / ReBeL)",
+  "citations": {
+    "arXiv:2010.02923": "Gray, Lerer, Bakhtin, Brown \u2014 Human-Level No-Press Diplomacy (2020, ICLR 2021)",
+    "arXiv:2007.13544": "Brown, Bakhtin, Lerer, Gong \u2014 ReBeL (2020)",
+    "Pluribus Science 2019": "Brown & Sandholm \u2014 Superhuman AI for multiplayer poker (no arXiv)",
+    "Libratus Science 2017": "Brown & Sandholm \u2014 Superhuman AI for heads-up poker (no arXiv)"
+  },
+  "all_verified_via": "export.arxiv.org/api/query + arxiv.org/abs/<id>",
+  "hypotheses": {
+    "H1_GRPO_eq_CFR_ES": {
+      "rows": 25,
+      "decisive": 25,
+      "verdict": "DECISIVE",
+      "max_abs_diff": 0.001
+    },
+    "H2_bounded_cone_Pluribus": {
+      "non_positive": 4,
+      "total": 4,
+      "verdict": "DECISIVE"
+    },
+    "H3_belief_state_compression": {
+      "slope_log_delta_vs_log_T": "0.0963",
+      "sublinear": true,
+      "verdict": "DECISIVE"
+    },
+    "H4_equilibrium_ZVF_decay": {
+      "monotonic": true,
+      "rows": 4,
+      "verdict": "DECISIVE"
+    },
+    "H5_CDH_bridge_ReBeL": {
+      "max_residual_at_smallest_G": true,
+      "rows": 5,
+      "verdict": "DECISIVE"
+    }
+  },
+  "verdict_counts": {
+    "DECISIVE": 5,
+    "TOTAL": 5
+  },
+  "outputs": {
+    "h1": "experiments/results/berkeley/cfr_grpo_analytical_equivalence.tsv",
+    "h2": "experiments/results/berkeley/cfr_grpo_bounded_cone.tsv",
+    "h3": "experiments/results/berkeley/cfr_grpo_belief_state_compression.tsv",
+    "h4": "experiments/results/berkeley/cfr_grpo_zvf_decay.tsv",
+    "h5": "experiments/results/berkeley/cfr_grpo_cdh_bridge.tsv"
+  },
+  "data_inputs": [
+    "experiments/results/group_size_iter127_joint_fit.tsv",
+    "experiments/results/group_size_iter127_bounded_cone.tsv",
+    "experiments/results/group_size_iter107_returns_to_compute.tsv",
+    "experiments/results/group_size_effect.tsv"
+  ]
+}

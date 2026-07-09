@@ -1,0 +1,5 @@
+pool	n_anchors	n_loocv_agree	frac_agree
+n=5 (iter125/129)	5	5	1.0000
+n=7 (reliable n>=20)	7	7	1.0000
+n=10 (reliable+probes)	11	11	1.0000
+n=12 (all anchors)	12	12	1.0000

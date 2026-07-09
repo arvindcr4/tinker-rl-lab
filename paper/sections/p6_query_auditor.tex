@@ -1,0 +1,84 @@
+% Paper 6 (GRPO-Registry) query API + auditor badge section
+\section{Query API, Auditor Badge, and \texttt{stackdiff}}
+\label{sec:p6-query}
+
+The reference CLI (\texttt{registry/query.py}, standard library only) is a
+specification by example: any conforming implementation must reproduce its
+outputs on the shipped entries.
+
+\subsection{Query API}
+\label{sec:p6-query-api}
+The query surface is deliberately small---four verbs over the entry
+directory:
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single,
+  caption={The reference CLI surface.}, label={lst:p6-cli}]
+python3 registry/query.py list
+python3 registry/query.py query --item reference_kl [--full]
+python3 registry/query.py badge [entry_id]
+python3 registry/query.py stackdiff <entry_a> <entry_b>
+\end{lstlisting}
+
+\texttt{query --item} classifies every stack as \texttt{FULL},
+\texttt{PARTIAL}, or \texttt{UNREPORTED} on one MIN-REPORT item, where the
+classification counts non-null leaves; the null-vs-explicit-absence convention
+of Section~\ref{sec:p6-schema} does the real work here. \texttt{list} and the
+JSON records themselves are the escape hatch: the format is plain JSON, so
+\texttt{jq}, pandas, or a five-line script can express any richer query.
+
+\subsection{The MIN-REPORT Auditor Badge}
+\label{sec:p6-badge}
+The badge maps a stack record to $[0,100]$:
+\begin{equation}
+  \mathrm{badge}(s) \;=\;
+  \Big\lfloor 100 \cdot \tfrac{1}{7}\textstyle\sum_{i=1}^{7}
+  c_i(s) \Big\rceil,
+  \qquad
+  c_i(s) = \frac{\#\{\text{non-null leaves of item } i\}}
+                {\#\{\text{leaves of item } i\}},
+  \label{eq:p6-badge}
+\end{equation}
+i.e.\ the mean per-item reporting coverage. Two design decisions matter.
+First, items are weighted equally: a stack cannot buy a high badge by
+over-documenting its sampler while staying silent on its loss form. Second,
+the badge is \emph{outcome-blind}: the \texttt{outcomes} block is excluded, so
+a collapsed run and a converged run with equal reporting earn equal badges.
+The badge answers ``can this stack be audited?''---never ``is this stack
+good?''. On the seed entries the badge spans 43 (the zvf-iter130
+risk-panel entries, which omit loss-form, KL, and group-size-schedule
+disclosure) to 96 (open trainer with explicit negative declarations),
+with the managed-runtime head-to-head at 57 and the open-framework
+config dumps at 60--74 in between (Table~\ref{tab:p6-entries}).
+
+\subsection{\texttt{stackdiff} and the R0--R5 Flip-Risk Ladder}
+\label{sec:p6-stackdiff}
+\texttt{stackdiff} compares two stack records and reports every differing
+leaf, each tagged with a rung on a flip-risk ladder; the verdict is the
+highest rung triggered:
+
+\begin{itemize}[leftmargin=1.5em, itemsep=0.1em]
+  \item \textbf{R0} --- identical manifests.
+  \item \textbf{R1} --- nuisance-only differences (metadata, logging).
+  \item \textbf{R2} --- runtime differences: backend, precision, reference
+        placement. Not benign---our backend-swap audit sits here---but
+        auditable.
+  \item \textbf{R3} --- loss-form or KL-handling differences: the update rule
+        itself differs.
+  \item \textbf{R4} --- the variant-delta sets differ: a technique credited to
+        the shared label is \texttt{absent} or merely \texttt{surrogate} on
+        one side. Any cross-stack comparison under the shared label is now at
+        risk of a label flip.
+  \item \textbf{R5} --- unauditable: a differing item is null (unreported) on
+        at least one side, so the flip risk cannot even be bounded.
+\end{itemize}
+
+The ladder is intentionally a \emph{risk} scale, not an effect-size scale: R2
+differences produced our largest observed swing ($17\times$), but they are
+diagnosable from the manifests; R5 says the manifests themselves are
+insufficient. When the verdict reaches R4 or above, the CLI prints an explicit
+warning that outcome differences must not be attributed to the shared
+algorithm label. A companion spec-level tool family (a trainer plugin that
+auto-emits the seven-item manifest during training, and a LeverTrace check
+that asks whether a cited paper actually reports the lever it is credited for)
+shares this ladder; only \texttt{stackdiff} and the badge are implemented in
+the shipped CLI, and we scope claims accordingly.

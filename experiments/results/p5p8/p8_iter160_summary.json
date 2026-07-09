@@ -1,0 +1,37 @@
+{
+  "iter": 160,
+  "pillar": "P8",
+  "cells_total": 2000,
+  "h1_f1_monotone_in_fset": {
+    "pass": false,
+    "n_pass": 5,
+    "n_total": 25,
+    "fraction": 0.2,
+    "bar": 0.8,
+    "verdict": "FAIL"
+  },
+  "h2_value_util_positive": {
+    "pass": true,
+    "n_pass": 100,
+    "n_total": 100,
+    "fraction": 1.0,
+    "bar": 0.5,
+    "verdict": "PASS"
+  },
+  "h3_value_lt_f1": {
+    "pass": false,
+    "n_pass": 0,
+    "n_total": 15,
+    "fraction": 0.0,
+    "bar": 0.6,
+    "verdict": "FAIL"
+  },
+  "h4_5seed_cv_value": {
+    "pass": true,
+    "n_pass": 20,
+    "n_total": 20,
+    "fraction": 1.0,
+    "bar": 0.6,
+    "verdict": "PASS"
+  }
+}

@@ -1,0 +1,11 @@
+# zvf_iter94_stability.tsv — cross-library ZVF stability score. alarm_rate_proxy = 1 - n_never_alarmed/n_traces (iter90). recovery_rate = recovered/total_episodes at K=5. post_recovery_delta = mean(post-recovery ha) - mean(post-sustained ha). stability_score = (1-alarm_rate)*60 + recovery_rate*30 + max(0, 1-|delta_h|)*10.
+method	alarm_rate_proxy	recovery_rate_K5	post_recovery_delta	stability_score
+aero	1.0	0.1667	-0.0166	14.83
+areal	1.0	0.6	-0.0	28.0
+cppo	1.0	0.2857	-0.029	18.28
+es	0.0	0.0	0.0	70.0
+gift	1.0	0.6364	-0.004	29.05
+grpo	1.0	0.0	0.0	10.0
+mcgrpo	1.0	0.375	-0.0073	21.18
+ngrpo	1.0	0.2857	-0.033	18.24
+scafgrpo	0.0	0.0	0.0	70.0

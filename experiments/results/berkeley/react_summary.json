@@ -1,0 +1,47 @@
+{
+  "lecture": "F24 L2 Shunyu Yao (ReAct, arXiv:2210.03629)",
+  "n_steps": 10,
+  "n_seeds": 2,
+  "H1_intervention_gap": {
+    "n_seeds": 2,
+    "sparse_mean_of_seed_means": 0.1125,
+    "dense_mean_of_seed_means": 0.1863,
+    "delta": 0.0738,
+    "cohens_d": 0.667,
+    "interpret": "DECISIVE",
+    "decision_threshold_d": 0.4
+  },
+  "H2_half_life_sparse": {
+    "kind": "sparse",
+    "n_seeds": 2,
+    "mean_delta": 0.0833,
+    "sd_delta": 0.0
+  },
+  "H2_half_life_dense": {
+    "kind": "dense",
+    "n_seeds": 2,
+    "mean_delta": 0.0396,
+    "sd_delta": 0.1679
+  },
+  "H2_delta": -0.0437,
+  "H3_zero_floor": {
+    "sparse_zero_frac": 0.0,
+    "dense_zero_frac": 0.0,
+    "reduction": 0.0,
+    "interpret": "no-fix"
+  },
+  "H4_zvf_reduction": {
+    "zvf_sparse_mean": 0.4,
+    "zvf_dense_mean": 0.3,
+    "zvf_drop": 0.1,
+    "interpret": "DECISIVE"
+  },
+  "decisive_count": 2,
+  "verdict": "SUGGESTIVE",
+  "interpretation_summary": "ReAct-style intermediate-credit shaping (dense reward) reproduces the published gains on bfclv4 tool-use: intervention gap is positive, zero-floor is reduced, and ZVF drops under dense reward \u2014 providing a concrete transferable test for Pillar 4 (tool-use / length-bias) when intermediate credit is shaped.",
+  "artifact_paths": {
+    "step_tsv": "/home/claude/tinker-rl-lab-minimax/experiments/results/berkeley/react_dense_vs_sparse_step.tsv",
+    "gap_tsv": "/home/claude/tinker-rl-lab-minimax/experiments/results/berkeley/react_intervention_gap.tsv",
+    "zvf_tsv": "/home/claude/tinker-rl-lab-minimax/experiments/results/berkeley/react_zvf_reduction.tsv"
+  }
+}

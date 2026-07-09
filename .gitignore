@@ -98,3 +98,16 @@ repomix-output.xml
 wandb/
 .modal/
 node_modules/
+
+# MiniMax secrets (never commit)
+.env.minimax
+minimax_autoresearch/state/
+minimax_autoresearch/logs/
+.claude/settings.local.json
+.env.tinker
+.env.wandb
+minimax_autoresearch/.venv/
+minimax_autoresearch/state_berkeley*/
+minimax_autoresearch/state_p5p8/*
+!minimax_autoresearch/state_p5p8/task_spec_p5p8.md
+!minimax_autoresearch/state_p5p8/pillars_p5p8.json

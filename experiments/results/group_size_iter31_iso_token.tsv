@@ -1,0 +1,5 @@
+T_tokens	G_a	G_b	acc_G_a	acc_G_b	diff	diff_ci_low	diff_ci_high	retention	retention_ci_low	retention_ci_high	tost_p_eps0.02	tost_equivalent	wu_97_6_in_CI	above_wu_97_6pct
+1000000	4	32	0.41	0.42	-0.01	-0.07	0.05	0.9762	0.8444	1.1282	0.37196	False	True	True
+4000000	4	32	0.55	0.66	-0.11	-0.17	-0.05	0.8333	0.7536	0.9206	0.998359	False	False	False
+16000000	4	32	0.63	0.84	-0.21	-0.27	-0.15	0.75	0.6897	0.8148	1.0	False	False	False
+64000000	4	32	0.64	0.88	-0.24	-0.3	-0.18	0.7273	0.6703	0.7882	1.0	False	False	False

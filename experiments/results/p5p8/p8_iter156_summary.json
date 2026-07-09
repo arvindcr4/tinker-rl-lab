@@ -1,0 +1,61 @@
+{
+  "iter": 156,
+  "n_seeds": 5,
+  "n_total_cells": 500,
+  "value_per_catch_dollars": 50.0,
+  "tau_vmean_threshold": 0.0,
+  "h1_pass": false,
+  "h1_n_prec_pass": 0,
+  "h1_n_total": 500,
+  "h1_prec_pass_rate": 0.0,
+  "h2_pass": true,
+  "h2_pass_rate": 1.0,
+  "h2_ratio_frontier_over_cheap_mean": 300.0,
+  "h2b_cheap_breakeven_pass": true,
+  "h2b_cheap_breakeven_rate": 1.0,
+  "h3_pass": false,
+  "h3_cv_pass_rate": 0.5,
+  "h4_low_rate_20raw_stat_pass": true,
+  "h4_release_24full_pass": false,
+  "h4_low_rate_bset_count": 10,
+  "h4_low_rate_total": 10,
+  "h4_release_bset_count": 0,
+  "h4_release_total": 5,
+  "seed_summary": [
+    {
+      "seed": 20260706,
+      "n_cells": 20,
+      "mean_value_rate": 0.48359971349470615,
+      "mean_n_lift": 21.45,
+      "max_n_lift": 53
+    },
+    {
+      "seed": 20260708,
+      "n_cells": 20,
+      "mean_value_rate": 0.4162998931175612,
+      "mean_n_lift": 20.9,
+      "max_n_lift": 54
+    },
+    {
+      "seed": 20260710,
+      "n_cells": 20,
+      "mean_value_rate": 0.5582031024524173,
+      "mean_n_lift": 22.35,
+      "max_n_lift": 54
+    },
+    {
+      "seed": 20260712,
+      "n_cells": 20,
+      "mean_value_rate": 0.6892697188780202,
+      "mean_n_lift": 23.45,
+      "max_n_lift": 53
+    },
+    {
+      "seed": 20260714,
+      "n_cells": 20,
+      "mean_value_rate": 0.5393687972205771,
+      "mean_n_lift": 21.05,
+      "max_n_lift": 50
+    }
+  ]
+}

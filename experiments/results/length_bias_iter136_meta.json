@@ -1,0 +1,204 @@
+{
+  "iter": 136,
+  "pillar": "P4-LengthBias",
+  "angle": "Step-level trajectory coupling between \u0394reward and \u0394length",
+  "tasks": [
+    "arithmetic_easy",
+    "gsm8k_cot"
+  ],
+  "algos": [
+    "grpo",
+    "dr_grpo"
+  ],
+  "n_seeds": {
+    "arithmetic_easy": 5,
+    "gsm8k_cot": 3
+  },
+  "B_perm": 50000,
+  "seed_base": 20260704,
+  "n_step_log_arith": 40,
+  "n_step_log_gsm8k": 30,
+  "hypotheses": [
+    "H1_abs_rho_dR_dL_DR_smaller",
+    "H2_abs_rho_len_lag1_DR_smaller",
+    "H3_late_eff_DR_larger",
+    "H4_rho_dZ_dL_DR_lessneg"
+  ],
+  "n_per_run_rows": 16,
+  "n_paired_rows": 8,
+  "headline": "Iter136 STEP-LEVEL TRAJECTORY COUPLING: 8/8 paired tests in predicted direction; global sign-test p=0.0039; H1_abs_rho_dR_dL_DR_smaller=DIRECTIONAL; H2_abs_rho_len_lag1_DR_smaller=DIRECTIONAL; H3_late_eff_DR_larger=DIRECTIONAL; H4_rho_dZ_dL_DR_lessneg=DIRECTIONAL",
+  "summary_table": [
+    {
+      "hypothesis": "H1_abs_rho_dR_dL_DR_smaller",
+      "tasks_favoured": "",
+      "tasks_marginal": "",
+      "n_favours": 0,
+      "n_dir_pos": 0,
+      "binom_p_two_sided_strict": "1.0000",
+      "binom_p_one_sided_signtest": "0.2500",
+      "headline": "DIRECTIONAL"
+    },
+    {
+      "hypothesis": "H2_abs_rho_len_lag1_DR_smaller",
+      "tasks_favoured": "",
+      "tasks_marginal": "",
+      "n_favours": 0,
+      "n_dir_pos": 0,
+      "binom_p_two_sided_strict": "1.0000",
+      "binom_p_one_sided_signtest": "0.2500",
+      "headline": "DIRECTIONAL"
+    },
+    {
+      "hypothesis": "H3_late_eff_DR_larger",
+      "tasks_favoured": "arithmetic_easy",
+      "tasks_marginal": "",
+      "n_favours": 1,
+      "n_dir_pos": 2,
+      "binom_p_two_sided_strict": "0.5000",
+      "binom_p_one_sided_signtest": "0.2500",
+      "headline": "DIRECTIONAL"
+    },
+    {
+      "hypothesis": "H4_rho_dZ_dL_DR_lessneg",
+      "tasks_favoured": "",
+      "tasks_marginal": "",
+      "n_favours": 0,
+      "n_dir_pos": 2,
+      "binom_p_two_sided_strict": "1.0000",
+      "binom_p_one_sided_signtest": "0.2500",
+      "headline": "DIRECTIONAL"
+    },
+    {
+      "hypothesis": "GLOBAL_sign_test_over_all_8_paired",
+      "tasks_favoured": "",
+      "tasks_marginal": "",
+      "n_favours": 1,
+      "n_dir_pos": 8,
+      "binom_p_two_sided_strict": "0.0039",
+      "binom_p_one_sided_signtest": "0.0039",
+      "headline": "GLOBAL_REJECT"
+    }
+  ],
+  "paired_table": [
+    {
+      "task": "arithmetic_easy",
+      "hypothesis": "H1_abs_rho_dR_dL_DR_smaller",
+      "pre_reg": "GR>DR: GR tightly coupled velocity, DR decoupled",
+      "direction": "DR_smaller",
+      "n_pairs": 5,
+      "mean_gr": "0.1978",
+      "mean_dr": "0.1687",
+      "mean_delta_dr_minus_gr": "-0.0291",
+      "W": 7,
+      "p_param_one_sided": "0.5000",
+      "p_perm_two_sided": "0.8137",
+      "cohens_d_paired": "-0.159",
+      "verdict": "null"
+    },
+    {
+      "task": "arithmetic_easy",
+      "hypothesis": "H2_abs_rho_len_lag1_DR_smaller",
+      "pre_reg": "GR>DR: GR trending length, DR no-trend",
+      "direction": "DR_smaller",
+      "n_pairs": 5,
+      "mean_gr": "0.3880",
+      "mean_dr": "0.3294",
+      "mean_delta_dr_minus_gr": "-0.0586",
+      "W": 6,
+      "p_param_one_sided": "0.4062",
+      "p_perm_two_sided": "0.5004",
+      "cohens_d_paired": "-0.374",
+      "verdict": "null"
+    },
+    {
+      "task": "arithmetic_easy",
+      "hypothesis": "H3_late_eff_DR_larger",
+      "pre_reg": "DR>GR: DR more reward-gain per unit length change",
+      "direction": "DR_larger",
+      "n_pairs": 5,
+      "mean_gr": "0.1695",
+      "mean_dr": "0.1899",
+      "mean_delta_dr_minus_gr": "0.0204",
+      "W": 15,
+      "p_param_one_sided": "0.0312",
+      "p_perm_two_sided": "0.0633",
+      "cohens_d_paired": "2.675",
+      "verdict": "FAVOURS"
+    },
+    {
+      "task": "arithmetic_easy",
+      "hypothesis": "H4_rho_dZ_dL_DR_lessneg",
+      "pre_reg": "GR<0<DR: GR negative ZVF-length coupling, DR decoupled toward zero",
+      "direction": "DR_lessneg",
+      "n_pairs": 5,
+      "mean_gr": "0.0058",
+      "mean_dr": "0.0753",
+      "mean_delta_dr_minus_gr": "0.0695",
+      "W": 9,
+      "p_param_one_sided": "0.4062",
+      "p_perm_two_sided": "0.6258",
+      "cohens_d_paired": "0.262",
+      "verdict": "null"
+    },
+    {
+      "task": "gsm8k_cot",
+      "hypothesis": "H1_abs_rho_dR_dL_DR_smaller",
+      "pre_reg": "GR>DR: GR tightly coupled velocity, DR decoupled",
+      "direction": "DR_smaller",
+      "n_pairs": 3,
+      "mean_gr": "0.6758",
+      "mean_dr": "0.6728",
+      "mean_delta_dr_minus_gr": "-0.0030",
+      "W": 3,
+      "p_param_one_sided": "0.6250",
+      "p_perm_two_sided": "1.0000",
+      "cohens_d_paired": "-0.018",
+      "verdict": "null"
+    },
+    {
+      "task": "gsm8k_cot",
+      "hypothesis": "H2_abs_rho_len_lag1_DR_smaller",
+      "pre_reg": "GR>DR: GR trending length, DR no-trend",
+      "direction": "DR_smaller",
+      "n_pairs": 3,
+      "mean_gr": "0.3678",
+      "mean_dr": "0.2475",
+      "mean_delta_dr_minus_gr": "-0.1204",
+      "W": 1,
+      "p_param_one_sided": "0.2500",
+      "p_perm_two_sided": "0.4990",
+      "cohens_d_paired": "-0.363",
+      "verdict": "null"
+    },
+    {
+      "task": "gsm8k_cot",
+      "hypothesis": "H3_late_eff_DR_larger",
+      "pre_reg": "DR>GR: DR more reward-gain per unit length change",
+      "direction": "DR_larger",
+      "n_pairs": 3,
+      "mean_gr": "0.0026",
+      "mean_dr": "0.0046",
+      "mean_delta_dr_minus_gr": "0.0020",
+      "W": 6,
+      "p_param_one_sided": "0.1250",
+      "p_perm_two_sided": "0.2527",
+      "cohens_d_paired": "1.593",
+      "verdict": "null"
+    },
+    {
+      "task": "gsm8k_cot",
+      "hypothesis": "H4_rho_dZ_dL_DR_lessneg",
+      "pre_reg": "GR<0<DR: GR negative ZVF-length coupling, DR decoupled toward zero",
+      "direction": "DR_lessneg",
+      "n_pairs": 3,
+      "mean_gr": "0.1723",
+      "mean_dr": "0.2377",
+      "mean_delta_dr_minus_gr": "0.0654",
+      "W": 6,
+      "p_param_one_sided": "0.1250",
+      "p_perm_two_sided": "0.2519",
+      "cohens_d_paired": "1.131",
+      "verdict": "null"
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+% Section: P6 iter-122 -- validate-strict CI gate + schema bump + cross-entry consistency
+% Closes brief vein (c) at the OPERATIONAL layer (CI integration) and vein (b)
+% at the CROSS-ENTRY layer (status agreement across stacks claiming the same
+% delta_id+component). Also bumps schema.json to accept iter-118's
+% audit_source / audit_date / synth_from_agg fields on claim_validation_row and
+% measured_delta, plus nullable ci_low / ci_high / significant (iter-118
+% backfill script emits point estimates whose CI is null).
+
+\subsubsection{Validate-strict CI gate, schema bump, and cross-entry consistency (iter 122)}
+\label{sec:p6-iter122-validate-strict}
+
+\paragraph{Setting.}
+The registry at \texttt{registry/} ships 39 entries (24 stack + 15
+variant-delta) and the iter-118 strict validator surfaced 51 fully-unknown
+MIN-REPORT items + 0 ERROR-severity findings. iter-118's operational
+recommendation was: \emph{wire \texttt{p6\_iter118\_strict\_validator.py}
+into \texttt{registry/query.py validate-strict} so every registry mutation
+invokes the script.} iter-122 closes that recommendation, surfaces a
+schema gap that iter-118 introduced without a corresponding schema bump,
+and adds a cross-entry consistency check at the (delta\_id, component)
+level.
+
+\paragraph{H1 -- Schema bump closes the iter-118 audit-trail gap.}
+Iter-118's backfill script
+(\texttt{scripts/p5p8/p6\_iter118\_zvf130\_deltas\_backfill.py}) emitted
+\texttt{claim\_validation[]} rows carrying three new fields
+(\texttt{audit\_source}, \texttt{audit\_date}, \texttt{synth\_from\_agg})
+and \texttt{measured[]} rows whose \texttt{ci\_low}, \texttt{ci\_high},
+and \texttt{significant} are null for synth-from-agg backfills. None of
+these fields were declared in the schema. \texttt{registry/query.py
+validate} (iter-50) reported 5 entries failing schema validation
+(\texttt{delta\_cppo}, \texttt{delta\_es}, \texttt{delta\_mcgrpo},
+\texttt{delta\_ngrpo}, \texttt{delta\_scafgrpo}). Iter-122 bumps the
+schema: \texttt{claim\_validation\_row} now accepts the three iter-118
+fields as nullable strings/booleans; \texttt{measured\_delta} now treats
+\texttt{delta}, \texttt{ci\_low}, \texttt{ci\_high}, and
+\texttt{significant} as nullable rather than required-and-number/boolean.
+After the bump: 39/39 entries pass schema validation (was 34/39). The
+bump is backward-compatible: every existing entry parses unchanged.
+
+\paragraph{H2 -- \texttt{validate-strict} gate wired into the CLI.}
+\texttt{registry/query.py} now exposes a new subcommand
+\texttt{validate-strict} that combines (i) the iter-50 schema validator
+and (ii) the iter-118 strict validator's ERROR-severity findings into a
+single CI gate. The gate contract: \texttt{schema\_fails == 0 AND
+error\_findings == 0} $\Rightarrow$ exit code 0; otherwise exit code 1.
+WARN-severity findings (missing optional MIN-REPORT items) and
+INFO-severity findings (fully-unknown items) print to stdout but do not
+block, unless \texttt{--include-warn} is passed. Run as
+\texttt{python3 registry/query.py validate-strict} at any point in the
+CI loop. After the schema bump, the gate passes:
+\texttt{schema\_fails=0, error\_findings=0, warn\_findings=0,
+info\_findings=51, CI GATE: PASS}.
+
+\paragraph{H3 -- 6 cross-entry CONFLICTs are transparent by design.}
+The new script
+(\texttt{scripts/p5p8/p6\_iter122\_cross\_entry\_consistency.py})
+cross-cuts every stack entry's \texttt{variant\_deltas\_applied[]} and
+flags any (delta\_id, component) referenced by 2+ stacks where the
+implementation statuses disagree. Across 22 (delta\_id, component)
+cells with $\geq 1$ stack reference, 16 are HOMOGENEOUS (every stack
+agrees on the status) and 6 are CONFLICT. The 6 CONFLICT cells are all
+on the colab-open\_*\_e3 vs tinker\_*\_qwen3.5-4b\_gsm8k axis: colab-open
+claims DAPO components are \texttt{implemented} (toy-scale colab, full
+open-source implementation) while tinker claims
+\texttt{surrogate} / \texttt{absent} / \texttt{unknown} (managed stack
+where some components cannot be verified end-to-end). These CONFLICTs
+are \emph{informative}, not bugs: the registry exists precisely to
+surface this kind of implementation gap. The new script's
+\texttt{CONFLICT} verdict is the machine-readable report; it does not
+flag them as errors.
+
+\paragraph{H4 -- 3 zvf130\_* stub entries use a placeholder component.}
+The script also flags 3 EVIDENCE\_MISSING cells: zvf130\_aero,
+zvf130\_areal, zvf130\_gift each carry a \texttt{variant\_deltas\_applied}
+row with \texttt{component: "see delta entry"} -- a transparent
+placeholder because the corresponding delta\_*.json record's
+\texttt{deltas[]} list does not declare a component named that
+literally. The other 6 zvf130\_* entries
+(cppo, es, mcgrpo, ngrpo, scafgrpo, grpo) reference real components.
+The 3 placeholder rows are honest reporting: the registry explicitly
+records that the zvf130 risk-index run did not bind to a specific named
+component. Future iterations may either (i) backfill the literal
+component name into the variant\_deltas\_applied row, or (ii) extend
+the schema to permit the placeholder string under a documented
+\texttt{placeholder\_allowed: true} flag. Neither is required for the
+CI gate to pass.
+
+\paragraph{H5 -- Audit-table machine-readable on disk.}
+Two new artifacts on disk:
+\begin{itemize}
+\item \texttt{experiments/results/p5p8/p6\_iter122\_cross\_entry\_consistency.tsv}
+      -- 22 (delta\_id, component) rows with n\_stacks, n\_unique\_statuses,
+      statuses, stacks, delta\_has\_component, verdict.
+\item \texttt{experiments/results/p5p8/p6\_iter118\_strict\_audit.json}
+      -- regenerated by validate-strict to reflect post-bump state.
+\end{itemize}
+The new CLI command \texttt{registry/query.py validate-strict} replaces
+manual orchestrations of \texttt{registry/query.py validate +
+scripts/p5p8/p6\_iter118\_strict\_validator.py}.
+
+\paragraph{Cross-paper coupling.}
+(i) \textbf{P6 iter-118 row 133} -- iter-118 produced 51 INFO findings
+(fully-unknown MIN-REPORT items) and recommended wiring the strict
+validator into \texttt{registry/query.py validate-strict}; iter-122
+closes that recommendation. (ii) \textbf{P6 iter-50 row 65} (CI-style
+schema validator) -- iter-122's validate-strict generalizes iter-50
+from "every entry parses the schema" to "every entry parses the schema
+AND has zero orphan delta references AND every measured source path
+resolves on disk." (iii) \textbf{P5 iter-121 row 136} (value-correctness
+mutation stress test) -- iter-121 audits manifest content; iter-122
+audits registry content. Both are stress tests on a fixed schema; both
+surfaced silent-corruption classes (iter-121: hash-suffix; iter-122:
+placeholder component). (iv) \textbf{P5P8-SYNTH iter-120 row 135}
+(score-stream universality) -- the iter-122 cross-entry CONFLICT
+verdict mirrors the iter-120 finding that two stacks claiming the same
+algorithm label can disagree on the operational signal that the label
+describes.
+
+\paragraph{Operational recommendation.}
+(a) Wire \texttt{python3 registry/query.py validate-strict} into the
+repository's pre-commit hook so every registry mutation passes the gate.
+(b) Close the 3 placeholder-component rows in zvf130\_aero, zvf130\_areal,
+zvf130\_gift by either replacing \texttt{"see delta entry"} with the
+literal component name from the corresponding delta\_*.json record, or
+by adding a documented \texttt{placeholder\_allowed: true} flag to the
+schema. Either option is low-effort and would close the H4 gap. (c)
+The 51 fully-unknown MIN-REPORT items remain a longitudinal
+reporting-coverage gap (closed across future iterations rather than
+retrofitted here).

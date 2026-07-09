@@ -1,0 +1,3 @@
+G	step	reward_mean	zvf	frac_all_zero	frac_all_one	pcd	mean_len	n_groups	n_completions	loss
+4	0	0.0	1.0	1.0	0.0	0.0	128.0	2	8	None
+8	0	0.0	1.0	1.0	0.0	0.0	128.0	1	8	None

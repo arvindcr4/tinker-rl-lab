@@ -1,0 +1,68 @@
+{
+  "iter": 16,
+  "ts": "2026-07-04",
+  "synthesis_target": "B-SYNTH cross-pillar CDH echo on Pillar-4 length-bias data",
+  "h1_pooled_paired": {
+    "hypothesis": "H1_pooled_DR_smaller",
+    "n_pairs": 8,
+    "mean_gr": 0.377,
+    "mean_dr": 0.3578,
+    "mean_dr_minus_gr": -0.0193,
+    "W_minus_one_sided": 18.0,
+    "n_pred_one_sided": 5,
+    "cohens_d_paired": -0.118,
+    "predicted_direction": "Dr.GR smaller (fixed normaliser decouples, learned break does not)",
+    "verdict": "NULL"
+  },
+  "h2_cross_pillar_consistency": {
+    "hypothesis": "H2_cross_pillar_consistency",
+    "p1_pillar1_learned_effect_pct": -19.53,
+    "p4_pillar4_fixed_effect_pct": -5.11,
+    "predicted_direction": "BOTH negative (any added component on top of stateless group-mean LOOSENS |\u03c1| of the natural coupling axis)",
+    "same_sign_check": "PASS",
+    "learned_vs_fixed_effect_size_ratio": 3.82,
+    "learned_amplifies_more_than_fixed_check": "PASS",
+    "verdict": "FAVOURS"
+  },
+  "h3_ratio_dr_over_gr": {
+    "arithmetic_easy": {
+      "task": "arithmetic_easy",
+      "n_pairs": 5,
+      "mean_gr_abs_rho_dR_dL": 0.1978,
+      "mean_dr_abs_rho_dR_dL": 0.1687,
+      "ratio_dr_over_gr": 0.853,
+      "pre_reg_criterion": "ratio < 1.0",
+      "verdict": "FAVOURS"
+    },
+    "gsm8k_cot": {
+      "task": "gsm8k_cot",
+      "n_pairs": 3,
+      "mean_gr_abs_rho_dR_dL": 0.6758,
+      "mean_dr_abs_rho_dR_dL": 0.6729,
+      "ratio_dr_over_gr": 0.9957,
+      "pre_reg_criterion": "ratio < 1.0",
+      "verdict": "FAVOURS"
+    },
+    "POOLED": {
+      "task": "POOLED",
+      "n_pairs": 8,
+      "mean_gr_abs_rho_dR_dL": 0.377,
+      "mean_dr_abs_rho_dR_dL": 0.3578,
+      "ratio_dr_over_gr": 0.9489,
+      "pre_reg_criterion": "ratio < 1.0",
+      "verdict": "FAVOURS"
+    }
+  },
+  "h4_sign_test_pooled": {
+    "hypothesis": "H4_sign_test_pooled_8_cells",
+    "n_total_cells": 8,
+    "n_dr_smaller": 5,
+    "n_gr_smaller": 3,
+    "binom_p_two_sided_strict": 1.0,
+    "binom_p_one_sided_signtest": 0.3633,
+    "predicted_direction": "Dr.GR smaller |\u03c1| (fixed normaliser decouples reward-length, learned would amplify)",
+    "verdict": "NULL"
+  },
+  "decision_rule": "FAVOURS row 16 if H3 POOLED ratio < 1.0 AND H2 same_sign PASS AND learned-vs-fixed effect-size ratio > 1.0 (PPO critic moves |\u03c1| MORE than Dr.GR normaliser \u2014 CDH predicts learned > fixed; row-12 evidence already confirms learned critic moves by 19.5%, so we expect the learned/fixed ratio to be > 1.0). H1 and H4 are secondary; both can be NULL without rejecting row 16.",
+  "verdict": "validated"
+}

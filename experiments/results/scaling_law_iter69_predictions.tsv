@@ -1,0 +1,9 @@
+prediction_id	claim	observed	expected	pass_fail
+P1_acf1_negative	ACF(1) < 0 for >= 10/12 anchors (anti-persistent regime -- the headline finding).	10/12	>= 10/12	PASS
+P2_acf1_dominant	|ACF(1)| >= max(|ACF(2)|, |ACF(3)|, |ACF(4)|) for >= 8/12 (anti-persistence concentrated at lag 1).	3/12	>= 8/12	FAIL
+P3_alpha_finite	Spectral slope alpha in [-2, 4] for >= 8/12 anchors (no NaN, no runaway 1/f noise).	8/12	>= 8/12	PASS
+P4_logparams_alpha_positive	Spearman(log params, alpha) > 0 across the n>=4 pool (bigger model => steeper spectrum).	spearman=+0.285, n=9	> 0	PASS
+P5_alpha_lambda_rank_coupling	Spearman(alpha, lambda) > 0.5 across the pool (rank coupling -- the headline cheap-diagnostic test).	spearman=+0.786, n=9, captured_pairs=[('Qwen3.5-4B', -0.18, 0.187), ('Qwen3-8B', -0.22, 0.019), ('Llama-3.1-8B-Instruct', 0.15, 0.177), ('gpt-oss-20B', -0.81, 0.209), ('Qwen3-30B-MoE', -2.97, 0.131), ('DeepSeek-V3.1', 0.22, 0.249), ('Nemotron-120B', -0.02, 0.019), ('Qwen3-235B-MoE', 3.18, 2.303), ('Kimi-K2-Thinking', -0.36, 0.22)]	> 0.5	PASS
+P6_logparams_smoothness	Spearman(log params, dy_var) < 0 (larger models produce smoother traces).	spearman=-0.417	< 0	PASS
+P7_rho1_bounded	|rho1| < 0.5 for >= 7/12 anchors (no random-walk regime).	7/12	>= 7/12	PASS
+P8_arch_alpha_differs	Mann-Whitney U: alpha differs across dense vs MoE (p < 0.10).	U=8.0, p=0.713 (n\_d=4, n\_m=5)	p < 0.10	FAIL

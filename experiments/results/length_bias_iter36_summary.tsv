@@ -1,0 +1,5 @@
+task	algo	n_seeds	n_R_ident	n_L_ident	median_lam_R	median_lam_L	median_t80_R	median_t80_L	median_lam_ratio	median_resid_rho
+arithmetic_easy	grpo	5	5	5	0.3339	0.4137	4.82	3.89	1.2305	-0.2135
+arithmetic_easy	dr_grpo	5	5	5	0.2985	0.4071	5.39	3.95	1.3731	-0.0591
+gsm8k_cot	grpo	3	3	1	0.377	0.2825	4.27	16094.38	0.0007	-0.576
+gsm8k_cot	dr_grpo	3	2	1	0.3841	0.3353	2.67	16094.38	0.0006	-0.6512

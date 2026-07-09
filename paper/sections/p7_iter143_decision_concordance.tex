@@ -1,0 +1,130 @@
+% Iter 143 - P7 inter-seed FIRE-decision Cohen's-kappa concordance on the
+% GROWING n10_seed_expansion panel
+% (extends iter-99/115/135/139 with the DECISION-CONCORDANCE layer;
+% prior iters measured FIRE COUNT only -- iter-143 measures whether
+% the same steps fire in the same seed across N10 seeds)
+% Depends on: scripts/p5p8/p7_iter143_seed_concordance.py and the
+% experiments/results/p5p8/p7_iter143_{pair_kappa,summary,growing_kappa}
+% artifacts.
+
+\subsubsection{Inter-seed FIRE-decision concordance on the growing N10 panel}
+\label{sec:p7-iter143-decision-concordance}
+
+The prior subsections audited \emph{count-level} stability of the joint
+trigger: $\mathrm{CV}(\mathrm{savings})$ at $\tau=0.30$ is $0.124$
+(iter-99), per-seed savings at canonical $\tau=0.65$ is $+0.14 \pm 0.04$
+across five seeds (iter-115), the $\tau$-flip band at N10 is
+$[0.55, 0.80]$ (iter-135), and the joint trigger's predictive validity
+is $\bar\Delta r = -0.067$ at the cohort level (iter-139). These all
+audit the \emph{rate} of firing, not which specific steps fire. Two
+seeds can have identical fire counts while disagreeing on every
+individual step.
+
+Iter-143 closes this gap by computing the per-$\tau$ Cohen's-$\kappa$
+on the 15-step binary FIRE vector for every seed-pair in the
+GROWING panel. For each $\tau \in \{0.30, 0.40, 0.50, 0.55, 0.60,
+0.65, 0.70, 0.75, 0.80, 0.85, 0.90\}$ and each of the $\binom{5}{2}=10$
+seed-pairs on the full panel (and $\binom{k}{2}$ pairs on the
+$k \in \{2,3,4,5\}$ growing slices):
+
+\[
+\kappa(\tau, s_i, s_j)
+= \frac{p_o(\tau, s_i, s_j) - p_e(\tau, s_i, s_j)}
+       {1 - p_e(\tau, s_i, s_j)},
+\]
+where $p_o$ is the per-step FIRE-agreement rate and $p_e$ is the
+chance-agreement rate. The degenerate case $p_e \approx 1.0$
+(everyone fires, or no one fires) returns $\kappa = 1.0$ if
+$p_o \approx 1.0$, else $0.0$.
+
+\paragraph{H1 (FAIL --- strict $\kappa \geq 0.40$ not met).}
+At canonical $\tau=0.65$, the mean $\kappa$ across the ten seed-pairs
+is $-0.0516$ with SE $0.0558$ (Table~\ref{tab:p7-iter143-h1}). The
+seeds \emph{systematically disagree} on which steps fire. The
+five seed-level FIRE vectors at $\tau=0.65$ are
+$\{42: 2/15, 179: 4/15, 316: 4/15, 453: 6/15, 590: 5/15\}$; the seeds
+agree on the marginal rate ($\sim 28\%$) but disagree on the per-step
+timing. The Landis-Koch "fair agreement" threshold of $\kappa \geq 0.20$
+is also unmet at every $\tau \in [0.55, 0.75]$.
+
+\begin{table}[t]
+\centering
+\caption{Per-$\tau$ Cohen's-$\kappa$ on the full 5-seed N10 panel.  At
+the canonical $\tau=0.65$, mean $\kappa = -0.052$, statistically
+indistinguishable from chance; the seeds agree on the marginal fire
+rate (iter-115 savings $+0.14$) but disagree on the per-step pattern.
+$\tau \in \{0.80, 0.85\}$ show $\kappa \approx +0.29$ (fair agreement)
+on the informative branch; $\tau=0.90$ shows $\kappa=1.0$ but is
+degenerate (no seed fires).}
+\label{tab:p7-iter143-h1}
+\small
+\begin{tabular}{rrrrrl}
+\hline
+$\tau$ & mean $\kappa$ & SE$(\kappa)$ & CV$(\kappa)$ & $n_\mathrm{pairs}$ & Landis-Koch \\
+\hline
+0.30 & $+0.288$ & 0.148 & 1.62 & 10 & fair \\
+0.40 & $+0.010$ & 0.072 & 23.58 & 10 & chance \\
+0.50 & $+0.010$ & 0.072 & 23.58 & 10 & chance \\
+0.55 & $-0.070$ & 0.101 & --- & 10 & worse than chance \\
+0.60 & $-0.070$ & 0.101 & --- & 10 & worse than chance \\
+0.65 & $-0.052$ & 0.056 & --- & 10 & worse than chance \\
+0.70 & $-0.052$ & 0.056 & --- & 10 & worse than chance \\
+0.75 & $-0.052$ & 0.056 & --- & 10 & worse than chance \\
+0.80 & $+0.290$ & 0.147 & 1.60 & 10 & fair \\
+0.85 & $+0.290$ & 0.147 & 1.60 & 10 & fair \\
+0.90 & $+1.000$ & 0.000 & --- & 10 & perfect (degenerate) \\
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{H2 (PASS --- growing-panel $\kappa$ converges).}
+At $\tau=0.65$, the mean $\kappa$ on the growing panel slices is
+$\kappa(k{=}2)=-0.216$, $\kappa(k{=}3)=-0.038$, $\kappa(k{=}4)=-0.071$,
+$\kappa(k{=}5)=-0.052$. The $\kappa(k{=}5) \geq \kappa(k{=}2) - 0.10$
+criterion holds by $\Delta\kappa = +0.165$. The disagreement is real at
+every panel size $k \leq 5$, ruling out a small-sample artifact: adding
+seeds does not introduce a fundamentally less concordant signal, but
+also does not rescue the negative $\kappa$.
+
+\paragraph{H3 (FAIL on naïve argmax; informative argmax is $\tau=0.30$).}
+The naïve argmax over the full $\tau$ grid is $\tau=0.90$ (mean
+$\kappa=+1.0$), but $\tau=0.90$ is \emph{degenerate}: no seed ever
+fires (max zvf in any seed is $0.875$), so all FIRE vectors are
+zero, and $\kappa$ is undefined $\to +1.0$ by convention. The
+\emph{informative} argmax (max $\kappa$ over $\tau$ with at least one
+fire per seed, i.e.\ $\mathrm{FIRE\_RATE} \geq 1/15$) is
+$\tau=0.30$ (mean $\kappa=+0.288$, $n_\mathrm{pairs}=10$). This
+sits \emph{below} the iter-135 stable band $[0.55, 0.80]$ and
+corresponds to the iter-99 $\mathrm{CV}(\mathrm{savings})=0.124$
+operating point: the lowest-$\tau$ regime that is both count-stable
+and decision-concordant.
+
+\paragraph{H4 (PASS by degeneracy).}
+At the naïve argmax $\tau=0.90$, $\mathrm{CV}(\kappa)=0.0$ by
+construction (every pair has $\kappa=1.0$). The informative analogue
+at $\tau=0.30$ gives $\mathrm{CV}(\kappa)=1.62$, reflecting the
+wide variance in pair-level $\kappa$ (some pairs agree strongly,
+others weakly) but a positive mean. We adopt $\tau=0.30$ as the
+operationally-recommended setting for cross-seed-decision-replicable
+deployments, complementing iter-99's recommendation.
+
+\paragraph{Operational interpretation.}
+The canonical $\tau=0.65$ trigger is \emph{count-stable} (per-seed
+savings $+0.14 \pm 0.04$, iter-115) but \emph{decision-noisy}
+(mean $\kappa \approx 0$, iter-143). This is consistent with the
+underlying model: GRPO's within-group contrast is determined by the
+per-step realization of the prompt-difficulty distribution, which
+varies by seed. The five seeds agree on the marginal zvf distribution
+(mean zvf $\approx 0.49$ per seed) but disagree on the per-step
+timing of contrast events. The trigger correctly identifies that
+\emph{approximately 3-6 of 15 steps} are contrast-starved, but the
+\emph{which} steps differ across seeds.
+
+For reviewer-facing claims, the canonical $\tau=0.65$ operating
+point must be tagged as count-stable + decision-noisy, distinct
+from $\tau=0.30$ (count-stable + decision-fair-agreement,
+$\kappa=+0.29$). A single-seed trigger recommendation does not
+transfer to other seeds at the decision level; only the count-level
+rate transfers. Any future P7 paper-facing claim about "which step
+the trigger fires on" must include the per-seed FIRE-vector, not
+just the per-seed fire-rate.

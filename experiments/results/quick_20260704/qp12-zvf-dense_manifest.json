@@ -1,0 +1,30 @@
+{
+  "exp": "qp12-zvf-dense",
+  "date": "2026-07-04",
+  "model": "Qwen/Qwen3.5-4B",
+  "lora_rank": 32,
+  "loss_form": "token-level importance_sampling surrogate (Tinker loss_fn='importance_sampling'); per-token advantage = group-standardized reward (r - mean)/std, GRPO-style; zero-variance groups get all-zero advantage and are dropped from the batch",
+  "ref_policy_kl_handling": "none: no KL penalty and no reference-policy term in the objective; behavior logprobs come from the sampler snapshot refreshed every step",
+  "sampler_backend_precision": "unknown/closed-stack (Tinker managed sampling backend; precision not exposed)",
+  "per_step_zvf_path": "/home/claude/tinker-rl-lab/experiments/results/quick_20260704/qp12-zvf-dense.tsv (column 'zvf'); per-group reward tensors in /home/claude/tinker-rl-lab/experiments/results/quick_20260704/qp12_group_tensors.jsonl",
+  "group_size_schedule": "constant G=8 for all steps, both seeds (no adaptation)",
+  "heldout_split": "none evaluated in-run; training prompts are the first 128 of a seed-shuffled openai/gsm8k train split; gsm8k test split untouched",
+  "decontamination_notes": "no additional decontamination performed beyond using the standard openai/gsm8k train split as released; base-model pretraining contamination unknown/closed-stack",
+  "config": {
+    "model": "Qwen/Qwen3.5-4B",
+    "rank": 32,
+    "seeds": "0,1",
+    "steps": 16,
+    "prompts_per_step": 16,
+    "group": 8,
+    "pool": 128,
+    "lr": 1e-05,
+    "temp": 0.8,
+    "top_p": 0.95,
+    "max_tokens": 512,
+    "max_prompt_tokens": 1024,
+    "wandb_project": "tinker-new-research",
+    "smoke": false,
+    "no_wandb": false
+  }
+}

@@ -1,0 +1,10 @@
+method	bucket	stability
+grpo	high_risk	1.0
+aero	mid_risk	1.0
+mcgrpo	mid_risk	1.0
+ngrpo	low_risk	1.0
+cppo	low_risk	1.0
+areal	mid_risk	1.0
+gift	high_risk	1.0
+es	high_risk	1.0
+scafgrpo	low_risk	1.0

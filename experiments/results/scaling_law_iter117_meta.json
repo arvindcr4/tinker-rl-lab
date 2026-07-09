@@ -1,0 +1,72 @@
+{
+  "iter": 117,
+  "pillar": "P1-ScalingLaws",
+  "n_anchors": 5,
+  "anchors": [
+    {
+      "name": "Qwen3.5-4B",
+      "params_B": 4.0,
+      "family": "dense",
+      "R_max": 0.816667625135217,
+      "lambda_": 9.999999999999591,
+      "t_80": 0.1609437912434166,
+      "lam_at_bound": true,
+      "phase_nimmaturi": "non_monotone",
+      "trace_file": "scale_gsm8k_qwen3.5-4b.json"
+    },
+    {
+      "name": "Qwen3-8B",
+      "params_B": 8.0,
+      "family": "dense",
+      "R_max": 0.2854169630330038,
+      "lambda_": 9.99999999962527,
+      "t_80": 0.16094379124944108,
+      "lam_at_bound": true,
+      "phase_nimmaturi": "plateau",
+      "trace_file": "scale_gsm8k_qwen3-8b.json"
+    },
+    {
+      "name": "Llama-3.1-8B-Instruct",
+      "params_B": 8.0,
+      "family": "dense",
+      "R_max": 0.8687511161004882,
+      "lambda_": 9.999999999999432,
+      "t_80": 0.16094379124341918,
+      "lam_at_bound": true,
+      "phase_nimmaturi": "non_monotone",
+      "trace_file": "scale_gsm8k_llama-8b-inst.json"
+    },
+    {
+      "name": "DeepSeek-V3.1",
+      "params_B": 685.0,
+      "family": "moe",
+      "R_max": 0.843751844386064,
+      "lambda_": 9.999999999997772,
+      "t_80": 0.16094379124344588,
+      "lam_at_bound": true,
+      "phase_nimmaturi": "non_monotone",
+      "trace_file": "frontier_gsm8k_deepseek-v3.1.json"
+    },
+    {
+      "name": "Nemotron-120B",
+      "params_B": 120.0,
+      "family": "dense",
+      "R_max": 0.18204167563556284,
+      "lambda_": 0.9902436825718396,
+      "t_80": 1.6252948044607594,
+      "lam_at_bound": false,
+      "phase_nimmaturi": "collapse",
+      "trace_file": "frontier_gsm8k_nemotron-120b.json"
+    }
+  ],
+  "fit_form": "R(t) = R_max * (1 - exp(-lambda * t))",
+  "lambda_bound": "[1e-4, 10.0]",
+  "phase_classification_method": "BIC-segmentation with k in {1,2,3} constant-mean regimes; nimmaturi2025predictive three-phase criterion = (best_k == 3) AND monotone_up AND (seg1_mean < 0.15) AND (seg3_mean > 0.40) (arXiv:2507.18014).",
+  "n_three_phase_pass": 0,
+  "n_collapse": 1,
+  "n_lam_at_bound": 4,
+  "n_lambda_free": 1,
+  "nemotron_violation": "Nemotron-120B is the only 5-anchor pool member classified as 'collapse'. BIC picks k=3 (best segmentation), the segment means are 0.0000;0.8750;0.1544 (rise-then-fall, peak=0.875, late=0.154), and the peak segment mean exceeds the late segment mean. This is a textbook collapse and DIRECTLY violates the nimmaturi2025predictive three-phase template, which requires monotone non-decreasing segment means with seg1_mean < 0.15 and seg3_mean > 0.40 (arXiv:2507.18014).",
+  "t80_scaling_law": "OLS log10(t_80) ~ log10(N) over 5 anchors: intercept=-0.8413, slope=0.1699, se=0.2538. 4/5 anchors hit the lambda upper bound (t_80 = -ln(0.2)/10.0 = 0.161) and only 1/5 (Nemotron-120B) has a meaningful lambda. The cross-scale t_80 scaling-law test is DEGENERATE: a 5-row column of repeated values prevents any informative slope estimate. LOO and bootstrap CI both confirm the degeneracy.",
+  "frontier_synthesis": "iter117 Pillar 1 closes the scaling-law investigation by adding (i) explicit t_80 = -ln(0.2)/lambda derivation in the canonical fits table; (ii) BIC-segmentation three-phase test against arXiv:2507.18014 (0/5 anchors pass); (iii) Nemotron-120B collapse audit (peak segment mean = 0.875, late segment mean = 0.154 -- rise-then-fall); and (iv) t_80-vs-N scaling-law test, which is demonstrably degenerate because 4/5 anchors are already saturated at step 1 (lambda at upper bound). Combined with iter109's lambda-vs-N null (p=0.74) and iter105's R_max*(N) failure, the Pillar-1 finding is that GRPO post-training on this evidence base is NOT scale-law-shaped -- the only strong signal is the absence of a scaling law."
+}

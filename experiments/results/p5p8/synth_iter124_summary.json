@@ -1,0 +1,99 @@
+{
+  "iter": 124,
+  "pillar": "P5P8-SYNTH",
+  "n_cells_mega": 98,
+  "domain_densities": {
+    "P8_grad_band": {
+      "rate": 0.0084,
+      "lo": 0.006647500000000001,
+      "hi": 0.0102,
+      "n_fire": 84,
+      "n_total": 10000
+    },
+    "P7_zvf_triage": {
+      "rate": 0.5,
+      "lo": 0.35,
+      "hi": 0.65,
+      "n_fire": 20,
+      "n_total": 40
+    },
+    "P5_zvf_eq_1": {
+      "domain": "P5_mega_manifest_zvf_eq_1",
+      "n_fire": 36,
+      "n_total": 98,
+      "rate": 0.3673469387755102,
+      "lo": 0.2755102040816326,
+      "hi": 0.46938775510204084,
+      "rule": "cell per-step zvf == 1.0 (fully contrast-depleted)"
+    }
+  },
+  "density_rank": [
+    {
+      "domain": "P7_zvf_triage",
+      "rate": 0.5
+    },
+    {
+      "domain": "P5_zvf_eq_1",
+      "rate": 0.3673469387755102
+    },
+    {
+      "domain": "P8_grad_band",
+      "rate": 0.0084
+    }
+  ],
+  "pairwise_ratios": {
+    "P5_over_P7": {
+      "ratio": 0.7346938775510204,
+      "lo": 0.49984539270253553,
+      "hi": 1.1400874635568505,
+      "excludes_1.0": false
+    },
+    "P5_over_P8": {
+      "ratio": 43.73177842565598,
+      "lo": 30.359911481729025,
+      "hi": 62.43268140589567,
+      "excludes_1.0": true
+    },
+    "P8_over_P7": {
+      "ratio": 0.0168,
+      "lo": 0.01170873015873016,
+      "hi": 0.02482999999999999,
+      "excludes_1.0": true
+    },
+    "P7_over_P8": {
+      "ratio": 59.523809523809526,
+      "lo": 39.18467989605481,
+      "hi": 84.45945945945945,
+      "excludes_1.0": true
+    },
+    "P7_over_P5": {
+      "ratio": 1.361111111111111,
+      "lo": 0.8590726351351351,
+      "hi": 2.0416666666666665,
+      "excludes_1.0": false
+    },
+    "P8_over_P5": {
+      "ratio": 0.022866666666666664,
+      "lo": 0.016256238913525498,
+      "hi": 0.03239322413793102,
+      "excludes_1.0": true
+    }
+  },
+  "h4_per_G_spearman": -0.1,
+  "h4_G_values": [
+    2,
+    4,
+    8,
+    16,
+    32
+  ],
+  "h4_per_G_density": [
+    0.4166666666666667,
+    0.4,
+    0.4444444444444444,
+    0.4444444444444444,
+    0.1111111111111111
+  ],
+  "n_boot": 1500,
+  "seed": 20260705
+}

@@ -1,0 +1,83 @@
+{
+  "experiment": "A4_CLMP_length_mediation",
+  "data_source": "experiments/results/quick_20260704/qp3_group_tensors.jsonl",
+  "n_rollouts": 2048,
+  "n_rollouts_G4": 1024,
+  "n_rollouts_G8": 1024,
+  "observed_group_means": [
+    {
+      "group_size": 4,
+      "n": 1024,
+      "mean_reward": 0.7646484375,
+      "mean_length": 385.8720703125
+    },
+    {
+      "group_size": 8,
+      "n": 1024,
+      "mean_reward": 0.7880859375,
+      "mean_length": 382.8525390625
+    }
+  ],
+  "mediator_model": {
+    "formula": "length_z ~ 1 + T",
+    "params": {
+      "gamma0": 0.01486849877786665,
+      "gamma1": -0.029736997555732392
+    },
+    "sigma": 0.9996452603269284,
+    "interpretation": "G=8 completions are -0.030 sd longer than G=4 completions"
+  },
+  "outcome_model": {
+    "formula": "reward ~ 1 + T + length_z + T:length_z",
+    "params": {
+      "beta0": 3.3232908249018718,
+      "beta1": -0.038537279892778324,
+      "beta2": -3.310711068028247,
+      "beta3": 0.13471372965724412
+    }
+  },
+  "estimates": {
+    "NDE": {
+      "point": 0.004978611665606536,
+      "ci_95": [
+        -0.02268910527570845,
+        0.033909651773545685
+      ],
+      "p_value": 0.716
+    },
+    "NIE": {
+      "point": 0.008537791684204961,
+      "ci_95": [
+        -0.014193351426026481,
+        0.02653234286592412
+      ],
+      "p_value": 0.556
+    },
+    "TE": {
+      "point": 0.013516403349811499,
+      "ci_95": [
+        -0.021500158574269894,
+        0.04655407762727101
+      ],
+      "p_value": 0.504
+    },
+    "GER": {
+      "point": 0.6316615051535903,
+      "ci_95": [
+        -5.100787588083045,
+        6.597537481895749
+      ],
+      "p_value": 0.504
+    },
+    "PM": {
+      "point": 0.6316615051535903,
+      "ci_95": [
+        -5.100787588083045,
+        6.597537481895749
+      ],
+      "p_value": 0.504
+    }
+  },
+  "headline": "GER=0.632 (63.2% of the G=8-vs-G=4 reward effect is mediated by completion length)",
+  "method_note": "Parametric causal mediation with Monte Carlo counterfactuals; bootstrap CI based on 2000 resamples."
+}

@@ -1,0 +1,8 @@
+item_no	item_name	total	validated	missing	na_or_empty	pct_validated	pct_missing
+1	Loss form	98	98	0	0	100.00	0.00
+2	Reference policy & KL	98	0	0	98	0.00	0.00
+3	Sampler / backend / precision	98	98	0	0	100.00	0.00
+4	Per-step ZVF/GU trajectory	98	98	0	0	100.00	0.00
+5	Group-size schedule	98	98	0	0	100.00	0.00
+6	Held-out split	98	98	0	0	100.00	0.00
+7	Decontamination & parser probe	98	98	0	0	100.00	0.00

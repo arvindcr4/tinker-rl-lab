@@ -1,0 +1,508 @@
+{
+  "iter": 89,
+  "vein": "(b)+(c) Bootstrap CIs + leave-one-method-out stability on the N2 four-method same-stack panel",
+  "data": {
+    "path": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+    "n_rows": 160,
+    "n_methods": 4,
+    "n_steps": 40,
+    "n_seeds": 1,
+    "methods": [
+      "grpo",
+      "aero",
+      "areal",
+      "gift"
+    ]
+  },
+  "bootstrap": {
+    "B": 4000,
+    "seed": 20260705,
+    "alpha": 0.05,
+    "method": "paired-step resample (sample 40 steps w/ replacement; keep all 4 methods at each resampled step)"
+  },
+  "h1_pooled_algo_axis_eta2_with_boot_ci": [
+    {
+      "metric": "zvf",
+      "n_rows": 160,
+      "eta2_point": 0.0454,
+      "eta2_boot_mean": 0.0534,
+      "eta2_boot_lo": 0.0145,
+      "eta2_boot_hi": 0.1127,
+      "ub_le_0p05": false,
+      "ub_le_0p10": false,
+      "H1_ub_le_0p05_pass": false,
+      "H1_ub_le_0p10_pass_strict_or_loose": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "pcd",
+      "n_rows": 160,
+      "eta2_point": 0.0357,
+      "eta2_boot_mean": 0.0414,
+      "eta2_boot_lo": 0.0153,
+      "eta2_boot_hi": 0.0807,
+      "ub_le_0p05": false,
+      "ub_le_0p10": true,
+      "H1_ub_le_0p05_pass": false,
+      "H1_ub_le_0p10_pass_strict_or_loose": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "larq",
+      "n_rows": 160,
+      "eta2_point": 0.001,
+      "eta2_boot_mean": 0.0042,
+      "eta2_boot_lo": 0.0003,
+      "eta2_boot_hi": 0.0136,
+      "ub_le_0p05": true,
+      "ub_le_0p10": true,
+      "H1_ub_le_0p05_pass": true,
+      "H1_ub_le_0p10_pass_strict_or_loose": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "reward_mean",
+      "n_rows": 160,
+      "eta2_point": 0.0075,
+      "eta2_boot_mean": 0.0098,
+      "eta2_boot_lo": 0.0019,
+      "eta2_boot_hi": 0.0244,
+      "ub_le_0p05": true,
+      "ub_le_0p10": true,
+      "H1_ub_le_0p05_pass": true,
+      "H1_ub_le_0p10_pass_strict_or_loose": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "mean_len",
+      "n_rows": 160,
+      "eta2_point": 0.0631,
+      "eta2_boot_mean": 0.0685,
+      "eta2_boot_lo": 0.0333,
+      "eta2_boot_hi": 0.1264,
+      "ub_le_0p05": false,
+      "ub_le_0p10": false,
+      "H1_ub_le_0p05_pass": false,
+      "H1_ub_le_0p10_pass_strict_or_loose": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "cv_len",
+      "n_rows": 160,
+      "eta2_point": 0.0457,
+      "eta2_boot_mean": 0.05,
+      "eta2_boot_lo": 0.0235,
+      "eta2_boot_hi": 0.0914,
+      "ub_le_0p05": false,
+      "ub_le_0p10": true,
+      "H1_ub_le_0p05_pass": false,
+      "H1_ub_le_0p10_pass_strict_or_loose": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "loss",
+      "n_rows": 160,
+      "eta2_point": 0.9867,
+      "eta2_boot_mean": 0.9869,
+      "eta2_boot_lo": 0.9828,
+      "eta2_boot_hi": 0.9908,
+      "ub_le_0p05": false,
+      "ub_le_0p10": false,
+      "H1_ub_le_0p05_pass": false,
+      "H1_ub_le_0p10_pass_strict_or_loose": false,
+      "n_boot": 4000
+    }
+  ],
+  "h2_pairwise_eta2_with_boot_ci": [
+    {
+      "metric": "zvf",
+      "pair": "grpo_vs_aero",
+      "eta2_pair_point": 0.0,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0183,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "zvf",
+      "pair": "grpo_vs_areal",
+      "eta2_pair_point": 0.0041,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.037,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "zvf",
+      "pair": "grpo_vs_gift",
+      "eta2_pair_point": 0.0442,
+      "eta2_pair_boot_lo": 0.008,
+      "eta2_pair_boot_hi": 0.1116,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "zvf",
+      "pair": "aero_vs_areal",
+      "eta2_pair_point": 0.0043,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0517,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "zvf",
+      "pair": "aero_vs_gift",
+      "eta2_pair_point": 0.0461,
+      "eta2_pair_boot_lo": 0.0065,
+      "eta2_pair_boot_hi": 0.1226,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "zvf",
+      "pair": "areal_vs_gift",
+      "eta2_pair_point": 0.0673,
+      "eta2_pair_boot_lo": 0.0145,
+      "eta2_pair_boot_hi": 0.1634,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "pcd",
+      "pair": "grpo_vs_aero",
+      "eta2_pair_point": 0.0023,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0259,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "pcd",
+      "pair": "grpo_vs_areal",
+      "eta2_pair_point": 0.0032,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0253,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "pcd",
+      "pair": "grpo_vs_gift",
+      "eta2_pair_point": 0.0319,
+      "eta2_pair_boot_lo": 0.0051,
+      "eta2_pair_boot_hi": 0.0825,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "pcd",
+      "pair": "aero_vs_areal",
+      "eta2_pair_point": 0.0001,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.018,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "pcd",
+      "pair": "aero_vs_gift",
+      "eta2_pair_point": 0.048,
+      "eta2_pair_boot_lo": 0.0148,
+      "eta2_pair_boot_hi": 0.1078,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "pcd",
+      "pair": "areal_vs_gift",
+      "eta2_pair_point": 0.0519,
+      "eta2_pair_boot_lo": 0.0151,
+      "eta2_pair_boot_hi": 0.1184,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "larq",
+      "pair": "grpo_vs_aero",
+      "eta2_pair_point": 0.0005,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0116,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "larq",
+      "pair": "grpo_vs_areal",
+      "eta2_pair_point": 0.0,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0086,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "larq",
+      "pair": "grpo_vs_gift",
+      "eta2_pair_point": 0.0018,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0187,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "larq",
+      "pair": "aero_vs_areal",
+      "eta2_pair_point": 0.0002,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0138,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "larq",
+      "pair": "aero_vs_gift",
+      "eta2_pair_point": 0.0004,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0134,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "larq",
+      "pair": "areal_vs_gift",
+      "eta2_pair_point": 0.0011,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0182,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "reward_mean",
+      "pair": "grpo_vs_aero",
+      "eta2_pair_point": 0.0018,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0123,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "reward_mean",
+      "pair": "grpo_vs_areal",
+      "eta2_pair_point": 0.0013,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0088,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "reward_mean",
+      "pair": "grpo_vs_gift",
+      "eta2_pair_point": 0.0045,
+      "eta2_pair_boot_lo": 0.0001,
+      "eta2_pair_boot_hi": 0.0203,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "reward_mean",
+      "pair": "aero_vs_areal",
+      "eta2_pair_point": 0.0001,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0056,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "reward_mean",
+      "pair": "aero_vs_gift",
+      "eta2_pair_point": 0.0115,
+      "eta2_pair_boot_lo": 0.0019,
+      "eta2_pair_boot_hi": 0.0366,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "reward_mean",
+      "pair": "areal_vs_gift",
+      "eta2_pair_point": 0.0103,
+      "eta2_pair_boot_lo": 0.0007,
+      "eta2_pair_boot_hi": 0.037,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "mean_len",
+      "pair": "grpo_vs_aero",
+      "eta2_pair_point": 0.0584,
+      "eta2_pair_boot_lo": 0.0296,
+      "eta2_pair_boot_hi": 0.1186,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "mean_len",
+      "pair": "grpo_vs_areal",
+      "eta2_pair_point": 0.0621,
+      "eta2_pair_boot_lo": 0.0327,
+      "eta2_pair_boot_hi": 0.121,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "mean_len",
+      "pair": "grpo_vs_gift",
+      "eta2_pair_point": 0.0001,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0029,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "mean_len",
+      "pair": "aero_vs_areal",
+      "eta2_pair_point": 0.0001,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0029,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "mean_len",
+      "pair": "aero_vs_gift",
+      "eta2_pair_point": 0.0639,
+      "eta2_pair_boot_lo": 0.03,
+      "eta2_pair_boot_hi": 0.1321,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "mean_len",
+      "pair": "areal_vs_gift",
+      "eta2_pair_point": 0.0678,
+      "eta2_pair_boot_lo": 0.0332,
+      "eta2_pair_boot_hi": 0.1361,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "cv_len",
+      "pair": "grpo_vs_aero",
+      "eta2_pair_point": 0.0335,
+      "eta2_pair_boot_lo": 0.0093,
+      "eta2_pair_boot_hi": 0.0835,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "cv_len",
+      "pair": "grpo_vs_areal",
+      "eta2_pair_point": 0.0604,
+      "eta2_pair_boot_lo": 0.0301,
+      "eta2_pair_boot_hi": 0.1191,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "cv_len",
+      "pair": "grpo_vs_gift",
+      "eta2_pair_point": 0.0001,
+      "eta2_pair_boot_lo": 0.0,
+      "eta2_pair_boot_hi": 0.0067,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "cv_len",
+      "pair": "aero_vs_areal",
+      "eta2_pair_point": 0.0056,
+      "eta2_pair_boot_lo": 0.0005,
+      "eta2_pair_boot_hi": 0.0186,
+      "ub_le_0p04": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "cv_len",
+      "pair": "aero_vs_gift",
+      "eta2_pair_point": 0.0294,
+      "eta2_pair_boot_lo": 0.0095,
+      "eta2_pair_boot_hi": 0.0683,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "cv_len",
+      "pair": "areal_vs_gift",
+      "eta2_pair_point": 0.0547,
+      "eta2_pair_boot_lo": 0.0262,
+      "eta2_pair_boot_hi": 0.1043,
+      "ub_le_0p04": false,
+      "n_boot": 4000
+    }
+  ],
+  "h2_pass_all_pairs_ub_le_0p04": false,
+  "h3_lomo_zvf_with_boot_ci": [
+    {
+      "omit_method": "grpo",
+      "remaining_methods": "aero,areal,gift",
+      "eta2_zvf_point": 0.0555,
+      "eta2_zvf_boot_lo": 0.0167,
+      "eta2_zvf_boot_hi": 0.137,
+      "in_band_0p025_0p075": false
+    },
+    {
+      "omit_method": "aero",
+      "remaining_methods": "areal,gift,grpo",
+      "eta2_zvf_point": 0.0539,
+      "eta2_zvf_boot_lo": 0.0149,
+      "eta2_zvf_boot_hi": 0.1301,
+      "in_band_0p025_0p075": false
+    },
+    {
+      "omit_method": "areal",
+      "remaining_methods": "aero,gift,grpo",
+      "eta2_zvf_point": 0.0429,
+      "eta2_zvf_boot_lo": 0.0099,
+      "eta2_zvf_boot_hi": 0.1086,
+      "in_band_0p025_0p075": false
+    },
+    {
+      "omit_method": "gift",
+      "remaining_methods": "aero,areal,grpo",
+      "eta2_zvf_point": 0.0038,
+      "eta2_zvf_boot_lo": 0.0003,
+      "eta2_zvf_boot_hi": 0.0392,
+      "in_band_0p025_0p075": false
+    }
+  ],
+  "h3_pass_all_in_band": false,
+  "h4_gift_dominance_cohens_d_with_boot_ci": [
+    {
+      "metric": "zvf",
+      "cohens_d_point": 2.353,
+      "cohens_d_boot_lo": 1.5207,
+      "cohens_d_boot_hi": 4.155,
+      "ci_excludes_zero": true,
+      "ci_lower_ge_1p0": true,
+      "n_boot": 4000
+    },
+    {
+      "metric": "reward_mean",
+      "cohens_d_point": 0.4654,
+      "cohens_d_boot_lo": 0.0377,
+      "cohens_d_boot_hi": 0.9754,
+      "ci_excludes_zero": true,
+      "ci_lower_ge_1p0": false,
+      "n_boot": 4000
+    },
+    {
+      "metric": "pcd",
+      "cohens_d_point": -1.7125,
+      "cohens_d_boot_lo": -3.0994,
+      "cohens_d_boot_hi": -1.0763,
+      "ci_excludes_zero": true,
+      "ci_lower_ge_1p0": false,
+      "n_boot": 4000
+    }
+  ],
+  "h4_zvf_lower_bound_ge_1p0": true
+}

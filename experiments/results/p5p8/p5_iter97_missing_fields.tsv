@@ -1,0 +1,15 @@
+field	field_class	in_manifest_schema	recoverable_via_cell_id	n_unique_values_in_corpus	gap_class
+model_family	stack_axis	False	True	2	RECOVERABLE
+task_slice	stack_axis	True	True	3	OK
+G	stack_axis	True	True	5	OK
+temperature	stack_axis	False	True	2	RECOVERABLE
+seed	stack_axis	False	True	2	RECOVERABLE
+n_groups	telemetry	False	True	1	RECOVERABLE
+mean_reward	telemetry	False	True	48	RECOVERABLE
+zvf	telemetry	False	True	20	RECOVERABLE
+pcd	telemetry	False	True	56	RECOVERABLE
+mean_completion_len	telemetry	False	True	98	RECOVERABLE
+std_completion_len	telemetry	False	True	98	RECOVERABLE
+sampled_tokens	telemetry	False	True	98	RECOVERABLE
+cumulative_sampled_tokens	telemetry	False	True	98	RECOVERABLE
+sample_errors	telemetry	False	True	1	RECOVERABLE

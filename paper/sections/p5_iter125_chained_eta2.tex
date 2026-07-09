@@ -1,0 +1,128 @@
+% =============================================================================
+% P5-125 — Chained eta^2 decomposition: stack-axis (mega-98) vs
+% algorithm-axis (N2 four-method), with paired bootstrap ratio.
+% =============================================================================
+\subsection{Chained $\eta^2$ decomposition: stack-axis vs algorithm-axis (iter 125)}
+\label{sec:p5-iter125-chained-eta2}
+
+The brief's vein (b) called for an explicit factorization of ``stack-
+conditioning'' along the algorithm-axis using the Berkeley unpacking
+machinery. Iter 89 reported bootstrap CIs on the N2 four-method
+algorithm-axis $\eta^2_{\mathrm{algo}}$ (7 channels). Iter 93 reported
+bootstrap CIs on the mega-98 stack-axis $\eta^2_{\mathrm{stack}}$ (25
+cells). \emph{Neither pair made the two streams commensurable.} Iter 125
+chained them: for each (mega-axis, metric) cell where both
+decompositions produce a finite $\eta^2$, we resample each stream's
+own paired bootstrap, align replicate-by-replicate, and report the
+ratio $R = \eta^2_{\mathrm{stack}} / \eta^2_{\mathrm{algo}}$ with a 95\%
+bootstrap CI.
+
+\subsubsection{Headline hypotheses (H1--H9)}
+\label{sec:p5-iter125-headlines}
+For the four dominant pairings (task\_slice, G) on the two shared
+metrics (zvf, pcd):
+\begin{itemize}
+\item \textbf{H1 (PASS)} $R_{\mathrm{zvf}}^{\mathrm{task\_slice}} = 10.32$ $[4.11, 32.14]$
+\item \textbf{H2 (PASS)} $R_{\mathrm{pcd}}^{\mathrm{task\_slice}} = 12.62$ $[5.46, 30.56]$
+\item \textbf{H3 (PASS)} $R_{\mathrm{zvf}}^{\mathrm{G}} = 9.77$ $[3.51, 32.19]$
+\item \textbf{H4 (PASS)} $R_{\mathrm{pcd}}^{\mathrm{G}} = 6.45$ $[2.39, 19.20]$
+\end{itemize}
+all four have $R^{\mathrm{lo}} > 1$ under the paired bootstrap. The
+six non-dominant pairings (model\_family, temperature, seed on zvf
+and pcd) FAIL ($R^{\mathrm{lo}} < 1$) by construction --- those axes
+are small in absolute terms. The dominant ratios are large: stack
+axes explain 6--13$\times$ more variance than the algorithm axis on
+the two contrast-signal channels.
+
+\textbf{H7 (REFUTED)} --- $\eta^2_{\mathrm{algo}}$ CI-UB $\leq 0.05$ holds for
+only 2/7 channels under paired-step bootstrap (larq CI-UB~$0.0136$,
+reward\_mean CI-UB~$0.0244$). The other 5 channels (zvf CI-UB~$0.113$,
+pcd CI-UB~$0.081$, mean\_len CI-UB~$0.126$, cv\_len CI-UB~$0.091$,
+loss CI-UB~$0.991$) exceed the strict 0.05 threshold. iter 89 row
+already showed this; iter 125 confirms it on the same panel.
+
+\textbf{H8 (PASS)} --- at least one mega stack-axis $\eta^2_{\mathrm{stack}}$
+$\geq 0.30$ with CI-lo $\geq 0.20$ on zvf: \texttt{task\_slice} (0.469
+$[0.371, 0.593]$) and \texttt{G} (0.444 $[0.280, 0.640]$) both qualify,
+plus 8 additional cells with $\eta^2_{\mathrm{stack}} \geq 0.20$.
+
+\textbf{H9 (REFUTED on zvf)} --- $\eta^2_{\mathrm{algo}}$ UB on zvf
+$= 0.113$ exceeds the seed-axis noise floor CI-UB
+$= 0.053$. The N2 zvf channel carries more algorithm-axis variance
+than mega's seed noise budget. On pcd, $\eta^2_{\mathrm{algo}}$ UB
+$= 0.081$ likewise exceeds the pcd seed CI-UB $= 0.052$. The
+algorithm axis is therefore \emph{not subsumed} by seed noise on the
+contrast channels; it is a small but non-zero signal (CI-UB $\leq 0.13$)
+that is invisible at the stack-axis dominance scale (which is 6--13$\times$
+larger).
+
+\subsubsection{What the chained ratio proves}
+\label{sec:p5-iter125-what}
+The chained ratio is sharp: on zvf, $\eta^2_{\mathrm{task\_slice}} /
+\eta^2_{\mathrm{algo}} \geq 4.11$ under the aligned paired bootstrap;
+on pcd, $\eta^2_{\mathrm{task\_slice}} / \eta^2_{\mathrm{algo}} \geq 5.46$.
+The stack axes dominate the algorithm axis by at least $4.1\times$ on
+the contrast-signal channels even when the algorithm axis is at its
+upper-bound estimate. The cross-paper coupling is direct: the same
+mega corpus that informs iter 93's stack-axis CIs also bounds the
+algorithm-axis variance via the N2 four-method same-stack panel ---
+the algorithm axis would have to be $\geq 4.1 \times$ larger to
+explain the task-axis effect, which is upper-bounded at $\eta^2_{\mathrm{task\_slice}}
+\leq 0.593$ on zvf. Iter 125 closes the brief vein (b) on a single,
+proportionate statistic.
+
+\subsubsection{Operational reading}
+\label{sec:p5-iter125-operational}
+\textbf{(a)} Reports of GRPO-family algorithm differences that omit
+mega-axis context (model\_family, task\_slice, G) are reporting noise
+at the $\leq 0.13$ level, not signal. \textbf{(b)} Reports that DO
+include task and group-size context must additionally bootstrap stack
+CIs to avoid being ignored as confounds. \textbf{(c)} The MIN-REPORT
+v2.2 \texttt{stack-context-required} flag ought to mandate either
+\texttt{task\_slice} OR \texttt{G} (or both) be reported alongside
+any algorithm-axis effect-size claim. \textbf{(d)} The chained ratio
+$R^{\mathrm{stack/algo}}$ is the recommended summary statistic for
+the MIN-REPORT ``claim placement audit'' (\S\ref{sec:p5-iter121-value-correctness}):
+PASS the audit only if $R^{\mathrm{stack/algo}}$ on the cited channel
+is $\geq 1$ at CI-lo.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+axis & metric & $\eta^2_{\mathrm{stack}}$ & $\eta^2_{\mathrm{algo}}$ &
+$R$ & $R^{\mathrm{lo}}$ \\
+\midrule
+\texttt{task\_slice} & \texttt{zvf}  & 0.469 & 0.045 & 10.32 & 4.11 \\
+\texttt{task\_slice} & \texttt{pcd}  & 0.451 & 0.036 & 12.62 & 5.46 \\
+\texttt{G}           & \texttt{zvf}  & 0.444 & 0.045 &  9.77 & 3.51 \\
+\texttt{G}           & \texttt{pcd}  & 0.230 & 0.036 &  6.45 & 2.39 \\
+\midrule
+\texttt{model\_family} & \texttt{pcd} & 0.093 & 0.036 & 2.61 & 0.37 \\
+\texttt{model\_family} & \texttt{zvf} & 0.005 & 0.045 & 0.12 & 0.00 \\
+\texttt{temperature}  & \texttt{pcd} & 0.009 & 0.036 & 0.25 & 0.00 \\
+\texttt{temperature}  & \texttt{zvf} & 0.009 & 0.045 & 0.20 & 0.00 \\
+\texttt{seed}         & \texttt{pcd} & 0.001 & 0.036 & 0.02 & 0.00 \\
+\texttt{seed}         & \texttt{zvf} & 0.000 & 0.045 & 0.00 & 0.00 \\
+\bottomrule
+\end{tabular}
+\caption{Chained $\eta^2$ ratio $R = \eta^2_{\mathrm{stack}} /
+\eta^2_{\mathrm{algo}}$ with paired-step / paired-cell bootstrap 95\%
+CIs ($B{=}4000$ on N2, $B{=}2000$ on mega-98; seed $20260705$). Rows
+sorted by $R$ point estimate. The four largest rows (top) all pass the
+$R^{\mathrm{lo}} > 1$ head-line test and are the load-bearing stack
+axes on the contrast-signal channels.}
+\label{tab:p5-iter125-chained}
+\end{table}
+
+\paragraph{Method note.} The mega-98 $\eta^2_{\mathrm{stack}}$ is
+computed under a paired-cell bootstrap (per-cell resampling,
+preserves the 5-axis factorial structure); the N2
+$\eta^2_{\mathrm{algo}}$ is computed under a paired-step bootstrap
+(per-step resampling within method groups). The chained ratio uses
+the minimum-length alignment of the two bootstrap streams (2000 each
+in this run; the N2 stream had 4000 but we pair the first 2000 to
+mirror the mega stream). Reproduce via
+\texttt{python3 scripts/p5p8/p5\_iter125\_chained\_eta2.py}; outputs
+in \texttt{experiments/results/p5p8/p5\_iter125\_*}.
+

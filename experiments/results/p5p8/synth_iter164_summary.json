@@ -1,0 +1,42 @@
+{
+  "iter": 164,
+  "pillar": "P5P8-SYNTH",
+  "job": "B",
+  "vein": "iter-161 mint vein #4 \u2014 D13 per-prompt reward stability",
+  "d13_density_eps_0p025": 0.0,
+  "d13_density_eps_0p05": 0.0,
+  "d13_density_eps_0p10": 0.0,
+  "d13_layer_eps_0p05": "LOW",
+  "d13_half_width_p1": 0.1622,
+  "d13_half_width_p10": 0.1622,
+  "d13_half_width_median": 0.1622,
+  "d13_half_width_max": 0.2848,
+  "h1_d13_in_low": {
+    "pass": true,
+    "density": 0.0,
+    "layer": "LOW",
+    "bar": "density < 0.05",
+    "verdict": "PASS"
+  },
+  "h2_structural_floor": {
+    "pass": true,
+    "p1_half_width": 0.1622,
+    "bar": "p1_hw >= 0.10",
+    "verdict": "PASS"
+  },
+  "h3_d13_lt_d12": {
+    "pass": true,
+    "d13": 0.0,
+    "d12": 0.175,
+    "ratio": 0.0,
+    "bar": "ratio < 1.0",
+    "verdict": "PASS"
+  },
+  "h4_all_methods_low": {
+    "pass": true,
+    "all_methods_in_low": true,
+    "verdict": "PASS"
+  },
+  "n_cells": 2560,
+  "n_methods": 4
+}

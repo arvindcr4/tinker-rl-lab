@@ -1,0 +1,54 @@
+% Paper 6 (GRPO-Registry) maintenance and governance
+\section{Maintenance and Governance}
+\label{sec:p6-governance}
+
+A registry is a promise to stay current; this section is the plan for keeping
+it, sized honestly for an academic-lab steward.
+
+\paragraph{Contribution model.}
+Entries arrive as pull requests containing one JSON file each. CI enforces the
+mechanical gate: the file must validate against \texttt{schema.json}, its
+\texttt{id} must be unique, and \texttt{provenance.source_artifacts} must be
+non-empty. Human review enforces the semantic gate: provenance must point to
+something checkable (a config dump, a public run log, a code permalink), and
+\texttt{variant_deltas_applied} statuses must be defensible from that
+provenance---\texttt{implemented} requires visible code or an open backward
+pass; anything inferred from a launcher flag on a closed stack is at most
+\texttt{surrogate}. Self-reported entries for closed stacks are accepted (the
+alternative is a registry of open stacks only) but are permanently
+distinguishable by their \texttt{openness} field and their nulls: the badge
+does the discounting automatically.
+
+\paragraph{Variant-delta records are the conservative tier.}
+Stack entries are cheap and may be wrong in ways their provenance exposes;
+delta records define shared vocabulary and therefore require verification
+against the source paper (as we did for DAPO, Dr.~GRPO, and GSPO) before
+merge. A delta record is never edited to track a paper's v2 silently;
+revisions create a new record id with a superseded pointer, so old stack
+entries keep meaning what they meant.
+
+\paragraph{Schema evolution.}
+Every record carries \texttt{schema_version} (currently 0.1.0). Additive
+changes (new optional fields) bump the minor version and require no entry
+migration, since absent-in-old-schema is exactly the null/unreported semantics
+the tooling already handles. Breaking changes require a migration script
+shipped in the same commit and a major-version bump. The badge definition
+(Eq.~\ref{eq:p6-badge}) is versioned with the schema: published badge numbers
+are meaningless without it.
+
+\paragraph{The bus-factor lesson.}
+Papers with Code was better resourced than any academic registry will be, and
+still disappeared with its steward~\citep{paperswithcode2025}. We adopt the
+three mitigations its aftermath validated: the registry is plain JSON files in
+a git repository (fork-to-preserve, no serving infrastructure to die), the
+license permits redistribution, and periodic snapshot dumps are archived with
+the benchmark release rather than only at a canonical URL. Continuity of the
+\emph{data} is engineered; continuity of \emph{curation} is not promised
+beyond the benchmark's maintenance window, and we say so rather than pretend
+otherwise.
+
+\paragraph{Scope discipline.}
+The registry catalogs GRPO-family stacks because that is where our evidence
+of label--implementation divergence lives. Widening to all RLHF methods would
+multiply schema surface faster than curation capacity; the intended growth
+path is depth (more stacks, more verified deltas) before breadth.

@@ -1,0 +1,17 @@
+task	algo	seed	model	n_steps	rho_dR_dL	abs_rho_dR_dL	rho_len_lag1	abs_rho_len_lag1	late_eff	rho_dZ_dL
+arithmetic_easy	grpo	42	Qwen/Qwen2.5-0.5B	40	-0.1916	0.1916	0.4069	0.4069	0.1719	0.0932
+arithmetic_easy	grpo	123	Qwen/Qwen2.5-0.5B	40	-0.3505	0.3505	0.5343	0.5343	0.1678	-0.1816
+arithmetic_easy	grpo	456	Qwen/Qwen2.5-0.5B	40	0.0839	0.0839	0.0908	0.0908	0.1667	0.1953
+arithmetic_easy	grpo	789	Qwen/Qwen2.5-0.5B	40	-0.2329	0.2329	0.3914	0.3914	0.1668	-0.0684
+arithmetic_easy	grpo	1024	Qwen/Qwen2.5-0.5B	40	-0.1300	0.1300	0.5167	0.5167	0.1743	-0.0095
+arithmetic_easy	dr_grpo	42	Qwen/Qwen2.5-0.5B	40	-0.0458	0.0458	0.4209	0.4209	0.1914	0.2480
+arithmetic_easy	dr_grpo	123	Qwen/Qwen2.5-0.5B	40	-0.1560	0.1560	0.6354	0.6354	0.1985	0.1310
+arithmetic_easy	dr_grpo	456	Qwen/Qwen2.5-0.5B	40	-0.2657	0.2657	0.1357	0.1357	0.1890	-0.1548
+arithmetic_easy	dr_grpo	789	Qwen/Qwen2.5-0.5B	40	-0.0896	0.0896	0.1745	0.1745	0.1874	0.1806
+arithmetic_easy	dr_grpo	1024	Qwen/Qwen2.5-0.5B	40	-0.2864	0.2864	0.2807	0.2807	0.1835	-0.0283
+gsm8k_cot	grpo	42	Qwen/Qwen2.5-1.5B-Instruct	30	-0.6260	0.6260	0.7049	0.7049	0.0030	0.1417
+gsm8k_cot	grpo	123	Qwen/Qwen2.5-1.5B-Instruct	30	-0.5686	0.5686	0.3901	0.3901	-0.0025	0.3951
+gsm8k_cot	grpo	456	Qwen/Qwen2.5-1.5B-Instruct	30	-0.8328	0.8328	0.0084	0.0084	0.0074	-0.0198
+gsm8k_cot	dr_grpo	42	Qwen/Qwen2.5-1.5B-Instruct	30	-0.5338	0.5338	0.3517	0.3517	0.0063	0.2599
+gsm8k_cot	dr_grpo	123	Qwen/Qwen2.5-1.5B-Instruct	30	-0.7534	0.7534	0.1232	0.1232	-0.0006	0.4695
+gsm8k_cot	dr_grpo	456	Qwen/Qwen2.5-1.5B-Instruct	30	-0.7314	0.7314	-0.2675	0.2675	0.0082	-0.0162

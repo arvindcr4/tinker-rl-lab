@@ -1,0 +1,10 @@
+library	rank_orig	rank_verif	rank_shift	drift_orig	drift_verif	mean_zvf	class
+grpo	4	4	+0	0.0000	0.0000	0.4808	GRPO-cousin
+aero	0	0	+0	0.0000	0.0000	0.2203	plateau-cluster
+cppo	1	1	+0	0.0000	0.0000	0.2952	plateau-cluster
+ngrpo	2	2	+0	0.0000	0.0000	0.3003	plateau-cluster
+scafgrpo	3	3	+0	0.0000	0.0000	0.3166	plateau-cluster
+mcgrpo	8	8	+0	0.2000	0.0400	0.1461	drift-cluster
+gift	5	5	+0	0.2000	0.0400	0.1142	drift-cluster
+areal	7	7	+0	0.2000	0.0400	0.1209	drift-cluster
+es	6	6	+0	0.2000	0.0400	0.1142	drift-cluster

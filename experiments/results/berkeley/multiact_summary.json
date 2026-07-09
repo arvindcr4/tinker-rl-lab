@@ -1,0 +1,78 @@
+{
+  "ts": "2026-07-04",
+  "iter": 23,
+  "lecture": "F25 L11 Oriol Vinyals (Multi-Agent Systems in the LLM Era)",
+  "anchor_paper": "AlphaZero (Silver et al. 2017, arXiv:1712.01815) \u2014 verified 2026-07-04",
+  "co_anchor": "AlphaStar (Vinyals et al. Nature 2019, s41586-019-1724-z) \u2014 verified via prior knowledge of Vinyals DeepMind StarCraft work",
+  "hypotheses": {
+    "H1_population_SE": {
+      "n_decisive": 0,
+      "n_total": 0,
+      "verdict": "NULL",
+      "rows": []
+    },
+    "H2_row03_NULL_extension": {
+      "n_decisive": 0,
+      "n_total": 3,
+      "verdict": "NULL",
+      "rows": [
+        {
+          "headline": "H3 P3 iter123: SNR slope in G = +0.366/decade (THEORY +0.500)",
+          "point": 0.366,
+          "ci_lo": 0.148,
+          "ci_hi": 0.583,
+          "half_width": 0.21749999999999997,
+          "signal_to_noise": 1.6827586206896554,
+          "row03_verdict": "NULL",
+          "population_extension_verdict": "NULL"
+        },
+        {
+          "headline": "H4 P3 iter135: Native-Wu paired G=2~=G=16 retention 1.0035",
+          "point": -0.0033,
+          "ci_lo": -0.0205,
+          "ci_hi": 0.0139,
+          "half_width": 0.0172,
+          "signal_to_noise": 0.19186046511627908,
+          "row03_verdict": "NULL",
+          "population_extension_verdict": "NULL"
+        },
+        {
+          "headline": "H5 P1 iter137: R_max_2p vs log10(N) slope across 5 anchors",
+          "point": -0.0231,
+          "ci_lo": -0.7959,
+          "ci_hi": 0.3228,
+          "half_width": 0.55935,
+          "signal_to_noise": 0.04129793510324484,
+          "row03_verdict": "NULL",
+          "population_extension_verdict": "NULL"
+        }
+      ]
+    },
+    "H3_pillar_checkpoint_population": {
+      "n_decisive": 1,
+      "n_total": 1,
+      "verdict": "NULL",
+      "rows": [
+        {
+          "pillar": "P3_group_size_last10",
+          "n_pop": 4,
+          "pop_mean": 0.97635,
+          "se_single_checkpoint": 0.004717255558054919,
+          "se_population": 0.002385248142751612,
+          "ratio_se_single_over_pop": 1.9776791661655433,
+          "verdict": "DECISIVE"
+        }
+      ]
+    },
+    "H4_cross_pillar_agreement": {
+      "n_decisive": 0,
+      "n_total": 0,
+      "verdict": "DECISIVE",
+      "rows": []
+    }
+  },
+  "verdict_counts": {
+    "DECISIVE": 1,
+    "TOTAL": 4
+  }
+}

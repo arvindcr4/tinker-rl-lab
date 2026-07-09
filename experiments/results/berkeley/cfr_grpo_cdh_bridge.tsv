@@ -1,0 +1,6 @@
+G	n_points	mean_abs_residual	cdh_signal_potential
+4	4	0.1043	high
+8	4	0.0720	mid
+16	4	0.0635	mid
+32	4	0.0762	low
+64	4	0.0790	low

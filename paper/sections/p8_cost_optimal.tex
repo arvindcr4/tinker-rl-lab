@@ -1,0 +1,105 @@
+% P8 iter-28 JOB A: expected-cost-optimal decision threshold.
+% Inputs: experiments/results/p5p8/p8_cost_optimal{,_boot}.tsv
+\subsection{Cost-optimal decision threshold: is the sensor worth its price?}
+\label{sec:p8-evidence-cost-optimal}
+
+The cost sections above fix a review budget (top-$K\%$,
+\secref{sec:p8-evidence-cost-curve}) or sweep thresholds for
+$F_1$ (\secref{sec:p8-evidence-threshold}). Neither selects the
+operating point the way a fraud desk does: by \emph{expected dollars per
+decision}. Given an investigation cost $C_{\text{inv}}$ per alert and a
+loss $L$ per \emph{missed} fraud, the cost-optimal threshold is
+\begin{equation}
+\tau^\star \;=\; \argmin_{\tau}\;
+  \frac{C_{\text{inv}}\,\big(\mathrm{TP}(\tau)+\mathrm{FP}(\tau)\big)
+        \;+\; L\,\mathrm{FN}(\tau)}{N}\; ,
+\label{eq:p8-tau-star}
+\end{equation}
+and the deployed cost adds a constant per-row sensing charge
+$c_{\text{sense}}$ for any tree that consumes the LLM aggregates. We take
+$C_{\text{inv}}=\$0.50$/alert and $c_{\text{sense}}=\$0.0035$/row from the
+iter-4 cost ledger, sweep the cost ratio $\rho = L/C_{\text{inv}}$, and put
+paired bootstrap CIs ($n{=}400$) on the cost advantage of each feature set.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Cost-optimal operating points from \eqref{eq:p8-tau-star} on the
+$10{,}000$-row held-out split. $\tau^\star$ falls and recall rises
+monotonically with the fraud loss $\rho$: a fixed threshold is never
+optimal. The sensor-only tree (\textsc{4sensor}) reaches comparable recall
+only by over-alerting ($39\%$ of the stream at $\rho{=}100$), making it
+$2.7\times$ more expensive per decision.}
+\label{tab:p8-cost-optimal}
+\begin{tabular}{r l r r r r}
+\toprule
+$\rho$ & model & $\tau^\star$ & alert\% & recall & \$/dec \\
+\midrule
+2   & \textsc{20raw}   & 0.197 & 0.9\%  & 0.542 & 0.0112 \\
+2   & \textsc{24full}  & 0.175 & 1.0\%  & 0.611 & 0.0142 \\
+2   & \textsc{4sensor} & 0.157 & 0.1\%  & 0.035 & 0.0178 \\
+\midrule
+10  & \textsc{20raw}   & 0.072 & 2.1\%  & 0.743 & 0.0290 \\
+10  & \textsc{24full}  & 0.069 & 2.2\%  & 0.792 & 0.0293 \\
+10  & \textsc{4sensor} & 0.045 & 2.4\%  & 0.271 & 0.0682 \\
+\midrule
+100 & \textsc{20raw}   & 0.019 & 10.5\% & 0.938 & 0.0975 \\
+100 & \textsc{24full}  & 0.019 & 10.8\% & 0.958 & 0.0877 \\
+100 & \textsc{4sensor} & 0.014 & 39.3\% & 0.944 & 0.2401 \\
+\midrule
+500 & \textsc{20raw}   & 0.009 & 27.9\% & 0.986 & 0.1897 \\
+500 & \textsc{24full}  & 0.014 & 15.4\% & 0.972 & 0.1803 \\
+500 & \textsc{4sensor} & 0.013 & 44.3\% & 0.965 & 0.3500 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired-bootstrap CI ($n{=}400$, $\alpha{=}0.05$) on the cost
+advantage (\$ per decision; positive $=$ first model cheaper) at each
+model's own $\tau^\star$. \textsc{24full} dominates the sensor-only tree at
+\emph{all} eight ratios; the LLM-sensor \emph{increment} over raw features
+never earns a CI-certified net win, and at low loss it is detectably
+\emph{worse} (you pay sensing cost for no gain).}
+\label{tab:p8-cost-optimal-boot}
+\begin{tabular}{r l r r c}
+\toprule
+$\rho$ & contrast & $\Delta$\$/dec & 95\% CI & sig. \\
+\midrule
+2   & \textsc{24full}$-$\textsc{4sensor} & $+0.0036$ & $[+0.0027,+0.0046]$ & \checkmark \\
+100 & \textsc{24full}$-$\textsc{4sensor} & $+0.1524$ & $[+0.1197,+0.1901]$ & \checkmark \\
+500 & \textsc{24full}$-$\textsc{4sensor} & $+0.1697$ & $[+0.0375,+0.3231]$ & \checkmark \\
+\midrule
+2   & \textsc{24full}$-$\textsc{20raw}   & $-0.0030$ & $[-0.0035,-0.0026]$ & \checkmark \\
+10  & \textsc{24full}$-$\textsc{20raw}   & $-0.0004$ & $[-0.0038,+0.0030]$ & --- \\
+100 & \textsc{24full}$-$\textsc{20raw}   & $+0.0098$ & $[-0.0099,+0.0304]$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{What the cost-optimal frame settles.} Three findings, all on the
+real held-out split. \textbf{(i)} $\tau^\star$ is strongly
+cost-ratio-dependent (Table~\ref{tab:p8-cost-optimal}): it moves from $0.18$
+to $0.01$ as the fraud loss grows, so any paper that quotes one threshold is
+implicitly fixing $\rho$. \textbf{(ii)} The four LLM-sensor aggregates
+\emph{alone} cannot score: \textsc{4sensor} is detectably costlier than both
+other trees at $8/8$ ratios, buying comparable recall only by over-alerting
+($2.7\times$ the per-decision cost at $\rho{=}100$). This is the sharpest
+quantitative form of the paper's sensor-not-scorer thesis. \textbf{(iii)} As a
+\emph{supplement} to a competent raw-feature scorer, the oracle sensor's value
+is marginal: the first break-even is $L^\star\!\approx\!\$5.50$ ($\rho^\star\!
+\approx\!11$), but the advantage peaks at $\$0.0008$/decision, oscillates in
+sign with the discrete $\tau^\star$ cutoff, and \emph{no} $\rho$ produces a
+bootstrap CI that certifies a net saving; at low loss the sensing charge makes
+\textsc{24full} detectably worse. On this data the LLM sensor is worth
+deploying only where the missed-fraud loss is large and the raw scorer is
+weak---consistent with the sensor/scribe, not scorer, framing.
+
+\paragraph{Reproduction.} \texttt{python3
+scripts/p5p8/p8\_cost\_optimal\_threshold.py} ($\sim$12\,s on 4 cores; XGBoost
+seed $42$, bootstrap seed $2026$). Outputs:
+\texttt{experiments/results/p5p8/p8\_cost\_optimal.tsv},
+\texttt{p8\_cost\_optimal\_boot.tsv},
+\texttt{p8\_cost\_optimal\_breakeven.tsv}, \texttt{p8\_cost\_optimal\_summary.json}.

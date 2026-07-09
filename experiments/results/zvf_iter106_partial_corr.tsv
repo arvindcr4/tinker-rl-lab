@@ -1,0 +1,13 @@
+# zvf_iter106_partial_corr.tsv -- raw vs partial (| p) correlations
+# between ZVF / Delta and is_collapse across the cross-library rows.
+# 'conditioned_on=p_difficulty' uses the partial-correlation formula
+# r_xy.z = (r_xy - r_xz*r_yz) / sqrt((1-r_xz^2)(1-r_yz^2)).
+# Bootstrap CIs are B=2000 percentile resamples.
+# Source: scripts/zvf_diagnostic_iter106.py
+predictor	predictor_label	method	rho	ci_lo	ci_hi	conditioned_on
+zvf_emp	ZVF (raw, uncond.)	Pearson	0.9307520702728896	0.8159367985827095	0.9779147102373644	none
+zvf_emp	ZVF (raw, | p)	Pearson partial	0.9487838937543468	-0.4578152086189747	0.9887350945779202	p_difficulty
+delta_calibration	Delta (uncond.)	Pearson	-0.737936522744733	-0.8859612654550096	-0.4528439434111847	none
+delta_calibration	Delta (| p)	Pearson partial	-0.7399488641219891	-0.9100290352015076	0.45362255336946944	p_difficulty
+zvf_emp	ZVF (Spearman | p)	Spearman partial	0.3735989458086144	-0.03498489460003531	0.8997361367616709	p_difficulty
+delta_calibration	Delta (Spearman | p)	Spearman partial	-0.8767363366149841	-0.8371130740925278	0.17023483913961057	p_difficulty

@@ -1,0 +1,36 @@
+{
+  "n_entries_backfilled": 5,
+  "loss_form_kl_leaves": [
+    "loss_form.clip_eps_low",
+    "loss_form.clip_eps_high",
+    "loss_form.length_normalization",
+    "loss_form.token_mask",
+    "loss_form.advantage_normalization",
+    "reference_kl.kl_beta",
+    "reference_kl.kl_estimator"
+  ],
+  "decontamination_leaves": [
+    "decontamination.performed",
+    "decontamination.parser_robustness_probe"
+  ],
+  "all_9_leaves": [
+    "loss_form.clip_eps_low",
+    "loss_form.clip_eps_high",
+    "loss_form.length_normalization",
+    "loss_form.token_mask",
+    "loss_form.advantage_normalization",
+    "reference_kl.kl_beta",
+    "reference_kl.kl_estimator",
+    "decontamination.performed",
+    "decontamination.parser_robustness_probe"
+  ],
+  "target_ids": [
+    "zvf130_cppo",
+    "zvf130_es",
+    "zvf130_mcgrpo",
+    "zvf130_ngrpo",
+    "zvf130_scafgrpo"
+  ],
+  "provenance_tag": "iter-98-redflag-backfill: 7 loss-form/KL leaves (loss_form.clip_eps_{low,high}, length_normalization, token_mask, advantage_normalization, reference_kl.kl_{beta,estimator}) are null because the zvf-iter130 single-batch risk-index harness is managed-by-tinker and does not expose loss-form internals; reported-as-unknown on purpose, not as oversight.",
+  "decontamination_tag": "iter-98-redflag-backfill: 2 decontamination leaves (performed, parser_robustness_probe) are null across all zvf130_* entries because the field was added in iter-94 after these entries were frozen; reported-as-unknown with provenance tied to iter-94."
+}

@@ -1,0 +1,7 @@
+comparison	G_a	G_b	n_seeds_a	n_seeds_b	max_step_distance	n_prompts_per_step	disc_above_epsilon_implicit_dpo	perm_p_value_discrepancy
+mean_curve_pair	2	4	3	3	0.5258	16	True	0.6610
+mean_curve_pair	2	8	3	3	0.6447	16	True	0.6610
+mean_curve_pair	2	16	3	3	0.5963	16	True	0.6610
+mean_curve_pair	4	8	3	3	0.2481	16	False	0.6610
+mean_curve_pair	4	16	3	3	0.3050	16	False	0.6610
+mean_curve_pair	8	16	3	3	0.2658	16	False	0.6610

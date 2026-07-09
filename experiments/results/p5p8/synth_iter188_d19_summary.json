@@ -1,0 +1,43 @@
+{
+  "domain": "D19 \u2014 Information-weighted controller efficiency eta",
+  "vein": "fresh",
+  "data_source": "iter-187 per_step TSV (160 cells)",
+  "G_esc_extra_rollouts": 8,
+  "hypotheses": {
+    "H1_eta_canonical_strictly_sub1_all_methods": true,
+    "H2_cross_method_CV_lt_5pct_method_invariant": true,
+    "H3_cross_method_bpr_CV_gt_5pct_varies": false,
+    "H4_weighted_eta_CV_lt_unweighted_CV": false,
+    "H5_boundary_eta_strictly_lt_mid_eta": true
+  },
+  "per_method_mean_eta": {
+    "grpo": 0.9258328476900113,
+    "aero": 0.9265372387232531,
+    "gift": 0.9263693831357971,
+    "areal": 0.9265106679631419
+  },
+  "per_method_bpr_per_rollout": {
+    "grpo": 0.048734374999999996,
+    "aero": 0.04875775,
+    "gift": 0.04852050625,
+    "areal": 0.048793078125
+  },
+  "cross_method_eta_CV": 0.00030680860865106205,
+  "cross_method_bpr_CV": 0.002187302616933518,
+  "cross_method_weighted_eta_CV": 0.0005889712791254254,
+  "weighted_eta_per_method": {
+    "grpo": 0.9284432933538173,
+    "aero": 0.9287583130977726,
+    "gift": 0.9278101513831617,
+    "areal": 0.9293238742161753
+  },
+  "mean_eta_high_regret": 0.9158988642914316,
+  "mean_eta_low_regret": 0.9372419053309599,
+  "n_high_regret_steps": 52,
+  "n_low_regret_steps": 54,
+  "tertile_edges_regret": [
+    0.029710999999999987,
+    0.032750999999999975
+  ],
+  "verdict_count": 3
+}

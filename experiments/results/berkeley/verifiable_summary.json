@@ -1,0 +1,84 @@
+{
+  "lecture": "F25 L4 \u2014 Jiantao Jiao (NVIDIA) \u2014 Post-Training Verifiable Agents (SWE-bench Verified + BrowseComp)",
+  "citations_verified_via_webfetch": [
+    "Wei et al. 2025, arXiv:2504.12516 \u2014 BrowseComp",
+    "Jimenez et al. 2024, arXiv:2310.06770 \u2014 SWE-bench (Verified subset)",
+    "Yehudai et al. 2025, arXiv:2503.16416 \u2014 Survey on Evaluation of LLM-based Agents (related, F25 L5)"
+  ],
+  "bfclv4_n10": {
+    "n": 10,
+    "n_nonherding": 6,
+    "h1_pass": false,
+    "h1_max": 0.3436089754104614,
+    "h1_mean": 0.13312114477157594,
+    "h1_nonherding_max": 0.3436089754104614,
+    "h1_nonherding_mean": 0.2218685746192932,
+    "h2_hits": 0,
+    "h2_frac": 0.0,
+    "h2_p_value": 1.0,
+    "h2_decisive": false,
+    "h2_mean_rho_sparse": 0.0,
+    "h2_mean_rho_dense": 0.0,
+    "h3_var_pass": true,
+    "h3_mean_pass": true,
+    "var_sparse": 0.011979166666666667,
+    "var_dense": 0.020814236111111113,
+    "mean_sparse": 0.1125,
+    "mean_dense": 0.18625
+  },
+  "g_star": {
+    "n": 12,
+    "n_Gn_ge_Gv": 12,
+    "n_Gn_gt_Gv": 12,
+    "Gv": [
+      32,
+      16,
+      12,
+      8,
+      6,
+      4,
+      4,
+      4,
+      6,
+      8,
+      16,
+      32
+    ],
+    "Gn": [
+      64,
+      32,
+      24,
+      16,
+      12,
+      8,
+      6,
+      8,
+      12,
+      16,
+      32,
+      64
+    ],
+    "Y_target": 0.8,
+    "delta_grader": 0.15
+  },
+  "risk_score": {
+    "grader_inflation_share": 0.95,
+    "n_calibration_cells": 4,
+    "n_methods": 0
+  },
+  "verdict": {
+    "h1_verifiable_identity_nonherding": false,
+    "h1_nonherding_n": 6,
+    "h1_max_abs_delta_div": 0.3436089754104614,
+    "h1_nonherding_mean_abs_delta_div": 0.2218685746192932,
+    "h2_grader_noise_inflation_decisive": false,
+    "h2_hits": 0,
+    "h2_hits_frac": 0.0,
+    "h2_mean_rho_sparse": 0.0,
+    "h2_mean_rho_dense": 0.0,
+    "h3a_var_dense_gt_sparse": true,
+    "h3b_mean_dense_gt_sparse": true,
+    "G_star_non_verifiable_ge_verifiable_n": 12,
+    "G_star_non_verifiable_strictly_gt_n": 12
+  }
+}

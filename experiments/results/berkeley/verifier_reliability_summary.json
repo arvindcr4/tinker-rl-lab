@@ -1,0 +1,47 @@
+{
+  "lecture": "F25 L4 - Jiantao Jiao (NVIDIA) - Post-Training Verifiable Agents",
+  "citations_verified_2026_07_04_via_webfetch": [
+    "Jimenez et al., SWE-bench: Can LMs Resolve Real-World GitHub Issues?, arXiv:2310.06770, ICLR 2024 (SWE-bench; the Verified subset is OpenAI's 2024-08 human-audited 500-task clean split)",
+    "Wei et al., BrowseComp: A Simple Yet Challenging Benchmark for Browsing Agents, arXiv:2504.12516, 2025 (verifiable short-answer, easy-to-verify hard-to-solve design)"
+  ],
+  "channel": "p_obs = alpha + (1-alpha-beta)*p_true  (FP=alpha, FN=beta)",
+  "H1_flagship_invariance": {
+    "clean_paired_delta": -0.002000000000000113,
+    "grid_cells": 20,
+    "point_estimate_invariant_all_cells": true,
+    "equiv_bound_clean": 0.0293,
+    "equiv_bound_worst": 0.1088,
+    "bound_widening_factor": 3.71,
+    "decisive": true,
+    "interpretation": "verifier noise is a SAME-VERIFIER common-mode error that cancels in the paired difference: the GRPO~=PPO point estimate stays ~-0.002 (never manufactures a false difference) across FP/FN up to 0.30/0.20 -- but the FN channel beta inflates per-seed variance, widening the TOST equivalence bound up to ~3.7x, so a noisy verifier costs the equivalence claim its TIGHTNESS (power) not its DIRECTION -- exactly the SWE-bench-Verified motivation to drive beta down"
+  },
+  "H2_attenuation": {
+    "true_G_effect_2_to_16": -0.0034000000000000696,
+    "attenuation_is_1_minus_alpha_minus_beta": true,
+    "decisive": true,
+    "interpretation": "verifier noise ONLY shrinks measured effects toward zero (never inflates); every reported verifiable-reward effect is a conservative lower bound on the true effect"
+  },
+  "H3_zvf_model_validation": {
+    "zvf_true_percell": 0.4,
+    "max_analytic_vs_mc_dev": 0.0016167840000000239,
+    "decisive": true,
+    "interpretation": "closed-form ZVF-under-verifier-noise matches Monte-Carlo corruption of real group counts to <2pp -> the corruption model is validated"
+  },
+  "H4_alpha_beta_dominance": {
+    "flagship_p": 0.9909999999999999,
+    "sparse_p": 0.1125,
+    "crossover_at_p_0.5": true,
+    "regimes_straddle_crossover": true,
+    "decisive": true,
+    "interpretation": "SWE-bench-Verified removes FALSE NEGATIVES; that helps a dense/high-accuracy metric but a SPARSE RL reward is false-POSITIVE-dominated, so Verified-style cleaning does not address the larger bias for sparse verifiable RL"
+  },
+  "H5_collapse_masking": {
+    "G": 8,
+    "zvf_obs_at_alpha_0.05": 0.6634204313281248,
+    "deflation_pp_at_0.05": 0.3365795686718752,
+    "decisive": true,
+    "interpretation": "a 5pct verifier false-positive rate deflates a fully-collapsed ZVF from 1.00 to 0.66 (34pp) at G=8 -> the Pillar-2 ZVF collapse detector UNDER-reports collapse severity whenever the verifier admits false positives"
+  },
+  "n_decisive": 5,
+  "n_hypotheses": 5
+}

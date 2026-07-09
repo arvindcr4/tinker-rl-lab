@@ -1,0 +1,170 @@
+% Section: P5 bootstrap CIs + LOMO stability on N2 algorithm-axis eta^2 (iter 89)
+% Closes brief veins (b) + (c): quantifies stack-conditioning on the N2
+% four-method same-stack panel with bootstrap step-resampled CIs, and a
+% leave-one-method-out (LOMO) stability audit. Corrects the iter 85
+% row 101 point estimates at the (n=40)-step sample-size ceiling.
+\subsection{Bootstrap CIs and leave-one-method-out stability on N2 algorithm-axis $\eta^2$ (iter 89)}
+\label{sec:p5-iter89-n2-bootstrap}
+
+The brief's vein (c) (\emph{bootstrap CIs on every P5 headline number})
+was not closed by iter 85 row 101, which reported point estimates of
+$\eta^2_{\mathrm{algo}}$ on the same N2 panel without step-resampled
+confidence bands. At $n{=}40$ steps the point estimates can be
+sample-noise unstable, particularly on right-skewed channels like
+\texttt{zvf} and \texttt{pcd}. We close the gap by re-using
+\texttt{axis\_variance\_fraction} on a paired-step bootstrap
+($B{=}4000$, seed 20260705), and add a leave-one-method-out (LOMO)
+stability audit on the algorithm axis.
+
+\subsubsection{Bootstrap CIs on pooled algorithm-axis $\eta^2$ (H1)}
+\label{sec:p5-iter89-h1}
+Table~\ref{tab:p5-iter89-boot} reports the 95\% bootstrap CIs on
+$\eta^2_{\mathrm{algo}}$ for each channel. \textbf{Only two of the
+four channels that passed Ivison strict in iter 85 survive
+bootstrap-strict}: \texttt{larq} (point 0.0010, UB 0.014) and
+\texttt{reward\_mean} (point 0.0075, UB 0.024). The other two,
+\texttt{zvf} (UB 0.113) and \texttt{pcd} (UB 0.081), exceed the
+0.05 threshold under bootstrap. This is a direct \emph{correction}
+of iter 85 row 101's strict-pass headline: at $n{=}40$ steps the
+point estimate is below 0.05 by chance. Loose-Ivison (UB
+$\leq 0.10$) survives on \texttt{pcd} (UB 0.081) and
+\texttt{cv\_len} (UB 0.091), giving 4 of 7 channels (the same as
+iter 85's \emph{loose} verdict). The \texttt{loss} channel stays
+at $\eta^2{=}0.987$ (CI [0.983, 0.991]) as the positive control.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & $\eta^2_{\mathrm{pt}}$ & $\eta^2_{\mathrm{lo}}$ & $\eta^2_{\mathrm{hi}}$ & $\leq 0.05$? & $\leq 0.10$? & $n_{\mathrm{boot}}$ \\
+\midrule
+\texttt{zvf}          & 0.0454 & 0.0145 & 0.1127 & $\times$ & $\times$ & 4000 \\
+\texttt{pcd}          & 0.0357 & 0.0153 & 0.0807 & $\times$ & \checkmark & 4000 \\
+\texttt{larq}         & 0.0010 & 0.0003 & 0.0136 & \checkmark & \checkmark & 4000 \\
+\texttt{reward\_mean} & 0.0075 & 0.0019 & 0.0244 & \checkmark & \checkmark & 4000 \\
+\texttt{mean\_len}    & 0.0631 & 0.0333 & 0.1264 & $\times$ & $\times$ & 4000 \\
+\texttt{cv\_len}      & 0.0457 & 0.0235 & 0.0914 & $\times$ & \checkmark & 4000 \\
+\texttt{loss}         & 0.9867 & 0.9828 & 0.9908 & $\times$ & $\times$ & 4000 \\
+\bottomrule
+\end{tabular}
+\caption{Bootstrap step-resampled 95\% CIs ($B{=}4000$, seed
+20260705) on the pooled algorithm-axis $\eta^2_{\mathrm{algo}}$ per
+channel. Strict Ivison (UB $\leq 0.05$) survives on 2 of 4 channels
+that iter 85 reported as strict-pass; loose Ivison (UB $\leq 0.10$)
+survives on 4 of 7 non-loss channels.}
+\label{tab:p5-iter89-boot}
+\end{table}
+
+\subsubsection{Pair-wise algorithm-pair decomposition (H2)}
+\label{sec:p5-iter89-h2}
+We also decompose $\eta^2$ on every pair of methods (6 pairs) per
+channel. The pattern is consistent across channels: the
+\textbf{three non-GIFT pairs} (grpo-vs-aero, grpo-vs-areal,
+aero-vs-areal) carry $\eta^2_{\mathrm{pair}} \leq 0.005$ with
+bootstrap CI upper bound $\leq 0.04$ on \texttt{zvf} and \texttt{pcd}.
+The \textbf{three GIFT-containing pairs} carry $\eta^2_{\mathrm{pair}}
+\geq 0.04$ with CI upper bound 0.08--0.16 on the same channels. The
+same pattern appears on \texttt{mean\_len} and \texttt{cv\_len}, and
+\emph{only} \texttt{larq} and \texttt{reward\_mean} show all 6 pairs
+below the 0.04 threshold. This is direct evidence that \textbf{the
+algorithm-axis signal on \texttt{zvf}, \texttt{pcd}, \texttt{mean\_len},
+and \texttt{cv\_len} is GIFT-driven, not a generic algorithm-axis
+property}.
+
+\subsubsection{Leave-one-method-out (LOMO) stability on \texttt{zvf} (H3)}
+\label{sec:p5-iter89-h3}
+Table~\ref{tab:p5-iter89-lomo} reports pooled $\eta^2_{\mathrm{algo}}$
+on \texttt{zvf} after omitting one method at a time. Removing any of
+the three non-GIFT methods yields $\eta^2 \in [0.043, 0.056]$ (CI
+upper bound 0.11--0.14). \textbf{Removing GIFT drops $\eta^2$ to
+0.0038, a $12\times$ reduction} (CI upper bound 0.039). GIFT is
+uniquely load-bearing on the algorithm-axis signal: it carries
+essentially all the between-method variance on \texttt{zvf}.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{llrrr}
+\toprule
+Omit & Remaining & $\eta^2_{\mathrm{pt}}$ & $\eta^2_{\mathrm{lo}}$ & $\eta^2_{\mathrm{hi}}$ \\
+\midrule
+grpo  & aero, areal, gift & 0.0555 & 0.0167 & 0.1370 \\
+aero  & areal, gift, grpo & 0.0539 & 0.0149 & 0.1301 \\
+areal & aero, gift, grpo  & 0.0429 & 0.0099 & 0.1086 \\
+gift  & aero, areal, grpo & \textbf{0.0038} & 0.0003 & 0.0392 \\
+\bottomrule
+\end{tabular}
+\caption{LOMO stability on \texttt{zvf}. Removing GIFT collapses the
+algorithm-axis $\eta^2$ from 0.0454 to 0.0038 (a $12\times$ drop);
+removing any other method leaves $\eta^2$ in $[0.043, 0.056]$.}
+\label{tab:p5-iter89-lomo}
+\end{table}
+
+\subsubsection{Bootstrap CIs on GIFT dominance (H4)}
+\label{sec:p5-iter89-h4}
+GIFT's last-10-step pooled effect size vs the other three methods is
+Cohen's $d{=}+2.353$ on \texttt{zvf} (CI $[+1.521, +4.155]$,
+$n{=}30$), $d{=}+0.465$ on \texttt{reward\_mean} (CI $[+0.038,
++0.975]$, excludes 0), and $d{=}-1.712$ on \texttt{pcd} (CI
+$[-3.099, -1.076]$). The \texttt{zvf} lower bound $1.521$ is well
+above the conventional $d{=}1.0$ threshold; GIFT is statistically
+indistinguishable from a $\geq 1.5$-SD effect on the contrast-yield
+axis.
+
+\subsubsection{Correction to iter 85 row 101's H1}
+\label{sec:p5-iter89-correction}
+\textbf{The iter 85 row 101 headline ``algorithm-equivalent on 5 of 7
+channels at $\eta^2 \leq 0.05$'' is corrected by the bootstrap CI
+to ``algorithm-equivalent on 2 of 7 channels at $\eta^2 \leq 0.05$
+(\texttt{larq}, \texttt{reward\_mean}) and on 4 of 7 at
+$\eta^2 \leq 0.10$ (\texttt{pcd}, \texttt{larq},
+\texttt{reward\_mean}, \texttt{cv\_len})''.} The strict threshold
+was over-confident at $n{=}40$ steps. The loose threshold survives
+the same channels as iter 85.
+
+\subsubsection{Cross-paper coupling}
+\label{sec:p5-iter89-coupling}
+\textbf{(i) P5 iter 85 row 101} --- this row is the bootstrap-CI
+correction of iter 85's point-estimate headline; iter 85 reported
+strict-pass on 5/7 channels, iter 89 reports strict-pass on 2/7
+and loose-pass on 4/7. The qualitative P5 thesis (algorithm-axis
+$\eta^2$ is small relative to within-step variance) survives the
+correction on the loose threshold.
+\textbf{(ii) P6 iter 66 row 77 / iter 74 row 87 / iter 86 row 102} ---
+the H2 pair-wise finding isolates GIFT as the algorithmic
+differentiator on contrast-yield axes; iter 86's \texttt{Y\_obs}
+ranking (AREAL $>$ AERO $\approx$ GRPO $>$ GIFT) measured the same
+phenomenon at the registry layer. iter 89's LOMO evidence is the
+\textbf{first isolation} of GIFT as the lone variance driver on the
+algorithm axis.
+\textbf{(iii) P7 iter 79 row 93 / iter 83 row 98 / iter 87 row 103} ---
+H2's GIFT-driven pair-wise signal on \texttt{mean\_len} and
+\texttt{cv\_len} explains why iter 87's hysteresis controller treats
+GIFT as the worst case (H5 gift is the worst case: gift's steep
+local ZVF drops cause persistence to refuse single-step spikes).
+GIFT's contrast-yield excess comes at theprice of larger length
+variance, which is exactly what the iter 87 hysteresis rule must
+absorb.
+\textbf{(iv) FRONTIER INSIGHTS round 2 (Gemini Deep Think)} ---
+the frontier synthesis flagged the iso-yield framework as
+$\delta_{\mathrm{div}} \in [0.13, 0.23]$ (anti-herding structural
+bonus). iter 89's LOMO evidence shows that on the algorithm axis,
+this bonus is \emph{GIFT-specific} not \emph{algorithm-axis-generic}:
+removing GIFT collapses the axis to a near-null signal
+($\eta^2{=}0.004$). The frontier synthesis's measured $[0.13,
+0.23]$ range is consistent with GIFT contributing nearly all of
+that range.
+
+\subsubsection{Operational recommendation}
+\label{sec:p5-iter89-op}
+Report the N2 four-method same-stack panel as
+\emph{algorithm-equivalent on 2 of 7 channels at $\eta^2 \leq 0.05$
+(strict, bootstrap-corrected)} and on \emph{4 of 7 at
+$\eta^2 \leq 0.10$ (loose)}. Adopt the \textbf{GIFT-aware}
+reporting convention: when reporting algorithm-axis decomposition
+on contrast-yield / length-variance channels, isolate GIFT-vs-rest
+as a separate axis; the algorithm axis is dominated by GIFT, not
+by generic GRPO-family differences. For benchmarking new GRPO
+variants against this panel, the operational baseline is
+GRPO/AERO/AREAL mutual (any pair $\eta^2 \leq 0.005$), with GIFT
+as a structurally distinct baseline whose $\delta_{\mathrm{div}}$
+is the headline contribution.

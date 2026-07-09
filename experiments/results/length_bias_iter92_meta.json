@@ -1,0 +1,26 @@
+{
+  "iter": 92,
+  "pillar": "P4-LengthBias",
+  "task": "Pillar 4 (Length Bias / Dr.GRPO): Transfer-entropy decomposition (TE_{L->R} vs TE_{R->L})",
+  "stats": [
+    "te_lr",
+    "te_rl",
+    "delta",
+    "ratio",
+    "p_lr",
+    "p_rl",
+    "p_delta",
+    "witness_lr",
+    "witness_rl"
+  ],
+  "n_bins": 3,
+  "n_surrogates": 200,
+  "lag": 1,
+  "null_model": "circular_shift_surrogate",
+  "inputs": [
+    "drgrpo_vs_grpo.json",
+    "drgrpo_gsm8k_cot_full.json"
+  ],
+  "n_runs": 16,
+  "n_paired_tests": 12
+}

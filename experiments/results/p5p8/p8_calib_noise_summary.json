@@ -1,0 +1,190 @@
+{
+  "n_train": 50000,
+  "n_test": 10000,
+  "sigmas": [
+    0.0,
+    0.05,
+    0.1,
+    0.2,
+    0.5,
+    1.0
+  ],
+  "k_pcts": [
+    0.5,
+    1.0,
+    2.0,
+    5.0
+  ],
+  "n_boot": 400,
+  "seed": 20260705,
+  "headlines": {
+    "sigma=0.0_k=0.5": {
+      "calib_gap_24full": -0.13643217086791992,
+      "calib_gap_4sensor": -0.3089710772037506,
+      "calib_gap_20raw": -0.12021535634994507,
+      "obs_rate_24full": 1.0,
+      "obs_rate_4sensor": 0.5
+    },
+    "sigma=0.05_k=0.5": {
+      "calib_gap_24full": -0.14363199472427368,
+      "calib_gap_4sensor": -0.037151169776916515,
+      "calib_gap_20raw": -0.12021535634994507,
+      "obs_rate_24full": 1.0,
+      "obs_rate_4sensor": 0.2
+    },
+    "sigma=0.1_k=0.5": {
+      "calib_gap_24full": -0.1542080044746399,
+      "calib_gap_4sensor": -0.028380580544471734,
+      "calib_gap_20raw": -0.12021535634994507,
+      "obs_rate_24full": 1.0,
+      "obs_rate_4sensor": 0.18
+    },
+    "sigma=0.2_k=0.5": {
+      "calib_gap_24full": -0.16328376531600952,
+      "calib_gap_4sensor": 0.07033226132392884,
+      "calib_gap_20raw": -0.12021535634994507,
+      "obs_rate_24full": 1.0,
+      "obs_rate_4sensor": 0.06
+    },
+    "sigma=0.5_k=0.5": {
+      "calib_gap_24full": -0.20395857095718384,
+      "calib_gap_4sensor": 0.08365203261375427,
+      "calib_gap_20raw": -0.12021535634994507,
+      "obs_rate_24full": 1.0,
+      "obs_rate_4sensor": 0.08
+    },
+    "sigma=1.0_k=0.5": {
+      "calib_gap_24full": -0.26660202026367186,
+      "calib_gap_4sensor": 0.12738325357437133,
+      "calib_gap_20raw": -0.12021535634994507,
+      "obs_rate_24full": 0.98,
+      "obs_rate_4sensor": 0.04
+    },
+    "sigma=0.0_k=1.0": {
+      "calib_gap_24full": -0.26875823736190796,
+      "calib_gap_4sensor": -0.26580523312091825,
+      "calib_gap_20raw": -0.257321834564209,
+      "obs_rate_24full": 1.0,
+      "obs_rate_4sensor": 0.41
+    },
+    "sigma=0.05_k=1.0": {
+      "calib_gap_24full": -0.2761781120300293,
+      "calib_gap_4sensor": -0.025489614903926844,
+      "calib_gap_20raw": -0.257321834564209,
+      "obs_rate_24full": 0.99,
+      "obs_rate_4sensor": 0.15
+    },
+    "sigma=0.1_k=1.0": {
+      "calib_gap_24full": -0.29212098360061645,
+      "calib_gap_4sensor": 0.007052532732486724,
+      "calib_gap_20raw": -0.257321834564209,
+      "obs_rate_24full": 0.99,
+      "obs_rate_4sensor": 0.11
+    },
+    "sigma=0.2_k=1.0": {
+      "calib_gap_24full": -0.31883267641067503,
+      "calib_gap_4sensor": 0.03434062778949737,
+      "calib_gap_20raw": -0.257321834564209,
+      "obs_rate_24full": 0.98,
+      "obs_rate_4sensor": 0.07
+    },
+    "sigma=0.5_k=1.0": {
+      "calib_gap_24full": -0.3933080148696899,
+      "calib_gap_4sensor": 0.06784397602081299,
+      "calib_gap_20raw": -0.257321834564209,
+      "obs_rate_24full": 0.97,
+      "obs_rate_4sensor": 0.06
+    },
+    "sigma=1.0_k=1.0": {
+      "calib_gap_24full": -0.4252095246315002,
+      "calib_gap_4sensor": 0.0959151005744934,
+      "calib_gap_20raw": -0.257321834564209,
+      "obs_rate_24full": 0.94,
+      "obs_rate_4sensor": 0.04
+    },
+    "sigma=0.0_k=2.0": {
+      "calib_gap_24full": -0.2540101671218872,
+      "calib_gap_4sensor": -0.2088969224691391,
+      "calib_gap_20raw": -0.2596638464927673,
+      "obs_rate_24full": 0.715,
+      "obs_rate_4sensor": 0.315
+    },
+    "sigma=0.05_k=2.0": {
+      "calib_gap_24full": -0.26046891689300533,
+      "calib_gap_4sensor": -0.015026055872440339,
+      "calib_gap_20raw": -0.2596638464927673,
+      "obs_rate_24full": 0.705,
+      "obs_rate_4sensor": 0.11
+    },
+    "sigma=0.1_k=2.0": {
+      "calib_gap_24full": -0.2705417394638061,
+      "calib_gap_4sensor": 0.006247521340847009,
+      "calib_gap_20raw": -0.2596638464927673,
+      "obs_rate_24full": 0.7,
+      "obs_rate_4sensor": 0.085
+    },
+    "sigma=0.2_k=2.0": {
+      "calib_gap_24full": -0.29464978694915767,
+      "calib_gap_4sensor": 0.04797166228294372,
+      "calib_gap_20raw": -0.2596638464927673,
+      "obs_rate_24full": 0.695,
+      "obs_rate_4sensor": 0.035
+    },
+    "sigma=0.5_k=2.0": {
+      "calib_gap_24full": -0.32313237428665165,
+      "calib_gap_4sensor": 0.049589928984642026,
+      "calib_gap_20raw": -0.2596638464927673,
+      "obs_rate_24full": 0.665,
+      "obs_rate_4sensor": 0.05
+    },
+    "sigma=1.0_k=2.0": {
+      "calib_gap_24full": -0.3228893232345581,
+      "calib_gap_4sensor": 0.08588357597589492,
+      "calib_gap_20raw": -0.2596638464927673,
+      "obs_rate_24full": 0.62,
+      "obs_rate_4sensor": 0.02
+    },
+    "sigma=0.0_k=5.0": {
+      "calib_gap_24full": -0.08236527192592619,
+      "calib_gap_4sensor": -0.11115568500757217,
+      "calib_gap_20raw": -0.0826487407684326,
+      "obs_rate_24full": 0.288,
+      "obs_rate_4sensor": 0.182
+    },
+    "sigma=0.05_k=5.0": {
+      "calib_gap_24full": -0.08665964162349699,
+      "calib_gap_4sensor": -0.012212557971477508,
+      "calib_gap_20raw": -0.0826487407684326,
+      "obs_rate_24full": 0.286,
+      "obs_rate_4sensor": 0.078
+    },
+    "sigma=0.1_k=5.0": {
+      "calib_gap_24full": -0.09246602809429166,
+      "calib_gap_4sensor": 0.004244896173477175,
+      "calib_gap_20raw": -0.0826487407684326,
+      "obs_rate_24full": 0.286,
+      "obs_rate_4sensor": 0.06
+    },
+    "sigma=0.2_k=5.0": {
+      "calib_gap_24full": -0.10440035319328306,
+      "calib_gap_4sensor": 0.03292482060194016,
+      "calib_gap_20raw": -0.0826487407684326,
+      "obs_rate_24full": 0.286,
+      "obs_rate_4sensor": 0.028
+    },
+    "sigma=0.5_k=5.0": {
+      "calib_gap_24full": -0.12032936799526217,
+      "calib_gap_4sensor": 0.03935831904411316,
+      "calib_gap_20raw": -0.0826487407684326,
+      "obs_rate_24full": 0.278,
+      "obs_rate_4sensor": 0.03
+    },
+    "sigma=1.0_k=5.0": {
+      "calib_gap_24full": -0.13317388713359835,
+      "calib_gap_4sensor": 0.052923559367656706,
+      "calib_gap_20raw": -0.0826487407684326,
+      "obs_rate_24full": 0.27,
+      "obs_rate_4sensor": 0.018
+    }
+  }
+}

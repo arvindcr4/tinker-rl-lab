@@ -1,0 +1,27 @@
+headline_id	value	ci_lo	ci_hi	n_obs	label	hypothesis
+coverage.loss_form.present_rate	1.0	0.9622786759045421	1.0	98	MIN-REPORT item coverage on 98 mega manifests	H4_anchor
+coverage.loss_form.n_unique	1.0	nan	nan	98	MIN-REPORT item n_unique on 98 mega manifests	H4_anchor
+coverage.ref_policy_kl.present_rate	1.0	0.9622786759045421	1.0	98	MIN-REPORT item coverage on 98 mega manifests	H4_anchor
+coverage.ref_policy_kl.n_unique	1.0	nan	nan	98	MIN-REPORT item n_unique on 98 mega manifests	H4_anchor
+coverage.sampler_backend_precision.present_rate	1.0	0.9622786759045421	1.0	98	MIN-REPORT item coverage on 98 mega manifests	H4_anchor
+coverage.sampler_backend_precision.n_unique	1.0	nan	nan	98	MIN-REPORT item n_unique on 98 mega manifests	H4_anchor
+coverage.per_step_zvf_path.present_rate	1.0	0.9622786759045421	1.0	98	MIN-REPORT item coverage on 98 mega manifests	H4_anchor
+coverage.per_step_zvf_path.n_unique	98.0	nan	nan	98	MIN-REPORT item n_unique on 98 mega manifests	H4_anchor
+coverage.group_size_schedule.present_rate	1.0	0.9622786759045421	1.0	98	MIN-REPORT item coverage on 98 mega manifests	H4_anchor
+coverage.group_size_schedule.n_unique	5.0	nan	nan	98	MIN-REPORT item n_unique on 98 mega manifests	H4_anchor
+coverage.heldout_split.present_rate	1.0	0.9622786759045421	1.0	98	MIN-REPORT item coverage on 98 mega manifests	H4_anchor
+coverage.heldout_split.n_unique	3.0	nan	nan	98	MIN-REPORT item n_unique on 98 mega manifests	H4_anchor
+coverage.decontamination_notes.present_rate	1.0	0.9622786759045421	1.0	98	MIN-REPORT item coverage on 98 mega manifests	H4_anchor
+coverage.decontamination_notes.n_unique	2.0	nan	nan	98	MIN-REPORT item n_unique on 98 mega manifests	H4_anchor
+placebo_triple.fraction_pairs	0.42857142857142855	0.39203751325762926	0.46590088883351743	686	placebo (item,manifest) pairs / total pairs, Wilson 95%	H4
+placebo_triple.fraction_items	0.42857142857142855	0.15821692226262685	0.7495457695909742	7	placebo items / 7 items, Wilson 95% CI on 7-item scale	H4_anchor
+eta2_method_pooled	0.007466416551996499	nan	nan	160	eta^2(method,reward_mean) on N2 same-stack (160 rows)	H1
+eta2_G	0.030434006848941084	0.010338257119210704	0.17154663416784466	98	eta^2(G | mean_reward) on 98 mega cells	H2
+eta2_model	0.452666527374799	0.3094497050941825	0.6143989316884129	98	eta^2(model | mean_reward) on 98 mega cells	H2
+eta2_task	0.2728604453647076	0.1871833823745558	0.41101449052174704	98	eta^2(task_slice | mean_reward) on 98 mega cells	H2
+eta2_temperature	6.648894690039854e-06	1.0096394193729582e-05	0.05116441126513812	98	eta^2(temperature | mean_reward) on 98 mega cells	H2
+eta2_union	0.9967388149646155	0.9961636108838715	0.9995578192431493	98	eta^2_union(stack | mean_reward) on 98 mega cells	H2
+per_step_eta2_method.early	0.005593031683744638	0.0032223380055262695	0.009473450510752162	14	per-step eta^2(method,reward_mean) band mean = early	H5
+per_step_eta2_method.mid	0.005333555995940092	0.0031059917931506105	0.007819093335877141	13	per-step eta^2(method,reward_mean) band mean = mid	H5
+per_step_eta2_method.late	0.005986967748782378	0.003969507431506826	0.008096612425546039	13	per-step eta^2(method,reward_mean) band mean = late	H5
+tost_G_vs_method.ratio_point	4.076119599944248	nan	nan	258	eta^2(G) / eta^2(method) -- G dominates algorithm axis (ratio >= 2x)	H3

@@ -1,0 +1,23 @@
+{
+  "adaptiveg_n_boot": 2000,
+  "adaptiveg_panel": "qp7_adaptive_armB_vs_armA_paired",
+  "adaptiveg_seed": 20260704,
+  "iter": 54,
+  "missing_delta_audit": {
+    "missing_delta_ids": [],
+    "n_claimed_but_missing": 0,
+    "n_claims_audited": 26
+  },
+  "n_new_entries_written": 3,
+  "new_entries": [
+    "delta_adaptiveg",
+    "delta_reinforce",
+    "delta_liteppo"
+  ],
+  "pillar": "P6",
+  "registry_total_after": 34,
+  "schema_fail_after": 0,
+  "schema_fail_ids": [],
+  "schema_pass_after": 34,
+  "vein": "(d) add missing variant-delta entries + cross-reference audit"
+}

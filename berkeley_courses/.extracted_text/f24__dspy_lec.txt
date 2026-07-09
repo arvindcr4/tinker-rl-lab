@@ -1,0 +1,1072 @@
+Omar Khattab
+Research Scientist, Databricks
+Incoming Assistant Professor, MIT EECS (Fall 2025)
+Compound
+AI Systems     &
+Includes slides adapted from
+Krista Opsahl-Ong & Michael Ryan
+
+It’s never been easier to prototype 
+impressive AI demos.
+
+Turning monolithic LMs into  reliable  AI 
+systems remains challenging.
+
+4
+
+Every AI system will make mistakes.
+But the monolithic nature of LMs
+makes them hard to control, debug, 
+and improve.
+5
+
+To tackle this, AI researchers increasingly 
+build Compound AI Systems,
+i.e. modular programs that use LMs as 
+specialized components
+
+Compound AI Systems, i.e. modular programs that use LMs as specialized components
+Example: Retrieval-Augmented Generation
+What 
+compounds 
+protect the 
+digestive 
+system?
+LM
+The stomach is 
+protected by 
+gastric acid and 
+proteases.
+⚡ Transparency: can debug traces & oﬀer user-facing attribution
+⚡ Eﬀiciency: can use smaller LMs, oﬀloading knowledge & control flow
+Monolithic LM
+Literature: DrQA (Chen et al., 2017), ORQA (Lee et al., 2019), RAG (Lewis et al., 2020), ColBERT-QA (Khattab et al., 2020)
+
+Compound AI Systems, i.e. modular programs that use LMs as specialized components
+Example: Retrieval-Augmented Generation
+What 
+compounds 
+protect the 
+digestive 
+system?
+LM
+The stomach is 
+protected by 
+gastric acid and 
+proteases.
+⚡ Transparency: can debug traces & oﬀer user-facing attribution
+⚡ Eﬀiciency: can use smaller LMs, oﬀloading knowledge & control flow
+Literature: DrQA (Chen et al., 2017), ORQA (Lee et al., 2019), RAG (Lewis et al., 2020), ColBERT-QA (Khattab et al., 2020)
+
+⚡ Control: can iteratively improve the system & ground it via tools
+Literature: GoldEn (Qi et al., 2019), DecompRC (Min et al., 2019), MDR (Xiong et al., 2020), Baleen (Khattab et al., 2021)
+Compound AI Systems, i.e. modular programs that use LMs as specialized components
+Example: Multi-Hop Retrieval-Augmented Generation
+
+⚡ Quality: more reliable composition of better-scoped LM capabilities
+STORM: Assisting in Writing Wikipedia-like Articles From Scratch with Large Language Models (Shao et al., 2024)
+“The 
+ColBERT 
+retriever”
+Compound AI Systems, i.e. modular programs that use LMs as specialized components
+Example: Compositional Report Generation, i.e. brainstorming an outline, collecting references, etc.
+
+Literature: AlphaCodium (Ridnik, 2024), DIN-SQL (Pourreza & Raﬁei, 2023), RARR (Gao et al., 2023), and many others
++
+Task-agnostic prompting strategies, e.g. Best-of-N, 
+Chain Of Thought, Program of Thought, ReAct, 
+Reflexion, Archon, …
+Compound AI Systems, i.e. modular programs that use LMs as specialized components
+⚡ Inference-time Scaling: systematically searching for better outputs
+
+(Summary) Why Compound AI Systems?
+1.
+Quality: more reliable composition of better-scoped LM capabilities
+2.
+Control: can iteratively improve the system & ground it via tools
+3.
+Transparency: can debug trajectories & oﬀer user-facing attribution
+4.
+Eﬀiciency: can use smaller LMs, oﬀloading knowledge & control flow
+5.
+Inference-time Scaling: can systematically search for better outputs
+
+13
+Unfortunately, LMs are highly sensitive to how theyʼre 
+instructed to solve tasks, so under the hood we often…
+
+14
+Each “prompt” couples five very diﬀerent roles:
+1.
+The core input → output behavior, a Signature.
+2.
+The computation specializing an inference-time strategy to the signature, a Predictor.
+3.
+The computation formatting the signatureʼs inputs and parsing its typed outputs, an Adapter.
+4.
+The computations defining objectives and constraints on behavior, Metrics and Assertions.
+5.
+The strings that instruct (or weights that adapt) the LM for desired behavior, an Optimizer.
+Existing Compound AI Systems are modular in principle, but are too “stringly-typed”: 
+they couple the fundamental system architecture with incidental choices
+not portable to new LMs, objectives, or pipelines.
+Unfortunately, LMs are highly sensitive to how theyʼre 
+instructed to solve tasks, so under the hood we often…
+
+We know how to build controllable 
+systems & improve them modularly.
+That is called… programming.
+15
+What if we could abstract Compound AI Systems 
+as programs with fuzzy natural-language-typed 
+modules that learn their behavior?
+
+
+
+This is hard. We don't have gradients or intermediate labels 
+to optimize each module! How should we go about this?
+
+As an example, let’s say we wanted to build this simple 
+pipeline for multi-hop retrieval-augmented generation
+19
+
+20
+class MultiHop(dspy.Module):
+  def __init__(self):
+    self.generate_query  = dspy.ChainOfThought("context, question -> query")
+    self.generate_answer = dspy.ChainOfThought("context, question -> answer")
+  def forward(self, question):
+    context = []
+    for hop in range(2):
+      query = self.generate_query(context, question).query
+      context += dspy.Retrieve(k=3)(query).passages
+    answer = self.generate_answer(context, question)
+    return answer
+This can be expressed as the following DSPy program
+
+21
+class MultiHop(dspy.Module):
+  def __init__(self):
+    self.generate_query  = dspy.ChainOfThought("context, question -> query")
+    self.generate_answer = dspy.ChainOfThought("context, question -> answer")
+  def forward(self, question):
+    context = []
+    for hop in range(2):
+      query = self.generate_query(context, question).query
+      context += dspy.Retrieve(k=3)(query).passages
+    answer = self.generate_answer(context, question)
+    return answer
+Init method defines LM calls
+Anatomy of an LM program in DSPy
+
+22
+class MultiHop(dspy.Module):
+  def __init__(self):
+    self.generate_query  = dspy.ChainOfThought("context, question -> query")
+    self.generate_answer = dspy.ChainOfThought("context, question -> answer")
+  def forward(self, question):
+    context = []
+    for hop in range(2):
+      query = self.generate_query(context, question).query
+      context += dspy.Retrieve(k=3)(query).passages
+    answer = self.generate_answer(context, question)
+    return answer
+Forward method defines 
+program logic
+Anatomy of an LM program in DSPy
+
+23
+class MultiHop(dspy.Module):
+  def __init__(self):
+    self.generate_query  = dspy.ChainOfThought("context, question -> query")
+    self.generate_answer = dspy.ChainOfThought("context, question -> answer")
+  def forward(self, question):
+    context = []
+    for hop in range(2):
+      query = self.generate_query(context, question).query
+      context += dspy.Retrieve(k=3)(query).passages
+    answer = self.generate_answer(context, question)
+    return answer
+Signature: what to do, 
+not how to prompt!
+Anatomy of an LM program in DSPy
+
+24
+class MultiHop(dspy.Module):
+  def __init__(self):
+    self.generate_query  = dspy.ChainOfThought("context, question -> query")
+    self.generate_answer = dspy.ChainOfThought("context, question -> answer")
+  def forward(self, question):
+    context = []
+    for hop in range(2):
+      query = self.generate_query(context, question).query
+      context += dspy.Retrieve(k=3)(query).passages
+    answer = self.generate_answer(context, question)
+    return answer
+Modules define the strategy 
+for expressing a signature
+Anatomy of an LM program in DSPy
+
+25
+class MultiHop(dspy.Module):
+  def __init__(self):
+    self.generate_query  = dspy.ChainOfThought("context, question -> query")
+    self.generate_answer = dspy.ChainOfThought("context, question -> answer")
+  def forward(self, question):
+    context = []
+    for hop in range(2):
+      query = self.generate_query(context, question).query
+      context += dspy.Retrieve(k=3)(query).passages
+    answer = self.generate_answer(context, question)
+    return answer
+How can we translate these 
+into high-quality prompts? 
+Anatomy of an LM program in DSPy
+
+26
+First, modules are translated into basic prompts 
+using Adapters and Predictors.
+class MultiHop(dspy.Module):
+  def __init__(self):
+    self.generate_query  = dspy.ChainOfThought("context, question -> query")
+    self.generate_answer = dspy.ChainOfThought("context, question -> answer")
+  def forward(self, question):  
+    context = []
+    for hop in range(2):
+      query = self.generate_query(context, question).query
+      context += dspy.Retrieve(k=3)(query).passages
+    answer = self.generate_answer(context, question)
+    return answer
+dspy.Adapter(self.generate_query)
+Given the fields “context” and “question”, respond with the field “query”.
+Follow the following format:
+Context: <context>
+Question: <question>
+Reasoning: Let’s think step by step to <..>
+Query: <query>
+Predeﬁned Adapters are used to 
+translate modules into basic prompts
+
+27
+DSPy’s Optimizers can then tune this prompt! 
+Given the fields “context” and “question”, respond with the field “query”.
+Follow the following format:
+Context: <context>
+Question: <question>
+Reasoning: Let’s think step by step to <..>
+Query: <query>
+Carefully read the provided `context` and `question`. Your task is to formulate a concise 
+and relevant `query` that could be used to retrieve information from a search engine to 
+answer the question most effectively. The `query` should encapsulate...
+Follow the following format:
+Context: <context>
+Question: <question>
+Reasoning: Let’s think step by step to <..>
+Query: <query>
+Here are some examples: <...>
+optimizer = MIPROv2()
+optimized_program = optimizer.compile(program)
+Program Score: 37%
+Program Score: 55%
+... jointly along with all other prompts in your program
+⭐
+
+Instead of tweaking a string prompt…
+28
+Solve a question answering task with interleaving Thought, Action, Observation steps. Thought can reason about the current situation, and 
+Action can be three types: 
+(1) Search[entity], which searches the exact entity on Wikipedia and returns the first paragraph if it exists. If not, it will return some similar 
+entities to search.
+(2) Lookup[keyword], which returns the next sentence containing keyword in the current passage.
+(3) Finish[answer], which returns the answer and finishes the task.
+Here are some examples.
+Question: What is the elevation range for the area that the eastern sector of the Colorado orogeny extends into?
+Thought 1: I need to search Colorado orogeny, find the area that the eastern sector of the Colorado orogeny extends into, then find the 
+elevation range of the area.
+Action 1: Search[Colorado orogeny]
+Observation 1: The Colorado orogeny was an episode of mountain building (an orogeny) in Colorado and surrounding areas.
+Thought 2: It does not mention the eastern sector. So I need to look up eastern sector.
+Action 2: Lookup[eastern sector]
+Observation 2: (Result 1 / 1) The eastern sector extends into the High Plains and is called the Central Plains orogeny.
+[... truncated …]
+Scores
+33%
+with GPT-3.5
+on a multi-hop 
+QA task
+
+29
+class MultiHop(dspy.Module):
+  def __init__(self):
+    self.generate_query  = dspy.ChainOfThought("context, question -> query")
+    self.generate_answer = dspy.ChainOfThought("context, question -> answer")
+  def forward(self, question):
+    context = []
+    for hop in range(2):
+      query = self.generate_query(context, question).query
+      context += dspy.Retrieve(k=3)(query).passages
+    answer = self.generate_answer(context, question)
+    return answer
+Scores
+55%
+with GPT-3.5
+on multi-hop QA 
+50%
+with Llama2-13B
+39%
+with T5-770M
+Carefully read the provided `context` and `question`. Your task is to formulate a concise and 
+relevant `search_query` that could be used to retrieve information from a search engine to answer 
+the question most effectively. The `search_query` should encapsulate...
+Context: [1] Twilight is a series of four vampire-themed fantasy romance...
+         [2] The Harper Connelly Mysteries is a series of fantasy...
+Question: In which year was the first of the vampire-themed fantasy romance novels, for which The 
+Twilight Saga serves as a spin-off encyclopedic reference book, first published?
+Reasoning: Let's determine when that fantasy romance novel was first published.
+Search Query: When was the first of the vampire-themed fantasy romance novels published?
+Context: [1] The Victorians - Their Story In Pictures is a 2009 British documentary ...
+         [2] The Caxtons: A Family Picture is an 1849 Victorian novel by Edward ...
+Question: The Victorians is a documentary series written by an author born in what year?
+Reasoning: We know that the documentary series is about Victorian art and culture, and it was 
+written by Jeremy Paxman. We need to find the year in which Jeremy Paxman was born.
+Search Query: Jeremy Paxman birth year
+* prompt parts adapted & combined for presentation
+
+Multi-Hop Retrieval-Augmented Generation (HotPotQA)
+30
+Compiling MultiHop into a small LM (T5-770M) with DSPy’s 
+BootstrapFinetune, starting from 200 answers, scores 39%
+Program
+Optimized
+GPT 3.5
+Llama2-13b-Chat
+dspy.Predict("question -> answer")
+❌
+34.3
+27.5
+dspy.RAG (with CoT)
+❌
+36.4
+34.5
+✅
+42.3
+38.3
+MultiHop
+❌
+36.9
+34.7
+✅
+54.7
+50.0
+
+DSPy Optimizers vary in how they tune the prompts & weights in a 
+program, but at a high level they typically…
+31
+1.
+Construct an initial prompt from each module via an Adapter
+2.
+Generate examples of every module via rejection sampling
+3.
+Use the examples to update the programʼs modules
+a.
+Automatic few-shot prompting: dspy.BootstrapFewShotWithRandomSearch
+b.
+Induction of instructions: dspy.MIPROv2
+c.
+Multi-stage fine-tuning: dspy.BootstrapFinetune
+
+That works well in practice…
+●Mayʼ24: U of Toronto researchers won the MEDIQA competition via DSPy.
+32
+●Junʼ24: U of Maryland researchers ran a direct case study.
+
+… and has enabled many SoTA systems
+like PATH (Jasper Xia, UWaterloo); IReRa (Karel DʼOosterlink, UGhent), STORM (Yijia Shao, Stanford), EDEN (Siyan Li, 
+Columbia), Eﬀicient Agents (Sayash Kapoor, Princeton), ECG-Chat (Yubao Zhao, Beijing Normal U), …
+33
+
+Slides adapted from
+Krista Opsahl-Ong & Michael Ryan
+
+Training/ Validation 
+Input
+LM Program P:
+Metric
+Inputs:
+Outputs:
+Given the question and context passages, generate the correct answer.
+Question: The Victorians is a documentary series written by an author born in what year?
+Context: [1] The Victorians - Their Story In Pictures is ...
+         [2] Jeremy Dickson Paxman(born 11 May 1950) is an English...
+Rationale: The Victorians was written by Jeremy Paxman.  Jeremy Paxman was born in 1950.
+Answer: 1950
+Question: Which actor played in both…
+Instructions
+Few-Shot 
+Examples
+Problem Setting
+⭐
+⭐
+Optimized LM Program P’:
+
+Constraints / Assumptions
+1.
+No access to log-probs or model weights: Developers may want to 
+optimize LM programs for use on API only models.
+2.
+No intermediate metrics / labels: We assume no access to manual 
+ground-truth labels for intermediate stages.
+3.
+Budget-Conscious: We want to limit the number of input examples 
+we require and the number of program calls we make.
+
+Key Challenges
+Prompt Proposal. 
+Searching over all possible strings 
+is intractable, especially as we add 
+in multiple modules we need to 
+optimize. Instead, we need to 
+propose a small set of high quality 
+options.
+Credit Assignment. 
+We need efficient ways of 
+inferring how each prompt 
+variable contributes to 
+performance, so that we can find 
+the best set for our program.
+Score: 85%
+?
+?
+?
+…
+
+Methods
+1. Bootstrap Few-shot
+2. Extending OPRO
+3. MIPRO
+
+Methods
+1. Bootstrap Few-shot
+2. Extending OPRO
+3. MIPRO
+💡Bootstrap Few-shot examples with simple rejection 
+sampling
+
+Bootstrap Few-Shot Examples
+O. Khattab, A. Singhvi, P. Maheshwari, Z. Zhang, K. Santhanam, S. Vardhamanan, S. Haq, A. Sharma, T. T. Joshi, H. Moazam, H. Miller, M. 
+Zaharia, C. Potts  “DSPY: COMPILING DECLARATIVE LANGUAGE MODEL CALLS INTO SELF-IMPROVING PIPELINES”
+
+LM Program:
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Metric
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Metric
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Metric
+Search Query Output 1
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Metric
+Search Query Output 1
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Metric
+Search Query Output 1
+Search Query Output 2
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Metric
+Search Query Output 1
+Search Query Output 2
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Metric
+Search Query Output 1
+Search Query Output 2
+Answer Output
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Metric
+Search Query Output 1
+Search Query Output 2
+Answer Output
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Metric
+Search Query Output 1
+Search Query Output 2
+Answer Output
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Metric
+Search Query Output 1
+Search Query Output 2
+Answer Output
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Metric
+Search Query Output 1
+Search Query Output 2
+Answer Output
+Task 
+Demonstration 
+Candidate
+Bootstrap Few Shot
+Bootstrap Few-Shot Examples
+
+LM Program:
+Training Input
+Metric
+Search Query Output 1
+Search Query Output 2
+Answer Output
+Task 
+Demonstration 
+Candidate
+Bootstrap Few Shot
+Bootstrap Few-Shot (w/ Random Search)
+Search for the best set 
+using random search! 
+
+LM Program:
+Training Input
+Metric
+Search Query Output 1
+Search Query Output 2
+Answer Output
+Task 
+Demonstration 
+Candidate
+Given the context passages and a question, generate the correct answer.
+Context: [1] The Victorians - Their Story In Pictures is ...
+         [2] Jeremy Dickson Paxman(born 11 May 1950) is an English...
+Question: The Victorians is a documentary series written by an author born in what year?
+Rationale: The Victorians was written by Jeremy Paxman.  Jeremy Paxman was born in 1950.
+Answer: 1950
+...
+Bootstrap Few Shot
+Bootstrap Few-Shot (w/ Random Search)
+
+Methods
+1. Bootstrap Few-shot
+2. Extending OPRO
+3. MIPRO
+💡Extend existing instruction opt. method (OPRO) to multi-stage
+
+What is OPRO? Optimization through Prompting
+“Think step by step”
+“Take a deep breath 
+and think step by step”
+“Carefully solve the 
+problem”
+“Let’s do the math”
+Prompt Proposals
+Evaluate
+Propose More Prompts
+Given prompts/scores 
+propose more prompts.
+“Think step by step”
+Score: 31
+“Take a deep breath and 
+think step by step”
+Score: 42
+LLM
+“Proposer LM”
+C. Yang*, X. Wang, Y. Lu, H. Liu, Q. V. Le, D. Zhou, X. Chen* “Large Language Models as Optimizers”
+
+Initial extension to multi-stage: CA-OPRO
+Coordinate-Ascent OPRO
+This is expensive to run… 
+O(NxD²xM)
+
+Module-Level OPRO
+Key Idea: Coordinate-Ascent was expensive, maybe we don’t need explicit 
+credit assignment? Let’s just change both prompts at a time in parallel!
+
+Updated LM Program
+Score: 30
+Module-Level OPRO
+Key Idea: Coordinate-Ascent was expensive, maybe we don’t need explicit 
+credit assignment? Let’s just change both prompts at a time in parallel!
+LM Program
+Given a question generate a search query
+Given the context answer the question
+LLM
+LLM
+Given a question generate a 
+comprehensive search query that will 
+retrieve pertinent information.
+Given the context answer the question by 
+identifying the relevant information and 
+providing a concise response.
+Score: 30
+Score: 30
+
+Finally, Grounding!
+Hypothesis: Providing our proposer LM with more information relevant to 
+the task can help us propose better instructions.
+History of Instructions and 
+Scores (and static task 
+demos)
+New Instruction
+Proposer LM
+LLM
+Training set examples 
+(input/output pairs from 
+training set)
+
+Finally, Grounding!
+Key idea: What if we built a multi-stage LM program to bootstrap and 
+synthesize information about the task for use in instruction proposal?
+History of Instructions and 
+Scores (and static task 
+demos)
+New Instruction
+Proposer LM
+LLM
+Training set examples 
+(input/output pairs from 
+training set)
+
+Finally, Grounding!
+History of Instructions and 
+Scores (and static task 
+demos)
+New Instruction
+LLM
+Bootstrapped demos 
+demos for a particular 
+module in program
+Bootstrapped demo example:
+Question: The Victorians - Their Story In 
+Pictures is a documentary series written 
+by an author born in what year?
+Reasoning: Let's think step by step in 
+order to find the search query. We need 
+to find the author's birth year. We can 
+search for the author's name along with 
+the phrase "birth year" or "birthday" to 
+get the desired information.
+Search Query: "author of The Victorians 
+- Their Story In Pictures birth year" or 
+"author of The Victorians - Their Story In 
+Pictures birthday"
+
+Finally, Grounding!
+History of Instructions and 
+Scores (and static task 
+demos)
+New Instruction
+LLM
+Bootstrapped demos 
+demos for a particular 
+module in program
+Dataset summary example:
+"The dataset consists of 
+factual, trivia-style 
+questions across a wide 
+range of topics, presented in a 
+clear and concise manner. 
+These questions are likely 
+designed for use in trivia 
+games..”
+Dataset Summary (Loop 
+over the data and use an 
+LLM to write a summary)
+
+Finally, Grounding!
+History of Instructions and 
+Scores (and static task 
+demos)
+New Instruction
+LLM
+Bootstrapped demos 
+demos for a particular 
+module in program
+Program Summary example:
+“The program code appears to 
+be designed to answer 
+complex questions by 
+retrieving and processing 
+information from multiple 
+sources or passages. In this 
+case, the program is set up for 
+two hops, … The module 
+`self.generate_query` in this 
+program is responsible for 
+generating a search query 
+based on the context and 
+question provided.”
+Dataset Summary (Loop 
+over the data and use an 
+LLM to write a summary)
+Summary of a Reflexive 
+View of the LM Program 
+Code itself
+
+Finally, Grounding!
+History of Instructions and 
+Scores (and static task 
+demos)
+New Instruction
+LLM
+Bootstrapped demos 
+demos for a particular 
+module in program
+Tip example:
+“Don’t be afraid to be creative 
+when generating the new 
+instruction”
+“Keep the instruction clear and 
+concise."
+“Make sure your instruction is 
+very informative and 
+descriptive."
+Dataset Summary (Loop 
+over the data and use an 
+LLM to write a summary)
+Tip for instruction generation 
+(be creative, be succinct, etc.)
+Summary of a Reflexive 
+View of the LM Program 
+Code itself
+
+Methods
+1. Bootstrap Few-shot
+2. Extending OPRO
+3. MIPRO
+💡Co-optimize instructions & few-shot examples eﬃciently
+
+MIPRO works in 3 steps:
+2. Propose Instruction Candidates 
+using an LM Program
+3. Jointly tune with a Bayesian 
+hyperparameter optimizer
+1. Bootstrap Task Demonstrations
+Prompt 
+Proposal 
+Credit 
+Assignment
+68
+Multi-prompt Instruction PRoposal Optimizer
+
+Step 3: Optimize with Bayesian Learning
+Key Idea: MIPRO uses a Bayesian Surrogate Model for Credit Assignment
+Basic Instruction
+N/A
+Basic Instruction
+N/A
+Bayesian 
+Opt.
+Instruction 1.A
+Instruction 1.A
+Instruction 1.C
+Instruction 1.A
+Instruction 1.A
+Instruction 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 1.C
+Set of instructions / fewshot 
+candidates for each module:
+LM Program
+
+Step 3: Optimize with Bayesian Learning
+Key Idea: MIPRO uses a Bayesian Surrogate Model for Credit Assignment
+LM Program
+Instruction 1.A
+Demo Set 1.B
+Instruction 2.C
+Demo Set 2.A
+Instruction 1.A
+Instruction 1.A
+Instruction 1.C
+Instruction 1.A
+Instruction 1.A
+Instruction 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 1.C
+Trial 1
+Bayesian 
+Opt.
+Score: 75%
+Evaluate on 
+minibatches of data to 
+learn eﬃciently!
+
+Step 3: Optimize with Bayesian Learning
+Key Idea: MIPRO uses a Bayesian Surrogate Model for Credit Assignment
+Instruction 1.C
+Demo Set 1.A
+Instruction 2.B
+Demo Set 2.B
+Instruction 1.A
+Instruction 1.A
+Instruction 1.C
+Instruction 1.A
+Instruction 1.A
+Instruction 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 1.C
+Trial 2
+Bayesian 
+Opt.
+Score: 50%
+LM Program
+Update
+
+Step 3: Optimize with Bayesian Learning
+Key Idea: MIPRO uses a Bayesian Surrogate Model for Credit Assignment
+Instruction 1.B
+Demo Set 1.A
+Instruction 2.A
+Demo Set 2.B
+Instruction 1.A
+Instruction 1.A
+Instruction 1.C
+Instruction 1.A
+Instruction 1.A
+Instruction 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 1.C
+Trial 3
+Bayesian 
+Opt.
+Score: 80%
+LM Program
+Update
+
+Step 3: Optimize with Bayesian Learning
+Key Idea: MIPRO uses a Bayesian Surrogate Model for Credit Assignment
+Instruction 1.B
+Demo Set 1.A
+Instruction 2.A
+Demo Set 2.B
+Instruction 1.A
+Instruction 1.A
+Instruction 1.C
+Instruction 1.A
+Instruction 1.A
+Instruction 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 1.C
+…
+Bayesian 
+Opt.
+LM Program
+
+Step 3: Optimize with Bayesian Learning
+Key Idea: MIPRO uses a Bayesian Surrogate Model for Credit Assignment
+Instruction 1.B
+Demo Set 1.A
+Instruction 2.A
+Demo Set 2.B
+Instruction 1.A
+Instruction 1.A
+Instruction 1.C
+Instruction 1.A
+Instruction 1.A
+Instruction 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 1.C
+…
+Bayesian 
+Opt.
+Every N trials, evaluate 
+on our full val set!
+LM Program
+
+Step 3: Optimize with Bayesian Learning
+Key Idea: MIPRO uses a Bayesian Surrogate Model for Credit Assignment
+Instruction 1.A
+Demo Set 1.B
+Instruction 2.C
+Demo Set 2.A
+Instruction 1.A
+Instruction 1.A
+Instruction 1.C
+Instruction 1.A
+Instruction 1.A
+Instruction 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 1.C
+Trial=N
+Bayesian 
+Opt.
+Score: 45%
+Trial
+Score
+LM Program
+
+Step 3: Optimize with Bayesian Learning
+Key Idea: MIPRO uses a Bayesian Surrogate Model for Credit Assignment
+Instruction 1..
+Demo Set 1..
+Instruction 2..
+Demo Set 2..
+Instruction 1.A
+Instruction 1.A
+Instruction 1.C
+Instruction 1.A
+Instruction 1.A
+Instruction 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 2.C
+Demo Set 2.A
+Demo Set 2.A
+Demo Set 1.C
+…
+Bayesian 
+Opt.
+Trial
+Score
+Return LM Program 
+with best score!
+LM Program
+
+Experiments & Results
+
+So how do these optimization methods compare?
+Enter LangProBe, the Language Model Program Benchmark
+
+So how do these optimization methods compare?
+Enter LangProBe, the Language Model Program Benchmark
+Hypothesis: Instructions become more important in tasks with multiple 
+conditional rules, which cannot be fully expressed with a set # of few-shot ex.
+
+Optimizing instructions can deliver gains over baseline signatures.
+*Results averaged across 5 runs. Bold values represent the highest average scores compared 
+to the second- highest, with significance supported by Wilcoxon signed-rank tests (p < .05).
+
+However, there’s no obvious best approach to 
+instruction proposal yet.
+*Results averaged across 5 runs. Bold values represent the highest average scores compared 
+to the second- highest, with significance supported by Wilcoxon signed-rank tests (p < .05).
+
+*Results averaged across 5 runs. Bold values represent the highest average scores compared 
+to the second- highest, with significance supported by Wilcoxon signed-rank tests (p < .05).
+Optimizing bootstrapped demonstrations is key!
+
+The bootstrapped demonstrations we choose matters a lot! 
+Understanding why is an area for future research.
+
+Optimizing both instructions and demonstrations via
+MIPRO is a often the most effective approach!
+
+The impact of optimizing instructions (rather than demonstrations)
+is more visible in tasks that have many isolated conditional rules.
+
+Summary & Lessons
+
+Key Lessons I: Natural Language Progamming
+1. Programs can often be more accurate, controllable, 
+transparent, and even efficient than models.
+2. You just need declarative programs, not implementation 
+details. High-level optimizers can bootstrap prompts — or 
+weights, or whatever the next paradigm deals with.
+
+DSPy makes it possible to program LMs
+Hand-written prompts 
+88
+Prompting techniques and prompt chains
+Manual prompt engineering
+⇒ Signatures
+⇒ Modules
+⇒ Optimized programs
+qa = dspy.Predict("question -> answer")
+mt = dspy.ChainOfThought("english_document -> french_translation")
+rc = dspy.ProgramOfThought("contexts, question -> answer_found: bool")
+Optimizer(metric).compile(program, dataset)
+
+and is being widely used in production & OSS -- dspy.ai
+at JetBlue, Databricks, Walmart, VMware, Replit, Haize Labs, Normal Computing, Sephora, Moodyʼs…
+89
+
+and is being widely used in production & OSS -- dspy.ai
+at JetBlue, Databricks, Walmart, VMware, Replit, Haize Labs, Normal Computing, Sephora, Moodyʼs…
+90
+
+Key Lessons II: Natural Language Optimization
+1. In isolation, on many tasks nothing beats bootstrapping good 
+demonstrations. Show don’t tell!
+2. Generating good instructions on top of these is possible, and is 
+especially important for tasks with conditional rules!
+3. But you will need effective grounding, and explicit forms of 
+credit assignment.
+
+Can open research again lead AI progress?
+                                (dspy.ai) aims to show that this lies in modularity.
+92
+❌ Not ever-larger, opaque LMs in isolation.
+❌ Not ad-hoc tricks for prompting or synthetic data.
+But well-scoped programs, better inference-time strategies, 
+and new ways to optimize how LMs are used to solve tasks.

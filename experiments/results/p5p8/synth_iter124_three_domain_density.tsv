@@ -1,0 +1,4 @@
+domain	n_fire	n_total	rate	ci_lo	ci_hi	rule
+P8_grad_band	84	10000	0.008400	0.006700	0.010400	row is in top-K AND |consecutive_score_grad| < 0.001
+P7_zvf_triage	20	40	0.500000	0.350000	0.650000	step-level zvf >= 0.7 (DEGENERATE regime)
+P5_mega_manifest_zvf_eq_1	36	98	0.367347	0.275510	0.469388	cell per-step zvf == 1.0 (fully contrast-depleted)

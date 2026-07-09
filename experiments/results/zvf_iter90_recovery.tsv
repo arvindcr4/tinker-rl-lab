@@ -1,0 +1,10 @@
+method	n_episodes	n_recovered	n_sustained	recovery_rate	n_never_alarmed_traces	trajectory_count
+grpo	5	0	5	0.0000	0	5
+aero	6	1	5	0.1667	0	5
+cppo	7	2	5	0.2857	0	5
+ngrpo	7	2	5	0.2857	0	5
+scafgrpo	0	0	0	0.0000	5	5
+mcgrpo	8	3	5	0.3750	0	5
+gift	11	7	4	0.6364	0	5
+areal	10	6	4	0.6000	0	5
+es	0	0	0	0.0000	5	5

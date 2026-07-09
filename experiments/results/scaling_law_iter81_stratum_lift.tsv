@@ -1,0 +1,13 @@
+stratum_axis	stratum_value	n_anchors	majority_winner	majority_count	winner_mean_aic	runner_up_family	runner_up_mean_aic	lift_winner_minus_runner	anchors
+arch	dense	6	zero	5	-11.289284898628072	power_law	-9.517943102027216	1.771341796600856	Qwen3.5-4B;Qwen3-8B;Llama-3.1-8B-Instruct;Qwen3-32B;Qwen3.5-27B;Nemotron-120B
+param_bracket	4-9B	3	zero	2	-15.295712057890563	power_law	-14.16602533123597	1.1296867266545938	Qwen3.5-4B;Qwen3-8B;Llama-3.1-8B-Instruct
+trace_bracket	long_n_ge21	4	zero	3	-14.38220546830824	power_law	-13.181893911545632	1.2003115567626068	Qwen3.5-4B;Qwen3-8B;Llama-3.1-8B-Instruct;gpt-oss-20B
+early_bracket	high_first5_ge0.8	7	zero	3	-14.252041684519238	power_law	-13.483083267703643	0.768958416815595	Qwen3.5-4B;Llama-3.1-8B-Instruct;gpt-oss-20B;Qwen3-30B-MoE-Inst;DeepSeek-V3.1;Qwen3-235B-MoE;Kimi-K2-Thinking
+early_bracket	low_first5_lt0.4	4	zero	4	-5.593372139519354	linear	-4.810038634762725	0.7833335047566292	Qwen3-8B;Qwen3-32B;Qwen3-30B-MoE;Nemotron-120B
+param_bracket	20-32B	5	zero	4	-5.672442187247613	linear	-5.596484013919305	0.07595817332830812	Qwen3-32B;Qwen3.5-27B;gpt-oss-20B;Qwen3-30B-MoE;Qwen3-30B-MoE-Inst
+trace_bracket	short_n_le5	5	zero	3	-0.7810856810459352	power_law	-0.7002708462240426	0.08081483482189267	Qwen3-32B;Qwen3.5-27B;Qwen3-30B-MoE;Qwen3-30B-MoE-Inst;Qwen3-235B-MoE
+early_bracket	mid_first5_0.4_0.8	1	zero	1	nan	power_law	nan	nan	Qwen3.5-27B
+arch	moe	6	zero	3	-11.544351709030504	linear	-10.982656056326064	0.5616956527044401	gpt-oss-20B;Qwen3-30B-MoE;Qwen3-30B-MoE-Inst;DeepSeek-V3.1;Qwen3-235B-MoE;Kimi-K2-Thinking
+param_bracket	120-685B	3	zero	2	-18.799900637873698	zero	-9.24689410374358	9.553006534130118	DeepSeek-V3.1;Nemotron-120B;Qwen3-235B-MoE
+trace_bracket	medium_n_6_20	3	zero	2	-16.10060687337417	zero	-10.167459597330497	5.933147276043671	DeepSeek-V3.1;Nemotron-120B;Kimi-K2-Thinking
+param_bracket	1000B+	1	linear	1	-13.754224413560689	log_linear	-13.401313108874636	0.35291130468605303	Kimi-K2-Thinking

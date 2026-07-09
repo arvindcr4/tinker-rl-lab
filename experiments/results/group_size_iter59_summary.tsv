@@ -1,0 +1,17 @@
+metric	value
+equiv_PRAGMATIC_0.85_last_above_T_M	1
+equiv_PRAGMATIC_0.85_first_below_T_M	4
+equiv_OPERATIONAL_0.75_last_above_T_M	16
+equiv_OPERATIONAL_0.75_first_below_T_M	64
+equiv_HARD_DIVERGENCE_0.70_last_above_T_M	64
+equiv_HARD_DIVERGENCE_0.70_first_below_T_M	none
+argmin_G_at_target_0.55	16
+argmin_G_at_target_0.65	16
+argmin_G_at_target_0.75	16
+argmin_G_at_target_0.85	32
+structural_R_Y_times_steps	4.2757
+log_steps_ratio	log_steps=2.0794
+noise_residual_at_T1M	-0.7717
+noise_residual_at_T4M	-0.8051
+noise_residual_at_T16M	-0.8246
+noise_residual_at_T64M	-0.8299

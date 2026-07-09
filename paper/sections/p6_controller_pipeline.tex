@@ -1,0 +1,79 @@
+\paragraph{Controller predictions: closing the registry--controller pipeline.}
+The iter-66 row 77 \texttt{measured\_yield\_residual} block reports a
+\emph{measurement}; the iter-67 row 78 controller counterfactual reports an
+\emph{intervention}. A downstream consumer who reads only the registry should
+not have to re-run the iter-67 script to ask \emph{which trigger the iter-51
+adaptive-G controller should use on this stack}. Iter 70 closes this gap by
+attaching a third additive-optional block,
+\texttt{controller\_predicted\_savings\_per\_rollout}, that lifts the iter-67
+paired-step bootstrap summary into both record types:
+\begin{itemize}
+  \item \texttt{stack\_record.outcomes.controller\_predicted\_savings\_per\_rollout},
+        populated on the $4$ N2 stack entries (grpo/aero/areal/gift).
+  \item \texttt{variant\_delta\_record.controller\_predicted\_savings\_per\_rollout},
+        populated on the $3$ N2 variant deltas (aero/areal/gift), as a sibling
+        of \texttt{measured\_yield\_residual}.
+\end{itemize}
+Each block carries the $15$ per-method controller predictions ($3$ triggers
+$\times$ $5$ thresholds): \texttt{trigger}, \texttt{threshold}, \texttt{fires},
+\texttt{saved}, \texttt{missed}, \texttt{saved\_per\_fire},
+\texttt{savings\_per\_rollout\_\{pt,lo,hi\}} (paired bootstrap percentile),
+and \texttt{cost\_ratio\_pt} (the rollouts-used ratio at the chosen
+threshold). All fields nullable; \texttt{additionalProperties: false}; the
+patch is purely additive ($34/34$ schema PASS confirmed by both the new
+script and canonical \texttt{registry\_validate.py}).
+
+\paragraph{Sharpest finding: $\delta_{\mathrm{div}}$-triage stays best even
+\emph{at fixed cost}.}
+The block lifts the row 78 headline into a registry-readable form. At matched
+cost ratio $\approx 1.45$--$1.55$, the registry now self-reports the
+saved-per-fire ordering $\delta_{\mathrm{div}}\geq\tau > \mathrm{Y^{obs}}\leq\tau
+> \mathrm{ZVF^{obs}}\geq\tau$ on every N2 method. The single highest
+saved-per-fire entry is GIFT under \texttt{ddiv\_triage} at $\tau=0.05$
+($19$ saves / $13$ fires / \texttt{saved\_per\_fire}$=1.4615$), confirming
+that the iter-67 sign-flip on GIFT (raw $\mathrm{ZVF^{obs}}=0.770$ is the
+\emph{worst} signal for GIFT; $\delta_{\mathrm{div}}=0.039$ is the
+\emph{best}) is now a registry-readable fact, not a high-level claim.
+
+\paragraph{Why this matters.}
+The block is the third additive-optional extension after iter-28
+\texttt{outcomes.ci\_method} and iter-66 row 77
+\texttt{measured\_yield\_residual}; together the three blocks implement a
+\textbf{measurement $\to$ trigger $\to$ registry} pipeline: an entry can now
+declare \emph{how its CI was computed} (iter-28), \emph{what its signed
+yield-residual is} (iter-66), and \emph{which controller trigger dominates on
+its panel} (iter-70) in three independent fields, all backward-compatible,
+all nullable on entries that have not been audited on the N2 corpus. The
+$N{=}7$ audited entries (grpo/aero/areal/gift as stacks + aero/areal/gift as
+deltas) cover the entire N2 4-method panel; the remaining $27$ entries ship
+\texttt{null} (unreported $\to$ auditor scores as gap).
+
+\paragraph{Cross-paper coupling.}
+\begin{itemize}
+  \item \textbf{P7}: the iter-51 controller trigger is now machine-readable
+        per-method on the N2 corpus. A future P7 audit can ask
+        ``\emph{on which methods does the optimal $\tau$ vary by $>0.02$?}''
+        directly from the registry without re-running iter-67.
+  \item \textbf{P6}: the three-block family (iter-28 / iter-66 / iter-70)
+        is the first operational decomposition of \emph{how a registry
+        entry earns trust} (CI provenance + signed measurement + controller
+        prediction); reviewers can audit any of the three blocks
+        independently.
+  \item \textbf{P5}: the block is a measured, machine-readable
+        \emph{outcome} of a stack -- a counterweight to the iter-65 row 76
+        $4$-of-$7$ placebo finding: every N2 entry now carries a stack
+        axis \emph{and} an outcome axis, so a reader sees both the declared
+        stack and the measured effect.
+\end{itemize}
+
+\paragraph{Reproduction.}
+\begin{verbatim}
+python3 scripts/p5p8/p6_controller_predicted_savings.py --apply  # idempotent
+python3 registry/query.py validate                              # 34/34 PASS
+\end{verbatim}
+Outputs: \texttt{experiments/results/p5p8/p6\_controller\_predicted\_savings.tsv}
+($60$ rows: $4$ methods $\times$ $3$ triggers $\times$ $5$ thresholds);
+\texttt{p6\_controller\_predicted\_savings\_summary.json}; patched
+\texttt{registry/schema.json} (two additive-optional properties); $4$ patched
+\texttt{registry/entries/tinker\_*\_qwen3.5-4b\_gsm8k.json} stacks + $3$
+patched \texttt{registry/entries/delta\_\{aero,areal,gift\}.json} variants.

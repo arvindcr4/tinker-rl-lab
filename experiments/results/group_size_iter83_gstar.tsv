@@ -1,0 +1,5 @@
+T_M	n_G_observed	G_peak	egt_peak	acc_at_G_peak	G_iso_egt	egt_at_G_iso	iso_threshold	steps_ratio_iso_over_peak	steps_ratio_peak_over_iso
+1.0	5	32	10.9568	0.42	16	10.5008	10.408959999999999	2.0	0.5
+4.0	5	64	15.7568	0.58	32	15.2288	14.96896	2.0	0.5
+16.0	5	64	18.7776	0.8	32	17.8976	17.83872	2.0	0.5
+64.0	5	64	20.352	0.87	64	20.352	19.3344	1.0	1.0

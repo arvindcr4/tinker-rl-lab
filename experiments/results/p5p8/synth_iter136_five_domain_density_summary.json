@@ -1,0 +1,166 @@
+{
+  "iter": 136,
+  "n_domains": 5,
+  "domains": {
+    "D1": {
+      "pillar": "P8",
+      "concept": "grad-band",
+      "density": {
+        "rate": 0.0084,
+        "lo": 0.0067,
+        "hi": 0.0102,
+        "n_fire": 84,
+        "n_total": 10000
+      }
+    },
+    "D2": {
+      "pillar": "P7",
+      "concept": "zvf-triage-step",
+      "density": {
+        "rate": 0.5,
+        "lo": 0.35,
+        "hi": 0.65,
+        "n_fire": 20,
+        "n_total": 40
+      }
+    },
+    "D3": {
+      "pillar": "P5",
+      "concept": "mega-zvf=1",
+      "density": {
+        "rate": 0.3673469387755102,
+        "lo": 0.2755102040816326,
+        "hi": 0.46938775510204084,
+        "n_fire": 36,
+        "n_total": 98
+      }
+    },
+    "D4": {
+      "pillar": "P7",
+      "concept": "boundary-prompt-cell",
+      "density": {
+        "rate": 0.729296875,
+        "lo": 0.712890625,
+        "hi": 0.746484375,
+        "n_fire": 1867,
+        "n_total": 2560
+      }
+    },
+    "D5": {
+      "pillar": "P8",
+      "concept": "iso_per_cohort-ECE>0.10-at-0.5%-rate",
+      "density": {
+        "rate": 1.0,
+        "lo": 1.0,
+        "hi": 1.0,
+        "n_fire": 26,
+        "n_total": 26
+      },
+      "source": "p8_iter136_calibration_realistic_rates.py at rate=0.5%",
+      "n_per_tree": {
+        "XGB-20raw": {
+          "fire": 13,
+          "total": 13
+        },
+        "XGB-24full": {
+          "fire": 13,
+          "total": 13
+        }
+      },
+      "n_per_cohort": {
+        "v_mean": {
+          "fire": 10,
+          "total": 10
+        },
+        "amount": {
+          "fire": 10,
+          "total": 10
+        },
+        "time": {
+          "fire": 6,
+          "total": 6
+        }
+      }
+    }
+  },
+  "iter124_super_domain_claim": "{P5, P7-step} <-> P8 \u2014 does adding D5 break it?",
+  "ratios": {
+    "D1/D2": {
+      "ratio": 0.0168,
+      "lo": 0.01170873015873016,
+      "hi": 0.02482999999999999
+    },
+    "D1/D3": {
+      "ratio": 0.022866666666666664,
+      "lo": 0.016256238913525498,
+      "hi": 0.03239322413793102
+    },
+    "D1/D4": {
+      "ratio": 0.01151794322442421,
+      "lo": 0.009188927594759153,
+      "hi": 0.013957929152264409
+    },
+    "D1/D5": {
+      "ratio": 0.0084,
+      "lo": 0.0066,
+      "hi": 0.0102
+    },
+    "D2/D3": {
+      "ratio": 1.361111111111111,
+      "lo": 0.8590726351351351,
+      "hi": 2.0416666666666665
+    },
+    "D2/D4": {
+      "ratio": 0.6855918585966793,
+      "lo": 0.4740495216253986,
+      "hi": 0.8970844409261086
+    },
+    "D2/D5": {
+      "ratio": 0.5,
+      "lo": 0.35,
+      "hi": 0.65
+    },
+    "D3/D4": {
+      "ratio": 0.5037001410098052,
+      "lo": 0.37686174251799964,
+      "hi": 0.6367877595241781
+    },
+    "D3/D5": {
+      "ratio": 0.3673469387755102,
+      "lo": 0.2755102040816326,
+      "hi": 0.46938775510204084
+    },
+    "D4/D5": {
+      "ratio": 0.729296875,
+      "lo": 0.712294921875,
+      "hi": 0.747080078125
+    }
+  },
+  "rate_stratified_d5": {
+    "0.05": {
+      "rate": 1.0,
+      "n_fire": 26,
+      "n_total": 26
+    },
+    "0.1": {
+      "rate": 1.0,
+      "n_fire": 26,
+      "n_total": 26
+    },
+    "0.5": {
+      "rate": 1.0,
+      "n_fire": 26,
+      "n_total": 26
+    },
+    "1.0": {
+      "rate": 1.0,
+      "n_fire": 26,
+      "n_total": 26
+    },
+    "1.44": {
+      "rate": 1.0,
+      "n_fire": 26,
+      "n_total": 26
+    }
+  }
+}

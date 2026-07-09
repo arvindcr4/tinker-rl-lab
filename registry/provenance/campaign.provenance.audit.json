@@ -1,0 +1,92 @@
+{
+  "run_id": "campaign-multiseed",
+  "score_pct": 100.0,
+  "grade": "A",
+  "checks": [
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "MIN-REPORT item present: loss_form"
+    },
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "MIN-REPORT item present: reference_kl"
+    },
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "MIN-REPORT item present: sampler_backend"
+    },
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "MIN-REPORT item present: telemetry"
+    },
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "MIN-REPORT item present: group_size_schedule"
+    },
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "MIN-REPORT item present: heldout_split"
+    },
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "MIN-REPORT item present: decontamination"
+    },
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "provenance hash present: git_sha"
+    },
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "provenance hash present: code_hash"
+    },
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "provenance hash present: reward_fn_hash"
+    },
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "provenance hash present: data_hash"
+    },
+    {
+      "level": "PASS",
+      "weight": 2,
+      "msg": "code_hash VERIFIED against live source (experiments/openings/campaign.py)"
+    },
+    {
+      "level": "PASS",
+      "weight": 3,
+      "msg": "multi-seed (n=3>=3)"
+    },
+    {
+      "level": "PASS",
+      "weight": 2,
+      "msg": "held-out reported"
+    },
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "held-out disjoint from train"
+    },
+    {
+      "level": "WARN",
+      "weight": 1,
+      "msg": "no CI/sd on results"
+    },
+    {
+      "level": "PASS",
+      "weight": 1,
+      "msg": "decontamination asserted"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+G	ZVF	Y_contrastive_yield	method
+2	0.648452	0.351548	hypergeometric_exact
+4	0.363976	0.636024	hypergeometric_exact
+8	0.158333	0.841667	hypergeometric_exact
+16	0.192162	0.807838	iid_collision_extrap
+32	0.162031	0.837969	iid_collision_extrap
+64	0.158385	0.841615	iid_collision_extrap

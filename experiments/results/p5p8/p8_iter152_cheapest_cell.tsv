@@ -1,0 +1,4 @@
+seed	rate_pct	tier	fset	acd	cppr_grad	cppr_xgb
+20260706	0.05	cheap_heuristic	24full	1.0	0.19722	0.19722
+20260708	0.05	cheap_heuristic	24full	1.0	0.19722	0.19722
+20260710	0.05	cheap_heuristic	24full	1.0	0.19722	0.19722

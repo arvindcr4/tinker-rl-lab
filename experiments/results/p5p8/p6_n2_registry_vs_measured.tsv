@@ -1,0 +1,13 @@
+method	metric	registry_delta_last10	registry_ci_lo_last10	registry_ci_hi_last10	registry_n	registry_sig	fresh_delta_full40	fresh_ci_lo_full40	fresh_ci_hi_full40	fresh_n_full40	fresh_sig_full40	registry_panel	sign_agreement	ci_overlap	stability_class
+aero	zvf	-0.025000	-0.062500	0.012500	10	False	0.000000	-0.025000	0.023438	40	False	n2_same_stack_last10	DISAGREE	YES	STABLE-DIRECTION-MAG-SHIFT
+aero	reward_mean	-0.014063	-0.023438	-0.005469	10	True	-0.006641	-0.016602	0.002930	40	False	n2_same_stack_last10	AGREE	YES	STABLE-DIRECTION-MAG-SHIFT
+aero	mean_len						14.163086	10.051758	18.511719	40	True	n2_same_stack_last10	no-registry-claim	n/a	STABLE-DIRECTION-MAG-SHIFT
+aero	cv_len						-0.013367	-0.020206	-0.006806	40	True	n2_same_stack_last10	no-registry-claim	n/a	STABLE-DIRECTION-MAG-SHIFT
+gift	zvf	0.125000	0.081250	0.175000	10	True	0.050000	0.020313	0.079687	40	True	n2_same_stack_last10	AGREE	NO	STABLE-DIRECTION-MAG-SHIFT
+gift	reward_mean	0.016406	-0.007031	0.039844	10	False	0.010547	0.000391	0.020508	40	True	n2_same_stack_last10	AGREE	YES	STABLE-DIRECTION-MAG-SHIFT
+gift	mean_len						-0.741992	-3.200781	1.751758	40	False	n2_same_stack_last10	no-registry-claim	n/a	STABLE-DIRECTION-MAG-SHIFT
+gift	cv_len						-0.000756	-0.005789	0.004421	40	False	n2_same_stack_last10	no-registry-claim	n/a	FRAGILE-SIGN-FLIP
+areal	zvf	-0.056250	-0.112500	0.006250	10	False	-0.014063	-0.042188	0.012500	40	False	n2_same_stack_last10	AGREE	YES	STABLE-DIRECTION-MAG-SHIFT
+areal	reward_mean	-0.019531	-0.032031	-0.007812	10	True	-0.005469	-0.014063	0.002930	40	False	n2_same_stack_last10	AGREE	NO	STABLE-DIRECTION-MAG-SHIFT
+areal	mean_len						14.604883	10.558398	18.746289	40	True	n2_same_stack_last10	no-registry-claim	n/a	STABLE-DIRECTION-MAG-SHIFT
+areal	cv_len						-0.018232	-0.023822	-0.012927	40	True	n2_same_stack_last10	no-registry-claim	n/a	STABLE-DIRECTION-MAG-SHIFT

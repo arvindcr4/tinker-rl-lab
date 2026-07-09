@@ -1,0 +1,134 @@
+{
+  "iter": 185,
+  "pillar": "P5",
+  "vein": "brief vein (a) at cross-corpus portability layer",
+  "extends_iter181_recommendation": "EXTEND iter-181 to additional corpora",
+  "corpora": {
+    "mega_20260704": {
+      "n": 98,
+      "fields_filled": 13
+    },
+    "n10_seed_expansion": {
+      "n": 5,
+      "fields_filled": 9
+    },
+    "n2_reward_tensor_resume": {
+      "n": 3,
+      "fields_filled": 13
+    }
+  },
+  "total_v25_fields": 13,
+  "h1_fill_at_least_0_80_on_at_least_10_fields_per_corpus": {
+    "verdict": "FAIL",
+    "per_corpus_counts": {
+      "mega": 13,
+      "n10": 9,
+      "n2": 13
+    },
+    "per_corpus_fields": {
+      "mega": [
+        13,
+        [
+          "model",
+          "task_slice",
+          "G",
+          "temperature",
+          "seed",
+          "mean_reward",
+          "zvf",
+          "pcd",
+          "n_groups",
+          "sample_errors",
+          "mean_completion_len",
+          "std_completion_len",
+          "sampled_tokens"
+        ]
+      ],
+      "n10": [
+        9,
+        [
+          "model",
+          "task_slice",
+          "G",
+          "temperature",
+          "seed",
+          "mean_reward",
+          "zvf",
+          "sample_errors",
+          "mean_completion_len"
+        ]
+      ],
+      "n2": [
+        13,
+        [
+          "model",
+          "task_slice",
+          "G",
+          "temperature",
+          "seed",
+          "mean_reward",
+          "zvf",
+          "pcd",
+          "n_groups",
+          "sample_errors",
+          "mean_completion_len",
+          "std_completion_len",
+          "sampled_tokens"
+        ]
+      ]
+    }
+  },
+  "h2_value_correctness_zvf_residual_le_0_05": {
+    "verdict": "PASS",
+    "n_total": 294,
+    "n_pass": 294,
+    "pass_rate": 1.0
+  },
+  "h3_entropy_monotone_mega_ge_n10_ge_n2": {
+    "verdict": "PASS",
+    "total_entropy_bits": {
+      "mega": 39.2333,
+      "n10": 8.887599999999999,
+      "n2": 8.8433
+    }
+  },
+  "h4_every_corpus_has_at_least_1_strong_field": {
+    "verdict": "PASS",
+    "strong_fields_per_corpus": {
+      "mega": [
+        "task_slice",
+        "G",
+        "mean_reward",
+        "zvf",
+        "pcd",
+        "mean_completion_len",
+        "std_completion_len",
+        "sampled_tokens"
+      ],
+      "n10": [
+        "seed",
+        "mean_reward",
+        "zvf",
+        "mean_completion_len"
+      ],
+      "n2": [
+        "mean_reward",
+        "pcd",
+        "mean_completion_len",
+        "std_completion_len",
+        "sampled_tokens"
+      ]
+    }
+  },
+  "h5_n10_mean_reward_bootstrap_ci_half_width_lt_0_10": {
+    "verdict": "PASS",
+    "n_seeds": 5,
+    "mean": 0.275625,
+    "ci_half_width": 0.03350044659217247
+  },
+  "headline": {
+    "n_corpora": 3,
+    "n_total_cells": 106,
+    "n_hypotheses_passed": 4
+  }
+}

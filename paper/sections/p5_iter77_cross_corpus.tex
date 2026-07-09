@@ -1,0 +1,85 @@
+% P5 cross-corpus portability test (iter 77, JOB A)
+\section{Cross-Corpus Portability of the Seven-Item MIN-REPORT}
+\label{sec:p5-cross-corpus}
+
+The seven-item MIN-REPORT standard of \secref{sec:p5-stack} was
+validated on a single corpus (the 98-cell mega campaign of
+\secref{sec:p5-exhibit-coverage}). A remaining question is whether
+the standard \emph{generalizes} across the heterogeneous experiment
+corpora in this repository---or whether it is a schema custom-built
+for one campaign. We answer with a portability test
+(\texttt{scripts/p5p8/p5\_cross\_corpus\_portability.py};
+\texttt{experiments/results/p5p8/p5\_cross\_corpus\_portability.*}).
+
+\paragraph{Method.}
+Apply the seven MIN-REPORT items to seven internal corpora and
+measure, for each, (a) per-item coverage, (b) per-item variance,
+(c) total bits, (d) mean Hamming discrimination across random record
+pairs (B=2000 bootstrap, seed 20260705), and (e) a STRONG /
+PORTABLE / LIMITED / NULL verdict. The seven corpora are
+deliberately heterogeneous: the full 98-cell manifest (C1); the
+N2 four-method same-stack tensors (C2); the N10 2-algo $\times$
+8-seed expansion manifest (C3); and four rows-only summary corpora
+(base-instruct paired, group-size paired, length-bias paired, ZVF
+per-stratum AUROC).
+
+\paragraph{Verdict rule.}
+STRONG iff $\geq 5$ of 7 items populate \emph{and} $\geq 1$ carries
+variance; PORTABLE iff $\geq 3$ populate \emph{and} $\geq 1$
+varies; LIMITED iff $\geq 1$ populates \emph{and} $\geq 1$ varies;
+NULL otherwise.
+
+\begin{table}[t]
+\centering
+\caption{Cross-corpus portability of the seven-item MIN-REPORT
+fingerprint. $n$ = number of manifest records; pop = number of
+items populated; var = number of items with $\geq 2$ unique values;
+$H$ = mean Hamming distance across bootstrap pairs with 95\% CI.}
+\label{tab:p5-cross-corpus}
+\small
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+Corpus & $n$ & pop & var & total\_bits & $H$ & verdict \\
+\midrule
+C1 mega\_20260704            &  98 & 7/7 & 3/7 & 4.80 & 1.891 [1.858, 2.028] & \textbf{STRONG} \\
+C2 n2\_reward\_tensor         &   4 & 7/7 & 1/7 & 2.00 & 1.000 [1.000, 1.000] & \textbf{STRONG} \\
+C3 n10\_seed\_expansion       &  16 & 7/7 & 2/7 & 4.00 & 1.716 [1.690, 1.810] & \textbf{STRONG} \\
+C4 base\_instruct\_paired     &   8 & 2/7 & 1/7 & 0.95 & 0.555 [0.518, 0.606] & \textbf{LIMITED} \\
+C5 group\_size\_iter111       &   4 & 4/7 & 1/7 & 2.00 & 1.000 [1.000, 1.000] & \textbf{PORTABLE} \\
+C6 length\_bias\_iter60       &  20 & 2/7 & 2/7 & 2.52 & 1.213 [1.150, 1.260] & \textbf{LIMITED} \\
+C7 zvf\_iter118\_auroc        &   8 & 3/7 & 2/7 & 3.00 & 1.472 [1.418, 1.502] & \textbf{PORTABLE} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Headline.}
+Across the seven corpora, mean \texttt{n\_items\_populated} =
+\textbf{4.57/7} with 95\% bootstrap CI [3.00, 6.29], confirming that
+the standard is portable but stratified. The verdict distribution is
+3 STRONG, 2 PORTABLE, 2 LIMITED, 0 NULL---no corpus is a complete
+schema-failure. Per-item coverage across corpora reveals a sharp
+separation: Items 1 (\textit{loss\_form}) and 6
+(\textit{heldout\_split}) are populated in \emph{every} corpus
+(7/7); Items 2, 3, 7 (KL, backend, decontam) are populated only in
+manifest-level corpora (C1/C2/C3); Item 4 (\textit{zvf\_gu\_trajectory})
+is populated in 5/7; Item 5 (\textit{group\_size\_schedule}) in 4/7.
+
+\paragraph{Cross-paper coupling.}
+This iter independently reproduces the iter-65 placebo pattern from
+the fingerprint-as-data path: on C1 four items carry \texttt{n\_unique}=1
+because the campaign is a single-stack Tinker-closed run, while the
+other three (group\_size\_schedule, heldout\_split,
+decontamination\_notes) carry all 4.80 bits of cross-cell information.
+The iter-69 placebo-replacement finding is confirmed at a higher
+abstraction: the same schema yields STRONG on C1 and LIMITED on C4/C6
+even though loaders faithfully apply every item---the variance-deficit
+is a corpus property, not a schema property. The iter-73 v2.0
+stack-axis extension is sharpened: the +60.1\% info-budget uplift is
+informative on C1-class multi-stack campaigns but yields 0 uplift on
+same-stack corpora (C2 N2 $G{=}8$ fixed).
+
+\paragraph{Operational recommendation.}
+For rows-only summary corpora (C4--C7), MIN-REPORT v3.0 should declare
+Items 2/3/7 as \textit{honest-n/a} (``n/a-rows-only'') rather than
+fail the audit; this single change lifts all 7 corpora to PORTABLE
+without altering the schema.

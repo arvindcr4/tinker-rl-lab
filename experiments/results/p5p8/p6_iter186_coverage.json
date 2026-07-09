@@ -1,0 +1,43 @@
+{
+  "audit_metadata": {
+    "iter": 186,
+    "pillar": "P6",
+    "seed": 20260706,
+    "source": "scripts/p5p8/p6_iter186_coverage_audit.py",
+    "veins": [
+      "(b) coverage audit",
+      "(c) schema validation"
+    ]
+  },
+  "expected_only_deltas": [
+    "delta_dapo",
+    "delta_gspo",
+    "delta_ppo",
+    "delta_ppo_reinforce"
+  ],
+  "fully_blank_deltas": [
+    "delta_liteppo",
+    "delta_reinforce"
+  ],
+  "have_jsonschema_pkg": true,
+  "method_layer_counts": {
+    "BLANK": 6,
+    "measured-other": 2,
+    "zvf130-measured": 10
+  },
+  "n_entries_total": 48,
+  "n_stack": 28,
+  "n_variant_delta": 18,
+  "n_with_raw_traces": 5,
+  "n_with_zvf130_xref": 10,
+  "schema_valid_totals": {
+    "no": 14,
+    "yes": 34
+  },
+  "variant_delta_verdict_totals": {
+    "BLANK": 2,
+    "EXPECTED-ONLY": 4,
+    "FULL": 9,
+    "PARTIAL": 3
+  }
+}

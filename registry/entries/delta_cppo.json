@@ -1,0 +1,133 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_cppo",
+  "name": "CPPO",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "lin2025cppo",
+    "arxiv": "2503.22342",
+    "title": "{CPPO}: Accelerating the Training of Group Relative Policy Optimization-Based Reasoning Models"
+  },
+  "deltas": [
+    {
+      "component": "continuity_penalty",
+      "field": "see delta-list and citation",
+      "change": "add a soft penalty that discourages large log-probability jumps between optimization steps; (per CPPO source paper"
+    }
+  ],
+  "notes": "Verified citation: lin2025cppo (arXiv:2503.22342) confirmed in paper/references.bib; jsonschema integrity audit still accepts every required field as a non-null string. N2 same-stack isolation unchanged.",
+  "measured": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "base": "grpo",
+      "delta": -0.151077,
+      "ci_low": -0.253342,
+      "ci_high": -0.048813,
+      "n": 5,
+      "significant": true,
+      "ci_method": {
+        "method": "normal_approx_welch",
+        "n_boot": null,
+        "seed": null,
+        "ci_level": 0.95,
+        "source": "scripts/p5p8/p6_measured_delta_block.py"
+      },
+      "source": "experiments/results/zvf_iter130_method_risk.tsv",
+      "note": "5-seed risk index; delta vs grpo (grpo risk=0.5777)",
+      "welch_ci_low": -0.295095,
+      "welch_ci_high": -0.007059,
+      "welch_sig": true,
+      "sig_robust_bootstrap_and_welch": true,
+      "sig_robust_note": "iter102: sig survives BOTH paired-bootstrap and Welch two-sample"
+    },
+    {
+      "metric": "mean_zvf",
+      "panel": "zvf130_5seed",
+      "base": "grpo",
+      "delta": -0.18558,
+      "ci_low": -0.18756,
+      "ci_high": -0.1837,
+      "n": 5,
+      "significant": false,
+      "ci_method": {
+        "method": "bootstrap_paired_5seed",
+        "n_boot": 5000,
+        "seed": 20260705,
+        "ci_level": 0.95,
+        "source": "scripts/p5p8/p6_iter130_patch_stale_mag.py"
+      },
+      "source": "experiments/results/zvf_iter130_risk_index.tsv",
+      "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI) | iter-146 provenance-recompute audit: stored delta matches recompute from experiments/results/zvf_iter130_risk_index.tsv; source path was misattributed to experiments/results/zvf_iter130_method_risk.tsv; patched in iter-146",
+      "iter_recomputed": 128
+    },
+    {
+      "metric": "mag_mean",
+      "panel": "zvf130_5seed",
+      "base": "grpo",
+      "delta": -0.18558,
+      "ci_low": -0.18788,
+      "ci_high": -0.18318,
+      "n": 5,
+      "significant": true,
+      "ci_method": {
+        "method": "bootstrap_paired_5seed",
+        "n_boot": 2000,
+        "seed": 20260705,
+        "ci_level": 0.95,
+        "source": "scripts/p5p8/p6_iter130_patch_stale_mag.py"
+      },
+      "source": "experiments/results/zvf_iter130_method_risk.tsv",
+      "note": "recomputed iter-130 paired-seed bootstrap on mean_zvf; method=cppo, n_seeds=5, B=2000, seed=20260705 | iter-146 provenance-recompute audit: stored delta matches recompute from experiments/results/zvf_iter130_method_risk.tsv; source path was misattributed to experiments/results/zvf_iter130_risk_index.tsv; patched in iter-146",
+      "synth_from_agg": false
+    }
+  ],
+  "expected_effects": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "rationale": "CPPO's continuity penalty reduces abrupt policy updates; risk of ZVF collapse should be lower than vanilla GRPO."
+    }
+  ],
+  "claim_validation": [
+    {
+      "metric": "zvf_risk_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": "<0",
+      "observed_delta": -0.151077,
+      "ci_low": -0.253342,
+      "ci_high": -0.048813,
+      "significant": true,
+      "verdict": "SUPPORTS",
+      "rationale": "measured delta=-0.1511 CI=[-0.2533,-0.0488] is significant and matches predicted <0"
+    },
+    {
+      "metric": "mean_zvf",
+      "panel": "zvf130_5seed",
+      "predicted_sign": null,
+      "observed_delta": -0.18558,
+      "ci_low": -0.18558,
+      "ci_high": -0.18558,
+      "significant": false,
+      "verdict": "UNCLAIMED",
+      "rationale": "no expected_effect declared for this (metric, panel) pair"
+    },
+    {
+      "metric": "mag_mean",
+      "panel": "zvf130_5seed",
+      "predicted_sign": null,
+      "observed_delta": -0.18558,
+      "ci_low": null,
+      "ci_high": null,
+      "significant": null,
+      "verdict": "UNCLAIMED",
+      "rationale": "",
+      "audit_source": "scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
+      "audit_date": "2026-07-05",
+      "synth_from_agg": true
+    }
+  ],
+  "iter128_recompute_note": "Patched by iter 128 JOB B: recomputed mean_zvf CI on zvf130_5seed panel from raw zvf_iter130_risk_index.tsv (per-seed n=5) with paired bootstrap (B=2000, seed=20260705). Old ci_method=point_no_perseed_sd (CI width=0) replaced with bootstrap_paired_5seed (mean CI width=0.00386)."
+}

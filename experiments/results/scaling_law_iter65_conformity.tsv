@@ -1,0 +1,13 @@
+model	params_B	arch	pci	phase_class	n_slow_ok	n_fast_ok	n_plateau_ok	n_template_ok
+Qwen3.5-4B	4.0	dense	1.0	valley	1	0	1	2
+Qwen3-8B	8.0	dense	1.5	valley	1	0	1	2
+Llama-3.1-8B-Instruct	8.0	dense	1.0	valley	1	0	1	2
+Qwen3-32B	32.0	dense	2.5	anomalous	1	0	1	2
+Qwen3.5-27B	27.0	dense	2.5	three-phase	1	0	1	2
+gpt-oss-20B	20.0	moe	1.5	valley	1	0	1	2
+Qwen3-30B-MoE	30.0	moe	2.0	monotonic-rising	1	1	0	2
+Qwen3-30B-MoE-Inst	30.0	moe	2.0	constant	1	0	1	2
+DeepSeek-V3.1	685.0	moe	1.0	three-phase	1	0	0	1
+Nemotron-120B	120.0	dense	2.0	valley	0	0	1	1
+Qwen3-235B-MoE	235.0	moe	2.0	constant	1	0	1	2
+Kimi-K2-Thinking	1000.0	moe	1.0	valley	1	1	0	2

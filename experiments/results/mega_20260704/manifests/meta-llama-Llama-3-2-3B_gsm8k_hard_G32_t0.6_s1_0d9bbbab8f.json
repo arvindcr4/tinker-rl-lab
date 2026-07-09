@@ -1,0 +1,10 @@
+{
+  "cell_id": "meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f",
+  "loss_form": "n/a-sampling",
+  "ref_policy_kl": "n/a",
+  "sampler_backend_precision": "tinker-closed",
+  "per_step_zvf_path": "/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f.json",
+  "group_size_schedule": "fixed-G=32",
+  "heldout_split": "gsm8k_hard",
+  "decontamination_notes": "gsm8k-train-slice"
+}

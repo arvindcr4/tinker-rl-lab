@@ -1,0 +1,5 @@
+surrogate	spearman_vs_full
+seed_only	0.4
+step_only	-0.2
+both_combined	0.4
+interaction_gain	0.0

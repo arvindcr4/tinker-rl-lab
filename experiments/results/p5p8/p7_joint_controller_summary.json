@@ -1,0 +1,123 @@
+{
+  "ts": "2026-07-05",
+  "iteration": 72,
+  "pillar": "P7",
+  "vein": "joint controller (Dualformer on contrast + ddiv_triage on boundary)",
+  "G_base": 8,
+  "G_esc": 16,
+  "G_dualformer": 2,
+  "tau_grid": [
+    0.03,
+    0.04,
+    0.05,
+    0.06,
+    0.07
+  ],
+  "n_boot": 2000,
+  "n_obs_per_method": 640,
+  "n_methods": 4,
+  "headlines": {
+    "grpo": {
+      "joint_net_saves": 529,
+      "joint_cost_ratio": 1.35625,
+      "joint_rollout_saves": 480,
+      "joint_zvf_saves": 49,
+      "df_only_rollout_saves": 1074,
+      "df_only_cost_ratio": 0.790234375,
+      "ddiv_only_zvf_saves": 49,
+      "ddiv_only_cost_ratio": 1.45,
+      "net_joint_minus_ddiv": 480,
+      "net_joint_minus_df": -545,
+      "joint_cost_minus_df_cost": 0.5660156249999999,
+      "joint_cost_minus_ddiv_cost": -0.09375
+    },
+    "aero": {
+      "joint_net_saves": 587,
+      "joint_cost_ratio": 1.293359375,
+      "joint_rollout_saves": 546,
+      "joint_zvf_saves": 41,
+      "df_only_rollout_saves": 1074,
+      "df_only_cost_ratio": 0.790234375,
+      "ddiv_only_zvf_saves": 41,
+      "ddiv_only_cost_ratio": 1.4,
+      "net_joint_minus_ddiv": 546,
+      "net_joint_minus_df": -487,
+      "joint_cost_minus_df_cost": 0.503125,
+      "joint_cost_minus_ddiv_cost": -0.10664062499999982
+    },
+    "areal": {
+      "joint_net_saves": 477,
+      "joint_cost_ratio": 1.416796875,
+      "joint_rollout_saves": 426,
+      "joint_zvf_saves": 51,
+      "df_only_rollout_saves": 1128,
+      "df_only_cost_ratio": 0.7796875,
+      "ddiv_only_zvf_saves": 51,
+      "ddiv_only_cost_ratio": 1.5,
+      "net_joint_minus_ddiv": 426,
+      "net_joint_minus_df": -651,
+      "joint_cost_minus_df_cost": 0.637109375,
+      "joint_cost_minus_ddiv_cost": -0.08320312500000004
+    },
+    "gift": {
+      "joint_net_saves": 473,
+      "joint_cost_ratio": 1.239453125,
+      "joint_rollout_saves": 438,
+      "joint_zvf_saves": 35,
+      "df_only_rollout_saves": 882,
+      "df_only_cost_ratio": 0.827734375,
+      "ddiv_only_zvf_saves": 35,
+      "ddiv_only_cost_ratio": 1.325,
+      "net_joint_minus_ddiv": 438,
+      "net_joint_minus_df": -409,
+      "joint_cost_minus_df_cost": 0.41171875,
+      "joint_cost_minus_ddiv_cost": -0.08554687499999991
+    }
+  },
+  "aggregate": {
+    "total_joint_net_saves_all_methods": 2066,
+    "total_ddiv_only_zvf_saves_all_methods": 176,
+    "total_df_only_rollout_saves_all_methods": 4158,
+    "joint_minus_ddiv_total": 1890,
+    "joint_minus_df_total": -2092,
+    "joint_vs_best_single_total": -2092,
+    "per_method_best_tau": {
+      "grpo": {
+        "tau": 0.07,
+        "net_saves": 731,
+        "rollout_saves": 702,
+        "zvf_saves": 29,
+        "cost_ratio": 1.112890625,
+        "net_saves_lo": 617,
+        "net_saves_hi": 852
+      },
+      "aero": {
+        "tau": 0.07,
+        "net_saves": 910,
+        "rollout_saves": 900,
+        "zvf_saves": 10,
+        "cost_ratio": 0.94921875,
+        "net_saves_lo": 784,
+        "net_saves_hi": 1038
+      },
+      "areal": {
+        "tau": 0.07,
+        "net_saves": 662,
+        "rollout_saves": 630,
+        "zvf_saves": 32,
+        "cost_ratio": 1.201953125,
+        "net_saves_lo": 558,
+        "net_saves_hi": 774
+      },
+      "gift": {
+        "tau": 0.07,
+        "net_saves": 646,
+        "rollout_saves": 630,
+        "zvf_saves": 16,
+        "cost_ratio": 1.051953125,
+        "net_saves_lo": 542,
+        "net_saves_hi": 764
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "falsifiable_claim": "For binary credit-card fraud with 1.44% positive rate, XGB-24full vs XGB-20raw: the RECALL gap is statistically detectable at the 95% level in the MODERATE-threshold regime (\u03c4 \u2208 {0.20, 0.25, 0.30, 0.35, 0.45}) -- the four aggregates recover +6 to +7 absolute recall points. Precision gap is statistically detectable only at \u03c4=0.15 (+6.8pp, 95% CI [+0.9, +13.8]). At strict thresholds (\u03c4 \u2265 0.70) both trees tie on precision (both = 1.0) because they recover the same top alerts. The aggregate features' value is recall-restoration at the moderate-precision operating point, NOT precision gain.",
+  "headline": {
+    "best_F1_20raw": 0.671875,
+    "best_F1_20raw_tau": 0.15,
+    "best_F1_24full": 0.7193675889328064,
+    "best_F1_24full_tau": 0.15
+  },
+  "models": [
+    "XGB-20raw",
+    "XGB-24full"
+  ],
+  "n_boot_rows": 40,
+  "n_pos_test": 144,
+  "n_prec_detectable": 1,
+  "n_rec_detectable": 5,
+  "n_test": 10000,
+  "n_thresholds": 20,
+  "prec_detectable_taus": [
+    0.15
+  ],
+  "rec_detectable_taus": [
+    0.2,
+    0.25,
+    0.3,
+    0.35,
+    0.45
+  ],
+  "thresholds": [
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.25,
+    0.3,
+    0.35,
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8,
+    0.85,
+    0.9,
+    0.95,
+    1.0
+  ]
+}

@@ -1,0 +1,201 @@
+{
+  "iter": 202,
+  "pillar": "P6",
+  "vein": "(b) post-bump cross-framework x method coverage + hypothesis test",
+  "n_hypotheses": 10,
+  "n_pass": 9,
+  "n_fail": 1,
+  "hypotheses": [
+    {
+      "id": "H1",
+      "claim": "cartesian density (populated / total) \u2265 25% post-iter-198-bump",
+      "value_pct": 27.78,
+      "threshold_pct": 25.0,
+      "result": "PASS"
+    },
+    {
+      "id": "H2",
+      "claim": "\u22653 methods covered by \u22652 frameworks (cross-framework surface \u22653)",
+      "value": 6,
+      "threshold": 3,
+      "result": "PASS",
+      "supporting_methods": [
+        "aero",
+        "areal",
+        "dapo",
+        "drgrpo",
+        "gift",
+        "grpo"
+      ]
+    },
+    {
+      "id": "H3",
+      "claim": "grpo is the highest-population method",
+      "value": "grpo (8)",
+      "grpo_count": 8,
+      "result": "PASS",
+      "all_method_counts": {
+        "grpo": 8,
+        "dapo": 2,
+        "drgrpo": 2,
+        "aero": 2,
+        "areal": 2,
+        "gift": 2,
+        "ppo-reinforce": 2,
+        "gspo": 1,
+        "cppo": 1,
+        "es": 1,
+        "mcgrpo": 1,
+        "ngrpo": 1,
+        "scafgrpo": 1,
+        "tool_use_llama-8b-inst": 1,
+        "tool_use_qwen3-32b": 1
+      }
+    },
+    {
+      "id": "H4",
+      "claim": "zvf130 framework has the most stack entries (single-batch harness reuse)",
+      "value": "zvf130 (11)",
+      "zvf130_count": 11,
+      "result": "PASS",
+      "all_fw_counts": {
+        "zvf130": 11,
+        "tinker": 10,
+        "colab-open": 4,
+        "openrlhf": 1,
+        "trl": 1,
+        "verl": 1
+      }
+    },
+    {
+      "id": "H5",
+      "claim": "grpo cross-framework MIN-REPORT shows \u22651 disagreeing field",
+      "n_disagree_fields": 10,
+      "n_total_fields": 23,
+      "disagree_rate_overall": 0.4348,
+      "result": "PASS",
+      "worst_disagree_fields": [
+        {
+          "method": "grpo",
+          "field": "backend",
+          "n_fws_reporting": "6",
+          "n_distinct_values": "6",
+          "cross_fw_pairs": "15",
+          "cross_fw_disagree_pairs": "15",
+          "disagree_rate": "1.0",
+          "per_fw_values": "{\"colab-open\": [\"hf_transformers (single-process, open backward pass)\"], \"openrlhf\": [\"vllm (separate-process reference model)\"], \"tinker\": [\"tinker-managed sampler\"], \"trl\": [\"hf_transformers (on-device reference model)\"], \"verl\": [\"vllm (sharded Ray reference placement)\"], \"zvf130\": [\"shared zvf-iter130 batch harness (Tinker)\"]}"
+        },
+        {
+          "method": "grpo",
+          "field": "source",
+          "n_fws_reporting": "4",
+          "n_distinct_values": "4",
+          "cross_fw_pairs": "6",
+          "cross_fw_disagree_pairs": "6",
+          "disagree_rate": "1.0",
+          "per_fw_values": "{\"colab-open\": [\"zvf-triage callback (live per-step ZVF/GU)\"], \"tinker\": [\"TinkerRL-Bench harness (per-step group reward variance)\", \"benchmark harness on per-group rewards\"], \"trl\": [\"TinkerRL-Bench harness (per-step group reward variance)\"], \"zvf130\": [\"zvf_iter130_method_risk.tsv (per-step file zvf_iter130/*)\"]}"
+        },
+        {
+          "method": "grpo",
+          "field": "kl_beta",
+          "n_fws_reporting": "4",
+          "n_distinct_values": "3",
+          "cross_fw_pairs": "6",
+          "cross_fw_disagree_pairs": "5",
+          "disagree_rate": "0.8333",
+          "per_fw_values": "{\"colab-open\": [0.0], \"openrlhf\": [0.02], \"trl\": [0.04], \"verl\": [0.04]}"
+        },
+        {
+          "method": "grpo",
+          "field": "description",
+          "n_fws_reporting": "6",
+          "n_distinct_values": "4",
+          "cross_fw_pairs": "15",
+          "cross_fw_disagree_pairs": "12",
+          "disagree_rate": "0.8",
+          "per_fw_values": "{\"colab-open\": [\"held-out arithmetic prompts disjoint from the reward environment; held-out delta reported per arm\"], \"openrlhf\": [\"GSM8K test split, disjoint from the train prompts that back the reward environment (benchmark protocol)\"], \"tinker\": [\"GSM8K test split (benchmark protocol)\", \"GSM8K test split, disjoint from the train prompts that back the reward environment (benchmark protocol)\"], \"trl\": [\"GSM8K test split, disjoint from the train prompts that back the reward environment (benchmark protocol)\"], \"verl\": [\"GSM8K test split, disjoint from the train prompts that back the reward environment (benchmark protocol)\"], \"zvf130\": [\"GSM8K canonical 16-prompt fixed eval\"]}"
+        },
+        {
+          "method": "grpo",
+          "field": "importance_ratio_level",
+          "n_fws_reporting": "4",
+          "n_distinct_values": "2",
+          "cross_fw_pairs": "6",
+          "cross_fw_disagree_pairs": "3",
+          "disagree_rate": "0.5",
+          "per_fw_values": "{\"colab-open\": [\"token\"], \"openrlhf\": [\"sequence\"], \"trl\": [\"token\"], \"verl\": [\"token\"]}"
+        }
+      ]
+    },
+    {
+      "id": "H6",
+      "claim": "mean cross-framework pairwise disagree rate < 0.50 (mostly agree)",
+      "value": 0.3227,
+      "threshold": 0.5,
+      "result": "PASS",
+      "n_fields_evaluated": 72
+    },
+    {
+      "id": "H7",
+      "claim": "zvf130 framework has the lowest mean MIN-REPORT badge (single-batch harness trades reporting breadth for cross-method coverage)",
+      "zvf130_badge": 39.13,
+      "lowest_fw": "zvf130",
+      "lowest_badge": 39.13,
+      "all_fw_badges": {
+        "zvf130": 39.13,
+        "openrlhf": 56.52,
+        "verl": 56.52,
+        "tinker": 61.02,
+        "trl": 69.57,
+        "colab-open": 95.82
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "H8",
+      "claim": "top-3 unmined cells are all zvf130 (cross-method extension of single-batch harness)",
+      "top3": [
+        {
+          "framework": "zvf130",
+          "method": "dapo",
+          "priority": 18
+        },
+        {
+          "framework": "zvf130",
+          "method": "drgrpo",
+          "priority": 18
+        },
+        {
+          "framework": "zvf130",
+          "method": "gspo",
+          "priority": 17
+        }
+      ],
+      "all_zvf130": true,
+      "result": "PASS"
+    },
+    {
+      "id": "H9",
+      "claim": "grpo cluster has \u22654 frameworks and \u22656 entries (sufficient for cross-fw reproducibility test)",
+      "n_frameworks": 6,
+      "n_entries": 8,
+      "result": "PASS"
+    },
+    {
+      "id": "H10",
+      "claim": "registry is method-monoculture (only grpo has multi-framework coverage)",
+      "value": 7,
+      "methods_with_multi_fw": [
+        "aero",
+        "areal",
+        "dapo",
+        "drgrpo",
+        "gift",
+        "grpo",
+        "ppo-reinforce"
+      ],
+      "result": "FAIL",
+      "interpretation": "FAIL IS the strong finding: 6 methods (grpo + 5 others) have multi-framework coverage; cross-framework reproducibility surface is broader than a single-method monoculture"
+    }
+  ]
+}

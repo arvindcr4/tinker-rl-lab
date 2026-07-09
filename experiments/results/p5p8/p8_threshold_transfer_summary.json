@@ -1,0 +1,139 @@
+{
+  "n_cells": 75,
+  "n_bootstrap_per_cell": 400,
+  "boot_seed": 20260704,
+  "rho_grid": [
+    10,
+    50,
+    100,
+    200,
+    500
+  ],
+  "rate_grid": [
+    "release",
+    "1.00%",
+    "0.50%",
+    "0.10%",
+    "0.05%"
+  ],
+  "per_model_at_rho100": {
+    "rho100": {
+      "XGB-20raw": {
+        "n_cells": 5,
+        "mean_transfer_gap_usd_per_dec": 0.006228118167248926,
+        "max_transfer_gap_usd_per_dec": 0.026145770240258423,
+        "mean_transfer_gap_rel_pct": 7.284602213496589,
+        "cells_with_positive_gap": 3
+      },
+      "XGB-24full": {
+        "n_cells": 5,
+        "mean_transfer_gap_usd_per_dec": 0.004401733871716757,
+        "max_transfer_gap_usd_per_dec": 0.012366242681203315,
+        "mean_transfer_gap_rel_pct": 3.60528274399489,
+        "cells_with_positive_gap": 2
+      },
+      "XGB-4sensor": {
+        "n_cells": 5,
+        "mean_transfer_gap_usd_per_dec": 0.004657846872708346,
+        "max_transfer_gap_usd_per_dec": 0.010194857372438693,
+        "mean_transfer_gap_rel_pct": 4.139187921616809,
+        "cells_with_positive_gap": 4
+      }
+    },
+    "rho500": {
+      "XGB-20raw": {
+        "n_cells": 5,
+        "mean_transfer_gap_usd_per_dec": 0.0671180146394551,
+        "max_transfer_gap_usd_per_dec": 0.20178786661309767,
+        "mean_transfer_gap_rel_pct": 18.18298676963736,
+        "cells_with_positive_gap": 3
+      },
+      "XGB-24full": {
+        "n_cells": 5,
+        "mean_transfer_gap_usd_per_dec": 0.06243050336481528,
+        "max_transfer_gap_usd_per_dec": 0.17756915001009488,
+        "mean_transfer_gap_rel_pct": 15.312947543133072,
+        "cells_with_positive_gap": 3
+      },
+      "XGB-4sensor": {
+        "n_cells": 5,
+        "mean_transfer_gap_usd_per_dec": 0.023164724469098525,
+        "max_transfer_gap_usd_per_dec": 0.09240658899156284,
+        "mean_transfer_gap_rel_pct": 5.564205791046244,
+        "cells_with_positive_gap": 3
+      }
+    }
+  },
+  "per_model_at_rho100_with_ci": {
+    "rho100": {
+      "XGB-20raw": {
+        "mean": 0.00623801220505797,
+        "ci_lo": 0.00032999999999999973,
+        "ci_hi": 0.0163564262633523,
+        "excludes_zero": true
+      },
+      "XGB-24full": {
+        "mean": 0.004370600123685747,
+        "ci_lo": 0.0,
+        "ci_hi": 0.009348230944198083,
+        "excludes_zero": false
+      },
+      "XGB-4sensor": {
+        "mean": 0.00462601488298764,
+        "ci_lo": 0.0016168740012835621,
+        "ci_hi": 0.008127640622413602,
+        "excludes_zero": true
+      }
+    },
+    "rho500": {
+      "XGB-20raw": {
+        "mean": 0.06551420393037705,
+        "ci_lo": 0.00472329211433205,
+        "ci_hi": 0.14310986917036211,
+        "excludes_zero": true
+      },
+      "XGB-24full": {
+        "mean": 0.06674133270014147,
+        "ci_lo": 0.0008000000000000007,
+        "ci_hi": 0.13367309228483362,
+        "excludes_zero": true
+      },
+      "XGB-4sensor": {
+        "mean": 0.021860054035826318,
+        "ci_lo": 0.0012980427948483919,
+        "ci_hi": 0.056741996189786106,
+        "excludes_zero": true
+      }
+    }
+  },
+  "per_rho_overall": {
+    "10": {
+      "mean_transfer_gap_usd_per_dec": 0.0005095226473646467,
+      "max_transfer_gap_usd_per_dec": 0.002271350696547547,
+      "n_cells_with_positive_gap": 11
+    },
+    "50": {
+      "mean_transfer_gap_usd_per_dec": 0.0015863225161933778,
+      "max_transfer_gap_usd_per_dec": 0.008429234807187568,
+      "n_cells_with_positive_gap": 9
+    },
+    "100": {
+      "mean_transfer_gap_usd_per_dec": 0.005095899637224675,
+      "max_transfer_gap_usd_per_dec": 0.026145770240258423,
+      "n_cells_with_positive_gap": 9
+    },
+    "200": {
+      "mean_transfer_gap_usd_per_dec": 0.009752861523090009,
+      "max_transfer_gap_usd_per_dec": 0.04265091863517059,
+      "n_cells_with_positive_gap": 8
+    },
+    "500": {
+      "mean_transfer_gap_usd_per_dec": 0.05090441415778964,
+      "max_transfer_gap_usd_per_dec": 0.20178786661309767,
+      "n_cells_with_positive_gap": 9
+    }
+  },
+  "headline": {
+    "falsifiable_claim": "For binary credit-card fraud under class-prior shift, \u03c4*(train) \u2192 test transfer gap is detectable at \u03c1=500 for all three models with CIs excluding zero: XGB-20raw +6.55 cents/dec, XGB-24full +6.67 cents/dec, XGB-4sensor +2.19 cents/dec. The sensor-only surrogate (XGB-4sensor) has the smallest absolute gap because \u03c4* lives in a less-precise regime where train and test agree; XGB-20raw has the largest because \u03c4* lives in a precise regime where small score differences flip the alert bit. \u03c4*(train) is a fingerprint, not a portable decision rule."
+  }
+}

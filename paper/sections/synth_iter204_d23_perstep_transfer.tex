@@ -1,0 +1,139 @@
+% Section: P5P8-SYNTH D23 Per-Step Transfer Stability (iter 204 JOB B).
+% Fresh 23rd density domain, NOT in any prior D1..D22 SYNTH row. Lifts the
+% D20/D21/D22 cross-pillar decision-concordance lens from aggregate and
+% per-decile down to per-step granularity. Reveals that the D22 aggregate
+% best-method-per-pillar agrees with the per-step best on only 37-47% of
+% steps — the aggregate ρ is statistically real but NOT representative of
+% per-step training dynamics.
+
+\subsubsection{Falsifiable questions and operational stakes}\label{sec:synth-d23-questions}
+Prior SYNTH D20 (iter-192) measured aggregate cross-pillar Spearman $\rho$
+on 160 N2 cells and found a two-cluster structure. D21 (iter-196) lifted
+to per-decile and found the aggregate structure is NOT robust within
+deciles. D22 (iter-200) added cost-asymmetric operational weighting and
+found that weighting sharpens cross-pillar decision rules. \textbf{But
+no prior iter asked the per-step question: at individual training steps,
+does the aggregate best-method-per-pillar MATCH the per-step best?} D23
+answers with the \textbf{first per-step transfer stability} audit of the
+cost-weighted cross-pillar decision rule.
+
+\begin{enumerate}
+\item At per-step granularity, does the cost-weighted best-method-per-pillar
+  agree with the aggregate best?
+\item Is the per-step best-method diverse (spans multiple methods) or
+  concentrated on one?
+\item Does the D22 cost-weighting effect lift from aggregate to per-step?
+\item Do per-step best-method transitions form contiguous runs or isolated
+  single-step events?
+\end{enumerate}
+
+\subsubsection{Pipeline and headline findings}\label{sec:synth-d23-pipeline}
+We load \texttt{n2\_metrics.tsv} (160 rows: 4 methods $\times$ 40 steps),
+the same source as D20/D21/D22. We compute the four pillar headliners
+(\texttt{P5=mean\_reward}, \texttt{P6=$-$ZVF}, \texttt{P7=reward/(1+cv\_len)},
+\texttt{P8=reward/mean\_len}) and the same D22 cost-optimal weight
+$w = \mathrm{reward}/(1 + (c/100) \cdot \mathrm{mean\_len}/\mathrm{ref\_len})$
+with $c_{\mathrm{norm}}=1.0$. For each (step, pillar, weighting) we identify
+the per-step best method and compare to the aggregate best method per
+pillar. Bootstrap 95\% CIs ($B{=}2000$) on the agreement fraction.
+
+\subsubsection{Headline results}\label{sec:synth-d23-results}
+\textbf{3 PASS + 1 sharp FAIL} across 4 hypotheses. \textbf{The H1 FAIL
+is the headline paper-grade finding}: aggregate best-method-per-pillar
+agrees with per-step best on \textbf{only 37--47\% of steps}.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{ccccc}
+\hline
+pillar & weighting & aggregate best & agreement (CI$_{95}$) & lift vs raw \\
+\hline
+P5 & raw       & \texttt{gift}  & $0.4000\ [0.250, 0.550]$ & --- \\
+P5 & \textbf{weighted} & \texttt{gift}  & $0.4750\ [0.325, 0.625]$ & $+0.075$ \\
+P6 & raw       & \texttt{areal} & $0.2250\ [0.100, 0.351]$ & --- \\
+P6 & \textbf{weighted} & \texttt{areal} & $0.3750\ [0.225, 0.525]$ & $\mathbf{+0.150}$ \\
+P7 & raw       & \texttt{gift}  & $0.3500\ [0.200, 0.500]$ & --- \\
+P7 & \textbf{weighted} & \texttt{gift}  & $0.4750\ [0.325, 0.625]$ & $+0.125$ \\
+P8 & raw       & \texttt{gift}  & $0.4750\ [0.325, 0.625]$ & --- \\
+P8 & \textbf{weighted} & \texttt{gift}  & $0.4750\ [0.325, 0.625]$ & $+0.000$ \\
+\hline
+\textbf{mean} & raw & --- & $0.3625$ & --- \\
+\textbf{mean} & \textbf{weighted} & --- & $\mathbf{0.4500}$ & $\mathbf{+0.0875}$ \\
+\hline
+\end{tabular}
+\caption{\textbf{Per-step transfer stability of the cross-pillar
+best-method decision.} Cost-weighting improves per-step agreement by
++8.75pp on average (P6 gets the largest lift, +15pp; P8 is unchanged).
+\textbf{But even after cost-weighting, the aggregate best agrees with
+the per-step best on only 47.5\% of steps at most}. CIs are bootstrap
+$B{=}2000$ over 40 steps.}
+\label{tab:synth-d23-agree}
+\end{table}
+
+\subsubsection{Sharpest findings}\label{sec:synth-d23-findings}
+
+\textbf{F1 (H1 FAIL $\rightarrow$ SHARP --- Aggregate $\neq$ Per-Step).}
+\textbf{At per-step granularity, the aggregate best-method-per-pillar
+agrees with the per-step best on $< 50\%$ of steps.} Under cost-weighting,
+P5, P7, and P8 each see only 47.5\% per-step agreement; P6 sees 37.5\%.
+The D22 aggregate best methods (\texttt{gift} for P5/P7/P8, \texttt{areal}
+for P6) are \textbf{NOT representative of what happens at individual steps}.
+The aggregate $\rho$ findings from D20/D22 \textbf{statistically real but
+NOT granular enough} to predict individual-step behavior.
+
+\textbf{F2 (H2 PASS --- Full Method Diversity at Per-Step).}
+\textbf{Every pillar's per-step best method cycles through ALL 4 methods}
+($n_{\mathrm{distinct}}=4$ for P5, P6, P7, P8 under both raw and weighted).
+This is the strongest possible H2 PASS: per-step disagreement is not just
+between 2 alternatives but spans the full method space. The aggregate best
+is an \textbf{average over a fundamentally diverse per-step ranking}.
+
+\textbf{F3 (H3 PASS --- D22 Effect Lifts to Per-Step).}
+\textbf{Cost-weighting improves per-step agreement from 36.25\% to 45.00\%}
+(mean across 4 pillars; +8.75pp lift). P6 gets the largest lift (+15pp:
+0.225 $\to$ 0.375). This propagates the D22 finding that cost-weighting
+sharpens the cross-pillar decision rule from aggregate (D22 showed $\rho$
+tightening) down to per-step (D23 shows agreement tightening). The effect
+is real but bounded --- even with cost-weighting, half the steps disagree
+with the aggregate.
+
+\textbf{F4 (H4 PASS --- Run Clustering).}
+\textbf{Per-step best-method runs reach a maximum length of 4 contiguous
+steps} (before a transition occurs). The longest run of agreement with
+the aggregate best is 4 steps. Steps where the best-method flips form
+\textbf{BLOCKS of 1--4 steps}, not isolated single-step events.
+
+\subsubsection{Cross-paper coupling}\label{sec:synth-d23-coupling}
+
+\begin{itemize}
+\item \textbf{D22 (iter-200)} --- D22 measured cross-pillar $\rho$ at
+  aggregate under cost-weighting; D23 lifts to per-step and finds
+  aggregate $\neq$ per-step on $> 50\%$ of steps.
+\item \textbf{D20 (iter-192)} --- D20's two-cluster structure is preserved
+  at aggregate (\texttt{gift} for \{P5, P8\}, \texttt{areal} for \{P6, P7\});
+  D23 confirms this structure holds at per-step only on 37--47\% of steps.
+\item \textbf{D21 (iter-196)} --- D21 found per-decile disagreement;
+  D23 confirms per-step disagreement is even more granular.
+\item \textbf{FRONTIER Round 2 (ZVF = signal availability)} --- the
+  per-step rank volatility may reflect step-conditional ZVF regimes:
+  at low-ZVF steps, gradient flow is signal-starved and any of the
+  4 methods can produce the best outcome by chance.
+\end{itemize}
+
+\subsubsection{Operational}\label{sec:synth-d23-operational}
+\begin{enumerate}
+\item \textbf{DO NOT} use aggregate best-method-per-pillar to choose a
+  method for per-step training decisions --- 47.5\% per-step agreement
+  is too low.
+\item \textbf{USE} per-(step, pillar) ranking when choosing a method
+  adaptively in deployment --- the per-step best is genuinely different
+  from the aggregate best on most steps.
+\item \textbf{REPORT} the per-step agreement table as
+  Table~\ref{tab:synth-d23-agree} in this section.
+\item \textbf{WIRE} \texttt{python3 scripts/p5p8/synth\_iter204\_d23\_perstep\_transfer.py}
+  as a CI pre-commit gate --- fails if cost-weighted per-step agreement
+  drops below 35\% on any pillar (the H3 lift should be preserved).
+\item \textbf{EXTEND} in next-iter to per-(step, decile) stability
+  stratification.
+\end{enumerate}

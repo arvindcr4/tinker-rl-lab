@@ -1,0 +1,289 @@
+Practical Lessons from 
+Deploying Real-World AI Agents
+Clay Bavor
+clay@sierra.ai
+
+Meet Sierra
+Who we are
+Engineers, researchers, and executives from 
+leading technology institutions
+What we do
+Sierra helps businesses build better, more 
+human customer experiences with AI.
+Bret Taylor
+Co-Founder
+Chair, OpenAI
+Clay Bavor
+Co-Founder
+Previously VP, Google Labs
+Our values
+Trust
+Customer Obsession 
+Craftsmanship 
+Intensity
+Family
+
+
+AI: the Internet movie on 5x the speed
+
+Internet → Websites
+1995
+Mobile → Apps
+2015
+AI  Agents
+2025
+Your order 
+has been placed.
+ETA Thursday
+New technology creates new experiences 
+
+single agent world
+From a multi channel world to 
+
+is the interface
+The conversation
+
+a job well done 
+Pay for
+
+RAG
+Tool use
+LLM
+The Agent Iceberg
+
+Reasoning traces for audit
+Staging and release management
+User simulation
+PII detection and encryption
+Foundation model redundancy and failover
+Model migration and upgrades
+Prompt injection protection
+Background noise suppression / VAD
+Pronunciation of branded terms
+Regression testing
+Role-based access controls
+Reporting & audit
+Contact center warm handoff
+Experimentation framework
+Complex workflows & orchestration
+Guardrails and enforced determinism 
+Parallelism to mitigate latency
+Multi-channel: chat, voice, email, SMS
+Fuzzy-matching user authentication
+Stratified sampling for QA
+Custom voices
+Multi-language support
+Intent-based routing
+Data warehouse export
+Observability and monitoring
+Changelogs
+Compliance supervisors
+Multi-user QA workflows
+RAG
+Tool use
+LLM
+Fast brain / slow brain
+PSTN / SIP transfers
+Fine-tuning pipelines + ML ops
+Knowledge partitioning + secondary indices
+The Agent Iceberg
+
+Weʼre in the 1997 era 
+of building agents
+
+agents as product
+Moving from agents as technology to 
+
+Simple, not simplistic
+
+Todayʼs agents are transactional
+Return
+order
+Troubleshoot
+device
+Upgrade
+plan
+Recover
+account
+
+they build relationships
+The best agents donʼt resolve cases,
+
+Engage over time on multiple channels
+Remember your interactions
+Integrate all your enterprise data
+Proactive, not reactive
+
+Build
+Test
+Optimize
+Agent Development Life Cycle
+
+Build with  
+Versus build or buy  
+
+Every channel is digital
+
+Phone
+Email
+Chat
+Build once deploy everywhere
+
+Technology → product 
+
+Agent Data Platform
+Agent Memory
+Customer Data Platform
+Intelligent Decisioning
+Proactive Engagement
+
+Voice architecture overview
+Speech-To-Text
+LLM Response
+Text-To-Speech
+Transcribe
+Convert incoming audio to text.
+Respond
+Reason about the text, use business 
+configuration, respond with text.
+Synthesize
+Construct audio signal from the text.
+Overall challenge: production readiness
+Easy to create demos, harder to make 
+everything work consistently, with high 
+quality and at scale.
+
+Quality measurement
+WER as a metric is terrible for transcription quality in voice agents.
+Voice transcription
+Audio input issues
+Multiple speakers. Background TV / radios / far-field speech. Off-the-shelf solutions are generally poor.
+
+Voice Synthesis
+Natural entity synthesis
+Accurately synthesize addresses, phone numbers, 
+websites by locale. Lost signal from input audio for 
+names. How do you synth “Andreaˮ?
+Prosody
+Maintain a natural prosody across sentences.
+Phrase quality
+Large impact on perceived tone. Brevity is important.
+Emotive range
+Content should match tone, and tone should be 
+appropriate to conversation.
+
+
+Test 
+New testing for new software 
+
+Back in the dark ages of May 2023, 
+our first user + agent simulator…
+
+Agents in the real world
+The Challenge: Realistic Testing
+Beyond reasoning or tool use — agents must manage:
+●
+Tool + User interaction
+●
+Policy adherence and guardrails
+●
+Dynamic, multi-turn conversations
+Enter τ-Bench
+Evaluate agents in realistic, holistic scenarios
+Core Requirements for Real-World Reliability
+1.
+Seamless interaction
+2.
+Policy adherence
+3.
+Consistency at scale
+
+Inside τ-Bench — Building Reliable Evaluation
+1. Realistic Domains
+●
+Complex Databases & APIs: JSON + Python API tools for reading/writing data.
+●
+Domain Policies: Documents defining rules and restrictions agents must obey.
+2. Realistic & Reliable User Simulator
+●
+LLM-based user simulation for authentic dialogue.
+●
+Dual-control environment: Both user and agent can act via tools.
+●
+Reliability: Structured task definitions anchored in a shared environment.
+3. Objective Evaluation
+●
+Well-defined tasks
+●
+Rule-based success check: Compare final database state to ground truth.
+●
+Pass^k metric:
+○
+Measures chance all k trials succeed.
+○
+Tests reliability under conversational variability.
+Goal:
+Ensure agents can reliably, safely, and effectively interact with a customer in real-world, policy-constrained 
+environments.
+pass@k (dotted) vs pass^k (full)
+When an agent handles millions of conversations with customers, we care about reliability! 
+(from 2024 paper)
+
+An Industry Standard for the Whole Community
+Impact and Adoption
+●
+τ-bench (and its upgrade τ2-bench) has rapidly become the standard for 
+evaluating agent success, cited by major AI labs like Anthropic and 
+OpenAI in model releases.
+●
+LLMs have significantly improved! Open Source LLMs are catching up!
+Evolving the Benchmark 
+●
+Transparency & Community: The τ-bench leaderboard provides a focus 
+point to track progress. And the τ2-bench repo facilitate community 
+contribution.
+●
+Want to contribute?  Join the Tau-Bench track for the MOOCʼs 
+Hackathon!
+From Research to Production
+●
+τ-bench defines the essential ingredients of conversational agent 
+evaluation. 
+●
+At Sierra, we build on this foundation, recognizing that testing in 
+production requires much more — continuous, integrated systems that 
+evolve with our agents.
+
+Sims
+
+Voice Sims compilation
+
+Traces
+
+Optimize 
+Use AI to improve AI 
+
+Insights 
+Explorer
+Expert Answers
+
+
+Knowledge
+Memory
+Business Systems
+Output
+Read Data
+Take Action
+Retrieval
+Recollection
+Input
+Guardrails
+Rules
+Policies
+Supervisors
+Agent
+Guardrails
+
+
+Thank you.
+And also, we are hiring. Email me at clay@sierra.ai)

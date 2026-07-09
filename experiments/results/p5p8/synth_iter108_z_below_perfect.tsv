@@ -1,0 +1,13 @@
+source	axis	pair	z_below_perfect_invariance	ci_excludes_perfect
+P7	method	grpo-aero	0.20171256555313724	True
+P7	method	grpo-gift	0.2647057828429331	True
+P7	method	grpo-areal	0.11518021218159682	True
+P7	method	aero-gift	0.1711355597559289	True
+P7	method	aero-areal	0.1872811676842097	True
+P7	method	gift-areal	0.25904201768776297	True
+P8	seed	XGB-20raw-gradient-band	0.7974055703929798	False
+P8	seed	XGB-20raw-absolute-band	0.8034141567902576	False
+P8	seed	XGB-24full-gradient-band	0.08720583997694745	False
+P8	seed	XGB-24full-absolute-band	0.018078253195451414	False
+P5	algorithm	n2_algoperstep	0.9559383136390947	True
+P5	seed	n10_seedrisk	0.9936949559647719	True

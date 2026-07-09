@@ -1,0 +1,92 @@
+# Pillar 2 Iter 70 failure-aware ZVF summary
+# Extension of zvf_summary.tsv with:
+#   severity           composite 0..3 failure score (0=ok, 3=full_collapse)
+#   zvf_tail_p_eq1     fraction of per-step ZVF values = 1.0 (stuck)
+#   zvf_tail_p_eq0     fraction of per-step ZVF values = 0.0 (dead)
+#   zvf_tail_gini      Gini of per-step ZVF distribution
+#   zvf_first_q        mean ZVF in first 25% of step trace
+#   zvf_last_q         mean ZVF in last 25% of step trace
+#   zvf_delta          last_q - first_q (positive = improving)
+# NA = no per-step trace available (e.g. aggregate summary row).
+# Source: scripts/zvf_iter70.py
+experiment	model	task	phase	group_size	n_seeds	mean_zvf	min_zvf	max_zvf	mean_reward	peak	last10_avg	failure_label	severity	zvf_tail_p_eq1	zvf_tail_p_eq0	zvf_tail_gini	zvf_first_q	zvf_last_q	zvf_delta	n_steps	evidence_path	seed
+tinker_gsm8k_zvf	Qwen/Qwen3-8B	gsm8k		8	1	0.1300	0.0000	1.0000	0.6942	0.7125	0.7125	converged	0	0.1300	0.8700	0.8700	0.1800	0.0800	-0.1000	200	experiments/results/tinker_gsm8k_zvf_s42.json	42
+tinker_gsm8k_zvf	Qwen/Qwen3-8B	gsm8k		8	1	0.1900	0.0000	1.0000	0.6942	0.6969	0.6969	converged	0	0.1900	0.8100	0.8100	0.2600	0.1800	-0.0800	200	experiments/results/tinker_gsm8k_zvf_s123.json	123
+tinker_gsm8k_zvf	Qwen/Qwen3-8B	gsm8k		8	1	0.1550	0.0000	1.0000	0.6942	0.6731	0.6731	converged	0	0.1550	0.8450	0.8450	0.1400	0.1000	-0.0400	200	experiments/results/tinker_gsm8k_zvf_s456.json	456
+tinker_gsm8k_zvf	Qwen/Qwen3-8B	gsm8k		8	3	0.1583	0.1300	0.1900	0.6942	0.7125	0.6942	converged	0	NA	NA	NA	NA	NA	NA	600	experiments/results/tinker_gsm8k_zvf_summary.json	agg
+groupsize_zvf_sweep	Qwen/Qwen2.5-0.5B	arithmetic_synthetic		2	3	0.8380	0.8336	0.8424	0.8398	0.9861	0.9771	converged	0	0.2354	0.0437	0.2214	0.8380	0.6312	-0.2068	120	experiments/results/groupsize_zvf_sweep.tsv	agg
+groupsize_zvf_sweep	Qwen/Qwen2.5-0.5B	arithmetic_synthetic		4	3	0.7635	0.7618	0.7652	0.8625	0.9900	0.9714	converged	0	0.2354	0.0437	0.2214	0.8380	0.6312	-0.2068	120	experiments/results/groupsize_zvf_sweep.tsv	agg
+groupsize_zvf_sweep	Qwen/Qwen2.5-0.5B	arithmetic_synthetic		8	3	0.6906	0.6877	0.6935	0.8694	0.9929	0.9732	converged	0	0.2354	0.0437	0.2214	0.8380	0.6312	-0.2068	120	experiments/results/groupsize_zvf_sweep.tsv	agg
+groupsize_zvf_sweep	Qwen/Qwen2.5-0.5B	arithmetic_synthetic		16	3	0.6312	0.6252	0.6372	0.8731	0.9843	0.9837	converged	0	0.2354	0.0437	0.2214	0.8380	0.6312	-0.2068	120	experiments/results/groupsize_zvf_sweep.tsv	agg
+variance_mitigation	GRPO	math_verifiable_rl		8	1	0.4813	0.0000	0.9308	0.2900	0.3844	0.3798	plateau	0	0.0000	0.1100	0.4230	0.3486	0.6362	0.2876	300	experiments/results/variance_mitigation.tsv	0
+variance_mitigation	GRPO	math_verifiable_rl		8	1	0.4793	0.0000	0.9056	0.2924	0.3862	0.3792	plateau	0	0.0000	0.0700	0.4156	0.3494	0.6302	0.2808	300	experiments/results/variance_mitigation.tsv	1
+variance_mitigation	GRPO	math_verifiable_rl		8	1	0.4803	0.0000	0.9180	0.2912	0.3860	0.3793	plateau	0	0.0000	0.0400	0.4143	0.3493	0.6305	0.2812	300	experiments/results/variance_mitigation.tsv	2
+variance_mitigation	GRPO	math_verifiable_rl		8	1	0.4806	0.0000	0.9573	0.2941	0.3869	0.3782	plateau	0	0.0000	0.0400	0.4167	0.3487	0.6300	0.2813	300	experiments/results/variance_mitigation.tsv	3
+variance_mitigation	GRPO	math_verifiable_rl		8	1	0.4824	0.0000	0.9376	0.2849	0.3840	0.3788	plateau	0	0.0000	0.0800	0.4265	0.3480	0.6373	0.2894	300	experiments/results/variance_mitigation.tsv	4
+variance_mitigation	AERO	math_verifiable_rl		8	1	0.2215	0.0000	0.7041	0.3172	0.4050	0.3992	plateau	0	0.0000	0.2300	0.6111	0.0131	0.6173	0.6042	100	experiments/results/variance_mitigation.tsv	0
+variance_mitigation	AERO	math_verifiable_rl		8	1	0.2185	0.0000	0.7435	0.3161	0.4058	0.3982	plateau	0	0.0000	0.2800	0.6273	0.0100	0.6224	0.6124	100	experiments/results/variance_mitigation.tsv	1
+variance_mitigation	AERO	math_verifiable_rl		8	1	0.2219	0.0000	0.7199	0.3193	0.4109	0.4005	plateau	0	0.0000	0.1700	0.6187	0.0137	0.6302	0.6165	100	experiments/results/variance_mitigation.tsv	2
+variance_mitigation	AERO	math_verifiable_rl		8	1	0.2178	0.0000	0.7521	0.3135	0.4059	0.3987	plateau	0	0.0000	0.1800	0.6243	0.0168	0.6278	0.6110	100	experiments/results/variance_mitigation.tsv	3
+variance_mitigation	AERO	math_verifiable_rl		8	1	0.2216	0.0000	0.7385	0.3171	0.4059	0.4001	plateau	0	0.0000	0.2000	0.6142	0.0147	0.6214	0.6066	100	experiments/results/variance_mitigation.tsv	4
+variance_mitigation	CPPO	math_verifiable_rl		8	1	0.2951	0.0000	0.8353	0.3081	0.3968	0.3920	plateau	0	0.0000	0.2100	0.5646	0.0112	0.7350	0.7239	100	experiments/results/variance_mitigation.tsv	0
+variance_mitigation	CPPO	math_verifiable_rl		8	1	0.2980	0.0000	0.8477	0.3075	0.4008	0.3916	plateau	0	0.0000	0.2200	0.5712	0.0067	0.7510	0.7443	100	experiments/results/variance_mitigation.tsv	1
+variance_mitigation	CPPO	math_verifiable_rl		8	1	0.2964	0.0000	0.8332	0.3084	0.3978	0.3912	plateau	0	0.0000	0.1500	0.5607	0.0107	0.7309	0.7202	100	experiments/results/variance_mitigation.tsv	2
+variance_mitigation	CPPO	math_verifiable_rl		8	1	0.2946	0.0000	0.8225	0.3128	0.3993	0.3923	plateau	0	0.0000	0.1700	0.5632	0.0121	0.7374	0.7253	100	experiments/results/variance_mitigation.tsv	3
+variance_mitigation	CPPO	math_verifiable_rl		8	1	0.2919	0.0000	0.8117	0.3110	0.4052	0.3926	plateau	0	0.0000	0.1600	0.5643	0.0083	0.7223	0.7140	100	experiments/results/variance_mitigation.tsv	4
+variance_mitigation	NGRPO	math_verifiable_rl		8	1	0.3036	0.0000	0.7727	0.2999	0.3931	0.3864	plateau	0	0.0000	0.1400	0.5396	0.0150	0.7135	0.6985	100	experiments/results/variance_mitigation.tsv	0
+variance_mitigation	NGRPO	math_verifiable_rl		8	1	0.3020	0.0000	0.8157	0.3064	0.3981	0.3879	plateau	0	0.0000	0.1400	0.5440	0.0112	0.7243	0.7131	100	experiments/results/variance_mitigation.tsv	1
+variance_mitigation	NGRPO	math_verifiable_rl		8	1	0.2994	0.0000	0.7773	0.3044	0.3907	0.3869	plateau	0	0.0000	0.1300	0.5459	0.0167	0.7114	0.6947	100	experiments/results/variance_mitigation.tsv	2
+variance_mitigation	NGRPO	math_verifiable_rl		8	1	0.2975	0.0000	0.7862	0.3035	0.3941	0.3873	plateau	0	0.0000	0.1400	0.5512	0.0114	0.7195	0.7081	100	experiments/results/variance_mitigation.tsv	3
+variance_mitigation	NGRPO	math_verifiable_rl		8	1	0.2993	0.0000	0.8236	0.3028	0.3962	0.3885	plateau	0	0.0000	0.1500	0.5476	0.0125	0.7161	0.7036	100	experiments/results/variance_mitigation.tsv	4
+variance_mitigation	SCAFGRPO	math_verifiable_rl		8	1	0.3151	0.1557	0.4375	0.3235	0.4138	0.4082	plateau	0	0.0000	0.0000	0.1148	0.2311	0.3840	0.1528	100	experiments/results/variance_mitigation.tsv	0
+variance_mitigation	SCAFGRPO	math_verifiable_rl		8	1	0.3126	0.1688	0.4379	0.3258	0.4150	0.4099	plateau	0	0.0000	0.0000	0.1238	0.2322	0.3903	0.1581	100	experiments/results/variance_mitigation.tsv	1
+variance_mitigation	SCAFGRPO	math_verifiable_rl		8	1	0.3131	0.1790	0.4693	0.3224	0.4190	0.4094	plateau	0	0.0000	0.0000	0.1168	0.2429	0.3855	0.1426	100	experiments/results/variance_mitigation.tsv	2
+variance_mitigation	SCAFGRPO	math_verifiable_rl		8	1	0.3216	0.1996	0.4353	0.3252	0.4119	0.4073	plateau	0	0.0000	0.0000	0.1079	0.2575	0.3933	0.1358	100	experiments/results/variance_mitigation.tsv	3
+variance_mitigation	SCAFGRPO	math_verifiable_rl		8	1	0.3208	0.1803	0.4732	0.3231	0.4156	0.4093	plateau	0	0.0000	0.0000	0.1242	0.2359	0.3997	0.1638	100	experiments/results/variance_mitigation.tsv	4
+variance_mitigation	MCGRPO	math_verifiable_rl		8	1	0.1332	0.0000	0.6105	0.2897	0.4044	0.0201	drift	1	0.0000	0.2818	0.7033	0.0081	0.3356	0.3275	110	experiments/results/variance_mitigation.tsv	0
+variance_mitigation	MCGRPO	math_verifiable_rl		8	1	0.1525	0.0000	0.6145	0.3165	0.4054	0.3982	plateau	0	0.0000	0.2800	0.6554	0.0160	0.4715	0.4555	100	experiments/results/variance_mitigation.tsv	1
+variance_mitigation	MCGRPO	math_verifiable_rl		8	1	0.1499	0.0000	0.6594	0.3129	0.4053	0.3972	plateau	0	0.0000	0.2800	0.6723	0.0155	0.4714	0.4559	100	experiments/results/variance_mitigation.tsv	2
+variance_mitigation	MCGRPO	math_verifiable_rl		8	1	0.1441	0.0000	0.6168	0.3116	0.4032	0.3980	plateau	0	0.0000	0.3500	0.6982	0.0090	0.4743	0.4653	100	experiments/results/variance_mitigation.tsv	3
+variance_mitigation	MCGRPO	math_verifiable_rl		8	1	0.1505	0.0000	0.6458	0.3186	0.4018	0.3972	plateau	0	0.0000	0.2200	0.6655	0.0141	0.4700	0.4559	100	experiments/results/variance_mitigation.tsv	4
+variance_mitigation	GIFT	math_verifiable_rl		8	1	0.1053	0.0000	0.5322	0.2942	0.4153	0.0208	drift	1	0.0000	0.2909	0.7211	0.0113	0.2851	0.2739	110	experiments/results/variance_mitigation.tsv	0
+variance_mitigation	GIFT	math_verifiable_rl		8	1	0.1176	0.0000	0.5628	0.3188	0.4081	0.4019	plateau	0	0.0000	0.2300	0.6800	0.0115	0.3778	0.3663	100	experiments/results/variance_mitigation.tsv	1
+variance_mitigation	GIFT	math_verifiable_rl		8	1	0.1157	0.0000	0.5379	0.3170	0.4112	0.4031	plateau	0	0.0000	0.2000	0.6812	0.0105	0.3719	0.3614	100	experiments/results/variance_mitigation.tsv	2
+variance_mitigation	GIFT	math_verifiable_rl		8	1	0.1151	0.0000	0.5447	0.3195	0.4100	0.4027	plateau	0	0.0000	0.2700	0.6929	0.0147	0.3764	0.3617	100	experiments/results/variance_mitigation.tsv	3
+variance_mitigation	GIFT	math_verifiable_rl		8	1	0.1173	0.0000	0.5789	0.3211	0.4047	0.4012	plateau	0	0.0000	0.2200	0.6710	0.0186	0.3745	0.3559	100	experiments/results/variance_mitigation.tsv	4
+variance_mitigation	AREAL	math_verifiable_rl		8	1	0.1118	0.0000	0.5316	0.2943	0.4083	0.0229	drift	1	0.0000	0.3091	0.7018	0.0128	0.2866	0.2738	110	experiments/results/variance_mitigation.tsv	0
+variance_mitigation	AREAL	math_verifiable_rl		8	1	0.1232	0.0000	0.5149	0.3181	0.4107	0.4057	plateau	0	0.0000	0.2400	0.6665	0.0176	0.3865	0.3689	100	experiments/results/variance_mitigation.tsv	1
+variance_mitigation	AREAL	math_verifiable_rl		8	1	0.1215	0.0000	0.5809	0.3207	0.4113	0.4042	plateau	0	0.0000	0.2800	0.6864	0.0098	0.3922	0.3825	100	experiments/results/variance_mitigation.tsv	2
+variance_mitigation	AREAL	math_verifiable_rl		8	1	0.1239	0.0000	0.5826	0.3210	0.4092	0.4046	plateau	0	0.0000	0.2500	0.6738	0.0111	0.3905	0.3795	100	experiments/results/variance_mitigation.tsv	3
+variance_mitigation	AREAL	math_verifiable_rl		8	1	0.1241	0.0000	0.5733	0.3199	0.4109	0.4038	plateau	0	0.0000	0.2900	0.6748	0.0171	0.3917	0.3747	100	experiments/results/variance_mitigation.tsv	4
+variance_mitigation	ES	math_verifiable_rl		8	1	0.1056	0.0000	0.3027	0.2893	0.3966	0.0215	drift	1	0.0000	0.2909	0.5400	0.0070	0.1527	0.1457	110	experiments/results/variance_mitigation.tsv	0
+variance_mitigation	ES	math_verifiable_rl		8	1	0.1150	0.0000	0.2919	0.3099	0.3978	0.3906	plateau	0	0.0000	0.2100	0.4997	0.0113	0.2460	0.2346	100	experiments/results/variance_mitigation.tsv	1
+variance_mitigation	ES	math_verifiable_rl		8	1	0.1163	0.0000	0.3139	0.3107	0.3954	0.3895	plateau	0	0.0000	0.1900	0.4866	0.0125	0.2434	0.2309	100	experiments/results/variance_mitigation.tsv	2
+variance_mitigation	ES	math_verifiable_rl		8	1	0.1151	0.0000	0.2901	0.3093	0.3992	0.3909	plateau	0	0.0000	0.1600	0.4858	0.0102	0.2370	0.2268	100	experiments/results/variance_mitigation.tsv	3
+variance_mitigation	ES	math_verifiable_rl		8	1	0.1191	0.0000	0.2942	0.3088	0.3955	0.3892	plateau	0	0.0000	0.1500	0.4792	0.0143	0.2436	0.2293	100	experiments/results/variance_mitigation.tsv	4
+cross_tool_qwen3-32b	qwen3-32b	tool_use		1	1	1.0000	1.0000	1.0000	0.0000	0.0000	0.0000	collapse	3	1.0000	0.0000	0.0000	1.0000	1.0000	0.0000	30	experiments/results/tool_code_reward_diagnostics.tsv	0
+cross_tool_llama-8b-inst	llama-8b-inst	tool_use		1	1	1.0000	1.0000	1.0000	0.0000	0.0000	0.0000	collapse	3	1.0000	0.0000	0.0000	1.0000	1.0000	0.0000	30	experiments/results/tool_code_reward_diagnostics.tsv	0
+scaling_law_three_phase	Qwen3.5-4B	gsm8k_reasoning	plateau	8	1	NA	NA	NA	0.8125	1.0000	0.8500	converged	0	NA	NA	NA	NA	NA	NA	30	experiments/results/scaling_law_three_phase.tsv	agg
+scaling_law_three_phase	Qwen3-8B	gsm8k_reasoning	saturation	8	1	NA	NA	NA	0.2437	0.6250	0.3438	drift	1	NA	NA	NA	NA	NA	NA	30	experiments/results/scaling_law_three_phase.tsv	agg
+scaling_law_three_phase	Llama-3.1-8B-Instruct	gsm8k_reasoning	drift	8	1	NA	NA	NA	0.9250	1.0000	0.8438	drift	1	NA	NA	NA	NA	NA	NA	30	experiments/results/scaling_law_three_phase.tsv	agg
+scaling_law_three_phase	DeepSeek-V3.1	gsm8k_reasoning	plateau	8	1	NA	NA	NA	0.8333	1.0000	0.8125	drift	1	NA	NA	NA	NA	NA	NA	30	experiments/results/scaling_law_three_phase.tsv	agg
+scaling_law_three_phase	Nemotron-120B	gsm8k_reasoning	collapse	8	1	NA	NA	NA	0.1458	0.8750	0.2083	collapse	2	NA	NA	NA	NA	NA	NA	30	experiments/results/scaling_law_three_phase.tsv	agg
+drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	0.8250	0.0000	1.0000	0.9195	0.9850	0.9789	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/drgrpo_vs_grpo.json	42
+drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	0.8109	0.0625	1.0000	0.9143	0.9850	0.9859	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/drgrpo_vs_grpo.json	123
+drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	0.8094	0.0000	1.0000	0.9227	0.9800	0.9898	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/drgrpo_vs_grpo.json	456
+drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	0.8125	0.0000	1.0000	0.9229	0.9950	0.9945	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/drgrpo_vs_grpo.json	789
+drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	0.8172	0.0000	1.0000	0.9215	0.9900	0.9914	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/drgrpo_vs_grpo.json	1024
+drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	0.7703	0.0000	1.0000	0.8998	0.9900	0.9711	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/drgrpo_vs_grpo.json	42
+drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	0.7641	0.0625	1.0000	0.9031	1.0000	0.9875	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/drgrpo_vs_grpo.json	123
+drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	0.7469	0.0000	1.0000	0.9021	0.9950	0.9914	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/drgrpo_vs_grpo.json	456
+drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	0.7719	0.0000	1.0000	0.9059	0.9950	0.9922	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/drgrpo_vs_grpo.json	789
+drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	0.8125	0.0000	1.0000	0.9230	0.9800	0.9984	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/drgrpo_vs_grpo.json	1024
+samestack_ppo_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	NA	NA	NA	NA	0.9800	0.9586	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/samestack_ppo_grpo.json	42
+samestack_ppo_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	NA	NA	NA	NA	1.0000	0.9930	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/samestack_ppo_grpo.json	123
+samestack_ppo_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	NA	NA	NA	NA	0.9900	0.9688	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/samestack_ppo_grpo.json	456
+samestack_ppo_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	NA	NA	NA	NA	0.9850	0.9828	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/samestack_ppo_grpo.json	789
+samestack_ppo_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	NA	NA	NA	NA	0.9950	0.9914	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/samestack_ppo_grpo.json	1024
+samestack_ppo_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	NA	NA	NA	NA	0.9850	0.9781	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/samestack_ppo_grpo.json	42
+samestack_ppo_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	NA	NA	NA	NA	0.9950	0.9758	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/samestack_ppo_grpo.json	123
+samestack_ppo_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	NA	NA	NA	NA	0.9950	0.7203	drift	1	NA	NA	NA	NA	NA	NA	40	experiments/results/samestack_ppo_grpo.json	456
+samestack_ppo_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	NA	NA	NA	NA	0.9850	0.9656	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/samestack_ppo_grpo.json	789
+samestack_ppo_grpo	Qwen/Qwen2.5-0.5B	arithmetic		8	1	NA	NA	NA	NA	1.0000	0.9508	converged	0	NA	NA	NA	NA	NA	NA	40	experiments/results/samestack_ppo_grpo.json	1024

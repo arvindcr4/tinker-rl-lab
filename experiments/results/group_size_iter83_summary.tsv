@@ -1,0 +1,23 @@
+metric	value
+metric	n_T_observed
+value	4
+metric	G_peak_at_T_1M
+value	32
+metric	G_peak_at_T_64M
+value	64
+metric	G_iso_egt_at_T_64M
+value	64
+metric	egt_ratio_raw_per_step_G4_over_G32_at_T_64M
+value	0.5194
+metric	egt_ratio_compensated_8x_G4_vs_G32_at_T_64M
+value	4.1548
+metric	iso_compute_verdict_at_T_64M
+value	G4_wins_at_iso_rollout
+metric	accuracy_retention_G4_over_G32_at_T_1M
+value	0.9762
+metric	accuracy_retention_G4_over_G32_at_T_64M
+value	0.7273
+metric	iso_egt_fraction_threshold
+value	0.95
+metric	interpretation
+value	G_peak shifts rightward with T (G=32 at T=1M, G=64 at T>=4M).  Per-step EGT ratio G=4/G=32 falls from 0.63 at T=1M to 0.52 at T=64M.  At iso-rollout-cost (G=4 with 8x steps), G=4 actually delivers 4x more total raw EGT than G=32 yet still loses on accuracy (R=0.727 at T=64M), confirming that per-step gradient quality -- not raw signal quantity -- drives the G=32 advantage.

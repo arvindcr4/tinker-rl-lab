@@ -1,0 +1,4 @@
+metric_kind	metric_key	headline
+iso_reward_setup	T_64M_acc	"{""G=4"": 0.64, ""G=8"": 0.8, ""G=16"": 0.85, ""G=32"": 0.88, ""G=64"": 0.87}"
+iso_reward_pairs	n_pairs	At T=64M, 10 (G_small, G_large) pairs; 2 pass Wu's R>=0.976 threshold
+iso_reward_best	max_rollouts_frac_at_T64M	Max rollouts-frac with Wu R>=0.976 at T=64M: 0.500 (G_small=32, G_large=64, R=1.011)

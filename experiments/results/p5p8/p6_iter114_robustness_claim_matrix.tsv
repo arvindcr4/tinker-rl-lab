@@ -1,0 +1,29 @@
+delta_id	metric	panel	predicted_sign	measured	observed_delta	rationale
+delta_adaptiveg	reward_mean	qp7_adaptive_armB_vs_armA_paired	>=0	yes	-0.007812	adaptive G aims to spend compute on contrast-rich prompts; should be at least reward-neutral and ideally positive.
+delta_adaptiveg	zvf	qp7_adaptive_armB_vs_armA_paired	<0	yes	-0.074219	escalating G when ZVF is high reduces the fraction of all-same groups on the next step (the iter-31 unified-band control
+delta_aero	zvf	n2_same_stack_last10	<0	yes	-0.025000	AERO inflates the effective group size via off-policy rollouts; fewer all-same groups should lower ZVF on the same stack
+delta_aero	reward_mean	n2_same_stack_last10	>=0	yes	-0.014063	AERO's off-policy rollouts reuse the same stack's signal -- no reason to expect a reward loss; we expect at least parity
+delta_aero	zvf_risk_mean	zvf130_5seed	<0	yes	-0.147637	Same logic on the 5-seed risk panel: lower risk of zero-variance groups.
+delta_areal	zvf	n2_same_stack_last10	<0	yes	-0.056250	AREAL's decoupled rollout budget acts as a larger effective G on this single-batch run; should lower ZVF.
+delta_areal	reward_mean	n2_same_stack_last10	>=0	yes	-0.019531	AREAL's autoscaler is statically set to 8 in our N2 run; should be at least reward-neutral on the same stack.
+delta_areal	zvf_risk_mean	zvf130_5seed	<0	yes	-0.245767	Decoupled rollout should reduce risk of zero-variance groups.
+delta_cppo	zvf_risk_mean	zvf130_5seed	<0	yes	-0.151077	CPPO's continuity penalty reduces abrupt policy updates; risk of ZVF collapse should be lower than vanilla GRPO.
+delta_dapo	zvf	n2_same_stack_last10	<0	no		DAPO's dynamic_sampling filter explicitly resamples zero-variance groups; predicted lower ZVF than GRPO on the same stac
+delta_dapo	mean_len	length_bias_iter60_grpo_vs_drgrpo_paired	<0	no		DAPO's overlong_reward_shaping soft-penalizes truncated completions; predicted lower mean_len on the same stack (Yu et a
+delta_dapo	reward_mean	n2_same_stack_last10	>0	no		DAPO's clip_higher (asymmetric 0.2/0.28) prevents premature convergence on low-entropy prompts while permitting explorat
+delta_drgrpo	neg_frac	length_bias_iter60_grpo_vs_drgrpo_paired	<0	yes	0.102800	DrGRPO removes 1/|o_i| length normalization from the loss; should reduce the rate of negative-elasticity steps by removi
+delta_drgrpo	pos_frac	length_bias_iter60_grpo_vs_drgrpo_paired	>0	yes	-0.100100	same mechanism — DrGRPO's removal of length normalization should increase positive-elasticity fraction
+delta_drgrpo	L_star	length_bias_iter60_grpo_vs_drgrpo_paired	<0	yes	44.250300	DrGRPO's removal of length normalization should pull the optimal-length fit toward shorter responses (less bias)
+delta_es	zvf_risk_mean	zvf130_5seed	<0	yes	-0.272578	Evolution Strategies as a policy-gradient surrogate; inherits lower ZVF risk via population-based evaluation.
+delta_gift	zvf	n2_same_stack_last10	>0	yes	0.125000	GIFT subtracts a gamma-style likelihood baseline -- a small increase in zero-variance fraction is plausible because the 
+delta_gift	reward_mean	n2_same_stack_last10	>=0	yes	0.016406	GIFT's documented loss shift of +16,722 absolute loss should be at least reward-neutral on the same stack.
+delta_gift	zvf_risk_mean	zvf130_5seed	<0	yes	-0.263187	On the 5-seed risk panel, GIFT's gamma prior reduces risk of zero-variance groups (anti-starvation).
+delta_gspo	zvf	n2_same_stack_last10	<0	no		GSPO's sequence-level (length-normalized) importance ratio reduces per-token variance amplification that drives zero-var
+delta_gspo	reward_mean	n2_same_stack_last10	>=0	no		GSPO is documented as reward-neutral or slightly positive on Qwen3 dense models; the sequence-level ratio is variance-re
+delta_gspo	mean_len	length_bias_iter60_grpo_vs_drgrpo_paired	<0	no		Length normalization in the importance ratio reduces the implicit length-bias GRPO inherits from per-token averaging; pr
+delta_mcgrpo	zvf_risk_mean	zvf130_5seed	<0	yes	-0.174277	MCGRPO's Monte-Carlo advantage uses a per-prompt baseline; should reduce ZVF risk vs vanilla GRPO.
+delta_ngrpo	zvf_risk_mean	zvf130_5seed	<0	yes	-0.131025	NGRPO's noise-injection acts as exploration; should lower the risk of zero-variance starvation.
+delta_ppo	zvf	n2_same_stack_last10	<0	no		PPO's learned V_head reduces within-group zero-variance probability because GAE reweights per-token advantages rather th
+delta_ppo	reward_mean	n2_same_stack_last10	>=0	no		PPO with K=4 epochs over the same buffer should be at least reward-neutral vs GRPO K=1; the value head adds variance red
+delta_ppo	zvf_risk_mean	zvf130_5seed	<0	no		On the 5-seed risk panel, PPO's learned baseline should reduce risk of zero-variance groups (variance reduction); same p
+delta_scafgrpo	zvf_risk_mean	zvf130_5seed	<0	yes	-0.352361	Scaffolded GRPO refactors the advantage; should be at least as ZVF-safe as vanilla GRPO.

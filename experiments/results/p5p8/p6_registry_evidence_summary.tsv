@@ -1,0 +1,15 @@
+delta_id	name	n_components	n_measured	n_expected	n_validated	n_panels	panels	supports	contradicts	neutral	unclaimed	has_yield_residual	n_yield_metrics
+delta_adaptiveg	Adaptive-G (ZVF-driven)	1	2	2	2	1	qp7_adaptive_armB_vs_armA_paired	1	0	1	0	False	0
+delta_aero	AERO	1	4	3	4	2	n2_same_stack_last10;zvf130_5seed	1	1	1	1	True	10
+delta_areal	AREAL	1	4	3	4	2	n2_same_stack_last10;zvf130_5seed	1	1	1	1	True	10
+delta_cppo	CPPO	1	2	1	2	1	zvf130_5seed	1	0	0	1	False	0
+delta_dapo	DAPO	5	0	0	0	0		0	0	0	0	False	0
+delta_drgrpo	Dr. GRPO	2	3	3	3	1	length_bias_iter60_grpo_vs_drgrpo_paired	0	1	2	0	False	0
+delta_es	ES	1	2	1	2	1	zvf130_5seed	1	0	0	1	False	0
+delta_gift	GIFT	1	4	3	4	2	n2_same_stack_last10;zvf130_5seed	2	0	1	1	True	10
+delta_gspo	GSPO	2	0	0	0	0		0	0	0	0	False	0
+delta_liteppo	LitePPO	2	0	0	0	0		0	0	0	0	False	0
+delta_mcgrpo	MCGRPO	2	2	1	2	1	zvf130_5seed	1	0	0	1	False	0
+delta_ngrpo	NGRPO	1	2	1	2	1	zvf130_5seed	1	0	0	1	False	0
+delta_reinforce	REINFORCE	2	0	0	0	0		0	0	0	0	False	0
+delta_scafgrpo	SCAFGRPO	1	2	1	2	1	zvf130_5seed	1	0	0	1	False	0

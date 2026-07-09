@@ -1,0 +1,4 @@
+fset	mean_pre_brier	mean_platt_brier	mean_iso_brier	mean_slope	mean_abs_curv_K1_pre	mean_abs_curv_K1_iso
+20raw	0.03382	0.00613	0.00504	1.1545	0.02795	0.10306
+24full	0.03099	0.00555	0.00449	1.22476	0.0098	0.13456
+4sensor	0.13796	0.01391	0.01372	0.52186	0.44629	0.22899

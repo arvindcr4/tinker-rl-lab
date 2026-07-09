@@ -1,0 +1,147 @@
+% Paper 6 measured-vs-claimed reconciliation section. Iter 18.
+% For each of the 11 registry variant-delta records, score the agreement
+% between the registry's qualitative claim (parsed from claim_summary)
+% and the measured proxies available in the repository (N2 same-stack
+% four-method tensors + zvf130 5-seed risk index + registry-side claimant
+% stacks).
+\section{Measured-vs-Claimed Variant-Delta Reconciliation}
+\label{sec:p6-measured-claimed}
+
+The previous section established that the registry's same-stack reward
+deltas are all $\leq 2$pp in magnitude (with the AERO and AREAL
+decreases statistically significant). That finding isolates the
+reward axis; this section asks the broader question: \emph{for each
+named variant delta, does the registry's qualitative claim survive
+quantitative scrutiny on every measurable proxy available?}
+
+\subsection{Method}
+We enumerate every \texttt{delta\_*.json} record (11 in total) and, for
+each, build three evidence bases:
+\begin{enumerate}
+  \item \textbf{N2 same-stack four-method tensors} (aero, gift, areal,
+    with grpo as baseline) --- paired bootstrap on per-step scalars at
+    $n_{\text{boot}}{=}2000$, last-$10$ steps. Five proxies:
+    \texttt{zvf}, \texttt{loss}, \texttt{mean\_len}, \texttt{cv\_len},
+    \texttt{reward\_mean}.
+  \item \textbf{zvf130 5-seed risk index} --- mean ZVF across 5 seeds
+    on the repository's canonical prompt distribution, for 9 of the 11
+    variants. The variants not covered by this panel are
+    \texttt{dapo}, \texttt{drgrpo}, \texttt{gspo}.
+  \item \textbf{Registry-side claimant stacks} --- the number and status
+    mix of \texttt{stack} records that explicitly claim the delta via
+    \texttt{variant\_delta\_applied[*].delta\_id}.
+\end{enumerate}
+For each \texttt{(delta, proxy)} pair we then assign a verdict by
+comparing the measured $\Delta$ to a predicted sign derived from the
+delta's \texttt{claim\_summary}:
+\textbf{SUPPORT} (sign matches, CI excludes 0), \textbf{WEAK} (sign
+matches, CI contains 0), \textbf{OPPOSE} (sign contradicts), or
+\textbf{NO\_DATA}.
+
+\subsection{Per-delta verdict (summary)}
+Table~\ref{tab:p6-measured-claimed} lists the verdict for each of the
+11 deltas. The headline numbers are:
+
+\begin{table}[t]
+\centering
+\caption{Measured-vs-claimed variant-delta reconciliation across the
+11 registry \texttt{delta\_*.json} records. N2 = paired bootstrap on
+last-10 steps (only aero/gift/areal have N2 data; grpo is the
+baseline); zvf130 = mean ZVF across 5 seeds vs the grpo baseline;
+claimants = number of stack records that list the delta in
+\texttt{variant\_delta\_applied}. The "ZVF BELOW grpo" verdict covers
+$8/8$ measured variants.}
+\label{tab:p6-measured-claimed}
+\small
+\begin{tabular}{lllrrrrr}
+\toprule
+delta & method & N2 verdict & N2 sup./tot. & zvf130 mean & zvf130 $\Delta$ & claimants & claimant statuses \\
+\midrule
+delta\_aero    & aero    & MIXED    & 0/5 & 0.220 & $-0.261$ & 1  & implemented \\
+delta\_gift    & gift    & MIXED    & 0/5 & 0.114 & $-0.367$ & 1  & implemented \\
+delta\_areal   & areal   & MIXED    & 0/5 & 0.121 & $-0.360$ & 1  & implemented \\
+delta\_dapo    & dapo    & NO\_DATA & 0/5 & ---   & ---      & 10 & abs./impl./sur./unkn. \\
+delta\_drgrpo  & drgrpo  & NO\_DATA & 0/5 & ---   & ---      & 4  & impl./surrogate \\
+delta\_gspo    & gspo    & NO\_DATA & 0/5 & ---   & ---      & 2  & surrogate/unknown \\
+delta\_cppo    & cppo    & NO\_DATA & 0/5 & 0.295 & $-0.186$ & 1  & unknown \\
+delta\_ngrpo   & ngrpo   & NO\_DATA & 0/5 & 0.300 & $-0.180$ & 1  & unknown \\
+delta\_mcgrpo  & mcgrpo  & NO\_DATA & 0/5 & 0.146 & $-0.335$ & 2  & unknown \\
+delta\_es      & es      & NO\_DATA & 0/5 & 0.114 & $-0.367$ & 1  & unknown \\
+delta\_scafgrpo& scafgrpo& NO\_DATA & 0/5 & 0.317 & $-0.164$ & 1  & unknown \\
+\midrule
+grpo (baseline) & grpo  & ---      & ---  & 0.481 & $+0.000$ & 6  & (self) \\
+\bottomrule
+\end{tabular}\\
+\footnotesize{All scripts and outputs:
+\texttt{scripts/p5p8/registry\_measured\_claimed.py},
+\texttt{experiments/results/p5p8/registry\_measured\_claimed.tsv} (11
+rows). Claimants counted from
+\texttt{registry/entries/*.json} (skipping \texttt{delta\_*.json}).
+}
+\end{table}
+
+\subsection{Three falsifiable findings}
+
+\paragraph{Finding A: $8/8$ measured variants have \emph{lower} mean ZVF
+than grpo.}
+The zvf130 risk index is the only proxy that fires on every measured
+variant, and it fires in the same direction on all 8: every variant
+drops mean ZVF relative to grpo by between $0.16$ (scafgrpo) and $0.37$
+(es / gift). The 5-seed reproducibility of this monotonic drop is the
+strongest claim-direction result the registry now licenses: \emph{no
+measured variant has lifted the within-group contrast that the variant
+claims to lift}. The \texttt{mcgrpo} diversity-bonus and \texttt{aero}
+off-policy rollouts are \emph{claimed} to raise within-group contrast;
+the canonical prompt distribution says the opposite.
+
+\paragraph{Finding B: $3/11$ variants are claim-only.}
+\texttt{dapo}, \texttt{drgrpo}, \texttt{gspo} have no N2 same-stack
+measurement and no zvf130 measurement. They are also the variants with
+the largest claimant populations ($10$, $4$, $2$ respectively) and,
+for DAPO specifically, the widest status mix (4 implemented / 1
+surrogate / 3 absent / 2 unknown, per the iter-14 audit). The
+adoption-vs-evidence gap is sharpest where the registry is most cited:
+the variant the field claims to use most is the one whose measured
+effect is least characterised.
+
+\paragraph{Finding C: $1/11$ variants shows an OPPOSE verdict.}
+The \texttt{aero} delta's predicted sign for ZVF was $-1$ (inflating
+the effective group size should lower zero-variance probability).
+Measured N2 reports $\Delta_{\text{ZVF}}{=}+0.025$ (single-seed CI
+contains 0); zvf130 reports $\Delta_{\text{ZVF}}{=}-0.261$ (5 seeds).
+The N2 single-step measurement points weakly opposite; the
+multi-seed measurement points weakly in the predicted direction. This
+is the only OPPOSE verdict the reconciliation produces, and the
+direction is itself ambiguous.
+
+\subsection{What the reconciliation rules out}
+The reconciliation table is \emph{not} a quality judgement on the
+variants. It is a machine-readable record of the agreement between the
+qualitative claim each delta makes and the measured proxies available.
+Three things it rules out:
+
+\begin{itemize}
+  \item The reward-axis claim (\emph{``variant $X$ improves reward''})
+    is not supported on the N2 same-stack data for any of the 4
+    measured variants --- the largest effect is a $2$pp reward
+    \emph{decrease} (AERO $-0.014$, AREAL $-0.020$, both CIs exclude 0),
+    so no variant improves reward and two significantly lower it.
+  \item The within-group-contrast claim (\emph{``variant $X$ raises
+    within-group contrast''}) is contradicted by the zvf130 panel for
+    every variant that makes such a claim.
+  \item The ``registry adoption implies evidence'' inference is
+    falsified for DAPO: 10 claimants, 0 measured proxies. The registry
+    correctly \emph{catalogs} the adoption; it does not yet
+    \emph{justify} it.
+\end{itemize}
+
+\subsection{Implications for downstream papers}
+The reconciliation table is consumable by Pillar-3 (P7, controller
+design) and Pillar-4 (P8, fraud scorer) only insofar as it sharpens
+the ``the algorithm label is under-identified'' thesis (already
+established in Pillar 1 / P5). Its direct contribution to Pillar 2
+(P6) is that the registry now carries a top-level \emph{claim vs
+measurement} check, not just a reporting-coverage check (the iter-14
+audit). The two are complementary: coverage answers ``was the claim
+even made?''; reconciliation answers ``does the measured behaviour
+match it?''

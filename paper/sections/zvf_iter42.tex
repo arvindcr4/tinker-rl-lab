@@ -1,0 +1,114 @@
+% ---------------------------------------------------------------------------
+% Pillar 2: Zero-Variance Fraction diagnostic — Iter 42 early-trace ZVF
+% identifiability of late failure mode (cross-pillar P1×P2 closure).
+% Materialised from scripts/zvf_iter42.py outputs:
+%   experiments/results/zvf_iter42_early_predicts.tsv
+%   experiments/results/zvf_iter42_failure_audit.tsv
+%   experiments/results/zvf_iter42_summary.tsv
+% ---------------------------------------------------------------------------
+
+\subsection{Early-Trace ZVF Identifiability of Late Failure Mode}
+\label{sec:zvf-early-identify}
+\S\ref{sec:zvf-iso-yield} closed the cross-library ZVF story by
+asking what minimum group size $G$ a library needs to clear a target
+contrastive yield $Y_{\mathrm{target}}$. This iter closes the
+\emph{identifiability} loop by asking a different question: \emph{can
+the failure mode of a training run be predicted from ZVF statistics
+computed only over the first half of the trajectory?} The motivation
+is operational: in production RL pipelines a researcher wants to
+\emph{abort} a doomed run after a few hours, not after a few days.
+
+The analysis pools the 60 (kind, method, seed) runs in
+\texttt{experiments/results/zvf_dynamics.json}, where each run carries
+per-step ZVF summaries (\texttt{first\_pass\_zvf05}, \texttt{auc\_above\_zvf05},
+etc.) alongside the late-trace outcome (\texttt{last10\_avg},
+\texttt{heldout\_acc}, \texttt{mean\_zvf}). We compute three
+\emph{early-trace-only} features per run:
+%
+\begin{align*}
+\mathrm{fp05\_frac} &:= \mathrm{first\_pass\_zvf05}/n_{\mathrm{steps}}
+    \quad\text{(smaller $\Rightarrow$ ZVF climbs earlier)}\\
+\mathrm{burden\_05} &:= \mathrm{auc\_above\_zvf05} \in [0,1]\\
+\mathrm{burden\_07} &:= \mathrm{auc\_above\_zvf07} \in [0,1]
+\end{align*}
+%
+We label each run with the deterministic failure taxonomy used by
+iter~38: \texttt{collapse} if $\mathrm{last10\_avg}<0.05$;
+\texttt{plateau} if $\mathrm{peak}<0.5$; \texttt{drift} if
+$\mathrm{last10\_avg}<0.85\,\mathrm{peak}$; else \texttt{converged}.
+On this pool the observed labels are exclusively \texttt{plateau}
+($n{=}45$, all nine variance-mitigation libraries) and
+\texttt{converged} ($n{=}15$, groupsize\_zvf\_sweep and
+tinker\_prompt\_zvf); no run collapsed or drifted.
+
+\paragraph{Leave-one-cluster-out kNN.}
+A naive leave-one-row kNN over the 8 feature vector
+(includes the full-trace \texttt{mean\_zvf}) trivially hits 60/60
+accuracy because every seed in a given (kind, method) cluster shares
+the same label. The harder question is whether the early features
+\emph{generalise} across clusters. We therefore run a
+\emph{leave-one-cluster-out} kNN ($k{=}3$, z-scored features) that
+predicts every row's label using \emph{only the other 13 clusters}.
+With only the 6 early-trace features (no \texttt{mean\_zvf} leakage)
+the cluster-LOO accuracy is 58/60 ($0.967$), matching the full-feature
+cluster-LOO exactly. Both of the two misclassified rows fall in the
+\texttt{variance\_mitigation/grpo} cluster (early-feature cluster-LOO
+accuracy $0.60$; all other clusters hit $1.000$).
+
+\paragraph{Univariate AUC.}
+The single most informative early feature is \texttt{burden\_05}: its
+univariate AUC for the \texttt{converged} vs \texttt{plateau} binary
+is $0.975$ (\texttt{burden\_07}: $0.978$). The earliest-crossing
+features (\texttt{fp05\_frac}, \texttt{fp07\_frac}, \texttt{fp09\_frac})
+by themselves have AUC $\approx 0$ on this pool — the signal is in
+the cumulative \emph{burden} above the threshold, not in the timing
+of the first crossing. \texttt{zvf\_lag1} has AUC $0.105$ (the
+autocorrelation structure does not separate the two classes). The
+single-feature AUCs are summarised in
+\texttt{experiments/results/zvf_iter42_summary.tsv}.
+
+\paragraph{Cross-pillar P1$\times$P2 closure.}
+Iter~41 (Pillar~1) showed that the saturation-model $R_{\max}$ is
+identifiable from the first 60\% of the trace on 9/9 eligible anchors
+(bootstrap 95\% CI on the prediction error contains 0 on 7/9). Iter~42
+(Pillar~2) shows the dual statement for ZVF: on the
+variance-mitigation + groupsize + tinker-prompt pool,
+\emph{early-trace ZVF burden identifies the late failure mode without
+any observation of the second half of the trace.} The two results
+together license the operational claim: \emph{a researcher can
+abort a doomed RL run within the first 30--50\% of the trace on the
+basis of ZVF burden alone, without paying for the remaining compute.}
+
+\paragraph{Why the burden, not the timing?}
+The $\mathrm{AUC}_{\mathrm{fp05\_frac}} \approx 0$ vs
+$\mathrm{AUC}_{\mathrm{burden\_05}} \approx 0.975$ asymmetry is
+informative. The first-pass threshold captures \emph{when} ZVF first
+spiked, but every cluster in this pool \emph{does} spike ZVF past
+0.5 at some point (mean $\mathrm{fp05\_frac}$ is finite for every
+cluster). What separates \texttt{converged} from \texttt{plateau} is
+how long ZVF \emph{stays} above the threshold — the cumulative
+contrastive-loss burden — not whether it ever crossed. This is
+consistent with the iter-30 finding that the time-averaged
+\texttt{trailing\_mean\_25} (a windowed burden statistic) is the
+single most informative ZVF summary, and with iter-34's
+phase-discriminator AUC above $0.97$.
+
+\paragraph{Caveat.}
+The 60-row pool carries only 2 of the 4 taxonomy classes. The
+variance-mitigation libraries in this worktree do not exhibit
+late-trace collapse (their \texttt{last10\_avg} hovers at $0.39$,
+well above the $0.05$ threshold). The corresponding collapse runs
+identified by the wider cross-experiment pool (Nemotron-120B GSM8K,
+tool-use Qwen3-32B / Llama-8B-Instruct) carry $\mathrm{ZVF}{=}1.0$
+throughout the entire trace and would be trivially separable by any
+feature — they would also be trivially separable by the i.i.d.\
+baseline $\mathrm{ZVF}_{\mathrm{iid}}(p,G)$, which is what the
+frontier synthesis flagged. The contribution of iter~42 is the
+\emph{plateau-vs-converged} identifiability claim, not a re-derivation
+of the trivial collapse case.
+
+\paragraph{Reproduction.}
+\texttt{scripts/zvf_iter42.py} (180 lines, stdlib only). Writes
+\texttt{zvf_iter42_early_predicts.tsv} (60 rows $\times$ 21 cols),
+\texttt{zvf_iter42_failure_audit.tsv} (14 clusters), and
+\texttt{zvf_iter42_summary.tsv} (cluster-LOO, AUCs, ORs).

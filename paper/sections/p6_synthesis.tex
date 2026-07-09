@@ -1,0 +1,44 @@
+% Paper 6 (GRPO-Registry) cross-pillar synthesis
+% NOTE: unlike the empirical pillars, P6 has no external frontier-model
+% cross-examination digest; this synthesis ties the resource to the program's
+% own cross-pillar evidence and adds no new experimental claims.
+\section{Synthesis: Why Each Schema Field Earned Its Place}
+\label{sec:p6-synthesis}
+
+The seven MIN-REPORT items are not a wishlist; each was forced by a measured
+failure somewhere in this program, and the registry is the container that
+makes those lessons reusable:
+
+\begin{itemize}[leftmargin=1.5em, itemsep=0.15em]
+  \item \emph{Items 1 and 3 (loss form; backend/precision)} are forced by the
+        stack-dependence results: a same-label backend swap moved final reward
+        $85.6\% \to 5.0\%$, and the scaling pillar (P1) found stack identity
+        competing with model scale as a predictor of outcome. Rankings that do
+        not pin these fields are rankings of launchers.
+  \item \emph{Item 4 (per-step ZVF/GU)} is forced by the ZVF pillar (P2): ZVF
+        is U-shaped in accuracy across the 368-run audit (${\sim}0.95$ at both
+        extremes, ${\sim}0.25$ mid-curve), so only a trajectory, not an
+        endpoint, is interpretable---and it is cheap to emit, since it needs
+        only per-group rewards. The pillar's micro-jitter falsification
+        (batch ZVF $0.158 \to 0.000$ under $\sim$$10^{-4}$ reward jitter while
+        contrast-density measures are invariant) is also why the schema
+        records the telemetry \emph{source}: a ZVF of zero means different
+        things from different reward pipelines.
+  \item \emph{Item 5 (group-size schedule)} is forced by the group-size pillar
+        (P3): expected ZVF-indicator is $p^G + (1-p)^G$, so larger $G$
+        mechanically lowers ZVF, and our model$\times G$ sweeps confirm the
+        monotone drop (e.g.\ Qwen3-32B: $0.33/0.18/0.08$ at $G{=}4/8/16$).
+        Comparing stacks at unrecorded $G$ confounds algorithm with schedule;
+        the adaptive-$G$ seed entry shows the field capturing a live
+        controller, not just a constant.
+  \item \emph{Items 2, 6, 7 (KL; held-out split; decontamination/parser)} are
+        forced by the confound audits behind P4 and the benchmark design
+        (\secref{sec:benchmark}): silent $\beta$ defaults differ $2\times$
+        across open frameworks, and length-bias results flip under
+        reward-parser changes that item 7's probe would surface.
+\end{itemize}
+
+Read this way, the registry is the program's exit artifact: the pillar papers
+established \emph{which} stack facts flip conclusions; the registry is the
+minimal data structure in which those facts travel with the stack instead of
+with the paper trail.

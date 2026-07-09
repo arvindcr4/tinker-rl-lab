@@ -1,0 +1,40 @@
+# Pillar 2 Iter 66 — pairwise KS distance between per-step ZVF
+# cells are KS distance D; p-values in zvf_iter66_ks_pvalues.tsv
+# Source: scripts/zvf_iter66_distshape.py
+method_a	method_b	ks_D	ks_pvalue	n_a	n_b
+aero	areal	0.2062	4.322e-10	495	503
+aero	cppo	0.1980	2.737e-09	495	495
+aero	es	0.3253	5.076e-24	495	503
+aero	gift	0.2102	1.854e-10	495	503
+aero	grpo	0.4121	3.27e-56	495	1485
+aero	mcgrpo	0.1980	2.34e-09	495	503
+aero	ngrpo	0.1980	2.737e-09	495	495
+aero	scafgrpo	0.6000	2.261e-79	495	495
+areal	cppo	0.3013	1.024e-20	503	495
+areal	es	0.2624	5.178e-16	503	503
+areal	gift	0.2624	5.178e-16	503	503
+areal	grpo	0.5012	8.939e-84	503	1485
+areal	mcgrpo	0.2624	5.178e-16	503	503
+areal	ngrpo	0.3174	6.633e-23	503	495
+areal	scafgrpo	0.7335	3.377e-119	503	495
+cppo	es	0.4062	4.675e-37	495	503
+cppo	gift	0.3073	1.626e-21	495	503
+cppo	grpo	0.3394	2.343e-38	495	1485
+cppo	mcgrpo	0.2708	7.049e-17	495	503
+cppo	ngrpo	0.1758	1.785e-07	495	495
+cppo	scafgrpo	0.5212	4.494e-60	495	495
+es	gift	0.2028	7.46e-10	503	503
+es	grpo	0.6081	5.37e-123	503	1485
+es	mcgrpo	0.2266	3.97e-12	503	503
+es	ngrpo	0.4304	1.622e-41	503	495
+es	scafgrpo	0.7490	2.839e-124	503	495
+gift	grpo	0.5072	9.184e-86	503	1485
+gift	mcgrpo	0.2366	3.774e-13	503	503
+gift	ngrpo	0.3233	9.557e-24	503	495
+gift	scafgrpo	0.7531	1.273e-125	503	495
+grpo	mcgrpo	0.4748	2.931e-75	1485	503
+grpo	ngrpo	0.3697	2.239e-45	1485	495
+grpo	scafgrpo	0.5475	1.211e-98	1485	495
+mcgrpo	ngrpo	0.2811	3.954e-18	503	495
+mcgrpo	scafgrpo	0.7077	5.25e-111	503	495
+ngrpo	scafgrpo	0.5010	1.459e-55	495	495

@@ -1,0 +1,39 @@
+% Pillar-7 (ZVF theory + adaptive-G controller) standalone abstract
+\begin{abstract}
+Our companion Pillar-2 paper characterized the Zero-Variance Fraction
+(ZVF)---the share of GRPO groups whose completions all receive the same
+reward---as a deliberately \emph{descriptive} diagnostic of signal starvation.
+This paper is the interventional sequel: we ask whether ZVF can be predicted
+from first principles and, once predicted, \emph{controlled}. This does not
+overturn Pillar-2's restraint---we \emph{test} ZVF's predictive value through
+falsifiable predictions (T1--T3 below) rather than assume it, and we flag where
+that value rests on the weakest evidence (the causal gradient link is toy-scale
+and directional only). We model the
+usable learning signal per prompt as $S = p(1-p)\,(1 - h_G(p))$, where $p$ is
+the latent success probability and $h_G(p) = p^G + (1-p)^G$ is the probability
+a size-$G$ group is degenerate, and derive three testable consequences:
+(T1) the expected ZVF indicator equals $p^G + (1-p)^G$; (T2) larger group
+size $G$ lowers ZVF; (T3) gradient magnitude tracks $p(1-p)$. Each prediction
+is paired with an empirical check: a 368-run Weights~\&~Biases audit across seven
+models (all logged runs---a superset of the benchmark's 70+ core training runs; the
+core set is defined by run \emph{type}, i.e.\ completed GRPO training runs, and is
+\emph{not} filtered on convergence or reward, while the remaining logged runs are
+evaluations, ablation probes, and short/aborted infrastructure runs---so the audit
+is not subject to outcome-based survivorship selection)
+reproduces the predicted U-shape of ZVF in accuracy (ZVF $0.95$--$0.97$ at both
+reward extremes, $0.25$--$0.29$ at mid-range rewards of $0.35$--$0.50$); a
+model~$\times$~$G$ grid confirms the monotone $G$ effect at interior accuracy
+(e.g.\ Qwen3-32B: $0.33 \to 0.18 \to
+0.08$ for $G = 4/8/16$); and a toy-scale open-backward-pass experiment finds
+$\mathrm{corr}(\|\nabla\|, p(1-p)) = +0.71$ (0.5B model, synthetic arithmetic;
+directional only). Because ZVF aliases mastery with incapacity, we promote the
+pairwise-contrast density $\mathrm{PCD} = \frac{G-1}{G}\,\E[p(1-p)]$ as the
+control signal: a micro-jitter falsification collapses batch ZVF from $0.158$
+to $0.000$ while leaving PCD unchanged. We then operationalize the theory as a
+\texttt{zvf-triage} callback and an adaptive-$G$ controller that escalates
+group size on ZVF spikes. In a four-arm open-trainer audit, adaptive-$G$
+matches the best fixed-recipe held-out gain ($+0.575$) at $186$ rollouts,
+while DAPO-style dynamic sampling drives ZVF to $0.00$ at $+45\%$ rollout
+cost---an accuracy-versus-compute trade the controller navigates explicitly.
+All interventional results are single-task, small-$n$, and scoped accordingly.
+\end{abstract}

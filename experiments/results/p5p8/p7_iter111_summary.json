@@ -1,0 +1,337 @@
+{
+  "tau": 0.7,
+  "g_base": 8,
+  "g_candidates": [
+    16,
+    32,
+    64
+  ],
+  "n_bootstrap": 4000,
+  "seed": 20260705,
+  "totals_net_benefit": {
+    "STATIC_G16": -41.732980634404164,
+    "DUALFORMER_AUTO_d4": -21.814154740865945,
+    "DUALFORMER_AUTO_d8": -41.732980634404164,
+    "ADAPTIVE_GSTAR": -287.0011416579862
+  },
+  "totals_fires": {
+    "STATIC_G16": 82,
+    "DUALFORMER_AUTO_d4": 82,
+    "DUALFORMER_AUTO_d8": 82,
+    "ADAPTIVE_GSTAR": 82
+  },
+  "totals_delta_z": {
+    "STATIC_G16": -0.7329806344041667,
+    "DUALFORMER_AUTO_d4": -1.3141547408659462,
+    "DUALFORMER_AUTO_d8": -0.7329806344041667,
+    "ADAPTIVE_GSTAR": -0.0011416579861956988
+  },
+  "totals_cost_ratio_summed": {
+    "STATIC_G16": 164.0,
+    "DUALFORMER_AUTO_d4": 123.0,
+    "DUALFORMER_AUTO_d8": 164.0,
+    "ADAPTIVE_GSTAR": 656.0
+  },
+  "per_method_summary": [
+    {
+      "controller": "STATIC_G16",
+      "method": "grpo",
+      "n_fired": 20,
+      "n_total": 40,
+      "frac_fired": 0.5,
+      "mean_dz_on_fires": -0.0112,
+      "mean_cost_ratio_on_fires": 2.0,
+      "mean_net_benefit_per_fire": -0.5112,
+      "net_all_mean": -0.2556,
+      "net_all_ci_lo": -0.428,
+      "net_all_ci_hi": -0.127,
+      "Gstar_distribution_fires": {
+        "16": 20
+      },
+      "n_salvageable_fires": 0
+    },
+    {
+      "controller": "STATIC_G16",
+      "method": "aero",
+      "n_fired": 19,
+      "n_total": 40,
+      "frac_fired": 0.475,
+      "mean_dz_on_fires": -0.0095,
+      "mean_cost_ratio_on_fires": 2.0,
+      "mean_net_benefit_per_fire": -0.5095,
+      "net_all_mean": -0.242,
+      "net_all_ci_lo": -0.4245,
+      "net_all_ci_hi": -0.1271,
+      "Gstar_distribution_fires": {
+        "16": 19
+      },
+      "n_salvageable_fires": 0
+    },
+    {
+      "controller": "STATIC_G16",
+      "method": "gift",
+      "n_fired": 26,
+      "n_total": 40,
+      "frac_fired": 0.65,
+      "mean_dz_on_fires": -0.0066,
+      "mean_cost_ratio_on_fires": 2.0,
+      "mean_net_benefit_per_fire": -0.5066,
+      "net_all_mean": -0.3293,
+      "net_all_ci_lo": -0.507,
+      "net_all_ci_hi": -0.1282,
+      "Gstar_distribution_fires": {
+        "16": 26
+      },
+      "n_salvageable_fires": 1
+    },
+    {
+      "controller": "STATIC_G16",
+      "method": "areal",
+      "n_fired": 17,
+      "n_total": 40,
+      "frac_fired": 0.425,
+      "mean_dz_on_fires": -0.0092,
+      "mean_cost_ratio_on_fires": 2.0,
+      "mean_net_benefit_per_fire": -0.5092,
+      "net_all_mean": -0.2164,
+      "net_all_ci_lo": -0.3815,
+      "net_all_ci_hi": -0.0834,
+      "Gstar_distribution_fires": {
+        "16": 17
+      },
+      "n_salvageable_fires": 0
+    },
+    {
+      "controller": "DUALFORMER_AUTO_d4",
+      "method": "grpo",
+      "n_fired": 20,
+      "n_total": 40,
+      "frac_fired": 0.5,
+      "mean_dz_on_fires": -0.02,
+      "mean_cost_ratio_on_fires": 1.5,
+      "mean_net_benefit_per_fire": -0.27,
+      "net_all_mean": -0.135,
+      "net_all_ci_lo": -0.2281,
+      "net_all_ci_hi": -0.0662,
+      "Gstar_distribution_fires": {
+        "12": 20
+      },
+      "n_salvageable_fires": 0
+    },
+    {
+      "controller": "DUALFORMER_AUTO_d4",
+      "method": "aero",
+      "n_fired": 19,
+      "n_total": 40,
+      "frac_fired": 0.475,
+      "mean_dz_on_fires": -0.0172,
+      "mean_cost_ratio_on_fires": 1.5,
+      "mean_net_benefit_per_fire": -0.2672,
+      "net_all_mean": -0.1269,
+      "net_all_ci_lo": -0.2223,
+      "net_all_ci_hi": -0.0663,
+      "Gstar_distribution_fires": {
+        "12": 19
+      },
+      "n_salvageable_fires": 0
+    },
+    {
+      "controller": "DUALFORMER_AUTO_d4",
+      "method": "gift",
+      "n_fired": 26,
+      "n_total": 40,
+      "frac_fired": 0.65,
+      "mean_dz_on_fires": -0.0118,
+      "mean_cost_ratio_on_fires": 1.5,
+      "mean_net_benefit_per_fire": -0.2618,
+      "net_all_mean": -0.1702,
+      "net_all_ci_lo": -0.2625,
+      "net_all_ci_hi": -0.0683,
+      "Gstar_distribution_fires": {
+        "12": 26
+      },
+      "n_salvageable_fires": 0
+    },
+    {
+      "controller": "DUALFORMER_AUTO_d4",
+      "method": "areal",
+      "n_fired": 17,
+      "n_total": 40,
+      "frac_fired": 0.425,
+      "mean_dz_on_fires": -0.0165,
+      "mean_cost_ratio_on_fires": 1.5,
+      "mean_net_benefit_per_fire": -0.2665,
+      "net_all_mean": -0.1133,
+      "net_all_ci_lo": -0.1991,
+      "net_all_ci_hi": -0.0421,
+      "Gstar_distribution_fires": {
+        "12": 17
+      },
+      "n_salvageable_fires": 0
+    },
+    {
+      "controller": "DUALFORMER_AUTO_d8",
+      "method": "grpo",
+      "n_fired": 20,
+      "n_total": 40,
+      "frac_fired": 0.5,
+      "mean_dz_on_fires": -0.0112,
+      "mean_cost_ratio_on_fires": 2.0,
+      "mean_net_benefit_per_fire": -0.5112,
+      "net_all_mean": -0.2556,
+      "net_all_ci_lo": -0.428,
+      "net_all_ci_hi": -0.127,
+      "Gstar_distribution_fires": {
+        "16": 20
+      },
+      "n_salvageable_fires": 0
+    },
+    {
+      "controller": "DUALFORMER_AUTO_d8",
+      "method": "aero",
+      "n_fired": 19,
+      "n_total": 40,
+      "frac_fired": 0.475,
+      "mean_dz_on_fires": -0.0095,
+      "mean_cost_ratio_on_fires": 2.0,
+      "mean_net_benefit_per_fire": -0.5095,
+      "net_all_mean": -0.242,
+      "net_all_ci_lo": -0.4245,
+      "net_all_ci_hi": -0.1271,
+      "Gstar_distribution_fires": {
+        "16": 19
+      },
+      "n_salvageable_fires": 0
+    },
+    {
+      "controller": "DUALFORMER_AUTO_d8",
+      "method": "gift",
+      "n_fired": 26,
+      "n_total": 40,
+      "frac_fired": 0.65,
+      "mean_dz_on_fires": -0.0066,
+      "mean_cost_ratio_on_fires": 2.0,
+      "mean_net_benefit_per_fire": -0.5066,
+      "net_all_mean": -0.3293,
+      "net_all_ci_lo": -0.507,
+      "net_all_ci_hi": -0.1282,
+      "Gstar_distribution_fires": {
+        "16": 26
+      },
+      "n_salvageable_fires": 1
+    },
+    {
+      "controller": "DUALFORMER_AUTO_d8",
+      "method": "areal",
+      "n_fired": 17,
+      "n_total": 40,
+      "frac_fired": 0.425,
+      "mean_dz_on_fires": -0.0092,
+      "mean_cost_ratio_on_fires": 2.0,
+      "mean_net_benefit_per_fire": -0.5092,
+      "net_all_mean": -0.2164,
+      "net_all_ci_lo": -0.3815,
+      "net_all_ci_hi": -0.0834,
+      "Gstar_distribution_fires": {
+        "16": 17
+      },
+      "n_salvageable_fires": 0
+    },
+    {
+      "controller": "ADAPTIVE_GSTAR",
+      "method": "grpo",
+      "n_fired": 20,
+      "n_total": 40,
+      "frac_fired": 0.5,
+      "mean_dz_on_fires": -0.0,
+      "mean_cost_ratio_on_fires": 8.0,
+      "mean_net_benefit_per_fire": -3.5,
+      "net_all_mean": -1.75,
+      "net_all_ci_lo": -2.9167,
+      "net_all_ci_hi": -0.875,
+      "Gstar_distribution_fires": {
+        "64": 20
+      },
+      "n_salvageable_fires": 1
+    },
+    {
+      "controller": "ADAPTIVE_GSTAR",
+      "method": "aero",
+      "n_fired": 19,
+      "n_total": 40,
+      "frac_fired": 0.475,
+      "mean_dz_on_fires": -0.0,
+      "mean_cost_ratio_on_fires": 8.0,
+      "mean_net_benefit_per_fire": -3.5,
+      "net_all_mean": -1.6625,
+      "net_all_ci_lo": -2.9167,
+      "net_all_ci_hi": -0.875,
+      "Gstar_distribution_fires": {
+        "64": 19
+      },
+      "n_salvageable_fires": 1
+    },
+    {
+      "controller": "ADAPTIVE_GSTAR",
+      "method": "gift",
+      "n_fired": 26,
+      "n_total": 40,
+      "frac_fired": 0.65,
+      "mean_dz_on_fires": -0.0,
+      "mean_cost_ratio_on_fires": 8.0,
+      "mean_net_benefit_per_fire": -3.5,
+      "net_all_mean": -2.275,
+      "net_all_ci_lo": -3.5,
+      "net_all_ci_hi": -0.875,
+      "Gstar_distribution_fires": {
+        "64": 26
+      },
+      "n_salvageable_fires": 5
+    },
+    {
+      "controller": "ADAPTIVE_GSTAR",
+      "method": "areal",
+      "n_fired": 17,
+      "n_total": 40,
+      "frac_fired": 0.425,
+      "mean_dz_on_fires": -0.0,
+      "mean_cost_ratio_on_fires": 8.0,
+      "mean_net_benefit_per_fire": -3.5,
+      "net_all_mean": -1.4875,
+      "net_all_ci_lo": -2.625,
+      "net_all_ci_hi": -0.5833,
+      "Gstar_distribution_fires": {
+        "64": 17
+      },
+      "n_salvageable_fires": 1
+    }
+  ],
+  "salvage_per_method_adaptive": {
+    "grpo": {
+      "fires_total": 20,
+      "salvageable": 1,
+      "salvage_rate": 0.05
+    },
+    "aero": {
+      "fires_total": 19,
+      "salvageable": 1,
+      "salvage_rate": 0.0526
+    },
+    "gift": {
+      "fires_total": 26,
+      "salvageable": 5,
+      "salvage_rate": 0.1923
+    },
+    "areal": {
+      "fires_total": 17,
+      "salvageable": 1,
+      "salvage_rate": 0.0588
+    }
+  },
+  "adaptive_gstar_distribution_fires": {
+    "64": 82
+  },
+  "overall_optimal_g_distribution": {
+    "64": 160
+  }
+}

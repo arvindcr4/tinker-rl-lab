@@ -1,0 +1,266 @@
+{
+  "n_manifests": 98,
+  "n_cells_tsv_rows": 98,
+  "schema_mismatch_table": [
+    {
+      "axis": "model_family",
+      "manifest_key": "<MISSING>",
+      "captured": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_cells": 2,
+      "n_unique_manifest_equiv": 0,
+      "captured_fraction": 0.0,
+      "equiv_classifier": "ABSENT",
+      "captured_fraction_ci_lo": 0.0,
+      "captured_fraction_ci_hi": 0.0,
+      "captured_fraction_ci_excludes_zero": false
+    },
+    {
+      "axis": "task_slice",
+      "manifest_key": "heldout_split",
+      "captured": true,
+      "recoverable_via_cell_id": false,
+      "n_unique_cells": 3,
+      "n_unique_manifest_equiv": 3,
+      "captured_fraction": 1.0,
+      "equiv_classifier": "EQUIV_PRESENT",
+      "captured_fraction_ci_lo": 1.0,
+      "captured_fraction_ci_hi": 1.0,
+      "captured_fraction_ci_excludes_zero": true
+    },
+    {
+      "axis": "G",
+      "manifest_key": "group_size_schedule",
+      "captured": true,
+      "recoverable_via_cell_id": false,
+      "n_unique_cells": 5,
+      "n_unique_manifest_equiv": 5,
+      "captured_fraction": 1.0,
+      "equiv_classifier": "EQUIV_PRESENT",
+      "captured_fraction_ci_lo": 1.0,
+      "captured_fraction_ci_hi": 1.0,
+      "captured_fraction_ci_excludes_zero": true
+    },
+    {
+      "axis": "temperature",
+      "manifest_key": "<MISSING>",
+      "captured": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_cells": 2,
+      "n_unique_manifest_equiv": 0,
+      "captured_fraction": 0.0,
+      "equiv_classifier": "ABSENT",
+      "captured_fraction_ci_lo": 0.0,
+      "captured_fraction_ci_hi": 0.0,
+      "captured_fraction_ci_excludes_zero": false
+    },
+    {
+      "axis": "seed",
+      "manifest_key": "<MISSING>",
+      "captured": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_cells": 2,
+      "n_unique_manifest_equiv": 0,
+      "captured_fraction": 0.0,
+      "equiv_classifier": "ABSENT",
+      "captured_fraction_ci_lo": 0.0,
+      "captured_fraction_ci_hi": 0.0,
+      "captured_fraction_ci_excludes_zero": false
+    }
+  ],
+  "missing_fields_table": [
+    {
+      "field": "model_family",
+      "field_class": "stack_axis",
+      "in_manifest_schema": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 2,
+      "gap_class": "RECOVERABLE"
+    },
+    {
+      "field": "task_slice",
+      "field_class": "stack_axis",
+      "in_manifest_schema": true,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 3,
+      "gap_class": "OK"
+    },
+    {
+      "field": "G",
+      "field_class": "stack_axis",
+      "in_manifest_schema": true,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 5,
+      "gap_class": "OK"
+    },
+    {
+      "field": "temperature",
+      "field_class": "stack_axis",
+      "in_manifest_schema": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 2,
+      "gap_class": "RECOVERABLE"
+    },
+    {
+      "field": "seed",
+      "field_class": "stack_axis",
+      "in_manifest_schema": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 2,
+      "gap_class": "RECOVERABLE"
+    },
+    {
+      "field": "n_groups",
+      "field_class": "telemetry",
+      "in_manifest_schema": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 1,
+      "gap_class": "RECOVERABLE"
+    },
+    {
+      "field": "mean_reward",
+      "field_class": "telemetry",
+      "in_manifest_schema": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 48,
+      "gap_class": "RECOVERABLE"
+    },
+    {
+      "field": "zvf",
+      "field_class": "telemetry",
+      "in_manifest_schema": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 20,
+      "gap_class": "RECOVERABLE"
+    },
+    {
+      "field": "pcd",
+      "field_class": "telemetry",
+      "in_manifest_schema": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 56,
+      "gap_class": "RECOVERABLE"
+    },
+    {
+      "field": "mean_completion_len",
+      "field_class": "telemetry",
+      "in_manifest_schema": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 98,
+      "gap_class": "RECOVERABLE"
+    },
+    {
+      "field": "std_completion_len",
+      "field_class": "telemetry",
+      "in_manifest_schema": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 98,
+      "gap_class": "RECOVERABLE"
+    },
+    {
+      "field": "sampled_tokens",
+      "field_class": "telemetry",
+      "in_manifest_schema": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 98,
+      "gap_class": "RECOVERABLE"
+    },
+    {
+      "field": "cumulative_sampled_tokens",
+      "field_class": "telemetry",
+      "in_manifest_schema": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 98,
+      "gap_class": "RECOVERABLE"
+    },
+    {
+      "field": "sample_errors",
+      "field_class": "telemetry",
+      "in_manifest_schema": false,
+      "recoverable_via_cell_id": true,
+      "n_unique_values_in_corpus": 1,
+      "gap_class": "RECOVERABLE"
+    }
+  ],
+  "ambiguous_fields_table": [
+    {
+      "field": "decontamination_notes",
+      "n_unique_manifest_values": 2,
+      "encodes_axes": "task_slice (implicit)",
+      "uniquely_parseable": false,
+      "parseable_to_axis": "task_slice (implicit via prefix)"
+    },
+    {
+      "field": "group_size_schedule",
+      "n_unique_manifest_values": 5,
+      "encodes_axes": "G",
+      "uniquely_parseable": true,
+      "parseable_to_axis": "G (clean)"
+    },
+    {
+      "field": "heldout_split",
+      "n_unique_manifest_values": 3,
+      "encodes_axes": "task_slice",
+      "uniquely_parseable": true,
+      "parseable_to_axis": "task_slice (clean)"
+    },
+    {
+      "field": "loss_form",
+      "n_unique_manifest_values": 1,
+      "encodes_axes": "none",
+      "uniquely_parseable": true,
+      "parseable_to_axis": "placeholder"
+    },
+    {
+      "field": "ref_policy_kl",
+      "n_unique_manifest_values": 1,
+      "encodes_axes": "none",
+      "uniquely_parseable": true,
+      "parseable_to_axis": "placeholder (n/a)"
+    },
+    {
+      "field": "sampler_backend_precision",
+      "n_unique_manifest_values": 1,
+      "encodes_axes": "openness",
+      "uniquely_parseable": true,
+      "parseable_to_axis": "openness (single value)"
+    }
+  ],
+  "registry_cross_reference": {
+    "n_registry_keys": 13,
+    "n_manifest_keys": 8,
+    "in_both": [],
+    "registry_only_keys": [
+      "framework",
+      "id",
+      "label_claimed",
+      "min_report",
+      "model",
+      "notes",
+      "outcomes",
+      "provenance",
+      "record_type",
+      "schema_version",
+      "seeds",
+      "task",
+      "variant_deltas_applied"
+    ],
+    "manifest_only_keys": [
+      "cell_id",
+      "decontamination_notes",
+      "group_size_schedule",
+      "heldout_split",
+      "loss_form",
+      "per_step_zvf_path",
+      "ref_policy_kl",
+      "sampler_backend_precision"
+    ]
+  },
+  "augmentation_value": {
+    "n_distinct_minrep_strings": 15,
+    "n_distinct_with_cell_extension": 98,
+    "n_cells": 98,
+    "augmentation_delta": 83,
+    "augmentation_pct": 84.69
+  }
+}

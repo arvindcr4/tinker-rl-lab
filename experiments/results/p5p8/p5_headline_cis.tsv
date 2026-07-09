@@ -1,0 +1,15 @@
+claim	G	metric	n	point	ci_lo	ci_hi	verdict	note
+H1	2	mean_zvf	3	0.839	0.8383	0.8403	ok	Gaussian-approx per-seed draws
+H1	4	mean_zvf	3	0.7639	0.762	0.7656	ok	Gaussian-approx per-seed draws
+H1	8	mean_zvf	3	0.6918	0.6902	0.6927	ok	Gaussian-approx per-seed draws
+H1	16	mean_zvf	3	0.6384	0.6295	0.6442	ok	Gaussian-approx per-seed draws
+H1-monotone	2 vs 16	zvf_gap	6	-0.2006	n/a	n/a	SUGGESTIVE	gap_sep=-0.2108 (positive => CIs do not overlap)
+H2	2	heldout_acc	3	0.9836	0.9789	0.987	ok	Gaussian-approx per-seed draws
+H2	4	heldout_acc	3	0.9878	0.986	0.9902	ok	Gaussian-approx per-seed draws
+H2	8	heldout_acc	3	0.9927	0.9901	0.9956	ok	Gaussian-approx per-seed draws
+H2	16	heldout_acc	3	0.975	0.9713	0.9821	ok	Gaussian-approx per-seed draws
+H2-flatness	2..16	range_heldout	12	0.0177	n/a	n/a	FLAT	max-min over G; threshold 0.02 (Miller TOST equiv region)
+H3	G32-G4	delta_acc@1000000tok	from_iter107	0.0099	-0.0327	0.0518	NULL	p_le_zero=0.3229
+H3	G32-G4	delta_acc@4000000tok	from_iter107	0.1101	0.067	0.1529	DECISIVE	p_le_zero=0.0
+H3	G32-G4	delta_acc@16000000tok	from_iter107	0.2095	0.1667	0.252	DECISIVE	p_le_zero=0.0
+H3	G32-G4	delta_acc@64000000tok	from_iter107	0.2398	0.1973	0.2824	DECISIVE	p_le_zero=0.0

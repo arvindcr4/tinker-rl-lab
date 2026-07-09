@@ -1,0 +1,867 @@
+{
+  "iter": 151,
+  "pillar": "P7",
+  "vein": "(a)+(b) Counterfactual step-level UNIFIED controller on N2 reward tensors; Berkeley 56.2% savings anchor audit",
+  "n_step_method_decisions": 160,
+  "n_steps_per_method": 40,
+  "methods": [
+    "grpo",
+    "aero",
+    "gift",
+    "areal"
+  ],
+  "controllers": [
+    "STATIC_G8",
+    "STATIC_G16",
+    "DUALFORMER_STEP",
+    "ALPHAPROOF_SMOOTH",
+    "UNIFIED_STEP_C4"
+  ],
+  "G_base": 8,
+  "tau_fast": 0.5,
+  "tau_degen": 0.7,
+  "berkeley_savings_anchor": 0.562,
+  "boot_n": 2000,
+  "boot_seed": 20260705,
+  "headline_overall": {
+    "STATIC_G8": {
+      "n_decisions": 160,
+      "mean_g": 8,
+      "mean_cost_ratio": 1.0,
+      "mean_savings_vs_g16": 0.5,
+      "mean_contrast_retention": 0.99375,
+      "mean_fire_rate": 0,
+      "ci95_cost": [
+        1.0,
+        1.0
+      ],
+      "ci95_savings": [
+        0.5,
+        0.5
+      ],
+      "ci95_retention": [
+        0.98125,
+        1.0
+      ],
+      "ci95_fire_rate": [
+        0,
+        0
+      ],
+      "frac_g4": 0.0,
+      "frac_g8": 1.0,
+      "frac_g16": 0.0,
+      "frac_g_other": 0.0
+    },
+    "STATIC_G16": {
+      "n_decisions": 160,
+      "mean_g": 16,
+      "mean_cost_ratio": 2.0,
+      "mean_savings_vs_g16": 0.0,
+      "mean_contrast_retention": 1.1480820614386418,
+      "mean_fire_rate": 1,
+      "ci95_cost": [
+        2.0,
+        2.0
+      ],
+      "ci95_savings": [
+        0.0,
+        0.0
+      ],
+      "ci95_retention": [
+        1.1312648835001318,
+        1.1625523062735637
+      ],
+      "ci95_fire_rate": [
+        1,
+        1
+      ],
+      "frac_g4": 0.0,
+      "frac_g8": 0.0,
+      "frac_g16": 1.0,
+      "frac_g_other": 0.0
+    },
+    "DUALFORMER_STEP": {
+      "n_decisions": 160,
+      "mean_g": 12.05,
+      "mean_cost_ratio": 1.50625,
+      "mean_savings_vs_g16": 0.246875,
+      "mean_contrast_retention": 1.0276231959142712,
+      "mean_fire_rate": 0.16875,
+      "ci95_cost": [
+        1.35625,
+        1.65625
+      ],
+      "ci95_savings": [
+        0.171875,
+        0.321875
+      ],
+      "ci95_retention": [
+        1.0106245851063216,
+        1.04466475758501
+      ],
+      "ci95_fire_rate": [
+        0.11875,
+        0.21875
+      ],
+      "frac_g4": 0.0,
+      "frac_g8": 0.83125,
+      "frac_g16": 0.0,
+      "frac_g_other": 0.16875
+    },
+    "ALPHAPROOF_SMOOTH": {
+      "n_decisions": 160,
+      "mean_g": 8,
+      "mean_cost_ratio": 1.0,
+      "mean_savings_vs_g16": 0.5,
+      "mean_contrast_retention": 0.99375,
+      "mean_fire_rate": 0,
+      "ci95_cost": [
+        1.0,
+        1.0
+      ],
+      "ci95_savings": [
+        0.5,
+        0.5
+      ],
+      "ci95_retention": [
+        0.98125,
+        1.0
+      ],
+      "ci95_fire_rate": [
+        0,
+        0
+      ],
+      "frac_g4": 0.0,
+      "frac_g8": 1.0,
+      "frac_g16": 0.0,
+      "frac_g_other": 0.0
+    },
+    "UNIFIED_STEP_C4": {
+      "n_decisions": 160,
+      "mean_g": 12.1,
+      "mean_cost_ratio": 1.5125,
+      "mean_savings_vs_g16": 0.24375,
+      "mean_contrast_retention": 1.0719186319453697,
+      "mean_fire_rate": 0.5125,
+      "ci95_cost": [
+        1.45,
+        1.575
+      ],
+      "ci95_savings": [
+        0.2125,
+        0.275
+      ],
+      "ci95_retention": [
+        1.054550570355976,
+        1.088368157264956
+      ],
+      "ci95_fire_rate": [
+        0.45,
+        0.575
+      ],
+      "frac_g4": 0.0,
+      "frac_g8": 0.4875,
+      "frac_g16": 0.5125,
+      "frac_g_other": 0.0
+    }
+  },
+  "headline_by_method": {
+    "grpo": {
+      "STATIC_G8": {
+        "n_decisions": 40,
+        "mean_g": 8,
+        "mean_cost_ratio": 1.0,
+        "mean_savings_vs_g16": 0.5,
+        "mean_contrast_retention": 1.0,
+        "mean_fire_rate": 0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_savings": [
+          0.5,
+          0.5
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "ci95_fire_rate": [
+          0,
+          0
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 1.0,
+        "frac_g16": 0.0,
+        "frac_g_other": 0.0
+      },
+      "STATIC_G16": {
+        "n_decisions": 40,
+        "mean_g": 16,
+        "mean_cost_ratio": 2.0,
+        "mean_savings_vs_g16": 0.0,
+        "mean_contrast_retention": 1.159433608646703,
+        "mean_fire_rate": 1,
+        "ci95_cost": [
+          2.0,
+          2.0
+        ],
+        "ci95_savings": [
+          0.0,
+          0.0
+        ],
+        "ci95_retention": [
+          1.1427000215780734,
+          1.1768167149186608
+        ],
+        "ci95_fire_rate": [
+          1,
+          1
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 0.0,
+        "frac_g16": 1.0,
+        "frac_g_other": 0.0
+      },
+      "DUALFORMER_STEP": {
+        "n_decisions": 40,
+        "mean_g": 10.4,
+        "mean_cost_ratio": 1.3,
+        "mean_savings_vs_g16": 0.35,
+        "mean_contrast_retention": 1.0167812015637738,
+        "mean_fire_rate": 0.1,
+        "ci95_cost": [
+          1.075,
+          1.525
+        ],
+        "ci95_savings": [
+          0.2375,
+          0.4625
+        ],
+        "ci95_retention": [
+          1.0027789435809966,
+          1.0347103693839914
+        ],
+        "ci95_fire_rate": [
+          0.025,
+          0.175
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 0.9,
+        "frac_g16": 0.0,
+        "frac_g_other": 0.1
+      },
+      "ALPHAPROOF_SMOOTH": {
+        "n_decisions": 40,
+        "mean_g": 8,
+        "mean_cost_ratio": 1.0,
+        "mean_savings_vs_g16": 0.5,
+        "mean_contrast_retention": 1.0,
+        "mean_fire_rate": 0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_savings": [
+          0.5,
+          0.5
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "ci95_fire_rate": [
+          0,
+          0
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 1.0,
+        "frac_g16": 0.0,
+        "frac_g_other": 0.0
+      },
+      "UNIFIED_STEP_C4": {
+        "n_decisions": 40,
+        "mean_g": 12,
+        "mean_cost_ratio": 1.5,
+        "mean_savings_vs_g16": 0.25,
+        "mean_contrast_retention": 1.0841083605164163,
+        "mean_fire_rate": 0.5,
+        "ci95_cost": [
+          1.375,
+          1.625
+        ],
+        "ci95_savings": [
+          0.1875,
+          0.3125
+        ],
+        "ci95_retention": [
+          1.05941277983634,
+          1.1105739452443357
+        ],
+        "ci95_fire_rate": [
+          0.375,
+          0.625
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 0.5,
+        "frac_g16": 0.5,
+        "frac_g_other": 0.0
+      }
+    },
+    "aero": {
+      "STATIC_G8": {
+        "n_decisions": 40,
+        "mean_g": 8,
+        "mean_cost_ratio": 1.0,
+        "mean_savings_vs_g16": 0.5,
+        "mean_contrast_retention": 1.0,
+        "mean_fire_rate": 0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_savings": [
+          0.5,
+          0.5
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "ci95_fire_rate": [
+          0,
+          0
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 1.0,
+        "frac_g16": 0.0,
+        "frac_g_other": 0.0
+      },
+      "STATIC_G16": {
+        "n_decisions": 40,
+        "mean_g": 16,
+        "mean_cost_ratio": 2.0,
+        "mean_savings_vs_g16": 0.0,
+        "mean_contrast_retention": 1.146745834150994,
+        "mean_fire_rate": 1,
+        "ci95_cost": [
+          2.0,
+          2.0
+        ],
+        "ci95_savings": [
+          0.0,
+          0.0
+        ],
+        "ci95_retention": [
+          1.1272167073607082,
+          1.1668699830051246
+        ],
+        "ci95_fire_rate": [
+          1,
+          1
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 0.0,
+        "frac_g16": 1.0,
+        "frac_g_other": 0.0
+      },
+      "DUALFORMER_STEP": {
+        "n_decisions": 40,
+        "mean_g": 10.4,
+        "mean_cost_ratio": 1.3,
+        "mean_savings_vs_g16": 0.35,
+        "mean_contrast_retention": 1.0104437946751677,
+        "mean_fire_rate": 0.1,
+        "ci95_cost": [
+          1.075,
+          1.525
+        ],
+        "ci95_savings": [
+          0.2375,
+          0.4625
+        ],
+        "ci95_retention": [
+          1.001648301219135,
+          1.0220772278564279
+        ],
+        "ci95_fire_rate": [
+          0.025,
+          0.175
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 0.9,
+        "frac_g16": 0.0,
+        "frac_g_other": 0.1
+      },
+      "ALPHAPROOF_SMOOTH": {
+        "n_decisions": 40,
+        "mean_g": 8,
+        "mean_cost_ratio": 1.0,
+        "mean_savings_vs_g16": 0.5,
+        "mean_contrast_retention": 1.0,
+        "mean_fire_rate": 0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_savings": [
+          0.5,
+          0.5
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "ci95_fire_rate": [
+          0,
+          0
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 1.0,
+        "frac_g16": 0.0,
+        "frac_g_other": 0.0
+      },
+      "UNIFIED_STEP_C4": {
+        "n_decisions": 40,
+        "mean_g": 11.8,
+        "mean_cost_ratio": 1.475,
+        "mean_savings_vs_g16": 0.2625,
+        "mean_contrast_retention": 1.074230628069276,
+        "mean_fire_rate": 0.475,
+        "ci95_cost": [
+          1.35,
+          1.6
+        ],
+        "ci95_savings": [
+          0.2,
+          0.325
+        ],
+        "ci95_retention": [
+          1.0494044027646434,
+          1.100422674019756
+        ],
+        "ci95_fire_rate": [
+          0.35,
+          0.6
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 0.525,
+        "frac_g16": 0.475,
+        "frac_g_other": 0.0
+      }
+    },
+    "gift": {
+      "STATIC_G8": {
+        "n_decisions": 40,
+        "mean_g": 8,
+        "mean_cost_ratio": 1.0,
+        "mean_savings_vs_g16": 0.5,
+        "mean_contrast_retention": 0.975,
+        "mean_fire_rate": 0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_savings": [
+          0.5,
+          0.5
+        ],
+        "ci95_retention": [
+          0.925,
+          1.0
+        ],
+        "ci95_fire_rate": [
+          0,
+          0
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 1.0,
+        "frac_g16": 0.0,
+        "frac_g_other": 0.0
+      },
+      "STATIC_G16": {
+        "n_decisions": 40,
+        "mean_g": 16,
+        "mean_cost_ratio": 2.0,
+        "mean_savings_vs_g16": 0.0,
+        "mean_contrast_retention": 1.125941380805258,
+        "mean_fire_rate": 1,
+        "ci95_cost": [
+          2.0,
+          2.0
+        ],
+        "ci95_savings": [
+          0.0,
+          0.0
+        ],
+        "ci95_retention": [
+          1.0642980842844298,
+          1.1695236714044288
+        ],
+        "ci95_fire_rate": [
+          1,
+          1
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 0.0,
+        "frac_g16": 1.0,
+        "frac_g_other": 0.0
+      },
+      "DUALFORMER_STEP": {
+        "n_decisions": 40,
+        "mean_g": 16.4,
+        "mean_cost_ratio": 2.05,
+        "mean_savings_vs_g16": -0.025,
+        "mean_contrast_retention": 1.0539713599709106,
+        "mean_fire_rate": 0.35,
+        "ci95_cost": [
+          1.675,
+          2.425
+        ],
+        "ci95_savings": [
+          -0.2125,
+          0.1625
+        ],
+        "ci95_retention": [
+          0.9886377029291213,
+          1.110492370968318
+        ],
+        "ci95_fire_rate": [
+          0.225,
+          0.475
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 0.65,
+        "frac_g16": 0.0,
+        "frac_g_other": 0.35
+      },
+      "ALPHAPROOF_SMOOTH": {
+        "n_decisions": 40,
+        "mean_g": 8,
+        "mean_cost_ratio": 1.0,
+        "mean_savings_vs_g16": 0.5,
+        "mean_contrast_retention": 0.975,
+        "mean_fire_rate": 0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_savings": [
+          0.5,
+          0.5
+        ],
+        "ci95_retention": [
+          0.925,
+          1.0
+        ],
+        "ci95_fire_rate": [
+          0,
+          0
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 1.0,
+        "frac_g16": 0.0,
+        "frac_g_other": 0.0
+      },
+      "UNIFIED_STEP_C4": {
+        "n_decisions": 40,
+        "mean_g": 13.2,
+        "mean_cost_ratio": 1.65,
+        "mean_savings_vs_g16": 0.175,
+        "mean_contrast_retention": 1.0648543094616976,
+        "mean_fire_rate": 0.65,
+        "ci95_cost": [
+          1.525,
+          1.775
+        ],
+        "ci95_savings": [
+          0.1125,
+          0.2375
+        ],
+        "ci95_retention": [
+          1.006733120648528,
+          1.111236313562351
+        ],
+        "ci95_fire_rate": [
+          0.525,
+          0.775
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 0.35,
+        "frac_g16": 0.65,
+        "frac_g_other": 0.0
+      }
+    },
+    "areal": {
+      "STATIC_G8": {
+        "n_decisions": 40,
+        "mean_g": 8,
+        "mean_cost_ratio": 1.0,
+        "mean_savings_vs_g16": 0.5,
+        "mean_contrast_retention": 1.0,
+        "mean_fire_rate": 0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_savings": [
+          0.5,
+          0.5
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "ci95_fire_rate": [
+          0,
+          0
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 1.0,
+        "frac_g16": 0.0,
+        "frac_g_other": 0.0
+      },
+      "STATIC_G16": {
+        "n_decisions": 40,
+        "mean_g": 16,
+        "mean_cost_ratio": 2.0,
+        "mean_savings_vs_g16": 0.0,
+        "mean_contrast_retention": 1.1602074221516125,
+        "mean_fire_rate": 1,
+        "ci95_cost": [
+          2.0,
+          2.0
+        ],
+        "ci95_savings": [
+          0.0,
+          0.0
+        ],
+        "ci95_retention": [
+          1.1410158259101162,
+          1.1790430849092972
+        ],
+        "ci95_fire_rate": [
+          1,
+          1
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 0.0,
+        "frac_g16": 1.0,
+        "frac_g_other": 0.0
+      },
+      "DUALFORMER_STEP": {
+        "n_decisions": 40,
+        "mean_g": 11,
+        "mean_cost_ratio": 1.375,
+        "mean_savings_vs_g16": 0.3125,
+        "mean_contrast_retention": 1.0292964274472332,
+        "mean_fire_rate": 0.125,
+        "ci95_cost": [
+          1.15,
+          1.675
+        ],
+        "ci95_savings": [
+          0.1625,
+          0.425
+        ],
+        "ci95_retention": [
+          1.007723847238402,
+          1.055391787568912
+        ],
+        "ci95_fire_rate": [
+          0.05,
+          0.225
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 0.875,
+        "frac_g16": 0.0,
+        "frac_g_other": 0.125
+      },
+      "ALPHAPROOF_SMOOTH": {
+        "n_decisions": 40,
+        "mean_g": 8,
+        "mean_cost_ratio": 1.0,
+        "mean_savings_vs_g16": 0.5,
+        "mean_contrast_retention": 1.0,
+        "mean_fire_rate": 0,
+        "ci95_cost": [
+          1.0,
+          1.0
+        ],
+        "ci95_savings": [
+          0.5,
+          0.5
+        ],
+        "ci95_retention": [
+          1.0,
+          1.0
+        ],
+        "ci95_fire_rate": [
+          0,
+          0
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 1.0,
+        "frac_g16": 0.0,
+        "frac_g_other": 0.0
+      },
+      "UNIFIED_STEP_C4": {
+        "n_decisions": 40,
+        "mean_g": 11.4,
+        "mean_cost_ratio": 1.425,
+        "mean_savings_vs_g16": 0.2875,
+        "mean_contrast_retention": 1.0644812297340887,
+        "mean_fire_rate": 0.425,
+        "ci95_cost": [
+          1.3,
+          1.55
+        ],
+        "ci95_savings": [
+          0.225,
+          0.35
+        ],
+        "ci95_retention": [
+          1.0418968940142823,
+          1.0885701111791268
+        ],
+        "ci95_fire_rate": [
+          0.3,
+          0.55
+        ],
+        "frac_g4": 0.0,
+        "frac_g8": 0.575,
+        "frac_g16": 0.425,
+        "frac_g_other": 0.0
+      }
+    }
+  },
+  "cross_method_unified_cost": [
+    1.5,
+    1.475,
+    1.65,
+    1.425
+  ],
+  "cross_method_unified_cost_sd": 0.09682458365518536,
+  "sensitivity_sweep": {
+    "rows": [
+      {
+        "p_degen": 0.05,
+        "expected_savings": 0.5700000000000001,
+        "mean_G": 6.88
+      },
+      {
+        "p_degen": 0.1,
+        "expected_savings": 0.54,
+        "mean_G": 7.360000000000001
+      },
+      {
+        "p_degen": 0.15,
+        "expected_savings": 0.51,
+        "mean_G": 7.84
+      },
+      {
+        "p_degen": 0.2,
+        "expected_savings": 0.48000000000000004,
+        "mean_G": 8.32
+      },
+      {
+        "p_degen": 0.3,
+        "expected_savings": 0.41999999999999993,
+        "mean_G": 9.28
+      },
+      {
+        "p_degen": 0.4,
+        "expected_savings": 0.36,
+        "mean_G": 10.24
+      },
+      {
+        "p_degen": 0.5,
+        "expected_savings": 0.30000000000000004,
+        "mean_G": 11.2
+      },
+      {
+        "p_degen": 0.65,
+        "expected_savings": 0.20999999999999996,
+        "mean_G": 12.64
+      }
+    ],
+    "anchor_p_degen": 0.05,
+    "note": "Berkeley 56.2% requires p_degen <= 0.10; N2 p_degen=0.50 \u2192 25% (matches iter127 G*(T)=12.0)."
+  },
+  "headline_falsifiable_claims": [
+    {
+      "id": "H1",
+      "claim": "UNIFIED_STEP_C4 mean savings vs G16 >= 50% (Berkeley-adjacent)",
+      "savings": 0.24375,
+      "ci95": [
+        0.2125,
+        0.275
+      ],
+      "verdict": "FAIL"
+    },
+    {
+      "id": "H2",
+      "claim": "UNIFIED_STEP_C4 contrast retention >= 0.95 vs STATIC_G8",
+      "retention": 1.0719186319453697,
+      "ci95": [
+        1.054550570355976,
+        1.088368157264956
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "H3",
+      "claim": "UNIFIED_STEP_C4 savings CI95 includes Berkeley 56.2% anchor",
+      "berkeley_anchor": 0.562,
+      "sav_ci95": [
+        0.2125,
+        0.275
+      ],
+      "includes_anchor": false,
+      "verdict": "FAIL"
+    },
+    {
+      "id": "H4",
+      "claim": "UNIFIED_STEP_C4 cross-method cost SD < 0.10 (uniformity)",
+      "cross_method_costs": [
+        1.5,
+        1.475,
+        1.65,
+        1.425
+      ],
+      "sd": 0.09682458365518536,
+      "verdict": "PASS"
+    },
+    {
+      "id": "H5",
+      "claim": "UNIFIED_STEP_C4 fire rate CI95 overlaps [0.20, 0.40] (iter-99/127/135 ~28%)",
+      "fire_rate": 0.5125,
+      "ci95": [
+        0.45,
+        0.575
+      ],
+      "target_band": [
+        0.2,
+        0.4
+      ],
+      "overlaps": false,
+      "verdict": "FAIL"
+    },
+    {
+      "id": "H6",
+      "claim": "UNIFIED_STEP_C4 mean cost < DUALFORMER_STEP mean cost (C4 caps G at 16)",
+      "c4_cost": 1.5125,
+      "dualformer_cost": 1.50625,
+      "verdict": "FAIL"
+    },
+    {
+      "id": "H7",
+      "claim": "Berkeley 56.2% savings reproduces when p_degen <= 0.10; N2 (p_degen=0.50) yields 24-25% savings",
+      "anchor_p_degen_implied": 0.05,
+      "n2_p_degen": 0.5,
+      "n2_predicted_savings": 0.30000000000000004,
+      "n2_measured_savings": 0.24375,
+      "verdict": "PASS"
+    }
+  ]
+}

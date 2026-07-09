@@ -1,0 +1,34 @@
+% Pillar-7 results opener
+\section{From Diagnostic to Controller: Results}
+\label{sec:p7-results}
+The results are organized as a ladder from theory to intervention. We first
+state the signal-starvation model and its three theorems, pairing each with
+the empirical check that could have falsified it
+(Section~\ref{sec:p7-theory}). We then zoom out to population scale, where
+the theory predicts---and a 368-run audit confirms---that ZVF is U-shaped in
+accuracy, which is precisely why ZVF alone cannot steer a controller: it
+aliases mastery with incapacity. Section~\ref{sec:p7-ushape} introduces the
+pairwise-contrast density (PCD) as the disambiguating statistic and reports
+the micro-jitter falsification that separates the two. Section~\ref{sec:p7-e1}
+validates the gradient-level assumption (T3) in an open backward pass, at
+honest toy scale. Sections~\ref{sec:p7-controller} and \ref{sec:p7-rules}
+operationalize the theory: a \texttt{zvf-triage} callback, an adaptive-$G$
+controller, a four-arm audit against fixed recipes, and the design rules the
+audit supports.
+
+Two findings from the companion papers of \ours{} (the Pillar-2 diagnostic
+paper and the Pillar-5/6 reporting papers) frame everything that follows.
+First, recipe labels
+are unreliable across stacks: in a 12-cell head-to-head on one closed stack
+(Qwen3.5-4B, GSM8K, 3 seeds each), \texttt{dapo}, \texttt{drgrpo},
+\texttt{grpo}, and \texttt{gspo} land within noise on last-10 reward
+($0.744$, $0.742$, $0.723$, $0.710$) while their mean ZVFs ($0.578$, $0.500$,
+$0.567$, $0.511$) stay far from the $0.00$ that true dynamic sampling
+produces in an open trainer---the same ``DAPO'' label yields mean ZVF $0.58$
+on the closed stack and $0.00$ in the open reimplementation. Second, the
+stack itself dominates: an audit holding model, $G$, learning rate, data,
+and seed fixed while swapping only the backend moved final reward from
+$5.0\%$ to $85.6\%$ ($17\times$). Both findings dictate our method: all
+interventional comparisons in this paper run inside a \emph{single auditable
+open reimplementation}, so that the controller is compared against what
+recipes actually do, not what their labels claim.

@@ -1,0 +1,27 @@
+# Pillar 2 iter78 canonical-anchor protocol audit.
+# tool_use, grpo, tinker_gsm8k, groupsize traces.
+# protocol_works=1 iff alarm strictly precedes failure.
+# Source: scripts/zvf_iter78.py
+source	method	seed	n_steps	peak_zvf	trough_heldout_acc	first_heldout_acc	last_heldout_acc	t_alarm	t_fail	lead_time	alarm_threshold	protocol_works
+variance_mitigation	grpo	0	300	0.930800	0.004500	0.004500	0.381400	7	152	145	0.500000	1
+variance_mitigation	grpo	1	300	0.905600	0.002900	0.002900	0.385400	4	153	149	0.500000	1
+variance_mitigation	grpo	2	300	0.918000	0.006700	0.006700	0.383600	4	153	149	0.500000	1
+variance_mitigation	grpo	3	300	0.957300	0.001500	0.001500	0.379600	4	154	150	0.500000	1
+variance_mitigation	grpo	4	300	0.937600	0.005600	0.005600	0.384000	4	152	148	0.500000	1
+groupsize_zvf_sweep	groupsize	42	40	1.000000	0.978100	0.978100	0.978100	4	19	15	0.500000	1
+groupsize_zvf_sweep	groupsize	123	40	1.000000	0.975000	0.975000	0.975000	10	19	9	0.500000	1
+groupsize_zvf_sweep	groupsize	456	40	1.000000	0.978100	0.978100	0.978100	15	19	4	0.500000	1
+groupsize_zvf_sweep	groupsize	42	40	1.000000	0.968800	0.968800	0.968800	8	19	11	0.500000	1
+groupsize_zvf_sweep	groupsize	123	40	1.000000	0.973400	0.973400	0.973400	9	19	10	0.500000	1
+groupsize_zvf_sweep	groupsize	456	40	1.000000	0.971900	0.971900	0.971900	9	19	10	0.500000	1
+groupsize_zvf_sweep	groupsize	42	40	1.000000	0.972700	0.972700	0.972700	9	21	12	0.500000	1
+groupsize_zvf_sweep	groupsize	123	40	1.000000	0.980500	0.980500	0.980500	9	21	12	0.500000	1
+groupsize_zvf_sweep	groupsize	456	40	1.000000	0.966400	0.966400	0.966400	7	21	14	0.500000	1
+groupsize_zvf_sweep	groupsize	42	40	1.000000	0.989100	0.989100	0.989100	8	24	16	0.500000	1
+groupsize_zvf_sweep	groupsize	123	40	1.000000	0.987100	0.987100	0.987100	8	23	15	0.500000	1
+groupsize_zvf_sweep	groupsize	456	40	1.000000	0.975000	0.975000	0.975000	10	23	13	0.500000	1
+tinker_gsm8k_zvf	tinker_gsm8k	42	1	0.130000	0.696900	0.696900	0.696900	NA	NA	NA	NA	0
+tinker_gsm8k_zvf	tinker_gsm8k	123	1	0.190000	0.712500	0.712500	0.712500	NA	NA	NA	NA	0
+tinker_gsm8k_zvf	tinker_gsm8k	456	1	0.155000	0.673100	0.673100	0.673100	NA	NA	NA	NA	0
+bfclv4_tool_use	tool_use	0	5	1.000000	0.000000	0.000000	0.000000	NA	NA	NA	NA	0
+bfclv4_tool_use	tool_use	1	5	0.000000	0.125000	0.125000	0.125000	NA	NA	NA	NA	0

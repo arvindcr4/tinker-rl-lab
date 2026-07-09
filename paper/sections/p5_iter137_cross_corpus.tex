@@ -1,0 +1,125 @@
+% P5 iter 137 -- MIN-REPORT v2.2 cross-corpus portability audit
+\section{Exhibit: MIN-REPORT v2.2 Cross-Corpus Portability (iter 137)}
+\label{sec:p5-iter137-cross-corpus}
+
+Prior MIN-REPORT audits (iter-105 row 121, iter-113 row 127a, iter-117 row
+132, iter-121 row 137) all measured coverage on the
+\texttt{mega\_20260704} corpus (n=98 manifests)---the corpus for which
+the standard was developed. The natural next question is whether the
+standard is \emph{portable}: can it be applied to other, smaller corpora
+in the repository at non-trivial recovery rates? Or is the standard
+\emph{corpus-conditional}, with the manifest-emission model baked in?
+
+\subsection*{Method}
+
+For each (corpus $\times$ item) cell on a $3 \times 18$ grid, we classify
+the encoding mode on a 6-class scheme that extends iter-117 row 132:
+\textbf{EX} explicit top-level JSON field; \textbf{IM} implicit in
+filename; \textbf{TS} derivable from a tabular/TSV-style file; \textbf{TD}
+tensor-derivable from a reward-vector array; \textbf{NA} corpus is
+fundamentally N/A for the item; \textbf{AB} absent (no live source).
+Three corpora are audited:
+
+\begin{itemize}
+  \item \textbf{C1 mega\_20260704} (n=98 manifests + 98 group\_tensors + 98 cells.tsv)
+  \item \textbf{C2 n10\_seed\_expansion} (n=5 per-seed JSON files, partial)
+  \item \textbf{C3 n2\_reward\_tensor\_resume} (4 methods $\times$ 40 steps; reward tensors only; \emph{no manifest})
+\end{itemize}
+
+\subsection*{Per-corpus coverage}
+
+\begin{table}[t]
+\centering
+\caption{Per-corpus MIN-REPORT v2.2 coverage (iter 137). The
+\emph{recoverable} column counts items in \{EX, IM, TS, TD\}; the
+\emph{unrecoverable} column counts \{NA, AB\}.}
+\label{tab:p5-iter137-corpus}
+\small
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+Corpus & $n_{\text{units}}$ & EX & IM & TS & TD & NA & AB & Recov. \\
+\midrule
+mega\_20260704            &  98 & 7 & 2 & 0 & 4 & 0 & 5 & \textbf{13/18} (72.2\,\%) \\
+n10\_seed\_expansion      &   5 & 2 & 0 & 1 & 0 & 3 & 12 & \textbf{3/18} (16.7\,\%) \\
+n2\_reward\_tensor\_resume & 160 & 2 & 0 & 1 & 4 & 3 & 8 & \textbf{7/18} (38.9\,\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{Falsifiable hypotheses (4/4 PASS)}
+
+\begin{itemize}
+  \item \textbf{H1 PASS} EX-mode counts are (mega, n10, n2) = (7, 2, 2).
+    N2 ties N10 on EX because both emit \texttt{group\_size} and \texttt{zvf}
+    as bare fields; mega emits the full v2.2 schema (7 keys).
+  \item \textbf{H2 PASS} RECOVERABLE (EX+IM+TS+TD) counts are (mega, n2,
+    n10) = (13, 7, 3). \textbf{N2 BEATS N10} because the reward tensor IS
+    the source for Items 14, 15, 17 (TD mode per iter-113).
+  \item \textbf{H3 PASS} N2 needs $\geq$11 items of new emission (NA or AB
+    after recovery). The upgrade path is to emit a
+    \texttt{n2\_manifest.json} with model\_family, rollout\_temperature,
+    decontam, sampler\_backend, advantage\_baseline, token\_mask,
+    kl\_beta, heldout\_split, reward\_model\_signature.
+  \item \textbf{H4 PASS} 14/18 items (77.8\,\%) have corpus-differentiated
+    encoding mode; only 4/18 (Items 3, 5, 10, 11) are corpus-uniform
+    (3 AB/AB/AB and 1 EX/EX/EX). Shannon entropy per item: median 0.355,
+    max 0.613 (Items 1, 8).
+\end{itemize}
+
+\subsection*{Per-item heterogeneity (\texorpdfstring{$3 \times 18$}{3x18} grid)}
+
+The full matrix is in
+\texttt{experiments/results/p5p8/p5\_iter137\_corpus\_x\_item.tsv} (54 cells).
+Three structural patterns emerge:
+
+\begin{enumerate}
+  \item \textbf{ZVF-derived items (13, 14, 15, 16, 17) are the most
+    portable.} All five are recoverable on mega (1 EX + 4 TD) and on N2
+    (1 EX + 4 TD); on N10 only Item 13 is TS-derivable (per-step zvf in
+    step\_log). The reward tensor IS the canonical source.
+  \item \textbf{Stack-axis items (1, 4) require filename regex.} They are
+    IM on mega, EX on N10 (per-seed ``model'' field), AB on N2. N2 needs a
+    new emission to recover model\_family.
+  \item \textbf{Schema-only items (3, 10, 11) are corpus-uniformly AB.}
+    No live source on any of the three corpora. These remain
+    \emph{schema-only} until a new emitter is wired in.
+\end{enumerate}
+
+\subsection*{Why this matters}
+
+The MIN-REPORT standard's title is ``Report the Stack, Not the Label''.
+Iter-137 audits whether the standard is portable across corpora \emph{of
+different shapes} (full manifests vs. partial seeds vs. bare tensors) and
+finds that:
+
+\begin{itemize}
+  \item The standard is \textbf{not corpus-uniform}: 14/18 items have
+    corpus-differentiated encoding mode. Reviewers who generalize ``the
+    MIN-REPORT standard requires X'' must scope X to a specific corpus
+    type.
+  \item \textbf{N2 is closer to mega than n10 is} (7/18 vs 3/18 recoverable),
+    even though N2 has no manifest at all---the reward tensor compensates.
+  \item \textbf{N2's upgrade path is concrete}: emit a 9-key
+    \texttt{n2\_manifest.json} to lift N2 from 7/18 to $\geq$15/18
+    recoverable (and N2 will then match the mega profile on Items 1, 6, 7,
+    9, plus the TD items already shared).
+\end{itemize}
+
+\subsection*{Cross-paper coupling}
+
+\begin{itemize}
+  \item \textbf{P5 iter-113 row 127a} --- the content-layer audit showed
+    Items 14, 15, 17 are DAA-recoverable on mega; iter-137 extends to
+    Items 13, 14, 15, 16, 17 being corpus-portable via TD.
+  \item \textbf{P5 iter-117 row 132} --- the structural-encoding audit on
+    mega alone; iter-137 audits 3 corpora and shows the encoding modes are
+    NOT uniform.
+  \item \textbf{P6 iter-134 row 150} --- the registry per-row measured-field
+    audit. The P6 registry \texttt{min\_report} block IS a fourth corpus
+    of MIN-REPORT applicability; iter-137's framework would extend to a
+    $4 \times 18$ grid in a future synthesis iteration.
+  \item \textbf{FRONTIER\_INSIGHTS Round 2 (ZVF = signal availability)}:
+    iter-137 confirms the (frontier synthesis) framing: Items 13-17 (ZVF-
+    derived) are the most corpus-portable, because the signal IS in the
+    tensor wherever the tensor exists.
+\end{itemize}

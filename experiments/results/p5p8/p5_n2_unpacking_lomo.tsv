@@ -1,0 +1,5 @@
+omit_method	remaining_methods	eta2_zvf_point	eta2_zvf_boot_lo	eta2_zvf_boot_hi	in_band_0p025_0p075
+grpo	aero,areal,gift	0.0555	0.0167	0.137	0
+aero	areal,gift,grpo	0.0539	0.0149	0.1301	0
+areal	aero,gift,grpo	0.0429	0.0099	0.1086	0
+gift	aero,areal,grpo	0.0038	0.0003	0.0392	0

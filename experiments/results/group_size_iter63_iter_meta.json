@@ -1,0 +1,52 @@
+{
+  "iteration": 63,
+  "pillar": 3,
+  "title": "Retention-decay functional form: linear / power / asymptotic-exponential",
+  "inputs": [
+    "experiments/results/group_size_token_normalized.tsv",
+    "experiments/results/group_size_iter59_equivalence.tsv"
+  ],
+  "outputs": [
+    "experiments/results/group_size_effect.tsv",
+    "experiments/results/group_size_iter63_linear_fits.tsv",
+    "experiments/results/group_size_iter63_power_fits.tsv",
+    "experiments/results/group_size_iter63_asymptotic_fits.tsv",
+    "experiments/results/group_size_iter63_summary.tsv",
+    "figures/group_size_iter63_retention_decay.pdf",
+    "figures/group_size_iter63_retention_decay.png"
+  ],
+  "n_budgets": 4,
+  "R_authoritative_at_budgets_M": {
+    "1M": 0.9761904761904762,
+    "4M": 0.8333333333333334,
+    "16M": 0.75,
+    "64M": 0.7272727272727273
+  },
+  "linear_params": {
+    "a": 0.946212121212121,
+    "b": -0.1378743965789287,
+    "R2": 0.9052062256235526,
+    "AIC": -24.043744922326248
+  },
+  "power_params": {
+    "c": 0.9466040624993687,
+    "beta": -0.07130008474374556,
+    "R2": 0.9281529997912537,
+    "AIC": -25.152404422585054
+  },
+  "asymp_params": {
+    "R_inf": 0.72,
+    "R0": 0.8637316858335283,
+    "tau_M": 20.1890177225,
+    "R2": 0.5924958851558334,
+    "AIC": -16.210355744578173
+  },
+  "best_AIC_form": "power",
+  "asymptotic_R_infinity_point": 0.72,
+  "asymptotic_R_infinity_BCa_lo": 0.0,
+  "asymptotic_R_infinity_BCa_hi": 0.77,
+  "HARD_DIVERGENCE_at_T256M_CI_low_gt_0p05": true,
+  "LIMIT_EQUIVALENCE_Rinf_CI_low_gt_0p10": false,
+  "n_bootstrap": 2000,
+  "seed": 63
+}

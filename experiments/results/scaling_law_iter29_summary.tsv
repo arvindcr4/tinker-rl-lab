@@ -1,0 +1,3 @@
+algo	n_traces	n_lam_at_bound	frac_lam_at_bound	n_sat_supported	frac_sat_supported	n_aicc_best_sat	frac_aicc_best_sat	n_aicc_best_const	frac_aicc_best_const	median_lambda	median_t80	median_n_eff	median_sigma_step	T_star_detectability	median_n_steps_actual	T_star_over_steps	median_resid_sat_vs_heldout	median_resid_lin_vs_heldout	median_resid_const_vs_heldout	stack_mean_heldout	stack_se_heldout
+grpo	5	0	0.0	5	1.0	5	1.0	0	0.0	0.25	6.4374	128.0	0.035557	7.8	40.0	0.2	0.1	0.0343	0.1906	0.99	0.0035
+ppo	5	0	0.0	0	0.0	0	0.0	0	0.0	0.078	20.6405	128.0	0.043874	7.8	40.0	0.2	0.302	0.2252	0.4657	0.992	0.003

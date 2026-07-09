@@ -1,0 +1,88 @@
+{
+  "iter": 173,
+  "pillar": "P5",
+  "vein": "brief_(c)_at_canonical_headline_CI_layer",
+  "n_headlines": 26,
+  "n_placebo_v1_items": 3,
+  "placebo_pair": {
+    "value": 0.42857142857142855,
+    "ci_lo": 0.39203751325762926,
+    "ci_hi": 0.46590088883351743
+  },
+  "placebo_items": {
+    "value": 0.42857142857142855,
+    "ci_lo": 0.15821692226262685,
+    "ci_hi": 0.7495457695909742
+  },
+  "eta2_method_pooled": 0.007466416551996499,
+  "eta2_method_ci": [
+    0.0016775129915142268,
+    0.06108390017257119
+  ],
+  "eta2_G": 0.030434006848941084,
+  "eta2_G_ci": [
+    0.010338257119210704,
+    0.17154663416784466
+  ],
+  "eta2_model": 0.452666527374799,
+  "eta2_model_ci": [
+    0.3094497050941825,
+    0.6143989316884129
+  ],
+  "eta2_task": 0.2728604453647076,
+  "eta2_task_ci": [
+    0.1871833823745558,
+    0.41101449052174704
+  ],
+  "eta2_union": 0.9967388149646155,
+  "eta2_union_ci": [
+    0.9961636108838715,
+    0.9995578192431493
+  ],
+  "per_step_band": {
+    "early": {
+      "mean": 0.005593031683744638,
+      "lo": 0.0032223380055262695,
+      "hi": 0.009473450510752162,
+      "n": 14
+    },
+    "mid": {
+      "mean": 0.005333555995940092,
+      "lo": 0.0031059917931506105,
+      "hi": 0.007819093335877141,
+      "n": 13
+    },
+    "late": {
+      "mean": 0.005986967748782378,
+      "lo": 0.003969507431506826,
+      "hi": 0.008096612425546039,
+      "n": 13
+    }
+  },
+  "tost": {
+    "ratio_point": 4.076119599944248,
+    "interpretation": "G dominates algorithm axis (ratio >= 2x)"
+  },
+  "hypotheses": {
+    "H1": {
+      "verdict": "PASS",
+      "evidence": "eta^2(method, reward_mean) point=0.0075, CI95 upper=0.0611 (bar 0.07)"
+    },
+    "H2": {
+      "verdict": "PASS",
+      "evidence": "eta^2(G) point=0.0304, CI95 lower=0.0103 (bar 0.005)"
+    },
+    "H3": {
+      "verdict": "G dominates algorithm axis (ratio >= 2x)",
+      "evidence": "ratio_point = 4.0761"
+    },
+    "H4": {
+      "verdict": "PASS",
+      "evidence": "placebo-triple per-(item,manifest) Wilson CI95 upper = 0.4659 (bar 0.50)"
+    },
+    "H5": {
+      "verdict": "PASS",
+      "evidence": "late-band CI95 upper = 0.0081 (bar 0.02)"
+    }
+  }
+}

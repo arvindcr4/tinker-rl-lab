@@ -1,0 +1,25 @@
+{
+  "record_type": "variant_delta",
+  "schema_version": "0.1.0",
+  "id": "delta_reinforce",
+  "name": "REINFORCE",
+  "base": "grpo",
+  "citation": {
+    "bibkey": "williams1992reinforce",
+    "arxiv": "",
+    "title": "Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning (REINFORCE)"
+  },
+  "deltas": [
+    {
+      "component": "no_baseline",
+      "field": "reference_kl.reference_policy",
+      "change": "no group-mean or value baseline; raw reward r_i is the advantage (A_i = r_i); no per-token variance reduction (equivalent to GRPO with no baseline term)."
+    },
+    {
+      "component": "no_clipping",
+      "field": "loss_form.clip_eps_low",
+      "change": "no PPO-style ratio clipping (canonical leaf pinned at clip_eps_low=null, clip_eps_high=null to mark reported-as-absent)."
+    }
+  ],
+  "notes": "Iter-54 vein (d): REINFORCE is mentioned in experiments/results/EXPERIMENT_LEDGER.md (gsm8k-reinforce, 4 wandb runs on Qwen3-8B / Llama-3.1-8B-Instruct) but no delta_*.json existed. Measured block intentionally null: no same-stack REINFORCE arm exists in the worktree, so adding a measured row would be fabricatory. To be measured once a same-stack run lands (criterion: same model + task + sampler + RLHF pipeline with only the baseline removed). | iter-94 transparent-placeholder-marker: Citation: bibkey=williams1992reinforce is a transparent placeholder because the canonical REINFORCE paper (Williams 1992, Machine Learning 8:229-256) predates arXiv (founded 1991, mainstream 2000s). No arXiv id is canonical for this work; the journal DOI (10.1007/BF00992696) is the verifiable citation surface."
+}

@@ -1,0 +1,595 @@
+{
+  "headlines": [
+    {
+      "method": "grpo",
+      "metric": "zvf",
+      "n": 40,
+      "point": 0.7203,
+      "lo": 0.6875,
+      "hi": 0.7531
+    },
+    {
+      "method": "grpo",
+      "metric": "reward_mean",
+      "n": 40,
+      "point": 0.8342,
+      "lo": 0.8098,
+      "hi": 0.8578
+    },
+    {
+      "method": "grpo",
+      "metric": "pcd",
+      "n": 40,
+      "point": 0.0477,
+      "lo": 0.0414,
+      "hi": 0.0542
+    },
+    {
+      "method": "grpo",
+      "metric": "lag1_autocorr",
+      "n": 38,
+      "point": -0.0171,
+      "lo": -0.1284,
+      "hi": 0.092
+    },
+    {
+      "method": "grpo",
+      "metric": "mean_len",
+      "n": 40,
+      "point": 351.6457,
+      "lo": 341.8471,
+      "hi": 361.69
+    },
+    {
+      "method": "grpo",
+      "metric": "loss",
+      "n": 40,
+      "point": 347.3155,
+      "lo": 281.4387,
+      "hi": 414.821
+    },
+    {
+      "method": "aero",
+      "metric": "zvf",
+      "n": 40,
+      "point": 0.7203,
+      "lo": 0.6891,
+      "hi": 0.7516
+    },
+    {
+      "method": "aero",
+      "metric": "reward_mean",
+      "n": 40,
+      "point": 0.8275,
+      "lo": 0.8033,
+      "hi": 0.8516
+    },
+    {
+      "method": "aero",
+      "metric": "pcd",
+      "n": 40,
+      "point": 0.0497,
+      "lo": 0.0433,
+      "hi": 0.0564
+    },
+    {
+      "method": "aero",
+      "metric": "lag1_autocorr",
+      "n": 38,
+      "point": 0.0372,
+      "lo": -0.0631,
+      "hi": 0.1399
+    },
+    {
+      "method": "aero",
+      "metric": "mean_len",
+      "n": 40,
+      "point": 365.8088,
+      "lo": 358.5322,
+      "hi": 373.4455
+    },
+    {
+      "method": "aero",
+      "metric": "loss",
+      "n": 40,
+      "point": 301.1095,
+      "lo": 243.44,
+      "hi": 360.8323
+    },
+    {
+      "method": "gift",
+      "metric": "zvf",
+      "n": 40,
+      "point": 0.7703,
+      "lo": 0.7312,
+      "hi": 0.8094
+    },
+    {
+      "method": "gift",
+      "metric": "reward_mean",
+      "n": 40,
+      "point": 0.8447,
+      "lo": 0.8187,
+      "hi": 0.8695
+    },
+    {
+      "method": "gift",
+      "metric": "pcd",
+      "n": 40,
+      "point": 0.0399,
+      "lo": 0.0328,
+      "hi": 0.0468
+    },
+    {
+      "method": "gift",
+      "metric": "lag1_autocorr",
+      "n": 38,
+      "point": -0.2065,
+      "lo": -0.3301,
+      "hi": -0.0852
+    },
+    {
+      "method": "gift",
+      "metric": "mean_len",
+      "n": 40,
+      "point": 350.9037,
+      "lo": 340.9629,
+      "hi": 361.3443
+    },
+    {
+      "method": "gift",
+      "metric": "loss",
+      "n": 40,
+      "point": -17527.6982,
+      "lo": -18072.6411,
+      "hi": -16976.8939
+    },
+    {
+      "method": "areal",
+      "metric": "zvf",
+      "n": 40,
+      "point": 0.7063,
+      "lo": 0.6703,
+      "hi": 0.7406
+    },
+    {
+      "method": "areal",
+      "metric": "reward_mean",
+      "n": 40,
+      "point": 0.8287,
+      "lo": 0.8047,
+      "hi": 0.852
+    },
+    {
+      "method": "areal",
+      "metric": "pcd",
+      "n": 40,
+      "point": 0.05,
+      "lo": 0.0435,
+      "hi": 0.0565
+    },
+    {
+      "method": "areal",
+      "metric": "lag1_autocorr",
+      "n": 38,
+      "point": 0.0153,
+      "lo": -0.1111,
+      "hi": 0.1441
+    },
+    {
+      "method": "areal",
+      "metric": "mean_len",
+      "n": 40,
+      "point": 366.2506,
+      "lo": 358.9297,
+      "hi": 373.8482
+    },
+    {
+      "method": "areal",
+      "metric": "loss",
+      "n": 40,
+      "point": 341.0149,
+      "lo": 275.8676,
+      "hi": 408.3945
+    }
+  ],
+  "controllers": [
+    {
+      "method": "grpo",
+      "controller": "fixed_g",
+      "fires": 0,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 1.0,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0
+    },
+    {
+      "method": "grpo",
+      "controller": "zvf_triage_0.50",
+      "fires": 640,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 2.0,
+      "cost_ratio_lo": 2.0,
+      "cost_ratio_hi": 2.0
+    },
+    {
+      "method": "grpo",
+      "controller": "zvf_triage_0.70",
+      "fires": 320,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 1.5,
+      "cost_ratio_lo": 1.35,
+      "cost_ratio_hi": 1.65
+    },
+    {
+      "method": "grpo",
+      "controller": "zvf_triage_0.80",
+      "fires": 192,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 1.3,
+      "cost_ratio_lo": 1.175,
+      "cost_ratio_hi": 1.45
+    },
+    {
+      "method": "grpo",
+      "controller": "zvf_triage_0.90",
+      "fires": 32,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 1.05,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.125
+    },
+    {
+      "method": "grpo",
+      "controller": "dualformer_auto",
+      "fires": 609,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 0.655,
+      "cost_ratio_lo": 0.599,
+      "cost_ratio_hi": 0.713
+    },
+    {
+      "method": "grpo",
+      "controller": "hybrid_0.70",
+      "fires": 320,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 1.5,
+      "cost_ratio_lo": 1.35,
+      "cost_ratio_hi": 1.65
+    },
+    {
+      "method": "grpo",
+      "controller": "hybrid_no_triage",
+      "fires": 0,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 1.0,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0
+    },
+    {
+      "method": "aero",
+      "controller": "fixed_g",
+      "fires": 0,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 1.0,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0
+    },
+    {
+      "method": "aero",
+      "controller": "zvf_triage_0.50",
+      "fires": 640,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 2.0,
+      "cost_ratio_lo": 2.0,
+      "cost_ratio_hi": 2.0
+    },
+    {
+      "method": "aero",
+      "controller": "zvf_triage_0.70",
+      "fires": 304,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 1.475,
+      "cost_ratio_lo": 1.325,
+      "cost_ratio_hi": 1.625
+    },
+    {
+      "method": "aero",
+      "controller": "zvf_triage_0.80",
+      "fires": 224,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 1.35,
+      "cost_ratio_lo": 1.2,
+      "cost_ratio_hi": 1.5
+    },
+    {
+      "method": "aero",
+      "controller": "zvf_triage_0.90",
+      "fires": 16,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 1.025,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.075
+    },
+    {
+      "method": "aero",
+      "controller": "dualformer_auto",
+      "fires": 611,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 0.677,
+      "cost_ratio_lo": 0.618,
+      "cost_ratio_hi": 0.737
+    },
+    {
+      "method": "aero",
+      "controller": "hybrid_0.70",
+      "fires": 304,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 1.475,
+      "cost_ratio_lo": 1.325,
+      "cost_ratio_hi": 1.625
+    },
+    {
+      "method": "aero",
+      "controller": "hybrid_no_triage",
+      "fires": 0,
+      "saved": 0,
+      "wasted": 461,
+      "cost_ratio_pt": 1.0,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0
+    },
+    {
+      "method": "gift",
+      "controller": "fixed_g",
+      "fires": 0,
+      "saved": 0,
+      "wasted": 493,
+      "cost_ratio_pt": 1.0,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0
+    },
+    {
+      "method": "gift",
+      "controller": "zvf_triage_0.50",
+      "fires": 640,
+      "saved": 0,
+      "wasted": 493,
+      "cost_ratio_pt": 2.0,
+      "cost_ratio_lo": 2.0,
+      "cost_ratio_hi": 2.0
+    },
+    {
+      "method": "gift",
+      "controller": "zvf_triage_0.70",
+      "fires": 416,
+      "saved": 0,
+      "wasted": 493,
+      "cost_ratio_pt": 1.65,
+      "cost_ratio_lo": 1.5,
+      "cost_ratio_hi": 1.8
+    },
+    {
+      "method": "gift",
+      "controller": "zvf_triage_0.80",
+      "fires": 272,
+      "saved": 0,
+      "wasted": 493,
+      "cost_ratio_pt": 1.425,
+      "cost_ratio_lo": 1.275,
+      "cost_ratio_hi": 1.575
+    },
+    {
+      "method": "gift",
+      "controller": "zvf_triage_0.90",
+      "fires": 128,
+      "saved": 0,
+      "wasted": 493,
+      "cost_ratio_pt": 1.2,
+      "cost_ratio_lo": 1.075,
+      "cost_ratio_hi": 1.325
+    },
+    {
+      "method": "gift",
+      "controller": "dualformer_auto",
+      "fires": 615,
+      "saved": 0,
+      "wasted": 493,
+      "cost_ratio_pt": 0.621,
+      "cost_ratio_lo": 0.564,
+      "cost_ratio_hi": 0.68
+    },
+    {
+      "method": "gift",
+      "controller": "hybrid_0.70",
+      "fires": 416,
+      "saved": 0,
+      "wasted": 493,
+      "cost_ratio_pt": 1.65,
+      "cost_ratio_lo": 1.5,
+      "cost_ratio_hi": 1.8
+    },
+    {
+      "method": "gift",
+      "controller": "hybrid_no_triage",
+      "fires": 0,
+      "saved": 0,
+      "wasted": 493,
+      "cost_ratio_pt": 1.0,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0
+    },
+    {
+      "method": "areal",
+      "controller": "fixed_g",
+      "fires": 0,
+      "saved": 0,
+      "wasted": 452,
+      "cost_ratio_pt": 1.0,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0
+    },
+    {
+      "method": "areal",
+      "controller": "zvf_triage_0.50",
+      "fires": 640,
+      "saved": 0,
+      "wasted": 452,
+      "cost_ratio_pt": 2.0,
+      "cost_ratio_lo": 2.0,
+      "cost_ratio_hi": 2.0
+    },
+    {
+      "method": "areal",
+      "controller": "zvf_triage_0.70",
+      "fires": 272,
+      "saved": 0,
+      "wasted": 452,
+      "cost_ratio_pt": 1.425,
+      "cost_ratio_lo": 1.275,
+      "cost_ratio_hi": 1.575
+    },
+    {
+      "method": "areal",
+      "controller": "zvf_triage_0.80",
+      "fires": 176,
+      "saved": 0,
+      "wasted": 452,
+      "cost_ratio_pt": 1.275,
+      "cost_ratio_lo": 1.15,
+      "cost_ratio_hi": 1.425
+    },
+    {
+      "method": "areal",
+      "controller": "zvf_triage_0.90",
+      "fires": 16,
+      "saved": 0,
+      "wasted": 452,
+      "cost_ratio_pt": 1.025,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.075
+    },
+    {
+      "method": "areal",
+      "controller": "dualformer_auto",
+      "fires": 619,
+      "saved": 0,
+      "wasted": 452,
+      "cost_ratio_pt": 0.673,
+      "cost_ratio_lo": 0.619,
+      "cost_ratio_hi": 0.73
+    },
+    {
+      "method": "areal",
+      "controller": "hybrid_0.70",
+      "fires": 272,
+      "saved": 0,
+      "wasted": 452,
+      "cost_ratio_pt": 1.425,
+      "cost_ratio_lo": 1.275,
+      "cost_ratio_hi": 1.575
+    },
+    {
+      "method": "areal",
+      "controller": "hybrid_no_triage",
+      "fires": 0,
+      "saved": 0,
+      "wasted": 452,
+      "cost_ratio_pt": 1.0,
+      "cost_ratio_lo": 1.0,
+      "cost_ratio_hi": 1.0
+    }
+  ],
+  "pareto": {
+    "fixed_g": {
+      "mean_cost_ratio": 1.0,
+      "mean_saved": 0,
+      "max_saved": 0
+    },
+    "zvf_triage_0.50": {
+      "mean_cost_ratio": 2.0,
+      "mean_saved": 0,
+      "max_saved": 0
+    },
+    "zvf_triage_0.70": {
+      "mean_cost_ratio": 1.512,
+      "mean_saved": 0,
+      "max_saved": 0
+    },
+    "zvf_triage_0.80": {
+      "mean_cost_ratio": 1.337,
+      "mean_saved": 0,
+      "max_saved": 0
+    },
+    "zvf_triage_0.90": {
+      "mean_cost_ratio": 1.075,
+      "mean_saved": 0,
+      "max_saved": 0
+    },
+    "dualformer_auto": {
+      "mean_cost_ratio": 0.657,
+      "mean_saved": 0,
+      "max_saved": 0
+    },
+    "hybrid_0.70": {
+      "mean_cost_ratio": 1.512,
+      "mean_saved": 0,
+      "max_saved": 0
+    },
+    "hybrid_no_triage": {
+      "mean_cost_ratio": 1.0,
+      "mean_saved": 0,
+      "max_saved": 0
+    }
+  },
+  "regime_split": {
+    "grpo": {
+      "interior_low": 20,
+      "interior_high": 20,
+      "boundary_low": 0,
+      "boundary_high": 0
+    },
+    "aero": {
+      "interior_low": 21,
+      "interior_high": 19,
+      "boundary_low": 0,
+      "boundary_high": 0
+    },
+    "gift": {
+      "interior_low": 14,
+      "interior_high": 26,
+      "boundary_low": 0,
+      "boundary_high": 0
+    },
+    "areal": {
+      "interior_low": 23,
+      "interior_high": 17,
+      "boundary_low": 0,
+      "boundary_high": 0
+    }
+  },
+  "baseline": 5120,
+  "n_steps": 40,
+  "n_prompts_per_step": 16,
+  "g_base": 8,
+  "g_alt": 16,
+  "max_pcd_guard": 0.2,
+  "n_boot": 10000,
+  "hybrid_rule": "Hybrid(threshold): if step.pcd > MAX_PCD (boundary regime) shrink per-prompt G via Dualformer-Auto rule; else if step.zvf >= threshold escalate to G_ALT=16 (zvf-triage); else fixed-G=8. MAX_PCD=0.20, threshold=0.70 default.",
+  "interpretation": "Three calibrated headline signals: (1) mean ZVF per method (saturated-prompt regime where zvf-triage has 0 headroom); (2) controller cost_ratio with bootstrap CI on the per-step rollout cost; (3) Pareto table comparing 8 controllers. The hybrid rule combines the Dualformer-Auto shrinkage at the boundary and the zvf-triage escalation at the interior. On the N2 data the regime is almost entirely interior_high (zvf >= 0.70 AND pcd <= 0.20), so the hybrid degenerates to zvf-triage and its cost_ratio matches zvf-triage_0.70 exactly."
+}

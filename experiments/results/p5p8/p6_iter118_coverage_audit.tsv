@@ -1,0 +1,68 @@
+framework	method	has_stack_entry	stack_id	schema_pass	badge	variant_deltas_resolved	n_orphan_deltas	n_measured_src_ok	n_measured_src_missing	stack_ids	note
+tinker	grpo	yes	tinker_drgrpo_qwen3.5-4b_gsm8k	PASS	61	2/2	0	0	0	tinker_drgrpo_qwen3.5-4b_gsm8k;tinker_grpo_qwen3-8b_gsm8k;tinker_grpo_qwen3.5-4b_gsm8k	
+tinker	grpo	yes	tinker_grpo_qwen3-8b_gsm8k	PASS	57	0/0	0	0	0	tinker_drgrpo_qwen3.5-4b_gsm8k;tinker_grpo_qwen3-8b_gsm8k;tinker_grpo_qwen3.5-4b_gsm8k	
+tinker	grpo	yes	tinker_grpo_qwen3.5-4b_gsm8k	PASS	52	0/0	0	0	0	tinker_drgrpo_qwen3.5-4b_gsm8k;tinker_grpo_qwen3-8b_gsm8k;tinker_grpo_qwen3.5-4b_gsm8k	
+tinker	aero	yes	tinker_aero_qwen3.5-4b_gsm8k	PASS	65	1/1	0	0	0	tinker_aero_qwen3.5-4b_gsm8k	
+tinker	gift	yes	tinker_gift_qwen3.5-4b_gsm8k	PASS	67	1/1	0	0	0	tinker_gift_qwen3.5-4b_gsm8k	
+tinker	areal	yes	tinker_areal_qwen3.5-4b_gsm8k	PASS	65	1/1	0	0	0	tinker_areal_qwen3.5-4b_gsm8k	
+tinker	ngrpo	no									no matching entry
+tinker	cppo	no									no matching entry
+tinker	mcgrpo	no									no matching entry
+tinker	es	no									no matching entry
+tinker	scafgrpo	no									no matching entry
+openrlhf	grpo	yes	openrlhf_grpo_qwen3-8b_gsm8k	PASS	57	0/0	0	0	0	openrlhf_grpo_qwen3-8b_gsm8k	
+openrlhf	aero	no									no matching entry
+openrlhf	gift	no									no matching entry
+openrlhf	areal	no									no matching entry
+openrlhf	ngrpo	no									no matching entry
+openrlhf	cppo	no									no matching entry
+openrlhf	mcgrpo	no									no matching entry
+openrlhf	es	no									no matching entry
+openrlhf	scafgrpo	no									no matching entry
+verl	grpo	yes	verl_grpo_qwen3-8b_gsm8k	PASS	57	0/0	0	0	0	verl_grpo_qwen3-8b_gsm8k	
+verl	aero	no									no matching entry
+verl	gift	no									no matching entry
+verl	areal	no									no matching entry
+verl	ngrpo	no									no matching entry
+verl	cppo	no									no matching entry
+verl	mcgrpo	no									no matching entry
+verl	es	no									no matching entry
+verl	scafgrpo	no									no matching entry
+trl	grpo	yes	trl_grpo_qwen3-8b_gsm8k	PASS	70	0/0	0	0	0	trl_grpo_qwen3-8b_gsm8k	
+trl	aero	no									no matching entry
+trl	gift	no									no matching entry
+trl	areal	no									no matching entry
+trl	ngrpo	no									no matching entry
+trl	cppo	no									no matching entry
+trl	mcgrpo	no									no matching entry
+trl	es	no									no matching entry
+trl	scafgrpo	no									no matching entry
+atropos	grpo	no									no matching entry
+atropos	aero	no									no matching entry
+atropos	gift	no									no matching entry
+atropos	areal	no									no matching entry
+atropos	ngrpo	no									no matching entry
+atropos	cppo	no									no matching entry
+atropos	mcgrpo	no									no matching entry
+atropos	es	no									no matching entry
+atropos	scafgrpo	no									no matching entry
+skyrl	grpo	no									no matching entry
+skyrl	aero	no									no matching entry
+skyrl	gift	no									no matching entry
+skyrl	areal	no									no matching entry
+skyrl	ngrpo	no									no matching entry
+skyrl	cppo	no									no matching entry
+skyrl	mcgrpo	no									no matching entry
+skyrl	es	no									no matching entry
+skyrl	scafgrpo	no									no matching entry
+colab-open	grpo	yes	colab-open_drgrpo_e3	PASS	96	2/2	0	0	0	colab-open_drgrpo_e3;colab-open_grpo-adaptiveg_e3;colab-open_grpo_e3	
+colab-open	grpo	yes	colab-open_grpo-adaptiveg_e3	PASS	96	1/1	0	0	0	colab-open_drgrpo_e3;colab-open_grpo-adaptiveg_e3;colab-open_grpo_e3	
+colab-open	grpo	yes	colab-open_grpo_e3	PASS	96	0/0	0	0	0	colab-open_drgrpo_e3;colab-open_grpo-adaptiveg_e3;colab-open_grpo_e3	
+colab-open	aero	no									no matching entry
+colab-open	gift	no									no matching entry
+colab-open	areal	no									no matching entry
+colab-open	ngrpo	no									no matching entry
+colab-open	cppo	no									no matching entry
+colab-open	mcgrpo	no									no matching entry
+colab-open	es	no									no matching entry
+colab-open	scafgrpo	no									no matching entry

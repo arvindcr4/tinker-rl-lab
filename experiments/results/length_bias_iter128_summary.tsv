@@ -1,0 +1,9 @@
+test	description	result	p	n
+H1_efficiency[arithmetic_easy]	Wilcoxon paired Dr.GR eff vs GR eff (one-sided, alt=greater)	FAVOURS Dr.GR	0.031250	5
+H1_efficiency[gsm8k_cot]	Wilcoxon paired Dr.GR eff vs GR eff (one-sided, alt=greater)	FAVOURS Dr.GR	0.250000	3
+H2_signed_ccf[arithmetic_easy]	Wilcoxon paired |bwd_signed| Dr.GR vs GR (one-sided, alt=less)	FAVOURS Dr.GR (tighter)	0.420411	20
+H2_signed_ccf[gsm8k_cot]	Wilcoxon paired |bwd_signed| Dr.GR vs GR (one-sided, alt=less)	FAVOURS Dr.GR (tighter)	0.234863	12
+H3_envelope_ratio[arithmetic_easy]	Cross-task envelope of eff(Dr.GR)/eff(GR)	Dr.GR >= GR	n/a	all_seeds
+H3_envelope_ratio[gsm8k_cot]	Cross-task envelope of eff(Dr.GR)/eff(GR)	Dr.GR >= GR	n/a	all_seeds
+H4_heldout_frontier[gsm8k_cot]	mean dL(DR)=7.07 vs dL(GR)=14.68; mean dacc(DR)=+0.0500 vs dacc(GR)=+0.0617	Dr.GR shorter at comparable acc	n/a	6
+H5_sign_test	Binomial P(Dr.GR wins | n=8, p=0.5)	Dr.GR wins 7/8	0.035156	8

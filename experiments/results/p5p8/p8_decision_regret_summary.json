@@ -1,0 +1,49 @@
+{
+  "n_test": 10000,
+  "n_pos_test": 144,
+  "n_grid_cells": 75,
+  "n_boot_cells": 25,
+  "boot_seed": 20260704,
+  "n_boot": 1000,
+  "c_inv_grid": [
+    0.1,
+    0.5,
+    1.0,
+    2.5,
+    5.0
+  ],
+  "l_grid": [
+    5.0,
+    25.0,
+    100.0,
+    250.0,
+    1000.0
+  ],
+  "models": [
+    "XGB-20raw",
+    "XGB-24full",
+    "XGB-4sensor"
+  ],
+  "c_sense": 0.0035,
+  "canonical_cinv_05_l100_regret": {
+    "XGB-20raw": 0.030850000000000002,
+    "XGB-24full": 0.0356,
+    "XGB-4sensor": 0.19525
+  },
+  "canonical_cinv_05_l100_cost_actual": {
+    "XGB-20raw": 0.03805,
+    "XGB-24full": 0.0463,
+    "XGB-4sensor": 0.20595
+  },
+  "canonical_cinv_05_l100_cost_oracle": {
+    "XGB-20raw": 0.0072,
+    "XGB-24full": 0.0107,
+    "XGB-4sensor": 0.0107
+  },
+  "canonical_cinv_05_l100_tau_star": {
+    "XGB-20raw": 0.03727451711893082,
+    "XGB-24full": 0.05550694838166237,
+    "XGB-4sensor": 0.01649005524814129
+  },
+  "cells_with_sensor_closure_24full_ci_excl0_positive": 2
+}

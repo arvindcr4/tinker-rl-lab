@@ -1,0 +1,69 @@
+% Section: P5 per-step algorithm-axis eta^2 trajectory on N2 four-method panel (iter 165)
+% Closes brief vein (b) at the PER-STEP granularity: does the algorithm-axis
+% eta^2 (0.0075 on reward_mean per iter-161) decay, hold, or grow across the
+% 40-step training trajectory? Tests 5 falsifiable hypotheses on the same N2
+% four-method reward tensor used by iter-161 row 176 and iter-89/106.
+\subsection{Per-step algorithm-axis $\eta^2$ trajectory (iter 165)}
+\label{sec:p5-iter165-per-step}
+
+The pooled iter-161 row 176 headline --- $\eta^2(\texttt{method} \to \texttt{reward\_mean}){=}0.0075$ on the 160-row N2 panel --- is a single number over 40 training steps. The open question is whether that number is \emph{trajectory-stationary} (the algorithm axis is a constant latent structure) or \emph{trajectory-trending} (the algorithm axis emerges or decays as training proceeds). Iter 165 tests this by computing per-step $\eta^2(\texttt{method}|\texttt{step})$ on the 4 method $\times$ 16 prompt $= 64$ obs per step per channel, with paired-prompt bootstrap CIs ($B{=}2000$, seed 20260705).
+
+\subsubsection{Per-step decomposition}
+\label{sec:p5-iter165-decomposition}
+For each step $s \in \{0, \dots, 39\}$ and each prompt-level channel $c \in \{\texttt{reward\_mean}, \texttt{mean\_len}, \texttt{cv\_len}\}$, we form 4 method-groups of 16 prompt-mean values:
+$\eta^2_{c,s} = \mathrm{SS\_between}(\texttt{method}) / \mathrm{SS\_total}$
+on the 64 obs. Bootstrap resamples the 16 prompts with replacement (paired across methods), recomputes $\eta^2_{c,s}$ 2000 times, and reports point, percentile 95\% CI, and bootstrap mean. The 40 steps are split into 3 trajectory bands: early (steps 0--13, 14 obs), mid (steps 14--26, 13 obs), late (steps 27--39, 13 obs).
+
+\subsubsection{5 falsifiable hypotheses (4/5 PASS)}
+\label{sec:p5-iter165-hypotheses}
+\textbf{H1 (PASS, DECISIVE)}. Per-step mean $\eta^2(\texttt{method}|\texttt{step}) \le 0.05$ on $\ge 2/3$ prompt-level channels. \emph{Evidence}: mean $\eta^2$ on \texttt{reward\_mean} $= 0.0056$, on \texttt{mean\_len} $= 0.0139$, on \texttt{cv\_len} $= 0.0405$ --- all three channels pass. The algorithm axis is small per-step on every prompt-level channel.
+
+\textbf{H2 (FAIL, sharpest negative)}. Trajectory $|\mathrm{Spearman}\,\rho| \le 0.5$ on $\ge 5/6$ channels (trajectory-stationary). \emph{Evidence}: $\rho(\texttt{reward\_mean}){=}{+}0.114$, $\rho(\texttt{mean\_len}){=}{+}\mathbf{0.875}$, $\rho(\texttt{cv\_len}){=}{+}0.401$ --- only 2/3 channels pass. \texttt{mean\_len} is strongly trajectory-monotone (Spearman $+0.875$): early-band mean $\eta^2(\texttt{mean\_len}){=}0.0019$, mid-band $0.0096$, late-band $0.0312$ --- a 16$\times$ monotone growth across the 40-step trajectory. This is the \textbf{first P5 finding of a training-trajectory trend in the algorithm-axis decomposition}: the algorithm axis is not just static "label noise" but a training-time emergent signal on length-controlled channels.
+
+\textbf{H3 (PASS, exact replication)}. Pooled $\eta^2(\texttt{method}, \texttt{reward\_mean})$ matches iter-161 within $\pm 0.005$. \emph{Evidence}: re-derived from canonical \texttt{n2\_metrics.tsv} (160 rows) gives $0.0074664$, matching iter-161's $0.0075$ at $\Delta = 3.4 \times 10^{-5}$ ($0.45\%$ error). The two implementations converge to four-decimal precision.
+
+\textbf{H4 (PASS, LOMO confirmation)}. GIFT dominates the algorithm axis on \texttt{reward\_mean}: $\mathrm{LOMO}(\texttt{GIFT}) / \mathrm{full} < 0.5$. \emph{Evidence}: leave-one-method-out at per-(method, prompt) granularity --- removing GIFT collapses $\eta^2$ from $0.000503$ to $0.0000911$ ($0.181 \times$, 82\% drop). Removing GRPO raises $\eta^2$ to $1.326 \times$ full (the 3 non-GRPO methods are more dispersed); removing AERO gives $0.962 \times$; removing AREAL gives $1.086 \times$. \textbf{Only GIFT removal shrinks the algorithm axis}, confirming iter-89/106 H3 finding at the reward level (not just zvf).
+
+\textbf{H5 (PASS, stationarity on reward)}. $|\mathrm{mean}(\mathrm{early}\,\eta^2_{\texttt{reward\_mean}}) - \mathrm{mean}(\mathrm{late}\,\eta^2_{\texttt{reward\_mean}})| \le 0.02$. \emph{Evidence}: early band mean $= 0.0056$, late band mean $= 0.0060$, $\Delta = 0.0004$ (200$\times$ below the stationarity bar). The iter-161 pooled headline of $\eta^2{=}0.0075$ is trajectory-robust on the canonical \texttt{reward\_mean} channel.
+
+\subsubsection{Sharpest paper-grade findings}
+\begin{enumerate}
+\item \textbf{Algorithm axis is trajectory-stationary on reward\_mean} (H5 PASS at $\Delta{=}0.0004$). The iter-161 pooled $\eta^2{=}0.0075$ headline is robust to trajectory binning.
+\item \textbf{Algorithm axis grows 16$\times$ on mean\_len} (H2 FAIL sharpest). Early $\eta^2(\texttt{mean\_len}){=}0.0019$, late $0.0312$ (Spearman $+0.875$). Method differences in completion length \emph{diverge} as training proceeds --- this is the structural-diversity bonus concentrating on the length channel as the model learns.
+\item \textbf{Pooled replication to 4 decimal places} (H3 PASS at $\Delta{=}3.4 \times 10^{-5}$). Iter-165 reads the per-(method, prompt) tensor; iter-161 reads the per-(method, step) terminal stats. Two implementations, one answer.
+\item \textbf{GIFT uniquely load-bearing on reward\_mean} (H4 PASS at $\mathrm{LOMO}(\texttt{GIFT})/\mathrm{full} = 0.181$). The structural diversity bonus iter-66 row 77 measured is concentrated in GIFT --- a "GRPO-family equivalent" claim is valid only AFTER excluding GIFT.
+\item \textbf{Per-step max $\eta^2 \le 0.13$ on every channel}. $\max \eta^2(\texttt{cv\_len}){=}0.1292$ at step 39; $\max \eta^2(\texttt{mean\_len}){=}0.0518$ at step 38; $\max \eta^2(\texttt{reward\_mean}){=}0.0306$ at step 0. The algorithm axis never crosses the $0.15$ threshold on any prompt-level channel --- consistent with iter-89/106 strict-pass ($\eta^2 \le 0.05$ on 2/7 channels, $\le 0.10$ on 4/7).
+\end{enumerate}
+
+\subsubsection{Per-step band summary (mean $\eta^2$ per band per channel)}
+\begin{tabular}{lcccc}
+\hline
+band & $n_{\mathrm{steps}}$ & channel & mean $\eta^2$ & max $\eta^2$ \\
+\hline
+early & 14 & \texttt{reward\_mean} & 0.0056 & 0.0306 \\
+early & 14 & \texttt{mean\_len}     & \textbf{0.0019} & 0.0054 \\
+early & 14 & \texttt{cv\_len}       & 0.0213 & 0.0581 \\
+mid   & 13 & \texttt{reward\_mean} & 0.0053 & 0.0149 \\
+mid   & 13 & \texttt{mean\_len}     & \textbf{0.0096} & 0.0348 \\
+mid   & 13 & \texttt{cv\_len}       & 0.0466 & 0.1239 \\
+late  & 13 & \texttt{reward\_mean} & 0.0060 & 0.0125 \\
+late  & 13 & \texttt{mean\_len}     & \textbf{0.0312} & 0.0518 \\
+late  & 13 & \texttt{cv\_len}       & 0.0549 & 0.1292 \\
+\hline
+\end{tabular}
+
+\subsubsection{Cross-paper coupling}
+\begin{itemize}
+\item \textbf{P5 iter-161 row 176} --- exact replication of pooled $\eta^2(\texttt{method}, \texttt{reward\_mean})$ at 4-decimal precision; per-step analysis sharpens the pooled headline.
+\item \textbf{P5 iter-89/106 rows 101/106} --- H4 LOMO confirms GIFT dominance at per-(method, prompt) granularity on \texttt{reward\_mean} (extending iter-89's zvf finding).
+\item \textbf{P5 iter-141 row 159} --- iter-141 produced the N2 reward tensor at per-(method, step) granularity; iter-165 reads the same tensor at per-(method, step, prompt) granularity, exposing the trajectory.
+\item \textbf{P5P8-SYNTH iter-164 D13} --- iter-164 showed per-prompt reward stability is structurally unreachable at $G{=}8$; iter-165 confirms per-prompt values are well-defined (mean $\eta^2(\texttt{method})$ on 64 obs per step is the right measurement).
+\item \textbf{FRONTIER\_INSIGHTS Round 2} (ZVF = signal availability) --- the per-step trajectory finding on \texttt{mean\_len} shows the algorithm axis is not just static "label noise" but a training-time emergent signal: as the model learns, the method differences in completion length diverge.
+\end{itemize}
+
+\subsubsection{Operational recommendations}
+\begin{enumerate}
+\item \textbf{Adopt per-step trajectory analysis} as a third P5 evaluation protocol alongside iter-161 pooled $\eta^2$ and iter-89 bootstrap CI on the N2 panel.
+\item \textbf{Report H5 stationarity} as a falsifiable check for any new algorithm-axis claim: $|\mathrm{early} - \mathrm{late}| \le 0.02$ on the canonical channel. Iter-165 PASS at $0.0004$ sets the bar.
+\item \textbf{Cite iter-165 H4 LOMO} when reporting algorithm-axis decomposition: GIFT removal collapses the axis 82\% on \texttt{reward\_mean}; a "GRPO-family equivalent" claim is valid only AFTER excluding GIFT.
+\end{enumerate}

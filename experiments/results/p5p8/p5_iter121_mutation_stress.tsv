@@ -1,0 +1,785 @@
+cell_id	mutation_id	mutation_name	n_checks_failed	flipped_check_ids	caught
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	M8	per_step_zvf_path_break	1	C10	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	M1	cell_id_swap_hash	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	M2	model_family_swap	0		0
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	M3	task_slice_swap	1	C03	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	M4	G_swap	1	C04	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	M5	temperature_swap	1	C05	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	M6	seed_swap	1	C06	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	M7	heldout_split_swap	1	C07	1
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	M8	per_step_zvf_path_break	1	C10	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	M1	cell_id_swap_hash	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	M2	model_family_swap	0		0
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	M3	task_slice_swap	1	C03	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	M4	G_swap	1	C04	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	M5	temperature_swap	1	C05	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	M6	seed_swap	1	C06	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	M7	heldout_split_swap	1	C07	1
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	M8	per_step_zvf_path_break	1	C10	1

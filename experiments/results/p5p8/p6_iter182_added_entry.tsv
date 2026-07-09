@@ -1,0 +1,3 @@
+filename	record_type	label_claimed	framework	model	task
+wandb_ppo_reinforce_qwen38b_gsm8k.json	stack	ppo-reinforce	tinker	Qwen/Qwen3-8B	gsm8k
+wandb_ppo_reinforce_llama318b-inst_gsm8k.json	stack	ppo-reinforce	tinker	meta-llama/Llama-3.1-8B-Instruct	gsm8k

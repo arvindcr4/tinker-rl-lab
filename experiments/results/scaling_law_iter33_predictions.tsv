@@ -1,0 +1,6 @@
+prediction	test	pass	rate	p_value	verdict
+P1_peak_after_10pct	peak_frac > 0.10	9/12	0.75	0.073	falsified
+P2_late_greater_than_early	delta_late_minus_early > 0	5/12	0.4167	0.8062	falsified
+P3_plateau_late_near_peak	|late - peak| <= sqrt(var)+0.05	7/12	0.5833	0.3872	falsified
+P4_phase_score_predicts_mean	pearson(phase_score, mean_reward)	rho=0.046	0.0462	0.9217	falsified
+P5_nemotron_unique_extreme_collapse	unique(zero_frac>0.5 AND mean<0.20)	1/12	1.0	0.083333	sustained

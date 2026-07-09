@@ -1,0 +1,17 @@
+field	classification	count	fraction
+cell_id	PRESENT_KEYWORD	98	1.0
+cell_id	__missing_frac [95% CI]		0.0
+loss_form	PRESENT_NA	98	1.0
+loss_form	__missing_frac [95% CI]		0.0
+ref_policy_kl	PRESENT_NA	98	1.0
+ref_policy_kl	__missing_frac [95% CI]		0.0
+sampler_backend_precision	PRESENT_KEYWORD	98	1.0
+sampler_backend_precision	__missing_frac [95% CI]		0.0
+per_step_zvf_path	PRESENT_PATH	98	1.0
+per_step_zvf_path	__missing_frac [95% CI]		0.0
+group_size_schedule	PRESENT_KEYWORD	98	1.0
+group_size_schedule	__missing_frac [95% CI]		0.0
+heldout_split	PRESENT_KEYWORD	98	1.0
+heldout_split	__missing_frac [95% CI]		0.0
+decontamination_notes	PRESENT_KEYWORD	98	1.0
+decontamination_notes	__missing_frac [95% CI]		0.0

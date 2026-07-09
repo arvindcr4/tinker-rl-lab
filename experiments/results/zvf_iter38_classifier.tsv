@@ -1,0 +1,29 @@
+# Iter 38 Pillar 2 LOO failure-mode classifier on by-library rows.
+# Features (z-scored): mean_zvf, mean_last10, mean_peak. k=3.
+# Truth label derived from peak/last10: collapse if last10<0.05;
+# plateau if peak<0.5; drift if last10<0.85*peak; else converged.
+# Source: scripts/zvf_iter38_crosslibrary.py
+library	model	mean_zvf	mean_last10	mean_peak	true	pred	correct
+grpo	GRPO	0.4808	0.3791	0.3855	plateau	plateau	1
+aero	AERO	0.2203	0.3993	0.4067	plateau	plateau	1
+cppo	CPPO	0.2952	0.392	0.4	plateau	plateau	1
+ngrpo	NGRPO	0.3003	0.3874	0.3944	plateau	plateau	1
+scafgrpo	SCAFGRPO	0.3166	0.4088	0.4151	plateau	plateau	1
+mcgrpo	MCGRPO	0.1461	0.3221	0.404	plateau	plateau	1
+gift	GIFT	0.1142	0.3259	0.4099	plateau	plateau	1
+areal	AREAL	0.1209	0.3283	0.4101	plateau	plateau	1
+es	ES	0.1142	0.3163	0.3969	plateau	plateau	1
+gsm8k_real	Qwen/Qwen3-8B	0.1583	0.6942	0.6987	converged	plateau	0
+arithmetic_groupsize	Qwen/Qwen2.5-0.5B	0.7308	0.9764	0.9883	converged	converged	1
+tool_use	qwen3-32b	1.0	0.0	0.0	collapse	plateau	0
+tool_use	llama-8b-inst	1.0	0.0	0.0	collapse	plateau	0
+drgrpo_vs_grpo	Qwen/Qwen2.5-0.5B	0.7941	0.9881	0.9895	converged	converged	1
+
+# Confusion matrix (rows=true, cols=pred)
+true	collapse	drift	plateau	converged
+collapse	0	0	2	0
+drift	0	0	0	0
+plateau	0	0	9	0
+converged	0	0	1	2
+
+# Overall LOO accuracy: 0.786 (11/14)

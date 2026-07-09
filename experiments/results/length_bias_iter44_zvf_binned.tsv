@@ -1,0 +1,13 @@
+task	algo	zvf_bin	n_steps	ols_slope	asymmetry_delta	median_L	median_R
+arithmetic_easy	grpo	low	19	-0.208321	0.035345	6.1719	0.523438
+arithmetic_easy	grpo	mid	13	-0.241473	0.046151	5.0391	0.882812
+arithmetic_easy	grpo	high	168	-0.01031	0.027238	4.5	0.992188
+arithmetic_easy	dr_grpo	low	23	-0.208826	0.038054	5.9609	0.515625
+arithmetic_easy	dr_grpo	mid	14	-0.188908	0.049677	4.8672	0.851562
+arithmetic_easy	dr_grpo	high	163	0.032826	0.03547	4.5	0.992188
+gsm8k_cot	grpo	low	19	-0.004101	0.002699	189.9844	0.359375
+gsm8k_cot	grpo	mid	47	-0.004341	0.00213	190.4219	0.265625
+gsm8k_cot	grpo	high	24	-0.006471	0.002751	194.25	0.21875
+gsm8k_cot	dr_grpo	low	11	-0.005504	0.005356	190.8125	0.328125
+gsm8k_cot	dr_grpo	mid	52	-0.013146	0.002557	191.3438	0.265625
+gsm8k_cot	dr_grpo	high	27	-0.011511	0.001975	194.875	0.1875

@@ -1,0 +1,51 @@
+{
+  "n_test": 10000,
+  "n_pos_test": 144,
+  "n_boot": 400,
+  "boot_seed": 20260704,
+  "sigma_grid": [
+    0.0,
+    0.005,
+    0.01,
+    0.02,
+    0.05
+  ],
+  "rho_grid": [
+    2,
+    5,
+    10,
+    20,
+    50,
+    100,
+    200,
+    500
+  ],
+  "c_inv": 0.5,
+  "c_sense": 0.0035,
+  "headline_at_item10_budget": {
+    "sigma": 0.02,
+    "rho_sensor_wins_sig": 0,
+    "rho_sensor_loses_sig": 2,
+    "rho_neither_sig": 6,
+    "rho_total": 8
+  },
+  "headline_at_oracle_sigma0": {
+    "sigma": 0.0,
+    "rho_sensor_wins_sig": 0,
+    "rho_sensor_loses_sig": 2,
+    "rho_neither_sig": 6
+  },
+  "headline_at_high_noise_sigma05": {
+    "sigma": 0.05,
+    "rho_sensor_wins_sig": 0,
+    "rho_sensor_loses_sig": 2,
+    "rho_neither_sig": 6
+  },
+  "break_even_L_star": {
+    "0.0": 5.291666666666666,
+    "0.005": 5.09375,
+    "0.01": 5.09090909090909,
+    "0.02": 26.437499999999993,
+    "0.05": 36.399999999999984
+  }
+}

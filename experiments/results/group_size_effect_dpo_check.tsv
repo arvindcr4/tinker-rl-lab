@@ -1,0 +1,5 @@
+comparison	G_a	G_b	mean_a	mean_b	ci_a	ci_b	diff_a_minus_b	diff_ci	retention_pct_of_G16	wu2025_claim_pct	conclusion
+G=2 vs G=16 (Wu et al. 2025 headline)	2	16	0.9817	0.9783	[0.9750, 0.9900]	[0.9700, 0.9900]	0.0033	[-0.0083, 0.0150]	100.34	97.6	within 1 SE of Wu et al. 97.6% retention
+G=4 vs G=16 (intermediate contrastive scaling)	4	16	0.9883	0.9783	[0.9850, 0.9900]	[0.9700, 0.9900]	0.01	n/a	101.02	n/a	G=4 retains >100% of G=16 on this task (within noise); consistent with DPO-equivalence in the contrastive regime
+G=8 vs G=16 (peak of inverted-U)	8	16	0.99	0.9783	[0.9850, 0.9950]	[0.9700, 0.9900]	0.0117	n/a	101.19	n/a	G=8 is the numerical apex but not statistically separable from G=4 or G=16 at n=3; inverted-U is qualitative only
+G=4 vs G=32 (Pillar 3 headline question)	4	32	0.9883	nan	[0.9850, 0.9900]	not measured on arithmetic sweep	nan	n/a	n/a	n/a	G=32 not measured on the arithmetic sweep; defer to the Qwen3-8B/GSM8K token-budget normalized analysis (G=4 0.64 vs G=32 0.88 at T=64M is a 0.24 absolute swing, illustrative only)

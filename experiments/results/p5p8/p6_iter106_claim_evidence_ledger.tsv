@@ -1,0 +1,37 @@
+delta_id	metric	panel	predicted_sign	observed_delta	ci_low	ci_high	n	significant	stored_verdict	machine_verdict	consistent	claim_layer	measured_layer	audit_layer
+delta_adaptiveg	reward_mean	qp7_adaptive_armB_vs_armA_paired	>=0	-0.007812	-0.023926	0.009277	16	False	NEUTRAL	NEUTRAL	True	expected_effects	measured[]	claim_validation[]
+delta_adaptiveg	zvf	qp7_adaptive_armB_vs_armA_paired	<0	-0.074219	-0.121094	-0.03125	16	True	SUPPORTS	SUPPORTS	True	expected_effects	measured[]	claim_validation[]
+delta_aero	mean_zvf	zvf130_5seed		-0.26052	-0.26052	-0.26052	5	False	UNCLAIMED	UNCLAIMED	True	missing	measured[]	claim_validation[]
+delta_aero	reward_mean	n2_same_stack_last10	>=0	-0.014063	-0.023438	-0.005469	10	True	CONTRADICTS	CONTRADICTS	True	expected_effects	measured[]	claim_validation[]
+delta_aero	zvf	n2_same_stack_last10	<0	-0.025	-0.0625	0.0125	10	False	NEUTRAL	NEUTRAL	True	expected_effects	measured[]	claim_validation[]
+delta_aero	zvf_risk_mean	zvf130_5seed	<0	-0.147637	-0.285921	-0.009354	5	True	SUPPORTS	SUPPORTS	True	expected_effects	measured[]	claim_validation[]
+delta_areal	mean_zvf	zvf130_5seed		-0.35988	-0.35988	-0.35988	5	False	UNCLAIMED	UNCLAIMED	True	missing	measured[]	claim_validation[]
+delta_areal	reward_mean	n2_same_stack_last10	>=0	-0.019531	-0.032031	-0.007812	10	True	CONTRADICTS	CONTRADICTS	True	expected_effects	measured[]	claim_validation[]
+delta_areal	zvf	n2_same_stack_last10	<0	-0.05625	-0.1125	0.00625	10	False	NEUTRAL	NEUTRAL	True	expected_effects	measured[]	claim_validation[]
+delta_areal	zvf_risk_mean	zvf130_5seed	<0	-0.245767	-0.354535	-0.137	5	True	SUPPORTS	SUPPORTS	True	expected_effects	measured[]	claim_validation[]
+delta_cppo	mean_zvf	zvf130_5seed		-0.18558	-0.18558	-0.18558	5	False	UNCLAIMED	UNCLAIMED	True	missing	measured[]	claim_validation[]
+delta_cppo	zvf_risk_mean	zvf130_5seed	<0	-0.151077	-0.253342	-0.048813	5	True	SUPPORTS	SUPPORTS	True	expected_effects	measured[]	claim_validation[]
+delta_dapo	mean_len	length_bias_iter60_grpo_vs_drgrpo_paired	<0									expected_effects	missing	missing
+delta_dapo	reward_mean	n2_same_stack_last10	>0									expected_effects	missing	missing
+delta_dapo	zvf	n2_same_stack_last10	<0									expected_effects	missing	missing
+delta_drgrpo	L_star	length_bias_iter60_grpo_vs_drgrpo_paired	<0	44.2503	-27.8523	116.3529	2	False	NEUTRAL	NEUTRAL	True	expected_effects	measured[]	claim_validation[]
+delta_drgrpo	neg_frac	length_bias_iter60_grpo_vs_drgrpo_paired	<0	0.1028	0.0646	0.1409	2	True	CONTRADICTS	CONTRADICTS	True	expected_effects	measured[]	claim_validation[]
+delta_drgrpo	pos_frac	length_bias_iter60_grpo_vs_drgrpo_paired	>0	-0.1001	-0.2087	0.0085	2	False	NEUTRAL	NEUTRAL	True	expected_effects	measured[]	claim_validation[]
+delta_es	mean_zvf	zvf130_5seed		-0.36656	-0.36656	-0.36656	5	False	UNCLAIMED	UNCLAIMED	True	missing	measured[]	claim_validation[]
+delta_es	zvf_risk_mean	zvf130_5seed	<0	-0.272578	-0.374617	-0.170539	5	True	SUPPORTS	SUPPORTS	True	expected_effects	measured[]	claim_validation[]
+delta_gift	mean_zvf	zvf130_5seed		-0.36658	-0.36658	-0.36658	5	False	UNCLAIMED	UNCLAIMED	True	missing	measured[]	claim_validation[]
+delta_gift	reward_mean	n2_same_stack_last10	>=0	0.016406	-0.007031	0.039844	10	False	NEUTRAL	NEUTRAL	True	expected_effects	measured[]	claim_validation[]
+delta_gift	zvf	n2_same_stack_last10	>0	0.125	0.08125	0.175	10	True	SUPPORTS	SUPPORTS	True	expected_effects	measured[]	claim_validation[]
+delta_gift	zvf_risk_mean	zvf130_5seed	<0	-0.263187	-0.365427	-0.160948	5	True	SUPPORTS	SUPPORTS	True	expected_effects	measured[]	claim_validation[]
+delta_gspo	mean_len	length_bias_iter60_grpo_vs_drgrpo_paired	<0									expected_effects	missing	missing
+delta_gspo	reward_mean	n2_same_stack_last10	>=0									expected_effects	missing	missing
+delta_gspo	zvf	n2_same_stack_last10	<0									expected_effects	missing	missing
+delta_mcgrpo	mean_zvf	zvf130_5seed		-0.33474	-0.33474	-0.33474	5	False	UNCLAIMED	UNCLAIMED	True	missing	measured[]	claim_validation[]
+delta_mcgrpo	zvf_risk_mean	zvf130_5seed	<0	-0.174277	-0.288771	-0.059783	5	True	SUPPORTS	SUPPORTS	True	expected_effects	measured[]	claim_validation[]
+delta_ngrpo	mean_zvf	zvf130_5seed		-0.18042	-0.18042	-0.18042	5	False	UNCLAIMED	UNCLAIMED	True	missing	measured[]	claim_validation[]
+delta_ngrpo	zvf_risk_mean	zvf130_5seed	<0	-0.131025	-0.239395	-0.022656	5	True	SUPPORTS	SUPPORTS	True	expected_effects	measured[]	claim_validation[]
+delta_ppo	reward_mean	n2_same_stack_last10	>=0									expected_effects	missing	missing
+delta_ppo	zvf	n2_same_stack_last10	<0									expected_effects	missing	missing
+delta_ppo	zvf_risk_mean	zvf130_5seed	<0									expected_effects	missing	missing
+delta_scafgrpo	mean_zvf	zvf130_5seed		-0.16414	-0.16414	-0.16414	5	False	UNCLAIMED	UNCLAIMED	True	missing	measured[]	claim_validation[]
+delta_scafgrpo	zvf_risk_mean	zvf130_5seed	<0	-0.352361	-0.455533	-0.249189	5	True	SUPPORTS	SUPPORTS	True	expected_effects	measured[]	claim_validation[]

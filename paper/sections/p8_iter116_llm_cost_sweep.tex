@@ -1,0 +1,76 @@
+% =============================================================================
+% P8 realistic LLM cost sweep: 5 cost ratios x 5 rates x 3 trees (iter 116)
+% =============================================================================
+\subsection{Realistic LLM-cost sweep extends the iter-112 envelope to a
+  cost-ratio axis (\textit{iter 116})}
+\label{sec:p8-llm-cost-sweep}
+
+The iter-108 cost-CI and iter-112 realistic-rate work fixed
+$\mathrm{cost}_{\mathrm{llm}}{=}\$0.001$/call (10$\times$ the XGB
+cost).  Real LLM-API costs span two orders of magnitude:
+GPT-4o-mini $\sim$\$0.0001--0.001, GPT-4o $\sim$\$0.005--0.015,
+Claude Sonnet $\sim$\$0.003--0.015, Claude Opus
+$\sim$\$0.015--0.075. iter-116 sweeps
+$\mathrm{cost}_{\mathrm{llm}}\in\{0.001, 0.003, 0.010, 0.030, 0.100\}$
+USD on the same 5 rates $\times$ 3 trees $\times$ 3 rules
+envelope (225 cells total).
+
+\subsubsection{Falsifiable headline H1 (xgb-only Pareto-dominates at every cell)}
+Across the full $5\,\mathrm{rates}\times 5\,\mathrm{cost\ ratios}\times
+3\,\mathrm{trees}=75$ cells, \textbf{xgb-only is the unique cheapest
+rule on both \$/dec and \$/caught in 75/75 cells}. The gradient-band
+and absolute-band rules add LLM cost without adding recall (same
+$K{=}2\,\%$ top-K, same positives caught), so they never Pareto-dominate
+xgb-only on the (cost, recall) plane.
+
+\subsubsection{Falsifiable headline H2 (cost-ratio gradient on \$/caught)}
+On XGB-24full at release rate $r{=}1.44\,\%$, gradient-band
+excess cost on \$/caught scales linearly with cost ratio:
+\begin{itemize}
+  \item $\mathrm{cost}_{\mathrm{llm}}{=}\$0.001$ (ratio 10):
+        $\Delta\,\mathrm{cpf}{=}+5.66{\times}10^{-5}$
+  \item $\mathrm{cost}_{\mathrm{llm}}{=}\$0.003$ (ratio 30):
+        $\Delta\,\mathrm{cpf}{=}+1.83{\times}10^{-4}$
+  \item $\mathrm{cost}_{\mathrm{llm}}{=}\$0.010$ (ratio 100):
+        $\Delta\,\mathrm{cpf}{=}+6.23{\times}10^{-4}$
+  \item $\mathrm{cost}_{\mathrm{llm}}{=}\$0.030$ (ratio 300):
+        $\Delta\,\mathrm{cpf}{=}+1.88{\times}10^{-3}$
+  \item $\mathrm{cost}_{\mathrm{llm}}{=}\$0.100$ (ratio 1000):
+        $\Delta\,\mathrm{cpf}{=}+6.29{\times}10^{-3}$
+\end{itemize}
+At every realistic LLM-API price point, gradient-band adds cost
+without adding recall at $K{=}2\,\%$. The cost-vs-recall gap is
+\textbf{monotonic and unbounded} in the cost ratio.
+
+\subsubsection{Falsifiable headline H3 (recall-preservation cost ratio)}
+At the LOWEST swept cost ($\mathrm{cost}_{\mathrm{llm}}{=}\$0.001$,
+ratio 10), the recall-preservation cost ratio
+$\mathrm{cpf}_{\mathrm{grad}}/\mathrm{cpf}_{\mathrm{xgb}}$ stays in
+$[1.008,\,1.051]$ -- gradient-band is 0.8--5.1\,\% more expensive
+than xgb-only on \$/caught at $K{=}2\,\%$, even at the cheapest
+realistic LLM cost. At the HIGHEST swept cost
+($\mathrm{cost}_{\mathrm{llm}}{=}\$0.100$, ratio 1000), the ratio
+expands to $[3.33,\,6.67]$ -- gradient-band is 3--7$\times$ more
+expensive than xgb-only.
+
+\subsubsection{Operational recommendation}
+The iter-116 cost-ratio sweep \textbf{confirms the iter-112
+envelope's xgb-only finding} and extends it across the realistic
+LLM-API cost range:
+\begin{itemize}
+  \item at every realistic $\mathrm{cost}_{\mathrm{llm}}$
+        (\$0.001--\$0.100) and at every realistic positive rate
+        (0.05\,\%--1.44\,\%), \textbf{xgb-only is the cost-optimal rule}.
+  \item the LLM-augmented rules (gradient-band, absolute-band)
+        only pay off if they enable a HIGHER recall -- e.g., a
+        larger $K$ (top-5\,\%, top-10\,\%) or a different decision
+        axis (latency, fairness). At the iter-112 $K{=}2\,\%$
+        decision rule, xgb-only is the unique Pareto-best choice.
+  \item the iter-108 cost-CI recommendation ("xgb-only at low
+        cost") was an artefact of the single-cost point; iter-116
+        shows the recommendation is \textbf{universal across the
+        cost-ratio axis}.
+\end{itemize}
+This closes the iter-32 row 53 `P8 (sigma x C_inv x L cube)' gap at
+the cost-axis level: the cost-cube (rate $\times$ cost-ratio
+$\times$ rule) is xgb-only-dominant at every interior cell.

@@ -1,0 +1,9 @@
+metric_kind	metric_key	headline
+linear_fit	slope_per_decade_T	slope(dR/dlog10T) = -0.1379/decade  95%CI [-0.1935,-0.0830]  R^2=0.905  p=4.86e-02
+linear_fit	intercept_at_log10T_eq_0	intercept(R at T=1 tok) = +1.773  95%CI [+1.374,+2.178]
+extrapolation	T=3e+08	predicted R(T=3e+08) = 0.614
+extrapolation	T=1e+09	predicted R(T=1e+09) = 0.531
+extrapolation	T_at_Wu_retention_0.976	R=0.976 achieved at T=6.081e+05 tok (5.78 on log10 scale)
+extrapolation	T_at_ceiling_floor_0.723	R=0.723 (iter95 ceiling floor) achieved at T=4.159e+07 tok (7.62 on log10 scale)
+fit_quality	ols_summary	OLS on n=4 budgets: R^2=0.905, Pearson r=-0.951, slope p-value=4.858e-02
+_extras	_store	"{""T"": [1000000.0, 4000000.0, 16000000.0, 64000000.0], ""R"": [0.9761904761904762, 0.8333333333333334, 0.75, 0.7272727272727273], ""slope"": -0.1378743965789289, ""intercept"": 1.7734585006856944, ""slope_lo"": -0.19345102091993943, ""slope_hi"": -0.0829601421412083, ""intercept_lo"": 1.3742946580778383, ""intercept_hi"": 2.1776078436940307, ""T_wu"": 608063.8192167439, ""T_inf"": 41586527.775386974}"

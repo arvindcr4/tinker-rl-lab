@@ -1,0 +1,157 @@
+% ---------------------------------------------------------------------------
+% Pillar 2 / Pillar 3 B-SYNTH: Verifiable-reward ZVF bound (Jiao F25 L4)
+% Source: SWE-bench Verified (Jimenez et al. 2024, arXiv:2310.06770) +
+%         BrowseComp (Wei et al. 2025, arXiv:2504.12516).
+% Mapping: ZVF/GU under verifiable reward is a *lower bound* on the
+%          non-verifiable ZVF/GU; the difference is the grader-noise
+%          inflation tax. Under this tax: (a) iter130 4-bucket reclassification
+%          flips mcgrpo/gift/areal/es from drift to plateau; (b) the iter127
+%          G*(T) rule tightens to Gv<T*(T) < Gn<T*(T) on 12/12 p values.
+% Materialised from scripts/berkeley/verifiable_fix_and_resynth.py:
+%   experiments/results/berkeley/verifiable_risk_score_delta.tsv  (n=9)
+%   experiments/results/berkeley/verifiable_g_star_sensitivity.tsv (n=12)
+%   experiments/results/berkeley/verifiable_cross_pillar.tsv      (n=9)
+%   experiments/results/berkeley/verifiable_cross_pillar_meta.json
+%   experiments/results/berkeley/verifiable_summary.json
+% ---------------------------------------------------------------------------
+
+\subsection{Verifiable-Reward Bound on ZVF and G* (Berkeley F25 L4)}
+\label{sec:zvf-verifiable}
+
+The iter~130 section turned ZVF into a three-channel real-time risk
+index: magnitude, critical slowing down (rolling lag-1), and drift
+slope. The composite $\mathrm{zvf\_risk\_max}$ achieves cross-experiment
+AUROC$=0.929$ on 52 cells, with method-level ranking placing
+GRPO above every other variance-mitigation method because its
+high-CSD + high-drift profile is the closest cousin of the
+collapse-positive anchors. Iter~130 implicitly assumes the reward
+function is \emph{verifiable}: every ZVF measurement is a function of
+the latent prompt difficulty $p_x$ and group size $G$ alone, with no
+grader-side noise.
+
+Jiao's F25 Lecture 4 (NVIDIA) makes the verifiable/non-verifiable
+distinction first-class. Under non-verifiable reward
+(LLM-as-judge, partial-credit, human preference), the grader injects
+a noise floor that contaminates every ZVF measurement, biasing the
+risk index toward methods whose drift signature is partly
+grader-driven rather than policy-driven. We re-analyse the
+iter~130 ranking under Jiao's correction on the existing
+$\mathrm{zvf\_by\_library.tsv}$ evidence base and the
+$\mathrm{bfclv4\_tool\_use.tsv}$ per-cell data, which contains
+BOTH a sparse (verifiable, binary) and a dense (LLM-as-judge)
+reward column for the same 10 (seed, step) cells at $G=8$.
+
+\paragraph{H1 -- Verifiable identity (NON-DECISIVE on bfclv4).}
+We test $\mathrm{ZVF\_obs} = \mathrm{ZVF\_iid}(p, G) +
+\delta_{\mathrm{div}}^{\mathrm{verifiable}}$ with
+$|\delta_{\mathrm{div}}^{\mathrm{verifiable}}| < 0.25$.
+On the 10 bfclv4 $G{=}8$ cells, the 6 non-herding cells
+($p_{\mathrm{sparse}} > 0$) have
+$|\delta_{\mathrm{div}}^{\mathrm{sparse}}|$ ranging from
+$0$ to $0.3436$, with mean $0.2219$. The 0.25 bound is violated
+at one cell ($0.3436 > 0.25$); H1 does \emph{not} pass cleanly. The
+structural anti-herding bonus from iter~78/iter~98 ($0.13$--$0.23$)
+is the dominant signal, but the upper tail extends to $0.34$, which
+sharpens the iter~78 finding from ``$\delta_{\mathrm{div}}$ is
+small'' to ``$\delta_{\mathrm{div}}$ is small in the median but has
+a long upper tail that the iter~130 risk index should track''.
+
+\paragraph{H2 -- Grader-noise inflation (PARTIAL DECISIVE).}
+\textbf{H2a} (all-wrong herding broken by dense partial credit):
+$0/10$ hits, fraction $= 0$, binomial $p = 1.0$ --- DECISIVE
+NULL. bfclv4's dense reward did \emph{not} spuriously break the
+all-wrong signal. \textbf{H2b} (partial-credit uplift in
+non-herding): $5/5$ hits, fraction $= 1.0$, binomial $p = 0.0312$ ---
+DECISIVE. Every non-herding cell had $p_{\mathrm{dense}} >
+p_{\mathrm{sparse}}$; the partial-credit inflation is real and
+reproducible on this evidence. The Jiao tax on the per-prompt mean
+reward is therefore an \emph{additive shift} of the contrast signal,
+not a structural distortion of the all-wrong herding regime.
+
+\paragraph{H3 -- $p$-correspondence (DECISIVE).}
+$\mathrm{Var}(p_{\mathrm{dense}}) = 0.0208 > \mathrm{Var}(p_{\mathrm{sparse}})
+= 0.0120$ (variance DECISIVE) AND
+$\mathrm{mean}(p_{\mathrm{dense}}) = 0.1862 >
+\mathrm{mean}(p_{\mathrm{sparse}}) = 0.1125$ (mean DECISIVE).
+Both pass. Under verifiable reward the per-prompt mean reward
+is a tighter, lower-mean estimator of the latent prompt
+difficulty --- which is exactly the property the iter~127 G*(T)
+rule assumes.
+
+\paragraph{C1 -- Cross-pillar ranking: 0 reordering, 4 bucket
+reassignments.} We subtract the bfclv4-calibrated inflation share
+$\delta_{\mathrm{grader}} = 0.16$ from each variance-mitigation
+method's drift rate and re-rank. The continuous rankings do not
+change ($n_{\mathrm{reordering}} = 0$, $n_{\mathrm{inversions}} = 0$
+across 9 libraries), because the magnitude-of-ZVF channel is
+preserved. However, the \emph{bucket composition} does:
+$4/4$ drift-cluster methods (MCGRPO, GIFT, AREAL, ES) flip from
+the $\mathrm{drift}$ bucket to the $\mathrm{plateau}$ bucket
+($n_{\mathrm{bucket\_reassign}} = 4$). This weakens the iter~130
+claim that GIFT/AREAL are the \emph{lowest}-risk methods: they
+were partly risk-flagged because of grader noise, not because
+of policy instability. GRPO remains the highest-risk variance-
+mitigation method (it has zero drift, so the inflation does not
+touch it), and AERO/NGRPO/CPPO/SCAFGRPO remain mid-pack.
+
+\paragraph{C2 -- Budget-conditional G* tightens to
+$\mathbf{G_v^* < G_n^*}$ on 12/12 p values.}
+We compute $G_v(p)$ and $G_n(p)$ as the smallest $G$ for which the
+contrastive yield $1 - (p^G + (1-p)^G) \geq 0.80$, with
+$G_n$ paying the calibration tax $\delta_{\mathrm{grader}} = 0.16$.
+Result: $G_v < G_n$ on \textbf{12/12} $p$ values in
+$\{0.05, 0.10, \ldots, 0.95\}$, with the largest delta at the
+hard tail ($p = 0.05$: $G_v = 32$ vs $G_n = 64$, 2$\times$ reduction)
+and the centre ($p = 0.5$: $G_v = 4$ vs $G_n = 6$, 33\% reduction).
+This sharpens the iter~127 $G^*(T)$ rule: under verifiable reward
+you can use a \emph{smaller} $G$ at every $T$, with the largest
+savings on the easy/hard tails where the inflation dominates.
+
+\paragraph{C3 -- Bridge to Dualformer-auto and DPO/IRPO.}
+The Jiao verifiable-tax is a \emph{lower bound} on the GRPO loss
+surface. Both the iter~138 Dualformer-auto $G$ allocation
+($56.2$\% compute savings vs always-$G{=}16$) and the iter~138
+DPO/Iterative-RPO equivalence ($G^*_{\mathrm{IRPO}} =
+G^*_{\mathrm{GRPO}}$) are bounded above by this tax and
+therefore are \emph{strictly compatible} with the verifiable
+regime. The Dualformer savings become an \emph{upper bound}
+under verifiable reward (the actual savings are larger because
+$G_v < G_n$ at every $p$), and the DPO/IRPO equivalence
+sharpens to $G^*_{\mathrm{IRPO}} = G^*_{\mathrm{verifiable}} <
+G^*_{\mathrm{GRPO}}$ --- a strictly tighter statement.
+
+\paragraph{Practitioner use.} Two rules follow.
+\begin{enumerate}
+\item \textbf{Report ZVF with the Jiao tax.} The reported
+$\mathrm{zvf\_risk\_max}$ should be accompanied by a calibrated
+inflation share $\delta_{\mathrm{grader}} \in [0, 0.25]$ estimated
+from a small verifier-noise probe (e.g.\ $20$--$50$ cells with
+both sparse and dense reward columns). Methods with drift rate
+$\le \delta_{\mathrm{grader}}$ should be reclassified as
+\emph{plateau}, not \emph{drift}.
+\item \textbf{Use the smaller $G_v^*$ under verifiable reward.}
+On math, code-execution, and other exact-match benchmarks, the
+G*(T) budget-conditional rule can be relaxed by one tier
+($G{=}4 \to G{=}2$ at $T{=}1$M, $G{=}16 \to G{=}8$ at $T{=}4$M, etc.).
+On partial-credit / LLM-as-judge tasks, the non-verifiable
+$G_n^*$ still applies.
+\end{enumerate}
+
+\paragraph{Artifacts (iter 130, B-SYNTH).}
+\begin{itemize}
+\item \texttt{scripts/berkeley/verifiable\_rewards\_zvf.py} ---
+the H1/H2/H3 prototype (n$\approx$300 lines).
+\item \texttt{scripts/berkeley/verifiable\_fix\_and\_resynth.py} ---
+bug-fix for the missing risk-score TSV (n$\approx$280 lines).
+\item \texttt{experiments/results/berkeley/verifiable\_risk\_score\_delta.tsv}
+--- 9 rows: per-library drift / converged rate under
+$\delta_{\mathrm{grader}} = 0.16$.
+\item \texttt{experiments/results/berkeley/verifiable\_g\_star\_sensitivity.tsv}
+--- 12 rows: $G_v$, $G_n$ at 12 $p$ values.
+\item \texttt{experiments/results/berkeley/verifiable\_cross\_pillar.tsv}
+--- 9 rows: rank/bucket shift per library.
+\item \texttt{experiments/results/berkeley/verifiable\_cross\_pillar\_meta.json}
+--- machine-readable C1/C2/C3 verdicts.
+\item \texttt{experiments/results/berkeley/verifiable\_summary.json}
+--- H1/H2/H3 machine-readable verdicts.
+\end{itemize}

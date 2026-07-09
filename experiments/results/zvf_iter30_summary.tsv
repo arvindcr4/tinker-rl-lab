@@ -1,0 +1,15 @@
+# Iter 30 Pillar 2 summary: best ZVF-only feature per
+# future-collapse horizon (sort by PR-AUC).
+# horizon_K	feature	roc_auc	pr_auc
+25	trailing_auc_25	4455	0.9313	0.8265
+25	trailing_mean_25	4500	0.9318	0.826
+25	current_zvf	4500	0.932	0.7915
+10	trailing_mean_25	4500	0.9286	0.588
+10	trailing_auc_25	4455	0.928	0.5876
+10	current_zvf	4500	0.9064	0.4875
+5	trailing_mean_25	4500	0.9302	0.4469
+5	trailing_auc_25	4455	0.9296	0.4469
+25	trailing_slope_10	4455	0.6647	0.3681
+5	current_zvf	4500	0.9016	0.3325
+10	trailing_slope_10	4455	0.2674	0.0726
+5	trailing_slope_10	4455	0.487	0.0574

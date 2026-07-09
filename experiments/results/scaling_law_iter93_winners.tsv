@@ -1,0 +1,7 @@
+criterion	winner_family	n_wins	total_anchors	candidates	totals_per_family
+AIC	constant	5	12	constant,1seg_ols,saturation,powerlaw,ar1	constant:5;1seg_ols:1;saturation:0;powerlaw:1;ar1:0
+BIC	constant	6	12	constant,1seg_ols,saturation,powerlaw,ar1	constant:6;1seg_ols:1;saturation:0;powerlaw:0;ar1:0
+LOOCV-RMSE	constant	4	12	constant,1seg_ols,saturation,powerlaw,ar1	constant:4;1seg_ols:1;saturation:0;powerlaw:1;ar1:1
+Forecast-MAE	ar1	4	12	constant,1seg_ols,saturation,powerlaw,ar1	constant:1;1seg_ols:0;saturation:0;powerlaw:2;ar1:4
+In-sample RMSE	ar1	4	12	constant,1seg_ols,saturation,powerlaw,ar1	constant:0;1seg_ols:2;saturation:0;powerlaw:1;ar1:4
+In-sample R^2	ar1	4	12	constant,1seg_ols,saturation,powerlaw,ar1	constant:0;1seg_ols:2;saturation:0;powerlaw:1;ar1:4

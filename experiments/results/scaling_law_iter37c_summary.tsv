@@ -1,0 +1,14 @@
+grpo_n_runs	5
+grpo_winner_count	{'C_hill_n2': 3, 'A_saturation_exp': 2}
+grpo_mean_w_sat	0.3788
+grpo_mean_w_mm	0.0
+grpo_mean_w_hill	0.6212
+grpo_mean_w_power	0.0
+grpo_mean_w_linear	0.0
+ppo_n_runs	5
+ppo_winner_count	{'C_hill_n2': 2, 'A_saturation_exp': 1, 'E_linear': 1, 'B_michaelis_menten': 1}
+ppo_mean_w_sat	0.2059
+ppo_mean_w_mm	0.2506
+ppo_mean_w_hill	0.3997
+ppo_mean_w_power	0.0
+ppo_mean_w_linear	0.1437

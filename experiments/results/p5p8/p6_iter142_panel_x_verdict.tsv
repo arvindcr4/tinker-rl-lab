@@ -1,0 +1,17 @@
+panel	verdict	n	pct	panel_total_n
+length_bias_iter60_grpo_vs_drgrpo_paired	SUPPORTS	0	0.0	3
+length_bias_iter60_grpo_vs_drgrpo_paired	NEUTRAL	2	66.67	3
+length_bias_iter60_grpo_vs_drgrpo_paired	CONTRADICTS	1	33.33	3
+length_bias_iter60_grpo_vs_drgrpo_paired	UNCLAIMED	0	0.0	3
+n2_same_stack_last10	SUPPORTS	1	8.33	12
+n2_same_stack_last10	NEUTRAL	3	25.0	12
+n2_same_stack_last10	CONTRADICTS	2	16.67	12
+n2_same_stack_last10	UNCLAIMED	6	50.0	12
+qp7_adaptive_armB_vs_armA_paired	SUPPORTS	1	50.0	2
+qp7_adaptive_armB_vs_armA_paired	NEUTRAL	1	50.0	2
+qp7_adaptive_armB_vs_armA_paired	CONTRADICTS	0	0.0	2
+qp7_adaptive_armB_vs_armA_paired	UNCLAIMED	0	0.0	2
+zvf130_5seed	SUPPORTS	8	38.1	21
+zvf130_5seed	NEUTRAL	0	0.0	21
+zvf130_5seed	CONTRADICTS	0	0.0	21
+zvf130_5seed	UNCLAIMED	13	61.9	21

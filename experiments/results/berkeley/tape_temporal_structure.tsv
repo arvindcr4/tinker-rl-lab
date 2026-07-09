@@ -1,0 +1,33 @@
+task	algo	seed	temporal_variance	temporal_variance_positive	abs_rho_early	abs_rho_late	delta_late_minus_early	late_smaller
+arithmetic_easy_qwen2.5-0.5b	grpo	42	0.05119346999999999	1				
+arithmetic_easy_qwen2.5-0.5b	grpo	123	0.027258863333333334	1				
+arithmetic_easy_qwen2.5-0.5b	grpo	456	0.05632670333333333	1				
+arithmetic_easy_qwen2.5-0.5b	grpo	789	0.11174732333333333	1				
+arithmetic_easy_qwen2.5-0.5b	grpo	1024	0.04984002333333334	1				
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	42	0.09543140333333333	1				
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	123	0.21195942333333334	1				
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	456	0.10824558333333333	1				
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	789	0.01665496333333333	1				
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	1024	0.012555643333333335	1				
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	42	0.003099613333333336	1				
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	123	0.02946985333333334	1				
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	456	0.017496263333333328	1				
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	42	0.02495433333333334	1				
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	123	0.030730083333333325	1				
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	456	0.08294602333333334	1				
+arithmetic_easy_qwen2.5-0.5b	grpo	42			0.1646	0.0497	-0.1149	1
+arithmetic_easy_qwen2.5-0.5b	grpo	123			0.3332	0.0069	-0.3263	1
+arithmetic_easy_qwen2.5-0.5b	grpo	456			0.0734	0.0255	-0.04790000000000001	1
+arithmetic_easy_qwen2.5-0.5b	grpo	789			0.601	0.0523	-0.5487	1
+arithmetic_easy_qwen2.5-0.5b	grpo	1024			0.4752	0.037	-0.43820000000000003	1
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	42			0.0447	0.0272	-0.017499999999999998	1
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	123			0.441	0.4788	0.0378	0
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	456			0.2776	0.5081	0.23049999999999998	0
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	789			0.364	0.1105	-0.2535	1
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	1024			0.2477	0.2368	-0.010899999999999993	1
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	42			0.6546	0.5568	-0.0978	1
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	123			0.4682	0.2592	-0.20900000000000002	1
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	456			0.6096	0.8603	0.2506999999999999	0
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	42			0.7146	0.7056	-0.009000000000000008	1
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	123			0.74	0.4455	-0.2945	1
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	456			0.3638	0.9191	0.5553	0

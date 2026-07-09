@@ -1,0 +1,125 @@
+{
+  "closure_act": {
+    "n_entries_populated": 3,
+    "populate_failures": [],
+    "populated_changes": [
+      {
+        "entry_id": "tinker_dapo_qwen3.5-4b_gsm8k",
+        "fields_populated": {
+          "reward_shaping_type": "overlong_penalty",
+          "sampling_dynamic_filter": true,
+          "token_aggregation": "token"
+        }
+      },
+      {
+        "entry_id": "colab-open_dapo_e3",
+        "fields_populated": {
+          "reward_shaping_type": "overlong_penalty"
+        }
+      },
+      {
+        "entry_id": "tinker_gspo_qwen3.5-4b_gsm8k",
+        "fields_populated": {
+          "token_aggregation": "sequence"
+        }
+      }
+    ],
+    "post_field_summary": {
+      "reward_shaping_type": {
+        "closure_remaining_post": 0,
+        "delta": 0.6667,
+        "populate_rate_post": 1.0,
+        "populate_rate_pre": 0.3333
+      },
+      "sampling_dynamic_filter": {
+        "closure_remaining_post": 0,
+        "delta": 0.5,
+        "populate_rate_post": 1.0,
+        "populate_rate_pre": 0.5
+      },
+      "token_aggregation": {
+        "closure_remaining_post": 0,
+        "delta": 0.6667,
+        "populate_rate_post": 1.0,
+        "populate_rate_pre": 0.3333
+      }
+    }
+  },
+  "counterfactual_gain": {
+    "bootstrap_95ci": [
+      0.0,
+      5.278
+    ],
+    "bootstrap_mean": 1.732,
+    "mean_gain_if_all_completed": 2.639,
+    "model": "per_field_ceiling = item1_weight/6*0.95 (~1.58 pts/field)",
+    "n_boot": 2000,
+    "n_entries_with_closure": 3
+  },
+  "iter32_bump_fields": [
+    "token_aggregation",
+    "reward_shaping_type",
+    "sampling_dynamic_filter"
+  ],
+  "n_entries": 20,
+  "n_new_fields": 3,
+  "per_field": {
+    "reward_shaping_type": {
+      "applies_reported": 1,
+      "applies_total": 3,
+      "applies_unpopulated": 2,
+      "closure_remaining": 2,
+      "not_applicable": 12,
+      "not_relevant": 5,
+      "populate_rate": 0.3333
+    },
+    "sampling_dynamic_filter": {
+      "applies_reported": 1,
+      "applies_total": 2,
+      "applies_unpopulated": 1,
+      "closure_remaining": 1,
+      "not_applicable": 12,
+      "not_relevant": 6,
+      "populate_rate": 0.5
+    },
+    "token_aggregation": {
+      "applies_reported": 1,
+      "applies_total": 3,
+      "applies_unpopulated": 2,
+      "closure_remaining": 2,
+      "not_applicable": 12,
+      "not_relevant": 5,
+      "populate_rate": 0.3333
+    }
+  },
+  "ts": "2026-07-04T19:32:19Z",
+  "worklist": [
+    {
+      "applies_n": 3,
+      "closeable_n": 3,
+      "entry_id": "tinker_dapo_qwen3.5-4b_gsm8k",
+      "unpopulated_fields": [
+        "token_aggregation",
+        "reward_shaping_type",
+        "sampling_dynamic_filter"
+      ]
+    },
+    {
+      "applies_n": 3,
+      "closeable_n": 1,
+      "entry_id": "colab-open_dapo_e3",
+      "unpopulated_fields": [
+        "reward_shaping_type"
+      ]
+    },
+    {
+      "applies_n": 1,
+      "closeable_n": 1,
+      "entry_id": "tinker_gspo_qwen3.5-4b_gsm8k",
+      "unpopulated_fields": [
+        "token_aggregation"
+      ]
+    }
+  ],
+  "worklist_size": 3
+}

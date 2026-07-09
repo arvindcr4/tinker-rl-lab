@@ -1,0 +1,104 @@
+{
+  "pillar": "B-F24 (Berkeley F24 L9 -- Jim Fan, NVIDIA; Eureka, Ma et al. 2023)",
+  "row_id": "08",
+  "source": "arXiv:2310.12931 (Ma, Liang, Wang, Huang, Bastani, Jayaraman, Zhu, Fan, Anandkumar; 'Eureka: Human-Level Reward Design via Coding Large Language Models'; ICLR 2024). Confirmed via WebFetch on arxiv.org/abs/2310.12931 on 2026-07-04: primary authors Yecheng Jason Ma, William Liang, Guanzhi Wang, De-An Huang, Osbert Bastani, Dinesh Jayaraman, Yuke Zhu, Linxi 'Jim' Fan, Anima Anandkumar; submitted 19 Oct 2023 (rev 30 Apr 2024); ICLR 2024 oral.",
+  "verified_citations": [
+    "Ma, Y. J., Liang, W., Wang, G., Huang, D.-A., Bastani, O., Jayaraman, D., Zhu, Y., Fan, L. J., & Anandkumar, A. (2023). Eureka: Human-Level Reward Design via Coding Large Language Models. arXiv:2310.12931, 19 Oct 2023 (rev 30 Apr 2024). ICLR 2024."
+  ],
+  "target_mapping": "B-F24 / A3 (post-training science): reward-design quality score (RQS) as a Pillar-1 exogenous covariate paralleling Eureka's evolutionary reward search. RQS extracts four anti-collapse, anti-starvation signals (variance, non-frozen-mass fraction, peak-trough dynamic range, anti-ZVF component) from the existing scaling_law_extended_frontier.tsv.",
+  "evidence_inputs": {
+    "scaling_law_extended_frontier": "12 anchors",
+    "scaling_law_fits": "5 anchors (R_max fit column)",
+    "scaling_law_iter137_aic_compare": "5 anchors (2p vs 3p)",
+    "scaling_law_iter137_capability_link": "5 anchors",
+    "group_size_iter127_joint_fit": "n=20 cells",
+    "group_size_iter127_optimal_g": "4 budgets",
+    "group_size_iter115_summary": "per-budget rollouts"
+  },
+  "five_questions": {
+    "Q1_rqs_per_anchor": {
+      "rows": "experiments/results/berkeley/eureka_rqs_per_anchor.tsv",
+      "n_rows": 12
+    },
+    "Q2_aic_compare": {
+      "rows": "experiments/results/berkeley/eureka_aic_compare.tsv",
+      "summary": {
+        "M0_intercept_only": {
+          "aicc": -2.013731829734553,
+          "rss": 0.452345752,
+          "k": 2,
+          "n": 5
+        },
+        "M1_logN": {
+          "aicc": -2.0351578669535737,
+          "rss": 0.4504115039034101,
+          "k": 2,
+          "n": 5
+        },
+        "M2_capability": {
+          "aicc": -23.072652976092343,
+          "rss": 0.006703720000000001,
+          "k": 2,
+          "n": 5
+        },
+        "M3_logN_plus_RQS": {
+          "aicc": -2.297097906297889,
+          "rss": 0.4274227670382508,
+          "k": 2,
+          "n": 5
+        },
+        "M4_capability_plus_RQS": {
+          "aicc": -21.93166113635233,
+          "rss": 0.008422114829750447,
+          "k": 2,
+          "n": 5
+        },
+        "n_anchors": 5
+      },
+      "anchors_used": "experiments/results/berkeley/eureka_aic_anchors.tsv"
+    },
+    "Q3_residualization_12_anchors": {
+      "rows": "experiments/results/berkeley/eureka_residualization.tsv",
+      "summary": {
+        "n_full": 12,
+        "rss_cap_only": 0.8658673963636363,
+        "rss_cap_plus_RQS": 0.8313073830367029,
+        "delta_rss": 0.03456001332693337,
+        "delta_rss_pct": 0.03991374830842953,
+        "pearson_RQS_vs_resid_cap": 0.22470551987481407,
+        "pearson_logN_vs_resid_cap": 0.3109493473017298,
+        "pearson_RQS_vs_resid_cap_RQS": -0.07157489444248244,
+        "pearson_logN_vs_resid_cap_RQS": 0.33624793609696574,
+        "spearman_RQS_vs_resid_cap": 0.08716617591692895,
+        "spearman_logN_vs_resid_cap": 0.24780354614011185,
+        "p_rqs_vs_resid_cap": 0.4658609517962158,
+        "p_logN_vs_resid_cap": 0.3008572616519616
+      }
+    },
+    "Q4_cross_pillar": {
+      "rows": "experiments/results/berkeley/eureka_cross_pillar.tsv",
+      "summary": {
+        "n_cells": 20,
+        "n_cells_with_zvf": 12,
+        "pearson_richness_vs_resid": -0.5685067094023091,
+        "p_value_pearson_richness_vs_resid": 0.028868953580373002,
+        "spearman_richness_vs_resid": -0.533113989983183,
+        "pearson_logG_vs_richness": 0.999806181806156,
+        "pearson_logT_vs_richness": 9.22569398433501e-18,
+        "pearson_richness_vs_abs_resid": -0.26029850841565727,
+        "p_value_pearson_richness_vs_abs_resid": 0.3939232075282104,
+        "note": "non-tautological proxy: richness_proxy_1_minus_zvf is independently computed from iter131 groupsize_zvf_sweep.tsv (theoretical iid ZVF contrast budget at each G); compared with iter127 joint-fit residual on the same model (Qwen2.5-0.5B/arithmetic). High richness = high contrast budget = 'compute has reward-signal room to spend'."
+      }
+    }
+  },
+  "key_findings": {
+    "Q1_rqs": "RQS identifies 3/12 anchors with degenerate signals (RQS<0.05: Nemotron-120B zero_frac=0.55, Qwen3-30B-MoE n_steps=5, Qwen3-32B n_steps=3). The 'capable' cluster averages RQS=0.69 vs the 'incapable' cluster RQS=0.45 -- the 24pp gap is statistically marginal at n=12 (Mann-Whitney U=24, p=0.21) but informative on direction.",
+    "Q2_aic": "On the 5-anchor capability-aware evidence base: M2_capability achieves AICc=-23.07 and M4_capability+RQS achieves AICc=-21.93; M3_logN+RQS achieves AICc=-2.30. Best-fit comparison is summarised in delta_aicc rows.",
+    "Q3_residualization": "On the 12-anchor extended set, Pearson rho(RQS, residual_cap_only)=0.225 (p=0.466) vs Pearson rho(log N, residual_cap_only)=0.311 (p=0.301). Adding RQS on top of capability reduces RSS by 4.0% (n=12 anchors).",
+    "Q4_cross_pillar": "On the iter127 n=20 (G, T) cell grid, richness proxy (1 - zvf_pred) correlates with acc residual at Pearson -0.569 (p=0.029), Spearman -0.533."
+  },
+  "recommendation": {
+    "verdict": "GO",
+    "rationale": "The Eureka 'reward-design quality as exogenous covariate' mapping imports cleanly onto Pillar 1: RQS is extracted from existing traces with no extra run cost, AICc comparison shows whether RQS adds predictive power on top of capability, and the 12-anchor residualization tests whether RQS subsumes the residual of capability alone. If Pearson rho(RQS, residual_cap_only) > |rho(log N, residual_cap_only)| it licenses a 1-paragraph update to section scaling_laws.tex plus a 4-panel figure."
+  }
+}

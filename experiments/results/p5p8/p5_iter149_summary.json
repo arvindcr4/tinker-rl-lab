@@ -1,0 +1,124 @@
+{
+  "n_cite_keys_unique": 42,
+  "n_total_uses": 103,
+  "n_entries_in_bib": 42,
+  "n_fully_formed": 39,
+  "family_stats": [
+    {
+      "family": "BASE",
+      "n_keys": 4,
+      "n_fully_formed": 4,
+      "pct_fully_formed": 100.0,
+      "ci_lo_pct": 100.0,
+      "ci_hi_pct": 100.0,
+      "in_bib": 4,
+      "n_total_uses": 10,
+      "n_doi_missing": 0,
+      "n_arxiv_missing": 4,
+      "n_venue_missing": 0,
+      "n_vp_missing": 0
+    },
+    {
+      "family": "STAT",
+      "n_keys": 10,
+      "n_fully_formed": 10,
+      "pct_fully_formed": 100.0,
+      "ci_lo_pct": 100.0,
+      "ci_hi_pct": 100.0,
+      "in_bib": 10,
+      "n_total_uses": 32,
+      "n_doi_missing": 1,
+      "n_arxiv_missing": 3,
+      "n_venue_missing": 0,
+      "n_vp_missing": 6
+    },
+    {
+      "family": "INFRA",
+      "n_keys": 10,
+      "n_fully_formed": 7,
+      "pct_fully_formed": 70.0,
+      "ci_lo_pct": 40.0,
+      "ci_hi_pct": 100.0,
+      "in_bib": 10,
+      "n_total_uses": 18,
+      "n_doi_missing": 4,
+      "n_arxiv_missing": 4,
+      "n_venue_missing": 3,
+      "n_vp_missing": 10
+    },
+    {
+      "family": "RL-ALG",
+      "n_keys": 18,
+      "n_fully_formed": 18,
+      "pct_fully_formed": 100.0,
+      "ci_lo_pct": 100.0,
+      "ci_hi_pct": 100.0,
+      "in_bib": 18,
+      "n_total_uses": 43,
+      "n_doi_missing": 5,
+      "n_arxiv_missing": 0,
+      "n_venue_missing": 2,
+      "n_vp_missing": 17
+    }
+  ],
+  "field_gaps": [
+    {
+      "field": "has_year",
+      "n_fail": 0,
+      "n_total": 42,
+      "pct_fail": 0.0,
+      "ci_lo_pct": 0.0,
+      "ci_hi_pct": 0.0
+    },
+    {
+      "field": "has_author",
+      "n_fail": 0,
+      "n_total": 42,
+      "pct_fail": 0.0,
+      "ci_lo_pct": 0.0,
+      "ci_hi_pct": 0.0
+    },
+    {
+      "field": "has_title",
+      "n_fail": 0,
+      "n_total": 42,
+      "pct_fail": 0.0,
+      "ci_lo_pct": 0.0,
+      "ci_hi_pct": 0.0
+    },
+    {
+      "field": "has_venue",
+      "n_fail": 5,
+      "n_total": 42,
+      "pct_fail": 11.9,
+      "ci_lo_pct": 4.76,
+      "ci_hi_pct": 23.81
+    },
+    {
+      "field": "has_doi",
+      "n_fail": 10,
+      "n_total": 42,
+      "pct_fail": 23.81,
+      "ci_lo_pct": 11.9,
+      "ci_hi_pct": 38.1
+    },
+    {
+      "field": "has_arxiv",
+      "n_fail": 11,
+      "n_total": 42,
+      "pct_fail": 26.19,
+      "ci_lo_pct": 14.29,
+      "ci_hi_pct": 40.48
+    },
+    {
+      "field": "has_volpages",
+      "n_fail": 33,
+      "n_total": 42,
+      "pct_fail": 78.57,
+      "ci_lo_pct": 66.67,
+      "ci_hi_pct": 90.48
+    }
+  ],
+  "iter": 149,
+  "pillar": "P5"
+}

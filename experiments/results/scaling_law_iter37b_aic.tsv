@@ -1,0 +1,11 @@
+model	params_B	arch	r_var	best_aic_model	second_aic_model	delta_aic_best_second	delta_aic_best_worst	w_saturation	w_michaelis_menten	w_hill_n2	w_power_law	w_linear
+Kimi-K2-Thinking	1000.0	moe	0.0291	E_linear	C_hill_n2	65.9338	68.0515	0.0	0.0	0.0	0.0	1.0
+DeepSeek-V3.1	685.0	moe	0.0186	E_linear	A_saturation_exp	9.2988	9.8573	0.0092	0.0089	0.0092	0.007	0.9657
+Nemotron-120B	120.0	dense	0.06	C_hill_n2	E_linear	1.7788	23.0517	0.0031	0.0018	0.7053	0.0	0.2898
+Qwen3-32B	32.0	dense	0.0078	E_linear	C_hill_n2	188.4084	188.9121	0.0	0.0	0.0	0.0	1.0
+Qwen3-30B-MoE	30.0	moe	0.0288	A_saturation_exp	D_power_law	0.2009	0.5001	0.2312	0.18	0.194	0.2091	0.1857
+Qwen3.5-27B	27.0	dense	0.1015	E_linear	C_hill_n2	100.4035	100.6739	0.0	0.0	0.0	0.0	1.0
+gpt-oss-20B	20.0	moe	0.0372	E_linear	B_michaelis_menten	2.1321	7.0526	0.0199	0.2326	0.041	0.031	0.6755
+Qwen3-8B	8.0	dense	0.0288	B_michaelis_menten	D_power_law	0.0634	2.2164	0.1076	0.3258	0.111	0.3157	0.1399
+Llama-3.1-8B-Instruct	8.0	dense	0.0267	E_linear	C_hill_n2	54.007	60.1767	0.0	0.0	0.0	0.0	1.0
+Qwen3.5-4B	4.0	dense	0.0463	E_linear	C_hill_n2	0.4499	7.6664	0.1269	0.2459	0.2752	0.0075	0.3446

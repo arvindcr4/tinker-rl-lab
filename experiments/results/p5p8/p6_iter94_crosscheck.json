@@ -1,0 +1,11 @@
+{
+  "stale_audit_path": "registry/measured_block_audit.json",
+  "discrepancies": [
+    {
+      "entry": "delta_drgrpo",
+      "stale_audit_says_measured_count": 0,
+      "validator_says_measured_n": 3,
+      "interpretation": "audit script is STALE; entry now has measured block"
+    }
+  ]
+}

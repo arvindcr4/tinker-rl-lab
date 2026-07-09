@@ -1,0 +1,16 @@
+\begin{figure}[h]\centering
+\begin{tikzpicture}
+\begin{axis}[width=14cm,height=5.2cm,ybar,bar width=3pt,
+  xlabel={transformer layer index (0--27)},ylabel={mean LoRA grad-norm},
+  xmin=-1,xmax=28,ymin=0,ymax=68,enlarge x limits=0.02,
+  xtick={0,4,8,12,16,20,24,27},tick label style={font=\footnotesize},
+  label style={font=\footnotesize}]
+\addplot[fill=violet!55,draw=violet!70] coordinates {
+(0,63.03)(1,9.99)(2,6.65)(3,6.45)(4,6.27)(5,8.66)(6,6.64)(7,6.98)(8,8.36)(9,7.17)
+(10,6.75)(11,8.22)(12,8.58)(13,10.47)(14,12.81)(15,7.50)(16,9.37)(17,12.35)(18,14.38)
+(19,17.69)(20,7.88)(21,6.12)(22,15.26)(23,11.36)(24,9.88)(25,9.28)(26,4.79)(27,5.64)};
+\draw[good,thick,dashed] (axis cs:-1,9.7)--(axis cs:28,9.7) node[right,font=\scriptsize,good!60!black]{mean};
+\end{axis}
+\end{tikzpicture}
+\caption{P1 white-box (Colab L4, real data). Layer 0 dominates adaptation; a secondary mid--late band (layers 17--23) is active. Top 25\% of layers carry 47.6\% of gradient (moderate concentration --- which \emph{holds} at 3B, 0.39). At this toy scale the step-1 top-$k$ matched the final top-$k$ (overlap $=1.0$), but a scaled 3B/2-seed re-test drops this to $0.11$ (${\approx}$chance): predictability does \emph{not} survive scaling.}
+\end{figure}

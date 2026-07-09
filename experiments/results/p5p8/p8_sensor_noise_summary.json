@@ -1,0 +1,150 @@
+{
+  "info_gain_required": {
+    "baseline": {
+      "auc_24_clean": 0.9991
+    },
+    "sweep": [
+      {
+        "auc_25": 0.9991,
+        "ci_excludes_zero": "no",
+        "ci_hi": 0.0003,
+        "ci_lo": -0.0003,
+        "delta_auc_vs_24clean": 0.0,
+        "strength": 0.0
+      },
+      {
+        "auc_25": 1.0,
+        "ci_excludes_zero": "yes",
+        "ci_hi": 0.0015,
+        "ci_lo": 0.0005,
+        "delta_auc_vs_24clean": 0.0009,
+        "strength": 0.05
+      },
+      {
+        "auc_25": 1.0,
+        "ci_excludes_zero": "yes",
+        "ci_hi": 0.0015,
+        "ci_lo": 0.0005,
+        "delta_auc_vs_24clean": 0.0009,
+        "strength": 0.1
+      },
+      {
+        "auc_25": 1.0,
+        "ci_excludes_zero": "yes",
+        "ci_hi": 0.0015,
+        "ci_lo": 0.0005,
+        "delta_auc_vs_24clean": 0.0009,
+        "strength": 0.2
+      },
+      {
+        "auc_25": 1.0,
+        "ci_excludes_zero": "yes",
+        "ci_hi": 0.0015,
+        "ci_lo": 0.0005,
+        "delta_auc_vs_24clean": 0.0009,
+        "strength": 0.4
+      },
+      {
+        "auc_25": 1.0,
+        "ci_excludes_zero": "yes",
+        "ci_hi": 0.0015,
+        "ci_lo": 0.0005,
+        "delta_auc_vs_24clean": 0.0009,
+        "strength": 0.8
+      },
+      {
+        "auc_25": 1.0,
+        "ci_excludes_zero": "yes",
+        "ci_hi": 0.0015,
+        "ci_lo": 0.0005,
+        "delta_auc_vs_24clean": 0.0009,
+        "strength": 1.5
+      },
+      {
+        "auc_25": 1.0,
+        "ci_excludes_zero": "yes",
+        "ci_hi": 0.0015,
+        "ci_lo": 0.0005,
+        "delta_auc_vs_24clean": 0.0009,
+        "strength": 3.0
+      }
+    ]
+  },
+  "n_test": 10000,
+  "n_train": 50000,
+  "noise_budget": {
+    "baseline": {
+      "auc_20": 0.9988,
+      "auc_24_clean": 0.9991
+    },
+    "sweep": [
+      {
+        "auc_24_noisy": 0.9981,
+        "ci_excludes_zero": "yes",
+        "ci_hi": -0.0003,
+        "ci_lo": -0.0018,
+        "delta_auc_vs_clean": -0.001,
+        "sigma_mult": 0.05
+      },
+      {
+        "auc_24_noisy": 0.9969,
+        "ci_excludes_zero": "yes",
+        "ci_hi": -0.0009,
+        "ci_lo": -0.0039,
+        "delta_auc_vs_clean": -0.0022,
+        "sigma_mult": 0.1
+      },
+      {
+        "auc_24_noisy": 0.9963,
+        "ci_excludes_zero": "yes",
+        "ci_hi": -0.0015,
+        "ci_lo": -0.0045,
+        "delta_auc_vs_clean": -0.0028,
+        "sigma_mult": 0.25
+      },
+      {
+        "auc_24_noisy": 0.996,
+        "ci_excludes_zero": "yes",
+        "ci_hi": -0.0017,
+        "ci_lo": -0.0046,
+        "delta_auc_vs_clean": -0.0031,
+        "sigma_mult": 0.5
+      },
+      {
+        "auc_24_noisy": 0.9914,
+        "ci_excludes_zero": "yes",
+        "ci_hi": -0.0037,
+        "ci_lo": -0.0127,
+        "delta_auc_vs_clean": -0.0077,
+        "sigma_mult": 0.75
+      },
+      {
+        "auc_24_noisy": 0.9917,
+        "ci_excludes_zero": "yes",
+        "ci_hi": -0.0035,
+        "ci_lo": -0.012,
+        "delta_auc_vs_clean": -0.0073,
+        "sigma_mult": 1.0
+      },
+      {
+        "auc_24_noisy": 0.9922,
+        "ci_excludes_zero": "yes",
+        "ci_hi": -0.0036,
+        "ci_lo": -0.0119,
+        "delta_auc_vs_clean": -0.0069,
+        "sigma_mult": 1.5
+      },
+      {
+        "auc_24_noisy": 0.9921,
+        "ci_excludes_zero": "yes",
+        "ci_hi": -0.0044,
+        "ci_lo": -0.0102,
+        "delta_auc_vs_clean": -0.007,
+        "sigma_mult": 2.0
+      }
+    ]
+  },
+  "note": "Noise budget Q1: how much Gaussian noise can a hypothetical LLM sensor add to the 4 aggregates before the tree's AUC drops measurably? Info gain Q2: what 25th-feature monotone signal strength is needed for the bootstrap CI on AUC(25) - AUC(24_clean) to first exclude zero?",
+  "pos_test": 144,
+  "pos_train": 719
+}

@@ -1,0 +1,116 @@
+% ---------------------------------------------------------------------------
+% Pillar 2: Zero-Variance Fraction diagnostic -- Iter 90
+% Recovery-Asymmetry: classify each ZVF-alarm episode as TRANSIENT
+% (recovered within K=5 steps) vs SUSTAINED, and ask whether
+% post-recovery heldout-acc matches post-sustained heldout-acc.
+% Materialised from scripts/zvf_iter90.py:
+%   experiments/results/zvf_iter90_episodes.tsv       (54 rows)
+%   experiments/results/zvf_iter90_post_episode.tsv   (27 rows)
+%   experiments/results/zvf_iter90_recovery.tsv       (9 rows)
+%   experiments/results/zvf_iter90_summary.tsv       (15 KV pairs)
+%   figures/zvf_iter90_recovery.{pdf,png}
+% ---------------------------------------------------------------------------
+
+\subsection{ZVF Recovery Asymmetry: Transient Alarms Do Not Rescue Accuracy}
+\label{sec:zvf-recovery}
+
+Iter~86 closed the decision-theoretic loop on the ZVF alarm by
+selecting $(\tau=0.6,\, K=5)$ as the optimal cost-vs-savings pair on
+the variance-mitigation pool (\texttt{zvf\_iter86\_optimal\_tau.tsv}).
+That framing implicitly assumed the alarm is a sharp signal:
+\emph{stop-on-alarm} is conservative because alarms lead to collapse
+within $\le 7$ steps with certainty. But the framing leaves a clean
+question for any practitioner who hesitates to stop training:
+\emph{how likely is the alarm itself to recover before the collapse
+arrives?}
+
+Iter~90 answers this. For every variance-mitigation trace, we
+detect contiguous alarm episodes
+$\mathcal{E}_i = \{t : \mathrm{ZVF}_{i,t} > \tau\}$ with
+$\tau=0.5$ fixed to the iter82 hazard threshold. Each episode is
+labelled \emph{transient} if ZVF drops back to $\le 0.5$ within
+$K=5$ steps of the alarm's last above-threshold sample (matching
+iter86's $k_{\text{persist}}$), and \emph{sustained} otherwise.
+
+\paragraph{Recovery rates are bimodal across methods.}
+On 45 traces (9 methods $\times$ 5 seeds), we observe 54 alarm
+episodes, of which 21 transient (pooled recovery rate
+$0.389$) and 33 sustained ($0.611$).
+Method-stratified rates
+(\texttt{zvf\_iter90\_recovery.tsv}) split sharply:
+%
+\begin{itemize}\itemsep1pt
+  \item \emph{Zero-recovery methods} (rate=0):
+        \textsc{grpo} (5/5 sustained).
+        \textsc{scafgrpo} and \textsc{es} never alarm at all
+        (their ZVF stays $\le 0.5$ across the 123-step trajectory),
+        so the recovery-rate denominator is vacuously zero.
+  \item \emph{Low-recovery methods} (rate $\in [0.17, 0.38]$):
+        \textsc{aero} 0.167,
+        \textsc{cppo} 0.286, \textsc{ngrpo} 0.286,
+        \textsc{mcgrpo} 0.375.
+  \item \emph{High-recovery methods} (rate $\ge 0.60$):
+        \textsc{areal} 0.600, \textsc{gift} 0.636.
+\end{itemize}
+%
+Vanilla \textsc{grpo}, which iter82 already flagged as having the
+highest in-alarm hazard ratio ($\mathrm{HR}=143$), now sharpens to
+\emph{zero recovery}: any ZVF alarm in pure GRPO is permanent within
+the variance-mitigation budget. Conversely \textsc{gift} recovers in
+two of three alarms.
+
+\paragraph{Transient alarms do \emph{not} rescue accuracy.}
+The sharper finding is what recovery does \emph{not} buy. Comparing
+the post-episode $15$-step trailing heldout-acc
+(\texttt{zvf\_iter90\_post\_episode.tsv}):
+%
+\begin{equation*}
+  \begin{array}{lccc}
+    \text{method} & \overline{ha}_{\text{recovered}} &
+    \overline{ha}_{\text{sustained}} & \Delta \\[2pt]
+    \textsc{aero}  & 0.389 & 0.405 & -0.017 \\
+    \textsc{cppo}  & 0.367 & 0.396 & -0.029 \\
+    \textsc{ngrpo} & 0.360 & 0.393 & -0.033 \\
+    \textsc{mcgrpo}& 0.395 & 0.403 & -0.007 \\
+    \textsc{gift}  & 0.405 & 0.409 & -0.004 \\
+    \textsc{areal} & 0.406 & 0.406 & \phantom{-}0.000 \\
+  \end{array}
+\end{equation*}
+%
+Across every method, the post-recovery heldout-acc is at most
+$\Delta=0.033$ \emph{lower} than the post-sustained heldout-acc, and
+two methods (\textsc{areal}, \textsc{gift}) have $\Delta < 0.01$.
+\emph{ZVF recovery and accuracy recovery are decoupled.} Even though
+the ZVF signal returns to the safe band, the heldout accuracy does
+not rebound; it converges to the same plateau as the sustained
+trajectory.
+%
+\paragraph{False-friend correction to iter86.}
+Iter~86 recommends \emph{stop-on-alarm} at $\tau=0.6$ on the
+implicit assumption that \emph{silent ZVF = healthy gradient}.
+Iter~90 falsifies the dual assumption: \emph{recovered ZVF
+= restored gradient}. A trainer that waits $K=5$ post-alarm steps
+to see if ZVF drops back, hoping to resume training only when the
+alarm is transient, would resume into the same accuracy plateau that
+an immediate stop would have avoided. The only methods where
+transient-vs-sustained is meaningfully distinguishable on accuracy
+are \textsc{cppo} and \textsc{ngrpo}, and even there the gap is
+only $\approx 3$ percentage points.
+
+\paragraph{Method-level prediction.}
+GRPO's $0\%$ recovery combined with iter82's $\mathrm{HR}=143$
+gives the cleanest operational rule: any GRPO alarm within the
+variance-mitigation budget is both necessary ($p_{\text{cov}}=1.0$)
+\emph{and} sufficient ($p_{\text{recov|alarm}}=0.0$) for collapse,
+so \emph{GRPO alarms are decision-complete}. Methods in the
+high-recovery tier (\textsc{gift}, \textsc{areal}) have lower
+in-alarm hazard than GRPO even when the alarm fires, so stopping
+on every alarm there is the costlier half of iter86's pairing.
+
+\paragraph{Deliverables.} \texttt{scripts/zvf\_iter90.py} (~190 LOC,
+stdlib $\cup$ matplotlib); \texttt{zvf\_iter90\_episodes.tsv}
+(54 alarm episodes with start/end/length/recovery label);
+\texttt{zvf\_iter90\_post\_episode.tsv} (27 (method, post-cat) rows);
+\texttt{zvf\_iter90\_recovery.tsv} (9 methods);
+\texttt{zvf\_iter90\_summary.tsv} / \texttt{.json};
+\texttt{figures/zvf\_iter90\_recovery.pdf} ($\sim 5$~KB).

@@ -1,0 +1,5 @@
+headline	delta_G32_G64	non_positive	pluribus_saturation
+T=1e+06: acc(G=32)=0.420, acc(G=64)=0.350, delta=-0.070  [OK]	-0.0700	yes	predicted
+T=4e+06: acc(G=32)=0.660, acc(G=64)=0.580, delta=-0.080  [OK]	-0.0800	yes	predicted
+T=2e+07: acc(G=32)=0.840, acc(G=64)=0.800, delta=-0.040  [OK]	-0.0400	yes	predicted
+T=6e+07: acc(G=32)=0.880, acc(G=64)=0.870, delta=-0.010  [OK]	-0.0100	yes	predicted

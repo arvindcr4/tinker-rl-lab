@@ -1,0 +1,2 @@
+n_G	empirical_slope_per_decade_G	ci95_lo	ci95_hi	R_squared	p_value	theoretical_slope_sqrt_G	slope_in_ci_of_theory	at_G_pred_vs_emp	interpretation
+4	0.366	0.148	0.583	0.844	0.0811	0.5	True	G=4: pred=0.060, emp=0.072; G=8: pred=0.094, emp=0.102; G=16: pred=0.087, emp=0.144	slope=+0.366 is 0.27 sigma below the GRPO/Iterative-RPO theoretical +0.500; consistent with theory at p=0.30 tolerance. Empirically doubling G buys 2^(0.366)=29% more SNR per doubling.

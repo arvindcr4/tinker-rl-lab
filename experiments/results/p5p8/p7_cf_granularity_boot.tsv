@@ -1,0 +1,5 @@
+method	metric	obs_mean	boot_ci_lo	boot_ci_hi	ci_excludes_zero
+aero	per_prompt_minus_oracle_rollouts	16.55	7.55	25.1	yes
+areal	per_prompt_minus_oracle_rollouts	20.6	10.7	30.95	yes
+gift	per_prompt_minus_oracle_rollouts	2.15	-9.55	13.4	no
+grpo	per_prompt_minus_oracle_rollouts	16.55	7.1	26.0	yes

@@ -1,0 +1,5 @@
+budget_tokens	acc_G4	acc_G32	retention_G4_over_G32	delta_boot	delta_boot_ci_low	delta_boot_ci_high	p_le_zero	rejects_wu_at_001	R_compute_at_acc070	R_C_late_ratio_G32_over_G4	fails_wu_combined
+1000000	0.41	0.42	0.9762	0.0099	-0.0327	0.0518	0.3229	False	7.873	4.0	False
+4000000	0.55	0.66	0.8333	0.1101	0.067	0.1529	0.0	True	7.873	4.0	True
+16000000	0.63	0.84	0.75	0.2095	0.1667	0.252	0.0	True	7.873	4.0	True
+64000000	0.64	0.88	0.7273	0.2398	0.1973	0.2824	0.0	True	7.873	4.0	True

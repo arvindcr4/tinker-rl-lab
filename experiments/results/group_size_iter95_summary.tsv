@@ -1,0 +1,6 @@
+metric	value	finding
+Rinf_ceiling_ratio	0.7230	Asymptotic G=4/G=32 retention floor = ceiling ratio a4/a32 = 0.723 [0.693,0.755]; Wu's 0.976 lies OUTSIDE this CI -> falsified as universal.
+ceiling_gap_G4_G32_pp	24.7	Irreducible accuracy cost of G=4 vs G=32 on GSM8K = 24.7pp (a4=0.646 vs a32=0.893).
+ceiling_argmax_G	32	Highest ceiling at G=32 (a=0.893); ceiling is NON-monotone in G (turnover at G=64: True, a64=0.883<a32=0.893).
+reconciliation	1.010_vs_0.723	Near-ceiling arithmetic: R_inf=1.010 (Wu HOLDS). Headroom GSM8K: R_inf=0.723 (Wu BREAKS). Wu-equivalence <=> both G ceiling-saturated on the task.
+wu_illusion_budget	1.0	At T=1M observed retention=0.976 (matches Wu) but this is pre-ceiling; decays to floor 0.723 by T=64M. Wu-equivalence is a low-compute measurement artifact.

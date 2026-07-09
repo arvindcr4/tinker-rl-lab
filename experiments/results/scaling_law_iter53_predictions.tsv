@@ -1,0 +1,5 @@
+prediction	value	pass	note
+P1_Kendall_tau_b_gt_0p50	0.1069	False	rank-preservation under LOO two-param OLS
+P2_spearman_peak_frac_resid_lt_-0p30	-0.125	False	late peak ⇒ negative LOO residual; p=0.7001
+P3_drop_collapse_log10_P_abs_rho_smaller	full=0.3603, drop_coll=0.3593	False	Critic-degeneracy: compute axis explained R_max through collapse anchors
+P4_spearman_peak_step_resid_lt_-0p20	-0.2501	True	absolute peak_step vs residual; p=0.4238

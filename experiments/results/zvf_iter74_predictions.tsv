@@ -1,0 +1,6 @@
+# Pillar 2 iter74 ZVF Markov-chain dynamics
+# Source: scripts/zvf_iter74.py
+id	claim	rationale	value	interpretation
+P1	absorbing_H(grpo) > absorbing_H(aero)	AERO is designed to inject contrast; GRPO has the canonical 'stuck at H' failure mode	True	if True: confirms chain recovers the textbook design intent of AERO
+P2	absorbing_H(bfcl_seed0_stuck) > absorbing_H(bfcl_seed1_working)	The 0%-reward seed 0 trace is stuck in H; the working seed 1 trace visits L/M more	True	if True: confirms H = 'starvation regime' is correctly encoded for tool_use
+P3	absorbing_H > 0.5 distinguishes vanilla GRPO from advanced libraries	Vanilla GRPO has the only trace with absorbing_H > 0.5 in variance_mitigation		check vs library_summary: counts of absorbing_H > 0.5 trace

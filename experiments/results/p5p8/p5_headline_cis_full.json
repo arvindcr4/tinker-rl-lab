@@ -1,0 +1,43 @@
+{
+  "n_bootstrap": 10000,
+  "alpha": 0.05,
+  "rows": [
+    {
+      "claim": "H4",
+      "metric": "eta2_algorithm_zvf",
+      "n_groups": 4,
+      "n_per_group": 40,
+      "point": 0.0454,
+      "ci_lo": 0.0014,
+      "ci_hi": 0.0585,
+      "verdict": "DECISIVE",
+      "note": "stratified bootstrap within method groups, n=10000"
+    },
+    {
+      "claim": "H4",
+      "metric": "eta2_algorithm_reward_mean",
+      "n_groups": 4,
+      "n_per_group": 40,
+      "point": 0.0075,
+      "ci_lo": 0.0014,
+      "ci_hi": 0.0577,
+      "verdict": "DECISIVE",
+      "note": "stratified bootstrap within method groups, n=10000"
+    },
+    {
+      "claim": "H5",
+      "metric": "spread_last10_reward",
+      "n_groups": 4,
+      "n_per_group": 10,
+      "point": 0.0359,
+      "ci_lo": 0.0164,
+      "ci_hi": 0.0984,
+      "verdict": "TINY",
+      "note": "spread = max(arm_mean)-min(arm_mean) over 4 method arms, last-10 step window"
+    }
+  ],
+  "interpretation": [
+    "H4: algorithm-axis eta^2 on ZVF and on reward_mean with bootstrap CIs.",
+    "H5: spread of last-10 mean reward across the 4 method arms with bootstrap CI."
+  ]
+}

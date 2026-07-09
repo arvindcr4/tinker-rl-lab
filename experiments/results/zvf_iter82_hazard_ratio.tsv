@@ -1,0 +1,14 @@
+# Pillar 2 iter82 ZVF hazard / survival reframing
+# Source: scripts/zvf_iter82.py
+# Hazard: h(t) = P(collapse at t+1 | alive at t)
+# Alarm threshold: ZVF > 0.5
+method	n_alarm_obs	n_noalarm_obs	failures_preceded_by_alarm	failures_not_preceded_by_alarm	h_alarm	h_noalarm	h_noalarm_smoothed	hazard_ratio	log_hr	alarm_coverage_recall	false_alarm_rate	precision	f1
+aero	52	384	5	0	0.0961538	0	0.0012987	74.0385	4.30458	1	0.903846	0.0961538	0.175439
+areal	15	490	0	0	0	0	0.00101833	0	nan	0	1	0	0
+cppo	48	339	5	0	0.104167	0	0.00147059	70.8333	4.26033	1	0.895833	0.104167	0.188679
+es	0	505	0	0	0	0	0.000988142	0	nan	0	1	0	0
+gift	15	490	0	0	0	0	0.00101833	0	nan	0	1	0	0
+grpo	50	714	5	0	0.1	0	0.000699301	143	4.96284	1	0.9	0.1	0.181818
+mcgrpo	53	450	5	0	0.0943396	0	0.00110865	85.0943	4.44376	1	0.90566	0.0943396	0.172414
+ngrpo	51	330	5	0	0.0980392	0	0.00151057	64.902	4.17288	1	0.901961	0.0980392	0.178571
+scafgrpo	0	495	0	0	0	0	0.00100806	0	nan	0	1	0	0

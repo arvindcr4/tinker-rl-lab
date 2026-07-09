@@ -1,0 +1,21 @@
+# Pillar 2 iter86 decision-theoretic ZVF alarm calibration
+# Source: scripts/zvf_iter86.py
+key	value
+n_pool_traces	45
+n_oop_traces	8
+n_pool_failed_actual	25
+k_persist	5
+tau_optimal_at_C10	0.5
+n_correct_stop_at_optimal	25
+n_false_stop_at_optimal	1
+n_missed_at_optimal	0
+n_none_at_optimal	19
+recall_at_optimal	1.0
+precision_at_optimal	0.9615384615384616
+f1_at_optimal	0.9803921568627451
+compute_saved_steps_at_optimal	1259
+compute_saved_frac_at_optimal	0.2272563176895307
+compute_budget_steps_pool	5540
+median_lead_time_steps	10
+min_lead_time_steps	7
+max_lead_time_steps	12

@@ -1,0 +1,5 @@
+method	n_prompts	n_steps_fired_c1	n_steps_fired_anti	fire_step_rate_c1	fire_step_rate_anti	n_fire_prompts_c1	n_fire_prompts_anti	mean_dH_overall	mean_dH_on_fires_c1	mean_dH_on_fires_anti
+grpo	640	40	0	1.0000	0.0000	640	0	0.389875	0.389875	0.000000
+aero	640	40	0	1.0000	0.0000	640	0	0.390062	0.390062	0.000000
+gift	640	40	0	1.0000	0.0000	640	0	0.388164	0.388164	0.000000
+areal	640	40	0	1.0000	0.0000	640	0	0.390345	0.390345	0.000000

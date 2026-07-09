@@ -1,0 +1,4 @@
+corpus	n_units	n_EX	n_IM	n_TS	n_TD	n_NA	n_AB	n_recoverable	n_unrecoverable	pct_recoverable
+mega_20260704	98	7	2	0	4	0	5	13	5	72.2
+n10_seed_expansion	5	2	0	1	0	3	12	3	15	16.7
+n2_reward_tensor_resume	160	2	0	1	4	3	8	7	11	38.9

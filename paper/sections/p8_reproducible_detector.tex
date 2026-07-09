@@ -1,0 +1,80 @@
+% P8 reproducible telemetry detector: independent re-derivation from raw reward tensors
+\subsection{Reproducible re-derivation of the telemetry detector}
+\label{sec:p8-reproducible-detector}
+
+The earlier integrity-detector figure in this paper was reported as a
+prose-level claim (full-telemetry vs.\ reward-only AUROC). This
+subsection replaces that claim with an \emph{independent, end-to-end
+reproducible} re-derivation: a single script
+(\texttt{experiments/openings/p8\_detector.py}) that reads the raw
+per-step reward tensors under
+\texttt{experiments/results/n2\_reward\_tensor\_resume/} and recomputes
+every feature from the underlying \texttt{rewards}, \texttt{lengths},
+and \texttt{advantages} arrays -- no pre-baked scalar field is trusted.
+The task is to separate genuine RL (\texttt{grpo}) from three surrogate
+methods (\texttt{aero}, \texttt{areal}, \texttt{gift}); positive
+$=$ surrogate. Each of the $4$ methods contributes $40$ training steps,
+giving $N{=}160$ rows with a $3{:}1$ class imbalance ($120$ surrogate
+positives, $40$ genuine negatives). The classifier is a
+\texttt{SimpleImputer(median)}$\to$\texttt{StandardScaler}$\to$%
+\texttt{LogisticRegression} pipeline scored by out-of-fold predictions
+under $5$-fold stratified cross-validation.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Reproducible integrity-detector AUROC on the $N{=}160$
+reward-tensor rows ($120$ surrogate / $40$ genuine). ``full telemetry''
+uses all eleven honestly-recomputed features; ``reward-only'' uses the
+three reward-level features a naive auditor would inspect. AUROC is the
+out-of-fold score under $5$-fold stratified CV; the seed columns
+summarise stability across CV seeds $\{0,1,2,3,4\}$.}
+\label{tab:p8-reproducible-detector}
+\begin{tabular}{lccc}
+\toprule
+Feature set & AUROC (seed $0$) & AUROC (mean $\pm$ sd, $5$ seeds) & \# features \\
+\midrule
+Full telemetry & $0.826$ & $0.838 \pm 0.010$ & $11$ \\
+Reward-only    & $0.427$ & $0.426 \pm 0.027$ & $3$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\tableref{tab:p8-reproducible-detector} confirms the paper's qualitative
+claim on independently recomputed data: \textbf{full telemetry
+($0.838 \pm 0.010$) roughly doubles the reward-only baseline
+($0.426 \pm 0.027$)}, and the reward-only classifier is at or below
+chance -- a naive auditor who inspects only reward levels cannot
+distinguish surrogate from genuine training. The full feature set is
+\texttt{reward\_mean}, \texttt{reward\_std}, \texttt{frac\_all\_zero},
+\texttt{frac\_all\_one}, \texttt{zvf} (fraction of prompt-groups with
+zero reward variance), \texttt{mean\_len}, \texttt{cv\_len},
+\texttt{len\_reward\_corr}, \texttt{adv\_abs\_mean}, \texttt{adv\_std},
+and \texttt{lag1\_autocorr} (lag-$1$ autocorrelation of the per-method
+step-level \texttt{reward\_mean} series); the reward-only set is
+\texttt{reward\_mean}, \texttt{frac\_all\_zero}, \texttt{frac\_all\_one}.
+
+\paragraph{Honest scope.} This re-derivation is a confirmation, not a
+verbatim reproduction, and four caveats bound it. (i) It uses a
+\emph{richer} feature set than the paper's earlier figure: the group
+-variance, length, and advantage-structure features carry most of the
+lift, so the AUROC here is not directly comparable to the earlier
+prose number. (ii) The training-side \texttt{loss} scalar mentioned in
+the earlier text is \emph{omitted}: it is an optimizer-side quantity
+that is not reconstructable from a single step's reward/length tensor,
+so it is dropped to keep every feature self-derived and auditable.
+(iii) The sample is small and imbalanced ($N{=}160$, $3{:}1$), and the
+source tensors are from a single seed (seed $0$), so the absolute AUROC
+should be read as a point estimate with the CV-seed spread as its only
+uncertainty. (iv) The tensors do not carry base-model or task
+provenance, so the detector cannot condition on -- or be confounded by
+-- which model or task generated a step; closing that provenance gap is
+exactly what the P5 stack-conditioning program addresses.
+
+\paragraph{Reproduction.} \texttt{python3
+experiments/openings/p8\_detector.py} regenerates
+\tableref{tab:p8-reproducible-detector} in under a minute on CPU and
+writes the full numeric summary (per-seed AUROC, feature lists, row
+counts) to
+\texttt{experiments/results/p8\_openings/detector\_reproduced.json}. No
+new Tinker API calls were used.

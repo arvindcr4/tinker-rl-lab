@@ -1,0 +1,7 @@
+section	metric	value	ci95_low	ci95_high	notes
+H1	v1_total_H_bits	11.4127	10.3132	10.7445	bootstrap B=2000 seed=20260705
+H1	group_size_schedule_H_bits	2.2825	2.2149	2.3170	bootstrap B=2000 seed=20260705
+H1	heldout_split_H_bits	1.5401	1.4600	1.5821	bootstrap B=2000 seed=20260705
+H1	decontamination_notes_H_bits	0.9243	0.8193	0.9892	bootstrap B=2000 seed=20260705
+H2	v2_total_H_bits_with_temperature	11.5370	11.3084	11.7397	v1 + temperature_schedule uplift only
+H1	v2_total_H_bits_with_hyperparams	10.5418	10.3132	10.7445	v1 + 4 hyperparameter candidates (each uplift=0)

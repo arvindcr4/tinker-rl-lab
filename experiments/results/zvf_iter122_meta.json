@@ -1,0 +1,13 @@
+{
+  "iter": 122,
+  "pillar": "P2-ZVF",
+  "n_pooled_cells": 23,
+  "n_rows": 12,
+  "n_pairs_total": 5,
+  "n_per_seed": 5,
+  "n_bin_rows": 1,
+  "mean_gap_zvf": 0.260543,
+  "ci_lo": 0.259334,
+  "ci_hi": 0.2618404,
+  "sd_gap_zvf": 0.001454440373477008
+}

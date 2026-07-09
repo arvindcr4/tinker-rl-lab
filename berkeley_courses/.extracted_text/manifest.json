@@ -1,0 +1,299 @@
+[
+  {
+    "course": "f24",
+    "file": "102824-yuandongtian.pdf",
+    "rel": "f24/slides/102824-yuandongtian.pdf",
+    "chars": 12762,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f24__102824-yuandongtian.txt"
+  },
+  {
+    "course": "f24",
+    "file": "Burak_slides.pdf",
+    "rel": "f24/slides/Burak_slides.pdf",
+    "chars": 18304,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f24__Burak_slides.txt"
+  },
+  {
+    "course": "f24",
+    "file": "MKA.pdf",
+    "rel": "f24/slides/MKA.pdf",
+    "chars": 14684,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f24__MKA.txt"
+  },
+  {
+    "course": "f24",
+    "file": "agentworkflows.pdf",
+    "rel": "f24/slides/agentworkflows.pdf",
+    "chars": 30954,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f24__agentworkflows.txt"
+  },
+  {
+    "course": "f24",
+    "file": "antrsp.pdf",
+    "rel": "f24/slides/antrsp.pdf",
+    "chars": 5152,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f24__antrsp.txt"
+  },
+  {
+    "course": "f24",
+    "file": "autogen.pdf",
+    "rel": "f24/slides/autogen.pdf",
+    "chars": 6085,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f24__autogen.txt"
+  },
+  {
+    "course": "f24",
+    "file": "dawn-agent-safety.pdf",
+    "rel": "f24/slides/dawn-agent-safety.pdf",
+    "chars": 40373,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f24__dawn-agent-safety.txt"
+  },
+  {
+    "course": "f24",
+    "file": "dspy_lec.pdf",
+    "rel": "f24/slides/dspy_lec.pdf",
+    "chars": 29042,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f24__dspy_lec.txt"
+  },
+  {
+    "course": "f24",
+    "file": "jimfangr00t.pdf",
+    "rel": "f24/slides/jimfangr00t.pdf",
+    "chars": 6176,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f24__jimfangr00t.txt"
+  },
+  {
+    "course": "f24",
+    "file": "neubig24softwareagents.pdf",
+    "rel": "f24/slides/neubig24softwareagents.pdf",
+    "chars": 9435,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f24__neubig24softwareagents.txt"
+  },
+  {
+    "course": "f24",
+    "file": "percyliang.pdf",
+    "rel": "f24/slides/percyliang.pdf",
+    "chars": 9107,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f24__percyliang.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "Code_Agents_and_AI_for_Vulnerability_Detection.pdf",
+    "rel": "sp25/slides/Code_Agents_and_AI_for_Vulnerability_Detection.pdf",
+    "chars": 17513,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__Code_Agents_and_AI_for_Vulnerability_Detection.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "Jason-Weston-Reasoning-Alignment-Berkeley-Talk.pdf",
+    "rel": "sp25/slides/Jason-Weston-Reasoning-Alignment-Berkeley-Talk.pdf",
+    "chars": 22874,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__Jason-Weston-Reasoning-Alignment-Berkeley-Talk.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "Multimodal_Agent_caiming.pdf",
+    "rel": "sp25/slides/Multimodal_Agent_caiming.pdf",
+    "chars": 19419,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__Multimodal_Agent_caiming.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "OLMo-Tulu-Reasoning-Hanna.pdf",
+    "rel": "sp25/slides/OLMo-Tulu-Reasoning-Hanna.pdf",
+    "chars": 25785,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__OLMo-Tulu-Reasoning-Hanna.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "alphaproof.pdf",
+    "rel": "sp25/slides/alphaproof.pdf",
+    "chars": 17176,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__alphaproof.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "dawn-agentic-ai.pdf",
+    "rel": "sp25/slides/dawn-agentic-ai.pdf",
+    "chars": 34420,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__dawn-agentic-ai.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "inference_time_techniques_lecture_sp25.pdf",
+    "rel": "sp25/slides/inference_time_techniques_lecture_sp25.pdf",
+    "chars": 25524,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__inference_time_techniques_lecture_sp25.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "language_agents_YuSu_Berkeley.pdf",
+    "rel": "sp25/slides/language_agents_YuSu_Berkeley.pdf",
+    "chars": 23104,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__language_agents_YuSu_Berkeley.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "llm-agents-berkeley-intro-sp25.pdf",
+    "rel": "sp25/slides/llm-agents-berkeley-intro-sp25.pdf",
+    "chars": 3716,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__llm-agents-berkeley-intro-sp25.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "mathverification.pdf",
+    "rel": "sp25/slides/mathverification.pdf",
+    "chars": 31337,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__mathverification.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "ruslan-multimodal.pdf",
+    "rel": "sp25/slides/ruslan-multimodal.pdf",
+    "chars": 33284,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__ruslan-multimodal.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "swarat.pdf",
+    "rel": "sp25/slides/swarat.pdf",
+    "chars": 21755,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__swarat.txt"
+  },
+  {
+    "course": "sp25",
+    "file": "welleck2025_berkeley_bridging.pdf",
+    "rel": "sp25/slides/welleck2025_berkeley_bridging.pdf",
+    "chars": 19433,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/sp25__welleck2025_berkeley_bridging.txt"
+  },
+  {
+    "course": "f25",
+    "file": "AgenticAI_Jiantao_Jiao.pdf",
+    "rel": "f25/slides/AgenticAI_Jiantao_Jiao.pdf",
+    "chars": 14656,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f25__AgenticAI_Jiantao_Jiao.txt"
+  },
+  {
+    "course": "f25",
+    "file": "LLM_Agent_Evaluations_&_Project_Overview.pdf",
+    "rel": "f25/slides/LLM_Agent_Evaluations_&_Project_Overview.pdf",
+    "chars": 27492,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f25__LLM_Agent_Evaluations_&_Project_Overview.txt"
+  },
+  {
+    "course": "f25",
+    "file": "Practical_Lessons_AI_Agents.pdf",
+    "rel": "f25/slides/Practical_Lessons_AI_Agents.pdf",
+    "chars": 5984,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f25__Practical_Lessons_AI_Agents.txt"
+  },
+  {
+    "course": "f25",
+    "file": "PredEval.pdf",
+    "rel": "f25/slides/PredEval.pdf",
+    "chars": 10088,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f25__PredEval.txt"
+  },
+  {
+    "course": "f25",
+    "file": "Yangqing.pdf",
+    "rel": "f25/slides/Yangqing.pdf",
+    "chars": 4810,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f25__Yangqing.txt"
+  },
+  {
+    "course": "f25",
+    "file": "introduction_25.pdf",
+    "rel": "f25/slides/introduction_25.pdf",
+    "chars": 17449,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f25__introduction_25.txt"
+  },
+  {
+    "course": "f25",
+    "file": "lecture1.pdf",
+    "rel": "f25/slides/lecture1.pdf",
+    "chars": 21170,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f25__lecture1.txt"
+  },
+  {
+    "course": "f25",
+    "file": "multiagent_berkeley_2025.pptx.pdf",
+    "rel": "f25/slides/multiagent_berkeley_2025.pptx.pdf",
+    "chars": 9902,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f25__multiagent_berkeley_2025.pptx.txt"
+  },
+  {
+    "course": "f25",
+    "file": "weizhu.pdf",
+    "rel": "f25/slides/weizhu.pdf",
+    "chars": 10539,
+    "quality": "ok",
+    "method": "pymupdf",
+    "txt_file": "berkeley_courses/.extracted_text/f25__weizhu.txt"
+  }
+]

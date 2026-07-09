@@ -1,0 +1,13 @@
+method	scope	controller	n_prompts	sum_ceiling	sum_change	recovery_ratio	recovery_lo	recovery_hi
+grpo	mixed_only	C1_zvf_triage@0.70	179	22.4106	16.4572	0.7343	0.571	0.8892
+grpo	mixed_only	C2_dualformer@0.70	179	22.4106	-25.6753	-1.1457	-1.4046	-0.8915
+grpo	mixed_only	C3_hybrid@0.70+0.20	179	22.4106	14.4647	0.6454	0.4512	0.8215
+aero	mixed_only	C1_zvf_triage@0.70	179	20.4905	12.9986	0.6344	0.465	0.7993
+aero	mixed_only	C2_dualformer@0.70	179	20.4905	-20.2392	-0.9877	-1.2628	-0.7325
+aero	mixed_only	C3_hybrid@0.70+0.20	179	20.4905	12.8268	0.626	0.4566	0.7873
+gift	mixed_only	C1_zvf_triage@0.70	147	17.7491	11.9796	0.6749	0.4879	0.8499
+gift	mixed_only	C2_dualformer@0.70	147	17.7491	-19.239	-1.0839	-1.3826	-0.7975
+gift	mixed_only	C3_hybrid@0.70+0.20	147	17.7491	8.0806	0.4553	0.1988	0.6694
+areal	mixed_only	C1_zvf_triage@0.70	188	23.7031	15.1237	0.638	0.4549	0.8239
+areal	mixed_only	C2_dualformer@0.70	188	23.7031	-23.8888	-1.0078	-1.2983	-0.7304
+areal	mixed_only	C3_hybrid@0.70+0.20	188	23.7031	13.0982	0.5526	0.3634	0.7501

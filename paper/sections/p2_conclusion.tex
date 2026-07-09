@@ -1,0 +1,33 @@
+% Pillar-2 (ZVF) discussion + conclusion
+\section{Discussion and Limitations}
+\label{sec:p2-discussion}
+ZVF earns its place as a descriptive diagnostic of signal starvation, but our
+evidence argues against treating it as a standalone causal or incrementally
+predictive statistic. (Our companion Pillar-7 takes up exactly this question as an
+\emph{interventional} sequel---testing, rather than assuming, whether ZVF-derived
+quantities can be made predictive and used for control; the two papers are
+complementary, descriptive characterization here and falsifiable intervention there,
+not contradictory.) Three limitations are load-bearing. First, ZVF is
+mechanically coupled to reward sparsity, group size, and baseline accuracy, so its
+correlations are partly bookkeeping rather than discovery; multivariate tests
+against reward mean, entropy, and divergence proxies are needed before any causal
+reading. Second, its strong association is with catastrophic \emph{collapse}, an
+easy target, and only weak with the graded held-out outcome that practitioners
+actually care about. Third, as an unsigned existence statistic it aliases mastery
+($p \to 1$) with incapacity ($p \to 0$) and, as the cross-examination shows, can be
+driven to zero by sub-reward jitter (for example a small length penalty), falsely
+reporting a healthy batch. These are reasons to prefer magnitude- and sign-aware
+diagnostics, which we outline but do not yet validate at the $\rho \geq 0.45$ bar
+the cross-examination sets.
+
+\section{Conclusion}
+\label{sec:p2-conclusion}
+The Zero-Variance Fraction is a useful, cheap, mechanistically grounded lens on
+when binary-reward GRPO stops producing within-group signal, and it reliably
+tracks collapse and drifts upward over training. It is not, on our data, a
+standalone predictor of final generalization, and its unsigned form conflates two
+opposite regimes. The constructive path forward is to measure the \emph{magnitude}
+and \emph{sign} of within-group contrast rather than merely its existence, and to
+test such replacements as early-window leading indicators against held-out outcome.
+We release the per-group reward tensors precisely so that these stricter tests can
+be run.

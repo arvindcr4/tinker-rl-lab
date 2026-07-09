@@ -1,0 +1,8 @@
+item_key	item_label	A_axis_score	B_match_rate	B_n_audited	C_normalised_H	C_H_bits	C_classification	honest_A	honest_B	informative_C	all_three_pass
+item1	loss_form		0.4118	17	0.0000	-0.0000	VACUOUS	False	False	False	False
+item2	ref_policy_kl		0.5000	6	0.0000	-0.0000	VACUOUS	False	False	False	False
+item3	sampler_backend_precision	16.6700		0	0.0000	-0.0000	VACUOUS	False	False	False	False
+item4	per_step_zvf_path	16.6700		0	1.0000	6.6147	HIGH	False	False	True	False
+item5	group_size_schedule	16.6700		0	0.9958	2.3121	MEDIUM	False	False	True	False
+item6	heldout_split	16.6700		0	0.9808	1.5546	MEDIUM	False	False	True	False
+item7	decontamination_notes	16.6700		0	0.9313	0.9313	VACUOUS	False	False	False	False

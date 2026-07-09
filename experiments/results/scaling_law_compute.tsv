@@ -1,0 +1,4 @@
+metric	n_used	intercept	se_intercept	slope_per_log10N	se_slope_per_log10N	note
+t_80_x_params_B	5	-209.423	n/a	482.531	490.417	OLS slope of (t_80 * params_B) on log10(N)
+lambda	5	6.408	n/a	-0.471	0.873	OLS slope of mean lambda (parametric bootstrap) on log10(N)
+lambda_x_log10_params	5	0.710	n/a	5.175	1.744	OLS slope of lambda*log10(N) on log10(N)

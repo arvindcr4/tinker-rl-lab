@@ -1,0 +1,18 @@
+# Pillar 2 ZVF lead-time aggregated by method (iter 22)
+# n_runs = total (method, seed) pairs (5 seeds per method by default).
+# n_collapsed = number of those that set collapse=1 at any step.
+# collapse_rate = n_collapsed / n_runs (mitigation libraries should be
+# near 0; non-mitigation grpo was 3/5 = 0.6 in this dataset).
+# mean_pre_zvf_5 vs mean_post_zvf_5: 5-step ZVF average
+# immediately AFTER peak vs immediately BEFORE collapse (or terminal).
+# Source: scripts/zvf_iter22.py
+method	n_runs	n_collapsed	collapse_rate	mean_lead	median_lead	min_lead	max_lead	mean_zvf_at_pass	mean_pre_zvf_5	mean_post_zvf_5	mean_local_max_zvf
+grpo	5	3	0.6000	1.00	1.0	1	1	0.8792	0.8827	0.8793	0.8936
+aero	5	0	0.0000	NA	NA	NA	NA	0.6850	0.6856	0.6919	0.7020
+cppo	5	0	0.0000	NA	NA	NA	NA	0.7825	0.7758	0.7713	0.7954
+ngrpo	5	0	0.0000	NA	NA	NA	NA	0.7371	0.7438	0.7459	0.7532
+scafgrpo	5	0	0.0000	NA	NA	NA	NA	0.4119	0.4114	0.4026	0.4216
+mcgrpo	5	0	0.0000	NA	NA	NA	NA	0.5748	0.5799	0.4922	0.5924
+gift	5	0	0.0000	NA	NA	NA	NA	0.5107	0.5132	0.4264	0.5298
+areal	5	0	0.0000	NA	NA	NA	NA	0.5381	0.5300	0.4313	0.5489
+es	5	0	0.0000	NA	NA	NA	NA	0.2562	0.2506	0.2196	0.2619

@@ -1,0 +1,40 @@
+{
+  "row": 20,
+  "source": "F24 L1 Denny Zhou -- Wang & Zhou, CoT Reasoning Without Prompting (arXiv:2402.10200, NeurIPS 2024)",
+  "target": "A5 + Pillar 2/3",
+  "data": "experiments/results/groupsize_zvf_sweep.json (4 G x 3 seeds, 40 steps)",
+  "margin_def": "M_t = |2*mean_reward_t - 1| (group-level analog of CoT-decoding Delta)",
+  "H1_margin_validity": {
+    "median_rho_M_zvf": 0.9294,
+    "decisive": true
+  },
+  "H2_train_confidence": {
+    "n_runs_both_signs": 12,
+    "of": 12,
+    "decisive": true
+  },
+  "H3_confidence_accuracy": {
+    "spearman_entropy_heldout": -0.0073,
+    "decisive": false
+  },
+  "H4_frontier_tension": {
+    "n_peak_lt_terminal": 12,
+    "of": 12,
+    "median_rho_M_advvar": -0.4249,
+    "decisive": true
+  },
+  "H5_group_size_margin": {
+    "mean_terminal_margin_by_G": {
+      "2": 0.9542,
+      "4": 0.9542,
+      "8": 0.9677,
+      "16": 0.9786
+    },
+    "monotone_decreasing": false,
+    "spearman_G_margin": 0.455,
+    "decisive": false
+  },
+  "n_decisive": 3,
+  "n_hypotheses": 5,
+  "verdict": "SUGGESTIVE"
+}

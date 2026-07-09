@@ -1,0 +1,10 @@
+n_dynamic_anchors	10
+n_calibration_anchors	3
+n_holdout_anchors	4
+sat_mean_abs_err_rmax	0.907
+hill_mean_abs_err_rmax	0.9083
+sat_mean_abs_err_t80	583.5574
+hill_mean_abs_err_t80	244606859.6593
+anchors_where_hill_aic_better	8
+anchors_where_sat_aic_better	2
+extrapolation_winner	saturation

@@ -1,0 +1,7 @@
+model	aicc_2p	aicc_3p	delta_aicc_3p_minus_2p	winner
+Qwen3.5-4B	-2.57	15.61	18.18	2p
+Qwen3-8B	-16.82	-15.11	1.71	2p
+Llama-3.1-8B-Instruct	-19.16	-4.39	14.77	2p
+DeepSeek-V3.1	-18.28	-15.48	2.79	2p
+Nemotron-120B	4.92	7.71	2.79	2p
+SUMMARY				0/5 anchors prefer 3p

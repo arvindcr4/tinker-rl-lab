@@ -1,0 +1,14 @@
+field	family	type	h_bits	n_unique	verdict
+model	identity	str	0.9988	2	PLACEBO
+task_slice	identity	str	1.5546	3	WEAK
+G	identity	int	2.3121	5	STRONG
+temperature	identity	float	0.9952	2	PLACEBO
+seed	identity	int	1.0000	2	WEAK
+mean_reward	rollout_outcomes	float	4.4178	48	STRONG
+zvf	rollout_outcomes	float	3.5534	20	STRONG
+pcd	rollout_outcomes	float	4.5573	56	STRONG
+n_groups	rollout_outcomes	int	0.0000	1	PLACEBO
+sample_errors	rollout_outcomes	int	0.0000	1	PLACEBO
+mean_completion_len	rollout_outcomes	float	6.6147	98	STRONG
+std_completion_len	rollout_outcomes	float	6.6147	98	STRONG
+sampled_tokens	operational	int	6.6147	98	STRONG

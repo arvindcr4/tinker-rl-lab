@@ -1,0 +1,13 @@
+G_a_vs_2	bin	mean_reward_G2	mean_reward_GN	retention_GN_of_G2	interpretation
+2	frontier	0.5417	0.5417	1.0	above Wu 97.6%
+2	mid	0.5703	0.5703	1.0	above Wu 97.6%
+2	saturation	0.9594	0.9594	1.0	above Wu 97.6%
+4	frontier	0.5417	0.5363	0.99	above Wu 97.6%
+4	mid	0.5703	0.8575	1.5036	above Wu 97.6%
+4	saturation	0.9594	0.9681	1.0091	above Wu 97.6%
+8	frontier	0.5417	0.6514	1.2025	above Wu 97.6%
+8	mid	0.5703	0.9284	1.6279	above Wu 97.6%
+8	saturation	0.9594	0.973	1.0142	above Wu 97.6%
+16	frontier	0.5417	0.6705	1.2378	above Wu 97.6%
+16	mid	0.5703	0.9492	1.6644	above Wu 97.6%
+16	saturation	0.9594	0.9856	1.0273	above Wu 97.6%

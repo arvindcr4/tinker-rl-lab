@@ -1,0 +1,359 @@
+Predictable Noise and patterns 
+from millions of questions 
+Sida Wang
+Research Scientist, FAIR at Meta
+Data contribution: Sean OBrien, Alex Gu, Lovish Madaan, Dieuwke Hupkes, Jiawei 
+Liu, Yuxiang Wei, Naman Jain, Yuhang Lai, Sten Sootla
+
+Outline
+●
+Intro
+●
+Motivation: benchmarks are getting harder and smaller
+●
+Exploratory data analysis: What does the evaluation say beyond single 
+accuracy
+●
+Implications on the noise levels and why?
+○
+Recommendations about noise intervals
+●
+How can we make this better + examples
+
+CWM: An Open-Weights LLM for Research on Code Generation with World Models: RL for 
+SWE-bench, stabilizing RL
+Code LLM: AST-FIM, SWE-RL, eval-arena, LEVER, Coder-reviewer, InCoder, MBR-exec.
+Benchmarks: SWE-bench M, Spider 2.0, LiveCodeBench, SAFIM, CRUXEval, DS-1000
+2016: learn from human feedback using marginal 
+likelihood, also originated here at UCB. an alternative 
+to RL without emphasis on exploration
+Quick self-intro
+
+A bit of reflection on evaluation
+Do 10% better on ImageNet, and no more doubts about deep learning
+●
+necessary condition: no doubt about statistical significance
+Do we similarly trust our current LLM evaluations?
+Many papers report 2-10% improvements on HumanEval, or a few % on 
+SWEbench
+How can we interpret this?
+●
+old answer is statistical testing: 2.5% on HumanEval is not stats significant
+
+Test set sizes are now much smaller than MNIST
+Deep learning was measured and validated by MNIST and ImageNet
+Testset sizes: MNIST: 10k, ImageNet: 100k
+LLM multiple choice: MMLU ~10k
+Generative test-based eval (generate a short program)
+HumanEval: 164, MBPP+: 378, CruxEval: 800, DS-1000: 1000, DMC: 165, 
+LiveCodeBench ~1000, Alder: 225
+Agent Evals (often need 100k+ tokens)
+SweBench: 2.3k, -Verified: 500, -lite: 300, -multimodal: 517
+T-Bench: 80
+
+But each question is more informative!
+●
+To answer each question, a lot of text/code is generated and evaluated by 
+tests. Is this more informative than True/False and multiple choice?
+●
+For humans, you can ask a few good questions and get good information
+○
+IOI / IMO: 6 questions, Putnam: 12 questions
+○
+has an interesting range of difficulties, but then maybe humans are still fairly similar
+def is_simple_power(x, n):
+    """Your task is to write a function that returns true if a number x is a simple
+    power of n and false in other cases.
+    x is a simple power of n if n**int=x
+    For example:
+    is_simple_power(1, 4) => true ..
+
+Solve an open problem?
+●
+solve even one major open problem is significant!
+○
+no one will object that a sample size of 1 is not statistically significant
+Many daily agentic tasks are more economically important
+
+So what’s the case?
+●
+A: small benchmarks are not reliable even if they contains some hard 
+generative/agentic problems. 
+●
+B: Solving a single hard problem could be significant already, so we can and 
+should use small but very hard benchmarks
+
+Let’s do some exploratory 
+data analysis
+●
+Each column is a model, x axis is their 
+pass@1
+●
+Each row is a question, sorted by their 
+difficulty. From easiest at top to 
+hardest at bottom
+●
+Color is pass@1 of model on a 
+question, over 10+ samples whenever 
+possible
+
+
+
+There is a lot of inconsistency
+HumanEval
+The worst models sometimes 
+succeeds on hard problem
+The best models still fails on easy 
+problems
+So perhaps the problems are not 
+too special
+hard          …       easy problems
+better models          …       worse models
+
+Can we make up for the low statistical power with hard 
+questions with long answers?
+incorrect
+correct
+strictly better
+prove P!=NP? train AGI?
+sometimes better
+Not if the answers are inconsistent:
+●
+wrote down a hard and long proof of P!=NP but cannot define NP? 
+copied it somewhere?
+is shortestPath in P? what is NP? 
+prove P!=NP? train AGI? 
+baseline
+
+red are not sharp 0s, but just lower probability
+This question cannot be a very hard open problem if a much weaker model just 
+have a smaller probability of solving the problem
+Increasing from 1% correct to 99% may not be that significant (especially on 
+verifiable problems). The first 1% is the most impressive.
+
+So what’s the case?
+●
+A: small benchmarks are not reliable even if they contains some hard 
+generative/agentic problems
+●
+B: Solving a single hard problem could be significant already, so we can and 
+should use small and hard benchmarks
+
+Help fix my kettle
+●
+kettle (boils water)
+●
+agent says it’s a robotic vacuum
+●
+should I trust its later advice (could still be 
+correct)
+●
+Hard problems often have many steps
+●
+Probability of error increases exponentially as the 
+number of steps increases
+
+So probably statistical analysis is still important
+How does it work? Let’s go over the basics
+I’ll put down some math, and convey the intuition with some examples
+
+The super-population (basic stats, Miller 2024)
+●
+With sample questions from a super population, then the mean and variance 
+of the population can be estimated from these sample
+
+Ask if this result is likely just due to chance
+
+Noise seems pretty large for small datasets
+
+Paired vs. Unpaired: intuition
+Paired: xi ~ Data -> A(xi), B(xi)
+Unpaired: xi, xj ~ Data -> A(xi), B(xj)
+
+Use the ability to draw independent samples? 
+This is a remarkable ability of the models, humans can’t seem to do this. A 
+common confusion is to consider this the only type of noise.
+
+Total variance to standard errors
+
+Paired comparison
+
+Correct with probability 0.8 leads to some weirdness
+
+Compute with simple array operations
+The answer is p(1-p), let’s compute with bootstrap…
+
+The other viewpoints gives about the same results
+Bootstrap: Drawing samples (with replacement) from the empirical distribution 
+≅Drawing more samples from unseen super population
+Sign test: wherever predictions are different, how likely is it to be due to 
+randomness (same for A and B that are close. if not close, then already statistically 
+different)
+
+Eval-Arena (doc/code)
+Results: https://crux-eval.github.io/eval-arena/main/ 
+For each benchmark, do pairwise comparisons / statistical testing on all models 
+pairs. Establish that no model is consistently better than another model (among 
+statistically questionable models). 
+●
+Assuming no special problems and the model has some chance of error on 
+each problem, we can measure noise meaningfully for each dataset
+●
+you can just read off the numbers in eval-arena instead of trusting the authors to 
+do their testing!
+
+Predictable noise
+SE(A) ~ SE(A-B) 
+are roughly similar
+-> correlation ~ 0.5
+
+There is a dependence on overall acc(A)
+
+There is a dependence on overall acc(A)
+
+Swebench verified
+SWEFixer, vs. 
+SWEFixer+P2P filter
+
+Empirical probabilities follow a Beta distribution
+Once performance is good, then the bimodal ~ Beta(a, 1-a)
+
+More beta 
+
+Betas
+only binary preds
+
+The failure: why we cannot just boost the signal
+My original goal is to see if I can make current benchmarks less noisy
+●
+Still just getting 1 bit of information per hard example.
+●
+Model performance is very noisy and unreliable
+○
+indirect evidence of memorization when a bad model solves a hard problem
+○
+unless it’s all open problems, there could always be memorization. “we deduplicate all n-grams overlap”
+●
+Modelling difficulty and error of each problem failed to get much signal. Item Response Model 
+failed to do better than baseline. 
+●
+Other’s attempt to correct errors did not lead to any measurable improvements
+●
+Subjectively poor quality dataset (MBPP) has better signal to noise than subjectively higher quality 
+dataset (HumanEval+). 
+●
+HumanEval+, MBPP+ is not any better than the original
+Attempting to boost signal to noise by filtering, reweighting problems is not promising (because the 
+models are the bigger sources of inconsistency than the benchmarks)
+Recommend: Report on more benchmarks. Collect bigger datasets or at least attempt to collect 
+more information per example (i.e. > 1 bit) on complex and expensive tasks i.e. SWE-Bench. 
+To be reconsidered when models are less random!
+
+Conclusions for measuring noise
+●
+run with multiple seeds: https://arxiv.org/abs/2406.10229v1
+○
+usually an underestimate, but can produce significant results. compatible to this work.
+●
+variance of the training curve (underestimate)
+●
+We recommend: in increasing accuracy, and decreasing convenience
+○
+read off our table
+○
+read off our figure in your accuracy range
+○
+Export your results and run our code, provides context
+■
+benchmark/leaderboard builders should share the full question level results
+■
+Do your own statistical tests and calculations?? fairly error prone
+
+Other features of Eval-Arena (docs)
+Noise level references and signal-to-noise ratio (this talk)
+Model performance ranked by Elo, win-rate, accuracy (best)
+Tool for finding suspect examples (we found more errors / inconsistencies on 
+MBPP+) and some ways. Explore if time allows
+Finding suspicious models
+
+Signal to noise
+The noise values allows us to interpret reported results. 
+To get a sense of the quality of the benchmark, we need 
+signal to noise ratio.
+Signal: the gain from doubling the size of model in each 
+series
+Noise: implied standard deviation by statistical testing 
+(same as bootstrapping)
+sig/noise = |A-B| / SE(A-B)
+sig/noise < 2: cannot reliably measure the improvement 
+from doubling model size. True on most code 
+benchmarks! examples of inversion
+Simple multiple choice benchmarks have much better 
+signal to noise ratio than complex generation 
+benchmarks
+benchmark_id
+size
+sig/noise
+mmlu
+14042
+13.2
+tqa
+11313
+12.6
+gsm8k
+1319
+7.1
+hellaswag
+10042
+6.4
+nq
+3610
+5.9
+agi_english
+2546
+5.1
+CRUXEval-output
+800
+3.2
+DS1000
+1000
+3.0
+arc_challenge
+1165
+2.7
+mbpp
+378
+1.9
+CRUXEval-input
+800
+1.9
+piqa
+1838
+1.7
+lcb_codegen
+400
+1.6
+mbpp+
+378
+1.6
+humaneval
+164
+1.1
+siqa
+1954
+0.93
+humaneval+
+164
+0.50
+
+signal-to-noise
+by model class as 
+well
+
+When everyone is too busy to look into the details of the eval because it's too 
+complicated and 100k tokens, bad things can happen
+https://github.com/SWE-bench/SWE-bench/issues/465
+@UniverseFly found it, several others from the team investigated, as mentioned in 
+the issue
+
+Paired comparisons

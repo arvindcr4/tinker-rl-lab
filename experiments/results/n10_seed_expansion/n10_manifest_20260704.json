@@ -1,0 +1,130 @@
+{
+  "experiment": "N10",
+  "model": "Qwen/Qwen3.5-4B",
+  "seeds": [
+    42,
+    179,
+    316,
+    453,
+    590,
+    727,
+    864,
+    1001
+  ],
+  "algos": [
+    "grpo",
+    "dr_grpo"
+  ],
+  "started_at": "2026-07-04T12:42:20.276454",
+  "runs": [
+    {
+      "algo": "grpo",
+      "seed": 42,
+      "status": "ok",
+      "last10_avg_reward": 0.33125,
+      "heldout_acc": 0.375,
+      "wandb_run_path": "arvindcr4-pes-university/tinker-new-research/4hexyc37"
+    },
+    {
+      "algo": "grpo",
+      "seed": 179,
+      "status": "ok",
+      "last10_avg_reward": 0.284375,
+      "heldout_acc": 0.5859375,
+      "wandb_run_path": "arvindcr4-pes-university/tinker-new-research/xkwom3d2"
+    },
+    {
+      "algo": "grpo",
+      "seed": 316,
+      "status": "ok",
+      "last10_avg_reward": 0.2828125,
+      "heldout_acc": 0.4765625,
+      "wandb_run_path": "arvindcr4-pes-university/tinker-new-research/b70pta7y"
+    },
+    {
+      "algo": "grpo",
+      "seed": 453,
+      "status": "ok",
+      "last10_avg_reward": 0.2453125,
+      "heldout_acc": 0.4296875,
+      "wandb_run_path": "arvindcr4-pes-university/tinker-new-research/8mk6ckbs"
+    },
+    {
+      "algo": "grpo",
+      "seed": 590,
+      "status": "ok",
+      "last10_avg_reward": 0.234375,
+      "heldout_acc": 0.40625,
+      "wandb_run_path": "arvindcr4-pes-university/tinker-new-research/2c0omfe5"
+    },
+    {
+      "algo": "grpo",
+      "seed": 727,
+      "status": "ok",
+      "last10_avg_reward": 0.2734375,
+      "heldout_acc": 0.0546875,
+      "wandb_run_path": "arvindcr4-pes-university/tinker-new-research/rcmyik7x"
+    },
+    {
+      "algo": "grpo",
+      "seed": 864,
+      "status": "failed",
+      "error": "Error code: 402 - {'detail': 'Access for  is blocked due to billing status. Please add payment at https://tinker-console.thinkingmachines.ai/billing/balance'}"
+    },
+    {
+      "algo": "grpo",
+      "seed": 1001,
+      "status": "failed",
+      "error": "Error code: 402 - {'detail': 'Access for  is blocked due to billing status. Please add payment at https://tinker-console.thinkingmachines.ai/billing/balance'}"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 42,
+      "status": "failed",
+      "error": "Error code: 402 - {'detail': 'Access for  is blocked due to billing status. Please add payment at https://tinker-console.thinkingmachines.ai/billing/balance'}"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 179,
+      "status": "failed",
+      "error": "Error code: 402 - {'detail': 'Access for  is blocked due to billing status. Please add payment at https://tinker-console.thinkingmachines.ai/billing/balance'}"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 316,
+      "status": "failed",
+      "error": "Error code: 402 - {'detail': 'Access for  is blocked due to billing status. Please add payment at https://tinker-console.thinkingmachines.ai/billing/balance'}"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 453,
+      "status": "failed",
+      "error": "Error code: 402 - {'detail': 'Access for  is blocked due to billing status. Please add payment at https://tinker-console.thinkingmachines.ai/billing/balance'}"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 590,
+      "status": "failed",
+      "error": "Error code: 402 - {'detail': 'Access for  is blocked due to billing status. Please add payment at https://tinker-console.thinkingmachines.ai/billing/balance'}"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 727,
+      "status": "failed",
+      "error": "Error code: 402 - {'detail': 'Access for  is blocked due to billing status. Please add payment at https://tinker-console.thinkingmachines.ai/billing/balance'}"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 864,
+      "status": "failed",
+      "error": "Error code: 402 - {'detail': 'Access for  is blocked due to billing status. Please add payment at https://tinker-console.thinkingmachines.ai/billing/balance'}"
+    },
+    {
+      "algo": "dr_grpo",
+      "seed": 1001,
+      "status": "failed",
+      "error": "Error code: 402 - {'detail': 'Access for  is blocked due to billing status. Please add payment at https://tinker-console.thinkingmachines.ai/billing/balance'}"
+    }
+  ],
+  "finished_at": "2026-07-04T15:21:20.168815"
+}

@@ -1,0 +1,2 @@
+hypothesis	p1_pillar1_learned_effect_pct	p4_pillar4_fixed_effect_pct	predicted_direction	same_sign_check	learned_vs_fixed_effect_size_ratio	learned_amplifies_more_than_fixed_check	verdict
+H2_cross_pillar_consistency	-19.53	-5.11	BOTH negative (any added component on top of stateless group-mean LOOSENS |ρ| of the natural coupling axis)	PASS	3.82	PASS	FAVOURS

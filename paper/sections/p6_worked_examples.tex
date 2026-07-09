@@ -1,0 +1,69 @@
+% Paper 6 (GRPO-Registry) worked examples
+\section{Worked Examples}
+\label{sec:p6-worked}
+Both examples below are verbatim CLI runs on the shipped entries.
+
+\subsection{Example 1: \texttt{stackdiff} on the ``DAPO'' Pair}
+\label{sec:p6-worked-dapo}
+The registry contains two stacks claiming the label \texttt{dapo}: the open
+Colab trainer arm and the managed-runtime arm. Diffing them:
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single,
+  caption={\texttt{stackdiff colab-open_dapo_e3
+  tinker_dapo_qwen3.5-4b_gsm8k} (abridged: R2 backend lines omitted).},
+  label={lst:p6-stackdiff}]
+stackdiff colab-open_dapo_e3 vs tinker_dapo_qwen3.5-4b_gsm8k
+  shared claimed label: 'dapo'
+  [R5] loss_form.importance_ratio_level: 'token' -> None
+  [R5] reference_kl.kl_beta: 0.0 -> None
+  [R3] reference_kl.reference_policy: False -> True
+  [R4] delta delta_dapo:clip_higher: implemented -> surrogate
+  [R4] delta delta_dapo:dynamic_sampling: implemented -> absent
+  [R5] delta delta_dapo:kl_removed: implemented -> unknown
+  [R5] delta delta_dapo:token_level_loss: implemented -> unknown
+verdict: R5 unauditable: a differing item is unreported (null)
+         on at least one side
+verdict: comparisons across this pair are at risk of a LABEL FLIP;
+         do not attribute outcome differences to the shared label.
+\end{lstlisting}
+
+The verdict is R5 with R4 findings inside it: DAPO's dynamic sampling---the
+component that mechanically drives batch ZVF to zero by filtering
+zero-variance groups---is \texttt{implemented} on one side and \texttt{absent}
+on the other, while the KL and loss-aggregation components cannot even be
+compared because the managed side leaves them unreported. This is a
+\emph{pre-run} verdict computed from manifests alone. The program's telemetry
+subsequently confirmed it empirically: mean ZVF $0.00$ on the open arm versus
+$0.58$ on the managed arm under the identical label (toy scale on the open
+side, hence directional---but the direction is the one the manifest diff
+predicted, and the mechanism is definitional). The general lesson matches the
+backend-swap audit, where a same-label, R2-level swap moved final reward
+$85.6\% \to 5.0\%$: rankings inherit the stack, and \texttt{stackdiff} makes
+the inheritance legible before compute is spent.
+
+\subsection{Example 2: ``Which Stacks Report KL Handling?''}
+\label{sec:p6-worked-kl}
+Item 2 (reference policy + KL) is the canonical scattered-in-appendices
+field: defaults differ silently across frameworks ($\beta{=}0.04$ in TRL and
+veRL versus $0.02$ in OpenRLHF, per their own dumps), and DAPO removes the
+term outright. The registry answers in one call:
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single,
+  caption={\texttt{query --item reference_kl} on the seed entries
+  (grouped).}, label={lst:p6-klquery}]
+colab-open_{grpo,drgrpo,dapo,grpo-adaptiveg}   reference_kl=FULL (1.00)
+trl_grpo_qwen3-8b_gsm8k                        reference_kl=FULL (1.00)
+verl_grpo_qwen3-8b_gsm8k                       reference_kl=FULL (1.00)
+openrlhf_grpo_qwen3-8b_gsm8k                   reference_kl=FULL (1.00)
+tinker_{grpo(8B),grpo,dapo,drgrpo,gspo}        reference_kl=PARTIAL (0.33)
+\end{lstlisting}
+
+Seven of twelve stacks fully report KL handling. The instructive cases are the
+two ends: the Colab arms score \texttt{FULL} by \emph{explicitly declaring the
+absence} of a reference policy ($\beta{=}0.0$, estimator \texttt{none})---a
+reported negative is a first-class answer---while all five managed-runtime
+entries are \texttt{PARTIAL} because \texttt{kl.beta} and the estimator are
+\texttt{managed_by_tinker} nulls. A meta-analyst asking ``does KL
+regularization explain the variant ranking?'' learns, in one query, exactly
+which stacks can enter the regression and which must be excluded as
+unauditable on that axis.

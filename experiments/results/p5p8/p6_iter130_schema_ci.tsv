@@ -1,0 +1,44 @@
+entry_id	parse_ok	schema_ok	badge	err	n_measured	n_significant	n_stale_method	n_panels	n_metrics	median_n	max_abs_delta	label_or_name	framework	openness
+colab-open_dapo_e3	1	1	D		0	0	0	0	0	0	0.0	dapo	colab-open-trainer	open
+colab-open_drgrpo_e3	1	1	D		0	0	0	0	0	0	0.0	drgrpo	colab-open-trainer	open
+colab-open_grpo-adaptiveg_e3	1	1	D		0	0	0	0	0	0	0.0	grpo	colab-open-trainer	open
+colab-open_grpo_e3	1	1	D		0	0	0	0	0	0	0.0	grpo	colab-open-trainer	open
+delta_adaptiveg	1	1	B		2	1	0	1	2	16	0.074219	Adaptive-G (ZVF-driven)		
+delta_aero	1	1	A		6	3	0	2	6	10	31.077344	AERO		
+delta_areal	1	1	A		6	3	0	2	6	10	30.125781	AREAL		
+delta_cppo	1	1	A		3	2	0	1	3	5	0.18558	CPPO		
+delta_dapo	1	1	D		0	0	0	0	0	0	0.0	DAPO		
+delta_drgrpo	1	1	A		3	1	0	1	3	2	44.2503	Dr. GRPO		
+delta_es	1	1	A		3	2	0	1	3	5	0.36656	ES		
+delta_gift	1	1	A		6	3	0	2	6	10	3.889063	GIFT		
+delta_gspo	1	1	D		0	0	0	0	0	0	0.0	GSPO		
+delta_liteppo	1	1	D		0	0	0	0	0	0	0.0	LitePPO		
+delta_mcgrpo	1	1	A		3	2	0	1	3	5	0.33474	MCGRPO		
+delta_ngrpo	1	1	A		3	2	0	1	3	5	0.18042	NGRPO		
+delta_ppo	1	1	D		0	0	0	0	0	0	0.0	PPO		
+delta_reinforce	1	1	D		0	0	0	0	0	0	0.0	REINFORCE		
+delta_scafgrpo	1	1	A		3	2	0	1	3	5	0.352361	SCAFGRPO		
+delta_tool_use_llama-8b-inst	1	1	B		1	0	0	1	1	1	0.030307	tool_use_llama-8b-inst		
+delta_tool_use_qwen3-32b	1	1	B		1	0	0	1	1	1	0.030307	tool_use_qwen3-32b		
+openrlhf_grpo_qwen3-8b_gsm8k	1	1	D		0	0	0	0	0	0	0.0	grpo	openrlhf	open
+tinker_aero_qwen3.5-4b_gsm8k	1	1	D		0	0	0	0	0	0	0.0	aero	tinker	managed
+tinker_areal_qwen3.5-4b_gsm8k	1	1	D		0	0	0	0	0	0	0.0	areal	tinker	managed
+tinker_dapo_qwen3.5-4b_gsm8k	1	1	D		0	0	0	0	0	0	0.0	dapo	tinker	managed
+tinker_drgrpo_qwen3.5-4b_gsm8k	1	1	D		0	0	0	0	0	0	0.0	drgrpo	tinker	managed
+tinker_gift_qwen3.5-4b_gsm8k	1	1	D		0	0	0	0	0	0	0.0	gift	tinker	managed
+tinker_grpo_qwen3-8b_gsm8k	1	1	D		0	0	0	0	0	0	0.0	grpo	tinker	managed
+tinker_grpo_qwen3.5-4b_gsm8k	1	1	D		0	0	0	0	0	0	0.0	grpo	tinker	managed
+tinker_gspo_qwen3.5-4b_gsm8k	1	1	D		0	0	0	0	0	0	0.0	gspo	tinker	managed
+trl_grpo_qwen3-8b_gsm8k	1	1	D		0	0	0	0	0	0	0.0	grpo	trl	open
+verl_grpo_qwen3-8b_gsm8k	1	1	D		0	0	0	0	0	0	0.0	grpo	verl	open
+zvf130_aero	1	1	D		0	0	0	0	0	0	0.0	aero	worktree-zvf130-batch	open
+zvf130_areal	1	1	D		0	0	0	0	0	0	0.0	areal	worktree-zvf130-batch	open
+zvf130_cppo	1	1	D		0	0	0	0	0	0	0.0	cppo	worktree-zvf130-batch	open
+zvf130_es	1	1	D		0	0	0	0	0	0	0.0	es	worktree-zvf130-batch	open
+zvf130_gift	1	1	D		0	0	0	0	0	0	0.0	gift	worktree-zvf130-batch	open
+zvf130_grpo	1	1	D		0	0	0	0	0	0	0.0	grpo	worktree-zvf130-batch	open
+zvf130_mcgrpo	1	1	D		0	0	0	0	0	0	0.0	mcgrpo	worktree-zvf130-batch	open
+zvf130_ngrpo	1	1	D		0	0	0	0	0	0	0.0	ngrpo	worktree-zvf130-batch	open
+zvf130_scafgrpo	1	1	D		0	0	0	0	0	0	0.0	scafgrpo	worktree-zvf130-batch	open
+zvf130_tool_use_llama-8b-inst	1	1	D		0	0	0	0	0	0	0.0	tool_use_llama-8b-inst	worktree-zvf130-batch	open
+zvf130_tool_use_qwen3-32b	1	1	D		0	0	0	0	0	0	0.0	tool_use_qwen3-32b	worktree-zvf130-batch	open

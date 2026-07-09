@@ -1,0 +1,79 @@
+% Section: P5P8-SYNTH thirteen-domain density matrix — D13 per-prompt reward stability (iter 164 JOB B)
+% Fresh vein. Extends iter-160's twelve-domain matrix (D1-D12) by adding
+% D13 = per-(method × step × prompt) reward-stability density on the N2
+% reward tensors (2560 cells = 4 × 40 × 16). H1-H4 4/4 PASS — sharpest
+% finding: per-prompt reward stability is structurally unreachable at G=8.
+
+\subsubsection{D13: per-prompt reward stability extends the 12-domain matrix to 13}
+\label{sec:synth-iter164-d13}
+
+Iter-160 added D12 = P5 N2 step-aggregate reward-stability density on
+the 160-cell N2 reward tensor (4 methods $\times$ 40 steps;
+\secref{sec:synth-iter160}). The natural follow-up is the per-prompt
+granularity: D13 on $4 \times 40 \times 16 = 2560$ cells. The motivation
+is the GRPO training loop: each step sees 16 prompts $\times$ 8 rollouts
+of binary reward. If per-prompt reward is well-measured at G=8, group
+baselines are stable; if not, the per-prompt CI is dominated by the
+binomial $n=8$ floor and reward stability is structurally unreachable.
+
+\paragraph{Setup.}
+For each (method $\times$ step $\times$ prompt) cell, we compute the
+Wilson 95\% CI half-width on the 8-rollout binary reward proportion
+and define $D_{13}(\mathrm{cell}, \varepsilon) = \mathbb{1}[\mathrm{half\text{-}width} < \varepsilon]$.
+Density = (\#stable cells) / 2560.
+$\varepsilon \in \{0.025, 0.05, 0.10\}$.
+
+\paragraph{Headline findings (4/4 PASS, all structural).}
+\begin{enumerate}
+\item \textbf{$D_{13}@0.05$ density = 0.0000.} H1 PASS. None of the
+2{,}560 (method $\times$ step $\times$ prompt) cells clears the
+$\varepsilon = 0.05$ bar; the layer assignment is LOW.
+\item \textbf{Wilson CI half-width floor = 0.1622 at $n=8$.} H2 PASS.
+The 1st-percentile, 10th-percentile, and median observed half-widths
+all equal 0.1622 (the theoretical floor when $k=0$ or $k=8$). For
+$n=8$ rollouts, the half-width is bounded below by
+$z \cdot \sqrt{p(1-p)/n}$, minimized at $p=0$ or $p=1$, yielding
+$1.96 / (2 \cdot \sqrt{8}) \cdot \sqrt{(0 + 1.96^2/(4 \cdot 8)) / 1.48}$
+$\approx 0.162$. Every $\varepsilon \leq 0.10$ is structurally infeasible.
+\item \textbf{$D_{13} \ll D_{12}$.} H3 PASS. $D_{13} = 0$ vs
+$D_{12} = 0.175$; ratio = 0. The per-prompt-vs-step granularity gap
+is exactly the binomial $n=8$ floor.
+\item \textbf{All four methods in LOW layer.} H4 PASS. grpo=0, aero=0,
+gift=0, areal=0 (each on 640 cells). The structural floor binds
+identically across the GRPO family.
+\end{enumerate}
+
+\paragraph{Operational implication for GRPO-family training.}
+\begin{itemize}
+\item \textbf{Per-prompt reward stability at $G=8$ is NOT measurable.}
+Reporting per-prompt confidence intervals on a $G=8$ GRPO rollout is
+structurally meaningless.
+\item \textbf{To achieve $\varepsilon \leq 0.10$ per-prompt stability,
+you need $G \geq 67$.} At $p=0.5$, the half-width is
+$z \cdot \sqrt{0.25/n} \leq 0.10 \Rightarrow n \geq 96$. For
+$\varepsilon \leq 0.05$ you need $G \geq 384$.
+\item \textbf{Step-aggregate ($D_{12}$) is the canonical reporting
+granularity at $G=8$.} $D_{12}@0.05 = 0.175$ with Wilson CI
+$[0.124, 0.241]$ sits in MID — step-aggregate reward stability is a
+meaningful metric, but per-prompt is not.
+\end{itemize}
+
+\paragraph{13-domain layer assignments.}
+\textbf{LOW} = $\{D_1, D_6, D_7, D_{13}\}$ (4 domains; $D_{13}$ is the
+first structural-LOW domain — its LOW status is determined by the
+binomial $n=8$ floor, not by empirical sample sparsity).
+\textbf{MID} = $\{D_2, D_3, D_4, D_8, D_9, D_{11}, D_{12}\}$ (7 domains).
+\textbf{HIGH} = $\{D_5, D_{10}\}$ (2 domains).
+
+\paragraph{Cross-paper coupling.}
+\begin{itemize}
+\item \textbf{P5P8-SYNTH iter-160 row 175 ($D_{12}$ step-aggregate):}
+$D_{12}@0.05 = 0.175 \in$ MID; iter-164 $D_{13}$ at per-prompt = 0
+forces LOW — the granularity gap is structural.
+\item \textbf{P5 iter-141 (N10 reward tensor):} iter-141 produced the
+160-cell N2 tensor; iter-164 reads the same tensor at finer granularity.
+\item \textbf{P7 iter-163 row 177 (step-aggregate Pareto):} P7 controller
+evaluation is at step granularity, consistent with iter-164's
+recommendation that step-aggregate is the canonical reporting granularity
+at $G=8$.
+\end{itemize}

@@ -1,0 +1,93 @@
+{
+  "iter": 83,
+  "pillar": "P7",
+  "n_boot": 2000,
+  "rng_seed": 20260705,
+  "method": "step-level resample with replacement",
+  "results": {
+    "grpo": {
+      "n_boot": 2000,
+      "n_steps_resampled": 40,
+      "baseline_rollouts": 5120,
+      "iso_g_0.90": {
+        "yield_per_1k_mean": 19.427546617550348,
+        "ci95_lo": 19.283210059171655,
+        "ci95_hi": 19.603158844765375
+      },
+      "zvf_triage_0.70": {
+        "yield_per_1k_mean": 3.2392665884366902,
+        "ci95_lo": 2.601806640624999,
+        "ci95_hi": 3.8861607142857144
+      },
+      "ratio_iso_over_zvf": {
+        "mean": 6.060055005839061,
+        "ci95_lo": 4.994747234062716,
+        "ci95_hi": 7.501150684931517,
+        "excludes_1.0": true
+      }
+    },
+    "aero": {
+      "n_boot": 2000,
+      "n_steps_resampled": 40,
+      "baseline_rollouts": 5120,
+      "iso_g_0.90": {
+        "yield_per_1k_mean": 19.631880317992536,
+        "ci95_lo": 19.372122302158314,
+        "ci95_hi": 20.00378048780488
+      },
+      "zvf_triage_0.70": {
+        "yield_per_1k_mean": 2.8916891614289257,
+        "ci95_lo": 2.2900240384615382,
+        "ci95_hi": 3.52890625
+      },
+      "ratio_iso_over_zvf": {
+        "mean": 6.877376095115569,
+        "ci95_lo": 5.542464654704775,
+        "ci95_hi": 8.63071744664855,
+        "excludes_1.0": true
+      }
+    },
+    "gift": {
+      "n_boot": 2000,
+      "n_steps_resampled": 40,
+      "baseline_rollouts": 5120,
+      "iso_g_0.90": {
+        "yield_per_1k_mean": 19.51070805103672,
+        "ci95_lo": 19.269461077844323,
+        "ci95_hi": 19.836139896373027
+      },
+      "zvf_triage_0.70": {
+        "yield_per_1k_mean": 1.9963600475219492,
+        "ci95_lo": 1.494170673076923,
+        "ci95_hi": 2.5748046875
+      },
+      "ratio_iso_over_zvf": {
+        "mean": 9.967354819885905,
+        "ci95_lo": 7.570844366609483,
+        "ci95_hi": 13.205784848716641,
+        "excludes_1.0": true
+      }
+    },
+    "areal": {
+      "n_boot": 2000,
+      "n_steps_resampled": 40,
+      "baseline_rollouts": 5120,
+      "iso_g_0.90": {
+        "yield_per_1k_mean": 19.332494800466673,
+        "ci95_lo": 19.186163982430514,
+        "ci95_hi": 19.526929530201386
+      },
+      "zvf_triage_0.70": {
+        "yield_per_1k_mean": 2.7585714924200984,
+        "ci95_lo": 2.1375919117647055,
+        "ci95_hi": 3.34306640625
+      },
+      "ratio_iso_over_zvf": {
+        "mean": 7.098659038177942,
+        "ci95_lo": 5.782257550703873,
+        "ci95_hi": 9.089394862333332,
+        "excludes_1.0": true
+      }
+    }
+  }
+}

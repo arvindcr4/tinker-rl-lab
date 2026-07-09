@@ -1,0 +1,48 @@
+% Pillar-7 synthesis: what the Pillar-2 cross-examination predicted, what held here
+\section{Synthesis: What the Pillar-2 Cross-Examination Predicted, and What
+Held}
+\label{sec:p7-synthesis}
+The companion Pillar-2 paper closed with an external frontier-model
+cross-examination that produced, as \emph{reasoning contributions},
+several falsifiable predictions about ZVF. This paper is, in part, the
+empirical answer to that cross-examination, and it is worth scoring the
+predictions explicitly.
+
+\paragraph{Predicted and confirmed.} (1) \emph{The binomial form.} The
+cross-examination proposed $\mathrm{ZVF}(p, G) = p^G + (1-p)^G$ as an
+inelasticity result; our T1 adopts it, and the endpoint/interior profile of
+the binned reward tensors plus the $h_G(\bar p)$ column of
+Table~\ref{tab:p7-gsweep} bear it out. (2) \emph{Mastery--incapacity
+aliasing as the structural defect.} Predicted from the symmetry
+$h_G(p) = h_G(1-p)$; confirmed at population scale by the 368-run U-shape
+(Table~\ref{tab:p7-ushape}), which is the aliasing rendered as data.
+(3) \emph{The jitter fragility.} The cross-examination's sharpest sub-test
+was that sub-reward jitter would zero ZVF without changing learning; the
+$0.158 \to 0.000$ collapse with PCD invariant
+(Section~\ref{sec:p7-jitter}) confirms it exactly. (4) \emph{Magnitude-aware
+replacement.} The proposed pairwise-contrast density is implemented here as
+PCD, with its expectation $\frac{G-1}{G}\E[p(1-p)]$ derived and its parabola
+measured.
+
+\paragraph{Predicted and still open.} The cross-examination set a bar of
+$\rho \geq 0.45$ for any replacement diagnostic as an \emph{early-window
+predictor of held-out outcome}. We have not cleared that bar, and we did
+not try to clear it with proxies: the honest test needs per-group reward
+tensors on every anchor run, which only the GSM8K runs carry. What we
+\emph{can} report is the sign-resolution half of the claim: on the 80-run
+summary corpus, the sign-carrying statistic (mean reward) reaches
+$\rho = 0.95$ against outcome where unsigned ZVF reaches $0.56$, consistent
+with the cross-examination's diagnosis that the missing ingredient is sign,
+not more of the same telemetry.
+
+\paragraph{Beyond the predictions.} Two results here were not anticipated
+by the cross-examination. First, the interventional turn: T2 is not only an
+explanation but a control law, and E3 shows a live controller acting on it
+matches the best fixed recipe on held-out gain. Second, the
+accuracy-versus-compute framing of dynamic sampling: the cross-examination
+treated ZVF $= 0$ as a target, whereas the E3 audit prices it ($+45\%$
+rollouts) and finds the purchase optional on a well-conditioned task. The
+program-level lesson for the pillar family is the same one Papers~1--4
+reached from four different directions: telemetry must be
+magnitude-aware, stack-attributed, and priced---or it will be gamed by the
+pipeline, the backend, or the budget.

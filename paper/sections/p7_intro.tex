@@ -1,0 +1,81 @@
+% Pillar-7 (ZVF theory + adaptive-G controller) introduction + related work
+\section{Introduction}
+\label{sec:p7-intro}
+GRPO~\citep{shao2024deepseekmath, guo2025deepseekr1} centers rewards within a
+group of $G$ completions per prompt. Under binary, verifiable rewards, any
+group whose completions are all correct or all incorrect contributes exactly
+zero gradient. The fraction of such degenerate groups---the Zero-Variance
+Fraction (ZVF)---was the subject of our companion Pillar-2 paper, which
+measured it across libraries, model scales, and training phases and
+deliberately stopped at description: ZVF tracks collapse, drifts upward, and
+is mechanically entangled with accuracy and group size, so Pillar~2 declined
+to promote it to a predictive or causal statistic.
+
+This paper takes the next two steps. First, \emph{prediction}: we show that a
+minimal binomial model of group degeneracy---usable signal
+$S = p(1-p)\,(1 - h_G(p))$ with $h_G(p) = p^G + (1-p)^G$---predicts, in
+closed form, three regularities that Pillar~2 could only observe: the
+expected ZVF indicator equals $p^G + (1-p)^G$ (T1), larger $G$ lowers ZVF
+(T2), and gradient magnitude tracks the contrast term $p(1-p)$ (T3). Each
+theorem is paired with an empirical check drawn from a 368-run
+Weights~\&~Biases audit (which counts \emph{all} logged runs---training,
+evaluation, and short accuracy-swept probes---and is thus a superset of the
+benchmark's 70+ core \emph{training} runs), a model~$\times$~group-size grid, and an
+open-backward-pass gradient probe. Second, \emph{intervention}: if the model
+is right, then ZVF is not fate but a control target. We build a
+\texttt{zvf-triage} callback that watches per-step ZVF and an adaptive-$G$
+controller that escalates group size when the signal starves, and we audit it
+head-to-head against fixed recipes (GRPO, Dr.~GRPO, DAPO-style dynamic
+sampling) in a single open, auditable reimplementation.
+
+The theory also explains why ZVF alone cannot drive a controller. Because
+$h_G(p)$ is symmetric in $p \leftrightarrow 1-p$, ZVF assigns the same value
+to a mastered prompt ($p \to 1$) and a hopeless one ($p \to 0$); at
+population scale this produces the U-shape we measure across seven models.
+Worse, ZVF is an \emph{existence} statistic: adding reward jitter
+of order $10^{-4}$ drives measured ZVF to zero while shifting the measured
+within-group contrast by less than $10^{-6}$. We therefore promote the
+\emph{pairwise-contrast density}
+$\mathrm{PCD} = \frac{G-1}{G}\,\E[p(1-p)]$---the expected within-group reward
+variance---as the magnitude-aware statistic a controller should consume, and
+verify empirically that PCD is invariant to the jitter that fools ZVF.
+
+Our contributions are:
+(i) a closed-form signal-starvation model of binary-reward GRPO with three
+theorems, each paired with an empirical check;
+(ii) the PCD statistic and a micro-jitter falsification separating it from
+ZVF;
+(iii) a toy-scale validation that gradient norms track $p(1-p)$
+($\mathrm{corr} = +0.71$; directional only);
+(iv) an operational \texttt{zvf-triage} callback and adaptive-$G$ controller,
+audited in a four-arm open-trainer comparison against GRPO, Dr.~GRPO, and
+DAPO-style dynamic sampling, with the accuracy-versus-compute trade stated
+explicitly; and
+(v) design rules for when and how to escalate $G$.
+Throughout we keep the Pillar-2 discipline: toy-scale results are marked
+directional, and every interventional claim is scoped to the single task and
+small $n$ on which it was measured.
+
+\subsection{Related Work}
+\label{sec:p7-related}
+The degenerate-group problem is increasingly attacked at the sampler. DAPO
+\citep{yu2025dapo} filters out zero-variance groups by resampling until the
+batch carries signal (dynamic sampling); GRESO \citep{zhang2026greso} makes
+the rollout decision itself selective to avoid paying for uninformative
+prompts; RL-ZVP/AERO \citep{le2025rlzvp} instead extracts signal \emph{from}
+zero-variance groups via entropy-guided advantage shaping. Our adaptive-$G$
+controller is a third point in this design space: rather than discarding or
+reshaping degenerate groups, it changes the group size that generates them,
+guided by the closed-form $h_G(p)$. Dr.~GRPO \citep{tong2025drgrpo} and GSPO
+\citep{qwen2025gspo} modify normalization and the importance-ratio level
+respectively, and serve as fixed-recipe baselines in our audit. The
+contrast term $p(1-p)$ at the heart of our model echoes the reduction of
+group-relative RL to pairwise preference objectives
+\citep{wu2025grpo_dpo, rafailov2024direct}: a group is exactly as informative
+as the correct/incorrect pairs it contains. Empirical scaling studies of
+GRPO post-training \citep{tan2025scalingrl} treat group size as a budget
+knob; we treat it as a feedback-controlled variable. All tasks are built on
+GSM8K-style verifiable rewards \citep{cobbe2021training}, and the benchmark
+substrate, statistics, and seed policy are shared with the companion pillars
+(Papers~1--4 of this series) and described in
+Sections~\ref{sec:benchmark}--\ref{sec:setup}.

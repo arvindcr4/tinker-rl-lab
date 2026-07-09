@@ -1,0 +1,48 @@
+% ---------------------------------------------------------------------------
+% Pillar 2: Zero-Variance Fraction diagnostic -- inference-time baselines
+% Berkeley harvest rows 21 (CoT-Without-Prompting, F24 L1 Denny Zhou) and
+% 17 (Self-Debug critique pass, SP25 L1 Xinyun Chen). Both reformulate the
+% ZVF diagnostic against purely inference-time interventions on data already
+% in this evidence base; no new training was run.
+% Evidence: experiments/results/berkeley/cot_decoding_*.tsv,
+%           experiments/results/berkeley/selfdebug_*.tsv
+% ---------------------------------------------------------------------------
+\subsection{Inference-Time Baselines: ZVF as a Sampling-Availability Diagnostic}
+\label{sec:zvf-inference-baselines}
+
+\paragraph{Best-of-$k$ decoding moves ZVF without a gradient update.}
+On the GSM8K trajectory data already in this evidence base (3 seeds
+$\times$ 200 problems, $G{=}8$), a purely inference-time intervention ---
+best-of-$k$ extraction over top-$k$ alternative decoding paths in the
+style of CoT-Without-Prompting~\citep{wang2024cotdecoding} --- recovers
+$+0.282$ mean accuracy (best-of-8 minus best-of-1; monotone in $k$ on
+all 3 seeds over $k \in \{1,2,4,8\}$), exceeding the pre-registered
+$\geq 0.10$ target almost threefold. The same sweep moves mean ZVF from
+$1.000$ at $k{=}1$ to $0.158$ at $k{=}8$ (mean $\Delta = -0.842$)
+without a single parameter update. We therefore sharpen the reading of
+the diagnostic: ZVF measures whether \emph{contrast is available in the
+sampled group}, not whether learning has occurred --- a sampling-availability
+diagnostic that RL training and decoding strategy both act upon. The
+negative control follows \citet{huang2024selfcorrect}: intrinsic
+self-correction is a different intervention from path extraction and
+does not reproduce the effect (pre-registered H5 NULL). Three of five
+pre-registered hypotheses were decisive; the $k{=}8$ ceiling leaves one
+undertested
+(\texttt{experiments/results/berkeley/cot\_decoding\_summary.json}).
+
+\paragraph{A critique-pass discount preserves the method ranking.}
+A Self-Debug-style reformulation~\citep{chen2023selfdebug} asks whether
+part of the magnitude channel in the iter130 risk decomposition is
+format-only variance that an execution-feedback critique pass would
+remove. Discounting a calibrated $\varepsilon = 0.12$ (from Self-Debug's
+$+12\%$ pass@1 on MBPP) drops \texttt{frac\_mag} by $\geq 2$\,pp on 8/9
+magnitude-dominant methods (mean $2.82$\,pp) while the one
+drift-dominant method (\texttt{grpo}) moves only $1.49$\,pp --- exactly
+the failure mode predicted by the no-intrinsic-self-correction
+result~\citep{huang2024selfcorrect}. The discount is ranking-preserving
+(Spearman $1.000$ across $\varepsilon \in [0, 0.30]$, the stability
+check suggested by OPRO~\citep{yang2024opro}), the three-bucket risk
+partition is preserved for 9/9 methods, and $\varepsilon = 0$ is an
+exact no-op; all five pre-registered hypotheses were decisive, and the
+top-ranked method is unchanged
+(\texttt{experiments/results/berkeley/selfdebug\_summary.json}).

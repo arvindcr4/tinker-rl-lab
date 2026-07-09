@@ -1,0 +1,55 @@
+{
+  "iter": 112,
+  "pillar": "P5P8-SYNTH",
+  "n_rates": 5,
+  "rates": [
+    0.0005,
+    0.001,
+    0.005,
+    0.01,
+    0.0144
+  ],
+  "rules": [
+    "xgb_only",
+    "gradient_band",
+    "absolute_band"
+  ],
+  "envelope": [
+    {
+      "rate": 0.0005,
+      "best_cpd": 0.0001,
+      "best_cpd_rule": "xgb_only",
+      "best_cpf": 0.29583000000000004,
+      "best_cpf_rule": "xgb_only"
+    },
+    {
+      "rate": 0.001,
+      "best_cpd": 0.0001,
+      "best_cpd_rule": "xgb_only",
+      "best_cpf": 0.12058444444444445,
+      "best_cpf_rule": "xgb_only"
+    },
+    {
+      "rate": 0.005,
+      "best_cpd": 0.0001,
+      "best_cpd_rule": "xgb_only",
+      "best_cpf": 0.023859612903225805,
+      "best_cpf_rule": "xgb_only"
+    },
+    {
+      "rate": 0.01,
+      "best_cpd": 0.0001,
+      "best_cpd_rule": "xgb_only",
+      "best_cpf": 0.012597045695045696,
+      "best_cpf_rule": "xgb_only"
+    },
+    {
+      "rate": 0.0144,
+      "best_cpd": 0.0001,
+      "best_cpd_rule": "xgb_only",
+      "best_cpf": 0.008968572798360032,
+      "best_cpf_rule": "xgb_only"
+    }
+  ],
+  "n_pair_cells": 45
+}

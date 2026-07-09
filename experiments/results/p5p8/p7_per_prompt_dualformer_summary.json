@@ -1,0 +1,93 @@
+{
+  "ts": "2026-07-05",
+  "iteration": 71,
+  "pillar": "P7",
+  "vein": "per-prompt Dualformer-Auto reproduce + bootstrap CIs on iter-67 ddiv_triage headline",
+  "data": "n2_reward_tensor_resume/{grpo,aero,areal,gift}_s0_tensors.jsonl",
+  "G_base": 8,
+  "G_esc": 16,
+  "G_dualformer": 2,
+  "n_prompts_per_step": 16,
+  "n_steps": 40,
+  "n_methods": 4,
+  "n_obs_per_method": 640,
+  "n_boot": 2000,
+  "dualformer_per_method_saving_pt": {
+    "grpo": 0.20976562499999996,
+    "aero": 0.20976562499999996,
+    "areal": 0.22031250000000002,
+    "gift": 0.17226562499999998
+  },
+  "dualformer_per_method_saving_ci": {
+    "grpo": [
+      0.209765625,
+      0.046875,
+      0.375
+    ],
+    "aero": [
+      0.209765625,
+      0.09375,
+      0.328125
+    ],
+    "areal": [
+      0.2203125,
+      0.09375,
+      0.375
+    ],
+    "gift": [
+      0.172265625,
+      0.046875,
+      0.328125
+    ]
+  },
+  "berkeley_row01_claim": 0.562,
+  "ddiv_tau_grid": [
+    0.03,
+    0.05,
+    0.08,
+    0.1,
+    0.12
+  ],
+  "ddiv_at_tau_0.05_by_method": {
+    "grpo": {
+      "tau": 0.05,
+      "n_fires": 126,
+      "n_saves": 51,
+      "n_at_risk_g8": 126,
+      "n_recovered_g16": 51,
+      "n_wasted_g16": 75,
+      "cost_ratio": 1.196875,
+      "saved_per_fire": 0.40476190476190477
+    },
+    "aero": {
+      "tau": 0.05,
+      "n_fires": 114,
+      "n_saves": 46,
+      "n_at_risk_g8": 114,
+      "n_recovered_g16": 46,
+      "n_wasted_g16": 68,
+      "cost_ratio": 1.178125,
+      "saved_per_fire": 0.40350877192982454
+    },
+    "areal": {
+      "tau": 0.05,
+      "n_fires": 124,
+      "n_saves": 40,
+      "n_at_risk_g8": 124,
+      "n_recovered_g16": 40,
+      "n_wasted_g16": 84,
+      "cost_ratio": 1.19375,
+      "saved_per_fire": 0.3225806451612903
+    },
+    "gift": {
+      "tau": 0.05,
+      "n_fires": 98,
+      "n_saves": 38,
+      "n_at_risk_g8": 98,
+      "n_recovered_g16": 38,
+      "n_wasted_g16": 60,
+      "cost_ratio": 1.153125,
+      "saved_per_fire": 0.3877551020408163
+    }
+  }
+}

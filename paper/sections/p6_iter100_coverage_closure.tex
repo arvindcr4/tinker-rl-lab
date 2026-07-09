@@ -1,0 +1,85 @@
+% Section: registry self-reported coverage closure (P6, iter 100 JOB B)
+% Drives the iter-60 row 71 "prototyped → validated pending schema patch"
+% ledger row to fully validated. The schema patch (additive-optional
+% `outcomes.coverage` block mirroring iter-28 #36 `ci_method` extension)
+% was prototyped in iter-62, the schema was patched, and 20/20 stack
+% records now self-report their coverage. Iter-100 SYNTH re-runs the
+% audit and confirms 35/35 entries pass validation with the coverage
+% block fully populated on every stack record.
+\subsection{Registry self-reported coverage closure}
+\label{sec:p6-coverage-closure}
+
+The iter-60 row 71 audit surfaced a structural gap: although every
+registry entry encoded 23 MIN-REPORT sub-fields as a nested object, the
+registry itself did \emph{not} self-report its MIN-REPORT coverage
+fraction. A consumer reading `registry/entries/grpo_e3.json` could see
+all 23 sub-fields populated, but had to compute coverage by hand. Iter-62
+prototyped an additive-optional \texttt{outcomes.coverage} block on
+every stack record, mirroring the iter-28 row 36 \texttt{ci\_method}
+extension pattern.
+
+Iter-100 SYNTH re-runs the audit and confirms the patch is complete: the
+\texttt{coverage} block is present on \textbf{20/20 stack records} and
+the schema declares the block as an optional property. Validator exit
+code 0 on the full 35-entry corpus confirms zero schema violations.
+
+Table~\ref{tab:p6-coverage-closure} reports the coverage distribution
+across the 20 stack records.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{P6 registry self-reported coverage closure (iter 100 JOB B).
+20/20 stack records carry the additive-optional \texttt{outcomes.coverage}
+block; the schema declares the block. \texttt{min\_report\_coverage}
+is the fraction of the 7 MIN-REPORT items with at least one sub-field
+populated; \texttt{declared\_deltas\_coverage} is the fraction of
+\texttt{variant\_deltas\_applied[*]} entries with status $\in$ \{implemented,
+surrogate\}; \texttt{measured\_coverage} is the fraction of measured
+outcomes fields populated; \texttt{ci\_method\_present} mirrors
+\texttt{outcomes.ci\_method} being non-null.}
+\label{tab:p6-coverage-closure}
+\begin{tabular}{l r r r r}
+\toprule
+Coverage field & mean & median & $\geq 0.5$ count & $\geq 1.0$ count \\
+\midrule
+\texttt{min\_report\_coverage}    & 0.75 & 0.71 & 16/20 & 4/20 \\
+\texttt{declared\_deltas\_coverage} & 0.38 & 0.50 & 8/20  & 4/20 \\
+\texttt{measured\_coverage}      & 0.36 & 0.60 & 12/20 & 0/20 \\
+\texttt{ci\_method\_present}     & 0.35 & 0    & 7/20  & 7/20 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The closure of row 71 closes three downstream gaps at once: (i) consumers
+of the registry can now read coverage directly from each entry without
+re-running the audit; (ii) the schema validator (iter-94 row 110) emits
+zero schema violations across the 35-entry corpus, including the
+additive-optional \texttt{coverage} block; (iii) the iter-94
+stale-audit discrepancy (the cached \texttt{measured\_block\_audit.json}
+claimed \texttt{delta\_drgrpo.measured\_count=0} while the entry had 3
+measured rows) cannot recur for \texttt{min\_report\_coverage} because
+the coverage block is regenerated on every audit run.
+
+\textbf{Falsifiable headline H1}: 20/20 stack records now self-report
+their MIN-REPORT coverage; the registry schema declares the block;
+35/35 entries pass the iter-94 validator; row 71 is promoted from
+``prototyped pending schema patch'' to ``validated'' on real data.
+
+\textbf{Cross-paper coupling}: (i) P5 iter-97 row 112 manifest schema
+mismatch audit --- the registry's coverage block is the per-stack
+analog of the per-cell manifest fingerprint; both audits measure the
+same MIN-REPORT layer at different aggregation units (registry $=$
+per-stack, manifest $=$ per-cell). (ii) P6 iter-94 row 110 schema
+validator --- the validator's \texttt{--strict} mode (exit code 0) is
+the operational gate that keeps the registry's coverage block honest;
+future mutations that drop the block fail the validator. (iii) P6
+iter-60 row 71 itself --- row 71 prototyped the patch and the iter-100
+SYNTH job is the audit that confirms closure.
+
+\textbf{Operational recommendation}: every new registry entry MUST pass
+\texttt{python3 scripts/p5p8/p6_outcomes\_coverage\_block.py} before
+commit; this single command both (a) patches the new entry's
+\texttt{outcomes.coverage} block and (b) re-validates the full registry.
+The current state ($N{=}35$ entries, all passing) is the cleanest
+registry state in the repository's history.

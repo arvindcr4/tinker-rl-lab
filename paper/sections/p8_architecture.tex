@@ -1,0 +1,106 @@
+% P8 hybrid architecture: sensor + scorer + scribe, post-score agentic triage
+\section{The Hybrid Architecture: Sensor and Scribe, Not Scorer}
+\label{sec:p8-architecture}
+
+The taxonomy dictates the architecture. Each model family holds exactly the
+seats it wins, and the seams between them are typed interfaces rather than
+shared prompts (\figref{fig:p8-architecture}).
+
+\begin{figure}[t]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  font=\small,
+  node distance=7mm and 9mm,
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=9mm,
+              inner sep=4pt, text width=30mm},
+  llm/.style={box, fill=blue!8},
+  tree/.style={box, fill=green!10},
+  human/.style={box, fill=orange!12},
+  data/.style={box, fill=gray!8, text width=26mm},
+  arr/.style={-{Latex[length=2mm]}, thick}
+]
+% Inputs
+\node[data] (txn) {Transaction stream\\(fixed schema)};
+\node[data, below=of txn] (docs) {Documents / images\\(disputes, onboarding)};
+% Sensor
+\node[llm, right=of docs] (sensor) {\textbf{LLM sensor}\\VLM feature extraction\\$\to$ typed features};
+% Scorer
+\node[tree, right=of txn, xshift=42mm] (scorer) {\textbf{XGBoost scorer}\\real-time, calibrated\\fraud score};
+% Alert queue + triage
+\node[llm, below=of scorer] (triage) {\textbf{LLM agentic triage}\\post-score alert-queue\\investigation};
+% Scribe
+\node[llm, right=of triage, xshift=2mm] (scribe) {\textbf{LLM scribe}\\SAR narrative /\\adverse-action draft};
+% Human
+\node[human, above=of scribe] (analyst) {\textbf{Human analyst}\\review, decide, file};
+% Edges
+\draw[arr] (txn) -- (scorer);
+\draw[arr] (docs) -- (sensor);
+\draw[arr] (sensor.east) -- node[above, sloped, font=\scriptsize]{numeric features} (scorer.west |- sensor.east) -- (scorer.south west);
+\draw[arr] (scorer) -- node[right, font=\scriptsize]{alerts} (triage);
+\draw[arr] (triage) -- node[below, font=\scriptsize]{case file} (scribe);
+\draw[arr] (scribe) -- node[right, font=\scriptsize]{draft} (analyst);
+\draw[arr] (analyst.west) to[out=180, in=45, looseness=1.1]
+  node[above, sloped, font=\scriptsize]{labels} (scorer.north east);
+\end{tikzpicture}%
+}
+\caption{The hybrid architecture. The LLM never sits in the synchronous scoring
+path: the \emph{sensor} converts unstructured evidence to typed numeric
+features upstream of the tree; the calibrated XGBoost \emph{scorer} owns the
+real-time decision; the \emph{agentic triage} loop and the \emph{scribe}
+operate post-score on the alert queue; the human analyst reviews drafts,
+decides, files, and returns confirmed labels to retrain the scorer.}
+\label{fig:p8-architecture}
+\end{figure}
+
+\paragraph{LLM as sensor.} Upstream of the tree, a vision--language model
+consumes the unstructured evidence of \secref{sec:p8-gap-docs} and emits
+\emph{typed features}: document-consistency scores, extracted field values,
+tamper-likelihood indicators, mismatch flags. The interface is a fixed numeric
+schema, so from the tree's perspective the VLM is just another feature source.
+This placement has two consequences. First, the tree's accuracy and
+calibration properties are preserved: the score is still produced by the model
+family that wins the scorer seat. Second, the injection surface is contained:
+adversarial text inside a document can at worst corrupt that document's
+feature values---a bounded, per-case failure the tree averages over---rather
+than hijack a decision-making agent, since the sensor has no tools, no memory
+across cases, and no authority \citep{greshake2023injection}.
+
+\paragraph{XGBoost as scorer.} The synchronous authorization path is unchanged
+from the incumbent design: fixed-schema features (now augmented by sensor
+outputs where evidence exists) enter a boosted tree; a calibrated score exits
+in milliseconds at near-zero marginal cost. Nothing in the real-time loop
+parses natural language. All four operational arguments of
+\secref{sec:p8-scorer} are honored by construction.
+
+\paragraph{Post-score agentic triage.} Alerts crossing the threshold enter a
+queue where an LLM agent performs the mechanical investigation of
+\secref{sec:p8-gap-agentic}: retrieving history, cross-referencing entities,
+checking narrative consistency, and ranking the queue by investigative
+priority with a written rationale per case. The agent is asynchronous
+(seconds-to-minutes latency is acceptable), budget-capped (the token spend
+lands only on the $\sim$1\% of traffic that alerts), and advisory (it cannot
+close a case or file a report). Its cold-start mode (\secref{sec:p8-gap-coldstart})
+runs the same loop seeded by typology bulletins instead of scorer alerts,
+covering the label vacuum until confirmed cases retrain the tree.
+
+\paragraph{LLM as scribe.} At the end of the queue, the scribe drafts the two
+regulated documents of \secref{sec:p8-gap-narration}: the SAR narrative,
+conditioned on the case file and structured to FinCEN's
+who/what/when/where/why guidance \citep{fincen2003sarnarrative}; and, in
+credit-decision contexts, the adverse-action statement of specific reasons,
+conditioned on the tree's feature attributions so that the stated reasons are
+the model's actual principal reasons as ECOA/Regulation~B demands
+\citep{cfr1002_9, cfpb2022circular}. Every draft carries provenance links from
+each claim to its evidence, and a human analyst signs before anything is
+filed. The scribe is the highest-value, lowest-risk seat: pure text
+generation, fully reviewable, in a category with no non-LLM competitor.
+
+\paragraph{The label loop.} Analyst dispositions flow back as confirmed
+labels, retraining the scorer and grading the sensor and triage components.
+The architecture is thus not a static ensemble but a division of labor with a
+single supervised spine: the tree learns from every closed case, and the LLM
+seats are evaluated by how much they improve the tree's inputs, the queue's
+ordering, and the filing's speed---each independently measurable, which is the
+program discipline (``measure capability, don't trust the label'') applied to
+the system's own components.

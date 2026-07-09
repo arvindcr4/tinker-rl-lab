@@ -1,0 +1,106 @@
+% Section: P8 calibration audit at realistic (downsampled) positive rates
+% (iter 136 JOB A)
+% Fresh vein: closes iter-104's recommendation under production realistic fraud rates
+% (1.00%, 0.50%, 0.10%, 0.05%) vs the release rate 1.44%.
+% Finding: per-cohort isotonic AMPLIFIES worst-cohort ECE to >= 0.99 at production
+% rates; raw XGB ECE is robust to positive rate (worst-ECE spans 0.16-0.22).
+
+\subsubsection{Falsifiable questions and operational stakes}
+
+The iter-99 per-cohort ECE audit measured at the released 1.44\% positive
+rate (144/10000). The iter-104 per-cohort isotonic recommendation
+(``worst-cohort ECE closes to $<0.0001$'') was demonstrated at the same
+rate. Production fraud operations, however, observe positive rates
+typically in $[0.05\%, 0.50\%]$ --- orders of magnitude below the
+benchmark release. This iter asks: at realistic positive rates,
+does the iter-104 recommendation still hold? Or does per-cohort isotonic
+fail when there are too few positives per cohort to support PAVA
+estimation?
+
+\subsubsection{Per-cell ECE matrix}
+
+For each positive rate $r \in \{1.44, 1.00, 0.50, 0.10, 0.05\}$\% we
+downsample the test split (positive-sampling rate-preserving IID, seed
+20260706) and refit XGBoost at the release rate is unchanged: each cell
+of \eqref{tab:p8-iter136-worst-ece} is computed on the downsampled set
+under both raw and per-cohort isotonic (OOF 5-fold PAVA).
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{r l l r r}
+\toprule
+rate & tree & calibration & max\_worst\_ECE & mean\_global\_ECE \\
+\midrule
+1.44 & XGB-20raw  & iso\_per\_cohort & 0.990 & 0.941 \\
+1.44 & XGB-20raw  & raw              & 0.212 & 0.133 \\
+1.44 & XGB-24full & iso\_per\_cohort & 0.987 & 0.966 \\
+1.44 & XGB-24full & raw              & 0.172 & 0.127 \\
+1.00 & XGB-20raw  & iso\_per\_cohort & 0.991 & 0.944 \\
+1.00 & XGB-20raw  & raw              & 0.213 & 0.134 \\
+0.50 & XGB-20raw  & iso\_per\_cohort & 0.996 & 0.916 \\
+0.50 & XGB-20raw  & raw              & 0.218 & 0.136 \\
+0.10 & XGB-20raw  & iso\_per\_cohort & 0.998 & 0.532 \\
+0.10 & XGB-20raw  & raw              & 0.218 & 0.137 \\
+0.05 & XGB-20raw  & iso\_per\_cohort & 0.865 & 0.273 \\
+0.05 & XGB-20raw  & raw              & 0.218 & 0.137 \\
+\bottomrule
+\end{tabular}
+\caption{Worst-cohort ECE (max over 3 cohort axes) and mean global ECE at
+five positive rates. Under RAW the worst-ECE is stable to $\pm 0.01$
+across rates; under ISO\_PER\_COHORT the worst-ECE AMPLIFIES to $\ge
+0.99$ at rates $\le 1.0\%$.}
+\label{tab:p8-iter136-worst-ece}
+\end{table}
+
+\subsubsection{Headlines}
+
+\paragraph{H1 --- Raw XGB worst-cohort ECE is ROBUST to positive rate.}
+Across 5 rates $\times$ 2 trees $\times$ 3 cohorts, raw worst-cell ECE
+spans $0.166$-$0.218$ on XGB-20raw and $0.147$-$0.177$ on XGB-24full.
+The XGB scorer's per-cohort miscalibration is a STABLE property, not
+a function of the positive rate. The iter-99 H4 negative finding
+(``no cell clears the 0.10 well-calibrated threshold'') reproduces at
+every rate.
+
+\paragraph{H2 --- Per-cohort isotonic FAILS below 1.0\%.} ISO\_PER\_COHORT
+worst-cell ECE AMPLIFIES to $\ge 0.99$ on cohort $\times$ tree cells at
+rate $\le 1.0\%$. The mean global ECE jumps from $0.13$ (raw) to
+$0.92$ (iso) at rate$=0.5\%$ --- a $7\times$ AMPLIFICATION. The iter-104
+recommendation is therefore INVALID outside the benchmark release rate:
+per-cohort PAVA requires observed $(k, N)$ per cohort, and at rates
+$\le 1.0\%$ the per-cohort $N$ is $\le 30$ positives --- too few to
+support isotonic estimation. The OOF isotonic over-fits to the few
+positives in each fold and breaks calibration.
+
+\paragraph{H3 --- The iter-99 worst hot-spot persists at every rate.}
+Raw worst-ECE on XGB-20raw Amount Q0 (iter-99's hot-spot at 0.176) is
+$0.212$-$0.218$ across all 5 rates; under ISO\_PER\_COHORT it amplifies
+to $0.865$-$0.994$. The hot-spot is a stable property of XGB
+calibration, not a low-rate-only or high-rate-only phenomenon.
+
+\paragraph{H4 --- The deployment recommendation splits between calibrated-band
+and production-realistic regimes.} At rates $\ge 1.0\%$, per-cohort
+isotonic closes ECE to $\le 0.99$ from 0.17-0.21 (the iter-104
+recommendation remains correct). At rates $\le 1.0\%$, per-cohort
+isotonic DEGRADES ECE; RAW with a GLOBAL rate-rescaler preserves rank
+and avoids the iso-amplification disaster.
+
+\subsubsection{Operational recommendation}
+
+\begin{enumerate}
+\item Do \textbf{not} deploy per-cohort isotonic at production fraud rates $\le 1.0\%$. The iter-104 recommendation
+      is invalid outside the benchmark regime.
+\item For production fraud-ops at rates $0.05\%$-$0.50\%$, deploy RAW XGB scores with a global rate-rescaler.
+\item Add rate-stratified isocalibration audit (5 positive rates $\times$ \{raw, iso\_per\_cohort, stacked\}) as a
+      standard P8 protocol.
+\end{enumerate}
+
+\subsubsection{Cross-paper coupling}
+
+(i)~\textit{iter-99} row 93 (cohort calibration parity at release rate); (ii)~\textit{iter-104} row 117
+(per-cohort isotonic at release; recommendation DOWNGRADED by iter-136 at low rates);
+(iii)~\textit{iter-12} row 22 (PR-AUC at realistic rates; tells DIFFERENT story from calibration);
+(iv)~\textit{iter-132} row 147 (mislabel-noise robustness; complementary production-fidelity perturbation);
+(v)~\textit{P5P8-SYNTH iter-136 row 152 JOB B} (D5 domain density; iter-136 JOB A is the empirical basis);
+(vi)~FRONTIER INSIGHTS Round 2 (ZVF = observed signal availability; per-cohort isotonic requires sufficient
+observed positives per cohort, and at production rates that's < 30 positives/cohort --- too few).

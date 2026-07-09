@@ -1,0 +1,9 @@
+prediction_id	claim	observed	expected	pass_fail
+P1_k50_lt_half_steps	Saturation k50 (prefix length at which suffix R^2 >= 0.5) is reached for < 4/12 anchors (the saturation law has *no* operational forecasting horizon).	0/12	< 4/12	PASS
+P2_sat_beats_const	Saturation beats constant-last on suffix R^2 for >= 7/12 anchors (operationally useful).	6/7	>= 7/12	FAIL
+P3_median_best_r2_nonneg	Median best suffix R^2 across the 12 anchors is > 0 (saturation adds information beyond a constant).	-0.000	> 0	FAIL
+P4_mean_delta_positive	Mean (best R^2_sat - best R^2_const) is > 0 on average (saturation beats constant in aggregate).	-0.005	> 0	FAIL
+P5_coverage_calibrated	1-step 90% PI coverage at k=n-1 is >= 0.5 for >= 4/12 anchors (PI is at least directionally calibrated).	1/8	>= 4/12	FAIL
+P6_hierarchical_suffix_better	Hierarchical (shared R_max) suffix R^2 is better than constant-last baseline for >= 4/6 dense anchors.	3/4	>= 4/6	FAIL
+P7_horizon_collapse_violator	Nemotron-120B has no prefix k with suffix R^2 >= 0 (the collapse is unforeshortenable).	no	no	PASS
+P8_saturation_vs_linear	Per-anchor best suffix R^2 (saturation) > per-anchor best (linear-extrap) for >= 4/12 anchors (specific functional form beats linear).	3/7	>= 4/12	FAIL

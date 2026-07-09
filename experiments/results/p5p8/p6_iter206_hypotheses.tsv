@@ -1,0 +1,8 @@
+h	claim	verdict	observed_rho	observed_ci_lo	observed_ci_hi	observed_delta	observed_mean_disagree	n_clusters	n_boot	n_zvf_clusters	n_colab_clusters	n_fields_gt_05	n_fields_eq_0	observed_n_zero
+H1	Spearman rho between cluster mean_badge and cluster mean_disagree is NEGATIVE (rho <= -0.10) with bootstrap CI excluding 0	FAIL	-0.3714	-0.5429	1.0			6	2000					
+H2	Top-quartile mean_disagree strictly less than bottom-quartile, with delta > 0.05	FAIL				0.0059								
+H3	Clusters with mean_badge >= 0.70 have mean_disagree < 0.30	FAIL					0.32736666666666664	3						
+H4	Entry-level Spearman rho (entry badge vs cluster mean disagree) is STRONGLY NEGATIVE (rho <= -0.20)	PASS	-0.3375											
+H5	zvf130 clusters have MEANINGFULLY HIGHER mean_disagree than colab-open clusters (delta > 0.05)	FAIL								4	3			
+H6	At least 4 of 23 MIN-REPORT sub-fields achieve all-cluster disagreement rate of 0 (universal agreement)	PASS												10
+H7	INTER-FIELD HETEROGENEITY: at least 3 fields at mean_disagree > 0.5 AND at least 3 at mean_disagree == 0	PASS										5	10	

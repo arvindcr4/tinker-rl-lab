@@ -1,0 +1,105 @@
+% Section: yield-aware MIN-REPORT v2.1 axis (P5, iter 80, JOB B / SYNTH)
+% Closes the iter-76 primary recommendation: add Item 13 (zvf_yield_residual)
+% to MIN-REPORT, computing the structural anti-herding bonus delta_div
+% per cell from the (G, mean_reward, zvf) columns of cells.tsv.
+\subsection{Yield-aware MIN-REPORT v2.1 axis (Item 13: \texttt{zvf\_yield\_residual})}
+\label{sec:p5-iter80-yield}
+
+The iter-66 row 77 \texttt{measured\_yield\_residual} block argued that the
+per-step anti-herding bonus
+$\delta_{\mathrm{div}} = \mathrm{ZVF}_{\mathrm{obs}} - \mathrm{ZVF}_{\mathrm{iid}}$ is the
+one signal that varies per-method on the same-stack N2 corpus. The
+iter-72 primary recommendation proposed extending MIN-REPORT with a
+per-cell $\delta_{\mathrm{div}}$ item to replace one of the iter-65
+``placebo'' items with a measurable yield-residual axis.
+
+We instantiate this proposal as Item 13 of a v2.1 MIN-REPORT:
+\begin{align}
+  \mathrm{Item13}(c) \;=\; z_{\mathrm{obs}}(c) \;-\; \bigl(p_c^{\,G_c} + (1-p_c)^{\,G_c}\bigr),
+\quad p_c \;=\; \mathrm{mean\_reward}(c)/100.
+\label{eq:item13}
+\end{align}
+
+\subsubsection{Information-budget uplift (H1)}
+On the live 98-cell corpus, Item~13 populates $\mathbf{98/98}$ cells (the
+formula is fully determined by $(G_c, \mathrm{mean\_reward}, \mathrm{zvf})$,
+all already in \texttt{cells.tsv}). Discrete-cardinality:
+$n_{\mathrm{unique}} = 58$ (at $10^{-4}$ rounding precision) -- Item~13 is
+\emph{much more} discriminating than any of the 7 v1 items. Shannon
+information added to the v2.0 fingerprint:
+$\Delta H \;=\; +4.645\,\mathrm{bits}$, bootstrap CI $[+3.66, +4.65]$.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{P5 v2.1 MIN-REPORT fingerprint: cumulative $H_{\mathrm{bits}}$ uplift.
+v1 = 11.41 bits; v2.0 adds 5 stack axes = +6.86 bits; v2.1 adds Item 13
+(zvf\_yield\_residual) = +4.65 bits. Item 13 contributes 67.7\% as much
+information as the entire 5-axis stack extension.}
+\label{tab:p5-v21-uplift}
+\begin{tabular}{l r r r r}
+\toprule
+Fingerprint & Items & Pop. cells & $H_{\mathrm{bits}}$ total & $\Delta H$ vs v1 \\
+\midrule
+v1 (paper §4.2)        & 7 & 98/98 & 11.41 & -- \\
+v2.0 (iter-73 row 86)  & 12 & 98/98 & 18.27 & +6.86 \\
+\textbf{v2.1 (this iteration)} & \textbf{13} & \textbf{98/98} & \textbf{22.92} & \textbf{+4.65} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Spearman $\rho$(Hamming, $|\Delta z|)$ uplift (H2)}
+On 2000 sampled cell-pairs from the live corpus:
+\begin{itemize}
+  \item v1 fingerprint alone: $\rho = 0.4268$
+  \item v2.0 (v1 + 5 stack axes): $\rho = 0.3835$ -- the v2.0 stack axes
+        \emph{weaken} coupling by $-0.043$ (consistent with iter-73 row 86 H2).
+  \item v2.1 (v2.0 + Item 13): $\rho = 0.4384$ -- Item 13 \emph{restores} and
+        \emph{strengthens} coupling by $+0.055$ vs v2.0 (paired bootstrap CI
+        $[+0.050,\,+0.062]$, \textbf{excludes zero}).
+\end{itemize}
+This is the \textbf{first MIN-REPORT item that independently strengthens
+fingerprint-vs-outcome coupling on the live 98-cell corpus} -- a sharp
+contrast to iter-65 row 76 (4/7 v1 items are placebo) and iter-73 row 86
+(v2 stack axes weaken coupling by 0.043).
+
+\subsubsection{Per-cell badge uplift (H3)}
+Deterministic: each cell's badge rises by exactly 20 points (the proposed
+weight of Item 13). The 95\% bootstrap CI on per-cell uplift is degenerate.
+
+\subsubsection{Per-axis Spearman (H4)}
+Item 13 alone vs $|\Delta z|$ gives $\rho = 0.366$ on 2000 cell-pairs --
+already 86\% of the v1 fingerprint's $\rho = 0.427$, despite being a
+single continuous axis. This is a sharper single-axis signal than any
+v2 stack axis at the 1-D Hamming granularity.
+
+\subsubsection{Verdict and operational recommendation}
+\textit{SIGNAL-BEARING.} Item 13 contributes both
+(i) high information content ($+4.65$ bits) and
+(ii) measurable outcome-coupling strengthening (paired $\Delta\rho$ excludes zero).
+We recommend Item 13 be adopted into a v2.1 MIN-REPORT schema, displacing
+\textbf{one} v1 placebo item. The iter-69 row 81 finding (``placebo is
+corpus-design, not schema-design'') is sharpened: at least one
+yield-residual axis is empirically signal-bearing across every stack-pair
+configuration on the live 98-cell corpus.
+
+\subsubsection{Cross-paper coupling}
+\begin{itemize}
+  \item \textbf{P6 iter-66 row 77 / iter-70 row 82 / iter-74 row 87} --
+        Item 13 is the row-level summarization of the registry's
+        \texttt{measured\_yield\_residual} $\delta_{\mathrm{div}}$ block.
+        The per-cell instantiation makes the registry axis reproducible
+        across any corpus with the $(G, p, z)$ columns.
+  \item \textbf{P7 iter-72 row 85 / iter-75 row 88 / iter-79 row 93} --
+        Item 13 captures the per-(method, step) contrast-preservation bonus
+        at the cell-summary granularity; together with iter-75's exact
+        hypergeometric \texttt{CP\_exact}, the structural anti-herding signal
+        is now end-to-end machine-readable from cells.tsv to the joint
+        controller's per-step savings.
+  \item \textbf{P8 iter-76 row 89 / iter-80 row 94} -- the same
+        anti-herding bonus that makes Item 13 signal-bearing on the LLM-RL
+        axis also explains why score-stream gradient (P8 row 94) is more
+        LLM-efficient than absolute-band: rows where consecutive scores
+        plateau are exactly the rows where cheap-vs-expensive disagreement
+        dominates -- a per-row analog of the per-cell Item 13.
+\end{itemize}

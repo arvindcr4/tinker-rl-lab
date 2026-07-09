@@ -1,0 +1,4 @@
+id	name	base	has_citation	arxiv	n_deltas	n_measured	n_claim_validation	notes_excerpt
+delta_adaptiveg	Adaptive-G (ZVF-driven)	grpo	True		1	2	2	Iter-54 vein (d): added because the worktree carries a real adaptive-G arm (qp7_
+delta_reinforce	REINFORCE	grpo	True		2	0	0	Iter-54 vein (d): REINFORCE is mentioned in experiments/results/EXPERIMENT_LEDGE
+delta_liteppo	LitePPO	grpo	True		2	0	0	Iter-54 vein (d): LitePPO is mentioned in experiments/results/EXPERIMENT_LEDGER.

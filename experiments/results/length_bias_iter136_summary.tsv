@@ -1,0 +1,6 @@
+hypothesis	tasks_favoured	tasks_marginal	n_favours	n_dir_pos	binom_p_two_sided_strict	binom_p_one_sided_signtest	headline
+H1_abs_rho_dR_dL_DR_smaller			0	0	1.0000	0.2500	DIRECTIONAL
+H2_abs_rho_len_lag1_DR_smaller			0	0	1.0000	0.2500	DIRECTIONAL
+H3_late_eff_DR_larger	arithmetic_easy		1	2	0.5000	0.2500	DIRECTIONAL
+H4_rho_dZ_dL_DR_lessneg			0	2	1.0000	0.2500	DIRECTIONAL
+GLOBAL_sign_test_over_all_8_paired			1	8	0.0039	0.0039	GLOBAL_REJECT

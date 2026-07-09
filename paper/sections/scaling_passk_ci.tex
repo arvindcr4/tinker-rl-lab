@@ -1,0 +1,120 @@
+% =====================================================================
+% paper/sections/scaling_passk_ci.tex
+%
+% PROVENANCE. Berkeley B-F24 row 09 (iter142, 2026-07-04): SWE-agent /
+% Agentless Pass@K confidence-interval + ACI-decomposition analysis of
+% the Pillar-1 R_max evidence, validated status.
+% Driver:  scripts/berkeley/sweagent_passk_aci.py
+% Inputs:  experiments/results/scaling_law_iter137_offset_fit.tsv
+%          experiments/results/berkeley/eureka_rqs_per_anchor.tsv
+% Outputs: experiments/results/berkeley/sweagent_passk_per_anchor.tsv
+%          experiments/results/berkeley/sweagent_passk_scaling.tsv
+%          experiments/results/berkeley/sweagent_aci_decomp.tsv
+%          experiments/results/berkeley/sweagent_agentless_tiers.tsv
+%          experiments/results/berkeley/sweagent_summary.json
+% Finding B (Miller error-bars audit, ledger row 07) is folded into the
+% final paragraph; source experiments/results/berkeley/
+% adding_error_bars_summary.json.
+% Cite keys yang2024sweagent / xia2024agentless / wang2024openhands are
+% staged in paper/bib_add_P1.bib pending merge into references.bib.
+% =====================================================================
+
+\subsection{Pass@$K$ Confidence Intervals and the ACI Ceiling: What the Capability Split Does and Does Not Resolve}
+\label{sec:scaling-passk-ci}
+
+The iter~133 capability-class analysis above treats each anchor's
+ceiling $\hat R_{\max}$ as a point estimate.  Software-agent benchmarking
+supplies two correctives.  First, the \emph{agent--computer interface}
+(ACI) --- how an agent observes its environment and how its output is
+parsed --- is a first-order determinant of measured capability, often
+rivalling the underlying policy \citep{yang2024sweagent,
+wang2024openhands}; in our setting the ACI is the reward parser that
+converts GSM8K rollouts into sparse reward.  Second, success-rate
+estimates should carry Pass@$K$ sampling uncertainty
+\citep{chen2021codex}.  We apply both to the five-anchor
+$R_{\max}$ evidence: treating each anchor's per-step training rewards
+($n = 20$--$30$ steps) as its Pass@$K{=}1$ sample, a percentile
+bootstrap ($B = 20{,}000$) on the mean gives the 95\% intervals of
+\tableref{tab:scaling-passk-ci}.
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabular}{lrrrcr}
+    \toprule
+    Model & $n$ & $\hat R_{\max}^{2p}$ & $\hat p$ &
+    95\% CI on $\hat p$ & width \\
+    \midrule
+    Llama-3.1-8B-Instruct & 30 & 0.869 & 0.828 & $[0.752,\,0.897]$ & 0.145 \\
+    DeepSeek-V3.1         & 20 & 0.844 & 0.827 & $[0.700,\,0.934]$ & 0.234 \\
+    Qwen3.5-4B            & 30 & 0.817 & 0.767 & $[0.657,\,0.863]$ & 0.205 \\
+    Qwen3-8B              & 30 & 0.285 & 0.416 & $[0.295,\,0.541]$ & 0.247 \\
+    Nemotron-120B         & 20 & 0.182 & 0.219 & $[0.081,\,0.380]$ & 0.298 \\
+    \bottomrule
+  \end{tabular}
+  \caption{\textbf{Per-anchor Pass@$K{=}1$ bootstrap intervals.}
+    $\hat p$ is the step-level Pass@$1$ estimate; the CI is a
+    percentile bootstrap ($B = 20{,}000$) over the within-anchor step
+    rewards.  Every CI width ($0.145$--$0.298$) exceeds the
+    $0.025$--$0.052$ $R_{\max}$ gaps that separate the three
+    top-ranked anchors by up to an order of magnitude.
+    \texttt{scripts/berkeley/sweagent\_passk\_aci.py} $\to$
+    \texttt{experiments/results/berkeley/sweagent\_passk\_per\_anchor.tsv}.}
+  \label{tab:scaling-passk-ci}
+\end{table}
+
+\paragraph{The within-tier ordering is not statistically resolvable.}
+A pairwise CI-overlap (``straddle'') test over all
+$\binom{5}{2} = 10$ anchor pairs
+(\texttt{experiments/results/berkeley/sweagent\_passk\_scaling.tsv})
+splits exactly along tier lines.  All three pairwise comparisons among
+the capable anchors overlap ($R_{\max}$ gaps $0.025$, $0.027$,
+$0.052$), and the two incapable anchors overlap each other (gap
+$0.110$); only the six capable-versus-incapable comparisons are
+cleanly separated.  The plain statement is that \emph{any within-tier
+model ordering read off the sorted $R_{\max}$ values --- e.g.\
+Llama-3.1-8B-Instruct $>$ DeepSeek-V3.1 $>$ Qwen3.5-4B --- is not
+resolvable at the current within-anchor sample size and should not be
+treated as a finding of this paper}.  What survives, with no CI
+overlap across the gap, is the capable/incapable split itself; this
+tempers, without overturning, the iter~133 capability-class verdict.
+Resolving a $0.025$ gap
+would require roughly $n \geq 100$ steps per anchor.
+
+\paragraph{An Agentless-style tier reading of the bimodality.}
+Binning $\hat R_{\max}^{2p}$ in the style of the Agentless
+pipeline audit \citep{xia2024agentless} into \emph{hard-floor}
+($< 0.30$), \emph{soft-floor} ($[0.30, 0.70)$), and \emph{reachable}
+($\geq 0.70$) tiers places three anchors in the reachable tier, two in
+the hard floor, and \emph{none} in the soft floor
+(\texttt{experiments/results/berkeley/sweagent\_agentless\_tiers.tsv}).
+The empty middle tier restates the iter~125/133 bimodality from the
+interface side: no anchor occupies a policy-bounded intermediate
+plateau.  A proxy decomposition of the observed ceiling by ACI
+quality, $R_{\max}^{\text{policy}} = R_{\max}^{\text{obs}} /
+\max(\mathrm{RQS}, 0.05)$ capped at $1$ (RQS as defined in
+Eq.~\ref{eq:iter140-rqs}), makes the reading
+concrete: the three reachable anchors all cap at $1.0$
+(policy-saturated within their ACI regime), whereas Qwen3-8B's
+observed $R_{\max} = 0.285$ decomposes against $\mathrm{RQS} = 0.353$
+to an implied policy ceiling of $\approx 0.808$
+(\texttt{experiments/results/berkeley/sweagent\_aci\_decomp.tsv}).
+On this reading, part of the ``incapable'' verdict for Qwen3-8B is a
+reward-parser ceiling rather than a policy deficit; the decomposition
+is a proxy, and confirming it would require re-training the anchor
+under a shared reward parser.  (Nemotron-120B has $\mathrm{RQS} = 0$
+and the decomposition is undefined.)
+
+\paragraph{Statistical-rigor audit of the Pillar-1 headlines.}
+A companion Miller-style error-bars audit \citep{miller2024erroreval}
+re-derived the headline claims of all four pillar papers under paired
+and non-paired bootstrap plus TOST equivalence testing
+(\texttt{experiments/results/berkeley/adding\_error\_bars\_summary.json}).
+Exactly one audited headline concerns this paper: \textbf{H5}, the
+iter~137 cross-anchor OLS slope of $R_{\max}^{2p}$ on $\log_{10} N$
+($n = 5$ anchors), whose non-paired bootstrap 95\% CI
+$[-0.796, +0.323]$ around the point slope $-0.023$ includes zero ---
+verdict \textbf{NULL}.  This is the audit confirming, rather than
+qualifying, the iter~137 no-cross-anchor-scaling-law statement; the
+audit's four
+DECISIVE verdicts (H1, H2, H6, H7) all concern the other pillars.

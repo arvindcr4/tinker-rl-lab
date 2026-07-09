@@ -1,0 +1,31 @@
+{
+  "source": "Berkeley F25 L8 Sida Wang -- Predictable Noise / Adding Error Bars to Evals",
+  "method": "seed-clustering design-effect audit (ICC + Kish DEFF + cluster bootstrap)",
+  "n_headlines_audited": 9,
+  "n_pooled_CI_inflated": 5,
+  "max_deff": {
+    "metric": "P1_ppo_last10",
+    "deff": 7.373,
+    "icc": 0.7081,
+    "width_inflation": 2.394,
+    "ci_naive": "[0.8822, 0.9477]",
+    "ci_cluster": "[0.8180, 0.9747]"
+  },
+  "mean_deff": 2.401,
+  "mean_icc": 0.2213,
+  "paired_delta_equivalence": {
+    "metric": "P1_grpo_minus_ppo_paired",
+    "point": 0.06078,
+    "cluster_ci": [
+      -0.00016,
+      0.15594
+    ],
+    "straddles_zero": true,
+    "naive_pooled_ci": [
+      0.02984,
+      0.09641
+    ],
+    "naive_straddles_zero": false
+  },
+  "key_finding": "Training-step metrics carry high within-seed autocorrelation: pooling S seeds x M steps as i.i.d. understates headline-CI width by up to 2.394x (DEFF=7.373, n_eff=6.78 vs n_pooled=50). Every TinkerRL-Bench headline must report SEED-CLUSTERED error bars; the papers that already aggregate per-seed then take seed-SE are correct, and this audit quantifies the trap for any pooled-CI reporting (closes row-07 H6 cluster-sensitivity thread)."
+}

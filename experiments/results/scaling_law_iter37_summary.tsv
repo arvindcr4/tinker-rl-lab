@@ -1,0 +1,14 @@
+n_anchors	12
+n_candidates	5
+anchors_where_sat_wins_aic	1
+anchors_where_hill_wins_aic	1
+anchors_where_mm_wins_aic	1
+anchors_where_power_wins_aic	0
+anchors_where_linear_wins_aic	9
+median_odds_saturation_vs_all	0.0015
+median_delta_aic_best_worst	41.6142
+bootstrap_win_share_saturation_mean	0.0963
+bootstrap_win_share_hill_mean	0.1162
+bootstrap_win_share_mm_mean	0.04
+bootstrap_win_share_power_mean	0.0158
+bootstrap_win_share_linear_mean	0.7317

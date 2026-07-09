@@ -1,0 +1,60 @@
+{
+  "paper": "Grokked Transformers are Implicit Reasoners (Wang, Yue, Su, Sun; NeurIPS 2024, arXiv:2405.15071)",
+  "lecture": "SP25 L3 Yu Su",
+  "target": "A3 + Pillar 1/3",
+  "n_native_prompt_seeds": 600,
+  "decisive": 4,
+  "suggestive": 1,
+  "n_hyp": 5,
+  "hypotheses": {
+    "H1_grokking_signature": {
+      "train_min_final_reward": 0.9688,
+      "train_saturated_ge_0.95": true,
+      "heldout_G32_last_two": [
+        0.84,
+        0.88
+      ],
+      "heldout_still_rising": true,
+      "verdict": "DECISIVE"
+    },
+    "H2_memorization_G_invariant": {
+      "t_mem_range_steps": 2,
+      "mean_t_mem_by_G": {
+        "2": 15.33,
+        "4": 14.33,
+        "8": 14.33,
+        "16": 14.33
+      },
+      "cv_t_mem": 0.0458,
+      "memorization_G_sensitivity": 0.0686,
+      "generalization_G_sensitivity": 0.3158,
+      "gen_over_mem_sensitivity_x": 4.61,
+      "spearman_G_vs_tmem": -0.5045,
+      "verdict": "DECISIVE"
+    },
+    "H3_generalization_G_controlled": {
+      "gen_gap_first_budget": 0.01,
+      "gen_gap_last_budget": 0.24,
+      "gap_opens_post_memorization": true,
+      "heldout_slope_per_decade_G4": 0.1279,
+      "heldout_slope_per_decade_G32": 0.2591,
+      "slope_ratio_G32_over_G4": 2.026,
+      "verdict": "DECISIVE"
+    },
+    "H4_contrastive_yield_mediates": {
+      "Y_G4": 0.636,
+      "Y_G32": 0.838,
+      "heldout_ceiling_G4": 0.64,
+      "heldout_ceiling_G32": 0.88,
+      "direction_consistent": true,
+      "verdict": "SUGGESTIVE",
+      "note": "only 2 heldout anchors (G4,G32); direction test not a regression"
+    },
+    "H5_ratio_not_size": {
+      "Y_SE_across_size_N100_G4": 0.01621,
+      "Y_range_across_ratio_G": 0.4901,
+      "ratio_dominance_x": 30.2,
+      "verdict": "DECISIVE"
+    }
+  }
+}

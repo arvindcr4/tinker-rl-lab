@@ -1,0 +1,5 @@
+prediction_id	claim	predicted_value	observed_value	delta	pass_fail	notes
+P1_collapse_only_unbound	Collapse (Nemotron-120B) is the only non-bound anchor	1	1	0	PASS	Unbound: ['Nemotron-120B']
+P2_robust_beats_canonical	robust R_max >= canonical on >= 3/5 anchors	3	0	-3	FAIL	gaps: ['-0.183', '-0.090', '-0.131', '-0.156', '-0.099']
+P3_alpha_CI_includes_zero	alpha (5-anchor) 95% CI includes 0	CI includes 0	[-1.626, 0.554]	0	PASS	alpha=-0.063, CI width=2.181, R^2=0.009
+P4_extended_pool_narrows_CI	9-anchor pool narrower CI than 5-anchor pool	CI_AB<2.181	1.514	-0.6660907895092354	PASS	5-anchor CI=2.181, 9-anchor CI=1.514

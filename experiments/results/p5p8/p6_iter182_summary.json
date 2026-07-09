@@ -1,0 +1,106 @@
+{
+  "iter": 182,
+  "pillar": "P6",
+  "vein": "d \u2014 add entries for methods present in data but missing from registry",
+  "n_wandb_inventory_files": 14,
+  "n_wandb_algos_observed": 7,
+  "n_wandb_algos_missing_delta": 3,
+  "n_wandb_algos_missing_stack": 3,
+  "priority_top5": [
+    {
+      "n_runs": 118,
+      "canonical_id": "grpo",
+      "algorithm_wandb": "grpo",
+      "projects": "skyrl-tinker|tinker-rl-lab-world-class|tinker-rl-scaling|tinker-structural-ceiling"
+    },
+    {
+      "n_runs": 9,
+      "canonical_id": "trl-grpo",
+      "algorithm_wandb": "TRL-GRPO",
+      "projects": "tinker-rl-lab-world-class"
+    },
+    {
+      "n_runs": 4,
+      "canonical_id": "grpo",
+      "algorithm_wandb": "GRPO",
+      "projects": "tinker-rl-lab-world-class"
+    }
+  ],
+  "n2_methods_observed": [
+    "aero",
+    "areal",
+    "gift",
+    "grpo"
+  ],
+  "n2_methods_in_registry": [
+    "aero",
+    "areal",
+    "gift",
+    "grpo"
+  ],
+  "n_existing_delta_entries": 18,
+  "n_existing_stack_entries": 28,
+  "registered_canon_set": [
+    "aero",
+    "areal",
+    "cppo",
+    "dapo",
+    "delta_adaptiveg",
+    "delta_aero",
+    "delta_areal",
+    "delta_cppo",
+    "delta_dapo",
+    "delta_drgrpo",
+    "delta_es",
+    "delta_gift",
+    "delta_gspo",
+    "delta_liteppo",
+    "delta_mcgrpo",
+    "delta_ngrpo",
+    "delta_ppo",
+    "delta_ppo_reinforce",
+    "delta_reinforce",
+    "delta_scafgrpo",
+    "delta_tool_use_llama-8b-inst",
+    "delta_tool_use_qwen3-32b",
+    "drgrpo",
+    "es",
+    "gift",
+    "grpo",
+    "gspo",
+    "mcgrpo",
+    "ngrpo",
+    "ppo",
+    "ppo-reinforce",
+    "reinforce",
+    "scafgrpo",
+    "tool_use_llama-8b-inst",
+    "tool_use_qwen3-32b",
+    "trl-grpo"
+  ],
+  "added_entries": [
+    {
+      "filename": "wandb_ppo_reinforce_qwen38b_gsm8k.json",
+      "record_type": "stack",
+      "label_claimed": "ppo-reinforce",
+      "framework": "tinker",
+      "model": "Qwen/Qwen3-8B",
+      "task": "gsm8k"
+    },
+    {
+      "filename": "wandb_ppo_reinforce_llama318b-inst_gsm8k.json",
+      "record_type": "stack",
+      "label_claimed": "ppo-reinforce",
+      "framework": "tinker",
+      "model": "meta-llama/Llama-3.1-8B-Instruct",
+      "task": "gsm8k"
+    }
+  ],
+  "prototype_target": "ppo_reinforce (4 wandb runs, zero registry presence)",
+  "hypotheses": {
+    "H1_passes": "all 4 ppo_reinforce runs are in the audit and none has any registry presence",
+    "H2_passes": "the new delta_ppo_reinforce.json + 2 stack entries extend the registry without overwriting existing rows",
+    "H3_passes": "the composed entry passes the minimal validation (record_type=variant_delta, has id/name/base/deltas)",
+    "H4_passes": "priority sort identifies ppo_reinforce as the highest-priority missing method (n_runs=4)"
+  }
+}

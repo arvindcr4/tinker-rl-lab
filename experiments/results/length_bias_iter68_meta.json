@@ -1,0 +1,167 @@
+{
+  "experiments": [
+    {
+      "name": "drgrpo_gsm8k_cot",
+      "summary_rows": [
+        {
+          "experiment": "drgrpo_gsm8k_cot",
+          "metric": "fds_mean",
+          "n_pairs": 3,
+          "mean_grpo": 10.333333333333334,
+          "mean_drgrpo": 10.333333333333334,
+          "mean_diff": 0.0,
+          "ci_lo": 3.0,
+          "ci_hi": 22.0,
+          "p_le0": 1.0,
+          "interpretation": "first-divergence-step; same value for both algos on each seed"
+        },
+        {
+          "experiment": "drgrpo_gsm8k_cot",
+          "metric": "volatility_ratio_drgrpo_over_grpo",
+          "n_pairs": 3,
+          "mean_grpo": 6.965712506825156,
+          "mean_drgrpo": 6.271782442948893,
+          "mean_diff": 0.9414513992043411,
+          "ci_lo": 0.6780172359361848,
+          "ci_hi": 1.1813135784762807,
+          "p_le0": 0.7405,
+          "interpretation": "ratio > 1 means Dr.GRPO length trajectory is more volatile"
+        },
+        {
+          "experiment": "drgrpo_gsm8k_cot",
+          "metric": "reversal_rate_diff_drgrpo_minus_grpo",
+          "n_pairs": 3,
+          "mean_grpo": 0.6785714285714285,
+          "mean_drgrpo": 0.7261904761904763,
+          "mean_diff": 0.047619047619047596,
+          "ci_lo": 0.0,
+          "ci_hi": 0.0714285714285714,
+          "p_le0": 0.0425,
+          "interpretation": "positive = Dr.GRPO flips sign(dL) more often"
+        },
+        {
+          "experiment": "drgrpo_gsm8k_cot",
+          "metric": "auc_drgrpo_minus_grpo",
+          "n_pairs": 3,
+          "mean_grpo": 104.54947916666667,
+          "mean_drgrpo": -104.54947916666667,
+          "mean_diff": -209.09895833333334,
+          "ci_lo": -344.421875,
+          "ci_hi": -94.296875,
+          "p_le0": 1.0,
+          "interpretation": "signed area (Dr.GRPO - GRPO); positive = Dr.GRPO trace lies above GRPO"
+        },
+        {
+          "experiment": "drgrpo_gsm8k_cot",
+          "metric": "rev_on_pos_dR_diff_drgrpo_minus_grpo",
+          "n_pairs": 3,
+          "mean_grpo": 0.6135531135531136,
+          "mean_drgrpo": 0.7545787545787546,
+          "mean_diff": 0.141025641025641,
+          "ci_lo": 0.016483516483516425,
+          "ci_hi": 0.2142857142857143,
+          "p_le0": 0.0,
+          "interpretation": "positive = Dr.GRPO flips dL direction more on this reward-sign stratum"
+        },
+        {
+          "experiment": "drgrpo_gsm8k_cot",
+          "metric": "rev_on_neg_dR_diff_drgrpo_minus_grpo",
+          "n_pairs": 3,
+          "mean_grpo": 0.684126984126984,
+          "mean_drgrpo": 0.6301587301587301,
+          "mean_diff": -0.05396825396825392,
+          "ci_lo": -0.09047619047619038,
+          "ci_hi": 0.0,
+          "p_le0": 1.0,
+          "interpretation": "positive = Dr.GRPO flips dL direction more on this reward-sign stratum"
+        }
+      ]
+    },
+    {
+      "name": "drgrpo_vs_grpo",
+      "summary_rows": [
+        {
+          "experiment": "drgrpo_vs_grpo",
+          "metric": "fds_mean",
+          "n_pairs": 5,
+          "mean_grpo": 24.4,
+          "mean_drgrpo": 24.4,
+          "mean_diff": 0.0,
+          "ci_lo": 9.6,
+          "ci_hi": 39.0,
+          "p_le0": 1.0,
+          "interpretation": "first-divergence-step; same value for both algos on each seed"
+        },
+        {
+          "experiment": "drgrpo_vs_grpo",
+          "metric": "volatility_ratio_drgrpo_over_grpo",
+          "n_pairs": 5,
+          "mean_grpo": 0.32383147608962265,
+          "mean_drgrpo": 0.3205617064234048,
+          "mean_diff": 1.0006916621327395,
+          "ci_lo": 0.8759239813977973,
+          "ci_hi": 1.1030794165123634,
+          "p_le0": 0.5255,
+          "interpretation": "ratio > 1 means Dr.GRPO length trajectory is more volatile"
+        },
+        {
+          "experiment": "drgrpo_vs_grpo",
+          "metric": "reversal_rate_diff_drgrpo_minus_grpo",
+          "n_pairs": 5,
+          "mean_grpo": 0.5736842105263158,
+          "mean_drgrpo": 0.5684210526315789,
+          "mean_diff": -0.005263157894736881,
+          "ci_lo": -0.06842105263157897,
+          "ci_hi": 0.07368421052631575,
+          "p_le0": 0.6125,
+          "interpretation": "positive = Dr.GRPO flips sign(dL) more often"
+        },
+        {
+          "experiment": "drgrpo_vs_grpo",
+          "metric": "auc_drgrpo_minus_grpo",
+          "n_pairs": 5,
+          "mean_grpo": 2.9859375,
+          "mean_drgrpo": -2.9859375,
+          "mean_diff": -5.971875,
+          "ci_lo": -7.0921875,
+          "ci_hi": -4.96875,
+          "p_le0": 1.0,
+          "interpretation": "signed area (Dr.GRPO - GRPO); positive = Dr.GRPO trace lies above GRPO"
+        },
+        {
+          "experiment": "drgrpo_vs_grpo",
+          "metric": "rev_on_pos_dR_diff_drgrpo_minus_grpo",
+          "n_pairs": 5,
+          "mean_grpo": 0.49777777777777776,
+          "mean_drgrpo": 0.5050764165315249,
+          "mean_diff": 0.007298638753747111,
+          "ci_lo": -0.04031746031746029,
+          "ci_hi": 0.07293233082706764,
+          "p_le0": 0.407,
+          "interpretation": "positive = Dr.GRPO flips dL direction more on this reward-sign stratum"
+        },
+        {
+          "experiment": "drgrpo_vs_grpo",
+          "metric": "rev_on_neg_dR_diff_drgrpo_minus_grpo",
+          "n_pairs": 5,
+          "mean_grpo": 0.6085314685314686,
+          "mean_drgrpo": 0.6698135198135198,
+          "mean_diff": 0.06128205128205126,
+          "ci_lo": 0.006596736596736585,
+          "ci_hi": 0.14764568764568764,
+          "p_le0": 0.0,
+          "interpretation": "positive = Dr.GRPO flips dL direction more on this reward-sign stratum"
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "first_div": "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter68_first_div.tsv",
+    "vol": "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter68_volatility.tsv",
+    "rev": "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter68_reversals.tsv",
+    "raw": "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter68_per_run.tsv",
+    "summary": "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter68_summary.tsv",
+    "auc": "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter68_auc.tsv",
+    "rev_cond": "/home/claude/tinker-rl-lab-minimax/experiments/results/length_bias_iter68_rev_cond.tsv"
+  }
+}

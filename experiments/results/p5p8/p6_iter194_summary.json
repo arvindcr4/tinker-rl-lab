@@ -1,0 +1,37 @@
+{
+  "iter": 194,
+  "pillar": "P6",
+  "vein": "(a) deeper \u2014 CONTRADICTS deep-dive + robustness stress test + registry amendment for delta_aero/delta_areal reward_mean claim",
+  "raw_data_sources": [
+    "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+    "experiments/results/zvf_iter130_method_risk.tsv"
+  ],
+  "h1_multiseed_pass": true,
+  "h2a_bca_lower_pass": true,
+  "h2b_bca_strict_pass": false,
+  "h2c_bca_relaxed_pass": false,
+  "h2_bca_pass": false,
+  "h3_jackknife_pass": true,
+  "h4_window_pass": true,
+  "h5_cross_panel_pass": true,
+  "n_h_pass": 4,
+  "n_h_total": 5,
+  "registry_amendments_applied": [
+    "aero",
+    "areal"
+  ],
+  "amendment_change": "predicted_sign for reward_mean @ n2_same_stack_last10: '>=0' -> '<=0' (now SUPPORTS verdict)",
+  "outputs": [
+    "p6_iter194_robustness_multiseed.tsv",
+    "p6_iter194_robustness_bca.tsv",
+    "p6_iter194_robustness_jackknife.tsv",
+    "p6_iter194_robustness_window.tsv",
+    "p6_iter194_robustness_cross_panel.tsv"
+  ],
+  "registry_patches": [
+    "registry/entries/delta_aero.json (predicted_sign amended, caveat added)",
+    "registry/entries/delta_areal.json (predicted_sign amended, caveat added)",
+    "registry/entries/delta_aero.amendment.json (NEW provenance)",
+    "registry/entries/delta_areal.amendment.json (NEW provenance)"
+  ]
+}

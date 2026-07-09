@@ -1,0 +1,15 @@
+task	stat	grpo_mean	drgrpo_mean	diff_dr_minus_gr	ci_lo	ci_hi	p_two_sided	n_seeds
+gsm8k_cot	tau_all	12.0805	10.1136	-1.9669	-10.4540	5.2510	1.0000	3
+gsm8k_cot	tau_up	8.0379	9.0024	0.9645	-3.5464	7.5745	1.0000	3
+gsm8k_cot	tau_dn	15.6373	10.7835	-4.8538	-17.5591	4.0892	1.0000	3
+gsm8k_cot	zeta_all	nan	nan	-0.0527	-0.3867	0.2813	1.0000	2
+gsm8k_cot	zeta_up	nan	nan	-0.0362	-0.3259	0.2535	1.0000	2
+gsm8k_cot	zeta_dn	nan	nan	-0.1113	-0.4041	0.1815	1.0000	2
+gsm8k_cot	loop_area	-0.4082	-1.2599	-0.8517	-2.3904	1.4851	1.0000	3
+arith_easy	tau_all	12.9627	8.7188	-4.2439	-7.0457	-1.4421	1.0000	5
+arith_easy	tau_up	12.9627	8.7188	-4.2439	-7.0457	-1.4421	1.0000	5
+arith_easy	tau_dn	nan	nan	nan	nan	nan	nan	0
+arith_easy	zeta_all	nan	0.4925	0.1888	0.0434	0.4241	1.0000	4
+arith_easy	zeta_up	nan	0.4839	0.2430	0.0553	0.5688	1.0000	4
+arith_easy	zeta_dn	nan	nan	0.1636	-0.0275	0.3547	1.0000	2
+arith_easy	loop_area	-0.1124	-0.2037	-0.0914	-0.2379	0.1117	1.0000	5

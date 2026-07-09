@@ -1,0 +1,5 @@
+task	algo	n_seeds	mean_rho_dL_dR	sd_rho_dL_dR	mean_len_slope_per_step	n_with_horizon	mean_late_nonneg_w10	mean_drift_w10
+arithmetic_easy_qwen2.5-0.5b	grpo	5	-0.1642	0.1604	-0.029672	0	0.5273	0.3263
+arithmetic_easy_qwen2.5-0.5b	dr_grpo	5	-0.1687	0.1058	-0.026447	0	0.3818	0.1872
+gsm8k_cot_hard_qwen2.5-1.5b	grpo	3	-0.6758	0.139	-0.480661	0	0.0476	0.0187
+gsm8k_cot_hard_qwen2.5-1.5b	dr_grpo	3	-0.6729	0.1209	-0.216351	0	0.0	-0.0839

@@ -1,0 +1,25 @@
+{
+  "iter": 124,
+  "pillar": "P4-LengthBias",
+  "n_w": 4,
+  "B_perm": 20000,
+  "seed_base": 20260703,
+  "tasks": [
+    "arithmetic_easy",
+    "gsm8k_cot"
+  ],
+  "algos": [
+    "grpo",
+    "dr_grpo"
+  ],
+  "consensus_H1_sever_vs_dL_GR": -0.17741935483870966,
+  "consensus_H1_p_param": 0.3313288590325348,
+  "consensus_H2_sever_vs_dR_GR": 0.15490376062297495,
+  "consensus_H2_p_param": 0.39725616805022884,
+  "n_consensus_points": 32,
+  "envelope_sever_vs_dL_GR": NaN,
+  "envelope_sever_vs_dL_GR_p": NaN,
+  "envelope_sever_vs_dR_GR": NaN,
+  "envelope_sever_vs_dR_GR_p": NaN,
+  "n_tasks_envelope": 2
+}

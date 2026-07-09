@@ -1,0 +1,8 @@
+# zvf_iter102_failure_corr.tsv - correlation of calibration gap (and raw ZVF)
+# with is_collapse across all cross-library rows. B=2000 bootstrap CIs.
+# Source: scripts/zvf_iter102.py
+predictor	target	n	pearson	pearson_ci_lo	pearson_ci_hi	spearman	method
+delta_calibration	is_collapse	14	-0.2744	-0.6621	-0.0428	-0.8637	Pearson + 95% bootstrap CI
+zvf_emp	is_collapse	14	0.7534	0.5234	0.97	0.3758	Pearson + 95% bootstrap CI
+AUC(delta_calibration -> is_collapse)	binary	14	0.1667				Rank-AUC
+AUC(zvf_emp -> is_collapse)	binary	14	1.0				Rank-AUC

@@ -1,0 +1,181 @@
+{
+  "ts": "2026-07-05",
+  "iter": 69,
+  "pillar": "P5",
+  "vein": "MIN-REPORT placebo-replacement feasibility on live corpus",
+  "n_cells": 98,
+  "n_v1_items": 7,
+  "n_v2_candidates": 6,
+  "H1": {
+    "claim": "GRPO/PPO hyperparameter candidates (kl_coeff, clip_range, adv_norm, mini_batch_size) would all be placebos on the live corpus (single-stack Tinker-closed campaign)",
+    "n_placebo_candidates": 4,
+    "n_varying_candidates": 2,
+    "total_uplift_bits_from_hyperparam_candidates": 0.0,
+    "verdict": "All 4 GRPO/PPO hyperparameter candidates would replicate the iter-65 4-placebo problem at higher cardinality. NO stack-discriminative bits added on the live corpus."
+  },
+  "H2": {
+    "claim": "A corpus-controlled candidate (temperature_schedule) WOULD vary on the live corpus because cells.tsv varies T in {0.6, 1.0}",
+    "temperature_H_bits": 0.9951876662918927,
+    "temperature_n_unique": 2,
+    "model_H_bits_redundant": 0.9987979209581139,
+    "verdict": "temperature_schedule would add ~0.98 bits to live info budget; model_family adds ~0.85 bits but is redundant (already in cells.tsv)"
+  },
+  "H3": {
+    "claim": "eta^2 algorithm-axis vs stack-axis on the live corpus: algorithm axis contributes 0 (single algo), stack axes dominate",
+    "grand_mean_zvf": 0.8172831632653061,
+    "total_ss": 3.7155313297193877,
+    "stack_axis_between_ss": 3.519730548469387,
+    "eta2_algo_axis": 0.0,
+    "eta2_stack_axis": 0.9473020777179697,
+    "n_stack_axis_buckets": 50,
+    "n_cells": 98,
+    "bucket_means": {
+      "('2', 'humaneval_subset', '0.6', 'meta-llama/Llama-3.2-3B')": 1.0,
+      "('2', 'humaneval_subset', '1.0', 'meta-llama/Llama-3.2-3B')": 1.0,
+      "('32', 'humaneval_subset', '0.6', 'meta-llama/Llama-3.2-3B')": 1.0,
+      "('4', 'humaneval_subset', '1.0', 'meta-llama/Llama-3.2-3B')": 1.0,
+      "('4', 'humaneval_subset', '0.6', 'meta-llama/Llama-3.2-3B')": 1.0,
+      "('8', 'humaneval_subset', '0.6', 'meta-llama/Llama-3.2-3B')": 1.0,
+      "('8', 'humaneval_subset', '1.0', 'meta-llama/Llama-3.2-3B')": 1.0,
+      "('16', 'humaneval_subset', '0.6', 'meta-llama/Llama-3.2-3B')": 1.0,
+      "('16', 'humaneval_subset', '1.0', 'meta-llama/Llama-3.2-3B')": 1.0,
+      "('2', 'gsm8k_hard', '0.6', 'meta-llama/Llama-3.2-3B')": 0.875,
+      "('2', 'gsm8k_hard', '1.0', 'meta-llama/Llama-3.2-3B')": 0.9531,
+      "('32', 'gsm8k_hard', '0.6', 'meta-llama/Llama-3.2-3B')": 0.3906,
+      "('32', 'gsm8k_hard', '1.0', 'meta-llama/Llama-3.2-3B')": 0.6094,
+      "('4', 'gsm8k_hard', '0.6', 'meta-llama/Llama-3.2-3B')": 0.8281,
+      "('4', 'gsm8k_hard', '1.0', 'meta-llama/Llama-3.2-3B')": 0.9219,
+      "('8', 'gsm8k_hard', '0.6', 'meta-llama/Llama-3.2-3B')": 0.7812,
+      "('8', 'gsm8k_hard', '1.0', 'meta-llama/Llama-3.2-3B')": 0.875,
+      "('16', 'gsm8k_hard', '0.6', 'meta-llama/Llama-3.2-3B')": 0.5938,
+      "('16', 'gsm8k_hard', '1.0', 'meta-llama/Llama-3.2-3B')": 0.7656,
+      "('2', 'gsm8k_easy', '0.6', 'meta-llama/Llama-3.2-3B')": 0.9531,
+      "('2', 'gsm8k_easy', '1.0', 'meta-llama/Llama-3.2-3B')": 0.9844,
+      "('32', 'gsm8k_easy', '0.6', 'meta-llama/Llama-3.2-3B')": 0.4688,
+      "('32', 'gsm8k_easy', '1.0', 'meta-llama/Llama-3.2-3B')": 0.5469,
+      "('4', 'gsm8k_easy', '0.6', 'meta-llama/Llama-3.2-3B')": 0.8594,
+      "('8', 'gsm8k_easy', '0.6', 'meta-llama/Llama-3.2-3B')": 0.7344,
+      "('16', 'gsm8k_easy', '0.6', 'meta-llama/Llama-3.2-3B')": 0.5469,
+      "('2', 'humaneval_subset', '0.6', 'Qwen/Qwen3.5-4B')": 1.0,
+      "('2', 'humaneval_subset', '1.0', 'Qwen/Qwen3.5-4B')": 1.0,
+      "('4', 'humaneval_subset', '0.6', 'Qwen/Qwen3.5-4B')": 1.0,
+      "('32', 'humaneval_subset', '1.0', 'Qwen/Qwen3.5-4B')": 1.0,
+      "('4', 'humaneval_subset', '1.0', 'Qwen/Qwen3.5-4B')": 1.0,
+      "('8', 'humaneval_subset', '0.6', 'Qwen/Qwen3.5-4B')": 1.0,
+      "('8', 'humaneval_subset', '1.0', 'Qwen/Qwen3.5-4B')": 1.0,
+      "('16', 'humaneval_subset', '1.0', 'Qwen/Qwen3.5-4B')": 1.0,
+      "('16', 'humaneval_subset', '0.6', 'Qwen/Qwen3.5-4B')": 1.0,
+      "('2', 'gsm8k_hard', '0.6', 'Qwen/Qwen3.5-4B')": 0.8594,
+      "('2', 'gsm8k_hard', '1.0', 'Qwen/Qwen3.5-4B')": 0.8281,
+      "('32', 'gsm8k_hard', '0.6', 'Qwen/Qwen3.5-4B')": 0.625,
+      "('32', 'gsm8k_hard', '1.0', 'Qwen/Qwen3.5-4B')": 0.5,
+      "('4', 'gsm8k_hard', '0.6', 'Qwen/Qwen3.5-4B')": 0.7969,
+      "('4', 'gsm8k_hard', '1.0', 'Qwen/Qwen3.5-4B')": 0.7344,
+      "('8', 'gsm8k_hard', '0.6', 'Qwen/Qwen3.5-4B')": 0.7812,
+      "('8', 'gsm8k_hard', '1.0', 'Qwen/Qwen3.5-4B')": 0.6562,
+      "('16', 'gsm8k_hard', '0.6', 'Qwen/Qwen3.5-4B')": 0.5156,
+      "('16', 'gsm8k_hard', '1.0', 'Qwen/Qwen3.5-4B')": 0.625,
+      "('2', 'gsm8k_easy', '0.6', 'Qwen/Qwen3.5-4B')": 0.8438,
+      "('2', 'gsm8k_easy', '1.0', 'Qwen/Qwen3.5-4B')": 0.8906,
+      "('32', 'gsm8k_easy', '0.6', 'Qwen/Qwen3.5-4B')": 0.4844,
+      "('32', 'gsm8k_easy', '1.0', 'Qwen/Qwen3.5-4B')": 0.4531,
+      "('4', 'gsm8k_easy', '0.6', 'Qwen/Qwen3.5-4B')": 0.7656
+    },
+    "verdict": "stack axes (G, task, T, model) account for the entire explainable variance on this corpus; algorithm-axis eta^2 = 0 by construction (single-algorithm campaign)"
+  },
+  "v1_info_budget": {
+    "total_bits_observed": 11.412744386555076,
+    "total_stack_discriminative_bits": 4.798034542439858,
+    "per_item": [
+      {
+        "item": "loss_form",
+        "H_bits": 0.0,
+        "stack_discriminative_bits": 0.0,
+        "classification": "PLACEBO"
+      },
+      {
+        "item": "ref_policy_kl",
+        "H_bits": 0.0,
+        "stack_discriminative_bits": 0.0,
+        "classification": "PLACEBO"
+      },
+      {
+        "item": "sampler_backend_precision",
+        "H_bits": 0.0,
+        "stack_discriminative_bits": 0.0,
+        "classification": "PLACEBO"
+      },
+      {
+        "item": "per_step_zvf_path",
+        "H_bits": 6.614709844115218,
+        "stack_discriminative_bits": 0.0,
+        "classification": "CELL_IDENTIFIER"
+      },
+      {
+        "item": "group_size_schedule",
+        "H_bits": 2.31212196663623,
+        "stack_discriminative_bits": 2.31212196663623,
+        "classification": "VARYING_STACK_DESCRIPTOR"
+      },
+      {
+        "item": "heldout_split",
+        "H_bits": 1.5546082072242515,
+        "stack_discriminative_bits": 1.5546082072242515,
+        "classification": "VARYING_STACK_DESCRIPTOR"
+      },
+      {
+        "item": "decontamination_notes",
+        "H_bits": 0.9313043685793763,
+        "stack_discriminative_bits": 0.9313043685793763,
+        "classification": "VARYING_STACK_DESCRIPTOR"
+      }
+    ]
+  },
+  "v2_projected_info_budget": {
+    "with_4_hyperparam_candidates_only": 11.412744386555076,
+    "with_temperature_schedule_only": 12.407932052846968,
+    "with_temperature_and_redundant_model": 12.407932052846968
+  },
+  "bootstrap": {
+    "n_boot": 2000,
+    "seed": 20260705,
+    "v1_total_observed_bits": 11.412744386555076,
+    "v1_total_bootstrap_mean_bits": 10.541800702237374,
+    "v1_total_bootstrap_ci95": [
+      10.313207340842588,
+      10.744513159197183
+    ],
+    "interpretation": "Bootstrap CI is the sampling distribution of the test statistic IF a different 98-cell sample were drawn from the same population; the lower CI boundreflects the well-known negative bias of entropy under bootstrap resampling (birthday-paradox duplicates). The observed point estimate 11.41 bits is the actual measured value on the live corpus, not a bootstrap-derived statistic.",
+    "per_varying_item_observed_and_ci95": {
+      "group_size_schedule": {
+        "observed": 2.31212196663623,
+        "ci95": [
+          2.2148900589088947,
+          2.3170151064037197
+        ]
+      },
+      "heldout_split": {
+        "observed": 1.5546082072242515,
+        "ci95": [
+          1.4600364381986837,
+          1.5820911767666537
+        ]
+      },
+      "decontamination_notes": {
+        "observed": 0.9313043685793763,
+        "ci95": [
+          0.819264971231439,
+          0.9891571023188155
+        ]
+      }
+    }
+  },
+  "operational_recommendation": "Add `temperature_schedule` to the MIN-REPORT v2 schema; document the 4 GRPO/PPO hyperparameter items (kl_coeff, clip_range, advantage_normalization, mini_batch_size) as DEFERRED-TO-CROSS-STACK-CAMPAIGN. The live corpus is structurally underpowered to discriminate these axes -- adding them to the current schema would replicate the 4-placebo problem at higher cardinality. The binding constraint is the experimental design (single-stack Tinker-closed campaign), not the schema.",
+  "cross_paper_coupling": {
+    "iter_49": "P5 eta^2 finding: algorithm-axis eta^2 < 0.05 on the multi-method corpus -- replicated here at zero by single-algorithm design",
+    "iter_53": "P5 subfield completeness audit -- 4 placebo items identified",
+    "iter_65_row_76": "P5 manifest x outcome coupling -- 4/7 items are placebos on the live 98-cell corpus (H=11.4 bits concentrated in 3 items)",
+    "iter_66_row_77": "P6 measured_yield_residual (delta_div) is the only signal that varies per-method on the same-stack corpus -- but it is an OUTCOMES not a STACK axis, so it cannot be a v2 replacement for stack descriptors",
+    "iter_68_row_79": "P8 single-sensor: 4-aggregate block is non-uniform; 2 of 4 members do the work -- same structural finding (4-of-7 has limited utility) at a different axis"
+  }
+}

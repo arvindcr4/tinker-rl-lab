@@ -1,0 +1,11 @@
+domain	label	density	wilson_lo	wilson_hi	layer
+D1	P8_grad_band_firing	0.0083	0.0083	0.0083	LOW
+D2	P7_step_rejection	0.5	0.5	0.5	MID
+D3	P5_cells_with_seed_pass	0.3673	0.3673	0.3673	MID
+D4	P7_per_prompt_boundary	0.7293	0.7293	0.7293	MID
+D5	P8_iso_ECE_gt_010	1.0	1.0	1.0	HIGH
+D6	P8_sensor_firing_flip	0.0053	0.0053	0.0053	LOW
+D7	N2_algo_axis_spread_gt_500	0.0156	0.0156	0.0156	LOW
+D8	P7_UNIFIED_C4_FIRE_density	0.0914	0.0914	0.0914	MID
+D9	P7_UNIFIED_C4_contrast_recov	0.0914	0.0914	0.0914	MID
+D10	P8_operationally_actionable	0.78	0.6892946528499969	0.849988254963442	HIGH

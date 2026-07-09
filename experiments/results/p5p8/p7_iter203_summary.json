@@ -1,0 +1,135 @@
+{
+  "iter": 203,
+  "pillar": "P7",
+  "vein": "(a) bucket-resolved counterfactual G* evaluation",
+  "settings": {
+    "g_base": 8,
+    "g_candidates": [
+      2,
+      4,
+      8,
+      12,
+      16,
+      24,
+      32
+    ],
+    "target_gu": 0.85,
+    "n_steps": 40,
+    "n_prompts": 16,
+    "n_methods": 4,
+    "beta_binomial_prior": "Beta(1,1)",
+    "n_boot": 2000,
+    "seed": 20260706
+  },
+  "method_summary": {
+    "grpo": {
+      "n_prompt_steps": 640,
+      "bucket_freq_dist": {
+        "0": 0.053125,
+        "1": 0.03125,
+        "2": 0.03125,
+        "3": 0.015625,
+        "4": 0.0328125,
+        "5": 0.034375,
+        "6": 0.0484375,
+        "7": 0.0859375,
+        "8": 0.6671875
+      },
+      "mean_g_star": 8.0,
+      "mean_contrast_restored": 0.0,
+      "mean_cost_ratio": 1.0,
+      "n_buckets_with_benefit": 0
+    },
+    "aero": {
+      "n_prompt_steps": 640,
+      "bucket_freq_dist": {
+        "0": 0.053125,
+        "1": 0.0328125,
+        "2": 0.0265625,
+        "3": 0.0234375,
+        "4": 0.05,
+        "5": 0.028125,
+        "6": 0.0453125,
+        "7": 0.0734375,
+        "8": 0.6671875
+      },
+      "mean_g_star": 8.0,
+      "mean_contrast_restored": 0.0,
+      "mean_cost_ratio": 1.0,
+      "n_buckets_with_benefit": 0
+    },
+    "gift": {
+      "n_prompt_steps": 640,
+      "bucket_freq_dist": {
+        "0": 0.059375,
+        "1": 0.0296875,
+        "2": 0.0203125,
+        "3": 0.015625,
+        "4": 0.034375,
+        "5": 0.0265625,
+        "6": 0.0390625,
+        "7": 0.0640625,
+        "8": 0.7109375
+      },
+      "mean_g_star": 8.0,
+      "mean_contrast_restored": 0.0,
+      "mean_cost_ratio": 1.0,
+      "n_buckets_with_benefit": 0
+    },
+    "areal": {
+      "n_prompt_steps": 640,
+      "bucket_freq_dist": {
+        "0": 0.059375,
+        "1": 0.0234375,
+        "2": 0.0296875,
+        "3": 0.0234375,
+        "4": 0.0328125,
+        "5": 0.04375,
+        "6": 0.0328125,
+        "7": 0.1078125,
+        "8": 0.646875
+      },
+      "mean_g_star": 8.0,
+      "mean_contrast_restored": 0.0,
+      "mean_cost_ratio": 1.0,
+      "n_buckets_with_benefit": 0
+    }
+  },
+  "method_mean_g_star": {
+    "grpo": 8.0,
+    "aero": 8.0,
+    "gift": 8.0,
+    "areal": 8.0
+  },
+  "global": {
+    "n_prompt_steps": 2560,
+    "mean_g_star": 8.0,
+    "mean_contrast_restored": 0.0,
+    "mean_cost_ratio": 1.0,
+    "n_buckets_with_benefit_global": 0
+  },
+  "verdicts": {
+    "H1_resolvable_pass": false,
+    "H1_n_buckets_with_diff_gs": 0,
+    "H2_pareto_pass": false,
+    "H2_n_pareto_buckets": 0,
+    "H3_uniformity_pass": true,
+    "H3_method_spread": 0.0,
+    "H4_signal_efficiency_pass": true,
+    "H4_n_buckets_le_base": 9
+  },
+  "bootstrap_ci": {
+    "cost_ratio_diff_ctrl_minus_base": {
+      "point": 0.0,
+      "ci_lo": 0.0,
+      "ci_hi": 0.0,
+      "excl_zero": 0
+    },
+    "contrast_restored_diff_ctrl_minus_zero": {
+      "point": 0.0,
+      "ci_lo": 0.0,
+      "ci_hi": 0.0,
+      "excl_zero": 0
+    }
+  }
+}

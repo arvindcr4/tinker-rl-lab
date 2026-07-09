@@ -1,0 +1,4 @@
+name	id	state	createdAt	model	algorithm	group_size	dataset	max_steps	lr	final_reward
+dr-grpo-qwen3-8b	ra8jxluz	crashed	2026-04-04T09:00:50Z			16		50	5e-05	
+dr-grpo-qwen3-8b	37rtlpl2	crashed	2026-04-04T09:13:02Z			16		50	5e-05	
+dr-grpo-qwen3-8b	wpxpf1fc	crashed	2026-04-04T09:28:39Z			16		-1	5e-06	

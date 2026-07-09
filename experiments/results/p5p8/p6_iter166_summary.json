@@ -1,0 +1,24 @@
+{
+  "n_entries": 43,
+  "n_entries_with_artifacts": 26,
+  "n_entries_with_zero_artifact_list": 17,
+  "type_counts_overall": {
+    "WANDB": 4,
+    "PATH_OK": 4,
+    "DESC_PATH_OK": 14,
+    "DESC": 4
+  },
+  "n_entries_with_combined_score_1.0": 12,
+  "n_entries_with_combined_score_0.0": 8,
+  "mean_combined_provenance_completeness_score": 0.6341,
+  "mean_citation_score": 0.3411,
+  "n_wandb_handles": 4,
+  "n_path_missing_clean_paths": 0,
+  "n_desc_path_missing_prose": 0,
+  "headline": {
+    "H1_pct_entries_with_at_least_one_artifact": 60.47,
+    "H2_pct_entries_with_full_combined_score_1.0": 27.91,
+    "H3_pct_wandb_handles_among_declared": 15.38,
+    "H4_mean_combined_score_all_entries": 0.6341
+  }
+}

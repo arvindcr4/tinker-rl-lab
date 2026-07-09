@@ -1,0 +1,3 @@
+{"code_file":"experiments/openings/parallel_sweep.py","G":4,"heldout_n":8,
+ "rigor":{"n_seeds":1,"seeds":[0],"reports_heldout":true,"heldout_disjoint":true,"reports_ci":false},
+ "results":{"G4_gain":0.125,"note":"single seed, n=8 heldout"}}

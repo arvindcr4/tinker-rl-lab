@@ -1,0 +1,9 @@
+quantity	value
+n_honest_seeds	5
+n_pooled_stepobs	50
+icc_step	0.7164
+deff	7.4477
+sqrt_deff	2.7291
+mde80_honest	0.186877
+mde80_pooled_illusion	0.048778
+power_inflation_ratio	3.8312

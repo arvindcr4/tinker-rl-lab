@@ -1,0 +1,89 @@
+{
+  "ts": "2026-07-04",
+  "iteration": 14,
+  "pillar": "B-SP25",
+  "lecture": "SP25 L4 \u2014 Hannaneh Hajishirzi (Tulu 3 / Unpacking DPO and PPO)",
+  "papers": {
+    "tulu3": {
+      "title": "Tulu 3: Pushing Frontiers in Open Language Model Post-Training",
+      "authors": "Lambert et al. (Allen AI / UW)",
+      "arxiv": "2411.15124",
+      "year": 2024,
+      "venue": "arXiv (cs.CL) preprint"
+    },
+    "unpacking": {
+      "title": "Unpacking DPO and PPO: Disentangling Best Practices for Learning from Preference Feedback",
+      "authors": "Ivison, Wang, Liu, Wu, Pyatkin, Lambert, Smith, Choi, Hajishirzi",
+      "arxiv": "2406.09279",
+      "year": 2024,
+      "venue": "NeurIPS 2024 camera-ready"
+    }
+  },
+  "framework": "Ivison 4-axis decomposition [data, algorithm, reward-model, prompts] -> verifiable-reward stacks pin (data, prompts). Testable axes: algorithm, reward-intervention.",
+  "hypotheses": [
+    {
+      "hypothesis": "H1: ALGO axis variance is small (<5%) for samestack PPO vs GRPO",
+      "n_pairs": 5,
+      "eta2": 0.02272727272727273,
+      "delta_acc": -0.0020000000000000018,
+      "cohens_d": -0.30499714066520933,
+      "perm_p_two_sided": 0.620937906209379,
+      "verdict": "DECISIVE (algorithm axis <5% AND |delta|<=0.005)"
+    },
+    {
+      "hypothesis": "H2: REWARD/INTERVENTION axis variance is small (<20%)",
+      "n_methods": 9,
+      "n_terminal_rows": 45,
+      "eta2_method": 0.11296592887475362,
+      "spread": 0.09238799999999997,
+      "pair_d_grpo_vs": {
+        "scafgrpo": -32.8399,
+        "aero": -24.2787,
+        "cppo": -12.5474,
+        "ngrpo": -8.2442,
+        "areal": 0.469,
+        "gift": 0.4884,
+        "mcgrpo": 0.5406,
+        "es": 0.6017
+      },
+      "verdict": "DECISIVE (Ivison reward-axis is small fraction + small spread)"
+    },
+    {
+      "hypothesis": "H3: |delta_grpo_minus_ppo|<=0.005 (Tulu 3 RLVR-equivalence)",
+      "abs_delta": 0.0020000000000000018,
+      "perm_p": 0.620937906209379,
+      "verdict": "DECISIVE"
+    },
+    {
+      "hypothesis": "H4: convergence-rate axis variance dominates algorithm axis",
+      "cv_across_methods": 0.007880415779734603,
+      "cv_within_methods": 0.02000166873839131,
+      "eta2_method_half": 0.1290322580645152,
+      "method_half_means": {
+        "grpo": 25.4,
+        "aero": 25.2,
+        "cppo": 25.4,
+        "ngrpo": 25.2,
+        "scafgrpo": 25.4,
+        "mcgrpo": 25.0,
+        "gift": 25.4,
+        "areal": 25.2,
+        "es": 24.8
+      },
+      "verdict": "NULL"
+    },
+    {
+      "hypothesis": "H5: grad_norm variance is G-axis-driven (CDH overlay)",
+      "eta2_G_last10": 0.5363339646824176,
+      "eta2_G_grad": 0.6270945118106888,
+      "cohen_d_2v16": -1.4692042252253759,
+      "per_G_last10_mean": {
+        "2": 0.9771,
+        "4": 0.9714,
+        "8": 0.9732,
+        "16": 0.9837
+      },
+      "verdict": "SUGGESTIVE"
+    }
+  ]
+}

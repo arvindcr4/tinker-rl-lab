@@ -1,0 +1,44 @@
+{
+  "iter": 204,
+  "vein": "P5P8-SYNTH D23 per-step transfer stability of the cost-weighted cross-pillar decision rule (extends D22 from aggregate to per-step)",
+  "n_methods": 4,
+  "n_steps": 40,
+  "ref_len": 358.652197265625,
+  "aggregate_best_raw": {
+    "P5": "gift",
+    "P6": "areal",
+    "P7": "gift",
+    "P8": "gift"
+  },
+  "aggregate_best_weighted": {
+    "P5": "gift",
+    "P6": "areal",
+    "P7": "gift",
+    "P8": "gift"
+  },
+  "h1_p5p8_perstep_agreement_gt_70pct": false,
+  "h1_p5_agree_w": 0.475,
+  "h1_p8_agree_w": 0.475,
+  "h2_perstep_variety_above_aggregate": true,
+  "h2_n_distinct_per_pillar_raw": {
+    "P5": 4,
+    "P6": 4,
+    "P7": 4,
+    "P8": 4
+  },
+  "h2_n_distinct_per_pillar_weighted": {
+    "P5": 4,
+    "P6": 4,
+    "P7": 4,
+    "P8": 4
+  },
+  "h3_cost_weighting_increases_perstep_agreement": true,
+  "h3_raw_mean_agreement": 0.3625,
+  "h3_weighted_mean_agreement": 0.44999999999999996,
+  "h4_run_clustering_max_run_ge_3": true,
+  "h4_max_run_weighted": 4,
+  "verdict_counts": {
+    "PASS": 3,
+    "FAIL": 1
+  }
+}

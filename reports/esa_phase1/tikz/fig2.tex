@@ -1,0 +1,14 @@
+\begin{figure}[h]\centering
+\begin{tikzpicture}[node distance=10mm and 16mm]
+\node[proc] (samp) {Sample $G$\\completions};
+\node[proc, right=of samp] (rew) {Verifiable\\reward $r_i$};
+\node[proc, right=of rew] (adv) {Group-relative adv.\\$A_i=\dfrac{r_i-\bar r}{\sigma_r}$};
+\node[proc, below=14mm of adv] (loss) {Loss\\$-\sum_i A_i\log\pi(y_i)$};
+\node[proc, left=of loss] (opt) {Adam\\optim step};
+\node[proc, left=of opt] (refresh) {Refresh\\sampler weights};
+\draw[ar] (samp)--(rew); \draw[ar] (rew)--(adv); \draw[ar] (adv)--(loss);
+\draw[ar] (loss)--(opt); \draw[ar] (opt)--(refresh); \draw[ar] (refresh)-- (samp);
+\node[lbl, below=0.5mm of adv, text width=32mm, align=center] {$\sigma_r=0 \Rightarrow A_i=0$\\(zero-variance collapse)};
+\end{tikzpicture}
+\caption{The GRPO training loop as implemented on Tinker. When every completion in a group earns the same reward, $\sigma_r=0$, the advantage is identically zero, and the step contributes no gradient (the ZVF phenomenon quantified in P2).}
+\end{figure}

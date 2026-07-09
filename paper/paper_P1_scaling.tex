@@ -1,0 +1,36 @@
+% =============================================================================
+% STANDALONE PAPER 1 of 4 -- Pillar 1: GRPO Scaling Laws
+% Reuses shared preamble/author/methods; pulls the P1 section family + frontier synthesis.
+% Build: pdflatex paper_P1_scaling ; bibtex paper_P1_scaling ; pdflatex x2
+% =============================================================================
+\documentclass{article}
+\input{sections/_shared_preamble}
+\title{Scaling Laws for GRPO Post-Training of Language Models:\\
+       A Cross-Library, Cross-Scale Study}
+\input{sections/_shared_author}
+\begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\input{sections/p1_abstract}
+\input{sections/p1_intro}
+\input{sections/_shared_methods}
+\input{sections/p1_results_intro}
+\input{sections/scaling_laws}
+% Berkeley row 09 (iter142): Pass@K CI + ACI-ceiling analysis of the
+% capability-tier evidence; placed directly after the iter133/137/140
+% capability-class paragraphs at the end of sections/scaling_laws.tex.
+\input{sections/scaling_passk_ci}
+\input{sections/scaling_law_iter29}
+\input{sections/scaling_law_iter33}
+\input{sections/scaling_law_iter37}
+\input{sections/scaling_law_iter41}
+\input{sections/scaling_law_iter45}
+\input{sections/scaling_law_iter49}
+\input{sections/scaling_law_iter53}
+\input{sections/scaling_law_iter61}
+\input{sections/scaling_law_iter65}
+\input{sections/frontier_synthesis_scaling}
+\input{sections/p1_conclusion}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

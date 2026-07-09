@@ -1,0 +1,29 @@
+{
+  "anti_herding_libraries": [
+    "arithmetic_groupsize",
+    "drgrpo_vs_grpo"
+  ],
+  "dose_response_rho_frac_collapse_vs_bin": 0.7071067811865475,
+  "dose_response_rho_severity_vs_bin": -0.2,
+  "herding_libraries": [
+    "grpo",
+    "aero",
+    "cppo",
+    "ngrpo",
+    "scafgrpo",
+    "mcgrpo",
+    "gift",
+    "areal",
+    "es",
+    "gsm8k_real"
+  ],
+  "iter": 114,
+  "n_bins": 5,
+  "n_libraries_delta_d": 14,
+  "n_pooled_rows": 65,
+  "out_delta_d": "experiments/results/zvf_iter114_delta_d.tsv",
+  "out_dose": "experiments/results/zvf_iter114_dose_response.tsv",
+  "out_figure": "figures/zvf_iter114_dose_response.pdf",
+  "source_by_library": "experiments/results/zvf_by_library.tsv",
+  "source_summary": "experiments/results/zvf_summary.tsv"
+}

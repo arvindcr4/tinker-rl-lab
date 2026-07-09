@@ -1,0 +1,56 @@
+{
+  "description": "Reproducible P8 integrity detector. Positive=surrogate (aero/areal/gift), negative=genuine (grpo). LogisticRegression, 5-fold stratified CV, out-of-fold AUROC.",
+  "data_dir": "/home/claude/tinker-rl-lab/experiments/results/n2_reward_tensor_resume",
+  "methods": [
+    "aero",
+    "areal",
+    "gift",
+    "grpo"
+  ],
+  "n_rows": 160,
+  "n_positive_surrogate": 120,
+  "n_negative_genuine": 40,
+  "full_features": [
+    "reward_mean",
+    "frac_all_zero",
+    "frac_all_one",
+    "zvf",
+    "reward_std",
+    "mean_len",
+    "cv_len",
+    "len_reward_corr",
+    "adv_abs_mean",
+    "adv_std",
+    "lag1_autocorr"
+  ],
+  "reward_only_features": [
+    "reward_mean",
+    "frac_all_zero",
+    "frac_all_one"
+  ],
+  "omitted_prose_features": {
+    "loss": "training-side optimizer scalar; not derivable from reward/length tensor, so omitted for reproducibility"
+  },
+  "auroc_full_telemetry": 0.8258,
+  "auroc_reward_only": 0.427,
+  "auroc_full_telemetry_seed_mean": 0.838,
+  "auroc_full_telemetry_seed_std": 0.0095,
+  "auroc_reward_only_seed_mean": 0.426,
+  "auroc_reward_only_seed_std": 0.0274,
+  "auroc_full_by_seed": {
+    "0": 0.8258,
+    "1": 0.835,
+    "2": 0.8358,
+    "3": 0.8385,
+    "4": 0.855
+  },
+  "auroc_reward_by_seed": {
+    "0": 0.427,
+    "1": 0.3996,
+    "2": 0.4553,
+    "3": 0.3909,
+    "4": 0.4572
+  },
+  "cv": "StratifiedKFold(n_splits=5, shuffle=True)",
+  "pipeline": "SimpleImputer(median) -> StandardScaler -> LogisticRegression"
+}

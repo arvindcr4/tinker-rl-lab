@@ -1,0 +1,61 @@
+% Pillar-5 (MIN-REPORT-RL) standalone introduction
+\section{Introduction: The Sandwich Problem}
+\label{sec:p5-intro}
+When a paper reports that ``DAPO outperforms GRPO,'' the named algorithm is a
+thin layer sandwiched between two thick, largely undocumented slices. Beneath the
+label sits the serving and training substrate: the sampling engine and its
+numerics~\citep{kwon2023vllm, zheng2024sglang}, attention kernels and
+precision~\citep{dao2022flashattention}, the trainer's tokenization and masking
+conventions, and the exact loss implementation shipped by the framework
+\citep{vonwerra2022trl, sheng2024verl, hu2024openrlhf, thinkingmachines2024tinker}.
+Above the label sits the reward and evaluation apparatus: the verifier and its
+answer parser, the held-out split, the prompt template, and whatever
+decontamination was (or was not) performed \citep{zhang2024gsm1k,
+riddell2024contamination}. The label names the filling; the experiment is the
+sandwich. We call the resulting failure of reference the \emph{sandwich problem}:
+two papers using the same algorithm label routinely describe different
+experiments, and two papers using different labels routinely differ more in their
+bread than in their filling.
+
+This is a position paper. Its position is: \textbf{RL-for-LLM results are
+stack-conditioned, and venues should require authors to report the stack, not
+merely the label.} We do not claim that algorithmic labels are meaningless---the
+loss-form differences among GRPO~\citep{shao2024deepseekmath, guo2025deepseekr1},
+DAPO~\citep{yu2025dapo}, Dr.GRPO~\citep{tong2025drgrpo}, and
+GSPO~\citep{qwen2025gspo} are real and sometimes consequential. We claim that on
+the evidence available to us the stack's contribution to reported outcomes is at
+least as large as the label's, and that the community's reporting conventions are
+calibrated to the wrong term. A $17\times$ outcome swing from swapping only the
+backend (\secref{sec:p5-evidence}) dwarfs every label-vs-label gap in our
+corpus; a label can even invert its own telemetry when re-implemented on a
+different stack. Deep RL went through this reckoning once
+already~\citep{henderson2018deep, colas2019hitchhiker, agarwal2021deep};
+RL-for-LLMs has re-created the conditions with a larger and less inspectable
+stack.
+
+Our contributions are deliberately those of a position paper: evidence, a
+standard, a threat model, and enforcement machinery.
+\begin{enumerate}[leftmargin=1.5em, itemsep=1pt, topsep=2pt]
+\item \textbf{Evidence} (\secref{sec:p5-evidence}): four exhibits---a
+$17\times$ backend flip under otherwise identical configuration; a cross-stack
+label flip in which ``DAPO'' yields mean ZVF $0.00$ on one stack and $0.58$ on
+another; a 12-cell head-to-head in which four labeled algorithms on one fixed
+stack land within noise; and cross-library ZVF variation from the companion
+Pillar-2 paper of \ours{}.
+\item \textbf{The seven-item minimum reportable stack} (\secref{sec:p5-stack}):
+a checklist small enough to enforce, in which every item is justified by a
+documented lever that can move or flip a reported ranking.
+\item \textbf{An RL-reproducibility threat model} (\secref{sec:p5-threat}): a
+taxonomy of confound vectors and a flip-risk grading R0--R5 that classifies how
+dangerous a given cross-paper comparison is.
+\item \textbf{An enforceability toolchain} (\secref{sec:p5-toolchain}): a
+specification for a manifest-emitting trainer plugin
+(\texttt{trl-min-report-rl}), a manifest differ with CI verdicts
+(\texttt{grpo-stackdiff}), a machine-readable stack registry, a 0--100 auditor
+badge, and a citation-lever tracer (LeverTrace).
+\end{enumerate}
+Throughout, we scope claims to their evidence: benchmark results come from
+\ours{} (\secref{sec:benchmark}); several exhibits come from internal program
+records that we describe as such; and toy-scale theory validations are marked
+directional. The paper ends with limitations and a concrete call to action for
+venues (\secref{sec:p5-conclusion}).

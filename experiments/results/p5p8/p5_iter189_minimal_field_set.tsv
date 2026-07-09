@@ -1,0 +1,6 @@
+k_fields	fields	n_unique_cells	covers_all
+1	n/a	0	False
+2	n/a	0	False
+3	n/a	0	False
+4	n/a	0	False
+5	model+task_slice+G+temperature+seed	98	True

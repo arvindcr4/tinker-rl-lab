@@ -1,0 +1,59 @@
+{
+  "pillar": "B-F24",
+  "row": 22,
+  "lecture": "F24 L11 Ben Mann (Anthropic) -- RSP + measuring agent capabilities",
+  "citations": {
+    "RSP": "Anthropic's Responsible Scaling Policy, 2023-09-19 (anthropic.com)",
+    "Phuong2024": "Phuong et al., Evaluating Frontier Models for Dangerous Capabilities, arXiv:2403.13793, DeepMind 2024-03-20"
+  },
+  "n_models": 5,
+  "hypotheses": {
+    "H1_yellow_red_buffer": {
+      "all_buffers_positive": true,
+      "min_buffer": 0.05630000000000002,
+      "max_protected_at_threshold": 3,
+      "verdict": "DECISIVE",
+      "evidence": "/home/claude/tinker-rl-lab-minimax-berkeley-p1/experiments/results/berkeley/rsp_h1_yellow_red_buffer.tsv"
+    },
+    "H2_elicitation_gap": {
+      "all_gaps_nonneg": true,
+      "rho_gap_vs_inv_rqs": 0.3999999999999999,
+      "n": 4,
+      "verdict": "NULL",
+      "evidence": "/home/claude/tinker-rl-lab-minimax-berkeley-p1/experiments/results/berkeley/rsp_h2_elicitation_gap.tsv"
+    },
+    "H3_forecast_reliability": {
+      "n_unforecastable": 2,
+      "n_forecastable": 3,
+      "unforecastable_models": [
+        "Qwen3-8B",
+        "Nemotron-120B"
+      ],
+      "clean_partition_gap": false,
+      "verdict": "NULL",
+      "evidence": "/home/claude/tinker-rl-lab-minimax-berkeley-p1/experiments/results/berkeley/rsp_h3_forecast_reliability.tsv"
+    },
+    "H4_scale_not_forecasting_variable": {
+      "rho_params_rmax": 0.10259783520851541,
+      "rho_params_t80": 0.051298917604257706,
+      "rho_rqs_rmax": 0.5999999999999999,
+      "scale_fails": true,
+      "stack_wins": true,
+      "verdict": "DECISIVE",
+      "evidence": "/home/claude/tinker-rl-lab-minimax-berkeley-p1/experiments/results/berkeley/rsp_h4_scale_vs_stack.tsv"
+    },
+    "H5_temporal_buffer": {
+      "all_leads_positive": true,
+      "mean_reserved_fraction": 0.7845552625776621,
+      "verdict": "DECISIVE",
+      "evidence": "/home/claude/tinker-rl-lab-minimax-berkeley-p1/experiments/results/berkeley/rsp_h5_temporal_buffer.tsv"
+    }
+  },
+  "n_decisive": 3,
+  "decisive": [
+    "H1_yellow_red_buffer",
+    "H4_scale_not_forecasting_variable",
+    "H5_temporal_buffer"
+  ],
+  "overall": "DECISIVE"
+}

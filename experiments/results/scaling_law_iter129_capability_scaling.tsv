@@ -1,0 +1,6 @@
+model	params_B	family	capability_class	t_peak	gamma	R_peak
+Qwen3.5-4B	4.0	dense-instruct	instruct	1.0000	-0.0001	0.9297
+Qwen3-8B	8.0	dense-base	base	13.0000	-0.0060	0.2549
+Llama-3.1-8B-Instruct	8.0	dense-instruct	instruct	1.0000	0.0037	0.9478
+DeepSeek-V3.1	685.0	moe-instruct	instruct	3.0000	-0.0003	0.8418
+Nemotron-120B	120.0	dense-base	base	3.0000	0.0014	1.0500

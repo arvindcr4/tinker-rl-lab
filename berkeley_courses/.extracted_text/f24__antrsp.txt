@@ -1,0 +1,285 @@
+CONFIDENTIAL
+Measuring Agent 
+Capabilities and 
+Anthropic’s RSP
+Ben Mann | 2024.11
+Berkeley CS294/194-196 Large Language Model Agents
+
+CONFIDENTIAL
+Add your 
+questions!
+2
+
+Anthropic’s history
+Anthropic Founded 
+as a PBC
+2021
+2022
+2023
+Claude 1 
+Completed
+Claude 1 
+Released
+Claude 2 
+Claude 3
+2024
+Claude 
+2.1
+1 year
+2025
+Constitutional AI
+Mathematical Framework for 
+Transformer Circuits
+Dictionary Learning
+(Interpretability)
+Sleeper Agents:
+Deceptive LLMs
+Toy Models of Superposition 
+(Interpretability)
+
+CONFIDENTIAL
+●
+Why measurement matters
+●
+Our approach to AI development
+●
+Themes: agents, safety, evaluation
+4
+Overview
+
+CONFIDENTIAL
+
+CONFIDENTIAL
+
+CONFIDENTIAL
+
+Claude 3.5 Sonnet / Agentic coding
+
+Claude 3.5 Sonnet / Game development
+
+CONFIDENTIAL
+CONFIDENTIAL
+Responsible Scaling Policy
+How is Anthropic developing safe models?
+10
+
+CONFIDENTIAL
+●
+Historical context
+●
+Existing parallels
+●
+Anthropic’s RSP
+●
+Updates
+11
+Safety 
+frameworks
+
+CONFIDENTIAL
+What is the RSP?
+12
+The Responsible Scaling Policy represents Anthropic’s public 
+commitment to ensuring that model capability does not 
+outstrip our ability to create effective guardrails for that 
+capability and  mitigate harm. 
+
+CONFIDENTIAL
+Our Responsible Scaling Policy outlines how we will 
+measure for potential catastrophic risks and then 
+mitigate them
+Our goals are to: 
+●
+Provide structure to help us make hard decisions about safety
+●
+Hold ourselves publicly accountable to developing models safely
+●
+Learn how to make and iterate on safe decisions 
+●
+Provide a template for policymakers and others in industry
+13
+
+CONFIDENTIAL
+AI Safety Levels
+14
+
+CONFIDENTIAL
+When Anthropic approaches a new level of model capability, the RSP mandates 
+that Anthropic prepare necessary safety measures for it. 
+We are preparing for ASL-3.
+15
+The RSP highlights AI Safety Levels:
+ASL-1
+Smaller Models
+ASL-2
+Present Large 
+Models
+ASL-3
+Signiﬁcantly 
+Higher Risk
+ASL-4
+Speculative
+How do we implement our RSP?
+
+CONFIDENTIAL
+How do we implement our RSP?
+
+CONFIDENTIAL
+●
+Challenges
+●
+Anthropic’s methods
+●
+Case study: computer use
+17
+Measuring 
+capabilities
+
+CONFIDENTIAL
+Benchmarks don’t last
+Test scores of AI systems on 
+various capabilities relative to 
+human performance. Human 
+performance is used as a 
+baseline, set to zero.
+Kiela et al. (2023) 
+
+CONFIDENTIAL
+Measuring task 
+completion 
+time relative to 
+humans
+Claude 3.5 Sonnet can handle tasks 
+that would take human developers 
+around 30 minutes, in seconds.
+August 2024 Eval from METR (Model Evaluation and Threat Research) 
+
+CONFIDENTIAL
+3.5 Sonnet 
+outperforms 
+OpenAI o1
+20
+Despite being signiﬁcantly faster 
+and cheaper than o1*, Claude 3.5 
+Sonnet beats o1-preview on key 
+agentic benchmarks like 
+SWE-bench Veriﬁed – making it 
+the best choice across the 
+industry for production usage
+SWE-bench Veriﬁed
+Assesses a model’s ability to complete real-world software engineering 
+tasks and understand, modify, and test code with tools 
+Sources: OpenAI o1 model system card, Anthropic model card (October 2024 3.5 model addendum)
+*Claude 3.5 Sonnet is $3/Mtok Input and $15/Mtok 
+Output, compared to OpenAI o1 at $15/Mtok Input and 
+$60/Mtok output (billing is also non-deterministic) 
+
+CONFIDENTIAL
+3.5 Sonnet 
+outperforms 
+OpenAI o1
+21
+Despite being signiﬁcantly faster 
+and cheaper than o1*, Claude 3.5 
+Sonnet beats o1-preview on key 
+agentic benchmarks such the 
+aider code editing benchmark – 
+making it the practical choice
+Aider’s code editing benchmark
+Measures the LLM’s coding ability, ability to write new code that 
+integrates into existing code, and apply changes to the source ﬁle 
+without human intervention
+Sources: Aider LLM Leaderboards
+*Claude 3.5 Sonnet is $3/Mtok Input and $15/Mtok 
+Output, compared to OpenAI o1 at $15/Mtok Input and 
+$60/Mtok output (billing is also non-deterministic) 
+
+CONFIDENTIAL
+3.5 Sonnet 
+outperforms 
+OpenAI o1
+22
+Despite being signiﬁcantly faster 
+and cheaper than o1*, Claude 3.5 
+Sonnet beats o1-preview on key 
+agentic benchmarks such as an 
+18% lead in the aider refactoring 
+benchmark – making it the 
+practical choice
+Aider’s refactoring benchmark
+A more challenging benchmark which tests the model’s ability to output 
+long chunks of code without skipping sections or making mistakes
+Sources: Aider LLM Leaderboards
+*Claude 3.5 Sonnet is $3/Mtok Input and $15/Mtok 
+Output, compared to OpenAI o1 at $15/Mtok Input and 
+$60/Mtok output (billing is also non-deterministic) 
+
+CONFIDENTIAL
+CONFIDENTIAL
+Computer use
+Case study
+23
+
+CONFIDENTIAL
+●
+Demos!
+●
+Technical implementation
+●
+Safety considerations
+●
+Future implications
+24
+Computer 
+use
+
+CONFIDENTIAL
+25
+Claude 3.5 Sonnet 
+(upgraded)
+Computer 
+use demo: 
+Coding
+https://www.youtube.com/watch?v=jqx18KgIzAE
+
+CONFIDENTIAL
+26
+Claude 3.5 Sonnet 
+(upgraded)
+Computer 
+use demo: 
+Operations
+https://youtu.be/ODaHJzOyVCQ
+
+CONFIDENTIAL
+●
+ASL standard implementation
+●
+Security measures
+●
+Deployment safeguards
+●
+Lessons learned in year 1
+27
+Practical 
+safety 
+measures
+
+CONFIDENTIAL
+●
+Scaling governance
+●
+Capability measurement
+●
+Academic collaboration
+28
+Future
+
+CONFIDENTIAL
+Add your 
+questions!
+29
+
+CONFIDENTIAL
+Thank you
+30

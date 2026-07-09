@@ -1,0 +1,41 @@
+{
+  "iter": 146,
+  "pillar": "P6",
+  "rows_audited": 40,
+  "n_match": 25,
+  "n_drift": 13,
+  "n_missing_source": 0,
+  "pct_match": 62.5,
+  "drift_kinds": {
+    "POINT_MATCH_WRONG_SOURCE": 13,
+    "UNINFERABLE_SOURCE": 2
+  },
+  "match_kinds": {
+    "MATCH": 17,
+    "MATCH_POINT": 8
+  },
+  "source_family_counts": {
+    "qp7_adaptive": 2,
+    "n2": 12,
+    "zvf130_method_risk": 16,
+    "zvf130_risk_index": 5,
+    "length_bias": 3,
+    "": 2
+  },
+  "entries_with_drift": [
+    "delta_aero",
+    "delta_areal",
+    "delta_cppo",
+    "delta_es",
+    "delta_gift",
+    "delta_mcgrpo",
+    "delta_ngrpo",
+    "delta_scafgrpo"
+  ],
+  "boot_recipe": {
+    "seed": 20260705,
+    "B": 2000,
+    "tolerance_abs": 0.01,
+    "tolerance_rel": 0.05
+  }
+}

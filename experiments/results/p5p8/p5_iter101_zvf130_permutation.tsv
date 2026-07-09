@@ -1,0 +1,15 @@
+panel	metric	eta2_observed	null_mean	p_value	n_perm
+full9	zvf_risk	0.763	0.1822	0.0	2000
+full9	mean_zvf	0.9989	0.1856	0.0	2000
+full9	lag1_zvf_rolling_w15	0.8222	0.1809	0.0	2000
+full9	slope	0.994	0.1853	0.0	2000
+full9	risk_mag	0.9991	0.1856	0.0	2000
+full9	risk_csd	0.7884	0.1834	0.0	2000
+full9	risk_drift	0.9943	0.1853	0.0	2000
+n2_subset	zvf_risk	0.6698	0.1545	0.0015	2000
+n2_subset	mean_zvf	0.9995	0.1544	0.0	2000
+n2_subset	lag1_zvf_rolling_w15	0.7383	0.1545	0.0005	2000
+n2_subset	slope	0.9981	0.1539	0.0	2000
+n2_subset	risk_mag	0.9996	0.1543	0.0	2000
+n2_subset	risk_csd	0.7178	0.1547	0.0015	2000
+n2_subset	risk_drift	0.9989	0.1539	0.0	2000

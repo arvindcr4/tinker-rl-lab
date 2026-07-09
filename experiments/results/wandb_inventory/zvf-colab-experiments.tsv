@@ -1,0 +1,17 @@
+name	id	state	createdAt	model	algorithm	group_size	dataset	max_steps	lr	final_metric
+E1_grad_signal	ds83rymc	finished	2026-06-21T06:47:47Z	Qwen/Qwen2.5-0.5B-Instruct				30		
+E3_open_audit	6c7p198f	finished	2026-06-21T06:47:55Z	Qwen/Qwen2.5-0.5B-Instruct						
+tinker-h2h-qwen3.5-4b	l5m9lqij	finished	2026-06-21T07:44:13Z	Qwen/Qwen3.5-4B						
+E2_lora_vs_fullft	22a3jxq6	finished	2026-06-21T12:06:43Z	Qwen/Qwen2.5-0.5B-Instruct				16		
+E4_scaling_law	f97z5pff	finished	2026-06-21T12:06:47Z	Qwen/Qwen2.5-0.5B-Instruct						
+E2_lora_vs_fullft	1abwdiw2	finished	2026-06-21T12:47:12Z	Qwen/Qwen2.5-0.5B-Instruct				16		
+E4_scaling_law	whhtjdn5	finished	2026-06-21T12:47:17Z	Qwen/Qwen2.5-0.5B-Instruct						
+E5_grad_geometry	t74v0dp9	finished	2026-06-21T12:47:21Z	Qwen/Qwen2.5-0.5B-Instruct						
+E6_live_triage	e0lbptvj	finished	2026-06-21T12:47:25Z	Qwen/Qwen2.5-0.5B-Instruct						
+E7_stack_levers	0q2whsnx	finished	2026-06-21T12:47:29Z	Qwen/Qwen2.5-0.5B-Instruct						
+E2_lora_vs_fullft	7nemjgsf	finished	2026-06-21T15:57:43Z	Qwen/Qwen2.5-0.5B-Instruct				16		
+E4_scaling_law	6qzq75cq	finished	2026-06-21T15:57:47Z	Qwen/Qwen2.5-0.5B-Instruct						
+E5_grad_geometry	ufm2i07t	finished	2026-06-21T15:57:51Z	Qwen/Qwen2.5-0.5B-Instruct	per-group regression; continuous reward; population-standardized advantage					
+E6_live_triage	nht3zie2	finished	2026-06-21T15:57:55Z	Qwen/Qwen2.5-0.5B-Instruct						
+E7_stack_levers	uqore9dt	finished	2026-06-21T15:58:00Z	Qwen/Qwen2.5-0.5B-Instruct						
+E2_lora_vs_fullft_4b	mk2houtf	finished	2026-06-29T12:45:34Z	Qwen/Qwen3-4B-Instruct-2507		6		40		

@@ -1,0 +1,56 @@
+% =============================================================================
+% STANDALONE PAPER 6 of 7 -- Resource: GRPO-Registry, a machine-readable catalog
+% of group-relative RL stacks and variant deltas. The artifact this paper
+% describes lives at registry/ (schema.json + entries/*.json + query.py).
+% Reuses shared preamble/author/methods; all other sections are p6_*.
+% Build: pdflatex paper_P6_registry ; bibtex paper_P6_registry ; pdflatex x2
+% =============================================================================
+\documentclass{article}
+\input{sections/_shared_preamble}
+\title{GRPO-Registry: A Machine-Readable Catalog of\\
+       Group-Relative RL Stacks and Their Variant Deltas}
+\input{sections/_shared_author}
+\begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\input{sections/p6_abstract}
+\input{sections/p6_intro}
+\input{sections/_shared_methods}
+\input{sections/p6_results_intro}
+\input{sections/p6_schema}
+\input{sections/p6_population}
+\input{sections/p6_query_auditor}
+\input{sections/p6_worked_examples}
+\input{sections/p6_measured_evidence}
+\input{sections/p6_measured_claimed}
+\input{sections/p6_schema_extension}
+\input{sections/p6_registry_health}
+\input{sections/p6_controller_pipeline}
+\input{sections/p6_missing_deltas}
+\input{sections/p6_measured_coverage}
+\input{sections/p6_joint_controller_extension}
+\input{sections/p6_iter74_drgrpo}
+\input{sections/p6_iter78_field_coverage}
+\input{sections/p6_iter82_window_sensitivity}
+\input{sections/p6_iter86_cross_stack_matrix}
+\input{sections/p6_iter90_zvf130_measured_audit}
+\input{sections/p6_iter94_schema_validator}
+\input{sections/p6_iter100_coverage_closure}
+\input{sections/p6_iter106_claim_evidence_ledger}
+\input{sections/p6_iter118_claim_xref_coverage_strict}
+\input{sections/p6_iter122_validate_strict_crossentry}
+\input{sections/p6_iter126_measured_evidence_tier}
+\input{sections/p6_iter134_field_completeness}
+\input{sections/p6_iter138_missing_method_entries}
+\input{sections/p6_iter142_verdict_aggregate}
+\input{sections/p6_iter150_n2_recompute_prose_vs_measured}
+\input{sections/p6_iter190_raw_recompute_audit}
+\input{sections/p6_related_resources}
+\input{sections/p6_governance}
+\input{sections/p6_synthesis}
+\input{sections/p6_conclusion}
+\appendix
+\input{sections/p6_appendix_artifact}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

@@ -1,0 +1,297 @@
+{
+  "config": {
+    "G_BASE": 8,
+    "G_ESC": 16,
+    "G_DES": 4,
+    "TAU": 0.7,
+    "TAU_DELTA": 0.2,
+    "TARGET_ZVF": 0.99,
+    "n_methods": 4,
+    "n_steps_n2": 40,
+    "n_prompts_per_step": 16,
+    "n_seeds_n10": 5,
+    "n_steps_n10": 15,
+    "n_boot": 2000,
+    "boot_seed": 20260704,
+    "headroom_definition": "ZVF(G_base) - ZVF(G_esc); capped per-prompt at ZVF(G_base) for mixed prompts",
+    "recovery_definition": "sum(ZVF(G_base) - ZVF(G_ctrl)) / sum(ZVF(G_base) - ZVF(G_esc)) over mixed prompts"
+  },
+  "n2_summary": [
+    {
+      "method": "grpo",
+      "scope": "mixed_only",
+      "controller": "C1_zvf_triage@0.70",
+      "n_prompts": 179,
+      "sum_ceiling": 22.4106,
+      "sum_change": 16.4572,
+      "recovery_ratio": 0.7343,
+      "recovery_lo": 0.571,
+      "recovery_hi": 0.8892
+    },
+    {
+      "method": "grpo",
+      "scope": "mixed_only",
+      "controller": "C2_dualformer@0.70",
+      "n_prompts": 179,
+      "sum_ceiling": 22.4106,
+      "sum_change": -25.6753,
+      "recovery_ratio": -1.1457,
+      "recovery_lo": -1.4046,
+      "recovery_hi": -0.8915
+    },
+    {
+      "method": "grpo",
+      "scope": "mixed_only",
+      "controller": "C3_hybrid@0.70+0.20",
+      "n_prompts": 179,
+      "sum_ceiling": 22.4106,
+      "sum_change": 14.4647,
+      "recovery_ratio": 0.6454,
+      "recovery_lo": 0.4512,
+      "recovery_hi": 0.8215
+    },
+    {
+      "method": "aero",
+      "scope": "mixed_only",
+      "controller": "C1_zvf_triage@0.70",
+      "n_prompts": 179,
+      "sum_ceiling": 20.4905,
+      "sum_change": 12.9986,
+      "recovery_ratio": 0.6344,
+      "recovery_lo": 0.465,
+      "recovery_hi": 0.7993
+    },
+    {
+      "method": "aero",
+      "scope": "mixed_only",
+      "controller": "C2_dualformer@0.70",
+      "n_prompts": 179,
+      "sum_ceiling": 20.4905,
+      "sum_change": -20.2392,
+      "recovery_ratio": -0.9877,
+      "recovery_lo": -1.2628,
+      "recovery_hi": -0.7325
+    },
+    {
+      "method": "aero",
+      "scope": "mixed_only",
+      "controller": "C3_hybrid@0.70+0.20",
+      "n_prompts": 179,
+      "sum_ceiling": 20.4905,
+      "sum_change": 12.8268,
+      "recovery_ratio": 0.626,
+      "recovery_lo": 0.4566,
+      "recovery_hi": 0.7873
+    },
+    {
+      "method": "gift",
+      "scope": "mixed_only",
+      "controller": "C1_zvf_triage@0.70",
+      "n_prompts": 147,
+      "sum_ceiling": 17.7491,
+      "sum_change": 11.9796,
+      "recovery_ratio": 0.6749,
+      "recovery_lo": 0.4879,
+      "recovery_hi": 0.8499
+    },
+    {
+      "method": "gift",
+      "scope": "mixed_only",
+      "controller": "C2_dualformer@0.70",
+      "n_prompts": 147,
+      "sum_ceiling": 17.7491,
+      "sum_change": -19.239,
+      "recovery_ratio": -1.0839,
+      "recovery_lo": -1.3826,
+      "recovery_hi": -0.7975
+    },
+    {
+      "method": "gift",
+      "scope": "mixed_only",
+      "controller": "C3_hybrid@0.70+0.20",
+      "n_prompts": 147,
+      "sum_ceiling": 17.7491,
+      "sum_change": 8.0806,
+      "recovery_ratio": 0.4553,
+      "recovery_lo": 0.1988,
+      "recovery_hi": 0.6694
+    },
+    {
+      "method": "areal",
+      "scope": "mixed_only",
+      "controller": "C1_zvf_triage@0.70",
+      "n_prompts": 188,
+      "sum_ceiling": 23.7031,
+      "sum_change": 15.1237,
+      "recovery_ratio": 0.638,
+      "recovery_lo": 0.4549,
+      "recovery_hi": 0.8239
+    },
+    {
+      "method": "areal",
+      "scope": "mixed_only",
+      "controller": "C2_dualformer@0.70",
+      "n_prompts": 188,
+      "sum_ceiling": 23.7031,
+      "sum_change": -23.8888,
+      "recovery_ratio": -1.0078,
+      "recovery_lo": -1.2983,
+      "recovery_hi": -0.7304
+    },
+    {
+      "method": "areal",
+      "scope": "mixed_only",
+      "controller": "C3_hybrid@0.70+0.20",
+      "n_prompts": 188,
+      "sum_ceiling": 23.7031,
+      "sum_change": 13.0982,
+      "recovery_ratio": 0.5526,
+      "recovery_lo": 0.3634,
+      "recovery_hi": 0.7501
+    }
+  ],
+  "aliasing": [
+    {
+      "method": "grpo",
+      "pearson_rho": 0.2339,
+      "n_steps": 40
+    },
+    {
+      "method": "aero",
+      "pearson_rho": 0.3125,
+      "n_steps": 40
+    },
+    {
+      "method": "gift",
+      "pearson_rho": 0.0133,
+      "n_steps": 40
+    },
+    {
+      "method": "areal",
+      "pearson_rho": 0.2034,
+      "n_steps": 40
+    }
+  ],
+  "n10_summary": [
+    {
+      "seed": 42,
+      "controller": "C0_baseline",
+      "total_G": 120,
+      "savings": 0.0
+    },
+    {
+      "seed": 42,
+      "controller": "C1_zvf_triage@0.70",
+      "total_G": 136,
+      "savings": -0.1333
+    },
+    {
+      "seed": 42,
+      "controller": "C2_dualformer@0.70",
+      "total_G": 112,
+      "savings": 0.0667
+    },
+    {
+      "seed": 42,
+      "controller": "C3_hybrid@0.70+0.20",
+      "total_G": 136,
+      "savings": -0.1333
+    },
+    {
+      "seed": 179,
+      "controller": "C0_baseline",
+      "total_G": 120,
+      "savings": 0.0
+    },
+    {
+      "seed": 179,
+      "controller": "C1_zvf_triage@0.70",
+      "total_G": 152,
+      "savings": -0.2667
+    },
+    {
+      "seed": 179,
+      "controller": "C2_dualformer@0.70",
+      "total_G": 104,
+      "savings": 0.1333
+    },
+    {
+      "seed": 179,
+      "controller": "C3_hybrid@0.70+0.20",
+      "total_G": 152,
+      "savings": -0.2667
+    },
+    {
+      "seed": 316,
+      "controller": "C0_baseline",
+      "total_G": 120,
+      "savings": 0.0
+    },
+    {
+      "seed": 316,
+      "controller": "C1_zvf_triage@0.70",
+      "total_G": 152,
+      "savings": -0.2667
+    },
+    {
+      "seed": 316,
+      "controller": "C2_dualformer@0.70",
+      "total_G": 104,
+      "savings": 0.1333
+    },
+    {
+      "seed": 316,
+      "controller": "C3_hybrid@0.70+0.20",
+      "total_G": 152,
+      "savings": -0.2667
+    },
+    {
+      "seed": 453,
+      "controller": "C0_baseline",
+      "total_G": 120,
+      "savings": 0.0
+    },
+    {
+      "seed": 453,
+      "controller": "C1_zvf_triage@0.70",
+      "total_G": 168,
+      "savings": -0.4
+    },
+    {
+      "seed": 453,
+      "controller": "C2_dualformer@0.70",
+      "total_G": 96,
+      "savings": 0.2
+    },
+    {
+      "seed": 453,
+      "controller": "C3_hybrid@0.70+0.20",
+      "total_G": 168,
+      "savings": -0.4
+    },
+    {
+      "seed": 590,
+      "controller": "C0_baseline",
+      "total_G": 120,
+      "savings": 0.0
+    },
+    {
+      "seed": 590,
+      "controller": "C1_zvf_triage@0.70",
+      "total_G": 160,
+      "savings": -0.3333
+    },
+    {
+      "seed": 590,
+      "controller": "C2_dualformer@0.70",
+      "total_G": 100,
+      "savings": 0.1667
+    },
+    {
+      "seed": 590,
+      "controller": "C3_hybrid@0.70+0.20",
+      "total_G": 160,
+      "savings": -0.3333
+    }
+  ]
+}

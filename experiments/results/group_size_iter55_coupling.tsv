@@ -1,0 +1,5 @@
+T_tokens	empirical_argmax_G	predicted_argmax_G	ratio_emp_over_pred	residual_log10	within_factor_2
+1000000	8	32	0.25	-0.6020599913279625	no
+4000000	16	32	0.5	-0.30102999566398125	yes
+16000000	32	32	1.0	0.0	yes
+64000000	32	32	1.0	0.0	yes

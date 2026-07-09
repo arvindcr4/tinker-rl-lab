@@ -1,0 +1,5 @@
+cv_sse_lambda	model
+231.7406462457846	null
+330.89621979992404	log10N_only
+429.8725455889951	log10N_plus_arch
+97.46323495650864	full_interaction

@@ -1,0 +1,84 @@
+% Shared preamble for the 4 per-pillar papers (extracted from main.tex)
+% NeurIPS 2026 style (download from https://neurips.cc)
+% \usepackage{neurips_2025}       % For camera-ready
+\usepackage[preprint,nonatbib]{neurips_2026} % For preprint (remove for submission)
+\usepackage[numbers]{natbib}
+% \usepackage[nonatbib]{neurips_2026} % Submission mode (anonymized, line numbers)
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{multirow}
+\usepackage{siunitx}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{positioning, fit, arrows.meta, backgrounds, calc, shadows, shapes.geometric, shapes.misc, decorations.pathreplacing}
+
+% Custom commands
+\newcommand{\tinker}{\textsc{Tinker}}
+\newcommand{\atropos}{\textsc{Atropos}}
+\newcommand{\grpo}{\textsc{Grpo}}
+\newcommand{\ours}{\textsc{TinkerRL-Bench}}
+% Custom command for partial answers in NeurIPS checklist
+\newcommand{\answerPartial}[1][]{\textcolor{purple}{[Partial] #1}}
+
+% Helper macros used by the section files (define here so the per-pillar papers are self-contained)
+\providecommand{\eps}{\ensuremath{\epsilon}}
+\providecommand{\tableref}[1]{Table~\ref{#1}}
+\providecommand{\secref}[1]{Section~\ref{#1}}
+\providecommand{\paragraphref}[1]{Paragraph~\ref{#1}}
+\providecommand{\figref}[1]{Figure~\ref{#1}}
+\providecommand{\eqnref}[1]{Eq.~\eqref{#1}}
+
+% Sections use bare underscores in text (e.g. R_max, file_name); make _ robust in text
+% while preserving math subscripts. Load late.
+\usepackage[strings]{underscore}
+
+% Many figure PDFs are pending regeneration; make \includegraphics degrade to a
+% placeholder box instead of a fatal "file not found" error.
+\usepackage{letltxmacro}
+\LetLtxMacro{\origincludegraphics}{\includegraphics}
+\renewcommand{\includegraphics}[2][]{%
+  \IfFileExists{#2}{\origincludegraphics[#1]{#2}}%
+  {\fbox{\parbox{0.7\linewidth}{\centering\small\textit{[figure \texttt{\detokenize{#2}} pending regeneration]}}}}}
+
+% Math operators + stray Unicode math chars used by some sections
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareUnicodeCharacter{0394}{\ensuremath{\Delta}}
+\DeclareUnicodeCharacter{03B4}{\ensuremath{\delta}}
+\DeclareUnicodeCharacter{00D7}{\ensuremath{\times}}
+\DeclareUnicodeCharacter{2264}{\ensuremath{\leq}}
+\DeclareUnicodeCharacter{2265}{\ensuremath{\geq}}
+\DeclareUnicodeCharacter{2248}{\ensuremath{\approx}}
+
+% Expectation + grouping-variable name macros used by the length-bias sections
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\task}{\textsf{task}}
+\newcommand{\algo}{\textsf{algo}}
+\newcommand{\seed}{\textsf{seed}}
+
+% Further section-local macros (undefined upstream): plateau time, ZVF shorthand, signature
+\newcommand{\tplat}{T_{\text{plat}}}
+\newcommand{\zvf}{\ensuremath{\widetilde{\mathrm{ZVF}}}}
+\providecommand{\signature}{\ensuremath{\mathcal{S}}}
+
+% More upstream-undefined macros
+\newcommand{\etal}{\emph{et al.}}
+\newcommand{\note}[1]{\footnote{#1}}
+
+% Resolve both figures/X.pdf and bare X.pdf references
+\graphicspath{{figures/}{./}}

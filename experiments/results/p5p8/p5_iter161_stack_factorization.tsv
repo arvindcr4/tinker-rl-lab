@@ -1,0 +1,9 @@
+hypothesis	axis	n_groups	n_rows	eta2	eta2_method_baseline	ratio	verdict
+H1: eta^2(method|stack) <= 0.05 on N2 same-stack panel		4	160	0.0075			DECISIVE
+H7: eta^2(step -> reward_mean) <= 0.10 (within-run drift is flat)		40		0.9284			NULL
+H2: eta^2_union(stack) >= 0.50 on mega cells		50		0.9967			DECISIVE
+H5: eta^2(model) vs eta^2(method) on mega stack	model			0.4527	0.0075	60.627	DECISIVE
+H5b: eta^2(task_slice) vs eta^2(method) on mega stack	task_slice			0.2729	0.0075	36.545	DECISIVE
+H3: eta^2(G) vs eta^2(method) on mega stack	G			0.0304	0.0075	4.076	DECISIVE
+H4: eta^2(temperature) vs eta^2(method) on mega stack	temperature			0.0	0.0075	0.001	NULL
+H6: eta^2(seed) vs eta^2(method) on mega stack	seed			0.0	0.0075	0.001	DECISIVE

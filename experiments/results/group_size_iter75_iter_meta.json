@@ -1,0 +1,47 @@
+{
+  "iteration": 75,
+  "pillar": "P3-Group-Size",
+  "inputs": [
+    "experiments/results/group_size_token_normalized.tsv",
+    "experiments/results/group_size_iter43_eff_zvf.tsv"
+  ],
+  "outputs": [
+    "experiments/results/group_size_iter75_scaling.tsv",
+    "experiments/results/group_size_iter75_hypothesis.tsv",
+    "experiments/results/group_size_iter75_extrapolate.tsv",
+    "experiments/results/group_size_iter75_egt.tsv",
+    "experiments/results/group_size_iter75_summary.tsv",
+    "figures/group_size_iter75_scaling.pdf",
+    "figures/group_size_iter75_scaling.png"
+  ],
+  "method": "Per-budget fit of acc_gap(G) = -k * (G_max/G - 1)^c on G in {4,8,16,32} (G_max=64) with weighted least-squares (w=1/sigma^2).  c(T) and k(T) bootstrapped by per-row normal resampling (5000 draws).  Hypothesis tests: c=0 (DPO-eq), c=0.5 (sqrt), c=1.0 (linear), reject if outside 95% CI.  Counterfactual extrapolation: linear fit of c vs log T and log k vs log T, projected to T in {128, 256, 512} M.  Effective-Gradient-per-Token (EGT) proxy: GU(G) * sqrt(G) / T_M.",
+  "headline_metrics": {
+    "n_budgets_T": 4,
+    "G_values_fitted": "4,8,16,32,64",
+    "G_max": 64,
+    "model": "acc_gap(G) \u2248 -k(T) * (G_max/G - 1)^c(T)",
+    "fit_method": "weighted grid+Nelder-Mead refinement, weights=1/sigma^2",
+    "ci_method": "bootstrap N=5000, resample N(acc, sigma) per row",
+    "c_hat_at_T_1M": 2.38,
+    "c_hat_at_T_4M": 2.2881,
+    "c_hat_at_T_16M": 1.4112,
+    "c_hat_at_T_64M": 1.1733,
+    "T_with_smallest_c_hat": 64000000,
+    "T_with_largest_c_hat": 1000000,
+    "n_budgets_rejecting_c_eq_0_DPO_eq": 0,
+    "n_budgets_rejecting_c_eq_0p5_sqrt_scaling": 0,
+    "n_budgets_rejecting_c_eq_1_linear": 4,
+    "c_slope_with_log_T": -0.7469,
+    "k_log_slope_with_log_T": 1.2737,
+    "predicted_acc_G32_at_T_128M_pp": 83.56,
+    "predicted_acc_G4_at_T_128M_pp": 45.99,
+    "predicted_delta_G32_minus_G4_at_T_128M_pp": 37.57,
+    "predicted_acc_G32_at_T_256M_pp": 73.04,
+    "predicted_acc_G4_at_T_256M_pp": 16.48,
+    "predicted_delta_G32_minus_G4_at_T_256M_pp": 56.56,
+    "predicted_acc_G32_at_T_512M_pp": 43.78,
+    "predicted_acc_G4_at_T_512M_pp": 0.0,
+    "predicted_delta_G32_minus_G4_at_T_512M_pp": 43.78,
+    "monotone_trend_c_with_T": "decreasing"
+  }
+}

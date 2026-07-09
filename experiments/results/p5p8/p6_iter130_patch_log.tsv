@@ -1,0 +1,6 @@
+entry_id	method	n_seeds	old_delta	old_ci	new_delta	new_ci	significant	skipped
+delta_cppo	cppo	5	-0.18558	(None, None)	-0.18558	(-0.18788, -0.18318)	True	False
+delta_es	es	5	-0.36656	(None, None)	-0.36656	(-0.3715, -0.36304)	True	False
+delta_mcgrpo	mcgrpo	5	-0.33474	(None, None)	-0.33474	(-0.34166, -0.32892)	True	False
+delta_ngrpo	ngrpo	5	-0.18042	(None, None)	-0.18042	(-0.18166, -0.17916)	True	False
+delta_scafgrpo	scafgrpo	5	-0.16414	(None, None)	-0.16414	(-0.16728, -0.16076)	True	False

@@ -1,0 +1,35 @@
+# Iter 38 Pillar 2 per-library Iso-Yield curves.
+# For each variance_mitigation library, computes the minimum G
+# required to reach y_target contrastive yield under the iid
+# baseline (ZVF_iid = p**G + (1-p)**G) AND under the empirical
+# library-specific anti-herding correction (delta_div_lib =
+# ZVF_iid_ref - mean_zvf). cost_* = G * 64 prompts * 512 tokens.
+# Source: scripts/zvf_iter38_crosslibrary.py
+library	model	p_x	y_target	G_ref	delta_div_lib	G_iid	G_empirical	G_savings	cost_iid	cost_empirical	cost_savings_frac
+grpo	GRPO	0.3791	0.5	8	0.1224	1	1	0	32768	32768	0.0
+grpo	GRPO	0.3791	0.8	8	0.1224	4	3	1	131072	98304	0.25
+grpo	GRPO	0.3791	0.95	8	0.1224	7	4	3	229376	131072	0.4286
+aero	AERO	0.3993	0.5	8	0.1224	1	1	0	32768	32768	0.0
+aero	AERO	0.3993	0.8	8	0.1224	4	3	1	131072	98304	0.25
+aero	AERO	0.3993	0.95	8	0.1224	7	4	3	229376	131072	0.4286
+cppo	CPPO	0.392	0.5	8	0.1224	1	1	0	32768	32768	0.0
+cppo	CPPO	0.392	0.8	8	0.1224	4	3	1	131072	98304	0.25
+cppo	CPPO	0.392	0.95	8	0.1224	7	4	3	229376	131072	0.4286
+ngrpo	NGRPO	0.3874	0.5	8	0.1224	1	1	0	32768	32768	0.0
+ngrpo	NGRPO	0.3874	0.8	8	0.1224	4	3	1	131072	98304	0.25
+ngrpo	NGRPO	0.3874	0.95	8	0.1224	7	4	3	229376	131072	0.4286
+scafgrpo	SCAFGRPO	0.4088	0.5	8	0.1224	1	1	0	32768	32768	0.0
+scafgrpo	SCAFGRPO	0.4088	0.8	8	0.1224	4	3	1	131072	98304	0.25
+scafgrpo	SCAFGRPO	0.4088	0.95	8	0.1224	6	4	2	196608	131072	0.3333
+mcgrpo	MCGRPO	0.3221	0.5	8	0.1224	1	1	0	32768	32768	0.0
+mcgrpo	MCGRPO	0.3221	0.8	8	0.1224	5	4	1	163840	131072	0.2
+mcgrpo	MCGRPO	0.3221	0.95	8	0.1224	8	5	3	262144	163840	0.375
+gift	GIFT	0.3259	0.5	8	0.1224	1	1	0	32768	32768	0.0
+gift	GIFT	0.3259	0.8	8	0.1224	5	4	1	163840	131072	0.2
+gift	GIFT	0.3259	0.95	8	0.1224	8	5	3	262144	163840	0.375
+areal	AREAL	0.3283	0.5	8	0.1224	1	1	0	32768	32768	0.0
+areal	AREAL	0.3283	0.8	8	0.1224	5	4	1	163840	131072	0.2
+areal	AREAL	0.3283	0.95	8	0.1224	8	5	3	262144	163840	0.375
+es	ES	0.3163	0.5	8	0.1224	1	1	0	32768	32768	0.0
+es	ES	0.3163	0.8	8	0.1224	5	4	1	163840	131072	0.2
+es	ES	0.3163	0.95	8	0.1224	8	5	3	262144	163840	0.375

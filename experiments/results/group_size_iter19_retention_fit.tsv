@@ -1,0 +1,2 @@
+model	R_0_fixed_at	R_inf_hat	R_inf_ci_low	R_inf_ci_high	tau_hat_tokens	tau_ci_low_tokens	tau_ci_high_tokens	R2	n_points
+R(T) = R_inf - (R_inf - R_0) * exp(-T/tau)	0.976	0.729148	0.71233	0.745351	5762739.133	4243941.131	7822441.795	0.948429	4

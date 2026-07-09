@@ -1,0 +1,6 @@
+model	params_B	family	n_steps	early_mean	middle_mean	late_mean	middle_var	peak	phase1_improvement	phase2_plateau	phase3_collapse	phase_combo	monotone_or_plateau	collapse_only	three_phase_full
+Qwen3.5-4B	4.0	dense-instruct	30	0.8125	0.7875	0.8500	0.0572	1.0000	0	0	1	(0,0,1)	0	1	0
+Qwen3-8B	8.0	dense-base	30	0.2437	0.2687	0.3438	0.0391	0.6250	1	1	1	(1,1,1)	0	0	1
+Llama-3.1-8B-Instruct	8.0	dense-instruct	30	0.9250	0.8375	0.8438	0.0322	1.0000	0	1	1	(0,1,1)	1	1	0
+DeepSeek-V3.1	685.0	moe-instruct	20	0.8333	0.8542	0.8438	0.0178	1.0000	0	1	1	(0,1,1)	1	1	0
+Nemotron-120B	120.0	dense-base	20	0.1458	0.2292	0.1562	0.0282	0.8750	0	1	1	(0,1,1)	1	1	0

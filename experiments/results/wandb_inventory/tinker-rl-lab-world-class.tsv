@@ -1,0 +1,175 @@
+name	id	state	createdAt	model	algorithm	group_size	dataset	max_steps	lr	final_reward
+scale_gsm8k_llama-8b-inst	3t9z44iz	finished	2026-04-18T15:38:18Z	meta-llama/Llama-3.1-8B-Instruct			gsm8k	30	3e-05	
+moe_gsm8k_qwen3-30b-moe	8nhyfstb	finished	2026-04-18T15:38:18Z	Qwen/Qwen3-30B-A3B			gsm8k	30	3e-05	
+scale_gsm8k_qwen3.5-4b	8plw10xc	finished	2026-04-18T15:38:18Z	Qwen/Qwen3.5-4B			gsm8k	30	3e-05	
+scale_gsm8k_qwen3.5-27b	9fc17bqu	finished	2026-04-18T15:38:18Z	Qwen/Qwen3.5-27B			gsm8k	30	3e-05	
+frontier_gsm8k_nemotron-120b	ax59u2zl	finished	2026-04-18T15:38:18Z	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16			gsm8k	20	1e-05	
+moe_gsm8k_qwen3-30b-inst	cv7gscq3	finished	2026-04-18T15:38:18Z	Qwen/Qwen3-30B-A3B-Instruct-2507			gsm8k	30	3e-05	
+frontier_gsm8k_qwen3-235b	u6lrpz38	finished	2026-04-18T15:38:18Z	Qwen/Qwen3-235B-A22B-Instruct-2507			gsm8k	20	1e-05	
+scale_gsm8k_qwen3-8b	vv6uu72m	finished	2026-04-18T15:38:18Z	Qwen/Qwen3-8B			gsm8k	30	3e-05	
+frontier_gsm8k_deepseek-v3.1	r28pjkud	finished	2026-04-18T15:38:20Z	deepseek-ai/DeepSeek-V3.1			gsm8k	20	1e-05	
+test-ping	rjxty3l2	finished	2026-04-18T15:41:21Z							
+scale_gsm8k_qwen3.5-27b	0mfjudrf	finished	2026-04-18T15:41:41Z	Qwen/Qwen3.5-27B			gsm8k	30	3e-05	
+scale_gsm8k_qwen3.5-4b	ek7eb7n5	finished	2026-04-18T15:41:41Z	Qwen/Qwen3.5-4B			gsm8k	30	3e-05	
+scale_gsm8k_qwen3-32b	ggvjyshv	finished	2026-04-18T15:41:41Z	Qwen/Qwen3-32B			gsm8k	30	3e-05	
+frontier_gsm8k_qwen3-235b	mo7naiuq	finished	2026-04-18T15:41:41Z	Qwen/Qwen3-235B-A22B-Instruct-2507			gsm8k	20	1e-05	
+scale_gsm8k_llama-8b-inst	o97uim72	finished	2026-04-18T15:41:41Z	meta-llama/Llama-3.1-8B-Instruct			gsm8k	30	3e-05	
+scale_gsm8k_qwen3-8b	wbue9ji9	finished	2026-04-18T15:41:41Z	Qwen/Qwen3-8B			gsm8k	30	3e-05	
+frontier_gsm8k_nemotron-120b	m0h1kht3	finished	2026-04-18T15:42:04Z	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16			gsm8k	20	1e-05	
+frontier_gsm8k_deepseek-v3.1	utte4kz0	finished	2026-04-18T15:42:04Z	deepseek-ai/DeepSeek-V3.1			gsm8k	20	1e-05	
+cross_tool_qwen3-32b	hjv0ekv6	finished	2026-04-18T15:42:05Z	Qwen/Qwen3-32B			tool_use	30	3e-05	
+moe_gsm8k_qwen3-30b-moe	95y69d53	finished	2026-04-18T15:42:06Z	Qwen/Qwen3-30B-A3B			gsm8k	30	3e-05	
+moe_gsm8k_qwen3-30b-inst	jzv13ldt	finished	2026-04-18T15:42:06Z	Qwen/Qwen3-30B-A3B-Instruct-2507			gsm8k	30	3e-05	
+cross_tool_llama-8b-inst	sfeza59k	finished	2026-04-18T15:42:26Z	meta-llama/Llama-3.1-8B-Instruct			tool_use	30	3e-05	
+arch_gsm8k_gpt-oss-20b	8tg4wv64	finished	2026-04-18T15:42:27Z	openai/gpt-oss-20b			gsm8k	30	3e-05	
+arch_gsm8k_kimi-k2	d3bvb4db	crashed	2026-04-18T15:42:33Z	moonshotai/Kimi-K2-Thinking			gsm8k	20	1e-05	
+kl_track_Qwen3-8B_s42	fbfie2nd	finished	2026-04-18T15:42:49Z	Qwen/Qwen3-8B			kl_tracking	30		
+humaneval_Qwen3-8B	jt87etzq	finished	2026-04-18T15:42:49Z	Qwen/Qwen3-8B			humaneval			
+ppo_gsm8k_Qwen3-8B_s42	ri2pajjl	finished	2026-04-18T15:42:49Z	Qwen/Qwen3-8B	ppo_reinforce		gsm8k	30		
+ppo_gsm8k_Llama-3.1-8B-Instruct_s42	wni44rkq	finished	2026-04-18T15:42:50Z	meta-llama/Llama-3.1-8B-Instruct	ppo_reinforce		gsm8k	30		
+heldout_gsm8k_Qwen3-32B	bkuc519e	finished	2026-04-18T15:42:52Z	Qwen/Qwen3-32B			gsm8k_heldout			
+heldout_gsm8k_Qwen3.5-27B	m4hg5upd	finished	2026-04-18T15:42:55Z	Qwen/Qwen3.5-27B			gsm8k_heldout			
+scale_gsm8k_llama-8b-inst	0r569zmz	finished	2026-04-19T03:01:13Z	meta-llama/Llama-3.1-8B-Instruct			gsm8k	30	3e-05	
+frontier_gsm8k_qwen3-235b	3ma4iy35	finished	2026-04-19T03:01:13Z	Qwen/Qwen3-235B-A22B-Instruct-2507			gsm8k	20	1e-05	
+scale_gsm8k_qwen3.5-27b	gyadmw73	finished	2026-04-19T03:01:13Z	Qwen/Qwen3.5-27B			gsm8k	30	3e-05	
+scale_gsm8k_qwen3-32b	h67ar2sk	finished	2026-04-19T03:01:13Z	Qwen/Qwen3-32B			gsm8k	30	3e-05	
+frontier_gsm8k_nemotron-120b	qxk1ji3v	finished	2026-04-19T03:01:13Z	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16			gsm8k	20	1e-05	
+scale_gsm8k_qwen3.5-4b	sqajfyr8	finished	2026-04-19T03:01:13Z	Qwen/Qwen3.5-4B			gsm8k	30	3e-05	
+ppo_gsm8k_Qwen3-8B_s42	vrb9zxql	finished	2026-04-19T03:01:29Z	Qwen/Qwen3-8B	ppo_reinforce		gsm8k	30		
+heldout_gsm8k_Qwen3-32B	4xlg1s78	finished	2026-04-19T03:01:30Z	Qwen/Qwen3-32B			gsm8k_heldout			
+heldout_gsm8k_Qwen3.5-27B	kwhnveqj	finished	2026-04-19T03:01:30Z	Qwen/Qwen3.5-27B			gsm8k_heldout			
+ppo_gsm8k_Llama-3.1-8B-Instruct_s42	dshd5xxm	finished	2026-04-19T03:01:34Z	meta-llama/Llama-3.1-8B-Instruct	ppo_reinforce		gsm8k	30		
+humaneval_Qwen3-8B	oak9w32i	finished	2026-04-19T03:01:34Z	Qwen/Qwen3-8B			humaneval			
+kl_track_Qwen3-8B_s42	s0m88vpn	finished	2026-04-19T03:01:34Z	Qwen/Qwen3-8B			kl_tracking	30		
+cross_tool_qwen3-32b	3shxlxst	finished	2026-04-19T03:01:45Z	Qwen/Qwen3-32B			tool_use	30	3e-05	
+arch_gsm8k_gpt-oss-20b	19y4lpcc	finished	2026-04-19T03:01:46Z	openai/gpt-oss-20b			gsm8k	30	3e-05	
+arch_gsm8k_kimi-k2	r8uwff0t	crashed	2026-04-19T03:02:10Z	moonshotai/Kimi-K2-Thinking			gsm8k	20	1e-05	
+scale_gsm8k_qwen3-32b	0ait6dly	finished	2026-04-19T03:52:59Z	Qwen/Qwen3-32B			gsm8k	30	3e-05	
+scale_gsm8k_qwen3.5-27b	0o63xl1c	finished	2026-04-19T03:52:59Z	Qwen/Qwen3.5-27B			gsm8k	30	3e-05	
+frontier_gsm8k_qwen3-235b	4hw4eko5	finished	2026-04-19T03:52:59Z	Qwen/Qwen3-235B-A22B-Instruct-2507			gsm8k	20	1e-05	
+moe_gsm8k_qwen3-30b-inst	73vx0ufb	finished	2026-04-19T03:52:59Z	Qwen/Qwen3-30B-A3B-Instruct-2507			gsm8k	30	3e-05	
+moe_gsm8k_qwen3-30b-moe	gxfk8nip	finished	2026-04-19T03:52:59Z	Qwen/Qwen3-30B-A3B			gsm8k	30	3e-05	
+scale_gsm8k_llama-8b-inst	or5wgo7a	finished	2026-04-19T03:52:59Z	meta-llama/Llama-3.1-8B-Instruct			gsm8k	30	3e-05	
+arch_gsm8k_gpt-oss-20b	b0i6hjd3	finished	2026-04-19T04:11:53Z	openai/gpt-oss-20b			gsm8k	30	3e-05	
+arch_gsm8k_kimi-k2	7ejhy2d7	crashed	2026-04-19T04:12:00Z	moonshotai/Kimi-K2-Thinking			gsm8k	20	1e-05	
+scale_gsm8k_qwen3-32b	29r5rp3q	crashed	2026-04-19T04:37:50Z	Qwen/Qwen3-32B			gsm8k	30	3e-05	
+scale_gsm8k_qwen3.5-27b	xmcdh5qm	crashed	2026-04-19T04:37:50Z	Qwen/Qwen3.5-27B			gsm8k	30	3e-05	
+scale_gsm8k_qwen3.5-27b	cb0pltmi	crashed	2026-04-19T04:49:25Z	Qwen/Qwen3.5-27B			gsm8k	30	3e-05	
+scale_gsm8k_qwen3-32b	x9e5l7xo	crashed	2026-04-19T04:49:25Z	Qwen/Qwen3-32B			gsm8k	30	3e-05	
+arch_gsm8k_gpt-oss-20b	k7duoedx	finished	2026-04-19T06:23:38Z	openai/gpt-oss-20b			gsm8k	30	3e-05	
+arch_gsm8k_kimi-k2	myp3krhn	finished	2026-04-19T06:23:38Z	moonshotai/Kimi-K2-Thinking			gsm8k	20	1e-05	
+grpo_qwen3-8b_gsm8k_s123	3abllmqk	finished	2026-04-19T06:28:00Z	Qwen/Qwen3-8B	GRPO		gsm8k	30	3e-05	
+held_out_gsm8k_eval	lu5ikfq7	finished	2026-04-19T06:28:00Z				held_out_eval			
+ppo_qwen3.5-4b_gsm8k_s42	v9eesnqc	finished	2026-04-19T06:28:01Z	Qwen/Qwen3.5-4B	PPO		gsm8k	30	0.0001	
+grpo_qwen3-8b_gsm8k_seed123	snm9mxni	finished	2026-04-19T08:08:20Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+grpo_qwen3-8b_gsm8k_seed456	q33egfyb	finished	2026-04-19T08:08:21Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+grpo_qwen3-8b_gsm8k_seed789	k6cmc7gi	crashed	2026-04-19T08:08:24Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+grpo_qwen3-8b_gsm8k_seed123	9lleqd1g	failed	2026-04-19T08:24:38Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+grpo_qwen3-8b_gsm8k_seed123	c1zca2qb	finished	2026-04-19T08:34:46Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+grpo_qwen3-8b_gsm8k_seed456	igejxwwl	finished	2026-04-19T08:34:49Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+grpo_qwen3-8b_gsm8k_seed789	28bzhlsa	finished	2026-04-19T08:34:50Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+campaign_w1_kimi-k2-thinking	oeidbyzx	finished	2026-04-19T09:11:28Z	moonshotai/Kimi-K2-Thinking	grpo	8	gsm8k	30	1e-05	
+campaign_w1_qwen35-397b	27ymnugp	finished	2026-04-19T09:11:29Z	Qwen/Qwen3.5-397B-A17B	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama31-70b-base	bxe5um4k	finished	2026-04-19T09:11:29Z	meta-llama/Llama-3.1-70B	grpo	8	gsm8k	30	1e-05	
+campaign_w1_gpt-oss-120b	v3ur5b1w	finished	2026-04-19T09:11:29Z	openai/gpt-oss-120b	grpo	8	gsm8k	30	1e-05	
+campaign_w1_qwen3-8b-base	xmot42ot	finished	2026-04-19T09:11:29Z	Qwen/Qwen3-8B-Base	grpo	8	gsm8k	30	1e-05	
+campaign_w1_kimi-k25	hiy9w3wo	finished	2026-04-19T09:11:31Z	moonshotai/Kimi-K2.5	grpo	8	gsm8k	30	1e-05	
+modal-trl_llama32_3b	7kgeas83	finished	2026-04-19T09:16:08Z	meta-llama/Llama-3.2-3B-Instruct	TRL-GRPO		gsm8k			
+modal-trl_qwen3_8b	ilp9ipus	finished	2026-04-19T09:16:09Z	Qwen/Qwen3-8B	TRL-GRPO		gsm8k			
+modal-trl_llama32_1b	8oxg8rgg	finished	2026-04-19T09:16:12Z	meta-llama/Llama-3.2-1B-Instruct	TRL-GRPO		gsm8k			
+modal-trl_qwen3_8b	q25vuhef	finished	2026-04-19T09:20:38Z	Qwen/Qwen3-8B	TRL-GRPO		gsm8k			
+modal-trl_llama32_3b	ioiqdj7b	finished	2026-04-19T09:20:39Z	meta-llama/Llama-3.2-3B-Instruct	TRL-GRPO		gsm8k			
+modal-trl_llama32_1b	zbwp8w7e	finished	2026-04-19T09:20:48Z	meta-llama/Llama-3.2-1B-Instruct	TRL-GRPO		gsm8k			
+modal-trl_llama32_3b	cj3csn5e	finished	2026-04-19T09:22:03Z	meta-llama/Llama-3.2-3B-Instruct	TRL-GRPO	8	gsm8k	30	1e-05	
+modal-trl_qwen3_8b	w83mv3ok	finished	2026-04-19T09:22:03Z	Qwen/Qwen3-8B	TRL-GRPO	8	gsm8k	30	1e-05	
+modal-trl_llama32_1b	gc3awqof	finished	2026-04-19T09:22:04Z	meta-llama/Llama-3.2-1B-Instruct	TRL-GRPO	8	gsm8k	30	1e-05	
+campaign_w1_deepseek-v31-base	njrt2no3	finished	2026-04-19T09:26:18Z	deepseek-ai/DeepSeek-V3.1-Base	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama31-8b-base	7bn59gdn	finished	2026-04-19T09:42:56Z	meta-llama/Llama-3.1-8B	grpo	8	gsm8k	30	1e-05	
+campaign_w2_qwen3-8b_G2	wv5ssnmp	finished	2026-04-19T09:47:06Z	Qwen/Qwen3-8B	grpo	2	gsm8k	30	1e-05	
+campaign_w2_qwen3-8b_G4	lpxrbgw2	finished	2026-04-19T09:48:54Z	Qwen/Qwen3-8B	grpo	4	gsm8k	30	1e-05	
+campaign_w2_qwen3-8b_G16	ao38u7bu	finished	2026-04-19T09:51:14Z	Qwen/Qwen3-8B	grpo	16	gsm8k	30	1e-05	
+campaign_w2_qwen3-8b_G32	v1ttydp0	finished	2026-04-19T10:00:49Z	Qwen/Qwen3-8B	grpo	32	gsm8k	30	1e-05	
+campaign_w3_dsv31_s123	inatk9re	finished	2026-04-19T10:03:30Z	deepseek-ai/DeepSeek-V3.1	grpo	8	gsm8k	30	1e-05	
+campaign_w3_dsv31_s456	j0xgk0eo	finished	2026-04-19T10:05:42Z	deepseek-ai/DeepSeek-V3.1	grpo	8	gsm8k	30	1e-05	
+campaign_w3_dsv31_s789	d4wr8xqk	finished	2026-04-19T10:08:49Z	deepseek-ai/DeepSeek-V3.1	grpo	8	gsm8k	30	1e-05	
+campaign_w1_kimi-k25	9w7gizec	finished	2026-04-19T11:16:32Z	moonshotai/Kimi-K2.5	grpo	8	gsm8k	30	1e-05	
+campaign_w1_kimi-k2-thinking	ee20882i	finished	2026-04-19T11:16:32Z	moonshotai/Kimi-K2-Thinking	grpo	8	gsm8k	30	1e-05	
+campaign_w1_qwen3-8b-base	pyy1y27m	finished	2026-04-19T11:16:32Z	Qwen/Qwen3-8B-Base	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama31-70b-base	qepg9b0r	finished	2026-04-19T11:16:32Z	meta-llama/Llama-3.1-70B	grpo	8	gsm8k	30	1e-05	
+campaign_w1_qwen35-397b	sdul6wv8	finished	2026-04-19T11:16:32Z	Qwen/Qwen3.5-397B-A17B	grpo	8	gsm8k	30	1e-05	
+campaign_w1_gpt-oss-120b	x29gchbr	finished	2026-04-19T11:16:32Z	openai/gpt-oss-120b	grpo	8	gsm8k	30	1e-05	
+campaign_w1_deepseek-v31-base	kqncve9u	finished	2026-04-19T11:31:39Z	deepseek-ai/DeepSeek-V3.1-Base	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama31-8b-base	vi4ay2yi	finished	2026-04-19T11:37:07Z	meta-llama/Llama-3.1-8B	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama33-70b-inst	caxo9cs5	failed	2026-04-19T11:38:12Z	meta-llama/Llama-3.3-70B-Instruct	GRPO	8	gsm8k	30	1e-05	
+campaign_w1_llama33-70b-inst_v2	0sastqzp	failed	2026-04-19T11:40:33Z	meta-llama/Llama-3.3-70B-Instruct	GRPO	8	gsm8k	30	1e-05	
+campaign_w2_qwen3-8b_G2	9x0u2bcj	finished	2026-04-19T11:40:48Z	Qwen/Qwen3-8B	grpo	2	gsm8k	30	1e-05	
+campaign_w1_llama33-70b-inst_v3	dlilh2jb	failed	2026-04-19T11:44:46Z	meta-llama/Llama-3.3-70B-Instruct	GRPO	8	gsm8k			
+campaign_w2_qwen3-8b_G4	u6iqve7o	finished	2026-04-19T11:48:27Z	Qwen/Qwen3-8B	grpo	4	gsm8k	30	1e-05	
+campaign_w2_qwen3-8b_G16	6pwbiixh	finished	2026-04-19T11:51:05Z	Qwen/Qwen3-8B	grpo	16	gsm8k	30	1e-05	
+campaign_w2_qwen3-8b_G32	xa88u4zz	finished	2026-04-19T11:56:44Z	Qwen/Qwen3-8B	grpo	32	gsm8k	30	1e-05	
+campaign_w3_dsv31_s123	rhxacq0y	finished	2026-04-19T11:56:53Z	deepseek-ai/DeepSeek-V3.1	grpo	8	gsm8k	30	1e-05	
+campaign_w3_dsv31_s456	6c6qjy9t	finished	2026-04-19T12:15:21Z	deepseek-ai/DeepSeek-V3.1	grpo	8	gsm8k	30	1e-05	
+campaign_w3_dsv31_s789	j23m5clr	finished	2026-04-19T12:15:28Z	deepseek-ai/DeepSeek-V3.1	grpo	8	gsm8k	30	1e-05	
+campaign_w3_nem120b_s123	s9wzsofo	finished	2026-04-19T12:17:48Z	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16	grpo	8	gsm8k	30	1e-05	
+campaign_w3_nem120b_s456	ycvx1tpu	finished	2026-04-19T12:19:41Z	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16	grpo	8	gsm8k	30	1e-05	
+campaign_w3_nem120b_s789	t80dkvup	finished	2026-04-19T12:21:31Z	nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16	grpo	8	gsm8k	30	1e-05	
+campaign_w3_q235b_s123	lasgrb5p	finished	2026-04-19T12:32:55Z	Qwen/Qwen3-235B-A22B-Instruct-2507	grpo	8	gsm8k	30	1e-05	
+campaign_w3_q235b_s456	credw6a1	finished	2026-04-19T12:50:01Z	Qwen/Qwen3-235B-A22B-Instruct-2507	grpo	8	gsm8k	30	1e-05	
+campaign_w3_q235b_s789	k6fzommw	finished	2026-04-19T12:50:08Z	Qwen/Qwen3-235B-A22B-Instruct-2507	grpo	8	gsm8k	30	1e-05	
+campaign_v2_w1_llama33-70b-inst_retry	g049p9p8	failed	2026-04-19T12:56:54Z	meta-llama/Llama-3.3-70B-Instruct		8		30	1e-05	
+campaign_v2_llama33-70b-inst_v4	lmlyzlqw	crashed	2026-04-19T12:57:43Z	meta-llama/Llama-3.3-70B-Instruct		8		30	1e-05	
+campaign_v2_llama33-70b-inst_v4	g7d80ar4	failed	2026-04-19T12:58:46Z	meta-llama/Llama-3.3-70B-Instruct		8		30	1e-05	
+campaign_v2_llama33-70b-inst_v4	ztn8880r	crashed	2026-04-19T13:01:26Z	meta-llama/Llama-3.3-70B-Instruct		8		30	1e-05	
+llama33_70b_s42	ot1mxw3t	crashed	2026-04-19T13:07:26Z	meta-llama/Llama-3.3-70B-Instruct	grpo	8	gsm8k	30	1e-05	
+llama33_70b_s42	kf2obth6	finished	2026-04-19T13:10:17Z	meta-llama/Llama-3.3-70B-Instruct	grpo	8	gsm8k	30	1e-05	
+campaign_w5_q8b_100s	2lw7gx59	finished	2026-04-19T13:14:29Z	Qwen/Qwen3-8B	grpo	8	gsm8k	100	1e-05	
+campaign_w1_qwen35-35b-moe	talygl4q	finished	2026-04-19T13:18:40Z	Qwen/Qwen3.5-35B-A3B	grpo	8	gsm8k	30	1e-05	
+campaign_w1_nemotron3-nano-30b	7rigsas7	finished	2026-04-19T13:29:06Z	nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama32-1b	l4jhzkxm	finished	2026-04-19T13:31:12Z	meta-llama/Llama-3.2-1B	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama32-3b	lihw3pot	finished	2026-04-19T13:32:37Z	meta-llama/Llama-3.2-3B	grpo	8	gsm8k	30	1e-05	
+llama33_70b_s123	elb6c34k	finished	2026-04-19T13:32:52Z	meta-llama/Llama-3.3-70B-Instruct	grpo	8	gsm8k	30	1e-05	
+campaign_w1_qwen3-4b-inst-2507	ey7dy864	finished	2026-04-19T13:35:43Z	Qwen/Qwen3-4B-Instruct-2507	grpo	8	gsm8k	30	1e-05	
+campaign_w1_qwen3-30b-inst-2507	sas2shvn	finished	2026-04-19T13:43:29Z	Qwen/Qwen3-30B-A3B-Instruct-2507	grpo	8	gsm8k	30	1e-05	
+campaign_w4_q8b_lr5e-06	ga5nopor	finished	2026-04-19T13:46:15Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	5e-06	
+campaign_w4_q8b_lr3e-05	eaf7c1s3	finished	2026-04-19T13:49:04Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	3e-05	
+llama33_70b_s456	nh1t54ta	finished	2026-04-19T13:53:53Z	meta-llama/Llama-3.3-70B-Instruct	grpo	8	gsm8k	30	1e-05	
+campaign_w4_q8b_lr0.0001	5c5ae695	finished	2026-04-19T13:56:44Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	0.0001	
+wave6_w6_kimik25_s123	2439l9ft	crashed	2026-04-19T14:07:19Z	moonshotai/Kimi-K2.5	grpo	8	gsm8k	30	1e-05	
+wave6_w6_q8b_temp10	5vajtfpv	finished	2026-04-19T14:07:19Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_llama31_8b_inst	exqu93nw	crashed	2026-04-19T14:07:19Z	meta-llama/Llama-3.1-8B-Instruct	grpo	8	gsm8k	30	1e-05	
+wave6_w6_q8b_rank64	fpeeck8o	finished	2026-04-19T14:07:19Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_q8b_batch1	msc7bnas	finished	2026-04-19T14:07:19Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_q8b_temp06	ncls3l15	finished	2026-04-19T14:07:19Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_llama31_70b_s123	pi0fllee	crashed	2026-04-19T14:07:19Z	meta-llama/Llama-3.1-70B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_llama31_70b_s456	rnehw7b7	crashed	2026-04-19T14:07:19Z	meta-llama/Llama-3.1-70B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_q8b_rank8	v482m025	finished	2026-04-19T14:07:19Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_q8b_batch4	zvr7v6ay	crashed	2026-04-19T14:07:19Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama33-70b-inst_s42	3zwb7akd	finished	2026-04-19T14:47:13Z	meta-llama/Llama-3.3-70B-Instruct	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama33-70b-inst_s123	rr9b9tn0	finished	2026-04-19T14:47:13Z	meta-llama/Llama-3.3-70B-Instruct	grpo	8	gsm8k	30	1e-05	
+wave6_w6_temp0.6_r32_b2	5coydety	finished	2026-04-19T14:47:20Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_base_r32_t0.8_b2	4f92b75c	finished	2026-04-19T14:47:21Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_temp0.4_r32_b2	4tupvr8a	finished	2026-04-19T14:47:21Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_temp1.0_r32_b2	58ux2839	finished	2026-04-19T14:47:21Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_temp0.2_r32_b2	7o5i9958	finished	2026-04-19T14:47:21Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_rank4_t0.8_b2	xqtlwvcq	finished	2026-04-19T14:47:21Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_rank8_t0.8_b2	0k4bpdox	finished	2026-04-19T15:02:42Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_rank16_t0.8_b2	3lq8sa6c	finished	2026-04-19T15:03:03Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_rank64_t0.8_b2	up9fagie	finished	2026-04-19T15:03:04Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_batch1_r32_t0.8	3iwj9kn4	finished	2026-04-19T15:03:33Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_batch4_r32_t0.8	cyscp586	finished	2026-04-19T15:03:35Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_batch8_r32_t0.8	ubkpnhjj	failed	2026-04-19T15:03:38Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama33-70b-inst_s456	a499yg52	finished	2026-04-19T15:04:35Z	meta-llama/Llama-3.3-70B-Instruct	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama33-70b-inst_s789	63uucd3s	failed	2026-04-19T15:05:43Z	meta-llama/Llama-3.3-70B-Instruct	grpo	8	gsm8k	30	1e-05	
+wave6_w6_batch1_r32_t0.8	6o5nyzbi	finished	2026-04-19T15:21:22Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_rank16_t0.8_b2	8nlvecol	finished	2026-04-19T15:21:22Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_batch4_r32_t0.8	icwke1dk	finished	2026-04-19T15:21:22Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_rank64_t0.8_b2	nvfc9uny	finished	2026-04-19T15:21:22Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_batch8_r32_t0.8	ve8ib5la	finished	2026-04-19T15:21:22Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+wave6_w6_rank8_t0.8_b2	x7m9trov	finished	2026-04-19T15:21:22Z	Qwen/Qwen3-8B	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama33-70b-inst_s456	0orv0eyr	finished	2026-04-19T15:23:46Z	meta-llama/Llama-3.3-70B-Instruct	grpo	8	gsm8k	30	1e-05	
+campaign_w1_llama33-70b-inst_s789	3eryah20	finished	2026-04-19T15:23:46Z	meta-llama/Llama-3.3-70B-Instruct	grpo	8	gsm8k	30	1e-05	
+modal-openrlhf-qwen3-8b-grpo-gsm8k500	ey4y388z	crashed	2026-04-19T15:26:42Z							
+modal-openrlhf-qwen3-8b-grpo-gsm8k500	caxqcnwy	crashed	2026-04-19T15:48:32Z							
+modal-openrlhf-qwen3-8b-grpo-gsm8k500	zbgf2z20	crashed	2026-04-19T16:03:35Z							
+modal-openrlhf-qwen3-8b-grpo-gsm8k500	ytqqrof7	crashed	2026-04-19T16:20:13Z							
+modal-verl-qwen3-8b-grpo-gsm8k500	1xrimg8y	finished	2026-04-19T17:01:10Z						1e-05	

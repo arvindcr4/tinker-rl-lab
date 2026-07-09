@@ -1,0 +1,5 @@
+method	n_stable	n_total	density	wilson_lo	wilson_hi
+aero	6	40	0.150000	0.070611	0.290726
+areal	4	40	0.100000	0.039579	0.230521
+gift	9	40	0.225000	0.123160	0.375034
+grpo	9	40	0.225000	0.123160	0.375034

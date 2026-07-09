@@ -1,0 +1,14 @@
+form	asymptotic_exponential
+R_infinity	0.72
+R_initial_at_T0	0.8637316858335283
+tau_M_tokens	20.1890177225
+R2_point_estimate	0.5924958851558334
+AIC	-16.210355744578173
+n_budgets	4
+bootstrap_R_infinity_mean	0.56386
+bootstrap_R_infinity_ci_lo	0.0
+bootstrap_R_infinity_ci_hi	0.77
+bootstrap_R_at_T256M	0.6482035752532639
+bootstrap_R_at_T256M_ci_lo	0.4757374802458302
+bootstrap_R_at_T256M_ci_hi	0.7700000001341586
+n_bootstrap	2000

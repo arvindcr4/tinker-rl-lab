@@ -1,0 +1,7 @@
+invariance_axis	invariance_magnitude	interpretation
+P5_n2_algoperstep	0.058500	eta^2 = 0.0454 -- invariance to algorithm on per-step zvf
+P5_n10_seedrisk	0.009300	eta^2 = 0.0071 -- invariance to seed on zvf_risk
+P7_cross_method_min	0.983256	min Pearson r across 6 method pairs (savings(tau) curve)
+P7_cross_method_mean	0.988997	mean Pearson r across 6 method pairs (savings(tau) curve)
+P8_gradientband_seed	0.961000	max|Delta recall| = 0.0111 -- invariance to XGBoost seed on gradient-band
+P8_absolute_band_seed	0.961000	max|Delta recall| = 0.0111 -- invariance to XGBoost seed on absolute-band

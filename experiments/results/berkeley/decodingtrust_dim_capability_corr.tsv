@@ -1,0 +1,6 @@
+dim	spearman_dim_capability
+t1_stereotype	0.7684
+t2_adversarial	0.6912
+t3_OOD	0.6982
+t4_demo_robustness	0.5977
+t5_ethics_fairness	0.7754

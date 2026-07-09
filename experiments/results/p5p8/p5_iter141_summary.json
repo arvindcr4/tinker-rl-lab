@@ -1,0 +1,73 @@
+{
+  "iter": 141,
+  "n_methods": 4,
+  "n_steps": 40,
+  "n_cells": 2560,
+  "n_scalars": 20480,
+  "eta2_method": 0.000502968135513749,
+  "eta2_step": 0.06254221710848192,
+  "eta2_prompt": 0.9166153653024314,
+  "eta2_method_ci": [
+    0.00011223229905959872,
+    0.004903085115426115
+  ],
+  "eta2_step_ci": [
+    0.057754962448297184,
+    0.09670505329701021
+  ],
+  "eta2_prompt_ci": [
+    0.9198699161879051,
+    0.9418335994374504
+  ],
+  "factor_ratios": {
+    "step_over_method": {
+      "ci_lo": 21.06966841739033,
+      "ci_hi": 552.6205968723775
+    },
+    "prompt_over_method": {
+      "ci_lo": 207.9369650425408,
+      "ci_hi": 8892.83667612118
+    },
+    "step_over_prompt": {
+      "ci_lo": 0.062142218169401485,
+      "ci_hi": 0.10132719025248729
+    }
+  },
+  "per_method_reward": [
+    {
+      "method": "grpo",
+      "reward_mean": 0.8341796875,
+      "ci_lo": 0.8111328125,
+      "ci_hi": 0.85625,
+      "p95_len_step": 0.9453125
+    },
+    {
+      "method": "aero",
+      "reward_mean": 0.8275390625,
+      "ci_lo": 0.8037109375,
+      "ci_hi": 0.8509765625,
+      "p95_len_step": 0.9375
+    },
+    {
+      "method": "gift",
+      "reward_mean": 0.8447265625,
+      "ci_lo": 0.8203125,
+      "ci_hi": 0.86796875,
+      "p95_len_step": 0.9375
+    },
+    {
+      "method": "areal",
+      "reward_mean": 0.8287109375,
+      "ci_lo": 0.8056640625,
+      "ci_hi": 0.8515625,
+      "p95_len_step": 0.9296875
+    }
+  ],
+  "rank_order": "prompt",
+  "hypotheses": {
+    "H1_method_under_identified": true,
+    "H2_step_dominates": true,
+    "H3_step_over_method_ratio_greater_than_2": true
+  },
+  "frontier_synthesis_round1": "ChatGPT-Pro-Extended: 'algorithm is under-identified unless it changes the induced update operator'. On a fixed stack, PPO/GRPO/etc. should be performance-equivalent whenever counterfactual update geometry matches."
+}

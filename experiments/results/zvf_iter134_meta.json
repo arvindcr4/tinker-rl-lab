@@ -1,0 +1,200 @@
+{
+  "iter": 134,
+  "pillar": "P2-ZVF",
+  "n_rows_real_only": 45,
+  "n_rows_synthetic_aug": 52,
+  "n_failure_real_only": 4,
+  "n_failure_synthetic_aug": 11,
+  "zs_g_slope_fit": {
+    "slope_dZVF_per_decade_logG": -0.2303,
+    "intercept": 0.9042,
+    "predicted_mean_zvf_at_G1": 0.9042,
+    "predicted_mean_zvf_at_G8": 0.6962,
+    "n_points": 4,
+    "source": "groupsize_zvf_sweep.tsv"
+  },
+  "weights": {
+    "magnitude": 0.25,
+    "csd": 0.45,
+    "drift": 0.15,
+    "gsize": 0.05,
+    "delta": 0.1
+  },
+  "aurocs_real_only": {
+    "magnitude": {
+      "auroc": 0.0732,
+      "ci_lo": 0.0,
+      "ci_hi": 0.2727,
+      "n": 45,
+      "n_pos": 4
+    },
+    "csd_roll_lag1": {
+      "auroc": 0.3354,
+      "ci_lo": 0.1136,
+      "ci_hi": 0.5581,
+      "n": 45,
+      "n_pos": 4
+    },
+    "drift_slope": {
+      "auroc": 0.2927,
+      "ci_lo": 0.0909,
+      "ci_hi": 0.5366,
+      "n": 45,
+      "n_pos": 4
+    },
+    "zvf_risk3_composite": {
+      "auroc": 0.3963,
+      "ci_lo": 0.2099,
+      "ci_hi": 0.6047,
+      "n": 45,
+      "n_pos": 4
+    },
+    "zvf_risk3_max": {
+      "auroc": 0.8049,
+      "ci_lo": 0.6051,
+      "ci_hi": 0.9524,
+      "n": 45,
+      "n_pos": 4
+    },
+    "zvf_risk5_composite": {
+      "auroc": 0.122,
+      "ci_lo": 0.0,
+      "ci_hi": 0.3415,
+      "n": 45,
+      "n_pos": 4
+    },
+    "zvf_risk5_max": {
+      "auroc": 0.2195,
+      "ci_lo": 0.0,
+      "ci_hi": 0.4,
+      "n": 45,
+      "n_pos": 4
+    },
+    "zvf_g_slope_axis": {
+      "auroc": 0.7561,
+      "ci_lo": 0.1636,
+      "ci_hi": 0.86,
+      "n": 45,
+      "n_pos": 4
+    },
+    "zvf_delta_axis": {
+      "auroc": 0.0,
+      "ci_lo": 0.0,
+      "ci_hi": 0.0,
+      "n": 45,
+      "n_pos": 4
+    },
+    "zvf_delta_raw": {
+      "auroc": 0.0,
+      "ci_lo": 0.0,
+      "ci_hi": 0.0,
+      "n": 45,
+      "n_pos": 4
+    }
+  },
+  "aurocs_synthetic_aug": {
+    "magnitude": {
+      "auroc": 0.663,
+      "ci_lo": 0.3702,
+      "ci_hi": 0.9231,
+      "n": 52,
+      "n_pos": 11
+    },
+    "csd_roll_lag1": {
+      "auroc": 0.7583,
+      "ci_lo": 0.5404,
+      "ci_hi": 0.9476,
+      "n": 52,
+      "n_pos": 11
+    },
+    "drift_slope": {
+      "auroc": 0.5787,
+      "ci_lo": 0.3262,
+      "ci_hi": 0.8254,
+      "n": 52,
+      "n_pos": 11
+    },
+    "zvf_risk3_composite": {
+      "auroc": 0.7627,
+      "ci_lo": 0.5555,
+      "ci_hi": 0.931,
+      "n": 52,
+      "n_pos": 11
+    },
+    "zvf_risk3_max": {
+      "auroc": 0.929,
+      "ci_lo": 0.8286,
+      "ci_hi": 0.9929,
+      "n": 52,
+      "n_pos": 11
+    },
+    "zvf_risk5_composite": {
+      "auroc": 0.6297,
+      "ci_lo": 0.3636,
+      "ci_hi": 0.8714,
+      "n": 52,
+      "n_pos": 11
+    },
+    "zvf_risk5_max": {
+      "auroc": 0.6608,
+      "ci_lo": 0.4219,
+      "ci_hi": 0.875,
+      "n": 52,
+      "n_pos": 11
+    },
+    "zvf_g_slope_axis": {
+      "auroc": 0.2816,
+      "ci_lo": 0.0143,
+      "ci_hi": 0.3825,
+      "n": 52,
+      "n_pos": 11
+    },
+    "zvf_delta_axis": {
+      "auroc": 0.0,
+      "ci_lo": 0.0,
+      "ci_hi": 0.0,
+      "n": 52,
+      "n_pos": 11
+    },
+    "zvf_delta_raw": {
+      "auroc": 0.0,
+      "ci_lo": 0.0,
+      "ci_hi": 0.0,
+      "n": 52,
+      "n_pos": 11
+    }
+  },
+  "operating_point_real_only": {
+    "threshold": 0.05,
+    "tp": 4.0,
+    "fp": 41.0,
+    "tn": 0.0,
+    "fn": 0.0,
+    "tpr": 1.0,
+    "fpr": 1.0,
+    "f1": 0.1633,
+    "balanced_acc": 0.5,
+    "accuracy": 0.0889
+  },
+  "operating_point_synthetic_aug": {
+    "threshold": 0.95,
+    "tp": 7.0,
+    "fp": 10.0,
+    "tn": 31.0,
+    "fn": 4.0,
+    "tpr": 0.6364,
+    "fpr": 0.2439,
+    "f1": 0.5,
+    "balanced_acc": 0.6962,
+    "accuracy": 0.7308
+  },
+  "iter130_heuristic_threshold": 0.55,
+  "heldout_summary": {
+    "n_rows": 24,
+    "n_predicted_safe": 7,
+    "n_predicted_collapse": 4,
+    "n_actual_converged": 23,
+    "n_actual_collapse": 0
+  },
+  "figure": "/home/claude/tinker-rl-lab-minimax/figures/zvf_vs_failure.pdf"
+}

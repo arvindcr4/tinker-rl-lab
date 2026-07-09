@@ -1,0 +1,6 @@
+prediction_id	claim	observed	expected	pass_fail
+P1_high_stratum_more_bound	HIGH-ZVF stratum has higher bound-degenerate rate than LOW-ZVF	0.78 > 0.67	HIGH > LOW	PASS
+P2_nemotron_in_high_floor	Nemotron-120B sits in HIGH-ZVF via P(R=0)=0.55 (floor-collapse, not ceiling)	True	True	PASS
+P3_nemotron_largest_jackknife_residual	Nemotron-120B has the largest |LOO residual| in the cross-scale fit	Nemotron-120B	Nemotron-120B	PASS
+P4_nemotron_alpha_logP_shift	Removing Nemotron-120B shifts alpha_logP (signed, in same direction as the full-fit residual)	-0.03542003029503481	sign(residual)*sign(shift)>0	PASS
+P5_step_zvf_above_rollout_zvf	Mean per-step ZVF proxy > Pillar 2 rollout-level mean_zvf	0.41250000000000003	> rollout-level	PASS

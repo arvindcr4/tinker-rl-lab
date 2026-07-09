@@ -1,0 +1,85 @@
+% P8 scorer result: artifact-backed XGBoost vs LLM, and the four operational reasons
+\section{The Scorer Result: The Tree Keeps the Seat}
+\label{sec:p8-scorer}
+
+On the tabular scoring task, the current quick artifacts place XGBoost at test
+AUC $0.7955$ on the $10{,}000$-row held-out split and the Qwen3.5-4B SFT
+row-serialization arm at accuracy $0.792$ but AUC $0.48268$ on a 500-row
+positive-enriched held-out evaluation (\tableref{tab:p8-headtohead}). The
+accuracy is not evidence of useful ranking: at this class balance, AUC near
+$0.5$ means the SFT scores do not order positives ahead of negatives. This is
+consistent with the broader tabular literature: tree ensembles
+remain the reference class on medium-sized tabular problems
+\citep{grinsztajn2022tree, shwartzziv2021tabular}, and LLM row-serialization
+approaches are most attractive in few-shot regimes, not at $40{,}000$ labeled
+examples \citep{hegselmann2023tabllm}.
+
+\begin{table}[t]
+\centering
+\caption{Current artifact-backed tabular scoring evidence on the custom
+synthetic fraud dataset. XGBoost is evaluated on the full $10{,}000$-row test
+split; the SFT LLM is evaluated on a 500-row positive-enriched held-out subset
+because the natural-rate quick split has too few positives for stable LLM AUC.
+Artifacts: \texttt{quick\_20260704/qp8\_fraud.tsv} and
+\texttt{quick\_20260704/qp8-fraud-sft.tsv}. Operational columns are qualitative
+rankings, argued in the text.}
+\label{tab:p8-headtohead}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+Model & Eval split & $n$ & Acc. & AUC $\uparrow$ & Latency & Injection surface \\
+\midrule
+XGBoost (scorer) & full test & $10{,}000$ & n/a & $\mathbf{0.7955}$ & ms-scale & none \\
+Qwen3.5-4B SFT   & enriched test & $500$ & $0.792$ & $0.48268$ & s-scale & present \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The artifact-backed ranking is only the first of five reasons the tree keeps
+the scorer seat. Even at AUC parity we would not move the LLM into the real-time scoring
+path, for four operational reasons.
+
+\paragraph{1. Latency.} Card authorization is a hard-real-time loop: the score
+must arrive within a network-and-rules budget measured in tens of
+milliseconds. A 200-tree, depth-6 ensemble scores a row in microseconds to
+milliseconds on commodity CPUs; the committed run of our released script
+measures roughly $6$\,ms per $10{,}000$ rows
+(\texttt{xgboost\_results.json})---a rounding error against the authorization
+budget. An LLM
+forward pass over a serialized row---let alone an autoregressive
+generation---is orders of magnitude slower and jitter-prone, and batching
+tricks that amortize LLM cost are exactly what a per-authorization
+synchronous path cannot use.
+
+\paragraph{2. Cost.} The tree's marginal cost per transaction is effectively
+zero at card-network volumes; the LLM's is a token bill that scales linearly
+with traffic. Spending per-token inference on a task the tree does better is
+the least defensible line item in the architecture we propose; the LLM budget
+should be reserved for the low-volume, high-value tasks of
+\secref{sec:p8-taxonomy}, where it has no substitute.
+
+\paragraph{3. Calibration.} Downstream of the score sit threshold rules, alert
+budgets, and expected-loss computations that consume the score \emph{as a
+probability}. Boosted trees produce dense, monotonically usable scores that
+calibrate well with standard post-hoc maps. LLM-verbalized confidences
+inherit the miscalibration pathologies of modern neural networks
+\citep{guo2017calibration}, compounded by the quantization of confidence into
+tokens. A scorer whose $0.9$ does not mean ninety percent silently corrupts
+every expected-loss decision behind it.
+
+\paragraph{4. Prompt-injection exposure.} This reason is qualitative and, we
+believe, decisive. A tree scores numbers; there is no channel through which a
+transaction can \emph{address} the model. An LLM that reads serialized
+transaction fields---merchant names, memo strings, cardholder-supplied
+text---creates a new attack surface: adversarial instructions embedded in
+attacker-controlled fields, the indirect prompt-injection pattern documented
+by \citet{greshake2023injection}. A fraudster who learns that the scorer reads
+free text will put text in front of it. Placing an instruction-following model
+in a synchronous decision loop over attacker-authored inputs is a security
+regression independent of accuracy, and it is the single strongest argument
+for keeping the scorer seat non-linguistic.
+
+The conclusion of this section is deliberately narrow: on fixed-schema tabular
+scoring with ample labels, the current artifacts score the LLM below the
+tree---and it would not get the seat even had it tied. Everything the LLM wins, it wins elsewhere in the pipeline---which is the
+subject of the next section.

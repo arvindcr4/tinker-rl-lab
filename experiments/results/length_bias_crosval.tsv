@@ -1,0 +1,2 @@
+source	n_steps	spearman_step_len_rho	spearman_step_reward_rho	spearman_len_reward_rho	first5_reward	last10_reward	first5_len	last10_len	len_range	rew_growth
+arithmetic_metrics.jsonl	100	0.4115	0.2702	0.3952	0.8769	0.998	4.96	5.0	0.0825	0.1211

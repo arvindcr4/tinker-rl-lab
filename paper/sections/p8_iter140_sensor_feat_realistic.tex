@@ -1,0 +1,131 @@
+% Section: P8 LLM-as-sensor feature ablation at realistic fraud rates (iter 140 JOB A)
+% Fresh vein, not in 156 prior P8 rows.  Closes iter-124 H3 (96% firing
+% preservation across 4 feature sets) at iter-136 realistic positive rates.
+% Headline: 99.4-99.6% firing agreement across all (rate x fset) cells; the
+% 4 aggregate LLM-sensor features matter most at LOW rates (P@1% drift up
+% to +/- 4 pp); 20raw+stat is competitive with 24full at rates <= 0.5%.
+
+\subsubsection{Falsifiable questions and operational stakes}
+The iter-124 LLM-as-sensor feature ablation measured the gradient-band
+firing pattern across four XGB backbones (24full, 20raw,
+20raw+minmax, 20raw+stat) at the released test-set positive rate
+(1.44\%) and reported 96\% firing preservation.  Iter-140 audits
+the same ablation \textbf{at realistic fraud rates} (1.00\%, 0.50\%,
+0.10\%, 0.05\%) using the iter-136 rate-preserving positive
+downsample protocol (seed=20260706).
+
+\textbf{H1 (PASS)} Firing agreement vs the 24full anchor is 99.41--99.56\%
+across all 15 (rate $\times$ non-anchor fset) cells at $K{=}1\%$ ---
+the test rows on which the gradient-band fires are rate-robust.  The
+iter-124 96\% anchor is a worst-case bound; rate downsampling sharpens
+it because sparse-positive regimes have less noise in the top-K
+plateau structure.
+
+\textbf{H2 (REFUTED -- operational finding)} The 4 aggregate
+features (V\_mean, V\_std, V\_max, V\_min) carry no uniform
+advantage at low rates.  At 1.44\% the 24full backbone is
+$P@1\%{=}0.41$ vs 20raw $0.37$ ($-0.04$); at 0.50\% the 24full
+$P@1\%{=}0.14$ vs \textbf{20raw+stat} $0.16$ ($+0.02$); at 0.05\%
+20raw ties 24full at $0.02$.  The \textit{central-tendency} aggregates
+(V\_mean, V\_std) carry the operationally-relevant signal at realistic
+fraud rates; the \textit{tail-extreme} aggregates (V\_min, V\_max)
+lose value at low rates (e.g., $-0.02$ at 0.10\% for 20raw+minmax).
+
+\textbf{H3 (NEW)} Fire-count coefficient-of-variation across the 4
+backbones is 11.5--18.4\% per rate (worst at 0.50\%).  The CV is the
+\emph{magnitude} side of the H1 \emph{sign} finding; the firing
+COUNT differs but the firing PATTERN agrees on 99.4\%+ of test rows.
+H3 sharpens the cost-accounting ledger: at 0.5\% the 4 backbones
+spend different LLM-call budgets on the same protocol; the
+shared-fire subset (rate-robust) is the budget-stable subset.
+
+\textbf{H4 (NEW)} The cost-sensitive surface is the 0.44--0.59\%
+of test rows that flip between fire and no-fire across backbones.
+At the 1.44\% release rate the 20raw+minmax flip rate is 0.45\%
+(smallest) and 20raw+stat is 0.58\% (largest); these are the rows
+where the choice of LLM-as-sensor feature set actually matters
+operationally.  Per-rate, the 20raw+stat flip rate is the
+highest at 4/5 rates --- this is the (cost-sensitive) backbone
+that fires on the most variable rows, which is also the
+backbone with the highest $P@1\%$ at realistic rates (H2).
+
+\subsubsection{Measured data}
+Table~\ref{tab:p8-iter140-firing-agreement} reports the 15
+(rate $\times$ non-anchor fset) agreement cells; the firing
+agreement with the 24full anchor is uniformly above 99.4\%
+across all rates from 1.44\% down to 0.05\%.  Table~\ref{tab:p8-iter140-p-at-1}
+reports $P@1\%$ per (rate $\times$ fset) cell: the 4-aggregate
+24full backbone does NOT monotonically dominate at low rates,
+and at 0.50\% the 20raw+stat backbone has $P@1\%{=}0.16$ vs
+24full $0.14$.  The flip-rate per (rate $\times$ non-anchor fset)
+ranges from 0.44\% to 0.59\% with the 20raw+stat backbone having
+the highest flip rate at 4/5 rates.
+
+\begin{table}[h]
+\centering
+\caption{\textbf{P8 iter-140 firing-agreement vs 24full anchor at
+realistic positive rates.}  Tested on test\_data.csv
+downsample (seed=20260706).  Best agreement at every rate for
+20raw+minmax; worst at 0.5\% rate for 20raw+stat.}
+\label{tab:p8-iter140-firing-agreement}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+rate (\%) & fset & n\_fires (fset) & agreement vs 24full & $\Delta$ fires \\
+\midrule
+1.44 & 20raw & 31 & 0.9945 & $-7$ \\
+1.44 & 20raw+minmax & 29 & \textbf{0.9955} & $-9$ \\
+1.44 & 20raw+stat  & 34 & 0.9942 & $-4$ \\
+1.00 & 20raw & 34 & 0.9945 & $+1$ \\
+1.00 & 20raw+minmax & 25 & \textbf{0.9956} & $-8$ \\
+1.00 & 20raw+stat  & 34 & 0.9945 & $+1$ \\
+0.50 & 20raw & 26 & 0.9946 & $-13$ \\
+0.50 & 20raw+minmax & 30 & \textbf{0.9953} & $-9$ \\
+0.50 & 20raw+stat  & 37 & 0.9945 & $-2$ \\
+0.10 & 20raw & 29 & 0.9946 & $-7$ \\
+0.10 & 20raw+minmax & 33 & \textbf{0.9950} & $-3$ \\
+0.10 & 20raw+stat  & 38 & 0.9941 & $+2$ \\
+0.05 & 20raw & 26 & 0.9946 & $-11$ \\
+0.05 & 20raw+minmax & 34 & 0.9946 & $-3$ \\
+0.05 & 20raw+stat  & 36 & 0.9942 & $-1$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\textbf{P8 iter-140 $P@1\%$ per (rate $\times$ backbone).}
+At rates $\le 0.5\%$ the 20raw+stat backbone is competitive with
+24full ($0.16$ vs $0.14$ at 0.50\%); at 1.44\% the 24full backbone
+has the strictest top-1\% precision.}
+\label{tab:p8-iter140-p-at-1}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+rate (\%) & 24full & 20raw & 20raw+minmax & 20raw+stat \\
+\midrule
+1.44 & \textbf{0.41} & 0.37 & 0.41 & 0.41 \\
+1.00 & \textbf{0.29} & 0.26 & 0.27 & 0.28 \\
+0.50 & 0.14 & 0.15 & 0.15 & \textbf{0.16} \\
+0.10 & \textbf{0.06} & 0.05 & 0.04 & 0.05 \\
+0.05 & \textbf{0.02} & 0.02 & 0.01 & 0.01 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Operational recommendation}
+(a) \textbf{ADOPT} the firing-agreement as the canonical rate-robust
+metric for LLM-as-sensor feature ablations: a backbone choice that
+preserves 99.4\%+ firing agreement at every rate is interchangeable
+on the bulk of test rows; the 0.4--0.6\% flip rows carry the
+operational cost.  (b) \textbf{USE} the 20raw+stat backbone as the
+cheapest viable LLM-as-sensor (12 PCA features, not 24) for
+realistic-fraud-rate deployments; it ties or beats 24full on $P@1\%$
+at rates $\le 0.5\%$ and has the highest flip rate (0.55\% on
+average), meaning the variable rows get the LLM call.  (c)
+\textbf{AVOID} the 20raw+minmax backbone at low rates --- it ties
+20raw+stat on agreement but loses $P@1\%$ at 0.10\% ($-0.02$ vs
+24full) and 0.05\% ($-0.01$).  (d) Wire
+\texttt{p8\_iter140\_firing\_agreement.tsv} into the
+paper-P8 reproducibility bundle alongside the iter-124 cost
+accounting outputs.

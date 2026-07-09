@@ -1,0 +1,31 @@
+% Pillar-3 (group size) results opener
+\section{Group Size: Results}
+\label{sec:p3-results}
+We report the effect of $G$ in three parts: the raw dependence of trainability on
+group size, the mechanism behind it, and the preference-learning interpretation.
+The dependence is non-monotone. Intermediate group sizes often outperform the
+smallest and largest settings we tested, but the swing is modest relative to
+seed variation and does not identify a universal optimum. Quantitatively, a
+$G{=}4$ versus $G{=}32$ token-budget reanalysis (illustrative, reconstructed
+from ablation logs; $G{=}32$ was not directly measured in the matched
+small-scale sweep) produces a sizable held-out swing, while held-out accuracy is
+retained almost completely on the measured near-ceiling task (about $100.3\%$
+between $G{=}2$ and $G{=}16$), and the effective signal-to-noise ratio grows only sublinearly---about
+$52\%$ of the $\sqrt{G}$ improvement a pure variance-reduction account would
+predict.
+
+That sublinearity is the clue the subsections develop. Under equivalence testing
+(TOST) and iso-token matching, the benefit of larger $G$ is not the clean
+$\sqrt{G}$ variance reduction of an idealized baseline; difficulty-stratified
+retention shows the gains concentrate in regimes where small-$G$ groups can lack
+recoverable contrast, pointing toward a preference-density rather than a
+pure-variance mechanism. We then
+make the preference view explicit: the group-centered GRPO update equals an
+all-pairs contrast over the group, so zero-variance groups contribute nothing and
+$G$ sets how many endogenous preference pairs a prompt supplies. This identity is
+an exact algebraic rewriting whose observable signatures are consistent with
+logged per-step diagnostics (advantage variance, ZVF, and gradient norms);
+direct gradient-vector validation remains future work. We reconcile it with the
+observed retention and SNR curves. The final subsection adds an external frontier-model
+cross-examination, including a decisive $2{\times}2$ design that would separate
+variance-reduction from contrast-density as the cause of the $G$ effect.

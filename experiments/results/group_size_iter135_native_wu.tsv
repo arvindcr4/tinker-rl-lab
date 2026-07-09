@@ -1,0 +1,4 @@
+metric_kind	metric_key	headline
+native_wu_setup	n_paired_seeds	Paired seeds with both G=2 and G=16: n=3
+native_wu_pair_retention	G2_vs_G16	Native-Wu pairing G=2 vs G=16: retention=1.0035 CI95 [0.9899,1.0206] (n_paired=3); TOST@0.976 p=0.0000; TOST@0.95 p=0.0000; wu_native_claim_holds=False
+native_wu_acc_pair	G2_vs_G16	Paired accuracy: acc(G=2)=0.9817+/-0.0076, acc(G=16)=0.9783+/-0.0104, diff(mean 16-2)=-0.0033+/-0.0088, Cohen's d (paired)=-0.218 (positive d means G=16 > G=2)

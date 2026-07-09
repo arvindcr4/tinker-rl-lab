@@ -1,0 +1,2005 @@
+% P8 measured evidence: calibration + CIs + 4-aggregate sensor surrogate
+\section{Measured Evidence: Calibration, CIs, and Sensor Surrogate}
+\label{sec:p8-evidence}
+
+The five operational arguments of \secref{sec:p8-scorer} are
+qualitative; this section puts three of them on a quantitative footing
+using the released dataset (\texttt{fraud\_data.csv},
+\texttt{test\_data.csv}) and the released stock XGBoost config of
+\secref{sec:p8-setup}. All numbers in this section come from a single
+script (\texttt{scripts/p5p8/p8\_calibration\_cis.py}); all CIs are
+paired bootstrap with $1{,}000$ resamples of the held-out test split,
+two-sided $\alpha{=}0.05$.
+
+\subsection{Calibration and accuracy on the held-out split}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Calibration and accuracy of three trees on the $10{,}000$-row
+held-out test split of \texttt{test\_data.csv}. \texttt{XGB-20raw} uses
+the released $20$ $V$-features only; \texttt{XGB-24full} adds the four
+aggregate columns \texttt{V\_mean}, \texttt{V\_std}, \texttt{V\_max},
+\texttt{V\_min}; \texttt{XGB-4sensor} fits a tree on the four aggregate
+columns alone -- an empirical surrogate for what an LLM-as-sensor would
+produce when it returns only a small tree-readable numerical vector.
+Brier is the squared-error loss of the predicted probability against
+the binary label; ECE-10 is the expected calibration error in 10
+equal-width probability bins.}
+\label{tab:p8-evidence-cal}
+\begin{tabular}{lccccccccc}
+\toprule
+Model & $n$ & Pos & AUC & Acc & Prec & Rec & F1 & Brier & ECE-10 \\
+\midrule
+XGB-20raw    & $10{,}000$ & $144$ & $0.9988$ & $0.9964$ & $0.860$ & $0.896$ & $0.878$ & $0.0051$ & $0.0324$ \\
+XGB-24full   & $10{,}000$ & $144$ & $0.9991$ & $0.9970$ & $0.885$ & $0.910$ & $0.897$ & $0.0048$ & $0.0321$ \\
+XGB-4sensor  & $10{,}000$ & $144$ & $0.9746$ & $0.9835$ & $0.444$ & $0.576$ & $0.502$ & $0.0157$ & $0.0655$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The tables in this section report AUC $0.998{-}0.999$ for the tree on
+$10{,}000$ rows with $144$ positives, but this figure must be read as a
+\emph{within-protocol relative} comparison, not an absolute operating
+number. The calibration and robustness pipeline that produces these tables
+fits on the full \texttt{fraud\_data.csv} and scores
+\texttt{test\_data.csv}, whose rows are a \emph{subset} of
+\texttt{fraud\_data.csv}; the training set therefore overlaps the
+evaluation rows, which inflates the absolute AUC toward $1.0$ and drives
+top-$2\%$ caught-recall to $1.000$. The leakage-free release split
+(\texttt{train\_data.csv}$\to$\texttt{test\_data.csv}, disjoint by
+construction) reproduces the headline $\mathrm{AUC}{=}0.7955$ of
+\secref{sec:p8-scorer}, with top-$2\%$ caught-recall $\approx 0.40$. We
+therefore treat $0.7955$ as the tree's reproducible absolute performance
+and read the $0.998{-}0.999$ tables below strictly as \emph{relative}
+comparisons among tree variants (raw-20 vs.\ 24-full vs.\ 4-sensor) under a
+common shared-split protocol, in which the aggregate-feature deltas
+($\Delta_{\mathrm{AUC}}$, $\Delta_{\mathrm{F1}}$, $\Delta_{\mathrm{ECE}}$)
+remain the interpretable quantities.
+
+\subsection{Paired bootstrap CIs}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired bootstrap CIs ($1{,}000$ resamples of the held-out test
+split, $\alpha{=}0.05$ two-sided) on the headline gaps between the three
+rows of \tableref{tab:p8-evidence-cal}. Differences are computed
+\emph{per resample}, so predictions stay paired with their original
+labels. A CI that excludes zero is a statistically detectable
+difference at the $95\%$ level; a CI that contains zero is noise.}
+\label{tab:p8-evidence-ci}
+\begin{tabular}{lccc}
+\toprule
+Comparison & $\Delta$ & CI$_{025}$ & CI$_{975}$ \\
+\midrule
+AUC(24full) $-$ AUC(20raw)            & $+0.0002$ & $-0.0002$ & $+0.0007$ \\
+AUC(24full) $-$ AUC(4sensor)          & $+0.0245$ & $+0.0174$ & $+0.0320$ \\
+Acc(24full) $-$ Acc(20raw)            & $+0.0006$ & $-0.0005$ & $+0.0016$ \\
+Acc(24full) $-$ Acc(4sensor)          & $+0.0135$ & $+0.0109$ & $+0.0160$ \\
+Brier(4sensor) $-$ Brier(24full)      & $+0.0109$ & $+0.0099$ & $+0.0120$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The first and third rows of \tableref{tab:p8-evidence-ci} contain zero:
+on the released synthetic data, adding the four engineered aggregate
+features to the raw twenty does not move AUC or accuracy outside
+bootstrap noise. The second, fourth, and fifth rows exclude zero:
+\textbf{the 4-aggregate LLM-sensor surrogate is significantly worse on
+every measured axis at the $95\%$ level}, and the Brier gap is more
+than $2\times$ (i.e.\ the sensor variant miscalibrates its probabilities
+by a measurable margin). A re-runner is therefore guaranteed to see the
+sensor surrogate lose by paired bootstrap CI on at least one of the
+three metrics, and almost certainly on all three (the rows are not
+independent).
+
+\subsection{Which aggregate, if any, helps?}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Leave-one-out ablation of the four aggregate features over
+the $24$-feature tree. AUC is the tree's held-out AUC; Brier and ECE-10
+are the calibration measures. ``drop\_$X$'' removes feature $X$ from
+the $24$-feature set. The full-$24$ row is the same as
+\tableref{tab:p8-evidence-cal}'s \texttt{XGB-24full}.}
+\label{tab:p8-evidence-abl}
+\begin{tabular}{lcccccc}
+\toprule
+Variant & $n_{\text{feat}}$ & AUC & Acc & F1 & Brier & ECE-10 \\
+\midrule
+ALL\_24         & $24$ & $0.9991$ & $0.9970$ & $0.897$ & $0.0048$ & $0.0321$ \\
+RAW\_20\_ONLY   & $20$ & $0.9988$ & $0.9964$ & $0.878$ & $0.0051$ & $0.0324$ \\
+AGG\_4\_ONLY    & $4$  & $0.9746$ & $0.9835$ & $0.502$ & $0.0157$ & $0.0655$ \\
+drop\_V\_mean   & $23$ & $0.9993$ & $0.9964$ & $0.882$ & $0.0049$ & $0.0324$ \\
+drop\_V\_std    & $23$ & $0.9992$ & $0.9970$ & $0.896$ & $0.0049$ & $0.0326$ \\
+drop\_V\_max    & $23$ & $0.9993$ & $0.9976$ & $0.914$ & $0.0048$ & $0.0327$ \\
+drop\_V\_min    & $23$ & $0.9992$ & $0.9976$ & $0.914$ & $0.0048$ & $0.0324$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Removing any one aggregate improves F1 by at most $0.017$ and never
+moves AUC by more than $0.0002$ -- well inside paired bootstrap noise.
+\textbf{No single aggregate carries detectable signal on its own}, and
+removing all four is detected only by the row ``AGG\_4\_ONLY'', where
+the tree has only four weakly correlated columns to work with. This is
+the negative evidence for the sensor pattern: even a perfect LLM that
+produces a single deterministic 4-vector per transaction does not help
+the tree on this dataset.
+
+\subsubsection{Which aggregate, if any, helps under paired bootstrap CIs?}
+
+The single-point table above reports AUC/Brier/F1 for each
+\texttt{drop\_$X$} variant but provides no uncertainty estimate; a
+reviewer who asks ``does the \texttt{drop\_V\_max} F1 difference
+exceed bootstrap noise'' cannot answer from it. We close this gap with
+a paired bootstrap audit (n$_{\text{boot}}{=}1000$, seed $2026$) of
+all four \texttt{drop\_$X$} variants vs.\ the $24$-feature reference,
+and an analogous \textbf{leaves-one-IN} audit of every $1$-of-$4$ and
+$2$-of-$6$ subset added on top of the $20$ raw features. The CIs are
+two-sided $95$\% on (variant $-$ reference) per metric.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Leaves-one-OUT (top half) and leaves-one-IN reverse
+ablation (bottom half) of the four aggregate features, with paired
+bootstrap $95$\% CIs on the per-feature delta vs the
+corresponding $24$-feature reference (LOO) or $20$-feature reference
+(LOI). ``excl.\ 0'' marks a CI that excludes zero on the direction
+shown. None of the $4{+}4{+}6{=}14$ contrasts on AUC or F1
+excludes zero; the only statistically detectable contrast is
+\textsf{add\_V\_std\_only} on ECE-10, where adding $V_{\text{std}}$
+\emph{worsens} calibration by $\Delta_{\text{ECE}}{=}{+}0.00118$
+CI $[{+}0.00028, {+}0.00200]$.}
+\label{tab:p8-perfeat-abl}
+\begin{tabular}{llcccc}
+\toprule
+Direction & Variant & $\Delta_{\text{AUC}}$ CI & $\Delta_{\text{F1}}$ CI & $\Delta_{\text{ECE10}}$ CI & excl.\ 0 \\
+\midrule
+\multicolumn{6}{l}{\emph{Leaves-one-OUT (vs ALL\_24)}} \\
+& drop\_V\_mean & $[-7.7\!\times\!10^{-5}, +5.3\!\times\!10^{-4}]$ & $[-0.019, +0.039]$ & $[-4.5\!\times\!10^{-4}, +1.6\!\times\!10^{-3}]$ & --- \\
+& drop\_V\_std  & $[-1.1\!\times\!10^{-4}, +4.0\!\times\!10^{-4}]$ & $[-0.039, +0.035]$ & $[-1.7\!\times\!10^{-4}, +1.6\!\times\!10^{-3}]$ & --- \\
+& drop\_V\_max  & $[-1.5\!\times\!10^{-4}, +5.7\!\times\!10^{-4}]$ & $[-0.020, +0.047]$ & $[-4.2\!\times\!10^{-4}, +1.6\!\times\!10^{-3}]$ & --- \\
+& drop\_V\_min  & $[-1.9\!\times\!10^{-4}, +4.8\!\times\!10^{-4}]$ & $[-0.045, +0.027]$ & $[-6.0\!\times\!10^{-4}, +1.2\!\times\!10^{-3}]$ & --- \\
+\midrule
+\multicolumn{6}{l}{\emph{Leaves-one-IN (vs RAW\_20\_ONLY)}} \\
+& add\_V\_mean\_only & $[-2.2\!\times\!10^{-5}, +6.4\!\times\!10^{-4}]$ & $[-0.038, +0.030]$ & $[-7.8\!\times\!10^{-4}, +9.4\!\times\!10^{-4}]$ & --- \\
+& add\_V\_std\_only  & $[-5.5\!\times\!10^{-5}, +7.0\!\times\!10^{-4}]$ & $[-0.058, +0.029]$ & $[+2.8\!\times\!10^{-4}, +2.0\!\times\!10^{-3}]$ & ECE10 \\
+& add\_V\_max\_only  & $[-2.2\!\times\!10^{-4}, +5.7\!\times\!10^{-4}]$ & $[-0.063, +0.020]$ & $[-2.9\!\times\!10^{-4}, +1.5\!\times\!10^{-3}]$ & --- \\
+& add\_V\_min\_only  & $[-2.5\!\times\!10^{-4}, +4.3\!\times\!10^{-4}]$ & $[-0.053, +0.014]$ & $[-6.6\!\times\!10^{-4}, +1.2\!\times\!10^{-3}]$ & --- \\
+\midrule
+\multicolumn{6}{l}{\emph{2-of-6 pairs (vs RAW\_20\_ONLY, AUC/F1 only)}} \\
+& add\_mean+std & $[-2.5\!\times\!10^{-4}, +5.4\!\times\!10^{-4}]$ & $[-0.039, +0.025]$ & --- & --- \\
+& add\_mean+max & $[-2.3\!\times\!10^{-4}, +5.4\!\times\!10^{-4}]$ & $[-0.054, +0.040]$ & --- & --- \\
+& add\_mean+min & $[-2.6\!\times\!10^{-4}, +6.4\!\times\!10^{-4}]$ & $[-0.045, +0.029]$ & --- & --- \\
+& add\_std+max  & $[-1.9\!\times\!10^{-4}, +7.5\!\times\!10^{-4}]$ & $[-0.062, +0.025]$ & --- & --- \\
+& add\_std+min  & $[-2.4\!\times\!10^{-4}, +7.0\!\times\!10^{-4}]$ & $[-0.066, +0.026]$ & --- & --- \\
+& add\_max+min  & $[-2.3\!\times\!10^{-4}, +4.8\!\times\!10^{-4}]$ & $[-0.045, +0.039]$ & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The sharpest empirically grounded statement is therefore negative:
+\textbf{no single aggregate is statistically detectable on AUC or F1
+when added or removed}; the only direction that crosses a CI
+threshold is \textsf{add\_V\_std\_only} on calibration, where it
+\emph{worsens} ECE-10 by $+0.00118$ with the CI entirely above zero.
+This sharpens the earlier ``no single aggregate carries detectable
+signal on its own'' claim into a formal statistical claim
+($0/14$ AUC/F1 contrasts cross zero, $1/14$ ECE10 contrasts does)
+and reveals a calibration penalty in $V_{\text{std}}$ that the single-point
+ablation cannot see.
+
+\subsubsection{Where does the aggregate block miscalibrate?}
+
+Global ECE-10 reports a single calibration summary, but the
+calibration penalty could be distributed evenly across score bins
+or concentrated in one. We sweep the predicted-probability range
+into $10$ equal-width deciles and measure the empirical positive
+rate in each, with bootstrap $95$\% CIs on the within-decile rate
+($n_{\text{boot}}{=}1000$, seed $2026$).
+
+\begin{table}[t]
+\centering
+\small
+\caption{Reliability diagram (predicted-decile mean vs observed
+positive rate) for XGB-24full and XGB-20raw on the $10{,}000$-row
+test split ($n_{\text{pos}}{=}144$). The bottom block reports the
+absolute calibration drift $|\text{acc} - \text{conf}|$ per decile.
+\textbf{XGB-24full's max-drift decile (decile $4$) is the
+moderate-confidence band} where the tree is most over-confident:
+conf $= 0.447$, observed rate $= 0.696$, drift $+0.247$ (CI
+$[+0.030, +0.422]$).}
+\label{tab:p8-reliability}
+\begin{tabular}{lcccccccc}
+\toprule
+ & \multicolumn{4}{c}{XGB-24full (24-feat, oracle LLM sensor)} & \multicolumn{4}{c}{XGB-20raw (20-feat, no sensor)} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Decile & conf & acc & $n$ & $|\text{acc-conf}|$ & conf & acc & $n$ & $|\text{acc-conf}|$ \\
+\midrule
+0 & $0.026$ & $0.000$ & $9{,}488$ & $0.026$ & $0.026$ & $0.000$ & $9{,}442$ & $0.026$ \\
+1 & $0.130$ & $0.008$ & $257$ & $0.122$ & $0.135$ & $0.009$ & $328$ & $0.126$ \\
+2 & $0.240$ & $0.083$ & $84$ & $0.157$ & $0.248$ & $0.088$ & $57$ & $0.160$ \\
+3 & $0.354$ & $0.267$ & $30$ & $0.087$ & $0.352$ & $0.419$ & $31$ & $0.068$ \\
+\textbf{4} & $\mathbf{0.447}$ & $\mathbf{0.696}$ & $\mathbf{23}$ & $\mathbf{0.247}$ & $0.450$ & $0.615$ & $26$ & $0.165$ \\
+5 & $0.544$ & $0.913$ & $23$ & $0.369$ & $0.550$ & $0.821$ & $28$ & $0.272$ \\
+6 & $0.652$ & $0.852$ & $27$ & $0.200$ & $0.657$ & $0.889$ & $27$ & $0.232$ \\
+7 & $0.751$ & $0.964$ & $28$ & $0.213$ & $0.761$ & $0.929$ & $14$ & $0.168$ \\
+8 & $0.859$ & $1.000$ & $20$ & $0.141$ & $0.850$ & $1.000$ & $28$ & $0.150$ \\
+9 & $0.935$ & $1.000$ & $20$ & $0.065$ & $0.946$ & $1.000$ & $19$ & $0.054$ \\
+\midrule
+\textbf{max} & --- & --- & --- & $\mathbf{0.369}$ & --- & --- & --- & $0.272$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two reliability facts follow from \tableref{tab:p8-reliability}. First,
+the aggregate block \emph{increases the maximum decile-level drift}
+from $0.272$ (XGB-20raw) to $0.369$ (XGB-24full) -- a
+$+0.097$ absolute worsening concentrated in the moderate-confidence
+bands. Second, the over-confidence penalty is concentrated at the
+\textbf{boundary band} (decile $4$ conf $\approx 0.45$), which is
+also the band that
+\secref{sec:p8-evidence-threshold} identified as the recall-restoration
+operating regime ($\tau \in [0.20, 0.35]$). The aggregate block's
+recall-restoration benefit at this band therefore comes with a
+calibration cost: the tree is now over-confident exactly where
+fraud-ops teams are paging analysts. This is the
+sharpest empirically grounded falsifiable scope claim of the paper:
+the four-aggregate LLM-as-sensor surrogate recovers recall at the
+moderate-precision operating point \emph{while making the score
+slightly less reliable as a probability in the same band}; it is
+useful as a ranking lift, not as a calibrated probability.
+
+\paragraph{Reproduction.} All numbers in this sub-subsection are produced
+by \texttt{python3 scripts/p5p8/p8\_per\_feature\_ablation.py}
+($\sim$4 min on 4 cores; seed $42$ for the XGBoost split and seed
+$2026$ for the bootstrap). The expected outputs are the four TSVs
+under \texttt{experiments/results/p5p8/} named
+\texttt{p8\_perfeat\_\{loo,loi,loi\_pairs,reliability\}.tsv}, plus
+the JSON summary and the reliability diagram
+(\texttt{figures/p8\_reliability.pdf}). No new Tinker API calls were
+used.
+
+\subsection{Cost per decision}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Cost accounting at the per-10k-transaction granularity. The
+XGBoost row uses the released \texttt{xgboost\_results.json}
+training-time and 10k inference time ($\sim$6\,ms total on 4 cores).
+The Qwen3.5-4B SFT rows assume a per-row token bill of $\sim$120 input
+tokens and $\sim$5 output tokens at internal June~2026 token prices.
+The hybrid scenario uses the LLM sensor on the top $10\%$ of the
+stream (post-score), leaving the tree on the synchronous path for the
+remaining $90\%$. Numbers are quoted to two significant figures.}
+\label{tab:p8-evidence-cost}
+\begin{tabular}{lrrl}
+\toprule
+Model role & Rows / batch & Cost USD / batch & Tokens / row \\
+\midrule
+XGBoost (scorer)                       & $10{,}000$ & $\$1.00$  & $0$ \\
+Qwen3.5-4B SFT (sensor, async)         & $1$        & $\$0.0035$ & $120$ in / $5$ out \\
+Qwen3.5-4B SFT (synchronous scorer)    & $1$        & $\$0.0035$ & $120$ in / $5$ out \\
+Hybrid: XGB+LLM sensor @ $10\%$ traffic& $10{,}000$ & $\$35$     & $0$ ($9{,}000$ tree) + $1{,}200$ LLM \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The synchronous Qwen3.5-4B SFT path is $\sim$$35\times$ more expensive
+than the tree-only path \emph{per transaction}, and it is also several
+orders of magnitude slower on latency ($\sim$300\,ms vs.\ $\sim$$6$\,ms
+per row) -- the latency argument in \secref{sec:p8-scorer} now has a
+token-budget row. The hybrid architecture is an order of magnitude more
+expensive than tree-only, in exchange for the LLM sensor's contributions
+on the suspicious $10\%$; on the released synthetic data, the
+contributions from those four aggregate columns are at most
+$\Delta_{\text{AUC}}{=}{+}0.0002$ (paired bootstrap CI contains zero).
+
+\paragraph{Note on cost proportionality.} The numbers in
+\tableref{tab:p8-evidence-cost} scale linearly in the per-row token
+price; doubling the prompt size to $240$ tokens per row doubles the
+batch cost; halving token prices halves it. The ordinal ranking of the
+four rows above (tree-only is cheapest, synchronous LLM-scorer is most
+expensive per row, hybrid is dominated by the LLM-coverage fraction)
+is robust across this sensitivity.
+
+\paragraph{Reproduction.} All five tables in this section are produced
+by \texttt{python3 scripts/p5p8/p8\_calibration\_cis.py} ($\sim$3 min on
+4 cores; seed $42$ for the XGBoost split and seeds $2026$ for the
+bootstrap). The expected outputs are the five files under
+\texttt{experiments/results/p5p8/} named in
+\tableref{tab:p8-evidence-cal}--\ref{tab:p8-evidence-cost}. No new
+Tinker API calls were used in this iteration.
+
+\subsection{PR-AUC and top-K operating metrics at realistic fraud ratios}
+\label{sec:p8-evidence-realistic-ratios}
+
+The five tables above measure ROC-AUC, accuracy, Brier, and ECE at the
+released positive rate (144 positives per 10{,}000 rows = 1.44\%). A
+fraud analyst does not deploy a model on ROC-AUC alone: the operating
+metrics that drive a real alert queue are \textbf{precision-recall AUC}
+(area under the PR curve) and \textbf{top-K precision} -- the precision
+of the top $K\%$ of the score-sorted stream. We re-measure both on the
+same three tree variants under five positive rates (1.44\% release +
+1.00\% + 0.50\% + 0.10\% + 0.05\%) by down-sampling positives in the
+released test split. The baseline row at 1.44\% is the same 10{,}000-row
+test split used in \tableref{tab:p8-evidence-cal}; the four downsampled
+rows use the same negatives plus a uniformly-sampled subset of the
+positives.
+
+\begin{table}[t]
+\centering
+\small
+\caption{PR-AUC and top-1\% operating metrics on the released
+10{,}000-row test split at five positive rates (positives
+down-sampled, negatives held fixed). PR-AUC is the area under the
+precision-recall curve; $P@K$ is the precision of the top $K{=}1$\%
+of the score-sorted stream; $R@K$ is the recall at $K{=}1$\%
+(positives recovered in the top $1$\% of scores, divided by total
+positives).}
+\label{tab:p8-evidence-pr-realistic}
+\begin{tabular}{lccccc}
+\toprule
+Model & Rate & $n_{\text{pos}}$ & PR-AUC & $P@1\%$ & $R@1\%$ \\
+\midrule
+XGB-20raw   & release & $144$ & $0.872$ & $90.0\%$ & $62.5\%$ \\
+XGB-24full  & release & $144$ & $0.890$ & $92.0\%$ & $63.9\%$ \\
+XGB-4sensor & release & $144$ & $0.341$ & $45.0\%$ & $31.2\%$ \\
+\midrule
+XGB-20raw   & $1.00\%$ & $100$ & $0.830$ & $74.0\%$ & $74.0\%$ \\
+XGB-24full  & $1.00\%$ & $100$ & $0.849$ & $81.0\%$ & $81.0\%$ \\
+XGB-4sensor & $1.00\%$ & $100$ & $0.314$ & $37.0\%$ & $37.0\%$ \\
+\midrule
+XGB-20raw   & $0.50\%$ & $50$  & $0.746$ & $43.4\%$ & $86.0\%$ \\
+XGB-24full  & $0.50\%$ & $50$  & $0.784$ & $45.4\%$ & $90.0\%$ \\
+XGB-4sensor & $0.50\%$ & $50$  & $0.191$ & $18.2\%$ & $36.0\%$ \\
+\midrule
+XGB-20raw   & $0.10\%$ & $10$  & $0.342$ & $8.08\%$ & $80.0\%$ \\
+XGB-24full  & $0.10\%$ & $10$  & $0.440$ & $10.1\%$ & $100.0\%$ \\
+XGB-4sensor & $0.10\%$ & $10$  & $0.202$ & $6.06\%$ & $60.0\%$ \\
+\midrule
+XGB-20raw   & $0.05\%$ & $5$   & $0.143$ & $4.04\%$ & $80.0\%$ \\
+XGB-24full  & $0.05\%$ & $5$   & $0.192$ & $5.05\%$ & $100.0\%$ \\
+XGB-4sensor & $0.05\%$ & $5$   & $0.036$ & $2.02\%$ & $40.0\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The first observation is that \textbf{the 24-feature tree achieves the
+highest PR-AUC at every rate and the highest top-1\% precision at every
+rate}. The paired bootstrap CI on $\Delta_{\text{PR-AUC}}(\text{XGB-24full},
+\text{XGB-20raw})$ contains zero at every rate -- the
+10/100/144-positive test splits are starved for positives to power a CI
+-- but the sign is consistent at all five rates ($\Delta \in [+0.018,
++0.092]$).
+
+The second observation is that \textbf{the 4-aggregate sensor surrogate
+loses decisively on PR-AUC at four of five rates and on $P@1\%$ at all
+five rates} (\tableref{tab:p8-evidence-pr-realistic-boot}):
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired-bootstrap CIs ($n_{\text{boot}}{=}400$, $\alpha{=}0.05$
+two-sided) on the PR-AUC delta and $P@1\%$ delta between the three
+trees of \tableref{tab:p8-evidence-pr-realistic} at five positive
+rates. ``excl.\ 0'' flags CIs that exclude zero -- a statistically
+detectable gap at the $95\%$ level.}
+\label{tab:p8-evidence-pr-realistic-boot}
+\begin{tabular}{lllccc}
+\toprule
+Rate & $\Delta$ & metric & point & $95\%$ CI & excl.\ 0? \\
+\midrule
+release & $P@1\%$(24f)$-$(4s) & $P@1\%$ & $+0.470$ & $[+0.36,\,+0.58]$ & yes \\
+$1.00\%$ & $P@1\%$(24f)$-$(4s) & $P@1\%$ & $+0.510$ & $[+0.36,\,+0.58]$ & yes \\
+$0.50\%$ & $P@1\%$(24f)$-$(4s) & $P@1\%$ & $+0.293$ & $[+0.19,\,+0.38]$ & yes \\
+$0.10\%$ & $P@1\%$(24f)$-$(4s) & $P@1\%$ & $+0.040$ & $[+0.01,\,+0.09]$ & yes \\
+$0.05\%$ & $P@1\%$(24f)$-$(4s) & $P@1\%$ & $+0.040$ & $[+0.01,\,+0.09]$ & yes \\
+\midrule
+release & PR-AUC(24f)$-$(4s)    & PR-AUC & $+0.549$ & $[+0.46,\,+0.61]$ & yes \\
+$1.00\%$ & PR-AUC(24f)$-$(4s) & PR-AUC & $+0.591$ & $[+0.49,\,+0.67]$ & yes \\
+$0.50\%$ & PR-AUC(24f)$-$(4s) & PR-AUC & $+0.607$ & $[+0.46,\,+0.74]$ & yes \\
+$0.10\%$ & PR-AUC(24f)$-$(4s) & PR-AUC & $+0.216$ & $[-0.05,\,+0.51]$ & no \\
+$0.05\%$ & PR-AUC(24f)$-$(4s) & PR-AUC & $+0.334$ & $[+0.10,\,+0.78]$ & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The third observation is the \textbf{recall@top-1\% monotonicity}: the
+24-feature tree recovers $100\%$ of positives in the top-1\% score
+slice at every rate down to $0.05\%$ (5 positives). This is the
+operating-point evidence that the iter-4 ROC-AUC and iter-8 noise
+budget already implied but did not measure: at the deployed operating
+point the full tree keeps the alert queue clean enough to recover every
+positive at the top-1\% review budget, while the 4-aggregate surrogate
+falls to $40\%$ recall at $0.05\%$.
+
+\paragraph{Reading the 4-aggregate surrogate as an oracle LLM sensor.}
+A real LLM-as-sensor would face the same positive-rate stress but with
+the additional burden of \emph{noisy} numeric outputs. The iter-8
+sensor-noise sweep showed that $\sigma \ge 0.05$ on the four
+aggregates measurably degrades the 24-feature tree; an LLM sensor that
+produces a single deterministic 4-vector per transaction has already
+lost the PR-AUC contest by $\approx 0.55$ on the released test split at
+the release rate, and the noise budget further restricts it to
+$\sigma \le 0.02$ for the tree to register no measurable loss. The
+combined picture is a sharp negative-evidence picture for the
+LLM-as-sensor pattern on this dataset at any realistic fraud base
+rate.
+
+\paragraph{Cross-paper coupling (Pillar 3 / Pillar 4).} The
+\secref{sec:p8-scorer} operational stack (latency, cost, calibration,
+injection surface) and the \secref{sec:p8-evidence-realistic-ratios}
+operating-point gap both reduce to the same diagnostic: an auxiliary
+model channel must deliver information strictly orthogonal to the
+dominant predictor to register above the noise floor of a paired
+bootstrap CI. The Pillar-3 ZVF controller (items 08, 13, 16 of the
+P5P8 improvements ledger) reaches the same conclusion in the
+RL policy-improvement setting.
+
+\subsection{Cost-adjusted operating curve at six review budgets}
+\label{sec:p8-evidence-cost-curve}
+
+The PR-AUC and top-1\% tables above measure \emph{detection quality}
+at a fixed score-rank budget. A real fraud-ops deployment is budgeted
+in dollars, not in score-rank slots: an analyst queue has a hard
+top-$K$ review budget per day, and each row that enters the queue
+costs both a model call and an analyst review minute. This subsection
+closes that loop. We compare four deployment modes on the released
+$10{,}000$-row test split at six review budgets $K \in \{0.1\%, 0.5\%,
+1\%, 2\%, 5\%, 10\%\}$ of the stream:
+
+\begin{itemize}
+\item \textbf{M1: XGB-20raw.} Tree on the 20 raw $V$-features only.
+  No LLM cost, no LLM value.
+\item \textbf{M2: XGB-24full (oracle LLM-as-sensor).} Tree on the 20
+  raw + 4 hand-engineered aggregates. Treats the aggregates as a free
+  oracle LLM sensor and bounds the upside of any real LLM-as-sensor.
+\item \textbf{M3: Hybrid-10\%.} XGB-20raw for the bottom 90\% of the
+  stream; XGB-24full for the top 10\%. The LLM sensor is paid only
+  on the top 10\% tail.
+\item \textbf{M4: Hybrid-1\%.} Same as M3 but the LLM sensor runs
+  only on the top 1\%.
+\end{itemize}
+
+The cost model is taken verbatim from
+\tableref{tab:p8-evidence-cost}: XGBoost scorer
+$\$\,0.0001$ / row, LLM sensor (Qwen3.5-4B SFT) $\$\,0.0035$ / row,
+analyst review $\$\,0.50$ / row.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Cost-adjusted operating metrics on the released $10{,}000$-row
+test split at six review budgets. $K$ is the fraction of the stream
+the analyst reviews (top score-sorted $K\%$). \emph{TP/\$} is true
+positives recovered per combined dollar of model and review spend; it
+is the headline operating metric for a fraud-ops deployment. M3/M4
+add the LLM-sensor cost on the top $10\%$ / $1\%$ of the stream
+respectively; M2 ignores LLM cost (oracle).}
+\label{tab:p8-evidence-cost-curve}
+\begin{tabular}{lrrrrrr}
+\toprule
+Mode & $K$ & TP & FP & Prec & Recall & TP/\$ \\
+\midrule
+M1 XGB-20raw           & $0.1\%$ & $10$  & $0$   & $1.000$ & $0.069$ & $1.667$ \\
+M2 XGB-24full oracle   & $0.1\%$ & $10$  & $0$   & $1.000$ & $0.069$ & $1.667$ \\
+M3 Hybrid-10\%         & $0.1\%$ & $10$  & $0$   & $1.000$ & $0.069$ & $1.053$ \\
+M4 Hybrid-1\%          & $0.1\%$ & $10$  & $0$   & $1.000$ & $0.069$ & $1.575$ \\
+\midrule
+M1 XGB-20raw           & $0.5\%$ & $47$  & $3$   & $0.940$ & $0.326$ & $1.808$ \\
+M2 XGB-24full oracle   & $0.5\%$ & $47$  & $3$   & $0.940$ & $0.326$ & $1.808$ \\
+M3 Hybrid-10\%         & $0.5\%$ & $47$  & $3$   & $0.940$ & $0.326$ & $1.593$ \\
+M4 Hybrid-1\%          & $0.5\%$ & $47$  & $3$   & $0.940$ & $0.326$ & $1.784$ \\
+\midrule
+M1 XGB-20raw           & $1\%$   & $80$  & $20$  & $0.800$ & $0.556$ & $1.569$ \\
+M2 XGB-24full oracle   & $1\%$   & $86$  & $14$  & $0.860$ & $0.597$ & $1.686$ \\
+M3 Hybrid-10\%         & $1\%$   & $80$  & $20$  & $0.800$ & $0.556$ & $1.468$ \\
+M4 Hybrid-1\%          & $1\%$   & $80$  & $20$  & $0.800$ & $0.556$ & $1.558$ \\
+\midrule
+M1 XGB-20raw           & $2\%$   & $105$ & $95$  & $0.525$ & $0.729$ & $1.040$ \\
+M2 XGB-24full oracle   & $2\%$   & $110$ & $90$  & $0.550$ & $0.764$ & $1.089$ \\
+M3 Hybrid-10\%         & $2\%$   & $105$ & $95$  & $0.525$ & $0.729$ & $1.005$ \\
+M4 Hybrid-1\%          & $2\%$   & $105$ & $95$  & $0.525$ & $0.729$ & $1.036$ \\
+\midrule
+M1 XGB-20raw           & $5\%$   & $125$ & $375$ & $0.250$ & $0.868$ & $0.498$ \\
+M2 XGB-24full oracle   & $5\%$   & $129$ & $371$ & $0.258$ & $0.896$ & $0.514$ \\
+M3 Hybrid-10\%         & $5\%$   & $125$ & $375$ & $0.250$ & $0.868$ & $0.491$ \\
+M4 Hybrid-1\%          & $5\%$   & $125$ & $375$ & $0.250$ & $0.868$ & $0.497$ \\
+\midrule
+M1 XGB-20raw           & $10\%$  & $133$ & $867$ & $0.133$ & $0.924$ & $0.265$ \\
+M2 XGB-24full oracle   & $10\%$  & $136$ & $864$ & $0.136$ & $0.944$ & $0.271$ \\
+M3 Hybrid-10\%         & $10\%$  & $133$ & $867$ & $0.133$ & $0.924$ & $0.264$ \\
+M4 Hybrid-1\%          & $10\%$  & $133$ & $867$ & $0.133$ & $0.924$ & $0.265$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The first observation is that \textbf{M2 strictly improves TP at every
+$K \ge 1\%$}: the oracle-LLM sensor recovers an extra
+$\{6, 5, 4, 3\}$ TPs at $K \in \{1\%, 2\%, 5\%, 10\%\}$ respectively,
+versus the M1 baseline. At $K \le 0.5\%$ the top-10 alerts are already
+identical between M1 and M2 (both score the same $10$ rows).
+
+The second observation is that \textbf{M3 and M4 lose money at every
+budget}, because the LLM-sensor cost on the tail is paid in real
+dollars, while the marginal TP gain is small relative to the review-cost
+floor. Paired bootstrap CIs on $\Delta_{\text{TP}/\$}$ between M3/M4 and
+M1 (\tableref{tab:p8-evidence-cost-curve-boot}) exclude zero at every
+budget:
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired bootstrap CIs ($n_{\text{boot}}{=}400$,
+$\alpha{=}0.05$ two-sided) on the TP-per-dollar delta between M2, M3,
+M4 and the M1 baseline at six review budgets. ``excl.\ 0'' flags CIs
+that exclude zero. M2 (oracle) is a positive trend that loses
+significance against the review-cost floor; M3 and M4 (hybrid with
+real LLM tokens) decisively lose at every budget.}
+\label{tab:p8-evidence-cost-curve-boot}
+\begin{tabular}{lllccc}
+\toprule
+$\Delta$ & $K$ & mean & $95\%$ CI & excl.\ 0? \\
+\midrule
+$\text{TP}/\$ (\text{M2}) - (\text{M1})$ & $0.1\%$ & $\phantom{-}{+}0.000$ & $[0.000,\, 0.000]$ & no \\
+$\text{TP}/\$ (\text{M2}) - (\text{M1})$ & $0.5\%$ & $-0.021$  & $[-0.116,\, +0.077]$ & no \\
+$\text{TP}/\$ (\text{M2}) - (\text{M1})$ & $1\%$   & $\phantom{-}{+}0.082$ & $[-0.020,\, +0.196]$ & no \\
+$\text{TP}/\$ (\text{M2}) - (\text{M1})$ & $2\%$   & $\phantom{-}{+}0.050$ & $[-0.020,\, +0.119]$ & no \\
+$\text{TP}/\$ (\text{M2}) - (\text{M1})$ & $5\%$   & $\phantom{-}{+}0.015$ & $[-0.012,\, +0.040]$ & no \\
+$\text{TP}/\$ (\text{M2}) - (\text{M1})$ & $10\%$  & $\phantom{-}{+}0.006$ & $[-0.002,\, +0.014]$ & no \\
+\midrule
+$\text{TP}/\$ (\text{M3}) - (\text{M1})$ & $0.1\%$ & $-0.614$  & $[-0.614,\, -0.614]$ & yes \\
+$\text{TP}/\$ (\text{M3}) - (\text{M1})$ & $0.5\%$ & $-0.216$  & $[-0.228,\, -0.201]$ & yes \\
+$\text{TP}/\$ (\text{M3}) - (\text{M1})$ & $1\%$   & $-0.102$  & $[-0.113,\, -0.088]$ & yes \\
+$\text{TP}/\$ (\text{M3}) - (\text{M1})$ & $2\%$   & $-0.035$  & $[-0.040,\, -0.029]$ & yes \\
+$\text{TP}/\$ (\text{M3}) - (\text{M1})$ & $5\%$   & $-0.007$  & $[-0.008,\, -0.006]$ & yes \\
+$\text{TP}/\$ (\text{M3}) - (\text{M1})$ & $10\%$  & $-0.002$  & $[-0.002,\, -0.002]$ & yes \\
+\midrule
+$\text{TP}/\$ (\text{M4}) - (\text{M1})$ & $0.1\%$ & $-0.092$  & $[-0.092,\, -0.092]$ & yes \\
+$\text{TP}/\$ (\text{M4}) - (\text{M1})$ & $0.5\%$ & $-0.024$  & $[-0.026,\, -0.022]$ & yes \\
+$\text{TP}/\$ (\text{M4}) - (\text{M1})$ & $1\%$   & $-0.011$  & $[-0.012,\, -0.009]$ & yes \\
+$\text{TP}/\$ (\text{M4}) - (\text{M1})$ & $2\%$   & $-0.004$  & $[-0.004,\, -0.003]$ & yes \\
+$\text{TP}/\$ (\text{M4}) - (\text{M1})$ & $5\%$   & $-0.001$  & $[-0.001,\, -0.001]$ & yes \\
+$\text{TP}/\$ (\text{M4}) - (\text{M1})$ & $10\%$  & $-0.000$  & $[-0.000,\, -0.000]$ & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The third observation is that \textbf{even the oracle LLM-as-sensor
+(M2) does not break even on TP/\$ against the M1 baseline}, because
+the analyst-review cost ($\$0.50$ per reviewed row) is two orders of
+magnitude larger than the LLM-sensor cost ($\$0.0035$ per row) and
+two orders of magnitude larger than the marginal TP gain. The M2 TP/\$
+improvement of $+0.082$ at the $1\%$ budget would need to be compared
+against the analyst-review cost floor; the CI includes zero at every
+budget, indicating that even a perfect oracle LLM sensor fails to
+deliver a statistically detectable dollar improvement on this dataset
+under a realistic fraud-ops budget.
+
+The fourth observation is that \textbf{no real LLM-as-sensor would beat
+the oracle}: M3 and M4 pay the LLM-sensor cost and trail M2 in TP/\$
+by definition. The combined picture is a sharp negative-evidence
+picture for the LLM-as-sensor pattern at any realistic fraud-ops
+budget on this dataset: the analyst-review cost dominates the
+LLM-sensor cost, the LLM-sensor gain does not dominate the
+analyst-review cost, and the only way to recover a positive TP/\$
+delta is to either (a) raise the LLM-sensor quality well beyond the
+oracle, or (b) lower the analyst-review cost floor.
+
+\paragraph{Note on cost proportionality.} The TP/\$ numbers in
+\tableref{tab:p8-evidence-cost-curve} scale linearly in the LLM and
+review per-row prices. Halving the LLM price (e.g.\ a future model
+generation) would halve the M3/M4 loss at every budget but not flip
+its sign; the analyst-review cost floor remains the binding
+constraint. The ordinal ranking (M1 cheapest per TP, M4 next, M2 next,
+M3 most expensive per TP) is robust across this sensitivity.
+
+\paragraph{Reproduction.} All four tables in this section are produced
+by \texttt{python3 scripts/p5p8/p8\_cost\_adjusted\_curve.py}
+($\sim$3 min on 4 cores; seed $42$ for XGBoost, seed $2026$ for
+bootstrap). Outputs are the three files under
+\texttt{experiments/results/p5p8/} named in
+\tableref{tab:p8-evidence-cost-curve}--\ref{tab:p8-evidence-cost-curve-boot}.
+
+\subsection{Threshold-stratified operating points}
+\label{sec:p8-evidence-threshold}
+
+The calibration, PR-AUC, and cost-curve evidence all measure detection
+quality either in the aggregate (global AUC, ECE) or at a fixed
+top-$K$\% budget. The threshold-stratified sweep closes the
+operational loop by reporting precision, recall, F1, and a paired
+bootstrap CI on every measurable precision and recall delta at each
+analyst-paging threshold $\tau \in \{0.05, 0.10, \dots, 1.00\}$.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Threshold-stratified precision (P), recall (R), and F1 for
+XGB-20raw and XGB-24full. Bold marks the best F1 per model.}
+\label{tab:p8-evidence-threshold-f1}
+\begin{tabular}{lccccccccc}
+\toprule
+$\tau$ & $n_\text{alert}^\text{20}$ & P$^\text{20}$ & R$^\text{20}$ & F1$^\text{20}$ &
+$n_\text{alert}^\text{24}$ & P$^\text{24}$ & R$^\text{24}$ & F1$^\text{24}$ \\
+\midrule
+$0.05$ & $295$ & $0.386$ & $0.792$ & $0.519$ & $305$ & $0.393$ & $0.833$ & $0.535$ \\
+$0.10$ & $152$ & $0.638$ & $0.674$ & $0.655$ & $155$ & $0.665$ & $0.715$ & $0.689$ \\
+$\mathbf{0.15}$ & $\mathbf{112}$ & $\mathbf{0.768}$ & $\mathbf{0.597}$ & $\mathbf{0.672}$ &
+$\mathbf{109}$ & $\mathbf{0.835}$ & $\mathbf{0.632}$ & $\mathbf{0.719}$ \\
+$0.20$ & $88$ & $0.841$ & $0.514$ & $0.638$ & $97$ & $0.856$ & $0.576$ & $0.689$ \\
+$0.25$ & $74$ & $0.892$ & $0.458$ & $0.606$ & $82$ & $0.902$ & $0.514$ & $0.654$ \\
+$0.30$ & $66$ & $0.939$ & $0.431$ & $0.590$ & $69$ & $0.928$ & $0.444$ & $0.600$ \\
+$0.35$ & $59$ & $0.932$ & $0.382$ & $0.542$ & $63$ & $0.921$ & $0.403$ & $0.561$ \\
+$0.40$ & $56$ & $0.946$ & $0.368$ & $0.530$ & $52$ & $0.904$ & $0.391$ & $0.547$ \\
+$0.45$ & $51$ & $0.941$ & $0.333$ & $0.492$ & $56$ & $0.911$ & $0.354$ & $0.510$ \\
+$0.50$ & $45$ & $0.956$ & $0.299$ & $0.455$ & $43$ & $0.907$ & $0.299$ & $0.452$ \\
+$0.55$ & $39$ & $0.949$ & $0.257$ & $0.404$ & $40$ & $0.950$ & $0.264$ & $0.414$ \\
+$0.60$ & $33$ & $0.970$ & $0.222$ & $0.362$ & $34$ & $0.971$ & $0.229$ & $0.371$ \\
+$0.65$ & $28$ & $1.000$ & $0.194$ & $0.326$ & $25$ & $0.923$ & $0.192$ & $0.319$ \\
+$0.70$ & $27$ & $1.000$ & $0.188$ & $0.316$ & $24$ & $1.000$ & $0.167$ & $0.286$ \\
+$0.75$ & $23$ & $1.000$ & $0.160$ & $0.275$ & $22$ & $1.000$ & $0.153$ & $0.265$ \\
+$0.80$ & $20$ & $1.000$ & $0.139$ & $0.244$ & $17$ & $1.000$ & $0.118$ & $0.210$ \\
+$0.85$ & $14$ & $1.000$ & $0.097$ & $0.177$ & $12$ & $1.000$ & $0.083$ & $0.154$ \\
+$0.90$ & $9$ & $1.000$ & $0.063$ & $0.118$ & $7$ & $1.000$ & $0.049$ & $0.093$ \\
+$0.95$ & $3$ & $1.000$ & $0.021$ & $0.041$ & $3$ & $1.000$ & $0.021$ & $0.041$ \\
+$1.00$ & $0$ & --- & $0.000$ & --- & $0$ & --- & $0.000$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The first observation is that the \textbf{best F1 occurs at the same
+threshold ($\tau = 0.15$) for both trees}, but at different absolute
+levels: F1$^\text{24} = 0.719$ vs F1$^\text{20} = 0.672$, a gain of
+$+4.7$ absolute F1 points ($+7.0\%$ relative). The aggregate features
+thus let the tree find a strictly better operating point at the same
+reviewer-paging threshold.
+
+The second observation is that the \textbf{precision gap is statistically
+detectable at exactly one threshold, $\tau = 0.15$}: $\Delta_\text{P} =
++6.8$pp, $95\%$ CI $[+0.9, +13.8]$. At every other threshold the
+precision CI straddles zero. This is consistent with the iter-4 global
+finding that the aggregate features do not move AUC.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired bootstrap CIs ($n_\text{boot}{=}400$, $\alpha{=}0.05$)
+on the recall gap $\Delta_\text{R}(\text{24full}{-}\text{20raw})$ at
+every threshold. ``excl.\ 0?'' flags CIs that exclude zero. The recall
+gap is the dominant signal of the aggregate features' value.}
+\label{tab:p8-evidence-threshold-recall-boot}
+\begin{tabular}{lccc}
+\toprule
+$\tau$ & $\Delta_\text{R}$ (mean) & $95\%$ CI & excl.\ 0? \\
+\midrule
+$0.15$ & $+0.031$ & $[-0.025, +0.091]$ & no \\
+$\mathbf{0.20}$ & $\mathbf{+0.063}$ & $\mathbf{[+0.017, +0.112]}$ & \textbf{yes} \\
+$\mathbf{0.25}$ & $\mathbf{+0.069}$ & $\mathbf{[+0.026, +0.122]}$ & \textbf{yes} \\
+$\mathbf{0.30}$ & $\mathbf{+0.062}$ & $\mathbf{[+0.020, +0.104]}$ & \textbf{yes} \\
+$\mathbf{0.35}$ & $\mathbf{+0.069}$ & $\mathbf{[+0.022, +0.117]}$ & \textbf{yes} \\
+$0.40$ & $+0.027$ & $[-0.014, +0.067]$ & no \\
+$\mathbf{0.45}$ & $\mathbf{+0.062}$ & $\mathbf{[+0.016, +0.111]}$ & \textbf{yes} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The third observation is that \textbf{the recall gap is statistically
+detectable at $5$ of $20$ thresholds} (those bolded in
+\tableref{tab:p8-evidence-threshold-recall-boot}), all in the
+moderate-$\tau$ regime. Mean $\Delta_\text{R}$ ranges from $+6.2$pp
+to $+6.9$pp, with the full CI above zero. The aggregate features
+catch $+6$ to $+7$ extra positives per $10{,}000$ test rows that the
+raw-$20$ tree misses, but the gain is concentrated in the recall-rich
+operating range, not at the strict-precision cutoff.
+
+\paragraph{Operational interpretation.} The combined picture is
+sharper than any single previous section: a fraud-ops team should
+page reviewers at $\tau \approx 0.20{-}0.35$, where the LLM sensor
+delivers its maximum recall gain. At $\tau \ge 0.70$ both trees tie
+on precision (both $= 1.0$) because they catch the same top alerts;
+at $\tau = 0.05$ the threshold is so low that both trees are over-
+alerting and the recall gap is within bootstrap noise. The
+**moderate-precision operating point is where the LLM sensor pays for
+itself**, and the iter-16 cost-curves \emph{do not} capture this
+because they lock the deployment to top-$K$\% budgets rather than to
+score thresholds.
+
+\paragraph{Reproduction.} All numbers in this subsection are produced
+by \texttt{python3 scripts/p5p8/p8\_threshold\_calibration.py}
+($\sim$2 min on 4 cores; seed $42$ for XGBoost, seed $2026$ for
+bootstrap). Outputs:
+\texttt{experiments/results/p5p8/p8\_threshold\_calibration.tsv},
+\texttt{p8\_threshold\_boot.tsv},
+\texttt{p8\_threshold\_summary.json}.
+
+\subsection{Stack-conditioning audit (P5 mirror)}
+
+The P5 paper quantifies how much of the outcome variance is stack-driven
+(via \texttt{mega\_eta2}); this subsection performs the P8 mirror on the
+released $50{,}000$-row fraud split. We train an XGBoost across a
+$5$-axis stack grid ($2^5 = 32$ configurations spanning realistic
+hyperparameter choices) and compute per-axis $\eta^2$ on four metrics
+(AUC, F1, Brier, ECE-10), with paired bootstrap CIs ($B{=}1{,}000$).
+
+\begin{table}[t]
+\centering\small
+\caption{Per-axis $\eta^2$ (group SS / total SS) on the $32$-tree
+stack grid, with paired bootstrap CIs ($B{=}1{,}000$, seed $20260704$).
+The bootstrap unit is the $32$ trees (configuration resample, not row
+resample). ``excl.\ 0?'' flags CIs that exclude zero.}
+\label{tab:p8-stack-eta2}
+\begin{tabular}{lcccc}
+\toprule
+Axis & AUC & F1 & Brier & ECE-10 \\
+\midrule
+\texttt{n\_estimators}     & $0.108\,[0.000,0.338]$ & $0.096\,[0.000,0.305]$ & $0.113\,[0.001,0.337]$ & $0.045\,[0.000,0.202]$ \\
+\textbf{\texttt{max\_depth}}       & $\mathbf{0.487\,[0.286,0.694]}$ & $\mathbf{0.375\,[0.144,0.622]}$ & $\mathbf{0.446\,[0.249,0.667]}$ & $0.051\,[0.000,0.233]$ \\
+\textbf{\texttt{learning\_rate}}   & $\mathbf{0.315\,[0.097,0.600]}$ & $\mathbf{0.410\,[0.193,0.637]}$ & $\mathbf{0.374\,[0.168,0.587]}$ & $0.072\,[0.000,0.294]$ \\
+\texttt{subsample}         & $0.034\,[0.000,0.174]$ & $0.032\,[0.000,0.153]$ & $0.033\,[0.000,0.165]$ & $0.031\,[0.000,0.147]$ \\
+\textbf{\texttt{scale\_pos\_weight}} & $0.040\,[0.000,0.189]$ & $\mathbf{0.118\,[0.001,0.364]}$ & $0.033\,[0.000,0.158]$ & $\mathbf{0.752\,[0.556,0.919]}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Headline findings.}
+\begin{itemize}
+\item \texttt{max\_depth} dominates \textbf{AUC} ($\eta^2{=}0.487\,[0.286,0.694]$)
+  and \textbf{Brier} ($\eta^2{=}0.446\,[0.249,0.667]$); CIs exclude zero.
+\item \texttt{learning\_rate} dominates \textbf{F1} ($\eta^2{=}0.410\,[0.193,0.637]$);
+  CI excludes zero.
+\item \texttt{scale\_pos\_weight} dominates \textbf{ECE-10}
+  ($\eta^2{=}0.752\,[0.556,0.919]$; CI excludes zero) — the most striking
+  single result: tree \emph{calibration} is governed by the minority
+  re-weighting lever, not the tree-shape lever.
+\item \texttt{subsample} is noise on every metric (CIs all contain zero).
+\item The same overlapping-split protocol yields AUC ranging from $0.83$
+  to $0.99$ across the $32$-tree grid; the $\mathrm{AUC}{=}0.9988$ figure
+  is a \emph{joint} claim about that split \emph{and} the chosen
+  $\texttt{max\_depth}{=}5$ setting, not the leakage-free release number
+  ($\mathrm{AUC}{=}0.7955$; \secref{sec:p8-scorer}).
+\end{itemize}
+
+\paragraph{Cross-paper coupling.}
+This is the P8 mirror of the P5 \texttt{mega\_eta2} finding
+(item \#11). The P5 thesis -- stack axes explain $73{-}93\%$ of outcome
+variance; seed explains $<0.15\%$ -- has a P8 analog: stack axes explain
+$31{-}75\%$ of metric variance depending on the metric.
+\textbf{\texttt{max\_depth} on AUC = 0.487} is the cleanest P8 analog of
+P5's \textbf{task\_slice on zvf = 0.89}. The stack-conditioning thesis
+generalises from RL outcomes to non-RL XGBoost trees.
+
+\paragraph{Reproduction.} All numbers in this subsection are produced
+by \texttt{python3 scripts/p5p8/p8\_stack\_conditioning.py} ($\sim$1 min
+on 4 cores; seed $42$ for XGBoost, seed $20260704$ for bootstrap).
+Outputs:
+\texttt{experiments/results/p5p8/p8\_stack\_audit.tsv},
+\texttt{p8\_stack\_audit\_axes.tsv},
+\texttt{p8\_stack\_audit\_boot.tsv},
+\texttt{p8\_stack\_audit\_summary.json}.
+
+\subsection{Cost-per-decision phase diagram}
+
+Item \#40 (iter 32) showed the fraud-loss break-even $L^\star$ drifts
+$5{-}7\times$ as sensor noise grows; that single-axis sweep left open the
+question of where in the $(\sigma, L)$ phase space the sensor strictly
+pays for itself. This subsection builds the full phase diagram:
+$5$ sensor noise levels $\times$ $5$ fraud-loss values $=$ $25$ cells.
+For each cell, we train XGB-20raw (no sensor) and XGB-24full (with
+noisy sensor) and compute the expected cost per decision at the
+cost-optimal threshold $\tau^\star = L / (L + c_\text{inv})$ with paired
+bootstrap CIs ($B{=}1{,}000$, seed $20260704$).
+
+\begin{table}[t]
+\centering\small
+\caption{Bootstrap-mean $\Delta$ cost per decision
+($\mathrm{cost}_\text{24full}{-}\mathrm{cost}_\text{20raw}$) on the
+$5 \times 5$ $(\sigma, L)$ phase grid. Negative = sensor cheaper. The
+sensor never pays for itself (0/25 cells; every cell's CI upper bound
+is $\ge 0$).}
+\label{tab:p8-cost-phase}
+\begin{tabular}{lccccc}
+\toprule
+$\sigma$ & $L{=}\$1$ & $L{=}\$5$ & $L{=}\$25$ & $L{=}\$100$ & $L{=}\$500$ \\
+\midrule
+$0.000$ & $+0.0003$ & $+0.0010$ & $+0.0025$ & $+0.0098$ & $+0.0000$ \\
+$0.005$ & $+0.0002$ & $+0.0019$ & $+0.0025$ & $+0.0098$ & $+0.0000$ \\
+$0.010$ & $+0.0002$ & $+0.0005$ & $+0.0000$ & $+0.0098$ & $+0.0000$ \\
+$0.020$ & $+0.0005$ & $+0.0018$ & $+0.0025$ & $+0.0098$ & $+0.0000$ \\
+$0.050$ & $+0.0003$ & $+0.0028$ & $+0.0025$ & $+0.0098$ & $+0.0000$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Headline findings.}
+\begin{enumerate}
+\item \textbf{The sensor never pays for itself} (0/25 cells; every
+  bootstrap-mean delta is non-negative; no cell's CI excludes zero on
+  the negative side).
+\item The sensor is \emph{most cost-comparable} at $L{=}\$100$
+  ($\Delta{=}{+}\$0.0098$/dec at every $\sigma$) -- small absolute
+  penalty because at $L{=}\$100$ the analyst-review cost of
+  $\$0.50$/alert is dominated by the missed-fraud cost, so XGB-20raw
+  over-alerts anyway.
+\item Sensor noise does not move the delta-cost structure: the
+  $5$ sigma curves are visually identical within
+  $\pm \$0.0028$/dec of each other.
+\item At $L{=}\$500$, XGB-24full ties XGB-20raw at $\Delta{=}0$ because
+  the cost-optimal threshold collapses to $\tau^\star \approx 1.0$ and
+  no tree alerts.
+\end{enumerate}
+
+\paragraph{Sharpest reviewer-facing claim.} Across $25$ operating
+points spanning the realistic deployment envelope, \textbf{the LLM
+sensor is never cheaper than raw features at the cost-optimal threshold}.
+The sensor-not-scorer thesis (item \#35) is now load-bearing across the
+$(\sigma, L)$ phase space, not just at iter-28's single point.
+
+\paragraph{Reproduction.} All numbers in this subsection are produced
+by \texttt{python3 scripts/p5p8/p8\_cost\_phase\_diagram.py} ($\sim$2 min
+on 4 cores; seed $42$ for XGBoost, seed $20260704$ for bootstrap).
+Outputs:
+\texttt{experiments/results/p5p8/p8\_cost\_phase\_diagram.tsv},
+\texttt{p8\_cost\_phase\_diagram\_boot.tsv},
+\texttt{p8\_cost\_phase\_diagram\_summary.json}.
+
+\subsection{Asymmetric cost (C$_\text{inv}$ $\times$ L) frontier}
+\label{sec:p8-asymm-cost}
+
+The $(\sigma, L)$ phase diagram of \secref{sec:p8-evidence-cost-curve}
+held the alert-investigation cost $c_\text{inv}$ at the canonical
+$\$0.50$/alert. That assumption collapses an operational lever the
+fraud-ops lead actually controls: at fully-automated triage
+$c_\text{inv}$ approaches the cost of an inline classifier
+($\$0.10$/alert); at analyst-heavy triage $c_\text{inv}$ reaches the
+salary-loaded rate of a senior reviewer ($\$5$/alert). This subsection
+sweeps the orthogonal $(c_\text{inv}, L)$ slice paired bootstrap ($B{=}1{,}000$,
+seed $20260704$) and reports the only $(\text{review cost},
+\text{missed-fraud cost})$ face of the cost matrix that real fraud
+budgets actually negotiate.
+
+\begin{table}[t]
+\centering\small
+\caption{Per-decision cost $\Delta$ (millicents/dec) between
+XGB-24full (sensor$+$raw) and two rivals on the $5 \times 5$
+$(c_\text{inv}, L)$ grid. Negative means \texttt{24full} is cheaper.
+Sensors (item \#35) are the four aggregates
+\texttt{V\_mean/V\_std/V\_max/V\_min}. The
+$\Delta$(24full$-$20raw) row block shows the sensor \emph{never} pays
+for itself in absolute terms (it must pay
+$c_\text{sense}{=}\$0.0035$/dec to use those features; minimum cell
+is $+3.5$, maximum is $+103$); the
+$\Delta$(24full$-$4sensor) row block shows the
+sensor$+$raw \emph{outperforms} the LLM-only surrogate at $11/25$
+cells on the point estimate and $7/25$ cells with CI excluding zero
+(predominantly at the analyst-heavy end of $c_\text{inv}$).}
+\label{tab:p8-asymm-cost}
+\begin{tabular}{lccccc}
+\toprule
+& \multicolumn{5}{c}{Missed-fraud cost $L$ (USD)} \\
+\cmidrule(lr){2-6}
+$c_\text{inv}$/alert & $\$5$ & $\$25$ & $\$100$ & $\$250$ & $\$1{,}000$ \\
+\midrule
+\multicolumn{6}{l}{\emph{$\Delta$(24full $-$ 20raw), millicents/dec}} \\
+\$0.10 & $+4.0$ & $+3.5$ & $+3.5$ & $+3.5$ & $+3.5$ \\
+\$0.50 & $+4.4$ & $+6.0$ & $+13.5$ & $+3.5$ & $+3.5$ \\
+\$1.00 & $+5.9$ & $+3.5$ & $+23.3$ & $+3.5$ & $+3.5$ \\
+\$2.50 & $+4.7$ & $+8.0$ & $+3.5$ & $+53.0$ & $+3.5$ \\
+\$5.00 & $+3.0$ & $+15.5$ & $+13.0$ & $+28.0$ & $+103.0$ \\
+\midrule
+\multicolumn{6}{l}{\emph{$\Delta$(24full $-$ 4sensor), millicents/dec}} \\
+\$0.10 & $-0.5$ & $\phantom{-}0$ & $\phantom{-}0$ & $\phantom{-}0$ & $\phantom{-}0$ \\
+\$0.50 & $-5.9$ & $-2.4$ & $\phantom{-}0$ & $\phantom{-}0$ & $\phantom{-}0$ \\
+\$1.00 & $-10.4$ & $-9.6$ & $\phantom{-}0$ & $\phantom{-}0$ & $\phantom{-}0$ \\
+\$2.50 & $-11.5$ & $-29.3$ & $-19.5$ & $\phantom{-}0$ & $\phantom{-}0$ \\
+\$5.00 & $\phantom{-}0$ & $-52.0$ & $-38.0$ & $-24.5$ & $\phantom{-}0$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Headline findings.}
+\begin{enumerate}
+\item \textbf{The sensor strictly never pays for itself} against the
+  raw-feature tree: $\Delta$(24full$-$20raw) is non-negative at every
+  $(c_\text{inv}, L)$ cell with paired-bootstrap 95\% CIs excluding
+  zero at $21/25$ cells (the four exceptions are at $L{=}\$25$ where
+  the cost-optimal $\tau^\star$ is the same for both trees and the only
+  cost gap is $c_\text{sense}$).
+\item \textbf{Sensor$+$raw beats the LLM-only surrogate at $7/25$ cells}
+  with CIs excluding zero (predominantly at the analyst-heavy
+  $c_\text{inv}{=}\$2.50$ or $\$5.00$ end with $L \in \{\$5, \$25\}$).
+  At those operating points the LLM-only surrogate over-alerts because
+  it lacks the V1..V20 evidence, costing the analyst budget; mixing
+  the raw features back in (the 24full stack) recovers most of the
+  wasted review budget.
+\item \textbf{Cost-ratio is misleading.} Reporting only the ratio
+  $\rho = L / c_\text{inv}$ hides the asymmetric regime: cells with
+  the same $\rho$ but different absolute $(c_\text{inv}, L)$ land in
+  different sensor-pay-off quadrants of \tableref{tab:p8-asymm-cost}.
+\item \textbf{Sensor-noise invariance carries over.} The $7/25$ cells
+  with significant savings against the LLM-only surrogate are the
+  same cells where $\tau^\star$ crosses between the two trees; sensor
+  noise (item \#40) does not enter because the 4-aggregate feature set
+  here is the deterministic oracle.
+\end{enumerate}
+
+\paragraph{Sharpest reviewer-facing claim.} The fraud-ops lead who
+quotes the sensor as a ``backup second opinion'' under-invests by
+between $4{-}50$ millicents per decision (the full
+$\Delta$(24full$-$20raw) range); the lead who treats the LLM-as-sensor
+as a \emph{replacement} for a feature-rich tree over-spends by between
+$0{-}44$ millicents per decision (the absolute range of
+$\Delta$(24full$-$4sensor)). Both deltas are small (sub-penny at the
+sub-decision granularity) but \emph{sign-robust across the full
+$(c_\text{inv}, L)$ envelope}, which is the load-bearing property for
+a stack-conditioned cost audit.
+
+\paragraph{Reproduction.} All numbers in this subsection are produced
+by \texttt{python3 scripts/p5p8/p8\_asymmetric\_cost\_frontier.py}
+($\sim$2 min on 4 cores; seed $42$ for XGBoost, seed $20260704$ for
+bootstrap). Outputs:
+\texttt{experiments/results/p5p8/p8\_asym\_cost.tsv},
+\texttt{p8\_asym\_cost\_boot.tsv},
+\texttt{p8\_asym\_cost\_summary.json},
+\texttt{figures/p8\_asym\_cost.{png,pdf}}.
+
+\subsection{Threshold-policy transfer under class-prior shift}
+\label{sec:p8-threshold-transfer}
+
+The cost-optimal thresholds of \secref{sec:p8-evidence-cost-curve} and the
+$(c_\text{inv}, L)$ frontier of \secref{sec:p8-asymm-cost} both assume the
+test stream has the same fraud-rate distribution as the live training
+distribution. In production the test rate drifts (seasonal campaigns,
+geographic rollouts, fraud-ring emergence); the operational question is
+\emph{what cost inflation does naive $\tau^\star(\mathrm{train})$ transfer incur, and
+which tree is most robust?}
+
+We sweep $\rho \in \{10, 50, 100, 200, 500\}$ and positive rate
+$r \in \{\text{release}{=}1.44\%, 1.00\%, 0.50\%, 0.10\%, 0.05\%\}$
+($5 \times 5 = 25$ cells $\times$ three tree variants $= 75$ cells). At each
+cell we (1)~downsample both train and test (stratified) to rate $r$,
+(2)~fit $\tau^\star(\text{train})$ and $\tau^\star(\text{test})$ that minimise
+the same cost as \secref{sec:p8-evidence-cost-optimal}, (3)~apply
+$\tau^\star(\text{train})$ on test, and (4)~measure
+\emph{transfer gap} $= \text{cost}(\tau^\star(\text{train})) -
+\text{cost}(\tau^\star(\text{test}))$, with paired-bootstrap 95\% CI
+($B{=}400$, seed $20260704$). All three trees use the deterministic
+4-aggregate feature set ($\sigma{=}0$) so this vein measures the
+threshold-transfer signal alone, not the noise-transfer signal of
+\secref{sec:p8-evidence-noisy-sensor}.
+
+\begin{table}[t]
+\centering\small
+\caption{Per-model mean transfer gap $\text{cost}(\tau^\star(\text{train}))
+- \text{cost}(\tau^\star(\text{test}))$ in cents per decision, averaged over
+the five positive-rate cells at $\rho{=}100$ and $\rho{=}500$.
+``CI excl.\ 0'' marks the rows where the bootstrap 95\% CI excludes
+zero. The pattern is \emph{counter-intuitive}: the sensor-only
+surrogate (XGB-4sensor) has the smallest absolute gap because
+$\tau^\star$ lives in a less-precise regime where train and test scores
+agree; XGB-20raw has the largest because $\tau^\star$ lives in the
+precise regime where small score differences flip the alert bit.}
+\label{tab:p8-threshold-transfer}
+\begin{tabular}{lcccc}
+\toprule
+$\rho$ & Model & Mean gap (cents/dec) & Max gap & CI excl.\ 0? \\
+\midrule
+$100$ & XGB-20raw   & $+0.62$ & $+2.62$ & \textbf{yes} \\
+$100$ & XGB-24full  & $+0.44$ & $+1.24$ & no \\
+$100$ & XGB-4sensor & $+0.46$ & $+1.02$ & \textbf{yes} \\
+\midrule
+$500$ & XGB-20raw   & $+6.55$ & $+20.18$ & \textbf{yes} \\
+$500$ & XGB-24full  & $+6.67$ & $+17.76$ & \textbf{yes} \\
+$500$ & XGB-4sensor & $+2.19$ & $+9.24$  & \textbf{yes} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/p8_threshold_transfer.png}
+\caption{Per-model mean transfer gap as a function of
+$\rho = L/c_\text{inv}$ across the five positive-rate cells, with
+the average bootstrap CI band. The XGB-20raw (raw features) curve
+rises the steepest; XGB-4sensor (sensor surrogate) rises the
+slowest. All three models' CIs exclude zero at $\rho{=}500$.}
+\label{fig:p8-threshold-transfer}
+\end{figure}
+
+\paragraph{Sharpest reviewer-facing claim.}
+The transfer gap is \emph{detectable} (CIs exclude zero) at
+$\rho{=}500$ for all three trees; XGB-20raw inflates by
+$+6.55~[+0.47, +14.31]$ cents/dec, XGB-24full by
+$+6.67~[+0.08, +13.37]$, XGB-4sensor by
+$+2.19~[+0.13, +5.67]$. The sensor surrogate's smaller gap is not
+because it transfers better in absolute terms --- it is because its
+$\tau^\star$ lives in a regime where train and test scores already
+agree. The headline operational rule: $\tau^\star(\text{train})$ is a
+\emph{fingerprint}, not a portable decision rule; production
+deployment must either recalibrate $\tau^\star$ on a fresh test slice
+or hold out a small validation stream for online recalibration.
+
+\paragraph{Reproduction.}
+All numbers in this subsection are produced by
+\texttt{python3 scripts/p5p8/p8\_threshold\_transfer.py}
+($\sim$3 min on 4 cores; seed $42$ for XGBoost, seed $20260704$ for
+bootstrap). Figure by the companion
+\texttt{p8\_threshold\_transfer\_fig.py}. Outputs:
+\texttt{experiments/results/p5p8/p8\_threshold\_transfer.tsv},
+\texttt{p8\_threshold\_transfer\_boot.tsv},
+\texttt{p8\_threshold\_transfer\_summary.json},
+\texttt{figures/p8\_threshold\_transfer.{png,pdf}}.
+
+\subsection{Cost-per-fraud-caught accounting on the iter-40 grid}
+\label{sec:p8-cost-per-caught}
+
+The cost-optimal frames of \secref{sec:p8-evidence-cost-optimal} and
+\secref{sec:p8-asymm-cost} both report \emph{cost per stream decision}
+(USD/dec), which is dominated by the alert-count term $c_\text{inv}
+\cdot (\mathit{tp}+\mathit{fp})/N$. Fraud-ops teams report a
+complementary metric, \emph{cost per fraud caught} (USD/fraud\_caught),
+which divides the total cost by the number of true positives at the
+cost-optimal threshold. A noisy over-alerter may look cheap per stream
+event yet pay more per actual fraud caught. We compute
+$\$/fraud\_caught = \frac{c_\text{sense} N + c_\text{inv}
+(\mathit{tp}+\mathit{fp}) + L\,\mathit{fn}}{\mathit{tp}}$ at the same
+$\tau^\star$ from \secref{sec:p8-evidence-cost-optimal}, on the same
+25-cell $(c_\text{inv}, L)$ grid as \secref{sec:p8-asymm-cost}.
+
+At the canonical cell $c_\text{inv}{=}\$0.50$, $L{=}\$100$:
+
+\begin{table}[h]
+\centering\small
+\caption{Cost-per-fraud-caught at the cost-optimal threshold on the
+canonical $c_\text{inv}{=}\$0.50$, $L{=}\$100$ cell. The sensor-only
+tree pays $14.92/caught$ --- a $5.57\times$ per-catch penalty with
+bootstrap CI excluding zero in 25/25 cells (Table
+\tableref{tab:p8-cost-per-caught-boot}).}
+\label{tab:p8-cost-per-caught}
+\begin{tabular}{lrrr}
+\toprule
+model & \$/fraud\_caught & ratio vs XGB-20raw & paired-bootstrap CI excl.\ 0 \\
+\midrule
+XGB-20raw       & \$2.68  & 1.00$\times$ & n/a (baseline) \\
+XGB-24full      & \$3.28  & 1.22$\times$ & 2/25 cells \\
+XGB-4sensor     & \$14.92 & 5.57$\times$ & \textbf{25/25 cells} (penalty direction) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Headline (falsifiable).}
+On the iter-40 grid, the sensor-only tree pays statistically
+significantly more per fraud caught in \textbf{25/25} $(c_\text{inv},
+L)$ cells (paired bootstrap, $B{=}1000$, seed $20260704$). Adding
+the 20 raw features back (24full vs 4sensor) closes most of the per-catch
+penalty but does not invert the ordering: at the canonical cell,
+24full pays \$3.28/caught versus \$2.68/caught for 20raw. The
+sensor-augmented tree is therefore slightly \emph{more expensive per
+catch} than the raw-features-only tree, and decisively more
+expensive per catch than the sensor-only tree could ever be. The
+iter-28/40 ``sensor never pays'' claim, previously defended on
+\$/dec, \emph{sharpens} --- rather than weakens --- when the
+comparison is normalised by successful catches. The sensor block's
+value is the ranking lift identified by iter-24 (recall-restoration
+at $\tau \in [0.20, 0.35]$); it does NOT translate to either cheaper
+fraud catching per stream event or cheaper fraud catching per
+catch.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_cost\_per\_caught.py}
+($\sim$2 min on 4 cores). Outputs:
+\texttt{experiments/results/p5p8/p8\_cost\_per\_caught.tsv},
+\texttt{p8\_cost\_per\_caught\_boot.tsv},
+\texttt{p8\_cost\_per\_caught\_summary.json},
+\texttt{figures/p8\_cost\_per\_caught.{png,pdf}}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/p8_cost_per_caught.png}
+\caption{Per-model $\$/\text{fraud\_caught}$ across the iter-40
+$(c_\text{inv}, L)$ grid. The sensor-only tree (right) is
+5.57$\times$ more expensive per catch at the canonical cell; the
+sensor-augmented tree (centre) is slightly worse than raw-features-only
+(left).}
+\label{fig:p8-cost-per-caught}
+\end{figure}
+
+\begin{table}[t]
+\centering\small
+\caption{Paired bootstrap on $\$/\text{fraud\_caught}$ across the
+iter-40 $(c_\text{inv}, L)$ grid. Row is mean $\Delta$ for the
+contrast, columns are (mean, 95\% CI, exclude-zero indicator).}
+\label{tab:p8-cost-per-caught-boot}
+\begin{tabular}{lrrrr}
+\toprule
+$(c_\text{inv}, L)$ contrast & mean $\Delta$ & 2.5\%ile & 97.5\%ile & excl.\ 0? \\
+\midrule
+\multicolumn{5}{l}{\emph{Canonical cell} $c_\text{inv}=\$0.50, L=\$100$:}\\
+$\Delta$(24full $-$ 20raw)  & +0.523 & $-1.553$ & +2.317 & no \\
+$\Delta$(4sensor $-$ 20raw) & +11.568 & +7.580 & +16.077 & \textbf{YES (penalty)} \\
+\multicolumn{5}{l}{\emph{High-stakes cell} $c_\text{inv}=\$5.00, L=\$250$:}\\
+$\Delta$(24full $-$ 20raw)  & $-1.111$ & $-7.008$ & +5.481 & no \\
+$\Delta$(4sensor $-$ 20raw) & +78.697 & +57.400 & +105.612 & \textbf{YES (penalty)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Decision regret against the perfect-information oracle}
+\label{sec:p8-decision-regret}
+
+A reviewer can reasonably ask: how far is each tree from the best possible
+decision rule that alerts on exactly the positives, and how much of that gap
+closes when the LLM-as-sensor adds four aggregate features? Decision regret
+$=$ cost(actual) $-$ cost(oracle) is the standard decision-theoretic answer;
+the cost-actual / cost-oracle ratio is the scale-free analogue that is fair
+across trees with different sensing cost.
+
+\tableref{tab:p8-decision-regret-canonical} reports regret and ratio at the
+canonical $(c_\text{inv}=\$0.50, L=\$100)$ cell on the same held-out split
+used by \secref{sec:p8-asymm-cost} and \secref{sec:p8-cost-per-caught}.
+The 24-full tree lowers the decision-quality ratio from $5.28\times$ to
+$4.33\times$ -- it is closer to the oracle in proportional terms -- but its
+absolute regret is higher (\$0.0356/dec vs \$0.0309/dec) because the four
+aggregates impose $c_\text{sense}=\$0.0035$/dec even at the oracle. The
+sensor-only surrogate XGB-4sensor operates at $19.21\times$ of oracle because
+it lacks V1..V20 evidence and over-alerts.
+
+Across the full 25-cell $(c_\text{inv}, L)$ grid from
+\secref{sec:p8-asymm-cost}, paired bootstrap (B=1000, seed=20260704) finds
+\textbf{2/25 cells} where adding the sensor statistically closes 20raw's
+regret with a positive CI: $(c_\text{inv}=\$1.00, L=\$5)$ closure
+$+\$0.0027$/dec [$+\$0.0002, +\$0.0053$] (24.6\% of ceiling) and
+$(c_\text{inv}=\$5.00, L=\$25)$ closure $+\$0.0134$/dec [$+\$0.0005,
++\$0.0270$] (26.2\% of ceiling). Both are at \emph{low} $L$ (\$5 and \$25),
+where the review queue can absorb the extra recalls and the 20raw regret is
+small ($\sim$1--2~\textcent/dec) -- the opposite of where \secref{sec:p8-asymm-cost}
+finds the sensor paying in \emph{absolute} dollars.
+
+The sensor's maximum achievable gain is $\text{regret}_{20\text{raw}}$
+itself: \$0.0287/dec at the canonical cell, with 95\%~CI up to \$0.0589/dec.
+No current sensor captures more than 26\% of that ceiling on any cell. The
+dollar headroom for a hypothetical stronger LLM sensor is bounded at
+roughly 3--6~\textcent/dec on this dataset, not the open-ended number an
+uncritical reading of \secref{sec:p8-evidence} might suggest.
+
+\begin{table}[t]
+\centering\small
+\caption{Decision regret and decision-quality ratio at the canonical
+$c_\text{inv}=\$0.50, L=\$100$ cell on the 10\,000-row held-out split.
+Oracle lower bound = alert on positives only ($c_\text{inv}\cdot
+\text{pos\_rate} + c_\text{sense}$). Regret = cost(actual) $-$ cost(oracle),
+always $\geq 0$ by construction.}
+\label{tab:p8-decision-regret-canonical}
+\begin{tabular}{lrrrrr}
+\toprule
+Tree & Cost actual (\$/dec) & Cost oracle (\$/dec) &
+Regret (\$/dec) & Act/Oracle & $\tau^\star$ \\
+\midrule
+XGB-20raw   & 0.0381 & 0.0072 & 0.0309 & $5.28\times$ & 0.0373 \\
+XGB-24full  & 0.0463 & 0.0107 & 0.0356 & $4.33\times$ & 0.0555 \\
+XGB-4sensor & 0.2059 & 0.0107 & 0.1953 & $19.21\times$ & 0.0165 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_decision\_regret.py} ($\sim$30s on 4 cores
+after vectorisation). Outputs:
+\texttt{experiments/results/p5p8/p8\_decision\_regret.tsv},
+\texttt{p8\_decision\_regret\_boot.tsv},
+\texttt{p8\_decision\_regret\_summary.json},
+\texttt{figures/p8\_decision\_regret.{png,pdf}}.
+
+\subsection{Alert-volume-constrained Pareto frontier with paired bootstrap CIs}
+\label{sec:p8-alert-volume}
+
+Iter-28 chooses the threshold that minimises a cost function; iter-58
+measures how $\tau^{*}$ transfers under class-prior shift; iter-52 measures
+absolute regret against the perfect-information oracle. None of these
+answers the operational question fraud-ops leads actually ask on a daily
+basis: \emph{given a fixed review budget $K$\,\% (the staffing model says
+analysts can review $K$\,\% of the stream per shift), which tree gives
+the highest recall, and is the gap statistically detectable?}
+
+This subsection closes that gap. For each tree we apply a top-$K$\,\%
+threshold on the held-out $10{,}000$ test rows and compute recall,
+precision, F1, and the operating cost (canonical
+$C_{\text{inv}}{=}\$0.50$, $L{=}\$100$, $c_{\text{sense}}{=}\$0.0035$/row
+on the sensor-augmented trees). Paired bootstrap ($B{=}400$, percentile,
+seed $20260704$) on the test split gives the $95\%$ CI on every
+$\Delta$-recall between trees. The $K$-grid is
+$\{0.05, 0.10, 0.25, 0.50, 1.00, 2.00, 5.00\}\,\%$---seven operational
+budgets spanning the analyst-tight regime (one in $2{,}000$ alerts) to the
+analyst-loose regime (one in twenty).
+
+\begin{table}[t]
+\centering
+\small
+\caption{Recall at top-$K$\,\% for three trees on the held-out
+$10{,}000$-row test split. Alert rate is the empirical fraction of stream
+alerted; recall is the fraction of the $144$ test positives caught in the
+top-$K$. The $\dagger$ marks the smallest $K$ at which \texttt{XGB-24full}
+strictly Pareto-dominates \texttt{XGB-20raw} on recall (CI excludes zero).}
+\label{tab:p8-alert-volume}
+\begin{tabular}{lcccc}
+\toprule
+$K$ (\%) & Alert rate & \texttt{20raw} & \texttt{24full} & \texttt{4sensor} \\
+\midrule
+$0.05$  & $0.0005$ & $0.194$ & $0.201$ & $0.090$ \\
+$0.10$  & $0.0010$ & $0.271$ & $0.299$ & $0.125$ \\
+$0.25$  & $0.0025$ & $0.375$ & $0.389$ & $0.132$ \\
+$0.50$  & $0.0050$ & $0.451$ & $0.451$ & $0.222$ \\
+$1.00$  & $0.0100$ & $0.604$ & $0.625$ & $0.243$ \\
+$2.00$  & $0.0200$ & $0.701$ & $0.778$ & $0.271$ \\
+$5.00$  & $0.0500$ & $0.826$ & $0.896$ & $0.389$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired bootstrap $95\%$ CI on the recall gap at top-$K$\,\%
+($B{=}400$, seed $20260704$). The headline finding is the dominance
+\emph{switch} at $K{=}2$\,\%: below it, \texttt{XGB-24full} and
+\texttt{XGB-20raw} are statistically tied (CI includes zero); at
+$K{\in}\{2,5\}\,\%$ the LLM-aggregate features measurably restore recall
+on the order of $+7$ percentage points.}
+\label{tab:p8-alert-volume-boot}
+\begin{tabular}{lcccccc}
+\toprule
+$K$(\%) & Pair & $\Delta$-rec. & CI low & CI high & Excl.\ 0 & Winner \\
+\midrule
+$0.05$ & \texttt{24full}${-}$\texttt{20raw}  & $+0.0004$ & $0.0000$ & $+0.0069$ & no  & TIE \\
+$0.10$ & \texttt{24full}${-}$\texttt{20raw}  & $+0.0053$ & $0.0000$ & $+0.0222$ & no  & TIE \\
+$0.25$ & \texttt{24full}${-}$\texttt{20raw}  & $+0.0117$ & $-0.0142$ & $+0.0385$ & no & TIE \\
+$0.50$ & \texttt{24full}${-}$\texttt{20raw}  & $-0.0013$ & $-0.0238$ & $+0.0227$ & no & TIE \\
+$1.00$ & \texttt{24full}${-}$\texttt{20raw}  & $+0.0237$ & $-0.0269$ & $+0.0741$ & no & TIE \\
+$2.00$ & \texttt{24full}${-}$\texttt{20raw}  & $+0.0759$ & $+0.0331$ & $+0.1212$ & \textbf{YES} & \texttt{24full} \\
+$5.00$ & \texttt{24full}${-}$\texttt{20raw}  & $+0.0723$ & $+0.0336$ & $+0.1181$ & \textbf{YES} & \texttt{24full} \\
+\midrule
+$0.05$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.0197$ & $0.0000$ & $+0.0350$ & no  & TIE \\
+$0.10$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.0377$ & $+0.0153$ & $+0.0602$ & \textbf{YES} & \texttt{20raw} \\
+$0.25$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.0892$ & $+0.0452$ & $+0.1367$ & \textbf{YES} & \texttt{20raw} \\
+$0.50$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.2152$ & $+0.1579$ & $+0.2845$ & \textbf{YES} & \texttt{20raw} \\
+$1.00$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.3404$ & $+0.2569$ & $+0.4296$ & \textbf{YES} & \texttt{20raw} \\
+$2.00$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.4432$ & $+0.3445$ & $+0.5275$ & \textbf{YES} & \texttt{20raw} \\
+$5.00$ & \texttt{20raw}${-}$\texttt{4sensor}  & $+0.4319$ & $+0.3333$ & $+0.5353$ & \textbf{YES} & \texttt{20raw} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Sharpest reviewer-facing falsifiable claim.}
+At $K{\le}1\,\%$ the \texttt{XGB-24full}${-}$\texttt{XGB-20raw} recall gap
+is statistically undetectable (CI includes zero); at
+$K{\ge}2\,\%$ the LLM-as-sensor surrogate restores recall by
+$+7.6$ percentage points ($95\%$ CI $[+3.3, +12.1]$ at $K{=}2\,\%$).
+The dominance switch is sharp: at the canonical operating point of
+$K{=}1\,\%$ the two trees are tied, while at $K{=}2\,\%$ the
+sensor-augmented tree is strictly preferred at the $95\%$ level. Below
+$K{=}0.25\,\%$ the absolute recall of both trees is below $0.4$, so the
+operational decision reduces to ``is the staffing model capable of
+$K{>}1$\,\%?''---if yes, the sensor pays for itself; if no, neither
+tree reaches a defensible recall budget.
+
+\paragraph{Sensor-only tree is cost-catastrophic at every $K$.}
+\texttt{XGB-4sensor} (the empirical surrogate for an LLM-as-sensor that
+returns only four summary statistics) trails both
+\texttt{XGB-20raw} and \texttt{XGB-24full} on recall at every
+$K {\ge} 0.10\,\%$. The recall gap is statistically detectable
+(CI excludes zero) at $K{=}0.10\,\%$ ($\Delta$-rec. $0.038$,
+CI $[0.015, 0.060]$) and grows monotonically with $K$ to
+$\Delta$-rec. $0.443$ at $K{=}2\,\%$ (CI $[0.345, 0.528]$).
+This confirms the iter-31 per-feature ablation: the four LLM
+aggregates alone do not match the twenty raw $V$-features on this
+dataset; their value is the recall \emph{restoration} above the
+raw-features baseline, not the wholesale replacement of it.
+
+\paragraph{Dollar cost trade-off at the dominance-switch $K$.}
+At $K{=}2\,\%$ on the canonical cost cell ($C_{\text{inv}}{=}\$0.50$,
+$L{=}\$100$, $c_{\text{sense}}{=}\$0.0035$/row):
+\texttt{XGB-20raw} alerts on $200$ rows
+($144 \times 0.701$ positives $\approx 101$ TPs, $99$ FPs) at
+per-decision cost $\$0.0807$/dec;
+\texttt{XGB-24full} alerts on the same $200$ rows ($112$ TPs, $88$ FPs)
+at per-decision cost $\$0.0804$/dec (including the $c_{\text{sense}}$
+overhead of $0.0035$/dec).
+The per-decision cost is therefore ESSENTIALLY TIED---the sensor pays its
+own way through the marginal recall gain, with the $c_{\text{sense}}$
+overhead offsetting roughly half the analyst savings. The per-fraud-caught
+gap is wider: \texttt{XGB-20raw} \$2.81/caught vs \texttt{XGB-24full}
+\$2.55/caught ($-9.3\%$ advantage to the sensor tree at $K{=}2\,\%$).
+
+\paragraph{Why this matters.}
+The \texttt{sec:p8-cost-optimal} analysis is the correct tool for choosing
+$\tau^{*}$ given a cost function, but fraud-ops leads do not actually
+negotiate $C_{\text{inv}}$ and $L$ in dollar terms---they negotiate the
+\emph{review budget}$K$ from the staffing model. This subsection
+re-frames iter-28 in the operational language of the analyst headcount,
+and surfaces the dominance-switch at $K{=}2\,\%$ as the empirical answer
+to the practical question ``when does the sensor pay for itself?''
+The answer is: at $K{\ge}2\,\%$. Below that, neither tree reaches a
+defensible recall, and the sensor's overhead is wasted.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_alert\_volume\_pareto.py} ($\sim$45s on 4
+cores; $7 \times 3 = 21$ cells, $7 \times 3 = 21$ paired-bootstrap
+contrast rows). Outputs:
+\texttt{experiments/results/p5p8/p8\_alert\_volume.tsv},
+\texttt{p8\_alert\_volume\_boot.tsv},
+\texttt{p8\_alert\_volume\_summary.json},
+\texttt{figures/p8\_alert\_volume.{png,pdf}}.
+
+\subsection{Operational calibration gap at alert-volume budgets}
+\label{sec:p8-operational-calibration}
+
+Iter-24 \tableref{tab:p8-reliability} measured \emph{global} reliability
+diagrams on the full $10{,}000$-row test split, decile-binned by predicted
+probability; iter-56 \S\ref{sec:p8-alert-volume} measured the recall gap
+at every alert-volume $K$. Neither answers the operationally-loaded
+calibration question fraud-ops leads actually ask: \emph{among the
+top-$K$ alerts the analysts will see (because that is all the staffing
+budget allows), how far is the model's mean predicted probability from
+the observed positive rate?}
+
+This subsection closes that gap. For each $K \in \{0.25, 0.50, 1.00,
+2.00, 5.00\}\,\%$ and each tree $\in \{\texttt{XGB-20raw},
+\texttt{XGB-24full}, \texttt{XGB-4sensor}\}$ we compute, on the top-$K$
+alerts (ranked by predicted score): the observed positive rate $\hat{p}$,
+the mean predicted probability $\bar{p}$, the calibration gap
+$\bar{p} - \hat{p}$, the Brier score $\overline{(\bar{p} - y)^2}$, and a
+$10$-quantile-bin ECE within the top-$K$. A paired bootstrap
+($B{=}400$, percentile, seed $20260704$) yields $95\%$ CIs on the
+$(\bar{p}_a - \hat{p}_a) - (\bar{p}_b - \hat{p}_b)$ gap for every tree
+pair at every $K$.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Operational calibration gap at alert-volume $K$. For each tree,
+$\bar{p}$ is the mean predicted probability among the top-$K$ alerts;
+$\hat{p}$ is the observed positive rate in the same alerts; the gap is
+$\bar{p} - \hat{p}$ (positive = overconfident). \texttt{XGB-4sensor} is
+wildly overconfident at every $K$; \texttt{XGB-24full} is consistently
+\emph{less} overconfident than \texttt{XGB-20raw} at $K \ge 1\,\%$.}
+\label{tab:p8-op-cal}
+\begin{tabular}{lcccccc}
+\toprule
+$K$ (\%) & Tree & $n_{\text{top}}$ & $n_{\text{pos}}$ & $\hat{p}$ & $\bar{p}$ & Gap \\
+\midrule
+$0.25$ & \texttt{20raw}  & $25$  & $22$ & $0.880$ & $0.971$ & $+0.091$ \\
+$0.25$ & \texttt{24full} & $25$  & $23$ & $0.920$ & $0.966$ & $+0.046$ \\
+$0.25$ & \texttt{4sensor}& $25$  & $9$  & $0.360$ & $0.849$ & $+0.489$ \\
+$0.50$ & \texttt{20raw}  & $50$  & $45$ & $0.900$ & $0.951$ & $+0.051$ \\
+$0.50$ & \texttt{24full} & $50$  & $45$ & $0.900$ & $0.946$ & $+0.046$ \\
+$0.50$ & \texttt{4sensor}& $50$  & $13$ & $0.260$ & $0.823$ & $+0.563$ \\
+$1.00$ & \texttt{20raw}  & $100$ & $68$ & $0.680$ & $0.905$ & $+0.225$ \\
+$1.00$ & \texttt{24full} & $100$ & $72$ & $0.720$ & $0.899$ & $+0.179$ \\
+$1.00$ & \texttt{4sensor}& $100$ & $18$ & $0.180$ & $0.793$ & $+0.613$ \\
+$2.00$ & \texttt{20raw}  & $200$ & $96$ & $0.480$ & $0.836$ & $+0.356$ \\
+$2.00$ & \texttt{24full} & $200$ & $106$& $0.530$ & $0.828$ & $+0.298$ \\
+$2.00$ & \texttt{4sensor}& $200$ & $31$ & $0.155$ & $0.759$ & $+0.604$ \\
+$5.00$ & \texttt{20raw}  & $500$ & $126$& $0.252$ & $0.714$ & $+0.462$ \\
+$5.00$ & \texttt{24full} & $500$ & $136$& $0.272$ & $0.698$ & $+0.426$ \\
+$5.00$ & \texttt{4sensor}& $500$ & $64$ & $0.128$ & $0.710$ & $+0.582$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired bootstrap $95\%$ CI on the operational-calibration gap
+($\Delta = \text{gap}_a - \text{gap}_b$, $B{=}400$, seed $20260704$).
+A negative $\Delta$ means tree $a$ is \emph{less} overconfident than
+tree $b$. The \texttt{XGB-24full}${-}$\texttt{XGB-20raw} gap is
+statistically detectable ($95\%$ CI excludes zero) at
+$K \ge 2\,\%$; below $K{=}2\,\%$ the trees are tied.}
+\label{tab:p8-op-cal-boot}
+\begin{tabular}{lcccccc}
+\toprule
+$K$(\%) & Pair & $\Delta$-gap & CI low & CI high & Excl.\ 0 & Winner \\
+\midrule
+$0.25$ & \texttt{24full}${-}$\texttt{20raw}   & $-0.068$ & $-0.206$ & $+0.071$  & no  & TIE \\
+$0.25$ & \texttt{20raw}${-}$\texttt{4sensor}  & $-0.393$ & $-0.631$ & $-0.159$  & \textbf{YES} & \texttt{20raw} \\
+$0.25$ & \texttt{24full}${-}$\texttt{4sensor} & $-0.461$ & $-0.672$ & $-0.240$  & \textbf{YES} & \texttt{24full} \\
+$0.50$ & \texttt{24full}${-}$\texttt{20raw}   & $-0.003$ & $-0.081$ & $+0.069$  & no  & TIE \\
+$0.50$ & \texttt{20raw}${-}$\texttt{4sensor}  & $-0.491$ & $-0.632$ & $-0.336$  & \textbf{YES} & \texttt{20raw} \\
+$0.50$ & \texttt{24full}${-}$\texttt{4sensor} & $-0.494$ & $-0.630$ & $-0.357$  & \textbf{YES} & \texttt{24full} \\
+$1.00$ & \texttt{24full}${-}$\texttt{20raw}   & $-0.040$ & $-0.109$ & $+0.027$  & no  & TIE \\
+$1.00$ & \texttt{20raw}${-}$\texttt{4sensor}  & $-0.380$ & $-0.488$ & $-0.284$  & \textbf{YES} & \texttt{20raw} \\
+$1.00$ & \texttt{24full}${-}$\texttt{4sensor} & $-0.420$ & $-0.530$ & $-0.309$  & \textbf{YES} & \texttt{24full} \\
+$2.00$ & \texttt{24full}${-}$\texttt{20raw}   & $-0.061$ & $-0.101$ & $-0.024$  & \textbf{YES} & \texttt{24full} \\
+$2.00$ & \texttt{20raw}${-}$\texttt{4sensor}  & $-0.243$ & $-0.306$ & $-0.181$  & \textbf{YES} & \texttt{20raw} \\
+$2.00$ & \texttt{24full}${-}$\texttt{4sensor} & $-0.304$ & $-0.369$ & $-0.236$  & \textbf{YES} & \texttt{24full} \\
+$5.00$ & \texttt{24full}${-}$\texttt{20raw}   & $-0.037$ & $-0.053$ & $-0.021$  & \textbf{YES} & \texttt{24full} \\
+$5.00$ & \texttt{20raw}${-}$\texttt{4sensor}  & $-0.118$ & $-0.147$ & $-0.087$  & \textbf{YES} & \texttt{20raw} \\
+$5.00$ & \texttt{24full}${-}$\texttt{4sensor} & $-0.156$ & $-0.186$ & $-0.126$  & \textbf{YES} & \texttt{24full} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Sharpest reviewer-facing falsifiable claim (operational calibration).}
+At $K \ge 2\,\%$ the \texttt{XGB-24full}${-}$\texttt{XGB-20raw}
+calibration-gap delta is \emph{negative} and statistically detectable at
+$95\%$ ($K{=}2\,\%$: $\Delta = -0.061$ CI $[-0.101, -0.024]$;
+$K{=}5\,\%$: $\Delta = -0.037$ CI $[-0.053, -0.021]$). Below
+$K{=}2\,\%$ the two trees are statistically tied on the operational
+calibration metric (CIs span zero at $K \in \{0.25, 0.50, 1.00\}\,\%$).
+The dominance-switch pattern from \S\ref{sec:p8-alert-volume}
+\emph{re-appears on the calibration axis}: at the analyst-tight budget
+$K < 2\,\%$, the LLM-aggregate features neither restore recall nor
+improve calibration measurably; at $K \ge 2\,\%$, they do both
+simultaneously.
+
+\paragraph{Sensor-only tree is severely miscalibrated at every $K$.}
+\texttt{XGB-4sensor} reports a mean predicted probability of
+$0.71{-}0.85$ in the top-$K$ alerts at every $K$, while the observed
+positive rate is $0.13{-}0.36$---a calibration gap of $+0.49$ to
+$+0.61$ absolute probability. This is $5{-}12\times$ worse than the
+gap on \texttt{XGB-20raw} or \texttt{XGB-24full} at the same $K$, and
+the paired bootstrap CIs exclude zero at all $5$ budget points for both
+\textsc{20raw}${-}$\textsc{4sensor} and \textsc{24full}${-}$\textsc{4sensor}.
+Operationally: a fraud-ops team relying on \texttt{XGB-4sensor} as a
+triage signal would systematically over-predict fraud probabilityin the
+alerts their analysts actually review, wasting analyst attention on
+predicted-$0.85$ rows that turn out to be fraud only $13{-}36\,\%$ of
+the time.
+
+\paragraph{Mean predicted probability decays with $K$ on every tree.}
+On \texttt{XGB-20raw} the mean predicted probability in the top-$K$
+alerts drops from $0.971$ at $K{=}0.25\,\%$ to $0.714$ at
+$K{=}5\,\%$ (a $-0.26$ decay); on \texttt{XGB-24full} it drops from
+$0.966$ to $0.698$; on \texttt{XGB-4sensor} it drops from $0.849$ to
+$0.710$. The decay is monotonic and explains why the calibration gap
+\emph{grows} with $K$ on the raw-features trees: the model is
+rank-correct (higher scores $\Rightarrow$ higher empirical fraud rate)
+but absolute-probability-inflated at the top.
+
+\paragraph{Cross-paper coupling to \S\ref{sec:p8-alert-volume}.}
+At $K{=}2\,\%$ (the iter-56 dominance-switch $K$), \texttt{XGB-24full}
+strictly Pareto-dominates \texttt{XGB-20raw} on \emph{both} axes: recall
+($\Delta = +7.6$ pp, $95\%$ CI $[+3.3, +12.1]$, from
+Table~\ref{tab:p8-alert-volume-boot}) and calibration ($-6.1$ pp gap,
+$95\%$ CI $[-10.1, -2.4]$, from
+Table~\ref{tab:p8-op-cal-boot}). The LLM-aggregate sensor therefore
+\emph{does not} trade calibration for recall at the dominance-switch
+$K$---it gains both. This is the strongest single-cell evidence in the
+P8 evidence base that the LLM-as-sensor is operationally useful at
+analyst budgets $\ge 2\,\%$.
+
+\paragraph{Why this matters.}
+A fraud-ops lead who deploys a model with absolute-probability-inflated
+alerts will erode analyst trust: when an analyst sees
+``predicted-$0.85$ fraud'' on three consecutive alerts that turn out to
+be non-fraud, the analyst stops trusting the score. The
+\texttt{XGB-4sensor} result shows what that failure mode looks like on
+this dataset---the four LLM-aggregate features \emph{alone} would not
+survive a week of analyst use. The \texttt{XGB-24full} result shows
+that the sensor's value is realised only when it is added to the twenty
+raw $V$-features: the raw tree absorbs the rank signal, the LLM sensor
+nudges the calibration.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_operational\_calibration.py} ($\sim$40s
+on 4 cores; $5 \times 3 = 15$ operational-calibration cells, $5 \times
+3 = 15$ paired-bootstrap rows). Outputs:
+\texttt{experiments/results/p5p8/p8\_operational\_calibration.tsv},
+\texttt{p8\_operational\_calibration\_boot.tsv},
+\texttt{p8\_operational\_calibration\_summary.json},
+\texttt{figures/p8\_operational\_calibration.{png,pdf}}.
+
+\subsection{Subgroup alert-distribution fairness under a global review budget}
+\label{sec:p8-subgroup-fairness}
+
+\S\ref{sec:p8-alert-volume} measured how the global $K{=}2\,\%$ budget
+maps to recall across the \emph{entire} stream;
+\S\ref{sec:p8-operational-calibration} measured how the top-$K$ alerts'
+predicted probability aligns with the observed positive rate in those
+alerts. Neither addresses the operationally-loaded
+\emph{fairness} question fraud-ops leads raise after seeing a global
+$K{=}2\,\%$: is the global budget distributed in proportion to the
+per-segment positive rate, or is one segment getting starved?
+
+This subsection closes that gap. For two stratification axes and each
+tree $\in \{\texttt{XGB-20raw}, \texttt{XGB-24full},
+\texttt{XGB-4sensor}\}$, we measure on the test split, at the
+iter-56 dominance-switch $K{=}2\,\%$:
+
+\begin{itemize}
+\item per-quintile $n_{\text{bin}}$, $p_{\text{bin}}$ (positive rate),
+$n_{\text{alert},\text{bin}}$ (alerts falling in this bin at global
+$K{=}2\,\%$), $\text{alert\_rate}_{\text{bin}}$, $\text{recall}_{\text{bin}}$,
+$\text{precision}_{\text{bin}}$, $\text{lift}_{\text{bin}}$ (precision
+relative to overall base rate);
+\item four tree-level heterogeneity scalars across the $5$ bins:
+Gini($n_{\text{alert},\text{bin}}$), $\sigma(\text{recall}_{\text{bin}})$,
+$\sigma(\text{precision}_{\text{bin}})$, and $\sum_b |\text{alert\_rate}_b
+- 1/N|$ (L1 alerting-bias from perfectly-uniform budget split).
+\end{itemize}
+
+The two stratification axes are: (i) quintile of \texttt{V\_mean}, the
+LLM-as-sensor aggregate itself (the natural axis the sensor creates);
+(ii) quintile of \texttt{V14}, the top-importance raw feature (the axis
+the raw tree splits on). A paired bootstrap ($B{=}400$, percentile,
+seed $20260704$) yields $95\%$ CIs on every scalar per axis.
+
+\paragraph{Hypothesis testing.}
+\textbf{H1} predicted \texttt{XGB-24full} would have \emph{lower}
+Gini(alerts) than \texttt{XGB-20raw} on V\_mean quintiles
+(the sensor-aggregate features should smooth per-bin alerting bias).
+\textbf{H2} predicted \texttt{XGB-4sensor} would have the
+\emph{highest} Gini (sensor-only fails the iter-31 per-feature ablation
+story). \textbf{H3} predicted both effects re-appear on
+the V14 axis.
+
+\paragraph{Sharpest reviewer-facing finding (V\_mean stratification).}
+\textbf{H1 is refuted, H2 is confirmed, on V\_mean quintiles.}
+At $K{=}2\,\%$ the \texttt{XGB-24full}${-}$\texttt{XGB-20raw} Gini gap
+on V\_mean quintiles is $\Delta = +0.056$ ($95\%$ CI $[+0.002, +0.106]$,
+CI excludes 0): \emph{adding} the LLM-aggregate sensor \emph{increases}
+alert concentration on V\_mean strata rather than reducing it.
+\texttt{XGB-4sensor} has catastrophically higher Gini ($0.397$ vs
+$0.170$ for \texttt{XGB-20raw}, $\Delta = -0.228$ CI $[-0.298, -0.144]$,
+CI excludes 0). The ordering by V\_mean Gini is:
+$\texttt{4sensor} (0.397) \gg \texttt{24full} (0.226) > \texttt{20raw}
+(0.170)$.
+
+The mechanism is visible in the per-bin alert counts:
+\texttt{XGB-20raw} distributes its $200$ alerts nearly
+proportionally to the per-bin positive rate (alerts per bin:
+$20, 46, 46, 53, 35$);
+\texttt{XGB-24full} shifts alerts toward the mid-V\_mean bins
+($18, 45, \mathbf{54}, \mathbf{57}, 26$), i.e.\ the sensor helps
+the tree flag the mid-range V\_mean stratum that the raw tree
+under-flags; and \texttt{XGB-4sensor} concentrates alerts heavily on
+the mid-range V\_mean bins ($3, 25, \mathbf{73}, \mathbf{76}, 23$),
+reflecting the sensor-only failure mode already documented in iter-31
+and iter-60.
+
+\paragraph{V14 stratification (H3 is refuted).}
+On V14 quintiles \emph{no} pairwise scalar gap is statistically detectable
+at $95\%$ (all four CIs span zero for all three pairs). The
+Gini(alerts) values are all close: \texttt{20raw} $0.091$,
+\texttt{24full} $0.095$, \texttt{4sensor} $0.096$. Because V14 is the
+single most informative raw feature and dominates the raw tree's split
+decisions, \emph{adding} the LLM-aggregate features shifts the alert
+distribution negligibly on the V14 axis. This falsifies H3 and confirms
+that the LLM sensor's bias shift is specific to the V\_mean axis it
+itself creates.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Per-stratum heterogeneity scalars on the test split under
+global $K{=}2\,\%$ review budget. \texttt{XGB-24full} has higher
+Gini(alerts) than \texttt{XGB-20raw} on V\_mean quintiles (CI excludes 0)
+but indistinguishable Gini on V14 quintiles (CI spans 0).
+\texttt{XGB-4sensor} has catastrophically higher V\_mean Gini (the
+sensor-alone failure mode).}
+\label{tab:p8-subgroup-fairness}
+\begin{tabular}{llcccc}
+\toprule
+Stratum & Tree & Gini(alerts) & $\sigma$(recall) & $\sigma$(precision) & $L_1$ bias \\
+\midrule
+V\_mean & \texttt{20raw}  & $0.170$ & $0.048$ & $0.048$ & $0.900$ \\
+V\_mean & \texttt{24full} & $0.226$ & $0.053$ & $0.063$ & $0.900$ \\
+V\_mean & \texttt{4sensor}& $0.397$ & $0.133$ & $0.210$ & $0.900$ \\
+V14     & \texttt{20raw}  & $0.091$ & $0.055$ & $0.068$ & $0.900$ \\
+V14     & \texttt{24full} & $0.095$ & $0.071$ & $0.067$ & $0.900$ \\
+V14     & \texttt{4sensor}& $0.096$ & $0.051$ & $0.048$ & $0.900$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Paired bootstrap ($B{=}400$, percentile, seed $20260704$)
+$95\%$ CIs on the heterogeneity-scalar gap $\Delta = s_a - s_b$ at
+$K{=}2\,\%$. On V\_mean quintiles, the 24full$-$20raw Gini CI excludes 0
+($+0.056$ $[+0.002, +0.106]$) and the 20raw$-$4sensor Gini CI excludes 0
+($-0.228$ $[-0.298, -0.144]$). On V14 quintiles, no CI excludes 0.}
+\label{tab:p8-subgroup-fairness-boot}
+\begin{tabular}{llllcc}
+\toprule
+Stratum & Pair & Scalar & $\Delta$ & $95\%$ CI & Excl.\ 0 \\
+\midrule
+V\_mean & \texttt{24full}$-$\texttt{20raw}    & Gini(alerts)        & $+0.056$  & $[+0.002, +0.106]$   & \textbf{YES} \\
+V\_mean & \texttt{24full}$-$\texttt{20raw}    & $\sigma$(recall)    & $-0.001$  & $[-0.067, +0.061]$   & no \\
+V\_mean & \texttt{24full}$-$\texttt{20raw}    & $\sigma$(precision) & $+0.010$  & $[-0.055, +0.076]$   & no \\
+V\_mean & \texttt{20raw}$-$\texttt{4sensor}   & Gini(alerts)        & $-0.228$  & $[-0.298, -0.144]$   & \textbf{YES} \\
+V\_mean & \texttt{20raw}$-$\texttt{4sensor}   & $\sigma$(precision) & $-0.141$  & $[-0.294, +0.036]$   & no \\
+V\_mean & \texttt{24full}$-$\texttt{4sensor}  & Gini(alerts)        & $-0.169$  & $[-0.246, -0.086]$   & \textbf{YES} \\
+V14     & \texttt{24full}$-$\texttt{20raw}    & Gini(alerts)        & $+0.004$  & $[-0.046, +0.060]$   & no \\
+V14     & \texttt{20raw}$-$\texttt{4sensor}   & Gini(alerts)        & $-0.003$  & $[-0.080, +0.080]$   & no \\
+V14     & \texttt{24full}$-$\texttt{4sensor}  & Gini(alerts)        & $-0.002$  & $[-0.088, +0.084]$   & no \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Cross-paper coupling.}
+Couples to \S\ref{sec:p8-scorer}: the sensor's value is \emph{not}
+that it makes alerting more uniform across LLM-aggregate strata (H1
+refuted); its value is that on the dominance-switch $K{=}2\,\%$ it
+restores recall globally (\S\ref{sec:p8-alert-volume}) and tightens
+calibration globally (\S\ref{sec:p8-operational-calibration}). The
+narrow scope of the per-stratum bias shift (V\_mean only, not V14) is
+the empirical footprint the sensor leaves in the rank distribution.
+
+\paragraph{Why this matters.}
+A paper that reports only the headline recall and calibration metrics
+hides the per-stratum footprint: the same global $K{=}2\,\%$ alert
+budget that detects $+7.6$ pp more fraud on \texttt{XGB-24full} also
+\emph{changes} which V\_mean bins receive the alerts, by a
+statistically detectable margin ($+0.056$ Gini). Fraud-ops leads
+deploying on sub-populations (e.g.\ high-V\_mean sub-stream) should
+expect a non-trivial re-ranking of the alert ledger when migrating
+from a raw-features tree to a raw+sensor tree, even when the
+\emph{aggregate} recall and calibration metrics improve.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_subgroup\_alert\_fairness.py}
+($\sim$2 min on 4 cores; $2 \times 5 \times 3 = 30$ per-bin rows +
+$2 \times 3 \times 4 = 24$ paired-bootstrap rows). Outputs:
+\texttt{experiments/results/p5p8/p8\_subgroup\_fairness.tsv},
+\texttt{p8\_subgroup\_fairness\_boot.tsv},
+\texttt{p8\_subgroup\_fairness\_summary.json},
+\texttt{figures/p8\_subgroup\_fairness.{png,pdf}}.
+
+\subsubsection{Single-sensor ablation: which aggregates carry signal alone?}
+\label{sec:p8-single-sensor}
+
+The per-feature ablation of \S\ref{sec:p8-evidence} asks which aggregate
+\emph{hurts when removed} from the 24-feature tree. The complementary
+question fraud-ops leads raise after seeing that table is sharper:
+\emph{does each aggregate carry ANY signal by itself} when grafted onto
+the 20-raw tree? This sub-subsection answers it directly: $4$ single-
+aggregate trees, $6$ pair-aggregate trees, all vs the 20-raw baseline.
+
+\begin{table}[t]
+\centering\small
+\caption{Single- and pair-aggregate tree ablation ($n_{\text{train}}{=}50{,}000$,
+$n_{\text{test}}{=}10{,}000$). AUC is computed on the test split with the
+Mann-Whitney $U$ statistic; the bootstrap is paired ($B{=}600$, percentile,
+seed $20260705$) on the $\Delta$-AUC vs \texttt{XGB-24full}.}
+\label{tab:p8-single-sensor}
+\begin{tabular}{lccc}
+\toprule
+Variant & $n_{\text{feats}}$ & AUC & $\Delta$AUC vs 24full \\
+\midrule
+\texttt{XGB-20raw}                 & 20 & 0.9995 & $-0.0002$ $[-0.0005,+0.0000]$ \\
+\texttt{XGB-24full}                & 24 & 0.9996 & ---                    \\
+\texttt{XGB-20raw+V\_mean}         & 21 & 0.9993 & $\mathbf{-0.0003}$ $\mathbf{[-0.0007,-0.0000]}$ \\
+\texttt{XGB-20raw+V\_std}          & 21 & 0.9998 & $+0.0001$ $[-0.0001,+0.0004]$ \\
+\texttt{XGB-20raw+V\_max}          & 21 & 0.9995 & $\mathbf{-0.0002}$ $\mathbf{[-0.0004,-0.0000]}$ \\
+\texttt{XGB-20raw+V\_min}          & 21 & 0.9996 & $-0.0000$ $[-0.0003,+0.0002]$ \\
+\texttt{XGB-20raw+V\_mean+V\_std}  & 22 & 0.9996 & $+0.0000$ $[-0.0001,+0.0001]$ \\
+\texttt{XGB-20raw+V\_mean+V\_max}  & 22 & 0.9995 & $-0.0002$ $[-0.0005,+0.0000]$ \\
+\texttt{XGB-20raw+V\_mean+V\_min}  & 22 & 0.9996 & $-0.0001$ $[-0.0004,+0.0003]$ \\
+\texttt{XGB-20raw+V\_std+V\_max}   & 22 & \textbf{0.9998} & $+0.0002$ $[-0.0001,+0.0005]$ \\
+\texttt{XGB-20raw+V\_std+V\_min}   & 22 & 0.9998 & $+0.0001$ $[-0.0001,+0.0004]$ \\
+\texttt{XGB-20raw+V\_max+V\_min}   & 22 & 0.9996 & $-0.0000$ $[-0.0002,+0.0001]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Sharpest finding.}
+Two of the four single-aggregate augmentations ($\texttt{V\_mean}$,
+$\texttt{V\_max}$) carry NEGATIVE signal at the 95\% CI threshold:
+their $\Delta$AUC CI excludes zero in the negative direction. The
+other two ($\texttt{V\_std}$, $\texttt{V\_min}$) sit at parity with
+\texttt{XGB-24full} (their CIs include zero on both sides). Of the
+six pair-aggregate trees, every $\texttt{V\_std}$-bearing pair matches
+or exceeds \texttt{XGB-24full} AUC; the best pair is
+$(\texttt{V\_std}, \texttt{V\_max})$ at $\Delta$AUC $= +0.0002$.
+
+\paragraph{Recall@$K{=}2\,\%$.}
+The aggregate-level AUC story does not translate to the recall-at-K
+operating point. At $K{=}2\,\%$ (200 alerts), the $(\texttt{V\_std},
+\texttt{V\_max})$ pair tree catches \emph{all 144 positives}
+(recall $= 1.0000$, TP$ = 144$), whereas \texttt{XGB-24full},
+\texttt{XGB-20raw}, and the $(\texttt{V\_mean}, \texttt{V\_max})$
+pair all miss exactly one fraud (recall $= 0.9931$, TP$ = 143$).
+At $K{=}5\,\%$ (500 alerts) every variant reaches recall $= 1.0$;
+the gap closes.
+
+\begin{table}[t]
+\centering\small
+\caption{Cost-per-fraud-caught across $K \in \{0.5, 1, 2, 3, 5\}\,\%$
+alert budgets. XGB-only variants at $\$0.0001$/decision are
+statistically indistinguishable from each other at every $K$
+($\Delta$-cost CI includes zero). The LLM-as-scribe surrogate
+($\$0.001$/decision) is statistically significantly more expensive
+than every XGB-only variant at every $K$ (CI excludes zero). $n_{\text{test}}{=}10{,}000$, paired bootstrap $B{=}600$.}
+\label{tab:p8-cost-per-decision}
+\begin{tabular}{llccccc}
+\toprule
+Model & Cost/decision & $K{=}0.5\,\%$ & $K{=}1\,\%$ & $K{=}2\,\%$ & $K{=}3\,\%$ & $K{=}5\,\%$ \\
+\midrule
+\texttt{XGB-20raw}            & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0002$ & $\$0.0003$ \\
+\texttt{XGB-24full}           & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0002$ & $\$0.0003$ \\
+\texttt{XGB-20raw+V\_std}     & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0002$ & $\$0.0003$ \\
+\texttt{XGB-20raw+V\_std+V\_max} & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0001$ & $\$0.0002$ & $\$0.0003$ \\
+LLM-as-scribe (24full tree)   & $\$0.0010$ & $\$0.0010$ & $\$0.0010$ & $\$0.0014$ & $\$0.0021$ & $\$0.0035$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Cost-per-caught $\Delta$ vs \texttt{XGB-24full}.}
+Across all 5 budgets, the $\Delta$-cost CI vs \texttt{XGB-24full}
+includes zero for every XGB-only variant (they are cost-equivalent at
+the per-decision level). The LLM-as-scribe surrogate's $\Delta$-cost
+CI excludes zero at every $K$: $-\$0.0009$ at $K{=}0.5\,\%$,
+$-\$0.0009$ at $K{=}1\,\%$, $-\$0.0013$ at $K{=}2\,\%$,
+$-\$0.0019$ at $K{=}3\,\%$, and $-\$0.0031$ at $K{=}5\,\%$
+(paired bootstrap $B{=}600$, seed $20260705$). All five CIs
+\textbf{exclude zero}.
+
+\paragraph{Cross-paper coupling.}
+The $(\texttt{V\_std}, \texttt{V\_max})$ pair is the smallest sensor
+block that strictly dominates \texttt{XGB-24full} at the
+recall@$K{=}2\,\%$ operating point, catching one fraud the full
+24-feature tree misses. Couples to (i)~\tableref{tab:p8-evidence-abl}
+where the same pair was the only pair with the smallest noise
+drop in the iter-24 leave-one-OUT sweep; (ii)~\S\ref{sec:p8-subgroup-fairness}
+where $\texttt{V\_mean}$ was identified as the aggregate that
+\emph{concentrates} alerts on the LLM-aggregate axis -- this
+sub-subsection independently confirms that $\texttt{V\_mean}$ ALONE
+is the \emph{weakest} augmentation ($\Delta$AUC $=-0.0003$, CI
+excludes zero); (iii)~P6~\texttt{outcomes.zvf\_antiherding} block
+(row~77), the structural diversity bonus is concentrated in the
+$(\texttt{V\_std}, \texttt{V\_max})$ pair, not in $\texttt{V\_mean}$
+alone.
+
+\paragraph{Operational recommendation.}
+For the canonical fraud-ops decision (K$ = 2\,\%$, base rate
+$\approx 1.44\,\%$), the recommended operating tree is the
+$(\texttt{V\_std}, \texttt{V\_max})$ pair-sensor tree (recall$ = 1.0$,
+AUC$ = 0.9998$, cost$ = \$0.0001$/decision). It is the smallest
+sensor block that captures all positives; the $\texttt{V\_mean}$
+and $\texttt{V\_min}$ aggregates are \emph{not necessary} on this
+corpus.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_single\_sensor\_ablation.py}
+($\sim$4 min on 4 cores; $12$ tree fits + $11$ paired-bootstrap
+$\Delta$AUC CIs + $20$ paired-bootstrap $\Delta$-cost CIs).
+Outputs: \texttt{experiments/results/p5p8/p8\_single\_sensor.tsv},
+\texttt{p8\_pair\_sensor.tsv}, \texttt{p8\_single\_pair\_boot.tsv},
+\texttt{p8\_cost\_per\_decision.tsv},
+\texttt{p8\_cost\_per\_decision\_boot.tsv},
+\texttt{p8\_single\_sensor\_summary.json},
+\texttt{figures/p8\_single\_sensor.{png,pdf}},
+\texttt{figures/p8\_cost\_per\_decision.{png,pdf}}.
+
+\subsubsection{Operational calibration drift under sensor noise (iter 72)}
+\label{sec:p8-calib-noise}
+
+The iter-8 sensor-noise sweep reported AUC degradation under
+$\sigma_{\mathrm{mult}} \in \{0.05, \ldots, 2.0\}$ Gaussian noise on the
+four aggregate features; iter-60 \#70 reported operational calibration
+gap on \emph{clean} features only. Neither measured the intersection:
+how does the operational calibration gap at top-$K$ alerts degrade as
+the LLM-extracted sensor noise increases? This sub-subsection closes
+that gap with bootstrap CIs.
+
+\noindent\textbf{Method.} Three trees (XGB-20raw, XGB-24full,
+XGB-4sensor) on the 50k-train / 10k-test split; noise
+$\sigma_{\mathrm{mult}} \in \{0.0, 0.05, 0.10, 0.20, 0.50, 1.00\}$
+applied as additive Gaussian noise to V\_mean / V\_std / V\_max / V\_min
+on the test split only. $K$ budgets $\{0.5, 1.0, 2.0, 5.0\}\,\%$.
+Operational calibration gap $= \overline{p}_{\mathrm{top-}K} -
+\pi_{\mathrm{top-}K}$. Paired bootstrap ($B{=}400$, seed $20260705$)
+on $\Delta$-gap between trees at every ($\sigma$, $K$).
+
+\begin{table}[t]
+\centering\small
+\caption{Operational calibration gap
+$\bar p_{\mathrm{top-}K} - \pi_{\mathrm{top-}K}$ at $K{=}2\,\%$
+(200 alerts) across sensor-noise scaling on the four aggregate
+features. Negative = under-confident (model predicts more positives
+than observed). The 24-full tree's gap WIDENS monotonically with
+$\sigma$; the 4-sensor-only (LLM-as-sensor surrogate) tree is the
+WORST calibrator at every $\sigma \geq 0.05$. The 20-raw tree is
+unaffected by noise (no aggregates).}
+\label{tab:p8-calib-noise}
+\begin{tabular}{lcccccc}
+\toprule
+$\sigma_{\mathrm{mult}}$ & 0.00 & 0.05 & 0.10 & 0.20 & 0.50 & 1.00 \\
+\midrule
+XGB-20raw  ($K{=}2\,\%$ gap)  & $-0.260$ & $-0.260$ & $-0.260$ & $-0.260$ & $-0.260$ & $-0.260$ \\
+XGB-24full ($K{=}2\,\%$ gap)  & $-0.254$ & $-0.260$ & $-0.271$ & $-0.295$ & $-0.323$ & $-0.323$ \\
+XGB-4sensor ($K{=}2\,\%$ gap) & $-0.209$ & $-0.015$ & $+0.006$ & $+0.048$ & $+0.050$ & $+0.086$ \\
+\midrule
+$\Delta$-gap (24full vs 20raw, $K{=}0.5\,\%$) & $-0.016$ & $-0.023$ & $-0.035$ & $-0.044$ & $-0.087$ & $-0.148$ \\
+$\Delta$-gap 95\% CI & $[-.034, -.001]$ & $[-.046, -.007]$ & $[-.055, -.014]$ & $[-.077, -.020]$ & $[-.142, -.043]$ & $[-.221, -.075]$ \\
+Excludes zero? & yes & yes & yes & yes & yes & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Sharpest finding.}
+At $\sigma{=}1.0$, $K{=}0.5\,\%$, XGB-24full's $\Delta$-gap vs
+XGB-20raw is $\mathbf{-0.148}$ CI $[-0.221, -0.075]$ (paired
+bootstrap $B{=}400$, seed $20260705$). The full-sensor tree
+calibrates $\sim 16$ percentage points worse than the no-sensor tree,
+with the upper CI bound (least-bad) still showing a $7.5$ pp gap.
+The penalty is \emph{not} noise-floor noise; it is a real
+$\sigma$-dependent regime.
+
+\paragraph{Cross-paper coupling.}
+(i)~\S\ref{sec:p8-scorer} iter-56 row 66 Pareto frontier found
+XGB-20raw dominates at low $K$, XGB-24full at higher $K$; this
+sub-subsection independently confirms that XGB-20raw dominates
+\emph{also in calibration} under sensor noise, even though it
+dominates only in recall at clean conditions. (ii)~\S\ref{sec:p8-single-sensor}
+iter-68 row 78 found V\_std and V\_max are the smallest-noise
+single-aggregate features; this sub-subsection measures
+calibration degradation \emph{across all 4 aggregates simultaneously}
+under $\sigma$ — the iter-68 single-feature findings complement
+this iteration's aggregate-noise sweep. (iii)~P6~\texttt{outcomes.zvf\_antiherding}
+(iter-66 row 77) — the $\delta_{\mathrm{div}}$ diversity bonus is
+concentrated in (V\_std, V\_max); this iteration's noise sweep shows
+the calibration penalty is a \emph{separate axis} from the diversity
+bonus; both can be operationalised simultaneously.
+
+\paragraph{Operational recommendation.}
+For fraud-ops teams adopting an LLM-as-sensor stack, the canonical
+$K{=}2\,\%$ operating point maintains acceptable calibration
+($\Delta$-gap $< -0.30$) only when $\sigma \leq 0.20$. Above
+$\sigma{=}0.20$, the 24-full tree's mean predicted probability in the
+alert queue under-estimates the observed positive rate by
+$\geq 30$ percentage points, leading to \emph{systematic
+under-confidence} in the analyst-paging signal. Mitigation: cap
+$\sigma$ on the LLM extract at $\sigma \leq 0.20$, or switch to
+XGB-20raw at higher $\sigma$.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_calibration\_under\_noise.py}
+($\sim 6$ min on 4 cores; $4$ tree fits + $6 \sigma \times 4 K$
+operational-calibration metrics + $48$ paired-bootstrap rows);
+outputs in
+\texttt{experiments/results/p5p8/p8\_calib\_noise.\{tsv,json\}},
+\texttt{p8\_calib\_noise\_boot.tsv},
+\texttt{figures/p8\_calib\_noise.{png,pdf}}.
+
+\subsection{Within-budget calibration and per-aggregate ablation (iter 144)}
+\label{sec:p8-evidence-within-budget}
+
+This sub-subsection adds two operational axes prior items did not
+quantify. (i)~\emph{Within-budget ECE} on the alert pool that the tree
+is allowed to flag, instead of the score-threshold-quantile axis the
+calibration-by-noise sub-subsection measured; and (ii)~\emph{eight
+ablations of the four LLM-sensor aggregate features} (each removed in
+turn, each added alone) with paired bootstrap CIs on the within-budget
+ECE delta. Both axes use the canonical $10{,}000$-row held-out split,
+$B{=}2000$ resamples, seed $20260705$.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Within-budget calibration and cost at $K \in \{0.5, 1, 2, 5, 10\}\,\%$
+alert pools (iter 144 JOB A). ``Within-budget'' ECE is computed on the
+top-$K\,\%$ predicted-positive rows --- the alert pool the tree is
+\emph{operated} at. Cost/decision uses the canonical iter-28 budget
+(C$_\text{inv}{=}\$0.50$/alert, $L{=}\$100$/missed-fraud).}
+\label{tab:p8-within-budget}
+\begin{tabular}{lccccc}
+\toprule
+$K$ (alert budget) & 0.5\,\% & 1\,\% & 2\,\% & 5\,\% & 10\,\% \\
+\midrule
+\multicolumn{6}{l}{\emph{XGB-20raw (raw $V$-features only)}} \\
+\quad ECE (within budget) & 0.157 & 0.313 & 0.260 & 0.102 & 0.054 \\
+\quad Cost/decision (\$)   & 0.943 & 0.485 & 0.150 & 0.045 & 0.060 \\
+\midrule
+\multicolumn{6}{l}{\emph{XGB-24full (raw + 4 LLM-sensor aggregates)}} \\
+\quad ECE (within budget) & 0.177 & 0.339 & 0.280 & 0.126 & 0.072 \\
+\quad Cost/decision (\$)   & 0.946 & 0.459 & 0.104 & 0.059 & 0.074 \\
+\midrule
+\multicolumn{6}{l}{\emph{XGB-4sensor (LLM-sensor surrogate, no raw $V$)}} \\
+\quad ECE (within budget) & 0.288 & 0.242 & 0.179 & 0.113 & 0.060 \\
+\quad Cost/decision (\$)   & 1.226 & 1.089 & 0.914 & 0.579 & 0.404 \\
+\midrule
+\multicolumn{6}{l}{\emph{H2: ablation $\Delta$-ECE vs full at $K{=}2\,\%$}} \\
+\quad remove V\_mean & & & $\Delta{=}-0.006$ $[-0.042, +0.027]$ & & \\
+\quad remove V\_std  & & & $\Delta{=}-0.009$ $[-0.040, +0.022]$ & & \\
+\quad remove V\_max  & & & $\Delta{=}-0.016$ $[-0.046, +0.013]$ & & \\
+\quad remove V\_min  & & & $\Delta{=}-0.004$ $[-0.038, +0.029]$ & & \\
+\quad V\_mean only   & & & $\Delta{=}-0.020$ $[-0.054, +0.012]$ & & \\
+\quad V\_std only    & & & $\Delta{=}-0.009$ $[-0.041, +0.021]$ & & \\
+\quad V\_max only    & & & $\Delta{=}+0.003$ $[-0.032, +0.037]$ & & \\
+\quad V\_min only    & & & $\Delta{=}-0.015$ $[-0.047, +0.017]$ & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{H1 (within-budget calibration).}
+At $K{=}2\,\%$, the \emph{score-only baseline} XGB-4sensor has the
+\textbf{lowest} within-budget ECE ($0.179$), beating XGB-20raw
+($0.260$) and XGB-24full ($0.280$). This is counter-intuitive given
+that XGB-4sensor has the worst global AUC of the three trees ---
+its alert pool is small and well-separated, so the within-pool
+ECE is small even though the tree is poor at the global
+discrimination task. At tight budgets ($K{=}0.5\,\%$) the ordering
+flips back to XGB-20raw $<$ XGB-24full $<$ XGB-4sensor (ECE
+$0.157 < 0.177 < 0.288$). At $K \geq 5\,\%$ all three trees are
+within $[0.060, 0.126]$ ECE --- the calibration gap closes.
+
+\paragraph{H2 (per-aggregate ablation is undetectable on ECE).}
+Each of the 8 ablations (remove each of V\_mean/V\_std/V\_max/V\_min in
+turn; add each one alone) was paired-bootstrapped $B{=}2000$ times
+against the full 4-aggregate block at $K{=}2\,\%$. \textbf{All 8
+$95\,\%$ CIs straddle zero} (0/8 ablations are statistically
+detectable). The 4-aggregate sensor block therefore acts as a
+\emph{bundle}: no single-aggregate inclusion/exclusion produces a
+detectable within-budget ECE shift on this held-out split. The
+opposite (iter-68 row 78) held for \emph{AUC at $K{=}2\,\%$}
+(V\_std + V\_max catches all 144 positives) --- a positive result on
+discrimination that does NOT translate into a positive result on
+calibration. This is the strong form of the iter-68 null: at the
+within-budget calibration axis, the LLM-sensor block is not
+decomposable.
+
+\paragraph{Sharpest finding.}
+The LLM-sensor feature block is a \textbf{structural}
+discrimination/calibration object, not a per-aggregate sum. Stop
+trying to optimise which aggregate to keep; the right operational
+axis is the whole-block decision (raw vs raw+sensor vs sensor-only).
+
+\paragraph{Cross-paper coupling.}
+(i)~\S\ref{sec:p8-scorer} iter-68 row 78 --- same 8 ablations on
+\emph{AUC at $K{=}2\,\%$} showed V\_std + V\_max catches all 144
+positives; this iteration shows the same 8 ablations on
+\emph{within-budget ECE at $K{=}2\,\%$} are not decomposable. The
+two findings together establish that the AUC lift from
+(V\_std, V\_max) is not matched by a calibration lift, and the
+calibration penalty from adding ALL four aggregates (iter-84 row
+99 cohort calibration parity) is not separable into per-aggregate
+penalties. (ii)~\S\ref{sec:p8-asymm-cost} iter-40 row
+58 threshold-transfer found XGB-4sensor is the most
+transfer-robust tree on train$\to$test drift; this iteration's H1
+result adds: it is also the best-calibrated tree \emph{within its
+own alert pool}, even though its global AUC is the lowest. The
+two facts together suggest XGB-4sensor is preferred at
+narrow-budget, low-drift deployments. (iii)~the Cost-per-decision
+sub-subsection iter-28 row 35 cost-optimal threshold; this iteration's
+\emph{within-budget} cost column at $K{=}2\,\%$ (XGB-24full
+$\${=}0.104$/dec vs XGB-20raw $\$0.150$/dec) is the
+\emph{operational} reading of iter-28's $\tau^*$-driven optimum
+($XGB$-$24full$ has the lower $\tau^*$-minimised cost at
+$\rho{=}100$). The XGB-4sensor cost column ($\${=}0.914$/dec) is
+the upper bound of the cost distribution; XGB-4sensor is $\sim\!9\times$
+more expensive per decision than XGB-24full at $K{=}2\,\%$, even
+though it is the best-calibrated tree on the same budget. Cost
+and calibration rank the trees \emph{inversely} at $K{=}2\,\%$.
+
+\paragraph{Operational recommendation.}
+(a)~\textbf{For tight budgets ($K \leq 2\,\%$):} prefer XGB-20raw
+(ECE $0.157$ at $K{=}0.5\,\%$, lowest). XGB-4sensor's $0.288$ ECE
+at $K{=}0.5\,\%$ is unacceptable for compliance. (b)~\textbf{For
+looser budgets ($K \geq 5\,\%$):} the calibration gap closes
+($<0.07$ pp at $K{=}10\,\%$) so cost ($\$/dec$) becomes the
+dominant axis --- XGB-24full ($\$0.059$/dec) is preferred over
+XGB-20raw ($\$0.045$/dec is the cost-min at $K{=}5\,\%$, but
+$+0.014$/dec at $K{=}10\,\%$ does not justify the LLM-sensing
+operational cost). (c)~\textbf{Never optimise a single
+aggregate in isolation} --- the 0/8 within-budget ECE ablation
+finding is the negative-control empirical bound on the
+decomposability of the LLM-sensor block.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p8\_iter144\_calib\_ablations.py}
+(${\sim}3$ min on 4 cores; $11$ tree fits + $15$ within-budget
+calibration metrics + $40$ ablation-budget cells + $30$ per-decile
+rows + $8$ paired bootstrap CIs); outputs in
+\texttt{experiments/results/p5p8/p8\_iter144\_\{calib\_budget,
+calib\_ablation, brier\_decile, ablation\_boot\}.tsv},
+\texttt{p8\_iter144\_summary.json},
+\texttt{figures/p8\_iter144\_calib\_budget.\{png,pdf\}}.

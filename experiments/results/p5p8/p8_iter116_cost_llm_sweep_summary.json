@@ -1,0 +1,101 @@
+{
+  "iter": 116,
+  "pillar": "P8",
+  "n_train": 50000,
+  "n_test": 10000,
+  "rates": [
+    0.0144,
+    0.01,
+    0.005,
+    0.001,
+    0.0005
+  ],
+  "trees": [
+    "XGB-20raw",
+    "XGB-24full",
+    "XGB-4sensor"
+  ],
+  "rules": [
+    "xgb_only",
+    "gradient_band",
+    "absolute_band"
+  ],
+  "cost_xgb": 0.0001,
+  "cost_llm_sweep": [
+    0.001,
+    0.003,
+    0.01,
+    0.03,
+    0.1
+  ],
+  "cost_ratio_sweep": [
+    10.0,
+    30.0,
+    100.0,
+    300.0,
+    1000.0
+  ],
+  "n_sweep_cells": 225,
+  "n_pair_cells": 225,
+  "n_flip_cells": 30,
+  "h1_at_cost_llm_0p10": {
+    "n_grad_dominates_xgb_both": 0,
+    "n_cells_total": 15,
+    "all_xgb_dominates": true
+  },
+  "h2_gradient_vs_xgb_at_release_rate_xgb24full": {
+    "0.001": {
+      "cpf_grad_minus_xgb": 5.664335664335666e-05,
+      "grad_pareto_dominates_xgb": false
+    },
+    "0.003": {
+      "cpf_grad_minus_xgb": 0.00018251748251748266,
+      "grad_pareto_dominates_xgb": false
+    },
+    "0.01": {
+      "cpf_grad_minus_xgb": 0.0006230769230769224,
+      "grad_pareto_dominates_xgb": false
+    },
+    "0.03": {
+      "cpf_grad_minus_xgb": 0.0018818181818181815,
+      "grad_pareto_dominates_xgb": false
+    },
+    "0.1": {
+      "cpf_grad_minus_xgb": 0.006287412587412587,
+      "grad_pareto_dominates_xgb": false
+    }
+  },
+  "h4_cpf_at_lowest_cost_llm_xgb24full": {
+    "0.0144": {
+      "cpf_xgb_at_lowest_cost_llm": 0.006993006993006993,
+      "cpf_grad_at_lowest_cost_llm": 0.00704965034965035,
+      "cpf_ratio_grad_over_xgb_at_low_cost": 1.0081
+    },
+    "0.01": {
+      "cpf_xgb_at_lowest_cost_llm": 0.010101010101010102,
+      "cpf_grad_at_lowest_cost_llm": 0.010246464646464646,
+      "cpf_ratio_grad_over_xgb_at_low_cost": 1.0144
+    },
+    "0.005": {
+      "cpf_xgb_at_lowest_cost_llm": 0.02,
+      "cpf_grad_at_lowest_cost_llm": 0.020720000000000002,
+      "cpf_ratio_grad_over_xgb_at_low_cost": 1.036
+    },
+    "0.001": {
+      "cpf_xgb_at_lowest_cost_llm": 0.1,
+      "cpf_grad_at_lowest_cost_llm": 0.10477,
+      "cpf_ratio_grad_over_xgb_at_low_cost": 1.0476999999999999
+    },
+    "0.0005": {
+      "cpf_xgb_at_lowest_cost_llm": 0.2,
+      "cpf_grad_at_lowest_cost_llm": 0.21025999999999997,
+      "cpf_ratio_grad_over_xgb_at_low_cost": 1.0513
+    }
+  },
+  "n_best_cells_total": 75,
+  "n_xgb_only_best_cpd": 75,
+  "n_xgb_only_best_cpf": 75,
+  "n_extreme_total": 15,
+  "n_extreme_xgb_only_best_cpd": 15,
+  "n_extreme_xgb_only_best_cpf": 15
+}

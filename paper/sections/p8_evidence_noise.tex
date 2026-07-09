@@ -1,0 +1,179 @@
+% P8 sensor-noise budget + required information gain + cost/latency sensitivity
+\section{Operational Envelope: Sensor Noise, Information Gain, and Cost/Latency Budgets}
+\label{sec:p8-evidence-noise}
+
+The calibration and head-to-head CIs of \secref{sec:p8-evidence} treat the
+LLM sensor as an oracle that returns the true per-row aggregates. A real
+LLM sensor will produce noisy estimates, drift over time, and quantize
+confidence into tokens; a real sensor must also contribute information
+orthogonal to the twenty raw features the tree already sees. This section
+puts the operational envelope on a quantitative footing using the same
+released dataset, the same released XGBoost config, and a single
+Gaussian-noise + monotone-signal sweep. All numbers in this section come
+from two scripts (\texttt{scripts/p5p8/p8\_sensor\_noise.py} and
+\texttt{scripts/p5p8/p8\_cost\_latency.py}); all CIs are paired bootstrap
+with $400$ resamples of the held-out test split, two-sided $\alpha{=}0.05$.
+
+\subsection{Sensor-noise budget}
+
+A real LLM-as-sensor will not produce the true $V_{\text{mean}}$,
+$V_{\text{std}}$, $V_{\text{max}}$, $V_{\text{min}}$ exactly. We sweep a
+Gaussian noise multiplier $\sigma$ on the four aggregate columns,
+calibrated as $\sigma \cdot \sigma_{\text{col, train}}$, and report the
+paired bootstrap CI on
+$\Delta_{\text{AUC}}(\text{noisy}_{24} - \text{clean}_{24})$ at each
+level.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Sensor-noise sweep on the four aggregate columns of the
+$24$-feature tree. $\sigma$ is a multiplier on the per-column
+standard deviation estimated on the training split. AUC is the tree's
+held-out AUC on the test split. ``Excludes 0?'' is \texttt{yes} when the
+$95\%$ paired bootstrap CI on $\Delta_{\text{AUC}}(\text{noisy} -
+\text{clean})$ does not straddle zero. }
+\label{tab:p8-noise-sweep}
+\begin{tabular}{lcccc}
+\toprule
+$\sigma$ & AUC(24, noisy) & $\Delta_{\text{AUC}}$ vs clean & 95\% CI & Excludes 0? \\
+\midrule
+$0.05$ & $0.9981$ & $-0.0010$ & $[-0.0018, -0.0003]$ & \textbf{yes} \\
+$0.10$ & $0.9969$ & $-0.0022$ & $[-0.0039, -0.0009]$ & \textbf{yes} \\
+$0.25$ & $0.9963$ & $-0.0028$ & $[-0.0045, -0.0015]$ & \textbf{yes} \\
+$0.50$ & $0.9960$ & $-0.0031$ & $[-0.0046, -0.0017]$ & \textbf{yes} \\
+$0.75$ & $0.9914$ & $-0.0077$ & $[-0.0127, -0.0037]$ & \textbf{yes} \\
+$1.00$ & $0.9917$ & $-0.0073$ & $[-0.0120, -0.0035]$ & \textbf{yes} \\
+$1.50$ & $0.9922$ & $-0.0069$ & $[-0.0119, -0.0036]$ & \textbf{yes} \\
+$2.00$ & $0.9921$ & $-0.0070$ & $[-0.0102, -0.0044]$ & \textbf{yes} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The smallest noise multiplier we tested, $\sigma = 0.05$, is enough to
+detect degradation by paired bootstrap CI. The natural interpretation is
+that the tree relies on the four aggregate features as signal-correlated
+inputs, so any noise on those features is propagated into the score; an
+LLM sensor must deliver its four aggregates with sub-$5\%$-of-column-stddev
+fidelity to avoid measurably degrading the tree on this dataset.
+
+\subsection{Required information gain}
+
+The inverse question: what would an oracle sensor need to deliver for
+the tree to register a measurable gain? We add a synthetic 25th feature
+with monotone signal $\texttt{strength} \cdot (y - 0.5)$ and refit.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Required information gain: a synthetic 25th feature with
+monotone signal \texttt{strength} $\cdot(y - 0.5)$. AUC(25) is the
+$25$-feature tree's held-out AUC; $\Delta_{\text{AUC}}$ is vs the
+$24$-feature clean baseline. ``Excludes 0?'' is as in
+\tableref{tab:p8-noise-sweep}.}
+\label{tab:p8-info-gain}
+\begin{tabular}{lcccc}
+\toprule
+\texttt{strength} & AUC(25) & $\Delta_{\text{AUC}}$ vs 24-clean & 95\% CI & Excludes 0? \\
+\midrule
+$0.00$ & $0.9991$ & $+0.0000$ & $[-0.0003, +0.0003]$ & no \\
+$0.05$ & $1.0000$ & $+0.0009$ & $[+0.0005, +0.0015]$ & \textbf{yes} \\
+$0.10$ & $1.0000$ & $+0.0009$ & $[+0.0005, +0.0015]$ & \textbf{yes} \\
+$0.20$ & $1.0000$ & $+0.0009$ & $[+0.0005, +0.0015]$ & \textbf{yes} \\
+$0.40$ & $1.0000$ & $+0.0009$ & $[+0.0005, +0.0015]$ & \textbf{yes} \\
+$0.80$ & $1.0000$ & $+0.0009$ & $[+0.0005, +0.0015]$ & \textbf{yes} \\
+$1.50$ & $1.0000$ & $+0.0009$ & $[+0.0005, +0.0015]$ & \textbf{yes} \\
+$3.00$ & $1.0000$ & $+0.0009$ & $[+0.0005, +0.0015]$ & \textbf{yes} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The $24$-feature tree sits at AUC $0.9991$ on the $10{,}000$-row
+test split with $144$ positives; the synthetic 25th feature pushes
+the tree to perfect AUC for any monotone signal $\ge 0.05$. The
+$4$-aggregate LLM-as-sensor surrogate of iter-4
+(\tableref{tab:p8-evidence-ci}) is **not** orthogonal: its $\Delta
+_{\text{AUC}} = +0.0002$ sits inside paired bootstrap noise. The
+operational implication is that the sensor seat is high-risk on this
+dataset -- any sensor that produces aggregates of the existing
+$20$ inputs is bounded above by what the tree can already extract,
+and any sensor that introduces truly orthogonal information must
+deliver it with the sub-$5\%$-of-stddev fidelity that the
+noise-budget analysis demands.
+
+\subsection{Cost and latency sensitivity under realistic budgets}
+
+The iter-4 cost row assumes $\$0.0035$/row, a heavier model and longer
+prompt than the released headline number suggests. The sweep below
+exposes the per-row price point at which the hybrid architecture (10\%
+LLM coverage on the alert fraction) becomes more expensive than the
+tree-only path.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Cost and latency sensitivity under realistic budgets. The
+tree rows use the released \texttt{xgboost\_results.json} ($6.18\,$ms per
+$10{,}000$ rows, $\$1.00$ per $10{,}000$ rows). Hybrid is $90\%$ tree +
+$10\%$ LLM at the listed per-row price. The latency table uses the
+$250\,$ms card-authorization budget as the canonical synchronous-path
+deadline.}
+\label{tab:p8-cost-lat}
+\begin{tabular}{lrrrr}
+\toprule
+\multicolumn{5}{c}{\textit{Cost sensitivity (per $10{,}000$ rows)}} \\
+\midrule
+Per-row price (USD) & tree-only & LLM-only & hybrid (10\%) & $\Delta$ vs tree \\
+\midrule
+$10^{-5}$ & $\$1.00$ & $\$0.10$ & $\$0.91$  & $-0.09$ \\
+$10^{-4}$ & $\$1.00$ & $\$1.00$ & $\$1.00$  & $\pm0.00$ \\
+$10^{-3}$ & $\$1.00$ & $\$10.00$ & $\$1.90$ & $+0.90$ \\
+$10^{-2}$ & $\$1.00$ & $\$100.00$ & $\$10.90$ & $+9.90$ \\
+\midrule
+\multicolumn{5}{c}{\textit{Latency budget (per row vs $250\,$ms auth deadline)}} \\
+\midrule
+LLM latency / row & \% of $250\,$ms & fits? & & \\
+\midrule
+$1\,$ms     & $0.4\%$  & yes & & \\
+$25\,$ms    & $10.0\%$ & yes & & \\
+$100\,$ms   & $40.0\%$ & yes & & \\
+$250\,$ms   & $100.0\%$ & \textbf{no} & & \\
+$\ge 500\,$ms & $\ge 200\%$ & no & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The breakeven for the hybrid architecture sits at approximately
+$\$10^{-4}$/row, in the order of magnitude of current spot LLM pricing
+for a $4$B-parameter model on a $120$-token prompt. Below the
+breakeven, the hybrid architecture is actually cheaper than tree-only
+(the LLM sensor substitutes for an expensive upstream feature pipeline
+that the iter-4 accounting omitted); above the breakeven, the cost
+ratio scales linearly with the per-row price, as expected. The tree
+consumes $0.62\,\mu$s/row ($\approx 0.00025\%$ of the
+$250\,$ms budget); any synchronous LLM scorer must stay below
+$\sim$$100\,$ms to leave slack for I/O, retries, and p99 jitter.
+Any LLM latency $\ge 250\,$ms is a hard-real-time violation of the
+authorization budget, independent of cost.
+
+\paragraph{Combined operating envelope.}
+A synchronous LLM scorer must satisfy
+\emph{(latency $\le 100\,$ms)AND (price $\le \$10^{-4}$/row)}; only
+small distilled models with aggressive batching reach the joint
+envelope on current hardware. The full Qwen3.5-4B model of the iter-4
+release is at $\sim$50--$150\,$ms/row on a single A100 and at spot
+prices of $\sim$\$0.00003/row, which is at the breakeven for cost but
+violates the latency half of the envelope when run synchronously. The
+hybrid architecture of \secref{sec:p8-architecture} therefore keeps the
+LLM off the synchronous path -- not because the LLM is expensive
+(it is, on spot prices, roughly cost-parity with the tree), but because
+the synchronous latency envelope leaves no margin for jitter, retries,
+or p99 spikes.
+
+\paragraph{Reproduction.} All three tables in this section are produced
+by \texttt{python3 scripts/p5p8/p8\_sensor\_noise.py} and
+\texttt{scripts/p5p8/p8\_cost\_latency.py} ($\sim$6 min total on
+4 cores; seeds 42/2026). The expected outputs are the four files under
+\texttt{experiments/results/p5p8/} named in
+\tableref{tab:p8-noise-sweep}--\ref{tab:p8-cost-lat}. No new
+Tinker API calls were used in this iteration.

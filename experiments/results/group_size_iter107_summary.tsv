@@ -1,0 +1,15 @@
+metric_kind	metric_key	headline
+per_budget	T=1M	T=1M: retention G=4/G=32=0.976, bootstrap Delta=+0.010 [-0.033,+0.052], p(Delta<=0)=0.3229 -> compatible w/ Wu
+per_budget	T=4M	T=4M: retention G=4/G=32=0.833, bootstrap Delta=+0.110 [+0.067,+0.153], p(Delta<=0)=0.0000 -> REJECTS Wu
+per_budget	T=16M	T=16M: retention G=4/G=32=0.750, bootstrap Delta=+0.209 [+0.167,+0.252], p(Delta<=0)=0.0000 -> REJECTS Wu
+per_budget	T=64M	T=64M: retention G=4/G=32=0.727, bootstrap Delta=+0.240 [+0.197,+0.282], p(Delta<=0)=0.0000 -> REJECTS Wu
+iso_acc	acc=0.50	acc=0.50: T*_G=4=3309394.16, T*_G=32=1501885.11, R_compute_G4/G32=2.203 (yes)
+iso_acc	acc=0.60	acc=0.60: T*_G=4=18432871.51, T*_G=32=4195855.32, R_compute_G4/G32=4.393 (yes)
+iso_acc	acc=0.70	acc=0.70: T*_G=4=78740022.49, T*_G=32=10001462.88, R_compute_G4/G32=7.873 (extrapolated_above_64M)
+iso_acc	acc=0.80	acc=0.80: T*_G=4=276979929.42, T*_G=32=21224931.51, R_compute_G4/G32=13.05 (extrapolated_above_64M)
+iso_acc	acc=0.85	acc=0.85: T*_G=4=490289574.55, T*_G=32=29868198.35, R_compute_G4/G32=16.415 (extrapolated_above_64M)
+R_C_per_G	G=4	G=4: R_C(1M->4M)=0.07, R_C(4M->16M)=0.04, R_C(16M->64M)=0.005
+R_C_per_G	G=8	G=8: R_C(1M->4M)=0.095, R_C(4M->16M)=0.055, R_C(16M->64M)=0.01
+R_C_per_G	G=16	G=16: R_C(1M->4M)=0.11, R_C(4M->16M)=0.065, R_C(16M->64M)=0.015
+R_C_per_G	G=32	G=32: R_C(1M->4M)=0.12, R_C(4M->16M)=0.09, R_C(16M->64M)=0.02
+R_C_per_G	G=64	G=64: R_C(1M->4M)=0.115, R_C(4M->16M)=0.11, R_C(16M->64M)=0.035

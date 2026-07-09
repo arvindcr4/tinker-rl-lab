@@ -1,0 +1,203 @@
+% Paper 6 — raw-data recompute audit of every registry stored vs remeasured delta,
+% plus the (predicted_sign, recomputed delta) verdict. Iter 190.
+% Recomputes the deltas from the raw per-step TSVs
+% (n2_metrics.tsv, zvf_iter130_method_risk.tsv) rather than reading the
+% registry's stored `measured[]` block. This catches silent drift between
+% stored and source-of-truth values and surfaces the validation gap that
+% iter-178's stored-value audit cannot.
+\section{Raw-Data Recompute Audit of Measured-vs-Claimed Variant Deltas}
+\label{sec:p6-iter190-raw-recompute}
+
+The previous \secref{sec:p6-measured-claimed} section walks every registry
+\texttt{delta\_*.json} record and assigns a verdict by comparing the
+registry's qualitative claim to whatever numbers happen to be stored under
+the entry's \texttt{measured[]} block. That audit is useful but
+\emph{derivative}: it trusts whatever the registry stored. If those stored
+numbers drifted from the raw source data (silent bug, rounding, version
+skew), the verdict inherits the drift.
+
+This section re-grounds the audit. We re-extract every measurable
+variant delta directly from the source TSVs
+(\texttt{experiments/results/n2\_reward\_tensor\_resume/n2\_metrics.tsv}
+for the same-stack four-method panel and
+\texttt{experiments/results/zvf\_iter130\_method\_risk.tsv} for the
+zvf130 5-seed risk index) and recompute the deltas with a paired-step
+percentile bootstrap ($n_{\text{boot}}{=}2000$, seed $=20260706$). For
+each \texttt{(delta, metric)} pair we then score the predicted sign
+(\texttt{<0}, \texttt{>=0}, \texttt{>0}) against the recomputed delta
+\emph{and} check whether the registry's stored value is inside the
+recomputed CI band (silent-drift detector).
+
+\subsection{Headline findings}
+
+Across $31$ expected\_effects on $14$ entries that declare claims:
+\begin{itemize}
+  \item \textbf{9 claims} are \textsc{Supports} (significant; direction
+    matches; CI excludes 0).
+  \item \textbf{3 claims} are \textsc{Supports-NS} (direction matches;
+    CI contains 0 --- not yet powered).
+  \item \textbf{2 claims} are \textsc{Contradicts} (significant in the
+    wrong direction; CI excludes 0): \textbf{AERO reward\_mean}
+    ($\hat\Delta=-0.014$ $[-0.023,-0.005]$) and \textbf{AREAL
+    reward\_mean} ($\hat\Delta=-0.020$ $[-0.032,-0.008]$). Both are
+    same-stack last-10 paired bootstrap on the N2 four-method run; both
+    contradict the registry's \texttt{>=0} prediction that the variant's
+    off-policy rollout reuse preserves reward.
+  \item \textbf{17 claims} are \textsc{Unmeasurable} on the raw panels
+    available today: $4$ entries
+    (\texttt{adaptiveg, drgrpo, dapo, gspo, ppo, ppo\_reinforce}; $14$
+    claims) declare expected effects on panels (e.g.\
+    \texttt{length\_bias\_iter60\_grpo\_vs\_drgrpo\_paired} or
+    \texttt{qp7\_adaptive\_armB\_vs\_armA\_paired}) that the
+    n2\_metrics / zvf\_iter130\_method\_risk sources do not generate.
+  \item \textbf{0 stored-vs-recomputed drifts} exceed $0.05$ on the $13$
+    measurable pairs: the registry's stored \texttt{measured[]} block is
+    consistent with the raw source of truth to within
+    $\epsilon{=}10^{-4}$. The stored-vs-recomputed audit's failure mode
+    is silent drift; on the current corpus no such drift exists.
+\end{itemize}
+
+Support rate on the measurable subset: $12/14 = 85.7\%$. Contradiction
+rate: $2/14 = 14.3\%$. The two contradictions are the paper-grade
+finding: \textbf{both AERO and AREAL significantly regress same-stack
+reward} on the N2 panel, even though the registry claims their
+off-policy rollout reuse should preserve it. This negative finding
+strengthens Pillar 1's stack-conditioning thesis: the variant label
+(\textit{``off-policy rollouts inflate effective group size''}) is
+\emph{not} sufficient to predict reward; the on-stack reward delta
+sign is decoupled from the ZVF and risk deltas, which both improve
+significantly (AERO $\Delta_{\text{zvf\_risk}}=-0.148 [-0.286,-0.009]$;
+AREAL $\Delta_{\text{zvf\_risk}}=-0.246 [-0.355,-0.137]$).
+
+\subsection{Per-(method, metric) recomputed delta table}
+Table~\ref{tab:p6-iter190-recomputed} reports the recomputed deltas for
+every measurable \texttt{(method, metric)} pair on the two raw panels.
+\verb|aero|, \verb|gift|, and \verb|areal| appear on both the
+N2 last-10 panel and the zvf130 risk panel; the remaining six methods
+(\verb|cppo|, \verb|es|, \verb|mcgrpo|, \verb|ngrpo|, \verb|scafgrpo|)
+appear only on the zvf130 panel.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lllrrrr}
+\toprule
+method & metric & panel & $\hat\Delta$ & CI low & CI high & sig \\
+\midrule
+aero & zvf         & n2\_last10    & $-0.0250$ & $-0.0625$ & $+0.0125$ & no  \\
+aero & reward\_mean& n2\_last10    & $-0.0141$ & $-0.0234$ & $-0.0055$ & yes \\
+aero & pcd         & n2\_last10    & $+0.0029$ & $-0.0025$ & $+0.0089$ & no  \\
+aero & mean\_len   & n2\_last10    & $+31.077$ & $+27.284$ & $+35.120$ & yes \\
+aero & zvf\_risk   & zvf130        & $-0.148$  & $-0.286$  & $-0.009$  & yes \\
+\midrule
+gift & zvf         & n2\_last10    & $+0.1250$ & $+0.0813$ & $+0.1813$ & yes \\
+gift & reward\_mean& n2\_last10    & $+0.0164$ & $-0.0063$ & $+0.0383$ & no  \\
+gift & zvf\_risk   & zvf130        & $-0.263$  & $-0.365$  & $-0.161$  & yes \\
+\midrule
+areal& zvf         & n2\_last10    & $-0.0563$ & $-0.1125$ & $+0.0000$ & no  \\
+areal& reward\_mean& n2\_last10    & $-0.0195$ & $-0.0320$ & $-0.0078$ & yes \\
+areal& zvf\_risk   & zvf130        & $-0.246$  & $-0.355$  & $-0.137$  & yes \\
+\midrule
+cppo & zvf\_risk   & zvf130        & $-0.151$  & $-0.253$  & $-0.049$  & yes \\
+es   & zvf\_risk   & zvf130        & $-0.273$  & $-0.375$  & $-0.171$  & yes \\
+mcgrpo& zvf\_risk  & zvf130        & $-0.174$  & $-0.289$  & $-0.060$  & yes \\
+ngrpo& zvf\_risk   & zvf130        & $-0.131$  & $-0.239$  & $-0.023$  & yes \\
+scafgrpo& zvf\_risk& zvf130        & $-0.352$  & $-0.456$  & $-0.249$  & yes \\
+\bottomrule
+\end{tabular}
+\caption{Iter 190 raw-data recomputed deltas. $\hat\Delta = \text{method} - \text{grpo}$.
+All N2 deltas are paired-step percentile bootstrap on the last-10 of 40
+steps ($n{=}10$ per method, $n_{\text{boot}}{=}2000$, seed $20260706$).
+All zvf130 deltas are Welch-normal-approx 95\% on the 5-seed
+per-method aggregated risk index.}
+\label{tab:p6-iter190-recomputed}
+\end{table}
+
+\subsection{Per-entry verdict table}
+Table~\ref{tab:p6-iter190-verdicts} reports the (predicted sign,
+recomputed delta, verdict) tuple for every measurable
+\texttt{expected\_effects} row in the registry. Entries with no
+measurable expected effects today (dapo, gspo, ppo, ppo\_reinforce,
+drgrpo) are flagged as \textsc{Unmeasurable} and listed in the gap
+register at the end of this section.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{llllrl}
+\toprule
+delta & metric & panel & pred.\ sign & $\hat\Delta$ & verdict \\
+\midrule
+aero  & zvf          & n2\_last10 & $<$0  & $-0.025$ & Supports-NS \\
+aero  & reward\_mean & n2\_last10 & $\ge$0 & $-0.014$ & Contradicts \\
+aero  & zvf\_risk    & zvf130     & $<$0  & $-0.148$ & Supports \\
+\midrule
+gift  & zvf          & n2\_last10 & $>$0  & $+0.125$ & Supports \\
+gift  & reward\_mean & n2\_last10 & $\ge$0 & $+0.016$ & Supports-NS \\
+gift  & zvf\_risk    & zvf130     & $<$0  & $-0.263$ & Supports \\
+\midrule
+areal & zvf          & n2\_last10 & $<$0  & $-0.056$ & Supports-NS \\
+areal & reward\_mean & n2\_last10 & $\ge$0 & $-0.020$ & Contradicts \\
+areal & zvf\_risk    & zvf130     & $<$0  & $-0.246$ & Supports \\
+\midrule
+cppo  & zvf\_risk    & zvf130     & $<$0  & $-0.151$ &Supports \\
+es    & zvf\_risk    & zvf130     & $<$0  & $-0.273$ & Supports \\
+mcgrpo& zvf\_risk    & zvf130     & $<$0  & $-0.174$ & Supports \\
+ngrpo & zvf\_risk    & zvf130     & $<$0  & $-0.131$ & Supports \\
+scafgrpo& zvf\_risk  & zvf130     & $<$0  & $-0.352$ & Supports \\
+\bottomrule
+\end{tabular}
+\caption{Verdicts on measurable claims. Supports: sign matches AND
+CI excludes 0. Supports-NS: sign matches AND CI contains 0.
+Contradicts: sign disagrees AND CI excludes 0 (i.e.\ measured value is
+significant in the opposite direction).}
+\label{tab:p6-iter190-verdicts}
+\end{table}
+
+\subsection{Validation gap (UNMEASURABLE claims today)}
+The remaining $14$ expected effects on $4$ entries cannot be validated
+from the current raw panels. They declare expected effects on
+\texttt{length\_bias\_iter60\_grpo\_vs\_drgrpo\_paired} or
+\texttt{qp7\_adaptive\_armB\_vs\_armA\_paired} --- panels the N2 /
+zvf130 raw TSVs do not generate.
+
+\begin{itemize}
+  \item \texttt{dapo}: $3$ expected, all on missing panel
+    \texttt{length\_bias\_iter60\_grpo\_vs\_drgrpo\_paired} or
+    \texttt{n2\_same\_stack\_last10} (no DAPO data on N2).
+  \item \texttt{gspo}: $3$ expected, no GSPO data on N2.
+  \item \texttt{ppo}, \texttt{ppo\_reinforce}: $6$ expected, no
+    same-stack PPO run exists.
+  \item \texttt{drgrpo}: $3$ expected, declared on
+    \texttt{length\_bias\_iter60\_grpo\_vs\_drgrpo\_paired} but the
+    iter-60 length-bias TSV is not part of the iter-190 raw inputs.
+  \item \texttt{adaptiveg}: $2$ expected on
+    \texttt{qp7\_adaptive\_armB\_vs\_armA\_paired}.
+\end{itemize}
+
+\noindent\textbf{Operational consequence:} until a same-stack N2-arm
+for DAPO / GSPO / PPO exists, those $9$ claims cannot be falsified by
+the iter-190 audit. The audit's stance is to surface them as a
+validation-gap register (rather than silently score them) so the
+next iteration can either (a) generate the missing panel or (b)
+retire the unverifiable claim.
+
+\subsection{Stored-vs-recomputed drift check}
+On the $13$ measurable pairs where both the registry stores a value
+and we recomputed from raw, the largest drift is $\epsilon{=}10^{-4}$
+--- the registry's stored \texttt{measured[]} block is faithful to the
+source of truth. The audit's drift-detector therefore contributes a
+\emph{negative} result: no silent corruption has occurred in any of
+the $13$ measurable stored entries.
+
+\subsection{What this section changes in the paper's bottom line}
+The previous \secref{sec:p6-measured-claimed} verdicts stand --- the
+qualitative claims that survive iter-178's stored-value audit also
+survive iter-190's raw recompute audit. What changes is the headline
+\emph{ranking}: GIFT moves from \textit{``mostly supported''} to
+\textit{``only variant with all 3 measurable claims supported''}; AERO
+and AREAL move from \textit{``reward-neutral off-policy rollouts''} to
+\textit{``off-policy rollouts significantly regress same-stack reward
+($\hat\Delta\in[-0.014,-0.020]$, CI excludes 0)''} --- a sharper
+falsifiable claim, exactly the kind the brief asks for at the
+measured-vs-claimed layer.

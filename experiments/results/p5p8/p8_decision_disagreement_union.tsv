@@ -1,0 +1,7 @@
+pair	n_union_alerts	n_inter_alerts	n_flips	tp_union	tp_inter	precision_union	precision_inter	recall_union	recall_inter
+XGB-20raw vs XGB-24full	229	171	58	143	141	0.624454	0.824561	0.993056	0.979167
+XGB-20raw vs XGB-pair	231	169	62	143	141	0.619048	0.83432	0.993056	0.979167
+XGB-20raw vs LLM-as-scribe (XGB-24full @ $0.001)	229	171	58	143	141	0.624454	0.824561	0.993056	0.979167
+XGB-24full vs XGB-pair	232	168	64	143	143	0.616379	0.85119	0.993056	0.993056
+XGB-24full vs LLM-as-scribe (XGB-24full @ $0.001)	200	200	0	143	143	0.715	0.715	0.993056	0.993056
+XGB-pair vs LLM-as-scribe (XGB-24full @ $0.001)	232	168	64	143	143	0.616379	0.85119	0.993056	0.993056

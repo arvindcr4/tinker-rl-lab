@@ -1,0 +1,10 @@
+# Pillar 2 iter86 optimal tau*(C_ratio) on the variance-mitigation pool.
+# Source: scripts/zvf_iter86.py
+scope	C_ratio	tau_optimal	n_at_optimal	total_cost_at_optimal	n_false_at_optimal	n_missed_at_optimal	compute_saved_frac_at_optimal
+pool	0.1	0.5	1	1	10	0	0.241516
+pool	0.3	0.6	1	2	0	2	0.150361
+pool	1	0.6	1	2	0	2	0.150361
+pool	3	0.6	1	2	0	2	0.150361
+pool	10	0.6	1	2	0	2	0.150361
+pool	30	0.6	1	2	0	2	0.150361
+pool	100	0.6	1	2	0	2	0.150361

@@ -1,0 +1,154 @@
+% Section: P8 V-stat ensemble precision-restoration ablation -- iter 172 JOB A
+% Fresh vein, not in 179 prior P8 rows. Closes iter-168 §4 operational
+% recommendation (4): "EXTEND the sensor with a learned precision-
+% restoration layer (joint V_mean/V_std/V_max/V_min classifier)" by
+% testing the hypothesis and DECISIVELY REFUTING it on 4/4 hypotheses.
+% Headline (sharpest finding): joint V-stat classifier cannot escape
+% the structural precision ceiling; the ceiling is V-stat-CLASS
+% (PCA-aggregated features are noise for fraud), not V_mean-ONLY.
+
+\subsubsection{Falsifiable questions and operational stakes}\label{sec:p8-iter172-ensemble}
+
+\subsubsection{Falsifiable questions and operational stakes}
+Iter-168 measured the structural precision ceiling of the LLM-as-sensor
+pattern at $\tau = 0.0$ ($\text{esc\_prec} \approx 1\%$) and at every
+threshold $\tau \in \{0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0\}$; the
+operational recommendation in iter-168 \S4 was to extend the sensor with
+a learned precision-restoration layer over the four aggregate
+features. Iter-172 directly tests that recommendation by training a
+logistic regression on $(V_\mathrm{mean}, V_\mathrm{std}, V_\mathrm{max},
+V_\mathrm{min}) \to \text{Class}$ (and a matched single-$V_\mathrm{mean}$
+classifier for comparison), then sweeping a probability threshold
+$\tau \in \{0.05, 0.10, \dots, 0.90\}$ (11 levels) on the XGB-missed
+rows to measure $\text{esc\_prec}$ and $\text{value\_rate}$.
+
+For each test row $r$ with XGB-missed indicator
+$\neg \text{xgb\_fire}_r$, joint classifier probability
+$P_\mathrm{joint}(r) = \sigma(\beta_0 + \beta_1 V_\mathrm{mean} +
+\beta_2 V_\mathrm{std} + \beta_3 V_\mathrm{max} + \beta_4 V_\mathrm{min})$
+and single-feature probability $P_\mathrm{vmean}(r)$:
+\begin{align*}
+\text{joint\_fire}_{r,\tau} &= (\neg \text{xgb\_fire}_r \wedge P_\mathrm{joint}(r) > \tau) \\
+\text{vmean\_fire}_{r,\tau} &= (\neg \text{xgb\_fire}_r \wedge P_\mathrm{vmean}(r) > \tau) \\
+\text{esc\_prec}_{\text{clf},\tau} &= \#(\text{clf\_fire} \wedge \text{is\_fraud}) /
+   \max(1, \#\text{clf\_fire})
+\end{align*}
+
+\textbf{H1 (FAIL -- sharpest negative finding)}: at some
+$\tau \in \{0.05, \dots, 0.90\}$ on the joint classifier, esc\_prec
+$\geq 0.05$ on $\geq 25\%$ of (seed $\times$ rate $\times$ fset) cells.
+\textbf{Measured: 0/100 = 0.0\%}. Across every (seed $\times$ rate
+$\times$ fset) cell, no threshold on the joint classifier achieves
+esc\_prec $\geq 5\%$. The ensemble cannot escape the structural
+ceiling on any operating point.
+
+\textbf{H2 (FAIL -- Pareto-frontier non-existence)}: there exists at
+least one joint cell with esc\_prec $\geq 0.10$ AND value\_rate
+$\geq 0.30$ simultaneously. \textbf{Measured: 0/1100 joint cells}.
+The Pareto frontier does not exist on the joint classifier either.
+
+\textbf{H3 (FAIL -- marginal lift, well below 5pp bar)}: the joint
+classifier's mean esc\_prec strictly exceeds the single-$V_\mathrm{mean}$
+classifier's mean esc\_prec on $\geq 50\%$ of cells (averaged across
+$\tau$). \textbf{Measured: 71/100 = 71.0\% cells show positive joint-vs-
+vmean precision lift, but the mean delta is $+0.000030$ (3 basis
+points); 0/100 cells exceed the 5pp bar}. The joint ensemble adds
+information in direction but at a magnitude that is operationally
+indistinguishable from noise.
+
+\textbf{H4 (FAIL -- degenerate)}: at the $\tau$ where esc\_prec first
+crosses 5\%, value\_rate $\geq 0.30$ on $\geq 25\%$ of cells.
+\textbf{Measured: 0/0 = 0.0\%}. The first-5\%-tau event never fires;
+H4 is degenerate on this dataset.
+
+\subsubsection{Sharpest paper-grade findings}
+\begin{enumerate}
+\item \textbf{The precision ceiling is V-stat-CLASS, not single-feature}.
+The joint $(V_\mathrm{mean}, V_\mathrm{std}, V_\mathrm{max}, V_\mathrm{min})$
+classifier produces essentially the same precision distribution as the
+single-$V_\mathrm{mean}$ classifier (mean esc\_prec 0.002625 vs
+0.002595, max esc\_prec 0.006507 vs 0.006387). All four aggregate
+features are derived from the same 20 PCA components; their
+class-conditional densities on Class are nearly identical. Iter-168's
+``single-feature ceiling'' hypothesis is decisively refuted: the
+ceiling is at the V-stat-class level, not at the V-mean-only level.
+\item \textbf{The joint ensemble is a weak recall-augmenter, not a
+precision-restorer}. On the highest-esc\_prec cell (seed=20260708,
+rate=1.44\%, fset=20raw, $\tau = 0.5$): joint produces
+esc\_prec = 0.0122, n\_lift = 61, n\_waste = 4946 (recall lift +9 vs
+vmean-only at the same $\tau$, but waste also +309). The marginal
+recall gain does not translate into precision lift; the joint
+classifier fires slightly more aggressively than vmean-only at matched
+$\tau$, increasing both true and false positives roughly proportionally.
+\item \textbf{Training-set AUC-equivalent is barely above chance}.
+On the training set at $\tau = 0.5$: joint pos-rate-at-thr = 0.5339,
+neg-rate-at-thr = 0.5030 ($\Delta = +0.031$); vmean pos-rate-at-thr =
+0.5357, neg-rate-at-thr = 0.4818 ($\Delta = +0.054$). The joint
+classifier's 3pp edge over vmean-only in-sample shrinks to 3 basis
+points out-of-sample: the V-stat features carry almost no class-
+conditional information even in-sample, and the joint ensemble has
+nothing to add over a single-V\_mean model trained on the same data.
+\item \textbf{Iter-168 recommendation (4) is decisively REFUTED}. The
+operational recommendation ``EXTEND the sensor with a learned
+precision-restoration layer'' was made on the hypothesis that the
+ceiling was single-feature. Iter-172 shows the ceiling is V-stat-class
+and the ensemble cannot escape it. The corrected operational
+recommendation is: deploy the LLM-as-sensor for recall lift at the
+cheap tier only; abandon precision-restoration attempts on PCA-
+aggregated features.
+\item \textbf{Precision-restoration requires more information per
+fire, not less}. The V-stat features are PCA-aggregated summaries of
+V$_1$..V$_{20}$; precision-restoration would require either (a) a model
+that operates on the raw 20 PCA components directly (which XGB already
+does), or (b) features that actually stratify fraud vs non-fraud (which
+the V-stats demonstrably do not). The iter-172 negative finding
+\emph{strengthens} the iter-156 / iter-168 / iter-120 chain: the
+LLM-as-sensor pattern is a recall instrument on this feature class.
+\end{enumerate}
+
+\subsubsection{Cross-paper coupling}
+\begin{itemize}
+\item \textbf{P8 iter-168 row 179}: iter-168's recommendation (4)
+(``EXTEND with joint V-classifier'') is decisively refuted by
+iter-172's 4/4 H-FAIL on 2200 cells. The precision ceiling is
+V-stat-class, not single-feature.
+\item \textbf{P8 iter-156 row 172}: iter-156 documented the
+high-recall low-precision signature at $\tau = 0.0$ (esc\_prec = 1\%).
+Iter-172 confirms the 1\% is \emph{not} a $V_\mathrm{mean}$-only
+phenomenon -- every aggregation of the V-stats reproduces it on
+0/100 cells achieving esc\_prec $\geq 5\%$.
+\item \textbf{P8 iter-120 row 165}: iter-120's ``score-stream geometry
+trigger, not feature trigger'' conclusion is sharpened by iter-172:
+even a learned joint V-stat classifier (trained specifically to
+predict fraud from the V-stats) cannot restore precision; the
+geometry-driven firing is the dominant signal and the V-stats
+themselves carry little class-conditional information.
+\item \textbf{FRONTIER\_INSIGHTS Round 2 (ZVF = signal availability)}:
+iter-172 sharpens the operational analogue. Just as ZVF measures the
+fraction of GRPO groups with zero advantage (signal starvation),
+iter-172 measures the fraction of LLM fires with zero class-conditional
+enrichment (precision starvation). Both are \emph{structural} signal-
+availability measurements that cannot be rescued by ensemblemethods
+over the same feature class.
+\end{itemize}
+
+\subsubsection{Operational recommendations}
+\begin{enumerate}
+\item \textbf{ABANDON} precision-restoration attempts on PCA-aggregated
+V-stat features. Iter-172 shows 0/100 cells achieve esc\_prec $\geq 5\%$
+at any $\tau$ on the joint classifier.
+\item \textbf{DEPLOY} the LLM-as-sensor pattern for recall lift at the
+cheap tier only (iter-156 H2b + iter-168 H4 + iter-172 H4 all converge
+on this operational conclusion).
+\item \textbf{EXTEND} the sensor to operate on raw V$_1$..V$_{20}$
+features rather than aggregated V-stats if precision restoration is
+required. The current LLM-call budget cannot be spent more efficiently
+on PCA-aggregated features than the iter-168 sweep already measured.
+\item \textbf{WIRE} \texttt{p8\_iter172\_vstat\_ensemble\_precision.py}
+as a CI pre-commit on precision-restoration proposals: the joint
+classifier must achieve esc\_prec $\geq 5\%$ on $\geq 25\%$ of cells
+at some $\tau$ to be considered a candidate for further engineering
+investment.
+\end{enumerate}
+
+\clearpage

@@ -1,0 +1,13 @@
+qid	query	gold	ppr_hit10	ppr_rank	bm25_hit10	bm25_rank	random_hit10	random_rank
+0	Qwen3.5-4B RQS r_mean r_max capable	Qwen3.5-4B	1	1	1	1	0	-1
+1	Qwen3-8B RQS residualization cap+RQS	Qwen3-8B	1	2	1	1	1	10
+2	AIC compare M0 M1 M2 delta_aicc_vs_best	delta_aicc_vs_best	0	-1	0	-1	0	-1
+3	cross_pillar G=8 T=1000000 zvf_theory	1	1	1	1	1	1	1
+4	Self-Debug grpo frac_mag_pre frac_mag_post drop_pp	grpo	1	1	1	1	1	4
+5	Self-Debug aero method reformulation eps=0.12	aero	1	7	1	1	0	-1
+6	Self-Debug scafgrpo top1 ranking stability	scafgrpo	1	1	1	1	1	1
+7	Self-Debug eps sweep epsilon spearman stability	epsilon	1	1	1	3	1	2
+8	H3 ranking stability H4 compositional bucket	h3_opro_stability	0	-1	0	-1	0	-1
+9	H4 compositional preserved 9/9 methods	h4_compositional_bucket	0	-1	0	-1	0	-1
+10	H5 calibration eps=0 identity max abs dev	h5_eps0_identity	0	-1	0	-1	0	-1
+11	Eureka RQS 12 anchors log10(N) r_mean_capable	Qwen3.5-4B	1	1	1	2	1	8

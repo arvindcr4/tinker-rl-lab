@@ -1,0 +1,128 @@
+% =============================================================================
+% P5-117 — Stack-conditioning eta^2 on the 9-method 5-seed zvf130 panel
+% (iter 101)
+% =============================================================================
+\subsection{Stack-conditioning $\eta^2$ on the 9-method 5-seed zvf130 panel}
+\label{sec:p5-iter101-zvf130-eta2}
+
+The iter-89 row 106 algorithm-axis $\eta^2$ decomposition of the
+4-method N2 same-stack panel (per-step zvf trace) reported
+$\eta^2(\mathrm{algo}, \mathrm{zvf}) = 0.045$ -- "decisive" per Ivison
+2024. Iter 101 re-runs the same machinery on the 9-method 5-seed
+zvf130 risk-index panel and finds that the algorithm axis is
+\textbf{large on the zvf130 risk-index y-axis} even within the
+GRPO-family subset:
+$\eta^2(\mathrm{algo}, \mathrm{zvf\_risk}) = 0.763$ on the full
+9-method panel, $0.670$ on the 4-method N2 subset, $0.634$ on the
+7-method GRPO-family subset.
+
+\paragraph{H1 --- $\eta^2(\mathrm{algo}, \mathrm{zvf\_risk})$ on the
+full 9-method panel is large, every LOMO stays high.}
+The point estimate is $0.763$ and the leave-one-method-out range
+across the 9 axes is $[0.6835, 0.8274]$ -- \textbf{every single LOMO
+stays $\geq 0.68$}, no method can be removed to bring the algorithm
+axis below $0.50$. SCAFGRPO is the most load-bearing method
+(rel\_drop $= -0.1042$ on removal); AERO is the second
+(rel\_drop $= +0.0844$ on removal, as AERO sits near the centre of
+the risk distribution and its removal tightens the spread).
+
+\paragraph{H2 --- the 4-method N2 subset is ALSO algorithm-distinguishing
+on the zvf130 y-axis (contrast with iter 89 row 106).}
+The 4-method N2 subset ($\mathrm{grpo, aero, areal, gift}$)
+has $\eta^2(\mathrm{algo}, \mathrm{zvf\_risk}) = 0.6698$, LOMO range
+$[0.4191, 0.7772]$. \textbf{This CONTRASTS with iter 89 row 106's
+$\eta^2 = 0.045$ on the per-step zvf trace for the same 4 methods.}
+The algorithm axis is y-axis-conditional: on per-step zvf traces
+the four GRPO-family methods are algorithm-equivalent; on the
+zvf130 risk-index they are algorithm-distinct. The two y-axes
+characterise different aspects of the same trajectory -- the
+risk-index amplifies the structural anti-herding bonus into a
+per-method summary statistic, while the per-step zvf trace averages
+it out.
+
+\paragraph{H3 --- algorithm axis dominates seed axis on the full 9.}
+$\eta^2(\mathrm{algo}, \mathrm{zvf\_risk}) = 0.763$ vs
+$\eta^2(\mathrm{seed}, \mathrm{zvf\_risk}) = 0.0071$. \textbf{The
+algorithm axis is 100$\times$ the seed axis on the panel level.}
+The seed axis is below the noise floor; the algorithm axis is
+above the 0.50 "decisive" threshold. The Iter-89 and iter-101
+findings jointly establish that the algorithm axis IS visible on
+the zvf130 risk-index, NOT on the per-step zvf trace; the seed
+axis is invisible on BOTH.
+
+\paragraph{H4 --- permutation test rejects the null on both panels.}
+Method-label shuffle ($N_\mathrm{perm}{=}2000$, seed 20260705)
+gives null mean $\eta^2 = 0.182$ on the full 9 (observed $0.763$,
+$p < 0.001$, zero permuted replicates exceed observed);
+$0.155$ on the 4-method N2 subset (observed $0.6698$, $p = 0.0015$).
+\textbf{The algorithm-axis $\eta^2$ is statistically distinguishable
+from the method-label null on both panels.}
+
+\paragraph{H5 --- SCAFGRPO is the most load-bearing method on the
+algorithm axis.}
+Across all 9 LOMO removals on $\mathrm{zvf\_risk}$, the
+$|\mathrm{rel\_drop}|$ ranks as: SCAFGRPO $-10.42\%$, AERO $+8.44\%$,
+GRPO $-3.85\%$, ES $-2.07\%$, GIFT $-1.54\%$, MCGRPO $+2.54\%$,
+AREAL $+0.53\%$, CPPO $-0.47\%$, NGRPO $+0.09\%$. SCAFGRPO has the
+lowest mean $\mathrm{zvf\_risk}$ ($0.225$) and the most distinctive
+risk-index signature; its removal is the only LOMO that drops
+$\eta^2$ by more than 5\%. AERO is the second most load-bearing
+because it sits between the GRPO and the GRPO-extension cluster
+(AERO risk = 0.430 vs GRPO 0.578 and GIFT 0.315), so its removal
+widens the spread.
+
+\paragraph{H6 --- adding ES to the 7-method GRPO-family subset does
+not increase $\eta^2(\mathrm{algo}, \mathrm{zvf\_risk})$ by more
+than 0.10.}
+GRPO-family-7: $\eta^2 = 0.6336$; GRPO-family-7 + ES: $\eta^2 =
+0.6835$; delta $= +0.050$. \textbf{ES is in the same risk-index
+family as the GRPO-family methods}, despite having no reward
+signal -- the risk-index is a trajectory-shape summary, not a
+reward-shape summary.
+
+\paragraph{Cross-paper coupling.}
+\textbf{(i) P5 iter-89 row 106} -- iter 89 isolated the 4-method
+N2 panel as $\eta^2(\mathrm{algo}, \mathrm{zvf}) = 0.045$ on the
+per-step trace; iter 101 shows the same 4 methods have
+$\eta^2(\mathrm{algo}, \mathrm{zvf\_risk}) = 0.670$ on the
+risk-index. The algorithm axis is y-axis-conditional, not method-set
+conditional. \textbf{(ii) P6 iter-90 row 107} -- iter 90 measured
+all 9 methods as significantly below GRPO on $\mathrm{zvf\_risk}$
+(26/36 pairs SIG); iter 101 decomposes the SAME 45-row panel
+into an algorithm-axis $\eta^2 = 0.763$ and a seed-axis
+$\eta^2 = 0.007$ -- the iter-90 "all below GRPO" finding IS the
+algorithm-axis dominance measured at the mean level. \textbf{(iii)
+FRONTIER\_INSIGHTS Round 1 (Critic Degeneracy Hypothesis)} -- the
+hypothesis states that within a family (GRPO) the algorithm axis
+is invisible; iter 101 shows this is true on per-step zvf (iter
+89) but FALSE on the zvf130 risk-index (this iteration). The
+"estimator equivalence" claim is y-axis-specific, not universal.
+
+\paragraph{Operational recommendation.}
+Report algorithm-axis $\eta^2$ on the y-axis that consumers
+care about: for stack-conditioning on the zvf130 risk-index,
+the algorithm axis is large (0.76) and SCAFGRPO is the
+load-bearing outlier. For stack-conditioning on per-step
+contrast-yield (ZVF trajectory), the algorithm axis is small
+($\leq 0.05$) within GRPO-family. MIN-REPORT Item 13
+(zvf\_yield\_residual, iter 80 row 95) lives on the per-step
+axis; a complementary Item 18 (zvf130\_risk\_residual) on the
+risk-index axis would close the y-axis coverage.
+
+% Tables and artefacts (referenced in main text)
+% - Table tab:p5-iter101-zvf130-eta2 -- the 14-row LOMO-CI table on
+%   full 9 + 4-method subset, all 7 risk-index metrics x 2 axes.
+% - Table tab:p5-iter101-zvf130-perm -- 14-row permutation test table
+%   (full 9 + 4-method, 7 metrics).
+% - Table tab:p5-iter101-zvf130-lomo -- 63-row LOMO detail (9 methods
+%   x 7 metrics).
+% - Table tab:p5-iter101-zvf130-family -- 35-row family subset table
+%   (5 subsets x 7 metrics).
+%
+% Artefacts:
+%   experiments/results/p5p8/p5_iter101_zvf130_eta2_full9.tsv
+%   experiments/results/p5p8/p5_iter101_zvf130_eta2_n2subset.tsv
+%   experiments/results/p5p8/p5_iter101_zvf130_lomo.tsv
+%   experiments/results/p5p8/p5_iter101_zvf130_family_subset.tsv
+%   experiments/results/p5p8/p5_iter101_zvf130_permutation.tsv
+%   experiments/results/p5p8/p5_iter101_zvf130_summary.json

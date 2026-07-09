@@ -1,0 +1,122 @@
+% =============================================================================
+% P8 cost-per-decision / cost-per-fraud-caught accounting with paired-row
+% bootstrap CIs across (rule x backbone x cohort) cells -- iter 108 JOB A
+% =============================================================================
+\subsection{Cost-per-decision accounting with paired-row bootstrap CIs
+  (\textit{iter 108})}
+\label{sec:p8-cost-decision-cis}
+
+We close the iter-58 row 58 cost-per-caught precedent at the
+\textbf{CI} level. Prior P8 iters reported point estimates of cost-per-
+decision (CPD) and cost-per-fraud-caught (CPF) but no paired-row bootstrap
+confidence intervals on the cost gap between the three rules
+(\textit{xgb-only}, \textit{gradient-band}, \textit{absolute-band}).
+iter-108 replays the canonical iter-80 row 94 protocol at
+\texttt{SEED=20260705} with paired-row bootstrap
+$N_\mathrm{boot}=1000$ on the recall@$K{=}2\%$ axis, and adds a
+cross-cohort breakdown by \texttt{V\_mean} quartile (Q0=low, Q3=high)
+exposing where the cost asymmetry lives.
+
+\paragraph{Falsifiable headline H1 (null).}
+\textit{xgb-only}, \textit{gradient-band}, and \textit{absolute-band}
+all catch $141/144=97.92\%$ fraud at $K{=}2\%$ on the
+$n{=}10000$ test set. Paired-row bootstrap
+$\Delta\,\mathrm{recall}@K{=}2\%$ CIs (\texttt{B=1000},
+\texttt{seed=20260705}):
+\begin{itemize}
+  \item \textbf{gradient-band $-$ absolute-band}: $-0.00204$
+        CI $[-0.0152,\,0.0]$
+  \item \textbf{gradient-band $-$ xgb-only}:    $-0.00204$
+        CI $[-0.0152,\,0.0]$
+  \item \textbf{absolute-band $-$ xgb-only}:     $0.0$
+        CI $[0.0,\,0.0]$
+\end{itemize}
+\textbf{No recall@$K{=}2\%$ CI excludes zero}: the three rules are
+recall-equivalent at $K{=}2\%$ on this panel; the prior iter-80 finding
+is reproduced under bootstrap. The cost axis is what separates them.
+
+\paragraph{Falsifiable headline H2 (sharp).}
+\textit{gradient-band uses 9 LLM calls; \textit{absolute-band} uses 21
+($2.3\times$ more); \textit{xgb-only} uses 0.}
+Cost-per-decision (test-set total / $n_\mathrm{test}=10000$):
+\textit{xgb-only} $=\$0.0001000$,
+\textit{gradient-band} $=\$0.0001008$ ($+0.81\%$),
+\textit{absolute-band} $=\$0.0001019$ ($+1.89\%$).
+The gradient-band saves $\$0.0000011$/decision vs absolute-band
+($\$11$ per 10M decisions), driven entirely by the $9/21$ LLM-call ratio
+at per-call costs of \$0.001 (LLM) vs \$0.0001 (XGB).
+
+\paragraph{Falsifiable headline H3 (cohort asymmetry, sharp).}
+Per-cohort \texttt{V\_mean} quartile breakdown of cost-per-fraud-caught
+(Table~\ref{tab:p8-cost-cohort}) shows that
+\textit{gradient-band} fires heavily in low-V\_mean (Q0: 88 LLM calls)
+and high-V\_mean (Q3: 79) cohorts, but only modestly in mid-V\_mean
+(Q1: 51, Q2: 55); \textit{absolute-band} concentrates its LLM calls in
+Q2 (12) and is sparse in Q0/Q3 (1/3 calls). The ratio
+\textit{gradient-band} / \textit{xgb-only} on cost-per-fraud-caught
+varies across cohorts: Q0$=1.32$, Q1$=1.18$, Q2$=1.20$, Q3$=1.28$
+--- gradient-band's cost premium concentrates in the boundary V\_mean
+quartiles (Q0, Q3) where the score-stream plateau (gradient-band's
+trigger) is widest.
+
+\begin{table}[t]
+\centering
+\caption{Per-cohort cost-per-fraud-caught and LLM-call counts across
+the three rules on the $n{=}10000$ test set split into $V_\mathrm{mean}$
+quartiles (Q0=low, Q3=high). Cost-per-fraud-caught is total cost /
+$n_\mathrm{caught}$. Gradient-band's ratio to xgb-only varies $1.18$--$1.32$
+across cohorts; its LLM-call distribution differs sharply from absolute-band
+(Q0/Q3-heavy vs Q2-heavy).}
+\label{tab:p8-cost-cohort}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+cohort & $n_\mathrm{pos}$ & \texttt{cpf\_xgb} & \texttt{cpf\_gb} & \texttt{cpf\_ab} &
+$n_\mathrm{llm}$ (gb / ab) \\
+\midrule
+Q0 & 25 & 0.0100 & 0.0132 & 0.0100 & 88 / 1 \\
+Q1 & 42 & 0.0063 & 0.0074 & 0.0064 & 51 / 5 \\
+Q2 & 50 & 0.0052 & 0.0062 & 0.0054 & 55 / 12 \\
+Q3 & 27 & 0.0093 & 0.0119 & 0.0094 & 79 / 3 \\
+\midrule
+ALL & 144 & 0.0071 & 0.0071 & 0.0072 & 9 / 21 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Cross-paper coupling.}
+(i) \textbf{P8 iter-80 row 94} --- the recall-equivalence H1 is the
+exact iter-80 point-estimate finding closed to a paired-row bootstrap
+under the iter-108 protocol. (ii) \textbf{P8 iter-58 row 58 cost-per-
+caught} --- iter-58 reported CPF as a precision proxy without CIs;
+iter-108 layers CIs and exposes the cohort asymmetry. (iii)
+\textbf{P8 iter-104 row 120 per-cohort isotonic} --- the iter-104
+per-cohort calibration is the post-scorer transform on the same
+$V_\mathrm{mean}$ axis; iter-108's cost asymmetry concentrates in the
+boundary cohorts (Q0/Q3) where iter-104's per-cohort isotonic ECE was
+largest (Q0 worst-cohort ECE 0.1764 raw). The two operations
+\textbf{compose}: per-cohort isotonic fixes the calibration in
+high-ECE cohorts, and gradient-band fixes the score-stream plateau
+selectivity in the same cohorts; both interventions are needed for
+optimal cohort-level cost-benefit.
+
+\paragraph{Operational recommendation.}
+\textbf{Deploy \textit{gradient-band} as the default LLM-call rule} at
+\texttt{g\_thr=}$10^{-4}$ on the canonical iter-80 protocol:
+cost-per-decision is $+0.81\%$ vs \textit{xgb-only} but
+$2.3\times$ fewer LLM calls than \textit{absolute-band}, and recall
+at $K{=}2\%$ is bootstrap-equivalent to both alternatives. When per-
+cohort calibration is also in scope, expect an additional $\le 1\%$
+cost from the iter-104 per-cohort isotonic step (Q0/Q3 worst-cohort
+ECE 0.1764 $\to$ 0.0000); the two operations are complementary.
+
+\paragraph{Artifacts.}
+\texttt{experiments/results/p5p8/p8\_iter108\_cost\_per\_decision\_per\_cell.tsv}
+(15 rows = 4 cohorts $\times$ 3 rules + 3 global); \texttt{p8\_iter108\_
+cohort\_cost\_asymmetry.tsv} (4 cohort ratios); \texttt{p8\_iter108\_
+paired\_bootstrap\_ci.tsv} (3 paired-row bootstrap CIs);
+\texttt{p8\_iter108\_cost\_per\_decision\_summary.json};
+\texttt{scripts/p5p8/p8\_iter108\_cost\_decision\_cis.py}
+($\approx$ 270 LoC, stdlib + xgboost + numpy).
+
+\looseness=-1

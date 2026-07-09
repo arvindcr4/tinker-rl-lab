@@ -1,0 +1,190 @@
+% Pillar 1 iter101 -- Cross-anchor (R_max, lambda) transfer test (Q6) +
+% stacked-AIC ensemble forecasting (Q7).  Closes two open operational
+% questions left by iter97:
+%   (a) is the per-anchor saturation fit (R_max, lambda) actually
+%       transferable across anchors, or just an anchor-specific
+%       over-fit?
+%   (b) does an AIC-stacked ensemble of the 8 functional families beat
+%       any single family on held-out forecast MAE (a "free lunch" test
+%       for not picking a single shape)?
+% Both yield falsifiable, mostly negative answers.
+\paragraph{Iter 101 elevation: per-anchor saturation fits degrade 19.4\% when transferred to a different anchor (mean off-diagonal MAE 0.446 vs home MAE 0.373); the AIC-stacked 8-family ensemble never beats the best single family on the held-out 25\% forecast (wins 0 of 12 anchors, mean $\Delta_\mathrm{stacked-best} = +0.117$).}
+\label{par:scaling-iter101}
+
+iter 97 closed Q4 (no new functional form beats constant-mean on
+parsimony) and Q5 (the GRPO reward noise floor is approximately
+scale-invariant).  iter 101 takes the next two operational questions
+in the same falsifiable register, asking whether the
+\emph{recommendation} from iter 97 -- ``use constant-mean for parsimony
+reporting and AR(1) for deployment forecasting'' -- actually delivers
+across anchors or whether some more sophisticated procedure dominates
+it:
+
+\begin{enumerate}
+\item \textbf{Q6 (cross-anchor transfer).}  For every ordered pair of
+anchors $(A, B)$ from the iter 81 / iter 97 12-anchor pool, we fit
+the saturation model $R(t) = R_\mathrm{max} \cdot (1 - e^{-\lambda t})$
+on $A$ and evaluate MAE / RMSE on $B$.  The home-anchor MAE
+$\mathrm{MAE}(A \to A)$ is the within-anchor over-fit floor; the
+off-diagonal mean $\mathbb{E}_{A \ne B} \mathrm{MAE}(A \to B)$ is the
+transfer cost.  The transfer ratio
+$\rho = \mathrm{MAE}_\mathrm{off} / \mathrm{MAE}_\mathrm{home}$
+quantifies how much of the within-anchor fit is genuine versus
+anchor-specific.  We additionally stratify by scale band
+($\mathrm{params}_B \le 32$ vs $> 100$) to see whether small-to-large
+transfer is asymmetrically bad.
+\item \textbf{Q7 (AIC-stacked ensemble forecast).}  On each anchor we
+hold out the last 25\% of the trace, refit all 8 functional families
+on the first 75\%, compute AIC, and form the AIC-softmax stacked
+predictor
+$\hat y_\mathrm{stacked}(t) = \sum_f w_f \hat y_f(t)$ with
+$w_f \propto \exp\!\bigl(-\tfrac{1}{2}(\mathrm{AIC}_f -
+\mathrm{AIC}_\mathrm{min})\bigr)$.
+We compare $\mathrm{MAE}_\mathrm{stacked}$ on the holdout to
+$\mathrm{MAE}_\mathrm{best\,single} = \min_f \mathrm{MAE}_f$ and
+record the winner.  A stacked win on even a single anchor would
+license the operational recommendation ``don't commit to one shape;
+let AIC weight them''.
+\end{enumerate}
+
+Both questions yield negative results
+(\tableref{tab:scaling-iter101-transfer},
+\tableref{tab:scaling-iter101-stacked},
+\figref{fig:scaling-iter101}):
+
+\begin{itemize}
+\item \textbf{Q6.}  Mean home-anchor MAE is $0.373$ over the 12
+diagonal pairs; mean off-diagonal transfer MAE is $0.446$ over the
+$132$ off-diagonal pairs, giving a transfer ratio
+$\hat\rho = 1.194$ -- \emph{the per-anchor saturation fit is only 84\%
+as good on a foreign anchor as it is on its home anchor}.  The
+degradation is asymmetric across scale bands: small-to-large transfer
+($S \to L$, 32 pairs) has $\mathrm{MAE} = 0.496$, 33\% above home, the
+worst band; large-to-small transfer ($L \to S$, 32 pairs) has
+$\mathrm{MAE} = 0.421$, only 13\% above home; within-band transfer
+($S \to S$, 56 pairs) has $\mathrm{MAE} = 0.434$ and within-$L$
+(12 pairs) has $\mathrm{MAE} = 0.431$.  \emph{The saturation model
+trained on a small anchor systematically under-predicts the ceiling of
+a large anchor; the reverse is milder.}
+\item \textbf{Q7.}  The AIC-stacked 8-family ensemble wins
+\textbf{0 of 12} anchors on holdout forecast MAE; mean
+$\Delta_\mathrm{stacked-best} = +0.117$ (stacked is on average
+\emph{worse} by $0.117$ MAE).  Best single family distribution:
+constant 4/12, AR(1) 3/12, monod 2/12, saturation 1/12, gompertz 1/12,
+plus 1 exact tie at MAE $=0$ on the Qwen3-235B-MoE short trace.
+\emph{There is no free lunch in not committing to a single shape} --
+AIC stacking consistently degrades against the oracle best-single
+choice, the standard stacked-generalisation failure mode when family
+weights become noisy on short traces.
+\end{itemize}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\hline
+scale band & $n$ pairs & mean MAE & median MAE & vs home \\
+\hline
+Home ($A \to A$)            & 12  & 0.3733 & 0.3768 & 1.000 \\
+$S \to S$ ($\le$32B)         & 56  & 0.4340 & 0.4010 & 1.163 \\
+$L \to L$ ($>$100B)          & 12  & 0.4310 & 0.5043 & 1.154 \\
+$S \to L$ (small to large)   & 32  & 0.4963 & 0.4749 & \textbf{1.330} \\
+$L \to S$ (large to small)   & 32  & 0.4211 & 0.3426 & 1.128 \\
+\hline
+Off-diag (all $A \ne B$)     & 132 & 0.4457 & 0.4230 & 1.194 \\
+\hline
+\end{tabular}
+\caption{Iter 101 Q6 cross-anchor transfer MAE.  Saturation
+$R_\mathrm{max} (1 - e^{-\lambda t})$ is fit on each anchor and
+evaluated on every other anchor (or itself, for the home row).  The
+transfer ratio (right column) is the band mean divided by the
+home-anchor mean.  Small-to-large transfer is the worst band, 33\%
+above the home floor; large-to-small is the closest to home.  $S$ =
+$\mathrm{params}_B \le 32$, $L$ = $> 100$.}
+\label{tab:scaling-iter101-transfer}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\hline
+anchor & $\mathrm{params}_B$ & stacked MAE & best single & best MAE & stacked wins \\
+\hline
+Qwen3.5-4B           & 4    & 0.256 & ar1          & 0.202 & False \\
+Qwen3-8B             & 8    & 0.152 & ar1          & 0.145 & False \\
+Llama-3.1-8B-Instruct & 8   & 0.152 & saturation   & 0.141 & False \\
+Qwen3-32B            & 32   & 0.150 & constant     & 0.094 & False \\
+Qwen3.5-27B          & 27   & 0.404 & constant     & 0.375 & False \\
+gpt-oss-20B          & 20   & 0.296 & ar1          & 0.152 & False \\
+Qwen3-30B-MoE        & 30   & 0.300 & constant     & 0.240 & False \\
+Qwen3-30B-MoE-Inst   & 30   & 0.179 & constant     & 0.000 & False \\
+DeepSeek-V3.1        & 671  & 0.210 & monod        & 0.145 & False \\
+Nemotron-120B        & 120  & 0.231 & monod        & 0.200 & False \\
+Qwen3-235B-MoE       & 235  & 0.000 & constant     & 0.000 & tie  \\
+Kimi-K2-Thinking     & 1000 & 0.894 & gompertz     & 0.129 & False \\
+\hline
+\end{tabular}
+\caption{Iter 101 Q7 AIC-stacked 8-family ensemble versus best
+single-family on the last-25\% holdout of each anchor's reward trace.
+The stacked ensemble wins 0 of 12 anchors and ties 1.  Best-single
+distribution: constant 4/12, AR(1) 3/12, monod 2/12, saturation 1/12,
+gompertz 1/12.  No free lunch in deferring the family choice to AIC
+weights.}
+\label{tab:scaling-iter101-stacked}
+\end{table}
+
+% --- evidence references ---
+The cross-anchor transfer matrix (12 $\times$ 12 = 144 entries) and
+the per-anchor stacked-versus-best TSV are saved as
+\texttt{scaling\_law\_iter101\_transfer.tsv} and
+\texttt{scaling\_law\_iter101\_stacked.tsv}, plus a meta JSON
+(\texttt{scaling\_law\_iter101\_meta.json}) summarising both
+diagnostics.  Script: \texttt{scripts/scaling\_law\_iter101.py}
+(stdlib + numpy + matplotlib, no fabricated numbers; saturation fit
+mirrors iter 81 / iter 85 / iter 89 / iter 93 / iter 97).  Figure:
+\figref{fig:scaling-iter101}.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{scaling_law_iter101.pdf}
+\caption{Iter 101 three-panel diagnostic.  \textbf{(A)} Cross-anchor
+transfer scatter: source-anchor $\mathrm{params}_B$ (log-scale, $x$) vs
+MAE evaluated on the target anchor ($y$).  Blue points are 132
+off-diagonal pairs; red dashed line = home-anchor mean MAE (0.373);
+orange dotted line = off-diagonal mean MAE (0.446).  The 19.4\%
+transfer-ratio gap is the visible vertical band.  \textbf{(B)} Per-
+anchor stacked AIC (green) versus best single family (red) holdout
+forecast MAE: stacked is uniformly equal or worse, with the gap
+largest on Kimi-K2-Thinking (+0.764) and Qwen3-30B-MoE-Inst (+0.179).
+\textbf{(C)} Mean AIC-stack weight across the 12 anchors; constant
+dominates the stack on average, with AR(1), 1-segment, and saturation
+as the next tier.  Even with constant averaging $\sim$30\% weight,
+the ensemble still loses to the constant-only oracle because the
+remaining weight smears constant's sharp forecast into the noisier
+families.  Key features: (i) saturation is per-anchor specific --
+``borrow strength across anchors'' does not work; (ii) AIC-stacking
+is not a free-lunch defence against the parsimony-vs-forecast
+inversion -- you have to commit to a family.}
+\label{fig:scaling-iter101}
+\end{figure}
+
+The Iter 101 finding is therefore a \emph{joint negative result} on
+both operational defences of iter 97's recommendation:
+\textbf{(a)} the saturation model does not generalise cleanly across
+anchors (transfer ratio 1.194, worst-case 1.330 in $S \to L$); and
+\textbf{(b)} the AIC-stacked 8-family ensemble does not dominate the
+best single family on held-out forecast MAE (wins 0/12).  The
+operational recommendation from iter 97 -- \emph{``use constant-mean
+for parsimony reporting and AR(1) for deployment forecasting''} --
+therefore stands: do not borrow saturation parameters across anchors,
+and do not try to hedge the family choice with an AIC stack.  The
+between-anchor variation in $(R_\mathrm{max}, \lambda)$ is too large
+relative to within-anchor signal to be smoothed away, and the
+forecast-MAE criterion is too sharp for AIC-weight averaging to help.
+(frontier synthesis: this matches the operational recommendation from
+breiman1996stacking that stacking is a defence against \emph{model
+uncertainty}, not against \emph{under-fitting short traces}; and the
+burnham2002model observation that AIC weights are only consistent in
+the asymptotic regime $n \to \infty$, which we are nowhere near on
+3--30 step traces.)

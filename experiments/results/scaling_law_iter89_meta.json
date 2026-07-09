@@ -1,0 +1,82 @@
+{
+  "n_anchors": 12,
+  "n_loocv_anchors": 7,
+  "n_kfold_anchors": 7,
+  "AIC_winner_counts": {
+    "constant": 6,
+    "1seg_ols": 1,
+    "saturation": 0,
+    "3seg": 5
+  },
+  "BIC_winner_counts": {
+    "constant": 11,
+    "1seg_ols": 1,
+    "saturation": 0,
+    "3seg": 0
+  },
+  "LOOCV_winner_counts": {
+    "constant": 6,
+    "1seg_ols": 1,
+    "saturation": 0,
+    "3seg": 0
+  },
+  "kfold_forecast_winner_counts": {
+    "constant": 4,
+    "1seg_ols": 1,
+    "saturation": 1,
+    "3seg": 1
+  },
+  "n_bic_3seg_winners": 0,
+  "n_aic_3seg_winners": 5,
+  "n_loo_3seg_winners": 0,
+  "n_kfold_3seg_winners": 1,
+  "bootstrap_canon_order_rate_mean": 0.24857142857142858,
+  "bootstrap_spurt_largest_rate_mean": 0.4935714285714285,
+  "bootstrap_cp2_cv_mean": 0.34242857142857147,
+  "kfold_winners_per_anchor": {
+    "Qwen3.5-4B": "constant",
+    "Qwen3-8B": "constant",
+    "Llama-3.1-8B-Instruct": "3seg",
+    "gpt-oss-20B": "1seg_ols",
+    "DeepSeek-V3.1": "constant",
+    "Nemotron-120B": "saturation",
+    "Kimi-K2-Thinking": "constant"
+  },
+  "loocv_winners_per_anchor": {
+    "Qwen3.5-4B": "constant",
+    "Qwen3-8B": "constant",
+    "Llama-3.1-8B-Instruct": "constant",
+    "gpt-oss-20B": "constant",
+    "DeepSeek-V3.1": "constant",
+    "Nemotron-120B": "constant",
+    "Kimi-K2-Thinking": "1seg_ols"
+  },
+  "bic_winners_per_anchor": {
+    "Qwen3.5-4B": "constant",
+    "Qwen3-8B": "constant",
+    "Llama-3.1-8B-Instruct": "constant",
+    "Qwen3-32B": "1seg_ols",
+    "Qwen3.5-27B": "constant",
+    "gpt-oss-20B": "constant",
+    "Qwen3-30B-MoE": "constant",
+    "Qwen3-30B-MoE-Inst": "constant",
+    "DeepSeek-V3.1": "constant",
+    "Nemotron-120B": "constant",
+    "Qwen3-235B-MoE": "constant",
+    "Kimi-K2-Thinking": "constant"
+  },
+  "aic_winners_per_anchor": {
+    "Qwen3.5-4B": "3seg",
+    "Qwen3-8B": "constant",
+    "Llama-3.1-8B-Instruct": "3seg",
+    "Qwen3-32B": "1seg_ols",
+    "Qwen3.5-27B": "constant",
+    "gpt-oss-20B": "constant",
+    "Qwen3-30B-MoE": "constant",
+    "Qwen3-30B-MoE-Inst": "constant",
+    "DeepSeek-V3.1": "3seg",
+    "Nemotron-120B": "3seg",
+    "Qwen3-235B-MoE": "constant",
+    "Kimi-K2-Thinking": "3seg"
+  }
+}

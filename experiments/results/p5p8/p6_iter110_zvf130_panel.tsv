@@ -1,0 +1,16 @@
+variant	metric	point	ci_lo	ci_hi	n	sig
+aero	zvf_risk	-0.147637	-0.301460	0.008028	5	0
+aero	mean_zvf	-0.260520	-0.261800	-0.259240	5	1
+aero	risk_mag	0.364753	0.362963	0.366652	5	1
+aero	risk_csd	-0.274073	-0.580984	0.034102	5	0
+aero	risk_drift	-0.600134	-0.604247	-0.595257	5	1
+gift	zvf_risk	-0.263187	-0.356983	-0.169392	5	1
+gift	mean_zvf	-0.366580	-0.371540	-0.363140	5	1
+gift	risk_mag	0.500365	0.496534	0.505859	5	1
+gift	risk_csd	-0.579540	-0.767096	-0.391984	5	1
+gift	risk_drift	-0.617634	-0.628215	-0.609525	5	1
+areal	zvf_risk	-0.245767	-0.334999	-0.156536	5	1
+areal	mean_zvf	-0.359880	-0.364800	-0.356780	5	1
+areal	risk_mag	0.492811	0.489307	0.498362	5	1
+areal	risk_csd	-0.537969	-0.714490	-0.361448	5	1
+areal	risk_drift	-0.623132	-0.631162	-0.610764	5	1

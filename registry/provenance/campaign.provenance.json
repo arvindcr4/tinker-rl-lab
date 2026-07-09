@@ -1,0 +1,67 @@
+{
+  "run_id": "campaign-multiseed",
+  "spec_version": "MIN-REPORT-RL/1.0",
+  "min_report_rl": {
+    "loss_form": {
+      "importance_ratio_level": "token",
+      "advantage_normalization": "std",
+      "length_normalization": false,
+      "clip_eps_low": null,
+      "clip_eps_high": null
+    },
+    "reference_kl": {
+      "beta": 0.0,
+      "note": "no KL penalty (pure advantage-weighted)"
+    },
+    "sampler_backend": "tinker",
+    "telemetry": [
+      "reward",
+      "loss",
+      "collapsed",
+      "heldout"
+    ],
+    "group_size_schedule": {
+      "G": 4,
+      "schedule": "constant"
+    },
+    "heldout_split": {
+      "n": 12,
+      "disjoint": true,
+      "eval": "greedy"
+    },
+    "decontamination": {
+      "method": "index-disjoint from train pool",
+      "verified": true
+    }
+  },
+  "provenance": {
+    "git_sha": "de9bcba",
+    "code_file": "experiments/openings/campaign.py",
+    "code_hash": "sha256:338fe245685b9126",
+    "reward_fn_hash": "sha256:338fe245685b9126",
+    "data_hash": "sha256:8c4bcfcab83f9986",
+    "config_hash": "sha256:dc9a4182b7f04a2c"
+  },
+  "rigor": {
+    "n_seeds": 3,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "reports_heldout": true,
+    "heldout_disjoint": true,
+    "reports_ci": false
+  },
+  "results": {
+    "baseline_G4_mean_gain": 0.028,
+    "curriculum_G4_mean_gain": -0.028,
+    "sd": 0.12,
+    "verdict": "no significant difference"
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "pubkey": "00448f8489261e083dd468a1fe7e49ffa7d1c1e02e46e0f54476f51d2c2d1e0d",
+    "sig": "2ae650a92105344d9f74ba0b8b01971f6809e59fba69713b3c8b2ee1116bcdc070a5a08ad357b3b2543e894d71d4c497ac852033f61e7e701c9b3e9e61b0810a"
+  }
+}

@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "key": "p5_minreport",
+    "title": "P5 — Report the Stack, Not the Label (MIN-REPORT)",
+    "detail": "FIRST read ./P5P8_IMPROVEMENT_BRIEF.md and ./P5P8_IMPROVEMENTS.md if it exists. Improve paper_P5_minreport.tex. Highest-value veins: (a) audit the MIN-REPORT schema against the live mega-campaign manifests in experiments/results/mega_20260704/manifests/ — field coverage, missing/ambiguous fields, a measured coverage table; (b) quantify stack-conditioning with the N2 four-method same-stack tensors and the berkeley unpacking_dpo_ppo factorization (algorithm-axis eta^2 vs stack axes); (c) bootstrap CIs on every P5 headline number (reuse scripts/berkeley/adding_error_bars_to_evals.py); (d) verified related-work hardening (reporting standards, model cards, datasheets). Pick ONE item not already in the ledger and prototype it on real data this iteration.",
+    "deliverables": "docs/p5p8_improvements/<NN>_<slug>.md; scripts/p5p8/<slug>.py -> experiments/results/p5p8/*.tsv; ledger row in P5P8_IMPROVEMENTS.md; if validated: paper_P5 section update + clean rebuild (0 errors / 0 undefined); >=1 AUTORESEARCH_FINDINGS.jsonl line with pillar P5."
+  },
+  {
+    "id": 2,
+    "key": "p6_registry",
+    "title": "P6 — GRPO-Registry (machine-readable stack catalog)",
+    "detail": "FIRST read ./P5P8_IMPROVEMENT_BRIEF.md and the ledger. Improve paper_P6_registry.tex and the registry itself (registry/schema.json, registry/entries/*.json, registry/query.py). Highest-value veins: (a) validate existing entries against measured behavior — the N2 tensors give same-stack GRPO/AERO/GIFT/AREAL deltas, the zvf_iter130 risk index covers 9 methods; compute measured variant deltas and compare to the registry's claimed deltas; (b) coverage audit: which of the repo's 7 frameworks / 9 methods have entries, which fields are unpopulated (measured table); (c) schema validation script + CI-style check that every entry parses; (d) add entries for methods present in the data but missing from the registry, with provenance. Pick ONE item, prototype on real data.",
+    "deliverables": "docs/p5p8_improvements/<NN>_<slug>.md; scripts/p5p8/<slug>.py; registry entry/schema patches with provenance; experiments/results/p5p8/*.tsv; ledger row; if validated: paper_P6 update + clean rebuild; >=1 findings line with pillar P6."
+  },
+  {
+    "id": 3,
+    "key": "p7_zvf_controller",
+    "title": "P7 — From Diagnostic to Controller (adaptive-G intervention)",
+    "detail": "FIRST read ./P5P8_IMPROVEMENT_BRIEF.md and the ledger. Improve paper_P7_zvf_controller.tex. Highest-value veins: (a) counterfactual evaluation of the adaptive-G controller on the REAL N2 reward tensors (40 steps x 4 methods, exact per-prompt ZVF) — when would it have fired, what G would it have chosen, what contrast would it have restored; (b) unify with the Dualformer auto-G rule (berkeley row 01: 56.2% saving) and the AlphaProof gamma*=0 smoothing (row 19) into one calibrated controller section; (c) seed-robustness of the trigger threshold on the growing n10_seed_expansion panel; (d) bootstrap CIs on every P7 headline. Pick ONE item, prototype on real data this iteration.",
+    "deliverables": "docs/p5p8_improvements/<NN>_<slug>.md; scripts/p5p8/<slug>.py -> experiments/results/p5p8/*.tsv; ledger row; if validated: paper_P7 update + clean rebuild; >=1 findings line with pillar P7."
+  },
+  {
+    "id": 4,
+    "key": "p8_fraud_and_synth",
+    "title": "P8 — LLM vs XGBoost fraud study + cross-paper synthesis",
+    "detail": "FIRST read ./P5P8_IMPROVEMENT_BRIEF.md, the FULL P5P8_IMPROVEMENTS.md ledger, and AUTORESEARCH_FINDINGS.jsonl. Alternate between two jobs. JOB A (P8): improve paper_P8_fraud.tex using fraud_data.csv / test_data.csv — calibration analysis, CIs on the sensor/scribe/scorer comparison, ablations of the LLM-as-sensor features, cost-per-decision accounting. JOB B (SYNTH): re-rank the ledger by impact x evidence x readiness; take the TOP proposed item from ANY pillar and drive it to validated — finish the prototype, integrate the paper-facing text, rebuild the affected paper at 0 errors / 0 undefined citations; record rejects with reasons so threads stop cycling.",
+    "deliverables": "JOB A: docs/p5p8_improvements/<NN>_<slug>.md + scripts/p5p8/<slug>.py + experiments/results/p5p8/*.tsv + ledger row + findings line with pillar P8. JOB B: re-ranked ledger with status transitions; one item driven to validated with a clean paper rebuild; findings line with pillar P5P8-SYNTH."
+  }
+]

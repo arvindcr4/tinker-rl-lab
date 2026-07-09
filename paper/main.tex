@@ -10,6 +10,7 @@
 % Replace with: \url{https://anonymous.4open.science/r/tinker-rl-lab}
 
 \documentclass{article}
+\let\eps\varepsilon
 
 % NeurIPS 2026 style (download from https://neurips.cc)
 % \usepackage{neurips_2025}       % For camera-ready
@@ -86,6 +87,15 @@
 
 % Custom command for partial answers in NeurIPS checklist
 \newcommand{\answerPartial}[1][]{\textcolor{purple}{[Partial] #1}}
+
+% Paragraph-ref helper used by some scaling-law sections
+\providecommand{\paragraphref}[1]{Paragraph~\ref{#1}}
+
+% Cross-ref helpers used by Pillar 1/2 sections that aren't loaded
+% through sections/_shared_preamble.tex.
+\providecommand{\tableref}[1]{Table~\ref{#1}}
+\providecommand{\figref}[1]{Figure~\ref{#1}}
+\providecommand{\secref}[1]{Section~\ref{#1}}
 
 \begin{document}
 \sloppy
@@ -879,6 +889,31 @@ at $p < 0.05$.}
 \label{fig:scaling_params}
 \end{figure}
 
+% Pillar 1 -- frontier-scale saturation / cross-scale law analysis
+% (this is the worktree-produced Pillar-1 deliverable;
+% scripts/scaling_law_fit.py)
+\input{sections/scaling_laws}
+\input{sections/scaling_law_iter29}
+\input{sections/scaling_law_iter33}
+\input{sections/scaling_law_iter37}
+\input{sections/scaling_law_iter41}
+\input{sections/scaling_law_iter45}
+\input{sections/scaling_law_iter49}
+\input{sections/scaling_law_iter53}
+\input{sections/scaling_law_iter61}
+\input{sections/scaling_law_iter65}
+\input{sections/scaling_law_iter69}
+input{sections/scaling_law_iter73}
+\input{sections/scaling_law_iter81}
+\input{sections/scaling_law_iter85}
+\input{sections/scaling_law_iter89}
+\input{sections/scaling_law_iter93}
+\input{sections/scaling_law_iter97}
+\input{sections/scaling_law_iter101}
+\input{sections/scaling_law_iter105}
+\input{sections/scaling_law_iter109}
+\input{sections/frontier_synthesis_scaling}
+
 \subsection{Hyperparameter Sensitivity}
 
 % Figure 8: Model x task reward grid
@@ -1475,7 +1510,7 @@ experiments.}
 Wu et al.~\cite{wu2025grpo_dpo} prove that GRPO is algebraically equivalent to
 an implicit contrastive objective (DPO), with group size $G$ affecting only
 the Monte Carlo variance of that objective. Their headline finding: \textbf{2-GRPO}
-($G=2$) retains 98.1\% of 16-GRPO performance while requiring 12.5\% of rollouts
+($G=2$) retains 97.6\% of 16-GRPO performance while requiring 12.5\% of rollouts
 and 21\% of training time.
 
 \paragraph{ZVF Theory.}
@@ -1891,6 +1926,35 @@ experiments (flag=1) are marked with a star.}
 \label{fig:reward_stability}
 \end{figure}
 
+% Pillar 4 — per-step Dr.GRPO signature analysis (Pillar 4 deliverable)
+\input{sections/length_bias}
+
+% Pillar 4 — step-decomposition and Dr.GRPO signature (Iter 28)
+\input{sections/length_bias_iter28}
+\input{sections/length_bias_iter32}
+\input{sections/length_bias_iter36}
+\input{sections/length_bias_iter40}
+\input{sections/length_bias_iter44}
+\input{sections/length_bias_iter48}
+\input{sections/length_bias_iter52}
+\input{sections/length_bias_iter56}
+\input{sections/length_bias_iter60}
+\input{sections/length_bias_iter64}
+\input{sections/length_bias_iter68}
+\input{sections/length_bias_iter72}
+\input{sections/length_bias_iter76}
+\input{sections/length_bias_iter80}
+\input{sections/length_bias_iter84}
+\input{sections/length_bias_iter88}
+\input{sections/length_bias_iter96}
+\input{sections/length_bias_iter100}
+\input{sections/length_bias_iter104}
+\input{sections/length_bias_iter108}
+\input{sections/length_bias_iter112}
+\input{sections/length_bias_iter116}
+\input{sections/length_bias_iter124}
+\input{sections/frontier_synthesis_length_bias}
+
 % =============================================================================
 \subsection{Broader Impact}
 \label{sec:impact}
@@ -2256,9 +2320,59 @@ and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existi
 % =============================================================================
 
 \input{sections/appendix_zvf_formalization}
+\input{sections/zvf}
 \input{sections/zvf_counterfactual_appendix}
 \input{sections/zvf_pipeline_spec}
+\input{sections/zvf_cross_experiment_diagnostic}
+\input{sections/zvf_dynamics}
+\input{sections/zvf_gradient}
+\input{sections/zvf_scaling}
+\input{sections/zvf_iter22}
+\input{sections/zvf_iter30}
+\input{sections/zvf_iter34}
+\input{sections/zvf_iter38}
+\input{sections/zvf_iter42}
+\input{sections/zvf_iter46}
+\input{sections/zvf_iter50}
+\input{sections/zvf_iter58}
+\input{sections/zvf_iter62}
+\input{sections/zvf_iter70}
+\input{sections/zvf_iter74}
+\input{sections/zvf_iter82}
+\input{sections/zvf_iter86}
+\input{sections/zvf_iter90}
+\input{sections/zvf_iter94}
+\input{sections/zvf_iter98}
+\input{sections/zvf_iter102}
+\input{sections/zvf_iter106}
+\input{sections/zvf_iter110}
+\input{sections/zvf_iter114}
+\input{sections/zvf_iter118}
+\input{sections/zvf_iter122}
+\input{sections/frontier_synthesis_zvf}
 \input{sections/group_size_reconcile}
+\input{sections/group_size_iter23}
+\input{sections/group_size_iter27}
+\input{sections/group_size_iter31}
+\input{sections/group_size_iter35}
+\input{sections/group_size_iter39}
+\input{sections/group_size_iter43}
+\input{sections/group_size_iter47}
+\input{sections/group_size_iter51}
+\input{sections/group_size_iter55}
+\input{sections/group_size_iter59}
+\input{sections/group_size_iter63}
+\input{sections/group_size_iter67}
+\input{sections/group_size_iter71}
+\input{sections/group_size_iter87}
+\input{sections/group_size_iter99}
+\input{sections/group_size_iter103}
+\input{sections/group_size_iter107}
+\input{sections/group_size_iter111}
+\input{sections/group_size_iter115}
+\input{sections/group_size_iter119}
+\input{sections/group_size_iter127}
+\input{sections/frontier_synthesis_group_size}
 \input{sections/framework_configs_appendix}
 \input{sections/stat_rigor_updates}
 \input{sections/statistical_rigor_addendum}

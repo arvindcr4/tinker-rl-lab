@@ -1,0 +1,10 @@
+metric_id	pillar	headline	point	n_seeds	n_pooled	ci_naive	w_naive	ci_cluster	w_cluster	icc	deff	n_eff	width_inflation	verdict
+P1_grpo_last10	P1	GRPO same-stack last-10 mean_reward = 0.979 (paper: 0.9789+/-0.0067)	0.97891	5	50	[0.9698, 0.9873]	0.0175	[0.9672, 0.9903]	0.02312	0.1279	2.151	23.25	1.321	MILD_INFLATION
+P1_ppo_last10	P1	PPO same-stack last-10 mean_reward = 0.918 (paper: 0.9181+/-0.0497)	0.91813	5	50	[0.8822, 0.9477]	0.06547	[0.8180, 0.9747]	0.15672	0.7081	7.373	6.78	2.394	INFLATED
+P1_grpo_minus_ppo_paired	P1	GRPO-PPO paired last10 delta = +0.061 pt (equivalence claim, p=0.75 in paper on heldout)	0.06078	5	50	[0.0298, 0.0964]	0.06656	[-0.0002, 0.1559]	0.15609	paired	2.345	5	2.345	CLUSTER_REQUIRED (delta CI must straddle 0 for equivalence)
+P3_reward_G2	P3	Group-size G=2 mean_reward (low-G endpoint of +24% swing claim)	0.83984	3	120	[0.7997, 0.8781]	0.07839	[0.8273, 0.8523]	0.025	0.0	1.0	120.0	0.319	HONEST
+P3_reward_G16	P3	Group-size G=16 mean_reward (high-G endpoint of +24% swing claim)	0.87308	3	120	[0.8343, 0.9083]	0.07402	[0.8697, 0.8783]	0.00859	0.0	1.0	120.0	0.116	HONEST
+P3_zvf_G2	P3	ZVF at G=2 = 0.845 (frontier r2 ZVF-decay endpoint)	0.83802	3	120	[0.8036, 0.8708]	0.06719	[0.8266, 0.8516]	0.025	0.0	1.0	120.0	0.372	HONEST
+P3_zvf_G16	P3	ZVF at G=16 = 0.631 (frontier r2 ZVF-decay endpoint)	0.63125	3	120	[0.5625, 0.6958]	0.13333	[0.6219, 0.6375]	0.01562	0.0	1.0	120.0	0.117	HONEST
+P4_bfcl_dense	P4	bfclv4 dense-shaped tool-use reward = 0.186 (ReAct row-13 H1)	0.18625	2	10	[0.1025, 0.2675]	0.165	[0.0950, 0.2775]	0.1825	0.5193	3.077	3.25	1.106	INFLATED
+P4_bfcl_sparse	P4	bfclv4 sparse tool-use reward = 0.113 (ReAct row-13 H1)	0.1125	2	10	[0.0500, 0.1750]	0.125	[0.0500, 0.1750]	0.125	0.4149	2.66	3.76	1.0	MILD_INFLATION

@@ -1,0 +1,44 @@
+% Pillar-4 (length bias) discussion + conclusion
+\section{Discussion and Limitations}
+\label{sec:p4-discussion}
+The central caution is that our comparison lives in a regime that is, by
+construction, unfavorable for revealing a length effect: short arithmetic chains
+with a binary exact-match reward, and GSM8K-CoT sampled with a 200-token cap where
+step-0 completions are already near the cap and length is weakly (often
+negatively) coupled to reward. A null difference between GRPO and
+Dr.\,GRPO here is therefore weak evidence about length debiasing in general. Two
+further limitations matter. Held-out evaluation is single-benchmark and
+the top-10-checkpoint frontier comparison is single-seed (the pre-RL-vs-post
+Qwen3-8B-Instruct comparison uses five seeds), so the non-significant GRPO gain
+should be read as a boundary on what we can claim rather than a universal result;
+and length
+dynamics are only weakly identifiable in this data, so mediation-style conclusions
+require the length-confounded regime we specify but do not yet run. The
+paired-outcome tests we rely on are also marginal tests, which can be confounded by
+length-mediated success---a limitation the proposed causal mediation protocol is
+designed to address.
+
+On the statistics themselves, an independent Miller-style
+audit~\citep{miller2024erroreval} re-derived seven headline numbers across the four
+pillar papers under paired/unpaired bootstrap CIs and an equivalence-region (TOST)
+test (\texttt{experiments/results/berkeley/adding\_error\_bars\_summary.json}).
+The single P4-facing headline---audit H7, the iter-136 arithmetic late-training-efficiency
+contrast (our H3; paired $n{=}5$, Cohen's $d = +2.68$,
+one-sided $p_{\mathrm{param}} = 0.031$, two-sided $p_{\mathrm{perm}} = 0.063$)---is
+graded \textbf{DECISIVE} at $\alpha = 0.05$ under the audit's $n{<}10$
+paired-bootstrap rule, while the audit's three NULL verdicts (its H3, H4, H5) all
+fall on Pillar-1/3 headlines rather than on this paper's claims.
+
+\section{Conclusion}
+\label{sec:p4-conclusion}
+In the near-ceiling Qwen3-8B-Instruct evaluation, GRPO does not significantly
+outperform its pre-RL checkpoint on held-out GSM8K; in the Qwen2.5-1.5B
+comparison, Dr.\,GRPO does not outperform GRPO at our seed budget; and under the
+200-token GSM8K cap neither algorithm inflates length. Rather than read this as
+evidence against length debiasing, we
+read it as the expected outcome when there is no length pathology to correct, and
+we convert it into a concrete experimental program: a length-confounded sparse-reward
+regime, a causal length-mediation protocol separating genuine deduction from
+verbosity-mediated exploitation, and a length-adversarial truncation test on the
+released checkpoints. The most useful contribution of this pillar is thus a precise
+statement of where a Dr.\,GRPO advantage should and should not be expected.

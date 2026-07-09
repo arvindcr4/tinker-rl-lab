@@ -1,0 +1,1457 @@
+%=====================================================================
+% PES University --- M.Tech (Data Science and Machine Learning)
+% Project Phase 1 (UE20CS971)
+% ZERO-VARIANCE FRACTION (ZVF) --- Phase-1 Project Report
+% Format: modelled on the PES "Sample-Project-Phase-1-Report" (bound thesis):
+%   Title -> Certificate -> Declaration -> Acknowledgement -> Abstract ->
+%   Table of Contents -> List of Figures -> List of Tables -> 7 chapters ->
+%   References -> Appendices.
+% Compile: pdflatex Phase1_Project_Report_ZVF.tex  (run TWICE for TOC/refs)
+% Individual (solo) project. Author: Arvind C R (SRN PES2PGE24DS140).
+%=====================================================================
+\documentclass[12pt,a4paper]{report}
+
+% ---- binding margin: extra room on the left (spine) side --------------
+\usepackage[a4paper,left=1.5in,right=1in,top=1in,bottom=1in]{geometry}
+\usepackage{setspace}
+\onehalfspacing                 % 1.5 line spacing (thesis requirement)
+
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,decorations.pathreplacing}
+
+% ---- shared tikz styles (identical to the ESA draft figures) ----
+\tikzset{
+  blk/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
+              minimum height=8mm, minimum width=20mm, align=center, font=\small},
+  io/.style={rectangle, rounded corners=6pt, draw=black!70, thick, fill=green!8,
+             minimum height=8mm, align=center, font=\small},
+  proc/.style={rectangle, draw=black!70, thick, fill=orange!10, minimum height=8mm,
+               align=center, font=\small},
+  dec/.style={diamond, aspect=2, draw=black!70, thick, fill=yellow!15, align=center, font=\footnotesize},
+  ar/.style={-{Latex[length=2mm]}, thick},
+  lbl/.style={font=\footnotesize\itshape, text=black!60},
+}
+\definecolor{good}{RGB}{34,139,34}
+\definecolor{bad}{RGB}{178,34,34}
+\definecolor{warn}{RGB}{218,165,32}
+\definecolor{pesblue}{RGB}{0,45,98}
+\newcommand{\zvf}{\mathrm{ZVF}}
+\renewcommand{\bibname}{References}   % rubric mandates "References", not "Bibliography"
+
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{0pt}
+\setlength{\emergencystretch}{3em} % absorb unbreakable \texttt / slashed tokens
+
+\begin{document}
+
+%=====================================================================
+% COVER / TITLE PAGE
+%=====================================================================
+\begin{titlepage}
+\centering
+\thispagestyle{empty}
+\vspace*{0.2in}
+
+{\large PES UNIVERSITY\par}
+{\footnotesize (Established under Karnataka Act No.\ 16 of 2013)\\
+100-ft Ring Road, Banashankari Stage III, Bengaluru --- 560085, Karnataka, India\par}
+
+\vspace{0.5in}
+{\normalsize A Project Report\par}
+{\normalsize On\par}
+\vspace{0.5em}
+{\Large\bfseries Zero-Variance Fraction (ZVF):\\[0.35em]
+A Diagnostic Benchmark for GRPO\\[0.25em] Post-Training of Language Models\par}
+\vspace{0.6em}
+{\normalsize Measurement, Diagnostics, and Reproducibility Tooling for RLVR\par}
+
+\vfill
+
+{\large Submitted in partial fulfilment of the requirements for\par}
+{\large Project Phase-1 of the degree of\par}
+\vspace{0.6em}
+{\large\bfseries Master of Technology\par}
+\vspace{0.2em}
+{\normalsize in\par}
+\vspace{0.2em}
+{\large Data Science and Machine Learning\par}
+
+\vfill
+
+{\normalsize Submitted by\par}
+\vspace{0.3em}
+{\large\bfseries Arvind C R\par}
+{\normalsize SRN: PES2PGE24DS140\par}
+
+\vspace{0.9em}
+{\normalsize Under the guidance of\par}
+\vspace{0.2em}
+{\large\bfseries Ramesh Prakash Guledgudd\par}
+{\normalsize Project Guide\par}
+
+\vfill
+
+{\normalsize Course: UE20CS971 --- Project Phase-1 \quad$\vert$\quad May 2026 --- July 2026\par}
+\vspace{0.6em}
+{\large\bfseries FACULTY OF ENGINEERING AND TECHNOLOGY\par}
+{\normalsize DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
+\vspace{0.4em}
+{\large\bfseries 2026\par}
+
+\end{titlepage}
+
+%=====================================================================
+% CERTIFICATE PAGE
+%=====================================================================
+\thispagestyle{empty}
+\begin{center}
+{\large PES UNIVERSITY, BENGALURU\par}
+{\normalsize FACULTY OF ENGINEERING AND TECHNOLOGY\par}
+{\normalsize DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
+\vspace{1.0em}
+{\Large\bfseries CERTIFICATE\par}
+\end{center}
+\vspace{1.0em}
+
+This is to certify that the Project Phase-1 report entitled
+\textbf{``Zero-Variance Fraction (ZVF): A Diagnostic Benchmark for GRPO
+Post-Training of Language Models''} is a bona fide record of the work carried out
+by \textbf{Arvind C R} (SRN \textbf{PES2PGE24DS140}), a student of the Master of
+Technology programme in Data Science and Machine Learning, PES University, in
+partial fulfilment of the requirements for the course \textbf{UE20CS971 ---
+Project Phase-1}, during the academic year 2025--2026. This is an
+\emph{individual} project; the candidate has worked on a unique project title and
+has independently carried out the work reported herein.
+
+\vspace{0.6em}
+
+The work presented in this report has been carried out under my supervision and
+guidance. To the best of my knowledge, the contents of this report, in full or in
+parts, have not been submitted to any other institute or university for the award
+of any degree or diploma.
+
+\vspace{3.2em}
+
+\noindent
+\begin{minipage}[t]{0.48\linewidth}
+\centering
+\rule{5cm}{0.4pt}\\
+\textbf{Ramesh Prakash Guledgudd}\\
+Project Guide\\
+Dept.\ of Computer Science and Engineering\\
+PES University
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\centering
+\rule{5cm}{0.4pt}\\
+\textbf{Chairperson}\\
+Dept.\ of Computer Science and Engineering\\
+PES University
+\end{minipage}
+
+\vspace{3.0em}
+
+\begin{center}\textbf{External Viva}\end{center}
+\vspace{0.3em}
+\noindent
+\begin{minipage}[t]{0.48\linewidth}
+\centering
+\rule{5cm}{0.4pt}\\
+Name and Signature of Examiner~1
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\centering
+\rule{5cm}{0.4pt}\\
+Name and Signature of Examiner~2
+\end{minipage}
+
+%=====================================================================
+% DECLARATION PAGE
+%=====================================================================
+\clearpage
+\thispagestyle{empty}
+\begin{center}
+{\Large\bfseries DECLARATION\par}
+\end{center}
+\vspace{1.0em}
+
+I, \textbf{Arvind C R} (SRN \textbf{PES2PGE24DS140}), hereby declare that the
+Project Phase-1 report entitled \textbf{``Zero-Variance Fraction (ZVF): A
+Diagnostic Benchmark for GRPO Post-Training of Language Models''}, submitted in
+partial fulfilment of the requirements for the course \textbf{UE20CS971 ---
+Project Phase-1} of the Master of Technology programme in Data Science and Machine
+Learning, is an original piece of work carried out by me under the guidance of
+\textbf{Ramesh Prakash Guledgudd}.
+
+\vspace{0.6em}
+
+I further declare that the matter embodied in this report has not been submitted,
+in full or in parts, to any other institute or university for the award of any
+degree or diploma. All sources of information and prior work drawn upon have been
+duly acknowledged and cited. The empirical findings reported herein --- including
+the negative and null results --- are reported honestly and reflect the actual
+outcomes of the experiments conducted.
+
+\vspace{3.2em}
+
+\noindent
+\begin{minipage}[t]{0.5\linewidth}
+Place: Bengaluru\\[0.4em]
+Date: \rule{3cm}{0.4pt}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\linewidth}
+\centering
+\vspace{1.2em}
+\rule{5cm}{0.4pt}\\
+\textbf{Arvind C R}\\
+SRN: PES2PGE24DS140\\
+M.Tech, Data Science and Machine Learning
+\end{minipage}
+
+%=====================================================================
+% FRONT MATTER (roman numerals)
+%=====================================================================
+\clearpage
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+I express my sincere gratitude to my project guide, \textbf{Ramesh Prakash
+Guledgudd}, for the weekly guidance, the sharp questions during review calls, and
+for encouraging a scientific posture that values honest negative results over
+cherry-picked positives. I thank the Department of Computer Science and
+Engineering, PES University, and the Great Learning programme office for the
+project framework, review structure, and infrastructure guidance. I also
+acknowledge the managed-training and compute platforms (Tinker, Modal, Google
+Colab, and Weights \& Biases) that made the empirical portfolio feasible within a
+modest budget, and the frontier models used as adversarial auditors, whose
+independent re-checks materially improved the rigour of the findings.
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+Reinforcement learning with verifiable rewards (RLVR), and in particular Group
+Relative Policy Optimization (GRPO), has become the de facto default recipe for
+post-training reasoning-capable language models. Yet reported gains are hard to
+reproduce: results are spread across incompatible frameworks (TRL, veRL,
+OpenRLHF, Tinker), are frequently single-seed, and rarely expose the internal
+training signal that would explain \emph{why} a run learned or failed to learn.
+This project builds a \textbf{unified, provenance-tracked benchmark and diagnostic
+harness} for GRPO/RLVR post-training, organised around a single measurable
+quantity --- the \textbf{Zero-Variance Fraction (ZVF)}, the fraction of prompt
+groups whose within-group reward variance is zero and which therefore contribute
+no gradient. The same task, reward function, and decoding configuration are held
+fixed across back-ends so that observed differences are attributable to the
+\emph{stack} rather than the experiment, and every training step emits per-step
+telemetry (reward, ZVF, gradient utilisation, entropy, length, KL). On top of this
+harness we run a portfolio of eight focused studies (P1--P8). We deliberately frame
+the contribution as a \emph{measurement / diagnostic benchmark and reproducibility
+tooling}, \textbf{not} a ``GRPO wins'' leaderboard. The honest headline findings
+are mixed and include strong negatives: on roughly $72$--$77\%$ of prompt groups in a
+typical batch the within-group reward variance is zero, so those groups contribute no
+policy-gradient signal (P2); there is \emph{no} robust group-size
+sweet spot once multiple seeds are used (P3); a curriculum that mechanically
+eliminates the wasted gradient does \emph{not} beat a matched baseline across three
+seeds ($+0.028$ vs.\ $-0.028$ held-out, within noise) and costs ${\sim}5$--$6\times$
+more sampling; the apparent step-1 predictability of per-layer adaptation
+(P1: top-$k$ overlap $=1.0$ at 1.5B) does \emph{not} survive a scaled 3B
+multi-seed re-test (overlap $0.11$, ${\approx}$chance); the clearest surviving
+positive is that a telemetry-based integrity auditor reaches AUROC $0.84$ versus
+$0.43$ for a reward-only baseline (P8). All findings were independently re-checked
+by two frontier models, which flagged several early single-seed conclusions as
+underpowered --- prompting the powered multi-seed re-test that produced the honest
+nulls reported here.
+
+\clearpage
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+
+%=====================================================================
+% BODY
+%=====================================================================
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+%---------------------------------------------------------------------
+\chapter{Introduction}
+\label{ch:intro}
+
+\section{Background}
+Post-training with reinforcement learning has shifted from human-preference reward
+models (RLHF~\cite{ouyang2022instructgpt}) toward \emph{verifiable} rewards, where
+a programmatic checker --- an exact-match grader for GSM8K, a unit test for code
+--- supplies a binary or scalar reward with no learned reward model in the
+loop~\cite{lambert2024tulu3,guo2025r1}. Within this RLVR setting, Group Relative
+Policy Optimization (GRPO)~\cite{shao2024deepseekmath} has become the default
+algorithm. It drops PPO's value network~\cite{schulman2017ppo} and instead
+estimates the advantage of each sampled completion \emph{relative to its own group}
+of same-prompt samples. Because GRPO removes a whole model (the critic), it is
+cheaper and simpler to run at scale, and it was central to the DeepSeek-R1
+reasoning models~\cite{guo2025r1}; it is now the recipe most open post-training
+efforts reach for first.
+
+This simplicity has a cost that is rarely reported. Because the advantage is a
+within-group standardisation, any prompt for which every sampled completion
+receives the \emph{same} reward contributes an advantage of exactly zero, and
+therefore \emph{no policy-gradient (advantage) signal} --- only the KL penalty
+toward the reference policy still acts. On an easy dataset the model quickly solves most
+prompts, so a large fraction of every batch collapses to zero advantage. We call
+this the \textbf{Zero-Variance Fraction (ZVF)}, and it is, empirically, the single
+largest source of wasted compute in GRPO post-training. ZVF is the namesake and the
+organising measurement of this project: every study in the portfolio either
+measures it, tests a lever intended to reduce it, or uses it as a feature.
+
+\section{A Motivating Example}
+Consider a single training step with a group size of $G=8$ on an easy GSM8K prompt
+that the current policy already solves. All eight sampled completions produce the
+correct final answer, so each receives reward $r_i=1$. The group mean is $\mu_g=1$
+and the group standard deviation is $\sigma_g=0$, so by Eq.~\eqref{eq:adv} every
+advantage $A_i=0$. The advantage (surrogate) term of the objective then contributes
+no gradient for the entire group of eight rollouts --- eight full forward-decode
+passes that cost real tokens and money --- so the group supplies \emph{no
+task-learning signal}. (The KL-regularisation term of Eq.~\eqref{eq:loss} still nudges
+the policy toward the reference; the point is that no \emph{reward-driven} learning
+happens.)
+Now imagine a batch of $16$ such prompts where $12$ are already solved: $12/16=0.75$
+of the batch is ``dark'' compute. This is not a corner case; Chapter~\ref{ch:results}
+shows it is the \emph{typical} regime ($\zvf\approx0.72$--$0.77$). The Zero-Variance
+Fraction turns this intuition into one loggable number, and the rest of the report is
+an attempt to measure it precisely and to test whether it can be reduced into real
+held-out accuracy.
+
+\section{Problem Statement}
+Three concrete problems motivate this project.
+\begin{enumerate}[leftmargin=1.6em,itemsep=3pt]
+  \item \textbf{A reproducibility crisis.} GRPO/RLVR results are reported on
+  different frameworks with different (often undocumented) reward parsers, decoding
+  temperatures, KL coefficients, and clip ranges. A headline number cannot be
+  attributed to the \emph{algorithm} versus the \emph{stack}.
+  \item \textbf{Gradient waste is invisible.} Standard training logs report reward
+  and loss, but not what fraction of the batch produced any learning signal at all.
+  Practitioners pay for rollouts that move no weights, and have no dashboard number
+  that tells them so.
+  \item \textbf{No provenance standard.} There is no machine-readable record of
+  \emph{what} was trained, on which verifier version, with which rollouts, so
+  contamination and silent reward drift go undetected.
+\end{enumerate}
+
+\section{Objectives}
+The Phase-1 objectives, against which the work is evaluated, are:
+\begin{enumerate}[leftmargin=1.6em,itemsep=2pt]
+  \item Build a \textbf{unified harness} that runs the identical task, reward, and
+  decoding configuration across multiple RL post-training back-ends, so that
+  cross-framework differences are attributable to the stack.
+  \item Instrument a \textbf{per-step telemetry layer} that surfaces ZVF, gradient
+  utilisation, entropy, completion length, and KL, and that saves raw group reward
+  tensors so any published diagnostic can be \emph{recomputed}, not merely trusted.
+  \item \textbf{Measure} the zero-variance phenomenon on real reward tensors, and
+  test whether any re-baselining or curriculum lever can recover the wasted
+  gradient into held-out accuracy.
+  \item Establish a \textbf{scientific protocol} --- multi-seed, matched baselines,
+  held-out evaluation with reported $n$, independent verification --- and apply it
+  honestly, reporting negative and null results where they occur.
+  \item Scope the most \emph{original} Phase-2 direction (a GRPO provenance /
+  reporting standard) via a literature scan for open white space.
+\end{enumerate}
+
+\section{Scope and Non-Goals}
+Phase-1 is deliberately a \emph{measurement and diagnostics} phase on small-to-mid
+open models (Qwen2.5 / Qwen3.5 at $1.5$B--$4$B) and math/code verifiers (GSM8K,
+a HumanEval subset). It is explicitly \textbf{not} an attempt to top a GRPO
+leaderboard, nor to train a frontier reasoning model. Held-out evaluation sets are
+intentionally small and every gain is reported with its denominator so that the
+reader can see when a result is noise-limited. Novel-algorithm claims (P4 length
+weighting, P7 controller) are \emph{designed} in Phase-1 and deferred to Phase-2
+for powered evaluation. This honest scoping is itself a deliverable: it is what
+makes the benchmark trustworthy.
+
+\section{Contribution of the Candidate}
+\label{sec:contribution}
+This is an \emph{individual} project; all design, implementation, experiments, analysis,
+and writing reported here were carried out by the candidate. The specific contributions
+are: (i) a unified harness that maps one configuration onto TRL, veRL, OpenRLHF, and
+Tinker; (ii) a per-step telemetry layer that surfaces ZVF, gradient utilisation,
+entropy, and KL, and that saves raw reward tensors for recomputation; and (iii) a
+portfolio of eight studies P1--P8 that use this harness to \emph{measure} GRPO rather
+than to market it. The scientific posture throughout is
+\emph{verify $\rightarrow$ multi-seed $\rightarrow$ report the honest null}.
+
+\paragraph{What was built vs.\ leveraged.} To delineate the candidate's own effort from
+reused infrastructure: the GRPO reference loop, the ZVF / collapse instrumentation, the
+recompute-from-tensors diagnostics, the process-per-run campaign launcher, the P8
+integrity detector, and the P5 provenance prototype are \emph{original} code written for
+this project. Leveraged (not claimed as original) are the underlying model weights
+(Qwen2.5 / Qwen3.5), the managed training back-end (Tinker), the RL framework libraries
+being unified (TRL, veRL, OpenRLHF), and standard libraries (PyTorch, Transformers,
+PEFT, scikit-learn). Table~\ref{tab:impl} summarises the implementation status.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}L{0.34\linewidth}L{0.12\linewidth}L{0.44\linewidth}@{}}
+\toprule
+\textbf{Component} & \textbf{Status} & \textbf{Evidence} \\
+\midrule
+GRPO reference loop (\texttt{tinkerrl/grpo.py}) & Done & P2/P3/campaign runs \\
+ZVF / collapse instrumentation & Done & recomputed by \texttt{p2\_collapse\_analysis.py} \\
+Per-step telemetry $\to$ JSONL / W\&B & Done & project \texttt{rlvr-openings} \\
+Process-per-run campaign launcher & Done & 9-run multi-seed campaign \\
+White-box P1 layer profiler & Done & 1.5B + scaled 3B re-test \\
+P8 integrity detector & Done & \texttt{detector\_reproduced.json} (AUROC $0.838$) \\
+Per-framework adapters (TRL/veRL/OpenRLHF) & Partial & implemented; four-way run is Phase-2 \\
+P5 provenance / P6 registry & Prototype & schema + \texttt{minreport verify} \\
+P4 length weighting, P7 controller & Designed & specified for Phase-2 \\
+\bottomrule
+\end{tabular}
+\caption{Implementation-completion matrix. The core measurement and diagnostic stack is
+complete; cross-framework comparison and the designed algorithmic levers (P4, P7) are
+Phase-2 work. Overall the implemented core corresponds to the ${\sim}80\%$
+Phase-1 code expectation, with the remaining ${\sim}20\%$ scoped for Phase-2.}
+\label{tab:impl}
+\end{table}
+
+\section{Project Plan and Timeline}
+The project follows the PES Phase-1 review cadence: a zeroth review (title, abstract,
+literature, proposed system, timeline), three internal reviews at roughly fortnightly
+intervals, and an End-Semester Assessment (ESA) viva. Table~\ref{tab:timeline} maps the
+deliverables of this report onto that schedule.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}L{0.20\linewidth}L{0.24\linewidth}L{0.46\linewidth}@{}}
+\toprule
+\textbf{Milestone} & \textbf{Window (2026)} & \textbf{Deliverable} \\
+\midrule
+Initiation / Zeroth & May & Title, abstract, literature survey, proposed system \\
+First Review & early June & Architecture, algorithm design, ${\sim}30\%$ code \\
+Second Review & mid June--July & Detailed design, intermediate results, ${\sim}80\%$ code \\
+Third Review & early July & Overall design, experimental results, ${\sim}100\%$ code, paper draft \\
+Phase-1 ESA & July & Presentation + code walkthrough/demo (viva) \\
+Phase-2 & Jul--Oct & Novelty (P5 provenance), publication \\
+\bottomrule
+\end{tabular}
+\caption{Phase-1 milestones and deliverables against the PES review schedule.}
+\label{tab:timeline}
+\end{table}
+
+\section{Organisation of the Report}
+Chapter~\ref{ch:lit} surveys the relevant literature and positions the eight
+studies against the closest prior art. Chapter~\ref{ch:srs} specifies the system
+requirements (functional, non-functional, test cases, and the hardware/software
+environment). Chapter~\ref{ch:method} describes the proposed methodology --- the
+unified harness architecture, the telemetry design, the formalisation of ZVF, and
+the P1--P8 portfolio design. Chapter~\ref{ch:impl} details the implementation.
+Chapter~\ref{ch:results} presents the intermediate results and discussion,
+including the rigour and threats-to-validity analysis. Chapter~\ref{ch:conclusion}
+concludes and lays out the Phase-2 plan. Appendices give the complete run registry
+and reproducibility details.
+
+%---------------------------------------------------------------------
+\chapter{Literature Survey}
+\label{ch:lit}
+
+\section{From RLHF and PPO to Group-Relative Methods}
+Policy-gradient post-training began with PPO~\cite{schulman2017ppo} and generalised
+advantage estimation~\cite{schulman2015gae}, used at scale for instruction
+tuning~\cite{ouyang2022instructgpt}. PPO learns a value network (critic) to
+baseline the advantage, which adds memory and a second optimisation problem. GRPO
+\cite{shao2024deepseekmath} removed the learned value function and replaced the
+per-token advantage with a group-relative baseline: it samples a \emph{group} of
+$G$ completions per prompt and standardises each completion's reward against the
+group mean and standard deviation. GRPO was central to the DeepSeek-R1 reasoning
+models~\cite{guo2025r1}. RLOO~\cite{ahmadian2024rloo} is a closely related
+leave-one-out estimator that baselines each sample against the mean of the
+\emph{other} samples in the group --- i.e.\ it already performs a form of
+within-group baselining, which is directly relevant to our P2 analysis.
+
+\section{Direct Preference Optimisation as a Contrast}
+An orthogonal branch of post-training removes on-policy sampling entirely: Direct
+Preference Optimisation (DPO)~\cite{rafailov2023dpo} optimises a classification
+loss over fixed preference pairs, trading the exploration of on-policy RL for
+stability and simplicity. The contrast is instructive for this project: DPO never
+suffers zero-variance collapse because it does not standardise within a sampled
+group, but it also cannot exploit a verifiable reward signal online. GRPO's
+zero-variance pathology is thus the price of its on-policy, verifier-in-the-loop
+design --- which is exactly what makes measuring that price worthwhile.
+
+\section{Fixing GRPO's Biases and Collapse}
+A fast-growing line of work targets specific GRPO pathologies. Dr.\
+GRPO~\cite{liu2025drgrpo} removes the length and difficulty normalisation biases in
+the standard objective. DAPO~\cite{yu2025dapo} introduces \emph{dynamic sampling},
+explicitly resampling to avoid groups whose reward variance is zero, plus decoupled
+clipping --- this is the most direct prior art for the ZVF problem we quantify in
+P2 and the curriculum lever we test. Group-variance methods such as
+GVPO~\cite{gvpo2025} re-weight by within-group variance. A cluster of very recent
+variants (AERO~\cite{aero2026}, NGRPO~\cite{ngrpo2025},
+$\lambda$-GRPO~\cite{lambdagrpo2025}, MC-GRPO~\cite{mcgrpo2026},
+AVSPO~\cite{avspo2026}) attack advantage collapse, length bias, and rollout
+accounting from different angles. The density of this literature is precisely why
+Phase-1 narrows the crowded pillars (P2 zero-variance, P4 length bias) to
+\emph{measurement} rather than a new algorithm.
+
+\section{Verifiable Rewards, Frameworks, and Reporting}
+RLVR was formalised for open post-training in T\"ULU~3~\cite{lambert2024tulu3}. The
+implementations we unify are TRL~\cite{vonwerra2020trl}, veRL /
+HybridFlow~\cite{sheng2024hybridflow}, and OpenRLHF~\cite{hu2024openrlhf}, plus
+Tinker as a managed training back-end. Our evaluation tasks are
+GSM8K~\cite{cobbe2021gsm8k} and a HumanEval~\cite{chen2021humaneval} subset. For the
+reporting/provenance pillar (P5/P6) we build on Datasheets for
+Datasets~\cite{gebru2021datasheets} and Model Cards~\cite{mitchell2019modelcards},
+but target the \emph{RL-run} object (verifier version, rollout provenance, reward
+drift) that neither of those artefacts captures. Static run-config registries
+(Weights \& Biases, MLflow) record hyperparameters but not the temporal, versioned
+evolution of verifier logic and reward drift that P6 targets.
+
+\section{Scaling and Layer-Adaptation Context}
+Whole-model scaling and saturation laws describe how loss and capability track
+parameters, data, and compute. P1 asks a narrower, orthogonal question: \emph{where}
+inside the network does GRPO-style adaptation concentrate, and can the layers that
+will matter be identified early enough to freeze the rest? This connects
+parameter-efficient fine-tuning (LoRA adapters on the attention projections) with
+the question of predictive layer-freezing, and is the one pillar in the portfolio
+that requires white-box per-layer gradient access.
+
+\section{Process-, Tree-, and Stability-Aware Variants}
+Beyond the group-baseline fixes above, a parallel line of work changes \emph{what}
+signal drives the update. Process-reward and tree-search methods supply denser,
+step-level feedback instead of a single terminal reward, which reduces the chance
+that a whole group collapses to identical terminal rewards; stability-aware variants
+constrain the update (e.g.\ trust-region or entropy controls) to avoid the
+advantage-collapse and length-inflation failure modes that a raw group baseline can
+induce. These methods are complementary to the measurement stance taken here: they
+propose \emph{levers}, whereas this project first builds the \emph{instrumentation}
+(ZVF, gradient utilisation, collapse decomposition) needed to tell whether any such
+lever actually converts wasted rollouts into held-out accuracy. The Phase-1 nulls in
+Chapter~\ref{ch:results} are precisely the kind of evidence this instrumentation is
+designed to produce, and they caution against adopting a variant on the strength of a
+single-seed improvement.
+
+\section{Positioning the Portfolio}
+Table~\ref{tab:position} states, per pillar, the closest prior art and the narrow
+axis we claim. Two pillars (P2 zero-variance and P4 length bias) are crowded; there
+we \emph{narrow} claims to measurement rather than a new algorithm. The widest open
+ground is the systems/reporting side (P5/P6/P8), where no GRPO-specific
+machine-readable standard or infrastructure-level integrity benchmark currently
+exists.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}L{0.045\linewidth}L{0.33\linewidth}L{0.50\linewidth}@{}}
+\toprule
+\textbf{P\#} & \textbf{Closest prior art} & \textbf{Our narrowed axis} \\
+\midrule
+P1 & whole-model scaling / saturation laws & \emph{per-layer} adaptation is moderately concentrated (step-1 predictability does \emph{not} survive scaling) \\
+P2 & DAPO dynamic sampling, GVPO, AERO/NGRPO & \emph{measure} ZVF and show re-baselining cannot recover gradient \\
+P3 & integer-$G$ sweeps, MC-GRPO & token/compute-bounded group sizing (not integer $G$) \\
+P4 & Dr.\ GRPO, $\lambda$-GRPO length fixes & semantic-density token weighting (\emph{designed}) \\
+P5 & Datasheets, Model Cards & GRPO datasheet + cryptographic rollout provenance \\
+P6 & static run-config registries (W\&B/MLflow) & temporal/versioned run-state ontology \\
+P7 & heuristic adaptive-$G$ (G2RPO-A) & PID control of temperature/clipping (\emph{designed}) \\
+P8 & output-level reward-hack benchmarks (EvilGenie, TRACE) & infrastructure-telemetry integrity auditing \\
+\bottomrule
+\end{tabular}
+\caption{Positioning of the eight studies against the closest prior art. Crowded
+pillars (P2, P4) are narrowed to measurement/design; the widest open ground is
+systems/reporting (P5, P6, P8).}
+\label{tab:position}
+\end{table}
+
+%---------------------------------------------------------------------
+\chapter{System Requirements Specification}
+\label{ch:srs}
+
+This chapter specifies the requirements the diagnostic harness must satisfy. Because
+the project is a \emph{measurement and reproducibility} system rather than a
+user-facing application, the requirements emphasise attribution, determinism, and
+recomputability over interactive features.
+
+\section{Overview and Actors}
+The system has three actors: (i) the \textbf{experimenter}, who declares a run via a
+single configuration object; (ii) the \textbf{back-end} (Tinker managed trainer, or
+a local GPU for white-box runs), which executes the GRPO loop; and (iii) the
+\textbf{auditor} (a downstream script or an independent model), who recomputes
+published diagnostics from stored raw tensors. The system's central object is a
+\emph{run}: one configuration, one seed, one framework, producing per-step telemetry
+and saved reward tensors.
+
+\section{Functional Requirements}
+\begin{longtable}{@{}L{0.10\linewidth}L{0.82\linewidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Functional requirement} \\
+\midrule
+\endhead
+FR-1 & The harness shall accept a single configuration object specifying model,
+dataset, reward function, decoding parameters ($T$, top-$p$, max tokens), group
+size $G$, learning rate, KL coefficient $\beta$, and seed. \\
+FR-2 & The harness shall map one configuration onto any supported back-end (TRL,
+veRL, OpenRLHF, Tinker) through thin per-framework adapters, sharing the reward
+grader and decoding code across back-ends. \\
+FR-3 & The harness shall compute, per training step, the Zero-Variance Fraction ---
+the fraction of prompt-groups whose within-group reward variance is zero. \\
+FR-4 & The harness shall emit per-step telemetry (reward, ZVF, gradient
+utilisation, all-correct / all-wrong collapse decomposition, entropy, completion
+length, KL) to JSONL and to Weights \& Biases. \\
+FR-5 & The harness shall persist the raw group reward tensors so that any published
+diagnostic can be \emph{recomputed} from stored data rather than trusted from a
+logged summary. \\
+FR-6 & The harness shall support configuration sweeps ($G\in\{2,4,8,16\}$; multiple
+seeds; baseline vs.\ curriculum arms) launched concurrently under a fixed
+wall-clock budget. \\
+FR-7 & The harness shall support a white-box path that records per-layer LoRA
+gradient norms for the layer-adaptation study (P1). \\
+FR-8 & The system shall emit a machine-readable provenance record (configuration,
+verifier version, rollout hashes) per run (P5 prototype). \\
+\bottomrule
+\end{longtable}
+
+\section{Non-Functional Requirements}
+\begin{longtable}{@{}L{0.10\linewidth}L{0.82\linewidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Non-functional requirement} \\
+\midrule
+\endhead
+NFR-1 (Attribution) & A difference in outcome between two back-ends must be
+attributable to the framework, not to a divergent reward parser or sampler; the
+reward grader and decoding must be shared code. \\
+NFR-2 (Reproducibility) & Every headline learning claim must be re-testable across
+$\ge 3$ seeds against a baseline that differs only in the lever under study. \\
+NFR-3 (Recomputability) & Published diagnostics must be regenerable from stored raw
+tensors by a documented script. \\
+NFR-4 (Honesty) & Held-out gains must be reported with their denominator $n$;
+negative and null results must be reported, not suppressed. \\
+NFR-5 (Isolation) & Concurrent runs must not corrupt each other's logs (process
+isolation, not thread sharing --- see the W\&B thread-safety defect in
+Chapter~\ref{ch:impl}). \\
+NFR-6 (Budget) & The full Phase-1 portfolio must fit a modest budget (order of tens
+of US dollars of managed compute plus free-tier GPUs). \\
+\bottomrule
+\end{longtable}
+
+\section{Test-Case Specification}
+Because the system's guarantee is recomputability, its tests are recompute-and-match
+checks rather than UI tests.
+\begin{longtable}{@{}L{0.09\linewidth}L{0.40\linewidth}L{0.42\linewidth}@{}}
+\toprule
+\textbf{ID} & \textbf{Test} & \textbf{Expected outcome} \\
+\midrule
+\endhead
+TC-1 & Recompute ZVF and collapse decomposition from stored P2 reward tensors via
+\texttt{p2\_collapse\_analysis.py}. & Matches published $\zvf=0.72$--$0.77$,
+all-correct $0.65$--$0.71$. \\
+TC-2 & Recompute the P8 detector AUROC from raw tensors via
+\texttt{p8\_detector.py} (5-fold stratified CV). & AUROC $0.84\pm0.01$ vs.\
+reward-only $0.43$. \\
+TC-3 & Re-run the curriculum campaign under the process-per-run launcher across
+3 seeds. & Baseline $+0.028$ vs.\ curriculum $-0.028$ held-out (not significant). \\
+TC-4 & Independent re-check of headline numbers by an external auditor model. &
+Mechanics reproduce; underpowered single-seed claims flagged. \\
+TC-5 & Provenance verify: \texttt{minreport verify} on a run's provenance block. &
+Config, verifier version, and rollout hashes validate. \\
+\bottomrule
+\end{longtable}
+
+\section{Requirements Traceability}
+Table~\ref{tab:trace} maps functional requirements to the studies and chapters that
+exercise them.
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}L{0.10\linewidth}L{0.34\linewidth}L{0.42\linewidth}@{}}
+\toprule
+\textbf{Req.} & \textbf{Exercised by} & \textbf{Where reported} \\
+\midrule
+FR-1,2 & Unified config + adapters & \S\ref{sec:harness}, \S\ref{sec:impl-loop} \\
+FR-3,4,5 & Telemetry + tensor dumps & \S\ref{sec:telemetry}, TC-1/TC-2 \\
+FR-6 & Sweeps / campaign & \S\ref{sec:runner}, \S\ref{sec:campaign} \\
+FR-7 & P1 white-box path & \S\ref{sec:colab}, \S\ref{sec:p1} \\
+FR-8 & P5 provenance prototype & \S\ref{sec:portfolio}, TC-5 \\
+\bottomrule
+\end{tabular}
+\caption{Requirements traceability matrix.}
+\label{tab:trace}
+\end{table}
+
+\section{Hardware Requirements}
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt]
+  \item \textbf{Managed training back-end (Tinker):} black-box GRPO training for
+  P2/P3/curriculum/campaign on Qwen3.5-4B; no direct GPU management required.
+  \item \textbf{White-box GPU (Google Colab L4, 24\,GB):} per-layer LoRA gradient
+  norms for P1 (Qwen2.5-1.5B; scaled 3B re-test).
+  \item \textbf{Serverless compute (Modal):} batch scoring / held-out evaluation.
+  \item Local workstation for orchestration, analysis, and report/figure generation.
+\end{itemize}
+
+\section{Software Requirements}
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt]
+  \item Python 3.11; PyTorch; Hugging Face Transformers, PEFT (LoRA), and Datasets.
+  \item RL back-ends: TRL, veRL / HybridFlow, OpenRLHF; Tinker client SDK.
+  \item Weights \& Biases (project \texttt{rlvr-openings}) for logging; JSONL for
+  raw telemetry and reward tensors.
+  \item Analysis/diagnostic scripts (\texttt{p2\_collapse\_analysis.py},
+  \texttt{p8\_detector.py}, \texttt{campaign.py}); \LaTeX{}/TikZ/pgfplots for
+  figures and this report.
+\end{itemize}
+
+\section{Constraints and Assumptions}
+The evaluation assumes binary verifiable rewards (exact-match GSM8K; unit-test
+HumanEval subset) and small held-out sets ($n=8$--$20$), so all learning-gain
+magnitudes are noise-limited by construction. The managed back-end does not expose
+per-layer gradients, which is why P1 uses a separate white-box path. A shared,
+deterministic prompt schedule across the four P2 methods means method-to-method ZVF
+differences reflect training dynamics, not independent samples --- an acknowledged
+limitation rather than a hidden one.
+
+%---------------------------------------------------------------------
+\chapter{Proposed Methodology}
+\label{ch:method}
+
+\section{Design Commitment: Attribution}
+\label{sec:harness}
+\input{tikz/fig1.tex}
+The core design commitment is \emph{attribution}: hold the experiment fixed and vary
+only the stack. A single configuration object specifies the model, dataset, reward
+function, decoding parameters (temperature, top-$p$, max tokens), group size $G$,
+learning rate, KL coefficient, and seed. A launcher (\texttt{unified/launcher.py})
+maps that one config onto any of the supported back-ends through thin per-framework
+adapters (\texttt{trl\_integrations/}, \texttt{verl/}, \texttt{openrlhf/},
+\texttt{skyrl/}, \texttt{atropos/}), while \texttt{tinkerrl/grpo.py} implements the
+reference GRPO loop against the managed Tinker back-end. Because the reward grader
+and decoding are shared code, a difference in outcome between two back-ends is
+attributable to the framework, not to a divergent reward parser or sampler.
+
+\paragraph{Scope of what Phase-1 exercises.} The adapter layer for TRL, veRL, and
+OpenRLHF is \emph{implemented}, but the empirical results in Chapter~\ref{ch:results}
+are produced on the Tinker managed back-end (and a Colab GPU for the white-box P1
+path). A head-to-head cross-framework divergence table --- identical config run on all
+four back-ends --- is deferred to Phase-2; Phase-1 delivers the harness and the
+attribution \emph{design}, and we are careful not to claim cross-framework results we
+have not yet run.
+
+\section{Per-Step Telemetry}
+\label{sec:telemetry}
+Every training step emits a telemetry record to JSONL and to Weights \& Biases. The
+fields that distinguish this harness from a standard trainer are:
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt]
+  \item \textbf{ZVF} --- the fraction of prompt-groups in the step whose within-group
+  reward variance is zero (hence zero advantage, zero gradient);
+  \item \textbf{gradient utilisation} --- the complementary fraction of the batch
+  that actually contributed a non-zero update;
+  \item \textbf{collapse decomposition} --- of the collapsed groups, how many are
+  \emph{all-correct} (already solved) versus \emph{all-wrong};
+  \item plus reward, loss, entropy, completion length, and KL to the reference.
+\end{itemize}
+The raw group reward tensors are also saved, so any downstream diagnostic (e.g.\
+\texttt{p2\_collapse\_analysis.py}) can \emph{recompute} a published number from the
+stored tensors rather than trusting a logged summary.
+
+\section{Formalising the Zero-Variance Fraction}
+For a prompt $q$ we draw a group of $G$ completions $\{o_i\}_{i=1}^{G}$ from the
+current policy and score each with a verifiable reward $r_i$. The group-relative
+advantage is the within-group standardisation
+\begin{equation}
+A_i \;=\; \frac{r_i - \mu_g}{\sigma_g + \varepsilon},
+\qquad
+\mu_g = \frac{1}{G}\sum_{j} r_j,\quad
+\sigma_g = \sqrt{\tfrac{1}{G}\sum_j (r_j-\mu_g)^2}.
+\label{eq:adv}
+\end{equation}
+(We write the population standard deviation; the sample-variance form $\tfrac{1}{G-1}$
+differs only by a constant factor and does not change the zero-variance condition
+$\sigma_g=0$ that this project measures.) Whenever $\sigma_g = 0$ --- every completion in the group receives the same reward ---
+every $A_i = 0$, so the whole group contributes no gradient \emph{through the
+advantage (surrogate) term}; only the KL-penalty term of Eq.~\eqref{eq:loss} is
+unaffected. The Zero-Variance
+Fraction is exactly the batch-mean of the indicator $\mathbb{1}[\sigma_g = 0]$:
+\begin{equation}
+\zvf \;=\; \frac{1}{|B|}\sum_{g \in B} \mathbb{1}\!\left[\sigma_g = 0\right].
+\label{eq:zvf}
+\end{equation}
+This makes ``wasted compute'' a single, loggable scalar --- the measurement around
+which the entire portfolio is organised.
+
+\section{The Eight-Study Portfolio}
+\label{sec:portfolio}
+\input{tikz/fig7_zvf.tex}
+\textbf{P1 --- Scaling / layer dynamics.} A white-box study of \emph{where} a model
+adapts under GRPO-style updates, recording per-layer LoRA gradient norms to test
+whether the layers that will matter can be identified early (predictive
+layer-freezing). Requires per-layer gradient access, so it runs on a local GPU
+rather than the managed back-end.
+
+\textbf{P2 --- Zero-variance / gradient waste.} Quantifies ZVF on real reward
+tensors and asks whether any re-baselining scheme can recover gradient from
+collapsed groups.
+
+\textbf{P3 --- Group size.} Studies how collapse, reward, held-out gain, and token
+cost vary with the group size $G$, and reframes $G$ as a compute budget rather than
+an integer.
+
+\textbf{P4 --- Length bias (designed).} Proposes semantic-density /
+surprise-weighted token normalisation instead of uniform or static length penalties.
+
+\textbf{P5 --- Reporting / provenance (flagship, systems).} A GRPO post-training
+datasheet plus cryptographic rollout provenance, so one can prove which verifier
+version and which rollouts produced a checkpoint.
+\input{tikz/fig6.tex}
+
+\textbf{P6 --- Registry.} A versioned, temporal registry of evolving run state
+(verifier-logic updates, reward drift), intended to fold into the P5 standard.
+
+\textbf{P7 --- Controller (designed).} Classical PID control of decoding temperature
+and clip range, using live advantage-variance / KL-drift as sensor inputs.
+
+\textbf{P8 --- Integrity / anomaly.} An auditor that uses the per-step telemetry
+(not just reward) to detect anomalous / manipulated runs.
+
+%---------------------------------------------------------------------
+\chapter{Implementation Details}
+\label{ch:impl}
+
+\section{The Tinker GRPO Loop}
+\label{sec:impl-loop}
+\input{tikz/fig2.tex}
+\input{tikz/fig3.tex}
+The reference loop in \texttt{tinkerrl/grpo.py} follows the standard
+sample~$\rightarrow$~advantage~$\rightarrow$~loss~$\rightarrow$~optimise cycle. For a
+prompt $q$ we draw a group of $G$ completions $\{o_i\}_{i=1}^{G}$ from the current
+policy and score each with the verifiable reward $r_i$; the group-relative advantage
+is Eq.~\eqref{eq:adv}. The optimisation objective is the PPO-clipped surrogate with
+a KL penalty to a frozen reference policy $\pi_{\mathrm{ref}}$,
+\begin{align}
+\mathcal{L}(\theta) &\;=\;
+-\,\mathbb{E}_{i,t}\!\left[
+\min\!\big(\rho_{i,t}A_i,\;
+\mathrm{clip}(\rho_{i,t},1-\epsilon,1+\epsilon)A_i\big)
+\right]
+\;+\; \beta\, \mathrm{KL}\!\big(\pi_\theta \,\|\, \pi_{\mathrm{ref}}\big),
+\label{eq:loss}\\[0.2em]
+\text{where}\quad
+\rho_{i,t} &=\frac{\pi_\theta(o_{i,t}\mid q,o_{i,<t})}{\pi_{\theta_{\mathrm{old}}}(o_{i,t}\mid q,o_{i,<t})}.
+\nonumber
+\end{align}
+The critical observation, made mechanical by Eq.~\eqref{eq:adv}, is that whenever
+$\sigma_g = 0$ every $A_i = 0$, so the whole group contributes nothing to the
+\emph{surrogate} term of Eq.~\eqref{eq:loss}; the KL-penalty term still applies, so
+the update is a pure pull toward the reference rather than reward-driven learning.
+
+\section{Parallel Runner and a Real Logging Defect}
+\label{sec:runner}
+To sweep configurations (e.g.\ $G \in \{2,4,8,16\}$ or three seeds $\times$ two arms)
+within a fixed wall-clock budget, \texttt{parallel\_sweep.py} and \texttt{campaign.py}
+launch runs concurrently. An early threaded runner hit a real bug: Weights \& Biases
+keeps a thread-unsafe global \texttt{run} object, so with four threads calling
+\texttt{wandb.init(reinit=True)} the summary writes for later runs failed (``Run is
+finished'') even though per-step logs survived. The fix, used by the multi-seed
+\texttt{campaign.py}, is one \emph{process} per run rather than one thread. We report
+this because it is exactly the kind of silent logging failure the benchmark is meant
+to surface (see the P3 caveat in Chapter~\ref{ch:results}).
+
+\section{The Colab White-Box Path (P1)}
+\label{sec:colab}
+P1 needs per-layer gradient norms, which the managed Tinker back-end does not expose.
+It therefore runs on a Colab L4 GPU (\texttt{p1\_layer\_profile.py}):
+Qwen2.5-1.5B-Instruct with LoRA adapters on the $q/k/v/o$ projections, five
+GRPO-style advantage-weighted steps, recording the per-layer LoRA gradient norm at
+each step. This white-box route complements the black-box managed runs used for
+P2/P3.
+
+\section{Software Modules}
+Table~\ref{tab:modules} lists the principal modules and their responsibilities.
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}L{0.34\linewidth}L{0.58\linewidth}@{}}
+\toprule
+\textbf{Module} & \textbf{Responsibility} \\
+\midrule
+\texttt{unified/launcher.py} & Map one config onto a chosen back-end. \\
+\texttt{tinkerrl/grpo.py} & Reference GRPO loop (managed back-end). \\
+\texttt{\{trl,verl,openrlhf,skyrl,atropos\}/} & Thin per-framework adapters. \\
+\texttt{p2\_collapse\_analysis.py} & Recompute ZVF / collapse from reward tensors. \\
+\texttt{p1\_layer\_profile.py} & White-box per-layer LoRA grad-norm profile. \\
+\texttt{parallel\_sweep.py}, \texttt{campaign.py} & Concurrent sweeps; process-per-run campaign. \\
+\texttt{p8\_detector.py} & Telemetry-based integrity auditor (CV AUROC). \\
+\bottomrule
+\end{tabular}
+\caption{Principal software modules and responsibilities.}
+\label{tab:modules}
+\end{table}
+
+%---------------------------------------------------------------------
+\chapter{Intermediate Results and Discussion}
+\label{ch:results}
+
+\section{Datasets and Experimental Configuration}
+The empirical studies use GSM8K~\cite{cobbe2021gsm8k} (grade-school math word problems,
+exact-match verifiable reward) and, for the code pillar, a HumanEval~\cite{chen2021humaneval}
+subset (unit-test reward). Held-out prompts are disjoint from the training prompts and are
+deliberately small so that noise is visible rather than hidden; every reported gain carries
+its denominator $n$. Table~\ref{tab:hparams} lists the common hyperparameters; per-study
+deviations (model size, group size $G$, step count, seeds) are stated in each section and
+consolidated in Appendix~\ref{app:registry}.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}L{0.34\linewidth}L{0.30\linewidth}L{0.26\linewidth}@{}}
+\toprule
+\textbf{Setting} & \textbf{Value} & \textbf{Notes} \\
+\midrule
+Base models & Qwen2.5-1.5B/3B; Qwen3.5-4B & P1 white-box vs.\ managed \\
+Task / reward & GSM8K exact-match; HumanEval unit-test & binary verifiable \\
+Group size $G$ & $\{2,4,8,16\}$ (P3); $4$ (campaign) & swept / fixed \\
+Steps & $5$--$10$ (P1); $6$--$8$ (P2/P3/campaign) & short by design (budget) \\
+Seeds & $1$ (sweeps) $\to$ $3$ (campaign) & multi-seed for headline claims \\
+Decoding & $T{=}1.0$, top-$p$, capped max tokens & shared across back-ends \\
+Adapters & LoRA on $q/k/v/o$ projections & white-box P1 \\
+Held-out $n$ & $8$--$20$ & reported with every gain \\
+\bottomrule
+\end{tabular}
+\caption{Common experimental configuration. Small step counts and held-out sets are a
+deliberate budget choice; conclusions are correspondingly framed as noise-limited and
+re-tested multi-seed where a claim is made.}
+\label{tab:hparams}
+\end{table}
+
+We report the portfolio honestly, \emph{including the negatives}, which are the
+scientific point of the exercise. Table~\ref{tab:summary} is the portfolio-level
+summary; the sections below give the detail and the caveats.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}L{0.14\linewidth}L{0.30\linewidth}L{0.37\linewidth}L{0.10\linewidth}@{}}
+\toprule
+\textbf{Study} & \textbf{Setup} & \textbf{Key result} & \textbf{Verdict} \\
+\midrule
+P1 layer-freeze
+& 1.5B/5-step \emph{vs.} 3B/10-step/2-seed
+& overlap $1.0$ (1.5B) $\to$ $0.11$ (3B, ${\approx}$chance); concentration $0.48{\to}0.39$ holds
+& \textbf{null (pred.)} \\
+P2 ZVF
+& 4 methods, 40 steps, $16\times8$, GSM8K
+& mean ZVF $0.72$--$0.77$; all-correct $0.65$--$0.71$
+& diagnostic \\
+P3 group size
+& Qwen3.5-4B, $G\in\{2,4,8,16\}$, 6 steps, s0
+& G4 best single-seed ($+0.125$, $n{=}8$) $\to$ not robust
+& suggestive \\
+Curriculum
+& Qwen3.5-4B, 8 steps, s0
+& ZVF $0.50\to0.00$ at $4.81\times$ cost; $+0.05$ both arms
+& \textbf{negative} \\
+Campaign
+& Qwen3.5-4B, $G{=}4$, 3 seeds
+& baseline $+0.028$ vs curriculum $-0.028$ (n.s.)
+& \textbf{negative} \\
+P8 integrity
+& telemetry auditor
+& AUROC $0.84$ vs reward-only $0.43$
+& \textbf{positive} \\
+\bottomrule
+\end{tabular}
+\caption{Portfolio-level summary of the empirical findings. ``n.s.'' = not
+statistically significant. Held-out sets are small ($n=8$ to $20$); all
+learning-gain magnitudes should be read as noise-limited (see text).}
+\label{tab:summary}
+\end{table}
+
+\section{P2 --- Gradient Waste is Massive and Easy-Driven}
+On real reward tensors for four methods (40 steps each, $16$ prompts $\times\,8$
+samples, binary verifiable reward on GSM8K), the mean zero-variance fraction is
+$\zvf = 0.72$--$0.77$: roughly three-quarters of every batch contributes no
+gradient. The collapse is \emph{easy-driven}, not chance: about $65$--$71\%$ of
+prompts are \emph{all-correct} (already solved) versus only ${\sim}5\%$ all-wrong.
+We then tested whether a re-baselining trick could recover gradient from collapsed
+groups. A naive cross-prompt baseline (advantage against the global mean) gives
+$|A|\approx0.21$, but that ``signal'' is just a proxy for prompt
+easiness/difficulty --- not a learning signal --- which is precisely what
+RLOO~\cite{ahmadian2024rloo} already captures. A difficulty-isocline baseline
+correctly recovers $|A|\approx0.012$--$0.02$, i.e.\ essentially zero, confirming that
+\emph{no recoverable gradient exists} in these groups. \textbf{Honest redirect:}
+re-baselining is the wrong lever; the data point instead to difficulty-targeted
+sampling / curriculum, motivating the experiments below.
+
+\section{P3 --- No Robust Group-Size Sweet Spot}
+\label{sec:p3}
+\input{tikz/fig8.tex}
+A single-seed sweep (Table~\ref{tab:p3}) is suggestive: $G{=}2$ sits below the
+learning threshold ($50\%$ of steps collapse, $+0.000$ held-out), $G{=}4$ looks best
+($+0.125$ held-out), and $G\ge8$ shows diminishing returns as token cost scales
+roughly linearly with $G$ while the easy subset gets mastered and groups collapse to
+all-correct anyway. But the $G{=}4$ ``win'' is literally one extra correct held-out
+example ($7/8 \to 8/8$, $n=8$, single seed). When the multi-seed campaign (below)
+re-tested this, the sweet spot did \emph{not} survive: at seed 0 the baseline
+held-out gains were $G2\,{+}0.083$, $G4\,{0.000}$, $G8\,{+}0.083$, $G16\,{+}0.083$
+--- i.e.\ $G{=}4$ was the \emph{worst} point, not the best.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+$G$ & batch-level zero-loss frac & mean reward & held-out gain & tokens used \\
+\midrule
+2  & 0.50 & 0.75 & $+0.000$ & 9{,}663 \\
+4  & 0.17 & 0.71 & $+0.125$ & 19{,}964 \\
+8  & rising (collapses by step 5--6) & ${\sim}0.8$ & (trained) & 34{,}084 \\
+16 & rising (collapses by step 5--6) & ${\sim}0.8$ & (trained) & 68{,}055 \\
+\bottomrule
+\end{tabular}
+\caption{P3 single-seed group-size sweep (Qwen3.5-4B, 6 steps, GSM8K, seed 0). The
+$G{=}4$ held-out gain is a single example ($n=8$). The ``zero-loss frac'' here is a
+stricter \emph{batch-level} collapse than the per-group $\zvf$ of P2; the $G\ge8$
+rows depend on W\&B logs whose summary writes were lost to the thread-safety bug
+(Chapter~\ref{ch:impl}).}
+\label{tab:p3}
+\end{table}
+
+\section{Curriculum --- Eliminating Waste is Not a Free Lunch}
+A curriculum that trains only on mixed-variance (non-collapsed) groups does exactly
+what it is designed to do: it drives the zero-loss fraction from $0.50$ to $0.00$.
+But it pays $4.81\times$ the sampling cost (oversampling to \emph{find} non-collapsed
+groups) and delivers an \emph{identical} held-out gain to the baseline ($+0.05$ vs
+$+0.05$, held-out $n=20$, one seed, both gains equal to one extra correct answer).
+Eliminating the visible gradient waste does not, by itself, buy accuracy: the
+sampling overhead offsets the gradient-density benefit.
+
+\section{Campaign --- the Powered Re-Test Yields an Honest Null}
+\label{sec:campaign}
+\input{tikz/fig5.tex}
+The multi-seed campaign (nine process-parallel runs, Qwen3.5-4B, 8 steps, GSM8K)
+re-tested the curriculum claim with statistical power. Across three seeds at $G{=}4$
+(Table~\ref{tab:campaign}), the baseline mean held-out gain is $+0.028$ (sd $0.10$)
+and the curriculum mean is $-0.028$ (sd $0.14$). With only three seeds per arm and
+outcomes quantised to ${\sim}0.083$ (one held-out example of $12$), we deliberately
+report \emph{descriptive} statistics rather than a parametric test: the arms overlap
+almost entirely, the between-arm difference (${\sim}0.056$) is smaller than the
+within-arm spread, and the sign of the curriculum effect flips across seeds
+($+0.167,\,-0.083,\,-0.167$). We therefore treat the two arms as indistinguishable
+on this setup. The promising single-seed
+curriculum result ($+0.167$ at seed 0) was noise --- seeds 1 and 2 were negative. The
+naive ``drop collapsed groups and oversample'' lever is therefore \emph{not worth}
+its $5$--$6\times$ cost. Held-out gains on this setup are within noise throughout
+($|\text{gain}|\le0.167$, i.e.\ at most $1$--$2$ of $12$ held-out examples), which is
+fully consistent with the ``diagnostic benchmark, not a GRPO-wins leaderboard''
+framing.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}cccc@{}}
+\toprule
+seed & baseline gain & curriculum gain & (oversample) \\
+\midrule
+0 & $+0.000$ & $+0.167$ & $6.0\times$ \\
+1 & $+0.167$ & $-0.083$ & $5.2\times$ \\
+2 & $-0.083$ & $-0.167$ & $5.3\times$ \\
+\midrule
+\textbf{mean} & $\mathbf{+0.028}$ (sd $0.10$) & $\mathbf{-0.028}$ (sd $0.14$) & ${\sim}5$--$6\times$ \\
+\bottomrule
+\end{tabular}
+\caption{Multi-seed campaign, baseline vs curriculum at $G{=}4$ (Qwen3.5-4B, 8 steps,
+GSM8K, held-out $n=12$, each gain quantised to ${\sim}0.083$). The difference between
+arms is not statistically significant.}
+\label{tab:campaign}
+\end{table}
+
+\section{P1 --- Step-1 Predictability Holds at Toy Scale but Collapses at 3B}
+\label{sec:p1}
+\input{tikz/fig4.tex}
+The white-box layer profile at toy scale (Qwen2.5-1.5B, 28 layers, 5 GRPO-style
+steps, a hardcoded arithmetic set) initially looked like the clearest positive in
+the portfolio: the top-$k$ highest-gradient layers after a \emph{single} step were
+identical to the top-$k$ over all steps
+(\texttt{step1\_predicts\_final\_topk\_overlap} $=1.0$), suggesting one could decide
+what to freeze after one update. \textbf{This did not survive scaling.} A powered
+re-test (Qwen2.5-3B, 36 layers, 10 steps, \emph{real} GSM8K, seeds $\{0,1\}$) drops
+the step-1$\to$final overlap to $0.11$ on both seeds --- i.e.\ ${\approx}$chance, with
+only layer~0 persisting. The mid-late band that dominates by end-of-training
+\emph{emerges} over steps and is invisible at step~1, so the apparent predictability
+was an artifact of the toy setup. Adaptation is only \emph{moderately} concentrated:
+the top $25\%$ of layers carry ${\sim}48\%$ of the total gradient norm
+(\texttt{concentration\_top25pct\_share} $=0.476$ at 1.5B, $0.39$ at 3B), not the
+$>90\%$ that a ``freeze almost everything'' story would need.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Freeze rule & Cold layers & Freeze-able frac. & Est.\ LoRA-bwd FLOP saving$^{\dagger}$ \\
+\midrule
+Conservative ($g<0.6\,\bar{g}$) & $5/28$  & $18\%$ & $\sim\!18\%$ \\
+Moderate ($g<0.7\,\bar{g}$)     & $11/28$ & $39\%$ & $\sim\!39\%$ \\
+\bottomrule
+\end{tabular}
+\caption{Freeze-able fraction and estimated FLOP saving. $^{\dagger}$\textbf{Estimate,
+not measured.} Assumes per-layer LoRA backward cost is uniform, so freezing $k$ of
+$28$ layers saves $\approx k/28$ of the \emph{LoRA-backward} FLOP only; the frozen
+base-model forward/backward (which dominates end-to-end training FLOP) is unchanged.
+Derived from a 1.5B, 5-step proof-of-concept; a scaled run is needed to confirm.}
+\label{tab:p1-freeze-estimate}
+\end{table}
+
+\section{P8 --- Telemetry Beats Reward-Only for Integrity}
+Using the per-step telemetry rather than reward alone, the integrity auditor reaches
+AUROC $0.84$, versus $0.43$ for a reward-only baseline. This supports the premise
+that internal training signal (ZVF trajectory, entropy, KL drift) carries
+information about run integrity that the reward curve does not. The result is
+recomputed from the raw \texttt{n2\_reward\_tensor\_resume} tensors by
+\texttt{p8\_detector.py}: four reward-optimisation algorithms each contribute $40$
+per-step rows ($N=160$); the positive ``surrogate'' class is three GRPO variants
+reported as GRPO ($120$ rows) and the negative class is genuine GRPO ($40$ rows), a
+$3{:}1$ imbalance. Features are derived entirely from the raw reward/length/advantage
+arrays (\texttt{zvf}, \texttt{reward\_mean}, \texttt{reward\_std},
+\texttt{frac\_all\_zero}, \texttt{frac\_all\_one}, \texttt{mean\_len},
+\texttt{cv\_len}, \texttt{len\_reward\_corr}, \texttt{adv\_abs\_mean},
+\texttt{adv\_std}, \texttt{lag1\_autocorr}). A logistic-regression detector
+(median-imputed, standardised, $5$-fold stratified CV) reaches
+$\mathrm{AUROC}=0.838\pm0.010$, versus $0.426\pm0.027$ for a reward-only auditor
+(below chance). \textbf{Overfitting caveat:} with $N=160$ rows, $11$ features, and a
+$3{:}1$ class imbalance, the AUROC is a cross-validated estimate on a small sample and
+is susceptible to optimism; it should be read as a \emph{proof-of-concept} that
+internal telemetry is informative, not as a deployable detector. A larger, multi-setup
+evaluation on a genuinely held-out set (diverse base models/tasks, thousands of steps)
+is required before the auditor is trusted. Remaining provenance caveat: the base
+model/task are not recorded in the tensor rows, so provenance is incomplete --- exactly
+the gap the P5 protocol is designed to close.
+
+\section{Cross-Study Synthesis}
+Read together, the eight studies tell a coherent story rather than eight isolated
+results. P2 establishes that the dominant, reproducible phenomenon is gradient waste
+($\zvf\approx0.72$--$0.77$), and that it is \emph{easy-driven} (the collapsed groups
+are mostly already-solved prompts). That immediately rules out the tempting fix ---
+re-baselining --- because P2 also shows the ``recovered'' signal is just a difficulty
+proxy with no learning content. The natural next lever, a curriculum that removes the
+waste, is exactly what the curriculum and campaign studies test; both return honest
+nulls, and the campaign shows \emph{why} single-seed enthusiasm is dangerous (the
+$+0.167$ seed-0 result reverses at seeds 1--2). P3 tells the same cautionary tale for
+group size: an apparent $G{=}4$ sweet spot evaporates under replication. P1 extends
+the pattern to a structural claim --- step-1 predictability of layer adaptation ---
+which likewise fails to survive scaling. The one lever that \emph{does} survive is P8:
+using the internal telemetry (including the ZVF trajectory) to audit run integrity
+beats a reward-only baseline decisively. The synthesis, then, is that on this
+compute scale the \emph{measurement} is trustworthy and valuable while most
+\emph{algorithmic} levers are noise-limited --- which is what justifies steering
+Phase-2 toward the systems/provenance direction (P5) rather than chasing another
+GRPO variant.
+
+\section{Rigour and Threats to Validity}
+\label{sec:rigor}
+The methodology is deliberately adversarial toward its own results.
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \textbf{Multi-seed with matched baselines.} Every headline learning claim is
+  re-tested across $\ge 3$ seeds against a baseline that differs only in the lever
+  under study. This is what converted the single-seed ``curriculum wins / $G{=}4$ is
+  best'' story into the honest null above.
+  \item \textbf{Held-out evaluation.} Gains are measured on held-out prompts, and we
+  report the held-out $n$ ($8$--$20$) alongside every gain so the reader can see that
+  magnitudes are noise-limited.
+  \item \textbf{Recompute-from-tensors.} Published diagnostics are recomputable from
+  stored raw tensors (e.g.\ \texttt{p2\_collapse\_analysis.py}), not merely read back
+  from a logged summary.
+  \item \textbf{Independent verification.} Findings were re-checked by two frontier
+  models used as adversarial auditors. They returned a \textbf{SUSPECT} verdict on
+  the early single-seed P2/P3/curriculum conclusions --- correctly identifying them as
+  underpowered --- which directly triggered the powered campaign re-test. The
+  recomputed mechanics (ZVF $0.72$--$0.77$, all-correct $0.65$--$0.71$, naive
+  $|A|\approx0.21$, curriculum $0.50\to0.00$ at $4.81\times$) all reproduced exactly.
+\end{itemize}
+Known threats we do \emph{not} hide: small held-out sets; a partially-recorded P3
+sweep artefact (G8/G16 summaries lost to the W\&B thread-safety bug); a deterministic
+prompt schedule shared across the four P2 methods; and an invalidated
+\texttt{zero\_loss\_frac} in the first campaign batch (since fixed). Re-running P3
+under the process-per-run launcher yields corrected G8/G16 held-out gains of
+$+0.083$ (both from $0.750\to0.833$, single seed), superseding the thread-bug-affected
+values --- but these remain single-seed point estimates pending multi-seed
+replication.
+
+%---------------------------------------------------------------------
+\chapter{Conclusions and Future Work}
+\label{ch:conclusion}
+
+\section{Conclusions}
+This phase delivered a working unified GRPO/RLVR benchmark, a per-step diagnostic
+telemetry layer, and eight studies whose honest verdict is: the algorithmic levers we
+could test on this setup (naive curriculum, integer group-size sweeps) do \emph{not}
+produce reliable held-out gains, while the large and reproducible effect is the
+\emph{gradient waste} itself ($\zvf \approx 0.72$--$0.77$). Reporting those negatives
+--- rather than the cherry-picked single-seed positives --- is the contribution: it is
+what makes the portfolio defensible and the benchmark trustworthy. The single
+clearest positive is P8: internal telemetry carries integrity information that the
+reward curve does not (AUROC $0.84$ vs.\ $0.43$).
+
+\paragraph{Where the original value is.} The strongest \emph{original} bet is
+\textbf{P5, a GRPO provenance / reporting standard}, which the literature scan
+confirms as open white space (no GRPO-specific machine-readable datasheet or
+rollout-provenance protocol exists). The earlier second bet --- \textbf{P1 predictive
+layer-freezing} --- is now weakened: its step-1 predictability held at 1.5B but
+collapsed to chance ($0.11$) on the scaled 3B multi-seed re-test.
+
+\section{Future Work (Phase-2 Plan)}
+\begin{enumerate}[leftmargin=1.6em,itemsep=3pt]
+  \item \textbf{Token-budget-optimal curriculum.} Replace naive ``filter collapsed
+  groups'' with an allocation that trades oversampling against training under an
+  explicit token budget with staleness bounds, tested multi-seed from the start. The
+  Phase-1 null tells us the lever must be \emph{budget-aware}, not just
+  waste-eliminating.
+  \item \textbf{Re-examine P1.} The scaled 3B / multi-seed re-test shows step-1
+  predictability does \emph{not} hold; the open question is whether the \emph{emerged}
+  mid-late band supports any FLOP-saving freeze schedule when read off late-training
+  gradients rather than step~1.
+  \item \textbf{The P5 protocol.} Specify and implement the GRPO post-training
+  datasheet plus cryptographic rollout provenance, and dogfood it on the harness's own
+  runs so every benchmark result ships with a verifiable provenance record.
+  \item \textbf{Adequately powered evaluation.} The most important methodological
+  upgrade for Phase-2 is statistical power: move from held-out $n=8$--$20$ to the full
+  GSM8K test split (or a large stratified subset), run $\ge 5$ seeds, and report
+  confidence intervals on every headline metric, so that a genuine effect can be
+  distinguished from the noise floor that dominates the Phase-1 nulls.
+  \item \textbf{Cross-framework divergence study.} Execute the identical
+  task/reward/decoding/seed configuration on TRL, veRL, OpenRLHF, and Tinker and publish
+  the divergence table --- the concrete demonstration of the attribution claim that
+  Phase-1 designs but does not yet run.
+  \item \textbf{Harden the P8 auditor.} Re-train and evaluate the integrity detector on a
+  much larger, multi-model, multi-task corpus with a held-out test split (not CV-only) to
+  establish whether the AUROC $0.84$ proof-of-concept generalises.
+  \item \textbf{Publication.} Consolidate the diagnostic findings and the P5 standard
+  into a paper draft targeting a reputed peer-reviewed venue, as required by the
+  programme guidelines.
+\end{enumerate}
+
+%=====================================================================
+% REFERENCES
+%=====================================================================
+\begin{thebibliography}{99}
+\small
+
+\bibitem{shao2024deepseekmath}
+Z.~Shao, P.~Wang, Q.~Zhu, R.~Xu, J.~Song, et al.
+\newblock DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models.
+\newblock \emph{arXiv:2402.03300}, 2024. (Introduces GRPO.)
+
+\bibitem{guo2025r1}
+D.~Guo, D.~Yang, H.~Zhang, et al. (DeepSeek-AI).
+\newblock DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning.
+\newblock \emph{arXiv:2501.12948}, 2025.
+
+\bibitem{ahmadian2024rloo}
+A.~Ahmadian, C.~Cremer, M.~Gall\'e, et al.
+\newblock Back to Basics: Revisiting REINFORCE-Style Optimization for Learning from Human Feedback in LLMs (RLOO).
+\newblock \emph{arXiv:2402.14740}, 2024.
+
+\bibitem{rafailov2023dpo}
+R.~Rafailov, A.~Sharma, E.~Mitchell, S.~Ermon, C.~D.~Manning, C.~Finn.
+\newblock Direct Preference Optimization: Your Language Model is Secretly a Reward Model.
+\newblock \emph{NeurIPS}, 2023.
+
+\bibitem{liu2025drgrpo}
+Z.~Liu, C.~Chen, W.~Li, et al.
+\newblock Understanding R1-Zero-Like Training: A Critical Perspective (Dr.\ GRPO).
+\newblock \emph{arXiv:2503.20783}, 2025.
+
+\bibitem{yu2025dapo}
+Q.~Yu, Z.~Zhang, R.~Zhu, et al.
+\newblock DAPO: An Open-Source LLM Reinforcement Learning System at Scale.
+\newblock \emph{arXiv:2503.14476}, 2025. (Dynamic sampling to avoid zero-variance groups.)
+
+\bibitem{ouyang2022instructgpt}
+L.~Ouyang, J.~Wu, X.~Jiang, et al.
+\newblock Training Language Models to Follow Instructions with Human Feedback.
+\newblock \emph{NeurIPS}, 2022.
+
+\bibitem{schulman2017ppo}
+J.~Schulman, F.~Wolski, P.~Dhariwal, A.~Radford, O.~Klimov.
+\newblock Proximal Policy Optimization Algorithms.
+\newblock \emph{arXiv:1707.06347}, 2017.
+
+\bibitem{schulman2015gae}
+J.~Schulman, P.~Moritz, S.~Levine, M.~Jordan, P.~Abbeel.
+\newblock High-Dimensional Continuous Control Using Generalized Advantage Estimation.
+\newblock \emph{arXiv:1506.02438}, 2015.
+
+\bibitem{lambert2024tulu3}
+N.~Lambert, J.~Morrison, V.~Pyatkin, et al.
+\newblock T\"ULU 3: Pushing Frontiers in Open Language Model Post-Training (RLVR).
+\newblock \emph{arXiv:2411.15124}, 2024.
+
+\bibitem{sheng2024hybridflow}
+G.~Sheng, C.~Zhang, Z.~Ye, et al.
+\newblock HybridFlow: A Flexible and Efficient RLHF Framework (veRL).
+\newblock \emph{arXiv:2409.19256}, 2024.
+
+\bibitem{hu2024openrlhf}
+J.~Hu, X.~Wu, W.~Wang, et al.
+\newblock OpenRLHF: An Easy-to-Use, Scalable and High-Performance RLHF Framework.
+\newblock \emph{arXiv:2405.11143}, 2024.
+
+\bibitem{vonwerra2020trl}
+L.~von Werra, Y.~Belkada, L.~Tunstall, et al.
+\newblock TRL: Transformer Reinforcement Learning.
+\newblock \url{https://github.com/huggingface/trl}, 2020--.
+
+\bibitem{cobbe2021gsm8k}
+K.~Cobbe, V.~Kosaraju, M.~Bavarian, et al.
+\newblock Training Verifiers to Solve Math Word Problems (GSM8K).
+\newblock \emph{arXiv:2110.14168}, 2021.
+
+\bibitem{chen2021humaneval}
+M.~Chen, J.~Tworek, H.~Jun, et al.
+\newblock Evaluating Large Language Models Trained on Code (HumanEval).
+\newblock \emph{arXiv:2107.03374}, 2021.
+
+\bibitem{gebru2021datasheets}
+T.~Gebru, J.~Morgenstern, B.~Vecchione, et al.
+\newblock Datasheets for Datasets.
+\newblock \emph{Communications of the ACM}, 64(12):86--92, 2021.
+
+\bibitem{mitchell2019modelcards}
+M.~Mitchell, S.~Wu, A.~Zaldivar, et al.
+\newblock Model Cards for Model Reporting.
+\newblock \emph{ACM FAT*}, 2019.
+
+\bibitem{aero2026}
+Z.~Zhang, Z.~Han, C.~Mavromatis, et al.
+\newblock Train Less, Learn More: Adaptive Efficient Rollout Optimization (AERO) for Group-Based Reinforcement Learning.
+\newblock \emph{arXiv:2602.14338}, 2026.
+
+\bibitem{ngrpo2025}
+G.~Nan, S.~Chen, J.~Huang, et al.
+\newblock NGRPO: Negative-enhanced Group Relative Policy Optimization.
+\newblock \emph{arXiv:2509.18851}, 2025.
+
+\bibitem{gvpo2025}
+K.~Zhang, Y.~Hong, J.~Bao, et al.
+\newblock GVPO: Group Variance Policy Optimization for Large Language Model Post-Training.
+\newblock \emph{arXiv:2504.19599}, 2025. NeurIPS 2025.
+
+\bibitem{lambdagrpo2025}
+Y.~Wang, J.~Zhao, C.~Zhao, et al.
+\newblock $\lambda$-GRPO: Unifying the GRPO Frameworks with Learnable Token Preferences.
+\newblock \emph{arXiv:2510.06870}, 2025.
+
+\bibitem{mcgrpo2026}
+Y.~Kim.
+\newblock MC-GRPO: Median-Centered Group Relative Policy Optimization for Small-Rollout Reinforcement Learning.
+\newblock \emph{arXiv:2601.22582}, 2026.
+
+\bibitem{avspo2026}
+X.~He, Q.~Sun, A.~Cheng, et al.
+\newblock Advantage Collapse in Group Relative Policy Optimization: Diagnosis and Mitigation (AVSPO).
+\newblock \emph{arXiv:2605.21125}, 2026. ICML 2026.
+
+\end{thebibliography}
+
+%=====================================================================
+% APPENDICES
+%=====================================================================
+\appendix
+
+\chapter{Complete Run Registry}
+\label{app:registry}
+Table~\ref{tab:registry} lists the runs behind the Phase-1 findings. All runs log to
+Weights \& Biases (project \texttt{rlvr-openings}) with per-step telemetry and saved
+group reward tensors; runs are pinned by config, seed, and framework.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}L{0.13\linewidth}L{0.32\linewidth}L{0.14\linewidth}L{0.28\linewidth}@{}}
+\toprule
+\textbf{Study} & \textbf{Model / setup} & \textbf{Seeds} & \textbf{Primary output} \\
+\midrule
+P1 (toy) & Qwen2.5-1.5B, 28 layers, 5 steps, arithmetic & 1 & per-layer grad-norm; overlap$=1.0$ \\
+P1 (scaled) & Qwen2.5-3B, 36 layers, 10 steps, GSM8K & $\{0,1\}$ & overlap$=0.11$; top-25\% share $0.39$ \\
+P2 & 4 methods, 40 steps, $16\times8$, GSM8K & shared sched. & ZVF $0.72$--$0.77$ \\
+P3 & Qwen3.5-4B, $G\in\{2,4,8,16\}$, 6 steps & 0 & token cost $9.7$k--$68$k; no robust $G$ \\
+Curriculum & Qwen3.5-4B, 8 steps, mixed-variance filter & 0 & ZVF $0.50\to0.00$, $4.81\times$ cost \\
+Campaign & Qwen3.5-4B, $G{=}4$, baseline vs curriculum & $\{0,1,2\}$ & $+0.028$ vs $-0.028$ (n.s.) \\
+P8 & telemetry auditor, $N=160$ rows, 5-fold CV & 5 CV & AUROC $0.838\pm0.010$ \\
+\bottomrule
+\end{tabular}
+\caption{Complete Phase-1 run registry.}
+\label{tab:registry}
+\end{table}
+
+\chapter{Reproducibility and Provenance}
+\label{app:repro}
+Every published diagnostic in this report is regenerable from stored artefacts:
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt]
+  \item \texttt{p2\_collapse\_analysis.py} regenerates the ZVF / collapse JSON from
+  the saved P2 reward tensors (reproduces $\zvf=0.72$--$0.77$).
+  \item \texttt{p8\_detector.py} regenerates \texttt{detector\_reproduced.json} from
+  the \texttt{n2\_reward\_tensor\_resume} tensors (reproduces AUROC $0.838$).
+  \item \texttt{campaign.py} (process-per-run) regenerates the multi-seed
+  baseline-vs-curriculum held-out gains.
+\end{itemize}
+Platforms and budget: managed GRPO training via Tinker; white-box P1 on a Google
+Colab L4 GPU; batch scoring on Modal; logging on Weights \& Biases. The full
+Phase-1 empirical portfolio was executed within a modest budget (order of tens of
+US dollars of managed compute plus free-tier GPU time).
+
+\paragraph{Independent verification.} The raw findings were re-checked by two frontier
+models acting as adversarial auditors, which recomputed the numbers and flagged the
+underpowered single-seed claims that motivated the powered re-tests reported here. So
+that this is a reproducible artefact rather than an appeal to authority, the auditor
+prompts, their outputs, and the SUSPECT/verdict logs are archived alongside the code
+(\texttt{reports/esa\_phase1/verification\_*.md}); the recomputation itself is
+script-based (Appendix~\ref{app:repro}) and does not depend on any model's judgement.
+
+\paragraph{Code availability.} All harness code, diagnostic scripts, raw reward tensors,
+and result JSONs are maintained in the project repository under version control, pinned
+by configuration, seed, and framework; the run registry (Table~\ref{tab:registry}) keys
+each finding to its producing run. The complete report source, figures, and this
+document are likewise version-controlled.
+
+\paragraph{Originality / plagiarism.} This report is an original individual work. All
+external sources and prior art are cited (Chapter~\ref{ch:lit}, References). The report
+has been prepared for the institutional similarity (plagiarism) check with a target
+similarity of $\le 15\%$ in line with the programme guidelines, and reuses the
+candidate's own prior project write-ups where applicable.
+
+\chapter{Notation, Symbols, and Abbreviations}
+\label{app:glossary}
+\begin{longtable}{@{}L{0.22\linewidth}L{0.70\linewidth}@{}}
+\toprule
+\textbf{Term / symbol} & \textbf{Meaning} \\
+\midrule
+\endhead
+GRPO & Group Relative Policy Optimization; the group-baseline RL post-training
+algorithm studied here~\cite{shao2024deepseekmath}. \\
+RLVR & Reinforcement Learning with Verifiable Rewards; a programmatic checker
+supplies the reward with no learned reward model. \\
+ZVF ($\zvf$) & Zero-Variance Fraction; the fraction of prompt-groups in a step whose
+within-group reward variance is zero (Eq.~\eqref{eq:zvf}). \\
+$G$ & Group size; number of sampled completions drawn per prompt. \\
+$A_i$ & Group-relative advantage of completion $i$ (Eq.~\eqref{eq:adv}). \\
+$\mu_g,\sigma_g$ & Within-group reward mean and standard deviation. \\
+$\beta$ & KL-penalty coefficient toward the frozen reference policy. \\
+Gradient utilisation & Complementary fraction of the batch that produced a non-zero
+update ($1-\zvf$ at the group level). \\
+Held-out gain & Change in accuracy on a held-out prompt set; always reported with
+its denominator $n$. \\
+All-correct / all-wrong & Decomposition of collapsed (zero-variance) groups by
+whether every completion was right or wrong. \\
+Matched baseline & A control run identical to the treatment except for the single
+lever under study. \\
+AUROC & Area under the ROC curve; the P8 integrity-detector metric. \\
+\bottomrule
+\end{longtable}
+
+\end{document}

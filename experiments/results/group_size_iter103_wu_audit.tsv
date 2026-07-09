@@ -1,0 +1,6 @@
+experiment	G_a	G_b	acc_G_a	acc_G_b	retention_acc_a_over_b	retention_minus_wu0976	fails_wu_0976
+arithmetic_small_qwen05B	2	16	0.9794	0.7987	1.2263	0.2503	False
+arithmetic_small_qwen05B	2	8	0.9794	0.7822	1.2521	0.2761	False
+arithmetic_small_qwen05B	4	16	0.642	0.7987	0.8038	-0.1722	True
+arithmetic_small_qwen05B	4	8	0.642	0.7822	0.8207	-0.1553	True
+arithmetic_small_qwen05B	2	4	0.9794	0.642	1.5256	0.5496	False

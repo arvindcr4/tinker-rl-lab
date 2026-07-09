@@ -1,0 +1,54 @@
+% P8 related work
+\section{Related Work}
+\label{sec:p8-related}
+
+\paragraph{Gradient boosting on tabular data.} XGBoost
+\citep{chen2016xgboost} remains the workhorse of applied tabular
+classification. \citet{grinsztajn2022tree} show systematically that tree-based
+models still outperform deep learning on medium-sized tabular benchmarks,
+attributing the gap to trees' robustness to uninformative features and to the
+non-smooth, non-rotation-invariant structure of tabular targets;
+\citet{shwartzziv2021tabular} reach the same conclusion across deep tabular
+architectures. Our scorer result is a single applied data point consistent
+with this literature, with the added operational arguments (latency, cost,
+calibration \citep{guo2017calibration}, injection surface
+\citep{greshake2023injection}) that the benchmarking papers do not address.
+
+\paragraph{LLMs for tabular data.} TabLLM \citep{hegselmann2023tabllm}
+established the serialize-and-prompt recipe and showed it is most competitive
+in very-few-shot regimes, degrading relative to boosted trees as labeled data
+grows---exactly the pattern our head-to-head reproduces at $40{,}000$ labels,
+and exactly why our taxonomy assigns the LLM the cold-start seat
+(\secref{sec:p8-gap-coldstart}) rather than the scorer seat.
+
+\paragraph{Fraud detection on transaction data.} \citet{dalpozzolo2018realistic}
+give the canonical treatment of realistic credit-card fraud modeling---class
+imbalance, verification latency, and concept drift---and motivate the
+anonymized-feature, heavily imbalanced regime our synthetic benchmark
+imitates. Our contribution is orthogonal to this line: we do not propose a
+better detector but a division of labor around an already-strong one.
+
+\paragraph{LLM agents for financial crime.} \citet{pirmorad2025icl_aml} shows
+that LLMs prompted with serialized financial-graph neighborhoods can perform
+analyst-style money-laundering triage few-shot, with coherent red-flag
+justifications; \citet{naik2025coinvestigator} builds an agentic framework
+specifically for drafting AML compliance narratives (SARs) with
+human-in-the-loop review. These systems instantiate, respectively, our
+cold-start and scribe/triage seats; our contribution is to place them in an
+explicit architecture where the real-time scorer remains a tree.
+
+\paragraph{VLMs for document and image fraud.} FakeShield
+\citep{xu2024fakeshield} demonstrates explainable image-forgery detection and
+localization with multimodal LLMs; Forensics-Bench \citep{wang2025forensicsbench}
+benchmarks large vision--language models across 112 forgery types and finds
+substantial headroom. Together they support both halves of our sensor claim:
+VLMs uniquely extend the input space to raw document evidence, and their
+current reliability justifies confining them to feature extraction with
+downstream tree scoring and human review rather than autonomous verdicts.
+
+\paragraph{Program context.} The parent reproducibility program measures
+RL post-training claims capability-by-capability rather than by their labels;
+the present side-probe applies the identical discipline to the marketing label
+``AI'' in fraud detection. The methodological through-line is decomposition:
+a bundled claim is replaced by per-capability measurements, and the deployment
+decision is made seat by seat.

@@ -1,0 +1,12 @@
+form	power_law
+c_scale_at_T1M	0.9466040624993687
+beta_exponent	-0.07130008474374556
+R2_point_estimate	0.9281529997912537
+AIC	-25.152404422585054
+n_budgets	4
+bootstrap_c_mean	0.9112787604064393
+bootstrap_beta_mean	-0.058704159851320825
+bootstrap_R_at_T256M	0.6586048003950822
+bootstrap_R_at_T256M_ci_lo	0.5896916319838291
+bootstrap_R_at_T256M_ci_hi	0.7333174421765057
+n_bootstrap	2000

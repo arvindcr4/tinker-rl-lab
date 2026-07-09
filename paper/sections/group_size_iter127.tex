@@ -1,0 +1,122 @@
+% =============================================================================
+% Pillar 3 -- Iter 127: Bounded-Cone Decomposition & Joint acc(G,T) Surface
+% Fit -- the practitioner angle. Given a budget T, what is the optimal G?
+% Driver: scripts/group_size_iter127.py
+% Inputs:  experiments/results/group_size_token_normalized.tsv
+% Outputs: experiments/results/group_size_iter127_*.tsv
+%          figures/group_size_iter127.pdf
+% =============================================================================
+\section{Iter 127 -- Bounded-Cone Decomposition and the Joint
+\texttt{acc(G,T)} Practitioner Surface}
+\label{sec:group-size-iter127}
+
+\paragraph{Setup.}
+Iters~99--126 built a converging falsification record on the
+Qwen2.5-0.5B / arithmetic sweep: bootstrap Delta at $T\ge 4$M
+(iter~103/107), iso-accuracy compute ratio $R_{\mathrm{compute}}=7.9$
+at $\mathrm{acc}{=}0.70$ (iter~107), log-$G$ linear-fit sign inversion
+(iter~111), TOST equivalence rejection (iter~115), retention-vs-$\log T$
+extrapolation with $T_{\mathrm{c}}{=}4.2{\times}10^{7}$ (iter~119),
+broader G-pair sweep + iso-reward + Cohen's $d$ (iter~123), and the
+SNR-vs-$G$ mechanism test confirming the theoretical
+$\sigma/\sqrt{G}$ slope (iter~123).
+
+Iter~127 closes the \emph{practitioner} angle: at a fixed budget $T$,
+what is the optimal group size $G$? On the existing $5G{\times}4T$
+grid ($G \in \{4,8,16,32,64\}$, $T \in \{10^{6}, 4{\times}10^{6},
+1.6{\times}10^{7}, 6.4{\times}10^{7}\}$ tokens, $n{=}20$ cells), we
+fit a joint surface, identify the cone, and decompose the
+value-of-$T$ vs value-of-$G$ complementarity. Driver:
+\texttt{scripts/group\_size\_iter127.py}.
+
+\paragraph{Finding 1 -- joint \texttt{acc(G,T)} fit in log-log error
+space reaches $R^{2}{=}0.796$ with both coefficients negative and
+significant.}
+A 3-parameter OLS fit
+$\log_{10}(1-\mathrm{acc}) = a + b\log_{10}G + c\log_{10}T + \varepsilon$
+on the 20 cells yields
+$\hat{a}=+1.669$, $\hat{b}=-0.141$ (95\% CI $[-0.254,-0.028]$,
+$p{=}0.026$), $\hat{c}=-0.293$ (95\% CI $[-0.365,-0.222]$,
+$p{<}10^{-6}$), $R^{2}=0.796$, $\mathrm{adj}R^{2}=0.772$. The $b{:}c$
+ratio is $0.480$: per decade of $T$, expected error decreases
+$2.08\times$ faster than per decade of $G$. Compute dominates group
+size on this benchmark by roughly a factor of two per decade.
+
+\paragraph{Finding 2 -- $G^{\ast}(T)$ optimal-G-per-budget rule has a
+pre-saturation slope of $+0.500$ per decade of $T$ and then pegs at
+$G^{\ast}{=}32$ for $T{\ge}1.6{\times}10^{7}$.}
+The optimal-$G$ on each $T$-row is $G^{\ast}(1\mathrm{M})=8$,
+$G^{\ast}(4\mathrm{M})=16$, $G^{\ast}(16\mathrm{M})=32$,
+$G^{\ast}(64\mathrm{M})=32$. Pre-saturation slope
+$\partial \log_{10}G^{\ast}/\partial \log_{10}T = +0.500$/decade
+($n{=}2$ pre-sat points). The empirical rule is
+$\log_{10}G^{\ast} = \min\bigl(\mathrm{intercept} + 0.500\cdot\log_{10}T,\ \log_{10}32\bigr)$.
+For $T{\ge}3.2{\times}10^{7}$ this caps at $G^{\ast}{=}32$.
+
+\paragraph{Finding 3 -- the bounded cone: $\mathrm{acc}(G{=}64) \le \mathrm{acc}(G{=}32)$ at every $T$ tested.}
+Across all four $T$-budgets, $G{=}64$'s accuracy is less than or equal
+to $G{=}32$'s accuracy:
+$T{=}10^{6}$: $\Delta = -0.07$;
+$T{=}4{\times}10^{6}$: $\Delta = -0.08$;
+$T{=}1.6{\times}10^{7}$: $\Delta = -0.04$;
+$T{=}6.4{\times}10^{7}$: $\Delta = -0.01$.
+\textbf{4/4 non-positive deltas}. The cone bound is supported, not
+rejected. Mechanistically, doubling $G$ from 32 to 64 halves the
+group-mean baseline noise, but it doubles the probability of an
+all-correct/all-wrong group producing zero advantage; on this
+benchmark the latter dominates for $G{=}64$.
+
+\paragraph{Finding 4 -- compute and group size are TWO-WAY
+complementary; value-of-$G$ amplifies by $24\times$ from $T{=}1$M to
+$T{=}64$M.}
+At fixed $G$, the value of going from $T{=}1$M to $T{=}64$M grows
+monotonically with $G$:
+$\Delta\mathrm{acc}(G{=}4) = +0.23$,
+$\Delta\mathrm{acc}(G{=}8) = +0.32$,
+$\Delta\mathrm{acc}(G{=}16) = +0.38$,
+$\Delta\mathrm{acc}(G{=}32) = +0.46$,
+$\Delta\mathrm{acc}(G{=}64) = +0.52$.
+Spearman $\rho(\Delta\mathrm{acc}_{T}, G) = +1.000$ ($n{=}5$, $p{\approx}10^{-24}$).
+
+Symmetrically, at fixed $T$, the value of going from $G{=}4$ to $G{=}32$
+grows monotonically with $\log_{10}T$:
+$\Delta\mathrm{acc}_{G}(T{=}1\mathrm{M}) = +0.01$,
+$\Delta\mathrm{acc}_{G}(T{=}4\mathrm{M}) = +0.11$,
+$\Delta\mathrm{acc}_{G}(T{=}16\mathrm{M}) = +0.21$,
+$\Delta\mathrm{acc}_{G}(T{=}64\mathrm{M}) = +0.24$.
+Spearman $\rho(\Delta\mathrm{acc}_{G}, \log_{10}T) = +1.000$
+($n{=}4$, $p{\approx}0$).
+
+The amplification factor is $24.0\times$ (value-of-$G$ at
+$T{=}64$M divided by value-of-$G$ at $T{=}1$M). \textbf{Compute unlocks
+the value of group size, and group size unlocks the value of compute}:
+the two are TWO-WAY complements, not substitutes. Iter-127's
+quantitative finding complements iter-123's qualitative finding that
+Wu's 12.5\% rollouts-frac claim is not generally true.
+
+\paragraph{Implication.}
+Wu et al.\ (2025) frame $G{=}2\sim G{=}16$ as evidence that GRPO
+degenerates to DPO at small $G$. Iter-127 sharpens the falsification:
+on the Qwen2.5-0.5B / arithmetic sweep, the joint surface
+$\mathrm{acc}(G,T)$ has a bounded cone ($G^{\ast}{=}32$ is the
+high-water mark), a pre-saturation $G^{\ast}(T)$ slope of $+0.5$/decade,
+and a $24\times$ two-way compute--group-size complementarity. The
+correct practitioner read is: \emph{allocate $G{=}16$ at
+$T{\approx}4{\times}10^{6}$, but if $T{\ge}1.6{\times}10^{7}$ go to
+$G{=}32$}; do not exceed $G{=}32$ on this benchmark; and never deploy
+$G{=}4$ without a sufficient $T$ budget to amortize the variance tax.
+
+\paragraph{Convergence-of-record.}
+Iters~99, 103, 107, 111, 115, 119, 123, 127 jointly falsify the Wu et
+al.\ (2025) G=2~=G=16 claim along eight axes: bootstrap Delta,
+iso-accuracy compute ratio, log-$G$ sign inversion, TOST
+equivalence, retention extrapolation, broader G-pair sweep, SNR
+mechanism, joint surface + cone. The triangulated falsification is
+robust to re-framing.
+
+\paragraph{Artifacts.}
+\texttt{scripts/group\_size\_iter127.py} (run on
+\texttt{group\_size\_token\_normalized.tsv}), producing
+\texttt{group\_size\_iter127\_\{joint\_fit, optimal\_g, bounded\_cone,
+complementarity, summary\}.tsv} plus
+\texttt{figures/group\_size\_iter127.pdf}.

@@ -1,0 +1,21 @@
+metric	value
+iter	120
+synth_vein	score_stream_universality_P7_P8
+p8_top_K	200
+p8_xgb_only_recall	0.3888888888888889
+p8_grad_band_calls	70
+p8_abs_band_calls	70
+p8_call_ratio_abs_over_grad	1.0
+p8_grad_p50	4.332279786467552e-06
+p8_grad_p90	8.012559555936605e-05
+p8_grad_ratio_p90_over_p50	18.495018675767184
+p8_call_density	0.007
+p7_grpo_mean_zvf	0.7203125
+p7_method_zvf_spread	0.06406249999999991
+p7_method_means	"{""grpo"": 0.7203125, ""aero"": 0.7203125, ""gift"": 0.7703125, ""areal"": 0.70625}"
+p7_fire_densities	"{""grpo"": 0.5, ""aero"": 0.525, ""gift"": 0.35, ""areal"": 0.575}"
+p7_triage_vs_static_ratio	0.6666666666666666
+synth_density_ratio_p8_over_p7_grpo	0.014
+h3_boot	"{""H3_p8_density_mean"": 0.006967600000000001, ""H3_p8_density_ci"": [0.0054, 0.008502499999999998], ""H3_p7_density_mean"": 0.495225, ""H3_p7_density_ci"": [0.325, 0.65], ""H3_density_ratio_mean"": 0.01447957018872965, ""H3_density_ratio_ci"": [0.009600000000000001, 0.022571428571428576]}"
+n_boot	1000
+seed	20260705

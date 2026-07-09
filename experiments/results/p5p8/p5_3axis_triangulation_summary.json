@@ -1,0 +1,78 @@
+{
+  "n_items": 7,
+  "n_audit_A_cells": 98,
+  "n_audit_B_rows": 32,
+  "A_overall_score": 100.0,
+  "A_per_axis_score": {
+    "item6": 16.67000000000001,
+    "item5": 16.67000000000001,
+    "item3": 16.67000000000001,
+    "item4": 16.67000000000001,
+    "item7": 16.67000000000001
+  },
+  "B_per_item_rows": [
+    {
+      "item_key": "item1",
+      "B_n": 17,
+      "B_match_rate": 0.4117647058823529,
+      "B_n_mismatch": 0,
+      "B_n_surrogate": 6,
+      "B_n_not_applicable": 4
+    },
+    {
+      "item_key": "item2",
+      "B_n": 6,
+      "B_match_rate": 0.5,
+      "B_n_mismatch": 0,
+      "B_n_surrogate": 0,
+      "B_n_not_applicable": 3
+    },
+    {
+      "item_key": "item3",
+      "B_n": 0,
+      "B_match_rate": NaN
+    },
+    {
+      "item_key": "item4",
+      "B_n": 0,
+      "B_match_rate": NaN
+    },
+    {
+      "item_key": "item5",
+      "B_n": 0,
+      "B_match_rate": NaN
+    },
+    {
+      "item_key": "item6",
+      "B_n": 0,
+      "B_match_rate": NaN
+    },
+    {
+      "item_key": "item7",
+      "B_n": 0,
+      "B_match_rate": NaN
+    }
+  ],
+  "C_per_item_classification_counts": {
+    "VACUOUS": 4,
+    "LOW": 0,
+    "MEDIUM": 2,
+    "HIGH": 1
+  },
+  "joint_corr_A_C": NaN,
+  "joint_corr_A_C_ci025": NaN,
+  "joint_corr_A_C_ci975": NaN,
+  "joint_corr_A_C_excludes_zero": false,
+  "joint_corr_B_C": NaN,
+  "joint_corr_B_C_ci025": NaN,
+  "joint_corr_B_C_ci975": NaN,
+  "joint_corr_B_C_excludes_zero": false,
+  "items_all_three_pass": 0,
+  "items_A_pass_only": 0,
+  "items_C_fail_only": 4,
+  "headline": {
+    "falsifiable_claim": "The P5 MIN-REPORT honesty surface has THREE orthogonal axes. (A) per-axis score on the harvest surface is a ceiling at 16.67/16.67 for all 6 audit axes (n=98 cells, 100.0% match on every declared value). (B) per-item match rate on the registry surface varies 100pp across the 32 (entry, delta, component) rows but per-item aggregation shows 0/7 items have B_n_audited > 5, underscoring that B operates at finer granularity. (C) per-item Shannon entropy on the standard classifies 4/7 items as VACUOUS, 2/7 as MEDIUM, 1/7 as HIGH. The three audits do not jointly single out a 'bad item' because A is uniform and B is sparse at item level; the actionable signal lives in C, which shows MIN-REPORT items 1, 2, 3, 7 are themselves informatively vacuous on the current 98-cell corpus.",
+    "items_pass_A_only": 0,
+    "items_pass_C_only": 3
+  }
+}

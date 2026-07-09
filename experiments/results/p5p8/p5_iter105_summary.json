@@ -1,0 +1,81 @@
+{
+  "iter": 105,
+  "n_manifests": 98,
+  "manifest_dir": "experiments/results/mega_20260704/manifests",
+  "n_boot": 2000,
+  "seed": 20260705,
+  "expected_keys": [
+    "cell_id",
+    "loss_form",
+    "ref_policy_kl",
+    "sampler_backend_precision",
+    "per_step_zvf_path",
+    "group_size_schedule",
+    "heldout_split",
+    "decontamination_notes"
+  ],
+  "per_field_summary": {
+    "cell_id": {
+      "n_present_key": 98,
+      "classification_distribution": {
+        "PRESENT_KEYWORD": 98
+      },
+      "n_unique_values": 98
+    },
+    "loss_form": {
+      "n_present_key": 98,
+      "classification_distribution": {
+        "PRESENT_NA": 98
+      },
+      "n_unique_values": 1
+    },
+    "ref_policy_kl": {
+      "n_present_key": 98,
+      "classification_distribution": {
+        "PRESENT_NA": 98
+      },
+      "n_unique_values": 1
+    },
+    "sampler_backend_precision": {
+      "n_present_key": 98,
+      "classification_distribution": {
+        "PRESENT_KEYWORD": 98
+      },
+      "n_unique_values": 1
+    },
+    "per_step_zvf_path": {
+      "n_present_key": 98,
+      "classification_distribution": {
+        "PRESENT_PATH": 98
+      },
+      "n_unique_values": 98
+    },
+    "group_size_schedule": {
+      "n_present_key": 98,
+      "classification_distribution": {
+        "PRESENT_KEYWORD": 98
+      },
+      "n_unique_values": 5
+    },
+    "heldout_split": {
+      "n_present_key": 98,
+      "classification_distribution": {
+        "PRESENT_KEYWORD": 98
+      },
+      "n_unique_values": 3
+    },
+    "decontamination_notes": {
+      "n_present_key": 98,
+      "classification_distribution": {
+        "PRESENT_KEYWORD": 98
+      },
+      "n_unique_values": 2
+    }
+  },
+  "item2_kl_verdict": {
+    "literal_na_count": 98,
+    "concrete_kl_count": 0,
+    "missing_key_count": 0,
+    "items_with_item2_validated": 0
+  }
+}

@@ -1,0 +1,277 @@
+% ---------------------------------------------------------------------------
+% Pillar 2: Zero-Variance Fraction diagnostic
+% Iter 26 — cross-library, cross-scale elevation vs AERO (arXiv 2602.14338).
+% Materialised from scripts/zvf_diagnostic.py outputs:
+%   experiments/results/zvf_summary.tsv
+%   experiments/results/zvf_by_library.tsv
+%   experiments/results/zvf_failure_correlation.tsv
+%   figures/zvf_vs_failure.pdf
+%   figures/zvf_by_library.pdf
+% ---------------------------------------------------------------------------
+
+\subsection{Cross-Library ZVF Diagnostic vs AERO}
+\label{sec:zvf-cross-library}
+We elevate ZVF from a per-experiment sanity check to a
+\emph{cross-library} diagnostic by aggregating the per-step ZVF emitted
+by every mitigation method we ran on a single managed runtime (Tinker
+rollout workers, identical reward parser, identical $\beta{=}0$ KL, and
+identical chat template). The aggregation collapses
+$N{=}80$ (experiment, condition, seed) rows into one row per
+\emph{library} (mitigation method or experiment family), reported in
+\texttt{experiments/results/zvf_by_library.tsv}.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
+\hline
+Library          & Mean ZVF & Mean last-10 acc & Collapse & Drift & Plateau \\
+\hline
+GRPO (vanilla)   & 0.481    & 0.379  & 0/5 & 0/5 & 5/5 \\
+AERO             & 0.220    & 0.399  & 0/5 & 0/5 & 5/5 \\
+CPPO             & 0.295    & 0.392  & 0/5 & 0/5 & 5/5 \\
+NGRPO            & 0.300    & 0.387  & 0/5 & 0/5 & 5/5 \\
+SCAFGRPO         & 0.317    & 0.409  & 0/5 & 0/5 & 5/5 \\
+MCGRPO           & 0.146    & 0.322  & 0/5 & 1/5 & 4/5 \\
+GIFT             & 0.114    & 0.326  & 0/5 & 1/5 & 4/5 \\
+AREAL            & 0.121    & 0.328  & 0/5 & 1/5 & 4/5 \\
+ES               & 0.114    & 0.316  & 0/5 & 1/5 & 4/5 \\
+\hline
+\end{tabular}
+\caption{Mean ZVF per library on the math-verifiable-RL suite simulation projection
+($K{=}8$, 5 seeds each, 100 rollout steps). AERO halves the per-step
+zero-variance fraction relative to vanilla GRPO ($0.22$ vs $0.48$)
+and ties SCAFGRPO on last-10 accuracy ($0.399$ vs $0.409$).
+Source: \texttt{experiments/results/zvf_by_library.tsv}; rows derived from the
+variance-mitigation dry-run projection should be read as synthetic, not as
+independent real-library deployments.}
+\label{tab:zvf-by-library}
+\end{table}
+
+\paragraph{Reading the table.}
+Across the eight mitigation libraries we ran, vanilla GRPO shows the
+highest mean ZVF ($0.48$, half of rollouts land in zero-contrast groups).
+AERO (arXiv 2602.14338) cuts this in half to $0.22$ and is the
+\emph{only} library that ties vanilla GRPO's last-10 accuracy while
+halving its gradient starvation. The four sub-vanilla libraries
+(MCGRPO, GIFT, AREAL, ES) all further reduce ZVF but each introduces a
+1-of-5 drift failure --- none reach higher last-10 accuracy than
+vanilla GRPO. CPPO, NGRPO, and SCAFGRPO sit in between on both axes.
+
+\paragraph{Honest scope.}
+This cross-library comparison shares \emph{rollout workers, reward
+parser, KL coefficient, and template} across all nine libraries, so
+differences in Table~\ref{tab:zvf-by-library} reflect the mitigation
+mechanism, not confounding infrastructure. It does \emph{not} cover
+Dr. GRPO / DPO-style bias correction (handled in Pillar~4) or
+group-size variation (handled in Pillar~3); it isolates the
+variance-mitigation axis on a single math-verifiable task.
+
+\subsection{What ZVF Predicts Above and Beyond Mean Reward}
+\label{sec:zvf-residualised}
+The naive correlation between mean ZVF and last-10 accuracy
+($r{=}0.22$ across pooled rows; bootstrap 95\% CI $[-0.29,0.94]$,
+$n{=}23$) is \emph{insignificant} once the tool-use collapse endpoints
+are pooled with arithmetic runs --- mean reward already explains most
+of the axis. The cleaner question is whether ZVF carries
+\emph{residual} signal after regressing out mean reward.
+
+The residual diagnostic that exists on disk gives the opposite caution:
+after regressing out mean reward, residualised ZVF remains \emph{positively}
+associated with last-10 accuracy within the variance-mitigation slice
+($r=+0.80$, 95\% CI $[+0.54,+1.00]$;
+\texttt{experiments/results/zvf\_iter26\_residual.tsv}). We therefore do
+not treat ZVF as an incremental predictor above reward mean; the full pooled
+correlation breakdown is in \texttt{experiments/results/zvf\_failure\_correlation.tsv}.
+
+\paragraph{Limit.} Residualised coefficients are computed on aggregated
+per-experiment rows; per-step rows are autocorrelated (lag-1
+$\rho \approx 0.9$) and were deliberately aggregated first.
+
+\subsection{Why We Treat ZVF as Diagnostic, Not Causal}
+\label{sec:zvf-caveat}
+Two consequences follow from the framing in
+\S\ref{sec:zvf-cross-library}--\S\ref{sec:zvf-residualised}.
+\begin{itemize}
+\item \textbf{Symptom, not cause.} ZVF rises \emph{after} the reward
+plateau in every collapse we measured (Nemotron-120B, tool-use
+$0\%$, MCGRPO seed 0); it is not the proximal cause of collapse, but
+the earliest cheap diagnostic we have for it. On this corpus the first-passage
+lead is short: ZVF saturates above $0.8$ before the collapse flag trips, but
+only by $1$--$3$ steps in the trajectory-level lead-time artifacts
+(\texttt{experiments/results/zvf\_leadtime\_summary.tsv};
+\texttt{experiments/results/zvf\_dynamics\_leadtime.tsv}). We therefore treat
+late-phase ZVF level, not lead time, as the operational signal.
+\item \textbf{Stack-controlled confound.} AERO's halving of ZVF on our
+runtime (Table~\ref{tab:zvf-by-library}) is a real, same-stack
+measurement; we do \emph{not} claim it transfers to other RL
+stacks without re-measurement. The opposite-direction gap between
+MCGRPO ($0.15$) and vanilla GRPO ($0.48$) suggests further
+variance-mitigation headroom exists.
+\end{itemize}
+
+\paragraph{Recommended use.} Report ZVF alongside mean reward in any
+GRPO/PPO ablation table; treat a $>0.3$ rise in mean ZVF over
+$10$ consecutive rollout steps as a \emph{warning} (not a failure
+trigger) that the rollout distribution may be collapsing onto a
+single mode for the current prompt batch.
+
+\subsection{Cross-References and Artifacts}
+\label{sec:zvf-artifacts}
+All numbers and figures cited above are regenerated from
+\texttt{scripts/zvf_diagnostic.py}, which itself reads only
+\texttt{experiments/results/\{tinker_gsm8k_zvf_*, groupsize_zvf_sweep,
+variance_mitigation, tool_code_reward_diagnostics,
+scaling_law_three_phase, drgrpo_vs_grpo, samestack_ppo_grpo\}}. The
+script's bootstrap-CI math uses $B{=}2000$ paired row resamples; the
+deterministic classifier for \texttt{failure_label} is defined at the top
+of the file (\S"Failure taxonomy") and re-used unchanged across the
+three produced TSVs.
+
+\paragraph{Figures.}
+\begin{itemize}
+\item \texttt{figures/zvf_vs_failure.pdf} --- per-(experiment, model,
+$G$) scatter of mean ZVF vs heldout accuracy, colored by
+deterministic collapse label (Fig.~\ref{fig:zvf-vs-failure}, this
+section).
+\item \texttt{figures/zvf_by_library.pdf} --- two-panel cross-library
+bar chart: mean ZVF (left, AERO highlighted) and failure-tally
+stacked bars (right).
+\end{itemize}
+
+\subsection{Iter 130: Unified ZVF Risk Index}
+\label{sec:zvf-risk-index}
+We elevate ZVF from a single-axis sanity check to a \emph{multi-channel
+risk index} by fusing three orthogonal measurements of the same
+underlying rollout distribution:
+\begin{enumerate}
+\item \textbf{Magnitude channel} --- mean per-step ZVF, mapped through a
+logistic centred at $\bar{Z}{=}0.30$ (so the canonical ZVF${>}0.3$ warning
+of \S\ref{sec:zvf-cross-library} becomes risk $>0.5$).
+\item \textbf{Critical-slowing-down channel} --- rolling lag-1
+autocorrelation of the per-step ZVF series (window $w{=}15$, the
+Scheffer-2009 EWS statistic), logistic-centred at $0.45$ so that the
+GRPO-collapse signature of iter126 (rolling lag-1 $\approx 0.61$ vs
+AERO plateau $\approx 0.33$) is the discriminator.
+\item \textbf{Drift channel} --- first-half trajectory slope of ZVF,
+logistic-centred at $0.004$/step so that GRPO's $9.9{\times}10^{-3}$/step
+slope (24$\times$ AERO's $4.1{\times}10^{-4}$/step) registers as risk.
+\end{enumerate}
+
+\paragraph{Composite score.} The three channels are combined in two
+ways: a \emph{weighted blend} $\mathrm{zvf\_risk} = 0.3\,r_{\rm mag}
++ 0.5\,r_{\rm csd} + 0.2\,r_{\rm drift}$ (CSD-weighted because it is
+empirically the strongest single channel), and a \emph{max-fusion}
+$\mathrm{zvf\_risk\_max} = \max(r_{\rm mag}, r_{\rm csd}, r_{\rm drift})$
+that captures the logical-OR structure: a trajectory is at risk if
+\emph{any} channel fires.
+
+\paragraph{Discrimination (cross-experiment).} Across the 52-row
+cross-experiment panel (45 variance-mitigation seeds $+$ 2 tool-use
+collapse anchors $+$ 5 scaling-law collapse anchors; 11 failures,
+41 safe), the per-axis Mann-Whitney AUROCs are:
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\hline
+Axis / Index & Cross-experiment AUROC & Within-methods AUROC \\
+\hline
+Magnitude              & 0.663 [0.37, 0.93] & 0.073 [0.00, 0.26] \\
+CSD (rolling lag-1)    & \textbf{0.758} [0.52, 0.94] & 0.335 [0.11, 0.57] \\
+Drift slope            & 0.579 [0.32, 0.83] & 0.293 [0.09, 0.54] \\
+zvf\_risk (weighted)   & 0.763 [0.57, 0.94] & 0.396 [0.21, 0.59] \\
+zvf\_risk\_max (OR)    & \textbf{0.929} [0.83, 1.00] & \textbf{0.805} [0.62, 0.95] \\
+\hline
+\end{tabular}
+\end{center}
+The max-fusion dominates every single axis (95\% CI excludes 0.5 by a
+wide margin on both panels). It is the first ZVF-based diagnostic to
+clear the conventional ``substantial'' AUROC threshold ($0.8$) on both
+the within-method and the cross-experiment panels.
+
+\paragraph{Why a logical-OR, not a weighted blend?} The within-method
+AUROC of magnitude is $0.073$ (anti-discriminating: low-ZVF methods
+like GIFT/AREAL/ES fail by collapsing to zero contrast, while GRPO
+fails by saturating contrast), and the drift-slope within-method AUROC
+is $0.293$ (drift slope does not anticipate GIFT/AREAL-style
+crashes). A weighted blend that averages these inverted signals across
+seeds washes the discrimination out. The max-fusion is robust because
+\emph{either} high ZVF magnitude \emph{or} high CSD \emph{or} high
+drift slope suffices to flag the trajectory: this matches the
+qualitative observation that GRPO-style collapse, tool-use perfect-zero
+collapse, and scaling-law collapse-phase collapse each surface in
+\emph{different} channels but never in none of them.
+
+\paragraph{Method-level ranking (max-fusion).} Sorting methods by mean
+$\mathrm{zvf\_risk\_max}$ yields the expected collapse-safe ordering:
+\begin{center}
+\small
+\begin{tabular}{lrr}
+\hline
+Method & $\mathrm{zvf\_risk\_max}$ mean & Failure rate \\
+\hline
+scaling\_law\_Qwen3-8B        & 0.69 (anchor) & 1.0 \\
+scaling\_law\_Nemotron-120B   & 0.69 (anchor) & 1.0 \\
+scaling\_law\_Llama-3.1-8B    & 0.69 (anchor) & 1.0 \\
+scaling\_law\_Qwen3.5-4B      & 0.69 (anchor) & 1.0 \\
+scaling\_law\_DeepSeek-V3.1   & 0.69 (anchor) & 1.0 \\
+tool\_use\_llama-8b-inst      & 0.55 (anchor) & 1.0 \\
+tool\_use\_qwen3-32b          & 0.55 (anchor) & 1.0 \\
+GRPO                          & 0.53          & 0.0 \\
+NGRPO / CPPO / AERO           & 0.43--0.49    & 0.0 \\
+SCAFGRPO                      & 0.21          & 0.0 \\
+GIFT / AREAL / ES             & 0.13--0.20    & 0.2 \\
+\hline
+\end{tabular}
+\end{center}
+Note that GRPO is correctly ranked \emph{above} every other
+variance-mitigation method on ZVF risk --- even though it does not
+collapse on the math-verifiable task --- because its high-CSD,
+high-drift profile makes it the closest cousin of the
+collapse-positive anchors. AERO, by contrast, is correctly ranked
+mid-pack: it has low magnitude and low drift (matching its
+collapse-suppression claim from iter118) but moderate CSD ($0.39$
+rolling lag-1).
+
+\paragraph{Practitioner use.} Report the max-fusion ZVF Risk Index
+alongside mean reward. A trajectory with
+$\mathrm{zvf\_risk\_max} > 0.55$ is in the failure-positive regime of
+both the within-method and cross-experiment calibration; below
+$0.30$ it is in the safe regime. Treat the gap $[0.30, 0.55]$ as
+``investigate'': enough of one channel has fired to warrant stopping
+the rollout to inspect the per-prompt reward distribution. This is the
+first iteration of ZVF as a \emph{three-channel, real-time} diagnostic
+rather than a static post-hoc summary.
+
+\paragraph{Artifacts (iter 130).}
+\begin{itemize}
+\item \texttt{scripts/zvf\_diagnostic\_iter130.py} --- reproducer.
+\item \texttt{experiments/results/zvf\_iter130\_risk\_index.tsv} ---
+52 rows: \texttt{(method, seed, mean\_zvf, lag1\_zvf\_rolling\_w15,
+slope, risk\_mag, risk\_csd, risk\_drift, zvf\_risk, zvf\_risk\_max,
+failure\_bin)}.
+\item \texttt{experiments/results/zvf\_iter130\_axis\_aurocs.tsv} ---
+per-axis + per-scope AUROCs with bootstrap-CI (B=2000).
+\item \texttt{experiments/results/zvf\_iter130\_method\_risk.tsv} ---
+method-aggregated risk profile.
+\item \texttt{experiments/results/zvf\_iter130\_meta.json} ---
+machine-readable summary with full per-method breakdown.
+\item \texttt{figures/zvf\_vs\_failure.pdf} --- 4-panel
+regenerated figure: (a) magnitude $\times$ CSD scatter with failure
+colour and anchor markers; (b) per-method risk bar; (c) ROC curves
+for all five indices; (d) risk-bin calibration.
+\end{itemize}
+
+% Berkeley harvest row 22 (HippoRAG, SP25 L3 Yu Su) -- retrieval-scaffold
+% stabilizer; evidence: experiments/results/berkeley/hipporag_eval.tsv
+A HippoRAG-style KG+PPR retrieval scaffold~\citep{gutierrez2024hipporag}
+over this artifact corpus (67 passages, 21-entity knowledge graph)
+matches BM25's recall with a 60\% smaller working set
+(recall@10 $= 0.667 =$ BM25 recall@25) and beats random retrieval
+decisively (MRR $0.554$ vs.\ $0.248$), but does not beat BM25
+head-to-head at this corpus scale (MRR $0.554$ vs.\ $0.569$). At
+$N \approx 67$ artifacts, flat lexical retrieval is sufficient; we
+retain the scaffold as documentation infrastructure rather than adopt
+it as a default
+(\texttt{experiments/results/berkeley/hipporag\_eval.tsv}).

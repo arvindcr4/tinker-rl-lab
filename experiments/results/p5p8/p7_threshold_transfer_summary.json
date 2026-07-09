@@ -1,0 +1,1147 @@
+{
+  "n_steps": 40,
+  "n_prompts_per_step": 16,
+  "thresholds": [
+    0.5,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8,
+    0.85,
+    0.9
+  ],
+  "methods": [
+    "grpo",
+    "aero",
+    "gift",
+    "areal"
+  ],
+  "baseline_rollouts": 5120,
+  "transfer_matrix_per_tau": {
+    "0.50": {
+      "grpo->aero": {
+        "cost_ratio": "1.9500",
+        "fires": 38,
+        "saved": 0
+      },
+      "grpo->gift": {
+        "cost_ratio": "1.9500",
+        "fires": 38,
+        "saved": 0
+      },
+      "grpo->areal": {
+        "cost_ratio": "1.9500",
+        "fires": 38,
+        "saved": 0
+      },
+      "aero->grpo": {
+        "cost_ratio": "1.9500",
+        "fires": 38,
+        "saved": 0
+      },
+      "aero->gift": {
+        "cost_ratio": "1.9500",
+        "fires": 38,
+        "saved": 0
+      },
+      "aero->areal": {
+        "cost_ratio": "1.9500",
+        "fires": 38,
+        "saved": 0
+      },
+      "gift->grpo": {
+        "cost_ratio": "1.9500",
+        "fires": 38,
+        "saved": 0
+      },
+      "gift->aero": {
+        "cost_ratio": "1.9500",
+        "fires": 38,
+        "saved": 0
+      },
+      "gift->areal": {
+        "cost_ratio": "1.9500",
+        "fires": 38,
+        "saved": 0
+      },
+      "areal->grpo": {
+        "cost_ratio": "1.9500",
+        "fires": 38,
+        "saved": 0
+      },
+      "areal->aero": {
+        "cost_ratio": "1.9500",
+        "fires": 38,
+        "saved": 0
+      },
+      "areal->gift": {
+        "cost_ratio": "1.9500",
+        "fires": 38,
+        "saved": 0
+      }
+    },
+    "0.60": {
+      "grpo->aero": {
+        "cost_ratio": "1.8250",
+        "fires": 33,
+        "saved": 0
+      },
+      "grpo->gift": {
+        "cost_ratio": "1.9000",
+        "fires": 36,
+        "saved": 0
+      },
+      "grpo->areal": {
+        "cost_ratio": "1.8000",
+        "fires": 32,
+        "saved": 0
+      },
+      "aero->grpo": {
+        "cost_ratio": "1.8250",
+        "fires": 33,
+        "saved": 0
+      },
+      "aero->gift": {
+        "cost_ratio": "1.9000",
+        "fires": 36,
+        "saved": 0
+      },
+      "aero->areal": {
+        "cost_ratio": "1.8000",
+        "fires": 32,
+        "saved": 0
+      },
+      "gift->grpo": {
+        "cost_ratio": "1.8250",
+        "fires": 33,
+        "saved": 0
+      },
+      "gift->aero": {
+        "cost_ratio": "1.8250",
+        "fires": 33,
+        "saved": 0
+      },
+      "gift->areal": {
+        "cost_ratio": "1.8000",
+        "fires": 32,
+        "saved": 0
+      },
+      "areal->grpo": {
+        "cost_ratio": "1.8250",
+        "fires": 33,
+        "saved": 0
+      },
+      "areal->aero": {
+        "cost_ratio": "1.8250",
+        "fires": 33,
+        "saved": 0
+      },
+      "areal->gift": {
+        "cost_ratio": "1.9000",
+        "fires": 36,
+        "saved": 0
+      }
+    },
+    "0.65": {
+      "grpo->aero": {
+        "cost_ratio": "1.6500",
+        "fires": 26,
+        "saved": 0
+      },
+      "grpo->gift": {
+        "cost_ratio": "1.7250",
+        "fires": 29,
+        "saved": 0
+      },
+      "grpo->areal": {
+        "cost_ratio": "1.7000",
+        "fires": 28,
+        "saved": 0
+      },
+      "aero->grpo": {
+        "cost_ratio": "1.7500",
+        "fires": 30,
+        "saved": 0
+      },
+      "aero->gift": {
+        "cost_ratio": "1.7250",
+        "fires": 29,
+        "saved": 0
+      },
+      "aero->areal": {
+        "cost_ratio": "1.7000",
+        "fires": 28,
+        "saved": 0
+      },
+      "gift->grpo": {
+        "cost_ratio": "1.7500",
+        "fires": 30,
+        "saved": 0
+      },
+      "gift->aero": {
+        "cost_ratio": "1.6500",
+        "fires": 26,
+        "saved": 0
+      },
+      "gift->areal": {
+        "cost_ratio": "1.7000",
+        "fires": 28,
+        "saved": 0
+      },
+      "areal->grpo": {
+        "cost_ratio": "1.7500",
+        "fires": 30,
+        "saved": 0
+      },
+      "areal->aero": {
+        "cost_ratio": "1.6500",
+        "fires": 26,
+        "saved": 0
+      },
+      "areal->gift": {
+        "cost_ratio": "1.7250",
+        "fires": 29,
+        "saved": 0
+      }
+    },
+    "0.70": {
+      "grpo->aero": {
+        "cost_ratio": "1.4750",
+        "fires": 19,
+        "saved": 0
+      },
+      "grpo->gift": {
+        "cost_ratio": "1.6250",
+        "fires": 25,
+        "saved": 0
+      },
+      "grpo->areal": {
+        "cost_ratio": "1.4250",
+        "fires": 17,
+        "saved": 0
+      },
+      "aero->grpo": {
+        "cost_ratio": "1.5000",
+        "fires": 20,
+        "saved": 0
+      },
+      "aero->gift": {
+        "cost_ratio": "1.6250",
+        "fires": 25,
+        "saved": 0
+      },
+      "aero->areal": {
+        "cost_ratio": "1.4250",
+        "fires": 17,
+        "saved": 0
+      },
+      "gift->grpo": {
+        "cost_ratio": "1.5000",
+        "fires": 20,
+        "saved": 0
+      },
+      "gift->aero": {
+        "cost_ratio": "1.4750",
+        "fires": 19,
+        "saved": 0
+      },
+      "gift->areal": {
+        "cost_ratio": "1.4250",
+        "fires": 17,
+        "saved": 0
+      },
+      "areal->grpo": {
+        "cost_ratio": "1.5000",
+        "fires": 20,
+        "saved": 0
+      },
+      "areal->aero": {
+        "cost_ratio": "1.4750",
+        "fires": 19,
+        "saved": 0
+      },
+      "areal->gift": {
+        "cost_ratio": "1.6250",
+        "fires": 25,
+        "saved": 0
+      }
+    },
+    "0.75": {
+      "grpo->aero": {
+        "cost_ratio": "1.4750",
+        "fires": 19,
+        "saved": 0
+      },
+      "grpo->gift": {
+        "cost_ratio": "1.6250",
+        "fires": 25,
+        "saved": 0
+      },
+      "grpo->areal": {
+        "cost_ratio": "1.4250",
+        "fires": 17,
+        "saved": 0
+      },
+      "aero->grpo": {
+        "cost_ratio": "1.5000",
+        "fires": 20,
+        "saved": 0
+      },
+      "aero->gift": {
+        "cost_ratio": "1.6250",
+        "fires": 25,
+        "saved": 0
+      },
+      "aero->areal": {
+        "cost_ratio": "1.4250",
+        "fires": 17,
+        "saved": 0
+      },
+      "gift->grpo": {
+        "cost_ratio": "1.5000",
+        "fires": 20,
+        "saved": 0
+      },
+      "gift->aero": {
+        "cost_ratio": "1.4750",
+        "fires": 19,
+        "saved": 0
+      },
+      "gift->areal": {
+        "cost_ratio": "1.4250",
+        "fires": 17,
+        "saved": 0
+      },
+      "areal->grpo": {
+        "cost_ratio": "1.5000",
+        "fires": 20,
+        "saved": 0
+      },
+      "areal->aero": {
+        "cost_ratio": "1.4750",
+        "fires": 19,
+        "saved": 0
+      },
+      "areal->gift": {
+        "cost_ratio": "1.6250",
+        "fires": 25,
+        "saved": 0
+      }
+    },
+    "0.80": {
+      "grpo->aero": {
+        "cost_ratio": "1.3500",
+        "fires": 14,
+        "saved": 0
+      },
+      "grpo->gift": {
+        "cost_ratio": "1.4250",
+        "fires": 17,
+        "saved": 0
+      },
+      "grpo->areal": {
+        "cost_ratio": "1.2750",
+        "fires": 11,
+        "saved": 0
+      },
+      "aero->grpo": {
+        "cost_ratio": "1.3000",
+        "fires": 12,
+        "saved": 0
+      },
+      "aero->gift": {
+        "cost_ratio": "1.4250",
+        "fires": 17,
+        "saved": 0
+      },
+      "aero->areal": {
+        "cost_ratio": "1.2750",
+        "fires": 11,
+        "saved": 0
+      },
+      "gift->grpo": {
+        "cost_ratio": "1.3000",
+        "fires": 12,
+        "saved": 0
+      },
+      "gift->aero": {
+        "cost_ratio": "1.3500",
+        "fires": 14,
+        "saved": 0
+      },
+      "gift->areal": {
+        "cost_ratio": "1.2750",
+        "fires": 11,
+        "saved": 0
+      },
+      "areal->grpo": {
+        "cost_ratio": "1.3000",
+        "fires": 12,
+        "saved": 0
+      },
+      "areal->aero": {
+        "cost_ratio": "1.3500",
+        "fires": 14,
+        "saved": 0
+      },
+      "areal->gift": {
+        "cost_ratio": "1.4250",
+        "fires": 17,
+        "saved": 0
+      }
+    },
+    "0.85": {
+      "grpo->aero": {
+        "cost_ratio": "1.1000",
+        "fires": 4,
+        "saved": 0
+      },
+      "grpo->gift": {
+        "cost_ratio": "1.3500",
+        "fires": 14,
+        "saved": 0
+      },
+      "grpo->areal": {
+        "cost_ratio": "1.1250",
+        "fires": 5,
+        "saved": 0
+      },
+      "aero->grpo": {
+        "cost_ratio": "1.1000",
+        "fires": 4,
+        "saved": 0
+      },
+      "aero->gift": {
+        "cost_ratio": "1.3500",
+        "fires": 14,
+        "saved": 0
+      },
+      "aero->areal": {
+        "cost_ratio": "1.1250",
+        "fires": 5,
+        "saved": 0
+      },
+      "gift->grpo": {
+        "cost_ratio": "1.1000",
+        "fires": 4,
+        "saved": 0
+      },
+      "gift->aero": {
+        "cost_ratio": "1.1000",
+        "fires": 4,
+        "saved": 0
+      },
+      "gift->areal": {
+        "cost_ratio": "1.1250",
+        "fires": 5,
+        "saved": 0
+      },
+      "areal->grpo": {
+        "cost_ratio": "1.1000",
+        "fires": 4,
+        "saved": 0
+      },
+      "areal->aero": {
+        "cost_ratio": "1.1000",
+        "fires": 4,
+        "saved": 0
+      },
+      "areal->gift": {
+        "cost_ratio": "1.3500",
+        "fires": 14,
+        "saved": 0
+      }
+    },
+    "0.90": {
+      "grpo->aero": {
+        "cost_ratio": "1.0250",
+        "fires": 1,
+        "saved": 0
+      },
+      "grpo->gift": {
+        "cost_ratio": "1.2000",
+        "fires": 8,
+        "saved": 0
+      },
+      "grpo->areal": {
+        "cost_ratio": "1.0250",
+        "fires": 1,
+        "saved": 0
+      },
+      "aero->grpo": {
+        "cost_ratio": "1.0500",
+        "fires": 2,
+        "saved": 0
+      },
+      "aero->gift": {
+        "cost_ratio": "1.2000",
+        "fires": 8,
+        "saved": 0
+      },
+      "aero->areal": {
+        "cost_ratio": "1.0250",
+        "fires": 1,
+        "saved": 0
+      },
+      "gift->grpo": {
+        "cost_ratio": "1.0500",
+        "fires": 2,
+        "saved": 0
+      },
+      "gift->aero": {
+        "cost_ratio": "1.0250",
+        "fires": 1,
+        "saved": 0
+      },
+      "gift->areal": {
+        "cost_ratio": "1.0250",
+        "fires": 1,
+        "saved": 0
+      },
+      "areal->grpo": {
+        "cost_ratio": "1.0500",
+        "fires": 2,
+        "saved": 0
+      },
+      "areal->aero": {
+        "cost_ratio": "1.0250",
+        "fires": 1,
+        "saved": 0
+      },
+      "areal->gift": {
+        "cost_ratio": "1.2000",
+        "fires": 8,
+        "saved": 0
+      }
+    }
+  },
+  "per_source_best_tau": {
+    "grpo": null,
+    "aero": null,
+    "gift": null,
+    "areal": null
+  },
+  "transfer_penalty_rows": [
+    {
+      "source": "grpo",
+      "target": "grpo",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "grpo",
+      "target": "aero",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "grpo",
+      "target": "gift",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "grpo",
+      "target": "areal",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "aero",
+      "target": "grpo",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "aero",
+      "target": "aero",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "aero",
+      "target": "gift",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "aero",
+      "target": "areal",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "gift",
+      "target": "grpo",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "gift",
+      "target": "aero",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "gift",
+      "target": "gift",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "gift",
+      "target": "areal",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "areal",
+      "target": "grpo",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "areal",
+      "target": "aero",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "areal",
+      "target": "gift",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    },
+    {
+      "source": "areal",
+      "target": "areal",
+      "tau_used": "n/a",
+      "tau_target_opt": "n/a",
+      "cost_used": "1.0000",
+      "cost_target_opt": "1.0000",
+      "transfer_penalty": "+0.0000"
+    }
+  ],
+  "cross_method_agreement_rows": [
+    {
+      "tau": "0.50",
+      "method_a": "aero",
+      "method_b": "grpo",
+      "fires_a": 38,
+      "fires_b": 38,
+      "jaccard": "1.0000"
+    },
+    {
+      "tau": "0.50",
+      "method_a": "aero",
+      "method_b": "gift",
+      "fires_a": 38,
+      "fires_b": 38,
+      "jaccard": "1.0000"
+    },
+    {
+      "tau": "0.50",
+      "method_a": "aero",
+      "method_b": "areal",
+      "fires_a": 38,
+      "fires_b": 38,
+      "jaccard": "1.0000"
+    },
+    {
+      "tau": "0.50",
+      "method_a": "gift",
+      "method_b": "grpo",
+      "fires_a": 38,
+      "fires_b": 38,
+      "jaccard": "1.0000"
+    },
+    {
+      "tau": "0.50",
+      "method_a": "areal",
+      "method_b": "grpo",
+      "fires_a": 38,
+      "fires_b": 38,
+      "jaccard": "1.0000"
+    },
+    {
+      "tau": "0.50",
+      "method_a": "areal",
+      "method_b": "gift",
+      "fires_a": 38,
+      "fires_b": 38,
+      "jaccard": "1.0000"
+    },
+    {
+      "tau": "0.60",
+      "method_a": "aero",
+      "method_b": "grpo",
+      "fires_a": 33,
+      "fires_b": 33,
+      "jaccard": "0.8333"
+    },
+    {
+      "tau": "0.60",
+      "method_a": "aero",
+      "method_b": "gift",
+      "fires_a": 33,
+      "fires_b": 36,
+      "jaccard": "0.8649"
+    },
+    {
+      "tau": "0.60",
+      "method_a": "aero",
+      "method_b": "areal",
+      "fires_a": 33,
+      "fires_b": 32,
+      "jaccard": "0.8571"
+    },
+    {
+      "tau": "0.60",
+      "method_a": "gift",
+      "method_b": "grpo",
+      "fires_a": 36,
+      "fires_b": 33,
+      "jaccard": "0.8649"
+    },
+    {
+      "tau": "0.60",
+      "method_a": "areal",
+      "method_b": "grpo",
+      "fires_a": 32,
+      "fires_b": 33,
+      "jaccard": "0.8571"
+    },
+    {
+      "tau": "0.60",
+      "method_a": "areal",
+      "method_b": "gift",
+      "fires_a": 32,
+      "fires_b": 36,
+      "jaccard": "0.8378"
+    },
+    {
+      "tau": "0.65",
+      "method_a": "aero",
+      "method_b": "grpo",
+      "fires_a": 26,
+      "fires_b": 30,
+      "jaccard": "0.7500"
+    },
+    {
+      "tau": "0.65",
+      "method_a": "aero",
+      "method_b": "gift",
+      "fires_a": 26,
+      "fires_b": 29,
+      "jaccard": "0.7188"
+    },
+    {
+      "tau": "0.65",
+      "method_a": "aero",
+      "method_b": "areal",
+      "fires_a": 26,
+      "fires_b": 28,
+      "jaccard": "0.6875"
+    },
+    {
+      "tau": "0.65",
+      "method_a": "gift",
+      "method_b": "grpo",
+      "fires_a": 29,
+      "fires_b": 30,
+      "jaccard": "0.7353"
+    },
+    {
+      "tau": "0.65",
+      "method_a": "areal",
+      "method_b": "grpo",
+      "fires_a": 28,
+      "fires_b": 30,
+      "jaccard": "0.8125"
+    },
+    {
+      "tau": "0.65",
+      "method_a": "areal",
+      "method_b": "gift",
+      "fires_a": 28,
+      "fires_b": 29,
+      "jaccard": "0.7273"
+    },
+    {
+      "tau": "0.70",
+      "method_a": "aero",
+      "method_b": "grpo",
+      "fires_a": 19,
+      "fires_b": 20,
+      "jaccard": "0.6250"
+    },
+    {
+      "tau": "0.70",
+      "method_a": "aero",
+      "method_b": "gift",
+      "fires_a": 19,
+      "fires_b": 25,
+      "jaccard": "0.5714"
+    },
+    {
+      "tau": "0.70",
+      "method_a": "aero",
+      "method_b": "areal",
+      "fires_a": 19,
+      "fires_b": 17,
+      "jaccard": "0.3846"
+    },
+    {
+      "tau": "0.70",
+      "method_a": "gift",
+      "method_b": "grpo",
+      "fires_a": 25,
+      "fires_b": 20,
+      "jaccard": "0.6667"
+    },
+    {
+      "tau": "0.70",
+      "method_a": "areal",
+      "method_b": "grpo",
+      "fires_a": 17,
+      "fires_b": 20,
+      "jaccard": "0.4800"
+    },
+    {
+      "tau": "0.70",
+      "method_a": "areal",
+      "method_b": "gift",
+      "fires_a": 17,
+      "fires_b": 25,
+      "jaccard": "0.5556"
+    },
+    {
+      "tau": "0.75",
+      "method_a": "aero",
+      "method_b": "grpo",
+      "fires_a": 19,
+      "fires_b": 20,
+      "jaccard": "0.6250"
+    },
+    {
+      "tau": "0.75",
+      "method_a": "aero",
+      "method_b": "gift",
+      "fires_a": 19,
+      "fires_b": 25,
+      "jaccard": "0.5714"
+    },
+    {
+      "tau": "0.75",
+      "method_a": "aero",
+      "method_b": "areal",
+      "fires_a": 19,
+      "fires_b": 17,
+      "jaccard": "0.3846"
+    },
+    {
+      "tau": "0.75",
+      "method_a": "gift",
+      "method_b": "grpo",
+      "fires_a": 25,
+      "fires_b": 20,
+      "jaccard": "0.6667"
+    },
+    {
+      "tau": "0.75",
+      "method_a": "areal",
+      "method_b": "grpo",
+      "fires_a": 17,
+      "fires_b": 20,
+      "jaccard": "0.4800"
+    },
+    {
+      "tau": "0.75",
+      "method_a": "areal",
+      "method_b": "gift",
+      "fires_a": 17,
+      "fires_b": 25,
+      "jaccard": "0.5556"
+    },
+    {
+      "tau": "0.80",
+      "method_a": "aero",
+      "method_b": "grpo",
+      "fires_a": 14,
+      "fires_b": 12,
+      "jaccard": "0.6250"
+    },
+    {
+      "tau": "0.80",
+      "method_a": "aero",
+      "method_b": "gift",
+      "fires_a": 14,
+      "fires_b": 17,
+      "jaccard": "0.5500"
+    },
+    {
+      "tau": "0.80",
+      "method_a": "aero",
+      "method_b": "areal",
+      "fires_a": 14,
+      "fires_b": 11,
+      "jaccard": "0.3889"
+    },
+    {
+      "tau": "0.80",
+      "method_a": "gift",
+      "method_b": "grpo",
+      "fires_a": 17,
+      "fires_b": 12,
+      "jaccard": "0.5263"
+    },
+    {
+      "tau": "0.80",
+      "method_a": "areal",
+      "method_b": "grpo",
+      "fires_a": 11,
+      "fires_b": 12,
+      "jaccard": "0.5333"
+    },
+    {
+      "tau": "0.80",
+      "method_a": "areal",
+      "method_b": "gift",
+      "fires_a": 11,
+      "fires_b": 17,
+      "jaccard": "0.4737"
+    },
+    {
+      "tau": "0.85",
+      "method_a": "aero",
+      "method_b": "grpo",
+      "fires_a": 4,
+      "fires_b": 4,
+      "jaccard": "0.3333"
+    },
+    {
+      "tau": "0.85",
+      "method_a": "aero",
+      "method_b": "gift",
+      "fires_a": 4,
+      "fires_b": 14,
+      "jaccard": "0.2000"
+    },
+    {
+      "tau": "0.85",
+      "method_a": "aero",
+      "method_b": "areal",
+      "fires_a": 4,
+      "fires_b": 5,
+      "jaccard": "0.2857"
+    },
+    {
+      "tau": "0.85",
+      "method_a": "gift",
+      "method_b": "grpo",
+      "fires_a": 14,
+      "fires_b": 4,
+      "jaccard": "0.2857"
+    },
+    {
+      "tau": "0.85",
+      "method_a": "areal",
+      "method_b": "grpo",
+      "fires_a": 5,
+      "fires_b": 4,
+      "jaccard": "0.1250"
+    },
+    {
+      "tau": "0.85",
+      "method_a": "areal",
+      "method_b": "gift",
+      "fires_a": 5,
+      "fires_b": 14,
+      "jaccard": "0.1875"
+    },
+    {
+      "tau": "0.90",
+      "method_a": "aero",
+      "method_b": "grpo",
+      "fires_a": 1,
+      "fires_b": 2,
+      "jaccard": "0.5000"
+    },
+    {
+      "tau": "0.90",
+      "method_a": "aero",
+      "method_b": "gift",
+      "fires_a": 1,
+      "fires_b": 8,
+      "jaccard": "0.1250"
+    },
+    {
+      "tau": "0.90",
+      "method_a": "aero",
+      "method_b": "areal",
+      "fires_a": 1,
+      "fires_b": 1,
+      "jaccard": "1.0000"
+    },
+    {
+      "tau": "0.90",
+      "method_a": "gift",
+      "method_b": "grpo",
+      "fires_a": 8,
+      "fires_b": 2,
+      "jaccard": "0.2500"
+    },
+    {
+      "tau": "0.90",
+      "method_a": "areal",
+      "method_b": "grpo",
+      "fires_a": 1,
+      "fires_b": 2,
+      "jaccard": "0.5000"
+    },
+    {
+      "tau": "0.90",
+      "method_a": "areal",
+      "method_b": "gift",
+      "fires_a": 1,
+      "fires_b": 8,
+      "jaccard": "0.1250"
+    }
+  ],
+  "fixed_tau_transfer_rows": [
+    {
+      "tau": "0.50",
+      "grpo": "1.9500",
+      "aero": "1.9500",
+      "gift": "1.9500",
+      "areal": "1.9500",
+      "mean": "1.9500",
+      "sd": "0.0000",
+      "range": "0.0000",
+      "max_minus_min_pct": "0.00%"
+    },
+    {
+      "tau": "0.60",
+      "grpo": "1.8250",
+      "aero": "1.8250",
+      "gift": "1.9000",
+      "areal": "1.8000",
+      "mean": "1.8375",
+      "sd": "0.0375",
+      "range": "0.1000",
+      "max_minus_min_pct": "5.44%"
+    },
+    {
+      "tau": "0.65",
+      "grpo": "1.7500",
+      "aero": "1.6500",
+      "gift": "1.7250",
+      "areal": "1.7000",
+      "mean": "1.7063",
+      "sd": "0.0370",
+      "range": "0.1000",
+      "max_minus_min_pct": "5.86%"
+    },
+    {
+      "tau": "0.70",
+      "grpo": "1.5000",
+      "aero": "1.4750",
+      "gift": "1.6250",
+      "areal": "1.4250",
+      "mean": "1.5063",
+      "sd": "0.0737",
+      "range": "0.2000",
+      "max_minus_min_pct": "13.28%"
+    },
+    {
+      "tau": "0.75",
+      "grpo": "1.5000",
+      "aero": "1.4750",
+      "gift": "1.6250",
+      "areal": "1.4250",
+      "mean": "1.5063",
+      "sd": "0.0737",
+      "range": "0.2000",
+      "max_minus_min_pct": "13.28%"
+    },
+    {
+      "tau": "0.80",
+      "grpo": "1.3000",
+      "aero": "1.3500",
+      "gift": "1.4250",
+      "areal": "1.2750",
+      "mean": "1.3375",
+      "sd": "0.0573",
+      "range": "0.1500",
+      "max_minus_min_pct": "11.21%"
+    },
+    {
+      "tau": "0.85",
+      "grpo": "1.1000",
+      "aero": "1.1000",
+      "gift": "1.3500",
+      "areal": "1.1250",
+      "mean": "1.1688",
+      "sd": "0.1051",
+      "range": "0.2500",
+      "max_minus_min_pct": "21.39%"
+    },
+    {
+      "tau": "0.90",
+      "grpo": "1.0500",
+      "aero": "1.0250",
+      "gift": "1.2000",
+      "areal": "1.0250",
+      "mean": "1.0750",
+      "sd": "0.0729",
+      "range": "0.1750",
+      "max_minus_min_pct": "16.28%"
+    }
+  ]
+}

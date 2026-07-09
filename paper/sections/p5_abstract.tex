@@ -1,0 +1,36 @@
+% Pillar-5 (MIN-REPORT-RL) standalone abstract
+\begin{abstract}
+Papers comparing RL algorithms for LLM post-training report a \emph{label}---GRPO,
+DAPO, Dr.GRPO, GSPO---and treat the surrounding software stack as an
+implementation detail. Our position is that this convention is backwards: on the
+evidence available to us, the stack is a material part of the reported result,
+and a label without its stack is not a reproducible experimental
+specification. Three exhibits motivate the reporting standard. First, a \emph{nominally} matched-configuration backend
+audit---every labeled knob (group size, LoRA setup, learning rate, data, prompt
+template, decoding, and seed) harmonized across frameworks, though as we disclose
+the managed backend was \emph{not} matched at the base-checkpoint level---moved
+final training reward from $5.0\%$ to $85.6\%$ when the training backend was exchanged: a $17\times$ swing
+produced without touching a single labeled algorithmic knob (the managed backend
+also silently pinned a different base checkpoint, and that undisclosed bundling
+is itself part of the exhibit). Second, the same label denotes different
+experiments across stacks: ``DAPO'' run on an open trainer with true dynamic
+sampling (a toy-scale arithmetic audit) produced a mean Zero-Variance Fraction
+(ZVF) of $0.00$, while ``DAPO'' approximated on a closed stack (GSM8K) via an
+asymmetric-clip surrogate produced mean ZVF $0.58$---same name, opposite
+telemetry. Third, a 12-cell head-to-head of four labeled algorithms on a single
+fixed stack landed within a $0.034$ band of one another (mean last-10 reward
+$0.710$--$0.744$), a spread comparable to seed-level variation, suggesting
+that label-only comparisons can hide stack-level variation. We therefore
+propose a seven-item \emph{minimum reportable
+stack}---loss form, reference-policy/KL handling, sampler/backend/precision
+\textbf{(including base-checkpoint identity: revision/hash)}, per-step ZVF/GU
+trajectory, group-size schedule, disjoint held-out split, and
+decontamination plus a parser-robustness probe---each item earning its place via a
+documented ranking-relevant lever. We call out base-checkpoint identity explicitly
+because our backend audit showed an \emph{undisclosed} checkpoint swap is itself a
+ranking-relevant lever: the ``stack'' effect is only interpretable once the base
+checkpoint is pinned and reported alongside the framework. We formalize an RL-reproducibility threat
+model with flip-risk grades R0--R5, specify a toolchain (manifest emitter, stack
+diff with CI verdicts, registry, auditor badge, and citation-lever tracer) that
+makes the standard enforceable, and close with a call to action for venues.
+\end{abstract}

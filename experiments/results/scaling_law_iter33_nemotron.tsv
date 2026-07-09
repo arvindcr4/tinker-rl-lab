@@ -1,0 +1,13 @@
+model	params_B	pre_peak_mean	post_peak_mean	post_peak_slope	zero_frac	peak_val	criterion_zero_frac_gt_0p3	criterion_post_slope_neg	criterion_peak_below_0p95	n_criteria_met	is_collapse_by_rule
+Qwen3.5-4B	4.0	0.9715	0.8114	0.00063	0.0	1.0	False	False	False	0	False
+Qwen3-8B	8.0	0.2741	0.2941	0.00011	0.0667	0.625	False	False	True	1	False
+Llama-3.1-8B-Instruct	8.0	0.9782	0.865	-0.00299	0.0	1.0	False	True	False	1	False
+Qwen3-32B	32.0	0.2937	0.2277	-0.04401	0.0	0.312	False	True	True	2	True
+Qwen3.5-27B	27.0	0.5831	0.3644	-0.14577	0.3333	0.75	True	True	True	3	True
+gpt-oss-20B	20.0	0.8275	0.8517	0.00036	0.0	1.0	False	False	False	0	False
+Qwen3-30B-MoE	30.0	0.3328	0.3201	0.00141	0.0	0.5	False	False	True	1	False
+Qwen3-30B-MoE-Inst	30.0	1.0	1.0	-0.0	0.0	1.0	False	True	False	1	False
+DeepSeek-V3.1	685.0	0.9189	0.8303	-0.00276	0.0	1.0	False	True	False	1	False
+Nemotron-120B	120.0	0.0	0.2059	0.03528	0.55	0.875	True	False	True	2	True
+Qwen3-235B-MoE	235.0	1.0	1.0	0.0	0.0	1.0	False	False	False	0	False
+Kimi-K2-Thinking	1000.0	1.0	0.842	-0.01038	0.0	1.0	False	True	False	1	False

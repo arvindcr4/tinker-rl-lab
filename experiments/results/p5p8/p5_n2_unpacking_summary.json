@@ -1,0 +1,204 @@
+{
+  "iter": 85,
+  "vein": "(b) Ivison 2024 unpacking_dpo_ppo factorization on N2 four-method same-stack tensors",
+  "data": {
+    "path": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+    "n_rows": 160,
+    "n_methods": 4,
+    "n_steps": 40,
+    "n_seeds": 1,
+    "methods": [
+      "grpo",
+      "aero",
+      "areal",
+      "gift"
+    ]
+  },
+  "h1_pooled_algo_axis_eta2_le_0p05_all_metrics": false,
+  "h4_ivison_equivalence_strict_all_reward_pairs": false,
+  "h4_ivison_equivalence_loose_all_reward_pairs": true,
+  "pooled_per_metric": [
+    {
+      "metric": "zvf",
+      "n_rows": 160,
+      "n_per_axis_json": "{\"grpo\": 40, \"aero\": 40, \"gift\": 40, \"areal\": 40}",
+      "mean_per_axis_json": "{\"grpo\": 0.72031, \"aero\": 0.72031, \"gift\": 0.77031, \"areal\": 0.70625}",
+      "ss_axis": 0.094995,
+      "ss_within": 1.996582,
+      "ss_total": 2.091577,
+      "eta2": 0.04542,
+      "omega2": 0.02655,
+      "h1_decisive_le_0p05": true,
+      "h1_decisive_le_0p10": true
+    },
+    {
+      "metric": "pcd",
+      "n_rows": 160,
+      "n_per_axis_json": "{\"grpo\": 40, \"aero\": 40, \"gift\": 40, \"areal\": 40}",
+      "mean_per_axis_json": "{\"grpo\": 0.04768, \"aero\": 0.04968, \"gift\": 0.03987, \"areal\": 0.05002}",
+      "ss_axis": 0.002701,
+      "ss_within": 0.072904,
+      "ss_total": 0.075605,
+      "eta2": 0.03573,
+      "omega2": 0.01686,
+      "h1_decisive_le_0p05": true,
+      "h1_decisive_le_0p10": true
+    },
+    {
+      "metric": "larq",
+      "n_rows": 160,
+      "n_per_axis_json": "{\"grpo\": 40, \"aero\": 40, \"gift\": 40, \"areal\": 40}",
+      "mean_per_axis_json": "{\"grpo\": 0.92954, \"aero\": 0.9269, \"gift\": 0.92446, \"areal\": 0.92876}",
+      "ss_axis": 0.000612,
+      "ss_within": 0.601033,
+      "ss_total": 0.601646,
+      "eta2": 0.00102,
+      "omega2": 0.0,
+      "h1_decisive_le_0p05": true,
+      "h1_decisive_le_0p10": true
+    },
+    {
+      "metric": "reward_mean",
+      "n_rows": 160,
+      "n_per_axis_json": "{\"grpo\": 40, \"aero\": 40, \"gift\": 40, \"areal\": 40}",
+      "mean_per_axis_json": "{\"grpo\": 0.83418, \"aero\": 0.82754, \"gift\": 0.84473, \"areal\": 0.82871}",
+      "ss_axis": 0.007385,
+      "ss_within": 0.981744,
+      "ss_total": 0.98913,
+      "eta2": 0.00747,
+      "omega2": 0.0,
+      "h1_decisive_le_0p05": true,
+      "h1_decisive_le_0p10": true
+    },
+    {
+      "metric": "mean_len",
+      "n_rows": 160,
+      "n_per_axis_json": "{\"grpo\": 40, \"aero\": 40, \"gift\": 40, \"areal\": 40}",
+      "mean_per_axis_json": "{\"grpo\": 351.6457, \"aero\": 365.80879, \"gift\": 350.90371, \"areal\": 366.25059}",
+      "ss_axis": 8723.292683,
+      "ss_within": 129441.189491,
+      "ss_total": 138164.482174,
+      "eta2": 0.06314,
+      "omega2": 0.04427,
+      "h1_decisive_le_0p05": false,
+      "h1_decisive_le_0p10": true
+    },
+    {
+      "metric": "cv_len",
+      "n_rows": 160,
+      "n_per_axis_json": "{\"grpo\": 40, \"aero\": 40, \"gift\": 40, \"areal\": 40}",
+      "mean_per_axis_json": "{\"grpo\": 0.28484, \"aero\": 0.27147, \"gift\": 0.28408, \"areal\": 0.26661}",
+      "ss_axis": 0.009998,
+      "ss_within": 0.208549,
+      "ss_total": 0.218546,
+      "eta2": 0.04575,
+      "omega2": 0.02688,
+      "h1_decisive_le_0p05": true,
+      "h1_decisive_le_0p10": true
+    },
+    {
+      "metric": "loss",
+      "n_rows": 160,
+      "n_per_axis_json": "{\"grpo\": 40, \"aero\": 40, \"gift\": 40, \"areal\": 40}",
+      "mean_per_axis_json": "{\"grpo\": 347.3155, \"aero\": 301.10946, \"gift\": -17527.69824, \"areal\": 341.01495}",
+      "ss_axis": 9566771784.217875,
+      "ss_within": 129430566.178423,
+      "ss_total": 9696202350.396297,
+      "eta2": 0.98665,
+      "omega2": 0.96778,
+      "h1_decisive_le_0p05": false,
+      "h1_decisive_le_0p10": false
+    }
+  ],
+  "h3_gift_dominance": [
+    {
+      "metric": "zvf",
+      "gift_last10_mean": 0.9,
+      "rest_last10_mean": 0.74792,
+      "diff_gift_minus_rest": 0.15208,
+      "cohens_d": 1.8995,
+      "n_gift": 10,
+      "n_rest": 30
+    },
+    {
+      "metric": "reward_mean",
+      "gift_last10_mean": 0.87734,
+      "rest_last10_mean": 0.84974,
+      "diff_gift_minus_rest": 0.0276,
+      "cohens_d": 0.4321,
+      "n_gift": 10,
+      "n_rest": 30
+    },
+    {
+      "metric": "pcd",
+      "gift_last10_mean": 0.01846,
+      "rest_last10_mean": 0.04033,
+      "diff_gift_minus_rest": -0.02187,
+      "cohens_d": -1.6045,
+      "n_gift": 10,
+      "n_rest": 30
+    }
+  ],
+  "h4_ivison_pairs": [
+    {
+      "pair": "grpo_vs_aero",
+      "metric": "reward_mean",
+      "grpo_last10_mean": 0.86094,
+      "aero_last10_mean": 0.84688,
+      "abs_diff": 0.01406,
+      "ivison_equivalence_le_0p005": false,
+      "ivison_equivalence_le_0p05": true,
+      "n_each": 10
+    },
+    {
+      "pair": "grpo_vs_aero",
+      "metric": "zvf",
+      "grpo_last10_mean": 0.775,
+      "aero_last10_mean": 0.75,
+      "abs_diff": 0.025,
+      "ivison_equivalence_le_0p005": false,
+      "ivison_equivalence_le_0p05": true,
+      "n_each": 10
+    },
+    {
+      "pair": "grpo_vs_areal",
+      "metric": "reward_mean",
+      "grpo_last10_mean": 0.86094,
+      "areal_last10_mean": 0.84141,
+      "abs_diff": 0.01953,
+      "ivison_equivalence_le_0p005": false,
+      "ivison_equivalence_le_0p05": true,
+      "n_each": 10
+    },
+    {
+      "pair": "grpo_vs_areal",
+      "metric": "zvf",
+      "grpo_last10_mean": 0.775,
+      "areal_last10_mean": 0.71875,
+      "abs_diff": 0.05625,
+      "ivison_equivalence_le_0p005": false,
+      "ivison_equivalence_le_0p05": false,
+      "n_each": 10
+    },
+    {
+      "pair": "grpo_vs_gift",
+      "metric": "reward_mean",
+      "grpo_last10_mean": 0.86094,
+      "gift_last10_mean": 0.87734,
+      "abs_diff": 0.01641,
+      "ivison_equivalence_le_0p005": false,
+      "ivison_equivalence_le_0p05": true,
+      "n_each": 10
+    },
+    {
+      "pair": "grpo_vs_gift",
+      "metric": "zvf",
+      "grpo_last10_mean": 0.775,
+      "gift_last10_mean": 0.9,
+      "abs_diff": 0.125,
+      "ivison_equivalence_le_0p005": false,
+      "ivison_equivalence_le_0p05": false,
+      "n_each": 10
+    }
+  ]
+}

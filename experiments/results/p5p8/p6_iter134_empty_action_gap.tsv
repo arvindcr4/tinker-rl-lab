@@ -1,0 +1,6 @@
+id	citation_bibkey	citation_arxiv	has_expected_effects	n_expected_effects	ee_panels	blocking_note
+delta_dapo	yu2025dapo	2503.14476	True	3	length_bias_iter60_grpo_vs_drgrpo_paired;n2_same_stack_last10	expected_effects declared; only needs a same-stack run; cite a measured TSV
+delta_gspo	qwen2025gspo	2507.18071	True	3	length_bias_iter60_grpo_vs_drgrpo_paired;n2_same_stack_last10	expected_effects declared; only needs a same-stack run; cite a measured TSV
+delta_liteppo	liteppo2024		False	0		no expected_effects; needs both prediction + same-stack run
+delta_ppo	schulman2017ppo	1707.06347	True	3	n2_same_stack_last10;zvf130_5seed	expected_effects declared; only needs a same-stack run; cite a measured TSV
+delta_reinforce	williams1992reinforce		False	0		no expected_effects; needs both prediction + same-stack run

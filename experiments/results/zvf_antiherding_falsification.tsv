@@ -1,0 +1,13 @@
+# Pillar 2 cross-source anti-herding falsification
+# delta_div = zvf_iid(p, G) - zvf_obs; POSITIVE means anti-herding
+# (sampler produces more contrast than independent draws),
+# NEGATIVE means herding (mode collapse / correlated rollouts).
+# Bootstrap CIs: B=2000 percentile resamples over per-problem
+# rows (one row per (source, seed, problem_id)). CIs whose sign
+# disagrees with the point estimate are decisive evidence of a
+# cross-source sign reversal in delta_div.
+# Source: scripts/zvf_antiherding_elevation.py
+source	n_problems	mean_delta_div	ci_lo	ci_hi	frac_positive	median_delta_div	min_delta_div	max_delta_div	verdict
+groupsize_zvf_sweep	480	-0.0668	-0.0792	-0.0560	0.298	0.0000	-0.6818	0.2216	herd
+groupsize_zvf_sweep_agg	12	-0.2994	-0.3882	-0.2150	0.000	-0.2822	-0.5303	-0.1033	herd
+tinker_gsm8k	600	0.1224	0.1115	0.1338	0.842	0.1001	0.0000	0.3436	anti-herd

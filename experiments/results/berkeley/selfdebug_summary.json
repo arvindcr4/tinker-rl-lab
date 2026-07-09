@@ -1,0 +1,170 @@
+{
+  "iteration": 149,
+  "lectures": "SP25 L1 (Xinyun Chen)",
+  "citations": [
+    "2304.05128",
+    "2309.03409 (OPRO, ICLR 2024)",
+    "2310.01798 (Huang, ICLR 2024)"
+  ],
+  "data": "zvf_iter130_risk_index.tsv (9 methods x 5 seeds = 45 rows)",
+  "epsilon_calibration": 0.12,
+  "calibration_rationale": "Self-Debug achieves +12% pass@1 on MBPP (Chen et al. 2304.05128) \u2014 used as the format-only-variance ceiling for the magnitude channel",
+  "hypotheses": {
+    "H1_selfdebug_mechanism": {
+      "n_methods_dropping_>=2pp": 8,
+      "rows": [
+        {
+          "method": "grpo",
+          "frac_mag_pre": 0.1428,
+          "frac_mag_post": 0.1278,
+          "drop_pp": 0.0149
+        },
+        {
+          "method": "aero",
+          "frac_mag_pre": 0.4901,
+          "frac_mag_post": 0.4582,
+          "drop_pp": 0.0319
+        },
+        {
+          "method": "mcgrpo",
+          "frac_mag_pre": 0.5785,
+          "frac_mag_post": 0.5471,
+          "drop_pp": 0.0314
+        },
+        {
+          "method": "ngrpo",
+          "frac_mag_pre": 0.3835,
+          "frac_mag_post": 0.3538,
+          "drop_pp": 0.0297
+        },
+        {
+          "method": "cppo",
+          "frac_mag_pre": 0.403,
+          "frac_mag_post": 0.3727,
+          "drop_pp": 0.0303
+        },
+        {
+          "method": "areal",
+          "frac_mag_pre": 0.6771,
+          "frac_mag_post": 0.6486,
+          "drop_pp": 0.0286
+        },
+        {
+          "method": "gift",
+          "frac_mag_pre": 0.7022,
+          "frac_mag_post": 0.6748,
+          "drop_pp": 0.0274
+        },
+        {
+          "method": "es",
+          "frac_mag_pre": 0.6913,
+          "frac_mag_post": 0.6634,
+          "drop_pp": 0.0279
+        },
+        {
+          "method": "scafgrpo",
+          "frac_mag_pre": 0.5596,
+          "frac_mag_post": 0.5279,
+          "drop_pp": 0.0317
+        }
+      ],
+      "mean_drop_pp": 0.0282,
+      "predicted_drop_pp_target": 0.02,
+      "verdict_DECISIVE": true
+    },
+    "H2_huang_no_self_correct": {
+      "n_methods_with_frac_mag_drop": 0,
+      "drops": [
+        -0.0144,
+        -0.0283,
+        -0.0274,
+        -0.0271,
+        -0.0275,
+        -0.0243,
+        -0.0231,
+        -0.0236,
+        -0.0277
+      ],
+      "verdict_DECISIVE": true
+    },
+    "H3_opro_stability": {
+      "pre_top1": "scafgrpo",
+      "post_top1": "scafgrpo",
+      "pre_ranking": [
+        "scafgrpo",
+        "cppo",
+        "ngrpo",
+        "aero",
+        "mcgrpo",
+        "areal",
+        "es",
+        "gift",
+        "grpo"
+      ],
+      "post_ranking": [
+        "scafgrpo",
+        "cppo",
+        "ngrpo",
+        "aero",
+        "mcgrpo",
+        "areal",
+        "es",
+        "gift",
+        "grpo"
+      ],
+      "spearman": 1.0,
+      "verdict_DECISIVE": true
+    },
+    "H4_compositional": {
+      "n_methods_preserved_in_bucket": 9,
+      "bucket_counts": {
+        "low_risk": 3,
+        "mid_risk": 3,
+        "high_risk": 3
+      },
+      "verdict_DECISIVE": true
+    },
+    "H5_calibration": {
+      "max_abs_deviation_at_eps0": 0.0,
+      "verdict_DECISIVE": true
+    }
+  },
+  "epsilon_sweep": [
+    {
+      "epsilon": 0.0,
+      "spearman_vs_pre": 1.0,
+      "mean_frac_mag_across_9": 0.5142,
+      "top1_method": "scafgrpo"
+    },
+    {
+      "epsilon": 0.05,
+      "spearman_vs_pre": 1.0,
+      "mean_frac_mag_across_9": 0.5029,
+      "top1_method": "scafgrpo"
+    },
+    {
+      "epsilon": 0.12,
+      "spearman_vs_pre": 1.0,
+      "mean_frac_mag_across_9": 0.486,
+      "top1_method": "scafgrpo"
+    },
+    {
+      "epsilon": 0.2,
+      "spearman_vs_pre": 1.0,
+      "mean_frac_mag_across_9": 0.465,
+      "top1_method": "scafgrpo"
+    },
+    {
+      "epsilon": 0.3,
+      "spearman_vs_pre": 1.0,
+      "mean_frac_mag_across_9": 0.4355,
+      "top1_method": "scafgrpo"
+    }
+  ],
+  "outputs": [
+    "/home/claude/tinker-rl-lab-minimax/experiments/results/berkeley/selfdebug_method_reformulation.tsv",
+    "/home/claude/tinker-rl-lab-minimax/experiments/results/berkeley/selfdebug_eps_sweep.tsv",
+    "/home/claude/tinker-rl-lab-minimax/experiments/results/berkeley/selfdebug_ranking_stability.tsv",
+    "/home/claude/tinker-rl-lab-minimax/experiments/results/berkeley/selfdebug_calibration.tsv"
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "n_total_observations": 160,
+  "n_methods": 4,
+  "n_steps_per_method": 40,
+  "n_prompts_per_step": 16,
+  "zvf_obs_mean_per_method": {
+    "grpo": 0.7203125,
+    "aero": 0.7203125,
+    "gift": 0.7703125,
+    "areal": 0.70625
+  },
+  "zvf_drop_mean_per_method": {
+    "grpo": 0.03502291840457243,
+    "aero": 0.03202200055324215,
+    "gift": 0.027737952409018905,
+    "areal": 0.03704349071683134
+  },
+  "restore_sum_mean_per_method": {
+    "grpo": 4.2403955771880755,
+    "aero": 4.262288193231144,
+    "gift": 3.487995097343652,
+    "areal": 4.441437576646865
+  },
+  "pareto_top10": [
+    {
+      "controller": "zvf_then_drop",
+      "threshold": "0.50",
+      "eta_min": "0.050",
+      "n_fires_total": 30,
+      "sum_zvf_drop_total": 1.8429,
+      "extra_rollouts_total": 3840,
+      "zvf_drop_per_1k_mean": 7.6367,
+      "ci_lo": 7.3907,
+      "ci_hi": 7.8827
+    },
+    {
+      "controller": "drop_gated",
+      "threshold": "n/a",
+      "eta_min": "0.050",
+      "n_fires_total": 30,
+      "sum_zvf_drop_total": 1.8429,
+      "extra_rollouts_total": 3840,
+      "zvf_drop_per_1k_mean": 7.6367,
+      "ci_lo": 7.3907,
+      "ci_hi": 7.8827
+    },
+    {
+      "controller": "zvf_then_drop",
+      "threshold": "0.60",
+      "eta_min": "0.050",
+      "n_fires_total": 16,
+      "sum_zvf_drop_total": 0.9655,
+      "extra_rollouts_total": 2048,
+      "zvf_drop_per_1k_mean": 7.5888,
+      "ci_lo": 7.308,
+      "ci_hi": 7.9428
+    },
+    {
+      "controller": "zvf_then_drop",
+      "threshold": "0.55",
+      "eta_min": "0.050",
+      "n_fires_total": 24,
+      "sum_zvf_drop_total": 1.4587,
+      "extra_rollouts_total": 3072,
+      "zvf_drop_per_1k_mean": 7.5788,
+      "ci_lo": 7.3994,
+      "ci_hi": 7.7871
+    },
+    {
+      "controller": "zvf_then_drop",
+      "threshold": "0.65",
+      "eta_min": "0.050",
+      "n_fires_total": 10,
+      "sum_zvf_drop_total": 0.5931,
+      "extra_rollouts_total": 1280,
+      "zvf_drop_per_1k_mean": 7.5047,
+      "ci_lo": 7.2572,
+      "ci_hi": 7.7521
+    },
+    {
+      "controller": "zvf_then_drop",
+      "threshold": "0.50",
+      "eta_min": "0.030",
+      "n_fires_total": 83,
+      "sum_zvf_drop_total": 3.9089,
+      "extra_rollouts_total": 10624,
+      "zvf_drop_per_1k_mean": 5.9021,
+      "ci_lo": 5.5532,
+      "ci_hi": 6.2509
+    },
+    {
+      "controller": "drop_gated",
+      "threshold": "n/a",
+      "eta_min": "0.030",
+      "n_fires_total": 83,
+      "sum_zvf_drop_total": 3.9089,
+      "extra_rollouts_total": 10624,
+      "zvf_drop_per_1k_mean": 5.9021,
+      "ci_lo": 5.5532,
+      "ci_hi": 6.2509
+    },
+    {
+      "controller": "zvf_then_drop",
+      "threshold": "0.55",
+      "eta_min": "0.030",
+      "n_fires_total": 77,
+      "sum_zvf_drop_total": 3.5248,
+      "extra_rollouts_total": 9856,
+      "zvf_drop_per_1k_mean": 5.7563,
+      "ci_lo": 5.4757,
+      "ci_hi": 6.0369
+    },
+    {
+      "controller": "zvf_then_drop",
+      "threshold": "0.60",
+      "eta_min": "0.030",
+      "n_fires_total": 66,
+      "sum_zvf_drop_total": 2.9155,
+      "extra_rollouts_total": 8448,
+      "zvf_drop_per_1k_mean": 5.5502,
+      "ci_lo": 5.258,
+      "ci_hi": 5.7786
+    },
+    {
+      "controller": "zvf_then_drop",
+      "threshold": "0.65",
+      "eta_min": "0.030",
+      "n_fires_total": 47,
+      "sum_zvf_drop_total": 2.0049,
+      "extra_rollouts_total": 6016,
+      "zvf_drop_per_1k_mean": 5.3739,
+      "ci_lo": 5.1589,
+      "ci_hi": 5.5545
+    }
+  ],
+  "n_boot": 4000,
+  "seed": 20260705
+}

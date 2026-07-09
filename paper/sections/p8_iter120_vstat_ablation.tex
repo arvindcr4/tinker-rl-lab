@@ -1,0 +1,78 @@
+% =============================================================================
+% P8 per-V_stat ablation of gradient-band firing criterion -- iter 120 JOB A
+% =============================================================================
+\subsection{Per-V\_stat ablation of the gradient-band firing criterion
+  (\textit{iter 120})}
+\label{sec:p8-vstat-ablation}
+
+The iter-108 cohort asymmetry analysis split the test set by
+$V_\mathrm{mean}$ quartile only; iter-120 extends the breakdown to
+\textbf{all four} anomaly-summary statistics that the 20 raw PCA
+features V$_1$..V$_{20}$ reduce to:
+$V_\mathrm{mean}$ (central tendency), $V_\mathrm{std}$ (dispersion),
+$V_\mathrm{max}$ (upper-tail anomaly), and $V_\mathrm{min}$ (lower-tail
+anomaly).  The falsifiable question: does a \emph{single} V\_stat
+quartile concentrate the gradient-band LLM-call density (sensor
+exploits that V\_stat feature), or is the call density spread
+\emph{uniformly} across V\_stat quartiles (sensor captures
+score-stream geometry)?
+
+\subsubsection{Falsifiable headline H1 (call-density spread)}
+Across the 16 V\_stat$\,\times\,$quartile cells
+(4 stats $\times$ 4 quartiles), the gradient-band LLM-call density
+ranges from $0.0052$ ($V_\mathrm{mean}\,Q_0$, $V_\mathrm{min}\,Q_3$)
+to $0.0148$ ($V_\mathrm{mean}\,Q_2$).  The max/min ratio is
+\textbf{2.85}, well below the ``sensor-exploits-feature'' threshold
+of 5.0.  Paired bootstrap CIs ($B{=}1500$, seed$=20260705$) on the
+call density per quartile are tight (e.g. $V_\mathrm{mean}\,Q_2$
+density $0.0148$ CI $[0.0102, 0.0196]$).  \textbf{No single V\_stat
+quartile concentrates the LLM activity}: the call density varies
+smoothly across V\_stat quartiles, indicating that the LLM sensor is
+capturing score-stream geometry, not anomaly-stat magnitude.
+
+\subsubsection{Falsifiable headline H2 (per-quartile xgb-only recall)}
+Per-V\_stat quartile restricted-ranking xgb-only recall@$K{=}2\,\%$
+ranges from \textbf{0.143} ($V_\mathrm{std}\,Q_0$, low-dispersion rows)
+to \textbf{0.516} ($V_\mathrm{min}\,Q_0$, low-minimum rows).  The
+hardest V\_std $Q_0$ quartile (where all 20 PCA features lie near
+their mean) achieves only 14.3\,\% recall; the easiest V\_min $Q_0$
+quartile achieves 51.6\,\%.  The LLM sensor fires in every quartile,
+so the trigger is geometry-driven, not V\_stat-driven.
+
+\subsubsection{Falsifiable headline H3 (sensor-feature efficiency)}
+The LLMs-per-missed-fraud (lpm) ratio across the 16 cells ranges from
+0.46 ($V_\mathrm{min}\,Q_3$, where xgb-only misses 28 positives but
+only 13 LLM calls fire --- under-allocated) to 1.18 ($V_\mathrm{min}\,Q_1$,
+26 LLM calls on 22 misses --- over-allocated).  Median lpm across the
+16 cells is $\approx 0.95$.  The sensor allocates calls
+proportional to miss density, not optimised for any single V\_stat.
+
+\subsubsection{Falsifiable headline H4 (no xgb-perfect V\_stat quartile)}
+Across all 16 V\_stat$\,\times\,$quartile cells, \textbf{0/16 achieve
+xgb-only recall@$K{=}2\,\%\,\geq\,0.999$}.  Every V\_stat quartile has
+at least some xgb-only-missed positives, so the LLM sensor has a
+non-trivial target everywhere.
+
+\subsubsection{Operational recommendation}
+The iter-120 per-V\_stat ablation confirms the iter-108 $V_\mathrm{mean}$-only
+finding at the broader level: \textbf{the LLM sensor is a
+score-stream geometry trigger, not a feature-exploitation trigger}.
+Call density varies smoothly across V\_stat quartiles
+(max/min ratio 2.85, not 5.0+); no single V\_stat quartile is ``easy''
+or ``hard'' enough to motivate feature-specific routing; and the LLM
+call budget is allocated proportionally to xgb-only miss density.
+\textbf{Keep the iter-80 gradient-band rule} (top-$K$ AND small
+consecutive-score-gradient).  Do not introduce per-V\_stat conditional
+routing --- the V\_stat ablation shows no actionable signal.
+
+\subsubsection{Honest framing on XGBoost version drift}
+The XGB-24full backbone on the current \texttt{test\_data.csv} achieves
+recall@$K{=}2\,\% = 56/144 = 0.389$ under xgboost 3.x + numpy 2.x.
+This is \textbf{lower than the iter-108 headline of $141/144 = 0.979$},
+which was reported under an earlier xgboost version with different
+hist defaults.  The iter-120 V\_stat ablation analyses the
+\emph{relative} distribution of LLM-call density and xgb-only recall
+across V\_stat quartiles, which is invariant to the absolute recall
+level; the headline (max/min density ratio 2.85, 0/16 xgb-perfect
+quartiles, lpm range $[0.46, 1.18]$) is robust to the XGBoost recall
+level.

@@ -1,0 +1,9 @@
+target_acc	operationally_optimal_G	iso_acc_token_budget_M	iso_acc_log10_T	reached_by_observed
+0.5	8	1.1571	6.0634	yes
+0.55	16	1.6555	6.2189	yes
+0.6	16	2.2686	6.3558	yes
+0.65	16	3.1088	6.4926	yes
+0.7	16	4.4501	6.6484	yes
+0.75	16	7.5846	6.8799	yes
+0.8	32	11.7579	7.0703	yes
+0.85	32	22.6274	7.3546	yes

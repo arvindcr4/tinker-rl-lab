@@ -1,0 +1,17 @@
+task	algo	seed	rise_slope	plat_slope	diff_plat_minus_rise
+arithmetic_easy	grpo	42	-0.715625	0.000705	0.71633
+arithmetic_easy	grpo	123	-0.4774	0.00476	0.48216
+arithmetic_easy	grpo	456	-0.499107	-0.000794	0.498313
+arithmetic_easy	grpo	789	-0.51317	-0.004198	0.508972
+arithmetic_easy	grpo	1024	-0.295089	-0.006958	0.288131
+arithmetic_easy	dr_grpo	42	-0.4601	0.006564	0.466664
+arithmetic_easy	dr_grpo	123	-0.363374	0.007456	0.37083
+arithmetic_easy	dr_grpo	456	-0.365234	-0.000293	0.364941
+arithmetic_easy	dr_grpo	789	-0.405971	-0.002512	0.403459
+arithmetic_easy	dr_grpo	1024	-0.450614	-0.003726	0.446888
+gsm8k_cot	grpo	42	-0.832027	0.0	0.832027
+gsm8k_cot	grpo	123	-0.377378	0.0	0.377378
+gsm8k_cot	grpo	456	-0.144512	0.0	0.144512
+gsm8k_cot	dr_grpo	42	-0.277871	0.0	0.277871
+gsm8k_cot	dr_grpo	123	-0.236084	0.0	0.236084
+gsm8k_cot	dr_grpo	456	-0.051632	0.0	0.051632

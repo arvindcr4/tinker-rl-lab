@@ -1,0 +1,102 @@
+% =====================================================================
+% paper/sections/robustness_smallscale_nulls.tex
+%
+% Honest small-scale robustness result: at 4B/GSM8K scale, several
+% popular GRPO levers (difficulty curriculum / collapse filtering,
+% group-size sweet spot, length-bias loss fixes, step-1 predictive
+% layer-freeze) do NOT robustly beat a matched baseline under
+% multi-seed re-testing. Evidence:
+%   experiments/results/curriculum_opening/FINDINGS.md
+%   experiments/results/token_budget/FINDINGS.md
+%   experiments/results/p3_groupsize/FINDINGS.md
+%   experiments/results/p4_surprise/FINDINGS.md
+%   experiments/results/p1_layerfreeze/FINDINGS.md
+% =====================================================================
+
+\subsection{Small-Scale Robustness Checks: Popular Levers Do Not Help}
+\label{sec:smallscale-nulls}
+
+A benchmark that is meant to be \emph{diagnostic rather than a
+leaderboard} earns its keep partly by reporting the tweaks that
+\emph{fail} its checks. In that spirit we ran a set of controlled,
+multi-seed re-tests of four popular GRPO levers at a single small scale
+(Qwen3.5-4B, an easy GSM8K subset, held-out $n{=}12$--$20$ per arm,
+$2$--$3$ seeds). Every one came back null: none robustly beat a matched
+baseline, and all measured effects sit within seed-and-difficulty noise.
+Table~\ref{tab:smallscale-nulls} summarizes the four checks.
+
+\begin{table}[t]
+  \centering
+  \small
+  \caption{Small-scale, multi-seed re-tests of four popular GRPO levers
+  (Qwen3.5-4B, easy GSM8K subset). Each lever's ``advertised'' benefit
+  fails to materialize against a matched baseline; differences are
+  within noise at held-out $n{=}12$--$20$. Effects are reported as
+  mean held-out accuracy gain unless noted.}
+  \label{tab:smallscale-nulls}
+  \begin{tabular}{@{}p{0.30\linewidth}p{0.33\linewidth}p{0.30\linewidth}@{}}
+    \toprule
+    \textbf{Lever (proposed benefit)} & \textbf{Controlled result} & \textbf{Verdict} \\
+    \midrule
+    Difficulty curriculum / filter collapsed groups
+      & Eliminates zero-gradient waste as designed ($0.50{\to}0.00$
+        collapse frac), but at ${\sim}4.8\times$ sampling cost and
+        \emph{identical} held-out gain ($+0.05$ vs $+0.05$); still ties
+        baseline at a \emph{matched} $30$k-token budget ($+0.028$ vs
+        $+0.028$) and loses at $5\times$ cost.
+      & Null (no free lunch). \\
+    \addlinespace
+    Group-size sweet spot ($G\in\{2,4,8,16\}$)
+      & $G{=}2$ under-trains ($50\%$ batch collapse, $+0.0$); a
+        single-seed $G{=}4$ ``win'' ($+0.125$) is one held-out example
+        and does not survive multi-seed re-testing; $G{\geq}8$ gives
+        diminishing gradient signal at linear token cost.
+      & Null (no robust optimal $G$). \\
+    \addlinespace
+    Length-bias loss fixes (mean-norm, surprise-weighting)
+      & Standard \emph{sum} was, if anything, best on held-out ($+0.125$
+        vs $+0.000$ mean-norm, $+0.042$ surprise), and completions did
+        not inflate under it ($\Delta\text{len}{=}-16$) --- little
+        length bias to correct on this setup.
+      & Null (fixes do not beat sum). \\
+    \addlinespace
+    Step-1 predictive layer-freeze
+      & Step-1$\to$final top-$k$ layer overlap collapses from $1.0$ (on
+        a 1.5B hardcoded-arithmetic toy) to $0.11$ ($\approx$chance,
+        both seeds) at 3B on real GSM8K; the predictability premise is a
+        toy artifact (concentration $\approx0.39$ still holds).
+      & Null (not predictable from step 1). \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{Reading the nulls.}
+The consistent message is that levers which look promising in a single
+underpowered run---a curriculum that visibly removes wasted gradients, a
+$G{=}4$ that edges ahead by one example, a ``length-debiased'' loss, a
+step-1 freeze rule---do not translate into a robust held-out advantage
+once the comparison is cost-matched and repeated across seeds. Two of
+these (the curriculum and the $G{=}4$ optimum) were flagged as
+\texttt{SUSPECT}/overclaimed by an independent verification pass before
+the multi-seed re-test confirmed them as noise, and the layer-freeze
+result explicitly \emph{reverses} its own toy-scale positive under
+scaling. This is exactly the failure mode a diagnostic benchmark exists
+to catch: it is the re-testing discipline, not any single lever, that is
+doing the work.
+
+\paragraph{Scope and caveat.}
+We stress that these are \emph{small-scale} checks, not a refutation of
+the underlying ideas. A single 4B model, one easy GSM8K subset, short
+training horizons, and held-out sets of $n{=}12$--$20$ leave our
+equivalence tests powered only to reject \emph{large} differences, not
+to certify exact parity; any of these levers could plausibly help at
+larger model scale, on harder or more length-sensitive tasks, or under
+longer optimization. The claim is narrow and deliberately so: at this
+scale, on this task, none of these popular GRPO tweaks robustly beats a
+matched baseline, and the observed effects are within noise. That
+negative, reported honestly, strengthens rather than weakens the
+benchmark's diagnostic thesis---the point of the instrument is to tell
+you \emph{when a lever is indistinguishable from doing nothing}, not to
+crown a winner. Full per-arm logs are released under
+\texttt{experiments/results/\{curriculum\_opening, token\_budget,
+p3\_groupsize, p4\_surprise, p1\_layerfreeze\}/}.

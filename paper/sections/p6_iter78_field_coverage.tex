@@ -1,0 +1,92 @@
+% Iter 78: registry field-level coverage audit + Vein (d) PPO backfill
+\subsection{Iter-78: Registry Field-Level Coverage Audit + PPO Backfill}
+\label{sec:p6-iter78-field-coverage}
+
+The brief's vein (b) calls for an explicit coverage audit at
+\emph{field-level} granularity across all registry entries: which optional
+blocks are populated vs null, which framework$\times$method cells carry
+entries, and which methods appear in the repository's experiment ledger
+but not in the registry. This subsection reports that audit
+(\texttt{scripts/p5p8/p6\_registry\_field\_coverage.py}, stdlib only,
+B=0; pure structural pass over \texttt{registry/entries/*.json} plus
+\texttt{experiments/results/experiment\_ledger.tsv}, with case +
+punctuation normalization on method labels so \texttt{PPO} $=$
+\texttt{ppo} $=$ \texttt{pporeinforce}) and pairs it with Vein (d): a
+new transparent entry for the previously-unregistered PPO method, plus
+\texttt{expected\_effects} backfill on DAPO and GSPO from their
+source papers.
+
+\paragraph{Headline H1: 14 $\rightarrow$ 17 normalized registry methods.}
+The registry now covers 17 distinct normalized methods (was 14):
+12 stack labels (aero/areal/cppo/dapo/drgrpo/es/gift/grpo/gspo/mcgrpo/
+ngrpo/scafgrpo) plus 15 variant names, with overlap of 10 stack labels
+shared with variant names and 5 variant-only entries (Adaptive-G,
+DAPO, Dr.GRPO, GSPO, LitePPO). Adding \texttt{delta\_ppo.json} lifts
+the methods-overlap with the ledger from 2/9 to 3/9.
+
+\paragraph{Headline H2: measured-evidence coverage unchanged at 10/15.}
+The audit reports \textbf{10 of 15} variant-delta records carry a
+non-empty \texttt{measured[]} array. The 5 zero-measured variants
+(DAPO, GSPO, LitePPO, REINFORCE, PPO) all fail the same-stack-arm
+criterion: a single paired run with only the named variant change
+applied. This is the \emph{experimental-design} constraint that the
+iter-74 row 87 audit identified; closing it requires a 5+ method
+Tinker panel (DAPO/GSPO/LitePPO/REINFORCE/PPO with only the named
+change vs the N2 GRPO reference). The information gain this iteration is
+narrower: 3 of 5 zero-measured variants (DAPO, GSPO, PPO) now carry
+\texttt{expected\_effects[]} rows sourced from the respective arXiv
+papers (2503.14476, 2507.18071, 1707.06347), so the future auditor
+can score the (predicted, measured) pair once the same-stack arm
+lands.
+
+\paragraph{Headline H3: 2 fully-null entries remain.}
+The \texttt{registry\_field\_coverage\_gaps.tsv} output identifies
+9 entries with $\geq 2$ null optional blocks; the 2 fully-null entries
+(LitePPO and REINFORCE) carry all 5 audited blocks null. The 7
+partially-populated entries (Adaptive-G, CPPO, DrGRPO, ES, DAPO,
+GSPO, PPO) carry 1 populated block each. The 6 fully-populated
+entries (AERO, AREAL, GIFT, MCGRPO, NGRPO, SCAFGRPO) are the
+registry's highest-coverage rows.
+
+\paragraph{Methods only in ledger (5 of 9).}
+The audit reports 5 ledger raw labels still missing from the registry:
+\texttt{trl-grpo} (a framework axis, not a variant), the one-off
+\texttt{per-group regression; continuous reward;
+population-standardized advantage} custom experiment, and the
+data-quality issues \texttt{UNKNOWN} / empty. None of these are
+GRPO-family variants requiring a delta entry; the 5 are
+\emph{unregistered by design}, not unregistered by oversight. The
+\textbf{only} ledger entry that was a genuine oversight (PPO, 1
+wandb run, Qwen3.5-4B / gsm8k / G=30) is now closed.
+
+\paragraph{Sharp operational recommendation.}
+The audit confirms the iter-74 row 87 experimental-design
+constraint: the remaining 5 zero-measured variants close \emph{only}
+with a new 5+ method Tinker panel. Adding \texttt{expected\_effects}
+to those entries (3 of 5 done in this iteration) is necessary but not
+sufficient -- a registry entry can carry predicted signs from the
+source paper and still need a same-stack measured block before the
+\texttt{claim\_validation} verdict can move from \texttt{UNCLAIMED}
+to \texttt{SUPPORTS}/\texttt{NEUTRAL}/\texttt{CONTRADICTS}.
+
+\paragraph{Cross-paper coupling.}
+This iter's coverage audit is the registry-level analog of the
+P5 iter-77 row 91 cross-corpus portability test: both surface that
+\emph{the schema is fine; the corpus (or the experimental design)
+is the gap}. The P5 iter-69 row 81 placebo-replacement
+recommendation (replace placebo MIN-REPORT items with yield-aware
+axes) and the iter-78 PPO backfill share the same insight: when a
+schema-level field is systematically null, the answer is a
+\emph{new entry with explicit provenance}, not a schema redesign.
+
+\paragraph{Validation gate.}
+All 35 registry entries PASS schema validation post-iter-78
+(\texttt{registry\_validate.py} output: 35/35 PASS, badge scores
+96--100). No entry was deleted or modified except for additive
+\texttt{expected\_effects[]} backfill on DAPO and GSPO.
+
+\paragraph{Reproducibility.}
+\texttt{cd /home/claude/tinker-rl-lab-minimax \&\& python3
+scripts/p5p8/p6\_registry\_field\_coverage.py} reproduces all four
+output TSVs and two JSONs; \texttt{python3 scripts/p5p8/registry\_validate.py}
+confirms 35/35 PASS.

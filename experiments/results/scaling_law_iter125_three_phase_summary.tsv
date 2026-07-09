@@ -1,0 +1,7 @@
+phase	n_anchors	n_total	frac
+phase1_improvement	1	5	0.2000
+phase2_plateau	4	5	0.8000
+phase3_collapse	5	5	1.0000
+monotone_or_plateau	3	5	0.6000
+collapse_only	4	5	0.8000
+three_phase_full	1	5	0.2000

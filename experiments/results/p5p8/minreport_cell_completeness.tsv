@@ -1,0 +1,687 @@
+cell_id	item_no	item_name	key	present	validated	severity	value	note	sub_ratio_level	sub_clip_range	sub_advantage_normalization	sub_dynamic_sampling	sub_token_mask	sub_ref_snapshot	sub_kl_coefficient	sub_kl_estimator	sub_backend	sub_precision	sub_decoding_params	sub_contamination_check	sub_parser_probe
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59.json													
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935.json													
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68.json													
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s0_b153a50c68	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef.json													
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+Qwen-Qwen3-5-4B_gsm8k_easy_G2_t1_s1_640529daef	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c.json													
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s0_b6fd39319c	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450.json													
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t0.6_s1_ee3645e450	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa.json													
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s0_ea5cf4fdaa	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc.json													
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+Qwen-Qwen3-5-4B_gsm8k_easy_G32_t1_s1_96d1e2cfdc	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f.json													
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s0_b434ff671f	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db.json													
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+Qwen-Qwen3-5-4B_gsm8k_easy_G4_t0.6_s1_94f01720db	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s0_118afdc1a5	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t0.6_s1_c4ba230736	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s0_c4991bf97d	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G16_t1_s1_3af89154ca	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s0_ef4c3f1274	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t0.6_s1_416a73f0f5	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s0_d6dc109a20	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G2_t1_s1_b9bc86f4ea	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s0_50c249bd96	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t0.6_s1_9c43d86c6b	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s0_5521a4a193	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G32_t1_s1_5abf741165	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s0_567e2fc7f9	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t0.6_s1_dbb41c261e	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s0_cd3e28cb0e	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G4_t1_s1_05d36328de	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s0_eaa0c23aa2	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t0.6_s1_f0e7e296e3	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s0_f7266511fb	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01.json													
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+Qwen-Qwen3-5-4B_gsm8k_hard_G8_t1_s1_3bf25dbc01	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s0_4bcb7d7b0e	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t0.6_s1_2242878eaa	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s0_5fdcf7ed0b	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G16_t1_s1_51bf6b93a1	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s0_5e1ac2c1f5	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t0.6_s1_e6553565b9	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s0_d876309eb2	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G2_t1_s1_d247b1d0ea	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G32_t1_s1_8452f56ff7	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s0_27daa4cda5	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t0.6_s1_7c9b62a065	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s0_a47da09000	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G4_t1_s1_6288406035	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s0_9bee70250b	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t0.6_s1_88242e7f3e	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s0_30b6719385	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7.json													
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+Qwen-Qwen3-5-4B_humaneval_subset_G8_t1_s1_9ab9fb26c7	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s0_8e446dc877	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G16_t0.6_s1_e9a9423400	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s0_3893b76a6e	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t0.6_s1_75fe692ecb	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s0_380865a051	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G2_t1_s1_696c3537a1	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s0_6a8e8385fb	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t0.6_s1_37acf24f27	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s0_9dc6f09c24	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G32_t1_s1_4e257ac5eb	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s0_4c0ce0d4bc	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G4_t0.6_s1_cba6422e4d	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s0_199c1c636d	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2.json													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	6	Held-out split	heldout_split	1	1	ok	gsm8k_easy	gsm8k_easy													
+meta-llama-Llama-3-2-3B_gsm8k_easy_G8_t0.6_s1_d59ab724e2	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s0_d897142710	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t0.6_s1_b60b0420a2	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s0_6aab836f38	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G16_t1_s1_1e545cf2f6	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s0_a5b25a88a5	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t0.6_s1_58aa148ca9	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s0_6c07ec4633	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G2_t1_s1_4a331a7ae6	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s0_0d154e9dbc	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t0.6_s1_0d9bbbab8f	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s0_b4416437d2	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G32_t1_s1_8a659041ea	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s0_474f8bfa6e	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t0.6_s1_2147d931ee	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s0_b4ba73c1c9	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G4_t1_s1_0db0d133df	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s0_f87bc50f73	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t0.6_s1_e453dd702b	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s0_509de77c10	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3.json													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	6	Held-out split	heldout_split	1	1	ok	gsm8k_hard	gsm8k_hard													
+meta-llama-Llama-3-2-3B_gsm8k_hard_G8_t1_s1_eb472478d3	7	Decontamination & parser probe	decontamination_notes	1	1	ok	gsm8k-train-slice	gsm8k-train-slice												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s0_fcf1ee8924	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t0.6_s1_7b9d73e4fa	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s0_5eca406a5e	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=16	fixed-G=16													
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G16_t1_s1_54abe1b310	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s0_74596db7ea	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t0.6_s1_f00f8119db	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s0_f87f680e42	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=2	fixed-G=2													
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G2_t1_s1_a0dffa8860	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=32	fixed-G=32													
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G32_t0.6_s0_4199d781a5	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s0_88fd09ba58	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t0.6_s1_c2e1c58d03	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s0_17fc7e91db	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=4	fixed-G=4													
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G4_t1_s1_ade17b9ade	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s0_0614d05c8f	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t0.6_s1_ff5b88ec10	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s0_2d6d38d3ef	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	1	Loss form	loss_form	1	1	ok	n/a-sampling	n/a-sampling	0	0	0	0	0								
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	2	Reference policy & KL	ref_policy_kl	1	0	info	n/a	empty-or-na value='n/a'						0	0	0					
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	3	Sampler / backend / precision	sampler_backend_precision	1	1	ok	tinker-closed	tinker-closed									1	0	0		
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	4	Per-step ZVF/GU trajectory	per_step_zvf_path	1	1	ok	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9.json	/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9.json													
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	5	Group-size schedule	group_size_schedule	1	1	ok	fixed-G=8	fixed-G=8													
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	6	Held-out split	heldout_split	1	1	ok	humaneval_subset	humaneval_subset													
+meta-llama-Llama-3-2-3B_humaneval_subset_G8_t1_s1_12354b9ca9	7	Decontamination & parser probe	decontamination_notes	1	1	ok	humaneval-openai-subset	humaneval-openai-subset												0	0

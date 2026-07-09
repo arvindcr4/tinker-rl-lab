@@ -1,0 +1,5 @@
+family	n_keys	n_fully_formed	pct_fully_formed	ci_lo_pct	ci_hi_pct	in_bib	n_total_uses	n_doi_missing	n_arxiv_missing	n_venue_missing	n_vp_missing
+BASE	4	4	100.0	100.0	100.0	4	10	0	4	0	0
+STAT	10	10	100.0	100.0	100.0	10	32	1	3	0	6
+INFRA	10	7	70.0	40.0	100.0	10	18	4	4	3	10
+RL-ALG	18	18	100.0	100.0	100.0	18	43	5	0	2	17

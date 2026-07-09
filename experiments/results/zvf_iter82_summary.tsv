@@ -1,0 +1,17 @@
+# Pillar 2 iter82 headline summary
+# Source: scripts/zvf_iter82.py
+key	value
+n_traces	53
+n_failed	28
+n_methods	12
+alarm_threshold	0.5
+n_methods_with_any_failure	5
+n_methods_with_alarm_firing	7
+median_alarm_coverage_recall	1.0
+min_alarm_coverage_recall	1.0
+max_false_alarm_rate_across_methods	1.0
+median_false_alarm_rate	0.9038461538461539
+median_f1	0.17857142857142855
+median_hr_smoothed	74.03846153846155
+q33_mean_zvf	0.13320636363636362
+q66_mean_zvf	0.299268

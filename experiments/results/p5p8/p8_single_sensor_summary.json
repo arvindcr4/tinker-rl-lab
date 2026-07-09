@@ -1,0 +1,22 @@
+{
+  "n_train": 50000,
+  "n_test": 10000,
+  "n_pos_test": 144,
+  "seed": 42,
+  "n_boot": 600,
+  "k_budgets": [
+    0.5,
+    1.0,
+    2.0,
+    3.0,
+    5.0
+  ],
+  "abl_rows": 12,
+  "boot_rows": 11,
+  "n_excludes_zero": 2,
+  "best_single_aggregate": "XGB-20raw+V_std",
+  "best_pair": "XGB-20raw+V_std+V_max",
+  "cost_rows": 25,
+  "cost_boot_rows": 20,
+  "cost_boot_excludes_zero": 5
+}

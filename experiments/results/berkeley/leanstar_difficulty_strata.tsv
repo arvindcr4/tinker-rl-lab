@@ -1,0 +1,4 @@
+stratum	n	frac_prompts	star_exclusive_gap
+hard(0-0.3)	48	0.080000	0.000000
+frontier(0.3-0.7)	190	0.316667	0.000000
+easy(0.7-1.0001)	362	0.603333	0.209945

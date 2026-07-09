@@ -1,0 +1,21 @@
+# Pillar 2 ZVF vs failure AUROC (iter118).
+# AUROC of mean_zvf vs binary failure targets:
+#   is_collapse            positive class = collapse only
+#   is_collapse_or_drift   positive class = collapse or drift
+# Targets both reference scripts/zvf_diagnostic.py:zd.classify.
+# Bootstrap CIs: B=2000 percentile resamples over per-cell pooled
+# rows (NOT per-step rows, which are autocorrelated).
+# AUROC > 0.5 = higher ZVF is more failure-like.
+# The pooled 'all' AUROC collapses both bimodal failure modes
+# (drift at LOW ZVF, collapse at HIGH ZVF) into a single number,
+# so it sits near 0.5; the per-stratum CIs expose the bimodality.
+# Source: scripts/zvf_iter118_diagnostic.py
+stratum	target	n_cells	n_positive	n_negative	auroc	ci_lo	ci_hi
+groupsize_zvf_sweep	collapse_or_drift	4	0	4	NA	NA	NA
+groupsize_zvf_sweep	collapse	4	0	4	NA	NA	NA
+scaling_law_three_phase	collapse_or_drift	5	5	0	NA	NA	NA
+scaling_law_three_phase	collapse	5	5	0	NA	NA	NA
+variance_mitigation	collapse_or_drift	9	4	5	0.0000	0.0000	0.0000
+variance_mitigation	collapse	9	0	9	NA	NA	NA
+all	collapse_or_drift	23	11	12	0.3333	0.0000	0.6667
+all	collapse	23	7	16	1.0000	1.0000	1.0000

@@ -1,0 +1,31 @@
+rate	tree	rule	flip_cost_llm	xgb_always_dominates
+0.0144	XGB-20raw	gradient_band	0.001	True
+0.0144	XGB-20raw	absolute_band	0.001	True
+0.0144	XGB-24full	gradient_band	0.001	True
+0.0144	XGB-24full	absolute_band	0.001	True
+0.0144	XGB-4sensor	gradient_band	0.001	True
+0.0144	XGB-4sensor	absolute_band	0.001	True
+0.01	XGB-20raw	gradient_band	0.001	True
+0.01	XGB-20raw	absolute_band	0.001	True
+0.01	XGB-24full	gradient_band	0.001	True
+0.01	XGB-24full	absolute_band	0.001	True
+0.01	XGB-4sensor	gradient_band	0.001	True
+0.01	XGB-4sensor	absolute_band		False
+0.005	XGB-20raw	gradient_band	0.001	True
+0.005	XGB-20raw	absolute_band	0.001	True
+0.005	XGB-24full	gradient_band	0.001	True
+0.005	XGB-24full	absolute_band	0.001	True
+0.005	XGB-4sensor	gradient_band	0.001	True
+0.005	XGB-4sensor	absolute_band		False
+0.001	XGB-20raw	gradient_band	0.001	True
+0.001	XGB-20raw	absolute_band		False
+0.001	XGB-24full	gradient_band	0.001	True
+0.001	XGB-24full	absolute_band		False
+0.001	XGB-4sensor	gradient_band	0.001	True
+0.001	XGB-4sensor	absolute_band		False
+0.0005	XGB-20raw	gradient_band	0.001	True
+0.0005	XGB-20raw	absolute_band		False
+0.0005	XGB-24full	gradient_band	0.001	True
+0.0005	XGB-24full	absolute_band		False
+0.0005	XGB-4sensor	gradient_band	0.001	True
+0.0005	XGB-4sensor	absolute_band		False

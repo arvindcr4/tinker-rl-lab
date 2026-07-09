@@ -1,0 +1,163 @@
+% =============================================================================
+% Iter 83 -- Pillar 3 / P7: Iso-Yield Dynamic Grouping (Iso-G) controller
+%             prototype.  Implements the frontier synthesis's "Concrete
+%             Invention" (FRONTIER_INSIGHTS.md Round 2, Gemini Deep Think).
+%             Pareto-dominates zvf-triage by 6-10x on yield-per-1000-extra.
+% Driver: scripts/p5p8/p7_iter83_iso_g.py + p7_iter83_iso_g_boot.py
+% Inputs: experiments/results/n2_reward_tensor_resume/*_s0_tensors.jsonl
+% Outputs: experiments/results/p5p8/p7_iter83_iso_g_{per_prompt,per_method,boot}.tsv
+%          experiments/results/p5p8/p7_iter83_iso_g_{summary,boot}.json
+% =============================================================================
+\subsection{Iter 83 Pillar 3: Iso-Yield Dynamic Grouping (Iso-G)
+              Pareto-Dominates zvf-triage by $6$--$10\times$ on
+              Yield-per-1000-Extra-Rollouts}
+\label{sec:p7-iter83-iso-g}
+
+\paragraph{Question.}
+The frontier synthesis (Round 2, Gemini Deep Think) proposed a
+\emph{Concrete Invention}: ``Iso-Yield Dynamic Grouping (Iso-G).
+Mechanism: Abandon [static $G$].''  The earlier P7 controllers
+(\texttt{zvf-triage}, Dualformer-Auto, Hybrid, Bayesian;
+\S\S\ref{sec:p7-controller-cf}--\ref{sec:p7-controller-hybrid-n2})
+all act on a \emph{step-level signal} (per-step $z_t$, per-prompt
+$\hat p$, mid-range probability) and pick $G'$ from a fixed menu
+(typically $\{4, 8, 16\}$).  They ignore the \emph{continuous}
+trade-off in $G'$: a prompt with $k{=}4$ at $G{=}8$ ($\hat p = 0.5$)
+has yield $1 - 2 \cdot 0.5^8 = 0.992$ at $G{=}8$ and yield
+$1 - 2 \cdot 0.5^4 = 0.875$ at $G{=}4$ -- the controllers would either
+keep $G{=}8$ (Dualformer) or escalate to $G{=}16$ (zvf-triage),
+neither accessing the smaller $G'$ that achieves the
+target yield at lower cost.
+
+\paragraph{Iso-G controller.}
+For each (method, step, prompt) with $k$ successes out of
+$G_{\text{base}}{=}8$, the Iso-G controller picks:
+\begin{equation}
+G^\star \;=\; \min\bigl\{G' \in \{2,4,6,8,10,12,16,24,32\} :
+                  Y(\hat p, G') \ge \tau_y\bigr\},
+\quad Y(\hat p, G') = 1 - \hat p^{G'} - (1-\hat p)^{G'},
+\label{eq:p7-iso-g}
+\end{equation}
+with $\tau_y \in \{0.50, 0.70, 0.90, 0.95\}$ swept.  The cost-efficiency
+metric is \emph{yield-restored per 1000 extra rollouts} (analog of
+iter-80 row 95's per-1k bit-coupling, applied to the per-prompt
+contrastive-yield axis).  Default to $G_{\text{base}}$ if no $G'$
+achieves the target.
+
+\paragraph{Per-method cost-efficiency on the N2 four-method tensors.}
+Table~\ref{tab:p7-iso-g-cost-eff} reports the headline.  Iso-G@$\tau_y{=}0.90$
+strictly Pareto-dominates every existing controller on
+yield-per-1000-extra-rollouts:
+
+\begin{table}[t]
+\centering\small
+\caption{Iso-G@$\tau_y{=}0.90$ cost-efficiency on the N2 four-method
+corpus ($2560$ prompt-step decisions, $640$ per method).  Ratio column
+is Iso-G / zvf-triage@$0.70$.}
+\label{tab:p7-iso-g-cost-eff}
+\begin{tabular}{lrrrrr}
+\toprule
+method & C1 zvf-triage & C3 Hybrid & C4 Bayesian & \textbf{Iso-G@0.90} & \textbf{ratio} \\
+\midrule
+\texttt{grpo}  &  3.24 &  3.61 &  4.38 &  \textbf{19.42} & \textbf{6.0$\times$} \\
+\texttt{aero}  &  2.89 &  3.07 &  4.00 &  \textbf{19.61} & \textbf{6.8$\times$} \\
+\texttt{gift}  &  1.99 &  2.47 &  3.47 &  \textbf{19.49} & \textbf{9.8$\times$} \\
+\texttt{areal} &  2.77 &  2.89 &  4.63 &  \textbf{19.33} & \textbf{7.0$\times$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{H1 --- Pareto dominance is statistically detectable.}
+Paired bootstrap ($B{=}2000$, seed 20260705) on the per-step rollout
+vector:
+
+\begin{table}[t]
+\centering\small
+\caption{95\% bootstrap CIs on the Iso-G@$0.90$ / zvf-triage@$0.70$
+yield-per-1000-extra ratio.  All four lower bounds exceed $1.0$;
+Pareto dominance is statistically certified on every method.}
+\label{tab:p7-iso-g-ci}
+\begin{tabular}{lrrr}
+\toprule
+method & ratio mean & 95\% CI & excludes 1.0? \\
+\midrule
+\texttt{grpo}  &  6.06$\times$ & [4.99$\times$, 7.50$\times$] & YES \\
+\texttt{aero}  &  6.88$\times$ & [5.54$\times$, 8.63$\times$] & YES \\
+\texttt{gift}  &  9.97$\times$ & [7.57$\times$, 13.21$\times$] & YES \\
+\texttt{areal} &  7.10$\times$ & [5.78$\times$, 9.09$\times$] & YES \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{H2 --- Aggressive Iso-G@$\tau_y{=}0.50$ is signal-harmful.}
+At the lowest $\tau_y$ the controller picks $G'{=}2$ for every
+mid-range prompt, achieving the $0.5$ target but \emph{destroying}
+the near-perfect yield that $G{=}8$ already provides:
+total $\Delta Y$ on grpo $=-34.21$, aero $=-37.94$, gift $=-29.52$,
+areal $=-34.38$.  Cost ratio $\approx 0.88$ (cheapest of any
+controller) but the saving is paid in contrast.  $\tau_y{=}0.50$
+is rejected on this evidence base.
+
+\paragraph{H3 --- $\tau_y{=}0.90$ is the Pareto knee.}
+Increasing $\tau_y$ to $0.95$ gains $\sim$10\% more total
+$\Delta Y$ but costs $\sim$2\% more rollouts; yield-per-1k stays
+at $\approx$19 (not strictly better).  $\tau_y{=}0.90$ is the
+smallest $\tau_y$ where the controller's de-escalation branch is
+\emph{not} contrast-harmful on mid-range prompts.
+
+\paragraph{Mechanism: why Iso-G dominates.}
+The existing controllers act on a step-level or per-prompt-binary
+signal and pick $G'$ from a fixed menu (typically $\{4, 8, 16\}$ or
+$\{2, 4, 8, 16\}$).  Iso-G's continuous-$G$ menu \textbf{strictly
+subsumes} Dualformer-Auto's $\hat p$-gated rule (which is the
+iso-yield curve at $\tau_y \approx 0.75$) and acts at the exact
+per-prompt granularity that the iter-71 row 83 Dualformer reproduce
+proved necessary: the 0.21-vs-0.562 saving discrepancy was a
+menu-coarseness artefact, and Iso-G's 6--10$\times$ cost-efficiency
+gain is the menu-coarseness release.  On the iter-75 row 88 exact
+finite-pool (hypergeometric) correction, $\mathrm{CP}_{\text{exact}}
+- \mathrm{CP}_{\text{binom}} \approx +0.049$ on average, so Iso-G's
+$\tau_y{=}0.90$ threshold would shift by $\le 5\%$ under the
+exact model -- the qualitative ranking is robust.
+
+\paragraph{Cross-paper coupling.}
+(i) \textbf{P7 iter-71 row 83} -- Dualformer's $\hat p$-gated menu
+is the iso-yield curve at $\tau_y \approx 0.75$; Iso-G's 6--10$\times$
+cost-efficiency gain is the menu-coarseness release.  (ii)
+\textbf{P7 iter-75 row 88} -- the hypergeometric correction
+shifts Iso-G's threshold by $\le 5\%$ on average; the Pareto
+dominance is robust to the model choice.  (iii) \textbf{P7
+iter-82 row 97 / P6 iter-82 row 97} -- the iter-82 window-sensitivity
+audit established that registry deltas are window-sensitive;
+Iso-G's per-prompt $G'$ choice is \emph{window-free} (deterministic
+from observed $k$), making it the natural extension of iter-82's
+measurement-vs-claim audit into the per-prompt decision domain.
+(iv) \textbf{P5 iter-81 row 96 / P5P8-SYNTH row 95} -- the
+per-cell Items 13-17 yield-residual axes are the \emph{aggregate}
+analog of per-prompt $Y(\hat p, G')$; the iter-83 Iso-G result
+suggests the \textbf{per-step analog} of Items 14-17
+(per-step K\_unique\_count distribution) would identify Iso-G's
+fired-step set in a unified framework.
+
+\paragraph{Operational recommendation.}
+Deploy Iso-G@$\tau_y{=}0.90$ as the \textbf{default per-prompt
+controller} when the prompt distribution contains $\ge 5\%$
+mid-range $k$ values (i.e., at least one prompt per 20 has
+$k \in \{2,3,4,5,6\}$).  On the N2 four-method corpus
+($\approx$27\% mid-range) the gain is 6--10$\times$ over
+zvf-triage and 5--7$\times$ over Hybrid, with 95\% CIs that
+exclude 1.0 on every method.  On fully-saturated panels
+(e.g., iter-31 sat-band panels) Iso-G's de-escalation branch
+fires on every prompt and the controller degenerates to
+Dualformer-Auto, exactly as predicted by the menu-coarseness
+release.
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p7\_iter83\_iso\_g.py} ($218$ LoC,
+stdlib only); \texttt{python3 scripts/p5p8/p7\_iter83\_iso\_g\_boot.py}
+($138$ LoC, stdlib only, $B{=}2000$ paired-step bootstrap,
+seed $20260705$).  Outputs:
+\texttt{experiments/results/p5p8/p7\_iter83\_iso\_g\_per\_prompt.tsv}
+($23040$ rows), \texttt{p7\_iter83\_iso\_g\_per\_method.tsv}
+($36$ rows), \texttt{p7\_iter83\_iso\_g\_boot.tsv} ($4$ rows),
+\texttt{p7\_iter83\_iso\_g\_summary.json}.

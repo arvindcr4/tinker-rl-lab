@@ -1,0 +1,50 @@
+{
+  "n_cells": 98,
+  "n_manifests": 98,
+  "n_tensor_files": 98,
+  "schema_declared": 16,
+  "na_sentinels": 2,
+  "live_emitted": 9,
+  "recoverable_from_tensor": 4,
+  "schema_uncovered": 3,
+  "daa_items": [
+    "Item03",
+    "Item10",
+    "Item11",
+    "Item12",
+    "Item14",
+    "Item15",
+    "Item16",
+    "Item17",
+    "Item18"
+  ],
+  "daa_recoverable": [
+    "Item14",
+    "Item15",
+    "Item17"
+  ],
+  "daa_unrecoverable": [
+    "Item03",
+    "Item10",
+    "Item11",
+    "Item12",
+    "Item16",
+    "Item18"
+  ],
+  "H1_daa_count": 9,
+  "H1_daa_recoverable": 3,
+  "H1_daa_unrecoverable": 6,
+  "H2_recovery_rate": "98/98",
+  "H2_zero_harvest": true,
+  "H3_spearman_item14_zvf": -0.6965,
+  "H3_spearman_item14_pcd": 0.7937,
+  "H3_spearman_item15_zvf": -0.8663,
+  "H3_spearman_item15_pcd": 0.9633,
+  "H3_spearman_item17_zvf": -0.6533,
+  "H3_spearman_item17_pcd": 0.839,
+  "H3_spearman_item14_item17": 0.692,
+  "H3_spearman_item14_item15": 0.8563,
+  "H3_spearman_item15_item17": 0.8506,
+  "iter": 113,
+  "source": "scripts/p5p8/p5_iter113_minreport_v22_recovery.py"
+}

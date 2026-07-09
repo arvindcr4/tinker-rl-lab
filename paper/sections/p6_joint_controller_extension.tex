@@ -1,0 +1,76 @@
+% P5P8 SYNTH / P6 iter 76 JOB B: joint-controller registry extension
+\subsection{Joint-controller cost-ratio extension of the iter-70 prediction block}\label{sec:p6-joint-controller-extension}
+
+The iter-70 row 82 block lifts per-(trigger $\times$ threshold) controller
+savings into the registry. The iter-72 row 85 joint controller
+extends the family to a 2-branch composite (Dualformer-Auto rollout
+saves + $\delta_\text{div}$-triage zvf-saved) and reports net-saves
+and cost-ratio for $4 \text{ methods} \times 5\, \tau$ values. This
+section closes the loop on the iter-72 mint: lift the iter-72 row 85
+outputs into the registry as a new additive-optional sub-block.
+
+\subsubsection{Schema extension}
+
+Two new additive-optional sub-blocks (all fields nullable, no
+required additions) are added to the registry schema, with
+\texttt{additionalProperties: false} preserved:
+
+\begin{itemize}
+    \item \texttt{controller\_predicted\_savings\_per\_rollout.joint\_controller}
+          in the variant-delta record --- a panel name, an array of
+          per-method joint predictions, and a CI-method provenance.
+    \item \texttt{outcomes.joint\_controller\_predictions} in the
+          stack record --- the mirror block, with $G$, $n_\text{steps}$,
+          and the prediction list.
+\end{itemize}
+Six nullable integer fields are added to each prediction item
+(\texttt{net\_saves}, \texttt{n\_contrast\_prompts},
+\texttt{n\_fired\_steps}, \texttt{n\_zvf\_saved},
+\texttt{n\_rollout\_saves}, \texttt{g\_total}) plus one nullable
+string (\texttt{source\_iter}).
+
+\subsubsection{Schema validation}
+
+The registry is re-validated after the patch; \textbf{34/34 entries
+PASS} ($\texttt{ok}{=}34$, $\texttt{fail}{=}0$, schema-conformance
+gate preserved). The patch is purely additive: 7 entries (4 stack +
+3 delta) carry the new sub-block; the remaining 27 entries are
+unchanged.
+
+\subsubsection{Joint-controller fact table}\label{sec:p6-joint-controller-extension-table}
+
+\begin{table}[t]
+\centering\small
+\caption{Lifted joint-controller net-saves and cost-ratio per
+method $\times \tau$ on the N2 same-stack 40-step panel
+(\texttt{n\_steps=40}, $G{=}8$). Sharpest observation: AERO at $\tau{=}0.05$
+has the highest net-saves-per-unit-cost-ratio in the registry
+($587 / 1.293 \approx 454$ net saves per unit cost).}
+\label{tab:p6-joint-controller-extension}
+\begin{tabular}{lccccc}
+\toprule
+Method & $\tau{=}0.03$ & $\tau{=}0.04$ & $\tau{=}0.05$ & $\tau{=}0.06$ & $\tau{=}0.07$ \\
+\midrule
+\textbf{GRPO net\_saves / cost-ratio} & 223 / 1.77 & 343 / 1.62 & \textbf{529 / 1.36} & 713 / 1.14 & 731 / 1.11 \\
+\textbf{AERO net\_saves / cost-ratio} & 325 / 1.65 & 409 / 1.53 & \textbf{587 / 1.29} & 752 / 1.13 & 770 / 1.10 \\
+\textbf{AREAL net\_saves / cost-ratio} & 187 / 1.95 & 308 / 1.71 & \textbf{477 / 1.42} & 638 / 1.20 & 656 / 1.18 \\
+\textbf{GIFT net\_saves / cost-ratio} & 191 / 1.92 & 296 / 1.74 & \textbf{473 / 1.41} & 643 / 1.20 & 657 / 1.18 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Cross-paper coupling.} The iter-89 row 89 cost-per-decision
+story at $K{=}2\,\%$ (selective-LLM $w{=}0.1$ at \$0.000102 per
+decision, vs always-LLM at \$0.001000) is the per-deployment analog
+of the joint controller's per-(method, $\tau$) cost-ratio. The selective
+composite's marginal cost floor (\$0.0001/dec + 2\,\%) is the
+operational ceiling that the AERO joint controller at
+$\tau{=}0.05$ reaches with cost-ratio 1.29 (~30\,\% marginal cost
+over the XGB-20raw-only baseline).
+
+\paragraph{Reproduction.}
+\texttt{python3 scripts/p5p8/p6\_controller\_joint\_extension.py}
+(idempotent; stdlib + json; provenance to
+\texttt{experiments/results/p5p8/p7\_joint\_controller.tsv}).
+Outputs: \texttt{experiments/results/p5p8/p6\_joint\_controller\_extension.\{tsv,json\}}.
+Schema check: \texttt{python3 scripts/p5p8/registry\_validate.py}.

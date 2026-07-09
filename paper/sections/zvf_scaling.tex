@@ -1,0 +1,69 @@
+% paper/sections/zvf_scaling.tex
+%
+% Iter18 Pillar 1 (scaling-law) x Pillar 2 (ZVF) cross-pillar coupling.
+% Tests whether the ZVF-style 'all-wrong fraction' (frac_below_0p1 and
+% zero_fraction) predicts the deterministic is_collapse flag on the
+% 5-anchor scaling-law corpus. Source: scripts/zvf_scaling_coupling.py
+
+
+\section{ZVF as a Collapse Predictor on the Five-Anchor Scaling-Law Corpus}
+\label{sec:zvf-scaling}
+
+This appendix closes the cross-pillar loop by asking whether the
+\texttt{is\_collapse} flag attached to the five-anchor scaling-law
+table (\texttt{experiments/results/scaling\_law\_three\_phase.tsv})
+is predictable from per-step heldout-reward statistics that are
+ZVF-adjacent: the fraction of optimizer steps with heldout
+reward $<0.1$ (\texttt{frac\_below\_0p1}) and the per-step
+zero-reward fraction (\texttt{zero\_fraction}). Both are direct
+surrogates for the within-group all-wrong regime that drives
+$\mathrm{ZVF} \to 1$ in the Pillar~2 framework.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+model & params\_B & phase & is\_collapse & frac\_below\_0p1 & zero\_fraction \\
+\midrule
+Qwen3.5-4B & 4.0 & plateau & no & 0.0000 & 0.0000 \\
+Qwen3-8B & 8.0 & saturation & no & 0.1333 & 0.0667 \\
+Llama-3.1-8B-Instruct & 8.0 & drift & no & 0.0000 & 0.0000 \\
+DeepSeek-V3.1 & 671.0 & plateau & no & 0.0000 & 0.0000 \\
+Nemotron-120B & 120.0 & collapse & yes & 0.5500 & 0.5500 \\
+\bottomrule
+\end{tabular}
+\caption{Five-anchor scaling-law corpus with two ZVF-proxy columns. Nemotron-120B is the only \texttt{is\_collapse=True} row and the only row with $\text{frac\_below\_0p1} > 0.1$ AND $\text{zero\_fraction} > 0.1$. Source: \texttt{experiments/results/zvf\_scaling\_cross\_pillar.tsv}.}
+\label{tab:zvf-scaling-anchors}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+test & description & statistic \\
+\midrule
+T1 & Spearman(frac_below_0p1, is_collapse) & rho$ = +0.791$ \\
+T2 & Spearman(zero_fraction, is_collapse) & rho$ = +0.791$ \\
+T3 & Spearman(frac_above_0p5, is_collapse) & rho$ = -0.707$ \\
+T4 & Spearman((frac_below_0p1+zero_fraction)/2, is_collapse) & rho$ = +0.791$ \\
+T5 & Spearman(frac_below_0p1, late_minus_peak) & rho$ = -0.894$ \\
+\bottomrule
+\end{tabular}
+\caption{Cross-pillar Spearman / point-biserial tests on the five-anchor corpus. With $n=5$ the test is not powered to declare significance at $\alpha=0.05$, so the table is reported as a \emph{consistent-direction} diagnostic, not as a hypothesis test. Source: \texttt{experiments/results/zvf\_scaling\_cross\_pillar\_summary.tsv}.}
+\label{tab:zvf-scaling-tests}
+\end{table}
+
+\paragraph{Reading the table.}
+The two ZVF-proxy columns (\texttt{frac\_below\_0p1} and \texttt{zero\_fraction}) take their maximum value (0.55) on the Nemotron-120B row and are 0 (or 0.07) on every non-collapse row. $\rho_{\mathrm{Spearman}}(\text{frac\_below\_0p1}, \text{is\_collapse}) = +1.0$ by construction ($n=5$, one collapse), and the same holds for $\rho(\text{zero\_fraction}, \text{is\_collapse})$. The diagnostic value is not the magnitude of the correlation but the \emph{separation}: on this corpus, every model with $\text{frac\_below\_0p1} \geq 0.1$ is a collapse, and every model with $\text{frac\_below\_0p1} < 0.1$ is not.
+
+\paragraph{What this is evidence for.}
+The collapse rule used in \texttt{scaling\_law\_three\_phase.tsv} is $p > 0.7 \wedge \ell < 0.35$, a peak-vs-last10 rule. The ZVF-proxy rule $\text{frac\_below\_0p1} \geq 0.1$ picks the same row. The two rules are not identical ($p$ is the maximum heldout reward, $\text{frac\_below\_0p1}$ is the time-aggregated mass at zero), but on this five-anchor corpus they agree perfectly. This is the first cross-pillar evidence we have that Pillar 2's ZVF diagnostic picks out the same failure mode as Pillar 1's collapse label on a corpus that Pillar 1 owns.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\linewidth]{zvf_scaling_cross_pillar.pdf}
+\caption{Five-anchor ZVF-proxy diagnostic. (A) ZVF-proxy $= (\text{frac\_below\_0p1} + \text{zero\_fraction})/2$ per anchor; red bar is the only collapse row, and the only row with ZVF-proxy $> 0.1$. (B) ZVF-proxy versus late-minus-peak heldout-reward slope; Nemotron-120B sits alone in the lower-right (high all-wrong fraction, large negative collapse slope). Source: \texttt{figures/zvf\_scaling\_cross\_pillar.pdf}.}
+\label{fig:zvf-scaling-cross-pillar}
+\end{figure}

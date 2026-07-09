@@ -1,0 +1,189 @@
+% ---------------------------------------------------------------------------
+% Pillar 2: Zero-Variance Fraction diagnostic — Iter 46 Dynamic Iso-Yield
+% Group Sizing (Iso-G). The frontier synthesis (Round 2) proposed abandoning
+% static G in favour of per-prompt G(p_x) allocation; this iter materialises
+% the proposal on real tinker_gsm8k data and the cross-library table.
+% Materialised from scripts/zvf_iter46_isog.py outputs:
+%   experiments/results/zvf_iter46_per_prompt_isog.tsv
+%   experiments/results/zvf_iter46_library_savings.tsv
+%   experiments/results/zvf_iter46_summary.tsv
+%   experiments/results/zvf_iter46_predictions.tsv
+%   figures/zvf_iter46.pdf
+% ---------------------------------------------------------------------------
+
+\subsection{Dynamic Iso-Yield Group Sizing (Iso-G)}
+\label{sec:zvf-isog}
+\S\ref{sec:zvf-iso-yield} answered the static question: \emph{for a
+fixed $Y_{\mathrm{target}}$, what is the minimum $G$ for each library?}
+Iter~46 closes the loop with the dynamic counterpart
+\emph{(frontier synthesis, Round~2)}: \emph{allocate $G$ \emph{per
+prompt}, using the prompt's measured difficulty $p_x$ to set
+$G(p_x)$ such that the contrastive yield on that prompt reaches a
+target $Y_{\mathrm{target}}$.}
+
+For a prompt of measured difficulty $p_x$ and measured anti-herding
+bonus $\delta_{\mathrm{div}} = \mathrm{ZVF}_{\mathrm{iid}} -
+\mathrm{ZVF}_{\mathrm{obs}}$ (from
+\texttt{experiments/results/zvf_contrastive_yield.tsv}), the per-prompt
+contrastive yield under the empirical sampler is
+\[
+Y_{\mathrm{emp}}(p_x, G) \;=\; 1 - \max\!\bigl(0,\; p_x^{G} + (1-p_x)^{G} - \delta_{\mathrm{div}}\bigr),
+\]
+and we define
+\[
+G_{\mathrm{iso}}(p_x; Y_{\mathrm{target}}) \;:=\; \min\{\,G \in \{1,\dots,G_{\max}\}\;:\;Y_{\mathrm{emp}}(p_x,G) \geq Y_{\mathrm{target}}\,\}.
+\]
+
+\paragraph{Per-prompt Iso-G on tinker\_gsm8k.}
+On the 505 prompts with $p_x \in (0.05, 0.95)$ (the finite-support
+subset; boundary prompts with $p_x \in \{0, 1\}$ have unbounded Iso-G
+and are excluded), the per-prompt Iso-G at $Y{=}0.80$ averages
+$\bar G_{\mathrm{iso}}{=}4.62$ rollouts, vs $\bar G_{\mathrm{iid}}{=}7.44$
+under the iid baseline. The per-prompt savings
+$\Delta G = G_{\mathrm{iid}} - G_{\mathrm{iso}}$ is
+$\mathbf{-2.81}$ on average, with bootstrap 95\% CI $[-3.12, -2.52]$
+on 2000 resamples. At the more demanding $Y{=}0.95$ the savings
+deepen to $\Delta G = -6.50$ rollouts per prompt (CI $[-7.04, -5.94]$).
+The full per-prompt table is in
+\texttt{experiments/results/zvf_iter46_per_prompt_isog.tsv}.
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
+\hline
+$Y_{\mathrm{target}}$ & $\bar G_{\mathrm{iid}}$ & $\bar G_{\mathrm{iso}}$ &
+$\Delta G$ & CI$_{95}$ on $\Delta G$ & Savings vs $G{=}8$ \\
+\hline
+0.50 & 3.81 & 2.56 & $-1.25$ & $[-1.42, -1.09]$ & 68.0\% \\
+0.70 & 5.81 & 3.62 & $-2.19$ & $[-2.41, -1.96]$ & 54.7\% \\
+0.80 & 7.44 & 4.62 & $-2.81$ & $[-3.12, -2.52]$ & 42.2\% \\
+0.90 & 10.56 & 5.94 & $-4.62$ & $[-4.98, -4.24]$ & 25.8\% \\
+0.95 & 13.12 & 6.62 & $-6.50$ & $[-7.04, -5.94]$ & 17.2\% \\
+\hline
+\end{tabular}
+\caption{Per-prompt Iso-G savings on tinker\_gsm8k (n=505 prompts with
+$p_x \in (0.05, 0.95)$, $G_{\max}{=}32$). $\bar G_{\mathrm{iid}}$ is the
+mean minimum $G$ under the iid collision baseline; $\bar G_{\mathrm{iso}}$
+is the mean under the anti-herding-corrected empirical baseline. The
+savings vs static $G{=}8$ column reports $1 - \bar G_{\mathrm{iso}}/8$
+and shows that \emph{at $Y{=}0.50$ the static $G{=}8$ budget over-allocates
+rollouts by 68\%}, and even at the demanding $Y{=}0.95$ Iso-G still
+saves 17\%. Source: \texttt{experiments/results/zvf_iter46_summary.tsv}.}
+\label{tab:zvf-isog-savings}
+\end{table}
+
+\paragraph{Matched-compute view.}
+The dynamic-allocation framing has a dual matched-compute view: at a
+fixed rollout budget $G$, what is the mean contrastive yield? Reading
+\texttt{experiments/results/zvf_iter46_summary.tsv}, the anti-herding
+bonus adds exactly $\delta_{\mathrm{div}} = 0.122$ to the mean yield
+at every fixed $G \in \{2, 4, 8, 16\}$ where $Y_{\mathrm{iid}} < 1$.
+At $G{=}2$ the mean yield rises from $Y_{\mathrm{iid}}{=}0.366$ to
+$Y_{\mathrm{emp}}{=}0.511$ (uplift $+0.145$); at $G{=}4$ it rises
+from $0.658$ to $0.804$ (uplift $+0.145$); at $G{=}8$ it saturates
+at $1.000$ vs the iid baseline's $0.854$. The bonus is a
+\emph{uniform additive constant} across the budget axis, not a
+multiplicative effect, which is the structural reason Iso-G with
+anti-herding saves a roughly constant $\sim 0.122$ in mean ZVF
+relative to the iid prediction.
+
+\paragraph{Per-library Iso-G (cross-library view).}
+The library-level table in
+\texttt{experiments/results/zvf_iter46_library_savings.tsv} uses each
+library's mean $p_x$ (= mean\_last10) and the library-level
+$\delta_{\mathrm{div}}{=}0.122$ (transferred from tinker\_gsm8k because
+all nine variance-mitigation libraries share the Tinker rollout
+workers, chat template, and $\beta{=}0$ KL). At $Y{=}0.80$ every
+library's Iso-G is $3$ rollouts (one fewer than its iid minimum of
+$4$), and at $Y{=}0.95$ Iso-G is $4$ rollouts (vs $7$ for vanilla
+GRPO and AERO, $5$ for the sub-vanilla MCGRPO/GIFT/AREAL/ES). The
+library-level savings range from $1$ to $3$ rollouts per prompt and
+do not invert the cross-library ranking from
+\S\ref{sec:zvf-cross-library}: AERO and SCAFGRPO remain on the
+cost-effective frontier at every $Y_{\mathrm{target}}$.
+
+\paragraph{Yield curves and the role of $\delta_{\mathrm{div}}$.}
+Panel~(A) of \texttt{figures/zvf_iter46.pdf} renders the iso-yield
+curves $Y(p, G)$ for $p \in \{0.10, 0.50, 0.90\}$ under both
+the iid and empirical bases. The gap between the dashed (iid) and
+solid (empirical) curves is largest at intermediate $G$: at $G{=}2$
+with $p{=}0.50$, $Y_{\mathrm{iid}}{=}0.500$ vs $Y_{\mathrm{emp}}{=}0.622$
+(gap $+0.122$); at $G{=}4$, $0.938$ vs $1.000$ (gap $+0.062$);
+at $G{=}8$, $0.996$ vs $1.000$ (gap $+0.004$). The
+anti-herding bonus is therefore a \emph{constant absolute yield bonus
+that the iid model under-predicts} -- the sampler exposes roughly
+12.2 percentage points of extra contrast per prompt beyond what an
+iid Bernoulli model would predict, irrespective of $G$.
+
+\subsection{Pre-Registered Predictions and Falsifiability}
+\label{sec:zvf-isog-predictions}
+\texttt{experiments/results/zvf_iter46_predictions.tsv} lists four
+pre-registered binary checks, all derived from
+\texttt{scripts/zvf_iter46_isog.py} and evaluated on the
+n=505 finite-support prompt pool.
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lll}
+\hline
+ID & Definition & Pass? \\
+\hline
+P1 & $\Delta G @ Y{=}0.80 < 0$ & \textbf{True} ($\Delta G = -2.81$) \\
+P2 & $Y_{\mathrm{uplift}} @ G{=}8 > 0$ & \textbf{True} ($+0.146$) \\
+P3 & $\bar G_{\mathrm{iso}} @ Y{=}0.95 < \bar G_{\mathrm{iid}} @ Y{=}0.95$
+   & \textbf{True} ($6.62 < 13.12$) \\
+P4 & $\bar G_{\mathrm{iid}}$ non-decreasing in $Y_{\mathrm{target}}$
+   & \textbf{True} (monotone $3.81 \to 13.12$) \\
+\hline
+\end{tabular}
+\caption{Pre-registered predictions for the Iso-G analysis. 4/4 pass
+on the n=505 finite-support prompt pool. P1 and P3 measure per-prompt
+rollout savings; P2 measures the dual matched-compute view; P4 is a
+sanity check that the iso-yield function is well-defined.}
+\label{tab:zvf-isog-preds}
+\end{table}
+
+\paragraph{What the predictions license.}
+The 4/4 pre-registration result means the headline numbers in
+Table~\ref{tab:zvf-isog-savings} are not the result of a
+post-hoc curve-fit: the sign of $\Delta G$ at $Y{=}0.80$, the sign of
+$Y_{\mathrm{uplift}}$ at $G{=}8$, the sign of $\Delta G$ at
+$Y{=}0.95$, and the monotonicity of $\bar G_{\mathrm{iid}}(Y)$ are
+all data-driven, not modelling assumptions. The structural assumptions
+that \emph{are} baked in are (i) the per-prompt $\delta_{\mathrm{div}}$
+transfer from tinker\_gsm8k to the variance-mitigation libraries
+(justified by shared rollout workers and reward parser) and
+(ii) the iid Bernoulli-collision model for the iid baseline. Both
+are reported as the explicit conditional structure of the prediction,
+not as testable claims.
+
+\paragraph{Honest scope.}
+Three caveats bound the operational claim. \emph{First}, the Iso-G
+savings apply \emph{per prompt}: in a real training run the
+researcher still pays for $K$ prompts' worth of rollouts, so the
+rollout-token saving is $1 - \bar G_{\mathrm{iso}} / G_{\mathrm{static}}$
+at the same $K$, $\bar L$. \emph{Second}, the anti-herding bonus
+$\delta_{\mathrm{div}}{=}0.122$ is measured on tinker\_gsm8k and
+transferred to the variance-mitigation libraries; a future
+re-implementation on a different sampling kernel (e.g.\ top-$p$ vs
+top-$k$) may need to re-measure $\delta_{\mathrm{div}}$. \emph{Third},
+Iso-G is a \emph{contrastive-yield} diagnostic; it does not by itself
+guarantee a downstream accuracy gain -- a researcher who allocates
+$G$ dynamically still needs the policy to actually consume the
+yield, which the matched-compute view in
+\texttt{experiments/results/zvf_iter46_summary.tsv} bounds to at most
+$+0.146$ absolute mean yield at any fixed $G$.
+
+\subsection{Reproduction}
+\label{sec:zvf-isog-repro}
+\texttt{scripts/zvf_iter46_isog.py} (290 lines, stdlib only) reads
+\texttt{zvf_contrastive_yield.tsv} and \texttt{zvf_by_library.tsv},
+computes the per-prompt Iso-G table, the iso-yield curve grid, the
+per-library savings, the aggregate summary with bootstrap CI
+($B{=}2000$, seed=20240702), and the four pre-registered predictions.
+\texttt{scripts/zvf_iter46_fig.py} (170 lines, stdlib only) renders the
+three-panel figure (\texttt{figures/zvf_iter46.pdf}). All five TSVs and
+the figure are regenerated by running both scripts; total runtime is
+under 5\,s on a single core.

@@ -1,0 +1,153 @@
+% paper/sections/frontier_synthesis_scaling.tex -- Pillar 1 frontier-model synthesis.
+%
+% PROVENANCE.  The material in this section is NOT an experiment we ran.  It is
+% a distillation of a live 30-round cross-examination of two external frontier
+% reasoning systems -- ChatGPT Pro Extended and Gemini Deep Think -- conducted
+% on the four research pillars of this program.  The P1-relevant rounds
+% (scaling laws: rounds 1, 5, 10, 15, 19) plus the shared cross-cutting rounds
+% (adversarial review / cross-critique / scaling-stress: rounds 13, 14, 19, 20,
+% 25, 26, 29, 30) are the source.  Every claim below is a reasoning
+% contribution, a proposed diagnostic, or a falsifiable prediction offered by
+% those models -- attributed as external synthesis, never as our own data.
+% Source digest: frontier_calls/digests/frontier_P1.md.
+% Depends on macros defined by the surrounding paper (\secref, \tableref,
+% \textsc); \input after sections/scaling_laws.tex.
+
+\subsection{Frontier-Model Cross-Examination: Scaling Laws}
+\label{sec:frontier-scaling}
+
+To stress-test the Pillar-1 findings, we submitted the same questions to two
+external frontier reasoning systems (ChatGPT Pro Extended and Gemini Deep
+Think) in a multi-round adversarial cross-examination. The material below is
+their synthesis -- proposed functional forms, diagnostics, and falsifiable
+predictions -- not additional experiments of ours. We report only the
+sharpest, most defensible claims, and we flag where each reinforces or
+challenges a number the paper itself measured.
+
+\paragraph{A proposed phase-gated law rather than a smooth power law (frontier synthesis).}
+In the external cross-examination, both models converged on the claim that
+GRPO gain versus model size should \emph{not} be fit as a single smooth power
+law in $N$. ChatGPT Pro proposed a \emph{gated saturating law}
+\begin{equation}
+  \label{eq:frontier-gated}
+  \Delta_{\mathrm{GRPO}}(N)
+    = z(N)\,\Delta_{\max}\bigl(1 - e^{-\lambda(\log N - \log N_0)_+}\bigr)
+      - \bigl(1 - z(N)\bigr)\,C_{\mathrm{collapse}},
+\end{equation}
+where $\Delta_{\mathrm{GRPO}}$ is held-out gain over the base policy and
+$z(N)\in[0,1]$ is a \emph{stability gate} driven by observables rather than
+size, e.g.
+\begin{equation}
+  \label{eq:frontier-gate}
+  z(N) = \sigma\bigl(\gamma_0 + \gamma_1 \log N + \gamma_2\,\mathrm{GU}
+         - \gamma_3\,\textsc{zvf} - \gamma_4\,\mathrm{KLspike}
+         - \gamma_5\,\mathrm{lengthdrift}\bigr).
+\end{equation}
+The envelope says larger models raise the \emph{attainable} gain; the gate
+says that gain is realized only inside a stable, contrastive-learning phase.
+The concrete, falsifiable version is that residuals from a na\"ive log-size
+power law should \emph{cluster by stability diagnostics rather than scatter
+randomly}: collapse anchors should show a high zero-signal proxy
+($\textsc{zvf}\approx 0.55$) against $\le 0.07$ on stable anchors -- an
+order-of-magnitude separation. This directly reinforces our own measurement:
+the paper reports a zero-reward fraction of exactly $0.55$ for Nemotron-120B
+(\tableref{tab:scaling-nemotron-autopsy}) against $\le 0.067$ on every
+well-behaved anchor. Under this reading the Nemotron-120B point is a
+\emph{different phase}, not noise around a size trend, and if DeepSeek-V3.1
+(671B) is stable while 120B collapses, the instability is \emph{reentrant} in
+scale, not monotone.
+
+\paragraph{Contrastive-yield compute as a proposed scaling axis (frontier synthesis).}
+The frontier models argued that the informative scaling variable for GRPO is
+not raw parameter count, steps, or samples, but \emph{usable contrastive
+compute}. ChatGPT Pro proposed
+\begin{equation}
+  \label{eq:frontier-ceff}
+  C_{\mathrm{eff}}(G) = T \cdot G \cdot
+      \mathbb{E}_x\!\bigl[Y_G(p_x)\bigr] \cdot \mathrm{KL}_t,
+  \qquad
+  Y_G(p) = 1 - p^{G} - (1-p)^{G},
+\end{equation}
+where $Y_G(p)$ is the probability that a group of size $G$ contains at least
+one mixed-reward pair and hence a nonzero advantage. Gemini Deep Think pushed
+the same idea to a prediction: several anchors that appear to \emph{fail} a
+FLOP-based scaling fit should recover log-linear geometry once compute is
+discounted to $C_{\mathrm{eff}}=\int Y_G(p)\,\mathrm{d}C$, and the
+compute-optimal group size is $G^\star = \arg\max_G [\,Y_G(p)/G\,]$. This is a
+constructive challenge to our null result: the paper's cross-scale slope on
+$\bar R$ is statistically indistinguishable from zero over the measured 2--3-decade
+parameter range (\tableref{tab:scaling-cross}), and the frontier reading is that a
+raw-$N$ axis is simply the wrong abscissa -- the gain lives on the
+contrastive-yield axis, linking Pillar 1 to the Pillar-2 \textsc{zvf}
+diagnostic and the Pillar-3 group-size geometry.
+
+\paragraph{The strongest ``estimator doesn't matter, stack does'' claim (frontier synthesis).}
+Our same-stack control found GRPO and PPO statistically indistinguishable
+(paired $\Delta = -0.002$, $p = 0.374$; \texttt{samestack\_ppo\_grpo.json}). The frontier models sharpened this
+into two falsifiable statements. ChatGPT Pro's \emph{Estimator-Equivalence
+Principle}: once the stack (rollout tensors, masking, KL, clipping, optimizer,
+reward parser, token budget) is fixed, PPO and GRPO are performance-equivalent
+whenever their counterfactual update geometry agrees on the same rollout
+batches, measured by
+\begin{equation}
+  \label{eq:frontier-bei}
+  \mathrm{BEI} = \cos\!\bigl(g_{\mathrm{GRPO}}, g_{\mathrm{PPO}}\bigr)\cdot
+     \min\!\Bigl(
+        \tfrac{\|g_{\mathrm{PPO}}\|}{\|g_{\mathrm{GRPO}}\|},\
+        \tfrac{\|g_{\mathrm{GRPO}}\|}{\|g_{\mathrm{PPO}}\|}
+     \Bigr),
+\end{equation}
+with the prediction that $\mathrm{BEI}\ge 0.97$ (and a gradient-norm ratio in
+$[0.7,1.3]$) forces held-out agreement to within $1$ percentage point. Gemini
+Deep Think supplied the mechanism -- a \emph{Critic Degeneracy Hypothesis}:
+for sparse, terminal, binary rewards, a token-level value network minimizing
+MSE cannot extract intra-trajectory credit and collapses to a static
+prompt-difficulty regressor $V_\phi(x_{1:t}) \approx \mathbb{E}[R \mid
+x_{\mathrm{prompt}}]$, which is exactly the scalar GRPO computes statelessly
+via the group mean. Both claims support the same-stack null (paired
+$\Delta=-0.002$, $p=0.374$): the estimator label
+is under-identified unless it changes the induced update operator.
+
+\paragraph{What breaks at 7B--30B (frontier synthesis, scaling-stress round).}
+Asked which Pillar-1 claim is most scale-fragile, the frontier models agreed
+it is the assumption of a \emph{universal GRPO scaling exponent}. ChatGPT Pro's
+argument: at larger scale the per-prompt solve-rate mass $p_x$ bifurcates
+toward $p_x\!\approx\!1$ on easy prompts and $p_x\!\approx\!0$ on hard
+out-of-distribution prompts, so usable contrastive signal concentrates in a
+thin band $p_x\in[0.1,0.9]$ and a static group size wastes compute -- at
+$p=0.95$, $G=8$ yields contrastive probability $Y_G\approx 0.34$, and at
+$p=0.99$ even $G=32$ gives only $\approx 0.28$. Gemini Deep Think framed the
+same failure as an \emph{iso-FLOP joint-fit collapse}: yield transitions from
+compute-bound extraction ($\sim$7B) to entropy-bound saturation ($\sim$30B),
+so a monolithic power law fractures and an iso-FLOP optimizer degenerately
+pins to the smallest anchor. Both independently endorse our own finding that
+a single positive exponent is not identifiable on this benchmark
+(\tableref{tab:scaling-cross}; \tableref{tab:scaling-iter25}): the defensible
+object is a \emph{local, stack-conditioned saturation law} whose frontier is
+gated by contrastive yield $Y_G(p)$ and realized KL, not a Chinchilla-style
+exponent in $N$.
+
+\paragraph{The bar for calling it a \emph{law} rather than a trend (frontier synthesis).}
+Finally, the frontier models specified the single experiment that would
+license the word ``law.'' ChatGPT Pro proposed a preregistered
+\emph{curve-collapse} sweep over model size $N$ and rollout budget $T$,
+reporting normalized held-out error reduction
+\begin{equation}
+  \label{eq:frontier-collapse}
+  H(N,T) = \frac{A(N,T) - A_0(N)}{1 - A_0(N)},
+  \qquad
+  H(N,T) = H_\infty\Bigl(1 - \exp\!\bigl[-(N^{\gamma} T / \tau_0)^{\beta}\bigr]\Bigr),
+\end{equation}
+so that after rescaling compute by $N^{\gamma}$ all sizes should lie on
+\emph{one} universal post-training curve. The claim is earned only if a law
+frozen on 60--70\% of cells predicts blind large-$N$, large-$T$ cells within
+$\le 1.5$--$2.0$ percentage points (or $\le 10\%$ relative error in $H$) with
+seed-stable exponents ($\mathrm{CV}(\beta),\mathrm{CV}(\gamma)<0.2$);
+otherwise it is a trend, not a law. This is the external standard against
+which our present result is honestly a \emph{taxonomic} one: the paper's
+identifiability audit finds $0/5$ per-trace saturation rates estimable
+(\tableref{tab:scaling-iter25}), so the reliable Pillar-1 structure lives in
+the cross-scale endpoint regression $R_{\max}\sim\log_{10}N$ rather than in
+single-trace kinetics. The frontier synthesis does not overturn that null; it
+prescribes the blind curve-collapse test and the $C_{\mathrm{eff}}$ abscissa
+as the route by which a future, larger sweep could upgrade the trend to a law.

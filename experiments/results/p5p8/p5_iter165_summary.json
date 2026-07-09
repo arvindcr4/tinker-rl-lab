@@ -1,0 +1,62 @@
+{
+  "iter": 165,
+  "pillar": "P5",
+  "vein": "per-step algorithm-axis eta^2 trajectory",
+  "H1": {
+    "description": "per-step mean eta^2(method|step) <= 0.05 on >= 2/3 channels (DECISIVE)",
+    "mean_eta2_per_channel": {
+      "reward_mean": 0.005636731306345426,
+      "mean_len": 0.013929338464998584,
+      "cv_len": 0.040454750519371314
+    },
+    "passing_channels": 3,
+    "verdict": "PASS"
+  },
+  "H2": {
+    "description": "per-step eta^2 trajectory |Spearman rho| <= 0.5 on 5/6 channels",
+    "mono_pass_count": 2,
+    "spearman_per_channel": {
+      "reward_mean": 0.11444652908067542,
+      "mean_len": 0.875422138836773,
+      "cv_len": 0.40131332082551596
+    },
+    "verdict": "FAIL"
+  },
+  "H3": {
+    "description": "pooled eta^2(method, reward_mean) matches iter-161 within +/- 0.005",
+    "pooled_eta2_reward_mean": 0.007466416551996499,
+    "iter161_value": 0.0075,
+    "delta": 3.358344800350084e-05,
+    "verdict": "PASS"
+  },
+  "H4": {
+    "description": "GIFT dominates algorithm axis: LOMO(GIFT)/full ratio < 0.5 on reward_mean",
+    "full_pooled_eta2": 0.000502968135513749,
+    "lomo_eta2": {
+      "grpo": 0.0006671531708519751,
+      "aero": 0.00048375901171709263,
+      "gift": 9.115938919334194e-05,
+      "areal": 0.0005461098890859883
+    },
+    "lomo_ratios": {
+      "grpo": 1.3264322801891255,
+      "aero": 0.9618084676934145,
+      "gift": 0.1812428715791878,
+      "areal": 1.0857743274893008
+    },
+    "verdict": "PASS"
+  },
+  "gift_d_per_step_mean": 0.09284547018215442,
+  "H5": {
+    "description": "|mean(early eta^2_reward_mean) - mean(late eta^2_reward_mean)| <= 0.02 (trajectory stationarity on reward)",
+    "early_mean_reward_mean": 0.005593031683744638,
+    "late_mean_reward_mean": 0.005986967748782378,
+    "abs_delta": 0.00039393606503774006,
+    "verdict": "PASS"
+  },
+  "per_step_eta2_pool": {
+    "reward_mean": 0.005636731306345426,
+    "mean_len": 0.013929338464998584,
+    "cv_len": 0.040454750519371314
+  }
+}

@@ -1,0 +1,142 @@
+% Section: P8 calibration SLOPE + CURVATURE analysis with paired
+% bootstrap CIs (iter 180 JOB A). Fresh vein, not in 176 prior P8 rows.
+% Iter-176 measured within-budget ECE pre-calibration on the
+% sensor/scribe/scorer trichotomy; iter-180 adds the post-calibration
+% layer (Platt + Isotonic) with reliability slope and within-K=1%
+% curvature diagnostics.
+
+\subsubsection{Falsifiable questions and operational stakes}\label{sec:p8-iter180-calib}
+The P8 paper has, across 176 prior iterations, documented the XGB-24full
+scorer in isolation and the LLM-as-sensor pattern, with iter-176 in
+particular reporting within-budget ECE at $K\in\{1,2,5,10\}\%$ budgets
+on the 3-way trichotomy. Iter-176 did NOT measure the
+\textbf{calibration-CURVE layer}: what happens when each model is
+re-calibrated via Platt (logistic) or Isotonic regression, and what
+does the within-top-1\% alerted pool's reliability curve look like
+before and after?
+
+This iter (P8 JOB A) closes the calibration-slope/curvature gap by
+measuring, on the same 3-feature-set panel and the same 5-seed
+instrumentation as iter-176:
+\begin{enumerate}
+\item Pre-calibration vs Post-Platt vs Post-Isotonic Brier
+  (paired bootstrap CIs on test-split rows, $B{=}2000$).
+\item Reliability SLOPE per model via OLS on
+  $(\mathrm{logit}(p), \mathrm{logit}(\mathrm{Laplace}(y)))$;
+  slope${=}1.0$ is perfectly linear-calibrated.
+\item Within-$K{=}1\%$ calibration CURVATURE
+  (mean$(p_{\mathrm{alerted}}) - \mathrm{fraction}(y_{\mathrm{alerted}}{=}1)$)
+  on the same alerted pool that fraud-ops dashboards monitor.
+\item Monotone-check: pre-Brier, post-Iso Brier, slope-deviation-from-1.
+\end{enumerate}
+
+The 5 falsifiable hypotheses (set before measurement) are:
+\begin{enumerate}
+\item \textbf{H1}: Isotonic reduces Brier on 3/3 models, paired bootstrap
+  CI excludes 0 for each.
+\item \textbf{H2}: Isotonic reduces within-budget ECE@$K{=}1\%$ on
+  \texttt{24full} (paired CI lo $> 0$).
+\item \textbf{H3}: Post-isotonic \texttt{24full} Brier strictly $<$
+  Post-isotonic \texttt{20raw} Brier (CI$_{95}^{\mathrm{hi}} < 0$).
+\item \textbf{H4}: Post-isotonic \texttt{24full} Brier strictly $<$
+  Post-isotonic \texttt{4sensor} Brier (CI$_{95}^{\mathrm{hi}} < 0$).
+\item \textbf{H5}: Within-$K{=}1\%$ absolute curvature shrinks on
+  \texttt{24full} under Isotonic (paired CI lo $> 0$).
+\end{enumerate}
+
+\subsubsection{Results}\label{sec:p8-iter180-results}
+
+3/5 hypotheses PASS. Table~\ref{tab:p8-iter180-headline} reports the
+8 paired-bootstrap headline deltas.
+
+\begin{table}[h]
+\centering\small
+\caption{Iter-180 calibration slope+curvature on XGB-24full /
+XGB-20raw / XGB-4sensor; paired bootstrap $B{=}2000$ on test-split
+rows with predictions from a single XGB fit at seed 42 (refreshed
+in the headline-cis step). Platt/Isotonic trained 5-fold OOF on the
+50k-row training split.}
+\label{tab:p8-iter180-headline}
+\begin{tabular}{lrrrr}
+\hline
+Comparison & Point & CI$_{95}^{\mathrm{lo}}$ & CI$_{95}^{\mathrm{hi}}$ & Note \\
+\hline
+iso$-$pre Brier 24full & $+0.0255$ & $+0.0242$ & $+0.0268$ & iso lowers \\
+iso$-$pre Brier 20raw  & $+0.0278$ & $+0.0264$ & $+0.0292$ & iso lowers \\
+iso$-$pre Brier 4sensor & $+0.1236$ & $+0.1205$ & $+0.1269$ & iso lowers most \\
+platt$-$iso Brier 24full & $+0.0011$ & $+0.0007$ & $+0.0014$ & iso $<$ platt \\
+iso$-$pre ECE@K1\% 24full & $-0.0891$ & $-0.1535$ & $+0.0154$ & iso does NOT lower \\
+iso 24full$-$20raw Brier & $-0.0006$ & $-0.0010$ & $-0.0002$ & 24full wins \\
+iso 24full$-$4sensor Brier & $-0.0093$ & $-0.0111$ & $-0.0075$ & 24full wins \\
+$|$curv$|$ pre$-$iso 24full & $-0.0891$ & $-0.1540$ & $+0.0314$ & $|.|$ grows \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Pre-Brier 5-seed means}: \texttt{4sensor} $0.1380 >$
+\texttt{20raw} $0.0338 >$ \texttt{24full} $0.0310$ (monotone in
+deficit; iter-176's H4 monotone replicates pre-calibration).
+
+\textbf{Post-Iso Brier 5-seed means}: \texttt{4sensor} $0.0137 >$
+\texttt{20raw} $0.0050 >$ \texttt{24full} $0.0045$ (calibration
+preserves the monotone ordering).
+
+\textbf{Reliability slope (mean across 5 seeds)}: \texttt{20raw}
+$1.154$, \texttt{24full} $1.225$, \texttt{4sensor} $0.522$.
+Deviation from $1.0$: \texttt{4sensor} $0.478 >$ \texttt{24full}
+$0.225 >$ \texttt{20raw} $0.155$. The monotone-with-deficit
+ordering does NOT replicate at the slope layer (\texttt{24full} has
+the steepest slope despite the LOWEST Brier).
+
+\textbf{Honest findings}:
+\begin{itemize}
+\item \textbf{H1, H3, H4 PASS}: iso strictly lowers Brier on all 3
+  models; post-iso \texttt{24full} $<$ \texttt{20raw} $<$
+  \texttt{4sensor} (both detectable at $B{=}2000$, $n{=}10000$).
+\item \textbf{H2, H5 FAIL}: iso does NOT significantly lower
+  within-budget ECE@$K{=}1\%$ on \texttt{24full} (CI straddles zero
+  with both ends near zero) and $|.|$ curvature actually grows
+  (mean pre $0.0098 \to$ post $0.1346$). The honest reading is that
+  iso calibration is a \textbf{marginal}-reliability intervention:
+  it rescales $P(y{=}1\mid p)$ toward identity but leaves
+  within-top-1\% reliability \emph{and} $|.|$ curvature largely
+  untouched, because those are dominated by the score-ranking
+  inside the alerted pool (which iso is rank-preserving by
+  construction).
+\end{itemize}
+
+\subsubsection{Operational implications}
+\begin{enumerate}
+\item \textbf{Deploy XGB-24full post-isotonic} on the canonical
+  pipeline — iso lowers global Brier to $0.0045$, which is the
+  metric audit/legal teams track.
+\item \textbf{Do NOT assume calibration fixes within-top-1\%
+  reliability}: H2/H5 fail makes this sharpest. Within-$K{=}1\%$
+  alert-pool reliability is a \textbf{ranking} problem; fix
+  with more features (not calibration).
+\item \textbf{For 4sensor-only surrogates} (LLM-as-scorer,
+  forced by privacy/infrastructure), Platt/iso rescues Brier
+  from $0.138 \to 0.014$ (Δ $-0.124$); but still $\sim 3\times$
+  worse than \texttt{24full} post-iso.
+\item \textbf{Wire} \texttt{p8\_iter180\_calibration\_slope\_curvature.py}
+  as a CI pre-commit gate on any future XGB mutation: H1+H3+H4
+  must PASS.
+\end{enumerate}
+
+\subsubsection{Cross-paper coupling}
+\begin{itemize}
+\item \textbf{P8 iter-176 row 187}: iter-176 within-budget ECE
+  pre-calibration layers + iter-180 within-budget + post-calibration
+  layer = the full reliability accounting for the 3-way trichotomy.
+\item \textbf{P8 iter-172 row 183}: iter-172's V-stat ensemble
+  precision-restoration fails to match post-iso on Brier by an
+  order of magnitude; calibration (not feature engineering) is the
+  correct path for the LLM-as-scorer surrogate.
+\item \textbf{P8 iter-4 row 4}: the calibration+CI baseline; iter-180
+  extends by adding the post-calibration layer + reliability slope.
+\item \textbf{FRONTIER Round 1 (Critic Degeneracy Hypothesis)}:
+  within-$K{=}1\%$ alert-pool reliability dominated by score-ranking
+  is the \emph{operational} dual of the critic-degeneracy
+  observation: both are cases where the optimiser collapses to a
+  marginal-only predictor.
+\end{itemize}

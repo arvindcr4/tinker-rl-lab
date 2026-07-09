@@ -1,0 +1,2 @@
+model	params_B	family	n_steps	peak_R	peak_step	early_mean	late_mean	delta_late_minus_early	zero_frac	R_inf_3p	lambda_3p	lambda_3p_lo	lambda_3p_hi	t_50_3p	t_80_3p	recovery_ratio_peak_over_late	rmse_3p	nimmature_collapse
+Nemotron-120B	120.0	dense	20	0.875	3	0.1458	0.2083	0.0625	0.55	1.5	0.0019	0.0007	1.662	358.9062	833.3543	4.2	0.2445	1

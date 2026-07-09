@@ -1,0 +1,97 @@
+% ---------------------------------------------------------------------------
+% Pillar 2: Zero-Variance Fraction diagnostic -- Iter 118
+% AUROC + paired bootstrap CI on the AERO-vs-GRPO gap + calibration.
+% Materialised from scripts/zvf_iter118_diagnostic.py:
+%   experiments/results/zvf_iter118_auroc.tsv            (10 rows)
+%   experiments/results/zvf_iter118_aero_grpo_gap.tsv    (3 rows)
+%   experiments/results/zvf_iter118_calibration.tsv      (5 rows)
+%   experiments/results/zvf_iter118_narrative.json
+%   figures/zvf_iter118_calibration.{pdf,png}
+% ---------------------------------------------------------------------------
+
+\subsection{ZVF as a First-Class Cross-Library Diagnostic vs AERO}
+\label{sec:zvf-first-class}
+
+The previous ZVF section (Table~\ref{tab:zvf-by-library}) reports
+per-library means; iter~110 closed the gap to a binary AUROC; iter~114
+added the dose-response curve and the anti-herding bonus
+\(\delta_{d}\). Iter~118 closes the loop on the brief's
+\emph{first-class diagnostic vs AERO} by reporting three summary
+artefacts together: (a) the pooled AUROC of mean-ZVF against
+\emph{is\_collapse} with a stratified breakdown, (b) a paired
+bootstrap CI on the AERO-vs-GRPO effect size, and (c) a
+predictive-calibration curve that exposes the \emph{bimodal} failure
+mode.
+
+\paragraph{AUROC: mean-ZVF perfectly separates collapse from non-collapse.}
+Across the $N{=}23$ pooled (experiment, model, group-size) cells, the
+AUROC of mean-ZVF against the binary label \texttt{is\_collapse} is
+$1.000$ with $95\%$ bootstrap CI $[1.000,\,1.000]$; against the broader
+\texttt{is\_collapse\_or\_drift} target, the AUROC is $0.333$
+$[0.000,\,0.667]$. The inversion is informative: mean-ZVF does NOT
+behave as a single monotonic damage signal. Two distinct failure
+regimes sit at opposite ends of the ZVF distribution, and a scalar
+AUROC that conflates them collapses to $0.5$. The bimodality is the
+\emph{structural} failure-mode finding. Source:
+\texttt{experiments/results/zvf\_iter118\_auroc.tsv}.
+
+\paragraph{AERO-vs-GRPO effect size, paired bootstrap.}
+On the variance-mitigation suite (Tinker rollout workers, identical
+reward parser, identical KL, identical chat template; $K{=}8$, 5 seeds
+each), AERO cuts mean-ZVF by $0.2605$ absolute relative to vanilla
+GRPO ($0.2203$ vs $0.4808$; paired bootstrap $95\%$ CI
+$[-0.2618,\,-0.2592]$ -- excludes zero). The last-10 accuracy gap is
+$+0.0203$ $[+0.0194,\,+0.0211]$, so AERO's ZVF reduction is not free
+but is consistent across seeds. Failure-rate is degenerate ($0/5$ for
+both AERO and GRPO under the deterministic classifier), so the
+failure-rate CI is reported for completeness but is not informative at
+$n{=}5$. Source:
+\texttt{experiments/results/zvf\_iter118\_aero\_grpo\_gap.tsv}.
+
+\paragraph{Predictive calibration exposes the bimodal failure mode.}
+Sorting the 23 pooled cells by mean-ZVF into 5 even-width bins and
+computing the within-bin failure rate yields the dose-response in
+Table~\ref{tab:zvf-iter118-calib}. Bin 0 (mean-ZVF $0.11$--$0.12$)
+contains the variance-mitigation drift cells (GIFT, ES, AREAL,
+MCGRPO); bin 3 (mean-ZVF $0.48$--$1.00$) contains the GRPO plateau
+AND the cross-tool tool-use collapse cells; bin 2
+(mean-ZVF $0.30$--$0.32$) is the AERO/CPPO/NGRPO/SCAFGRPO band with
+zero failures. The clear conclusion: \emph{low ZVF predicts
+variance-mitigation drift, high ZVF predicts tool-use collapse,
+mid-range ZVF is the safe band where AERO lives}. Source:
+\texttt{experiments/results/zvf\_iter118\_calibration.tsv}.
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{rrrrrr}
+\hline
+Bin & $n$ & Mean-ZVF & Failures & Failure-rate & Wilson 95\% CI \\
+\hline
+0 & 3 & 0.116 & 3/3 & 1.00 & [0.44,\,1.00] \\
+1 & 3 & 0.175 & 1/3 & 0.33 & [0.06,\,0.79] \\
+2 & 3 & 0.304 & 0/3 & 0.00 & [0.00,\,0.56] \\
+3 & 5 & 0.760 & 2/5 & 0.40 & [0.12,\,0.77] \\
+4 & 3 & 0.799 & 0/3 & 0.00 & [0.00,\,0.56] \\
+\hline
+\end{tabular}
+\caption{ZVF predictive calibration (iter~118). The same-pooled
+23 cells sorted into 5 even-width ZVF bins. Failure rate is
+bimodal: 100\% at the low-ZVF tail (variance-mitigation drift
+methods), 40\% at the high-ZVF tail (cross-tool collapse +
+GRPO plateau cohabitants), and 0\% in the mid-ZVF band
+($0.30$--$0.32$) where AERO/CPPO/NGRPO/SCAFGRPO live. Source:
+\texttt{experiments/results/zvf\_iter118\_calibration.tsv}.}
+\label{tab:zvf-iter118-calib}
+\end{table}
+
+\paragraph{Take-away for the paper.}
+ZVF is a \emph{first-class} cross-library diagnostic because it
+(a) cleanly separates collapse from non-collapse
+(AUROC$=1.000$), (b) places AERO in a measurable $-0.26$ absolute
+ZVF gap with a tight CI, and (c) reveals that the failure label
+is itself bimodal (drift at low ZVF, collapse at high ZVF). Any
+single-AUROC summary will average the two failure modes into a
+near-chance score; the dose-response curve in
+Table~\ref{tab:zvf-iter118-calib} and the figure
+\texttt{figures/zvf\_iter118\_calibration.pdf} preserve both modes.

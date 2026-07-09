@@ -1,0 +1,10 @@
+# Pillar 2 Contrastive Yield: static-G=8 vs Iso-G on Qwen3-8B/GSM8K.
+# Y_static_observed = mean over the 600-problem slice of
+#   1 - [p_x**G + (1-p_x)**G] at G = static_G.
+# Y_iso_realised    = same mean after sizing G per-prompt via Iso-G
+#   (G(p, Y_target)) so the iid baseline meets Y_target uniformly.
+# Source: scripts/zvf_contrastive_yield.py
+Y_target	static_G	Y_static_observed	Y_iso_target	Y_iso_realised	iso_G_mean	iso_G_max	n_problems
+0.6	8	0.7192	0.6	0.4896	3.68	7	600
+0.8	8	0.7192	0.8	0.6855	6.31	13	600
+0.95	8	0.7192	0.95	0.8036	11.09	23	600

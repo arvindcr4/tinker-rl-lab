@@ -1,0 +1,15 @@
+delta_id	name	measured_count	expected_count	validated_count	n_significant	pct_significant	min_n	max_n	supports	contradicts	neutral	unclaimed	n_src_resolved_ok	n_src_missing	panels	metrics	citation_arxiv
+delta_adaptiveg	Adaptive-G (ZVF-driven)	2	2	2	1	50.0	16	16	1	0	1	0	2	0	qp7_adaptive_armB_vs_armA_paired	reward_mean;zvf	
+delta_aero	AERO	4	3	4	2	50.0	5	10	1	1	1	1	4	0	n2_same_stack_last10;zvf130_5seed	mean_zvf;reward_mean;zvf;zvf_risk_mean	2509.21880
+delta_areal	AREAL	4	3	4	2	50.0	5	10	1	1	1	1	4	0	n2_same_stack_last10;zvf130_5seed	mean_zvf;reward_mean;zvf;zvf_risk_mean	2505.24298
+delta_cppo	CPPO	2	1	2	1	50.0	5	5	1	0	0	1	2	0	zvf130_5seed	mean_zvf;zvf_risk_mean	2503.22342
+delta_dapo	DAPO	0	0	0	0	0.0	0	0	0	0	0	0	0	0			2503.14476
+delta_drgrpo	Dr. GRPO	0	0	0	0	0.0	0	0	0	0	0	0	0	0			2503.20783
+delta_es	ES	2	1	2	1	50.0	5	5	1	0	0	1	2	0	zvf130_5seed	mean_zvf;zvf_risk_mean	2509.24372
+delta_gift	GIFT	4	3	4	2	50.0	5	10	2	0	1	1	4	0	n2_same_stack_last10;zvf130_5seed	mean_zvf;reward_mean;zvf;zvf_risk_mean	2510.23868
+delta_gspo	GSPO	0	0	0	0	0.0	0	0	0	0	0	0	0	0			2507.18071
+delta_liteppo	LitePPO	0	0	0	0	0.0	0	0	0	0	0	0	0	0			
+delta_mcgrpo	MCGRPO	2	1	2	1	50.0	5	5	1	0	0	1	2	0	zvf130_5seed	mean_zvf;zvf_risk_mean	2601.22582
+delta_ngrpo	NGRPO	2	1	2	1	50.0	5	5	1	0	0	1	2	0	zvf130_5seed	mean_zvf;zvf_risk_mean	2509.18851
+delta_reinforce	REINFORCE	0	0	0	0	0.0	0	0	0	0	0	0	0	0			
+delta_scafgrpo	SCAFGRPO	2	1	2	1	50.0	5	5	1	0	0	1	2	0	zvf130_5seed	mean_zvf;zvf_risk_mean	2510.19807

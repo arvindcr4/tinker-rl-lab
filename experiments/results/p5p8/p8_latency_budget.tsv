@@ -1,0 +1,10 @@
+llm_per_row_latency_ms	tree_per_row_latency_us	tree_pct_of_budget	llm_pct_of_250ms_budget	llm_fits_in_250ms
+1	0.618	0.000247	0.4	yes
+5	0.618	0.000247	2.0	yes
+10	0.618	0.000247	4.0	yes
+25	0.618	0.000247	10.0	yes
+50	0.618	0.000247	20.0	yes
+100	0.618	0.000247	40.0	yes
+250	0.618	0.000247	100.0	no
+500	0.618	0.000247	200.0	no
+1000	0.618	0.000247	400.0	no

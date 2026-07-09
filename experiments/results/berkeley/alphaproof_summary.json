@@ -1,0 +1,110 @@
+{
+  "ts": "2026-07-04",
+  "iteration": 19,
+  "pillar": "B-SP25",
+  "lecture": "SP25 L8 \u2014 Thomas Hubert / DeepMind (AlphaProof + AlphaZero)",
+  "papers": {
+    "alphaproof": {
+      "title": "AlphaProof: a formal-mathematics AI for IMO competition problems",
+      "venue": "Nature (s41586-025-09833-y, methodology Nov 12, 2025) and DeepMind blog (Jul 25, 2024)",
+      "components": [
+        "pretrained LM (Gemini)",
+        "AlphaZero MCTS over Lean states",
+        "value-net + policy prior"
+      ],
+      "year": 2024
+    },
+    "alphazero": {
+      "title": "Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm",
+      "authors": "Silver, Hubert, Schrittwieser, Antonoglou, Lai, Guez, Lanctot, Sifre, Kumaran, Graepel, Lillicrap, Simonyan, Hassabis",
+      "arxiv": "1712.01815",
+      "venue": "arXiv preprint (cs.AI)",
+      "year": 2017
+    }
+  },
+  "framework": "AlphaZero MCTS over Lean states -> tree-baseline V(s_t; \u03b3, h). Operationalised in GRPO/RLVR as discounted/look-back baseline \u03b2_tree(t; \u03b3, h); depth-0 h=1, \u03b3=1 reduces to GRPO group-mean. Five pre-registered hypotheses on iter127 + iter130 data.",
+  "data_sources": {
+    "iter127_group_size_advantage_variance": "experiments/results/group_size_advantage_variance.tsv",
+    "iter130_variance_mitigation": "experiments/results/variance_mitigation.tsv"
+  },
+  "hypotheses": [
+    {
+      "id": "H1",
+      "claim": "Tree-window ZVF mean \u0394 <0 for all w (all smoothing strictly helps)",
+      "summary": {
+        "1": {
+          "n": 12,
+          "mean_delta": -0.7645794458333333,
+          "pct_negative": 1.0
+        },
+        "2": {
+          "n": 12,
+          "mean_delta": -0.740962896875,
+          "pct_negative": 1.0
+        },
+        "5": {
+          "n": 12,
+          "mean_delta": -0.7137410619791668,
+          "pct_negative": 1.0
+        },
+        "10": {
+          "n": 12,
+          "mean_delta": -0.6809454452587632,
+          "pct_negative": 1.0
+        },
+        "20": {
+          "n": 12,
+          "mean_delta": -0.6315724191030002,
+          "pct_negative": 1.0
+        }
+      },
+      "all_pct_neg": true,
+      "monotone_mag": false,
+      "verdict": "DECISIVE"
+    },
+    {
+      "id": "H2",
+      "claim": "Tree-baseline G=2, w=2 bounds G=4, w=1 (compute equivalence)",
+      "n_paired": 3,
+      "neg_delta": 3,
+      "cohens_d": -16.39014901931424,
+      "sign_test": {
+        "pos": 0,
+        "neg": 3,
+        "zero": 0,
+        "n_eff": 3,
+        "binom_p": 1.0
+      },
+      "verdict": "DECISIVE"
+    },
+    {
+      "id": "H3",
+      "claim": "Calibrated \u03b3 < 1 reduces magnitude channel (CDH-consistent)",
+      "mean_delta_by_gamma": {
+        "0.0": -0.7645794458333333,
+        "0.25": -0.48110127717285156,
+        "0.5": 0.03256615429687502,
+        "0.75": 0.9715614004313151,
+        "1.0": 2.60861395625
+      },
+      "gamma_optimal": 0.0,
+      "neg_at_opt": "12/12",
+      "verdict": "DECISIVE"
+    },
+    {
+      "id": "H4",
+      "claim": "Tree-baseline ZVF sign-stable across 9 methods (Pearson > 0)",
+      "n_total": 90,
+      "n_pos_corr": 49,
+      "n_strict": 0,
+      "verdict": "SUGGESTIVE"
+    },
+    {
+      "id": "H5",
+      "claim": "\u03c1(tree-ZVF, final heldout acc) > \u03c1(naive ZVF, final heldout acc)",
+      "spearman_tree": 0.08223385137911522,
+      "spearman_naive": -0.2844625977365849,
+      "verdict": "SUGGESTIVE"
+    }
+  ]
+}

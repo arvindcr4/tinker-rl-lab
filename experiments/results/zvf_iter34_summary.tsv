@@ -1,0 +1,2 @@
+n_anchors	n_classes	loo_accuracy	chance_accuracy	per_class_recall	top_feature	top_feature_delta_acc	collapse_zvf_level	noncollapse_zvf_level	collapse_zvf_discriminator	noncollapse_zvf_discriminator	collapse_only_model
+12	4	0.6666666666666666	0.25	{'collapse': 1.0, 'drift': 0.6666666666666666, 'plateau': 0.0, 'saturation': 1.0}	zvf_direction	0.1133333333333334	0.3333	0.056063636363636364	0.3333	0.05233227272727273	Qwen3.5-27B

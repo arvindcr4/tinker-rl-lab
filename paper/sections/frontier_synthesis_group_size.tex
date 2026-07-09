@@ -1,0 +1,178 @@
+% =====================================================================
+% paper/sections/frontier_synthesis_group_size.tex
+%
+% PROVENANCE. This section distills an EXTERNAL frontier-model
+% cross-examination of Pillar 3 (group-size effect and the
+% GRPO<->DPO equivalence). The material below comes from a live
+% 30-round adversarial cross-examination of ChatGPT Pro Extended and
+% Gemini Deep Think (P3 rounds 3, 8, 9, 17, 23, 27 plus shared
+% cross-cutting rounds 13, 14, 19, 20, 29, 30). These are REASONING
+% CONTRIBUTIONS -- proposed theorems, closed forms, and falsifiable
+% tests produced by the frontier models -- NOT experiments this paper
+% ran. Everything is attributed as external synthesis and, where it
+% reinforces or challenges our own measured G-sweep and "GRPO is
+% secretly DPO" results (Section~\ref{sec:group-size}), the connection
+% is stated in prose.
+% Source digest: frontier_calls/digests/frontier_P3.md
+% =====================================================================
+
+\subsection{Frontier-Model Cross-Examination: Group Size and GRPO$\leftrightarrow$DPO}
+\label{sec:frontier-group-size}
+
+To stress-test the group-size analysis beyond our own measurements, we
+submitted the Pillar~3 construction to an external cross-examination of
+two frontier reasoning systems (ChatGPT Pro Extended and Gemini Deep
+Think). The exchange is a source of \emph{proposed theorems and
+falsifiable tests}, not additional experiments; we report the sharpest
+contributions and, where they bear on our measured sweep---the
+$100.3\%$ retention of $G{=}2$ vs $G{=}16$ on the near-ceiling
+arithmetic task, the $0.24$ absolute $G{=}4\!\to\!G{=}32$ swing at
+canonical scale, and the sub-$\sqrt{G}$ SNR
+(Table~\ref{tab:groupsize-snr})---we say so explicitly.
+
+\paragraph{A proposed contrast-projection theorem: GRPO as an endogenous all-pairs DPO (frontier synthesis).}
+Writing $s_i = \nabla_\theta \log \pi_\theta(y_i \mid x)$ for the
+per-rollout score and $r_i$ for the reward, the frontier synthesis
+derives the exact identity
+\begin{equation}
+  \sum_{i}(r_i - \bar r)\, s_i \;=\; \frac{1}{G}\sum_{i,j}(r_i - r_j)\, s_i,
+  \label{eq:fs-contrast}
+\end{equation}
+so the mean-centred GRPO update \emph{is} an all-pairs preference (DPO)
+update in which every ordered pair contributes its reward margin
+$r_i-r_j$. Two consequences follow. First, any group with zero reward
+variance ($r_i \equiv r_j$) is projected out and contributes no
+gradient---the exact algebraic origin of the zero-variance floor
+$\mathrm{ZVF}(p,G)=p^G+(1-p)^G$ used throughout
+Section~\ref{sec:group-size}. Second, unlike DPO, GRPO supplies its own
+margins: it self-induces a preference signal \emph{only} on
+mixed-reward groups. For binary rewards with $K$ successes the frontier
+models give the closed form
+$g_\text{GRPO}(x) = \tfrac{1}{G\,K(G-K)}\, g_\text{pair}(x)$, exposing
+the $K(G-K)$ pair count as the mechanistic driver. In an external
+cross-examination the models argued this is precisely why our measured
+$G{=}2$ run retains $100.3\%$ of $G{=}16$ on the near-ceiling task: at
+$p\!\to\!1$ almost every non-degenerate group already yields one usable
+win--loss pair, so extra rollouts buy only redundant pairs.
+
+\paragraph{Whitening turns the baseline into an adaptive-margin auto-curriculum.}
+Gemini Deep Think separates GRPO's centering from its $1/\sigma$
+whitening. Centering alone is a scaled leave-one-out (LOO) control
+variate, $r_i - \bar r = \tfrac{G-1}{G}\,(r_i - b_{-i})$ with
+$b_{-i}=\tfrac{1}{G-1}\sum_{j\ne i} r_j$, which is unbiased but injects
+an $O(1/G)$ baseline-estimation penalty
+$\mathrm{Var}(b_{-i}) = p_x(1-p_x)/(G-1)$. Dividing by the reward
+standard deviation then \emph{breaks} control-variate neutrality: for a
+group with $K$ successes the whitened advantages collapse to the
+deterministic DPO-style scalars $A_+ = \sqrt{(G-K)/K}$ and
+$A_- = -\sqrt{K/(G-K)}$, with adaptive margin
+\begin{equation}
+  \Delta_\text{margin} = A_+ - A_- = \frac{G}{\sqrt{K(G-K)}}.
+  \label{eq:fs-margin}
+\end{equation}
+The frontier reading is that GRPO is a self-scheduling curriculum:
+balanced groups ($K{=}G/2 \Rightarrow \Delta{=}2$) are gently throttled
+while rare breakthroughs ($K{=}1 \Rightarrow \Delta \approx \sqrt{G}$)
+receive amplified gradient. This rationalizes our measured
+sub-$\sqrt{G}$ SNR ($1.46 \to 2.16$ from $G{=}2$ to $G{=}16$, only
+$52\%$ of the $\sqrt{G}$ law, Table~\ref{tab:groupsize-snr}): the
+$O(1/G)$ LOO penalty and the whitening non-linearity together cap
+variance reduction well below the i.i.d.\ $\sqrt{G}$ ideal (frontier
+synthesis).
+
+\paragraph{Signal yield $Y_G(p)$ and why ``bigger $G$'' is not monotone.}
+The frontier models formalize the useful-signal rate
+\begin{equation}
+  Y_G(p) = 1 - p^G - (1-p)^G,
+  \label{eq:fs-yield}
+\end{equation}
+which is \emph{identical} to our gradient-utilization closed form
+$\mathrm{GU}(p,G) = 1 - \mathrm{ZVF}(p,G)$: their ``contrastive yield''
+and our ``gradient utilization'' are the same object reached from the
+preference and the variance side respectively. Because $Y_G$ saturates
+at $1$, increasing $G$ trades three quantities against one another---pair
+generation ($\uparrow$), baseline variance ($\downarrow$ as $1/G$), and
+inference compute ($\uparrow$ linearly)---so the compute-optimal group
+size is finite, $G^\star = \arg\max_G Y_G(p)/G$, not ``as large as
+possible''. For prompts bounded away from the extremes the frontier
+bound $G \gtrsim \log\epsilon / \log(1-p_\text{min})$ (e.g.\
+$p_\text{min}{=}0.1 \Rightarrow G\approx 29$ for $\mathrm{ZVF}<0.05$)
+predicts that $G{\approx}32$ is the first genuinely DPO-equivalent
+regime while $G{=}2$ is pairwise-equivalent only on already-unlocked
+prompts. This reinforces our budget-dependent optimum
+(Table~\ref{tab:groupsize-summary}) and gives a first-principles account
+of why the Wu et al.\ $G{=}2{\sim}G{=}16$ equivalence fails to
+generalize to $G{=}4{\sim}G{=}32$ at canonical scale
+(Table~\ref{tab:groupsize-g4-g32}).
+
+\paragraph{A decisive test separating variance-reduction from ZVF-reduction.}
+Our data show a large held-out swing with $G$ but cannot, on their own,
+say \emph{why}. The frontier synthesis proposes a $2{\times}2$
+super-group design that separates the two candidate mechanisms while
+holding tokens, steps, and KL fixed: Arm~A (natural small $G$), Arm~B
+(variance-only: the same set of unlocked prompts but all $K(G{-}K)$
+pairs used), Arm~C (ZVF-only: more unlocked prompts but a single random
+win--loss pair each, or noise injected to match Arm~A's gradient
+covariance), and Arm~D (natural large $G$). With a target swing of
+$\Delta_{32-2}\approx 0.020$, the preregistered rule is
+\emph{ZVF-dominant} if Arm~C recovers $\ge 75\%$ of the gain while
+Arm~B recovers $\le 25\%$, and variance-dominant if the pattern
+reverses. A complementary single-batch \emph{residual-isomorphism}
+check subtracts a synthetic margin-scaled DPO gradient
+$V_\text{mDPO}=\tfrac{1}{G}\sum_{i<j}(r_i-r_j)(s_i-s_j)$ from the
+empirical GRPO gradient and tests whether the residual is pure
+KL-penalty: $\cos(V_\text{GRPO}-V_\text{mDPO},\,V_\text{KL})\approx 1$
+would confirm Eq.~\eqref{eq:fs-contrast} exactly, whereas $<0.99$ would
+prove the group baseline carries stabilizing structure orthogonal to
+pairwise preference. On the mechanism, the frontier models lean toward
+ZVF-reduction: Gemini argued the $G{=}4\!\to\!G{=}32$ retention gap is
+concentrated in high-accuracy bins ($+0.253$ at $p\ge 0.75$ versus
+$+0.010$ at $p<0.5$), which is the signature of escaping the ZVF floor
+rather than of classical $\sqrt{G}$ variance reduction. This
+\emph{challenges} the variance-reduction reading we offer for the
+$G{=}32$ win in Section~\ref{sec:group-size} and is a concrete,
+falsifiable next experiment.
+
+\paragraph{The Baseline-Equivalence-Index (BEI).}
+Finally, the frontier synthesis proposes a Baseline-Equivalence-Index
+to pin \emph{when} the GRPO group mean, a PPO value head, and a DPO
+margin are interchangeable. Rather than compare baseline mean-squared
+errors it compares the resulting actor \emph{updates} $g_G$ (group
+baseline) and $g_V$ (value head),
+\begin{equation}
+  \mathrm{BEI}_G =
+  \frac{E_x\langle g_V, g_G\rangle}
+       {\sqrt{E_x\|g_V\|^2\; E_x\|g_G\|^2}}
+  \cdot
+  \min\!\Big(\tfrac{E\|g_G\|}{E\|g_V\|},\,\tfrac{E\|g_V\|}{E\|g_G\|}\Big),
+  \label{eq:fs-bei}
+\end{equation}
+so that $\mathrm{BEI}\approx 1$ requires the two updates to match in
+\emph{both} direction and scale---a value head can match direction
+while silently rescaling the effective learning rate, which a cosine
+alone would miss. The proposed boundary is exchangeable above
+$\approx 0.95$, distinct estimators below $\approx 0.8$ or on a
+projection sign flip; equivalently, the group mean overtakes a trained
+critic once its $O(1/G)$ Monte-Carlo variance drops below the critic's
+mean-squared error. Because our measured SNR rises only sublinearly
+($52\%$ of $\sqrt{G}$), the frontier prediction is that BEI should climb
+sublinearly and \emph{saturate before} critic-free GRPO becomes fully
+value-head-equivalent at the group sizes we test---i.e.\ $G{=}16$ is not
+yet in the PPO-equivalent regime. At the opposite end the same account
+recovers the exact GRPO$\leftrightarrow$DPO bridge: at $G{=}2$ the
+centred update assigns $+\tfrac12$ to the winner and $-\tfrac12$ to the
+loser, precisely a one-pair DPO step.
+
+\paragraph{Bottom line (frontier synthesis).}
+Taken together, the external analysis recasts the group-size knob as a
+preference-learning dial: $G$ controls how many endogenous DPO pairs a
+prompt contributes (Eq.~\ref{eq:fs-contrast}), the whitened margin turns
+that count into an auto-curriculum (Eq.~\ref{eq:fs-margin}), and the
+useful fraction $Y_G(p)=\mathrm{GU}(p,G)$ (Eq.~\ref{eq:fs-yield}) bounds
+the payoff so that the compute-optimal $G$ is finite. This is consistent
+with our measured near-ceiling equivalence at small $G$ and with the
+failure of that equivalence at canonical scale, while sharpening the one
+question our data leave open---whether the large-$G$ win is
+variance-reduction or ZVF-escape---into a preregistered, falsifiable
+test. We stress again that these are external reasoning contributions,
+not experiments this paper ran.

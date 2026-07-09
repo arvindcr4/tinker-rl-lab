@@ -1,0 +1,36 @@
+pool	model	params_B	arch	family	n_steps	R_max	lambda	lam_at_bound	r_mean
+n=5 (iter125/129)	Qwen3.5-4B	4.0	dense	qwen	30	0.8167	10.0000	1	0.8167
+n=5 (iter125/129)	Qwen3-8B	8.0	dense	qwen	30	0.2854	10.0000	1	0.2854
+n=5 (iter125/129)	Llama-3.1-8B-Instruct	8.0	dense	llama	30	0.8688	10.0000	1	0.8688
+n=5 (iter125/129)	DeepSeek-V3.1	685.0	moe	deepseek	20	0.8438	10.0000	1	0.8438
+n=5 (iter125/129)	Nemotron-120B	120.0	dense	nemotron	20	0.1820	0.9902	0	0.1750
+n=7 (reliable n>=20)	Qwen3.5-4B	4.0	dense	qwen	30	0.8167	10.0000	1	0.8167
+n=7 (reliable n>=20)	Qwen3-8B	8.0	dense	qwen	30	0.2854	10.0000	1	0.2854
+n=7 (reliable n>=20)	Llama-3.1-8B-Instruct	8.0	dense	llama	30	0.8688	10.0000	1	0.8688
+n=7 (reliable n>=20)	gpt-oss-20B	20.0	moe	gpt-oss	30	0.8479	1.4945	0	0.8396
+n=7 (reliable n>=20)	DeepSeek-V3.1	685.0	moe	deepseek	20	0.8438	10.0000	1	0.8438
+n=7 (reliable n>=20)	Nemotron-120B	120.0	dense	nemotron	20	0.1820	0.9902	0	0.1750
+n=7 (reliable n>=20)	Kimi-K2-Thinking	1000.0	moe	kimi	20	0.8500	10.0000	1	0.8500
+n=10 (reliable+probes)	Qwen3.5-4B	4.0	dense	qwen	30	0.8167	10.0000	1	0.8167
+n=10 (reliable+probes)	Qwen3-8B	8.0	dense	qwen	30	0.2854	10.0000	1	0.2854
+n=10 (reliable+probes)	Llama-3.1-8B-Instruct	8.0	dense	llama	30	0.8688	10.0000	1	0.8688
+n=10 (reliable+probes)	gpt-oss-20B	20.0	moe	gpt-oss	30	0.8479	1.4945	0	0.8396
+n=10 (reliable+probes)	DeepSeek-V3.1	685.0	moe	deepseek	20	0.8438	10.0000	1	0.8438
+n=10 (reliable+probes)	Nemotron-120B	120.0	dense	nemotron	20	0.1820	0.9902	0	0.1750
+n=10 (reliable+probes)	Kimi-K2-Thinking	1000.0	moe	kimi	20	0.8500	10.0000	1	0.8500
+n=10 (reliable+probes)	Qwen3-32B	32.0	dense	qwen	3	0.2497	NA	1	0.2497
+n=10 (reliable+probes)	Qwen3.5-27B	27.0	dense	qwen	3	0.4373	NA	1	0.4373
+n=10 (reliable+probes)	Qwen3-30B-MoE	30.0	moe	qwen	5	0.3252	NA	1	0.3252
+n=10 (reliable+probes)	Qwen3-30B-MoE-Inst	30.0	moe	qwen	3	1.0000	NA	1	1.0000
+n=12 (all anchors)	Qwen3.5-4B	4.0	dense	qwen	30	0.8167	10.0000	1	0.8167
+n=12 (all anchors)	Qwen3-8B	8.0	dense	qwen	30	0.2854	10.0000	1	0.2854
+n=12 (all anchors)	Llama-3.1-8B-Instruct	8.0	dense	llama	30	0.8688	10.0000	1	0.8688
+n=12 (all anchors)	gpt-oss-20B	20.0	moe	gpt-oss	30	0.8479	1.4945	0	0.8396
+n=12 (all anchors)	DeepSeek-V3.1	685.0	moe	deepseek	20	0.8438	10.0000	1	0.8438
+n=12 (all anchors)	Nemotron-120B	120.0	dense	nemotron	20	0.1820	0.9902	0	0.1750
+n=12 (all anchors)	Kimi-K2-Thinking	1000.0	moe	kimi	20	0.8500	10.0000	1	0.8500
+n=12 (all anchors)	Qwen3-32B	32.0	dense	qwen	3	0.2497	NA	1	0.2497
+n=12 (all anchors)	Qwen3.5-27B	27.0	dense	qwen	3	0.4373	NA	1	0.4373
+n=12 (all anchors)	Qwen3-30B-MoE	30.0	moe	qwen	5	0.3252	NA	1	0.3252
+n=12 (all anchors)	Qwen3-30B-MoE-Inst	30.0	moe	qwen	3	1.0000	NA	1	1.0000
+n=12 (all anchors)	Qwen3-235B-MoE	235.0	moe	qwen	4	1.0000	NA	1	1.0000

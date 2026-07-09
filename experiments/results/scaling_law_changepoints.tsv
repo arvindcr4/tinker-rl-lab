@@ -1,0 +1,14 @@
+model	params_B	best_k	segment_idx	start_step	end_step	length	mean_reward
+Qwen3.5-4B	4.0000	3	1	1	15	15	0.8417
+Qwen3.5-4B	4.0000	3	2	16	16	1	0.2500
+Qwen3.5-4B	4.0000	3	3	17	30	14	0.8304
+Qwen3-8B	8.0000	1	1	1	30	30	0.2854
+Llama-3.1-8B-Instruct	8.0000	3	1	1	15	15	0.9292
+Llama-3.1-8B-Instruct	8.0000	3	2	16	16	1	0.3750
+Llama-3.1-8B-Instruct	8.0000	3	3	17	30	14	0.8393
+DeepSeek-V3.1	685.0000	3	1	1	15	15	0.8667
+DeepSeek-V3.1	685.0000	3	2	16	16	1	0.5000
+DeepSeek-V3.1	685.0000	3	3	17	20	4	0.8438
+Nemotron-120B	120.0000	3	1	1	2	2	0.0000
+Nemotron-120B	120.0000	3	2	3	3	1	0.8750
+Nemotron-120B	120.0000	3	3	4	20	17	0.1544

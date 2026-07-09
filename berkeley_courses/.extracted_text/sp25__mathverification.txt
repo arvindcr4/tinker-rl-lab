@@ -1,0 +1,1490 @@
+Formal Reasoning Meets LLMs: 
+Towards AI for Mathematics and 
+Verification
+Kaiyu Yang
+Research Scientist @ Meta FAIR 
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+AI Arms Race in Math and Coding
+2
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+AI Arms Race in Math and Coding
+3
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+AI Arms Race in Math and Coding
+4
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+AI Arms Race in Math and Coding
+5
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Why Math and Coding?
+• Proxies for complex reasoning and planning
+• Important in human intelligence; challenging for LLMs
+• Unlimited applications: travel planning, calendar scheduling, etc.
+• Relatively easy to evaluate
+• Math: check the answers
+• Coding: run unit tests
+• Writing a crime fiction? Composing a symphony?
+6
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+How LLMs are Trained to Solve Math 
+Problems?
+• Supervised finetuning (SFT): “Good data is all you need!”
+• Reinforcement learning (RL): “Verifiability is all you need!”
+• Methods are straightforward, but the devil is in the details, e.g., data curation/
+cleaning, infrastructures for training and inference
+7
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Supervised Finetuning on Mathematical 
+Data
+8
+LLM  pretrained 
+on text and code
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Supervised Finetuning on Mathematical 
+Data
+9
+LLM  pretrained 
+on text and code
+Base math 
+LLM
+Math-related 
+web documents
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Supervised Finetuning on Mathematical 
+Data
+10
+LLM  pretrained 
+on text and code
+Base math 
+LLM
+Finetuned 
+math LLM
+Math-related 
+web documents
+Problems w/ step-
+by-step solutions
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Supervised Finetuning on Mathematical 
+Data
+11
+Problem: Suppose that the sum of the squares of two 
+complex numbers  and  is , and the sum of their cubes 
+is 
+. List all possible values for 
+, separated by 
+commas.
+𝑥
+𝑦
+7
+10
+𝑥+ 𝑦
+           >>> [-5, -5, 1, 1, 4, 4]
+Solution: Let’s use `sympy` to calculate and print all 
+possible values for 
+.
+𝑥+ 𝑦
+Removing duplicates, the possible values for 
+ are 
+\boxed{-5, 1, 4}
+𝑥+ 𝑦
+LLM  pretrained 
+on text and code
+Base math 
+LLM
+Finetuned 
+math LLM
+Tool-
+integrated 
+math LLM
+Math-related 
+web documents
+Problems w/ step-
+by-step solutions
+Problems w/ tool-
+integrated solutions
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Supervised Finetuning on Mathematical 
+Data
+12
+Problem: Suppose that the sum of the squares of two 
+complex numbers  and  is , and the sum of their cubes 
+is 
+. List all possible values for 
+, separated by 
+commas.
+𝑥
+𝑦
+7
+10
+𝑥+ 𝑦
+           >>> [-5, -5, 1, 1, 4, 4]
+Solution: Let’s use `sympy` to calculate and print all 
+possible values for 
+.
+𝑥+ 𝑦
+Removing duplicates, the possible values for 
+ are 
+\boxed{-5, 1, 4}
+𝑥+ 𝑦
+LLM  pretrained 
+on text and code
+Base math 
+LLM
+Finetuned 
+math LLM
+Tool-
+integrated 
+math LLM
+Math-related 
+web documents
+Problems w/ tool-
+integrated solutions
+Problems w/ step-
+by-step solutions
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Supervised Finetuning on Mathematical 
+Data
+13
+Problem: Suppose that the sum of the squares of two 
+complex numbers  and  is , and the sum of their cubes 
+is 
+. List all possible values for 
+, separated by 
+commas.
+𝑥
+𝑦
+7
+10
+𝑥+ 𝑦
+           >>> [-5, -5, 1, 1, 4, 4]
+Solution: Let’s use `sympy` to calculate and print all 
+possible values for 
+.
+𝑥+ 𝑦
+Removing duplicates, the possible values for 
+ 
+are \boxed{-5, 1, 4}
+𝑥+ 𝑦
+• Training data is foremost important
+• Problems + (step-by-step, tool-integrated) 
+solutions curated by humans and LLMs
+• Size of largest public datasets: ~900K
+[Li et al., 
+NuminaMath-1.5]
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Supervised Finetuning on Mathematical 
+Data
+14
+Problem: Suppose that the sum of the squares of two 
+complex numbers  and  is , and the sum of their cubes 
+is 
+. List all possible values for 
+, separated by 
+commas.
+𝑥
+𝑦
+7
+10
+𝑥+ 𝑦
+           >>> [-5, -5, 1, 1, 4, 4]
+Solution: Let’s use `sympy` to calculate and print all 
+possible values for 
+.
+𝑥+ 𝑦
+Removing duplicates, the possible values for 
+ 
+are \boxed{-5, 1, 4}
+𝑥+ 𝑦
+• Training data is foremost important
+• Problems + (step-by-step, tool-integrated) 
+solutions curated by humans and LLMs
+• Size of largest public datasets: ~900K
+• What if the data has final answers but not 
+intermediate steps ?
+[Li et al., 
+NuminaMath-1.5]
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Reinforcement Learning on Verifiable 
+Problems
+15
+Problem: Suppose that the sum of the squares of two 
+complex numbers  and  is , and the sum of their cubes 
+is 
+. List all possible values for 
+, separated by 
+commas.
+𝑥
+𝑦
+7
+10
+𝑥+ 𝑦
+           >>> [-5, -5, 1, 1, 4, 4]
+Solution: Let’s use `sympy` to calculate and print all 
+possible values for 
+.
+𝑥+ 𝑦
+Removing duplicates, the possible values for 
+ 
+are \boxed{-5, 1, 4}
+𝑥+ 𝑦
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Reinforcement Learning on Verifiable 
+Problems
+16
+Problem: Suppose that the sum of the squares of two 
+complex numbers  and  is , and the sum of their cubes 
+is 
+. List all possible values for 
+, separated by 
+commas.
+𝑥
+𝑦
+7
+10
+𝑥+ 𝑦
+           >>> [-5, -5, 1, 1, 4, 4]
+Solution: Let’s use `sympy` to calculate and print all 
+possible values for 
+.
+𝑥+ 𝑦
+Removing duplicates, the possible values for 
+ 
+are \boxed{-5, 1, 4}
+𝑥+ 𝑦
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Reinforcement Learning on Verifiable 
+Problems
+17
+Problem: Suppose that the sum of the squares of two 
+complex numbers  and  is , and the sum of their cubes 
+is 
+. List all possible values for 
+, separated by 
+commas.
+𝑥
+𝑦
+7
+10
+𝑥+ 𝑦
+           >>> [-5, -5, 1, 1, 4, 4]
+Solution: Let’s use `sympy` to calculate and print all 
+possible values for 
+.
+𝑥+ 𝑦
+Removing duplicates, the possible values for 
+ 
+are \boxed{-5, 1, 4}
+𝑥+ 𝑦
+Solution: ... \boxed{-5, 1, 
+4}
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Reinforcement Learning on Verifiable 
+Problems
+18
+Problem: Suppose that the sum of the squares of two 
+complex numbers  and  is , and the sum of their cubes 
+is 
+. List all possible values for 
+, separated by 
+commas.
+𝑥
+𝑦
+7
+10
+𝑥+ 𝑦
+           >>> [-5, -5, 1, 1, 4, 4]
+Solution: Let’s use `sympy` to calculate and print all 
+possible values for 
+.
+𝑥+ 𝑦
+Removing duplicates, the possible values for 
+ 
+are \boxed{-5, 1, 4}
+𝑥+ 𝑦
+Solution: ... \boxed{-5, 1, 
+4}
+• Verify the model’s solution by comparing the final 
+answer with the ground truth
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Reinforcement Learning on Verifiable 
+Problems
+19
+Problem: Suppose that the sum of the squares of two 
+complex numbers  and  is , and the sum of their cubes 
+is 
+. List all possible values for 
+, separated by 
+commas.
+𝑥
+𝑦
+7
+10
+𝑥+ 𝑦
+           >>> [-5, -5, 1, 1, 4, 4]
+Solution: Let’s use `sympy` to calculate and print all 
+possible values for 
+.
+𝑥+ 𝑦
+Removing duplicates, the possible values for 
+ 
+are \boxed{-5, 1, 4}
+𝑥+ 𝑦
+Solution: ... \boxed{-5, 1, 
+4}
+Solution: …\boxed{-2, 
+6}
+• Verify the model’s solution by comparing the final 
+answer with the ground truth
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Reinforcement Learning on Verifiable 
+Problems
+20
+Problem: Suppose that the sum of the squares of two 
+complex numbers  and  is , and the sum of their cubes 
+is 
+. List all possible values for 
+, separated by 
+commas.
+𝑥
+𝑦
+7
+10
+𝑥+ 𝑦
+           >>> [-5, -5, 1, 1, 4, 4]
+Solution: Let’s use `sympy` to calculate and print all 
+possible values for 
+.
+𝑥+ 𝑦
+Removing duplicates, the possible values for 
+ 
+are \boxed{-5, 1, 4}
+𝑥+ 𝑦
+Solution: ... \boxed{-5, 1, 
+4}
+Solution: …\boxed{-2, 
+6}
+• Verify the model’s solution by comparing the final 
+answer with the ground truth
+• RL algorithms such as GRPO optimize the model 
+to achieve high rewards
+• Popularized by DeepSeek-R1
+Reward
+[Guo et al., 2025]
+Feedback
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Reinforcement Learning on Verifiable 
+Problems
+21
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Reinforcement Learning on Verifiable 
+Problems
+22
+Problem: Suppose that the sum of the squares of two 
+complex numbers  and  is , and the sum of their cubes 
+is 
+. List all possible values for 
+, separated by 
+commas.
+𝑥
+𝑦
+7
+10
+𝑥+ 𝑦
+           >>> [-5, -5, 1, 1, 4, 4]
+Solution: Let’s use `sympy` to calculate and print all 
+possible values for 
+.
+𝑥+ 𝑦
+Removing duplicates, the possible values for 
+ 
+are \boxed{-5, 1, 4}
+𝑥+ 𝑦
+Solution: ... \boxed{-5, 1, 
+4}
+Solution: …\boxed{-2, 
+6}
+• Verify the model’s solution by comparing the final 
+answer with the ground truth
+• RL algorithms such as GRPO optimize the model 
+to achieve high rewards
+• Popularized by DeepSeek-R1
+• The solution must be verifiable, e.g., w/ 
+numeric answers. Not applicable to proofs?
+[Guo et al., 2025]
+Reward
+Feedback
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+How LLMs are Trained to Solve Math 
+Problems?
+• State-of-the-art math LLM ≈ strong pretrained model + two post-training 
+techniques + marvelous engineering
+• Supervised finetuning (SFT): “Good data is all you need!”
+• Reinforcement learning (RL): “Verifiability is all you need!”
+23
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+How LLMs are Trained to Solve Math 
+Problems?
+• State-of-the-art math LLM ≈ strong pretrained model + two post-training 
+techniques + marvelous engineering
+• Supervised finetuning (SFT): “Good data is all you need!”
+• Reinforcement learning (RL): “Verifiability is all you need!”
+• Will AI soon “solve mathematics”?
+24
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Gap 1: Pre-college Math -> Advanced Math
+• Existing successes are mostly on pre-college math, e.g., AIME, IMO
+• LLMs struggle with more advanced math, e.g., mathematical research
+• o3’s FrontierMath results come with caveats
+• How to solve problems w/o numeric answers?
+25
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Gap 2: Guessing Answers -> Writing Proofs
+• LLMs struggle to generate valid proofs
+26
+[Kevin Buzzard “Can AI do maths yet? Thoughts from a mathematician” 
+2024]
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Gap 2: Guessing Answers -> Writing Proofs
+• LLMs struggle to generate valid proofs
+27
+[Petrov et al. "Proof or Bluff? Evaluating LLMs on 2025 USA Math Olympiad" 
+2025]
+[Kevin Buzzard “Can AI do maths yet? Thoughts from a mathematician” 
+2024]
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Gap 2: Guessing Answers -> Writing Proofs
+• LLMs struggle to generate valid proofs
+28
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+LLMs Alone are Not Enough
+• Current math LLMs rely heavily on data and verifiability
+• Data scarcity
+• Limited to data-rich domains, e.g., pre-college math
+• Cannot tackle advanced math or proofs
+• Lack of verifiability
+• Solutions can only be evaluated by comparing with the ground truth
+• Limited to problems with numeric solutions, e.g., GSM8K, MATH
+• Not applicable to most problems in advanced math
+29
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Formal Mathematical Reasoning
+• Our position paper
+• Mathematical reasoning grounded in formal systems, e.g.,
+• First/higher-order logic
+• Dependent type theory
+• Computer programs & formal specifications
+• Formal environments can verify proofs and provide automatic feedback
+• Verification enables rigorous evaluation of reasoning
+• Learning from feedback mitigates data scarcity
+• Integrating formal reasoning and LLMs’ informal reasoning
+30
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+The Missing Ingredient: Formal Reasoning
+31
+[Yang et al. "Formal Mathematical Reasoning: A New Frontier in AI" 
+2024]
+• Mathematical reasoning grounded in formal systems, e.g.,
+• First/higher-order logic, dependent type theory
+• Computer programs & formal specifications
+• Formal systems can verify proofs and provide automatic feedback
+• Learning from feedback mitigates data scarcity
+• Verification enables rigorous evaluation of reasoning
+• We need to integrate formal reasoning with informal reasoning by LLMs
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Proof Assistants (Interactive Theorem 
+Provers)
+• Programming languages for writing formal math and software
+32
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Formalizing Mathematics in Lean
+33
+Lean file
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Formalizing Mathematics in Lean
+34
+n : ℕ 
+⊢ add 0 n = n
+⊢ add 0 0 = 0
+n’ : ℕ
+ih: add 0 n’ = n’ 
+⊢ add 0 (n’+1) = n’+1
+Proof tree
+Local context
+⊢ Goal
+Tactic
+induction 
+n
+rfl
+simp [add, ih]
+Lean file
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Formalizing Mathematics in Lean
+35
+n : ℕ 
+⊢ add 0 n = n
+⊢ add 0 0 = 0
+n’ : ℕ
+ih: add 0 n’ = n’ 
+⊢ add 0 (n’+1) = n’+1
+Proof tree
+Local context
+⊢ Goal
+Tactic
+induction 
+n
+rfl
+simp [add, ih]
+Lean file
+Project
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Formalizing Mathematics in Lean
+36
+n : ℕ 
+⊢ add 0 n = n
+⊢ add 0 0 = 0
+n’ : ℕ
+ih: add 0 n’ = n’ 
+⊢ add 0 (n’+1) = n’+1
+Proof tree
+Local context
+⊢ Goal
+Tactic
+induction 
+n
+rfl
+simp [add, ih]
+Lean file
+Project
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Example of AI + Lean: AlphaProof
+37
+• Large-scale search and reinforcement learning using feedback from Lean
+[Google DeepMind "AI achieves silver-medal standard solving International Mathematical Olympiad problems" 
+2024]
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+AI Meets Formal Mathematics
+38
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+AI Meets Formal Mathematics
+39
+• Theorems and proofs are 
+represented formally in Lean
+• Lean can check if the proof is 
+correct. No room for hallucination
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+AI Meets Formal Mathematics
+40
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+AI Meets Formal Mathematics
+41
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+AI Meets Formal Mathematics
+42
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+LLMs for Theorem Proving
+• We can train LLMs to generate either
+• Next steps in the proof (a.k.a. tactic)
+• Complete proofs
+• Proof steps can be assembled into complete 
+proofs using search algorithms
+• How to generate the next step?
+43
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+LLMs for Theorem Proving
+44
+• We can train LLMs to generate either
+• Next steps in the proof (a.k.a. tactic)
+• Complete proofs
+• Proof steps can be assembled into complete 
+proofs using search algorithms
+• How to generate the next step?
+• Learn from human-written formal proofs
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Machine Learning for Predicting the Next 
+Step
+• Classical ML algorithms, e.g., KNN
+• Deep neural networks
+• LLMs
+45
+[Gauthier et al. "TacticToe: Learning to Prove with Tactics" 2018]
+[Huang et al. “GamePad: A Learning Environment for Theorem Proving” ICLR 2019]
+[Yang et al. “Learning to Prove Theorems via Interacting with Proof Assistants” ICML 2019]
+[Yang et al. “Learning to Prove Theorems via Interacting with Proof Assistants” ICML 2019]
+[Bansal et al. "HOList: An Environment for Machine Learning of Higher-Order Theorem Proving" ICML 
+2019]
+[Polu and Sutskever "Generative Language Modeling for Automated Theorem Proving" 
+2020]
+[Lample et al. "HyperTree Proof Search for Neural Theorem Proving" NeurIPS 2022]
+[Han et al. "Proof Artifact Co-training for Theorem Proving with Language Models" ICLR 
+2022]
+…
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+LeanDojo
+46
+[Yang et al. “LeanDojo: Theorem Proving in Lean using Language Models” NeurIPS 
+2023]
+• Previous LLM-based provers are private
+• LeanDojo provides open-source
+• Data for training and evaluation
+• Trained model checkpoints
+• Tools for extracting data and interacting with Lean
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+LeanDojo
+47
+Lean 
+Data 
+extraction
+LeanDojo Benchmark
+•
+98,641 theorems and proofs
+•
+217,639 tactics
+•
+129,162 premises
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+LeanDojo
+48
+Lean 
+Machine learning model
+Data 
+extraction
+Training
+LeanDojo Benchmark
+•
+98,641 theorems and proofs
+•
+217,639 tactics
+•
+129,162 premises
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+LeanDojo
+49
+Lean 
+Machine learning model
+Data 
+extraction
+Training
+Prove theorems by Interaction
+LeanDojo Benchmark
+•
+98,641 theorems and proofs
+•
+217,639 tactics
+•
+129,162 premises
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Retrieval-Augmented Prover (ReProver)
+50
+• Given a state, we retrieve premises from the set of all accessible premises
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Retrieval-Augmented Prover (ReProver)
+51
+• Given a state, we retrieve premises from the set of all accessible premises
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Retrieval-Augmented Prover (ReProver)
+52
+• Given a state, we retrieve premises from the set of all accessible premises
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Retrieval-Augmented Prover (ReProver)
+53
+• Given a state, we retrieve premises from the set of all accessible premises
+• Retrieved premises are concatenated with the state and used for tactic 
+generation
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Retrieval-Augmented Prover (ReProver)
+54
+• Given a state, we retrieve premises from the set of all accessible premises
+• Retrieved premises are concatenated with the state and used for tactic 
+generation
+
+Summary: A Typical Neural Theorem Prover
+55
+n : ℕ 
+⊢ add 0 n = n
+⊢ add 0 0 = 0
+n’ : ℕ
+ih: add 0 n’ = n’ 
+⊢ add 0 (n’+1) = 
+n’+1
+n : ℕ
+⊢ false
+⊢ add 0 0 = 0
+n’ : ℕ
+⊢ add 0 (n’+1) = 
+n’+1
+induction n
+cases n
+exfalso
+n’ : ℕ
+ih: add 0 n’ = n’ 
+⊢ add 0 (n’+1) = 
+n’+1
+rfl
+simp [add, ih]
+n’ : ℕ
+ih: add 0 n’ = n’ 
+⊢ add 0 (n’+1) = 
+n’+1
+simp [add, ih]
+rw [ih]
+linarith
+…
+…
+…
+…
+…
+…
+…
+…
+…
+…
+Formal math library
+Local context + 
+goal
+Tactic 
+suggestion
+s
+Language 
+model
+rw [ih]
+linarith
+Tactic 
+generation
+Proof search
+
+
+Limitations
+• LLMs work well in domains with abundant data, but novel mathematical research 
+is data-scarce
+• The “action space” in proving mathematical theorems large
+• Go: 19x19 board. Math: infinite?
+• Hard to cover the space uniformly by human-created data
+• Exploration is difficult in reinforcement learning
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Taming the Action Space in Proving Inequalities
+𝟐𝒂𝟐+ 𝒃𝟐+ 𝟐𝒄𝟐+ 𝒃𝟐
+𝟐
+≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐  ≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+QED.
+Given 
+ three reals, prove that
+𝑎, 𝑏, 𝑐
+𝒂𝒃+ 𝒃𝒄+ 𝒄𝒂≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+(𝟐𝒂𝟐+ 𝒃𝟐)(𝟐𝒄𝟐+ 𝒃𝟐) ≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+Apply AM-GM
+Simplify
+Apply Cauchy-Schwarz
+QED.
+Given 
+ three reals, prove that
+𝑎, 𝑏, 𝑐
+𝒂𝒃+ 𝒃𝒄+ 𝒄𝒂≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+Neural network
+𝐱∧𝐲∨𝐳
+∀∃⊨
+𝐚𝟐= 𝟏
+Symbolic tool
++
+[Li et al. "Proving Olympiad Inequalities by Synergizing LLMs and Symbolic Reasoning" ICLR 
+2025]
+
+Infinite Proof Search Space
+…
+…
+…
+…
+…
+…
+…
+…
+…
+>10,000 potential one-steps options
+AM-GM (1)
+Titu
+Rewrite
+Problem: If 
+are positive reals and 
+, then
+𝑎,  𝑏,  𝑐
+𝑎2 + 𝑏2 + 𝑐2 = 1
+1
+𝑎2 + 2 +
+1
+𝑏2 + 2 +
+1
+𝑐2 + 2 ≤
+1
+6𝑎𝑏+ 𝑐2 +
+1
+6𝑏𝑐+ 𝑎2 +
+1
+6𝑐𝑎+ 𝑏2
+1
+2√2𝑎
++
+1
+2√2𝑏
++
+1
+2√2𝑐
+≤
+1
+6𝑎𝑏+ 𝑐2 +
+1
+6𝑏𝑐+ 𝑎2 +
+1
+6𝑐𝑎+ 𝑏2
+1
+𝑎2 + 2 +
+1
+𝑏2 + 2 +
+1
+𝑐2 + 2 ≤
+9
+6𝑎𝑏+ 6𝑏𝑐+ 6𝑐𝑎+ 𝑎2 + 𝑏2 + 𝑐2
+1
+3𝑎2 + 2𝑏2 + 𝑐2 +
+1
+3𝑏2 + 2𝑎2 + 2𝑐2 +
+1
+3𝑐2 + 2𝑎2 + 2𝑏2 ≤
+1
+6𝑎𝑏+ 𝑐2 +
+1
+6𝑏𝑐+ 𝑎2 +
+1
+6𝑐𝑎+ 𝑏2
+1
+𝑎2 + 2 +
+1
+𝑏2 + 2 +
+1
+𝑐2 + 2 ≤3[(6𝑎𝑏+ 𝑐2)(6𝑏𝑐+ 𝑎2)(6𝑎𝑏+ 𝑐2)]
+−1
+3
+AM-GM (2)
+
+Manually Checking o1’s Proofs
+…
+o1-preview
+o3-mini
+DeepSeek-R1
+Gold medalists
+#Solved Olympiad-level Inequalities
+0/20
+3/20
+4/20
+15/20
+
+Tactic Generation & Pruning
+• We categorize the steps in inequality proving into two types: 
+1) Scaling: substitute the given inequality using a known lemma (e.g., Cauchy-
+Schwarz) 
+2) Rewriting: transform the given inequality into an equivalent form  
+• We enumerate and prune the scaling tactics using symbolic tools
+Given 
+ three reals, prove that
+𝑎, 𝑏, 𝑐
+𝒂𝒃+ 𝒃𝒄+ 𝒄𝒂≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+Cauchy_Schwarz_left_sqrt_2vars 
+𝒖𝟏𝒗𝟏+ 𝒖𝟐𝒗𝟐  ≤
+𝒖𝟐
+𝟏+ 𝒖𝟐
+𝟐 
+𝒗𝟐
+𝟏+ 𝒗𝟐
+𝟐
+Pattern match
+Enumerate and prune all 
+patterns using symbolic tools
+u1:=1, u2:=1, v1:=a, v2:=b
+u1:=a, u2:=1, v1:=1, v2:=b
+u1:=c, u2:=b, v1:=a, v2:=c
+u1:=1, u2:=1, v1:=a, v2:=b
+u1:=1, u2:=b, v1:=a, v2:=1
+u1:=1, u2:=a, v1:=b, v2:=1  
+  … …
+(𝟐𝒂𝟐+ 𝒃𝟐)(𝟐𝒄𝟐+ 𝒃𝟐) ≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+
+Tactic Generation & Pruning
+• We categorize the steps in inequality proving into two types: 
+1) Scaling: substitute the given inequality using a known lemma (e.g., Cauchy-
+Schwarz) 
+2) Rewriting: transform the given inequality into an equivalent form (e.g., fraction 
+reduction)
+Given 
+ three reals, prove that
+𝑎, 𝑏, 𝑐
+𝒂𝒃+ 𝒃𝒄+ 𝒄𝒂≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+Prompt: You should rewrite the inequality given by 
+the user according to the rule x*y+y*z = 
+y*(x+z)
+Please reason step by step 
+Problem: {problem} 
+Let's rewrite the inequality \( ab + bc + ca \leq a^2 + b^2 + 
+c^2 \) step by step according to the rule \( xy + yz = y(x + z) 
+\).
+### Step 1: … 
+… …
+### Conclusion:
+The inequality \( ab + bc + ca \leq a^2 + b^2 + c^2 \) can be 
+rewritten as:
+\[
+a(b-a)+b(c-b)+c(a-c) \leq 0
+\]
+
+ 
+ 
+… …
+𝟑𝒂𝒃+ 𝟑𝒃𝒄+ 𝟑𝒄𝒂≤(𝒂+ 𝒃+ 𝒄)
+𝟐
+𝒂(𝒃−𝒂) + 𝒃(𝒄−𝒃) + 𝒄(𝒂−𝒄) ≤𝟎
+Rewriting
+LLM-generated transformation
+LIPS: LLM-based Inequality Prover with Symbolic Reasoning
+• Summary: we develop an inequality proving system, where LLM and symbolic 
+tools are used for rewriting and scaling the current inequality, respectively
+𝟐𝒂𝟐+ 𝒃𝟐+ 𝟐𝒄𝟐+ 𝒃𝟐
+𝟐
+≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐  ≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+QED.
+Given 
+ three reals, prove that
+𝑎, 𝑏, 𝑐
+𝒂𝒃+ 𝒃𝒄+ 𝒄𝒂≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+(𝟐𝒂𝟐+ 𝒃𝟐)(𝟐𝒄𝟐+ 𝒃𝟐) ≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+:  Proof step
+:  Neural reasoning
+:  Symbolic  reasoning
+scale AM_GM_2vars
+llm_simplify 
+scale 
+Cauchy_Schwarz_3vars 
+Goal filtering & ranking
+ …
+𝒂𝒃+ 𝒃𝒄+ 𝒄𝒂≤(𝒂+ 𝒃)
+𝟐−𝟐𝒂𝒃+ 𝒄𝟐
+𝒂𝒃+ 𝒃𝒄+ 𝒄𝒂≤𝟑
+𝟑𝒂𝟐𝒃𝟐𝒄𝟐
+Symbolic filtering
+1.  
+ 
+2. 
+ …
+(𝟐𝒂𝟐+ 𝒃𝟐)(𝟐𝒄𝟐+ 𝒃𝟐) ≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+𝟑𝒂𝒃+ 𝟑𝒃𝒄+ 𝟑𝒄𝒂≤(𝒂+ 𝒃+ 𝒄)
+𝟐
+LLM ranking
+Tactic generation & pruning
+ 
+… …
+𝒂𝒃+ 𝒃𝒄+ 𝒄𝒂≤𝟑
+𝟑𝒂𝟐𝒃𝟐𝒄𝟐
+(𝟐𝒂𝟐+ 𝒃𝟐)(𝟐𝒄𝟐+ 𝒃𝟐) ≤𝒂𝟐+ 𝒃𝟐+ 𝒄𝟐
+Scalin
+g
+Symbolic enumerating and pruning
+
+Experimental Results
+• Our system LIPS surpasses IMO Gold Medalists in inequality proving
+• LIPS achieves SoTA performance across various competition-level datasets
+DeepSeek-R1
+Gold medalists
+LIPS
+#Solved Olympiad-level Inequalities*
+4/20
+15/20
+16/20
+* Problems are collected from IMO competitions, national team selection test, training quizzes.
+
+Some Interesting Findings
+• LIPS finds novel proof paths expected to be impossible by human experts 
+ 
+“AM-GM alone is hopeless here...” 
+Evan Chen
+ (IMO Coach for Team USA)
+Generated by LIPS
+LIPS succeeds with exactly AM-GM
+Source: https://web.evanchen.cc/handouts/Ineq/en.pdf
+
+Takeaway
+• Challenge in theorem proving: How to efficiently explore an infinite action space?
+• Insights on a specific mathematical domain can be helpful
+• Open problem: generalizing across different domains?
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Theorem Proving
+67
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+Autoformalization
+68
+[Wu et al. "Autoformalization with Large Language Models" NeurIPS 
+2022]
+
+Autoformalizing Theorems and Proofs
+69
+Informal
+Formal
+
+• Autoformalizing theorems: informal theorem → formal theorem
+Autoformalizing Theorems and Proofs
+70
+Informal
+Formal
+
+• Autoformalizing theorems: informal theorem → formal theorem
+• Autoformalizing proofs: informal theorem & proof + formal theorem → formal proof
+Autoformalizing Theorems and Proofs
+71
+Informal
+Formal
+
+Hard to Evaluate Autoformalized Theorems
+No reliable automatic evaluation
+72
+Informal
+Formal
+
+Hard to Evaluate Autoformalized Theorems
+No reliable automatic evaluation
+73
+Alternatives
+Informal
+Formal
+
+Hard to Evaluate Autoformalized Theorems
+No reliable automatic evaluation
+74
+Informal
+Formal
+…
+Alternatives
+
+• Equivalence checking is infeasible
+Hard to Evaluate Autoformalized Theorems
+No reliable automatic evaluation
+75
+…
+Informal
+Formal
+Alternatives
+
+• Equivalence checking is infeasible
+• Human evaluation is expensive
+• Proxy metrics (e.g., BLEU) are inaccurate
+Hard to Evaluate Autoformalized Theorems
+No reliable automatic evaluation
+76
+…
+Informal
+Formal
+Alternatives
+
+Reasoning Gaps in Informal Proofs
+77
+Informal
+Formal
+• Informal proofs have reasoning gaps
+• Explicit gaps: “left to the reader”
+• Implicit gaps
+• Formal proofs must be gap-free
+
+Key Challenges in Autoformalization
+• Theorems: No reliable automatic evaluation
+• Proofs: Reasoning gaps ubiquitous in informal proofs 
+78
+Informal
+Formal
+
+Key Challenges in Autoformalization
+• Theorems: No reliable automatic evaluation
+• Proofs: Reasoning gaps ubiquitous in informal proofs 
+79
+Informal
+Formal
+Things intractable in general can be made tractable 
+in a specific domain
+
+Euclidean Geometry
+An arena for human and machine intelligence
+80
+Euclid (Εὐκλείδης), 300 BC
+[Trinh et al., AlphaGeometry, Nature 2024]
+
+• LeanEuclid: Benchmark for autoformalizing Euclidean geometry
+• 48 from Euclid’s Elements; 125 from UniGeo    [Chen et al., UniGeo, EMNLP 2022]
+Autoformalizing Euclidean Geometry
+81
+
+• LeanEuclid: Benchmark for autoformalizing Euclidean geometry
+• 48 from Euclid’s Elements; 125 from UniGeo    [Chen et al., UniGeo, EMNLP 2022]
+Autoformalizing Euclidean Geometry
+82
+Informal theorem, proof, diagram
+
+• LeanEuclid: Benchmark for autoformalizing Euclidean geometry
+• 48 from Euclid’s Elements; 125 from UniGeo    [Chen et al., UniGeo, EMNLP 2022]
+Autoformalizing Euclidean Geometry
+83
+Informal theorem, proof, diagram
+Formal theorem & proof in Lean
+
+• LeanEuclid: Benchmark for autoformalizing Euclidean geometry
+• 48 from Euclid’s Elements; 125 from UniGeo    [Chen et al., UniGeo, EMNLP 2022]
+Autoformalizing Euclidean Geometry
+84
+Informal theorem, proof, diagram
+Formal theorem & proof in Lean
+First to faithfully formalize proofs in  
+Euclid’s Elements
+
+Logical Gaps in Euclid’s Proofs
+85
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+Elements, Book I, Proposition 24
+
+Logical Gaps in Euclid’s Proofs
+86
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+Elements, Book I, Proposition 24
+
+Logical Gaps in Euclid’s Proofs
+87
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+Elements, Book I, Proposition 24
+
+Logical Gaps in Euclid’s Proofs
+88
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+Only need to prove∠𝐸𝐹𝐺> ∠𝐸𝐺𝐹
+Elements, Book I, Proposition 24
+
+Logical Gaps in Euclid’s Proofs
+89
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+Only need to prove∠𝐸𝐹𝐺> ∠𝐸𝐺𝐹
+△𝐷𝐺𝐹is isosceles!
+∠𝐷𝐺𝐹= ∠𝐷𝐹𝐺
+Elements, Book I, Proposition 24
+
+Logical Gaps in Euclid’s Proofs
+90
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+Elements, Book I, Proposition 24
+
+Logical Gaps in Euclid’s Proofs
+91
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+Elements, Book I, Proposition 24
+
+Logical Gaps in Euclid’s Proofs
+92
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+Elements, Book I, Proposition 24
+
+Logical Gaps in Euclid’s Proofs
+93
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+△𝐷𝐺𝐹is isosceles
+∠𝐷𝐺𝐹= ∠𝐷𝐹𝐺= 𝛼
+Elements, Book I, Proposition 24
+
+Logical Gaps in Euclid’s Proofs
+94
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+Need to prove𝑥> 𝑦
+△𝐷𝐺𝐹is isosceles
+∠𝐷𝐺𝐹= ∠𝐷𝐹𝐺= 𝛼
+Elements, Book I, Proposition 24
+
+Logical Gaps in Euclid’s Proofs
+95
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+Need to prove𝑥> 𝑦
+△𝐷𝐺𝐹is isosceles
+∠𝐷𝐺𝐹= ∠𝐷𝐹𝐺= 𝛼
+∠𝐷𝐺𝐸= 𝛼+ 𝑦< 𝜋
+Elements, Book I, Proposition 24
+
+Logical Gaps in Euclid’s Proofs
+Elements, Book I, Proposition 24
+96
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+Need to prove𝑥> 𝑦
+△𝐷𝐺𝐹is isosceles
+∠𝐷𝐺𝐹= ∠𝐷𝐹𝐺= 𝛼
+∠𝐷𝐺𝐸= 𝛼+ 𝑦< 𝜋
+∠𝐷𝐹𝐸= 2𝜋−𝛼−𝑥< 𝜋
+
+Logical Gaps in Euclid’s Proofs
+97
+|𝐴𝐶| = |𝐷𝐹|
+|𝐴𝐵| = |𝐷𝐸|
+∠𝐵𝐴𝐶> ∠𝐸𝐷𝐹
+|𝐵𝐶| > |𝐸𝐹|
+⟹
+Need to prove𝑥> 𝑦
+△𝐷𝐺𝐹is isosceles
+∠𝐷𝐺𝐹= ∠𝐷𝐹𝐺= 𝛼
+∠𝐷𝐺𝐸= 𝛼+ 𝑦< 𝜋
+∠𝐷𝐹𝐸= 2𝜋−𝛼−𝑥< 𝜋
+2𝜋−𝑥+ 𝑦< 2𝜋
+⟹
+Q.E.D.
+Elements, Book I, Proposition 24
+
+Equivalence Checking Between Theorems
+• Two theorems 
+ and 
+ are equivalent iff we can prove 
+• Symbolic reasoning engine based on SMT solvers
+𝑇1
+𝑇2
+𝑇1 ⟺𝑇2
+98
+
+Diagrammatic Reasoning
+Ubiquitous reasoning gaps in Euclidean geometry
+• Geometry proofs rely on diagrams that are hard to formalize
+• Example: Euclid’s Elements, Book I, Proposition 1
+99
+One can construct a equilateral triangle given two distinct points
+
+Diagrammatic Reasoning
+Ubiquitous reasoning gaps in Euclidean geometry
+• Geometry proofs rely on diagrams that are hard to formalize
+• Example: Euclid’s Elements, Book I, Proposition 1
+100
+One can construct a equilateral triangle given two distinct points
+
+Diagrammatic Reasoning
+Ubiquitous reasoning gaps in Euclidean geometry
+• Geometry proofs rely on diagrams that are hard to formalize
+• Example: Euclid’s Elements, Book I, Proposition 1
+101
+One can construct a equilateral triangle given two distinct points
+
+Diagrammatic Reasoning
+Ubiquitous reasoning gaps in Euclidean geometry
+• Geometry proofs rely on diagrams that are hard to formalize
+• Example: Euclid’s Elements, Book I, Proposition 1
+102
+One can construct a equilateral triangle given two distinct points
+
+Diagrammatic Reasoning
+Ubiquitous reasoning gaps in Euclidean geometry
+103
+One can construct a equilateral triangle given two distinct points
+• Geometry proofs rely on diagrams that are hard to formalize
+• Example: Euclid’s Elements, Book I, Proposition 1
+
+Diagrammatic Reasoning
+Ubiquitous reasoning gaps in Euclidean geometry
+• Geometry proofs rely on diagrams that are hard to formalize
+• Example: Euclid’s Elements, Book I, Proposition 1
+104
+One can construct a equilateral triangle given two distinct points
+Did we prove C exists?
+
+Modeling Diagrammatic Reasoning
+The Formal System E
+• Diagrammatic reasoning are logical consequences of "diagrammatic rules”
+• We implement E in Lean and automate diagrammatic reasoning using SMT 
+solvers
+105
+[Avigad et al., "A formal system for Euclid's Elements", 2008]
+
+Putting It Together
+106
+
+Putting It Together
+107
+
+Putting It Together
+108
+
+Putting It Together
+109
+
+Putting It Together
+110
+
+Putting It Together
+111
+
+Experiments: Autoformalizing Theorems
+112
+
+Takeaways
+• Two challenges in autoformalization
+• Autoformalized theorems are difficult to evaluate
+• Autoformalizing proofs require filling in reasoning gaps
+• They can be addresses leveraging knowledge in specific domains
+• Open problem: How to generalize across domains?
+113
+
+Formal Reasoning Meets LLMs: Towards AI for Mathematics and 
+Verification
+AI Meets Formal Mathematics
+114

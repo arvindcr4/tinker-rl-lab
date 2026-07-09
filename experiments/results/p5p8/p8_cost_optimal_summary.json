@@ -1,0 +1,39 @@
+{
+  "C_inv": 0.5,
+  "c_sense": {
+    "XGB-20raw": 0.0,
+    "XGB-24full": 0.0035,
+    "XGB-4sensor": 0.0035
+  },
+  "N": 10000,
+  "n_boot": 400,
+  "rho_grid": [
+    2,
+    5,
+    10,
+    20,
+    50,
+    100,
+    200,
+    500
+  ],
+  "contrasts": {
+    "XGB-24full_vs_XGB-4sensor": {
+      "n_rho_ci_excludes_zero": 8,
+      "n_rho": 8,
+      "a_cheaper_at_all_rho": true
+    },
+    "XGB-24full_vs_XGB-20raw": {
+      "n_rho_ci_excludes_zero": 2,
+      "n_rho": 8,
+      "a_cheaper_at_all_rho": false
+    },
+    "XGB-20raw_vs_XGB-4sensor": {
+      "n_rho_ci_excludes_zero": 8,
+      "n_rho": 8,
+      "a_cheaper_at_all_rho": true
+    }
+  },
+  "breakeven_L_usd_24full_beats_20raw": 5.5,
+  "breakeven_rho": 11.0
+}

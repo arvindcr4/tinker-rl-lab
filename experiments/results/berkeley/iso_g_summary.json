@@ -1,0 +1,67 @@
+{
+  "ts": "2026-07-04T10:59:05.057425+00:00",
+  "iter": 20,
+  "row_id": 19,
+  "thread": "B-SYNTH (cross-course synthesis)",
+  "title": "Iso-G: Iso-Yield Dynamic Grouping",
+  "inputs_synthesised": [
+    "Frontier Round 2 (Gemini): Y(p,G) = 1 - [p^G + (1-p)^G - \u03b4_div]",
+    "Row 18 (CFR bounded cone): 4/4 acc(G=64) <= acc(G=32)",
+    "Row 02 (DPO/IRPO): G*_GRPO = G*_IRPO at every T, slope +0.500/decade",
+    "Row 16 (CDH Echo): learned components amplify coupling 3.82\u00d7",
+    "Row 11 (channel-decomp): magnitude-axis dominance across 9 methods",
+    "Iter 107: mean_zvf drops 0.838 \u2192 0.631 over G=2 \u2192 16"
+  ],
+  "hypotheses": {
+    "H1_anti_herding": {
+      "n_positive": 0,
+      "n_total": 4,
+      "monotonic": true,
+      "deltas": [
+        -0.10707191999999999,
+        -0.20974604492187476,
+        -0.36419470190919356,
+        -0.5171687693055512
+      ],
+      "verdict": "NULL"
+    },
+    "H2_iso_yield": {
+      "n_decisive_p_le_0.8": 3,
+      "n_total": 5,
+      "verdict": "NULL"
+    },
+    "H3_bounded_cone_recovery": {
+      "n_recovered": 0,
+      "n_total": 4,
+      "verdict": "NULL"
+    },
+    "H4_cross_pillar_mag_delta_div": {
+      "spearman_rho": "+0.5000",
+      "p_one_sided": "0.0633",
+      "n_methods": 9,
+      "verdict": "DECISIVE"
+    },
+    "H5_CDH_echo_iso_le_raw": {
+      "n_iso_le_raw": 0,
+      "n_total": 4,
+      "verdict": "NULL"
+    }
+  },
+  "verdict_counts": {
+    "DECISIVE": 1,
+    "TOTAL": 5
+  },
+  "outputs": {
+    "h1": "experiments/results/berkeley/iso_g_anti_herding.tsv",
+    "h2": "experiments/results/berkeley/iso_g_iso_yield.tsv",
+    "h3": "experiments/results/berkeley/iso_g_bounded_cone_recovery.tsv",
+    "h4": "experiments/results/berkeley/iso_g_cross_pillar.tsv",
+    "h5": "experiments/results/berkeley/iso_g_cdh_echo.tsv"
+  },
+  "data_inputs": [
+    "experiments/results/group_size_effect.tsv",
+    "experiments/results/group_size_iter127_joint_fit.tsv",
+    "experiments/results/group_size_iter127_optimal_g.tsv",
+    "experiments/results/zvf_iter130_method_risk.tsv"
+  ]
+}

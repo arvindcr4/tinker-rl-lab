@@ -1,0 +1,98 @@
+% Paper 6 (GRPO-Registry) appendix: artifact reference
+\section{Artifact Reference}
+\label{sec:p6-appendix}
+
+\subsection{Layout and Validation}
+\label{sec:p6-appendix-layout}
+The artifact ships in the benchmark repository:
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single,
+  caption={Artifact layout.}, label={lst:p6-layout}]
+registry/
+  schema.json          # JSON Schema, draft 2020-12; record types:
+                       #   stack | variant_delta
+  entries/             # 20 stack records + 11 variant-delta records
+    trl_grpo_qwen3-8b_gsm8k.json        verl_grpo_qwen3-8b_gsm8k.json
+    openrlhf_grpo_qwen3-8b_gsm8k.json   tinker_grpo_qwen3-8b_gsm8k.json
+    colab-open_grpo_e3.json             colab-open_drgrpo_e3.json
+    colab-open_dapo_e3.json             colab-open_grpo-adaptiveg_e3.json
+    tinker_grpo_qwen3.5-4b_gsm8k.json   tinker_dapo_qwen3.5-4b_gsm8k.json
+    tinker_drgrpo_qwen3.5-4b_gsm8k.json tinker_gspo_qwen3.5-4b_gsm8k.json
+    delta_dapo.json  delta_drgrpo.json  delta_gspo.json
+  query.py             # reference CLI (stdlib only)
+  README.md
+\end{lstlisting}
+
+Every entry validates against the schema:
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single]
+python3 -c "import json, glob, jsonschema; \
+  s = json.load(open('registry/schema.json')); \
+  [jsonschema.validate(json.load(open(p)), s) \
+   for p in glob.glob('registry/entries/*.json')]"
+\end{lstlisting}
+
+\subsection{A Complete Variant-Delta Record}
+\label{sec:p6-appendix-delta}
+The DAPO record, verified against the source paper~\citep{yu2025dapo}:
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single,
+  caption={\texttt{entries/delta_dapo.json} (whitespace compressed).},
+  label={lst:p6-delta-dapo}]
+{ "record_type": "variant_delta", "schema_version": "0.1.0",
+  "id": "delta_dapo", "name": "DAPO", "base": "grpo",
+  "citation": { "bibkey": "yu2025dapo", "arxiv": "2503.14476",
+    "title": "DAPO: An Open-Source LLM Reinforcement Learning
+              System at Scale" },
+  "deltas": [
+   {"component": "clip_higher",
+    "field": "loss_form.clip_eps_high",
+    "change": "asymmetric (decoupled) clip: eps_low=0.2,
+               eps_high=0.28"},
+   {"component": "dynamic_sampling",
+    "field": "sampling.dynamic_sampling",
+    "change": "filter prompts whose groups have zero reward
+               variance and resample until the batch is full"},
+   {"component": "token_level_loss",
+    "field": "loss_form.aggregation",
+    "change": "token-level policy-gradient loss (mean over all
+               tokens in the batch rather than per-sequence
+               averaging)"},
+   {"component": "overlong_reward_shaping",
+    "field": "reward.overlong_shaping",
+    "change": "soft length-aware penalty for truncated/overlong
+               completions"},
+   {"component": "kl_removed", "field": "reference_kl",
+    "change": "KL regularization term removed from the objective"}],
+  "notes": "Four named techniques plus removal of the KL term,
+            per the source paper." }
+\end{lstlisting}
+
+\subsection{Badge Output on the Seed Entries}
+\label{sec:p6-appendix-badge}
+Verbatim (columns: per-item coverage $c_1..c_7$ order as in
+Section~\ref{sec:p6-schema-stack}); this is the source of the badge column in
+Table~\ref{tab:p6-entries}:
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single,
+  caption={\texttt{python3 registry/query.py badge} (item columns
+  abbreviated).}, label={lst:p6-badge-out}]
+colab-open_dapo_e3            badge= 96  1.00 1.00 0.75 1.00 1.00 1.00 1.00
+colab-open_drgrpo_e3          badge= 96  1.00 1.00 0.75 1.00 1.00 1.00 1.00
+colab-open_grpo-adaptiveg_e3  badge= 96  1.00 1.00 0.75 1.00 1.00 1.00 1.00
+colab-open_grpo_e3            badge= 96  1.00 1.00 0.75 1.00 1.00 1.00 1.00
+openrlhf_grpo_qwen3-8b_gsm8k  badge= 60  0.17 1.00 1.00 0.00 1.00 1.00 0.00
+tinker_dapo_qwen3.5-4b        badge= 62  0.33 0.33 1.00 1.00 0.67 1.00 0.00
+tinker_drgrpo_qwen3.5-4b      badge= 62  0.33 0.33 1.00 1.00 0.67 1.00 0.00
+tinker_grpo_qwen3-8b_gsm8k    badge= 62  0.00 0.33 1.00 1.00 1.00 1.00 0.00
+tinker_grpo_qwen3.5-4b        badge= 57  0.00 0.33 1.00 1.00 0.67 1.00 0.00
+tinker_gspo_qwen3.5-4b        badge= 60  0.17 0.33 1.00 1.00 0.67 1.00 0.00
+trl_grpo_qwen3-8b_gsm8k       badge= 74  0.17 1.00 1.00 1.00 1.00 1.00 0.00
+verl_grpo_qwen3-8b_gsm8k      badge= 60  0.17 1.00 1.00 0.00 1.00 1.00 0.00
+\end{lstlisting}
+
+Systematic zeros in the last column (item 7, decontamination/parser probe)
+across all non-Colab entries quantify the reporting gap discussed in
+Section~\ref{sec:p6-population}: the one item no configuration dump captures,
+because it is a property of the experimental protocol rather than of the
+launcher.

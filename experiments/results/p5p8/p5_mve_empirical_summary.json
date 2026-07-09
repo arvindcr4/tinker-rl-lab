@@ -1,0 +1,30 @@
+{
+  "n_cells": 98,
+  "mean_baseline": 90.0,
+  "mean_augmented_weight20": 110.0,
+  "mean_augmented_weight10": 100.0,
+  "mean_delta_weight20": 20.0,
+  "mean_delta_weight10": 10.0,
+  "paired_bootstrap_95ci_lo_weight20": 20.0,
+  "paired_bootstrap_95ci_hi_weight20": 20.0,
+  "paired_bootstrap_95ci_lo_weight10": 10.0,
+  "paired_bootstrap_95ci_hi_weight10": 10.0,
+  "ci_excludes_zero_weight20": true,
+  "ci_excludes_zero_weight10": true,
+  "median_delta_weight20": 20.0,
+  "max_delta_weight20": 20.0,
+  "min_delta_weight20": 20.0,
+  "n_boot": 2000,
+  "seed": 20260704,
+  "mve_fields": [
+    "mean_reward",
+    "zvf",
+    "pcd",
+    "mean_completion_len",
+    "std_completion_len"
+  ],
+  "mve_weight_full": 20,
+  "mve_weight_low": 10,
+  "baseline_weight_total": 100,
+  "augmented_weight_total": 120
+}

@@ -1,0 +1,77 @@
+{
+  "iter": 90,
+  "pillar": "P6",
+  "n_methods_measured": 9,
+  "n_zvf130_stack_entries": 5,
+  "n_zvf130_with_populated_outcomes": 0,
+  "h1_gap_pct": 100.0,
+  "h1_headline": "H1: 0/5 (0%) zvf130 stack entries have outcomes.zvf_risk_mean populated; 100% gap (entries exist, measured values never recorded).",
+  "h2_per_method_delta_vs_grpo": {
+    "aero": {
+      "delta_mean": -0.147637,
+      "ci_lo": -0.282293,
+      "ci_hi": -0.009067,
+      "sig": true
+    },
+    "areal": {
+      "delta_mean": -0.245767,
+      "ci_lo": -0.355393,
+      "ci_hi": -0.135679,
+      "sig": true
+    },
+    "cppo": {
+      "delta_mean": -0.151077,
+      "ci_lo": -0.257385,
+      "ci_hi": -0.04951,
+      "sig": true
+    },
+    "es": {
+      "delta_mean": -0.272578,
+      "ci_lo": -0.374871,
+      "ci_hi": -0.169558,
+      "sig": true
+    },
+    "gift": {
+      "delta_mean": -0.263187,
+      "ci_lo": -0.367135,
+      "ci_hi": -0.159317,
+      "sig": true
+    },
+    "mcgrpo": {
+      "delta_mean": -0.174277,
+      "ci_lo": -0.285084,
+      "ci_hi": -0.059092,
+      "sig": true
+    },
+    "ngrpo": {
+      "delta_mean": -0.131025,
+      "ci_lo": -0.240804,
+      "ci_hi": -0.026451,
+      "sig": true
+    },
+    "scafgrpo": {
+      "delta_mean": -0.352361,
+      "ci_lo": -0.458802,
+      "ci_hi": -0.247191,
+      "sig": true
+    }
+  },
+  "h3_n_pairs_sig": 26,
+  "h3_total_pairs": 36,
+  "h3_pct_pairs_sig": 72.2,
+  "h4_spearman_claim_count_vs_zvf_risk": -0.4833,
+  "h4_spearman_ci_lo": -0.7667,
+  "h4_spearman_ci_hi": 0.6167,
+  "h4_headline": "H4: Spearman rho(claim_delta_count, zvf_risk_mean) = -0.4833, CI [-0.7667, +0.6167] on B=4000 bootstrap",
+  "h5_methods_with_entry_but_no_measured_data": [],
+  "n_no_measured_for_existing_entry": 0,
+  "B": 4000,
+  "seed": 20260705,
+  "registry_patch_targets": [
+    "zvf130_cppo",
+    "zvf130_es",
+    "zvf130_mcgrpo",
+    "zvf130_ngrpo",
+    "zvf130_scafgrpo"
+  ]
+}

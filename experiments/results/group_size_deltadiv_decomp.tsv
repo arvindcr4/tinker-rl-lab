@@ -1,0 +1,5 @@
+G	n_obs	delta_div_mean	delta_div_ci_low	delta_div_ci_high	p_emp_mean	zvf_emp_mean	zvf_iid_mean	in_frontier_band	verdict
+2	120	-0.0097	-0.0216	0.0022	0.8398	0.838	0.8283	no	near-iid
+4	120	-0.0548	-0.0725	-0.0382	0.8625	0.7635	0.7087	no	herd (emp ZVF > iid)
+8	120	-0.0937	-0.1184	-0.0698	0.8694	0.6906	0.5969	no	herd (emp ZVF > iid)
+16	120	-0.1089	-0.1394	-0.0802	0.8731	0.6312	0.5223	no	herd (emp ZVF > iid)

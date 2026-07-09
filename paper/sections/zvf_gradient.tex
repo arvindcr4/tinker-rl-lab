@@ -1,0 +1,48 @@
+% paper/sections/zvf_gradient.tex
+%
+% Pillar 2 (ZVF) cross-pillar elevation, iter18: ZVF x gradient-flow
+% coupling on the G-sweep (Qwen2.5-0.5B / synthetic arithmetic).
+% Source: scripts/zvf_gradient_coupling.py
+
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+$G$ & proxy & $r_{\text{Pearson}}$ & 3-seed range & $n$ \\
+\midrule
+2 & grad_norm & -0.640 & $[-0.802, -0.513]$ & 120 \\
+2 & advantage_variance & -0.588 & $[-0.619, -0.552]$ & 120 \\
+2 & entropy & -0.841 & $[-0.866, -0.801]$ & 120 \\
+2 & mean_reward & +0.795 & $[+0.766, +0.830]$ & 120 \\
+4 & grad_norm & -0.529 & $[-0.705, -0.268]$ & 120 \\
+4 & advantage_variance & -0.486 & $[-0.557, -0.416]$ & 120 \\
+4 & entropy & -0.909 & $[-0.957, -0.870]$ & 120 \\
+4 & mean_reward & +0.848 & $[+0.804, +0.905]$ & 120 \\
+8 & grad_norm & -0.545 & $[-0.635, -0.411]$ & 120 \\
+8 & advantage_variance & -0.468 & $[-0.568, -0.352]$ & 120 \\
+8 & entropy & -0.900 & $[-0.918, -0.871]$ & 120 \\
+8 & mean_reward & +0.826 & $[+0.784, +0.848]$ & 120 \\
+16 & grad_norm & -0.486 & $[-0.651, -0.389]$ & 120 \\
+16 & advantage_variance & -0.454 & $[-0.525, -0.407]$ & 120 \\
+16 & entropy & -0.882 & $[-0.894, -0.870]$ & 120 \\
+16 & mean_reward & +0.791 & $[+0.772, +0.812]$ & 120 \\
+\bottomrule
+\end{tabular}
+\caption{Per-step Pearson correlation between ZVF and gradient-flow
+proxies, pooled across seeds within each $G$. The ``3-seed range''
+column is the \emph{min and max} of the three per-seed Pearson $r$
+values (not a bootstrap confidence interval): e.g.\ for $G{=}2$,
+\texttt{grad\_norm} the range $[-0.802, -0.513]$ is exactly seed-123
+($-0.8021$) and seed-456 ($-0.5126$). $n = 120 = 3\text{ seeds}
+\times 40$ per-step observations; these per-step rows are strongly
+autocorrelated (lag-1 $\rho \approx 0.9$, cf.\
+\S\ref{sec:zvf-cross-experiment}), so the point estimates are
+descriptive and the range should not be read as an inferential
+interval. Source:
+\texttt{experiments/results/zvf\_gradient\_coupling\_pooled.tsv}
+(per-seed values in
+\texttt{experiments/results/zvf\_gradient\_coupling.tsv}).}
+\label{tab:zvf-gradient-coupling}
+\end{table}

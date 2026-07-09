@@ -1,0 +1,63 @@
+section	k1	k2	k3	k4	k5	k6	k7	value
+H1_pair	meta-llama/Llama-3.2-3B	humaneval_subset	2	0.6	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	meta-llama/Llama-3.2-3B	humaneval_subset	2	1.0	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	meta-llama/Llama-3.2-3B	humaneval_subset	4	1.0	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	meta-llama/Llama-3.2-3B	humaneval_subset	4	0.6	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	meta-llama/Llama-3.2-3B	humaneval_subset	8	0.6	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	meta-llama/Llama-3.2-3B	humaneval_subset	8	1.0	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	meta-llama/Llama-3.2-3B	humaneval_subset	16	0.6	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	meta-llama/Llama-3.2-3B	humaneval_subset	16	1.0	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_hard	2	0.6	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_hard	2	1.0	0	1	badge=72.5,|dR|=0.015625	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_hard	32	0.6	0	1	badge=72.5,|dR|=0.014648	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_hard	32	1.0	0	1	badge=72.5,|dR|=0.003906	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_hard	4	0.6	0	1	badge=72.5,|dR|=0.015625	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_hard	4	1.0	0	1	badge=72.5,|dR|=0.023438	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_hard	8	0.6	0	1	badge=72.5,|dR|=0.007812	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_hard	8	1.0	0	1	badge=72.5,|dR|=0.015625	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_hard	16	0.6	0	1	badge=72.5,|dR|=0.001953	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_hard	16	1.0	0	1	badge=72.5,|dR|=0.001953	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_easy	2	0.6	0	1	badge=72.5,|dR|=0.046875	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_easy	2	1.0	0	1	badge=72.5,|dR|=0.046875	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_easy	32	0.6	0	1	badge=72.5,|dR|=0.001953	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_easy	32	1.0	0	1	badge=72.5,|dR|=0.000977	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_easy	4	0.6	0	1	badge=72.5,|dR|=0.046875	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_easy	8	0.6	0	1	badge=72.5,|dR|=0.042969	
+H1_pair	meta-llama/Llama-3.2-3B	gsm8k_easy	16	0.6	0	1	badge=72.5,|dR|=0.005859	
+H1_pair	Qwen/Qwen3.5-4B	humaneval_subset	2	0.6	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	Qwen/Qwen3.5-4B	humaneval_subset	2	1.0	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	Qwen/Qwen3.5-4B	humaneval_subset	4	0.6	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	Qwen/Qwen3.5-4B	humaneval_subset	4	1.0	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	Qwen/Qwen3.5-4B	humaneval_subset	8	0.6	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	Qwen/Qwen3.5-4B	humaneval_subset	8	1.0	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	Qwen/Qwen3.5-4B	humaneval_subset	16	1.0	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	Qwen/Qwen3.5-4B	humaneval_subset	16	0.6	0	1	badge=72.5,|dR|=0.000000	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_hard	2	0.6	0	1	badge=72.5,|dR|=0.078125	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_hard	2	1.0	0	1	badge=72.5,|dR|=0.078125	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_hard	32	0.6	0	1	badge=72.5,|dR|=0.004883	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_hard	32	1.0	0	1	badge=72.5,|dR|=0.028320	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_hard	4	0.6	0	1	badge=72.5,|dR|=0.171875	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_hard	4	1.0	0	1	badge=72.5,|dR|=0.015625	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_hard	8	0.6	0	1	badge=72.5,|dR|=0.058594	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_hard	8	1.0	0	1	badge=72.5,|dR|=0.039062	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_hard	16	0.6	0	1	badge=72.5,|dR|=0.015625	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_hard	16	1.0	0	1	badge=72.5,|dR|=0.126953	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_easy	2	0.6	0	1	badge=72.5,|dR|=0.031250	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_easy	2	1.0	0	1	badge=72.5,|dR|=0.046875	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_easy	32	0.6	0	1	badge=72.5,|dR|=0.092773	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_easy	32	1.0	0	1	badge=72.5,|dR|=0.003906	
+H1_pair	Qwen/Qwen3.5-4B	gsm8k_easy	4	0.6	0	1	badge=72.5,|dR|=0.054688	
+H2_info	loss_form	n_unique=1	H=0.0000	Hmax=6.6147	n_na=98	frac_na=1.0000	share=0.0000	placebo=True
+H2_info	ref_policy_kl	n_unique=1	H=0.0000	Hmax=6.6147	n_na=98	frac_na=1.0000	share=0.0000	placebo=True
+H2_info	sampler_backend_precision	n_unique=1	H=0.0000	Hmax=6.6147	n_na=0	frac_na=0.0000	share=0.0000	placebo=True
+H2_info	per_step_zvf_path	n_unique=98	H=6.6147	Hmax=6.6147	n_na=0	frac_na=0.0000	share=0.5796	placebo=False
+H2_info	group_size_schedule	n_unique=5	H=2.3121	Hmax=6.6147	n_na=0	frac_na=0.0000	share=0.2026	placebo=False
+H2_info	heldout_split	n_unique=3	H=1.5546	Hmax=6.6147	n_na=0	frac_na=0.0000	share=0.1362	placebo=False
+H2_info	decontamination_notes	n_unique=2	H=0.9313	Hmax=6.6147	n_na=0	frac_na=0.0000	share=0.0816	placebo=False
+H3_perm	loss_form	n_unique=1	p_reward=nan	p_zvf=nan	p_pcd=nan	placebo (<=1 unique value on live corpus)	
+H3_perm	ref_policy_kl	n_unique=1	p_reward=nan	p_zvf=nan	p_pcd=nan	placebo (<=1 unique value on live corpus)	
+H3_perm	sampler_backend_precision	n_unique=1	p_reward=nan	p_zvf=nan	p_pcd=nan	placebo (<=1 unique value on live corpus)	
+H3_perm	per_step_zvf_path	n_unique=98	p_reward=1.0	p_zvf=1.0	p_pcd=1.0		
+H3_perm	group_size_schedule	n_unique=5	p_reward=0.5642	p_zvf=0.0005	p_pcd=0.0005		
+H3_perm	heldout_split	n_unique=3	p_reward=0.0005	p_zvf=0.0005	p_pcd=0.0005		
+H3_perm	decontamination_notes	n_unique=2	p_reward=0.0005	p_zvf=0.0005	p_pcd=0.0005		

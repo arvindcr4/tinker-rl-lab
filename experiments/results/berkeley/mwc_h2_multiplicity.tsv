@@ -1,0 +1,7 @@
+metric_id	pillar	effect	se	raw_p	bonferroni_p	holm_p	bh_fdr_q	survives_bonf_05	survives_bh_05	is_equivalence	note
+P2_ZVF_decay_G2_G16	P2	0.2068	0.00752	1.99e-166	1.20e-165	1.20e-165	1.20e-165	True	True	False	SURVIVES
+P3_swing_G4_vs_G32_64M	P3	0.24	0.03061	4.51e-15	2.71e-14	2.26e-14	1.35e-14	True	True	False	SURVIVES
+P3_reward_up_G2_G16	P3	0.0332	0.00674	8.26e-07	4.96e-06	3.30e-06	1.65e-06	True	True	False	SURVIVES
+P3_reward_slope_logG	P3			7.64e-02	4.58e-01	2.29e-01	1.15e-01	False	False	False	MULTIPLICITY-FRAGILE
+P1_GRPO_ne_PPO_paired	P1	0.0608	0.03982	1.27e-01	7.61e-01	2.54e-01	1.52e-01	False	False	True	EQUIVALENCE: multiplicity CANNOT reject -> claim unaffected
+P4_toooluse_dense_gt_sparse	P4	0.0737	0.05643	1.91e-01	1.00e+00	2.54e-01	1.91e-01	False	False	False	MULTIPLICITY-FRAGILE

@@ -1,0 +1,50 @@
+{
+  "n_test": 10000,
+  "n_pos_test": 144,
+  "models": {
+    "XGB-24full": {
+      "auc": 0.9990741680194805,
+      "ap": 0.9475972727389675,
+      "brier": 0.004828600111975046,
+      "ece10": 0.032117682103777766,
+      "f1": 0.8473282442748092,
+      "precision": 0.940677966101695,
+      "recall": 0.7708333333333334,
+      "n": 10000,
+      "n_pos": 144,
+      "n_pred_pos": 118
+    },
+    "XGB-20raw": {
+      "auc": 0.9988303796897547,
+      "ap": 0.9356645819063432,
+      "brier": 0.005094080148983865,
+      "ece10": 0.03241513306074775,
+      "f1": 0.8230769230769232,
+      "precision": 0.9224137931034483,
+      "recall": 0.7430555555555556,
+      "n": 10000,
+      "n_pos": 144,
+      "n_pred_pos": 116
+    }
+  },
+  "loo": {
+    "rows": 20,
+    "auc_exclude_zero_drops": 0,
+    "f1_exclude_zero_drops": 0
+  },
+  "loi_1of4": {
+    "rows": 16,
+    "auc_exclude_zero_adds": 0,
+    "f1_exclude_zero_adds": 0
+  },
+  "loi_pairs": {
+    "rows": 12,
+    "auc_exclude_zero_adds": 0,
+    "f1_exclude_zero_adds": 0
+  },
+  "reliability": {
+    "deciles": 10,
+    "max_drift_24full": 0.36907729895218555,
+    "max_drift_20raw": 0.2718152744429452
+  }
+}

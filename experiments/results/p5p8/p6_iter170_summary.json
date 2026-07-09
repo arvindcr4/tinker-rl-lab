@@ -1,0 +1,68 @@
+{
+  "iter": 170,
+  "pillar": "P6",
+  "n_entries": 43,
+  "n_stack": 26,
+  "n_variant_delta": 17,
+  "n_stacks_with_full_mr": 26,
+  "n_leaves_total": 26,
+  "n_leaves_lt_50": 12,
+  "max_null_leaf": "sampling_dynamic_filter",
+  "min_null_leaf": "backend",
+  "hypotheses": [
+    {
+      "hypothesis": "H1: mean null-rate across 26 leaves < 0.50",
+      "mean_null_rate": 0.4852,
+      "pass": true,
+      "n_stacks": 26
+    },
+    {
+      "hypothesis": "H2: at least 18/26 leaves have null-rate < 0.50",
+      "n_leaves_lt_50": 12,
+      "n_leaves_total": 26,
+      "pass": false
+    },
+    {
+      "hypothesis": "H3: every of 6 frameworks has >= 1 stack entry",
+      "n_frameworks": 6,
+      "frameworks": [
+        "colab-open-trainer",
+        "openrlhf",
+        "tinker",
+        "trl",
+        "verl",
+        "worktree-zvf130-batch"
+      ],
+      "pass": true
+    },
+    {
+      "hypothesis": "H4: every of 9 method labels has >= 1 stack entry",
+      "n_labels": 14,
+      "labels": [
+        "aero",
+        "areal",
+        "cppo",
+        "dapo",
+        "drgrpo",
+        "es",
+        "gift",
+        "grpo",
+        "gspo",
+        "mcgrpo",
+        "ngrpo",
+        "scafgrpo",
+        "tool_use_llama-8b-inst",
+        "tool_use_qwen3-32b"
+      ],
+      "pass": true
+    }
+  ],
+  "n_pass": 3,
+  "n_total": 4,
+  "tsv_files": {
+    "per_leaf_null_rate": "p6_iter170_per_leaf_null_rate.tsv",
+    "per_entry_coverage": "p6_iter170_per_entry_coverage.tsv",
+    "framework_matrix": "p6_iter170_framework_matrix.tsv",
+    "label_matrix": "p6_iter170_label_matrix.tsv"
+  }
+}

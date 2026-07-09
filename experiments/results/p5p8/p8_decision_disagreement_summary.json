@@ -1,0 +1,35 @@
+{
+  "n_test": 10000,
+  "base_rate": 0.0144,
+  "variants": [
+    "XGB-20raw",
+    "XGB-24full",
+    "XGB-pair",
+    "LLM-as-scribe (XGB-24full @ $0.001)"
+  ],
+  "flip_count": 30,
+  "flip_mean_rate_at_K2": 0.0050999999999999995,
+  "feat_count": 120,
+  "union_count": 6,
+  "selective_count": 6,
+  "minimum_flip_pair_K2": {
+    "pair": "XGB-24full vs LLM-as-scribe (XGB-24full @ $0.001)",
+    "K_pct": 2.0,
+    "n_flips": 0,
+    "n_test": 10000,
+    "flip_rate": 0.0,
+    "ci_lo": 0.0,
+    "ci_hi": 0.0
+  },
+  "maximum_flip_pair_K2": {
+    "pair": "XGB-24full vs XGB-pair",
+    "K_pct": 2.0,
+    "n_flips": 64,
+    "n_test": 10000,
+    "flip_rate": 0.0064,
+    "ci_lo": 0.0047,
+    "ci_hi": 0.0078
+  },
+  "selective_cheapest_cost_per_decision": 0.00010188999999999999,
+  "selective_best_AUC": 0.9998027146464646
+}

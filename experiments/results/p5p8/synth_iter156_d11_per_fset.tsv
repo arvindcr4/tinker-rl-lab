@@ -1,0 +1,5 @@
+fset	n_breakeven	n_total	d11	wilson_lo	wilson_hi
+24full	25	25	1.0000	0.8668	1.0000
+20raw	25	25	1.0000	0.8668	1.0000
+20raw+minmax	25	25	1.0000	0.8668	1.0000
+20raw+stat	25	25	1.0000	0.8668	1.0000

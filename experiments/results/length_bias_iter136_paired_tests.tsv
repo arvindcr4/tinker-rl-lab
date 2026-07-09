@@ -1,0 +1,9 @@
+task	hypothesis	pre_reg	direction	n_pairs	mean_gr	mean_dr	mean_delta_dr_minus_gr	W	p_param_one_sided	p_perm_two_sided	cohens_d_paired	verdict
+arithmetic_easy	H1_abs_rho_dR_dL_DR_smaller	GR>DR: GR tightly coupled velocity, DR decoupled	DR_smaller	5	0.1978	0.1687	-0.0291	7	0.5000	0.8137	-0.159	null
+arithmetic_easy	H2_abs_rho_len_lag1_DR_smaller	GR>DR: GR trending length, DR no-trend	DR_smaller	5	0.3880	0.3294	-0.0586	6	0.4062	0.5004	-0.374	null
+arithmetic_easy	H3_late_eff_DR_larger	DR>GR: DR more reward-gain per unit length change	DR_larger	5	0.1695	0.1899	0.0204	15	0.0312	0.0633	2.675	FAVOURS
+arithmetic_easy	H4_rho_dZ_dL_DR_lessneg	GR<0<DR: GR negative ZVF-length coupling, DR decoupled toward zero	DR_lessneg	5	0.0058	0.0753	0.0695	9	0.4062	0.6258	0.262	null
+gsm8k_cot	H1_abs_rho_dR_dL_DR_smaller	GR>DR: GR tightly coupled velocity, DR decoupled	DR_smaller	3	0.6758	0.6728	-0.0030	3	0.6250	1.0000	-0.018	null
+gsm8k_cot	H2_abs_rho_len_lag1_DR_smaller	GR>DR: GR trending length, DR no-trend	DR_smaller	3	0.3678	0.2475	-0.1204	1	0.2500	0.4990	-0.363	null
+gsm8k_cot	H3_late_eff_DR_larger	DR>GR: DR more reward-gain per unit length change	DR_larger	3	0.0026	0.0046	0.0020	6	0.1250	0.2527	1.593	null
+gsm8k_cot	H4_rho_dZ_dL_DR_lessneg	GR<0<DR: GR negative ZVF-length coupling, DR decoupled toward zero	DR_lessneg	3	0.1723	0.2377	0.0654	6	0.1250	0.2519	1.131	null

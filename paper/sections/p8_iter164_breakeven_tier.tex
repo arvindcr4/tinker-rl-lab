@@ -1,0 +1,88 @@
+% Section: P8 breakeven-tier analysis on iter-160 VALUE-max outputs (iter 164 JOB A)
+% Fresh vein. Builds on iter-160's τ*-optimization by answering the operational
+% follow-up: "at each (rate × fset), what is the CHEAPEST tier at which
+% VALUE-max util recovers a target (0.99, 0.95, 0.90)?"
+%
+% Verdicts (6/6 PASS):
+%  H1: cheap_heuristic clears target on ≥80% cells — 60/60 = 100.0%
+%  H2: small_open clears target on ≥80% cells — 60/60 = 100.0%
+%  H3: frontier_gpt4 recovers util ≥ 0.95 on ≥90% cells — 60/60 = 100.0%
+%  H4: τ*_VALUE-max monotone in tier (cheap → frontier) on ≥80% cells — 20/20 = 100.0%
+%  H4a: breakeven tier = cheap_heuristic on ≥80% cells — 60/60 = 100.0%
+%  H5: frontier_gpt4 matches cheap_heuristic's target on ≥80% cells — 59/60 = 98.3%
+
+\subsubsection{Breakeven-tier analysis on VALUE-max outputs}
+\label{sec:p8-iter164-breakeven}
+
+The iter-160 finding that VALUE-max EXCEEDS F1-max at every
+(\ref{sec:p8-iter160}) cell invites the operational follow-up: \emph{at
+each (rate $\times$ fset), what is the cheapest cost tier at which
+VALUE-max utility recovers a chosen target level (0.99, 0.95, 0.90)?}
+\textbf{Iter-164} answers this question with no additional training — the
+2{,}000 iter-160 cells are re-aggregated.
+
+\paragraph{Setup.}
+For each (rate $\times$ fset $\times$ target $\in \{0.99, 0.95, 0.90\}$) cell,
+we compute the per-tier mean VALUE-max util across the 5 seeds and find
+the cheapest tier at which the mean clears the target. There are
+$5 \times 4 \times 3 = 60$ cells. The five-tier price ladder matches
+iter-148: cheap\_heuristic (\$0.0001/call), small\_open (\$0.0006/call),
+iter120\_default (\$0.0010/call), mid\_tier (\$0.0050/call),
+frontier\_gpt4 (\$0.0300/call).
+
+\paragraph{Headline findings (6/6 PASS).}
+\begin{enumerate}
+\item \textbf{cheap\_heuristic clears every target on every cell.}
+H1 60/60 = 100.0\% of (rate $\times$ fset $\times$ target) cells reach
+the target at the cheapest tier. The breakeven tier is therefore
+\emph{always} cheap\_heuristic — H4a 60/60 = 100.0\%.
+\item \textbf{small\_open also clears every target on every cell.}
+H2 60/60 = 100.0\%. The 6$\times$ per-call price premium over
+cheap\_heuristic buys nothing on VALUE-max.
+\item \textbf{frontier\_gpt4 still recovers $\geq 0.95$ on every cell.}
+H3 60/60 = 100.0\% (min observed cell mean = 0.9885). Even at \$0.03/call
+with rare-event alert volume variance, VALUE-max is dominated by
+$V_{\text{per\_catch}} = \$50$.
+\item \textbf{$\tau^*_{\text{VALUE-max}}$ is monotone increasing in tier.}
+H4 20/20 = 100.0\% of (rate $\times$ fset) cells show
+$\tau^*_{\text{cheap}} \leq \tau^*_{\text{small\_open}} \leq \cdots \leq
+\tau^*_{\text{frontier}}$. The costlier tier pushes the threshold up
+to suppress false alerts — at cheap\_heuristic $\tau^* \approx 0.55$
+(recall-pushing); at frontier\_gpt4 $\tau^* \approx 0.99$
+(precision-pushing).
+\item \textbf{frontier\_gpt4 matches cheap\_heuristic on the same target.}
+H5 59/60 = 98.3\% of (rate $\times$ fset $\times$ target) cells show
+frontier\_gpt4 also clearing the target. The single failure cell is
+0.05\% $\times$ 20raw+stat $\times$ 0.99 target, where the
+frontier tier drops to 0.9885 (1.15 percentage-point degradation).
+\end{enumerate}
+
+\paragraph{Sharpest negative finding.}
+The 1 of 60 cells where frontier\_gpt4 fails the 0.99 target is the
+0.05\% rate (rarest-event regime) on the 20raw+stat feature set
+(sparsest non-aggregated features) at the 0.99 target. At this cell,
+seed 20260714 saw 248 alerts, \$7.44 cost, and \$250 value\_gain, yielding
+$\mathrm{util} = 0.97024$. The other 4 seeds on this cell range from
+0.9957 (36 alerts) to 0.9893 (89 alerts). Alert-volume variance
+at the 0.05\% rate is the binding constraint — not the tier price.
+
+\paragraph{Operational recommendation.}
+\begin{itemize}
+\item \textbf{Default tier: cheap\_heuristic (\$0.0001/call).} Clears
+every reasonable utility bar on every (rate $\times$ fset) cell. The
+savings relative to small\_open are 6$\times$ per call; relative to
+frontier\_gpt4 are 300$\times$ per call.
+\item \textbf{Do not pay for frontier LLMs to flag fraud.} VALUE-max
+at frontier\_gpt4 is dominated by cheap\_heuristic on every cell —
+frontier only buys redundancy, not value.
+\item \textbf{$\tau^*$ at cheap\_heuristic $\approx 0.55$} (recall-pushing
+VALUE-max); at frontier\_gpt4 $\approx 0.99$ (precision-pushing).
+\end{itemize}
+
+\paragraph{Cross-paper coupling.}
+This finding sharpens iter-160's VALUE-max dominance: iter-160 showed
+VALUE-max EXCEEDS F1-max at every cell; iter-164 shows VALUE-max clears
+operational bars (0.99, 0.95, 0.90) at the cheapest tier on every cell.
+The two findings together mean \emph{VALUE-max is the dominant utility
+function at every tier} — the cost-tier choice is decoupled from the
+utility-function choice.

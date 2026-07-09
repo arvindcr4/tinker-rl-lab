@@ -1,0 +1,6 @@
+rate	best_cpd	best_cpd_rule	best_cpf	best_cpf_rule
+0.0005	0.0001	xgb_only	0.29583000000000004	xgb_only
+0.001	0.0001	xgb_only	0.12058444444444445	xgb_only
+0.005	0.0001	xgb_only	0.023859612903225805	xgb_only
+0.01	0.0001	xgb_only	0.012597045695045696	xgb_only
+0.0144	0.0001	xgb_only	0.008968572798360032	xgb_only

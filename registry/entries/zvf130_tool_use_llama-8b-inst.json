@@ -1,0 +1,107 @@
+{
+  "record_type": "stack",
+  "schema_version": "0.1.0",
+  "id": "zvf130_tool_use_llama-8b-inst",
+  "label_claimed": "tool_use_llama-8b-inst",
+  "framework": {
+    "name": "worktree-zvf130-batch",
+    "version": null,
+    "openness": "open"
+  },
+  "model": "Llama-3.1-8B-Instruct (tool-use BFCL)",
+  "task": "BFCL tool-use (single-prompt, n_seeds=1)",
+  "seeds": [
+    0
+  ],
+  "provenance": {
+    "source_artifacts": [
+      "zvf_iter130_method_risk.tsv row method=tool_use_llama-8b-inst (zvf_risk_mean=0.5474, n_seeds=1); per-method risk index, single-batch harness"
+    ],
+    "wandb": null,
+    "date_recorded": "2026-07-04"
+  },
+  "variant_deltas_applied": [
+    {
+      "delta_id": "delta_tool_use_llama-8b-inst",
+      "component": "see delta entry",
+      "status": "single-seed-surrogate",
+      "note": "zvf130 tool-use batch harness; n_seeds=1; per-component isolation requires multi-seed reproduction"
+    }
+  ],
+  "min_report": {
+    "loss_form": {
+      "importance_ratio_level": null,
+      "clip_eps_low": null,
+      "clip_eps_high": null,
+      "length_normalization": null,
+      "advantage_normalization": null,
+      "token_mask": null
+    },
+    "reference_kl": {
+      "reference_policy": null,
+      "kl_beta": null,
+      "kl_estimator": null
+    },
+    "sampler_backend": {
+      "backend": "shared zvf-iter130 batch harness (Tinker)",
+      "precision": "bf16",
+      "temperature": 0.7,
+      "top_p": 0.95
+    },
+    "telemetry": {
+      "per_step_zvf": true,
+      "per_step_gu": true,
+      "source": "zvf_iter130_method_risk.tsv (per-step file zvf_iter130/*)"
+    },
+    "group_size_schedule": {
+      "initial_g": null,
+      "schedule": null,
+      "adaptation_rule": null
+    },
+    "heldout_split": {
+      "disjoint_from_reward_env": true,
+      "description": "BFCL tool-use (single-prompt, n_seeds=1)"
+    },
+    "decontamination": {
+      "performed": null,
+      "parser_robustness_probe": null
+    }
+  },
+  "outcomes": {
+    "mean_last10_train_reward": null,
+    "mean_zvf": null,
+    "heldout_delta": null,
+    "rollouts": null,
+    "coverage": {
+      "min_report_coverage": 0.4286,
+      "declared_deltas_coverage": 0.0,
+      "measured_coverage": 1.0,
+      "ci_method_present": true,
+      "audit_source": "scripts/p5p8/p6_iter138_missing_method_audit.py",
+      "audit_date": "2026-07-05"
+    },
+    "zvf_risk_mean": 0.547381,
+    "zvf_risk_sd": null,
+    "n_seeds": 1,
+    "failure_rate": 1.0,
+    "mag_mean": 1.0,
+    "csd_mean": 0.95,
+    "drift_mean": 0.0,
+    "delta_vs_grpo_mean": -0.030307,
+    "delta_vs_grpo_ci_lo": null,
+    "delta_vs_grpo_ci_hi": null,
+    "delta_vs_grpo_sig": false,
+    "delta_vs_grpo_welch_ci_lo": null,
+    "delta_vs_grpo_welch_ci_hi": null,
+    "delta_vs_grpo_welch_sig": false,
+    "sig_robust_bootstrap_and_welch": null,
+    "crossref_integrity_iter138": {
+      "audit_date": "2026-07-05",
+      "audit_source": "scripts/p5p8/p6_iter138_missing_method_audit.py",
+      "ground_truth": "experiments/results/zvf_iter130_method_risk.tsv",
+      "point_estimate_matches_tsv": true,
+      "note": "n_seeds=1 tool-use batch: paired-seed bootstrap CI not computable (no per-seed distribution); only point estimate of risk vs grpo is recorded. sig_robust = null pending a multi-seed same-stack reproduction."
+    }
+  },
+  "notes": "Method 'tool_use_llama-8b-inst' measured on the zvf_iter130 risk-index batch (n_seeds=1, failure_rate=1.0). zvf_risk_mean=0.5474. iter-138 coverage-gap fill: this stack entry was created by scripts/p5p8/p6_iter138_missing_method_audit.py to close the zvf130 stack coverage from 9/11 to 11/11. loss-form/KL/decontam leaves are null because the tinker-managed single-batch risk-index harness does not expose them (reported-as-unknown). n_seeds=1 tool-use entry: sig_robust_bootstrap_and_welch is null pending a multi-seed same-stack reproduction; this entry is a tier-D evidence record (point-only, NOT citation-only)."
+}

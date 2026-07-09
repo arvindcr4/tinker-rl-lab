@@ -1,0 +1,6 @@
+metric	value
+n_prompts	600
+frac_uncoverable_p0	0.031667
+g_star_parallel_cov0.90	3.000000
+oracle_seq_expansions_E[1/p]	1.658028
+parallel_over_sequential_ratio	1.809378

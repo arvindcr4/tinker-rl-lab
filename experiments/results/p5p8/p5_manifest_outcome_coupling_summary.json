@@ -1,0 +1,161 @@
+{
+  "n_cells": 98,
+  "n_cell_groups_with_seeds": 50,
+  "n_pairwise_seed_comparisons": 48,
+  "n_sampled_cell_pairs": 2000,
+  "h1": {
+    "claim": "Higher manifest badge -> lower |delta_reward| across seeds (within cell-group).",
+    "spearman_rho": 0.0,
+    "ci95_low": 0.0,
+    "ci95_high": 0.0,
+    "ci_excludes_zero": false,
+    "n_pairs": 48
+  },
+  "h2": {
+    "claim": "Per-item info content on live 98-cell corpus (bits).",
+    "items": [
+      {
+        "item": "loss_form",
+        "n_unique_values": 1,
+        "entropy_bits": 0.0,
+        "n_na_or_missing": 98,
+        "fraction_na": 1.0,
+        "max_entropy_possible_bits": 6.6147,
+        "placebo": true,
+        "info_share": 0.0
+      },
+      {
+        "item": "ref_policy_kl",
+        "n_unique_values": 1,
+        "entropy_bits": 0.0,
+        "n_na_or_missing": 98,
+        "fraction_na": 1.0,
+        "max_entropy_possible_bits": 6.6147,
+        "placebo": true,
+        "info_share": 0.0
+      },
+      {
+        "item": "sampler_backend_precision",
+        "n_unique_values": 1,
+        "entropy_bits": 0.0,
+        "n_na_or_missing": 0,
+        "fraction_na": 0.0,
+        "max_entropy_possible_bits": 6.6147,
+        "placebo": true,
+        "info_share": 0.0
+      },
+      {
+        "item": "per_step_zvf_path",
+        "n_unique_values": 98,
+        "entropy_bits": 6.6147,
+        "n_na_or_missing": 0,
+        "fraction_na": 0.0,
+        "max_entropy_possible_bits": 6.6147,
+        "placebo": false,
+        "info_share": 0.5796
+      },
+      {
+        "item": "group_size_schedule",
+        "n_unique_values": 5,
+        "entropy_bits": 2.3121,
+        "n_na_or_missing": 0,
+        "fraction_na": 0.0,
+        "max_entropy_possible_bits": 6.6147,
+        "placebo": false,
+        "info_share": 0.2026
+      },
+      {
+        "item": "heldout_split",
+        "n_unique_values": 3,
+        "entropy_bits": 1.5546,
+        "n_na_or_missing": 0,
+        "fraction_na": 0.0,
+        "max_entropy_possible_bits": 6.6147,
+        "placebo": false,
+        "info_share": 0.1362
+      },
+      {
+        "item": "decontamination_notes",
+        "n_unique_values": 2,
+        "entropy_bits": 0.9313,
+        "n_na_or_missing": 0,
+        "fraction_na": 0.0,
+        "max_entropy_possible_bits": 6.6147,
+        "placebo": false,
+        "info_share": 0.0816
+      }
+    ],
+    "total_bits": 11.4127,
+    "n_placebo_items": 3
+  },
+  "h3": {
+    "claim": "Joint manifest fingerprint (Hamming) -> |delta_telemetry|.",
+    "spearman_hamming_vs_d_reward": 0.2514,
+    "spearman_hamming_vs_d_zvf": 0.4073,
+    "spearman_hamming_vs_d_pcd": 0.3361,
+    "close_vs_far_mean_diff_reward": -0.051865,
+    "close_vs_far_p_value_reward": 0.0026,
+    "close_vs_far_mean_diff_zvf": -0.112523,
+    "close_vs_far_p_value_zvf": 0.0002,
+    "close_vs_far_mean_diff_pcd": -0.010924,
+    "close_vs_far_p_value_pcd": 0.0002,
+    "per_item_outcome_perm": [
+      {
+        "item": "loss_form",
+        "n_unique": 1,
+        "p_value_mean_reward": NaN,
+        "p_value_zvf": NaN,
+        "p_value_pcd": NaN,
+        "note": "placebo (<=1 unique value on live corpus)"
+      },
+      {
+        "item": "ref_policy_kl",
+        "n_unique": 1,
+        "p_value_mean_reward": NaN,
+        "p_value_zvf": NaN,
+        "p_value_pcd": NaN,
+        "note": "placebo (<=1 unique value on live corpus)"
+      },
+      {
+        "item": "sampler_backend_precision",
+        "n_unique": 1,
+        "p_value_mean_reward": NaN,
+        "p_value_zvf": NaN,
+        "p_value_pcd": NaN,
+        "note": "placebo (<=1 unique value on live corpus)"
+      },
+      {
+        "item": "per_step_zvf_path",
+        "n_unique": 98,
+        "p_value_mean_reward": 1.0,
+        "p_value_zvf": 1.0,
+        "p_value_pcd": 1.0,
+        "note": ""
+      },
+      {
+        "item": "group_size_schedule",
+        "n_unique": 5,
+        "p_value_mean_reward": 0.5642,
+        "p_value_zvf": 0.0005,
+        "p_value_pcd": 0.0005,
+        "note": ""
+      },
+      {
+        "item": "heldout_split",
+        "n_unique": 3,
+        "p_value_mean_reward": 0.0005,
+        "p_value_zvf": 0.0005,
+        "p_value_pcd": 0.0005,
+        "note": ""
+      },
+      {
+        "item": "decontamination_notes",
+        "n_unique": 2,
+        "p_value_mean_reward": 0.0005,
+        "p_value_zvf": 0.0005,
+        "p_value_pcd": 0.0005,
+        "note": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,150 @@
+% Section: P8 V_mean threshold sweep -- precision-recall Pareto frontier (iter 168 JOB A)
+% Fresh vein, not in 172 prior P8 rows. Closes iter-156 H1 REFUTED
+% (esc_prec 1% at tau=0) by sweeping V_mean thresholds {0.0, 0.5,
+% 1.0, 1.5, 2.0, 2.5, 3.0} and asking: does the Pareto frontier exist?
+% Headline (sharpest negative finding): NO tau in {0.0..3.0} achieves
+% esc_prec >= 0.10 on any cell. The precision ceiling is structural.
+
+\subsubsection{Falsifiable questions and operational stakes}
+Iter-156 found the LLM-as-sensor pattern is high-recall, low-precision:
+the sensor catches 50--54 positives that XGB misses (recall lift
+42--69\% across seeds) but at a precision cost of $\sim$1\% (50 lifts
+vs $\sim$5000 fires). Iter-156 H1 (esc\_prec $\geq 0.05$) was REFUTED
+on 100/100 cells, and the operational recommendation was
+\emph{``TUNE V\_mean threshold to balance precision against recall
+lift''}. Iter-168 runs that recommended sweep on the same 5-seed panel
+(5 seeds $\times$ 5 rates $\times$ 4 fsets $\times$ 5 tiers $\times$
+7 thresholds = 3500 cells) and asks four falsifiable questions.
+
+For each test row $r$ on the iter-136 rate-preserving downsample, with
+$V\_mean_r$ being the LLM-extracted aggregate score (identical across
+fsets):
+\begin{align*}
+xgb\_fire_r &= (\text{xgb\_score}_r \in \text{top-}K\text{ of xgb scores}) \\
+llm\_fire_{r,\tau} &= (V\_mean_r > \tau) \\
+\text{VALUE}_\tau &= \#(\neg xgb\_fire \wedge llm\_fire_{\tau} \wedge is\_fraud) \\
+\text{WASTE}_\tau &= \#(\neg xgb\_fire \wedge llm\_fire_{\tau} \wedge \neg is\_fraud) \\
+\text{value\_rate}_\tau &= \text{VALUE}_\tau / \max(1, n\_xgb\_missed\_pos) \\
+\text{esc\_prec}_\tau &= \text{VALUE}_\tau / \max(1, \text{VALUE}_\tau + \text{WASTE}_\tau)
+\end{align*}
+
+\textbf{H1 (FAIL -- sharpest negative finding)}: at $\tau \geq 1.0$ on
+the cheap tier, esc\_prec $\geq 0.10$ on $\geq 50\%$ of cells.
+\textbf{Measured: 0/500 = 0.0\%}. Across every (seed $\times$ rate
+$\times$ fset $\times$ tier $\times$ $\tau \geq 1.0$) cell, the
+escalation precision remains below 1.1\%. The Pareto frontier at the
+10\% precision bar is unreachable on this dataset.
+
+\textbf{H2 (FAIL -- Pareto-frontier non-existence)}: there exists at
+least one cell with esc\_prec $\geq 0.10$ AND value\_rate $\geq 0.30$
+simultaneously. \textbf{Measured: 0/700 = 0.0\%}. The closest-to-Pareto
+cell is seed=20260708, rate=1.44\%, fset=24full, $\tau=0.0$:
+value\_rate=0.568, esc\_prec=0.0108. Even the \emph{highest-value
+operating point} sits two orders of magnitude below the precision bar.
+
+\textbf{H3 (PASS)}: value\_rate is monotone non-increasing in $\tau$ on
+$\geq 80\%$ of (seed $\times$ rate $\times$ fset) cells. \textbf{Measured:
+100/100 = 100.0\%}. Strict monotonicity across all 7 thresholds; this is
+the expected monotonicity (fewer fires $\Rightarrow$ fewer lifts).
+
+\textbf{H4 (PASS)}: at the cheap tier, breakeven rate (esc\_cost\_per\_lift
+$\leq \$50$) is monotone non-decreasing in $\tau$ on $\geq 50\%$ of
+cells. \textbf{Measured: 100/100 = 100.0\%}. Stricter thresholds restore
+breakeven by either (a) eliminating wasted fires on non-fraud rows
+(precision lift) or (b) eliminating all fires entirely (zero-cost
+trivially breakeven).
+
+\subsubsection{Structural precision ceiling -- the signal-mass bottleneck}
+The H1/H2 FAIL is not a threshold-tuning miss; it is a structural
+property of the V\_mean distribution on this dataset. At $\tau = 0.0$
+the LLM sensor fires on $\sim$5000/10000 test rows and catches 50
+positives: $\text{esc\_prec} = 50/(50 + 4945) = 0.0100$. At $\tau =
+2.0$ the LLM sensor fires on \textbf{0/10000} test rows (n\_lift = 0,
+n\_waste = 0): the entire signal mass of V\_mean is concentrated in
+$V\_mean \in (0, 2]$. Across all 7 thresholds, the positive-class
+enrichment of LLM fires stays at $\sim$1\% because the V\_mean
+distribution does not stratify fraud vs.\ non-fraud sharply enough
+to support a 10\% precision gate at any cutoff.
+
+This is the operational ceiling of the LLM-as-sensor pattern on
+credit-card fraud detection with this feature set: the sensor is
+fundamentally a \emph{recall} signal (catches positives XGB misses at
+high coverage) rather than a \emph{precision} signal (concentrates
+fires on positives). The structural signal-to-noise ratio limits
+precision to $\sim$1.1\% regardless of threshold choice.
+
+\subsubsection{Sharpest paper-grade findings}
+\begin{enumerate}
+\item \textbf{Pareto frontier does not exist on this dataset}. At no
+$\tau \in \{0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0\}$ and no (seed $\times$
+rate $\times$ fset) cell does esc\_prec reach 10\%. The
+precision-recall trade-off is \emph{not} a frontier -- it is a
+single-point at (recall lift $\sim$0.5, precision $\sim$1\%).
+\item \textbf{Value rate is strictly monotone non-increasing in $\tau$
+on 100/100 cells} (H3 PASS). The recall signal decays predictably as
+the threshold rises.
+\item \textbf{Breakeven restores at higher $\tau$ on 100/100 cells}
+(H4 PASS). The cost-per-lift metric improves with stricter gating
+because wasteful fires on non-fraud rows are eliminated first.
+\item \textbf{Signal mass bounded in $V\_mean \in (0, 2]$}. At
+$\tau = 2.0$, n\_lift = n\_waste = 0 -- the LLM sensor is silent. The
+operational conclusion is that the V\_mean feature alone cannot
+support a precision-constrained deployment; combining it with the 4
+aggregate features (V\_std, V\_max, V\_min, V\_mean jointly) or
+deploying a learned precision-restoration layer is the next step.
+\item \textbf{Iter-156 H1 REFUTED is structurally reinforced}.
+Iter-156 found esc\_prec = 1\% at $\tau = 0.0$ and recommended
+threshold tuning. Iter-168 sweeps $\tau$ and finds the precision
+ceiling is \emph{structural} -- no tuning rescues it. The
+operational recommendation is now \emph{``the LLM-as-sensor signal
+is a recall instrument, not a precision instrument; deploy for
+recall lift at the cheap tier (where breakeven holds), not for
+precision restoration''}.
+\end{enumerate}
+
+\subsubsection{Cross-paper coupling}
+\begin{itemize}
+\item \textbf{P8 iter-156 row 172}: iter-156 measured the
+high-recall low-precision signature at $\tau=0.0$ (esc\_prec = 1\%,
+n\_lift = 50, n\_waste = 4945). Iter-168 confirms this is the
+\emph{only} achievable operating point on this dataset -- the
+threshold sweep cannot escape it.
+\item \textbf{P8 iter-160 row 174}: iter-160 operating-point utility
+analysis showed M2 (oracle LLM sensor) loses on TP/\$ at every
+realistic fraud-ops budget. Iter-168 quantifies the structural
+reason: precision is bounded at $\sim$1\% regardless of how the LLM
+sensor is thresholded.
+\item \textbf{P8 iter-148 row 166}: iter-148 cost matrix averaged
+across all fires; iter-156 decomposed fires into value/waste;
+iter-168 extends the value-side analysis to a 7-threshold sweep
+and confirms the recall-precision trade-off is a single point.
+\item \textbf{FRONTIER\_INSIGHTS Round 2 (ZVF = signal
+availability)}: the V\_mean signal-mass bottleneck is the
+\emph{fraud-detection operational analogue} of ZVF-as-signal
+availability. Just as ZVF in GRPO quantifies the fraction of
+groups that \emph{could} produce a within-group credit-assignment
+signal, esc\_prec quantifies the fraction of LLM fires that
+\emph{could} produce a positive-class credit. Both are structural
+sampling-bottleneck measurements.
+\end{itemize}
+
+\subsubsection{Operational recommendations}
+\begin{enumerate}
+\item \textbf{DEPLOY} the LLM-as-sensor at the cheap tier for
+recall lift, not for precision restoration. Iter-156 H2b PASS
+(100/100 cells breakeven) and iter-168 H4 PASS (100/100 breakeven
+monotone in $\tau$) jointly license this deployment.
+\item \textbf{ABANDON} the precision-tuning thread on V\_mean alone.
+Iter-168 H1/H2 FAIL across 3500 cells establishes that no
+threshold choice reaches the 10\% precision bar on this dataset.
+\item \textbf{EXTEND} the sensor with a learned precision-restoration
+layer (e.g., a calibration map or a joint V\_mean / V\_std / V\_max /
+V\_min classifier) -- the structural precision ceiling is a
+\emph{single-feature} ceiling, not a dataset-level ceiling.
+\item \textbf{WIRE} \texttt{p8\_iter168\_vmean\_threshold\_sweep.py}
+as a CI pre-commit on fraud-team threshold-tuning proposals:
+H3/H4 monotonicity must hold ($\geq 95\%$ of cells); H1/H2
+Pareto-frontier existence is the documented failure mode.
+\end{enumerate}
+
+\clearpage

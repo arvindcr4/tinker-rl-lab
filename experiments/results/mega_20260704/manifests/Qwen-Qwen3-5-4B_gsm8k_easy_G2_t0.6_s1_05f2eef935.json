@@ -1,0 +1,10 @@
+{
+  "cell_id": "Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935",
+  "loss_form": "n/a-sampling",
+  "ref_policy_kl": "n/a",
+  "sampler_backend_precision": "tinker-closed",
+  "per_step_zvf_path": "/home/claude/tinker-rl-lab/experiments/results/mega_20260704/group_tensors/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s1_05f2eef935.json",
+  "group_size_schedule": "fixed-G=2",
+  "heldout_split": "gsm8k_easy",
+  "decontamination_notes": "gsm8k-train-slice"
+}

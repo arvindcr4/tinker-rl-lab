@@ -1,0 +1,86 @@
+% §4.16 -- Iter 115 -- ADAPTIVE-G* on N10: 5-seed multi-seed variance and bootstrap CI
+\label{sec:p7-adaptive-gstar-n10-multiseed}
+
+This subsection reports the iter-115 multi-seed robustness pass of the
+ADAPTIVE-G* controller on the N10 5-seed GRPO panel, deferring the
+unified calibrated controller (§4.17) to a fresh analysis
+(see iter-119 in the repository ledger). The headline is the negative direction:
+
+\textbf{On the N10 step-aggregate data, all four escalation controllers
+  are net-negative on \texttt{net\_benefit} at $\tau=0.70$.}
+
+\begin{itemize}
+\item \textbf{STATIC\_G16} -- $\mathrm{nb}=-0.0906$ (iter-115).
+\item \textbf{DUALFORMER\_d4} -- $\mathrm{nb}=-0.0906$ (closed-form
+  equivalent on this panel; both rules escalate only when trigger fires
+  and \texttt{G\_base}=8).
+\item \textbf{DUALFORMER\_d8} -- $\mathrm{nb}=-0.0906$ (closed-form
+  equivalent to STATIC\_G16 at \texttt{G\_base}=8 since $\delta=8$
+  satisfies $\min(\texttt{G\_base}+\delta, 64)=16$).
+\item \textbf{ADAPTIVE\_GSTAR} -- $\mathrm{nb}=-0.3747$ (closed-form
+  optimal $G^*$, 4.1$\times$ more negative than fixed-G controllers).
+\end{itemize}
+
+Bootstrap 95\% CI ($B=2000$, seed=20260705) on per-seed mean
+\texttt{net\_benefit}:
+\begin{itemize}
+\item STATIC\_G16 / DUALFORMER\_d4 / DUALFORMER\_d8: $[-0.1146,-0.0646]$.
+\item ADAPTIVE\_GSTAR: $[-0.5219,-0.2275]$.
+\end{itemize}
+All CIs exclude zero; the controller family fails to break even on
+step-aggregate data because the closed-form binomial ZVF at the N10
+saturation regime collapses to the boundary rate, leaving no salvage
+on the contrast axis that outweighs the $2$--$4\times$ rollout cost.
+
+\textbf{Seed-robustness diagnostic.} Per-seed salvage rate at
+$\tau=0.70$
+(\textit{fraction of fired steps where closed-form $G^*<64$}):
+$\{1.0, 1.0, 1.0, 0.833, 0.600\}$ for seeds
+$\{42, 179, 316, 453, 590\}$. Cross-seed CV$=0.198<0.50$ (seed-robust).
+
+\textbf{Multi-precision fingerprint.} iter-111 ADAPTIVE-G* nets positive
+mean \texttt{net\_benefit} on per-prompt $k_p$ decision data (N2
+four-method, 2560 prompt-step decisions) but iter-115 nets $-0.37$ on
+step-aggregate $z$ data (N10 5-seed, 75 step-seed decisions). The
+contrast is a measurement-precision effect: per-prompt $k_p$
+identifies $p$ within $[0,1]$ to $1/16$ resolution; step-aggregate $z$
+identifies $p$ to $\pm 0.04$ via the symmetric Bernoulli root.
+Closed-form target-$G^*$ is calibrated to the precision of the
+inversion, and at step-aggregate precision the cost of paying $G=64$
+to clear $z<\max(0.5, 0.5z_{\mathrm{obs}})$ exceeds the contrast
+restored. iter-119 (see §4.17) therefore restricts the
+$G^*$ candidate set on step-aggregate regimes to $\{16, 32\}$,
+closing the $-0.28$ \texttt{net\_benefit} gap.
+
+\subsubsection*{Methodology and inputs}
+Closed-form Bernoulli inversion $z(p,G)=p^G+(1-p)^G$ recovers
+$p_0$ from $z_{\mathrm{obs}}$ at $G_{\mathrm{obs}}=8$ via 80-iteration
+bisection (symmetry guarantees uniqueness on $[0,0.5]$). The
+prediction $z(p_0, G')$ is therefore uniquely determined despite the
+$p \leftrightarrow 1-p$ symmetry of the closed-form. Controller bank:
+\texttt{STATIC\_G16} (always 16); \texttt{DUALFORMER\_d4}
+(Berkeley row 01 rule: $G=12$ on trigger); \texttt{DUALFORMER\_d8}
+($G=16$ on trigger); \texttt{ADAPTIVE\_GSTAR} (closed-form optimal
+$G^*=\arg\min_{G'\in\{16,32,64\}}z(p_0,G')<\max(0.5,0.5z_{\mathrm{obs}})$).
+Net benefit $\mathrm{nb}=\Delta z - 0.5\cdot(\mathrm{cost\_ratio}-1)$
+matches iter-111 framing. Five seeds $\in\{42,179,316,453,590\}$, 15
+steps $\times 5$ seeds $=75$ step-seed decisions; 900 controller-replay
+rows $=4$ rules $\times 5$ seeds $\times 15$ steps $\times 3$
+$\tau$-points. Bootstrap CI B=2000, seed=20260705.
+
+\subsubsection*{Cross-paper implications}
+\begin{itemize}
+\item Reinforces the iter-111 finding that on per-prompt inversion,
+  ADAPTIVE-G* Pareto-dominates (N2 mean nb $\approx+0.06$,
+  $19.2\%$ GIFT-only salvage rate); the same rule underperforms on
+  step-aggregate inversion (N10 mean nb $-0.37$).
+\item Operational: at the N10 step-aggregate regime, the $G=64$
+  escape hatch is a pessimal choice; \texttt{DUALFORMER\_d4}
+  ($1.5\times$ cost) is the cost-conscious Pareto winner among
+  dynamic rules with mean nb $-0.09$ vs STATIC\_G16.
+\item Cross-couples to the Dualformer row 01 (the Berkeley row 01
+  rule that iter-115 reduces to $d_4$); the Alphaproof row 19
+  ($\gamma^*=0$ says ``no look-ahead smoothing is best'', consistent
+  with the iter-115 finding that there is no closed-form oracle on
+  step-aggregate inversion).
+\end{itemize}

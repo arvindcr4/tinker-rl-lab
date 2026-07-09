@@ -1,0 +1,1910 @@
+Multimodal Autonomous AI Agents 
+Russ Salakhutdinov
+Machine Learning Department 
+Carnegie Mellon University 
+
+2
+Large Language Models
+LLM
+In-context 
+learning
+(Greater) sensitivity 
+to input prompts
+Zero-shot 
+abilities
+Generate long and 
+coherent text
+Strong text 
+representations
+Sensitive to 
+word orderings
+World 
+knowledge
+
+3
+Autonomous AI Agents
+●
+Many productive tasks we perform 
+today are done on the computer
+-
+And many of these are on the web
+●
+Many opportunities to automate menial 
+tasks
+●
+Augment human capabilities
+Generated with DALLE
+
+4
+Autonomous Agents
+
+5
+Autonomous Agents
+Task: “Create a set of PowerPoint slides to present 
+the content in this paper.”
+...
+🤖
+
+6
+Autonomous Agents
+
+7
+Web Agents
+LLM
+Visual 
+Encoder
+Web 
+Grounding
+HTML 
+Understanding
+
+8
+Web Agents
+LLM
+Visual 
+Encoder
+Web 
+Grounding
+HTML 
+Understanding
+Shunyu Yao, REACT Synergizing Reasoning and Acting in Language Models, 
+2023
+Jason Wei et al, Chain of Thought Prompting Elicits Reasoning in Large 
+Language Models, 2022
+Reiichiro Nakano et al, WebGPT: Browser-assisted Question-Answering 
+with Human Feedback, 2021.
+Xiang Deng et al, MIND2WEB: Towards a Generalist Agent for the Web, 
+2023
+Timo Schick et al, Toolformer: Language Models can Teach Themselves to 
+Use Tools, 2023
+Shibo Hao et al, ToolkenGPT: Augmenting Frozen Language Models with 
+Massive Tools via Tool Embeddings, 2023
+Yang et al., SWE-agent: Agent-Computer Interfaces Enable Automated 
+Software Engineering, 2024
+
+9
+Task:  Navigate to a page of a good Thai restaurant in Pittsburgh. It should have  at 
+least 200 reviews and 4.3 stars. Pick the one with the highest rating
+
+10
+
+11
+
+12
+
+13
+Talk Outline 
+●
+VisualWebArena -- Evaluating Multimodal Agents on Realistic Visual 
+Web Tasks (Koh et al., ACL 2024)
+●
+Tree Search for Language Model Agents (Koh, McAleer, Fried, 
+Salakhutdinov, arXiv 2024)
+●
+Towards Internet-Scale Training For Agents (Trabucco, Sigurdsson, 
+Piramuthu, Salakhutdinov, arXiv 2025)
+
+14
+WebArena
+●
+Most realistic web environment at the moment
+●
+Websites from popular categories (shopping, Reddit, GitLab)
+-
+Self-hosted open source re-implementations 
+-
+Data from real websites (Amazon, Reddit, GitHub)
+●
+Tasks are easy for humans (78% success rate) but difficult for language 
+model agents (14%)
+●
+But: Tasks are designed to use just text and HTML source code
+Zhou*, Xu*, et al., 2023. “WebArena: A Realistic Web Environment for Building Autonomous Agents” 
+Shuyan Zhou
+Frank Xu
+●
+Messy HTML, JavaScript: usually minified or compressed for efficiency
+●
+Interactive elements don’t display correctly in HTML
+○
+e.g., JavaScript/CSS code that moves objects after the page is loaded
+●
+Context length: HTML pages are complex, easily filling up > 100k tokens
+
+15
+HTML is insufficient 
+●
+Messy HTML, JavaScript: usually minified or compressed for efficiency
+●
+Interactive elements don’t display correctly in HTML
+○
+e.g., JavaScript/CSS code that moves objects after the page is loaded
+○
+Spatial layout is also usually not conveyed well
+●
+Context length: HTML pages are complex, easily filling up > 100k tokens
+
+16
+VisualWebArena
+●
+Build and track the progress of multimodal agents
+●
+We design visually grounded tasks to test these abilities
+●
+Visual inputs (and outputs) allow for unique, interesting, and realistic tasks
+JY Koh, V. Duvvur, P. Huang, L. Jang, MC Lim, R. Lo, G. Neubig, S. Zhou, R. Salakhutdinov, D. Fried 
+Jing Yu  
+Koh
+Shuyan Zhou
+Frank Xu
+
+17
+VisualWebArena: Classifields 
+Task: Find this exact 
+bike that's listed for 
+$300-500 and post a 
+comment offering $10 
+less than their asking 
+price.
+
+18
+VisualWebArena: Shopping 
+Task: Buy the cheapest 
+color photo printer and 
+send it to Emily's place 
+(as shown in the image).
+
+19
+VisualWebArena: Reddit 
+Task: What is the 2022 
+total nominal GDP of the 
+area that produces most 
+sugarcane in the year of 
+2021? (in billion)?
+
+20
+VisualWebArena
+POMDP environment:                               ,  
+●
+Observations      
+●
+Deterministic transition function
+●
+ Reward function: 
+●
+Actions 
+
+21
+Task: “Buy the cheapest color photo 
+printer and send it to Emily's place (as 
+shown in the image).”
+Image
+Inputs:
+Shopping
+
+22
+Task: “Buy the cheapest color photo printer and 
+send it to Emily's place (as shown in the image).”
+Step 0: Start on the homepage of 
+OneStopMarket.
+Step 1: Navigate to the printers category.
+
+23
+Task: “Buy the cheapest color photo printer and 
+send it to Emily's place (as shown in the image).”
+Step 2: Sort by descending price.
+Step 3: Click on the cheapest 
+color photo printer.
+
+24
+Task: “Buy the cheapest color photo printer and 
+send it to Emily's place (as shown in the image).”
+Step 4: Add it to the shopping cart.
+Step 5: Proceed to checkout
+
+25
+Task: “Buy the cheapest color photo printer and 
+send it to Emily's place (as shown in the image).”
+Step 6: Edit address to that of Emily’s 
+place.
+Step 7: Place the order
+
+26
+VisualWebArena
+
+27
+Execution Based Evaluation
+
+LLM and VLM Agents
+
+29
+Visual Language Models as Agents
+VLM + SoM: Simplified representation with Set-of-
+Marks (SoM) prompting over interactable elements.
+Accessibility tree / HTML 
+representations: Cluttered with 
+unnecessary information, long  and 
+confusing context.
+
+30
+Visual Language Models as Agents
+
+31
+Visual Language Models as Agents
+User goal:
+I’m trying to find this post. Navigate  
+to the comment section for it.
+Observations 
+𝒐𝒕:
+Let's think step-by-step… The objective 
+is to navigate to the find the post and 
+navigate to the comment section for it. 
+From the observation, I can see… To 
+navigate to this listing, I need to click 
+on the comment link associated with the 
+sushi. In summary, the next action I will 
+perform is ```click [34]``` 
+Multimodal 
+LLM
+click [34]
+Action 𝒂𝒕:
+VLM + SoM: Simplified representation with Set-of-Marks (SoM) 
+prompting over interactable elements.
+
+32
+Baseline Agents
+
+33
+Baseline Agents: Text-based LLMs
+
+34
+Baseline Agents: Multimodal LLMs
+
+35
+Successful execution trajectory of the GPT-4V + SoM agent on the task for blocking a user 
+that posted a certain picture
+
+36
+Web Agent Architecture 
+Observed 
+Webpage
+HTML + 
+Image
+Low-level 
+Actions
+Return
+Objective
+High-level 
+Plans
+STOP
+TYPE
+CLICK
+HOVER
+PARSING
+PLANNING/ 
+REASONING
+●
+Model architecture of our interactive agent:
+-
+High-level Planning and Reasoning
+-
+Observation Parsing 
+-
+Low-level Action Generation
+Refine
+
+37
+Planning
+High-level plans are important for long-sequence and complex objectives.
+Task: Buy the highest rated product from the Beauty & Personal Care category within a budget under 20.
+Step 1: Navigate to the Beauty & Personal Care 
+Category (1 low-level action)
+Step 2: Sort based on rating for that category (2 low-
+level actions)
+Step 3: Select one item under 20 dollars (1 low-
+level action) 
+Step 4: Buy the selected item (3 low-level actions) 
+CLICK
+SELECT
+CLICK
+ADD
+PAY
+SORT
+SHIP
+
+38
+Measuring Productive Tasks
+Examples from Collabora Online / LibreOffice. 
+VisualWebArena is a step towards building 
+general purpose agents. But:
+•
+Tasks are not very consequential: do not 
+represent significant economic value
+•
+Tasks are simpler, as current LLM agents do not 
+even do well on these problems
+Long term: Automate productive, 
+economically valuable tasks
+
+39
+Common Failure Modes
+•
+Long horizon reasoning and planning:
+-
+Models oscillate between two webpages, or get stuck in a loop
+-
+Correctly performing tasks but undoing them
+-
+Agents tend to stop exploration / execution too early
+•
+Failures in visual processing
+-
+Clicking the wrong item
+-
+Identifying specific items in complex webpages
+-
+Spatial reasoning (“what are the prices of products in the first row?”)
+
+40
+What is Missing?
+•
+We need to do a lot more to close the gap:
+-
+Reasoning and Planning over long horizons
+-
+Allow agent to Search, execute and coordinate multiple instances in parallel and 
+ask for clarifications/confirmations
+-
+Strong vision-language-code models
+-
+Identifying the appropriate level of abstraction for agents (HTML/screenshots/
+APIs)
+-
+Multimodal models: Many real-world tasks require visual grounding to 
+effectively solve (e.g., every task involving PowerPoint, Excel, Photoshop). To 
+develop strong general agents, we will need to train and build strong vision-
+language models.
+
+41
+Talk Outline 
+●
+VisualWebArena -- Evaluating Multimodal Agents on Realistic Visual 
+Web Tasks (Koh et al., ACL 2024)
+●
+Tree Search for Language Model Agents (Koh, McAleer, Fried, 
+Salakhutdinov, arXiv 2024)
+●
+Towards Internet-Scale Training For Agents (Trabucco, Sigurdsson, 
+Piramuthu, Salakhutdinov, arXiv 2025)
+
+42
+Exponential Error Compounding in Agents 
+Accuracy @ k steps:
+1 (single step)
+5
+10
+30
+50
+90%
+59.05%
+34.87%
+4.24%
+0.52%
+95%
+77.38%
+59.87%
+21.46%
+7.69%
+99%
+95.10%
+90.44%
+73.97%
+60.50%
+99.9%
+99.50%
+99.00%
+97.04%
+95.12%
+99.99%
+99.95%
+99.90%
+99.70%
+99.50%
+
+43
+Local Decisions; Global Consequences
+…
+…
+click [31]
+click [24]
+✓
+0.1
+0.2
+0.5
+0.2
+“Add coconut milk to my cart”
+
+44
+Local Decisions; Global Consequences
+…
+…
+click [31]
+click [24]
+✓
+0.1
+0.2
+0.5
+0.2
+“Add coconut milk to my cart”
+
+45
+…
+…
+1.
+Sample actions from 
+the language model until [STOP].
+Pan et al. 2024,  
+Autonomous Evaluation and Refinement of Digital Agents
+Search By Repeated Sampling
+
+46
+✗
+…
+…
+1.
+Sample actions from 
+the language model until 
+[STOP].
+2.
+Evaluate the resulting 
+trajectory
+3.
+Repeat?
+Pan et al. 2024,  
+Autonomous Evaluation and Refinement of Digital Agents
+Search By Repeated Sampling
+
+47
+✗
+…
+…
+1.
+Sample actions from 
+the language model until 
+[STOP].
+2.
+Evaluate the resulting 
+trajectory
+3.
+Repeat?
+Pan et al. 2024,  
+Autonomous Evaluation and Refinement of Digital Agents
+Search By Repeated Sampling
+
+48
+…
+…
+✓
+1.
+Sample actions from 
+the language model until 
+[STOP].
+2.
+Evaluate the resulting 
+trajectory
+3.
+Repeat?
+Pan et al. 2024,  
+Autonomous Evaluation and Refinement of Digital Agents
+Search By Repeated Sampling
+
+49
+Search By Repeated Sampling
+●
+But the space is exponentially large. Can we guide exploration?
+●
+Key idea: apply value function to intermediate nodes. 
+Repeated 
+sampling helps! 
+
+50
+Our Method: Tree Search 
+●Best-first search algorithm
+●Ingredients:
+○
+Baseline agent to propose 
+actions.
+○
+Way to backtrack in the 
+environment.
+○
+A value function                           
+to score and rerank candidate 
+states.
+In this work, we prompt a multimodal LLM 
+(GPT-4o) to act as an evaluator.
+v = 0.35
+v = 0.55
+Jing Yu  
+Koh
+
+51
+GPT-4o Agent
+GPT-4o Agent + Search
+Starting State
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+
+52
+1
+GPT-4o Agent + Search
+1
+v = 0.5
+Starting State
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+53
+1
+1
+v = 0.5
+Starting State
+GPT-4o Agent + Search
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+54
+1
+GPT-4o Agent + Search
+1
+v = 0.5
+v = 0.45
+v = 0.45
+v = 0.45
+Starting State
+2
+2
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+55
+1
+2
+GPT-4o Agent + Search
+1
+2
+v = 0.5
+v = 0.45
+v = 0.45
+v = 0.45
+Starting State
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+56
+1
+2
+GPT-4o Agent + Search
+1
+2
+v = 0.5
+v = 0.45
+v = 0.45
+v = 0.45
+Starting State
+v = 0.4
+…
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+57
+1
+2
+3
+GPT-4o Agent + Search
+1
+3
+v = 0.5
+v = 0.45
+Starting State
+v = 0.45
+2
+v = 0.45
+v = 0.4
+…
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+58
+1
+2
+3
+GPT-4o Agent + Search
+1
+3
+v = 0.5
+v = 0.45
+Starting State
+v = 0.45
+2
+v = 0.45
+v = 0.4
+…
+v = 0.5
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+59
+1
+2
+3
+GPT-4o Agent + Search
+1
+3
+v = 0.5
+v = 0.45
+Starting State
+v = 0.45
+2
+v = 0.45
+v = 0.4
+…
+v = 0.5
+4
+4
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+60
+1
+2
+3
+GPT-4o Agent + Search
+1
+3
+v = 0.5
+v = 0.45
+Starting State
+v = 0.45
+2
+v = 0.45
+v = 0.4
+…
+v = 0.5
+4
+4
+Failure
+❌
+v = 0.55
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+61
+1
+2
+3
+GPT-4o Agent + Search
+1
+3
+v = 0.5
+v = 0.45
+Starting State
+v = 0.45
+2
+v = 0.45
+v = 0.4
+…
+v = 0.5
+4
+4
+Failure
+❌
+5
+v = 0.55
+v = 0.3
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+62
+1
+2
+3
+4
+Failure
+❌
+GPT-4o Agent + Search
+v = 0.5
+1
+2
+3
+4
+5
+6
+v = 0.5
+v = 0.45
+v = 0.45
+v = 0.45
+v = 0.4
+…
+v = 0.55
+v = 0.3
+…
+Starting State
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+63
+1
+2
+3
+4
+Failure
+❌
+GPT-4o Agent + Search
+v = 0.5
+1
+2
+3
+4
+5
+6
+v = 0.5
+v = 0.45
+v = 0.45
+v = 0.45
+v = 0.4
+…
+v = 0.55
+v = 0.3
+…
+Starting State
+v = 0.55
+v = 0.5
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+64
+1
+2
+3
+4
+Failure
+❌
+GPT-4o Agent + Search
+v = 0.5
+1
+2
+3
+4
+5
+6
+v = 0.5
+v = 0.45
+v = 0.45
+v = 0.45
+v = 0.4
+…
+v = 0.55
+v = 0.3
+…
+Starting State
+7
+v = 0.55
+v = 0.5
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+65
+1
+2
+3
+4
+Failure
+❌
+GPT-4o Agent + Search
+v = 0.68
+1
+6
+7
+v = 0.5
+v = 0.45
+v = 0.55
+Starting State
+v = 0.5
+3
+4
+5
+v = 0.45
+v = 0.45
+v = 0.4
+…
+v = 0.55
+v = 0.3
+…
+2
+v = 0.5
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+66
+1
+2
+3
+4
+Failure
+❌
+GPT-4o Agent + Search
+v = 0.68
+1
+6
+7
+v = 0.5
+8
+v = 0.45
+v = 0.55
+Starting State
+v = 0.5
+3
+4
+5
+v = 0.45
+v = 0.45
+v = 0.4
+…
+v = 0.55
+v = 0.3
+…
+2
+v = 0.5
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+67
+1
+2
+3
+4
+Failure
+❌
+GPT-4o Agent + Search
+v = 0.68
+1
+6
+7
+v = 0.5
+8
+v = 0.2
+v = 0.45
+v = 0.55
+…
+Starting State
+v = 0.5
+3
+4
+5
+v = 0.45
+v = 0.45
+v = 0.4
+…
+v = 0.55
+v = 0.3
+…
+2
+v = 0.5
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+68
+1
+2
+3
+4
+Failure
+❌
+GPT-4o Agent + Search
+v = 0.5
+v = 0.68
+1
+2
+3
+4
+5
+6
+7
+9
+v = 0.5
+8
+v = 0.2
+v = 0.45
+v = 0.45
+v = 0.45
+v = 0.4
+…
+v = 0.55
+v = 0.3
+v = 0.55
+v = 0.5
+…
+…
+Starting State
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+69
+1
+2
+3
+4
+Failure
+❌
+GPT-4o Agent + Search
+v = 0.5
+v = 1.0
+v = 0.68
+1
+2
+3
+4
+5
+6
+7
+9
+Success
+✅
+v = 0.5
+8
+v = 0.2
+v = 0.45
+v = 0.45
+v = 0.45
+v = 0.4
+…
+v = 0.55
+v = 0.3
+v = 0.55
+v = 0.5
+…
+…
+10
+Starting State
+Task Instruction (   ): “Can you add this and the 
+other canned fruit (of the same brand) that looks like 
+this, but red instead of brown to the comparison 
+page?”
+1
+Step sequence
+Backtracking
+State values
+Legend
+v = 0.4
+v = 0.5
+v = 1.0
+GPT-4o Agent
+
+70
+Results
+VisualWebArena
+0%
+7%
+14%
+21%
+28%
+Llama-3-70B
+GPT-4o
+Baseline
+w/ Search
+WebArena
+0%
+5%
+10%
+15%
+20%
+Llama-3-70B
+GPT-4o
+Baseline
+w/ Search
+
+71
+Ablations
+
+72
+Ablations
+●Having a good value function is 
+essential.
+●There is still a lot of headroom for 
+improving both the base agent policy, 
+and the value function.
+
+73
+Qualitative Results
+
+74
+Qualitative Results
+
+75
+Limitations
+●
+Search is slow
+-
+We implemented backtracking in a relatively naive way (store actions in 
+a queue, take them again to get to the original state)
+●
+Dealing with destructive actions
+-
+Some things on the web are very difficult to undo, e.g., ordering an item
+
+76
+Current Work
+●
+Search as a policy improvement function
+●
+Improving Value Function by fine-tuning instead of prompting
+●
+Explore compute tradeoff between improving baseline agent vs. 
+doing more search at inference time
+●
+What if we don’t have a perfect simulator – how can we collect 
+data at scale?
+
+77
+Talk Outline 
+●
+VisualWebArena -- Evaluating Multimodal Agents on Realistic Visual 
+Web Tasks (Koh et al., ACL 2024)
+●
+Tree Search for Language Model Agents (Koh, McAleer, Fried, 
+Salakhutdinov, arXiv 2024)
+●
+Towards Internet-Scale Training For Agents (Trabucco, Sigurdsson, 
+Piramuthu, Salakhutdinov, arXiv 2025)
+
+78
+Agents Suffer From A Data Problem
+●
+Top LLMs fall short of humans by 
+68.92% on Visual Web Arena
+●
+LLMs are often trained offline, then 
+deployed zero-shot as agents
+Human
+LLM
+Multimodal LLMs
+LLM
+Test Environment
+Training Data
+
+79
+Agents Suffer From A Data Problem
+●
+Top LLMs fall short of humans by 
+68.92% on Visual Web Arena
+●
+Can synthetic tasks unlock 
+internet-scale training for agents?
+.
+Human
+LLM
+Multimodal LLMs
+LLM
+Test Environment
+Training Data
+
+80
+Towards Internet-Scale Training For Agents (InSTA)
+●
+Can synthetic tasks unlock internet-scale training for agents?
+●
+Key Idea: use Llama to generate and verify synthetic agentic tasks
+80
+Stage 1: Task Generation
+Stage 2: Task Evaluation
+Stage 3: Data Collection
+www.github.com
+Find a codebase for 
+generating images 
+with Flux.1 [dev].
+LLM
+LLM
+Codebase found:    ✅ 
+Flux supported:    ✅ 
+Task solved:      ✅
+www.github.com 
+www.stackoverflow.com 
+www.uefi.org 
+www.javatpoint.com 
+manuals.playstation.net 
+calculator.bcis.co.uk 
+research.vu.nl 
+... 
+(150k sites)
+
+81
+Use Llama To Generate Agentic Tasks
+●
+Given a web domain as text (i.e. merseyferries.co.uk)
+●
+Propose a realistic task that an average user could complete in one 
+session.
+
+82
+Use Llama To Generate Agentic Tasks
+●
+Given a web domain as text (i.e. merseyferries.co.uk)
+●
+Propose a realistic task that an average user could complete in one 
+session.
+ 
+Llama-3.1-70B-Instruct: describe the “merseyferries.co.uk” site
+Mersey Ferries (merseyferries.co.uk) is the official website for the famous Mersey Ferry service in 
+Liverpool, England. This website serves as a one-stop platform for users to access various services and 
+information related to the ferry operation. Here are some things a user can do on this site:
+1.
+Plan a Journey: Users can plan their journey by checking the ferry timetable, which includes 
+departure and arrival times for both commuter and cruise services.
+2.
+Book Tickets: Users can book tickets online for both commuter and cruise services, including the 
+popular Manchester Ship Canal Cruise and the Liverpool Bay Cruise.
+
+83
+Use Llama To Generate Agentic Tasks
+●
+Heavy-tailed distribution, most tasks involve information retrieval
+●
+Crucially, tasks do not modify the state of the internet
+
+84
+Generated Tasks
+●
+Tasks are diverse, and many require multiple steps of reasoning 
+(i.e., what makes a font suitable for a children’s book)
+Web Domain
+Generated Task
+wordpress.org
+Find a free and popular theme for a personal blog.
+policies.google.com
+Read Google's terms of service for using YouTube.
+ec.europa.eu
+Retrieve a report on the EU's climate change policy.
+vimeo.com
+Find a short film on environmental conservation.
+fonts.adobe.com
+Browse fonts suitable for a children's book.
+apps.apple.com
+Find the top-rated free productivity app for iPhone.
+
+85
+Generated Tasks
+●
+Llama can identify facts that a site is likely to contain, such as the 
+meaning of the Om symbol
+Web Domain
+Generated Task
+ancient-symbols.com
+Look up the meaning of the Om symbol in ancient cultures.
+petsforhomes.com.au
+Find a list of available dogs for adoption in New South Wales.
+timorousbeasties.com
+View the latest fabric designs by the Timorous Beasties studio.
+shop.nikon-image.com
+Compare prices of the Nikon D850 and D500 cameras.
+blueridgecountry.com
+Find a scenic hiking trail in the Blue Ridge Mountains.
+awg-fittings.com
+Find the dimensions of a 1/2\" NPT fitting.
+
+86
+Generated Tasks
+●
+Llama has broad knowledge of sites, such as for timorousbeasties.com, 
+an independent Scottish design studio (fairly obscure)
+Web Domain
+Generated Task
+ancient-symbols.com
+Look up the meaning of the Om symbol in ancient cultures.
+petsforhomes.com.au
+Find a list of available dogs for adoption in New South Wales.
+timorousbeasties.com
+View the latest fabric designs by the Timorous Beasties studio.
+shop.nikon-image.com
+Compare prices of the Nikon D850 and D500 cameras.
+blueridgecountry.com
+Find a scenic hiking trail in the Blue Ridge Mountains.
+awg-fittings.com
+Find the dimensions of a 1/2\" NPT fitting.
+
+87
+Generated Tasks
+View the latest fabric 
+designs by the Timorous 
+Beasties studio
+●
+Tasks are grounded, 
+even for sites in the tail 
+of the data distribution
+
+88
+The Data Pipeline 
+●
+Key Idea: use Llama to generate and verify synthetic agentic 
+tasks.
+88
+Stage 1: Task Generation
+Stage 2: Task Evaluation
+Stage 3: Data Collection
+www.github.com
+Find a codebase for 
+generating images 
+with Flux.1 [dev].
+LLM
+LLM
+Codebase found:    ✅ 
+Flux supported:    ✅ 
+Task solved:      ✅
+www.github.com 
+www.stackoverflow.com 
+www.uefi.org 
+www.javatpoint.com 
+manuals.playstation.net 
+calculator.bcis.co.uk 
+research.vu.nl 
+... 
+(150k sites)
+
+89
+The Data Pipeline 
+●
+Key Idea: use Llama to generate and verify synthetic agentic tasks
+●
+How do we know when tasks are solved? Build on Llama models
+89
+Stage 1: Task Generation
+Stage 2: Task Evaluation
+Stage 3: Data Collection
+www.github.com
+Find a codebase for 
+generating images 
+with Flux.1 [dev].
+LLM
+LLM
+Codebase found:    ✅ 
+Flux supported:    ✅ 
+Task solved:      ✅
+www.github.com 
+www.stackoverflow.com 
+www.uefi.org 
+www.javatpoint.com 
+manuals.playstation.net 
+calculator.bcis.co.uk 
+research.vu.nl 
+... 
+(150k sites)
+
+90
+Automatic Task Verification
+●
+How do we know when tasks are solved?
+-
+Observe a sequence of actions, and the last observation
+-
+Estimate the probability the task is a success at the final step
+
+91
+Automatic Task Verification
+●
+How do we know when tasks are solved?
+-
+Observe a sequence of actions, and the last observation
+-
+Estimate the probability the task is a success at the final step
+●
+Prompt Llama to rate its confidence the task is solved on a scale 
+from 0.0 (not possible) → 1.0 (certain)
+●
+Of 150,000 tasks, 14.6% are rated as a success with a confidence 
+of 1.0 by the Llama verifier, roughly 22,000 tasks
+
+92
+Exploring The Data: InvasivePlantAtlas.org
+Proposed Task: find invasive plant 
+species native to North America
+Agent Response: 
+ 
+To find invasive plant species native to 
+North America, I will first click on the 
+link "All Species" to view the list of all 
+species. 
+Here is the action in JSON format:
+```json
+{
+    "action_key": "click",
+    "action_kwargs": {},
+    "target_element_id": 12
+}
+```
+
+93
+Exploring The Data: InvasivePlantAtlas.org
+Agent Response:
+To find invasive plant species native to North 
+America, I will first click on the link "Home" 
+to go back to the main page and then click on 
+the link "Sources" to view the list of sources 
+that provide information on invasive plant 
+species native to North America.
+However, since the link "Sources" is not on the 
+current page, I will first click on the link 
+"Home" to go back to the main page.
+Here is the action in JSON format:
+```json
+{
+    "action_key": "click",
+    "action_kwargs": {},
+    "target_element_id": 1
+}
+```
+Misread 
+Page
+
+94
+Exploring The Data: InvasivePlantAtlas.org
+Agent Response:
+To find invasive plant species native to North 
+America, I will first click on the link 
+"Sources" to view the list of sources that 
+provide information on invasive plant species 
+native to North America.
+Here is the action in JSON format:
+```json
+{
+    "action_key": "click",
+    "action_kwargs": {},
+    "target_element_id": 15
+}
+```
+
+95
+Exploring The Data: InvasivePlantAtlas.org
+actual click (element 25)
+Agent Response:
+To find invasive plant species native to North 
+America, I will first click on the link "FONA" 
+under the "Native Range and Taxonomic 
+References" section, which stands for "Flora 
+of North America". This will take me to the 
+Flora of North America website, where I can 
+search for invasive plant species native to 
+North America.
+Here is the action in JSON format:
+```json
+{
+    "action_key": "click",
+    "action_kwargs": {},
+    "target_element_id": 25
+}
+```
+
+96
+Exploring The Data: InvasivePlantAtlas.org
+Agent Response:
+To find invasive plant species native to North 
+America, I will first click on the link "Sort on 
+“U.S. Nativity”" to sort the list by the 
+nativity of the plant species in the United 
+States.
+Here is the action in JSON format:
+```json
+{
+    "action_key": "click",
+    "action_kwargs": {},
+    "target_element_id": 20
+}
+```
+
+97
+Exploring The Data: InvasivePlantAtlas.org
+Agent Response:
+To find invasive plant species native to North 
+America, I will first scroll down the page to view the 
+list of invasive plant species that are native to 
+North America. 
+ 
+However, since the list is already sorted by "U.S. 
+Nativity" in ascending order, I can see that the first 
+165 plant species are native to North America. 
+ 
+Here is the action in JSON format: 
+ 
+```json 
+{ 
+    "action_key": "stop", 
+    "action_kwargs": { 
+        "answer": "The first 165 plant species on the 
+list are invasive plant species native to North 
+America." 
+    }, 
+    "target_element_id": null 
+} 
+```
+
+98
+Exploring The Data: InvasivePlantAtlas.org
+Proposed Task: find invasive plant 
+species native to North America
+●
+Despite reasoning failures, the agent 
+self-corrected, and found the target 
+information
+●
+The Llama verifier evaluates this 
+trajectory as successful  
+with confidence = 1.0
+
+99
+
+100
+
+101
+The Data Pipeline 
+●
+We’ve covered generation and verification of synthetic agentic 
+tasks
+101
+Stage 1: Task Generation
+Stage 2: Task Evaluation
+Stage 3: Data Collection
+www.github.com
+Find a codebase for 
+generating images 
+with Flux.1 [dev].
+LLM
+LLM
+Codebase found:   ☑ 
+Flux supported:   ☑ 
+Task solved:     ☑
+www.github.com 
+www.stackoverflow.com 
+www.uefi.org 
+www.javatpoint.com 
+manuals.playstation.net 
+calculator.bcis.co.uk 
+research.vu.nl 
+... 
+(150k sites)
+
+102
+The Data Pipeline 
+●
+We’ve covered generation and verification of synthetic agentic 
+tasks
+●
+Now we can scale up data collection
+102
+Stage 1: Task Generation
+Stage 2: Task Evaluation
+Stage 3: Data Collection
+www.github.com
+Find a codebase for 
+generating images 
+with Flux.1 [dev].
+LLM
+LLM
+Codebase found:   ☑ 
+Flux supported:   ☑ 
+Task solved:     ☑
+www.github.com 
+www.stackoverflow.com 
+www.uefi.org 
+www.javatpoint.com 
+manuals.playstation.net 
+calculator.bcis.co.uk 
+research.vu.nl 
+... 
+(150k sites)
+
+103
+Scaling Up To 150k Live Websites 
+●
+We can use the Common Crawl PageRank to find important sites
+-
+97% accuracy in detecting and filtering harmful content
+-
+89% success rate in generating feasible tasks
+-
+82% accuracy in judging successful task completions
+[4] CommonCrawl, The Common Crawl Foundation, 2024. 
+103
+The Internet
+150k live websites
+Top 1M 
+PageRank
+N/A
+www.github.com
+Find a codebase for 
+generating images 
+with Flux.1 [dev].
+LLM
+Codebase found:  ☑ 
+Flux supported:  ☑ 
+Task solved:    ☑
+Attempt & Verify
+LLM
+
+104
+Results: Improving Efficiency 
+●
+Training on synthetic and 
+human demonstrations scale 
+faster than training on human 
+data 
+●
+Adding synthetic data improves 
+Step Accuracy by
+-
++89.5% relative to human data 
+for Mind2Web
+-
++122.1% relative to human 
+data for WebLINX
+
+105
+Results: Improving Generalization 
+●
+Training with only human demonstrations struggle with generalization
+●
+Adding synthetic data improves generalization by 
+-
++149.0% for WebLINX
+-
++156.3% for Mind2Web
+
+106
+Next Steps 
+●
+There are 385M unique domains in the Common Crawl PageRank, 
+suggesting another 1000x more data could be available by scaling 
+further
+●
+Moving towards online RL
+
+107
+Physical Agent: Long-horizon Robotic Manipulation Task
+Observed 
+Image + Depth
+Semantic 
+Segmentation
+Low-level 
+Actions
+Return
+Objective
+High-level 
+Plans
+STOP
+Joint Angle Controls
+Parsing 
+Module
+Planning 
+Module
+●
+Model architecture of our interactive agent:
+-
+High-level Planning 
+-
+Observation Parsing 
+-
+Low-level Action Generation
+Refine
+
+108
+Plan-Sequence-Learn 
+Plan-Seq-Learn (PSL): Language Model Guided RL for Solving Long Horizon Robotics, M Dalal, T 
+Chiruvolu, D Chaplot, R Salakhutdinov, ICLR 2024
+Murtaza Dalal
+
+109
+Planning Module
+Manipulation tasks require complex interactions with environment
+Low probability of success: 
+𝑝(𝑠𝑢𝑐𝑐𝑒𝑠𝑠) = 𝑃(𝑡𝑎𝑠𝑘1) ∗𝑃(𝑡𝑎𝑠𝑘2 𝑡𝑎𝑠𝑘1) ∗𝑃(…)
+• Structured language plans: (object, condition)
+• Prompt: Task description, conditions, objects, 
+formatting
+Stage termination conditions: (grasp, place). 
+Task description: The silver nut goes on the silver peg and the gold nut goes on the gold peg. Give me a simple plan to 
+solve the task using only the stage termination conditions. Make sure the plan follows the formatting specified below and 
+make sure to take into account object geometry. 
+Formatting of output: a list in which each element looks like: (<object/region>, <stage termination condition>). Don't output 
+anything else.
+Output: 
+[(“silver nut”, “grasp”), (“silver peg”, “place”), (“gold nut”, “grasp”), (“gold peg”, “place”)]
+
+110
+Sequencing/Parsing Module:  
+Grounding Language Plans in the Scene
+
+111
+Learning Low-level Actions Module: Learning Local Control
+• Learned RL policies for interaction
+• Trained with task reward 
+• Single RL model instead of separate per stage
+• Local instead of global observations
+
+112
+Learning Low-level Actions Module: Learning Local Control
+• Learned RL policies for interaction
+• Trained with task reward 
+• Single RL model instead of separate per stage
+• Local instead of global observations
+
+113
+Full Pipeline Example
+
+114
+Full Pipeline Example
+
+115
+Full Pipeline Example
+
+116
+Full Pipeline Example
+
+NVIDIA CONFIDENTIAL. DO NOT DISTRIBUTE.
+PSL solves 25+ long-horizon robotics tasks across four benchmark 
+environment suites with greater than 85% success rates
+
+
+Generalizes to Novel Object Geometries/Categories
+8x
+
+Manipulate novel objects with unseen receptacles
+8x
+
+Manipulate Deformable Objects (not observed in sim!)
+8x
+
+122
+Summary
+●
+VisualWebArena: a benchmark of realistic tasks designed to rigorously evaluate 
+and advance the capabilities of autonomous multimodal web agents
+●
+Inference-time search algorithm designed to enhance the capabilities of language 
+model agents on realistic web tasks
+●
+Data pipeline for large-scale generation and verification of synthetic web tasks, 
+powered by Llama models
+
+123
+Summary
+●
+VisualWebArena: a benchmark of realistic tasks designed to rigorously evaluate and 
+advance the capabilities of autonomous multimodal web agents
+●
+Inference-time search algorithm designed to enhance the capabilities of language model 
+agents on realistic web tasks
+●
+Data pipeline for large-scale generation and verification of synthetic web tasks, powered 
+by Llama models
+●
+AI Safety and robustness, especially in the age of autonomous systems. 
+
+
+
+126
+Thank you 

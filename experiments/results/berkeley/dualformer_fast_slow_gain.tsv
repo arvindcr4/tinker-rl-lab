@@ -1,0 +1,5 @@
+G	mode	n_seeds	heldout_acc_mean	heldout_acc_se	last10_mean	mean_zvf	zvf_theory_at_mean_p	mean_reward_train	cost_eq_reward	rollout_saving_vs_G16	delta_acc_vs_fast	delta_zvf_vs_fast
+2	fast	3	0.9817	0.0044	0.9771	0.838	0.731	0.8398	0.5938	0.875	0.0	0.0
+4	mid	3	0.9883	0.0017	0.9714	0.7635	0.5538	0.8625	0.4313	0.75	0.0066	-0.0745
+8	mid	3	0.99	0.0029	0.9732	0.6906	0.3264	0.8694	0.3074	0.5	0.0083	-0.1474
+16	slow	3	0.9783	0.006	0.9837	0.6312	0.114	0.8731	0.2183	0.0	-0.0034	-0.2068

@@ -1,0 +1,93 @@
+{
+  "iter": 148,
+  "n_domains": 9,
+  "n_pairs": 36,
+  "n_total_cells_iter147": 2560,
+  "d8_unified_c4_fire_density": 0.09140625,
+  "d8_wilson_lo": 0.0808463373797422,
+  "d8_wilson_hi": 0.10319061716534356,
+  "d9_unified_c4_recovery_density": 0.09140625,
+  "d9_wilson_lo": 0.0808463373797422,
+  "d9_wilson_hi": 0.10319061716534356,
+  "low_cluster": [
+    "D1",
+    "D6",
+    "D7"
+  ],
+  "mid_cluster": [
+    "D2",
+    "D3",
+    "D4",
+    "D8",
+    "D9"
+  ],
+  "high_cluster": [
+    "D5"
+  ],
+  "low_density_range": [
+    0.00530359555546593,
+    0.015625
+  ],
+  "mid_density_range": [
+    0.09140625,
+    0.729296875
+  ],
+  "high_density_range": [
+    1.0,
+    1.0
+  ],
+  "h1_d8_matches_cost_overhead": true,
+  "h2_d8_equals_d9": true,
+  "h3_d8_in_mid_layer": true,
+  "h4_d8_d9_identical_and_method_uniform": true,
+  "per_method_d8_d9": [
+    {
+      "method": "aero",
+      "n": 640,
+      "n_fired": 57,
+      "d8_density": 0.0890625,
+      "d8_wilson_lo": 0.06937642770843834,
+      "d8_wilson_hi": 0.11365244150411334,
+      "n_recovered": 57,
+      "d9_density": 0.0890625,
+      "d9_wilson_lo": 0.06937642770843834,
+      "d9_wilson_hi": 0.11365244150411334
+    },
+    {
+      "method": "areal",
+      "n": 640,
+      "n_fired": 51,
+      "d8_density": 0.0796875,
+      "d8_wilson_lo": 0.061127135524002674,
+      "d8_wilson_hi": 0.10326360903180112,
+      "n_recovered": 51,
+      "d9_density": 0.0796875,
+      "d9_wilson_lo": 0.061127135524002674,
+      "d9_wilson_hi": 0.10326360903180112
+    },
+    {
+      "method": "gift",
+      "n": 640,
+      "n_fired": 64,
+      "d8_density": 0.1,
+      "d8_wilson_lo": 0.07909079752289233,
+      "d8_wilson_hi": 0.1256825504558652,
+      "n_recovered": 64,
+      "d9_density": 0.1,
+      "d9_wilson_lo": 0.07909079752289233,
+      "d9_wilson_hi": 0.1256825504558652
+    },
+    {
+      "method": "grpo",
+      "n": 640,
+      "n_fired": 62,
+      "d8_density": 0.096875,
+      "d8_wilson_lo": 0.07630615546653241,
+      "d8_wilson_hi": 0.12225448429330915,
+      "n_recovered": 62,
+      "d9_density": 0.096875,
+      "d9_wilson_lo": 0.07630615546653241,
+      "d9_wilson_hi": 0.12225448429330915
+    }
+  ]
+}

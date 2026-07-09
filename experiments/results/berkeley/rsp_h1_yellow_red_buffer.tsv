@@ -1,0 +1,13 @@
+model_or_threshold	r_max_or_red	r_hi_or_yellow	buffer_or_protected	ci_width
+Qwen3.5-4B	0.8180	0.8921	0.0741	0.1563
+Qwen3-8B	0.2894	0.3563	0.0669	0.1292
+Llama-3.1-8B-Instruct	0.8687	0.9250	0.0563	0.1195
+DeepSeek-V3.1	0.8469	0.9062	0.0593	0.1236
+Nemotron-120B	0.3097	1.5000	1.1903	1.4115
+THRESHOLD_R*=0.30	red_cross=4	yellow_cross=5	protected=1	
+THRESHOLD_R*=0.40	red_cross=3	yellow_cross=4	protected=1	
+THRESHOLD_R*=0.50	red_cross=3	yellow_cross=4	protected=1	
+THRESHOLD_R*=0.60	red_cross=3	yellow_cross=4	protected=1	
+THRESHOLD_R*=0.70	red_cross=3	yellow_cross=4	protected=1	
+THRESHOLD_R*=0.80	red_cross=3	yellow_cross=4	protected=1	
+THRESHOLD_R*=0.90	red_cross=0	yellow_cross=3	protected=3	

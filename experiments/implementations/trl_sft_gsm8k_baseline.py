@@ -122,7 +122,7 @@ def main():
 
         # Match GRPO step budget
         max_steps=args.max_steps,
-        max_seq_length=2048,
+        max_length=2048,
 
         # Logging to match GRPO eval frequency
         logging_steps=1,
@@ -141,7 +141,7 @@ def main():
 
         # Misc
         seed=args.seed,
-        report_to="wandb",
+        report_to="none",
         run_name=f"sft-gsm8k-{args.model.split('/')[-1].lower()}",
 
         # Packing for efficiency

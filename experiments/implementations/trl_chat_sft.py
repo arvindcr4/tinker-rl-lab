@@ -85,7 +85,7 @@ def main():
 
         # Training
         num_train_epochs=3,
-        max_seq_length=512,
+        max_length=512,
 
         # LoRA for efficiency
         use_peft=True,

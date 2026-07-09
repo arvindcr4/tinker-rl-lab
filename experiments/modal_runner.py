@@ -13,40 +13,54 @@ Usage:
 import modal
 import os
 import json
-from pathlib import Path
 
-# Modal app
 app = modal.App("tinker-rl-lab")
 
 # GPU image with all dependencies
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install(
-        "torch>=2.4.0",
-        "transformers>=4.45.0",
-        "trl>=0.12.0",
+        # Core ML — layer 1
+        "torch==2.6.0",
+        "numpy==1.26.4",
+        "scipy==1.14.1",
+        "gymnasium==0.29.1",
+    )
+    .pip_install(
+        # HuggingFace ecosystem — layer 2
+        "transformers>=4.46.0,<5.0.0",
+        "trl>=1.0.0,<1.2.0",
         "datasets>=3.0.0",
-        "accelerate>=1.0.0",
+        "accelerate>=1.4.0",
         "peft>=0.13.0",
         "bitsandbytes>=0.44.0",
-        "numpy>=1.26.0",
-        "scipy>=1.14.0",
-        "rliable>=1.0.8",
-        "wandb",
+        "safetensors>=0.4.0",
+    )
+    .pip_install(
+        # RL libraries — compatible with gymnasium 0.29.1
+        "stable-baselines3==2.3.2",
+        "rliable>=1.1.0",
+        "matplotlib",
+    )
+    .run_commands(
+        # These have conflicting gymnasium pins but work fine at runtime with 0.29.1
+        "pip install --no-deps tianshou==1.1.0 d3rlpy==2.6.0 rl-games==1.6.5",
+        # Install their non-gymnasium deps (including gym for d3rlpy, sensai for tianshou)
+        "pip install gym h5py structlog colorama dataclasses-json 'deepdiff<8.0.0' tensorboard tensorboardX setproctitle watchdog sensai-utils numba overrides pettingzoo wandb",
+        "pip install gymnasium==0.29.1",  # Re-pin after pettingzoo overwrites it
+    )
+    .add_local_dir(
+        os.path.expanduser("~/tinker"),
+        remote_path="/root/tinker",
+        ignore=[".git", "wandb", "__pycache__", "*.pyc"],
     )
 )
 
-# Mount the repo
-repo_mount = modal.Mount.from_local_dir(
-    os.path.expanduser("~/tinker"),
-    remote_path="/root/tinker",
-    condition=lambda path: not any(
-        x in path for x in [".git", "__pycache__", "wandb", ".pyc", "paper/"]
-    ),
-)
-
-# Volume for persisting results across runs
+# Volume for persisting results
 results_vol = modal.Volume.from_name("tinker-results", create_if_missing=True)
+
+# HF token for gated models (Llama etc.)
+hf_secret = modal.Secret.from_name("huggingface-secret")
 
 EXPERIMENTS = {
     "trl_grpo": "trl_grpo_math.py",
@@ -70,21 +84,31 @@ SEEDS = [42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768]
 @app.function(
     image=image,
     gpu="A10G",
-    mounts=[repo_mount],
     volumes={"/results": results_vol},
-    timeout=3600,  # 1 hour per experiment
+    secrets=[hf_secret],
+    timeout=3600,
     retries=1,
 )
 def run_experiment(exp_name: str, exp_file: str, seed: int) -> dict:
     """Run a single experiment with a given seed on GPU."""
     import subprocess
     import time
+    import glob
+    import shutil
 
     exp_path = f"/root/tinker/experiments/implementations/{exp_file}"
     result_dir = f"/results/{exp_name}/seed_{seed}"
     os.makedirs(result_dir, exist_ok=True)
 
-    print(f"[{exp_name}] seed={seed} | GPU: {os.popen('nvidia-smi --query-gpu=name --format=csv,noheader').read().strip()}")
+    gpu_name = os.popen("nvidia-smi --query-gpu=name --format=csv,noheader").read().strip()
+    print(f"[{exp_name}] seed={seed} | GPU: {gpu_name}")
+
+    # HF login if token available
+    hf_token = os.environ.get("HF_TOKEN", "")
+    run_env = {**os.environ, "SEED": str(seed), "RESULTS_DIR": result_dir}
+    if hf_token:
+        run_env["HF_TOKEN"] = hf_token
+        run_env["HUGGING_FACE_HUB_TOKEN"] = hf_token
 
     start = time.time()
     try:
@@ -94,30 +118,25 @@ def run_experiment(exp_name: str, exp_file: str, seed: int) -> dict:
             text=True,
             timeout=3000,
             cwd="/root/tinker",
-            env={**os.environ, "SEED": str(seed), "RESULTS_DIR": result_dir},
+            env=run_env,
         )
         elapsed = time.time() - start
-        success = proc.returncode == 0
 
         result = {
             "experiment": exp_name,
             "seed": seed,
-            "success": success,
+            "success": proc.returncode == 0,
             "elapsed_seconds": round(elapsed, 1),
             "returncode": proc.returncode,
             "stdout_tail": proc.stdout[-2000:] if proc.stdout else "",
             "stderr_tail": proc.stderr[-2000:] if proc.stderr else "",
         }
 
-        # Save result
         with open(f"{result_dir}/result.json", "w") as f:
             json.dump(result, f, indent=2)
 
-        # Copy any output files from the experiment
         for pattern in ["*.json", "*.csv", "*.pt", "*.safetensors"]:
-            import glob
             for fp in glob.glob(f"/root/tinker/experiments/implementations/{pattern}"):
-                import shutil
                 shutil.copy2(fp, result_dir)
 
         results_vol.commit()
@@ -151,105 +170,76 @@ def run_experiment(exp_name: str, exp_file: str, seed: int) -> dict:
         }
 
 
-@app.function(
-    image=image,
-    volumes={"/results": results_vol},
-    timeout=600,
-)
+@app.function(image=image, volumes={"/results": results_vol}, timeout=600)
 def aggregate_results() -> dict:
     """Aggregate all results into a summary."""
     import glob
 
     all_results = []
-    for result_file in glob.glob("/results/*/seed_*/result.json"):
-        with open(result_file) as f:
+    for rf in glob.glob("/results/*/seed_*/result.json"):
+        with open(rf) as f:
             all_results.append(json.load(f))
 
-    # Group by experiment
     by_exp = {}
     for r in all_results:
-        exp = r["experiment"]
-        if exp not in by_exp:
-            by_exp[exp] = []
-        by_exp[exp].append(r)
+        by_exp.setdefault(r["experiment"], []).append(r)
 
     summary = {}
     for exp, runs in by_exp.items():
-        successes = [r for r in runs if r.get("success")]
+        ok = [r for r in runs if r.get("success")]
         summary[exp] = {
             "total_runs": len(runs),
-            "successful": len(successes),
-            "failed": len(runs) - len(successes),
+            "successful": len(ok),
+            "failed": len(runs) - len(ok),
             "seeds": [r["seed"] for r in runs],
-            "avg_time": round(sum(r["elapsed_seconds"] for r in runs) / len(runs), 1) if runs else 0,
+            "avg_time": round(sum(r["elapsed_seconds"] for r in runs) / max(len(runs), 1), 1),
         }
 
-    # Save summary
     with open("/results/summary.json", "w") as f:
         json.dump(summary, f, indent=2)
     results_vol.commit()
-
     return summary
 
 
 @app.local_entrypoint()
-def main(
-    exp: str = "",
-    seeds: int = 5,
-    dry_run: bool = False,
-):
-    """Launch multi-seed experiments on Modal GPUs."""
+def main(exp: str = "", seeds: int = 5, dry_run: bool = False):
     seed_list = SEEDS[:seeds]
+    experiments = {exp: EXPERIMENTS[exp]} if exp else EXPERIMENTS
 
-    if exp:
-        # Single experiment
-        if exp not in EXPERIMENTS:
-            print(f"Unknown experiment: {exp}")
-            print(f"Available: {', '.join(EXPERIMENTS.keys())}")
-            return
-        experiments = {exp: EXPERIMENTS[exp]}
-    else:
-        experiments = EXPERIMENTS
-
-    total_jobs = len(experiments) * len(seed_list)
-    print(f"Launching {total_jobs} jobs ({len(experiments)} experiments x {len(seed_list)} seeds)")
-    print(f"Experiments: {', '.join(experiments.keys())}")
-    print(f"Seeds: {seed_list}")
-    print(f"GPU: A10G | Timeout: 1h per job")
-
-    if dry_run:
-        print("\n[DRY RUN] Would launch:")
-        for exp_name, exp_file in experiments.items():
-            for seed in seed_list:
-                print(f"  {exp_name} seed={seed} -> {exp_file}")
+    if exp and exp not in EXPERIMENTS:
+        print(f"Unknown: {exp}. Available: {', '.join(EXPERIMENTS.keys())}")
         return
 
-    # Launch all jobs in parallel
+    total = len(experiments) * len(seed_list)
+    print(f"Launching {total} jobs ({len(experiments)} exp x {len(seed_list)} seeds) on A10G")
+
+    if dry_run:
+        for name, f in experiments.items():
+            for s in seed_list:
+                print(f"  {name} seed={s} -> {f}")
+        return
+
     jobs = []
-    for exp_name, exp_file in experiments.items():
-        for seed in seed_list:
-            jobs.append(run_experiment.spawn(exp_name, exp_file, seed))
+    for name, f in experiments.items():
+        for s in seed_list:
+            jobs.append(run_experiment.spawn(name, f, s))
 
-    print(f"\n{total_jobs} jobs dispatched. Waiting for results...")
+    print(f"{total} jobs dispatched. Waiting...")
 
-    # Collect results
     results = []
     for job in jobs:
-        result = job.get()
-        status = "OK" if result.get("success") else "FAIL"
-        print(f"  [{status}] {result['experiment']} seed={result['seed']} ({result['elapsed_seconds']}s)")
-        results.append(result)
+        r = job.get()
+        tag = "OK" if r.get("success") else "FAIL"
+        print(f"  [{tag}] {r['experiment']} seed={r['seed']} ({r['elapsed_seconds']}s)")
+        if not r.get("success") and r.get("stderr_tail"):
+            print(f"        stderr: {r['stderr_tail'][-300:]}")
+        results.append(r)
 
-    # Aggregate
-    print("\nAggregating results...")
     summary = aggregate_results.remote()
+    print("\n" + "=" * 50)
+    for name, s in summary.items():
+        tag = "PASS" if s["successful"] == s["total_runs"] else "PARTIAL"
+        print(f"  [{tag}] {name}: {s['successful']}/{s['total_runs']} OK, avg {s['avg_time']}s")
 
-    print("\n" + "=" * 60)
-    print("EXPERIMENT SUMMARY")
-    print("=" * 60)
-    for exp_name, stats in summary.items():
-        status = "PASS" if stats["successful"] == stats["total_runs"] else "PARTIAL"
-        print(f"  [{status}] {exp_name}: {stats['successful']}/{stats['total_runs']} seeds OK, avg {stats['avg_time']}s")
-
-    succeeded = sum(1 for r in results if r.get("success"))
-    print(f"\nTotal: {succeeded}/{total_jobs} succeeded")
+    ok = sum(1 for r in results if r.get("success"))
+    print(f"\nTotal: {ok}/{total} succeeded")

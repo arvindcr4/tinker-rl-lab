@@ -6,6 +6,14 @@ A consolidated research repository for Reinforcement Learning experiments with L
 
 This repository consolidates multiple research projects, spanning several RL frameworks (Tinker/SkyRL, verl, OpenRLHF, TRL from HuggingFace), multiple compute backends (Local GPU, vast.ai, Google Colab), and multiple environments (Atropos, GSM8K, Math, HumanEval, Tool Use).
 
+## Semester and authorship map
+
+This codebase spans two academic phases. They share infrastructure, but their deliverables and authorship are separated:
+
+- [`sem 3 work/`](sem%203%20work/) — frozen six-student Group 6 report, paper, capstone source, contribution record, and original citation metadata.
+- [`sem 4 work/`](sem%204%20work/) — Arvind C R's solo continuation under project guide Ramesh Prakash Guledgudd, including eight freshly compiled papers and an experiment/evidence map.
+- [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) — exact boundary, ownership explanation, and rationale for retaining one reproducible codebase.
+
 ## Repository Structure
 
 ```
@@ -242,7 +250,14 @@ This repository consolidates all PES LLM Research projects:
 
 ## Authors
 
-**PES LLM Research Team**
+### Semester 4 — individual continuation
+
+- Arvind C R (PES University) — student researcher and author
+- Ramesh Prakash Guledgudd (PES University) — project guide
+
+The current P1–P8 paper series belongs to this phase. See [`sem 4 work/`](sem%204%20work/) and the shared author source in [`paper/sections/_shared_author.tex`](paper/sections/_shared_author.tex).
+
+### Semester 3 — Group 6
 
 - Arvind C R (PES University) &mdash; equal contribution
 - Sandhya Jeyaraj (PES University) &mdash; equal contribution
@@ -255,7 +270,7 @@ This repository consolidates all PES LLM Research projects:
 
 Corresponding author: Arvind C R &lt;arvindcr4@gmail.com&gt;. Equal contribution denotes equal
 technical and writing contribution; author order among the student team is alphabetical by given name after the two equal-contribution leads.
-See [`CITATION.cff`](CITATION.cff) for the canonical BibTeX record.
+The root [`CITATION.cff`](CITATION.cff) is the canonical citation record for the Semester 3 group release; a frozen copy is retained in [`sem 3 work/CITATION.cff`](sem%203%20work/CITATION.cff).
 
 ## License
 

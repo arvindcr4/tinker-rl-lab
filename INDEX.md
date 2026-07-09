@@ -3,12 +3,15 @@
 > **Agent navigation map.** Every folder in this repo has its own `INDEX.md`; this is the top-level
 > router. When you need a file, read the relevant folder's `INDEX.md` first instead of grepping blind.
 >
-> **What this repo is:** *"A Unified Benchmark for RL Post-Training of Language Models"* — PES University
-> MTech capstone (Group 6), prepped for NeurIPS 2026 blind review. GRPO/PPO/DPO post-training of LLMs
-> across many RL frameworks (Tinker, SkyRL, verl, OpenRLHF, TRL, Atropos), plus a heavy
-> paper / reproducibility / audit apparatus.
+> **What this repo is:** a PES University M.Tech research codebase spanning a Semester 3 Group 6
+> capstone and Arvind C R's Semester 4 solo continuation. It studies GRPO/PPO/DPO post-training
+> across many RL frameworks (Tinker, SkyRL, verl, OpenRLHF, TRL, Atropos), with a substantial
+> paper, reproducibility, and audit apparatus.
 
 ## Read first (entry points)
+- `PROJECT_HISTORY.md` — semester boundary and academic ownership.
+- `sem 3 work/` — frozen six-member group deliverables and contribution record.
+- `sem 4 work/` — solo-continuation papers and source/evidence map.
 - `README.md` — master overview: repo layout, the 8 components, quick-start commands, provenance.
 - `AGENTS.md` + `CONTEXT-MAP.md` — agent workflow + domain-doc routing (→ `contexts/research-engineering/CONTEXT.md`).
 - `REPRODUCE.md` — copy-pasteable reviewer commands to reproduce the headline Qwen3-8B GSM8K GRPO result.

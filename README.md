@@ -4,10 +4,7 @@ A consolidated research repository for Reinforcement Learning experiments with L
 
 ## Overview
 
-This repository consolidates multiple research projects focused on:
-- **Multiple RL Frameworks**: Tinker/SkyRL, verl, OpenRLHF, TRL (HuggingFace)
-- **Multiple Compute Backends**: Local GPU, vast.ai, Google Colab
-- **Multiple Environments**: Atropos, GSM8K, Math, HumanEval, Tool Use
+This repository consolidates multiple research projects, spanning several RL frameworks (Tinker/SkyRL, verl, OpenRLHF, TRL from HuggingFace), multiple compute backends (Local GPU, vast.ai, Google Colab), and multiple environments (Atropos, GSM8K, Math, HumanEval, Tool Use).
 
 ## Repository Structure
 
@@ -64,7 +61,7 @@ PES LLM Research Project experiments using the [Tinker](https://thinkingmachines
 | Distillation On-Policy | KL minimization to teacher | Complete |
 | Math RL (GSM8K) | Word problem solving | Complete |
 
-**Key Results:**
+Key results from the experiments:
 - Arithmetic: 69.5% → 100% accuracy in ~20 steps
 - Preference learning effectively shapes response style
 - Distillation transfers knowledge efficiently

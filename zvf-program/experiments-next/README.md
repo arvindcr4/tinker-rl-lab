@@ -43,10 +43,20 @@ build_pool.py  ──(one Tinker sampling pass per model/checkpoint)──▶  r
      │
      ├─▶ analyze_t1_ci.py      E-T1  CI coverage (Wald + Wilson, iid vs correlated)
      ├─▶ analyze_t2_floor.py   E-T2  wasted-compute floor vs observed rollouts-to-mixed
-     └─▶ analyze_t3_gstar.py   E-T3a signal-per-rollout vs G, empirical argmax vs analytic
+     ├─▶ analyze_t3_gstar.py   E-T3a signal-per-rollout vs G, empirical argmax vs analytic
+     └─▶ analyze_rollout_quality.py
+                               zero-variance groups, active advantages,
+                               clustered CIs, length confounding
 
 passk_eval.py  ──(Tinker sampling pass per checkpoint)──▶  results/passk_*.json
-                                item 8: pass@{1,8,32}, base AND post-RL, pinned config
+                                pass@{1,8,32} + problem-clustered CIs,
+                                base AND post-RL, pinned config
+                                      │
+                                      └─▶ compare_passk_results.py
+                                           paired base/post-RL deltas
+
+quality_*.json (3+ evaluation seeds) ──▶ aggregate_seed_audits.py
+                                mean ± SD + seed-level bootstrap interval
 ```
 
 ## Run
@@ -64,14 +74,54 @@ python3 build_pool.py --model Qwen/Qwen3-8B
 python3 analyze_t1_ci.py    --pool results/pool_qwen3-8b_train_n512_r32_s42.json
 python3 analyze_t2_floor.py --pool results/pool_qwen3-8b_train_n512_r32_s42.json --group-size 8
 python3 analyze_t3_gstar.py --pool results/pool_qwen3-8b_train_n512_r32_s42.json
+python3 analyze_rollout_quality.py \
+  --pool results/pool_qwen3-8b_train_n512_r32_s42.json
 
 # 3. item-8 baseline for the base model (do this BEFORE any training arm)
 python3 passk_eval.py --model Qwen/Qwen3-8B --problems 200
+
+# add clustered CIs to a historical completed result without sampling
+python3 passk_eval.py \
+  --from-result results/passk_qwen3-8b_base_test_p200_n32_s42.json
+
+# after sampling a post-RL checkpoint with the identical config
+python3 compare_passk_results.py \
+  --base results/passk_qwen3-8b_base_test_p200_n32_s42.json \
+  --post results/passk_qwen3-8b_postrl_test_p200_n32_s42.json
 
 # repeat build_pool + analyses for a mid-training checkpoint:
 python3 build_pool.py --model Qwen/Qwen3-8B \
     --sampler-path "tinker://<weights-from-audit-run>" --tag qwen3-8b-step50
 ```
+
+## Publication-readiness diagnostics
+
+New pools store per-rollout token counts and per-prompt sampling latency. They
+also checkpoint retry/failure events and report goodput, output-token
+throughput, and MTBF when at least two failures are observed. Historical pools
+without token counts remain analyzable, but their length diagnostics are
+explicitly marked unavailable rather than imputed.
+
+Collect at least three **evaluation seeds** for each frozen checkpoint:
+
+```bash
+for seed in 42 43 44; do
+  python3 build_pool.py --model Qwen/Qwen3-8B --seed "$seed" \
+    --tag "qwen3-8b-base-s${seed}"
+  python3 analyze_rollout_quality.py \
+    --pool "results/pool_qwen3-8b-base-s${seed}.json"
+done
+
+python3 aggregate_seed_audits.py \
+  results/quality_pool_qwen3-8b-base-s42.json \
+  results/quality_pool_qwen3-8b-base-s43.json \
+  results/quality_pool_qwen3-8b-base-s44.json \
+  --out results/quality_qwen3-8b-base_3seed.json
+```
+
+These vary prompt selection and stochastic sampling for one frozen checkpoint.
+They are not substitutes for independently initialized **training-seed** runs.
+Base and post-RL comparisons must use matching seed/config sets.
 
 ## Pre-registered decision rules
 
@@ -90,5 +140,7 @@ python3 build_pool.py --model Qwen/Qwen3-8B \
 - Every JSON carries `status`; analyses refuse pools with `status != complete`.
 - `--dry-run` prints plans and cost estimates and contacts nothing.
 - Partial pool progress is checkpointed every 25 prompts; a killed run leaves
-  `status: "started"` (visible, resumable by rerunning, never silently used).
+  `status: "started"` (visible, resumable with `--resume`, never silently used).
+- Resume validates model, split, prompt count, rollout count, seed, sampling
+  parameters, and contiguous prompt indices before making another paid call.
 - Nothing in this directory invents a run, a metric, or a "win."

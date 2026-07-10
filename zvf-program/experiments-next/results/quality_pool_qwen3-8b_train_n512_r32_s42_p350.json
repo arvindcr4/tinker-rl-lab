@@ -1,0 +1,71 @@
+{
+  "kind": "rollout_quality_audit",
+  "status": "complete",
+  "created_at": "2026-07-10T18:48:40.831805+00:00",
+  "source": {
+    "tag": "qwen3-8b_train_n512_r32_s42_p350",
+    "model": "Qwen/Qwen3-8B",
+    "split": "train",
+    "seed": 42,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "rollouts_per_prompt": 32,
+    "n_prompts": 350,
+    "max_tokens": 512,
+    "checkpoint_identity": "tinker://01d27017-5469-581a-b390-18ddc46856cb:train:0/sampler_weights/pool0",
+    "path": "results/pool_qwen3-8b_train_n512_r32_s42_p350.json",
+    "input_status": "complete"
+  },
+  "core_metrics": {
+    "n_prompts": 350,
+    "n_rollouts": 11200,
+    "pass_at_1": 0.3030357142857143,
+    "zero_variance_prompt_rate": 0.10857142857142857,
+    "informative_prompt_rate": 0.8914285714285715,
+    "all_correct_prompt_rate": 0.0,
+    "all_incorrect_prompt_rate": 0.10857142857142857,
+    "mean_group_reward_variance": 0.15758370535714286,
+    "active_advantage_fraction": 0.8914285714285715
+  },
+  "prompt_clustered_bootstrap_95_ci": {
+    "pass_at_1": {
+      "point": 0.3030357142857143,
+      "ci_low": 0.2786584821428571,
+      "ci_high": 0.32813616071428564,
+      "bootstrap_replicates": 2000,
+      "resampling_unit": "prompt"
+    },
+    "zero_variance_prompt_rate": {
+      "point": 0.10857142857142857,
+      "ci_low": 0.07428571428571429,
+      "ci_high": 0.14285714285714285,
+      "bootstrap_replicates": 2000,
+      "resampling_unit": "prompt"
+    },
+    "mean_group_reward_variance": {
+      "point": 0.15758370535714286,
+      "ci_low": 0.14916964285714285,
+      "ci_high": 0.16619789341517854,
+      "bootstrap_replicates": 2000,
+      "resampling_unit": "prompt"
+    },
+    "active_advantage_fraction": {
+      "point": 0.8914285714285715,
+      "ci_low": 0.8571428571428571,
+      "ci_high": 0.9228571428571428,
+      "bootstrap_replicates": 2000,
+      "resampling_unit": "prompt"
+    }
+  },
+  "length_diagnostics": {
+    "available": false,
+    "prompt_coverage": 0.0,
+    "reason": "pool rows lack token_counts; collect with instrumented build_pool.py"
+  },
+  "methodology": {
+    "bootstrap_seed": 20260711,
+    "bootstrap_replicates": 2000,
+    "zero_variance_definition": "population variance <= 1e-12 within prompt",
+    "length_auc_interpretation": "0.5 means length does not rank correct above incorrect responses"
+  }
+}

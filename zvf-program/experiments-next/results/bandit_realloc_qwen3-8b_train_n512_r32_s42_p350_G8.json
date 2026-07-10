@@ -1,0 +1,42 @@
+{
+  "kind": "bandit_reallocation_sim",
+  "status": "complete",
+  "pool": "results/pool_qwen3-8b_train_n512_r32_s42_p350.json",
+  "pool_tag": "qwen3-8b_train_n512_r32_s42_p350",
+  "model": "Qwen/Qwen3-8B",
+  "G": 8,
+  "n_strata": 6,
+  "groups_budget": 250,
+  "sims": 500,
+  "seed": 0,
+  "stratum_true_J": [
+    0.00437,
+    0.0633,
+    0.14493,
+    0.20454,
+    0.24176,
+    0.19381
+  ],
+  "oracle_stratum": 4,
+  "results": {
+    "uniform": {
+      "informative_groups_per_1k_rollouts": 94.521,
+      "J_signal_per_1k_rollouts": 18.1874
+    },
+    "static-oracle": {
+      "informative_groups_per_1k_rollouts": 124.36,
+      "J_signal_per_1k_rollouts": 30.4508
+    },
+    "static-hardest": {
+      "informative_groups_per_1k_rollouts": 13.638,
+      "J_signal_per_1k_rollouts": 0.6018
+    },
+    "thompson-gu": {
+      "informative_groups_per_1k_rollouts": 120.84,
+      "J_signal_per_1k_rollouts": 27.8364
+    }
+  },
+  "verdict": "GO: thompson within 5% of oracle and beats uniform",
+  "caveat": "offline simulation on a frozen pool; a training-time pilot must confirm under distribution shift (p_hat drifts as the policy learns)",
+  "generated_at": "2026-07-10T21:21:29.495433+00:00"
+}

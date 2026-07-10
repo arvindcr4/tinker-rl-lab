@@ -350,6 +350,20 @@ step $t$ is
 \end{equation}
 and a Wilson-score interval is recommended near the boundaries
 $\ZVF_t\in\{0,1\}$ where the Wald interval \eqref{eq:ci} degenerates.
+
+\paragraph{Empirical calibration (E-T1, added after validation).} On a
+350-prompt $\times$ 32-rollout Qwen3-8B/GSM8K sampling pool, the Wald
+interval \eqref{eq:ci} attains 0.94--0.97 coverage at $m\ge 64$ under
+shuffled batching but only 0.89--0.93 at $m=32$; the Wilson interval is
+within 0.95--0.98 at every tested $(m,K)$. \textbf{We therefore adopt the
+Wilson interval as the operational CI} and recommend $m\ge 64$ groups for
+Wald-based reporting. Under difficulty-\emph{sorted} (curriculum-style)
+batching, coverage of the \emph{global} population ZVF collapses to
+0.08--0.40 --- but the same intervals cover the \emph{local} (window)
+ZVF at 0.947: the failure is an estimand mismatch, not mis-calibration.
+Stratified batch composition restores global validity (0.996, conservative).
+Artifacts: \texttt{experiments-next/results/t1\_ci\_coverage\_*.json},
+\texttt{t1\_correlated\_fix\_*.json}.
 \end{theorem}
 \begin{proofsketch}
 Each $Z_g$ is a Bernoulli$(\theta_K)$ variable (its mean over the within-group
@@ -728,14 +742,29 @@ closed-form FOC.
         of $G^\star$ is unproven. See \GAP{T3 sketch}.
   \item \textbf{Across-group i.i.d.\ (Assumption~\ref{ass:across-iid})
         underlies all three} and is violated by curriculum, replay, and
-        within-epoch correlation. This is the single biggest threat to validity.
+        within-epoch correlation. \emph{Resolved empirically (E-T1):} under
+        curriculum ordering the CI remains calibrated for the \emph{local}
+        (curriculum-stage) ZVF --- the quantity a stage-local controller
+        acts on --- while global inference requires stratified batch
+        composition. The threat is thus an estimand-labeling requirement,
+        not an invalidation.
 \end{itemize}
 
-\paragraph{No empirical claims.} This draft contains no experiments and
-fabricates no numbers; the only numeric values are illustrative algebraic
-constants ($1.96$, $\delta$, $\varepsilon$) and the worked example inherited
-from the Pillar~1 appendix. Empirical validation of the CI coverage, the T2
-floor, and the T3 optimum is deferred to Pillar~1/3 experiments.
+\paragraph{Empirical status of the theorems.} The companion
+\texttt{experiments-next} suite now provides validation on a real pool
+(Qwen3-8B, GSM8K, 350 prompts $\times$ 32 rollouts): T1 coverage as above;
+the T2 geometric floor holds in all six difficulty strata with tightness
+1.00--1.05; and the T3 objective's analytic argmax ($G^\star=2$ under the
+empirical $\hat p$ prior, every stratum) agrees with the empirical
+$J$-argmax in 4/5 strata (adjacent grid point in the fifth). Note the
+tension this exposes: $J$-optimal group sizes are far below the $G=8$--$16$
+the field defaults to; whether small-$G$ advantage-estimate quality erodes
+the predicted efficiency is exactly what experiment E-T3b must test.
+
+\paragraph{No empirical claims beyond the cited artifacts.} This draft
+contains no experiments of its own; all numeric values above are either
+illustrative algebraic constants or drawn from the checked-in
+\texttt{experiments-next/results/*.json} artifacts named inline.
 
 %==============================================================================
 \section*{References (placeholders --- DO NOT cite as resolved)}

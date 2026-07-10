@@ -1,0 +1,46 @@
+{
+  "kind": "passk_bootstrap_audit",
+  "status": "complete",
+  "created_at": "2026-07-10T18:51:58.620172+00:00",
+  "source_path": "results/passk_qwen3-8b_base_test_p200_n32_s42.json",
+  "source_tag": "qwen3-8b_base_test_p200_n32_s42",
+  "model": "Qwen/Qwen3-8B",
+  "which": "base",
+  "split": "test",
+  "seed": 42,
+  "temperature": 1.0,
+  "top_p": 1.0,
+  "max_tokens": null,
+  "max_prompt_tokens": null,
+  "prompt_fingerprints": null,
+  "n_problems": 200,
+  "n_per_problem": 32,
+  "pass_at_k": {
+    "1": 0.304375,
+    "8": 0.797436,
+    "32": 0.91
+  },
+  "pass_at_k_95_ci": {
+    "1": {
+      "point": 0.304375,
+      "ci_low": 0.27515234375000003,
+      "ci_high": 0.33125390624999995,
+      "bootstrap_replicates": 2000,
+      "resampling_unit": "problem"
+    },
+    "8": {
+      "point": 0.7974362653660763,
+      "ci_low": 0.7526176484555489,
+      "ci_high": 0.8392041518947928,
+      "bootstrap_replicates": 2000,
+      "resampling_unit": "problem"
+    },
+    "32": {
+      "point": 0.91,
+      "ci_low": 0.865,
+      "ci_high": 0.95,
+      "bootstrap_replicates": 2000,
+      "resampling_unit": "problem"
+    }
+  }
+}

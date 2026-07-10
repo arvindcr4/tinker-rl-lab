@@ -36,9 +36,11 @@ app = modal.App(APP_NAME)
 results_vol = modal.Volume.from_name("zvf-passk-results", create_if_missing=True)
 
 image = (
-    modal.Image.debian_slim(python_version="3.12")
+    modal.Image.from_registry("nvidia/cuda:12.8.1-devel-ubuntu22.04",
+                              add_python="3.12")
     .pip_install("vllm", "datasets", "huggingface_hub", "hf_transfer")
-    .env({"HF_HUB_ENABLE_HF_TRANSFER": "1", "VLLM_USE_V1": "1"})
+    .env({"HF_HUB_ENABLE_HF_TRANSFER": "1",
+          "CUDA_HOME": "/usr/local/cuda"})
 )
 
 SYSTEM_PROMPT = (
@@ -178,7 +180,8 @@ def evaluate(model: str, dataset: str, problems: int, n: int, ks: list[int],
         lora_request = LoRARequest("postrl", 1, adapter_path)
 
     llm = LLM(model=model, dtype="bfloat16", seed=seed,
-              max_model_len=2048, **lora_kwargs)
+              max_model_len=2048, gpu_memory_utilization=0.90,
+              enforce_eager=True, **lora_kwargs)
     sp = SamplingParams(n=n, temperature=temperature, top_p=top_p,
                         max_tokens=max_tokens, seed=seed)
     prompts = [p for p, _ in items]

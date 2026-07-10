@@ -1,0 +1,35 @@
+{
+  "kind": "passk_eval_modal",
+  "status": "complete",
+  "backend": "modal-vllm",
+  "vllm_version": "0.24.0",
+  "gpu": "A100-40GB",
+  "model": "Qwen/Qwen3-8B",
+  "adapter": null,
+  "dataset": "math500",
+  "grader": "strict normalized-boxed match (LOWER BOUND)",
+  "n_problems": 8,
+  "n_per_problem": 4,
+  "ks": [
+    1
+  ],
+  "temperature": 1.0,
+  "top_p": 1.0,
+  "seed": 42,
+  "max_tokens": 512,
+  "per_problem_c": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "pass_at_k": {
+    "1": 0.0
+  },
+  "wall_seconds": 232.2,
+  "tag": "qwen3-8b_base_math500_p8_n4_s42"
+}

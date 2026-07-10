@@ -13663,5 +13663,10 @@
       "p_hat": 0.1875
     }
   ],
-  "sampler_path": "tinker://01d27017-5469-581a-b390-18ddc46856cb:train:0/sampler_weights/pool0"
+  "sampler_path": "tinker://01d27017-5469-581a-b390-18ddc46856cb:train:0/sampler_weights/pool0",
+  "requested_sampler_path": null,
+  "failure_events": [],
+  "retry_count": 0,
+  "resumed_at": "2026-07-10T20:29:02.028375+00:00",
+  "sampling_session_id": "2026-07-10T20:29:02.028359+00:00"
 }

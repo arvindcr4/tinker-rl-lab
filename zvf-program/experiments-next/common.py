@@ -20,7 +20,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 RESULTS_DIR = HERE / "results"
-REPO_ROOT = HERE.parents[2]
+REPO_ROOT = HERE.parents[1]  # .../tinker-rl-lab
 
 SYSTEM_PROMPT = (
     "You are a math assistant. Solve the problem step by step, then give "

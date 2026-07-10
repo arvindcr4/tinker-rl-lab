@@ -1,0 +1,316 @@
+{
+  "kind": "t3_gstar_curve",
+  "status": "complete",
+  "pool": "results/pool_qwen3-8b_train_n512_r32_s42_p350.json",
+  "pool_tag": "qwen3-8b_train_n512_r32_s42_p350",
+  "model": "Qwen/Qwen3-8B",
+  "grid": [
+    2,
+    3,
+    4,
+    6,
+    8,
+    12,
+    16,
+    24,
+    32
+  ],
+  "draws_per_cell": 4000,
+  "seed": 0,
+  "generated_at": "2026-07-10T18:37:17.645823+00:00",
+  "rows": [
+    {
+      "stratum": 0,
+      "n_prompts": 87,
+      "mean_p_hat": 0.037,
+      "curve": [
+        {
+          "G": 2,
+          "p_mixed_empirical": 0.07,
+          "p_mixed_analytic": 0.0684,
+          "signal_per_rollout_empirical": 0.035,
+          "signal_per_rollout_analytic": 0.03422
+        },
+        {
+          "G": 3,
+          "p_mixed_empirical": 0.1052,
+          "p_mixed_analytic": 0.1027,
+          "signal_per_rollout_empirical": 0.03508,
+          "signal_per_rollout_analytic": 0.03422
+        },
+        {
+          "G": 4,
+          "p_mixed_empirical": 0.1388,
+          "p_mixed_analytic": 0.1322,
+          "signal_per_rollout_empirical": 0.03469,
+          "signal_per_rollout_analytic": 0.03305
+        },
+        {
+          "G": 6,
+          "p_mixed_empirical": 0.1958,
+          "p_mixed_analytic": 0.1846,
+          "signal_per_rollout_empirical": 0.03263,
+          "signal_per_rollout_analytic": 0.03077
+        },
+        {
+          "G": 8,
+          "p_mixed_empirical": 0.2502,
+          "p_mixed_analytic": 0.2297,
+          "signal_per_rollout_empirical": 0.03128,
+          "signal_per_rollout_analytic": 0.02871
+        },
+        {
+          "G": 12,
+          "p_mixed_empirical": 0.346,
+          "p_mixed_analytic": 0.3023,
+          "signal_per_rollout_empirical": 0.02883,
+          "signal_per_rollout_analytic": 0.02519
+        },
+        {
+          "G": 16,
+          "p_mixed_empirical": 0.42,
+          "p_mixed_analytic": 0.3568,
+          "signal_per_rollout_empirical": 0.02625,
+          "signal_per_rollout_analytic": 0.0223
+        },
+        {
+          "G": 24,
+          "p_mixed_empirical": 0.5258,
+          "p_mixed_analytic": 0.43,
+          "signal_per_rollout_empirical": 0.02191,
+          "signal_per_rollout_analytic": 0.01792
+        },
+        {
+          "G": 32,
+          "p_mixed_empirical": 0.556,
+          "p_mixed_analytic": 0.474,
+          "signal_per_rollout_empirical": 0.01738,
+          "signal_per_rollout_analytic": 0.01481
+        }
+      ],
+      "empirical_argmax_G": 3,
+      "analytic_argmax_G": 2,
+      "t3_gstar_prediction": null
+    },
+    {
+      "stratum": 1,
+      "n_prompts": 87,
+      "mean_p_hat": 0.1932,
+      "curve": [
+        {
+          "G": 2,
+          "p_mixed_empirical": 0.325,
+          "p_mixed_analytic": 0.308,
+          "signal_per_rollout_empirical": 0.1625,
+          "signal_per_rollout_analytic": 0.15398
+        },
+        {
+          "G": 3,
+          "p_mixed_empirical": 0.4745,
+          "p_mixed_analytic": 0.4619,
+          "signal_per_rollout_empirical": 0.15817,
+          "signal_per_rollout_analytic": 0.15398
+        },
+        {
+          "G": 4,
+          "p_mixed_empirical": 0.5982,
+          "p_mixed_analytic": 0.5671,
+          "signal_per_rollout_empirical": 0.14956,
+          "signal_per_rollout_analytic": 0.14177
+        },
+        {
+          "G": 6,
+          "p_mixed_empirical": 0.7522,
+          "p_mixed_analytic": 0.712,
+          "signal_per_rollout_empirical": 0.12537,
+          "signal_per_rollout_analytic": 0.11866
+        },
+        {
+          "G": 8,
+          "p_mixed_empirical": 0.8385,
+          "p_mixed_analytic": 0.8056,
+          "signal_per_rollout_empirical": 0.10481,
+          "signal_per_rollout_analytic": 0.1007
+        },
+        {
+          "G": 12,
+          "p_mixed_empirical": 0.9465,
+          "p_mixed_analytic": 0.9086,
+          "signal_per_rollout_empirical": 0.07888,
+          "signal_per_rollout_analytic": 0.07571
+        },
+        {
+          "G": 16,
+          "p_mixed_empirical": 0.9865,
+          "p_mixed_analytic": 0.9553,
+          "signal_per_rollout_empirical": 0.06166,
+          "signal_per_rollout_analytic": 0.05971
+        },
+        {
+          "G": 24,
+          "p_mixed_empirical": 0.9992,
+          "p_mixed_analytic": 0.9882,
+          "signal_per_rollout_empirical": 0.04164,
+          "signal_per_rollout_analytic": 0.04118
+        },
+        {
+          "G": 32,
+          "p_mixed_empirical": 1.0,
+          "p_mixed_analytic": 0.9965,
+          "signal_per_rollout_empirical": 0.03125,
+          "signal_per_rollout_analytic": 0.03114
+        }
+      ],
+      "empirical_argmax_G": 2,
+      "analytic_argmax_G": 2,
+      "t3_gstar_prediction": null
+    },
+    {
+      "stratum": 2,
+      "n_prompts": 87,
+      "mean_p_hat": 0.3459,
+      "curve": [
+        {
+          "G": 2,
+          "p_mixed_empirical": 0.457,
+          "p_mixed_analytic": 0.4475,
+          "signal_per_rollout_empirical": 0.2285,
+          "signal_per_rollout_analytic": 0.22377
+        },
+        {
+          "G": 3,
+          "p_mixed_empirical": 0.6945,
+          "p_mixed_analytic": 0.6713,
+          "signal_per_rollout_empirical": 0.2315,
+          "signal_per_rollout_analytic": 0.22377
+        },
+        {
+          "G": 4,
+          "p_mixed_empirical": 0.811,
+          "p_mixed_analytic": 0.7945,
+          "signal_per_rollout_empirical": 0.20275,
+          "signal_per_rollout_analytic": 0.19863
+        },
+        {
+          "G": 6,
+          "p_mixed_empirical": 0.9377,
+          "p_mixed_analytic": 0.9128,
+          "signal_per_rollout_empirical": 0.15629,
+          "signal_per_rollout_analytic": 0.15213
+        },
+        {
+          "G": 8,
+          "p_mixed_empirical": 0.977,
+          "p_mixed_analytic": 0.9609,
+          "signal_per_rollout_empirical": 0.12212,
+          "signal_per_rollout_analytic": 0.12012
+        },
+        {
+          "G": 12,
+          "p_mixed_empirical": 0.9985,
+          "p_mixed_analytic": 0.9916,
+          "signal_per_rollout_empirical": 0.08321,
+          "signal_per_rollout_analytic": 0.08263
+        },
+        {
+          "G": 16,
+          "p_mixed_empirical": 0.9998,
+          "p_mixed_analytic": 0.9981,
+          "signal_per_rollout_empirical": 0.06248,
+          "signal_per_rollout_analytic": 0.06238
+        },
+        {
+          "G": 24,
+          "p_mixed_empirical": 1.0,
+          "p_mixed_analytic": 0.9999,
+          "signal_per_rollout_empirical": 0.04167,
+          "signal_per_rollout_analytic": 0.04166
+        },
+        {
+          "G": 32,
+          "p_mixed_empirical": 1.0,
+          "p_mixed_analytic": 1.0,
+          "signal_per_rollout_empirical": 0.03125,
+          "signal_per_rollout_analytic": 0.03125
+        }
+      ],
+      "empirical_argmax_G": 3,
+      "analytic_argmax_G": 2,
+      "t3_gstar_prediction": null
+    },
+    {
+      "stratum": 3,
+      "n_prompts": 87,
+      "mean_p_hat": 0.6214,
+      "curve": [
+        {
+          "G": 2,
+          "p_mixed_empirical": 0.4532,
+          "p_mixed_analytic": 0.4413,
+          "signal_per_rollout_empirical": 0.22662,
+          "signal_per_rollout_analytic": 0.22064
+        },
+        {
+          "G": 3,
+          "p_mixed_empirical": 0.6935,
+          "p_mixed_analytic": 0.6619,
+          "signal_per_rollout_empirical": 0.23117,
+          "signal_per_rollout_analytic": 0.22064
+        },
+        {
+          "G": 4,
+          "p_mixed_empirical": 0.8125,
+          "p_mixed_analytic": 0.7815,
+          "signal_per_rollout_empirical": 0.20312,
+          "signal_per_rollout_analytic": 0.19538
+        },
+        {
+          "G": 6,
+          "p_mixed_empirical": 0.9105,
+          "p_mixed_analytic": 0.8929,
+          "signal_per_rollout_empirical": 0.15175,
+          "signal_per_rollout_analytic": 0.14881
+        },
+        {
+          "G": 8,
+          "p_mixed_empirical": 0.952,
+          "p_mixed_analytic": 0.9381,
+          "signal_per_rollout_empirical": 0.119,
+          "signal_per_rollout_analytic": 0.11726
+        },
+        {
+          "G": 12,
+          "p_mixed_empirical": 0.982,
+          "p_mixed_analytic": 0.9722,
+          "signal_per_rollout_empirical": 0.08183,
+          "signal_per_rollout_analytic": 0.08101
+        },
+        {
+          "G": 16,
+          "p_mixed_empirical": 0.9928,
+          "p_mixed_analytic": 0.9846,
+          "signal_per_rollout_empirical": 0.06205,
+          "signal_per_rollout_analytic": 0.06154
+        },
+        {
+          "G": 24,
+          "p_mixed_empirical": 0.9995,
+          "p_mixed_analytic": 0.9939,
+          "signal_per_rollout_empirical": 0.04165,
+          "signal_per_rollout_analytic": 0.04141
+        },
+        {
+          "G": 32,
+          "p_mixed_empirical": 1.0,
+          "p_mixed_analytic": 0.9972,
+          "signal_per_rollout_empirical": 0.03125,
+          "signal_per_rollout_analytic": 0.03116
+        }
+      ],
+      "empirical_argmax_G": 3,
+      "analytic_argmax_G": 2,
+      "t3_gstar_prediction": null
+    }
+  ],
+  "next_step": "fill t3_gstar_prediction from the closed-form in theory/zvf_theory.tex sec:T3 and compare to empirical_argmax_G per stratum; then run E-T3b (short training at G* +/- delta, matched rollouts)"
+}

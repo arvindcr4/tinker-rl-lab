@@ -21,6 +21,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import time
@@ -54,6 +55,9 @@ def main() -> None:
     ap.add_argument("--lora-rank", type=int, default=4)
     ap.add_argument("--dry-run", action="store_true",
                     help="print the plan and cost estimate; contact nothing")
+    ap.add_argument("--resume", action="store_true",
+                    help="continue a partial pool with identical config "
+                         "(same seed => deterministic example order)")
     args = ap.parse_args()
 
     tag = args.tag or (
@@ -82,6 +86,24 @@ def main() -> None:
         print(f"[pool:{tag}] WARNING: only {len(examples)} examples available",
               flush=True)
 
+    banked: list[dict] = []
+    if args.resume and out_path.exists():
+        prev = json.loads(out_path.read_text())
+        if prev.get("status") == "complete":
+            sys.exit(f"[pool:{tag}] pool already complete; nothing to resume.")
+        same = all(prev.get(k) == getattr(args, k.replace("-", "_"), None) or
+                   prev.get(k) == v for k, v in
+                   [("seed", args.seed), ("split", args.split),
+                    ("rollouts_per_prompt", args.rollouts),
+                    ("temperature", args.temperature)])
+        if not same:
+            sys.exit(f"[pool:{tag}] existing partial pool has different "
+                     "config; refusing to resume across configs.")
+        banked = prev.get("prompts", [])
+        print(f"[pool:{tag}] resuming: {len(banked)} prompts already banked; "
+              f"{len(examples) - len(banked)} to go "
+              "(same seed => same deterministic example order)", flush=True)
+
     result: dict = {
         "kind": "zvf_pool",
         "status": "started",
@@ -95,7 +117,7 @@ def main() -> None:
         "top_p": args.top_p,
         "max_tokens": args.max_tokens,
         "started_at": utc_now(),
-        "prompts": [],
+        "prompts": banked,
     }
     write_result(out_path, result)
 
@@ -110,6 +132,8 @@ def main() -> None:
 
     t0 = time.time()
     for i, (prompt, answer) in enumerate(examples):
+        if i < len(banked):
+            continue  # resumed: already sampled in a prior run
         prompt_ids = tok.encode(prompt, add_special_tokens=False)
         if len(prompt_ids) > args.max_prompt_tokens:
             prompt_ids = prompt_ids[: args.max_prompt_tokens]

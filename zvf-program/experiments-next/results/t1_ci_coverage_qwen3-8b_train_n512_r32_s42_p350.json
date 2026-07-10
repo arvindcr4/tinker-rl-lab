@@ -1,0 +1,313 @@
+{
+  "kind": "t1_ci_coverage",
+  "status": "complete",
+  "pool": "results/pool_qwen3-8b_train_n512_r32_s42_p350.json",
+  "pool_tag": "qwen3-8b_train_n512_r32_s42_p350",
+  "model": "Qwen/Qwen3-8B",
+  "batches_per_cell": 2000,
+  "seed": 0,
+  "generated_at": "2026-07-10T18:37:03.085741+00:00",
+  "rows": [
+    {
+      "G": 4,
+      "M": 8,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.4158,
+      "wald_coverage": 0.8385,
+      "wilson_coverage": 0.974,
+      "mean_wald_width": 0.6304
+    },
+    {
+      "G": 4,
+      "M": 8,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.4158,
+      "wald_coverage": 0.465,
+      "wilson_coverage": 0.7225,
+      "mean_wald_width": 0.4465
+    },
+    {
+      "G": 4,
+      "M": 16,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.4158,
+      "wald_coverage": 0.928,
+      "wilson_coverage": 0.966,
+      "mean_wald_width": 0.4667
+    },
+    {
+      "G": 4,
+      "M": 16,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.4158,
+      "wald_coverage": 0.401,
+      "wilson_coverage": 0.5145,
+      "mean_wald_width": 0.3419
+    },
+    {
+      "G": 4,
+      "M": 32,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.4158,
+      "wald_coverage": 0.9275,
+      "wilson_coverage": 0.952,
+      "mean_wald_width": 0.3355
+    },
+    {
+      "G": 4,
+      "M": 32,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.4158,
+      "wald_coverage": 0.2685,
+      "wilson_coverage": 0.329,
+      "mean_wald_width": 0.2585
+    },
+    {
+      "G": 4,
+      "M": 64,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.4158,
+      "wald_coverage": 0.958,
+      "wilson_coverage": 0.975,
+      "mean_wald_width": 0.2397
+    },
+    {
+      "G": 4,
+      "M": 64,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.4158,
+      "wald_coverage": 0.2115,
+      "wilson_coverage": 0.231,
+      "mean_wald_width": 0.1975
+    },
+    {
+      "G": 4,
+      "M": 128,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.4158,
+      "wald_coverage": 0.9695,
+      "wilson_coverage": 0.9695,
+      "mean_wald_width": 0.1701
+    },
+    {
+      "G": 4,
+      "M": 128,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.4158,
+      "wald_coverage": 0.1875,
+      "wilson_coverage": 0.1875,
+      "mean_wald_width": 0.1496
+    },
+    {
+      "G": 8,
+      "M": 8,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.2412,
+      "wald_coverage": 0.8815,
+      "wilson_coverage": 0.98,
+      "mean_wald_width": 0.5245
+    },
+    {
+      "G": 8,
+      "M": 8,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.2412,
+      "wald_coverage": 0.33,
+      "wilson_coverage": 0.8225,
+      "mean_wald_width": 0.2332
+    },
+    {
+      "G": 8,
+      "M": 16,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.2412,
+      "wald_coverage": 0.9175,
+      "wilson_coverage": 0.9725,
+      "mean_wald_width": 0.4032
+    },
+    {
+      "G": 8,
+      "M": 16,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.2412,
+      "wald_coverage": 0.2515,
+      "wilson_coverage": 0.3985,
+      "mean_wald_width": 0.1813
+    },
+    {
+      "G": 8,
+      "M": 32,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.2412,
+      "wald_coverage": 0.9205,
+      "wilson_coverage": 0.9735,
+      "mean_wald_width": 0.2923
+    },
+    {
+      "G": 8,
+      "M": 32,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.2412,
+      "wald_coverage": 0.1875,
+      "wilson_coverage": 0.2665,
+      "mean_wald_width": 0.1501
+    },
+    {
+      "G": 8,
+      "M": 64,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.2412,
+      "wald_coverage": 0.9455,
+      "wilson_coverage": 0.9605,
+      "mean_wald_width": 0.2085
+    },
+    {
+      "G": 8,
+      "M": 64,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.2412,
+      "wald_coverage": 0.1515,
+      "wilson_coverage": 0.1715,
+      "mean_wald_width": 0.1227
+    },
+    {
+      "G": 8,
+      "M": 128,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.2412,
+      "wald_coverage": 0.9645,
+      "wilson_coverage": 0.966,
+      "mean_wald_width": 0.1484
+    },
+    {
+      "G": 8,
+      "M": 128,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.2412,
+      "wald_coverage": 0.149,
+      "wilson_coverage": 0.151,
+      "mean_wald_width": 0.0956
+    },
+    {
+      "G": 16,
+      "M": 8,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.1542,
+      "wald_coverage": 0.7415,
+      "wilson_coverage": 0.9785,
+      "mean_wald_width": 0.3977
+    },
+    {
+      "G": 16,
+      "M": 8,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.1542,
+      "wald_coverage": 0.137,
+      "wilson_coverage": 0.8665,
+      "mean_wald_width": 0.0915
+    },
+    {
+      "G": 16,
+      "M": 16,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.1542,
+      "wald_coverage": 0.92,
+      "wilson_coverage": 0.9755,
+      "mean_wald_width": 0.3223
+    },
+    {
+      "G": 16,
+      "M": 16,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.1542,
+      "wald_coverage": 0.165,
+      "wilson_coverage": 0.869,
+      "mean_wald_width": 0.078
+    },
+    {
+      "G": 16,
+      "M": 32,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.1542,
+      "wald_coverage": 0.8925,
+      "wilson_coverage": 0.9515,
+      "mean_wald_width": 0.242
+    },
+    {
+      "G": 16,
+      "M": 32,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.1542,
+      "wald_coverage": 0.0945,
+      "wilson_coverage": 0.182,
+      "mean_wald_width": 0.0664
+    },
+    {
+      "G": 16,
+      "M": 64,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.1542,
+      "wald_coverage": 0.941,
+      "wilson_coverage": 0.9615,
+      "mean_wald_width": 0.1741
+    },
+    {
+      "G": 16,
+      "M": 64,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.1542,
+      "wald_coverage": 0.0775,
+      "wilson_coverage": 0.089,
+      "mean_wald_width": 0.0575
+    },
+    {
+      "G": 16,
+      "M": 128,
+      "B": 2000,
+      "correlated": false,
+      "population_zvf": 0.1542,
+      "wald_coverage": 0.966,
+      "wilson_coverage": 0.9795,
+      "mean_wald_width": 0.1237
+    },
+    {
+      "G": 16,
+      "M": 128,
+      "B": 2000,
+      "correlated": true,
+      "population_zvf": 0.1542,
+      "wald_coverage": 0.081,
+      "wilson_coverage": 0.087,
+      "mean_wald_width": 0.044
+    }
+  ],
+  "decision_rule": "T1 usable if Wald coverage in [0.93,0.97] at M>=32 (iid); correlated under-coverage => clustered-variance correction needed"
+}

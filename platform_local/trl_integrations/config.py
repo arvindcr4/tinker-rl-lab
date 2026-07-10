@@ -16,6 +16,8 @@ class TRLModelConfig(BaseModel):
     load_in_8bit: bool = False
     load_in_4bit: bool = False
     use_peft: bool = True
+    peft_method: str = "lora"  # lora, prefix_tuning, p_tuning, prompt_tuning, bitfit
+    peft_num_virtual_tokens: int = 32
     lora_rank: int = 32
     lora_alpha: int = 32
     lora_dropout: float = 0.0

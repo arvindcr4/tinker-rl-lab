@@ -344,6 +344,14 @@ Examples:
     )
 
     parser.add_argument(
+        "--peft-method",
+        type=str,
+        choices=["lora", "prefix_tuning", "p_tuning", "prompt_tuning", "bitfit"],
+        default="lora",
+        help="PEFT method to use"
+    )
+
+    parser.add_argument(
         "--batch-size",
         type=int,
         default=8,

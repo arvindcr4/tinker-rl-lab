@@ -285,10 +285,10 @@ from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from trl import GRPOConfig, GRPOTrainer
+from platform_local.unified.peft_utils import get_peft_config, apply_bitfit
 
 # Model
 MODEL_NAME = "{config.model_name}"
-LORA_RANK = {config.model.lora_rank}
 
 # Load model
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
@@ -298,14 +298,18 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map=None if "LOCAL_RANK" in os.environ else "auto",
 )
 
-# LoRA
-model = prepare_model_for_kbit_training(model)
-lora_config = LoraConfig(
-    r=LORA_RANK,
-    lora_alpha=LORA_RANK,
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
-)
-model = get_peft_model(model, lora_config)
+# PEFT Setup
+if "{config.model.peft_method}" == "bitfit":
+    model = apply_bitfit(model)
+else:
+    model = prepare_model_for_kbit_training(model)
+    peft_config = get_peft_config(
+        method="{config.model.peft_method}",
+        lora_rank={config.model.lora_rank},
+        lora_alpha={config.model.lora_alpha},
+        num_virtual_tokens={config.model.peft_num_virtual_tokens},
+    )
+    model = get_peft_model(model, peft_config)
 
 # Data
 train_data = load_dataset("json", data_files="{config.data.train_data[0]}")

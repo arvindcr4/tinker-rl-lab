@@ -376,7 +376,7 @@ add_text(slide, 1, 3.2, 11, 0.5, "Questions & Discussion", 24, GRAY, False, PP_A
 add_text(slide, 1, 4.2, 11, 0.5, "Group 6", 20, WHITE, True, PP_ALIGN.CENTER)
 add_text(slide, 1, 4.7, 11, 0.5, "Madhu Kumara L  |  Sandhya Jeyaraj  |  Mohammad Rafi", 16, GRAY, False, PP_ALIGN.CENTER)
 add_text(slide, 1, 5.1, 11, 0.5, "Arumugam Chetty K  |  Arvind CR  |  Dhruva N", 16, GRAY, False, PP_ALIGN.CENTER)
-add_text(slide, 1, 5.8, 11, 0.5, "Mentors: Narayana Darapaneni & Anwesh Reddy Padhuri", 14, CYAN, False, PP_ALIGN.CENTER)
+add_text(slide, 1, 5.8, 11, 0.5, "Mentors: Narayana Darapaneni & Anwesh Reddy Paduri", 14, CYAN, False, PP_ALIGN.CENTER)
 
 # Save
 output_path = "/Users/arvind/Downloads/8th_guidance_call_slides.pptx"

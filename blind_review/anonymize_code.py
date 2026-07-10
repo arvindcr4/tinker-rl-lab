@@ -2,8 +2,8 @@
 """Anonymize the repository into ``blind_review/tinker-rl-lab-anon/`` and
 produce a tarball ``blind_review/tinker-rl-lab-anon.tar.gz``.
 
-The anonymized tree is built from a clean export of the working tree
-(``git archive HEAD``) so that nothing outside source-control is leaked.
+The anonymized tree is built from the tracked files of the working tree
+(``git ls-files --cached``) so that nothing outside source-control is leaked.
 All comments, docstrings, W&B run/project names, HuggingFace repo paths,
 notebook metadata, and README / LICENSE copyright lines are rewritten to
 remove any identifying information.
@@ -218,6 +218,10 @@ REPLACEMENTS: list[tuple[str, str, str]] = [
     (r"Ramesh Prakash Guledgudd", "Anonymous", "name Ramesh Prakash Guledgudd -> Anonymous"),
     (r"Guledgudd", "Anonymous", "name Guledgudd -> Anonymous"),
     (r"rameshpg@pes\.edu", "anonymous@example.com", "email rameshpg@pes.edu -> anonymous@example.com"),
+    (_LB + r"ArumugamKrishnan" + _LA, "anonymous", "handle ArumugamKrishnan -> anonymous"),
+    # Local home-directory paths (machine/user identity).
+    (r"/Users/arvind", "/home/anon", "home path /Users/arvind -> /home/anon"),
+    (r"/Users/lingzhi", "/home/anon", "home path /Users/lingzhi -> /home/anon"),
     (r"Anwesh Reddy Padhuri", "Anonymous", "name Anwesh Reddy Padhuri -> Anonymous"),
     (r"Anwesh Reddy Paduri", "Anonymous", "name Anwesh Reddy Paduri -> Anonymous"),
     (r"Sandhya Jeyaraj", "Anonymous", "name Sandhya Jeyaraj -> Anonymous"),
@@ -297,13 +301,13 @@ class ChangeLog:
 
 def _git_archive_into(dst: Path) -> None:
     """Copy the current working tree (tracked files + newly added paper_anon
-    and blind_review/) into ``dst``. We use ``git ls-files`` with ``--others
-    --exclude-standard`` so we include both tracked and staged-but-new files
-    while respecting .gitignore. Build artefacts and secrets are filtered.
+    and blind_review/) into ``dst``. We use ``git ls-files --cached`` so only
+    tracked files are exported — untracked scratch can never leak into the
+    bundle.
     """
     dst.mkdir(parents=True, exist_ok=True)
     result = subprocess.run(
-        ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+        ["git", "ls-files", "--cached"],
         cwd=ROOT,
         stdout=subprocess.PIPE,
         text=True,
@@ -324,6 +328,8 @@ def _git_archive_into(dst: Path) -> None:
 def _excluded(relpath: str) -> bool:
     parts = Path(relpath).parts
     if any(part in EXCLUDE_DIRS for part in parts):
+        return True
+    if _IDENT_PATH_RE.search(relpath):
         return True
     return relpath in EXCLUDE_FILES
 
@@ -432,12 +438,16 @@ def _post_scan(root: Path) -> list[str]:
         r"chettyarumugam|dhruva\.n\.murthy|@greatlearning|@northwestern|"
         r"tinker-rl-lab-world-class|PES2PGE|arvindcr@pes\.edu|"
         r"Padhuri|Paduri|Jeyaraj|"
-        r"Guledgudd|rameshpg|Ramesh Prakash"
+        r"Guledgudd|rameshpg|Ramesh Prakash|"
+        r"ArumugamKrishnan|/Users/arvind|/Users/lingzhi"
     )
     for path in root.rglob("*"):
         if not path.is_file():
             continue
         rel = path.relative_to(root).as_posix()
+        if _IDENT_PATH_RE.search(rel):
+            leaks.append(rel)
+            continue
         try:
             data = path.read_bytes()
         except OSError:
@@ -455,7 +465,8 @@ def _post_scan(root: Path) -> list[str]:
 
 
 def main() -> None:
-    # 1. Fresh staging tree from git archive so we never export uncommitted files.
+    # 1. Fresh staging tree from tracked files only, so we never export
+    #    uncommitted or untracked content.
     if STAGING.exists():
         shutil.rmtree(STAGING)
     _git_archive_into(STAGING)

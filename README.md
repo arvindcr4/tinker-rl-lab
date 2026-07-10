@@ -20,6 +20,10 @@ This codebase spans two academic phases. They share infrastructure, but their de
 
 ```
 tinker-rl-lab/
+├── PROJECT_HISTORY.md    # Semester boundary & academic ownership
+├── sem 3 work/           # Frozen Group 6 deliverables (Semester 3)
+├── sem 4 work/           # Solo-continuation papers & submission (Semester 4)
+│
 ├── skyrl/               # SkyRL tx integration (Local Tinker API)
 │   ├── backends/         # vast.ai and Colab runners
 │   ├── configs/          # YAML configurations
@@ -155,6 +159,8 @@ source tinker-env/bin/activate
 
 # Install dependencies
 pip install tinker tinker-cookbook atropos
+# Full dependency set (all integrations, audits, and analysis scripts):
+pip install -r requirements.txt
 ```
 
 ### Running Tinker Experiments
@@ -270,7 +276,7 @@ The current P1–P8 paper series belongs to this phase. See [`sem 4 work/`](sem%
 - Madhu Kumara L (PES University)
 - Mohammad Rafi (PES University)
 - Dhruva N Murthy (PES University)
-- Arumugam K (PES University)
+- Arumugam Chetty K (PES University)
 - Anwesh Reddy Paduri (Great Learning / PES University) &mdash; project guide
 - Narayana Darapaneni (Northwestern University / Great Learning) &mdash; project guide
 

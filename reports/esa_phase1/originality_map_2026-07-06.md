@@ -1,7 +1,6 @@
 # 8-Paper Originality Map — from Deep Research (2026-07-06)
 
-Source: Gemini Deep Research (complete) + ChatGPT Deep Research (pending, will cross-check).
-Raw: `deepresearch_gemini_raw.md`. Brief: `deep_research_brief.md`.
+Compiled from an external deep-research literature sweep (2026-07-06).
 
 > ⚠️ **Verify every citation before use.** Deep Research can hallucinate/misattribute papers and dates
 > (several are dated 2026). Treat the *angles* as the deliverable; confirm each cited paper on arXiv/OpenReview

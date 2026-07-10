@@ -16,7 +16,6 @@
 
 **Subfolders:**
 - `addendum/` — 8 numbered reviewer-response addenda notes (see its INDEX.md)
-- `chatgpt_responses/` — raw ChatGPT/Claude review answer batches (see its INDEX.md)
 - `_staging/` — pre-8-agent draft snapshot (see its INDEX.md)
 
 **Find it fast:**

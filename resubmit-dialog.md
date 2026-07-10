@@ -1,0 +1,57 @@
+- generic [ref=f18e10]:
+  - link [ref=f18e36] [cursor=pointer]:
+    - /url: /notifications?pb_id=20839
+  - generic [ref=f18e56]:
+    - generic [ref=f18e57]:
+      - generic [ref=f18e58]:
+        - generic [ref=f18e59]:
+          - link [ref=f18e61] [cursor=pointer]:
+            - /url: /courses/153654?th=pg&pb_id=20839
+          - generic [ref=f18e69]:
+            - generic [ref=f18e70]: M.Tech Project
+            - generic [ref=f18e72]: Phase 1 First Review
+        - generic [ref=f18e74]:
+          - link "Previous" [ref=f18e75] [cursor=pointer]:
+            - /url: /courses/153654/modules/items/8729980?pb_id=20839
+          - link "Next" [ref=f18e84] [cursor=pointer]:
+            - /url: /courses/153654/modules/items/8695032?pb_id=20839
+      - generic [ref=f18e96]:
+        - generic [ref=f18e97]: Submitted, evaluation under process
+        - generic [ref=f18e106]:
+          - generic [ref=f18e107]:
+            - generic [ref=f18e108]: "Available From:"
+            - generic [ref=f18e109]: 05 Jun 26 8:00 PM
+          - generic [ref=f18e110]:
+            - generic [ref=f18e111]: "Due Date:"
+            - generic [ref=f18e112]: 11 Jul 26 11:59 PM
+          - generic [ref=f18e113]:
+            - generic [ref=f18e114]: "Total Marks:"
+            - generic [ref=f18e115]: "40"
+          - generic [ref=f18e116]:
+            - generic [ref=f18e117]: "Submission Type:"
+            - generic [ref=f18e118]: File Upload
+        - generic [ref=f18e119]: Description
+        - generic [ref=f18e131]:
+          - generic [ref=f18e132] [cursor=pointer]: Submit Assignment
+          - generic [ref=f18e147]:
+            - generic [ref=f18e148]:
+              - generic [ref=f18e149]: Submission
+              - generic [ref=f18e154]: 10 Jul 26 2:44 PM
+            - generic [ref=f18e157]:
+              - generic [ref=f18e158]: PESU_MTech_Phase1_Session1_Review_ArvindCR.pptx
+              - generic [ref=f18e159]: 57 KB
+            - generic [ref=f18e168]: Resubmit
+            - generic [ref=f18e172]: Comments
+            - generic [ref=f18e187]:
+              - generic [ref=f18e188]:
+                - generic [ref=f18e189]: Arvind C R
+                - generic [ref=f18e190]: 10 Jul 26 2:44 PM
+              - generic [ref=f18e191]: Phase 1 First Review (Session 1 with guide Ramesh Prakash Guledgudd) — review deck. Arvind C R, SRN PES2PGE24DS140.
+            - generic [ref=f18e192] [cursor=pointer]: + Add Comment
+    - generic [ref=f18e197]:
+      - generic [ref=f18e198]: Learning
+      - generic [ref=f18e262]:
+        - generic [ref=f18e263]: No content found
+        - generic [ref=f18e264]:
+          - generic [ref=f18e265]: Content is not released for this course
+          - generic [ref=f18e266]: at the moment.

@@ -59,7 +59,6 @@ HumanEval/logp-steering); `configs/` (per model×env YAML; `sweep_results/` = 10
 - `huggingface/` — Hub checkpoint upload · `tests/` — GRPO + util smoke tests · `scripts/` — ~25 experiment/figure/eval/stats utils · `reproducibility/` — cheap claim-verification checks.
 
 ### Integrations, tooling & misc
-- `ai-scientist-template/` + `ai-scientist-v2-integration/` — Sakana AI-Scientist (v1 + v2/BFTS) that autonomously run GRPO experiments and write/self-review papers.
 - `agentic-rl-finetuning/` — Axolotl SFT-QLoRA → DPO Colab pipeline for large Qwen3 models Tinker RL can't host.
 - `contexts/` + `docs/` + `.codex/` — agent/skill machinery: domain vocab & ADRs, issue-tracker/triage conventions, Codex subagent roles.
 - `demo_recording/` + `grpo_ablation_results/` — talk deliverables (HF-Space demo media; ablation + reviewer-objections report).

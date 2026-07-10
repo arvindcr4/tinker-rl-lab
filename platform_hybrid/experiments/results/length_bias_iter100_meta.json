@@ -12,13 +12,13 @@
     "dr_grpo"
   ],
   "inputs": [
-    "experiments/results/drgrpo_vs_grpo.json",
-    "experiments/results/drgrpo_gsm8k_cot_full.json"
+    "__ALREADY_platform_hybrid/experiments/__results/drgrpo_vs_grpo.json",
+    "__ALREADY_platform_hybrid/experiments/__results/drgrpo_gsm8k_cot_full.json"
   ],
   "outputs": [
-    "experiments/results/length_bias_iter100_perrun.tsv",
-    "experiments/results/length_bias_iter100_paired.tsv",
-    "experiments/results/length_bias_iter100_summary.tsv"
+    "__ALREADY_platform_hybrid/experiments/__results/length_bias_iter100_perrun.tsv",
+    "__ALREADY_platform_hybrid/experiments/__results/length_bias_iter100_paired.tsv",
+    "__ALREADY_platform_hybrid/experiments/__results/length_bias_iter100_summary.tsv"
   ],
   "notes": "Bivariate VAR(1) on (L_t, R_t).  Cross-equation coefficients phi_LR, phi_RL isolate the joint cross-coupling (not absorbed by marginal AR(1) alone).  Long-run IRF: (I-K)^{-1}.  FEVD: Cholesky-ordered (L,R) decomposition at h=1..h_max."
 }

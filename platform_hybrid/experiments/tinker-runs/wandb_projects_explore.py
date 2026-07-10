@@ -1,7 +1,7 @@
 """Cross-tab the zvf-audit runs (model x group-size ZVF) and summarize the other
 big W&B projects (world-class, scaling) by model. Direct GraphQL; key from env.
 
-Usage:  WANDB_API_KEY=... python3 experiments/tinker-runs/wandb_projects_explore.py
+Usage:  WANDB_API_KEY=... python3 platform_hybrid/experiments/tinker-runs/wandb_projects_explore.py
 """
 import os, json, base64, urllib.request, collections, statistics
 

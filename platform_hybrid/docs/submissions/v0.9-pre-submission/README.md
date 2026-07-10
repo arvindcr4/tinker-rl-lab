@@ -39,6 +39,6 @@ Two variants, placeholders to fill in:
 3. Get co-author sign-off
 4. Attach: anonymised PDF (or main PDF if not blind), supplementary,
    data/code statement, conflict-of-interest form if required
-5. Check that the attached PDF matches the tag's `paper/main.pdf`
-   (or `reports/final/grpo_agentic_llm_paper_anonymous.pdf` for blind)
+5. Check that the attached PDF matches the tag's `platform_hybrid/paper/main.pdf`
+   (or `platform_tinker/reports/final/grpo_agentic_llm_paper_anonymous.pdf` for blind)
 6. Verify reviewer suggestions have email + affiliation + no conflict

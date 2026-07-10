@@ -2,13 +2,13 @@
   "iteration": 67,
   "pillar": "P3-Group-Size",
   "inputs": [
-    "experiments/results/group_size_token_normalized.tsv"
+    "platform_hybrid/experiments/results/group_size_token_normalized.tsv"
   ],
   "outputs": [
-    "experiments/results/group_size_iter67_iso_acc_frontier.tsv",
-    "experiments/results/group_size_iter67_iaf_ratios.tsv",
-    "experiments/results/group_size_iter67_se_width.tsv",
-    "experiments/results/group_size_iter67_iaf_summary.tsv",
+    "platform_hybrid/experiments/results/group_size_iter67_iso_acc_frontier.tsv",
+    "platform_hybrid/experiments/results/group_size_iter67_iaf_ratios.tsv",
+    "platform_hybrid/experiments/results/group_size_iter67_se_width.tsv",
+    "platform_hybrid/experiments/results/group_size_iter67_iaf_summary.tsv",
     "figures/group_size_iter67_iaf.pdf",
     "figures/group_size_iter67_iaf.png"
   ],

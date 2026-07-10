@@ -15,7 +15,7 @@ to **100.0% [100.0%, 100.0%]**.
 
 ### 1. Stress-test harness (new in iter 26)
 
-`scripts/p5p8/registry_stress_test.py` (~290 LoC, stdlib + jsonschema):
+`platform_modal/scripts/p5p8/registry_stress_test.py` (~290 LoC, stdlib + jsonschema):
 
 - For each of 13 mutation categories (drop a top-level required key; wrong
   type on `record_type`, `id`, `min_report`, `outcomes`; bad `id` regex;
@@ -45,7 +45,7 @@ iter-14 audit's per-leaf coverage check had silently allowed:
 | `broken_delta_ref`             | 0.0% (130/130 misses; `delta_id` was a free-form string) | 100% |
 | **All 13 categories combined** | **86.4% [75.6%, 87.8%]** | **100.0% [100.0%, 100.0%]** |
 
-The patches (kept inside `registry/schema.json`, all current 31 entries
+The patches (kept inside `platform_hybrid/registry/schema.json`, all current 31 entries
 still PASS) are:
 
 1. **Pattern on `variant_delta_record.id`** — copied from
@@ -58,23 +58,23 @@ still PASS) are:
    validation still passes for all 31 records; the new invariant is that
    a "leaf dropped" record now fails fast instead of silently passing.
 3. **`enum` on `variant_deltas_applied[].delta_id`** — every valid
-   `registry/entries/delta_*.json` stem is now an allowed value.
+   `platform_hybrid/registry/entries/delta_*.json` stem is now an allowed value.
    Adds a small maintenance burden (run
-   `scripts/p5p8/regenerate_schema_delta_enum.py` whenever a new delta is
+   `platform_modal/scripts/p5p8/regenerate_schema_delta_enum.py` whenever a new delta is
    added), which is principled because broken refs were previously caught
    only by `registry_audit.py`'s post-hoc check (`variant_delta_xref`).
 
 ### 3. Schema-bump helper
 
-`scripts/p5p8/regenerate_schema_delta_enum.py` (~60 LoC, stdlib +
+`platform_modal/scripts/p5p8/regenerate_schema_delta_enum.py` (~60 LoC, stdlib +
 optional jsonschema): regenerates the `delta_id` enum in
-`registry/schema.json` from the current `registry/entries/delta_*.json`
+`platform_hybrid/registry/schema.json` from the current `platform_hybrid/registry/entries/delta_*.json`
 set, then validates all entries still PASS. Exit code = 0 only if every
 entry passes the bumped schema.
 
 ### 4. Re-validation
 
-After the bumps, the existing `scripts/p5p8/registry_audit.py` still
+After the bumps, the existing `platform_modal/scripts/p5p8/registry_audit.py` still
 reports `31/31 PASS` (the per-leaf coverage numbers are unchanged
 because the underlying entries are unchanged; only their schema
 constraint set is tighter).
@@ -112,9 +112,9 @@ constraint set is tighter).
 ## Reproducibility
 
 ```bash
-python3 scripts/p5p8/registry_stress_test.py --n-mutations-per-category 10 --seed 20260704
-python3 scripts/p5p8/regenerate_schema_delta_enum.py
-python3 scripts/p5p8/registry_audit.py
+python3 platform_modal/scripts/p5p8/registry_stress_test.py --n-mutations-per-category 10 --seed 20260704
+python3 platform_modal/scripts/p5p8/regenerate_schema_delta_enum.py
+python3 platform_modal/scripts/p5p8/registry_audit.py
 ```
 
 Expected summary (post-bump):

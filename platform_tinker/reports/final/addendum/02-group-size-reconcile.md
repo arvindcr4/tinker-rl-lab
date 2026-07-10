@@ -2,8 +2,8 @@
 
 **Addresses reviewer concerns:** W2 (G=32 vs G=8 contradiction), W3 (gradient utilization undefined), Q2 (token-normalized sweeps)
 
-**Paper section added:** `paper/sections/group_size_reconcile.tex`
-**Reproducibility:** `experiments/group_size_token_normalized.py`
+**Paper section added:** `platform_hybrid/paper/sections/group_size_reconcile.tex`
+**Reproducibility:** `platform_hybrid/experiments/group_size_token_normalized.py`
 
 #### The Apparent Contradiction
 
@@ -19,7 +19,7 @@ where *A_g* is the within-group advantage, *K* is rollouts per group, and *L̄_r
 
 > **ĜU(G, B) ∝ (1 − ZVF) · V̂ar_A / ( G · K · L̄_rollout )**
 
-This estimator is implemented in `gu_estimate(zvf, var_a, G)` in `experiments/group_size_token_normalized.py` (scaled by a calibration constant GU_SCALE=55,000 so printed values land on the ×10⁻³ scale of the appendix table).
+This estimator is implemented in `gu_estimate(zvf, var_a, G)` in `platform_hybrid/experiments/group_size_token_normalized.py` (scaled by a calibration constant GU_SCALE=55,000 so printed values land on the ×10⁻³ scale of the appendix table).
 
 #### Token-Budget-Normalized Sweep (4 budgets × 5 group sizes)
 
@@ -44,7 +44,7 @@ Fitting a quadratic in log₂ G to each row gives an apex that slides monotonica
 
 > **log₂ G\*(T) ≈ 2.1 + 0.38 · log₁₀(T / 1M)**,  95% bootstrap CI on slope = **[0.20, 0.56]**
 
-The CI excludes zero, so the shift is statistically real rather than noise. There is no universal G\*; the practitioner's recommended group size depends on the compute budget, and the reanalysis script in `experiments/group_size_token_normalized.py` locates the optimum for any specified *T*.
+The CI excludes zero, so the shift is statistically real rather than noise. There is no universal G\*; the practitioner's recommended group size depends on the compute budget, and the reanalysis script in `platform_hybrid/experiments/group_size_token_normalized.py` locates the optimum for any specified *T*.
 
 #### Reconciliation Statement (verbatim from the appendix)
 

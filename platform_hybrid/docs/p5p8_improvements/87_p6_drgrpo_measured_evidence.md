@@ -8,26 +8,26 @@ remaining 4 zero-evidence deltas with explicit panel requirements.
 
 ## What this iteration delivers
 
-1. **`scripts/p5p8/p6_drgrpo_measured_evidence.py`** — populates
+1. **`platform_modal/scripts/p5p8/p6_drplatform_tinker/grpo_measured_evidence.py`** — populates
    `delta_drgrpo.json` with 3 measured rows + 3 expected_effects + 3
    claim_validation rows, sourced from
-   `experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv`
+   `platform_hybrid/experiments/results/length_bias_iter60_platform_tinker/grpo_vs_drgrpo.tsv`
    (Welch pooled-task CI, B=4000, seed=20260705, 2 tasks).
 
-2. **`scripts/p5p8/p6_zero_evidence_audit.py`** — catalogs the 4
+2. **`platform_modal/scripts/p5p8/p6_zero_evidence_audit.py`** — catalogs the 4
    remaining zero-evidence delta entries
    (`delta_dapo`, `delta_gspo`, `delta_liteppo`, `delta_reinforce`)
    with per-delta (core_claim, needed_panel, closest_proxy,
    verdict_status), and produces the registry-wide evidence summary.
 
-3. **Registry patch** — `registry/entries/delta_drgrpo.json` now
+3. **Registry patch** — `platform_hybrid/registry/entries/delta_drgrpo.json` now
    carries 3 measured rows / 3 expected_effects / 3 claim_validation
    rows. All additive; existing fields retained with `"| iter-74"`
    suffix on `notes`. Schema validation: **34/34 PASS** before and
    after.
 
-4. **Paper section** — `paper/sections/p6_iter74_drgrpo.tex` (new),
-   wired into `paper/paper_P6_registry.tex`. Rebuilds cleanly to
+4. **Paper section** — `platform_hybrid/paper/sections/p6_iter74_drgrpo.tex` (new),
+   wired into `platform_hybrid/paper/paper_P6_registry.tex`. Rebuilds cleanly to
    **37 pages / 0 errors / 0 undefined citations** (was 36, +1 page).
 
 ## Falsifiable headline (re-run 2026-07-05)
@@ -97,32 +97,32 @@ constraint, not a registry-schema constraint**.
 - **iter-58 (P6 #58 measured-coverage):** this iter closes 1 of 5
   zero-evidence deltas catalogued there (DrGRPO); the remaining 4
   are recharacterised in
-  `experiments/results/p5p8/p6_zero_evidence_audit.tsv`.
+  `platform_hybrid/experiments/results/p5p8/p6_zero_evidence_audit.tsv`.
 
 ## Reproduction
 
 ```
-python3 scripts/p5p8/p6_drgrpo_measured_evidence.py   # exit 0; patches delta_drgrpo.json
-python3 scripts/p5p8/p6_zero_evidence_audit.py       # exit 0; 4-row audit + summary
-python3 registry/query.py validate                   # 34/34 PASS
+python3 platform_modal/scripts/p5p8/p6_drplatform_tinker/grpo_measured_evidence.py   # exit 0; patches delta_drgrpo.json
+python3 platform_modal/scripts/p5p8/p6_zero_evidence_audit.py       # exit 0; 4-row audit + summary
+python3 platform_hybrid/registry/query.py validate                   # 34/34 PASS
 cd paper && pdflatex paper_P6_registry && bibtex paper_P6_registry && pdflatex ×2
 ```
 
 ## Outputs
 
-- `experiments/results/p5p8/p6_drgrpo_measured.tsv`
+- `platform_hybrid/experiments/results/p5p8/p6_drplatform_tinker/grpo_measured.tsv`
   (per-task × per-metric rows with paired CIs)
-- `experiments/results/p5p8/p6_zero_evidence_audit.tsv`
+- `platform_hybrid/experiments/results/p5p8/p6_zero_evidence_audit.tsv`
   (4 rows: dapo/gspo/liteppo/reinforce characterisation)
-- `experiments/results/p5p8/p6_registry_evidence_summary.tsv`
+- `platform_hybrid/experiments/results/p5p8/p6_registry_evidence_summary.tsv`
   (14 rows: per-delta evidence tally)
-- `experiments/results/p5p8/p6_zero_evidence_audit_summary.json`
+- `platform_hybrid/experiments/results/p5p8/p6_zero_evidence_audit_summary.json`
   (machine-readable headline numbers)
-- `registry/entries/delta_drgrpo.json` (patched additively)
-- `paper/sections/p6_iter74_drgrpo.tex` (new section)
+- `platform_hybrid/registry/entries/delta_drgrpo.json` (patched additively)
+- `platform_hybrid/paper/sections/p6_iter74_drgrpo.tex` (new section)
 
 ## Backward compatibility
 
-`registry/schema.json` unchanged. `delta_drgrpo.json` patched
+`platform_hybrid/registry/schema.json` unchanged. `delta_drgrpo.json` patched
 additively. All 33 other entries unchanged. Schema validation
 **34/34 PASS** before and after.

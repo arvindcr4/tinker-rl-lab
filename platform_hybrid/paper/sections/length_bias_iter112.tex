@@ -131,7 +131,7 @@ not a rewriter that exploits it.
 \end{enumerate}
 
 \paragraph{Reproducibility.}
-\texttt{scripts/length\_bias\_iter112.py} ($\sim$280 lines, numpy
+\texttt{platform_modal/scripts/length\_bias\_iter112.py} ($\sim$280 lines, numpy
 + scipy.stats) reads iter108's per-run TSV, slices the same $40$-step
 $R_t$ series into $n_w{=}4$ windows to compute $\delta R$, and
 reports four artefacts:
@@ -170,6 +170,6 @@ $\rho=\pm1.00$ on $n{=}3$ seeds (rank-resolution artefact).
 $k_{\mathrm{end}}\in\{1,2,3,4\}$; GSM8K $\rho$ rises to $+1.00$ at
 $k{=}3$ before falling at $k{=}4$, arithmetic\_easy hovers near
 zero throughout.
---- \texttt{scripts/length\_bias\_iter112\_fig.py}.}
+--- \texttt{platform_modal/scripts/length\_bias\_iter112\_fig.py}.}
 \label{fig:length-bias-iter112-sever}
 \end{figure}

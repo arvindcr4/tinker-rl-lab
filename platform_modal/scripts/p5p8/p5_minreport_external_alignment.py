@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P5 MIN-REPORT x external-reporting-standards gap audit (iter 17, JOB A).
 
-Maps each of the seven MIN-REPORT items of paper/sections/p5_stack.tex
+Maps each of the seven MIN-REPORT items of platform_hybrid/paper/sections/p5_stack.tex
 against the published axes of two complementary reporting standards:
 
   * Model Cards for Model Reporting (Mitchell et al., FAT* 2019) -
@@ -26,8 +26,8 @@ sum three quantitative gap scores per axis:
   gap_score     = 1 - coverage - honest_na    # the operational gap
 
 The script writes:
-  experiments/results/p5p8/p5_minreport_external_alignment.tsv
-  experiments/results/p5p8/p5_minreport_external_alignment.json
+  platform_hybrid/experiments/results/p5p8/p5_minreport_external_alignment.tsv
+  platform_hybrid/experiments/results/p5p8/p5_minreport_external_alignment.json
 
 The seven MIN-REPORT items are then cross-tabulated against the 8 model-
 card axes and the 7 datasheet axes, exposing which axes MIN-REPORT

@@ -84,17 +84,17 @@ spread a reviewer would care about given 8 binary rollouts per cell.
 
 ## Reproducibility
 
-- Script: `scripts/p5p8/synth_iter144_seven_domain_density.py`
+- Script: `platform_modal/scripts/p5p8/synth_iter144_seven_domain_density.py`
   (~280 LoC stdlib + matplotlib; loads `n2_*_s0_tensors.jsonl`, computes
   per-cell 4-method spread, parametric bootstrap B=2000 on binomial
   ratios, seed=20260705; 21 ratios)
 - Outputs:
-  - `experiments/results/p5p8/synth_iter144_seven_domain_density.tsv`
+  - `platform_hybrid/experiments/results/p5p8/synth_iter144_seven_domain_density.tsv`
     (10 rows: 6 D1..D6 + 4 D7 thresholds)
-  - `experiments/results/p5p8/synth_iter144_seven_domain_ratios.tsv`
+  - `platform_hybrid/experiments/results/p5p8/synth_iter144_seven_domain_ratios.tsv`
     (21 pairs: C(7,2))
-  - `experiments/results/p5p8/synth_iter144_low_cluster.tsv` (6 LOW pairs)
-  - `experiments/results/p5p8/synth_iter144_summary.json`
+  - `platform_hybrid/experiments/results/p5p8/synth_iter144_low_cluster.tsv` (6 LOW pairs)
+  - `platform_hybrid/experiments/results/p5p8/synth_iter144_summary.json`
     (machine-readable: n_domains=7, n_pairs=21, n_excl_1=19, etc.)
-  - `experiments/results/p5p8/figures/synth_iter144_seven_domain.{png,pdf}`
+  - `platform_hybrid/experiments/results/p5p8/figures/synth_iter144_seven_domain.{png,pdf}`
     (7-bar log-scale plot with Wilson CIs)

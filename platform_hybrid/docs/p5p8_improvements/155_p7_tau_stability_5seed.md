@@ -15,7 +15,7 @@ hypotheses on stability, plateau width, and steady-state predictive validity.
 
 ## Method (terse)
 
-Inputs: `experiments/results/n10_seed_expansion/n10_grpo_s{42,179,316,453,590}.json`
+Inputs: `platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s{42,179,316,453,590}.json`
 — 5 seeds × 15 steps = 75 step-observations.
 
 Pipeline:
@@ -139,9 +139,9 @@ heldout). Magnitude not significant at n=5; the n=8 panel (when seeds 727,
 
 ## Deliverables
 
-- `scripts/p5p8/p7_iter155_tau_stability_5seed.py` (245 LoC, stdlib only)
-- `experiments/results/p5p8/p7_iter155_per_seed.tsv` (55 rows: 5 seeds × 11τ)
-- `experiments/results/p5p8/p7_iter155_per_tau.tsv` (11 rows: 11 τ values)
-- `experiments/results/p5p8/p7_iter155_summary.json` (H1–H4 verdicts, CI95,
+- `platform_modal/scripts/p5p8/p7_iter155_tau_stability_5seed.py` (245 LoC, stdlib only)
+- `platform_hybrid/experiments/results/p5p8/p7_iter155_per_seed.tsv` (55 rows: 5 seeds × 11τ)
+- `platform_hybrid/experiments/results/p5p8/p7_iter155_per_tau.tsv` (11 rows: 11 τ values)
+- `platform_hybrid/experiments/results/p5p8/p7_iter155_summary.json` (H1–H4 verdicts, CI95,
   correlations, panel metadata)
-- `docs/p5p8_improvements/155_p7_tau_stability_5seed.md` (this file)
+- `platform_hybrid/docs/p5p8_improvements/155_p7_tau_stability_5seed.md` (this file)

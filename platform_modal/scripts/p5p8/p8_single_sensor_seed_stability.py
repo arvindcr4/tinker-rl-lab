@@ -15,9 +15,9 @@ Reports:
   - HEADLINE pass/fail: is (V_std, V_max) recall@K=2% = 1.0000 at seed=42?
 
 Outputs:
-  experiments/results/p5p8/p8_single_sensor_seed42.tsv
-  experiments/results/p5p8/p8_single_sensor_seed_stability.json
-  experiments/results/p5p8/p8_single_sensor_seed_stability.tsv
+  platform_hybrid/experiments/results/p5p8/p8_single_sensor_seed42.tsv
+  platform_hybrid/experiments/results/p5p8/p8_single_sensor_seed_stability.json
+  platform_hybrid/experiments/results/p5p8/p8_single_sensor_seed_stability.tsv
 """
 from __future__ import annotations
 

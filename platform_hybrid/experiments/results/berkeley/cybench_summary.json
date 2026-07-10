@@ -74,8 +74,8 @@
   },
   "frontier_synthesis": "Iter 140 (Cybench) re-frames the iter125/129 2-tier decomposition as a 4-tier Cybench-style capability gradient. The 5-anchor pool assigns to tiers: L1=2, L2=1, L3=1, L4=1. Tier 1 frontier rho is -1.0000 (n=2); the global rho is -0.0654. Per (frontier synthesis) Round 1: Pillar-1 'scaling law' is under-identified at n=5, so a sharper test is the *gap structure*, not the slope. The 4-tier gradient gives a 3-decisive test battery (H1 within-tier, H2 tier-frontier, H3 bimodality origin) and a structural recommendation to the Pillar-1 paper: report Cybench-style tier-conditional frontier curves, not a single scaling exponent.",
   "evidence_paths": {
-    "tier_assignment": "experiments/results/berkeley/cybench_tier_assignment.tsv",
-    "tier_scaling": "experiments/results/berkeley/cybench_tier_scaling.tsv",
-    "tier_shift": "experiments/results/berkeley/cybench_tier_shift.tsv"
+    "tier_assignment": "platform_hybrid/experiments/results/berkeley/cybench_tier_assignment.tsv",
+    "tier_scaling": "platform_hybrid/experiments/results/berkeley/cybench_tier_scaling.tsv",
+    "tier_shift": "platform_hybrid/experiments/results/berkeley/cybench_tier_shift.tsv"
   }
 }

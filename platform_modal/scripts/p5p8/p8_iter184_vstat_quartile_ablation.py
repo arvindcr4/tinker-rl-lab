@@ -32,7 +32,7 @@ Pipeline:
        H6: hit_rate@K1% of 24full SPREAD across quartiles < 10 pp -- XGB is
             "fair" across the V_std distribution under 24full
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   p8_iter184_per_cell.tsv       75 rows: 3 fsets x 5 quartiles x 5 seeds
   p8_iter184_gap_per_quartile.tsv  30 rows: 3 contrasts x 5 seeds per Q
   p8_iter184_gap_ci.tsv          12 rows: per-contrast x Q headline + CI

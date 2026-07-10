@@ -374,7 +374,7 @@ ecosystem. Institutional support statements are redacted for blind review.
 % =============================================================================
 % Reviewer-Response Appendix Block
 % Each subsection carries a %REVIEW-ADDR marker verified by
-% scripts/reviewer_response_score.sh (registry at paper/reviewer_points.yaml).
+% platform_modal/scripts/reviewer_response_score.sh (registry at platform_hybrid/paper/reviewer_points.yaml).
 % =============================================================================
 \input{sections/appendix_zvf_formalization}
 \input{sections/zvf_pipeline_spec}
@@ -396,7 +396,7 @@ rawness, and release them as follows.
         the released code. Each row is
         \texttt{\{step, zvf, gu, n\_groups, K, framework\}} and is the
         same artifact format defined in Appendix~\ref{sec:appendix:zvf-pipeline}
-        and produced by \texttt{scripts/zvf\_compute\_cross\_framework.py}.
+        and produced by \texttt{platform_modal/scripts/zvf\_compute\_cross\_framework.py}.
   \item \textbf{Step-level aggregate logs (per-step).} Released for
         \emph{every} reported run: mean reward, peak reward, last-10
         average, surrogate loss, and reward trace. These are the

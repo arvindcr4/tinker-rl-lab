@@ -129,10 +129,10 @@ measurement.
 
 ## Files
 
-- `scripts/p5p8/synth_iter124_three_domain_density.py` (~270 LoC)
-- `experiments/results/p5p8/synth_iter124_three_domain_density.tsv` (3 rows)
-- `experiments/results/p5p8/synth_iter124_density_ratios.tsv` (6 rows)
-- `experiments/results/p5p8/synth_iter124_per_G_density.tsv` (5 rows)
-- `experiments/results/p5p8/synth_iter124_summary.json`
-- `paper/sections/synth_iter124_three_domain_density.tex` (~80 lines)
+- `platform_modal/scripts/p5p8/synth_iter124_three_domain_density.py` (~270 LoC)
+- `platform_hybrid/experiments/results/p5p8/synth_iter124_three_domain_density.tsv` (3 rows)
+- `platform_hybrid/experiments/results/p5p8/synth_iter124_density_ratios.tsv` (6 rows)
+- `platform_hybrid/experiments/results/p5p8/synth_iter124_per_G_density.tsv` (5 rows)
+- `platform_hybrid/experiments/results/p5p8/synth_iter124_summary.json`
+- `platform_hybrid/paper/sections/synth_iter124_three_domain_density.tex` (~80 lines)
 - 1 line in `findings_ledger.jsonl` (pillar P5P8-SYNTH, iter 124)

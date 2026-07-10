@@ -69,7 +69,7 @@ Based on the A-level thesis check recommending submission as an **evaluation/emp
 - **Primary endpoint**: First-5-step GU and reward slope, not held-out accuracy
 
 ### New Experiment Script
-- **File**: `experiments/causal_zvf_experiment.py`
+- **File**: `platform_hybrid/experiments/causal_zvf_experiment.py`
 - **Phases**: bin → train (3 arms) → evaluate
 - **Purpose**: Turns observational ZVF/GU diagnostics into causal test
 
@@ -79,8 +79,8 @@ Based on the A-level thesis check recommending submission as an **evaluation/emp
 
 | File | Status | Notes |
 |------|--------|-------|
-| `paper/main.tex` | [OK] Compiles | 6.5MB PDF |
-| `paper/main_anon.tex` | [OK] Compiles | 1.8MB PDF |
+| `platform_hybrid/paper/main.tex` | [OK] Compiles | 6.5MB PDF |
+| `platform_hybrid/paper/main_anon.tex` | [OK] Compiles | 1.8MB PDF |
 
 ---
 

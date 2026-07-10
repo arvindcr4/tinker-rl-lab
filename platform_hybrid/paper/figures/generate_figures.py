@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────────────────
 # Load data
 # ─────────────────────────────────────────────────────────
-with open("/home/user/workspace/tinker-rl-lab/experiments/all_results_consolidated.json") as f:
+with open("/home/user/workspace/tinker-rl-lab/platform_hybrid/experiments/all_results_consolidated.json") as f:
     data = json.load(f)
 
 # ─────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ plt.rcParams.update(
     }
 )
 
-OUTDIR = "/home/user/workspace/tinker-rl-lab/paper/figures/"
+OUTDIR = "/home/user/workspace/tinker-rl-lab/platform_hybrid/paper/figures/"
 
 # ─────────────────────────────────────────────────────────
 # Color palette

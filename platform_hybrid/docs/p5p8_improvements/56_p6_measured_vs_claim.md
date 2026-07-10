@@ -118,15 +118,15 @@ rather than wait for a reviewer to discover.
 
 ## Artifacts
 
-- `scripts/p5p8/p6_measured_vs_claim.py` (~280 LoC, stdlib + jsonschema)
-- `experiments/results/p5p8/p6_measured_vs_claim.tsv` (22 rows)
-- `experiments/results/p5p8/p6_measured_vs_claim_summary.json`
+- `platform_modal/scripts/p5p8/p6_measured_vs_claim.py` (~280 LoC, stdlib + jsonschema)
+- `platform_hybrid/experiments/results/p5p8/p6_measured_vs_claim.tsv` (22 rows)
+- `platform_hybrid/experiments/results/p5p8/p6_measured_vs_claim_summary.json`
 - 8 `delta_*.json` entries extended with `expected_effects` +
   `claim_validation` blocks
-- `registry/schema.json` updated with two new `$defs`:
+- `platform_hybrid/registry/schema.json` updated with two new `$defs`:
   `expected_effect` and `claim_validation_row`
-- `registry/query.py` extended with `claim-validation` subcommand
-- `registry/README.md` updated with the new quick-start snippet
+- `platform_hybrid/registry/query.py` extended with `claim-validation` subcommand
+- `platform_hybrid/registry/README.md` updated with the new quick-start snippet
 
 ## Cross-paper coupling
 
@@ -142,7 +142,7 @@ rather than wait for a reviewer to discover.
   5-seed panel** — this iter now exposes that as a per-delta
   claim_validation row.
 - **Berkeley unpacking recipe**: this iter uses the same
-  pair-of-blocks pattern as `scripts/berkeley/eval_protocol_hardening.py`:
+  pair-of-blocks pattern as `platform_modal/scripts/berkeley/eval_protocol_hardening.py`:
   declare an expected effect, then machine-validate the measurement
   against it. The 2 CONTRADICTS verdicts are exactly the
   "theory-predicts-but-data-refutes" rows the iter-26

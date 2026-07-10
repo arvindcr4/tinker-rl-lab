@@ -137,12 +137,12 @@ beats XGB-20 with statistical significance at $\sigma \le 0.10$.
 
 ## Deliverables
 
-- `scripts/p5p8/p8_iter88_noise_cost_frontier.py` (~280 LoC, stdlib + numpy + xgboost + sklearn)
-- `experiments/results/p5p8/p8_iter88_noise_cost.tsv` (165 rows = 5 noise x 3 models x 11 K)
-- `experiments/results/p5p8/p8_iter88_noise_cost_boot.tsv` (55 rows = 5 noise x 11 K paired bootstrap on (24-20) cost-delta)
-- `experiments/results/p5p8/p8_iter88_noise_pareto.tsv` (75 rows = 5 noise x 3 models x 5 recall-target)
-- `experiments/results/p5p8/p8_iter88_noise_summary.json`
-- `experiments/results/p5p8/figures/p8_iter88_noise_pareto.{png,pdf}` (5-panel cost-vs-recall frontier per noise level)
-- New `paper/sections/p8_iter88_noise_cost_frontier.tex`
+- `platform_modal/scripts/p5p8/p8_iter88_noise_cost_frontier.py` (~280 LoC, stdlib + numpy + xgboost + sklearn)
+- `platform_hybrid/experiments/results/p5p8/p8_iter88_noise_cost.tsv` (165 rows = 5 noise x 3 models x 11 K)
+- `platform_hybrid/experiments/results/p5p8/p8_iter88_noise_cost_boot.tsv` (55 rows = 5 noise x 11 K paired bootstrap on (24-20) cost-delta)
+- `platform_hybrid/experiments/results/p5p8/p8_iter88_noise_pareto.tsv` (75 rows = 5 noise x 3 models x 5 recall-target)
+- `platform_hybrid/experiments/results/p5p8/p8_iter88_noise_summary.json`
+- `platform_hybrid/experiments/results/p5p8/figures/p8_iter88_noise_pareto.{png,pdf}` (5-panel cost-vs-recall frontier per noise level)
+- New `platform_hybrid/paper/sections/p8_iter88_noise_cost_frontier.tex`
 - Updated the P5–P8 improvement backlog row 104
 - 1 line in `findings_ledger.jsonl` (pillar P8, iter 88)

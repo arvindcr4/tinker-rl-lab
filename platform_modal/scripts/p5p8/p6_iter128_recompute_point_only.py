@@ -10,7 +10,7 @@ each has a `mean_zvf` measured row at zvf130_5seed panel where
 ci_low == ci_high == delta (no per-seed SD was recorded).
 
 This script:
-  1. Loads `experiments/results/zvf_iter130_risk_index.tsv` (53 rows,
+  1. Loads `platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv` (53 rows,
      per-method per-seed with mean_zvf and zvf_risk).
   2. For each of the 9 methods with 5 seeds, computes the per-seed
      mean_zvf, the per-method mean across seeds, and a paired bootstrap
@@ -87,7 +87,7 @@ def boot_ci(values, B, seed):
 
 
 def load_registry_delta(delta_id):
-    """Read registry/entries/delta_<id>.json, return measured[] list."""
+    """Read platform_hybrid/registry/entries/delta_<id>.json, return measured[] list."""
     fp = ROOT / "registry" / "entries" / f"{delta_id}.json"
     if not fp.exists():
         return None, None

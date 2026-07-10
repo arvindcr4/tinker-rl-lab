@@ -31,9 +31,9 @@
         "n_boot": null,
         "seed": null,
         "ci_level": null,
-        "source": "scripts/p5p8/p6_iter138_missing_method_audit.py"
+        "source": "platform_modal/scripts/p5p8/p6_iter138_missing_method_audit.py"
       },
-      "source": "experiments/results/zvf_iter130_method_risk.tsv",
+      "source": "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
       "note": "1-seed pointestimate (zvf_risk_mean=0.5474 vs grpo=0.5777); n_seeds=1 precludes paired-seed bootstrap CI. Tier-D coverage record, not a significant-effect claim.",
       "evidence_deferred_until": "multi-seed same-stack reproduction on BFCL tool-use task (n_seeds>=5) AND verified peer-reviewed citation"
     }

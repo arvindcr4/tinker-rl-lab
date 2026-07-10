@@ -4,7 +4,7 @@
 # Quintile 4 = highest acc (easy-prompt-dominated window).
 # Equal-mass bins PER METHOD, so cross-method contrast is not
 # confounded by global accuracy shifts.
-# Source: scripts/zvf_iter62.py
+# Source: platform_modal/scripts/zvf_iter62.py
 method	quintile	acc_lo	acc_hi	n_steps	mean_zvf	zvf_se	mean_acc	n_collapse
 aero	0	-0.0039	0.1706	100	0.0138	0.0019	0.0900	0
 aero	1	0.1706	0.2777	100	0.0147	0.0019	0.2279	0

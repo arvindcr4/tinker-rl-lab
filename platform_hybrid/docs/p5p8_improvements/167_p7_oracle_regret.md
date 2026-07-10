@@ -7,7 +7,7 @@
 ## The question
 
 For each of 2560 (method × step × prompt) observations on the N2 four-method
-tensor corpus (`experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl`),
+tensor corpus (`platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl`),
 the *oracle* controller sees the true `p̂ = k/8` for that prompt and picks
 `G* ∈ {2,4,6,8,10,12,16,24,32}` that maximises
 
@@ -124,14 +124,14 @@ functions**. Iter-167's metric pair makes the trade-off explicit.
 
 | Path | What |
 |---|---|
-| `scripts/p5p8/p7_iter167_oracle_regret.py` | main script (≤300 LoC, stdlib only) |
-| `experiments/results/p5p8/p7_iter167_oracle_per_obs.tsv` | 2560 obs: oracle G*, oracle ΔY, G from each controller, regret |
-| `experiments/results/p5p8/p7_iter167_oracle_per_step.tsv` | 160 rows: per-(method,step) oracle ΔY vs each ctrl |
-| `experiments/results/p5p8/p7_iter167_oracle_regret_by_method.tsv` | 20 rows: cumulative absolute ΔY, %oracle captured, costeff ratio |
-| `experiments/results/p5p8/p7_iter167_oracle_regret_bootstrap.tsv` | 20 rows: bootstrap CIs on both axes (B=2000, seed=20260705) |
-| `experiments/results/p5p8/p7_iter167_oracle_regret_summary.json` | machine-readable headline dictionary |
-| `paper/sections/p7_iter167_oracle_regret.tex` | new P7 subsection (~6 paragraphs + 2 tables) |
-| `paper/paper_P7_zvf_controller.pdf` | rebuild verified at 71 pages, 0 errors, 0 undefined citations |
+| `platform_modal/scripts/p5p8/p7_iter167_oracle_regret.py` | main script (≤300 LoC, stdlib only) |
+| `platform_hybrid/experiments/results/p5p8/p7_iter167_oracle_per_obs.tsv` | 2560 obs: oracle G*, oracle ΔY, G from each controller, regret |
+| `platform_hybrid/experiments/results/p5p8/p7_iter167_oracle_per_step.tsv` | 160 rows: per-(method,step) oracle ΔY vs each ctrl |
+| `platform_hybrid/experiments/results/p5p8/p7_iter167_oracle_regret_by_method.tsv` | 20 rows: cumulative absolute ΔY, %oracle captured, costeff ratio |
+| `platform_hybrid/experiments/results/p5p8/p7_iter167_oracle_regret_bootstrap.tsv` | 20 rows: bootstrap CIs on both axes (B=2000, seed=20260705) |
+| `platform_hybrid/experiments/results/p5p8/p7_iter167_oracle_regret_summary.json` | machine-readable headline dictionary |
+| `platform_hybrid/paper/sections/p7_iter167_oracle_regret.tex` | new P7 subsection (~6 paragraphs + 2 tables) |
+| `platform_hybrid/paper/paper_P7_zvf_controller.pdf` | rebuild verified at 71 pages, 0 errors, 0 undefined citations |
 
 ## Cross-paper coupling
 

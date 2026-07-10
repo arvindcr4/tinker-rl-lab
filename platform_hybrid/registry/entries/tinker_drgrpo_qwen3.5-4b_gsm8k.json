@@ -85,14 +85,14 @@
       "n_boot": 2000,
       "seed": 0,
       "ci_level": 0.95,
-      "source": "scripts/p5p8/registry_validate.py::bootstrap_paired_diff (percentile 2.5/97.5 over aligned per-step N2 tensors)"
+      "source": "platform_modal/scripts/p5p8/registry_validate.py::bootstrap_paired_diff (percentile 2.5/97.5 over aligned per-step N2 tensors)"
     },
     "coverage": {
       "min_report_coverage": 0.8571,
       "declared_deltas_coverage": 1.0,
       "measured_coverage": 0.6,
       "ci_method_present": true,
-      "audit_source": "scripts/p5p8/p6_outcomes_coverage_block.py",
+      "audit_source": "platform_modal/scripts/p5p8/p6_outcomes_coverage_block.py",
       "audit_date": "2026-07-05"
     },
     "zvf_antiherding": {
@@ -111,9 +111,9 @@
         "n_boot": 4000,
         "seed": 20260705,
         "ci_level": 0.95,
-        "source": "scripts/p5p8/p6_zvf_antiherding.py"
+        "source": "platform_modal/scripts/p5p8/p6_zvf_antiherding.py"
       },
-      "audit_source": "scripts/p5p8/p6_zvf_antiherding.py",
+      "audit_source": "platform_modal/scripts/p5p8/p6_zvf_antiherding.py",
       "audit_date": "2026-07-05"
     }
   },

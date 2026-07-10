@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-experiments/tinker_direct_eval.py
+platform_hybrid/experiments/tinker_direct_eval.py
 
 Direct Tinker API evaluation on GSM8K (no Atropos needed).
 Uses Tinker sampling client for inference, local scoring for rewards.
@@ -10,10 +10,10 @@ requiring the full Atropos environment server.
 
 Usage:
     export TINKER_API_KEY=...
-    python3 experiments/tinker_direct_eval.py --model Qwen/Qwen3-8B --n-problems 50
+    python3 platform_hybrid/experiments/tinker_direct_eval.py --model Qwen/Qwen3-8B --n-problems 50
 
 Output:
-    experiments/results/tinker_direct_eval.json
+    platform_hybrid/experiments/results/tinker_direct_eval.json
 """
 
 from __future__ import annotations

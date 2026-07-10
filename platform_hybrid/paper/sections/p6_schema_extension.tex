@@ -110,8 +110,8 @@ pairs as iter 30, iter 32 still reports 7/7 MATCH.
 
 \paragraph{Reproduction.} \texttt{cat registry/schema.json} (verify the
 three new optional fields in \texttt{min\_report.loss\_form});
-\texttt{python3 scripts/p5p8/registry\_validate.py} (31/31 PASS);
-\texttt{python3 scripts/p5p8/delta\_minreport\_consistency.py}
+\texttt{python3 platform_modal/scripts/p5p8/registry\_validate.py} (31/31 PASS);
+\texttt{python3 platform_modal/scripts/p5p8/delta\_minreport\_consistency.py}
 (writes the audit results to
 \texttt{experiments/results/p5p8/delta\_minreport\_consistency.tsv}
 and \texttt{.json}; reports the schema-exposure rate).
@@ -178,7 +178,7 @@ Pillar-1 ``the label barely moves the outcome once the stack is fixed''
 thesis, recorded honestly (2/3 CIs do exclude 0 at this small sample).
 The panel-conditional ZVF sign flip is the sharpest evidence that
 \texttt{panel} belongs in the record. \textbf{Reproduce:}
-\texttt{python3 scripts/p5p8/p6\_measured\_delta\_block.py}.
+\texttt{python3 platform_modal/scripts/p5p8/p6\_measured\_delta\_block.py}.
 
 \subsection{Delta-implementation cross-reference matrix}
 \label{sec:p6-delta-implementation-matrix}
@@ -231,7 +231,7 @@ catalog quality and bench quality.
 
 \paragraph{Reproducing the audit.}
 \begin{verbatim}
-python3 scripts/p5p8/p6_delta_implementation_matrix.py
+python3 platform_modal/scripts/p5p8/p6_delta_implementation_matrix.py
 python3 registry/query.py implementations --delta delta_dapo
 python3 registry/query.py implementations --status implemented
 python3 registry/query.py implementations --status unknown

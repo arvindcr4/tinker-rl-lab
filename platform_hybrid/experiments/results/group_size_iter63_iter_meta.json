@@ -3,15 +3,15 @@
   "pillar": 3,
   "title": "Retention-decay functional form: linear / power / asymptotic-exponential",
   "inputs": [
-    "experiments/results/group_size_token_normalized.tsv",
-    "experiments/results/group_size_iter59_equivalence.tsv"
+    "platform_hybrid/experiments/results/group_size_token_normalized.tsv",
+    "platform_hybrid/experiments/results/group_size_iter59_equivalence.tsv"
   ],
   "outputs": [
-    "experiments/results/group_size_effect.tsv",
-    "experiments/results/group_size_iter63_linear_fits.tsv",
-    "experiments/results/group_size_iter63_power_fits.tsv",
-    "experiments/results/group_size_iter63_asymptotic_fits.tsv",
-    "experiments/results/group_size_iter63_summary.tsv",
+    "platform_hybrid/experiments/results/group_size_effect.tsv",
+    "platform_hybrid/experiments/results/group_size_iter63_linear_fits.tsv",
+    "platform_hybrid/experiments/results/group_size_iter63_power_fits.tsv",
+    "platform_hybrid/experiments/results/group_size_iter63_asymptotic_fits.tsv",
+    "platform_hybrid/experiments/results/group_size_iter63_summary.tsv",
     "figures/group_size_iter63_retention_decay.pdf",
     "figures/group_size_iter63_retention_decay.png"
   ],

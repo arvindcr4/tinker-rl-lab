@@ -8,7 +8,7 @@ operating points; bootstrap-CI cross-method transfer test.
 
 ## Source data (real)
 
-- `experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl`
+- `platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl`
   — 40 steps × 4 methods × 16 prompts; G_base=8; full per-prompt reward tensors
 - iter 103 unified calibrated controller (P7 §5.7) — C3 = Dualformer-Auto ⊕
   ZVF-triage with τ ∈ {0.50, 0.60, 0.70, 0.80, 0.90}; iter-103 default τ=0.70.
@@ -102,12 +102,12 @@ P7 a clean transferability lemma without any new Tinker runs.
 
 ## Deliverables
 
-- `scripts/p5p8/p7_iter107_tautransfer_failure.py` (≤300 LoC, stdlib only)
-- `scripts/p5p8/p7_iter107_crosscurve_class_transfer.py` (≤300 LoC, stdlib only)
-- `experiments/results/p5p8/p7_iter107_{taut_in_method,taut_transfer,failure_taxonomy,failure_summary,failure_bootstrap_ci,summary}.tsv`
-- `experiments/results/p5p8/p7_iter107b_{curve_table,curve_correlation,curve_correlation_boot,operating_points,kappa_class_agreement,summary}.tsv`
-- `paper/sections/p7_iter107_tautransfer.tex` (new ~80-line LaTeX section)
-- `paper/paper_P7_zvf_controller.tex` extended with `\input{sections/p7_iter107_tautransfer}`
+- `platform_modal/scripts/p5p8/p7_iter107_tautransfer_failure.py` (≤300 LoC, stdlib only)
+- `platform_modal/scripts/p5p8/p7_iter107_crosscurve_class_transfer.py` (≤300 LoC, stdlib only)
+- `platform_hybrid/experiments/results/p5p8/p7_iter107_{taut_in_method,taut_transfer,failure_taxonomy,failure_summary,failure_bootstrap_ci,summary}.tsv`
+- `platform_hybrid/experiments/results/p5p8/p7_iter107b_{curve_table,curve_correlation,curve_correlation_boot,operating_points,kappa_class_agreement,summary}.tsv`
+- `platform_hybrid/paper/sections/p7_iter107_tautransfer.tex` (new ~80-line LaTeX section)
+- `platform_hybrid/paper/paper_P7_zvf_controller.tex` extended with `\input{sections/p7_iter107_tautransfer}`
 - 1 line in `findings_ledger.jsonl` (pillar P7, iter 107)
 
 ## Open questions for next iteration

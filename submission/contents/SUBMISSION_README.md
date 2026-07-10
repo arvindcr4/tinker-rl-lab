@@ -26,7 +26,7 @@ sha256sum -c checksums.sha256
 # Extract and verify claims
 tar -xzf code.tar.gz
 cd tinker-rl-lab-anon
-python3 scripts/verify_claims_offline.py
+python3 platform_modal/scripts/verify_claims_offline.py
 ```
 
 See `REVIEWER_README.md` for the full verification guide.

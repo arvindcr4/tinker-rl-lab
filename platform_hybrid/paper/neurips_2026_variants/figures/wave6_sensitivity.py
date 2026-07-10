@@ -7,8 +7,8 @@ Produces a 3-panel figure for the Qwen3-8B GSM8K ablations:
   • Panel 2 — LoRA rank vs. peak / last-10 reward
   • Panel 3 — Per-step batch size vs. peak / last-10 reward
 
-Reads: experiments/tinker-runs/results/wave6_ablations.json
-Writes: paper/figures/wave6_sensitivity.png (+ matching .pdf)
+Reads: platform_hybrid/experiments/tinker-runs/results/wave6_ablations.json
+Writes: platform_hybrid/paper/figures/wave6_sensitivity.png (+ matching .pdf)
 """
 
 import argparse

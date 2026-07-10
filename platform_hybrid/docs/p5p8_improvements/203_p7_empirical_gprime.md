@@ -118,7 +118,7 @@ The paper-facing claim (§P7 — From Diagnostic to Controller):
    itself, not the marginal cost. A controller that escalates every step
    pays 2× the factual budget.
 
-## Outputs (under experiments/results/p5p8/)
+## Outputs (under platform_hybrid/experiments/results/p5p8/)
 
 - `p7_iter203_emp_per_step.tsv` — one row per (method, step) cell (160 rows):
   `method, step, emp_gu_8, emp_gu_16, emp_gu_32, emp_gu_64, chosen_g, chosen_gu,
@@ -128,7 +128,7 @@ The paper-facing claim (§P7 — From Diagnostic to Controller):
   cost_ratio`
 - `p7_iter203_emp_summary.json` — machine-readable summary including all 4
   verdict flags and per-method stats
-- `scripts/p5p8/p7_iter203_empirical_gprime.py` — 290 LoC, stdlib only
+- `platform_modal/scripts/p5p8/p7_iter203_empirical_gprime.py` — 290 LoC, stdlib only
 
 ## Builds on
 

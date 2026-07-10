@@ -392,10 +392,10 @@ The core design commitment is \emph{attribution}: hold the experiment fixed and
 vary only the stack. A single configuration object specifies the model, dataset,
 reward function, decoding parameters (temperature, top-$p$, max tokens), group
 size $G$, learning rate, KL coefficient, and seed. A launcher
-(\texttt{platform_local/unified/launcher.py}) maps that one config onto any of the supported
+(\texttt{__ALREADY_platform_local/unified/__launcher.py}) maps that one config onto any of the supported
 back-ends through thin per-framework adapters
-(\texttt{trl\_integrations/}, \texttt{verl/}, \texttt{platform_modal/openrlhf/},
-\texttt{platform_hybrid/skyrl/}, \texttt{platform_tinker/atropos/}), while \texttt{platform_tinker/tinkerrl/grpo.py} implements
+(\texttt{trl\_integrations/}, \texttt{verl/}, \texttt{__ALREADY_platform_modal/openrlhf/__},
+\texttt{__ALREADY_platform_hybrid/skyrl/__}, \texttt{__ALREADY_platform_tinker/atropos/__}), while \texttt{__ALREADY_platform_tinker/tinkerrl/__grpo.py} implements
 the reference GRPO loop against the managed Tinker back-end. Because the reward
 grader and decoding are shared code, a difference in outcome between two
 back-ends is attributable to the framework, not to a divergent reward parser or
@@ -457,7 +457,7 @@ and clip range, using live advantage-variance / KL-drift as sensor inputs.
 \subsection{The Tinker GRPO loop}
 \input{tikz/fig2.tex}
 \input{tikz/fig3.tex}
-The reference loop in \texttt{platform_tinker/tinkerrl/grpo.py} follows the standard
+The reference loop in \texttt{__ALREADY_platform_tinker/tinkerrl/__grpo.py} follows the standard
 sample~$\rightarrow$~advantage~$\rightarrow$~loss~$\rightarrow$~optimise cycle.
 For a prompt $q$ we draw a group of $G$ completions $\{o_i\}_{i=1}^{G}$ from the
 current policy and score each with the verifiable reward $r_i$. The
@@ -714,7 +714,7 @@ reaches AUROC $0.84$, versus $0.43$ for a reward-only baseline. This supports th
 premise that internal training signal (ZVF trajectory, entropy, KL drift) carries
 information about run integrity that the reward curve does not.
 
-\paragraph{P8 evaluation set (reproducible).} The surrogate-detection result is recomputed from the raw \texttt{n2\_reward\_tensor\_resume} tensors by \texttt{experiments/openings/p8\_detector.py} (output \texttt{detector\_reproduced.json}). Four reward-optimization algorithms (\textsc{grpo}, \textsc{aero}, \textsc{areal}, \textsc{gift}) each contribute $40$ per-step rows ($N=160$); the positive ``surrogate'' class is the three GRPO variants reported as GRPO (\textsc{aero}/\textsc{areal}/\textsc{gift}, $120$ rows) and the negative class is genuine \textsc{grpo} ($40$ rows), a $3{:}1$ imbalance. Features are derived entirely from the raw reward/length/advantage arrays (\texttt{zvf}, \texttt{reward\_mean}, \texttt{reward\_std}, \texttt{frac\_all\_zero}, \texttt{frac\_all\_one}, \texttt{mean\_len}, \texttt{cv\_len}, \texttt{len\_reward\_corr}, \texttt{adv\_abs\_mean}, \texttt{adv\_std}, \texttt{lag1\_autocorr}); the training-side \texttt{loss} scalar is absent from the tensors and is omitted. A logistic-regression detector (median-imputed, standardized, $5$-fold stratified CV) reaches $\mathrm{AUROC}=0.838\pm0.010$ across five CV seeds ($0.826$ at seed~0), versus $\mathrm{AUROC}=0.426\pm0.027$ for a reward-only auditor (below chance). This reproducible, multi-seed result supersedes an earlier prose-only estimate of $0.63/0.35$; the higher value reflects the fuller, documented feature set. Remaining caveat: the base model/task are not recorded in the tensor rows (only method/seed/step/group\_size), so provenance of the underlying runs is incomplete---exactly the gap the P5 protocol is designed to close.
+\paragraph{P8 evaluation set (reproducible).} The surrogate-detection result is recomputed from the raw \texttt{n2\_reward\_tensor\_resume} tensors by \texttt{platform_hybrid/experiments/openings/p8\_detector.py} (output \texttt{detector\_reproduced.json}). Four reward-optimization algorithms (\textsc{grpo}, \textsc{aero}, \textsc{areal}, \textsc{gift}) each contribute $40$ per-step rows ($N=160$); the positive ``surrogate'' class is the three GRPO variants reported as GRPO (\textsc{aero}/\textsc{areal}/\textsc{gift}, $120$ rows) and the negative class is genuine \textsc{grpo} ($40$ rows), a $3{:}1$ imbalance. Features are derived entirely from the raw reward/length/advantage arrays (\texttt{zvf}, \texttt{reward\_mean}, \texttt{reward\_std}, \texttt{frac\_all\_zero}, \texttt{frac\_all\_one}, \texttt{mean\_len}, \texttt{cv\_len}, \texttt{len\_reward\_corr}, \texttt{adv\_abs\_mean}, \texttt{adv\_std}, \texttt{lag1\_autocorr}); the training-side \texttt{loss} scalar is absent from the tensors and is omitted. A logistic-regression detector (median-imputed, standardized, $5$-fold stratified CV) reaches $\mathrm{AUROC}=0.838\pm0.010$ across five CV seeds ($0.826$ at seed~0), versus $\mathrm{AUROC}=0.426\pm0.027$ for a reward-only auditor (below chance). This reproducible, multi-seed result supersedes an earlier prose-only estimate of $0.63/0.35$; the higher value reflects the fuller, documented feature set. Remaining caveat: the base model/task are not recorded in the tensor rows (only method/seed/step/group\_size), so provenance of the underlying runs is incomplete---exactly the gap the P5 protocol is designed to close.
 
 %=====================================================================
 \section{Rigor and Reproducibility}

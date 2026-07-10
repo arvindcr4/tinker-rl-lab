@@ -83,7 +83,7 @@
           "stderr": ""
         }
       ],
-      "screenshot": "experiments/results/browser_control_screenshots/checkout.png",
+      "screenshot": "platform_hybrid/experiments/results/browser_control_screenshots/checkout.png",
       "screenshot_returncode": 0
     },
     {
@@ -105,7 +105,7 @@
           "stderr": ""
         }
       ],
-      "screenshot": "experiments/results/browser_control_screenshots/inventory_search.png",
+      "screenshot": "platform_hybrid/experiments/results/browser_control_screenshots/inventory_search.png",
       "screenshot_returncode": 0
     },
     {
@@ -159,7 +159,7 @@
           "stderr": ""
         }
       ],
-      "screenshot": "experiments/results/browser_control_screenshots/settings.png",
+      "screenshot": "platform_hybrid/experiments/results/browser_control_screenshots/settings.png",
       "screenshot_returncode": 0
     }
   ]

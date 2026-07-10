@@ -3,11 +3,11 @@
 | field | value |
 | --- | --- |
 | pillar | **P7** (ZVF theory → adaptive-G controller) |
-| target | `paper/sections/p7_controller.tex` §4.10bis "Exact finite-pool correction" (NEW) + inline correction to Table~\ref{tab:p7-per-prompt-optimal} caption |
+| target | `platform_hybrid/paper/sections/p7_controller.tex` §4.10bis "Exact finite-pool correction" (NEW) + inline correction to Table~\ref{tab:p7-per-prompt-optimal} caption |
 | class | **T2** fresh-data evidence (exact combinatorics on real N2 rollout pools) + **T1** statistical rigor (bootstrap CIs on the correction) + **T3** cross-paper coupling (grounds the frontier δ_div in exact enumeration) |
 | status | **validated** (N2 four-method, 40 steps × 16 prompts × 4 methods = 2,560 prompt-steps; exact formula checked vs brute-force enumeration, max err 1.1e-16) |
-| artifact | `scripts/p5p8/p7_exact_finite_pool_g.py` (≤230 LoC, **stdlib only**) |
-| evidence | `experiments/results/p5p8/p7_exact_finite_pool_{per_prompt.tsv, summary.tsv, summary.json}` |
+| artifact | `platform_modal/scripts/p5p8/p7_exact_finite_pool_g.py` (≤230 LoC, **stdlib only**) |
+| evidence | `platform_hybrid/experiments/results/p5p8/p7_exact_finite_pool_{per_prompt.tsv, summary.tsv, summary.json}` |
 
 ## 1. Question (fresh vein — not in prior 87 rows)
 
@@ -104,11 +104,11 @@ anti-herding bonus is exactly quantified. No fabricated citation used
 ## 6. Reproduction
 
 ```bash
-python3 scripts/p5p8/p7_exact_finite_pool_g.py
+python3 platform_modal/scripts/p5p8/p7_exact_finite_pool_g.py
 # stdlib only, ~1 min; validates exact formula vs brute-force enumeration,
 # then computes both allocators over 2,560 prompt-steps with B=2000 bootstrap.
 ```
-Outputs: `experiments/results/p5p8/p7_exact_finite_pool_per_prompt.tsv`
+Outputs: `platform_hybrid/experiments/results/p5p8/p7_exact_finite_pool_per_prompt.tsv`
 (30,720 rows: 2,560 prompt-steps × 3 τ_c × ... method/step/prompt/k/g_exact/g_binom/cp),
 `p7_exact_finite_pool_summary.tsv` (12 rows: 4 methods × 3 τ_c),
 `p7_exact_finite_pool_summary.json` (full machine-readable summary).

@@ -1,7 +1,7 @@
 # Iter 114 dose-response curve (Pillar 2 ZVF)
 # 5 quantile bins over the cross-library aggregator (n_pooled_rows >= 20).
 # severity_drop = mean(peak - last10_avg) inside the bin.
-# Source: scripts/zvf_diagnostic_iter114.py
+# Source: __ALREADY_platform_modal/scripts/__zvf_diagnostic_iter114.py
 bin	bin_zvf_lo	bin_zvf_hi	bin_zvf_mid	n_rows	mean_last10	mean_peak	severity_drop	n_collapse	n_drift	n_converged	frac_collapse	frac_converged
 1	0.1300	0.8380	0.4585	13	0.6598	0.6674	0.0076	0	0	8	0.0000	0.6154
 2	0.2178	0.3036	0.2679	13	0.3937	0.4012	0.0075	0	0	0	0.0000	0.0000

@@ -3,7 +3,7 @@ is broken in this env). Reads WANDB_API_KEY from env. Paginates all runs, parses
 difficulty from run names, and breaks ZVF / GU / reward / frac_solved down by
 model / group-size / difficulty. Writes results/zvf_audit_summary.{json,md}.
 
-Usage:  WANDB_API_KEY=... python3 experiments/tinker-runs/wandb_zvf_audit_agg.py
+Usage:  WANDB_API_KEY=... python3 platform_hybrid/experiments/tinker-runs/wandb_zvf_audit_agg.py
 """
 import os, re, json, base64, urllib.request, collections, statistics, pathlib
 
@@ -11,7 +11,7 @@ KEY = os.environ["WANDB_API_KEY"]
 ENT, PROJ = "arvindcr4-pes-university", "zvf-audit"
 URL = "https://api.wandb.ai/graphql"
 AUTH = base64.b64encode(f"api:{KEY}".encode()).decode()
-OUT = pathlib.Path("experiments/tinker-runs/results")
+OUT = pathlib.Path("platform_hybrid/experiments/tinker-runs/results")
 Q = ("query($e:String!,$p:String!,$c:String){ project(name:$p,entityName:$e){ "
      "runs(first:250,after:$c){ edges{ node{ name state config summaryMetrics } } "
      "pageInfo{ hasNextPage endCursor } } } }")

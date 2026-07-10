@@ -6,7 +6,7 @@ existence, zvf130 value integrity, per-entry integrity score).
 The P6 GRPO-Registry encodes three classes of external references that, if
 silently stale, undermine the catalog's machine-readability claim:
   (1) citation.bibkey — a string that should resolve to a real entry in
-      paper/references.bib. The catalog asserts "verified" in free-text notes
+      platform_hybrid/paper/references.bib. The catalog asserts "verified" in free-text notes
       but does not machine-check this.
   (2) measured[].source — a relative path that should exist on disk. A
       measured row whose source file has been moved or deleted is silently
@@ -20,13 +20,13 @@ ground-truth at these three layers, surfaces the gap count per layer and per
 entry, and computes a per-entry registry_integrity_score (fraction of the
 applicable ground-truth checks that pass).
 
-Inputs : registry/entries/*.json
-         paper/references.bib
-         experiments/results/zvf_iter130_method_risk.tsv
-Outputs: experiments/results/p5p8/p6_iter162_per_entry.tsv
-         experiments/results/p5p8/p6_iter162_per_layer_summary.tsv
-         experiments/results/p5p8/p6_iter162_per_cell.tsv
-         experiments/results/p5p8/p6_iter162_summary.json
+Inputs : platform_hybrid/registry/entries/*.json
+         platform_hybrid/paper/references.bib
+         platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv
+Outputs: platform_hybrid/experiments/results/p5p8/p6_iter162_per_entry.tsv
+         platform_hybrid/experiments/results/p5p8/p6_iter162_per_layer_summary.tsv
+         platform_hybrid/experiments/results/p5p8/p6_iter162_per_cell.tsv
+         platform_hybrid/experiments/results/p5p8/p6_iter162_summary.json
 """
 import csv
 import json
@@ -136,7 +136,7 @@ def main():
                 "field": "citation.bibkey",
                 "value": cite_key or "",
                 "ok": "PASS" if cite_ok else ("FAIL" if cite_ok is False else "NA"),
-                "note": "" if cite_ok else "bibkey not in paper/references.bib",
+                "note": "" if cite_ok else "bibkey not in platform_hybrid/paper/references.bib",
             })
 
         # Layer 2: source-path existence on every measured[] row

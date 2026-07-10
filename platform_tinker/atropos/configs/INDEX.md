@@ -1,4 +1,4 @@
-# atropos/configs/ — INDEX
+# platform_tinker/atropos/configs/ — INDEX
 
 **Purpose:** YAML training configs (Atropos format with `env`, `openai`, and `tinker` sections). One file per model×env×variant; consumed by `launch_training.py`, the env `serve` command, and the Unsloth/TRL trainers.
 

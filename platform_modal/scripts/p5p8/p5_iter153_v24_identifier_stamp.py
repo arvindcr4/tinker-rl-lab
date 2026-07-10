@@ -4,7 +4,7 @@
 Operationalizes iter-149 row 167 recommendation (b): promote the
 relaxed-fully-formed rule to MIN-REPORT v2.4 (year + author + title +
 (venue OR arXiv) + (DOI OR arXiv)). Tests the rule on three artefact
-layers: paper/references.bib (P5 cite keys), 98 mega manifests JSON,
+layers: platform_hybrid/paper/references.bib (P5 cite keys), 98 mega manifests JSON,
 98 mega cells.tsv rows. H1 — layer coverage; H2 — cross-layer agreement
 between cells.tsv and cell_id; H3 — systematic gaps; H4 — v2.3->v2.4 lift.
 """
@@ -16,9 +16,9 @@ from pathlib import Path
 
 ROOT = Path("/home/claude/tinker-rl-lab-minimax")
 BIB = ROOT / "paper" / "references.bib"
-MANIFEST_DIR = ROOT / "experiments/results/mega_20260704/manifests"
-CELLS_TSV = ROOT / "experiments/results/mega_20260704/cells.tsv"
-OUT_DIR = ROOT / "experiments/results/p5p8"
+MANIFEST_DIR = ROOT / "platform_hybrid/experiments/results/mega_20260704/manifests"
+CELLS_TSV = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
 P5_PAPER_FILES = [ROOT / "paper" / f for f in ["paper_P5_minreport.tex"]] + \
     sorted((ROOT / "paper" / "sections").glob("p5_*.tex"))
 
@@ -44,7 +44,7 @@ def v24_pass(entry):
     return True, "pass", fields
 
 
-# Layer 1 — paper/references.bib
+# Layer 1 — platform_hybrid/paper/references.bib
 def extract_p5_cite_keys():
     """Brace-balanced parse of all \\cite{...} keys in P5 paper files."""
     keys = set()

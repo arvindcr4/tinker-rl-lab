@@ -32,7 +32,7 @@ A **runnable orchestration harness** for two things:
   *same* reward → GRPO advantage collapses to 0 → no usable gradient.
 - **GU** = `1.0 - ZVF`.
 Both are logged per step by the existing runners
-(`experiments/tinker-runs/campaign_v2.py`, `live_zvf_probe.py`,
+(`platform_hybrid/experiments/tinker-runs/campaign_v2.py`, `live_zvf_probe.py`,
 `tinker_parallel_runner.py`) into each run's `step_log`.
 
 ---
@@ -66,7 +66,7 @@ The harness **shells out** to a per-cell runner script. It does **not**
 implement training. You provide one thin shim that wraps your existing Tinker
 GRPO loop and accepts the flags the harness passes:
 
-**`experiments/tinker-runs/cell_runner.py`** (you own this) must accept:
+**`platform_hybrid/experiments/tinker-runs/cell_runner.py`** (you own this) must accept:
 ```
 --tag <str> --model <hf_id> --task <gsm8k|...> --loss <grpo|dapo|gspo|importance_sampling>
 --seed <int> --group-size <int> --lr <float> --steps <int> --rank <int>
@@ -88,7 +88,7 @@ can never fabricate a metric.
 
 To use **Modal** instead of Tinker: set `runner.kind: modal` in
 `sweep_config.yaml`; `run_sweep.py` then builds commands against
-`experiments/modal_runner.py` (which already has its own `--dry-run`).
+`platform_hybrid/experiments/modal_runner.py` (which already has its own `--dry-run`).
 
 ### (Optional) held-out scores
 After training, your eval step should write `<tag>.heldout.json` next to each
@@ -129,7 +129,7 @@ python3 aggregate_sweep.py --matched  # just the GRPO/DAPO/GSPO comparison
 ```
 
 `run_sweep.py --execute` is **resumable**: cells whose result JSON already
-exists (or whose tag is `completed` in `experiments/master_results.csv`) are
+exists (or whose tag is `completed` in `platform_hybrid/experiments/master_results.csv`) are
 skipped. Kill it and re-run freely.
 
 ---

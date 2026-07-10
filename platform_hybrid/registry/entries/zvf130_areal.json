@@ -100,12 +100,14 @@
     "delta_vs_grpo_welch_sig": true,
     "sig_robust_bootstrap_and_welch": true,
     "crossref_integrity_iter102": {
-      "audit_date": "2026-07-05",
-      "audit_source": "scripts/p5p8/p6_fill_zvf130_stack_gap.py",
-      "ground_truth": "experiments/results/zvf_iter130_method_risk.tsv",
+      "verdict": "SUPPORTED_MEASURED",
+      "rationale": "",
+      "audit_source": "platform_modal/scripts/p5p8/p6_fill_zvf130_stack_gap.py",
+      "ground_truth": "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
       "point_estimate_matches_tsv": true,
-      "note": "delta_vs_grpo bootstrap CI from iter90 (B=4000 paired Gaussian-residual); welch CI is a conservative two-sample cross-check. sig_robust requires BOTH."
+      "audit_date": "2026-07-05"
     }
   },
-  "notes": "Method 'areal' measured on the zvf_iter130 risk-index batch (n_seeds=5). zvf_risk_mean=0.3319 (sd 0.0438). iter-102 coverage-gap fill: this stack entry was created by scripts/p5p8/p6_fill_zvf130_stack_gap.py to close the zvf130 stack coverage from 5/9 to 9/9. loss-form/KL/decontam leaves are null because the tinker-managed single-batch risk-index harness does not expose them (reported-as-unknown). sig_robust_bootstrap_and_welch records whether the risk reduction vs grpo survives BOTH the iter90 paired bootstrap AND a conservative Welch two-sample t-test."
+  "n_mismatch_audit": 0,
+  "notes": "Method 'areal' measured on the zvf_iter130 risk-index batch (n_seeds=5). zvf_risk_mean=0.3319 (sd 0.0438). iter-102 coverage-gap fill: this stack entry was created by platform_modal/scripts/p5p8/p6_fill_zvf130_stack_gap.py to close the zvf130 stack coverage from 5/9 to 9/9. loss-form/KL/decontam leaves are null because the tinker-managed single-batch risk-index harness does not expose them (reported-as-unknown). sig_robust_bootstrap_and_welch records whether the risk reduction vs grpo survives BOTH the iter90 paired bootstrap AND a conservative Welch two-sample t-test."
 }

@@ -146,7 +146,7 @@ def main():
     # ----------------------------------------------------------------
     # Build the 9-domain density table (D1..D7 from iter-144 + D8 + D9)
     # ----------------------------------------------------------------
-    # iter-144 prior densities (cited from experiments/results/p5p8/synth_iter144_seven_domain_density.tsv)
+    # iter-144 prior densities (cited from platform_hybrid/experiments/results/p5p8/synth_iter144_seven_domain_density.tsv)
     prior = [
         ("D1", "P8 grad-band firing (per-row)", 840, 7, "iter-120 table"),
         ("D2", "P7 step rejection (per-step)", 160, 80, "iter-124"),

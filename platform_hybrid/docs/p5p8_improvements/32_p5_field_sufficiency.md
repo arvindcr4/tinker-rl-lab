@@ -23,7 +23,7 @@ number: the label predicts nothing; the stack predicts most of the variance.
 
 ## Method
 
-- Data: `experiments/results/mega_20260704/cells.tsv`, $n=98$ cells
+- Data: `platform_hybrid/experiments/results/mega_20260704/cells.tsv`, $n=98$ cells
   ($2$ models $\times 3$ tasks $\times 5$ $G \times 2$ temps $\times 2$ seeds).
 - Predictors: `model_family`, `task_slice` (one-hot), `G` (log2), `temperature`.
   `seed` is a nuisance control (added on top of full stack).
@@ -31,8 +31,8 @@ number: the label predicts nothing; the stack predicts most of the variance.
   predictions via 8-fold CV averaged over 12 fold seeds for stability.
 - CIs: paired case-resampling bootstrap over cells ($B=2000$) on $R^2$ and every
   $\Delta R^2$.
-- Script: `scripts/p5p8/p5_field_sufficiency.py`; outputs
-  `experiments/results/p5p8/p5_field_sufficiency{.tsv,_summary.json}`.
+- Script: `platform_modal/scripts/p5p8/p5_field_sufficiency.py`; outputs
+  `platform_hybrid/experiments/results/p5p8/p5_field_sufficiency{.tsv,_summary.json}`.
 
 ## Result
 
@@ -80,7 +80,7 @@ Three findings:
    redundancy/interactions, not an orthogonal ANOVA partition. This is expected
    and is precisely why the joint test adds information over Exhibit 7.
 
-Figure: `experiments/results/p5p8/figures/p5_field_sufficiency.{png,pdf}`.
+Figure: `platform_hybrid/experiments/results/p5p8/figures/p5_field_sufficiency.{png,pdf}`.
 
 ## Verified citations (reused, already in references.bib)
 
@@ -91,7 +91,7 @@ Figure: `experiments/results/p5p8/figures/p5_field_sufficiency.{png,pdf}`.
 
 ## Verdict
 
-**validated.** Adds Exhibit 13 to `paper/sections/p5_evidence.tex`
+**validated.** Adds Exhibit 13 to `platform_hybrid/paper/sections/p5_evidence.tex`
 (`tab:p5-field-suff`). Directly answers the open question Exhibit 7 flagged
 ("which axes are load-bearing"), quantifies the paper's title claim in one
 number (label $R^2=0$ vs stack $R^2=0.83$–0.99), and hardens the

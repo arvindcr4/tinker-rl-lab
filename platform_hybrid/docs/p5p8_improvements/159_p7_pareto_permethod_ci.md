@@ -11,11 +11,11 @@ Iter-147 reported overall bootstrap CIs (B=1000, seed=42) on the per-prompt UNIF
 - test which controllers are dominated, Pareto-optimal, or strictly optimal,
 - compute per-method SDs with bootstrap CIs to validate the "6× more method-portable" claim.
 
-Iter-159 closes these four sub-gaps at the per-prompt granularity on N2. **It also re-implements the controller evaluation from scratch** because iter-147's `p7_iter147_per_cell.tsv` file turned out to have misaligned column labels (the values written do not match the iter-147 source code that produced them — g_STATIC_G8 column has value 0.0 instead of 8.0, etc.). Iter-159 reads the N2 reward tensors directly and applies the controller functions in `scripts/p5p8/p7_iter147_unified_per_prompt.py` verbatim.
+Iter-159 closes these four sub-gaps at the per-prompt granularity on N2. **It also re-implements the controller evaluation from scratch** because iter-147's `p7_iter147_per_cell.tsv` file turned out to have misaligned column labels (the values written do not match the iter-147 source code that produced them — g_STATIC_G8 column has value 0.0 instead of 8.0, etc.). Iter-159 reads the N2 reward tensors directly and applies the controller functions in `platform_modal/scripts/p5p8/p7_iter147_unified_per_prompt.py` verbatim.
 
 ## Method (terse)
 
-Inputs: `experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl` (4 methods × 40 steps × 16 prompts × 8 rewards = 2,560 prompt cells).
+Inputs: `platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl` (4 methods × 40 steps × 16 prompts × 8 rewards = 2,560 prompt cells).
 
 Pipeline:
 1. For each cell, compute `p_hat = k_p / G_BASE`, `z_obs = step.zvf`, then apply each of the 5 controller functions (verbatim from iter-147) to compute `g_used`, `cm_used`, `cost = g_used / G_BASE`.
@@ -141,14 +141,14 @@ This iter is the **most thorough per-prompt bootstrap-CI audit** of the iter-147
 
 ## Deliverables
 
-- `scripts/p5p8/p7_iter159_pareto_permethod_ci.py` (~280 LoC, stdlib only, deterministic LCG bootstrap B=2000 seed=20260705)
-- `experiments/results/p5p8/p7_iter159_per_method_ci.tsv` (20 rows: 4 methods × 5 controllers × 9 metrics)
-- `experiments/results/p5p8/p7_iter159_pareto.tsv` (20 points: cost-vs-retention scatter)
-- `experiments/results/p5p8/p7_iter159_pareto_frontier.tsv` (5 Pareto-optimal points)
-- `experiments/results/p5p8/p7_iter159_cross_method_sd.tsv` (5 rows: per-controller SD on cost/retention/mpc with block-bootstrap CI)
-- `experiments/results/p5p8/p7_iter159_paired_bootstrap.tsv` (16 rows: paired C4 vs each other controller per method)
-- `experiments/results/p5p8/p7_iter159_heldout_zvf_reg.tsv` (4 rows: per-method bootstrap Pearson r on zvf vs reward)
-- `experiments/results/p5p8/p7_iter159_summary.json` (H1–H8 verdicts + per-method SD table)
-- `docs/p5p8_improvements/159_p7_pareto_permethod_ci.md` (this file)
+- `platform_modal/scripts/p5p8/p7_iter159_pareto_permethod_ci.py` (~280 LoC, stdlib only, deterministic LCG bootstrap B=2000 seed=20260705)
+- `platform_hybrid/experiments/results/p5p8/p7_iter159_per_method_ci.tsv` (20 rows: 4 methods × 5 controllers × 9 metrics)
+- `platform_hybrid/experiments/results/p5p8/p7_iter159_pareto.tsv` (20 points: cost-vs-retention scatter)
+- `platform_hybrid/experiments/results/p5p8/p7_iter159_pareto_frontier.tsv` (5 Pareto-optimal points)
+- `platform_hybrid/experiments/results/p5p8/p7_iter159_cross_method_sd.tsv` (5 rows: per-controller SD on cost/retention/mpc with block-bootstrap CI)
+- `platform_hybrid/experiments/results/p5p8/p7_iter159_paired_bootstrap.tsv` (16 rows: paired C4 vs each other controller per method)
+- `platform_hybrid/experiments/results/p5p8/p7_iter159_heldout_zvf_reg.tsv` (4 rows: per-method bootstrap Pearson r on zvf vs reward)
+- `platform_hybrid/experiments/results/p5p8/p7_iter159_summary.json` (H1–H8 verdicts + per-method SD table)
+- `platform_hybrid/docs/p5p8_improvements/159_p7_pareto_permethod_ci.md` (this file)
 - 1 line in `findings_ledger.jsonl` (pillar P7)
 - Ledger row 173 in the P5–P8 improvement backlog

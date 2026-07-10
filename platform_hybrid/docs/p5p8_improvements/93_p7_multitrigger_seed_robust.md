@@ -8,14 +8,14 @@
 
 | Artifact | Description |
 |---|---|
-| `scripts/p5p8/p7_multitrigger_seed_robust.py` | ~310 LoC, stdlib only — multi-trigger replay + bootstrap CIs |
-| `experiments/results/p5p8/p7_multitrigger_seed_per_seed.tsv` | 100 rows (5 seeds × 4 triggers × 5 τ) of per-seed fire counts |
-| `experiments/results/p5p8/p7_multitrigger_seed_summary.tsv` | 20 rows (4 triggers × 5 τ) of seed-mean ± sd + 95% bootstrap CI |
-| `experiments/results/p5p8/p7_multitrigger_seed_rank.tsv` | per-(trigger, τ) top/bottom seed + rank spread |
-| `experiments/results/p5p8/p7_joint_controller_ci.tsv` | 4 methods × 2 τ × 4 headline metrics with prompt-bootstrap CIs |
-| `experiments/results/p5p8/p7_multitrigger_seed_summary.json` | machine-readable headline dictionary |
-| `paper/sections/p7_iter79_multitrigger.tex` | new subsection (~7 paragraphs + 2 tables) |
-| `paper/paper_P7_zvf_controller.pdf` | rebuild to 43 pages, 0 errors, 0 undefined citations |
+| `platform_modal/scripts/p5p8/p7_multitrigger_seed_robust.py` | ~310 LoC, stdlib only — multi-trigger replay + bootstrap CIs |
+| `platform_hybrid/experiments/results/p5p8/p7_multitrigger_seed_per_seed.tsv` | 100 rows (5 seeds × 4 triggers × 5 τ) of per-seed fire counts |
+| `platform_hybrid/experiments/results/p5p8/p7_multitrigger_seed_summary.tsv` | 20 rows (4 triggers × 5 τ) of seed-mean ± sd + 95% bootstrap CI |
+| `platform_hybrid/experiments/results/p5p8/p7_multitrigger_seed_rank.tsv` | per-(trigger, τ) top/bottom seed + rank spread |
+| `platform_hybrid/experiments/results/p5p8/p7_joint_controller_ci.tsv` | 4 methods × 2 τ × 4 headline metrics with prompt-bootstrap CIs |
+| `platform_hybrid/experiments/results/p5p8/p7_multitrigger_seed_summary.json` | machine-readable headline dictionary |
+| `platform_hybrid/paper/sections/p7_iter79_multitrigger.tex` | new subsection (~7 paragraphs + 2 tables) |
+| `platform_hybrid/paper/paper_P7_zvf_controller.pdf` | rebuild to 43 pages, 0 errors, 0 undefined citations |
 
 ## Headlines (falsifiable)
 
@@ -116,11 +116,11 @@ Reviewers weighting **anti-herding purity** should pick T3 alone
 ## Reproduction
 
 ```
-python3 scripts/p5p8/p7_multitrigger_seed_robust.py
+python3 platform_modal/scripts/p5p8/p7_multitrigger_seed_robust.py
 ```
 
 (≤ 310 LoC, stdlib only); outputs in
-`experiments/results/p5p8/p7_multitrigger_seed_{per_seed,summary,rank}.tsv`,
+`platform_hybrid/experiments/results/p5p8/p7_multitrigger_seed_{per_seed,summary,rank}.tsv`,
 `p7_joint_controller_ci.tsv`,
 `p7_multitrigger_seed_summary.json`.
 

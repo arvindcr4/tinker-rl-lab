@@ -2,7 +2,7 @@
 % Closes brief vein (b) at the head-to-head granularity: a single table that
 % places the algorithm-axis eta^2 from the N2 four-method same-stack panel
 % alongside the eta^2 of every stack axis on the 98-cell mega panel. Reuses
-% axis_variance_fraction from scripts/berkeley/unpacking_dpo_ppo_factorization.py.
+% axis_variance_fraction from platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.py.
 \subsection{Stack-conditioning factorization: algorithm axis vs stack axes (iter 161)}
 \label{sec:p5-iter161-stack-factorization}
 
@@ -20,7 +20,7 @@ the same scale.
 \subsubsection{Two-tier $\eta^2$ decomposition}
 \label{sec:p5-iter161-two-tier}
 \textbf{Tier A --- same-stack (algorithm axis).} We load
-\texttt{experiments/results/n2\_reward\_tensor\_resume/n2\_metrics.tsv}
+\texttt{platform_hybrid/experiments/results/n2\_reward\_tensor\_resume/n2\_metrics.tsv}
 (4 methods $\times$ 40 steps $\times G{=}8 \times$ seed 0 = 160 rows)
 and compute $\eta^2(\texttt{method} \to \texttt{reward\_mean})$. On
 this scale \textbf{$\eta^2_{\mathrm{algo}} = 0.0075$} (SS\textsubscript{axis}=0.0074,
@@ -32,7 +32,7 @@ The algorithm axis explains $<$1\% of within-run variance; this is the
 for direct comparison to the stack axes.
 
 \textbf{Tier B --- stack axes (mega panel).} We load
-\texttt{experiments/results/mega\_20260704/cells.tsv} (98 cells
+\texttt{platform_hybrid/experiments/results/mega\_20260704/cells.tsv} (98 cells
 spanning 2 models $\times$ 3 task\_slice $\times$ 5 $G$ $\times$ 2
 temperature $\times$ 2 seeds) and compute $\eta^2$ of each axis on
 \texttt{mean\_reward}. Paired-stack coverage is 48/50 unique

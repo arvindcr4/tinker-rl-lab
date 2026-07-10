@@ -69,13 +69,13 @@ XGB-20raw has observed rate = 0.615 (+0.165 drift). Both trees
 over-call probability in this band, but XGB-24full over-calls more.
 
 ### Files written
-- `experiments/results/p5p8/p8_perfeat_loo.tsv` (20 rows: 5 variants × 4 metrics)
-- `experiments/results/p5p8/p8_perfeat_loi.tsv` (16 rows: 4 variants × 4 metrics)
-- `experiments/results/p5p8/p8_perfeat_loi_pairs.tsv` (12 rows: 6 pairs × 2 metrics)
-- `experiments/results/p5p8/p8_perfeat_reliability.tsv` (20 rows: 10 deciles × 2 models)
-- `experiments/results/p5p8/p8_perfeat_summary.json` (machine-readable headline)
-- `experiments/results/p5p8/figures/p8_reliability.{png,pdf}` (reliability diagram)
-- `scripts/p5p8/p8_per_feature_ablation.py` (340 LoC, stdlib + xgboost + sklearn + matplotlib)
+- `platform_hybrid/experiments/results/p5p8/p8_perfeat_loo.tsv` (20 rows: 5 variants × 4 metrics)
+- `platform_hybrid/experiments/results/p5p8/p8_perfeat_loi.tsv` (16 rows: 4 variants × 4 metrics)
+- `platform_hybrid/experiments/results/p5p8/p8_perfeat_loi_pairs.tsv` (12 rows: 6 pairs × 2 metrics)
+- `platform_hybrid/experiments/results/p5p8/p8_perfeat_reliability.tsv` (20 rows: 10 deciles × 2 models)
+- `platform_hybrid/experiments/results/p5p8/p8_perfeat_summary.json` (machine-readable headline)
+- `platform_hybrid/experiments/results/p5p8/figures/p8_reliability.{png,pdf}` (reliability diagram)
+- `platform_modal/scripts/p5p8/p8_per_feature_ablation.py` (340 LoC, stdlib + xgboost + sklearn + matplotlib)
 
 ## Sharpest falsifiable claim
 
@@ -114,6 +114,6 @@ output as a probability.
 
 ## Reproduction
 
-`python3 scripts/p5p8/p8_per_feature_ablation.py` (~4 min on 4 cores;
+`python3 platform_modal/scripts/p5p8/p8_per_feature_ablation.py` (~4 min on 4 cores;
 seed 42 for the XGBoost split, seed 2026 for the bootstrap). Outputs
 are deterministic.

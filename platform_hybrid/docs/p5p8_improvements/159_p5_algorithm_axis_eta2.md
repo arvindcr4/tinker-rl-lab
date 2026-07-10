@@ -22,7 +22,7 @@ penalty" — (frontier synthesis).
 
 ## What iter 141 measures
 
-The N2 corpus (`experiments/results/n2_reward_tensor_resume/`) contains
+The N2 corpus (`platform_hybrid/experiments/results/n2_reward_tensor_resume/`) contains
 4 same-stack methods × 40 steps × 16 prompts × 8 rollouts = **20,480 scalar
 reward observations**, all on the identical stack:
 
@@ -36,7 +36,7 @@ reward observations**, all on the identical stack:
 We decompose the per-cell mean reward (4 × 40 × 16 = 2,560 cells) into a
 3-factor ANOVA and report η²(method | step, prompt), η²(step | method, prompt),
 and η²(prompt | method, step), with paired-resample bootstrap CIs at
-B = 2,000, seed = 20260705 (canonical Miller recipe, see `scripts/berkeley/adding_error_bars_to_evals.py`).
+B = 2,000, seed = 20260705 (canonical Miller recipe, see `platform_modal/scripts/berkeley/adding_error_bars_to_evals.py`).
 
 ## Headline findings
 
@@ -126,20 +126,20 @@ statistically indistinguishable from noise.
 
 ## Artifact tree
 
-- `scripts/p5p8/p5_iter141_algorithm_axis_eta2.py` (~280 LoC, stdlib only,
+- `platform_modal/scripts/p5p8/p5_iter141_algorithm_axis_eta2.py` (~280 LoC, stdlib only,
   deterministic bootstrap)
-- `experiments/results/p5p8/p5_iter141_anova_eta2.tsv` (4 rows: 3 factors + rank)
-- `experiments/results/p5p8/p5_iter141_per_method_reward.tsv` (4 rows: per-method
+- `platform_hybrid/experiments/results/p5p8/p5_iter141_anova_eta2.tsv` (4 rows: 3 factors + rank)
+- `platform_hybrid/experiments/results/p5p8/p5_iter141_per_method_reward.tsv` (4 rows: per-method
   reward mean + paired-step bootstrap CI)
-- `experiments/results/p5p8/p5_iter141_factor_ratio.tsv` (3 rows: pairwise ratios
+- `platform_hybrid/experiments/results/p5p8/p5_iter141_factor_ratio.tsv` (3 rows: pairwise ratios
   with bootstrap CI)
-- `experiments/results/p5p8/p5_iter141_step_trajectory.tsv` (160 rows: 4 × 40
+- `platform_hybrid/experiments/results/p5p8/p5_iter141_step_trajectory.tsv` (160 rows: 4 × 40
   step-level reward means)
-- `experiments/results/p5p8/p5_iter141_summary.json` (H1-H4 verdicts + full CI)
-- `paper/sections/p5_iter141_algorithm_axis.tex` (new §sec:p5-iter141-algo-axis,
+- `platform_hybrid/experiments/results/p5p8/p5_iter141_summary.json` (H1-H4 verdicts + full CI)
+- `platform_hybrid/paper/sections/p5_iter141_algorithm_axis.tex` (new §sec:p5-iter141-algo-axis,
   ~115 lines)
-- `paper/paper_P5_minreport.tex` extended with `\input{sections/p5_iter141_algorithm_axis}`
-- `paper/paper_P5_minreport.pdf` rebuilds clean to 58 pages / 0 errors / 0
+- `platform_hybrid/paper/paper_P5_minreport.tex` extended with `\input{sections/p5_iter141_algorithm_axis}`
+- `platform_hybrid/paper/paper_P5_minreport.pdf` rebuilds clean to 58 pages / 0 errors / 0
   undefined citations (was 57, +1 page)
 
 ## Operational recommendation

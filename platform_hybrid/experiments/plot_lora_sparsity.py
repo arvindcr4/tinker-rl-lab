@@ -24,8 +24,8 @@ def plot_sparsity():
     plt.legend()
     plt.grid(True, alpha=0.3, axis='y')
     plt.tight_layout()
-    plt.savefig('paper/figures/figure_lora_sparsity.pdf')
-    print("Saved paper/figures/figure_lora_sparsity.pdf")
+    plt.savefig('platform_hybrid/paper/figures/figure_lora_sparsity.pdf')
+    print("Saved platform_hybrid/paper/figures/figure_lora_sparsity.pdf")
 
 if __name__ == '__main__':
     plot_sparsity()

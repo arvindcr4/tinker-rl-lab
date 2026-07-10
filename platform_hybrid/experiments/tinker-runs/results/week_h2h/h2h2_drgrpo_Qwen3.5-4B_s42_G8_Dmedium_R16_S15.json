@@ -12,7 +12,7 @@
   "temperature": 0.8,
   "steps": 15,
   "started_at": "2026-06-21T06:52:17.747908+00:00",
-  "output_path": "experiments/tinker-runs/results/h2h2_drgrpo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json",
+  "output_path": "platform_hybrid/experiments/tinker-runs/results/h2h2_drgrpo_Qwen3.5-4B_s42_G8_Dmedium_R16_S15.json",
   "run_id": "2781cc05-097a-5006-a389-3703828becc2:train:0",
   "initial_sampler": "tinker://2781cc05-097a-5006-a389-3703828becc2:train:0/sampler_weights/s0",
   "reward_trace": [

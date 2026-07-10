@@ -17,16 +17,16 @@ Per-cell definitions:
   (informative) and penalises cells whose values are the common case.
 
 Inputs:
-- experiments/results/mega_20260704/manifests/*.json (98 files)
-- experiments/results/p5p8/claim_alignment.tsv (98 rows)
-- experiments/results/p5p8/delta_minreport_consistency.tsv
-- registry/entries/*.json (model, task per entry_id)
+- platform_hybrid/experiments/results/mega_20260704/manifests/*.json (98 files)
+- platform_hybrid/experiments/results/p5p8/claim_alignment.tsv (98 rows)
+- platform_hybrid/experiments/results/p5p8/delta_minreport_consistency.tsv
+- platform_hybrid/registry/entries/*.json (model, task per entry_id)
 
 Outputs:
-- experiments/results/p5p8/p5_3axis_triangulation_per_cell.tsv (98 rows)
-- experiments/results/p5p8/p5_3axis_triangulation_per_cell_boot.tsv
-- experiments/results/p5p8/p5_3axis_triangulation_per_cell_summary.json
-- experiments/results/p5p8/figures/p5_3axis_per_cell.{png,pdf}
+- platform_hybrid/experiments/results/p5p8/p5_3axis_triangulation_per_cell.tsv (98 rows)
+- platform_hybrid/experiments/results/p5p8/p5_3axis_triangulation_per_cell_boot.tsv
+- platform_hybrid/experiments/results/p5p8/p5_3axis_triangulation_per_cell_summary.json
+- platform_hybrid/experiments/results/p5p8/figures/p5_3axis_per_cell.{png,pdf}
 
 Stdlib + matplotlib only. <=300 lines.
 """

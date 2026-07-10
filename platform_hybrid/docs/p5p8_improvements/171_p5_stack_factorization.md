@@ -33,14 +33,14 @@ algorithm-axis η² on the N2 same-stack panel, vs each stack axis
 
 ## Method
 
-Reuses `axis_variance_fraction` from `scripts/berkeley/unpacking_dpo_ppo_factorization.py`
+Reuses `axis_variance_fraction` from `platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.py`
 (the Ivison 4-axis decomposition). Two tiers:
 
 1. **N2 same-stack** (algorithm-axis baseline): 4 methods × 40 steps ×
    G=8 × seed 0 = 160 rows from
-   `experiments/results/n2_reward_tensor_resume/n2_metrics.tsv`. η² of
+   `platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv`. η² of
    `method` on per-step `reward_mean`.
-2. **mega stack axes** (`experiments/results/mega_20260704/cells.tsv`,
+2. **mega stack axes** (`platform_hybrid/experiments/results/mega_20260704/cells.tsv`,
    98 cells): η² of each of `model`, `task_slice`, `G`, `temperature`,
    `seed` on terminal `mean_reward`, plus a union-stack η² of
    `(model, task_slice, G, temperature)`-keyed cell means over the
@@ -129,21 +129,21 @@ with the iter 161 head-to-head:
 
 ## Reuse and citations
 
-- `scripts/berkeley/unpacking_dpo_ppo_factorization.py` —
+- `platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.py` —
   `axis_variance_fraction` helper (Ivison framework).
-- Ivison et al. 2024, "Unpacking DPO and PPO", NeurIPS 2024 camera-ready, arXiv:2406.09279 (already in `paper/references.bib`).
+- Ivison et al. 2024, "Unpacking DPO and PPO", NeurIPS 2024 camera-ready, arXiv:2406.09279 (already in `platform_hybrid/paper/references.bib`).
 - Lambert et al. 2024, "Tulu 3: Pushing Frontiers in Open Language Model Post-Training", arXiv:2411.15124 (RLVR equivalence claim, H3 in `unpacking_dpo_ppo_factorization.py`).
-- `scripts/p5p8/stack_eta2.py` — prior η² work in the same family; iter 161 extends the decomposition to the (model, task, G, T) stack axes.
+- `platform_modal/scripts/p5p8/stack_eta2.py` — prior η² work in the same family; iter 161 extends the decomposition to the (model, task, G, T) stack axes.
 
 ## Outputs
 
-- `scripts/p5p8/p5_iter161_stack_factorization.py` — analysis script (~280 LoC, stdlib only)
-- `experiments/results/p5p8/p5_iter161_stack_factorization.tsv` — 8-row hypothesis TSV
-- `experiments/results/p5p8/p5_iter161_stack_factorization.json` — full summary with per-axis point estimates and Wilson CI
+- `platform_modal/scripts/p5p8/p5_iter161_stack_factorization.py` — analysis script (~280 LoC, stdlib only)
+- `platform_hybrid/experiments/results/p5p8/p5_iter161_stack_factorization.tsv` — 8-row hypothesis TSV
+- `platform_hybrid/experiments/results/p5p8/p5_iter161_stack_factorization.json` — full summary with per-axis point estimates and Wilson CI
 
 ## Paper-facing text
 
-A new section `paper/sections/p5_iter161_stack_factorization.tex` adds the
+A new section `platform_hybrid/paper/sections/p5_iter161_stack_factorization.tex` adds the
 head-to-head table and the head-to-head numerical claim; the existing
 iter 89 section is unchanged. The P5 paper rebuilds with **0 errors /
 0 undefined** (verified via `pdflatex ×3 + bibtex`).
@@ -151,5 +151,5 @@ iter 89 section is unchanged. The P5 paper rebuilds with **0 errors /
 ## Finding to append to `findings_ledger.jsonl`
 
 ```json
-{"ts":"2026-07-05","pillar":"P5","claim":"η²(method|same-stack) = 0.0075 on N2 (160 rows); η²_union(stack) =0.9967 on mega (50 cells); 3/4 stack axes (model, task, G) dominate algorithm axis by 4-60x","evidence_path":"experiments/results/p5p8/p5_iter161_stack_factorization.json","citation_ok":true}
+{"ts":"2026-07-05","pillar":"P5","claim":"η²(method|same-stack) = 0.0075 on N2 (160 rows); η²_union(stack) =0.9967 on mega (50 cells); 3/4 stack axes (model, task, G) dominate algorithm axis by 4-60x","evidence_path":"platform_hybrid/experiments/results/p5p8/p5_iter161_stack_factorization.json","citation_ok":true}
 ```

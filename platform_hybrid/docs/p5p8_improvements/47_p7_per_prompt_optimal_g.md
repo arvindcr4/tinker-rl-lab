@@ -3,11 +3,11 @@
 | field | value |
 | --- | --- |
 | pillar | **P7** (ZVF theory → adaptive-G controller) |
-| target | `paper/sections/p7_controller.tex` §4.10 "Per-prompt hindsight-optimal G* analysis" (NEW) + Table~\ref{tab:p7-per-prompt-optimal} |
+| target | `platform_hybrid/paper/sections/p7_controller.tex` §4.10 "Per-prompt hindsight-optimal G* analysis" (NEW) + Table~\ref{tab:p7-per-prompt-optimal} |
 | class | **T1** statistical rigor (per-prompt bound on rollout spend) + **T2** fresh-data evidence (per-prompt replay on real N2 tensors) |
 | status | **validated** (N2 four-method, 40 steps × 16 prompts × 4 methods = 2,560 prompt-steps) |
-| artifact | `scripts/p5p8/p7_per_prompt_optimal_g.py` (≤290 LoC, stdlib + matplotlib) |
-| evidence | `experiments/results/p5p8/p7_per_prompt_optimal_g_{summary.tsv, per_step.tsv, per_prompt.tsv, summary.json}`; figure `experiments/results/p5p8/figures/p7_per_prompt_g_distribution.{png,pdf}` |
+| artifact | `platform_modal/scripts/p5p8/p7_per_prompt_optimal_g.py` (≤290 LoC, stdlib + matplotlib) |
+| evidence | `platform_hybrid/experiments/results/p5p8/p7_per_prompt_optimal_g_{summary.tsv, per_step.tsv, per_prompt.tsv, summary.json}`; figure `platform_hybrid/experiments/results/p5p8/figures/p7_per_prompt_g_distribution.{png,pdf}` |
 | paper-facing | `paper_P7_zvf_controller.pdf` rebuilt to 29 pages / 0 errors / 0 undefined citations (was 26 pages before) |
 
 ## 1. Question (falsifiable, vein (a) of the iter-35 brief)
@@ -80,25 +80,25 @@ Three readings:
 ## 6. Validation
 
 - Run on real N2 four-method tensors (40 steps × 16 prompts × 4 methods = 2,560 prompt-steps).
-- Per-method `experiments/results/p5p8/p7_per_prompt_optimal_g_per_step.tsv` (160 rows); per-prompt `p7_per_prompt_optimal_g_per_prompt.tsv` (2,560 rows).
+- Per-method `platform_hybrid/experiments/results/p5p8/p7_per_prompt_optimal_g_per_step.tsv` (160 rows); per-prompt `p7_per_prompt_optimal_g_per_prompt.tsv` (2,560 rows).
 - Script is stdlib-only except matplotlib for the optional figure.
 - Figure `p7_per_prompt_g_distribution.pdf` shows the bimodal G* distribution per method.
 
 ## 7. Reproduction
 
 ```bash
-python3 scripts/p5p8/p7_per_prompt_optimal_g.py --write
+python3 platform_modal/scripts/p5p8/p7_per_prompt_optimal_g.py --write
 # Writes:
-#   experiments/results/p5p8/p7_per_prompt_optimal_g_summary.tsv
-#   experiments/results/p5p8/p7_per_prompt_optimal_g_per_step.tsv
-#   experiments/results/p5p8/p7_per_prompt_optimal_g_per_prompt.tsv
-#   experiments/results/p5p8/p7_per_prompt_optimal_g_summary.json
-#   experiments/results/p5p8/figures/p7_per_prompt_g_distribution.{png,pdf}
+#   platform_hybrid/experiments/results/p5p8/p7_per_prompt_optimal_g_summary.tsv
+#   platform_hybrid/experiments/results/p5p8/p7_per_prompt_optimal_g_per_step.tsv
+#   platform_hybrid/experiments/results/p5p8/p7_per_prompt_optimal_g_per_prompt.tsv
+#   platform_hybrid/experiments/results/p5p8/p7_per_prompt_optimal_g_summary.json
+#   platform_hybrid/experiments/results/p5p8/figures/p7_per_prompt_g_distribution.{png,pdf}
 ```
 
 ## 8. Paper-facing change
 
-`paper/sections/p7_controller.tex`: added §4.10 "Per-prompt
+`platform_hybrid/paper/sections/p7_controller.tex`: added §4.10 "Per-prompt
 hindsight-optimal $G'$ analysis" with table
 Table~\ref{tab:p7-per-prompt-optimal} (the per-prompt Pareto frontier)
 and the unified-rule paragraph. Rebuild:
@@ -110,5 +110,5 @@ pdflatex -interaction=nonstopmode -output-directory=build paper_P7_zvf_controlle
 pdflatex -interaction=nonstopmode -output-directory=build paper_P7_zvf_controller.tex
 ```
 
-Result: `paper/build/paper_P7_zvf_controller.pdf` (29 pages, 0 errors,
+Result: `platform_hybrid/paper/build/paper_P7_zvf_controller.pdf` (29 pages, 0 errors,
 0 undefined citations).

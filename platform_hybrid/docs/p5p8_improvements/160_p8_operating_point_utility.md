@@ -69,10 +69,10 @@ For each (rate, seed, fset, tier, utility) cell:
 
 ## Deliverables
 
-- `scripts/p5p8/p8_iter160_operating_point_utility.py` (~320 LoC)
-- `experiments/results/p5p8/p8_iter160_opt_tau_per_cell.tsv` (2000 rows)
-- `experiments/results/p5p8/p8_iter160_opt_util_per_cell.tsv` (2000 rows)
-- `experiments/results/p5p8/p8_iter160_h_util_monotone.tsv` (115 rows)
-- `experiments/results/p5p8/p8_iter160_h_5seed_ci.tsv` (20 rows)
-- `experiments/results/p5p8/p8_iter160_summary.json`
-- `paper/sections/p8_iter160_operating_point_utility.tex` (~165 lines, \input into paper)
+- `platform_modal/scripts/p5p8/p8_iter160_operating_point_utility.py` (~320 LoC)
+- `platform_hybrid/experiments/results/p5p8/p8_iter160_opt_tau_per_cell.tsv` (2000 rows)
+- `platform_hybrid/experiments/results/p5p8/p8_iter160_opt_util_per_cell.tsv` (2000 rows)
+- `platform_hybrid/experiments/results/p5p8/p8_iter160_h_util_monotone.tsv` (115 rows)
+- `platform_hybrid/experiments/results/p5p8/p8_iter160_h_5seed_ci.tsv` (20 rows)
+- `platform_hybrid/experiments/results/p5p8/p8_iter160_summary.json`
+- `platform_hybrid/paper/sections/p8_iter160_operating_point_utility.tex` (~165 lines, \input into paper)

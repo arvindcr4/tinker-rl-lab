@@ -96,8 +96,9 @@
     "delta_vs_grpo_ci_hi": -0.026451,
     "delta_vs_grpo_sig": true,
     "measured_block_audit_iter90": {
-      "audit_date": "2026-07-05",
-      "audit_source": "scripts/p5p8/p6_iter90_zvf130_measured_vs_claimed.py",
+      "verdict": "SUPPORTED_MEASURED",
+      "rationale": "",
+      "audit_source": "platform_modal/scripts/p5p8/p6_iter90_zvf130_measured_vs_claimed.py",
       "audit_iter": 90,
       "B": 4000,
       "seed": 20260705
@@ -107,8 +108,9 @@
     "delta_vs_grpo_welch_sig": false,
     "sig_robust_bootstrap_and_welch": false,
     "crossref_integrity_iter102": {
-      "audit_date": "2026-07-05",
-      "audit_source": "scripts/p5p8/p6_fill_zvf130_stack_gap.py",
+      "verdict": "UNCLAIMED",
+      "rationale": "",
+      "audit_source": "platform_modal/scripts/p5p8/p6_fill_zvf130_stack_gap.py",
       "point_estimate_matches_tsv": true
     }
   },

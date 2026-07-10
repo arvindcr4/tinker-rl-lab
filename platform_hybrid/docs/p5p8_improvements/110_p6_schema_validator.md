@@ -5,29 +5,29 @@ P6 (Pillar 2 — GRPO-Registry)
 
 ## Vein
 Brief veins (c) + (b) — a CI-style schema validator that every registry
-entry must pass against `registry/schema.json`, plus a per-leaf null-
+entry must pass against `platform_hybrid/registry/schema.json`, plus a per-leaf null-
 population coverage audit on the 20 stack records. Fresh vein, not in 109
 prior rows.
 
 ## Deliverables
 
-- `scripts/p5p8/p6_iter94_schema_validator.py` (~280 LoC, stdlib + jsonschema)
-- `scripts/p5p8/p6_iter94_close_surrogate_gaps.py` (~80 LoC, stdlib)
-- `experiments/results/p5p8/p6_iter94_validation.json`
-- `experiments/results/p5p8/p6_iter94_validation.tsv`
-- `experiments/results/p5p8/p6_iter94_field_coverage.tsv`
-- `experiments/results/p5p8/p6_iter94_pending_gaps.tsv`
-- `experiments/results/p5p8/p6_iter94_crosscheck.json`
-- patched `registry/entries/{delta_dapo,delta_gspo,delta_reinforce,delta_adaptiveg}.json`
-- `paper/sections/p6_iter94_schema_validator.tex`
-- `paper/paper_P6_registry.pdf` rebuilds to **48 pages / 0 errors / 0 undefined citations** (was 46, +2 pages)
+- `platform_modal/scripts/p5p8/p6_iter94_schema_validator.py` (~280 LoC, stdlib + jsonschema)
+- `platform_modal/scripts/p5p8/p6_iter94_close_surrogate_gaps.py` (~80 LoC, stdlib)
+- `platform_hybrid/experiments/results/p5p8/p6_iter94_validation.json`
+- `platform_hybrid/experiments/results/p5p8/p6_iter94_validation.tsv`
+- `platform_hybrid/experiments/results/p5p8/p6_iter94_field_coverage.tsv`
+- `platform_hybrid/experiments/results/p5p8/p6_iter94_pending_gaps.tsv`
+- `platform_hybrid/experiments/results/p5p8/p6_iter94_crosscheck.json`
+- patched `platform_hybrid/registry/entries/{delta_dapo,delta_gspo,delta_reinforce,delta_adaptiveg}.json`
+- `platform_hybrid/paper/sections/p6_iter94_schema_validator.tex`
+- `platform_hybrid/paper/paper_P6_registry.pdf` rebuilds to **48 pages / 0 errors / 0 undefined citations** (was 46, +2 pages)
 
 ## Falsifiable measured headlines
 
 ### H1 — 35/35 entries pass schema validation on initial run
 
 The validator runs `jsonschema.Draft202012Validator` against
-`registry/schema.json` for every `registry/entries/*.json` and reports 0
+`platform_hybrid/registry/schema.json` for every `platform_hybrid/registry/entries/*.json` and reports 0
 schema violations across 20 stack + 15 variant_delta records. The
 `--strict` mode exits code 0 so the script can be wired into CI as a gate
 on registry mutations.
@@ -58,7 +58,7 @@ paper-derived theory.
 
 ### H3 — stale-audit cross-check found a real drift
 
-`registry/measured_block_audit.json` says `delta_drgrpo.measured_count=0`
+`platform_hybrid/registry/measured_block_audit.json` says `delta_drgrpo.measured_count=0`
 but the entry actually has 3 measured rows (added in iter 74 on the
 `length_bias_iter60` panel). The audit script was not re-run after iter
 74's patch. `p6_iter94_crosscheck.json` flags this as a drift signal;
@@ -110,7 +110,7 @@ across the 35-entry corpus is **0.3576**.
 ## Operational recommendation
 
 Every new entry must pass
-`python3 scripts/p5p8/p6_iter94_schema_validator.py --strict` before
+`python3 platform_modal/scripts/p5p8/p6_iter94_schema_validator.py --strict` before
 commit. The validator exits non-zero on any new SCHEMA-VIOLATION;
 MEASURED-BLOCK-MISSING and CITATION-INCOMPLETE are emitted as MEDIUM/LOW
 severity rows in `p6_iter94_pending_gaps.tsv` but do not block. Future
@@ -128,13 +128,13 @@ iterations should:
 
 ```bash
 # initial run (4 MEDIUM gaps)
-python3 scripts/p5p8/p6_iter94_schema_validator.py
+python3 platform_modal/scripts/p5p8/p6_iter94_schema_validator.py
 
 # close 4 gaps (2 surrogate-markers + 2 transparent-placeholders)
-python3 scripts/p5p8/p6_iter94_close_surrogate_gaps.py
+python3 platform_modal/scripts/p5p8/p6_iter94_close_surrogate_gaps.py
 
 # strict CI gate (exit 0 = no HIGH-severity gaps)
-python3 scripts/p5p8/p6_iter94_schema_validator.py --strict
+python3 platform_modal/scripts/p5p8/p6_iter94_schema_validator.py --strict
 
 # paper rebuild
 cd paper && pdflatex paper_P6_registry && bibtex paper_P6_registry && \

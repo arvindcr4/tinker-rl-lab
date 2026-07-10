@@ -6,9 +6,9 @@ For every measured[] row in delta_*.json: infer source family from path/panel,
 recompute (delta, ci_low, ci_high, n) deterministically (LCG B=2000, seed=20260705),
 classify as MATCH / MATCH_POINT / POINT_MATCH_WRONG_SOURCE / DRIFT_SIGN / etc.
 
-Inputs: registry/entries/delta_*.json, n2_metrics.tsv, zvf_iter130_*,
-        length_bias_iter60, qp7_adaptive.tsv, registry/schema.json.
-Outputs: experiments/results/p5p8/p6_iter146_{audit,per_entry,summary}.{tsv,json}
+Inputs: platform_hybrid/registry/entries/delta_*.json, n2_metrics.tsv, zvf_iter130_*,
+        length_bias_iter60, qp7_adaptive.tsv, platform_hybrid/registry/schema.json.
+Outputs: platform_hybrid/experiments/results/p5p8/p6_iter146_{audit,per_entry,summary}.{tsv,json}
          and p6_iter146_fix_plan.tsv (rows where source path is misattributed).
 """
 import csv
@@ -398,8 +398,8 @@ def main():
     # write auto-fix plan (rows where the value is correct but source is misattributed)
     fix_rows = []
     src_map = {
-        "zvf130_method_risk": "experiments/results/zvf_iter130_risk_index.tsv",
-        "zvf130_risk_index": "experiments/results/zvf_iter130_method_risk.tsv",
+        "zvf130_method_risk": "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv",
+        "zvf130_risk_index": "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
     }
     for r in rows:
         v = r["verdict"]

@@ -24,7 +24,7 @@ The check surfaces three classes of inconsistency:
       `deltas[].component` set. This catches stack entries that drift
       from the variant-delta definition (e.g. typo'd component name).
 
-Output: experiments/results/p5p8/p6_iter122_cross_entry_consistency.tsv
+Output: platform_hybrid/experiments/results/p5p8/p6_iter122_cross_entry_consistency.tsv
 (per (delta_id, component) row with N stacks, N statuses, verdict).
 """
 import argparse
@@ -53,7 +53,7 @@ def load():
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write", action="store_true",
-                    help="Persist TSV to experiments/results/p5p8/")
+                    help="Persist TSV to platform_hybrid/experiments/results/p5p8/")
     args = ap.parse_args()
     stacks, deltas = load()
     # index of declared (delta_id, component) -> delta_name

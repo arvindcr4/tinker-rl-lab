@@ -72,7 +72,7 @@ All 39 entries (12 stack + 11 delta + 16 measured-related) PASS
 written into the registry entries themselves because the variant_delta
 schema's `claim_validation` items use `additionalProperties: false`.
 Instead, the audit lives in the standalone
-`experiments/results/p5p8/p6_iter110_xpanel_summary.json` + verdict TSV.
+`platform_hybrid/experiments/results/p5p8/p6_iter110_xpanel_summary.json` + verdict TSV.
 
 ## Cross-coupling
 
@@ -93,19 +93,19 @@ Instead, the audit lives in the standalone
 
 ## Reproducibility
 
-- Script: `scripts/p5p8/p6_iter110_n2_zvf130_xpanel.py` (stdlib only,
+- Script: `platform_modal/scripts/p5p8/p6_iter110_n2_zvf130_xpanel.py` (stdlib only,
   ~280 lines)
 - Bootstrap: paired_step_or_seed_pct, B=4000, seed=20260705, ci=0.95
 - Outputs:
-  - `experiments/results/p5p8/p6_iter110_n2_panel.tsv` (27 rows: 3 variants
+  - `platform_hybrid/experiments/results/p5p8/p6_iter110_n2_panel.tsv` (27 rows: 3 variants
     × 9 metrics)
-  - `experiments/results/p5p8/p6_iter110_zvf130_panel.tsv` (15 rows: 3
+  - `platform_hybrid/experiments/results/p5p8/p6_iter110_zvf130_panel.tsv` (15 rows: 3
     variants × 5 metrics)
-  - `experiments/results/p5p8/p6_iter110_xpanel_verdict.tsv` (6 rows: 3
+  - `platform_hybrid/experiments/results/p5p8/p6_iter110_xpanel_verdict.tsv` (6 rows: 3
     variants × 2 metric pairs)
-  - `experiments/results/p5p8/p6_iter110_xpanel_summary.json` (counts +
+  - `platform_hybrid/experiments/results/p5p8/p6_iter110_xpanel_summary.json` (counts +
     bootstrap metadata)
-- Run: `python3 scripts/p5p8/p6_iter110_n2_zvf130_xpanel.py` (≈3s on a
+- Run: `python3 platform_modal/scripts/p5p8/p6_iter110_n2_zvf130_xpanel.py` (≈3s on a
   cold start, <1MB memory)
 - No GPU, no Tinker call.
 

@@ -96,19 +96,19 @@ noise. Future P7 iters may use this analysis as a template.
 
 ## Artifacts
 
-- `scripts/p5p8/p8_noisy_sensor_cost.py` (~245 LoC, stdlib +
+- `platform_modal/scripts/p5p8/p8_noisy_sensor_cost.py` (~245 LoC, stdlib +
   numpy + pandas + xgboost + matplotlib)
-- `experiments/results/p5p8/p8_noisy_sensor.tsv` (40 rows: 5 σ × 8 ρ
+- `platform_hybrid/experiments/results/p5p8/p8_noisy_sensor.tsv` (40 rows: 5 σ × 8 ρ
   exact cost-optimal)
-- `experiments/results/p5p8/p8_noisy_sensor_boot.tsv` (40 rows: same
+- `platform_hybrid/experiments/results/p5p8/p8_noisy_sensor_boot.tsv` (40 rows: same
   shape with paired bootstrap CI)
-- `experiments/results/p5p8/p8_noisy_sensor_breakeven.tsv` (5 rows: L*
+- `platform_hybrid/experiments/results/p5p8/p8_noisy_sensor_breakeven.tsv` (5 rows: L*
   per σ)
-- `experiments/results/p5p8/p8_noisy_sensor_summary.json` (machine-readable)
-- `experiments/results/p5p8/figures/p8_noisy_sensor.{png,pdf}`
+- `platform_hybrid/experiments/results/p5p8/p8_noisy_sensor_summary.json` (machine-readable)
+- `platform_hybrid/experiments/results/p5p8/figures/p8_noisy_sensor.{png,pdf}`
   (Δ-cost vs ρ, one curve per σ)
-- `paper/sections/p8_noisy_sensor.tex` (new §4.7, ~150 lines)
-- `paper/paper_P8_fraud.pdf` rebuilds to 22 pages / 0 errors / 0
+- `platform_hybrid/paper/sections/p8_noisy_sensor.tex` (new §4.7, ~150 lines)
+- `platform_hybrid/paper/paper_P8_fraud.pdf` rebuilds to 22 pages / 0 errors / 0
   undefined citations
 
 ## Verified citations

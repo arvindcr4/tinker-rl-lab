@@ -52,21 +52,21 @@ regenerated on every audit run.
 
 ## Outputs
 
-- `scripts/p5p8/p6_outcomes_coverage_block.py` (~270 LoC, stdlib; already
+- `platform_modal/scripts/p5p8/p6_outcomes_coverage_block.py` (~270 LoC, stdlib; already
   in tree; reran for this iter)
-- `experiments/results/p5p8/p6_outcomes_coverage_audit.tsv` (35 rows)
-- `experiments/results/p5p8/p6_outcomes_coverage_claim_evidence.tsv` (14 rows)
-- `experiments/results/p5p8/p6_outcomes_coverage_summary.json`
-- `paper/sections/p6_iter100_coverage_closure.tex` (new; 8 paragraphs +
+- `platform_hybrid/experiments/results/p5p8/p6_outcomes_coverage_audit.tsv` (35 rows)
+- `platform_hybrid/experiments/results/p5p8/p6_outcomes_coverage_claim_evidence.tsv` (14 rows)
+- `platform_hybrid/experiments/results/p5p8/p6_outcomes_coverage_summary.json`
+- `platform_hybrid/paper/sections/p6_iter100_coverage_closure.tex` (new; 8 paragraphs +
   1 table + 3 cross-coupling bullets)
-- `paper/paper_P6_registry.tex` extended with `\input{sections/p6_iter100_coverage_closure}`
-- `paper/paper_P6_registry.pdf` rebuilds to **49 pages / 0 errors / 0
+- `platform_hybrid/paper/paper_P6_registry.tex` extended with `\input{sections/p6_iter100_coverage_closure}`
+- `platform_hybrid/paper/paper_P6_registry.pdf` rebuilds to **49 pages / 0 errors / 0
   undefined citations** (was 48, +1 page from new subsection)
 
 ## Reproduction
 
 ```bash
-python3 scripts/p5p8/p6_outcomes_coverage_block.py   # ~2s on 1 core
+python3 platform_modal/scripts/p5p8/p6_outcomes_coverage_block.py   # ~2s on 1 core
 ```
 
 Validator runs as part of the script; output is the audit TSV + summary
@@ -80,7 +80,7 @@ cd paper && pdflatex paper_P6_registry && bibtex paper_P6_registry \
 ## Operational recommendation
 
 Every new registry entry MUST pass
-`python3 scripts/p5p8/p6_outcomes_coverage_block.py` before commit; this
+`python3 platform_modal/scripts/p5p8/p6_outcomes_coverage_block.py` before commit; this
 single command both (a) patches the new entry's `outcomes.coverage` block
 and (b) re-validates the full registry. The current state (N=35 entries,
 all passing) is the cleanest registry state in the worktree's history.

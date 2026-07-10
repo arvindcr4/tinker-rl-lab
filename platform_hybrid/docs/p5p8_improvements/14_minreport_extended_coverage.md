@@ -3,7 +3,7 @@
 **Pillar:** P5 (MIN-REPORT, "Report the Stack, Not the Label")
 **Class:** T3 (cross-paper coupling — schema coverage against the live data)
 **Status:** prototyped → **validated** (iter 9)
-**Deliverable:** `scripts/p5p8/minreport_extended_coverage.py` + 3 TSVs + 1 summary JSON
+**Deliverable:** `platform_modal/scripts/p5p8/minreport_extended_coverage.py` + 3 TSVs + 1 summary JSON
 
 ## Motivation
 
@@ -91,7 +91,7 @@ Concretely, the proposed expansion:
 ## Reproducibility
 
 ```
-$ python3 scripts/p5p8/minreport_extended_coverage.py
+$ python3 platform_modal/scripts/p5p8/minreport_extended_coverage.py
 cells (cells.tsv):      98
 cells (cells_done):     98
 fully-covered (7/7):    0 (0.0%)
@@ -99,7 +99,7 @@ fully-covered (18/18):  0 (0.0%)
 N10 runs audited:       6
 ```
 
-Outputs: `experiments/results/p5p8/minreport_extended_coverage.tsv`,
+Outputs: `platform_hybrid/experiments/results/p5p8/minreport_extended_coverage.tsv`,
 `minreport_extended_per_cell.tsv`, `minreport_extended_n10.tsv`,
 `minreport_extended_summary.json`.
 

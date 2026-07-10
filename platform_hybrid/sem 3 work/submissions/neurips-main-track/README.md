@@ -11,4 +11,4 @@ This is the NeurIPS main-track submission prepared during the six-member Group 6
 
 These files were extracted from Git tag `capstone-final-2026-04-25` and therefore belong to Semester 3. They are not the Semester 4 workshop submission.
 
-The complete historical source remains accessible at that tag under `paper/`, `blind_review/`, and `submission/`.
+The complete historical source remains accessible at that tag under `platform_hybrid/paper/`, `platform_local/blind_review/`, and `submission/`.

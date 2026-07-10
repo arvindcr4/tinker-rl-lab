@@ -60,18 +60,18 @@ Top candidates from iter-56 SYNTH section:
 
 ## Outputs
 
-- `scripts/p5p8/p6_registry_minreport_audit.py` (~270 LoC, stdlib + json + math + collections)
-- `experiments/results/p5p8/p6_registry_minreport_subfield.tsv` (23 rows)
-- `experiments/results/p5p8/p6_registry_minreport_entry_fingerprint.tsv` (20 rows)
-- `experiments/results/p5p8/p6_registry_minreport_item_summary.tsv` (7 rows)
-- `experiments/results/p5p8/p6_registry_minreport_summary.json`
-- `paper/sections/p6_registry_health.tex` new §sec:p6-minreport-subfield + Table tab:p6-minreport-subfield
-- `paper/paper_P6_registry.pdf` rebuilds to 34 pages / 0 errors / 0 undefined citations (was 27, +7 pages)
+- `platform_modal/scripts/p5p8/p6_registry_minreport_audit.py` (~270 LoC, stdlib + json + math + collections)
+- `platform_hybrid/experiments/results/p5p8/p6_registry_minreport_subfield.tsv` (23 rows)
+- `platform_hybrid/experiments/results/p5p8/p6_registry_minreport_entry_fingerprint.tsv` (20 rows)
+- `platform_hybrid/experiments/results/p5p8/p6_registry_minreport_item_summary.tsv` (7 rows)
+- `platform_hybrid/experiments/results/p5p8/p6_registry_minreport_summary.json`
+- `platform_hybrid/paper/sections/p6_registry_health.tex` new §sec:p6-minreport-subfield + Table tab:p6-minreport-subfield
+- `platform_hybrid/paper/paper_P6_registry.pdf` rebuilds to 34 pages / 0 errors / 0 undefined citations (was 27, +7 pages)
 
 ## Reproduction
 
 ```bash
-python3 scripts/p5p8/p6_registry_minreport_audit.py   # ~2s on 1 core
+python3 platform_modal/scripts/p5p8/p6_registry_minreport_audit.py   # ~2s on 1 core
 ```
 
 23 per-sub-field rows, 20 per-entry fingerprint rows, 7 per-item summary rows.

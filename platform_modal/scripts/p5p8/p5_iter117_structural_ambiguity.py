@@ -6,7 +6,7 @@ Closes brief vein (a) at the **encoding-mode layer**. Iter-113 row 127a
 audited the **content layer** (declared vs emitted vs derivable). This iter
 audits the **structural layer**: for every one of the 18 MIN-REPORT v2.2
 items, classify the *encoding mode* used in the live
-`experiments/results/mega_20260704/manifests/` corpus (n=98) into one of:
+`platform_hybrid/experiments/results/mega_20260704/manifests/` corpus (n=98) into one of:
 
   - explicit_json_key : the manifest JSON has a dedicated top-level key
   - implicit_filename  : the value is encoded ONLY in the cell_id filename
@@ -35,11 +35,11 @@ H3 — recommended remediation: emit 5 new top-level JSON keys (`model_family`,
      emitted keys MUST fail `registry_validate.py`.
 
 Outputs:
-  experiments/results/p5p8/p5_iter117_structural_ambiguity.tsv
+  platform_hybrid/experiments/results/p5p8/p5_iter117_structural_ambiguity.tsv
        (18 rows: per-MIN-REPORT-item encoding-mode classification)
-  experiments/results/p5p8/p5_iter117_rename_vulnerability.tsv
+  platform_hybrid/experiments/results/p5p8/p5_iter117_rename_vulnerability.tsv
        (15 rows: 5 perturbed cells × 3 perturbations; rename recovery test)
-  experiments/results/p5p8/p5_iter117_summary.json
+  platform_hybrid/experiments/results/p5p8/p5_iter117_summary.json
        (machine-readable with H1-H3 evidence)
 
 The companion registry-style schema-level audit reuses the live corpus
@@ -56,10 +56,10 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-MANIFEST_DIR = ROOT / "experiments/results/mega_20260704/manifests"
-CELLS_TSV = ROOT / "experiments/results/mega_20260704/cells.tsv"
-TENSOR_DIR = ROOT / "experiments/results/mega_20260704/group_tensors"
-OUT_DIR = ROOT / "experiments/results/p5p8"
+MANIFEST_DIR = ROOT / "platform_hybrid/experiments/results/mega_20260704/manifests"
+CELLS_TSV = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
+TENSOR_DIR = ROOT / "platform_hybrid/experiments/results/mega_20260704/group_tensors"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
 
 # MIN-REPORT v2.2 items: (item_id, item_name, schema_status, declared_source)
 # schema_status from iter-113: live | live_NA | DERIVABLE | DERIVABLE_REJECTED | schema_only

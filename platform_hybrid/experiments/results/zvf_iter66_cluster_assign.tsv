@@ -1,5 +1,5 @@
 # Pillar 2 Iter 66 — cluster assignment at k=3
-# Source: scripts/zvf_iter66_distshape.py
+# Source: platform_modal/scripts/zvf_iter66_distshape.py
 method	cluster	mean_zvf	mean_acc	ks_to_grpo
 aero	0	0.2225	0.2800	0.4121
 areal	1	0.1223	0.2790	0.5012

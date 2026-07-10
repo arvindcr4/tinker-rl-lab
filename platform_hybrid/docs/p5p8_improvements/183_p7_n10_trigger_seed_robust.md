@@ -113,7 +113,7 @@ expectation for "seed-robustness" claims.
 3. **CITE** iter-183 alongside iter-167 (oracle regret) when claiming
    "the controller is seed-portable" — the population-level claim survives,
    the step-level claim does not.
-4. **WIRE** `python3 scripts/p5p8/p7_iter183_trigger_seed_robust_n10.py`
+4. **WIRE** `python3 platform_modal/scripts/p5p8/p7_iter183_trigger_seed_robust_n10.py`
    as a CI-style pre-commit gate for any future P7 controller variant —
    gate fails if cross_sd > 0.20 at τ=0.70 OR if monotone seeds < 5/5.
 5. **EXTEND** in next-iter: include the iter-131 per-prompt adaptive
@@ -124,20 +124,20 @@ expectation for "seed-robustness" claims.
 
 | Path | rows × cols | bytes |
 |---|---|---|
-| `scripts/p5p8/p7_iter183_trigger_seed_robust_n10.py` | 285 LoC | stdlib only |
-| `experiments/results/p5p8/p7_iter183_per_obs.tsv` | 75 × 12 | seed,step,zvf,reward + 8 fire bits |
-| `experiments/results/p5p8/p7_iter183_per_seed_rate.tsv` | 40 × 7 | per-(seed,τ) rate + 95% bootstrap CI |
-| `experiments/results/p5p8/p7_iter183_cross_seed_ci.tsv` | 8 × 7 | per-τ mean + cross_sd + cross-bootstrap CI |
-| `experiments/results/p5p8/p7_iter183_tost.tsv` | 80 × 8 | per-(pair,τ) paired-block-bootstrap + TOST |
-| `experiments/results/p5p8/p7_iter183_spearman.tsv` | 80 × 3 | per-(τ,pair) Spearman ρ |
-| `experiments/results/p5p8/p7_iter183_summary.json` | H1-H6 verdicts | structured |
+| `platform_modal/scripts/p5p8/p7_iter183_trigger_seed_robust_n10.py` | 285 LoC | stdlib only |
+| `platform_hybrid/experiments/results/p5p8/p7_iter183_per_obs.tsv` | 75 × 12 | seed,step,zvf,reward + 8 fire bits |
+| `platform_hybrid/experiments/results/p5p8/p7_iter183_per_seed_rate.tsv` | 40 × 7 | per-(seed,τ) rate + 95% bootstrap CI |
+| `platform_hybrid/experiments/results/p5p8/p7_iter183_cross_seed_ci.tsv` | 8 × 7 | per-τ mean + cross_sd + cross-bootstrap CI |
+| `platform_hybrid/experiments/results/p5p8/p7_iter183_tost.tsv` | 80 × 8 | per-(pair,τ) paired-block-bootstrap + TOST |
+| `platform_hybrid/experiments/results/p5p8/p7_iter183_spearman.tsv` | 80 × 3 | per-(τ,pair) Spearman ρ |
+| `platform_hybrid/experiments/results/p5p8/p7_iter183_summary.json` | H1-H6 verdicts | structured |
 
 ## What this is NOT
 
 - It is not a recalibration of τ — the existing τ ∈ [0.55, 0.75] is the
   correct operating zone and iter-183 confirmsthis.
 - It is not a Tinker rerun — the N10 5-seed panel already exists in
-  `experiments/results/n10_seed_expansion/`.
+  `platform_hybrid/experiments/results/n10_seed_expansion/`.
 - It is not a paper rebuild — the iteration is a delta-layer finding,
   not a section add. The P7 design-rules section should grow by ~3 lines
   in next-iter synthesis.

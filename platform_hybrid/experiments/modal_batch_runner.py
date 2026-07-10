@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-experiments/modal_batch_runner.py
+platform_hybrid/experiments/modal_batch_runner.py
 
 Modal GPU runner for real multi-seed TRL experiments.
 Replaces synthetic data with actual training runs on A10G GPUs.
 
 Usage:
-    modal run experiments/modal_batch_runner.py --seeds 3 --steps 20
+    modal run platform_hybrid/experiments/modal_batch_runner.py --seeds 3 --steps 20
 """
 
 import modal
@@ -32,10 +32,10 @@ image = (
 
 # Mount repo
 repo_mount = modal.Mount.from_local_dir(
-    "/Users/arvind/paper/tinker-rl-lab",
+    "/Users/arvind/platform_hybrid/paper/tinker-rl-lab",
     remote_path="/root/tinker-rl-lab",
     condition=lambda path: not any(
-        x in path for x in [".git", "__pycache__", "wandb", ".pyc", "paper/"]
+        x in path for x in [".git", "__pycache__", "wandb", ".pyc", "platform_hybrid/paper/"]
     ),
 )
 
@@ -56,7 +56,7 @@ def run_trl_grpo(seed: int, num_steps: int = 20) -> dict:
     import time
     import sys
 
-    exp_path = "/root/tinker-rl-lab/experiments/implementations/trl_grpo_math.py"
+    exp_path = "/root/tinker-rl-lab/platform_hybrid/experiments/implementations/trl_grpo_math.py"
     result_dir = f"/results/trl_grpo/seed_{seed}"
     os.makedirs(result_dir, exist_ok=True)
 

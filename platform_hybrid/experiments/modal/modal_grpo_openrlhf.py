@@ -9,11 +9,11 @@ GRPO is realised via ``--advantage_estimator group_norm`` on the
 reward server exposes the verifiable GSM8K boxed-answer reward so OpenRLHF can
 query it per sample.
 
-Sister script to ``experiments/modal/modal_grpo_trl.py`` and
+Sister script to ``platform_hybrid/experiments/modal/modal_grpo_trl.py`` and
 ``modal_grpo_verl.py``. Writes result.json to
 ``/home/user/workspace/elevation_outputs/modal_openrlhf_grpo.json``.
 
-Note: the repo's top-level ``openrlhf/`` package shares a name with pypi
+Note: the repo's top-level ``platform_modal/openrlhf/`` package shares a name with pypi
 ``openrlhf``. We avoid the shadow by not importing the repo launcher here and
 calling pypi openrlhf via its CLI directly.
 """

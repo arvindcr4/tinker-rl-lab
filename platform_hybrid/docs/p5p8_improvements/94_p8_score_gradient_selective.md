@@ -35,16 +35,16 @@ Deploy **gradient-band (XGB-20raw backbone, g_thr=0.0001)** with the following p
 
 ## Reproducibility
 
-- Script: `scripts/p5p8/p8_score_gradient_selective.py` (290 lines)
+- Script: `platform_modal/scripts/p5p8/p8_score_gradient_selective.py` (290 lines)
 - Outputs:
-  - `experiments/results/p5p8/p8_score_gradient_distribution.tsv` (398 rows)
-  - `experiments/results/p5p8/p8_score_gradient_selective.tsv` (14 rows)
-  - `experiments/results/p5p8/p8_score_gradient_vs_absband.tsv` (12 rows)
-  - `experiments/results/p5p8/p8_score_gradient_boot.tsv` (7 rows)
-  - `experiments/results/p5p8/p8_score_gradient_summary.json`
-  - `experiments/results/p5p8/figures/p8_score_gradient.{png,pdf}`
+  - `platform_hybrid/experiments/results/p5p8/p8_score_gradient_distribution.tsv` (398 rows)
+  - `platform_hybrid/experiments/results/p5p8/p8_score_gradient_selective.tsv` (14 rows)
+  - `platform_hybrid/experiments/results/p5p8/p8_score_gradient_vs_absband.tsv` (12 rows)
+  - `platform_hybrid/experiments/results/p5p8/p8_score_gradient_boot.tsv` (7 rows)
+  - `platform_hybrid/experiments/results/p5p8/p8_score_gradient_summary.json`
+  - `platform_hybrid/experiments/results/p5p8/figures/p8_score_gradient.{png,pdf}`
 - Seed: 20260705 (paired bootstrap B=600, 95% CI)
 
 ## Paper-facing text
 
-Lifted into `paper/sections/p8_iter80_score_gradient.tex`.
+Lifted into `platform_hybrid/paper/sections/p8_iter80_score_gradient.tex`.

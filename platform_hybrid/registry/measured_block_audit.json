@@ -499,6 +499,6 @@
     "seed": 20260704,
     "n_boot": 2000,
     "audit_date": "2026-07-05",
-    "source": "scripts/p5p8/p6_measured_coverage.py"
+    "source": "platform_modal/scripts/p5p8/p6_measured_coverage.py"
   }
 }

@@ -3,11 +3,11 @@
 Task 1 — Llama-3.3-70B-Instruct multi-seed retry on GSM8K.
 
 Reuses the run_experiment() + EXPERIMENT schema from
-experiments/tinker-runs/campaign_v2.py so behaviour is identical to
+platform_hybrid/experiments/tinker-runs/campaign_v2.py so behaviour is identical to
 `w1_llama33-70b-inst` from that campaign, just across seeds {42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768}.
 
-Output: experiments/tinker-runs/results/llama33_70b_seeds.json
-Then: regenerate master_results.json via experiments/aggregate_results.py
+Output: platform_hybrid/experiments/tinker-runs/results/llama33_70b_seeds.json
+Then: regenerate master_results.json via platform_hybrid/experiments/aggregate_results.py
 """
 import os, sys, json, time
 from datetime import datetime

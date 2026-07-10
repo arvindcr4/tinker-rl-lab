@@ -11,7 +11,7 @@ margin
 (0 = maximally uncertain group, half right; 1 = unanimous group).
 
 We test five hypotheses on the same-stack group-size sweep
-(experiments/results/groupsize_zvf_sweep.json: 4 group sizes x 3 seeds,
+(platform_hybrid/experiments/results/groupsize_zvf_sweep.json: 4 group sizes x 3 seeds,
 40 steps each, per-step zvf / mean_reward / entropy / advantage_variance
 / grad_norm):
 
@@ -34,8 +34,8 @@ import os
 from statistics import mean, pstdev
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SRC = os.path.join(ROOT, "experiments/results/groupsize_zvf_sweep.json")
-OUT = os.path.join(ROOT, "experiments/results/berkeley")
+SRC = os.path.join(ROOT, "platform_hybrid/experiments/results/groupsize_zvf_sweep.json")
+OUT = os.path.join(ROOT, "platform_hybrid/experiments/results/berkeley")
 os.makedirs(OUT, exist_ok=True)
 
 
@@ -168,7 +168,7 @@ def main():
         "row": 20,
         "source": "F24 L1 Denny Zhou -- Wang & Zhou, CoT Reasoning Without Prompting (arXiv:2402.10200, NeurIPS 2024)",
         "target": "A5 + Pillar 2/3",
-        "data": "experiments/results/groupsize_zvf_sweep.json (4 G x 3 seeds, 40 steps)",
+        "data": "platform_hybrid/experiments/results/groupsize_zvf_sweep.json (4 G x 3 seeds, 40 steps)",
         "margin_def": "M_t = |2*mean_reward_t - 1| (group-level analog of CoT-decoding Delta)",
         "H1_margin_validity": {"median_rho_M_zvf": round(med_rho1, 4), "decisive": h1_decisive},
         "H2_train_confidence": {"n_runs_both_signs": n_both, "of": len(h2_rows), "decisive": h2_decisive},

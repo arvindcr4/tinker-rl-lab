@@ -12,19 +12,19 @@ any stack entry. For each missing method, emits:
     - a stack-entries patch list for any wandb run that lacks a stack record
 
 Inputs (read-only):
-    experiments/results/wandb_inventory/*.tsv
-    experiments/results/n2_reward_tensor_resume/*.jsonl
-    registry/entries/*.json
-    registry/schema.json
+    platform_hybrid/experiments/results/wandb_inventory/*.tsv
+    platform_hybrid/experiments/results/n2_reward_tensor_resume/*.jsonl
+    platform_hybrid/registry/entries/*.json
+    platform_hybrid/registry/schema.json
 
 Outputs (written):
-    experiments/results/p5p8/p6_iter182_missing_method_audit.tsv
-    experiments/results/p5p8/p6_iter182_missing_method_per_run.tsv
-    experiments/results/p5p8/p6_iter182_added_entry.tsv
-    experiments/results/p5p8/p6_iter182_summary.json
-    registry/entries/delta_ppo_reinforce.json  (NEW)
-    registry/entries/wandb_ppo_reinforce_qwen3-8b_gsm8k.json  (NEW)
-    registry/entries/wandb_ppo_reinforce_llama-8b-inst_gsm8k.json  (NEW)
+    platform_hybrid/experiments/results/p5p8/p6_iter182_missing_method_audit.tsv
+    platform_hybrid/experiments/results/p5p8/p6_iter182_missing_method_per_run.tsv
+    platform_hybrid/experiments/results/p5p8/p6_iter182_added_entry.tsv
+    platform_hybrid/experiments/results/p5p8/p6_iter182_summary.json
+    platform_hybrid/registry/entries/delta_ppo_reinforce.json  (NEW)
+    platform_hybrid/registry/entries/wandb_ppo_reinforce_qwen3-8b_gsm8k.json  (NEW)
+    platform_hybrid/registry/entries/wandb_ppo_reinforce_llama-8b-inst_gsm8k.json  (NEW)
 
 Stdlib only. Single-file script, <=300 LoC.
 """
@@ -335,7 +335,7 @@ def make_stack_entry(model: str, run_id: str, run_name: str,
         "seeds": [42],
         "provenance": {
             "source_artifacts": [
-                "experiments/results/wandb_inventory/"
+                "platform_hybrid/experiments/results/wandb_inventory/"
                 "tinker-rl-lab-world-class.tsv"
             ],
             "wandb": (

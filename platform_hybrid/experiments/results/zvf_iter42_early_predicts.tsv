@@ -3,7 +3,7 @@
 #   burden_05 = auc_above_zvf05, etc.) + late outcome label.
 # kNN-LOO with k=3 over z-scored features predicting {collapse,
 #   plateau, drift, converged}. Same taxonomy as iter 38.
-# Source: scripts/zvf_iter42.py
+# Source: __ALREADY_platform_modal/scripts/__zvf_iter42.py
 kind	method	seed	group_size	n_steps	fp05_frac	fp07_frac	fp09_frac	early_bloom05	early_bloom07	early_bloom09	burden_05	burden_07	mean_zvf	zvf_std	zvf_lag1	last10_avg	peak	label	pred	correct
 groupsize_zvf_sweep	grpo_G2	42	2	40	0.2000	0.3000	0.3750	1	1	1	0.3375	0.1722	0.8266	0.2028	0.9131	0.9781	0.9900	converged	converged	1
 groupsize_zvf_sweep	grpo_G2	123	2	40	0.0750	0.2250	0.3250	1	1	1	0.3563	0.1863	0.8516	0.1858	0.8224	0.9750	0.9750	converged	converged	1

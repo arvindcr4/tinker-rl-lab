@@ -1,5 +1,5 @@
 # Pillar 2 iter78 per-channel (AR1, CUSUM, H-run) alarm at th=0.70.
-# Source: scripts/zvf_iter78.py
+# Source: __ALREADY_platform_modal/scripts/__zvf_iter78.py
 source	method	seed	channel	threshold	t_alarm	t_fail	lead_time	true_alarm
 variance_mitigation	grpo	0	ar1	0.700000	7	152	145	1
 variance_mitigation	grpo	0	cusum	0.700000	98	152	54	1

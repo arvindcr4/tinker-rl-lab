@@ -19,17 +19,17 @@ chance at 95%?".
 
 Outputs
 -------
-- experiments/results/p5p8/p6_cross_stack_delta_div_matrix.tsv
+- platform_hybrid/experiments/results/p5p8/p6_cross_stack_delta_div_matrix.tsv
   (6 rows: 6 method-pairs x {a, b, n_steps, dd_diff, dd_lo, dd_hi, dd_sig,
    y_diff, y_lo, y_hi, y_sig, zvf_diff, zvf_lo, zvf_hi, zvf_sig})
-- experiments/results/p5p8/p6_cross_stack_delta_div_matrix.json
+- platform_hybrid/experiments/results/p5p8/p6_cross_stack_delta_div_matrix.json
   (summary + ranking + audit by pair)
-- experiments/results/p5p8/p6_cross_stack_delta_div_matrix_summary.json
+- platform_hybrid/experiments/results/p5p8/p6_cross_stack_delta_div_matrix_summary.json
   (machine-readable: per-method rank, per-pair verdict)
 
 Registry patches (additive, idempotent, schema-bounded)
 -------------------------------------------------------
-- registry/schema.json: new optional block
+- platform_hybrid/registry/schema.json: new optional block
   `outcomes.cross_stack_delta_div_matrix` (per-stack) is NOT added in this
   iter -- the matrix is computed from existing zvf_antiherding per-method
   blocks (each entry's per-method rank + bootstrap rho-matrix is recorded

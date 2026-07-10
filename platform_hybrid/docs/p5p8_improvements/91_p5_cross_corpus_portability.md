@@ -7,7 +7,7 @@
 
 Iter-65 row 76 (Placebo-Replacement) and iter-69 row 81 (Manifest × Telemetry Coupling) both analyzed the **mega_20260704** corpus only. Iter-73 row 86 (MIN-REPORT v2.0 Stack-Axis Extension) generalised the schema but again on the same 98-cell corpus. A remaining question is whether the **7-item MIN-REPORT standard itself is portable** across the worktree's heterogeneous experiment corpora, or whether it is a schema custom-built for one campaign. This iter answers that question with a fresh cross-corpus portability test.
 
-**Method.** Apply the 7-item MIN-REPORT fingerprint (paper/sections/p5_stack.tex) to **7 internal corpora** and measure, for each: (a) per-item coverage = share of records with a non-null value; (b) per-item variance = number of unique values; (c) total bits = sum of item entropies; (d) mean Hamming discrimination across random record pairs (B=2000 bootstrap resamples); (e) a STRONG / PORTABLE / LIMITED / NULL verdict.
+**Method.** Apply the 7-item MIN-REPORT fingerprint (platform_hybrid/paper/sections/p5_stack.tex) to **7 internal corpora** and measure, for each: (a) per-item coverage = share of records with a non-null value; (b) per-item variance = number of unique values; (c) total bits = sum of item entropies; (d) mean Hamming discrimination across random record pairs (B=2000 bootstrap resamples); (e) a STRONG / PORTABLE / LIMITED / NULL verdict.
 
 The 7 corpora (deliberately heterogeneous — from a full manifest campaign to a single per-stratum AUROC table):
 
@@ -18,7 +18,7 @@ The 7 corpora (deliberately heterogeneous — from a full manifest campaign to a
 | C3 | n10_seed_expansion (2 algo × 8 seed manifest JSON) | 16 | manifest JSON, 8 runs pending |
 | C4 | base_instruct_paired (paired t-test rows) | 8 | rows-only summary |
 | C5 | group_size_iter111_paired (G sweep G4 vs G32) | 4 | rows-only summary |
-| C6 | length_bias_iter60_grpo_vs_drgrpo (kind × task rows) | 20 | rows-only summary |
+| C6 | length_bias_iter60_platform_tinker/grpo_vs_drgrpo (kind × task rows) | 20 | rows-only summary |
 | C7 | zvf_iter118_auroc (per-stratum AUROC rows) | 8 | rows-only summary |
 
 **Verdict rule.** STRONG if ≥5 of 7 items are populated AND ≥1 carries variance; PORTABLE if ≥3 populated AND ≥1 varies; LIMITED if ≥1 populated AND ≥1 varies; NULL otherwise.
@@ -83,11 +83,11 @@ The 7-item MIN-REPORT standard is **portable but stratified**:
 
 | Path | Purpose |
 | --- | --- |
-| `scripts/p5p8/p5_cross_corpus_portability.py` | stdlib-only analysis script (~300 LoC, B=2000 bootstrap) |
-| `experiments/results/p5p8/p5_cross_corpus_portability.tsv` | 7 corpora × 31 cols (n, pop, var, bits, hamming, ci, verdict, per-item cov/var/bits) |
-| `experiments/results/p5p8/p5_cross_corpus_portability_pairs.tsv` | bootstrap pair statistics per corpus |
-| `experiments/results/p5p8/p5_cross_corpus_portability_summary.json` | full machine-readable summary with 7 falsifiable headlines |
-| `paper/sections/p5_iter77_cross_corpus.tex` | (optional) paper-facing section for §sec:p5-cross-corpus |
+| `platform_modal/scripts/p5p8/p5_cross_corpus_portability.py` | stdlib-only analysis script (~300 LoC, B=2000 bootstrap) |
+| `platform_hybrid/experiments/results/p5p8/p5_cross_corpus_portability.tsv` | 7 corpora × 31 cols (n, pop, var, bits, hamming, ci, verdict, per-item cov/var/bits) |
+| `platform_hybrid/experiments/results/p5p8/p5_cross_corpus_portability_pairs.tsv` | bootstrap pair statistics per corpus |
+| `platform_hybrid/experiments/results/p5p8/p5_cross_corpus_portability_summary.json` | full machine-readable summary with 7 falsifiable headlines |
+| `platform_hybrid/paper/sections/p5_iter77_cross_corpus.tex` | (optional) paper-facing section for §sec:p5-cross-corpus |
 
 ## Validation
 

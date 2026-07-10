@@ -71,13 +71,13 @@ to 0 errors / 0 undefined.
 
 ```
 cd /home/claude/tinker-rl-lab-minimax
-python3 scripts/p5p8/p8_asymmetric_cost_frontier.py
+python3 platform_modal/scripts/p5p8/p8_asymmetric_cost_frontier.py
 ```
 
 Outputs:
-- `experiments/results/p5p8/p8_asym_cost.tsv` (75 rows: 5×5×3 grid)
-- `experiments/results/p5p8/p8_asym_cost_boot.tsv` (25 paired bootstrap rows)
-- `experiments/results/p5p8/p8_asym_cost_summary.json`
-- `experiments/results/p5p8/figures/p8_asym_cost.{png,pdf}`
+- `platform_hybrid/experiments/results/p5p8/p8_asym_cost.tsv` (75 rows: 5×5×3 grid)
+- `platform_hybrid/experiments/results/p5p8/p8_asym_cost_boot.tsv` (25 paired bootstrap rows)
+- `platform_hybrid/experiments/results/p5p8/p8_asym_cost_summary.json`
+- `platform_hybrid/experiments/results/p5p8/figures/p8_asym_cost.{png,pdf}`
 
 Wall time ~2 min on 4 cores.

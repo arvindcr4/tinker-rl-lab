@@ -607,9 +607,9 @@ All training scripts are available in the repository:
     \item \texttt{grpo\_gsm8k\_base.py} -- Parameterized GSM8K training
     \item \texttt{grpo\_exp\_a\_baseline.py}, \texttt{exp\_b\_high\_lr.py}, \texttt{exp\_c\_low\_temp.py}, \texttt{exp\_d\_xlam.py} -- Tool-use experiments
     \item \texttt{grpo\_100\_xlam.py}, \texttt{grpo\_100\_synthetic.py}, \texttt{grpo\_100\_math.py} -- Extended runs
-    \item \texttt{experiments/10x\_structural\_ceiling/grpo\_10x\_runner.py} -- Unified runner with YAML config, checkpoint resumption, ZVF/GU logging
-    \item \texttt{experiments/10x\_structural\_ceiling/configs/*.yaml} -- 23 YAML configs for all 10x ablation dimensions
-    \item \texttt{experiments/10x\_structural\_ceiling/RESULTS.md} -- Complete 50-step results with 8 findings
+    \item \texttt{platform_hybrid/experiments/10x\_structural\_ceiling/grpo\_10x\_runner.py} -- Unified runner with YAML config, checkpoint resumption, ZVF/GU logging
+    \item \texttt{platform_hybrid/experiments/10x\_structural\_ceiling/configs/*.yaml} -- 23 YAML configs for all 10x ablation dimensions
+    \item \texttt{platform_hybrid/experiments/10x\_structural\_ceiling/RESULTS.md} -- Complete 50-step results with 8 findings
 \end{itemize}
 
 At present, we can release training scripts, paper sources, and the hardened held-out evaluation script, but the exact prompt packs / scenario definitions used for every internal tool-calling score are not yet packaged as a replication bundle. Releasing prompts, scoring rubrics, and scenario manifests is an explicit next step for reproducibility.

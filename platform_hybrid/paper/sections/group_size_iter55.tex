@@ -1,9 +1,9 @@
 % =============================================================================
 % Iter 55 -- Pillar 3: Theory-coupled G=4 vs G=32 analysis
-% Driver: scripts/group_size_iter55.py + scripts/group_size_iter55_fig.py
-% Inputs: experiments/results/group_size_token_normalized.tsv
-%         experiments/results/groupsize_zvf_sweep.tsv
-% Outputs: experiments/results/group_size_iter55_{d_eff,antiherd,isoyield_pred,
+% Driver: platform_modal/scripts/group_size_iter55.py + platform_modal/scripts/group_size_iter55_fig.py
+% Inputs: platform_hybrid/experiments/results/group_size_token_normalized.tsv
+%         platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
+% Outputs: platform_hybrid/experiments/results/group_size_iter55_{d_eff,antiherd,isoyield_pred,
 %          coupling,wu_model,stepaware,summary}.tsv
 %          figures/group_size_iter55.{pdf,png}
 % =============================================================================
@@ -161,7 +161,7 @@ $G$-invariance, falsified).
 
 \paragraph{Reproducibility (iter 55).}
 The iter 55 artifacts are produced by
-\texttt{scripts/group\_size\_iter55.py} (no new measurements; every
+\texttt{platform\_modal/scripts/group\_size\_iter55.py} (no new measurements; every
 number is computed from \texttt{group\_size\_token\_normalized.tsv}
 and \texttt{groupsize\_zvf\_sweep.tsv}).  Seven TSV outputs are
 written:

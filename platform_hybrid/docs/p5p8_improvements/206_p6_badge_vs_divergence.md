@@ -27,7 +27,7 @@ replaced (or supplemented) with a different scoring scheme.
 
 ## Approach
 
-1. Load every stack entry from `registry/entries/*.json` (28 stack records
+1. Load every stack entry from `platform_hybrid/registry/entries/*.json` (28 stack records
    after iter-198's bump; 18 delta files don't participate because
    they're variant-delta records, not stack records).
 2. Extract per-entry BADGE = `outcomes.coverage.min_report_coverage`.
@@ -218,7 +218,7 @@ to the documentation layer.
 
 ## Operational
 
-(a) **WIRE** `python3 scripts/p5p8/p6_iter206_badge_vs_divergence.py`
+(a) **WIRE** `python3 platform_modal/scripts/p5p8/p6_iter206_badge_vs_divergence.py`
 as a CI pre-commit gate — fails if entry-level Spearman ρ rises above
 −0.10 OR if the number of fully-agree sub-fields drops below 6.
 
@@ -251,19 +251,19 @@ descriptive sub-field split is the deeper audit signal.
 
 ## Evidence path
 
-- `scripts/p5p8/p6_iter206_badge_vs_divergence.py` (~480 LoC,
+- `platform_modal/scripts/p5p8/p6_iter206_badge_vs_divergence.py` (~480 LoC,
   stdlib only)
-- `experiments/results/p5p8/p6_iter206_cluster_rollup.tsv` (15 rows:
+- `platform_hybrid/experiments/results/p5p8/p6_iter206_cluster_rollup.tsv` (15 rows:
   per-label_claimed cluster, mean_badge, mean_disagree, etc.)
-- `experiments/results/p5p8/p6_iter206_perfield_disagree.tsv`
+- `platform_hybrid/experiments/results/p5p8/p6_iter206_perfield_disagree.tsv`
   (20 rows: per-(item, leaf) aggregated disagreement rate)
-- `experiments/results/p5p8/p6_iter206_hypotheses.tsv` (7 rows: H1-H7
+- `platform_hybrid/experiments/results/p5p8/p6_iter206_hypotheses.tsv` (7 rows: H1-H7
   verdicts)
-- `experiments/results/p5p8/p6_iter206_entry_level.tsv` (18 rows:
+- `platform_hybrid/experiments/results/p5p8/p6_iter206_entry_level.tsv` (18 rows:
   per-entry BADGE × cluster-mean-disagree table — the scatter for
   `tab:p6-iter206-entry-coupling`)
-- `experiments/results/p5p8/p6_iter206_quartiles.tsv` (4 rows:
+- `platform_hybrid/experiments/results/p5p8/p6_iter206_quartiles.tsv` (4 rows:
   per-badge-quartile cluster rollup)
-- `experiments/results/p5p8/p6_iter206_summary.json` (aggregate H
+- `platform_hybrid/experiments/results/p5p8/p6_iter206_summary.json` (aggregate H
   rollup + Spearman ρ + bootstrap CIs)
 - 1 line in `findings_ledger.jsonl` (pillar P6, iter 206)

@@ -4,11 +4,11 @@ contrast-restoration on N2 four-method tensors (Pareto-reversing finding)
 | field | value |
 | --- | --- |
 | pillar | **P7** (ZVF theory → adaptive-G controller) |
-| target | `paper/sections/p7_controller.tex` — new §4.9 "Posterior-predictive contrast-restoration" |
+| target | `platform_hybrid/paper/sections/p7_controller.tex` — new §4.9 "Posterior-predictive contrast-restoration" |
 | class | **T2** fresh-data evidence (per-prompt closed-form posterior under real N2 2560 prompt-step obs) + **T3** cross-paper coupling (closes the loop with the iter-15 synthetic sweep estimate ΔZVF=0.059) + **T1** cost-efficiency |
 | status | **validated** |
-| artifact | `scripts/p5p8/p7_posterior_predictive.py` (300 LoC, stdlib only); `scripts/p5p8/p7_postpred_costeff.py` (81 LoC) |
-| evidence | `experiments/results/p5p8/p7_postpred_{per_step,summary}.{tsv,json}` (640 + summary rows); `p7_postpred_costeff.tsv` (45 controller-method rows) |
+| artifact | `platform_modal/scripts/p5p8/p7_posterior_predictive.py` (300 LoC, stdlib only); `platform_modal/scripts/p5p8/p7_postpred_costeff.py` (81 LoC) |
+| evidence | `platform_hybrid/experiments/results/p5p8/p7_postpred_{per_step,summary}.{tsv,json}` (640 + summary rows); `p7_postpred_costeff.tsv` (45 controller-method rows) |
 
 ## 1. Question (falsifiable)
 
@@ -57,7 +57,7 @@ directly compared to the iter-15 sweep estimate.
 
 ## 3. Method
 
-`scripts/p5p8/p7_posterior_predictive.py` (stdlib only):
+`platform_modal/scripts/p5p8/p7_posterior_predictive.py` (stdlib only):
 
 1. **Beta-Binomial posterior predictive (closed form).** For each
    observed (step, prompt) with k successes in G=8 rollouts, compute
@@ -81,7 +81,7 @@ directly compared to the iter-15 sweep estimate.
    fired prompt(s) from G=8 → G'=16 (extra 8 rollouts per fired prompt;
    extra 16×8 = 128 rollouts per zvf-triage step fire).
 
-`scripts/p5p8/p7_postpred_costeff.py` reads
+`platform_modal/scripts/p5p8/p7_postpred_costeff.py` reads
 `p7_postpred_summary.json` and computes the **restored-per-1000-extra-rollouts**
 ratio (the cost-efficiency metric).
 
@@ -201,7 +201,7 @@ principled per-prompt set is a strict subset of the most
 cost-efficient step-level escalation.
 
 Recommended paper change: add §4.9 "Posterior-predictive
-contrast-restoration" to `paper/sections/p7_controller.tex`,
+contrast-restoration" to `platform_hybrid/paper/sections/p7_controller.tex`,
 replacing the current best-controller claim with the
 **Pareto-restoration-efficiency table** above and noting that the
 Bayesian controller is dominated on restoration-per-rollout but

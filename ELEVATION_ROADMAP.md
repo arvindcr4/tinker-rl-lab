@@ -671,4 +671,4 @@ The following changes require no new experiments or code — only paper editing:
 
 ---
 
-*Document prepared for TinkerRL-Bench elevation planning. All paper quotes are from /home/user/workspace/tinker-rl-lab/paper/main.tex. All SOTA references are from the research brief provided by the parent agent.*
+*Document prepared for TinkerRL-Bench elevation planning. All paper quotes are from /home/user/workspace/tinker-rl-lab/platform_hybrid/paper/main.tex. All SOTA references are from the research brief provided by the parent agent.*

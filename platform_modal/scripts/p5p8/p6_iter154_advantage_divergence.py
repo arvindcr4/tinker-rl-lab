@@ -17,13 +17,13 @@ For every step t in N2 (40 steps, G=8, seed 0, 4 methods):
       * KL(p_var || p_grpo)  with ε-smoothing (epsilon=1e-6)
       * JS  (symmetrised KL on the midpoint)
       * Wasserstein-1  on sorted samples (empirical cdf distance)
-  - Compare to scalar measured deltas in registry/entries/delta_*.json:
+  - Compare to scalar measured deltas in platform_hybrid/registry/entries/delta_*.json:
       * `delta.zvf`            (registry measured[zvf, panel=n2_same_stack_last10])
       * `delta.reward_mean`    (registry measured[reward_mean, panel=...] )
   - Aggregate per-method summary statistics across steps (mean, sd, max,
     fraction-of-steps-with-d_KL > 0.01).
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   - p6_iter154_adv_div_per_step.tsv   (one row per (method, step))
   - p6_iter154_adv_div_summary.json   (per-method aggregates + scalars)
   - p6_iter154_adv_div_vs_scalar.tsv  (cross-checks adv-div vs registry deltas)
@@ -38,9 +38,9 @@ import sys
 import numpy as np
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-TENSORS = ROOT / "experiments/results/n2_reward_tensor_resume"
-REG_ENTRIES = ROOT / "registry/entries"
-OUT = ROOT / "experiments/results/p5p8"
+TENSORS = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+REG_ENTRIES = ROOT / "platform_hybrid/registry/entries"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 METHODS = ["grpo", "aero", "gift", "areal"]

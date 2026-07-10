@@ -26,10 +26,10 @@ Outputs (5 TSV + 1 JSON):
   p6_iter194_robustness_window.tsv
   p6_iter194_robustness_cross_panel.tsv
   p6_iter194_summary.json
-  + registry/entries/delta_aero.json (PATCHED: predicted_sign -> "<=0", caveat added)
-  + registry/entries/delta_areal.json (PATCHED: predicted_sign -> "<=0", caveat added)
-  + registry/entries/delta_aero.amendment.json (provenance trail)
-  + registry/entries/delta_areal.amendment.json (provenance trail)
+  + platform_hybrid/registry/entries/delta_aero.json (PATCHED: predicted_sign -> "<=0", caveat added)
+  + platform_hybrid/registry/entries/delta_areal.json (PATCHED: predicted_sign -> "<=0", caveat added)
+  + platform_hybrid/registry/entries/delta_aero.amendment.json (provenance trail)
+  + platform_hybrid/registry/entries/delta_areal.amendment.json (provenance trail)
 """
 from __future__ import annotations
 import csv
@@ -484,8 +484,8 @@ def main():
         "pillar": "P6",
         "vein": "(a) deeper — CONTRADICTS deep-dive + robustness stress test + registry amendment for delta_aero/delta_areal reward_mean claim",
         "raw_data_sources": [
-            "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
-            "experiments/results/zvf_iter130_method_risk.tsv",
+            "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+            "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
         ],
         "h1_multiseed_pass": h1_pass,
         "h2a_bca_lower_pass": h2a_pass,
@@ -507,10 +507,10 @@ def main():
             "p6_iter194_robustness_cross_panel.tsv",
         ],
         "registry_patches": [
-            "registry/entries/delta_aero.json (predicted_sign amended, caveat added)",
-            "registry/entries/delta_areal.json (predicted_sign amended, caveat added)",
-            "registry/entries/delta_aero.amendment.json (NEW provenance)",
-            "registry/entries/delta_areal.amendment.json (NEW provenance)",
+            "platform_hybrid/registry/entries/delta_aero.json (predicted_sign amended, caveat added)",
+            "platform_hybrid/registry/entries/delta_areal.json (predicted_sign amended, caveat added)",
+            "platform_hybrid/registry/entries/delta_aero.amendment.json (NEW provenance)",
+            "platform_hybrid/registry/entries/delta_areal.amendment.json (NEW provenance)",
         ],
     }
     out_sum = RES / "p6_iter194_summary.json"

@@ -12,15 +12,15 @@ seed derived from a master SEED (default 20260506, the NeurIPS 2026 deadline)
 and the resample generator is `np.random.default_rng`. Running the script
 twice on the same input always yields byte-identical outputs.
 
-Outputs (written to experiments/):
+Outputs (written to platform_hybrid/experiments/):
   * statistical_analysis.json   -- machine-readable record of every number
   * statistical_analysis.md     -- human-readable summary
   * stat_rigor_tables.json      -- compact payload keyed by table
                                    (Tables 1-4 as rendered in the paper)
 
 Usage:
-  python experiments/compute_statistics.py            # uses default SEED=20260506
-  SEED=42 python experiments/compute_statistics.py     # override
+  python platform_hybrid/experiments/compute_statistics.py            # uses default SEED=20260506
+  SEED=42 python platform_hybrid/experiments/compute_statistics.py     # override
 """
 from __future__ import annotations
 

@@ -135,7 +135,7 @@ adoption on N10 requires extending N10 to store per-step tensors
 or deriving the 4 missing fields from `step_log`.
 (b) **DEFER** N10 `pcd, n_groups, std_completion_len, sampled_tokens`
 to v2.5.1 with explicit corpus-aware partial-fill semantics.
-(c) **WIRE** `python3 scripts/p5p8/p5_iter185_v25_cross_corpus.py`
+(c) **WIRE** `python3 platform_modal/scripts/p5p8/p5_iter185_v25_cross_corpus.py`
 as a CI pre-commit gate for v2.5 schema migrations; gate fails if
 H1's n10/cell count drops below 7/13 OR if H2 value-correctness
 pass rate drops below 0.90.
@@ -147,18 +147,18 @@ when they stabilise; current audit pipeline is corpus-agnostic.
 
 ## Files touched
 
-- `scripts/p5p8/p5_iter185_v25_cross_corpus.py` (~310 LoC, stdlib only)
-- `experiments/results/p5p8/p5_iter185_v25_field_fill_per_corpus.tsv`
+- `platform_modal/scripts/p5p8/p5_iter185_v25_cross_corpus.py` (~310 LoC, stdlib only)
+- `platform_hybrid/experiments/results/p5p8/p5_iter185_v25_field_fill_per_corpus.tsv`
   (39 rows: 13 fields × 3 corpora with Wilson 95% CI)
-- `experiments/results/p5p8/p5_iter185_v25_discriminative_entropy.tsv`
+- `platform_hybrid/experiments/results/p5p8/p5_iter185_v25_discriminative_entropy.tsv`
   (39 rows: 13 fields × 3 corpora with Shannon bits + verdict)
-- `experiments/results/p5p8/p5_iter185_v25_value_correctness.tsv`
+- `platform_hybrid/experiments/results/p5p8/p5_iter185_v25_value_correctness.tsv`
   (294 rows: 3 fields × 98 mega cells with declared/recomputed)
-- `experiments/results/p5p8/p5_iter185_v25_cross_corpus_matrix.tsv`
+- `platform_hybrid/experiments/results/p5p8/p5_iter185_v25_cross_corpus_matrix.tsv`
   (13 rows: per-field portability verdict across the 3 corpora)
-- `experiments/results/p5p8/p5_iter185_summary.json` (H1–H5 verdicts
+- `platform_hybrid/experiments/results/p5p8/p5_iter185_summary.json` (H1–H5 verdicts
   + headline numbers + per-corpus coverage)
-- `docs/p5p8_improvements/185_p5_v25_cross_corpus.md` (this file)
+- `platform_hybrid/docs/p5p8_improvements/185_p5_v25_cross_corpus.md` (this file)
 - 1 line in `findings_ledger.jsonl`
 
 ## Deliverables (validated)

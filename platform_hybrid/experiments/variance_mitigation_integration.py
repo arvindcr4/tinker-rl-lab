@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-experiments/variance_mitigation_integration.py
+platform_hybrid/experiments/variance_mitigation_integration.py
 
 Integrates AERO / CPPO / NGRPO / Scaf-GRPO on top of a baseline GRPO
 trainer as minimal config-override wrappers. Used by the
 variance-mitigation comparison section of the paper
-(paper/sections/variance_mitigation_comparison.tex) and by reviewer
+(platform_hybrid/paper/sections/variance_mitigation_comparison.tex) and by reviewer
 points W14 / Q7.
 
 CLI
 ---
-    python3 experiments/variance_mitigation_integration.py \\
+    python3 platform_hybrid/experiments/variance_mitigation_integration.py \\
         --method {grpo,aero,cppo,ngrpo,scafgrpo} --config CONFIG
 
 For reviewer-response workflows without a GPU attached, pass
@@ -26,7 +26,7 @@ Hook points on the baseline GRPO trainer
 
 Output
 ------
-    experiments/results/variance_mitigation.tsv
+    platform_hybrid/experiments/results/variance_mitigation.tsv
     schema: method, seed, step, zvf, reward_mean, heldout_acc, collapse
 """
 
@@ -302,7 +302,7 @@ def run_real(cfg: MethodConfig, config_path: str, seed: int) -> List[dict]:
 # ---------------------------------------------------------------------------
 
 
-# Targets taken from paper/sections/variance_mitigation_comparison.tex
+# Targets taken from platform_hybrid/paper/sections/variance_mitigation_comparison.tex
 # (Table variance-head2head). Order: (last10_reward_mean, heldout_acc,
 # mean_zvf_at_50, time_to_collapse_median).
 _PROJECTION_TARGETS = {

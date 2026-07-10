@@ -12,7 +12,7 @@ number printed is computed by the zvf-triage package from the synthetic rewards.
 Run::
 
     zvf-program/zvf-triage/.venv/bin/python \
-        experiments/tinker-runs/smoke_zvf_triage_probe.py
+        platform_hybrid/experiments/tinker-runs/smoke_zvf_triage_probe.py
 """
 
 from __future__ import annotations

@@ -3,7 +3,7 @@
     "iter": 186,
     "pillar": "P6",
     "seed": 20260706,
-    "source": "scripts/p5p8/p6_iter186_coverage_audit.py",
+    "source": "platform_modal/scripts/p5p8/p6_iter186_coverage_audit.py",
     "veins": [
       "(b) coverage audit",
       "(c) schema validation"

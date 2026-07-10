@@ -37,9 +37,9 @@
         "n_boot": 4000,
         "seed": 20260705,
         "ci_level": 0.95,
-        "source": "scripts/p5p8/p6_drgrpo_measured_evidence.py"
+        "source": "platform_modal/scripts/p5p8/p6_drgrpo_measured_evidence.py"
       },
-      "source": "experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv",
+      "source": "platform_hybrid/experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv",
       "note": "fraction of negative-elasticity steps; pool over 2 tasks (arith_easy n=5, gsm8k_cot n=3 paired runs)"
     },
     {
@@ -56,9 +56,9 @@
         "n_boot": 4000,
         "seed": 20260705,
         "ci_level": 0.95,
-        "source": "scripts/p5p8/p6_drgrpo_measured_evidence.py"
+        "source": "platform_modal/scripts/p5p8/p6_drgrpo_measured_evidence.py"
       },
-      "source": "experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv",
+      "source": "platform_hybrid/experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv",
       "note": "fraction of positive-elasticity steps; same panel"
     },
     {
@@ -75,9 +75,9 @@
         "n_boot": 4000,
         "seed": 20260705,
         "ci_level": 0.95,
-        "source": "scripts/p5p8/p6_drgrpo_measured_evidence.py"
+        "source": "platform_modal/scripts/p5p8/p6_drgrpo_measured_evidence.py"
       },
-      "source": "experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv",
+      "source": "platform_hybrid/experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv",
       "note": "optimal-length under curvature fit; pool over 2 tasks"
     }
   ],

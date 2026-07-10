@@ -27,9 +27,9 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 ENTRIES = ROOT / "registry" / "entries"
-TSV_130 = ROOT / "experiments/results/zvf_iter130_method_risk.tsv"
-META_130 = ROOT / "experiments/results/zvf_iter130_meta.json"
-OUT_DIR = ROOT / "experiments/results/p5p8"
+TSV_130 = ROOT / "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv"
+META_130 = ROOT / "platform_hybrid/experiments/results/zvf_iter130_meta.json"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 DATE = "2026-07-05"
@@ -166,7 +166,7 @@ def make_stack(method, m):
         "crossref_integrity_iter138": {
             "audit_date": DATE,
             "audit_source": AUDIT,
-            "ground_truth": "experiments/results/zvf_iter130_method_risk.tsv",
+            "ground_truth": "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
             "point_estimate_matches_tsv": True,
             "note": (
                 "BASE reference (delta vs self = 0)." if is_base
@@ -297,7 +297,7 @@ def make_delta(method, m):
                 "ci_level": None,
                 "source": AUDIT,
             },
-            "source": "experiments/results/zvf_iter130_method_risk.tsv",
+            "source": "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
             "note": (
                 f"1-seed pointestimate (zvf_risk_mean={round(risk_mean,4)} "
                 f"vs grpo=0.5777); n_seeds=1 precludes paired-seed bootstrap "

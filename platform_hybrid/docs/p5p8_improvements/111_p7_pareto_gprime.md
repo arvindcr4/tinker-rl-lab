@@ -197,10 +197,10 @@ signal is already saturated at the next coarser granularity**.
 
 ## Reproducibility
 
-- Script: `scripts/p5p8/p7_iter95_pareto_gprime.py` (~340 LoC, stdlib only)
+- Script: `platform_modal/scripts/p5p8/p7_iter95_pareto_gprime.py` (~340 LoC, stdlib only)
 - Outputs:
-  - `experiments/results/p5p8/p7_iter95_pareto_gprime.tsv` (16 rows = 4 methods × 4 G')
-  - `experiments/results/p5p8/p7_iter95_dualformer_compare.tsv` (10 rows = 2 variants × 4 methods + 2 cross-method summaries)
-  - `experiments/results/p5p8/p7_iter95_n10_seed_stability.tsv` (5 seed rows + 10 Jaccard rows + 2 summary lines)
-  - `experiments/results/p5p8/p7_iter95_pareto_summary.json`
+  - `platform_hybrid/experiments/results/p5p8/p7_iter95_pareto_gprime.tsv` (16 rows = 4 methods × 4 G')
+  - `platform_hybrid/experiments/results/p5p8/p7_iter95_dualformer_compare.tsv` (10 rows = 2 variants × 4 methods + 2 cross-method summaries)
+  - `platform_hybrid/experiments/results/p5p8/p7_iter95_n10_seed_stability.tsv` (5 seed rows + 10 Jaccard rows + 2 summary lines)
+  - `platform_hybrid/experiments/results/p5p8/p7_iter95_pareto_summary.json`
 - Validation: closed-form arithmetic matches iter-91 row 108 at G'=16 (1.84 sum_zvf_drop, 7.64 benefit/1k within ±0.05 of iter-91's 7.64; the small drift is from boundary prompt k=8 special-case which iter-95 handles identically to iter-91)

@@ -4,7 +4,7 @@ instrumentation and a measured held-out evaluation.
 Purpose (closes two adversarial-review gaps):
   * Pillar 3 (trainability / group size): produces a *measured* multi-seed
     G-sweep with held-out accuracy, replacing the hardcoded FALLBACK_ROWS in
-    experiments/group_size_token_normalized.py.
+    platform_hybrid/experiments/group_size_token_normalized.py.
   * Pillar 2 (ZVF): logs per-step Zero-Variance Fraction together with the
     confounders the withdrawn partial-correlation table needs (batch mean
     reward, policy entropy, advantage variance), so the partial correlation can
@@ -17,7 +17,7 @@ Qwen2.5-0.5B with a verifiable binary correctness reward on a+b arithmetic, so
 rewards have real within-group variance (meaningful ZVF).
 
 Usage:
-  modal run experiments/modal/modal_groupsize_zvf_sweep.py
+  modal run platform_hybrid/experiments/modal/modal_groupsize_zvf_sweep.py
 """
 import modal
 import json
@@ -232,6 +232,6 @@ def main():
               f"last10={np.mean(l10):.3f} meanZVF={np.mean(zvfs):.3f} (n={len(rs)})")
 
     out = {"summary": summary, "runs": results}
-    with open("experiments/results/groupsize_zvf_sweep.json", "w") as f:
+    with open("platform_hybrid/experiments/results/groupsize_zvf_sweep.json", "w") as f:
         json.dump(out, f, indent=2)
-    print("\nSaved experiments/results/groupsize_zvf_sweep.json")
+    print("\nSaved platform_hybrid/experiments/results/groupsize_zvf_sweep.json")

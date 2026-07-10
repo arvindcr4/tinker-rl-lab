@@ -78,19 +78,19 @@ The **operational recommendation**: the iter-53 #64 MVE recommendation (add 5 co
 
 ```bash
 cd /home/claude/tinker-rl-lab-minimax
-python3 scripts/p5p8/p5_stack_axis_minreport.py
+python3 platform_modal/scripts/p5p8/p5_stack_axis_minreport.py
 ```
 
 Inputs:
-- `experiments/results/mega_20260704/cells.tsv` (98 cells, 12 axes)
-- `experiments/results/mega_20260704/manifests/*.json` (98 manifests)
+- `platform_hybrid/experiments/results/mega_20260704/cells.tsv` (98 cells, 12 axes)
+- `platform_hybrid/experiments/results/mega_20260704/manifests/*.json` (98 manifests)
 
 Outputs:
-- `experiments/results/p5p8/p5_stack_axis_minreport.tsv` (12 rows: 7 v1 + 5 v2)
-- `experiments/results/p5p8/p5_stack_axis_minreport_boot.tsv` (bootstrap CIs)
-- `experiments/results/p5p8/p5_stack_axis_minreport_summary.json` (full headline numbers)
+- `platform_hybrid/experiments/results/p5p8/p5_stack_axis_minreport.tsv` (12 rows: 7 v1 + 5 v2)
+- `platform_hybrid/experiments/results/p5p8/p5_stack_axis_minreport_boot.tsv` (bootstrap CIs)
+- `platform_hybrid/experiments/results/p5p8/p5_stack_axis_minreport_summary.json` (full headline numbers)
 
-Script: `scripts/p5p8/p5_stack_axis_minreport.py` (~280 LoC, stdlib only).
+Script: `platform_modal/scripts/p5p8/p5_stack_axis_minreport.py` (~280 LoC, stdlib only).
 
 ## Status
 

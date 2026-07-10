@@ -13,7 +13,7 @@ from the bibliography or present-but-uncited. Iter 109 closes this gap.
 
 **H1 (sharp) — 4/4 reporting-standards papers verified against CrossRef
 metadata; 2 added to bib, 2 retrofitted with DOIs.** The verification check
-(`scripts/p5p8/p5_iter109_reporting_standards.py`) opens each paper's
+(`platform_modal/scripts/p5p8/p5_iter109_reporting_standards.py`) opens each paper's
 CrossRef JSON record and asserts year + first-5-gram title + author-family
 overlap (≥ 0.6). All four pass:
 
@@ -24,7 +24,7 @@ overlap (≥ 0.6). All four pass:
 | `bender2018datastatements` | 10.1162/tacl_a_00041 | no (added) | OK |
 | `pushkarna2022datacards` | 10.1145/3531146.3533231 | no (added) | OK |
 
-**H2 — All 4 papers now cited in `paper/sections/p5_related.tex`.** Prior to
+**H2 — All 4 papers now cited in `platform_hybrid/paper/sections/p5_related.tex`.** Prior to
 iter 109, Mitchell 2019 and Gebru 2021 were present in `references.bib`
 but never invoked in the related work; iter 109 cites all four in a new
 "reporting-standards lineage" paragraph that names each paper's specific
@@ -71,12 +71,12 @@ strictness as the stack-axis fields.
 - **(v) P6 iter 102 row 119** (cross-reference integrity guard) — iter 109's
   verification pattern (CrossRef JSON record + author-overlap classifier)
   mirrors iter 102's ground-truth cross-check pattern; both are
-  registry/bibliography hygiene tools that future iterations can compose.
+  platform_hybrid/registry/bibliography hygiene tools that future iterations can compose.
 
 ## Operational recommendation
 
 After every bibliography mutation, run
-`python3 scripts/p5p8/p5_iter109_reporting_standards.py` and assert:
+`python3 platform_modal/scripts/p5p8/p5_iter109_reporting_standards.py` and assert:
 - `n_papers >= 4` (or the next paper added)
 - `n_match == n_papers` (all verified)
 - `n_already_cited_in_p5_related == n_papers` (all cited, not orphaned)
@@ -88,21 +88,21 @@ guard: any future entry that gets `present_in_bib=True` and
 
 ## Files
 
-- `scripts/p5p8/p5_iter109_reporting_standards.py` (146 LoC, stdlib +
+- `platform_modal/scripts/p5p8/p5_iter109_reporting_standards.py` (146 LoC, stdlib +
   urllib, CrossRef JSON API, deterministic)
-- `experiments/results/p5p8/p5_iter109_crossref_verify.tsv` (4 rows =
+- `platform_hybrid/experiments/results/p5p8/p5_iter109_crossref_verify.tsv` (4 rows =
   4 papers × verification status)
-- `experiments/results/p5p8/p5_iter109_bib_audit.tsv` (4 rows =
+- `platform_hybrid/experiments/results/p5p8/p5_iter109_bib_audit.tsv` (4 rows =
   4 papers × present/doi/year/volume/pages/cited)
-- `experiments/results/p5p8/p5_iter109_minreport_coupling.tsv` (16 rows =
+- `platform_hybrid/experiments/results/p5p8/p5_iter109_minreport_coupling.tsv` (16 rows =
   4 papers × ~4 items)
-- `experiments/results/p5p8/p5_iter109_summary.json` (machine-readable
+- `platform_hybrid/experiments/results/p5p8/p5_iter109_summary.json` (machine-readable
   with H1/H2/H3)
-- `paper/references.bib` updated: + DOIs to `mitchell2019modelcards` and
+- `platform_hybrid/paper/references.bib` updated: + DOIs to `mitchell2019modelcards` and
   `gebru2021datasheets`; + 2 new entries `bender2018datastatements` and
   `pushkarna2022datacards`
-- `paper/sections/p5_related.tex` extended with a 5th paragraph
+- `platform_hybrid/paper/sections/p5_related.tex` extended with a 5th paragraph
   (Reporting-standards lineage of MIN-REPORT) citing all 4 papers
-- `paper/paper_P5_minreport.pdf` rebuilds to **49 pages / 0 errors /
+- `platform_hybrid/paper/paper_P5_minreport.pdf` rebuilds to **49 pages / 0 errors /
   0 undefined citations** (was 49; +0 pages, but +1 substantive
   paragraph and 4 verified citations)

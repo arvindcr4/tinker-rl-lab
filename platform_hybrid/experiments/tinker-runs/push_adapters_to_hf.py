@@ -5,7 +5,7 @@ repo, instead of N separate repos. Idempotent: skips runs already uploaded, so i
 can be re-run as more cells finish. Retries on the Tinker->HF transfer timeout.
 
 Requires env: HF_TOKEN, TINKER_API_KEY.
-Usage:  HF_TOKEN=... TINKER_API_KEY=... .venv/bin/python experiments/tinker-runs/push_adapters_to_hf.py
+Usage:  HF_TOKEN=... TINKER_API_KEY=... .venv/bin/python platform_hybrid/experiments/tinker-runs/push_adapters_to_hf.py
 """
 import json, glob, re, subprocess, os, time
 from huggingface_hub import HfApi
@@ -21,8 +21,8 @@ def branch_of(tag):
 
 # completed cells (dedup by tag, prefer week_h2h copy)
 cells = {}
-for f in sorted(glob.glob("experiments/tinker-runs/results/week_h2h/*.json")) + \
-         sorted(glob.glob("experiments/tinker-runs/results/h2h2_*.json")):
+for f in sorted(glob.glob("platform_hybrid/experiments/tinker-runs/results/week_h2h/*.json")) + \
+         sorted(glob.glob("platform_hybrid/experiments/tinker-runs/results/h2h2_*.json")):
     try: d = json.load(open(f))
     except Exception: continue
     if d.get("status") == "completed" and d.get("checkpoint"):

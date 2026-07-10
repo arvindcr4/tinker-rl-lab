@@ -1,4 +1,4 @@
-% paper/sections/p6_iter138_missing_method_entries.tex
+% platform_hybrid/paper/sections/p6_iter138_missing_method_entries.tex
 % Iter-138 P6 audit: missing-method registry entries (brief vein (d)).
 % Closes the registry coverage gap at the *method-identity* layer:
 %   9 zvf130 stack entries existed (grpo/aero/areal/gift/ngrpo/cppo/
@@ -17,7 +17,7 @@
 %   - Schema CI: parse_ok=43/43, schema_ok=43/43.
 %
 % Reproducibility:
-%   python3 scripts/p5p8/p6_iter138_missing_method_audit.py
+%   python3 platform_modal/scripts/p5p8/p6_iter138_missing_method_audit.py
 
 \subsection{Missing-method registry entries (iter 138)}
 \label{sec:p6-iter138-missing-method}
@@ -59,8 +59,8 @@ verdicts:
   variant-delta entry at iter-138.
 \end{itemize}
 The audit script is
-\texttt{scripts/p5p8/p6\_iter138\_missing\_method\_audit.py} and
-emits \texttt{experiments/results/p5p8/p6\_iter138\_missing\_method\_audit.tsv}
+\texttt{platform_modal/scripts/p5p8/p6\_iter138\_missing\_method\_audit.py} and
+emits \texttt{platform_hybrid/experiments/results/p5p8/p6\_iter138\_missing\_method\_audit.tsv}
 (16 rows $\times$ 7 cols).
 
 \paragraph{Provenance discipline for the new entries.}
@@ -92,10 +92,10 @@ After iter-138:
 \item Registry entry count: 39 $\to$ 43
   ($+2$ stack \texttt{zvf130\_tool\_use\_*},
   $+2$ variant-delta \texttt{delta\_tool\_use\_*}).
-\item \texttt{python3 scripts/p5p8/p6\_iter130\_schema\_ci.py} reports
+\item \texttt{python3 platform_modal/scripts/p5p8/p6\_iter130\_schema\_ci.py} reports
   \texttt{parse\_ok=43/43}, \texttt{schema\_ok=43/43},
   $\mathit{n\_stale\_method\_rows}=0$.
-\item \texttt{python3 registry/query.py list} now includes both
+\item \texttt{python3 platform_hybrid/registry/query.py list} now includes both
   \texttt{zvf130\_tool\_use\_llama-8b-inst} and
   \texttt{zvf130\_tool\_use\_qwen3-32b}.
 \item The \texttt{measured\_block\_audit\_refresh.json} delta-entry

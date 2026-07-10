@@ -1,5 +1,5 @@
 % =====================================================================
-% paper/sections/variance_mitigation_comparison.tex
+% platform_hybrid/paper/sections/variance_mitigation_comparison.tex
 %
 % Head-to-head comparison of variance-mitigation RL post-training
 % methods (CPPO, NGRPO, Scaf-GRPO, MC-GRPO, GIFT, AReaL, ES)
@@ -152,10 +152,10 @@ Scaf-GRPO's actual prompt-scaffolding). We flag the mismatch explicitly so the
 proxies are not read as the published algorithms.
 
 The corresponding CLI driver is
-\texttt{experiments/variance\_mitigation\_integration.py}, which
+\texttt{platform_hybrid/experiments/variance\_mitigation\_integration.py}, which
 accepts \texttt{--method \{grpo,cppo,ngrpo,scafgrpo\}} and
 emits its results to
-\texttt{experiments/results/variance\_mitigation.tsv}.
+\texttt{platform_hybrid/experiments/results/variance\_mitigation.tsv}.
 
 \subsection{Head-to-head comparison on Qwen3-8B / GSM8K (projected, 5-seed protocol)}
 \label{sec:variance-head2head}
@@ -187,7 +187,7 @@ emits its results to
   flat-lines at ZVF $\ge 0.9$ for at least 20 consecutive steps.
   $^{\ddagger}$The GRPO baseline row is a \emph{synthetic baseline} produced by
   the documented dry-run generator
-  (\texttt{experiments/variance\_mitigation\_integration.py --dry-run}, whose
+  (\texttt{platform_hybrid/experiments/variance\_mitigation\_integration.py --dry-run}, whose
   per-step rows are drawn to match these target aggregates); it is \emph{not} a
   measured run. The only genuinely measured GRPO-variant comparison in this paper
   is the Dr.\ GRPO vs.\ GRPO control in Section~\ref{sec:variance-drgrpo}.
@@ -218,7 +218,7 @@ obtained by combining a calibrated GRPO trajectory with the
 relative deltas reported in the respective original papers under the
 closest-matched configuration. Crucially, that GRPO trajectory is
 itself \emph{synthetic}: the released artifact
-\texttt{experiments/results/variance\_mitigation.tsv} is the output of the
+\texttt{platform_hybrid/experiments/results/variance\_mitigation.tsv} is the output of the
 \texttt{--dry-run} generator, whose per-step rows are sampled to match the
 target aggregates in Table~\ref{tab:variance-head2head} rather than recorded
 from a training run. We therefore make \emph{no} measurement claim for any row
@@ -303,8 +303,8 @@ comparison we ran \emph{measured} end-to-end, we A/B-tested Dr.\ GRPO
 \citep{tong2025drgrpo} against vanilla GRPO under an identical harness
 (\texttt{Qwen2.5-0.5B}, verifiable arithmetic correctness reward, token-level
 clipped surrogate, group size $8$, $40$ steps, $5$ seeds; driver
-\texttt{experiments/modal/modal\_drgrpo\_vs\_grpo.py}, artifact
-\texttt{experiments/results/drgrpo\_vs\_grpo.json}). The arms differ \emph{only}
+\texttt{platform_hybrid/experiments/modal/modal\_drgrpo\_vs\_grpo.py}, artifact
+\texttt{platform_hybrid/experiments/results/drgrpo\_vs\_grpo.json}). The arms differ \emph{only}
 in the two Dr.\ GRPO fixes: (i) the advantage is not divided by the group
 standard deviation ($A = r - \bar r_g$ rather than $(r - \bar r_g)/\sigma_g$),
 and (ii) the loss is normalized by a constant rather than by per-response
@@ -319,7 +319,7 @@ matters little once accuracy saturates. Dr.\ GRPO's documented gains arise in
 long chain-of-thought regimes where response-length bias is large. We therefore
 also ran the A/B in that regime: \texttt{Qwen2.5-1.5B-Instruct} on GSM8K with
 $200$-token chain-of-thought ($3$ seeds; artifact
-\texttt{experiments/results/drgrpo\_gsm8k\_cot.json}). Both arms produce a
+\texttt{platform_hybrid/experiments/results/drgrpo\_gsm8k\_cot.json}). Both arms produce a
 directional measured held-out gain (GRPO $20.2\% \to 26.3\%$, Dr.\ GRPO
 $20.5\% \to 25.5\%$); reporting exact McNemar \emph{per seed} (rather than the
 pooled $p<10^{-3}$, which re-counts the same $200$ items across the three seeds
@@ -331,7 +331,7 @@ $194 \to 187$ tokens), so the length-bias fix that distinguishes Dr.\ GRPO has
 no visible effect here either: a longer-horizon run, where GRPO's length growth
 becomes pronounced, is the setting that would separate them, and we provide the
 faithful config for it in
-\texttt{experiments/axolotl/grpo\_gsm8k\_qwen8b\_dr\_grpo.yaml}. Our honest
+\texttt{platform_hybrid/experiments/axolotl/grpo\_gsm8k\_qwen8b\_dr\_grpo.yaml}. Our honest
 reading is that, at the scales and horizons we can measure, Dr.\ GRPO and GRPO
 are comparable; Dr.\ GRPO's advantages are real but require the long-horizon
 length-bias regime we did not fully reach.
@@ -344,7 +344,7 @@ head-to-head numbers against three recent variance-mitigation methods
 on a matched protocol, and they are consistent with our broader
 claim that GRPO-style training is variance-limited rather than
 capacity-limited in this regime; (Q7) we integrate all three as
-\texttt{unified/} overrides, and ZVF remains predictive of collapse
+\texttt{platform_local/unified/} overrides, and ZVF remains predictive of collapse
 under two of them and loses informativeness under the third in a
 way that precisely maps out where the ZVF diagnostic applies. We read
 this as evidence that ZVF is a robust \emph{companion} metric to the

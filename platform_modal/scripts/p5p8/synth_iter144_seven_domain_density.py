@@ -24,11 +24,11 @@ Falsifiable claims:
   cell-level dual. They should agree to leading order.
 
 Outputs:
-- experiments/results/p5p8/synth_iter144_seven_domain_density.tsv
-- experiments/results/p5p8/synth_iter144_seven_domain_ratios.tsv
-- experiments/results/p5p8/synth_iter144_low_cluster.tsv
-- experiments/results/p5p8/synth_iter144_summary.json
-- experiments/results/p5p8/figures/synth_iter144_seven_domain.{png,pdf}
+- platform_hybrid/experiments/results/p5p8/synth_iter144_seven_domain_density.tsv
+- platform_hybrid/experiments/results/p5p8/synth_iter144_seven_domain_ratios.tsv
+- platform_hybrid/experiments/results/p5p8/synth_iter144_low_cluster.tsv
+- platform_hybrid/experiments/results/p5p8/synth_iter144_summary.json
+- platform_hybrid/experiments/results/p5p8/figures/synth_iter144_seven_domain.{png,pdf}
 
 Stdlib only. <=300 LoC.
 """

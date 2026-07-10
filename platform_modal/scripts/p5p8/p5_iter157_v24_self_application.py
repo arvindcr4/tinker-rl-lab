@@ -17,7 +17,7 @@ it, and check field presence against the cited source.
   H4 — per-field discriminative power: the required-field set is small
         (<= 8 fields) and concentrated (>= 80% claims share the top-3 fields)
 
-Outputs (all under experiments/results/p5p8/):
+Outputs (all under platform_hybrid/experiments/results/p5p8/):
   p5_iter157_claim_inventory.tsv    -- 22 claims x 14 cols
   p5_iter157_required_fields.tsv    -- per-claim required-field list
   p5_iter157_source_coverage.tsv    -- per-source coverage rate (5 sources x 6 fields)
@@ -31,14 +31,14 @@ import csv, json, os, re, sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-ROOT = Path("experiments/results")
+ROOT = Path("platform_hybrid/experiments/results")
 MEGA_CELLS = ROOT / "mega_20260704" / "cells.tsv"
 MEGA_MANIFESTS = ROOT / "mega_20260704" / "manifests"
 N2 = ROOT / "n2_reward_tensor_resume"
 N10 = ROOT / "n10_seed_expansion"
 ZVFI = ROOT / "zvf_iter130_method_risk.tsv"
 P8 = ROOT.parent / "experiments" / "results"  # ensure path
-P8_BASE = Path("experiments/results")
+P8_BASE = Path("platform_hybrid/experiments/results")
 
 
 # ---------------------------------------------------------------------------
@@ -50,39 +50,39 @@ P8_BASE = Path("experiments/results")
 
 CLAIMS = [
     # iter-141 algorithm-axis eta^2 on N2
-    ("C01_eta2_prompt_n2",    "n2",       "0.9166", ["prompt_idx", "method", "step", "reward_mean"], "experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
-    ("C02_eta2_step_n2",      "n2",       "0.0625", ["step", "method", "prompt_idx", "reward_mean"], "experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
-    ("C03_eta2_method_n2",    "n2",       "0.0005", ["method", "step", "prompt_idx", "reward_mean"], "experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
+    ("C01_eta2_prompt_n2",    "n2",       "0.9166", ["prompt_idx", "method", "step", "reward_mean"], "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
+    ("C02_eta2_step_n2",      "n2",       "0.0625", ["step", "method", "prompt_idx", "reward_mean"], "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
+    ("C03_eta2_method_n2",    "n2",       "0.0005", ["method", "step", "prompt_idx", "reward_mean"], "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
     # iter-133 N10 per-axis eta^2
-    ("C04_eta2_seed_zvf_n10", "n10",      "0.1025", ["seed", "step_band", "zvf"], "experiments/results/n10_seed_expansion/n10_grpo_s42.json"),
-    ("C05_eta2_band_zvf_n10", "n10",      "0.0346", ["step_band", "seed", "zvf"], "experiments/results/n10_seed_expansion/n10_grpo_s42.json"),
-    ("C06_R_band_over_seed_reward_n10", "n10", "2.97", ["step_band", "seed", "reward_mean"], "experiments/results/n10_seed_expansion/n10_grpo_s42.json"),
+    ("C04_eta2_seed_zvf_n10", "n10",      "0.1025", ["seed", "step_band", "zvf"], "platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s42.json"),
+    ("C05_eta2_band_zvf_n10", "n10",      "0.0346", ["step_band", "seed", "zvf"], "platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s42.json"),
+    ("C06_R_band_over_seed_reward_n10", "n10", "2.97", ["step_band", "seed", "reward_mean"], "platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s42.json"),
     # iter-125 chained eta^2 (mega-98)
-    ("C07_R_stack_over_algo_zvf_mega", "mega", "10.32", ["stack_axis", "algo_axis", "zvf"], "experiments/results/mega_20260704/cells.tsv"),
-    ("C08_R_stack_over_algo_pcd_mega", "mega", "8.5",   ["stack_axis", "algo_axis", "pcd"], "experiments/results/mega_20260704/cells.tsv"),
+    ("C07_R_stack_over_algo_zvf_mega", "mega", "10.32", ["stack_axis", "algo_axis", "zvf"], "platform_hybrid/experiments/results/mega_20260704/cells.tsv"),
+    ("C08_R_stack_over_algo_pcd_mega", "mega", "8.5",   ["stack_axis", "algo_axis", "pcd"], "platform_hybrid/experiments/results/mega_20260704/cells.tsv"),
     # iter-105 live field coverage
-    ("C09_field_coverage_mega", "mega",  "98/98", ["cell_id", "model", "task_slice", "G", "temperature", "seed", "zvf"], "experiments/results/mega_20260704/manifests/*.json"),
+    ("C09_field_coverage_mega", "mega",  "98/98", ["cell_id", "model", "task_slice", "G", "temperature", "seed", "zvf"], "platform_hybrid/experiments/results/mega_20260704/manifests/*.json"),
     # iter-113 v22 recovery
-    ("C10_recovery_rate_mega", "mega", "13/18", ["cell_id", "zvf", "pcd", "mean_completion_len"], "experiments/results/mega_20260704/cells.tsv"),
+    ("C10_recovery_rate_mega", "mega", "13/18", ["cell_id", "zvf", "pcd", "mean_completion_len"], "platform_hybrid/experiments/results/mega_20260704/cells.tsv"),
     # iter-117 structural ambiguity
-    ("C11_ambiguous_fields_mega", "mega", "4/18", ["cell_id", "manifest_path"], "experiments/results/mega_20260704/cells.tsv"),
+    ("C11_ambiguous_fields_mega", "mega", "4/18", ["cell_id", "manifest_path"], "platform_hybrid/experiments/results/mega_20260704/cells.tsv"),
     # iter-121 value-correctness
-    ("C12_value_correct_mega", "mega", "98/98", ["cell_id", "tensor_path", "manifest_path", "zvf"], "experiments/results/mega_20260704/cells.tsv"),
+    ("C12_value_correct_mega", "mega", "98/98", ["cell_id", "tensor_path", "manifest_path", "zvf"], "platform_hybrid/experiments/results/mega_20260704/cells.tsv"),
     # iter-129 bootstrap CI audit (headlines, sourced from N2 panel)
-    ("C13_eta2_loss_n2", "n2", "0.987", ["method", "step", "loss"], "experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
-    ("C14_eta2_zvf_n2",  "n2", "0.045", ["method", "step", "zvf"],  "experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
+    ("C13_eta2_loss_n2", "n2", "0.987", ["method", "step", "loss"], "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
+    ("C14_eta2_zvf_n2",  "n2", "0.045", ["method", "step", "zvf"],  "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
     # iter-137 cross-corpus
-    ("C15_recoverable_mega", "mega", "13/18", ["cell_id", "manifest_path"], "experiments/results/mega_20260704/manifests/*.json"),
-    ("C16_recoverable_n2", "n2", "7/18", ["reward_mean", "zvf", "prompt_idx"], "experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
-    ("C17_recoverable_n10", "n10", "3/18", ["seed", "step_band", "zvf"], "experiments/results/n10_seed_expansion/n10_grpo_s42.json"),
+    ("C15_recoverable_mega", "mega", "13/18", ["cell_id", "manifest_path"], "platform_hybrid/experiments/results/mega_20260704/manifests/*.json"),
+    ("C16_recoverable_n2", "n2", "7/18", ["reward_mean", "zvf", "prompt_idx"], "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
+    ("C17_recoverable_n10", "n10", "3/18", ["seed", "step_band", "zvf"], "platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s42.json"),
     # iter-145 schema ground-truth
-    ("C18_manifest_xref_mega", "mega", "98/98", ["cell_id", "manifest_path", "tensor_path"], "experiments/results/mega_20260704/manifests/*.json"),
+    ("C18_manifest_xref_mega", "mega", "98/98", ["cell_id", "manifest_path", "tensor_path"], "platform_hybrid/experiments/results/mega_20260704/manifests/*.json"),
     # iter-149 cite-key audit
-    ("C19_p5_cite_formed", "bib", "38/38", ["cite_key"], "paper/references.bib"),
+    ("C19_p5_cite_formed", "bib", "38/38", ["cite_key"], "platform_hybrid/paper/references.bib"),
     # iter-153 v2.4 identifier-stamp
-    ("C20_v24_bib", "bib", "38/38", ["cite_key"], "paper/references.bib"),
-    ("C21_v24_manifest", "mega", "98/98", ["cell_id", "manifest_path"], "experiments/results/mega_20260704/manifests/*.json"),
-    ("C22_v24_cells", "mega", "98/98", ["cell_id", "tensor_path", "manifest_path"], "experiments/results/mega_20260704/cells.tsv"),
+    ("C20_v24_bib", "bib", "38/38", ["cite_key"], "platform_hybrid/paper/references.bib"),
+    ("C21_v24_manifest", "mega", "98/98", ["cell_id", "manifest_path"], "platform_hybrid/experiments/results/mega_20260704/manifests/*.json"),
+    ("C22_v24_cells", "mega", "98/98", ["cell_id", "tensor_path", "manifest_path"], "platform_hybrid/experiments/results/mega_20260704/cells.tsv"),
 ]
 
 
@@ -157,7 +157,7 @@ def load_n10():
 
 
 def load_bib():
-    fp = Path("paper/references.bib")
+    fp = Path("platform_hybrid/paper/references.bib")
     if not fp.exists():
         return []
     text = fp.read_text()
@@ -319,7 +319,7 @@ def wilson95(p, n):
 # ---------------------------------------------------------------------------
 
 def main():
-    out_dir = Path("experiments/results/p5p8")
+    out_dir = Path("platform_hybrid/experiments/results/p5p8")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # 1) per-claim inventory with citation resolution + source coverage
@@ -417,7 +417,7 @@ def main():
                 H1_pass = False
                 H1_failed.append((cid, cite))
         # bib: also check references.bib exists
-        if cite == "paper/references.bib" and not os.path.exists(cite):
+        if cite == "platform_hybrid/paper/references.bib" and not os.path.exists(cite):
             H1_pass = False
             H1_failed.append((cid, cite))
     # H2 — every claim has coverage=1.0 (rate=1.0)

@@ -6,7 +6,7 @@
 | target | new `paper/sections/p7_iter131_per_prompt_adaptive_gstar.tex` — operationalizes the per-prompt granularity of the Adaptive-G* controller, evaluated counterfactually on the REAL N2 reward tensors with exact observed k_p at G=8 |
 | class | **T2** fresh-data evidence (4 methods × 40 steps × 16 prompts = 2,560 per-prompt decisions) + **T1** statistical rigor (B=2000 percentile bootstrap-CI on per-step contrast_restored net of cost, seed=20260705) + **T3** cross-paper coupling (per-prompt granularity vs step-aggregate CCC vs Dualformer-Auto) |
 | status | **validated** (2,560 per-prompt G* decisions; 800 step summary rows; 20 method summary rows; 5 bootstrap CI rows; 5 controller × 4 method comparisons) |
-| artifact | `scripts/p5p8/p7_iter131_per_prompt_adaptive_gstar_simulation.py` (~480 LoC, stdlib only) |
+| artifact | `platform_modal/scripts/p5p8/p7_iter131_per_prompt_adaptive_gstar_simulation.py` (~480 LoC, stdlib only) |
 | evidence | `experiments/results/p5p8/p7_iter131_{per_prompt_gstar.tsv (2560), step_summary.tsv (800), method_summary.tsv (20), contrast_ci.tsv (5), summary.json}` |
 | paper-facing | will append §4.19 to `paper/sections/p7_iter127_method_axis_ccc.tex` next iteration; this iteration produces validated inputs only |
 
@@ -27,7 +27,7 @@ But the actual GRPO update is **per-prompt**: the advantage $A_i = (r_i - \mu_g)
 
 ## 2. Method
 
-`scripts/p5p8/p7_iter131_per_prompt_adaptive_gstar_simulation.py` (~480 LoC, stdlib only):
+`platform_modal/scripts/p5p8/p7_iter131_per_prompt_adaptive_gstar_simulation.py` (~480 LoC, stdlib only):
 
 For each (method, step, prompt) cell, compute observed k_p, p_hat, zvf_obs at G=8, then evaluate 5 controllers:
 
@@ -135,8 +135,8 @@ The fix is documented in the docstring of `zvf_from_k` and is the kind of method
 
 ## 11. Reproducibility
 
-```
-python3 scripts/p5p8/p7_iter131_per_prompt_adaptive_gstar_simulation.py
+```bash
+python3 platform_modal/scripts/p5p8/p7_iter131_per_prompt_adaptive_gstar_simulation.py
 ```
 
 All inputs are real N2 reward tensors in `experiments/results/n2_reward_tensor_resume/`. No external dependencies beyond stdlib. Seed 20260705, B=2000 bootstrap iterations on the contrast_restored net of cost metric.

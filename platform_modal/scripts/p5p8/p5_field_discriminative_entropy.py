@@ -24,9 +24,9 @@ For every mega_20260704 cell we:
   4. classify: VACUOUS (H<0.5 or k≤2), LOW (H<1.5),
      MEDIUM (H<2.5), HIGH (H≥2.5);
   5. write:
-       experiments/results/p5p8/p5_field_discriminative_entropy.tsv
-       experiments/results/p5p8/p5_field_discriminative_entropy_summary.json
-       experiments/results/p5p8/figures/p5_field_discriminative_entropy.{png,pdf}
+       platform_hybrid/experiments/results/p5p8/p5_field_discriminative_entropy.tsv
+       platform_hybrid/experiments/results/p5p8/p5_field_discriminative_entropy_summary.json
+       platform_hybrid/experiments/results/p5p8/figures/p5_field_discriminative_entropy.{png,pdf}
 
 Headline: the gap between *validation rate* (Exhibit 11) and
 *discriminative content* (this iter) identifies the work-list for the

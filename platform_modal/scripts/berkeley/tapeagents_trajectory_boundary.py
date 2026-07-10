@@ -56,7 +56,7 @@ import pathlib
 import statistics as st
 from typing import Dict, List, Tuple
 
-RESULTS = pathlib.Path("experiments/results")
+RESULTS = pathlib.Path("platform_hybrid/experiments/results")
 BERK = RESULTS / "berkeley"
 BERK.mkdir(parents=True, exist_ok=True)
 
@@ -461,10 +461,10 @@ summary = {
     "decisive_count": decisive,
     "overall_status": overall,
     "evidence_paths": {
-        "windowed_rho": "experiments/results/berkeley/tape_windowed_rho.tsv",
-        "tape_vs_global": "experiments/results/berkeley/tape_vs_global.tsv",
-        "tape_temporal_structure": "experiments/results/berkeley/tape_temporal_structure.tsv",
-        "tape_variance_compression": "experiments/results/berkeley/tape_variance_compression.tsv",
+        "windowed_rho": "platform_hybrid/experiments/results/berkeley/tape_windowed_rho.tsv",
+        "tape_vs_global": "platform_hybrid/experiments/results/berkeley/tape_vs_global.tsv",
+        "tape_temporal_structure": "platform_hybrid/experiments/results/berkeley/tape_temporal_structure.tsv",
+        "tape_variance_compression": "platform_hybrid/experiments/results/berkeley/tape_variance_compression.tsv",
     },
     "citation_ok": True,
     "citation": {

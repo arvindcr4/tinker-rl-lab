@@ -43,9 +43,9 @@ Bootstrap protocol (B = 2000, seed = 20260705):
     percentile CI on every headline number.
 
 Outputs:
-    experiments/results/p5p8/p5_placebo_replacement.tsv
-    experiments/results/p5p8/p5_placebo_replacement_boot.tsv
-    experiments/results/p5p8/p5_placebo_replacement_summary.json
+    platform_hybrid/experiments/results/p5p8/p5_placebo_replacement.tsv
+    platform_hybrid/experiments/results/p5p8/p5_placebo_replacement_boot.tsv
+    platform_hybrid/experiments/results/p5p8/p5_placebo_replacement_summary.json
 """
 from __future__ import annotations
 

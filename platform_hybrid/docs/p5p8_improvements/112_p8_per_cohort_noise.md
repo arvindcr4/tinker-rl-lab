@@ -145,15 +145,15 @@ cohort level.**
 
 ## Deliverables
 
-- `scripts/p5p8/p8_iter96_per_cohort_noise_audit.py` (~280 LoC, stdlib + numpy + xgboost + sklearn + matplotlib)
-- `experiments/results/p5p8/p8_iter96_per_cohort_noise.tsv` (440 rows =
+- `platform_modal/scripts/p5p8/p8_iter96_per_cohort_noise_audit.py` (~280 LoC, stdlib + numpy + xgboost + sklearn + matplotlib)
+- `platform_hybrid/experiments/results/p5p8/p8_iter96_per_cohort_noise.tsv` (440 rows =
   3 cohort-axes × up-to-5 strata × 5 noise × 8 K)
-- `experiments/results/p5p8/p8_iter96_per_cohort_noise_boot.tsv` (165 rows =
+- `platform_hybrid/experiments/results/p5p8/p8_iter96_per_cohort_noise_boot.tsv` (165 rows =
   3 axes × strata × 5 noise × 3 K = stratified B=200 bootstrap)
-- `experiments/results/p5p8/p8_iter96_per_cohort_summary.json` (machine-readable)
-- `experiments/results/p5p8/figures/p8_iter96_per_cohort_flip.{png,pdf}` (3-panel bar plot)
-- `paper/sections/p8_iter96_per_cohort_noise.tex` (~80 lines, 8 paragraphs + table)
-- `paper/paper_P8_fraud.tex` extended with `\input{sections/p8_iter96_per_cohort_noise}`
-- `paper/paper_P8_fraud.pdf` rebuilds to 0 errors / 0 undefined citations
-- `docs/p5p8_improvements/112_p8_per_cohort_noise.md` (this proposal)
+- `platform_hybrid/experiments/results/p5p8/p8_iter96_per_cohort_summary.json` (machine-readable)
+- `platform_hybrid/experiments/results/p5p8/figures/p8_iter96_per_cohort_flip.{png,pdf}` (3-panel bar plot)
+- `platform_hybrid/paper/sections/p8_iter96_per_cohort_noise.tex` (~80 lines, 8 paragraphs + table)
+- `platform_hybrid/paper/paper_P8_fraud.tex` extended with `\input{sections/p8_iter96_per_cohort_noise}`
+- `platform_hybrid/paper/paper_P8_fraud.pdf` rebuilds to 0 errors / 0 undefined citations
+- `platform_hybrid/docs/p5p8_improvements/112_p8_per_cohort_noise.md` (this proposal)
 - 1 line in `findings_ledger.jsonl` (pillar P8, iter 96)

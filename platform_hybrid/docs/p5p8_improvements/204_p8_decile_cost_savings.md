@@ -131,7 +131,7 @@ within ±1 SD; both are valid.
    a viable model — it competes with raw features in this regime.
 3. **REPORT** the per-decile cost table as Table~\ref{tab:p8-iter204-decile-cost}
    in §sec:p8-iter204.
-4. **WIRE** `python3 scripts/p5p8/p8_iter204_decile_cost_savings.py` as a
+4. **WIRE** `python3 platform_modal/scripts/p5p8/p8_iter204_decile_cost_savings.py` as a
    CI pre-commit gate — fails if decile 2 share drops below 30% OR if
    decile 0 4sensor gap flips positive (4sensor becomes uniformly worse).
 5. **EXTEND** to per-decile cost savings stratified by V_std (iter-184's

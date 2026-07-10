@@ -7,14 +7,14 @@
 
 **3 new artifacts** in the registry-measured surface:
 
-1. **`scripts/p5p8/p6_measured_coverage.py`** (~280 LoC, stdlib only) — for every `delta_*.json`:
+1. **`platform_modal/scripts/p5p8/p6_measured_coverage.py`** (~280 LoC, stdlib only) — for every `delta_*.json`:
    - Block presence: `measured` / `expected_effects` / `claim_validation` row counts
    - Source resolution: each measured row's `source` path resolves on disk + mtime age in days
    - Coverage grid: panel × metric (panel ∈ {`n2_same_stack_last10`, `zvf130_5seed`}, metric ∈ {`zvf`, `reward_mean`, `zvf_risk_mean`, `mean_zvf`})
    - Cross-panel agreement: for entries with zvf measured in N2 AND `zvf_risk_mean` measured in ZVF130, do they agree on direction?
    - Verdict aggregate: registry-wide count of SUPPORTS / CONTRADICTS / NEUTRAL / UNCLAIMED
-2. **`registry/query.py measured-coverage`** — new third-tier reporting subcommand (additive, 8 prior subcommands untouched). Supports `--delta <id>` filter for per-entry deep view.
-3. **`registry/measured_block_audit.json`** — sidecar cache refreshed on every audit run (idempotent regen in < 1 second).
+2. **`platform_hybrid/registry/query.py measured-coverage`** — new third-tier reporting subcommand (additive, 8 prior subcommands untouched). Supports `--delta <id>` filter for per-entry deep view.
+3. **`platform_hybrid/registry/measured_block_audit.json`** — sidecar cache refreshed on every audit run (idempotent regen in < 1 second).
 
 ## Falsifiable headline (re-run verified 2026-07-05)
 
@@ -43,24 +43,24 @@ The audit's `empty_measured_gap` list quantifies the actionable backlog: **3 ent
 ## Reproduction
 
 ```bash
-python3 scripts/p5p8/p6_measured_coverage.py        # writes 4 output files
-python3 registry/query.py measured-coverage         # prints the audit
-python3 registry/query.py measured-coverage --delta delta_gift
+python3 platform_modal/scripts/p5p8/p6_measured_coverage.py        # writes 4 output files
+python3 platform_hybrid/registry/query.py measured-coverage         # prints the audit
+python3 platform_hybrid/registry/query.py measured-coverage --delta delta_gift
                                                    # per-entry deep view
-python3 registry/query.py validate                  # 34/34 PASS (unchanged)
+python3 platform_hybrid/registry/query.py validate                  # 34/34 PASS (unchanged)
 ```
 
 ## Files written
 
-- `scripts/p5p8/p6_measured_coverage.py`
-- `registry/query.py` (added `measured-coverage` subcommand + handler)
-- `registry/measured_block_audit.json` (sidecar cache, refreshed on each audit)
-- `experiments/results/p5p8/p6_measured_coverage.tsv` (14 per-entry rows)
-- `experiments/results/p5p8/p6_measured_coverage_grid.tsv` (14 × 8 grid)
-- `experiments/results/p5p8/p6_measured_cross_panel.tsv` (3 cross-panel rows)
-- `experiments/results/p5p8/p6_measured_coverage_summary.json`
-- `paper/sections/p6_measured_coverage.tex` (new §sec:p6-measured-coverage + tab:p6-measured-coverage)
-- `paper/paper_P6_registry.tex` (added \input line for the new section)
+- `platform_modal/scripts/p5p8/p6_measured_coverage.py`
+- `platform_hybrid/registry/query.py` (added `measured-coverage` subcommand + handler)
+- `platform_hybrid/registry/measured_block_audit.json` (sidecar cache, refreshed on each audit)
+- `platform_hybrid/experiments/results/p5p8/p6_measured_coverage.tsv` (14 per-entry rows)
+- `platform_hybrid/experiments/results/p5p8/p6_measured_coverage_grid.tsv` (14 × 8 grid)
+- `platform_hybrid/experiments/results/p5p8/p6_measured_cross_panel.tsv` (3 cross-panel rows)
+- `platform_hybrid/experiments/results/p5p8/p6_measured_coverage_summary.json`
+- `platform_hybrid/paper/sections/p6_measured_coverage.tex` (new §sec:p6-measured-coverage + tab:p6-measured-coverage)
+- `platform_hybrid/paper/paper_P6_registry.tex` (added \input line for the new section)
 
 ## Paper rebuild
 

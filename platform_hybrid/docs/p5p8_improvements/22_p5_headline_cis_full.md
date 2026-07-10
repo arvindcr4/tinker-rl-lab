@@ -10,7 +10,7 @@ since iter 1 with TBD evidence path. This iter closes the long-standing
 caveat by adding real bootstrap CIs to the two algorithm-axis numbers.
 
 ## Method
-Source data: `experiments/results/n2_reward_tensor_resume/n2_metrics.tsv`
+Source data: `platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv`
 (4 methods × 40 steps same stack; one seed). Bootstrap is stratified:
 within each method arm, the 40 step observations are resampled with
 replacement; group sizes are preserved. B=10,000 replicates, two-sided
@@ -31,11 +31,11 @@ Two new headline CIs are added:
 ## Verified citations
 No new citations; the analysis uses the existing N2 four-method same-
 stack tensors. The bootstrap recipe follows Miller (2024, Berkeley
-recipe `scripts/berkeley/adding_error_bars_to_evals.py`) reimplemented
+recipe `platform_modal/scripts/berkeley/adding_error_bars_to_evals.py`) reimplemented
 locally for ≤300 LoC.
 
 ## Measured results
-3 rows in `experiments/results/p5p8/p5_headline_cis_full.tsv` and
+3 rows in `platform_hybrid/experiments/results/p5p8/p5_headline_cis_full.tsv` and
 `p5_headline_cis_full.json`:
 
 | Claim | Metric                    | n     | Point   | 95% CI              | Verdict  |
@@ -72,16 +72,16 @@ real CIs replacing the single-seed point estimates.
 ## Reproduction
 ```bash
 cd /home/claude/tinker-rl-lab-minimax
-python3 scripts/p5p8/p5_headline_cis_full.py
+python3 platform_modal/scripts/p5p8/p5_headline_cis_full.py
 ```
 Expected runtime: ~30 s. Outputs:
-- `experiments/results/p5p8/p5_headline_cis_full.tsv`
-- `experiments/results/p5p8/p5_headline_cis_full.json`
+- `platform_hybrid/experiments/results/p5p8/p5_headline_cis_full.tsv`
+- `platform_hybrid/experiments/results/p5p8/p5_headline_cis_full.json`
 
 ## Paper rebuild
-`paper/sections/p5_evidence.tex` extended with new Exhibit 9
+`platform_hybrid/paper/sections/p5_evidence.tex` extended with new Exhibit 9
 "Bootstrap CIs on the Algorithm-axis η² and Method-arm Reward Spread"
-(after Exhibit 8). `paper/paper_P5_minreport.pdf` rebuilds to
+(after Exhibit 8). `platform_hybrid/paper/paper_P5_minreport.pdf` rebuilds to
 **22 pages** with **0 errors and 0 undefined citations** (only
 2 pre-existing bibtex warnings on `henderson2018deep` /
 `schulman2017proximal` — not introduced by this iter).

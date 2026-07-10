@@ -3,14 +3,14 @@ utils/verify_results.py
 =======================
 
 Compare a directory of experiment result JSONs / logs against the expected
-headline numbers reported in the paper (`paper/expected_results.json`), within
+headline numbers reported in the paper (`platform_hybrid/paper/expected_results.json`), within
 documented tolerances.
 
 Designed to be run by NeurIPS artifact reviewers after a reproduction run:
 
     python utils/verify_results.py \\
         --results-dir results/ \\
-        --expected-results paper/expected_results.json \\
+        --expected-results platform_hybrid/paper/expected_results.json \\
         --last10-tolerance 0.05 \\
         --peak-tolerance   0.10
 
@@ -44,7 +44,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 # Default expected results — overridden by --expected-results file if present.
-# Values from paper/main.tex Table 2 ("Atropos GSM8K, Tinker, GRPO" block).
+# Values from platform_hybrid/paper/main.tex Table 2 ("Atropos GSM8K, Tinker, GRPO" block).
 DEFAULT_EXPECTED: Dict[str, Dict[str, float]] = {
     "gsm8k_qwen3_8b": {"last10": 0.344, "peak": 0.625},  # headline
     "gsm8k_qwen3_8b_base": {"last10": 0.844, "peak": 1.000},

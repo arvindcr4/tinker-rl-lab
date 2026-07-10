@@ -1,7 +1,7 @@
 # Pillar 2 iter78 per-step EWS features.
 # W=10 trailing window; H/M/L at 0.10/0.50 (iter74 cutoffs).
 # CUSUM drift k=0.05 (Page 1954 small-shift).
-# Source: scripts/zvf_iter78.py
+# Source: platform_modal/scripts/zvf_iter78.py
 source	method	seed	step	zvf	heldout_acc	held_mean_10	is_failure	h_run	ar1	cusum	variance_ratio	kurtosis	composite_ews
 variance_mitigation	grpo	0	0	0.000000	0.004500	0.004500	0	0	0.000000	0.000000	1.000000	0.000000	0.000000
 variance_mitigation	grpo	0	1	0.000000	0.004500	0.004500	0	0	0.000000	0.000000	1.000000	0.000000	0.000000

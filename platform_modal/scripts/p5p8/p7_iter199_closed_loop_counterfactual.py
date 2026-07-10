@@ -51,10 +51,10 @@ Hypotheses (falsifiable):
          methods (the iter-192 sub-vein lifts the headline)
 
 Outputs:
-    experiments/results/p5p8/p7_iter199_per_step.tsv         (160 × 4 pol rows = 640)
-    experiments/results/p5p8/p7_iter199_per_method.tsv       (4 methods × 4 policies = 16 rows)
-    experiments/results/p5p8/p7_iter199_ci.tsv               (4 methods × 4 policies = 16 CI rows)
-    experiments/results/p5p8/p7_iter199_summary.json
+    platform_hybrid/experiments/results/p5p8/p7_iter199_per_step.tsv         (160 × 4 pol rows = 640)
+    platform_hybrid/experiments/results/p5p8/p7_iter199_per_method.tsv       (4 methods × 4 policies = 16 rows)
+    platform_hybrid/experiments/results/p5p8/p7_iter199_ci.tsv               (4 methods × 4 policies = 16 CI rows)
+    platform_hybrid/experiments/results/p5p8/p7_iter199_summary.json
 
 Stdlib only; deterministic (seed=20260706); B=2000 bootstrap CIs.
 """
@@ -62,8 +62,8 @@ from __future__ import annotations
 import csv, glob, json, os, random, statistics
 
 WORKTREE = "/home/claude/tinker-rl-lab-minimax"
-DATA_DIR = os.path.join(WORKTREE, "experiments/results/n2_reward_tensor_resume")
-OUT_DIR = os.path.join(WORKTREE, "experiments/results/p5p8")
+DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 METHODS = ["grpo", "aero", "gift", "areal"]

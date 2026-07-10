@@ -6,7 +6,7 @@ MIN-REPORT-RL Auditor component of `p5_toolchain.tex` §3 on the live
 worktree data) + T5 (presentation — produces the auditor leaderboard
 figure)
 **Status:** prototyped → **validated** (iter 13)
-**Deliverable:** `scripts/p5p8/minreport_auditor.py` (≤300 LoC,
+**Deliverable:** `platform_modal/scripts/p5p8/minreport_auditor.py` (≤300 LoC,
 stdlib + matplotlib) + 2 TSVs + 2 figures + paper Exhibit 8
 
 ## Motivation
@@ -30,7 +30,7 @@ the leaderboard.
 
 ## What was built
 
-1. **`scripts/p5p8/minreport_auditor.py`** (≤300 LoC, stdlib + matplotlib)
+1. **`platform_modal/scripts/p5p8/minreport_auditor.py`** (≤300 LoC, stdlib + matplotlib)
    - 7-item MIN-REPORT schema with weighted scores (items 3, 4, 7 each
      worth 20 pts; items 1, 2, 5, 6 each worth 10 pts; total = 100)
    - Per-item scoring: present × validated × (0.5 + 0.5 ×
@@ -40,31 +40,31 @@ the leaderboard.
      item weight (vs. 100% for a fully-validated value, 25% for a
      present-but-unrecognised value, 0% for a missing key)
    - Multi-corpus support: scans both
-     `experiments/results/mega_20260704/manifests/` (compact keys)
-     and `experiments/results/quick_20260704/` (verbose keys) and
+     `platform_hybrid/experiments/results/mega_20260704/manifests/` (compact keys)
+     and `platform_hybrid/experiments/results/quick_20260704/` (verbose keys) and
      scores every file that touches at least one of the seven
      MIN-REPORT fields
    - Per-manifest TSV output + stratified summary JSON + two figures
 
-2. **`experiments/results/p5p8/minreport_audit.tsv`** (103 rows: 98
+2. **`platform_hybrid/experiments/results/p5p8/minreport_audit.tsv`** (103 rows: 98
    mega + 5 quick; columns: cell_id, corpus, model, task_slice, G,
    temperature, seed, items 1-7 scores, badge, tier)
 
-3. **`experiments/results/p5p8/minreport_audit_summary.json`**
+3. **`platform_hybrid/experiments/results/p5p8/minreport_audit_summary.json`**
    (n, mean/median/min/max/std, tier counts, stratified by corpus /
    task / model / G / temperature / seed, per-item %)
 
-4. **`experiments/results/p5p8/figures/minreport_badge_dist.{png,pdf}`**
+4. **`platform_hybrid/experiments/results/p5p8/figures/minreport_badge_dist.{png,pdf}`**
    (histogram of badge distribution with four tier thresholds marked)
 
-5. **`experiments/results/p5p8/figures/minreport_per_item.{png,pdf}`**
+5. **`platform_hybrid/experiments/results/p5p8/figures/minreport_per_item.{png,pdf}`**
    (per-item % bar chart with red highlighting on the three
    high-leverage items, weight 20)
 
-6. **`paper/sections/p5_evidence.tex`** — extended with Exhibit 8
+6. **`platform_hybrid/paper/sections/p5_evidence.tex`** — extended with Exhibit 8
    (per-item table + stratified table + 5-paragraph discussion)
 
-7. **`paper/build/paper_P5_minreport.pdf`** — rebuilt to 21 pages,
+7. **`platform_hybrid/paper/build/paper_P5_minreport.pdf`** — rebuilt to 21 pages,
    0 errors, 0 undefined citations
 
 ## Key results
@@ -142,7 +142,7 @@ the leaderboard.
 ## Reproducibility
 
 ```
-$ python3 scripts/p5p8/minreport_auditor.py
+$ python3 platform_modal/scripts/p5p8/minreport_auditor.py
 manifests scored:    103
 corpus sizes:        {'manifests': 98, 'quick_20260704': 5}
 badge mean / median: 55.01 / 56.7
@@ -156,13 +156,13 @@ tier counts:
 ```
 
 Outputs:
-- `experiments/results/p5p8/minreport_audit.tsv` (per-manifest)
-- `experiments/results/p5p8/minreport_audit_summary.json`
-- `experiments/results/p5p8/figures/minreport_badge_dist.{png,pdf}`
-- `experiments/results/p5p8/figures/minreport_per_item.{png,pdf}`
+- `platform_hybrid/experiments/results/p5p8/minreport_audit.tsv` (per-manifest)
+- `platform_hybrid/experiments/results/p5p8/minreport_audit_summary.json`
+- `platform_hybrid/experiments/results/p5p8/figures/minreport_badge_dist.{png,pdf}`
+- `platform_hybrid/experiments/results/p5p8/figures/minreport_per_item.{png,pdf}`
 
-Paper-facing artifact: `paper/sections/p5_evidence.tex` Exhibit 8 +
-`paper/build/paper_P5_minreport.pdf` rebuilds at 0 errors / 0
+Paper-facing artifact: `platform_hybrid/paper/sections/p5_evidence.tex` Exhibit 8 +
+`platform_hybrid/paper/build/paper_P5_minreport.pdf` rebuilds at 0 errors / 0
 undefined refs (21 pages).
 
 ## Connection to iter-1 (item 01) and iter-9 (item 14)

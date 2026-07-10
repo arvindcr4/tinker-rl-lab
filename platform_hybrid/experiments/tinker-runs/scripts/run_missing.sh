@@ -7,5 +7,5 @@ export TINKER_API_KEY="${TINKER_API_KEY}"
 export HF_TOKEN="${HF_TOKEN}"
 
 cd /home/user/workspace/tinker-rl-lab
-python3 experiments/tinker-runs/scripts/tinker_parallel_runner.py --max-parallel 2 2>&1
+python3 platform_hybrid/experiments/tinker-runs/platform_modal/scripts/tinker_parallel_runner.py --max-parallel 2 2>&1
 echo "RUNNER_EXIT_CODE=$?"

@@ -28,7 +28,7 @@
   "stack_missing": [],
   "delta_coverage": "8/8",
   "delta_missing": [],
-  "ground_truth": "/home/claude/tinker-rl-lab-minimax/experiments/results/zvf_iter130_method_risk.tsv",
+  "ground_truth": "/home/claude/tinker-rl-lab-minimax/platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
   "sig_robustness": {
     "aero": {
       "delta_vs_grpo": -0.147637,

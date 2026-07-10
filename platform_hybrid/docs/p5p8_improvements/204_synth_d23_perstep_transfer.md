@@ -110,7 +110,7 @@ flips form BLOCKS of 1-4 steps, not isolated single-step events.
    aggregate best on most steps.
 3. **REPORT** the per-step agreement table as `tab:synth-d23-agree` in
    §sec:synth-d23.
-4. **WIRE** `python3 scripts/p5p8/synth_iter204_d23_perstep_transfer.py`
+4. **WIRE** `python3 platform_modal/scripts/p5p8/synth_iter204_d23_perstep_transfer.py`
    as a CI pre-commit gate — fails if cost-weighted per-step agreement
    drops below 35% on any pillar (the H3 lift should be preserved).
 5. **EXTEND** to per-(step, decile) stability for the next iter.

@@ -1,6 +1,6 @@
 # P1 white-box — per-layer adaptation profile under GRPO-style updates (Colab L4, 2026-07-06)
 
-Ran on Colab L4 GPU (Tinker can't — needs per-layer gradient access). Qwen2.5-1.5B-Instruct, LoRA on q/k/v/o, 5 GRPO-style steps, advantage-weighted loss, per-layer LoRA grad-norm recorded. `experiments/openings/p1_layer_profile.py`.
+Ran on Colab L4 GPU (Tinker can't — needs per-layer gradient access). Qwen2.5-1.5B-Instruct, LoRA on q/k/v/o, 5 GRPO-style steps, advantage-weighted loss, per-layer LoRA grad-norm recorded. `platform_hybrid/experiments/openings/p1_layer_profile.py`.
 
 ## Findings (28 layers)
 1. **Adaptation is PREDICTABLE from step 1:** the top-k highest-gradient layers at step 1 == the top-k over all steps (`step1_predicts_final_topk_overlap = 1.0`). => you can decide what to freeze after ONE step. This is the core premise of "predictive layer-freezing" (differentiates from SALF's during-training selection).

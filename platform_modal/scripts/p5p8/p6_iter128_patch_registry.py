@@ -22,7 +22,7 @@ import json
 from pathlib import Path
 
 ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RES = ROOT / "experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid" / "experiments" / "results" / "p5p8"
 
 DELTA_IDS = [
     "delta_aero", "delta_areal", "delta_cppo", "delta_es", "delta_gift",
@@ -42,7 +42,7 @@ def main():
     n_total = 0
     n_ci_method_changed = 0
     for delta_id in DELTA_IDS:
-        fp = ROOT / "registry" / "entries" / f"{delta_id}.json"
+        fp = ROOT / "platform_hybrid" / "registry" / "entries" / f"{delta_id}.json"
         if not fp.exists():
             print(f"# SKIP {delta_id}: not found")
             continue
@@ -96,7 +96,7 @@ def main():
     try:
         import subprocess
         result = subprocess.run(
-            ["python3", str(ROOT / "scripts" / "p5p8" / "registry_validate.py"),
+            ["python3", str(ROOT / "platform_modal" / "scripts" / "p5p8" / "registry_validate.py"),
              "--schema-only"],
             cwd=str(ROOT), capture_output=True, text=True, timeout=60
         )

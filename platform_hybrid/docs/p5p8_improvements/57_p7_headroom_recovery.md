@@ -3,11 +3,11 @@
 | field | value |
 | --- | --- |
 | pillar | **P7** (ZVF theory → adaptive-G controller) |
-| target | `paper/sections/p7_controller.tex` §4.14 "Headroom-ceiling recovery ratio and the aliasing of step-level ZVF" (NEW) + Table~\ref{tab:p7-headroom-recovery} |
+| target | `platform_hybrid/paper/sections/p7_controller.tex` §4.14 "Headroom-ceiling recovery ratio and the aliasing of step-level ZVF" (NEW) + Table~\ref{tab:p7-headroom-recovery} |
 | class | **T1** statistical rigor (block-bootstrap CI on every recovery ratio) + **T2** fresh-data evidence (per-prompt ceiling + controller recovery on real N2 four-method tensors) |
 | status | **validated** (N2 four-method, 40 steps × 16 prompts × 4 methods = 2,560 prompt-steps; N10 5-seed × 15 steps = 75 step-rows) |
-| artifact | `scripts/p5p8/p7_headroom_recovery.py` (≤ 380 LoC, stdlib only) |
-| evidence | `experiments/results/p5p8/p7_headroom_recovery_{n2_summary.tsv (12 rows), n2_per_step.tsv (160 rows), n2_per_prompt.tsv (2,560 rows), n10_summary.tsv (20 rows), n10_per_step.tsv (75 rows), summary.json}` |
+| artifact | `platform_modal/scripts/p5p8/p7_headroom_recovery.py` (≤ 380 LoC, stdlib only) |
+| evidence | `platform_hybrid/experiments/results/p5p8/p7_headroom_recovery_{n2_summary.tsv (12 rows), n2_per_step.tsv (160 rows), n2_per_prompt.tsv (2,560 rows), n10_summary.tsv (20 rows), n10_per_step.tsv (75 rows), summary.json}` |
 | paper-facing | `paper_P7_zvf_controller.pdf` rebuilt to 33 pages / 0 errors / 0 undefined citations (was 31 pages, +2 pages for the new § and table) |
 
 ## 1. Question (falsifiable, vein not in prior ledger)
@@ -199,19 +199,19 @@ axis matters more.
 ## 8. Reproduction
 
 ```bash
-python3 scripts/p5p8/p7_headroom_recovery.py --write
+python3 platform_modal/scripts/p5p8/p7_headroom_recovery.py --write
 # Writes:
-#   experiments/results/p5p8/p7_headroom_recovery_n2_summary.tsv
-#   experiments/results/p5p8/p7_headroom_recovery_n2_per_step.tsv
-#   experiments/results/p5p8/p7_headroom_recovery_n2_per_prompt.tsv
-#   experiments/results/p5p8/p7_headroom_recovery_n10_summary.tsv
-#   experiments/results/p5p8/p7_headroom_recovery_n10_per_step.tsv
-#   experiments/results/p5p8/p7_headroom_recovery_summary.json
+#   platform_hybrid/experiments/results/p5p8/p7_headroom_recovery_n2_summary.tsv
+#   platform_hybrid/experiments/results/p5p8/p7_headroom_recovery_n2_per_step.tsv
+#   platform_hybrid/experiments/results/p5p8/p7_headroom_recovery_n2_per_prompt.tsv
+#   platform_hybrid/experiments/results/p5p8/p7_headroom_recovery_n10_summary.tsv
+#   platform_hybrid/experiments/results/p5p8/p7_headroom_recovery_n10_per_step.tsv
+#   platform_hybrid/experiments/results/p5p8/p7_headroom_recovery_summary.json
 ```
 
 ## 9. Paper-facing change
 
 NEW §4.14 "Headroom-ceiling recovery ratio and the aliasing of step-level ZVF" added to
-`paper/sections/p7_controller.tex`; `paper_P7_zvf_controller.tex` rebuilds to 33 pages with
+`platform_hybrid/paper/sections/p7_controller.tex`; `paper_P7_zvf_controller.tex` rebuilds to 33 pages with
 0 errors and 0 undefined citations. Citation key `alphaproof2025nature` already in
-`paper/references.bib` (added in iter-31 for the $\gamma^{*}{=}0$ mention).
+`platform_hybrid/paper/references.bib` (added in iter-31 for the $\gamma^{*}{=}0$ mention).

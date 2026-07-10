@@ -1,4 +1,4 @@
-% paper/sections/p6_iter126_measured_evidence_tier.tex
+% platform_hybrid/paper/sections/p6_iter126_measured_evidence_tier.tex
 % Iter-126 P6 audit: per-delta measured-evidence tier classification.
 % Closes brief vein (a) at the per-delta granularity:
 %   "validate existing entries against measured behavior; compute
@@ -11,15 +11,15 @@
 % Tier A deltas: aero, areal, gift -- the three N2 same-stack methods.
 %
 % Reproducibility:
-%   python3 scripts/p5p8/p6_iter126_measured_evidence_tier.py
-%   -> experiments/results/p5p8/p6_iter126_measured_evidence_tier.tsv
-%   -> experiments/results/p5p8/p6_iter126_measured_evidence_tier.json
+%   python3 platform_modal/scripts/p5p8/p6_iter126_measured_evidence_tier.py
+%   -> platform_hybrid/experiments/results/p5p8/p6_iter126_measured_evidence_tier.tsv
+%   -> platform_hybrid/experiments/results/p5p8/p6_iter126_measured_evidence_tier.json
 
 \subsection{Per-delta measured-evidence tier classification (iter 126)}
 \label{sec:p6-iter126-evidence-tier}
 
 The registry's variant-delta entries
-(\texttt{registry/entries/delta\_*.json}) carry two kinds of evidence:
+(\texttt{platform_hybrid/registry/entries/delta\_*.json}) carry two kinds of evidence:
 (a)~\emph{claimed} -- the conceptual change relative to GRPO, the citation
 key, and the textual description of what the variant does; and
 (b)~\emph{measured} -- an optional list of $\{metric, panel, base, delta,
@@ -42,13 +42,13 @@ their cited description.
 
 Applied to all 15 \texttt{delta\_*.json} entries, the audit produces
 Table~\ref{tab:p6-iter126-tier-rk} (top 10) and the full ranking in
-\texttt{experiments/results/p5p8/p6\_iter126\_measured\_evidence\_tier.tsv}.
+\texttt{platform_hybrid/experiments/results/p5p8/p6\_iter126\_measured\_evidence\_tier.tsv}.
 The headline result is a sharp three-tier split:
 \begin{itemize}
 \item \textbf{Tier A (3 deltas)} -- \texttt{aero}, \texttt{areal}, \texttt{gift}.
 These are the three GRPO-family variants covered by the N2
 same-stack reward tensors
-(\texttt{experiments/results/n2\_reward\_tensor\_resume/}) and the
+(\texttt{platform_hybrid/experiments/results/n2\_reward\_tensor\_resume/}) and the
 zvf-iter130 risk index.  Each carries six measured rows (zvf +
 reward\_mean, n2\_same\_stack\_last10 panel + zvf130 5-seed panel), with
 3/6 statistically significant at the 95\% paired-step bootstrap level

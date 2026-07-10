@@ -54,16 +54,16 @@ H5 manifest + temperature + seed extend η²(mean_completion_len)
 
 Outputs
 -------
-- experiments/results/p5p8/p5_iter189_minimal_field_set.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter189_minimal_field_set.tsv
   (rows: greedy-add minimal-field-set growth; col: incremental
    discrimination gain)
-- experiments/results/p5p8/p5_iter189_manifest_sufficiency.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter189_manifest_sufficiency.tsv
   (98 rows: per-cell uniqueness under each candidate field-set)
-- experiments/results/p5p8/p5_iter189_eta2_by_field_group.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter189_eta2_by_field_group.tsv
   (rows: 2 field_groups × 4 channels × 3 stats [η², ω², ε²])
-- experiments/results/p5p8/p5_iter189_h5_eta2_lift.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter189_h5_eta2_lift.tsv
   (4 rows: per-channel η² lift from adding temp/seed to manifest)
-- experiments/results/p5p8/p5_iter189_summary.json
+- platform_hybrid/experiments/results/p5p8/p5_iter189_summary.json
   (H1-H5 verdicts + per-cell-level findings + bootstrap CIs)
 """
 from __future__ import annotations
@@ -77,9 +77,9 @@ from pathlib import Path
 
 # ---------- config ----------
 WORKTREE = Path("/home/claude/tinker-rl-lab-minimax")
-MANIFEST_DIR = WORKTREE / "experiments/results/mega_20260704/manifests"
-CELLS_TSV = WORKTREE / "experiments/results/mega_20260704/cells.tsv"
-OUT_DIR = WORKTREE / "experiments/results/p5p8"
+MANIFEST_DIR = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/manifests"
+CELLS_TSV = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
+OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
 
 MANIFEST_FIELDS = [
     "loss_form", "ref_policy_kl", "sampler_backend_precision",

@@ -11,8 +11,8 @@ For each (condition, protocol) we compute mean held-out accuracy and a 95%
 bootstrap CI (N_boot=1000), then emit a long-form TSV.
 
 Usage:
-    python3 experiments/stratified_heldout.py --protocol all
-    python3 experiments/stratified_heldout.py --protocol p2 --seed 42
+    python3 platform_hybrid/experiments/stratified_heldout.py --protocol all
+    python3 platform_hybrid/experiments/stratified_heldout.py --protocol p2 --seed 42
 
 The script degrades gracefully when per-condition checkpoints are sparse:
   - N_c < 10            -> P1/P2 use the full set

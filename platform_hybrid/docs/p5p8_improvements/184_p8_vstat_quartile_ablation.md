@@ -144,7 +144,7 @@ underlying ranking is much weaker (AUC 0.95 vs 0.9998 for `24full`), so
    in Q2 mid-V_std regime).
 3. **CITE** iter-184 in the paper-P8 abstract's "sensor vs scorer"
    discussion -- F3 is the sharpest empirical justification.
-4. **WIRE** `scripts/p5p8/p8_iter184_vstat_quartile_ablation.py` as a
+4. **WIRE** `platform_modal/scripts/p5p8/p8_iter184_vstat_quartile_ablation.py` as a
    CI pre-commit gate: gate fails if H1 or H3 PASS direction reverses
    (i.e., if a future XGB variant makes V-stat features hurt more than
    help, or if 4sensor catches up to 20raw).
@@ -154,10 +154,10 @@ underlying ranking is much weaker (AUC 0.95 vs 0.9998 for `24full`), so
 
 ## Reproducibility
 
-- Script: `scripts/p5p8/p8_iter184_vstat_quartile_ablation.py` (~250 LoC,
+- Script: `platform_modal/scripts/p5p8/p8_iter184_vstat_quartile_ablation.py` (~250 LoC,
   stdlib + numpy + xgboost + sklearn)
 - Inputs: `fraud_data.csv` (50,000), `test_data.csv` (10,000)
 - Seeds: 42, 179, 316, 453, 590 (5-seed paired bootstrap)
-- Outputs: `experiments/results/p5p8/p8_iter184_*.tsv|json`
+- Outputs: `platform_hybrid/experiments/results/p5p8/p8_iter184_*.tsv|json`
 - Docs: this file
-- Re-run: `python3 scripts/p5p8/p8_iter184_vstat_quartile_ablation.py`
+- Re-run: `python3 platform_modal/scripts/p5p8/p8_iter184_vstat_quartile_ablation.py`

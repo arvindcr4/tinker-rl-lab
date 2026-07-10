@@ -20,15 +20,15 @@ This iter computes the per-STEP analog:
 Predicted discrimination (per iter-83 mint): items 14, 15, 17 carry signal
 on the per-step axis; item 16 should be placebo-null.
 
-Data: experiments/results/n2_reward_tensor/{grpo,aero,gift,areal}_s0_tensors.jsonl
+Data: platform_hybrid/experiments/results/n2_reward_tensor/{grpo,aero,gift,areal}_s0_tensors.jsonl
 (n2_reward_tensor_resume/{...}_s0_tensors.jsonl is iter-91 used; n2_reward_tensor
 is the canonical N2 panel).
 
 Outputs:
-- experiments/results/p5p8/p5p8_iter96_per_step_yield_axes.tsv  (4 methods x 40 steps = 160 rows)
-- experiments/results/p5p8/p5p8_iter96_per_step_summary.json
-- experiments/results/p5p8/p5p8_iter96_per_step_rho.tsv  (Spearman rho of Item_k vs |zvf_drop|)
-- docs/p5p8_improvements/113_p5p8_per_step_yield_axes.md
+- platform_hybrid/experiments/results/p5p8/p5p8_iter96_per_step_yield_axes.tsv  (4 methods x 40 steps = 160 rows)
+- platform_hybrid/experiments/results/p5p8/p5p8_iter96_per_step_summary.json
+- platform_hybrid/experiments/results/p5p8/p5p8_iter96_per_step_rho.tsv  (Spearman rho of Item_k vs |zvf_drop|)
+- platform_hybrid/docs/p5p8_improvements/113_p5p8_per_step_yield_axes.md
 """
 
 from __future__ import annotations

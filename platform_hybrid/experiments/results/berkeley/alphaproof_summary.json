@@ -24,8 +24,8 @@
   },
   "framework": "AlphaZero MCTS over Lean states -> tree-baseline V(s_t; \u03b3, h). Operationalised in GRPO/RLVR as discounted/look-back baseline \u03b2_tree(t; \u03b3, h); depth-0 h=1, \u03b3=1 reduces to GRPO group-mean. Five pre-registered hypotheses on iter127 + iter130 data.",
   "data_sources": {
-    "iter127_group_size_advantage_variance": "experiments/results/group_size_advantage_variance.tsv",
-    "iter130_variance_mitigation": "experiments/results/variance_mitigation.tsv"
+    "iter127_group_size_advantage_variance": "platform_hybrid/experiments/results/group_size_advantage_variance.tsv",
+    "iter130_variance_mitigation": "platform_hybrid/experiments/results/variance_mitigation.tsv"
   },
   "hypotheses": [
     {

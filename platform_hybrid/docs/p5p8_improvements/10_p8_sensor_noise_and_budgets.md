@@ -2,7 +2,7 @@
 
 ## Proposal (T2, paper P8 / `paper_P8_fraud.tex`)
 
-The iter-4 calibration/CI artifact (`docs/p5p8_improvements/06_p8_calibration_and_cis.md`)
+The iter-4 calibration/CI artifact (`platform_hybrid/docs/p5p8_improvements/06_p8_calibration_and_cis.md`)
 quantified three of the four operational arguments in \secref{sec:p8-scorer} --
 calibration, accuracy, and cost -- but stopped at the "the LLM sensor could
 contribute something the tree cannot, in principle" threshold. It did not
@@ -124,20 +124,20 @@ synchronous scorer regardless of cost.
 > per-row latency $\ge 250$ ms (the canonical card-authorization budget).
 
 If this sentence is false on a re-run with the shipped script
-(`python3 scripts/p5p8/p8_sensor_noise.py` and
-`scripts/p5p8/p8_cost_latency.py`, seeds 42/2026), this deliverable is
+(`python3 platform_modal/scripts/p5p8/p8_sensor_noise.py` and
+`platform_modal/scripts/p5p8/p8_cost_latency.py`, seeds 42/2026), this deliverable is
 invalidated. Wall-clock: ~3 min each on 4 cores.
 
 ## Evidence files (this iter)
 
 | file | contents |
 | --- | --- |
-| `experiments/results/p5p8/p8_sensor_noise_sweep.tsv` | 8 noise levels ($\sigma$=0.05..2.0); 24-feature tree AUC + paired bootstrap CI vs clean baseline |
-| `experiments/results/p5p8/p8_required_info_gain.tsv` | 8 monotone-signal strengths on a synthetic 25th feature; 25-feature tree AUC + CI |
-| `experiments/results/p5p8/p8_cost_latency_sensitivity.tsv` | 7 per-row LLM price points; tree-only / LLM-only / hybrid 10 % columns |
-| `experiments/results/p5p8/p8_latency_budget.tsv` | 9 LLM latency points; per-row latency as % of 250 ms auth budget |
-| `experiments/results/p5p8/p8_sensor_noise_summary.json` | machine-readable sweep + info-gain summary |
-| `experiments/results/p5p8/p8_cost_latency_summary.json` | machine-readable cost + latency sweep |
+| `platform_hybrid/experiments/results/p5p8/p8_sensor_noise_sweep.tsv` | 8 noise levels ($\sigma$=0.05..2.0); 24-feature tree AUC + paired bootstrap CI vs clean baseline |
+| `platform_hybrid/experiments/results/p5p8/p8_required_info_gain.tsv` | 8 monotone-signal strengths on a synthetic 25th feature; 25-feature tree AUC + CI |
+| `platform_hybrid/experiments/results/p5p8/p8_cost_latency_sensitivity.tsv` | 7 per-row LLM price points; tree-only / LLM-only / hybrid 10 % columns |
+| `platform_hybrid/experiments/results/p5p8/p8_latency_budget.tsv` | 9 LLM latency points; per-row latency as % of 250 ms auth budget |
+| `platform_hybrid/experiments/results/p5p8/p8_sensor_noise_summary.json` | machine-readable sweep + info-gain summary |
+| `platform_hybrid/experiments/results/p5p8/p8_cost_latency_summary.json` | machine-readable cost + latency sweep |
 
 ## How this connects to the existing P8 claims
 
@@ -200,7 +200,7 @@ invalidated. Wall-clock: ~3 min each on 4 cores.
 
 ## Paper-facing integration
 
-- New section `paper/sections/p8_evidence_noise.tex` is created with
+- New section `platform_hybrid/paper/sections/p8_evidence_noise.tex` is created with
   three tables (noise sweep, info gain, cost+latency) and a one-paragraph
   distillation that ties the three together.
 - `paper_P8_fraud.tex` is updated to include
@@ -210,4 +210,4 @@ invalidated. Wall-clock: ~3 min each on 4 cores.
 - `\tableref{tab:p8-noise-sweep}`, `\tableref{tab:p8-info-gain}`,
   `\tableref{tab:p8-cost-lat}` are the three new references.
 - The new section explicitly cites this docs file as the working artifact
-  (`docs/p5p8_improvements/10_p8_sensor_noise_and_budgets.md`).
+  (`platform_hybrid/docs/p5p8_improvements/10_p8_sensor_noise_and_budgets.md`).

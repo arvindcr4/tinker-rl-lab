@@ -1,6 +1,6 @@
-% paper/sections/p6_iter162_registry_groundtruth_audit.tex
+% platform_hybrid/paper/sections/p6_iter162_registry_groundtruth_audit.tex
 % Iter-162 P6 audit: registry ground-truth JOIN at three external-reference
-% layers (citation.bibkey -> paper/references.bib, measured[].source -> file
+% layers (citation.bibkey -> platform_hybrid/paper/references.bib, measured[].source -> file
 % system, zvf130 outcomes.zvf_risk_mean -> zvf_iter130_method_risk.tsv) plus
 % a per-entry registry_integrity_score that aggregates the three layers.
 %
@@ -14,11 +14,11 @@
 % references.bib would surface the drift.
 %
 % Reproducibility:
-%   python3 scripts/p5p8/p6_iter162_registry_groundtruth_audit.py
-%   -> experiments/results/p5p8/p6_iter162_per_entry.tsv (43 rows)
-%   -> experiments/results/p5p8/p6_iter162_per_layer_summary.tsv (4 rows)
-%   -> experiments/results/p5p8/p6_iter162_per_cell.tsv (66 rows)
-%   -> experiments/results/p5p8/p6_iter162_summary.json
+%   python3 platform_modal/scripts/p5p8/p6_iter162_registry_groundtruth_audit.py
+%   -> platform_hybrid/experiments/results/p5p8/p6_iter162_per_entry.tsv (43 rows)
+%   -> platform_hybrid/experiments/results/p5p8/p6_iter162_per_layer_summary.tsv (4 rows)
+%   -> platform_hybrid/experiments/results/p5p8/p6_iter162_per_cell.tsv (66 rows)
+%   -> platform_hybrid/experiments/results/p5p8/p6_iter162_summary.json
 %
 % Vein: brief vein (b) at a new ground-truth layer; complements iter-158's
 % 4-tuple completeness audit (which scored the (deltas[], expected_effects[],
@@ -35,7 +35,7 @@ silently stale, undermine the catalog's machine-readability claim:
 \begin{enumerate}
 \item \textbf{Citation resolution.} Each \texttt{delta\_*.json} declares a
 \texttt{citation.bibkey} that should resolve to a real entry in
-\texttt{paper/references.bib}. The catalog asserts ``verified'' in
+\texttt{platform_hybrid/paper/references.bib}. The catalog asserts ``verified'' in
 free-text notes but does not machine-check this.
 \item \textbf{Source-path existence.} Each \texttt{measured[]} row carries
 a \texttt{source} relative path that should exist on disk. A row whose
@@ -50,7 +50,7 @@ hand-edit bug undermines any downstream \texttt{measured[]} row that
 reuses it.
 \end{enumerate}
 
-The audit (\texttt{scripts/p5p8/p6\_iter162\_registry\_groundtruth\_audit.py})
+The audit (\texttt{platform_modal/scripts/p5p8/p6\_iter162\_registry\_groundtruth\_audit.py})
 joins each entry's claims against the repository's ground-truth at these three
 layers, surfaces the gap count per layer and per entry, and computes a per-
 entry \texttt{registry\_integrity\_score} (fraction of the applicable
@@ -59,7 +59,7 @@ ground-truth checks that pass).
 \paragraph{Pre-fix finding (4 of 15 stale citations).}
 \begin{itemize}
 \item \texttt{delta\_ppo} declared \texttt{bibkey=``schulman2017ppo''}, but
-the canonical key in \texttt{paper/references.bib} is
+the canonical key in \texttt{platform_hybrid/paper/references.bib} is
 \texttt{schulman2017proximal}.
 \item \texttt{delta\_reinforce} declared \texttt{``williams1992reinforce''},
 which was absent from \texttt{references.bib}.
@@ -72,7 +72,7 @@ which was absent from \texttt{references.bib}.
 \paragraph{Fix applied.} \texttt{delta\_ppo} was updated to use the
 canonical \texttt{schulman2017proximal} key. The other three bibkeys
 (representing either canonical papers whose bibkey had never been added or
-repository-internal placeholders) were added to \texttt{paper/references.bib}
+repository-internal placeholders) were added to \texttt{platform_hybrid/paper/references.bib}
 as \texttt{@misc} entries with full author/title/year/note provenance,
 including a \texttt{note} field pointing to the canonical source paper for
 the underlying algorithm.
@@ -95,7 +95,7 @@ zvf\_value\_sd integrity  &  9 &  9 & 100.00\% \\
 \hline
 \end{tabular}
 \caption{Iter-162 registry ground-truth audit results across four layers. Each
-delta\_*.json citation is checked against paper/references.bib; each
+delta\_*.json citation is checked against platform_hybrid/paper/references.bib; each
 measured[].source path is checked against the filesystem; each
 zvf130\_*.json outcomes.zvf\_risk\_mean and zvf\_risk\_sd is checked against
 zvf\_iter130\_method\_risk.tsv with absolute tolerance 1e-4.}
@@ -131,7 +131,7 @@ bounds. This validates the iter-102/iter-146 provenance-recompute work.
 
 \paragraph{Operational note.}
 The audit script is now a CI-style gate: a re-run on a stale
-\texttt{paper/references.bib} or a moved TSV will surface the drift in
+\texttt{platform_hybrid/paper/references.bib} or a moved TSV will surface the drift in
 the \texttt{p6\_iter162\_per\_layer\_summary.tsv} \texttt{pass\_rate}
 column. Future iter of \texttt{registry\_validate.py} should consider
 importing this audit as a sub-check so the per-entry integrity score

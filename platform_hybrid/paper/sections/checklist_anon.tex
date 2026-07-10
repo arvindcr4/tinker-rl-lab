@@ -3,8 +3,8 @@
 % -----------------------------------------------------------------------------
 % Self-contained.  Replace the current inline checklist block in main.tex with
 %   \input{sections/checklist}
-% (the file lives at paper/sections/checklist.tex so the relative path is
-% correct when main.tex is compiled from paper/).
+% (the file lives at platform_hybrid/paper/sections/checklist.tex so the relative path is
+% correct when main.tex is compiled from platform_hybrid/paper/).
 %
 % Requirements already present in main.tex:
 %   \newcommand{\answerPartial}[1][]{\textcolor{purple}{[Partial] #1}}
@@ -161,7 +161,7 @@
     these hyperparameters across all 7~libraries.
     Appendix~\ref{app:hyperparams} reports sweep ranges.  Per-task
     YAML configurations are version-controlled under
-    \texttt{atropos/configs/}.  GSM8K uses the standard
+    \texttt{platform_tinker/atropos/configs/}.  GSM8K uses the standard
     train/test partitions; HumanEval uses the full pass@1 suite.
     Tinker hyperparameters are released as API call scripts; the only
     unavailable information is the Tinker platform's internal hardware.}

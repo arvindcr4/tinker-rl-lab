@@ -4,7 +4,7 @@
 # AERO has LOWER mean ZVF than GRPO (better contrast).
 # gap_failure is the gap in fraction-of-(seed)-cells labelled
 # collapse-or-drift; gap_last10 is the gap in mean last-10 accuracy.
-# Source: scripts/zvf_iter118_diagnostic.py
+# Source: platform_modal/scripts/zvf_iter118_diagnostic.py
 metric	aero_mean	grpo_mean	gap	ci_lo	ci_hi	n_aero	n_grpo
 mean_zvf	0.2203	0.4808	-0.2605	-0.2618	-0.2592	5	5
 failure_rate	0.0000	0.0000	+0.0000	+0.0000	+0.0000	5	5

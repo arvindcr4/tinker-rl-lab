@@ -28,12 +28,12 @@ Plus 5-seed bootstrap B=2000 on realized utility(τ*) at each
 (rate x fset x tier x utility) cell → 4000 CIs total.
 
 Outputs:
-  experiments/results/p5p8/p8_iter160_opt_tau_per_cell.tsv      (2000 rows: cell-level τ* + util)
-  experiments/results/p5p8/p8_iter160_opt_util_per_cell.tsv     (2000 rows: realized utility at τ*)
-  experiments/results/p5p8/p8_iter160_h_tau_stratified.tsv      (40 rows: 5 utilities x 4 fsets x 2 tiers selected)
-  experiments/results/p5p8/p8_iter160_h_util_monotone.tsv       (20 rows: utility-monotonicity test)
-  experiments/results/p5p8/p8_iter160_h_5seed_ci.tsv            (50 rows: 5 utilities x 5 rates x 2 tiers)
-  experiments/results/p5p8/p8_iter160_summary.json              (machine-readable H1-H4 verdicts)
+  platform_hybrid/experiments/results/p5p8/p8_iter160_opt_tau_per_cell.tsv      (2000 rows: cell-level τ* + util)
+  platform_hybrid/experiments/results/p5p8/p8_iter160_opt_util_per_cell.tsv     (2000 rows: realized utility at τ*)
+  platform_hybrid/experiments/results/p5p8/p8_iter160_h_tau_stratified.tsv      (40 rows: 5 utilities x 4 fsets x 2 tiers selected)
+  platform_hybrid/experiments/results/p5p8/p8_iter160_h_util_monotone.tsv       (20 rows: utility-monotonicity test)
+  platform_hybrid/experiments/results/p5p8/p8_iter160_h_5seed_ci.tsv            (50 rows: 5 utilities x 5 rates x 2 tiers)
+  platform_hybrid/experiments/results/p5p8/p8_iter160_summary.json              (machine-readable H1-H4 verdicts)
 
 Stdlib + numpy + xgboost.  <= 290 lines.
 """

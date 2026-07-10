@@ -5,12 +5,12 @@
 archetype classification + path-resolvability scoring.
 **Iteration:** 166.
 **Author:** autonomous agent (`p6_iter166_provenance_audit.py`).
-**Inputs:** `registry/entries/*.json` (43 entries).
+**Inputs:** `platform_hybrid/registry/entries/*.json` (43 entries).
 **Outputs:**
-- `experiments/results/p5p8/p6_iter166_per_entry.tsv` (43 rows × 16 cols)
-- `experiments/results/p5p8/p6_iter166_per_artifact.tsv` (26 rows × 7 cols)
-- `experiments/results/p5p8/p6_iter166_type_counts.tsv` (10 rows × 4 cols)
-- `experiments/results/p5p8/p6_iter166_summary.json` (H1-H4 verdicts)
+- `platform_hybrid/experiments/results/p5p8/p6_iter166_per_entry.tsv` (43 rows × 16 cols)
+- `platform_hybrid/experiments/results/p5p8/p6_iter166_per_artifact.tsv` (26 rows × 7 cols)
+- `platform_hybrid/experiments/results/p5p8/p6_iter166_type_counts.tsv` (10 rows × 4 cols)
+- `platform_hybrid/experiments/results/p5p8/p6_iter166_summary.json` (H1-H4 verdicts)
 - the P5–P8 improvement backlog ledger row 179
 - `findings_ledger.jsonl` finding line (pillar P6)
 
@@ -19,10 +19,10 @@ archetype classification + path-resolvability scoring.
 Each P6 registry entry declares `provenance.source_artifacts` as a list of
 free-text strings. The strings blend multiple archetypes:
 
-- **clean relative path** — `experiments/results/foo.tsv` (resolvable)
+- **clean relative path** — `platform_hybrid/experiments/results/foo.tsv` (resolvable)
 - **wandb handle** — `W&B <project> / <run>` (URL-like, not a file)
 - **prose with embedded path tokens** — `"...see
-  experiments/results/n2_reward_tensor_resume/aero_s0_tensors.jsonl"`
+  platform_hybrid/experiments/results/n2_reward_tensor_resume/aero_s0_tensors.jsonl"`
 - **pure free-text description** — `"12-cell Tinker head-to-head (internal
   program records, 2026-06-21)"`
 
@@ -36,8 +36,8 @@ as a distinct channel. iter-166 closes this gap by:
    five types (`PATH_OK`, `PATH_MISSING`, `WANDB`, `DESC_PATH_OK`,
    `DESC_PATH_MISSING`, `DESC`).
 2. **Path-token extraction** from prose strings via lookahead-anchored regex
-   (`jsonl` wins over `json`, `experiments/...` and bare `*.tsv` both
-   recognized) with a canonical-fallback resolver (`experiments/results/<bare>`).
+   (`jsonl` wins over `json`, `platform_hybrid/experiments/...` and bare `*.tsv` both
+   recognized) with a canonical-fallback resolver (`platform_hybrid/experiments/results/<bare>`).
 3. **Two-channel scoring** — artifact resolvability (primary, weight 0.7)
    + citation completeness (secondary, weight 0.3). For entries without
    `source_artifacts` (variant_delta records), citation_score is the
@@ -65,9 +65,9 @@ as a distinct channel. iter-166 closes this gap by:
 
 The 14 `DESC_PATH_OK` entries are the 11 `zvf130_*` stack records (prose
 `"zvf_iter130_method_risk.tsv row method=<X>"` resolves to
-`experiments/results/zvf_iter130_method_risk.tsv` via canonical-fallback)
+`platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv` via canonical-fallback)
 plus the 3 `tinker_{aero,areal,gift}_qwen3.5-4b_gsm8k` stack records
-(prose `"...see experiments/results/n2_reward_tensor_resume/<method>_s0_tensors.jsonl"`).
+(prose `"...see platform_hybrid/experiments/results/n2_reward_tensor_resume/<method>_s0_tensors.jsonl"`).
 
 ## Per-entry scoring distribution
 
@@ -100,7 +100,7 @@ plus the 3 `tinker_{aero,areal,gift}_qwen3.5-4b_gsm8k` stack records
      `title` only, no `bibkey` / `arxiv`)
 4. **Path-token extraction resolves all 18 prose-with-path entries.**
    The lookahead-anchored regex (`jsonl` > `json` > `tsv` ordering)
-   plus canonical-fallback (`experiments/results/<bare>.tsv`) is the
+   plus canonical-fallback (`platform_hybrid/experiments/results/<bare>.tsv`) is the
    first principled provenance-resolver for the P6 catalog.
 5. **No `PATH_MISSING` (clean path that doesn't exist).** All 4 PATH_OK
    entries resolve to a real file; the only "missing" cases are
@@ -112,13 +112,13 @@ plus the 3 `tinker_{aero,areal,gift}_qwen3.5-4b_gsm8k` stack records
 
 | entry_id | record_type | gap_type | cure |
 |---|---|---|---|
-| colab-open_dapo_e3 | stack | wandb_only | add `experiments/results/<tinker_dapo>.jsonl` or move to `delta_dapo` |
+| colab-open_dapo_e3 | stack | wandb_only | add `platform_hybrid/experiments/results/<tinker_dapo>.jsonl` or move to `delta_dapo` |
 | colab-open_drgrpo_e3 | stack | wandb_only | same |
 | colab-open_grpo-adaptiveg_e3 | stack | wandb_only | same |
 | colab-open_grpo_e3 | stack | wandb_only | same |
 | delta_tool_use_llama-8b-inst | variant_delta | title_only_cite | add bibkey + arxiv (cite "tool-use-agent-llama-8b-instruct" paper) |
 | delta_tool_use_qwen3-32b | variant_delta | title_only_cite | add bibkey + arxiv |
-| tinker_dapo_qwen3.5-4b_gsm8k | stack | desc_only | add `experiments/results/tinker_qwen3.5-4b_dapo.jsonl` reference |
+| tinker_dapo_qwen3.5-4b_gsm8k | stack | desc_only | add `platform_hybrid/experiments/results/tinker_qwen3.5-4b_dapo.jsonl` reference |
 | tinker_drgrpo_qwen3.5-4b_gsm8k | stack | desc_only | same |
 | tinker_grpo_qwen3.5-4b_gsm8k | stack | desc_only | same |
 | tinker_gspo_qwen3.5-4b_gsm8k | stack | desc_only | same |
@@ -144,7 +144,7 @@ plus the 3 `tinker_{aero,areal,gift}_qwen3.5-4b_gsm8k` stack records
 (b) **Add a `provenance_channel` field** to each entry — explicit
 `"source_artifacts"` vs `"citation"` vs `"both"` annotation.
 (c) **Make the audit a CI-style gate** — add
-    `python3 scripts/p5p8/p6_iter166_provenance_audit.py` to the
+    `python3 platform_modal/scripts/p5p8/p6_iter166_provenance_audit.py` to the
     pre-commit hook and fail if any new entry drops below 0.5.
 (d) **Wire the audit into paper_P6_registry.tex §4.X** — the
     provenance-completeness bar is a reviewer-visible signal.

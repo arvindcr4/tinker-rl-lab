@@ -34,17 +34,17 @@ Operational hypotheses (5/6 expected PASS, 1 honest negative):
   H6 — mean Spearman rho across seed pairs > 0.50
 
 Outputs:
-  experiments/results/p5p8/p7_iter183_per_obs.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter183_per_obs.tsv
       75 rows × (seed, step, zvf, reward, fire_0.50..fire_0.85)
-  experiments/results/p5p8/p7_iter183_per_seed_rate.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter183_per_seed_rate.tsv
       5 × 8 rows × (seed, tau, rate, ci_lo, ci_hi)
-  experiments/results/p5p8/p7_iter183_cross_seed_ci.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter183_cross_seed_ci.tsv
       8 rows × (tau, mean_rate, cross_sd, cross_ci_lo, cross_ci_hi)
-  experiments/results/p5p8/p7_iter183_tost.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter183_tost.tsv
       10 pairs × 8 taus = 80 rows × (pair, tau, lo, hi, tost_pass)
-  experiments/results/p5p8/p7_iter183_spearman.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter183_spearman.tsv
       10 pairs × 1 row × (pair, spearman_rho)
-  experiments/results/p5p8/p7_iter183_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_iter183_summary.json
       H1-H6 verdicts + structured stats
 
 Stdlib only; deterministic LCG bootstrap B=2000 seed=20260705.
@@ -59,8 +59,8 @@ import statistics
 from itertools import combinations
 
 WORKTREE = "/home/claude/tinker-rl-lab-minimax"
-N10_DIR = os.path.join(WORKTREE, "experiments/results/n10_seed_expansion")
-OUT_DIR = os.path.join(WORKTREE, "experiments/results/p5p8")
+N10_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n10_seed_expansion")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 SEEDS = [42, 179, 316, 453, 590]

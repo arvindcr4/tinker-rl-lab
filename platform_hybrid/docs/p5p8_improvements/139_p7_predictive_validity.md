@@ -12,14 +12,14 @@ iter 139 closes this gap with 4 falsifiable hypotheses on the live
 
 | Artifact | Description |
 |---|---|
-| `scripts/p5p8/p7_iter139_predictive_validity.py` | ~285 LoC, stdlib only — joint trigger + per-seed step levels + paired-step & across-seed bootstrap |
-| `experiments/results/p5p8/p7_iter139_step_level.tsv` | per-(seed, step) zvf, reward, FIRE@τ=0.70, Δr_next (75 rows) |
-| `experiments/results/p5p8/p7_iter139_predictive_validity.tsv` | per-(seed, τ) Δr with paired-step bootstrap CI (5 × 8 = 40 rows) |
-| `experiments/results/p5p8/p7_iter139_h3_next_step.tsv` | per-seed next-step reward-delta on FIRE vs ¬FIRE (5 rows) |
-| `experiments/results/p5p8/p7_iter139_h2b_across_seed.tsv` | per-τ across-seed 95% CI (8 rows) |
-| `experiments/results/p5p8/p7_iter139_summary.json` | H1–H4 verdicts + h2b canonical row + τ-band recommendation |
-| `paper/sections/p7_iter139_predictive_validity.tex` | ~110 lines, NEW §4.20 |
-| `docs/p5p8_improvements/139_p7_predictive_validity.md` | this file |
+| `platform_modal/scripts/p5p8/p7_iter139_predictive_validity.py` | ~285 LoC, stdlib only — joint trigger + per-seed step levels + paired-step & across-seed bootstrap |
+| `platform_hybrid/experiments/results/p5p8/p7_iter139_step_level.tsv` | per-(seed, step) zvf, reward, FIRE@τ=0.70, Δr_next (75 rows) |
+| `platform_hybrid/experiments/results/p5p8/p7_iter139_predictive_validity.tsv` | per-(seed, τ) Δr with paired-step bootstrap CI (5 × 8 = 40 rows) |
+| `platform_hybrid/experiments/results/p5p8/p7_iter139_h3_next_step.tsv` | per-seed next-step reward-delta on FIRE vs ¬FIRE (5 rows) |
+| `platform_hybrid/experiments/results/p5p8/p7_iter139_h2b_across_seed.tsv` | per-τ across-seed 95% CI (8 rows) |
+| `platform_hybrid/experiments/results/p5p8/p7_iter139_summary.json` | H1–H4 verdicts + h2b canonical row + τ-band recommendation |
+| `platform_hybrid/paper/sections/p7_iter139_predictive_validity.tex` | ~110 lines, NEW §4.20 |
+| `platform_hybrid/docs/p5p8_improvements/139_p7_predictive_validity.md` | this file |
 
 ## Headlines (falsifiable)
 
@@ -142,6 +142,6 @@ identifies current-step low-reward steps in 4/5 seeds.
 ## Pre-existing build-error status
 
 No `paper_P7_zvf_controller.tex` rebuild this iter (audit-level
-deliverable; the LaTeX patch in `paper/sections/p7_iter139_predictive_validity.tex`
+deliverable; the LaTeX patch in `platform_hybrid/paper/sections/p7_iter139_predictive_validity.tex`
 is added but the full rebuild is delegated to iter 140's P3 synthesis
 pass per the deli protocol's audit-first → rebuild-second pattern).

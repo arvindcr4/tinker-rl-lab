@@ -117,14 +117,14 @@ additional auditor cost.
 
 ## Files
 
-- `scripts/p5p8/p8_iter132_mislabel_robustness.py` (~330 LoC, stdlib +
+- `platform_modal/scripts/p5p8/p8_iter132_mislabel_robustness.py` (~330 LoC, stdlib +
   numpy + pandas + xgboost + sklearn + scipy)
-- `experiments/results/p5p8/p8_iter132_mislabel_main.tsv` (50 rows:
+- `platform_hybrid/experiments/results/p5p8/p8_iter132_mislabel_main.tsv` (50 rows:
   5 eps × 2 trees × 5 metrics + caught_K2pct + tau_star)
-- `experiments/results/p5p8/p8_iter132_mislabel_flip.tsv` (5 rows:
+- `platform_hybrid/experiments/results/p5p8/p8_iter132_mislabel_flip.tsv` (5 rows:
   per-eps summary including delta-Caught@K2pct)
-- `experiments/results/p5p8/p8_iter132_mislabel_boot.tsv` (35 rows:
+- `platform_hybrid/experiments/results/p5p8/p8_iter132_mislabel_boot.tsv` (35 rows:
   paired bootstrap per-eps-per-metric)
-- `experiments/results/p5p8/p8_iter132_mislabel_summary.json`
-- `paper/sections/p8_iter132_mislabel.tex` (~95 lines, NEW)
+- `platform_hybrid/experiments/results/p5p8/p8_iter132_mislabel_summary.json`
+- `platform_hybrid/paper/sections/p8_iter132_mislabel.tex` (~95 lines, NEW)
 - 1 line in `findings_ledger.jsonl` (pillar P8, iter 132)

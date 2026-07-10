@@ -50,7 +50,7 @@ def fig1_capacity_threshold():
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
     # Parse logs
-    log_dir = '../../experiments/tinker-runs/logs'
+    log_dir = '../../platform_hybrid/experiments/tinker-runs/logs'
 
     # 8B seeds
     colors_8b = ['#1f77b4', '#aec7e8', '#c6dbef', '#6baed6', '#2171b5']
@@ -114,7 +114,7 @@ def fig1_capacity_threshold():
 
 def fig2_diagnostics():
     """Figure 2: Training diagnostics — entropy collapse and group composition."""
-    steps = parse_arithmetic_log('../../experiments/results/arithmetic_metrics.jsonl')
+    steps = parse_arithmetic_log('../../platform_hybrid/experiments/results/arithmetic_metrics.jsonl')
 
     fig, axes = plt.subplots(1, 3, figsize=(12, 3.5))
 

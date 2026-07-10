@@ -15,7 +15,7 @@ provenance-backed fields on the records themselves.
 
 ## What was built
 
-1. **Schema extension** (`registry/schema.json`, additive + optional, backward
+1. **Schema extension** (`platform_hybrid/registry/schema.json`, additive + optional, backward
    compatible): a new `measured` array on `variant_delta_record`, each element a
    `$defs/measured_delta` = `{metric, panel, base, delta, ci_low, ci_high, n,
    significant, ci_method, source, note}`. `panel` and `source` are **required**
@@ -23,7 +23,7 @@ provenance-backed fields on the records themselves.
    reuses the existing iter-28 `$defs/ci_method`. 31/31 entries still PASS
    (additive-optional pattern, same discipline as the iter-28 `ci_method` bump).
 
-2. **`scripts/p5p8/p6_measured_delta_block.py`** (≤300 LoC, stdlib + jsonschema)
+2. **`platform_modal/scripts/p5p8/p6_measured_delta_block.py`** (≤300 LoC, stdlib + jsonschema)
    computes `variant − grpo` on two provenanced panels and writes the blocks:
    - **`n2_same_stack_last10`** — N2 four-method same-stack reward tensors
      (`n2_metrics.tsv`), metrics `{zvf, reward_mean}`, last 10 of 40 steps,
@@ -35,7 +35,7 @@ provenance-backed fields on the records themselves.
      `mag_mean` is not stored → CI marked unmeasurable, `significant:false`).
      Populated for all 8 measured variants.
 
-## Measured results (`experiments/results/p5p8/p6_measured_delta_block.tsv`)
+## Measured results (`platform_hybrid/experiments/results/p5p8/p6_measured_delta_block.tsv`)
 
 - **8 delta records populated, 22 measured rows**; full registry re-validates
   **31/31 PASS** against the bumped schema.
@@ -71,10 +71,10 @@ the level of the variant catalog itself.
 ## Reproduce
 
 ```
-python3 scripts/p5p8/p6_measured_delta_block.py
-python3 -c "import json,jsonschema,pathlib;s=json.load(open('registry/schema.json'));\
+python3 platform_modal/scripts/p5p8/p6_measured_delta_block.py
+python3 -c "import json,jsonschema,pathlib;s=json.load(open('platform_hybrid/registry/schema.json'));\
 V=jsonschema.Draft202012Validator(s);\
-print(sum(not list(V.iter_errors(json.load(open(p)))) for p in pathlib.Path('registry/entries').glob('*.json')),'PASS')"
+print(sum(not list(V.iter_errors(json.load(open(p)))) for p in pathlib.Path('platform_hybrid/registry/entries').glob('*.json')),'PASS')"
 ```
 
 ## Citations

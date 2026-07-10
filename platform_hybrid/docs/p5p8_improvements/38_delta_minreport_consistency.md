@@ -25,7 +25,7 @@ mistake from a registry that predicts a ZVF direction wrongly.
 
 ## What we built
 
-- `scripts/p5p8/delta_minreport_consistency.py` (~290 LoC, stdlib
+- `platform_modal/scripts/p5p8/delta_minreport_consistency.py` (~290 LoC, stdlib
   only). For every `(entry, applied_delta, component)` triple it:
     1. Looks up the component's hand-curated **implication table** —
        the MIN-REPORT field(s) and expected value(s) the technique,
@@ -49,9 +49,9 @@ mistake from a registry that predicts a ZVF direction wrongly.
          - `NOT_APPLICABLE` — `status=absent/unknown` (no claim being
            made) OR the component has no MIN-REPORT implication.
 
-- `experiments/results/p5p8/delta_minreport_consistency.tsv` (31 rows
+- `platform_hybrid/experiments/results/p5p8/delta_minreport_consistency.tsv` (31 rows
   — one per `(entry, applied_delta, component)` triple).
-- `experiments/results/p5p8/delta_minreport_consistency.json` (full
+- `platform_hybrid/experiments/results/p5p8/delta_minreport_consistency.json` (full
   summary including the implication table, the per-field verdicts, the
   per-entry verdicts, the per-status breakdown, and the
   **schema-exposure** number).
@@ -126,7 +126,7 @@ mistake from a registry that predicts a ZVF direction wrongly.
 ## Reproducibility
 
 ```bash
-python3 scripts/p5p8/delta_minreport_consistency.py
+python3 platform_modal/scripts/p5p8/delta_minreport_consistency.py
 ```
 
 Expected summary: 31 rows; 0 MISMATCH; 7 MATCH; 0 MISSING_REPORT;
@@ -136,9 +136,9 @@ exposure = 5/18 = 0.2778.
 
 ## Files
 
-- `scripts/p5p8/delta_minreport_consistency.py` (~290 LoC, stdlib
+- `platform_modal/scripts/p5p8/delta_minreport_consistency.py` (~290 LoC, stdlib
   only).
-- `experiments/results/p5p8/delta_minreport_consistency.tsv` (31
+- `platform_hybrid/experiments/results/p5p8/delta_minreport_consistency.tsv` (31
   rows, tab-separated).
-- `experiments/results/p5p8/delta_minreport_consistency.json`
+- `platform_hybrid/experiments/results/p5p8/delta_minreport_consistency.json`
   (machine-readable summary including the implication table).

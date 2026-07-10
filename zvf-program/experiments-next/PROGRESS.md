@@ -12,17 +12,27 @@ Last updated: 2026-07-11 (session: gameplan deployment + first real Tinker runs)
 | E-T1 CI coverage | ✅ run on p350 pool — `results/t1_ci_coverage_..._p350.json` |
 | E-T2 wasted-compute floor | ✅ run on p350 pool (G=8) — `results/t2_floor_..._p350_G8.json` |
 | E-T3a G\* curve | ✅ run on p350 pool — `results/t3_gstar_..._p350.json` |
+| Rollout-quality audit | ✅ p350 complete — zero-variance, advantage, clustered CI |
+| pass@k bootstrap audit | ✅ base complete — problem-clustered 95% intervals |
 | 403-cell sweep | ⏸ gated — cleared for shuffled batching only (see T1 verdict) |
 
-Committed through `d14659f` (results + tooling) on `main`; nothing pushed to remote.
+Sampling hardening is committed through `699cab97` on `main`; nothing pushed
+to remote. The rollout-quality/pass@k comparison layer is the next local change.
 
 ## Results so far (Qwen3-8B, GSM8K)
 
 - **pass@k baseline** (test split, T=1.0, n=32, unbiased estimator):
   **pass@1 = 30.4%, pass@8 = 79.7%, pass@32 = 91.0%.**
+  Problem-clustered 95% intervals are **[27.5, 33.1]%, [75.3, 83.9]%,
+  [86.5, 95.0]%**, respectively.
   18/200 problems unsolved at k=32; 0/200 saturated. → Only ~9 pts of k=32
   headroom: GSM8K alone cannot demonstrate capability expansion for this
   model; add MATH-500 + a code task before E-R headline runs.
+- **Rollout signal quality** (train split, p350, G=32): pass@1 30.30%
+  [27.87, 32.81]%; zero-variance prompts 10.86% [7.43, 14.29]%;
+  active-advantage fraction 89.14% [85.71%, 92.29%]. All zero-variance prompts
+  are all-incorrect. This is measurable waste, but not the dominant bottleneck
+  at the frozen base checkpoint.
 - **T1 (calibration): conditional pass.** iid Wald coverage 0.92–0.97
   (passes the pre-registered [0.93, 0.97] rule at M≥64; marginal at M=32).
   Wilson is well-calibrated everywhere (0.95–0.98) → **use Wilson in the
@@ -66,6 +76,7 @@ V=../../.venv/bin/python          # repo venv (tinker SDK installed via uv)
    $V analyze_t1_ci.py    --pool $POOL
    $V analyze_t2_floor.py --pool $POOL --group-size 8
    $V analyze_t3_gstar.py --pool $POOL
+   $V analyze_rollout_quality.py --pool $POOL
    ```
    The `_p350` artifacts stay as the truncated-run record; full-pool outputs
    get the untruncated tag. Expect verdicts to match (n=350 → 512 tightens
@@ -89,6 +100,11 @@ V=../../.venv/bin/python          # repo venv (tinker SDK installed via uv)
    the E-R capability-expansion claim per the pass@32=91% headroom finding.
 6. **Checkpoint pool** for E-T2 on drifting ZVF: rerun `build_pool.py` with
    `--sampler-path tinker://<audit-run-weights> --tag qwen3-8b-stepNN`.
+7. **Matched post-RL pass@k**: use the identical seed/sampling configuration,
+   then run `compare_passk_results.py`; new results carry prompt fingerprints
+   and the comparison refuses unverified pairing.
+8. **Three evaluation seeds** per frozen checkpoint (42/43/44), followed by
+   `aggregate_seed_audits.py`. Keep this separate from training-seed evidence.
 
 ## Environment notes
 
@@ -102,3 +118,13 @@ V=../../.venv/bin/python          # repo venv (tinker SDK installed via uv)
   (`402|Error|Traceback|Unauthorized|Killed`). Tinker billing 402 surfaces
   as "The job is paused due to billing status" and the SDK retries forever —
   kill the job rather than letting it spin.
+
+## W&B logging policy (added 2026-07-11)
+
+Every result JSON in `results/` gets mirrored to W&B by the idempotent
+backfill: `platform_hybrid/experiments/tinker-runs/wandb_backfill.py`
+(projects: `zvf-experiments-next` for this suite, `modal-open-stack` for the
+Modal artifacts). **Re-run it after any new experiment completes** — existing
+run names are skipped, so it is safe to run repeatedly. Backfilled runs are
+tagged `backfill` and carry the source path; W&B created-at is backfill time,
+original timing lives in the attached JSON artifact.

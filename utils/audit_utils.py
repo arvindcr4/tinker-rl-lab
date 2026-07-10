@@ -6,7 +6,7 @@ from pathlib import Path
 class AuditContext:
     def __init__(self):
         self.ROOT = Path(__file__).resolve().parent.parent
-        self.FINAL_DIR = self.ROOT / "reports" / "final"
+        self.FINAL_DIR = self.ROOT / "platform_tinker" / "reports" / "final"
         
         self._cache = {}
         

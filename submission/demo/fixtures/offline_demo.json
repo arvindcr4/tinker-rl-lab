@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "title": "TinkerRL group-relative signal demo",
+  "scope_notice": "Synthetic didactic fixture. It demonstrates metric computation only and is not a training run, benchmark result, or performance claim.",
+  "groups": [
+    {
+      "id": "mixed-binary",
+      "label": "Mixed outcomes",
+      "interpretation": "Within-group reward contrast is available.",
+      "rewards": [0.0, 1.0, 0.0, 1.0]
+    },
+    {
+      "id": "all-incorrect",
+      "label": "All-incorrect toy group",
+      "interpretation": "All rewards are equal, so this group has no group-relative contrast.",
+      "rewards": [0.0, 0.0, 0.0, 0.0]
+    },
+    {
+      "id": "all-correct",
+      "label": "All-correct toy group",
+      "interpretation": "Saturation can also remove group-relative contrast.",
+      "rewards": [1.0, 1.0, 1.0, 1.0]
+    },
+    {
+      "id": "graded",
+      "label": "Graded outcomes",
+      "interpretation": "Continuous rewards can also provide within-group contrast.",
+      "rewards": [0.0, 0.25, 0.75, 1.0]
+    }
+  ],
+  "expected": {
+    "zvf": 0.5,
+    "gradient_utilization": 0.5,
+    "effective_groups": 2
+  },
+  "artifact_contract": {
+    "path_from_repo_root": "experiments/results/tinker_direct_eval.json",
+    "sha256": "c56b85e04f1a9a043e84d63101fa3be1eea4d37e9823eba6410be2a2481cd59d",
+    "model_label": "Qwen/Qwen3-8B",
+    "n_problems": 10,
+    "group_size": 8,
+    "overall_accuracy": 0.6875,
+    "overall_zvf": 0.3,
+    "scope_notice": "Recorded project artifact. The demo checks byte provenance and internal arithmetic only; it does not establish benchmark validity, causal improvement, or generalization."
+  },
+  "live_smoke_tasks": [
+    {
+      "id": "addition",
+      "prompt": "What is 17 + 25?",
+      "expected_answer": 42
+    },
+    {
+      "id": "multiplication",
+      "prompt": "What is 12 multiplied by 7?",
+      "expected_answer": 84
+    },
+    {
+      "id": "subtraction",
+      "prompt": "A box has 15 cards and 6 are removed. How many remain?",
+      "expected_answer": 9
+    }
+  ]
+}
+

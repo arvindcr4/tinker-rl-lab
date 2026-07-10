@@ -1,6 +1,6 @@
 {
-  "description": "Reproducible P8 integrity detector. Positive=surrogate (aero/areal/gift), negative=genuine (grpo). LogisticRegression, 5-fold stratified CV, out-of-fold AUROC.",
-  "data_dir": "/home/claude/tinker-rl-lab/experiments/results/n2_reward_tensor_resume",
+  "description": "Exploratory P8 method-trace classifier. Positive=surrogate (aero/areal/gift), negative=genuine (grpo). LogisticRegression, 5-fold stratified CV, out-of-fold AUROC.",
+  "data_dir": "experiments/results/n2_reward_tensor_resume",
   "methods": [
     "aero",
     "areal",

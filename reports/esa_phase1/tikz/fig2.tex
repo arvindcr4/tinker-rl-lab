@@ -10,5 +10,5 @@
 \draw[ar] (loss)--(opt); \draw[ar] (opt)--(refresh); \draw[ar] (refresh)-- (samp);
 \node[lbl, below=0.5mm of adv, text width=32mm, align=center] {$\sigma_r=0 \Rightarrow A_i=0$\\(zero-variance collapse)};
 \end{tikzpicture}
-\caption{The GRPO training loop as implemented on Tinker. When every completion in a group earns the same reward, $\sigma_r=0$, the advantage is identically zero, and the step contributes no gradient (the ZVF phenomenon quantified in P2).}
+\caption{The GRPO training loop as implemented on Tinker. When every completion in a group earns the same reward, $\sigma_r=0$, the advantage is identically zero, and the reward-derived surrogate term contributes no gradient; KL regularisation may still act (the ZVF phenomenon quantified in P2).}
 \end{figure}

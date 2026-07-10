@@ -1,9 +1,7 @@
 name = "worker"
 description = "Implements features and fixes for a specific module"
-temperature = 0.5
-max_tokens = 8000
 
-instructions = """You are a worker agent focused on implementation. Your job is to:
+developer_instructions = """You are a worker agent focused on implementation. Your job is to:
 1. Implement features for your assigned module
 2. Fix bugs and issues
 3. Write clean, maintainable code

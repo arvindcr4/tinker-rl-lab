@@ -1,4 +1,5 @@
 \begin{figure}[h]\centering
+\resizebox{0.98\linewidth}{!}{%
 \begin{tikzpicture}[node distance=7mm and 12mm]
 \node[io] (task) {Task\\\footnotesize GSM8K / HumanEval};
 \node[io, below=of task] (rew) {Verifiable\\reward};
@@ -17,5 +18,6 @@
 \node[lbl, above=1mm of harness] {one config};
 \node[lbl, above=1mm of tel] {logged to W\&B};
 \end{tikzpicture}
+}
 \caption{System architecture: one task/reward/decoding config drives any framework backend; uniform per-step telemetry feeds the eight studies P1--P8. Differences are attributable to the \emph{stack}, not the experiment.}
 \end{figure}

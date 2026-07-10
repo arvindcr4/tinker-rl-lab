@@ -14,6 +14,9 @@ The continuation adds a much larger post-capstone evidence base, including 206 r
 
 ## Semester 4 submission
 
+- [`../reports/esa_phase1/`](../reports/esa_phase1/) — canonical individual M.Tech
+  Project Phase-1 report source, build instructions, defense deck pointer, and demo
+  runbook for UE20CS971.
 - [`submissions/neurips-workshop/`](submissions/neurips-workshop/) — the NeurIPS workshop submission, including a freshly compiled anonymous PDF and its build/provenance notes.
 
 The NeurIPS main-track submission is not part of this semester; it is preserved under [`../sem 3 work/submissions/neurips-main-track/`](../sem%203%20work/submissions/neurips-main-track/).

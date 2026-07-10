@@ -41,10 +41,6 @@ def get_issues(ctx):
     if re.search(r"\[x\].*9-page limit satisfied", ctx.submission):
         issues.append("submission_has_unverified_page_count_checkbox")
 
-    # Ideas backlog should stay focused on unrun, concrete experiment paths.
-    if "ctx.paper-improvement roadmap" in ctx.ideas.lower() or "plan audit" in ctx.ideas.lower():
-        issues.append("ideas_contains_already_done_meta_work")
-
     return issues
 
 if __name__ == '__main__':

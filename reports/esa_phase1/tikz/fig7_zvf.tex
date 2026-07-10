@@ -1,21 +1,21 @@
 \begin{figure}[h]\centering
 \begin{tikzpicture}[x=34mm,y=15mm,every node/.style={font=\footnotesize}]
 \foreach \p/\x/\y/\name/\col/\st in {
- P1/0/1/{scaling / layer-freeze}/warn/{null: overlap 1.0$\to$0.11},
+ P1/0/1/{scaling / layer-freeze}/warn/{null: overlap 1.0$\to$0.083},
  P2/1/1/{ZVF collapse}/warn/{measured: 72--77\%},
  P3/2/1/{group size}/warn/{null: no sweet spot},
  P4/3/1/{length bias}/blue/{designed},
  P5/0/0/{provenance (flagship)}/good/{built: verifier A/F},
  P6/1/0/{GRPO-registry}/blue/{fold into P5},
  P7/2/0/{ZVF controller}/blue/{designed},
- P8/3/0/{integrity}/good/{positive: AUROC 0.84}} {
+ P8/3/0/{method traces}/good/{PoC: row-CV 0.84}} {
   \node[blk, fill=\col!12, minimum width=30mm, minimum height=11mm] at (\x,\y)
     {\textbf{\p}: \name\\[1pt]\scriptsize \st};
 }
 \end{tikzpicture}
-\caption{The eight-study portfolio and honest status. The strongest \emph{surviving}
-results are P8 (telemetry-based integrity auditing, positive) and P5 (verifiable
-provenance, built); the earlier P1 layer-freeze bet is weakened (step-1
-predictability holds at 1.5B but collapses to chance at 3B). Green = positive/built,
+\caption{The eight-study portfolio and honest status. P8 is an exploratory
+method-trace classification proof of concept and P5 is a built provenance prototype;
+the earlier P1 layer-freeze bet is weakened (step-1 predictability holds at 1.5B but
+collapses to chance at 3B). Green = proof-of-concept/built,
 amber = measured/null, blue = designed.}
 \end{figure}

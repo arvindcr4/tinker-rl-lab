@@ -12,5 +12,5 @@
 \draw[good,thick,dashed] (axis cs:-1,9.7)--(axis cs:28,9.7) node[right,font=\scriptsize,good!60!black]{mean};
 \end{axis}
 \end{tikzpicture}
-\caption{P1 white-box (Colab L4, real data). Layer 0 dominates adaptation; a secondary mid--late band (layers 17--23) is active. Top 25\% of layers carry 47.6\% of gradient (moderate concentration --- which \emph{holds} at 3B, 0.39). At this toy scale the step-1 top-$k$ matched the final top-$k$ (overlap $=1.0$), but a scaled 3B/2-seed re-test drops this to $0.11$ (${\approx}$chance): predictability does \emph{not} survive scaling.}
+\caption{P1 white-box (Colab L4, real data). Layer 0 dominates adaptation; a secondary mid--late band (layers 17--23) is active. Top 25\% of layers carry 47.6\% of gradient (moderate concentration --- which \emph{holds} at 3B, 0.39). At this toy scale the step-1 top-$k$ matched the final top-$k$ (overlap $=1.0$), but a scaled 3B/four-seed re-test drops the mean to $0.083\pm0.048$ (${\approx}$chance): predictability does \emph{not} survive scaling.}
 \end{figure}

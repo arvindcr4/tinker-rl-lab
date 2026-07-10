@@ -6,17 +6,19 @@
   \fill[\c!70] (\x,0) rectangle (\x+0.8,1.6);
   \node[white,font=\scriptsize] at (\x+0.4,0.8) {\v};
 }
-\node at (1.5,3.2) {\footnotesize group A};
-\node at (7,3.2) {\footnotesize group B};
-\node at (12.5,3.2) {\footnotesize group C};
+\node at (1.5,2.8) {\footnotesize group A};
+\node at (7,2.8) {\footnotesize group B};
+\node at (12.5,2.8) {\footnotesize group C};
 \node[font=\footnotesize] at (1.5,-0.9) {all-correct};
 \node[font=\footnotesize] at (7,-0.9) {all-wrong};
 \node[font=\footnotesize] at (12.5,-0.9) {mixed};
-\node[font=\footnotesize] at (2,-2.2) {$A_i=0$ (no grad)};
-\node[font=\footnotesize] at (7.5,-2.2) {$A_i=0$ (no grad)};
-\node[font=\footnotesize,good!60!black] at (13,-2.2) {$A_i\neq 0$ (learns)};
+\node[font=\footnotesize] at (2,-2.2) {$A_i=0$ (zero adv.)};
+\node[font=\footnotesize] at (7.5,-2.2) {$A_i=0$ (zero adv.)};
+\node[font=\footnotesize,good!60!black] at (13,-2.2) {$A_i\neq 0$ (reward signal)};
 \draw[decorate,decoration={brace,amplitude=4pt},thick] (-0.2,2.0)--(8.8,2.0);
-\node[font=\small] at (4.3,2.9) {$\approx$ 65--71\% all-correct + $\sim$5\% all-wrong $=$ 72--77\% wasted (ZVF)};
+\node[font=\scriptsize,text width=90mm,align=center] at (4.3,4.2)
+  {$\approx$ 65--71\% all-correct + $\sim$5\% all-wrong\\
+   $=$ 72--77\% zero-advantage groups (ZVF)};
 \end{tikzpicture}
-\caption{Zero-Variance Fraction (P2). Binary reward makes most groups collapse to all-correct (already-solved easy prompts) or all-wrong; only mixed groups carry gradient. Measured ZVF: 0.72--0.77 across four methods.}
+\caption{Zero-Variance Fraction (P2). Binary reward makes most groups collapse to all-correct (already-solved easy prompts) or all-wrong; only mixed groups carry reward-relative advantage signal. Measured ZVF: 0.72--0.77 across four seed-0 method traces on a shared prompt schedule.}
 \end{figure}

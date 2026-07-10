@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-P8 integrity detector -- REPRODUCIBLE version.
+P8 method-trace classifier -- reproducible exploratory version.
 
 Goal: replace the prose-only claim ("full-telemetry AUROC 0.63 vs reward-only 0.35")
 with a runnable script that reads the real per-step reward tensors and reports the
@@ -39,7 +39,7 @@ single step's reward tensor:
 
 import json
 import glob
-import os
+from pathlib import Path
 
 import numpy as np
 from sklearn.linear_model import LogisticRegression
@@ -49,9 +49,9 @@ from sklearn.impute import SimpleImputer
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.metrics import roc_auc_score
 
-ROOT = "/home/claude/tinker-rl-lab"
-DATA_DIR = os.path.join(ROOT, "experiments/results/n2_reward_tensor_resume")
-OUT_PATH = os.path.join(ROOT, "experiments/results/p8_openings/detector_reproduced.json")
+ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = ROOT / "experiments/results/n2_reward_tensor_resume"
+OUT_PATH = ROOT / "experiments/results/p8_openings/detector_reproduced.json"
 
 SURROGATE = {"aero", "areal", "gift"}
 GENUINE = {"grpo"}
@@ -75,7 +75,7 @@ FULL_FEATURES = REWARD_ONLY_FEATURES + [
 def load_steps():
     """Return list of per-step dicts with recomputed features + label."""
     rows = []
-    for path in sorted(glob.glob(os.path.join(DATA_DIR, "*_tensors.jsonl"))):
+    for path in sorted(glob.glob(str(DATA_DIR / "*_tensors.jsonl"))):
         method_steps = []
         with open(path) as fh:
             for line in fh:
@@ -200,10 +200,10 @@ def main():
     rew_seeds = [cv_auroc(X_rew, y, s)[0] for s in seeds]
 
     out = {
-        "description": "Reproducible P8 integrity detector. Positive=surrogate "
+        "description": "Exploratory P8 method-trace classifier. Positive=surrogate "
                        "(aero/areal/gift), negative=genuine (grpo). LogisticRegression, "
                        "5-fold stratified CV, out-of-fold AUROC.",
-        "data_dir": DATA_DIR,
+        "data_dir": str(DATA_DIR.relative_to(ROOT)),
         "methods": methods,
         "n_rows": len(rows),
         "n_positive_surrogate": n_pos,
@@ -226,8 +226,8 @@ def main():
         "pipeline": "SimpleImputer(median) -> StandardScaler -> LogisticRegression",
     }
 
-    os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
-    with open(OUT_PATH, "w") as fh:
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with OUT_PATH.open("w") as fh:
         json.dump(out, fh, indent=2)
 
     print(f"rows={len(rows)}  pos(surrogate)={n_pos}  neg(genuine)={n_neg}  methods={methods}")

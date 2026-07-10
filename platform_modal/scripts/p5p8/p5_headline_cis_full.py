@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P5 headline CIs (iter 16, JOB B) — drives ledger item 02 to validated.
 
-The existing scripts/p5p8/p5_headline_cis.py (iter 1, ledger item 02) covers
+The existing platform_modal/scripts/p5p8/p5_headline_cis.py (iter 1, ledger item 02) covers
 H1 (ZVF monotone in G), H2 (heldout flatness), H3 (G32-G4 delta). It uses
 Gaussian-approx per-seed draws for H1/H2 (n=3 seeds per arm). This iter
 extends item 02 with two new headline claims that need real bootstrap CIs

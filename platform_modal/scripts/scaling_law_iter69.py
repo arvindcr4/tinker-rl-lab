@@ -677,7 +677,7 @@ are summarised in \tableref{tab:iter69-arch}.
   \caption{\textbf{Per-architecture serial-correlation fingerprint.}
     MoE models have """ + ("higher" if arch_rows[1]["alpha_med"] > arch_rows[0]["alpha_med"] else "lower") + r"""
     spectral slopes on average than dense models.
-    \texttt{scripts/scaling\_law\_iter69.py} $\to$
+    \texttt{platform_modal/scripts/scaling\_law\_iter69.py} $\to$
     \texttt{scaling\_law\_iter69\_arch.tsv}.}
   \label{tab:iter69-arch}
 \end{table}

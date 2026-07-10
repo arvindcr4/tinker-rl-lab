@@ -7,7 +7,7 @@ much the STACK axes explain (G / temperature / task_slice / model / seed, mega
 corpus). Shared outcome channels measured on both corpora: zvf, reward, length.
 
 Reuses the Berkeley Ivison-et-al. factorization recipe
-(scripts/berkeley/unpacking_dpo_ppo_factorization.py: axis_variance_fraction),
+(platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.py: axis_variance_fraction),
 adds unbiased omega^2 and stratified bootstrap CIs on every eta^2.
 
 Fresh vs iter-189 (which only computed stack-axis eta^2 on mega): iter-193 adds

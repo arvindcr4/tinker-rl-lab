@@ -57,7 +57,7 @@ OUTPUTS (5 TSV + meta) under experiments/results/length_bias_iter128_*
   length_bias_iter128_summary.tsv                 one-line headline per test
   length_bias_iter128_meta.json                   run metadata
 
-USAGE  : python3 scripts/length_bias_iter128.py [--B_perm 50000]
+USAGE  : python3 platform_modal/scripts/length_bias_iter128.py [--B_perm 50000]
 """
 from __future__ import annotations
 

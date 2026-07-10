@@ -29,7 +29,7 @@ Method (stdlib only):
   - emit machine-readable artefact set
 
 Usage:
-  python scripts/p5p8/p5_iter105_live_field_coverage.py
+  python platform_modal/scripts/p5p8/p5_iter105_live_field_coverage.py
 """
 from __future__ import annotations
 

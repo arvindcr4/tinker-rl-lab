@@ -320,7 +320,7 @@ def main():
             e["outcomes"]["delta_vs_grpo_sig"] = d["sig"]
         e["outcomes"]["measured_block_audit_iter90"] = {
             "audit_date": "2026-07-05",
-            "audit_source": "scripts/p5p8/p6_iter90_zvf130_measured_vs_claimed.py",
+            "audit_source": "platform_modal/scripts/p5p8/p6_iter90_zvf130_measured_vs_claimed.py",
             "audit_iter": 90,
             "B": B,
             "seed": SEED,
@@ -328,7 +328,7 @@ def main():
         # also bump coverage: min_report_coverage stays; add measured_coverage refresh
         e["outcomes"]["coverage"]["measured_coverage"] = 1.0
         e["outcomes"]["coverage"]["ci_method_present"] = True
-        e["outcomes"]["coverage"]["audit_source"] = "scripts/p5p8/p6_iter90_zvf130_measured_vs_claimed.py"
+        e["outcomes"]["coverage"]["audit_source"] = "platform_modal/scripts/p5p8/p6_iter90_zvf130_measured_vs_claimed.py"
         e["outcomes"]["coverage"]["audit_date"] = "2026-07-05"
         with (REG / f"{key}.json").open("w") as f:
             json.dump(e, f, indent=2)

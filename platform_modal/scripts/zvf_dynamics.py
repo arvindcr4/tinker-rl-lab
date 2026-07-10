@@ -230,7 +230,7 @@ def _write_tsv(path, rows):
         writer.writeheader()
         for r in rows:
             writer.writerow(r)
-        f.write("# Pillar 2 ZVF dynamics — iter14. Source: scripts/zvf_dynamics.py\n")
+        f.write("# Pillar 2 ZVF dynamics — iter14. Source: platform_modal/scripts/zvf_dynamics.py\n")
 
 
 def main():

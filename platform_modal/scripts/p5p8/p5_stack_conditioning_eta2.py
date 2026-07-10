@@ -8,7 +8,7 @@ Vein (from iter-45 brief): quantify stack-conditioning with the N2
 four-method same-stack tensors and the berkeley unpacking_dpo_ppo
 factorization (algorithm-axis eta^2 vs stack axes).
 
-Method (mirrors scripts/berkeley/unpacking_dpo_ppo_factorization.py):
+Method (mirrors platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.py):
 
   1. Reshape the four (grpo, aero, gift, areal) N2 reward-tensor panels
      into a long-frame 5120 rows = 4 methods * 40 steps * 16 prompts *

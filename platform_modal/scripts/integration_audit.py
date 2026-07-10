@@ -418,7 +418,7 @@ def check_authors() -> dict:
 
     # capstone report
     md = _read(CAPSTONE_MD)
-    sources["reports/final/capstone_final_report.md"] = [a for a in CANONICAL_AUTHORS if _norm_name(a) in _norm_name(md)]
+    sources["platform_tinker/reports/final/capstone_final_report.md"] = [a for a in CANONICAL_AUTHORS if _norm_name(a) in _norm_name(md)]
 
     # README
     rm = _read(README_MD)

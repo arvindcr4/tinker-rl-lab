@@ -311,7 +311,7 @@ def main() -> int:
     # load the existing length_bias.tsv for per-algo summary numbers
     base = RES / "length_bias.tsv"
     if not base.exists():
-        print(f"ERROR: {base} not found; run scripts/length_bias.py first.", file=sys.stderr)
+        print(f"ERROR: {base} not found; run platform_modal/scripts/length_bias.py first.", file=sys.stderr)
         return 1
     base_rows: list[dict] = []
     with base.open() as f:

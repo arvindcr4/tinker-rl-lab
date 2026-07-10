@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Iter118 -- first-class ZVF diagnostic vs AERO.
 
-Builds three additions on top of scripts/zvf_diagnostic.py:
+Builds three additions on top of platform_modal/scripts/zvf_diagnostic.py:
 
 1. zvf_iter118_auroc.tsv
    AUROC (with 95% bootstrap CI, B=2000) of mean_zvf vs terminal
    failure binary, computed on the pooled (experiment, model,
    group_size) cells.  Two targets: (a) is_collapse (cleanest),
-   (b) is_collapse_or_drift (matches scripts/zvf_diagnostic).
+   (b) is_collapse_or_drift (matches platform_modal/scripts/zvf_diagnostic).
 
 2. zvf_iter118_aero_grpo_gap.tsv
    Effect-size gap (AERO - GRPO) on mean_zvf and on
@@ -195,14 +195,14 @@ def write_auroc(pooled: List[Dict[str, Any]], out_path: Path) -> Dict[str, Any]:
             "# AUROC of mean_zvf vs binary failure targets:\n"
             "#   is_collapse            positive class = collapse only\n"
             "#   is_collapse_or_drift   positive class = collapse or drift\n"
-            "# Targets both reference scripts/zvf_diagnostic.py:zd.classify.\n"
+            "# Targets both reference platform_modal/scripts/zvf_diagnostic.py:zd.classify.\n"
             "# Bootstrap CIs: B=2000 percentile resamples over per-cell pooled\n"
             "# rows (NOT per-step rows, which are autocorrelated).\n"
             "# AUROC > 0.5 = higher ZVF is more failure-like.\n"
             "# The pooled 'all' AUROC collapses both bimodal failure modes\n"
             "# (drift at LOW ZVF, collapse at HIGH ZVF) into a single number,\n"
             "# so it sits near 0.5; the per-stratum CIs expose the bimodality.\n"
-            "# Source: scripts/zvf_iter118_diagnostic.py\n"
+            "# Source: platform_modal/scripts/zvf_iter118_diagnostic.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
@@ -350,7 +350,7 @@ def write_aero_grpo_gap(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str,
             "# AERO has LOWER mean ZVF than GRPO (better contrast).\n"
             "# gap_failure is the gap in fraction-of-(seed)-cells labelled\n"
             "# collapse-or-drift; gap_last10 is the gap in mean last-10 accuracy.\n"
-            "# Source: scripts/zvf_iter118_diagnostic.py\n"
+            "# Source: platform_modal/scripts/zvf_iter118_diagnostic.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
@@ -451,7 +451,7 @@ def write_calibration(pooled: List[Dict[str, Any]], out_path: Path) -> Dict[str,
             "# fraction of cells in the bin labelled collapse or drift per\n"
             "# zvf_diagnostic.classify.  wilson_lo / wilson_hi are Wilson\n"
             "# 95% CIs on the bin failure rate.\n"
-            "# Source: scripts/zvf_iter118_diagnostic.py\n"
+            "# Source: platform_modal/scripts/zvf_iter118_diagnostic.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(

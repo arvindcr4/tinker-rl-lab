@@ -72,7 +72,7 @@ def load_n2():
 
 
 def paired_bootstrap_pct(dv, dg, n_boot=N_BOOT, seed=BOOT_SEED):
-    """Exact replica of scripts/p5p8/p6_measured_delta_block.py::paired_boot.
+    """Exact replica of platform_modal/scripts/p5p8/p6_measured_delta_block.py::paired_boot.
 
     Returns (delta, lo, hi, n). Uses resampled-mean percentile at indices
     [int(0.025*n_boot), int(0.975*n_boot)-1].

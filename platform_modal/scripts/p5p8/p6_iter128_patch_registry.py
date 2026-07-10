@@ -66,7 +66,7 @@ def main():
                     "n_boot": 2000,
                     "seed": 20260705,
                     "ci_level": 0.95,
-                    "source": "scripts/p5p8/p6_iter128_recompute_point_only.py"
+                    "source": "platform_modal/scripts/p5p8/p6_iter128_recompute_point_only.py"
                 }
                 row["iter_recomputed"] = 128
                 if old_method_name == "point_no_perseed_sd":

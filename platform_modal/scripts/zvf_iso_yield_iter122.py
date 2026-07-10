@@ -258,7 +258,7 @@ def write_iso_yield(out_path: Path) -> Dict[str, Any]:
             "# G in {2, 4, 8, 16}. Extrapolated rows flag slope-limited\n"
             "# extrapolations beyond G=16; interpolated rows flag between-point\n"
             "# linear interpolation; reachable rows flag tau met at G=2.\n"
-            "# Source: scripts/zvf_iso_yield_iter122.py\n"
+            "# Source: platform_modal/scripts/zvf_iso_yield_iter122.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
@@ -434,7 +434,7 @@ def write_aero_quantile(out_path: Path) -> Dict[str, Any]:
             "#   bin_*     -- quantile-bin stratification; reports bin label,\n"
             "#                 n_pairs in bin, mean gap (NOT bootstrap CI\n"
             "#                 because n_pairs<=5 makes CI degenerately tight)\n"
-            "# Source: scripts/zvf_iso_yield_iter122.py\n"
+            "# Source: platform_modal/scripts/zvf_iso_yield_iter122.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
@@ -548,7 +548,7 @@ def write_op_sweep(out_path: Path, pooled: List[Dict[str, Any]]) -> Dict[str, An
             "# class = collapse) or is_collapse_or_drift (positive class =\n"
             "# collapse or drift). The single-AUROC figure in iter 118 averaged\n"
             "# the bimodal failure-mode; the PR sweep makes both modes\n"
-            "# separately visible. Source: scripts/zvf_iso_yield_iter122.py\n"
+            "# separately visible. Source: platform_modal/scripts/zvf_iso_yield_iter122.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(

@@ -359,8 +359,8 @@ def main():
 
     pdf.text(36, 235, "Source: experiments/results/{zvf_iter50_lagged_corr, zvf_iter50_phase_integrals, zvf_iter50_summary, zvf_iter50_predictions}.tsv",
              size=8, color=(0.4, 0.4, 0.4))
-    pdf.text(36, 222, "Driver: scripts/zvf_iter50.py and scripts/zvf_iter50_fig.py", size=8, color=(0.4, 0.4, 0.4))
-    pdf.text(36, 209, "Script: stdlib only; B=2000 percentile bootstrap CIs (seed 20240702); PEER OF scripts/zvf_diagnostic.py.",
+    pdf.text(36, 222, "Driver: platform_modal/scripts/zvf_iter50.py and platform_modal/scripts/zvf_iter50_fig.py", size=8, color=(0.4, 0.4, 0.4))
+    pdf.text(36, 209, "Script: stdlib only; B=2000 percentile bootstrap CIs (seed 20240702); PEER OF platform_modal/scripts/zvf_diagnostic.py.",
              size=8, color=(0.4, 0.4, 0.4))
 
     pdf.save(OUT_PDF)

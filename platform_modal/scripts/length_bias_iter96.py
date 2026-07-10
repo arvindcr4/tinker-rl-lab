@@ -57,7 +57,7 @@ experiments/results/length_bias_iter96_meta.json    (run configuration)
 
 USAGE
 -----
-python3 scripts/length_bias_iter96.py [--K 3] [--B 2000]
+python3 platform_modal/scripts/length_bias_iter96.py [--K 3] [--B 2000]
 """
 from __future__ import annotations
 

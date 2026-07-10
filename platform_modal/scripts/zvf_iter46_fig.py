@@ -231,7 +231,7 @@ def make_pdf():
     # Caption
     cap = ("(A) Iso-yield curves. (B) Per-prompt rollout savings at Y=0.80, "
            "p_x in (0.05, 0.95). (C) Yield uplift at fixed rollout budget. "
-           "Sources: scripts/zvf_iter46_isog.py + scripts/zvf_iter46_fig.py.")
+           "Sources: platform_modal/scripts/zvf_iter46_isog.py + platform_modal/scripts/zvf_iter46_fig.py.")
     body.append(text(margin, 25, cap, size=8))
 
     # Wrap in PDF

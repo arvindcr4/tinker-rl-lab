@@ -5,7 +5,7 @@
 # Runs an experiment command with multiple seeds for statistical validity.
 #
 # Usage:
-#   ./scripts/run_seeds.sh "python experiment.py" [seed1 seed2 ...]
+#   ./platform_modal/scripts/run_seeds.sh "python experiment.py" [seed1 seed2 ...]
 #
 # Default seeds: 42 123 456 789 1024
 # =============================================================================

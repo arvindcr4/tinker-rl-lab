@@ -14,7 +14,7 @@ Outputs (all under experiments/results/p5p8/):
   p6_iter202_unmined_cell_priority.tsv     — priority score per unpopulated cell
   p6_iter202_summary.json                  — aggregate rollup
 
-Stdlib only. Run: python3 scripts/p5p8/p6_iter202_framework_method_coverage.py
+Stdlib only. Run: python3 platform_modal/scripts/p5p8/p6_iter202_framework_method_coverage.py
 """
 import csv
 import json

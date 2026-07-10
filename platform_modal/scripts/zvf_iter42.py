@@ -399,7 +399,7 @@ def main() -> int:
         f.write("#   burden_05 = auc_above_zvf05, etc.) + late outcome label.\n")
         f.write("# kNN-LOO with k=3 over z-scored features predicting {collapse,\n")
         f.write("#   plateau, drift, converged}. Same taxonomy as iter 38.\n")
-        f.write("# Source: scripts/zvf_iter42.py\n")
+        f.write("# Source: platform_modal/scripts/zvf_iter42.py\n")
         cols = ["kind", "method", "seed", "group_size", "n_steps",
                 "fp05_frac", "fp07_frac", "fp09_frac",
                 "early_bloom05", "early_bloom07", "early_bloom09",
@@ -544,7 +544,7 @@ def main() -> int:
         f.write("# Iter 42 Pillar 2 per-(kind, method) early-bloom failure audit.\n")
         f.write("# early_bloom05 = ZVF first crosses 0.5 in first half of trace.\n")
         f.write("# early_bloom09 = ZVF first crosses 0.9 in first half of trace.\n")
-        f.write("# Source: scripts/zvf_iter42.py\n")
+        f.write("# Source: platform_modal/scripts/zvf_iter42.py\n")
         f.write("kind\tmethod\tn\tn_collapse\tcollapse_rate\t"
                 "n_bloom05\tn_bloom05_collapse\tbloom05_collapse_rate\t"
                 "n_bloom09\tn_bloom09_collapse\tbloom09_collapse_rate\t"
@@ -567,7 +567,7 @@ def main() -> int:
     out_summary = RESULTS / "zvf_iter42_summary.tsv"
     with out_summary.open("w") as f:
         f.write("# Iter 42 Pillar 2 one-rollup summary.\n")
-        f.write("# Source: scripts/zvf_iter42.py\n")
+        f.write("# Source: platform_modal/scripts/zvf_iter42.py\n")
         f.write("metric\tvalue\tdetail\n")
         f.write(f"n_runs\t{n_total}\t60-row zvf_dynamics.json pool\n")
         f.write(f"n_classes\t2\tobserved in pool: plateau=45, converged=15\n")

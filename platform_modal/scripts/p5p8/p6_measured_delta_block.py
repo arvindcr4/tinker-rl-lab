@@ -85,7 +85,7 @@ def n2_measured():
                 "n": n, "significant": (lo > 0) or (hi < 0),
                 "ci_method": {"method": "paired_step_bootstrap_pct", "n_boot": N_BOOT,
                               "seed": SEED, "ci_level": 0.95,
-                              "source": "scripts/p5p8/p6_measured_delta_block.py"},
+                              "source": "platform_modal/scripts/p5p8/p6_measured_delta_block.py"},
                 "source": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
                 "note": f"last {LAST_K} of 40 steps, G=8, seed 0, same stack",
             })
@@ -116,7 +116,7 @@ def z130_measured():
             "delta": round(d, 6), "ci_low": round(lo, 6), "ci_high": round(hi, 6),
             "n": vn, "significant": (lo > 0) or (hi < 0),
             "ci_method": {"method": "normal_approx_welch", "n_boot": None, "seed": None,
-                          "ci_level": 0.95, "source": "scripts/p5p8/p6_measured_delta_block.py"},
+                          "ci_level": 0.95, "source": "platform_modal/scripts/p5p8/p6_measured_delta_block.py"},
             "source": "experiments/results/zvf_iter130_method_risk.tsv",
             "note": f"5-seed risk index; delta vs grpo (grpo risk={gm_risk:.4f})",
         })
@@ -127,7 +127,7 @@ def z130_measured():
             "delta": round(dmag, 6), "ci_low": round(dmag, 6), "ci_high": round(dmag, 6),
             "n": vn, "significant": False,
             "ci_method": {"method": "point_no_perseed_sd", "n_boot": None, "seed": None,
-                          "ci_level": None, "source": "scripts/p5p8/p6_measured_delta_block.py"},
+                          "ci_level": None, "source": "platform_modal/scripts/p5p8/p6_measured_delta_block.py"},
             "source": "experiments/results/zvf_iter130_method_risk.tsv",
             "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)",
         })

@@ -8,7 +8,7 @@ Outputs:
   experiments/results/p5p8/p6_iter202_hypotheses.tsv
   experiments/results/p5p8/p6_iter202_hypotheses.json
 
-Stdlib only. Run: python3 scripts/p5p8/p6_iter202_hypothesis_test.py
+Stdlib only. Run: python3 platform_modal/scripts/p5p8/p6_iter202_hypothesis_test.py
 """
 import csv
 import json

@@ -277,7 +277,7 @@ def main():
             "iter":   186,
             "pillar": "P6",
             "veins":  ["(b) coverage audit", "(c) schema validation"],
-            "source": "scripts/p5p8/p6_iter186_coverage_audit.py",
+            "source": "platform_modal/scripts/p5p8/p6_iter186_coverage_audit.py",
             "seed":   20260706,
         },
     }

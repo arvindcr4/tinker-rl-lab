@@ -468,7 +468,7 @@ def main() -> int:
             "# Iter 30 Pillar 2: ZVF as a leading indicator.\n"
             "# Leave-one-(method, seed)-trajectory-out CV with a univariate\n"
             "# logistic regression on a single ZVF feature.\n"
-            "# y_K{K} = 1[collapse occurs in (t, t+K]]. Source: scripts/zvf_iter30_earliness.py\n"
+            "# y_K{K} = 1[collapse occurs in (t, t+K]]. Source: platform_modal/scripts/zvf_iter30_earliness.py\n"
             "horizon_K\tfeature\tn_rows\tbase_rate\troc_auc\tpr_auc\tbrier\tece\n"
         )
         for r in lead_rows:

@@ -37,7 +37,7 @@ Produces four new TSVs and one new figure, all derived from
       "G=2 ~ G=16" horizontal band.
 
 Driver: this script is a strict add-on to
-scripts/group_size_analysis.py. It does not modify the existing
+platform_modal/scripts/group_size_analysis.py. It does not modify the existing
 artifacts (group_size_effect.tsv, group_size_effect_theory.tsv,
 group_size_effect_dpo_check.tsv, group_size_g4_vs_g32_broader_scale.tsv,
 group_size.pdf, group_size_extended.pdf).

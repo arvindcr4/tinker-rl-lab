@@ -8,7 +8,7 @@ factorization (algorithm-axis eta^2 vs stack axes)" + "bootstrap CIs
 on every P5 headline number".
 
 Reuses the `axis_variance_fraction` helper from
-scripts/berkeley/unpacking_dpo_ppo_factorization.py verbatim. Extends
+platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.py verbatim. Extends
 the iter 85 row 101 point estimates with bootstrap step-resampled 95%
 CIs and a leave-one-method-out (LOMO) stability audit on the same N2
 panel (40 steps × 4 methods × 1 seed = 160 rows on Qwen2.5-0.5B-MATH).

@@ -633,28 +633,28 @@ def main():
     _write_tsv(RES / "zvf_iter102_calibration.tsv", cal_rows,
                header_comment="zvf_iter102_calibration.tsv - per-(library,experiment) calibration gap\n"
                               "Delta = ZVF_emp - (p^G+(1-p)^G), i.e. herding/anti-herding residual over the i.i.d. null.\n"
-                              "Source: scripts/zvf_iter102.py")
+                              "Source: platform_modal/scripts/zvf_iter102.py")
     _write_tsv(RES / "zvf_iter102_per_library.tsv", per_lib,
                header_comment="zvf_iter102_per_library.tsv - aggregated calibration gap per library\n"
-                              "with 95% bootstrap CIs. Source: scripts/zvf_iter102.py")
+                              "with 95% bootstrap CIs. Source: platform_modal/scripts/zvf_iter102.py")
     _write_tsv(RES / "zvf_iter102_aero_test.tsv", aero_per_lib,
                header_comment="zvf_iter102_aero_test.tsv - per-method mean ZVF, predicted ZVF_iid,\n"
                               "and calibration gap on variance_mitigation runs (G=8 assumed).\n"
-                              "Last row is the paired AERO-vs-GRPO summary. Source: scripts/zvf_iter102.py")
+                              "Last row is the paired AERO-vs-GRPO summary. Source: platform_modal/scripts/zvf_iter102.py")
     _write_tsv(RES / "zvf_iter102_aero_paired.tsv", aero_paired_detail,
                header_comment="zvf_iter102_aero_paired.tsv - per-seed AERO vs GRPO paired calibration delta\n"
-                              "from variance_mitigation.tsv. Source: scripts/zvf_iter102.py")
+                              "from variance_mitigation.tsv. Source: platform_modal/scripts/zvf_iter102.py")
     _write_tsv(RES / "zvf_iter102_failure_corr.tsv", cal_corr,
                header_comment="zvf_iter102_failure_corr.tsv - correlation of calibration gap (and raw ZVF)\n"
                               "with is_collapse across all cross-library rows. B=2000 bootstrap CIs.\n"
-                              "Source: scripts/zvf_iter102.py")
+                              "Source: platform_modal/scripts/zvf_iter102.py")
 
     # Re-emit zvf_summary.tsv
     new_summary = reemit_summary(per_lib, cal_corr, aero_per_lib, summary)
     with (RES / "zvf_summary.tsv").open("w") as f:
         f.write("# zvf_summary.tsv - Pillar 2 headline dashboard (iter102: +calibration columns).\n")
         f.write("# iter94 base columns + iter98 rho + iter102 delta_calibration, rho_overdispersion,\n"
-                "# delta_vs_collapse correlations and AERO-vs-GRPO paired summary. Source: scripts/zvf_iter102.py\n")
+                "# delta_vs_collapse correlations and AERO-vs-GRPO paired summary. Source: platform_modal/scripts/zvf_iter102.py\n")
         cols = list(new_summary[0].keys())
         f.write("\t".join(cols) + "\n")
         for r in new_summary:

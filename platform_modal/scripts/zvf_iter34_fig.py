@@ -17,7 +17,7 @@ Output:
     figures/zvf_iter34.pdf
     figures/zvf_iter34.png
 
-Source: scripts/zvf_iter34_fig.py
+Source: platform_modal/scripts/zvf_iter34_fig.py
 """
 
 from __future__ import annotations

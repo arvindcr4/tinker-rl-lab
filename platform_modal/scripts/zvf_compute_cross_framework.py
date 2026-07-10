@@ -24,11 +24,11 @@ Emits a time-series JSONL (one line per optimizer step) of
 Usage
 -----
 
-    python3 scripts/zvf_compute_cross_framework.py \
+    python3 platform_modal/scripts/zvf_compute_cross_framework.py \
         --framework {trl,tinker,openrlhf,verl} \
         --log-path PATH [--epsilon 1e-6] [--out PATH]
 
-    python3 scripts/zvf_compute_cross_framework.py --self-test
+    python3 platform_modal/scripts/zvf_compute_cross_framework.py --self-test
 
 Graceful degradation: unknown/missing keys print a schema-expected-vs-found
 diff on stderr and the step is skipped (not fatal).

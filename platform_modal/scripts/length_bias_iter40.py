@@ -40,7 +40,7 @@ Outputs:
   experiments/results/length_bias_iter40_findings.tsv         (2 rows aggregate)
 
 Usage:
-  python scripts/length_bias_iter40.py
+  python platform_modal/scripts/length_bias_iter40.py
 """
 from __future__ import annotations
 

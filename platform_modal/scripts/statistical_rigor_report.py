@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scripts/statistical_rigor_report.py
+platform_modal/scripts/statistical_rigor_report.py
 
 Produces a rigor-classified report of all statistical comparisons in the
 paper, flagging which are well-powered (multi-seed, matched-init,
@@ -13,7 +13,7 @@ This directly addresses reviewer weaknesses W4, W5, Q1, Q5:
 
 Usage
 -----
-    python3 scripts/statistical_rigor_report.py
+    python3 platform_modal/scripts/statistical_rigor_report.py
 
 Output
 ------

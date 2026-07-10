@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pillar 2 Iter 74 figure -- 4-panel ZVF Markov-chain dynamics.
 
-Reads the TSV outputs of scripts/zvf_iter74.py and renders:
+Reads the TSV outputs of platform_modal/scripts/zvf_iter74.py and renders:
 
   Panel A: 3x3 transition matrix heatmap for vanilla GRPO (the unique
            stuck library) vs AERO (the canonical contrast-injecting

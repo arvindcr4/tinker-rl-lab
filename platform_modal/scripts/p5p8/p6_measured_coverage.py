@@ -84,7 +84,7 @@ def main():
             "seed": 20260704,
             "n_boot": 2000,
             "audit_date": _dt.date.today().isoformat(),
-            "source": "scripts/p5p8/p6_measured_coverage.py",
+            "source": "platform_modal/scripts/p5p8/p6_measured_coverage.py",
         },
     }
     for v in ("SUPPORTS", "CONTRADICTS", "NEUTRAL", "UNCLAIMED"):

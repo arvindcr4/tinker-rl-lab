@@ -77,7 +77,7 @@ V1_ITEMS = [
     "heldout_split",
     "decontamination_notes",
 ]
-# auditor weights, identical to scripts/p5p8/minreport_auditor.py
+# auditor weights, identical to platform_modal/scripts/p5p8/minreport_auditor.py
 V1_WEIGHTS = {
     "loss_form": 10,
     "ref_policy_kl": 10,

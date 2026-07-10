@@ -62,7 +62,7 @@ def classify(artifact: str):
         return ("WANDB", [])
 
     # Pure path?
-    if s.startswith(("experiments/", "paper/", "registry/", "scripts/", "docs/")):
+    if s.startswith(("experiments/", "paper/", "registry/", "platform_modal/scripts/", "docs/")):
         full = os.path.join(WORKTREE, s)
         return ("PATH_OK" if os.path.exists(full) else "PATH_MISSING", [s])
 

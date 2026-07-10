@@ -8,7 +8,7 @@ same-stack tensors and the berkeley unpacking_dpo_ppo factorization
 
 Reference: Ivison et al., 2024. Unpacking DPO and PPO: Disentangling Best
 Practices for Learning from Preference Feedback. NeurIPS 2024. arXiv:2406.09279.
-Reused machinery: scripts/berkeley/unpacking_dpo_ppo_factorization.py
+Reused machinery: platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.py
 (axis_variance_fraction + samestack_ppo_grpo path).
 
 Hypotheses on the N2 four-method panel (40 steps × 4 methods × 1 seed = 160 rows):

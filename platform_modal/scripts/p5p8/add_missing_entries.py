@@ -25,7 +25,7 @@ This script:
     if present, else a minimal manual checker),
   - emits a coverage audit table diffing before/after MIN-REPORT leaf counts.
 
-Stdlib only. Run: python3 scripts/p5p8/add_missing_entries.py --write
+Stdlib only. Run: python3 platform_modal/scripts/p5p8/add_missing_entries.py --write
 """
 import argparse
 import json

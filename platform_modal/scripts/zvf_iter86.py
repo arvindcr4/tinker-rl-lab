@@ -269,34 +269,34 @@ write_tsv(RES / "zvf_iter86_threshold_curve.tsv", sweep_rows,
            "total_cost", "compute_saved_steps", "compute_saved_frac"],
           ["Pillar 2 iter86 cost-vs-tau sweep (K=1, 45 variance-mitigation traces).",
            "total_cost = C_ratio * n_false_stop + n_missed_collapse.",
-           "Source: scripts/zvf_iter86.py"])
+           "Source: platform_modal/scripts/zvf_iter86.py"])
 
 write_tsv(RES / "zvf_iter86_optimal_tau.tsv", optimal_pool,
           ["scope", "C_ratio", "tau_optimal", "n_at_optimal",
            "total_cost_at_optimal", "n_false_at_optimal", "n_missed_at_optimal",
            "compute_saved_frac_at_optimal"],
           ["Pillar 2 iter86 optimal tau*(C_ratio) on the variance-mitigation pool.",
-           "Source: scripts/zvf_iter86.py"])
+           "Source: platform_modal/scripts/zvf_iter86.py"])
 
 write_tsv(RES / "zvf_iter86_k_persist_sensitivity.tsv", k_sens_rows,
           ["k_persist", "tau_optimal_at_C10", "n_false_stop_at_optimal",
            "n_missed_at_optimal", "n_correct_stop_at_optimal", "cost",
            "compute_saved_steps", "compute_saved_frac"],
           ["Pillar 2 iter86 sensitivity to consecutive-step persistence K.",
-           "Source: scripts/zvf_iter86.py"])
+           "Source: platform_modal/scripts/zvf_iter86.py"])
 
 write_tsv(RES / "zvf_iter86_compute_savings.tsv", savings_rows,
           ["source", "method", "seed", "class", "t_stop", "t_fail",
            "lead_time", "n_steps", "compute_saved"],
           [f"Pillar 2 iter86 per-trace counterfactual at K=5, tau=0.5.",
-           "Source: scripts/zvf_iter86.py"])
+           "Source: platform_modal/scripts/zvf_iter86.py"])
 
 write_tsv(RES / "zvf_iter86_oop_applied.tsv", oop_rows,
           ["source", "method", "seed", "class_iter78", "t_stop_iter78",
            "t_fail_iter78", "class_strict", "t_stop_strict", "t_fail_strict"],
           ["Pillar 2 iter86 OOP classification at K=5, tau=0.5.",
            "class_iter78 = iter78 is_failure. class_strict = held_mean_10<0.10.",
-           "Source: scripts/zvf_iter86.py"])
+           "Source: platform_modal/scripts/zvf_iter86.py"])
 
 n_pool_failed = sum(1 for k in POOL_KEYS if 1 in traces[k]["is_failure"])
 n_correct_stop = sum(1 for r in savings_rows if r["class"] == "correct_stop")
@@ -323,7 +323,7 @@ summary = {
 }
 with (RES / "zvf_iter86_summary.tsv").open("w") as fh:
     fh.write("# Pillar 2 iter86 decision-theoretic ZVF alarm calibration\n")
-    fh.write("# Source: scripts/zvf_iter86.py\n")
+    fh.write("# Source: platform_modal/scripts/zvf_iter86.py\n")
     fh.write("key\tvalue\n")
     for k, v in summary.items():
         fh.write(f"{k}\t{v}\n")

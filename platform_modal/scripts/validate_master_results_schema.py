@@ -6,7 +6,7 @@ This script checks that all rows in master_results.json conform to a canonical
 schema and reports any inconsistencies.
 
 Usage:
-    python3 scripts/validate_master_results_schema.py
+    python3 platform_modal/scripts/validate_master_results_schema.py
 """
 
 import json

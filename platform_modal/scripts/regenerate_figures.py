@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scripts/regenerate_figures.py
+platform_modal/scripts/regenerate_figures.py
 =============================
 
 Submission-quality figure regeneration for the Tinker-RL-Lab NeurIPS 2026
@@ -38,7 +38,7 @@ Outputs (written to ``paper/figures/v2/``)
 
 Usage
 -----
-    python scripts/regenerate_figures.py
+    python platform_modal/scripts/regenerate_figures.py
 
 The script is idempotent and deterministic; a seed is fixed for the small
 amount of jitter used on the scatter plots.

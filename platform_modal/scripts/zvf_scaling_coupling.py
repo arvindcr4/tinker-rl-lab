@@ -315,7 +315,7 @@ def write_tex(rows, tests):
         "% Iter18 Pillar 1 (scaling-law) x Pillar 2 (ZVF) cross-pillar coupling.\n"
         "% Tests whether the ZVF-style 'all-wrong fraction' (frac_below_0p1 and\n"
         "% zero_fraction) predicts the deterministic is_collapse flag on the\n"
-        "% 5-anchor scaling-law corpus. Source: scripts/zvf_scaling_coupling.py\n"
+        "% 5-anchor scaling-law corpus. Source: platform_modal/scripts/zvf_scaling_coupling.py\n"
     )
     lines.append("")
     lines.append(

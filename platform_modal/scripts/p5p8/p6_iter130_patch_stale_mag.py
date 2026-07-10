@@ -106,7 +106,7 @@ def patch_entry(entry_id, per_seed):
             "n_boot": N_BOOT,
             "seed": SEED,
             "ci_level": 0.95,
-            "source": "scripts/p5p8/p6_iter130_patch_stale_mag.py",
+            "source": "platform_modal/scripts/p5p8/p6_iter130_patch_stale_mag.py",
         },
         "source": "experiments/results/zvf_iter130_risk_index.tsv",
         "note": f"recomputed iter-130 paired-seed bootstrap on mean_zvf; "

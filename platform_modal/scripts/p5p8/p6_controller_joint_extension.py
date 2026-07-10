@@ -109,7 +109,7 @@ def main():
     (RES / "p6_joint_controller_extension.json").write_text(
         json.dumps({"n_predictions": len(preds), "predictions": preds,
                     "panel": "n2_same_stack_40step_joint", "source_iter": "iter-72 row 85",
-                    "audit_source": "scripts/p5p8/p6_controller_joint_extension.py",
+                    "audit_source": "platform_modal/scripts/p5p8/p6_controller_joint_extension.py",
                     "audit_date": "2026-07-05"}, indent=2, default=str)
     )
 
@@ -125,7 +125,7 @@ def main():
             "G": 8,
             "n_steps": 40,
             "predictions": method_preds,
-            "audit_source": "scripts/p5p8/p6_controller_joint_extension.py",
+            "audit_source": "platform_modal/scripts/p5p8/p6_controller_joint_extension.py",
             "audit_date": "2026-07-05",
             "ci_method": {
                 "method": "paired_step_bootstrap_pct",
@@ -151,7 +151,7 @@ def main():
         existing["joint_controller"] = {
             "panel": "n2_same_stack_40step_joint",
             "predictions": method_preds,
-            "audit_source": "scripts/p5p8/p6_controller_joint_extension.py",
+            "audit_source": "platform_modal/scripts/p5p8/p6_controller_joint_extension.py",
             "audit_date": "2026-07-05",
             "ci_method": {
                 "method": "paired_step_bootstrap_pct",

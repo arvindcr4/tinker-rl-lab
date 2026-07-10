@@ -11,7 +11,7 @@ Panel D : Forward vs Backward innovation coupling scatter, GSM8K CoT
 
 USAGE
 -----
-python3 scripts/length_bias_iter96_fig.py
+python3 platform_modal/scripts/length_bias_iter96_fig.py
 """
 from __future__ import annotations
 

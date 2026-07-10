@@ -5,7 +5,7 @@ Runs all benchmark experiments on Modal's GPU infrastructure.
 Uses ungated models (Qwen2.5 series) to avoid auth issues.
 
 Usage:
-  modal run scripts/modal_run_experiments.py
+  modal run platform_modal/scripts/modal_run_experiments.py
 """
 
 import modal

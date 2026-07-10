@@ -22,9 +22,9 @@ subprocess.run(["git", "archive", "--format=zip", "-o", str(CODE_ZIP), "HEAD"], 
 # 2. Gather Artifacts
 ARTIFACTS = {
     "paper/main.pdf": "research_paper.pdf",
-    "reports/final/capstone_final_report_submission/capstone_final_report.pdf": "capstone_report.pdf",
-    "reports/final/grpo_agentic_llm_paper.pdf": "grpo_agentic_llm_paper.pdf",
-    "reports/final/final_capstone_presentation.pptx": "defense_presentation.pptx",
+    "platform_tinker/reports/final/capstone_final_report_submission/capstone_final_report.pdf": "capstone_report.pdf",
+    "platform_tinker/reports/final/grpo_agentic_llm_paper.pdf": "grpo_agentic_llm_paper.pdf",
+    "platform_tinker/reports/final/final_capstone_presentation.pptx": "defense_presentation.pptx",
     "README.md": "README.md"
 }
 

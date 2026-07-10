@@ -160,7 +160,7 @@ def main():
     # JOB C — refresh measured_block_audit.json from live entries
     # =================================================================
     refreshed = {"n_entries": 0, "per_entry": [], "audit_date": "2026-07-05",
-                 "audit_source": "scripts/p5p8/p6_iter98_vda_validator.py"}
+                 "audit_source": "platform_modal/scripts/p5p8/p6_iter98_vda_validator.py"}
     for drec in delta_records:
         measured = drec.get("measured") or []
         msig = [m for m in measured if isinstance(m, dict)]

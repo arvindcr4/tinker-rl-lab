@@ -43,7 +43,7 @@ Writes (to experiments/results/berkeley/):
 - cybench_tier_shift.tsv          : 2-tier -> 4-tier shift in the cross-class gap
 - cybench_summary.json            : one-record machine summary
 
-Run:  python3 scripts/berkeley/cybench_capability_tiers.py
+Run:  python3 platform_modal/scripts/berkeley/cybench_capability_tiers.py
 """
 import json
 import math

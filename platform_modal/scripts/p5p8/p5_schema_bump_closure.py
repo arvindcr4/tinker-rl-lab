@@ -22,7 +22,7 @@ RES.mkdir(parents=True, exist_ok=True)
 
 NEW_FIELDS = ("token_aggregation", "reward_shaping_type", "sampling_dynamic_filter")
 # (delta_id) -> tuple of NEW_FIELDS this variant touches. Mirrored from
-# scripts/p5p8/delta_minreport_consistency.py DELTA_IMPLICATIONS.
+# platform_modal/scripts/p5p8/delta_minreport_consistency.py DELTA_IMPLICATIONS.
 DELTA_FIELD_APPLIES: dict[str, tuple[str, ...]] = {
     "delta_dapo":     ("token_aggregation", "reward_shaping_type", "sampling_dynamic_filter"),
     "delta_drgrpo":   (),

@@ -463,7 +463,7 @@ def cohens_kappa(a: list[str], b: list[str]) -> float:
 def load_reward_per_step(path: Path) -> np.ndarray | None:
     """Extract the per-step mean reward from a tinker-trace JSON file.
 
-    Canonical layout (scripts/tinker_run.py writes this):
+    Canonical layout (platform_modal/scripts/tinker_run.py writes this):
         {..., "reward_trace": [r_1, r_2, ..., r_T], ...}
 
     We also fall back to per_step_rewards / step_log[].reward / etc.

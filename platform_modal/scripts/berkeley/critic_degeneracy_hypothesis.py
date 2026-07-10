@@ -14,7 +14,7 @@ via the group mean. Under CDH:
       for outcome-only reward
 
 This script tests (a)-(d) on the SAME-STACK PPO/GRPO benchmark data
-(scripts/samestack_ppo_grpo, 5 seeds × 2 algos = 10 runs, 40 steps).
+(platform_modal/scripts/samestack_ppo_grpo, 5 seeds × 2 algos = 10 runs, 40 steps).
 We do NOT train a critic head — we test the OBSERVABLE consequence
 of CDH:
 

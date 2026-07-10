@@ -447,8 +447,8 @@ def main():
             "schema_backup_path": str(SCH_BAK.relative_to(ROOT)) if applied else None,
             "have_jsonschema": HAVE_JS,
             "audit_date": datetime.date.today().isoformat(),
-            "audit_source": "scripts/p5p8/p6_iter198_schema_drift_bump.py",
-            "baseline_audit_source": "scripts/p5p8/p6_iter186_coverage_audit.py",
+            "audit_source": "platform_modal/scripts/p5p8/p6_iter198_schema_drift_bump.py",
+            "baseline_audit_source": "platform_modal/scripts/p5p8/p6_iter186_coverage_audit.py",
         },
     }
     (out / "p6_iter198_summary.json").write_text(

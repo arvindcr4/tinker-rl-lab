@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P5-02 — Bootstrap CIs on P5 headline numbers using the Miller recipe.
 
-Reuses the bootstrap primitives from scripts/berkeley/adding_error_bars_to_evals.py
+Reuses the bootstrap primitives from platform_modal/scripts/berkeley/adding_error_bars_to_evals.py
 (paired and non-paired percentile bootstrap with B=10000) and applies them to
 three P5 headline claims drawn from paper/sections/p5_stack.tex:
 

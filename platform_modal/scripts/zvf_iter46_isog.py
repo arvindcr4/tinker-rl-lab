@@ -154,7 +154,7 @@ def write_per_prompt_isog(rows, targets):
             "# For each (problem, seed, Y_target): smallest G s.t. yield(p_x, G) >= target,\n"
             "# under both the iid baseline and the empirical anti-herding-corrected base.\n"
             "# G_iid=-1 or G_emp=-1 means unreachable within G_MAX=32.\n"
-            "# Source: scripts/zvf_iter46_isog.py\n"
+            "# Source: platform_modal/scripts/zvf_iter46_isog.py\n"
             "source\tseed\tproblem_id\tp_x\tdelta_div\tY_target\tG_iid\tG_emp\tdG\n"
         )
         for r in prompts:
@@ -184,7 +184,7 @@ def write_yield_curve(targets):
             "# Iso-Yield curves: Y_iid(p, G) = 1 - (p^G + (1-p)^G)\n"
             "#                  Y_emp(p, G) = 1 - max(0, p^G + (1-p)^G - delta_div)\n"
             "# delta_div = 0.122 (library-level mean from iter38 tinker_gsm8k).\n"
-            "# Source: scripts/zvf_iter46_isog.py\n"
+            "# Source: platform_modal/scripts/zvf_iter46_isog.py\n"
             "p_x\tG\tY_iid\tY_emp\tDelta_Y\n"
         )
         for p in p_grid:
@@ -208,7 +208,7 @@ def write_library_savings(libs, targets):
             "# delta_div = 0.122 (library-level mean from tinker_gsm8k; all\n"
             "# variance-mitigation libraries share Tinker rollout workers).\n"
             "# G_iid=-1 means the Y_target is unreachable within G_MAX=32.\n"
-            "# Source: scripts/zvf_iter46_isog.py\n"
+            "# Source: platform_modal/scripts/zvf_iter46_isog.py\n"
             "library\tp_x\tY_target\tG_iid\tG_emp\tdG\n"
         )
         for lib in libs:
@@ -286,7 +286,7 @@ def write_summary_and_predictions(prompts, targets):
             "# savings_vs_static8 = 1 - mean_G_emp/8 (vs static G=8 baseline),\n"
             "# CI95 = bootstrap 95% CI on mean_dG (B=2000, seed=20240702).\n"
             "# Y_uplift at fixed G = mean(Y_emp - Y_iid) over prompts.\n"
-            "# Source: scripts/zvf_iter46_isog.py\n"
+            "# Source: platform_modal/scripts/zvf_iter46_isog.py\n"
             "metric\tvalue\tn_prompts_or_G\tnotes\n"
         )
         for yt in targets:
@@ -335,7 +335,7 @@ def write_summary_and_predictions(prompts, targets):
             "# P2: At G=8, Y_uplift > 0 (anti-herding raises yield at fixed budget).\n"
             "# P3: At Y_target=0.95, mean_G_emp < mean_G_iid (savings at high yield).\n"
             "# P4: Mean G_iid at Y=0.80 is monotonic increasing in Y_target (sanity).\n"
-            "# Source: scripts/zvf_iter46_isog.py\n"
+            "# Source: platform_modal/scripts/zvf_iter46_isog.py\n"
             "prediction\tdefinition\tvalue\tthreshold\tpass\n"
         )
 

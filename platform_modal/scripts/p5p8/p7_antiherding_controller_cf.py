@@ -43,7 +43,7 @@ Outputs
 
 Usage
 -----
-python3 scripts/p5p8/p7_antiherding_controller_cf.py
+python3 platform_modal/scripts/p5p8/p7_antiherding_controller_cf.py
 """
 import json
 import math
@@ -65,7 +65,7 @@ G_ALT = 16
 N_BOOT = 2000
 CI_LEVEL = 0.95
 AUDIT_DATE = "2026-07-05"
-AUDIT_SOURCE = "scripts/p5p8/p7_antiherding_controller_cf.py"
+AUDIT_SOURCE = "platform_modal/scripts/p5p8/p7_antiherding_controller_cf.py"
 RNG = random.Random(20260705)
 
 

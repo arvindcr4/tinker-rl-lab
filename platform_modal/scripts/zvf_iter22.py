@@ -139,7 +139,7 @@ def compute_library_bootstrap_ci(
         fh.write(
             "# For each variance_mitigation method, B=2000 percentile bootstrap\n"
             "# CIs on mean_ZVF and on collapse_rate, with seed-level resampling.\n"
-            "# Source: scripts/zvf_iter22.py\n"
+            "# Source: platform_modal/scripts/zvf_iter22.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
@@ -289,7 +289,7 @@ def write_leadtime_table(
             "# lead_steps) plus the mean ZVF in the 5-step window AFTER the peak.\n"
             "# lead_steps = -1 means the run never set collapse=1 (i.e. did NOT\n"
             "# collapse -- a positive outcome for mitigation libraries).\n"
-            "# Source: scripts/zvf_iter22.py\n"
+            "# Source: platform_modal/scripts/zvf_iter22.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
@@ -372,7 +372,7 @@ def write_leadtime_summary(
             "# near 0; non-mitigation grpo was 3/5 = 0.6 in this dataset).\n"
             "# mean_pre_zvf_5 vs mean_post_zvf_5: 5-step ZVF average\n"
             "# immediately AFTER peak vs immediately BEFORE collapse (or terminal).\n"
-            "# Source: scripts/zvf_iter22.py\n"
+            "# Source: platform_modal/scripts/zvf_iter22.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
@@ -487,7 +487,7 @@ def write_pre_post_test(
             "# For each method, paired Wilcoxon signed-rank test on\n"
             "# (post_zvf_5 - pre_zvf_5). Positive mean_delta = ZVF rises\n"
             "# in the 5-step window immediately BEFORE collapse (or terminal).\n"
-            "# Source: scripts/zvf_iter22.py\n"
+            "# Source: platform_modal/scripts/zvf_iter22.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(

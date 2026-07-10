@@ -184,7 +184,7 @@ def main() -> None:
         fh.write("# Quintile 4 = highest acc (easy-prompt-dominated window).\n")
         fh.write("# Equal-mass bins PER METHOD, so cross-method contrast is not\n")
         fh.write("# confounded by global accuracy shifts.\n")
-        fh.write("# Source: scripts/zvf_iter62.py\n")
+        fh.write("# Source: platform_modal/scripts/zvf_iter62.py\n")
         fh.write("method\tquintile\tacc_lo\tacc_hi\tn_steps\tmean_zvf\tzvf_se\tmean_acc\tn_collapse\n")
         for m in sorted(strat):
             quintiles = sorted(strat[m], key=lambda r: r["quintile"])
@@ -206,7 +206,7 @@ def main() -> None:
         fh.write("# AERO - GRPO ZVF delta per heldout_acc quintile\n")
         fh.write("# Negative = AERO has LOWER ZVF (better signal availability)\n")
         fh.write("# 95% bootstrap CI from B=2000 step-level resamples\n")
-        fh.write("# Source: scripts/zvf_iter62.py\n")
+        fh.write("# Source: platform_modal/scripts/zvf_iter62.py\n")
         fh.write("quintile\taero_mean\tgrpo_mean\tdelta\tdelta_lo\tdelta_hi\tn_aero\tn_grpo\tinterpretation\n")
         for q in range(5):
             aero = per_mq.get("aero", {}).get(q, [])
@@ -246,7 +246,7 @@ def main() -> None:
         fh.write("# Mann-Whitney AUC: P(ZVF_collapse > ZVF_healthy) per (method, quintile)\n")
         fh.write("# AUC > 0.5: collapsed runs have HIGHER ZVF; AUC < 0.5: lower\n")
         fh.write("# Note: many methods have 0 collapse steps; AUC = NaN there\n")
-        fh.write("# Source: scripts/zvf_iter62.py\n")
+        fh.write("# Source: platform_modal/scripts/zvf_iter62.py\n")
         fh.write("method\tquintile\tauc\tn_collapse\tn_healthy\tmean_zvf_collapse\tmean_zvf_healthy\n")
         for m in sorted(collapse_zvfs):
             for q in range(5):
@@ -268,7 +268,7 @@ def main() -> None:
         fh.write("# mean_zvf_loq = mean ZVF in lowest acc quintile (hard prompts)\n")
         fh.write("# mean_zvf_hiq = mean ZVF in highest acc quintile (easy prompts)\n")
         fh.write("# delta_hiq_loq = high - low (positive => ZVF grows with accuracy)\n")
-        fh.write("# Source: scripts/zvf_iter62.py\n")
+        fh.write("# Source: platform_modal/scripts/zvf_iter62.py\n")
         fh.write("method\tn_steps\tn_seeds\tmean_zvf_overall\tmean_zvf_loq\tmean_zvf_q2\t"
                  "mean_zvf_q3\tmean_zvf_q4\tmean_zvf_hiq\tdelta_hiq_loq\tmean_acc_overall\tn_collapse_steps\n")
         for m in sorted(strat):

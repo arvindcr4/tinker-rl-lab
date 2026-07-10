@@ -19,7 +19,7 @@ within the 4 GRPO-family methods (eta^2 = 0.67 on zvf_risk, p=0.0015).
 Inputs:
   - experiments/results/zvf_iter130_risk_index.tsv
     (52 rows: 9 methods x 5 seeds = 45 measured + 7 reference)
-  - scripts/berkeley/unpacking_dpo_ppo_factorization.py::axis_variance_fraction
+  - platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.py::axis_variance_fraction
 
 Outputs:
   - experiments/results/p5p8/p5_iter101_zvf130_eta2_full9.tsv

@@ -7,7 +7,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 YAML="$REPO_ROOT/paper/reviewer_points.yaml"
 PAPER_DIR="$REPO_ROOT/paper"
-EXTRACT="$REPO_ROOT/scripts/_reviewer_points_extract.py"
+EXTRACT="$REPO_ROOT/platform_modal/scripts/_reviewer_points_extract.py"
 
 if [ ! -f "$YAML" ]; then
   echo "ERROR: missing $YAML" >&2

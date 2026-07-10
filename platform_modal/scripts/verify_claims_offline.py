@@ -4,7 +4,7 @@ Offline claim verification script for TinkerRL Lab submission.
 
 This script verifies every numeric claim used in the paper from shipped files.
 Run from the extracted bundle root:
-    python3 scripts/verify_claims_offline.py
+    python3 platform_modal/scripts/verify_claims_offline.py
 
 Expected output:
     PASS checksum manifest
@@ -13,9 +13,9 @@ Expected output:
     ...
 
 Usage:
-    python3 scripts/verify_claims_offline.py              # Run all checks
-    python3 scripts/verify_claims_offline.py --claim qwen3_8b  # Run specific check
-    python3 scripts/verify_claims_offline.py --list     # List all checks
+    python3 platform_modal/scripts/verify_claims_offline.py              # Run all checks
+    python3 platform_modal/scripts/verify_claims_offline.py --claim qwen3_8b  # Run specific check
+    python3 platform_modal/scripts/verify_claims_offline.py --list     # List all checks
 """
 
 import json

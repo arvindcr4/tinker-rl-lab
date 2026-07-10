@@ -301,6 +301,6 @@ add_text(slide, 0.7, 4.65, 11.9, 1.7,
 add_text(slide, 0.5, 6.8, 12.3, 0.5, "Target: ICLR 2027 (deadlines expected ~mid-Sept 2026; CFP not yet posted). Fallbacks: ICML 2027 D&B (~Jan 2027), NeurIPS 2027 E&D (~May 2027).", 11, GRAY, False, PP_ALIGN.RIGHT)
 footer(slide, 8)
 
-out = ROOT / "reports/ZVF_status_Ramesh_2026-07-04.pptx"
+out = ROOT / "platform_tinker/reports/ZVF_status_Ramesh_2026-07-04.pptx"
 prs.save(str(out))
 print(f"Saved {out} ({len(prs.slides)} slides)")

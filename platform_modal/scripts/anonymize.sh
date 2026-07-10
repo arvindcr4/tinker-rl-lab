@@ -5,7 +5,7 @@
 # Creates an anonymized copy of the repository suitable for submission.
 #
 # Usage:
-#   ./scripts/anonymize.sh [output_dir]
+#   ./platform_modal/scripts/anonymize.sh [output_dir]
 #
 # This script:
 #   1. Copies the repo to a clean directory (no .git history)

@@ -225,7 +225,7 @@ def main():
             "# r(residual(last10 ~ reward), ZVF) -- the residualised\n"
             "# partial correlation that isolates the ZVF contribution.\n"
             "# Bootstrap CIs use B=2000 percentile resamples.\n"
-            "# Source: scripts/zvf_iter26_residual.py\n"
+            "# Source: platform_modal/scripts/zvf_iter26_residual.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(

@@ -129,7 +129,7 @@ def adaptiveg_measured():
             "ci_method": {
                 "method": "paired_step_bootstrap_pct",
                 "n_boot": N_BOOT, "seed": SEED, "ci_level": 0.95,
-                "source": "scripts/p5p8/p6_add_missing_deltas.py",
+                "source": "platform_modal/scripts/p5p8/p6_add_missing_deltas.py",
             },
             "source": "experiments/results/quick_20260704/qp7_adaptive.tsv",
             "note": f"arm B (adaptive 4->6->8) - arm A (fixed G=4); paired by step",

@@ -39,7 +39,7 @@ entries disclose their MIN-REPORT compliance"). This script:
 
 Stdlib only. ≤300 LoC. Run from the worktree root:
 
-    python3 scripts/p5p8/p6_outcomes_coverage_block.py
+    python3 platform_modal/scripts/p5p8/p6_outcomes_coverage_block.py
 """
 from __future__ import annotations
 
@@ -235,7 +235,7 @@ def patch_entry(entry_path: Path) -> bool:
         "declared_deltas_coverage": cov["declared_deltas_coverage"],
         "measured_coverage": cov["measured_coverage"],
         "ci_method_present": cov["ci_method_present"],
-        "audit_source": "scripts/p5p8/p6_outcomes_coverage_block.py",
+        "audit_source": "platform_modal/scripts/p5p8/p6_outcomes_coverage_block.py",
         "audit_date": "2026-07-05",
     }
     out["coverage"] = cov_schema_bounded

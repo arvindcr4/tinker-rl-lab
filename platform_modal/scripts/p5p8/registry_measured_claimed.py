@@ -23,7 +23,7 @@ Writes:
   experiments/results/p5p8/registry_measured_claimed.tsv   — one row per delta
   experiments/results/p5p8/registry_measured_claimed.json  — machine-readable
 
-Stdlib only. Run: python3 scripts/p5p8/registry_measured_claimed.py
+Stdlib only. Run: python3 platform_modal/scripts/p5p8/registry_measured_claimed.py
 """
 
 import csv

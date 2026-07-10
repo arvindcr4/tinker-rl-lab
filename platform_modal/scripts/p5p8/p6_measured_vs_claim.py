@@ -5,7 +5,7 @@ Each `delta_*.json` carries:
   - `deltas[].change` -- a free-text description of WHAT the variant does;
   - `measured[]`      -- a list of (metric, panel, base, delta, ci, ...)
                         grounded measurement rows from
-                        `scripts/p5p8/p6_measured_delta_block.py`.
+                        `platform_modal/scripts/p5p8/p6_measured_delta_block.py`.
 
 The audit gap that this iter closes: the registry records both
 "what the variant claims to change" and "what we measured", but

@@ -47,7 +47,7 @@ Falsifiable hypotheses (on the chained ratio R):
       noise floor. Pass if eta^2_algo CI-UB <= eta^2_seed CI-UB on
       each metric where both are finite.
 
-Reuses axis_variance_fraction machinery from scripts/berkeley/
+Reuses axis_variance_fraction machinery from platform_modal/scripts/berkeley/
 unpacking_dpo_ppo_factorization.py verbatim (BSD-3).
 
 Outputs:

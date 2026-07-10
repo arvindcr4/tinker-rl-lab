@@ -8,7 +8,7 @@ Reference:
     - Recommends reporting sensitivity to hyperparameters for RL benchmarks.
 
 Usage:
-    python scripts/hyperparam_sensitivity.py --seed 42 --output-dir results/sensitivity
+    python platform_modal/scripts/hyperparam_sensitivity.py --seed 42 --output-dir results/sensitivity
 """
 
 import atexit

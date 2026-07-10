@@ -58,7 +58,7 @@ Outputs:
     experiments/results/zvf_iter106_partial_corr.tsv      (4 rows)
     figures/zvf_vs_failure.pdf                            (3-panel re-emit)
 
-Source: scripts/zvf_diagnostic_iter106.py
+Source: platform_modal/scripts/zvf_diagnostic_iter106.py
 Honest-stat note: n=14 rows is small for partial correlation; CIs are
 wide and the test is reported alongside the unconditioned correlations
 from iter94/98/102 so the reader can see the ordering claim.
@@ -546,7 +546,7 @@ def main() -> int:
             "# of zvf_iter102_calibration rows. p = mean_reward, G from row,\n"
             "# Delta = ZVF_emp - (p^G + (1-p)^G), rho = ZVF_emp / max(ZVF_iid, eps).\n"
             "# phase_label uses collapse_rate >= 0.5 OR p in {<=0.05,>=0.95} -> collapse,\n"
-            "# p >= 0.85 -> converged, else drift. Source: scripts/zvf_diagnostic_iter106.py\n"
+            "# p >= 0.85 -> converged, else drift. Source: platform_modal/scripts/zvf_diagnostic_iter106.py\n"
         ),
     )
 
@@ -637,7 +637,7 @@ def main() -> int:
             "# 'conditioned_on=p_difficulty' uses the partial-correlation formula\n"
             "# r_xy.z = (r_xy - r_xz*r_yz) / sqrt((1-r_xz^2)(1-r_yz^2)).\n"
             "# Bootstrap CIs are B=2000 percentile resamples.\n"
-            "# Source: scripts/zvf_diagnostic_iter106.py\n"
+            "# Source: platform_modal/scripts/zvf_diagnostic_iter106.py\n"
         ),
     )
 

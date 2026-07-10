@@ -1,4 +1,4 @@
-# scripts/ — INDEX
+# platform_modal/scripts/ — INDEX
 
 **Purpose:** ~25 standalone utilities supporting experiments, figures, evaluation, statistics, and NeurIPS submission packaging (not framework integrations themselves).
 

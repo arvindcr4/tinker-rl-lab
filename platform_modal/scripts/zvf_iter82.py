@@ -265,7 +265,7 @@ for method in sorted({r["method"] for r in trace_table}):
 def write_tsv(path, rows, header):
     with path.open("w") as fh:
         fh.write("# Pillar 2 iter82 ZVF hazard / survival reframing\n")
-        fh.write("# Source: scripts/zvf_iter82.py\n")
+        fh.write("# Source: platform_modal/scripts/zvf_iter82.py\n")
         fh.write("# Hazard: h(t) = P(collapse at t+1 | alive at t)\n")
         fh.write(f"# Alarm threshold: ZVF > {ALARM_THRESH}\n")
         fh.write("\t".join(header) + "\n")
@@ -286,7 +286,7 @@ write_tsv(RES / "zvf_iter82_hazard_ratio.tsv", hr_table,
 # Per-step hazard pooled
 with (RES / "zvf_iter82_hazard.tsv").open("w") as fh:
     fh.write("# Pillar 2 iter82 pooled per-step hazard h(t | alarm), h(t | no_alarm)\n")
-    fh.write("# Source: scripts/zvf_iter82.py\n")
+    fh.write("# Source: platform_modal/scripts/zvf_iter82.py\n")
     fh.write("method\tstep\th_alarm\th_noalarm\n")
     for method, h in sorted(hazard_by_method.items()):
         for t in range(HORIZON - 1):
@@ -299,7 +299,7 @@ with (RES / "zvf_iter82_hazard.tsv").open("w") as fh:
 # Survival
 with (RES / "zvf_iter82_survival.tsv").open("w") as fh:
     fh.write("# Pillar 2 iter82 survival S(t) by ZVF quartile (pooled across all methods)\n")
-    fh.write("# Source: scripts/zvf_iter82.py\n")
+    fh.write("# Source: platform_modal/scripts/zvf_iter82.py\n")
     fh.write("group\tt\tS\n")
     for (gname, sub), rows in sorted(survival.items()):
         for t, s in rows:
@@ -334,7 +334,7 @@ summary = {
 }
 with (RES / "zvf_iter82_summary.tsv").open("w") as fh:
     fh.write("# Pillar 2 iter82 headline summary\n")
-    fh.write("# Source: scripts/zvf_iter82.py\n")
+    fh.write("# Source: platform_modal/scripts/zvf_iter82.py\n")
     fh.write("key\tvalue\n")
     for k, v in summary.items():
         fh.write(f"{k}\t{v}\n")

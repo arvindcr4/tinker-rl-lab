@@ -345,7 +345,7 @@ HEADER_BF = ["source", "n_steps", "mean_zvf", "max_zvf", "n_H_steps",
 def write_tsv(path: Path, rows: List[List], header: List[str]) -> None:
     with path.open("w") as fh:
         fh.write("# Pillar 2 iter74 ZVF Markov-chain dynamics\n")
-        fh.write("# Source: scripts/zvf_iter74.py\n")
+        fh.write("# Source: platform_modal/scripts/zvf_iter74.py\n")
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(header)
         for r in rows:

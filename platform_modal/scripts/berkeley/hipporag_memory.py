@@ -46,7 +46,7 @@ ALL inputs are real on-disk TinkerRL-Bench artifacts; no fabrication.
 
 Run:
   cd /home/claude/tinker-rl-lab-minimax
-  python3 scripts/berkeley/hipporag_memory.py
+  python3 platform_modal/scripts/berkeley/hipporag_memory.py
 """
 from __future__ import annotations
 

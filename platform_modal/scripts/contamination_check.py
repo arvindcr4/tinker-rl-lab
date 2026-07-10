@@ -8,7 +8,7 @@ References:
     Jacovi et al., "Stop Uploading Test Data in Plain Text" (EMNLP 2023)
 
 Usage:
-    python scripts/contamination_check.py --results-dir experiments/results/
+    python platform_modal/scripts/contamination_check.py --results-dir experiments/results/
 """
 
 import sys

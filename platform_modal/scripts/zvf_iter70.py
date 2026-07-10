@@ -376,7 +376,7 @@ def write_enhanced_summary(rows: List[Dict[str, Any]], out_path: Path) -> None:
             "#   zvf_last_q         mean ZVF in last 25% of step trace\n"
             "#   zvf_delta          last_q - first_q (positive = improving)\n"
             "# NA = no per-step trace available (e.g. aggregate summary row).\n"
-            "# Source: scripts/zvf_iter70.py\n"
+            "# Source: platform_modal/scripts/zvf_iter70.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(ENHANCED_HEADERS)
@@ -440,7 +440,7 @@ def severity_per_library(rows: List[Dict[str, Any]],out_path: Path) -> List[Dict
             "# (0=ok, 1=drift, 2=collapse, 3=full_collapse). tail_means\n"
             "# are the per-step averages of (p_eq1, p_eq0) across the\n"
             "# rows in each bucket.\n"
-            "# Source: scripts/zvf_iter70.py\n"
+            "# Source: platform_modal/scripts/zvf_iter70.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow((
@@ -619,7 +619,7 @@ def write_per_run_zvf_acc(out_path: Path) -> List[Dict[str, Any]]:
             "# the within-run Pearson r between ZVF and reward across steps.\n"
             "# Within-run correlations are *not* the cross-experiment\n"
             "# correlation (use the latter for failure predictions).\n"
-            "# Source: scripts/zvf_iter70.py\n"
+            "# Source: platform_modal/scripts/zvf_iter70.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow((
@@ -661,7 +661,7 @@ def write_severity_corr(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str,
         fh.write(
             "# severity_score 0..3 (0=ok, 1=drift, 2=collapse, 3=full_collapse).\n"
             "# Bootstrap CIs are B=2000 percentile resamples over the pooled\n"
-            "# (zvf, severity) rows. Source: scripts/zvf_iter70.py\n"
+            "# (zvf, severity) rows. Source: platform_modal/scripts/zvf_iter70.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(("test", "n_pooled_rows", "rho", "ci_lo", "ci_hi", "method"))

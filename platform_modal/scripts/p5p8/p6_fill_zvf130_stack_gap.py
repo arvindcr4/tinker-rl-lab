@@ -22,7 +22,7 @@ import json, os, glob, importlib.util
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ENTRIES = os.path.join(ROOT, "registry/entries")
 spec = importlib.util.spec_from_file_location(
-    "ig", os.path.join(ROOT, "scripts/p5p8/p6_registry_crossref_integrity.py"))
+    "ig", os.path.join(ROOT, "platform_modal/scripts/p5p8/p6_registry_crossref_integrity.py"))
 ig = importlib.util.module_from_spec(spec); spec.loader.exec_module(ig)
 
 TSV = ig.load_tsv()
@@ -30,7 +30,7 @@ BASE = ig.TSV_BASE if hasattr(ig, "TSV_BASE") else "grpo"
 base = TSV["grpo"]
 STACKS, DELTAS = ig.load_entries()
 DATE = "2026-07-05"
-AUDIT = "scripts/p5p8/p6_fill_zvf130_stack_gap.py"
+AUDIT = "platform_modal/scripts/p5p8/p6_fill_zvf130_stack_gap.py"
 
 
 def welch_of(m):

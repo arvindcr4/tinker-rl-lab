@@ -291,7 +291,7 @@ def main() -> None:
             "# baseline (ZVF_iid = p**G + (1-p)**G) AND under the empirical\n"
             "# library-specific anti-herding correction (delta_div_lib =\n"
             "# ZVF_iid_ref - mean_zvf). cost_* = G * 64 prompts * 512 tokens.\n"
-            "# Source: scripts/zvf_iter38_crosslibrary.py\n"
+            "# Source: platform_modal/scripts/zvf_iter38_crosslibrary.py\n"
         )
         fh.write("\t".join(cols) + "\n")
         for r in isoyield_rows:
@@ -342,7 +342,7 @@ def main() -> None:
             "# Features (z-scored): mean_zvf, mean_last10, mean_peak. k=3.\n"
             "# Truth label derived from peak/last10: collapse if last10<0.05;\n"
             "# plateau if peak<0.5; drift if last10<0.85*peak; else converged.\n"
-            "# Source: scripts/zvf_iter38_crosslibrary.py\n"
+            "# Source: platform_modal/scripts/zvf_iter38_crosslibrary.py\n"
         )
         fh.write("library\tmodel\tmean_zvf\tmean_last10\tmean_peak\ttrue\tpred\tcorrect\n")
         for r in conf_rows:
@@ -461,7 +461,7 @@ def main() -> None:
     with summary_path.open("w") as fh:
         fh.write(
             "# Iter 38 Pillar 2 one-rollup summary.\n"
-            "# Source: scripts/zvf_iter38_crosslibrary.py\n"
+            "# Source: platform_modal/scripts/zvf_iter38_crosslibrary.py\n"
         )
         fh.write("metric\tvalue\tdetail\n")
         for r in summary_rows:

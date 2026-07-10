@@ -26,7 +26,7 @@ CANON = {
     "n_boot": 5000,
     "seed": 20260705,
     "ci_level": 0.95,
-    "source": "scripts/p5p8/p6_iter130_patch_stale_mag.py",
+    "source": "platform_modal/scripts/p5p8/p6_iter130_patch_stale_mag.py",
 }
 
 

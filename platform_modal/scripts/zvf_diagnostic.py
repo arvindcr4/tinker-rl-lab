@@ -520,7 +520,7 @@ def write_summary(rows: List[Dict[str, Any]], out_path: Path) -> None:
             "#   drift     last10_avg < 0.85 * peak (and not collapse)\n"
             "#   plateau   peak < 0.5\n"
             "#   converged last10_avg >= 0.85 * peak\n"
-            "# Source: scripts/zvf_diagnostic.py\n"
+            "# Source: platform_modal/scripts/zvf_diagnostic.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(SUMMARY_HEADERS)
@@ -605,7 +605,7 @@ def write_by_library(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str, An
             "# experiment family for non-variance_mitigation rows (tool_use, gsm8k_real,\n"
             "# arithmetic_groupsize, scaling_law). failure counts are computed by the\n"
             "# deterministic classify() rule (see top of this file).\n"
-            "# Source: scripts/zvf_diagnostic.py\n"
+            "# Source: platform_modal/scripts/zvf_diagnostic.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
@@ -796,7 +796,7 @@ def write_correlation(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str, A
             "# not per-step rows; per-step ZVF rows are autocorrelated and\n"
             "# would inflate apparent significance. Bootstrap CIs are B=2000\n"
             "# percentile resamples over the pooled rows. Source:\n"
-            "# scripts/zvf_diagnostic.py\n"
+            "# platform_modal/scripts/zvf_diagnostic.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(

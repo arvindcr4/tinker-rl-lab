@@ -461,7 +461,7 @@ def main() -> int:
             "# Pillar 2 iter78 per-step EWS features.\n"
             "# W=10 trailing window; H/M/L at 0.10/0.50 (iter74 cutoffs).\n"
             "# CUSUM drift k=0.05 (Page 1954 small-shift).\n"
-            "# Source: scripts/zvf_iter78.py"
+            "# Source: platform_modal/scripts/zvf_iter78.py"
         ),
     )
     print(f"[iter78] per_step_features: {len(per_step_rows)} rows", flush=True)
@@ -528,7 +528,7 @@ def main() -> int:
             "# Pillar 2 iter78 per-(method, threshold) alarm sweep.\n"
             "# t_fail = first t with mean(zvf[max(0,t-19)..t+1]) >= 0.50 (stuck).\n"
             "# EWS = max(ar1, cusum, h_run_frac). Alarm when composite > threshold.\n"
-            "# Source: scripts/zvf_iter78.py"
+            "# Source: platform_modal/scripts/zvf_iter78.py"
         ),
     )
 
@@ -566,7 +566,7 @@ def main() -> int:
         header_comment=(
             "# Pillar 2 iter78 best-threshold-per-method lead-time summary.\n"
             "# Selection: maximize true_alarm_rate, then mean_lead_time.\n"
-            "# Source: scripts/zvf_iter78.py"
+            "# Source: platform_modal/scripts/zvf_iter78.py"
         ),
     )
 
@@ -613,7 +613,7 @@ def main() -> int:
         ],
         header_comment=(
             "# Pillar 2 iter78 per-channel (AR1, CUSUM, H-run) alarm at th=0.70.\n"
-            "# Source: scripts/zvf_iter78.py"
+            "# Source: platform_modal/scripts/zvf_iter78.py"
         ),
     )
 
@@ -656,7 +656,7 @@ def main() -> int:
             "# Pillar 2 iter78 canonical-anchor protocol audit.\n"
             "# tool_use, grpo, tinker_gsm8k, groupsize traces.\n"
             "# protocol_works=1 iff alarm strictly precedes failure.\n"
-            "# Source: scripts/zvf_iter78.py"
+            "# Source: platform_modal/scripts/zvf_iter78.py"
         ),
     )
 
@@ -720,7 +720,7 @@ def main() -> int:
             "# Pillar 2 iter78 recommended ZVF EWS protocol.\n"
             "# R1: global recommended threshold; R2: composite definition;\n"
             "# R3: stuck failure criterion; R4: per-method fallback.\n"
-            "# Source: scripts/zvf_iter78.py"
+            "# Source: platform_modal/scripts/zvf_iter78.py"
         ),
     )
 
@@ -750,7 +750,7 @@ def main() -> int:
         fieldnames=["key", "value"],
         header_comment=(
             "# Pillar 2 iter78 top-level summary.\n"
-            "# Source: scripts/zvf_iter78.py"
+            "# Source: platform_modal/scripts/zvf_iter78.py"
         ),
     )
 

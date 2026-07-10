@@ -616,10 +616,10 @@ if __name__ == "__main__":
     except Exception as _exc:  # noqa: BLE001
         print(f"could not append iter129 columns: {_exc}")
     # Iter 129 follow-on: piecewise saturate+collapse model + LOOCV + Bayes factor.
-    # See scripts/scaling_law_iter129.py for the full analysis.  We invoke it
+    # See platform_modal/scripts/scaling_law_iter129.py for the full analysis.  We invoke it
     # here as a thin wrapper so the canonical script regenerates both outputs.
     try:
         from scaling_law_iter129 import main as iter129_main
         iter129_main()
     except Exception as exc:  # noqa: BLE001
-        print(f"iter129 wrapper failed: {exc}; run scripts/scaling_law_iter129.py manually.")
+        print(f"iter129 wrapper failed: {exc}; run platform_modal/scripts/scaling_law_iter129.py manually.")

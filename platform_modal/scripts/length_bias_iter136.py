@@ -51,7 +51,7 @@ OUTPUTS (5 TSV + meta):
   length_bias_iter136_summary.tsv          -- headline numbers
   length_bias_iter136_meta.json
 
-USAGE : python3 scripts/length_bias_iter136.py [--B_perm 50000 --seed_base 20260704]
+USAGE : python3 platform_modal/scripts/length_bias_iter136.py [--B_perm 50000 --seed_base 20260704]
 """
 from __future__ import annotations
 

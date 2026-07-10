@@ -54,7 +54,7 @@ OUTPUTS (5 TSV + meta) under experiments/results/length_bias_iter132_*
   length_bias_iter132_summary.tsv
   length_bias_iter132_meta.json
 
-USAGE  : python3 scripts/length_bias_iter132.py [--B_perm 50000 --n_w 4]
+USAGE  : python3 platform_modal/scripts/length_bias_iter132.py [--B_perm 50000 --n_w 4]
 """
 from __future__ import annotations
 

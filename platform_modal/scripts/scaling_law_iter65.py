@@ -656,7 +656,7 @@ anomalous & """ + str(n_anom) + r""" & """ + f"{n_anom/12:.2f}" + r""" \\
     drift class contains the late-decay anchors (Llama-3.1-8B-Inst,
     Kimi-K2-Thinking, Qwen3.5-27B).  The remaining
     anchors are either already-saturated (constant) or
-    monotonically rising.  \texttt{scripts/scaling\_law\_iter65.py}
+    monotonically rising.  \texttt{platform_modal/scripts/scaling\_law\_iter65.py}
     $\to$ \texttt{scaling\_law\_iter65\_phase\_pieces.tsv}.}
   \label{tab:iter65-class-dist}
 \end{table}
@@ -708,7 +708,7 @@ unsaturated) rather than \emph{predictive}.
     \emph{3P} is the count of canonical three-phase traces;
     \emph{full-template} is the count of traces satisfying all
     three slope constraints simultaneously.  PCI mean is over
-    the stratum.  \texttt{scripts/scaling\_law\_iter65.py}
+    the stratum.  \texttt{platform_modal/scripts/scaling\_law\_iter65.py}
     $\to$ \texttt{scaling\_law\_iter65\_arch\_phase.tsv}.}
   \label{tab:iter65-arch}
 \end{table}

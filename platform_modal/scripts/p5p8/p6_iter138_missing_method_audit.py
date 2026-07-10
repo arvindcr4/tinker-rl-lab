@@ -33,7 +33,7 @@ OUT_DIR = ROOT / "experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 DATE = "2026-07-05"
-AUDIT = "scripts/p5p8/p6_iter138_missing_method_audit.py"
+AUDIT = "platform_modal/scripts/p5p8/p6_iter138_missing_method_audit.py"
 
 GRPO_METHODS_KNOWN = {
     "grpo", "aero", "areal", "gift", "ngrpo", "cppo", "mcgrpo", "es", "scafgrpo",

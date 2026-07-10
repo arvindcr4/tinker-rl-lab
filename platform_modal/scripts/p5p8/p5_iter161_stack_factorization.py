@@ -16,7 +16,7 @@ small fraction of total variance, while the stack axes (mega) collectively
 explain the lion's share. That is the empirical case for "report the stack,
 not the label".
 
-Reuses: scripts/berkeley/unpacking_dpo_ppo_factorization.py helpers
+Reuses: platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.py helpers
         (axis_variance_fraction, eta^2 = SS_axis / SS_total).
 
 Hypotheses (validated against the data):

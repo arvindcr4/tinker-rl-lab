@@ -38,7 +38,7 @@ Outputs:
   - experiments/results/zvf_iter110_leadtime.tsv      (lead_steps summary)
   - figures/zvf_iter110_discrimination.pdf            (3-panel summary)
 
-Source: scripts/zvf_discrimination_iter110.py
+Source: platform_modal/scripts/zvf_discrimination_iter110.py
 Honest-stat note: n=14 rows for AUROC/EMD; we report both point estimates
 and 2-fold-leave-one-out robust estimates with 95% bootstrap CIs (B=2000).
 """
@@ -655,7 +655,7 @@ def main() -> int:
             "# Higher AUROC = better; direction_used reports the sign\n"
             "# of the predictor that gave the larger AUROC.\n"
             "# Bootstrap CIs: B=2000 percentile resamples.\n"
-            "# Source: scripts/zvf_discrimination_iter110.py\n"
+            "# Source: platform_modal/scripts/zvf_discrimination_iter110.py\n"
         ),
     )
 
@@ -690,7 +690,7 @@ def main() -> int:
             "# the collapse arm and the non-collapse arm, per predictor.\n"
             "# EMD divided by the empirical range of the predictor so the\n"
             "# value sits in [0, 1] across all three predictors.\n"
-            "# Source: scripts/zvf_discrimination_iter110.py\n"
+            "# Source: platform_modal/scripts/zvf_discrimination_iter110.py\n"
         ),
     )
 
@@ -705,7 +705,7 @@ def main() -> int:
             "# tau_sat in {0.30, 0.50, 0.70, 0.90} and p in 11 representative\n"
             "# bins spanning [0, 1]; G_max = 64. -1 means no G within range\n"
             "# attains the saturation target. Source:\n"
-            "# scripts/zvf_discrimination_iter110.py\n"
+            "# platform_modal/scripts/zvf_discrimination_iter110.py\n"
         ),
     )
 
@@ -749,7 +749,7 @@ def main() -> int:
             "# difference (first_collapse_step - first_pass_step): the number\n"
             "# of training steps the collapse indicator lags the ZVF crossing\n"
             "# of theta. +ve = ZVF leads collapse, -ve = collapse leads ZVF,\n"
-            "# 0 = same step. Source: scripts/zvf_discrimination_iter110.py\n"
+            "# 0 = same step. Source: platform_modal/scripts/zvf_discrimination_iter110.py\n"
         ),
     )
 

@@ -367,7 +367,7 @@ def main():
             "%\n"
             "% Pillar 2 (ZVF) cross-pillar elevation, iter18: ZVF x gradient-flow\n"
             "% coupling on the G-sweep (Qwen2.5-0.5B / synthetic arithmetic).\n"
-            "% Source: scripts/zvf_gradient_coupling.py\n"
+            "% Source: platform_modal/scripts/zvf_gradient_coupling.py\n"
         ),
     )
     # Quick console summary

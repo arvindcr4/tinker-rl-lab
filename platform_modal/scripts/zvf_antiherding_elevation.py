@@ -135,7 +135,7 @@ def write_falsification_tsv(
             "# rows (one row per (source, seed, problem_id)). CIs whose sign\n"
             "# disagrees with the point estimate are decisive evidence of a\n"
             "# cross-source sign reversal in delta_div.\n"
-            "# Source: scripts/zvf_antiherding_elevation.py\n"
+            "# Source: platform_modal/scripts/zvf_antiherding_elevation.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
@@ -271,7 +271,7 @@ def write_empirical_isog_tsv(
             "# the iid theory assumes (herding regime); delta_G < 0 means\n"
             "# FEWER (anti-herding regime). This is the directly testable\n"
             "# prediction the Contrastive Yield framing licenses.\n"
-            "# Source: scripts/zvf_antiherding_elevation.py\n"
+            "# Source: platform_modal/scripts/zvf_antiherding_elevation.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(

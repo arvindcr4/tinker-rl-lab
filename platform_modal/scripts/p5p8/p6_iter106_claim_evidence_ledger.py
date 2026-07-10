@@ -136,7 +136,7 @@ def compute_n2_delta(variant, metric, B=B):
             "n_boot": B,
             "seed": SEED,
             "ci_level": 0.95,
-            "source": "scripts/p5p8/p6_iter106_claim_evidence_ledger.py::compute_n2_delta",
+            "source": "platform_modal/scripts/p5p8/p6_iter106_claim_evidence_ledger.py::compute_n2_delta",
         },
         "source": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
         "note": f"iter-106: N2 last-10 paired bootstrap (B={B}, seed={SEED}); variant minus grpo",
@@ -521,7 +521,7 @@ def main():
         ],
         "git_sha": "iter-106 uncommitted",
         "audit_date": "2026-07-05",
-        "audit_source": "scripts/p5p8/p6_iter106_claim_evidence_ledger.py",
+        "audit_source": "platform_modal/scripts/p5p8/p6_iter106_claim_evidence_ledger.py",
     }
     summary_path.write_text(json.dumps(json_summary, indent=2, sort_keys=False) + "\n")
 

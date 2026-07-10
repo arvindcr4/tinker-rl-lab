@@ -19,8 +19,8 @@
 #      training client wire-protocol works.
 #
 # Usage
-#   bash scripts/smoke_test.sh              # offline subset (~2 min)
-#   TINKER_API_KEY=... bash scripts/smoke_test.sh   # full smoke (~8 min)
+#   bash platform_modal/scripts/smoke_test.sh              # offline subset (~2 min)
+#   TINKER_API_KEY=... bash platform_modal/scripts/smoke_test.sh   # full smoke (~8 min)
 #
 # Exit codes
 #   0  all checks passed
@@ -163,7 +163,7 @@ step 6 "$TOTAL" "Docstring / script surface check"
 "$PY" - <<'PY' 2>&1 | tee -a "$SMOKE_LOG"
 import importlib.util, pathlib
 for p in ["grpo_gsm8k_base.py", "utils/seed.py", "utils/stats.py",
-         "scripts/run_seeds.sh", "REPRODUCE.md", "ARTIFACT.md", "Dockerfile"]:
+         "platform_modal/scripts/run_seeds.sh", "REPRODUCE.md", "ARTIFACT.md", "Dockerfile"]:
     assert pathlib.Path(p).exists(), f"missing required artifact file: {p}"
 # Just parse the main experiment script to catch syntax errors
 import ast

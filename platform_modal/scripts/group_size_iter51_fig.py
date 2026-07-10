@@ -2,7 +2,7 @@
 """Iter 51 — 2-panel figure: (left) reward-vs-G curves at 4 budgets, with Wu 97.6% retention
 line on the right axis; (right) retention G=4/G=32 vs budget, with argmax G annotated.
 
-Stdlib-only PDF renderer (mirrors scripts/group_size_iter47_fig.py style).
+Stdlib-only PDF renderer (mirrors platform_modal/scripts/group_size_iter47_fig.py style).
 """
 from __future__ import annotations
 

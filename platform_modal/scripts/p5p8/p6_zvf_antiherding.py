@@ -28,7 +28,7 @@ Outputs
 
 Usage
 -----
-python3 scripts/p5p8/p6_zvf_antiherding.py
+python3 platform_modal/scripts/p5p8/p6_zvf_antiherding.py
 """
 import json
 import math
@@ -52,7 +52,7 @@ G_OBSERVED = 8
 N_PROMPTS_PER_STEP = 16
 SEED_LEVEL = 0.95
 AUDIT_DATE = "2026-07-05"
-AUDIT_SOURCE = "scripts/p5p8/p6_zvf_antiherding.py"
+AUDIT_SOURCE = "platform_modal/scripts/p5p8/p6_zvf_antiherding.py"
 
 
 def load_tensors(method):

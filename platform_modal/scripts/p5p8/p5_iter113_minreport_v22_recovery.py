@@ -291,7 +291,7 @@ def main() -> int:
         "H3_spearman_item14_item15": round(rho_item14_item15, 4),
         "H3_spearman_item15_item17": round(rho_item15_item17, 4),
         "iter":                    113,
-        "source":                  "scripts/p5p8/p5_iter113_minreport_v22_recovery.py",
+        "source":                  "platform_modal/scripts/p5p8/p5_iter113_minreport_v22_recovery.py",
     }
     with open(OUT_DIR / "p5_iter113_recovery_summary.json", "w") as f:
         json.dump(summary, f, indent=2)

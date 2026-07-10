@@ -104,7 +104,7 @@ def run_harmbench_eval(model_name: str, seed: int = 42) -> dict:
 def main(model_name: str = "Qwen/Qwen2.5-0.5B-Instruct"):
     """
     Local entry point. Run with:
-    modal run scripts/eval_harmbench.py --model-name "Qwen/Qwen2.5-0.5B-Instruct"
+    modal run platform_modal/scripts/eval_harmbench.py --model-name "Qwen/Qwen2.5-0.5B-Instruct"
     """
     res = run_harmbench_eval.remote(model_name)
     print("Final Result:", res)

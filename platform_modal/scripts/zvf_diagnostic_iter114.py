@@ -8,7 +8,7 @@ follow-up question is: **is ZVF a continuous dose-response signal or
 just a binary alarm?**
 
 This script computes three follow-on artefacts from the same
-cross-library aggregator used by scripts/zvf_diagnostic.py:
+cross-library aggregator used by platform_modal/scripts/zvf_diagnostic.py:
 
   experiments/results/zvf_iter114_dose_response.tsv
       5 ZVF quantile bins x (n_rows, mean_last10, frac_collapse,
@@ -150,7 +150,7 @@ def load_summary_rows() -> List[Dict[str, Any]]:
     path = RESULTS / "zvf_summary.tsv"
     if not path.exists():
         raise FileNotFoundError(
-            f"zvf_summary.tsv missing at {path}; run scripts/zvf_diagnostic.py first."
+            f"zvf_summary.tsv missing at {path}; run platform_modal/scripts/zvf_diagnostic.py first."
         )
     rows: List[Dict[str, Any]] = []
     with path.open() as fh:
@@ -184,7 +184,7 @@ def load_by_library() -> List[Dict[str, Any]]:
     path = RESULTS / "zvf_by_library.tsv"
     if not path.exists():
         raise FileNotFoundError(
-            f"zvf_by_library.tsv missing at {path}; run scripts/zvf_diagnostic.py first."
+            f"zvf_by_library.tsv missing at {path}; run platform_modal/scripts/zvf_diagnostic.py first."
         )
     rows: List[Dict[str, Any]] = []
     with path.open() as fh:
@@ -434,7 +434,7 @@ def write_dose_response_tsv(bins: List[Dict[str, Any]], out_path: Path) -> None:
         fh.write("# Iter 114 dose-response curve (Pillar 2 ZVF)\n")
         fh.write("# 5 quantile bins over the cross-library aggregator (n_pooled_rows >= 20).\n")
         fh.write("# severity_drop = mean(peak - last10_avg) inside the bin.\n")
-        fh.write("# Source: scripts/zvf_diagnostic_iter114.py\n")
+        fh.write("# Source: platform_modal/scripts/zvf_diagnostic_iter114.py\n")
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
             (
@@ -482,7 +482,7 @@ def write_delta_d_tsv(rows: List[Dict[str, Any]], out_path: Path) -> None:
         fh.write("#     libraries; p = mean_last10 for non-mitigation libraries (canonical p_x proxy).\n")
         fh.write("# Negative delta_d = anti-herding (sampler creates more contrast than i.i.d.);\n")
         fh.write("# Positive delta_d = herding / mode collapse.\n")
-        fh.write("# Source: scripts/zvf_diagnostic_iter114.py\n")
+        fh.write("# Source: platform_modal/scripts/zvf_diagnostic_iter114.py\n")
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
             (

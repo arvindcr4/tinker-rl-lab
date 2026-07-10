@@ -53,7 +53,7 @@ N_BOOT = 4000
 SEED = 20260705
 CI_LEVEL = 0.95
 AUDIT_DATE = "2026-07-05"
-AUDIT_SOURCE = "scripts/p5p8/p6_cross_stack_delta_div_matrix.py"
+AUDIT_SOURCE = "platform_modal/scripts/p5p8/p6_cross_stack_delta_div_matrix.py"
 
 INPUT_TSV = P5P8 / "p6_zvf_antiherding_per_step.tsv"
 SUMMARY_TSV = P5P8 / "p6_zvf_antiherding_summary.tsv"

@@ -5,7 +5,7 @@ from itertools import product
 
 def main():
     parser = argparse.ArgumentParser(description="Generate and run an exhaustive GRPO hyperparameter sweep.")
-    parser.add_argument("--base-config", required=True, help="Path to base YAML config (e.g., atropos/configs/gsm8k_qwen_8b.yaml)")
+    parser.add_argument("--base-config", required=True, help="Path to base YAML config (e.g., platform_tinker/atropos/configs/gsm8k_qwen_8b.yaml)")
     parser.add_argument("--output-dir", default="sweep_configs", help="Directory to save generated configs and run script")
     parser.add_argument("--run-script-name", default="run_sweep.sh", help="Name of the generated bash script")
     
@@ -65,7 +65,7 @@ def main():
         # Assuming the generated bash script will be run from the repo root or atropos dir,
         # we provide the relative path to the config file.
         # But to be safe, we can use absolute paths or relative to execution dir.
-        cmd = f"python3 atropos/train_grpo_unsloth.py --config {config_filepath} --seed 42"
+        cmd = f"python3 platform_tinker/atropos/train_grpo_unsloth.py --config {config_filepath} --seed 42"
         run_commands.append(cmd)
 
     print(f"Generated {count} valid configurations.")

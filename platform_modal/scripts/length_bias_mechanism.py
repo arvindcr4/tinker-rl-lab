@@ -21,7 +21,7 @@ Outputs:
   figures/length_bias_mechanism.pdf + .png                (3-panel: scatter, slopes, mediation)
 
 Usage:
-  python scripts/length_bias_mechanism.py
+  python platform_modal/scripts/length_bias_mechanism.py
 """
 from __future__ import annotations
 

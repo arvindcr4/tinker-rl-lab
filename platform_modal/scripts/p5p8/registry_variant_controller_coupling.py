@@ -23,7 +23,7 @@ Writes:
   experiments/results/p5p8/figures/registry_variant_coupling.png — per-variant
     firing-rate curves overlaid on the grpo baseline.
 
-Stdlib only (+ matplotlib). Run: python3 scripts/p5p8/registry_variant_controller_coupling.py
+Stdlib only (+ matplotlib). Run: python3 platform_modal/scripts/p5p8/registry_variant_controller_coupling.py
 """
 
 import csv

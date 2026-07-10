@@ -58,7 +58,7 @@ ITEMS = [
     "decontamination_notes",
 ]
 
-# Weight schedule mirrors scripts/p5p8/minreport_auditor.py exactly
+# Weight schedule mirrors platform_modal/scripts/p5p8/minreport_auditor.py exactly
 ITEM_WEIGHTS = {
     "loss_form": 10,
     "ref_policy_kl": 10,

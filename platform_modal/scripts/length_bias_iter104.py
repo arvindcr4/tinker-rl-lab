@@ -70,7 +70,7 @@ experiments/results/length_bias_iter104_meta.json       run configuration
 
 USAGE
 -----
-python3 scripts/length_bias_iter104.py [--K 3] [--n_q 5] [--B 2000]
+python3 platform_modal/scripts/length_bias_iter104.py [--K 3] [--n_q 5] [--B 2000]
 """
 from __future__ import annotations
 

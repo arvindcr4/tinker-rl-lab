@@ -10,9 +10,9 @@ Mirrors the iter-129 P5 paper-CI audit and the iter-171 P7 headline-CI
 audit, but at the aggregated cross-iter P5-paper scale.
 
 Reuses:
-- scripts/berkeley/adding_error_bars_to_evals.py bootstrap style
-- scripts/p5p8/p5_iter161_stack_factorization.py axis_variance_fraction
-- scripts/p5p8/p5_iter169_p5_manifest_audit.py v1-item schema
+- platform_modal/scripts/berkeley/adding_error_bars_to_evals.py bootstrap style
+- platform_modal/scripts/p5p8/p5_iter161_stack_factorization.py axis_variance_fraction
+- platform_modal/scripts/p5p8/p5_iter169_p5_manifest_audit.py v1-item schema
 
 Hypotheses (5 falsifiable, sensibly calibrated):
   H1: eta^2(method, reward_mean) bootstrap CI95 upper < 0.07 (algorithm

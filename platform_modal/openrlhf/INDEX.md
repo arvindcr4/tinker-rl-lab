@@ -1,4 +1,4 @@
-# openrlhf/ — INDEX
+# platform_modal/openrlhf/ — INDEX
 
 **Purpose:** Integration of **OpenRLHF** (Ray + vLLM distributed RL; PPO/DAPO/REINFORCE++) with tinker-rl-lab. Real GRPO runner for cross-framework comparison, with a seeded deterministic `dryrun` fallback when openrlhf isn't installed.
 

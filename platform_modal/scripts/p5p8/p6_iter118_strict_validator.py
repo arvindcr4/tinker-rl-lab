@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P6 iter-118 strict registry validation.
 
-Extends scripts/p5p8/registry_validate.py with a ``--strict`` mode
+Extends platform_modal/scripts/p5p8/registry_validate.py with a ``--strict`` mode
 that flags:
 
 * orphan delta_id references (variant_deltas_applied[].delta_id must
@@ -154,7 +154,7 @@ def main():
             1 for p in (REGISTRY / "entries").glob("*.json")
             if json.loads(p.read_text()).get("record_type") == "stack"),
         "audit_date": "2026-07-05",
-        "audit_source": "scripts/p5p8/p6_iter118_strict_validator.py",
+        "audit_source": "platform_modal/scripts/p5p8/p6_iter118_strict_validator.py",
     }
     out_path = RESULTS / "p6_iter118_strict_audit.json"
     out_path.write_text(json.dumps(out_json, indent=2))

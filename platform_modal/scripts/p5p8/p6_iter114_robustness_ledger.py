@@ -34,7 +34,7 @@ Definitions (stdlib only):
                      + POINT_ONLY   * 0.00
                      / total_rows
 
-Run: python3 scripts/p5p8/p6_iter114_robustness_ledger.py
+Run: python3 platform_modal/scripts/p5p8/p6_iter114_robustness_ledger.py
 """
 import json
 import os
@@ -286,7 +286,7 @@ def main():
         "top_5_load_bearing_rows": [
             r for r in sorted(per_row, key=lambda r: float(r["snr"]) if r["snr"] != "" else -1, reverse=True)[:5]
         ],
-        "audit_source": "scripts/p5p8/p6_iter114_robustness_ledger.py",
+        "audit_source": "platform_modal/scripts/p5p8/p6_iter114_robustness_ledger.py",
         "audit_date": "2026-07-05",
     }
     p_sum = OUT_DIR / "p6_iter114_robustness_summary.json"

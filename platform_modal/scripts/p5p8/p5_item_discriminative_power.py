@@ -28,7 +28,7 @@ AUDIT_TSV = ROOT / "experiments" / "results" / "p5p8" / "minreport_audit.tsv"
 CELLS_TSV = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
 OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
 
-# Canonical weight vector from scripts/p5p8/minreport_auditor.py
+# Canonical weight vector from platform_modal/scripts/p5p8/minreport_auditor.py
 # (sums to 100).
 CANONICAL_WEIGHTS = {
     1: 10.0,

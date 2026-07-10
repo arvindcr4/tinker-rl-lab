@@ -33,7 +33,7 @@ OUT_TSV = WORKTREE / "experiments" / "results" / "p5p8" / "p6_controller_predict
 OUT_JSON = WORKTREE / "experiments" / "results" / "p5p8" / "p6_controller_predicted_savings_summary.json"
 SCHEMA = WORKTREE / "registry" / "schema.json"
 AUDIT_DATE = "2026-07-05"
-AUDIT_SOURCE = "scripts/p5p8/p6_controller_predicted_savings.py"
+AUDIT_SOURCE = "platform_modal/scripts/p5p8/p6_controller_predicted_savings.py"
 
 # Same N2 stack panel the iter-67 summary was produced on
 PANEL = "n2_same_stack_40step"

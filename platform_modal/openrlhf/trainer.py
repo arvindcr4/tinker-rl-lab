@@ -246,7 +246,7 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
     ]
     print("[openrlhf] cmd:", " ".join(cmd))
     # Strip repo root from subprocess PYTHONPATH so python -m openrlhf.cli.*
-    # resolves to the installed pypi package, not the repo's openrlhf/ launcher.
+    # resolves to the installed pypi package, not the repo's platform_modal/openrlhf/ launcher.
     env = os.environ.copy()
     env["PYTHONPATH"] = ""
     start = time.time()

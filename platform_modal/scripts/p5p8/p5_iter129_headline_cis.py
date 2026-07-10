@@ -3,7 +3,7 @@
 P5 iter-129 — Headline-CI audit (fresh vein, not in 138 prior rows).
 
 Closes brief vein (c): "bootstrap CIs on every P5 headline number (reuse
-scripts/berkeley/adding_error_bars_to_evals.py)". Iter-123 did this for
+platform_modal/scripts/berkeley/adding_error_bars_to_evals.py)". Iter-123 did this for
 P7 (19 headlines) and set the template; iter-129 does the same for P5.
 
 P5 headlines (15 numerical point estimates across paper/sections/p5_*.tex):

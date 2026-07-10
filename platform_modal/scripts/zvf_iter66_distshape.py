@@ -467,7 +467,7 @@ def main():
     with open(os.path.join(RES, "zvf_iter66_ks_matrix.tsv"), "w") as f:
         f.write("# Pillar 2 Iter 66 — pairwise KS distance between per-step ZVF\n")
         f.write("# cells are KS distance D; p-values in zvf_iter66_ks_pvalues.tsv\n")
-        f.write("# Source: scripts/zvf_iter66_distshape.py\n")
+        f.write("# Source: platform_modal/scripts/zvf_iter66_distshape.py\n")
         w = csv.writer(f, delimiter="\t")
         w.writerow(["method_a", "method_b", "ks_D", "ks_pvalue", "n_a", "n_b"])
         for i, ma in enumerate(methods):
@@ -494,7 +494,7 @@ def main():
         f.write("# Average-linkage on the 9x9 KS distance matrix.\n")
         f.write("# Rows are merges in chronological order; final row is the\n")
         f.write("# root (the entire 9 libraries together).\n")
-        f.write("# Source: scripts/zvf_iter66_distshape.py\n")
+        f.write("# Source: platform_modal/scripts/zvf_iter66_distshape.py\n")
         w = csv.writer(f, delimiter="\t")
         w.writerow(
             [
@@ -549,7 +549,7 @@ def main():
         )
     with open(os.path.join(RES, "zvf_iter66_cluster_assign.tsv"), "w") as f:
         f.write("# Pillar 2 Iter 66 — cluster assignment at k=3\n")
-        f.write("# Source: scripts/zvf_iter66_distshape.py\n")
+        f.write("# Source: platform_modal/scripts/zvf_iter66_distshape.py\n")
         w = csv.writer(f, delimiter="\t")
         w.writerow(
             ["method", "cluster", "mean_zvf", "mean_acc", "ks_to_grpo"]
@@ -604,7 +604,7 @@ def main():
         f.write("# anti_herd = observed < beta_lo_05 (sampler anti-herds)\n")
         f.write("# herd      = observed > iid_pred (sampler over-herds)\n")
         f.write("# neutral   = within Beta posterior interval\n")
-        f.write("# Source: scripts/zvf_iter66_distshape.py\n")
+        f.write("# Source: platform_modal/scripts/zvf_iter66_distshape.py\n")
         w = csv.writer(f, delimiter="\t")
         w.writerow(
             [
@@ -627,7 +627,7 @@ def main():
         f.write("# Pillar 2 Iter 66 — combined cross-library ZVF shape summary\n")
         f.write("# Mean ZVF, mean acc, cluster id (k=3), KS to GRPO,\n")
         f.write("# observed-vs-iid delta, anti-herding label.\n")
-        f.write("# Source: scripts/zvf_iter66_distshape.py\n")
+        f.write("# Source: platform_modal/scripts/zvf_iter66_distshape.py\n")
         w = csv.writer(f, delimiter="\t")
         w.writerow(
             [

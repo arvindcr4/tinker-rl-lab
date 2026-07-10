@@ -199,7 +199,7 @@ def write_contrastive_yield(
             "# zvf_iid  = p**G + (1-p)**G (Bernoulli-collision baseline).\n"
             "# delta_div = zvf_iid - zvf_obs (structural diversity bonus;\n"
             "#            POSITIVE delta_div proves the sampler anti-herds).\n"
-            "# Source: scripts/zvf_contrastive_yield.py\n"
+            "# Source: platform_modal/scripts/zvf_contrastive_yield.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
@@ -259,7 +259,7 @@ def write_iso_yield_sizing(
             "# Pillar 2 Iso-Yield Dynamic Grouping (Iso-G) sizing curve.\n"
             "# G(p, Y_target) = ceil(log(1 - Y_target) / log(max(p, 1 - p))).\n"
             "#   p in [0.05, 0.95] at 0.025 step; Y_target in {0.6, 0.8, 0.95}.\n"
-            "# Source: scripts/zvf_contrastive_yield.py\n"
+            "# Source: platform_modal/scripts/zvf_contrastive_yield.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(("p", "G_y06", "G_y08", "G_y095"))
@@ -349,7 +349,7 @@ def write_yield_vs_static(
             "#   1 - [p_x**G + (1-p_x)**G] at G = static_G.\n"
             "# Y_iso_realised    = same mean after sizing G per-prompt via Iso-G\n"
             "#   (G(p, Y_target)) so the iid baseline meets Y_target uniformly.\n"
-            "# Source: scripts/zvf_contrastive_yield.py\n"
+            "# Source: platform_modal/scripts/zvf_contrastive_yield.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(

@@ -55,7 +55,7 @@ Outputs:
     experiments/results/zvf_iter34_summary.tsv        (one-row
                                                       rollup)
 
-Source: scripts/zvf_iter34_phasescan.py
+Source: platform_modal/scripts/zvf_iter34_phasescan.py
 """
 
 from __future__ import annotations

@@ -11,8 +11,8 @@ import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-REPORT = ROOT / "reports/final/capstone_final_report.md"
-FRAG_DIR = ROOT / "reports/final/addendum"
+REPORT = ROOT / "platform_tinker/reports/final/capstone_final_report.md"
+FRAG_DIR = ROOT / "platform_tinker/reports/final/addendum"
 BACKUP = REPORT.with_suffix(".md.bak")
 
 
@@ -132,7 +132,7 @@ def main() -> None:
         "Figures (Reviewer W10 / W12)\n\n"
         "*Paper sections: `paper/sections/frontier_scope_clarification.tex`, "
         "`paper/sections/figures_regeneration_note.tex`. Reproducibility: "
-        "`scripts/regenerate_missing_figures.py`.*\n\n"
+        "`platform_modal/scripts/regenerate_missing_figures.py`.*\n\n"
         + f7.strip()
         + "\n"
     )
@@ -146,8 +146,8 @@ def main() -> None:
         "Cross-Framework Pipeline (Reviewer W1 / Q1 / W13)\n\n"
         "*Paper sections: `paper/sections/appendix_zvf_formalization.tex`, "
         "`paper/sections/zvf_pipeline_spec.tex`. Reproducibility: "
-        "`scripts/partial_correlation_zvf.py`, "
-        "`scripts/zvf_compute_cross_framework.py`.*\n\n"
+        "`platform_modal/scripts/partial_correlation_zvf.py`, "
+        "`platform_modal/scripts/zvf_compute_cross_framework.py`.*\n\n"
         + f1.strip()
         + "\n"
     )
@@ -210,7 +210,7 @@ def main() -> None:
         "rebuttal detail is in §§5.8.1, 5.12.1, 5.16.1, 5.17–5.19 and §§2.7–2.8. "
         "A mechanical registry of all 24 weaknesses is at "
         "`paper/reviewer_points.yaml`, scored by "
-        "`scripts/reviewer_response_score.sh`.\n\n"
+        "`platform_modal/scripts/reviewer_response_score.sh`.\n\n"
     )
     txt = re.sub(
         r"(^## 6\. Summary of Findings\n)", r"\1" + summary_note,

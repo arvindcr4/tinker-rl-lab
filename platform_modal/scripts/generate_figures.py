@@ -13,7 +13,7 @@ References:
     Statistical Precipice" (NeurIPS 2021)
 
 Usage:
-    python scripts/generate_figures.py --results-dir experiments/results/ --output-dir paper/figures/
+    python platform_modal/scripts/generate_figures.py --results-dir experiments/results/ --output-dir paper/figures/
 """
 
 import sys

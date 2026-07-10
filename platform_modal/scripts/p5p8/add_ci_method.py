@@ -10,7 +10,7 @@ named property inside the already-permissive `outcomes` object, with no
 
 We then truthfully populate `ci_method` on the 7 tinker entries whose outcomes
 were derived from the N2 same-stack four-method run, whose CI methodology is the
-paired bootstrap in `scripts/p5p8/registry_validate.py::bootstrap_paired_diff`
+paired bootstrap in `platform_modal/scripts/p5p8/registry_validate.py::bootstrap_paired_diff`
 (n_boot=2000, seed=0, percentile 95%). Finally we re-validate all 31 entries.
 
 Stdlib + jsonschema only. Idempotent (safe to re-run).
@@ -38,7 +38,7 @@ CI_METHOD = {
     "n_boot": 2000,
     "seed": 0,
     "ci_level": 0.95,
-    "source": ("scripts/p5p8/registry_validate.py::bootstrap_paired_diff "
+    "source": ("platform_modal/scripts/p5p8/registry_validate.py::bootstrap_paired_diff "
                "(percentile 2.5/97.5 over aligned per-step N2 tensors)"),
 }
 

@@ -1,5 +1,7 @@
 # Demo deliverables
 
+> **Current (Semester 4 / final review):** `thesis_demo.ipynb` (executed offline, all outputs real), `thesis_demo.html`, and `thesis_demo.mp4`. The Phase-1 defense demo lives in `submission/demo/`. The PNG frames and `demo*.mp4` cuts below are **Semester 3 Group-6 historical assets** kept for provenance.
+
 ## Live URL
 
 **https://arvindcr4-tinkerrl-bench-demo.hf.space/**

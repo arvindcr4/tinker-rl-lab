@@ -170,6 +170,41 @@ notation identical to the Pillar~1 appendix and to the analyses of
 (mixed-group probability), so the three results compose with existing work
 rather than re-deriving it.
 
+\paragraph{Related work: interventions without a measurement theory.}
+The phenomenon \ZVF{} measures is no longer a niche observation. The TMLR
+survey of agentic RL \cite{agenticrl-survey} catalogs, in a single table,
+more than twenty GRPO-family variants, and a striking fraction of them
+intervene directly on dead groups: DAPO's dynamic sampling drops
+zero-gradient groups online \cite{TODO-dapo}; GRESO filters prompts
+\emph{before} rollout when they are predicted to produce single-outcome
+groups \cite{TODO-greso}; EDGE-GRPO reshapes advantages explicitly to
+mitigate what its authors --- and now the survey --- call \emph{advantage
+collapse} \cite{TODO-edgegrpo}; DARS reallocates rollout budget from
+medium-difficulty prompts to the hardest ones \cite{TODO-dars}. We adopt
+\emph{advantage collapse} as the field's name for the phenomenon and read
+this convergence as evidence for the premise of the ZVF Program: the
+dead-group fraction is a first-order quantity in critic-free RL. Our
+position, stated plainly, is that \textbf{every one of these methods is a
+controller acting on a signal it never calibrates}. Each filters,
+reweights, or reallocates based on an implicit point estimate of the very
+quantity whose sampling distribution (T1), compute cost (T2), and optimal
+set-point (T3) this paper supplies. A filtering rule triggered by an
+uncalibrated \ZVF{} estimate is a decision made on a point estimate
+masquerading as a measurement (\S\ref{sec:T1}); a reallocation rule without
+a wasted-compute bound cannot say what it saves (\S\ref{sec:T2}); and an
+adaptive group-size heuristic without an optimality target has no set-point
+to track (\S\ref{sec:T3}). The theory below is therefore not in competition
+with DAPO, GRESO, EDGE-GRPO, or DARS; it is the missing measurement layer
+that any of them would need in order to be a \emph{calibrated} controller
+rather than a heuristic. A second, sharper implication follows from the
+survey's mechanistic synthesis \cite{agenticrl-survey}: RL's genuinely
+new-capability gains concentrate on tasks where the base model is in an
+\emph{intermediate} success regime --- neither near-random nor near-ceiling
+--- which is precisely the complement of the zero-variance groups (all-fail
+and all-pass). Controlling \ZVF{} is thus not merely a compute optimization;
+it concentrates the gradient budget in the regime where RL has been observed
+to install new capability rather than to resharpen existing distributions.
+
 \paragraph{Honesty contract.} This is a \emph{draft skeleton}. Each theorem is
 followed by a \emph{proof sketch}, not a proof. Steps that are not airtight are
 flagged inline with a red \GAP{$\cdot$} marker and a greppable
@@ -709,8 +744,9 @@ floor, and the T3 optimum is deferred to Pillar~1/3 experiments.
 % Replace with proper \bibliography{...} entries once located (see THEORY_NOTES.md).
 \begin{thebibliography}{9}
 \bibitem[TODO-shao-grpo]{TODO-shao-grpo}
-  \textbf{[TODO]} Shao et al., GRPO / DeepSeekMath. \emph{Locate canonical
-  citation for group-relative policy optimization.}
+  Shao, Z., et al. \emph{DeepSeekMath: Pushing the Limits of Mathematical
+  Reasoning in Open Language Models}. arXiv:2402.03300, 2024. (Canonical
+  GRPO reference; verify final venue before submission.)
 \bibitem[TODO-zhou-demystify]{TODO-zhou-demystify}
   \textbf{[TODO]} Zhou et al., ``Demystifying GRPO.'' \emph{Locate; needed for
   the effective-batch-size connection in Remark~\ref{rem:connections}.}
@@ -720,6 +756,30 @@ floor, and the T3 optimum is deferred to Pillar~1/3 experiments.
 \bibitem[TODO-zvf-pillar1]{TODO-zvf-pillar1}
   \textbf{[TODO]} ZVF Program, Pillar~1 (this work's companion). \emph{Internal
   reference to the mechanistic-diagnostic paper.}
+\bibitem[agenticrl-survey]{agenticrl-survey}
+  Zhang, G., Geng, H., Yu, X., Yin, Z., et al. \emph{The Landscape of Agentic
+  Reinforcement Learning for LLMs: A Survey}. Transactions on Machine
+  Learning Research, 01/2026. arXiv:2509.02547. (Source of the
+  ``advantage collapse'' terminology, the variant catalog in its Table~2,
+  and the intermediate-regime synthesis in its \S6.4.)
+\bibitem[TODO-dapo]{TODO-dapo}
+  Yu, Q., et al. \emph{DAPO: An Open-Source LLM Reinforcement Learning
+  System at Scale}. arXiv:2503.14476, 2025. (Dynamic sampling drops
+  zero-gradient groups; verify final venue.)
+\bibitem[TODO-greso]{TODO-greso}
+  Zheng, H., et al. \emph{Act Only When It Pays: Efficient Reinforcement
+  Learning for LLM Reasoning via Selective Rollout} (GRESO).
+  arXiv:2506.02177, 2025. (Verified via arXiv API 2026-07-10; confirm
+  final venue before submission.)
+\bibitem[TODO-edgegrpo]{TODO-edgegrpo}
+  Zhang, X., et al. \emph{EDGE-GRPO: Entropy-Driven GRPO with Guided Error
+  Correction for Advantage Diversity}. arXiv:2507.21848, 2025. (Verified via
+  arXiv API 2026-07-10; confirm final venue before submission.)
+\bibitem[TODO-dars]{TODO-dars}
+  Yang, Z., et al. \emph{Depth-Breadth Synergy in RLVR: Unlocking LLM
+  Reasoning Gains with Adaptive Exploration} (introduces DARS,
+  difficulty-adaptive rollout sampling). arXiv:2508.13755, 2025. (Verified
+  via arXiv API 2026-07-10; confirm final venue before submission.)
 \end{thebibliography}
 
 \end{document}

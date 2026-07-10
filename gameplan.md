@@ -2,7 +2,7 @@
 
 Source: **"The Landscape of Agentic Reinforcement Learning for LLMs: A Survey"**
 (arXiv:2509.02547v4, Jan 24 2026, published TMLR 01/2026)
-Local copy: `~/Downloads/agentic-rl-llms-survey-2509.02547v4.pdf`
+Local copy: `~/Downloads/Agentic_RL_for_LLMs_Survey.pdf`
 OpenReview: https://openreview.net/forum?id=RY19y2RI1O
 
 Highest-value sections for my work: **Table 2** (GRPO variants), **§6.2** (training efficiency), **§6.4** (mechanistic debate).
@@ -77,3 +77,32 @@ Clean incremental paper on top of existing infrastructure.
 
 ## Next step (optional)
 Diff ZVF theory/position drafts against the claims and citations above to find what's missing — where this survey converts most directly into revisions.
+
+---
+
+## Deployment log (2026-07-10)
+
+Executed against `zvf-program/`; all three tex files verified compiling with pdflatex.
+
+- **§1.1 DONE — registry:** 8 new variant rows added to `registry/grpo_registry.tex`
+  catalog (GRESO, EDGE-GRPO, DARS, TreePo, Posterior-GRPO, Skywork-R1V2, GMPO, ProRL)
+  + "the dead-group lever is the most-attacked knob in the family" paragraph + survey
+  citation. All 8 arXiv IDs verified via arXiv API: GRESO 2506.02177,
+  EDGE-GRPO 2507.21848, DARS 2508.13755 (inside "Depth-Breadth Synergy in RLVR"),
+  TreePO 2508.17445, Posterior-GRPO 2508.05170, Skywork-R1V2 2504.16656,
+  GMPO 2507.20673, ProRL 2505.24864. DAPO/GSPO/Dr.GRPO placeholder bibitems resolved.
+- **§1.1+§1.2 DONE — theory:** related-work paragraph added to
+  `theory/zvf_theory.tex` intro: "every one of these methods is a controller acting
+  on a signal it never calibrates" + intermediate-regime framing (survey §6.4);
+  "advantage collapse" terminology adopted; bibliography expanded (survey + verified
+  variant cites; DeepSeekMath resolved).
+- **§1.3 DONE — position + sweep:** MIN-REPORT-RL upgraded from 7 to 8 items — new
+  item 8 "Pass@k curves alongside pass@1" in `position/min_report_rl.tex` +
+  `position/CHECKLIST.md` (incl. fillable template block). Sweep protocol amendments
+  appended to `sweep/README.md`: pass@k {1,8,32} required for held-out scoring,
+  5-seed axis protected, ProRL-style reference reset documented as candidate axis.
+- **§1.4 OPEN:** filtering→reallocation bandit pillar — not started (design work).
+- **§2–§4 OPEN:** fast-apply SFT+RL recipe, fraud abstention class, orchestrator
+  HITL-on-uncertainty — live outside this repo.
+- **Drive-by fixes:** 3 pre-existing LaTeX errors in `position/min_report_rl.tex`
+  (2 brace typos, 1 `language=json` listings failure) that had blocked compilation.

@@ -1,17 +1,18 @@
 # MIN-REPORT-RL — Author Checklist
 
 A copy-pasteable minimum-reportable-stack for **any GRPO-family RL post-training paper**
-(GRPO, DAPO, GSPO, Dr.GRPO, MAD-GRPO, AERO, CPPO, NGRPO, Scaf-GRPO, …).
+(GRPO, DAPO, GSPO, Dr.GRPO, MAD-GRPO, AERO, CPPO, NGRPO, Scaf-GRPO, GRESO, EDGE-GRPO,
+DARS, TreePo, …).
 
 **Why this exists.** Algorithm labels are under-specified treatments. In a controlled audit,
 a *nominally identical* GRPO config (same model, group size, learning rate, dataset, seed,
 step budget) produced **84.4%** [TODO:trace to v1 audit citation] last-10 training reward on one backend and **5.0%** [TODO:trace to v1 audit citation] on
 another — a ~17× gap [TODO:trace to v1 audit citation] with **no visible hyperparameter difference**. The label was constant;
 the stack was not. Each item below is on the list because it is a **documented lever that can
-flip a head-to-head comparison**. If two papers both report these seven fields, a reader can
+flip a head-to-head comparison**. If two papers both report these eight fields, a reader can
 tell whether their comparison is confounded.
 
-Report all seven. They are a *minimum*, not a maximum.
+Report all eight. They are a *minimum*, not a maximum.
 
 **Provenance / scope of the worked numbers in this checklist.** The concrete
 numbers used as motivating examples below (61.6–89.6% prompt-token
@@ -27,7 +28,7 @@ the [TODO:trace] markers are replaced with real `\cite{}` keys.
 
 ---
 
-## The 7 items
+## The 8 items
 
 ### 1. Loss form
 - **Report:** PPO importance ratio used? (yes/no). Clipped? bounds (incl. asymmetric
@@ -114,6 +115,19 @@ the [TODO:trace] markers are replaced with real `\cite{}` keys.
   format-only (no-answer) adversarial inputs."
 - **Bad:** No contamination check; parser behavior unstated.
 
+### 8. Pass@k curves alongside pass@1
+- **Report:** held-out pass@k at k ∈ {1, 8, 32} (or a stated subset with justification),
+  plus the sampling temperature and completion budget used for the estimate.
+- **Why it can flip:** pass@1 conflates *sharpening* the output distribution (concentrating
+  probability on already-reachable solutions) with *expanding* the set of reachable solutions.
+  The TMLR agentic-RL survey (arXiv:2509.02547, §6.4) finds ~2/3 of RL-for-reasoning papers
+  report only pass@1, while studies reporting pass@k frontiers repeatedly find base models
+  matching or overtaking RL-tuned ones at large k. Group-relative training acts directly on
+  the sampling distribution, so a pass@1 ranking between two GRPO variants can invert at k=32.
+- **Good:** "Held-out pass@{1,8,32} at T=1.0, 32 completions/problem: base 61/78/89%,
+  post-RL 72/80/89% — gain is concentrated at k=1, consistent with distribution sharpening."
+- **Bad:** Single pass@1 number, greedy decoding, no k>1 evidence.
+
 ---
 
 ## Fillable appendix template (drop into your paper)
@@ -158,6 +172,11 @@ Tokenizer + chat tmpl:   <id; same in sampler and trainer? yes/no>
 [7] DECONTAMINATION
     Train/test overlap:  <metric=__, value=__>
     Parser adversarial:  <format-only reject rate=__%>
+
+[8] PASS@K
+    Held-out pass@k:     <k=1: __%, k=8: __%, k=32: __%>
+    Estimate config:     <temp=__, completions/problem=__>
+    Base-model pass@k:   <k=1: __%, k=8: __%, k=32: __%>  (same config)
 ====================================================
 ```
 

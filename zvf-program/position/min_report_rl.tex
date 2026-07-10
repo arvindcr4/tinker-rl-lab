@@ -59,7 +59,8 @@ Author list and affiliations \todo{finalize author block and affiliations}.}}
 % =============================================================================
 Reinforcement-learning post-training of large language models is reported as
 though an algorithm label---PPO, GRPO, DPO, and the growing GRPO family
-(DAPO, GSPO, Dr.GRPO, MAD-GRPO, \ldots)---fixes the experiment. It does not.
+(DAPO, GSPO, Dr.GRPO, MAD-GRPO, GRESO, EDGE-GRPO, DARS, TreePo,
+\ldots)---fixes the experiment. It does not.
 In a controlled audit of a group-relative RL runner, nominally identical
 ``GRPO'' configurations (same model, group size, learning rate, dataset,
 seed, and step budget) produced last-10 training reward of $84.4\%$~\todo{trace to v1 audit citation} on one
@@ -71,7 +72,7 @@ make it structurally impossible to tell whether a claimed algorithmic gain
 survives a change of backend, sampler, reference-policy/KL handling, LoRA
 configuration, or reward parser.
 
-This position paper proposes \minreport{}: a seven-item
+This position paper proposes \minreport{}: an eight-item
 \emph{minimum-reportable-stack} checklist that every GRPO-family paper should
 satisfy, where each item is included precisely because it is a documented
 lever that can flip a head-to-head comparison. We then propose a concrete
@@ -127,6 +128,27 @@ result by $17\times$~\todo{trace to v1 audit citation} with no visible knob chan
 two GRPO \emph{variants}---each implemented in its own stack---tells us almost
 nothing about the variants.
 
+\paragraph{The family is growing faster than its reporting.}
+The TMLR survey of agentic RL \cite{agenticrlsurvey2026} now catalogs, in a
+single comparison table, more than twenty GRPO-family variants---and a
+striking fraction of them (DAPO's dynamic sampling, GRESO's pre-rollout
+filtering, EDGE-GRPO's \emph{advantage collapse} mitigation, DARS's
+difficulty-aware reallocation) intervene on the same underlying lever: the
+fraction of groups whose identical rewards contribute zero gradient, i.e.\
+the quantity \zvf{} measures. Not one of the cataloged variant papers
+reports a per-step dead-group trajectory or the stack fields below, so
+their relative standings are, under current norms, unattributable. The
+same survey's mechanistic synthesis supplies a second indictment of current
+reporting: roughly two-thirds of the RL-for-reasoning studies it reviews
+report only pass@1, although pass@$k$ curves are what distinguish a model
+whose solution \emph{distribution was sharpened} from one whose solution
+\emph{support expanded}. A variant can ``win'' at pass@1 by concentrating
+probability on already-reachable solutions while strictly shrinking the
+set of problems it can solve at pass@32. Under pass@1-only reporting, these
+two outcomes---one an optimization of sampling, the other a capability
+change---are indistinguishable. This motivates the eighth item of the
+standard.
+
 \paragraph{Why this is a reporting problem, not just a science problem.}
 The gap above is not a bug to be fixed by a better trainer; it is information
 that is routinely \emph{not logged}. Most papers do not report whether the KL
@@ -162,7 +184,7 @@ This paper makes three:
   \item \textbf{The stack-conditioning thesis, sharpened into a reporting
         standard.} We restate and extend the audit finding that algorithm
         labels are under-specified treatments (\S\ref{sec:stack}), and convert
-        it into \minreport{}: a seven-item minimum-reportable-stack checklist
+        it into \minreport{}: an eight-item minimum-reportable-stack checklist
         in which every item is justified by a mechanism through which it can
         flip a comparison (\S\ref{sec:standard}).
   \item \textbf{A controlled reproducibility-audit protocol.} We specify a
@@ -340,6 +362,23 @@ if the parser rewards a format token, a ``gain'' may be a shortcut. A
 contamination/parser probe is the minimum evidence that the reported number
 measures the thing it claims to measure.
 
+\paragraph{8. Pass@$k$ curves alongside pass@1.}
+\emph{Report:} held-out pass@$k$ at $k \in \{1, 8, 32\}$ (or a stated
+subset with justification), with the sampling temperature and completion
+budget used for the estimate. \emph{Why it can flip:} pass@1 conflates two
+different improvements---sharpening the output distribution over solutions
+the base model could already reach, and expanding the set of reachable
+solutions. The agentic-RL survey's synthesis \cite{agenticrlsurvey2026}
+finds that roughly two-thirds of RL-for-reasoning papers report only
+pass@1, while the studies that do report pass@$k$ frontiers repeatedly find
+base models matching or overtaking their RL-tuned counterparts at large
+$k$---i.e., the ``gain'' was distribution sharpening. A GRPO-variant
+comparison scored at pass@1 alone can therefore rank the method that
+sharpens above the method that generalizes, and the ranking can invert at
+$k=32$. Because group-relative training acts directly on the sampling
+distribution, this is not an exotic failure mode for the GRPO family; it is
+the expected one.
+
 \paragraph{Summary table.}
 Table~\ref{tab:checklist} collects the standard. The companion
 \texttt{CHECKLIST.md} provides a fillable appendix template.
@@ -361,6 +400,7 @@ because it is a documented lever that can flip a head-to-head comparison.}
 5 & Group-size schedule (fixed / adaptive) & $G$ sets the mixed-group probability; adaptive-$G$ confounds compute with algorithm.\\
 6 & Held-out split $\neq$ reward environment & Training reward is not capability; selection-by-reward inflates apparent gains.\\
 7 & Decontamination probe results & Verifiable rewards still admit parser/format/length/overlap hacking.\\
+8 & Pass@$k$ curves alongside pass@1 & Pass@1-only scoring cannot distinguish distribution sharpening from capability gain; rankings can invert at large $k$.\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -492,14 +532,14 @@ designed so that the marginal cost to an author is close to zero \emph{if the
 trainers log it by default}.
 
 \paragraph{Make the trainers emit it.}
-The seven fields are already computable inside every major open trainer. The
+The eight fields are already computable inside every major open trainer. The
 marginal work is to write them down once, in a stable schema, and to compute
 \zvf{}/\gu{} from the grouped reward tensor that GRPO already materializes.
 
 \subparagraph{A concrete TRL plugin: \texttt{trl-min-report-rl}.}
 We sketch a small TRL extension that makes adoption automatic. For every
 \texttt{GRPOTrainer.train()} call it emits a run-start JSON block containing the
-seven \minreport{} fields, then logs per-step \zvf{}/\gu{} from the actual
+eight \minreport{} fields, then logs per-step \zvf{}/\gu{} from the actual
 grouped rewards used by GRPO. The package shape is:
 \begin{verbatim}
 trl_min_report_rl/
@@ -548,11 +588,11 @@ is the ``few lines of telemetry'' version of the standard.
 
 \subparagraph{Run-start manifest.}
 The first line of \texttt{min\_report\_rl.jsonl} is a JSON object whose
-\texttt{min\_reportable\_stack} field contains the seven items. A fragment is
+\texttt{min\_reportable\_stack} field contains the eight items. A fragment is
 shown in Listing~\ref{lst:runstart}; the full schema is in the
 \grpoReg{} catalog paper \cite{grpoRegistry2026}.
 
-\begin{lstlisting}[language=json, caption={Fragment of the
+\begin{lstlisting}[caption={Fragment of the
   \texttt{min\_report\_rl} run-start manifest.}, label={lst:runstart}]
 {
   "event": "min_report_rl.run_start",
@@ -579,7 +619,7 @@ field changes.
 The same manifests feed three tools. \texttt{grpo-stackdiff}
 (\S\ref{sec:tooling}) compares two manifests and flags whether their nuisance
 differences are large enough to flip a comparison. The \texttt{MIN-REPORT-RL
-Auditor} scores an existing paper or repo against the seven-item checklist,
+Auditor} scores an existing paper or repo against the eight-item checklist,
 assigns a 0--100 reproducibility-auditable badge, and produces a reviewer-facing
 summary \cite{zvfaudit2026}. The \texttt{MRRL-AuditRunner} turns the controlled
 single-stack audit of \S\ref{sec:audit} into a pre-registered executable
@@ -613,12 +653,14 @@ sampler precision, per-step \zvf{}/\gu{}, group-size schedule, held-out
 disjointness, contamination probe---precisely because each is a demonstrated
 flip lever, not a tuning knob.
 
-\paragraph{``Seven items is too many / too few.''}
+\paragraph{``Eight items is too many / too few.''}
 Each item earns its place by a flip mechanism (\S\ref{sec:standard}); removing
 any one reopens a known confound. The list is a \emph{minimum}, not a maximum:
-authors may report more. We deliberately stop at seven because that is the set
-that, in our audit, was sufficient to explain the comparisons that flipped.
-\todo{If the audit surfaces an eighth recurring confound, extend the list and
+authors may report more. We deliberately stop at eight because that is the set
+that, in our audit and in the survey-documented pass@$k$ reporting gap
+\cite{agenticrlsurvey2026}, was sufficient to explain the comparisons that
+flipped.
+\todo{If the audit surfaces a ninth recurring confound, extend the list and
 justify it the same way.}
 
 \paragraph{``Re-implementations are unfaithful, so the audit is unfair.''}
@@ -658,7 +700,7 @@ comparison. The tool is not a replacement for the audit of
 seconds, whether a head-to-head is stack-comparable.
 
 \paragraph{Manifest contract.} Each run is a YAML/JSON block containing the
-seven \minreport{} fields, plus run identity (trainer, version, seed, hardware),
+eight \minreport{} fields, plus run identity (trainer, version, seed, hardware),
 model and tokenizer hashes, LoRA configuration, optimizer settings, and results.
 The schema is the JSON block proposed in \S\ref{sec:adoption}.
 
@@ -725,7 +767,7 @@ specification, and the unreported remainder of the stack can move a result by
 more than the algorithmic effect anyone is trying to claim. We have argued that
 this stack-conditioning is the default, demonstrated it with a matched-config
 comparison that flips by $17\times$, and proposed two coupled remedies: a
-seven-item minimum-reportable-stack (\minreport{}), where every item is a
+eight-item minimum-reportable-stack (\minreport{}), where every item is a
 documented flip lever, and a controlled single-stack audit of DAPO, GSPO,
 Dr.GRPO, and MAD-GRPO that reports which claimed gains survive. Neither remedy
 requires new science---only a few fields of telemetry and the discipline to log

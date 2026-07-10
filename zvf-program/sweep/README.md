@@ -174,3 +174,38 @@ To shrink cost: trim `model_families` tiers, drop `group_sizes` entries, reduce
   from real aggregated logs.
 
 **Nothing in this directory invents a run, a metric, or a "win."**
+
+---
+
+## Protocol amendments (2026-07-10, from the TMLR agentic-RL survey, arXiv:2509.02547)
+
+Three amendments to the evaluation protocol, adopted before the real (non-dry-run)
+sweep launches. Rationale lives in `../../gameplan.md`; the survey is the source.
+
+1. **Pass@k alongside pass@1 (REQUIRED for held-out scoring).** Every cell's
+   held-out eval must report pass@k at k ∈ {1, 8, 32} (temperature and
+   completions/problem pinned and logged), for both the post-RL checkpoint and
+   the *base* checkpoint under the identical config. Reason: the survey's §6.4
+   synthesis — pass@1-only reporting cannot distinguish distribution sharpening
+   from capability gain, and rankings between GRPO variants can invert at large
+   k. This is also item 8 of MIN-REPORT-RL (see `../position/CHECKLIST.md`).
+   ZVF connection: zero-variance groups are the all-fail/all-pass cells; if ZVF
+   control concentrates gradient in the intermediate-success regime, the
+   prediction is a pass@k-frontier expansion, not just a pass@1 lift. The
+   pass@k curves are the observable that tests this.
+
+2. **Seed policy.** The 5-seed axis (`seeds:` in `sweep_config.yaml`) stays;
+   do not trim it to save cost on the diagonal cells. The survey highlights
+   extreme hyperparameter sensitivity of RL at scale (Vattikonda et al., cited
+   in its §6.2); single-seed cells are triage-only and must be labeled as such
+   in `aggregate_table.csv`.
+
+3. **Reference-policy reset (CANDIDATE axis, not yet enabled).** ProRL-style
+   reference resets change the KL anchor mid-run and plausibly shift
+   steady-state ZVF. If added, it enters as an explicit boolean axis with its
+   own MIN-REPORT field (item 2: reference + KL handling), never as a silent
+   runner default. Do not enable without a matched no-reset arm.
+
+None of the above adds runs by itself; item 1 changes what the held-out
+evaluator logs, item 2 forbids a cost-saving trim, item 3 is documented so it
+cannot enter the stack silently.

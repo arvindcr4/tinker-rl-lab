@@ -313,6 +313,53 @@ NGRPO & \grpo{} & Normalized advantage / reward transform \todo{specify} &
 Scaf-\grpo{} & \grpo{} & Incorporates scaffolded exploration signal into the
   advantage \todo{specify} & Fixed or adaptive \todo{} & Scaffolded hints shape
   the rollout distribution \cite{scafgrpo2025}.\\
+\addlinespace
+
+GRESO & \grpo{} & Unchanged \todo{verify} & \emph{Pre-rollout} filtering:
+  prompts predicted to yield zero-gradient (single-outcome) groups are skipped
+  before any rollout is spent & Acts on the dead-group phenomenon \emph{before}
+  sampling; the prediction rule is itself a stack component
+  \cite{greso2025,agenticrl2026}.\\
+\addlinespace
+
+EDGE-\grpo{} & \grpo{} & Entropy-driven advantage reshaping + guided error
+  correction & Fixed $G$ \todo{verify} & Explicitly framed as mitigating
+  \emph{advantage collapse} --- the same phenomenon \zvf{} measures
+  \cite{edgegrpo2025,agenticrl2026}.\\
+\addlinespace
+
+DARS & \grpo{} & Unchanged \todo{verify} & Multi-stage rollout sampling that
+  reallocates compute from medium-difficulty to the hardest prompts &
+  Difficulty-aware rollout budget; confounds compute allocation with the
+  algorithmic claim unless reported \cite{dars2025,agenticrl2026}.\\
+\addlinespace
+
+TreePo & \grpo{} & Unchanged \todo{verify} & Self-guided policy rollout over a
+  tree structure to reduce rollout compute & Compute-reduction delta; group
+  construction differs from i.i.d.\ sampling \cite{treepo2025,agenticrl2026}.\\
+\addlinespace
+
+Posterior-\grpo{} & \grpo{} & Rewards only successful \emph{processes}
+  (intermediate steps), not outcomes alone & Fixed \todo{verify} & Changes the
+  reward density and hence steady-state \zvf{}
+  \cite{posteriorgrpo2025,agenticrl2026}.\\
+\addlinespace
+
+Skywork-R1V2 & \grpo{} & Hybrid reward signal \todo{specify} & Selective
+  sample buffer replays informative (mixed-reward) samples & Buffer selection
+  is a direct intervention on group reward diversity
+  \cite{skyworkr1v2-2025,agenticrl2026}.\\
+\addlinespace
+
+GMPO & \grpo{} & Geometric mean of token-level rewards in place of arithmetic
+  aggregation & Fixed \todo{verify} & Aggregation change alters which groups
+  register as zero-variance \cite{gmpo2025,agenticrl2026}.\\
+\addlinespace
+
+ProRL & \grpo{} & Unchanged \todo{verify} & Fixed \todo{verify} &
+  Reference-policy \emph{reset} during prolonged training; changes KL anchor
+  identity mid-run --- a stack field the label omits
+  \cite{prorl2025,agenticrl2026}.\\
 
 \end{longtable}
 \label{tab:catalog}
@@ -323,6 +370,21 @@ surfaces it so that a re-implementer knows what still has to be reverse
 engineered. A fair comparison between, say, DAPO and Dr.\grpo{} requires not
 only the delta rows above but also the full stack records of the two original
 runs; only then can one tell whether the reported gap is a stack effect.
+
+\paragraph{The dead-group lever is now the most-attacked knob in the family.}
+The TMLR survey of agentic RL \cite{agenticrl2026} canonizes, in a single
+comparison table, more than twenty \grpo{}-family variants --- and a striking
+fraction of them (DAPO's dynamic sampling, GRESO's pre-rollout filtering,
+EDGE-\grpo{}'s \emph{advantage collapse} mitigation, DARS's difficulty-aware
+reallocation, Skywork-R1V2's selective buffer, TreePo's rollout pruning)
+intervene, each with a different heuristic, on precisely the phenomenon
+\zvf{} measures: groups whose identical rewards contribute zero gradient.
+We take the survey's adoption of the term \emph{advantage collapse} as
+confirmation that the field has converged on the phenomenon; what it has not
+converged on is a calibrated way to \emph{measure} it, which is exactly the
+telemetry this registry and the \minreport{} standard demand. None of the
+variant papers above reports a per-step dead-group trajectory, so their
+relative gains on this axis are currently unattributable.
 
 % =============================================================================
 \section{How to Use the Registry to Flag Confounded Comparisons}
@@ -560,13 +622,19 @@ extra writing.
 \todo{\minreport{} position paper. Cite the arXiv/venue version once assigned.}
 
 \bibitem{dapo2025}
-\todo{DAPO paper (clip-higher + dynamic sampling). Fill authors/venue/year.}
+Yu, Q., et al. \emph{DAPO: An Open-Source LLM Reinforcement Learning System
+at Scale}. arXiv:2503.14476, 2025. (Clip-higher + dynamic sampling.)
+\todo{verify final venue}
 
 \bibitem{gspo2025}
-\todo{GSPO paper (sequence-level importance sampling). Fill authors/venue/year.}
+Zheng, C., et al. (Qwen Team). \emph{Group Sequence Policy Optimization}.
+arXiv:2507.18071, 2025. (Sequence-level importance sampling.)
+\todo{verify final venue}
 
 \bibitem{drgrpo2025}
-\todo{Dr.\grpo{} paper (length/normalization fix). Fill authors/venue/year.}
+Liu, Z., et al. \emph{Understanding R1-Zero-Like Training: A Critical
+Perspective}. arXiv:2503.20783, 2025. (Dr.\grpo{}: length/normalization-bias
+fix.) \todo{verify final venue}
 
 \bibitem{madgrpo2025}
 \todo{MAD-\grpo{} paper (multi-agent/diversity). Fill authors/venue/year.}
@@ -582,6 +650,51 @@ extra writing.
 
 \bibitem{scafgrpo2025}
 \todo{Scaf-\grpo{} (scaffolded exploration). Fill authors/venue/year.}
+
+\bibitem{agenticrl2026}
+Zhang, G., Geng, H., Yu, X., Yin, Z., et al. \emph{The Landscape of Agentic
+Reinforcement Learning for LLMs: A Survey}. Transactions on Machine Learning
+Research, 01/2026. arXiv:2509.02547. (Table~2 is the canonizing catalog of
+\grpo{}-family variants; source of the variant attributions below.)
+
+\bibitem{greso2025}
+Zheng, H., et al. \emph{Act Only When It Pays: Efficient Reinforcement
+Learning for LLM Reasoning via Selective Rollout} (GRESO).
+arXiv:2506.02177, 2025. \todo{verify final venue}
+
+\bibitem{edgegrpo2025}
+Zhang, X., et al. \emph{EDGE-GRPO: Entropy-Driven GRPO with Guided Error
+Correction for Advantage Diversity}. arXiv:2507.21848, 2025.
+\todo{verify final venue}
+
+\bibitem{dars2025}
+Yang, Z., et al. \emph{Depth-Breadth Synergy in RLVR: Unlocking LLM
+Reasoning Gains with Adaptive Exploration} (introduces DARS,
+difficulty-adaptive rollout sampling). arXiv:2508.13755, 2025.
+\todo{verify final venue}
+
+\bibitem{treepo2025}
+Li, Y., et al. \emph{TreePO: Bridging the Gap of Policy Optimization and
+Efficacy and Inference Efficiency with Heuristic Tree-based Modeling}.
+arXiv:2508.17445, 2025. \todo{verify final venue}
+
+\bibitem{posteriorgrpo2025}
+Fan, L., Zhang, Y., Chen, M., and Liu, Z. \emph{Posterior-GRPO: Rewarding
+Reasoning Processes in Code Generation}. arXiv:2508.05170, 2025.
+\todo{verify final venue}
+
+\bibitem{skyworkr1v2-2025}
+Wang, P., et al. \emph{Skywork R1V2: Multimodal Hybrid Reinforcement
+Learning for Reasoning}. arXiv:2504.16656, 2025. \todo{verify final venue}
+
+\bibitem{gmpo2025}
+Zhao, Y., et al. \emph{Geometric-Mean Policy Optimization}.
+arXiv:2507.20673, 2025. \todo{verify final venue}
+
+\bibitem{prorl2025}
+Liu, M., et al. \emph{ProRL: Prolonged Reinforcement Learning Expands
+Reasoning Boundaries in Large Language Models}. arXiv:2505.24864, 2025.
+\todo{verify final venue}
 
 \end{thebibliography}
 

@@ -199,13 +199,13 @@ Excluded files:
 - `paper/limitations_update.tex`
 - `paper/main.aux`, `paper/main.bbl`, `paper/main.blg`, `paper/main.out`, `paper/main.pdf`, `paper/main.tex`
 - `paper/neurips_checklist_update.tex`
-- `reports/final/CONSOLIDATED_REVIEW_IMPROVEMENTS.md`
-- `reports/final/PAPER_IMPROVEMENT_PLAN.md`
-- `reports/final/capstone_final_report.docx`
-- `reports/final/capstone_final_report.md`
-- `reports/final/grpo_agentic_llm_paper.md`
-- `reports/final/grpo_agentic_llm_paper.tex`
-- `scripts/anonymize.sh`
+- `platform_tinker/reports/final/CONSOLIDATED_REVIEW_IMPROVEMENTS.md`
+- `platform_tinker/reports/final/PAPER_IMPROVEMENT_PLAN.md`
+- `platform_tinker/reports/final/capstone_final_report.docx`
+- `platform_tinker/reports/final/capstone_final_report.md`
+- `platform_tinker/reports/final/grpo_agentic_llm_paper.md`
+- `platform_tinker/reports/final/grpo_agentic_llm_paper.tex`
+- `platform_modal/scripts/anonymize.sh`
 - `team-analysis.pplx.md`
 - `team-links-audit.pplx.md`
 - `verify_links_entities.txt`
@@ -220,7 +220,7 @@ Excluded directories:
 ### 4.4 Included binaries (figures & data zip)
 
 Figures under `paper/figures/`, `paper/tikz/`, `grpo_ablation_results/images/`,
-and `reports/final/*.png` are copied as-is. The data archive
+and `platform_tinker/reports/final/*.png` are copied as-is. The data archive
 `GRPO_Ablation_results.zip` is included. All have been scanned with `strings`
 for the identifier token set and contain no identifying strings.
 
@@ -268,5 +268,5 @@ produces the same `paper/main_anon.tex` and a tarball with identical content
   for Task 11 (which forbids modifying the non-anon tree).
 - `platform_local/scientific_audit.py` cannot run in this sandbox (no `pdflatex`); it should
   be re-run on the submission runner.
-- The non-anon tree (`paper/main.tex`, `reports/`, repo scripts) was not
+- The non-anon tree (`paper/main.tex`, `platform_tinker/reports/`, repo scripts) was not
   modified.

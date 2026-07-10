@@ -425,7 +425,7 @@ PEFT, scikit-learn). Table~\ref{tab:impl} summarises the implementation status.
 \toprule
 \textbf{Component} & \textbf{Status} & \textbf{Evidence} \\
 \midrule
-GRPO reference loop (\texttt{tinkerrl/grpo.py}) & Done & P2/P3/campaign runs \\
+GRPO reference loop (\texttt{platform_tinker/tinkerrl/grpo.py}) & Done & P2/P3/campaign runs \\
 ZVF / collapse instrumentation & Done & recomputed by \texttt{p2\_collapse\_analysis.py} \\
 Per-step telemetry $\to$ JSONL / W\&B & Done & project \texttt{rlvr-openings} \\
 Process-per-run campaign launcher & Done & 9-run multi-seed campaign \\
@@ -745,10 +745,10 @@ limitation rather than a hidden one.
 The core design commitment is \emph{attribution}: hold the experiment fixed and vary
 only the stack. A single configuration object specifies the model, dataset, reward
 function, decoding parameters (temperature, top-$p$, max tokens), group size $G$,
-learning rate, KL coefficient, and seed. A launcher (\texttt{unified/launcher.py})
+learning rate, KL coefficient, and seed. A launcher (\texttt{platform_local/unified/launcher.py})
 maps that one config onto any of the supported back-ends through thin per-framework
-adapters (\texttt{trl\_integrations/}, \texttt{verl/}, \texttt{openrlhf/},
-\texttt{skyrl/}, \texttt{atropos/}), while \texttt{tinkerrl/grpo.py} implements the
+adapters (\texttt{trl\_integrations/}, \texttt{verl/}, \texttt{platform_modal/openrlhf/},
+\texttt{platform_hybrid/skyrl/}, \texttt{platform_tinker/atropos/}), while \texttt{platform_tinker/tinkerrl/grpo.py} implements the
 reference GRPO loop against the managed Tinker back-end. Because the reward grader
 and decoding are shared code, a difference in outcome between two back-ends is
 attributable to the framework, not to a divergent reward parser or sampler.
@@ -846,7 +846,7 @@ and clip range, using live advantage-variance / KL-drift as sensor inputs.
 \label{sec:impl-loop}
 \input{tikz/fig2.tex}
 \input{tikz/fig3.tex}
-The reference loop in \texttt{tinkerrl/grpo.py} follows the standard
+The reference loop in \texttt{platform_tinker/tinkerrl/grpo.py} follows the standard
 sample~$\rightarrow$~advantage~$\rightarrow$~loss~$\rightarrow$~optimise cycle. For a
 prompt $q$ we draw a group of $G$ completions $\{o_i\}_{i=1}^{G}$ from the current
 policy and score each with the verifiable reward $r_i$; the group-relative advantage
@@ -898,10 +898,10 @@ Table~\ref{tab:modules} lists the principal modules and their responsibilities.
 \toprule
 \textbf{Module} & \textbf{Responsibility} \\
 \midrule
-\texttt{unified/launcher.py} & Map one config onto a chosen back-end. \\
-\texttt{tinkerrl/grpo.py} & Reference GRPO loop (managed back-end). \\
-\path{trl_integrations/}, \path{verl/}, \path{openrlhf/}, \path{skyrl/},
-\path{atropos/} & Thin per-framework adapters. \\
+\texttt{platform_local/unified/launcher.py} & Map one config onto a chosen back-end. \\
+\texttt{platform_tinker/tinkerrl/grpo.py} & Reference GRPO loop (managed back-end). \\
+\path{platform_local/trl_integrations/}, \path{verl/}, \path{platform_modal/openrlhf/}, \path{platform_hybrid/skyrl/},
+\path{platform_tinker/atropos/} & Thin per-framework adapters. \\
 \texttt{p2\_collapse\_analysis.py} & Recompute ZVF / collapse from reward tensors. \\
 \texttt{p1\_layer\_profile.py} & White-box per-layer LoRA grad-norm profile. \\
 \texttt{parallel\_sweep.py}, \texttt{campaign.py} & Concurrent sweeps; process-per-run campaign. \\

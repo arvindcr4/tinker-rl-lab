@@ -41,7 +41,7 @@ done
 
 echo "==> Uploading webarena-compose + load_images.sh..."
 gcloud compute scp --recurse \
-  "$REPO_DIR/infra/gcp/webarena-compose" \
+  "$REPO_DIR/platform_gcp/infra/gcp/webarena-compose" \
   "$BUILDER_NAME:/tmp/webarena-compose" \
   --zone="$GCP_ZONE"
 

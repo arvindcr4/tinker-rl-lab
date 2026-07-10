@@ -1133,12 +1133,12 @@ The World-Class Suite provides a more complete picture of frontier model behavio
 
 #### 5.8.1 F5 Reframed from Mechanistic to Descriptive; Regenerated Figures (Reviewer W10 / W12)
 
-*Paper sections: `paper/sections/frontier_scope_clarification.tex`, `paper/sections/figures_regeneration_note.tex`. Reproducibility: `scripts/regenerate_missing_figures.py`.*
+*Paper sections: `paper/sections/frontier_scope_clarification.tex`, `paper/sections/figures_regeneration_note.tex`. Reproducibility: `platform_modal/scripts/regenerate_missing_figures.py`.*
 
 **Addresses reviewer concerns:** W10 (F5 brief runs), W12 (placeholder figures)
 
 **Paper sections added:** `paper/sections/frontier_scope_clarification.tex`, `paper/sections/figures_regeneration_note.tex`
-**Reproducibility:** `scripts/regenerate_missing_figures.py`
+**Reproducibility:** `platform_modal/scripts/regenerate_missing_figures.py`
 
 ---
 
@@ -1195,7 +1195,7 @@ such a replication can reuse the same evaluation harness unchanged.
 
 Reviewer W12 flagged that three figure PDFs had shipped as placeholder boxes
 in an earlier draft. All three have been regenerated as real rendered PDF+PNG
-pairs via a single entrypoint, `scripts/regenerate_missing_figures.py`, which
+pairs via a single entrypoint, `platform_modal/scripts/regenerate_missing_figures.py`, which
 consumes canonical data files (or falls back deterministically to the numbers
 already quoted in the paper text when a source file is missing). The script
 depends only on `numpy` and `matplotlib` — no `scipy` — so it runs in the
@@ -1210,7 +1210,7 @@ minimal environment used for artefact review.
 The paper's `main.tex` wraps each `\includegraphics` in
 `\IfFileExists{...}{real}{placeholder}`, so the document compiles whether the
 regenerated figures are present or not. After running
-`python3 scripts/regenerate_missing_figures.py`, all six files are written to
+`python3 platform_modal/scripts/regenerate_missing_figures.py`, all six files are written to
 the exact paths `main.tex` expects and the real-figure branch fires for all
 three, eliminating the placeholder boxes without any change to the LaTeX
 source.
@@ -1357,12 +1357,12 @@ Tool-use experiments without SFT warm-up have ZVF=100% from step 0 — no gradie
 
 #### 5.12.1 Formal Definition, Partial-Correlation Ablation, and Cross-Framework Pipeline (Reviewer W1 / Q1 / W13)
 
-*Paper sections: `paper/sections/appendix_zvf_formalization.tex`, `paper/sections/zvf_pipeline_spec.tex`. Reproducibility: `scripts/partial_correlation_zvf.py`, `scripts/zvf_compute_cross_framework.py`.*
+*Paper sections: `paper/sections/appendix_zvf_formalization.tex`, `paper/sections/zvf_pipeline_spec.tex`. Reproducibility: `platform_modal/scripts/partial_correlation_zvf.py`, `platform_modal/scripts/zvf_compute_cross_framework.py`.*
 
 **Addresses reviewer concerns:** W1 (ZVF tautology), Q1 (formalization), W13 (pipeline underspecification)
 
 **Paper sections added:** `paper/sections/appendix_zvf_formalization.tex`, `paper/sections/zvf_pipeline_spec.tex`
-**Reproducibility:** `scripts/partial_correlation_zvf.py`, `scripts/zvf_compute_cross_framework.py`
+**Reproducibility:** `platform_modal/scripts/partial_correlation_zvf.py`, `platform_modal/scripts/zvf_compute_cross_framework.py`
 
 ##### Formal Definition
 
@@ -1376,7 +1376,7 @@ A reviewer may reasonably suspect that under binary outcome rewards and group-re
 
 ##### Partial-Correlation Ablation
 
-To show that ZVF_t adds predictive signal beyond well-known diagnostics, we compute partial correlations between ZVF at an early reference window t* ∈ [25, 40] and final held-out GSM8K-500 accuracy R_final, controlling for candidate confounders one at a time and then jointly: batch mean reward r̄_t, policy entropy H_π(t), within-group advantage variance Var_A(t), and KL drift to reference KL(π_t ‖ π_ref). The Tier-A matched-protocol subset (Qwen3-8B, Qwen3-1.7B, Qwen2.5-0.5B on GSM8K; 5-seed) is used throughout. Computations use `pingouin.partial_corr` when available with a residualized-regression fallback (see `scripts/partial_correlation_zvf.py`; per-(model, framework) breakdown in `experiments/results/zvf_partial_correlations.tsv`).
+To show that ZVF_t adds predictive signal beyond well-known diagnostics, we compute partial correlations between ZVF at an early reference window t* ∈ [25, 40] and final held-out GSM8K-500 accuracy R_final, controlling for candidate confounders one at a time and then jointly: batch mean reward r̄_t, policy entropy H_π(t), within-group advantage variance Var_A(t), and KL drift to reference KL(π_t ‖ π_ref). The Tier-A matched-protocol subset (Qwen3-8B, Qwen3-1.7B, Qwen2.5-0.5B on GSM8K; 5-seed) is used throughout. Computations use `pingouin.partial_corr` when available with a residualized-regression fallback (see `platform_modal/scripts/partial_correlation_zvf.py`; per-(model, framework) breakdown in `experiments/results/zvf_partial_correlations.tsv`).
 
 | Controlling for | r_partial | 95% bootstrap CI | ΔR² | p (BH) |
 |---|---|---|---|---|
@@ -1391,7 +1391,7 @@ Even after partialling out the four most intuitive confounders *jointly*, ZVF re
 
 ##### Cross-Framework Pipeline
 
-The reference implementation normalizes each framework's rollout log into a [|B_t|, K] reward matrix and applies the canonical rule `(rewards_2d.var(axis=-1, ddof=1) ≤ ε).mean()`. The per-framework log-field mapping used by `scripts/zvf_compute_cross_framework.py` is:
+The reference implementation normalizes each framework's rollout log into a [|B_t|, K] reward matrix and applies the canonical rule `(rewards_2d.var(axis=-1, ddof=1) ≤ ε).mean()`. The per-framework log-field mapping used by `platform_modal/scripts/zvf_compute_cross_framework.py` is:
 
 | Framework | Reward key | Group boundary | Mask field |
 |---|---|---|---|
@@ -1787,7 +1787,7 @@ d.o. = descriptive only (`n_seeds < 5`, CIs suppressed and no p-value computed).
 
 ## 6. Summary of Findings
 
-> **Revision note (2026-04-19).** The findings below have been audited against NeurIPS 2026 reviewer feedback. Concerns that required scope or wording changes are flagged in the rightmost column; full rebuttal detail is in §§5.8.1, 5.12.1, 5.16.1, 5.17–5.19 and §§2.7–2.8. A mechanical registry of all 24 weaknesses is at `paper/reviewer_points.yaml`, scored by `scripts/reviewer_response_score.sh`.
+> **Revision note (2026-04-19).** The findings below have been audited against NeurIPS 2026 reviewer feedback. Concerns that required scope or wording changes are flagged in the rightmost column; full rebuttal detail is in §§5.8.1, 5.12.1, 5.16.1, 5.17–5.19 and §§2.7–2.8. A mechanical registry of all 24 weaknesses is at `paper/reviewer_points.yaml`, scored by `platform_modal/scripts/reviewer_response_score.sh`.
 
 
 | # | Finding | Type | Evidence | Source |

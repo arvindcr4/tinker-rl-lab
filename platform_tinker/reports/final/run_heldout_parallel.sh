@@ -2,7 +2,7 @@
 set -uo pipefail
 
 : "${TINKER_API_KEY:?Set TINKER_API_KEY in env (was hardcoded, removed 2026-04-11)}"
-cd /home/arvind/tinker-rl-lab/reports/final
+cd /home/arvind/tinker-rl-lab/platform_tinker/reports/final
 
 LIMIT=200
 

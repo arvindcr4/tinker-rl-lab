@@ -158,11 +158,11 @@ class UnifiedLauncher:
 
         # Import and use existing tinker_atropos trainer
         try:
-            from tinker_atropos.config import TinkerAtroposConfig
-            from tinker_atropos.trainer import TinkerAtroposTrainer
+            from platform_tinker.tinker_atropos.config import TinkerAtroposConfig
+            from platform_tinker.tinker_atropos.trainer import TinkerAtroposTrainer
 
             # This would run actual training
-            print("  Note: Run 'python atropos/launch_training.py' for actual Tinker Atropos training")
+            print("  Note: Run 'python platform_tinker/atropos/launch_training.py' for actual Tinker Atropos training")
         except ImportError:
             print("  Warning: tinker_atropos not available")
 
@@ -224,8 +224,8 @@ class UnifiedLauncher:
         print("\n[OPENRLHF] Starting OpenRLHF training...")
 
         try:
-            from openrlhf.config import OpenRLHFConfig
-            from openrlhf.trainer import OpenRLHFTrainer
+            from platform_modal.openrlhf.config import OpenRLHFConfig
+            from platform_modal.openrlhf.trainer import OpenRLHFTrainer
         except ImportError:
             print("  Warning: OpenRLHF not installed. Install with: pip install openrlhf")
 

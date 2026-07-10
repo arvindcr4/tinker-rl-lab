@@ -27,13 +27,13 @@ Files dropped on purpose (not part of the anonymised artefact):
   * paper/main.tex, paper/acm_main.tex                   (non-anonymous sources)
   * paper/main.pdf                                        (compiled artefact)
   * paper/main.aux/out/bbl/blg/log                        (build artefacts)
-  * reports/final/grpo_agentic_llm_paper.tex             (non-anonymous mirror)
-  * reports/final/grpo_agentic_llm_paper.md              (non-anonymous mirror)
-  * reports/final/capstone_final_report.md               (internal, names authors)
-  * reports/final/capstone_final_report.docx             (internal)
-  * reports/final/CONSOLIDATED_REVIEW_IMPROVEMENTS.md    (internal)
-  * reports/final/PAPER_IMPROVEMENT_PLAN.md              (internal)
-  * scripts/anonymize.sh                                  (old tool, superseded)
+  * platform_tinker/reports/final/grpo_agentic_llm_paper.tex             (non-anonymous mirror)
+  * platform_tinker/reports/final/grpo_agentic_llm_paper.md              (non-anonymous mirror)
+  * platform_tinker/reports/final/capstone_final_report.md               (internal, names authors)
+  * platform_tinker/reports/final/capstone_final_report.docx             (internal)
+  * platform_tinker/reports/final/CONSOLIDATED_REVIEW_IMPROVEMENTS.md    (internal)
+  * platform_tinker/reports/final/PAPER_IMPROVEMENT_PLAN.md              (internal)
+  * platform_modal/scripts/anonymize.sh                                  (old tool, superseded)
   * blind_review/**                                       (not self-referential)
   * **/__pycache__, *.pyc, wandb/, .env                   (caches/secrets)
 
@@ -81,13 +81,13 @@ EXCLUDE_FILES = {
     "paper/limitations_update.tex",
     "paper/neurips_checklist_update.tex",
     "paper/ethics_statement.tex",
-    "reports/final/grpo_agentic_llm_paper.tex",
-    "reports/final/grpo_agentic_llm_paper.md",
-    "reports/final/capstone_final_report.md",
-    "reports/final/capstone_final_report.docx",
-    "reports/final/CONSOLIDATED_REVIEW_IMPROVEMENTS.md",
-    "reports/final/PAPER_IMPROVEMENT_PLAN.md",
-    "scripts/anonymize.sh",
+    "platform_tinker/reports/final/grpo_agentic_llm_paper.tex",
+    "platform_tinker/reports/final/grpo_agentic_llm_paper.md",
+    "platform_tinker/reports/final/capstone_final_report.md",
+    "platform_tinker/reports/final/capstone_final_report.docx",
+    "platform_tinker/reports/final/CONSOLIDATED_REVIEW_IMPROVEMENTS.md",
+    "platform_tinker/reports/final/PAPER_IMPROVEMENT_PLAN.md",
+    "platform_modal/scripts/anonymize.sh",
     "archive/root-scratch/verify_links_entities.txt",
     # Citation metadata file lists real author names -- excluded from blind
     # bundle. A reviewer-facing citation block lives in the paper itself.

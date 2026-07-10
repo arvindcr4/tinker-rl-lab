@@ -7856,12 +7856,12 @@ the Zero-Variance Fraction (ZVF) diagnostic → the group-size sweep → the app
 
 <span class="k">def</span><span class="w"> </span><span class="nf">find_repo_root</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">[</span><span class="n">start</span><span class="p">,</span> <span class="o">*</span><span class="n">start</span><span class="o">.</span><span class="n">parents</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s2">"experiments"</span> <span class="o">/</span> <span class="s2">"master_results.csv"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s2">"platform_hybrid/experiments"</span> <span class="o">/</span> <span class="s2">"master_results.csv"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">p</span>
     <span class="k">return</span> <span class="n">start</span>
 
 <span class="n">REPO_ROOT</span> <span class="o">=</span> <span class="n">find_repo_root</span><span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">())</span>
-<span class="k">assert</span> <span class="p">(</span><span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"experiments"</span> <span class="o">/</span> <span class="s2">"master_results.csv"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span> <span class="s2">"repo root not found"</span>
+<span class="k">assert</span> <span class="p">(</span><span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"platform_hybrid/experiments"</span> <span class="o">/</span> <span class="s2">"master_results.csv"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span> <span class="s2">"repo root not found"</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Repo root :"</span><span class="p">,</span> <span class="n">REPO_ROOT</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Libraries : pandas"</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span> <span class="s2">"| numpy"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span> <span class="s2">"| matplotlib"</span><span class="p">,</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
 </pre></div>
@@ -7912,8 +7912,8 @@ all of which draw on the artifacts loaded below.</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="b.-Load-consolidated-results">b. Load consolidated results<a class="anchor-link" href="#b.-Load-consolidated-results">¶</a></h2><p>The single source of truth is <code>experiments/master_results.csv</code> (mirrored as
-<code>experiments/master_results.json</code>). Below we load it and count runs by experiment group,
+<h2 id="b.-Load-consolidated-results">b. Load consolidated results<a class="anchor-link" href="#b.-Load-consolidated-results">¶</a></h2><p>The single source of truth is <code>platform_hybrid/experiments/master_results.csv</code> (mirrored as
+<code>platform_hybrid/experiments/master_results.json</code>). Below we load it and count runs by experiment group,
 RL algorithm, task, model, and completion status.</p>
 </div>
 </div>
@@ -7926,8 +7926,8 @@ RL algorithm, task, model, and completion status.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">csv_path</span> <span class="o">=</span> <span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"experiments"</span> <span class="o">/</span> <span class="s2">"master_results.csv"</span>
-<span class="n">json_path</span> <span class="o">=</span> <span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"experiments"</span> <span class="o">/</span> <span class="s2">"master_results.json"</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">csv_path</span> <span class="o">=</span> <span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"platform_hybrid/experiments"</span> <span class="o">/</span> <span class="s2">"master_results.csv"</span>
+<span class="n">json_path</span> <span class="o">=</span> <span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"platform_hybrid/experiments"</span> <span class="o">/</span> <span class="s2">"master_results.json"</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Loaded </span><span class="si">{</span><span class="n">csv_path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">REPO_ROOT</span><span class="p">)</span><span class="si">}</span><span class="s2">  -&gt;  </span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> rows x </span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> columns"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Companion JSON: </span><span class="si">{</span><span class="n">json_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> present=</span><span class="si">{</span><span class="n">json_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span><span class="si">}</span><span class="s2"> "</span>
@@ -7954,7 +7954,7 @@ RL algorithm, task, model, and completion status.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Loaded experiments/master_results.csv  -&gt;  95 rows x 18 columns
+<pre>Loaded platform_hybrid/experiments/master_results.csv  -&gt;  95 rows x 18 columns
 Companion JSON: master_results.json present=True (117 KB)
 
 Runs by experiment group:
@@ -8386,7 +8386,7 @@ Runs by experiment group:
 <h2 id="c.-Headline-result-%E2%80%94-GRPO-%C2%B7-Qwen3-8B-%C2%B7-GSM8K">c. Headline result — GRPO · Qwen3-8B · GSM8K<a class="anchor-link" href="#c.-Headline-result-%E2%80%94-GRPO-%C2%B7-Qwen3-8B-%C2%B7-GSM8K">¶</a></h2><p>The flagship task is <strong>GSM8K grade-school math</strong> trained with <strong>GRPO on Qwen3-8B</strong>. We first
 show the training-reward numbers (peak and last-10 average) from the consolidated table, then
 the <strong>held-out</strong> test accuracy — the honest generalization number — read directly from
-<code>reports/final/gsm8k_heldout_seed*.json</code> (each a fresh 200-example GSM8K test evaluation).</p>
+<code>platform_tinker/reports/final/gsm8k_heldout_seed*.json</code> (each a fresh 200-example GSM8K test evaluation).</p>
 </div>
 </div>
 </div>
@@ -8669,7 +8669,7 @@ Last-10 reward across 14 configs: mean=0.310, best=0.425, worst=0.050
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">ho_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"reports"</span> <span class="o">/</span> <span class="s2">"final"</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"gsm8k_heldout_seed*.json"</span><span class="p">))</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">ho_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"platform_tinker/reports"</span> <span class="o">/</span> <span class="s2">"final"</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"gsm8k_heldout_seed*.json"</span><span class="p">))</span>
 <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">ho_files</span><span class="p">:</span>
     <span class="n">d</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="p">));</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">"summary"</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">"config"</span><span class="p">]</span>
@@ -8979,9 +8979,9 @@ semantics, so its final accuracy is drawn as a reference level rather than on th
 <h2 id="e.-ZVF-diagnostic-%E2%80%94-signal-starvation-in-GRPO">e. ZVF diagnostic — signal starvation in GRPO<a class="anchor-link" href="#e.-ZVF-diagnostic-%E2%80%94-signal-starvation-in-GRPO">¶</a></h2><p>The <strong>Zero-Variance Fraction (ZVF)</strong> is the share of GRPO groups in which every sampled
 completion earns the <em>same</em> reward, so the group-relative advantage is zero and the batch
 contributes no learning signal (paper <strong>P2</strong>). Using the per-step logs in
-<code>experiments/results/groupsize_zvf_sweep.json</code>, we trace ZVF over training for each group size
+<code>platform_hybrid/platform_hybrid/experiments/results/groupsize_zvf_sweep.json</code>, we trace ZVF over training for each group size
 (mean of 3 seeds), then show the cross-experiment ZVF summary table
-(<code>experiments/results/zvf_summary.tsv</code>) with its deterministic failure labels.</p>
+(<code>platform_hybrid/platform_hybrid/experiments/results/zvf_summary.tsv</code>) with its deterministic failure labels.</p>
 </div>
 </div>
 </div>
@@ -8993,7 +8993,7 @@ contributes no learning signal (paper <strong>P2</strong>). Using the per-step l
 <div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">sweep</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"experiments"</span> <span class="o">/</span> <span class="s2">"results"</span> <span class="o">/</span> <span class="s2">"groupsize_zvf_sweep.json"</span><span class="p">))</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sweep</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"platform_hybrid/experiments"</span> <span class="o">/</span> <span class="s2">"results"</span> <span class="o">/</span> <span class="s2">"groupsize_zvf_sweep.json"</span><span class="p">))</span>
 <span class="n">runs</span> <span class="o">=</span> <span class="n">sweep</span><span class="p">[</span><span class="s2">"runs"</span><span class="p">]</span>
 <span class="n">group_sizes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">r</span><span class="p">[</span><span class="s2">"group_size"</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">})</span>
 
@@ -9043,7 +9043,7 @@ contributes no learning signal (paper <strong>P2</strong>). Using the per-step l
 <div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">zvf_sum</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"experiments"</span> <span class="o">/</span> <span class="s2">"results"</span> <span class="o">/</span> <span class="s2">"zvf_summary.tsv"</span><span class="p">,</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">zvf_sum</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"platform_hybrid/experiments"</span> <span class="o">/</span> <span class="s2">"results"</span> <span class="o">/</span> <span class="s2">"zvf_summary.tsv"</span><span class="p">,</span>
                       <span class="n">sep</span><span class="o">=</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s2">"#"</span><span class="p">)</span>
 <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"experiment"</span><span class="p">,</span><span class="s2">"model"</span><span class="p">,</span><span class="s2">"task"</span><span class="p">,</span><span class="s2">"group_size"</span><span class="p">,</span><span class="s2">"n_seeds"</span><span class="p">,</span>
         <span class="s2">"mean_zvf"</span><span class="p">,</span><span class="s2">"peak"</span><span class="p">,</span><span class="s2">"last10_avg"</span><span class="p">,</span><span class="s2">"failure_label"</span><span class="p">,</span><span class="s2">"n_steps"</span><span class="p">]</span>
@@ -9281,7 +9281,7 @@ contributes no learning signal (paper <strong>P2</strong>). Using the per-step l
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="f.-Group-size-sweep">f. Group-size sweep<a class="anchor-link" href="#f.-Group-size-sweep">¶</a></h2><p>Paper <strong>P3</strong> frames group size as a <strong>contrast-density</strong> knob. The sweep table
-<code>experiments/results/groupsize_zvf_sweep.tsv</code> (Qwen2.5-0.5B, synthetic arithmetic, 3 seeds each)
+<code>platform_hybrid/platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv</code> (Qwen2.5-0.5B, synthetic arithmetic, 3 seeds each)
 shows that as the group size G grows from 2 → 16 the <strong>measured ZVF falls monotonically</strong> while
 <strong>held-out accuracy stays high (~98%)</strong>. We also overlay the <em>theoretical</em> ZVF at the observed
 mean pass-rate, closing the loop between the descriptive diagnostic and its model.</p>
@@ -9296,7 +9296,7 @@ mean pass-rate, closing the loop between the descriptive diagnostic and its mode
 <div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">gs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"experiments"</span> <span class="o">/</span> <span class="s2">"results"</span> <span class="o">/</span> <span class="s2">"groupsize_zvf_sweep.tsv"</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">gs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"platform_hybrid/experiments"</span> <span class="o">/</span> <span class="s2">"results"</span> <span class="o">/</span> <span class="s2">"groupsize_zvf_sweep.tsv"</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">gs</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"G"</span><span class="p">:</span> <span class="s2">"group_size"</span><span class="p">})</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Group-size sweep (Qwen2.5-0.5B, synthetic arithmetic, 3 seeds each):"</span><span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">gs</span><span class="p">)</span>
@@ -9833,8 +9833,8 @@ fraud_data.csv sample: 1000 rows x 25 cols; features ['V1', 'V2', 'V3', 'V4', 'V
 <li><code>REPRODUCE.md</code> — reviewer-oriented reproduction commands</li>
 <li><code>ARTIFACT.md</code> — result-to-artifact mapping</li>
 <li><code>sem 4 work/EXPERIMENTS.md</code> — paper-to-source / evidence map</li>
-<li><code>experiments/experiment_summary.md</code> — consolidated experiment summary</li>
-<li><code>experiments/results/</code> — result tables, per-step traces, and audit outputs</li>
+<li><code>platform_hybrid/experiments/experiment_summary.md</code> — consolidated experiment summary</li>
+<li><code>platform_hybrid/experiments/results/</code> — result tables, per-step traces, and audit outputs</li>
 </ul>
 <p><em>Every figure and table above was regenerated live from these committed artifacts — fully
 offline, no API keys, no training.</em></p>

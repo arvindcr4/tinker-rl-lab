@@ -3,7 +3,7 @@
 **Files reviewed:**
 - `reports/TinkerRL-Bench_status_Ramesh_2026-07-04.pptx`
 - `reports/TinkerRL-Bench_status_Ramesh_2026-07-04_transcript.md`
-- `scripts/generate_ramesh_status_slides_20260704.py`
+- `platform_modal/scripts/generate_ramesh_status_slides_20260704.py`
 
 **Evidence checked:**
 - `experiments/launch_log.md`
@@ -123,11 +123,11 @@ The integrity framing around LaTeX builds is now honest, Berkeley is handled cor
 
 ## Required fixes
 
-1. **Correct N2 status** (`scripts/generate_ramesh_status_slides_20260704.py` line 126; Slide 4; transcript Slide 4). AERO is finished; GIFT is the active arm and is paused on a Tinker billing block. Suggested wording: "GRPO 40/40 · AERO 40/40 · GIFT ~22/40 paused on billing block."
+1. **Correct N2 status** (`platform_modal/scripts/generate_ramesh_status_slides_20260704.py` line 126; Slide 4; transcript Slide 4). AERO is finished; GIFT is the active arm and is paused on a Tinker billing block. Suggested wording: "GRPO 40/40 · AERO 40/40 · GIFT ~22/40 paused on billing block."
 
-2. **Reconcile and update mega count** (`scripts/generate_ramesh_status_slides_20260704.py` line 128; Slide 4; transcript Slide 4). Use a single reconciled source (`cells_done.jsonl` or `cells.tsv`) and report the actual count (currently 8 completed cells, with `campaign_summary.json` showing 2 and needing regeneration).
+2. **Reconcile and update mega count** (`platform_modal/scripts/generate_ramesh_status_slides_20260704.py` line 128; Slide 4; transcript Slide 4). Use a single reconciled source (`cells_done.jsonl` or `cells.tsv`) and report the actual count (currently 8 completed cells, with `campaign_summary.json` showing 2 and needing regeneration).
 
-3. **Remove or reword the citation-tracking claim** (`scripts/generate_ramesh_status_slides_20260704.py` line 210; Slide 7). Either say "identified but not yet removed" or, if cleanup is genuinely in progress, point to the actual tracker. Do not say it is tracked in `paper_changes.log` or the "worktree change log."
+3. **Remove or reword the citation-tracking claim** (`platform_modal/scripts/generate_ramesh_status_slides_20260704.py` line 210; Slide 7). Either say "identified but not yet removed" or, if cleanup is genuinely in progress, point to the actual tracker. Do not say it is tracked in `paper_changes.log` or the "worktree change log."
 
 4. **Regenerate `n10_manifest_20260704.json`** so it reflects the successful `n10_grpo_s42` run and in-progress `n10_grpo_s179` run rather than the stale `failed`/`TINKER_API_KEY` state.
 

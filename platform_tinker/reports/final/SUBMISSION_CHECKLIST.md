@@ -82,6 +82,6 @@ reports/final/
 ## Notes for Authors
 
 - Paper should focus on empirical findings, not theoretical contributions
-- Emphasize reproducibility carefully (Tinker SDK, released scripts/configs, and explicit checkpoint availability status)
+- Emphasize reproducibility carefully (Tinker SDK, released platform_modal/scripts/configs, and explicit checkpoint availability status)
 - Highlight novel findings (capacity threshold, MoE volatility, two-phase learning)
 - Acknowledge limitations honestly, especially custom internal tool scores, the 50-problem HumanEval subset, and training-set math metrics vs held-out evaluation

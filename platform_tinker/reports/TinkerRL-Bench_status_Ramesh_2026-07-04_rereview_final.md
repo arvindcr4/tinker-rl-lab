@@ -3,7 +3,7 @@
 **Files reviewed:**
 - `reports/TinkerRL-Bench_status_Ramesh_2026-07-04.pptx`
 - `reports/TinkerRL-Bench_status_Ramesh_2026-07-04_transcript.md`
-- `scripts/generate_ramesh_status_slides_20260704.py`
+- `platform_modal/scripts/generate_ramesh_status_slides_20260704.py`
 
 **Evidence checked:**
 - `experiments/results/n2_reward_tensor_resume/n2_metrics.tsv` + live log + running PID
@@ -64,7 +64,7 @@ The deck and transcript are materially stale on two live-run counts. Everything 
 
 ## Required fixes before READY
 
-1. Update `scripts/generate_ramesh_status_slides_20260704.py` line 126 and regenerate the deck/transcript with the live N2 GIFT count (~18/40 and running).
+1. Update `platform_modal/scripts/generate_ramesh_status_slides_20260704.py` line 126 and regenerate the deck/transcript with the live N2 GIFT count (~18/40 and running).
 2. Update generator line 127 and prose to reflect that only N10 GRPO seed 42 is complete; seed 179 is still running (per-seed JSON has only 1/15 steps).
 3. Update Berkeley iteration count from 20 to 21.
 4. Re-run the generator and re-export the PPTX, or hand-edit both deck and transcript to keep them identical.

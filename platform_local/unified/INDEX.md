@@ -1,6 +1,6 @@
 # unified/ — INDEX
 
-**Purpose:** Single launcher that dispatches RL training across all integrated frameworks (skyrl, tinker/atropos, verl, openrlhf, trl) with a common CLI, algorithm set, and `TrainingResult` schema.
+**Purpose:** Single launcher that dispatches RL training across all integrated frameworks (skyrl, platform_tinker/atropos, verl, platform_modal/openrlhf, trl) with a common CLI, algorithm set, and `TrainingResult` schema.
 
 **Key files:**
 - `__init__.py` — the launcher implementation: defines `UnifiedLauncher` (per-framework `_run_*` dispatch, `FRAMEWORKS`/`ALGORITHMS` tables, `TrainingResult`) and `main()`.

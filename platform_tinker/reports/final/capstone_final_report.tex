@@ -1179,7 +1179,7 @@ Table~\ref{tab:reproducibility-checklist} lists the concrete artifacts needed to
 \toprule
 Artifact class & Location & Reproduction role & Status\\
 \midrule
-Source code and scripts & \path{src/}, \path{experiments/}, \path{scripts/} & Rebuilds data processing, validation, plotting, and packaging steps & Included in the code bundle.\\
+Source code and scripts & \path{src/}, \path{experiments/}, \path{platform_modal/scripts/} & Rebuilds data processing, validation, plotting, and packaging steps & Included in the code bundle.\\
 Primary result registry & \path{experiments/master_results.json}; \path{grpo_ablation_results/RESULTS.md} & Supports experiment inventory, reward summaries, and structural-ceiling claims & Included and summarized in the report.\\
 ZVF validation outputs & \path{experiments/zvf_predictive_validation_results.json}; \path{experiments/zvf_predictive_validation_runs.csv} & Reproduces the diagnostic confusion table, rank-correlation check, and leave-one-out regression & Included as direct empirical evidence.\\
 Tinker live-run artifact & \path{experiments/tinker-runs/results/live_zvf_probe_20260422_012018.json} & Verifies hosted Tinker execution metadata and checkpoint capture & Included locally; remote checkpoint access depends on Tinker permissions.\\

@@ -3268,7 +3268,7 @@ reuse the same evaluation harness unchanged.
 Three figure PDFs in an earlier draft had shipped as placeholder boxes.
 in an earlier draft. All three have been regenerated as real rendered
 PDF+PNG pairs via a single entrypoint,
-\texttt{scripts/regenerate\_missing\_figures.py}, which consumes
+\texttt{platform_modal/scripts/regenerate\_missing\_figures.py}, which consumes
 canonical data files (or falls back deterministically to the numbers
 already quoted in the paper text when a source file is missing). The
 script depends only on \texttt{numpy} and \texttt{matplotlib} --- no
@@ -3309,7 +3309,7 @@ The paper's \texttt{main.tex} wraps each
 \texttt{\textbackslash{}IfFileExists\{...\}\{real\}\{placeholder\}}, so
 the document compiles whether the regenerated figures are present or
 not. After running
-\texttt{python3\ scripts/regenerate\_missing\_figures.py}, all six files
+\texttt{python3\ platform_modal/scripts/regenerate\_missing\_figures.py}, all six files
 are written to the exact paths \texttt{main.tex} expects and the
 real-figure branch fires for all three, eliminating the placeholder
 boxes without any change to the LaTeX source. \#\#\# 5.9 PPO vs.~GRPO
@@ -3777,7 +3777,7 @@ KL(π\_t ‖ π\_ref). The Tier-A matched-protocol subset (Qwen3-8B,
 Qwen3-1.7B, Qwen2.5-0.5B on GSM8K; 5-seed) is used throughout.
 Computations use \texttt{pingouin.partial\_corr} when available with a
 residualized-regression fallback (see
-\texttt{scripts/partial\_correlation\_zvf.py}; per-(model, framework)
+\texttt{platform_modal/scripts/partial\_correlation\_zvf.py}; per-(model, framework)
 breakdown in
 \texttt{experiments/results/zvf\_partial\_correlations.tsv}).
 
@@ -3819,7 +3819,7 @@ into a {[}\textbar B\_t\textbar, K{]} reward matrix and applies the
 canonical rule
 \texttt{(rewards\_2d.var(axis=-1,\ ddof=1)\ \textless{}=\ ε).mean()}.
 The per-framework log-field mapping used by
-\texttt{scripts/zvf\_compute\_cross\_framework.py} is:
+\texttt{platform_modal/scripts/zvf\_compute\_cross\_framework.py} is:
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}

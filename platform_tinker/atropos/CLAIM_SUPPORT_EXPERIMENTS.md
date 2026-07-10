@@ -29,9 +29,9 @@ Why: tests whether the trained checkpoint generalizes beyond one saturated bench
 ## Training Blocks
 
 ### 1. Matched Qwen GSM8K scaling
-- [gsm8k_qwen_4b.yaml](/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_4b.yaml)
-- [gsm8k_qwen_8b.yaml](/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_8b.yaml)
-- [gsm8k_qwen_14b.yaml](/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_14b.yaml)
+- [gsm8k_qwen_4b.yaml](/home/arvind/tinker-rl-lab/platform_tinker/atropos/configs/gsm8k_qwen_4b.yaml)
+- [gsm8k_qwen_8b.yaml](/home/arvind/tinker-rl-lab/platform_tinker/atropos/configs/gsm8k_qwen_8b.yaml)
+- [gsm8k_qwen_14b.yaml](/home/arvind/tinker-rl-lab/platform_tinker/atropos/configs/gsm8k_qwen_14b.yaml)
 
 Run:
 ```bash
@@ -39,12 +39,12 @@ Run:
 ```
 
 ### 2. Replication / prompt / bootstrap controls
-- [gsm8k_qwen_8b_seed1.yaml](/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_8b_seed1.yaml)
-- [gsm8k_qwen_8b_seed2.yaml](/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_8b_seed2.yaml)
-- [gsm8k_qwen_8b_seed3.yaml](/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_8b_seed3.yaml)
-- [gsm8k_qwen_8b_no_prefix.yaml](/home/arvind/tinker-rl-lab/atropos/configs/gsm8k_qwen_8b_no_prefix.yaml)
-- [bootstrap_threshold_easy.yaml](/home/arvind/tinker-rl-lab/atropos/configs/bootstrap_threshold_easy.yaml)
-- [bootstrap_threshold_hardest.yaml](/home/arvind/tinker-rl-lab/atropos/configs/bootstrap_threshold_hardest.yaml)
+- [gsm8k_qwen_8b_seed1.yaml](/home/arvind/tinker-rl-lab/platform_tinker/atropos/configs/gsm8k_qwen_8b_seed1.yaml)
+- [gsm8k_qwen_8b_seed2.yaml](/home/arvind/tinker-rl-lab/platform_tinker/atropos/configs/gsm8k_qwen_8b_seed2.yaml)
+- [gsm8k_qwen_8b_seed3.yaml](/home/arvind/tinker-rl-lab/platform_tinker/atropos/configs/gsm8k_qwen_8b_seed3.yaml)
+- [gsm8k_qwen_8b_no_prefix.yaml](/home/arvind/tinker-rl-lab/platform_tinker/atropos/configs/gsm8k_qwen_8b_no_prefix.yaml)
+- [bootstrap_threshold_easy.yaml](/home/arvind/tinker-rl-lab/platform_tinker/atropos/configs/bootstrap_threshold_easy.yaml)
+- [bootstrap_threshold_hardest.yaml](/home/arvind/tinker-rl-lab/platform_tinker/atropos/configs/bootstrap_threshold_hardest.yaml)
 
 Run:
 ```bash
@@ -52,9 +52,9 @@ Run:
 ```
 
 ### 3. Harder math benchmark training
-- [math_qwen_4b.yaml](/home/arvind/tinker-rl-lab/atropos/configs/math_qwen_4b.yaml)
-- [math_qwen_8b.yaml](/home/arvind/tinker-rl-lab/atropos/configs/math_qwen_8b.yaml)
-- [math_qwen_14b.yaml](/home/arvind/tinker-rl-lab/atropos/configs/math_qwen_14b.yaml)
+- [math_qwen_4b.yaml](/home/arvind/tinker-rl-lab/platform_tinker/atropos/configs/math_qwen_4b.yaml)
+- [math_qwen_8b.yaml](/home/arvind/tinker-rl-lab/platform_tinker/atropos/configs/math_qwen_8b.yaml)
+- [math_qwen_14b.yaml](/home/arvind/tinker-rl-lab/platform_tinker/atropos/configs/math_qwen_14b.yaml)
 
 Run:
 ```bash
@@ -68,7 +68,7 @@ Run:
 
 ## Out-of-Distribution Evaluation
 
-Use [eval_reasoning_suite.py](/home/arvind/tinker-rl-lab/atropos/eval_reasoning_suite.py) to evaluate a base model or saved checkpoint on:
+Use [eval_reasoning_suite.py](/home/arvind/tinker-rl-lab/platform_tinker/atropos/eval_reasoning_suite.py) to evaluate a base model or saved checkpoint on:
 
 - `gsm8k`
 - `gsm1k`
@@ -81,7 +81,7 @@ Use [eval_reasoning_suite.py](/home/arvind/tinker-rl-lab/atropos/eval_reasoning_
 The intended use is:
 
 1. Train a checkpoint on GSM8K.
-2. Serve that checkpoint with [serve.py](/home/arvind/tinker-rl-lab/atropos/serve.py).
+2. Serve that checkpoint with [serve.py](/home/arvind/tinker-rl-lab/platform_tinker/atropos/serve.py).
 3. Run deterministic eval on multiple benchmarks.
 
 ### End-to-end example

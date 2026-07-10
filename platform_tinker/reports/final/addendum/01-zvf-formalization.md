@@ -3,7 +3,7 @@
 **Addresses reviewer concerns:** W1 (ZVF tautology), Q1 (formalization), W13 (pipeline underspecification)
 
 **Paper sections added:** `paper/sections/appendix_zvf_formalization.tex`, `paper/sections/zvf_pipeline_spec.tex`
-**Reproducibility:** `scripts/partial_correlation_zvf.py`, `scripts/zvf_compute_cross_framework.py`
+**Reproducibility:** `platform_modal/scripts/partial_correlation_zvf.py`, `platform_modal/scripts/zvf_compute_cross_framework.py`
 
 #### Formal Definition
 
@@ -22,11 +22,11 @@ A reviewer-recommended test of "is ZVF just a re-expression of mean reward?" is 
 - ZVF at an early reference window t* ∈ [25, 40] versus final held-out GSM8K-500 accuracy R_final.
 - Controls: batch mean reward r̄_t, policy entropy H_π(t), within-group advantage variance Var_A(t), and KL drift to reference KL(π_t ‖ π_ref).
 - Tier-A matched-protocol subset (Qwen3-8B, Qwen3-1.7B, Qwen2.5-0.5B on GSM8K; 5-seed).
-- Script: `scripts/partial_correlation_zvf.py`; output: `experiments/results/zvf_partial_correlations.tsv`.
+- Script: `platform_modal/scripts/partial_correlation_zvf.py`; output: `experiments/results/zvf_partial_correlations.tsv`.
 
 **Status (measured).** For the Qwen3-8B/frontier GSM8K corpus we still do not ship per-group step-level rollout logs, so no causal partial-correlation is claimed there. To answer the partial-correlation question directly we ran a fully instrumented, ungated validation (`experiments/modal/modal_groupsize_zvf_sweep.py` on Qwen2.5-0.5B arithmetic, 12 runs × 40 steps = 480 logged steps, G ∈ {2,4,8,16} × 3 seeds) that logs per-step ZVF, batch-mean reward, policy entropy, and advantage variance. `experiments/results/zvf_partial_correlations.tsv` now holds the **measured** result, but only the defensible part of it: ZVF↔reward **raw** `r = +0.74` (more all-correct groups → more zero-variance groups). We explicitly do **not** report a partial correlation "controlling for advantage variance": under binary rewards the within-group advantage variance is a *deterministic transform* of ZVF (zero iff zero-variance), so partialling it out is **circular** (regressing ZVF on a function of itself); and the 480 step-rows are 12 runs × 40 *autocorrelated* steps (lag-1 ≈ 0.9), so step-level p-values are invalid. The closed form `ZVF(p,G)=p^G+(1−p)^G` reproduces the qualitative *shape* across scales, but a per-problem Pearson `r ≈ 0.93` is mechanically inflated (observed per-problem ZVF = `1[p∈{0,1}]`, theory is a function of the same `p`; rank `ρ ≈ 0.65`), and the i.i.d. null mis-estimates the *level* (over-predicts at 8B, under-predicts at 0.5B). This is a small-scale consistency check on the diagnostic's shape, **not** a precise validation or a causal claim. The earlier 6-row table (r_partial −0.71→−0.31), the synthetic positive-sign stub, and the entropy/adv-var-"controlled" partials (−0.12/−0.13) are all **retracted**.
 
-**Schema bridge.** A future run that emits per-step `entropy`, `advantage_variance`, `kl_drift`, `final_reward` (and `group_size`, `baseline_accuracy` for completeness) will populate the 4 confounder rows automatically. The canonical per-step emitter is `SaturationTracker.record_step_with_diagnostics(step, group_rewards, entropy=…, advantage_variance=…, kl_drift=…, final_reward=…)` in `experiments/10x_structural_ceiling/group_saturation_diagnostic.py`; field names match the aliases accepted by `scripts/partial_correlation_zvf.py::_extract_zvf_row`. ZVF is emitted as `zero_variance_frac` (also accepted as `zvf` or `zero_variance_fraction`). The schema is verified end-to-end: a synthetic 16-step run with all confounders populated produced r_partial values for every row including the joint-control row. See `scripts/partial_correlation_zvf.py` header docstring for the field conventions.
+**Schema bridge.** A future run that emits per-step `entropy`, `advantage_variance`, `kl_drift`, `final_reward` (and `group_size`, `baseline_accuracy` for completeness) will populate the 4 confounder rows automatically. The canonical per-step emitter is `SaturationTracker.record_step_with_diagnostics(step, group_rewards, entropy=…, advantage_variance=…, kl_drift=…, final_reward=…)` in `experiments/10x_structural_ceiling/group_saturation_diagnostic.py`; field names match the aliases accepted by `platform_modal/scripts/partial_correlation_zvf.py::_extract_zvf_row`. ZVF is emitted as `zero_variance_frac` (also accepted as `zvf` or `zero_variance_fraction`). The schema is verified end-to-end: a synthetic 16-step run with all confounders populated produced r_partial values for every row including the joint-control row. See `platform_modal/scripts/partial_correlation_zvf.py` header docstring for the field conventions.
 
 **The non-tautology argument does not depend on the partial-correlation table.** The conceptual defense against the tautology concern is the closed-form E[ZVF] = E_{p_g}[p_g^K + (1 − p_g)^K] under an i.i.d. Bernoulli null: ZVF is sensitive to the higher moments of the per-prompt success distribution, not only its mean (see "Why ZVF Is Not a Tautological Re-expression of Mean Reward" above). A reviewer who still finds that argument unsatisfying should weight the partial-correlation evidence as **future work**, not as a current empirical claim.
 
@@ -34,7 +34,7 @@ A reviewer-recommended test of "is ZVF just a re-expression of mean reward?" is 
 
 #### Cross-Framework Pipeline
 
-The reference implementation normalizes each framework's rollout log into a [|B_t|, K] reward matrix and applies the canonical rule `(rewards_2d.var(axis=-1, ddof=1) ≤ ε).mean()`. The per-framework log-field mapping used by `scripts/zvf_compute_cross_framework.py` is:
+The reference implementation normalizes each framework's rollout log into a [|B_t|, K] reward matrix and applies the canonical rule `(rewards_2d.var(axis=-1, ddof=1) ≤ ε).mean()`. The per-framework log-field mapping used by `platform_modal/scripts/zvf_compute_cross_framework.py` is:
 
 | Framework | Reward key | Group boundary | Mask field |
 |---|---|---|---|

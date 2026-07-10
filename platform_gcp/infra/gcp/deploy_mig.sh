@@ -9,7 +9,7 @@
 #
 # Usage:
 #   GCP_PROJECT=electric-armor-388216 BUCKET=my-webarena-results \
-#   NUM_WORKERS=10 ./infra/gcp/deploy_mig.sh
+#   NUM_WORKERS=10 ./platform_gcp/infra/gcp/deploy_mig.sh
 set -euo pipefail
 
 : "${GCP_PROJECT:?set GCP_PROJECT}"
@@ -128,7 +128,7 @@ sudo /opt/tinker/bin/pip install --quiet orjson || true
 
 sudo git -C /opt/tinker-rl-lab pull --ff-only || true
 
-cd /opt/tinker-rl-lab
+cd /opt/tinker-rl-lab/platform_hybrid
 HF_FLAGS=""
 if [ -n "\$HF_REPO" ]; then
   HF_FLAGS="--hf-repo \$HF_REPO"
@@ -145,7 +145,7 @@ fi
 # worker threads (even with single-worker executors per episode), and
 # Playwright raises "cannot switch to a different thread" at env.reset.
 # To parallelize, scale horizontally (more VMs), not --concurrency.
-/opt/tinker/bin/python -m experiments.webarena.react_eval \\
+/opt/tinker/bin/python -m platform_hybrid.experiments.webarena.react_eval \\
   --benchmark "\$BENCHMARK" \\
   --tasks all \\
   --model "\$MODEL" \\
@@ -204,6 +204,6 @@ echo "==> Results will appear at gs://$BUCKET/$RUN_ID/"
 echo "==> Monitor:    gcloud compute instance-groups managed list-instances $MIG_NAME --zone=$GCP_ZONE"
 echo "==> Collect:    gsutil ls gs://$BUCKET/$RUN_ID/"
 echo "==> Aggregate:  gsutil cp gs://$BUCKET/$RUN_ID/*.jsonl ./results/ && \\"
-echo "                python -m experiments.webarena.aggregate --inputs 'results/*.jsonl' --out final.json"
+echo "                python -m platform_hybrid.experiments.webarena.aggregate --inputs 'results/*.jsonl' --out final.json"
 echo "==> Cleanup:    gcloud compute instance-groups managed delete $MIG_NAME --zone=$GCP_ZONE -q && \\"
 echo "                gcloud compute instance-templates delete $TEMPLATE_NAME -q"

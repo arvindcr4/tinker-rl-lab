@@ -23,7 +23,7 @@ if [ ! -d /root/trl-lab ]; then
 else
     git -C /root/trl-lab pull --rebase 2>&1 | tail -2
 fi
-cd /root/trl-lab/atropos
+cd /root/trl-lab/platform_tinker/atropos
 echo "=== $(date) repo ready ==="
 
 # ── auth ──────────────────────────────────────────────────────────────────────

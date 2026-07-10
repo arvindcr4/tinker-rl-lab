@@ -499,7 +499,7 @@ four-bar last-10-reward chart (Figure~\ref{fig:framework_gap}).
 \includegraphics[width=0.8\columnwidth]{figures/v2/framework_comparison.pdf}
 \caption{Task~4 framework-gap deep-dive. Identical GRPO config
 (Qwen3-8B, $G{=}8$, lr${=}10^{-5}$, GSM8K-500, 30 steps, seed~42) run through
-four launchers (\texttt{verl/}, \texttt{openrlhf/}, \texttt{trl\_integrations/}
+four launchers (\texttt{verl/}, \texttt{platform_modal/openrlhf/}, \texttt{trl\_integrations/}
 and Tinker-Managed) in this repository. Tinker's managed reference-model
 offload and tuned rollout defaults dominate at 30 steps; TRL-H100 collapses on
 the same config (PEFT LoRA rank~32 over 500 prompts $\approx$ 10\% of

@@ -16,7 +16,7 @@ echo "=== $(date) | deps installed ==="
 
 # ── 2. Clone repo ────────────────────────────────────────────────────────────
 git clone --depth 1 https://github.com/pes-llm-research/tinker-rl-lab.git /root/tinker-rl-lab
-cd /root/tinker-rl-lab/atropos
+cd /root/tinker-rl-lab/platform_tinker/atropos
 echo "=== $(date) | repo cloned ==="
 
 # ── 3. WandB login ───────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ python3 - <<'EOF'
 import os, csv, json
 
 results = {}
-base = '/root/tinker-rl-lab/atropos/checkpoints'
+base = '/root/tinker-rl-lab/platform_tinker/atropos/checkpoints'
 for run_dir in os.listdir(base):
     csv_path = os.path.join(base, run_dir, 'reward_log.csv')
     if not os.path.exists(csv_path):

@@ -392,10 +392,10 @@ The core design commitment is \emph{attribution}: hold the experiment fixed and
 vary only the stack. A single configuration object specifies the model, dataset,
 reward function, decoding parameters (temperature, top-$p$, max tokens), group
 size $G$, learning rate, KL coefficient, and seed. A launcher
-(\texttt{unified/launcher.py}) maps that one config onto any of the supported
+(\texttt{platform_local/unified/launcher.py}) maps that one config onto any of the supported
 back-ends through thin per-framework adapters
-(\texttt{trl\_integrations/}, \texttt{verl/}, \texttt{openrlhf/},
-\texttt{skyrl/}, \texttt{atropos/}), while \texttt{tinkerrl/grpo.py} implements
+(\texttt{trl\_integrations/}, \texttt{verl/}, \texttt{platform_modal/openrlhf/},
+\texttt{platform_hybrid/skyrl/}, \texttt{platform_tinker/atropos/}), while \texttt{platform_tinker/tinkerrl/grpo.py} implements
 the reference GRPO loop against the managed Tinker back-end. Because the reward
 grader and decoding are shared code, a difference in outcome between two
 back-ends is attributable to the framework, not to a divergent reward parser or
@@ -457,7 +457,7 @@ and clip range, using live advantage-variance / KL-drift as sensor inputs.
 \subsection{The Tinker GRPO loop}
 \input{tikz/fig2.tex}
 \input{tikz/fig3.tex}
-The reference loop in \texttt{tinkerrl/grpo.py} follows the standard
+The reference loop in \texttt{platform_tinker/tinkerrl/grpo.py} follows the standard
 sample~$\rightarrow$~advantage~$\rightarrow$~loss~$\rightarrow$~optimise cycle.
 For a prompt $q$ we draw a group of $G$ completions $\{o_i\}_{i=1}^{G}$ from the
 current policy and score each with the verifiable reward $r_i$. The

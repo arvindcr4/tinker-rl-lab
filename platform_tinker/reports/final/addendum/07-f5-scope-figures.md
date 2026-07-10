@@ -3,7 +3,7 @@
 **Addresses reviewer concerns:** W10 (F5 brief runs), W12 (placeholder figures)
 
 **Paper sections added:** `paper/sections/frontier_scope_clarification.tex`, `paper/sections/figures_regeneration_note.tex`
-**Reproducibility:** `scripts/regenerate_missing_figures.py`
+**Reproducibility:** `platform_modal/scripts/regenerate_missing_figures.py`
 
 ---
 
@@ -60,7 +60,7 @@ such a replication can reuse the same evaluation harness unchanged.
 
 Reviewer W12 flagged that three figure PDFs had shipped as placeholder boxes
 in an earlier draft. All three have been regenerated as real rendered PDF+PNG
-pairs via a single entrypoint, `scripts/regenerate_missing_figures.py`, which
+pairs via a single entrypoint, `platform_modal/scripts/regenerate_missing_figures.py`, which
 consumes canonical data files (or falls back deterministically to the numbers
 already quoted in the paper text when a source file is missing). The script
 depends only on `numpy` and `matplotlib` — no `scipy` — so it runs in the
@@ -75,7 +75,7 @@ minimal environment used for artefact review.
 The paper's `main.tex` wraps each `\includegraphics` in
 `\IfFileExists{...}{real}{placeholder}`, so the document compiles whether the
 regenerated figures are present or not. After running
-`python3 scripts/regenerate_missing_figures.py`, all six files are written to
+`python3 platform_modal/scripts/regenerate_missing_figures.py`, all six files are written to
 the exact paths `main.tex` expects and the real-figure branch fires for all
 three, eliminating the placeholder boxes without any change to the LaTeX
 source.

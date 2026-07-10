@@ -1099,7 +1099,7 @@ such a replication can reuse the same evaluation harness unchanged.
 
 Three figure PDFs in an earlier draft had shipped as placeholder boxes.
 in an earlier draft. All three have been regenerated as real rendered PDF+PNG
-pairs via a single entrypoint, `scripts/regenerate_missing_figures.py`, which
+pairs via a single entrypoint, `platform_modal/scripts/regenerate_missing_figures.py`, which
 consumes canonical data files (or falls back deterministically to the numbers
 already quoted in the paper text when a source file is missing). The script
 depends only on `numpy` and `matplotlib` — no `scipy` — so it runs in the
@@ -1114,7 +1114,7 @@ minimal environment used for artefact review.
 The paper's `main.tex` wraps each `\includegraphics` in
 `\IfFileExists{...}{real}{placeholder}`, so the document compiles whether the
 regenerated figures are present or not. After running
-`python3 scripts/regenerate_missing_figures.py`, all six files are written to
+`python3 platform_modal/scripts/regenerate_missing_figures.py`, all six files are written to
 the exact paths `main.tex` expects and the real-figure branch fires for all
 three, eliminating the placeholder boxes without any change to the LaTeX
 source.
@@ -1274,7 +1274,7 @@ It is tempting to suspect that under binary outcome rewards and group-relative a
 
 ##### Partial-Correlation Ablation
 
-To show that ZVF_t adds predictive signal beyond well-known diagnostics, we compute partial correlations between ZVF at an early reference window t* ∈ [25, 40] and final held-out GSM8K-500 accuracy R_final, controlling for candidate confounders one at a time and then jointly: batch mean reward r̄_t, policy entropy H_π(t), within-group advantage variance Var_A(t), and KL drift to reference KL(π_t ‖ π_ref). The Tier-A matched-protocol subset (Qwen3-8B, Qwen3-1.7B, Qwen2.5-0.5B on GSM8K; 5-seed) is used throughout. Computations use `pingouin.partial_corr` when available with a residualized-regression fallback (see `scripts/partial_correlation_zvf.py`; per-(model, framework) breakdown in `experiments/results/zvf_partial_correlations.tsv`).
+To show that ZVF_t adds predictive signal beyond well-known diagnostics, we compute partial correlations between ZVF at an early reference window t* ∈ [25, 40] and final held-out GSM8K-500 accuracy R_final, controlling for candidate confounders one at a time and then jointly: batch mean reward r̄_t, policy entropy H_π(t), within-group advantage variance Var_A(t), and KL drift to reference KL(π_t ‖ π_ref). The Tier-A matched-protocol subset (Qwen3-8B, Qwen3-1.7B, Qwen2.5-0.5B on GSM8K; 5-seed) is used throughout. Computations use `pingouin.partial_corr` when available with a residualized-regression fallback (see `platform_modal/scripts/partial_correlation_zvf.py`; per-(model, framework) breakdown in `experiments/results/zvf_partial_correlations.tsv`).
 
 | Controlling for | r_partial | 95% bootstrap CI | ΔR² | p (BH) |
 |---|---|---|---|---|
@@ -1289,7 +1289,7 @@ Even after partialling out the four most intuitive confounders *jointly*, ZVF re
 
 ##### Cross-Framework Pipeline
 
-The reference implementation normalizes each framework's rollout log into a [|B_t|, K] reward matrix and applies the canonical rule `(rewards_2d.var(axis=-1, ddof=1) ≤ ε).mean()`. The per-framework log-field mapping used by `scripts/zvf_compute_cross_framework.py` is:
+The reference implementation normalizes each framework's rollout log into a [|B_t|, K] reward matrix and applies the canonical rule `(rewards_2d.var(axis=-1, ddof=1) ≤ ε).mean()`. The per-framework log-field mapping used by `platform_modal/scripts/zvf_compute_cross_framework.py` is:
 
 | Framework | Reward key | Group boundary | Mask field |
 |---|---|---|---|

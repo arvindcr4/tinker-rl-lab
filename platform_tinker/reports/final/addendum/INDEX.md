@@ -13,4 +13,4 @@
 - `08-related-work-integration.md` — related-work integration
 
 **Find it fast:**
-- to trace a reviewer weakness → open the addendum; header lists the addressed W/Q IDs, added `paper/sections/*.tex`, and `scripts/*`
+- to trace a reviewer weakness → open the addendum; header lists the addressed W/Q IDs, added `paper/sections/*.tex`, and `platform_modal/scripts/*`

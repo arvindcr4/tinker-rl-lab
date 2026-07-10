@@ -28,7 +28,7 @@ gsutil mb -l us-central1 gs://YOUR-WEBARENA-BUCKET
 
 ```sh
 GCP_PROJECT=electric-armor-388216 GCP_ZONE=us-central1-a \
-  ./infra/gcp/build_webarena_image.sh
+  ./platform_gcp/infra/gcp/build_webarena_image.sh
 ```
 
 Produces image family `webarena`. Skip this step for subsequent eval runs.
@@ -43,7 +43,7 @@ BENCHMARK=webarena_verified \
 MODEL=Qwen/Qwen3-8B \
 MAX_STEPS=30 \
 PREEMPTIBLE=false \
-  ./infra/gcp/deploy_mig.sh
+  ./platform_gcp/infra/gcp/deploy_mig.sh
 ```
 
 Each VM:
@@ -60,7 +60,7 @@ Each VM:
 RUN_ID=20260422-120000
 mkdir -p results/
 gsutil cp gs://YOUR-WEBARENA-BUCKET/$RUN_ID/*.jsonl results/
-python -m experiments.webarena.aggregate \
+python -m platform_hybrid.experiments.webarena.aggregate \
   --inputs 'results/*.jsonl' --out results/final_$RUN_ID.json
 ```
 
@@ -112,7 +112,7 @@ export TINKER_API_KEY=...
 export MINIWOB_URL=http://localhost:8000/miniwob/
 # In another terminal: cd miniwob-plusplus/miniwob/html && python -m http.server 8000
 
-python -m experiments.webarena.react_eval \
+python -m platform_hybrid.experiments.webarena.react_eval \
   --benchmark miniwob \
   --tasks miniwob.click-button,miniwob.choose-list,miniwob.enter-text \
   --model Qwen/Qwen3-8B \

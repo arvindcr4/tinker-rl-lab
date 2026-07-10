@@ -13,7 +13,7 @@ pip install -q math-verify latex2sympy2-extended datasets wandb pyyaml huggingfa
 
 [ -d /root/trl-lab ] && git -C /root/trl-lab pull --rebase 2>&1 | tail -1 \
   || git clone --depth 1 https://github.com/pes-llm-research/tinker-rl-lab.git /root/trl-lab
-cd /root/trl-lab/atropos
+cd /root/trl-lab/platform_tinker/atropos
 
 python3 -c "import wandb; wandb.login(key='${WANDB_API_KEY}')"
 python3 -c "from huggingface_hub import login; login(token='${HF_TOKEN}')"

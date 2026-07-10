@@ -2477,7 +2477,7 @@ All experiments ran on the \textbf{Tinker RL platform} using the \textbf{Atropos
     \item \textbf{Fine-tuning:} LoRA (Low-Rank Adaptation) with rank 32, targeting attention and MLP projections. Only $\sim$0.1\% of total parameters modified.
     \item \textbf{Training:} GRPO with group size 16 (16 completions sampled per question), learning rate $4 \times 10^{-5}$, binary reward signal (format + correctness).
     \item \textbf{Checkpointing:} Automatic checkpoint saving every training step via Atropos; training state recoverable from any checkpoint.
-    \item \textbf{Code:} All experiment configs at \texttt{pes-llm-research/tinker-rl-lab/atropos/configs/}; notebooks at \texttt{atropos/notebooks/}.
+    \item \textbf{Code:} All experiment configs at \texttt{pes-llm-research/tinker-rl-lab/platform_tinker/atropos/configs/}; notebooks at \texttt{platform_tinker/atropos/notebooks/}.
 \end{itemize}
 
 \subsection{Reproducibility Protocol}
@@ -2665,7 +2665,7 @@ Training Qwen3-3.8B for 50 steps on a single RTX 4090 (Vast.ai, \$0.50 total) im
 \section{Statistical Analysis of Experimental Results}
 \label{sec:statistical_analysis}
 
-All statistical tests were computed from the step-level mean rewards logged by the Atropos environment (each step mean $= k/128$ where $k$ is the number of correct completions out of $n{=}128$ binary samples: 8 groups $\times$ 16 rollouts).  Tests were implemented in \texttt{tinker\_atropos/stats\_utils.py} and run post-hoc on the full 50-step series for the three completed GSM8K experiments.
+All statistical tests were computed from the step-level mean rewards logged by the Atropos environment (each step mean $= k/128$ where $k$ is the number of correct completions out of $n{=}128$ binary samples: 8 groups $\times$ 16 rollouts).  Tests were implemented in \texttt{tinker\_platform_tinker/atropos/stats\_utils.py} and run post-hoc on the full 50-step series for the three completed GSM8K experiments.
 
 \subsection{Bootstrap 95\% Confidence Intervals}
 
@@ -2840,7 +2840,7 @@ Once all new runs complete, we will apply:
     \item \textbf{Block A (IT effect):} Mann-Whitney U and Cohen's $d$ on final-10-step rewards, comparing Llama-3.1-8B base vs.\ instruct.
     \item \textbf{Block B (family effect):} Same tests, comparing Qwen3-8B vs.\ Llama-3.1-8B (both base).
     \item \textbf{Block C (size ladder):} Plot step-to-80\%-accuracy vs.\ $\log_{10}(\text{params})$; fit a linear scaling law; identify the parameter count below which convergence fails.
-    \item \textbf{Omnibus 2$\times$2 ANOVA:} Using final-10-step means as the dependent variable, test main effects of family and instruction-tuning, and their interaction, using the \texttt{two\_way\_anova\_2x2()} function in \texttt{tinker\_atropos/stats\_utils.py}.
+    \item \textbf{Omnibus 2$\times$2 ANOVA:} Using final-10-step means as the dependent variable, test main effects of family and instruction-tuning, and their interaction, using the \texttt{two\_way\_anova\_2x2()} function in \texttt{tinker\_platform_tinker/atropos/stats\_utils.py}.
 \end{enumerate}
 
 All analysis code is in \texttt{notebooks/systematic\_scaling\_study.ipynb}.

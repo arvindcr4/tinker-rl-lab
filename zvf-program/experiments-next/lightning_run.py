@@ -65,8 +65,9 @@ def main() -> None:
 
         # uv-run sidesteps the fragile Studio conda env entirely (venv is
         # forbidden; upgrading numpy in-place breaks torch/sklearn ABI).
-        cmd = (f"HF_HUB_ENABLE_HF_TRANSFER=1 python -m uv run "
-               f"--with vllm --with datasets --with hf_transfer "
+        cmd = (f"HF_HUB_ENABLE_HF_TRANSFER=1 python -m uv run --isolated "
+               f"--no-project --python 3.12 "
+               f"--with vllm --with 'datasets>=3.0' --with hf_transfer "
                f"eval_passk_standalone.py "
                f"--dataset {args.dataset} --model {args.model} "
                f"--problems {args.problems} --n {args.n} --seed {args.seed} "

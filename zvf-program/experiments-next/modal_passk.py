@@ -131,7 +131,7 @@ def pass_at_k(n: int, c: int, k: int) -> float:
     return 1.0 - r
 
 
-@app.function(image=image, gpu="A100-40GB", timeout=3600,
+@app.function(image=image, gpu="A100-40GB", timeout=10800,
               volumes={"/results": results_vol},
               secrets=[modal.Secret.from_name("hf-token")])
 def evaluate(model: str, dataset: str, problems: int, n: int, ks: list[int],
@@ -168,19 +168,51 @@ def evaluate(model: str, dataset: str, problems: int, n: int, ks: list[int],
     lora_kwargs = {}
     lora_request = None
     if adapter:
+        import os
+        import shutil
+
         from vllm.lora.request import LoRARequest
         from huggingface_hub import snapshot_download
         adapter_path = snapshot_download(adapter)
         # adapters pushed by parallel_push_hf keep weights under final/
-        import os
         if os.path.exists(os.path.join(adapter_path, "final",
                                        "adapter_model.safetensors")):
             adapter_path = os.path.join(adapter_path, "final")
+        # Tinker exports differ from PEFT conventions in two ways vLLM
+        # rejects: target_modules="all-linear" (shorthand) and the LM head
+        # trained under the name "model.unembed_tokens" (vLLM expects
+        # "lm_head"). Patch a local copy: remap weight keys, then derive
+        # target_modules from what the weights actually contain.
+        from safetensors.torch import load_file, save_file
+        patched = "/tmp/adapter_patched"
+        shutil.copytree(adapter_path, patched, dirs_exist_ok=True,
+                        symlinks=False)
+        wpath = os.path.join(patched, "adapter_model.safetensors")
+        weights = load_file(wpath)
+        remapped = {}
+        for k, v in weights.items():
+            remapped[k.replace("model.unembed_tokens", "lm_head")] = v
+        modules = set()
+        for k in remapped:
+            parts = k.split(".")
+            for i, p in enumerate(parts):
+                if p in ("lora_A", "lora_B") and i > 0:
+                    modules.add(parts[i - 1])
+        save_file(remapped, wpath)
+        cfg_path = os.path.join(patched, "adapter_config.json")
+        with open(cfg_path) as f:
+            cfg = json.load(f)
+        cfg["target_modules"] = sorted(modules)
+        if not cfg.get("base_model_name_or_path"):
+            cfg["base_model_name_or_path"] = model
+        with open(cfg_path, "w") as f:
+            json.dump(cfg, f)
+        print(f"[adapter] remapped modules: {sorted(modules)}", flush=True)
         lora_kwargs = {"enable_lora": True, "max_lora_rank": 64}
-        lora_request = LoRARequest("postrl", 1, adapter_path)
+        lora_request = LoRARequest("postrl", 1, patched)
 
     llm = LLM(model=model, dtype="bfloat16", seed=seed,
-              max_model_len=2048, gpu_memory_utilization=0.90,
+              max_model_len=4608, gpu_memory_utilization=0.90,
               enforce_eager=True, **lora_kwargs)
     sp = SamplingParams(n=n, temperature=temperature, top_p=top_p,
                         max_tokens=max_tokens, seed=seed)
@@ -189,9 +221,14 @@ def evaluate(model: str, dataset: str, problems: int, n: int, ks: list[int],
         if lora_request else llm.generate(prompts, sp)
 
     cs = []
+    boxed_hits = 0
+    total_outs = 0
     for (prompt, ans), out in zip(items, outs):
         c = sum(int(reward(o.text, ans)) for o in out.outputs)
         cs.append(c)
+        for o in out.outputs:
+            total_outs += 1
+            boxed_hits += int("\\boxed" in o.text)
 
     result = {
         "kind": "passk_eval_modal",
@@ -212,6 +249,7 @@ def evaluate(model: str, dataset: str, problems: int, n: int, ks: list[int],
         "seed": seed,
         "max_tokens": max_tokens,
         "per_problem_c": cs,
+        "boxed_rate": round(boxed_hits / max(total_outs, 1), 4),
         "pass_at_k": {str(k): round(sum(pass_at_k(n, c, k) for c in cs)
                                     / len(cs), 4) for k in ks},
         "wall_seconds": round(time.time() - t0, 1),

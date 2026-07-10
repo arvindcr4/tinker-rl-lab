@@ -38,7 +38,7 @@ strict refinement of the point-estimate rule.
   doi:10.1038/s41586-025-09833-y), Berkeley B-SP25 row 19 — frontier-aligned
   finding that short-horizon terminal rewards make tree-baselines
   degenerate into the group mean. Imported from
-  `docs/berkeley_improvements/19_alphaproof_mcts_zvf.md`. The Beta(1,1)
+  the Berkeley analysis notes. The Beta(1,1)
   prior used here is the same uniform Dirichlet smoothing kernel that
   $\gamma^*{=}0$ selects for AlphaProof's tree baseline.
 - **DAPO dynamic sampling** — Yu et al. 2025 (`yu2025dapo`).

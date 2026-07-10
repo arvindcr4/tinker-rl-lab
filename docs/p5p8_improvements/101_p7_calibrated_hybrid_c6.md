@@ -17,7 +17,7 @@ the controller framework. Iter 175 closes the loop.
 **Inputs (real, in-repo, untouched):**
 - N2 reward tensors: `experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl`
   (4 methods × 40 steps × 16 prompts × G=8 = **2560 obs**)
-- Berkeley row 01: `docs/berkeley_improvements/01_dualformer_fast_slow_auto_grpo.md`
+- Berkeley row 01: the Berkeley analysis notes
   → Dualformer auto-G band: `p̂ ∈ (0.55, 0.70] → 12`; `p̂ ∈ (0.70, 0.85] → 16`; `p̂ > 0.85 → 24`.
 - Berkeley row 19: `experiments/results/berkeley/alphaproof_gamma_sweep.tsv` —
   empirical observation that `mag(γ=0) ≈ 0` on every seed×G cell, so the

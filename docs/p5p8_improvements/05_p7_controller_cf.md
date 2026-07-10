@@ -29,11 +29,11 @@ restored?*
 - **DAPO dynamic sampling** — Yu et al. 2025 (`yu2025dapo` in refs).
 - **Dualformer auto-G rule** — Su et al. 2024, arXiv:2410.09918, used as
   Controller B in this evaluation; imported verbatim from
-  `docs/berkeley_improvements/01_dualformer_fast_slow_auto.md` row 01.
+  the Berkeley analysis notes row 01.
 - **AlphaProof γ*=0 smoothing** — Hubert (DeepMind) AlphaProof lecture,
   Berkeley B-SP25 row 19, **frontier-aligned** finding that short-horizon
   terminal rewards make tree-baselines degenerate into the group mean.
-  Imported from `docs/berkeley_improvements/19_alphaproof_mcts_zvf.md`.
+  Imported from the Berkeley analysis notes.
   Connects to P7 via: *the controller must recognize that when all prompts
   are at the degenerate boundary (p∈{0,1}), no escalation helps* — exactly
   the regime where γ*=0 says "no look-ahead smoothing helps either."

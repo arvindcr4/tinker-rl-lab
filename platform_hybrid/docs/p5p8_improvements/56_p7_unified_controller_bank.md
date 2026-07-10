@@ -6,7 +6,7 @@
 | target | new `paper/sections/p7_controller.tex` §4.14 "Unified Adaptive-G Controller Bank" — paper-facing operational specification that **absorbs** `zvf-triage`, `Dualformer-Auto`, and `Hybrid` as boundary cases of one parametric family |
 | class | **T1** statistical rigor (paired bootstrap-CI on savings across 5 N10 seeds) + **T3** cross-paper coupling (Berkeley row 01 Dualformer-Auto + Berkeley row 19 AlphaProof γ*=0 smoothing) + **T2** fresh-data evidence (N10 + N2 four-method replay) |
 | status | **validated** (1,030 per-N10-seed rows × 37 θ-points + 5,920 per-N2-prompt rows × 37 θ-points = 6,950 controller-evaluations) |
-| artifact | `scripts/p5p8/p7_unified_controller_bank.py` (≤350 LoC, stdlib only) + `scripts/p5p8/fig_p7_unified_controller_bank.py` |
+| artifact | `platform_modal/scripts/p5p8/p7_unified_controller_bank.py` (≤350 LoC, stdlib only) + `platform_modal/scripts/p5p8/fig_p7_unified_controller_bank.py` |
 | evidence | `experiments/results/p5p8/p7_unified_controller_{per_seed.tsv (185), per_step_n2.tsv (5920), summary.tsv (37), pareto.tsv (37), ci.tsv (37), summary.json}` + `experiments/results/p5p8/figures/p7_unified_controller_bank.{png,pdf}` |
 | paper-facing | added §4.14 to `paper/sections/p7_controller.tex`; `paper_P7_zvf_controller.pdf` rebuilt (extends §4.13 — keeps 0 errors / 0 undefined refs) |
 
@@ -24,7 +24,7 @@ The cumulative iter-27 → iter-51 P7 evidence has produced **four** distinct co
 
 ## 2. Method
 
-`scripts/p5p8/p7_unified_controller_bank.py` (≤350 LoC, stdlib only):
+`platform_modal/scripts/p5p8/p7_unified_controller_bank.py` (≤350 LoC, stdlib only):
 
 ```
 C(z_t | θ) = C(z_t | τ_esc, τ_des)
@@ -105,11 +105,11 @@ The §4.14 § will be the **closing operational specification** of the paper. Th
 ## 5. Reproduction
 
 ```
-python3 scripts/p5p8/p7_unified_controller_bank.py
-python3 scripts/p5p8/fig_p7_unified_controller_bank.py
+python3 platform_modal/scripts/p5p8/p7_unified_controller_bank.py
+python3 platform_modal/scripts/p5p8/fig_p7_unified_controller_bank.py
 ```
 
-(workspace `scripts/p5p8/p7_unified_controller_bank.py` ≤350 LoC, stdlib only; outputs `experiments/results/p5p8/p7_unified_controller_*.{tsv,json}` + `figures/p7_unified_controller_bank.{png,pdf}`)
+(workspace `platform_modal/scripts/p5p8/p7_unified_controller_bank.py` ≤350 LoC, stdlib only; outputs `experiments/results/p5p8/p7_unified_controller_*.{tsv,json}` + `figures/p7_unified_controller_bank.{png,pdf}`)
 
 ## 6. References (verified citations)
 

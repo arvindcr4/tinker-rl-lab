@@ -25,13 +25,13 @@ We answer with three deliverables:
        at the high-budget end of our sweep.
 
 Inputs:
-  experiments/results/group_size_token_normalized.tsv
+  platform_hybrid/experiments/results/group_size_token_normalized.tsv
 Outputs:
-  experiments/results/group_size_iter87_crossover.tsv
-  experiments/results/group_size_iter87_isoflop.tsv
-  experiments/results/group_size_iter87_retention_slope.tsv
-  experiments/results/group_size_iter87_summary.tsv
-  experiments/results/group_size_iter87_meta.json
+  platform_hybrid/experiments/results/group_size_iter87_crossover.tsv
+  platform_hybrid/experiments/results/group_size_iter87_isoflop.tsv
+  platform_hybrid/experiments/results/group_size_iter87_retention_slope.tsv
+  platform_hybrid/experiments/results/group_size_iter87_summary.tsv
+  platform_hybrid/experiments/results/group_size_iter87_meta.json
   figures/group_size_iter87.{pdf,png}
 """
 

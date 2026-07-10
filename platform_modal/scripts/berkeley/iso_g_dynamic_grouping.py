@@ -46,7 +46,7 @@ Pre-registered hypotheses on real iter107 + iter127 + iter130 Pillar-2/3 data:
       least as parsimonious as the row 02 prescription).
       DECISIVE if G_iso ≤ G*_raw at 4/4 T values.
 
-Outputs (experiments/results/berkeley/):
+Outputs (platform_hybrid/experiments/results/berkeley/):
   iso_g_anti_herding.tsv
   iso_g_iso_yield.tsv
   iso_g_bounded_cone_recovery.tsv
@@ -464,10 +464,10 @@ def main():
             "h5": str(h5_path.relative_to(ROOT)),
         },
         "data_inputs": [
-            "experiments/results/group_size_effect.tsv",
-            "experiments/results/group_size_iter127_joint_fit.tsv",
-            "experiments/results/group_size_iter127_optimal_g.tsv",
-            "experiments/results/zvf_iter130_method_risk.tsv",
+            "platform_hybrid/experiments/results/group_size_effect.tsv",
+            "platform_hybrid/experiments/results/group_size_iter127_joint_fit.tsv",
+            "platform_hybrid/experiments/results/group_size_iter127_optimal_g.tsv",
+            "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
         ],
     }
     out_json = OUT / "iso_g_summary.json"

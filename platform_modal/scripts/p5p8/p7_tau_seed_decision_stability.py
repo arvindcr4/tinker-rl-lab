@@ -15,16 +15,16 @@ fires/seed mean ± CI). This script adds:
       — these are the iter-59 "operationally inert" branch).
 
 Outputs:
-  experiments/results/p5p8/p7_tau_seed_stability.tsv
-  experiments/results/p5p8/p7_tau_two_threshold_sweep.tsv
-  experiments/results/p5p8/p7_tau_seed_stability_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_tau_seed_stability.tsv
+  platform_hybrid/experiments/results/p5p8/p7_tau_two_threshold_sweep.tsv
+  platform_hybrid/experiments/results/p5p8/p7_tau_seed_stability_summary.json
 """
 import json, math, itertools, random, statistics
 from pathlib import Path
 
 WORKTREE = Path("/home/claude/tinker-rl-lab-minimax")
-N10_DIR = WORKTREE / "experiments/results/n10_seed_expansion"
-OUT = WORKTREE / "experiments/results/p5p8"
+N10_DIR = WORKTREE / "platform_hybrid/experiments/results/n10_seed_expansion"
+OUT = WORKTREE / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 SEEDS = [42, 179, 316, 453, 590]

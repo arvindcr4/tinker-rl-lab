@@ -10,8 +10,8 @@ Extends iter131 (per-prompt adaptive-G* family on N2) by replacing the
 per-prompt-only family with the iter119 C4 unified controller evaluated
 per-prompt, and adds bootstrap CIs on every headline metric.
 
-Inputs:  experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
-Outputs: experiments/results/p5p8/p7_iter147_*.{tsv,json}
+Inputs:  platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
+Outputs: platform_hybrid/experiments/results/p5p8/p7_iter147_*.{tsv,json}
 
 Pillar: P7 (Pillar 3 — adaptive-G controller / signal-starvation theory)
 """

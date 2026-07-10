@@ -22,7 +22,7 @@
       low-bwd/low-sever (arithmetic_easy) to high-bwd/high-sever
       (GSM8K CoT) -- the de-herding efficacy envelope.
 
-Reads : experiments/results/length_bias_iter120_*.tsv
+Reads : platform_hybrid/experiments/results/length_bias_iter120_*.tsv
 Writes: figures/length_bias_iter120_sever_bwd.{pdf,png}
         mirrored to paper/figures/.
 """

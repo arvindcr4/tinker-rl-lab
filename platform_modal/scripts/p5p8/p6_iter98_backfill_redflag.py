@@ -28,8 +28,8 @@ the last 2 (decontamination.*) are universal across the corpus because
 the field was added later and most legacy entries pre-date it.
 
 Outputs (3 files):
-- experiments/results/p5p8/p6_iter98_redflag_backfill.tsv
-- experiments/results/p5p8/p6_iter98_redflag_backfill.json
+- platform_hybrid/experiments/results/p5p8/p6_iter98_redflag_backfill.tsv
+- platform_hybrid/experiments/results/p5p8/p6_iter98_redflag_backfill.json
 - patched registry/entries/zvf130_*.json (5 entries)
 """
 import json

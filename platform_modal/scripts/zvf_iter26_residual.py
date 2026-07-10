@@ -8,7 +8,7 @@ difficulty. We regress last10 ~ reward on each library slice, then
 correlate the residuals against ZVF.
 
 Outputs:
-    experiments/results/zvf_iter26_residual.tsv
+    platform_hybrid/experiments/results/zvf_iter26_residual.tsv
         per-library slice: n, naive r, r(reward,last10), residual r.
 """
 from __future__ import annotations

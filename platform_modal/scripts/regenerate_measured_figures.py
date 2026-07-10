@@ -3,10 +3,10 @@
 
 Sources (all measured this session):
   modal_results_all.json                         -> comparison_bars
-  experiments/results/groupsize_zvf_sweep.json   -> group_size_ablation
-  experiments/results/samestack_ppo_grpo.json    -> ppo_vs_grpo (same-stack)
-  experiments/results/tinker_gsm8k_zvf_s*.json   -> zvf_correlation (frontier)
-  experiments/results/groupsize_zvf_sweep.json   -> zvf_correlation (small-scale ZVF vs G)
+  platform_hybrid/experiments/results/groupsize_zvf_sweep.json   -> group_size_ablation
+  platform_hybrid/experiments/results/samestack_ppo_grpo.json    -> ppo_vs_grpo (same-stack)
+  platform_hybrid/experiments/results/tinker_gsm8k_zvf_s*.json   -> zvf_correlation (frontier)
+  platform_hybrid/experiments/results/groupsize_zvf_sweep.json   -> zvf_correlation (small-scale ZVF vs G)
 
 Writes 300-dpi PNG+PDF into paper/figures/v2/, overwriting the stale versions.
 Only figures with clean measured backing are regenerated; others are left as-is.
@@ -63,7 +63,7 @@ def fig_comparison_bars():
 
 
 def fig_group_size():
-    d = json.load(open(ROOT / "experiments/results/groupsize_zvf_sweep.json"))
+    d = json.load(open(ROOT / "platform_hybrid/experiments/results/groupsize_zvf_sweep.json"))
     s = d["summary"]
     Gs = sorted(int(k) for k in s)
     acc = [s[str(g)]["heldout_acc_mean"] for g in Gs]
@@ -91,7 +91,7 @@ def fig_group_size():
 
 
 def fig_ppo_vs_grpo():
-    d = json.load(open(ROOT / "experiments/results/samestack_ppo_grpo.json"))
+    d = json.load(open(ROOT / "platform_hybrid/experiments/results/samestack_ppo_grpo.json"))
     runs = d["runs"]
     def traj(algo):
         rs = [r for r in runs if r["algo"] == algo]
@@ -121,7 +121,7 @@ def fig_ppo_vs_grpo():
 
 def fig_zvf_correlation():
     # frontier per-problem observed vs theoretical ZVF
-    files = [f for f in sorted(glob.glob(str(ROOT / "experiments/results/tinker_gsm8k_zvf_s*.json")))
+    files = [f for f in sorted(glob.glob(str(ROOT / "platform_hybrid/experiments/results/tinker_gsm8k_zvf_s*.json")))
              if re.search(r"_s\d+\.json$", f)]
     G = 8
     obs, th = [], []
@@ -133,7 +133,7 @@ def fig_zvf_correlation():
     r = np.corrcoef(obs, th)[0, 1] if len(obs) else float("nan")
 
     # small-scale mean ZVF vs G with theory at mean reward
-    gd = json.load(open(ROOT / "experiments/results/groupsize_zvf_sweep.json"))["summary"]
+    gd = json.load(open(ROOT / "platform_hybrid/experiments/results/groupsize_zvf_sweep.json"))["summary"]
     Gs = sorted(int(k) for k in gd)
     zvf_g = [gd[str(g)]["mean_zvf"] for g in Gs]
 

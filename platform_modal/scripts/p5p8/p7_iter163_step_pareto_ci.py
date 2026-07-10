@@ -21,13 +21,13 @@ to step-aggregate granularity to test whether STATIC_G16 is also dominated
 there. Iter-163 closes that gap.
 
 Outputs:
-- experiments/results/p5p8/p7_iter163_per_method_ci.tsv (20 rows)
-- experiments/results/p5p8/p7_iter163_pareto.tsv (20 points)
-- experiments/results/p5p8/p7_iter163_pareto_frontier.tsv (Pareto-optimal)
-- experiments/results/p5p8/p7_iter163_cross_method_sd.tsv (5 rows)
-- experiments/results/p5p8/p7_iter163_paired_bootstrap.tsv (16 rows)
-- experiments/results/p5p8/p7_iter163_dominance.tsv (dominance matrix)
-- experiments/results/p5p8/p7_iter163_summary.json
+- platform_hybrid/experiments/results/p5p8/p7_iter163_per_method_ci.tsv (20 rows)
+- platform_hybrid/experiments/results/p5p8/p7_iter163_pareto.tsv (20 points)
+- platform_hybrid/experiments/results/p5p8/p7_iter163_pareto_frontier.tsv (Pareto-optimal)
+- platform_hybrid/experiments/results/p5p8/p7_iter163_cross_method_sd.tsv (5 rows)
+- platform_hybrid/experiments/results/p5p8/p7_iter163_paired_bootstrap.tsv (16 rows)
+- platform_hybrid/experiments/results/p5p8/p7_iter163_dominance.tsv (dominance matrix)
+- platform_hybrid/experiments/results/p5p8/p7_iter163_summary.json
 """
 from __future__ import annotations
 import json

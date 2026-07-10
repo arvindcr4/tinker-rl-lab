@@ -13,7 +13,7 @@ Schema extension (additive, optional, nullable):
   - measured_delta.robust_panel        : string enum
 
 Classification rule (per method x metric cell on the n2 same-stack corpus,
-reading experiments/results/p5p8/p6_n2_window_deltas.tsv):
+reading platform_hybrid/experiments/results/p5p8/p6_n2_window_deltas.tsv):
 
   STABLE
     -> same sign at full40 / last10 / last5 AND all three panels are SIG,
@@ -41,9 +41,9 @@ import jsonschema
 ROOT = "/home/claude/tinker-rl-lab-minimax"
 SCHEMA = f"{ROOT}/registry/schema.json"
 ENTRIES = f"{ROOT}/registry/entries"
-ITER_DATA = f"{ROOT}/experiments/results/p5p8/p6_n2_window_deltas.tsv"
-SUMMARY = f"{ROOT}/experiments/results/p5p8/p6_window_sensitivity_backfill.json"
-LOG = f"{ROOT}/experiments/results/p5p8/p6_window_sensitivity_backfill.log"
+ITER_DATA = f"{ROOT}/platform_hybrid/experiments/results/p5p8/p6_n2_window_deltas.tsv"
+SUMMARY = f"{ROOT}/platform_hybrid/experiments/results/p5p8/p6_window_sensitivity_backfill.json"
+LOG = f"{ROOT}/platform_hybrid/experiments/results/p5p8/p6_window_sensitivity_backfill.log"
 
 WINDOW_ORDER = ["full40", "last20", "last10", "last5", "early10"]
 SIG_PANELS = ["full40", "last20", "last10", "last5"]  # ignore early10 (low-signal)
@@ -198,7 +198,7 @@ def main():
             "panel=n2_same_stack_*: STABLE / FRAGILE-SIGN-FLIP / "
             "STABLE-DIRECTION-MAG-SHIFT classification + robust_panel recorded "
             "based on the iter-82 re-measurement "
-            "(experiments/results/p5p8/p6_n2_window_deltas.tsv + "
+            "(platform_hybrid/experiments/results/p5p8/p6_n2_window_deltas.tsv + "
             "p6_n2_window_sensitivity.json, B=2000 paired-step bootstrap)."
         )
         if "iter-84: window-sensitivity backfill" not in prior_notes:

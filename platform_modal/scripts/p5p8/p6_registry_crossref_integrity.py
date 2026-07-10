@@ -10,7 +10,7 @@ Until now nothing checked (A) against the TSV, (B) against the TSV, or (A)==(B).
 This script is that CI-style regression guard.  It also audits COVERAGE: which of
 the 9 real methods actually have a stack entry.
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   p6_crossref_integrity.tsv     one row per (method, check)
   p6_crossref_summary.json      pass/fail counts + coverage gap list
 No third-party deps (stdlib only).
@@ -18,9 +18,9 @@ No third-party deps (stdlib only).
 import json, glob, os, math, csv
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-TSV = os.path.join(ROOT, "experiments/results/zvf_iter130_method_risk.tsv")
+TSV = os.path.join(ROOT, "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv")
 ENTRIES = os.path.join(ROOT, "registry/entries")
-OUTDIR = os.path.join(ROOT, "experiments/results/p5p8")
+OUTDIR = os.path.join(ROOT, "platform_hybrid/experiments/results/p5p8")
 os.makedirs(OUTDIR, exist_ok=True)
 TOL = 5e-4  # tolerance for stored-vs-recomputed floats
 

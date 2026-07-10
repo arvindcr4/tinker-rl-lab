@@ -42,7 +42,7 @@ harvest cost**.
 
 ## Method
 
-`scripts/p5p8/p5_iter113_minreport_v22_recovery.py` (~290 LoC, stdlib +
+`platform_modal/scripts/p5p8/p5_iter113_minreport_v22_recovery.py` (~290 LoC, stdlib +
 numpy):
 
 1. Load 98 manifests from `experiments/results/mega_20260704/manifests/`.
@@ -154,7 +154,7 @@ Adopt the following emission policy for the MIN-REPORT v2.2 schema:
    cell. The schema declares them; the corpus has the data; the only
    remaining cost is the JSON write.
 2. **Back-fill Items 14, 15, 17 into the 98 existing manifests** as a
-   one-shot `scripts/p5p8/backfill_v22_items.py` (~50 LoC, deterministic;
+   one-shot `platform_modal/scripts/p5p8/backfill_v22_items.py` (~50 LoC, deterministic;
    `p5_iter113_recovery_per_cell.tsv` is the source-of-truth TSV).
 3. **Mark Items 03, 10, 11, 12, 18 as schema-only** in the manifest schema
    documentation, with the explicit note "no source in current corpus; future
@@ -169,7 +169,7 @@ is fully addressable from existing on-disk data).
 
 ## Artefacts
 
-- `scripts/p5p8/p5_iter113_minreport_v22_recovery.py` (~290 LoC, stdlib +
+- `platform_modal/scripts/p5p8/p5_iter113_minreport_v22_recovery.py` (~290 LoC, stdlib +
   numpy)
 - `experiments/results/p5p8/p5_iter113_emit_gap.tsv` (18 rows: per-MIN-REPORT
   item audit)
@@ -182,7 +182,7 @@ is fully addressable from existing on-disk data).
 ## Verification
 
 ```bash
-python3 scripts/p5p8/p5_iter113_minreport_v22_recovery.py
+python3 platform_modal/scripts/p5p8/p5_iter113_minreport_v22_recovery.py
 # Outputs: 9 DAA, 3 DAA-R (Items 14, 15, 17), 6 DAA-U
 # Recovery: 98/98, zero harvest cost
 # H3 Spearman: Item15↔zvf=-0.87, Item14↔pcd=+0.79, Item17↔zvf=-0.65

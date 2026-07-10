@@ -30,15 +30,15 @@ We measure FOUR drift/forecast signals purely from per-step aggregates
       precede a reward DECREASE (compression)?
 
 Inputs (existing):
-  experiments/results/drgrpo_vs_grpo.json         (40 steps × 10 runs)
-  experiments/results/drgrpo_gsm8k_cot_full.json  (30 steps × 6 runs)
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json         (40 steps × 10 runs)
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json  (30 steps × 6 runs)
 
 Outputs (new):
-  experiments/results/length_bias_iter24_windows.tsv     (S1: per-window ρ)
-  experiments/results/length_bias_iter24_signflip.tsv    (S2: drift statistics)
-  experiments/results/length_bias_iter24_forecast.tsv    (S3: t* predictions)
-  experiments/results/length_bias_iter24_diffcorr.tsv    (S4: ΔL-ΔR coupling)
-  experiments/results/length_bias_iter24_summary.tsv     (per-task-algo aggregates)
+  platform_hybrid/experiments/results/length_bias_iter24_windows.tsv     (S1: per-window ρ)
+  platform_hybrid/experiments/results/length_bias_iter24_signflip.tsv    (S2: drift statistics)
+  platform_hybrid/experiments/results/length_bias_iter24_forecast.tsv    (S3: t* predictions)
+  platform_hybrid/experiments/results/length_bias_iter24_diffcorr.tsv    (S4: ΔL-ΔR coupling)
+  platform_hybrid/experiments/results/length_bias_iter24_summary.tsv     (per-task-algo aggregates)
   figures/length_bias_iter24.pdf + .png                  (4-panel: windows / sign / forecast / diff)
 
 Cite: tong2025drgrpo (Liu et al. 2025, arXiv:2503.20783)

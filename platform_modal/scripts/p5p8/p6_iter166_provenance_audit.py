@@ -4,21 +4,21 @@ Iter-166 — P6 registry provenance-source audit.
 
 Vein (fresh): each registry entry declares `provenance.source_artifacts` as a
 list of free-text strings. The strings blend three archetypes:
-  (A) clean relative path (e.g. "experiments/results/foo.tsv") that should
+  (A) clean relative path (e.g. "platform_hybrid/experiments/results/foo.tsv") that should
       exist on disk;
   (B) wandb handle (e.g. "W&B <project> / <run>") — opaque URL-like token;
   (C) free-text prose that may embed path tokens (e.g. "...see
-      experiments/results/n2_reward_tensor_resume/aero_s0_tensors.jsonl").
+      platform_hybrid/experiments/results/n2_reward_tensor_resume/aero_s0_tensors.jsonl").
 
 Iter-166 classifies each `source_artifacts` element into one of six types,
 resolves path tokens, and combines artifact resolvability with citation
 completeness into a `provenance_completeness_score` per entry.
 
 Inputs : registry/entries/*.json
-Outputs: experiments/results/p5p8/p6_iter166_per_entry.tsv
-         experiments/results/p5p8/p6_iter166_per_artifact.tsv
-         experiments/results/p5p8/p6_iter166_type_counts.tsv
-         experiments/results/p5p8/p6_iter166_summary.json
+Outputs: platform_hybrid/experiments/results/p5p8/p6_iter166_per_entry.tsv
+         platform_hybrid/experiments/results/p5p8/p6_iter166_per_artifact.tsv
+         platform_hybrid/experiments/results/p5p8/p6_iter166_type_counts.tsv
+         platform_hybrid/experiments/results/p5p8/p6_iter166_summary.json
 Stdlib only.
 """
 import csv
@@ -35,7 +35,7 @@ OUT_DIR = os.path.join(WORKTREE, "experiments", "results", "p5p8")
 # Use lookahead so the alternation matches the LONGEST extension first
 # (e.g. `jsonl` wins over `json`). The body is greedy and includes `/`, `.`,
 # `_`, `-` so multi-segment paths like
-# `experiments/results/n2_reward_tensor_resume/aero_s0_tensors.jsonl` match.
+# `platform_hybrid/experiments/results/n2_reward_tensor_resume/aero_s0_tensors.jsonl` match.
 # Two flavors are recognized:
 #   (i) full-prefix path: experiments/...tsv
 #   (ii) bare filename in the worktree root: foo.tsv
@@ -88,7 +88,7 @@ def classify(artifact: str):
     resolved = []
     for m in candidates:
         # Try the literal candidate first; if it doesn't exist, fall back
-        # to the canonical worktree location experiments/results/<name> for
+        # to the canonical worktree location platform_hybrid/experiments/results/<name> for
         # bare top-level filenames like `zvf_iter130_method_risk.tsv`.
         full = os.path.join(WORKTREE, m)
         if os.path.exists(full):

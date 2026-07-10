@@ -27,9 +27,9 @@ instead of the iid-only theoretical curve, and (3) cross-validates the
 predictions against the observed yield on the held-out Qwen3-8B/GSM8K slice.
 
 Outputs:
-    experiments/results/zvf_antiherding_falsification.tsv
+    platform_hybrid/experiments/results/zvf_antiherding_falsification.tsv
         Per-source and pooled delta_div stats with 2000-resample CIs.
-    experiments/results/zvf_empirical_isog.tsv
+    platform_hybrid/experiments/results/zvf_empirical_isog.tsv
         Corrected Iso-G sizing using empirical delta_div bin-by-bin.
     figures/zvf_antiherding_falsification.pdf
         Three-panel: delta_div distribution by source, sign test,

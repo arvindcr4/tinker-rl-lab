@@ -45,12 +45,12 @@ Pre-registered hypotheses on real iter127 Pillar-3 data:
                  as larger |ρ(Δg, Δr)| at the smallest G.
 
 Reads:
-  experiments/results/group_size_iter127_{joint_fit,optimal_g,
+  platform_hybrid/experiments/results/group_size_iter127_{joint_fit,optimal_g,
   bounded_cone,complementarity,summary}.tsv
-  experiments/results/group_size_iter107_returns_to_compute.tsv
-  experiments/results/group_size_effect.tsv
+  platform_hybrid/experiments/results/group_size_iter107_returns_to_compute.tsv
+  platform_hybrid/experiments/results/group_size_effect.tsv
 
-Outputs (under experiments/results/berkeley/):
+Outputs (under platform_hybrid/experiments/results/berkeley/):
   cfr_grpo_analytical_equivalence.tsv
   cfr_grpo_bounded_cone.tsv
   cfr_grpo_zvf_decay.tsv
@@ -420,10 +420,10 @@ def main():
             "h5": str(h5_path.relative_to(ROOT)),
         },
         "data_inputs": [
-            "experiments/results/group_size_iter127_joint_fit.tsv",
-            "experiments/results/group_size_iter127_bounded_cone.tsv",
-            "experiments/results/group_size_iter107_returns_to_compute.tsv",
-            "experiments/results/group_size_effect.tsv",
+            "platform_hybrid/experiments/results/group_size_iter127_joint_fit.tsv",
+            "platform_hybrid/experiments/results/group_size_iter127_bounded_cone.tsv",
+            "platform_hybrid/experiments/results/group_size_iter107_returns_to_compute.tsv",
+            "platform_hybrid/experiments/results/group_size_effect.tsv",
         ],
     }
     out_json = OUT / "cfr_grpo_summary.json"

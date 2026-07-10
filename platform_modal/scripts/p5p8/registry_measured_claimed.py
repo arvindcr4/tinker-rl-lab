@@ -6,9 +6,9 @@ For each of the 11 variant-delta records in registry/entries/delta_*.json:
   (a) Read the *claimed* components (loss_form.*, reference_kl.*, etc.).
   (b) Pull measured proxies from:
       - N2 same-stack four-method tensors (aero/gift/areal/grpo, n=10 steps)
-        via experiments/results/p5p8/registry_measured_deltas.json
+        via platform_hybrid/experiments/results/p5p8/registry_measured_deltas.json
       - zvf_iter130 risk index (9 methods, 5 seeds)
-        via experiments/results/zvf_iter130_risk_index.tsv
+        via platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv
       - registry stack records that *claim* the delta
         via registry/entries/<stack>_*.json
   (c) For each measurable proxy, decide:
@@ -20,8 +20,8 @@ For each of the 11 variant-delta records in registry/entries/delta_*.json:
         NO_DATA   — no measured proxy available for this claim
 
 Writes:
-  experiments/results/p5p8/registry_measured_claimed.tsv   — one row per delta
-  experiments/results/p5p8/registry_measured_claimed.json  — machine-readable
+  platform_hybrid/experiments/results/p5p8/registry_measured_claimed.tsv   — one row per delta
+  platform_hybrid/experiments/results/p5p8/registry_measured_claimed.json  — machine-readable
 
 Stdlib only. Run: python3 platform_modal/scripts/p5p8/registry_measured_claimed.py
 """

@@ -13,9 +13,9 @@ transfer gap = cost(τ*(train)) − cost(τ*(test)), bootstrap 95% CI.
 
 Outputs
 -------
-experiments/results/p5p8/p8_threshold_transfer.tsv          (per cell)
-experiments/results/p5p8/p8_threshold_transfer_boot.tsv    (per cell CI)
-experiments/results/p5p8/p8_threshold_transfer_summary.json
+platform_hybrid/experiments/results/p5p8/p8_threshold_transfer.tsv          (per cell)
+platform_hybrid/experiments/results/p5p8/p8_threshold_transfer_boot.tsv    (per cell CI)
+platform_hybrid/experiments/results/p5p8/p8_threshold_transfer_summary.json
 """
 from __future__ import annotations
 import json

@@ -54,7 +54,7 @@ iter-130 introduced cannot be satisfied at n_seeds=1. Both new
 entries therefore record:
 
 - `ci_method: {method: "point_only_no_per_seed_sd", n_boot: null,
-  seed: null, ci_level: null, source: "scripts/p5p8/p6_iter138_missing_method_audit.py"}`
+  seed: null, ci_level: null, source: "platform_modal/scripts/p5p8/p6_iter138_missing_method_audit.py"}`
 - `significant: false` (no CI to flip; point estimate honestly
   reported as non-significant)
 - `evidence_deferred_until: "multi-seed same-stack reproduction on
@@ -105,14 +105,14 @@ a measured effect. They are **coverage records**, not effect claims.
 ## Reproducibility
 
 ```bash
-python3 scripts/p5p8/p6_iter138_missing_method_audit.py
-python3 scripts/p5p8/p6_iter130_schema_ci.py
+python3 platform_modal/scripts/p5p8/p6_iter138_missing_method_audit.py
+python3 platform_modal/scripts/p5p8/p6_iter130_schema_ci.py
 python3 registry/query.py list
 ```
 
 ## Files
 
-- `scripts/p5p8/p6_iter138_missing_method_audit.py` (~270 LoC, stdlib only)
+- `platform_modal/scripts/p5p8/p6_iter138_missing_method_audit.py` (~270 LoC, stdlib only)
 - `experiments/results/p5p8/p6_iter138_missing_method_audit.tsv` (16 rows × 7 cols)
 - `experiments/results/p5p8/p6_iter138_entry_summary.json`
 - `registry/entries/zvf130_tool_use_llama-8b-inst.json` (NEW)

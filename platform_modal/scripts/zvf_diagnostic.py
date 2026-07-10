@@ -9,36 +9,36 @@ table.
 
 Inputs (real, measured; produced earlier in this repo):
 
-    experiments/results/tinker_gsm8k_zvf_summary.json
+    platform_hybrid/experiments/results/tinker_gsm8k_zvf_summary.json
         Real Qwen3-8B / GSM8K rollouts, 3 seeds x 200 problems, K=8.
-    experiments/results/tinker_gsm8k_zvf_s42.json (+ s123, s456)
+    platform_hybrid/experiments/results/tinker_gsm8k_zvf_s42.json (+ s123, s456)
         Per-problem reward tensors (length-8 lists) for each seed.
-    experiments/results/groupsize_zvf_sweep.tsv
+    platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
         4 G-sweep rows (G in {2,4,8,16}, 3 seeds each, x 40 steps).
-    experiments/results/variance_mitigation.tsv
+    platform_hybrid/experiments/results/variance_mitigation.tsv
         Per-step ZVF and a "collapse" label flagged by the heldout-acc
         going to zero across an entire 30-step trajectory.
-    experiments/results/tool_code_reward_diagnostics.tsv
+    platform_hybrid/experiments/results/tool_code_reward_diagnostics.tsv
         Cross-tool tool-use runs (Qwen3-32B, Llama-8B-Instruct) whose
         trajectory collapses (last10_avg == 0.0).
-    experiments/results/scaling_law_three_phase.tsv
+    platform_hybrid/experiments/results/scaling_law_three_phase.tsv
         5-model scaling-law study with a "collapse" phase row for
         Nemotron-120B (peak=0.875, late_mean=0.2083).
-    experiments/results/drgrpo_vs_grpo.json
+    platform_hybrid/experiments/results/drgrpo_vs_grpo.json
         Per-run mean_zvf for the DRGRPO vs GRPO comparison.
-    experiments/results/samestack_ppo_grpo.json
+    platform_hybrid/experiments/results/samestack_ppo_grpo.json
         Per-run metrics for the PPO/GRPO shared-stack diagnostic.
 
 Output:
 
-    experiments/results/zvf_summary.tsv
+    platform_hybrid/experiments/results/zvf_summary.tsv
         One row per (experiment, condition). Columns: experiment, model,
         task, group_size, n_seeds, mean_zvf, max_zvf, mean_reward, peak,
         last10_avg, collapse_label, n_steps, evidence_path.
 
 It also writes a secondary wide correlation table:
 
-    experiments/results/zvf_failure_correlation.tsv
+    platform_hybrid/experiments/results/zvf_failure_correlation.tsv
         Spearman + Pearson rho between (mean_zvf, collapse) and the
         heldout_acc / last10_avg columns of the summary; reported with
         bootstrap CIs from B=2000 resamples over rows (treat the n=14
@@ -67,7 +67,7 @@ Why include this script (vs reusing zvf_compute_cross_framework.py)
 
 zvf_compute_cross_framework.py is the *per-step time-series* ZVF
 emitter used during a run. This script is the *post-hoc aggregator*
-that lifts every existing time-series summary in experiments/results/
+that lifts every existing time-series summary in platform_hybrid/experiments/results/
 into a single small TSV, attaches a collapse label, and emits a
 correlation matrix against failure outcomes -- the artifact reviewers
 will actually open.
@@ -156,7 +156,7 @@ def load_tinker_gsm8k() -> List[Dict[str, Any]]:
             "last10_avg": summary["sampling_accuracy_mean"],
             "n_problems": summary["n_problems_total"],
             "n_steps": summary["n_problems_total"],
-            "evidence_path": "experiments/results/tinker_gsm8k_zvf_summary.json",
+            "evidence_path": "platform_hybrid/experiments/results/tinker_gsm8k_zvf_summary.json",
             "seed": "agg",
         }
     )
@@ -197,7 +197,7 @@ def load_groupsize_sweep() -> List[Dict[str, Any]]:
                     "last10_avg": last10_mean,
                     "n_problems": 0,
                     "n_steps": 40 * n_seeds,
-                    "evidence_path": "experiments/results/groupsize_zvf_sweep.tsv",
+                    "evidence_path": "platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv",
                     "seed": "agg",
                 }
             )
@@ -239,7 +239,7 @@ def load_variance_mitigation() -> List[Dict[str, Any]]:
                 "last10_avg": statistics.fmean(heldout[-10:]),
                 "n_problems": 0,
                 "n_steps": len(recs),
-                "evidence_path": "experiments/results/variance_mitigation.tsv",
+                "evidence_path": "platform_hybrid/experiments/results/variance_mitigation.tsv",
                 "seed": seed,
                 "_collapse_flag": collapse,
             }
@@ -279,7 +279,7 @@ def load_tool_use_diagnostics() -> List[Dict[str, Any]]:
                     "last10_avg": float(r["last10_avg"]),
                     "n_problems": 0,
                     "n_steps": int(r["n_steps"]),
-                    "evidence_path": "experiments/results/tool_code_reward_diagnostics.tsv",
+                    "evidence_path": "platform_hybrid/experiments/results/tool_code_reward_diagnostics.tsv",
                     "seed": 0,
                 }
             )
@@ -318,7 +318,7 @@ def load_scaling_law_phases() -> List[Dict[str, Any]]:
                     "last10_avg": float(parts[14]),
                     "n_problems": 0,
                     "n_steps": 30,
-                    "evidence_path": "experiments/results/scaling_law_three_phase.tsv",
+                    "evidence_path": "platform_hybrid/experiments/results/scaling_law_three_phase.tsv",
                     "seed": "agg",
                 }
             )
@@ -346,7 +346,7 @@ def load_drgrpo_vs_grpo() -> List[Dict[str, Any]]:
                 "last10_avg": r["last10_avg"],
                 "n_problems": 0,
                 "n_steps": len(r["step_log"]),
-                "evidence_path": "experiments/results/drgrpo_vs_grpo.json",
+                "evidence_path": "platform_hybrid/experiments/results/drgrpo_vs_grpo.json",
                 "seed": r["seed"],
                 "algo": r["algo"],
             }
@@ -378,7 +378,7 @@ def load_samestack_ppo_grpo() -> List[Dict[str, Any]]:
                 "last10_avg": r.get("last10_avg", float("nan")),
                 "n_problems": 0,
                 "n_steps": r.get("n_steps", 0),
-                "evidence_path": "experiments/results/samestack_ppo_grpo.json",
+                "evidence_path": "platform_hybrid/experiments/results/samestack_ppo_grpo.json",
                 "seed": r.get("seed", 0),
             }
         )
@@ -513,7 +513,7 @@ def write_summary(rows: List[Dict[str, Any]], out_path: Path) -> None:
         fh.write("# Pillar 2 cross-experiment ZVF summary\n")
         fh.write(
             "# Aggregated from per-experiment training-log sources under\n"
-            "# experiments/results/. Each row corresponds to a single\n"
+            "# platform_hybrid/experiments/results/. Each row corresponds to a single\n"
             "# (experiment, configuration, seed or aggregate). failure_label\n"
             "# is computed deterministically from peak vs last10_avg:\n"
             "#   collapse  peak > 0.7 AND last10_avg < 0.35\n"

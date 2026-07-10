@@ -23,9 +23,9 @@ import statistics as st
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 ENTRIES = ROOT / "registry" / "entries"
-N2 = ROOT / "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
-Z130 = ROOT / "experiments/results/zvf_iter130_method_risk.tsv"
-OUT = ROOT / "experiments/results/p5p8"
+N2 = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+Z130 = ROOT / "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 SEED = 20260704
 N_BOOT = 2000
@@ -86,7 +86,7 @@ def n2_measured():
                 "ci_method": {"method": "paired_step_bootstrap_pct", "n_boot": N_BOOT,
                               "seed": SEED, "ci_level": 0.95,
                               "source": "platform_modal/scripts/p5p8/p6_measured_delta_block.py"},
-                "source": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+                "source": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
                 "note": f"last {LAST_K} of 40 steps, G=8, seed 0, same stack",
             })
         out[m] = recs
@@ -117,7 +117,7 @@ def z130_measured():
             "n": vn, "significant": (lo > 0) or (hi < 0),
             "ci_method": {"method": "normal_approx_welch", "n_boot": None, "seed": None,
                           "ci_level": 0.95, "source": "platform_modal/scripts/p5p8/p6_measured_delta_block.py"},
-            "source": "experiments/results/zvf_iter130_method_risk.tsv",
+            "source": "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
             "note": f"5-seed risk index; delta vs grpo (grpo risk={gm_risk:.4f})",
         })
         # mean_zvf (mag_mean): point delta, per-seed sd not stored -> CI = delta,delta, not sig
@@ -128,7 +128,7 @@ def z130_measured():
             "n": vn, "significant": False,
             "ci_method": {"method": "point_no_perseed_sd", "n_boot": None, "seed": None,
                           "ci_level": None, "source": "platform_modal/scripts/p5p8/p6_measured_delta_block.py"},
-            "source": "experiments/results/zvf_iter130_method_risk.tsv",
+            "source": "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
             "note": "mag_mean per-seed sd not stored; point estimate only (unmeasurable CI)",
         })
         out[m] = recs

@@ -21,7 +21,7 @@ Four deployment modes are compared on the released 10,000-row test split:
   M4 Hybrid-1%    : same as M3 but top 1% only.
 
 The per-row cost figures are taken from
-experiments/results/p5p8/p8_cost_accounting.tsv (iter 4):
+platform_hybrid/experiments/results/p5p8/p8_cost_accounting.tsv (iter 4):
   XGBoost scorer      $0.0001 / row  (10k inference ~ $1)
   LLM sensor async    $0.0035 / row  (Qwen3.5-4B SFT, 120 in + 5 out tokens)
   Analyst review       $0.50 / row  (standard call-centre unit cost for
@@ -45,9 +45,9 @@ J5 Write per-row operating-curve TSV (long format) and summary JSON.
 
 Outputs
 -------
-experiments/results/p5p8/p8_cost_adjusted_curve.tsv
-experiments/results/p5p8/p8_cost_adjusted_boot.tsv
-experiments/results/p5p8/p8_cost_adjusted_summary.json
+platform_hybrid/experiments/results/p5p8/p8_cost_adjusted_curve.tsv
+platform_hybrid/experiments/results/p5p8/p8_cost_adjusted_boot.tsv
+platform_hybrid/experiments/results/p5p8/p8_cost_adjusted_summary.json
 """
 
 from __future__ import annotations

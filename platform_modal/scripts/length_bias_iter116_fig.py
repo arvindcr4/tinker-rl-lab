@@ -20,7 +20,7 @@
       high-ZVF/no-sever (arithmetic_easy) to low-ZVF/high-sever
       (gsm8k_cot) -- visually the *inverted* dose response.
 
-Reads : experiments/results/length_bias_iter116_*.tsv
+Reads : platform_hybrid/experiments/results/length_bias_iter116_*.tsv
 Writes: figures/length_bias_iter116_sever_zvf.{pdf,png};
         mirrored to paper/figures/.
 """

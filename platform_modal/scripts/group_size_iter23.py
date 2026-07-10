@@ -10,7 +10,7 @@ Builds four deliverables from existing group_size data:
 4. Anti-herding δ_div injection: how much sampling diversity amplification does
    G=4 need to recover G=32 contrastive-yield (ZVF_G=4 -> ZVF_G=32) at equal T?
 
-All outputs land in experiments/results/, with one 4-panel figure.
+All outputs land in platform_hybrid/experiments/results/, with one 4-panel figure.
 """
 from __future__ import annotations
 
@@ -495,7 +495,7 @@ def main():
             f"T_critical={r.T_critical_tokens/1e6:.2f}M tokens for |Δ|>={thr:.0%} "
             f"between G=4 and G=32 (Wu 2025 equivalence breaks; "
             f"asymptote |Δ|→{r.a_hat:.3f}, τ={r.tau_hat_tokens/1e6:.2f}M).",
-            "experiments/results/group_size_iter23_t_critical.tsv"
+            "platform_hybrid/experiments/results/group_size_iter23_t_critical.tsv"
         )
 
     # 2. Pareto frontier
@@ -505,7 +505,7 @@ def main():
         f"At T=64M tokens the compute-optimal G on Qwen3-8B/GSM8K is G={g4_at_64}. "
         f"Inverted-U apex shifts monotonically to larger G as T grows (G*=8 at T=1M, "
         f"G*=16 at T=4M, G*=32 at T=64M).",
-        "experiments/results/group_size_iter23_pareto.tsv"
+        "platform_hybrid/experiments/results/group_size_iter23_pareto.tsv"
     )
 
     # 3. Crossover
@@ -516,7 +516,7 @@ def main():
             f"G=4 → G=32: Δ_pct goes from {r['diff_T1M_pct']:+.2f}pp at T=1M to "
             f"{r['diff_T64M_pct']:+.2f}pp at T=64M — the Wu 2025 G=2≈G=16 equivalence "
             f"translates cleanly to G=4≈G=32 only at the smallest compute budgets.",
-            "experiments/results/group_size_iter23_crossings.tsv"
+            "platform_hybrid/experiments/results/group_size_iter23_crossings.tsv"
         )
 
     # 4. Anti-herding
@@ -529,7 +529,7 @@ def main():
         f"{p_feasible:.0%} of the frontier). "
         f"Invention: a per-step presence penalty tuned to p_eff could recover "
         f"G=32 yield at G=4 FLOPs.",
-        "experiments/results/group_size_iter23_antiherding.tsv"
+        "platform_hybrid/experiments/results/group_size_iter23_antiherding.tsv"
     )  # noqa: E501
 
     with findings_path.open("a") as f:

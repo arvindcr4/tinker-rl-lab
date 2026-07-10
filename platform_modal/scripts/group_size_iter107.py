@@ -28,16 +28,16 @@ did not measure:
         its marginal return vs G=4.
 
 Inputs:
-    experiments/results/group_size_token_normalized.tsv
+    platform_hybrid/experiments/results/group_size_token_normalized.tsv
         Iso-token-budget sweep, G in {4,8,16,32,64},
         T in {1M, 4M, 16M, 64M}, accuracy +/- 95% CI.
 
 Outputs:
-    experiments/results/group_size_iter107_bootstrap_delta.tsv
-    experiments/results/group_size_iter107_iso_acc_budget.tsv
-    experiments/results/group_size_iter107_returns_to_compute.tsv
-    experiments/results/group_size_iter107_wu_broader_audit.tsv
-    experiments/results/group_size_iter107_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter107_bootstrap_delta.tsv
+    platform_hybrid/experiments/results/group_size_iter107_iso_acc_budget.tsv
+    platform_hybrid/experiments/results/group_size_iter107_returns_to_compute.tsv
+    platform_hybrid/experiments/results/group_size_iter107_wu_broader_audit.tsv
+    platform_hybrid/experiments/results/group_size_iter107_summary.tsv
     figures/group_size_iter107.pdf
 
 Sharpest claim: On Qwen3-8B / GSM8K, the Wu et al. (2025) "It Takes

@@ -46,19 +46,19 @@ Four analyses:
       DOWN this per-step variance.
 
 Inputs:
-    experiments/results/group_size_token_normalized.tsv
-    experiments/results/groupsize_zvf_sweep.tsv
-    experiments/results/zvf_iter114_delta_d.tsv
-    experiments/results/zvf_summary.tsv
-    experiments/results/group_size_iter95_ceilings.tsv
-    experiments/results/tinker_gsm8k_zvf_s{42,123,456}.json
+    platform_hybrid/experiments/results/group_size_token_normalized.tsv
+    platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
+    platform_hybrid/experiments/results/zvf_iter114_delta_d.tsv
+    platform_hybrid/experiments/results/zvf_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter95_ceilings.tsv
+    platform_hybrid/experiments/results/tinker_gsm8k_zvf_s{42,123,456}.json
 
 Outputs:
-    experiments/results/group_size_iter119_retention_extrap.tsv
-    experiments/results/group_size_iter119_cross_pillar.tsv
-    experiments/results/group_size_iter119_wu_boundary.tsv
-    experiments/results/group_size_iter119_step_variance.tsv
-    experiments/results/group_size_iter119_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter119_retention_extrap.tsv
+    platform_hybrid/experiments/results/group_size_iter119_cross_pillar.tsv
+    platform_hybrid/experiments/results/group_size_iter119_wu_boundary.tsv
+    platform_hybrid/experiments/results/group_size_iter119_step_variance.tsv
+    platform_hybrid/experiments/results/group_size_iter119_summary.tsv
     figures/group_size_iter119.pdf
 """
 from __future__ import annotations

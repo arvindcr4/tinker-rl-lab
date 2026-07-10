@@ -528,7 +528,7 @@ Additional scaling runs & GRPO, TRL-GRPO & Larger dense and MoE GSM8K runs, stac
 \section{Source-of-Truth Result Ledger}
 \label{sec:source-of-truth-ledger}
 
-The artifact directory contains several result files because the project evolved from a short capstone paper into a dissertation-style systems report. To avoid cherry-picking, Table~\ref{tab:source-ledger} records the numbers used in the main claims and separates them from exploratory or failed attempts. The machine-readable companion ledger is \path{reports/final/result_ledger.md}.
+The artifact directory contains several result files because the project evolved from a short capstone paper into a dissertation-style systems report. To avoid cherry-picking, Table~\ref{tab:source-ledger} records the numbers used in the main claims and separates them from exploratory or failed attempts. The machine-readable companion ledger is \path{platform_tinker/reports/final/result_ledger.md}.
 
 \begin{table}[ht]
 \centering
@@ -570,7 +570,7 @@ Runs in Table~\ref{tab:excluded-runs} are retained in the artifact bundle for tr
 \toprule
 Artifact / ID & Status & Reason excluded & How it is used\\
 \midrule
-\path{reports/final/gsm8k_test_results.json} & Failed & Model/tokenizer dependencies did not load; no held-out examples were successfully attempted. & Disclosed as an invalid full-GSM8K attempt; not used for the 83.3\% result.\\
+\path{platform_tinker/reports/final/gsm8k_test_results.json} & Failed & Model/tokenizer dependencies did not load; no held-out examples were successfully attempted. & Disclosed as an invalid full-GSM8K attempt; not used for the 83.3\% result.\\
 humaneval\_qwen3-8b & Partial & Timed out after 40/164 problems. & Timing and harness-risk evidence only.\\
 heldout\_qwen3.5-27b & Partial & Timed out at 100/200 examples. & Hypothesis-generating larger-model held-out probe.\\
 heldout\_qwen3-32b & Partial & Timed out at 100/200 examples. & Hypothesis-generating held-out probe; no main conclusion.\\
@@ -1183,12 +1183,12 @@ Source code and scripts & \path{src/}, \path{experiments/}, \path{platform_modal
 Primary result registry & \path{experiments/master_results.json}; \path{grpo_ablation_results/RESULTS.md} & Supports experiment inventory, reward summaries, and structural-ceiling claims & Included and summarized in the report.\\
 ZVF validation outputs & \path{experiments/zvf_predictive_validation_results.json}; \path{experiments/zvf_predictive_validation_runs.csv} & Reproduces the diagnostic confusion table, rank-correlation check, and leave-one-out regression & Included as direct empirical evidence.\\
 Tinker live-run artifact & \path{experiments/tinker-runs/results/live_zvf_probe_20260422_012018.json} & Verifies hosted Tinker execution metadata and checkpoint capture & Included locally; remote checkpoint access depends on Tinker permissions.\\
-Figures and diagrams & \path{paper/figures/}; \path{paper/figures/v2/}; \path{reports/final/tikz/} & Recreates visual evidence and final report diagrams & Included in the Overleaf bundle.\\
-Final report bundle & \path{reports/final/submission_uploads/} & Provides the PDF, Overleaf source archive, and code/data archive expected for review & Regenerated after final edits.\\
-Source-of-truth result ledger & \path{reports/final/result_ledger.md} & Reconciles headline numbers, excluded runs, checkpoint-selection rules, and whether each result supports a main claim & Included to reduce cherry-picking risk.\\
-Artifact sanitization note & \path{reports/final/ARTIFACT_SANITIZATION.md} & Documents excluded credential patterns and post-build secret-scan commands & Included; local credentials are excluded from submission archives.\\
+Figures and diagrams & \path{paper/figures/}; \path{paper/figures/v2/}; \path{platform_tinker/reports/final/tikz/} & Recreates visual evidence and final report diagrams & Included in the Overleaf bundle.\\
+Final report bundle & \path{platform_tinker/reports/final/submission_uploads/} & Provides the PDF, Overleaf source archive, and code/data archive expected for review & Regenerated after final edits.\\
+Source-of-truth result ledger & \path{platform_tinker/reports/final/result_ledger.md} & Reconciles headline numbers, excluded runs, checkpoint-selection rules, and whether each result supports a main claim & Included to reduce cherry-picking risk.\\
+Artifact sanitization note & \path{platform_tinker/reports/final/ARTIFACT_SANITIZATION.md} & Documents excluded credential patterns and post-build secret-scan commands & Included; local credentials are excluded from submission archives.\\
 Private local audit mirror & \path{artifacts/local_copies/latest}; \path{artifacts/local_copies/nia_index_payload/tinker-rl-lab-artifacts} & Preserves local W\&B logs, HF cache metadata, Tinker checkpoint manifests/checkpoints, and a NIA-searchable artifact payload & Private/local only; not part of the public submission archive.\\
-Dissertation benchmark manifest & \path{reports/final/thesis_benchmarks/expanded_50_sources.json}; \path{reports/final/thesis_benchmarks/expanded_50_summary.md} & Documents the 50-report comparison corpus used to improve report structure & Included as comparison context, not as primary empirical evidence.\\
+Dissertation benchmark manifest & \path{platform_tinker/reports/final/thesis_benchmarks/expanded_50_sources.json}; \path{platform_tinker/reports/final/thesis_benchmarks/expanded_50_summary.md} & Documents the 50-report comparison corpus used to improve report structure & Included as comparison context, not as primary empirical evidence.\\
 \bottomrule
 \end{tabularx}
 \end{table}

@@ -9,8 +9,8 @@ Computes partial corr(ZVF_t*, final_reward) while controlling for
   * group size G
   * baseline (SFT) accuracy
 
-Inputs:  JSONL / JSON training logs under experiments/results/
-Outputs: experiments/results/zvf_partial_correlations.tsv (+ stdout tex table)
+Inputs:  JSONL / JSON training logs under platform_hybrid/experiments/results/
+Outputs: platform_hybrid/experiments/results/zvf_partial_correlations.tsv (+ stdout tex table)
 
 For each configuration the script reports:
   - r_partial           : Pearson (or Spearman, --method spearman) partial
@@ -79,10 +79,10 @@ except Exception:  # pragma: no cover
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LOG_GLOBS = [
-    "experiments/results/*.jsonl",
-    "experiments/results/**/*.jsonl",
-    "experiments/results/*.json",
-    "experiments/results/**/*.json",
+    "platform_hybrid/experiments/results/*.jsonl",
+    "platform_hybrid/experiments/results/**/*.jsonl",
+    "platform_hybrid/experiments/results/*.json",
+    "platform_hybrid/experiments/results/**/*.json",
     # NOTE: *.tsv globs were removed deliberately. They previously ingested
     # synthetic/dry-run summary TSVs (e.g. variance_mitigation.tsv) as if they
     # were per-group rollout logs, producing a populated partial-correlation

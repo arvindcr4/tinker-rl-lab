@@ -120,7 +120,7 @@ operating point is:
 ## Reproduction
 
 ```bash
-python3 scripts/p5p8/p7_joint_controller.py
+python3 platform_modal/scripts/p5p8/p7_joint_controller.py
 # ~3 min on 4 cores; loads 4 N2 tensor files (640 prompt-step obs each),
 # computes per-step delta_div, applies joint rule at 5 tau × 4 methods
 # (20 evaluation cells), bootstrap B=2000 on net_saves

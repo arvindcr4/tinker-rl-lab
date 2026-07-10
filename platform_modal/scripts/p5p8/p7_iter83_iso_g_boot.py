@@ -2,10 +2,10 @@
 """P7 iter-83: bootstrap CIs on Iso-G@0.90 vs zvf-triage yield-per-1k-extra.
 
 Reads:
-  experiments/results/p5p8/p7_iter83_iso_g_per_prompt.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter83_iso_g_per_prompt.tsv
 Writes:
-  experiments/results/p5p8/p7_iter83_iso_g_boot.tsv
-  experiments/results/p5p8/p7_iter83_iso_g_boot.json
+  platform_hybrid/experiments/results/p5p8/p7_iter83_iso_g_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter83_iso_g_boot.json
 
 Step-level resample with replacement (n_boot=2000, seed=20260705).
 """
@@ -16,7 +16,7 @@ from collections import defaultdict
 from pathlib import Path
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-OUT = WORK / "experiments/results/p5p8"
+OUT = WORK / "platform_hybrid/experiments/results/p5p8"
 G_BASE = 8
 N_PROMPTS_PER_STEP = 16
 N_BOOT = 2000

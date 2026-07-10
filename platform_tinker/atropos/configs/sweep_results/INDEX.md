@@ -1,4 +1,4 @@
-# atropos/configs/sweep_results/ — INDEX
+# platform_tinker/atropos/configs/sweep_results/ — INDEX
 
 **Purpose:** Auto-generated exhaustive GRPO hyperparameter sweep for GSM8K on Qwen3-0.6B (open-source Unsloth/TRL backend). 108 config YAMLs spanning the full grid plus one runner.
 

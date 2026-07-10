@@ -17,7 +17,7 @@ All inputs are REAL in-repo results. Outputs: 4 TSV + 1 JSON summary.
 import csv, json, math, os
 from scipy import stats
 
-R = "experiments/results"
+R = "platform_hybrid/experiments/results"
 OUT = os.path.join(R, "berkeley")
 os.makedirs(OUT, exist_ok=True)
 Z = 1.959963985  # 97.5% normal quantile

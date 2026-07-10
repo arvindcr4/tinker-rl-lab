@@ -19,7 +19,7 @@ Vein (a) of the brief at the transfer/sharpening level:
       (E) TN       -- correctly does NOT fire (low zvf, low opportunity)
   - Bootstrap CIs on failure-class shares (per method + pooled).
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   p7_iter107_taut_in_method.tsv          per-method optimal tau + metric
   p7_iter107_taut_transfer.tsv          transfer CIs (grpo_tau -> other-methods)
   p7_iter107_failure_taxonomy.tsv       one row per (method, step)

@@ -4,7 +4,7 @@ Upload these files for the four required items:
 
 1. Overleaf document
    - `overleaf_document.zip`
-   - Main file inside Overleaf: `reports/final/capstone_final_report.tex`
+   - Main file inside Overleaf: `platform_tinker/reports/final/capstone_final_report.tex`
    - Includes the consolidated final report source, TikZ diagrams, literature survey section files, bibliography, and paper figures.
 
 2. Data and code as zip file

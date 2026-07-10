@@ -23,7 +23,7 @@ Pipeline:
      metric gaps.
   6. 5 falsifiable hypotheses.
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   p8_iter192_decile_metrics.tsv   3 fsets x 10 deciles x 5 seeds = 150 rows
   p8_iter192_decile_lift.tsv      10 deciles x 4 metrics = 40 rows
   p8_iter192_per_decile_summary.json

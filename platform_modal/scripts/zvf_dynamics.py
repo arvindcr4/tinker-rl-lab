@@ -15,24 +15,24 @@ are reduced to:
 
 Inputs (real per-step data already in the worktree):
 
-  experiments/results/groupsize_zvf_sweep.json
+  platform_hybrid/experiments/results/groupsize_zvf_sweep.json
       12 runs x 40 steps, G in {2,4,8,16} x {42,123,456}.
-  experiments/results/variance_mitigation.tsv
+  platform_hybrid/experiments/results/variance_mitigation.tsv
       9 methods x 5 seeds x 100-300 steps; collapse flag per step.
-  experiments/results/tinker_gsm8k_zvf_summary.json (+ per-seed files)
+  platform_hybrid/experiments/results/tinker_gsm8k_zvf_summary.json (+ per-seed files)
       3 seeds x 200 problems (prompt-level, not step-level — used for
       prompt-zvf cross-entropy analysis instead).
 
 Outputs:
 
-  experiments/results/zvf_dynamics_summary.tsv
+  platform_hybrid/experiments/results/zvf_dynamics_summary.tsv
       One row per (method_or_group_size, seed-or-pool) with dynamics
       statistics.
-  experiments/results/zvf_dynamics_leadtime.tsv
+  platform_hybrid/experiments/results/zvf_dynamics_leadtime.tsv
       Per-(method,seed) first-ZVF>theta step, first-collapse step, lead.
-  experiments/results/zvf_dynamics_phase.tsv
+  platform_hybrid/experiments/results/zvf_dynamics_phase.tsv
       Early/mid/late ZVF statistics per run.
-  experiments/results/zvf_dynamics.json
+  platform_hybrid/experiments/results/zvf_dynamics.json
       All aggregates also in JSON for downstream figure scripts.
 """
 from __future__ import annotations

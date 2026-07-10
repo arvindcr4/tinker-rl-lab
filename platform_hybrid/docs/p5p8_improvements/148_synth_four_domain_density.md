@@ -111,7 +111,7 @@ meaningless at $D_1$.
 
 ## Files
 
-- `scripts/p5p8/synth_iter132_four_domain_density.py` (~290 LoC, stdlib
+- `platform_modal/scripts/p5p8/synth_iter132_four_domain_density.py` (~290 LoC, stdlib
   + numpy + csv)
 - `experiments/results/p5p8/synth_iter132_four_domain_density.tsv`
   (4 rows: 4-domain density table)

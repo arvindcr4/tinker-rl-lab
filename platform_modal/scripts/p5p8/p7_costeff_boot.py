@@ -7,10 +7,10 @@ symmetry-based caveat ("sub-0.5/1k by symmetry across methods"); the
 formally bootstrapped. This iter closes that statistical-rigor gap.
 
 Output:
-  experiments/results/p5p8/p7_costeff_boot_summary.tsv
-  experiments/results/p5p8/p7_costeff_boot_summary.json
-  experiments/results/p5p8/p7_costeff_boot_regime.tsv
-  experiments/results/p5p8/p7_costeff_boot_step.tsv
+  platform_hybrid/experiments/results/p5p8/p7_costeff_boot_summary.tsv
+  platform_hybrid/experiments/results/p5p8/p7_costeff_boot_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_costeff_boot_regime.tsv
+  platform_hybrid/experiments/results/p5p8/p7_costeff_boot_step.tsv
 """
 
 from __future__ import annotations
@@ -22,8 +22,8 @@ import random
 import statistics
 
 WORKTREE = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-TENSOR_DIR = WORKTREE / "experiments/results/n2_reward_tensor_resume"
-OUT_DIR = WORKTREE / "experiments/results/p5p8"
+TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 METHODS = ("grpo", "aero", "gift", "areal")

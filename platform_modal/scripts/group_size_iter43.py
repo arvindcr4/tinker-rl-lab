@@ -27,20 +27,20 @@ G=2~=G=16 retention 97.6% is FALSE on GSM8K at broad scale):
 
 Deliverables (each computed from existing TSVs -- no fabrication):
 
-    experiments/results/group_size_iter43_eff_zvf.tsv
+    platform_hybrid/experiments/results/group_size_iter43_eff_zvf.tsv
         25 rows: 5 G values x 5 token budgets.
         Per-cell ZVF-theoretical retention, measured retention, and the
         ZVF-driven component of any retention gap.
 
-    experiments/results/group_size_iter43_difficulty.tsv
+    platform_hybrid/experiments/results/group_size_iter43_difficulty.tsv
         15 rows: 5 G values x 3 difficulty bins (low/mid/high).
         Per-bin effective-equivalence score.
 
-    experiments/results/group_size_iter43_flop_tost.tsv
+    platform_hybrid/experiments/results/group_size_iter43_flop_tost.tsv
         10 rows: 5 ordered (G_a, G_b) pairs.
         FLOP-matched retention with bootstrap CI and TOST test.
 
-    experiments/results/group_size_iter43_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter43_summary.tsv
         Single-rollup table of headline findings for the paper section.
 """
 from __future__ import annotations

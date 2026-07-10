@@ -8,13 +8,13 @@ Closes the iter-31 falsifiable prediction:
 
 Inputs
 ------
-experiments/results/mega_20260704/cells.tsv  (98 cells, each has
+platform_hybrid/experiments/results/mega_20260704/cells.tsv  (98 cells, each has
     reward_vectors_json -> list of (step, group, rollout) rewards).
 
 Outputs
 -------
-experiments/results/p5p8/p7_mega_saturation_band_per_cell.tsv
-experiments/results/p5p8/p7_mega_saturation_band_summary.json
+platform_hybrid/experiments/results/p5p8/p7_mega_saturation_band_per_cell.tsv
+platform_hybrid/experiments/results/p5p8/p7_mega_saturation_band_summary.json
 docs/p5p8_improvements/<NN>_p7_mega_saturation_band.md
 
 Stdlib + numpy + pandas + matplotlib. <=300 lines.

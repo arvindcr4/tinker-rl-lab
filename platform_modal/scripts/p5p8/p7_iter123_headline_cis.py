@@ -30,8 +30,8 @@ Three classes of headline are covered:
      an INSUFFICIENT_N flag and the reason.
 
 Output:
-  experiments/results/p5p8/p7_iter123_headline_cis.tsv
-  experiments/results/p5p8/p7_iter123_headline_cis.json
+  platform_hybrid/experiments/results/p5p8/p7_iter123_headline_cis.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter123_headline_cis.json
 
 Citations verified locally against the section file paths; no external
 fetches. Manuscript rebuild NOT touched.

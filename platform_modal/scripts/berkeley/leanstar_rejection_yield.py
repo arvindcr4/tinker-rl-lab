@@ -28,8 +28,8 @@ Citations (verified 2026-07-04 via arxiv.org/abs):
 import json, math, glob, os
 from itertools import combinations
 
-RES = "experiments/results"
-OUT = "experiments/results/berkeley"
+RES = "platform_hybrid/experiments/results"
+OUT = "platform_hybrid/experiments/results/berkeley"
 os.makedirs(OUT, exist_ok=True)
 
 def comb(n, r):

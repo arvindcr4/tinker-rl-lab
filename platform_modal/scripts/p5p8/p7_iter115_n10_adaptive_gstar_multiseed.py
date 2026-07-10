@@ -15,8 +15,8 @@ import random
 from pathlib import Path
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-N10_DIR = WORK / "experiments/results/n10_seed_expansion"
-OUT_DIR = WORK / "experiments/results/p5p8"
+N10_DIR = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 G_BASE, G_CANDS = 8, (16, 32, 64)

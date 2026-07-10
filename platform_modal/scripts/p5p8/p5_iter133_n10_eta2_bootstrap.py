@@ -9,9 +9,9 @@ within-corpus consistency. Iter 133 measures CROSS-CORPUS PORTABILITY on
 the n10_seed_expansion/ panel (5 GRPO seeds × 15 steps = 75 obs;
 single-algorithm single-stack — the opposite experimental design from mega-98).
 
-Inputs:  experiments/results/n10_seed_expansion/n10_grpo_s{42,179,316,453,590}.json
-Outputs: experiments/results/p5p8/p5_iter133_{per_axis_eta2, step_band, chained_R}.tsv
-         experiments/results/p5p8/p5_iter133_summary.json
+Inputs:  platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s{42,179,316,453,590}.json
+Outputs: platform_hybrid/experiments/results/p5p8/p5_iter133_{per_axis_eta2, step_band, chained_R}.tsv
+         platform_hybrid/experiments/results/p5p8/p5_iter133_summary.json
 H1: η²(step_band) > η²(seed) on ≥ 2/4 channels  (PASS on reward+mean_len, FAIL on zvf+loss)
 H2: R = η²(step_band)/η²(seed) ≥ 1 with CI-lo > 1 on ≥ 2/4 channels (PASS on 2/4)
 H3: iter-125 cross-corpus portability of R≥4 (REFUTED — zvf R=0.34 on N10)
@@ -254,7 +254,7 @@ def main():
 # ---------- summary JSON ----------
     summary = {
         "iter": 133, "pillar": "P5",
-        "corpus": "experiments/results/n10_seed_expansion/",
+        "corpus": "platform_hybrid/experiments/results/n10_seed_expansion/",
         "n_seeds_used": len(SEEDS), "seeds": SEEDS, "n_obs": n_rows,
         "channels": CHANNELS, "B_bootstrap": B_BOOT, "boot_seed": BOOT_SEED,
         "hypotheses": verdicts,

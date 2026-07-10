@@ -27,10 +27,10 @@ References (verified):
   - kaplan2020scaling -- Scale-axis baseline.
 
 Outputs:
-  experiments/results/scaling_law_iter97_headtohead.tsv  (8 families x 12 anchors x 5 metrics)
-  experiments/results/scaling_law_iter97_winners.tsv     (per-criterion winners)
-  experiments/results/scaling_law_iter97_variance.tsv    (per-anchor sigma^2 + OLS regression)
-  experiments/results/scaling_law_iter97_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter97_headtohead.tsv  (8 families x 12 anchors x 5 metrics)
+  platform_hybrid/experiments/results/scaling_law_iter97_winners.tsv     (per-criterion winners)
+  platform_hybrid/experiments/results/scaling_law_iter97_variance.tsv    (per-anchor sigma^2 + OLS regression)
+  platform_hybrid/experiments/results/scaling_law_iter97_meta.json
   figures/scaling_law_iter97.{pdf,png}
   paper/figures/scaling_law_iter97.pdf
 """

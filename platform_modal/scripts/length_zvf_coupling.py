@@ -16,10 +16,10 @@ For every run we compute:
   * Joint Spearman(len, zvf), Spearman(len, reward), Spearman(zvf, reward)
   * Length-bin conditional ZVF (low/mid/high length segments)
 
-Inputs : experiments/results/drgrpo_vs_grpo.json (Qwen2.5-0.5B arithmetic)
-         experiments/results/drgrpo_gsm8k_cot_full.json (Qwen2.5-1.5B GSM8K-CoT)
-Outputs: experiments/results/length_zvf_coupling.tsv  (per-run joint spearman)
-         experiments/results/length_zvf_bincond.tsv   (per-run length-bin conditional ZVF)
+Inputs : platform_hybrid/experiments/results/drgrpo_vs_grpo.json (Qwen2.5-0.5B arithmetic)
+         platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json (Qwen2.5-1.5B GSM8K-CoT)
+Outputs: platform_hybrid/experiments/results/length_zvf_coupling.tsv  (per-run joint spearman)
+         platform_hybrid/experiments/results/length_zvf_bincond.tsv   (per-run length-bin conditional ZVF)
          figures/length_zvf_coupling.pdf
 """
 import json

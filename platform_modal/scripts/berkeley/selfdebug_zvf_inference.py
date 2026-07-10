@@ -47,11 +47,11 @@ Hypotheses (pre-registered):
       1e-6 (no numerical transformation noise).
 
 Stdlib only. Outputs:
-  experiments/results/berkeley/selfdebug_eps_sweep.tsv
-  experiments/results/berkeley/selfdebug_method_reformulation.tsv
-  experiments/results/berkeley/selfdebug_ranking_stability.tsv
-  experiments/results/berkeley/selfdebug_calibration.tsv
-  experiments/results/berkeley/selfdebug_summary.json
+  platform_hybrid/experiments/results/berkeley/selfdebug_eps_sweep.tsv
+  platform_hybrid/experiments/results/berkeley/selfdebug_method_reformulation.tsv
+  platform_hybrid/experiments/results/berkeley/selfdebug_ranking_stability.tsv
+  platform_hybrid/experiments/results/berkeley/selfdebug_calibration.tsv
+  platform_hybrid/experiments/results/berkeley/selfdebug_summary.json
 """
 from __future__ import annotations
 
@@ -64,8 +64,8 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-RISK_TSV = ROOT / "experiments/results/zvf_iter130_risk_index.tsv"
-OUT = ROOT / "experiments/results/berkeley"
+RISK_TSV = ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv"
+OUT = ROOT / "platform_hybrid/experiments/results/berkeley"
 OUT.mkdir(parents=True, exist_ok=True)
 
 VAR_MIT = ["grpo", "ngrpo", "aero", "cppo", "mcgrpo", "areal", "gift", "es", "scafgrpo"]

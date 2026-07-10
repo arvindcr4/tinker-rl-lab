@@ -7,8 +7,8 @@ Two-panel PDF (figures/length_regime_drift.pdf):
       — Dr.GRPO's regime-stratification effect is sharper on GSM8K CoT.
 
 Reads:
-  experiments/results/length_bias_iter52_grpo_vs_drgrpo.tsv
-  experiments/results/length_bias_iter52_above_minus_below.tsv
+  platform_hybrid/experiments/results/length_bias_iter52_grpo_vs_drgrpo.tsv
+  platform_hybrid/experiments/results/length_bias_iter52_above_minus_below.tsv
 """
 from __future__ import annotations
 import csv

@@ -40,10 +40,10 @@ H5 union of v2.5 audits catches exactly 5/5 mutations (full coverage)
 
 Outputs
 -------
-- experiments/results/p5p8/p5_iter177_mutation_panel.tsv
-- experiments/results/p5p8/p5_iter177_detection_rates.tsv
-- experiments/results/p5p8/p5_iter177_v25_spec.tsv
-- experiments/results/p5p8/p5_iter177_summary.json
+- platform_hybrid/experiments/results/p5p8/p5_iter177_mutation_panel.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter177_detection_rates.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter177_v25_spec.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter177_summary.json
 """
 from __future__ import annotations
 import json

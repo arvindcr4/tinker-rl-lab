@@ -9,7 +9,7 @@ step-level signals (mean_reward / entropy / grad_norm / advantage_variance):
 
     EXPLORE  --(reward >= 0.5*R_T)-->  CONSOLIDATE  --(reward >= 0.9*R_T)-->  CONVERGE
 
-Data: experiments/results/groupsize_zvf_sweep.json  (same-stack sweep, 4 G x 3 seed x
+Data: platform_hybrid/experiments/results/groupsize_zvf_sweep.json  (same-stack sweep, 4 G x 3 seed x
 40 step, per-step {zvf, mean_reward, entropy, advantage_variance, grad_norm}).
 
 Hypotheses (target A2 eval-methodology + A3 post-training-science):
@@ -35,8 +35,8 @@ import json, os, statistics as st
 from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SRC = os.path.join(ROOT, "experiments/results/groupsize_zvf_sweep.json")
-OUT = os.path.join(ROOT, "experiments/results/berkeley")
+SRC = os.path.join(ROOT, "platform_hybrid/experiments/results/groupsize_zvf_sweep.json")
+OUT = os.path.join(ROOT, "platform_hybrid/experiments/results/berkeley")
 os.makedirs(OUT, exist_ok=True)
 THETA_LO, THETA_HI = 0.5, 0.9
 

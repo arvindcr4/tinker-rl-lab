@@ -21,9 +21,9 @@ still yield a degenerate group. Closed-form via Beta-Binomial:
   P(restored contrast)   = 1 - P(degenerate at G'=16)
 
 Output:
-  experiments/results/p5p8/p7_postpred_per_step.tsv
-  experiments/results/p5p8/p7_postpred_summary.json
-  experiments/results/p5p8/p7_postpred_summary.tsv
+  platform_hybrid/experiments/results/p5p8/p7_postpred_per_step.tsv
+  platform_hybrid/experiments/results/p5p8/p7_postpred_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_postpred_summary.tsv
 """
 
 from __future__ import annotations
@@ -35,8 +35,8 @@ import random
 import statistics
 
 WORKTREE = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-TENSOR_DIR = WORKTREE / "experiments/results/n2_reward_tensor_resume"
-OUT_DIR = WORKTREE / "experiments/results/p5p8"
+TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 METHODS = ("grpo", "aero", "gift", "areal")

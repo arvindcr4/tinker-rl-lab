@@ -34,14 +34,14 @@ Three concrete deliverables:
       sequel because they avoid the structural near-degeneracy of n=5.
 
 Outputs:
-  experiments/results/scaling_law_iter133_pool_sizes.tsv
-  experiments/results/scaling_law_iter133_monotonicity.tsv
-  experiments/results/scaling_law_iter133_three_phase.tsv
-  experiments/results/scaling_law_iter133_bimodality.tsv
-  experiments/results/scaling_law_iter133_class_scaling.tsv
-  experiments/results/scaling_law_iter133_loocv.tsv
-  experiments/results/scaling_law_iter133_interaction_aic.tsv
-  experiments/results/scaling_law_iter133_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter133_pool_sizes.tsv
+  platform_hybrid/experiments/results/scaling_law_iter133_monotonicity.tsv
+  platform_hybrid/experiments/results/scaling_law_iter133_three_phase.tsv
+  platform_hybrid/experiments/results/scaling_law_iter133_bimodality.tsv
+  platform_hybrid/experiments/results/scaling_law_iter133_class_scaling.tsv
+  platform_hybrid/experiments/results/scaling_law_iter133_loocv.tsv
+  platform_hybrid/experiments/results/scaling_law_iter133_interaction_aic.tsv
+  platform_hybrid/experiments/results/scaling_law_iter133_meta.json
   figures/scaling_law_iter133.{pdf,png}
 
 References (verified):

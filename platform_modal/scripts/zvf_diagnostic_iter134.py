@@ -39,25 +39,25 @@ This iter sharpens three things on top of the iter130 framework:
       index should NOT mislabel).
 
 Inputs (real, prior iterations):
-    experiments/results/zvf_iter126_lag1.tsv      lag-1 channel
-    experiments/results/zvf_iter126_drift.tsv     slope channel
-    experiments/results/zvf_summary.tsv           magnitude channel + labels
-    experiments/results/groupsize_zvf_sweep.tsv   iter131 zvf_g_slope source
-    experiments/results/variance_mitigation.tsv   raw per-step ZVF source
-    experiments/results/zvf_iter130_meta.json     iter130 metadata (for
+    platform_hybrid/experiments/results/zvf_iter126_lag1.tsv      lag-1 channel
+    platform_hybrid/experiments/results/zvf_iter126_drift.tsv     slope channel
+    platform_hybrid/experiments/results/zvf_summary.tsv           magnitude channel + labels
+    platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv   iter131 zvf_g_slope source
+    platform_hybrid/experiments/results/variance_mitigation.tsv   raw per-step ZVF source
+    platform_hybrid/experiments/results/zvf_iter130_meta.json     iter130 metadata (for
         the existing heuristic threshold)
 
 Outputs (this iter):
-    experiments/results/zvf_iter134_axis_aurocs.tsv
+    platform_hybrid/experiments/results/zvf_iter134_axis_aurocs.tsv
         Real-only vs iter130-mixed AUROC table (5 axes x 2 scopes)
-    experiments/results/zvf_iter134_operating_point.tsv
+    platform_hybrid/experiments/results/zvf_iter134_operating_point.tsv
         Threshold sweep of zvf_risk_max with balanced-accuracy/F1 columns
-    experiments/results/zvf_iter134_risk_with_gsize.tsv
+    platform_hybrid/experiments/results/zvf_iter134_risk_with_gsize.tsv
         Per-row 4-axis risk table including zvf_g_slope and zvf_risk_max4
-    experiments/results/zvf_iter134_heldout.tsv
+    platform_hybrid/experiments/results/zvf_iter134_heldout.tsv
         Held-out validation: tinker_gsm8k_zvf + drgrpo_vs_grpo + samestack
         (rows not used in the AUROC training set)
-    experiments/results/zvf_iter134_meta.json
+    platform_hybrid/experiments/results/zvf_iter134_meta.json
         Machine-readable summary
     figures/zvf_vs_failure.pdf     extended 4-panel figure (overwrites)
 """

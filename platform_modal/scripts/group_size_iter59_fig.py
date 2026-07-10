@@ -14,9 +14,9 @@ Panel (b) --- Multiplicative decomposition at each budget: structural upper
     R_emp/R_struct - 1.
 
 Inputs:
-  experiments/results/group_size_iter59_equivalence.tsv
-  experiments/results/group_size_iter59_min_tokens.tsv
-  experiments/results/group_size_iter59_decomp.tsv
+  platform_hybrid/experiments/results/group_size_iter59_equivalence.tsv
+  platform_hybrid/experiments/results/group_size_iter59_min_tokens.tsv
+  platform_hybrid/experiments/results/group_size_iter59_decomp.tsv
 
 Outputs:
   figures/group_size_iter59.{pdf,png}

@@ -48,16 +48,16 @@ Mapping to TinkerRL-Bench pillars:
     (G, p) plane.
 
 Outputs (relative to ROOT):
-  experiments/results/berkeley/verifiable_zvf_percell.tsv
-  experiments/results/berkeley/verifiable_zvf_inflation.tsv
-  experiments/results/berkeley/verifiable_zvf_p_dispersion.tsv
-  experiments/results/berkeley/verifiable_g_star.tsv
-  experiments/results/berkeley/verifiable_summary.json
+  platform_hybrid/experiments/results/berkeley/verifiable_zvf_percell.tsv
+  platform_hybrid/experiments/results/berkeley/verifiable_zvf_inflation.tsv
+  platform_hybrid/experiments/results/berkeley/verifiable_zvf_p_dispersion.tsv
+  platform_hybrid/experiments/results/berkeley/verifiable_g_star.tsv
+  platform_hybrid/experiments/results/berkeley/verifiable_summary.json
 
 Source data (already in repo, NOT regenerated):
-  experiments/results/bfclv4_tool_use.tsv          (10 cells: G=8, 2 seeds x 5 steps)
-  experiments/results/groupsize_zvf_sweep.json     (12 runs, sparse only)
-  experiments/results/zvf_iter98_tooluse.tsv       (rho decomposition)
+  platform_hybrid/experiments/results/bfclv4_tool_use.tsv          (10 cells: G=8, 2 seeds x 5 steps)
+  platform_hybrid/experiments/results/groupsize_zvf_sweep.json     (12 runs, sparse only)
+  platform_hybrid/experiments/results/zvf_iter98_tooluse.tsv       (rho decomposition)
 """
 from __future__ import annotations
 

@@ -25,24 +25,24 @@ Iter 79 closes two open P7 veins simultaneously on REAL data:
 
 Inputs
 ------
-experiments/results/n10_seed_expansion/n10_grpo_s*.json
+platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s*.json
     5 seed-level JSONs (s42, s179, s316, s453, s590) each with
     step_log[15]={step, loss, reward, zvf, mean_len}.
-experiments/results/n2_reward_tensor_resume/{grpo,aero,areal,gift}_s0_tensors.jsonl
+platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,areal,gift}_s0_tensors.jsonl
     40 step rows × 16 prompts × 8 rewards per prompt, all four methods,
     same stack.
 
 Outputs
 -------
-experiments/results/p5p8/p7_multitrigger_seed_per_seed.tsv
+platform_hybrid/experiments/results/p5p8/p7_multitrigger_seed_per_seed.tsv
     5 seeds × 4 triggers × 5 τ = 100 rows of per-seed fire counts.
-experiments/results/p5p8/p7_multitrigger_seed_summary.tsv
+platform_hybrid/experiments/results/p5p8/p7_multitrigger_seed_summary.tsv
     4 triggers × 5 τ = 20 rows of seed-mean ± seed-sd + 95% bootstrap CI.
-experiments/results/p5p8/p7_multitrigger_seed_rank.tsv
+platform_hybrid/experiments/results/p5p8/p7_multitrigger_seed_rank.tsv
     one row per (seed-pair, trigger, τ) for seed-pair rank consistency.
-experiments/results/p5p8/p7_joint_controller_ci.tsv
+platform_hybrid/experiments/results/p5p8/p7_joint_controller_ci.tsv
     4 methods × 2 τ × 4 headline metrics = 32 rows of point + 95% CI.
-experiments/results/p5p8/p7_multitrigger_seed_summary.json
+platform_hybrid/experiments/results/p5p8/p7_multitrigger_seed_summary.json
     machine-readable headline dictionary with all CIs.
 
 Stdlib only.

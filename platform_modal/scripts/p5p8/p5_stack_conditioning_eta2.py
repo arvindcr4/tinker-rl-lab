@@ -52,10 +52,10 @@ References (verified):
   - tulu3_rlvr2024       (Lambert et al., arXiv:2411.15124)
 
 Outputs (worktree-relative):
-  experiments/results/p5p8/p5_stack_conditioning_eta2_per_axis.tsv
-  experiments/results/p5p8/p5_stack_conditioning_eta2_boot.tsv
-  experiments/results/p5p8/p5_stack_conditioning_zvf_iid.tsv
-  experiments/results/p5p8/p5_stack_conditioning_summary.json
+  platform_hybrid/experiments/results/p5p8/p5_stack_conditioning_eta2_per_axis.tsv
+  platform_hybrid/experiments/results/p5p8/p5_stack_conditioning_eta2_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p5_stack_conditioning_zvf_iid.tsv
+  platform_hybrid/experiments/results/p5p8/p5_stack_conditioning_summary.json
 """
 from __future__ import annotations
 import csv
@@ -69,8 +69,8 @@ from pathlib import Path
 # Configuration
 # ----------------------------------------------------------------------------
 ROOT = Path(__file__).resolve().parents[2]
-N2_DIR = ROOT / "experiments/results/n2_reward_tensor_resume"
-OUT_DIR = ROOT / "experiments/results/p5p8"
+N2_DIR = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 N_METHODS = 4

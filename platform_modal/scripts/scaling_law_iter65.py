@@ -25,11 +25,11 @@ template, with bootstrap CIs for the phase boundaries, and contrasts
 the per-architecture composition of phase classes.
 
 Outputs (5 artefacts + 1 fig):
-  experiments/results/scaling_law_iter65_phase_pieces.tsv
-  experiments/results/scaling_law_iter65_conformity.tsv
-  experiments/results/scaling_law_iter65_boundaries.tsv
-  experiments/results/scaling_law_iter65_arch_phase.tsv
-  experiments/results/scaling_law_iter65_predictions.tsv
+  platform_hybrid/experiments/results/scaling_law_iter65_phase_pieces.tsv
+  platform_hybrid/experiments/results/scaling_law_iter65_conformity.tsv
+  platform_hybrid/experiments/results/scaling_law_iter65_boundaries.tsv
+  platform_hybrid/experiments/results/scaling_law_iter65_arch_phase.tsv
+  platform_hybrid/experiments/results/scaling_law_iter65_predictions.tsv
   paper/sections/scaling_law_iter65.tex
   figures/scaling_law_iter65.{pdf,png}
 """

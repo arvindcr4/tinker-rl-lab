@@ -30,8 +30,8 @@ import json, itertools, statistics as st
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / "experiments/results/groupsize_zvf_sweep.json"
-OUT = ROOT / "experiments/results/berkeley"
+SRC = ROOT / "platform_hybrid/experiments/results/groupsize_zvf_sweep.json"
+OUT = ROOT / "platform_hybrid/experiments/results/berkeley"
 OUT.mkdir(parents=True, exist_ok=True)
 
 d = json.load(open(SRC))

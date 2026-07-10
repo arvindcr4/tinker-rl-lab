@@ -3,7 +3,7 @@
 %             prototype.  Implements the frontier synthesis's "Concrete
 %             Invention" (FRONTIER_INSIGHTS.md Round 2, Gemini Deep Think).
 %             Pareto-dominates zvf-triage by 6-10x on yield-per-1000-extra.
-% Driver: scripts/p5p8/p7_iter83_iso_g.py + p7_iter83_iso_g_boot.py
+% Driver: platform_modal/scripts/p5p8/p7_iter83_iso_g.py + p7_iter83_iso_g_boot.py
 % Inputs: experiments/results/n2_reward_tensor_resume/*_s0_tensors.jsonl
 % Outputs: experiments/results/p5p8/p7_iter83_iso_g_{per_prompt,per_method,boot}.tsv
 %          experiments/results/p5p8/p7_iter83_iso_g_{summary,boot}.json
@@ -153,11 +153,11 @@ Dualformer-Auto, exactly as predicted by the menu-coarseness
 release.
 
 \paragraph{Reproduction.}
-\texttt{python3 scripts/p5p8/p7\_iter83\_iso\_g.py} ($218$ LoC,
-stdlib only); \texttt{python3 scripts/p5p8/p7\_iter83\_iso\_g\_boot.py}
+\texttt{python3 platform\_modal/scripts/p5p8/p7\_iter83\_iso\_g.py} ($218$ LoC,
+stdlib only); \texttt{python3 platform\_modal/scripts/p5p8/p7\_iter83\_iso\_g_boot.py}
 ($138$ LoC, stdlib only, $B{=}2000$ paired-step bootstrap,
 seed $20260705$).  Outputs:
-\texttt{experiments/results/p5p8/p7\_iter83\_iso\_g\_per\_prompt.tsv}
-($23040$ rows), \texttt{p7\_iter83\_iso\_g\_per\_method.tsv}
+\texttt{platform\_hybrid/experiments/results/p5p8/p7\_iter83\_iso\_g\_per\_prompt.tsv}
+and \texttt{p7\_iter83\_iso\_g\_summary.json}.tsv}
 ($36$ rows), \texttt{p7\_iter83\_iso\_g\_boot.tsv} ($4$ rows),
 \texttt{p7\_iter83\_iso\_g\_summary.json}.

@@ -39,15 +39,15 @@ H5 n10 mean_reward per-seed bootstrap CI half-width < 0.10
 
 Outputs
 -------
-- experiments/results/p5p8/p5_iter185_v25_field_fill_per_corpus.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter185_v25_field_fill_per_corpus.tsv
   (39 rows: 13 fields * 3 corpora)
-- experiments/results/p5p8/p5_iter185_v25_value_correctness.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter185_v25_value_correctness.tsv
   (4 fields * 98 cells = 392 rows)
-- experiments/results/p5p8/p5_iter185_v25_discriminative_entropy.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter185_v25_discriminative_entropy.tsv
   (39 rows: 13 fields * 3 corpora)
-- experiments/results/p5p8/p5_iter185_v25_cross_corpus_matrix.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter185_v25_cross_corpus_matrix.tsv
   (13 rows: per-field portability verdict)
-- experiments/results/p5p8/p5_iter185_summary.json
+- platform_hybrid/experiments/results/p5p8/p5_iter185_summary.json
 """
 from __future__ import annotations
 import csv

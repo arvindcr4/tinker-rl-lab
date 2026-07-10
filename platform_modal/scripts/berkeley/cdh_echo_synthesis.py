@@ -56,11 +56,11 @@ Hypotheses (pre-registered from row 12 mechanism + iter136 H1 prior):
       gradient-reward direction.
 
 Outputs:
-  - experiments/results/berkeley/cdh_echo_pooled_paired.tsv
-  - experiments/results/berkeley/cdh_echo_sign_test.tsv
-  - experiments/results/berkeley/cdh_echo_ratio.tsv
-  - experiments/results/berkeley/cdh_echo_cross_pillar.tsv
-  - experiments/results/berkeley/cdh_echo_summary.json
+  - platform_hybrid/experiments/results/berkeley/cdh_echo_pooled_paired.tsv
+  - platform_hybrid/experiments/results/berkeley/cdh_echo_sign_test.tsv
+  - platform_hybrid/experiments/results/berkeley/cdh_echo_ratio.tsv
+  - platform_hybrid/experiments/results/berkeley/cdh_echo_cross_pillar.tsv
+  - platform_hybrid/experiments/results/berkeley/cdh_echo_summary.json
 """
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ import json
 import math
 from pathlib import Path
 
-RESULTS = Path("experiments/results")
+RESULTS = Path("platform_hybrid/experiments/results")
 BERK = RESULTS / "berkeley"
 BERK.mkdir(parents=True, exist_ok=True)
 

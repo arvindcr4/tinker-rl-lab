@@ -14,9 +14,9 @@ Builds on iter9's saturation+bootstrap+holdout+autopsy work and adds:
       that is robust to lambda-bound degeneracy.
 
 Outputs:
-  experiments/results/scaling_law_extended_frontier.tsv
-  experiments/results/scaling_law_power_law.tsv
-  experiments/results/scaling_law_moe_vs_dense.tsv
+  platform_hybrid/experiments/results/scaling_law_extended_frontier.tsv
+  platform_hybrid/experiments/results/scaling_law_power_law.tsv
+  platform_hybrid/experiments/results/scaling_law_moe_vs_dense.tsv
   figures/scaling_law_extended.{pdf,png}
   paper/figures/scaling_law_extended.{pdf,png}
 """
@@ -371,14 +371,14 @@ def main() -> None:
         new_records = [
             {"ts": "2026-07-02", "pillar": "P1",
              "claim": f"Spearman rho(log_10 N, R_first)={rho_first:+.3f} (p={p_first:.3f}) on 12 anchors",
-             "evidence_path": "experiments/results/scaling_law_extended_frontier.tsv"},
+             "evidence_path": "platform_hybrid/experiments/results/scaling_law_extended_frontier.tsv"},
             {"ts": "2026-07-02", "pillar": "P1",
              "claim": f"Spearman rho(log_10 N, R_mean)={rho_mean:+.3f} (p={p_mean:.3f}) on 12 anchors",
-             "evidence_path": "experiments/results/scaling_law_power_law.tsv"},
+             "evidence_path": "platform_hybrid/experiments/results/scaling_law_power_law.tsv"},
             {"ts": "2026-07-02", "pillar": "P1",
              "claim": f"MoE mean={moe_means.mean():.3f} vs dense mean={dense_means.mean():.3f}, "
                       f"gap={obs_gap:+.3f}, perm p={p_moe_gt:.3f}",
-             "evidence_path": "experiments/results/scaling_law_moe_vs_dense.tsv"},
+             "evidence_path": "platform_hybrid/experiments/results/scaling_law_moe_vs_dense.tsv"},
             {"ts": "2026-07-02", "pillar": "P1",
              "claim": f"First-final gap R(1)-R(T) distribution: Nemotron outlier +0.5 (collapse), "
                       f"others within [-0.5, +0.4]",

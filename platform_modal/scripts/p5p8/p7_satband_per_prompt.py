@@ -42,10 +42,10 @@ over-de-escalating (i.e., mixed prompts that Dualformer would not have
 shrunk)?
 
 Outputs:
-  experiments/results/p5p8/p7_satband_per_prompt_summary.tsv (per-method)
-  experiments/results/p5p8/p7_satband_per_step.tsv (160 rows: 4 x 40)
-  experiments/results/p5p8/p7_satband_per_prompt.tsv (2560 rows)
-  experiments/results/p5p8/p7_satband_per_prompt.json
+  platform_hybrid/experiments/results/p5p8/p7_satband_per_prompt_summary.tsv (per-method)
+  platform_hybrid/experiments/results/p5p8/p7_satband_per_step.tsv (160 rows: 4 x 40)
+  platform_hybrid/experiments/results/p5p8/p7_satband_per_prompt.tsv (2560 rows)
+  platform_hybrid/experiments/results/p5p8/p7_satband_per_prompt.json
 """
 
 import json
@@ -55,8 +55,8 @@ from pathlib import Path
 from collections import Counter
 
 WORK = Path('/home/claude/tinker-rl-lab-minimax')
-N2 = WORK / 'experiments/results/n2_reward_tensor_resume'
-OUT = WORK / 'experiments/results/p5p8'
+N2 = WORK / 'platform_hybrid/experiments/results/n2_reward_tensor_resume'
+OUT = WORK / 'platform_hybrid/experiments/results/p5p8'
 OUT.mkdir(parents=True, exist_ok=True)
 FIG = OUT / 'figures'
 FIG.mkdir(parents=True, exist_ok=True)

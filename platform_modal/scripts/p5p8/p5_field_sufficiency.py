@@ -16,7 +16,7 @@ Method (stdlib + numpy + sklearn):
   * Label-only baseline: all cells carry the SAME sampling label -> R^2 == 0 by
     construction (predict-the-mean). The stack, not the label, is predictive.
 
-Outputs: experiments/results/p5p8/p5_field_sufficiency{.tsv,_summary.json}
+Outputs: platform_hybrid/experiments/results/p5p8/p5_field_sufficiency{.tsv,_summary.json}
 """
 import csv, json, math, os, time
 import numpy as np
@@ -24,8 +24,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CELLS = os.path.join(ROOT, "experiments/results/mega_20260704/cells.tsv")
-OUTDIR = os.path.join(ROOT, "experiments/results/p5p8")
+CELLS = os.path.join(ROOT, "platform_hybrid/experiments/results/mega_20260704/cells.tsv")
+OUTDIR = os.path.join(ROOT, "platform_hybrid/experiments/results/p5p8")
 os.makedirs(OUTDIR, exist_ok=True)
 
 TARGETS = ["zvf", "mean_reward"]

@@ -46,13 +46,13 @@ Method
 
 Outputs
 -------
-- experiments/results/p5p8/p5_iter201_per_task_ratio.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter201_per_task_ratio.tsv
   (channels x task_slices: point ratios + bootstrap CI)
-- experiments/results/p5p8/p5_iter201_dominant_axis_per_task.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter201_dominant_axis_per_task.tsv
   (channels x task_slices: top stack axis per (channel, task_slice))
-- experiments/results/p5p8/p5_iter201_within_task_summary.tsv
+- platform_hybrid/experiments/results/p5p8/p5_iter201_within_task_summary.tsv
   (3 channels x 3 task_slices: aggregate summary)
-- experiments/results/p5p8/p5_iter201_summary.json
+- platform_hybrid/experiments/results/p5p8/p5_iter201_summary.json
   (H1-H5 verdicts + per-task findings + bootstrap CIs)
 """
 from __future__ import annotations
@@ -69,9 +69,9 @@ N_BOOT = 2000
 SEED = 20260706
 
 WORKTREE = Path("/home/claude/tinker-rl-lab-minimax")
-CELLS_TSV = WORKTREE / "experiments/results/mega_20260704/cells.tsv"
-N2_METRICS = WORKTREE / "experiments/results/n2_reward_tensor_resume/metrics.tsv"
-OUT_DIR = WORKTREE / "experiments/results/p5p8"
+CELLS_TSV = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
+N2_METRICS = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume/metrics.tsv"
+OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 CHANNELS = ["zvf", "mean_reward", "mean_completion_len"]
@@ -109,7 +109,7 @@ def load_n2_metrics() -> list[dict]:
     if not N2_METRICS.exists():
         # fallback: try alternative name
         for alt in ["zvf_iter130_method_risk.tsv", "n2_metrics.tsv"]:
-            cand = WORKTREE / "experiments/results/n2_reward_tensor_resume" / alt
+            cand = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume" / alt
             if cand.exists():
                 with cand.open() as fh:
                     rd = csv.DictReader(fh, delimiter="\t")

@@ -11,7 +11,7 @@ The N2 dataset is the only evidence base in this worktree where
 stack** (model, task, G=8, prompts, seed) for 40 steps each. It is
 therefore the cleanest possible substrate for measuring the
 algorithm-axis eta^2 against the stack axes. Mirroring the berkeley
-unpacking recipe (`scripts/berkeley/unpacking_dpo_ppo_factorization.py`),
+unpacking recipe (`platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.py`),
 we reshape 20480 reward observations = 4 methods × 40 steps × 16
 prompts × 8 group-position into two long-form data structures
 (`(method, step, prompt) cell-mean` and raw per-`(m,s,p,g)`) and compute
@@ -100,7 +100,7 @@ strongest possible confidence (upper CI 0.0053 < 0.10 by 19×).
 
 ## Artifacts
 
-- `scripts/p5p8/p5_stack_conditioning_eta2.py` (~280 LoC, stdlib only)
+- `platform_modal/scripts/p5p8/p5_stack_conditioning_eta2.py` (~280 LoC, stdlib only)
 - `experiments/results/p5p8/p5_stack_conditioning_eta2_per_axis.tsv`
   (8 rows: 6 cell-mean axes + 2 raw-5120 axes)
 - `experiments/results/p5p8/p5_stack_conditioning_eta2_boot.tsv`
@@ -119,7 +119,7 @@ strongest possible confidence (upper CI 0.0053 < 0.10 by 19×).
   controller signal is measured on the right axis, not the noise axis.
 - **Berkeley unpacking recipe**: this iter uses Ivison et al. (NeurIPS
   2024, arXiv:2406.09279) axis-variance factorization at the same
-  scale/structure as `scripts/berkeley/unpacking_dpo_ppo_factorization.py`
+  scale/structure as `platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.py`
   (H1: eta^2(algo) ≤ 5%) — adapted from the 2-method PPO/GRPO setup
   to the 4-method GRPO-family setup, with the **sharpest N2 result
   being eta^2(method) = 0.05%**, 100× better than the 5% threshold.

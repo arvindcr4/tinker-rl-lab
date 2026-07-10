@@ -20,10 +20,10 @@ selected by the data or whether the (B) hyperbola / (C) Hill are competitive.
 We also bootstrap (B=200) the AIC preference.
 
 Outputs (5 TSVs + 1 figure):
-  experiments/results/scaling_law_iter37_fits.tsv          (per anchor × per model)
-  experiments/results/scaling_law_iter37_aic.tsv           (per anchor best/worst ΔAIC, w)
-  experiments/results/scaling_law_iter37_bootstrap.tsv     (B=200 AIC selection rates)
-  experiments/results/scaling_law_iter37_summary.tsv       (top-line summary)
+  platform_hybrid/experiments/results/scaling_law_iter37_fits.tsv          (per anchor × per model)
+  platform_hybrid/experiments/results/scaling_law_iter37_aic.tsv           (per anchor best/worst ΔAIC, w)
+  platform_hybrid/experiments/results/scaling_law_iter37_bootstrap.tsv     (B=200 AIC selection rates)
+  platform_hybrid/experiments/results/scaling_law_iter37_summary.tsv       (top-line summary)
   paper/sections/scaling_law_iter37.tex                    (paper section)
   figures/scaling_law_iter37.{pdf,png}                     (figure)
 """

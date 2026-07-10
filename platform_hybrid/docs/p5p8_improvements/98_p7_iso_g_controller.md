@@ -152,7 +152,7 @@ controller degenerates to Dualformer-Auto.
 ## Reproduction
 
 ```bash
-python3 scripts/p5p8/p7_iter83_iso_g.py
+python3 platform_modal/scripts/p5p8/p7_iter83_iso_g.py
 ```
 
 Outputs:

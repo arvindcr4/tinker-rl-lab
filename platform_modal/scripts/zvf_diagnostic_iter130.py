@@ -11,16 +11,16 @@ observed failure labels (collapse | drift vs plateau vs converged)
 across every experiment where the three channels are measurable.
 
 Inputs (real, prior iterations):
-    experiments/results/zvf_iter126_lag1.tsv     (lag-1 channel)
-    experiments/results/zvf_iter126_drift.tsv    (slope channel)
-    experiments/results/zvf_summary.tsv          (magnitude channel + labels)
-    experiments/results/zvf_iter126_leadtime.tsv (H2 evidence)
+    platform_hybrid/experiments/results/zvf_iter126_lag1.tsv     (lag-1 channel)
+    platform_hybrid/experiments/results/zvf_iter126_drift.tsv    (slope channel)
+    platform_hybrid/experiments/results/zvf_summary.tsv          (magnitude channel + labels)
+    platform_hybrid/experiments/results/zvf_iter126_leadtime.tsv (H2 evidence)
 
 Outputs (this iter):
-    experiments/results/zvf_iter130_risk_index.tsv     one row per (method, seed)
-    experiments/results/zvf_iter130_axis_aurocs.tsv    per-axis + combined AUROC
-    experiments/results/zvf_iter130_method_risk.tsv    method-aggregated risk
-    experiments/results/zvf_iter130_meta.json          machine-readable summary
+    platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv     one row per (method, seed)
+    platform_hybrid/experiments/results/zvf_iter130_axis_aurocs.tsv    per-axis + combined AUROC
+    platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv    method-aggregated risk
+    platform_hybrid/experiments/results/zvf_iter130_meta.json          machine-readable summary
     figures/zvf_vs_failure.pdf                        4-panel figure
 """
 from __future__ import annotations

@@ -11,9 +11,9 @@ Performs a complete health check on registry/entries/*.json:
   5. Per-variant-delta aggregate: how many stacks claim each named delta and
      in what status mix.
   6. Exports:
-       experiments/results/p5p8/registry_audit.tsv         (one row per entry × item)
-       experiments/results/p5p8/registry_audit_summary.json (machine-readable rollup)
-       experiments/results/p5p8/figures/registry_coverage.{png,pdf}
+       platform_hybrid/experiments/results/p5p8/registry_audit.tsv         (one row per entry × item)
+       platform_hybrid/experiments/results/p5p8/registry_audit_summary.json (machine-readable rollup)
+       platform_hybrid/experiments/results/p5p8/figures/registry_coverage.{png,pdf}
 
 Stdlib + jsonschema + matplotlib. Designed to be cheap and to fit in CI.
 """

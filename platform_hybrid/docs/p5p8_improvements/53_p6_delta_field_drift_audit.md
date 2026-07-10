@@ -29,7 +29,7 @@ Inputs:
 - `registry/entries/delta_*.json` — 11 variant-delta records (32 component
   rows total; 14 are `schema-anchored candidates` for the audit, the
   other 18 are `see delta-list and citation` placeholders)
-- `scripts/p5p8/p6_delta_field_drift_audit.py` — the audit, `<200 LoC`,
+- `platform_modal/scripts/p5p8/p6_delta_field_drift_audit.py` — the audit, `<200 LoC`,
   stdlib only
 - `registry/query.py drift` — the audit re-wired as the registry's 5th
   subcommand
@@ -107,7 +107,7 @@ construction.
 
 ## Artifacts
 
-- `scripts/p5p8/p6_delta_field_drift_audit.py` — the audit script (≤200
+- `platform_modal/scripts/p5p8/p6_delta_field_drift_audit.py` — the audit script (≤200
   LoC, stdlib)
 - `registry/entries/delta_dapo.json` — 4 fields repaired (all 5
   components now schema-anchored)

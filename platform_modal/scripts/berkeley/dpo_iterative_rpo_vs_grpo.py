@@ -11,7 +11,7 @@ Verified citations (no fabrication):
 - Tulu 3: Lambert et al. (AI2), 2024, arXiv:2411.15124 (DPO + RLVR).
 
 Reads iter115 + iter123 + iter127 Pillar 3 evidence; writes 4 TSVs to
-experiments/results/berkeley/. No new training; re-analysis only.
+platform_hybrid/experiments/results/berkeley/. No new training; re-analysis only.
 """
 
 import json
@@ -396,18 +396,18 @@ def main():
             "iter115 + iter127 evidence already supports this framing."
         ),
         "evidence_files": [
-            "experiments/results/group_size_iter115_zvf_linkage.tsv",
-            "experiments/results/group_size_iter127_joint_fit.tsv",
-            "experiments/results/group_size_iter127_optimal_g.tsv",
-            "experiments/results/group_size_iter123_iso_reward.tsv",
-            "experiments/results/group_size_iter123_noise_mech.tsv",
-            "experiments/results/group_size_iter123_effect_size.tsv",
+            "platform_hybrid/experiments/results/group_size_iter115_zvf_linkage.tsv",
+            "platform_hybrid/experiments/results/group_size_iter127_joint_fit.tsv",
+            "platform_hybrid/experiments/results/group_size_iter127_optimal_g.tsv",
+            "platform_hybrid/experiments/results/group_size_iter123_iso_reward.tsv",
+            "platform_hybrid/experiments/results/group_size_iter123_noise_mech.tsv",
+            "platform_hybrid/experiments/results/group_size_iter123_effect_size.tsv",
         ],
         "prototype_outputs": [
-            "experiments/results/berkeley/dpo_iterative_rpo_grpo_equivalence.tsv",
-            "experiments/results/berkeley/dpo_iterative_rpo_snr_scaling.tsv",
-            "experiments/results/berkeley/dpo_iterative_rpo_optimal_g.tsv",
-            "experiments/results/berkeley/dpo_iterative_rpo_loss_equivalence.tsv",
+            "platform_hybrid/experiments/results/berkeley/dpo_iterative_rpo_grpo_equivalence.tsv",
+            "platform_hybrid/experiments/results/berkeley/dpo_iterative_rpo_snr_scaling.tsv",
+            "platform_hybrid/experiments/results/berkeley/dpo_iterative_rpo_optimal_g.tsv",
+            "platform_hybrid/experiments/results/berkeley/dpo_iterative_rpo_loss_equivalence.tsv",
         ],
     }
     with open(OUT / "dpo_iterative_rpo_summary.json", "w") as f:
@@ -441,7 +441,7 @@ def main():
                 continue
             print(f"    {k}: {v}")
 
-    print("\nWrote 4 TSVs + 1 JSON summary to experiments/results/berkeley/")
+    print("\nWrote 4 TSVs + 1 JSON summary to platform_hybrid/experiments/results/berkeley/")
 
 
 if __name__ == "__main__":

@@ -32,11 +32,11 @@ iter105 (failure-mode taxonomy + R_max*(N) Chinchilla-analogue failure):
       peak/late_mean which is the canonical "peak not retained" metric.
 
 Outputs (TSV + JSON meta, plus 4-panel figure):
-  experiments/results/scaling_law_iter109_saturation.tsv   (12 anchors x 3-param fit + bootstrap CI)
-  experiments/results/scaling_law_iter109_tX.tsv          (48 rows: per-anchor time-to-X%)
-  experiments/results/scaling_law_iter109_lambdaN.tsv     (cross-scale lambda vs N, all anchors + filtered)
-  experiments/results/scaling_law_iter109_nemotron.tsv    (Nemotron collapse audit)
-  experiments/results/scaling_law_iter109_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter109_saturation.tsv   (12 anchors x 3-param fit + bootstrap CI)
+  platform_hybrid/experiments/results/scaling_law_iter109_tX.tsv          (48 rows: per-anchor time-to-X%)
+  platform_hybrid/experiments/results/scaling_law_iter109_lambdaN.tsv     (cross-scale lambda vs N, all anchors + filtered)
+  platform_hybrid/experiments/results/scaling_law_iter109_nemotron.tsv    (Nemotron collapse audit)
+  platform_hybrid/experiments/results/scaling_law_iter109_meta.json
   figures/scaling_law_iter109.{pdf,png}
   paper/figures/scaling_law_iter109.pdf
 

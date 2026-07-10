@@ -56,15 +56,15 @@ Hypotheses:
       the iter-127 method-axis CCC ranking (gift > grpo > aero > areal)?
 
 Outputs:
-  experiments/results/p5p8/p7_iter131_per_prompt_gstar.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter131_per_prompt_gstar.tsv
     (2560 rows: method × step × prompt × controller × recommended_G × predicted_zvf)
-  experiments/results/p5p8/p7_iter131_step_summary.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter131_step_summary.tsv
     (160 rows: method × step × controller × 7 metrics)
-  experiments/results/p5p8/p7_iter131_method_summary.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter131_method_summary.tsv
     (20 rows: method × controller × 12 metrics)
-  experiments/results/p5p8/p7_iter131_contrast_ci.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter131_contrast_ci.tsv
     (5 rows: per-controller bootstrap CI on contrast_restored net of cost)
-  experiments/results/p5p8/p7_iter131_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_iter131_summary.json
 """
 import json
 import math
@@ -73,8 +73,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-N2_DIR = WORK / "experiments/results/n2_reward_tensor_resume"
-OUT_DIR = WORK / "experiments/results/p5p8"
+N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
 
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_BASE = 8

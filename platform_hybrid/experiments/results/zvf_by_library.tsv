@@ -4,7 +4,7 @@
 # experiment family for non-variance_mitigation rows (tool_use, gsm8k_real,
 # arithmetic_groupsize, scaling_law). failure counts are computed by the
 # deterministic classify() rule (see top of this file).
-# Source: scripts/zvf_diagnostic.py
+# Source: platform_modal/scripts/zvf_diagnostic.py
 library	model	n_rows	n_seeds	mean_zvf	max_zvf	mean_peak	mean_last10	n_collapse	n_drift	n_plateau	n_converged	collapse_rate	drift_rate	plateau_rate	converged_rate	per_step_collapse_rate	evidence_path
 grpo	GRPO	5	5	0.4808	0.4824	0.3855	0.3791	0	0	5	0	0.0000	0.0000	1.0000	0.0000	0.6000	experiments/results/variance_mitigation.tsv
 aero	AERO	5	5	0.2203	0.2219	0.4067	0.3993	0	0	5	0	0.0000	0.0000	1.0000	0.0000	0.0000	experiments/results/variance_mitigation.tsv

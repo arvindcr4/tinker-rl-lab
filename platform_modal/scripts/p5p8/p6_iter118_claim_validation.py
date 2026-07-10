@@ -18,7 +18,7 @@ Sign convention: the registry uses (variant - baseline) for
 BELOW grpo). This script adopts that convention and emits
 ``predicted_sign`` as parsed from the entry verbatim.
 
-Output: experiments/results/p5p8/p6_iter118_claim_validation.tsv
+Output: platform_hybrid/experiments/results/p5p8/p6_iter118_claim_validation.tsv
 
 The script also prints a summary table: per delta, total SUPPORTS /
 CONTRADICTS / NEUTRAL / UNCLAIMED counts.

@@ -31,10 +31,10 @@ This script adds two rigorous falsifiability extensions:
       distribution spans more than 1 order of magnitude.
 
 Outputs:
-  experiments/results/scaling_law_iter109b_permtest.tsv
-  experiments/results/scaling_law_iter109b_family.tsv
-  experiments/results/scaling_law_iter109b_stability.tsv
-  experiments/results/scaling_law_iter109b_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter109b_permtest.tsv
+  platform_hybrid/experiments/results/scaling_law_iter109b_family.tsv
+  platform_hybrid/experiments/results/scaling_law_iter109b_stability.tsv
+  platform_hybrid/experiments/results/scaling_law_iter109b_meta.json
 """
 from __future__ import annotations
 import csv

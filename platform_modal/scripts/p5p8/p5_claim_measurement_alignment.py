@@ -25,10 +25,10 @@ This iter closes that gap. For every mega_20260704 cell we:
   5. aggregate to a corpus-level alignment score with paired
        bootstrap 95% CIs over the 98 cells
   6. write:
-       experiments/results/p5p8/claim_alignment.tsv
-       experiments/results/p5p8/claim_alignment_summary.json
-       experiments/results/p5p8/figures/claim_alignment_per_axis.{png,pdf}
-       experiments/results/p5p8/figures/claim_alignment_dist.{png,pdf}
+       platform_hybrid/experiments/results/p5p8/claim_alignment.tsv
+       platform_hybrid/experiments/results/p5p8/claim_alignment_summary.json
+       platform_hybrid/experiments/results/p5p8/figures/claim_alignment_per_axis.{png,pdf}
+       platform_hybrid/experiments/results/p5p8/figures/claim_alignment_dist.{png,pdf}
 
 Headline falsifiable claim:
   the mega_20260704 corpus is X% claim-measured aligned, with the

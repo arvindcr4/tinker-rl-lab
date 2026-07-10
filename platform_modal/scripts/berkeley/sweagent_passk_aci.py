@@ -47,7 +47,7 @@ Concretely, three concrete deliverables:
      reachable tier is where the iter133 capability-class gap is
      measurable.
 
-Outputs (all under experiments/results/berkeley/):
+Outputs (all under platform_hybrid/experiments/results/berkeley/):
   - sweagent_passk_per_anchor.tsv   (per-anchor Pass@K CI table)
   - sweagent_passk_scaling.tsv      (cross-anchor capability gap under Pass@K CI)
   - sweagent_aci_decomp.tsv         (ACI-stratified R_max per anchor)
@@ -122,7 +122,7 @@ def _aci_proxy(row) -> float:
     The Euler RQS row (08, eureka_rqs_per_anchor.tsv) is the AUTHORITATIVE
     ACI-quality measurement; this proxy matches it closely where data is
     available (RQS ~0.595 for Qwen3.5, ~0.353 for Qwen3-8B, ~0.000 for
-    Nemotron-120B; see experiments/results/berkeley/eureka_rqs_per_anchor.tsv).
+    Nemotron-120B; see platform_hybrid/experiments/results/berkeley/eureka_rqs_per_anchor.tsv).
     """
     zf = float(row["zero_frac"])
     f50 = float(row["frac_above_0p5"])
@@ -379,10 +379,10 @@ def main():
             "arXiv:2407.01489 -- Agentless",
         ],
         "target": "A1 (statistical rigor) + A2 (eval methodology) + A4 (tool-use / ACI reframing)",
-        "passk_per_anchor_path": "experiments/results/berkeley/sweagent_passk_per_anchor.tsv",
-        "passk_scaling_path": "experiments/results/berkeley/sweagent_passk_scaling.tsv",
-        "aci_decomp_path": "experiments/results/berkeley/sweagent_aci_decomp.tsv",
-        "agentless_tiers_path": "experiments/results/berkeley/sweagent_agentless_tiers.tsv",
+        "passk_per_anchor_path": "platform_hybrid/experiments/results/berkeley/sweagent_passk_per_anchor.tsv",
+        "passk_scaling_path": "platform_hybrid/experiments/results/berkeley/sweagent_passk_scaling.tsv",
+        "aci_decomp_path": "platform_hybrid/experiments/results/berkeley/sweagent_aci_decomp.tsv",
+        "agentless_tiers_path": "platform_hybrid/experiments/results/berkeley/sweagent_agentless_tiers.tsv",
         "key_findings": {
             "h1_within_anchor_ci": "Pass@K=1 95% CI width per anchor (n=20-30 within-anchor step rewards): 0.20-0.34 absolute. The 0.025-0.050 R_max gaps that drive iter133's capability-class ordering are WITHIN within-anchor sampling noise. The SWE-agent/Chen-2021 Pass@K lesson applies: we would need n_steps >> 100 per anchor to resolve the gap at +/- 0.02 CI radius.",
             "h2_cross_class_straddle_rate": f"CI-straddle rate on cross-class pairs (L1 vs L2/L3/L4): {cross_straddle}/{cross_pairs_cross_class} pairs. Cross-class gaps are NOT statistically resolvably under within-anchor n_steps evidence; the iter133 verdict that capability class dominates requires N>K=2x more within-anchor samples to qualify.",

@@ -21,10 +21,10 @@ entries disclose their MIN-REPORT compliance"). This script:
                                    populated fields to total measured fields
         d) ci_method_present     — bool: outcomes.ci_method is non-null
 
-  (2) Writes `experiments/results/p5p8/p6_outcomes_coverage_audit.tsv` with one
+  (2) Writes `platform_hybrid/experiments/results/p5p8/p6_outcomes_coverage_audit.tsv` with one
       row per registry entry.
 
-  (3) Writes `experiments/results/p5p8/p6_outcomes_coverage_summary.json` with
+  (3) Writes `platform_hybrid/experiments/results/p5p8/p6_outcomes_coverage_summary.json` with
       cross-table aggregate stats.
 
   (4) Patches `registry/schema.json` additively to add the `coverage` object

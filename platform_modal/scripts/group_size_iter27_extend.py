@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Iteration 27 — Extend experiments/results/group_size_effect.tsv.
+"""Iteration 27 — Extend platform_hybrid/experiments/results/group_size_effect.tsv.
 
 Adds the canonical per-G reward row from the measured Qwen2.5-0.5B /
 arithmetic sweep (using per-seed last-10 mean_reward), and per-(G, T)

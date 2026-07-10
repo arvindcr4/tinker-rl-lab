@@ -357,7 +357,7 @@ def main() -> None:
     for fn in ("cdh_gradnorm_stats.tsv", "cdh_reward_window.tsv",
                "cdh_paired_test.tsv", "cdh_gradnorm_vs_reward.tsv",
                "cdh_rqs_collapse.tsv", "cdh_summary.json"):
-        print(f"  experiments/results/berkeley/{fn}")
+        print(f"  platform_hybrid/experiments/results/berkeley/{fn}")
 
 
 if __name__ == "__main__":

@@ -5,8 +5,8 @@ Consumes the per-cell TSVs from p6_iter202_framework_method_coverage.py and
 issues falsifiable hypotheses about cross-framework reproducibility.
 
 Outputs:
-  experiments/results/p5p8/p6_iter202_hypotheses.tsv
-  experiments/results/p5p8/p6_iter202_hypotheses.json
+  platform_hybrid/experiments/results/p5p8/p6_iter202_hypotheses.tsv
+  platform_hybrid/experiments/results/p5p8/p6_iter202_hypotheses.json
 
 Stdlib only. Run: python3 platform_modal/scripts/p5p8/p6_iter202_hypothesis_test.py
 """

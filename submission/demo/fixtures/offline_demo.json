@@ -34,7 +34,7 @@
     "effective_groups": 2
   },
   "artifact_contract": {
-    "path_from_repo_root": "experiments/results/tinker_direct_eval.json",
+    "path_from_repo_root": "platform_hybrid/experiments/results/tinker_direct_eval.json",
     "sha256": "c56b85e04f1a9a043e84d63101fa3be1eea4d37e9823eba6410be2a2481cd59d",
     "model_label": "Qwen/Qwen3-8B",
     "n_problems": 10,

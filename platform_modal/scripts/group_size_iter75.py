@@ -27,13 +27,13 @@ Counterfactual forward projection:
   budgets T in {128M, 256M, 512M} and compare with a log-linear extrapolation.
 
 Inputs:
-  experiments/results/group_size_token_normalized.tsv
+  platform_hybrid/experiments/results/group_size_token_normalized.tsv
 
 Outputs:
-  experiments/results/group_size_iter75_scaling.tsv     per-budget c(T), k(T), bootstrap CI
-  experiments/results/group_size_iter75_hypothesis.tsv   which H0 is rejected per budget
-  experiments/results/group_size_iter75_extrapolate.tsv  counterfactual c(T) at T_ext
-  experiments/results/group_size_iter75_summary.tsv      headline rollup
+  platform_hybrid/experiments/results/group_size_iter75_scaling.tsv     per-budget c(T), k(T), bootstrap CI
+  platform_hybrid/experiments/results/group_size_iter75_hypothesis.tsv   which H0 is rejected per budget
+  platform_hybrid/experiments/results/group_size_iter75_extrapolate.tsv  counterfactual c(T) at T_ext
+  platform_hybrid/experiments/results/group_size_iter75_summary.tsv      headline rollup
   figures/group_size_iter75_scaling.pdf
   figures/group_size_iter75_scaling.png
 """
@@ -419,15 +419,15 @@ def main() -> None:
         "iteration": 75,
         "pillar": "P3-Group-Size",
         "inputs": [
-            "experiments/results/group_size_token_normalized.tsv",
-            "experiments/results/group_size_iter43_eff_zvf.tsv",
+            "platform_hybrid/experiments/results/group_size_token_normalized.tsv",
+            "platform_hybrid/experiments/results/group_size_iter43_eff_zvf.tsv",
         ],
         "outputs": [
-            "experiments/results/group_size_iter75_scaling.tsv",
-            "experiments/results/group_size_iter75_hypothesis.tsv",
-            "experiments/results/group_size_iter75_extrapolate.tsv",
-            "experiments/results/group_size_iter75_egt.tsv",
-            "experiments/results/group_size_iter75_summary.tsv",
+            "platform_hybrid/experiments/results/group_size_iter75_scaling.tsv",
+            "platform_hybrid/experiments/results/group_size_iter75_hypothesis.tsv",
+            "platform_hybrid/experiments/results/group_size_iter75_extrapolate.tsv",
+            "platform_hybrid/experiments/results/group_size_iter75_egt.tsv",
+            "platform_hybrid/experiments/results/group_size_iter75_summary.tsv",
             "figures/group_size_iter75_scaling.pdf",
             "figures/group_size_iter75_scaling.png",
         ],

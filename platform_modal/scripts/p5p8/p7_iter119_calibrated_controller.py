@@ -39,7 +39,7 @@ import random
 from pathlib import Path
 
 ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-P5P8 = ROOT / "experiments/results/p5p8"
+P5P8 = ROOT / "platform_hybrid/experiments/results/p5p8"
 P5P8.mkdir(parents=True, exist_ok=True)
 
 
@@ -247,7 +247,7 @@ def replay_n10(per_step_path: Path) -> list[dict]:
 # -------- main: write all artifacts ----------------------------------------
 def main() -> None:
     out_dir = P5P8
-    n2_metrics = ROOT / "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+    n2_metrics = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
     n10_perstep = out_dir / "p7_iter115_per_step_n10.tsv"
 
     print(f"[iter119] reading {n2_metrics.name}")

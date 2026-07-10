@@ -7,7 +7,7 @@ function of ρ). Stdlib + matplotlib + pandas only.
 
 Outputs
 -------
-experiments/results/p5p8/figures/p8_threshold_transfer.{png,pdf}
+platform_hybrid/experiments/results/p5p8/figures/p8_threshold_transfer.{png,pdf}
 """
 from __future__ import annotations
 from pathlib import Path

@@ -11,18 +11,18 @@ controller and an honest probe of whether the seed-robust τ ∈ [0.70,
 holds when the "seed" axis is replaced by the "method" axis.
 
 Inputs:
-  experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
+  platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
 
 Outputs:
-  experiments/results/p5p8/p7_threshold_transfer_summary.tsv
+  platform_hybrid/experiments/results/p5p8/p7_threshold_transfer_summary.tsv
     -- per-(source, target, τ) Pareto cell: fires, cost_ratio, saved,
        wasted, plus 95% bootstrap CI on cost_ratio from per-step
        resampling of the (target, τ) trajectory.
-  experiments/results/p5p8/p7_threshold_transfer_per_step.tsv
+  platform_hybrid/experiments/results/p5p8/p7_threshold_transfer_per_step.tsv
     -- one row per (source, target, τ, step): zvf_A (tuning source's
        ZVF on step s), zvf_B (test target's ZVF on step s), fire,
        rollouts.
-  experiments/results/p5p8/p7_threshold_transfer_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_threshold_transfer_summary.json
     -- machine-readable headline.
 
 Stdlib only. <= 300 LoC. seed=20260704, n_boot=2000.

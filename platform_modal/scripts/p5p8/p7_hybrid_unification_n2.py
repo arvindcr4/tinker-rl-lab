@@ -44,9 +44,9 @@ References (verified):
   - alphaproof2025nature (AlphaProof, Nature 2025)
 
 Outputs (worktree-relative paths):
-  experiments/results/p5p8/p7_hybrid_n2_per_step.tsv
-  experiments/results/p5p8/p7_hybrid_n2_per_method.tsv
-  experiments/results/p5p8/p7_hybrid_n2_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_hybrid_n2_per_step.tsv
+  platform_hybrid/experiments/results/p5p8/p7_hybrid_n2_per_method.tsv
+  platform_hybrid/experiments/results/p5p8/p7_hybrid_n2_summary.json
 """
 from __future__ import annotations
 import csv
@@ -59,8 +59,8 @@ from pathlib import Path
 # Configuration
 # ----------------------------------------------------------------------------
 ROOT = Path(__file__).resolve().parents[2]
-N2_DIR = ROOT / "experiments/results/n2_reward_tensor_resume"
-OUT_DIR = ROOT / "experiments/results/p5p8"
+N2_DIR = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 TAU = 0.7           # primary zvf-triage threshold

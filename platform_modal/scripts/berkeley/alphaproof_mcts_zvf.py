@@ -21,10 +21,10 @@ Five pre-registered hypotheses on iter127 Pillar-2 group-size data + iter130
 variance-mitigation 9-method suite.
 
 Inputs (read-only):
-  experiments/results/group_size_advantage_variance.tsv   (16x40 = 640 rows)
-  experiments/results/variance_mitigation.tsv             (9 methods x 5 seeds x 122 steps = 5490 rows)
+  platform_hybrid/experiments/results/group_size_advantage_variance.tsv   (16x40 = 640 rows)
+  platform_hybrid/experiments/results/variance_mitigation.tsv             (9 methods x 5 seeds x 122 steps = 5490 rows)
 Outputs (written):
-  experiments/results/berkeley/alphaproof_<...>.tsv + .json
+  platform_hybrid/experiments/results/berkeley/alphaproof_<...>.tsv + .json
 
 Author: Berkeley-curriculum mining iter 151.
 """

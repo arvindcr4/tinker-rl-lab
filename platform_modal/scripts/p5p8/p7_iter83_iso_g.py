@@ -7,9 +7,9 @@ step, prompt) on the N2 four-method 2560-decision corpus, choose G' to
 achieve Y(p_hat, G') >= tau_y at minimum rollout cost; Y = 1 - ZVF_iid.
 
 Outputs:
-  experiments/results/p5p8/p7_iter83_iso_g_per_prompt.tsv
-  experiments/results/p5p8/p7_iter83_iso_g_per_method.tsv
-  experiments/results/p5p8/p7_iter83_iso_g_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_iter83_iso_g_per_prompt.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter83_iso_g_per_method.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter83_iso_g_summary.json
 """
 import json
 from collections import defaultdict
@@ -17,8 +17,8 @@ from math import lgamma, exp, log
 from pathlib import Path
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-N2_DIR = WORK / "experiments/results/n2_reward_tensor_resume"
-OUT = WORK / "experiments/results/p5p8"
+N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT = WORK / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_BASE = 8

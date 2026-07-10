@@ -34,10 +34,10 @@ Falsifiable hypotheses on the N2 four-method panel:
       effect and is statistically distinguishable from noise.
 
 Outputs (≤300 LoC, stdlib only):
-  - experiments/results/p5p8/p5_n2_unpacking_boot.tsv (per-metric CI table)
-  - experiments/results/p5p8/p5_n2_unpacking_pair.tsv (6-pair decomposition)
-  - experiments/results/p5p8/p5_n2_unpacking_lomo.tsv (LOMO stability)
-  - experiments/results/p5p8/p5_n2_unpacking_boot_summary.json (machine-readable)
+  - platform_hybrid/experiments/results/p5p8/p5_n2_unpacking_boot.tsv (per-metric CI table)
+  - platform_hybrid/experiments/results/p5p8/p5_n2_unpacking_pair.tsv (6-pair decomposition)
+  - platform_hybrid/experiments/results/p5p8/p5_n2_unpacking_lomo.tsv (LOMO stability)
+  - platform_hybrid/experiments/results/p5p8/p5_n2_unpacking_boot_summary.json (machine-readable)
 """
 from __future__ import annotations
 import json, math, os, random
@@ -293,7 +293,7 @@ def main():
     summary = {
         "iter": 89,
         "vein": "(b)+(c) Bootstrap CIs + leave-one-method-out stability on the N2 four-method same-stack panel",
-        "data": {"path": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+        "data": {"path": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
                  "n_rows": len(rows), "n_methods": 4, "n_steps": 40, "n_seeds": 1,
                  "methods": METHODS},
         "bootstrap": {"B": B, "seed": SEED, "alpha": ALPHA,

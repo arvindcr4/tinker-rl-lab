@@ -27,9 +27,9 @@ Calibration methods (matching iter-104):
   iso_per_cohort    (5-fold OOF PAVA isotonic per cohort)
 
 Outputs (mirrors iter-99 / iter-104 / iter-132):
-  experiments/results/p5p8/p8_iter136_cal_realistic.tsv
-  experiments/results/p5p8/p8_iter136_cal_realistic_summary.json
-  experiments/results/p5p8/p8_iter136_worst_ece_curve.tsv
+  platform_hybrid/experiments/results/p5p8/p8_iter136_cal_realistic.tsv
+  platform_hybrid/experiments/results/p5p8/p8_iter136_cal_realistic_summary.json
+  platform_hybrid/experiments/results/p5p8/p8_iter136_worst_ece_curve.tsv
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ import random
 from collections import defaultdict
 
 DATA_DIR = "/home/claude/tinker-rl-lab-minimax"
-OUT_DIR = f"{DATA_DIR}/experiments/results/p5p8"
+OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8"
 TRAIN = f"{DATA_DIR}/fraud_data.csv"
 TEST = f"{DATA_DIR}/test_data.csv"
 

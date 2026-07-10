@@ -17,18 +17,18 @@ by computing, for each of the nine variance_mitigation libraries:
       predicting {collapse, drift, plateau, converged}.
 
 Inputs (real, measured):
-    experiments/results/zvf_by_library.tsv  (the iter26 cross-library summary)
-    experiments/results/zvf_contrastive_yield.tsv (the iter22 p/G decomposition)
-    experiments/results/zvf_failure_correlation.tsv (from zvf_diagnostic.py)
+    platform_hybrid/experiments/results/zvf_by_library.tsv  (the iter26 cross-library summary)
+    platform_hybrid/experiments/results/zvf_contrastive_yield.tsv (the iter22 p/G decomposition)
+    platform_hybrid/experiments/results/zvf_failure_correlation.tsv (from zvf_diagnostic.py)
 
 Outputs:
-    experiments/results/zvf_iter38_isoyield.tsv
+    platform_hybrid/experiments/results/zvf_iter38_isoyield.tsv
         Per-library per-(Y_target, basis) row with the G needed and the
         cost (rollout tokens / prompt) to reach Y_target.
-    experiments/results/zvf_iter38_classifier.tsv
+    platform_hybrid/experiments/results/zvf_iter38_classifier.tsv
         Per-library LOO confusion + accuracy on the 4-class failure
         taxonomy.
-    experiments/results/zvf_iter38_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter38_summary.tsv
         One-rollup summary table.
     figures/zvf_iter38.{pdf,png}
         Three-panel: iso-yield curves (iid vs empirical-corrected);

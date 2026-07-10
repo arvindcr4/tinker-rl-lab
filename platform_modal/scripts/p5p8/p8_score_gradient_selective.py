@@ -19,12 +19,12 @@ Measures (paired bootstrap, B=600, seed 20260705):
   G4. Paired bootstrap CI on Δrecall@K=2% (gradient vs absolute-band).
 
 Outputs (7 files):
-  experiments/results/p5p8/p8_score_gradient_distribution.tsv
-  experiments/results/p5p8/p8_score_gradient_selective.tsv
-  experiments/results/p5p8/p8_score_gradient_vs_absband.tsv
-  experiments/results/p5p8/p8_score_gradient_boot.tsv
-  experiments/results/p5p8/p8_score_gradient_summary.json
-  experiments/results/p5p8/figures/p8_score_gradient.{png,pdf}
+  platform_hybrid/experiments/results/p5p8/p8_score_gradient_distribution.tsv
+  platform_hybrid/experiments/results/p5p8/p8_score_gradient_selective.tsv
+  platform_hybrid/experiments/results/p5p8/p8_score_gradient_vs_absband.tsv
+  platform_hybrid/experiments/results/p5p8/p8_score_gradient_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p8_score_gradient_summary.json
+  platform_hybrid/experiments/results/p5p8/figures/p8_score_gradient.{png,pdf}
 
 Stdlib + numpy + xgboost + matplotlib. <=290 lines.
 """
@@ -295,4 +295,4 @@ fig.savefig(FIG / "p8_score_gradient.png", dpi=120)
 fig.savefig(FIG / "p8_score_gradient.pdf")
 plt.close(fig)
 
-print("# === iter 80 JOB A complete; outputs in experiments/results/p5p8/ ===")
+print("# === iter 80 JOB A complete; outputs in platform_hybrid/experiments/results/p5p8/ ===")

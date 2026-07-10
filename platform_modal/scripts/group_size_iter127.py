@@ -30,15 +30,15 @@ Three falsifiable findings (computed on the existing 5G x 4T grid):
       (T=64M), the same delta = +0.24 -- a 24x amplification.
 
 Inputs:
-    experiments/results/group_size_token_normalized.tsv
-    experiments/results/groupsize_zvf_sweep.tsv
+    platform_hybrid/experiments/results/group_size_token_normalized.tsv
+    platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
 
 Outputs:
-    experiments/results/group_size_iter127_joint_fit.tsv
-    experiments/results/group_size_iter127_optimal_g.tsv
-    experiments/results/group_size_iter127_bounded_cone.tsv
-    experiments/results/group_size_iter127_complementarity.tsv
-    experiments/results/group_size_iter127_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter127_joint_fit.tsv
+    platform_hybrid/experiments/results/group_size_iter127_optimal_g.tsv
+    platform_hybrid/experiments/results/group_size_iter127_bounded_cone.tsv
+    platform_hybrid/experiments/results/group_size_iter127_complementarity.tsv
+    platform_hybrid/experiments/results/group_size_iter127_summary.tsv
     figures/group_size_iter127.pdf
 """
 from __future__ import annotations

@@ -105,7 +105,7 @@ models** (k_model ≥ 3) and **more temperatures** (k_temp ≥ 3):
 
 ## Artifacts
 
-- `scripts/p5p8/p5_stack_conditioning_mega.py` (~250 LoC, stdlib only)
+- `platform_modal/scripts/p5p8/p5_stack_conditioning_mega.py` (~250 LoC, stdlib only)
 - `experiments/results/p5p8/p5_stack_conditioning_mega.tsv` (10 rows: 5 axes × 2 outcomes)
 - `experiments/results/p5p8/p5_stack_conditioning_mega_boot.tsv` (10 rows: bootstrap CIs)
 - `experiments/results/p5p8/p5_stack_conditioning_mega_summary.json`

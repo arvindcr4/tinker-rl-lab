@@ -17,17 +17,17 @@ it does NOT, the zvf130 risk-index is algorithm-distinguishing even
 within the 4 GRPO-family methods (eta^2 = 0.67 on zvf_risk, p=0.0015).
 
 Inputs:
-  - experiments/results/zvf_iter130_risk_index.tsv
+  - platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv
     (52 rows: 9 methods x 5 seeds = 45 measured + 7 reference)
   - platform_modal/scripts/berkeley/unpacking_dpo_ppo_factorization.py::axis_variance_fraction
 
 Outputs:
-  - experiments/results/p5p8/p5_iter101_zvf130_eta2_full9.tsv
-  - experiments/results/p5p8/p5_iter101_zvf130_eta2_n2subset.tsv
-  - experiments/results/p5p8/p5_iter101_zvf130_lomo.tsv
-  - experiments/results/p5p8/p5_iter101_zvf130_family_subset.tsv
-  - experiments/results/p5p8/p5_iter101_zvf130_permutation.tsv
-  - experiments/results/p5p8/p5_iter101_zvf130_summary.json
+  - platform_hybrid/experiments/results/p5p8/p5_iter101_zvf130_eta2_full9.tsv
+  - platform_hybrid/experiments/results/p5p8/p5_iter101_zvf130_eta2_n2subset.tsv
+  - platform_hybrid/experiments/results/p5p8/p5_iter101_zvf130_lomo.tsv
+  - platform_hybrid/experiments/results/p5p8/p5_iter101_zvf130_family_subset.tsv
+  - platform_hybrid/experiments/results/p5p8/p5_iter101_zvf130_permutation.tsv
+  - platform_hybrid/experiments/results/p5p8/p5_iter101_zvf130_summary.json
 
 Falsifiable hypotheses (point estimate + LOMO range + permutation p):
   H1: eta^2(algo, zvf_risk) on the FULL 9-method panel is LARGE

@@ -33,13 +33,13 @@ iter26 baseline does not produce:
 
 The script writes:
 
-    experiments/results/zvf_iter70_enhanced_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter70_enhanced_summary.tsv
         Extension of zvf_summary.tsv: adds the new columns above.
-    experiments/results/zvf_iter70_failure_severity.tsv
+    platform_hybrid/experiments/results/zvf_iter70_failure_severity.tsv
         Per-(library, model) severity ranking.
-    experiments/results/zvf_iter70_per_run_zvf_acc.tsv
+    platform_hybrid/experiments/results/zvf_iter70_per_run_zvf_acc.tsv
         Run-level (zvf, heldout) pairs from step logs.
-    experiments/results/zvf_iter70_severity_corr.tsv
+    platform_hybrid/experiments/results/zvf_iter70_severity_corr.tsv
         Spearman+Pearson of mean_zvf vs severity with bootstrap CIs.
     figures/zvf_vs_failure.pdf (overwrite)
         4-panel failure-aware figure: scatter, library strip, tail
@@ -538,7 +538,7 @@ def write_per_run_zvf_acc(out_path: Path) -> List[Dict[str, Any]]:
                 "mean_zvf": statistics.fmean(zvfs),
                 "mean_acc": statistics.fmean(accs),
                 "zvf_acc_corr": _pearson(zvfs, accs),
-                "evidence_path": "experiments/results/groupsize_zvf_sweep.json",
+                "evidence_path": "platform_hybrid/experiments/results/groupsize_zvf_sweep.json",
             })
 
     # 2. drgrpo_vs_grpo.json
@@ -560,7 +560,7 @@ def write_per_run_zvf_acc(out_path: Path) -> List[Dict[str, Any]]:
                 "mean_zvf": statistics.fmean(zvfs),
                 "mean_acc": statistics.fmean(accs),
                 "zvf_acc_corr": _pearson(zvfs, accs),
-                "evidence_path": "experiments/results/drgrpo_vs_grpo.json",
+                "evidence_path": "platform_hybrid/experiments/results/drgrpo_vs_grpo.json",
             })
 
     # 3. samestack_ppo_grpo.json
@@ -582,7 +582,7 @@ def write_per_run_zvf_acc(out_path: Path) -> List[Dict[str, Any]]:
                 "mean_zvf": statistics.fmean(zvfs),
                 "mean_acc": statistics.fmean(accs),
                 "zvf_acc_corr": _pearson(zvfs, accs),
-                "evidence_path":"experiments/results/samestack_ppo_grpo.json",
+                "evidence_path":"platform_hybrid/experiments/results/samestack_ppo_grpo.json",
             })
 
     # 4. variance_mitigation.tsv: per-(method, seed)
@@ -608,7 +608,7 @@ def write_per_run_zvf_acc(out_path: Path) -> List[Dict[str, Any]]:
                 "mean_zvf": statistics.fmean(zvfs),
                 "mean_acc": statistics.fmean(accs),
                 "zvf_acc_corr": _pearson(zvfs, accs),
-                "evidence_path": "experiments/results/variance_mitigation.tsv",
+                "evidence_path": "platform_hybrid/experiments/results/variance_mitigation.tsv",
             })
 
     out_path.parent.mkdir(parents=True, exist_ok=True)

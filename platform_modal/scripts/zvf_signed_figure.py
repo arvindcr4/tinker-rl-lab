@@ -9,7 +9,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
-RES = "experiments/results"
+RES = "platform_hybrid/experiments/results"
 rows = []
 with open(f"{RES}/zvf_signed_summary.tsv") as fh:
     for line in fh:

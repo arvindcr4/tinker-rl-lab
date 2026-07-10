@@ -10,7 +10,7 @@ Three angles on the 7-item MIN-REPORT auditor (n=103 manifests):
   C) Inter-item Pearson r on the 103-row audit.
 
 Outputs:
-  experiments/results/p5p8/p5_item_discriminative_power.{tsv,json}
+  platform_hybrid/experiments/results/p5p8/p5_item_discriminative_power.{tsv,json}
   docs/p5p8_improvements/72_p5_item_discriminative_power.md  (doc-only)
 """
 from __future__ import annotations

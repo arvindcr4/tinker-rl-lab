@@ -27,13 +27,13 @@ Method (stdlib + Bisection, deterministic):
     for the heldout reward the controller would have produced at G_ccc.
 
 Outputs:
-  - experiments/results/p5p8/p7_iter127_method_axis_ccc.tsv
+  - platform_hybrid/experiments/results/p5p8/p7_iter127_method_axis_ccc.tsv
       (4 rows: aero, areal, gift, grpo)
-  - experiments/results/p5p8/p7_iter127_method_step_recommendation.tsv
+  - platform_hybrid/experiments/results/p5p8/p7_iter127_method_step_recommendation.tsv
       (160 rows: 4 methods x 40 steps)
-  - experiments/results/p5p8/p7_iter127_regime_mix.tsv
+  - platform_hybrid/experiments/results/p5p8/p7_iter127_regime_mix.tsv
       (4 methods x 3 regimes = 12 rows)
-  - experiments/results/p5p8/p7_iter127_summary.json
+  - platform_hybrid/experiments/results/p5p8/p7_iter127_summary.json
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-P5P8 = ROOT / "experiments/results/p5p8"
+P5P8 = ROOT / "platform_hybrid/experiments/results/p5p8"
 P5P8.mkdir(parents=True, exist_ok=True)
 
 G_BASE = 8
@@ -138,7 +138,7 @@ def ccc_recommend(zvf_obs: float, reward_mean: float) -> dict:
 # ---- data load + per-row application ----------------------------------------
 def load_n2() -> list[dict]:
     rows = []
-    with open(ROOT / "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv") as f:
+    with open(ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv") as f:
         header = f.readline().rstrip("\n").split("\t")
         idx = {k: i for i, k in enumerate(header)}
         for line in f:

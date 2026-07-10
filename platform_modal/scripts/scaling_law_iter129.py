@@ -34,11 +34,11 @@ Four falsifiable findings expected:
       of R_max over params_B predictor.
 
 Outputs:
-  experiments/results/scaling_law_iter129_piecewise_fit.tsv
-  experiments/results/scaling_law_iter129_aic_compare.tsv
-  experiments/results/scaling_law_iter129_capability_scaling.tsv
-  experiments/results/scaling_law_iter129_loocv_cluster.tsv
-  experiments/results/scaling_law_iter129_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter129_piecewise_fit.tsv
+  platform_hybrid/experiments/results/scaling_law_iter129_aic_compare.tsv
+  platform_hybrid/experiments/results/scaling_law_iter129_capability_scaling.tsv
+  platform_hybrid/experiments/results/scaling_law_iter129_loocv_cluster.tsv
+  platform_hybrid/experiments/results/scaling_law_iter129_meta.json
   figures/scaling_law_iter129.pdf
 
 References (verified):

@@ -24,10 +24,10 @@ the same step logs, and asks three falsifiable questions:
       Q1's Spearman survives chance.
 
 INPUTS :
-  experiments/results/length_bias_iter108_perrun_progress.tsv
-  experiments/results/drgrpo_vs_grpo.json
-  experiments/results/drgrpo_gsm8k_cot_full.json
-OUTPUTS: 6 TSVs + meta under experiments/results/length_bias_iter112_*
+  platform_hybrid/experiments/results/length_bias_iter108_perrun_progress.tsv
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json
+OUTPUTS: 6 TSVs + meta under platform_hybrid/experiments/results/length_bias_iter112_*
 USAGE  : python3 platform_modal/scripts/length_bias_iter112.py [--n_w 4 --B_perm 50000]
 """
 from __future__ import annotations

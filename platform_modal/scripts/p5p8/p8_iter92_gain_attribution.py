@@ -34,12 +34,12 @@ test_data.csv  : 10k held-out rows (same schema + Class)
 
 Outputs
 -------
-experiments/results/p5p8/p8_iter92_gain_curve.tsv         (24 rows)
-experiments/results/p5p8/p8_iter92_gain_curve_summary.json
-experiments/results/p5p8/p8_iter92_gain_by_class.tsv      (24 rows)
-experiments/results/p5p8/p8_iter92_cohort_gain.tsv        (n_cohorts * 24 rows)
-experiments/results/p5p8/p8_iter92_cohort_rank_rho.tsv    (cohort-pair rows)
-experiments/results/p5p8/figures/p8_iter92_gain_curve.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_iter92_gain_curve.tsv         (24 rows)
+platform_hybrid/experiments/results/p5p8/p8_iter92_gain_curve_summary.json
+platform_hybrid/experiments/results/p5p8/p8_iter92_gain_by_class.tsv      (24 rows)
+platform_hybrid/experiments/results/p5p8/p8_iter92_cohort_gain.tsv        (n_cohorts * 24 rows)
+platform_hybrid/experiments/results/p5p8/p8_iter92_cohort_rank_rho.tsv    (cohort-pair rows)
+platform_hybrid/experiments/results/p5p8/figures/p8_iter92_gain_curve.{png,pdf}
 """
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ import xgboost as xgb
 from sklearn.metrics import roc_auc_score
 
 ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RESULTS = ROOT / "experiments/results/p5p8"
+RESULTS = ROOT / "platform_hybrid/experiments/results/p5p8"
 RESULTS.mkdir(parents=True, exist_ok=True)
 (RESULTS / "figures").mkdir(parents=True, exist_ok=True)
 

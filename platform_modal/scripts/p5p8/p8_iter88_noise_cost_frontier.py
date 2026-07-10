@@ -29,11 +29,11 @@ Pareto metric: cost_at_recall(R) = min over K { cost(model, K) : recall(K) >= R 
 
 Outputs
 -------
-experiments/results/p5p8/p8_iter88_noise_cost.tsv          (4 models x 5 noise x 11 K)
-experiments/results/p5p8/p8_iter88_noise_cost_boot.tsv     (paired bootstrap on (24full-cost, 20raw-cost) at matched-K)
-experiments/results/p5p8/p8_iter88_noise_pareto.tsv        (cost_at_recall for each (model, noise) at recall in {0.5,0.7,0.8,0.9,0.95})
-experiments/results/p5p8/p8_iter88_noise_summary.json
-experiments/results/p5p8/figures/p8_iter88_noise_pareto.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_iter88_noise_cost.tsv          (4 models x 5 noise x 11 K)
+platform_hybrid/experiments/results/p5p8/p8_iter88_noise_cost_boot.tsv     (paired bootstrap on (24full-cost, 20raw-cost) at matched-K)
+platform_hybrid/experiments/results/p5p8/p8_iter88_noise_pareto.tsv        (cost_at_recall for each (model, noise) at recall in {0.5,0.7,0.8,0.9,0.95})
+platform_hybrid/experiments/results/p5p8/p8_iter88_noise_summary.json
+platform_hybrid/experiments/results/p5p8/figures/p8_iter88_noise_pareto.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + sklearn + matplotlib. <=300 lines.
 """

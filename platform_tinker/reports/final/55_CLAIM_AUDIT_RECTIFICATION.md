@@ -7,7 +7,7 @@ reproducibility, policy-drift/length-bias/instability, and ethics/cost/
 licensing.
 
 Scope: `paper/main.tex`, `paper/main_anon.tex`,
-`reports/final/capstone_final_report.tex`. Many items are already scoped in
+`platform_tinker/reports/final/capstone_final_report.tex`. Many items are already scoped in
 earlier passes (the abstract, intro claim-evidence-verdict table, the
 Scope-boundary paragraph, the Post-selection warning, Table~10 arithmetic
 fix, the BH-autocorrelation caveat, the Artifact Reconciliation paragraph,
@@ -73,6 +73,6 @@ and the Limitations section). This log records what THIS pass added.
 - `paper/main_anon.tex` - matching dual-use rewrite, matching drift
   softening, duplicate section heading removed (residue of an earlier
   morph miss), 55-point audit paragraph inserted.
-- `reports/final/55_CLAIM_AUDIT_RECTIFICATION.md` - this log.
+- `platform_tinker/reports/final/55_CLAIM_AUDIT_RECTIFICATION.md` - this log.
 
 No new experiments, figures, or tables. Editorial + arithmetic only.

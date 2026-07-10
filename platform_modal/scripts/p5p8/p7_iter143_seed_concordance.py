@@ -30,10 +30,10 @@ Hypotheses (all falsifiable):
       STABLE across seed pairs (no single seed-pair dominates).
 
 Outputs:
-  experiments/results/p5p8/p7_iter143_pair_kappa.tsv     (7 τ × 10 pairs = 70 rows)
-  experiments/results/p5p8/p7_iter143_growing_kappa.tsv  (7 τ × 4 k-levels = 28 rows)
-  experiments/results/p5p8/p7_iter143_summary.json       (H1-H4 verdicts + headline)
-  experiments/results/p5p8/p7_iter143_summary.tsv       (7 τ × {mean_k, se_k, cv_k, n_pairs})
+  platform_hybrid/experiments/results/p5p8/p7_iter143_pair_kappa.tsv     (7 τ × 10 pairs = 70 rows)
+  platform_hybrid/experiments/results/p5p8/p7_iter143_growing_kappa.tsv  (7 τ × 4 k-levels = 28 rows)
+  platform_hybrid/experiments/results/p5p8/p7_iter143_summary.json       (H1-H4 verdicts + headline)
+  platform_hybrid/experiments/results/p5p8/p7_iter143_summary.tsv       (7 τ × {mean_k, se_k, cv_k, n_pairs})
 
 Stdlib only.
 """
@@ -43,8 +43,8 @@ from itertools import combinations
 from pathlib import Path
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-N10_DIR = WORK / "experiments/results/n10_seed_expansion"
-OUT_DIR = WORK / "experiments/results/p5p8"
+N10_DIR = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
 
 TAU_GRID = (0.30, 0.40, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90)
 SEED_ORDER = (42, 179, 316, 453, 590)  # panel order, used for growing-k slices

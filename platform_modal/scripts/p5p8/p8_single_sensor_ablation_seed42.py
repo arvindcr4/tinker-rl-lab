@@ -36,14 +36,14 @@ test_data.csv  : 10k held-out rows (same schema + Class).
 
 Outputs
 -------
-experiments/results/p5p8/p8_single_sensor.tsv          (4 rows: 4 single)
-experiments/results/p5p8/p8_pair_sensor.tsv           (6 rows: 6 pairs)
-experiments/results/p5p8/p8_single_pair_boot.tsv      (paired bootstrap CIs)
-experiments/results/p5p8/p8_cost_per_decision.tsv     (4 models x 5 K)
-experiments/results/p5p8/p8_cost_per_decision_boot.tsv
-experiments/results/p5p8/p8_single_sensor_summary.json
-experiments/results/p5p8/figures/p8_single_sensor.{png,pdf}
-experiments/results/p5p8/figures/p8_cost_per_decision.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_single_sensor.tsv          (4 rows: 4 single)
+platform_hybrid/experiments/results/p5p8/p8_pair_sensor.tsv           (6 rows: 6 pairs)
+platform_hybrid/experiments/results/p5p8/p8_single_pair_boot.tsv      (paired bootstrap CIs)
+platform_hybrid/experiments/results/p5p8/p8_cost_per_decision.tsv     (4 models x 5 K)
+platform_hybrid/experiments/results/p5p8/p8_cost_per_decision_boot.tsv
+platform_hybrid/experiments/results/p5p8/p8_single_sensor_summary.json
+platform_hybrid/experiments/results/p5p8/figures/p8_single_sensor.{png,pdf}
+platform_hybrid/experiments/results/p5p8/figures/p8_cost_per_decision.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + matplotlib. <=290 lines.
 """

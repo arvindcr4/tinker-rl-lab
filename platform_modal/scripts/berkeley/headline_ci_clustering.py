@@ -24,7 +24,7 @@ For every headline metric with real (seed x step) data we compute:
 This directly closes the open thread flagged in row-07 H6 ("n=52 pooled across 3
 experiments, not pure seeds -> Miller would call for cluster sensitivity").
 
-Outputs (experiments/results/berkeley/):
+Outputs (platform_hybrid/experiments/results/berkeley/):
   headline_ci_clustering.tsv        one row per audited headline
   headline_ci_clustering_icc.tsv    variance-component breakdown
   headline_ci_clustering_summary.json

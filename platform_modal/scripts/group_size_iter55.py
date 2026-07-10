@@ -18,9 +18,9 @@ frontier-synthesis "contrastive yield" framing.  Concretely:
   (F) Summary rollup.
 
 Inputs (read-only):
-  experiments/results/group_size_token_normalized.tsv   (4 budgets x 5 G)
-  experiments/results/groupsize_zvf_sweep.tsv          (4 G rows from n=3 seeds)
-  experiments/results/group_size_iter43_summary.tsv     (Wu retention at 4 budgets)
+  platform_hybrid/experiments/results/group_size_token_normalized.tsv   (4 budgets x 5 G)
+  platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv          (4 G rows from n=3 seeds)
+  platform_hybrid/experiments/results/group_size_iter43_summary.tsv     (Wu retention at 4 budgets)
 
 Outputs (TSVs):
   group_size_iter55_d_eff.tsv            d_eff(G) and contrast yield

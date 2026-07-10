@@ -30,7 +30,7 @@ Method:
            the floor, not the ceiling)
        H4: bootstrap CI for worst_step loss is non-degenerate (CV < 0.30)
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   synth_iter184_d18_per_method.tsv        4 rows x 8 cols
   synth_iter184_d18_worst_step_bootstrap.tsv 4 rows x 6 cols
   synth_iter184_d18_summary.json          H1-H4 verdicts + headline table

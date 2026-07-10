@@ -18,10 +18,10 @@ x panel) granularity, surfaces the four coverage gaps, and computes a per-entry
 ``registry_completeness`` score.
 
 Inputs : registry/entries/delta_*.json
-Outputs: experiments/results/p5p8/p6_iter158_per_cell.tsv
-         experiments/results/p5p8/p6_iter158_per_entry.tsv
-         experiments/results/p5p8/p6_iter158_coverage_gaps.tsv
-         experiments/results/p5p8/p6_iter158_summary.json
+Outputs: platform_hybrid/experiments/results/p5p8/p6_iter158_per_cell.tsv
+         platform_hybrid/experiments/results/p5p8/p6_iter158_per_entry.tsv
+         platform_hybrid/experiments/results/p5p8/p6_iter158_coverage_gaps.tsv
+         platform_hybrid/experiments/results/p5p8/p6_iter158_summary.json
 """
 import csv
 import json

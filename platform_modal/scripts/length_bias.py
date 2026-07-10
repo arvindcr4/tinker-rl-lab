@@ -9,13 +9,13 @@ Measures:
   - Last10 mean reward, last10 mean length, half-life growth
   - Dr.GRPO signature flag: (length trend up) AND (reward trend flat or down)
 
-Inputs : experiments/results/drgrpo_vs_grpo.json         (Qwen2.5-0.5B / arithmetic,
+Inputs : platform_hybrid/experiments/results/drgrpo_vs_grpo.json         (Qwen2.5-0.5B / arithmetic,
                                                           40 steps, 5 GRPO + 5 Dr.GRPO)
-         experiments/results/drgrpo_gsm8k_cot_full.json  (Qwen2.5-1.5B-Instruct / GSM8K-CoT,
+         platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json  (Qwen2.5-1.5B-Instruct / GSM8K-CoT,
                                                           30 steps, 3 GRPO + 3 Dr.GRPO)
 
-Outputs: experiments/results/length_bias.tsv            (per-run metrics, header explained below)
-         experiments/results/length_bias_summary.tsv    (per-algo summary)
+Outputs: platform_hybrid/experiments/results/length_bias.tsv            (per-run metrics, header explained below)
+         platform_hybrid/experiments/results/length_bias_summary.tsv    (per-algo summary)
          figures/length_vs_reward.pdf and .png          (2-panel: trajectories + scatter)
          figures/length_vs_reward.pdf copied to paper/figures/
 

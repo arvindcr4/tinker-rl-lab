@@ -13,7 +13,7 @@ and severity as in the GRPO stack.
 
 This driver:
   1. Pulls the 10 same-stack traces (5 GRPO + 5 PPO seeds, Qwen2.5-0.5B on
-     GSM8K, 40 steps, n_gen=128) from experiments/results/samestack_ppo_grpo.json.
+     GSM8K, 40 steps, n_gen=128) from platform_hybrid/experiments/results/samestack_ppo_grpo.json.
   2. Applies the iter25 noise-aware saturation test to every trace, recording
      lambda-at-bound, binomial noise floor, bootstrap CI on lambda, AICc-best
      among {constant, linear, saturation}, and the heldout-accuracy residual
@@ -26,10 +26,10 @@ This driver:
      via Fisher's exact (E1, E2) and Welch's t (E3).
 
 Outputs:
-  experiments/results/scaling_law_iter29_identifiability.tsv
-  experiments/results/scaling_law_iter29_bootstrap.tsv
-  experiments/results/scaling_law_iter29_summary.tsv
-  experiments/results/scaling_law_iter29_stack_compare.tsv
+  platform_hybrid/experiments/results/scaling_law_iter29_identifiability.tsv
+  platform_hybrid/experiments/results/scaling_law_iter29_bootstrap.tsv
+  platform_hybrid/experiments/results/scaling_law_iter29_summary.tsv
+  platform_hybrid/experiments/results/scaling_law_iter29_stack_compare.tsv
   figures/scaling_law_iter29.{pdf,png}
 """
 from __future__ import annotations

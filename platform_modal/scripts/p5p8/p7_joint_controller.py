@@ -34,9 +34,9 @@ Compared against:
     contrast, G=8 on boundary. Saves only rollout_saves.
 
 Outputs:
-  experiments/results/p5p8/p7_joint_controller.tsv
-  experiments/results/p5p8/p7_joint_controller_boot.tsv
-  experiments/results/p5p8/p7_joint_controller_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_joint_controller.tsv
+  platform_hybrid/experiments/results/p5p8/p7_joint_controller_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p7_joint_controller_summary.json
 
 Stdlib only. <=290 lines.
 """
@@ -49,8 +49,8 @@ import random
 from collections import defaultdict
 
 WORK = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-N2_DIR = WORK / "experiments/results/n2_reward_tensor_resume"
-OUT_DIR = WORK / "experiments/results/p5p8"
+N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 G_BASE = 8

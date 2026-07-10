@@ -11,8 +11,8 @@ Closes the iter-72 row 85 mint recommendation:
 
 Inputs
 ------
-experiments/results/p5p8/p7_joint_controller.tsv     (20 rows: 4 methods x 5 tau)
-experiments/results/p5p8/p7_joint_controller_boot.tsv (4 rows: bootstrap headline)
+platform_hybrid/experiments/results/p5p8/p7_joint_controller.tsv     (20 rows: 4 methods x 5 tau)
+platform_hybrid/experiments/results/p5p8/p7_joint_controller_boot.tsv (4 rows: bootstrap headline)
 registry/entries/tinker_{grpo,aero,areal,gift}_qwen3.5-4b_gsm8k.json
                                                        (4 stack entries)
 registry/entries/delta_{aero,areal,gift}.json          (3 delta entries)
@@ -20,8 +20,8 @@ registry/schema.json                                    (34/34 must remain PASS)
 
 Outputs
 -------
-experiments/results/p5p8/p6_joint_controller_extension.tsv  (20 rows: 4 m x 5 t)
-experiments/results/p5p8/p6_joint_controller_extension.json (machine-readable)
+platform_hybrid/experiments/results/p5p8/p6_joint_controller_extension.tsv  (20 rows: 4 m x 5 t)
+platform_hybrid/experiments/results/p5p8/p6_joint_controller_extension.json (machine-readable)
 patched registry/entries/tinker_{grpo,aero,areal,gift}_qwen3.5-4b_gsm8k.json
 patched registry/entries/delta_{aero,areal,gift}.json
 docs/p5p8_improvements/90_p6_joint_controller_extension.md

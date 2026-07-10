@@ -24,11 +24,11 @@ Inputs:
   registry/entries/delta_*.json  (17 entries, all variant_delta records)
 
 Outputs:
-  experiments/results/p5p8/p6_iter174_per_entry.tsv       (17 rows)
-  experiments/results/p5p8/p6_iter174_per_entry_panel.tsv (~26 rows)
-  experiments/results/p5p8/p6_iter174_per_metric.tsv      (10 metrics)
-  experiments/results/p5p8/p6_iter174_tier_summary.tsv    (3 tier rows)
-  experiments/results/p5p8/p6_iter174_summary.json        (H1-H5 verdicts)
+  platform_hybrid/experiments/results/p5p8/p6_iter174_per_entry.tsv       (17 rows)
+  platform_hybrid/experiments/results/p5p8/p6_iter174_per_entry_panel.tsv (~26 rows)
+  platform_hybrid/experiments/results/p5p8/p6_iter174_per_metric.tsv      (10 metrics)
+  platform_hybrid/experiments/results/p5p8/p6_iter174_tier_summary.tsv    (3 tier rows)
+  platform_hybrid/experiments/results/p5p8/p6_iter174_summary.json        (H1-H5 verdicts)
 
 Stdlib only. Deterministic. Re-runnable.
 """
@@ -41,7 +41,7 @@ import time
 from collections import defaultdict
 
 REG = "registry/entries/delta_*.json"
-OUT_DIR = "experiments/results/p5p8"
+OUT_DIR = "platform_hybrid/experiments/results/p5p8"
 
 # iter-126 tier rule (from ledger row 139): A=n_sig≥3 AND n_panels≥2;
 # B=n_sig≥1; D=n_total=0.  We re-derive from current data; rule unchanged.
@@ -302,10 +302,10 @@ def main():
                                 "tierD_wilson_ci95": [tier_d_lo, tier_d_hi]},
         },
         "artifacts": {
-            "per_entry": "experiments/results/p5p8/p6_iter174_per_entry.tsv",
-            "per_entry_panel": "experiments/results/p5p8/p6_iter174_per_entry_panel.tsv",
-            "per_metric": "experiments/results/p5p8/p6_iter174_per_metric.tsv",
-            "tier_summary": "experiments/results/p5p8/p6_iter174_tier_summary.tsv",
+            "per_entry": "platform_hybrid/experiments/results/p5p8/p6_iter174_per_entry.tsv",
+            "per_entry_panel": "platform_hybrid/experiments/results/p5p8/p6_iter174_per_entry_panel.tsv",
+            "per_metric": "platform_hybrid/experiments/results/p5p8/p6_iter174_per_metric.tsv",
+            "tier_summary": "platform_hybrid/experiments/results/p5p8/p6_iter174_tier_summary.tsv",
         },
         "elapsed_sec": round(time.time() - t0, 3),
     }

@@ -16,9 +16,9 @@ Building on p7_satband_per_prompt.py, this script:
      controller's per-step ZVF and rollouts.
 
 Outputs:
-  experiments/results/p5p8/p7_satband_bootstrap_summary.tsv
-  experiments/results/p5p8/p7_satband_per_step_controllers.tsv
-  experiments/results/p5p8/p7_satband_bootstrap.json
+  platform_hybrid/experiments/results/p5p8/p7_satband_bootstrap_summary.tsv
+  platform_hybrid/experiments/results/p5p8/p7_satband_per_step_controllers.tsv
+  platform_hybrid/experiments/results/p5p8/p7_satband_bootstrap.json
 """
 
 import json
@@ -27,7 +27,7 @@ import random
 from pathlib import Path
 
 WORK = Path('/home/claude/tinker-rl-lab-minimax')
-OUT = WORK / 'experiments/results/p5p8'
+OUT = WORK / 'platform_hybrid/experiments/results/p5p8'
 PER_PROMPT_TSV = OUT / 'p7_satband_per_prompt.tsv'
 PER_STEP_TSV = OUT / 'p7_satband_per_step.tsv'
 

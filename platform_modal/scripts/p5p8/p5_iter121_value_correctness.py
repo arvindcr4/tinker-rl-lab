@@ -41,9 +41,9 @@ Per-item aggregate across 98 cells:
   pass_count, fail_count, fail_rate
 
 Outputs:
-  - experiments/results/p5p8/p5_iter121_value_correctness.tsv (per-cell)
-  - experiments/results/p5p8/p5_iter121_value_correctness_per_item.tsv
-  - experiments/results/p5p8/p5_iter121_summary.json
+  - platform_hybrid/experiments/results/p5p8/p5_iter121_value_correctness.tsv (per-cell)
+  - platform_hybrid/experiments/results/p5p8/p5_iter121_value_correctness_per_item.tsv
+  - platform_hybrid/experiments/results/p5p8/p5_iter121_summary.json
   - docs/p5p8_improvements/136_p5_value_correctness.md
 """
 import csv
@@ -54,10 +54,10 @@ from pathlib import Path
 from collections import defaultdict
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-MEGA = WORK / "experiments/results/mega_20260704"
+MEGA = WORK / "platform_hybrid/experiments/results/mega_20260704"
 MANIFEST_DIR = MEGA / "manifests"
 CELLS_TSV = MEGA / "cells.tsv"
-OUT_DIR = WORK / "experiments/results/p5p8"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
 
 # Canonical valid sentinels per MIN-REPORT v2.2 schema
 LOSS_FORM_VALID = {"n/a-sampling", "n/a-pretrain", "policy-only",

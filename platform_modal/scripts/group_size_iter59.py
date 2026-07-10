@@ -26,8 +26,8 @@ Three fresh, first-class diagnostics of the G=4 vs G=32 question:
       and is a direct probe of the iter-55 budget exponent gamma.
 
 Inputs (read-only):
-  experiments/results/group_size_token_normalized.tsv   (4 budgets x 5 G)
-  experiments/results/groupsize_zvf_sweep.tsv          (4 G rows from n=3 seeds)
+  platform_hybrid/experiments/results/group_size_token_normalized.tsv   (4 budgets x 5 G)
+  platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv          (4 G rows from n=3 seeds)
 
 Outputs (TSVs):
   group_size_iter59_equivalence.tsv       region thresholds and budgets

@@ -19,8 +19,8 @@ drawn from the actual evidence base:
      point estimate spread = 0.034 (0.710 - 0.744); we add CIs.
 
 Outputs:
-  experiments/results/p5p8/p5_headline_cis_full.tsv
-  experiments/results/p5p8/p5_headline_cis_full.json
+  platform_hybrid/experiments/results/p5p8/p5_headline_cis_full.tsv
+  platform_hybrid/experiments/results/p5p8/p5_headline_cis_full.json
 """
 
 from __future__ import annotations

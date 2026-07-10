@@ -31,21 +31,21 @@ provides beyond independent-rollout Bernoulli collision.
 
 Inputs
 ------
-- experiments/results/zvf_summary.tsv     (per-run pooled)
-- experiments/results/groupsize_zvf_sweep.json
-- experiments/results/tinker_gsm8k_zvf_s{42,123,456}.json
-- experiments/results/variance_mitigation.tsv   (per-step)
-- experiments/results/tool_code_reward_diagnostics.tsv
+- platform_hybrid/experiments/results/zvf_summary.tsv     (per-run pooled)
+- platform_hybrid/experiments/results/groupsize_zvf_sweep.json
+- platform_hybrid/experiments/results/tinker_gsm8k_zvf_s{42,123,456}.json
+- platform_hybrid/experiments/results/variance_mitigation.tsv   (per-step)
+- platform_hybrid/experiments/results/tool_code_reward_diagnostics.tsv
 
 Outputs
 -------
-- experiments/results/zvf_iter54_doom_threshold.tsv
+- platform_hybrid/experiments/results/zvf_iter54_doom_threshold.tsv
   Rows: threshold_candidate, n_below_converged, n_below_nonconv,
         precision_converged_below, recall_converged_below, J_stat
   Plus a "BEST" row that records ZVF_crit.
-- experiments/results/zvf_iter54_yield_gap.tsv
+- platform_hybrid/experiments/results/zvf_iter54_yield_gap.tsv
   Per-(library, model, group_size) contrastive-yield gap with bootstrap CI.
-- experiments/results/zvf_iter54_doom_summary.tsv
+- platform_hybrid/experiments/results/zvf_iter54_doom_summary.tsv
   One-row summary suitable for inclusion in the paper's headline table.
 """
 from __future__ import annotations

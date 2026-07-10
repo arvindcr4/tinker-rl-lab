@@ -9,9 +9,9 @@ Two-panel PDF that visualises the iter34 findings:
              per-class recovery annotated in each cell.
 
 Inputs:
-    experiments/results/zvf_iter34_discriminant.tsv
-    experiments/results/zvf_iter34_confusion.tsv
-    experiments/results/zvf_iter34_summary.json
+    platform_hybrid/experiments/results/zvf_iter34_discriminant.tsv
+    platform_hybrid/experiments/results/zvf_iter34_confusion.tsv
+    platform_hybrid/experiments/results/zvf_iter34_summary.json
 
 Output:
     figures/zvf_iter34.pdf

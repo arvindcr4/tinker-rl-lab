@@ -43,14 +43,14 @@ test_data.csv  : 10k held-out (same schema + Class)
 
 Outputs
 -------
-experiments/results/p5p8/p8_decision_disagreement_flip.tsv       (~30 rows: 6 pairs x 5 K)
-experiments/results/p5p8/p8_decision_disagreement_flip_boot.tsv  (~30 paired-bootstrap rows)
-experiments/results/p5p8/p8_decision_disagreement_features.tsv   (~24 rows: 6 pairs x 4 aggs)
-experiments/results/p5p8/p8_decision_disagreement_union.tsv      (~6 rows: 6 pairs x 1 K)
-experiments/results/p5p8/p8_decision_disagreement_selective.tsv (~16 rows: 4 widths x 4 metrics)
-experiments/results/p5p8/p8_decision_disagreement_summary.json  (machine-readable summary)
-experiments/results/p5p8/figures/p8_decision_disagreement_flip.{png,pdf}
-experiments/results/p5p8/figures/p8_decision_disagreement_selective.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_decision_disagreement_flip.tsv       (~30 rows: 6 pairs x 5 K)
+platform_hybrid/experiments/results/p5p8/p8_decision_disagreement_flip_boot.tsv  (~30 paired-bootstrap rows)
+platform_hybrid/experiments/results/p5p8/p8_decision_disagreement_features.tsv   (~24 rows: 6 pairs x 4 aggs)
+platform_hybrid/experiments/results/p5p8/p8_decision_disagreement_union.tsv      (~6 rows: 6 pairs x 1 K)
+platform_hybrid/experiments/results/p5p8/p8_decision_disagreement_selective.tsv (~16 rows: 4 widths x 4 metrics)
+platform_hybrid/experiments/results/p5p8/p8_decision_disagreement_summary.json  (machine-readable summary)
+platform_hybrid/experiments/results/p5p8/figures/p8_decision_disagreement_flip.{png,pdf}
+platform_hybrid/experiments/results/p5p8/figures/p8_decision_disagreement_selective.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + matplotlib. <=290 lines.
 """
@@ -362,4 +362,4 @@ fig.savefig(FIG / "p8_decision_disagreement_selective.png", dpi=120)
 fig.savefig(FIG / "p8_decision_disagreement_selective.pdf")
 plt.close(fig)
 
-print("# === iter 76 JOB A complete; outputs in experiments/results/p5p8/ ===")
+print("# === iter 76 JOB A complete; outputs in platform_hybrid/experiments/results/p5p8/ ===")

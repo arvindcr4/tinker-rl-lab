@@ -13,10 +13,10 @@ The ratio is a clean precision proxy that no prior P8 item separated.
 
 Outputs
 -------
-experiments/results/p5p8/p8_cost_per_caught.tsv         (per cell)
-experiments/results/p5p8/p8_cost_per_caught_boot.tsv    (per cell CI)
-experiments/results/p5p8/p8_cost_per_caught_summary.json
-experiments/results/p5p8/figures/p8_cost_per_caught.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_cost_per_caught.tsv         (per cell)
+platform_hybrid/experiments/results/p5p8/p8_cost_per_caught_boot.tsv    (per cell CI)
+platform_hybrid/experiments/results/p5p8/p8_cost_per_caught_summary.json
+platform_hybrid/experiments/results/p5p8/figures/p8_cost_per_caught.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + matplotlib. <=300 lines.
 """

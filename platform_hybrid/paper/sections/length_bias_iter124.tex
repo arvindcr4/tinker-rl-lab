@@ -194,7 +194,7 @@ which is the original Dr.GRPO motivation more faithfully.
 \end{enumerate}
 
 \paragraph{Reproducibility.}
-\texttt{scripts/length\_bias\_iter124.py} ($\sim$440 lines, numpy
+\texttt{platform_modal/scripts/length\_bias\_iter124.py} ($\sim$440 lines, numpy
 + scipy.stats) consumes the iter108 per-run progress TSV plus the
 same step-log JSONs as iter120; it produces seven TSV artefacts
 under \texttt{experiments/results/length\_bias\_iter124\_*}:
@@ -234,6 +234,6 @@ severship versus per-task mean $dL^{\mathrm{GR}}/dt$, with the
 GSM8K CoT point sitting at a $\sim$40$\times$ higher
 $dL^{\mathrm{GR}}/dt$ value but no severship difference in that
 direction --- the clean visual signature of the static-vs-dynamic
-dissociation. --- \texttt{scripts/length\_bias\_iter124\_fig.py}.}
+dissociation. --- \texttt{platform_modal/scripts/length\_bias\_iter124\_fig.py}.}
 \label{fig:length-bias-iter124-static-vs-dynamic}
 \end{figure}

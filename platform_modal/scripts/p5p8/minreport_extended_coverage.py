@@ -11,8 +11,8 @@ std_len, sampled_tokens) and that the run-level RL plumbing
 (lr, max_tokens, rank, batch, group, model, n_eval, algo) is recorded.
 
 Output:
-  experiments/results/p5p8/minreport_extended_coverage.tsv
-  experiments/results/p5p8/minreport_extended_summary.json
+  platform_hybrid/experiments/results/p5p8/minreport_extended_coverage.tsv
+  platform_hybrid/experiments/results/p5p8/minreport_extended_summary.json
 
 The new field-coverage numbers and the new "telemetry-complete AND
 manifest-complete" cell counts become evidence that the original 7-item

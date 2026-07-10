@@ -11,13 +11,13 @@ the OPERATIONAL follow-up:
     to spend to clear the bar?
 
 Inputs (read-only — no XGBoost retraining):
-  experiments/results/p5p8/p8_iter160_opt_util_per_cell.tsv   (2000 rows)
-  experiments/results/p5p8/p8_iter160_opt_tau_per_cell.tsv     (2000 rows)
+  platform_hybrid/experiments/results/p5p8/p8_iter160_opt_util_per_cell.tsv   (2000 rows)
+  platform_hybrid/experiments/results/p5p8/p8_iter160_opt_tau_per_cell.tsv     (2000 rows)
 
 Outputs:
-  experiments/results/p5p8/p8_iter164_breakeven_per_cell.tsv  (60 rows: 5 rates x 4 fsets x 3 targets)
-  experiments/results/p5p8/p8_iter164_tau_tier_monotone.tsv   (40 rows: 5 tiers x 4 fsets x 2 rates)
-  experiments/results/p5p8/p8_iter164_summary.json            (machine-readable H1-H4 verdicts)
+  platform_hybrid/experiments/results/p5p8/p8_iter164_breakeven_per_cell.tsv  (60 rows: 5 rates x 4 fsets x 3 targets)
+  platform_hybrid/experiments/results/p5p8/p8_iter164_tau_tier_monotone.tsv   (40 rows: 5 tiers x 4 fsets x 2 rates)
+  platform_hybrid/experiments/results/p5p8/p8_iter164_summary.json            (machine-readable H1-H4 verdicts)
 
 Stdlib only. <= 280 lines.
 """

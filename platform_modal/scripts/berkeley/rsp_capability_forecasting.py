@@ -17,9 +17,9 @@ Mapping RSP -> our benchmark:
   * forecasting horizon            <- t_80 (steps to reach 80% of asymptote)
 
 Five falsifiable hypotheses (see docstring per block). Real data only:
-  experiments/results/scaling_law_bootstrap_ci.tsv       (5 models, 1000-boot CIs)
-  experiments/results/berkeley/eureka_rqs_per_anchor.tsv (RQS elicitation quality)
-  experiments/results/berkeley/sweagent_aci_decomp.tsv   (R_max_policy elicitation-adj)
+  platform_hybrid/experiments/results/scaling_law_bootstrap_ci.tsv       (5 models, 1000-boot CIs)
+  platform_hybrid/experiments/results/berkeley/eureka_rqs_per_anchor.tsv (RQS elicitation quality)
+  platform_hybrid/experiments/results/berkeley/sweagent_aci_decomp.tsv   (R_max_policy elicitation-adj)
 """
 import csv, json, math, os
 

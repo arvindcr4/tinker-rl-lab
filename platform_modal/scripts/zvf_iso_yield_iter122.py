@@ -26,10 +26,10 @@ Three additions on top of iter 118's diagnostic:
 
 Output artefacts:
 
-    experiments/results/zvf_iter122_iso_yield.tsv
-    experiments/results/zvf_iter122_aero_quantile.tsv
-    experiments/results/zvf_iter122_op_sweep.tsv
-    experiments/results/zvf_iter122_meta.json
+    platform_hybrid/experiments/results/zvf_iter122_iso_yield.tsv
+    platform_hybrid/experiments/results/zvf_iter122_aero_quantile.tsv
+    platform_hybrid/experiments/results/zvf_iter122_op_sweep.tsv
+    platform_hybrid/experiments/results/zvf_iter122_meta.json
     figures/zvf_iter122_iso_yield.{pdf,png}
 
 All inputs are existing per-experiment measurement files; no new
@@ -254,7 +254,7 @@ def write_iso_yield(out_path: Path) -> Dict[str, Any]:
         fh.write(
             "# Per-task iso-yield table: the minimum G (linearly interpolated\n"
             "# in log2(G)) required to push mean_ZVF under tau. Source:\n"
-            "# experiments/results/groupsize_zvf_sweep.tsv measured at\n"
+            "# platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv measured at\n"
             "# G in {2, 4, 8, 16}. Extrapolated rows flag slope-limited\n"
             "# extrapolations beyond G=16; interpolated rows flag between-point\n"
             "# linear interpolation; reachable rows flag tau met at G=2.\n"

@@ -26,7 +26,7 @@ from collections import defaultdict
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-DEFAULT_DIR = Path("/Users/arvind/Developer/tinker-rl-lab/experiments/tinker-runs/results/head_to_head")
+DEFAULT_DIR = Path("/Users/arvind/Developer/tinker-rl-lab/platform_hybrid/experiments/tinker-runs/results/head_to_head")
 
 
 def load_results(results_dir: Path) -> list[dict]:

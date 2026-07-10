@@ -7,7 +7,7 @@ training-on-test exposure, and statistical-power claims have been narrowed.
 
 ## What changed
 
-### `reports/final/capstone_final_report.tex` (109 pages)
+### `platform_tinker/reports/final/capstone_final_report.tex` (109 pages)
 
 1. **Abstract** — rescoped to "systems-oriented empirical audit of when a
    critic-free, group-relative RL loop receives a usable reward signal".
@@ -67,7 +67,7 @@ cd paper && pdflatex -interaction=nonstopmode main.tex \
   && pdflatex -interaction=nonstopmode main.tex
 
 # Capstone
-cd reports/final && pdflatex -interaction=nonstopmode capstone_final_report.tex \
+cd platform_tinker/reports/final && pdflatex -interaction=nonstopmode capstone_final_report.tex \
   && bibtex capstone_final_report \
   && pdflatex -interaction=nonstopmode capstone_final_report.tex \
   && pdflatex -interaction=nonstopmode capstone_final_report.tex
@@ -77,8 +77,8 @@ Zero BibTeX warnings after `liu2025rlzvp` entry was added.
 
 ## Submission bundles (regenerated)
 
-- `reports/final/capstone_final_report_submission.zip` (986 KB)
-- `reports/final/capstone_complete_submission_all_files.zip` (6.6 MB,
+- `platform_tinker/reports/final/capstone_final_report_submission.zip` (986 KB)
+- `platform_tinker/reports/final/capstone_complete_submission_all_files.zip` (6.6 MB,
   with refreshed `overleaf_document.zip` and `final_report.pdf`)
 
 ## Verification

@@ -1,12 +1,12 @@
 {
   "description": "Paired GSM8K held-out test: base Qwen3-8B vs GRPO LoRA (5 seeds)",
-  "base_file": "reports/final/gsm8k_base_control_200.json",
+  "base_file": "platform_tinker/reports/final/gsm8k_base_control_200.json",
   "seed_files": [
-    "reports/final/gsm8k_heldout_seed042.json",
-    "reports/final/gsm8k_heldout_seed137.json",
-    "reports/final/gsm8k_heldout_seed256.json",
-    "reports/final/gsm8k_heldout_seed512.json",
-    "reports/final/gsm8k_heldout_seed999.json"
+    "platform_tinker/reports/final/gsm8k_heldout_seed042.json",
+    "platform_tinker/reports/final/gsm8k_heldout_seed137.json",
+    "platform_tinker/reports/final/gsm8k_heldout_seed256.json",
+    "platform_tinker/reports/final/gsm8k_heldout_seed512.json",
+    "platform_tinker/reports/final/gsm8k_heldout_seed999.json"
   ],
   "per_seed": [
     {

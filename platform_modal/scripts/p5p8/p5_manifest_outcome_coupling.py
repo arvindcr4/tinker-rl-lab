@@ -23,9 +23,9 @@ Three falsifiable sub-claims:
      far-fingerprint cells. Permutation p-value.
 
 Outputs:
-  experiments/results/p5p8/p5_manifest_outcome_coupling.tsv
-  experiments/results/p5p8/p5_manifest_outcome_coupling_boot.tsv
-  experiments/results/p5p8/p5_manifest_outcome_coupling_summary.json
+  platform_hybrid/experiments/results/p5p8/p5_manifest_outcome_coupling.tsv
+  platform_hybrid/experiments/results/p5p8/p5_manifest_outcome_coupling_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p5_manifest_outcome_coupling_summary.json
 """
 from __future__ import annotations
 

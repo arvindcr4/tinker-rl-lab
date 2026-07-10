@@ -19,7 +19,7 @@ import csv, json, os, time
 import numpy as np
 from scipy.optimize import curve_fit
 
-R = "experiments/results"
+R = "platform_hybrid/experiments/results"
 os.makedirs(R, exist_ok=True)
 RNG = np.random.default_rng(95)
 
@@ -189,7 +189,7 @@ findings = [
               f"so 'bigger G always wins' is false even at infinite compute.",
      "evidence_path": f"{R}/group_size_iter95_summary.tsv", "citation_ok": True},
 ]
-with open("experiments/results/findings_ledger.jsonl", "a") as f:
+with open("platform_hybrid/experiments/results/findings_ledger.jsonl", "a") as f:
     for fi in findings:
         f.write(json.dumps(fi) + "\n")
 

@@ -3,8 +3,8 @@
 recommendation on the live 98-cell mega corpus.
 
 Two PARTs on the same data:
-  - 98 MIN-REPORT manifests in experiments/results/mega_20260704/manifests/
-  - the live ledger experiments/results/mega_20260704/cells.tsv
+  - 98 MIN-REPORT manifests in platform_hybrid/experiments/results/mega_20260704/manifests/
+  - the live ledger platform_hybrid/experiments/results/mega_20260704/cells.tsv
 
 PART A: SUB-FIELD COVERAGE
   The seven MIN-REPORT items decompose into 20 sub-fields across the seven
@@ -47,11 +47,11 @@ PART B: MINIMUM-VIABLE-EXTENSION (MVE) ANALYSIS
   identified" bar).
 
 Outputs:
-  experiments/results/p5p8/p5_minreport_subfield_audit.tsv          (PART A per-sub-field)
-  experiments/results/p5p8/p5_minreport_subfield_audit_per_item.tsv (PART A per-item aggregate)
-  experiments/results/p5p8/p5_minreport_subfield_audit_summary.json (PART A summary)
-  experiments/results/p5p8/p5_minreport_mve.tsv                     (PART B per-extension table)
-  experiments/results/p5p8/p5_minreport_mve_summary.json            (PART B summary)
+  platform_hybrid/experiments/results/p5p8/p5_minreport_subfield_audit.tsv          (PART A per-sub-field)
+  platform_hybrid/experiments/results/p5p8/p5_minreport_subfield_audit_per_item.tsv (PART A per-item aggregate)
+  platform_hybrid/experiments/results/p5p8/p5_minreport_subfield_audit_summary.json (PART A summary)
+  platform_hybrid/experiments/results/p5p8/p5_minreport_mve.tsv                     (PART B per-extension table)
+  platform_hybrid/experiments/results/p5p8/p5_minreport_mve_summary.json            (PART B summary)
 """
 from __future__ import annotations
 

@@ -28,8 +28,8 @@ the triple (A_axis_score, B_match_rate, C_entropy).
 
 Outputs
 -------
-experiments/results/p5p8/p5_3axis_triangulation.tsv         (7 rows)
-experiments/results/p5p8/p5_3axis_triangulation_summary.json
+platform_hybrid/experiments/results/p5p8/p5_3axis_triangulation.tsv         (7 rows)
+platform_hybrid/experiments/results/p5p8/p5_3axis_triangulation_summary.json
 """
 from __future__ import annotations
 import json

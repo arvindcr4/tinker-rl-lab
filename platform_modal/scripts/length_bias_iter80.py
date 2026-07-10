@@ -22,10 +22,10 @@ and derive, per run:
               Delta L_t = alpha + gamma * L_{t-1} + eps ,  gamma = phi-1
 Then a seed-paired bootstrap compares GRPO vs Dr.GRPO on Delta(mu) and Delta(phi).
 
-Inputs : experiments/results/drgrpo_vs_grpo.json      (arithmetic, Qwen2.5-0.5B, 5+5 seeds)
-         experiments/results/drgrpo_gsm8k_cot_full.json (GSM8K CoT, Qwen2.5-1.5B, 3+3 seeds)
-Outputs: experiments/results/length_bias_iter80_{perrun,summary,unitroot,paired}.tsv
-         experiments/results/length_bias_iter80_meta.json
+Inputs : platform_hybrid/experiments/results/drgrpo_vs_grpo.json      (arithmetic, Qwen2.5-0.5B, 5+5 seeds)
+         platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json (GSM8K CoT, Qwen2.5-1.5B, 3+3 seeds)
+Outputs: platform_hybrid/experiments/results/length_bias_iter80_{perrun,summary,unitroot,paired}.tsv
+         platform_hybrid/experiments/results/length_bias_iter80_meta.json
 Stdlib + numpy only.
 """
 import json, os, math

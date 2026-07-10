@@ -27,9 +27,9 @@ Measures (bootstrap B=2000, seed 20260705):
       versus v1 fingerprint alone, to isolate the marginal contribution.
 
 Outputs (5 files):
-  experiments/results/p5p8/p5_delta_div_minreport.tsv
-  experiments/results/p5p8/p5_delta_div_minreport_boot.tsv
-  experiments/results/p5p8/p5_delta_div_minreport_summary.json
+  platform_hybrid/experiments/results/p5p8/p5_delta_div_minreport.tsv
+  platform_hybrid/experiments/results/p5p8/p5_delta_div_minreport_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p5_delta_div_minreport_summary.json
 
 Stdlib only. <=290 lines.
 """
@@ -311,7 +311,7 @@ def main():
     }
     (OUT / "p5_delta_div_minreport_summary.json").write_text(json.dumps(summary, indent=2, default=str))
     print("# summary:", json.dumps(summary, indent=2, default=str))
-    print("# === iter 80 JOB B complete; outputs in experiments/results/p5p8/ ===")
+    print("# === iter 80 JOB B complete; outputs in platform_hybrid/experiments/results/p5p8/ ===")
 
 
 if __name__ == "__main__":

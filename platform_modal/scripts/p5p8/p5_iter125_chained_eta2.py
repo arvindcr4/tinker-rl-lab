@@ -51,10 +51,10 @@ Reuses axis_variance_fraction machinery from platform_modal/scripts/berkeley/
 unpacking_dpo_ppo_factorization.py verbatim (BSD-3).
 
 Outputs:
-  experiments/results/p5p8/p5_iter125_chained_eta2.tsv    (per-metric ratio)
-  experiments/results/p5p8/p5_iter125_n2_reboot.tsv       (re-derived N2)
-  experiments/results/p5p8/p5_iter125_mega_reboot.tsv     (re-derived mega)
-  experiments/results/p5p8/p5_iter125_chained_summary.json (verdicts)
+  platform_hybrid/experiments/results/p5p8/p5_iter125_chained_eta2.tsv    (per-metric ratio)
+  platform_hybrid/experiments/results/p5p8/p5_iter125_n2_reboot.tsv       (re-derived N2)
+  platform_hybrid/experiments/results/p5p8/p5_iter125_mega_reboot.tsv     (re-derived mega)
+  platform_hybrid/experiments/results/p5p8/p5_iter125_chained_summary.json (verdicts)
 """
 from __future__ import annotations
 import json, math, os, random, sys

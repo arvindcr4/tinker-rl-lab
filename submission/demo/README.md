@@ -5,7 +5,7 @@ This is the evaluator-friendly demo entry point for the MTech defense. The defau
 It demonstrates two narrow, auditable things:
 
 1. how rewards inside a completion group become group-relative normalized advantages, including the equal-reward case; and
-2. whether the exact bytes and recorded aggregates in `experiments/results/tinker_direct_eval.json` are internally consistent.
+2. whether the exact bytes and recorded aggregates in `platform_hybrid/experiments/results/tinker_direct_eval.json` are internally consistent.
 
 It does **not** train a model, reproduce a headline benchmark, establish causal improvement, or treat online reward as held-out accuracy.
 
@@ -61,7 +61,7 @@ If live mode is unavailable during the defense, use the default offline command.
 `fixtures/offline_demo.json` contains:
 
 - four explicitly synthetic reward groups and their expected ZVF/GU contract;
-- the exact SHA-256 and expected aggregate contract for `experiments/results/tinker_direct_eval.json`; and
+- the exact SHA-256 and expected aggregate contract for `platform_hybrid/experiments/results/tinker_direct_eval.json`; and
 - the three optional live smoke prompts.
 
 The artifact audit recomputes all 10 per-problem reward means, all 10 zero-variance indicators, the mean of all 80 binary rewards, and overall ZVF. A changed artifact, row mismatch, group-size mismatch, or aggregate mismatch fails closed with exit code 1.

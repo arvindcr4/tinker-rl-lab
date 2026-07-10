@@ -27,10 +27,10 @@ controller agree with the Berkeley-formalism rules when measured on
 the SAME step-cells?
 
 Outputs:
-  experiments/results/p5p8/p7_iter195_concordance_pair.tsv
-  experiments/results/p5p8/p7_iter195_concordance_boot.tsv
-  experiments/results/p5p8/p7_iter195_concordance_per_step.tsv
-  experiments/results/p5p8/p7_iter195_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_iter195_concordance_pair.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter195_concordance_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter195_concordance_per_step.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter195_summary.json
 
 Stdlib only.
 """
@@ -44,8 +44,8 @@ import random
 import statistics
 
 WORK = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-N2_DIR = WORK / "experiments/results/n2_reward_tensor_resume"
-OUT = WORK / "experiments/results/p5p8"
+N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT = WORK / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 METHODS = ("grpo", "aero", "gift", "areal")

@@ -41,11 +41,11 @@ This iteration answers three sharp questions:
       zero-fraction for the saturation-bound anchors.
 
 Outputs (5 artefacts):
-  experiments/results/scaling_law_iter61_zvf_proxy.tsv
-  experiments/results/scaling_law_iter61_stratum_fit.tsv
-  experiments/results/scaling_law_iter61_jackknife.tsv
-  experiments/results/scaling_law_iter61_cross_pillar.tsv
-  experiments/results/scaling_law_iter61_predictions.tsv
+  platform_hybrid/experiments/results/scaling_law_iter61_zvf_proxy.tsv
+  platform_hybrid/experiments/results/scaling_law_iter61_stratum_fit.tsv
+  platform_hybrid/experiments/results/scaling_law_iter61_jackknife.tsv
+  platform_hybrid/experiments/results/scaling_law_iter61_cross_pillar.tsv
+  platform_hybrid/experiments/results/scaling_law_iter61_predictions.tsv
   paper/sections/scaling_law_iter61.tex
   figures/scaling_law_iter61.{pdf,png}
 """

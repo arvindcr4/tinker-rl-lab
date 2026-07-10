@@ -128,7 +128,7 @@ def main():
                     "n_boot": N_BOOT,
                     "seed": SEED,
                     "ci_level": 0.95,
-                    "source": "scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
+                    "source": "platform_modal/scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
                 },
                 "source": "experiments/results/zvf_iter130_method_risk.tsv",
                 "note": (f"5-seed zvf130 risk index; backfill iter118 "
@@ -153,7 +153,7 @@ def main():
                     "n_boot": None,
                     "seed": None,
                     "ci_level": None,
-                    "source": "scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
+                    "source": "platform_modal/scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
                 },
                 "source": "experiments/results/zvf_iter130_method_risk.tsv",
                 "note": "mag_mean: per-seed sd not stored; point estimate only",
@@ -209,7 +209,7 @@ def main():
                 "significant": nm["significant"],
                 "verdict": verdict,
                 "rationale": rationale,
-                "audit_source": "scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
+                "audit_source": "platform_modal/scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
                 "audit_date": "2026-07-05",
                 "synth_from_agg": True,
             })

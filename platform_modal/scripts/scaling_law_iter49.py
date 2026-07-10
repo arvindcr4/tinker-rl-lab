@@ -32,11 +32,11 @@ Concretely this iteration answers four sharp questions:
       R_max ~ P^ap * C^ac (interpret ac as the data-epoch exponent)?
 
 Outputs (5 artefacts):
-  experiments/results/scaling_law_iter49_two_param.tsv
-  experiments/results/scaling_law_iter49_loo_residuals.tsv
-  experiments/results/scaling_law_iter49_phase_residual.tsv
-  experiments/results/scaling_law_iter49_optimal_anchor.tsv
-  experiments/results/scaling_law_iter49_predictions.tsv
+  platform_hybrid/experiments/results/scaling_law_iter49_two_param.tsv
+  platform_hybrid/experiments/results/scaling_law_iter49_loo_residuals.tsv
+  platform_hybrid/experiments/results/scaling_law_iter49_phase_residual.tsv
+  platform_hybrid/experiments/results/scaling_law_iter49_optimal_anchor.tsv
+  platform_hybrid/experiments/results/scaling_law_iter49_predictions.tsv
   paper/sections/scaling_law_iter49.tex
   figures/scaling_law_iter49.{pdf,png}
 """

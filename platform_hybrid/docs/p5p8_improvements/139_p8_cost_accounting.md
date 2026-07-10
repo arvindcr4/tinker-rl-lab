@@ -119,7 +119,7 @@ residual.
 
 ## Files
 
-- `scripts/p5p8/p8_iter124_cost_accounting.py` (~310 LoC)
+- `platform_modal/scripts/p5p8/p8_iter124_cost_accounting.py` (~310 LoC)
 - `experiments/results/p5p8/p8_iter124_cost_sweep.tsv` (80 rows: 4 stats ×
   4 quartiles × 5 price tiers)
 - `experiments/results/p5p8/p8_iter124_feature_ablation.tsv` (3 rows)

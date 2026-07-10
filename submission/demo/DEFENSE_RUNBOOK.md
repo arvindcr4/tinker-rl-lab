@@ -43,6 +43,6 @@ Open `http://127.0.0.1:8765/demo_report.html` and stop the server with Ctrl-C af
 
 1. If port 8765 is busy, run `./submission/demo/demo.sh --serve --port 8877`.
 2. If the local server cannot start, open `submission/demo/output/demo_report.html` directly.
-3. If the artifact SHA check fails, do not bypass it. Show the failure, run `git diff -- experiments/results/tinker_direct_eval.json`, and explain that the input bytes no longer match the reviewed contract.
+3. If the artifact SHA check fails, do not bypass it. Show the failure, run `git diff -- platform_hybrid/experiments/results/tinker_direct_eval.json`, and explain that the input bytes no longer match the reviewed contract.
 4. If Groq live mode fails, return to `./submission/demo/demo.sh`. Live mode is optional and supports no thesis claim.
 

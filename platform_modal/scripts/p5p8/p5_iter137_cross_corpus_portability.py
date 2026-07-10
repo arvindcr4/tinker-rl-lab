@@ -37,12 +37,12 @@ Hypotheses tested (falsifiable; thresholds calibrated on iter-117/121 anchor):
       corpora on >= 12/18 items, i.e., MIN-REPORT v2.2 is NOT corpus-uniform.
 
 Outputs:
-  experiments/results/p5p8/p5_iter137_corpus_x_item.tsv    (54 cells)
-  experiments/results/p5p8/p5_iter137_corpus_summary.tsv   (3 rows)
-  experiments/results/p5p8/p5_iter137_item_summary.tsv     (18 rows)
-  experiments/results/p5p8/p5_iter137_recovery_budget.tsv  (3 rows x 5 cols)
-  experiments/results/p5p8/p5_iter137_entropy_per_item.tsv (18 rows)
-  experiments/results/p5p8/p5_iter137_summary.json
+  platform_hybrid/experiments/results/p5p8/p5_iter137_corpus_x_item.tsv    (54 cells)
+  platform_hybrid/experiments/results/p5p8/p5_iter137_corpus_summary.tsv   (3 rows)
+  platform_hybrid/experiments/results/p5p8/p5_iter137_item_summary.tsv     (18 rows)
+  platform_hybrid/experiments/results/p5p8/p5_iter137_recovery_budget.tsv  (3 rows x 5 cols)
+  platform_hybrid/experiments/results/p5p8/p5_iter137_entropy_per_item.tsv (18 rows)
+  platform_hybrid/experiments/results/p5p8/p5_iter137_summary.json
 """
 from __future__ import annotations
 import csv, json, math, re, sys

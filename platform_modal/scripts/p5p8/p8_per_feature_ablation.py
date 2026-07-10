@@ -34,12 +34,12 @@ test_data.csv  : 10k held-out rows (same schema + Class).
 
 Outputs
 -------
-experiments/results/p5p8/p8_perfeat_loo.tsv        (LOO with bootstrap CI)
-experiments/results/p5p8/p8_perfeat_loi.tsv        (LOI 1-of-4 with CI)
-experiments/results/p5p8/p8_perfeat_loi_pairs.tsv  (LOI 2-of-6 pairs with CI)
-experiments/results/p5p8/p8_perfeat_reliability.tsv (10 deciles x 3 models)
-experiments/results/p5p8/p8_perfeat_summary.json
-experiments/results/p5p8/figures/p8_reliability.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_perfeat_loo.tsv        (LOO with bootstrap CI)
+platform_hybrid/experiments/results/p5p8/p8_perfeat_loi.tsv        (LOI 1-of-4 with CI)
+platform_hybrid/experiments/results/p5p8/p8_perfeat_loi_pairs.tsv  (LOI 2-of-6 pairs with CI)
+platform_hybrid/experiments/results/p5p8/p8_perfeat_reliability.tsv (10 deciles x 3 models)
+platform_hybrid/experiments/results/p5p8/p8_perfeat_summary.json
+platform_hybrid/experiments/results/p5p8/figures/p8_reliability.{png,pdf}
 """
 
 from __future__ import annotations

@@ -11,13 +11,13 @@ Claim under test (Liu et al. 2025, arXiv:2503.20783):
   neutralised.
 
 Inputs (existing, in this worktree):
-  experiments/results/drgrpo_vs_grpo.json         (arithmetic_easy / Qwen2.5-0.5B)
-  experiments/results/drgrpo_gsm8k_cot_full.json  (gsm8k_cot_hard / Qwen2.5-1.5B)
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json         (arithmetic_easy / Qwen2.5-0.5B)
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json  (gsm8k_cot_hard / Qwen2.5-1.5B)
 
 Outputs:
-  experiments/results/length_bias_mechanism_per_run.tsv   (per-run regression slopes + diagnostics)
-  experiments/results/length_bias_mechanism_summary.tsv   (per-task, per-algo aggregates + paired Delta)
-  experiments/results/length_bias_mechanism_mediation.tsv (ZVF mediation: direct vs indirect effect)
+  platform_hybrid/experiments/results/length_bias_mechanism_per_run.tsv   (per-run regression slopes + diagnostics)
+  platform_hybrid/experiments/results/length_bias_mechanism_summary.tsv   (per-task, per-algo aggregates + paired Delta)
+  platform_hybrid/experiments/results/length_bias_mechanism_mediation.tsv (ZVF mediation: direct vs indirect effect)
   figures/length_bias_mechanism.pdf + .png                (3-panel: scatter, slopes, mediation)
 
 Usage:

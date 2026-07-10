@@ -8979,9 +8979,9 @@ semantics, so its final accuracy is drawn as a reference level rather than on th
 <h2 id="e.-ZVF-diagnostic-%E2%80%94-signal-starvation-in-GRPO">e. ZVF diagnostic — signal starvation in GRPO<a class="anchor-link" href="#e.-ZVF-diagnostic-%E2%80%94-signal-starvation-in-GRPO">¶</a></h2><p>The <strong>Zero-Variance Fraction (ZVF)</strong> is the share of GRPO groups in which every sampled
 completion earns the <em>same</em> reward, so the group-relative advantage is zero and the batch
 contributes no learning signal (paper <strong>P2</strong>). Using the per-step logs in
-<code>platform_hybrid/platform_hybrid/experiments/results/groupsize_zvf_sweep.json</code>, we trace ZVF over training for each group size
+<code>platform_hybrid/experiments/results/groupsize_zvf_sweep.json</code>, we trace ZVF over training for each group size
 (mean of 3 seeds), then show the cross-experiment ZVF summary table
-(<code>platform_hybrid/platform_hybrid/experiments/results/zvf_summary.tsv</code>) with its deterministic failure labels.</p>
+(<code>platform_hybrid/experiments/results/zvf_summary.tsv</code>) with its deterministic failure labels.</p>
 </div>
 </div>
 </div>
@@ -9281,7 +9281,7 @@ contributes no learning signal (paper <strong>P2</strong>). Using the per-step l
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="f.-Group-size-sweep">f. Group-size sweep<a class="anchor-link" href="#f.-Group-size-sweep">¶</a></h2><p>Paper <strong>P3</strong> frames group size as a <strong>contrast-density</strong> knob. The sweep table
-<code>platform_hybrid/platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv</code> (Qwen2.5-0.5B, synthetic arithmetic, 3 seeds each)
+<code>platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv</code> (Qwen2.5-0.5B, synthetic arithmetic, 3 seeds each)
 shows that as the group size G grows from 2 → 16 the <strong>measured ZVF falls monotonically</strong> while
 <strong>held-out accuracy stays high (~98%)</strong>. We also overlay the <em>theoretical</em> ZVF at the observed
 mean pass-rate, closing the loop between the descriptive diagnostic and its model.</p>

@@ -28,11 +28,11 @@ Iter33 closes these gaps:
       at most one of them per trace.
 
 Outputs:
-  experiments/results/scaling_law_iter33_phase_score.tsv
-  experiments/results/scaling_law_iter33_predictions.tsv
-  experiments/results/scaling_law_iter33_stability.tsv
-  experiments/results/scaling_law_iter33_nemotron.tsv
-  experiments/results/scaling_law_iter33_summary.tsv
+  platform_hybrid/experiments/results/scaling_law_iter33_phase_score.tsv
+  platform_hybrid/experiments/results/scaling_law_iter33_predictions.tsv
+  platform_hybrid/experiments/results/scaling_law_iter33_stability.tsv
+  platform_hybrid/experiments/results/scaling_law_iter33_nemotron.tsv
+  platform_hybrid/experiments/results/scaling_law_iter33_summary.tsv
   figures/scaling_law_iter33.{pdf,png}
 """
 from __future__ import annotations

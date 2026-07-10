@@ -45,15 +45,15 @@ the AI and F/B deltas (B=2000, paired sign-preserving resamples).
 
 INPUTS
 ------
-experiments/results/drgrpo_vs_grpo.json         (arithmetic_easy, n=40, 5 seeds)
-experiments/results/drgrpo_gsm8k_cot_full.json  (gsm8k_cot,    n=30, 3 seeds)
+platform_hybrid/experiments/results/drgrpo_vs_grpo.json         (arithmetic_easy, n=40, 5 seeds)
+platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json  (gsm8k_cot,    n=30, 3 seeds)
 
 OUTPUTS
 -------
-experiments/results/length_bias_iter96_perrun.tsv   (one row per run)
-experiments/results/length_bias_iter96_paired.tsv   (one row per (task,key))
-experiments/results/length_bias_iter96_summary.tsv  (task-level aggregates)
-experiments/results/length_bias_iter96_meta.json    (run configuration)
+platform_hybrid/experiments/results/length_bias_iter96_perrun.tsv   (one row per run)
+platform_hybrid/experiments/results/length_bias_iter96_paired.tsv   (one row per (task,key))
+platform_hybrid/experiments/results/length_bias_iter96_summary.tsv  (task-level aggregates)
+platform_hybrid/experiments/results/length_bias_iter96_meta.json    (run configuration)
 
 USAGE
 -----

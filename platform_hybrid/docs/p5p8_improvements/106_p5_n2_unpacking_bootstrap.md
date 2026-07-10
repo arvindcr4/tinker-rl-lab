@@ -102,7 +102,7 @@ GRPO-family differences.
 
 ## Files
 
-- `scripts/p5p8/p5_iter89_n2_unpacking_bootstrap.py` (~280 LoC, stdlib only)
+- `platform_modal/scripts/p5p8/p5_iter89_n2_unpacking_bootstrap.py` (~280 LoC, stdlib only)
 - `experiments/results/p5p8/p5_n2_unpacking_boot.tsv` (7 rows)
 - `experiments/results/p5p8/p5_n2_unpacking_pair.tsv` (36 rows)
 - `experiments/results/p5p8/p5_n2_unpacking_lomo.tsv` (4 rows)

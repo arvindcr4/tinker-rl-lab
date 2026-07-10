@@ -19,9 +19,9 @@ and rebuild the per-prompt Iso-G allocator with the EXACT rule. The binomial
 allocator leaves savings on the table: prompts it labels "starved at G'=2" are in
 fact contrastive under exact accounting.
 
-Data: experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
+Data: platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
       40 steps x 16 prompts x 8 rollouts (binary) per method.
-Outputs: experiments/results/p5p8/p7_exact_finite_pool_{per_prompt,summary}.tsv,
+Outputs: platform_hybrid/experiments/results/p5p8/p7_exact_finite_pool_{per_prompt,summary}.tsv,
          p7_exact_finite_pool_summary.json
 Stdlib only. ~1-2 min on 4 cores (single-thread fine).
 """

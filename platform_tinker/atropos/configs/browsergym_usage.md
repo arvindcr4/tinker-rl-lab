@@ -35,7 +35,7 @@ export MINIWOB_URL="file://$HOME/.cache/tinker-rl-lab/miniwob-plusplus/miniwob/h
 Run the Tinker smoke:
 
 ```bash
-cd atropos
+cd platform_tinker/atropos
 export TINKER_API_KEY="$TINKER_API_KEY"
 export WANDB_API_KEY="$WANDB_API_KEY"
 ./run_experiment_generic.sh browsergym_tinker configs/browsergym_miniwob_qwen_8b_smoke.yaml
@@ -71,7 +71,7 @@ export OPENAI_API_KEY="$OPENAI_API_KEY"
 Then run:
 
 ```bash
-cd atropos
+cd platform_tinker/atropos
 export TINKER_API_KEY="$TINKER_API_KEY"
 export WANDB_API_KEY="$WANDB_API_KEY"
 ./run_experiment_generic.sh browsergym_tinker configs/browsergym_webarena_qwen_8b_smoke.yaml

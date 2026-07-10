@@ -119,7 +119,7 @@ analyst-paging signal. The mitigation: cap σ on the LLM extract at
 ## Reproduction
 
 ```bash
-python3 scripts/p5p8/p8_calibration_under_noise.py
+python3 platform_modal/scripts/p5p8/p8_calibration_under_noise.py
 # ~6 min on 4 cores; 4 tree fits + 6 sigma × 4 K × 4 metrics +
 # 48 paired-bootstrap rows (24 Δgap, 24 Δbrier)
 ```

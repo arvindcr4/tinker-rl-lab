@@ -27,7 +27,7 @@ Pipeline:
      per-pillar headline gaps (best - worst method).
   6. 5 falsifiable hypotheses.
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   synth_iter192_d20_per_method.tsv       4 methods x 4 pillars = 16 rows
   synth_iter192_d20_method_ranks.tsv     4 methods x 4 pillars = 16 rows
   synth_iter192_d20_concordance.tsv      6 pairs + mean = 7 rows

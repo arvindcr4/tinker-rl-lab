@@ -44,7 +44,7 @@ iter122 (per-task) + iter127 (G*-T optimality) data:
       G_iso_corrected ≤ G*_raw at 4/4 T — i.e., the practitioner rule
       is a valid floor that the compute-gated G* never violates.
 
-Outputs (experiments/results/berkeley/):
+Outputs (platform_hybrid/experiments/results/berkeley/):
   iso_g_corrected_overherding.tsv       (H1)
   iso_g_corrected_tip_savings.tsv       (H2)
   iso_g_corrected_league_coupling.tsv   (H3)
@@ -405,11 +405,11 @@ def main():
             "h5": str(h5_path.relative_to(ROOT)),
         },
         "data_inputs": [
-            "experiments/results/group_size_effect.tsv",
-            "experiments/results/zvf_iter46_summary.tsv",
-            "experiments/results/zvf_iter130_method_risk.tsv",
-            "experiments/results/group_size_iter127_optimal_g.tsv",
-            "experiments/results/berkeley/iso_g_anti_herding.tsv (negative prior)",
+            "platform_hybrid/experiments/results/group_size_effect.tsv",
+            "platform_hybrid/experiments/results/zvf_iter46_summary.tsv",
+            "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
+            "platform_hybrid/experiments/results/group_size_iter127_optimal_g.tsv",
+            "platform_hybrid/experiments/results/berkeley/iso_g_anti_herding.tsv (negative prior)",
         ],
     }
     out_json = OUT / "iso_g_corrected_summary.json"

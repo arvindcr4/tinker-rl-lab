@@ -5,7 +5,7 @@ Applies the 7-item MIN-REPORT fingerprint to 7 internal corpora; for each
 measures per-item coverage, variance, bits, mean Hamming discrimination,
 and emits a STRONG / PORTABLE / LIMITED / NULL verdict.
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   p5_cross_corpus_portability.tsv          (7 corpora x 31 cols)
   p5_cross_corpus_portability_pairs.tsv    (bootstrap pair stats)
   p5_cross_corpus_portability_summary.json (full machine-readable)

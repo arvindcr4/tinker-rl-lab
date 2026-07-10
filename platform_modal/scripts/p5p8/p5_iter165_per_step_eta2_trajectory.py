@@ -18,11 +18,11 @@ channel), compute eta^2(method|step) on a chosen set of channels, and
 add paired-step bootstrap CIs (B=2000, seed=20260705). Test 5 falsifiable
 hypotheses (see H1-H5 below).
 
-Inputs:  experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
-Outputs: experiments/results/p5p8/p5_iter165_per_step_eta2.tsv (40 rows)
-         experiments/results/p5p8/p5_iter165_per_step_eta2_boot.tsv (40 rows: with CIs)
-         experiments/results/p5p8/p5_iter165_step_band_summary.tsv (3 rows: early/mid/late bands)
-         experiments/results/p5p8/p5_iter165_summary.json (machine-readable)
+Inputs:  platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
+Outputs: platform_hybrid/experiments/results/p5p8/p5_iter165_per_step_eta2.tsv (40 rows)
+         platform_hybrid/experiments/results/p5p8/p5_iter165_per_step_eta2_boot.tsv (40 rows: with CIs)
+         platform_hybrid/experiments/results/p5p8/p5_iter165_step_band_summary.tsv (3 rows: early/mid/late bands)
+         platform_hybrid/experiments/results/p5p8/p5_iter165_summary.json (machine-readable)
 """
 
 import csv

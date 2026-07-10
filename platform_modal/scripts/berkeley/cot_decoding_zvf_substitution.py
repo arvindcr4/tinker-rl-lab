@@ -63,7 +63,7 @@ paths").  The three hypotheses are:
      rollouts recover anything?  DECISIVE-NEGATIVE if recovery rate
      <= 5% (matching Huang et al.'s "self-correction hurts" claim).
 
-Outputs (under experiments/results/berkeley/cot_decoding_*):
+Outputs (under platform_hybrid/experiments/results/berkeley/cot_decoding_*):
   cot_decoding_per_k.tsv     - accuracy, ZVF, frac_all_{good,bad,mixed} per k per seed
   cot_decoding_substitution.tsv - H3 RL-substitution gap per seed + paired
   cot_decoding_premise_order.tsv - H4 recoverable fraction per seed

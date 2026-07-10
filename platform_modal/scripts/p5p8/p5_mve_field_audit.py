@@ -35,11 +35,11 @@ This complements iter-49's "stack axes explain 92.7% of zvf variance"
 by reporting the same decomposition at per-MVE-field granularity.
 
 Outputs:
-  experiments/results/p5p8/p5_mve_field_audit.tsv (5 rows × N cols)
-  experiments/results/p5p8/p5_mve_field_eta2.tsv (5 fields × 5 axes = 25 rows)
-  experiments/results/p5p8/p5_mve_field_corr.tsv (5×5 Pearson matrix)
-  experiments/results/p5p8/p5_mve_field_summary.json
-  experiments/results/p5p8/figures/p5_mve_field_dist.{png,pdf}
+  platform_hybrid/experiments/results/p5p8/p5_mve_field_audit.tsv (5 rows × N cols)
+  platform_hybrid/experiments/results/p5p8/p5_mve_field_eta2.tsv (5 fields × 5 axes = 25 rows)
+  platform_hybrid/experiments/results/p5p8/p5_mve_field_corr.tsv (5×5 Pearson matrix)
+  platform_hybrid/experiments/results/p5p8/p5_mve_field_summary.json
+  platform_hybrid/experiments/results/p5p8/figures/p5_mve_field_dist.{png,pdf}
 """
 
 import csv
@@ -52,8 +52,8 @@ from statistics import mean, median, stdev
 
 # --- I/O paths ---
 WORKTREE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CELLS_TSV = os.path.join(WORKTREE, "experiments/results/mega_20260704/cells.tsv")
-OUT_DIR = os.path.join(WORKTREE, "experiments/results/p5p8")
+CELLS_TSV = os.path.join(WORKTREE, "platform_hybrid/experiments/results/mega_20260704/cells.tsv")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
 FIG_DIR = os.path.join(OUT_DIR, "figures")
 os.makedirs(FIG_DIR, exist_ok=True)
 

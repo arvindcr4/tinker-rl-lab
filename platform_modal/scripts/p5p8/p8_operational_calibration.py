@@ -31,10 +31,10 @@ probability can be trusted as a triage signal.
 
 Outputs
 -------
-experiments/results/p5p8/p8_operational_calibration.tsv           (15 rows: 5 K × 3 trees)
-experiments/results/p5p8/p8_operational_calibration_boot.tsv      (30 paired-bootstrap rows: 5 K × 3 pairs)
-experiments/results/p5p8/p8_operational_calibration_summary.json
-experiments/results/p5p8/figures/p8_operational_calibration.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_operational_calibration.tsv           (15 rows: 5 K × 3 trees)
+platform_hybrid/experiments/results/p5p8/p8_operational_calibration_boot.tsv      (30 paired-bootstrap rows: 5 K × 3 pairs)
+platform_hybrid/experiments/results/p5p8/p8_operational_calibration_summary.json
+platform_hybrid/experiments/results/p5p8/figures/p8_operational_calibration.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + matplotlib. <=290 lines.
 """

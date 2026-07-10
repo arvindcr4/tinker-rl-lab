@@ -42,14 +42,14 @@ same deterministic taxonomy as iter 38:
     converged := otherwise
 
 Outputs:
-    experiments/results/zvf_iter42_early_predicts.tsv
+    platform_hybrid/experiments/results/zvf_iter42_early_predicts.tsv
         Per-run row with early features, late outcome, and a
         leave-one-out knn prediction (k=3) of failure class.
-    experiments/results/zvf_iter42_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter42_summary.tsv
         One-rollup summary: classifier accuracy, feature
         univariate odds-ratio of collapse for early-bloomers,
         Spearman correlation of early vs late ZVF summary stats.
-    experiments/results/zvf_iter42_failure_audit.tsv
+    platform_hybrid/experiments/results/zvf_iter42_failure_audit.tsv
         Per-(kind, method) aggregate showing collapse rate among
         "early-ZVF-spikers" vs "late-ZVF-spikers".
 

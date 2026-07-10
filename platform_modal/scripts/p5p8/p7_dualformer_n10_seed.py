@@ -35,8 +35,8 @@ References (verified):
   - alphaproof2025nature (AlphaProof, Nature 2025)
 
 Outputs (worktree-relative paths):
-  experiments/results/p5p8/p7_dualformer_n10_per_seed.tsv
-  experiments/results/p5p8/p7_dualformer_n10_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_dualformer_n10_per_seed.tsv
+  platform_hybrid/experiments/results/p5p8/p7_dualformer_n10_summary.json
 """
 from __future__ import annotations
 import csv
@@ -51,8 +51,8 @@ from pathlib import Path
 # Configuration
 # ----------------------------------------------------------------------------
 ROOT = Path(__file__).resolve().parents[2]
-N10_DIR = ROOT / "experiments/results/n10_seed_expansion"
-OUT_DIR = ROOT / "experiments/results/p5p8"
+N10_DIR = ROOT / "platform_hybrid/experiments/results/n10_seed_expansion"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 TAU = 0.7           # primary zvf-triage threshold
@@ -249,7 +249,7 @@ def main() -> None:
         "per_controller_total_G_boot_ci": {},
         "per_controller_savings_boot_ci": {},
         "paired_contrasts_savings": {},
-        "per_seed_table": "experiments/results/p5p8/p7_dualformer_n10_per_seed.tsv",
+        "per_seed_table": "platform_hybrid/experiments/results/p5p8/p7_dualformer_n10_per_seed.tsv",
     }
 
     for name in controllers:

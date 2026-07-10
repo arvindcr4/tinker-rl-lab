@@ -10,9 +10,9 @@
       Per-(method, seed) ZVF first-passage-vs-collapse lead time scatter
       for the variance-mitigation collapse-flagged runs.
 
-Inputs: experiments/results/zvf_dynamics_phase.tsv,
-        experiments/results/zvf_dynamics_leadtime.tsv
-        experiments/results/zvf_dynamics_summary.tsv
+Inputs: platform_hybrid/experiments/results/zvf_dynamics_phase.tsv,
+        platform_hybrid/experiments/results/zvf_dynamics_leadtime.tsv
+        platform_hybrid/experiments/results/zvf_dynamics_summary.tsv
 Outputs: paper/figures/zvf_dynamics_{phase,leadtime}.pdf and .png
 """
 import csv

@@ -28,10 +28,10 @@ Four fresh analyses, all on real iter-90 / iter-82 / dynamics data:
      decision-table winners per metric.
 
 Outputs:
-    experiments/results/zvf_iter94_shuffle_null.tsv
-    experiments/results/zvf_iter94_stability.tsv
-    experiments/results/zvf_iter94_calibration.tsv
-    experiments/results/zvf_summary.tsv            <-- headline
+    platform_hybrid/experiments/results/zvf_iter94_shuffle_null.tsv
+    platform_hybrid/experiments/results/zvf_iter94_stability.tsv
+    platform_hybrid/experiments/results/zvf_iter94_calibration.tsv
+    platform_hybrid/experiments/results/zvf_summary.tsv            <-- headline
     figures/zvf_vs_failure.{pdf,png}
 """
 from __future__ import annotations

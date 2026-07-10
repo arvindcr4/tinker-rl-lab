@@ -48,11 +48,11 @@ diagnostics already in iter5/iter9/iter13:
       sets and a confusion-matrix dump for qualitative review.
 
 Outputs:
-  experiments/results/scaling_law_iter17_aic.tsv         (per-(trace,model) AIC profile)
-  experiments/results/scaling_law_iter17_changepoint.tsv (changepoint tau + perm-p + CI)
-  experiments/results/scaling_law_iter17_t_eps.tsv       (effective plateau horizon)
-  experiments/results/scaling_law_iter17_phase_kappa.tsv (per-trace phase labels)
-  experiments/results/scaling_law_iter17_phase_kappa_only.tsv (Cohen's kappa)
+  platform_hybrid/experiments/results/scaling_law_iter17_aic.tsv         (per-(trace,model) AIC profile)
+  platform_hybrid/experiments/results/scaling_law_iter17_changepoint.tsv (changepoint tau + perm-p + CI)
+  platform_hybrid/experiments/results/scaling_law_iter17_t_eps.tsv       (effective plateau horizon)
+  platform_hybrid/experiments/results/scaling_law_iter17_phase_kappa.tsv (per-trace phase labels)
+  platform_hybrid/experiments/results/scaling_law_iter17_phase_kappa_only.tsv (Cohen's kappa)
   figures/scaling_law_iter17.{pdf,png}
   paper/figures/scaling_law_iter17.{pdf,png}
 """

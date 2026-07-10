@@ -25,15 +25,15 @@ budget T*.  Iter 47 builds on that with three fresh analyses that target
 
 Deliverables (4 TSV + 1 paper section + 1 figure):
 
-    experiments/results/group_size_iter47_critical_T.tsv
+    platform_hybrid/experiments/results/group_size_iter47_critical_T.tsv
         12 rows: 4 G_a values x 3 retention targets.  Log-linear T* fit
         with bootstrap CI.
-    experiments/results/group_size_iter47_monotonicity.tsv
+    platform_hybrid/experiments/results/group_size_iter47_monotonicity.tsv
         5 rows: per-G_a Kendall's tau with bootstrap CI on iso-token
         retention vs budget.
-    experiments/results/group_size_iter47_diff_Tstar.tsv
+    platform_hybrid/experiments/results/group_size_iter47_diff_Tstar.tsv
         9 rows: 3 difficulty bins x 3 retention targets.  Per-bin T*.
-    experiments/results/group_size_iter47_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter47_summary.tsv
         Single rollup with 11 headline numbers.
     paper/sections/group_size_iter47.tex + figures/group_size_iter47.pdf.
 """

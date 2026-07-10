@@ -1,6 +1,6 @@
 """Iter 48 figure: rises-vs-plateau slopes side-by-side bar chart.
 
-Reads experiments/results/length_bias_iter48_summary.tsv and writes
+Reads platform_hybrid/experiments/results/length_bias_iter48_summary.tsv and writes
 figures/length_plateau_slopes.pdf with two panels:
   (a) arithmetic_easy: plat_slope bar (GRPO negative, Dr.GRPO positive)
   (b) gsm8k_cot: rise_slope bar (GRPO much more negative than Dr.GRPO)

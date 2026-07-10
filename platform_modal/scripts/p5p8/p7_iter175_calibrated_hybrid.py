@@ -33,7 +33,7 @@ Compared against the 5 existing controllers from iter-167 (C0..C5) on:
   (b) compute cost in extra rollouts
   (c) Pareto-optimality vs iter-167 oracle (per-prompt marginal-cost oracle)
 
-Outputs (experiments/results/p5p8/p7_iter175_*):
+Outputs (platform_hybrid/experiments/results/p5p8/p7_iter175_*):
   per_obs.tsv        (2560 obs: G_C6, dY_C6, fire flags)
   per_summary.tsv    (4 methods x 6 controllers: contrast + cost + extras)
   pareto.tsv         (per-method Pareto with optimal flag)
@@ -46,8 +46,8 @@ import csv, glob, json, math, os, random
 from typing import Dict, List
 
 WORKTREE = "/home/claude/tinker-rl-lab-minimax"
-DATA_DIR = os.path.join(WORKTREE, "experiments/results/n2_reward_tensor_resume")
-OUT_DIR = os.path.join(WORKTREE, "experiments/results/p5p8")
+DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
 os.makedirs(OUT_DIR, exist_ok=True)
 G_BASE = 8
 G_MENU = [2, 4, 6, 8, 10, 12, 16, 24, 32]

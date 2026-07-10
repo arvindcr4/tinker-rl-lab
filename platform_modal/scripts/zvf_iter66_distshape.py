@@ -15,7 +15,7 @@ answers:
         (Anti-herding = observed ZVF below the i.i.d. lower bound.)
 
 Both diagnostics rest on the per-step ZVF already logged in
-experiments/results/variance_mitigation.tsv, and they are deliberately
+platform_hybrid/experiments/results/variance_mitigation.tsv, and they are deliberately
 orthogonal to the prior scalar and stratification work (iter58 signed
 decomposition, iter62 quintile stratification). They answer reviewer
 questions about library *identity* rather than library *rank*: are two
@@ -25,33 +25,33 @@ a similar mean?
 
 Outputs (8 artifacts):
 
-    experiments/results/zvf_iter66_cdf_overlay.tsv
+    platform_hybrid/experiments/results/zvf_iter66_cdf_overlay.tsv
         Long-form CDF grid (50 zvf-bins x 9 methods) for the overlay
         figure.  Columns: zvf, method, ecdf.
 
-    experiments/results/zvf_iter66_ks_matrix.tsv
+    platform_hybrid/experiments/results/zvf_iter66_ks_matrix.tsv
         Pairwise Kolmogorov-Smirnov distance between per-step ZVF
         samples (9x9 methods).  Columns: method_a, method_b, ks_D,
         ks_pvalue, n_a, n_b.
 
-    experiments/results/zvf_iter66_dendrogram.tsv
+    platform_hybrid/experiments/results/zvf_iter66_dendrogram.tsv
         Hierarchical clustering linkage matrix (agglomerative,
         average-linkage on KS distance) flattened to 8 merge rows.
         Columns: merge_a, merge_b, height, n_in_cluster_a, n_in_cluster_b.
 
-    experiments/results/zvf_iter66_cluster_assign.tsv
+    platform_hybrid/experiments/results/zvf_iter66_cluster_assign.tsv
         Flat cluster assignment at k=3 (cut of the dendrogram),
         one row per library.  Columns: method, cluster, mean_zvf,
         mean_acc, ks_to_grpo.
 
-    experiments/results/zvf_iter66_anti_herding.tsv
+    platform_hybrid/experiments/results/zvf_iter66_anti_herding.tsv
         Per-library anti-herding signature: observed_mean_zvf,
         iid_predicted_zvf (Binomial(G, p_bar)), iid_lower_bound
         (Beta(1,1) prior predictive 5th percentile), delta_obs_minus_pred,
         delta_obs_minus_lower, signature_label
         (anti_herd / neutral / over_herd).  9 rows.
 
-    experiments/results/zvf_iter66_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter66_summary.tsv
         9-row summary combining everything for paper Table.
 
     figures/zvf_iter66_distshape.pdf

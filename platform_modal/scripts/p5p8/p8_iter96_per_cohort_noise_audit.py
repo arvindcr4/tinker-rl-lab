@@ -20,9 +20,9 @@ Method:
 - Cross-couples with iter-99 cohort-calibration, iter-88 noise-frontier.
 
 Outputs:
-- experiments/results/p5p8/p8_iter96_per_cohort_noise.tsv
-- experiments/results/p5p8/p8_iter96_per_cohort_noise_boot.tsv
-- experiments/results/p5p8/p8_iter96_per_cohort_summary.json
+- platform_hybrid/experiments/results/p5p8/p8_iter96_per_cohort_noise.tsv
+- platform_hybrid/experiments/results/p5p8/p8_iter96_per_cohort_noise_boot.tsv
+- platform_hybrid/experiments/results/p5p8/p8_iter96_per_cohort_summary.json
 - paper/sections/p8_iter96_per_cohort_noise.tex
 - docs/p5p8_improvements/112_p8_per_cohort_noise.md
 """

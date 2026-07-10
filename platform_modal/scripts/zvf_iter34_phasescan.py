@@ -43,16 +43,16 @@ permutation, and a confusion matrix between true and predicted
 phases.
 
 Outputs:
-    experiments/results/zvf_iter34_phase_scan.tsv     (12 rows)
-    experiments/results/zvf_iter34_discriminant.tsv   (4 rows
+    platform_hybrid/experiments/results/zvf_iter34_phase_scan.tsv     (12 rows)
+    platform_hybrid/experiments/results/zvf_iter34_discriminant.tsv   (4 rows
                                                       per-phase
                                                       feature
                                                       mean +- sd)
-    experiments/results/zvf_iter34_feature_importance.tsv (rows
+    platform_hybrid/experiments/results/zvf_iter34_feature_importance.tsv (rows
                                                       per feature)
-    experiments/results/zvf_iter34_confusion.tsv      (4x4 LOO
+    platform_hybrid/experiments/results/zvf_iter34_confusion.tsv      (4x4 LOO
                                                       confusion)
-    experiments/results/zvf_iter34_summary.tsv        (one-row
+    platform_hybrid/experiments/results/zvf_iter34_summary.tsv        (one-row
                                                       rollup)
 
 Source: platform_modal/scripts/zvf_iter34_phasescan.py

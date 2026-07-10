@@ -16,9 +16,9 @@ C-ICCA-Q), iter108 closes the spatial-temporal decomposition:
       per (task, algo).  A flip = "Dr.GRPO redirects the backward
       channel away from the high-L regime".
 
-INPUTS : experiments/results/drgrpo_vs_grpo.json
-         experiments/results/drgrpo_gsm8k_cot_full.json
-OUTPUTS: 6 TSVs + meta under experiments/results/length_bias_iter108_*
+INPUTS : platform_hybrid/experiments/results/drgrpo_vs_grpo.json
+         platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json
+OUTPUTS: 6 TSVs + meta under platform_hybrid/experiments/results/length_bias_iter108_*
 USAGE  : python3 platform_modal/scripts/length_bias_iter108.py [--n_w 4 --n_q 5 --K 3 --B 10000]
 """
 from __future__ import annotations

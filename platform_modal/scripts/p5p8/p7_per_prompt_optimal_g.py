@@ -23,7 +23,7 @@ Aggregates:
   - Pareto frontier of fixed-G (4, 6, 8, 12, 16, 24, 32) vs per-prompt optimal G*
   - savings over best-fixed-G baseline (mean rollouts/saved-prompt)
 
-Outputs (under experiments/results/p5p8/):
+Outputs (under platform_hybrid/experiments/results/p5p8/):
   p7_per_prompt_optimal_g_summary.tsv   -- one row per (method, candidate_G, candidate_controller)
                                           with mean_G_*, cost_ratio, mean_ZVF_restored, total rollouts
   p7_per_prompt_optimal_g_per_step.tsv  -- one row per (method, step) with the distribution of G* across 16 prompts
@@ -109,7 +109,7 @@ def load_rewards():
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write", action="store_true",
-                    help="Write outputs to experiments/results/p5p8/")
+                    help="Write outputs to platform_hybrid/experiments/results/p5p8/")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     FIG.mkdir(parents=True, exist_ok=True)

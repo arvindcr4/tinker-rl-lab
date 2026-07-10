@@ -12,10 +12,10 @@ Headline question: at what (sigma, L) does the LLM sensor pay for itself?
 
 Outputs
 -------
-experiments/results/p5p8/p8_cost_phase_diagram.tsv
-experiments/results/p5p8/p8_cost_phase_diagram_boot.tsv
-experiments/results/p5p8/p8_cost_phase_diagram_summary.json
-experiments/results/p5p8/figures/p8_cost_phase_diagram.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_cost_phase_diagram.tsv
+platform_hybrid/experiments/results/p5p8/p8_cost_phase_diagram_boot.tsv
+platform_hybrid/experiments/results/p5p8/p8_cost_phase_diagram_summary.json
+platform_hybrid/experiments/results/p5p8/figures/p8_cost_phase_diagram.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + sklearn + matplotlib. <=300 lines.
 """

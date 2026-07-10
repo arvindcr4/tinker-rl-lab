@@ -7,7 +7,7 @@ vein (b) — coverage audit — by computing per-leaf null-population rates
 across all 35 entries and surfacing the gaps as a ranked "pending gaps" table.
 
 Stdlib + jsonschema. No external deps beyond jsonschema (already installed in
-worktree). Outputs (5 files in experiments/results/p5p8/):
+worktree). Outputs (5 files in platform_hybrid/experiments/results/p5p8/):
 
 - p6_iter94_validation.json   : per-entry validation record (pass/fail + detail)
 - p6_iter94_validation.tsv    : per-entry summary table (35 rows)

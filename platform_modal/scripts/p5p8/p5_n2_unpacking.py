@@ -30,9 +30,9 @@ Hypotheses on the N2 four-method panel (40 steps × 4 methods × 1 seed = 160 ro
       weak (>= 0.05) result rejects H4.
 
 Outputs (≤300 LoC, stdlib only):
-  - experiments/results/p5p8/p5_n2_unpacking.tsv (algorithm-axis eta^2 per metric)
-  - experiments/results/p5p8/p5_n2_unpacking_per_step.tsv (per-step algo eta^2 trajectories)
-  - experiments/results/p5p8/p5_n2_unpacking_summary.json (machine-readable)
+  - platform_hybrid/experiments/results/p5p8/p5_n2_unpacking.tsv (algorithm-axis eta^2 per metric)
+  - platform_hybrid/experiments/results/p5p8/p5_n2_unpacking_per_step.tsv (per-step algo eta^2 trajectories)
+  - platform_hybrid/experiments/results/p5p8/p5_n2_unpacking_summary.json (machine-readable)
 """
 from __future__ import annotations
 import json, math, os
@@ -212,7 +212,7 @@ def main():
     summary = {
         "iter": 85,
         "vein": "(b) Ivison 2024 unpacking_dpo_ppo factorization on N2 four-method same-stack tensors",
-        "data": {"path": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+        "data": {"path": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
                  "n_rows": len(rows), "n_methods": 4, "n_steps": 40, "n_seeds": 1,
                  "methods": METHODS},
         "h1_pooled_algo_axis_eta2_le_0p05_all_metrics": h1_decisive_all,

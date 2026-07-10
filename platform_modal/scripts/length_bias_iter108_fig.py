@@ -12,12 +12,12 @@
     (E) log2 share ratio (q=4 / q=0) per (task, algo) for L-quantile bwd
     (F) paired Dr.GRPO - GRPO delta per L-quantile (bwd) with 95% CI
 
-Reads:  experiments/results/length_bias_iter108_perrun_progress.tsv
-        experiments/results/length_bias_iter108_paired_progress.tsv
-        experiments/results/length_bias_iter108_summary_length.tsv
-        experiments/results/length_bias_iter108_paired_length.tsv
-        experiments/results/length_bias_iter108_trend_length.tsv
-        experiments/results/length_bias_iter108_trend_progress.tsv
+Reads:  platform_hybrid/experiments/results/length_bias_iter108_perrun_progress.tsv
+        platform_hybrid/experiments/results/length_bias_iter108_paired_progress.tsv
+        platform_hybrid/experiments/results/length_bias_iter108_summary_length.tsv
+        platform_hybrid/experiments/results/length_bias_iter108_paired_length.tsv
+        platform_hybrid/experiments/results/length_bias_iter108_trend_length.tsv
+        platform_hybrid/experiments/results/length_bias_iter108_trend_progress.tsv
 Writes: figures/length_bias_iter108_progress_lquant.{pdf,png}
         paper/figures/length_bias_iter108_progress_lquant.{pdf,png}
 """

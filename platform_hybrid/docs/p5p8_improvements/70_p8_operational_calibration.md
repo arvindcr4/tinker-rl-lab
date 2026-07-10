@@ -48,7 +48,7 @@ for recall at the dominance-switch $K$.
 
 ## Outputs
 
-- `scripts/p5p8/p8_operational_calibration.py` (~290 LoC, stdlib + numpy + pandas + xgboost + matplotlib)
+- `platform_modal/scripts/p5p8/p8_operational_calibration.py` (~290 LoC, stdlib + numpy + pandas + xgboost + matplotlib)
 - `experiments/results/p5p8/p8_operational_calibration.tsv` (15 rows: 5 K × 3 trees)
 - `experiments/results/p5p8/p8_operational_calibration_boot.tsv` (15 paired-bootstrap rows: 5 K × 3 pairs)
 - `experiments/results/p5p8/p8_operational_calibration_summary.json`
@@ -59,7 +59,7 @@ for recall at the dominance-switch $K$.
 ## Reproduction
 
 ```bash
-python3 scripts/p5p8/p8_operational_calibration.py   # ~40s on 4 cores
+python3 platform_modal/scripts/p5p8/p8_operational_calibration.py   # ~40s on 4 cores
 ```
 
 5 K × 3 trees = 15 operational-calibration cells, 5 K × 3 pairs = 15 paired-bootstrap rows,

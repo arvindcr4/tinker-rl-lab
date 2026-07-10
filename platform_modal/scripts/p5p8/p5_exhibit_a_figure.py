@@ -17,15 +17,15 @@ Why drive item 05 to validated now:
 
 Inputs
 ------
-experiments/results/p5p8/minreport_field_coverage.tsv       (per-item, n=98)
-experiments/results/p5p8/minreport_extended_coverage.tsv    (per-item × sub)
-experiments/results/p5p8/minreport_extended_n10.tsv         (n=6 n10 records)
+platform_hybrid/experiments/results/p5p8/minreport_field_coverage.tsv       (per-item, n=98)
+platform_hybrid/experiments/results/p5p8/minreport_extended_coverage.tsv    (per-item × sub)
+platform_hybrid/experiments/results/p5p8/minreport_extended_n10.tsv         (n=6 n10 records)
 
 Outputs
 -------
-experiments/results/p5p8/figures/p5_minreport_per_item.png
-experiments/results/p5p8/figures/p5_minreport_per_item.pdf
-experiments/results/p5p8/p5_exhibit_a_data.tsv
+platform_hybrid/experiments/results/p5p8/figures/p5_minreport_per_item.png
+platform_hybrid/experiments/results/p5p8/figures/p5_minreport_per_item.pdf
+platform_hybrid/experiments/results/p5p8/p5_exhibit_a_data.tsv
 """
 from __future__ import annotations
 import json

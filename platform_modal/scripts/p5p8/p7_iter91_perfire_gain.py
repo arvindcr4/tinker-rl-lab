@@ -25,10 +25,10 @@ Mixed prompts (k=1, 7): Δ_z ≈ 0.24 (z_8 = 0.34, z_16 = 0.10)
 Mid prompts (k=2..6): Δ_z < 0.01
 
 Outputs:
-  experiments/results/p5p8/p7_iter91_perfire_gain_per_step.tsv
-  experiments/results/p5p8/p7_iter91_perfire_gain_per_method.tsv
-  experiments/results/p5p8/p7_iter91_perfire_gain_summary.json
-  experiments/results/p5p8/p7_iter91_perfire_gain_pareto.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter91_perfire_gain_per_step.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter91_perfire_gain_per_method.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter91_perfire_gain_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_iter91_perfire_gain_pareto.tsv
 """
 import json
 import math
@@ -38,8 +38,8 @@ from collections import defaultdict
 from pathlib import Path
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-N2_DIR = WORK / "experiments/results/n2_reward_tensor_resume"
-OUT_DIR = WORK / "experiments/results/p5p8"
+N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
 
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_BASE = 8

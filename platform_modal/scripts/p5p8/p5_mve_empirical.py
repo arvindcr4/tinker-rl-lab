@@ -24,8 +24,8 @@ operational, not just theoretical.
 
 Outputs
 -------
-experiments/results/p5p8/p5_mve_empirical.tsv             (98 rows per-cell baseline+augmented)
-experiments/results/p5p8/p5_mve_empirical_summary.json   (CI + headline)
+platform_hybrid/experiments/results/p5p8/p5_mve_empirical.tsv             (98 rows per-cell baseline+augmented)
+platform_hybrid/experiments/results/p5p8/p5_mve_empirical_summary.json   (CI + headline)
 docs/p5p8_improvements/67_p5_mve_empirical.md
 
 Stdlib + json + csv + math + statistics. <=290 lines.

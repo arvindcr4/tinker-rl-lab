@@ -5,7 +5,7 @@ per-prompt G(p_x) allocation that achieves a fixed contrastive yield
 Y_target. This script materialises the proposal on real data:
 
   1. Loads the per-prompt decomposition in
-     experiments/results/zvf_contrastive_yield.tsv
+     platform_hybrid/experiments/results/zvf_contrastive_yield.tsv
      (zvf_iid, zvf_obs, delta_div = zvf_iid - zvf_obs).
   2. For each prompt with p_x in [0.05, 0.95] (finite Iso-G support),
      computes minimum G(p_x) such that Y_iid(p_x, G) and
@@ -32,8 +32,8 @@ Outputs (5 TSVs):
   zvf_iter46_predictions.tsv     -- pre-registered predictions P1..P4
 
 Reads:
-  experiments/results/zvf_contrastive_yield.tsv
-  experiments/results/zvf_by_library.tsv
+  platform_hybrid/experiments/results/zvf_contrastive_yield.tsv
+  platform_hybrid/experiments/results/zvf_by_library.tsv
 
 Stdlib only.
 """

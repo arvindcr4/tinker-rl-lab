@@ -30,9 +30,9 @@ This script proves a complementary claim at the EMISSION layer:
        (schema × live-manifest × deterministic-recovery).
 
 Outputs:
-  experiments/results/p5p8/p5_iter113_emit_gap.tsv       (18 rows: per-MIN-REPORT-item audit)
-  experiments/results/p5p8/p5_iter113_recovery_per_cell.tsv  (98 rows: per-cell backfill)
-  experiments/results/p5p8/p5_iter113_recovery_summary.json  (machine-readable, H1-H4 evidence)
+  platform_hybrid/experiments/results/p5p8/p5_iter113_emit_gap.tsv       (18 rows: per-MIN-REPORT-item audit)
+  platform_hybrid/experiments/results/p5p8/p5_iter113_recovery_per_cell.tsv  (98 rows: per-cell backfill)
+  platform_hybrid/experiments/results/p5p8/p5_iter113_recovery_summary.json  (machine-readable, H1-H4 evidence)
 """
 from __future__ import annotations
 import csv
@@ -46,10 +46,10 @@ from typing import Any
 import numpy as np
 
 ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-MANIFEST_DIR = ROOT / "experiments/results/mega_20260704/manifests"
-TENSOR_DIR   = ROOT / "experiments/results/mega_20260704/group_tensors"
-CELLS_TSV    = ROOT / "experiments/results/mega_20260704/cells.tsv"
-OUT_DIR      = ROOT / "experiments/results/p5p8"
+MANIFEST_DIR = ROOT / "platform_hybrid/experiments/results/mega_20260704/manifests"
+TENSOR_DIR   = ROOT / "platform_hybrid/experiments/results/mega_20260704/group_tensors"
+CELLS_TSV    = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
+OUT_DIR      = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # MIN-REPORT v2.2 schema (18 items; see paper/sections/p5_iter81_yield_axes.tex)

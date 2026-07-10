@@ -11,32 +11,32 @@ Wu 2 vs 16 ratio) and (b) across four token-budget tiers on GSM8K
 where accuracy still climbs with budget.
 
 Inputs:
-    experiments/results/group_size_token_normalized.tsv
+    platform_hybrid/experiments/results/group_size_token_normalized.tsv
         Iso-token-budget sweep, G in {4,8,16,32,64},
         T in {1M, 4M, 16M, 64M}, accuracy +/- 95% CI.
-    experiments/results/group_size_effect.tsv
+    platform_hybrid/experiments/results/group_size_effect.tsv
         Small-scale Qwen2.5-0.5B / arithmetic_correctness sweep, G in {2,4,8,16},
         3 seeds each (ZVF_emp + heldout_acc + last10_avg).
 
 Outputs:
-    experiments/results/group_size_iter103_retention_curve.tsv
+    platform_hybrid/experiments/results/group_size_iter103_retention_curve.tsv
         Per-budget G=4 -> G=32 retention: acc(G=4,T)/acc(G=32,T)
         and the Wu-claim 97.6% benchmark flagged.
 
-    experiments/results/group_size_iter103_paired_delta.tsv
+    platform_hybrid/experiments/results/group_size_iter103_paired_delta.tsv
         Paired Delta = acc(G=32,T) - acc(G=4,T) per budget,
         95% CI on the difference, sign test against Wu claim.
 
-    experiments/results/group_size_iter103_slope.tsv
+    platform_hybrid/experiments/results/group_size_iter103_slope.tsv
         Per-G log-log slope of acc vs token budget (returns to scale)
         and the G-vs-slope correlation.
 
-    experiments/results/group_size_iter103_wu_audit.tsv
+    platform_hybrid/experiments/results/group_size_iter103_wu_audit.tsv
         Cross-experiment Wu-retention check: small-scale retention
         R(G_a, G_b) = acc(G_a)/acc(G_b) on the arithmetic sweep vs
         token-budget retention on GSM8K.
 
-    experiments/results/group_size_iter103_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter103_summary.tsv
         One-line per-budget headline: G_best, G=4 vs G=32 delta,
         retention vs Wu-97.6% claim, falsification verdict.
 

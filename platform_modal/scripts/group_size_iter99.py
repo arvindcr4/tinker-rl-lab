@@ -28,24 +28,24 @@ the measured 12-run sweep into:
         curve-discrepancy on the 40-step cumulative reward trace.
 
 Inputs (real, measured):
-    experiments/results/groupsize_zvf_sweep.json
+    platform_hybrid/experiments/results/groupsize_zvf_sweep.json
         Per-run rollouts on Qwen2.5-0.5B / arithmetic_correctness,
         40 steps, G in {2,4,8,16}, 3 seeds each.
 
 Outputs:
-    experiments/results/group_size_iter99_signal_amplitude.tsv
+    platform_hybrid/experiments/results/group_size_iter99_signal_amplitude.tsv
         Signal-amplitude decomposition per (G, step): advantage-variance
         term, the 1-ZVF predicted, and the empirical residual.
 
-    experiments/results/group_size_iter99_snr_at_g.tsv
+    platform_hybrid/experiments/results/group_size_iter99_snr_at_g.tsv
         Per-G SNR = mean(|ΔR|) / sqrt(sigma_A^2 / G), aggregated over
         the second half of training.
 
-    experiments/results/group_size_iter99_noise_floor.tsv
+    platform_hybrid/experiments/results/group_size_iter99_noise_floor.tsv
         Per-G noise floor (across 3 seeds) at each step: std / MAD / IQR
         and the cross-G compression ratio.
 
-    experiments/results/group_size_iter99_trajectory_equiv.tsv
+    platform_hybrid/experiments/results/group_size_iter99_trajectory_equiv.tsv
         Pairwise curve discrepancy between G=2,4,8,16: Kolmogorov-
         Smirnov style max-distance on the 40-step mean reward trace,
         plus permutation-of-runs p-value.

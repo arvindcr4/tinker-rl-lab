@@ -36,10 +36,10 @@ Measures (paired bootstrap B=2000, seed 20260705):
        should vanish under the shuffle.)
 
 Outputs (6 files):
-  experiments/results/p5p8/p5_yield_residual_axes.tsv
-  experiments/results/p5p8/p5_yield_residual_axes_per_item.tsv
-  experiments/results/p5p8/p5_yield_residual_axes_shuffle_null.tsv
-  experiments/results/p5p8/p5_yield_residual_axes_summary.json
+  platform_hybrid/experiments/results/p5p8/p5_yield_residual_axes.tsv
+  platform_hybrid/experiments/results/p5p8/p5_yield_residual_axes_per_item.tsv
+  platform_hybrid/experiments/results/p5p8/p5_yield_residual_axes_shuffle_null.tsv
+  platform_hybrid/experiments/results/p5p8/p5_yield_residual_axes_summary.json
 
 Stdlib only. <=300 lines.
 """
@@ -515,7 +515,7 @@ def main():
     }
     (OUT / "p5_yield_residual_axes_summary.json").write_text(
         json.dumps(summary, indent=2, default=str))
-    print("# === iter 81 multi-axis yield-residual: outputs in experiments/results/p5p8/ ===")
+    print("# === iter 81 multi-axis yield-residual: outputs in platform_hybrid/experiments/results/p5p8/ ===")
 
 
 if __name__ == "__main__":

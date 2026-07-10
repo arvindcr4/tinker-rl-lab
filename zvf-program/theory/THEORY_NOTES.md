@@ -51,7 +51,7 @@ Ordered by how load-bearing they are.
    crucially — confirm the **reporting pipeline averages Z_g (the indicator),
    not h_K (the conditional probability)**. If a pipeline ever plugs in an
    estimated p_g and averages h_K(p̂_g), the variance and the CI change. Verify
-   against the actual `scripts/zvf_compute_cross_framework.py` rule
+   against the actual `platform_modal/scripts/zvf_compute_cross_framework.py` rule
    `(var(axis=-1, ddof=1) ≤ ε).mean()` — that averages the indicator, so the
    Wald CI is the right one, but **state this explicitly**.
 4. **Boundary CI.** Justify the Wilson-score recommendation near ZVF ∈ {0,1};

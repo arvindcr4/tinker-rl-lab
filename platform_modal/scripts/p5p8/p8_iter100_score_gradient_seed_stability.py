@@ -23,9 +23,9 @@ Reports:
     baseline.
 
 Outputs:
-  experiments/results/p5p8/p8_iter100_score_gradient_seed42_per_rule.tsv
-  experiments/results/p5p8/p8_iter100_score_gradient_seed_stability.json
-  experiments/results/p5p8/p8_iter100_score_gradient_seed_stability.tsv
+  platform_hybrid/experiments/results/p5p8/p8_iter100_score_gradient_seed42_per_rule.tsv
+  platform_hybrid/experiments/results/p5p8/p8_iter100_score_gradient_seed_stability.json
+  platform_hybrid/experiments/results/p5p8/p8_iter100_score_gradient_seed_stability.tsv
 """
 from __future__ import annotations
 

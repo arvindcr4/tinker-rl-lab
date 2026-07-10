@@ -21,11 +21,11 @@ Methodology:
   - Headroom-bad: # fires on z_t >= 0.99 (sanity: must remain 0).
 
 Outputs:
-  experiments/results/p5p8/p7_iter99_seed_threshold_robustness_per_step_n2.tsv
-  experiments/results/p5p8/p7_iter99_seed_threshold_robustness_per_seed_n10.tsv
-  experiments/results/p5p8/p7_iter99_seed_threshold_robustness_summary.tsv
-  experiments/results/p5p8/p7_iter99_seed_threshold_robustness_ci.tsv
-  experiments/results/p5p8/p7_iter99_seed_threshold_robustness_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_iter99_seed_threshold_robustness_per_step_n2.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter99_seed_threshold_robustness_per_seed_n10.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter99_seed_threshold_robustness_summary.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter99_seed_threshold_robustness_ci.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter99_seed_threshold_robustness_summary.json
 
 Stdlib only. ≤300 LoC.
 """
@@ -38,9 +38,9 @@ from pathlib import Path
 from statistics import mean, stdev
 
 WORK = Path('/home/claude/tinker-rl-lab-minimax')
-N2_DIR = WORK / 'experiments/results/n2_reward_tensor_resume'
-N10_DIR = WORK / 'experiments/results/n10_seed_expansion'
-OUT_DIR = WORK / 'experiments/results/p5p8'
+N2_DIR = WORK / 'platform_hybrid/experiments/results/n2_reward_tensor_resume'
+N10_DIR = WORK / 'platform_hybrid/experiments/results/n10_seed_expansion'
+OUT_DIR = WORK / 'platform_hybrid/experiments/results/p5p8'
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 G_BASE = 8

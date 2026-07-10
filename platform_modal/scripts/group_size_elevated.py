@@ -3,27 +3,27 @@
 Qwen2.5-0.5B / arithmetic groupsize_zvf_sweep.
 
 Produces four new TSVs and one new figure, all derived from
-``experiments/results/groupsize_zvf_sweep.json`` (no fabricated numbers):
+``platform_hybrid/experiments/results/groupsize_zvf_sweep.json`` (no fabricated numbers):
 
-  experiments/results/group_size_advantage_variance.tsv
+  platform_hybrid/experiments/results/group_size_advantage_variance.tsv
       Per-step advantage_variance averaged across seeds, per G.
       Direct test of Wu et al. (2025) "G=2 -> GRPO reduces to DPO"
       claim: under DPO the within-group advantage signal is exactly
       a binary preference, so advantage_variance should be flat in G
       (only the count of contrasts changes, not their distribution).
 
-  experiments/results/group_size_deltadiv_decomp.tsv
+  platform_hybrid/experiments/results/group_size_deltadiv_decomp.tsv
       Per-G delta_div = ZVF_empirical - ZVF_iid(p_emp, G), with
       bootstrap 95% CI across per-step points. Tests the
       frontier-synthesis claim delta_div in [0.13, 0.23].
 
-  experiments/results/group_size_isog_sizing.tsv
+  platform_hybrid/experiments/results/group_size_isog_sizing.tsv
       Empirical Iso-G sizing: for each (Y_target, p_emp) find the
       smallest G satisfying GU(p_emp, G) >= Y_target. Contrast
       G_min_empirical (from the measured ZVF) against G_min_iid
       (from the Bernoulli formula).
 
-  experiments/results/group_size_convergence.tsv
+  platform_hybrid/experiments/results/group_size_convergence.tsv
       Step-to-X%-heldout by G: at which optimizer step does each
       G first reach heldout >= X (for X in {0.50, 0.80, 0.95}).
       Tests whether larger G reaches convergence in fewer steps

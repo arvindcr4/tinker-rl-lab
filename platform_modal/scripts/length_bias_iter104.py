@@ -57,16 +57,16 @@ ALGORITHM
 
 INPUTS
 ------
-experiments/results/drgrpo_vs_grpo.json         (arithmetic_easy, n=40, 5 seeds)
-experiments/results/drgrpo_gsm8k_cot_full.json  (gsm8k_cot,    n=30, 3 seeds)
+platform_hybrid/experiments/results/drgrpo_vs_grpo.json         (arithmetic_easy, n=40, 5 seeds)
+platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json  (gsm8k_cot,    n=30, 3 seeds)
 
 OUTPUTS
 -------
-experiments/results/length_bias_iter104_perrun.tsv      per-run per-quantile CCF
-experiments/results/length_bias_iter104_paired.tsv      Dr-GR - GR delta per (task, q, key)
-experiments/results/length_bias_iter104_summary.tsv     task-level ratios
-experiments/results/length_bias_iter104_trendtest.tsv  Page's L + Spearman trend
-experiments/results/length_bias_iter104_meta.json       run configuration
+platform_hybrid/experiments/results/length_bias_iter104_perrun.tsv      per-run per-quantile CCF
+platform_hybrid/experiments/results/length_bias_iter104_paired.tsv      Dr-GR - GR delta per (task, q, key)
+platform_hybrid/experiments/results/length_bias_iter104_summary.tsv     task-level ratios
+platform_hybrid/experiments/results/length_bias_iter104_trendtest.tsv  Page's L + Spearman trend
+platform_hybrid/experiments/results/length_bias_iter104_meta.json       run configuration
 
 USAGE
 -----

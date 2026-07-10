@@ -4,7 +4,7 @@
 For each variant in registry/entries/delta_*.json that has zvf130 evidence,
 compute:
 
-  1. Per-seed ZVF trajectory from experiments/results/zvf_iter130_risk_index.tsv
+  1. Per-seed ZVF trajectory from platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv
      (9 methods × 5 seeds = 45 rows; the canonical P7 risk-index panel).
   2. Effect size vs grpo baseline (Cohen's d on mean_zvf across seeds).
   3. P7 controller firing rate: at each τ in {0.10..0.90}, the fraction of
@@ -17,10 +17,10 @@ compute:
      number) instead of the raw ZVF magnitude.
 
 Writes:
-  experiments/results/p5p8/registry_variant_coupling.tsv   — one row per
+  platform_hybrid/experiments/results/p5p8/registry_variant_coupling.tsv   — one row per
     (delta_id × τ) pair, plus a per-delta effect-size row.
-  experiments/results/p5p8/registry_variant_coupling.json  — machine-readable.
-  experiments/results/p5p8/figures/registry_variant_coupling.png — per-variant
+  platform_hybrid/experiments/results/p5p8/registry_variant_coupling.json  — machine-readable.
+  platform_hybrid/experiments/results/p5p8/figures/registry_variant_coupling.png — per-variant
     firing-rate curves overlaid on the grpo baseline.
 
 Stdlib only (+ matplotlib). Run: python3 platform_modal/scripts/p5p8/registry_variant_controller_coupling.py

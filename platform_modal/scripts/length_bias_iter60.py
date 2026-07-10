@@ -27,15 +27,15 @@ Three deliverables:
     range of lengths that don't improve reward.
 
 Reads:
-  experiments/results/drgrpo_vs_grpo.json      (arithmetic_easy: 5 seeds)
-  experiments/results/drgrpo_gsm8k_cot_full.json (gsm8k_cot: 3 seeds)
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json      (arithmetic_easy: 5 seeds)
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json (gsm8k_cot: 3 seeds)
 
 Outputs (5 TSVs):
-  experiments/results/length_bias_iter60_elasticity.tsv
-  experiments/results/length_bias_iter60_curvature.tsv
-  experiments/results/length_bias_iter60_iso_band.tsv
-  experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv
-  experiments/results/length_bias_iter60_summary.tsv
+  platform_hybrid/experiments/results/length_bias_iter60_elasticity.tsv
+  platform_hybrid/experiments/results/length_bias_iter60_curvature.tsv
+  platform_hybrid/experiments/results/length_bias_iter60_iso_band.tsv
+  platform_hybrid/experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv
+  platform_hybrid/experiments/results/length_bias_iter60_summary.tsv
 """
 from __future__ import annotations
 import csv

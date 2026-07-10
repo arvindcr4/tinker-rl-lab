@@ -16,10 +16,10 @@ G*_non-verifiable > G*_verifiable law (12/12 p) tightens into a
 budget-conditional rule.
 
 Outputs (relative to ROOT):
-  experiments/results/berkeley/verifiable_risk_score_delta.tsv  (FIXED)
-  experiments/results/berkeley/verifiable_cross_pillar.tsv
-  experiments/results/berkeley/verifiable_cross_pillar_meta.json
-  experiments/results/berkeley/verifiable_g_star_sensitivity.tsv
+  platform_hybrid/experiments/results/berkeley/verifiable_risk_score_delta.tsv  (FIXED)
+  platform_hybrid/experiments/results/berkeley/verifiable_cross_pillar.tsv
+  platform_hybrid/experiments/results/berkeley/verifiable_cross_pillar_meta.json
+  platform_hybrid/experiments/results/berkeley/verifiable_g_star_sensitivity.tsv
 """
 from __future__ import annotations
 

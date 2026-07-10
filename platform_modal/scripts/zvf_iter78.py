@@ -15,12 +15,12 @@ Definitions (locked):
     zvf_iter78_single_channel.tsv.
 
 Inputs:
-  experiments/results/variance_mitigation.tsv     (45 traces, 9 lib x 5 seed)
-  experiments/results/groupsize_zvf_sweep.json    (12 traces, 4 G x 3 seed)
-  experiments/results/tinker_gsm8k_zvf_*.json     (3 traces, 200 problems)
-  experiments/results/bfclv4_tool_use.tsv         (canonical failure anchor)
+  platform_hybrid/experiments/results/variance_mitigation.tsv     (45 traces, 9 lib x 5 seed)
+  platform_hybrid/experiments/results/groupsize_zvf_sweep.json    (12 traces, 4 G x 3 seed)
+  platform_hybrid/experiments/results/tinker_gsm8k_zvf_*.json     (3 traces, 200 problems)
+  platform_hybrid/experiments/results/bfclv4_tool_use.tsv         (canonical failure anchor)
 
-Outputs (in experiments/results/):
+Outputs (in platform_hybrid/experiments/results/):
   zvf_iter78_per_step_features.tsv
   zvf_iter78_alarm_thresholds.tsv
   zvf_iter78_leadtime_summary.tsv
@@ -44,7 +44,7 @@ import sys
 from collections import defaultdict
 from datetime import datetime, timezone
 
-RESULTS = "experiments/results"
+RESULTS = "platform_hybrid/experiments/results"
 NOW = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 SEED = 20260703
 W = 10                 # trailing window for EWS features

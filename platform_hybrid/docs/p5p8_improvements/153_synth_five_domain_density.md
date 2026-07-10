@@ -72,7 +72,7 @@ D5 is rate-independent: under iso_per_cohort, every cohort-cell at every positiv
 
 ## Reproducibility
 
-- Script: `scripts/p5p8/synth_iter136_five_domain_density.py` (~210 LoC, stdlib + numpy)
+- Script: `platform_modal/scripts/p5p8/synth_iter136_five_domain_density.py` (~210 LoC, stdlib + numpy)
 - Outputs:
   - `experiments/results/p5p8/synth_iter136_five_domain_density.tsv` (5 rows)
   - `experiments/results/p5p8/synth_iter136_five_domain_density_ratios.tsv` (10 rows)

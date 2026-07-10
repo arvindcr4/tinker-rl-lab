@@ -31,11 +31,11 @@ K_up=K_dn=2 sit at the same level (22-33%) as iter-87's N2 finding?
 
 Outputs
 -------
-experiments/results/p5p8/p7_iter88_hysteresis_n10_per_seed.tsv
+platform_hybrid/experiments/results/p5p8/p7_iter88_hysteresis_n10_per_seed.tsv
   (5 seeds x 10 configs = 50 rows)
-experiments/results/p5p8/p7_iter88_hysteresis_n10_boot.tsv
+platform_hybrid/experiments/results/p5p8/p7_iter88_hysteresis_n10_boot.tsv
   (10 configs, paired-seed bootstrap on flip-ratio and yield-retention)
-experiments/results/p5p8/p7_iter88_hysteresis_n10_summary.json
+platform_hybrid/experiments/results/p5p8/p7_iter88_hysteresis_n10_summary.json
 paper/sections/p7_iter88_hysteresis_n10.tex
 docs/p5p8_improvements/105_p7_hysteresis_n10.md
 

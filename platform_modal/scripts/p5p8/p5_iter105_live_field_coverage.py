@@ -16,7 +16,7 @@ Fresh vein (not in 120 prior rows):
     Item 2 KL problem: count how many manifests literally report the
     `n/a` sentinel vs an empty string vs null vs a concrete value.
 
-Outputs (under experiments/results/p5p8/):
+Outputs (under platform_hybrid/experiments/results/p5p8/):
   - p5_iter105_per_field_class.tsv     (per-cell per-field classification, 98x8 = 784 rows)
   - p5_iter105_per_field_summary.tsv   (per-field aggregate over 98 cells, ~10 rows)
   - p5_iter105_unique_values.tsv       (per-field unique-value inventory + frequency)
@@ -46,8 +46,8 @@ random.seed(20260705)
 N_BOOT = 2000
 SEED = 20260705
 
-MANIFEST_DIR = "experiments/results/mega_20260704/manifests"
-OUT_DIR = "experiments/results/p5p8"
+MANIFEST_DIR = "platform_hybrid/experiments/results/mega_20260704/manifests"
+OUT_DIR = "platform_hybrid/experiments/results/p5p8"
 
 # Eight declared manifest keys (from iter 97 + iter 105 inspection)
 EXPECTED_KEYS = [

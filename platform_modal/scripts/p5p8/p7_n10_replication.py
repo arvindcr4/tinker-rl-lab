@@ -3,7 +3,7 @@
 Iter 15 — Pillar 3 (P7) cross-paper coupling + headline CIs.
 
 Replicates the calibrated adaptive-G controller on the N10 5-seed panel
-(experiments/results/n10_seed_expansion/) and answers:
+(platform_hybrid/experiments/results/n10_seed_expansion/) and answers:
   (a) Does zvf-triage at fixed thresholds τ ∈ {0.50..0.90} fire the same
       number of times across the 5 N10 seeds?
   (b) Does the Bayesian@τ_post=0.60 controller (Pillar 3, iter 11) save
@@ -13,7 +13,7 @@ Replicates the calibrated adaptive-G controller on the N10 5-seed panel
       base (G=8 → G=16, empirical shift ΔZVF = 0.059)?
   (d) Bootstrap CIs on per-seed fires and on total contrast-restoration.
 
-Outputs (all in experiments/results/p5p8/):
+Outputs (all in platform_hybrid/experiments/results/p5p8/):
   p7_n10_replication.tsv       — per-(controller, threshold) × per-seed fires
   p7_n10_replication_summary.json — aggregates + bootstrap CIs + Pareto frontier
   p7_n10_contrast.tsv          — per-step contrast-restoration predictions
@@ -25,8 +25,8 @@ import time
 from pathlib import Path
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-N10 = WORK / "experiments/results/n10_seed_expansion"
-OUT = WORK / "experiments/results/p5p8"
+N10 = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
+OUT = WORK / "platform_hybrid/experiments/results/p5p8"
 
 N10_SEEDS = [42, 179, 316, 453, 590]
 G_BASE = 8                       # N10 base group size (all 5 seeds)
@@ -79,7 +79,7 @@ def fit_contrast_regression():
     restores contrast. We report the absolute contrast-restoration |ΔZVF| =
     ZVF@8 - ZVF@16 as the positive benefit per fired step.
     """
-    sweep_path = WORK / "experiments/results/groupsize_zvf_sweep.tsv"
+    sweep_path = WORK / "platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv"
     if sweep_path.exists():
         by_g = {}
         se_by_g = {}

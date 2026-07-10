@@ -43,21 +43,21 @@ existing data:
       distribution. d=4.7 at T=64M (very large).
 
 Inputs:
-    experiments/results/group_size_token_normalized.tsv
-    experiments/results/groupsize_zvf_sweep.tsv
-    experiments/results/group_size_iter95_ceilings.tsv
-    experiments/results/group_size_iter99_snr_at_g.tsv
-    experiments/results/group_size_iter107_bootstrap_delta.tsv
-    experiments/results/group_size_iter107_returns_to_compute.tsv
-    experiments/results/group_size_iter107_iso_acc_budget.tsv
-    experiments/results/zvf_summary.tsv
+    platform_hybrid/experiments/results/group_size_token_normalized.tsv
+    platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
+    platform_hybrid/experiments/results/group_size_iter95_ceilings.tsv
+    platform_hybrid/experiments/results/group_size_iter99_snr_at_g.tsv
+    platform_hybrid/experiments/results/group_size_iter107_bootstrap_delta.tsv
+    platform_hybrid/experiments/results/group_size_iter107_returns_to_compute.tsv
+    platform_hybrid/experiments/results/group_size_iter107_iso_acc_budget.tsv
+    platform_hybrid/experiments/results/zvf_summary.tsv
 
 Outputs:
-    experiments/results/group_size_iter123_iso_reward.tsv
-    experiments/results/group_size_iter123_noise_mech.tsv
-    experiments/results/group_size_iter123_wu_broader.tsv
-    experiments/results/group_size_iter123_effect_size.tsv
-    experiments/results/group_size_iter123_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter123_iso_reward.tsv
+    platform_hybrid/experiments/results/group_size_iter123_noise_mech.tsv
+    platform_hybrid/experiments/results/group_size_iter123_wu_broader.tsv
+    platform_hybrid/experiments/results/group_size_iter123_effect_size.tsv
+    platform_hybrid/experiments/results/group_size_iter123_summary.tsv
     figures/group_size_iter123.pdf
 """
 from __future__ import annotations

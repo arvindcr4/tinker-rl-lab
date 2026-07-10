@@ -33,7 +33,7 @@ Pipeline:
      H5: 4sensor per-decile lift is strictly negative at every decile
          (no decile where 4sensor alone beats 20raw in cost).
 
-Outputs (under experiments/results/p5p8/):
+Outputs (under platform_hybrid/experiments/results/p5p8/):
   p8_iter204_decile_cost_curve.tsv   3 fsets x 5 c x 10 deciles x 5 seeds = 750 rows
   p8_iter204_decile_gap.tsv         2 contrasts x 5 c x 10 deciles = 100 rows
   p8_iter204_decile_summary.json    H1..H5 verdicts + lift attribution

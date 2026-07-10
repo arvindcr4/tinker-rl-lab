@@ -16,10 +16,10 @@ headline is a property of the data, not of the XGB hyperparameters.
 
 Outputs
 -------
-experiments/results/p5p8/p8_stack_audit.tsv      (5 axes x 4 metrics)
-experiments/results/p5p8/p8_stack_audit_boot.tsv (CI on per-axis eta^2)
-experiments/results/p5p8/p8_stack_audit_summary.json
-experiments/results/p5p8/figures/p8_stack_audit.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_stack_audit.tsv      (5 axes x 4 metrics)
+platform_hybrid/experiments/results/p5p8/p8_stack_audit_boot.tsv (CI on per-axis eta^2)
+platform_hybrid/experiments/results/p5p8/p8_stack_audit_summary.json
+platform_hybrid/experiments/results/p5p8/figures/p8_stack_audit.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + sklearn + matplotlib. <=300 lines.
 """

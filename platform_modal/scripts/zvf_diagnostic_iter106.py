@@ -37,7 +37,7 @@ Three fresh analyses on REAL measured data:
   1. PER-(LIBRARY, EXPERIMENT) PHASE COORDINATES
      For every row in zvf_iter102_calibration.tsv, project the row
      onto (p, G, Delta, rho, is_collapse). Write to
-     experiments/results/zvf_iter106_phase_diag.tsv.
+     platform_hybrid/experiments/results/zvf_iter106_phase_diag.tsv.
 
   2. PARTIAL CORRELATION TESTS
      Compute partial Pearson + partial Spearman (Reisz / partial-rank)
@@ -54,8 +54,8 @@ Three fresh analyses on REAL measured data:
            vs Delta conditioned on p).
 
 Outputs:
-    experiments/results/zvf_iter106_phase_diag.tsv       (14+ rows)
-    experiments/results/zvf_iter106_partial_corr.tsv      (4 rows)
+    platform_hybrid/experiments/results/zvf_iter106_phase_diag.tsv       (14+ rows)
+    platform_hybrid/experiments/results/zvf_iter106_partial_corr.tsv      (4 rows)
     figures/zvf_vs_failure.pdf                            (3-panel re-emit)
 
 Source: platform_modal/scripts/zvf_diagnostic_iter106.py

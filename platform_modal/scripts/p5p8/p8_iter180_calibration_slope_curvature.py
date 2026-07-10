@@ -20,7 +20,7 @@ classifiers; iter-180 adds the calibration-CURVE layer:
     deviation monotone (4sensor > 20raw > 24full); H5 calibration
     curvature (within-K1%) monotone.
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   p8_iter180_calib_per_fset.tsv    (30 rows: 3 fsets x 2 calibrators x 5 seeds)
   p8_iter180_calibration_curve.tsv (3 fsets x 5 rows: pre/platt/iso/perfect/ref)
   p8_iter180_reliability.tsv       (30 rows: per-(fset, seed) slope + intercept)

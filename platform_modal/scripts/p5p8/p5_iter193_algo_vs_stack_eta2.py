@@ -14,7 +14,7 @@ Fresh vs iter-189 (which only computed stack-axis eta^2 on mega): iter-193 adds
 the ALGORITHM axis from the N2 four-method same-stack corpus and reports the
 label-to-stack variance ratio side-by-side.
 
-stdlib only. Outputs -> experiments/results/p5p8/p5_iter193_*.tsv|json
+stdlib only. Outputs -> platform_hybrid/experiments/results/p5p8/p5_iter193_*.tsv|json
 """
 from __future__ import annotations
 import csv, json, math, os, random

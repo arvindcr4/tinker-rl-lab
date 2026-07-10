@@ -11,8 +11,8 @@ For each row in p6_iter146_fix_plan.tsv:
   5. Write the patched entry back in place.
   6. Re-validate the registry post-patch via jsonschema (Draft 2020-12).
 
-Output: experiments/results/p5p8/p6_iter146_patch_log.tsv
-        experiments/results/p5p8/p6_iter146_post_patch_summary.json
+Output: platform_hybrid/experiments/results/p5p8/p6_iter146_patch_log.tsv
+        platform_hybrid/experiments/results/p5p8/p6_iter146_post_patch_summary.json
 """
 import csv
 import json

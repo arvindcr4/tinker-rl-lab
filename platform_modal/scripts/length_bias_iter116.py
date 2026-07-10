@@ -35,10 +35,10 @@ Hypotheses tested (each sharp & falsifiable):
       survives a 10^5-shuffle chance distribution.
 
 INPUTS :
-  experiments/results/drgrpo_vs_grpo.json
-  experiments/results/drgrpo_gsm8k_cot_full.json
-  experiments/results/length_bias_iter108_perrun_progress.tsv
-OUTPUTS: 6 TSVs + meta under experiments/results/length_bias_iter116_*
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json
+  platform_hybrid/experiments/results/length_bias_iter108_perrun_progress.tsv
+OUTPUTS: 6 TSVs + meta under platform_hybrid/experiments/results/length_bias_iter116_*
 USAGE  : python3 platform_modal/scripts/length_bias_iter116.py [--n_w 4 --B_perm 50000]
 """
 from __future__ import annotations

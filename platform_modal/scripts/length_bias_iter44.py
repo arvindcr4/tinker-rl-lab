@@ -12,17 +12,17 @@ q_tau(R|L) - E[R|L] as a function of tau. We test this on both tasks, both
 algorithms, and stratify by ZVF bin (cross-pillar with iter34's ZVF proxy).
 
 Outputs (5 TSVs + 1 fig driver):
-  experiments/results/length_bias_iter44_quantile_slopes.tsv  per (task, algo,
+  platform_hybrid/experiments/results/length_bias_iter44_quantile_slopes.tsv  per (task, algo,
       seed, tau) with linear-fit slope and intercept of q_tau(R) on L
-  experiments/results/length_bias_iter44_condvar.tsv          per (task, algo,
+  platform_hybrid/experiments/results/length_bias_iter44_condvar.tsv          per (task, algo,
       seed, L_bin) with std(R|L) and residuals
-  experiments/results/length_bias_iter44_asymmetry.tsv        per (task, algo,
+  platform_hybrid/experiments/results/length_bias_iter44_asymmetry.tsv        per (task, algo,
       seed) with delta_slope = slope_q90 - slope_q10 and CI
-  experiments/results/length_bias_iter44_grpo_vs_drgrpo.tsv   paired bootstrap
+  platform_hybrid/experiments/results/length_bias_iter44_grpo_vs_drgrpo.tsv   paired bootstrap
       on the asymmetry score
-  experiments/results/length_bias_iter44_zvf_binned.tsv       per (task, algo,
+  platform_hybrid/experiments/results/length_bias_iter44_zvf_binned.tsv       per (task, algo,
       zvf_bin) with quantiles and asymmetry
-  experiments/results/length_bias_iter44_summary.tsv          one-rollup table
+  platform_hybrid/experiments/results/length_bias_iter44_summary.tsv          one-rollup table
 
 Implements an in-house pinball-loss quantile regression (no sklearn dep) on
 per-step (R, L) pairs pooled across seeds within (task, algo).

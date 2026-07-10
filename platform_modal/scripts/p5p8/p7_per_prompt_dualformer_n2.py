@@ -19,10 +19,10 @@ pairs it with:
       cost_ratio and saved_per_fire across all 4 N2 methods.
 
 Outputs:
-  experiments/results/p5p8/p7_per_prompt_dualformer_summary.tsv
-  experiments/results/p5p8/p7_per_prompt_ddiv_boot.tsv
-  experiments/results/p5p8/p7_per_prompt_joint_comparison.tsv
-  experiments/results/p5p8/p7_per_prompt_dualformer_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_per_prompt_dualformer_summary.tsv
+  platform_hybrid/experiments/results/p5p8/p7_per_prompt_ddiv_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p7_per_prompt_joint_comparison.tsv
+  platform_hybrid/experiments/results/p5p8/p7_per_prompt_dualformer_summary.json
 
 Stdlib only.
 """
@@ -36,8 +36,8 @@ import random
 import statistics
 
 WORK = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-N2_DIR = WORK / "experiments/results/n2_reward_tensor_resume"
-OUT_DIR = WORK / "experiments/results/p5p8"
+N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 G_BASE = 8

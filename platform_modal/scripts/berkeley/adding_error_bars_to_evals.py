@@ -723,7 +723,7 @@ def main():
             "Miller, E. (2024). Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations. arXiv:2411.00640 (cs.CL / stat.AP), 1 Nov 2024.",
             "Wang, S. et al. (2025). Measuring all the noises of LLM Evals. arXiv:2512.21326 (cs.CL), Dec 2025.",
         ],
-        "audit_tsv": "experiments/results/berkeley/adding_error_bars_audit.tsv",
+        "audit_tsv": "platform_hybrid/experiments/results/berkeley/adding_error_bars_audit.tsv",
         "seven_headline_audit": audit_rows,
         "aggregate_verdict": {
             "decisive_count": sum(1 for r in flat_rows if r["verdict"] == "DECISIVE" or (isinstance(r["verdict"], str) and "DECISIVE" in r["verdict"])),
@@ -749,13 +749,13 @@ def main():
             "annotated as DECISIVE / SUGGESTIVE / NULL."
         ),
         "evidence_inputs": [
-            "experiments/results/groupsize_zvf_sweep.json",
-            "experiments/results/group_size_iter115_zvf_linkage.tsv",
-            "experiments/results/group_size_iter123_noise_mech.tsv",
-            "experiments/results/group_size_iter135_native_wu.tsv",
-            "experiments/results/scaling_law_iter137_offset_fit.tsv",
-            "experiments/results/zvf_iter130_axis_aurocs.tsv",
-            "experiments/results/length_bias_iter136_paired_tests.tsv",
+            "platform_hybrid/experiments/results/groupsize_zvf_sweep.json",
+            "platform_hybrid/experiments/results/group_size_iter115_zvf_linkage.tsv",
+            "platform_hybrid/experiments/results/group_size_iter123_noise_mech.tsv",
+            "platform_hybrid/experiments/results/group_size_iter135_native_wu.tsv",
+            "platform_hybrid/experiments/results/scaling_law_iter137_offset_fit.tsv",
+            "platform_hybrid/experiments/results/zvf_iter130_axis_aurocs.tsv",
+            "platform_hybrid/experiments/results/length_bias_iter136_paired_tests.tsv",
         ],
     }
     with open(OUT / "adding_error_bars_summary.json", "w") as f:
@@ -770,7 +770,7 @@ def main():
         print(f"    pillar={r['pillar']}  n={r['n_for_CI']}  "
               f"point={r['point_estimate']}  CI95={ci}  -> {r['verdict']}")
     print(f"\nagg verdict: {summary['aggregate_verdict']}")
-    print("\nwrote 1 TSV + 1 JSON summary to experiments/results/berkeley/")
+    print("\nwrote 1 TSV + 1 JSON summary to platform_hybrid/experiments/results/berkeley/")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
 Closes brief vein (c): every P5 headline number from iter-05 row 11
 (mega_eta2.tsv) was reported as a point estimate with no bootstrap CI.
 This script re-runs the same one-way eta^2 decomposition on the
-experiments/results/mega_20260704/cells.tsv corpus under a paired-cell
+platform_hybrid/experiments/results/mega_20260704/cells.tsv corpus under a paired-cell
 bootstrap (B=4000, seed 20260705) and adds three extensions:
 
   H1 — bootstrap 95% CIs on every per-axis eta^2 cell (5 axes x 5 metrics = 25)
@@ -15,11 +15,11 @@ bootstrap (B=4000, seed 20260705) and adds three extensions:
        remove every cell-bin in turn?
 
 Outputs:
-  experiments/results/p5p8/p5_iter93_eta2_boot.tsv
-  experiments/results/p5p8/p5_iter93_eta2_boot_per_task.tsv
-  experiments/results/p5p8/p5_iter93_eta2_boot_ratio.tsv
-  experiments/results/p5p8/p5_iter93_eta2_boot_loco.tsv
-  experiments/results/p5p8/p5_iter93_eta2_boot_summary.json
+  platform_hybrid/experiments/results/p5p8/p5_iter93_eta2_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p5_iter93_eta2_boot_per_task.tsv
+  platform_hybrid/experiments/results/p5p8/p5_iter93_eta2_boot_ratio.tsv
+  platform_hybrid/experiments/results/p5p8/p5_iter93_eta2_boot_loco.tsv
+  platform_hybrid/experiments/results/p5p8/p5_iter93_eta2_boot_summary.json
 """
 from __future__ import annotations
 

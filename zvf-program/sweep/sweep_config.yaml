@@ -32,7 +32,7 @@ schema_version: 1                     # bump if column/field layout changes
 # shells out. Placeholders in {curly braces} are filled per run-cell.
 #
 # The default points at the existing per-cell Tinker GRPO runner pattern used in
-# experiments/tinker-runs/ (campaign_v2.run_experiment style: one process per
+# platform_hybrid/experiments/tinker-runs/ (campaign_v2.run_experiment style: one process per
 # cell, parameterised by model / seed / group_size / lr / steps / task / loss).
 # Swap `runner.kind` to "modal" to instead dispatch via experiments/modal_runner.py.
 runner:
@@ -91,7 +91,7 @@ runner:
 
 # -----------------------------------------------------------------------------
 # MODEL FAMILIES  (drawn from the user's existing corpus / model registry in
-# experiments/tinker-runs/scripts/world_class_experiments.py MODELS + campaign_v2)
+# platform_hybrid/experiments/tinker-runs/platform_modal/scripts/world_class_experiments.py MODELS + campaign_v2)
 # -----------------------------------------------------------------------------
 # `tier` is metadata only: it lets sweep_design down-select cheaply (e.g. run the
 # full seed/G grid on `small` tier, a thinner grid on `frontier` tier) so the

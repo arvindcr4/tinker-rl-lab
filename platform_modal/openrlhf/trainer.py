@@ -133,7 +133,7 @@ class OpenRLHFTrainer:
 
 
 # ---------------------------------------------------------------------------
-# Real driver — invoked by experiments/modal/modal_grpo_openrlhf.py on H100.
+# Real driver — invoked by platform_hybrid/experiments/modal/modal_grpo_openrlhf.py on H100.
 # ---------------------------------------------------------------------------
 
 GSM8K_SYSTEM_PROMPT = (
@@ -189,7 +189,7 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
     except Exception as exc:
         raise RuntimeError(
             "run_openrlhf_training requires openrlhf + wandb; "
-            "launch via experiments/modal/modal_grpo_openrlhf.py"
+            "launch via platform_hybrid/experiments/modal/modal_grpo_openrlhf.py"
         ) from exc
 
     os.makedirs(output_dir, exist_ok=True)

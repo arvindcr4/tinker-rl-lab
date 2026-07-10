@@ -15,9 +15,9 @@ For each of {aero, gift, areal} we re-measure Δ vs grpo under 4 windows
   - rank preservation (does the method ranking by Δ_full40 match Δ_last10?)
 
 Outputs:
-  experiments/results/p5p8/p6_n2_window_deltas.tsv
-  experiments/results/p5p8/p6_n2_registry_vs_measured.tsv
-  experiments/results/p5p8/p6_n2_window_sensitivity.json
+  platform_hybrid/experiments/results/p5p8/p6_n2_window_deltas.tsv
+  platform_hybrid/experiments/results/p5p8/p6_n2_registry_vs_measured.tsv
+  platform_hybrid/experiments/results/p5p8/p6_n2_window_sensitivity.json
 
 Stdlib only. ~280 LoC.
 """

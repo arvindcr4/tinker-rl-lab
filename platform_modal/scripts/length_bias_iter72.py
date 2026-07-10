@@ -28,11 +28,11 @@ Negative control: arithmetic_easy has ΔL ≈ 0 by step 5; both algos should giv
 near-zero φ on the trailing window.
 
 Outputs:
-  experiments/results/length_bias_iter72_persistence.tsv
-  experiments/results/length_bias_iter72_residvar.tsv
-  experiments/results/length_bias_iter72_lagcorr.tsv
-  experiments/results/length_bias_iter72_summary.tsv
-  experiments/results/length_bias_iter72_meta.json
+  platform_hybrid/experiments/results/length_bias_iter72_persistence.tsv
+  platform_hybrid/experiments/results/length_bias_iter72_residvar.tsv
+  platform_hybrid/experiments/results/length_bias_iter72_lagcorr.tsv
+  platform_hybrid/experiments/results/length_bias_iter72_summary.tsv
+  platform_hybrid/experiments/results/length_bias_iter72_meta.json
 """
 from __future__ import annotations
 

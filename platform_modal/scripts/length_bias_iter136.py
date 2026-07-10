@@ -41,8 +41,8 @@ report paired Wilcoxon one-sided p, Cohen's d, permutation p (B=50000), and
 binomial over the 2 tasks.
 
 INPUTS :
-  experiments/results/drgrpo_vs_grpo.json            (arithmetic_easy, 5 seeds)
-  experiments/results/drgrpo_gsm8k_cot_full.json     (gsm8k_cot,        3 seeds)
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json            (arithmetic_easy, 5 seeds)
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json     (gsm8k_cot,        3 seeds)
 OUTPUTS (5 TSV + meta):
   length_bias_iter136_step_coupling.tsv    -- per-run (algo,task,seed,h,N)
   length_bias_iter136_paired_tests.tsv     -- paired (task, hypothesis)

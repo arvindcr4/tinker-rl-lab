@@ -18,8 +18,8 @@ import json
 import pathlib
 
 WORKTREE = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-SUMMARY = WORKTREE / "experiments/results/p5p8/p7_postpred_summary.json"
-OUT = WORKTREE / "experiments/results/p5p8/p7_postpred_costeff.tsv"
+SUMMARY = WORKTREE / "platform_hybrid/experiments/results/p5p8/p7_postpred_summary.json"
+OUT = WORKTREE / "platform_hybrid/experiments/results/p5p8/p7_postpred_costeff.tsv"
 
 G_BASE = 8
 G_NEW = 16

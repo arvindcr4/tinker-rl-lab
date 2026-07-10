@@ -11,10 +11,10 @@ needs to size the budget tradeoff.
 
 Outputs
 -------
-experiments/results/p5p8/p8_asym_cost.tsv
-experiments/results/p5p8/p8_asym_cost_boot.tsv
-experiments/results/p5p8/p8_asym_cost_summary.json
-experiments/results/p5p8/figures/p8_asym_cost.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_asym_cost.tsv
+platform_hybrid/experiments/results/p5p8/p8_asym_cost_boot.tsv
+platform_hybrid/experiments/results/p5p8/p8_asym_cost_summary.json
+platform_hybrid/experiments/results/p5p8/figures/p8_asym_cost.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + sklearn + matplotlib. <=300 lines.
 """

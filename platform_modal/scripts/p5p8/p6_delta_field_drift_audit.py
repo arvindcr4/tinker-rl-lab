@@ -26,8 +26,8 @@ Inputs:
   registry/entries/delta_*.json
 
 Outputs:
-  experiments/results/p5p8/p6_delta_field_drift.tsv          (per-row)
-  experiments/results/p5p8/p6_delta_field_drift_summary.json  (machine-readable)
+  platform_hybrid/experiments/results/p5p8/p6_delta_field_drift.tsv          (per-row)
+  platform_hybrid/experiments/results/p5p8/p6_delta_field_drift_summary.json  (machine-readable)
 """
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ from collections import defaultdict, Counter
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 ROOT = pathlib.Path("registry")
-OUT = pathlib.Path("experiments/results/p5p8")
+OUT = pathlib.Path("platform_hybrid/experiments/results/p5p8")
 OUT.mkdir(parents=True, exist_ok=True)
 
 # ------------------------------------------------------------------

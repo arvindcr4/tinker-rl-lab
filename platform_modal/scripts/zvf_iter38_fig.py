@@ -9,8 +9,8 @@ Panel B: Per-library cost savings at y_target=0.80 (G_iid*G*K_prompts*L_bar
 Panel C: Failure-mode LOO confusion heatmap on the 14-pool rows.
 
 Inputs:
-    experiments/results/zvf_iter38_isoyield.tsv
-    experiments/results/zvf_iter38_classifier.tsv
+    platform_hybrid/experiments/results/zvf_iter38_isoyield.tsv
+    platform_hybrid/experiments/results/zvf_iter38_classifier.tsv
 
 Output:
     figures/zvf_iter38.pdf  (matplotlib fallback).

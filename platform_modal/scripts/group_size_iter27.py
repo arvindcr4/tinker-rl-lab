@@ -7,24 +7,24 @@ Is Secretly DPO' framing, arXiv 2510.00977) and produces one main TSV +
 one main figure + one paper subsection.
 
 Inputs (all real, no fabrication):
-  experiments/results/groupsize_zvf_sweep.json
+  platform_hybrid/experiments/results/groupsize_zvf_sweep.json
       Per-step traces for G in {2,4,8,16} on Qwen2.5-0.5B / arithmetic,
       3 seeds x 40 steps (avg reward, advantage variance, ZVF, etc.).
-  experiments/results/group_size_g4_vs_g32_broader_scale.tsv
+  platform_hybrid/experiments/results/group_size_g4_vs_g32_broader_scale.tsv
       Qwen3-8B / GSM8K G=4 vs G=32 at T in {1,4,16,64}M (iter7).
-  experiments/results/group_size_iter15_equivalence.tsv
+  platform_hybrid/experiments/results/group_size_iter15_equivalence.tsv
       TOST + Cohen's d between all (G_a, G_b) pairs.
-  experiments/results/group_size_iter15_snr.tsv
+  platform_hybrid/experiments/results/group_size_iter15_snr.tsv
       Per-G signal-to-noise ratio (DPO flat vs sqrt(G) reference).
-  experiments/results/group_size_iter19_retention_fit.tsv
+  platform_hybrid/experiments/results/group_size_iter19_retention_fit.tsv
       Saturating-exponential fit: R(T) = R_inf + (R_0 - R_inf) e^{-T/tau}.
 
 Outputs:
-  experiments/results/group_size_iter27_synthesis.tsv
+  platform_hybrid/experiments/results/group_size_iter27_synthesis.tsv
       Master TSV: one row per G (and per T for the broader sweep) with
       mean_reward, last10_acc, retention, SNR, TOST verdict vs G=2,
       DPO-equivalence verdict.
-  experiments/results/group_size_iter27_dpo_bands.tsv
+  platform_hybrid/experiments/results/group_size_iter27_dpo_bands.tsv
       Three retention bands: Wu 97.6% (canonical), measured G=4 vs G=32
       (ours), measured G=4 vs G=64 (broader extrapolation).
   figures/group_size_iter27.{pdf,png}

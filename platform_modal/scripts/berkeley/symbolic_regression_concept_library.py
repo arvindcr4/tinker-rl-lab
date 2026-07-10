@@ -18,14 +18,14 @@ domain concepts ALREADY surfaced by prior iterations (the capability/instruct
 tier from iter129/133 bimodality, and the `sat` saturation concept from the
 learning-curve fits). No live LLM call -> fully reproducible.
 
-Runs on REAL data only (experiments/results/scaling_law_iter133_pool_sizes.tsv
-n=12 pool). Pure numpy/scipy. Outputs TSV + JSON under experiments/results/berkeley/.
+Runs on REAL data only (platform_hybrid/experiments/results/scaling_law_iter133_pool_sizes.tsv
+n=12 pool). Pure numpy/scipy. Outputs TSV + JSON under platform_hybrid/experiments/results/berkeley/.
 """
 import json, itertools, math
 import numpy as np
 from scipy.optimize import least_squares
 
-OUT = "experiments/results/berkeley"
+OUT = "platform_hybrid/experiments/results/berkeley"
 
 # ---- 12-anchor pool (n=12, from scaling_law_iter133_pool_sizes.tsv) ----------
 # model, params_B, arch(moe=1), R_max, r_mean

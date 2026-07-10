@@ -8,9 +8,9 @@ Iter 131 angle: 'It Takes Two: Your GRPO Is Secretly DPO' (arXiv
 G=4 ~ G=32 holds at broader scale (T-budget sweep).
 
 Driver: platform_modal/scripts/group_size_analysis.py
-Inputs:  experiments/results/groupsize_zvf_sweep.json      (G in {2,4,8,16}, n=3)
-         experiments/results/group_size_token_normalized.tsv (G x T grid 5x4, n=20)
-Outputs: experiments/results/group_size_effect.tsv
+Inputs:  platform_hybrid/experiments/results/groupsize_zvf_sweep.json      (G in {2,4,8,16}, n=3)
+         platform_hybrid/experiments/results/group_size_token_normalized.tsv (G x T grid 5x4, n=20)
+Outputs: platform_hybrid/experiments/results/group_size_effect.tsv
          figures/group_size.pdf
 
 Angles (three concrete findings):

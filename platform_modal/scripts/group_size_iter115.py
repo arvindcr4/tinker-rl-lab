@@ -37,15 +37,15 @@ not measure:
       G=4/G=32 delta.
 
 Inputs:
-    experiments/results/group_size_token_normalized.tsv
-    experiments/results/groupsize_zvf_sweep.tsv
-    experiments/results/zvf_iter114_delta_d.tsv
+    platform_hybrid/experiments/results/group_size_token_normalized.tsv
+    platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
+    platform_hybrid/experiments/results/zvf_iter114_delta_d.tsv
 
 Outputs:
-    experiments/results/group_size_iter115_tost.tsv
-    experiments/results/group_size_iter115_zvf_linkage.tsv
-    experiments/results/group_size_iter115_compute_cost.tsv
-    experiments/results/group_size_iter115_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter115_tost.tsv
+    platform_hybrid/experiments/results/group_size_iter115_zvf_linkage.tsv
+    platform_hybrid/experiments/results/group_size_iter115_compute_cost.tsv
+    platform_hybrid/experiments/results/group_size_iter115_summary.tsv
     figures/group_size_iter115.pdf
 
 Sharpest claims:

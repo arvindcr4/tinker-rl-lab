@@ -21,7 +21,7 @@ the submission.
 tar xzf code.tar.gz
 cd tinker-rl-lab-anon
 # Offline smoke test (~25 s CPU):
-bash scripts/smoke_test.sh
+bash platform_modal/scripts/smoke_test.sh
 # Headline-claim check (±2 pp tolerance):
 python3 reproducibility/check_qwen3_8b_claim.py
 ```

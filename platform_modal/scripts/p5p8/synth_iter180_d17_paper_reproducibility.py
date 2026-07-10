@@ -34,7 +34,7 @@ Falsifiable hypotheses (5 claims):
     fraud data limits bootstrap resolution).
   H5: the 16-domain density matrix D17a row falls in HIGH layer.
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   synth_iter180_d17_per_pillar.tsv  (5 rows: D17a..D17d per pillar +
        per-finding list)
   synth_iter180_d17_aggregate.tsv  (1 row: aggregate of all 17 domains)

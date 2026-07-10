@@ -3,14 +3,14 @@
 hybrid (Dualformer-Auto + zvf-triage + fixed-G) Pareto evaluation.
 
 Inputs:
-  experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
+  platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
 
 Outputs:
-  experiments/results/p5p8/p7_headline_cis.tsv    -- per-method bootstrap
+  platform_hybrid/experiments/results/p5p8/p7_headline_cis.tsv    -- per-method bootstrap
     CI for mean zvf / reward_mean / pcd / lag1_autocorr / mean_len / loss.
-  experiments/results/p5p8/p7_calibrated_controller.tsv
+  platform_hybrid/experiments/results/p5p8/p7_calibrated_controller.tsv
     -- per-(method, controller) cost_ratio with bootstrap CI, plus Pareto.
-  experiments/results/p5p8/p7_calibrated_controller.json
+  platform_hybrid/experiments/results/p5p8/p7_calibrated_controller.json
     -- machine-readable (hybrid rule, headline table, Pareto).
 
 Stdlib only. <= 300 LoC.

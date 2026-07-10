@@ -41,11 +41,11 @@ H5 v2.5 adds >= 13 new mandatory fields (i.e., schema grew by at least
 
 Outputs
 -------
-- experiments/results/p5p8/p5_iter181_v25_field_fill_rate.tsv (13 rows)
-- experiments/results/p5p8/p5_iter181_v25_per_family_fill.tsv (3 rows)
-- experiments/results/p5p8/p5_iter181_v25_field_validity.tsv (13 rows)
-- experiments/results/p5p8/p5_iter181_v25_v24_comparison.tsv (2 rows)
-- experiments/results/p5p8/p5_iter181_summary.json
+- platform_hybrid/experiments/results/p5p8/p5_iter181_v25_field_fill_rate.tsv (13 rows)
+- platform_hybrid/experiments/results/p5p8/p5_iter181_v25_per_family_fill.tsv (3 rows)
+- platform_hybrid/experiments/results/p5p8/p5_iter181_v25_field_validity.tsv (13 rows)
+- platform_hybrid/experiments/results/p5p8/p5_iter181_v25_v24_comparison.tsv (2 rows)
+- platform_hybrid/experiments/results/p5p8/p5_iter181_summary.json
 """
 from __future__ import annotations
 import csv

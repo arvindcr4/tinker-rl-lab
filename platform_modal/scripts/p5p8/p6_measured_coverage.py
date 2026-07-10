@@ -13,7 +13,7 @@ For every delta_*.json in the registry, audit:
    measured under two panels, normalise sign conventions and emit a
    "same direction?" verdict.
 
-Writes TSVs + JSON to experiments/results/p5p8/, plus a regeneratable
+Writes TSVs + JSON to platform_hybrid/experiments/results/p5p8/, plus a regeneratable
 sidecar audit file next to the registry. Stdlib only.
 """
 import csv
@@ -24,9 +24,9 @@ import pathlib
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 ENTRIES = ROOT / "registry" / "entries"
 AUDIT = ROOT / "registry" / "measured_block_audit.json"
-N2_METRICS_TSV = ROOT / "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
-Z130_TSV = ROOT / "experiments/results/zvf_iter130_method_risk.tsv"
-OUT = ROOT / "experiments/results/p5p8"
+N2_METRICS_TSV = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+Z130_TSV = ROOT / "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 KNOWN_PANELS = ("n2_same_stack_last10", "zvf130_5seed")

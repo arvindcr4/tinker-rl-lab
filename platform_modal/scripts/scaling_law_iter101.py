@@ -41,9 +41,9 @@ References (verified, frontier synthesis):
   - burnham2002model     -- AIC model-averaging weights
 
 Outputs:
-  experiments/results/scaling_law_iter101_transfer.tsv  (cross-anchor MAE/RMSE matrix)
-  experiments/results/scaling_law_iter101_stacked.tsv   (stacked vs best-single MAE per anchor)
-  experiments/results/scaling_law_iter101_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter101_transfer.tsv  (cross-anchor MAE/RMSE matrix)
+  platform_hybrid/experiments/results/scaling_law_iter101_stacked.tsv   (stacked vs best-single MAE per anchor)
+  platform_hybrid/experiments/results/scaling_law_iter101_meta.json
   figures/scaling_law_iter101.{pdf,png}
   paper/figures/scaling_law_iter101.pdf
 """

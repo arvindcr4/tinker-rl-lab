@@ -8,8 +8,8 @@ accounting baseline + a sensitivity sweep.
 
 Outputs
 -------
-experiments/results/p5p8/p8_cost_latency_sensitivity.tsv
-experiments/results/p5p8/p8_cost_latency_summary.json
+platform_hybrid/experiments/results/p5p8/p8_cost_latency_sensitivity.tsv
+platform_hybrid/experiments/results/p5p8/p8_cost_latency_summary.json
 """
 
 from __future__ import annotations

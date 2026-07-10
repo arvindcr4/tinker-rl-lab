@@ -8,7 +8,7 @@ References:
     Jacovi et al., "Stop Uploading Test Data in Plain Text" (EMNLP 2023)
 
 Usage:
-    python platform_modal/scripts/contamination_check.py --results-dir experiments/results/
+    python platform_modal/scripts/contamination_check.py --results-dir platform_hybrid/experiments/results/
 """
 
 import sys
@@ -387,7 +387,7 @@ def main():
         description="Data contamination detection for TinkerRL benchmarks."
     )
     parser.add_argument(
-        "--results-dir", type=str, default="experiments/results/",
+        "--results-dir", type=str, default="platform_hybrid/experiments/results/",
         help="Directory containing experiment result files for integrity check"
     )
     parser.add_argument(

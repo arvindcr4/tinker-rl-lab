@@ -16,9 +16,9 @@ Badge: A (>=3 measured rows AND >=1 significant AND zero stale) /
        D (stack with no measured rows; or variant_delta with no measured).
 
 Outputs:
-  experiments/results/p5p8/p6_iter130_schema_ci.tsv    (one row / entry)
-  experiments/results/p5p8/p6_iter130_schema_ci.json   (summary + per-type counts)
-  experiments/results/p5p8/p6_iter130_schema_ci_patch_plan.tsv
+  platform_hybrid/experiments/results/p5p8/p6_iter130_schema_ci.tsv    (one row / entry)
+  platform_hybrid/experiments/results/p5p8/p6_iter130_schema_ci.json   (summary + per-type counts)
+  platform_hybrid/experiments/results/p5p8/p6_iter130_schema_ci_patch_plan.tsv
        (entries needing ci_method patch — id, n_stale, n_total)
 
 Stdlib only; deterministic; <= 300 lines.

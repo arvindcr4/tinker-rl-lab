@@ -22,7 +22,7 @@ Two needles:
   (b) cross-run needle = the terminal group-size REWARD ranking, recovered via
       Spearman(window_reward, terminal_reward) across the 12 runs.
 
-Data: experiments/results/groupsize_zvf_sweep.json (same-stack sweep,
+Data: platform_hybrid/experiments/results/groupsize_zvf_sweep.json (same-stack sweep,
 4 G x 3 seed x 40 step; per-step {zvf, mean_reward, entropy, advantage_variance,
 grad_norm}). Target A2 (eval methodology) + A1 (statistical rigor).
 
@@ -51,8 +51,8 @@ Hypotheses:
 import json, os, statistics as st
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SRC = os.path.join(ROOT, "experiments/results/groupsize_zvf_sweep.json")
-OUT = os.path.join(ROOT, "experiments/results/berkeley")
+SRC = os.path.join(ROOT, "platform_hybrid/experiments/results/groupsize_zvf_sweep.json")
+OUT = os.path.join(ROOT, "platform_hybrid/experiments/results/berkeley")
 os.makedirs(OUT, exist_ok=True)
 
 TOL = 0.05                       # recovery tolerance on reward level (absolute)

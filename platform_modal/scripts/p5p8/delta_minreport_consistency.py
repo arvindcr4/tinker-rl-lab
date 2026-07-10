@@ -8,8 +8,8 @@ actual MIN-REPORT. Verdicts: MATCH / MISMATCH / MISSING_REPORT /
 SURROGATE_OBS / NOT_APPLICABLE.
 
 Outputs:
-  experiments/results/p5p8/delta_minreport_consistency.tsv  (per-triple rows)
-  experiments/results/p5p8/delta_minreport_consistency.json (summary)
+  platform_hybrid/experiments/results/p5p8/delta_minreport_consistency.tsv  (per-triple rows)
+  platform_hybrid/experiments/results/p5p8/delta_minreport_consistency.json (summary)
 """
 from __future__ import annotations
 import json, pathlib, sys, datetime, warnings
@@ -18,7 +18,7 @@ from collections import defaultdict, Counter
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 REG = pathlib.Path("registry/entries")
-OUT = pathlib.Path("experiments/results/p5p8")
+OUT = pathlib.Path("platform_hybrid/experiments/results/p5p8")
 OUT.mkdir(parents=True, exist_ok=True)
 
 

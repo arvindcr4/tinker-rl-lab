@@ -26,11 +26,11 @@ Q3. **Power-law cross-check on extended anchor pool**: add the partial
     9-anchor (5 + 4 partials) pool.
 
 Outputs (5 artefacts):
-  experiments/results/scaling_law_iter57_lam_bound.tsv
-  experiments/results/scaling_law_iter57_robust_rmax.tsv
-  experiments/results/scaling_law_iter57_powerlaw.tsv
-  experiments/results/scaling_law_iter57_extended_pool.tsv
-  experiments/results/scaling_law_iter57_predictions.tsv
+  platform_hybrid/experiments/results/scaling_law_iter57_lam_bound.tsv
+  platform_hybrid/experiments/results/scaling_law_iter57_robust_rmax.tsv
+  platform_hybrid/experiments/results/scaling_law_iter57_powerlaw.tsv
+  platform_hybrid/experiments/results/scaling_law_iter57_extended_pool.tsv
+  platform_hybrid/experiments/results/scaling_law_iter57_predictions.tsv
   paper/sections/scaling_law_iter57.tex
   figures/scaling_law_iter57.{pdf,png}
 """

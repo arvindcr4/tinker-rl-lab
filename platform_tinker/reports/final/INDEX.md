@@ -1,4 +1,4 @@
-# reports/final/ — INDEX
+# platform_tinker/reports/final/ — INDEX
 
 **Purpose:** Final capstone deliverables for the GRPO agentic-LLM project (Group 6): the integrated final report, standalone conference-paper drafts, reviewer-response material, held-out GSM8K evaluation code + result JSONs, and build/audit scripts. See `README.md` for status + A-grade completion path.
 

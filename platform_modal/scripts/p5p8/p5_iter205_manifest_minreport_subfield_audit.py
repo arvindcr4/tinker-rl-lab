@@ -7,7 +7,7 @@ manifest fields; iter-153 (row 170) audited the v2.4 emit-gap on
 12 sub-fields. None of the 215 prior P5 rows does a **per-sub-field**, **per-
 manifest** coverage audit that classifies each MIN-REPORT-required sub-field
 as ``EXTRACTABLE_LITERAL`` / ``EXTRACTABLE_PARSED`` / ``AMBIGUOUS`` /
-``MISSING`` against the LIVE ``experiments/results/mega_20260704/manifests/``
+``MISSING`` against the LIVE ``platform_hybrid/experiments/results/mega_20260704/manifests/``
 corpus (98 cells, 4 model_family x 3 task_slice x 5 G x 2 temperature x 2 seed).
 
 Iter-205 closes this gap by:
@@ -26,18 +26,18 @@ Iter-205 closes this gap by:
 
 Outputs
 -------
-- experiments/results/p5p8/p5_iter205_subfield_class.tsv (23 rows: per
+- platform_hybrid/experiments/results/p5p8/p5_iter205_subfield_class.tsv (23 rows: per
   sub-field, n_extract_literal, n_extract_parsed, n_ambiguous,
   n_missing, coverage_pct)
-- experiments/results/p5p8/p5_iter205_item_coverage.tsv (7 rows: per
+- platform_hybrid/experiments/results/p5p8/p5_iter205_item_coverage.tsv (7 rows: per
   Item, n_subfields_pass / total_subfields, manifest-level pass rate)
-- experiments/results/p5p8/p5_iter205_per_manifest_coverage.tsv (98
+- platform_hybrid/experiments/results/p5p8/p5_iter205_per_manifest_coverage.tsv (98
   rows: per manifest, n_subfields_pass, n_subfields_partial,
   n_subfields_missing, derived badge level)
-- experiments/results/p5p8/p5_iter205_stratified_coverage.tsv (4
+- platform_hybrid/experiments/results/p5p8/p5_iter205_stratified_coverage.tsv (4
   model_family x 3 task_slice cells: per-cell coverage rate with
   bootstrap CI)
-- experiments/results/p5p8/p5_iter205_summary.json (H1-H6 verdicts +
+- platform_hybrid/experiments/results/p5p8/p5_iter205_summary.json (H1-H6 verdicts +
   measured coverage rollups + missing-field list + ambiguous-field
   list)
 """
@@ -53,9 +53,9 @@ N_BOOT = 2000
 SEED = 20260706
 
 WORKTREE = Path("/home/claude/tinker-rl-lab-minimax")
-MANIFEST_DIR = WORKTREE / "experiments/results/mega_20260704/manifests"
-CELLS_TSV = WORKTREE / "experiments/results/mega_20260704/cells.tsv"
-OUT_DIR = WORKTREE / "experiments/results/p5p8"
+MANIFEST_DIR = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/manifests"
+CELLS_TSV = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
+OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 

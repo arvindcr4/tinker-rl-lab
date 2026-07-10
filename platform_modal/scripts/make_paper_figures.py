@@ -15,7 +15,7 @@ from scipy.optimize import curve_fit
 from scipy.ndimage import gaussian_filter1d
 
 # ── directories ──────────────────────────────────────────────────────────────
-RESULTS_DIR = "experiments/results"
+RESULTS_DIR = "platform_hybrid/experiments/results"
 FIGURES_DIR = "paper/figures"
 os.makedirs(FIGURES_DIR, exist_ok=True)
 

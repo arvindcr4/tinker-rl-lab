@@ -7,7 +7,7 @@
 # stress-tested the AUDITORS THEMSELVES against controlled perturbations.
 #
 # Method:
-# 1. Load n=98 manifests from experiments/results/mega_20260704/manifests/
+# 1. Load n=98 manifests from platform_hybrid/experiments/results/mega_20260704/manifests/
 # 2. Pick 8 controlled mutations per cell (each corrupts one specific
 #    MIN-REPORT v2.2 item by flipping the value to a known-wrong one):
 #    M1 cell_id ↔ swap last 8 hex chars
@@ -25,9 +25,9 @@
 # 4. Aggregate detection rate across (mutation × check) cells.
 #
 # Outputs:
-#   - experiments/results/p5p8/p5_iter121_mutation_stress.tsv
+#   - platform_hybrid/experiments/results/p5p8/p5_iter121_mutation_stress.tsv
 #       (rows = 8 mutations × 98 cells = 784 rows)
-#   - experiments/results/p5p8/p5_iter121_mutation_summary.json
+#   - platform_hybrid/experiments/results/p5p8/p5_iter121_mutation_summary.json
 #       (per-mutation detection rate + per-check detection rate + the
 #       headline "did the auditor catch every mutation on at least one
 #       check" verdict)
@@ -53,10 +53,10 @@ from p5_iter121_value_correctness import (
 )
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-MEGA = WORK / "experiments/results/mega_20260704"
+MEGA = WORK / "platform_hybrid/experiments/results/mega_20260704"
 MANIFEST_DIR = MEGA / "manifests"
 CELLS_TSV = MEGA / "cells.tsv"
-OUT_DIR = WORK / "experiments/results/p5p8"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
 
 
 def _mut_m1(m, c, f):

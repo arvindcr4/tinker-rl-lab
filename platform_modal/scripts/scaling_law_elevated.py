@@ -19,10 +19,10 @@ This script extends iter5's saturation fit with five new diagnostics:
       Approximated by comparing bound-fit RSS to a 4x-lambda ceiling fit.
 
 Outputs:
-  experiments/results/scaling_law_bootstrap_ci.tsv
-  experiments/results/scaling_law_holdout.tsv
-  experiments/results/scaling_law_compute.tsv
-  experiments/results/scaling_law_nemotron_rootcause.tsv
+  platform_hybrid/experiments/results/scaling_law_bootstrap_ci.tsv
+  platform_hybrid/experiments/results/scaling_law_holdout.tsv
+  platform_hybrid/experiments/results/scaling_law_compute.tsv
+  platform_hybrid/experiments/results/scaling_law_nemotron_rootcause.tsv
   figures/scaling_law_elevated.{pdf,png}
   paper/figures/scaling_law_elevated.{pdf,png}
 """

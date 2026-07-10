@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 P5 — Stack-conditioning generalization to the mega-cell corpus
-(iter 49). Reads experiments/results/mega_20260704/cells.tsv
+(iter 49). Reads platform_hybrid/experiments/results/mega_20260704/cells.tsv
 (98 cells of GRPO on a 2 model × 3 task × 5 G × 2 temperature
 × 2 seed design) and decomposes per-cell mean_reward variance
 into eta^2(model) / eta^2(task) / eta^2(G) / eta^2(temperature) /
@@ -14,9 +14,9 @@ the iter-45 four-method same-stack eta^2(method)=0.0005 result
 (algorithmic axis near-zero) into the larger claim: when only the
 stack varies, the stack explains >50% of the outcome variance.
 
-Output: experiments/results/p5p8/p5_stack_conditioning_mega.tsv
-        experiments/results/p5p8/p5_stack_conditioning_mega_boot.tsv
-        experiments/results/p5p8/p5_stack_conditioning_mega_summary.json
+Output: platform_hybrid/experiments/results/p5p8/p5_stack_conditioning_mega.tsv
+        platform_hybrid/experiments/results/p5p8/p5_stack_conditioning_mega_boot.tsv
+        platform_hybrid/experiments/results/p5p8/p5_stack_conditioning_mega_summary.json
 """
 from __future__ import annotations
 
@@ -30,8 +30,8 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-CELLS = ROOT / "experiments/results/mega_20260704/cells.tsv"
-OUT = ROOT / "experiments/results/p5p8"
+CELLS = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 

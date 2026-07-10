@@ -1,7 +1,7 @@
 # Hostile Reviewer Rectification Log
 
 Source: anonymous hostile reviewer memo recommending reject, confidence high.
-Scope: `paper/main.tex`, `paper/main_anon.tex`, `reports/final/capstone_final_report.tex`,
+Scope: `paper/main.tex`, `paper/main_anon.tex`, `platform_tinker/reports/final/capstone_final_report.tex`,
 `submission/contents/*`, `blind_review/*`.
 
 | # | Reviewer concern | Status | Rectification |
@@ -27,6 +27,6 @@ Scope: `paper/main.tex`, `paper/main_anon.tex`, `reports/final/capstone_final_re
 
 - `paper/main.tex` — title, BH-caveat, BH table caption, Table 10 row-mean arithmetic fix, artifact-reconciliation paragraph, scope-boundary paragraph.
 - `paper/main_anon.tex` — title, BH-caveat, BH table caption, scope-boundary paragraph.
-- `reports/final/HOSTILE_REVIEW_RECTIFICATION.md` — this log.
+- `platform_tinker/reports/final/HOSTILE_REVIEW_RECTIFICATION.md` — this log.
 
 No new experiments, no new figures, no new tables. Rectification is editorial and arithmetic only.

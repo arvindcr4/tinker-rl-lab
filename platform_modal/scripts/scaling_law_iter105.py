@@ -15,11 +15,11 @@ iter97 (8-family head-to-head), iter101 (cross-anchor transfer + AIC stack):
       that asks: is the R_max*->params_B relation family-invariant?
 
 Outputs (TSV + JSON meta, no figure this iter — keeps deliverable compact):
-  experiments/results/scaling_law_iter105_failure_modes.tsv   (12 rows)
-  experiments/results/scaling_law_iter105_scaling_law.tsv    (12 rows + summary)
-  experiments/results/scaling_law_iter105_lofo.tsv           (LOFO residuals)
-  experiments/results/scaling_law_iter105_summary.tsv        (3 fits, MAE / R^2 / aic)
-  experiments/results/scaling_law_iter105_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter105_failure_modes.tsv   (12 rows)
+  platform_hybrid/experiments/results/scaling_law_iter105_scaling_law.tsv    (12 rows + summary)
+  platform_hybrid/experiments/results/scaling_law_iter105_lofo.tsv           (LOFO residuals)
+  platform_hybrid/experiments/results/scaling_law_iter105_summary.tsv        (3 fits, MAE / R^2 / aic)
+  platform_hybrid/experiments/results/scaling_law_iter105_meta.json
 
 Method notes:
   - All fit quality is OLS-on-transformed. AIC = n ln(RSS/n) + 2k.

@@ -23,11 +23,11 @@ Setup:
        a Hoffmann-style prediction: P* ~ C^(1/(alpha+1)).
 
 Outputs (5 artefacts):
-  experiments/results/scaling_law_iter45_compute_proxy.tsv   (per-anchor C, R_max)
-  experiments/results/scaling_law_iter45_scaling.tsv         (within-stack fits)
-  experiments/results/scaling_law_iter45_isocompute.tsv      (iso-compute bands)
-  experiments/results/scaling_law_iter45_predictions.tsv     (P1-P3 with pass/fail)
-  experiments/results/scaling_law_iter45_summary.tsv         (top-line rollup)
+  platform_hybrid/experiments/results/scaling_law_iter45_compute_proxy.tsv   (per-anchor C, R_max)
+  platform_hybrid/experiments/results/scaling_law_iter45_scaling.tsv         (within-stack fits)
+  platform_hybrid/experiments/results/scaling_law_iter45_isocompute.tsv      (iso-compute bands)
+  platform_hybrid/experiments/results/scaling_law_iter45_predictions.tsv     (P1-P3 with pass/fail)
+  platform_hybrid/experiments/results/scaling_law_iter45_summary.tsv         (top-line rollup)
   paper/sections/scaling_law_iter45.tex                      (paper section)
   figures/scaling_law_iter45.{pdf,png}                       (figure)
 """

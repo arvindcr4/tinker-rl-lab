@@ -18,15 +18,15 @@ Three analyses, building on iter 31 (iso-token TOST) and iter 35 (pair sweep):
        (upper CI bound) -- is 0.976 still in play?
 
 Inputs (read-only, sourced from existing results):
-  - experiments/results/group_size_iter31_iso_token.tsv
-  - experiments/results/group_size_iter35_pair_sweep.tsv
-  - experiments/results/group_size_token_normalized.tsv
+  - platform_hybrid/experiments/results/group_size_iter31_iso_token.tsv
+  - platform_hybrid/experiments/results/group_size_iter35_pair_sweep.tsv
+  - platform_hybrid/experiments/results/group_size_token_normalized.tsv
 
 Outputs:
-  - experiments/results/group_size_iter39_t_critical.tsv
-  - experiments/results/group_size_iter39_aic.tsv
-  - experiments/results/group_size_iter39_claim_strength.tsv
-  - experiments/results/group_size_iter39_summary.tsv
+  - platform_hybrid/experiments/results/group_size_iter39_t_critical.tsv
+  - platform_hybrid/experiments/results/group_size_iter39_aic.tsv
+  - platform_hybrid/experiments/results/group_size_iter39_claim_strength.tsv
+  - platform_hybrid/experiments/results/group_size_iter39_summary.tsv
 """
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ from pathlib import Path
 
 import numpy as np
 
-RESULTS = Path("experiments/results")
+RESULTS = Path("platform_hybrid/experiments/results")
 RESULTS.mkdir(parents=True, exist_ok=True)
 
 # Wu et al. 2025 headline threshold: G=2 retains 97.6% of G=16.

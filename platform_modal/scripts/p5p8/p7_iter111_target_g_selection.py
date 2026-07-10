@@ -31,10 +31,10 @@ pays for itself; when no candidate can, the controller's escalation lever
 is exhausted and the P7 design should fall back to prompt-set rotation.
 
 Outputs:
-  experiments/results/p5p8/p7_iter111_target_g_distribution.tsv
-  experiments/results/p5p8/p7_iter111_controller_replay.tsv
-  experiments/results/p5p8/p7_iter111_net_benefit.tsv
-  experiments/results/p5p8/p7_iter111_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_iter111_target_g_distribution.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter111_controller_replay.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter111_net_benefit.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter111_summary.json
 """
 import json
 import math
@@ -43,8 +43,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-N2_DIR = WORK / "experiments/results/n2_reward_tensor_resume"
-OUT_DIR = WORK / "experiments/results/p5p8"
+N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
 
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_BASE = 8

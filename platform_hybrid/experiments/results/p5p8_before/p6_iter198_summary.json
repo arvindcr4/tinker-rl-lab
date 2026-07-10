@@ -2,8 +2,8 @@
   "applied": false,
   "audit_metadata": {
     "audit_date": "2026-07-06",
-    "audit_source": "scripts/p5p8/p6_iter198_schema_drift_bump.py",
-    "baseline_audit_source": "scripts/p5p8/p6_iter186_coverage_audit.py",
+    "audit_source": "platform_modal/scripts/p5p8/p6_iter198_schema_drift_bump.py",
+    "baseline_audit_source": "platform_modal/scripts/p5p8/p6_iter186_coverage_audit.py",
     "have_jsonschema": true,
     "schema_backup_path": null,
     "schema_path": "registry/schema.json"

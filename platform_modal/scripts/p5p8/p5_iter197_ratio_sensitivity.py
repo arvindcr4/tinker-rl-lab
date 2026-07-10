@@ -38,7 +38,7 @@ Iter-197 is vein (b) at the ROBUSTNESS layer (sensitivity to axis choice + paire
 ratio CI): neither iter-193 nor any prior row asked "what if we pick the WORST
 stack axis instead of the BEST?"
 
-stdlib only. Outputs -> experiments/results/p5p8/p5_iter197_*.tsv|json
+stdlib only. Outputs -> platform_hybrid/experiments/results/p5p8/p5_iter197_*.tsv|json
 """
 from __future__ import annotations
 import csv, json, os, random

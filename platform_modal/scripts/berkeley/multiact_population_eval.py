@@ -100,7 +100,7 @@ def kendall_tau(a, b):
 # Data loaders (operate on REAL TSVs)
 # ----------------------------------------------------------------------------
 def load_zvf_summary():
-    """Parse experiments/results/zvf_summary.tsv -> dict[experiment] -> rows."""
+    """Parse platform_hybrid/experiments/results/zvf_summary.tsv -> dict[experiment] -> rows."""
     p = RESULTS / "zvf_summary.tsv"
     out = {}
     with p.open() as f:
@@ -139,7 +139,7 @@ def load_zvf_summary():
 
 
 def load_group_size_effect():
-    """Parse experiments/results/group_size_effect.tsv -> per-G reward table."""
+    """Parse platform_hybrid/experiments/results/group_size_effect.tsv -> per-G reward table."""
     p = RESULTS / "group_size_effect.tsv"
     out = {}
     with p.open() as f:

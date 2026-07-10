@@ -12,7 +12,7 @@ that flags:
 * MIN-REPORT items where every leaf is null (i.e. the entry is
   reporting-as-unknown on every leaf of that item).
 
-Output: experiments/results/p5p8/p6_iter118_strict_audit.json
+Output: platform_hybrid/experiments/results/p5p8/p6_iter118_strict_audit.json
 """
 import json
 import pathlib

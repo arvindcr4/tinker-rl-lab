@@ -39,7 +39,7 @@ with open('modal_results_all.json') as f:
 
 # Load Tinker original data
 tinker_metrics = []
-with open('experiments/results/arithmetic_metrics.jsonl') as f:
+with open('platform_hybrid/experiments/results/arithmetic_metrics.jsonl') as f:
     for line in f:
         tinker_metrics.append(json.loads(line))
 

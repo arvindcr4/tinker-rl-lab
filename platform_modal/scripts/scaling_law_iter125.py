@@ -52,11 +52,11 @@ This iteration delivers four falsifiable findings:
         the model is already capable.
 
 Outputs:
-  experiments/results/scaling_law_iter125_monotonicity.tsv
-  experiments/results/scaling_law_iter125_residual_decomp.tsv
-  experiments/results/scaling_law_iter125_three_phase.tsv
-  experiments/results/scaling_law_iter125_bimodality.tsv
-  experiments/results/scaling_law_iter125_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter125_monotonicity.tsv
+  platform_hybrid/experiments/results/scaling_law_iter125_residual_decomp.tsv
+  platform_hybrid/experiments/results/scaling_law_iter125_three_phase.tsv
+  platform_hybrid/experiments/results/scaling_law_iter125_bimodality.tsv
+  platform_hybrid/experiments/results/scaling_law_iter125_meta.json
   figures/scaling_law_iter125.pdf
 
 References (verified):

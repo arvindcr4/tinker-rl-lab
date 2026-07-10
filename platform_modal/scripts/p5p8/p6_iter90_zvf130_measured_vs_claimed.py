@@ -7,16 +7,16 @@ on n_seeds=5), cross-reference with each delta entry's *claimed* component count
 test whether the claimed deltas are informative about the measured zvf130 risk ranking.
 
 Inputs:
-  - experiments/results/zvf_iter130_method_risk.tsv (9 methods x n_seeds=5)
+  - platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv (9 methods x n_seeds=5)
   - registry/entries/zvf130_*.json (5 stack entries: cppo/es/mcgrpo/ngrpo/scafgrpo)
   - registry/entries/delta_*.json (14 variant-delta records)
   - registry/entries/tinker_*_qwen3.5-4b_gsm8k.json (N2 stack entries for grpo/aero/areal/gift)
 
 Outputs:
-  - experiments/results/p5p8/p6_iter90_zvf130_measured_audit.tsv (9 rows)
-  - experiments/results/p5p8/p6_iter90_zvf130_measured_pairs.tsv (36 rows = 9C2)
-  - experiments/results/p5p8/p6_iter90_zvf130_claim_vs_measured.tsv (9 rows: per-method claim x measured)
-  - experiments/results/p5p8/p6_iter90_zvf130_measured_audit.json (machine-readable)
+  - platform_hybrid/experiments/results/p5p8/p6_iter90_zvf130_measured_audit.tsv (9 rows)
+  - platform_hybrid/experiments/results/p5p8/p6_iter90_zvf130_measured_pairs.tsv (36 rows = 9C2)
+  - platform_hybrid/experiments/results/p5p8/p6_iter90_zvf130_claim_vs_measured.tsv (9 rows: per-method claim x measured)
+  - platform_hybrid/experiments/results/p5p8/p6_iter90_zvf130_measured_audit.json (machine-readable)
   - registry/entries/zvf130_<method>.json  (PATCHED: outcomes.measured_block_v2 populated)
 """
 import json

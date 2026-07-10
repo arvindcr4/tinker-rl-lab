@@ -37,11 +37,11 @@ Hypotheses:
        on at least 3/4 methods at tau=0.70
 
 Outputs:
-  experiments/results/p5p8/p7_iter179_per_fired.tsv        (raw per-(method, step, tau, G_N) rows)
-  experiments/results/p5p8/p7_iter179_per_prompt.tsv         (per-prompt restored contrast on fired steps)
-  experiments/results/p5p8/p7_iter179_summary.tsv           (18 rows = 4 methods × 6 tau × 3 G_N - sparse)
-  experiments/results/p5p8/p7_iter179_ci.tsv                (CI95 per (method, tau, G_N))
-  experiments/results/p5p8/p7_iter179_summary.json          (structured)
+  platform_hybrid/experiments/results/p5p8/p7_iter179_per_fired.tsv        (raw per-(method, step, tau, G_N) rows)
+  platform_hybrid/experiments/results/p5p8/p7_iter179_per_prompt.tsv         (per-prompt restored contrast on fired steps)
+  platform_hybrid/experiments/results/p5p8/p7_iter179_summary.tsv           (18 rows = 4 methods × 6 tau × 3 G_N - sparse)
+  platform_hybrid/experiments/results/p5p8/p7_iter179_ci.tsv                (CI95 per (method, tau, G_N))
+  platform_hybrid/experiments/results/p5p8/p7_iter179_summary.json          (structured)
 
 Stdlib only; deterministic.
 """
@@ -49,8 +49,8 @@ from __future__ import annotations
 import csv, glob, json, os, random, statistics
 
 WORKTREE = "/home/claude/tinker-rl-lab-minimax"
-DATA_DIR = os.path.join(WORKTREE, "experiments/results/n2_reward_tensor_resume")
-OUT_DIR = os.path.join(WORKTREE, "experiments/results/p5p8")
+DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
 os.makedirs(OUT_DIR, exist_ok=True)
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_BASE = 8; N_PROMPTS = 16

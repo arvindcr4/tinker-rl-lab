@@ -16,21 +16,21 @@ Frontier synthesis (Round 2): ZVF is a *censored contrast probability*, not
 difficulty; the clean formalization splits the collision mass by the sign of the
 saturated reward. This script operationalizes that split.
 
-Inputs (all under experiments/results/):
+Inputs (all under platform_hybrid/experiments/results/):
   tinker_gsm8k_zvf_s*.json          exact per-group rewards  (converged anchor)
   variance_mitigation.tsv           per-step zvf+reward, G=8  (plateau; AERO...)
   groupsize_zvf_sweep.json          per-step zvf+reward, G=2..16 (converged)
   drgrpo_gsm8k_cot_full.json        per-step zvf+reward (struggling low-acc)
   tool_code_reward_diagnostics.tsv  zvf=1.0 at reward 0 (collapse)
 Outputs:
-  experiments/results/zvf_signed_summary.tsv
-  experiments/results/zvf_signed_failure_corr.tsv
-  experiments/results/zvf_signed_aero.tsv
+  platform_hybrid/experiments/results/zvf_signed_summary.tsv
+  platform_hybrid/experiments/results/zvf_signed_failure_corr.tsv
+  platform_hybrid/experiments/results/zvf_signed_aero.tsv
 """
 import csv, glob, json, math, os, statistics as st
 from collections import defaultdict
 
-RES = "experiments/results"
+RES = "platform_hybrid/experiments/results"
 
 
 def odds_split(zvf, p, G):

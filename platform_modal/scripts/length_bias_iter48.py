@@ -26,21 +26,21 @@ We test whether signature_drgrpo > signature_grpo on both arithmetic_easy and
 gsm8k_cot, by paired bootstrap across seeds.
 
 Outputs (5 TSVs):
-  experiments/results/length_bias_iter48_plateau.tsv        per (task, algo,
+  platform_hybrid/experiments/results/length_bias_iter48_plateau.tsv        per (task, algo,
       seed): R_max, t_plat, R_at_plat, rising slope, plateau slope, signature
-  experiments/results/length_bias_iter48_grpo_vs_drgrpo.tsv  paired bootstrap
+  platform_hybrid/experiments/results/length_bias_iter48_grpo_vs_drgrpo.tsv  paired bootstrap
       on (signature, rising slope, plateau slope)
-  experiments/results/length_bias_iter48_summary.tsv          one-line rollup
+  platform_hybrid/experiments/results/length_bias_iter48_summary.tsv          one-line rollup
       per task with mean/SD/CI for the paired comparison
-  experiments/results/length_bias_iter48_rising_vs_plateau.tsv  within-algo
+  platform_hybrid/experiments/results/length_bias_iter48_rising_vs_plateau.tsv  within-algo
       paired: rising slope vs plateau slope per seed
-  experiments/results/length_bias_iter48_zvf_anchored.tsv     per (task, algo,
+  platform_hybrid/experiments/results/length_bias_iter48_zvf_anchored.tsv     per (task, algo,
       zvf_bin_around_plateau): the signature stratified by whether t_plat sits
       in a low/mid/high-ZVF step (cross-pillar with iter34 ZVF proxy)
 
 Reads:
-  experiments/results/drgrpo_vs_grpo.json   (arithmetic_easy: 5 seeds)
-  experiments/results/drgrpo_gsm8k_cot_full.json (gsm8k_cot: 3 seeds)
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json   (arithmetic_easy: 5 seeds)
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json (gsm8k_cot: 3 seeds)
 """
 from __future__ import annotations
 import csv

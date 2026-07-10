@@ -102,7 +102,7 @@ This verifies the paper, capstone, submission docs, anonymization hygiene, held-
 For blind-review export, you can generate a clean bundle with:
 
 ```bash
-python reports/final/prepare_blind_review_package.py --force
+python platform_tinker/reports/final/prepare_blind_review_package.py --force
 ```
 
 By default, the export script runs `python platform_local/run_all_audits.py` first and refuses to package files if the audit suite is failing.

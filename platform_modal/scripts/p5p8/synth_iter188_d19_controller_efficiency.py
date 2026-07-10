@@ -24,7 +24,7 @@ Pipeline:
   4. Bootstrap CIs across steps per method, paired across methods.
   5. 5 falsifiable hypotheses.
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   synth_iter188_d19_per_step.tsv     160 rows: per-(method,step) eta + dH/rollout
   synth_iter188_d19_per_method.tsv     4 rows: per-method mean-eta + CI
   synth_iter188_d19_per_tier.tsv       3 tiers x 4 methods: tier-stratified eta
@@ -39,7 +39,7 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-RES = ROOT / "experiments/results/p5p8"
+RES = ROOT / "platform_hybrid/experiments/results/p5p8"
 ITER187_PER_STEP = RES / "p7_iter187_infogain_per_step.tsv"
 ITER187_PER_METHOD = RES / "p7_iter187_infogain_per_method.tsv"
 G_ESC = 8

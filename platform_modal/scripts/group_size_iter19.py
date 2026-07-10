@@ -23,31 +23,31 @@ This script bridges three pillars:
 
 Inputs (real, measured):
 
-  experiments/results/group_size_g4_vs_g32_broader_scale.tsv
+  platform_hybrid/experiments/results/group_size_g4_vs_g32_broader_scale.tsv
       Retention of G=4 vs G=32 at T in {1,4,16,64}M with bootstrap
       95% CI.
 
-  experiments/results/group_size_isog_sizing.tsv
+  platform_hybrid/experiments/results/group_size_isog_sizing.tsv
       Per-(p_bin, Y_target) minimum G under iid and empirical
       (herding) decompositions.
 
-  experiments/results/group_size_deltadiv_decomp.tsv
+  platform_hybrid/experiments/results/group_size_deltadiv_decomp.tsv
       Per-step delta_div = ZVF_iid - ZVF_emp (sign convention:
       positive = anti-herding).
 
 Outputs (real artifacts):
 
-  experiments/results/group_size_iter19_retention_fit.tsv
+  platform_hybrid/experiments/results/group_size_iter19_retention_fit.tsv
       Fit parameters (slope, intercept, R^2) and per-T prediction
       for retention at T values outside the measured grid.
 
-  experiments/results/group_size_iter19_retention_pred.tsv
+  platform_hybrid/experiments/results/group_size_iter19_retention_pred.tsv
       Predicted retention-vs-T curve with 95% CI on the prediction.
 
-  experiments/results/group_size_iter19_isog_savings.tsv
+  platform_hybrid/experiments/results/group_size_iter19_isog_savings.tsv
       Per-(budget, G_target) Iso-G rollout cost vs static G=32.
 
-  experiments/results/group_size_iter19_isog_savings_summary.tsv
+  platform_hybrid/experiments/results/group_size_iter19_isog_savings_summary.tsv
       Single-row summary: mean Iso-G saving across budgets.
 
   figures/group_size_iter19.pdf  (and .png)

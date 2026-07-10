@@ -16,15 +16,15 @@ defensible claim: "the schema's true-positive rate is at least X% on the
 N=13-category stress test, with paired 95% bootstrap CI [...]".
 
 Outputs:
-  experiments/results/p5p8/registry_stress_per_run.tsv
+  platform_hybrid/experiments/results/p5p8/registry_stress_per_run.tsv
       one row per (entry_id, category, mutation_idx) — 700 rows
-  experiments/results/p5p8/registry_stress_summary.json
+  platform_hybrid/experiments/results/p5p8/registry_stress_summary.json
       machine-readable per-category TP / FP / FN + 95% paired bootstrap CI
       on the recovery rate (overall + per-category)
-  experiments/results/p5p8/registry_stress_misses.tsv
+  platform_hybrid/experiments/results/p5p8/registry_stress_misses.tsv
       one row per (entry_id, category, mutation_idx) where the schema
       MISSED the perturbation — feeds the regression work-list
-  experiments/results/p5p8/registry_stress_by_mutation.tsv
+  platform_hybrid/experiments/results/p5p8/registry_stress_by_mutation.tsv
       one row per (category, mutation_idx) with mean recovery across entries
   docs/p5p8_improvements/33_registry_stress_test.md
   1 line in findings_ledger.jsonl

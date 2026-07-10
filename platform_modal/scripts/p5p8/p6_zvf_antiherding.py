@@ -17,9 +17,9 @@ bootstrap 95% CI; per-step table for downstream P7 cross-paper coupling.
 
 Outputs
 -------
-- experiments/results/p5p8/p6_zvf_antiherding_summary.tsv  (4 rows: 1/method)
-- experiments/results/p5p8/p6_zvf_antiherding_per_step.tsv  (160 rows: 4x40)
-- experiments/results/p5p8/p6_zvf_antiherding_summary.json
+- platform_hybrid/experiments/results/p5p8/p6_zvf_antiherding_summary.tsv  (4 rows: 1/method)
+- platform_hybrid/experiments/results/p5p8/p6_zvf_antiherding_per_step.tsv  (160 rows: 4x40)
+- platform_hybrid/experiments/results/p5p8/p6_zvf_antiherding_summary.json
 - registry/entries/{tinker_grpo,tinker_aero,tinker_areal,tinker_gift,
   tinker_dapo,tinker_drgrpo,tinker_gspo}_*.json patched with
   outcomes.zvf_antiherding block (additive, schema-bounded)

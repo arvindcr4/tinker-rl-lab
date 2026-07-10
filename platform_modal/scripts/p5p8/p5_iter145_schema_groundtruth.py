@@ -10,8 +10,8 @@ per_step_zvf_path points to an existing tensor file and whether the
 loaded tensor's `cell.group_size` matches the declared G.
 
 Outputs:
-  - experiments/results/p5p8/p5_iter145_schema_groundtruth.tsv
-  - experiments/results/p5p8/p5_iter145_summary.json
+  - platform_hybrid/experiments/results/p5p8/p5_iter145_schema_groundtruth.tsv
+  - platform_hybrid/experiments/results/p5p8/p5_iter145_summary.json
 
 Falsifiable headline: zero manifest drift on a stack-consistency audit
 (n=X / 98 perfect on cell_id parsability + hash uniqueness + tensor
@@ -35,10 +35,10 @@ import sys
 from pathlib import Path
 
 REPO = Path("/home/claude/tinker-rl-lab-minimax")
-MAN_DIR = REPO / "experiments/results/mega_20260704/manifests"
-TENS_DIR = REPO / "experiments/results/mega_20260704/group_tensors"
-OUT_TSV = REPO / "experiments/results/p5p8/p5_iter145_schema_groundtruth.tsv"
-OUT_JSON = REPO / "experiments/results/p5p8/p5_iter145_summary.json"
+MAN_DIR = REPO / "platform_hybrid/experiments/results/mega_20260704/manifests"
+TENS_DIR = REPO / "platform_hybrid/experiments/results/mega_20260704/group_tensors"
+OUT_TSV = REPO / "platform_hybrid/experiments/results/p5p8/p5_iter145_schema_groundtruth.tsv"
+OUT_JSON = REPO / "platform_hybrid/experiments/results/p5p8/p5_iter145_summary.json"
 
 # Regex for cell_id: {model}_{task}_G{N}_t{T}_s{S}_{10hex}
 CELL_ID_RE = re.compile(
@@ -322,7 +322,7 @@ def main():
         m = dict(rows[idx]["_manifest_obj"])
         m[field] = new
         # write to a tmp file, audit, delete
-        tmp = REPO / f"experiments/results/p5p8/.tmp_perturb_{idx}.json"
+        tmp = REPO / f"platform_hybrid/experiments/results/p5p8/.tmp_perturb_{idx}.json"
         tmp.write_text(json.dumps(m))
         audited = audit_one(tmp)
         tmp.unlink()

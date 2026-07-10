@@ -193,5 +193,5 @@
   ],
   "git_sha": "iter-106 uncommitted",
   "audit_date": "2026-07-05",
-  "audit_source": "scripts/p5p8/p6_iter106_claim_evidence_ledger.py"
+  "audit_source": "platform_modal/scripts/p5p8/p6_iter106_claim_evidence_ledger.py"
 }

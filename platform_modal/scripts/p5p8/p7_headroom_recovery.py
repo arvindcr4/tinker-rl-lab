@@ -31,7 +31,7 @@ Headline questions (falsifiable):
   Q3. Is step-level ZVF an aliased predictor of per-prompt headroom?
       (correlation between step_zvf and mean per-prompt headroom at step)
 
-Outputs (under experiments/results/p5p8/):
+Outputs (under platform_hybrid/experiments/results/p5p8/):
   p7_headroom_recovery_n2_summary.tsv   -- one row per (method, controller)
   p7_headroom_recovery_n2_per_step.tsv  -- one row per (method, step)
   p7_headroom_recovery_n2_per_prompt.tsv -- one row per (method, step, prompt_index)

@@ -22,10 +22,10 @@ sensor could perfectly close the gap.
 
 Outputs
 -------
-experiments/results/p5p8/p8_decision_regret.tsv          (75 cells)
-experiments/results/p5p8/p8_decision_regret_boot.tsv     (25 paired-bootstrap CIs)
-experiments/results/p5p8/p8_decision_regret_summary.json
-experiments/results/p5p8/figures/p8_decision_regret.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_decision_regret.tsv          (75 cells)
+platform_hybrid/experiments/results/p5p8/p8_decision_regret_boot.tsv     (25 paired-bootstrap CIs)
+platform_hybrid/experiments/results/p5p8/p8_decision_regret_summary.json
+platform_hybrid/experiments/results/p5p8/figures/p8_decision_regret.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + sklearn + matplotlib. <=300 lines.
 """

@@ -48,7 +48,7 @@ Inputs : drgrpo_vs_grpo.json          (arithmetic_easy, Qwen2.5-0.5B,
                                        5 seeds x 2 algos, n=40 step log)
          drgrpo_gsm8k_cot_full.json   (GSM8K CoT, Qwen2.5-1.5B,
                                        3 seeds x 2 algos, n=30 step log)
-Outputs: experiments/results/length_bias_iter88_{perrun,quantile,
+Outputs: platform_hybrid/experiments/results/length_bias_iter88_{perrun,quantile,
          paired,summary}.tsv + meta.json
 Stdlib + numpy + scipy.stats + scipy.optimize.
 """

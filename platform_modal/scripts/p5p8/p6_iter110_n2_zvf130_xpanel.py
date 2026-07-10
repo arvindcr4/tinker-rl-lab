@@ -15,10 +15,10 @@ disagree, the registry is underdetermined -- exactly the kind of finding a
 paper reviewer would flag.
 
 Outputs:
-  experiments/results/p5p8/p6_iter110_n2_panel.tsv        (variant, metric, N2 deltas + CI)
-  experiments/results/p5p8/p6_iter110_zvf130_panel.tsv    (variant, metric, zvf130 deltas + CI)
-  experiments/results/p5p8/p6_iter110_xpanel_verdict.tsv (cross-panel AGREE/DIVERGE/NA)
-  experiments/results/p5p8/p6_iter110_xpanel_summary.json
+  platform_hybrid/experiments/results/p5p8/p6_iter110_n2_panel.tsv        (variant, metric, N2 deltas + CI)
+  platform_hybrid/experiments/results/p5p8/p6_iter110_zvf130_panel.tsv    (variant, metric, zvf130 deltas + CI)
+  platform_hybrid/experiments/results/p5p8/p6_iter110_xpanel_verdict.tsv (cross-panel AGREE/DIVERGE/NA)
+  platform_hybrid/experiments/results/p5p8/p6_iter110_xpanel_summary.json
   registry/entries/delta_{aero,gift,areal}.json            PATCHED with cross_panel_verdict
 
 Stdlib only. ~200 lines.
@@ -32,10 +32,10 @@ import statistics
 from collections import defaultdict
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-N2_DIR = ROOT / "experiments/results/n2_reward_tensor_resume"
-ZV130_TSV = ROOT / "experiments/results/zvf_iter130_risk_index.tsv"
+N2_DIR = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+ZV130_TSV = ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv"
 REG = ROOT / "registry/entries"
-OUT = ROOT / "experiments/results/p5p8"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 SEED = 20260705

@@ -41,10 +41,10 @@ This script:
    some threshold, doubling G' is wasted compute.
 
 Outputs:
-  experiments/results/p5p8/p7_iter95_pareto_gprime.tsv
-  experiments/results/p5p8/p7_iter95_dualformer_compare.tsv
-  experiments/results/p5p8/p7_iter95_n10_seed_stability.tsv
-  experiments/results/p5p8/p7_iter95_pareto_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_iter95_pareto_gprime.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter95_dualformer_compare.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter95_n10_seed_stability.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter95_pareto_summary.json
 """
 import json
 import math
@@ -55,9 +55,9 @@ from collections import defaultdict
 from pathlib import Path
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-N2_DIR = WORK / "experiments/results/n2_reward_tensor_resume"
-N10_DIR = WORK / "experiments/results/n10_seed_expansion"
-OUT_DIR = WORK / "experiments/results/p5p8"
+N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+N10_DIR = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
 
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_BASE = 8

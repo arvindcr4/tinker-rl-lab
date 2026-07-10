@@ -30,9 +30,9 @@ Concrete translation to TinkerRL-Bench (Pillar 1):
        joint space.
 
 DATA
-  - experiments/results/berkeley/eureka_rqs_per_anchor.tsv
+  - platform_hybrid/experiments/results/berkeley/eureka_rqs_per_anchor.tsv
        (12 anchors, 14 reward-quality features each)
-  - experiments/results/berkeley/decodingtrust_per_anchor.tsv
+  - platform_hybrid/experiments/results/berkeley/decodingtrust_per_anchor.tsv
        (12 anchors, 5 trust-dimension scores)
 
 HYPOTHESES
@@ -62,7 +62,7 @@ HYPOTHESES
      negative than RANDOM's.
 
 Outputs:
-  experiments/results/berkeley/mipro_pareto_{regret_curve, budget_eff,
+  platform_hybrid/experiments/results/berkeley/mipro_pareto_{regret_curve, budget_eff,
   paired, efficiency, info_gain}.tsv + mipro_pareto_summary.json
   docs/berkeley_improvements/23_mipro_pareto_grpo.md
   a removed orchestrator note (B1 patch)

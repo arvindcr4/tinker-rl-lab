@@ -30,19 +30,19 @@ Iso-Yield Dynamic Grouping (Iso-G):
     Iso-G picks G per prompt to keep Y >= Y_target uniformly.
 
 Inputs (real, measured):
-    experiments/results/tinker_gsm8k_zvf_s{42,123,456}.json
+    platform_hybrid/experiments/results/tinker_gsm8k_zvf_s{42,123,456}.json
         200 problems x G=8 rewards per problem (Qwen3-8B / GSM8K).
-    experiments/results/groupsize_zvf_sweep.json
+    platform_hybrid/experiments/results/groupsize_zvf_sweep.json
         12 runs x 40 steps of per-step ZVF; G in {2,4,8,16}.
 
 Outputs:
-    experiments/results/zvf_contrastive_yield.tsv
+    platform_hybrid/experiments/results/zvf_contrastive_yield.tsv
         Per-problem decomposition rows (p_x, ZVF_obs, ZVF_iid, delta_div,
         Y, iso_g_target).
-    experiments/results/zvf_iso_yield_sizing.tsv
+    platform_hybrid/experiments/results/zvf_iso_yield_sizing.tsv
         Required G(p) curve under three Y_target settings and the
         per-quintile mean G.
-    experiments/results/zvf_yield_vs_static.tsv
+    platform_hybrid/experiments/results/zvf_yield_vs_static.tsv
         Static-G vs Iso-G expected gradient-flow summary on GSM8K.
     figures/zvf_contrastive_yield.pdf
         Two-panel figure: (left) Y(p, G) curves vs p for G in

@@ -16,15 +16,15 @@ target-accuracy frontier: instead of asking "which G is optimal?", we
 ask "why does G=4 lose?" and assign percentages to each cause.
 
 Inputs:
-  experiments/results/group_size_token_normalized.tsv
-  experiments/results/group_size_iter43_eff_zvf.tsv
-  experiments/results/group_size_iter67_iaf_ratios.tsv
+  platform_hybrid/experiments/results/group_size_token_normalized.tsv
+  platform_hybrid/experiments/results/group_size_iter43_eff_zvf.tsv
+  platform_hybrid/experiments/results/group_size_iter67_iaf_ratios.tsv
 
 Outputs:
-  experiments/results/group_size_iter71_signal_loss.tsv
-  experiments/results/group_size_iter71_eff_batch.tsv
-  experiments/results/group_size_iter71_decomp.tsv
-  experiments/results/group_size_iter71_summary.tsv
+  platform_hybrid/experiments/results/group_size_iter71_signal_loss.tsv
+  platform_hybrid/experiments/results/group_size_iter71_eff_batch.tsv
+  platform_hybrid/experiments/results/group_size_iter71_decomp.tsv
+  platform_hybrid/experiments/results/group_size_iter71_summary.tsv
   figures/group_size_iter71_decomp.pdf
   figures/group_size_iter71_decomp.png
 """
@@ -306,17 +306,17 @@ def main() -> None:
         "iteration": 71,
         "pillar": "P3-Group-Size",
         "inputs": [
-            "experiments/results/group_size_token_normalized.tsv",
-            "experiments/results/group_size_iter43_eff_zvf.tsv",
-            "experiments/results/group_size_iter67_iaf_ratios.tsv",
+            "platform_hybrid/experiments/results/group_size_token_normalized.tsv",
+            "platform_hybrid/experiments/results/group_size_iter43_eff_zvf.tsv",
+            "platform_hybrid/experiments/results/group_size_iter67_iaf_ratios.tsv",
         ],
         "outputs": [
-            "experiments/results/group_size_iter71_signal_loss.tsv",
-            "experiments/results/group_size_iter71_eff_batch.tsv",
-            "experiments/results/group_size_iter71_decomp.tsv",
-            "experiments/results/group_size_iter71_multiplicative.tsv",
-            "experiments/results/group_size_iter71_fixed_budget.tsv",
-            "experiments/results/group_size_iter71_summary.tsv",
+            "platform_hybrid/experiments/results/group_size_iter71_signal_loss.tsv",
+            "platform_hybrid/experiments/results/group_size_iter71_eff_batch.tsv",
+            "platform_hybrid/experiments/results/group_size_iter71_decomp.tsv",
+            "platform_hybrid/experiments/results/group_size_iter71_multiplicative.tsv",
+            "platform_hybrid/experiments/results/group_size_iter71_fixed_budget.tsv",
+            "platform_hybrid/experiments/results/group_size_iter71_summary.tsv",
             "figures/group_size_iter71_decomp.pdf",
             "figures/group_size_iter71_decomp.png",
         ],

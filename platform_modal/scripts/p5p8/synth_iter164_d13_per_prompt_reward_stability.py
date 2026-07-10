@@ -13,13 +13,13 @@ Density = (#stable cells) / (2560).
 Per-method density: each method has 40 × 16 = 640 cells.
 
 Inputs:
-  experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
+  platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
 
 Outputs:
-  experiments/results/p5p8/synth_iter164_d13_per_cell.tsv     (2560 rows)
-  experiments/results/p5p8/synth_iter164_d13_per_eps.tsv      (3 rows: per-ε Wilson CIs)
-  experiments/results/p5p8/synth_iter164_d13_per_method.tsv   (4 rows: per-method density)
-  experiments/results/p5p8/synth_iter164_summary.json         (H1-H4 verdicts + D13 layer)
+  platform_hybrid/experiments/results/p5p8/synth_iter164_d13_per_cell.tsv     (2560 rows)
+  platform_hybrid/experiments/results/p5p8/synth_iter164_d13_per_eps.tsv      (3 rows: per-ε Wilson CIs)
+  platform_hybrid/experiments/results/p5p8/synth_iter164_d13_per_method.tsv   (4 rows: per-method density)
+  platform_hybrid/experiments/results/p5p8/synth_iter164_summary.json         (H1-H4 verdicts + D13 layer)
 
 Stdlib only. <= 280 lines.
 """

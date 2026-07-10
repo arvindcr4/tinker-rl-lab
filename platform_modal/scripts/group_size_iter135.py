@@ -38,11 +38,11 @@ combining three concrete tests:
 Outputs (5 TSVs + 1 figure, all derived from existing measured
 data -- no fabrication):
 
-  experiments/results/group_size_iter135_native_wu.tsv
-  experiments/results/group_size_iter135_threshold_tstar.tsv
-  experiments/results/group_size_iter135_zvf_mech_link.tsv
-  experiments/results/group_size_iter135_reward_quad.tsv
-  experiments/results/group_size_iter135_summary.tsv
+  platform_hybrid/experiments/results/group_size_iter135_native_wu.tsv
+  platform_hybrid/experiments/results/group_size_iter135_threshold_tstar.tsv
+  platform_hybrid/experiments/results/group_size_iter135_zvf_mech_link.tsv
+  platform_hybrid/experiments/results/group_size_iter135_reward_quad.tsv
+  platform_hybrid/experiments/results/group_size_iter135_summary.tsv
   figures/group_size_iter135.pdf
 """
 from __future__ import annotations

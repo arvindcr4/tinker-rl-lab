@@ -14,11 +14,11 @@ cost-optimal frame at rho in {2, 5, 10, 20, 50, 100, 200, 500}.
 
 Outputs
 -------
-experiments/results/p5p8/p8_noisy_sensor.tsv        (sigma x rho cost-optimal table)
-experiments/results/p5p8/p8_noisy_sensor_boot.tsv   (paired bootstrap CI, sigma x rho)
-experiments/results/p5p8/p8_noisy_sensor_breakeven.tsv  (per-sigma break-even L*)
-experiments/results/p5p8/p8_noisy_sensor_summary.json
-experiments/results/p5p8/figures/p8_noisy_sensor.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_noisy_sensor.tsv        (sigma x rho cost-optimal table)
+platform_hybrid/experiments/results/p5p8/p8_noisy_sensor_boot.tsv   (paired bootstrap CI, sigma x rho)
+platform_hybrid/experiments/results/p5p8/p8_noisy_sensor_breakeven.tsv  (per-sigma break-even L*)
+platform_hybrid/experiments/results/p5p8/p8_noisy_sensor_summary.json
+platform_hybrid/experiments/results/p5p8/figures/p8_noisy_sensor.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost. <=300 lines. Real data only.
 """

@@ -25,8 +25,8 @@ Cross-pillar tests:
   T5. Heldout zero-reward fraction vs late_minus_peak (the collapse slope)
 
 Outputs:
-  - experiments/results/zvf_scaling_cross_pillar.tsv
-  - experiments/results/zvf_scaling_cross_pillar_summary.tsv
+  - platform_hybrid/experiments/results/zvf_scaling_cross_pillar.tsv
+  - platform_hybrid/experiments/results/zvf_scaling_cross_pillar_summary.tsv
   - figures/zvf_scaling_cross_pillar.pdf
   - paper/sections/zvf_scaling.tex
 """
@@ -330,7 +330,7 @@ def write_tex(rows, tests):
         r"\texttt{is\_collapse} flag attached to the five-anchor scaling-law"
     )
     lines.append(
-        r"table (\texttt{experiments/results/scaling\_law\_three\_phase.tsv})"
+        r"table (\texttt{platform_hybrid/experiments/results/scaling\_law\_three\_phase.tsv})"
     )
     lines.append(
         r"is predictable from per-step heldout-reward statistics that are"
@@ -374,7 +374,7 @@ def write_tex(rows, tests):
         r"\caption{Five-anchor scaling-law corpus with two ZVF-proxy columns. "
         r"Nemotron-120B is the only \texttt{is\_collapse=True} row and the only "
         r"row with $\text{frac\_below\_0p1} > 0.1$ AND $\text{zero\_fraction} > 0.1$. "
-        r"Source: \texttt{experiments/results/zvf\_scaling\_cross\_pillar.tsv}.}"
+        r"Source: \texttt{platform_hybrid/experiments/results/zvf\_scaling\_cross\_pillar.tsv}.}"
     )
     lines.append(r"\label{tab:zvf-scaling-anchors}")
     lines.append(r"\end{table}")
@@ -402,7 +402,7 @@ def write_tex(rows, tests):
         r"five-anchor corpus. With $n=5$ the test is not powered to declare "
         r"significance at $\alpha=0.05$, so the table is reported as a "
         r"\emph{consistent-direction} diagnostic, not as a hypothesis test. "
-        r"Source: \texttt{experiments/results/zvf\_scaling\_cross\_pillar\_summary.tsv}.}"
+        r"Source: \texttt{platform_hybrid/experiments/results/zvf\_scaling\_cross\_pillar\_summary.tsv}.}"
     )
     lines.append(r"\label{tab:zvf-scaling-tests}")
     lines.append(r"\end{table}")

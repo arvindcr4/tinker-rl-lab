@@ -42,9 +42,9 @@ Method:
   - Badge uplift = sum(weight_new * 1.0) over v2 axes; deterministic.
 
 Outputs:
-  experiments/results/p5p8/p5_stack_axis_minreport.tsv
-  experiments/results/p5p8/p5_stack_axis_minreport_boot.tsv
-  experiments/results/p5p8/p5_stack_axis_minreport_summary.json
+  platform_hybrid/experiments/results/p5p8/p5_stack_axis_minreport.tsv
+  platform_hybrid/experiments/results/p5p8/p5_stack_axis_minreport_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p5_stack_axis_minreport_summary.json
 """
 from __future__ import annotations
 

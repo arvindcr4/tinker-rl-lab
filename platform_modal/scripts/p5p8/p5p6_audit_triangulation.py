@@ -24,8 +24,8 @@ This script computes the CROSS-PAPER coupling:
 
 Outputs
 -------
-experiments/results/p5p8/p5p6_audit_triangulation.tsv
-experiments/results/p5p8/p5p6_audit_triangulation_summary.json
+platform_hybrid/experiments/results/p5p8/p5p6_audit_triangulation.tsv
+platform_hybrid/experiments/results/p5p8/p5p6_audit_triangulation_summary.json
 
 Stdlib + pandas. <=200 lines.
 """

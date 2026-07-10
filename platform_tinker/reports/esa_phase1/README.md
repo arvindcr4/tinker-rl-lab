@@ -3,7 +3,7 @@
 This directory contains Arvind C R's **individual Semester-4 M.Tech Project
 Phase-1 report** for UE20CS971 under the guidance of Ramesh Prakash Guledgudd.
 It is distinct from the Semester-3 Group-6 capstone material under
-`reports/final/` and `sem 3 work/`.
+`platform_tinker/reports/final/` and `sem 3 work/`.
 
 ## Source of truth
 

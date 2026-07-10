@@ -29,15 +29,15 @@ Methodology:
    row 08 as a sanity check).
 
 Reads:
-- experiments/results/scaling_law_iter117_meta.json (5 anchors with R_max,
+- platform_hybrid/experiments/results/scaling_law_iter117_meta.json (5 anchors with R_max,
   params_B, family)
-- experiments/results/scaling_law_iter125_*.tsv (bimodality, three-phase,
+- platform_hybrid/experiments/results/scaling_law_iter125_*.tsv (bimodality, three-phase,
   residual_decomp)
-- experiments/results/scaling_law_iter129_*.tsv (capability-class scaling)
-- experiments/results/scaling_law_iter137_*.tsv (capability link)
-- experiments/results/berkeley/eureka_rqs_per_anchor.tsv (RQS covariate)
+- platform_hybrid/experiments/results/scaling_law_iter129_*.tsv (capability-class scaling)
+- platform_hybrid/experiments/results/scaling_law_iter137_*.tsv (capability link)
+- platform_hybrid/experiments/results/berkeley/eureka_rqs_per_anchor.tsv (RQS covariate)
 
-Writes (to experiments/results/berkeley/):
+Writes (to platform_hybrid/experiments/results/berkeley/):
 - cybench_tier_assignment.tsv     : per-anchor tier label + summary
 - cybench_tier_scaling.tsv        : per-tier rho + slope, with H1/H2/H3 tests
 - cybench_tier_shift.tsv          : 2-tier -> 4-tier shift in the cross-class gap

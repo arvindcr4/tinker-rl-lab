@@ -4,12 +4,12 @@ zvf_gradient_coupling.py — Pillar 2 (ZVF) cross-pillar elevation, iter18.
 
 Couples per-step ZVF with the gradient-flow proxies
 (advantage_variance, mean_reward, entropy, grad_norm) recorded in
-experiments/results/group_size_advantage_variance.tsv (G-sweep on
+platform_hybrid/experiments/results/group_size_advantage_variance.tsv (G-sweep on
 Qwen2.5-0.5B arithmetic, G in {2,4,8,16}, 3 seeds, 40 steps each).
 
 Produces:
-  - experiments/results/zvf_gradient_coupling.tsv   (per-G regression table)
-  - experiments/results/zvf_gradient_coupling_pivot.tsv  (per-(G,step) stats)
+  - platform_hybrid/experiments/results/zvf_gradient_coupling.tsv   (per-G regression table)
+  - platform_hybrid/experiments/results/zvf_gradient_coupling_pivot.tsv  (per-(G,step) stats)
   - figures/zvf_gradient_coupling.pdf
   - paper/sections/zvf_gradient.tex
 
@@ -241,7 +241,7 @@ def write_tex(out_path, per_g_pooled_rows, per_step_stats_rows, header=""):
     lines.append(
         r"\caption{Per-step Pearson correlation between ZVF and "
         r"gradient-flow proxies, pooled across seeds within each $G$. "
-        r"Source: \texttt{experiments/results/zvf\_gradient\_coupling.tsv}.}"
+        r"Source: \texttt{platform_hybrid/experiments/results/zvf\_gradient\_coupling.tsv}.}"
     )
     lines.append(r"\label{tab:zvf-gradient-coupling}")
     lines.append(r"\end{table}")

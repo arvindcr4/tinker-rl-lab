@@ -23,11 +23,11 @@ prompt". This is the counterfactual headroom the iter-51 controller
 left on the table.
 
 Outputs (worktree-relative):
-  experiments/results/p5p8/p7_cf_granularity_per_step.tsv
-  experiments/results/p5p8/p7_cf_granularity_per_prompt.tsv
-  experiments/results/p5p8/p7_cf_granularity_summary.tsv
-  experiments/results/p5p8/p7_cf_granularity_boot.tsv
-  experiments/results/p5p8/p7_cf_granularity_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_cf_granularity_per_step.tsv
+  platform_hybrid/experiments/results/p5p8/p7_cf_granularity_per_prompt.tsv
+  platform_hybrid/experiments/results/p5p8/p7_cf_granularity_summary.tsv
+  platform_hybrid/experiments/results/p5p8/p7_cf_granularity_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p7_cf_granularity_summary.json
 
 Stdlib only.
 """

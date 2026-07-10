@@ -31,11 +31,11 @@ Calibration objective (chosen for paper-facing readability):
     point (CI excludes zero) with the **lowest seed-CV**.
 
 Outputs (worktree-relative):
-    experiments/results/p5p8/p7_unified_controller_per_seed.tsv
-    experiments/results/p5p8/p7_unified_controller_per_step_n2.tsv
-    experiments/results/p5p8/p7_unified_controller_summary.tsv
-    experiments/results/p5p8/p7_unified_controller_ci.tsv
-    experiments/results/p5p8/p7_unified_controller_summary.json
+    platform_hybrid/experiments/results/p5p8/p7_unified_controller_per_seed.tsv
+    platform_hybrid/experiments/results/p5p8/p7_unified_controller_per_step_n2.tsv
+    platform_hybrid/experiments/results/p5p8/p7_unified_controller_summary.tsv
+    platform_hybrid/experiments/results/p5p8/p7_unified_controller_ci.tsv
+    platform_hybrid/experiments/results/p5p8/p7_unified_controller_summary.json
 
 Stdlib only.
 """

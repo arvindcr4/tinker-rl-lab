@@ -30,8 +30,8 @@ Local credential files were detected during artifact hygiene checks, but their c
 Run these checks after rebuilding the submission artifacts:
 
 ```sh
-unzip -l reports/final/submission_uploads/data_and_code.zip | rg '(^|/)(\.env|\.env\.|\.tinker_api_key|.*\.key|.*\.pem|.*\.token|.*\.secret|wandb)(/|$)'
-unzip -l reports/final/submission_uploads/overleaf_document.zip | rg '(^|/)(\.env|\.env\.|\.tinker_api_key|.*\.key|.*\.pem|.*\.token|.*\.secret|wandb)(/|$)'
+unzip -l platform_tinker/reports/final/submission_uploads/data_and_code.zip | rg '(^|/)(\.env|\.env\.|\.tinker_api_key|.*\.key|.*\.pem|.*\.token|.*\.secret|wandb)(/|$)'
+unzip -l platform_tinker/reports/final/submission_uploads/overleaf_document.zip | rg '(^|/)(\.env|\.env\.|\.tinker_api_key|.*\.key|.*\.pem|.*\.token|.*\.secret|wandb)(/|$)'
 ```
 
 Expected result: no output.

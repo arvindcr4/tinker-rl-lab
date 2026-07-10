@@ -14,7 +14,7 @@ For every entry in registry/entries/ compute:
   - cross-delta verdict signature: per delta, the verdict string of
     every claim_validation row, hashed to a short tag for comparison
 
-Writes three artifacts to experiments/results/p5p8/:
+Writes three artifacts to platform_hybrid/experiments/results/p5p8/:
   - p6_registry_health.tsv         (one row per entry; long format)
   - p6_registry_health_coverage.tsv (framework × method grid)
   - p6_registry_health_summary.json  (single object with headline stats)

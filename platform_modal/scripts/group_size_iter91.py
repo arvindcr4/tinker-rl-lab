@@ -28,22 +28,22 @@ This iteration sharpens the falsification along three axes:
    noise?).
 
 Inputs (real, measured, no fabrication):
-    experiments/results/group_size_token_normalized.tsv
+    platform_hybrid/experiments/results/group_size_token_normalized.tsv
         Held-out accuracy under G in {4,8,16,32,64} x T in
         {1M, 4M, 16M, 64M} with per-row 95% CI widths.
 
-    experiments/results/groupsize_zvf_sweep.tsv
+    platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
         Qwen2.5-0.5B / arithmetic, G in {2,4,8,16}, 3 seeds.
 
 Outputs:
-    experiments/results/group_size_iter91_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter91_summary.tsv
         Three blocks (Pareto, iso-cost, bootstrap CI) as long-form
         key/value TSV plus a 'finding' column.
-    experiments/results/group_size_iter91_pareto.tsv
+    platform_hybrid/experiments/results/group_size_iter91_pareto.tsv
         Per-T best G and best accuracy with envelope gaps.
-    experiments/results/group_size_iter91_isocost.tsv
+    platform_hybrid/experiments/results/group_size_iter91_isocost.tsv
         T_needed(target, G) and the Pareto-min T_needed(target).
-    experiments/results/group_size_iter91_bootstrap.tsv
+    platform_hybrid/experiments/results/group_size_iter91_bootstrap.tsv
         Per-T bootstrap R(2.5/50/97.5).
     figures/group_size_iter91.pdf
         Three-panel figure: (A) Pareto envelope, (B) iso-cost

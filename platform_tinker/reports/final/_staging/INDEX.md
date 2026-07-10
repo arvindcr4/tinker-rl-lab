@@ -1,4 +1,4 @@
-# reports/final/_staging/ — INDEX
+# platform_tinker/reports/final/_staging/ — INDEX
 
 **Purpose:** Staging/snapshot area for report drafts superseded by the current final report.
 

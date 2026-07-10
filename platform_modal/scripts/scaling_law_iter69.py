@@ -29,12 +29,12 @@ trace length (works for n >= 4 via FFT on zero-padded arrays)
 and has a 40-year theoretical literature on 1/f^alpha noise.
 
 Outputs (6 TSV + 1 fig + 1 tex):
-  experiments/results/scaling_law_iter69_acf.tsv
-  experiments/results/scaling_law_iter69_spectral.tsv
-  experiments/results/scaling_law_iter69_ar1.tsv
-  experiments/results/scaling_law_iter69_coupling.tsv
-  experiments/results/scaling_law_iter69_arch.tsv
-  experiments/results/scaling_law_iter69_predictions.tsv
+  platform_hybrid/experiments/results/scaling_law_iter69_acf.tsv
+  platform_hybrid/experiments/results/scaling_law_iter69_spectral.tsv
+  platform_hybrid/experiments/results/scaling_law_iter69_ar1.tsv
+  platform_hybrid/experiments/results/scaling_law_iter69_coupling.tsv
+  platform_hybrid/experiments/results/scaling_law_iter69_arch.tsv
+  platform_hybrid/experiments/results/scaling_law_iter69_predictions.tsv
   figures/scaling_law_iter69.{pdf,png}
   paper/sections/scaling_law_iter69.tex
 

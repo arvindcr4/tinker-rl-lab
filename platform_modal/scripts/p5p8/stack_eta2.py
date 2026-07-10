@@ -14,8 +14,8 @@ genuinely stack-driven (zvf, pcd, reward). This is a quantitative version of
 the Pillar-1 "estimator equivalence / stack-conditioning" claim.
 
 Outputs:
-  experiments/results/p5p8/stack_eta2.tsv
-  experiments/results/p5p8/stack_eta2.json
+  platform_hybrid/experiments/results/p5p8/stack_eta2.tsv
+  platform_hybrid/experiments/results/p5p8/stack_eta2.json
 """
 from __future__ import annotations
 

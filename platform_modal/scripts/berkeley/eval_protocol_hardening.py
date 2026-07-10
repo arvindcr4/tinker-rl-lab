@@ -20,19 +20,19 @@ Hypotheses tested on real Pillar-2 (ZVF) iter130 per-seed risk data:
       driven by ONE of these clusters, not by all three.
 
 Stdlib-only. Outputs:
-  experiments/results/berkeley/eval_protocol_mvsp.tsv
-  experiments/results/berkeley/eval_protocol_robustness.tsv
-  experiments/results/berkeley/eval_protocol_ablation.tsv
-  experiments/results/berkeley/eval_protocol_clusters.tsv
-  experiments/results/berkeley/eval_protocol_summary.json
+  platform_hybrid/experiments/results/berkeley/eval_protocol_mvsp.tsv
+  platform_hybrid/experiments/results/berkeley/eval_protocol_robustness.tsv
+  platform_hybrid/experiments/results/berkeley/eval_protocol_ablation.tsv
+  platform_hybrid/experiments/results/berkeley/eval_protocol_clusters.tsv
+  platform_hybrid/experiments/results/berkeley/eval_protocol_summary.json
 """
 import csv, json, math, random, statistics, itertools
 from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-RISK_TSV = ROOT / "experiments/results/zvf_iter130_risk_index.tsv"
-OUT = ROOT / "experiments/results/berkeley"
+RISK_TSV = ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv"
+OUT = ROOT / "platform_hybrid/experiments/results/berkeley"
 
 VAR_MIT = ["grpo", "ngrpo", "aero", "cppo", "mcgrpo", "areal", "gift", "es", "scafgrpo"]
 

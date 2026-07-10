@@ -35,7 +35,7 @@ Pipeline:
        H6: 4sensor STRICTLY worse than 20raw at c in {10, 100} on the
            MIN-cost gap (i.e., 4sensor alone is worse than no V-stat)
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   p8_iter188_cost_curves.tsv    3 fsets x 4 c x 100 thresholds (rate sweep)
   p8_iter188_min_cost.tsv       3 fsets x 4 c x 5 seeds = 60 rows
   p8_iter188_min_cost_gap.tsv   2 contrasts x 4 c = 8 rows (gap + CI)

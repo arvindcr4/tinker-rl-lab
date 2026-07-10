@@ -21,7 +21,7 @@ from the registry. Two new entries ship this iter:
   * delta_liteppo --- LitePPO (reduced-variant PPO without the value
     head / GAE). Provenance = iter-45 colab runs; same measured=null
     policy as delta_reinforce. LitePPO is mentioned in
-    `experiments/results/EXPERIMENT_LEDGER.md` as `ppo_lite` but has
+    `platform_hybrid/experiments/results/EXPERIMENT_LEDGER.md` as `ppo_lite` but has
     no registry entry.
 
 Plus a cross-reference audit (`missing_delta_audit.tsv`):
@@ -31,10 +31,10 @@ Plus a cross-reference audit (`missing_delta_audit.tsv`):
   CLAIMED_BUT_MISSING delta_ids (the next iter's backlog).
 
 Writes:
-  experiments/results/p5p8/p6_new_deltas_audit.tsv        (one row per new delta)
-  experiments/results/p5p8/p6_new_deltas_measured.tsv     (per (delta, metric, panel))
-  experiments/results/p5p8/p6_new_deltas_summary.json     (headline numbers)
-  experiments/results/p5p8/missing_delta_audit.tsv        (claimed but missing)
+  platform_hybrid/experiments/results/p5p8/p6_new_deltas_audit.tsv        (one row per new delta)
+  platform_hybrid/experiments/results/p5p8/p6_new_deltas_measured.tsv     (per (delta, metric, panel))
+  platform_hybrid/experiments/results/p5p8/p6_new_deltas_summary.json     (headline numbers)
+  platform_hybrid/experiments/results/p5p8/missing_delta_audit.tsv        (claimed but missing)
   registry/entries/delta_adaptiveg.json                   (new)
   registry/entries/delta_reinforce.json                   (new)
   registry/entries/delta_liteppo.json                     (new)
@@ -66,7 +66,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 SEED = 20260704
 N_BOOT = 2000
-ADAPTIVE_TSV = ROOT / "experiments/results/quick_20260704/qp7_adaptive.tsv"
+ADAPTIVE_TSV = ROOT / "platform_hybrid/experiments/results/quick_20260704/qp7_adaptive.tsv"
 
 
 # ---------------------------------------------------------------------------
@@ -131,7 +131,7 @@ def adaptiveg_measured():
                 "n_boot": N_BOOT, "seed": SEED, "ci_level": 0.95,
                 "source": "platform_modal/scripts/p5p8/p6_add_missing_deltas.py",
             },
-            "source": "experiments/results/quick_20260704/qp7_adaptive.tsv",
+            "source": "platform_hybrid/experiments/results/quick_20260704/qp7_adaptive.tsv",
             "note": f"arm B (adaptive 4->6->8) - arm A (fixed G=4); paired by step",
         })
     return out, common_steps
@@ -249,7 +249,7 @@ def build_reinforce_entry():
                       "clip_eps_low=null, clip_eps_high=null to mark reported-as-absent)."},
         ],
         "notes": ("Iter-54 vein (d): REINFORCE is mentioned in "
-                  "experiments/results/EXPERIMENT_LEDGER.md (gsm8k-reinforce, "
+                  "platform_hybrid/experiments/results/EXPERIMENT_LEDGER.md (gsm8k-reinforce, "
                   "4 wandb runs on Qwen3-8B / Llama-3.1-8B-Instruct) but no "
                   "delta_*.json existed. Measured block intentionally null: "
                   "no same-stack REINFORCE arm exists in the worktree, so adding "
@@ -286,7 +286,7 @@ def build_liteppo_entry():
                       "(symmetric clip, unlike DAPO's asymmetric 0.2/0.28)."},
         ],
         "notes": ("Iter-54 vein (d): LitePPO is mentioned in "
-                  "experiments/results/EXPERIMENT_LEDGER.md as ppo_lite but had no "
+                  "platform_hybrid/experiments/results/EXPERIMENT_LEDGER.md as ppo_lite but had no "
                   "delta_*.json. Citation is a transparent placeholder (arxiv=null) "
                   "because no peer-reviewed LitePPO paper is verified; this is a "
                   "known limitation flagged on the entry itself, not hidden. "

@@ -38,8 +38,8 @@ exact hypergeometric subsampling to G in {2,4,8} -- no Monte-Carlo):
 import json, glob, math, os
 from collections import defaultdict
 
-RES = "experiments/results"
-OUT = "experiments/results/berkeley"
+RES = "platform_hybrid/experiments/results"
+OUT = "platform_hybrid/experiments/results/berkeley"
 os.makedirs(OUT, exist_ok=True)
 
 # ---- load real per-prompt rollout rewards (n=8 binary each) ----

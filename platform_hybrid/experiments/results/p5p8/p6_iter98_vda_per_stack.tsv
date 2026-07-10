@@ -14,7 +14,7 @@ zvf130_es	worktree-zvf130-batch	open	es	1	0	0	0	1	0	0	0.0000
 zvf130_ngrpo	worktree-zvf130-batch	open	ngrpo	1	0	0	0	1	0	0	0.0000
 zvf130_scafgrpo	worktree-zvf130-batch	open	scafgrpo	1	0	0	0	1	0	0	0.0000
 colab-open_grpo_e3	colab-open-trainer	open	grpo	0	0	0	0	0	0	0	0.0000
-openrlhf_grpo_qwen3-8b_gsm8k	openrlhf	open	grpo	0	0	0	0	0	0	0	0.0000
+openrlhf_grpo_qwen3-8b_gsm8k	platform_modal/openrlhf	open	grpo	0	0	0	0	0	0	0	0.0000
 tinker_grpo_qwen3-8b_gsm8k	tinker	managed	grpo	0	0	0	0	0	0	0	0.0000
 tinker_grpo_qwen3.5-4b_gsm8k	tinker	managed	grpo	0	0	0	0	0	0	0	0.0000
 trl_grpo_qwen3-8b_gsm8k	trl	open	grpo	0	0	0	0	0	0	0	0.0000

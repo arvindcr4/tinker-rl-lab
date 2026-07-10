@@ -17,9 +17,9 @@ naive prediction, because reliable (p~1) tasks dominate the all-k-pass set. The
 excess is a functional of the SAME per-task variance sigma^2_p that drives the
 Pillar-2 ZVF / group-size collapse -- a cross-pillar bridge.
 
-Runs on REAL per-prompt data: experiments/results/zvf_iter46_per_prompt_isog.tsv
+Runs on REAL per-prompt data: platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv
 (Qwen3-8B on tinker_gsm8k; 505 distinct (seed,problem) tasks, p_x per task).
-Outputs -> experiments/results/berkeley/passk_*.tsv + passk_reliability_summary.json
+Outputs -> platform_hybrid/experiments/results/berkeley/passk_*.tsv + passk_reliability_summary.json
 No fabricated numbers; every value is computed from the on-disk distribution.
 """
 import csv, json, math, os

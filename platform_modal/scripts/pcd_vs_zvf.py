@@ -22,7 +22,7 @@ sign-resolution claim with the available proxy and flags the data gap. Stdlib on
 """
 import json, glob, math, os, random
 
-RES = "experiments/results"
+RES = "platform_hybrid/experiments/results"
 random.seed(0)
 
 # ---------- helpers (no numpy/scipy dependency) ----------

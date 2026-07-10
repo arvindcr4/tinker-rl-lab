@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P6 iter-130 patcher: recompute the 5 remaining stale `mag_mean` point
 rows (delta_cppo, delta_es, delta_mcgrpo, delta_ngrpo, delta_scafgrpo) from
-per-seed `mean_zvf` in experiments/results/zvf_iter130_risk_index.tsv.
+per-seed `mean_zvf` in platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv.
 
 For each method, computes:
   baseline_mean = mean(per-seed grpo mean_zvf)
@@ -11,7 +11,7 @@ For each method, computes:
 
 Patches the registry entries in place (writes a new measured[] row with
 ci_method=bootstrap_paired_5seed, replaces the point_no_perseed_sd row).
-Writes experiments/results/p5p8/p6_iter130_patch_log.tsv with diff per entry.
+Writes platform_hybrid/experiments/results/p5p8/p6_iter130_patch_log.tsv with diff per entry.
 
 Stdlib only. <= 300 lines.
 """
@@ -108,7 +108,7 @@ def patch_entry(entry_id, per_seed):
             "ci_level": 0.95,
             "source": "platform_modal/scripts/p5p8/p6_iter130_patch_stale_mag.py",
         },
-        "source": "experiments/results/zvf_iter130_risk_index.tsv",
+        "source": "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv",
         "note": f"recomputed iter-130 paired-seed bootstrap on mean_zvf; "
                 f"method={method}, n_seeds={n_seeds}, B={N_BOOT}, seed={SEED}",
         "synth_from_agg": False,

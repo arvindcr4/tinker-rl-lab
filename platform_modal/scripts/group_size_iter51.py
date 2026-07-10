@@ -2,11 +2,11 @@
 """Iter 51 — Pillar 3: Reward-vs-G curves, broader-scale G=4~G=32 test, Wu 2025 fit.
 
 Inputs (read-only):
-  experiments/results/group_size_token_normalized.tsv   (4 budgets x 5 G)
-  experiments/results/groupsize_zvf_sweep.tsv          (4 G rows from n=3 seeds)
-  experiments/results/group_size_iter43_summary.tsv     (Wu retention at 4 budgets)
+  platform_hybrid/experiments/results/group_size_token_normalized.tsv   (4 budgets x 5 G)
+  platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv          (4 G rows from n=3 seeds)
+  platform_hybrid/experiments/results/group_size_iter43_summary.tsv     (Wu retention at 4 budgets)
 
-Outputs (TSVs, written to experiments/results/):
+Outputs (TSVs, written to platform_hybrid/experiments/results/):
   group_size_iter51_reward_vs_G.tsv          reward/G curve per budget
   group_size_iter51_broader_tost.tsv         G=4 vs G=32 TOST at 4 budgets x 4 epsilons
   group_size_iter51_peak_shift.tsv            argmax G as fn of budget

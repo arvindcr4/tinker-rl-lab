@@ -23,15 +23,15 @@ data. Channel:  p_obs = alpha + (1 - alpha - beta) * p_true .
       masking) -> reported ZVF UNDER-states true reward sparsity / collapse
 
 Real inputs (all in-repo):
-  experiments/results/samestack_ppo_grpo.json     (5 seeds x 2 algos, heldout+steps)
-  experiments/results/group_size_effect.tsv       (heldout_acc per G)
-  experiments/results/berkeley/verifiable_zvf_percell.tsv (real n_correct/G cells)
+  platform_hybrid/experiments/results/samestack_ppo_grpo.json     (5 seeds x 2 algos, heldout+steps)
+  platform_hybrid/experiments/results/group_size_effect.tsv       (heldout_acc per G)
+  platform_hybrid/experiments/results/berkeley/verifiable_zvf_percell.tsv (real n_correct/G cells)
 """
 import json, math, csv
 import numpy as np
 
 RNG = np.random.default_rng(20260704)
-OUT = "experiments/results/berkeley"
+OUT = "platform_hybrid/experiments/results/berkeley"
 
 
 def wtsv(name, header, rows):
@@ -48,7 +48,7 @@ def chan(p, a, b):
 
 
 # ---------------------------------------------------------------- load real data
-ss = json.load(open("experiments/results/samestack_ppo_grpo.json"))
+ss = json.load(open("platform_hybrid/experiments/results/samestack_ppo_grpo.json"))
 runs = ss["runs"]
 runs = runs if isinstance(runs, list) else list(runs.values())
 heldout = {"grpo": {}, "ppo": {}}
@@ -60,7 +60,7 @@ p_held = np.array([heldout["ppo"][s] for s in seeds])
 N_EVAL = 100  # heldout eval-set size implied by the reported SEs (~0.003 at p~0.99)
 
 # group-size effect (heldout_acc per G) from the headline JSON blob
-gs_rows = list(csv.reader(open("experiments/results/group_size_effect.tsv"), delimiter="\t"))
+gs_rows = list(csv.reader(open("platform_hybrid/experiments/results/group_size_effect.tsv"), delimiter="\t"))
 per_G = None
 for row in gs_rows:
     if len(row) >= 3 and row[1] == "per_G_table":

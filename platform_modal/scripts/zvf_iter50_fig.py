@@ -21,8 +21,8 @@ from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, ".."))
-LAGGED = os.path.join(ROOT, "experiments/results/zvf_iter50_lagged_corr.tsv")
-SUMMARY = os.path.join(ROOT, "experiments/results/zvf_iter50_summary.tsv")
+LAGGED = os.path.join(ROOT, "platform_hybrid/experiments/results/zvf_iter50_lagged_corr.tsv")
+SUMMARY = os.path.join(ROOT, "platform_hybrid/experiments/results/zvf_iter50_summary.tsv")
 FIG_DIR = os.path.join(ROOT, "figures")
 OUT_PDF = os.path.join(FIG_DIR, "zvf_iter50.pdf")
 OUT_PNG = os.path.join(FIG_DIR, "zvf_iter50.png")
@@ -295,7 +295,7 @@ def main():
     # values: pull all per-(method,seed) phase-2 integrals from
     # zvf_iter50_phase_integrals.tsv and bootstrap the CI here.
     integ = defaultdict(list)
-    integ_path = os.path.join(ROOT, "experiments/results/zvf_iter50_phase_integrals.tsv")
+    integ_path = os.path.join(ROOT, "platform_hybrid/experiments/results/zvf_iter50_phase_integrals.tsv")
     with open(integ_path) as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
@@ -357,7 +357,7 @@ def main():
     pdf.text(36, 260, "  P4 argmax over LAGS of GRPO r is positive               → PASS  L* = +10",
              size=9, color=(0.0, 0.4, 0.0))
 
-    pdf.text(36, 235, "Source: experiments/results/{zvf_iter50_lagged_corr, zvf_iter50_phase_integrals, zvf_iter50_summary, zvf_iter50_predictions}.tsv",
+    pdf.text(36, 235, "Source: platform_hybrid/experiments/results/{zvf_iter50_lagged_corr, zvf_iter50_phase_integrals, zvf_iter50_summary, zvf_iter50_predictions}.tsv",
              size=8, color=(0.4, 0.4, 0.4))
     pdf.text(36, 222, "Driver: platform_modal/scripts/zvf_iter50.py and platform_modal/scripts/zvf_iter50_fig.py", size=8, color=(0.4, 0.4, 0.4))
     pdf.text(36, 209, "Script: stdlib only; B=2000 percentile bootstrap CIs (seed 20240702); PEER OF platform_modal/scripts/zvf_diagnostic.py.",

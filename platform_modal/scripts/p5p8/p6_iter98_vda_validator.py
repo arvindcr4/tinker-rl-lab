@@ -6,7 +6,7 @@ to close the delta_drgrpo stale-audit drift) and the per-component VDA
 audit (mint vein "how much of the registry is actually verified vs
 labelled").
 
-Stdlib only. Outputs (5 files in experiments/results/p5p8/):
+Stdlib only. Outputs (5 files in platform_hybrid/experiments/results/p5p8/):
 
 - p6_iter98_vda_per_stack.tsv     : per-stack record VDA summary (20 rows)
 - p6_iter98_vda_per_component.tsv : per-(delta,component) coverage table

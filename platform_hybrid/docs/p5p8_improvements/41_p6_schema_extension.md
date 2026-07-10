@@ -20,7 +20,7 @@ Inputs:
 
 - `registry/schema.json` — the registry's JSON-Schema-2020-12 source
 - `registry/entries/*.json` — the 31 stack records
-- `scripts/p5p8/delta_minreport_consistency.py` — the iter-30 audit
+- `platform_modal/scripts/p5p8/delta_minreport_consistency.py` — the iter-30 audit
   (this iter extends its `DELTA_IMPLICATIONS` table)
 
 Per pair:
@@ -28,7 +28,7 @@ Per pair:
 1. Add the optional field to `min_report.loss_form.properties` (NOT to
    the `required` clause → backward compatible).
 2. Update `DELTA_IMPLICATIONS` in
-   `scripts/p5p8/delta_minreport_consistency.py` to map the
+   `platform_modal/scripts/p5p8/delta_minreport_consistency.py` to map the
    (delta_id, component) pair onto the new field.
 3. Populate the new field on the entries that *claim* the corresponding
    component as `implemented` (with honest values; for surrogate /
@@ -102,7 +102,7 @@ adoption-without-evidence.
   `token_aggregation=token`, `sampling_dynamic_filter=true`)
 - `registry/entries/tinker_gift_qwen3.5-4b_gsm8k.json` (populated
   `reward_shaping_type=gamma_baseline`)
-- `scripts/p5p8/delta_minreport_consistency.py` (extended
+- `platform_modal/scripts/p5p8/delta_minreport_consistency.py` (extended
   `DELTA_IMPLICATIONS` to map 4 newly-auditable pairs)
 - `experiments/results/p5p8/delta_minreport_consistency.tsv` (32 rows:
   re-run after bump + population)

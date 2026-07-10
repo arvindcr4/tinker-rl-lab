@@ -17,10 +17,10 @@ For each tree in {XGB-20raw, XGB-24full} and each mislabel rate epsilon in
 Paired bootstrap B=400 seed=20260705.
 
 Outputs:
-  experiments/results/p5p8/p8_iter132_mislabel_main.tsv (50 rows: 5 eps x 2 trees x 5 metrics)
-  experiments/results/p5p8/p8_iter132_mislabel_flip.tsv  (rows: 5 eps x 2 trees x 2 ops (tp @ 0.5 / cost @ tau*))
-  experiments/results/p5p8/p8_iter132_mislabel_boot.tsv  (paired bootstrap CIs per gap, 5 eps x 5 metrics)
-  experiments/results/p5p8/p8_iter132_mislabel_summary.json
+  platform_hybrid/experiments/results/p5p8/p8_iter132_mislabel_main.tsv (50 rows: 5 eps x 2 trees x 5 metrics)
+  platform_hybrid/experiments/results/p5p8/p8_iter132_mislabel_flip.tsv  (rows: 5 eps x 2 trees x 2 ops (tp @ 0.5 / cost @ tau*))
+  platform_hybrid/experiments/results/p5p8/p8_iter132_mislabel_boot.tsv  (paired bootstrap CIs per gap, 5 eps x 5 metrics)
+  platform_hybrid/experiments/results/p5p8/p8_iter132_mislabel_summary.json
 
 Operationally this answers: does the iter-66 K=2% dominance switch survive
 label noise? If yes, the sensor's recall-restoration value is robust; if the
@@ -48,7 +48,7 @@ L_CANON = C_INV_CANON * RHO_CANON  # $=100
 C_SENSE = 0.0035    # $/row for LLM sensor
 TAU_DEFAULT = 0.5
 
-OUT_DIR = Path("/home/claude/tinker-rl-lab-minimax/experiments/results/p5p8")
+OUT_DIR = Path("/home/claude/tinker-rl-lab-minimax/platform_hybrid/experiments/results/p5p8")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 def load_data():

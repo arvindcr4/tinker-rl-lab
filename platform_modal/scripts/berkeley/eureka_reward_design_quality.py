@@ -24,21 +24,21 @@ real evidence base:
        or the iter137 3p-offset model?
 
 Inputs (all read-only):
-  experiments/results/scaling_law_extended_frontier.tsv     # 12 anchors
-  experiments/results/scaling_law_fits.tsv                  # 5 anchors (R_max, lambda, t_80)
-  experiments/results/scaling_law_iter137_aic_compare.tsv   # 5-anchor 2p vs 3p table
-  experiments/results/scaling_law_iter137_capability_link.tsv
-  experiments/results/scaling_law_changepoints.tsv          # segment-level reward means
-  experiments/results/group_size_iter127_joint_fit.tsv      # confirms n=20 union
-  experiments/results/group_size_iter127_optimal_g.tsv      # cross-link
-  experiments/results/group_size_iter115_summary.tsv        # per-budget rollouts
+  platform_hybrid/experiments/results/scaling_law_extended_frontier.tsv     # 12 anchors
+  platform_hybrid/experiments/results/scaling_law_fits.tsv                  # 5 anchors (R_max, lambda, t_80)
+  platform_hybrid/experiments/results/scaling_law_iter137_aic_compare.tsv   # 5-anchor 2p vs 3p table
+  platform_hybrid/experiments/results/scaling_law_iter137_capability_link.tsv
+  platform_hybrid/experiments/results/scaling_law_changepoints.tsv          # segment-level reward means
+  platform_hybrid/experiments/results/group_size_iter127_joint_fit.tsv      # confirms n=20 union
+  platform_hybrid/experiments/results/group_size_iter127_optimal_g.tsv      # cross-link
+  platform_hybrid/experiments/results/group_size_iter115_summary.tsv        # per-budget rollouts
 
 Outputs (Berkeley row 08):
-  experiments/results/berkeley/eureka_rqs_per_anchor.tsv
-  experiments/results/berkeley/eureka_aic_compare.tsv
-  experiments/results/berkeley/eureka_residualization.tsv
-  experiments/results/berkeley/eureka_cross_pillar.tsv
-  experiments/results/berkeley/eureka_summary.json
+  platform_hybrid/experiments/results/berkeley/eureka_rqs_per_anchor.tsv
+  platform_hybrid/experiments/results/berkeley/eureka_aic_compare.tsv
+  platform_hybrid/experiments/results/berkeley/eureka_residualization.tsv
+  platform_hybrid/experiments/results/berkeley/eureka_cross_pillar.tsv
+  platform_hybrid/experiments/results/berkeley/eureka_summary.json
 """
 
 import csv

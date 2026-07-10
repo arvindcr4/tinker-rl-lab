@@ -9,7 +9,7 @@ script decomposes per-step trajectories into the conditional reward curve
 E[R | L_bin] and asks whether Dr.GRPO flattens that curve vs GRPO.
 
 Outputs:
-  experiments/results/length_bias_reward_shape.tsv
+  platform_hybrid/experiments/results/length_bias_reward_shape.tsv
     - per (algo, task, seed) binned E[R | L_bin]
     - per (algo, task) aggregate slope + Spearman rho between L_bin and E[R]
   figures/length_bias_reward_shape.pdf

@@ -1,4 +1,4 @@
-# reports/final/addendum/ — INDEX
+# platform_tinker/reports/final/addendum/ — INDEX
 
 **Purpose:** Numbered reviewer-response addenda (Markdown). Each maps specific NeurIPS reviewer weakness IDs to the paper sections, scripts, and reproducibility artifacts added to resolve them. Naming: `NN-topic-slug.md`.
 

@@ -2,7 +2,7 @@
 """P6 iter-102: fill the zvf130 stack-entry coverage gap + stamp sig_robust.
 
 Two actions, both provenance-tagged, both derived from ground truth
-(experiments/results/zvf_iter130_method_risk.tsv):
+(platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv):
 
   1. Create zvf130_<m>.json STACK entries for the 4 real 5-seed methods that
      lacked one: grpo (the BASE!), aero, areal, gift.  Each mirrors the existing
@@ -78,7 +78,7 @@ def make_stack(m):
         "sig_robust_bootstrap_and_welch": sig_robust,
         "crossref_integrity_iter102": {
             "audit_date": DATE, "audit_source": AUDIT,
-            "ground_truth": "experiments/results/zvf_iter130_method_risk.tsv",
+            "ground_truth": "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
             "point_estimate_matches_tsv": True,
             "note": ("BASE reference (delta vs self = 0)." if is_base else
                      "delta_vs_grpo bootstrap CI from iter90 (B=4000 paired "

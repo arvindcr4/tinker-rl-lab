@@ -10,10 +10,10 @@ just a binary alarm?**
 This script computes three follow-on artefacts from the same
 cross-library aggregator used by platform_modal/scripts/zvf_diagnostic.py:
 
-  experiments/results/zvf_iter114_dose_response.tsv
+  platform_hybrid/experiments/results/zvf_iter114_dose_response.tsv
       5 ZVF quantile bins x (n_rows, mean_last10, frac_collapse,
       frac_converged, severity_drop) -- the dose-response curve.
-  experiments/results/zvf_iter114_delta_d.tsv
+  platform_hybrid/experiments/results/zvf_iter114_delta_d.tsv
       Per-library delta_d = mean_zvf_emp - mean_zvf_iid(p_emp, G_emp).
       Positive delta_d -> anti-herding; negative -> herding/collapse.
   figures/zvf_iter114_dose_response.{pdf,png}
@@ -21,10 +21,10 @@ cross-library aggregator used by platform_modal/scripts/zvf_diagnostic.py:
 
 Inputs (all real measurements from prior iterations):
 
-  experiments/results/zvf_summary.tsv (already produced by zvf_diagnostic.py)
-  experiments/results/zvf_by_library.tsv
-  experiments/results/zvf_dynamics_phase.tsv  (per-source p_obs proxy)
-  experiments/results/variance_mitigation.tsv  (per-step for delta_d)
+  platform_hybrid/experiments/results/zvf_summary.tsv (already produced by zvf_diagnostic.py)
+  platform_hybrid/experiments/results/zvf_by_library.tsv
+  platform_hybrid/experiments/results/zvf_dynamics_phase.tsv  (per-source p_obs proxy)
+  platform_hybrid/experiments/results/variance_mitigation.tsv  (per-step for delta_d)
 
 Honest statistics note
 ----------------------
@@ -142,7 +142,7 @@ def classify(row: Dict[str, Any]) -> str:
 
 
 def load_summary_rows() -> List[Dict[str, Any]]:
-    """Read experiments/results/zvf_summary.tsv (written by zvf_diagnostic.py).
+    """Read platform_hybrid/experiments/results/zvf_summary.tsv (written by zvf_diagnostic.py).
 
     Returns the list of dicts with mean_zvf, last10_avg, peak, etc. and the
     precomputed failure_label.
@@ -560,8 +560,8 @@ def main() -> int:
         "out_dose": str(args.out_dose.relative_to(REPO_ROOT)),
         "out_delta_d": str(args.out_delta_d.relative_to(REPO_ROOT)),
         "out_figure": str(args.out_figure.relative_to(REPO_ROOT)) if fig_path else None,
-        "source_summary": "experiments/results/zvf_summary.tsv",
-        "source_by_library": "experiments/results/zvf_by_library.tsv",
+        "source_summary": "platform_hybrid/experiments/results/zvf_summary.tsv",
+        "source_by_library": "platform_hybrid/experiments/results/zvf_by_library.tsv",
     }
     write_meta(meta, args.out_meta)
 

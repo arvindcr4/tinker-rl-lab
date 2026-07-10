@@ -9,7 +9,7 @@ are the binding MIN-REPORT-coverage ceiling.
 Inputs:
   registry/entries/*.json   -- 43 records (26 stack + 17 variant_delta)
 
-Outputs (under experiments/results/p5p8/):
+Outputs (under platform_hybrid/experiments/results/p5p8/):
   p6_iter170_per_leaf_null_rate.tsv
   p6_iter170_per_entry_coverage.tsv
   p6_iter170_framework_matrix.tsv

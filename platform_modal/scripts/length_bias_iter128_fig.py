@@ -8,7 +8,7 @@
   C. Signed CCF |bwd_signed| per (task, algo), mean +/- 95% bootstrap CI
   D. GSM8K heldout (dL, dacc) scatter, GR vs DR
 
-Reads experiments/results/length_bias_iter128_*.tsv + meta.
+Reads platform_hybrid/experiments/results/length_bias_iter128_*.tsv + meta.
 Writes  figures/length_bias_iter128_efficiency_frontier.{pdf,png}
 """
 from __future__ import annotations

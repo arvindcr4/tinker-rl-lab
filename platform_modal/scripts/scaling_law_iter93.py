@@ -29,10 +29,10 @@ References (verified):
   - nimmaturi2025predictive (arXiv:2507.18014) -- compared family.
 
 Outputs:
-  experiments/results/scaling_law_iter93_headtohead.tsv      (5 families x 12 anchors x 5 metrics)
-  experiments/results/scaling_law_iter93_ar1.tsv             (AR(1) per anchor: phi, ci_lo, ci_hi, ci_covers_zero)
-  experiments/results/scaling_law_iter93_winners.tsv         (per-anchor + aggregate winners by 5 criteria)
-  experiments/results/scaling_law_iter93_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter93_headtohead.tsv      (5 families x 12 anchors x 5 metrics)
+  platform_hybrid/experiments/results/scaling_law_iter93_ar1.tsv             (AR(1) per anchor: phi, ci_lo, ci_hi, ci_covers_zero)
+  platform_hybrid/experiments/results/scaling_law_iter93_winners.tsv         (per-anchor + aggregate winners by 5 criteria)
+  platform_hybrid/experiments/results/scaling_law_iter93_meta.json
   figures/scaling_law_iter93.{pdf,png}
   paper/sections/scaling_law_iter93.tex
 """

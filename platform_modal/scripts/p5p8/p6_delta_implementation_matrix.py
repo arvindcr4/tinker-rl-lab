@@ -18,13 +18,13 @@ Inputs
 - registry/entries/{stack,delta}_*.json (20 + 11 = 31 entries)
 - registry/entries/delta_{aero,areal,gift,cppo,ngrpo,mcgrpo,es,scafgrpo}.json
   (iter-34 measured block on `measured[]`)
-- experiments/results/p5p8/p6_measured_delta_block.tsv (iter-34 measured TSV)
+- platform_hybrid/experiments/results/p5p8/p6_measured_delta_block.tsv (iter-34 measured TSV)
 
 Outputs
 -------
-- experiments/results/p5p8/p6_delta_implementation_matrix.tsv
+- platform_hybrid/experiments/results/p5p8/p6_delta_implementation_matrix.tsv
   (one row per (delta_id, component, stack_id); full cross-product)
-- experiments/results/p5p8/p6_delta_implementation_matrix_summary.json
+- platform_hybrid/experiments/results/p5p8/p6_delta_implementation_matrix_summary.json
 - prints a headline report
 
 Stdlib only. ≤300 LoC.

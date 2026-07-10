@@ -62,7 +62,7 @@ Pre-registered hypotheses on real iter127 Pillar-3 data:
       RETURNS-TO-COMPUTE per G (iter107) to be FLAT (delta_R_C decays)
       for G >= 16. DECISIVE if R_C(3window) at G=32 < R_C at G=8.
 
-Outputs (under experiments/results/berkeley/):
+Outputs (under platform_hybrid/experiments/results/berkeley/):
   alphastar_league_{league_law, bounded_cone, diversity_bonus,
                     complementarity, throughput}.tsv
   alphastar_league_summary.json
@@ -466,11 +466,11 @@ def main():
             "h5": str(h5_path.relative_to(ROOT)),
         },
         "data_inputs": [
-            "experiments/results/group_size_iter127_optimal_g.tsv",
-            "experiments/results/group_size_iter127_bounded_cone.tsv",
-            "experiments/results/group_size_iter127_complementarity.tsv",
-            "experiments/results/group_size_iter107_returns_to_compute.tsv",
-            "experiments/results/group_size_deltadiv_decomp.tsv",
+            "platform_hybrid/experiments/results/group_size_iter127_optimal_g.tsv",
+            "platform_hybrid/experiments/results/group_size_iter127_bounded_cone.tsv",
+            "platform_hybrid/experiments/results/group_size_iter127_complementarity.tsv",
+            "platform_hybrid/experiments/results/group_size_iter107_returns_to_compute.tsv",
+            "platform_hybrid/experiments/results/group_size_deltadiv_decomp.tsv",
         ],
     }
     out_json = OUT / "alphastar_league_summary.json"

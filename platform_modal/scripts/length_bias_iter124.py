@@ -39,10 +39,10 @@ Iter 124 turns to the DYNAMIC dimension:
   H5 -- Cross-task envelope of mean dL/dt vs mean severship.
 
 INPUTS :
-  experiments/results/length_bias_iter108_perrun_progress.tsv
-  experiments/results/drgrpo_vs_grpo.json
-  experiments/results/drgrpo_gsm8k_cot_full.json
-OUTPUTS: 5 TSVs + meta under experiments/results/length_bias_iter124_*
+  platform_hybrid/experiments/results/length_bias_iter108_perrun_progress.tsv
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json
+OUTPUTS: 5 TSVs + meta under platform_hybrid/experiments/results/length_bias_iter124_*
 USAGE  : python3 platform_modal/scripts/length_bias_iter124.py [--n_w 4 --B_perm 50000]
 """
 from __future__ import annotations

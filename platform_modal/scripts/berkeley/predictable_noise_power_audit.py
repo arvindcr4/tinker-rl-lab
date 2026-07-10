@@ -8,7 +8,7 @@ Miller (arXiv:2411.00640) and Wang (arXiv:2512.21326) actually pose: given the
 predictable seed-level noise, WHAT effect can this study resolve, and can the
 GRPO==PPO null be turned into a POSITIVE equivalence claim?
 
-Real data: experiments/results/samestack_ppo_grpo.json (5 seeds x 2 algos,
+Real data: platform_hybrid/experiments/results/samestack_ppo_grpo.json (5 seeds x 2 algos,
 paired by seed; heldout_acc and last10_avg per seed).
 
 Pre-registered hypotheses:
@@ -34,8 +34,8 @@ import numpy as np
 from scipy.stats import nct, t as tdist, norm
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SRC = os.path.join(ROOT, "experiments/results/samestack_ppo_grpo.json")
-OUT = os.path.join(ROOT, "experiments/results/berkeley")
+SRC = os.path.join(ROOT, "platform_hybrid/experiments/results/samestack_ppo_grpo.json")
+OUT = os.path.join(ROOT, "platform_hybrid/experiments/results/berkeley")
 os.makedirs(OUT, exist_ok=True)
 ALPHA = 0.05
 LIT_GAP = 0.05  # conservative lower end of reported cross-stack GRPO-PPO gaps

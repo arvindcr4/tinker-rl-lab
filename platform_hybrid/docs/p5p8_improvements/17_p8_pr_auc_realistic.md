@@ -39,7 +39,7 @@ aggregate columns alone, the LLM-as-sensor surrogate).
 > recall at every rate down to 0.05%; the 4-aggregate sensor surrogate
 > drops to 40%.
 
-Reproducibility: `python3 scripts/p5p8/p8_pr_auc_realistic.py` (single
+Reproducibility: `python3 platform_modal/scripts/p5p8/p8_pr_auc_realistic.py` (single
 command, ~2 min on 4 cores; release seed 42 inside, downsampling seed
 42, bootstrap seeds sweep over 2026+).
 

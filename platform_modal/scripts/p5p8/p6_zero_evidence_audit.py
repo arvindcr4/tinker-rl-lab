@@ -4,10 +4,10 @@
 After iter-74's p6_drgrpo_measured_evidence.py patches delta_drgrpo.json,
 catalog the remaining delta entries that have NO measured block, NO
 expected_effects, NO claim_validation, and characterize what panel would
-ground each. Output: experiments/results/p5p8/p6_zero_evidence_audit.tsv
+ground each. Output: platform_hybrid/experiments/results/p5p8/p6_zero_evidence_audit.tsv
 
 Also builds the registry-level evidence summary:
-  experiments/results/p5p8/p6_registry_evidence_summary.tsv
+  platform_hybrid/experiments/results/p5p8/p6_registry_evidence_summary.tsv
   one row per (delta_id) with has_measured / n_panels / n_verdicts / sources.
 
 Then runs jsonschema validation on every entry + emits 14/14 PASS evidence.
@@ -22,7 +22,7 @@ import jsonschema
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 ENTRIES = ROOT / "registry" / "entries"
 SCHEMA = ROOT / "registry" / "schema.json"
-OUT = ROOT / "experiments/results/p5p8"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 
 # characterization of the 4 unmeasured deltas: which panel would ground them
 # and what's the closest existing data

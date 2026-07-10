@@ -148,9 +148,9 @@ def main():
         "cpf_ratio_grad_over_xgb_range": [ratios_min, ratios_max],
         "cpf_ratio_grad_over_xgb_at_lowest_cost": [min(ratios_at_low_cost), max(ratios_at_low_cost)],
         "cpf_ratio_grad_over_xgb_at_highest_cost": [min(ratios_at_high_cost), max(ratios_at_high_cost)],
-        "p8_iter116_link": "experiments/results/p5p8/p8_iter116_cost_llm_sweep.tsv",
-        "p8_iter108_link": "experiments/results/p5p8/p8_iter108_cost_decision_cis_summary.json",
-        "p8_iter112_link": "experiments/results/p5p8/p8_iter112_cost_cis_realistic_rates_summary.json",
+        "p8_iter116_link": "platform_hybrid/experiments/results/p5p8/p8_iter116_cost_llm_sweep.tsv",
+        "p8_iter108_link": "platform_hybrid/experiments/results/p5p8/p8_iter108_cost_decision_cis_summary.json",
+        "p8_iter112_link": "platform_hybrid/experiments/results/p5p8/p8_iter112_cost_cis_realistic_rates_summary.json",
     }
     (RES / "synth_iter116_cost_cube_envelope_summary.json").write_text(
         json.dumps(summary, indent=2)

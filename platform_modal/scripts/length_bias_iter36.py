@@ -29,7 +29,7 @@ eps_X(t) = X(t) - X_fit(t).  Positive rho means common residual structure;
 negative rho means the residuals move in opposite directions (one above
 its fit while the other is below).
 
-Data: experiments/results/drgrpo_vs_grpo.json (Qwen2.5-0.5B arithmetic,
+Data: platform_hybrid/experiments/results/drgrpo_vs_grpo.json (Qwen2.5-0.5B arithmetic,
   40 steps, 5 seeds per algo) and drgrpo_gsm8k_cot_full.json
   (Qwen2.5-1.5B GSM8K CoT, 30 steps, 3 seeds per algo).
 """

@@ -19,16 +19,16 @@ Output:
       c(T) power law estimated in iter75
 
 Inputs:
-  experiments/results/group_size_token_normalized.tsv
-  experiments/results/group_size_iter75_scaling.tsv  (c(T), k(T))
-  experiments/results/group_size_iter75_extrapolate.tsv (predicted G4/G32)
+  platform_hybrid/experiments/results/group_size_token_normalized.tsv
+  platform_hybrid/experiments/results/group_size_iter75_scaling.tsv  (c(T), k(T))
+  platform_hybrid/experiments/results/group_size_iter75_extrapolate.tsv (predicted G4/G32)
 
 Outputs:
-  experiments/results/group_size_iter79_retention.tsv
-  experiments/results/group_size_iter79_wu_test.tsv
-  experiments/results/group_size_iter79_breakpoint.tsv
-  experiments/results/group_size_iter79_forecast.tsv
-  experiments/results/group_size_iter79_summary.tsv
+  platform_hybrid/experiments/results/group_size_iter79_retention.tsv
+  platform_hybrid/experiments/results/group_size_iter79_wu_test.tsv
+  platform_hybrid/experiments/results/group_size_iter79_breakpoint.tsv
+  platform_hybrid/experiments/results/group_size_iter79_forecast.tsv
+  platform_hybrid/experiments/results/group_size_iter79_summary.tsv
   figures/group_size_iter79.pdf
   figures/group_size_iter79.png
 """
@@ -541,7 +541,7 @@ def main():
                   f"{observed_min_R:.3f} at T={observed_T_min_R:.0f}M and "
                   f"extrapolates below {EQUIVALENCE_THRESHOLD:.0%} by "
                   f"T~128M -- Wu's 97.6% claim holds at T<=1M only."),
-        "evidence_path": "experiments/results/group_size_iter79_*.tsv",
+        "evidence_path": "platform_hybrid/experiments/results/group_size_iter79_*.tsv",
         "citation_ok": True,
         "source_paper": "arXiv:2510.00977 (Wu et al. 2025)",
     }

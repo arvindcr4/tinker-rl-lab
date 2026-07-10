@@ -23,7 +23,7 @@ Headline hypotheses (6):
   H5: inflection tau lies at 0.60-0.65 (max pairwise slope).
   H6: tau-flip cells correlate with low reward (the "ambiguous-zvf frontier").
 
-Outputs: experiments/results/p5p8/p7_iter135_{tau_grid,fire_rate,concordance,
+Outputs: platform_hybrid/experiments/results/p5p8/p7_iter135_{tau_grid,fire_rate,concordance,
   tau_flip,bootstrap_ci,summary}
 """
 import json
@@ -31,8 +31,8 @@ import statistics
 from pathlib import Path
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-N10_DIR = WORK / "experiments/results/n10_seed_expansion"
-OUT_DIR = WORK / "experiments/results/p5p8"
+N10_DIR = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
 
 SEEDS = [42, 179, 316, 453, 590]
 TAU_GRID = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85]

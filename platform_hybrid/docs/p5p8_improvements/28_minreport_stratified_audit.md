@@ -3,11 +3,11 @@
 **Pillar:** P5 (MIN-REPORT, "Report the Stack, Not the Label")
 **Class:** T3 (cross-paper coupling — schema coverage against the live data)
 **Status:** prototyped → **validated** (iter 21)
-**Deliverable:** `scripts/p5p8/minreport_stratified_audit.py` + 2 TSVs + 1 summary JSON + 2 figures
+**Deliverable:** `platform_modal/scripts/p5p8/minreport_stratified_audit.py` + 2 TSVs + 1 summary JSON + 2 figures
 
 ## Motivation
 
-The iter-18 auditor (`scripts/p5p8/minreport_auditor.py`) gives every
+The iter-18 auditor (`platform_modal/scripts/p5p8/minreport_auditor.py`) gives every
 manifest a 0-100 badge and a per-item score; its summary.json already
 includes a one-line per-stack-axis mean. But that one-line summary
 hides *which* (item, axis) cells drive the variance, *whether* per-item
@@ -110,7 +110,7 @@ mixed).
 ## Reproducibility
 
 ```
-python3 scripts/p5p8/minreport_stratified_audit.py
+python3 platform_modal/scripts/p5p8/minreport_stratified_audit.py
 ```
 
 Inputs:

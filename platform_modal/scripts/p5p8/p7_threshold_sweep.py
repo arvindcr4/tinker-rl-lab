@@ -5,7 +5,7 @@ Pillar-7 (P7) τ-sensitivity sweep with seed-robustness bootstrap CIs.
 Iter 39: addresses brief vein (c) — "seed-robustness of the trigger threshold
 on the growing n10_seed_expansion panel".
 
-Loads every n10_grpo_s*.json in experiments/results/n10_seed_expansion/
+Loads every n10_grpo_s*.json in platform_hybrid/experiments/results/n10_seed_expansion/
 (falls back to the 5-seed panel if no new seeds have landed since iter 27).
 
 For each controller in {zvf_triage, dualformer_auto, hybrid} and each τ ∈
@@ -32,10 +32,10 @@ References (verified):
   - alphaproof2025nature (AlphaProof, Nature 2025)
 
 Outputs (worktree-relative paths):
-  experiments/results/p5p8/p7_threshold_sweep_per_seed.tsv
-  experiments/results/p5p8/p7_threshold_sweep_summary.tsv
-  experiments/results/p5p8/p7_threshold_sweep_ci.tsv
-  experiments/results/p5p8/p7_threshold_sweep_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_threshold_sweep_per_seed.tsv
+  platform_hybrid/experiments/results/p5p8/p7_threshold_sweep_summary.tsv
+  platform_hybrid/experiments/results/p5p8/p7_threshold_sweep_ci.tsv
+  platform_hybrid/experiments/results/p5p8/p7_threshold_sweep_summary.json
 """
 from __future__ import annotations
 import csv
@@ -46,8 +46,8 @@ import statistics
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-N10_DIR = ROOT / "experiments/results/n10_seed_expansion"
-OUT_DIR = ROOT / "experiments/results/p5p8"
+N10_DIR = ROOT / "platform_hybrid/experiments/results/n10_seed_expansion"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 G_BASE = 8

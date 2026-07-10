@@ -29,11 +29,11 @@ question from two complementary angles:
         reported; the model with the lowest median MAFE wins.
 
 Outputs:
-  experiments/results/scaling_law_iter89_loocv.tsv
-  experiments/results/scaling_law_iter89_bootstrap.tsv
-  experiments/results/scaling_law_iter89_bic.tsv
-  experiments/results/scaling_law_iter89_kfold_forecast.tsv
-  experiments/results/scaling_law_iter89_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter89_loocv.tsv
+  platform_hybrid/experiments/results/scaling_law_iter89_bootstrap.tsv
+  platform_hybrid/experiments/results/scaling_law_iter89_bic.tsv
+  platform_hybrid/experiments/results/scaling_law_iter89_kfold_forecast.tsv
+  platform_hybrid/experiments/results/scaling_law_iter89_meta.json
   figures/scaling_law_iter89.{pdf,png}
   paper/sections/scaling_law_iter89.tex
 

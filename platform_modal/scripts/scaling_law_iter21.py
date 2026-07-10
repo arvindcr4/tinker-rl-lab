@@ -32,7 +32,7 @@ Five axes beyond iter17's AIC/changepoint/T_eps/phase-kappa work:
       for gradient updates; front-end FPO is proportional to this).
       OLS(lambda ~ log10(N) + log10(CF) + arch_dummy) with bootstrap.
 
-Outputs (one per axis, all filed in experiments/results/):
+Outputs (one per axis, all filed in platform_hybrid/experiments/results/):
   scaling_law_iter21_lambda_audit.tsv
   scaling_law_iter21_arch_regression.tsv
   scaling_law_iter21_arch_kfold.tsv

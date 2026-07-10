@@ -10,10 +10,10 @@ verify provenance (source file exists on disk) and CI consistency
 (ci_low <= delta <= ci_high).
 
 Output:
-  experiments/results/p5p8/p6_iter134_per_row.tsv         (one row per measured row)
-  experiments/results/p5p8/p6_iter134_per_entry.tsv      (one row per entry)
-  experiments/results/p5p8/p6_iter134_per_field.tsv      (one row per field)
-  experiments/results/p5p8/p6_iter134_summary.json
+  platform_hybrid/experiments/results/p5p8/p6_iter134_per_row.tsv         (one row per measured row)
+  platform_hybrid/experiments/results/p5p8/p6_iter134_per_entry.tsv      (one row per entry)
+  platform_hybrid/experiments/results/p5p8/p6_iter134_per_field.tsv      (one row per field)
+  platform_hybrid/experiments/results/p5p8/p6_iter134_summary.json
 
 Stdlib only.
 """
@@ -25,7 +25,7 @@ from collections import defaultdict, Counter
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 REG = ROOT / "registry/entries"
-OUT = ROOT / "experiments/results/p5p8"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 BASE_FIELDS = [

@@ -25,7 +25,7 @@ import length_bias_iter100 as ib100  # type: ignore
 
 
 def main() -> None:
-    out_dir = "experiments/results"
+    out_dir = "platform_hybrid/experiments/results"
     out_pdf = "figures/length_bias_iter100_var.pdf"
     out_png = "figures/length_bias_iter100_var.png"
     os.makedirs("figures", exist_ok=True)

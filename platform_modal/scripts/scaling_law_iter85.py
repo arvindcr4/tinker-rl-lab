@@ -38,11 +38,11 @@ battery:
         (f) 3-phase conformity under monotone-decreasing constraint
 
 Outputs (5 TSV + 1 figure + 1 tex):
-  experiments/results/scaling_law_iter85_phases.tsv
-  experiments/results/scaling_law_iter85_conformity.tsv
-  experiments/results/scaling_law_iter85_nemotron.tsv
-  experiments/results/scaling_law_iter85_changepoints.tsv
-  experiments/results/scaling_law_iter85_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter85_phases.tsv
+  platform_hybrid/experiments/results/scaling_law_iter85_conformity.tsv
+  platform_hybrid/experiments/results/scaling_law_iter85_nemotron.tsv
+  platform_hybrid/experiments/results/scaling_law_iter85_changepoints.tsv
+  platform_hybrid/experiments/results/scaling_law_iter85_meta.json
   figures/scaling_law_iter85.{pdf,png}
   paper/sections/scaling_law_iter85.tex
 

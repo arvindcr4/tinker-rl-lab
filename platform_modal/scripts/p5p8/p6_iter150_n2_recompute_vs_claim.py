@@ -12,10 +12,10 @@ For each delta_*.json entry:
       measured sign agrees with the prose direction (e.g., 'token-level loss'
       should shift 'loss' up; 'zvf-aware' should shift 'zvf' down; etc.).
 
-Inputs : registry/entries/delta_*.json, experiments/results/n2_reward_tensor_resume/n2_metrics.tsv
-Outputs: experiments/results/p5p8/p6_iter150_recompute.tsv
-         experiments/results/p5p8/p6_iter150_per_entry.tsv
-         experiments/results/p5p8/p6_iter150_summary.json
+Inputs : registry/entries/delta_*.json, platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv
+Outputs: platform_hybrid/experiments/results/p5p8/p6_iter150_recompute.tsv
+         platform_hybrid/experiments/results/p5p8/p6_iter150_per_entry.tsv
+         platform_hybrid/experiments/results/p5p8/p6_iter150_summary.json
 """
 import csv
 import json

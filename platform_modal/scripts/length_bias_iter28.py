@@ -17,7 +17,7 @@ Then the Dr.GRPO signature is operationalised as:
   signature := corr(L_slope, R_slope) across the same algo's seeds, AND
                the gap (Dr.GRPO minus GRPO) in (B) and (C).
 
-Outputs (all in experiments/results/):
+Outputs (all in platform_hybrid/experiments/results/):
   length_bias_iter28_step_decomp.tsv   per-run rows with (A,B,C) components
   length_bias_iter28_signature.tsv     per-(task,algo) aggregate + Dr.GRPO gap
   length_bias_iter28_zvf_scatter.tsv   per-(task,algo,step) (ZVF, L) points

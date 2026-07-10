@@ -36,10 +36,10 @@ import datetime
 REG = pathlib.Path("registry")
 ENTRIES = REG / "entries"
 SCHEMA = REG / "schema.json"
-N2 = pathlib.Path("experiments/results/n2_reward_tensor_resume/n2_metrics.tsv")
-Z130 = pathlib.Path("experiments/results/zvf_iter130_method_risk.tsv")
-RISK_IDX = pathlib.Path("experiments/results/zvf_iter130_risk_index.tsv")
-OUT = pathlib.Path("experiments/results/p5p8")
+N2 = pathlib.Path("platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv")
+Z130 = pathlib.Path("platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv")
+RISK_IDX = pathlib.Path("platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv")
+OUT = pathlib.Path("platform_hybrid/experiments/results/p5p8")
 
 # Map the 8 "missing" methods to (label, framework, base_for_delta, known_paper)
 METHODS = {
@@ -184,7 +184,7 @@ def make_n2_entry(method_key, meta, n2_metric_rows, date_str):
             "source_artifacts": [
                 f"N2 same-stack four-method run (managed sampler, G=8, {len(seed_unique)} seed(s), "
                 f"{len(n2_metric_rows)} steps); isolated variant label, see "
-                f"experiments/results/n2_reward_tensor_resume/{method_key}_s0_tensors.jsonl"
+                f"platform_hybrid/experiments/results/n2_reward_tensor_resume/{method_key}_s0_tensors.jsonl"
             ],
             "wandb": None,
             "date_recorded": date_str

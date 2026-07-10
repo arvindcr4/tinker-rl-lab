@@ -3,14 +3,14 @@
 
 Builds a SINGLE CI-anchored headline table for the P7 paper on the four-method
 N2 reward tensor corpus (grpo, aero, gift, areal x 40 steps). 6 artifacts in
-experiments/results/p5p8/. Stdlib only. LCG bootstrap B=2000 seed=20260705.
+platform_hybrid/experiments/results/p5p8/. Stdlib only. LCG bootstrap B=2000 seed=20260705.
 """
 from __future__ import annotations
 import csv, glob, json, os, random, statistics
 
 WORKTREE = "/home/claude/tinker-rl-lab-minimax"
-DATA_DIR = os.path.join(WORKTREE, "experiments/results/n2_reward_tensor_resume")
-OUT_DIR = os.path.join(WORKTREE, "experiments/results/p5p8")
+DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
 os.makedirs(OUT_DIR, exist_ok=True)
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_MENU = [2, 4, 8, 16]; G_BASE = 8; N_PROMPTS = 16

@@ -8,7 +8,7 @@ canonical object shape. This script:
 
   - Promotes each string to a full {method, n_boot, seed, ci_level, source}
     object using the iter-130 paired-seed bootstrap provenance.
-  - Writes a patch log to experiments/results/p5p8/p6_iter134_patch_log.tsv
+  - Writes a patch log to platform_hybrid/experiments/results/p5p8/p6_iter134_patch_log.tsv
   - Leaves all other rows untouched.
 
 Stdlib only.
@@ -19,7 +19,7 @@ import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 REG = ROOT / "registry/entries"
-OUT = ROOT / "experiments/results/p5p8"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 
 CANON = {
     "method": "bootstrap_paired_5seed",

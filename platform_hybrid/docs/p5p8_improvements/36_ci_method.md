@@ -22,14 +22,14 @@ a point outcome with no way to know how (or whether) a CI was computed.
 2. Populated `ci_method` truthfully on the **7** tinker entries whose outcomes
    were derived from the N2 same-stack four-method run (aero, areal, dapo,
    drgrpo, grpo, gspo, gift). Their CI methodology is the paired bootstrap in
-   `scripts/p5p8/registry_validate.py::bootstrap_paired_diff` — verified in
+   `platform_modal/scripts/p5p8/registry_validate.py::bootstrap_paired_diff` — verified in
    source: `n_boot=2000`, `seed=0`, percentile 2.5/97.5 (95%). The remaining 24
    entries leave it `null` (unreported).
 3. Re-validated all 31 entries with `jsonschema.Draft202012Validator` and
    re-ran the canonical `registry_validate.py`.
 
 Everything is in one idempotent, stdlib+jsonschema script
-`scripts/p5p8/add_ci_method.py` (safe to re-run; asserts no regression).
+`platform_modal/scripts/p5p8/add_ci_method.py` (safe to re-run; asserts no regression).
 
 ## Measured result
 - **31/31 entries schema PASS** after the edit (no regression) — confirmed by

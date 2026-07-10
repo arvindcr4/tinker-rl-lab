@@ -29,21 +29,21 @@ verdict — and exposes audit gaps that prior iterations only flagged implicitly
 
 Bonus job: extend the registry's measured block on delta_aero, delta_gift,
 delta_areal with N2 panel rows for two metrics that exist in
-experiments/results/n2_reward_tensor_resume/n2_metrics.tsv but are not yet
+platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv but are not yet
 catalogued: pcd (per-prompt collapse depth) and mean_len. These are
 deterministic last-10-step paired bootstraps over the 4 method x 40 step tensors.
 
 Inputs:
   - registry/entries/delta_*.json (14 variant_delta records)
-  - experiments/results/n2_reward_tensor_resume/n2_metrics.tsv (4 methods x 40 steps)
+  - platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv (4 methods x 40 steps)
   - registry/schema.json (for jsonschema validation)
 
 Outputs:
-  - experiments/results/p5p8/p6_iter106_claim_evidence_ledger.tsv
+  - platform_hybrid/experiments/results/p5p8/p6_iter106_claim_evidence_ledger.tsv
       (40 rows = one per (delta, metric, panel) tuple across 14 entries)
-  - experiments/results/p5p8/p6_iter106_audit_gaps.tsv
+  - platform_hybrid/experiments/results/p5p8/p6_iter106_audit_gaps.tsv
       (ranked by severity, Gap A-E classification)
-  - experiments/results/p5p8/p6_iter106_summary.json
+  - platform_hybrid/experiments/results/p5p8/p6_iter106_summary.json
       (machine-readable: per-entry matrix + corpus verdict distribution)
   - registry/entries/delta_aero.json, delta_gift.json, delta_areal.json
       PATCHED with new measured[] + claim_validation[] rows (provenance:
@@ -138,7 +138,7 @@ def compute_n2_delta(variant, metric, B=B):
             "ci_level": 0.95,
             "source": "platform_modal/scripts/p5p8/p6_iter106_claim_evidence_ledger.py::compute_n2_delta",
         },
-        "source": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+        "source": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
         "note": f"iter-106: N2 last-10 paired bootstrap (B={B}, seed={SEED}); variant minus grpo",
     }
 

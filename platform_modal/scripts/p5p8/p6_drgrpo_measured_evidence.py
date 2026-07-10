@@ -36,16 +36,16 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 ENTRIES = ROOT / "registry" / "entries"
 SCHEMA = ROOT / "registry" / "schema.json"
-LBIAS = ROOT / "experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv"
-META = ROOT / "experiments/results/length_bias_iter60_summary.tsv"
-N2 = ROOT / "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
-Z130 = ROOT / "experiments/results/zvf_iter130_method_risk.tsv"
-OUT = ROOT / "experiments/results/p5p8"
+LBIAS = ROOT / "platform_hybrid/experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv"
+META = ROOT / "platform_hybrid/experiments/results/length_bias_iter60_summary.tsv"
+N2 = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+Z130 = ROOT / "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 DATE = "2026-07-05"
 DRGRPO_FILE = ENTRIES / "delta_drgrpo.json"
-SOURCE = "experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv"
+SOURCE = "platform_hybrid/experiments/results/length_bias_iter60_grpo_vs_drgrpo.tsv"
 PANEL = "length_bias_iter60_grpo_vs_drgrpo_paired"
 N_BOOT = 4000
 SEED = 20260705

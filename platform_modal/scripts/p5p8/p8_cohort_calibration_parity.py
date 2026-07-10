@@ -32,9 +32,9 @@ Inputs:
   fraud_data.csv : 24 PCA features + Class + 4 LLM-sensor aggregates
   test_data.csv  : 10000 held-out, same schema
 Output:
-  experiments/results/p5p8/p8_cohort_calibration_parity.tsv   (per-cell)
-  experiments/results/p5p8/p8_cohort_calibration_summary.json (machine readable)
-  experiments/results/p5p8/p8_cohort_calibration_boot.tsv     (B=2000 bootstrap)
+  platform_hybrid/experiments/results/p5p8/p8_cohort_calibration_parity.tsv   (per-cell)
+  platform_hybrid/experiments/results/p5p8/p8_cohort_calibration_summary.json (machine readable)
+  platform_hybrid/experiments/results/p5p8/p8_cohort_calibration_boot.tsv     (B=2000 bootstrap)
 """
 from __future__ import annotations
 import csv
@@ -46,7 +46,7 @@ import statistics
 from collections import defaultdict
 
 DATA_DIR = "/home/claude/tinker-rl-lab-minimax"
-OUT_DIR = f"{DATA_DIR}/experiments/results/p5p8"
+OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8"
 TRAIN = f"{DATA_DIR}/fraud_data.csv"
 TEST = f"{DATA_DIR}/test_data.csv"
 

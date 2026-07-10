@@ -5,7 +5,7 @@ Iter 178 — P6 N2 same-stack last-10 measured-delta recompute audit.
 Vein (a) at the *numerical value* layer: for every registry entry that
 declares a `measured[]` row on `panel=n2_same_stack_last10`, independently
 recompute the variant-vs-grpo point delta and the paired-step bootstrap
-percentile CI from the raw `experiments/results/n2_reward_tensor_resume/n2_metrics.tsv`
+percentile CI from the raw `platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv`
 and compare to (a) the stored `measured[].delta`, (b) the stored
 `claim_validation[].observed_delta`, (c) the stored `measured[].{ci_low,ci_high}`.
 
@@ -46,8 +46,8 @@ import glob
 from collections import defaultdict
 
 REG_DIR = "registry/entries"
-N2_METRICS = "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
-OUT_DIR = "experiments/results/p5p8"
+N2_METRICS = "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+OUT_DIR = "platform_hybrid/experiments/results/p5p8"
 
 # 12 stored rows = 3 N2 variants × 4 metrics
 N2_VARIANTS = ("aero", "gift", "areal")

@@ -26,10 +26,10 @@ For each model ∈ {XGB-20raw, XGB-24full, XGB-4sensor}:
 
 Outputs
 -------
-experiments/results/p5p8/p8_alert_volume.tsv               (21 cells: 7 K × 3 trees)
-experiments/results/p5p8/p8_alert_volume_boot.tsv          (42 paired-bootstrap rows: 7 K × 3 tree-pairs)
-experiments/results/p5p8/p8_alert_volume_summary.json
-experiments/results/p5p8/figures/p8_alert_volume.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_alert_volume.tsv               (21 cells: 7 K × 3 trees)
+platform_hybrid/experiments/results/p5p8/p8_alert_volume_boot.tsv          (42 paired-bootstrap rows: 7 K × 3 tree-pairs)
+platform_hybrid/experiments/results/p5p8/p8_alert_volume_summary.json
+platform_hybrid/experiments/results/p5p8/figures/p8_alert_volume.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + sklearn + matplotlib. <=300 lines.
 """

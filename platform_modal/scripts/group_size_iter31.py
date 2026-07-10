@@ -10,15 +10,15 @@ matters on canonical training budgets, decomposes the retention gap into
 Pillar 2's ZVF framework to predict when the DPO-equivalence claim breaks.
 
 Deliverables (all real, re-aggregated from existing TSVs):
-  experiments/results/group_size_iter31_iso_token.tsv
+  platform_hybrid/experiments/results/group_size_iter31_iso_token.tsv
       Per-(G, T) iso-token retention matrix with TOST verdict at eps=0.02.
-  experiments/results/group_size_iter31_wu_audit.tsv
+  platform_hybrid/experiments/results/group_size_iter31_wu_audit.tsv
       Cell-by-cell audit of the Wu 97.6% claim across both easy-task
       (Qwen2.5-0.5B arithmetic) and hard-task (Qwen3-8B GSM8K) regimes.
-  experiments/results/group_size_iter31_zvf_coupling.tsv
+  platform_hybrid/experiments/results/group_size_iter31_zvf_coupling.tsv
       ZVF x G coupling table: how does the per-G advantage variance
       scaling predict the retention gap measured at broader scale?
-  experiments/results/group_size_iter31_summary.tsv
+  platform_hybrid/experiments/results/group_size_iter31_summary.tsv
       One-row-per-regime summary with verdict string and effect size.
 
 No fabrication: every number is sourced from an existing TSV.

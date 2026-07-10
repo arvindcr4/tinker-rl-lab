@@ -13,7 +13,7 @@ entropy (Bits-shannon, Jeffreys Beta prior).
 
 ## Method
 
-Single script `scripts/p5p8/p7_iter187_infogain_controller.py`
+Single script `platform_modal/scripts/p5p8/p7_iter187_infogain_controller.py`
 (≤300 LoC, stdlib only — no scipy) producing 4 reproducible artifacts
 in <10 s on the 4-method × 40-step × 16-prompt N2 reward tensors:
 
@@ -92,7 +92,7 @@ de-escalation, not from positive-condition escalation**.
 ## Reproducibility
 
 ```
-python3 scripts/p5p8/p7_iter187_infogain_controller.py
+python3 platform_modal/scripts/p5p8/p7_iter187_infogain_controller.py
 ```
 
 reproduces all 5 artifacts in <10 s. Seeds `20260705`, n_boot `4000`,

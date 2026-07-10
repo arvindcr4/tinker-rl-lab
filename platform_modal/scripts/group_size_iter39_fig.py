@@ -10,7 +10,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-RESULTS = Path("experiments/results")
+RESULTS = Path("platform_hybrid/experiments/results")
 FIG_DIR = Path("figures")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 

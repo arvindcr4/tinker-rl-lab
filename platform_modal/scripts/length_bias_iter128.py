@@ -46,10 +46,10 @@ Sharp, falsifiable hypotheses:
         binomial p = P(X >= 7 | n=9, p=0.5) reported.
 
 INPUTS :
-  experiments/results/drgrpo_vs_grpo.json           (arithmetic_easy; 5 seeds)
-  experiments/results/drgrpo_gsm8k_cot_full.json     (gsm8k_cot;       3 seeds)
-  experiments/results/length_bias_iter108_perrun_progress.tsv (signed CCF)
-OUTPUTS (5 TSV + meta) under experiments/results/length_bias_iter128_*
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json           (arithmetic_easy; 5 seeds)
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json     (gsm8k_cot;       3 seeds)
+  platform_hybrid/experiments/results/length_bias_iter108_perrun_progress.tsv (signed CCF)
+OUTPUTS (5 TSV + meta) under platform_hybrid/experiments/results/length_bias_iter128_*
   length_bias_iter128_efficiency_frontier.tsvper (algo, seed, task)
   length_bias_iter128_signed_ccf.tsv              per (algo, seed, task, window)
   length_bias_iter128_pooled_h1_efficiency.tsv    pooled tests

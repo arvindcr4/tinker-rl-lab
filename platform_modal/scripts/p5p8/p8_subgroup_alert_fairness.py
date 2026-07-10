@@ -41,7 +41,7 @@ Hypotheses tested:
       subgroups — it captures only the LLM aggregate).
   H3: The same pattern appears on the V14-quintile axis.
 
-Outputs (5 files in experiments/results/p5p8/):
+Outputs (5 files in platform_hybrid/experiments/results/p5p8/):
   p8_subgroup_fairness.tsv         (30 rows: 2 strata × 5 bins × 3 trees)
   p8_subgroup_fairness_boot.tsv    (24 paired-bootstrap rows)
   p8_subgroup_fairness_summary.json

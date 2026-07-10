@@ -76,7 +76,7 @@ LOW cluster: **{D1, D6, D7}** (range 0.005-0.016). MID cluster: **{D2, D3, D4, D
 
 ## Artifacts
 
-- `scripts/p5p8/synth_iter148_eight_domain_density.py` (~250 LoC, stdlib + numpy; loads `p7_iter147_per_cell.tsv`, Wilson CIs B=1000 seed=20260705)
+- `platform_modal/scripts/p5p8/synth_iter148_eight_domain_density.py` (~250 LoC, stdlib + numpy; loads `p7_iter147_per_cell.tsv`, Wilson CIs B=1000 seed=20260705)
 - `experiments/results/p5p8/synth_iter148_nine_domain_density.tsv` (9 rows: D1-D9 with Wilson CIs)
 - `experiments/results/p5p8/synth_iter148_nine_domain_ratios.tsv` (36 pairs: C(9,2))
 - `experiments/results/p5p8/synth_iter148_nine_domain_layers.tsv` (9 rows: per-domain layer assignment)

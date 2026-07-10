@@ -9,7 +9,7 @@ source papers are arXiv-verified and make explicit per-axis predictions).
 
 ## What was built
 
-1. `scripts/p5p8/p6_registry_field_coverage.py` (~280 LoC, stdlib only)
+1. `platform_modal/scripts/p5p8/p6_registry_field_coverage.py` (~280 LoC, stdlib only)
    — reads `registry/entries/*.json`, classifies per `(record_type, framework)`,
    normalizes method labels (case + punctuation stripped) so `PPO` ==
    `ppo` == `pporeinforce`, emits:
@@ -147,8 +147,8 @@ DrGRPO, ES, DAPO, GSPO, PPO) carry 1 populated block each (typically
 
 ```
 cd /home/claude/tinker-rl-lab-minimax
-python3 scripts/p5p8/p6_registry_field_coverage.py
-python3 scripts/p5p8/registry_validate.py
+python3 platform_modal/scripts/p5p8/p6_registry_field_coverage.py
+python3 platform_modal/scripts/p5p8/registry_validate.py
 ```
 
 Validation gate: all 35 entries PASS schema validation; 35/35 badges

@@ -37,8 +37,8 @@ import random
 from pathlib import Path
 
 REPO = Path("/home/claude/tinker-rl-lab-minimax")
-PANEL = REPO / "experiments/results/n10_seed_expansion"
-OUT = REPO / "experiments/results/p5p8"
+PANEL = REPO / "platform_hybrid/experiments/results/n10_seed_expansion"
+OUT = REPO / "platform_hybrid/experiments/results/p5p8"
 SEEDS = [42, 179, 316, 453, 590]
 TAUS = [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80]
 N_BOOT = 2000

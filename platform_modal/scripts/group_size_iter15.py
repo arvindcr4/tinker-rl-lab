@@ -30,28 +30,28 @@ This script attacks the same question with three sharper tools:
 
 Inputs (real, measured, no fabrication):
 
-  experiments/results/groupsize_zvf_sweep.json
+  platform_hybrid/experiments/results/groupsize_zvf_sweep.json
       Qwen2.5-0.5B / arithmetic_correctness sweep at G in {2,4,8,16}
       with 3 seeds and 40 per-step zvf / mean_reward / advantage_variance
       / entropy / grad_norm traces.
 
-  experiments/results/group_size_g4_vs_g32_broader_scale.tsv
+  platform_hybrid/experiments/results/group_size_g4_vs_g32_broader_scale.tsv
       Token-budget-normalized Qwen3-8B / GSM8K at G in {4,32} and
       budgets T in {1, 4, 16, 64} M. Retention and CI of
       G=4 vs G=32 at each T.
 
 Outputs (real artifacts):
 
-  experiments/results/group_size_iter15_equivalence.tsv
+  platform_hybrid/experiments/results/group_size_iter15_equivalence.tsv
       Paired TOST + Cohen's d matrix for (G_a, G_b) in
       {(2,4),(2,8),(2,16),(4,8),(4,16),(8,16)} on the per-seed
       last-10-step mean_reward, with three epsilon values.
 
-  experiments/results/group_size_iter15_snr.tsv
+  platform_hybrid/experiments/results/group_size_iter15_snr.tsv
       Per-G SNR on per-step advantage_variance (and on abs
       mean_advantage).  Tests sqrt(G) scaling vs flat scaling.
 
-  experiments/results/group_size_iter15_retained_dpo.tsv
+  platform_hybrid/experiments/results/group_size_iter15_retained_dpo.tsv
       Per-(G_a, G_b) test of whether the measured difference is
       consistent with the Wu 2025 97.6% retention claim.
 

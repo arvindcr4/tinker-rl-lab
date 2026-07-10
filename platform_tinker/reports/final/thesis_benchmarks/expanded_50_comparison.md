@@ -17,4 +17,4 @@ The best reports make artifacts concrete. They point readers to the code, run re
 - Added a claim-to-evidence audit table connecting each major conclusion to its primary evidence, artifact path, and caveat.
 - Added a reproducibility checklist in the artifact appendix.
 - Kept the expanded benchmark corpus as comparison context, not as primary empirical evidence for the capstone claims.
-- Kept raw third-party dissertation PDFs local to `reports/final/thesis_benchmarks/expanded_50/`; the submission bundle should include the source manifest and summaries, not necessarily the raw external PDFs.
+- Kept raw third-party dissertation PDFs local to `platform_tinker/reports/final/thesis_benchmarks/expanded_50/`; the submission bundle should include the source manifest and summaries, not necessarily the raw external PDFs.

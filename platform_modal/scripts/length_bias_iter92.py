@@ -47,7 +47,7 @@ test is the share of seeds with p_surr < 0.05.
 
 Inputs : drgrpo_vs_grpo.json          (arithmetic_easy, n=40)
          drgrpo_gsm8k_cot_full.json   (gsm8k_cot, n=30)
-Outputs: experiments/results/length_bias_iter92_{perrun,paired,
+Outputs: platform_hybrid/experiments/results/length_bias_iter92_{perrun,paired,
          witness,summary}.tsv + meta.json
 Stdlib + numpy + scipy.stats.
 """

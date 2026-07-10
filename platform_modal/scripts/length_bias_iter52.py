@@ -24,20 +24,20 @@ steps, to test whether the above-median length-drift signature is mediated
 by ZVF collapse.
 
 Outputs (5 TSVs):
-  experiments/results/length_bias_iter52_regime_slopes.tsv
+  platform_hybrid/experiments/results/length_bias_iter52_regime_slopes.tsv
     per (task, algo, seed, regime): n_steps, dL/dt, R_mean, L_mean, ZVF_mean
-  experiments/results/length_bias_iter52_grpo_vs_drgrpo.tsv
+  platform_hybrid/experiments/results/length_bias_iter52_grpo_vs_drgrpo.tsv
     paired bootstrap on dL/dt per (task, regime)
-  experiments/results/length_bias_iter52_above_minus_below.tsv
+  platform_hybrid/experiments/results/length_bias_iter52_above_minus_below.tsv
     paired bootstrap on (above slope - below slope) per (task, algo)
-  experiments/results/length_bias_iter52_zvf_coupling.tsv
+  platform_hybrid/experiments/results/length_bias_iter52_zvf_coupling.tsv
     per (task, algo, regime): dL/dt further split by zvf_bin (low/mid/high)
-  experiments/results/length_bias_iter52_summary.tsv
+  platform_hybrid/experiments/results/length_bias_iter52_summary.tsv
     one-line rollup per (task, regime) with mean/SD/CI/interpretation
 
 Reads:
-  experiments/results/drgrpo_vs_grpo.json      (arithmetic_easy: 5 seeds)
-  experiments/results/drgrpo_gsm8k_cot_full.json (gsm8k_cot: 3 seeds)
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json      (arithmetic_easy: 5 seeds)
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json (gsm8k_cot: 3 seeds)
 """
 from __future__ import annotations
 import csv

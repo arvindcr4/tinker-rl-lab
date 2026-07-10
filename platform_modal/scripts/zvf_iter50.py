@@ -24,25 +24,25 @@ These are computed on the real `variance_mitigation.tsv` logs (5541
 per-step rows, 9 methods × 5 seeds, see header below).
 
 Inputs:
-    experiments/results/variance_mitigation.tsv
+    platform_hybrid/experiments/results/variance_mitigation.tsv
         9 methods × 5 seeds × 100-300 steps (5541 rows total).
         Columns: method, seed, step, zvf, reward_mean, heldout_acc,
         collapse. Pre-validated by iter22 zvf_leadtime summary and
         iter38 zvf_iter38_classifier; treated as ground truth here.
 
 Outputs:
-    experiments/results/zvf_iter50_lagged_corr.tsv
+    platform_hybrid/experiments/results/zvf_iter50_lagged_corr.tsv
         Long-form table; columns = (method, seed, lag, r). 9*5*7 = 315
         rows.
-    experiments/results/zvf_iter50_phase_integrals.tsv
+    platform_hybrid/experiments/results/zvf_iter50_phase_integrals.tsv
         Per-(method, seed) per-phase integral of (ZVF - 0.5)⁺
         normalised. 9*5 = 45 rows × {int_phase1, int_phase2,
         int_phase3, n_steps_phase1, peak_step}.
-    experiments/results/zvf_iter50_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter50_summary.tsv
         Per-library (method) rollup: mean peak-L r at the
         reward-leads-ZVF lag, mean phase-2 integral, mean last10_avg.
         9 rows.
-    experiments/results/zvf_iter50_predictions.tsv
+    platform_hybrid/experiments/results/zvf_iter50_predictions.tsv
         4 pre-registered predictions for this iter.
 
 This script does NOT touch the existing zvf_diagnostic.py outputs;
@@ -63,9 +63,9 @@ from collections import defaultdict
 # ---------------------------------------------------------------------------
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, ".."))
-INPUT = os.path.join(ROOT, "experiments/results/variance_mitigation.tsv")
+INPUT = os.path.join(ROOT, "platform_hybrid/experiments/results/variance_mitigation.tsv")
 
-OUT_DIR = os.path.join(ROOT, "experiments/results")
+OUT_DIR = os.path.join(ROOT, "platform_hybrid/experiments/results")
 OUT_LAGGED = os.path.join(OUT_DIR, "zvf_iter50_lagged_corr.tsv")
 OUT_INTEGRALS = os.path.join(OUT_DIR, "zvf_iter50_phase_integrals.tsv")
 OUT_SUMMARY = os.path.join(OUT_DIR, "zvf_iter50_summary.tsv")

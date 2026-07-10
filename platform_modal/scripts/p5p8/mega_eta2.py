@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P5-11 — Stack-axis eta^2 decomposition on the live 98-cell mega corpus.
 
-Loads experiments/results/mega_20260704/cells.tsv (98 completed cells =
+Loads platform_hybrid/experiments/results/mega_20260704/cells.tsv (98 completed cells =
 2 models * 3 task_slices * 5 G * 2 temperatures * 2 seeds, minus a few that
 are still running) and decomposes the variance in {zvf, mean_reward, pcd,
 mean_completion_len, std_completion_len} into five "stack axes":
@@ -19,8 +19,8 @@ counterpart to the Pillar-1 "stack conditions everything" claim, now on the
 98-cell live mega corpus rather than the 4-method N2 tensors.
 
 Outputs:
-  experiments/results/p5p8/mega_eta2.tsv
-  experiments/results/p5p8/mega_eta2.json
+  platform_hybrid/experiments/results/p5p8/mega_eta2.tsv
+  platform_hybrid/experiments/results/p5p8/mega_eta2.json
 """
 from __future__ import annotations
 

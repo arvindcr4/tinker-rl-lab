@@ -118,7 +118,7 @@ def main() -> None:
         "Verifiable Math (Reviewer W7 / Q6)\n\n"
         "*Paper section: `paper/sections/tool_use_code_expanded.tex`. "
         "Reproducibility: `experiments/tool_use_reward_analysis.py` → "
-        "`experiments/results/tool_code_reward_diagnostics.tsv`.*\n\n"
+        "`platform_hybrid/experiments/results/tool_code_reward_diagnostics.tsv`.*\n\n"
         + f5.strip()
         + "\n"
     )
@@ -161,7 +161,7 @@ def main() -> None:
         "(Reviewer W4 / W5 / Q5)\n\n"
         "*Paper section: `paper/sections/statistical_rigor_addendum.tex`. "
         "Reproducibility: `experiments/survival_analysis.py` → "
-        "`experiments/results/survival_analysis.tsv`.*\n\n"
+        "`platform_hybrid/experiments/results/survival_analysis.tsv`.*\n\n"
         + f4.strip()
         + "\n"
     )
@@ -182,21 +182,21 @@ def main() -> None:
         "(Reviewer W2 / W3 / Q2)\n\n"
         "*Paper section: `paper/sections/group_size_reconcile.tex`. "
         "Reproducibility: `experiments/group_size_token_normalized.py` → "
-        "`experiments/results/group_size_token_normalized.tsv`.*\n\n"
+        "`platform_hybrid/experiments/results/group_size_token_normalized.tsv`.*\n\n"
         + f2.strip()
         + "\n\n"
         "### 5.18 Held-Out Sampling Protocols: P1 / P2 / P3 "
         "(Reviewer W8)\n\n"
         "*Paper section: `paper/sections/heldout_stratified.tex`. "
         "Reproducibility: `experiments/stratified_heldout.py` → "
-        "`experiments/results/heldout_stratified.tsv`.*\n\n"
+        "`platform_hybrid/experiments/results/heldout_stratified.tsv`.*\n\n"
         + f6_heldout
         + "\n\n"
         "### 5.19 Base vs Instruct Paired Evaluation "
         "(Reviewer W9 / W11 / Q4)\n\n"
         "*Paper section: `paper/sections/base_vs_instruct_paired.tex`. "
         "Reproducibility: `experiments/base_instruct_paired.py` → "
-        "`experiments/results/base_instruct_paired.tsv`.*\n\n"
+        "`platform_hybrid/experiments/results/base_instruct_paired.tsv`.*\n\n"
         + f6_bi
         + "\n\n"
     )

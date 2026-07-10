@@ -12,8 +12,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[2]
-RES  = ROOT / "experiments/results/p5p8"
-FIG  = ROOT / "experiments/results/p5p8/figures"
+RES  = ROOT / "platform_hybrid/experiments/results/p5p8"
+FIG  = ROOT / "platform_hybrid/experiments/results/p5p8/figures"
 FIG.mkdir(parents=True, exist_ok=True)
 
 rows = []

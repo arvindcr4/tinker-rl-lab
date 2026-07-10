@@ -7,7 +7,7 @@ audit is the *cartesian* coverage of (framework x method): which cells of
 the registry are populated, which are empty, and where multiple frameworks
 share the same claimed method (the cross-framework reproducibility surface).
 
-Outputs (all under experiments/results/p5p8/):
+Outputs (all under platform_hybrid/experiments/results/p5p8/):
   p6_iter202_framework_method_cell.tsv      — one row per (framework, method)
   p6_iter202_same_method_clusters.tsv      — clusters of entries sharing a method
   p6_iter202_minreport_divergence.tsv      — per-field divergence across clusters

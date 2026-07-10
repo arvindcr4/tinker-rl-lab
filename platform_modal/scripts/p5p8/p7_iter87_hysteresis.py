@@ -12,10 +12,10 @@ reduction, fire-count retention, contrast-yield retention, cost
 retention. Pair-step bootstrap CIs on every headline.
 
 Outputs:
-  experiments/results/p5p8/p7_iter87_hysteresis_per_method.tsv
-  experiments/results/p5p8/p7_iter87_hysteresis_per_step.tsv
-  experiments/results/p5p8/p7_iter87_hysteresis_summary.json
-  experiments/results/p5p8/p7_iter87_hysteresis_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter87_hysteresis_per_method.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter87_hysteresis_per_step.tsv
+  platform_hybrid/experiments/results/p5p8/p7_iter87_hysteresis_summary.json
+  platform_hybrid/experiments/results/p5p8/p7_iter87_hysteresis_boot.tsv
 """
 import json
 from collections import defaultdict
@@ -24,8 +24,8 @@ from pathlib import Path
 import random
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-N2_DIR = WORK / "experiments/results/n2_reward_tensor_resume"
-OUT = WORK / "experiments/results/p5p8"
+N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT = WORK / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_BASE = 8

@@ -26,16 +26,16 @@ We ask three sharp questions:
           directly while accuracy saturates (Chinchilla-style).
 
 Inputs:
-  experiments/results/group_size_token_normalized.tsv
-  experiments/results/groupsize_zvf_sweep.tsv
-  experiments/results/group_size_iter75_scaling.tsv
+  platform_hybrid/experiments/results/group_size_token_normalized.tsv
+  platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
+  platform_hybrid/experiments/results/group_size_iter75_scaling.tsv
 
 Outputs:
-  experiments/results/group_size_iter83_egt.tsv
-  experiments/results/group_size_iter83_gstar.tsv
-  experiments/results/group_size_iter83_iso_egt.tsv
-  experiments/results/group_size_iter83_iso_compute.tsv
-  experiments/results/group_size_iter83_summary.tsv
+  platform_hybrid/experiments/results/group_size_iter83_egt.tsv
+  platform_hybrid/experiments/results/group_size_iter83_gstar.tsv
+  platform_hybrid/experiments/results/group_size_iter83_iso_egt.tsv
+  platform_hybrid/experiments/results/group_size_iter83_iso_compute.tsv
+  platform_hybrid/experiments/results/group_size_iter83_summary.tsv
   figures/group_size_iter83.pdf
   figures/group_size_iter83.png
 """
@@ -514,7 +514,7 @@ def main():
             f"fails at T>=4M precisely because no amount of extra G=4 steps "
             f"can replicate G=32's per-step quality at large T."
         ),
-        "evidence_path": "experiments/results/group_size_iter83_*.tsv",
+        "evidence_path": "platform_hybrid/experiments/results/group_size_iter83_*.tsv",
         "citation_ok": True,
         "source_paper": "arXiv:2510.00977 (Wu et al. 2025)",
     }

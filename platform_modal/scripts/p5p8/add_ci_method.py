@@ -24,7 +24,7 @@ import jsonschema
 ROOT = Path("/home/claude/tinker-rl-lab-minimax")
 SCHEMA = ROOT / "registry/schema.json"
 ENTRIES = sorted(glob.glob(str(ROOT / "registry/entries/*.json")))
-OUT = ROOT / "experiments/results/p5p8"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 
 # entries whose outcomes came from the N2 same-stack four-method tensors
 N2_TINKER = {

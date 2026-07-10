@@ -39,11 +39,11 @@ We answer Q in four pieces:
         explicit "anchors needed" curve for each candidate true-scaling slope.
 
 Outputs:
-  experiments/results/scaling_law_iter121_late_early.tsv
-  experiments/results/scaling_law_iter121_effective_compute.tsv
-  experiments/results/scaling_law_iter121_synthetic_recovery.tsv
-  experiments/results/scaling_law_iter121_power_curve.tsv
-  experiments/results/scaling_law_iter121_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter121_late_early.tsv
+  platform_hybrid/experiments/results/scaling_law_iter121_effective_compute.tsv
+  platform_hybrid/experiments/results/scaling_law_iter121_synthetic_recovery.tsv
+  platform_hybrid/experiments/results/scaling_law_iter121_power_curve.tsv
+  platform_hybrid/experiments/results/scaling_law_iter121_meta.json
   figures/scaling_law_iter121.pdf
 
 References (verified):

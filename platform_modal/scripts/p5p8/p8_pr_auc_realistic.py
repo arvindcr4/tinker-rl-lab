@@ -31,8 +31,8 @@ J4 Paired bootstrap CIs (n=400) on the deltas
 
 Outputs
 -------
-experiments/results/p5p8/p8_pr_auc_realistic.tsv
-experiments/results/p5p8/p8_pr_auc_realistic.json
+platform_hybrid/experiments/results/p5p8/p8_pr_auc_realistic.tsv
+platform_hybrid/experiments/results/p5p8/p8_pr_auc_realistic.json
 """
 from __future__ import annotations
 import json

@@ -13,8 +13,8 @@ import json, math, os, statistics
 from pathlib import Path
 
 WORK = Path("/home/claude/tinker-rl-lab-minimax")
-N2_DIR = WORK / "experiments/results/n2_reward_tensor_resume"
-OUT = WORK / "experiments/results/p5p8"
+N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT = WORK / "platform_hybrid/experiments/results/p5p8"
 METHODS = ["grpo", "aero", "gift", "areal"]
 GB, GE, NS, NP, TAU = 8, 8, 40, 16, 0.70
 SEED, NBOOT = 20260705, 4000

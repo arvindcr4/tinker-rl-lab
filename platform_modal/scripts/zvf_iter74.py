@@ -58,30 +58,30 @@ iter74 supplies exactly this. For each per-step ZVF trace we
 
 Inputs (real):
 
-    experiments/results/variance_mitigation.tsv
+    platform_hybrid/experiments/results/variance_mitigation.tsv
         9 methods x 5 seeds x 100-300 steps (5540 rows total).
         Columns: method, seed, step, zvf, reward_mean, heldout_acc,
         collapse. Pre-validated by every iter since iter22.
-    experiments/results/bfclv4_tool_use.tsv
+    platform_hybrid/experiments/results/bfclv4_tool_use.tsv
         Per-step sparse/dense ZVF for the tool-use rolled rollout;
         11 rows.  Anchors the high-ZVF "stuck" interpretation.
 
 Outputs:
 
-    experiments/results/zvf_iter74_transition_matrices.tsv
+    platform_hybrid/experiments/results/zvf_iter74_transition_matrices.tsv
         One row per (method, transition s -> s'); 9 * 9 = 81 rows.
-    experiments/results/zvf_iter74_run_lengths.tsv
+    platform_hybrid/experiments/results/zvf_iter74_run_lengths.tsv
         One row per (method, seed) carrying mean_run_{L,M,H},
         selfloop_H, absorbing_H, exit_halflife_H, last10_acc.
-    experiments/results/zvf_iter74_library_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter74_library_summary.tsv
         One row per method -- aggregated absorbing_H, selfloop_H,
         mean_run_H and rank by absorbing_H.
-    experiments/results/zvf_iter74_corr.tsv
+    platform_hybrid/experiments/results/zvf_iter74_corr.tsv
         Pearson+Spearman correlations of (mean_run_H, selfloop_H,
         absorbing_H) with last10_acc over the 9 methods, with
         bootstrap CIs of B=2000 percentile resamples over methods.
         Also per-(method, seed) correlation over 45 rows (9*5).
-    experiments/results/zvf_iter74_tool_anchor.tsv
+    platform_hybrid/experiments/results/zvf_iter74_tool_anchor.tsv
         Single row stating the bfclv4 tool-use anchor absorbing_H=1.0
         and run-length-H = trace length (full history).
     figures/zvf_iter74.pdf

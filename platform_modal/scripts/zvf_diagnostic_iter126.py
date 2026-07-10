@@ -12,12 +12,12 @@ Angles tested (all three falsifiable):
         methods.
 
 Inputs:
-  experiments/results/variance_mitigation.tsv   (9 methods x 5 seeds x ~100 steps)
+  platform_hybrid/experiments/results/variance_mitigation.tsv   (9 methods x 5 seeds x ~100 steps)
 Outputs:
-  experiments/results/zvf_iter126_lag1.tsv
-  experiments/results/zvf_iter126_leadtime.tsv
-  experiments/results/zvf_iter126_drift.tsv
-  experiments/results/zvf_iter126_meta.json
+  platform_hybrid/experiments/results/zvf_iter126_lag1.tsv
+  platform_hybrid/experiments/results/zvf_iter126_leadtime.tsv
+  platform_hybrid/experiments/results/zvf_iter126_drift.tsv
+  platform_hybrid/experiments/results/zvf_iter126_meta.json
   figures/zvf_iter126_ews.{pdf,png}
 """
 

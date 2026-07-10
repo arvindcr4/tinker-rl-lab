@@ -19,10 +19,10 @@ model cards, datasheets)". This script:
     below: which MIN-REPORT item(s) the paper inspired or formalised.
 
 (4) Outputs three artifacts:
-    - experiments/results/p5p8/p5_iter109_crossref_verify.tsv
-    - experiments/results/p5p8/p5_iter109_bib_audit.tsv
-    - experiments/results/p5p8/p5_iter109_minreport_coupling.tsv
-    - experiments/results/p5p8/p5_iter109_summary.json
+    - platform_hybrid/experiments/results/p5p8/p5_iter109_crossref_verify.tsv
+    - platform_hybrid/experiments/results/p5p8/p5_iter109_bib_audit.tsv
+    - platform_hybrid/experiments/results/p5p8/p5_iter109_minreport_coupling.tsv
+    - platform_hybrid/experiments/results/p5p8/p5_iter109_summary.json
 
 CrossRef is queried via urllib.request; if a call fails (rate limit, network)
 the script records UNVERIFIED and continues. All other work is stdlib.

@@ -20,10 +20,10 @@ a fitting artifact, using three noise-aware tests:
     given the inferred noise floor; compare to the actual trace length.
 
 Outputs:
-  experiments/results/scaling_law_iter25_identifiability.tsv (per trace)
-  experiments/results/scaling_law_iter25_bootstrap.tsv       (bootstrap CIs)
-  experiments/results/scaling_law_iter25_modelsel.tsv        (AICc weights)
-  experiments/results/scaling_law_iter25_summary.tsv         (headline rollup)
+  platform_hybrid/experiments/results/scaling_law_iter25_identifiability.tsv (per trace)
+  platform_hybrid/experiments/results/scaling_law_iter25_bootstrap.tsv       (bootstrap CIs)
+  platform_hybrid/experiments/results/scaling_law_iter25_modelsel.tsv        (AICc weights)
+  platform_hybrid/experiments/results/scaling_law_iter25_summary.tsv         (headline rollup)
   figures/scaling_law_iter25.{pdf,png}  (+ mirror into paper/figures/)
 """
 from __future__ import annotations

@@ -11,11 +11,11 @@
       the recommended threshold.
 
 Inputs:
-  experiments/results/zvf_iter78_per_step_features.tsv
-  experiments/results/zvf_iter78_leadtime_summary.tsv
-  experiments/results/zvf_iter78_single_channel.tsv
-  experiments/results/zvf_iter78_anchors.tsv
-  experiments/results/zvf_iter78_summary.tsv
+  platform_hybrid/experiments/results/zvf_iter78_per_step_features.tsv
+  platform_hybrid/experiments/results/zvf_iter78_leadtime_summary.tsv
+  platform_hybrid/experiments/results/zvf_iter78_single_channel.tsv
+  platform_hybrid/experiments/results/zvf_iter78_anchors.tsv
+  platform_hybrid/experiments/results/zvf_iter78_summary.tsv
 
 Outputs:
   figures/zvf_iter78.pdf
@@ -37,7 +37,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-RESULTS = "experiments/results"
+RESULTS = "platform_hybrid/experiments/results"
 FIG_DIR = "figures"
 PAPER_FIG_DIR = "paper/figures"
 

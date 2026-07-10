@@ -35,19 +35,19 @@ empirical decompositions that the previous iterations did not perform:
 
 Deliverables (no fabrication: every number comes from an existing TSV):
 
-    experiments/results/group_size_iter35_pair_sweep.tsv
+    platform_hybrid/experiments/results/group_size_iter35_pair_sweep.tsv
         40 rows: 10 ordered (G_a, G_b) pairs x 4 token budgets.
         Per-cell retention, conservative 95% CI, and DPO-equivalence score.
 
-    experiments/results/group_size_iter35_difficulty.tsv
+    platform_hybrid/experiments/results/group_size_iter35_difficulty.tsv
         12 rows: 4 G values x 3 difficulty bins (p_hat low/mid/high).
         Per-bin retention of G_a vs G=2 on the measured arithmetic sweep.
 
-    experiments/results/group_size_iter35_pareto.tsv
+    platform_hybrid/experiments/results/group_size_iter35_pareto.tsv
         20 rows: 4 budgets x 5 G values. Cost-effectiveness rank by
         accuracy per million rollout tokens.
 
-    experiments/results/group_size_iter35_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter35_summary.tsv
         Single-row-per-finding summary table (6 rows) with the headline
         claims and effect sizes for the paper section.
 """

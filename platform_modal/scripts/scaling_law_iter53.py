@@ -35,11 +35,11 @@ Concretely, three pre-registered questions:
 This script does not refit; it imports iter49 outputs and adds three artefacts.
 
 Outputs (5 artefacts):
-  experiments/results/scaling_law_iter53_rank.tsv
-  experiments/results/scaling_law_iter53_rank_summary.tsv
-  experiments/results/scaling_law_iter53_peak_residual_coupling.tsv
-  experiments/results/scaling_law_iter53_critic_degeneracy.tsv
-  experiments/results/scaling_law_iter53_predictions.tsv
+  platform_hybrid/experiments/results/scaling_law_iter53_rank.tsv
+  platform_hybrid/experiments/results/scaling_law_iter53_rank_summary.tsv
+  platform_hybrid/experiments/results/scaling_law_iter53_peak_residual_coupling.tsv
+  platform_hybrid/experiments/results/scaling_law_iter53_critic_degeneracy.tsv
+  platform_hybrid/experiments/results/scaling_law_iter53_predictions.tsv
   paper/sections/scaling_law_iter53.tex
   figures/scaling_law_iter53_rank.{pdf,png}
 """

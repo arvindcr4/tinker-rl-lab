@@ -31,18 +31,18 @@ Method (stdlib + numpy + sklearn):
   * Non-vacuity perturbation: swap the model column on 30% of cells, confirm
     that R^2(manifest) rises only because we added a leaked feature.
 
-Outputs: experiments/results/p5p8/p5_manifest_self_sufficiency.tsv
-         experiments/results/p5p8/p5_manifest_self_sufficiency.json
-         experiments/results/p5p8/figures/p5_manifest_r2_gap.{png,pdf}
+Outputs: platform_hybrid/experiments/results/p5p8/p5_manifest_self_sufficiency.tsv
+         platform_hybrid/experiments/results/p5p8/p5_manifest_self_sufficiency.json
+         platform_hybrid/experiments/results/p5p8/figures/p5_manifest_r2_gap.{png,pdf}
 """
 import csv, json, math, os, sys, time
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CELLS = os.path.join(ROOT, "experiments/results/mega_20260704/cells.tsv")
-MDIR = os.path.join(ROOT, "experiments/results/mega_20260704/manifests")
-OUTDIR = os.path.join(ROOT, "experiments/results/p5p8")
+CELLS = os.path.join(ROOT, "platform_hybrid/experiments/results/mega_20260704/cells.tsv")
+MDIR = os.path.join(ROOT, "platform_hybrid/experiments/results/mega_20260704/manifests")
+OUTDIR = os.path.join(ROOT, "platform_hybrid/experiments/results/p5p8")
 FIGDIR = os.path.join(OUTDIR, "figures")
 os.makedirs(OUTDIR, exist_ok=True)
 os.makedirs(FIGDIR, exist_ok=True)

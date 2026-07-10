@@ -38,14 +38,14 @@ Pillar 4 elevation — three new analyses on the same per-step traces.
       signal in the benchmark, and lets us check whether the
       compression pattern holds at a longer horizon.
 
-Inputs : experiments/results/drgrpo_vs_grpo.json          (per-step traces, 40 steps, 5+5)
-         experiments/results/drgrpo_gsm8k_cot_full.json   (per-step traces, 30 steps, 3+3)
-         experiments/results/arithmetic_metrics.jsonl     (100-step cross-validation)
+Inputs : platform_hybrid/experiments/results/drgrpo_vs_grpo.json          (per-step traces, 40 steps, 5+5)
+         platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json   (per-step traces, 30 steps, 3+3)
+         platform_hybrid/experiments/results/arithmetic_metrics.jsonl     (100-step cross-validation)
 
-Outputs: experiments/results/length_bias_trap.tsv         (per-run trap onset detection)
-         experiments/results/length_bias_summary_ci.tsv   (per-algo Spearman + 95% bootstrap CI)
-         experiments/results/length_bias_bins.tsv         (per-algo decile binned len-vs-reward)
-         experiments/results/length_bias_crosval.tsv      (arithmetic_metrics.jsonl summary)
+Outputs: platform_hybrid/experiments/results/length_bias_trap.tsv         (per-run trap onset detection)
+         platform_hybrid/experiments/results/length_bias_summary_ci.tsv   (per-algo Spearman + 95% bootstrap CI)
+         platform_hybrid/experiments/results/length_bias_bins.tsv         (per-algo decile binned len-vs-reward)
+         platform_hybrid/experiments/results/length_bias_crosval.tsv      (arithmetic_metrics.jsonl summary)
          figures/length_vs_reward_elevated.{pdf,png}      (3-panel: trap-onset + binned + crossval)
          paper/figures/length_vs_reward_elevated.pdf
 
@@ -236,7 +236,7 @@ def decile_binned_coupling(runs: list[dict], task: str, algo: str) -> list[dict]
 
 def crossval_arithmetic_metrics() -> dict:
     """Compute per-step Spearman and last-10 numbers on
-    experiments/results/arithmetic_metrics.jsonl (100 steps, 1 run).
+    platform_hybrid/experiments/results/arithmetic_metrics.jsonl (100 steps, 1 run).
     """
     p = RES / "arithmetic_metrics.jsonl"
     if not p.exists():

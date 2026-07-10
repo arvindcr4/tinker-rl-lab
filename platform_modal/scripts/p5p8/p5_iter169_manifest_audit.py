@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P5 MIN-REPORT manifest ground-truth audit on the 98 live mega manifests.
 
-Reads every JSON file in ``experiments/results/mega_20260704/manifests/`` and
+Reads every JSON file in ``platform_hybrid/experiments/results/mega_20260704/manifests/`` and
 audits:
 
 * **H1** — every v1 MIN-REPORT item has leaf-presence >=98/98.
@@ -15,7 +15,7 @@ audits:
 * **F5** — v2 schema expansion carries +2.99 fresh entropy bits beyond what v1
   stack descriptors already encode.
 
-Outputs (in ``experiments/results/p5p8/``):
+Outputs (in ``platform_hybrid/experiments/results/p5p8/``):
 
 * ``p5_iter169_manifest_audit_per_cell.tsv`` (98 rows)
 * ``p5_iter169_manifest_audit_per_key.tsv`` (8 rows)
@@ -35,9 +35,9 @@ from collections import Counter, defaultdict
 from typing import Any, Dict, List, Tuple
 
 WORKTREE = "/home/claude/tinker-rl-lab-minimax"
-MANIFESTS_DIR = f"{WORKTREE}/experiments/results/mega_20260704/manifests"
-CELLS_TSV = f"{WORKTREE}/experiments/results/mega_20260704/cells.tsv"
-OUT_DIR = f"{WORKTREE}/experiments/results/p5p8"
+MANIFESTS_DIR = f"{WORKTREE}/platform_hybrid/experiments/results/mega_20260704/manifests"
+CELLS_TSV = f"{WORKTREE}/platform_hybrid/experiments/results/mega_20260704/cells.tsv"
+OUT_DIR = f"{WORKTREE}/platform_hybrid/experiments/results/p5p8"
 
 V1_KEYS = [
     "loss_form",

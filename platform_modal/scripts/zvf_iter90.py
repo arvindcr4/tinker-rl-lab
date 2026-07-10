@@ -12,13 +12,13 @@ alarms are transient, iter86's "stop" rule is over-conservative for
 those methods, and the proper decision-theoretic fix is to wait K
 post-alarm steps before stopping.
 
-Input: experiments/results/variance_mitigation.tsv (45 traces:
+Input: platform_hybrid/experiments/results/variance_mitigation.tsv (45 traces:
        9 methods x 5 seeds x ~123 steps).
 Output:
-    experiments/results/zvf_iter90_episodes.tsv     (one row per alarm episode)
-    experiments/results/zvf_iter90_post_episode.tsv (one row per (method, post-cat))
-    experiments/results/zvf_iter90_recovery.tsv     (per-method recovery rate)
-    experiments/results/zvf_iter90_summary.tsv      (one-line headline)
+    platform_hybrid/experiments/results/zvf_iter90_episodes.tsv     (one row per alarm episode)
+    platform_hybrid/experiments/results/zvf_iter90_post_episode.tsv (one row per (method, post-cat))
+    platform_hybrid/experiments/results/zvf_iter90_recovery.tsv     (per-method recovery rate)
+    platform_hybrid/experiments/results/zvf_iter90_summary.tsv      (one-line headline)
     figures/zvf_iter90_recovery.{pdf,png}
 """
 

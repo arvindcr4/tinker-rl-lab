@@ -12,8 +12,8 @@ Four controllers compared on the same N2 four-method reward tensors:
 (Berkeley row 01); (C) Bayesian-escalation (NEW); (D) oracle hindsight.
 
 Outputs:
-  experiments/results/p5p8/p7_bayesian_summary.{tsv,json}
-  experiments/results/p5p8/p7_bayesian_per_step.tsv
+  platform_hybrid/experiments/results/p5p8/p7_bayesian_summary.{tsv,json}
+  platform_hybrid/experiments/results/p5p8/p7_bayesian_per_step.tsv
 
 Stdlib only.
 """
@@ -309,7 +309,7 @@ def _eval_controller(name, threshold, eval_fn, method_step_info,
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write", action="store_true",
-                    help="Write outputs under experiments/results/p5p8/")
+                    help="Write outputs under platform_hybrid/experiments/results/p5p8/")
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
 

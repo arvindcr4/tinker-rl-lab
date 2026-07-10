@@ -39,11 +39,11 @@ This iteration does three things the previous battery did not:
       violates this by a wide margin.
 
 Outputs (5 TSV + 1 fig + 1 tex):
-  experiments/results/scaling_law_iter73_closed_form.tsv
-  experiments/results/scaling_law_iter73_aic_bic.tsv
-  experiments/results/scaling_law_iter73_nemotron.tsv
-  experiments/results/scaling_law_iter73_phase_conform.tsv
-  experiments/results/scaling_law_iter73_predictions.tsv
+  platform_hybrid/experiments/results/scaling_law_iter73_closed_form.tsv
+  platform_hybrid/experiments/results/scaling_law_iter73_aic_bic.tsv
+  platform_hybrid/experiments/results/scaling_law_iter73_nemotron.tsv
+  platform_hybrid/experiments/results/scaling_law_iter73_phase_conform.tsv
+  platform_hybrid/experiments/results/scaling_law_iter73_predictions.tsv
   figures/scaling_law_iter73.{pdf,png}
   paper/sections/scaling_law_iter73.tex
 

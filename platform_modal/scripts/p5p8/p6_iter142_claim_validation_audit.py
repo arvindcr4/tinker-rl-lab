@@ -21,25 +21,25 @@ explanatory power).
 Inputs:
   - registry/entries/delta_*.json (17 variant_delta records; 15 + 2 tool_use
     from iter-138)
-  - experiments/results/p5p8/p6_iter126_measured_evidence_tier.tsv
+  - platform_hybrid/experiments/results/p5p8/p6_iter126_measured_evidence_tier.tsv
     (per-delta tier classification: A/B/C/D)
-  - experiments/results/p5p8/p5_iter141_anova_eta2.tsv
+  - platform_hybrid/experiments/results/p5p8/p5_iter141_anova_eta2.tsv
     (η²(method)=0.0005 anchor)
 
 Outputs:
-  - experiments/results/p5p8/p6_iter142_verdict_aggregate.tsv
+  - platform_hybrid/experiments/results/p5p8/p6_iter142_verdict_aggregate.tsv
     (per-(delta, metric, panel) rows + verdict aggregate columns)
-  - experiments/results/p5p8/p6_iter142_tier_x_verdict.tsv
+  - platform_hybrid/experiments/results/p5p8/p6_iter142_tier_x_verdict.tsv
     (cross-tab: tier × verdict counts and rates)
-  - experiments/results/p5p8/p6_iter142_metric_x_verdict.tsv
+  - platform_hybrid/experiments/results/p5p8/p6_iter142_metric_x_verdict.tsv
     (cross-tab: metric × verdict)
-  - experiments/results/p5p8/p6_iter142_panel_x_verdict.tsv
+  - platform_hybrid/experiments/results/p5p8/p6_iter142_panel_x_verdict.tsv
     (cross-tab: panel × verdict; tests N2 vs zvf130 SUPPORTS rate)
-  - experiments/results/p5p8/p6_iter142_sign_concordance.tsv
+  - platform_hybrid/experiments/results/p5p8/p6_iter142_sign_concordance.tsv
     (per-delta: predicted_sign matches measured sign? counts)
-  - experiments/results/p5p8/p6_iter142_eta2_paradox.tsv
+  - platform_hybrid/experiments/results/p5p8/p6_iter142_eta2_paradox.tsv
     (N2 panel SUPPORTS rate vs zvf130 panel SUPPORTS rate; explained)
-  - experiments/results/p5p8/p6_iter142_summary.json
+  - platform_hybrid/experiments/results/p5p8/p6_iter142_summary.json
 """
 import json
 import pathlib

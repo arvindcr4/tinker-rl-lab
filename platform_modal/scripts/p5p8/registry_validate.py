@@ -2,13 +2,13 @@
 """P6 Registry Validation: schema check + measured variant deltas from N2 tensors.
 
 Three deliverables:
-  1. experiments/results/p5p8/registry_schema_check.tsv
+  1. platform_hybrid/experiments/results/p5p8/registry_schema_check.tsv
      - one row per registry/entries/*.json
      - PASS / FAIL on schema validation + a leaf-coverage table per MIN-REPORT item
-  2. experiments/results/p5p8/registry_measured_deltas.tsv
+  2. platform_hybrid/experiments/results/p5p8/registry_measured_deltas.tsv
      - one row per (method_pair) on N2 reward tensors (same stack, G=8, seed=0)
      - measured delta_reward_mean, delta_zvf, delta_loss, paired bootstrap CI
-  3. experiments/results/p5p8/registry_measured_deltas.json
+  3. platform_hybrid/experiments/results/p5p8/registry_measured_deltas.json
      - machine-readable dump (also consumed by paper_P6 §measured-evidence patch)
 
 This is the P6 T3 item: validate entries against what the N2 four-method run
@@ -229,7 +229,7 @@ def measured_per_prompt(prompts):
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write", action="store_true",
-                    help="Write outputs under experiments/results/p5p8/")
+                    help="Write outputs under platform_hybrid/experiments/results/p5p8/")
     args = ap.parse_args()
 
     RESULTS.mkdir(parents=True, exist_ok=True)
@@ -286,7 +286,7 @@ def main():
             },
             "measured_deltas_stepwise": deltas,
             "measured_deltas_per_prompt": pp,
-            "source": "experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl",
+            "source": "platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl",
             "note": "All four methods share the same stack (Tinker-managed sampler, G=8, seed 0); "
                     "deltas isolate the variant label, not the runtime.",
         }

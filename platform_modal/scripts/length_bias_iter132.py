@@ -43,10 +43,10 @@ Sharp, falsifiable hypotheses:
         on (rho>0, p<0.10) over 2 tasks.
 
 INPUTS :
-  experiments/results/drgrpo_vs_grpo.json            (arithmetic_easy, 5 seeds)
-  experiments/results/drgrpo_gsm8k_cot_full.json     (gsm8k_cot, 3 seeds)
-  experiments/results/length_bias_iter108_perrun_progress.tsv
-OUTPUTS (5 TSV + meta) under experiments/results/length_bias_iter132_*
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json            (arithmetic_easy, 5 seeds)
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json     (gsm8k_cot, 3 seeds)
+  platform_hybrid/experiments/results/length_bias_iter108_perrun_progress.tsv
+OUTPUTS (5 TSV + meta) under platform_hybrid/experiments/results/length_bias_iter132_*
   length_bias_iter132_window_efficiency.tsv
   length_bias_iter132_paired_delta.tsv
   length_bias_iter132_mediation_chain.tsv

@@ -76,7 +76,7 @@
           "sampler_backend": 1.0,
           "telemetry": 0.0
         },
-        "framework": "openrlhf",
+        "framework": "platform_modal/openrlhf",
         "label_claimed": "grpo",
         "openness": "open"
       },
@@ -344,7 +344,7 @@
           "total_leaves": 12
         }
       },
-      "openrlhf": {
+      "platform_modal/openrlhf": {
         "decontamination": {
           "filled_leaves": 0,
           "frac": 0.0,

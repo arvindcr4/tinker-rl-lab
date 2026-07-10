@@ -23,11 +23,11 @@ P7 paper promises.
 
 Outputs
 -------
-- experiments/results/p5p8/p7_iter167_oracle_per_obs.tsv      (2560 obs: oracle G*, oracle ΔY, G from each controller, regret)
-- experiments/results/p5p8/p7_iter167_oracle_per_step.tsv     (4×40: per-step oracle yield vs each controller yield)
-- experiments/results/p5p8/p7_iter167_oracle_regret_by_method.tsv  (4 methods × 5 controllers: cumulative regret & % oracle captured)
-- experiments/results/p5p8/p7_iter167_oracle_regret_summary.json
-- experiments/results/p5p8/p7_iter167_oracle_regret_bootstrap.tsv  (bootstrap CIs on %oracle captured per controller, B=2000)
+- platform_hybrid/experiments/results/p5p8/p7_iter167_oracle_per_obs.tsv      (2560 obs: oracle G*, oracle ΔY, G from each controller, regret)
+- platform_hybrid/experiments/results/p5p8/p7_iter167_oracle_per_step.tsv     (4×40: per-step oracle yield vs each controller yield)
+- platform_hybrid/experiments/results/p5p8/p7_iter167_oracle_regret_by_method.tsv  (4 methods × 5 controllers: cumulative regret & % oracle captured)
+- platform_hybrid/experiments/results/p5p8/p7_iter167_oracle_regret_summary.json
+- platform_hybrid/experiments/results/p5p8/p7_iter167_oracle_regret_bootstrap.tsv  (bootstrap CIs on %oracle captured per controller, B=2000)
 """
 from __future__ import annotations
 
@@ -41,8 +41,8 @@ import statistics
 from typing import Dict, List, Tuple
 
 WORKTREE = "/home/claude/tinker-rl-lab-minimax"
-DATA_DIR = os.path.join(WORKTREE, "experiments/results/n2_reward_tensor_resume")
-OUT_DIR = os.path.join(WORKTREE, "experiments/results/p5p8")
+DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 G_BASE = 8

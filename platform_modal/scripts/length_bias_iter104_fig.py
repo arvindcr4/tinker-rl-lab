@@ -10,8 +10,8 @@
   (C) Per-quantile Dr.GRPO - GRPO paired delta with bootstrap 95% CI,
       sub-panelled per task.
 
-Reads:  experiments/results/length_bias_iter104_summary.tsv
-        experiments/results/length_bias_iter104_paired.tsv
+Reads:  platform_hybrid/experiments/results/length_bias_iter104_summary.tsv
+        platform_hybrid/experiments/results/length_bias_iter104_paired.tsv
 Writes: figures/length_bias_iter104_qreg.{pdf,png}
         paper/figures/length_bias_iter104_qreg.{pdf,png}
 """

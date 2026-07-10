@@ -11,11 +11,11 @@ Builds on iter-134 base audit (per-row field completeness) with:
        rows, summarize expected_effects presence and blocking note.
 
 Outputs:
-  experiments/results/p5p8/p6_iter134_ci_method_diversity.tsv
-  experiments/results/p5p8/p6_iter134_seed_inconsistency.tsv
-  experiments/results/p5p8/p6_iter134_cross_panel_companion.tsv
-  experiments/results/p5p8/p6_iter134_empty_action_gap.tsv
-  experiments/results/p5p8/p6_iter134_summary.json
+  platform_hybrid/experiments/results/p5p8/p6_iter134_ci_method_diversity.tsv
+  platform_hybrid/experiments/results/p5p8/p6_iter134_seed_inconsistency.tsv
+  platform_hybrid/experiments/results/p5p8/p6_iter134_cross_panel_companion.tsv
+  platform_hybrid/experiments/results/p5p8/p6_iter134_empty_action_gap.tsv
+  platform_hybrid/experiments/results/p5p8/p6_iter134_summary.json
 """
 import csv
 import json
@@ -24,7 +24,7 @@ from collections import defaultdict, Counter
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 REG = ROOT / "registry/entries"
-OUT = ROOT / "experiments/results/p5p8"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
 

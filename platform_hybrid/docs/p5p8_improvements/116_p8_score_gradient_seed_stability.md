@@ -39,11 +39,11 @@ The iter-80 row 94 deployment recommendation stands: **use gradient-band at `g_t
 ## Outputs
 
 - `scripts/p5p8/p8_iter100_score_gradient_seed_stability.py` (~210 LoC, stdlib + xgboost + numpy)
-- `experiments/results/p5p8/p8_iter100_score_gradient_seed42_per_rule.tsv` (8 rows: 4 rule × backbone cells × 2 seeds)
-- `experiments/results/p5p8/p8_iter100_score_gradient_seed_stability.tsv` (4 rows: per-rule paired bootstrap)
-- `experiments/results/p5p8/p8_iter100_score_gradient_seed_stability.json` (summary)
-- Extended `paper/sections/p8_iter80_score_gradient.tex` with §sec:p8-gradient-seed-stability + Table tab:p8-gradient-seed
-- `paper/paper_P8_fraud.pdf` rebuilds to **42 pages / 0 errors / 0 undefined citations** (was 38, +4 pages from the new section)
+- `platform_hybrid/experiments/results/p5p8/p8_iter100_score_gradient_seed42_per_rule.tsv` (8 rows: 4 rule × backbone cells × 2 seeds)
+- `platform_hybrid/experiments/results/p5p8/p8_iter100_score_gradient_seed_stability.tsv` (4 rows: per-rule paired bootstrap)
+- `platform_hybrid/experiments/results/p5p8/p8_iter100_score_gradient_seed_stability.json` (summary)
+- Extended `platform_hybrid/paper/sections/p8_iter80_score_gradient.tex` with §sec:p8-gradient-seed-stability + Table tab:p8-gradient-seed
+- `platform_hybrid/paper/paper_P8_fraud.pdf` rebuilds to **42 pages / 0 errors / 0 undefined citations** (was 38, +4 pages from the new section)
 
 ## Why this matters
 

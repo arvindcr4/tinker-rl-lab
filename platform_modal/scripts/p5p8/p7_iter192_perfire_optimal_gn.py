@@ -51,10 +51,10 @@ For each (method) we tabulate:
          ((static - per-prompt optimum) / static) excludes zero on 4/4.
 
 Outputs:
-    experiments/results/p5p8/p7_iter192_per_prompt.tsv
-    experiments/results/p5p8/p7_iter192_per_method.tsv
-    experiments/results/p5p8/p7_iter192_ci.tsv
-    experiments/results/p5p8/p7_iter192_summary.json
+    platform_hybrid/experiments/results/p5p8/p7_iter192_per_prompt.tsv
+    platform_hybrid/experiments/results/p5p8/p7_iter192_per_method.tsv
+    platform_hybrid/experiments/results/p5p8/p7_iter192_ci.tsv
+    platform_hybrid/experiments/results/p5p8/p7_iter192_summary.json
     docs/p5p8_improvements/192_p7_perfire_optimal_gn.md
 
 Stdlib only; deterministic.
@@ -63,8 +63,8 @@ from __future__ import annotations
 import csv, glob, json, os, random, statistics
 
 WORKTREE = "/home/claude/tinker-rl-lab-minimax"
-DATA_DIR = os.path.join(WORKTREE, "experiments/results/n2_reward_tensor_resume")
-OUT_DIR = os.path.join(WORKTREE, "experiments/results/p5p8")
+DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 METHODS = ["grpo", "aero", "gift", "areal"]

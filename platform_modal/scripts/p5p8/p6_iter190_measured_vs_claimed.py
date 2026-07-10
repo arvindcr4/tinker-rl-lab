@@ -156,7 +156,7 @@ def main():
                 "ci_low": round(lo, 6),
                 "ci_high": round(hi, 6),
                 "significant": bool(lo > 0 or hi < 0),
-                "data_source": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+                "data_source": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
                 "ci_method": f"paired_step_bootstrap_pct n_boot={N_BOOT} seed={SEED}",
             })
 
@@ -183,7 +183,7 @@ def main():
                 "ci_low": round(lo, 6),
                 "ci_high": round(hi, 6),
                 "significant": bool(lo > 0 or hi < 0),
-                "data_source": "experiments/results/zvf_iter130_method_risk.tsv",
+                "data_source": "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
                 "ci_method": f"welch_norm_approx_95pct n=5",
             })
 
@@ -365,8 +365,8 @@ def main():
         "ci_method_n2": f"paired_step_bootstrap_pct n_boot={N_BOOT} seed={SEED}",
         "ci_method_zvf130": "welch_normal_approx_95pct n=5 (per-method aggregated sd)",
         "raw_data_sources": [
-            "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
-            "experiments/results/zvf_iter130_method_risk.tsv",
+            "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+            "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
         ],
     }
     out_sum = RES / "p6_iter190_summary.json"

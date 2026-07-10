@@ -28,10 +28,10 @@ families in the worktree use different naming (mega manifests use
 "ref_policy_kl"; quick manifests use "ref_policy_kl_handling").
 
 Outputs:
-  experiments/results/p5p8/minreport_audit.tsv
-  experiments/results/p5p8/minreport_audit_summary.json
-  experiments/results/p5p8/figures/minreport_badge_dist.{png,pdf}
-  experiments/results/p5p8/figures/minreport_per_item.{png,pdf}
+  platform_hybrid/experiments/results/p5p8/minreport_audit.tsv
+  platform_hybrid/experiments/results/p5p8/minreport_audit_summary.json
+  platform_hybrid/experiments/results/p5p8/figures/minreport_badge_dist.{png,pdf}
+  platform_hybrid/experiments/results/p5p8/figures/minreport_per_item.{png,pdf}
 """
 from __future__ import annotations
 

@@ -15,7 +15,7 @@ report:
   - factor-rank decomposition: ANOVA-style eta² + a comparison to the
     Berkeley Ivison unpacking_dpo_ppo factorization framework (P5 §p5_iter85).
 
-Outputs (4 files, all to experiments/results/p5p8/):
+Outputs (4 files, all to platform_hybrid/experiments/results/p5p8/):
   p5_iter141_anova_eta2.tsv        (3 factors with eta² + bootstrap CI)
   p5_iter141_per_method_reward.tsv (4 methods: reward mean + paired-step bootstrap CI)
   p5_iter141_factor_ratio.tsv      (3 pairwise eta² ratios with bootstrap CI)

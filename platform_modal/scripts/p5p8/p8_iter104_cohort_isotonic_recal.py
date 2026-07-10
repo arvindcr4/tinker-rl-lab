@@ -58,9 +58,9 @@ Falsifiable headlines (all on n_test=10000, 144 positives):
        common scale (so the global top-K recall loss is bounded by <= 0.05).
 
 Stdlib + xgboost + numpy (already in worktree venv). Outputs:
-  experiments/results/p5p8/p8_iter104_isotonic_per_cohort.tsv
-  experiments/results/p5p8/p8_iter104_isotonic_per_cohort_boot.tsv
-  experiments/results/p5p8/p8_iter104_isotonic_summary.json
+  platform_hybrid/experiments/results/p5p8/p8_iter104_isotonic_per_cohort.tsv
+  platform_hybrid/experiments/results/p5p8/p8_iter104_isotonic_per_cohort_boot.tsv
+  platform_hybrid/experiments/results/p5p8/p8_iter104_isotonic_summary.json
 """
 from __future__ import annotations
 
@@ -73,7 +73,7 @@ import statistics
 from collections import defaultdict
 
 DATA_DIR = "/home/claude/tinker-rl-lab-minimax"
-OUT_DIR = f"{DATA_DIR}/experiments/results/p5p8"
+OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8"
 TRAIN = f"{DATA_DIR}/fraud_data.csv"
 TEST = f"{DATA_DIR}/test_data.csv"
 

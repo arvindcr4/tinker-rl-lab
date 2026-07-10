@@ -5,7 +5,7 @@
       coverage then entropy)
   (b) MVE lift waterfall  (right, top-N extension fields by delta_distinct)
 
-Saves PNG + PDF under experiments/results/p5p8/figures/.
+Saves PNG + PDF under platform_hybrid/experiments/results/p5p8/figures/.
 """
 from __future__ import annotations
 

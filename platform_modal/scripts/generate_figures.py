@@ -13,7 +13,7 @@ References:
     Statistical Precipice" (NeurIPS 2021)
 
 Usage:
-    python platform_modal/scripts/generate_figures.py --results-dir experiments/results/ --output-dir paper/figures/
+    python platform_modal/scripts/generate_figures.py --results-dir platform_hybrid/experiments/results/ --output-dir paper/figures/
 """
 
 import sys
@@ -475,7 +475,7 @@ def main():
         description="Generate publication-quality figures for the TinkerRL paper."
     )
     parser.add_argument(
-        "--results-dir", type=str, default="experiments/results/",
+        "--results-dir", type=str, default="platform_hybrid/experiments/results/",
         help="Root directory containing experiment result files",
     )
     parser.add_argument(

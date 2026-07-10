@@ -15,12 +15,12 @@ audit, AND the iter117 fresh angle:
       contrasts the t_80-on-bound (4/5) with the t_80-free (1/5) regime.
 
 Outputs:
-  experiments/results/scaling_law_fits.tsv          (canonical 2-param fits)
-  experiments/results/scaling_law_three_phase.tsv   (3-phase hypothesis test)
-  experiments/results/scaling_law_cross_scale.tsv   (cross-scale OLS)
-  experiments/results/scaling_law_changepoints.tsv  (BIC-segmentation per anchor)
-  experiments/results/scaling_law_iter117_t80_scaling.tsv  (iter117 fresh angle)
-  experiments/results/scaling_law_iter117_meta.json (numeric summary)
+  platform_hybrid/experiments/results/scaling_law_fits.tsv          (canonical 2-param fits)
+  platform_hybrid/experiments/results/scaling_law_three_phase.tsv   (3-phase hypothesis test)
+  platform_hybrid/experiments/results/scaling_law_cross_scale.tsv   (cross-scale OLS)
+  platform_hybrid/experiments/results/scaling_law_changepoints.tsv  (BIC-segmentation per anchor)
+  platform_hybrid/experiments/results/scaling_law_iter117_t80_scaling.tsv  (iter117 fresh angle)
+  platform_hybrid/experiments/results/scaling_law_iter117_meta.json (numeric summary)
   figures/scaling_law_fit.{pdf,png}                  (4-panel figure)
 
 References (verified):

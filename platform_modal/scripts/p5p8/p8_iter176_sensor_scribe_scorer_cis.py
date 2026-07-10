@@ -19,7 +19,7 @@ We add three things beyond iter-4 calibration_cis.py:
   3. Per-V_stat ablation grid: remove each of (V_mean, V_std, V_max, V_min)
      from the 4-aggregate block and report ΔAUC, ΔECE, ΔP@K=1%.
 
-Outputs (all in experiments/results/p5p8/):
+Outputs (all in platform_hybrid/experiments/results/p5p8/):
   p8_iter176_calib_per_fset.tsv   (3 fsets x 6 metrics x 5 seeds, 90 rows)
   p8_iter176_within_budget_ece.tsv (3 fsets x 4 budgets x 5 seeds, 60 rows)
   p8_iter176_vstat_ablation.tsv   (5 ablations x 6 metrics, 30 rows)

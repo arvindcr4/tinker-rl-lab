@@ -30,16 +30,16 @@ parameters each), extrapolated R(256M) with BCa CI, and asymptotic
 R_∞ with BCa CI for form (iii).
 
 Inputs (read-only):
-    experiments/results/group_size_token_normalized.tsv
-    experiments/results/group_size_iter59_equivalence.tsv
+    platform_hybrid/experiments/results/group_size_token_normalized.tsv
+    platform_hybrid/experiments/results/group_size_iter59_equivalence.tsv
 
 Outputs:
-    experiments/results/group_size_effect.tsv       (APPENDED; historical rows preserved)
-    experiments/results/group_size_iter63_linear_fits.tsv
-    experiments/results/group_size_iter63_power_fits.tsv
-    experiments/results/group_size_iter63_asymptotic_fits.tsv
-    experiments/results/group_size_iter63_summary.tsv
-    experiments/results/group_size_iter63_iter_meta.json
+    platform_hybrid/experiments/results/group_size_effect.tsv       (APPENDED; historical rows preserved)
+    platform_hybrid/experiments/results/group_size_iter63_linear_fits.tsv
+    platform_hybrid/experiments/results/group_size_iter63_power_fits.tsv
+    platform_hybrid/experiments/results/group_size_iter63_asymptotic_fits.tsv
+    platform_hybrid/experiments/results/group_size_iter63_summary.tsv
+    platform_hybrid/experiments/results/group_size_iter63_iter_meta.json
     figures/group_size_iter63_retention_decay.pdf
     figures/group_size_iter63_retention_decay.png
 """

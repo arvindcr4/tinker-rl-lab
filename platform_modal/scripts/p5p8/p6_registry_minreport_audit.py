@@ -23,9 +23,9 @@ Falsifiable headline:
 
 Outputs
 -------
-experiments/results/p5p8/p6_registry_minreport_subfield.tsv        (22 rows: per-field pop rate)
-experiments/results/p5p8/p6_registry_minreport_entry_fingerprint.tsv (20 rows: per-entry fingerprint)
-experiments/results/p5p8/p6_registry_minreport_summary.json
+platform_hybrid/experiments/results/p5p8/p6_registry_minreport_subfield.tsv        (22 rows: per-field pop rate)
+platform_hybrid/experiments/results/p5p8/p6_registry_minreport_entry_fingerprint.tsv (20 rows: per-entry fingerprint)
+platform_hybrid/experiments/results/p5p8/p6_registry_minreport_summary.json
 docs/p5p8_improvements/71_p6_registry_minreport_audit.md
 
 Stdlib + json + math + collections. <=290 lines.

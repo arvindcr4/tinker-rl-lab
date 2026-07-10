@@ -35,8 +35,8 @@ Verdicts:
   INSUFFICIENT_N — n < 4 effective paired diffs.
 
 Outputs:
-  experiments/results/p5p8/p5_iter129_headline_cis.tsv     (15 rows)
-  experiments/results/p5p8/p5_iter129_headline_cis.json    (per-class tally)
+  platform_hybrid/experiments/results/p5p8/p5_iter129_headline_cis.tsv     (15 rows)
+  platform_hybrid/experiments/results/p5p8/p5_iter129_headline_cis.json    (per-class tally)
 """
 from __future__ import annotations
 import csv
@@ -48,10 +48,10 @@ from pathlib import Path
 from collections import defaultdict
 
 ROOT = Path("/home/claude/tinker-rl-lab-minimax")
-N2_TSV   = ROOT / "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
-ZV130    = ROOT / "experiments/results/zvf_iter130_risk_index.tsv"
-MEGA     = ROOT / "experiments/results/mega_20260704/cells.tsv"
-OUT_DIR  = ROOT / "experiments/results/p5p8"
+N2_TSV   = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+ZV130    = ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv"
+MEGA     = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
+OUT_DIR  = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 SEED = 20260705

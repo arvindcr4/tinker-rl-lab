@@ -15,11 +15,11 @@ Negative control: arithmetic_easy should show no meaningful divergence (both
 algos converge to L ~ 4 by step 5).
 
 Outputs:
-  experiments/results/length_bias_iter68_first_div.tsv
-  experiments/results/length_bias_iter68_volatility.tsv
-  experiments/results/length_bias_iter68_reversals.tsv
-  experiments/results/length_bias_iter68_summary.tsv
-  experiments/results/length_bias_iter68_meta.json
+  platform_hybrid/experiments/results/length_bias_iter68_first_div.tsv
+  platform_hybrid/experiments/results/length_bias_iter68_volatility.tsv
+  platform_hybrid/experiments/results/length_bias_iter68_reversals.tsv
+  platform_hybrid/experiments/results/length_bias_iter68_summary.tsv
+  platform_hybrid/experiments/results/length_bias_iter68_meta.json
 """
 from __future__ import annotations
 

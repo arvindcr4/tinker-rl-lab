@@ -41,10 +41,10 @@ Three fresh analyses on REAL measured data:
      Compare to the iter94 raw-ZVF correlations (rho_Pearson=0.62 / rho_Spear=0.56).
 
 Outputs:
-    experiments/results/zvf_iter102_calibration.tsv   (one row per library+experiment)
-    experiments/results/zvf_iter102_aero_test.tsv     (AERO vs GRPO paired)
-    experiments/results/zvf_iter102_failure_corr.tsv  (Delta vs collapse)
-    experiments/results/zvf_summary.tsv               (RE-EMIT, +iter102 columns)
+    platform_hybrid/experiments/results/zvf_iter102_calibration.tsv   (one row per library+experiment)
+    platform_hybrid/experiments/results/zvf_iter102_aero_test.tsv     (AERO vs GRPO paired)
+    platform_hybrid/experiments/results/zvf_iter102_failure_corr.tsv  (Delta vs collapse)
+    platform_hybrid/experiments/results/zvf_summary.tsv               (RE-EMIT, +iter102 columns)
     figures/zvf_vs_failure.pdf                        (RE-EMIT, 5-panel)
 """
 from __future__ import annotations

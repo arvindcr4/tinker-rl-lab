@@ -17,7 +17,7 @@ Usage
 
 Output
 ------
-    experiments/results/statistical_rigor_report.tsv
+    platform_hybrid/experiments/results/statistical_rigor_report.tsv
     schema: comparison_id, claim, n_seeds_A, n_seeds_B, matched_init,
             well_powered, effect_size, ci_low, ci_high, recommendation
 """

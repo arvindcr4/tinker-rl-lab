@@ -15,8 +15,8 @@ For each delta_*.json registry entry:
   - evidence_tier     A/B/C/D (A=strongest)
 
 Outputs:
-  experiments/results/p5p8/p6_iter126_measured_evidence_tier.tsv   (15 rows: per delta)
-  experiments/results/p5p8/p6_iter126_measured_evidence_tier.json  (summary + ranking)
+  platform_hybrid/experiments/results/p5p8/p6_iter126_measured_evidence_tier.tsv   (15 rows: per delta)
+  platform_hybrid/experiments/results/p5p8/p6_iter126_measured_evidence_tier.json  (summary + ranking)
 
 No network; stdlib only; deterministic.
 """

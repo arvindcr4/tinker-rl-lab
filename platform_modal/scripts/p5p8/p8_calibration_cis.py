@@ -25,11 +25,11 @@ J5 Cost-per-decision accounting table (tree vs LLM-as-sensor + tree, internal
 
 Outputs
 -------
-experiments/results/p5p8/p8_calibration_<x>.tsv
-experiments/results/p5p8/p8_feature_ablation.tsv
-experiments/results/p5p8/p8_headline_cis.tsv
-experiments/results/p5p8/p8_cost_accounting.tsv
-experiments/results/p5p8/p8_calibration_summary.json
+platform_hybrid/experiments/results/p5p8/p8_calibration_<x>.tsv
+platform_hybrid/experiments/results/p5p8/p8_feature_ablation.tsv
+platform_hybrid/experiments/results/p5p8/p8_headline_cis.tsv
+platform_hybrid/experiments/results/p5p8/p8_cost_accounting.tsv
+platform_hybrid/experiments/results/p5p8/p8_calibration_summary.json
 """
 
 from __future__ import annotations

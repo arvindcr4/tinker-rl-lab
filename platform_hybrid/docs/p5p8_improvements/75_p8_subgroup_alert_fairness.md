@@ -38,7 +38,7 @@ on sub-populations should expect a non-trivial ledger re-rank.
 
 ## Outputs
 
-- `scripts/p5p8/p8_subgroup_alert_fairness.py`
+- `platform_modal/scripts/p5p8/p8_subgroup_alert_fairness.py`
 - `experiments/results/p5p8/p8_subgroup_fairness.tsv` (36 rows: 2 strata × 5 bins × 3 trees + 6 heterogeneity rows)
 - `experiments/results/p5p8/p8_subgroup_fairness_boot.tsv` (24 paired-bootstrap rows)
 - `experiments/results/p5p8/p8_subgroup_fairness_summary.json`
@@ -49,5 +49,5 @@ on sub-populations should expect a non-trivial ledger re-rank.
 ## Reproduction
 
 ```bash
-python3 scripts/p5p8/p8_subgroup_alert_fairness.py   # ~2 min on 4 cores
+python3 platform_modal/scripts/p5p8/p8_subgroup_alert_fairness.py   # ~2 min on 4 cores
 ```

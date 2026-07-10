@@ -39,10 +39,10 @@ Method
 6. Output four tables and one figure; LaTeX section reads them.
 
 Outputs (real, computed this session):
-    experiments/results/zvf_iter30_leadindic.tsv
-    experiments/results/zvf_iter30_calib.tsv
-    experiments/results/zvf_iter30_feature_importance.tsv
-    experiments/results/zvf_iter30_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter30_leadindic.tsv
+    platform_hybrid/experiments/results/zvf_iter30_calib.tsv
+    platform_hybrid/experiments/results/zvf_iter30_feature_importance.tsv
+    platform_hybrid/experiments/results/zvf_iter30_summary.tsv
     figures/zvf_iter30_roc.{pdf,png}
 
 Honest scope

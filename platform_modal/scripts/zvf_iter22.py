@@ -18,15 +18,15 @@ answer:
       rank, paired per (method, seed)).
 
 Inputs (real, measured):
-    experiments/results/variance_mitigation.tsv        -- per-step zvf, collapse
-    experiments/results/groupsize_zvf_sweep.tsv        -- G-sweep point
-    experiments/results/zvf_summary.tsv                -- pooled rows
-    experiments/results/zvf_by_library.tsv             -- per-library pooled
+    platform_hybrid/experiments/results/variance_mitigation.tsv        -- per-step zvf, collapse
+    platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv        -- G-sweep point
+    platform_hybrid/experiments/results/zvf_summary.tsv                -- pooled rows
+    platform_hybrid/experiments/results/zvf_by_library.tsv             -- per-library pooled
 
 Outputs (real, computed this session):
-    experiments/results/zvf_library_bootstrap_ci.tsv   -- (A)
-    experiments/results/zvf_leadtime_all.tsv           -- (B) extended table
-    experiments/results/zvf_leadtime_summary.tsv       -- (B) aggregated
+    platform_hybrid/experiments/results/zvf_library_bootstrap_ci.tsv   -- (A)
+    platform_hybrid/experiments/results/zvf_leadtime_all.tsv           -- (B) extended table
+    platform_hybrid/experiments/results/zvf_leadtime_summary.tsv       -- (B) aggregated
     figures/zvf_leadtime.pdf                           -- (B) figure
 """
 from __future__ import annotations

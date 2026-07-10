@@ -4,7 +4,7 @@ on the N10 (8-seed-expansion) live panel.
 
 Inputs
 ------
-experiments/results/n10_seed_expansion/n10_grpo_s*.json
+platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s*.json
     5 seed-level files (s42, s179, s316, s453, s590) each with
     step_log[15] = list of {step, loss, reward, zvf, mean_len}.
 
@@ -37,9 +37,9 @@ Cross-seed:
 
 Outputs
 -------
-experiments/results/p5p8/p7_seed_robust_per_seed.tsv  -- 25 rows
-experiments/results/p5p8/p7_seed_robust_summary.tsv   -- 5 rows (one per tau)
-experiments/results/p5p8/p7_seed_robust_summary.json  -- machine-readable
+platform_hybrid/experiments/results/p5p8/p7_seed_robust_per_seed.tsv  -- 25 rows
+platform_hybrid/experiments/results/p5p8/p7_seed_robust_summary.tsv   -- 5 rows (one per tau)
+platform_hybrid/experiments/results/p5p8/p7_seed_robust_summary.json  -- machine-readable
     with bootstrap CIs and PCD-guarded/un-guarded block.
 
 Stdlib only.

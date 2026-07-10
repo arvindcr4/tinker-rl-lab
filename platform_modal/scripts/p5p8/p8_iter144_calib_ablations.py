@@ -17,13 +17,13 @@ Falsifiable claims to test on the canonical 10k test split (144 positives):
       calibration (closes iter-32 break-even drift cleanly).
 
 Deliverables:
-- experiments/results/p5p8/p8_iter144_calib_budget.tsv       (per tree x budget)
-- experiments/results/p5p8/p8_iter144_calib_ablation.tsv     (per ablation)
-- experiments/results/p5p8/p8_iter144_brier_decile.tsv       (per (tree, decile))
-- experiments/results/p5p8/p8_iter144_cost_ablation.tsv      (cost/decision x ablation)
-- experiments/results/p5p8/p8_iter144_ablation_boot.tsv       (paired bootstrap CIs)
-- experiments/results/p5p8/p8_iter144_summary.json
-- experiments/results/p5p8/figures/p8_iter144_{calib_budget,brier_decile}.{png,pdf}
+- platform_hybrid/experiments/results/p5p8/p8_iter144_calib_budget.tsv       (per tree x budget)
+- platform_hybrid/experiments/results/p5p8/p8_iter144_calib_ablation.tsv     (per ablation)
+- platform_hybrid/experiments/results/p5p8/p8_iter144_brier_decile.tsv       (per (tree, decile))
+- platform_hybrid/experiments/results/p5p8/p8_iter144_cost_ablation.tsv      (cost/decision x ablation)
+- platform_hybrid/experiments/results/p5p8/p8_iter144_ablation_boot.tsv       (paired bootstrap CIs)
+- platform_hybrid/experiments/results/p5p8/p8_iter144_summary.json
+- platform_hybrid/experiments/results/p5p8/figures/p8_iter144_{calib_budget,brier_decile}.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + sklearn + matplotlib. <=300 LoC.
 """

@@ -27,7 +27,7 @@
 
 ## Document Files
 ```
-reports/final/
+platform_tinker/reports/final/
 ├── capstone_final_report.md            # Full capstone report (28KB)
 ├── capstone_final_report.docx           # Word version
 ├── grpo_agentic_llm_paper.tex          # NeurIPS LaTeX paper

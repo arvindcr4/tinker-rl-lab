@@ -22,9 +22,9 @@ across n=400 resamples of the 10k test split, two-sided α=0.05.
 
 Outputs
 -------
-experiments/results/p5p8/p8_threshold_calibration.tsv  (per (model, τ))
-experiments/results/p5p8/p8_threshold_boot.tsv          (per (τ, contrast))
-experiments/results/p5p8/p8_threshold_summary.json     (machine-readable)
+platform_hybrid/experiments/results/p5p8/p8_threshold_calibration.tsv  (per (model, τ))
+platform_hybrid/experiments/results/p5p8/p8_threshold_boot.tsv          (per (τ, contrast))
+platform_hybrid/experiments/results/p5p8/p8_threshold_summary.json     (machine-readable)
 """
 from __future__ import annotations
 import json

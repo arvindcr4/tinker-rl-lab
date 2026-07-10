@@ -20,7 +20,7 @@ This ledger reconciles headline numbers used in the final capstone report. It se
 
 | Artifact / run ID | Status | Reason excluded from headline claims | How it is used |
 | --- | --- | --- | --- |
-| `reports/final/gsm8k_test_results.json` | Failed | Model/tokenizer dependencies did not load; no valid full-GSM8K examples were completed | Disclosed as an invalid full-GSM8K attempt |
+| `platform_tinker/reports/final/gsm8k_test_results.json` | Failed | Model/tokenizer dependencies did not load; no valid full-GSM8K examples were completed | Disclosed as an invalid full-GSM8K attempt |
 | `humaneval_qwen3-8b` | Partial | Timed out after 40/164 examples | Reproducibility warning only |
 | `heldout_qwen3.5-27b` | Partial | Timed out at 100/200 examples | Hypothesis-generating larger-model held-out probe |
 | `heldout_qwen3-32b` | Partial | Timed out at 100/200 examples | Hypothesis-generating larger-model held-out probe |

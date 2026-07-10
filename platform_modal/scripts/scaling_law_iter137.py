@@ -46,12 +46,12 @@ Three concrete deliverables:
       model R_max as dependent variable.
 
 Outputs:
-  experiments/results/scaling_law_iter137_offset_fit.tsv
-  experiments/results/scaling_law_iter137_aic_compare.tsv
-  experiments/results/scaling_law_iter137_t80_scaling.tsv
-  experiments/results/scaling_law_iter137_capability_link.tsv
-  experiments/results/scaling_law_iter137_meta.json
-  experiments/results/scaling_law_fits.tsv             (appended columns)
+  platform_hybrid/experiments/results/scaling_law_iter137_offset_fit.tsv
+  platform_hybrid/experiments/results/scaling_law_iter137_aic_compare.tsv
+  platform_hybrid/experiments/results/scaling_law_iter137_t80_scaling.tsv
+  platform_hybrid/experiments/results/scaling_law_iter137_capability_link.tsv
+  platform_hybrid/experiments/results/scaling_law_iter137_meta.json
+  platform_hybrid/experiments/results/scaling_law_fits.tsv             (appended columns)
   figures/scaling_law_fit.{pdf,png}                    (regenerated)
 
 References (verified):

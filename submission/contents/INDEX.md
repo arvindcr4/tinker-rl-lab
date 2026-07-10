@@ -5,7 +5,7 @@
 **Key files:**
 - `MANIFEST.md` — every file in `neurips2026_tinker_rl_lab.zip` with SHA-256; 7-file bundle composition
 - `checksums.sha256` — authoritative machine-readable list for `sha256sum -c`
-- `REVIEWER_README.md` — reviewer entry point: file guide, reproducibility smoke-test (`scripts/smoke_test.sh`, `check_qwen3_8b_claim.py`), anonymity guarantees
+- `REVIEWER_README.md` — reviewer entry point: file guide, reproducibility smoke-test (`platform_modal/scripts/smoke_test.sh`, `check_qwen3_8b_claim.py`), anonymity guarantees
 - `data_statement.md` — dataset provenance, licensing, PII / offensive-content notes
 
 **Find it fast:**

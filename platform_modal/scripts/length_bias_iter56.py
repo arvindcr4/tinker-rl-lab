@@ -30,16 +30,16 @@ Two complementary deliverables:
     halves). Dr.GRPO should reach half-life earlier.
 
 Outputs (5 TSVs):
-  experiments/results/length_bias_iter56_rho_slopes.tsv
-  experiments/results/length_bias_iter56_grpo_vs_drgrpo.tsv
-  experiments/results/length_bias_iter56_cumulative_tax.tsv
-  experiments/results/length_bias_iter56_phase_portrait.tsv
-  experiments/results/length_bias_iter56_half_life.tsv
-  experiments/results/length_bias_iter56_summary.tsv
+  platform_hybrid/experiments/results/length_bias_iter56_rho_slopes.tsv
+  platform_hybrid/experiments/results/length_bias_iter56_grpo_vs_drgrpo.tsv
+  platform_hybrid/experiments/results/length_bias_iter56_cumulative_tax.tsv
+  platform_hybrid/experiments/results/length_bias_iter56_phase_portrait.tsv
+  platform_hybrid/experiments/results/length_bias_iter56_half_life.tsv
+  platform_hybrid/experiments/results/length_bias_iter56_summary.tsv
 
 Reads:
-  experiments/results/drgrpo_vs_grpo.json      (arithmetic_easy: 5 seeds)
-  experiments/results/drgrpo_gsm8k_cot_full.json (gsm8k_cot: 3 seeds)
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json      (arithmetic_easy: 5 seeds)
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json (gsm8k_cot: 3 seeds)
 """
 from __future__ import annotations
 import csv

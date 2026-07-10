@@ -111,7 +111,7 @@ Now 20/20 stacks do. This means:
   (variant_delta_record does not carry `outcomes`).
 - `registry/query.py` — new `coverage` subcommand with `--entry`
   filter; existing 10 subcommands unchanged.
-- `scripts/p5p8/p6_outcomes_coverage_block.py` (≤300 LoC, stdlib only)
+- `platform_modal/scripts/p5p8/p6_outcomes_coverage_block.py` (≤300 LoC, stdlib only)
   — idempotent re-runnable audit + patch.
 - `experiments/results/p5p8/p6_outcomes_coverage_audit.tsv` (34 rows)
 - `experiments/results/p5p8/p6_outcomes_coverage_claim_evidence.tsv`
@@ -122,7 +122,7 @@ Now 20/20 stacks do. This means:
 ## Reproduction
 
 ```bash
-python3 scripts/p5p8/p6_outcomes_coverage_block.py   # ~2s on 1 core
+python3 platform_modal/scripts/p5p8/p6_outcomes_coverage_block.py   # ~2s on 1 core
 python3 registry/query.py validate                    # 34/34 PASS
 python3 registry/query.py coverage                    # prints per-entry table
 python3 registry/query.py coverage --entry tinker_aero_qwen3.5-4b_gsm8k

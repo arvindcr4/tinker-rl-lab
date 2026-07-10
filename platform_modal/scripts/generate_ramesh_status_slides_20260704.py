@@ -38,7 +38,7 @@ def _read(path):
 
 
 def n2_status():
-    txt = _read(ROOT / "experiments/tinker-runs/logs/n2_reward_tensor_resume_20260704.out")
+    txt = _read(ROOT / "platform_hybrid/experiments/tinker-runs/logs/n2_reward_tensor_resume_20260704.out")
     prog = {}
     for arm, step, total in re.findall(r"\[n2:(\w+)\]\s+(\d+)/(\d+)", txt):
         prog[arm] = "done" if int(step) >= int(total) else f"{step}/{total}"
@@ -48,7 +48,7 @@ def n2_status():
 
 
 def n10_status():
-    txt = _read(ROOT / "experiments/tinker-runs/logs/n10_gsm8k_cot_seed_expansion_20260704.out")
+    txt = _read(ROOT / "platform_hybrid/experiments/tinker-runs/logs/n10_gsm8k_cot_seed_expansion_20260704.out")
     runs = {}
     for run, step, total in re.findall(r"\[(n10_\w+?_s\d+)\]\s+(\d+)/(\d+)", txt):
         runs[run] = (int(step), int(total))
@@ -61,7 +61,7 @@ def n10_status():
 
 
 def mega_status():
-    txt = _read(ROOT / "experiments/results/mega_20260704/cells_done.jsonl")
+    txt = _read(ROOT / "platform_hybrid/experiments/results/mega_20260704/cells_done.jsonl")
     n = sum(1 for line in txt.splitlines() if line.strip())
     return f"506 cells planned · {n} done since relaunch"
 

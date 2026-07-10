@@ -35,11 +35,11 @@ Four fresh analyses on real iter-94 / iter-85 / bfclv4 data:
      9-row Pillar 2 first-class diagnostic.
 
 Outputs:
-    experiments/results/zvf_iter98_rho_perstep.tsv       (12 runs)
-    experiments/results/zvf_iter98_nemotron_proxy.tsv   (12 models)
-    experiments/results/zvf_iter98_tooluse.tsv          (10 rows)
-    experiments/results/zvf_iter98_auc.tsv              (threshold sweep)
-    experiments/results/zvf_summary.tsv                 (RE-EMIT, 9 rows)
+    platform_hybrid/experiments/results/zvf_iter98_rho_perstep.tsv       (12 runs)
+    platform_hybrid/experiments/results/zvf_iter98_nemotron_proxy.tsv   (12 models)
+    platform_hybrid/experiments/results/zvf_iter98_tooluse.tsv          (10 rows)
+    platform_hybrid/experiments/results/zvf_iter98_auc.tsv              (threshold sweep)
+    platform_hybrid/experiments/results/zvf_summary.tsv                 (RE-EMIT, 9 rows)
     figures/zvf_vs_failure.pdf                          (RE-EMIT, 5-panel)
 """
 from __future__ import annotations

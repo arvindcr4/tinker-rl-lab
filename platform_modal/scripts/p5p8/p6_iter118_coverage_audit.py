@@ -5,7 +5,7 @@ Cross-cuts every (framework x method) cell the brief lists, scoring
 whether the registry carries a stack record and what its MIN-REPORT
 badge is. Emits:
 
-    experiments/results/p5p8/p6_iter118_coverage_audit.tsv
+    platform_hybrid/experiments/results/p5p8/p6_iter118_coverage_audit.tsv
 
 with columns: framework, method, has_stack_entry, stack_id,
               schema_pass, badge, variant_deltas_resolved,

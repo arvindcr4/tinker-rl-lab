@@ -81,7 +81,7 @@ generate more DEGENERATE steps via higher p_hat asymmetry.
 
 ## Artifacts
 
-- `scripts/p5p8/p7_iter127_method_axis_ccc.py` (~280 LoC,
+- `platform_modal/scripts/p5p8/p7_iter127_method_axis_ccc.py` (~280 LoC,
   stdlib only, deterministic Bisection)
 - `experiments/results/p5p8/p7_iter127_method_axis_ccc.tsv`
   (4 rows × 16 cols)

@@ -14,10 +14,10 @@ saturation model at four trace truncations (40%, 60%, 80%, 100%) and report:
   - Early -> late prediction: does fitting on (steps [1..k]) predict full R_max?
 
 Outputs (5 artefacts):
-  experiments/results/scaling_law_iter41_truncation.tsv     (per model x per fraction)
-  experiments/results/scaling_law_iter41_stability.tsv      (per-model stability summary)
-  experiments/results/scaling_law_iter41_early_predicts.tsv (early-fit -> late R_max)
-  experiments/results/scaling_law_iter41_summary.tsv       (top-line claims + 95% boot CI)
+  platform_hybrid/experiments/results/scaling_law_iter41_truncation.tsv     (per model x per fraction)
+  platform_hybrid/experiments/results/scaling_law_iter41_stability.tsv      (per-model stability summary)
+  platform_hybrid/experiments/results/scaling_law_iter41_early_predicts.tsv (early-fit -> late R_max)
+  platform_hybrid/experiments/results/scaling_law_iter41_summary.tsv       (top-line claims + 95% boot CI)
   paper/sections/scaling_law_iter41.tex                     (paper section)
   figures/scaling_law_iter41.{pdf,png}                      (figure)
 """

@@ -9,10 +9,10 @@ import json
 import pathlib
 
 ROOT = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-OUT = ROOT / "experiments/results/p5p8/figures"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8/figures"
 OUT.mkdir(parents=True, exist_ok=True)
 
-summary = list(csv.DictReader(open(ROOT / "experiments/results/p5p8/p7_unified_controller_summary.tsv"), delimiter="\t"))
+summary = list(csv.DictReader(open(ROOT / "platform_hybrid/experiments/results/p5p8/p7_unified_controller_summary.tsv"), delimiter="\t"))
 for r in summary:
     r["mean_savings_n10"] = float(r["mean_savings_n10"])
     r["seed_cv_total_G"] = float(r["seed_cv_total_G"])

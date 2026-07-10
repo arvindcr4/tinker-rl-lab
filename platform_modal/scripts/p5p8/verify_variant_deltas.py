@@ -5,8 +5,8 @@ Reads every registry/entries/delta_*.json, checks each citation (bibkey,
 arxiv id, title) against paper/references.bib AND against the arxiv.org
 title that this script fetches live. Writes:
 
-  experiments/results/p5p8/variant_delta_citation_audit.tsv
-  experiments/results/p5p8/variant_delta_citation_audit.json
+  platform_hybrid/experiments/results/p5p8/variant_delta_citation_audit.tsv
+  platform_hybrid/experiments/results/p5p8/variant_delta_citation_audit.json
 
 If an entry still carries UNVERIFIED_/TBD_ markers, this script reports
 exactly what was patched (or refrains from patching when the references.bib

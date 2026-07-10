@@ -3,7 +3,7 @@
 Source: arXiv:2410.09918 (Su, Sukhbaatar, Rabbat, Tian, Zheng; Meta FAIR; 2024
 revised 2025). Maps GRPO G onto Dualformer's fast/slow/auto modes. Reads
 iter131 sweep + iter127 joint fit + iter127 G*(T) and writes 4 TSVs to
-experiments/results/berkeley/. No new training; re-analyses existing data.
+platform_hybrid/experiments/results/berkeley/. No new training; re-analyses existing data.
 """
 
 import json

@@ -19,17 +19,17 @@ on the per-prompt UNIFIED_C4 headline but did not:
 This iter closes those four sub-gaps at the per-prompt granularity on N2.
 
 Inputs:
-  experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
-  experiments/results/n2_reward_tensor_resume/n2_metrics.tsv
+  platform_hybrid/experiments/results/n2_reward_tensor_resume/{grpo,aero,gift,areal}_s0_tensors.jsonl
+  platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv
 
 Outputs:
-  experiments/results/p5p8/p7_iter159_per_method_ci.tsv   (20 rows = 4 methods x 5 controllers)
-  experiments/results/p5p8/p7_iter159_pareto.tsv          (20 points on cost-vs-retention scatter)
-  experiments/results/p5p8/p7_iter159_pareto_frontier.tsv (Pareto-optimal subset)
-  experiments/results/p5p8/p7_iter159_cross_method_sd.tsv (5 controllers x 3 metrics)
-  experiments/results/p5p8/p7_iter159_paired_bootstrap.tsv (paired bootstrap C4 vs each other controller per method)
-  experiments/results/p5p8/p7_iter159_heldout_zvf_reg.tsv (4 rows: per-method ZVF-vs-reward correlation)
-  experiments/results/p5p8/p7_iter159_summary.json       (H1-H8 verdicts + per-method SD table)
+  platform_hybrid/experiments/results/p5p8/p7_iter159_per_method_ci.tsv   (20 rows = 4 methods x 5 controllers)
+  platform_hybrid/experiments/results/p5p8/p7_iter159_pareto.tsv          (20 points on cost-vs-retention scatter)
+  platform_hybrid/experiments/results/p5p8/p7_iter159_pareto_frontier.tsv (Pareto-optimal subset)
+  platform_hybrid/experiments/results/p5p8/p7_iter159_cross_method_sd.tsv (5 controllers x 3 metrics)
+  platform_hybrid/experiments/results/p5p8/p7_iter159_paired_bootstrap.tsv (paired bootstrap C4 vs each other controller per method)
+  platform_hybrid/experiments/results/p5p8/p7_iter159_heldout_zvf_reg.tsv (4 rows: per-method ZVF-vs-reward correlation)
+  platform_hybrid/experiments/results/p5p8/p7_iter159_summary.json       (H1-H8 verdicts + per-method SD table)
 """
 
 from __future__ import annotations
@@ -43,9 +43,9 @@ from collections import defaultdict
 from pathlib import Path
 
 WORKTREE = Path("/home/claude/tinker-rl-lab-minimax")
-TENSOR_DIR = WORKTREE / "experiments/results/n2_reward_tensor_resume"
-HELDOUT = WORKTREE / "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
-OUT_DIR = WORKTREE / "experiments/results/p5p8"
+TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+HELDOUT = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---- Controller parameters (matching iter-147 source) ----

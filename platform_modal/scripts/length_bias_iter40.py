@@ -29,15 +29,15 @@ coupling change across training?  Specifically:
       GRPO-vs-Dr.GRPO on this slope.
 
 Inputs (existing):
-  experiments/results/drgrpo_vs_grpo.json
-  experiments/results/drgrpo_gsm8k_cot_full.json
+  platform_hybrid/experiments/results/drgrpo_vs_grpo.json
+  platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json
 
 Outputs:
-  experiments/results/length_bias_iter40_per_run.tsv          (per-run slopes + ratios)
-  experiments/results/length_bias_iter40_phases.tsv           (per-(task,algo,phase) aggregates)
-  experiments/results/length_bias_iter40_summary.tsv          (per-(task,algo) headline numbers)
-  experiments/results/length_bias_iter40_grpo_vs_drgrpo.tsv   (paired bootstrap)
-  experiments/results/length_bias_iter40_findings.tsv         (2 rows aggregate)
+  platform_hybrid/experiments/results/length_bias_iter40_per_run.tsv          (per-run slopes + ratios)
+  platform_hybrid/experiments/results/length_bias_iter40_phases.tsv           (per-(task,algo,phase) aggregates)
+  platform_hybrid/experiments/results/length_bias_iter40_summary.tsv          (per-(task,algo) headline numbers)
+  platform_hybrid/experiments/results/length_bias_iter40_grpo_vs_drgrpo.tsv   (paired bootstrap)
+  platform_hybrid/experiments/results/length_bias_iter40_findings.tsv         (2 rows aggregate)
 
 Usage:
   python platform_modal/scripts/length_bias_iter40.py

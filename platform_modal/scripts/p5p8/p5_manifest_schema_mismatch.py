@@ -41,9 +41,9 @@ import json, csv, glob, os, math, random, re
 from collections import defaultdict, Counter
 
 ROOT = "/home/claude/tinker-rl-lab-minimax"
-MAN_DIR = f"{ROOT}/experiments/results/mega_20260704/manifests"
-CELLS = f"{ROOT}/experiments/results/mega_20260704/cells.tsv"
-OUT = f"{ROOT}/experiments/results/p5p8"
+MAN_DIR = f"{ROOT}/platform_hybrid/experiments/results/mega_20260704/manifests"
+CELLS = f"{ROOT}/platform_hybrid/experiments/results/mega_20260704/cells.tsv"
+OUT = f"{ROOT}/platform_hybrid/experiments/results/p5p8"
 SCHEMA = f"{ROOT}/registry/schema.json"
 
 random.seed(20260705)

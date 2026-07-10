@@ -22,10 +22,10 @@ Builds three additions on top of platform_modal/scripts/zvf_diagnostic.py:
 
 Output artefacts:
 
-    experiments/results/zvf_iter118_auroc.tsv
-    experiments/results/zvf_iter118_aero_grpo_gap.tsv
-    experiments/results/zvf_iter118_calibration.tsv
-    experiments/results/zvf_iter118_narrative.json
+    platform_hybrid/experiments/results/zvf_iter118_auroc.tsv
+    platform_hybrid/experiments/results/zvf_iter118_aero_grpo_gap.tsv
+    platform_hybrid/experiments/results/zvf_iter118_calibration.tsv
+    platform_hybrid/experiments/results/zvf_iter118_narrative.json
     figures/zvf_iter118_calibration.pdf
 
 All inputs are existing per-experiment measurement files; no new

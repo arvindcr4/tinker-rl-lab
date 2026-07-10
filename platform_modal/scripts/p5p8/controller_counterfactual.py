@@ -20,12 +20,12 @@ Three controllers are compared:
      ever extract from this data.
 
 Outputs:
-  experiments/results/p5p8/controller_cf_summary.tsv   -- one row per
+  platform_hybrid/experiments/results/p5p8/controller_cf_summary.tsv   -- one row per
     (method, controller, threshold) with fires, rollouts_spent, saved_prompts,
     wasted_prompts, naive_fixed_G_cost, cost_ratio.
-  experiments/results/p5p8/controller_cf_per_step.tsv   -- one row per
+  platform_hybrid/experiments/results/p5p8/controller_cf_per_step.tsv   -- one row per
     (method, step) under each controller, showing the per-step decisions.
-  experiments/results/p5p8/controller_cf_summary.json   -- machine-readable
+  platform_hybrid/experiments/results/p5p8/controller_cf_summary.json   -- machine-readable
     with seed-robustness block (sensitivity of the fire count to threshold).
 
 Stdlib only.
@@ -189,7 +189,7 @@ def rollouts_per_prompt(per_prompt_g, g_base=G_BASE):
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write", action="store_true",
-                    help="Write outputs under experiments/results/p5p8/")
+                    help="Write outputs under platform_hybrid/experiments/results/p5p8/")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
 

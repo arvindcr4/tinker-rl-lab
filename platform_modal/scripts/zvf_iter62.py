@@ -9,18 +9,18 @@ that AERO and the other variance-mitigation libraries attack the
 strongly than vanilla GRPO, and that the gap reverses at the high end.
 
 Inputs (real):
-    experiments/results/variance_mitigation.tsv
+    platform_hybrid/experiments/results/variance_mitigation.tsv
         9 methods x 5 seeds x 100 steps (5540 rows total). Per-step
         (zvf, heldout_acc) pairs.
 
 Outputs:
-    experiments/results/zvf_iter62_difficulty_strata.tsv
+    platform_hybrid/experiments/results/zvf_iter62_difficulty_strata.tsv
         (method, quintile) -> mean_zvf, mean_acc, n_steps
-    experiments/results/zvf_iter62_aero_minus_grpo.tsv
+    platform_hybrid/experiments/results/zvf_iter62_aero_minus_grpo.tsv
         per-quintile AERO-GRPO delta with bootstrap CI
-    experiments/results/zvf_iter62_quintile_separability.tsv
+    platform_hybrid/experiments/results/zvf_iter62_quintile_separability.tsv
         Mann-Whitney AUC per (method, quintile) for collapse vs healthy
-    experiments/results/zvf_iter62_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter62_summary.tsv
         one-row-per-method summary of stratification
     figures/zvf_iter62_difficulty_strata.{pdf,png}
 

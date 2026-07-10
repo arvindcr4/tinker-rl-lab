@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """P5 MIN-REPORT coverage audit.
 
-For each cell manifest in experiments/results/mega_20260704/manifests/ we check
+For each cell manifest in platform_hybrid/experiments/results/mega_20260704/manifests/ we check
 each of the seven MIN-REPORT items defined in paper/sections/p5_stack.tex and
 record coverage / missingness / ambiguity. Outputs:
-  experiments/results/p5p8/minreport_field_coverage.tsv   (per-field coverage)
-  experiments/results/p5p8/minreport_cell_completeness.tsv (per-cell audit)
-  experiments/results/p5p8/minreport_summary.json
+  platform_hybrid/experiments/results/p5p8/minreport_field_coverage.tsv   (per-field coverage)
+  platform_hybrid/experiments/results/p5p8/minreport_cell_completeness.tsv (per-cell audit)
+  platform_hybrid/experiments/results/p5p8/minreport_summary.json
 """
 from __future__ import annotations
 

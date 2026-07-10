@@ -27,9 +27,9 @@ Q2. **Required information gain for the sensor to matter.** A sensor that
 
 Outputs
 -------
-experiments/results/p5p8/p8_sensor_noise_sweep.tsv
-experiments/results/p5p8/p8_sensor_noise_summary.json
-experiments/results/p5p8/p8_required_info_gain.tsv
+platform_hybrid/experiments/results/p5p8/p8_sensor_noise_sweep.tsv
+platform_hybrid/experiments/results/p5p8/p8_sensor_noise_summary.json
+platform_hybrid/experiments/results/p5p8/p8_required_info_gain.tsv
 """
 
 from __future__ import annotations

@@ -27,15 +27,15 @@ extends with three NEW analyses the previous iterations did not run:
      "if you have prompts with difficulty near p, you need G >= G_min" table.
 
 Inputs (real, already in the worktree):
-  - experiments/results/zvf_iter102_calibration.tsv   (14 rows)
-  - experiments/results/zvf_dynamics_leadtime.tsv      (per-run timing)
-  - experiments/results/zvf_dynamics_summary.tsv      (per-run pooled ZVF)
+  - platform_hybrid/experiments/results/zvf_iter102_calibration.tsv   (14 rows)
+  - platform_hybrid/experiments/results/zvf_dynamics_leadtime.tsv      (per-run timing)
+  - platform_hybrid/experiments/results/zvf_dynamics_summary.tsv      (per-run pooled ZVF)
 
 Outputs:
-  - experiments/results/zvf_iter110_auroc.tsv         (3 predictors x 4 stats)
-  - experiments/results/zvf_iter110_emd.tsv           (3 predictors x 3 stats)
-  - experiments/results/zvf_iter110_isog_floor.tsv    (p_bin x tau x G_min)
-  - experiments/results/zvf_iter110_leadtime.tsv      (lead_steps summary)
+  - platform_hybrid/experiments/results/zvf_iter110_auroc.tsv         (3 predictors x 4 stats)
+  - platform_hybrid/experiments/results/zvf_iter110_emd.tsv           (3 predictors x 3 stats)
+  - platform_hybrid/experiments/results/zvf_iter110_isog_floor.tsv    (p_bin x tau x G_min)
+  - platform_hybrid/experiments/results/zvf_iter110_leadtime.tsv      (lead_steps summary)
   - figures/zvf_iter110_discrimination.pdf            (3-panel summary)
 
 Source: platform_modal/scripts/zvf_discrimination_iter110.py

@@ -67,7 +67,7 @@
       "declared_deltas_coverage": 0.0,
       "measured_coverage": 0.0,
       "ci_method_present": false,
-      "audit_source": "scripts/p5p8/p6_outcomes_coverage_block.py",
+      "audit_source": "platform_modal/scripts/p5p8/p6_outcomes_coverage_block.py",
       "audit_date": "2026-07-05"
     }
   }

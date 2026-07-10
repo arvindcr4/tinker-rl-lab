@@ -6,15 +6,15 @@ Reuses the bootstrap primitives from platform_modal/scripts/berkeley/adding_erro
 three P5 headline claims drawn from paper/sections/p5_stack.tex:
 
   H1  Group-size sweep: ZVF(G=2 -> G=16) drops monotonically.
-      Source: experiments/results/groupsize_zvf_sweep.tsv
+      Source: platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
   H2  Group-size sweep: held-out accuracy is non-monotone / flat with G.
-      Source: experiments/results/groupsize_zvf_sweep.tsv
+      Source: platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv
   H3  Bootstrap delta-acc between G=32 and G=4 at budget = 1M and 4M tokens.
-      Source: experiments/results/group_size_iter107_bootstrap_delta.tsv
+      Source: platform_hybrid/experiments/results/group_size_iter107_bootstrap_delta.tsv
 
 Outputs:
-  experiments/results/p5p8/p5_headline_cis.tsv
-  experiments/results/p5p8/p5_headline_cis.json
+  platform_hybrid/experiments/results/p5p8/p5_headline_cis.tsv
+  platform_hybrid/experiments/results/p5p8/p5_headline_cis.json
 
 Stdlib only (re-implements the bootstrap primitives locally to keep this
 script ≤ 300 LoC and not depend on importing the Berkeley module).

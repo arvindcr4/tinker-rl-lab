@@ -17,7 +17,7 @@ Five controllers are compared per (method, step, prompt):
                                                        per-prompt Bayesian shrinkage on p; the trigger
                                                        decision is taken on raw point estimates)
 
-Outputs (written to experiments/results/p5p8/):
+Outputs (written to platform_hybrid/experiments/results/p5p8/):
   p7_iter103_unified_controller_per_step.tsv   one row per (method, step) per controller
   p7_iter103_unified_controller_summary.tsv    one row per (controller, method) totals
   p7_iter103_unified_controller_ci.tsv         bootstrap CIs on per-method savings

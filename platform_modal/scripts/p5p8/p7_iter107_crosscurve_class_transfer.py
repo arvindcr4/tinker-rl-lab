@@ -11,7 +11,7 @@ Uses outputs from p7_iter107_tautransfer_failure.py and adds:
   3. Cohen-kappa per (method_a, method_b) on the failure class assignment
      (run at three canonical taus {0.70, 0.80, 0.90}).
 
-Outputs (experiments/results/p5p8/):
+Outputs (platform_hybrid/experiments/results/p5p8/):
   p7_iter107b_curve_table.tsv            one row per (method, tau)
   p7_iter107b_curve_correlation.tsv      Pearson r per (method_a, method_b) pair
   p7_iter107b_curve_correlation_boot.tsv bootstrap CI on r

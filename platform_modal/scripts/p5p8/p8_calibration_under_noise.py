@@ -25,10 +25,10 @@ it directly.
 
 Outputs
 -------
-experiments/results/p5p8/p8_calib_noise.tsv               (6 sigma × 4 K × 4 trees)
-experiments/results/p5p8/p8_calib_noise_boot.tsv          (paired bootstrap)
-experiments/results/p5p8/p8_calib_noise_summary.json
-experiments/results/p5p8/figures/p8_calib_noise.{png,pdf}
+platform_hybrid/experiments/results/p5p8/p8_calib_noise.tsv               (6 sigma × 4 K × 4 trees)
+platform_hybrid/experiments/results/p5p8/p8_calib_noise_boot.tsv          (paired bootstrap)
+platform_hybrid/experiments/results/p5p8/p8_calib_noise_summary.json
+platform_hybrid/experiments/results/p5p8/figures/p8_calib_noise.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + matplotlib. <=290 lines.
 """

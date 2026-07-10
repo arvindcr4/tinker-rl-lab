@@ -2,7 +2,7 @@
 (a) traces + 3-param fits, (b) lambda-vs-N log-log with perm-test annotation,
 (c) time-to-saturation bars, (d) Nemotron collapse zoom.
 
-Reads from experiments/results/scaling_law_iter109_{saturation,lambdaN,nemotron,
+Reads from platform_hybrid/experiments/results/scaling_law_iter109_{saturation,lambdaN,nemotron,
 permtest,family,stability}.tsv + the canonical reward_trace JSONs.
 
 Outputs:

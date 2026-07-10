@@ -29,8 +29,8 @@ Hypotheses (validated against the data):
   H7 N2 step axis (within-run drift)    : eta^2(step)     <= 0.10  (i.e., flat)
 
 Outputs:
-  experiments/results/p5p8/p5_iter161_stack_factorization.tsv
-  experiments/results/p5p8/p5_iter161_stack_factorization.json
+  platform_hybrid/experiments/results/p5p8/p5_iter161_stack_factorization.tsv
+  platform_hybrid/experiments/results/p5p8/p5_iter161_stack_factorization.json
 """
 from __future__ import annotations
 
@@ -328,11 +328,11 @@ def main():
                       "algorithm + reward-intervention; here we extend to "
                       "stack axes (model, task, G, temperature, seed) at scale."),
         "data_sources": {
-            "n2_panel": "experiments/results/n2_reward_tensor_resume/n2_metrics.tsv "
+            "n2_panel": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv "
                         "(4 methods × 40 steps × 1 seed × G=8 = 160 rows)",
-            "mega_cells": "experiments/results/mega_20260704/cells.tsv "
+            "mega_cells": "platform_hybrid/experiments/results/mega_20260704/cells.tsv "
                           "(98 cells spanning 2 models × 3 tasks × 5 G × 2 T × 2 seeds)",
-            "manifests": "experiments/results/mega_20260704/manifests/*.json (98)",
+            "manifests": "platform_hybrid/experiments/results/mega_20260704/manifests/*.json (98)",
         },
         "hypotheses": findings,
         "headline": {

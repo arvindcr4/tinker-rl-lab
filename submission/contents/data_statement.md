@@ -14,7 +14,7 @@ redistribute any of them.
 | GSM-1k (held-out) | MIT (Scale AI) | https://scale.com/leaderboard/gsm1k |
 | CountDown (tool-use) | MIT | https://github.com/Jiayi-Pan/TinyZero |
 
-Each evaluation in `experiments/master_results.json` records the exact
+Each evaluation in `platform_hybrid/experiments/master_results.json` records the exact
 dataset slug and split used. No new dataset is introduced by this paper.
 
 ## 2. Artefacts introduced by this paper

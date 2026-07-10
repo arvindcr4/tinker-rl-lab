@@ -29,17 +29,17 @@ against subsequent reward. iter 139 closes this gap:
 
 Inputs
 ------
-experiments/results/n10_seed_expansion/n10_grpo_s*.json
+platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s*.json
     5 seed-level JSONs (s42, s179, s316, s453, s590) each with
     step_log[15]={step, loss, reward, zvf, mean_len}.
 
 Outputs
 -------
-experiments/results/p5p8/p7_iter139_predictive_validity.tsv
+platform_hybrid/experiments/results/p5p8/p7_iter139_predictive_validity.tsv
     per-seed, per-τ reward gap with bootstrap CI (5 seeds × 8 τ = 40 rows).
-experiments/results/p5p8/p7_iter139_step_level.tsv
+platform_hybrid/experiments/results/p5p8/p7_iter139_step_level.tsv
     per-(seed, step) FIRE flag, reward, Δr, Δr_next (75 rows).
-experiments/results/p5p8/p7_iter139_summary.json
+platform_hybrid/experiments/results/p5p8/p7_iter139_summary.json
     H1-H4 verdicts + per-seed concordance + τ-band recommendation.
 docs/p5p8_improvements/139_p7_predictive_validity.md
     per-item proposal + verified falsifiable claims.

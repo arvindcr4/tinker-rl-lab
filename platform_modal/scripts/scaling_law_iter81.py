@@ -37,12 +37,12 @@ iter73/77 battery did not:
       blank; this script fills them in.
 
 Outputs (6 TSV + 2 figures + 1 tex):
-  experiments/results/scaling_law_iter81_compute_refit.tsv
-  experiments/results/scaling_law_iter81_stratum.tsv
-  experiments/results/scaling_law_iter81_k50_k80.tsv
-  experiments/results/scaling_law_iter81_stratum_lift.tsv
-  experiments/results/scaling_law_iter81_meta.json
-  experiments/results/scaling_law_iter81_predictions.tsv
+  platform_hybrid/experiments/results/scaling_law_iter81_compute_refit.tsv
+  platform_hybrid/experiments/results/scaling_law_iter81_stratum.tsv
+  platform_hybrid/experiments/results/scaling_law_iter81_k50_k80.tsv
+  platform_hybrid/experiments/results/scaling_law_iter81_stratum_lift.tsv
+  platform_hybrid/experiments/results/scaling_law_iter81_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter81_predictions.tsv
   figures/scaling_law_iter81.{pdf,png}
   paper/sections/scaling_law_iter81.tex
 

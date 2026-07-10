@@ -12,12 +12,12 @@
   (D) Cumulative-window regression rho for k_end in {1,2,3,4};
       tests whether severship compounds into reward as windows accumulate.
 
-Reads : experiments/results/length_bias_iter112_per_window.tsv
-        experiments/results/length_bias_iter112_pooled.tsv
-        experiments/results/length_bias_iter112_cumulative.tsv
-        experiments/results/length_bias_iter112_rho_bootstrap.tsv
-        experiments/results/length_bias_iter112_permutation_null.tsv
-        experiments/results/length_bias_iter108_perrun_progress.tsv
+Reads : platform_hybrid/experiments/results/length_bias_iter112_per_window.tsv
+        platform_hybrid/experiments/results/length_bias_iter112_pooled.tsv
+        platform_hybrid/experiments/results/length_bias_iter112_cumulative.tsv
+        platform_hybrid/experiments/results/length_bias_iter112_rho_bootstrap.tsv
+        platform_hybrid/experiments/results/length_bias_iter112_permutation_null.tsv
+        platform_hybrid/experiments/results/length_bias_iter108_perrun_progress.tsv
 Writes: figures/length_bias_iter112_sever_reward.pdf and .png;
         mirrored to paper/figures/.
 """

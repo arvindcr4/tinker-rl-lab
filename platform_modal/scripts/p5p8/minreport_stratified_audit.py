@@ -6,7 +6,7 @@ manifests, computes eta^2 of per-cell item_score + concrete% + max-min
 contrast, plus reward-quartile and ZVF-quartile strata. Identifies whether
 the manifest emitter is stack-invariant.
 
-Reuses iter-18's auditor output: experiments/results/p5p8/minreport_audit.tsv.
+Reuses iter-18's auditor output: platform_hybrid/experiments/results/p5p8/minreport_audit.tsv.
 
 Headline falsifiable claim: items 1-6 are perfectly stack-invariant
 (every cell in every stratum gets the same per-item score -> eta^2 is
@@ -17,10 +17,10 @@ are themselves task-stratified). The "add the missing fields" work-list
 is therefore corpus-wide, not stack-conditional.
 
 Output:
-  experiments/results/p5p8/minreport_stratified.tsv
-  experiments/results/p5p8/minreport_stratified_summary.json
-  experiments/results/p5p8/figures/minreport_stratified_heatmap.{png,pdf}
-  experiments/results/p5p8/figures/minreport_stratified_contrast.{png,pdf}
+  platform_hybrid/experiments/results/p5p8/minreport_stratified.tsv
+  platform_hybrid/experiments/results/p5p8/minreport_stratified_summary.json
+  platform_hybrid/experiments/results/p5p8/figures/minreport_stratified_heatmap.{png,pdf}
+  platform_hybrid/experiments/results/p5p8/figures/minreport_stratified_contrast.{png,pdf}
 """
 from __future__ import annotations
 import csv, json, math, re, sys

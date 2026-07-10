@@ -44,7 +44,7 @@ trajectory summary concretely  shows whether the ReAct-style intervention
 "intermediate-credit shaping" reproduces the published gains when
 projected onto the smaller  sparse-vs-dense ablation  already on disk.
 
-Outputs (under experiments/results/berkeley/react_*):
+Outputs (under platform_hybrid/experiments/results/berkeley/react_*):
   react_dense_vs_sparse_step.tsv  - per-step rollout reward, sparse+dense, by seed
   react_intervention_gap.tsv      - Cohen's d, half-life delta, zero-floor delta
   react_zvf_reduction.tsv          - ZVF shift sparse -> dense by seed

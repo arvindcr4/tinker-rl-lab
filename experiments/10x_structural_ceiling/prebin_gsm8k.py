@@ -7,6 +7,8 @@ Optimizations vs v1:
   - Total: 800 calls in ~16 parallel batches ≈ 10-15 min
 """
 
+from __future__ import annotations
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -16,7 +18,6 @@ try:
 except ImportError:
     pass
 
-from __future__ import annotations
 import json, os, random, re, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path

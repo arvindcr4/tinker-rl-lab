@@ -8,6 +8,8 @@ Round 2 Experiment Runner — extends grpo_10x_runner.py with:
 All experiments log ZVF/GU saturation diagnostics to W&B.
 """
 
+from __future__ import annotations
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -16,8 +18,6 @@ try:
     atexit.register(_tracker.stop)
 except ImportError:
     pass
-
-from __future__ import annotations
 
 import argparse
 import json

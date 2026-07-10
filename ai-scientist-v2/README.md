@@ -22,7 +22,7 @@ python3 scripts/prepare_ai_scientist_v2.py \
 export AI_SCIENTIST_V2_DIR="$HOME/AI-Scientist-v2"
 cd "$AI_SCIENTIST_V2_DIR"
 python ai_scientist/perform_ideation_temp_free.py \
-  --workshop-file "/Users/arvind/tinker-rl-lab/.ai_scientist_v2_runs/latest/tinker_rl_lab_topic.md" \
+  --workshop-file "./.ai_scientist_v2_runs/latest/tinker_rl_lab_topic.md" \
   --model "${AI_SCIENTIST_MODEL:-gpt-4o-2024-11-20}" \
   --max-num-generations 12 \
   --num-reflections 3
@@ -32,7 +32,7 @@ For the model requested in this run:
 
 ```bash
 python ai_scientist/perform_ideation_temp_free.py \
-  --workshop-file "/Users/arvind/tinker-rl-lab/.ai_scientist_v2_runs/latest/tinker_rl_lab_topic.md" \
+  --workshop-file "./.ai_scientist_v2_runs/latest/tinker_rl_lab_topic.md" \
   --model gemini-3.1-pro-preview \
   --max-num-generations 1 \
   --num-reflections 2
@@ -45,7 +45,7 @@ stall or fail before writing usable ideas.
 3. Import the generated ideas into the safe research-loop queue:
 
 ```bash
-cd /Users/arvind/tinker-rl-lab
+cd /path/to/tinker-rl-lab
 python3 scripts/import_ai_scientist_v2_ideas.py \
   --ideas .ai_scientist_v2_runs/latest/tinker_rl_lab_topic.json \
   --dry-run

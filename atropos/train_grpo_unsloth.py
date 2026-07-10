@@ -20,6 +20,8 @@ Tier mapping (matches VRAM budget doc):
     30B   → A100 80 GB
 """
 
+from __future__ import annotations
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -29,8 +31,6 @@ try:
 except ImportError:
     pass
 
-
-from __future__ import annotations
 
 import argparse
 import os

@@ -32,8 +32,12 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 SMOKE_LOG="${SMOKE_LOG:-/tmp/tinkerrl_smoke.log}"
-START_TS=$(date +%s)
+
 : > "$SMOKE_LOG"
+
+# Prefer the repo venv; fall back to the ambient python3 (e.g. Docker image,
+# where dependencies are installed globally).
+if [[ -x .venv/bin/python ]]; then PY=.venv/bin/python; else PY="$(command -v python3)"; fi
 
 log()   { printf "\033[1;34m[smoke]\033[0m %s\n" "$*" | tee -a "$SMOKE_LOG"; }
 ok()    { printf "\033[1;32m  ✓\033[0m %s\n" "$*" | tee -a "$SMOKE_LOG"; }
@@ -45,13 +49,13 @@ TOTAL=6
 
 log "TinkerRL-Bench smoke test — target <10 min"
 log "Repo:      $(git rev-parse --short HEAD 2>/dev/null || echo 'not-a-git-repo')"
-log "Python:    $(.venv/bin/python --version 2>&1)"
+log "Python:    $("$PY" --version 2>&1)"
 log "Host:      $(uname -srm)"
 log "Log file:  $SMOKE_LOG"
 
 # -----------------------------------------------------------------------------
 step 1 "$TOTAL" "Core library imports"
-.venv/bin/python - <<'PY' 2>&1 | tee -a "$SMOKE_LOG"
+"$PY" - <<'PY' 2>&1 | tee -a "$SMOKE_LOG"
 import importlib, sys, time
 t0 = time.time()
 required = ["torch", "numpy", "transformers", "datasets", "accelerate", "trl"]
@@ -73,7 +77,7 @@ ok "imports"
 
 # -----------------------------------------------------------------------------
 step 2 "$TOTAL" "Seed determinism (utils.seed)"
-.venv/bin/python - <<'PY' 2>&1 | tee -a "$SMOKE_LOG"
+"$PY" - <<'PY' 2>&1 | tee -a "$SMOKE_LOG"
 import sys, os
 sys.path.insert(0, os.getcwd())
 from utils.seed import set_global_seed
@@ -95,14 +99,14 @@ if command -v pytest >/dev/null 2>&1; then
     pytest -q tests/ --maxfail=1 --disable-warnings 2>&1 | tee -a "$SMOKE_LOG"
     ok "pytest"
 else
-    .venv/bin/python -m pip install -q pytest 2>&1 | tee -a "$SMOKE_LOG"
+    "$PY" -m pip install -q pytest 2>&1 | tee -a "$SMOKE_LOG"
     pytest -q tests/ --maxfail=1 --disable-warnings 2>&1 | tee -a "$SMOKE_LOG"
     ok "pytest"
 fi
 
 # -----------------------------------------------------------------------------
 step 4 "$TOTAL" "GSM8K dataset load (openai/gsm8k, split=test, first 8 rows)"
-.venv/bin/python - <<'PY' 2>&1 | tee -a "$SMOKE_LOG"
+"$PY" - <<'PY' 2>&1 | tee -a "$SMOKE_LOG"
 import re, time
 from datasets import load_dataset
 t0 = time.time()
@@ -119,7 +123,7 @@ ok "gsm8k"
 
 # -----------------------------------------------------------------------------
 step 5 "$TOTAL" "GRPO reward + advantage round-trip"
-.venv/bin/python - <<'PY' 2>&1 | tee -a "$SMOKE_LOG"
+"$PY" - <<'PY' 2>&1 | tee -a "$SMOKE_LOG"
 import re, math
 def reward(response, answer):
     boxed = re.findall(r'\\boxed\{([^}]+)\}', response)
@@ -156,7 +160,7 @@ ok "grpo math"
 
 # -----------------------------------------------------------------------------
 step 6 "$TOTAL" "Docstring / script surface check"
-.venv/bin/python - <<'PY' 2>&1 | tee -a "$SMOKE_LOG"
+"$PY" - <<'PY' 2>&1 | tee -a "$SMOKE_LOG"
 import importlib.util, pathlib
 for p in ["grpo_gsm8k_base.py", "utils/seed.py", "utils/stats.py",
          "scripts/run_seeds.sh", "REPRODUCE.md", "ARTIFACT.md", "Dockerfile"]:
@@ -173,7 +177,7 @@ if [[ -n "${TINKER_API_KEY:-}" ]]; then
     step 7 "$TOTAL" "Tinker wire-protocol (3-step GRPO on Qwen3.5-4B, LoRA r=4)"
     # Tiny run: 3 steps × batch 1 × group 2, LoRA rank 4 — designed to finish
     # in ~3–5 min on Tinker's smallest tier and cost < $0.25.
-    timeout 480 .venv/bin/python grpo_gsm8k_base.py \
+    timeout 480 "$PY" grpo_gsm8k_base.py \
         --model "Qwen/Qwen3.5-4B" \
         --seed 42 \
         --rank 4 \

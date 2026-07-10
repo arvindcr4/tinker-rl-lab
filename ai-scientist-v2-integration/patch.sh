@@ -2,7 +2,7 @@
 set -euo pipefail
 # Apply tinker-rl-lab integration patches to ~/ai-scientist-v2
 
-SRC="/Users/arvind/paper/tinker-rl-lab/ai-scientist-v2-integration"
+SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DST="$HOME/ai-scientist-v2"
 
 # Copy modified parallel_agent.py to add tinker to agent environment prompt

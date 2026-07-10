@@ -25,6 +25,8 @@ Env:
                   arvindcr4-pes-university/tinker-rl-lab-world-class)
 """
 
+from __future__ import annotations
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -34,8 +36,6 @@ try:
 except ImportError:
     pass
 
-
-from __future__ import annotations
 
 import argparse
 import json

@@ -1,4 +1,4 @@
-"""Experiment A: Baseline GRPO — LR=3e-5, group=8, temp=0.8, LoRA rank=32"""
+"""Experiment B: High LR GRPO — LR=1e-4, group=16, temp=0.8, LoRA rank=32"""
 
 import atexit
 try:

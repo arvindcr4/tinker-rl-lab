@@ -26,6 +26,8 @@ Output: {out_dir}/final_info.json  with:
   }
 """
 
+from __future__ import annotations
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -35,8 +37,6 @@ try:
 except ImportError:
     pass
 
-
-from __future__ import annotations
 
 import json
 import os

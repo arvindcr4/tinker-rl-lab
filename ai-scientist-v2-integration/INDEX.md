@@ -4,7 +4,7 @@
 
 **Key files:**
 - `README.md` — what each patch fixes (agent prompt, exec templates, timeouts, deps) + how to launch.
-- `patch.sh` — copies modified files into `~/ai-scientist-v2` (agent, idea templates, config). NOTE hardcoded `SRC=/Users/arvind/paper/tinker-rl-lab/...`.
+- `patch.sh` — copies modified files into `~/ai-scientist-v2` (agent, idea templates, config).
 - `launch.sh` — convenience launcher for `launch_scientist_bfts.py` (default idea = tinker template).
 - `bfts_config.yaml` — BFTS run config; `exec.timeout` raised to 7200s for Tinker latency.
 

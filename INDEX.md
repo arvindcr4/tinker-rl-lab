@@ -88,11 +88,9 @@ HumanEval/logp-steering); `configs/` (per model×env YAML; `sweep_results/` = 10
 - **a one-shot GRPO run** → top-level `grpo_*.py` (export `TINKER_API_KEY` first)
 
 ## Known issues / caveats (surfaced during indexing)
-- `grpo_exp_b/c.py` docstrings are **stale copies** of `exp_a` (code differs; docstrings don't).
 - `archive/root-scratch/team-*.pplx.md` and `archive/root-scratch/verify_links_entities.txt` contain **real names/handles → NOT blind-safe**; the entire `archive/` tree is excluded by `blind_review/anonymize_code.py`.
 - `blind_review/tinker-rl-lab-anon.tar.gz` is **no longer tracked** — the last tracked copy was a stale ~97 MB regeneration that mismatched `SUBMISSION_MANIFEST.md` and contained identifying strings. A tag-time 25.8 MB copy remains at `capstone-final-2026-04-25` (its hash also predates the manifest); regenerate via `blind_review/anonymize_*.py` before any future integrity check.
 - **No `local_*.py` native ports** exist in this checkout (those were generated only on the Lightning studio copy); the `modal_*.py` pillar scripts are canonical here.
-- Hardcoded machine-specific paths in `ai-scientist-v2-integration/patch.sh`, `archive/root-scratch/inject_patch.py`, `demo_recording/concat*.txt` — break off their origin machine.
 
 ---
 *83 per-folder `INDEX.md` files + this root map (84 total), generated 2026-07-02.*

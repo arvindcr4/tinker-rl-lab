@@ -2,7 +2,10 @@
 
 This document gives **reviewers and third parties** exact, copy-pasteable
 commands to reproduce every result reported in the NeurIPS 2026 submission
-(`paper/main.tex`) and the capstone final report (`reports/capstone_final_report.md`).
+(`paper/main.tex`) and the capstone final report (`reports/final/capstone_final_report.md`).
+
+> **Scope:** this reproduces the Semester 3 headline result on shared infrastructure.
+> The Semester 4 (P1–P8) paper-to-evidence map is [`sem 4 work/EXPERIMENTS.md`](sem%204%20work/EXPERIMENTS.md).
 
 The **headline result** reviewers should verify is:
 
@@ -26,7 +29,8 @@ docker build \
   --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
   -t tinker-rl-lab:repro .
 
-# 2. Under 10 minutes of structural checks — no GPU required
+# 2. Under 10 minutes of structural checks — no GPU required.
+#    Network is needed on the first run to fetch GSM8K (cached afterwards).
 docker run --rm tinker-rl-lab:repro bash scripts/smoke_test.sh
 
 # 3. Full smoke incl. a live 3-step Tinker call (~8 min, < $0.25)
@@ -59,9 +63,10 @@ Expected final line from step 4 (within tolerance):
 ```bash
 git clone https://github.com/arvindcr4/tinker-rl-lab.git
 cd tinker-rl-lab
-# Optional: check out the frozen Semester 3 submission state (§1 of ARTIFACT.md).
-# Stay on current HEAD to reproduce the Semester 4 (P1–P8) work.
-git checkout <COMMIT_HASH_FROM_ARTIFACT_MD>
+# Optional: check out the frozen Semester 3 submission state (§1 of ARTIFACT.md),
+# replacing the placeholder with that commit hash. Stay on current HEAD to
+# reproduce the Semester 4 (P1–P8) work.
+# git checkout <COMMIT_HASH_FROM_ARTIFACT_MD>
 
 docker build -t tinker-rl-lab:repro .
 docker run --gpus all -it \
@@ -332,9 +337,10 @@ run-to-run variance on this setup is of the order of the reported effect.
 
 ## 9. Known gotchas
 
-- **`transformers` 4.50+** removes the `Qwen3Config` alias — pin to
-  `<4.50` (enforced by `requirements.txt`). If you see
-  `AttributeError: Qwen3Config`, re-check the pin.
+- **`transformers` version drift** — `requirements.txt` pins
+  `transformers>=4.56.2,<4.60.0`; versions outside that range may rename or
+  remove Qwen3 config aliases. If you see `AttributeError: Qwen3Config`,
+  re-check the installed version against the pin.
 - **GSM8K load_dataset script mode** — HF deprecated `trust_remote_code` for
   the GSM8K loader in datasets 3.0; we pass `trust_remote_code=True` only
   where needed. Upgrading past `datasets<3.2` may require a `load_dataset`

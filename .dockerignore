@@ -1,0 +1,31 @@
+# Secrets and local config — never bake into the image
+.env
+.env.*
+!.env.example
+*.key
+.secrets/
+
+# VCS and agent/tool caches
+.git/
+.github/
+graphify-out/
+.firecrawl/
+.serena/
+.playwright-mcp/
+.claude/settings.local.json
+wandb/
+.modal/
+
+# Local environments and build junk
+.venv*/
+venv/
+node_modules/
+__pycache__/
+*.pyc
+checkpoints/
+logs/
+
+# Identity-bearing scratch archive and stale blind bundle
+archive/
+blind_review/tinker-rl-lab-anon.tar.gz
+blind_review/tinker-rl-lab-anon/

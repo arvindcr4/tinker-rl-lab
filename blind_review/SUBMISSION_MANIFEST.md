@@ -1,5 +1,12 @@
 # Blind-Review Submission Manifest — NeurIPS 2026
 
+> **Historical note (July 2026):** this manifest records the bundle as submitted on
+> April 19, 2026. Working-tree files (e.g. `main_anon.tex`) have evolved since and
+> will not match these hashes; the tarball itself is no longer tracked. To produce a
+> fresh bundle, re-run `anonymize_paper.py` / `anonymize_code.py` and regenerate the
+> manifest. The frozen Semester 3 copy of this record lives in
+> `../sem 3 work/submissions/neurips-main-track/`.
+
 **Paper:** Tinker RL Lab — An End-to-End Reinforcement-Learning Post-Training
 Benchmark for Large Language Models
 **Track:** Datasets & Benchmarks (blind review)

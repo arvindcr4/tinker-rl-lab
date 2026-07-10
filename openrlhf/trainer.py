@@ -12,6 +12,8 @@ Falls back to a seeded deterministic dryrun when openrlhf cannot be imported,
 clearly marked as such in the returned metrics.
 """
 
+from __future__ import annotations
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -21,8 +23,6 @@ try:
 except ImportError:
     pass
 
-
-from __future__ import annotations
 
 import asyncio
 import json

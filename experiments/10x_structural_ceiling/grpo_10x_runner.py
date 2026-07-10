@@ -12,6 +12,8 @@ Usage:
   python grpo_10x_runner.py --config configs/block_g_gsm8k_group32.yaml --resume
 """
 
+from __future__ import annotations
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -20,8 +22,6 @@ try:
     atexit.register(_tracker.stop)
 except ImportError:
     pass
-
-from __future__ import annotations
 
 import argparse
 import json

@@ -57,6 +57,8 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import zipfile
+import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -331,6 +333,10 @@ def _excluded(relpath: str) -> bool:
         return True
     if _IDENT_PATH_RE.search(relpath):
         return True
+    ext = Path(relpath).suffix.lower()
+    if ext in _DOC_BINARY_EXTS:
+        if not (ext == ".pdf" and relpath.startswith(_PDF_ALLOWED_PREFIXES)):
+            return True
     return relpath in EXCLUDE_FILES
 
 
@@ -426,6 +432,42 @@ def _rename_main_anon_to_main(root: Path, log: ChangeLog) -> None:
     # Nothing to do beyond letting main_anon.tex live at paper/main_anon.tex.
 
 
+def _deep_scan(path: Path, pattern: re.Pattern) -> bool:
+    """Scan container/compressed formats after decompression."""
+    ext = path.suffix.lower()
+    try:
+        if ext in {".zip", ".docx", ".pptx", ".xlsx"}:
+            with zipfile.ZipFile(path) as zf:
+                for name in zf.namelist():
+                    if pattern.search(name):
+                        return True
+                    text = zf.read(name).decode("utf-8", errors="ignore")
+                    if pattern.search(text):
+                        return True
+        elif ext == ".pdf":
+            data = path.read_bytes()
+            for m in re.finditer(rb"stream\r?\n(.*?)endstream", data, re.S):
+                try:
+                    text = zlib.decompress(m.group(1)).decode("utf-8", errors="ignore")
+                except Exception:
+                    continue
+                if pattern.search(text):
+                    return True
+        elif ext in {".gz", ".tgz", ".tar"}:
+            with tarfile.open(path) as tf:
+                for member in tf.getmembers():
+                    if pattern.search(member.name):
+                        return True
+                    f = tf.extractfile(member)
+                    if f is not None:
+                        text = f.read().decode("utf-8", errors="ignore")
+                        if pattern.search(text):
+                            return True
+    except Exception:
+        return False
+    return False
+
+
 def _post_scan(root: Path) -> list[str]:
     """Final safety scan; return files that still contain identifying tokens."""
     leaks: list[str] = []
@@ -460,6 +502,9 @@ def _post_scan(root: Path) -> list[str]:
         except Exception:
             text = data.decode("latin-1", errors="ignore")
         if pattern.search(text):
+            leaks.append(rel)
+            continue
+        if _deep_scan(path, pattern):
             leaks.append(rel)
     return leaks
 

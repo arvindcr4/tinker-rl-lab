@@ -26,7 +26,7 @@ We target three ACM badges:
 | **Head commit date** | `2026-04-19 12:53:07 +0000` |
 | **PR introducing this artifact** | `task-8-repro-artifact` → `main` |
 | **Submitted paper** | [`paper/main.tex`](./paper/main.tex) |
-| **Capstone report** | [`reports/capstone_final_report.md`](./reports/capstone_final_report.md) |
+| **Capstone report** | [`reports/final/capstone_final_report.md`](./reports/final/capstone_final_report.md) |
 | **W&B project**    | `arvindcr4-pes-university/tinker-rl-lab-world-class` (153 runs, 23.9 h client-side wall-clock) |
 | **License**        | Apache-2.0 (see [`LICENSE`](./LICENSE)) |
 | **DOI**            | _Pending — will be minted on Zenodo upon camera-ready_ |

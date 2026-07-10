@@ -89,7 +89,7 @@ as findings. Re-run all 8 when billing is restored.
 
 ### Action items before Wave 2 can run
 1. User: resolve Tinker billing at https://tinker-console.thinkingmachines.ai/billing/balance
-2. User: rotate the leaked `tml-ig7SDcYd3...` / `tml-lpYVuVb7Zy4...` keys if not
+2. User: rotate the previously leaked Tinker keys (prefixes redacted) if not
    already done (they were neutralized in source but still live in git history)
 3. Loop: re-queue H01–H08 (`coordinator.py queue add`) and re-run wave_001
 4. Then proceed to H09–H20 as originally planned

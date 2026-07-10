@@ -57,11 +57,6 @@ services:
       service: base
     command: ["python", "grpo_100_math.py"]
 
-  train-synthetic:
-    extends:
-      service: base
-    command: ["python", "grpo_100_synthetic.py"]
-
   train-xlam:
     extends:
       service: base

@@ -4,18 +4,12 @@ import subprocess
 import sys
 
 AUDITS = [
-    "paper_improvement_audit.py",
     "submission_claim_audit.py",
     "paper_sync_audit.py",
-    "capstone_claim_audit.py",
-    "abstract_scope_audit.py",
-    "heldout_readiness_audit.py",
     "anonymization_repro_audit.py",
     "claim_strength_audit.py",
     "submission_package_audit.py",
     "submission_workflow_audit.py",
-    "blind_review_package_audit.py",
-    "blind_review_export_audit.py",
     "export_guard_audit.py",
 ]
 

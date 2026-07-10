@@ -1,0 +1,9 @@
+{
+  "experiment": "cleanrl_ppo",
+  "seed": 1024,
+  "success": true,
+  "elapsed_seconds": 67.0,
+  "returncode": 0,
+  "stdout_tail": "Using device: cuda\n============================================================\nCleanRL PPO Math RL Training\nExpected: accuracy ~50% -> ~100%\n============================================================\nStep   5120 | Accuracy:   0.5% | Reward: 0.005 | SPS: 1281\nStep  10240 | Accuracy:   0.5% | Reward: 0.005 | SPS: 1416\nStep  15360 | Accuracy:   0.5% | Reward: 0.005 | SPS: 1465\nStep  20480 | Accuracy:   0.5% | Reward: 0.005 | SPS: 1498\nStep  25600 | Accuracy:   0.5% | Reward: 0.005 | SPS: 1517\nStep  30720 | Accuracy:   0.7% | Reward: 0.007 | SPS: 1534\nStep  35840 | Accuracy:   0.6% | Reward: 0.006 | SPS: 1545\nStep  40960 | Accuracy:   0.5% | Reward: 0.005 | SPS: 1555\nStep  46080 | Accuracy:   0.6% | Reward: 0.006 | SPS: 1565\nStep  51200 | Accuracy:   0.6% | Reward: 0.006 | SPS: 1568\nStep  56320 | Accuracy:   0.5% | Reward: 0.005 | SPS: 1567\nStep  61440 | Accuracy:   0.6% | Reward: 0.006 | SPS: 1565\nStep  66560 | Accuracy:   0.6% | Reward: 0.006 | SPS: 1566\nStep  71680 | Accuracy:   0.4% | Reward: 0.004 | SPS: 1564\nStep  76800 | Accuracy:   0.5% | Reward: 0.005 | SPS: 1565\nStep  81920 | Accuracy:   0.7% | Reward: 0.007 | SPS: 1567\nStep  87040 | Accuracy:   0.5% | Reward: 0.005 | SPS: 1571\nStep  92160 | Accuracy:   0.4% | Reward: 0.004 | SPS: 1574\nStep  97280 | Accuracy:   0.6% | Reward: 0.006 | SPS: 1576\n\nTraining complete!\nModel saved to cleanrl_math_agent.pt\n",
+  "stderr_tail": ""
+}

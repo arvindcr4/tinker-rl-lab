@@ -1,0 +1,9 @@
+{
+  "experiment": "pufferlib",
+  "seed": 42,
+  "success": true,
+  "elapsed_seconds": 2.0,
+  "returncode": 0,
+  "stdout_tail": "============================================================\nPufferLib Math RL Configuration\n============================================================\n\nTraining Config:\n  total_timesteps: 100000\n  learning_rate: 0.0001\n  batch_size: 2048\n  minibatch_size: 512\n  update_epochs: 4\n  gamma: 0.99\n  gae_lambda: 0.95\n  clip_coef: 0.2\n  vf_coef: 0.5\n  ent_coef: 0.01\n  max_grad_norm: 0.5\n  vtrace: True\n  vtrace_rho_clip: 1.0\n  vtrace_c_clip: 1.0\n  num_envs: 16\n  num_steps: 128\n\nEnvironment Config:\n  max_num: 99\n\n--- Testing Environment ---\nObservation shape: (2,)\nAction space: Discrete(199)\n  Problem 1: 101, Predicted: 158, Correct: False\n  Problem 2: 120, Predicted: 117, Correct: False\n  Problem 3: 98, Predicted: 38, Correct: False\n  Problem 4: 47, Predicted: 137, Correct: False\n  Problem 5: 27, Predicted: 198, Correct: False\n  Problem 6: 137, Predicted: 138, Correct: False\n  Problem 7: 26, Predicted: 15, Correct: False\n  Problem 8: 95, Predicted: 23, Correct: False\n  Problem 9: 104, Predicted: 193, Correct: False\n  Problem 10: 49, Predicted: 197, Correct: False\n\nRandom baseline: 0/10 = 0%\n\n--- Full PufferLib Training (requires pufferlib) ---\n\n    from pufferlib import pufferl\n\n    # Load and customize config\n    args = pufferl.load_config('default')\n    args.update(PUFFERLIB_CONFIG['train'])\n\n    # Create trainer\n    trainer = pufferl.PPO(\n        env_creator=make_env_creator(PUFFERLIB_CONFIG),\n        policy=pufferl.MLP(hidden_sizes=[64, 64]),\n        config=args,\n    )\n\n    # Train\n    trainer.train()\n    \n",
+  "stderr_tail": ""
+}

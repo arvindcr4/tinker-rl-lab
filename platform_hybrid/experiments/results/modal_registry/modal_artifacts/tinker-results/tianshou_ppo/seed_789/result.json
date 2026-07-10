@@ -1,0 +1,9 @@
+{
+  "experiment": "tianshou_ppo",
+  "seed": 789,
+  "success": false,
+  "elapsed_seconds": 5.8,
+  "returncode": 1,
+  "stdout_tail": "============================================================\nTianshou PPO Math RL Training\nDevice: cuda\n============================================================\n",
+  "stderr_tail": "Traceback (most recent call last):\n  File \"/root/tinker/experiments/implementations/tianshou_ppo_math.py\", line 175, in <module>\n    main()\n  File \"/root/tinker/experiments/implementations/tianshou_ppo_math.py\", line 117, in main\n    policy = PPOPolicy(\n             ^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/tianshou/policy/modelfree/ppo.py\", line 103, in __init__\n    super().__init__(\n  File \"/usr/local/lib/python3.11/site-packages/tianshou/policy/modelfree/a2c.py\", line 86, in __init__\n    super().__init__(\n  File \"/usr/local/lib/python3.11/site-packages/tianshou/policy/modelfree/pg.py\", line 102, in __init__\n    super().__init__(\n  File \"/usr/local/lib/python3.11/site-packages/tianshou/policy/base.py\", line 210, in __init__\n    raise ValueError(\nValueError: action_scaling can only be True when action_space is Box but got: Discrete(199)\n"
+}

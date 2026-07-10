@@ -1,0 +1,9 @@
+{
+  "experiment": "trl_dpo",
+  "seed": 1024,
+  "success": false,
+  "elapsed_seconds": 202.1,
+  "returncode": 1,
+  "stdout_tail": "Loading model and tokenizer...\nGenerating preference dataset (this may take a while)...\nCreated 170 preference pairs\n",
+  "stderr_tail": "`torch_dtype` is deprecated! Use `dtype` instead!\nTraceback (most recent call last):\n  File \"/root/tinker/experiments/implementations/trl_dpo_shorter.py\", line 187, in <module>\n    main()\n  File \"/root/tinker/experiments/implementations/trl_dpo_shorter.py\", line 155, in main\n    dpo_config = DPOConfig(\n                 ^^^^^^^^^^\nTypeError: DPOConfig.__init__() got an unexpected keyword argument 'max_prompt_length'\n"
+}

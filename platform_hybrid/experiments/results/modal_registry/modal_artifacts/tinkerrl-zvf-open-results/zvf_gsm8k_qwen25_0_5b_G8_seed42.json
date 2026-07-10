@@ -1,0 +1,261 @@
+{
+  "config": {
+    "model": "Qwen/Qwen2.5-0.5B",
+    "task": "gsm8k",
+    "group_size": 8,
+    "seed": 42,
+    "total_steps": 30,
+    "stack": "TRL_v0_16_modal_A100_40GB",
+    "lr": 5e-06,
+    "temperature": 0.9,
+    "elapsed_sec": 347.1591491699219
+  },
+  "step_log": [
+    {
+      "step": 1,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 2,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 3,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 4,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 5,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 6,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.125,
+      "advantage_var": 0.125,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 7,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 8,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 9,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 10,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 11,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.125,
+      "advantage_var": 0.125,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 12,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.25,
+      "advantage_var": 0.21428571428571427,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 13,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.125,
+      "advantage_var": 0.125,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 14,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.25,
+      "advantage_var": 0.21428571428571427,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 15,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.125,
+      "advantage_var": 0.125,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 16,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.25,
+      "advantage_var": 0.21428571428571427,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 17,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 18,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.125,
+      "advantage_var": 0.125,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 19,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 20,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 21,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.125,
+      "advantage_var": 0.125,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 22,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 23,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.375,
+      "advantage_var": 0.26785714285714285,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 24,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 25,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.625,
+      "advantage_var": 0.26785714285714285,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 26,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.25,
+      "advantage_var": 0.21428571428571427,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 27,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.125,
+      "advantage_var": 0.125,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 28,
+      "zvf": 0.0,
+      "batch_reward_mean": 0.375,
+      "advantage_var": 0.26785714285714285,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 29,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    },
+    {
+      "step": 30,
+      "zvf": 1.0,
+      "batch_reward_mean": 0.0,
+      "advantage_var": 0.0,
+      "n_groups": 1,
+      "K": 8
+    }
+  ],
+  "summary": {
+    "mean_zvf": 0.5333333333333333,
+    "first5_zvf": 1.0,
+    "last10_reward_mean": 0.1875,
+    "n_steps_logged": 30
+  }
+}

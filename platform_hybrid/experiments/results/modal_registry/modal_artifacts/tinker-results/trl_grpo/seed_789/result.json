@@ -1,0 +1,9 @@
+{
+  "experiment": "trl_grpo",
+  "seed": 789,
+  "success": false,
+  "elapsed_seconds": 34.0,
+  "returncode": 1,
+  "stdout_tail": "Seed set to 789 | Environment: {'seed': 789, 'python_hash_seed': '789', 'deterministic_cudnn': True, 'torch_version': '2.6.0+cu124', 'cuda_available': True, 'cuda_version': '12.4', 'gpu_count': 1, 'gpu_name': 'NVIDIA A10G'}\nLoading model and tokenizer...\nGenerating arithmetic dataset...\n",
+  "stderr_tail": "`torch_dtype` is deprecated! Use `dtype` instead!\nTraceback (most recent call last):\n  File \"/root/tinker/experiments/implementations/trl_grpo_math.py\", line 192, in <module>\n    main()\n  File \"/root/tinker/experiments/implementations/trl_grpo_math.py\", line 115, in main\n    grpo_config = GRPOConfig(\n                  ^^^^^^^^^^^\nTypeError: GRPOConfig.__init__() got an unexpected keyword argument 'use_peft'\n"
+}

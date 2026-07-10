@@ -1,0 +1,294 @@
+{
+  "experiment": "samestack_ppo_grpo",
+  "algo": "ppo",
+  "seed": 123,
+  "model": "Qwen/Qwen2.5-0.5B",
+  "n_steps": 40,
+  "n_gen": 128,
+  "k_epochs": 2,
+  "heldout_acc": 0.995,
+  "last10_avg": 0.97578125,
+  "elapsed_seconds": 175.1426877975464,
+  "step_log": [
+    {
+      "step": 0,
+      "mean_reward": 0.171875,
+      "zvf": NaN,
+      "entropy": 1.2904045013660186,
+      "grad_norm": 276.3878479003906
+    },
+    {
+      "step": 1,
+      "mean_reward": 0.328125,
+      "zvf": NaN,
+      "entropy": 1.1100475505246954,
+      "grad_norm": 146.31297302246094
+    },
+    {
+      "step": 2,
+      "mean_reward": 0.3203125,
+      "zvf": NaN,
+      "entropy": 1.038679767053281,
+      "grad_norm": 123.0321273803711
+    },
+    {
+      "step": 3,
+      "mean_reward": 0.3515625,
+      "zvf": NaN,
+      "entropy": 1.0617970330374582,
+      "grad_norm": 42.17128372192383
+    },
+    {
+      "step": 4,
+      "mean_reward": 0.4765625,
+      "zvf": NaN,
+      "entropy": 1.0283844451904296,
+      "grad_norm": 114.76106262207031
+    },
+    {
+      "step": 5,
+      "mean_reward": 0.40625,
+      "zvf": NaN,
+      "entropy": 1.0106496285265825,
+      "grad_norm": 34.62636947631836
+    },
+    {
+      "step": 6,
+      "mean_reward": 0.40625,
+      "zvf": NaN,
+      "entropy": 1.1315132857229735,
+      "grad_norm": 64.516357421875
+    },
+    {
+      "step": 7,
+      "mean_reward": 0.40625,
+      "zvf": NaN,
+      "entropy": 1.16340862078422,
+      "grad_norm": 33.508670806884766
+    },
+    {
+      "step": 8,
+      "mean_reward": 0.453125,
+      "zvf": NaN,
+      "entropy": 1.1757775084863749,
+      "grad_norm": 36.3338737487793
+    },
+    {
+      "step": 9,
+      "mean_reward": 0.4921875,
+      "zvf": NaN,
+      "entropy": 1.1383060926801702,
+      "grad_norm": 1.8916888236999512
+    },
+    {
+      "step": 10,
+      "mean_reward": 0.5390625,
+      "zvf": NaN,
+      "entropy": 1.041605688369048,
+      "grad_norm": 5.647932529449463
+    },
+    {
+      "step": 11,
+      "mean_reward": 0.6953125,
+      "zvf": NaN,
+      "entropy": 0.7939305383226146,
+      "grad_norm": 46.84199905395508
+    },
+    {
+      "step": 12,
+      "mean_reward": 0.7109375,
+      "zvf": NaN,
+      "entropy": 0.6805434035158705,
+      "grad_norm": 47.204776763916016
+    },
+    {
+      "step": 13,
+      "mean_reward": 0.7734375,
+      "zvf": NaN,
+      "entropy": 0.6946230700801944,
+      "grad_norm": 65.2203140258789
+    },
+    {
+      "step": 14,
+      "mean_reward": 0.796875,
+      "zvf": NaN,
+      "entropy": 0.5733890480903227,
+      "grad_norm": 1.615037441253662
+    },
+    {
+      "step": 15,
+      "mean_reward": 0.828125,
+      "zvf": NaN,
+      "entropy": 0.4273220818818159,
+      "grad_norm": 18.32513999938965
+    },
+    {
+      "step": 16,
+      "mean_reward": 0.8984375,
+      "zvf": NaN,
+      "entropy": 0.2603596648231882,
+      "grad_norm": 35.548004150390625
+    },
+    {
+      "step": 17,
+      "mean_reward": 0.921875,
+      "zvf": NaN,
+      "entropy": 0.14810640204964381,
+      "grad_norm": 5.011075019836426
+    },
+    {
+      "step": 18,
+      "mean_reward": 0.9375,
+      "zvf": NaN,
+      "entropy": 0.14344005812168933,
+      "grad_norm": 2.709029197692871
+    },
+    {
+      "step": 19,
+      "mean_reward": 0.9609375,
+      "zvf": NaN,
+      "entropy": 0.06523200663845095,
+      "grad_norm": 39.797271728515625
+    },
+    {
+      "step": 20,
+      "mean_reward": 0.9765625,
+      "zvf": NaN,
+      "entropy": 0.052981366056183074,
+      "grad_norm": 74.55899810791016
+    },
+    {
+      "step": 21,
+      "mean_reward": 0.96875,
+      "zvf": NaN,
+      "entropy": 0.03891096249870632,
+      "grad_norm": 97.01732635498047
+    },
+    {
+      "step": 22,
+      "mean_reward": 0.96875,
+      "zvf": NaN,
+      "entropy": 0.038864400719298794,
+      "grad_norm": 62.79840850830078
+    },
+    {
+      "step": 23,
+      "mean_reward": 0.984375,
+      "zvf": NaN,
+      "entropy": 0.03553650725338467,
+      "grad_norm": 115.28863525390625
+    },
+    {
+      "step": 24,
+      "mean_reward": 0.96875,
+      "zvf": NaN,
+      "entropy": 0.0524248938832507,
+      "grad_norm": 26.307313919067383
+    },
+    {
+      "step": 25,
+      "mean_reward": 0.96875,
+      "zvf": NaN,
+      "entropy": 0.075523219536202,
+      "grad_norm": 46.40391159057617
+    },
+    {
+      "step": 26,
+      "mean_reward": 0.984375,
+      "zvf": NaN,
+      "entropy": 0.04300211425554954,
+      "grad_norm": 76.97319030761719
+    },
+    {
+      "step": 27,
+      "mean_reward": 0.9921875,
+      "zvf": NaN,
+      "entropy": 0.038912072725463334,
+      "grad_norm": 93.84744262695312
+    },
+    {
+      "step": 28,
+      "mean_reward": 0.953125,
+      "zvf": NaN,
+      "entropy": 0.048218699013959594,
+      "grad_norm": 43.34983444213867
+    },
+    {
+      "step": 29,
+      "mean_reward": 0.9765625,
+      "zvf": NaN,
+      "entropy": 0.05022904692336327,
+      "grad_norm": 63.458065032958984
+    },
+    {
+      "step": 30,
+      "mean_reward": 0.9765625,
+      "zvf": NaN,
+      "entropy": 0.0492729612001001,
+      "grad_norm": 54.55470275878906
+    },
+    {
+      "step": 31,
+      "mean_reward": 0.96875,
+      "zvf": NaN,
+      "entropy": 0.04644275459192567,
+      "grad_norm": 78.50894927978516
+    },
+    {
+      "step": 32,
+      "mean_reward": 0.96875,
+      "zvf": NaN,
+      "entropy": 0.04380712850355007,
+      "grad_norm": 49.76976013183594
+    },
+    {
+      "step": 33,
+      "mean_reward": 0.9921875,
+      "zvf": NaN,
+      "entropy": 0.043954546116802794,
+      "grad_norm": 55.50286865234375
+    },
+    {
+      "step": 34,
+      "mean_reward": 0.9921875,
+      "zvf": NaN,
+      "entropy": 0.048439085587573094,
+      "grad_norm": 51.200923919677734
+    },
+    {
+      "step": 35,
+      "mean_reward": 0.953125,
+      "zvf": NaN,
+      "entropy": 0.058392911094035105,
+      "grad_norm": 63.7119255065918
+    },
+    {
+      "step": 36,
+      "mean_reward": 0.96875,
+      "zvf": NaN,
+      "entropy": 0.05147913901518423,
+      "grad_norm": 51.69428253173828
+    },
+    {
+      "step": 37,
+      "mean_reward": 0.96875,
+      "zvf": NaN,
+      "entropy": 0.06009602045812527,
+      "grad_norm": 65.00835418701172
+    },
+    {
+      "step": 38,
+      "mean_reward": 0.9921875,
+      "zvf": NaN,
+      "entropy": 0.05780676048095912,
+      "grad_norm": 51.94926071166992
+    },
+    {
+      "step": 39,
+      "mean_reward": 0.9765625,
+      "zvf": NaN,
+      "entropy": 0.04562337290156971,
+      "grad_norm": 63.639732360839844
+    }
+  ]
+}

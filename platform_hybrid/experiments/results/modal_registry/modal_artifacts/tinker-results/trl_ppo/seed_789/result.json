@@ -1,0 +1,9 @@
+{
+  "experiment": "trl_ppo",
+  "seed": 789,
+  "success": false,
+  "elapsed_seconds": 15.3,
+  "returncode": 1,
+  "stdout_tail": "Loading model: Qwen/Qwen2-0.5B-Instruct\n",
+  "stderr_tail": "`torch_dtype` is deprecated! Use `dtype` instead!\n\nGenerating train split:   0%|          | 0/7473 [00:00<?, ? examples/s]\nGenerating train split: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 7473/7473 [00:00<00:00, 382440.20 examples/s]\n\nGenerating test split:   0%|          | 0/1319 [00:00<?, ? examples/s]\nGenerating test split: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 1319/1319 [00:00<00:00, 290165.06 examples/s]\n\nMap:   0%|          | 0/256 [00:00<?, ? examples/s]\nMap: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 256/256 [00:00<00:00, 13372.79 examples/s]\nTraceback (most recent call last):\n  File \"/root/tinker/experiments/implementations/trl_ppo_gsm8k_baseline.py\", line 140, in <module>\n    main()\n  File \"/root/tinker/experiments/implementations/trl_ppo_gsm8k_baseline.py\", line 96, in main\n    rloo_config = RLOOConfig(\n                  ^^^^^^^^^^^\nTypeError: RLOOConfig.__init__() got an unexpected keyword argument 'num_generation_per_prompt'\n"
+}

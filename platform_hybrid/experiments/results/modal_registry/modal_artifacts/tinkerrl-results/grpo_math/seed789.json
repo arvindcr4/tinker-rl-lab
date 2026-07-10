@@ -1,0 +1,10 @@
+{
+  "experiment": "trl_grpo_math",
+  "seed": 789,
+  "final_accuracy": 0.74,
+  "train_loss": 0.003221572862006724,
+  "train_steps": 125,
+  "elapsed_seconds": 157.7675859928131,
+  "gpu": "NVIDIA L4",
+  "model": "Qwen/Qwen2.5-0.5B"
+}

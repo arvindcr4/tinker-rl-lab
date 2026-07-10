@@ -1,0 +1,9 @@
+{
+  "experiment": "trl_sft",
+  "seed": 42,
+  "success": false,
+  "elapsed_seconds": 14.4,
+  "returncode": 1,
+  "stdout_tail": "Loading model and tokenizer...\nLoading NoRobots dataset...\nLoaded 1000 examples\n",
+  "stderr_tail": "`torch_dtype` is deprecated! Use `dtype` instead!\n\nGenerating train split:   0%|          | 0/9500 [00:00<?, ? examples/s]\nGenerating train split: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 9500/9500 [00:00<00:00, 167874.65 examples/s]\n\nGenerating test split:   0%|          | 0/500 [00:00<?, ? examples/s]\nGenerating test split: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 500/500 [00:00<00:00, 78281.15 examples/s]\n\nMap:   0%|          | 0/1000 [00:00<?, ? examples/s]\nMap: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 1000/1000 [00:00<00:00, 13009.67 examples/s]\nTraceback (most recent call last):\n  File \"/root/tinker/experiments/implementations/trl_chat_sft.py\", line 131, in <module>\n    main()\n  File \"/root/tinker/experiments/implementations/trl_chat_sft.py\", line 76, in main\n    sft_config = SFTConfig(\n                 ^^^^^^^^^^\nTypeError: SFTConfig.__init__() got an unexpected keyword argument 'use_peft'\n"
+}

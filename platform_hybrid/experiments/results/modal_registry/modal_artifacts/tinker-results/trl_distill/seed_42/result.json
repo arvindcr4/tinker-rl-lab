@@ -1,0 +1,9 @@
+{
+  "experiment": "trl_distill",
+  "seed": 42,
+  "success": false,
+  "elapsed_seconds": 681.6,
+  "returncode": 1,
+  "stdout_tail": "============================================================\nTinker Distillation -> TRL Implementation\n============================================================\n\n--- Part 1: Off-Policy Distillation ---\nLoading teacher model...\nGenerating teacher dataset...\nLoading student model...\n",
+  "stderr_tail": "`torch_dtype` is deprecated! Use `dtype` instead!\n\nFetching 2 files:   0%|          | 0/2 [00:00<?, ?it/s]\nFetching 2 files:  50%|\u2588\u2588\u2588\u2588\u2588     | 1/2 [00:34<00:34, 34.64s/it]\nFetching 2 files: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 2/2 [00:34<00:00, 17.32s/it]\n\nLoading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]\nLoading checkpoint shards:  50%|\u2588\u2588\u2588\u2588\u2588     | 1/2 [00:01<00:01,  1.18s/it]\nLoading checkpoint shards: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 2/2 [00:01<00:00,  1.45it/s]\nLoading checkpoint shards: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 2/2 [00:01<00:00,  1.31it/s]\nTraceback (most recent call last):\n  File \"/root/tinker/experiments/implementations/trl_distillation.py\", line 248, in <module>\n    main()\n  File \"/root/tinker/experiments/implementations/trl_distillation.py\", line 231, in main\n    train_off_policy_distillation(config, prompts)\n  File \"/root/tinker/experiments/implementations/trl_distillation.py\", line 112, in train_off_policy_distillation\n    trainer = SFTTrainer(\n              ^^^^^^^^^^^\nTypeError: SFTTrainer.__init__() got an unexpected keyword argument 'tokenizer'\n"
+}

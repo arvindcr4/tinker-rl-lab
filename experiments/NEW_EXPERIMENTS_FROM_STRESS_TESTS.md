@@ -1,8 +1,7 @@
 # NEW_EXPERIMENTS_FROM_STRESS_TESTS — SD1–SD4 launch-ready specs
 
-Date: 2026-07-04. Source: the four `*_decisive_experiment.md` contracts under
-`/home/claude/tinker-rl-lab-minimax/paper/prompt_reviews/` (P1–P4), synthesized per the
-per-paper reviews (`P1_REVIEW.md`–`P4_REVIEW.md`, same directory).
+Date: 2026-07-04. Source: the four per-paper decisive-experiment contracts
+(P1–P4), synthesized from the corresponding per-paper stress-test reviews.
 
 **Dedup policy:** cross-referenced against `experiments/NEW_EXPERIMENTS_PLAN.md`
 (read-only — that file is NOT edited by this doc). No `experiments/launch_log.md` exists;

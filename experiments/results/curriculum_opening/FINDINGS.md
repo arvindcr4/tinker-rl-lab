@@ -10,4 +10,4 @@ Curriculum **eliminates the zero-gradient waste** (0.50 -> 0.00) exactly as desi
 
 
 ## Independent verification (kimi, 2026-07-06) — verdict: SUSPECT
-Mechanics recompute correctly, but the CONCLUSION is underpowered/overclaimed. Details in `reports/esa_phase1/verification_kimi_codex.md`. The **multi-seed campaign** (`experiments/openings/campaign.py`, W&B group `campaign`) is running to fix exactly this (3 seeds, matched baseline vs curriculum).
+Mechanics recompute correctly, but the CONCLUSION is underpowered/overclaimed. The **multi-seed campaign** (`experiments/openings/campaign.py`, W&B group `campaign`) is running to fix exactly this (3 seeds, matched baseline vs curriculum).

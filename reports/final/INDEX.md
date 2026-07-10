@@ -10,7 +10,7 @@
 - `evaluate_gsm8k_test.py` — held-out GSM8K eval (Tinker API or local HF); `run_*batches*.sh`, `run_heldout_parallel.sh`, `retry_even_batches.sh` — batch drivers
 - `gsm8k_*results*.json`, `gsm8k_heldout_seed{042,137,256,512,999}.json`, `gsm8k_base_control_200.json` — eval outputs (5-seed held-out + base control)
 - `PAPER_IMPROVEMENT_PLAN.md`, `CONSOLIDATED_REVIEW_IMPROVEMENTS.md`, `SUBMISSION_CHECKLIST.md`, `SUBMISSION_README.md` — planning/review docs
-- Reviewer-response dumps: `chatgpt_pro_*.{txt,md,json}`, `chatgpt_session_a_q1_5.txt`, `edison_ablation_report.md` + `GRPO_Ablation_..._figure_{1-9}.png` (Edison research report)
+- Reviewer-response dumps: `edison_ablation_report.md` + `GRPO_Ablation_..._figure_{1-9}.png` (Edison research report)
 - `fig{1,2,3}_*.png` + `generate_figures.py` — capacity-threshold / diagnostics / synthetic-vs-real figures
 - `prepare_blind_review_package.py`, `update_paper_with_results.py` — packaging/update helpers
 

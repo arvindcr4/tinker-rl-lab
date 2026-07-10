@@ -18,7 +18,7 @@ Commit `282e6b4f0f158de11b3f5bb4656e2d871f68f5c0` (July 7, 2026) records the sol
 - Arvind C R — student researcher and paper author
 - Ramesh Prakash Guledgudd — project guide
 
-The eight PDFs in [`papers/`](papers/) were compiled from the current LaTeX sources at repository commit `006e90a38e4dabe2d0b4778be01dc7b27f2d3462` on July 9, 2026.
+The eight PDFs in [`papers/`](papers/) were compiled from the current LaTeX sources at repository commit `006e90a38e4dabe2d0b4778be01dc7b27f2d3462` on July 9, 2026. `P8-fraud.pdf` was recompiled on July 10, 2026 after the findings ledger was renamed to `findings_ledger.jsonl`; the other seven sources were unaffected by that rename.
 
 ## NeurIPS workshop submission
 

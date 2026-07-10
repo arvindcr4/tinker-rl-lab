@@ -24,40 +24,32 @@ tinker-rl-lab/
 ├── sem 3 work/           # Frozen Group 6 deliverables (Semester 3)
 ├── sem 4 work/           # Solo-continuation papers & submission (Semester 4)
 │
-├── skyrl/               # SkyRL tx integration (Local Tinker API)
-│   ├── backends/         # vast.ai and Colab runners
-│   ├── configs/          # YAML configurations
-│   └── notebooks/         # Colab notebooks
+├── platform_tinker/      # Cloud-based Tinker platform integration
+│   ├── atropos/          # Tinker-Atropos environment integration
+│   ├── tinkerrl/         # Tinker API bindings
+│   └── reports/          # Final capstone report and paper
 │
-├── atropos/              # Tinker-Atropos integration
-│   ├── tinker_atropos/   # Core package
-│   │   ├── environments/ # GSM8K, Math, LogP steering
-│   │   ├── trainer.py    # Tinker trainer
-│   │   └── config.py     # Configuration management
-│   ├── configs/          # YAML configurations
-│   └── notebooks/        # Analysis notebooks & GRPO results
+├── platform_modal/       # Modal serverless execution
+│   ├── scripts/          # Research scripts and analysis
+│   └── openrlhf/         # OpenRLHF on Modal
 │
-├── verl/                 # Volcano Engine RL integration
-│   └── trainer.py
+├── platform_local/       # Local GPU & unified execution
+│   ├── unified/          # Unified launcher for all frameworks
+│   ├── trl_integrations/ # HuggingFace TRL local integration
+│   └── contexts/         # Local workspace context
 │
-├── openrlhf/             # OpenRLHF integration
-│   └── trainer.py
+├── platform_hybrid/      # Hybrid-cloud execution logic
+│   ├── experiments/      # Tinker RL Cookbook & evaluation logs
+│   ├── skyrl/            # SkyRL tx integration
+│   └── registry/         # Hybrid asset registry
 │
-├── trl_integrations/     # HuggingFace TRL integration
-│   └── trainer.py
-│
-├── unified/              # Unified launcher for all frameworks
-│   └── launcher.py
-│
-├── experiments/           # Tinker RL Cookbook experiments
-│   ├── notebooks/        # Jupyter notebooks for each experiment
-│   ├── implementations/  # RL implementations (PPO, DPO, GRPO, etc.)
-│   ├── results/          # Training metrics
-│   └── tinker-runs/     # Training logs and scripts
+├── platform_colab/       # Google Colab notebooks
+├── platform_vast/        # vast.ai run scripts
+├── platform_gcp/         # Google Cloud execution config
+├── platform_hf_spaces/   # HuggingFace Spaces deployments
 │
 ├── agentic-rl-finetuning/ # Agentic RL fine-tuning research
-├── capstone-literature-survey/ # Literature Survey: RL for LLMs (GRPO Scaling)
-└── reports/              # Final capstone report and paper
+└── capstone-literature-survey/ # Literature Survey
 ```
 
 ## Components
@@ -186,11 +178,11 @@ run-api
 
 # Terminal 2: Start training
 export TINKER_API_KEY="your-key"
-python atropos/launch_training.py --config atropos/configs/default.yaml
+python platform_tinker/atropos/launch_training.py --config platform_tinker/atropos/configs/default.yaml
 
 # Terminal 3: Start environment
-python atropos/tinker_atropos/environments/gsm8k_tinker.py serve \
-    --config atropos/configs/default.yaml
+python platform_tinker/atropos/tinker_atropos/environments/gsm8k_tinker.py serve \
+    --config platform_tinker/atropos/configs/default.yaml
 ```
 
 ### Running SkyRL (Local Tinker API)
@@ -213,11 +205,8 @@ python -m tinker_cookbook.recipes.math_rl.train base_url=$TINKER_BASE_URL ...
 
 ```bash
 # SkyRL on vast.ai
-cd skyrl/backends
-./vastai_launch.sh --model Qwen/Qwen2.5-1.5B-Instruct
-
-# Or use Python launcher
-python -m skyrl.backends.vastai_runner --model Qwen/Qwen2.5-1.5B-Instruct
+cd platform_vast/
+./vast_run.sh --model Qwen/Qwen2.5-1.5B-Instruct
 ```
 
 ### Running with Unified Launcher
@@ -226,15 +215,16 @@ The unified launcher is a smoke-test scaffold: it validates framework dispatch a
 
 ```bash
 # Use any framework with unified launcher
-python -m unified.launcher --framework skyrl --model Qwen/Qwen2.5-1.5B-Instruct
-python -m unified.launcher --framework trl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm grpo
-python -m unified.launcher --framework verl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm ppo
-python -m unified.launcher --framework openrlhf --model Qwen/Qwen2.5-1.5B-Instruct
+export PYTHONPATH=.
+python -m platform_local.unified.launcher --framework skyrl --model Qwen/Qwen2.5-1.5B-Instruct
+python -m platform_local.unified.launcher --framework trl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm grpo
+python -m platform_local.unified.launcher --framework verl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm ppo
+python -m platform_local.unified.launcher --framework openrlhf --model Qwen/Qwen2.5-1.5B-Instruct
 ```
 
 ### Running in Google Colab
 
-Open `skyrl/notebooks/skyrl_colab_training.ipynb` and run cells sequentially.
+Open the notebooks inside `platform_colab/` and run cells sequentially.
 
 ## Source Repositories
 

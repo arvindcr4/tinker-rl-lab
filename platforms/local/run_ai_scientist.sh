@@ -1,0 +1,1 @@
+../../run_ai_scientist.sh

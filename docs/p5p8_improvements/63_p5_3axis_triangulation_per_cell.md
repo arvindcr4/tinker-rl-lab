@@ -1,7 +1,7 @@
 # #63 P5 3-Axis Triangulation at the Per-Cell Level (iter 52 SYNTH)
 
 **Fresh vein, not in prior ledger.** The iter-50 triangulation (#50 in
-P5P8_IMPROVEMENTS.md) measured A (per-axis harvest score) and B (per-item
+the P5-P8 improvement backlog) measured A (per-axis harvest score) and B (per-item
 registry match-rate) at the ITEM level and found A at the ceiling. iter-48
 measured C (per-item Shannon entropy) and found 4/7 items VACUOUS. Both
 triangulations were at the item level, so all three joint correlations were

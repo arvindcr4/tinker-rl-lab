@@ -7,13 +7,13 @@ Dedup method: grepped all 13 TSVs for run-name families, `group_size`, algorithm
 and instrumentation signatures matching each candidate; cross-checked repo scripts
 (`experiments/variance_mitigation_integration.py`, `experiments/tinker_direct_eval.py`,
 `experiments/base_instruct_paired.py`, `experiments/group_size_token_normalized.py`,
-`tinkerrl/grpo.py`) and the autoresearch state (`minimax_autoresearch/state/`, iters 117–137).
+`tinkerrl/grpo.py`) and the recorded analysis backlog (iters 117–137).
 
 ## Candidate table
 
 | id | title | pillar | needs | already-run verdict + evidence | impact | verdict |
 |----|-------|--------|-------|--------------------------------|--------|---------|
-| A1 | PCD & LARQ vs ZVF head-to-head | P2 | re-analysis | **ALREADY RUN** — backlog itself flags `already_executed: true`; the structural validation (micro-jitter falsification: ZVF 0.158→0.000 while PCD invariant) was completed in the autoresearch line that produced iter130's PCD/LARQ findings. No new runs or analysis needed. | done | SKIP |
+| A1 | PCD & LARQ vs ZVF head-to-head | P2 | re-analysis | **ALREADY RUN** — backlog itself flags `already_executed: true`; the structural validation (micro-jitter falsification: ZVF 0.158→0.000 while PCD invariant) was completed in the analysis line that produced iter130's PCD/LARQ findings. No new runs or analysis needed. | done | SKIP |
 | A2 | Contrastive-yield re-plot of scaling null | P1 | re-analysis | NEW as analysis — no C_eff refit exists; anchors' p_x/G/KL traces live in `tinker-rl-scaling` (88 runs) + `tinker-rl-lab-world-class` scale/arch/frontier families. | high, zero cost | NEW-ANALYSIS (no launch needed) |
 | A3 | Length-adversarial truncation test | P4 | sampling | NEW — zero hits for truncation/generation-cap eval families across all 822 inventory rows (no `trunc`/`cap`/max-len sweep run names anywhere). **Risk**: needs a converged Dr.GRPO checkpoint; the only Dr.GRPO project (`huggingface`: 3× `dr-grpo-qwen3-8b`) is all-crashed, so checkpoint availability must be confirmed first. | high | NEW-RUN (deferred until Dr.GRPO ckpt confirmed) |
 | A4 | CLMP length-mediation on existing rollouts | P4 | re-analysis | NEW as analysis — no NDE/NIE/GER computation exists in repo results. | medium | NEW-ANALYSIS |
@@ -33,7 +33,7 @@ and instrumentation signatures matching each candidate; cross-checked repo scrip
 | N7 | Native Wu test G=2 vs G=16, off-ceiling | P3 | training | **PARTIAL** — native G2/G16 cells exist: `campaign_w2_qwen3-8b_G2` (wv5ssnmp, 9x0u2bcj) and `campaign_w2_qwen3-8b_G16` (ao38u7bu, 6pwbiixh), gsm8k, 30 steps, lr 1e-5 — but unpaired seeds and only Qwen3-8B/GSM8K; the decisive off-ceiling paired cell (Qwen2.5-1.5B/gsm8k_cot) is unrun. G=16 violates the current G≤8 launch constraint. | high | NEW-RUN (deferred; meanwhile re-analyze the 2×2 campaign_w2 repeats) |
 | N8 | **Per-prompt pass-rate spectrum (K=64 rollouts) → predicted ZVF(G)** | P3 | sampling | NEW — no K-rollout-per-prompt sampling runs in any project; per-prompt p_i has never been measured, which is exactly why iter135's "causal driver" claim is untested and why B2/B3 are blocked. | **highest sampling-only** — tests the P3 mechanism analytically, unblocks B2 + B3, doubles as N5's c for the 8B anchor | **NEW-RUN — LAUNCH NOW (#2)** |
 | N9 | Retention(T) law replication, 2nd model/task | P3 | training | NEW — no G-sweep-by-budget grid on any non-(Qwen3-8B/GSM8K) pair; needs multiple T budgets → exceeds 40-step constraint. | medium | NEW-RUN (deferred) |
-| N10 | gsm8k_cot seed expansion n=3→8-10 | P4 | training | NEW — the GRPO/Dr.GRPO paired traces exist only at n=3 (autoresearch iters 128/132/136); no additional seed-pair runs in W&B. | medium | NEW-RUN (next wave) |
+| N10 | gsm8k_cot seed expansion n=3→8-10 | P4 | training | NEW — the GRPO/Dr.GRPO paired traces exist only at n=3 (analysis iters 128/132/136); no additional seed-pair runs in W&B. | medium | NEW-RUN (next wave) |
 | N11 | Causal length-coupling intervention knob | P4 | training | NEW — no length-penalty/length-normalized-advantage ablation runs anywhere. | high | NEW-RUN (after N10 powers the baseline) |
 | N12 | 4th risk channel (rho(dZ,dL)) in max-fusion index | P2 | re-analysis | NEW as analysis — iter130's fusion index uses 3 channels; length traces are already logged in the archived n=52 panel; zero new runs needed. | high, zero cost | NEW-ANALYSIS (do immediately, no launch) |
 

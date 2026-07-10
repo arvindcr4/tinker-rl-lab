@@ -50,7 +50,7 @@ Outputs (under experiments/results/berkeley/react_*):
   react_zvf_reduction.tsv          - ZVF shift sparse -> dense by seed
   react_summary.json              - final pass/fail for each hypothesis
 
-Author: autoresearch iter 145 (B-F24, L2 Shunyu Yao / ReAct).
+Author: analysis iter 145 (B-F24, L2 Shunyu Yao / ReAct).
 """
 
 from __future__ import annotations

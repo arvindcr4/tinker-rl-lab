@@ -366,7 +366,7 @@ def main() -> None:
     print(f"\nwrote {out_pdf}")
 
     # ---- append findings to AUTORESEARCH jsonl ------------------------
-    findings_path = REPO / "AUTORESEARCH_FINDINGS.jsonl"
+    findings_path = REPO / "experiments" / "results" / "AUTORESEARCH_FINDINGS.jsonl"
     if findings_path.exists():
         new_records = [
             {"ts": "2026-07-02", "pillar": "P1",

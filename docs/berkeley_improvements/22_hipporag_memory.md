@@ -103,7 +103,7 @@ passages." Three diagnostic facts:
 >  et al. arXiv:2405.14831) emerges only at N>1000 passages."
 
 ## B1 patch proposal
-See `minimax_autoresearch_improvements/22_hipporag_b1_orchestrator.md`.
+See a removed orchestrator note.
 
 ## Why this is row 22 not row 17-style 5/5 DECISIVE
 Row 17 (Self-Debug) measured a **pre-registered numerical transformation**
@@ -117,6 +117,6 @@ informative for the B1 patch.
 - Prototype: `scripts/berkeley/hipporag_memory.py`
 - Outputs: `experiments/results/berkeley/hipporag_eval.tsv` (12 rows) +
   `hipporag_summary.json`
-- Patch proposal: `minimax_autoresearch_improvements/22_hipporag_b1_orchestrator.md`
+- Patch proposal: a removed orchestrator note
 - Ledger: BERKELEY_IMPROVEMENTS.md row 22
 - Findings: AUTORESEARCH_FINDINGS.jsonl (one B-SP25 line)

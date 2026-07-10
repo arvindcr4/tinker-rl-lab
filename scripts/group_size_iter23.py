@@ -474,7 +474,7 @@ def main():
         print(f"[iter23] Figure skipped: {e}")
 
     # Findings JSONL
-    findings_path = ROOT / "AUTORESEARCH_FINDINGS.jsonl"
+    findings_path = ROOT / "experiments" / "results" / "AUTORESEARCH_FINDINGS.jsonl"
     rows_out = []
 
     def find(claim: str, evidence_path: str):

@@ -4,7 +4,7 @@ P5 MIN-REPORT v2.2 emit-gap recovery audit (iter 113, fresh vein).
 
 Closes the gap between the **MIN-REPORT v2.2 SCHEMA** (Items 13-17 declared
 as RL-specific yield-residual items, see paper/sections/p5_iter81_yield_axes.tex
-and P5P8_IMPROVEMENTS.md row 96 / iter 81) and the **LIVE MANIFEST EMISSION**
+and the P5-P8 improvement backlog row 96 / iter 81) and the **LIVE MANIFEST EMISSION**
 (only 8 keys emitted per cell; Items 14, 15, 17 are absent as manifest keys).
 
 Iter-81 row 96 PROVED that Items 14, 15, 17 are signal-bearing under a

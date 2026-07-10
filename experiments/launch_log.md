@@ -97,5 +97,5 @@
 ### Billing block — 2026-07-04
 - N2 (PID 1015998), N10 (PID 1059111), and mega campaign (PID 1059558) were stopped after Tinker API returned 402 billing-block errors.
 - Re-analyses N12/A2/A4 completed before the block.
-- MiniMax Berkeley autoresearch (PID 1002298) is unaffected and continues.
+- The background Berkeley analysis job (PID 1002298) is unaffected and continues.
 - Resume Tinker work after adding payment at https://tinker-console.thinkingmachines.ai/billing/balance.

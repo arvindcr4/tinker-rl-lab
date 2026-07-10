@@ -67,7 +67,7 @@ Outputs:
   docs/berkeley_improvements/23_mipro_pareto_grpo.md
   minimax_autoresearch_improvements/23_mipro_orchestrator.md (B1 patch)
 
-Author: autoresearch iter 29 (B-F24, L5 Omar Khattab, MIPRO).
+Author: analysis iter 29 (B-F24, L5 Omar Khattab, MIPRO).
 """
 from __future__ import annotations
 

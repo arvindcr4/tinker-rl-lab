@@ -27,11 +27,7 @@ class AuditContext:
     @property
     def checklist(self): return self.read_text(self.FINAL_DIR / "SUBMISSION_CHECKLIST.md").lower()
     @property
-    def ideas(self): return self.read_text(self.ROOT / "research_loop" / "autoresearch" / "autoresearch.ideas.md").lower()
-    @property
     def main_tex(self): return self.read_text(self.FINAL_DIR / "grpo_agentic_llm_paper.tex").lower()
-    @property
-    def md(self): return self.read_text(self.ROOT / "research_loop" / "autoresearch" / "autoresearch.md").lower()
     @property
     def paper(self): return self.main_tex
     @property

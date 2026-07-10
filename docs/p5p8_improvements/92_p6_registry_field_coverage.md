@@ -38,7 +38,7 @@ source papers are arXiv-verified and make explicit per-axis predictions).
 4. New `paper/sections/p6_iter78_field_coverage.tex` (1 table, 4 paragraphs,
    no new equations) added to `paper/paper_P6_registry.tex`.
 
-5. `P5P8_IMPROVEMENTS.md` row 92 appended.
+5. the P5–P8 improvement backlog row 92 appended.
 
 6. `AUTORESEARCH_FINDINGS.jsonl` line appended.
 

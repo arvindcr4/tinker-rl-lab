@@ -25,7 +25,7 @@ This directory contains integration patches that make AI-Scientist-v2 run smooth
 ## How to Run AI Scientist v2 on This Repo
 
 ```bash
-# 1. Apply patches (done automatically by research_loop/autoresearch/autoresearch.sh)
+# 1. Apply patches
 bash ai-scientist-v2-integration/patch.sh
 
 # 2. Launch with the Tinker template

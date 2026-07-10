@@ -136,7 +136,7 @@ The paper section should present the three rules side-by-side with their failure
 
 ## 7. Ledger entry
 
-Append to `P5P8_IMPROVEMENTS.md`:
+Append to the P5–P8 improvement backlog:
 
 | # | paper | class | one-line | evidence path | status | iter |
 |---|-------|-------|----------|---------------|--------|------|

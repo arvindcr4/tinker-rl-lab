@@ -10,7 +10,7 @@
 - `survival_analysis.py`, `stratified_heldout.py`, `base_instruct_paired.py`, `group_size_token_normalized.py`, `variance_mitigation_integration.py`, `tool_use_reward_analysis.py`, `bfclv4_tool_use.py`, `tinker_direct_eval.py` — targeted reviewer-response analyses (each docstring names the W#/Q# it addresses).
 - `power_analysis_cohens_d.py`, `fit_saturation_model.py`, `analyze_lora_sparsity.py`, `plot_*.py`, `create_presentation.py` — power analysis, curve fits, figures, pptx.
 - `modal_runner.py`, `modal_batch_runner.py`, `run_tinker.sh` — launchers.
-- `CHANGELOG.md` (row-count provenance), `worklog.md`, `RALPH_PLAN*.md`, `README.md`.
+- `CHANGELOG.md` (row-count provenance), `worklog.md`, `README.md`.
 
 **Subfolders:** (each has its own INDEX.md)
 - `modal/` — GPU (Modal H100) experiment scripts; the 4 "pillar" de-confound experiments live here.

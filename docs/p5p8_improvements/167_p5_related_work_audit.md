@@ -112,7 +112,7 @@ peer-reviewed venue` note so reviewers can see the audit's honesty.
 - `experiments/results/p5p8/p5_iter149_{cite_inventory,family_stats,field_gaps}.tsv` (3 TSVs)
 - `experiments/results/p5p8/p5_iter149_summary.json`
 - `docs/p5p8_improvements/167_p5_related_work_audit.md` (this file)
-- `P5P8_IMPROVEMENTS.md` (row 167 added)
+- the P5–P8 improvement backlog (row 167 added)
 
 ## Deliverables (validated)
 - 1 line in `AUTORESEARCH_FINDINGS.jsonl` with pillar P5

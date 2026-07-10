@@ -169,7 +169,7 @@ python3 scripts/p5p8/p6_iter154_advantage_divergence.py
 - **NEW** `experiments/results/p5p8/p6_iter154_adv_div_summary.json`
 - **NEW** `docs/p5p8_improvements/154_p6_advantage_distribution_divergence.md` (this file)
 - 1 line appended to `AUTORESEARCH_FINDINGS.jsonl` (pillar=P6)
-- 1 row appended to `P5P8_IMPROVEMENTS.md` ledger (status=validated)
+- 1 row appended to the P5–P8 improvement backlog ledger (status=validated)
 - `paper/paper_P6_registry.tex` **not touched** — distribution block is
   presented as a per-iter contribution in the docs layer first; promotion to
   the paper is a future iter once a second panel (e.g. mega_20260704) confirms

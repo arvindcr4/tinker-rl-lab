@@ -70,7 +70,7 @@ Outputs (under experiments/results/berkeley/cot_decoding_*):
   cot_decoding_huang_negctl.tsv   - H5 intrinsic self-correction deltas per seed
   cot_decoding_summary.json  - final pass/fail for each hypothesis
 
-Author: autoresearch iter 25 (B-F24, L1 Denny Zhou, CoT-Without-Prompting).
+Author: analysis iter 25 (B-F24, L1 Denny Zhou, CoT-Without-Prompting).
 """
 
 from __future__ import annotations

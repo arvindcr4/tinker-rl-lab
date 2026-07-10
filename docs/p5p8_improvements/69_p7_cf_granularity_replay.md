@@ -169,7 +169,7 @@ contributes 0 marginal savings on the empirical N2 panel.
 
 ## Ledger row
 
-This iter closes row **#69** in `P5P8_IMPROVEMENTS.md` (T2+T3):
+This iter closes row **#69** in the P5–P8 improvement backlog (T2+T3):
 Counterfactual granularity replay — direct measurement of the brief's
 three questions (when fired, what G, what contrast restored) on the
 real 2560-decision N2 panel.

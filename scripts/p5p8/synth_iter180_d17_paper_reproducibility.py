@@ -57,7 +57,7 @@ ROOT = Path("/home/claude/tinker-rl-lab-minimax")
 RES = ROOT / "experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
 
-PATH_JSONL = ROOT / "AUTORESEARCH_FINDINGS.jsonl"
+PATH_JSONL = ROOT / "experiments" / "results" / "AUTORESEARCH_FINDINGS.jsonl"
 
 PILLARS = ["P5", "P6", "P7", "P8", "P5P8-SYNTH"]
 

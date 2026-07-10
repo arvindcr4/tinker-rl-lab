@@ -124,7 +124,7 @@ corpora in a future synthesis iter.
 - `experiments/results/p5p8/p5_iter181_v25_placebo_table.tsv` (13 rows)
 - `experiments/results/p5p8/p5_iter181_summary.json`
 - `docs/p5p8_improvements/181_p5_v25_rollout.md` (this file)
-- `P5P8_IMPROVEMENTS.md` (row 194 added)
+- the P5–P8 improvement backlog (row 194 added)
 - 1 line in `AUTORESEARCH_FINDINGS.jsonl`
 
 ## Deliverables (validated)

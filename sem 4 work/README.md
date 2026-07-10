@@ -10,7 +10,7 @@ This folder is the professor-facing record of Arvind C R's individual continuati
 
 Semester 4 retains the shared code and Semester 3 experimental foundation, but the new research direction, experiment expansion, analysis, paper writing, and P1–P8 outputs are Arvind's solo work. The current papers name Arvind as author and Ramesh Prakash Guledgudd as project guide.
 
-The continuation adds a much larger post-capstone evidence base, including automated research iterations through iteration 206, Berkeley-course-inspired audits and prototypes, expanded statistical analyses, new GRPO diagnostics and controllers, reporting/registry work, and an applied fraud-detection study.
+The continuation adds a much larger post-capstone evidence base, including 206 recorded analysis iterations, Berkeley-course-inspired audits and prototypes, expanded statistical analyses, new GRPO diagnostics and controllers, reporting/registry work, and an applied fraud-detection study.
 
 ## Semester 4 submission
 
@@ -39,7 +39,5 @@ See [`EXPERIMENTS.md`](EXPERIMENTS.md) for the paper-to-source and evidence map,
 - [`../ARTIFACT.md`](../ARTIFACT.md) — result-to-artifact mapping (historical Semester 3 record; the Semester 4 paper-to-evidence map is [`EXPERIMENTS.md`](EXPERIMENTS.md))
 - [`../experiments/experiment_summary.md`](../experiments/experiment_summary.md) — consolidated experiment summary
 - [`../experiments/results/`](../experiments/results/) — result tables, traces, and audit outputs
-- [`../AUTORESEARCH_FINDINGS.jsonl`](../AUTORESEARCH_FINDINGS.jsonl) — machine-readable iteration ledger
-- [`../BERKELEY_IMPROVEMENT_BRIEF.md`](../BERKELEY_IMPROVEMENT_BRIEF.md) — Berkeley-derived improvement program
 
 The code and raw evidence remain in their canonical root locations so all imports, audit scripts, and LaTeX builds continue to work.

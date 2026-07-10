@@ -70,5 +70,5 @@
 | `experiments/results/p5p8/p7_iter171_cross_paper_consistency.tsv` | 12 rows × 5 cols (consistency check vs iter-163, iter-167, FRONTIER Round 2) |
 | `experiments/results/p5p8/p7_iter171_summary.json` | H1-H7 verdicts + structured summary |
 | `docs/p5p8_improvements/175_p7_headline_cis.md` | this file |
-| `P5P8_IMPROVEMENTS.md` | row 182 appended |
+| the P5–P8 improvement backlog | row 182 appended |
 | `AUTORESEARCH_FINDINGS.jsonl` | 1 line appended (pillar P7) |

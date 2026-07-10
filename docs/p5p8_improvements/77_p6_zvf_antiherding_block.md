@@ -130,7 +130,7 @@ The frontier-synthesis Round 2 labelled δ_div ∈ [0.13, 0.23] as
 - `paper/build/paper_P6_registry.pdf` rebuilds to **37 pages / 0
   errors / 0 undefined citations** (was 36, +1 page for the new
   §sec:p6-zvf-antiherding + Table)
-- `paper/P5P8_IMPROVEMENTS.md` row 77 (next mint row)
+- `paper/the P5-P8 improvement backlog` row 77 (next mint row)
 - `AUTORESEARCH_FINDINGS.jsonl` line appended with pillar P6
 
 ## Reproduction

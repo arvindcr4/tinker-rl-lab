@@ -90,7 +90,7 @@ queued as a follow-up vein for iter 151.
 | `experiments/results/p5p8/p6_iter150_prose_vs_measured.tsv` | 21 rows × 9 cols (prose-implied vs measured-direction verdict) |
 | `experiments/results/p5p8/p6_iter150_summary.json` | structured summary (counts + disagree_entries + no_link_entries) |
 | `docs/p5p8_improvements/168_p6_n2_recompute_prose_vs_measured.md` | this file |
-| `P5P8_IMPROVEMENTS.md` | ledger row 168 |
+| the P5–P8 improvement backlog | ledger row 168 |
 | `AUTORESEARCH_FINDINGS.jsonl` | finding line (pillar P6) |
 
 ## Headline verdicts

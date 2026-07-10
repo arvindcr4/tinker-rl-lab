@@ -104,5 +104,5 @@ of raw, yield-retention 1.01 — **both** Pareto-optimal in the flip-vs-yield pl
 - `experiments/results/p5p8/p7_iter88_hysteresis_n10_boot.tsv` (8 rows = 4 taus × 2 K configs)
 - `experiments/results/p5p8/p7_iter88_hysteresis_n10_summary.json`
 - `paper/sections/p7_iter88_hysteresis_n10.tex`
-- Updated `P5P8_IMPROVEMENTS.md` row 105
+- Updated the P5–P8 improvement backlog row 105
 - 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5P8-SYNTH)

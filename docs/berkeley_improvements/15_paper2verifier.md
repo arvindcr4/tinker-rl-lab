@@ -92,8 +92,8 @@ Outputs:
 **Go (B1 orchestrator improvement, paper-facing note).** Add a one-paragraph
 "Paper2Verifier ready" sentence to the Pillar-3 reproducibility appendix
 (links to `scripts/berkeley/paper2verifier.py`) and file a patch proposal
-under `minimax_autoresearch_improvements/15_paper2verifier_orchestrator.md`
-describing how the autoresearch driver could host its own benchmark papers
+under a removed orchestrator note
+describing how the analysis driver could host its own benchmark papers
 as MCP-verifiable artifacts (B1 target).
 
 ## Cross-reads

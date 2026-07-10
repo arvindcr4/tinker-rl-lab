@@ -154,5 +154,5 @@ Outputs:
 - `experiments/results/p5p8/figures/p5_field_discriminative_entropy.{png,pdf}`
 - `paper/sections/p5_evidence.tex` (Exhibit 16)
 - `paper/paper_P5_minreport.pdf` (rebuild)
-- `P5P8_IMPROVEMENTS.md` (row #48)
+- the P5–P8 improvement backlog (row #48)
 - `AUTORESEARCH_FINDINGS.jsonl` (1 line, pillar P5)

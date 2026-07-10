@@ -53,7 +53,7 @@ iter-167, iter-171, iter-159) on per-method %-oracle-captured. Stdlib only.
 | `experiments/results/p5p8/p7_iter175_summary.json` | structured verdicts |
 | `paper/sections/p7_iter175_calibrated_hybrid.tex` | NEW § for paper rebuild |
 | `docs/p5p8_improvements/101_p7_calibrated_hybrid_c6.md` | this file |
-| `P5P8_IMPROVEMENTS.md` / `EXPERIMENT_LEDGER.md` | row 186 appended |
+| the P5–P8 improvement backlog / `EXPERIMENT_LEDGER.md` | row 186 appended |
 | `AUTORESEARCH_FINDINGS.jsonl` | 1 line appended (pillar P7) |
 
 ## C6 vs the 5 existing empirical controllers (zvf_tau=0.70)
@@ -216,6 +216,6 @@ smallest of the four)? The data point hints that the gift sampler
 | `experiments/results/p5p8/p7_iter175_summary.json` | structured |
 | `paper/sections/p7_iter175_calibrated_hybrid.tex` | new § for paper rebuild |
 | `docs/p5p8_improvements/101_p7_calibrated_hybrid_c6.md` | this file |
-| `P5P8_IMPROVEMENTS.md` | row 186 appended |
+| the P5–P8 improvement backlog | row 186 appended |
 | `EXPERIMENT_LEDGER.md` | row 186 appended |
 | `AUTORESEARCH_FINDINGS.jsonl` | 1 line appended (pillar P7) |

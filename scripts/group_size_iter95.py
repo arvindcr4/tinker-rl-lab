@@ -189,7 +189,7 @@ findings = [
               f"so 'bigger G always wins' is false even at infinite compute.",
      "evidence_path": f"{R}/group_size_iter95_summary.tsv", "citation_ok": True},
 ]
-with open("AUTORESEARCH_FINDINGS.jsonl", "a") as f:
+with open("experiments/results/AUTORESEARCH_FINDINGS.jsonl", "a") as f:
     for fi in findings:
         f.write(json.dumps(fi) + "\n")
 

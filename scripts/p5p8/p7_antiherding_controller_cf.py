@@ -38,7 +38,7 @@ Outputs
     (rows = step; columns include zvf_obs, y_obs, delta_div, fire_{t1,t2,t3})
 - experiments/results/p5p8/p7_antiherding_controller_cf_summary.json
 - docs/p5p8_improvements/55_p7_antiherding_controller_cf.md (auto-emitted)
-- P5P8_IMPROVEMENTS.md row appended (caller is responsible; this script
+- the P5-P8 improvement backlog row appended (caller is responsible; this script
   only prints the markdown body to stdout for transparency)
 
 Usage

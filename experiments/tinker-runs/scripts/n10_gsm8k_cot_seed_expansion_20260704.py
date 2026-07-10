@@ -3,7 +3,7 @@
 Experiment N10 — gsm8k_cot seed expansion (n=3 → 8) on the Tinker RL API.
 
 This is a polite, low-concurrency pilot that replicates the GRPO vs Dr.GRPO
-GSM8K-CoT protocol from the autoresearch P4 line (iters 128/132/136) on a
+GSM8K-CoT protocol from the P4 analysis line (iters 128/132/136) on a
 Tinker-supported <=8B model and expands the seed panel from 3 to 8 seeds.
 
 Usage:

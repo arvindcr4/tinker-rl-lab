@@ -4,7 +4,7 @@
 P5 headline numbers (Exhibit 3 last-10 reward spread, Exhibit 5
 algorithm-axis η²) have been quoted with the caveat "the direction is
 robust, the magnitude is not" because they were single-seed point
-estimates. Item 02 of `P5P8_IMPROVEMENTS.md` ("bootstrap CIs on P5
+estimates. Item 02 of the P5–P8 improvement backlog ("bootstrap CIs on P5
 headline numbers using Miller recipe") has been listed as `proposed`
 since iter 1 with TBD evidence path. This iter closes the long-standing
 caveat by adding real bootstrap CIs to the two algorithm-axis numbers.

@@ -20,7 +20,7 @@ attack surfaces the SP25 L12 reading list targets.
 
 **Goal of this iter:** produce concrete attack/defense test cases that
 exercise each of the three surfaces against a faithful mini-clone of the
-orchestrator, and a patch proposal (`minimax_autoresearch_improvements/06_sp25_l12_progent_dsl.md`)
+orchestrator, and a patch proposal (a removed orchestrator note)
 that hardens all three.
 
 ## Attack surface map (verified against the orchestrator)
@@ -101,7 +101,7 @@ concern, it is a Pillar-1 measurement-validity concern.
 **GO.** All three proposed defences (sanitiser, sanitise-memory,
 Progent-DSL) achieve 100% block on the test corpus with no false
 positives. The patch proposal
-`minimax_autoresearch_improvements/06_sp25_l12_progent_dsl.md`
+a removed orchestrator note
 specifies a 3-step staged roll-out (warning-only → enforcement →
 summary-step mirror) that minimises disruption to the live BFTS workload.
 
@@ -110,7 +110,7 @@ summary-step mirror) that minimises disruption to the live BFTS workload.
 - `scripts/berkeley/sp25_l12_security_audit.py` — the prototype (~410 lines)
 - `experiments/results/berkeley/sp25_l12_security_audit.tsv` — per-test matrix
 - `experiments/results/berkeley/sp25_l12_security_summary.json` — counts/verdicts
-- `minimax_autoresearch_improvements/06_sp25_l12_progent_dsl.md` — patch proposal
+- a removed orchestrator note — patch proposal
 - Ledger: `BERKELEY_IMPROVEMENTS.md` row 04 promoted from `proposed` → `prototyped`
 
 ## Verification

@@ -518,7 +518,7 @@ def main():
         "citation_ok": True,
         "source_paper": "arXiv:2510.00977 (Wu et al. 2025)",
     }
-    findings_path = REPO / "AUTORESEARCH_FINDINGS.jsonl"
+    findings_path = REPO / "experiments" / "results" / "AUTORESEARCH_FINDINGS.jsonl"
     with findings_path.open("a") as fh:
         fh.write(json.dumps(finding) + "\n")
     print(f"[iter83] Finding appended to {findings_path}")

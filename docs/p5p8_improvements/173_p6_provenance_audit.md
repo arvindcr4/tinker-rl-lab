@@ -11,7 +11,7 @@ archetype classification + path-resolvability scoring.
 - `experiments/results/p5p8/p6_iter166_per_artifact.tsv` (26 rows × 7 cols)
 - `experiments/results/p5p8/p6_iter166_type_counts.tsv` (10 rows × 4 cols)
 - `experiments/results/p5p8/p6_iter166_summary.json` (H1-H4 verdicts)
-- `P5P8_IMPROVEMENTS.md` ledger row 179
+- the P5–P8 improvement backlog ledger row 179
 - `AUTORESEARCH_FINDINGS.jsonl` finding line (pillar P6)
 
 ## Motivation

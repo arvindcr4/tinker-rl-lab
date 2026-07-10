@@ -24,6 +24,8 @@ from typing import Dict, Any, List, Optional, Callable
 import torch
 import numpy as np
 
+from .config import TRLConfig
+
 
 class TRLTrainer:
     """
@@ -269,12 +271,19 @@ def create_dpo_trainer(
 
 
 def generate_trl_train_script(config: TRLConfig, output_path: str = "train_trl.py"):
-    """Generate a TRL training script."""
+    """Generate a runnable TRL GRPO script from a validated configuration."""
 
-    alg = config.algorithm.algorithm.lower()
+    algorithm = config.algorithm.algorithm.lower()
+    if algorithm != "grpo":
+        raise NotImplementedError(
+            "Script generation currently supports GRPO only; the previous PPO/DPO "
+            "branch emitted an incomplete script"
+        )
+    if not config.data.train_data:
+        raise ValueError("At least one data.train_data JSON path is required")
 
-    if alg == "grpo":
-        script = f'''"""
+    boxed_marker = "\\boxed{"
+    script = f'''"""
 TRL GRPO Training Script
 Generated for config: {config.model_name}
 """
@@ -283,48 +292,76 @@ import os
 import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from trl import GRPOConfig, GRPOTrainer
-from platform_local.unified.peft_utils import get_peft_config, apply_bitfit
+from platform_local.unified.peft_utils import apply_peft_method, save_bitfit_checkpoint
 
-# Model
-MODEL_NAME = "{config.model_name}"
+# Configuration
+MODEL_NAME = {config.model_name!r}
+TRAIN_FILES = {config.data.train_data!r}
+PEFT_METHOD = {config.model.peft_method!r}
+USE_PEFT = {config.model.use_peft!r}
+LOAD_IN_4BIT = {config.model.load_in_4bit!r}
+LOAD_IN_8BIT = {config.model.load_in_8bit!r}
+BF16 = {config.bf16!r}
+FP16 = {config.fp16!r}
+BOXED_MARKER = {boxed_marker!r}
+COMPUTE_DTYPE = torch.bfloat16 if BF16 else (torch.float16 if FP16 else torch.float32)
 
 # Load model
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_NAME,
-    torch_dtype=torch.bfloat16,
-    device_map=None if "LOCAL_RANK" in os.environ else "auto",
-)
+quantization_config = None
+if LOAD_IN_4BIT:
+    quantization_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_compute_dtype=COMPUTE_DTYPE,
+    )
+elif LOAD_IN_8BIT:
+    quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+
+model_kwargs = {{
+    "device_map": None if "LOCAL_RANK" in os.environ else "auto",
+}}
+if BF16:
+    model_kwargs["torch_dtype"] = torch.bfloat16
+elif FP16:
+    model_kwargs["torch_dtype"] = torch.float16
+if quantization_config is not None:
+    model_kwargs["quantization_config"] = quantization_config
+
+model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, **model_kwargs)
 
 # PEFT Setup
-if "{config.model.peft_method}" == "bitfit":
-    model = apply_bitfit(model)
-else:
-    model = prepare_model_for_kbit_training(model)
-    peft_config = get_peft_config(
-        method="{config.model.peft_method}",
+if USE_PEFT:
+    model = apply_peft_method(
+        model,
+        method=PEFT_METHOD,
+        quantized=quantization_config is not None,
         lora_rank={config.model.lora_rank},
         lora_alpha={config.model.lora_alpha},
+        lora_dropout={config.model.lora_dropout},
+        lora_target_modules={config.model.lora_target_modules!r},
         num_virtual_tokens={config.model.peft_num_virtual_tokens},
+        encoder_hidden_size={config.model.peft_encoder_hidden_size},
     )
-    model = get_peft_model(model, peft_config)
 
 # Data
-train_data = load_dataset("json", data_files="{config.data.train_data[0]}")
+train_dataset = load_dataset("json", data_files=TRAIN_FILES, split="train")
 
 # Reward function (customize this)
 def reward_fn(completions, prompts=None, **kwargs):
-    import re
-    rewards = []
-    for completion in completions:
-        # Example: check for boxed answer
-        if "\\\\\\\boxed{{" in completion:
-            rewards.append(1.0)
-        else:
-            rewards.append(0.0)
-    return rewards
+    def completion_text(completion):
+        if isinstance(completion, str):
+            return completion
+        if isinstance(completion, list) and completion and isinstance(completion[-1], dict):
+            return str(completion[-1].get("content", ""))
+        return str(completion)
+
+    return [
+        1.0 if BOXED_MARKER in completion_text(completion) else 0.0
+        for completion in completions
+    ]
 
 # GRPO Config
 grpo_config = GRPOConfig(
@@ -334,9 +371,13 @@ grpo_config = GRPOConfig(
     gradient_accumulation_steps={config.data.gradient_accumulation_steps},
     learning_rate={config.optimizer.learning_rate},
     max_grad_norm={config.algorithm.max_grad_norm},
-    bf16=True,
-    report_to="{config.report_to}",
+    max_steps={config.max_steps},
+    bf16=BF16,
+    fp16=FP16,
+    gradient_checkpointing={config.gradient_checkpointing!r},
+    report_to={config.report_to!r},
     logging_steps=1,
+    save_strategy="no" if USE_PEFT and PEFT_METHOD == "bitfit" else "steps",
     save_steps={config.save_interval},
 )
 
@@ -344,35 +385,24 @@ grpo_config = GRPOConfig(
 trainer = GRPOTrainer(
     model=model,
     args=grpo_config,
-    train_dataset=train_data["train"],
+    train_dataset=train_dataset,
     reward_funcs=[reward_fn],
     processing_class=tokenizer,
 )
 
 trainer.train()
+if USE_PEFT and PEFT_METHOD == "bitfit":
+    save_bitfit_checkpoint(
+        model,
+        "./checkpoints/bitfit_adapter.pt",
+        base_model_name=MODEL_NAME,
+    )
 print("Training complete!")
 '''
-    else:
-        script = f'''"""
-TRL {alg.upper()} Training Script
-Generated for config: {config.model_name}
-"""
 
-import os
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from trl import {alg.upper()}Config, {alg.upper()}Trainer
-
-# Configuration
-MODEL_NAME = "{config.model_name}"
-EPOCHS = {config.epochs}
-LR = {config.optimizer.learning_rate}
-
-# ... (similar structure)
-trainer.train()
-'''
-
-    with open(output_path, "w") as f:
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(script)
 
     print(f"Training script saved to {output_path}")

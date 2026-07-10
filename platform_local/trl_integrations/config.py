@@ -3,9 +3,9 @@ TRL Configuration for tinker-rl-lab
 """
 
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Literal, Optional
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class TRLModelConfig(BaseModel):
@@ -16,11 +16,23 @@ class TRLModelConfig(BaseModel):
     load_in_8bit: bool = False
     load_in_4bit: bool = False
     use_peft: bool = True
-    peft_method: str = "lora"  # lora, prefix_tuning, p_tuning, prompt_tuning, bitfit
-    peft_num_virtual_tokens: int = 32
-    lora_rank: int = 32
-    lora_alpha: int = 32
-    lora_dropout: float = 0.0
+    peft_method: Literal[
+        "lora", "prefix_tuning", "p_tuning", "prompt_tuning", "bitfit"
+    ] = "lora"
+    peft_num_virtual_tokens: int = Field(default=32, gt=0)
+    peft_encoder_hidden_size: int = Field(default=128, gt=0)
+    lora_rank: int = Field(default=32, gt=0)
+    lora_alpha: int = Field(default=32, gt=0)
+    lora_dropout: float = Field(default=0.0, ge=0.0, lt=1.0)
+    lora_target_modules: Optional[List[str]] = None
+
+    @model_validator(mode="after")
+    def validate_quantization(self) -> "TRLModelConfig":
+        if self.load_in_4bit and self.load_in_8bit:
+            raise ValueError("load_in_4bit and load_in_8bit are mutually exclusive")
+        if (self.load_in_4bit or self.load_in_8bit) and not self.use_peft:
+            raise ValueError("4-bit/8-bit training requires use_peft=True")
+        return self
 
 
 class TROptimizerConfig(BaseModel):
@@ -77,6 +89,12 @@ class TRLConfig(BaseModel):
     project_name: str = "trl-tinker"
     run_name: Optional[str] = None
     report_to: str = "wandb"
+
+    @model_validator(mode="after")
+    def validate_precision(self) -> "TRLConfig":
+        if self.bf16 and self.fp16:
+            raise ValueError("bf16 and fp16 are mutually exclusive")
+        return self
 
     @property
     def model_name(self) -> str:

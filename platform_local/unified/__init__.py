@@ -20,6 +20,7 @@ import os
 import sys
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 import numpy as np
@@ -71,6 +72,8 @@ class UnifiedLauncher:
         self.algorithm = "grpo"
         self.epochs = 20
         self.config = None
+        self.use_peft = True
+        self.peft_method = "lora"
 
     def print_banner(self):
         """Print startup banner."""
@@ -92,6 +95,9 @@ class UnifiedLauncher:
         print(f"  Model: {self.model}")
         print(f"  Algorithm: {self.algorithm}")
         print(f"  Epochs: {self.epochs}")
+        if self.framework == "trl":
+            tuning = self.peft_method if self.use_peft else "full fine-tuning"
+            print(f"  Tuning: {tuning}")
         print("=" * 60 + "\n")
 
     def run(self):
@@ -289,7 +295,12 @@ Examples:
   python -m unified.launcher --framework skyrl --model Qwen/Qwen2.5-1.5B-Instruct
 
   # Run with TRL GRPO
-  python -m unified.launcher --framework trl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm grpo
+  python -m platform_local.unified.launcher --framework trl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm grpo
+
+  # Generate a real TRL script with QLoRA
+  python -m platform_local.unified.launcher --framework trl --algorithm grpo \
+    --peft-method lora --load-in-4bit --train-data train.json \
+    --generate-script train_grpo.py
 
   # Run with verl PPO
   python -m unified.launcher --framework verl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm ppo
@@ -352,6 +363,46 @@ Examples:
     )
 
     parser.add_argument(
+        "--peft-num-virtual-tokens",
+        type=int,
+        default=32,
+        help="Virtual token count for prefix, P-tuning, and prompt tuning"
+    )
+
+    parser.add_argument(
+        "--no-peft",
+        action="store_true",
+        help="Generate a full fine-tuning configuration"
+    )
+
+    quantization = parser.add_mutually_exclusive_group()
+    quantization.add_argument(
+        "--load-in-4bit",
+        action="store_true",
+        help="Load the model with NF4 quantization before adapter training"
+    )
+    quantization.add_argument(
+        "--load-in-8bit",
+        action="store_true",
+        help="Load the model with 8-bit quantization before adapter training"
+    )
+
+    parser.add_argument(
+        "--train-data",
+        action="append",
+        default=[],
+        metavar="JSON_PATH",
+        help="Training JSON file; repeat to provide multiple files"
+    )
+
+    parser.add_argument(
+        "--generate-script",
+        type=Path,
+        metavar="PATH",
+        help="Write a runnable TRL GRPO script instead of running the smoke scaffold"
+    )
+
+    parser.add_argument(
         "--batch-size",
         type=int,
         default=8,
@@ -379,10 +430,51 @@ Examples:
     launcher.model = args.model
     launcher.algorithm = args.algorithm
     launcher.epochs = args.epochs
+    launcher.use_peft = not args.no_peft
+    launcher.peft_method = args.peft_method
 
     if args.dry_run:
         launcher.print_banner()
         print("\n[Dry run - exiting]")
+        return
+
+    if args.generate_script:
+        if args.framework != "trl":
+            parser.error("--generate-script requires --framework trl")
+        if args.algorithm != "grpo":
+            parser.error("--generate-script currently supports --algorithm grpo only")
+        if not args.train_data:
+            parser.error("--generate-script requires at least one --train-data path")
+        if args.no_peft and (args.load_in_4bit or args.load_in_8bit):
+            parser.error("quantized training cannot be combined with --no-peft")
+
+        try:
+            from platform_local.trl_integrations.config import TRLConfig
+            from platform_local.trl_integrations.trainer import generate_trl_train_script
+        except ImportError:
+            from trl_integrations.config import TRLConfig
+            from trl_integrations.trainer import generate_trl_train_script
+
+        config = TRLConfig(
+            model={
+                "model_name": args.model,
+                "use_peft": not args.no_peft,
+                "peft_method": args.peft_method,
+                "peft_num_virtual_tokens": args.peft_num_virtual_tokens,
+                "lora_rank": args.lora_rank,
+                "load_in_4bit": args.load_in_4bit,
+                "load_in_8bit": args.load_in_8bit,
+            },
+            optimizer={"learning_rate": args.lr},
+            algorithm={"algorithm": args.algorithm},
+            data={
+                "train_data": args.train_data,
+                "train_batch_size": args.batch_size,
+            },
+            epochs=args.epochs,
+            project_name=args.wandb_project,
+        )
+        generate_trl_train_script(config, args.generate_script)
         return
 
     # Run training

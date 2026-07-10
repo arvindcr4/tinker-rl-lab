@@ -3,7 +3,7 @@ set -euo pipefail
 
 : "${TINKER_API_KEY:?Set TINKER_API_KEY in env (was hardcoded, removed 2026-04-11)}"
 
-cd /home/arvind/tinker-rl-lab/reports/final
+cd "$(dirname "$0")/reports/final"
 
 SEEDS=(
   "042:899d909e-7821-5b2b-a8d9-d8b3113ebd64"
@@ -62,6 +62,6 @@ for f in files:
 if accs:
     mean = statistics.mean(accs)
     std = statistics.stdev(accs) if len(accs) > 1 else 0
-    print(f'\nMean accuracy: {mean:.1%} ± {std:.1%} (10 seeds)')
-    print(f'Ready for paper: YES' if len(accs) == 10 else f'Only {len(accs)}/10 seeds done')
+    print(f'\nMean accuracy: {mean:.1%} ± {std:.1%} ({len(accs)} seeds)')
+    print('Ready for paper: YES' if len(accs) == 5 else f'Only {len(accs)}/5 seeds done')
 "

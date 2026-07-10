@@ -10,3 +10,4 @@ One-off working files moved out of the repository root during the 2026-07-10 pro
 - `patch_trainer.py`, `patch_wandb.py`, `patch_wandb_imports.py` — one-off codemods for external checkouts (machine-specific paths).
 - `update_remaining.py` — imports a since-removed `scratch.refactor` module; kept for history only.
 - `plot_monitor.py` — remote-machine training monitor with hardcoded host paths.
+- `download_berkeley_transcripts.py` — one-off transcript fetcher with hardcoded origin-machine paths and personal credential lookups; unreferenced by the research code.

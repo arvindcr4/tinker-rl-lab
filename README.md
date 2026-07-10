@@ -190,7 +190,9 @@ python atropos/tinker_atropos/environments/gsm8k_tinker.py serve \
 ### Running SkyRL (Local Tinker API)
 
 ```bash
-# Start local Tinker API server (requires an external SkyRL checkout)
+# Start local Tinker API server (requires an external SkyRL checkout).
+# Upstream layout changes over time — follow the official quickstart if the
+# path below has moved: https://docs.skyrl.ai
 git clone https://github.com/NovaSky-AI/SkyRL.git && cd SkyRL/skyrl-train
 uv run --extra gpu --extra tinker -m skyrl.tinker.api \
     --base-model Qwen/Qwen2.5-1.5B-Instruct --port 8000
@@ -213,6 +215,8 @@ python -m skyrl.backends.vastai_runner --model Qwen/Qwen2.5-1.5B-Instruct
 ```
 
 ### Running with Unified Launcher
+
+The unified launcher is a smoke-test scaffold: it validates framework dispatch and configuration and emits simulated metrics. Use the per-framework sections above for real training.
 
 ```bash
 # Use any framework with unified launcher

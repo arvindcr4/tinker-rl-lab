@@ -98,6 +98,11 @@ EXCLUDE_FILES = {
 EXCLUDE_DIRS = {
     # Scratch/provenance archive; contains identity-bearing team memos.
     "archive",
+    # Professor-facing semester trees: carry full author/guide identities
+    # (named PDFs, CITATION.cff, contribution records) and are not part of
+    # the anonymous artifact.
+    "sem 3 work",
+    "sem 4 work",
     "blind_review",
     "past_session_contexts",
     "wandb",
@@ -209,6 +214,10 @@ REPLACEMENTS: list[tuple[str, str, str]] = [
     ),
     # Team-member real names (in comments, docstrings, READMEs, bibtex, etc.).
     (r"Narayana Darapaneni", "Anonymous", "name Narayana Darapaneni -> Anonymous"),
+    # Semester 4 project guide.
+    (r"Ramesh Prakash Guledgudd", "Anonymous", "name Ramesh Prakash Guledgudd -> Anonymous"),
+    (r"Guledgudd", "Anonymous", "name Guledgudd -> Anonymous"),
+    (r"rameshpg@pes\.edu", "anonymous@example.com", "email rameshpg@pes.edu -> anonymous@example.com"),
     (r"Anwesh Reddy Padhuri", "Anonymous", "name Anwesh Reddy Padhuri -> Anonymous"),
     (r"Anwesh Reddy Paduri", "Anonymous", "name Anwesh Reddy Paduri -> Anonymous"),
     (r"Sandhya Jeyaraj", "Anonymous", "name Sandhya Jeyaraj -> Anonymous"),
@@ -422,7 +431,8 @@ def _post_scan(root: Path) -> list[str]:
         r"Arvind C R|madhukumara1993|sandhya\.jeyaraj|gmd\.rafi|"
         r"chettyarumugam|dhruva\.n\.murthy|@greatlearning|@northwestern|"
         r"tinker-rl-lab-world-class|PES2PGE|arvindcr@pes\.edu|"
-        r"Padhuri|Paduri|Jeyaraj"
+        r"Padhuri|Paduri|Jeyaraj|"
+        r"Guledgudd|rameshpg|Ramesh Prakash"
     )
     for path in root.rglob("*"):
         if not path.is_file():
@@ -490,12 +500,17 @@ def main() -> None:
             continue
         _rewrite_file(path, rel, log)
 
-    # 5. Post-scan for residual identifiers.
+    # 5. Post-scan for residual identifiers. Abort hard before building the
+    # tarball so a leaking bundle can never be produced.
     leaks = _post_scan(STAGING)
     if leaks:
-        print("WARNING: residual identifiers found in anonymised tree:", file=sys.stderr)
+        print("ERROR: residual identifiers found in anonymised tree:", file=sys.stderr)
         for rel in leaks:
             print(f"  - {rel}", file=sys.stderr)
+        if TARBALL.exists():
+            TARBALL.unlink()
+        print("Aborting: no tarball was produced.", file=sys.stderr)
+        sys.exit(2)
 
     # 6. Build tarball.
     if TARBALL.exists():
@@ -543,9 +558,6 @@ def main() -> None:
     print(f"Tarball SHA-256:       {tarball_sha}")
     print(f"Change log:            {LOG.relative_to(ROOT)}")
     print(f"Files edited:          {len(log.per_file)}")
-    if leaks:
-        print(f"WARNING: {len(leaks)} files still contain identifiers.")
-        sys.exit(2)
 
 
 if __name__ == "__main__":

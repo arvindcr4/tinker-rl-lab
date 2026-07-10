@@ -36,7 +36,7 @@ See [`EXPERIMENTS.md`](EXPERIMENTS.md) for the paper-to-source and evidence map,
 ## Reproduction entry points
 
 - [`../REPRODUCE.md`](../REPRODUCE.md) — reviewer-oriented reproduction commands
-- [`../ARTIFACT.md`](../ARTIFACT.md) — result-to-artifact mapping
+- [`../ARTIFACT.md`](../ARTIFACT.md) — result-to-artifact mapping (historical Semester 3 record; the Semester 4 paper-to-evidence map is [`EXPERIMENTS.md`](EXPERIMENTS.md))
 - [`../experiments/experiment_summary.md`](../experiments/experiment_summary.md) — consolidated experiment summary
 - [`../experiments/results/`](../experiments/results/) — result tables, traces, and audit outputs
 - [`../AUTORESEARCH_FINDINGS.jsonl`](../AUTORESEARCH_FINDINGS.jsonl) — machine-readable iteration ledger

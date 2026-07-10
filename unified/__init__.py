@@ -34,7 +34,7 @@ class TrainingResult:
     final_step: int
     reward_history: List[float]
     loss_history: List[float]
-    total_time: float
+    total_time: float = 0.0
 
 
 class UnifiedLauncher:
@@ -76,6 +76,8 @@ class UnifiedLauncher:
         """Print startup banner."""
         print("\n" + "=" * 60)
         print("  Unified RL Training Launcher")
+        print("  (smoke-test scaffold: validates dispatch/config and emits")
+        print("   simulated metrics — use per-framework runners for real training)")
         print("=" * 60)
         print(f"\nAvailable Frameworks:")
         for key, desc in self.FRAMEWORKS.items():

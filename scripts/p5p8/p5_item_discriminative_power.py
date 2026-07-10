@@ -305,10 +305,11 @@ def main() -> int:
         n = len(xs)
         r_pt, _, _ = spearman(xs, ys)
         rng = random.Random(idx_seed)
-        rhos = sorted(spearman([xs[i] for i in idx := [rng.randrange(n) for _ in range(n)]],
-                                [ys[i] for i in idx])[0]
-                       for _ in range(n_boot_b))
-        rhos = [r for r in rhos if not math.isnan(r)]
+        boot = []
+        for _ in range(n_boot_b):
+            idx = [rng.randrange(n) for _ in range(n)]
+            boot.append(spearman([xs[i] for i in idx], [ys[i] for i in idx])[0])
+        rhos = sorted(r for r in boot if not math.isnan(r))
         if not rhos:
             return r_pt, math.nan, math.nan
         return r_pt, rhos[int(0.025*len(rhos))], rhos[int(0.975*len(rhos))]

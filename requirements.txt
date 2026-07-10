@@ -65,3 +65,4 @@ openai>=1.0.0
 # --- Testing ---
 pytest>=8.3.0,<8.4.0
 pytest-asyncio>=0.24.0,<0.25.0
+asyncssh  # skyrl/backends/vastai_runner.py (vast.ai SSH provisioning)

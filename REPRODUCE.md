@@ -59,7 +59,9 @@ Expected final line from step 4 (within tolerance):
 ```bash
 git clone https://github.com/arvindcr4/tinker-rl-lab.git
 cd tinker-rl-lab
-git checkout <COMMIT_HASH_FROM_ARTIFACT_MD>     # §1 of ARTIFACT.md
+# Optional: check out the frozen Semester 3 submission state (§1 of ARTIFACT.md).
+# Stay on current HEAD to reproduce the Semester 4 (P1–P8) work.
+git checkout <COMMIT_HASH_FROM_ARTIFACT_MD>
 
 docker build -t tinker-rl-lab:repro .
 docker run --gpus all -it \

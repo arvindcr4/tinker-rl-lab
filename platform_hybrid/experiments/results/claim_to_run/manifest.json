@@ -1,0 +1,35 @@
+{
+  "claim_count": 18,
+  "exact_model_conflicting_tinker_ids": 8,
+  "exact_model_consistent_tinker_ids": 33,
+  "exact_tinker_ids": 41,
+  "generated_at": "2026-07-10T19:30:59.327604+00:00",
+  "p1_selected_tinker_ids": 10,
+  "p1_selected_wandb_runs": 10,
+  "paper_counts": {
+    "P1": 2,
+    "P2": 2,
+    "P3": 2,
+    "P4": 1,
+    "P5": 3,
+    "P6": 2,
+    "P7": 3,
+    "P8": 3
+  },
+  "registry_validation_failures": [
+    "delta_aero.amendment.json",
+    "delta_areal.amendment.json",
+    "delta_mcgrpo.json",
+    "zvf130_areal.json"
+  ],
+  "registry_validation_pass": 44,
+  "registry_validation_total": 48,
+  "tier_counts": {
+    "C": 11,
+    "R": 2,
+    "X": 5
+  },
+  "tinker_run_count": 949,
+  "validation": "PASS",
+  "wandb_run_count": 940
+}

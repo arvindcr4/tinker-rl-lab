@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import re
 import subprocess
 import sys
@@ -13,9 +14,11 @@ AUDITS = [
     "export_guard_audit.py",
 ]
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
 failures = []
 for audit in AUDITS:
-    proc = subprocess.run(["python3", audit], capture_output=True, text=True)
+    audit_path = os.path.join(script_dir, audit)
+    proc = subprocess.run(["python3", audit_path], capture_output=True, text=True)
     out = proc.stdout.strip()
     match = re.search(r"METRIC\s+\w+=(\d+)", out)
     metric = int(match.group(1)) if match else None

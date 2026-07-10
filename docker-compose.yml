@@ -98,4 +98,4 @@ services:
   run-audits:
     extends:
       service: base
-    command: ["python", "run_all_audits.py"]
+    command: ["python", "platform_local/run_all_audits.py"]

@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import MagicMock
 
-from tinkerrl.grpo import (
+from platform_tinker.tinkerrl.grpo import (
     GRPOConfig,
     GRPORunResult,
     InMemoryDataset,

@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from tinkerrl.grpo import (
+from .grpo import (
     GRPOConfig,
     InMemoryDataset,
     MathReward,

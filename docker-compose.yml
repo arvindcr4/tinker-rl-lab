@@ -55,22 +55,22 @@ services:
   train-math:
     extends:
       service: base
-    command: ["python", "grpo_100_math.py"]
+    command: ["python", "platform_tinker/grpo_100_math.py"]
 
   train-xlam:
     extends:
       service: base
-    command: ["python", "grpo_100_xlam.py"]
+    command: ["python", "platform_tinker/grpo_100_xlam.py"]
 
   train-gsm8k-base:
     extends:
       service: base
-    command: ["python", "grpo_gsm8k_base.py"]
+    command: ["python", "platform_tinker/grpo_gsm8k_base.py"]
 
   train-tooluse-tinker:
     extends:
       service: base
-    command: ["python", "grpo_tooluse_tinker.py"]
+    command: ["python", "platform_tinker/grpo_tooluse_tinker.py"]
 
   # ---------------------------------------------------------
   # Batch Run Scripts
@@ -79,12 +79,12 @@ services:
   run-heldout-all-seeds:
     extends:
       service: base
-    command: ["bash", "run_heldout_all_seeds.sh"]
+    command: ["bash", "platform_tinker/run_heldout_all_seeds.sh"]
 
   run-coding:
     extends:
       service: base
-    command: ["bash", "run_coding.sh"]
+    command: ["bash", "platform_vast/run_coding.sh"]
 
   # ---------------------------------------------------------
   # Validation / Testing
@@ -93,7 +93,7 @@ services:
   smoke-test:
     extends:
       service: base
-    command: ["bash", "scripts/smoke_test.sh"]
+    command: ["bash", "platform_modal/scripts/smoke_test.sh"]
 
   run-audits:
     extends:

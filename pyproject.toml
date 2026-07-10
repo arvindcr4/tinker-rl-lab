@@ -94,7 +94,7 @@ Issues = "https://github.com/pes-llm-research/tinker-rl-lab/issues"
 # agentic-rl-finetuning, ai-scientist-template, research_loop) are kept
 # out of the `tinkerrl` wheel on purpose — they ship as source-only
 # references from upstream projects and have their own packaging.
-include = ["tinkerrl*", "utils*"]
+include = ["platform_tinker/tinkerrl*", "utils*"]
 exclude = [
     "atropos*", "verl*", "openrlhf*", "skyrl*", "trl_integrations*",
     "unified*", "agentic-rl-finetuning*", "ai-scientist-template*",

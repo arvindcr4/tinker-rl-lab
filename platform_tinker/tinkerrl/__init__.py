@@ -1,4 +1,4 @@
-from tinkerrl.grpo import (
+from .grpo import (
     GRPOConfig,
     GRPORunResult,
     TrainingExample,

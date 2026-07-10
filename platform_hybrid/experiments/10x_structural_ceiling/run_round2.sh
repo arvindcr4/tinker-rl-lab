@@ -12,7 +12,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-export WANDB_API_KEY="${WANDB_API_KEY:-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}"
+export WANDB_API_KEY="${WANDB_API_KEY:?set WANDB_API_KEY in the environment}"
 
 LOG_DIR="./logs/round2"
 mkdir -p "$LOG_DIR"

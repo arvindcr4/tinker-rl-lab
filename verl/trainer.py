@@ -12,6 +12,8 @@ from this file for CI smoke-tests. Real results are produced via
 ``experiments/modal/modal_grpo_verl.py`` on Modal H100.
 """
 
+from __future__ import annotations
+
 import atexit
 try:
     from codecarbon import EmissionsTracker
@@ -21,8 +23,6 @@ try:
 except ImportError:
     pass
 
-
-from __future__ import annotations
 
 import asyncio
 import json

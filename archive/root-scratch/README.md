@@ -7,3 +7,6 @@ One-off working files moved out of the repository root during the 2026-07-10 pro
 - `_ideation_context.md` — ideation-prompt context referenced by `FRONTIER_INSIGHTS.md`.
 - `GRPO_Ablation_results.zip` — zipped copy of ablation outputs; unpacked copies live in `grpo_ablation_results/`.
 - `zvf_pro55_extract.json`, `zvf_today_all.json`, `zvf_today_full.json` — raw ZVF extraction dumps (unreferenced by code).
+- `patch_trainer.py`, `patch_wandb.py`, `patch_wandb_imports.py` — one-off codemods for external checkouts (machine-specific paths).
+- `update_remaining.py` — imports a since-removed `scratch.refactor` module; kept for history only.
+- `plot_monitor.py` — remote-machine training monitor with hardcoded host paths.

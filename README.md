@@ -190,8 +190,8 @@ python atropos/tinker_atropos/environments/gsm8k_tinker.py serve \
 ### Running SkyRL (Local Tinker API)
 
 ```bash
-# Start local Tinker API server
-cd SkyRL/skyrl-train
+# Start local Tinker API server (requires an external SkyRL checkout)
+git clone https://github.com/NovaSky-AI/SkyRL.git && cd SkyRL/skyrl-train
 uv run --extra gpu --extra tinker -m skyrl.tinker.api \
     --base-model Qwen/Qwen2.5-1.5B-Instruct --port 8000
 

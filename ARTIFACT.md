@@ -2,6 +2,8 @@
 
 ## A Unified Benchmark for RL Post-Training of Language Models
 
+> **Historical note (July 2026):** this document is the Semester 3 artifact record frozen at the April 19, 2026 submission (commit `9019b5c`). The `v1.0.0-neurips-2026` tag was never pushed, and some linked paths have since moved; see [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) and [`sem 3 work/PROVENANCE.md`](sem%203%20work/PROVENANCE.md) for current provenance.
+
 This document follows the [ACM Artifact Review and Badging v1.1](https://www.acm.org/publications/policies/artifact-review-and-badging-current)
 guidelines and the [NeurIPS 2026 reproducibility checklist](https://nips.cc/public/guides/PaperChecklist).
 We target three ACM badges:

@@ -226,7 +226,7 @@ def get_issues(ctx):
     
     def _run(cmd, cwd: Path):
         return subprocess.run(
-            cmd, cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, ctx.text=True
+            cmd, cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
         )
     
     

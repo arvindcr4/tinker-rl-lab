@@ -66,14 +66,14 @@ HumanEval/logp-steering); `configs/` (per model×env YAML; `sweep_results/` = 10
 - `.github/workflows/` (ruff + pytest + reproducibility CI). Local untracked caches (gitignored): `graphify-out/` (repo knowledge graph), `.firecrawl/` (raw web-search dumps), `.serena/`, `.playwright-mcp/`.
 
 ## Root-level files (by theme)
-- **Entry docs:** `README.md`, `AGENTS.md`, `CONTEXT-MAP.md`, `CONTRIBUTING.md`, `REPRODUCE.md`, `CHANGELOG.md`.
-- **Submission checklists & meta:** `ELEVATION_ROADMAP.md`, `ARTIFACT.md`, `LIMITATIONS_AND_IMPACT.md`, `FINAL_HANDOFF.md`, `INTEGRATION_LOG.md`, `NEURIPS_CHECKLIST.md`, `NEURIPS_CHECKLIST_FINAL.md`, `ACM_CHECKLIST.md`, `BASELINES.md`, `BENCHMARKS_COMPARISON.md`, `COMPUTE.md`.
+- **Entry docs:** `README.md`, `AGENTS.md`, `CONTEXT-MAP.md`, `REPRODUCE.md`, `CHANGELOG.md`.
+- **Submission checklists & meta:** `ELEVATION_ROADMAP.md`, `ARTIFACT.md`, `LIMITATIONS_AND_IMPACT.md`, `FINAL_HANDOFF.md`, `INTEGRATION_LOG.md`, `NEURIPS_CHECKLIST.md`, `NEURIPS_CHECKLIST_FINAL.md`, `ACM_CHECKLIST.md`, `BASELINES.md`.
 - **Top-level GRPO drivers** (need `TINKER_API_KEY`): `grpo_gsm8k_base.py` (parameterized multi-seed), `grpo_tooluse_tinker.py` (Qwen3-8B tool-use), `grpo_100_{math,synthetic,xlam}.py`, `grpo_exp_{a,b,c,d}_*.py` (LR/temp/dataset ablations).
 - **Audit suite:** `run_all_audits.py` runs a 13-audit integrity suite (paper/claim/abstract/heldout/anonymization/submission/blind-review); further standalone `*_audit.py` checks sit beside it. Each prints `METRIC …=N`.
 - **Notebooks:** `advanced_rl_colab.ipynb` (Dr.GRPO/DAPO/DPO), `ppo_reinforce_baselines_colab.ipynb`, `submission_colab.ipynb`, `skyrl-tinker-colab.ipynb`.
 - **Build/deps:** `pyproject.toml` (pkg `tinkerrl`), `requirements.txt`, `uv.lock`, `Dockerfile`, `docker-compose.yml`, `sweep.yaml`, `CITATION.cff`, `.env.example`.
 - **Runners:** `run_one.sh`, `run_coding.sh`, `run_heldout_all_seeds.sh`, `vast_run.sh`, `run_ai_scientist.sh`. The dormant autoresearch/oracle iteration harness is archived in `research_loop/autoresearch/`.
-- **Utilities / codemods:** `patch_trainer.py`, `patch_wandb*.py`, `fix_eval.py`, `refactor_seeds.py`, `upload_tinker_to_wandb.py`. One-off codemods (`patch.py`, `patch.diff`, `inject_patch.py`) are archived in `archive/root-scratch/`.
+- **Utilities:** `fix_eval.py`, `refactor_seeds.py`, `upload_tinker_to_wandb.py`. One-off codemods and machine-specific monitors (`patch*.py`, `inject_patch.py`, `update_remaining.py`, `plot_monitor.py`) are archived in `archive/root-scratch/`.
 - **Result data:** `modal_results_all.json`, `integration_audit.json`, `group6.pdf` (`GRPO_Ablation_results.zip` archived in `archive/root-scratch/`; unpacked copy in `grpo_ablation_results/`).
 - **P8 fraud-study evidence:** `train_xgboost.py` + `*_data.csv` + `xgboost_results.json` — principal evidence for the Semester 4 paper P8 (LLM vs. XGBoost credit-card fraud); kept at root because `scripts/p5p8/` analyses reference these paths.
 
@@ -84,13 +84,13 @@ HumanEval/logp-steering); `configs/` (per model×env YAML; `sweep_results/` = 10
 - the **anonymized submission** → `blind_review/`
 - **reproduce the headline result** → `REPRODUCE.md`
 - **run all integrity audits** → `python run_all_audits.py`
-- **add a new RL framework/task** → `CONTRIBUTING.md`, then `unified/`
+- **add a new RL framework/task** → `unified/` (extend `FRAMEWORKS` in `unified/__init__.py`)
 - **a one-shot GRPO run** → top-level `grpo_*.py` (export `TINKER_API_KEY` first)
 
 ## Known issues / caveats (surfaced during indexing)
 - `grpo_exp_b/c.py` docstrings are **stale copies** of `exp_a` (code differs; docstrings don't).
 - `archive/root-scratch/team-*.pplx.md` and `archive/root-scratch/verify_links_entities.txt` contain **real names/handles → NOT blind-safe**; the entire `archive/` tree is excluded by `blind_review/anonymize_code.py`.
-- `blind_review/tinker-rl-lab-anon.tar.gz` is **stale vs `SUBMISSION_MANIFEST.md`** (~97 MB on disk vs 27 MB / different SHA-256) — regenerate before any integrity check.
+- `blind_review/tinker-rl-lab-anon.tar.gz` is **no longer tracked** — the last tracked copy was a stale ~97 MB regeneration that mismatched `SUBMISSION_MANIFEST.md` and contained identifying strings. A tag-time 25.8 MB copy remains at `capstone-final-2026-04-25` (its hash also predates the manifest); regenerate via `blind_review/anonymize_*.py` before any future integrity check.
 - **No `local_*.py` native ports** exist in this checkout (those were generated only on the Lightning studio copy); the `modal_*.py` pillar scripts are canonical here.
 - Hardcoded machine-specific paths in `ai-scientist-v2-integration/patch.sh`, `archive/root-scratch/inject_patch.py`, `demo_recording/concat*.txt` — break off their origin machine.
 

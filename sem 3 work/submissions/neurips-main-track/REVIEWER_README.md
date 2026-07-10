@@ -1,5 +1,7 @@
 # Reviewer README
 
+> **Historical note:** reproduced verbatim from the April 2026 blind-review package. The paths below refer to the extracted submission bundle (`code.tar.gz`), not to this folder; recreate the full historical checkout with the command in [`../../PROVENANCE.md`](../../PROVENANCE.md).
+
 ## Quick Start
 
 1. **Extract the bundle:**

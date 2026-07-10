@@ -99,7 +99,7 @@ seed 42 inside, bootstrap seed 2026).
   the value $0.9988$ for AUC above is **not** the $0.7955$ the current
   paper headline quotes from a quick artifact because the quick artifact
   was a different run (smaller model, fewer rounds, see
-  `train_xgboost.py` vs the script's larger XGBoost 3.x defaults). The
+  `platform_local/train_xgboost.py` vs the script's larger XGBoost 3.x defaults). The
   qualitative conclusion -- the tree keeps the seat -- is unchanged and
   is now reinforced by the bootstrap CIs. We retain the
   $\mathrm{AUC}{=}0.9988$ as the **iter-4 reproducible headline** and

@@ -9426,7 +9426,7 @@ mean pass-rate, closing the loop between the descriptive diagnostic and its mode
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="g.-Fraud-study-(P8)-%E2%80%94-XGBoost-tabular-baseline">g. Fraud study (P8) — XGBoost tabular baseline<a class="anchor-link" href="#g.-Fraud-study-(P8)-%E2%80%94-XGBoost-tabular-baseline">¶</a></h2><p>Paper <strong>P8</strong> ("Sensor and Scribe, Not Scorer") contrasts LLMs with a strong tabular model on
 highly imbalanced <strong>credit-card fraud</strong> data. Here we load the precomputed XGBoost metrics from
-<code>xgboost_results.json</code> (produced offline by <code>train_xgboost.py</code> on the full dataset) and a small
+<code>xgboost_results.json</code> (produced offline by <code>platform_local/train_xgboost.py</code> on the full dataset) and a small
 1,000-row sample of <code>fraud_data.csv</code> to show the feature schema and the extreme class imbalance
 that makes the task hard.</p>
 </div>
@@ -9441,7 +9441,7 @@ that makes the task hard.</p>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">xgb</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"xgboost_results.json"</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"XGBoost fraud-detection results (precomputed on the full dataset by train_xgboost.py):"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"XGBoost fraud-detection results (precomputed on the full dataset by platform_local/train_xgboost.py):"</span><span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">xgb</span><span class="p">]))</span>
 
 <span class="n">fraud</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"fraud_data.csv"</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
@@ -9463,7 +9463,7 @@ that makes the task hard.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>XGBoost fraud-detection results (precomputed on the full dataset by train_xgboost.py):
+<pre>XGBoost fraud-detection results (precomputed on the full dataset by platform_local/train_xgboost.py):
 </pre>
 </div>
 </div>

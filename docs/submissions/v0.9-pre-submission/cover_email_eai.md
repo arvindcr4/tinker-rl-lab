@@ -62,7 +62,7 @@ contributions]. Our submission fits via three axes:
 - Tag: v0.9-pre-submission
 - Code: https://github.com/arvindcr4/tinker-rl-lab
 - W&B: https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-world-class
-- Audits: 13/13 passing on this tag (python3 run_all_audits.py)
+- Audits: 13/13 passing on this tag (python3 platform_local/run_all_audits.py)
 
 ### Author confirmation
 

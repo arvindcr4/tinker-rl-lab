@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # AI Scientist launcher for GRPO GSM8K research
-# Usage: ./run_ai_scientist.sh [num_ideas] [model]
+# Usage: ./platform_local/run_ai_scientist.sh [num_ideas] [model]
 #
 # Prerequisites:
 #   export ANTHROPIC_API_KEY="sk-ant-..."

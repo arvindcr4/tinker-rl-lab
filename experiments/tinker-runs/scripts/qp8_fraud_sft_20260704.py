@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """qp8-fraud-sft: supervised fine-tune a small Tinker model on serialized fraud rows.
 
-Data comes from train_xgboost.py's synthetic generator (train_data.csv / test_data.csv).
+Data comes from platform_local/train_xgboost.py's synthetic generator (train_data.csv / test_data.csv).
 Rows are serialized as "field: value" lines -> label yes/no; 1 epoch SFT via
 cross_entropy loss; eval accuracy/AUC by sampling (k votes -> P(yes) score).
 
@@ -156,7 +156,7 @@ def main():
         "sampler_backend_precision": "unknown/closed-stack (Tinker managed sampler)",
         "per_step_zvf_path": "n/a (SFT, no group rollouts); per-step loss in " + step_tsv,
         "group_size_schedule": f"n/a for SFT; eval voting k={args.votes} fixed",
-        "heldout_split": f"test_data.csv from train_xgboost.py split (random_state=42, stratified); eval subset positive-enriched to 20% fraud ({args.eval_rows} rows) since natural rate ~1.4% gives too few positives for stable AUC",
+        "heldout_split": f"test_data.csv from platform_local/train_xgboost.py split (random_state=42, stratified); eval subset positive-enriched to 20% fraud ({args.eval_rows} rows) since natural rate ~1.4% gives too few positives for stable AUC",
         "decontamination_notes": "synthetic data (sklearn make_classification seed 42); no overlap with pretraining corpora possible; train/test split disjoint by construction",
     }
     with open(os.path.join(OUT_DIR, f"{EXP}_manifest.json"), "w") as f:

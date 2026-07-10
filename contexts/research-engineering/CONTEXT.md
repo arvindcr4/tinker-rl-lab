@@ -25,7 +25,7 @@ The structured value returned by an audit: a name plus a collection of issue rec
 _Avoid_: METRIC string, printed report.
 
 **Grouped audit**:
-An audit that returns multiple grouped check results, used for large scientific audits such as `scientific_audit.py`.
+An audit that returns multiple grouped check results, used for large scientific audits such as `platform_local/scientific_audit.py`.
 _Avoid_: monolithic audit, giant checker.
 
 **Figure module**:

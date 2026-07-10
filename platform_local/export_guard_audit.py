@@ -7,7 +7,7 @@ def get_issues(ctx):
 
     # The export/bundling script must invoke the audit suite before packaging
     # and must support a documented skip override.
-    if "run_all_audits.py" not in ctx.export_script:
+    if "platform_local/run_all_audits.py" not in ctx.export_script:
         issues.append("export_script_missing_audit_guard")
     if "--skip-audits" not in ctx.export_script:
         issues.append("export_script_missing_skip_audits_override")

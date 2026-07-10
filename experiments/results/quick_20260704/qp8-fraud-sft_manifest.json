@@ -4,6 +4,6 @@
   "sampler_backend_precision": "unknown/closed-stack (Tinker managed sampler)",
   "per_step_zvf_path": "n/a (SFT, no group rollouts); per-step loss in /home/claude/tinker-rl-lab/experiments/results/quick_20260704/qp8-fraud-sft.tsv",
   "group_size_schedule": "n/a for SFT; eval voting k=8 fixed",
-  "heldout_split": "test_data.csv from train_xgboost.py split (random_state=42, stratified); eval subset positive-enriched to 20% fraud (500 rows) since natural rate ~1.4% gives too few positives for stable AUC",
+  "heldout_split": "test_data.csv from platform_local/train_xgboost.py split (random_state=42, stratified); eval subset positive-enriched to 20% fraud (500 rows) since natural rate ~1.4% gives too few positives for stable AUC",
   "decontamination_notes": "synthetic data (sklearn make_classification seed 42); no overlap with pretraining corpora possible; train/test split disjoint by construction"
 }

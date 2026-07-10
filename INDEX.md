@@ -68,13 +68,13 @@ HumanEval/logp-steering); `configs/` (per model×env YAML; `sweep_results/` = 10
 - **Entry docs:** `README.md`, `AGENTS.md`, `CONTEXT-MAP.md`, `REPRODUCE.md`, `CHANGELOG.md`.
 - **Submission checklists & meta:** `ELEVATION_ROADMAP.md`, `ARTIFACT.md`, `LIMITATIONS_AND_IMPACT.md`, `FINAL_HANDOFF.md`, `INTEGRATION_LOG.md`, `NEURIPS_CHECKLIST.md`, `NEURIPS_CHECKLIST_FINAL.md`, `ACM_CHECKLIST.md`, `BASELINES.md`.
 - **Top-level GRPO drivers** (need `TINKER_API_KEY`): `grpo_gsm8k_base.py` (parameterized multi-seed), `grpo_tooluse_tinker.py` (Qwen3-8B tool-use), `grpo_100_{math,synthetic,xlam}.py`, `grpo_exp_{a,b,c,d}_*.py` (LR/temp/dataset ablations).
-- **Audit suite:** `run_all_audits.py` runs a 13-audit integrity suite (paper/claim/abstract/heldout/anonymization/submission/blind-review); further standalone `*_audit.py` checks sit beside it. Each prints `METRIC …=N`.
+- **Audit suite:** `platform_local/run_all_audits.py` runs a 13-audit integrity suite (paper/claim/abstract/heldout/anonymization/submission/blind-review); further standalone `*_audit.py` checks sit beside it. Each prints `METRIC …=N`.
 - **Notebooks:** `advanced_rl_colab.ipynb` (Dr.GRPO/DAPO/DPO), `ppo_reinforce_baselines_colab.ipynb`, `submission_colab.ipynb`, `skyrl-tinker-colab.ipynb`.
 - **Build/deps:** `pyproject.toml` (pkg `tinkerrl`), `requirements.txt`, `uv.lock`, `Dockerfile`, `docker-compose.yml`, `sweep.yaml`, `CITATION.cff`, `.env.example`.
-- **Runners:** `run_one.sh`, `run_coding.sh`, `run_heldout_all_seeds.sh`, `vast_run.sh`, `run_ai_scientist.sh`.
+- **Runners:** `run_one.sh`, `run_coding.sh`, `run_heldout_all_seeds.sh`, `vast_run.sh`, `platform_local/run_ai_scientist.sh`.
 - **Utilities:** `fix_eval.py`, `refactor_seeds.py`, `upload_tinker_to_wandb.py`. One-off codemods and machine-specific monitors (`patch*.py`, `inject_patch.py`, `update_remaining.py`, `plot_monitor.py`) are archived in `archive/root-scratch/`.
 - **Result data:** `modal_results_all.json`, `integration_audit.json` (`GRPO_Ablation_results.zip` archived in `archive/root-scratch/`; unpacked copy in `grpo_ablation_results/`; the Group 6 report PDF lives in `sem 3 work/deliverables/`).
-- **P8 fraud-study evidence:** `train_xgboost.py` + `*_data.csv` + `xgboost_results.json` — principal evidence for the Semester 4 paper P8 (LLM vs. XGBoost credit-card fraud); kept at root because `scripts/p5p8/` analyses reference these paths.
+- **P8 fraud-study evidence:** `platform_local/train_xgboost.py` + `*_data.csv` + `xgboost_results.json` — principal evidence for the Semester 4 paper P8 (LLM vs. XGBoost credit-card fraud); kept at root because `scripts/p5p8/` analyses reference these paths.
 
 ## Find it fast
 - the **pillar experiments** → `experiments/modal/`
@@ -82,7 +82,7 @@ HumanEval/logp-steering); `configs/` (per model×env YAML; `sweep_results/` = 10
 - the **paper source** → `paper/main.tex` (sections in `paper/sections/`, figures in `paper/figures/`)
 - the **anonymized submission** → `blind_review/`
 - **reproduce the headline result** → `REPRODUCE.md`
-- **run all integrity audits** → `python run_all_audits.py`
+- **run all integrity audits** → `python platform_local/run_all_audits.py`
 - **add a new RL framework/task** → `unified/` (extend `FRAMEWORKS` in `unified/__init__.py`)
 - **a one-shot GRPO run** → top-level `grpo_*.py` (export `TINKER_API_KEY` first)
 

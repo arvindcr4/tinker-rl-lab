@@ -5,7 +5,7 @@ import re
 def get_issues(ctx):
     issues = []
     
-    if "python run_all_audits.py" not in ctx.submission:
+    if "python platform_local/run_all_audits.py" not in ctx.submission:
         issues.append("submission_readme_missing_audit_suite_step")
     if "do not include generated build artifacts" not in ctx.submission:
         issues.append("submission_readme_missing_build_artifact_exclusion_note")

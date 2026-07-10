@@ -43,7 +43,7 @@ Excluded on purpose:
 Before submission, run from the repository root:
 
 ```bash
-python run_all_audits.py
+python platform_local/run_all_audits.py
 ```
 """
 
@@ -52,12 +52,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare blind-review package")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="Output directory")
     parser.add_argument("--force", action="store_true", help="Overwrite existing output directory")
-    parser.add_argument("--skip-audits", action="store_true", help="Skip `python run_all_audits.py` before export")
+    parser.add_argument("--skip-audits", action="store_true", help="Skip `python platform_local/run_all_audits.py` before export")
     args = parser.parse_args()
 
     if not args.skip_audits:
         repo_root = ROOT.parent.parent
-        proc = subprocess.run(["python", "run_all_audits.py"], cwd=repo_root)
+        proc = subprocess.run(["python", "platform_local/run_all_audits.py"], cwd=repo_root)
         if proc.returncode != 0:
             raise SystemExit("Audit suite failed; refusing to prepare blind-review package.")
 

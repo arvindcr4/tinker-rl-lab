@@ -4,7 +4,7 @@
 > Covers NeurIPS Paper Checklist Items 2 (Limitations), 7 (Code of Ethics),
 > 8 (Compute Resources), 10 (Safeguards), and 11 (Broader Impacts).
 > Must be kept in sync with `paper/ethics_statement.tex`; run
-> `python paper_sync_audit.py` before submission.
+> `python platform_local/paper_sync_audit.py` before submission.
 
 ---
 
@@ -389,7 +389,7 @@ region‑average, not marginal; reported CO₂ is order‑of‑magnitude.
   instructions.
 - **Improving reproducibility standards.** The multi‑seed protocol, the
   abstract‑scope audit script (`abstract_scope_audit.py`), and the
-  anonymisation audit (`anonymization_repro_audit.py`) directly address
+  anonymisation audit (`platform_local/anonymization_repro_audit.py`) directly address
   the RL reproducibility crisis documented by Henderson et al. (2018) and
   Pineau et al. (2020).
 - **Fair cross‑library comparison.** Standardised reward functions and
@@ -435,7 +435,7 @@ matching Tables are:
 - `paper/ethics_statement.tex` § Known Methodological Limits ↔ Section 7
   here.
 
-Run `python paper_sync_audit.py` before every submission revision.
+Run `python platform_local/paper_sync_audit.py` before every submission revision.
 
 ---
 

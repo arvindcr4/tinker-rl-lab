@@ -26,25 +26,25 @@ anonymisation artefacts live under `blind_review/` and `paper/main_anon.tex`.
 
 ## 2. Audit-script results
 
-All 17 `*_audit.py` scripts at the repo root were executed. `run_all_audits.py`
-covers 13 of them; 3 extras (`paper_plan_audit.py`, `reviewer_caveat_audit.py`,
-`scientific_audit.py`) were executed separately. Logs are in
+All 17 `*_audit.py` scripts at the repo root were executed. `platform_local/run_all_audits.py`
+covers 13 of them; 3 extras (`paper_plan_audit.py`, `platform_local/reviewer_caveat_audit.py`,
+`platform_local/scientific_audit.py`) were executed separately. Logs are in
 `blind_review/audit_logs/`.
 
 ### 2.1 Passing (10)
 
 | Audit | Metric | Status |
 |---|---|---|
-| `submission_claim_audit.py` | `claim_issues=0` | pass |
-| `paper_sync_audit.py` | `sync_issues=0` | pass |
+| `platform_local/submission_claim_audit.py` | `claim_issues=0` | pass |
+| `platform_local/paper_sync_audit.py` | `sync_issues=0` | pass |
 | `heldout_readiness_audit.py` | `readiness_issues=0` | pass |
-| `anonymization_repro_audit.py` | `anon_issues=0` | pass |
-| `claim_strength_audit.py` | `strength_issues=0` | pass |
-| `submission_package_audit.py` | `package_issues=0` | pass |
-| `submission_workflow_audit.py` | `workflow_issues=0` | pass |
+| `platform_local/anonymization_repro_audit.py` | `anon_issues=0` | pass |
+| `platform_local/claim_strength_audit.py` | `strength_issues=0` | pass |
+| `platform_local/submission_package_audit.py` | `package_issues=0` | pass |
+| `platform_local/submission_workflow_audit.py` | `workflow_issues=0` | pass |
 | `blind_review_package_audit.py` | `blind_package_issues=0` | pass |
 | `blind_review_export_audit.py` | `export_issues=0` | pass |
-| `export_guard_audit.py` | `export_guard_issues=0` | pass |
+| `platform_local/export_guard_audit.py` | `export_guard_issues=0` | pass |
 
 ### 2.2 Failing — pre-existing, not in scope for Task 11
 
@@ -58,11 +58,11 @@ fixing them belongs to other tasks in the submission plan.
 | `paper_plan_audit.py` (rc=1) | Same `T2_conclusion_heldout` item | paper-hardening task |
 | `capstone_claim_audit.py` (rc=0, `capstone_issues=1`) | `missing_baseline_positioning` | paper-hardening task |
 | `abstract_scope_audit.py` (rc=0, `abstract_issues=4`) | Missing `humaneval_subset_caveat` and `training_reward_caveat` in the abstract of both `main.tex` and `main_anon.tex` | abstract-caveats task |
-| `reviewer_caveat_audit.py` (rc=0, `caveat_issues=6`) | `heldout_scope`, `tool_eval_protocol`, `codegen_subset`, `budget_and_splits`, `replication_release`, `report.threshold_overclaim` | reviewer-caveats task |
+| `platform_local/reviewer_caveat_audit.py` (rc=0, `caveat_issues=6`) | `heldout_scope`, `tool_eval_protocol`, `codegen_subset`, `budget_and_splits`, `replication_release`, `report.threshold_overclaim` | reviewer-caveats task |
 
 ### 2.3 Environment limitation
 
-- `scientific_audit.py` terminated with
+- `platform_local/scientific_audit.py` terminated with
   `FileNotFoundError: [Errno 2] No such file or directory: 'pdflatex'`. The
   sandbox does not ship a TeX Live install; the audit checks LaTeX build
   hygiene. Running on the submission runner (which has pdflatex) is expected
@@ -244,7 +244,7 @@ From a fresh clone on `task-11-anonymization`:
 ```
 python blind_review/anonymize_paper.py
 python blind_review/anonymize_code.py
-python run_all_audits.py > blind_review/audit_logs/run_all_audits.log 2>&1
+python platform_local/run_all_audits.py > blind_review/audit_logs/run_all_audits.log 2>&1
 for a in paper_plan_audit reviewer_caveat_audit scientific_audit; do
   python "${a}.py" > "blind_review/audit_logs/${a}.log" 2>&1 || true
 done
@@ -266,7 +266,7 @@ produces the same `paper/main_anon.tex` and a tarball with identical content
 - 10 of 13 audits in the main suite pass. The 3 failing audits and the 3
   supplementary audits with issues are all pre-existing and out of scope
   for Task 11 (which forbids modifying the non-anon tree).
-- `scientific_audit.py` cannot run in this sandbox (no `pdflatex`); it should
+- `platform_local/scientific_audit.py` cannot run in this sandbox (no `pdflatex`); it should
   be re-run on the submission runner.
 - The non-anon tree (`paper/main.tex`, `reports/`, repo scripts) was not
   modified.

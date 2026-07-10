@@ -14,7 +14,7 @@ This iter (P5P8-SYNTH JOB B) extends the matrix to the
 **cross-paper metadata layer** with D17: how reproducible are the
 stored findings across papers?
 
-D17 is computed directly from `AUTORESEARCH_FINDINGS.jsonl` (39 stored
+D17 is computed directly from `findings_ledger.jsonl` (39 stored
 findings across P5 / P6 / P7 / P8 / P5P8-SYNTH). Two complementary
 denominators are reported:
 
@@ -35,7 +35,7 @@ Layer assignment matches iter-176 (LOW ≤0.10 < MID < 0.50 ≤ HIGH).
 
 ## Method
 
-1. Parse `AUTORESEARCH_FINDINGS.jsonl` line-by-line.
+1. Parse `findings_ledger.jsonl` line-by-line.
 2. For each line, read `pillar`, `claim`, `verdicts` keys.
 3. Compute `n_pass`, `n_fail`, `n_total` from the `verdicts` dict; if
    the dict is empty, fall back to a text parser
@@ -186,4 +186,4 @@ counter-weight that keeps D17 from HIGH.
   per-pillar D17a + D17_OVERALL)
 - `experiments/results/p5p8/synth_iter180_d17_summary.json` (H1-H6
   verdicts + per-pillar numbers + layer counts)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5P8-SYNTH, iter 180)
+- 1 line in `findings_ledger.jsonl` (pillar P5P8-SYNTH, iter 180)

@@ -5,7 +5,7 @@ density matrix (D17).
 Fresh vein, not in 188 prior rows. Iter-176 added D16 (per-prompt reward
 stability on N2 four-method); iter-180 adds D17 = per-pillar (paper)
 stored-finding reproducibility density computed directly from
-`AUTORESEARCH_FINDINGS.jsonl` (n=39 stored findings across pillars
+`findings_ledger.jsonl` (n=39 stored findings across pillars
 P5 / P6 / P7 / P8 / SYNTH).
 
 D17 = paper-level evidence reproducibility measured four ways:
@@ -57,7 +57,7 @@ ROOT = Path("/home/claude/tinker-rl-lab-minimax")
 RES = ROOT / "experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
 
-PATH_JSONL = ROOT / "experiments" / "results" / "AUTORESEARCH_FINDINGS.jsonl"
+PATH_JSONL = ROOT / "experiments" / "results" / "findings_ledger.jsonl"
 
 PILLARS = ["P5", "P6", "P7", "P8", "P5P8-SYNTH"]
 

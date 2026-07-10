@@ -108,7 +108,7 @@ P7 a clean transferability lemma without any new Tinker runs.
 - `experiments/results/p5p8/p7_iter107b_{curve_table,curve_correlation,curve_correlation_boot,operating_points,kappa_class_agreement,summary}.tsv`
 - `paper/sections/p7_iter107_tautransfer.tex` (new ~80-line LaTeX section)
 - `paper/paper_P7_zvf_controller.tex` extended with `\input{sections/p7_iter107_tautransfer}`
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P7, iter 107)
+- 1 line in `findings_ledger.jsonl` (pillar P7, iter 107)
 
 ## Open questions for next iteration
 

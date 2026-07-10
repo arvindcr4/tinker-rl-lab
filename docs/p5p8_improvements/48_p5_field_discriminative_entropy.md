@@ -155,4 +155,4 @@ Outputs:
 - `paper/sections/p5_evidence.tex` (Exhibit 16)
 - `paper/paper_P5_minreport.pdf` (rebuild)
 - the P5–P8 improvement backlog (row #48)
-- `AUTORESEARCH_FINDINGS.jsonl` (1 line, pillar P5)
+- `findings_ledger.jsonl` (1 line, pillar P5)

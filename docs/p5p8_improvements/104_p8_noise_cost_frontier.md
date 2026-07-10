@@ -145,4 +145,4 @@ beats XGB-20 with statistical significance at $\sigma \le 0.10$.
 - `experiments/results/p5p8/figures/p8_iter88_noise_pareto.{png,pdf}` (5-panel cost-vs-recall frontier per noise level)
 - New `paper/sections/p8_iter88_noise_cost_frontier.tex`
 - Updated the P5–P8 improvement backlog row 104
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P8, iter 88)
+- 1 line in `findings_ledger.jsonl` (pillar P8, iter 88)

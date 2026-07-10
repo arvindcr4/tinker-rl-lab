@@ -40,7 +40,7 @@ source papers are arXiv-verified and make explicit per-axis predictions).
 
 5. the P5–P8 improvement backlog row 92 appended.
 
-6. `AUTORESEARCH_FINDINGS.jsonl` line appended.
+6. `findings_ledger.jsonl` line appended.
 
 ## Headline findings (falsifiable)
 

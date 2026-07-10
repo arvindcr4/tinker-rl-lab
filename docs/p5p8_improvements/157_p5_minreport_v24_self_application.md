@@ -107,4 +107,4 @@ in future synthesis iters — the 22-claim × 5-iter-family template applies.
 - `experiments/results/p5p8/p5_iter157_source_coverage.tsv` (4 rows × 7 cols)
 - `experiments/results/p5p8/p5_iter157_field_discriminative.tsv` (20 rows)
 - `experiments/results/p5p8/p5_iter157_summary.json` (H1-H4 verdicts)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5, iter 157)
+- 1 line in `findings_ledger.jsonl` (pillar P5, iter 157)

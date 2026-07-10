@@ -122,4 +122,4 @@ meaningless at $D_1$.
 - `experiments/results/p5p8/synth_iter132_summary.json`
 - `paper/sections/synth_iter132_four_domain_density.tex` (~115 lines,
   NEW)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5P8-SYNTH, iter 132)
+- 1 line in `findings_ledger.jsonl` (pillar P5P8-SYNTH, iter 132)

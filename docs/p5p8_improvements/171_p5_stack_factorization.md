@@ -148,7 +148,7 @@ head-to-head table and the head-to-head numerical claim; the existing
 iter 89 section is unchanged. The P5 paper rebuilds with **0 errors /
 0 undefined** (verified via `pdflatex ×3 + bibtex`).
 
-## Finding to append to `AUTORESEARCH_FINDINGS.jsonl`
+## Finding to append to `findings_ledger.jsonl`
 
 ```json
 {"ts":"2026-07-05","pillar":"P5","claim":"η²(method|same-stack) = 0.0075 on N2 (160 rows); η²_union(stack) =0.9967 on mega (50 cells); 3/4 stack axes (model, task, G) dominate algorithm axis by 4-60x","evidence_path":"experiments/results/p5p8/p5_iter161_stack_factorization.json","citation_ok":true}

@@ -153,7 +153,7 @@ weight-perturbation audit interpretable.
 - `experiments/results/p5p8/p5_item_discriminative_power_summary.json`
   (machine-readable shape)
 - `scripts/p5p8/p5_item_discriminative_power.py` (≤300 LoC, stdlib)
-- appended to `AUTORESEARCH_FINDINGS.jsonl` (pillar P5).
+- appended to `findings_ledger.jsonl` (pillar P5).
 
 No paper update this iteration — the finding is a **scoping** audit
 (informs the next iter-62 manifest-emitter work) rather than a

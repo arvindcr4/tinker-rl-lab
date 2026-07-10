@@ -150,5 +150,5 @@ This iter is the **most thorough per-prompt bootstrap-CI audit** of the iter-147
 - `experiments/results/p5p8/p7_iter159_heldout_zvf_reg.tsv` (4 rows: per-method bootstrap Pearson r on zvf vs reward)
 - `experiments/results/p5p8/p7_iter159_summary.json` (H1–H8 verdicts + per-method SD table)
 - `docs/p5p8_improvements/159_p7_pareto_permethod_ci.md` (this file)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P7)
+- 1 line in `findings_ledger.jsonl` (pillar P7)
 - Ledger row 173 in the P5–P8 improvement backlog

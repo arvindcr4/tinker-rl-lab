@@ -74,4 +74,4 @@ A measured row is `significant` iff its 95% bootstrap CI excludes 0. Of 38 rows,
 - `paper/sections/p6_iter134_field_completeness.tex` (NEW §sec:p6-iter134-field-completeness, ~95 lines)
 - `paper/paper_P6_registry.pdf` rebuilds to N pages / 0 errors / 0 undefined citations (was M, +1 page for the new section)
 - the P5–P8 improvement backlog row 150
-- `AUTORESEARCH_FINDINGS.jsonl` +1 line (P6)
+- `findings_ledger.jsonl` +1 line (P6)

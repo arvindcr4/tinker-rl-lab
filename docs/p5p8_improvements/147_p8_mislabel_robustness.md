@@ -127,4 +127,4 @@ additional auditor cost.
   paired bootstrap per-eps-per-metric)
 - `experiments/results/p5p8/p8_iter132_mislabel_summary.json`
 - `paper/sections/p8_iter132_mislabel.tex` (~95 lines, NEW)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P8, iter 132)
+- 1 line in `findings_ledger.jsonl` (pillar P8, iter 132)

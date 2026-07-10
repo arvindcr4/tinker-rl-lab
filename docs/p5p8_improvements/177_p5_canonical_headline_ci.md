@@ -63,7 +63,7 @@ dependency for the bootstrap), matching the iter-171 P7 headline-CI recipe.
   verdicts + per-cluster summaries)
 - `docs/p5p8_improvements/177_p5_canonical_headline_ci.md` (this file)
 - `paper/sections/p5_iter173_headline_cis.tex` (NEW §`sec:p5-iter173-headline-ci`)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5, iter 173)
+- 1 line in `findings_ledger.jsonl` (pillar P5, iter 173)
 
 ## 5 falsifiable hypotheses settled (5/5 PASS)
 

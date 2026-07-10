@@ -156,4 +156,4 @@ cohort level.**
 - `paper/paper_P8_fraud.tex` extended with `\input{sections/p8_iter96_per_cohort_noise}`
 - `paper/paper_P8_fraud.pdf` rebuilds to 0 errors / 0 undefined citations
 - `docs/p5p8_improvements/112_p8_per_cohort_noise.md` (this proposal)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P8, iter 96)
+- 1 line in `findings_ledger.jsonl` (pillar P8, iter 96)

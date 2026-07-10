@@ -266,4 +266,4 @@ descriptive sub-field split is the deeper audit signal.
   per-badge-quartile cluster rollup)
 - `experiments/results/p5p8/p6_iter206_summary.json` (aggregate H
   rollup + Spearman ρ + bootstrap CIs)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P6, iter 206)
+- 1 line in `findings_ledger.jsonl` (pillar P6, iter 206)

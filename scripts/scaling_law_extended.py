@@ -365,8 +365,8 @@ def main() -> None:
     plt.close(fig)
     print(f"\nwrote {out_pdf}")
 
-    # ---- append findings to AUTORESEARCH jsonl ------------------------
-    findings_path = REPO / "experiments" / "results" / "AUTORESEARCH_FINDINGS.jsonl"
+    # ---- append findings to the findings ledger ------------------------
+    findings_path = REPO / "experiments" / "results" / "findings_ledger.jsonl"
     if findings_path.exists():
         new_records = [
             {"ts": "2026-07-02", "pillar": "P1",

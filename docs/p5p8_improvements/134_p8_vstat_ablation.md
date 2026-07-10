@@ -105,4 +105,4 @@ is invariant to the absolute recall level.
 - `experiments/results/p5p8/p8_iter120_vstat_lpm.tsv` (16 rows)
 - `experiments/results/p5p8/p8_iter120_summary.json`
 - `paper/sections/p8_iter120_vstat_ablation.tex` (~85 lines)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P8, iter 120)
+- 1 line in `findings_ledger.jsonl` (pillar P8, iter 120)

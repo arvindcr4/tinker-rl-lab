@@ -199,4 +199,4 @@ marginal reliability, not within-K reliability.**
   paired bootstrap CIs on each comparison)
 - `experiments/results/p5p8/p8_iter180_summary.json` (H1-H5 verdicts +
   pre-Brier means + slope means + slope-deviation)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P8, iter 180)
+- 1 line in `findings_ledger.jsonl` (pillar P8, iter 180)

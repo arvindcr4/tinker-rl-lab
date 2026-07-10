@@ -68,4 +68,4 @@ For each (rate × fset) cell:
 - `experiments/results/p5p8/p8_iter164_breakeven_per_cell.tsv` (60 rows: 5 rates × 4 fsets × 3 targets)
 - `experiments/results/p5p8/p8_iter164_tau_tier_monotone.tsv` (20 rows: 5 rates × 4 fsets)
 - `experiments/results/p5p8/p8_iter164_summary.json` (machine-readable H1-H5 verdicts)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P8, iter 164)
+- 1 line in `findings_ledger.jsonl` (pillar P8, iter 164)

@@ -17,7 +17,7 @@ channel.
 - `experiments/results/p5p8/p6_iter170_label_matrix.tsv` (14 rows × 10 cols)
 - `experiments/results/p5p8/p6_iter170_summary.json` (H1-H4 verdicts)
 - the P5–P8 improvement backlog ledger row 181
-- `AUTORESEARCH_FINDINGS.jsonl` finding line (pillar P6)
+- `findings_ledger.jsonl` finding line (pillar P6)
 
 ## Motivation
 

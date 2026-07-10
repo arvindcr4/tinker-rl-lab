@@ -125,7 +125,7 @@ corpora in a future synthesis iter.
 - `experiments/results/p5p8/p5_iter181_summary.json`
 - `docs/p5p8_improvements/181_p5_v25_rollout.md` (this file)
 - the P5–P8 improvement backlog (row 194 added)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl`
+- 1 line in `findings_ledger.jsonl`
 
 ## Deliverables (validated)
 

@@ -135,4 +135,4 @@ measurement.
 - `experiments/results/p5p8/synth_iter124_per_G_density.tsv` (5 rows)
 - `experiments/results/p5p8/synth_iter124_summary.json`
 - `paper/sections/synth_iter124_three_domain_density.tex` (~80 lines)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5P8-SYNTH, iter 124)
+- 1 line in `findings_ledger.jsonl` (pillar P5P8-SYNTH, iter 124)

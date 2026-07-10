@@ -145,4 +145,4 @@ from the manifest alone or via a one-line derivation.
 - `experiments/results/p5p8/p5_iter117_structural_ambiguity.tsv` (18 rows)
 - `experiments/results/p5p8/p5_iter117_rename_vulnerability.tsv` (15 rows)
 - `experiments/results/p5p8/p5_iter117_summary.json` (machine-readable)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5, iter 117)
+- 1 line in `findings_ledger.jsonl` (pillar P5, iter 117)

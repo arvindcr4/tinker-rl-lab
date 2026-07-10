@@ -117,7 +117,7 @@ Now 20/20 stacks do. This means:
 - `experiments/results/p5p8/p6_outcomes_coverage_claim_evidence.tsv`
   (14 rows, one per `implemented`/`surrogate` stack claim)
 - `experiments/results/p5p8/p6_outcomes_coverage_summary.json`
-- appended to `AUTORESEARCH_FINDINGS.jsonl` (pillar P6).
+- appended to `findings_ledger.jsonl` (pillar P6).
 
 ## Reproduction
 

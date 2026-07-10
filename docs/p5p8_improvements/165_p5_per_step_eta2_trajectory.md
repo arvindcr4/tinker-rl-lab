@@ -144,4 +144,4 @@ algorithm-axis signal on length-controlled channels.
 - `experiments/results/p5p8/p5_iter165_step_band_summary.tsv` (9 rows: 3 bands × 3 channels)
 - `experiments/results/p5p8/p5_iter165_summary.json` (machine-readable H1-H5 verdicts)
 - `paper/sections/p5_iter165_per_step_trajectory.tex` (NEW §sec:p5-iter165)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5, iter 165)
+- 1 line in `findings_ledger.jsonl` (pillar P5, iter 165)

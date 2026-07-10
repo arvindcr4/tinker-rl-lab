@@ -27,7 +27,7 @@ Outputs:
   experiments/results/p5p8/registry_stress_by_mutation.tsv
       one row per (category, mutation_idx) with mean recovery across entries
   docs/p5p8_improvements/33_registry_stress_test.md
-  1 line in AUTORESEARCH_FINDINGS.jsonl
+  1 line in findings_ledger.jsonl
 
 Stdlib + jsonschema only. Designed to be cheap (≤300 LoC) and CI-runnable.
 """

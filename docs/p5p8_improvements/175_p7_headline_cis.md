@@ -71,4 +71,4 @@
 | `experiments/results/p5p8/p7_iter171_summary.json` | H1-H7 verdicts + structured summary |
 | `docs/p5p8_improvements/175_p7_headline_cis.md` | this file |
 | the P5–P8 improvement backlog | row 182 appended |
-| `AUTORESEARCH_FINDINGS.jsonl` | 1 line appended (pillar P7) |
+| `findings_ledger.jsonl` | 1 line appended (pillar P7) |

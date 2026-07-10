@@ -163,5 +163,5 @@ scoping is the iter-121 deliverable; it sets the work-list for iter-122.
 - `experiments/results/p5p8/p5_iter121_summary.json` (machine-readable)
 - `experiments/results/p5p8/p5_iter121_mutation_stress.tsv` (784 rows: 8 mutations × 98 cells)
 - `experiments/results/p5p8/p5_iter121_mutation_summary.json` (per-mutation + per-check fanout + H1-H4 verdicts)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5, iter 121)
+- 1 line in `findings_ledger.jsonl` (pillar P5, iter 121)
 - `paper/sections/p5_iter121_value_correctness.tex` (~75 lines, NEW)

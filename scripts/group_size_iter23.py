@@ -474,7 +474,7 @@ def main():
         print(f"[iter23] Figure skipped: {e}")
 
     # Findings JSONL
-    findings_path = ROOT / "experiments" / "results" / "AUTORESEARCH_FINDINGS.jsonl"
+    findings_path = ROOT / "experiments" / "results" / "findings_ledger.jsonl"
     rows_out = []
 
     def find(claim: str, evidence_path: str):
@@ -535,7 +535,7 @@ def main():
     with findings_path.open("a") as f:
         for r in rows_out:
             f.write(json.dumps(r) + "\n")
-    print(f"[iter23] Appended {len(rows_out)} findings to AUTORESEARCH_FINDINGS.jsonl")
+    print(f"[iter23] Appended {len(rows_out)} findings to findings_ledger.jsonl")
 
 
 if __name__ == "__main__":

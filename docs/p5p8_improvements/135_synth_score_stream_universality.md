@@ -126,7 +126,7 @@ measured on a model whose top-K scores straddled 0.5).
 - `experiments/results/p5p8/synth_iter120_score_stream_universality.tsv`
 - `experiments/results/p5p8/synth_iter120_score_stream_boot.tsv`
 - `paper/sections/synth_iter120_score_stream_universality.tex`
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5P8-SYNTH, iter 120)
+- 1 line in `findings_ledger.jsonl` (pillar P5P8-SYNTH, iter 120)
 
 ## Operational recommendation
 

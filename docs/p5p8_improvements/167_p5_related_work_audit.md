@@ -115,5 +115,5 @@ peer-reviewed venue` note so reviewers can see the audit's honesty.
 - the P5–P8 improvement backlog (row 167 added)
 
 ## Deliverables (validated)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` with pillar P5
+- 1 line in `findings_ledger.jsonl` with pillar P5
 - `paper_P5_minreport.pdf` rebuilds to 62 pages / 0 errors / 0 undefined citations

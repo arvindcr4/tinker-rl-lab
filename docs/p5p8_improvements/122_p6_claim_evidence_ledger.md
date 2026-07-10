@@ -158,4 +158,4 @@ Adopt the Claim-Evidence Ledger as the canonical registry audit-trail:
 - `registry/entries/delta_aero.json`, `delta_gift.json`, `delta_areal.json` (patched)
 - `paper/sections/p6_iter106_claim_evidence_ledger.tex` (new subsection)
 - `paper/paper_P6_registry.tex` (extended)
-- `AUTORESEARCH_FINDINGS.jsonl` (+1 line, pillar P6)
+- `findings_ledger.jsonl` (+1 line, pillar P6)

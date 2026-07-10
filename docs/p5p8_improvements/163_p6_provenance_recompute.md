@@ -138,7 +138,7 @@ Inputs read: `registry/entries/delta_*.json`,
 - `experiments/results/p5p8/p6_iter146_fix_plan.tsv` (13 rows, the patch plan)
 - `experiments/results/p5p8/p6_iter146_patch_log.tsv` (13 rows, audit log)
 - 8 patched entries: `delta_{aero,areal,gift,cppo,es,mcgrpo,ngrpo,scafgrpo}.json`
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P6, iter 146)
+- 1 line in `findings_ledger.jsonl` (pillar P6, iter 146)
 
 ## What iter-146 did NOT do (scope-protective)
 

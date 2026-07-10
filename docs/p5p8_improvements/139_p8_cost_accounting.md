@@ -126,4 +126,4 @@ residual.
 - `experiments/results/p5p8/p8_iter124_sweet_spot.tsv` (16 rows)
 - `experiments/results/p5p8/p8_iter124_summary.json`
 - `paper/sections/p8_iter124_cost_accounting.tex` (~85 lines)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P8, iter 124)
+- 1 line in `findings_ledger.jsonl` (pillar P8, iter 124)

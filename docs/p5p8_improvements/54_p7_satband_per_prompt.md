@@ -87,7 +87,7 @@ iter-31 conclusion.
 - `experiments/results/p5p8/p7_satband_per_prompt.json` (machine-readable, includes per-method sat-band prompt classification)
 - `experiments/results/p5p8/p7_satband_bootstrap.json`
 - new `\subsection{Per-prompt over-de-escalation on saturation-band steps}` in `paper/sections/p7_controller.tex`
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P7, iter 43)
+- 1 line in `findings_ledger.jsonl` (pillar P7, iter 43)
 
 ## Reproduction
 

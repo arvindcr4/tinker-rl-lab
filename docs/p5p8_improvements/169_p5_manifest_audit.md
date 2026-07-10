@@ -114,4 +114,4 @@ For every JSON file in `experiments/results/mega_20260704/manifests/`:
 * `paper/build/paper_P5_minreport.pdf` rebuilds to 69 pages, 0 errors,
   0 undefined citations (was 65 before iter-169).
 * `docs/p5p8_improvements/169_p5_manifest_audit.md` (this file).
-* 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5, iter 169).
+* 1 line in `findings_ledger.jsonl` (pillar P5, iter 169).

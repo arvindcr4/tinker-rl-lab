@@ -113,4 +113,4 @@ property generalises beyond a single emitter.
 - `experiments/results/p5p8/claim_alignment_perturbation.json`
 - `experiments/results/p5p8/figures/claim_alignment_per_axis.{png,pdf}`
 - `experiments/results/p5p8/figures/claim_alignment_dist.{png,pdf}`
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5, iter 29)
+- 1 line in `findings_ledger.jsonl` (pillar P5, iter 29)

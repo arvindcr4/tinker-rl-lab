@@ -169,4 +169,4 @@ cell-granularity artifact, while Item 17's per-step signal is universal.
 - `experiments/results/p5p8/p5p8_iter96_per_step_summary.json` (machine-readable
   with per-method per-item empirical vs null z-scores).
 - `docs/p5p8_improvements/113_p5p8_per_step_yield_axes.md` (this proposal).
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5P8-SYNTH, iter 96).
+- 1 line in `findings_ledger.jsonl` (pillar P5P8-SYNTH, iter 96).

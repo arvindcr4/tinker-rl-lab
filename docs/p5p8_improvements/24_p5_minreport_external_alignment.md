@@ -160,4 +160,4 @@ corpora by Δ=10.5).
   `tab:p5-external-alignment`
 - `paper/paper_P5_minreport.pdf` rebuilds at 0 errors / 0 undefined
   citations
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5, iter 17)
+- 1 line in `findings_ledger.jsonl` (pillar P5, iter 17)

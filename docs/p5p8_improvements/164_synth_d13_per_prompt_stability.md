@@ -64,4 +64,4 @@ For each (method × step × prompt) cell on N2 (4 × 40 × 16 = 2560 cells):
 - `experiments/results/p5p8/synth_iter164_d13_per_eps.tsv` (3 rows: per-ε Wilson CIs + layer)
 - `experiments/results/p5p8/synth_iter164_d13_per_method.tsv` (4 rows: per-method density)
 - `experiments/results/p5p8/synth_iter164_summary.json` (machine-readable H1-H4 verdicts)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P5P8-SYNTH, iter 164)
+- 1 line in `findings_ledger.jsonl` (pillar P5P8-SYNTH, iter 164)

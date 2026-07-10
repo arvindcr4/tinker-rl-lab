@@ -16,7 +16,7 @@ against (a) stored `measured[].delta`, (b) stored `claim_validation[].observed_d
 - `experiments/results/p5p8/p6_iter178_n2_recompute_cv_consistency.tsv` (12 rows × 7 cols)
 - `experiments/results/p5p8/p6_iter178_n2_recompute_summary.json` (H1-H5 verdicts)
 - the P5–P8 improvement backlog ledger row (this iter)
-- `AUTORESEARCH_FINDINGS.jsonl` finding line (pillar P6)
+- `findings_ledger.jsonl` finding line (pillar P6)
 
 ## Motivation
 

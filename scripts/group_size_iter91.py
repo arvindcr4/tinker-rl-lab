@@ -481,7 +481,7 @@ def main():
     render_figure(pareto, iso, boot, fig_path)
     print(f"\nFigure written: {fig_path.relative_to(REPO)}")
 
-    # Bonus: compute headline-finding numbers for AUTORESEARCH log
+    # Bonus: compute headline-finding numbers for the findings ledger
     headline = {
         "pareto_Gstar_at_T64M": next(p for p in pareto
                                      if p["T_M"] == 64.0)["G_star"],

@@ -29,6 +29,6 @@ The earlier NeurIPS main-track package is not a Semester 4 output; it is archive
 ## Audit trail
 
 - Current author block: [`../paper/sections/_shared_author.tex`](../paper/sections/_shared_author.tex)
-- Findings ledger: [`../experiments/results/AUTORESEARCH_FINDINGS.jsonl`](../experiments/results/AUTORESEARCH_FINDINGS.jsonl)
+- Findings ledger: [`../experiments/results/findings_ledger.jsonl`](../experiments/results/findings_ledger.jsonl)
 - Research history: [`../PROJECT_HISTORY.md`](../PROJECT_HISTORY.md)
 - Semester 3 frozen archive: [`../sem 3 work/`](../sem%203%20work/)

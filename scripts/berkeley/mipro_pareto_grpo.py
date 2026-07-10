@@ -65,7 +65,7 @@ Outputs:
   experiments/results/berkeley/mipro_pareto_{regret_curve, budget_eff,
   paired, efficiency, info_gain}.tsv + mipro_pareto_summary.json
   docs/berkeley_improvements/23_mipro_pareto_grpo.md
-  minimax_autoresearch_improvements/23_mipro_orchestrator.md (B1 patch)
+  a removed orchestrator note (B1 patch)
 
 Author: analysis iter 29 (B-F24, L5 Omar Khattab, MIPRO).
 """

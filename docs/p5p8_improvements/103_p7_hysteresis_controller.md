@@ -130,4 +130,4 @@ controller "commits" once it sees a ZVF spike, and that commitment lasts.
 - `experiments/results/p5p8/p7_iter87_hysteresis_summary.json`
 - New `paper/sections/p7_iter87_hysteresis.tex`
 - Updated the P5–P8 improvement backlog row 103
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl` (pillar P7)
+- 1 line in `findings_ledger.jsonl` (pillar P7)

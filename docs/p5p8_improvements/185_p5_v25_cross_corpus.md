@@ -159,7 +159,7 @@ when they stabilise; current audit pipeline is corpus-agnostic.
 - `experiments/results/p5p8/p5_iter185_summary.json` (H1–H5 verdicts
   + headline numbers + per-corpus coverage)
 - `docs/p5p8_improvements/185_p5_v25_cross_corpus.md` (this file)
-- 1 line in `AUTORESEARCH_FINDINGS.jsonl`
+- 1 line in `findings_ledger.jsonl`
 
 ## Deliverables (validated)
 

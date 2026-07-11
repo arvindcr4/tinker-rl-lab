@@ -11,17 +11,48 @@ Original Tinker Method:
 This implementation uses DPOTrainer with length-penalized preferences.
 """
 
-import sys
+import logging
 import os
-import torch
+from dataclasses import dataclass, field
 from typing import List
+
+import torch
 from datasets import Dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
 from trl import DPOTrainer, DPOConfig
 
-# Add project root to path for utils
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-from utils.seed import set_global_seed, get_seed_from_args, log_experiment_metadata
+from utils.seed import set_global_seed, log_experiment_metadata
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+)
+
+
+@dataclass
+class DPOScriptArguments:
+    """Arguments for the DPO Shorter Responses Experiment."""
+    model_name: str = field(default="Qwen/Qwen2-0.5B-Instruct", metadata={"help": "The model to train."})
+    seed: int = field(default=42, metadata={"help": "Random seed for reproducibility."})
+    num_prompts: int = field(default=100, metadata={"help": "Number of prompts."})
+    num_generations: int = field(default=4, metadata={"help": "Number of generations per prompt."})
+    max_new_tokens: int = field(default=100, metadata={"help": "Max new tokens."})
+    output_dir: str = field(default="./dpo_shorter_output", metadata={"help": "Output directory."})
+    
+    # DPO Config
+    beta: float = field(default=0.1, metadata={"help": "KL penalty coefficient."})
+    per_device_train_batch_size: int = field(default=4, metadata={"help": "Batch size per device."})
+    gradient_accumulation_steps: int = field(default=4, metadata={"help": "Gradient accumulation steps."})
+    learning_rate: float = field(default=5e-7, metadata={"help": "Learning rate."})
+    max_length: int = field(default=512, metadata={"help": "Max sequence length."})
+    max_prompt_length: int = field(default=256, metadata={"help": "Max prompt length."})
+    loss_type: str = field(default="sigmoid", metadata={"help": "DPO loss type."})
+    num_train_epochs: int = field(default=1, metadata={"help": "Number of training epochs."})
+    logging_steps: int = field(default=1, metadata={"help": "Logging steps."})
+    save_steps: int = field(default=50, metadata={"help": "Save steps."})
+    max_grad_norm: float = field(default=1.0, metadata={"help": "Max gradient norm."})
+    warmup_ratio: float = field(default=0.1, metadata={"help": "Warmup ratio."})
 
 
 def create_preference_dataset(
@@ -116,59 +147,64 @@ def load_prompts(num_prompts: int = 500) -> List[str]:
 
 
 def main():
-    # Model configuration (matching Tinker)
-    model_name = "Qwen/Qwen2-0.5B-Instruct"  # Small instruct model
+    parser = HfArgumentParser((DPOScriptArguments,))
+    args, = parser.parse_args_into_dataclasses()
+    
+    # Seed management for reproducibility
+    env_info = set_global_seed(args.seed)
+    logger.info(f"Seed set to {args.seed} | Environment: {env_info}")
 
-    print("Loading model and tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    logger.info("Loading model and tokenizer...")
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
     model = AutoModelForCausalLM.from_pretrained(
-        model_name,
+        args.model_name,
         torch_dtype=torch.bfloat16,
         device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     # Load reference model (frozen)
     ref_model = AutoModelForCausalLM.from_pretrained(
-        model_name,
+        args.model_name,
         torch_dtype=torch.bfloat16,
         device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     # Create preference dataset
-    print("Generating preference dataset (this may take a while)...")
-    prompts = load_prompts(num_prompts=100)  # Reduced for demo
+    logger.info("Generating preference dataset (this may take a while)...")
+    prompts = load_prompts(num_prompts=args.num_prompts)
 
     preference_dataset = create_preference_dataset(
         prompts=prompts,
         model=model,
         tokenizer=tokenizer,
-        num_generations=4,  # group_size in Tinker
-        max_new_tokens=100,
+        num_generations=args.num_generations,
+        max_new_tokens=args.max_new_tokens,
     )
 
-    print(f"Created {len(preference_dataset)} preference pairs")
+    logger.info(f"Created {len(preference_dataset)} preference pairs")
 
     # DPO Configuration
+    output_dir = os.environ.get("RESULTS_DIR", args.output_dir)
     dpo_config = DPOConfig(
-        output_dir=os.environ.get("RESULTS_DIR", "./dpo_shorter_output"),
-        beta=0.1,
-        per_device_train_batch_size=4,
-        gradient_accumulation_steps=4,
-        learning_rate=5e-7,
-        max_length=512,
-        max_prompt_length=256,
-        loss_type="sigmoid",
-        num_train_epochs=1,
-        logging_steps=1,
-        save_steps=50,
-        max_grad_norm=1.0,
-        warmup_ratio=0.1,
+        output_dir=output_dir,
+        beta=args.beta,
+        per_device_train_batch_size=args.per_device_train_batch_size,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
+        learning_rate=args.learning_rate,
+        max_length=args.max_length,
+        max_prompt_length=args.max_prompt_length,
+        loss_type=args.loss_type,
+        num_train_epochs=args.num_train_epochs,
+        logging_steps=args.logging_steps,
+        save_steps=args.save_steps,
+        max_grad_norm=args.max_grad_norm,
+        warmup_ratio=args.warmup_ratio,
     )
 
-    print("Initializing DPOTrainer...")
+    logger.info("Initializing DPOTrainer...")
     trainer = DPOTrainer(
         model=model,
         ref_model=ref_model,
@@ -177,10 +213,25 @@ def main():
         tokenizer=tokenizer,
     )
 
-    print("Starting DPO training for shorter responses...")
+    logger.info("Starting DPO training for shorter responses...")
     trainer.train(resume_from_checkpoint=True)
-    trainer.save_model("./dpo_shorter_final")
-    print("Training complete!")
+    
+    final_output_dir = f"{output_dir}_final"
+    trainer.save_model(final_output_dir)
+    logger.info("Training complete!")
+    
+    # Log experiment metadata
+    log_experiment_metadata(
+        experiment_name="trl_dpo_shorter",
+        seed=args.seed,
+        hyperparameters={
+            "model_name": args.model_name,
+            "learning_rate": args.learning_rate,
+            "num_generations": args.num_generations,
+            "beta": args.beta,
+        },
+        output_dir=final_output_dir,
+    )
 
 
 if __name__ == "__main__":

@@ -23,12 +23,14 @@ except ImportError:
 
 
 import argparse
-import random
+import asyncio
+import logging
 import time
+import uuid
 
 import tinker
 from tinker.types import ModelInput, SamplingParams
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Depends
 from transformers import AutoTokenizer
 
 from tinker_atropos.types import (
@@ -41,30 +43,46 @@ from tinker_atropos.types import (
     TokenLogprob,
 )
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger("tinker.serve")
+
 app = FastAPI(title="Tinker Inference Server")
 
-# Global state
-sampling_client = None
-tokenizer = None
-model_name = None
+
+def get_app_state(request: Request):
+    return request.app.state
 
 
 @app.get("/health")
-async def health():
-    return {"status": "ok", "model": model_name, "ready": sampling_client is not None}
+async def health(state=Depends(get_app_state)):
+    is_ready = hasattr(state, "sampling_client") and state.sampling_client is not None
+    return {"status": "ok", "model": getattr(state, "model_name", None), "ready": is_ready}
 
 
 @app.post("/v1/chat/completions", response_model=ChatCompletionResponse)
-async def chat_completions(request: ChatCompletionRequest):
-    if sampling_client is None:
+async def chat_completions(request: ChatCompletionRequest, state=Depends(get_app_state)):
+    if not hasattr(state, "sampling_client") or state.sampling_client is None:
+        logger.error("Chat completion failed: Model not loaded")
         raise HTTPException(status_code=503, detail="Model not loaded")
 
     try:
         messages_dict = [{"role": msg.role, "content": msg.content} for msg in request.messages]
-        prompt_text = tokenizer.apply_chat_template(
-            messages_dict, tokenize=False, add_generation_prompt=True
+        
+        prompt_text = await asyncio.to_thread(
+            state.tokenizer.apply_chat_template,
+            messages_dict,
+            tokenize=False,
+            add_generation_prompt=True
         )
-        prompt_tokens = tokenizer.encode(prompt_text, add_special_tokens=False)
+        prompt_tokens = await asyncio.to_thread(
+            state.tokenizer.encode,
+            prompt_text,
+            add_special_tokens=False
+        )
         model_input = ModelInput.from_ints(prompt_tokens)
 
         sampling_params = SamplingParams(
@@ -73,7 +91,7 @@ async def chat_completions(request: ChatCompletionRequest):
             stop=request.stop if request.stop else [],
         )
 
-        result = await sampling_client.sample_async(
+        result = await state.sampling_client.sample_async(
             prompt=model_input,
             sampling_params=sampling_params,
             num_samples=request.n,
@@ -81,7 +99,11 @@ async def chat_completions(request: ChatCompletionRequest):
 
         choices = []
         for i, sequence in enumerate(result.sequences):
-            output_text = tokenizer.decode(sequence.tokens, skip_special_tokens=True)
+            output_text = await asyncio.to_thread(
+                state.tokenizer.decode,
+                sequence.tokens,
+                skip_special_tokens=True
+            )
             choices.append(
                 {
                     "message": {"role": "assistant", "content": output_text},
@@ -91,18 +113,23 @@ async def chat_completions(request: ChatCompletionRequest):
             )
 
         return ChatCompletionResponse(
-            id=f"chatcmpl-{random.randint(0, 999999)}",
+            id=f"chatcmpl-{uuid.uuid4()}",
             choices=choices,
             created=int(time.time()),
-            model=model_name,
+            model=state.model_name,
         )
+    except ValueError as ve:
+        logger.error(f"Value error during chat completion: {ve}")
+        raise HTTPException(status_code=400, detail=f"Invalid request: {ve}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error during chat completion: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.post("/v1/completions", response_model=CompletionResponse)
-async def completions(request: CompletionRequest):
-    if sampling_client is None:
+async def completions(request: CompletionRequest, state=Depends(get_app_state)):
+    if not hasattr(state, "sampling_client") or state.sampling_client is None:
+        logger.error("Completion failed: Model not loaded")
         raise HTTPException(status_code=503, detail="Model not loaded")
 
     try:
@@ -110,7 +137,11 @@ async def completions(request: CompletionRequest):
         all_choices = []
 
         for prompt in prompts:
-            prompt_tokens = tokenizer.encode(prompt, add_special_tokens=False)
+            prompt_tokens = await asyncio.to_thread(
+                state.tokenizer.encode,
+                prompt,
+                add_special_tokens=False
+            )
             model_input = ModelInput.from_ints(prompt_tokens)
 
             sampling_params = SamplingParams(
@@ -119,14 +150,18 @@ async def completions(request: CompletionRequest):
                 stop=request.stop if request.stop else [],
             )
 
-            result = await sampling_client.sample_async(
+            result = await state.sampling_client.sample_async(
                 prompt=model_input,
                 sampling_params=sampling_params,
                 num_samples=request.n,
             )
 
             for sequence in result.sequences:
-                output_text = tokenizer.decode(sequence.tokens, skip_special_tokens=True)
+                output_text = await asyncio.to_thread(
+                    state.tokenizer.decode,
+                    sequence.tokens,
+                    skip_special_tokens=True
+                )
                 all_choices.append(
                     {
                         "text": output_text,
@@ -136,83 +171,100 @@ async def completions(request: CompletionRequest):
                 )
 
         return CompletionResponse(
-            id=f"cmpl-{random.randint(0, 999999)}",
+            id=f"cmpl-{uuid.uuid4()}",
             choices=all_choices,
             created=int(time.time()),
-            model=model_name,
+            model=state.model_name,
         )
+    except ValueError as ve:
+        logger.error(f"Value error during completion: {ve}")
+        raise HTTPException(status_code=400, detail=f"Invalid request: {ve}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error during completion: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.post("/logprobs", response_model=LogprobsResponse)
-async def logprobs(request: LogprobsRequest):
-    if sampling_client is None:
+async def logprobs(request: LogprobsRequest, state=Depends(get_app_state)):
+    if not hasattr(state, "sampling_client") or state.sampling_client is None:
+        logger.error("Logprobs failed: Model not loaded")
         raise HTTPException(status_code=503, detail="Model not loaded")
 
     try:
         if request.input_ids is not None:
             token_ids = request.input_ids
         elif request.text is not None:
-            token_ids = tokenizer.encode(request.text, add_special_tokens=False)
+            token_ids = await asyncio.to_thread(
+                state.tokenizer.encode,
+                request.text,
+                add_special_tokens=False
+            )
         else:
+            logger.warning("Logprobs request missing input_ids and text")
             raise HTTPException(status_code=400, detail="input_ids or text required")
 
         if len(token_ids) == 0:
+            logger.warning("Logprobs request with empty input")
             raise HTTPException(status_code=400, detail="Empty input")
 
         model_input = ModelInput.from_ints(token_ids)
-        prompt_lps = await sampling_client.compute_logprobs_async(model_input)
+        prompt_lps = await state.sampling_client.compute_logprobs_async(model_input)
 
         token_logprobs = []
         for i, token_id in enumerate(token_ids):
             lp = prompt_lps[i] if i < len(prompt_lps) and prompt_lps[i] is not None else 0.0
-            token_text = tokenizer.decode([token_id]) if request.return_text else None
+            if request.return_text:
+                token_text = await asyncio.to_thread(state.tokenizer.decode, [token_id])
+            else:
+                token_text = None
             token_logprobs.append(TokenLogprob(token_id=token_id, logprob=lp, token=token_text))
 
         return LogprobsResponse(logprobs=token_logprobs, num_tokens=len(token_ids))
     except HTTPException:
         raise
+    except ValueError as ve:
+        logger.error(f"Value error during logprobs: {ve}")
+        raise HTTPException(status_code=400, detail=f"Invalid request: {ve}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error during logprobs: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 def main():
-    global sampling_client, tokenizer, model_name
-
     parser = argparse.ArgumentParser(description="Tinker inference server")
     parser.add_argument("--model", default="Qwen/Qwen3-30B-A3B", help="Model name")
     parser.add_argument("--weights", default=None, help="Saved weights path (tinker://...)")
     parser.add_argument("--port", type=int, default=8001, help="Server port")
     args = parser.parse_args()
 
-    model_name = args.model
-    print(f"Loading model: {model_name}")
+    app.state.model_name = args.model
+    logger.info(f"Loading model: {args.model}")
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    print("Tokenizer loaded")
+    app.state.tokenizer = AutoTokenizer.from_pretrained(args.model)
+    logger.info("Tokenizer loaded")
 
     service_client = tinker.ServiceClient()
 
     if args.weights:
-        print(f"Loading weights from: {args.weights}")
-        sampling_client = service_client.create_sampling_client(model_path=args.weights)
+        logger.info(f"Loading weights from: {args.weights}")
+        app.state.sampling_client = service_client.create_sampling_client(model_path=args.weights)
     else:
-        print("Using base model weights")
-        sampling_client = service_client.create_sampling_client(base_model=model_name)
+        logger.info("Using base model weights")
+        app.state.sampling_client = service_client.create_sampling_client(base_model=args.model)
 
-    print("Sampling client ready")
+    logger.info("Sampling client ready")
 
     import uvicorn
 
-    print(f"\nServing on http://0.0.0.0:{args.port}")
-    print("  /v1/chat/completions  - OpenAI chat")
-    print("  /v1/completions       - OpenAI completions")
-    print("  /logprobs             - per-token logprobs")
-    print("  /health               - health check")
+    logger.info(f"Serving on http://0.0.0.0:{args.port}")
+    logger.info("  /v1/chat/completions  - OpenAI chat")
+    logger.info("  /v1/completions       - OpenAI completions")
+    logger.info("  /logprobs             - per-token logprobs")
+    logger.info("  /health               - health check")
 
     uvicorn.run(app, host="0.0.0.0", port=args.port, log_level="info")
 
 
 if __name__ == "__main__":
     main()
+

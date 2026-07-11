@@ -1,0 +1,302 @@
+{
+  "tag": "p4uncap_drgrpo_s123",
+  "status": "completed",
+  "model": "Qwen/Qwen3-8B",
+  "model_short": "qwen3-8b",
+  "task": "gsm8k",
+  "seed": 123,
+  "rank": 4,
+  "group_size": 8,
+  "batch": 4,
+  "lr": 3e-05,
+  "temperature": 1.0,
+  "steps": 30,
+  "started_at": "2026-07-11T03:57:27.660053+00:00",
+  "output_path": "experiments/tinker-runs/results/p4uncap_drgrpo_s123.json",
+  "run_id": "bd721acc-e511-5a2f-9c7e-39bd9bec6512:train:0",
+  "initial_sampler": "tinker://bd721acc-e511-5a2f-9c7e-39bd9bec6512:train:0/sampler_weights/s0",
+  "reward_trace": [
+    0.65625,
+    0.625,
+    0.78125,
+    0.5,
+    0.78125,
+    0.75,
+    0.78125,
+    0.5,
+    0.34375,
+    0.65625,
+    0.59375,
+    0.65625,
+    0.28125,
+    0.5,
+    0.84375,
+    0.71875,
+    0.625,
+    0.5,
+    0.3125,
+    0.5,
+    0.71875,
+    0.46875,
+    0.6875,
+    0.65625,
+    0.34375,
+    0.40625,
+    0.5625,
+    0.71875,
+    0.71875,
+    0.96875
+  ],
+  "step_log": [
+    {
+      "step": 1,
+      "reward": 0.65625,
+      "loss": 0.13547134399414062,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 959.5625
+    },
+    {
+      "step": 2,
+      "reward": 0.625,
+      "loss": -1.9126014709472656,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 982.71875
+    },
+    {
+      "step": 3,
+      "reward": 0.78125,
+      "loss": -5.432910919189453,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 972.84375
+    },
+    {
+      "step": 4,
+      "reward": 0.5,
+      "loss": -0.9196548461914062,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 989.59375
+    },
+    {
+      "step": 5,
+      "reward": 0.78125,
+      "loss": 0.7906150817871094,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 981.125
+    },
+    {
+      "step": 6,
+      "reward": 0.75,
+      "loss": -8.652379989624023,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1004.8125
+    },
+    {
+      "step": 7,
+      "reward": 0.78125,
+      "loss": -7.289365768432617,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 941.71875
+    },
+    {
+      "step": 8,
+      "reward": 0.5,
+      "loss": -3.3383827209472656,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 1022.21875
+    },
+    {
+      "step": 9,
+      "reward": 0.34375,
+      "loss": -3.5669403076171875,
+      "zvf": 0.0,
+      "gu": 1.0,
+      "mean_comp_len": 1024.0
+    },
+    {
+      "step": 10,
+      "reward": 0.65625,
+      "loss": -0.3160581588745117,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 959.125
+    },
+    {
+      "step": 11,
+      "reward": 0.59375,
+      "loss": -4.994171142578125,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 983.78125
+    },
+    {
+      "step": 12,
+      "reward": 0.65625,
+      "loss": -0.9807815551757812,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 980.90625
+    },
+    {
+      "step": 13,
+      "reward": 0.28125,
+      "loss": -6.668178558349609,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 1024.0
+    },
+    {
+      "step": 14,
+      "reward": 0.5,
+      "loss": 0.28980016708374023,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 992.59375
+    },
+    {
+      "step": 15,
+      "reward": 0.84375,
+      "loss": -4.964297294616699,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 1002.28125
+    },
+    {
+      "step": 16,
+      "reward": 0.71875,
+      "loss": 0.07672882080078125,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 949.15625
+    },
+    {
+      "step": 17,
+      "reward": 0.625,
+      "loss": -3.585023880004883,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 942.375
+    },
+    {
+      "step": 18,
+      "reward": 0.5,
+      "loss": -15.051651000976562,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 887.53125
+    },
+    {
+      "step": 19,
+      "reward": 0.3125,
+      "loss": -5.281932830810547,
+      "zvf": 0.0,
+      "gu": 1.0,
+      "mean_comp_len": 1023.75
+    },
+    {
+      "step": 20,
+      "reward": 0.5,
+      "loss": -7.370456695556641,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 1012.5
+    },
+    {
+      "step": 21,
+      "reward": 0.71875,
+      "loss": -5.202098846435547,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 934.0
+    },
+    {
+      "step": 22,
+      "reward": 0.46875,
+      "loss": -2.666473388671875,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 965.34375
+    },
+    {
+      "step": 23,
+      "reward": 0.6875,
+      "loss": -4.107820510864258,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 959.8125
+    },
+    {
+      "step": 24,
+      "reward": 0.65625,
+      "loss": -9.464370727539062,
+      "zvf": 0.0,
+      "gu": 1.0,
+      "mean_comp_len": 1016.09375
+    },
+    {
+      "step": 25,
+      "reward": 0.34375,
+      "loss": -6.075080871582031,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1008.375
+    },
+    {
+      "step": 26,
+      "reward": 0.40625,
+      "loss": -4.838336944580078,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1014.84375
+    },
+    {
+      "step": 27,
+      "reward": 0.5625,
+      "loss": 5.6349029541015625,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 914.8125
+    },
+    {
+      "step": 28,
+      "reward": 0.71875,
+      "loss": -5.358131408691406,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 988.6875
+    },
+    {
+      "step": 29,
+      "reward": 0.71875,
+      "loss": -12.777119636535645,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 925.9375
+    },
+    {
+      "step": 30,
+      "reward": 0.96875,
+      "loss": -8.065849304199219,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 896.9375
+    }
+  ],
+  "last_updated_at": "2026-07-11T04:33:25.946654+00:00",
+  "latest_sampler": "tinker://bd721acc-e511-5a2f-9c7e-39bd9bec6512:train:0/sampler_weights/s30",
+  "checkpoint": "tinker://bd721acc-e511-5a2f-9c7e-39bd9bec6512:train:0/sampler_weights/final",
+  "first5_avg": 0.66875,
+  "last10_avg": 0.625,
+  "peak_reward": 0.96875,
+  "zero_reward_pct": 0.0,
+  "zero_loss_pct": 0.0,
+  "wall_clock_sec": 2159.9933240413666,
+  "completed_at": "2026-07-11T04:33:27.653537+00:00"
+}

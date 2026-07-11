@@ -1,0 +1,204 @@
+{
+  "tag": "p4uncap_grpo_s456",
+  "status": "running",
+  "model": "Qwen/Qwen3-8B",
+  "model_short": "qwen3-8b",
+  "task": "gsm8k",
+  "seed": 456,
+  "rank": 4,
+  "group_size": 8,
+  "batch": 4,
+  "lr": 3e-05,
+  "temperature": 1.0,
+  "steps": 30,
+  "started_at": "2026-07-11T04:44:28.685774+00:00",
+  "output_path": "experiments/tinker-runs/results/p4uncap_grpo_s456.json",
+  "run_id": "315c33b9-fb35-56bc-b54d-184b6b98acce:train:0",
+  "initial_sampler": "tinker://315c33b9-fb35-56bc-b54d-184b6b98acce:train:0/sampler_weights/s0",
+  "reward_trace": [
+    0.90625,
+    0.625,
+    0.59375,
+    0.34375,
+    0.53125,
+    0.625,
+    0.46875,
+    0.46875,
+    0.375,
+    0.59375,
+    0.65625,
+    0.78125,
+    0.59375,
+    0.90625,
+    0.90625,
+    0.5625,
+    0.8125,
+    0.8125,
+    0.5,
+    0.6875
+  ],
+  "step_log": [
+    {
+      "step": 1,
+      "reward": 0.90625,
+      "loss": -7.329858779907227,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 950.625
+    },
+    {
+      "step": 2,
+      "reward": 0.625,
+      "loss": -1.3835716247558594,
+      "zvf": 0.0,
+      "gu": 1.0,
+      "mean_comp_len": 995.6875
+    },
+    {
+      "step": 3,
+      "reward": 0.59375,
+      "loss": -4.184726715087891,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1008.6875
+    },
+    {
+      "step": 4,
+      "reward": 0.34375,
+      "loss": -5.512434005737305,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1019.65625
+    },
+    {
+      "step": 5,
+      "reward": 0.53125,
+      "loss": -5.925193786621094,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1015.09375
+    },
+    {
+      "step": 6,
+      "reward": 0.625,
+      "loss": -7.686813831329346,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 954.875
+    },
+    {
+      "step": 7,
+      "reward": 0.46875,
+      "loss": -1.85791015625,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 966.84375
+    },
+    {
+      "step": 8,
+      "reward": 0.46875,
+      "loss": -10.375964164733887,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 987.75
+    },
+    {
+      "step": 9,
+      "reward": 0.375,
+      "loss": 2.413227081298828,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 968.40625
+    },
+    {
+      "step": 10,
+      "reward": 0.59375,
+      "loss": -6.717214584350586,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 947.90625
+    },
+    {
+      "step": 11,
+      "reward": 0.65625,
+      "loss": 1.6591730117797852,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 934.53125
+    },
+    {
+      "step": 12,
+      "reward": 0.78125,
+      "loss": -5.702239990234375,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 851.21875
+    },
+    {
+      "step": 13,
+      "reward": 0.59375,
+      "loss": -0.5954246520996094,
+      "zvf": 0.0,
+      "gu": 1.0,
+      "mean_comp_len": 1024.0
+    },
+    {
+      "step": 14,
+      "reward": 0.90625,
+      "loss": -0.22810935974121094,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 946.4375
+    },
+    {
+      "step": 15,
+      "reward": 0.90625,
+      "loss": -6.472755432128906,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 863.8125
+    },
+    {
+      "step": 16,
+      "reward": 0.5625,
+      "loss": -2.825105667114258,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 1013.0625
+    },
+    {
+      "step": 17,
+      "reward": 0.8125,
+      "loss": -16.01988410949707,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 937.59375
+    },
+    {
+      "step": 18,
+      "reward": 0.8125,
+      "loss": -12.963817596435547,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 884.78125
+    },
+    {
+      "step": 19,
+      "reward": 0.5,
+      "loss": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0,
+      "mean_comp_len": 945.0625
+    },
+    {
+      "step": 20,
+      "reward": 0.6875,
+      "loss": -4.448156356811523,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 998.625
+    }
+  ],
+  "last_updated_at": "2026-07-11T05:07:04.671282+00:00",
+  "latest_sampler": "tinker://315c33b9-fb35-56bc-b54d-184b6b98acce:train:0/sampler_weights/s20"
+}

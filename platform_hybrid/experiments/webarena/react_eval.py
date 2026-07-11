@@ -113,7 +113,7 @@ def _import_benchmark(benchmark: str) -> None:
         raise ValueError(f"Unknown benchmark: {benchmark}")
 
 
-def _make_env(env_id: str, headless: bool = True):
+def _make_env(env_id: str, headless: bool = True) -> Any:
     import gymnasium as gym
     try:
         return gym.make(env_id, headless=headless)
@@ -171,7 +171,7 @@ def _parse_response(text: str) -> tuple[str, Optional[str]]:
 class TinkerChatSampler:
     """Minimal wrapper: render chat messages -> tokens -> sc.sample -> decode."""
 
-    def __init__(self, model: str, temperature: float = 0.0, max_tokens: int = 512):
+    def __init__(self, model: str, temperature: float = 0.0, max_tokens: int = 512) -> None:
         import tinker
         from tinker.types import SamplingParams, ModelInput
         from transformers import AutoTokenizer
@@ -286,8 +286,8 @@ def run_episode(
         logger.exception("Episode crashed env_id=%s seed=%s: %r", env_id, seed, exc)
         try:
             env.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Failed to close env after crash env_id=%s: %s", env_id, e)
         return EpisodeResult(
             env_id=env_id, seed=seed, score=0.0, total_reward=0.0,
             terminated=False, truncated=False, num_steps=len(steps),
@@ -297,8 +297,8 @@ def run_episode(
     finally:
         try:
             env.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Failed to close env env_id=%s: %s", env_id, e)
     score = max(max_reward, total_reward)
     score = max(0.0, min(1.0, float(score)))
     return EpisodeResult(
@@ -340,7 +340,7 @@ def _shard(tasks: List[str], shard_spec: str) -> List[str]:
     return tasks[k::n]
 
 
-def _main_sync(args) -> int:
+def _main_sync(args: argparse.Namespace) -> int:
     _import_benchmark(args.benchmark)
     tasks = _parse_tasks(args.tasks, args.benchmark)
     tasks = _shard(tasks, args.shard)
@@ -423,10 +423,12 @@ def _main_sync(args) -> int:
     done_ids: set = set()
     if args.resume and out_path.exists():
         for line in out_path.read_text().splitlines():
+            if not line.strip():
+                continue
             try:
                 done_ids.add(json.loads(line)["env_id"])
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Failed to parse line for done_ids: %s", e)
         logger.info("resuming: %d already done", len(done_ids))
 
     for i, env_id in enumerate(tasks):
@@ -514,7 +516,7 @@ def main() -> int:
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
     if not os.environ.get("TINKER_API_KEY") and not Path(os.path.expanduser("~/.tinker_api_key")).exists():
-        print("ERROR: TINKER_API_KEY not set and ~/.tinker_api_key missing", file=sys.stderr)
+        logger.error("TINKER_API_KEY not set and ~/.tinker_api_key missing")
         return 2
     return _main_sync(args)
 

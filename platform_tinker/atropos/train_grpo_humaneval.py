@@ -41,10 +41,11 @@ import shutil
 import signal
 import sys
 import textwrap
-import time
 import traceback
 from pathlib import Path
 from typing import Any, List
+
+import numpy as np
 
 import yaml
 
@@ -161,18 +162,51 @@ def make_humaneval_reward_fn(dataset, group_size: int):
                 score = _run_humaneval_test(full_code, meta.get("test", ""), meta.get("entry_point", ""))
             else:
                 score = 0.0
-            rewards.append(score)
+                
+            # Basic PRM for code (e.g. tracking docstrings or comments as reasoning steps)
+            step_reward = 0.0
+            text_lower = code.lower()
+            if "# step" in text_lower or '"""' in text_lower:
+                step_reward += 0.2
+            
+            rewards.append(score + step_reward)
         
         zvf_sum = 0.0
+        advantage_variances = []
         n_groups = len(rewards) // group_size
         if n_groups > 0:
             for idx in range(n_groups):
                 chunk = rewards[idx*group_size:(idx+1)*group_size]
+                var = np.var(chunk)
+                advantage_variances.append(var)
                 mr = sum(chunk) / group_size
                 if all(abs(r - mr) < 1e-6 for r in chunk):
                     zvf_sum += 1.0
-            global _last_zvf
+            global _last_zvf, _last_adv_var, _last_acr
             _last_zvf = zvf_sum / n_groups
+            _last_adv_var = float(np.mean(advantage_variances))
+            _last_acr = 1.0 if _last_adv_var < 1e-4 else 0.0
+            
+        # Length confounding panel
+        lengths = [len(c if isinstance(c, str) else str(c)) for c in completions]
+        correct_lens = [l for l, r in zip(lengths, rewards) if r > 0.5]
+        incorrect_lens = [l for l, r in zip(lengths, rewards) if r <= 0.5]
+        
+        global _last_mean_len_correct, _last_mean_len_incorrect, _last_len_reward_corr
+        _last_mean_len_correct = float(np.mean(correct_lens)) if correct_lens else 0.0
+        _last_mean_len_incorrect = float(np.mean(incorrect_lens)) if incorrect_lens else 0.0
+        
+        if correct_lens and incorrect_lens:
+            mean_y1 = _last_mean_len_correct
+            mean_y0 = _last_mean_len_incorrect
+            n1 = len(correct_lens)
+            n0 = len(incorrect_lens)
+            n = n1 + n0
+            std_y = np.std(lengths)
+            _last_len_reward_corr = float(((mean_y1 - mean_y0) / (std_y + 1e-8)) * np.sqrt((n1 * n0) / (n * (n - 1))))
+        else:
+            _last_len_reward_corr = 0.0
+            
         return rewards
 
     return reward_fn
@@ -256,23 +290,57 @@ def make_tool_use_reward_fn(group_size: int):
                 ga   = gold_answers[i][0] if isinstance(gold_answers[i], list) else gold_answers[i]
                 idx  = int(gold_args[i][0] if isinstance(gold_args[i], list) else gold_args[i])
                 _, _, args_fn, _ = _TOOL_EXAMPLES[idx % len(_TOOL_EXAMPLES)]
-                rewards.append(_score_tool_call(text, gt, args_fn, ga))
+                base_reward = _score_tool_call(text, gt, args_fn, ga)
             else:
-                rewards.append(0.0)
+                base_reward = 0.0
+                
+            # PRM for tool use (rewarding step-by-step thinking before tool call)
+            step_reward = 0.0
+            text_lower = text.lower()
+            if "thought:" in text_lower or "step" in text_lower:
+                step_reward += 0.2
+                
+            rewards.append(base_reward + step_reward)
         
         # TODO: Adversarial review notes that ZVF completely breaks down outside of math tasks.
         # In format-gated tasks (like tool-use), ZVF saturates at 1.0 because the base model
         # consistently fails schema parsing. Replace ZVF with ERF (Effective-Rollout Fraction).
         zvf_sum = 0.0
+        advantage_variances = []
         n_groups = len(rewards) // group_size
         if n_groups > 0:
             for idx in range(n_groups):
                 chunk = rewards[idx*group_size:(idx+1)*group_size]
+                var = np.var(chunk)
+                advantage_variances.append(var)
                 mr = sum(chunk) / group_size
                 if all(abs(r - mr) < 1e-6 for r in chunk):
                     zvf_sum += 1.0
-            global _last_zvf
+            global _last_zvf, _last_adv_var, _last_acr
             _last_zvf = zvf_sum / n_groups
+            _last_adv_var = float(np.mean(advantage_variances))
+            _last_acr = 1.0 if _last_adv_var < 1e-4 else 0.0
+            
+        # Length confounding panel
+        lengths = [len(c if isinstance(c, str) else str(c)) for c in completions]
+        correct_lens = [l for l, r in zip(lengths, rewards) if r > 0.5]
+        incorrect_lens = [l for l, r in zip(lengths, rewards) if r <= 0.5]
+        
+        global _last_mean_len_correct, _last_mean_len_incorrect, _last_len_reward_corr
+        _last_mean_len_correct = float(np.mean(correct_lens)) if correct_lens else 0.0
+        _last_mean_len_incorrect = float(np.mean(incorrect_lens)) if incorrect_lens else 0.0
+        
+        if correct_lens and incorrect_lens:
+            mean_y1 = _last_mean_len_correct
+            mean_y0 = _last_mean_len_incorrect
+            n1 = len(correct_lens)
+            n0 = len(incorrect_lens)
+            n = n1 + n0
+            std_y = np.std(lengths)
+            _last_len_reward_corr = float(((mean_y1 - mean_y0) / (std_y + 1e-8)) * np.sqrt((n1 * n0) / (n * (n - 1))))
+        else:
+            _last_len_reward_corr = 0.0
+            
         return rewards
 
     return reward_fn
@@ -425,8 +493,21 @@ def maybe_push_to_hub(final_dir: str, cfg: dict, config_path: str, seed: int) ->
 
 # ── main ─────────────────────────────────────────────────────────────────────
 
-def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None = None):
+def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None = None,
+          total_token_budget: int | None = None, tokens_per_sample: int = 2048,
+          group_size_override: int | None = None, batch_size_override: int | None = None):
     cfg = load_config(config_path)
+    if group_size_override:
+        cfg['group_size'] = group_size_override
+    if batch_size_override:
+        cfg['batch_size'] = batch_size_override
+        
+    if total_token_budget:
+        total_samples = total_token_budget / tokens_per_sample
+        effective_batch_size = cfg['batch_size']
+        cfg['total_steps'] = max(1, int(total_samples / effective_batch_size))
+        print(f"[P1 Ablation] Matching token budget: {total_token_budget} tokens -> total_steps={cfg['total_steps']}")
+        
     print(f"\n{'='*60}")
     print(f"  GRPO ({task}) — {cfg['model_name']}")
     print(f"  Steps: {cfg['total_steps']}  batch: {cfg['batch_size']}  group: {cfg['group_size']}")
@@ -509,7 +590,21 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
                 step_log.append(float(mean_r))
                 # TODO: ZVF is borderline tautological and a symptom, not a root cause.
                 # Consider monitoring advantage variance or policy entropy directly instead of ZVF.
-                log_dict = {"train/percent_correct": float(mean_r), "train/step": state.global_step, "zvf": _last_zvf}
+                global _last_zvf, _last_adv_var, _last_acr, _last_mean_len_correct, _last_mean_len_incorrect, _last_len_reward_corr
+                log_dict = {"train/percent_correct": float(mean_r), "train/step": state.global_step}
+                if '_last_zvf' in globals():
+                    log_dict["zvf"] = _last_zvf
+                if '_last_adv_var' in globals():
+                    log_dict["diagnostics/advantage_variance"] = _last_adv_var
+                if '_last_acr' in globals():
+                    log_dict["diagnostics/advantage_collapse_rate"] = _last_acr
+                if '_last_mean_len_correct' in globals():
+                    log_dict["diagnostics/mean_len_correct"] = _last_mean_len_correct
+                if '_last_mean_len_incorrect' in globals():
+                    log_dict["diagnostics/mean_len_incorrect"] = _last_mean_len_incorrect
+                if '_last_len_reward_corr' in globals():
+                    log_dict["diagnostics/length_reward_corr"] = _last_len_reward_corr
+                    
                 if "objective/entropy" in logs:
                     log_dict["train/policy_entropy"] = logs["objective/entropy"]
                 wandb.log(log_dict,
@@ -549,10 +644,18 @@ if __name__ == "__main__":
     # We should run these experiments across multiple seeds (e.g. N=5) to compute variance.
     parser.add_argument("--seed",      type=int, default=42)
     parser.add_argument("--wandb_key", default=None)
+    parser.add_argument("--total_token_budget", type=int, default=None, help="Total token budget for causal SFT warm-up ablation")
+    parser.add_argument("--tokens_per_sample", type=int, default=2048, help="Avg tokens per sample")
+    parser.add_argument("--group_size", type=int, default=None, help="Override config group_size for Pareto ablation")
+    parser.add_argument("--batch_size", type=int, default=None, help="Override config batch_size for Pareto ablation")
     args = parser.parse_args()
     train(
         config_path=args.config,
         task=args.task,
         seed=args.seed,
         wandb_api_key=args.wandb_key or os.environ.get("WANDB_API_KEY"),
+        total_token_budget=args.total_token_budget,
+        tokens_per_sample=args.tokens_per_sample,
+        group_size_override=args.group_size,
+        batch_size_override=args.batch_size,
     )

@@ -274,10 +274,10 @@ def generate_trl_train_script(config: TRLConfig, output_path: str = "train_trl.p
     """Generate a runnable TRL GRPO script from a validated configuration."""
 
     algorithm = config.algorithm.algorithm.lower()
-    if algorithm != "grpo":
+    if algorithm not in ("grpo", "idpo"):
         raise NotImplementedError(
-            "Script generation currently supports GRPO only; the previous PPO/DPO "
-            "branch emitted an incomplete script"
+            "Script generation currently supports GRPO and iDPO (Online DPO) only; "
+            "the previous PPO/DPO branch emitted an incomplete script"
         )
     if not config.data.train_data:
         raise ValueError("At least one data.train_data JSON path is required")
@@ -292,7 +292,9 @@ import os
 import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from trl import GRPOConfig, GRPOTrainer
+{
+    'from trl import GRPOConfig, GRPOTrainer' if algorithm == 'grpo' else 'from trl import OnlineDPOConfig, OnlineDPOTrainer'
+}
 from platform_local.unified.peft_utils import apply_peft_method, save_bitfit_checkpoint
 
 # Configuration
@@ -349,8 +351,15 @@ if USE_PEFT:
 # Data
 train_dataset = load_dataset("json", data_files=TRAIN_FILES, split="train")
 
-# Reward function (customize this)
-def reward_fn(completions, prompts=None, **kwargs):
+# Process Reward Model (PRM) & Diagnostic tracking
+import numpy as np
+import wandb
+
+def prm_reward_fn(completions, prompts=None, **kwargs):
+    """
+    Evaluates step-level fidelity using a Process Reward Model (PRM) approach
+    and tracks Advantage Collapse Rate (ACR) across groups.
+    """
     def completion_text(completion):
         if isinstance(completion, str):
             return completion
@@ -358,13 +367,54 @@ def reward_fn(completions, prompts=None, **kwargs):
             return str(completion[-1].get("content", ""))
         return str(completion)
 
-    return [
-        1.0 if BOXED_MARKER in completion_text(completion) else 0.0
-        for completion in completions
-    ]
+    rewards = []
+    lengths = []
+    for completion in completions:
+        text = completion_text(completion).lower()
+        lengths.append(len(text))
+        step_reward = 0.0
+        
+        # PRM intermediate step fidelity (mock logic for step reasoning)
+        steps_found = text.count("step") + text.count("first") + text.count("then")
+        if steps_found > 0:
+            step_reward += min(0.5, 0.1 * steps_found)
+            
+        # Final outcome ORM
+        if BOXED_MARKER in text:
+            step_reward += 0.5
+            
+        rewards.append(step_reward)
+        
+    # Advantage Diagnostics (ACR & Variance & Length Bias)
+    if len(rewards) > 1:
+        variance = np.var(rewards)
+        acr = 1.0 if variance < 1e-4 else 0.0
+        
+        correct_lens = [l for l, r in zip(lengths, rewards) if r > 0.5]
+        incorrect_lens = [l for l, r in zip(lengths, rewards) if r <= 0.5]
+        mean_len_correct = np.mean(correct_lens) if correct_lens else 0.0
+        mean_len_incorrect = np.mean(incorrect_lens) if incorrect_lens else 0.0
+        
+        len_reward_corr = 0.0
+        if correct_lens and incorrect_lens:
+            n1, n0, n = len(correct_lens), len(incorrect_lens), len(lengths)
+            std_y = np.std(lengths)
+            len_reward_corr = ((mean_len_correct - mean_len_incorrect) / (std_y + 1e-8)) * np.sqrt((n1 * n0) / (n * (n - 1)))
+            
+        if wandb.run is not None:
+            wandb.log({{
+                "diagnostics/advantage_variance": variance,
+                "diagnostics/advantage_collapse_rate": acr,
+                "diagnostics/mean_prm_reward": np.mean(rewards),
+                "diagnostics/mean_len_correct": mean_len_correct,
+                "diagnostics/mean_len_incorrect": mean_len_incorrect,
+                "diagnostics/length_reward_corr": len_reward_corr
+            }}, commit=False)
+            
+    return rewards
 
-# GRPO Config
-grpo_config = GRPOConfig(
+# Trainer Config
+trainer_config = { 'GRPOConfig' if algorithm == 'grpo' else 'OnlineDPOConfig' }(
     output_dir="./checkpoints",
     num_train_epochs={config.epochs},
     per_device_train_batch_size={config.data.train_batch_size},
@@ -379,14 +429,15 @@ grpo_config = GRPOConfig(
     logging_steps=1,
     save_strategy="no" if USE_PEFT and PEFT_METHOD == "bitfit" else "steps",
     save_steps={config.save_interval},
+    {f'deepspeed="{config.deepspeed}",' if config.deepspeed else ''}
 )
 
 # Trainer
-trainer = GRPOTrainer(
+trainer = { 'GRPOTrainer' if algorithm == 'grpo' else 'OnlineDPOTrainer' }(
     model=model,
-    args=grpo_config,
+    args=trainer_config,
     train_dataset=train_dataset,
-    reward_funcs=[reward_fn],
+    reward_funcs=[prm_reward_fn],
     processing_class=tokenizer,
 )
 

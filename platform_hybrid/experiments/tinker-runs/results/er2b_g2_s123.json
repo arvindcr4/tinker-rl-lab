@@ -1,0 +1,17 @@
+{
+  "tag": "er2b_g2_s123",
+  "status": "started",
+  "model": "Qwen/Qwen3-8B",
+  "model_short": "qwen3-8b",
+  "task": "gsm8k",
+  "seed": 123,
+  "rank": 4,
+  "group_size": 2,
+  "batch": 8,
+  "lr": 3e-05,
+  "temperature": 1.0,
+  "steps": 160,
+  "started_at": "2026-07-11T03:59:28.182626+00:00",
+  "output_path": "experiments/tinker-runs/results/er2b_g2_s123.json",
+  "run_id": "d54c5e48-5614-5b0a-8e13-50b8a1cb489d:train:0"
+}

@@ -11,19 +11,25 @@ Original Tinker Results:
 This implementation uses GRPOTrainer with verifiable binary rewards.
 """
 
-import re
-import sys
+import logging
 import os
-import torch
-from dataclasses import dataclass
+import random
+import re
+from dataclasses import dataclass, field
 from typing import List, Optional
+
+import torch
 from datasets import Dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, EarlyStoppingCallback, HfArgumentParser
 from trl import GRPOTrainer, GRPOConfig
 
-# Add project root to path for utils
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-from utils.seed import set_global_seed, get_seed_from_args, log_experiment_metadata
+from utils.seed import set_global_seed, log_experiment_metadata
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+)
 
 
 @dataclass
@@ -33,10 +39,53 @@ class MathProblem:
     answer: int
 
 
+@dataclass
+class ScriptArguments:
+    """Arguments for the GRPO Math RL Experiment."""
+    model_name: str = field(default="meta-llama/Llama-3.2-1B", metadata={"help": "The model to train."})
+    seed: int = field(default=42, metadata={"help": "Random seed for reproducibility."})
+    num_train_problems: int = field(default=1000, metadata={"help": "Number of problems in the train dataset."})
+    num_eval_problems: int = field(default=200, metadata={"help": "Number of problems in the eval dataset."})
+    output_dir: str = field(default="./grpo_math_output", metadata={"help": "Output directory for the model."})
+    
+    # Batch settings
+    per_device_train_batch_size: int = field(default=4, metadata={"help": "Batch size per device."})
+    gradient_accumulation_steps: int = field(default=25, metadata={"help": "Gradient accumulation steps."})
+    
+    # GRPO-specific
+    num_generations: int = field(default=4, metadata={"help": "Number of generations per prompt."})
+    beta: float = field(default=0.1, metadata={"help": "KL penalty coefficient."})
+    
+    # Learning rate
+    learning_rate: float = field(default=1e-4, metadata={"help": "Learning rate."})
+    
+    # LoRA settings
+    use_peft: bool = field(default=True, metadata={"help": "Whether to use PEFT."})
+    lora_r: int = field(default=32, metadata={"help": "LoRA rank."})
+    lora_alpha: int = field(default=64, metadata={"help": "LoRA alpha."})
+    lora_dropout: float = field(default=0.05, metadata={"help": "LoRA dropout."})
+    
+    # Generation settings
+    max_new_tokens: int = field(default=5, metadata={"help": "Max new tokens to generate."})
+    temperature: float = field(default=1.0, metadata={"help": "Sampling temperature."})
+    
+    # Training
+    num_train_epochs: int = field(default=1, metadata={"help": "Number of training epochs."})
+    logging_steps: int = field(default=1, metadata={"help": "Logging steps."})
+    save_steps: int = field(default=10, metadata={"help": "Save steps."})
+    eval_strategy: str = field(default="steps", metadata={"help": "Evaluation strategy."})
+    eval_steps: int = field(default=10, metadata={"help": "Evaluation steps."})
+    save_strategy: str = field(default="steps", metadata={"help": "Save strategy."})
+    load_best_model_at_end: bool = field(default=True, metadata={"help": "Load best model at end."})
+    metric_for_best_model: str = field(default="eval_reward/mean", metadata={"help": "Metric for best model."})
+    
+    # Optimization
+    max_grad_norm: float = field(default=1.0, metadata={"help": "Max gradient norm."})
+    warmup_ratio: float = field(default=0.1, metadata={"help": "Warmup ratio."})
+
+
 def generate_arithmetic_dataset(num_problems: int = 1000, max_num: int = 99) -> Dataset:
     """Generate arithmetic addition problems."""
-    import random
-
     problems = []
     for _ in range(num_problems):
         a = random.randint(1, max_num)
@@ -89,67 +138,53 @@ def math_reward_function(completions: List[str], prompts: List[str], answers: Li
 
 
 def main():
+    parser = HfArgumentParser((ScriptArguments,))
+    args, = parser.parse_args_into_dataclasses()
+
     # Seed management for reproducibility
-    seed = get_seed_from_args(default=42)
-    env_info = set_global_seed(seed)
-    print(f"Seed set to {seed} | Environment: {env_info}")
+    env_info = set_global_seed(args.seed)
+    logger.info(f"Seed set to {args.seed} | Environment: {env_info}")
 
-    # Model configuration (matching Tinker)
-    model_name = "meta-llama/Llama-3.2-1B"
-
-    print("Loading model and tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    logger.info("Loading model and tokenizer...")
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     tokenizer.pad_token = tokenizer.eos_token
 
     model = AutoModelForCausalLM.from_pretrained(
-        model_name,
+        args.model_name,
         torch_dtype=torch.bfloat16,
         device_map=None if "LOCAL_RANK" in os.environ else "auto",
     )
 
     # Generate dataset
-    print("Generating arithmetic dataset...")
-    dataset = generate_arithmetic_dataset(num_problems=1000)
-    eval_dataset = generate_arithmetic_dataset(num_problems=200)
+    logger.info("Generating arithmetic dataset...")
+    dataset = generate_arithmetic_dataset(num_problems=args.num_train_problems)
+    eval_dataset = generate_arithmetic_dataset(num_problems=args.num_eval_problems)
 
     # GRPO Configuration (matching Tinker hyperparameters)
+    output_dir = os.environ.get("RESULTS_DIR", args.output_dir)
     grpo_config = GRPOConfig(
-        output_dir=os.environ.get("RESULTS_DIR", "./grpo_math_output"),
-
-        # Batch settings (matching Tinker: group_size=4, groups_per_batch=100)
-        per_device_train_batch_size=4,
-        gradient_accumulation_steps=25,  # Effective batch = 100 groups
-
-        # GRPO-specific
-        num_generations=4,  # group_size in Tinker
-        beta=0.1,  # KL penalty coefficient
-
-        # Learning rate (matching Tinker)
-        learning_rate=1e-4,
-
-        # LoRA settings
-        use_peft=True,
-        lora_r=32,  # lora_rank in Tinker
-        lora_alpha=64,
-        lora_dropout=0.05,
-
-        # Generation settings
-        max_new_tokens=5,  # max_tokens in Tinker
-        temperature=1.0,
-
-        # Training
-        num_train_epochs=1,
-        logging_steps=1,
-        save_steps=10,
-        eval_strategy="steps",
-        eval_steps=10,
-        save_strategy="steps",
-        load_best_model_at_end=True,
-        metric_for_best_model="eval_reward/mean",
-
-        # Optimization
-        max_grad_norm=1.0,
-        warmup_ratio=0.1,
+        output_dir=output_dir,
+        per_device_train_batch_size=args.per_device_train_batch_size,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
+        num_generations=args.num_generations,
+        beta=args.beta,
+        learning_rate=args.learning_rate,
+        use_peft=args.use_peft,
+        lora_r=args.lora_r,
+        lora_alpha=args.lora_alpha,
+        lora_dropout=args.lora_dropout,
+        max_new_tokens=args.max_new_tokens,
+        temperature=args.temperature,
+        num_train_epochs=args.num_train_epochs,
+        logging_steps=args.logging_steps,
+        save_steps=args.save_steps,
+        eval_strategy=args.eval_strategy,
+        eval_steps=args.eval_steps,
+        save_strategy=args.save_strategy,
+        load_best_model_at_end=args.load_best_model_at_end,
+        metric_for_best_model=args.metric_for_best_model,
+        max_grad_norm=args.max_grad_norm,
+        warmup_ratio=args.warmup_ratio,
     )
 
     # Create reward function wrapper
@@ -159,8 +194,7 @@ def main():
             batch_answers = [a[0] for a in batch_answers]
         return math_reward_function(completions, prompts, batch_answers)
 
-    from transformers import EarlyStoppingCallback
-    print("Initializing GRPOTrainer...")
+    logger.info("Initializing GRPOTrainer...")
     trainer = GRPOTrainer(
         model=model,
         args=grpo_config,
@@ -171,30 +205,30 @@ def main():
         callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
     )
 
-    print("Starting GRPO training...")
-    print("=" * 50)
-    print("Expected: reward=0.67 -> 1.0, accuracy=70% -> 100%")
-    print("=" * 50)
+    logger.info("Starting GRPO training...")
+    logger.info("=" * 50)
+    logger.info("Expected: reward=0.67 -> 1.0, accuracy=70% -> 100%")
+    logger.info("=" * 50)
 
     trainer.train(resume_from_checkpoint=True)
 
     # Save final model
-    output_dir = f"./grpo_math_final_seed{seed}"
-    trainer.save_model(output_dir)
-    print(f"Training complete! Model saved to {output_dir}")
+    final_output_dir = f"{output_dir}_final_seed{args.seed}"
+    trainer.save_model(final_output_dir)
+    logger.info(f"Training complete! Model saved to {final_output_dir}")
 
     # Log experiment metadata
     log_experiment_metadata(
         experiment_name="trl_grpo_math",
-        seed=seed,
+        seed=args.seed,
         hyperparameters={
-            "model_name": model_name,
-            "learning_rate": 1e-4,
-            "lora_rank": 32,
-            "num_generations": 4,
-            "beta": 0.1,
+            "model_name": args.model_name,
+            "learning_rate": args.learning_rate,
+            "lora_rank": args.lora_r,
+            "num_generations": args.num_generations,
+            "beta": args.beta,
         },
-        output_dir=output_dir,
+        output_dir=final_output_dir,
     )
 
 

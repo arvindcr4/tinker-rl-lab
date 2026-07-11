@@ -33,15 +33,25 @@ except ImportError:
 
 
 import argparse
+import logging
 import os
 import re
 import shutil
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import List
 
+import numpy as np
 import yaml
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger("train_grpo_unsloth")
 
 # ── Pre-import peft/transformers before wandb installs its import hooks ─────
 # wandb monkey-patches importlib; importing these first avoids the lazy-load
@@ -68,8 +78,6 @@ try:
         wandb._vram_patched = True
 except ImportError:
     pass
-
-_last_zvf = 0.0
 
 
 # ── reward helpers (verbatim logic from gsm8k_tinker.py) ────────────────────
@@ -123,6 +131,84 @@ def _score_response(response: str, gold_boxed: str) -> float:
     )
     return 1.0 if verify(answer_parsed, gold_parsed) else 0.0
 
+def _generative_score_response(prompt: str, response: str, gold_raw: str, api_url: str = "http://localhost:8001/v1") -> float:
+    """
+    Area 10: Generative Verifier.
+    Uses the local LLM inference server to generate a reasoning trace and verify correctness.
+    """
+    import requests
+    system_prompt = (
+        "You are a strict math teacher grading a student's answer. "
+        "First, write a short reasoning trace comparing the student's answer to the exact gold answer. "
+        "Then, if they are mathematically equivalent, end your response with exactly: <SCORE>1</SCORE>. "
+        "Otherwise, end with exactly: <SCORE>0</SCORE>."
+    )
+    user_prompt = f"Question: {prompt}\n\nGold Answer: {gold_raw}\n\nStudent Answer: {response}"
+    try:
+        resp = requests.post(
+            f"{api_url}/chat/completions",
+            json={
+                "model": "meta-llama/Llama-3.1-8B-Instruct",
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "temperature": 0.0,
+                "max_tokens": 128
+            },
+            timeout=10.0
+        )
+        if resp.status_code == 200:
+            content = resp.json()["choices"][0]["message"]["content"]
+            if "<SCORE>1</SCORE>" in content:
+                return 1.0
+        return 0.0
+    except Exception:
+        # Fallback to 0.0 on timeout/error
+        return 0.0
+
+def _execution_score_response(response: str, gold_raw: str) -> float:
+    """
+    Area 5: Execution-Based Rewards.
+    Extracts a Python block, executes it, captures stdout, and compares it to the gold answer.
+    """
+    import io, contextlib, signal, re
+    
+    # Extract Python code
+    match = re.search(r"```python(.*?)```", response, re.DOTALL)
+    if not match:
+        return 0.0
+    code = match.group(1).strip()
+    
+    # Secure Sandbox
+    safe_globals = {
+        "__builtins__": {
+            k: __builtins__[k] for k in (
+                "abs", "all", "any", "bool", "dict", "float", "int", "len",
+                "list", "map", "max", "min", "pow", "print", "range", "round",
+                "set", "str", "sum", "tuple", "zip"
+            ) if k in __builtins__
+        },
+        "math": __import__("math")
+    }
+    
+    output = io.StringIO()
+    def _timeout_handler(signum, frame):
+        raise TimeoutError()
+        
+    old = signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(3)
+    try:
+        with contextlib.redirect_stdout(output):
+            exec(compile(code, "<math_exec>", "exec"), safe_globals)
+        printed = output.getvalue().strip()
+        gold_answer = gold_raw.split("#")[-1].strip().replace(",", "")
+        return 1.0 if printed == gold_answer else 0.0
+    except Exception:
+        return 0.0
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, old)
 
 def _completion_to_text(completion) -> str:
     """
@@ -239,7 +325,7 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
         try:
             from unsloth import FastLanguageModel
 
-            print(f"  Loading {model_name} with Unsloth ({params_b}B, 4-bit={load_in_4bit}) ...")
+            logger.info(f"Loading {model_name} with Unsloth ({params_b}B, 4-bit={load_in_4bit}) ...")
             model, tokenizer = FastLanguageModel.from_pretrained(
                 model_name=model_name,
                 max_seq_length=max_seq_len,
@@ -260,7 +346,7 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
             )
             backend = "unsloth"
         except Exception as exc:
-            print(f"  Unsloth load failed, falling back to Transformers/PEFT: {exc}")
+            logger.warning(f"Unsloth load failed, falling back to Transformers/PEFT: {exc}")
             model = None
             tokenizer = None
             backend = "hf"
@@ -274,7 +360,7 @@ def load_model_and_tokenizer(model_name: str, lora_rank: int, max_seq_len: int):
         from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
         from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
-        print(f"  Loading {model_name} with Transformers/PEFT ({params_b}B, 4-bit={load_in_4bit}) ...")
+        logger.info(f"Loading {model_name} with Transformers/PEFT ({params_b}B, 4-bit={load_in_4bit}) ...")
         quantization_config = None
         compute_dtype = torch.float32 if load_in_4bit else (torch.bfloat16 if torch.cuda.is_available() else torch.float32)
         # BnB 4-bit requires entire model on GPU (no CPU offload).
@@ -359,43 +445,113 @@ def prepare_dataset(tokenizer, use_prefix: bool = True, seed: int = 42, split: s
 
 # ── reward function for GRPOTrainer ──────────────────────────────────────────
 
-def make_reward_fn(group_size: int):
-    """Return a reward function compatible with TRL GRPOTrainer."""
+class StatefulRewardFunction:
+    """A stateful reward function compatible with TRL GRPOTrainer, tracking metrics thread-safely."""
+    
+    def __init__(self, group_size: int, evaluation_mode: str = "static"):
+        self.group_size = group_size
+        self.evaluation_mode = evaluation_mode
+        self.lock = threading.Lock()
+        self.metrics = {}
 
-    def reward_fn(completions: List[str], prompts=None, **kwargs) -> List[float]:
+    def __call__(self, completions: List[str], prompts=None, **kwargs) -> List[float]:
         # GRPOTrainer passes gold answers via kwargs when the dataset has them.
         # We store gold_boxed in the dataset column and TRL surfaces it here.
         gold_list = kwargs.get("gold_boxed", None)
         rewards = []
+        comp_texts = []
         for i, completion in enumerate(completions):
             if gold_list is not None:
                 gold = gold_list[i] if isinstance(gold_list[i], str) else gold_list[i][0]
             else:
                 gold = ""   # fallback (shouldn't happen)
-            rewards.append(_score_response(_completion_to_text(completion), gold))
+            
+            comp_text = _completion_to_text(completion)
+            comp_texts.append(comp_text)
+
+            # Outcome Reward Model (ORM) based on Evaluation Mode
+            if self.evaluation_mode == "generative":
+                # Extract prompt text
+                prompt_text = ""
+                if prompts is not None and len(prompts) > i:
+                    if isinstance(prompts[i], str):
+                        prompt_text = prompts[i]
+                    elif isinstance(prompts[i], list):
+                        prompt_text = prompts[i][-1].get("content", "") if isinstance(prompts[i][-1], dict) else str(prompts[i][-1])
+                base_reward = _generative_score_response(prompt_text, comp_text, gold)
+            elif self.evaluation_mode == "execution":
+                base_reward = _execution_score_response(comp_text, gold)
+            else:
+                base_reward = _score_response(comp_text, gold)
+            
+            # Process Reward Model (PRM)
+            text_lower = comp_text.lower()
+            step_reward = 0.0
+            steps_found = text_lower.count("step") + text_lower.count("first") + text_lower.count("then")
+            if steps_found > 0:
+                step_reward += min(0.5, 0.1 * steps_found)
+                
+            rewards.append(base_reward + step_reward)
         
-        # calculate zvf
-        # TODO: ZVF breaks down outside of math tasks. Implement ERF (Effective-Rollout Fraction) for format-gated tasks.
-        # TODO: Log advantage variance and policy entropy as ZVF is often just a symptom.
+        # calculate zvf, advantage variance, and ACR
         zvf_sum = 0.0
-        n_groups = len(rewards) // group_size
+        advantage_variances = []
+        n_groups = len(rewards) // self.group_size
         if n_groups > 0:
             for idx in range(n_groups):
-                chunk = rewards[idx*group_size:(idx+1)*group_size]
-                mr = sum(chunk) / group_size
+                chunk = rewards[idx*self.group_size:(idx+1)*self.group_size]
+                var = np.var(chunk)
+                advantage_variances.append(var)
+                mr = sum(chunk) / self.group_size
                 if all(abs(r - mr) < 1e-6 for r in chunk):
                     zvf_sum += 1.0
-            global _last_zvf
-            _last_zvf = zvf_sum / n_groups
+                    
+            mean_adv_var = float(np.mean(advantage_variances))
+            acr = 1.0 if mean_adv_var < 1e-4 else 0.0
+            zvf = zvf_sum / n_groups
+        else:
+            mean_adv_var = 0.0
+            acr = 0.0
+            zvf = 0.0
+            
+        # Length confounding panel
+        lengths = [len(t) for t in comp_texts]
+        correct_lens = [l for l, r in zip(lengths, rewards) if r > 0.5]
+        incorrect_lens = [l for l, r in zip(lengths, rewards) if r <= 0.5]
+        
+        mean_len_correct = float(np.mean(correct_lens)) if correct_lens else 0.0
+        mean_len_incorrect = float(np.mean(incorrect_lens)) if incorrect_lens else 0.0
+        
+        if correct_lens and incorrect_lens:
+            mean_y1 = mean_len_correct
+            mean_y0 = mean_len_incorrect
+            n1 = len(correct_lens)
+            n0 = len(incorrect_lens)
+            n = n1 + n0
+            std_y = np.std(lengths)
+            len_reward_corr = float(((mean_y1 - mean_y0) / (std_y + 1e-8)) * np.sqrt((n1 * n0) / (n * (n - 1))))
+        else:
+            len_reward_corr = 0.0
+
+        with self.lock:
+            self.metrics["zvf"] = zvf
+            self.metrics["diagnostics/advantage_variance"] = mean_adv_var
+            self.metrics["diagnostics/advantage_collapse_rate"] = acr
+            self.metrics["diagnostics/mean_len_correct"] = mean_len_correct
+            self.metrics["diagnostics/mean_len_incorrect"] = mean_len_incorrect
+            self.metrics["diagnostics/length_reward_corr"] = len_reward_corr
             
         return rewards
 
-    return reward_fn
+    def get_metrics_and_reset(self) -> dict:
+        with self.lock:
+            metrics = self.metrics.copy()
+            return metrics
 
 
 # ── WandB logging helper ──────────────────────────────────────────────────────
 
-class StepLogger:
+class StepTracker:
     """Accumulates per-completion scores and logs step-level metrics."""
 
     def __init__(self, run_name: str):
@@ -416,8 +572,7 @@ class StepLogger:
             "train/step": step,
         }
         wandb.log(metrics, step=step)
-        print(f"  step {step:3d}  mean_reward={mean_r:.4f}  "
-              f"n={len(self.step_scores)}")
+        logger.info(f"step {step:3d}  mean_reward={mean_r:.4f}  n={len(self.step_scores)}")
         self.step_scores = []
 
     def save_csv(self, path: str):
@@ -426,7 +581,7 @@ class StepLogger:
             f.write("step,mean_reward\n")
             for i, r in enumerate(self.step_log):
                 f.write(f"{i},{r:.6f}\n")
-        print(f"  Reward log saved → {path}")
+        logger.info(f"Reward log saved → {path}")
 
 
 def _bool_env(name: str, default: bool = False) -> bool:
@@ -470,19 +625,32 @@ def maybe_push_to_hub(final_dir: str, cfg: dict, config_path: str, seed: int) ->
         token=token,
         commit_message=f"Upload adapter for {cfg['model_name']} ({cfg['wandb_run_name']})",
     )
-    print(f"  Hugging Face upload complete → {repo_id}")
+    logger.info(f"Hugging Face upload complete → {repo_id}")
 
 
 # ── main training loop ───────────────────────────────────────────────────────
 
-def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
+def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None,
+          total_token_budget: int | None = None, tokens_per_sample: int = 2048,
+          group_size_override: int | None = None, batch_size_override: int | None = None,
+          evaluation_mode_override: str | None = None):
     cfg = load_config(config_path)
-    print(f"\n{'='*60}")
-    print(f"  GRPO (Unsloth) — {cfg['model_name']}")
-    print(f"  Config: {config_path}")
-    print(f"  Steps: {cfg['total_steps']}  |  batch: {cfg['batch_size']}  "
-          f"|  group: {cfg['group_size']}  |  seed: {seed}")
-    print(f"{'='*60}\n")
+    if group_size_override:
+        cfg['group_size'] = group_size_override
+    if batch_size_override:
+        cfg['batch_size'] = batch_size_override
+        
+    if total_token_budget:
+        total_samples = total_token_budget / tokens_per_sample
+        effective_batch_size = cfg['group_size']
+        cfg['total_steps'] = max(1, int(total_samples / effective_batch_size))
+        logger.info(f"[P1 Ablation] Matching token budget: {total_token_budget} tokens -> total_steps={cfg['total_steps']}")
+        
+    logger.info("\n" + "="*60)
+    logger.info(f"GRPO (Unsloth) — {cfg['model_name']}")
+    logger.info(f"Config: {config_path}")
+    logger.info(f"Steps: {cfg['total_steps']}  |  batch: {cfg['batch_size']}  |  group: {cfg['group_size']}  |  seed: {seed}")
+    logger.info("="*60 + "\n")
 
     # ── WandB init ──────────────────────────────────────────────────────────
     if wandb_api_key:
@@ -494,7 +662,7 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
         name=run_name,
         config={**cfg, "seed": seed, "config_file": config_path},
     )
-    logger = StepLogger(cfg["wandb_run_name"])
+    step_tracker = StepTracker(cfg["wandb_run_name"])
 
     # ── model + tokenizer ───────────────────────────────────────────────────
     model, tokenizer = load_model_and_tokenizer(
@@ -552,7 +720,8 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
         remove_unused_columns=False,
     )
 
-    reward_fn = make_reward_fn(cfg["group_size"])
+    eval_mode = evaluation_mode_override if evaluation_mode_override else cfg.get("evaluation_mode", "static")
+    reward_fn = StatefulRewardFunction(cfg["group_size"], evaluation_mode=eval_mode)
 
     from transformers import EarlyStoppingCallback
 
@@ -570,6 +739,10 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
     from transformers import TrainerCallback
 
     class RewardLogCallback(TrainerCallback):
+        def __init__(self, step_tracker, reward_fn: StatefulRewardFunction):
+            self.step_tracker = step_tracker
+            self.reward_fn = reward_fn
+
         def on_log(self, args, state, control, logs=None, **kwargs):
             if logs is None:
                 return
@@ -577,24 +750,46 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
             # TRL logs reward/mean from the reward function
             mean_r = logs.get("reward/mean", logs.get("rewards/mean", None))
             if mean_r is not None:
-                logger.step_log.append(float(mean_r))
-                logger.flush(step)
+                self.step_tracker.step_log.append(float(mean_r))
+                self.step_tracker.flush(step)
             
-            global _last_zvf
-            if '_last_zvf' in globals():
-                wandb.log({"zvf": _last_zvf}, step=step, commit=False)
+            metrics_to_log = self.reward_fn.get_metrics_and_reset()
+            if metrics_to_log:
+                wandb.log(metrics_to_log, step=step, commit=False)
 
-    trainer.add_callback(RewardLogCallback())
+    class GoodputCallback(TrainerCallback):
+        def __init__(self):
+            self.start_time = time.time()
+            self.last_step_time = self.start_time
+            self.total_steps = 0
+            
+        def on_step_end(self, args, state, control, **kwargs):
+            now = time.time()
+            step_time = now - self.last_step_time
+            self.last_step_time = now
+            self.total_steps += 1
+            
+            # Goodput: total steps completed / elapsed time (steps per second)
+            goodput = self.total_steps / (now - self.start_time)
+            
+            if wandb.run is not None:
+                wandb.log({
+                    "infrastructure/goodput_steps_per_sec": goodput,
+                    "infrastructure/step_time_sec": step_time,
+                }, step=state.global_step, commit=False)
+
+    trainer.add_callback(RewardLogCallback(step_tracker, reward_fn))
+    trainer.add_callback(GoodputCallback())
 
     # ── run ─────────────────────────────────────────────────────────────────
     t0 = time.time()
     trainer.train()
     elapsed = time.time() - t0
-    print(f"\n  Training complete in {elapsed/60:.1f} min")
+    logger.info(f"\nTraining complete in {elapsed/60:.1f} min")
 
     # Save reward log as CSV for offline analysis
     csv_path = os.path.join(cfg["checkpoint_dir"], "reward_log.csv")
-    logger.save_csv(csv_path)
+    step_tracker.save_csv(csv_path)
 
     final_dir = os.path.join(cfg["checkpoint_dir"], "final")
     Path(final_dir).mkdir(parents=True, exist_ok=True)
@@ -606,7 +801,7 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None):
 
     wandb.finish()
 
-    return logger.step_log
+    return step_tracker.step_log
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
@@ -616,13 +811,36 @@ if __name__ == "__main__":
         description="GRPO training with Unsloth (drop-in for Atropos+Tinker)"
     )
     parser.add_argument("--config",  required=True, help="Path to YAML config")
-    # TODO: Support multi-seed runs to avoid single-seed statistical vulnerability.
     parser.add_argument("--seed",    type=int, default=42)
     parser.add_argument("--wandb_key", default=None, help="WandB API key (or set WANDB_API_KEY)")
+    parser.add_argument("--total_token_budget", type=int, default=None, help="Total token budget for causal SFT warm-up ablation")
+    parser.add_argument("--tokens_per_sample", type=int, default=2048, help="Avg tokens per sample")
+    parser.add_argument("--group_size", type=int, default=None, help="Override config group_size for Pareto ablation")
+    parser.add_argument("--batch_size", type=int, default=None, help="Override config batch_size for Pareto ablation")
+    parser.add_argument("--evaluation_mode", type=str, default="static", choices=["static", "execution", "generative"], help="Reward evaluation mode")
     args = parser.parse_args()
+
+    cfg = TinkerAtroposConfig.from_yaml(args.config)
+    cfg.env.data_seed = args.seed
+    if args.group_size:
+        cfg.env.group_size = args.group_size
+    if args.batch_size:
+        cfg.env.batch_size = args.batch_size
+    
+    if args.total_token_budget:
+        total_samples = args.total_token_budget / args.tokens_per_sample
+        # For Unsloth trainer, batch size is group_size
+        effective_batch_size = cfg.env.group_size
+        cfg.env.total_steps = max(1, int(total_samples / effective_batch_size))
+        logger.info(f"[P1 Ablation] Matching token budget: {args.total_token_budget} tokens -> total_steps={cfg.env.total_steps}")
 
     train(
         config_path=args.config,
         seed=args.seed,
         wandb_api_key=args.wandb_key or os.environ.get("WANDB_API_KEY"),
+        total_token_budget=args.total_token_budget,
+        tokens_per_sample=args.tokens_per_sample,
+        group_size_override=args.group_size,
+        batch_size_override=args.batch_size,
+        evaluation_mode_override=args.evaluation_mode,
     )

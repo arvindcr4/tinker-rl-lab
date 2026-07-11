@@ -89,6 +89,9 @@ class TRLConfig(BaseModel):
     project_name: str = "trl-tinker"
     run_name: Optional[str] = None
     report_to: str = "wandb"
+    
+    # DeepSpeed Integration
+    deepspeed: Optional[str] = None
 
     @model_validator(mode="after")
     def validate_precision(self) -> "TRLConfig":

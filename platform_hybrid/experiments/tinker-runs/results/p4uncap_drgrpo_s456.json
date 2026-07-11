@@ -1,0 +1,77 @@
+{
+  "tag": "p4uncap_drgrpo_s456",
+  "status": "running",
+  "model": "Qwen/Qwen3-8B",
+  "model_short": "qwen3-8b",
+  "task": "gsm8k",
+  "seed": 456,
+  "rank": 4,
+  "group_size": 8,
+  "batch": 4,
+  "lr": 3e-05,
+  "temperature": 1.0,
+  "steps": 30,
+  "started_at": "2026-07-11T03:57:32.819544+00:00",
+  "output_path": "experiments/tinker-runs/results/p4uncap_drgrpo_s456.json",
+  "run_id": "2aca8371-1f03-58e9-bfd0-958ac74a9df8:train:0",
+  "initial_sampler": "tinker://2aca8371-1f03-58e9-bfd0-958ac74a9df8:train:0/sampler_weights/s0",
+  "reward_trace": [
+    0.84375,
+    0.40625,
+    0.625,
+    0.375,
+    0.6875,
+    0.625
+  ],
+  "step_log": [
+    {
+      "step": 1,
+      "reward": 0.84375,
+      "loss": -6.664499282836914,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 949.5
+    },
+    {
+      "step": 2,
+      "reward": 0.40625,
+      "loss": -9.799234390258789,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1008.1875
+    },
+    {
+      "step": 3,
+      "reward": 0.625,
+      "loss": -1.2446556091308594,
+      "zvf": 0.0,
+      "gu": 1.0,
+      "mean_comp_len": 1015.03125
+    },
+    {
+      "step": 4,
+      "reward": 0.375,
+      "loss": -6.352699279785156,
+      "zvf": 0.0,
+      "gu": 1.0,
+      "mean_comp_len": 1009.28125
+    },
+    {
+      "step": 5,
+      "reward": 0.6875,
+      "loss": -3.6697263717651367,
+      "zvf": 0.0,
+      "gu": 1.0,
+      "mean_comp_len": 1016.6875
+    },
+    {
+      "step": 6,
+      "reward": 0.625,
+      "loss": -0.5641899108886719,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 966.5
+    }
+  ],
+  "last_updated_at": "2026-07-11T04:04:40.060117+00:00"
+}

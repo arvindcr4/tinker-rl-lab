@@ -5,12 +5,15 @@ set -euo pipefail
 
 cd "$(dirname "$0")/reports/final"
 
+# P0 Checklist: Independent Evaluation Seeds
+# We test a single frozen checkpoint (e.g., the primary Qwen3-8B run)
+# across multiple independent evaluation seeds (42, 43, 44).
+PRIMARY_RUN_ID="899d909e-7821-5b2b-a8d9-d8b3113ebd64"
+
 SEEDS=(
-  "042:899d909e-7821-5b2b-a8d9-d8b3113ebd64"
-  "137:5db4e965-07f3-575c-a806-2578d230a30d"
-  "256:aabb48cb-cb8b-5ebb-85f8-ccd6443eff00"
-  "512:99971b26-f228-5726-88c7-ab92c73b72ec"
-  "999:b3ba8df6-753b-545a-816d-0cbff0b059f7"
+  "042:${PRIMARY_RUN_ID}"
+  "043:${PRIMARY_RUN_ID}"
+  "044:${PRIMARY_RUN_ID}"
 )
 
 echo "=========================================="

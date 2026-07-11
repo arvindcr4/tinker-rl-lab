@@ -136,7 +136,7 @@ def pass_at_k(n: int, c: int, k: int) -> float:
               secrets=[modal.Secret.from_name("hf-token")])
 def evaluate(model: str, dataset: str, problems: int, n: int, ks: list[int],
              temperature: float, top_p: float, max_tokens: int, seed: int,
-             adapter: str | None) -> dict:
+             adapter: str | None, offset: int = 0) -> dict:
     import random
 
     from datasets import load_dataset
@@ -163,7 +163,7 @@ def evaluate(model: str, dataset: str, problems: int, n: int, ks: list[int],
 
     rng = random.Random(seed)
     rng.shuffle(items)
-    items = items[:problems] if problems else items
+    items = items[offset:offset + problems] if problems else items[offset:]
 
     lora_kwargs = {}
     lora_request = None
@@ -247,6 +247,7 @@ def evaluate(model: str, dataset: str, problems: int, n: int, ks: list[int],
         "temperature": temperature,
         "top_p": top_p,
         "seed": seed,
+        "offset": offset,
         "max_tokens": max_tokens,
         "per_problem_c": cs,
         "boxed_rate": round(boxed_hits / max(total_outs, 1), 4),
@@ -256,7 +257,7 @@ def evaluate(model: str, dataset: str, problems: int, n: int, ks: list[int],
     }
     tag = (f"{model.split('/')[-1].lower()}"
            f"{'_' + adapter.split('/')[-1][:40] if adapter else '_base'}"
-           f"_{dataset}_p{len(items)}_n{n}_s{seed}")
+           f"_{dataset}_o{offset}_p{len(items)}_n{n}_s{seed}")
     with open(f"/results/passk_modal_{tag}.json", "w") as f:
         json.dump(result, f, indent=2)
     results_vol.commit()
@@ -268,13 +269,13 @@ def evaluate(model: str, dataset: str, problems: int, n: int, ks: list[int],
 def main(dataset: str = "math500", model: str = "Qwen/Qwen3-8B",
          problems: int = 500, n: int = 32, temperature: float = 1.0,
          top_p: float = 1.0, max_tokens: int = 512, seed: int = 42,
-         adapter: str = ""):
+         adapter: str = "", offset: int = 0):
     ks = [k for k in (1, 8, 32) if k <= n]
     print(f"[modal-passk] {model}{' + ' + adapter if adapter else ''} on "
           f"{dataset}: {problems} problems x {n} samples, T={temperature}",
           flush=True)
     result = evaluate.remote(model, dataset, problems, n, ks, temperature,
-                             top_p, max_tokens, seed, adapter or None)
+                             top_p, max_tokens, seed, adapter or None, offset)
     print(f"[modal-passk] pass@k = {result['pass_at_k']} "
           f"({result['wall_seconds']}s on GPU)", flush=True)
     from pathlib import Path

@@ -1,0 +1,17 @@
+{
+  "kind": "t1_correlated_fix",
+  "status": "complete",
+  "pool": "results/pool_qwen3-8b_train_n512_r32_s42.json",
+  "pool_tag": "qwen3-8b_train_n512_r32_s42",
+  "model": "Qwen/Qwen3-8B",
+  "G": 8,
+  "M": 32,
+  "B": 2000,
+  "seed": 0,
+  "global_truth_zvf": 0.2524,
+  "coverage_correlated_vs_local_truth": 0.944,
+  "coverage_correlated_vs_global_truth": 0.2,
+  "coverage_stratified_vs_global_truth": 0.996,
+  "interpretation": "H-bias confirmed if local~0.95 while global collapses; stratified~0.95 validates the design fix for global inference",
+  "generated_at": "2026-07-11T03:04:18.506758+00:00"
+}

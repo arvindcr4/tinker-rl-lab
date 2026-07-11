@@ -6,9 +6,9 @@ Last updated: 2026-07-11 (session: gameplan deployment + first real Tinker runs)
 
 | Item | Status |
 |---|---|
-| Tinker account | **BLOCKED — billing 402** (add credit: https://tinker.thinkingmachines.ai/billing/balance) |
+| Tinker account | ✅ credit reloaded 2026-07-11; pool completed |
 | pass@k baseline (Qwen3-8B base) | ✅ complete — `results/passk_qwen3-8b_base_test_p200_n32_s42.json` |
-| Sampling pool (Qwen3-8B, GSM8K train) | ⚠️ partial **350/512** prompts, billing-truncated; finalized copy at `results/pool_qwen3-8b_train_n512_r32_s42_p350.json` |
+| Sampling pool (Qwen3-8B, GSM8K train) | ✅ **512/512 complete** (`results/pool_qwen3-8b_train_n512_r32_s42.json`); p350 kept as truncated-run record |
 | E-T1 CI coverage | ✅ run on p350 pool — `results/t1_ci_coverage_..._p350.json` |
 | E-T2 wasted-compute floor | ✅ run on p350 pool (G=8) — `results/t2_floor_..._p350_G8.json` |
 | E-T3a G\* curve | ✅ run on p350 pool — `results/t3_gstar_..._p350.json` |

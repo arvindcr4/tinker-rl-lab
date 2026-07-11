@@ -1,0 +1,108 @@
+{
+  "kind": "rollout_quality_audit",
+  "status": "complete",
+  "created_at": "2026-07-11T03:04:36.774507+00:00",
+  "source": {
+    "tag": "qwen3-8b_train_n512_r32_s42",
+    "model": "Qwen/Qwen3-8B",
+    "split": "train",
+    "seed": 42,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "rollouts_per_prompt": 32,
+    "n_prompts": 512,
+    "max_tokens": 512,
+    "checkpoint_identity": "base:Qwen/Qwen3-8B",
+    "path": "results/pool_qwen3-8b_train_n512_r32_s42.json",
+    "input_status": "complete"
+  },
+  "core_metrics": {
+    "n_prompts": 512,
+    "n_rollouts": 16384,
+    "pass_at_1": 0.300048828125,
+    "zero_variance_prompt_rate": 0.107421875,
+    "informative_prompt_rate": 0.892578125,
+    "all_correct_prompt_rate": 0.0,
+    "all_incorrect_prompt_rate": 0.107421875,
+    "mean_group_reward_variance": 0.15502166748046875,
+    "active_advantage_fraction": 0.892578125
+  },
+  "prompt_clustered_bootstrap_95_ci": {
+    "pass_at_1": {
+      "point": 0.300048828125,
+      "ci_low": 0.2798446655273437,
+      "ci_high": 0.3196441650390625,
+      "bootstrap_replicates": 2000,
+      "resampling_unit": "prompt"
+    },
+    "zero_variance_prompt_rate": {
+      "point": 0.107421875,
+      "ci_low": 0.081982421875,
+      "ci_high": 0.1328125,
+      "bootstrap_replicates": 2000,
+      "resampling_unit": "prompt"
+    },
+    "mean_group_reward_variance": {
+      "point": 0.15502166748046875,
+      "ci_low": 0.14779052734375,
+      "ci_high": 0.16223549842834473,
+      "bootstrap_replicates": 2000,
+      "resampling_unit": "prompt"
+    },
+    "active_advantage_fraction": {
+      "point": 0.892578125,
+      "ci_low": 0.86328125,
+      "ci_high": 0.91796875,
+      "bootstrap_replicates": 2000,
+      "resampling_unit": "prompt"
+    }
+  },
+  "length_diagnostics": {
+    "available": true,
+    "prompt_coverage": 0.31640625,
+    "n_rollouts_with_lengths": 5184,
+    "mean_output_tokens": 511.3709490740741,
+    "mean_tokens_correct": 509.8574244415243,
+    "mean_tokens_incorrect": 512.0,
+    "correct_minus_incorrect_tokens": -2.1425755584756985,
+    "reward_length_correlation": -0.12874400141851275,
+    "length_predictive_auc": 0.483245729303548,
+    "length_stratified_macro_accuracy": 0.2935956790123457,
+    "accuracy_by_length_quartile": [
+      {
+        "quartile": 1,
+        "n": 1296,
+        "min_tokens": 331.0,
+        "max_tokens": 512.0,
+        "accuracy": 0.30324074074074076
+      },
+      {
+        "quartile": 2,
+        "n": 1296,
+        "min_tokens": 512.0,
+        "max_tokens": 512.0,
+        "accuracy": 0.3109567901234568
+      },
+      {
+        "quartile": 3,
+        "n": 1296,
+        "min_tokens": 512.0,
+        "max_tokens": 512.0,
+        "accuracy": 0.30478395061728397
+      },
+      {
+        "quartile": 4,
+        "n": 1296,
+        "min_tokens": 512.0,
+        "max_tokens": 512.0,
+        "accuracy": 0.25540123456790126
+      }
+    ]
+  },
+  "methodology": {
+    "bootstrap_seed": 20260711,
+    "bootstrap_replicates": 2000,
+    "zero_variance_definition": "population variance <= 1e-12 within prompt",
+    "length_auc_interpretation": "0.5 means length does not rank correct above incorrect responses"
+  }
+}

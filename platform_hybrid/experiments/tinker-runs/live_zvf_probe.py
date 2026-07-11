@@ -120,6 +120,30 @@ def run(args: argparse.Namespace) -> dict:
     t0 = time.time()
     output_path = RESULTS_DIR / f"{tag}.json"
 
+    wb = None
+    if not getattr(args, "no_wandb", False):
+        try:
+            import wandb
+            wb = wandb.init(
+                entity=os.environ.get("WANDB_ENTITY", "arvindcr4-pes-university"),
+                project=os.environ.get("WANDB_PROJECT", "zvf-training"),
+                name=tag,
+                config={
+                    "model": args.model, "seed": args.seed, "rank": args.rank,
+                    "group_size": args.group, "batch": args.batch, "lr": args.lr,
+                    "temperature": args.temperature, "steps": args.steps,
+                    "max_tokens": args.max_tokens,
+                    "loss": getattr(args, "loss", "grpo"),
+                },
+                tags=["live", getattr(args, "loss", "grpo")],
+                settings=wandb.Settings(silent=True),
+                reinit=True,
+            )
+            print(f"[{tag}] W&B live: {wb.url}", flush=True)
+        except Exception as exc:
+            print(f"[{tag}] W&B disabled ({exc})", flush=True)
+            wb = None
+
     result: dict = {
         "tag": tag,
         "status": "started",
@@ -252,6 +276,14 @@ def run(args: argparse.Namespace) -> dict:
                 flush=True,
             )
 
+            if wb is not None:
+                _e = step_log[-1]
+                wb.log({
+                    "reward": avg_reward, "zvf": zvf, "gu": 1.0 - zvf,
+                    "loss": loss_value,
+                    "mean_comp_len": _e.get("mean_comp_len"),
+                }, step=step + 1)
+
             if (step + 1) % args.save_every == 0:
                 weights = tc.save_weights_for_sampler(name=f"s{step+1}").result()
                 sc = tc.create_sampling_client(model_path=weights.path)
@@ -299,6 +331,11 @@ def run(args: argparse.Namespace) -> dict:
         )
         output_path.write_text(json.dumps(result, indent=2) + "\n")
         print(f"[{tag}] completed run_id={result.get('run_id')} output={output_path}", flush=True)
+        if wb is not None:
+            wb.summary.update({k: v for k, v in result.items()
+                               if isinstance(v, (int, float))
+                               and not isinstance(v, bool)})
+            wb.finish()
         return result
 
     except Exception as exc:
@@ -312,6 +349,9 @@ def run(args: argparse.Namespace) -> dict:
             }
         )
         output_path.write_text(json.dumps(result, indent=2) + "\n")
+        if wb is not None:
+            wb.summary["status"] = "failed"
+            wb.finish(exit_code=1)
         raise
 
 
@@ -333,6 +373,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tag", default="")
     parser.add_argument("--loss", default="grpo", choices=["grpo", "drgrpo"],
                         help="drgrpo removes the /std advantage normalization")
+    parser.add_argument("--no-wandb", action="store_true",
+                        help="disable native live W&B logging for this run")
     return parser.parse_args()
 
 

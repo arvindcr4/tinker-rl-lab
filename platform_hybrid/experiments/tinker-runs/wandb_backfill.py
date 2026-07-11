@@ -10,6 +10,7 @@ so re-running after new results land keeps W&B complete.
 Sources -> projects:
   zvf-program/experiments-next/results/*.json      -> zvf-experiments-next
   .../results/modal_registry/modal_artifacts/**/*.json -> modal-open-stack
+  tinker-runs/results/*.json (completed)           -> zvf-training
 
 Backfilled runs carry `backfill: true` in config; W&B created-at reflects
 backfill time, NOT original run time — original timing lives in the JSON.
@@ -31,6 +32,7 @@ ENTITY = "arvindcr4-pes-university"
 EXPNEXT = REPO / "zvf-program" / "experiments-next" / "results"
 MODAL_ART = (HERE.parents[1] / "experiments" / "results" / "modal_registry"
              / "modal_artifacts")
+TRAIN_RESULTS = HERE / "results"
 
 MAX_CONFIG_STR = 200
 
@@ -120,6 +122,31 @@ def main() -> None:
             notes = f"Backfilled from {modal_ref} (open-stack Modal artifact)"
             total += log_file(proj, name, p,
                               ["backfill", "modal", volume], notes, seen)
+
+    # 3. Tinker training runs (live_zvf_probe outputs; no native W&B logging)
+    proj = "zvf-training"
+    seen = existing_names(api, proj)
+    if TRAIN_RESULTS.exists():
+        for p in sorted(TRAIN_RESULTS.glob("*.json")):
+            if ".orig" in p.name:
+                continue  # preserved originals; the canonical tag is logged
+            try:
+                data = json.loads(p.read_text())
+            except Exception:
+                continue
+            if data.get("status") not in ("completed", "complete"):
+                print(f"[skip] {p.name} status={data.get('status')!r}",
+                      flush=True)
+                continue
+            name = p.stem
+            tags = ["backfill", "tinker-train"]
+            if "drgrpo" in name:
+                tags.append("drgrpo")
+            elif "grpo" in name:
+                tags.append("grpo")
+            notes = (f"Backfilled from {p.relative_to(REPO)}; "
+                     "live_zvf_probe training run (P4/E-R2b)")
+            total += log_file(proj, name, p, tags, notes, seen)
 
     print(f"done: {total} new runs logged", flush=True)
 

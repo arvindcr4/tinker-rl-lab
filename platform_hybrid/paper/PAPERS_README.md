@@ -1,6 +1,46 @@
 # Per-Pillar Standalone Papers (P1–P8)
 
-## Consolidation plan: 17 documents → 3 submission vehicles (2026-07-11, revised after external Deep Think review)
+## Consolidation plan v3 — THESIS-FIRST (2026-07-11, after adversarial council review)
+
+v2's "2+1" was reviewed adversarially by a three-model council (Gemini 3.1 Pro,
+Grok, Kimi). All three independently converged on the same three objections:
+(1) the 2+1 plan is a publication plan, not a degree-completion plan — its
+evidence-upgrade list is ~6 months of funded work for a solo researcher;
+(2) the flagship's adaptive-controller headline is pre-undermined by our own
+E-R2b finding (static G=16 avoids the all-correct ZVF wall at the same rollout
+budget) and by the closed Tinker/LoRA-only kernel; (3) the four-algorithm
+survival audit is non-credible weeks after the unwired-loss-flag incident and
+structurally hypocritical on a closed API. Full reviews: session scratchpad
+`council_{agy,grok,kimi}.out`.
+
+**v3 priority order:**
+
+1. **M.Tech thesis (primary deliverable).** One bounded contribution: *ZVF as
+   a cheap online diagnostic for signal starvation in group-relative RL, plus
+   group-size-under-budget failure modes* — honestly scoped to
+   Qwen3-8B / GSM8K / Tinker-LoRA, 1–3 seeds, with explicit non-claims.
+   The 8 pillars map to chapters. The loss-flag incident becomes a
+   methods/reproducibility chapter (postmortem + 8-item checklist + registry),
+   NOT an archival standards submission.
+2. **Paper 1 (post-degree, gated).** Flagship only if a pre-registered,
+   compute-matched bakeoff shows the ZVF-triggered controller strictly beats
+   static G=16 AND naive non-ZVF heuristics on learning or generation-compute
+   cost (e.g., stays at G=2 for most of training, spikes late). If the bakeoff
+   fails or is unaffordable: submit the descriptive-diagnostic scope instead
+   ("ZVF tracks saturation/collapse under small G; large G mitigates it at
+   fixed budget") to a workshop/short-paper venue.
+3. **Paper 2 (post-degree, gated harder).** Survival audit only after (a) an
+   open-stack implementation (not Tinker), (b) differential-objective test
+   tooling that would have auto-caught the unwired-flag bug, (c) one method at
+   a time. Until then the checklist/registry live in the thesis chapter.
+4. **RL-Finetuning Bench:** versioned artifact + technical report (unchanged
+   from v2). No archival claim.
+
+Data firewall, pair canonicalization, and the v2 vehicle map below remain the
+reference for which text lives where; v3 changes *sequencing and claims*, not
+file ownership.
+
+## [SUPERSEDED by v3 above] Consolidation plan v2: 17 documents → 3 submission vehicles (2026-07-11, revised after external Deep Think review)
 
 Overall verdict from the review: proceed with revisions. The revisions below are
 incorporated. Execution order: **A → B → C**, and A's terminology/notation

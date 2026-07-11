@@ -25,7 +25,7 @@ from atroposlib.envs.base import (
     ScoredDataGroup,
 )
 from atroposlib.type_definitions import Item
-from tinker_platform_tinker/atropos.config import TinkerAtroposConfig
+from tinker_atropos.config import TinkerAtroposConfig
 
 CONFIG_PATH = "configs/logp_steering_qwen3_30b.yaml"
 

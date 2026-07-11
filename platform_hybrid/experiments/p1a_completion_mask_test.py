@@ -96,12 +96,15 @@ def make_data(tok, prompt, response):
     prompt_ids = tok.encode(prompt, add_special_tokens=False)
     resp_ids = tok.encode(response, add_special_tokens=False)
     full_ids = prompt_ids + resp_ids
-    target_ids = full_ids[1:] + [0]
+    # next-token alignment: input positions 0..L-2 predict 1..L-1; the old
+    # `full_ids[1:] + [0]` trained a spurious token-0 target at the final
+    # position (fixed 2026-07-11)
+    target_ids = full_ids[1:]
     # completion mask aligned to prediction positions (shifted like target_ids).
     raw_mask = [0.0] * len(prompt_ids) + [1.0] * len(resp_ids)
-    mask = raw_mask[1:] + [0.0]
+    mask = raw_mask[1:]
     datum = T.Datum(
-        model_input=T.ModelInput.from_ints(full_ids),
+        model_input=T.ModelInput.from_ints(full_ids[:-1]),
         loss_fn_inputs={
             "target_tokens": T.TensorData(
                 data=target_ids, dtype="int64", shape=[len(target_ids)]

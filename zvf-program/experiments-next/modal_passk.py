@@ -62,7 +62,10 @@ def gsm8k_reward(response: str, answer: str) -> float:
     """Byte-identical logic to the Tinker harness parser."""
     response = response.strip()
     boxed = re.findall(r"\\boxed\{([^}]+)\}", response)
-    for item in boxed:
+    # Parser v2 (2026-07-11): score only the LAST boxed value (the final
+    # answer); accepting ANY boxed match let intermediate boxed steps produce
+    # false positives.
+    for item in boxed[-1:]:
         cleaned = item.strip().replace(",", "").replace(" ", "")
         try:
             if abs(float(cleaned) - float(answer)) < 0.01:

@@ -432,7 +432,7 @@ carefully).}
 % direction; \eqref{eq:exp-rollouts} should be framed as a bound, not equality.
 \end{proofsketch}
 
-\begin{theorem}[No-go / wasted-compute lower bound]\label{thm:T2}
+\begin{theorem}[Wasted-compute reliability bound]\label{thm:T2}
 Fix group size $K$ and a target: obtain at least one informative group with
 probability at least $1-\delta$. Under
 Assumptions~\ref{ass:binary}--\ref{ass:across-iid}, if the population
@@ -444,9 +444,15 @@ n_g \;\ge\; \frac{\ln(1/\delta)}{-\ln \ZVF}
 N \;\coloneqq\; K\,n_g \;\ge\;
 \underbrace{K\,\frac{\ln(1/\delta)}{-\ln \ZVF}}_{\displaystyle N(\ZVF)}\!,
 \end{equation}
-and $N(\ZVF)\to\infty$ as $\ZVF\to1^-$. Equivalently, no \emph{nonzero
-gradient step} is possible with fewer than $N(\ZVF)$ rollouts except
-with probability $<\delta$. (\textbf{Important}: the theorem bounds
+and $N(\ZVF)\to\infty$ as $\ZVF\to1^-$. Equivalently, $N(\ZVF)$ is the
+$(1-\delta)$-quantile of the rollouts-to-first-informative-group
+distribution: a budget below $N(\ZVF)$ leaves probability $>\delta$
+that the \emph{entire batch} is uninformative. \textbf{This is a
+reliability/budget statement, not an impossibility bound}: an
+informative group arrives within the first $K$ rollouts with
+probability $1-\ZVF$, which can be large. Fewer than $N$ rollouts does
+not make a gradient improbable; it makes the \emph{guarantee} of one
+unavailable at confidence $1-\delta$. (\textbf{Important}: the theorem bounds
 rollouts-to-nonzero-\emph{gradient}; it does NOT bound rollouts-to-
 \emph{policy improvement} in the sense of monotone reward gain. A
 single informative group yields a nonzero update direction, not a
@@ -576,19 +582,27 @@ J(G)=\frac{1-p_0^G-(1-p_0)^G}{G}\,p_0(1-p_0),
 \end{equation}
 so the maximizing $G$ depends only on the
 informativeness-per-rollout term
-$(1-p_0^G-(1-p_0)^G)/G$.  Because this term is bounded and
-vanishes as $G\to\infty$, the discrete maximizer
-$G^\star\in\{2,3,\dots\}$ exists and can be found by evaluating
-$J(G)$ over a modest bounded range.  We do \emph{not} assert a simple
-monotonic relationship between $G^\star$ and $p_0$: very easy or very
-hard prompts (extreme $p_0$) shrink the absolute signal $p_0(1-p_0)$ and
-can favor small $G$, while intermediate $p_0$ may support somewhat
-larger $G$; the exact optimum must be read off the evaluated objective.
-\textbf{Uniqueness of $G^\star$ is NOT proven:} the FOC may have
-multiple roots and the integer constraint means the argmax is a
-\emph{set} of maximizers, not necessarily a single value; readers should
-treat the closed form as a candidate optimum, not as the unique global
-maximizer.
+$(1-p_0^G-(1-p_0)^G)/G$.
+\textbf{Resolution (2026-07-11): under this objective the maximizer is
+universal, and the theorem is weaker than previously stated.} The
+algebraic identities $1-p^2-(1-p)^2 = 2p(1-p)$ and
+$1-p^3-(1-p)^3 = 3p(1-p)$ hold for all $p$, so
+$(1-h_2(p))/2 = (1-h_3(p))/3 = p(1-p)$ pointwise, and therefore
+\begin{equation}\label{eq:J23}
+J(2) \;=\; J(3) \;=\; \E_{p\sim\phi}\big[(p(1-p))^2\big]
+\qquad\text{for \emph{every} prior }\phi,
+\end{equation}
+while $(1-h_G(p))/G < p(1-p)$ on $(0,1)$ for $G\ge4$ (second-order
+expansion at the endpoints; verified numerically on a dense grid;
+\GAP{global proof of the $G\ge4$ inequality}). Hence
+$G^\star\in\{2,3\}$ \emph{independently of $\phi$}: the argmax of
+\eqref{eq:efficiency} carries no information about the reward-density
+prior, the FOC \eqref{eq:foc} is vacuous for the discrete problem, and
+any \emph{data-dependent} optimal-$G$ claim must come from a richer
+objective (variance-, Fisher-information-, or wall-clock-aware), which
+this paper does not supply. We retain \eqref{eq:efficiency} as the
+simplest signal-per-rollout accounting, with its optimum stated
+honestly as the universal $\{2,3\}$.
 \end{theorem}
 \begin{proofsketch}
 $J(G)$ is a smooth function of $G$ once relaxed to the reals via
@@ -618,8 +632,10 @@ exists. (3) the discrete-to-continuous relaxation needs a rounding argument
 If $\phi=\mathrm{Beta}(\alpha,\beta)$, the expectations in
 \eqref{eq:efficiency}--\eqref{eq:foc} are finite sums of Beta functions, since
 $\E_\phi[p^{G+1}(1-p)] = B(\alpha+G+1,\beta+1)/B(\alpha,\beta)$ and similarly
-for the other terms; hence $J(G)$ and the FOC are available in closed form and
-$G^\star$ is a one-line numerical root-find. \GAP{expand the three required
+for the other terms; hence $J(G)$ and the FOC are available in closed form.
+Given \eqref{eq:J23}, however, the Beta closed form is informative for the
+\emph{value} of $J$ but not for the argmax, which is $\{2,3\}$ for every
+$(\alpha,\beta)$. \GAP{expand the three required
 moments explicitly and verify the Beta-function bookkeeping; this is mechanical
 but unverified here.}
 % TODO(proof-gap): write out E_phi[(1-h_G(p)) p(1-p)] for Beta in closed form.
@@ -642,15 +658,19 @@ controller can execute per training step $t$:
   \item \textbf{Measure (T1).} Compute $\ZVF_t$ and its $95\%$ CI
         \eqref{eq:ci}; this turns a point estimate into a calibrated reading
         with a lower confidence bound $\underline{\ZVF}_t$.
-  \item \textbf{Decide (T2).} If the compute floor $N(\underline{\ZVF}_t)$ from
-        Corollary~\ref{cor:T2-traj} exceeds the remaining per-step rollout
-        budget, the step is \emph{provably} (at the stated confidence) unable to
-        produce an informative update at the current $G$: trigger
-        intervention rather than burn rollouts.
-  \item \textbf{Act (T3).} Set the next group size to
-        $G_{t+1}\leftarrow G^\star$ from Theorem~\ref{thm:T3}, using a running
-        estimate $\widehat\phi_t$ of the difficulty prior from recent groups'
-        empirical $\bar r_g$ (a method-of-moments or MLE Beta fit).
+  \item \textbf{Decide (T2).} If the reliability budget
+        $N(\underline{\ZVF}_t)$ from Corollary~\ref{cor:T2-traj} exceeds the
+        remaining per-step rollout budget, the step fails to produce any
+        informative group with probability greater than $\delta$ (at the
+        stated confidence on $\ZVF$): trigger intervention rather than
+        gamble the remaining budget.
+  \item \textbf{Act (T3, revised).} Under objective \eqref{eq:efficiency}
+        the per-rollout optimum is the universal $G^\star\in\{2,3\}$
+        (eq.~\ref{eq:J23}), so the controller cannot derive a
+        \emph{data-dependent} group size from T3 as stated; re-estimating
+        $\widehat\phi_t$ adds nothing. The escalation policy must instead
+        come from the T2 reliability budget: raise $G$ when the current
+        $G$'s budget-failure probability exceeds $\delta$.
 \end{enumerate}
 This is the formal interface between Pillar~2 (theory) and Pillar~1 (the
 mechanistic controller): T1 supplies the \emph{sensor calibration}, T2 the
@@ -704,25 +724,34 @@ validity (conservatively). This resolves the across-group-i.i.d.\ threat
 (Assumption~\ref{ass:across-iid}) into a labeling requirement rather than
 an invalidation.
 
-\paragraph{E-T2: the wasted-compute floor.} With $G{=}8$ and
-$\delta{=}0.1$, the geometric floor $G\lceil\ln\delta/\ln\mathrm{ZVF}\rceil$
-held in all six difficulty strata with tightness 1.00--1.05. In the hardest
-stratum ($\hat p\approx 0.01$, $\mathrm{ZVF}=0.886$) the floor is
-\textbf{160 rollouts} before a single informative group --- matched by the
-observed quantile at ratio 1.00. The floor is not merely valid but
-essentially exact on this reward distribution.
+\paragraph{E-T2: the waiting-time quantile.} With $G{=}8$ and
+$\delta{=}0.1$, the geometric $(1{-}\delta)$-quantile
+$G\lceil\ln\delta/\ln\mathrm{ZVF}\rceil$ matched the observed
+$(1{-}\delta)$-quantile of rollouts-to-first-informative-group within
+0--5\% in all six difficulty strata. In the hardest stratum
+($\hat p\approx 0.01$, $\mathrm{ZVF}=0.886$) the quantile is
+\textbf{160 rollouts} (ratio 1.00). The geometric waiting-time model is
+essentially exact on this reward distribution. Note what is validated:
+a \emph{reliability budget} --- the rollouts needed to make a fully
+uninformative batch improbable at level $\delta$ --- not a minimum;
+informative groups typically arrive much sooner.
 
-\paragraph{E-T3a: the optimal group size.} Under the empirical
-$\hat p$-prior, the closed-form argmax of $J(G)$ \eqref{eq:efficiency} is
-$G^\star{=}2$ in every stratum and pooled; the empirical $J$-argmax is
-2--3 (exact agreement in 3--4 of 5 partitions, adjacent grid point
-otherwise). Since prevailing practice uses $G\in[8,16]$, this is a
-falsifiable prediction that current group sizes are several-fold
-inefficient per rollout. A first training-side corroboration: a $G{=}2$
-adapter matched a $G{=}16$ adapter's held-out pass@32 improvement at
-$8\times$ fewer rollouts per step (single seed; extended to a two-seed
-matched-budget panel in E-R2b below). Experiment E-T3b (matched-budget
-training at $G^\star\pm\delta$) remains the decisive test.
+\paragraph{E-T3a: the optimal group size (reinterpreted).} The measured
+$J$-argmax was 2--3 in every stratum and pooled, agreeing with the
+analytic argmax. \textbf{This agreement is now understood to be
+algebraically guaranteed, not an empirical test}: by \eqref{eq:J23},
+$J(2)=J(3)$ exactly and $G^\star\in\{2,3\}$ for \emph{every} prior, so
+the measurement can only confirm the objective's arithmetic (which it
+does --- a model-fit sanity check); it cannot validate a data-dependent
+prediction, because the objective makes none. What survives is
+objective-relative: \emph{if} signal-per-rollout \eqref{eq:efficiency}
+is the accepted accounting, prevailing $G\in[8,16]$ practice is
+several-fold inefficient per rollout. A first training-side
+corroboration: a $G{=}2$ adapter matched a $G{=}16$ adapter's held-out
+pass@32 improvement at $8\times$ fewer rollouts per step (single seed;
+extended to a two-seed matched-budget panel in E-R2b below, which also
+shows the endgame cost of small $G$). Experiment E-T3b under a richer
+objective remains the decisive test.
 
 \paragraph{E-B: controller pilot (offline).} Treating stratum selection as
 a Thompson-sampling bandit with reward = ``group is informative'' recovers
@@ -780,10 +809,11 @@ None of the theorems' proof gaps is discharged by these measurements.
 %==============================================================================
 \paragraph{What is (sketched to be) true.} Under i.i.d.\ groups and binary
 verifiable rewards: (T1) $\ZVF_t$ is an unbiased, asymptotically normal
-estimator of a well-defined population quantity with a closed-form CI; (T2) high
-\ZVF{} implies a logarithmically diverging lower bound on rollouts to a nonzero
-update; (T3) there is a well-defined efficiency-optimal group size with a
-closed-form FOC.
+estimator of a well-defined population quantity with a closed-form CI; (T2)
+high \ZVF{} implies a logarithmically diverging \emph{reliability budget} ---
+the $(1{-}\delta)$-quantile of rollouts to a nonzero update; (T3) the
+signal-per-rollout objective has a well-defined optimum, which is the
+\emph{universal} $G^\star\in\{2,3\}$ (eq.~\ref{eq:J23}), prior-independent.
 
 \paragraph{What is not yet established (loud).}
 \begin{itemize}[leftmargin=1.5em,itemsep=1pt]
@@ -794,8 +824,11 @@ closed-form FOC.
   \item \textbf{T2 bounds rollouts-to-nonzero-gradient, not
         rollouts-to-improvement,} and uses the population $\ZVF$ where only an
         estimate is available. See \GAP{T2 sketch} and Corollary~\ref{cor:T2-traj}.
-  \item \textbf{T3's objective $S(p,G)$ is a modelling choice,} and uniqueness
-        of $G^\star$ is unproven. See \GAP{T3 sketch}.
+  \item \textbf{T3's objective $S(p,G)$ is a modelling choice,} and under it
+        the optimum is the universal, prior-independent $\{2,3\}$
+        (eq.~\ref{eq:J23}) --- so T3 as stated supports no data-adaptive
+        group-size policy; a richer objective is required for any
+        adaptive-$G^\star$ claim. See \GAP{T3 sketch}.
   \item \textbf{Across-group i.i.d.\ (Assumption~\ref{ass:across-iid})
         underlies all three} and is violated by curriculum, replay, and
         within-epoch correlation. \emph{Resolved empirically (E-T1):} under

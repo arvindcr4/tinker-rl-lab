@@ -42,13 +42,16 @@ to remote. The rollout-quality/pass@k comparison layer is the next local change.
   collapses coverage to **0.08–0.40** with *narrower* intervals →
   **clustered-variance correction is a required work item before any
   curriculum-ordered training uses the CI.**
-- **T2 (floor): clean pass.** Geometric floor `G·⌈ln δ / ln ZVF⌉` holds in
-  all 6 difficulty strata, tightness 1.00–1.05. Vivid datum: stratum with
-  p̂≈0.01 (ZVF=0.88) needs ≥152 rollouts before one usable gradient (δ=0.1).
-- **T3a (G\*): consistent, pending closed form.** Empirical
-  signal-per-rollout argmax G = 2–3 per stratum; analytic Bernoulli argmax 2.
-  `t3_gstar_prediction` in the JSON is null — plug the closed form from
-  `theory/zvf_theory.tex` §T3 and compare.
+- **T2 (waiting-time quantile): clean fit** (direction-corrected 2026-07-11).
+  The geometric (1−δ)-quantile `G·⌈ln δ / ln ZVF⌉` matches the observed
+  quantile in all 6 strata (ratio 1.00). Vivid datum: stratum with p̂≈0.01
+  (ZVF=0.886) has a δ=0.1 reliability budget of 160 rollouts — a quantile,
+  NOT a minimum; informative groups typically arrive much sooner.
+- **T3a (G\*): reinterpreted 2026-07-11.** Under the J(G) objective the
+  argmax is ALWAYS {2,3} for any prior (J(2)=J(3) is an algebraic identity),
+  so the empirical argmax 2–3 is a model-fit sanity check, not a validated
+  prediction. A data-dependent G\* requires a richer objective; filling
+  `t3_gstar_prediction` is moot under the current form.
 
 ## How to resume (in order)
 

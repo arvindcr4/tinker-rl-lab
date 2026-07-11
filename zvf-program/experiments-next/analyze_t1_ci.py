@@ -60,16 +60,29 @@ def wilson_ci(zvf: float, m: int) -> tuple[float, float]:
 
 def population_zvf(prompts: list[dict], G: int, rng: random.Random,
                    draws_per_prompt: int = 64) -> float:
-    """Estimate population ZVF(G) by exhaustive-ish subsampling of the pool.
-    For binary rewards this could be computed exactly from p_hat via
-    hypergeometric terms; we use resampling so the same code path also serves
-    non-binary rewards later."""
-    total = 0
+    """Population ZVF(G). For binary rewards this is computed EXACTLY via
+    hypergeometric terms (drawing G of the m recorded rewards without
+    replacement): P(uniform) = [C(k,G) + C(m-k,G)] / C(m,G) with k ones.
+    The earlier 64-draw Monte-Carlo estimate was treated as exact truth in
+    the coverage analysis (fixed 2026-07-11). Non-binary rewards fall back
+    to resampling."""
+    from math import comb
+    total = 0.0
     n = 0
     for p in prompts:
-        for _ in range(draws_per_prompt):
-            total += subsample_indicator(rng, p["rewards"], G)
-            n += 1
+        rewards = p["rewards"]
+        m = len(rewards)
+        if m < G:
+            continue
+        if set(rewards) <= {0, 0.0, 1, 1.0}:
+            k = sum(1 for r in rewards if r in (1, 1.0))
+            total += (comb(k, G) + comb(m - k, G)) / comb(m, G)
+        else:
+            s = 0
+            for _ in range(draws_per_prompt):
+                s += subsample_indicator(rng, rewards, G)
+            total += s / draws_per_prompt
+        n += 1
     return total / n
 
 

@@ -287,11 +287,15 @@ $w_{i,t}=\pi_\theta/\pi_{\theta_{\text{old}}}$; whether and how it is clipped
 (and the clip bounds, including asymmetric DAPO-style ``clip-higher'');
 whether the token mask is completion-only or whole-sequence; and whether
 advantages are normalized per-group, per-batch, or with a running estimate.
-\emph{Why it can flip:} the choice of token mask alone changes which tokens
-carry gradient. In one diagnostic, $61.6$--$89.6\%$~\todo{trace to v1 audit citation} of the full-sequence loss
-magnitude came from \emph{prompt} tokens rather than completion tokens
-\cite{zvfaudit2026}; a whole-sequence mask and a completion-only mask are
-therefore different objectives sharing a name. Dr.GRPO's contribution is
+\emph{Why it can flip:} the choice of token mask changes the
+\emph{objective}. In one diagnostic, $61.6$--$89.6\%$~\todo{trace to v1 audit citation} of the full-sequence
+\emph{loss magnitude} (raw NLL composition) came from \emph{prompt} tokens
+rather than completion tokens \cite{zvfaudit2026}; a whole-sequence mask and
+a completion-only mask are therefore different objectives sharing a name.
+(Caveat, added 2026-07-11: under exactly group-centered advantages the
+prompt-token \emph{gradient} contributions cancel within each group, so this
+figure quantifies objective composition, not gradient leakage --- a
+distinction that is itself rarely reported.) Dr.GRPO's contribution is
 precisely a change to length/normalization in the loss \cite{drgrpo2025}; GSPO
 changes the importance-sampling granularity \cite{gspo2025}. If the baseline's
 loss form is unreported, the variant's gain is unattributable. The stake is not

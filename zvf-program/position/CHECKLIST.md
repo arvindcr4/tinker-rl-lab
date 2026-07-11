@@ -34,9 +34,11 @@ the [TODO:trace] markers are replaced with real `\cite{}` keys.
 - **Report:** PPO importance ratio used? (yes/no). Clipped? bounds (incl. asymmetric
   "clip-higher")? Token mask: completion-only or whole-sequence? Advantage normalization:
   per-group / per-batch / running estimate?
-- **Why it can flip:** the token mask reassigns gradient. In one diagnostic [TODO:trace to v1 audit citation], **61.6–89.6%**
-  of full-sequence loss magnitude came from *prompt* tokens, not completion tokens — a
-  whole-sequence and a completion-only mask are different objectives sharing a name. Dr.GRPO
+- **Why it can flip:** the token mask changes the *objective*. In one diagnostic [TODO:trace to v1 audit citation], **61.6–89.6%**
+  of full-sequence *loss magnitude* (raw NLL composition) came from *prompt* tokens, not completion tokens — a
+  whole-sequence and a completion-only mask are different objectives sharing a name. (Caveat 2026-07-11:
+  under exactly group-centered advantages, prompt-token *gradient* contributions cancel within each group —
+  the figure quantifies objective composition, not gradient leakage.) Dr.GRPO
   *is* a normalization change; GSPO *is* an IS-granularity change. If the baseline loss form
   is unreported, the variant's gain is unattributable.
 - **Good:** "Token-masked completion-only; PPO ratio with symmetric clip ε=0.2; per-group

@@ -26,11 +26,16 @@ Scope is stated honestly everywhere: Qwen3-8B, GSM8K, Tinker managed API
 2. **Loss-form panel (corrected).** Six uncapped 1,024-token arms, 3 seeds per
    loss: no length inflation in either GRPO or Dr.GRPO (all arms *shrink*
    6–12%), and no late-ZVF separation between the losses at this scale.
-3. **Theory checks.** ZVF's confidence interval is calibrated (Wilson, all
-   tested settings); the wasted-compute floor G·⌈ln δ/ln ZVF⌉ held in all six
-   difficulty strata at tightness 1.00–1.05; the efficiency-optimal G* ≈ 2–3
-   empirically — which the panel above shows is an *early-training* optimum
-   that inverts in the endgame. Group size is a schedule question.
+3. **Theory checks (with today's corrections owned openly).** ZVF's
+   confidence interval is calibrated (Wilson, all tested settings). The
+   geometric waiting-time quantile G·⌈ln δ/ln ZVF⌉ matched the observed
+   quantile in all six strata (ratio ≈ 1.00) — correctly read as a
+   *reliability budget*, not a minimum (direction fixed 2026-07-11). The
+   signal-per-rollout objective's optimum turns out to be the universal
+   G ∈ {2,3} for any prior (an algebraic identity, found in external review
+   2026-07-11) — so the matching empirical argmax is a model-fit check, not
+   a validated prediction; meanwhile the panel above shows small G inverts
+   in the endgame. Group size is a schedule question.
 4. **pass@k baselines.** Qwen3-8B base: GSM8K pass@1 30.4% / pass@32 91.0%
    (clustered 95% CIs); MATH-500 and MBPP panels for the post-RL comparison
    are complete or near-complete.

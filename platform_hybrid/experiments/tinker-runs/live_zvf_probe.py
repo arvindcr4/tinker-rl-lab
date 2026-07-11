@@ -56,7 +56,10 @@ def load_env_file(path: Path) -> None:
 def reward_fn(response: str, answer: str) -> float:
     response = response.strip()
     boxed = re.findall(r"\\boxed\{([^}]+)\}", response)
-    for item in boxed:
+    # Parser v2 (2026-07-11): score only the LAST boxed value (the final
+    # answer); accepting ANY boxed match let intermediate boxed steps produce
+    # false positives.
+    for item in boxed[-1:]:
         cleaned = item.strip().replace(",", "").replace(" ", "")
         try:
             if abs(float(cleaned) - float(answer)) < 0.01:
@@ -252,10 +255,14 @@ def run(args: argparse.Namespace) -> dict:
                 prompt_ids = tok.encode(prompt, add_special_tokens=False)
                 if len(prompt_ids) > args.max_prompt_tokens:
                     prompt_ids = prompt_ids[: args.max_prompt_tokens]
+                # Deterministic per-(step, prompt) generation seed so runs are
+                # reproducible end-to-end (previously generation randomness was
+                # uncontrolled — fixed 2026-07-11).
                 sampling = T.SamplingParams(
                     max_tokens=args.max_tokens,
                     temperature=args.temperature,
                     top_p=args.top_p,
+                    seed=args.seed * 1_000_003 + step * 1_009 + len(all_data),
                 )
                 sampled = sc.sample(
                     T.ModelInput.from_ints(prompt_ids),
@@ -278,10 +285,12 @@ def run(args: argparse.Namespace) -> dict:
                 for sequence, reward in zip(sampled.sequences, rewards):
                     response_ids = list(sequence.tokens)
                     full_ids = prompt_ids + response_ids
-                    target_ids = full_ids[1:] + [0]
+                    # next-token alignment; old `+ [0]` trained a spurious
+                    # token-0 target at the final position (fixed 2026-07-11)
+                    target_ids = full_ids[1:]
                     all_data.append(
                         T.Datum(
-                            model_input=T.ModelInput.from_ints(full_ids),
+                            model_input=T.ModelInput.from_ints(full_ids[:-1]),
                             loss_fn_inputs={
                                 "target_tokens": T.TensorData(
                                     data=target_ids,

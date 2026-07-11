@@ -435,9 +435,11 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
             for resp, adv in zip(responses.sequences, advs):
                 resp_ids = list(resp.tokens)
                 full_ids = prompt_ids + resp_ids
-                target_ids = full_ids[1:] + [0]
+                # next-token alignment; old `+ [0]` trained a spurious token-0
+                # target at the final position (fixed 2026-07-11)
+                target_ids = full_ids[1:]
                 datum = T.Datum(
-                    model_input=T.ModelInput.from_ints(full_ids),
+                    model_input=T.ModelInput.from_ints(full_ids[:-1]),
                     loss_fn_inputs={
                         "target_tokens": T.TensorData(
                             data=target_ids, dtype="int64", shape=[len(target_ids)]

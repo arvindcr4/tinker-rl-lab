@@ -175,9 +175,12 @@ def _build_datum(prompt_ids: List[int], response_ids: List[int]) -> Any:
     import tinker.types as T
 
     full_ids = prompt_ids + response_ids
-    target_ids = full_ids[1:] + [0]
+    # next-token alignment: input positions 0..L-2 predict 1..L-1; the old
+    # `full_ids[1:] + [0]` trained a spurious token-0 target at the final
+    # position (fixed 2026-07-11)
+    target_ids = full_ids[1:]
     return T.Datum(
-        model_input=T.ModelInput.from_ints(full_ids),
+        model_input=T.ModelInput.from_ints(full_ids[:-1]),
         loss_fn_inputs={
             "target_tokens": T.TensorData(data=target_ids, dtype="int64", shape=[len(target_ids)])
         },

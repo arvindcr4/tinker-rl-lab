@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
-"""analyze_t2_floor.py — E-T2: empirical test of the wasted-compute floor.
+"""analyze_t2_floor.py — E-T2: empirical test of the waiting-time quantile.
 
-T2 (theory/zvf_theory.tex) lower-bounds the number of additional rollouts
-required before the next NON-DEGENERATE advantage event (a mixed-reward
-group) when the observed ZVF is high. The bound instantiated here:
+T2 (theory/zvf_theory.tex) gives a RELIABILITY BUDGET: the (1-delta)-quantile
+of rollouts until the next NON-DEGENERATE advantage event (a mixed-reward
+group) when the observed ZVF is high. Instantiated here:
 
     P(no mixed group in n consecutive groups) = ZVF^n <= delta
     =>  n(delta, ZVF) = ceil( ln(delta) / ln(ZVF) )   groups
-    =>  rollout floor = G * n(delta, ZVF)
+    =>  reliability budget = G * n(delta, ZVF)        rollouts
 
-NOTE: this is the geometric instantiation of T2; cross-check the constant
-against the theorem statement in zvf_theory.tex before citing (the theorem
-carries proof-gap markers — this script is evidence, not proof).
+This is a quantile, NOT a minimum: an informative group arrives within the
+first G rollouts with probability 1-ZVF. The check below validates that the
+empirical (1-delta)-quantile matches (and, given the ceiling, does not
+exceed) the geometric model's quantile.
+
+NOTE: cross-check the constant against the theorem statement in
+zvf_theory.tex before citing (the theorem carries proof-gap markers — this
+script is evidence, not proof).
 
 Method (pure offline, resampled from a build_pool.py pool):
   1. Stratify prompts by p_hat into strata whose group-level ZVF(G) spans
@@ -20,8 +25,9 @@ Method (pure offline, resampled from a build_pool.py pool):
      replacement, rollouts subsampled without replacement) until the first
      mixed group; record rollouts consumed.
   3. Compare the empirical distribution of rollouts-to-first-mixed against the
-     floor at delta in {0.5, 0.1, 0.05}: the bound HOLDS if the empirical
-     (1-delta)-quantile >= floor(delta); it is TIGHT if the ratio is near 1.
+     model quantile at delta in {0.5, 0.1, 0.05}: the model FITS if the
+     empirical (1-delta)-quantile is <= the (ceiled) budget, and is EXACT if
+     the ratio is near 1.
 """
 
 from __future__ import annotations
@@ -113,21 +119,27 @@ def main() -> None:
         for delta in args.deltas:
             fl = floor_rollouts(zvf, delta, G)
             q = quantile(obs, 1.0 - delta)
-            holds = (math.isnan(fl)) or (q >= fl)
+            # fl is the geometric-model (1-delta)-quantile of rollouts to the
+            # first informative group (a reliability budget, NOT a minimum).
+            # The ceiling makes fl an upper estimate of the exact quantile, so
+            # the model-consistency check is q <= fl; the earlier `q >= fl`
+            # tested the inverted statement.
+            quantile_ok = (math.isnan(fl)) or (q <= fl)
             row["bounds"].append({
                 "delta": delta,
-                "floor_rollouts": None if math.isnan(fl) else fl,
+                "reliability_budget_rollouts": None if math.isnan(fl) else fl,
                 "observed_q_at_1_minus_delta": q,
-                "bound_holds": bool(holds),
-                "tightness_ratio": None if (math.isnan(fl) or fl == 0)
-                                   else round(q / fl, 3),
+                "quantile_within_budget": bool(quantile_ok),
+                "fit_ratio_obs_over_model": None if (math.isnan(fl) or fl == 0)
+                                            else round(q / fl, 3),
             })
         rows.append(row)
         b = row["bounds"][1] if len(row["bounds"]) > 1 else row["bounds"][0]
         print(f"stratum {si}: p_hat~{row['mean_p_hat']:.2f} ZVF={zvf:.3f} "
               f"mean_obs={row['observed_mean_rollouts']:.0f} "
-              f"floor(d={b['delta']})={b['floor_rollouts']} "
-              f"holds={b['bound_holds']} tight={b['tightness_ratio']}",
+              f"budget(d={b['delta']})={b['reliability_budget_rollouts']} "
+              f"fits={b['quantile_within_budget']} "
+              f"ratio={b['fit_ratio_obs_over_model']}",
               flush=True)
 
     out = RESULTS_DIR / f"t2_floor_{pool['tag']}_G{G}.json"
@@ -139,8 +151,9 @@ def main() -> None:
         "model": pool["model"],
         "seed": args.seed,
         "generated_at": utc_now(),
-        "bound_form": "rollouts >= G * ceil(ln(delta)/ln(ZVF)) -- geometric "
-                      "instantiation; cross-check constant vs zvf_theory.tex T2",
+        "bound_form": "reliability budget: (1-delta)-quantile of rollouts to "
+                      "first mixed group = G * ceil(ln(delta)/ln(ZVF)); a "
+                      "quantile, not a minimum (2026-07-11 direction fix)",
         "rows": rows,
     })
     print(f"-> {out}")

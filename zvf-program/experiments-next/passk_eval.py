@@ -289,12 +289,6 @@ def main() -> None:
     sc, tok, sampler_used = make_sampler(args.model, args.sampler_path,
                                          args.lora_rank)
     result["sampler_path"] = sampler_used
-    sampling = T.SamplingParams(
-        max_tokens=args.max_tokens,
-        temperature=args.temperature,
-        top_p=args.top_p,
-    )
-
     t0 = time.time()
     for i, (prompt, answer) in enumerate(examples):
         if i < len(counts):
@@ -302,6 +296,15 @@ def main() -> None:
         prompt_ids = tok.encode(prompt, add_special_tokens=False)
         if len(prompt_ids) > args.max_prompt_tokens:
             prompt_ids = prompt_ids[: args.max_prompt_tokens]
+        # Per-problem generation seed: makes eval seeds true stochastic
+        # replicates (previously only prompt selection was seeded; generation
+        # randomness was uncontrolled — fixed 2026-07-11).
+        sampling = T.SamplingParams(
+            max_tokens=args.max_tokens,
+            temperature=args.temperature,
+            top_p=args.top_p,
+            seed=args.seed * 1_000_003 + i,
+        )
         sampled = None
         for attempt in range(args.max_retries + 1):
             try:

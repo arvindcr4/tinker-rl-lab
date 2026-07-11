@@ -5,8 +5,8 @@
   "pool_tag": "qwen3-8b_train_n512_r32_s42",
   "model": "Qwen/Qwen3-8B",
   "seed": 0,
-  "generated_at": "2026-07-11T03:04:18.625528+00:00",
-  "bound_form": "rollouts >= G * ceil(ln(delta)/ln(ZVF)) -- geometric instantiation; cross-check constant vs zvf_theory.tex T2",
+  "generated_at": "2026-07-11T18:01:13.286578+00:00",
+  "bound_form": "reliability budget: (1-delta)-quantile of rollouts to first mixed group = G * ceil(ln(delta)/ln(ZVF)); a quantile, not a minimum (2026-07-11 direction fix)",
   "rows": [
     {
       "stratum": 0,
@@ -20,24 +20,24 @@
       "bounds": [
         {
           "delta": 0.5,
-          "floor_rollouts": 48,
+          "reliability_budget_rollouts": 48,
           "observed_q_at_1_minus_delta": 48.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         },
         {
           "delta": 0.1,
-          "floor_rollouts": 160,
+          "reliability_budget_rollouts": 160,
           "observed_q_at_1_minus_delta": 160.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         },
         {
           "delta": 0.05,
-          "floor_rollouts": 200,
+          "reliability_budget_rollouts": 200,
           "observed_q_at_1_minus_delta": 208.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.04
+          "quantile_within_budget": false,
+          "fit_ratio_obs_over_model": 1.04
         }
       ]
     },
@@ -53,24 +53,24 @@
       "bounds": [
         {
           "delta": 0.5,
-          "floor_rollouts": 8,
+          "reliability_budget_rollouts": 8,
           "observed_q_at_1_minus_delta": 8.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         },
         {
           "delta": 0.1,
-          "floor_rollouts": 24,
+          "reliability_budget_rollouts": 24,
           "observed_q_at_1_minus_delta": 24.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         },
         {
           "delta": 0.05,
-          "floor_rollouts": 32,
+          "reliability_budget_rollouts": 32,
           "observed_q_at_1_minus_delta": 32.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         }
       ]
     },
@@ -86,24 +86,24 @@
       "bounds": [
         {
           "delta": 0.5,
-          "floor_rollouts": 8,
+          "reliability_budget_rollouts": 8,
           "observed_q_at_1_minus_delta": 8.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         },
         {
           "delta": 0.1,
-          "floor_rollouts": 16,
+          "reliability_budget_rollouts": 16,
           "observed_q_at_1_minus_delta": 16.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         },
         {
           "delta": 0.05,
-          "floor_rollouts": 16,
+          "reliability_budget_rollouts": 16,
           "observed_q_at_1_minus_delta": 16.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         }
       ]
     },
@@ -119,24 +119,24 @@
       "bounds": [
         {
           "delta": 0.5,
-          "floor_rollouts": 8,
+          "reliability_budget_rollouts": 8,
           "observed_q_at_1_minus_delta": 8.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         },
         {
           "delta": 0.1,
-          "floor_rollouts": 8,
+          "reliability_budget_rollouts": 8,
           "observed_q_at_1_minus_delta": 8.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         },
         {
           "delta": 0.05,
-          "floor_rollouts": 8,
+          "reliability_budget_rollouts": 8,
           "observed_q_at_1_minus_delta": 8.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         }
       ]
     },
@@ -152,24 +152,24 @@
       "bounds": [
         {
           "delta": 0.5,
-          "floor_rollouts": 8,
+          "reliability_budget_rollouts": 8,
           "observed_q_at_1_minus_delta": 8.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         },
         {
           "delta": 0.1,
-          "floor_rollouts": 8,
+          "reliability_budget_rollouts": 8,
           "observed_q_at_1_minus_delta": 8.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         },
         {
           "delta": 0.05,
-          "floor_rollouts": 8,
+          "reliability_budget_rollouts": 8,
           "observed_q_at_1_minus_delta": 8.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         }
       ]
     },
@@ -185,24 +185,24 @@
       "bounds": [
         {
           "delta": 0.5,
-          "floor_rollouts": 8,
+          "reliability_budget_rollouts": 8,
           "observed_q_at_1_minus_delta": 8.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         },
         {
           "delta": 0.1,
-          "floor_rollouts": 8,
+          "reliability_budget_rollouts": 8,
           "observed_q_at_1_minus_delta": 8.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         },
         {
           "delta": 0.05,
-          "floor_rollouts": 16,
+          "reliability_budget_rollouts": 16,
           "observed_q_at_1_minus_delta": 16.0,
-          "bound_holds": true,
-          "tightness_ratio": 1.0
+          "quantile_within_budget": true,
+          "fit_ratio_obs_over_model": 1.0
         }
       ]
     }

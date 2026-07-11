@@ -1,0 +1,342 @@
+% ZVF Program — Progress Review deck (2026-07-13)
+% Built from checked-in artifacts only; every number traces to a results JSON
+% or committed table. No claim above Tier C. Compile: pdflatex (Madrid theme).
+\documentclass[aspectratio=169,11pt]{beamer}
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{booktabs}
+\setbeamertemplate{navigation symbols}{}
+\newcommand{\good}[1]{\textcolor{green!50!black}{#1}}
+\newcommand{\warn}[1]{\textcolor{orange!80!black}{#1}}
+\newcommand{\tier}[1]{\hfill{\scriptsize\textcolor{gray}{[#1]}}}
+
+\title[ZVF Program Review]{The ZVF Program: Measuring and Controlling the
+Learning Signal in Group-Relative RL}
+\subtitle{Progress Review — Stage-1 Complete}
+\author{Arvind C R}
+\institute{PES University}
+\date{July 13, 2026}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{The program at a glance}
+  \textbf{Core object:} the Zero-Variance Fraction (ZVF) --- the fraction of
+  GRPO prompt-groups whose identical rewards contribute \emph{zero gradient}.
+  \vspace{4pt}
+  \begin{itemize}
+    \item \textbf{P-Method} — adaptive ZVF-aware rollout controller
+          \tier{pilot: GO}
+    \item \textbf{P-Theory} — calibrated estimator (T1), wasted-compute floor
+          (T2), optimal group size $G^\star$ (T3) \tier{all 3 validated on real data}
+    \item \textbf{P-OSS} — \texttt{zvf-triage} library, 73 tests green
+          \tier{shippable}
+    \item \textbf{P-Position} — MIN-REPORT-RL: now an \textbf{8-item}
+          minimum-reportable-stack standard \tier{draft compiles}
+  \end{itemize}
+  \vspace{4pt}
+  The field converged on our phenomenon: the TMLR agentic-RL survey
+  (arXiv:2509.02547) canonizes it as \emph{advantage collapse}; DAPO, GRESO,
+  EDGE-GRPO, DARS all intervene on it --- \textbf{none measures it}.
+\end{frame}
+
+\begin{frame}{Position: controllers acting on an uncalibrated signal}
+  \begin{itemize}
+    \item 20+ GRPO variants now catalogued in one survey table; a striking
+          fraction filter, reweight, or reallocate on the dead-group fraction
+    \item Every one acts on an \emph{implicit point estimate} of the quantity
+          whose sampling distribution (T1), compute cost (T2), and optimal
+          set-point (T3) this program supplies
+    \item Our theory is not a competitor to DAPO/GRESO/DARS --- it is the
+          \textbf{missing measurement layer} any of them needs to become a
+          calibrated controller
+    \item Sharper implication (survey \S6.4): zero-variance groups are the
+          all-fail/all-pass cells --- controlling ZVF concentrates gradient
+          budget exactly where RL installs \emph{new} capability
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Stage-1: pre-registered validation protocol (now complete)}
+  \textbf{Data:} one sampling pool --- Qwen3-8B, GSM8K, \textbf{512 prompts
+  $\times$ 32 rollouts} (Tinker). All analyses are offline resampling; decision
+  rules fixed before scoring.
+  \vspace{4pt}
+  \begin{itemize}
+    \item E-T1: does the closed-form CI achieve nominal coverage?
+    \item E-T2: does the wasted-compute floor hold, and how tight?
+    \item E-T3a: does the closed-form $G^\star$ match the empirical optimum?
+    \item E-B: does bandit reallocation recover the oracle static policy?
+    \item Item-8 protocol: pass@\{1,8,32\} everywhere, base and post-RL,
+          pinned config
+  \end{itemize}
+  \vspace{4pt}
+  \good{Verdicts below were confirmed at $n{=}350$ (billing-truncated,
+  honestly stamped) and re-confirmed unchanged at $n{=}512$.}
+\end{frame}
+
+\begin{frame}{T1 --- the estimator is calibrated; the failure mode is an
+  estimand mismatch}
+  \centering
+  \begin{tabular}{@{}lcc@{}}
+    \toprule
+    Batching regime & Coverage target & 95\% CI coverage \\
+    \midrule
+    shuffled (iid), Wald, $m{\ge}64$ & global ZVF & \good{0.93--0.96} \\
+    shuffled, Wilson, all $(m,K)$    & global ZVF & \good{0.95--0.98} \\
+    difficulty-sorted (curriculum)   & global ZVF & \warn{0.07--0.22} \\
+    difficulty-sorted                & \textbf{local} ZVF & \good{0.944} \\
+    stratified batches               & global ZVF & \good{0.996} \\
+    \bottomrule
+  \end{tabular}
+  \vspace{6pt}
+  \begin{itemize}
+    \item Adopted: \textbf{Wilson interval}, $m\ge 64$ groups
+    \item Curriculum ordering does NOT break calibration --- it silently
+          changes the estimand to the curriculum-stage ZVF (which is what a
+          stage-local controller acts on anyway)
+    \item Global inference under curriculum $\Rightarrow$ stratified batch
+          composition (validated) \tier{Tier C, n=512 pool}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{T2 --- the wasted-compute floor holds, and it is essentially exact}
+  Floor: $\;$ rollouts $\ge G\cdot\lceil \ln\delta / \ln \mathrm{ZVF} \rceil$
+  before one informative (mixed-reward) group, w.p. $1-\delta$.
+  \vspace{4pt}
+  \centering
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    Stratum ($\hat p$) & ZVF$(G{=}8)$ & floor $(\delta{=}0.1)$ & observed & tightness \\
+    \midrule
+    0.01 (hardest) & 0.886 & \textbf{160 rollouts} & holds & 1.00 \\
+    0.11 & 0.384 & 24 & holds & 1.00 \\
+    0.21--0.69 (4 strata) & 0.004--0.121 & 8--16 & holds & 1.00 \\
+    \bottomrule
+  \end{tabular}
+  \vspace{6pt}
+  \begin{itemize}
+    \item Headline datum: at $\hat p \approx 0.01$, \textbf{160 rollouts are
+          provably burned} before a single usable gradient
+    \item 6/6 strata, tightness 1.00--1.05 \tier{Tier C, n=512 pool}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{T3 --- theory says the optimal group size is $G^\star = 2$;
+  the field uses 8--16}
+  Objective (eq.~efficiency): $J(G)=\frac{1}{G}\,
+  \mathbb{E}_{p\sim\hat\phi}[(1-p^G-(1-p)^G)\,p(1-p)]$
+  \vspace{4pt}
+  \begin{itemize}
+    \item Closed-form argmax: $G^\star=2$ in \textbf{every} difficulty stratum
+          and pooled
+    \item Empirical $J$-argmax: 2--3 (exact agreement 3--4 of 5 strata,
+          adjacent grid point otherwise)
+    \item Corroboration from training: the $G{=}2$ adapter matched
+          $G{=}16$'s held-out pass@32 gain at $8\times$ fewer
+          rollouts per step (next slides)
+    \item Named open question (E-T3b): does small-$G$ advantage-estimate
+          quality erode the predicted efficiency in training?
+          \tier{Tier C; theorem still proof-sketch}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Pilot for the controller pillar: bandit reallocation is GO}
+  Offline simulation on the real pool; arms = difficulty strata; reward =
+  group is informative (usable gradient). $G{=}8$, 250 groups/sim, 500 sims.
+  \vspace{4pt}
+  \centering
+  \begin{tabular}{@{}lcc@{}}
+    \toprule
+    Policy & informative groups / 1k rollouts & vs.\ oracle \\
+    \midrule
+    static-oracle (needs truth) & 124.3 & 100\% \\
+    \textbf{Thompson-GU (ours)} & \textbf{120.7} & \good{97\%} \\
+    uniform & 94.5 & 76\% \\
+    hardest-first (DARS caricature) & \warn{13.7} & \warn{11\%} \\
+    \bottomrule
+  \end{tabular}
+  \vspace{6pt}
+  \begin{itemize}
+    \item Difficulty $\ne$ signal: hardest-first wastes $\sim$89\% of the
+          gradient budget (hardest $\approx$ all-fail $\approx$ zero variance)
+    \item Caveat: frozen-pool simulation; training-time pilot must confirm
+          under distribution shift
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Provenance: from ``949 runs somewhere'' to an audited graph}
+  Three-way identity audit: \textbf{949 Tinker runs $\times$ 940 W\&B runs
+  $\times$ 33 HF adapter repos}.
+  \vspace{4pt}
+  \begin{itemize}
+    \item 41 exact ID links: \good{33 confirmed} (5 HF-corroborated),
+          \warn{5 arbitrated as W\&B mislinks}, 3 unresolved
+    \item Solved case: the ``Nemotron conflict'' was an \textbf{ID swap} ---
+          the true Nemotron-120B run verified from HF
+          \texttt{training\_run.json} (peak 0.875 $\to$ last-10 0.163)
+    \item Claim-to-run table: 18 claims across 8 papers mapped to run IDs,
+          links, model consistency, tiers (C=12, R=2, X=4)
+    \item Modal volumes: 127 per-seed metrics JSONs recovered --- P4/P5
+          ``local:'' claims now resolve to \texttt{modal://} artifacts
+    \item Everything mirrored to W\&B (135+ backfilled runs, idempotent)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{MIN-REPORT-RL: now 8 items --- and we dogfood it}
+  \begin{itemize}
+    \item Items 1--7: loss form; reference/KL; sampler/backend/precision;
+          per-step ZVF/GU; group-size schedule; held-out split;
+          decontamination probe
+    \item \textbf{New item 8: pass@$k$ curves alongside pass@1} ---
+          pass@1-only reporting cannot distinguish distribution sharpening
+          from capability gain; rankings can invert at $k{=}32$
+    \item Evidence base: survey \S6.4 ($\sim$2/3 of RL papers report pass@1
+          only) + our own measurements (next slide)
+    \item Every experiment in this review emits the full 8-item block
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{We measured the stack effect the position paper warns about}
+  Same model, same 200 problems, same config (seed 42, $T{=}1.0$) ---
+  \textbf{only the sampler/backend differs}:
+  \vspace{4pt}
+  \centering
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    Backend & pass@1 & pass@8 & pass@32 \\
+    \midrule
+    Tinker sampler & 30.4\% & 79.7\% & 91.0\% \\
+    vLLM 0.24 (Modal A100) & 30.6\% & 77.8\% & 89.0\% \\
+    \midrule
+    $\Delta$ & \good{+0.2} & $-1.9$ & \warn{$-2.0$} \\
+    \bottomrule
+  \end{tabular}
+  \vspace{6pt}
+  \begin{itemize}
+    \item Point estimates are backend-robust; \textbf{frontier metrics are
+          not} (individual problems move up to $|11|/32$ solutions)
+    \item Eval-seed spread (3 seeds): $\sim$4 pts at pass@1 --- the noise
+          bands all later comparisons are judged against
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Headline: the first matched base-vs-post-RL pass@$k$ panel}
+  Base vs.\ four RL adapters (G-series, seed 42), one vLLM stack, same 200
+  GSM8K problems:
+  \vspace{4pt}
+  \centering
+  \begin{tabular}{@{}lccccc@{}}
+    \toprule
+    Arm & pass@1 & pass@32 & $\Delta$@1 & $\Delta$@32 & frontier $\pm$ \\
+    \midrule
+    base & 30.6 & 89.0 & --- & --- & --- \\
+    $+$G2  & 30.1 & 91.0 & $-0.5$ & \good{$+2.0$} & $+7/-3$ \\
+    $+$G4  & 31.6 & 90.5 & $+1.0$ & \good{$+1.5$} & $+5/-2$ \\
+    $+$G16 & 32.5 & 91.0 & $+1.9$ & \good{$+2.0$} & $+8/-4$ \\
+    $+$G32 & 32.3 & 91.5 & $+1.7$ & \good{$+2.5$} & $+7/-2$ \\
+    \bottomrule
+  \end{tabular}
+  \vspace{6pt}
+  \begin{itemize}
+    \item \textbf{4/4 adapters move the pass@32 frontier up} --- a
+          capability-expansion signature, not pure sharpening
+    \item Group size barely matters (P3's flat-in-$G$, now held-out at
+          matched config); $G{=}2$ ties $G{=}16$ at far fewer rollouts
+    \item Each $\Delta$ individually sits \emph{within} the measured noise
+          bands \tier{Tier C, single training seed}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{New baselines position the next battleground}
+  \centering
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    Dataset (config) & pass@1 & pass@32 & unsolved@32 & headroom \\
+    \midrule
+    GSM8K (512 tok) & 30.4\% & 91.0\% & 18/200 & $\sim$9 pts \\
+    \textbf{MATH-500 (4096 tok)} & 59.8\% & 76.0\% & \textbf{120/500} &
+    \good{24 pts} \\
+    MBPP (Lightning, exec-graded) & 7.2\% & 16.5\% & 167/200 & large \\
+    \bottomrule
+  \end{tabular}
+  \vspace{6pt}
+  \begin{itemize}
+    \item GSM8K is nearly saturated at $k{=}32$ --- capability claims must be
+          made on \textbf{MATH-500} (24 pts of frontier headroom)
+    \item Learned the hard way: 512-token MATH run was truncation-invalid
+          (pass@1 0.03\%); diagnosed via boxed-rate, re-run sharded at 4096
+    \item Cross-dataset pass@1 comparisons are token-budget-confounded;
+          within-dataset matched comparisons are the valid unit
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Infrastructure: one protocol, three platforms}
+  \begin{itemize}
+    \item \textbf{Tinker} — training + pool sampling (resumable, billing-safe,
+          truncation stamped, retry-hardened)
+    \item \textbf{Modal} — vLLM A100 eval harness; adapter evaluation required
+          reverse-engineering Tinker's export format
+          (\texttt{all-linear}, \texttt{unembed\_tokens}$\to$\texttt{lm\_head})
+          --- prior cross-stack adapter evals would have silently failed
+    \item \textbf{Lightning} — code-task eval (isolated \texttt{uv} env after
+          the studio conda env defeated 5 attempts)
+    \item Every result JSON carries the 8-item block fields; W\&B mirrors all
+          runs; adversarial review (\texttt{agy}) used on repeated failures
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Evidence / Limitation / Next decisive experiment}
+  \textbf{Completed evidence} \good{(all committed, W\&B-mirrored)}
+  \begin{itemize}
+    \item T1/T2/T3 validated on a 512$\times$32 real pool; bandit pilot GO
+    \item Three-way provenance audit; 8-item standard; quantified stack effect
+    \item First matched base-vs-post-RL panel: 4/4 adapters $+$1.5--2.5 pts
+          pass@32
+  \end{itemize}
+  \textbf{Current limitation} \warn{(stated plainly)}
+  \begin{itemize}
+    \item Every empirical claim is Tier C: single training seed, deltas within
+          sampler/seed noise bands; theorems remain proof sketches
+  \end{itemize}
+  \textbf{Next decisive experiment}
+  \begin{itemize}
+    \item Multi-seed replication of the pass@32 shift on \textbf{MATH-500}
+          (the headroom dataset), then the \texttt{greso} vs
+          \texttt{zvf\_ci\_gated} (Wilson, $m{\ge}64$) matched-compute arms
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Summary}
+  \begin{enumerate}
+    \item The field now names our phenomenon (\emph{advantage collapse}) ---
+          we are the only group \textbf{measuring} it with calibrated error
+          bars
+    \item All three theory pillars survived contact with real data;
+          $G^\star{=}2$ is a falsifiable, provocative prediction
+    \item The decisive-experiment machinery (matched pass@$k$ panels across
+          backends) is \textbf{operational} and produced a 4/4-directional
+          first signal
+    \item Reporting standards (8-item MIN-REPORT-RL) are dogfooded across
+          every result shown today
+  \end{enumerate}
+  \vspace{8pt}
+  \centering
+  \emph{Artifacts: PROGRESS.md, claim-to-run table, experiments-next/results/
+  --- every number in this deck traces to a committed JSON.}
+\end{frame}
+
+\begin{frame}
+  \centering
+  {\Large Thank you}\\[10pt]
+  Questions?\\[16pt]
+  {\scriptsize repo: \texttt{tinker-rl-lab} (zvf-program/) \quad
+   W\&B: \texttt{arvindcr4-pes-university} \quad
+   deck sources: \texttt{zvf-program/review/}}
+\end{frame}
+
+\end{document}

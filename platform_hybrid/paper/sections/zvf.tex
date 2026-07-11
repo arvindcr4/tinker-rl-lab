@@ -89,6 +89,19 @@ correlation breakdown is in \texttt{experiments/results/zvf\_failure\_correlatio
 per-experiment rows; per-step rows are autocorrelated (lag-1
 $\rho \approx 0.9$) and were deliberately aggregated first.
 
+\paragraph{The clearest case of ZVF-beyond-reward: the all-correct wall.}
+A two-seed matched-budget panel (2{,}560 rollouts per arm:
+$G{=}2\times160$ steps vs.\ $G{=}16\times20$ steps, Qwen3-8B/GSM8K,
+LoRA rank~4, batch~8) supplies the sharpest instance of ZVF carrying
+information mean reward cannot. Late in the $G{=}2$ arms, mean train
+reward sits near 1.0 --- by the reward axis alone, training is
+succeeding --- while $\mathrm{ZVF}$ sits at $0.75$--$1.0$: nearly every
+group is all-correct and contributes zero gradient. The $G{=}16$ arms at
+the same rollout budget hold $\mathrm{ZVF}\le0.25$. Reward reports
+\emph{where the policy is}; ZVF reports \emph{whether training is still
+moving} --- and at the high-accuracy end the two disagree completely.
+Artifacts: \texttt{tinker-runs/results/er2b\_*.json}.
+
 \subsection{Why We Treat ZVF as Diagnostic, Not Causal}
 \label{sec:zvf-caveat}
 Two consequences follow from the framing in

@@ -32,6 +32,21 @@ the registry's \textbf{first CONTRADICTS verdict on a
 \texttt{length\_bias} metric that is sign-detectable with 95\%
 confidence on a real, pre-existing audit panel}.
 
+\paragraph{A second, independent measured panel (uncapped, 8B scale).}
+A later six-arm uncapped panel (Qwen3-8B, LoRA rank~4, GSM8K, 30 steps,
+$G{=}8$, batch~4, 1{,}024-token completions, three seeds per loss)
+corroborates the null-to-contradicting picture at larger scale: mean
+completion length \emph{declines} 6--12\% under both losses, and
+late-run ZVF shows no separation (Dr.GRPO 0.45/0.70/0.72 vs.\ GRPO
+0.47/0.47/0.55) --- no measured support for the registry-claimed delta
+on either axis (Tier~C, $n{=}3$ per loss). Provenance caveat worth
+recording in the registry itself: the \emph{first} version of this panel
+was invalid --- the runner's loss flag was documented but never wired,
+so both arms trained vanilla GRPO --- and the defect was invisible in
+every output-level trace; artifacts of the invalid runs are preserved
+under \texttt{.invalid\_actually\_grpo.json} names alongside the
+corrected rerun (2026-07-11).
+
 \paragraph{Three measured rows on \texttt{delta\_drgrpo}.}
 We populate three measured rows, paired expected\_effects, and three
 claim\_validation rows (all on the same panel

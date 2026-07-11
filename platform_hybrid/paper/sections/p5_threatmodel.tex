@@ -21,7 +21,12 @@ precision, decoding parameters. Documented magnitude: $17\times$
 \item[V2 --- Objective semantics under a shared label.] Loss-form divergence
 hidden by a common name: clip asymmetry, dynamic sampling, normalization,
 ratio level. Documented magnitude: qualitative telemetry inversion (mean ZVF
-$0.00$ vs.\ $0.58$; \secref{sec:p5-exhibit-label}).
+$0.00$ vs.\ $0.58$; \secref{sec:p5-exhibit-label}). The vector also runs in
+reverse --- a claimed divergence of \emph{zero} magnitude: in our own
+trainer a documented-but-unwired \texttt{--loss drgrpo} flag left a six-arm
+``GRPO vs.\ Dr.GRPO'' panel training the identical objective under two
+labels, and no reward, length, or ZVF trace revealed it; only reading the
+runner did.
 \item[V3 --- Signal geometry.] Group size and its schedule, advantage
 normalization, and the accuracy regime relative to the ZVF U-shape.
 Documented magnitude: mean ZVF $0.33 \to 0.08$ moving $G$ from 4 to 16 on

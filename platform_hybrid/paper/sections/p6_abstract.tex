@@ -15,10 +15,11 @@ dynamic sampling but $0.58$ on a closed stack running an asymmetric-clip
 surrogate. These audits motivate \textsc{GRPO-Registry}, a resource that makes
 such discrepancies queryable rather than presenting a new performance result:
 (i) a JSON schema whose stack records carry the
-seven-item MIN-REPORT-RL block (loss form; reference policy and KL handling;
+eight-item MIN-REPORT-RL block (loss form; reference policy and KL handling;
 sampler/backend/precision \textbf{including base-checkpoint identity: revision/hash};
 per-step ZVF/GU telemetry; group-size schedule;
-held-out split; decontamination and parser probes) plus per-component
+held-out split; decontamination and parser probes; held-out pass@$k$
+curves) plus per-component
 variant-delta status; (ii) three variant-delta records verified against the
 DAPO, Dr.~GRPO, and GSPO papers; (iii) twenty seed stack entries derived from
 this benchmark's released config dumps, an open Colab trainer audit, a

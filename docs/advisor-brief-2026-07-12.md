@@ -19,8 +19,10 @@ Scope is stated honestly everywhere: Qwen3-8B, GSM8K, Tinker managed API
    two seeds each: G=2×160 steps vs G=16×20 steps reach comparable final train
    reward, but every G=2 arm ends at ZVF ≈ 0.75–1.0 with reward ≈ 1.0 — the
    *all-correct* zero-variance wall — while G=16 holds ZVF ≤ 0.25 throughout.
-   Reward alone reads "success"; ZVF reveals training is dead. This is the
-   clearest demonstration that ZVF carries information mean reward cannot.
+   Reward alone reads "success"; ZVF, read together with reward, shows the
+   updates have stopped carrying signal (ZVF alone aliases mastery with
+   incapacity — the reward coordinate disambiguates). This is the clearest
+   demonstration that ZVF carries information mean reward cannot.
 2. **Loss-form panel (corrected).** Six uncapped 1,024-token arms, 3 seeds per
    loss: no length inflation in either GRPO or Dr.GRPO (all arms *shrink*
    6–12%), and no late-ZVF separation between the losses at this scale.
@@ -48,7 +50,8 @@ motivated) on why stack identity must be verified, not inferred from outputs.
 The 17 drafted documents were consolidated under a reviewed plan (two external
 model reviews + a three-model adversarial council). Decisions:
 
-- **Primary deliverable: the thesis.** Pillars → chapters; contribution as
+- **Primary deliverable: the thesis.** Pillars → chapters (P8, an unrelated
+  fraud-detection study, is out-of-program and excluded); contribution as
   stated above; limitations chapter owns the scope statement.
 - **Conference submissions are post-degree and gated.** The flagship paper
   goes out only if a pre-registered, compute-matched bakeoff shows the

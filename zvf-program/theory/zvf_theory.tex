@@ -247,9 +247,10 @@ Z_g \;\coloneqq\; \1\!\left[\Varhat_g \le \varepsilon\right]
 \]
 \end{definition}
 
-\paragraph{Group Uniformity (GU).} We use $\GU_t \coloneqq \ZVF_t$ as the
-batch-level uniformity rate, and reserve the per-group, population-level object
-for analysis. For binary rewards the population zero-variance probability of a
+\paragraph{Gradient Utilization (GU).} Following the program-wide convention
+we set $\GU_t \coloneqq 1-\ZVF_t$, the fraction of groups carrying usable
+signal; $\ZVF_t$ itself is the batch-level uniformity rate, and we reserve
+the per-group, population-level object for analysis. For binary rewards the population zero-variance probability of a
 prompt with success rate $p$ at group size $K$ is the \emph{kernel}
 \begin{equation}\label{eq:kernel}
 h_K(p) \;\coloneqq\; \Prob\big(Z_g = 1 \mid p_g=p\big) \;=\; p^{K} + (1-p)^{K},
@@ -489,20 +490,21 @@ $95\%$ lower confidence bound
 $\underline{\ZVF}_t = \ZVF_t - 1.645\,\sqrt{\ZVF_t(1-\ZVF_t)/m}$
 from Theorem~\ref{thm:T1} yields a per-step, observation-driven
 compute floor $N(\underline{\ZVF}_t)$ that the controller can read off
-online. \textbf{Important: the direction of the inequality is
-uphill, not downhill. The function $N(Z) = K\ln(1/\delta)/(-\ln Z)$ is
-\emph{increasing} in $Z$ on $(0,1)$, so a \emph{lower} confidence
-bound on $\ZVF$ propagates to an \emph{upper} bound on $N$. The
-corollary's claim is therefore ``with probability $\ge 0.95$ you need
-$\ge N(\underline{\ZVF}_t)$ rollouts, where $N(\underline{\ZVF}_t) \ge
-N(\ZVF_{\text{obs}})$ is the worst-case compute'' --- not ``you need
-$\ge N$ rollouts with certainty.'' A reviewer who reads the corollary
-as needing an \emph{upper} bound on $\ZVF$ has the direction
-inverted; the lower bound is correct, and the corollary is a
-worst-case wasted-compute statement, not an optimistic one. The
-confidence level ($95\%$, one-sided) is what makes the claim
-probabilistic rather than deterministic; readers should not read it
-as ``you provably need $N$ rollouts always.''} The previous
+online. \textbf{Important: mind the direction. The function
+$N(Z) = K\ln(1/\delta)/(-\ln Z)$ is \emph{increasing} in $Z$ on $(0,1)$,
+so $\underline{\ZVF}_t \le \ZVF_t$ gives
+$N(\underline{\ZVF}_t) \le N(\ZVF_t)$, and with probability $\ge 0.95$
+the population floor satisfies $N(\ZVF) \ge N(\underline{\ZVF}_t)$. The
+corollary's claim is therefore ``with probability $\ge 0.95$ you need at
+least $N(\underline{\ZVF}_t)$ rollouts'' --- a \emph{certified,
+conservative} floor, \emph{smaller} than the plug-in value $N(\ZVF_t)$,
+not a worst-case estimate. A reviewer who reads the corollary as needing
+an \emph{upper} confidence bound on $\ZVF$ has the roles reversed: an
+upper bound would \emph{overstate} the floor and void the no-go
+guarantee; the lower bound is what keeps the statement valid under
+estimation. The confidence level ($95\%$, one-sided) is what makes the
+claim probabilistic rather than deterministic; readers should not read
+it as ``you provably need $N$ rollouts always.''} The previous
 version used the two-sided $1.96$ constant inside a one-sided
 wasted-compute claim, which is the wrong table: the two-sided
 critical value covers ``ZVF lies in $[a,b]$ with 95\% probability''

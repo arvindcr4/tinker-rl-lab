@@ -1,6 +1,8 @@
 # experiments-next — Progress & Resume Notes
 
-Last updated: 2026-07-11 (session: gameplan deployment + first real Tinker runs)
+Last updated: 2026-07-11 evening (staleness fix: MATH-500/MBPP panels ran
+later the same day — see amended queue item 5; earlier "needs billing" state
+was corrected after the credit reload)
 
 ## State at a glance
 
@@ -96,8 +98,12 @@ V=../../.venv/bin/python          # repo venv (tinker SDK installed via uv)
    G≫3, the divergence is the finding.
 4. **Extend `../sweep/matched_compute.py`** with `greso` and `zvf_ci_gated`
    (Wilson, M≥64) arms → launch the 403-cell sweep, shuffled batching only.
-5. **MATH-500 + code-task pools/pass@k** (needs billing) — prerequisite for
-   the E-R capability-expansion claim per the pass@32=91% headroom finding.
+5. **MATH-500 + code-task pools/pass@k** — LARGELY DONE (2026-07-11 pm,
+   post credit-reload): MATH-500 base p500 complete (`passk_modal_..._p500_
+   n32_s42_mt4096.json`); G16 checkpoint 375/500 (o250 chunk stuck in Modal
+   A100 queue), G4 125/500; MBPP p200 complete on Lightning (base +
+   G2/G4/G16/G32 at s42) with Colab base replication at s43/s44. Remaining:
+   the stalled Modal chunks.
 6. **Checkpoint pool** for E-T2 on drifting ZVF: rerun `build_pool.py` with
    `--sampler-path tinker://<audit-run-weights> --tag qwen3-8b-stepNN`.
 7. **Matched post-RL pass@k**: use the identical seed/sampling configuration,

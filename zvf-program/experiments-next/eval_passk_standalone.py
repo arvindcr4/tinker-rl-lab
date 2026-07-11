@@ -4,7 +4,9 @@
 Runs anywhere with a GPU + vllm (Lightning Studio, Colab, bare metal).
 Datasets: gsm8k (tinker-identical parser), math500 (strict boxed match,
 lower bound), mbpp (unit-test execution — sandboxed subprocess w/ timeout;
-run only on an isolated VM).
+run only on an isolated VM). Supports Tinker-exported HF LoRA adapters via
+--adapter (remaps all-linear target modules and unembed_tokens -> lm_head,
+same logic as modal_passk.py).
 
   python eval_passk_standalone.py --dataset mbpp --problems 200 --n 32 \
       --out passk_lightning_qwen3-8b_base_mbpp.json
@@ -14,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import multiprocessing as mp
 import re
 import subprocess
@@ -31,12 +32,14 @@ SYSTEM_PROMPT_CODE = (
     "You are an expert Python programmer. Write a correct, self-contained "
     "Python function for the task. Output ONLY a Python code block."
 )
+IM_START = "<|im_start|>"
+IM_END = "<|im_end|>"
 
 
 def chatml(system: str, user: str) -> str:
-    return ("<|im_start|>system\n" + system + "<|im_end|>\n"
-            "<|im_start|>user\n" + user + "<|im_end|>\n"
-            "<|im_start|>assistant\n")
+    return (IM_START + "system\n" + system + IM_END + "\n"
+            + IM_START + "user\n" + user + IM_END + "\n"
+            + IM_START + "assistant\n")
 
 
 def gsm8k_reward(response: str, answer: str) -> float:
@@ -91,7 +94,8 @@ def last_boxed(text: str) -> str | None:
 
 def math_reward(response: str, answer: str) -> float:
     got = last_boxed(response)
-    return 1.0 if got is not None and norm_math(got) == norm_math(answer) else 0.0
+    return 1.0 if got is not None and norm_math(got) == norm_math(answer) \
+        else 0.0
 
 
 CODE_BLOCK_RE = re.compile(r"```(?:python)?\s*\n(.*?)```", re.S)
@@ -137,6 +141,8 @@ def main() -> None:
     ap.add_argument("--top-p", type=float, default=1.0)
     ap.add_argument("--max-tokens", type=int, default=512)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--adapter", default="",
+                    help="HF LoRA adapter repo (Tinker export; remapped)")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -152,17 +158,19 @@ def main() -> None:
         for row in ds:
             m = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
             if m:
-                items.append((chatml(SYSTEM_PROMPT_MATH, row["question"] +
-                              " Provide the final numerical answer inside \\boxed{}."),
-                              m.group(1).replace(",", "").strip()))
+                items.append((
+                    chatml(SYSTEM_PROMPT_MATH, row["question"] +
+                           " Provide the final numerical answer inside "
+                           "\\boxed{}."),
+                    m.group(1).replace(",", "").strip()))
         grade_mode = "gsm8k"
     elif args.dataset == "math500":
         ds = load_dataset("HuggingFaceH4/MATH-500", split="test")
         items = [(chatml(SYSTEM_PROMPT_MATH, row["problem"] +
-                  " Put your final answer inside \\boxed{}."), row["answer"])
-                 for row in ds]
+                         " Put your final answer inside \\boxed{}."),
+                  row["answer"]) for row in ds]
         grade_mode = "math"
-    else:  # mbpp: sanitized test split, standard 3-assert protocol
+    else:
         ds = load_dataset("google-research-datasets/mbpp", "sanitized",
                           split="test")
         items = []
@@ -176,13 +184,52 @@ def main() -> None:
     rng.shuffle(items)
     items = items[:args.problems] if args.problems else items
 
+    lora_kwargs = {}
+    lora_request = None
+    if args.adapter:
+        import os
+        import shutil
+        from vllm.lora.request import LoRARequest
+        from huggingface_hub import snapshot_download
+        from safetensors.torch import load_file, save_file
+        adapter_path = snapshot_download(args.adapter)
+        if os.path.exists(os.path.join(adapter_path, "final",
+                                       "adapter_model.safetensors")):
+            adapter_path = os.path.join(adapter_path, "final")
+        patched = os.path.expanduser(
+            "~/adapter_patched_" + args.adapter.split("/")[-1][:40])
+        shutil.copytree(adapter_path, patched, dirs_exist_ok=True,
+                        symlinks=False)
+        wpath = os.path.join(patched, "adapter_model.safetensors")
+        weights = load_file(wpath)
+        remapped = {k.replace("model.unembed_tokens", "lm_head"): v
+                    for k, v in weights.items()}
+        modules = set()
+        for k in remapped:
+            parts = k.split(".")
+            for i, p in enumerate(parts):
+                if p in ("lora_A", "lora_B") and i > 0:
+                    modules.add(parts[i - 1])
+        save_file(remapped, wpath)
+        cfg_path = os.path.join(patched, "adapter_config.json")
+        cfg = json.loads(open(cfg_path).read())
+        cfg["target_modules"] = sorted(modules)
+        if not cfg.get("base_model_name_or_path"):
+            cfg["base_model_name_or_path"] = args.model
+        open(cfg_path, "w").write(json.dumps(cfg))
+        print(f"[adapter] remapped modules: {sorted(modules)}", flush=True)
+        lora_kwargs = {"enable_lora": True, "max_lora_rank": 64}
+        lora_request = LoRARequest("postrl", 1, patched)
+
     llm = LLM(model=args.model, dtype="bfloat16", seed=args.seed,
               max_model_len=2048, gpu_memory_utilization=0.92,
-              enforce_eager=True)
+              enforce_eager=True, **lora_kwargs)
     sp = SamplingParams(n=args.n, temperature=args.temperature,
                         top_p=args.top_p, max_tokens=args.max_tokens,
                         seed=args.seed)
-    outs = llm.generate([p for p, _ in items], sp)
+    prompts = [p for p, _ in items]
+    outs = (llm.generate(prompts, sp, lora_request=lora_request)
+            if lora_request else llm.generate(prompts, sp))
 
     cs = []
     if grade_mode == "mbpp":
@@ -207,10 +254,12 @@ def main() -> None:
         "backend": "standalone-vllm",
         "vllm_version": vllm.__version__,
         "model": args.model,
+        "adapter": args.adapter or None,
         "dataset": args.dataset,
         "grader": {"gsm8k": "tinker-identical boxed/number parser",
                    "math": "strict normalized-boxed match (LOWER BOUND)",
-                   "mbpp": "sanitized 3-assert execution, 10s timeout"}[grade_mode],
+                   "mbpp": "sanitized 3-assert execution, 10s timeout"
+                   }[grade_mode],
         "n_problems": len(items),
         "n_per_problem": args.n,
         "temperature": args.temperature,

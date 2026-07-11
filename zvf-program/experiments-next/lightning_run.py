@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import sys
 import time
+from pathlib import Path as _P
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -30,6 +31,9 @@ def main() -> None:
     ap.add_argument("--machine", default="L40S",
                     help="Lightning machine type (L40S / L4 / A100 ...)")
     ap.add_argument("--studio", default="zvf-passk")
+    ap.add_argument("--adapters", default="",
+                    help="comma-separated HF adapter repos; runs one eval per "
+                         "adapter in the same studio session")
     ap.add_argument("--keep-alive", action="store_true")
     args = ap.parse_args()
 
@@ -65,23 +69,33 @@ def main() -> None:
 
         # uv-run sidesteps the fragile Studio conda env entirely (venv is
         # forbidden; upgrading numpy in-place breaks torch/sklearn ABI).
-        cmd = (f"HF_HUB_ENABLE_HF_TRANSFER=1 python -m uv run --isolated "
-               f"--no-project --python 3.12 "
-               f"--with vllm --with 'datasets>=3.0' --with hf_transfer "
-               f"eval_passk_standalone.py "
-               f"--dataset {args.dataset} --model {args.model} "
-               f"--problems {args.problems} --n {args.n} --seed {args.seed} "
-               f"--out {remote_out}; echo REMOTE_EXIT=$?")
-        print(f"[lightning] running: {cmd}", flush=True)
-        out = studio.run(cmd)
-        print(out[-2000:], flush=True)
-        if "REMOTE_EXIT=0" not in out:
-            raise RuntimeError("remote eval failed (see output above); "
-                               "skipping download")
-
-        local_out.parent.mkdir(exist_ok=True)
-        studio.download_file(remote_out, str(local_out))
-        print(f"[lightning] -> {local_out}", flush=True)
+        arms = [("", remote_out, local_out)]
+        if args.adapters:
+            arms = []
+            for ad in args.adapters.split(","):
+                ad = ad.strip()
+                short = ad.split("/")[-1][:40]
+                r = f"passk_lightning_{args.model.split('/')[-1].lower()}_{short}_{args.dataset}_p{args.problems}_n{args.n}_s{args.seed}.json"
+                arms.append((ad, r, HERE / "results" / r))
+        for adapter, r_out, l_out in arms:
+            ad_flag = f"--adapter {adapter} " if adapter else ""
+            cmd = (f"HF_HUB_ENABLE_HF_TRANSFER=1 python -m uv run --isolated "
+                   f"--no-project --python 3.12 "
+                   f"--with vllm --with 'datasets>=3.0' --with hf_transfer "
+                   f"eval_passk_standalone.py "
+                   f"--dataset {args.dataset} --model {args.model} {ad_flag}"
+                   f"--problems {args.problems} --n {args.n} --seed {args.seed} "
+                   f"--out {r_out}; echo REMOTE_EXIT=$?")
+            print(f"[lightning] running: {cmd}", flush=True)
+            out = studio.run(cmd)
+            print(out[-1200:], flush=True)
+            if "REMOTE_EXIT=0" not in out:
+                print(f"[lightning] ARM FAILED ({adapter or 'base'}); continuing",
+                      flush=True)
+                continue
+            Path(l_out).parent.mkdir(exist_ok=True)
+            studio.download_file(r_out, str(l_out))
+            print(f"[lightning] -> {l_out}", flush=True)
     finally:
         if not args.keep_alive:
             studio.stop()

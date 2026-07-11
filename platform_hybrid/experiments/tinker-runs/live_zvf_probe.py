@@ -102,6 +102,9 @@ def load_gsm8k_examples(limit: int, seed: int):
 
 
 def run(args: argparse.Namespace) -> dict:
+    global _ADV_NORMALIZE_STD
+    _ADV_NORMALIZE_STD = getattr(args, "loss", "grpo") != "drgrpo"
+
     load_env_file(ROOT / ".env")
     if not os.environ.get("TINKER_API_KEY"):
         raise RuntimeError("TINKER_API_KEY is not set and was not found in .env")
@@ -120,6 +123,37 @@ def run(args: argparse.Namespace) -> dict:
     t0 = time.time()
     output_path = RESULTS_DIR / f"{tag}.json"
 
+    # --resume: pick up from the last save_state checkpoint recorded in the
+    # existing result JSON; weights + Adam state are restored server-side.
+    prior: dict | None = None
+    resume_step = 0
+    resume_state_path: str | None = None
+    if getattr(args, "resume", False) and output_path.exists():
+        prior = json.loads(output_path.read_text())
+        if prior.get("status") == "completed":
+            print(f"[{tag}] already completed; nothing to resume", flush=True)
+            return prior
+        expected = {
+            "model": args.model, "seed": args.seed, "rank": args.rank,
+            "group_size": args.group, "batch": args.batch,
+            "steps": args.steps, "temperature": args.temperature,
+            "loss": getattr(args, "loss", "grpo"),
+        }
+        mismatched = [k for k, v in expected.items()
+                      if prior.get(k) is not None and prior.get(k) != v]
+        if mismatched:
+            raise RuntimeError(
+                f"--resume config mismatch on {mismatched} vs {output_path}")
+        resume_state_path = prior.get("train_state_path")
+        if resume_state_path:
+            resume_step = int(prior.get("train_state_step", 0))
+            print(f"[{tag}] resuming from step {resume_step} "
+                  f"state={resume_state_path}", flush=True)
+        else:
+            prior = None
+            print(f"[{tag}] no train_state_path in {output_path}; starting fresh",
+                  flush=True)
+
     wb = None
     if not getattr(args, "no_wandb", False):
         try:
@@ -128,6 +162,8 @@ def run(args: argparse.Namespace) -> dict:
                 entity=os.environ.get("WANDB_ENTITY", "arvindcr4-pes-university"),
                 project=os.environ.get("WANDB_PROJECT", "zvf-training"),
                 name=tag,
+                id=(prior or {}).get("wandb_run_id") or None,
+                resume="allow" if prior else None,
                 config={
                     "model": args.model, "seed": args.seed, "rank": args.rank,
                     "group_size": args.group, "batch": args.batch, "lr": args.lr,
@@ -157,9 +193,24 @@ def run(args: argparse.Namespace) -> dict:
         "lr": args.lr,
         "temperature": args.temperature,
         "steps": args.steps,
-        "started_at": started_at,
+        "loss": getattr(args, "loss", "grpo"),
+        "started_at": (prior or {}).get("started_at", started_at),
         "output_path": str(output_path.relative_to(ROOT)),
     }
+    if wb is not None:
+        result["wandb_run_id"] = wb.id
+    elif prior:
+        result["wandb_run_id"] = prior.get("wandb_run_id")
+    if prior:
+        result["resumed_at"] = started_at
+        result["resumed_from_step"] = resume_step
+        result["train_state_path"] = resume_state_path
+        result["train_state_step"] = resume_step
+        prior_ids = list(prior.get("prior_run_ids", []))
+        if prior.get("run_id"):
+            prior_ids.append(prior["run_id"])
+        if prior_ids:
+            result["prior_run_ids"] = prior_ids
     output_path.write_text(json.dumps(result, indent=2) + "\n")
 
     try:
@@ -169,20 +220,27 @@ def run(args: argparse.Namespace) -> dict:
 
         print(f"[{tag}] Connecting to Tinker model={args.model} rank={args.rank}", flush=True)
         svc = tinker.ServiceClient(base_url=None)
-        tc = svc.create_lora_training_client(base_model=args.model, rank=args.rank)
+        if prior and resume_state_path:
+            tc = svc.create_training_client_from_state_with_optimizer(resume_state_path)
+        else:
+            tc = svc.create_lora_training_client(base_model=args.model, rank=args.rank)
         result["run_id"] = tc.model_id
         output_path.write_text(json.dumps(result, indent=2) + "\n")
 
         tok = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
-        initial = tc.save_weights_for_sampler(name="s0").result()
+        initial = tc.save_weights_for_sampler(name=f"s{resume_step}").result()
         sc = tc.create_sampling_client(model_path=initial.path)
         result["initial_sampler"] = initial.path
 
-        step_rewards: list[float] = []
-        step_log: list[dict] = []
+        step_rewards: list[float] = list((prior or {}).get("reward_trace", []))[:resume_step]
+        step_log: list[dict] = list((prior or {}).get("step_log", []))[:resume_step]
         rng = random.Random(args.seed)
+        # Fast-forward the batch-selection RNG so the example stream continues
+        # exactly where the checkpointed run left off.
+        for _ in range(resume_step):
+            rng.sample(examples, min(args.batch, len(examples)))
 
-        for step in range(args.steps):
+        for step in range(resume_step, args.steps):
             batch_examples = rng.sample(examples, min(args.batch, len(examples)))
             all_data = []
             all_advs: list[float] = []
@@ -288,6 +346,9 @@ def run(args: argparse.Namespace) -> dict:
                 weights = tc.save_weights_for_sampler(name=f"s{step+1}").result()
                 sc = tc.create_sampling_client(model_path=weights.path)
                 result["latest_sampler"] = weights.path
+                state = tc.save_state(name=f"state_s{step+1}", overwrite=True).result()
+                result["train_state_path"] = state.path
+                result["train_state_step"] = step + 1
 
             result.update(
                 {
@@ -373,6 +434,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tag", default="")
     parser.add_argument("--loss", default="grpo", choices=["grpo", "drgrpo"],
                         help="drgrpo removes the /std advantage normalization")
+    parser.add_argument("--resume", action="store_true",
+                        help="resume from the last save_state checkpoint recorded "
+                             "in results/<tag>.json (weights + Adam state)")
     parser.add_argument("--no-wandb", action="store_true",
                         help="disable native live W&B logging for this run")
     return parser.parse_args()

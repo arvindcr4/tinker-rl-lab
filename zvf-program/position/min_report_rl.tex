@@ -284,7 +284,12 @@ magnitude came from \emph{prompt} tokens rather than completion tokens
 therefore different objectives sharing a name. Dr.GRPO's contribution is
 precisely a change to length/normalization in the loss \cite{drgrpo2025}; GSPO
 changes the importance-sampling granularity \cite{gspo2025}. If the baseline's
-loss form is unreported, the variant's gain is unattributable.
+loss form is unreported, the variant's gain is unattributable. The stake is not
+hypothetical: in our own companion panel, a documented-but-unwired loss flag
+left six ``GRPO vs.\ Dr.GRPO'' arms silently training the identical objective,
+and no reward, length, or ZVF trace revealed it --- only reading the runner
+did. Loss form must be \emph{reported and verified}, not inferred from
+plausible-looking outputs.
 
 \paragraph{2. Reference policy and KL handling.}
 \emph{Report:} whether a frozen reference policy is retained; whether the KL

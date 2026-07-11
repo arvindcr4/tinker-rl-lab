@@ -287,7 +287,9 @@ GSPO & \grpo{} & Sequence-level importance-sampling ratio rather than
 
 Dr.\grpo{} & \grpo{} & Length-normalized advantage and reward terms; fixes
   length bias in the per-token loss & Fixed or adaptive $G$ \todo{} & Removes
-  length bias in normalization \cite{drgrpo2025}.\\
+  length bias in normalization \cite{drgrpo2025}. Measured delta
+  (Qwen3-8B/GSM8K, 1024-tok, 3 seeds/loss): no length inflation in either
+  loss and no late-ZVF separation --- Tier~C.\\
 \addlinespace
 
 MAD-\grpo{} & \grpo{} & Adds multi-agent / diversity term into the group

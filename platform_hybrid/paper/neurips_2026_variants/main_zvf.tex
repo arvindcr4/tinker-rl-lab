@@ -268,6 +268,28 @@ apex rightward with total tokens $T$, so neither $G{=}4$ nor $G{=}32$ is
 a universal optimum. We mention $G$ only because it is mechanically tied
 to $\mathrm{ZVF}(p,G)$; $G$ does not rescue the pooled cross-task story.
 
+A two-seed matched-budget panel (E-R2b: 2{,}560 rollouts per arm,
+$G{=}2\times160$ steps vs.\ $G{=}16\times20$ steps, LoRA rank 4, 512-token
+completions, seeds 123/456) sharpens the mechanical coupling into a
+trajectory claim: both group sizes reach comparable final train reward,
+but every $G{=}2$ arm ends in sustained $\mathrm{ZVF}\approx0.75$--$1.0$
+with train reward near 1.0 --- all-\emph{correct} groups, the high-$p$
+zero-variance wall that $\mathrm{ZVF}(p,G)=p^G+(1-p)^G$ predicts as
+$p\to1$ --- while the $G{=}16$ arms hold $\mathrm{ZVF}$ at $0$--$0.25$
+throughout. Small $G$ converts a fixed rollout budget into more optimizer
+steps early, then exhausts its own gradient signal in the endgame
+(Tier~C, two seeds per arm).
+
+\paragraph{Loss form leaves no ZVF signature at this scale.} A six-arm
+uncapped panel (1{,}024-token completions, $G{=}8$, batch 4, 30 steps,
+three seeds per loss) comparing GRPO with Dr.GRPO's $/\sigma$-free
+advantage found no length inflation in \emph{either} loss --- mean
+completion length declines 6--12\% in all six arms --- and no late-ZVF
+separation (Dr.GRPO 0.45/0.70/0.72 vs.\ GRPO 0.47/0.47/0.55). Whatever
+Dr.GRPO's normalization change does at larger scale, it has no observable
+ZVF or length footprint on Qwen3-8B/GSM8K (Tier~C, $n{=}3$ seeds per
+loss).
+
 % ---------------------------------------------------------------------------
 \subsection{Evidence Grade of Each Claim}
 \label{sec:evidence-grade}

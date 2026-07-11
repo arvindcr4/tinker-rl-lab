@@ -282,7 +282,7 @@ chosen tolerance.
 | **Well-structured**   | Modular layout: `experiments/`, `utils/`, `scripts/`, `atropos/` (§2) |
 | **Docs beyond min.**  | `NEURIPS_CHECKLIST.md`, `ACM_CHECKLIST.md`, `LIMITATIONS_AND_IMPACT.md`, `COMPUTE.md` |
 | **Standards**         | ACM v1.1 badges, NeurIPS 2026 checklist, HF model-card spec            |
-| **Extensible**        | New RL libraries drop into `experiments/implementations/<name>.py`; new tasks → new YAML under `atropos/configs/` |
+| **Extensible**        | New RL libraries live in `platform_hybrid/experiments/implementations/<name>.py`; new tasks use the appropriate platform configuration directory |
 
 ---
 

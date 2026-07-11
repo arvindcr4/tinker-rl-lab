@@ -21,12 +21,12 @@ import os
 import random
 import re
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field, replace
+from pathlib import Path
 from typing import (
     Any,
     Callable,
     Dict,
-    Iterable,
     List,
     Optional,
     Protocol,
@@ -90,6 +90,9 @@ class GRPOConfig:
     eps: float = 1e-8
     evaluate_heldout: bool = False
     base_url: Optional[str] = None
+    checkpoint_dir: str = "checkpoints/grpo"
+    resume: bool = True
+    wandb_project: Optional[str] = "tinker-rl-lab"
 
     def effective_save_every(self) -> int:
         return self.save_every or max(self.steps // 4, 10)
@@ -109,6 +112,8 @@ class GRPORunResult:
     zero_loss_steps: int = 0
     zero_reward_steps: int = 0
     heldout_reward: Optional[float] = None
+    resumed_from_step: int = 0
+    checkpoint_path: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -134,9 +139,7 @@ class RewardAdapter(Protocol):
 # ---------------------------------------------------------------------------
 
 
-def normalize_rewards(
-    rewards: Sequence[float], epsilon: float = 1e-8
-) -> List[float]:
+def normalize_rewards(rewards: Sequence[float], epsilon: float = 1e-8) -> List[float]:
     """Group-relative advantage normalization (mean 0, std 1)."""
     n = len(rewards)
     if n == 0:
@@ -176,9 +179,7 @@ def _build_datum(prompt_ids: List[int], response_ids: List[int]) -> Any:
     return T.Datum(
         model_input=T.ModelInput.from_ints(full_ids),
         loss_fn_inputs={
-            "target_tokens": T.TensorData(
-                data=target_ids, dtype="int64", shape=[len(target_ids)]
-            )
+            "target_tokens": T.TensorData(data=target_ids, dtype="int64", shape=[len(target_ids)])
         },
     )
 
@@ -189,6 +190,96 @@ def _metric(result: Any, names: Sequence[str], default: float = float("nan")) ->
         if name in metrics:
             return metrics[name]
     return default
+
+
+def _checkpoint_path(config: GRPOConfig, seed: int) -> Path:
+    safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "-", config.name).strip("-")
+    return Path(config.checkpoint_dir) / f"{safe_name}_seed{seed}.json"
+
+
+def _config_fingerprint(config: GRPOConfig, seed: int) -> Dict[str, Any]:
+    values = asdict(config)
+    values["seed"] = seed
+    values.pop("resume", None)
+    return values
+
+
+def _write_checkpoint(path: Path, payload: Dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(payload, indent=2) + "\n")
+    os.replace(temporary, path)
+
+
+def _load_checkpoint(config: GRPOConfig, seed: int) -> Dict[str, Any] | None:
+    path = _checkpoint_path(config, seed)
+    if not config.resume or not path.exists():
+        return None
+    payload = json.loads(path.read_text())
+    expected = _config_fingerprint(config, seed)
+    if payload.get("config") != expected:
+        raise ValueError(f"[{config.name}] incompatible checkpoint: {path}")
+    return payload
+
+
+def _start_wandb(config: GRPOConfig, seed: int) -> Any:
+    if not config.wandb_project:
+        return None
+
+
+def _publish_checkpoint(
+    config: GRPOConfig,
+    seed: int,
+    folder_path: str | None,
+    logger: Callable[[str], Any],
+) -> None:
+    if not folder_path or os.environ.get("HF_PUSH", "0").lower() not in {
+        "1",
+        "true",
+        "yes",
+    }:
+        return
+    try:
+        from huggingface_hub import HfApi, create_repo
+
+        token = os.environ.get("HF_TOKEN")
+        api = HfApi(token=token)
+        owner = os.environ.get("HF_REPO_OWNER") or api.whoami(token=token)["name"]
+        repo_id = f"{owner}/{config.name}_seed{seed}"
+        private = os.environ.get("HF_PUSH_PRIVATE", "1").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
+        create_repo(
+            repo_id=repo_id,
+            token=token,
+            private=private,
+            exist_ok=True,
+            repo_type="model",
+        )
+        api.upload_folder(
+            repo_id=repo_id,
+            folder_path=folder_path,
+            repo_type="model",
+            token=token,
+            commit_message=f"Upload Tinker SDK adapter for {config.name}_seed{seed}",
+        )
+        logger(f"[{config.name}] Published checkpoint: {repo_id}")
+    except Exception as exc:
+        warnings.warn(f"[{config.name}] Hugging Face publish failed: {exc}", stacklevel=2)
+    try:
+        import wandb
+
+        return wandb.init(
+            project=config.wandb_project,
+            name=f"{config.name}_seed{seed}",
+            config=_config_fingerprint(config, seed),
+            reinit=True,
+        )
+    except Exception as exc:
+        warnings.warn(f"[{config.name}] W&B disabled: {exc}", stacklevel=2)
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -209,31 +300,46 @@ def _run_one_seed(
     from transformers import AutoTokenizer as _AT  # noqa: F811
 
     seed = config.seed
-    random.seed(seed)
+    rng = random.Random(seed)
     torch.manual_seed(seed)
 
     train_examples = list(dataset.train_examples())
     if not train_examples:
         raise ValueError(f"[{config.name}] dataset returned 0 training examples")
 
+    checkpoint_path = _checkpoint_path(config, seed)
+    prior = _load_checkpoint(config, seed)
+    if prior and prior.get("status") == "completed":
+        return GRPORunResult(**prior["result"])
+    resume_step = int((prior or {}).get("step", 0))
+    resume_state_path = (prior or {}).get("train_state_path")
+    for _ in range(resume_step):
+        rng.sample(train_examples, min(config.batch_size, len(train_examples)))
+
     logger(f"[{config.name}] Connecting to Tinker...")
     svc = tinker.ServiceClient(base_url=config.base_url)
-    tc = svc.create_lora_training_client(base_model=config.model, rank=config.lora_rank)
-    tok = tokenizer if tokenizer is not None else _AT.from_pretrained(
-        config.model, trust_remote_code=True
+    if resume_state_path:
+        tc = svc.create_training_client_from_state_with_optimizer(resume_state_path)
+        logger(f"[{config.name}] Resuming from step {resume_step}: {resume_state_path}")
+    else:
+        tc = svc.create_lora_training_client(base_model=config.model, rank=config.lora_rank)
+    tok = (
+        tokenizer
+        if tokenizer is not None
+        else _AT.from_pretrained(config.model, trust_remote_code=True)
     )
-    w0 = tc.save_weights_for_sampler(name=f"{config.name}_seed{seed}_step_0").result()
+    w0 = tc.save_weights_for_sampler(name=f"{config.name}_seed{seed}_step_{resume_step}").result()
     sc = tc.create_sampling_client(model_path=w0.path)
     logger(f"[{config.name}] Run: {tc.model_id}")
 
-    loss_fn_template = make_grpo_loss_fn([])
     save_every = config.effective_save_every()
-    step_rewards: List[float] = []
-    zero_loss_steps = 0
-    zero_reward_steps = 0
+    step_rewards: List[float] = list((prior or {}).get("reward_trace", []))[:resume_step]
+    zero_loss_steps = int((prior or {}).get("zero_loss_steps", 0))
+    zero_reward_steps = int((prior or {}).get("zero_reward_steps", 0))
+    wb = _start_wandb(config, seed)
 
-    for step in range(config.steps):
-        batch = random.sample(train_examples, min(config.batch_size, len(train_examples)))
+    for step in range(resume_step, config.steps):
+        batch = rng.sample(train_examples, min(config.batch_size, len(train_examples)))
         all_data: List[Any] = []
         all_advs: List[float] = []
         batch_rewards: List[float] = []
@@ -255,8 +361,7 @@ def _run_one_seed(
             ).result()
 
             rewards = [
-                reward.score(_decode_response(tok, resp), example)
-                for resp in responses.sequences
+                reward.score(_decode_response(tok, resp), example) for resp in responses.sequences
             ]
             advs = normalize_rewards(rewards)
             batch_rewards.extend(rewards)
@@ -270,7 +375,11 @@ def _run_one_seed(
             continue
 
         loss_fn = make_grpo_loss_fn(all_advs)
-        result = tc.forward_backward_custom(data=all_data, loss_fn=loss_fn).result()
+        result = tc.forward_backward_custom(
+            data=all_data,
+            loss_fn=loss_fn,
+            loss_type_input="logprobs",
+        ).result()
         tc.optim_step(
             T.AdamParams(
                 learning_rate=config.lr,
@@ -292,16 +401,36 @@ def _run_one_seed(
             f"[{config.name}] Step {step + 1:3d}/{config.steps}"
             f" | loss={loss_val:.4f} | reward={avg:.3f}"
         )
+        if wb is not None:
+            wb.log(
+                {
+                    "train/loss": loss_val,
+                    "train/reward": avg,
+                    "train/step": step + 1,
+                }
+            )
 
         if (step + 1) % save_every == 0:
-            tc.save_state(name=f"state_seed{seed}_{step + 1}")
-            ckpt = tc.save_weights_for_sampler(
-                name=f"step_seed{seed}_{step + 1}"
-            ).result()
+            state = tc.save_state(name=f"state_seed{seed}_{step + 1}", overwrite=True).result()
+            ckpt = tc.save_weights_for_sampler(name=f"step_seed{seed}_{step + 1}").result()
             sc = tc.create_sampling_client(model_path=ckpt.path)
+            _write_checkpoint(
+                checkpoint_path,
+                {
+                    "status": "started",
+                    "config": _config_fingerprint(config, seed),
+                    "step": step + 1,
+                    "train_state_path": state.path,
+                    "sampler_path": ckpt.path,
+                    "run_id": getattr(tc, "model_id", None),
+                    "reward_trace": step_rewards,
+                    "zero_loss_steps": zero_loss_steps,
+                    "zero_reward_steps": zero_reward_steps,
+                },
+            )
             logger(f"[{config.name}]   -> Checkpoint step_{step + 1}")
 
-    tc.save_state(name=f"seed{seed}_final")
+    tc.save_state(name=f"seed{seed}_final", overwrite=True).result()
     final = tc.save_weights_for_sampler(name=f"seed{seed}_final").result()
 
     last10 = step_rewards[-10:] if step_rewards else []
@@ -331,8 +460,10 @@ def _run_one_seed(
                     continue
             if test_rewards:
                 heldout_reward = sum(test_rewards) / len(test_rewards)
+                if wb is not None:
+                    wb.log({"test/reward": heldout_reward})
 
-    return GRPORunResult(
+    result = GRPORunResult(
         seed=seed,
         run_id=getattr(tc, "model_id", None),
         sampler_path=getattr(final, "path", None),
@@ -343,7 +474,22 @@ def _run_one_seed(
         zero_loss_steps=zero_loss_steps,
         zero_reward_steps=zero_reward_steps,
         heldout_reward=heldout_reward,
+        resumed_from_step=resume_step,
+        checkpoint_path=str(checkpoint_path),
     )
+    _publish_checkpoint(config, seed, result.sampler_path, logger)
+    _write_checkpoint(
+        checkpoint_path,
+        {
+            "status": "completed",
+            "config": _config_fingerprint(config, seed),
+            "step": config.steps,
+            "result": asdict(result),
+        },
+    )
+    if wb is not None:
+        wb.finish()
+    return result
 
 
 def run_grpo(
@@ -356,12 +502,7 @@ def run_grpo(
     """Run GRPO for ``config.num_seeds`` seeds and return all results."""
     results: List[GRPORunResult] = []
     for seed_idx in range(config.num_seeds):
-        cfg = GRPOConfig(
-            **{
-                **config.__dict__,
-                "seed": config.seed + seed_idx,
-            }
-        )
+        cfg = replace(config, seed=config.seed + seed_idx)
         result = _run_one_seed(cfg, dataset, reward, tokenizer, logger)
         results.append(result)
     return results
@@ -374,7 +515,7 @@ def run_grpo(
 
 def make_synthetic_tool_use_dataset(
     system_prompt: str = (
-        'You are a tool-calling assistant. Respond ONLY with a valid JSON object:\n'
+        "You are a tool-calling assistant. Respond ONLY with a valid JSON object:\n"
         '{"tool": "<name>", "arguments": {<key>: <value>}}\n'
         "No prose. Only JSON."
     ),
@@ -382,10 +523,22 @@ def make_synthetic_tool_use_dataset(
     """Build the 5-tool synthetic dataset used by ``grpo_exp_a/b/c`` and ``grpo_100_synthetic``."""
     tools = [
         {"name": "calculator", "description": "Arithmetic", "parameters": {"expression": "string"}},
-        {"name": "get_weather", "description": "Weather for a city", "parameters": {"city": "string", "units": "string"}},
+        {
+            "name": "get_weather",
+            "description": "Weather for a city",
+            "parameters": {"city": "string", "units": "string"},
+        },
         {"name": "web_search", "description": "Web search", "parameters": {"query": "string"}},
-        {"name": "get_time", "description": "Time in timezone", "parameters": {"timezone": "string"}},
-        {"name": "set_reminder", "description": "Set a reminder", "parameters": {"task": "string", "time": "string"}},
+        {
+            "name": "get_time",
+            "description": "Time in timezone",
+            "parameters": {"timezone": "string"},
+        },
+        {
+            "name": "set_reminder",
+            "description": "Set a reminder",
+            "parameters": {"task": "string", "time": "string"},
+        },
     ]
     tool_schema = json.dumps(tools)
 
@@ -406,8 +559,16 @@ def make_synthetic_tool_use_dataset(
         ("Current time in Los Angeles?", "get_time", {"timezone": "America/Los_Angeles"}),
         ("Time in Berlin?", "get_time", {"timezone": "Europe/Berlin"}),
         ("Remind me to call mom at 6pm", "set_reminder", {"task": "call mom", "time": "6pm"}),
-        ("Set a reminder for team meeting 10am", "set_reminder", {"task": "team meeting", "time": "10am"}),
-        ("Remind me to take medicine at 8pm", "set_reminder", {"task": "take medicine", "time": "8pm"}),
+        (
+            "Set a reminder for team meeting 10am",
+            "set_reminder",
+            {"task": "team meeting", "time": "10am"},
+        ),
+        (
+            "Remind me to take medicine at 8pm",
+            "set_reminder",
+            {"task": "take medicine", "time": "8pm"},
+        ),
     ]
 
     def _mkp(q: str) -> str:
@@ -418,10 +579,28 @@ def make_synthetic_tool_use_dataset(
         )
 
     examples = [
-        TrainingExample(prompt=_mkp(q), target={"tool": t, "arguments": a})
-        for q, t, a in raw
+        TrainingExample(prompt=_mkp(q), target={"tool": t, "arguments": a}) for q, t, a in raw
     ]
-    return InMemoryDataset(train=examples * 28)
+    heldout_raw: List[Tuple[str, str, Dict[str, str]]] = [
+        ("3 to the power of 4", "calculator", {"expression": "3 ** 4"}),
+        ("What is the weather in Paris?", "get_weather", {"city": "Paris", "units": "metric"}),
+        (
+            "Search for Python 3.12 release notes",
+            "web_search",
+            {"query": "Python 3.12 release notes"},
+        ),
+        ("Current time in Tokyo", "get_time", {"timezone": "Asia/Tokyo"}),
+        (
+            "Remind me to buy groceries tomorrow",
+            "set_reminder",
+            {"task": "buy groceries", "time": "tomorrow"},
+        ),
+    ]
+    heldout = [
+        TrainingExample(prompt=_mkp(q), target={"tool": t, "arguments": a})
+        for q, t, a in heldout_raw
+    ]
+    return InMemoryDataset(train=examples * 28, test=heldout)
 
 
 def make_synthetic_math_dataset(
@@ -481,11 +660,91 @@ def make_synthetic_math_dataset(
             f"<|im_start|>assistant\n"
         )
 
-    examples = [
-        TrainingExample(prompt=_mkp(q), target=answer)
-        for q, answer in problems
-    ]
-    return InMemoryDataset(train=examples * 20)
+    split = int(len(problems) * 0.8)
+    train = [TrainingExample(prompt=_mkp(q), target=answer) for q, answer in problems[:split]]
+    test = [TrainingExample(prompt=_mkp(q), target=answer) for q, answer in problems[split:]]
+    return InMemoryDataset(train=train * 20, test=test)
+
+
+def make_gsm8k_dataset(seed: int = 42) -> InMemoryDataset:
+    """Load GSM8K through the dataset adapter seam."""
+    from datasets import load_dataset
+
+    system_prompt = (
+        "You are a math assistant. Solve the problem step by step, then give "
+        "your final numerical answer inside \\boxed{}."
+    )
+
+    def convert(split: str) -> List[TrainingExample]:
+        rows: List[TrainingExample] = []
+        for row in load_dataset("openai/gsm8k", "main", split=split):
+            match = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
+            if not match:
+                continue
+            prompt = (
+                f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
+                f"<|im_start|>user\n{row['question']}<|im_end|>\n"
+                "<|im_start|>assistant\n"
+            )
+            rows.append(
+                TrainingExample(
+                    prompt=prompt,
+                    target=match.group(1).replace(",", "").strip(),
+                )
+            )
+        random.Random(seed).shuffle(rows)
+        return rows
+
+    return InMemoryDataset(train=convert("train"), test=convert("test"))
+
+
+def make_xlam_dataset(seed: int = 42) -> InMemoryDataset:
+    """Load xLAM function-calling records through the dataset adapter seam."""
+    from datasets import load_dataset
+
+    system_prompt = (
+        "You are a tool-calling assistant. Respond ONLY with a valid JSON object:\n"
+        '{"tool": "<name>", "arguments": {<key>: <value>}}\n'
+        "No prose. Only JSON."
+    )
+    examples: List[TrainingExample] = []
+    for row in load_dataset("Salesforce/xlam-function-calling-60k", split="train"):
+        try:
+            tools = (
+                json.loads(row.get("tools", "[]"))
+                if isinstance(row.get("tools"), str)
+                else row.get("tools", [])
+            )
+            answers = (
+                json.loads(row.get("answers", "[]"))
+                if isinstance(row.get("answers"), str)
+                else row.get("answers", [])
+            )
+            if not isinstance(answers, list) or not answers:
+                continue
+            answer = answers[0]
+            tool = answer.get("name", answer.get("tool", ""))
+            arguments = answer.get("arguments", answer.get("parameters", {}))
+            if isinstance(arguments, str):
+                arguments = json.loads(arguments)
+            if not tool:
+                continue
+            prompt = (
+                f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
+                f"<|im_start|>user\nAvailable tools:\n{json.dumps(tools[:8])}\n\n"
+                f"User: {row.get('query', row.get('instruction', ''))}<|im_end|>\n"
+                "<|im_start|>assistant\n"
+            )
+            examples.append(
+                TrainingExample(
+                    prompt=prompt,
+                    target={"tool": tool, "arguments": arguments},
+                )
+            )
+        except (json.JSONDecodeError, TypeError, AttributeError):
+            continue
+    random.Random(seed).shuffle(examples)
+    return InMemoryDataset(train=examples[:3000], test=examples[3000:3500])
 
 
 class ToolCallReward:
@@ -547,4 +806,24 @@ class MathReward:
 
         if any(c in response for c in "+-*/="):
             return 0.1
+        return 0.0
+
+
+class ExactMathReward:
+    """Binary boxed-or-final-number reward used by held-out math benchmarks."""
+
+    def score(self, response: str, example: TrainingExample) -> float:
+        answer = str(example.target or "")
+        boxed = re.findall(r"\\boxed\{([^}]+)\}", response.strip())
+        candidates = [item.strip().replace(",", "").replace(" ", "") for item in boxed]
+        all_numbers = re.findall(r"[-+]?\d[\d,]*\.?\d*", response)
+        if all_numbers:
+            candidates.append(all_numbers[-1].replace(",", ""))
+        for candidate in candidates:
+            try:
+                if abs(float(candidate) - float(answer)) < 0.01:
+                    return 1.0
+            except ValueError:
+                if candidate == answer:
+                    return 1.0
         return 0.0

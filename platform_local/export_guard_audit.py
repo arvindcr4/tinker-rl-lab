@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from utils.audit_utils import run_audit
-import re
+
 
 def get_issues(ctx):
     issues = []
@@ -16,5 +16,6 @@ def get_issues(ctx):
 
     return issues
 
-if __name__ == '__main__':
-    run_audit('export_guard_issues', get_issues)
+
+if __name__ == "__main__":
+    raise SystemExit(run_audit("export_guard_issues", get_issues))

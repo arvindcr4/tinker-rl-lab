@@ -1,0 +1,23 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run --no-sync ruff check --force-exclude
+        language: system
+        types: [python]
+      - id: ruff-format-check
+        name: ruff format check
+        entry: uv run --no-sync ruff format --check --force-exclude
+        language: system
+        types: [python]
+      - id: focused-tests
+        name: focused unit tests
+        entry: uv run --no-sync pytest -q tests/
+        language: system
+        pass_filenames: false
+      - id: repository-policy
+        name: repository policy
+        entry: python3 tools/check_repo_policy.py
+        language: system
+        pass_filenames: false

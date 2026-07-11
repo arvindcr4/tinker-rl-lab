@@ -211,20 +211,49 @@ cd platform_vast/
 
 ### Running with Unified Launcher
 
-The unified launcher is a smoke-test scaffold: it validates framework dispatch and configuration and emits simulated metrics. Use the per-framework sections above for real training.
+The unified launcher validates framework dispatch and can generate runnable,
+checkpoint-resumable TRL training scripts. Frameworks marked unimplemented fail
+explicitly; use the per-framework sections above for their real training paths.
 
 ```bash
 # Use any framework with unified launcher
 export PYTHONPATH=.
-python -m platform_local.unified.launcher --framework skyrl --model Qwen/Qwen2.5-1.5B-Instruct
-python -m platform_local.unified.launcher --framework trl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm grpo
-python -m platform_local.unified.launcher --framework verl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm ppo
-python -m platform_local.unified.launcher --framework openrlhf --model Qwen/Qwen2.5-1.5B-Instruct
+python -m platform_local.unified --framework skyrl --model Qwen/Qwen2.5-1.5B-Instruct
+python -m platform_local.unified --framework trl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm grpo
+python -m platform_local.unified --framework verl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm ppo
+python -m platform_local.unified --framework openrlhf --model Qwen/Qwen2.5-1.5B-Instruct
 ```
 
 ### Running in Google Colab
 
 Open the notebooks inside `platform_colab/` and run cells sequentially.
+
+## Development
+
+The repository uses a locked `uv` environment, Ruff, pytest, wheel-content
+verification, and local pre-commit hooks:
+
+```bash
+make bootstrap
+make check
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for change discipline and research
+provenance requirements, and [SECURITY.md](SECURITY.md) for private reporting
+and credential-handling guidance.
+
+Canonical research-engineering commands:
+
+```bash
+# resumable GRPO presets (historical platform_tinker/grpo_*.py paths still work)
+python -m platform_tinker.tinkerrl.grpo_cli --preset gsm8k --steps 200
+
+# structured, in-process submission audit suite
+python platform_local/run_all_audits.py
+
+# canonical paper, sensitivity, and fallback profile figures
+python -m platform_hybrid.paper.figure_module --profile all
+```
 
 ## Source Repositories
 

@@ -5,8 +5,10 @@ Unified interface for HuggingFace TRL (GRPO, PPO, DPO training).
 """
 
 import atexit
+
 try:
     from codecarbon import EmissionsTracker
+
     _tracker = EmissionsTracker()
     _tracker.start()
     atexit.register(_tracker.stop)
@@ -14,14 +16,10 @@ except ImportError:
     pass
 
 
-import os
-import asyncio
 import time
-import json
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Callable
+from typing import Any, Callable, Dict, List
 
-import torch
 import numpy as np
 
 from .config import TRLConfig
@@ -49,16 +47,17 @@ class TRLTrainer:
 
     async def setup(self):
         """Initialize TRL components."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Setting up TRL Trainer")
         print(f"Model: {self.config.model_name}")
         print(f"Algorithm: {self.config.algorithm.algorithm}")
         print(f"GPUs: {self.config.num_gpus}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # Check if TRL is installed
         try:
             import trl
+
             print(f"TRL version: {trl.__version__}")
         except ImportError:
             print("Warning: TRL not installed. Install with: pip install trl")
@@ -67,10 +66,11 @@ class TRLTrainer:
         if getattr(self.config, "report_to", "") and "wandb" in self.config.report_to:
             try:
                 import wandb
+
                 wandb.init(
                     project=getattr(self.config, "project_name", "trl-tinker"),
                     name=getattr(self.config, "run_name", None),
-                    config=self.config.to_dict() if hasattr(self.config, "to_dict") else {}
+                    config=self.config.to_dict() if hasattr(self.config, "to_dict") else {},
                 )
             except ImportError:
                 print("Warning: wandb not installed.")
@@ -80,14 +80,17 @@ class TRLTrainer:
 
         if alg == "grpo":
             from trl import GRPOConfig, GRPOTrainer
+
             self._trainer_class = GRPOTrainer
             self._config_class = GRPOConfig
         elif alg == "ppo":
             from trl import PPOConfig, PPOTrainer
+
             self._trainer_class = PPOTrainer
             self._config_class = PPOConfig
         elif alg == "dpo":
             from trl import DPOTrainer, DPOConfig
+
             self._trainer_class = DPOTrainer
             self._config_class = DPOConfig
         else:
@@ -95,9 +98,9 @@ class TRLTrainer:
 
     async def train_step(self, step: int) -> Dict[str, Any]:
         """Execute one training step."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Step {step}/{self.config.epochs}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         step_start = time.time()
 
@@ -121,6 +124,7 @@ class TRLTrainer:
         if getattr(self.config, "report_to", "") and "wandb" in self.config.report_to:
             try:
                 import wandb
+
                 if wandb.run is not None:
                     wandb.log(metrics)
             except ImportError:
@@ -144,6 +148,7 @@ class TRLTrainer:
             except Exception as e:
                 print(f"Error in step {step}: {e}")
                 import traceback
+
                 traceback.print_exc()
                 break
 
@@ -152,7 +157,9 @@ class TRLTrainer:
         print(f"Final reward: {self.reward_history[-1] if self.reward_history else 'N/A':.4f}")
         print("=" * 60 + "\n")
 
-        push_to_hub = getattr(self.config, "push_to_hub", False) or getattr(getattr(self.config, "model", None), "push_to_hub", False)
+        push_to_hub = getattr(self.config, "push_to_hub", False) or getattr(
+            getattr(self.config, "model", None), "push_to_hub", False
+        )
         if push_to_hub and self.trainer is not None:
             print("Pushing model to Hub...")
             try:
@@ -163,6 +170,7 @@ class TRLTrainer:
         if getattr(self.config, "report_to", "") and "wandb" in self.config.report_to:
             try:
                 import wandb
+
                 if wandb.run is not None:
                     wandb.finish()
             except ImportError:
@@ -176,11 +184,7 @@ class TRLTrainer:
 
 
 def create_grpo_trainer(
-    model,
-    tokenizer,
-    train_dataset,
-    reward_funcs: List[Callable],
-    config: "TRLConfig"
+    model, tokenizer, train_dataset, reward_funcs: List[Callable], config: "TRLConfig"
 ):
     """
     Create a GRPO trainer with TRL.
@@ -213,8 +217,12 @@ def create_grpo_trainer(
         report_to=config.report_to,
         logging_steps=1,
         save_steps=config.save_interval,
-        push_to_hub=getattr(config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)),
-        hub_model_id=getattr(config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None)),
+        push_to_hub=getattr(
+            config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)
+        ),
+        hub_model_id=getattr(
+            config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None)
+        ),
     )
 
     trainer = GRPOTrainer(
@@ -229,11 +237,7 @@ def create_grpo_trainer(
 
 
 def create_ppo_trainer(
-    model,
-    tokenizer,
-    train_dataset,
-    reward_funcs: List[Callable],
-    config: "TRLConfig"
+    model, tokenizer, train_dataset, reward_funcs: List[Callable], config: "TRLConfig"
 ):
     """
     Create a PPO trainer with TRL.
@@ -257,8 +261,12 @@ def create_ppo_trainer(
         report_to=config.report_to,
         logging_steps=1,
         save_steps=config.save_interval,
-        push_to_hub=getattr(config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)),
-        hub_model_id=getattr(config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None)),
+        push_to_hub=getattr(
+            config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)
+        ),
+        hub_model_id=getattr(
+            config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None)
+        ),
     )
 
     trainer = PPOTrainer(
@@ -272,12 +280,7 @@ def create_ppo_trainer(
     return trainer
 
 
-def create_dpo_trainer(
-    model,
-    tokenizer,
-    train_dataset,
-    config: "TRLConfig"
-):
+def create_dpo_trainer(model, tokenizer, train_dataset, config: "TRLConfig"):
     """
     Create a DPO trainer with TRL.
     """
@@ -298,8 +301,12 @@ def create_dpo_trainer(
         report_to=config.report_to,
         logging_steps=1,
         save_steps=config.save_interval,
-        push_to_hub=getattr(config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)),
-        hub_model_id=getattr(config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None)),
+        push_to_hub=getattr(
+            config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)
+        ),
+        hub_model_id=getattr(
+            config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None)
+        ),
     )
 
     trainer = DPOTrainer(
@@ -334,9 +341,12 @@ import os
 import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from transformers.trainer_utils import get_last_checkpoint
 {
-    'from trl import GRPOConfig, GRPOTrainer' if algorithm == 'grpo' else 'from trl import OnlineDPOConfig, OnlineDPOTrainer'
-}
+        "from trl import GRPOConfig, GRPOTrainer"
+        if algorithm == "grpo"
+        else "from trl import OnlineDPOConfig, OnlineDPOTrainer"
+    }
 from platform_local.unified.peft_utils import apply_peft_method, save_bitfit_checkpoint
 
 # Configuration
@@ -354,8 +364,16 @@ COMPUTE_DTYPE = torch.bfloat16 if BF16 else (torch.float16 if FP16 else torch.fl
 REPORT_TO = {config.report_to!r}
 PROJECT_NAME = {config.project_name!r}
 RUN_NAME = {config.run_name!r}
-PUSH_TO_HUB = {getattr(config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False))!r}
-HUB_MODEL_ID = {getattr(config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None))!r}
+PUSH_TO_HUB = {
+        getattr(
+            config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)
+        )!r
+    }
+HUB_MODEL_ID = {
+        getattr(
+            config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None)
+        )!r
+    }
 
 import wandb
 if "wandb" in REPORT_TO:
@@ -467,7 +485,7 @@ def prm_reward_fn(completions, prompts=None, **kwargs):
     return rewards
 
 # Trainer Config
-trainer_config = { 'GRPOConfig' if algorithm == 'grpo' else 'OnlineDPOConfig' }(
+trainer_config = {"GRPOConfig" if algorithm == "grpo" else "OnlineDPOConfig"}(
     output_dir="./checkpoints",
     num_train_epochs={config.epochs},
     per_device_train_batch_size={config.data.train_batch_size},
@@ -484,11 +502,11 @@ trainer_config = { 'GRPOConfig' if algorithm == 'grpo' else 'OnlineDPOConfig' }(
     save_steps={config.save_interval},
     push_to_hub=PUSH_TO_HUB,
     hub_model_id=HUB_MODEL_ID,
-    {f'deepspeed="{config.deepspeed}",' if config.deepspeed else ''}
+    {f'deepspeed="{config.deepspeed}",' if config.deepspeed else ""}
 )
 
 # Trainer
-trainer = { 'GRPOTrainer' if algorithm == 'grpo' else 'OnlineDPOTrainer' }(
+trainer = {"GRPOTrainer" if algorithm == "grpo" else "OnlineDPOTrainer"}(
     model=model,
     args=trainer_config,
     train_dataset=train_dataset,
@@ -496,7 +514,8 @@ trainer = { 'GRPOTrainer' if algorithm == 'grpo' else 'OnlineDPOTrainer' }(
     processing_class=tokenizer,
 )
 
-trainer.train()
+last_checkpoint = get_last_checkpoint(trainer_config.output_dir)
+trainer.train(resume_from_checkpoint=last_checkpoint)
 if USE_PEFT and PEFT_METHOD == "bitfit":
     save_bitfit_checkpoint(
         model,

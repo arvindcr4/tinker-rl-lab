@@ -12,13 +12,22 @@ import matplotlib.patches as mpatches
 from matplotlib.lines import Line2D
 from scipy import stats
 import warnings
+import os
+from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
 # ─────────────────────────────────────────────────────────
 # Load data
 # ─────────────────────────────────────────────────────────
-with open("/home/user/workspace/tinker-rl-lab/platform_hybrid/experiments/all_results_consolidated.json") as f:
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+RESULTS_PATH = Path(
+    os.environ.get(
+        "TINKERRL_FIGURE_RESULTS_PATH",
+        _REPO_ROOT / "platform_hybrid/experiments/all_results_consolidated.json",
+    )
+)
+with RESULTS_PATH.open() as f:
     data = json.load(f)
 
 # ─────────────────────────────────────────────────────────
@@ -43,7 +52,7 @@ plt.rcParams.update(
     }
 )
 
-OUTDIR = "/home/user/workspace/tinker-rl-lab/platform_hybrid/paper/figures/"
+OUTDIR = os.environ.get("TINKERRL_FIGURE_OUT_DIR", str(Path(__file__).resolve().parent)) + os.sep
 
 # ─────────────────────────────────────────────────────────
 # Color palette
@@ -648,8 +657,6 @@ for exp_name, (ms, cat) in CATEGORY_MAP.items():
 mat = np.array([[heat[m][c] for c in categories] for m in row_order], dtype=float)
 
 fig, ax = plt.subplots(figsize=(8, 6))
-import matplotlib.cm as cm
-
 masked = np.ma.masked_invalid(mat)
 im = ax.imshow(masked, cmap="RdYlGn", vmin=0, vmax=100, aspect="auto")
 

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68.0", "wheel"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,8 +7,9 @@ name = "tinkerrl"
 version = "0.1.0"
 description = "TinkerRL: A Reproducible Multi-Library Reinforcement Learning Benchmark Suite"
 readme = "README.md"
-license = {text = "Apache-2.0"}
-requires-python = ">=3.9"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
 authors = [
     {name = "PES LLM Research Team", email = "arvindcr4@gmail.com"},
 ]
@@ -22,10 +23,7 @@ keywords = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -40,6 +38,9 @@ dependencies = [
     "datasets>=2.14.0",
     "codecarbon>=2.0.0",
 ]
+
+[project.scripts]
+tinkerrl = "platform_local.unified.__main__:main"
 
 [project.optional-dependencies]
 trl = [
@@ -66,9 +67,18 @@ eval = [
     "openai>=1.0.0",
 ]
 all = [
-    "tinkerrl[trl,sb3,cleanrl,tianshou,d3rlpy,eval]",
+    "accelerate>=0.24.0",
+    "d3rlpy>=2.0.0",
+    "fschat>=0.2.33",
+    "openai>=1.0.0",
+    "peft>=0.5.0",
+    "stable-baselines3>=2.1.0",
+    "tensorboard>=2.14.0",
+    "tianshou>=0.5.0",
+    "trl>=0.7.0",
 ]
 dev = [
+    "build>=1.2",
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "ruff>=0.1.0",
@@ -90,14 +100,19 @@ Issues = "https://github.com/pes-llm-research/tinker-rl-lab/issues"
 
 [tool.setuptools.packages.find]
 # First-party Python packages only. Vendored / integration subtrees
-# (atropos, verl, openrlhf, skyrl, trl_integrations, unified,
-# agentic-rl-finetuning, ai-scientist-template, research_loop) are kept
-# out of the `tinkerrl` wheel on purpose — they ship as source-only
-# references from upstream projects and have their own packaging.
-include = ["platform_tinker/tinkerrl*", "utils*"]
+# Supported reusable modules are packaged. Vendored framework integrations and
+# exploratory trees stay source-only because they have independent runtimes.
+include = [
+    "platform_local",
+    "platform_local.trl_integrations*",
+    "platform_local.unified*",
+    "platform_tinker",
+    "platform_tinker.tinkerrl*",
+    "utils*",
+]
 exclude = [
-    "atropos*", "verl*", "openrlhf*", "skyrl*", "trl_integrations*",
-    "unified*", "agentic-rl-finetuning*", "ai-scientist-template*",
+    "atropos*", "verl*", "openrlhf*", "skyrl*",
+    "agentic-rl-finetuning*", "ai-scientist-template*",
     "research_loop*", "capstone-literature-survey*", "huggingface*",
     "tests*", "paper*", "reports*", "experiments*", "scripts*",
 ]
@@ -111,8 +126,6 @@ extend-exclude = [
     "verl",
     "openrlhf",
     "skyrl",
-    "trl_integrations",
-    "unified",
     "agentic-rl-finetuning",
     "ai-scientist-template",
     "research_loop",

@@ -1,0 +1,32 @@
+{
+  "tag": "er2b_g16_s123",
+  "status": "running",
+  "model": "Qwen/Qwen3-8B",
+  "model_short": "qwen3-8b",
+  "task": "gsm8k",
+  "seed": 123,
+  "rank": 4,
+  "group_size": 16,
+  "batch": 8,
+  "lr": 3e-05,
+  "temperature": 1.0,
+  "steps": 20,
+  "started_at": "2026-07-11T04:01:28.155626+00:00",
+  "output_path": "experiments/tinker-runs/results/er2b_g16_s123.json",
+  "run_id": "97c83981-13ae-5f71-9a72-5b3cdbefb8b0:train:0",
+  "initial_sampler": "tinker://97c83981-13ae-5f71-9a72-5b3cdbefb8b0:train:0/sampler_weights/s0",
+  "reward_trace": [
+    0.421875
+  ],
+  "step_log": [
+    {
+      "step": 1,
+      "reward": 0.421875,
+      "loss": -1.9774718284606934,
+      "zvf": 0.125,
+      "gu": 0.875,
+      "mean_comp_len": 512.0
+    }
+  ],
+  "last_updated_at": "2026-07-11T04:03:12.743776+00:00"
+}

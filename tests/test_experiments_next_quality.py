@@ -31,6 +31,7 @@ quality = load_script_module("analyze_rollout_quality")
 seed_aggregate = load_script_module("aggregate_seed_audits")
 passk = load_script_module("passk_eval")
 passk_compare = load_script_module("compare_passk_results")
+standalone_passk = load_script_module("eval_passk_standalone")
 
 
 def synthetic_pool(with_lengths: bool = True):
@@ -63,9 +64,7 @@ def test_quality_audit_uses_prompt_level_signal_and_length_diagnostics():
     assert core["zero_variance_prompt_rate"] == pytest.approx(0.5)
     assert core["active_advantage_fraction"] == pytest.approx(0.5)
     assert core["mean_group_reward_variance"] == pytest.approx(0.125)
-    assert audit["prompt_clustered_bootstrap_95_ci"]["pass_at_1"][
-        "resampling_unit"
-    ] == "prompt"
+    assert audit["prompt_clustered_bootstrap_95_ci"]["pass_at_1"]["resampling_unit"] == "prompt"
 
     length = audit["length_diagnostics"]
     assert length["available"] is True
@@ -76,9 +75,7 @@ def test_quality_audit_uses_prompt_level_signal_and_length_diagnostics():
 
 
 def test_legacy_pool_never_imputes_missing_lengths():
-    audit = quality.analyze(
-        synthetic_pool(with_lengths=False), n_bootstrap=100, seed=7
-    )
+    audit = quality.analyze(synthetic_pool(with_lengths=False), n_bootstrap=100, seed=7)
     assert audit["length_diagnostics"]["available"] is False
     assert "lack token_counts" in audit["length_diagnostics"]["reason"]
 
@@ -127,26 +124,28 @@ def test_pool_builder_dry_run_never_requires_credentials():
 
 
 def test_passk_summary_and_offline_audit_are_problem_clustered(tmp_path):
-    point, intervals = passk.summarize_pass_at_k(
-        [0, 2], n=2, ks=[1, 2], n_bootstrap=100, seed=3
-    )
+    point, intervals = passk.summarize_pass_at_k([0, 2], n=2, ks=[1, 2], n_bootstrap=100, seed=3)
     assert point == {"1": pytest.approx(0.5), "2": pytest.approx(0.5)}
     assert intervals["1"]["resampling_unit"] == "problem"
 
     source = tmp_path / "passk.json"
     output = tmp_path / "audit.json"
-    source.write_text(json.dumps({
-        "kind": "passk_eval",
-        "status": "complete",
-        "tag": "synthetic",
-        "model": "test/model",
-        "which": "base",
-        "split": "test",
-        "seed": 42,
-        "n_per_problem": 2,
-        "ks": [1, 2],
-        "per_problem_c": [0, 2],
-    }))
+    source.write_text(
+        json.dumps(
+            {
+                "kind": "passk_eval",
+                "status": "complete",
+                "tag": "synthetic",
+                "model": "test/model",
+                "which": "base",
+                "split": "test",
+                "seed": 42,
+                "n_per_problem": 2,
+                "ks": [1, 2],
+                "per_problem_c": [0, 2],
+            }
+        )
+    )
     completed = subprocess.run(
         [
             sys.executable,
@@ -199,3 +198,50 @@ def test_paired_passk_comparison_requires_verified_matching_prompts():
     post["prompt_fingerprints"] = ["a", "different"]
     with pytest.raises(ValueError, match="prompt fingerprints differ"):
         passk_compare.compare(base, post, n_bootstrap=100, seed=5)
+
+
+def test_standalone_resume_rejects_config_or_prompt_drift():
+    expected = {
+        "model": "test/model",
+        "n_problems": 2,
+        "n_per_problem": 4,
+        "checkpoint_every": 1,
+    }
+    existing = {
+        **expected,
+        "prompt_fingerprints": ["first", "second"],
+        "per_problem_c": [1],
+    }
+    standalone_passk.validate_resume(existing, expected, ["first", "second"])
+
+    changed = {**expected, "n_per_problem": 8}
+    with pytest.raises(ValueError, match="incompatible partial result"):
+        standalone_passk.validate_resume(existing, changed, ["first", "second"])
+    with pytest.raises(ValueError, match="prompt fingerprints changed"):
+        standalone_passk.validate_resume(existing, expected, ["other", "second"])
+
+
+def test_standalone_checkpoint_is_atomic_and_restartable(tmp_path):
+    output = tmp_path / "partial.json"
+    payload = {
+        "status": "started",
+        "per_problem_c": [0, 3],
+        "completed_problem_count": 2,
+    }
+    standalone_passk.write_checkpoint(output, payload)
+
+    assert json.loads(output.read_text()) == payload
+    assert list(tmp_path.glob(".*.tmp")) == []
+
+
+def test_all_expensive_experiments_next_entrypoints_have_resume_contracts():
+    for name in (
+        "build_pool.py",
+        "passk_eval.py",
+        "eval_passk_standalone.py",
+        "modal_passk.py",
+        "lightning_run.py",
+    ):
+        source = (EXPERIMENTS_NEXT / name).read_text()
+        assert "resume" in source, name
+        assert "checkpoint" in source, name

@@ -9,9 +9,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -19,17 +24,18 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install ruff
-        run: pip install ruff
+        run: pip install ruff==0.15.11
       - name: Lint with ruff
-        run: ruff check .
+        run: make lint RUFF=ruff PYTHON=python
       - name: Check formatting
-        run: ruff format --check .
+        run: make format-check RUFF=ruff
 
   test-core:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -39,18 +45,37 @@ jobs:
       - name: Install core dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install uv==0.10.11
+          uv sync --locked --extra dev --python python
       - name: Run tests
-        run: pytest tests/ -v --tb=short
+        run: uv run --no-sync pytest tests/ -v --tb=short
       - name: Test seed utility
-        run: python -c "from utils.seed import set_global_seed; info = set_global_seed(42); print('Seed set successfully:', info)"
+        run: uv run --no-sync python -c "from utils.seed import set_global_seed; info = set_global_seed(42); print('Seed set successfully:', info)"
       - name: Test imports
         run: |
-          python -c "from utils.seed import set_global_seed, get_seed_from_args"
-          python -c "from utils.stats import bootstrap_ci, compute_iqm"
+          uv run --no-sync python -c "from utils.seed import set_global_seed, get_seed_from_args"
+          uv run --no-sync python -c "from utils.stats import bootstrap_ci, compute_iqm"
+
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build wheel from locked metadata
+        run: |
+          pip install uv==0.10.11
+          uv lock --check
+          uv build --wheel
+      - name: Verify wheel contents
+        run: python tools/check_wheel.py dist/*.whl
 
   test-environments:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -73,7 +98,7 @@ jobs:
           # Execute the module's top section (up to the first def main)
           # providing a real __file__ so the module's own sys.path.insert
           # logic works when pulled in via exec().
-          src_path = os.path.abspath('experiments/implementations/sb3_ppo_math.py')
+          src_path = os.path.abspath('platform_hybrid/experiments/implementations/sb3_ppo_math.py')
           src = open(src_path).read().split('def main')[0]
           ns = {'__file__': src_path, '__name__': '__main__'}
           exec(compile(src, src_path, 'exec'), ns)
@@ -88,6 +113,7 @@ jobs:
 
   reproducibility-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -124,11 +150,12 @@ jobs:
 
   docs-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Check required documentation
         run: |
-          for f in README.md LICENSE REPRODUCE.md BASELINES.md CONTRIBUTING.md ARTIFACT.md; do
+          for f in README.md LICENSE REPRODUCE.md BASELINES.md CONTRIBUTING.md SECURITY.md ARTIFACT.md; do
             if [ ! -f "$f" ]; then
               echo "ERROR: Missing required file: $f"
               exit 1
@@ -137,7 +164,7 @@ jobs:
           echo "All required documentation files present"
       - name: Check experiment implementations exist
         run: |
-          count=$(ls experiments/implementations/*.py 2>/dev/null | wc -l)
+          count=$(ls platform_hybrid/experiments/implementations/*.py 2>/dev/null | wc -l)
           if [ "$count" -lt 5 ]; then
             echo "ERROR: Expected at least 5 experiment implementations, found $count"
             exit 1
@@ -146,18 +173,27 @@ jobs:
 
   minreport-audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install signature verifier
+        run: pip install cryptography==49.0.0
       - name: Verify provenance records
         run: |
-          for f in registry/provenance/*.provenance.json; do
+          for f in platform_hybrid/registry/provenance/*.provenance.json; do
             if [ -f "$f" ]; then
               echo "Verifying $f..."
-              python registry/provenance/minreport.py verify "$f" --strict
+              python platform_hybrid/registry/provenance/minreport.py verify "$f" --strict
             fi
           done
-
+          for sig in platform_hybrid/registry/provenance/*.provenance.json.sig; do
+            if [ -f "$sig" ]; then
+              record="${sig%.sig}"
+              echo "Verifying detached signature for $record..."
+              python platform_hybrid/registry/provenance/sign.py verify "$record"
+            fi
+          done

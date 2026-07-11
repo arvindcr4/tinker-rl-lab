@@ -2,6 +2,7 @@ import unittest
 import math
 import torch
 
+
 def normalize_rewards(rewards, epsilon=1e-8):
     n = len(rewards)
     if n == 0:
@@ -9,6 +10,7 @@ def normalize_rewards(rewards, epsilon=1e-8):
     mean_r = sum(rewards) / n
     std_r = (sum((r - mean_r) ** 2 for r in rewards) / n) ** 0.5 + epsilon
     return [(r - mean_r) / std_r for r in rewards]
+
 
 def compute_grpo_loss(logprobs_list, advantages):
     losses = []
@@ -20,8 +22,8 @@ def compute_grpo_loss(logprobs_list, advantages):
     loss = torch.stack(losses).mean()
     return loss, {"grpo_loss": loss.item()}
 
-class TestGRPOLoss(unittest.TestCase):
 
+class TestGRPOLoss(unittest.TestCase):
     def test_normalize_rewards_basic(self):
         rewards = [1.0, 2.0, 3.0, 4.0, 5.0]
         advs = normalize_rewards(rewards)
@@ -85,16 +87,13 @@ class TestGRPOLoss(unittest.TestCase):
         self.assertTrue(torch.allclose(logprobs.grad, torch.tensor([0.0, 0.0])))
 
     def test_compute_grpo_loss_batch(self):
-        logprobs_list = [
-            torch.tensor([-1.0]),
-            torch.tensor([-2.0]),
-            torch.tensor([-3.0])
-        ]
+        logprobs_list = [torch.tensor([-1.0]), torch.tensor([-2.0]), torch.tensor([-3.0])]
         advantages = [1.0, -1.0, 0.0]
         loss, metrics = compute_grpo_loss(logprobs_list, advantages)
         expected = (1.0 - 2.0 + 0.0) / 3.0
         self.assertTrue(math.isclose(loss.item(), expected, rel_tol=1e-5))
         self.assertEqual(metrics["grpo_loss"], loss.item())
+
 
 if __name__ == "__main__":
     unittest.main()

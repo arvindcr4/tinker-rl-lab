@@ -1,6 +1,6 @@
 {
   "run_id": "p3-sweep-singleseed",
-  "score_pct": 85.7,
+  "score_pct": 82.6,
   "grade": "B",
   "checks": [
     {
@@ -61,7 +61,12 @@
     {
       "level": "PASS",
       "weight": 2,
-      "msg": "code_hash VERIFIED against live source (experiments/openings/parallel_sweep.py)"
+      "msg": "provenance source exists: platform_hybrid/experiments/openings/parallel_sweep.py"
+    },
+    {
+      "level": "PASS",
+      "weight": 2,
+      "msg": "code_hash VERIFIED against live source (platform_hybrid/experiments/openings/parallel_sweep.py)"
     },
     {
       "level": "FAIL",

@@ -90,6 +90,8 @@ def test_generated_grpo_script_is_valid_and_wires_quantized_prompt_tuning(tmp_pa
     assert "bnb_4bit_compute_dtype=COMPUTE_DTYPE" in script
     assert "quantized=quantization_config is not None" in script
     assert "BOXED_MARKER = '\\\\boxed{'" in script
+    assert "get_last_checkpoint(trainer_config.output_dir)" in script
+    assert "trainer.train(resume_from_checkpoint=last_checkpoint)" in script
 
 
 def test_generated_bitfit_script_avoids_full_model_checkpoints(tmp_path):
@@ -116,7 +118,7 @@ def test_generator_rejects_missing_data_and_incomplete_algorithms(tmp_path):
         algorithm={"algorithm": "dpo"},
         data={"train_data": ["preferences.json"]},
     )
-    with pytest.raises(NotImplementedError, match="GRPO only"):
+    with pytest.raises(NotImplementedError, match="GRPO and iDPO"):
         generate_trl_train_script(dpo_config, tmp_path / "dpo.py")
 
 
@@ -126,7 +128,7 @@ def test_cli_generates_script_instead_of_running_smoke_training(tmp_path):
         [
             sys.executable,
             "-m",
-            "platform_local.unified.launcher",
+            "platform_local.unified",
             "--framework",
             "trl",
             "--peft-method",
@@ -151,7 +153,7 @@ def test_cli_rejects_quantized_full_fine_tuning(tmp_path):
         [
             sys.executable,
             "-m",
-            "platform_local.unified.launcher",
+            "platform_local.unified",
             "--framework",
             "trl",
             "--no-peft",

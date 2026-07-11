@@ -1,19 +1,21 @@
 """Tests for the consolidated ``tinkerrl.grpo`` module."""
 
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import patch
 
 from platform_tinker.tinkerrl.grpo import (
     GRPOConfig,
     GRPORunResult,
     InMemoryDataset,
     MathReward,
+    ExactMathReward,
     ToolCallReward,
     TrainingExample,
     make_grpo_loss_fn,
     make_synthetic_math_dataset,
     make_synthetic_tool_use_dataset,
     normalize_rewards,
+    run_grpo,
 )
 
 
@@ -85,8 +87,6 @@ class TestMakeGrpoLossFn(unittest.TestCase):
         self.assertAlmostEqual(loss.item(), expected, places=5)
 
     def test_empty(self):
-        import torch
-
         loss_fn = make_grpo_loss_fn([])
         loss, metrics = loss_fn(None, [])
         self.assertEqual(loss.item(), 0.0)
@@ -261,6 +261,30 @@ class TestMathReward(unittest.TestCase):
         r = MathReward()
         score = r.score("1 + 2 = ?", self._ex("42"))
         self.assertAlmostEqual(score, 0.1)
+
+
+class TestExactMathReward(unittest.TestCase):
+    def test_binary_reward_has_no_partial_credit(self):
+        reward = ExactMathReward()
+        example = TrainingExample(prompt="q", target="42")
+
+        self.assertEqual(reward.score("\\boxed{42}", example), 1.0)
+        self.assertEqual(reward.score("The answer might be \\boxed{41}", example), 0.0)
+
+
+class TestRunGrpo(unittest.TestCase):
+    def test_multiple_seeds_copy_slotted_config_safely(self):
+        config = GRPOConfig(name="seed-test", seed=10, num_seeds=3)
+        dataset = InMemoryDataset(train=[TrainingExample(prompt="q", target="1")])
+
+        def fake_run(cfg, *_args, **_kwargs):
+            return GRPORunResult(seed=cfg.seed)
+
+        with patch("platform_tinker.tinkerrl.grpo._run_one_seed", side_effect=fake_run):
+            results = run_grpo(config, dataset, ExactMathReward())
+
+        self.assertEqual([result.seed for result in results], [10, 11, 12])
+        self.assertEqual(config.seed, 10)
 
 
 class TestGRPORunResult(unittest.TestCase):

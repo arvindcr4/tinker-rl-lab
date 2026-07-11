@@ -38,7 +38,7 @@ def load_env_file(path: Path) -> None:
         if not line or line.startswith("#") or "=" not in line:
             continue
         if line.startswith("export "):
-            line = line[len("export "):]
+            line = line[len("export ") :]
         key, value = line.split("=", 1)
         os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
@@ -124,8 +124,15 @@ def utc_now() -> str:
 
 
 def write_result(path: Path, payload: dict) -> None:
+    """Atomically replace a result/checkpoint JSON file.
+
+    A killed process can leave a normal ``write_text`` target truncated.  All
+    resumable runners share this helper, so checkpoint durability belongs here.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2) + "\n")
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(payload, indent=2) + "\n")
+    os.replace(temporary, path)
 
 
 def load_pool(path: Path) -> dict:

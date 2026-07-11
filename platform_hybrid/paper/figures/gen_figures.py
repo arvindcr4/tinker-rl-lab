@@ -10,11 +10,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-from matplotlib.colors import Normalize
-from matplotlib.cm import ScalarMappable
 import os
+from pathlib import Path
 
-OUT_DIR = "/home/user/workspace/tinker-rl-lab/paper/figures"
+OUT_DIR = os.environ.get("TINKERRL_FIGURE_OUT_DIR", str(Path(__file__).resolve().parent))
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # ─── Global style ──────────────────────────────────────────────────────────────

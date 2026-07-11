@@ -5,9 +5,12 @@ from .grpo import (
     InMemoryDataset,
     ToolCallReward,
     MathReward,
+    ExactMathReward,
     normalize_rewards,
     make_grpo_loss_fn,
     run_grpo,
+    make_gsm8k_dataset,
+    make_xlam_dataset,
 )
 
 __all__ = [
@@ -17,7 +20,10 @@ __all__ = [
     "InMemoryDataset",
     "ToolCallReward",
     "MathReward",
+    "ExactMathReward",
     "normalize_rewards",
     "make_grpo_loss_fn",
     "run_grpo",
+    "make_gsm8k_dataset",
+    "make_xlam_dataset",
 ]

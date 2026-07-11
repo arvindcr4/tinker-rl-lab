@@ -80,6 +80,13 @@ python3 analyze_rollout_quality.py \
 # 3. item-8 baseline for the base model (do this BEFORE any training arm)
 python3 passk_eval.py --model Qwen/Qwen3-8B --problems 200
 
+# interrupted paid/GPU jobs resume only after validating their exact config
+python3 passk_eval.py --model Qwen/Qwen3-8B --problems 200 --resume
+python3 eval_passk_standalone.py --dataset mbpp --problems 200 --n 32 \
+  --out results/passk_lightning_mbpp.json --resume
+python3 lightning_run.py --dataset mbpp --problems 200 --n 32 --resume
+modal run modal_passk.py --dataset math500 --problems 500 --n 32 --resume
+
 # add clustered CIs to a historical completed result without sampling
 python3 passk_eval.py \
   --from-result results/passk_qwen3-8b_base_test_p200_n32_s42.json
@@ -139,8 +146,14 @@ Base and post-RL comparisons must use matching seed/config sets.
 
 - Every JSON carries `status`; analyses refuse pools with `status != complete`.
 - `--dry-run` prints plans and cost estimates and contacts nothing.
-- Partial pool progress is checkpointed every 25 prompts; a killed run leaves
-  `status: "started"` (visible, resumable with `--resume`, never silently used).
-- Resume validates model, split, prompt count, rollout count, seed, sampling
-  parameters, and contiguous prompt indices before making another paid call.
+- Every paid or GPU-backed runner (`build_pool.py`, `passk_eval.py`,
+  `eval_passk_standalone.py`, `lightning_run.py`, and `modal_passk.py`)
+  checkpoints completed problem batches and accepts `--resume`.
+- Checkpoints are atomically replaced. A killed run leaves `status: "started"`
+  and a completed-prefix count instead of a truncated JSON file.
+- Resume validates model/checkpoint identity, dataset/split, prompt fingerprints,
+  sample count, seed, sampling parameters, and checkpoint size before making
+  another paid call. Compatible completed arms are skipped.
+- Offline analyses are deterministic and restart-safe: they make no paid calls
+  and atomically replace their final JSON outputs.
 - Nothing in this directory invents a run, a metric, or a "win."

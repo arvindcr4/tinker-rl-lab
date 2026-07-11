@@ -1,17 +1,18 @@
 import sys
 import time
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
+
 
 @dataclass
 class TrainingResult:
     """Result of a training run."""
+
     framework: str
     model: str
     algorithm: str
     final_step: int
-    reward_history: List[float]
-    loss_history: List[float]
+    reward_history: list[float]
+    loss_history: list[float]
     total_time: float = 0.0
 
 
@@ -136,7 +137,7 @@ class UnifiedLauncher:
             )
             trainer = VERLTrainer(config)
             asyncio.run(trainer.run())
-            
+
             return TrainingResult(
                 framework="verl",
                 model=self.model,
@@ -156,4 +157,6 @@ class UnifiedLauncher:
     def _run_trl(self) -> TrainingResult:
         """Run TRL training."""
         print("\n[TRL] Starting HuggingFace TRL training...")
-        raise NotImplementedError("TRL training runner is not yet implemented. Please use --generate-script to create a script instead.")
+        raise NotImplementedError(
+            "TRL training runner is not yet implemented. Please use --generate-script to create a script instead."
+        )

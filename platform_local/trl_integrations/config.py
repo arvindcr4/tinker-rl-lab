@@ -10,15 +10,14 @@ from pydantic import BaseModel, Field, model_validator
 
 class TRLModelConfig(BaseModel):
     """Model configuration"""
+
     model_name: str = "Qwen/Qwen2.5-1.5B-Instruct"
     model_path: Optional[str] = None
     use_flash_attention: bool = True
     load_in_8bit: bool = False
     load_in_4bit: bool = False
     use_peft: bool = True
-    peft_method: Literal[
-        "lora", "prefix_tuning", "p_tuning", "prompt_tuning", "bitfit"
-    ] = "lora"
+    peft_method: Literal["lora", "prefix_tuning", "p_tuning", "prompt_tuning", "bitfit"] = "lora"
     peft_num_virtual_tokens: int = Field(default=32, gt=0)
     peft_encoder_hidden_size: int = Field(default=128, gt=0)
     lora_rank: int = Field(default=32, gt=0)
@@ -37,6 +36,7 @@ class TRLModelConfig(BaseModel):
 
 class TROptimizerConfig(BaseModel):
     """Optimizer configuration"""
+
     learning_rate: float = 1e-6
     beta1: float = 0.9
     beta2: float = 0.95
@@ -46,6 +46,7 @@ class TROptimizerConfig(BaseModel):
 
 class TRLAlgorithmConfig(BaseModel):
     """RL algorithm configuration"""
+
     algorithm: str = "grpo"  # grpo, ppo, reinforce, dpo
     gamma: float = 1.0
     lam: float = 0.95
@@ -56,6 +57,7 @@ class TRLAlgorithmConfig(BaseModel):
 
 class TRLDataConfig(BaseModel):
     """Data configuration"""
+
     train_data: List[str] = Field(default_factory=list)
     val_data: List[str] = Field(default_factory=list)
     max_prompt_length: int = 512
@@ -89,7 +91,7 @@ class TRLConfig(BaseModel):
     project_name: str = "trl-tinker"
     run_name: Optional[str] = None
     report_to: str = "wandb"
-    
+
     # DeepSpeed Integration
     deepspeed: Optional[str] = None
 

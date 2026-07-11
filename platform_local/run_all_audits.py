@@ -1,43 +1,60 @@
 #!/usr/bin/env python3
-import os
-import re
-import subprocess
+"""Run submission audits through their structured result interface."""
+
+from __future__ import annotations
+
 import sys
+from collections.abc import Callable, Iterable
+from pathlib import Path
 
-AUDITS = [
-    "submission_claim_audit.py",
-    "paper_sync_audit.py",
-    "anonymization_repro_audit.py",
-    "claim_strength_audit.py",
-    "submission_package_audit.py",
-    "submission_workflow_audit.py",
-    "export_guard_audit.py",
-]
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-failures = []
-for audit in AUDITS:
-    audit_path = os.path.join(script_dir, audit)
-    proc = subprocess.run(["python3", audit_path], capture_output=True, text=True)
-    out = proc.stdout.strip()
-    match = re.search(r"METRIC\s+\w+=(\d+)", out)
-    metric = int(match.group(1)) if match else None
-    print(f"=== {audit} ===")
-    print(out)
-    if proc.stderr.strip():
-        print(proc.stderr.strip())
-    if proc.returncode != 0 or (metric is not None and metric != 0):
-        failures.append((audit, proc.returncode, metric))
-    print()
+from platform_local import (
+    anonymization_repro_audit,
+    claim_strength_audit,
+    export_guard_audit,
+    paper_sync_audit,
+    submission_claim_audit,
+    submission_package_audit,
+    submission_workflow_audit,
+)
+from utils.audit_utils import (
+    AuditContext,
+    AuditIssue,
+    AuditSuiteResult,
+    evaluate_audit,
+    render_suite,
+)
 
-print(f"METRIC suite_issues={len(failures)}")
-print(f"METRIC audits_total={len(AUDITS)}")
-print(f"METRIC audits_passing={len(AUDITS) - len(failures)}")
 
-if failures:
-    print("Failing audits:")
-    for audit, rc, metric in failures:
-        print(f"  - {audit}: rc={rc}, metric={metric}")
-    sys.exit(1)
+AuditFunction = Callable[[AuditContext], Iterable[str | AuditIssue]]
+AUDITS: tuple[tuple[str, AuditFunction], ...] = (
+    ("claim_issues", submission_claim_audit.get_issues),
+    ("sync_issues", paper_sync_audit.get_issues),
+    ("anon_issues", anonymization_repro_audit.get_issues),
+    ("strength_issues", claim_strength_audit.get_issues),
+    ("package_issues", submission_package_audit.get_issues),
+    ("workflow_issues", submission_workflow_audit.get_issues),
+    ("export_guard_issues", export_guard_audit.get_issues),
+)
 
-print("All audits passing.")
+
+def run_suite(
+    audits: tuple[tuple[str, AuditFunction], ...] = AUDITS,
+    context: AuditContext | None = None,
+) -> AuditSuiteResult:
+    shared_context = context or AuditContext()
+    return AuditSuiteResult(
+        audits=tuple(evaluate_audit(name, audit, shared_context) for name, audit in audits)
+    )
+
+
+def main() -> int:
+    result = run_suite()
+    print(render_suite(result))
+    return 0 if result.passed else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

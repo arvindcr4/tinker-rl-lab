@@ -14,17 +14,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .grpo import (
     GRPOConfig,
-    InMemoryDataset,
+    ExactMathReward,
     MathReward,
     ToolCallReward,
     make_synthetic_math_dataset,
     make_synthetic_tool_use_dataset,
+    make_gsm8k_dataset,
+    make_xlam_dataset,
     run_grpo,
 )
 
@@ -47,6 +50,36 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "max_response_tokens": 128,
         "save_every": 25,
         "num_seeds": 5,
+        "seed": 0,
+    },
+    "tooluse_baseline": {
+        "name": "A_baseline",
+        "model": "Qwen/Qwen3-8B",
+        "lora_rank": 32,
+        "steps": 200,
+        "group_size": 8,
+        "batch_size": 4,
+        "lr": 3e-5,
+        "temperature": 0.8,
+        "max_response_tokens": 192,
+        "save_every": 10,
+        "num_seeds": 5,
+        "seed": 0,
+    },
+    "tooluse_heldout": {
+        "name": "grpo_tooluse_qwen3_8b",
+        "model": "Qwen/Qwen3-8B",
+        "lora_rank": 32,
+        "steps": 200,
+        "group_size": 8,
+        "batch_size": 4,
+        "lr": 3e-5,
+        "temperature": 0.8,
+        "max_response_tokens": 192,
+        "save_every": 10,
+        "num_seeds": 5,
+        "seed": 0,
+        "evaluate_heldout": True,
     },
     "tooluse_xlam": {
         "name": "tooluse_xlam",
@@ -61,6 +94,8 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "max_response_tokens": 128,
         "save_every": 25,
         "num_seeds": 1,
+        "seed": 42,
+        "evaluate_heldout": True,
     },
     "gsm8k": {
         "name": "gsm8k",
@@ -76,6 +111,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "save_every": None,
         "num_seeds": 1,
         "evaluate_heldout": False,
+        "seed": 42,
     },
     "math100": {
         "name": "math100",
@@ -90,39 +126,37 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "max_response_tokens": 256,
         "save_every": 25,
         "num_seeds": 1,
+        "seed": 42,
+        "evaluate_heldout": True,
     },
 }
 
 DATASET_FACTORIES = {
     "tooluse_synth": make_synthetic_tool_use_dataset,
-    "tooluse_xlam": None,  # requires HF datasets; built in _build_dataset via extra arg
-    "gsm8k": None,
+    "tooluse_baseline": make_synthetic_tool_use_dataset,
+    "tooluse_heldout": make_synthetic_tool_use_dataset,
+    "tooluse_xlam": make_xlam_dataset,
+    "gsm8k": make_gsm8k_dataset,
     "math100": make_synthetic_math_dataset,
 }
 
 REWARD_MAP = {
     "tooluse_synth": ToolCallReward,
+    "tooluse_baseline": ToolCallReward,
+    "tooluse_heldout": ToolCallReward,
     "tooluse_xlam": ToolCallReward,
-    "gsm8k": MathReward,
+    "gsm8k": ExactMathReward,
     "math100": MathReward,
 }
 
 
-def _build_dataset(args: argparse.Namespace, cfg: Dict[str, Any]) -> Any:
+def _build_dataset(args: argparse.Namespace, config: GRPOConfig) -> Any:
     dataset_name = args.dataset or args.preset
-    if dataset_name == "tooluse_xlam":
-        raise SystemExit(
-            "xlam dataset requires --json-config or manual setup; "
-            "use --dataset tooluse_synth for the built-in synthetic tool-use set."
-        )
-    if dataset_name == "gsm8k":
-        raise SystemExit(
-            "gsm8k dataset requires HF datasets; "
-            "use --dataset math100 for the built-in synthetic math set."
-        )
     factory = DATASET_FACTORIES.get(dataset_name)
     if factory is None:
         raise SystemExit(f"Unknown dataset preset: {dataset_name}")
+    if dataset_name in {"tooluse_xlam", "gsm8k"}:
+        return factory(seed=config.seed)
     return factory()
 
 
@@ -143,6 +177,7 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         "seed": "seed",
         "num_seeds": "num_seeds",
         "name": "name",
+        "checkpoint_dir": "checkpoint_dir",
     }
     for cfg_key, attr in mapping.items():
         val = getattr(args, attr, None)
@@ -150,6 +185,10 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
             cfg[cfg_key] = val
     if args.evaluate_heldout:
         cfg["evaluate_heldout"] = True
+    if args.no_resume:
+        cfg["resume"] = False
+    if args.no_wandb:
+        cfg["wandb_project"] = None
     return cfg
 
 
@@ -159,9 +198,7 @@ def build_config(args: argparse.Namespace) -> GRPOConfig:
         return GRPOConfig(**data)
 
     if args.preset not in PRESETS:
-        raise SystemExit(
-            f"Unknown preset: {args.preset!r}.  Choose from {list(PRESETS)}"
-        )
+        raise SystemExit(f"Unknown preset: {args.preset!r}.  Choose from {list(PRESETS)}")
     cfg_dict = dict(PRESETS[args.preset])
     cfg_dict = _apply_overrides(cfg_dict, args)
     return GRPOConfig(**cfg_dict)
@@ -194,9 +231,12 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--max-prompt-tokens", dest="max_prompt_tokens", type=int)
     parser.add_argument("--max-response-tokens", dest="max_response_tokens", type=int)
     parser.add_argument("--save-every", dest="save_every", type=int)
-    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--seed", type=int)
     parser.add_argument("--num-seeds", dest="num_seeds", type=int)
     parser.add_argument("--evaluate-heldout", dest="evaluate_heldout", action="store_true")
+    parser.add_argument("--checkpoint-dir")
+    parser.add_argument("--no-resume", action="store_true")
+    parser.add_argument("--no-wandb", action="store_true")
     parser.add_argument("--help-overrides", action="store_true", help="Show all override flags.")
     return parser.parse_args(argv)
 
@@ -208,12 +248,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         args = _parse_args(["--help"])
         return 0
 
-    if "TINKER_API_KEY" not in __import__("os").environ:
-        print("ERROR: Set TINKER_API_KEY in the environment.", file=__import__("sys").stderr)
+    if "TINKER_API_KEY" not in os.environ:
+        print("ERROR: Set TINKER_API_KEY in the environment.", file=sys.stderr)
         return 1
 
     config = build_config(args)
-    dataset = _build_dataset(args, config.__dict__)
+    dataset = _build_dataset(args, config)
     reward_name = args.reward or args.preset
     reward_cls = REWARD_MAP.get(reward_name, ToolCallReward)
     reward = reward_cls()
@@ -239,6 +279,18 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"  reward_trace  : {[round(v, 3) for v in r.reward_trace]}")
 
     return 0
+
+
+def legacy_main(preset: str, argv: Optional[List[str]] = None) -> int:
+    """Preserve old script flags while routing execution through this module."""
+    translations = {
+        "--rank": "--lora-rank",
+        "--group": "--group-size",
+        "--batch": "--batch-size",
+        "--tag": "--name",
+    }
+    forwarded = [translations.get(arg, arg) for arg in (argv or [])]
+    return main(["--preset", preset, *forwarded])
 
 
 if __name__ == "__main__":

@@ -2,17 +2,17 @@
 from utils.audit_utils import run_audit
 import re
 
+
 def get_issues(ctx):
     issues = []
-    
-    
+
     def need(cond, code, msg):
         if not cond:
             issues.append((code, msg))
-    
-    
+
     need(
-        "held-out gsm8k evaluation is still pending" in PAPER or "held-out test evaluation" in PAPER,
+        "held-out gsm8k evaluation is still pending" in PAPER
+        or "held-out test evaluation" in PAPER,
         "heldout_scope",
         "Main ctx.paper should explicitly state that held-out GSM8K evaluation is still pending and math claims are not generalization claims.",
     )
@@ -32,7 +32,9 @@ def get_issues(ctx):
     need(
         ("50-problem subset" in PAPER or "50-item subset" in PAPER)
         and (
-            "full humaneval" in PAPER or "standard harness" in PAPER or "non-standard subset" in PAPER
+            "full humaneval" in PAPER
+            or "standard harness" in PAPER
+            or "non-standard subset" in PAPER
         ),
         "codegen_subset",
         "Paper should clearly disclose that code generation used a 50-problem subset rather than the full standard HumanEval harness and avoid significance claims.",
@@ -90,8 +92,9 @@ def get_issues(ctx):
         "report.peak_table_overclaim",
         "Summary tables should not present peak GSM8K training-step numbers in a way that reads like benchmark performance.",
     )
-    
+
     return issues
 
-if __name__ == '__main__':
-    run_audit('caveat_issues', get_issues)
+
+if __name__ == "__main__":
+    run_audit("caveat_issues", get_issues)

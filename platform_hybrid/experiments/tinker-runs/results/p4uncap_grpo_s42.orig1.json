@@ -1,0 +1,32 @@
+{
+  "tag": "p4uncap_grpo_s42",
+  "status": "running",
+  "model": "Qwen/Qwen3-8B",
+  "model_short": "qwen3-8b",
+  "task": "gsm8k",
+  "seed": 42,
+  "rank": 4,
+  "group_size": 8,
+  "batch": 4,
+  "lr": 3e-05,
+  "temperature": 1.0,
+  "steps": 30,
+  "started_at": "2026-07-11T04:03:57.709227+00:00",
+  "output_path": "experiments/tinker-runs/results/p4uncap_grpo_s42.json",
+  "run_id": "1cecf3c5-0c13-557c-b138-13041e7ce387:train:0",
+  "initial_sampler": "tinker://1cecf3c5-0c13-557c-b138-13041e7ce387:train:0/sampler_weights/s0",
+  "reward_trace": [
+    0.4375
+  ],
+  "step_log": [
+    {
+      "step": 1,
+      "reward": 0.4375,
+      "loss": -0.8476982116699219,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1015.25
+    }
+  ],
+  "last_updated_at": "2026-07-11T04:05:30.763412+00:00"
+}

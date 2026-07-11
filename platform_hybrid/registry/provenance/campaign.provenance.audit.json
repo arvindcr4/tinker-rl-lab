@@ -1,6 +1,6 @@
 {
   "run_id": "campaign-multiseed",
-  "score_pct": 100.0,
+  "score_pct": 95.7,
   "grade": "A",
   "checks": [
     {
@@ -61,7 +61,12 @@
     {
       "level": "PASS",
       "weight": 2,
-      "msg": "code_hash VERIFIED against live source (experiments/openings/campaign.py)"
+      "msg": "provenance source exists: platform_hybrid/experiments/openings/campaign.py"
+    },
+    {
+      "level": "PASS",
+      "weight": 2,
+      "msg": "code_hash VERIFIED against live source (platform_hybrid/experiments/openings/campaign.py)"
     },
     {
       "level": "PASS",

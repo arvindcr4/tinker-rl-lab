@@ -1,1 +1,0 @@
-/Users/arvind/Developer/agentic_repos/tinker-rl-lab/platform_hybrid/experiments/results/p5p8/registry_audit_summary.json

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from utils.audit_utils import run_audit
-import re
+
 
 def get_issues(ctx):
     issues = []
@@ -13,12 +13,13 @@ def get_issues(ctx):
         "REINFORCE++": "reinforce++",
         "Step-DPO": "step-dpo",
     }
-    
+
     for label, needle in checks.items():
         if needle in ctx.main_tex and needle not in ctx.anon_tex:
             issues.append(f"anonymous_missing:{label}")
-    
+
     return issues
 
-if __name__ == '__main__':
-    run_audit('sync_issues', get_issues)
+
+if __name__ == "__main__":
+    raise SystemExit(run_audit("sync_issues", get_issues))

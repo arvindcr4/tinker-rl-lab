@@ -80,13 +80,13 @@ Build tested on: Docker 24.x, nvidia-container-toolkit ≥ 1.14, NVIDIA driver �
 ### 1.2 Option B — Local virtualenv
 
 ```bash
-python3.10 -m venv .venv && source .venv/bin/activate
+python3.11 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 # Optional: install the project so "tinkerrl" CLI shortcuts work
 pip install -e .
 ```
 
-Requires CUDA 12.4+, NVIDIA driver ≥ 550, Python 3.10+.
+Requires CUDA 12.4+, NVIDIA driver ≥ 550, Python 3.11+.
 
 ### 1.3 Required environment variables
 
@@ -246,7 +246,7 @@ Requires `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET`.
 ### 4.5 Cross-library RL baselines (arithmetic env)
 
 ```bash
-for exp in experiments/implementations/{trl_grpo_math,sb3_ppo_math,\
+for exp in platform_hybrid/experiments/implementations/{trl_grpo_math,sb3_ppo_math,\
 cleanrl_ppo_math,tianshou_ppo_math}.py; do
     ./scripts/run_seeds.sh "python $exp" 42 123 456 789 1024
 done

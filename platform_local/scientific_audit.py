@@ -2,18 +2,16 @@
 from utils.audit_utils import run_audit
 import re
 
+
 def get_issues(ctx):
     issues = []
-    
-    
+
     def add(path: Path, code: str, message: str):
         issues.append((str(path.relative_to(ctx.ROOT)), code, message))
-    
-    
+
     def read(path: Path) -> str:
         return path.read_text(encoding="utf-8")
-    
-    
+
     def check_paper():
         tex = read(PAPER_TEX)
         ctx.anon = read(PAPER_TEX_ANON)
@@ -21,7 +19,7 @@ def get_issues(ctx):
         ctx.md = read(REPORT_MD)
         ctx.checklist = read(SUBMISSION_CHECKLIST)
         ctx.supp = read(ctx.FINAL_DIR / "supplementary_appendix.tex")
-    
+
         abstract_match = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", tex, re.S)
         if abstract_match:
             abstract = abstract_match.group(1).lower()
@@ -35,22 +33,24 @@ def get_issues(ctx):
                     "ctx.paper.abstract.scope",
                     "LaTeX abstract reports GSM8K gains without explicitly saying they are training-set reward metrics, risking overclaim.",
                 )
-    
+
         if "held-out" not in tex.lower() and "training-set reward" not in tex.lower():
             add(
                 PAPER_TEX,
                 "ctx.paper.global.scope",
                 "LaTeX ctx.paper lacks an explicit held-out-vs-training-set evaluation scope warning.",
             )
-    
+
         if "publishable confidence intervals" in ctx.md.lower():
             add(
                 REPORT_MD,
                 "report.overclaim.publishable",
                 "Capstone report claims 'publishable confidence intervals' despite n=3 seeds and no held-out evaluation.",
             )
-    
-        anon_abstract_match = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", ctx.anon, re.S)
+
+        anon_abstract_match = re.search(
+            r"\\begin\{abstract\}(.*?)\\end\{abstract\}", ctx.anon, re.S
+        )
         if anon_abstract_match:
             anon_abstract = anon_abstract_match.group(1).lower()
             if (
@@ -63,21 +63,21 @@ def get_issues(ctx):
                     "paper_anon.abstract.scope",
                     "Anonymous LaTeX abstract still reports GSM8K gains without an explicit training-set-vs-held-out caveat.",
                 )
-    
+
         if "held-out" not in paper_md.lower() and "training-set reward" not in paper_md.lower():
             add(
                 PAPER_MD,
                 "paper_md.global.scope",
                 "Markdown ctx.paper lacks an explicit held-out-vs-training-set scope warning.",
             )
-    
+
         if re.search(r"\|\s*GSM8K\s*\|\s*30\.0% \± 2\.5% \(3 seeds\)\s*\|", ctx.checklist):
             add(
                 SUBMISSION_CHECKLIST,
                 "ctx.checklist.gsm8k.label",
                 "Submission ctx.checklist labels GSM8K as a generic result instead of explicitly marking it as training-set reward.",
             )
-    
+
         for path, ctx.text in [
             (PAPER_TEX, tex),
             (PAPER_TEX_ANON, ctx.anon),
@@ -89,7 +89,7 @@ def get_issues(ctx):
                     "ctx.paper.stability.overclaim",
                     "Paper claims the 3-seed GSM8K result 'confirms' training stability; this should be softened to a more accurate characterization.",
                 )
-    
+
         for path, ctx.text in [
             (REPORT_MD, ctx.md),
             (PAPER_MD, paper_md),
@@ -102,22 +102,19 @@ def get_issues(ctx):
                     "gsm8k.peak_accuracy.overclaim",
                     "A 99% GSM8K statement appears without making clear that it refers to a peak training-step metric rather than held-out benchmark accuracy.",
                 )
-    
-    
+
     def _is_name(node, name: str) -> bool:
         return isinstance(node, ast.Name) and node.id == name
-    
-    
+
     def _const_str(node):
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             return node.value
         return None
-    
-    
+
     def check_eval_script():
         tree = ast.parse(read(EVAL_PY))
         source = read(EVAL_PY)
-    
+
         parser_has_seed = "--seed" in source
         parser_has_split = "--split" in source
         split_choices_locked = 'choices=["test"]' in source or "choices=['test']" in source
@@ -129,7 +126,7 @@ def get_issues(ctx):
         has_do_sample_metadata = '"do_sample": args.do_sample' in source
         has_seed_metadata = '"seed": args.seed' in source
         has_model_source_metadata = '"model_source":' in source
-    
+
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
                 if node.func.attr == "add_argument":
@@ -155,7 +152,7 @@ def get_issues(ctx):
                             do_sample_true = True
             if isinstance(node, ast.Name) and node.id == "checkpoint_path":
                 checkpoint_arg_used = True
-    
+
         if default_temp_nonzero:
             add(
                 EVAL_PY,
@@ -222,14 +219,12 @@ def get_issues(ctx):
                 "eval.missing_model_source_metadata",
                 "Saved evaluation results do not record the exact checkpoint/model source used for evaluation.",
             )
-    
-    
+
     def _run(cmd, cwd: Path):
         return subprocess.run(
             cmd, cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
         )
-    
-    
+
     def check_latex_builds():
         cleanup = [
             "grpo_agentic_llm_paper.aux",
@@ -251,7 +246,7 @@ def get_issues(ctx):
             path = ctx.FINAL_DIR / name
             if path.exists():
                 path.unlink()
-    
+
         steps = [
             (
                 [
@@ -309,7 +304,7 @@ def get_issues(ctx):
                 "latex.supplementary.pass2",
             ),
         ]
-    
+
         try:
             for cmd, code in steps:
                 result = _run(cmd, ctx.FINAL_DIR)
@@ -327,8 +322,7 @@ def get_issues(ctx):
                 path = ctx.FINAL_DIR / name
                 if path.exists():
                     path.unlink()
-    
-    
+
     def check_result_jsons():
         required_config = {
             "model",
@@ -351,7 +345,7 @@ def get_issues(ctx):
             "accuracy",
             "accuracy_percent",
         }
-    
+
         for path in RESULT_JSONS:
             data = json.loads(read(path))
             if data.get("schema_version") != 2:
@@ -392,21 +386,26 @@ def get_issues(ctx):
                     "attempted must equal correct + incorrect in the result summary.",
                 )
             if data.get("evaluation_status") == "failed" and not data.get("failure_reason"):
-                add(path, "results.failure_reason", "Failed evaluations must record a failure_reason.")
+                add(
+                    path,
+                    "results.failure_reason",
+                    "Failed evaluations must record a failure_reason.",
+                )
             if data.get("evaluation_status") == "completed" and attempted == 0:
                 add(
                     path,
                     "results.completed_zero_attempts",
                     "Completed evaluations must have at least one attempted example.",
                 )
-    
-    
+
     def main():
         check_paper()
         check_eval_script()
         check_latex_builds()
         check_result_jsons()
+
     return issues
 
-if __name__ == '__main__':
-    run_audit('audit_issues', get_issues)
+
+if __name__ == "__main__":
+    run_audit("audit_issues", get_issues)

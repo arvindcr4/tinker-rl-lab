@@ -2,6 +2,7 @@ import torch, tinker, tinker.types as T
 from transformers import AutoTokenizer
 import random
 
+
 def run_grpo_training(
     exp_name,
     model_name,
@@ -15,7 +16,7 @@ def run_grpo_training(
     reward_fn,
     max_tokens=512,
     temperature=0.8,
-    top_p=0.95
+    top_p=0.95,
 ):
     print(f"[{exp_name}] Connecting to Tinker...")
     svc = tinker.ServiceClient(base_url=None)
@@ -27,6 +28,7 @@ def run_grpo_training(
 
     # Shared state for custom loss
     _adv = []
+
     def loss_fn(data, lp):
         losses = [(-_adv[i] * lp[i].sum()) for i in range(len(lp))]
         loss = torch.stack(losses).mean()
@@ -43,7 +45,7 @@ def run_grpo_training(
         for item in batch:
             # item should be a tuple (prompt_text, expected_answer)
             prompt_text, ans = item[:2]
-            
+
             pid = tok.encode(prompt_text, add_special_tokens=False)
             if len(pid) > 1024:
                 pid = pid[:1024]
@@ -51,7 +53,7 @@ def run_grpo_training(
             resp = sc.sample(
                 T.ModelInput.from_ints(pid), num_samples=group_size, sampling_params=sp
             ).result()
-            
+
             rews = []
             for r in resp.sequences:
                 text = tok.decode(list(r.tokens), skip_special_tokens=True)
@@ -66,7 +68,7 @@ def run_grpo_training(
             sr = (sum((r - mr) ** 2 for r in rews) / len(rews)) ** 0.5 + 1e-8
             advs = [(r - mr) / sr for r in rews]
             batch_r.extend(rews)
-            
+
             for r, a in zip(resp.sequences, advs):
                 rid = list(r.tokens)
                 fid = pid + rid
@@ -120,11 +122,12 @@ def run_grpo_training(
     print(f"[{exp_name}] First-5 avg accuracy: {avg_first5 * 100:.1f}%")
     print(f"[{exp_name}] Last-10 avg accuracy: {avg10 * 100:.1f}%")
     print(f"[{exp_name}] Peak accuracy: {max_r * 100:.1f}%")
-    print(f"[{exp_name}] Zero-loss steps: {zero_loss_steps}/{steps} ({100 * zero_loss_steps / steps:.0f}%)")
+    print(
+        f"[{exp_name}] Zero-loss steps: {zero_loss_steps}/{steps} ({100 * zero_loss_steps / steps:.0f}%)"
+    )
     print(
         f"[{exp_name}] Zero-reward steps: {zero_reward_steps}/{steps} ({100 * zero_reward_steps / steps:.0f}%)"
     )
     print(f"[{exp_name}] Run ID: {tc.model_id}")
     print(f"[{exp_name}] Sampler: {f.path}")
     print(f"[{exp_name}] Reward trace: {[round(r, 3) for r in step_rewards]}")
-

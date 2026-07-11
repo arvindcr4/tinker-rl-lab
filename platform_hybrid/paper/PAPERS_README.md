@@ -1,5 +1,49 @@
 # Per-Pillar Standalone Papers (P1–P8)
 
+## Consolidation plan: 17 documents → 3 submission vehicles (2026-07-11, revised after external Deep Think review)
+
+Overall verdict from the review: proceed with revisions. The revisions below are
+incorporated. Execution order: **A → B → C**, and A's terminology/notation
+(ZVF bounds, G\*) must be frozen before drafting B and C.
+
+**Vehicle A — Flagship (main track): "ZVF: Diagnostic → Theory → Controller"**
+Narrative order is *diagnostic-led* (problem → solution), per review — not
+controller-led as originally planned.
+- Part I (diagnostic): `paper_P2_zvf` + the stratified-audit framing of
+  `neurips_2026_variants/main_zvf.tex` (retired after merge)
+- Part II (theory): `zvf-program/theory/zvf_theory.tex` (T1–T3, empirical validation)
+- Part III (controller): `paper_P7_zvf_controller` (engineering, design rules)
+- Section donations: `paper_P3` (group-size / contrast-density results incl. the
+  matched-budget G2-vs-G16 panel), `paper_P4` (loss-form robustness: GRPO vs
+  Dr.GRPO no-signature result)
+- **Data firewall**: A exclusively owns the scientific claims and figures of the
+  E-R2b (G2-vs-G16) and E-P4 (Dr.GRPO) runs. B and C cross-cite A; they do not
+  republish these figures.
+
+**Vehicle B — Position paper: "Report the Stack, Not the Label"**
+Tight policy paper (review: the earlier plan was overstuffed).
+- Base: `paper_P5_minreport` (eight-item standard, evidence corpus, threat model,
+  toolchain)
+- Appendix/linked artifact: `paper_P6_registry` (machine-readable registry)
+- `zvf-program/position/min_report_rl.tex` = condensed statement until submission,
+  then retires; `zvf-program/registry/grpo_registry.tex` retires
+- The Survival Audit does NOT go here (moved to C, per review)
+
+**Vehicle C — Artifact/benchmark: "RL-Finetuning Bench"**
+- Base: `neurips_2026_variants/main_dnb.tex` — with the ZVF diagnostic narrative
+  scrubbed out (cross-cite A instead), per review, so C does not cannibalize A
+- Flagship use-case: `zvf-program/audit/reproducibility_audit.tex` (single-stack
+  survival protocol — re-implement DAPO/GSPO/Dr.GRPO/MAD-GRPO on the bench and
+  measure which claimed gains survive)
+- Results appendix: `paper_P1_scaling`'s scaling analysis
+- Retire: `main.tex` (734 errors) — after a detex/visual-diff salvage pass to
+  confirm no methodology text or bib entries were stranded; `acm_main.tex` and
+  `main_workshop.tex` regenerate from C on demand
+
+**Thesis chapters (explicitly assigned, so nothing is orphaned):** P3's
+bridge-to-DPO remnant, P4's held-out-generalization remnant, P1's full scaling
+treatment, and `paper_P8_fraud` (parked; different program).
+
 ## Canonical map vs. the zvf-program / benchmark-variant roster (2026-07-11)
 
 The repo carries two drafting tracks that overlap: this P1–P8 pillar series,

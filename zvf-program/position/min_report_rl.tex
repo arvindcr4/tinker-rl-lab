@@ -405,6 +405,58 @@ because it is a documented lever that can flip a head-to-head comparison.}
 \end{tabular}
 \end{table}
 
+\subsection{Measured stack effects (new evidence, 2026-07)}
+\label{sec:measured}
+
+Three of the standard's items now carry \emph{quantified} first-party
+evidence from the companion experiments suite
+(\texttt{zvf-program/experiments-next/results/}), replacing argument by
+anecdote.
+
+\paragraph{Item 3, measured: the sampler moves frontier metrics.}
+Holding model, prompts (200 GSM8K test problems), temperature, seed, and
+parser byte-identical, and swapping \emph{only} the sampling backend:
+\begin{center}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Backend & pass@1 & pass@8 & pass@32 \\
+\midrule
+Managed (Tinker) sampler & 30.4\% & 79.7\% & 91.0\% \\
+vLLM 0.24 on A100 & 30.6\% & 77.8\% & 89.0\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+Point estimates are backend-robust ($+0.2$ at pass@1) while the pass@32
+frontier shifts by $2.0$ points and individual problems move by up to
+$|11|/32$ solutions. Any cross-paper comparison of frontier metrics that
+does not report the sampler is therefore confounded at the
+$\sim$2-point scale --- the same scale as many claimed algorithmic gains.
+
+\paragraph{Item 1, measured: silent export/loader incompatibilities.}
+Evaluating LoRA adapters trained on a managed stack inside an open
+inference stack required reverse-engineering two undocumented format
+deltas: \texttt{target\_modules="all-linear"} (PEFT shorthand the open
+loader rejects) and the unembedding trained under
+\texttt{model.unembed\_tokens} (the open loader accepts only
+\texttt{lm\_head}). Without remapping, \emph{every} cross-stack evaluation
+of these 21 public adapters fails --- loudly in our harness, but a wrapper
+that silently skipped the adapter would have produced base-model numbers
+labeled as post-RL results. This is precisely the class of confound item 1
+exists to surface.
+
+\paragraph{Item 8, exemplified: the panel pass@1 alone would misreport.}
+A matched base-vs-post-RL panel (four adapters trained at
+$G\in\{2,4,16,32\}$; one stack; same problems) shows pass@1 deltas
+scattered from $-0.5$ to $+1.9$ points --- under pass@1-only reporting,
+the $G{=}2$ arm would be called a \emph{regression}. The pass@32 frontier
+tells the opposite, consistent story: all four arms improve by $+1.5$ to
+$+2.5$ points. Neither reading reaches significance at a single training
+seed (the deltas sit within the measured sampler and eval-seed noise
+bands above), which is itself the point: \textbf{without pass@$k$ curves
+and stated noise bands, this panel supports any narrative a reader
+prefers.} With them, it supports exactly one claim: a small,
+directionally consistent frontier shift requiring multi-seed replication.
+
 % =============================================================================
 \section{Proposed Reproducibility Audit}
 \label{sec:audit}

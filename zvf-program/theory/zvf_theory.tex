@@ -654,70 +654,79 @@ fixed point.}
 % is unproven; at minimum flag it, ideally give a contraction condition.
 
 %==============================================================================
-\section{Empirical Sanity Check: Plugging E3 Pilot Data into T1--T3}\label{sec:sanity}
+\section{Empirical Validation}\label{sec:empirical}
 %==============================================================================
-This section is \emph{not} a formal validation of the theorems; it is a
-mechanical check that the formulas are computable and return sensible
-numbers on real data.  The data come from the open-source E3 pilot
-reported in the ZVF Program audit companion \cite{zvfaudit2026}: four
-arms (GRPO, Dr.\,GRPO, DAPO, adaptive-$G$ GRPO) trained on
-Qwen2.5-0.5B-Instruct for 10 steps with 3 prompt-groups per step and
-two seeds, giving $m=60$ observed groups per arm.
+All three theorems, plus the controller-pilot implied by
+Section~\ref{sec:controller}, were validated against real sampling data
+under a pre-registered protocol (decision rules fixed before scoring; see
+\texttt{experiments-next/README.md}). None of the following alters the
+theorems' logical status --- they remain proof sketches --- but every
+operational quantity they define has now been measured.
 
-\paragraph{T1 -- Wilson confidence intervals.}  Treating $\ZVF$ as the
-sample mean of $m=60$ i.i.d.\ Bernoulli group indicators, we report the
-Wilson 95\% interval for the population zero-variance rate.
+\paragraph{Setup.} One sampling pool: Qwen3-8B, GSM8K train split,
+$512$ prompts $\times$ $32$ rollouts at $T{=}1.0$ (Tinker sampling client;
+ChatML prompt and binary boxed-answer reward identical to the audit
+runners). All analyses are offline resampling of this pool. An initial
+billing-truncated pool ($n{=}350$, explicitly stamped) produced identical
+verdicts; numbers below are from the complete $n{=}512$ pool. Artifacts:
+\texttt{experiments-next/results/*qwen3-8b\_train\_n512\_r32\_s42*.json}.
 
-\paragraph{T2 -- rollouts to one informative group.}  With fixed group
-size $K=4$ and target failure probability $\delta=0.05$, the lower
-bound on rollouts required to observe at least one informative group
-with probability at least $1-\delta$ is $N=K\ln(1/\delta)/(-\ln\ZVF)$
-from Theorem~\ref{thm:T2}; we use the observed $\ZVF$ as a plug-in.
-When $\ZVF=0$ the observed rate is already below $\delta$, so we report
-$N=0$.
-
-\paragraph{T3 -- candidate optimal group size.}  We evaluate the
-point-mass objective \eqref{eq:J-pointmass} at two plausible success
-rates: $p=0.5$ (a medium-difficulty prompt) and the $p$ implied by
-solving $1-p^4-(1-p)^4=\ZVF$ for the observed arm.  In both cases the
-optimum is small (2--3), illustrating that the efficiency objective can
-favor smaller groups than the $G=4$ default used in the pilot.
-
-\begin{table}[t]
-\centering
-\caption{\textbf{Sanity-check table (E3 pilot).}  Wilson 95\% CI for
-$\ZVF$; T2 rollouts-to-one-informative-group floor at $\delta=0.05$;
-T3 candidate $G^\star$ under a medium-difficulty $p=0.5$ prior and
-under the $p$ implied by the observed $\ZVF$ ($K=4$).}
-\label{tab:sanity}
-\small
-\begin{tabular}{@{}lcccc@{}}
+\paragraph{E-T1: coverage of the ZVF confidence interval.}
+\begin{center}
+\begin{tabular}{@{}lcc@{}}
 \toprule
-\textbf{Arm} & \textbf{Observed $\ZVF$} & \textbf{Wilson 95\% CI} &
-\textbf{T2 floor $N$} & \textbf{T3 $G^\star$ ($p=0.5$ / implied)}\\
+Batching regime & Estimand & 95\% CI coverage \\
 \midrule
-GRPO            & $0.250$ & $[0.158,\ 0.372]$ & $8.6$ & $2$--$3$ / $3$ \\
-Dr.\,GRPO       & $0.267$ & $[0.172,\ 0.390]$ & $9.1$ & $2$--$3$ / $3$ \\
-DAPO            & $0.000$ & $[0.000,\ 0.060]$ & $0.0$ & $2$--$3$ / $2$--$3$ \\
-Adaptive-$G$ GRPO & $0.233$ & $[0.144,\ 0.354]$ & $8.2$ & $2$--$3$ / $3$ \\
+shuffled (iid), Wald, $m\ge 64$ & global & 0.93--0.96 \\
+shuffled (iid), Wilson, all tested $(m,K)$ & global & 0.95--0.98 \\
+difficulty-sorted (curriculum) & global & 0.07--0.22 \\
+difficulty-sorted (curriculum) & \emph{local (window)} & 0.944 \\
+stratified batch composition & global & 0.996 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{center}
+The Wald interval \eqref{eq:ci} is adequate at $m\ge 64$ and the Wilson
+interval is well calibrated everywhere; we adopt Wilson operationally.
+The curriculum-ordering ``failure'' is an \emph{estimand mismatch}: the
+interval remains calibrated for the local (curriculum-stage) ZVF while
+losing the global one, and stratified batch composition restores global
+validity (conservatively). This resolves the across-group-i.i.d.\ threat
+(Assumption~\ref{ass:across-iid}) into a labeling requirement rather than
+an invalidation.
 
-\paragraph{Interpretation.}  The Wilson intervals are wide because the
-pilot has only 60 independent groups per arm; a production audit would
-need an order of magnitude more groups to tighten them.  The T2 floor
-says that, \emph{under the stated assumptions}, arms with observed
-$\ZVF\approx0.25$ would require roughly $8$--$9$ rollouts just to be
-assured of one informative group at 95\% confidence.  The actual pilot
-spent 120--186 rollouts per arm, so the floor is not binding, but it
-quantifies the signal tax.  The T3 candidates (2--3) are smaller than
-the $G=4$ default and much smaller than the $G=8$--$16$ values common
-in recent GRPO papers, suggesting that current group-size defaults may
-be larger than the simple efficiency objective recommends.  These
-numbers are illustrative; formal theory validation requires a dedicated
-experiment with independent groups, known $p$ calibration, and CI
-coverage checks.
+\paragraph{E-T2: the wasted-compute floor.} With $G{=}8$ and
+$\delta{=}0.1$, the geometric floor $G\lceil\ln\delta/\ln\mathrm{ZVF}\rceil$
+held in all six difficulty strata with tightness 1.00--1.05. In the hardest
+stratum ($\hat p\approx 0.01$, $\mathrm{ZVF}=0.886$) the floor is
+\textbf{160 rollouts} before a single informative group --- matched by the
+observed quantile at ratio 1.00. The floor is not merely valid but
+essentially exact on this reward distribution.
+
+\paragraph{E-T3a: the optimal group size.} Under the empirical
+$\hat p$-prior, the closed-form argmax of $J(G)$ \eqref{eq:efficiency} is
+$G^\star{=}2$ in every stratum and pooled; the empirical $J$-argmax is
+2--3 (exact agreement in 3--4 of 5 partitions, adjacent grid point
+otherwise). Since prevailing practice uses $G\in[8,16]$, this is a
+falsifiable prediction that current group sizes are several-fold
+inefficient per rollout. A first training-side corroboration: a $G{=}2$
+adapter matched a $G{=}16$ adapter's held-out pass@32 improvement at
+$8\times$ fewer rollouts per step (single seed; see the companion
+experiments log). Experiment E-T3b (matched-budget training at
+$G^\star\pm\delta$) remains the decisive test.
+
+\paragraph{E-B: controller pilot (offline).} Treating stratum selection as
+a Thompson-sampling bandit with reward = ``group is informative'' recovers
+97\% of the static-oracle's informative groups per 1{,}000 rollouts
+(120.7 vs.\ 124.3), beats uniform allocation by 28\%, and exceeds a
+hardest-first policy by $8.8\times$ --- difficulty and signal are not the
+same axis, exactly as $J(G,p)$ predicts. Caveat: frozen-pool simulation;
+the training-time pilot must confirm under the distribution shift induced
+by learning itself.
+
+\paragraph{Threats to validity.} Single base model and task family
+(Qwen3-8B, GSM8K); binary rewards only; $\hat p$ plug-in bias at $R{=}32$
+rollouts per prompt; and all training-side corroborations are single-seed.
+None of the theorems' proof gaps is discharged by these measurements.
 
 %==============================================================================
 \section{Discussion and Limitations of the Theory}\label{sec:discussion}
@@ -750,16 +759,13 @@ closed-form FOC.
         not an invalidation.
 \end{itemize}
 
-\paragraph{Empirical status of the theorems.} The companion
-\texttt{experiments-next} suite now provides validation on a real pool
-(Qwen3-8B, GSM8K, 350 prompts $\times$ 32 rollouts): T1 coverage as above;
-the T2 geometric floor holds in all six difficulty strata with tightness
-1.00--1.05; and the T3 objective's analytic argmax ($G^\star=2$ under the
-empirical $\hat p$ prior, every stratum) agrees with the empirical
-$J$-argmax in 4/5 strata (adjacent grid point in the fifth). Note the
-tension this exposes: $J$-optimal group sizes are far below the $G=8$--$16$
-the field defaults to; whether small-$G$ advantage-estimate quality erodes
-the predicted efficiency is exactly what experiment E-T3b must test.
+\paragraph{Empirical status of the theorems.} Superseded by
+Section~\ref{sec:empirical}, which reports the complete $n{=}512$
+validation (T1 coverage and estimand resolution, T2 floor tightness
+1.00--1.05, T3 $G^\star{=}2$ agreement, controller pilot). The
+truncated-pool ($n{=}350$) artifacts are retained alongside as the
+pre-registration record; no verdict changed between $n{=}350$ and
+$n{=}512$.
 
 \paragraph{No empirical claims beyond the cited artifacts.} This draft
 contains no experiments of its own; all numeric values above are either

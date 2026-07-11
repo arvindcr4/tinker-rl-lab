@@ -134,6 +134,8 @@ def main() -> None:
                 data = json.loads(p.read_text())
             except Exception:
                 continue
+            if not isinstance(data, dict):
+                continue  # legacy batch files are top-level lists; skip
             if data.get("status") not in ("completed", "complete"):
                 print(f"[skip] {p.name} status={data.get('status')!r}",
                       flush=True)

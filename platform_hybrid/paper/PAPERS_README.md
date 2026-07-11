@@ -1,3 +1,21 @@
+# Per-Pillar Standalone Papers (P1–P8)
+
+## Canonical map vs. the zvf-program / benchmark-variant roster (2026-07-11)
+
+The repo carries two drafting tracks that overlap: this P1–P8 pillar series,
+and a roster of benchmark variants + ZVF-program drafts ("R1–R8"). Canonical
+status per duplicate pair (reciprocal scope notes are embedded in each tex):
+
+| Concept | Canonical | Companion (kept, scoped) |
+|---|---|---|
+| MIN-REPORT-RL standard | `paper_P5_minreport` (evidence corpus; **eight-item** standard as of 2026-07-11 — item 8 = pass@k curves, merged from the position draft) | `zvf-program/position/min_report_rl.tex` (community-position statement) |
+| GRPO-Registry | `paper_P6_registry` (schema, population, measured-evidence tiers) | `zvf-program/registry/grpo_registry.tex` (living-catalog statement) |
+| ZVF theory ↔ controller | split by scope: `zvf-program/theory/zvf_theory.tex` canonical for theorems (T1–T3), `paper_P7_zvf_controller` canonical for controller engineering | cross-referenced companions |
+| ZVF diagnostic | `paper_P2_zvf` (pillar paper) | `neurips_2026_variants/main_zvf.tex` (NeurIPS variant framing) |
+| Benchmark | `main.tex` (+ `acm_main.tex`) | `neurips_2026_variants/main_workshop.tex`, `main_dnb.tex` (venue variants); P1–P4 are per-pillar splits |
+| Survival audit | `zvf-program/audit/reproducibility_audit.tex` (no P counterpart) | — |
+| Fraud detection | `paper_P8_fraud` (no R counterpart) | — |
+
 # Four Per-Pillar Standalone Papers
 
 Split out from the combined benchmark paper (`main.tex`) into four independently

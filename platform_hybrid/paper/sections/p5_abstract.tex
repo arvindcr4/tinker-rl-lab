@@ -21,11 +21,12 @@ telemetry. Third, a 12-cell head-to-head of four labeled algorithms on a single
 fixed stack landed within a $0.034$ band of one another (mean last-10 reward
 $0.710$--$0.744$), a spread comparable to seed-level variation, suggesting
 that label-only comparisons can hide stack-level variation. We therefore
-propose a seven-item \emph{minimum reportable
+propose an eight-item \emph{minimum reportable
 stack}---loss form, reference-policy/KL handling, sampler/backend/precision
 \textbf{(including base-checkpoint identity: revision/hash)}, per-step ZVF/GU
-trajectory, group-size schedule, disjoint held-out split, and
-decontamination plus a parser-robustness probe---each item earning its place via a
+trajectory, group-size schedule, disjoint held-out split,
+decontamination plus a parser-robustness probe, and held-out pass@$k$
+curves alongside pass@1---each item earning its place via a
 documented ranking-relevant lever. We call out base-checkpoint identity explicitly
 because our backend audit showed an \emph{undisclosed} checkpoint swap is itself a
 ranking-relevant lever: the ``stack'' effect is only interpretable once the base

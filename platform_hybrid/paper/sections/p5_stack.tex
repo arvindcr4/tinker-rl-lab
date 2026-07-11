@@ -1,5 +1,7 @@
-% Pillar-5 (MIN-REPORT-RL) central standard: the 7-item minimum reportable stack
-\section{The Seven-Item Minimum Reportable Stack}
+% Pillar-5 (MIN-REPORT-RL) central standard: the 8-item minimum reportable stack
+% (items 1-7 original; item 8 (pass@k) merged from the ZVF-program position
+%  draft, 2026-07-11 canonicalization)
+\section{The Eight-Item Minimum Reportable Stack}
 \label{sec:p5-stack}
 A reporting standard survives only if it is short, checkable, and every item is
 load-bearing. We therefore admit an item to the minimum reportable stack only
@@ -8,11 +10,11 @@ with the rest held fixed, moved or flipped a reported outcome or its
 telemetry. \tableref{tab:p5-minreport} is the standard; the subsections justify
 each row. Items 1--3 specify what objective was optimized and on what
 substrate; items 4--5 specify the signal geometry of group-relative training;
-items 6--7 specify what the headline number can legitimately claim.
+items 6--8 specify what the headline number can legitimately claim.
 
 \begin{table}[t]
 \centering
-\caption{The seven-item minimum reportable stack. Each item earns its place
+\caption{The eight-item minimum reportable stack. Each item earns its place
 via a documented lever---evidence that the item alone can move or flip a
 reported result. Provenance strata as defined in \secref{sec:p5-results}.}
 \label{tab:p5-minreport}
@@ -51,6 +53,11 @@ reported result. Provenance strata as defined in \secref{sec:p5-results}.}
     Benchmark contamination shifts headline scores \citep{zhang2024gsm1k,
     riddell2024contamination}; micro-jitter $\epsilon \sim U(0,10^{-4})$
     collapses batch ZVF $0.158 \to 0.000$ \\
+8 & Pass@$k$ curves & Held-out pass@$k$ at $k \in \{1, 8, 32\}$ (or stated
+    subset), with sampling temperature and completion budget &
+    Matched base-vs-post-RL panel: pass@1 deltas scatter $-0.5$ to $+1.9$
+    points (the $G{=}2$ arm reads as a regression) while the pass@32
+    frontier improves $+1.5$ to $+2.5$ points in all four arms \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -190,9 +197,33 @@ whose reported value is a stack property. The probe we ask for is one line:
 perturb rewards below the verifier's resolution and report which telemetry
 survives.
 
-\subsection{Live-Corpus Coupling: How the 7-Item MIN-REPORT Fingerprint Relates to Measured Telemetry}
+\subsection{Item 8: Pass@$k$ Curves Alongside Pass@1}
+\label{sec:p5-item8}
+Pass@1 conflates two different improvements: sharpening the output
+distribution over solutions the base model could already reach, and
+expanding the set of reachable solutions. Roughly two-thirds of
+RL-for-reasoning papers report only pass@1, while studies that report
+pass@$k$ frontiers repeatedly find base models matching or overtaking
+their RL-tuned counterparts at large $k$ --- i.e., the ``gain'' was
+distribution sharpening. Because group-relative training acts directly on
+the sampling distribution, this is the \emph{expected} failure mode for
+the GRPO family, not an exotic one. The documented lever: on a matched
+base-vs-post-RL panel (four adapters at $G\in\{2,4,16,32\}$, one stack,
+same problems), pass@1 deltas scatter from $-0.5$ to $+1.9$ points ---
+under pass@1-only reporting the $G{=}2$ arm would be called a regression
+--- while the pass@32 frontier tells the opposite, consistent story: all
+four arms improve by $+1.5$ to $+2.5$ points. Neither reading reaches
+significance at a single training seed, which is itself the point:
+without pass@$k$ curves and stated noise bands, the panel supports any
+narrative a reader prefers. \emph{Report:} held-out pass@$k$ at
+$k \in \{1, 8, 32\}$ (or a stated subset with justification), with the
+sampling temperature and completion budget used for the estimate.
+
+\subsection{Live-Corpus Coupling: How the MIN-REPORT Fingerprint Relates to Measured Telemetry}
 \label{sec:p5-live-coupling}
-The seven items above are the proposed MIN-REPORT standard; the question a
+The first seven items above form the manifest fingerprint used in this
+coupling analysis (item 8 is an evaluation-report requirement rather than
+a manifest field, and postdates the corpus below); the question a
 reviewer will ask is whether the resulting manifest \emph{actually predicts}
 the measured telemetry on a live corpus. We test this on the
 98-cell mega-campaign manifest corpus

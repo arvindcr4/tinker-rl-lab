@@ -227,6 +227,22 @@ necessary length-bias mitigation on these task scales; we
 \emph{do} recommend measuring the same per-step Spearman on any
 $200{+}$ step run before adopting it.
 
+\paragraph{Scale extension: an uncapped Qwen3-8B panel.}
+A six-arm panel run after the analysis above extends the scale axis:
+Qwen3-8B (LoRA rank~4) on GSM8K, $30$ steps, $G{=}8$, batch~4, three
+seeds per algorithm, with the completion cap raised $5\times$ to
+$1{,}024$ tokens. The picture is unchanged: mean completion length
+\emph{declines} 6--12\% in all six arms (GRPO $1004{\to}905$,
+$981{\to}944$, $996{\to}900$; Dr.~GRPO $999{\to}931$, $972{\to}902$,
+$1000{\to}878$ tokens), and late-run ZVF shows no separation between the
+two losses (Dr.~GRPO $0.45/0.70/0.72$ vs.\ GRPO $0.47/0.47/0.55$).
+Step-0 completions sit near the raised cap ($\approx 98\%$), so upward
+headroom is still limited; but the trajectories move \emph{away} from
+the cap rather than pressing against it, so the compression finding is
+not a censoring artifact. The horizon caveat stands: $30$ steps does not
+test the $200{+}$-step regime in which \cite{tong2025drgrpo} observe the
+trap.
+
 \paragraph{Limitations.}
 (1)~$n{=}5$ and $n{=}3$ seeds are too few to put tight confidence
 intervals on the difference between the two algorithms; we report

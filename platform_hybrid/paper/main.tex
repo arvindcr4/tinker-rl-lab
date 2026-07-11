@@ -1475,6 +1475,19 @@ operational intervention threshold (the previously stated trigger is
 withdrawn). Related methods act on the same all-equal-group
 event~\cite{zhang2026greso}.
 
+A controlled matched-budget panel gives the diagnostic a training-side
+test at both ends of the accuracy range. At a fixed budget of 2{,}560
+rollouts per arm (Qwen3-8B, LoRA rank~4, GSM8K, batch~8, two seeds per
+arm), $G{=}2\times160$ steps and $G{=}16\times20$ steps reach comparable
+final train reward, but every $G{=}2$ arm ends in sustained
+$\mathrm{ZVF}\approx0.75$--$1.0$ at train reward near 1.0 ---
+all-\emph{correct} groups, the high-accuracy zero-variance wall implied
+by $\mathrm{ZVF}(p,G)=p^G+(1-p)^G$ as $p\to1$ --- while the $G{=}16$ arms
+hold $\mathrm{ZVF}$ at $0$--$0.25$ throughout. Small $G$ converts the
+budget into more optimizer steps early and then exhausts its own signal
+in the endgame; the reading of sustained high ZVF as signal degeneracy
+applies whether the wall is all-incorrect or all-correct.
+
 \begin{figure}[htbp]
 \centering
 \IfFileExists{figures/v2/zvf_heatmap.pdf}{%

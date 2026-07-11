@@ -710,9 +710,9 @@ otherwise). Since prevailing practice uses $G\in[8,16]$, this is a
 falsifiable prediction that current group sizes are several-fold
 inefficient per rollout. A first training-side corroboration: a $G{=}2$
 adapter matched a $G{=}16$ adapter's held-out pass@32 improvement at
-$8\times$ fewer rollouts per step (single seed; see the companion
-experiments log). Experiment E-T3b (matched-budget training at
-$G^\star\pm\delta$) remains the decisive test.
+$8\times$ fewer rollouts per step (single seed; extended to a two-seed
+matched-budget panel in E-R2b below). Experiment E-T3b (matched-budget
+training at $G^\star\pm\delta$) remains the decisive test.
 
 \paragraph{E-B: controller pilot (offline).} Treating stratum selection as
 a Thompson-sampling bandit with reward = ``group is informative'' recovers
@@ -723,9 +723,46 @@ same axis, exactly as $J(G,p)$ predicts. Caveat: frozen-pool simulation;
 the training-time pilot must confirm under the distribution shift induced
 by learning itself.
 
+\paragraph{E-R2b: matched-budget training at $G{=}2$ vs.\ $G{=}16$.} Four
+LoRA (rank~4) training runs on Qwen3-8B/GSM8K at a matched budget of
+2{,}560 rollouts per arm --- $G{=}2\times160$ steps vs.\ $G{=}16\times20$
+steps, batch 8, 512-token completions, seeds $\{123,456\}$ --- extend the
+single-seed corroboration above. Both group sizes reach comparable final
+train reward, consistent with T3's per-rollout efficiency claim. The
+instructive effect is the \emph{endgame}: every $G{=}2$ arm finishes in
+sustained $\ZVF\approx0.75$--$1.0$ with train reward near 1.0 --- the
+all-\emph{correct} zero-variance wall, the mirror image of T2's
+all-incorrect wall --- while the $G{=}16$ arms hold $\ZVF$ at $0$--$0.25$
+throughout. Small $G$ buys more optimizer steps per rollout early, then
+exhausts its own gradient signal as $\hat p\to 1$; group-size policy is
+therefore a \emph{schedule} question, exactly the regime the controller of
+Section~\ref{sec:controller} targets. Artifacts:
+\texttt{tinker-runs/results/er2b\_*.json}.
+
+\paragraph{E-P4: advantage normalization and the length-bias premise.}
+An uncapped (1{,}024-token) six-arm panel --- GRPO vs.\ Dr.GRPO's
+$/\sigma$-free advantage \cite{TODO-liu-drgrpo}, three seeds each, 30
+steps, $G{=}8$, batch 4, Qwen3-8B/GSM8K --- tests the premise that
+std-normalized advantages inflate completion length. Neither loss
+inflates length: mean completion length \emph{declines} 6--12\% over
+training in all six arms (GRPO $1004{\to}905$, $981{\to}944$,
+$996{\to}900$; Dr.GRPO $999{\to}931$, $972{\to}902$, $1000{\to}878$
+tokens). Nor does the $/\sigma$ removal show a ZVF signature: late-run
+ZVF is 0.45/0.70/0.72 (Dr.GRPO) vs.\ 0.47/0.47/0.55 (GRPO). At this
+scale the length-bias motivation for the normalization change has no
+observable footprint on either axis (Tier~C, $n{=}3$ seeds per loss).
+Provenance: an earlier version of this panel was invalidated by an
+unwired loss flag --- both ``arms'' had trained vanilla GRPO --- and was
+caught only by reading the runner, not from any output-level signal; the
+invalid artifacts are preserved under explicit
+\texttt{.invalid\_actually\_grpo.json} names and the panel was rerun
+(2026-07-11). The companion survival-audit paper turns this class of
+failure into protocol.
+
 \paragraph{Threats to validity.} Single base model and task family
 (Qwen3-8B, GSM8K); binary rewards only; $\hat p$ plug-in bias at $R{=}32$
-rollouts per prompt; and all training-side corroborations are single-seed.
+rollouts per prompt; and training-side corroborations use two seeds per
+arm (E-R2b) or three per loss (E-P4).
 None of the theorems' proof gaps is discharged by these measurements.
 
 %==============================================================================
@@ -788,6 +825,10 @@ illustrative algebraic constants or drawn from the checked-in
 \bibitem[TODO-razin]{TODO-razin}
   \textbf{[TODO]} Razin et al., mixed-group probability. \emph{Locate; needed
   for the $1-h_K(p)$ identity.}
+\bibitem[TODO-liu-drgrpo]{TODO-liu-drgrpo}
+  Liu, Z., et al. \emph{Understanding R1-Zero-Like Training: A Critical
+  Perspective}. arXiv:2503.20783, 2025. (Dr.GRPO: removes the per-group
+  $/\sigma$ advantage normalization; verify final venue before submission.)
 \bibitem[TODO-zvf-pillar1]{TODO-zvf-pillar1}
   \textbf{[TODO]} ZVF Program, Pillar~1 (this work's companion). \emph{Internal
   reference to the mechanistic-diagnostic paper.}

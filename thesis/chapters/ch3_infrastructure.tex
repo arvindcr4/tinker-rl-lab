@@ -1,0 +1,55 @@
+% Provenance: main.tex / acm_main.tex / main_dnb.tex (benchmark family),
+% main_workshop.tex compact setup, PROGRESS.md, ARTIFACT.md.
+\chapter{Experimental Infrastructure}
+\label{ch:infra}
+
+\section{The bench}
+All training-side experiments run through a consolidated harness
+(\emph{RL-Finetuning Bench}) spanning several stacks: a managed training API
+(Tinker; LoRA rank 4, closed loss kernel) used for the group-relative training
+runs; vLLM-based evaluation on Modal, Lightning, and Colab GPU backends for
+pass@$k$ panels; and cross-library logged runs (seven RL libraries) that feed
+the observational \ZVF{} corpus of Chapter~4. The bench ships as a versioned
+artifact --- code, configuration schema, run manifests, and validation
+scripts --- and is deliberately \emph{not} claimed as an independent archival
+contribution (consolidation decision, Chapter~9).
+
+\section{Tasks and rewards}
+The primary task family is GSM8K with a binary boxed-answer verifier; MBPP and
+MATH-500 panels provide transfer and difficulty extension for evaluation.
+The reward parser scores the \emph{last} boxed value with a trailing-number
+fallback (parser v2; the v1 parser accepted any boxed match and its
+false-positive risk is documented in Chapter~9). Reward-parser behaviour is a
+stack lever: adding micro-jitter $\epsilon\sim U(0,10^{-4})$ below the
+verifier's resolution collapses batch \ZVF{} from $0.158$ to $0.000$, while a
+magnitude-aware alternative moves by $3\times10^{-7}$ --- one line of probe
+that Chapter~9's standard therefore requires.
+
+\section{Baseline capability measurements}
+Qwen3-8B base on GSM8K test (200 problems, $n{=}32$ completions each,
+$T{=}1.0$, unbiased estimator, problem-clustered $95\%$ bootstrap intervals):
+pass@1 $30.4\%$ $[27.5,33.1]$, pass@8 $79.7\%$ $[75.3,83.9]$, pass@32 $91.0\%$
+$[86.5,95.0]$; 18/200 problems unsolved at $k{=}32$, none saturated. The
+$91\%$ ceiling leaves $\sim$9 points of $k{=}32$ headroom, so GSM8K alone
+cannot demonstrate capability expansion for this model --- a scope constraint
+respected throughout. On the training split (512-prompt pool, 32 rollouts per
+prompt): pass@1 $30.30\%$ $[27.87, 32.81]$, zero-variance prompts $10.86\%$
+$[7.43,14.29]$ (all of them all-incorrect at the base checkpoint), active
+advantage fraction $89.14\%$.
+
+\section{Run hygiene}
+Every result JSON carries its configuration, seeds, and status; partial or
+truncated runs are stamped as such rather than silently promoted. All runs
+mirror to Weights \& Biases (live logging plus an idempotent backfill), and
+training runs checkpoint full state (weights + optimiser) every few steps with
+a \texttt{--resume} path verified live by a kill-and-resume test. Generation
+randomness is seeded per problem (evaluation) and per step-and-prompt
+(training) as of 2026-07-11; earlier runs controlled only prompt selection,
+a limitation inherited by pre-fix artifacts and noted where relevant.
+
+\section{Compute envelope}
+Training experiments are bounded: typically 20--160 optimiser steps, group
+sizes 2--32, batch 4--8, 512--1{,}024-token completions, on one 8B model at
+LoRA rank 4. Two billing interruptions (Tinker credit exhaustion) occurred
+mid-programme; both are visible in the artifact trail, and the resume
+machinery of this chapter was built in response.

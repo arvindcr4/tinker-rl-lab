@@ -1,0 +1,65 @@
+% Provenance: paper_P3_group_size (contrast density, Wu pairing, bridge-to-DPO
+% remnant), paper_P7_zvf_controller (controller, design rules), E-R2b artifacts
+% (er2b_*.json), group_size.tex + group_size_reconcile.
+\chapter{Group Size as a Schedule}
+\label{ch:groupsize}
+
+\section{Static sweeps are inconclusive}
+A single-seed sweep over $G\in\{2,4,8,16,32\}$ on Qwen3-8B/GSM8K is
+non-monotone in fixed-step last-10 reward ($G{=}4{:}0.52$, $G{=}32{:}0.44$,
+$G{=}16{:}0.38$, $G{=}2{:}0.38$, $G{=}8{:}0.34$), and a token-budget-normalised
+reanalysis shifts the apparent optimum rightward with total tokens (toward
+$G\approx32$ at $T\ge16$M tokens). Neither view supports a universal winner;
+the honest summary is that fixed-$G$ comparisons are confounded by what the
+budget is held constant \emph{in}.
+
+\section{The matched-budget experiment (Claim 2)}
+The decisive design holds the \emph{rollout budget} fixed at 2{,}560 rollouts
+per arm: $G{=}2\times160$ optimiser steps versus $G{=}16\times20$ steps
+(batch 8, 512-token completions, LoRA rank 4, seeds 123 and 456). Both group
+sizes reach comparable final train reward. The difference is the endgame:
+\begin{center}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+ & $G{=}2\times160$ & $G{=}16\times20$ \\
+\midrule
+final train reward & $\approx 0.9$--$1.0$ & comparable \\
+late-run \ZVF{} & $0.75$--$1.0$ (all-correct wall) & $0.00$--$0.25$ \\
+late-run gradient signal & effectively zero & sustained \\
+\bottomrule
+\end{tabular}
+\end{center}
+Small $G$ converts the budget into more optimiser steps early --- consistent
+with the per-rollout accounting of Chapter~5 --- and then exhausts its own
+signal as accuracy rises: the $p\to1$ wall of $h_G(p)$. Large $G$ pays for
+contrast it does not need early and retains signal late. \textbf{Group size
+controls which end of training starves; it is a schedule variable.}
+
+\section{Relation to the contrastive reading of GRPO}
+The $G{=}2$ versus $G{=}16$ pairing is exactly the pairing behind the
+``GRPO is secretly contrastive/DPO-like'' equivalence claims. Our direct test
+of the generalised claim ($G{=}4\sim G{=}32$) shows retention of the large-$G$
+arm's accuracy falling from $97.6\%$ at $T{=}1$M tokens to $72.7\%$ at
+$T{=}64$M: the equivalence holds only in the under-trained regime. The
+matched-budget panel adds the trajectory view: contrastive equivalence
+survives on final reward but not on signal availability. The fuller
+bridge-to-DPO treatment from the group-size working paper remains
+thesis-external future work.
+
+\section{Controller design (evidence-gapped, stated as such)}
+A ZVF-triggered group-size controller follows from Chapters~4--5: measure
+$\ZVF_t$ with its Wilson interval (T1); when the reliability budget
+$N(\underline{\ZVF}_t)$ exceeds the step's remaining rollout budget, the step
+fails to produce any informative group with probability $>\delta$ --- escalate
+$G$ rather than gamble the budget (T2). Design rules from the controller
+working paper carry over: gate on magnitude-aware statistics, escalate
+multiplicatively in small steps, trigger on spikes rather than levels, never
+compare controllers across stacks, and treat bought signal ($\ZVF{=}0$ via
+dynamic sampling at ${\sim}45\%$ extra rollouts) as a purchase to be priced.
+An offline bandit pilot recovers $97\%$ of a static oracle's informative
+groups per 1{,}000 rollouts and beats uniform allocation by $28\%$.
+\textbf{No efficacy claim is made} (non-claim 3): the decisive test --- a
+pre-registered, compute-matched comparison against static $G{=}16$ and a
+reward-only schedule, at $\ge3$ seeds on held-out metrics --- is future work,
+and Chapter~5's T3 result removes any pretence that the controller could
+derive a data-dependent target $G$ from the current objective.

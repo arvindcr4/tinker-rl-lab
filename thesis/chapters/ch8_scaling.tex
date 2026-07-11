@@ -1,0 +1,41 @@
+% Provenance: paper_P1_scaling (demoted from "law" to observations),
+% MATH-500/MBPP panels, frontier synthesis sections, pass@k protocol.
+\chapter{Scaling and Transfer Observations}
+\label{ch:scaling}
+
+\section{Scope discipline}
+The programme's cross-library corpus (70+ logged runs, seven libraries, five
+model families, 0.6B--671B) supports \emph{observations}, not laws: most cells
+are single-seed, backends differ, and the term ``scaling law'' is deliberately
+avoided (external review, Chapter~9). The full scaling-law treatment of the
+corresponding working paper is demoted to this observational chapter.
+
+\section{What the corpus shows}
+Model scale does not uniformly reduce \ZVF{} ($r\approx-0.26$ across logged
+runs), and after accounting for task type, model family alone does not explain
+performance variance (one-way ANOVA $F(4,10){=}0.949$, $p{=}0.476$). The
+practical reading: signal starvation is a property of the (task difficulty
+$\times$ group size $\times$ training phase) geometry, not something scale
+buys you out of.
+
+\section{Transfer and difficulty extension}
+Post-RL adapters trained on GSM8K show \emph{zero forgetting and mild positive
+transfer} on MBPP (pass@32, all adapters within noise of or above base across
+$G\in\{2,4,16,32\}$). On the matched base-versus-post-RL pass@$k$ panel,
+pass@1 deltas scatter from $-0.5$ to $+1.9$ points --- under pass@1-only
+reporting the $G{=}2$ arm would read as a regression --- while the pass@32
+frontier improves $+1.5$ to $+2.5$ points in all four arms; none of this
+reaches significance at a single training seed, which is exactly why pass@$k$
+curves with stated noise bands are a reporting-standard item (Chapter~9).
+On MATH-500, the harder-task extension, the base-model panel is complete and
+the post-RL panels are partial at the time of writing; the partial result is
+that \textbf{GSM8K-trained gains do not replicate on hard math} --- the
+frontier shift observed on GSM8K-family tasks does not carry, reinforcing the
+distribution-sharpening (rather than capability-expansion) interpretation and
+the thesis's non-claim~4.
+
+\section{Takeaway}
+Scaling observations here serve one purpose: bounding the claims. The
+capability headroom analysis (pass@32 $=91\%$ on GSM8K), the non-transfer to
+MATH-500, and the single-seed density of the cross-scale corpus jointly
+justify why Claims~1--2 are stated at the stack level and nowhere above it.

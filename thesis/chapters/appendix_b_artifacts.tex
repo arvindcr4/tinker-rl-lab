@@ -1,0 +1,51 @@
+\chapter{Claim-to-Artifact Map}
+\label{app:artifacts}
+
+Every quantitative claim in this thesis traces to a version-controlled
+artifact in \texttt{arvindcr4/tinker-rl-lab} (result JSONs; W\&B mirrors in
+the \texttt{zvf-training}, \texttt{zvf-experiments-next}, and
+\texttt{modal-open-stack} projects).
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{6.2cm}p{7.2cm}@{}}
+\toprule
+Claim / number & Primary artifact(s)\\
+\midrule
+GSM8K base pass@\{1,8,32\} $=30.4/79.7/91.0\%$ &
+\texttt{experiments-next/results/passk\_qwen3-8b\_base\_test\_p200\_n32\_s42.json}\\
+Train-pool rollout quality (\ZVF{} $10.86\%$ etc.) &
+\texttt{quality\_pool\_qwen3-8b\_train\_n512\_r32\_s42.json}\\
+T1 coverage (Wilson $0.95$--$0.98$; curriculum collapse) &
+\texttt{t1\_ci\_coverage\_*.json}, \texttt{analyze\_t1\_ci.py}\\
+T2 quantile fit (ratio $1.00$, six strata; 160-rollout budget) &
+\texttt{t2\_floor\_qwen3-8b\_train\_n512\_r32\_s42\_G8.json} (corrected check)\\
+T3 universality ($J(2){=}J(3)$) &
+\texttt{zvf\_theory.tex} eq.~(J23); \texttt{analyze\_t3\_gstar.py}\\
+Claim 2 matched-budget panel (E-R2b) &
+\texttt{tinker-runs/results/er2b\_\{g2,g16\}\_s\{123,456\}.json}\\
+Loss-form panel (E-P4, corrected; 6 arms) &
+\texttt{tinker-runs/results/p4uncap\_\{grpo,drgrpo\}\_s\{42,123,456\}.json}\\
+Invalid first panel (preserved) &
+\texttt{p4uncap\_drgrpo\_*.invalid\_actually\_grpo.json}\\
+MBPP transfer; base-vs-post-RL pass@$k$ frontier &
+\texttt{passk\_lightning\_*.json}, \texttt{passk\_colab\_*.json}\\
+MATH-500 non-replication (partial) &
+\texttt{passk\_modal\_*math500*.json}\\
+Backend $17\times$ span; ``DAPO'' \ZVF{} $0.00$ vs $0.55$--$0.58$ &
+cross-stack audit artifacts (registry seed entries)\\
+Parser micro-jitter probe ($0.158\to0.000$) &
+convergent-repository experiment records (P5 evidence)\\
+Loss-flag incident timeline &
+commits \texttt{4847764}, \texttt{1959eff}, \texttt{212ff0e}; fleet logs\\
+Audit-round fixes (2026-07-11) &
+commits \texttt{5486ae2}, \texttt{acc08eb}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Reproduction.} \texttt{REPRODUCE.md} at the repository root
+documents environment setup; the experiments-next suite is offline-resampled
+from committed pools wherever possible, so the T1/T2/T3 analyses re-run
+without API credits. Training reruns require Tinker credits and are
+checkpointed/resumable (Chapter~3).

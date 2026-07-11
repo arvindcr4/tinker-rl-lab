@@ -1,0 +1,62 @@
+% Provenance: p5_related.tex, min_report_rl.tex related work, grpo_registry.tex
+% variant catalog, p2/p7 intros.
+\chapter{Background and Related Work}
+\label{ch:background}
+
+\section{Group-relative policy optimisation}
+GRPO (Shao et al., DeepSeekMath) replaces the learned value baseline of PPO
+with a group-relative baseline: for each prompt, $G$ completions are sampled
+and each completion's advantage is its reward centred (and, in the original
+formulation, standardised) against the group. The family has proliferated:
+DAPO adds asymmetric clipping and dynamic sampling; Dr.GRPO removes the length
+and standard-deviation normalisations to correct a length bias; GSPO moves the
+importance ratio from token to sequence level; GRESO and related methods skip
+or resample degenerate groups; MAD-GRPO adds diversity terms. A recurring
+finding of this programme (Chapter~9) is that these labels underdetermine the
+executed update rule: the same name is attached to materially different loss
+forms, reference-policy treatments, and sampling stacks.
+
+\section{The degenerate-group event}
+The all-equal-reward group is not a new observation --- dynamic-sampling
+methods exist precisely to avoid spending compute on it, and recent analyses
+relate mixed-group probability to $1-p^G-(1-p)^G$ under per-prompt success
+rate $p$. What this programme adds is treating the \emph{fraction} of such
+groups as a measured, calibrated, first-class training signal with an explicit
+estimation theory (Chapter~5), rather than as an implementation detail inside
+a sampling heuristic, and characterising its \emph{two-sided} nature: the
+all-incorrect wall at the hard end and the all-correct wall at the mastered
+end (Chapter~6).
+
+\section{Evaluation of RL post-training}
+Pass@$k$ estimation follows the standard unbiased estimator over $n$
+completions per problem with problem-clustered bootstrap intervals. A survey
+synthesis motivating our reporting standard finds roughly two-thirds of
+RL-for-reasoning papers report only pass@1, while studies reporting pass@$k$
+frontiers repeatedly find base models matching or overtaking their RL-tuned
+counterparts at large $k$ --- the observed ``gain'' being distribution
+sharpening rather than capability expansion. Our own base measurements
+(Chapter~3) put Qwen3-8B at pass@1 $30.4\%$ but pass@32 $91.0\%$ on GSM8K,
+leaving little headroom for capability claims on that task and motivating the
+harder-task panels of Chapter~8.
+
+\section{Reproducibility in deep RL and RL-for-LLMs}
+The deep-RL reproducibility literature (Henderson et al.; Dodge et al.)
+established that seeds, environments, and code-level choices can dominate
+algorithmic deltas. RL post-training of LLMs inherits all of that and adds new
+levers: sampling backend and precision, base-checkpoint identity, token
+masking, KL placement, and reward-parser behaviour. Chapter~9 documents
+measured instances --- a backend swap (bundling an undisclosed checkpoint
+change) moving final reward across a $17\times$ span, and one ``DAPO'' label
+yielding mean \ZVF{} $0.00$ on an open trainer with true dynamic sampling but
+$0.58$ on a closed stack running an asymmetric-clip surrogate --- and proposes
+the eight-item minimum-reportable-stack standard with registry tooling.
+
+\section{Positioning}
+Relative to dynamic-sampling methods, this thesis is orthogonal: it does not
+propose a new update rule but a measurement discipline that any rule can be
+instrumented with. Relative to benchmark papers, the released harness
+(Chapter~3) is infrastructure in service of the two claims, not an
+independent leaderboard contribution. Relative to reporting standards in NLP,
+the contribution is specificity: every item in the standard is justified by a
+documented lever that moved or flipped a result in this programme's own
+corpus.

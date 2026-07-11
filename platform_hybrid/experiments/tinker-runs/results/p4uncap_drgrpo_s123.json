@@ -1,6 +1,6 @@
 {
   "tag": "p4uncap_drgrpo_s123",
-  "status": "running",
+  "status": "completed",
   "model": "Qwen/Qwen3-8B",
   "model_short": "qwen3-8b",
   "task": "gsm8k",
@@ -39,7 +39,13 @@
     0.71875,
     0.46875,
     0.8125,
-    0.625
+    0.625,
+    0.5,
+    0.40625,
+    0.6875,
+    0.84375,
+    0.78125,
+    1.0
   ],
   "step_log": [
     {
@@ -233,8 +239,64 @@
       "zvf": 0.0,
       "gu": 1.0,
       "mean_comp_len": 1011.90625
+    },
+    {
+      "step": 25,
+      "reward": 0.5,
+      "loss": -0.7017068862915039,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 1019.59375
+    },
+    {
+      "step": 26,
+      "reward": 0.40625,
+      "loss": -5.5943450927734375,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1015.34375
+    },
+    {
+      "step": 27,
+      "reward": 0.6875,
+      "loss": 2.4990501403808594,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 927.15625
+    },
+    {
+      "step": 28,
+      "reward": 0.84375,
+      "loss": -4.242149353027344,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 980.125
+    },
+    {
+      "step": 29,
+      "reward": 0.78125,
+      "loss": -0.7098751068115234,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 865.65625
+    },
+    {
+      "step": 30,
+      "reward": 1.0,
+      "loss": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0,
+      "mean_comp_len": 875.0
     }
   ],
-  "last_updated_at": "2026-07-11T05:06:31.627200+00:00",
-  "latest_sampler": "tinker://ff547018-5a61-5ff9-9c87-96dca48dc2df:train:0/sampler_weights/s20"
+  "last_updated_at": "2026-07-11T05:12:38.145082+00:00",
+  "latest_sampler": "tinker://ff547018-5a61-5ff9-9c87-96dca48dc2df:train:0/sampler_weights/s30",
+  "checkpoint": "tinker://ff547018-5a61-5ff9-9c87-96dca48dc2df:train:0/sampler_weights/final",
+  "first5_avg": 0.63125,
+  "last10_avg": 0.684375,
+  "peak_reward": 1.0,
+  "zero_reward_pct": 0.0,
+  "zero_loss_pct": 3.3333333333333335,
+  "wall_clock_sec": 1990.7089920043945,
+  "completed_at": "2026-07-11T05:12:39.467245+00:00"
 }

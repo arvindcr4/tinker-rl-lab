@@ -16,9 +16,11 @@ Scope is stated honestly everywhere: Qwen3-8B, GSM8K, Tinker managed API
 ## Evidence in hand (all runs logged to W&B `zvf-training`, artifacts in-repo)
 
 1. **Matched-budget group-size panel (new this week).** 2,560 rollouts/arm,
-   two seeds each: G=2×160 steps vs G=16×20 steps reach comparable final train
-   reward, but every G=2 arm ends at ZVF ≈ 0.75–1.0 with reward ≈ 1.0 — the
-   *all-correct* zero-variance wall — while G=16 holds ZVF ≤ 0.25 throughout.
+   two seeds each: the G=2×160-step arms master the sampled pool (train
+   reward ≈ 0.9–1.0) and end at ZVF ≈ 0.75–1.0 — the *all-correct*
+   zero-variance wall, their final steps spent on zero-gradient groups —
+   while the G=16×20-step arms end mid-learning (≈ 0.3–0.5) with
+   ZVF ≤ 0.25 and signal intact.
    Reward alone reads "success"; ZVF, read together with reward, shows the
    updates have stopped carrying signal (ZVF alone aliases mastery with
    incapacity — the reward coordinate disambiguates). This is the clearest

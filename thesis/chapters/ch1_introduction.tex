@@ -74,11 +74,13 @@ the $(1{-}\delta)$-quantile of rollouts until the next informative group ---
 that matched observed quantiles at ratio 1.00 across six difficulty strata.
 
 \paragraph{Claim 2 (supported; Chapter 6).} At a matched budget of 2{,}560
-rollouts per arm on Qwen3-8B/GSM8K (LoRA rank 4), $G{=}2\times160$ steps and
-$G{=}16\times20$ steps reach comparable final train reward, but every $G{=}2$
-arm terminates inside the all-correct zero-variance wall
-($\ZVF\approx0.75$--$1.0$ at reward $\approx1.0$) while $G{=}16$ arms hold
-$\ZVF\le0.25$ throughout (seeds 123/456). Group size controls \emph{which end
+rollouts per arm on Qwen3-8B/GSM8K (LoRA rank 4), the $G{=}2\times160$-step
+arms master the sampled pool (train reward $\approx0.9$--$1.0$) and terminate
+inside the all-correct zero-variance wall ($\ZVF\approx0.75$--$1.0$) ---
+spending their final steps on zero-gradient groups --- while the
+$G{=}16\times20$-step arms end mid-learning (train reward
+$\approx0.3$--$0.5$) with $\ZVF\le0.25$ and signal intact
+(seeds 123/456). Group size controls \emph{which end
 of training starves}; it is a schedule question, not a constant.
 
 \paragraph{Non-claims (explicit).}

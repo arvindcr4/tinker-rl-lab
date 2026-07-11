@@ -39,10 +39,11 @@ with \ZVF{} rising \emph{after} the plateau --- a cheap alarm, not a cause.
 \end{axis}
 \end{tikzpicture}
 \caption{Schematic of the measured matched-budget behaviour (Chapter~6,
-seeds 123/456): both group sizes reach comparable train reward, but the
-$G{=}2$ trajectory's \ZVF{} climbs into the all-correct wall
-($0.75$--$1.0$) while $G{=}16$ stays low ($\le0.25$). Reward alone cannot
-distinguish the two runs at the end; the (reward, \ZVF{}) pair can.
+seeds 123/456): the $G{=}2$ trajectory races to reward $\approx1.0$ and its
+\ZVF{} climbs into the all-correct wall ($0.75$--$1.0$), while $G{=}16$
+ends mid-learning with \ZVF{} low ($\le0.25$). By reward alone the $G{=}2$
+run looks strictly better; the (reward, \ZVF{}) pair reveals its lead
+ended in zero-gradient compute.
 Stylised curves; measured values in Table form in Chapter~6 and artifacts in
 Appendix~B.}
 \label{fig:disagreement}

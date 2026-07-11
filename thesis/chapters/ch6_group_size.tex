@@ -16,19 +16,20 @@ budget is held constant \emph{in}.
 \section{The matched-budget experiment (Claim 2)}
 The decisive design holds the \emph{rollout budget} fixed at 2{,}560 rollouts
 per arm: $G{=}2\times160$ optimiser steps versus $G{=}16\times20$ steps
-(batch 8, 512-token completions, LoRA rank 4, seeds 123 and 456). Both group
-sizes reach comparable final train reward. The difference is the endgame:
+(batch 8, 512-token completions, LoRA rank 4, seeds 123 and 456):
 \begin{center}
 \begin{tabular}{@{}lcc@{}}
 \toprule
  & $G{=}2\times160$ & $G{=}16\times20$ \\
 \midrule
-final train reward & $\approx 0.9$--$1.0$ & comparable \\
+final train reward & $\approx 0.9$--$1.0$ (pool mastered) & $\approx 0.3$--$0.5$ (mid-learning) \\
 late-run \ZVF{} & $0.75$--$1.0$ (all-correct wall) & $0.00$--$0.25$ \\
 late-run gradient signal & effectively zero & sustained \\
 \bottomrule
 \end{tabular}
 \end{center}
+By the reward axis alone the $G{=}2$ arms win outright --- which is exactly
+the trap: their final steps are spent on zero-gradient groups.
 Small $G$ converts the budget into more optimiser steps early --- consistent
 with the per-rollout accounting of Chapter~5 --- and then exhausts its own
 signal as accuracy rises: the $p\to1$ wall of $h_G(p)$. Large $G$ pays for
@@ -41,8 +42,10 @@ The $G{=}2$ versus $G{=}16$ pairing is exactly the pairing behind the
 of the generalised claim ($G{=}4\sim G{=}32$) shows retention of the large-$G$
 arm's accuracy falling from $97.6\%$ at $T{=}1$M tokens to $72.7\%$ at
 $T{=}64$M: the equivalence holds only in the under-trained regime. The
-matched-budget panel adds the trajectory view: contrastive equivalence
-survives on final reward but not on signal availability. The fuller
+matched-budget panel adds the trajectory view: at a fixed rollout budget the
+small-$G$ arm can even \emph{lead} on train reward, but the equivalence
+claims say nothing about signal availability --- and that is where the
+small-$G$ lead dies. The fuller
 bridge-to-DPO treatment from the group-size working paper remains
 thesis-external future work.
 

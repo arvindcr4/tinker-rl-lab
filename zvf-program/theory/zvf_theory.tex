@@ -766,13 +766,14 @@ by learning itself.
 LoRA (rank~4) training runs on Qwen3-8B/GSM8K at a matched budget of
 2{,}560 rollouts per arm --- $G{=}2\times160$ steps vs.\ $G{=}16\times20$
 steps, batch 8, 512-token completions, seeds $\{123,456\}$ --- extend the
-single-seed corroboration above. Both group sizes reach comparable final
-train reward, consistent with T3's per-rollout efficiency claim. The
-instructive effect is the \emph{endgame}: every $G{=}2$ arm finishes in
-sustained $\ZVF\approx0.75$--$1.0$ with train reward near 1.0 --- the
-all-\emph{correct} zero-variance wall, the mirror image of T2's
-all-incorrect wall --- while the $G{=}16$ arms hold $\ZVF$ at $0$--$0.25$
-throughout. Small $G$ buys more optimizer steps per rollout early, then
+single-seed corroboration above. The $G{=}2$ arms convert the budget into
+$8\times$ more optimiser steps and drive train reward to
+$\approx0.9$--$1.0$ on the sampled pool --- small-$G$ per-rollout
+efficiency in action --- before finishing in sustained
+$\ZVF\approx0.75$--$1.0$: the all-\emph{correct} zero-variance wall, the
+mirror image of T2's all-incorrect wall. The $G{=}16$ arms end
+mid-learning (train reward $\approx0.3$--$0.5$ after their 20 steps) with
+$\ZVF$ at $0$--$0.25$ throughout and signal intact. Small $G$ buys more optimizer steps per rollout early, then
 exhausts its own gradient signal as $\hat p\to 1$; group-size policy is
 therefore a \emph{schedule} question, exactly the regime the controller of
 Section~\ref{sec:controller} targets. Artifacts:

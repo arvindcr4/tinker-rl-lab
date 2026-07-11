@@ -234,14 +234,15 @@ A two-seed matched-budget panel on exactly the $G{=}2$ vs.\ $G{=}16$
 pairing (2{,}560 rollouts per arm: $G{=}2\times160$ steps vs.\
 $G{=}16\times20$ steps, Qwen3-8B/GSM8K, LoRA rank~4, batch~8, 512-token
 completions, seeds 123/456) adds the time axis to the static table
-above: both group sizes reach comparable final train reward, but the
-$G{=}2$ arms terminate in a sustained all-correct zero-variance regime
-($\mathrm{ZVF}\approx0.75$--$1.0$ at train reward near 1.0, the $p\to1$
-wall of $\mathrm{ZVF}(p,G)=p^G+(1-p)^G$) while the $G{=}16$ arms hold
-$\mathrm{ZVF}\le0.25$ throughout. The contrastive-equivalence reading of
-$G{=}2$ survives on final reward but not on signal availability: small
-$G$ spends its extra optimizer steps into an endgame where most groups
-carry zero gradient. Artifacts:
+above: the $G{=}2$ arms drive train reward to $\approx0.9$--$1.0$ on the
+sampled pool and terminate in a sustained all-correct zero-variance regime
+($\mathrm{ZVF}\approx0.75$--$1.0$, the $p\to1$
+wall of $\mathrm{ZVF}(p,G)=p^G+(1-p)^G$), while the $G{=}16$ arms end
+mid-learning (train reward $\approx0.3$--$0.5$) with
+$\mathrm{ZVF}\le0.25$ throughout. On this budget the small-$G$ arm wins
+the train-reward race outright --- and that is precisely the trap: it
+spends its final optimizer steps in an endgame where most groups carry
+zero gradient, while the reward curve reads success. Artifacts:
 \texttt{tinker-runs/results/er2b\_*.json}.
 
 \begin{table}[htbp]

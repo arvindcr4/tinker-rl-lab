@@ -69,9 +69,11 @@ Here is the single most important table in the thesis. Same budget — 2,560
 rollouts per arm, two seeds each. Left: G=2 for 160 steps. Right: G=16 for 20
 steps.
 
-Both reach comparable final training reward. But look at the late-run ZVF:
-the G=2 arms end at **0.75 to 1.0** — nearly every group is all-correct,
-contributing zero gradient — while G=16 never exceeds 0.25.
+The G=2 arms finish having *mastered* the training pool — reward near
+one-point-oh — while G=16, with eight times fewer optimiser steps, is still
+mid-learning around 0.3 to 0.5. But look at the late-run ZVF: the G=2 arms
+end at **0.75 to 1.0** — nearly every group is all-correct, contributing
+zero gradient — while G=16 never exceeds 0.25.
 
 If you monitored only reward, the G=2 run looks like your best experiment —
 reward one-point-oh. ZVF tells you the truth: **training ended some time ago;
@@ -130,8 +132,9 @@ The matched-rollout-budget experiment resolves it as a **schedule** question:
 small G converts your budget into more optimiser steps early — consistent
 with the per-rollout theory — and then starves in the endgame; large G keeps
 signal alive to the end. This also qualifies the "GRPO is secretly
-contrastive" equivalence claims: they hold on final reward but *not* on
-signal availability, and they decay as training scale grows.
+contrastive" equivalence claims: at matched budget the small-G arm can even
+lead on train reward, but the equivalence says nothing about signal
+availability — and the claims decay as training scale grows.
 
 The obvious next step is a ZVF-triggered controller. I've designed it —
 measure with the Wilson bound, escalate when the reliability budget exceeds

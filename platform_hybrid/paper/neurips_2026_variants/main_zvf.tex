@@ -271,12 +271,13 @@ to $\mathrm{ZVF}(p,G)$; $G$ does not rescue the pooled cross-task story.
 A two-seed matched-budget panel (E-R2b: 2{,}560 rollouts per arm,
 $G{=}2\times160$ steps vs.\ $G{=}16\times20$ steps, LoRA rank 4, 512-token
 completions, seeds 123/456) sharpens the mechanical coupling into a
-trajectory claim: both group sizes reach comparable final train reward,
-but every $G{=}2$ arm ends in sustained $\mathrm{ZVF}\approx0.75$--$1.0$
-with train reward near 1.0 --- all-\emph{correct} groups, the high-$p$
-zero-variance wall that $\mathrm{ZVF}(p,G)=p^G+(1-p)^G$ predicts as
-$p\to1$ --- while the $G{=}16$ arms hold $\mathrm{ZVF}$ at $0$--$0.25$
-throughout. Small $G$ converts a fixed rollout budget into more optimizer
+trajectory claim: the $G{=}2$ arms (160 steps) drive train reward to
+$\approx0.9$--$1.0$ on the sampled pool and end in sustained
+$\mathrm{ZVF}\approx0.75$--$1.0$ --- all-\emph{correct} groups, the
+high-$p$ zero-variance wall that $\mathrm{ZVF}(p,G)=p^G+(1-p)^G$ predicts
+as $p\to1$ --- while the $G{=}16$ arms (20 steps at the same budget) end
+mid-learning at train reward $\approx0.3$--$0.5$ with $\mathrm{ZVF}$ at
+$0$--$0.25$ throughout. Small $G$ converts a fixed rollout budget into more optimizer
 steps early, then exhausts its own gradient signal in the endgame
 (Tier~C, two seeds per arm).
 

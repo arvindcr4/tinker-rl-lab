@@ -9,6 +9,7 @@ login(token="hf_YOUR_TOKEN_HERE")
 
 import json
 import torch
+import wandb
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
 
@@ -194,6 +195,9 @@ def score_prediction(predicted: dict | None, ground_truth: dict) -> dict:
 # ────────────────────────────────────────────────────────────
 # 6. RUN EVALUATION
 # ────────────────────────────────────────────────────────────
+wandb.init(project="tool-call-eval", name="qwen2.5-0.5b-lora")
+eval_table = wandb.Table(columns=["split", "query", "expected", "raw_output", "parsed", "json_valid", "tool_ok", "args_ok", "full_match"])
+
 print("=" * 65)
 print(f"{'TOOL CALL EVALUATION RESULTS':^65}")
 print("=" * 65)
@@ -224,6 +228,13 @@ for i, ex in enumerate(EVAL_EXAMPLES):
     else:
         unseen_total += 1
         unseen_pass  += scores["full_score"]
+        
+    eval_table.add_data(
+        ex["split"], ex["user"], json.dumps(ex["ground_truth"]),
+        raw_output, json.dumps(parsed) if parsed else "",
+        scores["json_valid"], scores["tool_correct"],
+        scores["args_correct"], scores["full_score"]
+    )
 
 # ────────────────────────────────────────────────────────────
 # 7. SUMMARY
@@ -250,3 +261,21 @@ print(f"  Tool Name   → Does it know WHICH tool to use?")
 print(f"  Arguments   → Does it know HOW to call the tool?")
 print(f"  Full Match  → Both tool + args exactly right")
 print(f"  Out-of-dist → Generalization beyond training examples")
+
+wandb.log({
+    "eval_results_table": eval_table,
+    "metrics/json_valid_pct": 100 * json_pass / total if total else 0,
+    "metrics/tool_correct_pct": 100 * tool_pass / total if total else 0,
+    "metrics/args_correct_pct": 100 * args_pass / total if total else 0,
+    "metrics/full_match_pct": 100 * total_pass / total if total else 0,
+    "metrics/in_dist_pct": 100 * seen_pass / seen_total if seen_total else 0,
+    "metrics/out_of_dist_pct": 100 * unseen_pass / unseen_total if unseen_total else 0,
+})
+
+print("\nPushing adapter and tokenizer to Hugging Face Hub...")
+repo_name = "qwen2.5-0.5b-tool-call-lora"
+model.push_to_hub(repo_name)
+tokenizer.push_to_hub(repo_name)
+print("Push complete.")
+
+wandb.finish()

@@ -153,6 +153,21 @@ w0 = tc.save_weights_for_sampler(name="s0").result()
 sc = tc.create_sampling_client(model_path=w0.path)
 print(f"[{EXP}] Run: {tc.model_id}")
 
+import wandb
+wandb.init(
+    project="tinker-math-grpo",
+    name=f"{EXP}-{tc.model_id}",
+    config={
+        "model": MODEL,
+        "steps": STEPS,
+        "group": GROUP,
+        "lr": LR,
+        "temp": TEMP,
+        "save_every": SAVE_EVERY,
+        "seed": SEED
+    }
+)
+
 step_rewards = []
 for step in range(STEPS):
     batch = random.sample(examples, 2)
@@ -198,6 +213,12 @@ for step in range(STEPS):
     print(
         f"[{EXP}] {step + 1:3d}/{STEPS} | loss={result.metrics.get('loss', 0):.4f} | reward={avg:.3f} | r_var={avg_var:.3f} | zvf={zvf:.2f}"
     )
+    wandb.log({
+        "train/loss": result.metrics.get("loss", 0),
+        "train/reward": avg,
+        "train/r_var": avg_var,
+        "train/zvf": zvf
+    }, step=step + 1)
     if (step + 1) % SAVE_EVERY == 0:
         tc.save_state(name=f"s{step + 1}")
         ckpt = tc.save_weights_for_sampler(name=f"s{step + 1}").result()
@@ -209,6 +230,18 @@ f = tc.save_weights_for_sampler(name="final").result()
 last10 = step_rewards[-10:]
 avg10 = sum(last10) / len(last10) if last10 else 0
 print(f"\n[{EXP}] DONE | last10={avg10:.3f} | run={tc.model_id} | path={f.path}")
+
+print(f"[{EXP}] Pushing final model to HuggingFace Hub...")
+from huggingface_hub import HfApi
+api = HfApi()
+repo_id = os.environ.get("HF_REPO_ID", f"arvindcr4/tinker-{EXP}-{MODEL.split('/')[-1]}-lora")
+api.create_repo(repo_id=repo_id, exist_ok=True, private=True)
+api.upload_folder(
+    folder_path=f.path,
+    repo_id=repo_id,
+    repo_type="model"
+)
+print(f"[{EXP}] Successfully pushed to {repo_id}")
 
 # Fix for Failure to Prove Generalization: Evaluate on held-out test set
 print(f"[{EXP}] Evaluating on {len(test_examples)} held-out test problems...")
@@ -228,3 +261,6 @@ if test_examples:
 
     test_acc = sum(test_rews) / len(test_rews)
     print(f"[{EXP}] Test Accuracy on Held-Out Set: {test_acc:.3f}")
+    wandb.log({"test/accuracy": test_acc})
+
+wandb.finish()

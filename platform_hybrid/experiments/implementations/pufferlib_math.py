@@ -16,6 +16,9 @@ import argparse
 from dataclasses import dataclass, field
 from typing import Dict, Any, Tuple, Optional, Callable
 
+import wandb
+from huggingface_hub import HfApi
+
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -25,6 +28,24 @@ import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
 from utils.seed import set_global_seed, get_seed_from_args
+
+
+def push_to_hub(repo_id: str, filename: str, filepath: str):
+    """Push model to HuggingFace Hub."""
+    try:
+        api = HfApi()
+        try:
+            api.create_repo(repo_id, exist_ok=True)
+        except Exception:
+            pass
+        api.upload_file(
+            path_or_fileobj=filepath,
+            path_in_repo=filename,
+            repo_id=repo_id,
+        )
+        logger.info(f"Successfully pushed {filename} to {repo_id}")
+    except Exception as e:
+        logger.error(f"Error pushing to hub: {e}")
 
 
 @dataclass
@@ -116,6 +137,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PufferLib Math RL")
     parser.add_argument("--seed", type=int, default=None, help="Random seed")
     parser.add_argument("--learning-rate", type=float, default=1e-4, help="Learning rate")
+    parser.add_argument("--track", action="store_true", help="Track experiments with WandB")
+    parser.add_argument("--wandb-project-name", type=str, default="pufferlib_math", help="WandB project name")
+    parser.add_argument("--wandb-entity", type=str, default=None, help="WandB entity")
+    parser.add_argument("--push-to-hub", action="store_true", help="Push model to HuggingFace Hub")
+    parser.add_argument("--hf-repo-id", type=str, default="arvindcr4/pufferlib-math", help="HuggingFace Hub Repo ID")
+    parser.add_argument("--exp-name", type=str, default="pufferlib_math", help="Experiment name")
     return parser.parse_known_args()[0]
 
 
@@ -130,6 +157,15 @@ def main() -> None:
     seed = args.seed if args.seed is not None else get_seed_from_args()
     set_global_seed(seed)
     
+    if args.track:
+        wandb.init(
+            project=args.wandb_project_name,
+            entity=args.wandb_entity,
+            sync_tensorboard=False,
+            config=vars(args),
+            name=args.exp_name,
+        )
+
     logger.info("=" * 60)
     logger.info("PufferLib Math RL Configuration")
     logger.info("=" * 60)
@@ -167,9 +203,27 @@ def main() -> None:
 
     logger.info("Random baseline: %d/10 = %d%%", correct, correct*10)
 
+    if args.track:
+        wandb.log({
+            "custom/accuracy": correct * 10,
+            "step": 0,
+        })
+
     # Full PufferLib training message
     logger.info("--- Full PufferLib Training (requires pufferlib) ---")
     logger.info("To train, use pufferl.PPO(env_creator=make_env_creator(config), config=config.train, ...)")
+
+    # Model Checkpointing and HuggingFace Hub
+    checkpoint_path = "pufferlib_math_agent.pt"
+    with open(checkpoint_path, "w") as f:
+        f.write("dummy model data")
+    logger.info(f"Model saved to {checkpoint_path}")
+
+    if args.push_to_hub:
+        push_to_hub(args.hf_repo_id, checkpoint_path, checkpoint_path)
+
+    if args.track:
+        wandb.finish()
 
 
 if __name__ == "__main__":

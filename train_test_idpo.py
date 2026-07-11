@@ -127,6 +127,9 @@ def prm_reward_fn(completions, prompts=None, **kwargs):
     return rewards
 
 # Trainer Config
+if wandb.run is None:
+    wandb.init(project="tinker-rl-lab", name="idpo-training-run")
+
 trainer_config = OnlineDPOConfig(
     output_dir="./checkpoints",
     num_train_epochs=20,
@@ -142,7 +145,8 @@ trainer_config = OnlineDPOConfig(
     logging_steps=1,
     save_strategy="no" if USE_PEFT and PEFT_METHOD == "bitfit" else "steps",
     save_steps=10,
-    
+    push_to_hub=True,
+    hub_model_id="tinker-idpo-model",
 )
 
 # Trainer
@@ -161,4 +165,8 @@ if USE_PEFT and PEFT_METHOD == "bitfit":
         "./checkpoints/bitfit_adapter.pt",
         base_model_name=MODEL_NAME,
     )
+
+if trainer_config.push_to_hub:
+    trainer.push_to_hub(commit_message="Training complete")
+
 print("Training complete!")

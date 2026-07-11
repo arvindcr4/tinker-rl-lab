@@ -32,7 +32,7 @@ image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install("torch>=2.3.0", "transformers>=4.46.0", "peft>=0.13.0",
                  "numpy>=1.26.0,<2.0.0", "accelerate>=1.0.0", "safetensors>=0.4.0",
-                 "huggingface-hub>=0.26.0")
+                 "huggingface-hub>=0.26.0", "wandb>=0.16.0")
 )
 
 SEEDS = [42, 123, 456, 789, 1024]
@@ -48,7 +48,7 @@ EPS = 1e-6
 CHUNK = 8
 
 
-@app.function(image=image, gpu="A10G", timeout=3600, volumes={RESULTS_DIR: results_vol}, retries=1)
+@app.function(image=image, gpu="A10G", timeout=3600, volumes={RESULTS_DIR: results_vol}, retries=1, secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
 def run_arm(algo: str, seed: int) -> dict:
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
     import random
@@ -63,6 +63,9 @@ def run_arm(algo: str, seed: int) -> dict:
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    import wandb
+    wandb.init(project="tinkerrl-drgrpo-vs-grpo", name=f"{algo}_s{seed}", config={"algo": algo, "seed": seed, "model": MODEL})
 
     tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
     if tok.pad_token is None:
@@ -166,6 +169,7 @@ def run_arm(algo: str, seed: int) -> dict:
 
         step_log.append({"step": step, "mean_reward": float(rewards.mean()),
                          "zvf": zvf, "mean_comp_len": comp_len})
+        wandb.log(step_log[-1])
 
     # held-out greedy eval
     model.eval()
@@ -190,6 +194,19 @@ def run_arm(algo: str, seed: int) -> dict:
         json.dump(res, f, indent=2)
     results_vol.commit()
     print(f"[{algo} seed={seed}] heldout={res['heldout_acc']:.3f} last10={res['last10_avg']:.3f} len={res['mean_comp_len']:.2f}")
+
+    try:
+        if "HF_TOKEN" in os.environ:
+            repo_id = f"arvindcr4/tinkerrl-drgrpo-vs-grpo-{algo}-s{seed}"
+            model.push_to_hub(repo_id, token=os.environ["HF_TOKEN"])
+            tok.push_to_hub(repo_id, token=os.environ["HF_TOKEN"])
+            print(f"Pushed model to HF Hub: {repo_id}")
+        else:
+            print("HF_TOKEN not found in environment, skipping push_to_hub")
+    except Exception as e:
+        print(f"Failed to push to HF Hub: {e}")
+
+    wandb.finish()
     return res
 
 

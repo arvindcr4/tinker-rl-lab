@@ -23,15 +23,25 @@ import json
 import os
 import time
 
+HF_TOKEN = os.environ.get("HF_TOKEN", "")
+WANDB_KEY = os.environ.get("WANDB_API_KEY", "")
+
 app = modal.App("tinkerrl-drgrpo-gsm8k-cot")
 results_vol = modal.Volume.from_name("tinkerrl-results", create_if_missing=True)
 RESULTS_DIR = "/results"
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
-    .pip_install("torch>=2.3.0", "transformers>=4.46.0", "peft>=0.13.0",
-                 "datasets>=3.0.0", "numpy>=1.26.0,<2.0.0", "accelerate>=1.0.0",
-                 "safetensors>=0.4.0", "huggingface-hub>=0.26.0")
+    .pip_install(
+        "torch>=2.3.0", "transformers>=4.46.0", "peft>=0.13.0",
+        "datasets>=3.0.0", "numpy>=1.26.0,<2.0.0", "accelerate>=1.0.0",
+        "safetensors>=0.4.0", "huggingface-hub>=0.26.0", "wandb>=0.16.0"
+    )
+    .env({
+        "HF_TOKEN": HF_TOKEN,
+        "WANDB_API_KEY": WANDB_KEY,
+        "WANDB_PROJECT": "tinkerrl-drgrpo-gsm8k-cot",
+    })
 )
 
 SEEDS = [42, 123, 456]
@@ -48,7 +58,16 @@ EPS = 1e-6
 CHUNK = 4
 
 
-@app.function(image=image, gpu="A10G", timeout=7200, volumes={RESULTS_DIR: results_vol}, retries=1)
+@app.function(
+    image=image, gpu="A10G", timeout=7200, volumes={RESULTS_DIR: results_vol}, retries=1,
+    secrets=[
+        modal.Secret.from_dict({
+            "HF_TOKEN": HF_TOKEN,
+            "WANDB_API_KEY": WANDB_KEY,
+            "WANDB_PROJECT": "tinkerrl-drgrpo-gsm8k-cot",
+        })
+    ]
+)
 def run_arm(algo: str, seed: int) -> dict:
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
     import random
@@ -132,6 +151,10 @@ def run_arm(algo: str, seed: int) -> dict:
             outs_lp.append(lp); outs_m.append(cm); del logits
         return torch.cat(outs_lp), torch.cat(outs_m)
 
+    import wandb
+    run_name = f"{algo}_s{seed}"
+    wandb.init(project="tinkerrl-drgrpo-gsm8k-cot", name=run_name, config={"algo": algo, "seed": seed, "model": MODEL})
+
     step_log = []
     t0 = time.time()
     train_iter = iter(train)
@@ -180,8 +203,10 @@ def run_arm(algo: str, seed: int) -> dict:
                 loss_chunk.backward(); del logits, lp, ptl
             torch.nn.utils.clip_grad_norm_(params, 1.0)
             opt.step()
-        step_log.append({"step": step, "mean_reward": float(rewards.mean()),
-                         "zvf": zvf, "mean_comp_len": comp_len})
+        metrics = {"step": step, "mean_reward": float(rewards.mean()),
+                   "zvf": zvf, "mean_comp_len": comp_len}
+        step_log.append(metrics)
+        wandb.log(metrics)
 
     post_correct = heldout()  # post-GRPO
 
@@ -204,6 +229,18 @@ def run_arm(algo: str, seed: int) -> dict:
     results_vol.commit()
     print(f"[{algo} s{seed}] pre={pre.mean():.3f} post={post.mean():.3f} "
           f"len {res['mean_comp_len_first5']:.0f}->{res['mean_comp_len_last5']:.0f} last10={res['last10_avg']:.3f}")
+
+    if os.environ.get("HF_TOKEN"):
+        repo_id = f"drgrpo-gsm8k-cot-{algo}-s{seed}"
+        print(f"Pushing adapter to Hub: {repo_id}")
+        try:
+            model.push_to_hub(repo_id, token=os.environ["HF_TOKEN"])
+            tok.push_to_hub(repo_id, token=os.environ["HF_TOKEN"])
+        except Exception as e:
+            print(f"Failed to push to hub: {e}")
+
+    wandb.finish()
+
     return res
 
 

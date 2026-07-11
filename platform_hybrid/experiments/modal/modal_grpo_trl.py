@@ -63,8 +63,9 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
     
     print(f"Starting TRL GRPO: {tag} with {model_id}")
     
+    wandb.login(key=os.environ.get("WANDB_API_KEY"))
     wandb.init(
-        project="tinker-rl-lab-world-class",
+        project=os.environ.get("WANDB_PROJECT", "tinker-rl-lab-world-class"),
         name=f"modal-{tag}",
         tags=["trl-grpo", "modal-h100", "framework-comparison", model_short],
         config={
@@ -79,6 +80,7 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
     
     # Load GSM8K
     dataset = load_dataset("openai/gsm8k", "main", split="train[:500]")
+    eval_dataset = load_dataset("openai/gsm8k", "main", split="test[:100]")
     
     SYSTEM_PROMPT = "You are a math assistant. Solve step by step, then give your final answer inside \\boxed{}."
     
@@ -91,10 +93,15 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
         }
     
     dataset = dataset.map(format_prompt)
+    eval_dataset = eval_dataset.map(format_prompt)
     
     # Extract ground truth answers
     answers = {}
     for i, row in enumerate(dataset):
+        m = re.search(r'####\s*([\-\d,\.]+)', row["answer"])
+        if m:
+            answers[row["question"]] = m.group(1).replace(",", "").strip()
+    for i, row in enumerate(eval_dataset):
         m = re.search(r'####\s*([\-\d,\.]+)', row["answer"])
         if m:
             answers[row["question"]] = m.group(1).replace(",", "").strip()
@@ -157,6 +164,10 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
         report_to="wandb",
         bf16=True,
         gradient_accumulation_steps=1,
+        push_to_hub=True,
+        hub_model_id=f"arvindcr4/{tag}-grpo-gsm8k",
+        hub_token=os.environ.get("HF_TOKEN"),
+        hub_strategy="every_save",
     )
     
     from transformers import EarlyStoppingCallback
@@ -198,7 +209,7 @@ def run_trl_grpo(tag: str, model_id: str, model_short: str):
     
     # Push model to HF
     try:
-        trainer.model.push_to_hub(f"arvindcr4/{tag}-grpo-gsm8k", token=os.environ["HF_TOKEN"])
+        trainer.push_to_hub(commit_message="Final GRPO model training complete")
         result["hf_model"] = f"arvindcr4/{tag}-grpo-gsm8k"
         print(f"  Pushed to HF: arvindcr4/{tag}-grpo-gsm8k")
     except Exception as e:

@@ -41,6 +41,7 @@ import shutil
 import signal
 import sys
 import textwrap
+import time
 import traceback
 from pathlib import Path
 from typing import Any, List
@@ -479,7 +480,7 @@ def maybe_push_to_hub(final_dir: str, cfg: dict, config_path: str, seed: int) ->
     if os.environ.get("HF_PUSH", "0").lower() not in {"1", "true", "yes"}:
         return
     from huggingface_hub import HfApi, create_repo
-    token = os.environ["HF_TOKEN"]
+    token = os.environ.get("HF_TOKEN")
     api = HfApi(token=token)
     owner = os.environ.get("HF_REPO_OWNER") or api.whoami(token=token)["name"]
     repo_name = cfg["wandb_run_name"] + (f"-seed{seed}" if seed != 42 else "")
@@ -542,6 +543,16 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
     from trl import GRPOConfig, GRPOTrainer
     _per_device_bs = cfg["batch_size"] // cfg["group_size"]
     _num_gen       = cfg["group_size"]
+
+    push_to_hub_flag = os.environ.get("HF_PUSH", "0").lower() in {"1", "true", "yes"}
+    hub_model_id = None
+    if push_to_hub_flag:
+        from huggingface_hub import HfApi
+        token = os.environ.get("HF_TOKEN")
+        api = HfApi(token=token)
+        owner = os.environ.get("HF_REPO_OWNER") or api.whoami(token=token)["name"]
+        hub_model_id = f"{owner}/{run_name}"
+
     grpo_config = GRPOConfig(
         output_dir=cfg["checkpoint_dir"],
         num_train_epochs=1,
@@ -566,6 +577,10 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
         gradient_checkpointing=True,
         dataloader_num_workers=0,
         remove_unused_columns=False,
+        push_to_hub=push_to_hub_flag,
+        hub_model_id=hub_model_id,
+        hub_strategy="checkpoint",
+        hub_private_repo=os.environ.get("HF_PUSH_PRIVATE", "1") in {"1", "true", "yes"},
     )
     from transformers import EarlyStoppingCallback
     
@@ -607,8 +622,7 @@ def train(config_path: str, task: str, seed: int = 42, wandb_api_key: str | None
                     
                 if "objective/entropy" in logs:
                     log_dict["train/policy_entropy"] = logs["objective/entropy"]
-                wandb.log(log_dict,
-                          step=state.global_step)
+                wandb.log(log_dict, step=state.global_step, commit=False)
                 print(f"  step {state.global_step:3d}  mean_reward={float(mean_r):.4f} zvf={_last_zvf:.2f}")
 
     trainer.add_callback(RewardLogCallback())

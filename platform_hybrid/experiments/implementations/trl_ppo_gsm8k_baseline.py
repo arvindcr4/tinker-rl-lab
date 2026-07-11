@@ -20,6 +20,7 @@ import os
 import sys
 import json
 import torch
+import wandb
 from typing import Optional
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -94,6 +95,15 @@ def main():
 
     dataset = dataset.map(format_prompt, remove_columns=dataset.column_names)
 
+    wandb.init(
+        project="rloo-gsm8k",
+        config={
+            "seed": seed,
+            "model": model_name,
+            "algorithm": "RLOO"
+        }
+    )
+
     rloo_config = RLOOConfig(
         output_dir=results_dir,
         per_device_train_batch_size=4,
@@ -103,7 +113,7 @@ def main():
         num_train_epochs=1,
         logging_steps=1,
         seed=seed,
-        report_to="none",
+        report_to="wandb",
         bf16=True,
     )
 
@@ -135,6 +145,15 @@ def main():
     with open(f"{results_dir}/experiment_result.json", "w") as f:
         json.dump(result, f, indent=2)
     print(f"Results saved to {results_dir}")
+
+    # Log the final results to wandb
+    wandb.log({"final_results": result})
+    wandb.finish()
+    
+    # Push model to huggingface hub
+    hub_id = os.environ.get("HUB_MODEL_ID", f"rloo-gsm8k-baseline-{seed}")
+    print(f"Pushing to hub: {hub_id}")
+    trainer.push_to_hub(hub_id)
 
 
 if __name__ == "__main__":

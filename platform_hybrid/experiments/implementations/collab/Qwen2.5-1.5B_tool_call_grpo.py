@@ -14,6 +14,9 @@ from datasets import load_dataset, Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import LoraConfig, TaskType, PeftModel
 from trl import GRPOTrainer, GRPOConfig
+import wandb
+
+wandb.init(project="qwen-grpo-tool-calling", name="qwen2.5-1.5b-grpo")
 
 # ── CONFIG ───────────────────────────────────────────────────
 MODEL_ID      = "Qwen/Qwen2.5-1.5B-Instruct"
@@ -216,7 +219,9 @@ grpo_config = GRPOConfig(
     bf16=True,
     logging_steps=5,
     save_strategy="epoch",
-    report_to="none",
+    report_to="wandb",
+    push_to_hub=True,
+    hub_model_id="qwen15b-glaive-grpo",
     # GRPO specific
     num_generations=4,          # generate 4 outputs per prompt, rank them
     max_completion_length=128,  # renamed from max_new_tokens
@@ -246,7 +251,9 @@ print("What GRPO does each step:")
 print("  1. Generate 4 different tool call candidates per prompt")
 print("  2. Score each with reward functions above")
 print("  3. Update model to prefer higher-scoring outputs\n")
-trainer.train(resume_from_checkpoint=True)
+train_result = trainer.train(resume_from_checkpoint=True)
+if train_result and getattr(train_result, "metrics", None):
+    wandb.log(train_result.metrics)
 
 # ── SAVE ─────────────────────────────────────────────────────
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -254,3 +261,6 @@ trainer.model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
 print(f"\n✅ GRPO adapter saved to {OUTPUT_DIR}")
 print(f"   Files: {os.listdir(OUTPUT_DIR)}")
+
+trainer.push_to_hub()
+wandb.finish()

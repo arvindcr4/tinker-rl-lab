@@ -14816,6 +14816,7 @@
   "started_at": "2026-07-11T04:41:04.021023+00:00",
   "failure_events": [],
   "retry_count": 0,
-  "sampling_session_id": "2026-07-11T04:41:04.020993+00:00",
-  "sampler_path": "tinker://2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0/sampler_weights/s30"
+  "sampling_session_id": "2026-07-11T05:34:16.154387+00:00",
+  "sampler_path": "tinker://2d96523c-e5bf-5332-b8d6-a72f52de333c:train:0/sampler_weights/s30",
+  "resumed_at": "2026-07-11T05:34:16.154414+00:00"
 }

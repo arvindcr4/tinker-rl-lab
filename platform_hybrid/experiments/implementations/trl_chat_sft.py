@@ -16,6 +16,8 @@ import torch
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import SFTTrainer, SFTConfig
+import wandb
+import argparse
 
 # Add project root to path for utils
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -53,9 +55,29 @@ def load_no_robots_dataset(num_samples=None):
     return dataset.map(format_chat)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="TRL Chat SFT")
+    parser.add_argument("--model", type=str, default="meta-llama/Llama-3.2-1B", help="Base model")
+    parser.add_argument("--wandb-project", type=str, default="tinker-rl-lab", help="WandB project name")
+    parser.add_argument("--wandb-entity", type=str, default=None, help="WandB entity name")
+    parser.add_argument("--push-to-hub", action="store_true", help="Push model to HuggingFace Hub")
+    parser.add_argument("--hub-model-id", type=str, default=None, help="HuggingFace Hub model ID")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    return parser.parse_args()
+
 def main():
+    args = parse_args()
+    
     # Model configuration (matching Tinker)
-    model_name = "meta-llama/Llama-3.2-1B"
+    model_name = args.model
+    run_name = f"trl-chat-sft-{model_name.split('/')[-1].lower()}"
+
+    wandb.init(
+        project=args.wandb_project,
+        entity=args.wandb_entity,
+        name=run_name,
+        config=vars(args)
+    )
 
     print("Loading model and tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -105,6 +127,15 @@ def main():
         # Mixed precision
         fp16=False,
         bf16=True,
+
+        # WandB logging
+        report_to="wandb",
+        run_name=run_name,
+
+        # HuggingFace Hub
+        push_to_hub=args.push_to_hub,
+        hub_model_id=args.hub_model_id,
+        seed=args.seed,
     )
 
     print("Initializing SFTTrainer...")
@@ -120,11 +151,20 @@ def main():
     print("Supervised fine-tuning on NoRobots dataset")
     print("=" * 50)
 
-    trainer.train(resume_from_checkpoint=True)
+    try:
+        trainer.train(resume_from_checkpoint=True)
+    except Exception as e:
+        print(f"Failed to resume from checkpoint, training from scratch: {e}")
+        trainer.train()
 
     # Save final model
     trainer.save_model("./chat_sft_final")
     print("Training complete! Model saved to ./chat_sft_final")
+
+    if args.push_to_hub:
+        trainer.push_to_hub()
+    
+    wandb.finish()
 
 
 if __name__ == "__main__":

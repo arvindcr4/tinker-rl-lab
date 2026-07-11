@@ -24,6 +24,25 @@ from tianshou.trainer import OnpolicyTrainer
 from tianshou.utils.net.common import Net
 from tianshou.utils.net.discrete import Actor, Critic
 from utils.seed import set_global_seed, get_seed_from_args
+import wandb
+from huggingface_hub import HfApi
+
+def push_to_hub(repo_id: str, filename: str, filepath: str):
+    """Push model to HuggingFace Hub."""
+    try:
+        api = HfApi()
+        try:
+            api.create_repo(repo_id, exist_ok=True)
+        except Exception:
+            pass
+        api.upload_file(
+            path_or_fileobj=filepath,
+            path_in_repo=filename,
+            repo_id=repo_id,
+        )
+        print(f"Successfully pushed {filename} to {repo_id}")
+    except Exception as e:
+        print(f"Error pushing to hub: {e}")
 
 
 class ArithmeticEnv(gym.Env):
@@ -76,6 +95,8 @@ def main():
     print("Tianshou PPO Math RL Training")
     print(f"Device: {device}")
     print("=" * 60)
+
+    wandb.init(project="tianshou_ppo_math", name="ppo_math_run")
 
     # Create environments
     train_envs = DummyVectorEnv([make_env(max_num) for _ in range(num_envs)])
@@ -143,6 +164,7 @@ def main():
     print("\nStarting training...")
 
     def stop_fn(mean_rewards):
+        wandb.log({"custom/accuracy": mean_rewards})
         return mean_rewards >= 0.95  # Stop when accuracy ~95%
 
     result = OnpolicyTrainer(
@@ -169,6 +191,11 @@ def main():
     # Save policy
     torch.save(policy.state_dict(), "tianshou_ppo_math.pt")
     print("Model saved to tianshou_ppo_math.pt")
+
+    # Push to HuggingFace Hub
+    push_to_hub("arvindcr4/tianshou-ppo-math", "tianshou_ppo_math.pt", "tianshou_ppo_math.pt")
+
+    wandb.finish()
 
 
 if __name__ == "__main__":

@@ -100,6 +100,19 @@ def run_verl_qwen3_8b():
     WORK = "/root/verl-run"
     os.makedirs(WORK, exist_ok=True)
 
+    wandb.login(key=os.environ.get("WANDB_API_KEY"))
+    run = wandb.init(
+        project=PROJECT,
+        name=RUN_NAME,
+        tags=["verl-grpo", "modal-h100"],
+        config={
+            "model": MODEL,
+            "method": "verl-GRPO",
+            "task": "gsm8k-500",
+            "platform": "modal_h100",
+        }
+    )
+
     # ---- GSM8K[:500] -> verl-compatible parquet (prompt + reward_model) ----
     SYS = "You are a math assistant. Solve step by step, then give your final answer inside \\boxed{}."
     ds = load_dataset("openai/gsm8k", "main", split="train[:500]")
@@ -154,7 +167,8 @@ def run_verl_qwen3_8b():
         f"trainer.experiment_name={RUN_NAME}",
         "trainer.total_training_steps=30",
         "trainer.total_epochs=1",
-        "trainer.save_freq=-1",
+        "trainer.default_local_dir=/root/verl-run/checkpoints",
+        "trainer.save_freq=30",
         "trainer.test_freq=-1",
         "trainer.nnodes=1",
         "trainer.n_gpus_per_node=1",
@@ -164,34 +178,50 @@ def run_verl_qwen3_8b():
     start = time.time()
     env = os.environ.copy()
     env["PYTHONPATH"] = ""
+    env["WANDB_RUN_ID"] = run.id
     proc = subprocess.run(cmd, cwd=WORK, env=env)
     duration = time.time() - start
     print(f"[verl] subprocess exit={proc.returncode} in {duration:.1f}s")
 
     # ---- pull reward trace from W&B ----
     reward_trace = []
-    wandb_url = None
+    wandb_url = run.url
     try:
         api = wandb.Api()
-        runs = api.runs(
-            f"{api.default_entity}/{PROJECT}",
-            {"display_name": RUN_NAME},
+        api_run = api.run(f"{api.default_entity}/{PROJECT}/{run.id}")
+        hist = api_run.history(
+            keys=["critic/rewards/mean", "train/reward_mean", "reward/mean"],
         )
-        if runs:
-            wandb_url = runs[0].url
-            hist = runs[0].history(
-                keys=["critic/rewards/mean", "train/reward_mean", "reward/mean"],
-            )
-            for col in ("critic/rewards/mean", "train/reward_mean", "reward/mean"):
-                if col in hist.columns:
-                    reward_trace = [float(x) for x in hist[col].dropna().tolist()]
-                    break
+        for col in ("critic/rewards/mean", "train/reward_mean", "reward/mean"):
+            if col in hist.columns:
+                reward_trace = [float(x) for x in hist[col].dropna().tolist()]
+                break
     except Exception as exc:
         print(f"[verl] could not fetch W&B history: {exc}")
 
     last10 = float(np.mean(reward_trace[-10:])) if len(reward_trace) >= 10 else float(np.mean(reward_trace or [0]))
     peak = float(max(reward_trace or [0]))
     first5 = float(np.mean(reward_trace[:5])) if reward_trace else 0.0
+
+    wandb.log({"final_peak": peak, "final_last10": last10, "duration_s": duration})
+    wandb.finish()
+
+    # ---- push to hub ----
+    hf_model_id = f"arvindcr4/modal-verl-qwen3-8b-grpo-gsm8k500"
+    hf_model_pushed = None
+    try:
+        from huggingface_hub import HfApi
+        hf_api = HfApi(token=os.environ.get("HF_TOKEN"))
+        hf_api.create_repo(hf_model_id, exist_ok=True)
+        hf_api.upload_folder(
+            folder_path="/root/verl-run/checkpoints",
+            repo_id=hf_model_id,
+            commit_message="Final GRPO model training complete"
+        )
+        hf_model_pushed = hf_model_id
+        print(f"  Pushed to HF: {hf_model_id}")
+    except Exception as e:
+        print(f"  HF push failed: {e}")
 
     return {
         "framework": "verl",
@@ -211,6 +241,7 @@ def run_verl_qwen3_8b():
         "duration_s": duration,
         "subprocess_exit": proc.returncode,
         "wandb_run_url": wandb_url,
+        "hf_model": hf_model_pushed,
     }
 
 

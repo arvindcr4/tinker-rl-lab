@@ -19,6 +19,8 @@ assert os.environ.get("TINKER_API_KEY"), (
 
 import torch, tinker, tinker.types as T
 from transformers import AutoTokenizer
+import wandb
+from huggingface_hub import HfApi, create_repo
 
 EXP_NAME = "A_baseline"
 MODEL = "Qwen/Qwen3-8B"
@@ -125,6 +127,21 @@ for seed in range(NUM_SEEDS):
     random.seed(seed)
     torch.manual_seed(seed)
     
+    run_name = f"{EXP_NAME}_seed{seed}"
+    wandb.init(
+        project="tinker-rl-lab",
+        name=run_name,
+        config={
+            "model": MODEL,
+            "lora_rank": LORA_RANK,
+            "group_size": GROUP_SIZE,
+            "steps": STEPS,
+            "lr": LR,
+            "seed": seed,
+            "temp": TEMP,
+        }
+    )
+    
     print(f"[{EXP_NAME}] Connecting...")
     svc = tinker.ServiceClient(base_url=None)
     tc = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK)
@@ -174,9 +191,16 @@ for seed in range(NUM_SEEDS):
         result = tc.forward_backward_custom(data=all_data, loss_fn=grpo_loss_fn).result()
         tc.optim_step(T.AdamParams(learning_rate=LR, beta1=0.9, beta2=0.95, eps=1e-8)).result()
         avg_r = sum(batch_rewards) / len(batch_rewards)
+        erf = sum(1 for r in batch_rewards if r >= 0.3) / max(len(batch_rewards), 1)
         step_rewards.append(avg_r)
         loss_val = result.metrics.get("grpo_loss", float("nan"))
-        print(f"[{EXP_NAME}] Step {step + 1:3d}/{STEPS} | loss={loss_val:.4f} | reward={avg_r:.3f}")
+        print(f"[{EXP_NAME}] Step {step + 1:3d}/{STEPS} | loss={loss_val:.4f} | reward={avg_r:.3f} | erf={erf:.3f}")
+        wandb.log({
+            "train/loss": loss_val,
+            "train/reward": avg_r,
+            "train/erf": erf,
+            "train/step": step + 1,
+        })
         if (step + 1) % SAVE_EVERY == 0:
             tc.save_state(name=f"state_seed{seed}_{step + 1}")
             ckpt = tc.save_weights_for_sampler(name=f"step_seed{seed}_{step + 1}").result()
@@ -190,4 +214,28 @@ for seed in range(NUM_SEEDS):
     )
     print(f"[{EXP_NAME}] Run ID: {tc.model_id}")
     print(f"[{EXP_NAME}] Sampler: {final.path}")
+
+    wandb.finish()
+
+    push_to_hub_flag = os.environ.get("HF_PUSH", "0").lower() in {"1", "true", "yes"}
+    if push_to_hub_flag:
+        try:
+            token = os.environ.get("HF_TOKEN")
+            api = HfApi(token=token)
+            owner = os.environ.get("HF_REPO_OWNER") or api.whoami(token=token)["name"]
+            repo_id = f"{owner}/{run_name}"
+            private = os.environ.get("HF_PUSH_PRIVATE", "1") in {"1", "true", "yes"}
+            
+            print(f"[{EXP_NAME}] Pushing final checkpoint to Hugging Face Hub: {repo_id}")
+            create_repo(repo_id=repo_id, token=token, private=private, exist_ok=True, repo_type="model")
+            api.upload_folder(
+                repo_id=repo_id,
+                folder_path=final.path,
+                repo_type="model",
+                token=token,
+                commit_message=f"Upload Tinker SDK adapter for {run_name}"
+            )
+            print(f"[{EXP_NAME}] Successfully pushed to Hub.")
+        except Exception as e:
+            print(f"[{EXP_NAME}] Failed to push to Hub: {e}")
 

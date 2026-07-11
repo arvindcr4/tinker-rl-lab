@@ -9,6 +9,10 @@ from huggingface_hub import login
 login(token="TOKEN")   
 
 import json, os, re, torch
+import wandb
+wandb.login()
+wandb.init(project="qwen1.5b-tool-call-sft")
+
 from datasets import load_dataset, Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import LoraConfig, TaskType
@@ -17,6 +21,7 @@ from trl import SFTTrainer, SFTConfig
 # ── CONFIG ───────────────────────────────────────────────────
 MODEL_ID    = "Qwen/Qwen2.5-1.5B-Instruct"
 OUTPUT_DIR  = "/content/qwen15b-glaive-sft"
+HUB_MODEL_ID = "YOUR_HF_USERNAME/qwen15b-glaive-sft"
 NUM_SAMPLES = 500       
 MAX_SEQ_LEN = 512
 LORA_RANK   = 16
@@ -176,7 +181,7 @@ sft_config = SFTConfig(
     eval_strategy="epoch",
     save_strategy="epoch",
     load_best_model_at_end=True,
-    report_to="none",
+    report_to="wandb",
     optim="paged_adamw_8bit",
     seed=42,
     max_length=MAX_SEQ_LEN,
@@ -193,15 +198,22 @@ trainer = SFTTrainer(
 )
 
 print("\n🚀 Starting SFT training ...\n")
-trainer.train(resume_from_checkpoint=True)
+train_result = trainer.train(resume_from_checkpoint=True)
+wandb.log({"train_runtime": train_result.metrics["train_runtime"]})
 
-# ── SAVE ─────────────────────────────────────────────────────
+# ── SAVE & PUSH ──────────────────────────────────────────────
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 trainer.model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
 print(f"\n✅ SFT adapter saved!")
 print(f"   Files: {os.listdir(OUTPUT_DIR)}")
 print(f"   Path : {OUTPUT_DIR}")
+
+print("\nPushing to HuggingFace Hub ...")
+trainer.model.push_to_hub(HUB_MODEL_ID)
+tokenizer.push_to_hub(HUB_MODEL_ID)
+print(f"\n✅ SFT adapter pushed to Hub: {HUB_MODEL_ID}")
+wandb.finish()
 
 # ── QUICK INFERENCE ──────────────────────────────────────────
 def run_inference(query):

@@ -19,7 +19,9 @@ Usage:
 """
 
 import argparse
+import os
 import torch
+import wandb
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import SFTTrainer, SFTConfig
@@ -75,11 +77,23 @@ def parse_args():
     parser.add_argument("--output-dir", type=str, default="./checkpoints/sft_gsm8k_baseline/",
                         help="Output directory")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument("--wandb-project", type=str, default="tinker-rl-lab", help="WandB project name")
+    parser.add_argument("--wandb-entity", type=str, default=None, help="WandB entity name")
+    parser.add_argument("--push-to-hub", action="store_true", help="Push model to HuggingFace Hub")
+    parser.add_argument("--hub-model-id", type=str, default=None, help="HuggingFace Hub model ID")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+
+    run_name = f"sft-gsm8k-{args.model.split('/')[-1].lower()}"
+    wandb.init(
+        project=args.wandb_project,
+        entity=args.wandb_entity,
+        name=run_name,
+        config=vars(args)
+    )
 
     print(f"Loading model: {args.model}")
     tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
@@ -141,8 +155,11 @@ def main():
 
         # Misc
         seed=args.seed,
-        report_to="none",
-        run_name=f"sft-gsm8k-{args.model.split('/')[-1].lower()}",
+        report_to="wandb",
+        run_name=run_name,
+
+        push_to_hub=args.push_to_hub,
+        hub_model_id=args.hub_model_id,
 
         # Packing for efficiency
         packing=True,
@@ -166,9 +183,19 @@ def main():
     print(f"  Effective batch: 128")
     print("=" * 60)
 
-    trainer.train(resume_from_checkpoint=True)
+    try:
+        trainer.train(resume_from_checkpoint=True)
+    except Exception as e:
+        print(f"Failed to resume from checkpoint, training from scratch: {e}")
+        trainer.train()
+    
     trainer.save_model(args.output_dir + "/final")
     print(f"SFT baseline saved to {args.output_dir}/final")
+
+    if args.push_to_hub:
+        trainer.push_to_hub()
+    
+    wandb.finish()
 
 
 if __name__ == "__main__":

@@ -22,6 +22,7 @@ import sys
 import os
 import torch
 import torch.nn.functional as F
+import wandb
 from typing import List
 from dataclasses import dataclass
 from datasets import Dataset
@@ -117,6 +118,9 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
         num_train_epochs=3,
         max_length=config.max_length,
         logging_steps=10,
+        report_to="wandb",
+        push_to_hub=True,
+        hub_model_id=f"{config.student_model_name.split('/')[-1]}-distilled-off-policy",
     )
 
     trainer = SFTTrainer(
@@ -127,8 +131,11 @@ def train_off_policy_distillation(config: DistillationConfig, prompts: List[str]
     )
 
     print("Starting off-policy distillation...")
+    wandb.init(project="trl-distillation", name="off-policy")
     trainer.train(resume_from_checkpoint=True)
     trainer.save_model("./distillation_off_policy_final")
+    trainer.push_to_hub()
+    wandb.finish()
     return trainer
 
 
@@ -173,6 +180,13 @@ class OnPolicyDistillationTrainer(Trainer):
 
         loss = self.alpha * task_loss + (1 - self.alpha) * kl_loss
 
+        if wandb.run is not None:
+            wandb.log({
+                "kl_loss": kl_loss.item(),
+                "task_loss": task_loss.item(),
+                "total_loss": loss.item()
+            })
+
         if return_outputs:
             return loss, student_outputs
         return loss
@@ -206,6 +220,9 @@ def train_on_policy_distillation(config: DistillationConfig, train_dataset: Data
         logging_steps=10,
         fp16=True,
         remove_unused_columns=False,
+        report_to="wandb",
+        push_to_hub=True,
+        hub_model_id=f"{config.student_model_name.split('/')[-1]}-distilled-on-policy",
     )
 
     trainer = OnPolicyDistillationTrainer(
@@ -219,8 +236,11 @@ def train_on_policy_distillation(config: DistillationConfig, train_dataset: Data
     )
 
     print("Starting on-policy distillation (KL minimization)...")
+    wandb.init(project="trl-distillation", name="on-policy")
     trainer.train(resume_from_checkpoint=True)
     trainer.save_model("./distillation_on_policy_final")
+    trainer.push_to_hub()
+    wandb.finish()
     return trainer
 
 

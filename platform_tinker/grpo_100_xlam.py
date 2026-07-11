@@ -11,6 +11,7 @@ except ImportError:
 
 
 import os, json, re, warnings, random
+import wandb
 
 warnings.filterwarnings("ignore")
 assert os.environ.get("TINKER_API_KEY"), (
@@ -24,6 +25,14 @@ EXP = "xlam100"
 MODEL = "Qwen/Qwen3-8B"
 STEPS, GROUP, LR, TEMP = 100, 4, 3e-5, 0.8
 SAVE_EVERY = 25
+
+wandb.init(project="tinker-rl-lab", name=EXP, config={
+    "model": MODEL,
+    "steps": STEPS,
+    "group": GROUP,
+    "lr": LR,
+    "temp": TEMP
+})
 
 SYSTEM_PROMPT = 'You are a tool-calling assistant. Respond ONLY with a valid JSON object:\n{"tool": "<name>", "arguments": {<key>: <value>}}\nNo prose. Only JSON.'
 
@@ -139,6 +148,7 @@ for step in range(STEPS):
     print(
         f"[{EXP}] {step + 1:3d}/{STEPS} | loss={result.metrics.get('loss', 0):.4f} | reward={avg:.3f}"
     )
+    wandb.log({"train/loss": result.metrics.get('loss', 0), "train/reward": avg, "step": step + 1})
     if (step + 1) % SAVE_EVERY == 0:
         tc.save_state(name=f"s{step + 1}")
         ckpt = tc.save_weights_for_sampler(name=f"s{step + 1}").result()
@@ -170,4 +180,21 @@ for i in range(0, len(test_examples), 4):
 
 avg_test = sum(test_rewards) / len(test_rewards) if test_rewards else 0.0
 print(f"[{EXP}] Held-out Test Reward: {avg_test:.3f}")
+wandb.log({"test/reward": avg_test})
+wandb.finish()
+
+if os.environ.get("HF_PUSH", "0").lower() in {"1", "true", "yes"}:
+    try:
+        from huggingface_hub import HfApi, create_repo
+        token = os.environ.get("HF_TOKEN")
+        api = HfApi(token=token)
+        owner = os.environ.get("HF_REPO_OWNER") or api.whoami(token=token)["name"]
+        repo_id = f"{owner}/{EXP}"
+        private = os.environ.get("HF_PUSH_PRIVATE", "1") in {"1", "true", "yes"}
+        create_repo(repo_id=repo_id, token=token, private=private, exist_ok=True, repo_type="model")
+        api.upload_folder(repo_id=repo_id, folder_path=f.path, repo_type="model", token=token,
+                          commit_message=f"Upload {EXP} adapter")
+        print(f"[{EXP}] HuggingFace upload -> {repo_id}")
+    except Exception as e:
+        print(f"[{EXP}] Failed to push to hub: {e}")
 

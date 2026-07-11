@@ -109,6 +109,20 @@ def run_openrlhf_qwen3_8b():
     WORK = "/root/openrlhf-run"
     os.makedirs(WORK, exist_ok=True)
 
+    # Initialize W&B
+    wandb.init(
+        project=PROJECT,
+        name=RUN_NAME,
+        tags=["openrlhf-grpo", "modal-h100", "qwen3-8b"],
+        config={
+            "model": MODEL,
+            "method": "OpenRLHF-GRPO",
+            "task": "gsm8k-500",
+            "platform": "modal_h100",
+            "gpu": "H100"
+        }
+    )
+
     # ---- GSM8K[:500] -> prompt + label JSONL ----
     SYS = "You are a math assistant. Solve step by step, then give your final answer inside \\boxed{}."
     ds = load_dataset("openai/gsm8k", "main", split="train[:500]")
@@ -220,6 +234,30 @@ def run_openrlhf_qwen3_8b():
     last10 = float(np.mean(reward_trace[-10:])) if len(reward_trace) >= 10 else float(np.mean(reward_trace or [0]))
     peak = float(max(reward_trace or [0]))
     first5 = float(np.mean(reward_trace[:5])) if reward_trace else 0.0
+
+    wandb.log({
+        "final_peak": peak,
+        "final_last10": last10,
+        "first5_avg": first5,
+        "duration_s": duration,
+        "subprocess_exit": proc.returncode,
+    })
+    wandb.finish()
+
+    # Push to HuggingFace Hub
+    hf_repo_id = f"arvindcr4/{RUN_NAME}"
+    try:
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        actor_path = f"{WORK}/ckpt/_actor" if os.path.exists(f"{WORK}/ckpt/_actor") else f"{WORK}/ckpt"
+        if os.path.exists(actor_path):
+            print(f"Loading model from {actor_path} for push_to_hub...")
+            model = AutoModelForCausalLM.from_pretrained(actor_path, torch_dtype="auto")
+            tokenizer = AutoTokenizer.from_pretrained(actor_path)
+            model.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""))
+            tokenizer.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""))
+            print(f"Pushed model to HF: {hf_repo_id}")
+    except Exception as e:
+        print(f"HF push failed: {e}")
 
     return {
         "framework": "OpenRLHF",

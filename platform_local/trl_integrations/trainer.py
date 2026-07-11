@@ -63,6 +63,18 @@ class TRLTrainer:
         except ImportError:
             print("Warning: TRL not installed. Install with: pip install trl")
 
+        # Setup wandb
+        if getattr(self.config, "report_to", "") and "wandb" in self.config.report_to:
+            try:
+                import wandb
+                wandb.init(
+                    project=getattr(self.config, "project_name", "trl-tinker"),
+                    name=getattr(self.config, "run_name", None),
+                    config=self.config.to_dict() if hasattr(self.config, "to_dict") else {}
+                )
+            except ImportError:
+                print("Warning: wandb not installed.")
+
         # Import TRL components based on algorithm
         alg = self.config.algorithm.algorithm.lower()
 
@@ -106,6 +118,14 @@ class TRLTrainer:
 
         print(f"  Loss: {loss_val:.4f}, Reward: {reward_val:.4f}")
 
+        if getattr(self.config, "report_to", "") and "wandb" in self.config.report_to:
+            try:
+                import wandb
+                if wandb.run is not None:
+                    wandb.log(metrics)
+            except ImportError:
+                pass
+
         return metrics
 
     async def run(self):
@@ -131,6 +151,22 @@ class TRLTrainer:
         print("Training complete!")
         print(f"Final reward: {self.reward_history[-1] if self.reward_history else 'N/A':.4f}")
         print("=" * 60 + "\n")
+
+        push_to_hub = getattr(self.config, "push_to_hub", False) or getattr(getattr(self.config, "model", None), "push_to_hub", False)
+        if push_to_hub and self.trainer is not None:
+            print("Pushing model to Hub...")
+            try:
+                self.trainer.push_to_hub()
+            except Exception as e:
+                print(f"Failed to push to hub: {e}")
+
+        if getattr(self.config, "report_to", "") and "wandb" in self.config.report_to:
+            try:
+                import wandb
+                if wandb.run is not None:
+                    wandb.finish()
+            except ImportError:
+                pass
 
         return {
             "final_step": self.current_step,
@@ -177,6 +213,8 @@ def create_grpo_trainer(
         report_to=config.report_to,
         logging_steps=1,
         save_steps=config.save_interval,
+        push_to_hub=getattr(config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)),
+        hub_model_id=getattr(config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None)),
     )
 
     trainer = GRPOTrainer(
@@ -219,6 +257,8 @@ def create_ppo_trainer(
         report_to=config.report_to,
         logging_steps=1,
         save_steps=config.save_interval,
+        push_to_hub=getattr(config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)),
+        hub_model_id=getattr(config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None)),
     )
 
     trainer = PPOTrainer(
@@ -258,6 +298,8 @@ def create_dpo_trainer(
         report_to=config.report_to,
         logging_steps=1,
         save_steps=config.save_interval,
+        push_to_hub=getattr(config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False)),
+        hub_model_id=getattr(config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None)),
     )
 
     trainer = DPOTrainer(
@@ -308,6 +350,17 @@ BF16 = {config.bf16!r}
 FP16 = {config.fp16!r}
 BOXED_MARKER = {boxed_marker!r}
 COMPUTE_DTYPE = torch.bfloat16 if BF16 else (torch.float16 if FP16 else torch.float32)
+
+REPORT_TO = {config.report_to!r}
+PROJECT_NAME = {config.project_name!r}
+RUN_NAME = {config.run_name!r}
+PUSH_TO_HUB = {getattr(config, "push_to_hub", getattr(getattr(config, "model", None), "push_to_hub", False))!r}
+HUB_MODEL_ID = {getattr(config, "hub_model_id", getattr(getattr(config, "model", None), "hub_model_id", None))!r}
+
+import wandb
+if "wandb" in REPORT_TO:
+    wandb.init(project=PROJECT_NAME, name=RUN_NAME)
+
 
 # Load model
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
@@ -429,6 +482,8 @@ trainer_config = { 'GRPOConfig' if algorithm == 'grpo' else 'OnlineDPOConfig' }(
     logging_steps=1,
     save_strategy="no" if USE_PEFT and PEFT_METHOD == "bitfit" else "steps",
     save_steps={config.save_interval},
+    push_to_hub=PUSH_TO_HUB,
+    hub_model_id=HUB_MODEL_ID,
     {f'deepspeed="{config.deepspeed}",' if config.deepspeed else ''}
 )
 
@@ -448,6 +503,8 @@ if USE_PEFT and PEFT_METHOD == "bitfit":
         "./checkpoints/bitfit_adapter.pt",
         base_model_name=MODEL_NAME,
     )
+if PUSH_TO_HUB:
+    trainer.push_to_hub()
 print("Training complete!")
 '''
 

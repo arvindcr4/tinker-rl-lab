@@ -24,6 +24,7 @@ login(token="hf_YOUR_TOKEN_HERE")
 
 import json, os, re, random, torch
 import torch.nn.functional as F
+import wandb
 from torch.optim import AdamW
 from datasets import load_dataset
 from transformers import (AutoTokenizer, AutoModelForCausalLM,
@@ -40,6 +41,8 @@ NUM_ROLLOUTS = 2
 TRAIN_STEPS  = 40
 LR           = 5e-6
 LOG_EVERY    = 10
+HUB_REPO_ID  = "qwen3b-toolbench-grpo"
+WANDB_PROJECT = "qwen-grpo-multiturn"
 
 SYSTEM_PROMPT = """You are a helpful AI assistant with access to real-world APIs and tools.
 
@@ -427,6 +430,7 @@ scheduler = get_cosine_schedule_with_warmup(
 )
 
 # ── TRAINING LOOP ─────────────────────────────────────────────
+wandb.init(project=WANDB_PROJECT, name="qwen-3b-multiturn-grpo")
 print("=" * 60)
 print("  TRUE MULTI-TURN GRPO TRAINING")
 print("=" * 60)
@@ -496,12 +500,23 @@ while step < TRAIN_STEPS:
                   f"loss={avg_loss:.4f} | "
                   f"avg_reward={avg_reward:.3f} | "
                   f"chain=[{chain_summary}] reward={rewards[0]:.2f}")
+            
+            wandb.log({
+                "train/loss": avg_loss,
+                "train/reward": avg_reward,
+                "train/step": step
+            })
 
 # ── SAVE ─────────────────────────────────────────────────────
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
-print(f"\n✅ GRPO adapter saved to {OUTPUT_DIR}")
+
+print(f"\nPushing to HuggingFace Hub: {HUB_REPO_ID}")
+model.push_to_hub(HUB_REPO_ID)
+tokenizer.push_to_hub(HUB_REPO_ID)
+
+print(f"\n✅ GRPO adapter saved to {OUTPUT_DIR} and pushed to hub")
 print(f"   Files: {os.listdir(OUTPUT_DIR)}")
 
 # ── QUICK CHAIN TEST ──────────────────────────────────────────

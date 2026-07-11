@@ -15,10 +15,11 @@ import logging
 import os
 import random
 import re
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import List, Optional
 
 import torch
+import wandb
 from datasets import Dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, EarlyStoppingCallback, HfArgumentParser
 from trl import GRPOTrainer, GRPOConfig
@@ -82,6 +83,13 @@ class ScriptArguments:
     # Optimization
     max_grad_norm: float = field(default=1.0, metadata={"help": "Max gradient norm."})
     warmup_ratio: float = field(default=0.1, metadata={"help": "Warmup ratio."})
+    
+    # Wandb & Hub Settings
+    wandb_project: Optional[str] = field(default="trl_grpo_math", metadata={"help": "Wandb project name."})
+    wandb_entity: Optional[str] = field(default=None, metadata={"help": "Wandb entity name."})
+    push_to_hub: bool = field(default=False, metadata={"help": "Whether to push to HF Hub."})
+    hub_model_id: Optional[str] = field(default=None, metadata={"help": "Hub model ID."})
+    hub_token: Optional[str] = field(default=None, metadata={"help": "Hub token."})
 
 
 def generate_arithmetic_dataset(num_problems: int = 1000, max_num: int = 99) -> Dataset:
@@ -141,6 +149,10 @@ def main():
     parser = HfArgumentParser((ScriptArguments,))
     args, = parser.parse_args_into_dataclasses()
 
+    # Setup wandb
+    if args.wandb_project:
+        wandb.init(project=args.wandb_project, entity=args.wandb_entity, config=asdict(args))
+
     # Seed management for reproducibility
     env_info = set_global_seed(args.seed)
     logger.info(f"Seed set to {args.seed} | Environment: {env_info}")
@@ -185,6 +197,10 @@ def main():
         metric_for_best_model=args.metric_for_best_model,
         max_grad_norm=args.max_grad_norm,
         warmup_ratio=args.warmup_ratio,
+        report_to="wandb" if args.wandb_project else "none",
+        push_to_hub=args.push_to_hub,
+        hub_model_id=args.hub_model_id,
+        hub_token=args.hub_token,
     )
 
     # Create reward function wrapper
@@ -217,19 +233,28 @@ def main():
     trainer.save_model(final_output_dir)
     logger.info(f"Training complete! Model saved to {final_output_dir}")
 
+    if args.push_to_hub:
+        logger.info("Pushing to Hugging Face Hub...")
+        trainer.push_to_hub()
+
     # Log experiment metadata
+    hyperparameters = {
+        "model_name": args.model_name,
+        "learning_rate": args.learning_rate,
+        "lora_rank": args.lora_r,
+        "num_generations": args.num_generations,
+        "beta": args.beta,
+    }
     log_experiment_metadata(
         experiment_name="trl_grpo_math",
         seed=args.seed,
-        hyperparameters={
-            "model_name": args.model_name,
-            "learning_rate": args.learning_rate,
-            "lora_rank": args.lora_r,
-            "num_generations": args.num_generations,
-            "beta": args.beta,
-        },
+        hyperparameters=hyperparameters,
         output_dir=final_output_dir,
     )
+
+    if wandb.run is not None:
+        wandb.log({"training_completed": 1})
+        wandb.finish()
 
 
 if __name__ == "__main__":

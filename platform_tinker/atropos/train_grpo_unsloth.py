@@ -653,6 +653,7 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None,
     logger.info("="*60 + "\n")
 
     # ── WandB init ──────────────────────────────────────────────────────────
+    os.environ["WANDB_MODE"] = "online"
     if wandb_api_key:
         wandb.login(key=wandb_api_key)
     run_name = f"{cfg['wandb_run_name']}-seed{seed}" if seed != 42 else cfg["wandb_run_name"]
@@ -690,6 +691,15 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None,
     per_device_train_batch_size = cfg["group_size"]
     gradient_accumulation_steps = max(1, cfg["batch_size"] // per_device_train_batch_size)
 
+    push_to_hub_flag = os.environ.get("HF_PUSH", "0").lower() in {"1", "true", "yes"}
+    hub_model_id = None
+    if push_to_hub_flag:
+        from huggingface_hub import HfApi
+        token = os.environ.get("HF_TOKEN")
+        api = HfApi(token=token)
+        owner = os.environ.get("HF_REPO_OWNER") or api.whoami(token=token)["name"]
+        hub_model_id = f"{owner}/{run_name}"
+
     # TODO: Implement micro-partitioning and reference offloading to close the performance gap with Tinker API.
     # num_generations = group_size (TRL calls it num_generations)
     grpo_config = GRPOConfig(
@@ -711,13 +721,17 @@ def train(config_path: str, seed: int = 42, wandb_api_key: str | None = None,
         metric_for_best_model="eval_reward/mean",
         seed=seed,
         report_to="wandb",
-        run_name=cfg["wandb_run_name"],
+        run_name=run_name,
         # Unsloth-compatible settings
         bf16=True,
         fp16=False,
         gradient_checkpointing=True,
         dataloader_num_workers=0,
         remove_unused_columns=False,
+        push_to_hub=push_to_hub_flag,
+        hub_model_id=hub_model_id,
+        hub_strategy="checkpoint",
+        hub_private_repo=os.environ.get("HF_PUSH_PRIVATE", "1") in {"1", "true", "yes"},
     )
 
     eval_mode = evaluation_mode_override if evaluation_mode_override else cfg.get("evaluation_mode", "static")
@@ -819,20 +833,6 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=None, help="Override config batch_size for Pareto ablation")
     parser.add_argument("--evaluation_mode", type=str, default="static", choices=["static", "execution", "generative"], help="Reward evaluation mode")
     args = parser.parse_args()
-
-    cfg = TinkerAtroposConfig.from_yaml(args.config)
-    cfg.env.data_seed = args.seed
-    if args.group_size:
-        cfg.env.group_size = args.group_size
-    if args.batch_size:
-        cfg.env.batch_size = args.batch_size
-    
-    if args.total_token_budget:
-        total_samples = args.total_token_budget / args.tokens_per_sample
-        # For Unsloth trainer, batch size is group_size
-        effective_batch_size = cfg.env.group_size
-        cfg.env.total_steps = max(1, int(total_samples / effective_batch_size))
-        logger.info(f"[P1 Ablation] Matching token budget: {args.total_token_budget} tokens -> total_steps={cfg.env.total_steps}")
 
     train(
         config_path=args.config,

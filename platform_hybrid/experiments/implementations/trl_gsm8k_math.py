@@ -14,6 +14,7 @@ import re
 import sys
 import os
 import torch
+import wandb
 from typing import List, Optional
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -110,6 +111,8 @@ def load_gsm8k_dataset(split: str = "train", num_samples: Optional[int] = None):
 
 
 def main():
+    wandb.init(project="tinker-rl-lab", name="trl_gsm8k_math")
+
     # Model configuration
     model_name = "meta-llama/Llama-3.2-1B-Instruct"
 
@@ -167,6 +170,12 @@ def main():
         # Optimization
         max_grad_norm=1.0,
         warmup_ratio=0.1,
+
+        # Logging & Hub
+        report_to="wandb",
+        push_to_hub=True,
+        hub_model_id="arvindcr4/trl-gsm8k-math",
+        hub_strategy="every_save",
     )
 
     # Reward function wrapper
@@ -174,7 +183,13 @@ def main():
         answers = kwargs.get("answer")
         if answers and isinstance(answers[0], list):
             answers = [a[0] for a in answers]
-        return gsm8k_reward_function(completions, prompts, answers)
+        rewards = gsm8k_reward_function(completions, prompts, answers)
+        if wandb.run is not None:
+            wandb.log({
+                "custom_reward/mean": sum(rewards) / len(rewards) if rewards else 0.0,
+                "custom_reward/max": max(rewards) if rewards else 0.0,
+            })
+        return rewards
 
     from transformers import EarlyStoppingCallback
     print("Initializing GRPOTrainer for GSM8K...")
@@ -197,7 +212,9 @@ def main():
 
     # Save final model
     trainer.save_model("./grpo_gsm8k_final")
-    print("Training complete! Model saved to ./grpo_gsm8k_final")
+    trainer.push_to_hub(tags=["grpo", "gsm8k", "math"])
+    print("Training complete! Model saved to ./grpo_gsm8k_final and pushed to Hub.")
+    wandb.finish()
 
 
 if __name__ == "__main__":

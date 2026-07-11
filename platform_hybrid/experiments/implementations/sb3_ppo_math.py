@@ -17,7 +17,26 @@ from gymnasium import spaces
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3.common.callbacks import BaseCallback
+import wandb
+from huggingface_hub import HfApi
 from utils.seed import set_global_seed, get_seed_from_args
+
+def push_to_hub(repo_id: str, filename: str, filepath: str):
+    """Push model to HuggingFace Hub."""
+    try:
+        api = HfApi()
+        try:
+            api.create_repo(repo_id, exist_ok=True)
+        except Exception:
+            pass
+        api.upload_file(
+            path_or_fileobj=filepath,
+            path_in_repo=filename,
+            repo_id=repo_id,
+        )
+        print(f"Successfully pushed {filename} to {repo_id}")
+    except Exception as e:
+        print(f"Error pushing to hub: {e}")
 
 
 class ArithmeticEnv(gym.Env):
@@ -111,6 +130,7 @@ class MetricsCallback(BaseCallback):
         if self.episode_correct:
             accuracy = np.mean(self.episode_correct)
             self.logger.record("custom/accuracy", accuracy)
+            wandb.log({"custom/accuracy": accuracy, "step": self.num_timesteps})
             self.episode_correct = []
 
 
@@ -132,6 +152,7 @@ def main():
 
     # PPO Configuration (matching Tinker hyperparameters where applicable)
     print("Initializing PPO...")
+    wandb.init(project="sb3_ppo_math", name="ppo_math_run", sync_tensorboard=True)
     model = PPO(
         "MlpPolicy",
         env,
@@ -182,7 +203,10 @@ def main():
 
     # Save model
     model.save("./sb3_math_ppo_final")
-    print("Training complete! Model saved to ./sb3_math_ppo_final")
+    print("Training complete! Model saved to ./sb3_math_ppo_final.zip")
+    
+    # Push to HuggingFace Hub
+    push_to_hub("arvindcr4/sb3-ppo-math", "sb3_math_ppo_final.zip", "./sb3_math_ppo_final.zip")
 
     # Evaluate
     print("\nEvaluating trained model...")
@@ -198,6 +222,7 @@ def main():
             correct += 1
 
     print(f"Final accuracy: {correct}/{total} = {100*correct/total:.1f}%")
+    wandb.finish()
 
 
 if __name__ == "__main__":

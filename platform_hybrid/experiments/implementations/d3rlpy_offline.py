@@ -26,8 +26,28 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import numpy as np
 import d3rlpy
+import wandb
 from d3rlpy.dataset import MDPDataset
 from utils.seed import set_global_seed, get_seed_from_args
+
+
+def push_to_hub(repo_id: str, filename: str, filepath: str):
+    """Push model to HuggingFace Hub."""
+    from huggingface_hub import HfApi
+    try:
+        api = HfApi()
+        try:
+            api.create_repo(repo_id, exist_ok=True)
+        except Exception:
+            pass
+        api.upload_file(
+            path_or_fileobj=filepath,
+            path_in_repo=filename,
+            repo_id=repo_id,
+        )
+        print(f"Successfully pushed {filepath} to HuggingFace Hub ({repo_id}/{filename})")
+    except Exception as e:
+        print(f"Failed to push to Hub: {e}")
 
 
 def create_arithmetic_dataset(
@@ -103,6 +123,7 @@ def train_cql(dataset: MDPDataset):
     )
 
     cql.save_model("cql_arithmetic.d3")
+    push_to_hub("arvindcr4/tinker-d3rlpy-offline", "cql_arithmetic.d3", "cql_arithmetic.d3")
     return cql
 
 
@@ -132,6 +153,7 @@ def train_iql(dataset: MDPDataset):
     )
 
     iql.save_model("iql_arithmetic.d3")
+    push_to_hub("arvindcr4/tinker-d3rlpy-offline", "iql_arithmetic.d3", "iql_arithmetic.d3")
     return iql
 
 
@@ -157,6 +179,7 @@ def train_bc(dataset: MDPDataset):
     )
 
     bc.save_model("bc_arithmetic.d3")
+    push_to_hub("arvindcr4/tinker-d3rlpy-offline", "bc_arithmetic.d3", "bc_arithmetic.d3")
     return bc
 
 
@@ -180,6 +203,7 @@ def evaluate_model(model, num_eval: int = 1000, max_num: int = 99):
 
 
 def main():
+    wandb.init(project="tinker-rl-lab", name="d3rlpy_offline")
     seed = get_seed_from_args()
     set_global_seed(seed)
     print("=" * 60)
@@ -217,6 +241,13 @@ def main():
     print(f"CQL:              {cql_acc:.1f}%")
     print(f"IQL:              {iql_acc:.1f}%")
     print("\nExpected: All should approach ~70% (expert ratio in dataset)")
+
+    wandb.log({
+        "eval/bc_accuracy": bc_acc,
+        "eval/cql_accuracy": cql_acc,
+        "eval/iql_accuracy": iql_acc,
+    })
+    wandb.finish()
 
 
 if __name__ == "__main__":

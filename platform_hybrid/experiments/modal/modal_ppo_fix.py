@@ -67,6 +67,9 @@ def run_ppo_qwen35_4b_quantized():
     MODEL_ID = "Qwen/Qwen3.5-4B"
     model_short = "qwen3.5-4b"
 
+    if os.environ.get("WANDB_API_KEY"):
+        wandb.login(key=os.environ["WANDB_API_KEY"])
+
     wandb.init(
         project="tinker-rl-lab-world-class",
         name=f"ppo_{model_short}_gsm8k_s{SEED}_4bit",
@@ -196,11 +199,17 @@ def run_ppo_qwen35_4b_quantized():
 
     # Push to HF
     try:
-        from huggingface_hub import login
-        login(token=os.environ["HF_TOKEN"])
-        model.push_to_hub(f"arvindcr4/tinker-rl-ppo-qwen3.5-4b-4bit", private=True)
-        tokenizer.push_to_hub(f"arvindcr4/tinker-rl-ppo-qwen3.5-4b-4bit", private=True)
-        results["hf_repo"] = "arvindcr4/tinker-rl-ppo-qwen3.5-4b-4bit"
+        hf_token = os.environ.get("HF_TOKEN")
+        if hf_token:
+            from huggingface_hub import login
+            login(token=hf_token)
+            repo_id = "arvindcr4/tinker-rl-ppo-qwen3.5-4b-4bit"
+            model.push_to_hub(repo_id, private=True)
+            tokenizer.push_to_hub(repo_id, private=True)
+            results["hf_repo"] = repo_id
+            print(f"Successfully pushed model to {repo_id}")
+        else:
+            print("HF_TOKEN not found, skipping push to hub")
     except Exception as e:
         print(f"HF push failed: {e}")
 
@@ -221,6 +230,8 @@ def main():
 
     # Save locally too
     import json
-    with open("/home/user/workspace/tinker-rl-lab/experiments/modal/ppo_fix_result.json", "w") as f:
+    import os
+    out_path = os.path.join(os.path.dirname(__file__), "ppo_fix_result.json")
+    with open(out_path, "w") as f:
         json.dump(result, f, indent=2)
-    print("Saved to ppo_fix_result.json")
+    print(f"Saved to {out_path}")

@@ -23,6 +23,7 @@ from huggingface_hub import login
 login(token="hf_YOUR_TOKEN_HERE")
 
 import json, os, re, torch
+import wandb
 from datasets import load_dataset, Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import LoraConfig, TaskType
@@ -354,7 +355,9 @@ sft_config = SFTConfig(
     eval_strategy="epoch",
     save_strategy="epoch",
     load_best_model_at_end=True,
-    report_to="none",
+    report_to="wandb",
+    push_to_hub=True,
+    hub_model_id="YOUR_HF_USERNAME/qwen3b-toolbench-sft",
     optim="paged_adamw_8bit",
     seed=42,
     max_length=MAX_SEQ_LEN,
@@ -371,17 +374,27 @@ trainer = SFTTrainer(
 )
 
 print("\n🚀 Starting multi-turn SFT training ...")
+wandb.init(project="qwen3b-toolbench-sft", name="qwen2.5-3b-multiturn-sft")
 print(f"   Model  : Qwen2.5-3B")
 print(f"   Dataset: {len(dataset['train'])} examples (ToolBench + synthetic)")
 print(f"   Each example has: tool_call → tool_result → final_answer\n")
-trainer.train(resume_from_checkpoint=True)
+train_result = trainer.train(resume_from_checkpoint=True)
+
+# Log final metrics explicitly
+wandb.log({"final_train_loss": train_result.training_loss})
 
 # ── SAVE ─────────────────────────────────────────────────────
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 trainer.model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
+
 print(f"\n✅ Adapter saved to {OUTPUT_DIR}")
 print(f"   Files: {os.listdir(OUTPUT_DIR)}")
+
+# Push to Hugging Face Hub
+print("\nPushing to Hugging Face Hub...")
+trainer.push_to_hub(tags=["qwen", "toolbench", "sft", "multiturn"])
+wandb.finish()
 
 # ── MULTI-TURN INFERENCE TEST ─────────────────────────────────
 print("\n── Multi-turn inference test ──")

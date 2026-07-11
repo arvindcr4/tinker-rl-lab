@@ -21,8 +21,11 @@ from huggingface_hub import login
 login(token="hf_YOUR_TOKEN_HERE")
 
 import json, os, re, torch
+import wandb
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
+
+wandb.init(project="toolbench-multiturn-eval", name="Qwen2.5-3B-eval")
 
 # ── CONFIG ───────────────────────────────────────────────────
 MODEL_ID  = "Qwen/Qwen2.5-3B-Instruct"
@@ -329,6 +332,27 @@ print(f"{'-' * 72}")
 print(f"{'AVERAGE':<35} {sft_avg:>8.2f} {grpo_avg:>8.2f}")
 print(f"{'=' * 72}")
 print(f"\n🏆 Overall Winner: {'GRPO' if grpo_avg > sft_avg else 'SFT' if sft_avg > grpo_avg else 'TIE'}")
+
+wandb.log({
+    "sft_avg_score": sft_avg,
+    "grpo_avg_score": grpo_avg,
+})
+for sc, s, g in zip(SCENARIOS, all_sft_scores, all_grpo_scores):
+    wandb.log({
+        f"sft_score_{sc['id']}": s,
+        f"grpo_score_{sc['id']}": g,
+    })
+
+if grpo_avg >= sft_avg:
+    print("\nPushing GRPO model to Hub...")
+    grpo_model.push_to_hub("Qwen2.5-3B-Toolbench-GRPO")
+    tokenizer.push_to_hub("Qwen2.5-3B-Toolbench-GRPO")
+else:
+    print("\nPushing SFT model to Hub...")
+    sft_model.push_to_hub("Qwen2.5-3B-Toolbench-SFT")
+    tokenizer.push_to_hub("Qwen2.5-3B-Toolbench-SFT")
+
+wandb.finish()
 
 print(f"\n{'─' * 72}")
 print("Chain health check (what good results look like):")

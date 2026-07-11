@@ -167,12 +167,27 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
         reward = compute_reward(response, answer)
         rewards_trace.append(reward)
         
+        query_tensors = [input_ids[0]]
+        response_tensors_list = [outputs[0][input_ids.shape[1]:]]
+        reward_tensors = [torch.tensor(reward, dtype=torch.float32, device=model.pretrained_model.device)]
+        
+        # PPO step
+        stats = trainer.step(query_tensors, response_tensors_list, reward_tensors)
+        
         # Log to W&B
-        wandb.log({
+        log_dict = {
             "step": step,
             "reward": reward,
             "running_avg": np.mean(rewards_trace[-10:]),
-        }, step=step)
+        }
+        if stats:
+            for k, v in stats.items():
+                if isinstance(v, (int, float, np.number)):
+                    log_dict[f"ppo/{k}"] = float(v)
+                elif isinstance(v, torch.Tensor) and v.numel() == 1:
+                    log_dict[f"ppo/{k}"] = float(v.item())
+                    
+        wandb.log(log_dict, step=step)
         
         if step % 5 == 0:
             print(f"  Step {step}/{num_steps}: reward={reward:.3f}, running_avg={np.mean(rewards_trace[-10:]):.3f}")
@@ -196,6 +211,17 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
         "num_steps": num_steps,
         "status": "completed",
     }
+    
+    # Push to HF Hub
+    hf_repo_id = f"arvindcr4-pes-university/tinker-rl-{tag}"
+    print(f"Pushing model to Hub: {hf_repo_id}")
+    try:
+        model.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN"))
+        tokenizer.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN"))
+        result["hub_repo"] = hf_repo_id
+    except Exception as e:
+        print(f"Failed to push to Hub: {e}")
+        result["hub_error"] = str(e)
     
     wandb.log({"final_peak": peak, "final_last10": last10})
     wandb.finish()

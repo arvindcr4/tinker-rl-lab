@@ -200,6 +200,14 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
         "WANDB_PROJECT", "tinker-rl-lab-world-class"
     )
 
+    # Initialize W&B
+    wandb.init(
+        project=os.environ["WANDB_PROJECT"],
+        name=run_name,
+        tags=["openrlhf-grpo"],
+        config=config.to_dict()
+    )
+
     # ---- launch OpenRLHF PPO-Ray with group_norm advantage (GRPO) ----
     # We rely on the reward being baked in via a verifiable reward function
     # the container will register under --reward_pretrain (see modal_grpo_openrlhf.py).
@@ -290,6 +298,30 @@ def run_openrlhf_training(config: OpenRLHFConfig, output_dir: str = "/tmp/openrl
     last10 = float(np.mean(reward_trace[-10:])) if len(reward_trace) >= 10 else float(np.mean(reward_trace or [0]))
     peak = float(max(reward_trace or [0]))
     first5 = float(np.mean(reward_trace[:5])) if reward_trace else 0.0
+
+    wandb.log({
+        "final_peak": peak,
+        "final_last10": last10,
+        "first5_avg": first5,
+        "duration_s": duration,
+        "subprocess_exit": proc.returncode,
+    })
+    wandb.finish()
+
+    hf_repo_id = os.environ.get("HF_REPO_ID", f"arvindcr4/{run_name}")
+    try:
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        actor_path = f"{output_dir}/ckpt/_actor" if os.path.exists(f"{output_dir}/ckpt/_actor") else f"{output_dir}/ckpt"
+        if os.path.exists(actor_path):
+            print(f"Loading model from {actor_path} for push_to_hub...")
+            model = AutoModelForCausalLM.from_pretrained(actor_path, torch_dtype="auto")
+            tokenizer = AutoTokenizer.from_pretrained(actor_path)
+            model.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""))
+            tokenizer.push_to_hub(hf_repo_id, token=os.environ.get("HF_TOKEN", ""))
+            print(f"Pushed model to HF: {hf_repo_id}")
+    except Exception as e:
+        print(f"HF push failed: {e}")
+
     result = {
         "framework": "openrlhf",
         "mode": "real",

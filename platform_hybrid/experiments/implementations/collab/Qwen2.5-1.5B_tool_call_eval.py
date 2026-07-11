@@ -8,7 +8,8 @@
 from huggingface_hub import login
 login(token="TOKEN")   
 
-import json, re, torch
+import os, json, re, torch
+import wandb
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
 
@@ -16,6 +17,11 @@ from peft import PeftModel
 MODEL_ID    = "Qwen/Qwen2.5-1.5B-Instruct"
 SFT_PATH    = "/content/qwen15b-glaive-sft"
 GRPO_PATH   = "/content/qwen15b-glaive-grpo"
+
+WANDB_PROJECT = os.getenv("WANDB_PROJECT", "qwen2.5-tool-call-eval")
+PUSH_TO_HUB   = os.getenv("PUSH_TO_HUB", "false").lower() == "true"
+HF_HUB_ID_SFT = os.getenv("HF_HUB_ID_SFT", "qwen15b-glaive-sft")
+HF_HUB_ID_GRPO = os.getenv("HF_HUB_ID_GRPO", "qwen15b-glaive-grpo")
 
 SYSTEM_PROMPT = (
     "You are a helpful assistant with access to tools.\n"
@@ -153,8 +159,18 @@ def infer(model, tokenizer, query):
 sft_model,  sft_tok  = load_model_with_adapter(SFT_PATH,  "SFT model")
 grpo_model, grpo_tok = load_model_with_adapter(GRPO_PATH, "GRPO model")
 
+wandb.init(project=WANDB_PROJECT, name="sft_vs_grpo_eval", config={
+    "model_id": MODEL_ID,
+    "sft_path": SFT_PATH,
+    "grpo_path": GRPO_PATH,
+    "num_test_cases": len(TEST_CASES)
+})
+
 sft_results  = []
 grpo_results = []
+
+columns = ["query", "expected_tool", "expected_args", "sft_out", "sft_score", "grpo_out", "grpo_score", "winner"]
+eval_table = wandb.Table(columns=columns)
 
 print("\n" + "=" * 80)
 print(f"{'SIDE-BY-SIDE COMPARISON: SFT vs GRPO (RL)':^80}")
@@ -171,6 +187,11 @@ for i, tc in enumerate(TEST_CASES):
     grpo_results.append(grpo_s)
 
     winner = "GRPO" if grpo_s["score"] > sft_s["score"] else ("SFT" if sft_s["score"] > grpo_s["score"] else "TIE")
+
+    eval_table.add_data(
+        tc["query"], tc["expected_tool"], str(tc["expected_args"]),
+        sft_out, sft_s["score"], grpo_out, grpo_s["score"], winner
+    )
 
     print(f"\n[{i+1:02d}] {tc['query']}")
     print(f"  Expected tool : {tc['expected_tool']} | args: {tc['expected_args']}")
@@ -218,6 +239,32 @@ sp = str(sft_sum["avg_score"]);  gp = str(grpo_sum["avg_score"])
 w  = "GRPO ✅" if grpo_sum["avg_score"] > sft_sum["avg_score"] else ("SFT ✅" if sft_sum["avg_score"] > grpo_sum["avg_score"] else "TIE")
 print(f"  {'Avg Quality Score':<23} {sp:>15} {gp:>15} {w:>12}")
 print("=" * 80)
+
+# Log metrics to wandb
+wandb.log({
+    "sft_json_valid_pct": 100 * sft_sum["json"] / sft_sum["n"],
+    "sft_correct_tool_pct": 100 * sft_sum["tool"] / sft_sum["n"],
+    "sft_has_args_pct": 100 * sft_sum["args"] / sft_sum["n"],
+    "sft_clean_output_pct": 100 * sft_sum["clean"] / sft_sum["n"],
+    "sft_avg_score": sft_sum["avg_score"],
+    "grpo_json_valid_pct": 100 * grpo_sum["json"] / grpo_sum["n"],
+    "grpo_correct_tool_pct": 100 * grpo_sum["tool"] / grpo_sum["n"],
+    "grpo_has_args_pct": 100 * grpo_sum["args"] / grpo_sum["n"],
+    "grpo_clean_output_pct": 100 * grpo_sum["clean"] / grpo_sum["n"],
+    "grpo_avg_score": grpo_sum["avg_score"],
+    "eval_results_table": eval_table
+})
+wandb.finish()
+
+if PUSH_TO_HUB:
+    print(f"\nPushing SFT model to HF Hub: {HF_HUB_ID_SFT}")
+    sft_model.push_to_hub(HF_HUB_ID_SFT)
+    sft_tok.push_to_hub(HF_HUB_ID_SFT)
+    
+    print(f"Pushing GRPO model to HF Hub: {HF_HUB_ID_GRPO}")
+    grpo_model.push_to_hub(HF_HUB_ID_GRPO)
+    grpo_tok.push_to_hub(HF_HUB_ID_GRPO)
+    print("Push complete.")
 
 print("\n📊 Interpretation:")
 print("  JSON Valid   → Basic format learned")

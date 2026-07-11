@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 import torch
+import wandb
 from datasets import Dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
 from trl import DPOTrainer, DPOConfig
@@ -53,6 +54,12 @@ class DPOScriptArguments:
     save_steps: int = field(default=50, metadata={"help": "Save steps."})
     max_grad_norm: float = field(default=1.0, metadata={"help": "Max gradient norm."})
     warmup_ratio: float = field(default=0.1, metadata={"help": "Warmup ratio."})
+
+    # Tracking and Hub
+    push_to_hub: bool = field(default=False, metadata={"help": "Push the model to HF Hub."})
+    hub_model_id: str = field(default=None, metadata={"help": "The model ID to push to on the Hub."})
+    wandb_project: str = field(default="tinker-dpo-shorter", metadata={"help": "Wandb project name."})
+    wandb_run_name: str = field(default=None, metadata={"help": "Wandb run name."})
 
 
 def create_preference_dataset(
@@ -154,6 +161,12 @@ def main():
     env_info = set_global_seed(args.seed)
     logger.info(f"Seed set to {args.seed} | Environment: {env_info}")
 
+    wandb.init(
+        project=args.wandb_project,
+        name=args.wandb_run_name,
+        config=vars(args)
+    )
+
     logger.info("Loading model and tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     if tokenizer.pad_token is None:
@@ -202,6 +215,9 @@ def main():
         save_steps=args.save_steps,
         max_grad_norm=args.max_grad_norm,
         warmup_ratio=args.warmup_ratio,
+        report_to="wandb",
+        push_to_hub=args.push_to_hub,
+        hub_model_id=args.hub_model_id,
     )
 
     logger.info("Initializing DPOTrainer...")
@@ -214,11 +230,21 @@ def main():
     )
 
     logger.info("Starting DPO training for shorter responses...")
-    trainer.train(resume_from_checkpoint=True)
+    train_result = trainer.train(resume_from_checkpoint=True)
+    
+    # Log final metrics to wandb
+    metrics = train_result.metrics
+    wandb.log(metrics)
     
     final_output_dir = f"{output_dir}_final"
     trainer.save_model(final_output_dir)
+    
+    if args.push_to_hub:
+        logger.info(f"Pushing to Hub: {args.hub_model_id}")
+        trainer.push_to_hub()
+        
     logger.info("Training complete!")
+    wandb.finish()
     
     # Log experiment metadata
     log_experiment_metadata(

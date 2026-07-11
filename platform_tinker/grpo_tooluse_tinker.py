@@ -25,6 +25,8 @@ import torch
 import tinker
 import tinker.types as T
 from transformers import AutoTokenizer
+import wandb
+from huggingface_hub import HfApi, create_repo
 
 # ── Config ───────────────────────────────────────────────────────────────
 # TODO (Adversarial Review): To address the "Closed-Source Confound", compare these Tinker API 
@@ -152,6 +154,20 @@ for seed in range(NUM_SEEDS):
     print(f"\n==================================================\nRunning seed {seed} ({seed+1}/{NUM_SEEDS})\n==================================================")
     random.seed(seed)
     torch.manual_seed(seed)
+
+    run_name = f"grpo_tooluse_qwen3_8b_seed{seed}"
+    wandb.init(
+        project="tinker-rl-lab",
+        name=run_name,
+        config={
+            "model": MODEL,
+            "lora_rank": LORA_RANK,
+            "group_size": GROUP_SIZE,
+            "steps": STEPS,
+            "lr": LR,
+            "seed": seed,
+        }
+    )
     
     print("Connecting to Tinker...")
     svc = tinker.ServiceClient(base_url=None)
@@ -238,6 +254,12 @@ for seed in range(NUM_SEEDS):
         step_rewards.append(avg_r)
         grpo_loss_val = result.metrics.get("grpo_loss", float("nan"))
         print(f"Step {step + 1:3d}/{STEPS} | loss={grpo_loss_val:.4f} | reward={avg_r:.3f} | erf={erf:.3f}")
+        wandb.log({
+            "train/loss": grpo_loss_val,
+            "train/reward": avg_r,
+            "train/erf": erf,
+            "train/step": step + 1,
+        })
 
         if (step + 1) % SAVE_EVERY == 0:
             state = tc.save_state(name=f"state_seed{seed}_{step + 1}")
@@ -272,5 +294,29 @@ for seed in range(NUM_SEEDS):
 
     avg_test = sum(test_rewards) / len(test_rewards) if test_rewards else 0.0
     print(f"Held-out Test Reward: {avg_test:.3f}")
+    wandb.log({"test/reward": avg_test})
+    wandb.finish()
+
+    push_to_hub_flag = os.environ.get("HF_PUSH", "0").lower() in {"1", "true", "yes"}
+    if push_to_hub_flag:
+        try:
+            token = os.environ.get("HF_TOKEN")
+            api = HfApi(token=token)
+            owner = os.environ.get("HF_REPO_OWNER") or api.whoami(token=token)["name"]
+            repo_id = f"{owner}/{run_name}"
+            private = os.environ.get("HF_PUSH_PRIVATE", "1") in {"1", "true", "yes"}
+            
+            print(f"Pushing final checkpoint to Hugging Face Hub: {repo_id}")
+            create_repo(repo_id=repo_id, token=token, private=private, exist_ok=True, repo_type="model")
+            api.upload_folder(
+                repo_id=repo_id,
+                folder_path=final_ckpt.path,
+                repo_type="model",
+                token=token,
+                commit_message=f"Upload Tinker SDK adapter for {run_name}"
+            )
+            print("Successfully pushed to Hub.")
+        except Exception as e:
+            print(f"Failed to push to Hub: {e}")
 
 

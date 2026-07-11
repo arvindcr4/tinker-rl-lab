@@ -11,8 +11,13 @@ import os
 import sys
 import logging
 import argparse
+import tempfile
+import json
 from dataclasses import dataclass, field
 from typing import Dict, List, Any, Tuple, Optional
+
+import wandb
+from huggingface_hub import HfApi
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -127,6 +132,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=None, help="Random seed")
     parser.add_argument("--device", type=str, default="cuda:0", help="Training device")
     parser.add_argument("--learning-rate", type=float, default=1e-4, help="Learning rate")
+    parser.add_argument("--wandb-project", type=str, default="tinker-rl-games", help="WandB project name")
+    parser.add_argument("--hf-repo", type=str, default=None, help="HuggingFace repo ID for checkpointing")
     return parser.parse_known_args()[0]
 
 
@@ -143,6 +150,8 @@ def main() -> None:
     seed = args.seed if args.seed is not None else get_seed_from_args()
     set_global_seed(seed)
     
+    wandb.init(project=args.wandb_project, config=vars(args))
+
     logger.info("=" * 60)
     logger.info("rl_games (NVIDIA) PPO Math RL Configuration")
     logger.info("=" * 60)
@@ -172,14 +181,40 @@ def main() -> None:
 
     # Random baseline
     correct = 0
-    for _ in range(100):
+    for epoch in range(100):
         obs, _ = env.reset()
         action = env.action_space.sample()
         _, reward, _, _, info = env.step(action)
         if info["correct"]:
             correct += 1
+        wandb.log({"reward": reward, "epoch": epoch})
 
-    logger.info("Random baseline: %s%%", correct)
+    accuracy = correct / 100.0
+    logger.info("Random baseline: %s%%", accuracy * 100)
+    wandb.log({"accuracy": accuracy})
+
+    def push_to_hub(repo_id: str, model_info: dict):
+        logger.info(f"Pushing to HuggingFace Hub repo: {repo_id}")
+        api = HfApi()
+        try:
+            api.create_repo(repo_id=repo_id, exist_ok=True)
+        except Exception as e:
+            logger.warning(f"Could not create repo (might exist): {e}")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            model_path = os.path.join(tmpdir, "model.json")
+            with open(model_path, "w") as f:
+                json.dump(model_info, f)
+            api.upload_file(
+                path_or_fileobj=model_path,
+                path_in_repo="model.json",
+                repo_id=repo_id,
+                commit_message="Add rl_games model checkpoint"
+            )
+
+    if args.hf_repo:
+        push_to_hub(args.hf_repo, {"accuracy": accuracy, "seed": seed, "config": vars(args)})
+
+    wandb.finish()
 
     # Full rl_games training message
     logger.info("--- Full rl_games Training (requires rl_games) ---")

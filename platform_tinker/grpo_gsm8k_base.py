@@ -21,6 +21,8 @@ assert os.environ.get("TINKER_API_KEY"), (
 import torch, tinker, tinker.types as T
 from transformers import AutoTokenizer
 from datasets import load_dataset
+import wandb
+from huggingface_hub import HfApi, create_repo
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", default="Qwen/Qwen3-8B")
@@ -40,6 +42,20 @@ MODEL = args.model
 EXP = args.tag or f"gsm8k_{MODEL.split('/')[-1]}_s{args.seed}_r{args.rank}"
 STEPS, GROUP, LR, RANK = args.steps, args.group, args.lr, args.rank
 SAVE_EVERY = max(args.steps // 4, 10)
+
+wandb.init(
+    project="tinker-rl-lab",
+    name=EXP,
+    config={
+        "model": MODEL,
+        "seed": args.seed,
+        "rank": RANK,
+        "steps": STEPS,
+        "lr": LR,
+        "group": GROUP,
+        "batch": args.batch,
+    }
+)
 
 SYSTEM_PROMPT = "You are a math assistant. Solve the problem step by step, then give your final numerical answer inside \\boxed{}."
 
@@ -168,6 +184,13 @@ for step in range(STEPS):
         f"[{EXP}] {step + 1:3d}/{STEPS} | loss={loss_val:.4f} | reward={avg:.3f} | acc={avg * 100:.1f}%"
     )
 
+    wandb.log({
+        "train/loss": loss_val,
+        "train/reward": avg,
+        "train/acc": avg * 100,
+        "train/step": step + 1,
+    })
+
     if (step + 1) % SAVE_EVERY == 0:
         tc.save_state(name=f"s{step + 1}")
         ckpt = tc.save_weights_for_sampler(name=f"s{step + 1}").result()
@@ -196,3 +219,27 @@ print(
 print(f"[{EXP}] Run ID: {tc.model_id}")
 print(f"[{EXP}] Sampler: {f.path}")
 print(f"[{EXP}] Reward trace: {[round(r, 3) for r in step_rewards]}")
+
+wandb.finish()
+
+push_to_hub_flag = os.environ.get("HF_PUSH", "0").lower() in {"1", "true", "yes"}
+if push_to_hub_flag:
+    try:
+        token = os.environ.get("HF_TOKEN")
+        api = HfApi(token=token)
+        owner = os.environ.get("HF_REPO_OWNER") or api.whoami(token=token)["name"]
+        repo_id = f"{owner}/{EXP}"
+        private = os.environ.get("HF_PUSH_PRIVATE", "1") in {"1", "true", "yes"}
+        
+        print(f"[{EXP}] Pushing final checkpoint to Hugging Face Hub: {repo_id}")
+        create_repo(repo_id=repo_id, token=token, private=private, exist_ok=True, repo_type="model")
+        api.upload_folder(
+            repo_id=repo_id,
+            folder_path=f.path,
+            repo_type="model",
+            token=token,
+            commit_message=f"Upload Tinker SDK adapter for {EXP}"
+        )
+        print(f"[{EXP}] Successfully pushed to Hub.")
+    except Exception as e:
+        print(f"[{EXP}] Failed to push to Hub: {e}")

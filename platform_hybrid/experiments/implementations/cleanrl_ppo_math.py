@@ -16,6 +16,26 @@ from typing import Optional
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import gymnasium as gym
+import wandb
+from huggingface_hub import HfApi
+
+def push_to_hub(repo_id: str, filename: str, filepath: str):
+    """Push model to HuggingFace Hub."""
+    try:
+        api = HfApi()
+        try:
+            api.create_repo(repo_id, exist_ok=True)
+        except Exception:
+            pass
+        api.upload_file(
+            path_or_fileobj=filepath,
+            path_in_repo=filename,
+            repo_id=repo_id,
+        )
+        print(f"Successfully pushed {filename} to {repo_id}")
+    except Exception as e:
+        print(f"Error pushing to hub: {e}")
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -52,6 +72,13 @@ class Args:
     vf_coef: float = 0.5
     max_grad_norm: float = 0.5
     target_kl: Optional[float] = 0.01  # KL divergence for early stopping
+
+    # Logging and Hub
+    track: bool = False
+    wandb_project_name: str = "cleanrl_ppo_math"
+    wandb_entity: Optional[str] = None
+    push_to_hub: bool = False
+    hf_repo_id: str = "arvindcr4/cleanrl-ppo-math"
 
 
 class ArithmeticEnv(gym.Env):
@@ -136,6 +163,15 @@ class Agent(nn.Module):
 
 def main():
     args = Args()
+
+    if args.track:
+        wandb.init(
+            project=args.wandb_project_name,
+            entity=args.wandb_entity,
+            sync_tensorboard=False,
+            config=vars(args),
+            name=args.exp_name,
+        )
 
     # Seeding
     seed = get_seed_from_args(default=args.seed)
@@ -294,12 +330,27 @@ def main():
             avg_reward = np.mean(episode_rewards) if episode_rewards else 0
             sps = int(global_step / (time.time() - start_time))
             print(f"Step {global_step:>6} | Accuracy: {accuracy:5.1f}% | Reward: {avg_reward:.3f} | SPS: {sps}")
+            
+            if args.track:
+                wandb.log({
+                    "custom/accuracy": accuracy,
+                    "custom/reward": avg_reward,
+                    "custom/sps": sps,
+                    "step": global_step,
+                })
+                
             episode_correct = []
             episode_rewards = []
 
     print("\nTraining complete!")
     torch.save(agent.state_dict(), "cleanrl_math_agent.pt")
     print("Model saved to cleanrl_math_agent.pt")
+
+    if args.push_to_hub:
+        push_to_hub(args.hf_repo_id, "cleanrl_math_agent.pt", "cleanrl_math_agent.pt")
+
+    if args.track:
+        wandb.finish()
 
 
 if __name__ == "__main__":

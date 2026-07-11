@@ -24,6 +24,9 @@ import json
 import os
 import time
 
+HF_TOKEN = os.environ.get("HF_TOKEN", "")
+WANDB_KEY = os.environ.get("WANDB_API_KEY", "")
+
 app = modal.App("tinkerrl-groupsize-zvf")
 results_vol = modal.Volume.from_name("tinkerrl-results", create_if_missing=True)
 RESULTS_DIR = "/results"
@@ -38,7 +41,13 @@ image = (
         "accelerate>=1.0.0",
         "safetensors>=0.4.0",
         "huggingface-hub>=0.26.0",
+        "wandb>=0.16.0",
     )
+    .env({
+        "HF_TOKEN": HF_TOKEN,
+        "WANDB_API_KEY": WANDB_KEY,
+        "WANDB_PROJECT": "tinkerrl-groupsize-zvf",
+    })
 )
 
 GROUP_SIZES = [2, 4, 8, 16]
@@ -50,7 +59,16 @@ MAX_NEW = 10
 EPS = 1e-6
 
 
-@app.function(image=image, gpu="A10G", timeout=3600, volumes={RESULTS_DIR: results_vol}, retries=1)
+@app.function(
+    image=image, gpu="A10G", timeout=3600, volumes={RESULTS_DIR: results_vol}, retries=1,
+    secrets=[
+        modal.Secret.from_dict({
+            "HF_TOKEN": HF_TOKEN,
+            "WANDB_API_KEY": WANDB_KEY,
+            "WANDB_PROJECT": "tinkerrl-groupsize-zvf",
+        })
+    ]
+)
 def run_one(group_size: int, seed: int) -> dict:
     import os as _os
     _os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -92,6 +110,10 @@ def run_one(group_size: int, seed: int) -> dict:
 
     def sample_batch(n):
         return [(random.randint(1, 99), random.randint(1, 99)) for _ in range(n)]
+
+    import wandb
+    run_name = f"G{group_size}_s{seed}"
+    wandb.init(project="tinkerrl-groupsize-zvf", name=run_name, config={"group_size": group_size, "seed": seed, "model": MODEL})
 
     step_log = []
     t0 = time.time()
@@ -159,14 +181,16 @@ def run_one(group_size: int, seed: int) -> dict:
             [p for p in model.parameters() if p.requires_grad], 1.0))
         opt.step()
 
-        step_log.append({
+        metrics = {
             "step": step,
             "zvf": zvf,
             "mean_reward": float(rewards.mean()),
             "entropy": entropy,
             "advantage_variance": adv_var,
             "grad_norm": gnorm,
-        })
+        }
+        step_log.append(metrics)
+        wandb.log(metrics)
 
     # measured held-out eval (greedy on fresh problems)
     model.eval()
@@ -200,6 +224,18 @@ def run_one(group_size: int, seed: int) -> dict:
         json.dump(result, f, indent=2)
     results_vol.commit()
     print(f"[G={group_size} seed={seed}] heldout={heldout_acc:.3f} last10={last10:.3f} meanZVF={mean_zvf:.3f}")
+
+    if _os.environ.get("HF_TOKEN"):
+        repo_id = f"groupsize-zvf-sweep-G{group_size}-s{seed}"
+        print(f"Pushing adapter to Hub: {repo_id}")
+        try:
+            model.push_to_hub(repo_id, token=_os.environ["HF_TOKEN"])
+            tok.push_to_hub(repo_id, token=_os.environ["HF_TOKEN"])
+        except Exception as e:
+            print(f"Failed to push to hub: {e}")
+            
+    wandb.finish()
+
     return result
 
 

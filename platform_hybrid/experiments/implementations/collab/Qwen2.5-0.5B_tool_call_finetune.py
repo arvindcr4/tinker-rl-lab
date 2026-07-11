@@ -9,8 +9,10 @@
 # ────────────────────────────────────────────────────────────
 # 1. IMPORTS
 # ────────────────────────────────────────────────────────────
+import os
 import json
 import torch
+import wandb
 from datasets import Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import LoraConfig, TaskType
@@ -196,6 +198,8 @@ lora_config = LoraConfig(
 # ────────────────────────────────────────────────────────────
 # 7. SFTConfig + SFTTrainer  (trl >= 0.16)
 # ────────────────────────────────────────────────────────────
+wandb.init(project="qwen25-tool-finetune", name="qlora-experiment")
+
 sft_config = SFTConfig(
     output_dir=OUTPUT_DIR,
     num_train_epochs=TRAIN_EPOCHS,
@@ -210,7 +214,7 @@ sft_config = SFTConfig(
     eval_strategy="epoch",
     save_strategy="epoch",
     load_best_model_at_end=True,
-    report_to="none",
+    report_to="wandb",
     optim="paged_adamw_8bit",
     seed=42,
     max_length=MAX_SEQ_LEN,
@@ -233,11 +237,17 @@ print("\nStarting training ...\n")
 trainer.train(resume_from_checkpoint=True)
 
 # ────────────────────────────────────────────────────────────
-# 9. SAVE ADAPTER
+# 9. SAVE ADAPTER & PUSH TO HUB
 # ────────────────────────────────────────────────────────────
 trainer.model.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
 print(f"\nLoRA adapter saved to {OUTPUT_DIR}")
+
+try:
+    trainer.push_to_hub("arvindcr4/tool-call-lora-qwen0.5b")
+    print("Pushed to HuggingFace Hub successfully!")
+except Exception as e:
+    print(f"Failed to push to Hub: {e}")
 
 # ────────────────────────────────────────────────────────────
 # 10. QUICK INFERENCE TEST
@@ -267,4 +277,8 @@ def run_inference(user_query):
 print("\n-- Inference test --")
 q = "What is the stock price of Microsoft?"
 print(f"User : {q}")
-print(f"Model: {run_inference(q)}")
+ans = run_inference(q)
+print(f"Model: {ans}")
+
+wandb.log({"inference_test/query": q, "inference_test/response": ans})
+wandb.finish()

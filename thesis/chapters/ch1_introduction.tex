@@ -33,6 +33,31 @@ fraction of groups carrying usable gradient signal (\emph{gradient
 utilisation}).
 \end{definition}
 
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.86\textwidth,height=6.2cm,
+  xlabel={per-prompt success rate $p$},
+  ylabel={$h_G(p)=p^G+(1-p)^G$},
+  xmin=0,xmax=1,ymin=0,ymax=1.02,
+  legend style={at={(0.5,0.6)},anchor=south,legend columns=3,draw=none,fill=none},
+  domain=0:1,samples=201,thick]
+\addplot[blue]{x^2+(1-x)^2};   \addlegendentry{$G{=}2$}
+\addplot[orange]{x^8+(1-x)^8}; \addlegendentry{$G{=}8$}
+\addplot[red]{x^16+(1-x)^16};  \addlegendentry{$G{=}16$}
+\node[align=center,font=\scriptsize] at (axis cs:0.09,0.32)
+  {all-incorrect\\wall ($p\to0$)};
+\node[align=center,font=\scriptsize] at (axis cs:0.91,0.32)
+  {all-correct\\wall ($p\to1$)};
+\end{axis}
+\end{tikzpicture}
+\caption{The two walls. The population zero-variance probability
+$h_G(p)$ is U-shaped in difficulty: groups carry no gradient when the model
+fails everything ($p\to0$) \emph{or} masters everything ($p\to1$). Larger $G$
+narrows both walls; no fixed $G$ removes them.}
+\label{fig:ushape}
+\end{figure}
+
 \section{Claim contract}
 \label{sec:claims}
 Following an external adversarial review of this program (Chapter~9), the

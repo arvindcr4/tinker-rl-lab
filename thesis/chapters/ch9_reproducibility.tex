@@ -36,6 +36,35 @@ findings (invented file paths and quotes), all refuted against the source ---
 itself a demonstration that \emph{plausible-but-wrong survives until verified
 against the stack}.
 
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[node distance=4mm and 9mm,
+  box/.style={rectangle,rounded corners,draw,align=center,minimum height=9mm,
+              font=\scriptsize,inner sep=4pt},
+  arr/.style={-{Stealth},thick}]
+\node[box,fill=gray!12] (run) {training run\\(any stack)};
+\node[box,fill=blue!12,right=of run] (manifest)
+  {8-item manifest\\loss form · ref/KL · backend+ckpt\\ \ZVF{} trace ·
+   $G$-schedule · split\\decontam+parser · pass@$k$};
+\node[box,fill=blue!12,right=of manifest] (registry)
+  {registry entry\\(machine-readable,\\evidence-tiered)};
+\node[box,fill=orange!20,below=of registry] (stackdiff)
+  {\texttt{stackdiff}\\pairwise flip-risk\\verdict R0--R5};
+\node[box,fill=green!15,left=of stackdiff] (badge)
+  {auditor badge\\0--100 coverage};
+\draw[arr] (run) -- (manifest);
+\draw[arr] (manifest) -- (registry);
+\draw[arr] (registry) -- (stackdiff);
+\draw[arr] (manifest) -- (badge);
+\node[font=\scriptsize,align=center,below=1.5mm of badge,xshift=-16mm]
+  {example verdict: open-vs-closed ``DAPO'' pair\\flagged R5 from manifests alone};
+\end{tikzpicture}
+\caption{The reporting pipeline: every run emits an eight-item manifest;
+manifests populate the registry; \texttt{stackdiff} grades any pair of
+entries for label-flip risk before their results are compared.}
+\label{fig:pipeline}
+\end{figure}
+
 \section{The eight-item minimum reportable stack}
 Every item earns its place via a documented lever from this corpus:
 (1) loss form (ratio level, clip, mask, normalisation, dynamic-sampling

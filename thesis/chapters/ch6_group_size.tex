@@ -46,6 +46,36 @@ survives on final reward but not on signal availability. The fuller
 bridge-to-DPO treatment from the group-size working paper remains
 thesis-external future work.
 
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[node distance=5mm and 7mm,
+  stage/.style={rectangle,rounded corners,draw,align=center,minimum height=9mm,
+                font=\scriptsize,inner sep=4pt},
+  lab/.style={font=\scriptsize,align=center}]
+\node[stage,fill=blue!10]  (early) {early training\\$p$ low--mid};
+\node[stage,fill=blue!20,right=of early]  (mid) {mid training\\$p$ rising};
+\node[stage,fill=blue!30,right=of mid]    (late) {endgame\\$p\to1$};
+\node[lab,below=2mm of early] {small $G$ efficient:\\most groups mixed,\\
+  more optimiser steps\\per rollout};
+\node[lab,below=2mm of mid] {monitor the pair\\(reward, \ZVF{})\\with Wilson CI};
+\node[lab,below=2mm of late] {small $G$ starves\\(all-correct wall);\\
+  large $G$ keeps\\signal alive};
+\draw[-{Stealth},thick] (early) -- (mid);
+\draw[-{Stealth},thick] (mid) -- (late);
+\draw[decorate,decoration={brace,amplitude=4pt},thick]
+  ([yshift=3mm]early.north west) -- ([yshift=3mm]late.north east)
+  node[midway,above=5pt,font=\scriptsize]
+  {escalate $G$ when the T2 budget $N(\underline{\ZVF}_t)$ exceeds the step's
+   rollout budget};
+\end{tikzpicture}
+\caption{Group size as a schedule. Per-rollout efficiency favours small $G$
+early (Chapter~5); the all-correct wall punishes it late (Claim~2). The
+escalation trigger comes from the T2 reliability budget, not from a
+data-dependent ``optimal $G$'' --- which Chapter~5 shows does not exist under
+per-rollout accounting.}
+\label{fig:schedule}
+\end{figure}
+
 \section{Controller design (evidence-gapped, stated as such)}
 A ZVF-triggered group-size controller follows from Chapters~4--5: measure
 $\ZVF_t$ with its Wilson interval (T1); when the reliability budget

@@ -16,6 +16,38 @@ What survives is the mechanical reading: sustained low gradient utilisation
 coincided with reward plateaus and regressions in every collapse we measured,
 with \ZVF{} rising \emph{after} the plateau --- a cheap alarm, not a cause.
 
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.86\textwidth,height=6.4cm,
+  xlabel={fraction of the 2{,}560-rollout budget spent},
+  ylabel={value},
+  xmin=0,xmax=1,ymin=0,ymax=1.05,
+  legend style={at={(0.98,0.35)},anchor=east,draw=none,fill=none,font=\scriptsize},
+  thick]
+\addplot[blue,domain=0:1,samples=100]{min(1, 0.35+0.75*x)};
+  \addlegendentry{$G{=}2$: train reward}
+\addplot[blue,dashed,domain=0:1,samples=100]{0.15+0.8*x^3};
+  \addlegendentry{$G{=}2$: \ZVF{}}
+\addplot[red!80!black,domain=0:1,samples=100]{min(1,0.35+0.7*x)};
+  \addlegendentry{$G{=}16$: train reward}
+\addplot[red!80!black,dashed,domain=0:1,samples=100]{0.10+0.12*x};
+  \addlegendentry{$G{=}16$: \ZVF{}}
+\draw[gray,dotted] (axis cs:0.75,0) -- (axis cs:0.75,1.05);
+\node[font=\scriptsize,align=left,anchor=west] at (axis cs:0.76,0.55)
+  {endgame: reward\\reads success,\\$G{=}2$ signal is gone};
+\end{axis}
+\end{tikzpicture}
+\caption{Schematic of the measured matched-budget behaviour (Chapter~6,
+seeds 123/456): both group sizes reach comparable train reward, but the
+$G{=}2$ trajectory's \ZVF{} climbs into the all-correct wall
+($0.75$--$1.0$) while $G{=}16$ stays low ($\le0.25$). Reward alone cannot
+distinguish the two runs at the end; the (reward, \ZVF{}) pair can.
+Stylised curves; measured values in Table form in Chapter~6 and artifacts in
+Appendix~B.}
+\label{fig:disagreement}
+\end{figure}
+
 \section{What \ZVF{} adds over mean reward}
 The sharpest demonstration comes from the matched-budget panel of Chapter~6.
 Late in the $G{=}2$ arms, mean train reward sits near $1.0$ --- by the reward

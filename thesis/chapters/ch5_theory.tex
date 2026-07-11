@@ -42,6 +42,30 @@ with T1, the one-sided lower confidence bound $\underline{\ZVF}_t$ yields a
 per-step, observation-driven budget $N(\underline{\ZVF}_t)$ --- conservative,
 since $N$ is increasing and $N(\underline{\ZVF}_t)\le N(\ZVF_t)$.
 
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{semilogyaxis}[width=0.86\textwidth,height=6.2cm,
+  xlabel={observed \ZVF{}},
+  ylabel={reliability budget $N(\ZVF)$ (rollouts)},
+  xmin=0.05,xmax=0.99,ymin=5,ymax=2000,
+  legend style={at={(0.05,0.95)},anchor=north west,draw=none,fill=none,font=\scriptsize},
+  domain=0.05:0.99,samples=300,thick]
+\addplot[blue]{8*ln(10)/(-ln(x))};   \addlegendentry{$G{=}8$, $\delta{=}0.1$}
+\addplot[orange]{8*ln(20)/(-ln(x))}; \addlegendentry{$G{=}8$, $\delta{=}0.05$}
+\addplot[only marks,mark=*,mark size=2pt,red] coordinates {(0.886,160)};
+\node[font=\scriptsize,anchor=west] at (axis cs:0.6,160)
+  {hardest stratum: $\ZVF{=}0.886 \Rightarrow 160$ rollouts};
+\end{semilogyaxis}
+\end{tikzpicture}
+\caption{The T2 reliability budget
+$N(\ZVF)=G\lceil\ln\delta/\ln\ZVF\rceil$: the $(1{-}\delta)$-quantile of
+rollouts to the next informative group diverges logarithmically as
+$\ZVF\to1$. The marked point is the hardest empirical stratum, where the
+model quantile matched the observed quantile at ratio 1.00.}
+\label{fig:budget}
+\end{figure}
+
 \section{T3: the optimal group size is universal (a negative result)}
 The signal-per-rollout objective
 $J(G)=\tfrac1G\,\mathbb{E}_{p\sim\phi}[(1-h_G(p))\,p(1-p)]$ was intended to

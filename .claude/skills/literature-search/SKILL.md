@@ -87,5 +87,5 @@ python ~/.claude/skills/deep-research/scripts/bibtex_manager.py \
 Present results as a table + detailed entries with BibTeX keys. Always note preprint status.
 
 ## Related Skills
-- Downstream: [citation-management](../citation-management/), [literature-review](../literature-review/), [related-work-writing](../related-work-writing/)
-- See also: [deep-research](../deep-research/), [novelty-assessment](../novelty-assessment/)
+- Downstream: [citation-management](../citation-management/)
+- See also: [novelty-assessment](../novelty-assessment/)

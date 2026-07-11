@@ -91,6 +91,4 @@ BibTeX key format: `firstAuthorLastNameYearFirstContentWord` (e.g., `vaswani2017
 - Ensure required fields per entry type
 
 ## Related Skills
-- Upstream: [literature-search](../literature-search/), [deep-research](../deep-research/)
-- Downstream: [paper-compilation](../paper-compilation/), [latex-formatting](../latex-formatting/)
-- See also: [related-work-writing](../related-work-writing/)
+- Upstream: [literature-search](../literature-search/)

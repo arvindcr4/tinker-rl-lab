@@ -79,6 +79,4 @@ Always generate tables with:
 - Add glossary/notes for abbreviated column headers
 
 ## Related Skills
-- Upstream: [data-analysis](../data-analysis/), [experiment-code](../experiment-code/)
-- Downstream: [paper-writing-section](../paper-writing-section/), [paper-compilation](../paper-compilation/)
 - See also: [figure-generation](../figure-generation/)

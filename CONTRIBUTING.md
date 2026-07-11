@@ -43,6 +43,11 @@ The canonical research-engineering interfaces are:
 - `utils.audit_utils.AuditResult` for submission and scientific audits;
 - `platform_hybrid.paper.figure_module.FigureModule` for paper figures.
 
+Every `platform_local/*_audit.py` module must be registered with the audit
+runner and remain directly executable. Every figure results adapter must return
+loaded records; canonical renderers must not load result files or embed fallback
+records themselves.
+
 Historical script paths may remain as compatibility adapters, but must not grow
 independent training loops, audit exit policy, or rendering implementations.
 
@@ -50,8 +55,8 @@ independent training loops, audit exit policy, or rendering implementations.
 
 Describe the behavior change, verification performed, provenance impact, and any
 known limitations. CI must pass on every supported Python version. Architectural
-changes should update the relevant `CONTEXT.md`; durable trade-offs should be
-recorded as an ADR under `docs/adr/`.
+changes should update the contract tests that
+enforce the chosen interface.
 
 ## Generated training scripts
 

@@ -101,5 +101,5 @@ For poster sessions, use a multi-column layout:
 - Presentation should be self-contained (understandable without reading the paper)
 
 ## Related Skills
-- Upstream: [paper-compilation](../paper-compilation/), [figure-generation](../figure-generation/)
-- See also: [self-review](../self-review/), [paper-assembly](../paper-assembly/)
+- Upstream: [figure-generation](../figure-generation/)
+- See also: [self-review](../self-review/)

@@ -89,6 +89,7 @@ dev = [
     # per-experiment analysis tooling).
     "pandas>=2.0",
     "matplotlib>=3.7",
+    "scipy>=1.10",
     "seaborn>=0.13",
 ]
 
@@ -179,4 +180,5 @@ exclude = ["experiments/**", "scripts/**"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-v --tb=short"

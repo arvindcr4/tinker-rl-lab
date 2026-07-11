@@ -88,6 +88,4 @@ formulation, or insight.
 - Check for concurrent/recent arXiv submissions
 
 ## Related Skills
-- Upstream: [literature-search](../literature-search/), [deep-research](../deep-research/)
-- Downstream: [idea-generation](../idea-generation/), [research-planning](../research-planning/)
-- See also: [related-work-writing](../related-work-writing/)
+- Upstream: [literature-search](../literature-search/)

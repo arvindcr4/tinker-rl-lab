@@ -1,6 +1,6 @@
 # Tinker RL Lab
 
-> **Academic reviewers / professors:** start at [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) for the semester boundary and ownership, then review [`sem 3 work/`](sem%203%20work/) (Group 6 capstone) and [`sem 4 work/`](sem%204%20work/) (solo continuation). Everything else in this repository is shared research infrastructure and evidence.
+> **Academic reviewers / professors:** start at [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) for the semester boundary and ownership, then review [`platform_hybrid/sem 3 work/`](sem%203%20work/) (Group 6 capstone) and [`platform_hybrid/sem 4 work/`](sem%204%20work/) (solo continuation). Everything else in this repository is shared research infrastructure and evidence.
 
 A consolidated research repository for Reinforcement Learning experiments with Large Language Models, integrating multiple RL frameworks and compute backends.
 
@@ -12,8 +12,8 @@ This repository consolidates multiple research projects, spanning several RL fra
 
 This codebase spans two academic phases. They share infrastructure, but their deliverables and authorship are separated:
 
-- [`sem 3 work/`](sem%203%20work/) — frozen six-student Group 6 report, capstone artifacts, and the NeurIPS main-track submission.
-- [`sem 4 work/`](sem%204%20work/) — Arvind C R's solo continuation under project guide Ramesh Prakash Guledgudd, including the NeurIPS workshop submission, eight freshly compiled papers, and an experiment/evidence map.
+- [`platform_hybrid/sem 3 work/`](sem%203%20work/) — frozen six-student Group 6 report, capstone artifacts, and the NeurIPS main-track submission.
+- [`platform_hybrid/sem 4 work/`](sem%204%20work/) — Arvind C R's solo continuation under project guide Ramesh Prakash Guledgudd, including the NeurIPS workshop submission, eight freshly compiled papers, and an experiment/evidence map.
 - [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) — exact boundary, ownership explanation, and rationale for retaining one reproducible codebase.
 
 ## Repository Structure
@@ -21,8 +21,8 @@ This codebase spans two academic phases. They share infrastructure, but their de
 ```
 tinker-rl-lab/
 ├── PROJECT_HISTORY.md    # Semester boundary & academic ownership
-├── sem 3 work/           # Frozen Group 6 deliverables (Semester 3)
-├── sem 4 work/           # Solo-continuation papers & submission (Semester 4)
+├── platform_hybrid/sem 3 work/           # Frozen Group 6 deliverables (Semester 3)
+├── platform_hybrid/sem 4 work/           # Solo-continuation papers & submission (Semester 4)
 │
 ├── platform_tinker/      # Cloud-based Tinker platform integration
 │   ├── atropos/          # Tinker-Atropos environment integration
@@ -286,7 +286,7 @@ This repository consolidates all PES LLM Research projects:
 - Arvind C R (PES University) — student researcher and author
 - Ramesh Prakash Guledgudd (PES University) — project guide
 
-The current P1–P8 paper series belongs to this phase. See [`sem 4 work/`](sem%204%20work/) and the shared author source in [`paper/sections/_shared_author.tex`](paper/sections/_shared_author.tex).
+The current P1–P8 paper series belongs to this phase. See [`platform_hybrid/sem 4 work/`](sem%204%20work/) and the shared author source in [`paper/sections/_shared_author.tex`](paper/sections/_shared_author.tex).
 
 ### Semester 3 — Group 6
 
@@ -301,7 +301,7 @@ The current P1–P8 paper series belongs to this phase. See [`sem 4 work/`](sem%
 
 Corresponding author: Arvind C R &lt;arvindcr4@gmail.com&gt;. Equal contribution denotes equal
 technical and writing contribution; author order among the student team is alphabetical by given name after the two equal-contribution leads.
-The root [`CITATION.cff`](CITATION.cff) is the canonical citation record for the Semester 3 group release; a frozen copy is retained in [`sem 3 work/CITATION.cff`](sem%203%20work/CITATION.cff).
+The root [`CITATION.cff`](CITATION.cff) is the canonical citation record for the Semester 3 group release; a frozen copy is retained in [`platform_hybrid/sem 3 work/CITATION.cff`](sem%203%20work/CITATION.cff).
 
 ## License
 

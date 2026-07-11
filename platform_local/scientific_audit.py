@@ -1,24 +1,49 @@
 #!/usr/bin/env python3
-from utils.audit_utils import run_audit
+from __future__ import annotations
+
+import ast
+import json
 import re
+import subprocess
+import sys
+from pathlib import Path
+
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from utils.audit_utils import AuditIssue, run_audit
 
 
 def get_issues(ctx):
-    issues = []
+    issues: list[AuditIssue] = []
+    paper_tex = ctx.FINAL_DIR / "grpo_agentic_llm_paper.tex"
+    paper_tex_anon = ctx.FINAL_DIR / "grpo_agentic_llm_paper_anonymous.tex"
+    paper_md = ctx.FINAL_DIR / "grpo_agentic_llm_paper.md"
+    report_md = ctx.FINAL_DIR / "capstone_final_report.md"
+    submission_checklist = ctx.FINAL_DIR / "SUBMISSION_CHECKLIST.md"
+    supplementary = ctx.FINAL_DIR / "supplementary_appendix.tex"
+    eval_py = ctx.FINAL_DIR / "evaluate_gsm8k_test.py"
+    result_jsons = tuple(sorted(ctx.FINAL_DIR.glob("gsm8k*.json")))
 
     def add(path: Path, code: str, message: str):
-        issues.append((str(path.relative_to(ctx.ROOT)), code, message))
+        issues.append(
+            AuditIssue(
+                code=code,
+                message=message,
+                location=str(path.relative_to(ctx.ROOT)),
+            )
+        )
 
     def read(path: Path) -> str:
         return path.read_text(encoding="utf-8")
 
     def check_paper():
-        tex = read(PAPER_TEX)
-        ctx.anon = read(PAPER_TEX_ANON)
-        paper_md = read(PAPER_MD)
-        ctx.md = read(REPORT_MD)
-        ctx.checklist = read(SUBMISSION_CHECKLIST)
-        ctx.supp = read(ctx.FINAL_DIR / "supplementary_appendix.tex")
+        tex = read(paper_tex)
+        anon = read(paper_tex_anon)
+        paper_markdown = read(paper_md)
+        report = read(report_md)
+        checklist = read(submission_checklist)
+        supp = read(supplementary)
 
         abstract_match = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", tex, re.S)
         if abstract_match:
@@ -29,28 +54,26 @@ def get_issues(ctx):
                 and "evaluation scope" not in abstract
             ):
                 add(
-                    PAPER_TEX,
+                    paper_tex,
                     "ctx.paper.abstract.scope",
                     "LaTeX abstract reports GSM8K gains without explicitly saying they are training-set reward metrics, risking overclaim.",
                 )
 
         if "held-out" not in tex.lower() and "training-set reward" not in tex.lower():
             add(
-                PAPER_TEX,
+                paper_tex,
                 "ctx.paper.global.scope",
                 "LaTeX ctx.paper lacks an explicit held-out-vs-training-set evaluation scope warning.",
             )
 
-        if "publishable confidence intervals" in ctx.md.lower():
+        if "publishable confidence intervals" in report.lower():
             add(
-                REPORT_MD,
+                report_md,
                 "report.overclaim.publishable",
                 "Capstone report claims 'publishable confidence intervals' despite n=3 seeds and no held-out evaluation.",
             )
 
-        anon_abstract_match = re.search(
-            r"\\begin\{abstract\}(.*?)\\end\{abstract\}", ctx.anon, re.S
-        )
+        anon_abstract_match = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", anon, re.S)
         if anon_abstract_match:
             anon_abstract = anon_abstract_match.group(1).lower()
             if (
@@ -59,43 +82,49 @@ def get_issues(ctx):
                 and "evaluation scope" not in anon_abstract
             ):
                 add(
-                    PAPER_TEX_ANON,
+                    paper_tex_anon,
                     "paper_anon.abstract.scope",
                     "Anonymous LaTeX abstract still reports GSM8K gains without an explicit training-set-vs-held-out caveat.",
                 )
 
-        if "held-out" not in paper_md.lower() and "training-set reward" not in paper_md.lower():
+        if (
+            "held-out" not in paper_markdown.lower()
+            and "training-set reward" not in paper_markdown.lower()
+        ):
             add(
-                PAPER_MD,
+                paper_md,
                 "paper_md.global.scope",
                 "Markdown ctx.paper lacks an explicit held-out-vs-training-set scope warning.",
             )
 
-        if re.search(r"\|\s*GSM8K\s*\|\s*30\.0% \± 2\.5% \(3 seeds\)\s*\|", ctx.checklist):
+        if re.search(
+            r"\|\s*GSM8K\s*\|\s*30\.0% \± 2\.5% \(3 seeds\)\s*\|",
+            checklist,
+        ):
             add(
-                SUBMISSION_CHECKLIST,
+                submission_checklist,
                 "ctx.checklist.gsm8k.label",
                 "Submission ctx.checklist labels GSM8K as a generic result instead of explicitly marking it as training-set reward.",
             )
 
-        for path, ctx.text in [
-            (PAPER_TEX, tex),
-            (PAPER_TEX_ANON, ctx.anon),
-            (PAPER_MD, paper_md),
+        for path, text in [
+            (paper_tex, tex),
+            (paper_tex_anon, anon),
+            (paper_md, paper_markdown),
         ]:
-            if "confirms grpo training stability" in ctx.text.lower():
+            if "confirms grpo training stability" in text.lower():
                 add(
                     path,
                     "ctx.paper.stability.overclaim",
                     "Paper claims the 3-seed GSM8K result 'confirms' training stability; this should be softened to a more accurate characterization.",
                 )
 
-        for path, ctx.text in [
-            (REPORT_MD, ctx.md),
-            (PAPER_MD, paper_md),
-            (ctx.FINAL_DIR / "supplementary_appendix.tex", ctx.supp),
+        for path, text in [
+            (report_md, report),
+            (paper_md, paper_markdown),
+            (supplementary, supp),
         ]:
-            low = ctx.text.lower()
+            low = text.lower()
             if "99% gsm8k accuracy" in low or "99\\% gsm8k accuracy" in low:
                 add(
                     path,
@@ -112,8 +141,8 @@ def get_issues(ctx):
         return None
 
     def check_eval_script():
-        tree = ast.parse(read(EVAL_PY))
-        source = read(EVAL_PY)
+        tree = ast.parse(read(eval_py))
+        source = read(eval_py)
 
         parser_has_seed = "--seed" in source
         parser_has_split = "--split" in source
@@ -155,67 +184,67 @@ def get_issues(ctx):
 
         if default_temp_nonzero:
             add(
-                EVAL_PY,
+                eval_py,
                 "eval.nondeterministic.default_temp",
                 "Evaluation defaults to temperature=0.7, which makes headline accuracy nondeterministic.",
             )
         if do_sample_true:
             add(
-                EVAL_PY,
+                eval_py,
                 "eval.nondeterministic_sampling",
                 "HF evaluation uses do_sample=True instead of deterministic decoding, weakening rigor and reproducibility.",
             )
         if not parser_has_seed:
             add(
-                EVAL_PY,
+                eval_py,
                 "eval.missing_seed",
                 "Evaluation ctx.script has no seed control for stochastic generation.",
             )
         if not parser_has_split:
             add(
-                EVAL_PY,
+                eval_py,
                 "eval.missing_split_arg",
                 "Evaluation ctx.script does not record which dataset split it evaluates.",
             )
         if parser_has_split and not split_choices_locked:
             add(
-                EVAL_PY,
+                eval_py,
                 "eval.unlocked_split",
                 "Evaluation ctx.script allows non-test splits; held-out evaluation should be locked to the GSM8K test split to avoid accidental train-set reporting.",
             )
         if not checkpoint_arg_used:
             add(
-                EVAL_PY,
+                eval_py,
                 "eval.unused_checkpoint_path",
                 "--checkpoint_path is declared but never used, so local checkpoint evaluation is broken/misleading.",
             )
         if fallback_last_number:
             add(
-                EVAL_PY,
+                eval_py,
                 "eval.lenient_answer_extraction",
                 "Answer extraction falls back to the last number in the response, which can overcount correctness and invite benchmark leakage.",
             )
         if not has_dataset_split_metadata:
             add(
-                EVAL_PY,
+                eval_py,
                 "eval.missing_split_metadata",
                 "Saved evaluation results do not record the dataset split, weakening auditability.",
             )
         if not has_do_sample_metadata:
             add(
-                EVAL_PY,
+                eval_py,
                 "eval.missing_sampling_metadata",
                 "Saved evaluation results do not record whether decoding was greedy or sampled.",
             )
         if not has_seed_metadata:
             add(
-                EVAL_PY,
+                eval_py,
                 "eval.missing_seed_metadata",
                 "Saved evaluation results do not record the evaluation seed.",
             )
         if not has_model_source_metadata:
             add(
-                EVAL_PY,
+                eval_py,
                 "eval.missing_model_source_metadata",
                 "Saved evaluation results do not record the exact checkpoint/model source used for evaluation.",
             )
@@ -346,7 +375,7 @@ def get_issues(ctx):
             "accuracy_percent",
         }
 
-        for path in RESULT_JSONS:
+        for path in result_jsons:
             data = json.loads(read(path))
             if data.get("schema_version") != 2:
                 add(
@@ -398,14 +427,13 @@ def get_issues(ctx):
                     "Completed evaluations must have at least one attempted example.",
                 )
 
-    def main():
-        check_paper()
-        check_eval_script()
-        check_latex_builds()
-        check_result_jsons()
+    check_paper()
+    check_eval_script()
+    check_latex_builds()
+    check_result_jsons()
 
     return issues
 
 
 if __name__ == "__main__":
-    run_audit("audit_issues", get_issues)
+    raise SystemExit(run_audit("scientific_issues", get_issues))

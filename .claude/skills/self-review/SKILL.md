@@ -96,6 +96,5 @@ Output format:
 You MUST verify that all required sections are present: Abstract, Introduction, Methods/Approach, Experiments/Results, Discussion/Conclusion. Reduce scores if any are missing.
 
 ## Related Skills
-- Upstream: [paper-compilation](../paper-compilation/)
 - Downstream: [paper-revision](../paper-revision/), [rebuttal-writing](../rebuttal-writing/)
 - See also: [slide-generation](../slide-generation/)

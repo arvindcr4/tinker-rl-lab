@@ -13,7 +13,20 @@ import matplotlib.ticker as ticker
 import os
 from pathlib import Path
 
-OUT_DIR = os.environ.get("TINKERRL_FIGURE_OUT_DIR", str(Path(__file__).resolve().parent))
+figure_records = globals().get("FIGURE_RECORDS")
+figure_output_dir = globals().get("FIGURE_OUTPUT_DIR")
+if figure_records is None or figure_output_dir is None:
+    if __name__ == "__main__":
+        import sys
+
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+        from platform_hybrid.paper.figure_module import render_legacy_figure
+
+        render_legacy_figure("profiles", Path(__file__).resolve().parent)
+        raise SystemExit(0)
+    raise RuntimeError("figure records must be supplied by FigureModule")
+
+OUT_DIR = str(figure_output_dir)
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # ─── Global style ──────────────────────────────────────────────────────────────
@@ -48,132 +61,7 @@ COLORS = {
 # TODO: Address "Early-Training Snapshot" limitation. Traces are only 20-30 steps long due to API costs. Need longer runs to observe true convergence.
 # TODO: Address "Single-Seed Extrapolations" limitation. These traces are from N=1 runs. Need multi-seed runs for reliable statistical variance.
 traces = {
-    "GRPO-DeepSeek-V3.1": np.array(
-        [
-            0.875,
-            0.875,
-            1.0,
-            0.75,
-            0.75,
-            0.75,
-            0.625,
-            0.875,
-            0.875,
-            1.0,
-            0.75,
-            1.0,
-            0.875,
-            0.875,
-            0.75,
-            1.0,
-            0.875,
-            0.75,
-            0.875,
-            0.875,
-        ]
-    ),
-    "GRPO-Qwen3-8B": np.array(
-        [
-            0.375,
-            0.0625,
-            0.5625,
-            0.1875,
-            0.375,
-            0.3125,
-            0.125,
-            0.125,
-            0.1875,
-            0.125,
-            0.25,
-            0.4375,
-            0.625,
-            0.1875,
-            0.3125,
-            0.5,
-            0.375,
-            0.375,
-            0.4375,
-            0.5,
-            0.3125,
-            0.125,
-            0.25,
-            0.4375,
-            0.5,
-            0.3125,
-            0.4375,
-            0.375,
-            0.1875,
-            0.25,
-        ]
-    ),
-    "PPO-Qwen3-8B": np.array(
-        [
-            0.5,
-            0.5,
-            0.0,
-            0.0,
-            1.0,
-            0.5,
-            0.0,
-            0.0,
-            0.25,
-            0.5,
-            0.5,
-            0.0,
-            0.5,
-            0.25,
-            0.0,
-            0.0,
-            0.0,
-            0.25,
-            0.25,
-            0.0,
-            0.5,
-            0.5,
-            0.5,
-            0.0,
-            0.75,
-            0.25,
-            0.0,
-            0.25,
-            0.75,
-            0.0,
-        ]
-    ),
-    "PPO-Llama-8B": np.array(
-        [
-            1.0,
-            1.0,
-            1.0,
-            0.75,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            0.5,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            0.75,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            0.75,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            0.75,
-            1.0,
-        ]
-    ),
+    name: np.asarray(values, dtype=float) for name, values in figure_records["traces"].items()
 }
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -314,9 +202,9 @@ def volatility(trace):
 # ── Per-model stats ───────────────────────────────────────────────────────────
 # Qwen2.5-0.5B (TRL GRPO, 5 seeds): only mean stats available
 # We'll synthesise a plausible trace using the 5 seed accuracies as "steps"
-trl_accuracies = np.array([0.735, 0.81, 0.62, 0.74, 0.765])
-trl_mean = 0.734
-trl_std = 0.065
+trl_accuracies = np.asarray(figure_records["trl_accuracies"], dtype=float)
+trl_mean = float(figure_records["trl_mean"])
+trl_std = float(figure_records["trl_std"])
 # peak = max of seeds
 trl_peak = float(np.max(trl_accuracies))
 # last10_avg: approximate as mean (we only have 5 points)

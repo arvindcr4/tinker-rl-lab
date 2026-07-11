@@ -10,6 +10,8 @@ class AuditIssue:
     """One stable, machine-readable audit finding."""
 
     code: str
+    message: str | None = None
+    location: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,7 +117,20 @@ class AuditContext:
         return {"main_tex": self.main_tex, "anon_tex": self.anon_tex}
 
 
-AuditFunction = Callable[[AuditContext], Iterable[str | AuditIssue]]
+RawAuditIssue = str | AuditIssue | tuple[str, str] | tuple[str, str, str]
+AuditFunction = Callable[[AuditContext], Iterable[RawAuditIssue]]
+
+
+def _coerce_issue(issue: RawAuditIssue) -> AuditIssue:
+    if isinstance(issue, AuditIssue):
+        return issue
+    if isinstance(issue, str):
+        return AuditIssue(code=issue)
+    if len(issue) == 2:
+        code, message = issue
+        return AuditIssue(code=code, message=message)
+    location, code, message = issue
+    return AuditIssue(code=code, message=message, location=location)
 
 
 def evaluate_audit(
@@ -125,9 +140,7 @@ def evaluate_audit(
 ) -> AuditResult:
     """Run one audit through the structured result interface."""
     raw_issues = get_issues(context or AuditContext())
-    issues = tuple(
-        issue if isinstance(issue, AuditIssue) else AuditIssue(str(issue)) for issue in raw_issues
-    )
+    issues = tuple(_coerce_issue(issue) for issue in raw_issues)
     return AuditResult(name=metric_name, issues=issues)
 
 

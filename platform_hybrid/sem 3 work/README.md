@@ -32,6 +32,6 @@ The original report prints some names with shorter or alternate spellings. The n
 
 ## Scope
 
-Semester 3 established the literature survey, multi-framework RL post-training repository, initial GRPO/SFT/DPO experiments, evaluation pipeline, group report, and NeurIPS main-track submission. The later workshop submission, solo papers, and post-capstone experiments are intentionally excluded; they are collected in [`../sem 4 work/`](../sem%204%20work/).
+Semester 3 established the literature survey, multi-framework RL post-training repository, initial GRPO/SFT/DPO experiments, evaluation pipeline, group report, and NeurIPS main-track submission. The later workshop submission, solo papers, and post-capstone experiments are intentionally excluded; they are collected in [`../../platform_hybrid/sem 4 work/`](../../platform_hybrid/sem%204%20work/).
 
 The shared executable code remains in the repository root because both semesters depend on it. Moving thousands of interdependent source and evidence files into semester folders would break imports, LaTeX references, and reproduction commands. These folders therefore separate academic ownership and deliverables while preserving one working codebase.

@@ -2,7 +2,7 @@
 
 ## A Unified Benchmark for RL Post-Training of Language Models
 
-> **Historical note (July 2026):** this document is the Semester 3 artifact record frozen at the April 19, 2026 submission (commit `9019b5c`). The `v1.0.0-neurips-2026` tag was never pushed, and some linked paths have since moved; see [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) and [`sem 3 work/PROVENANCE.md`](sem%203%20work/PROVENANCE.md) for current provenance.
+> **Historical note (July 2026):** this document is the Semester 3 artifact record frozen at the April 19, 2026 submission (commit `9019b5c`). The `v1.0.0-neurips-2026` tag was never pushed, and some linked paths have since moved; see [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) and [`platform_hybrid/sem 3 work/PROVENANCE.md`](sem%203%20work/PROVENANCE.md) for current provenance.
 
 This document follows the [ACM Artifact Review and Badging v1.1](https://www.acm.org/publications/policies/artifact-review-and-badging-current)
 guidelines and the [NeurIPS 2026 reproducibility checklist](https://nips.cc/public/guides/PaperChecklist).
@@ -10,7 +10,7 @@ We target three ACM badges:
 
 - **Artifacts Available** — permanently archived on GitHub + Hugging Face Hub (DOI pending via Zenodo).
 - **Artifacts Evaluated — Functional** — documented, consistent, complete, and exercisable in < 10 min via
-  [`scripts/smoke_test.sh`](./scripts/smoke_test.sh).
+  [`platform_modal/scripts/smoke_test.sh`](./platform_modal/scripts/smoke_test.sh).
 - **Artifacts Evaluated — Reusable** — modular layout, pinned deps, extensible configs.
 
 ---
@@ -25,8 +25,8 @@ We target three ACM badges:
 | **Head commit (this artifact)** | `9019b5c946f17ffe4761b5f4eac13b86d1e51cc0`  (short: `9019b5c`) |
 | **Head commit date** | `2026-04-19 12:53:07 +0000` |
 | **PR introducing this artifact** | `task-8-repro-artifact` → `main` |
-| **Submitted paper** | [`paper/main.tex`](./paper/main.tex) |
-| **Capstone report** | [`reports/final/capstone_final_report.md`](./reports/final/capstone_final_report.md) |
+| **Submitted paper** | [`platform_hybrid/paper/main.tex`](./platform_hybrid/paper/main.tex) |
+| **Capstone report** | [`platform_tinker/reports/final/capstone_final_report.md`](./platform_tinker/reports/final/capstone_final_report.md) |
 | **W&B project**    | `arvindcr4-pes-university/tinker-rl-lab-world-class` (153 runs, 23.9 h client-side wall-clock) |
 | **License**        | Apache-2.0 (see [`LICENSE`](./LICENSE)) |
 | **DOI**            | _Pending — will be minted on Zenodo upon camera-ready_ |
@@ -74,7 +74,7 @@ tinker-rl-lab/
 ├── atropos/                          # Atropos integration + 34 YAML configs
 ├── paper/                            # main.tex + figures + tables
 ├── reports/capstone_final_report.md  # Capstone report
-└── tests/                            # pytest smoke suite (imported by scripts/smoke_test.sh)
+└── tests/                            # pytest smoke suite (imported by platform_modal/scripts/smoke_test.sh)
 ```
 
 ---
@@ -149,7 +149,7 @@ revision at training time. Exact shas as of artifact submission:
 | Qwen3.5-4B                   | `Qwen/Qwen3.5-4B`               | `851bf6e806`               | 2026-03-02         |
 | Llama-3.1-8B-Instruct        | `meta-llama/Llama-3.1-8B-Instruct` | `0e9e39f249`            | 2024-09-25         |
 
-`scripts/smoke_test.sh` step 4 loads the first 8 GSM8K rows to verify the
+`platform_modal/scripts/smoke_test.sh` step 4 loads the first 8 GSM8K rows to verify the
 answer-extraction regex works against whatever revision the reviewer's HF
 cache has.
 
@@ -161,7 +161,7 @@ cache has.
 
 > **GRPO on Qwen3-8B, GSM8K, 30 steps, LoRA rank 32, group size 8, seed 42**
 > Peak accuracy **62.5 %**, last-10-step average **34.4 %**.
-> Reported in `paper/main.tex` line 897 (Table 2).
+> Reported in `platform_hybrid/paper/main.tex` line 897 (Table 2).
 
 ### 4.2 Exact command (from `REPRODUCE.md §3.2`)
 
@@ -277,7 +277,7 @@ chosen tolerance.
 | **Documented**        | `README.md`, `REPRODUCE.md`, `ARTIFACT.md`, inline docstrings, 2 checklists |
 | **Consistent**        | W&B runs (§4.4) reproduce the paper table; verified via `utils/verify_results.py` |
 | **Complete**          | 13 trainer scripts + 34 Atropos configs + 31 scaling configs + stats tools |
-| **Exercisable**       | `scripts/smoke_test.sh` (< 10 min, 7 checks); `scripts/run_seeds.sh`; `python grpo_gsm8k_base.py` |
+| **Exercisable**       | `platform_modal/scripts/smoke_test.sh` (< 10 min, 7 checks); `scripts/run_seeds.sh`; `python grpo_gsm8k_base.py` |
 | **Verification**      | `utils/stats.py --rliable` computes IQM, bootstrap CIs, performance profiles |
 | **Well-structured**   | Modular layout: `experiments/`, `utils/`, `scripts/`, `atropos/` (§2) |
 | **Docs beyond min.**  | `NEURIPS_CHECKLIST.md`, `ACM_CHECKLIST.md`, `LIMITATIONS_AND_IMPACT.md`, `COMPUTE.md` |
@@ -300,7 +300,7 @@ chosen tolerance.
 
 ## 9. Contact
 
-File an issue on https://github.com/arvindcr4/tinker-rl-lab or email the corresponding author listed in `paper/main.tex`.
+File an issue on https://github.com/arvindcr4/tinker-rl-lab or email the corresponding author listed in `platform_hybrid/paper/main.tex`.
 
 ---
 

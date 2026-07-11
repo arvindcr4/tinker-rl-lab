@@ -96,6 +96,7 @@ tasks/outcome/
 repomix-output.xml
 
 wandb/
+emissions.csv
 .modal/
 node_modules/
 

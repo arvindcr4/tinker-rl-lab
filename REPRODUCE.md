@@ -2,10 +2,10 @@
 
 This document gives **reviewers and third parties** exact, copy-pasteable
 commands to reproduce every result reported in the NeurIPS 2026 submission
-(`paper/main.tex`) and the capstone final report (`reports/final/capstone_final_report.md`).
+(`platform_hybrid/paper/main.tex`) and the capstone final report (`platform_tinker/reports/final/capstone_final_report.md`).
 
 > **Scope:** this reproduces the Semester 3 headline result on shared infrastructure.
-> The Semester 4 (P1–P8) paper-to-evidence map is [`sem 4 work/EXPERIMENTS.md`](sem%204%20work/EXPERIMENTS.md).
+> The Semester 4 (P1–P8) paper-to-evidence map is [`platform_hybrid/sem 4 work/EXPERIMENTS.md`](sem%204%20work/EXPERIMENTS.md).
 
 The **headline result** reviewers should verify is:
 
@@ -31,10 +31,10 @@ docker build \
 
 # 2. Under 10 minutes of structural checks — no GPU required.
 #    Network is needed on the first run to fetch GSM8K (cached afterwards).
-docker run --rm tinker-rl-lab:repro bash scripts/smoke_test.sh
+docker run --rm tinker-rl-lab:repro bash platform_modal/scripts/smoke_test.sh
 
 # 3. Full smoke incl. a live 3-step Tinker call (~8 min, < $0.25)
-docker run --rm -e TINKER_API_KEY tinker-rl-lab:repro bash scripts/smoke_test.sh
+docker run --rm -e TINKER_API_KEY tinker-rl-lab:repro bash platform_modal/scripts/smoke_test.sh
 
 # 4. Headline result — GRPO Qwen3-8B GSM8K (1x A100-80GB, ~5 h wall)
 docker run --gpus all --rm \
@@ -105,12 +105,12 @@ A template lives in [`.env.example`](./.env.example).
 ## 2. The 10-minute smoke test  (reviewer entry-point)
 
 ```bash
-bash scripts/smoke_test.sh                   # ~2 min — fully offline
-TINKER_API_KEY=... bash scripts/smoke_test.sh # ~8 min — live Tinker wire-protocol
+bash platform_modal/scripts/smoke_test.sh                   # ~2 min — fully offline
+TINKER_API_KEY=... bash platform_modal/scripts/smoke_test.sh # ~8 min — live Tinker wire-protocol
 ```
 
 What it verifies — see the header of
-[`scripts/smoke_test.sh`](./scripts/smoke_test.sh) for the full list:
+[`platform_modal/scripts/smoke_test.sh`](./platform_modal/scripts/smoke_test.sh) for the full list:
 
 1. Core library imports and versions
 2. `utils.seed.set_global_seed(42)` is deterministic across Python/NumPy/PyTorch
@@ -277,8 +277,8 @@ python utils/stats.py --results-dir results/ --latex \
 | Step                                   | Hardware        | Wall-clock       |
 |----------------------------------------|-----------------|------------------|
 | `docker build` (cold)                  | any             | ~6 min           |
-| `scripts/smoke_test.sh` (offline)      | CPU             | ~2 min           |
-| `scripts/smoke_test.sh` (with Tinker)  | any + net       | ~8 min           |
+| `platform_modal/scripts/smoke_test.sh` (offline)      | CPU             | ~2 min           |
+| `platform_modal/scripts/smoke_test.sh` (with Tinker)  | any + net       | ~8 min           |
 | Headline GRPO Qwen3-8B GSM8K (1 seed)  | 1x A100-80GB    | ~5 h             |
 | Full 5-seed headline                   | 1x A100-80GB    | ~25 h            |
 | Group-size ablation (4 runs × 1 seed)  | 1x A100-80GB    | ~20 h            |

@@ -6,10 +6,9 @@ import argparse
 import json
 import os
 import runpy
-from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator, Mapping, Protocol
+from typing import Any, Protocol
 
 
 HERE = Path(__file__).resolve().parent
@@ -19,6 +18,7 @@ DEFAULT_RESULTS = REPO_ROOT / "platform_hybrid/experiments/all_results_consolida
 DEFAULT_WAVE6_RESULTS = (
     REPO_ROOT / "platform_hybrid/experiments/tinker-runs/results/wave6_ablations.json"
 )
+DEFAULT_PROFILE_RESULTS = CANONICAL_FIGURES / "performance_profiles_snapshot.json"
 
 
 class ResultsAdapter(Protocol):
@@ -27,7 +27,6 @@ class ResultsAdapter(Protocol):
     @property
     def source(self) -> str: ...
     def load(self) -> Any: ...
-    def environment(self) -> Mapping[str, str]: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,25 +43,20 @@ class JsonResultsAdapter:
     def load(self) -> Any:
         return json.loads(self.path.read_text())
 
-    def environment(self) -> Mapping[str, str]:
-        return {"TINKERRL_FIGURE_RESULTS_PATH": str(self.path.resolve())}
-
 
 @dataclass(frozen=True, slots=True)
 class FallbackResultsAdapter:
-    """Names an explicit embedded publication snapshot."""
+    """Supplies the explicit publication snapshot used when measured data is absent."""
 
     name: str = "embedded-publication-snapshot"
+    path: Path = DEFAULT_PROFILE_RESULTS
 
     @property
     def source(self) -> str:
         return f"fallback:{self.name}"
 
     def load(self) -> Any:
-        return None
-
-    def environment(self) -> Mapping[str, str]:
-        return {"TINKERRL_FIGURE_RESULTS_SOURCE": self.source}
+        return json.loads(self.path.read_text())
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,20 +64,6 @@ class FigureRequest:
     profile: str
     output_dir: Path
     results: ResultsAdapter
-
-
-@contextmanager
-def _temporary_environment(values: Mapping[str, str]) -> Iterator[None]:
-    previous = {key: os.environ.get(key) for key in values}
-    os.environ.update(values)
-    try:
-        yield
-    finally:
-        for key, value in previous.items():
-            if value is None:
-                os.environ.pop(key, None)
-            else:
-                os.environ[key] = value
 
 
 class FigureModule:
@@ -94,34 +74,53 @@ class FigureModule:
         "paper": CANONICAL_FIGURES / "generate_figures.py",
         "wave6": CANONICAL_FIGURES / "wave6_sensitivity.py",
     }
+    outputs = {
+        "profiles": (
+            "performance_profiles.pdf",
+            "performance_profiles.png",
+            "sensitivity_heatmap.pdf",
+            "sensitivity_heatmap.png",
+        ),
+        "paper": (
+            "comparison_bars.png",
+            "learning_curves.png",
+            "ppo_vs_grpo_comparison.png",
+            "scaling_plot.png",
+            "sensitivity_heatmap.png",
+        ),
+        "wave6": ("wave6_sensitivity.pdf", "wave6_sensitivity.png"),
+    }
 
     def render(self, request: FigureRequest) -> Path:
         if request.profile not in self.renderers:
             raise ValueError(f"unknown figure profile: {request.profile}")
         request.output_dir.mkdir(parents=True, exist_ok=True)
-        environment = {
-            "TINKERRL_FIGURE_OUT_DIR": str(request.output_dir.resolve()),
-            **request.results.environment(),
-        }
+        records = request.results.load()
         renderer = self.renderers[request.profile]
-        with _temporary_environment(environment):
-            namespace = runpy.run_path(str(renderer), run_name="_tinkerrl_figure_renderer")
-            if request.profile == "wave6":
-                out_png = request.output_dir / "wave6_sensitivity.png"
-                namespace["make_figure"](
-                    request.results.load(), out_png, out_png.with_suffix(".pdf")
-                )
+        runpy.run_path(
+            str(renderer),
+            run_name="_tinkerrl_figure_renderer",
+            init_globals={
+                "FIGURE_RECORDS": records,
+                "FIGURE_OUTPUT_DIR": request.output_dir.resolve(),
+            },
+        )
+        missing = [
+            name
+            for name in self.outputs[request.profile]
+            if not (request.output_dir / name).is_file()
+        ]
+        if missing:
+            raise RuntimeError(
+                f"{request.profile} renderer did not create expected outputs: {', '.join(missing)}"
+            )
 
         manifest = request.output_dir / f"{request.profile}.figure-manifest.json"
         payload = {
             "profile": request.profile,
             "results_source": request.results.source,
             "renderer": str(renderer.relative_to(REPO_ROOT)),
-            "outputs": sorted(
-                path.name
-                for path in request.output_dir.iterdir()
-                if path.suffix.lower() in {".pdf", ".png"}
-            ),
+            "outputs": list(self.outputs[request.profile]),
         }
         temporary = manifest.with_name(f".{manifest.name}.{os.getpid()}.tmp")
         temporary.write_text(json.dumps(payload, indent=2) + "\n")
@@ -155,7 +154,8 @@ def main() -> int:
     profiles = FigureModule.renderers if args.profile == "all" else [args.profile]
     module = FigureModule()
     for profile in profiles:
-        manifest = module.render(default_request(profile, args.out))
+        output_dir = args.out / profile if args.profile == "all" else args.out
+        manifest = module.render(default_request(profile, output_dir))
         print(f"[{profile}] manifest: {manifest}")
     return 0
 

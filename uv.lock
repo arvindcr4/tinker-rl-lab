@@ -4084,6 +4084,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
+    { name = "scipy" },
     { name = "seaborn" },
 ]
 eval = [
@@ -4129,6 +4130,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
+    { name = "scipy", marker = "extra == 'dev'", specifier = ">=1.10" },
     { name = "seaborn", marker = "extra == 'dev'", specifier = ">=0.13" },
     { name = "stable-baselines3", marker = "extra == 'all'", specifier = ">=2.1.0" },
     { name = "stable-baselines3", marker = "extra == 'sb3'", specifier = ">=2.1.0" },

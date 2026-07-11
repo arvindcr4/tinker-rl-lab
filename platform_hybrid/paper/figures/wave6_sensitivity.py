@@ -206,7 +206,12 @@ def make_figure(data, out_png=OUT_PNG, out_pdf=OUT_PDF):
     print(f"Wrote {out_pdf}")
 
 
-if __name__ == "__main__":
+figure_records = globals().get("FIGURE_RECORDS")
+figure_output_dir = globals().get("FIGURE_OUTPUT_DIR")
+if figure_records is not None and figure_output_dir is not None:
+    output = os.path.join(str(figure_output_dir), "wave6_sensitivity.png")
+    make_figure(figure_records, output, output.replace(".png", ".pdf"))
+elif __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--results", default=RESULTS_PATH)
     p.add_argument("--out", default=OUT_PNG)

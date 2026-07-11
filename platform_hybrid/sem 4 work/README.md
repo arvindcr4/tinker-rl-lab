@@ -14,12 +14,12 @@ The continuation adds a much larger post-capstone evidence base, including 206 r
 
 ## Semester 4 submission
 
-- [`../reports/esa_phase1/`](../reports/esa_phase1/) — canonical individual M.Tech
+- [`../../platform_tinker/reports/esa_phase1/`](../../platform_tinker/reports/esa_phase1/) — canonical individual M.Tech
   Project Phase-1 report source, build instructions, defense deck pointer, and demo
   runbook for UE20CS971.
 - [`submissions/neurips-workshop/`](submissions/neurips-workshop/) — the NeurIPS workshop submission, including a freshly compiled anonymous PDF and its build/provenance notes.
 
-The NeurIPS main-track submission is not part of this semester; it is preserved under [`../sem 3 work/submissions/neurips-main-track/`](../sem%203%20work/submissions/neurips-main-track/).
+The NeurIPS main-track submission is not part of this semester; it is preserved under [`../../platform_hybrid/sem 3 work/submissions/neurips-main-track/`](../../platform_hybrid/sem%203%20work/submissions/neurips-main-track/).
 
 ## Ready-to-read papers
 
@@ -38,9 +38,9 @@ See [`EXPERIMENTS.md`](EXPERIMENTS.md) for the paper-to-source and evidence map,
 
 ## Reproduction entry points
 
-- [`../REPRODUCE.md`](../REPRODUCE.md) — reviewer-oriented reproduction commands (Semester 3 headline result on the shared infrastructure; P1–P8 evidence is mapped in [`EXPERIMENTS.md`](EXPERIMENTS.md))
-- [`../ARTIFACT.md`](../ARTIFACT.md) — result-to-artifact mapping (historical Semester 3 record; the Semester 4 paper-to-evidence map is [`EXPERIMENTS.md`](EXPERIMENTS.md))
-- [`../experiments/experiment_summary.md`](../experiments/experiment_summary.md) — consolidated experiment summary
-- [`../experiments/results/`](../experiments/results/) — result tables, traces, and audit outputs
+- [`../../REPRODUCE.md`](../../REPRODUCE.md) — reviewer-oriented reproduction commands (Semester 3 headline result on the shared infrastructure; P1–P8 evidence is mapped in [`EXPERIMENTS.md`](EXPERIMENTS.md))
+- [`../../ARTIFACT.md`](../../ARTIFACT.md) — result-to-artifact mapping (historical Semester 3 record; the Semester 4 paper-to-evidence map is [`EXPERIMENTS.md`](EXPERIMENTS.md))
+- [`../../platform_hybrid/experiments/experiment_summary.md`](../../platform_hybrid/experiments/experiment_summary.md) — consolidated experiment summary
+- [`../../platform_hybrid/experiments/results/`](../../platform_hybrid/experiments/results/) — result tables, traces, and audit outputs
 
 The code and raw evidence remain in their canonical root locations so all imports, audit scripts, and LaTeX builds continue to work.

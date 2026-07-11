@@ -22,13 +22,13 @@ The eight PDFs in [`papers/`](papers/) were compiled from the current LaTeX sour
 
 ## NeurIPS workshop submission
 
-The Semester 4 workshop variant is [`../paper/neurips_2026_variants/main_workshop.tex`](../paper/neurips_2026_variants/main_workshop.tex). It first appears in commit `b0ac85bf` dated June 21, 2026, after the Semester 3 boundary. The compiled anonymous workshop paper is archived in [`submissions/neurips-workshop/`](submissions/neurips-workshop/).
+The Semester 4 workshop variant is [`../../platform_hybrid/paper/neurips_2026_variants/main_workshop.tex`](../../platform_hybrid/paper/neurips_2026_variants/main_workshop.tex). It first appears in commit `b0ac85bf` dated June 21, 2026, after the Semester 3 boundary. The compiled anonymous workshop paper is archived in [`submissions/neurips-workshop/`](submissions/neurips-workshop/).
 
-The earlier NeurIPS main-track package is not a Semester 4 output; it is archived under [`../sem 3 work/submissions/neurips-main-track/`](../sem%203%20work/submissions/neurips-main-track/).
+The earlier NeurIPS main-track package is not a Semester 4 output; it is archived under [`../../platform_hybrid/sem 3 work/submissions/neurips-main-track/`](../../platform_hybrid/sem%203%20work/submissions/neurips-main-track/).
 
 ## Audit trail
 
-- Current author block: [`../paper/sections/_shared_author.tex`](../paper/sections/_shared_author.tex)
-- Findings ledger: [`../experiments/results/findings_ledger.jsonl`](../experiments/results/findings_ledger.jsonl)
-- Research history: [`../PROJECT_HISTORY.md`](../PROJECT_HISTORY.md)
-- Semester 3 frozen archive: [`../sem 3 work/`](../sem%203%20work/)
+- Current author block: [`../../platform_hybrid/paper/sections/_shared_author.tex`](../../platform_hybrid/paper/sections/_shared_author.tex)
+- Findings ledger: [`../../platform_hybrid/experiments/results/findings_ledger.jsonl`](../../platform_hybrid/experiments/results/findings_ledger.jsonl)
+- Research history: [`../../PROJECT_HISTORY.md`](../../PROJECT_HISTORY.md)
+- Semester 3 frozen archive: [`../../platform_hybrid/sem 3 work/`](../../platform_hybrid/sem%203%20work/)

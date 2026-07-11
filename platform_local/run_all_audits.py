@@ -15,6 +15,8 @@ from platform_local import (
     claim_strength_audit,
     export_guard_audit,
     paper_sync_audit,
+    reviewer_caveat_audit,
+    scientific_audit,
     submission_claim_audit,
     submission_package_audit,
     submission_workflow_audit,
@@ -37,6 +39,8 @@ AUDITS: tuple[tuple[str, AuditFunction], ...] = (
     ("package_issues", submission_package_audit.get_issues),
     ("workflow_issues", submission_workflow_audit.get_issues),
     ("export_guard_issues", export_guard_audit.get_issues),
+    ("caveat_issues", reviewer_caveat_audit.get_issues),
+    ("scientific_issues", scientific_audit.get_issues),
 )
 
 

@@ -2,7 +2,6 @@
 Generate all figures for the TinkerRL NeurIPS paper.
 """
 
-import json
 import numpy as np
 import matplotlib
 
@@ -18,17 +17,22 @@ from pathlib import Path
 warnings.filterwarnings("ignore")
 
 # ─────────────────────────────────────────────────────────
-# Load data
+# Receive data through the figure module's results-adapter seam.
 # ─────────────────────────────────────────────────────────
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-RESULTS_PATH = Path(
-    os.environ.get(
-        "TINKERRL_FIGURE_RESULTS_PATH",
-        _REPO_ROOT / "platform_hybrid/experiments/all_results_consolidated.json",
-    )
-)
-with RESULTS_PATH.open() as f:
-    data = json.load(f)
+figure_records = globals().get("FIGURE_RECORDS")
+figure_output_dir = globals().get("FIGURE_OUTPUT_DIR")
+if figure_records is None or figure_output_dir is None:
+    if __name__ == "__main__":
+        import sys
+
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+        from platform_hybrid.paper.figure_module import render_legacy_figure
+
+        render_legacy_figure("paper", Path(__file__).resolve().parent)
+        raise SystemExit(0)
+    raise RuntimeError("figure records must be supplied by FigureModule")
+
+data = figure_records
 
 # ─────────────────────────────────────────────────────────
 # Shared style
@@ -52,7 +56,7 @@ plt.rcParams.update(
     }
 )
 
-OUTDIR = os.environ.get("TINKERRL_FIGURE_OUT_DIR", str(Path(__file__).resolve().parent)) + os.sep
+OUTDIR = str(figure_output_dir) + os.sep
 
 # ─────────────────────────────────────────────────────────
 # Color palette

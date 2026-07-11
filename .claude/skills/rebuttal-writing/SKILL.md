@@ -70,5 +70,3 @@ Add a brief summary at the top listing all major changes made to the paper:
 
 ## Related Skills
 - Upstream: [self-review](../self-review/), [paper-revision](../paper-revision/)
-- Downstream: [paper-compilation](../paper-compilation/)
-- See also: [data-analysis](../data-analysis/)

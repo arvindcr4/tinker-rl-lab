@@ -2,7 +2,7 @@
 
 These figures are generated deterministically from
 `experiments/master_results.json` by
-[`scripts/regenerate_figures.py`](../../../scripts/regenerate_figures.py).
+[`platform_modal/scripts/regenerate_figures.py`](../../../scripts/regenerate_figures.py).
 
 Every figure is rendered at **300 dpi PNG** and as a **vector PDF** with the
 following design rules:
@@ -40,7 +40,7 @@ following design rules:
 ## Reproducing
 
 ```bash
-python scripts/regenerate_figures.py
+python platform_modal/scripts/regenerate_figures.py
 ```
 
 The script is idempotent and deterministic (`np.random.seed(7)` is fixed for

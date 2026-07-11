@@ -163,6 +163,7 @@ def run(args: argparse.Namespace) -> dict:
             all_data = []
             all_advs: list[float] = []
             batch_rewards: list[float] = []
+            batch_comp_lens: list[int] = []
             zero_var_prompts = 0
 
             for prompt, answer in batch_examples:
@@ -183,6 +184,7 @@ def run(args: argparse.Namespace) -> dict:
                 for sequence in sampled.sequences:
                     text = tok.decode(list(sequence.tokens), skip_special_tokens=True)
                     rewards.append(reward_fn(text, answer))
+                    batch_comp_lens.append(len(sequence.tokens))
 
                 mean_reward = sum(rewards) / len(rewards)
                 variance = sum((reward - mean_reward) ** 2 for reward in rewards) / len(rewards)
@@ -239,6 +241,8 @@ def run(args: argparse.Namespace) -> dict:
                     "loss": loss_value,
                     "zvf": zvf,
                     "gu": 1.0 - zvf,
+                    "mean_comp_len": (sum(batch_comp_lens) / len(batch_comp_lens))
+                                     if batch_comp_lens else None,
                 }
             )
 
@@ -327,6 +331,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--example-limit", type=int, default=256)
     parser.add_argument("--save-every", type=int, default=5)
     parser.add_argument("--tag", default="")
+    parser.add_argument("--loss", default="grpo", choices=["grpo", "drgrpo"],
+                        help="drgrpo removes the /std advantage normalization")
     return parser.parse_args()
 
 

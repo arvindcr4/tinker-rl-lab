@@ -116,6 +116,39 @@ def define_arms() -> list[Arm]:
                   "/std removal is enforced by toggling live_zvf_probe._ADV_NORMALIZE_STD "
                   "in cell_runner.install_loss_arm; the loss kernel is unchanged.",
         ),
+        Arm(
+            name="greso", loss="grpo",
+            description="GRESO-style pre-rollout filtering: skip prompts whose "
+                        "rolling success-rate estimate predicts a zero-variance "
+                        "group; recycle the saved rollouts into fresh prompts. "
+                        "Loss identical to canonical GRPO — the ONLY delta is "
+                        "which prompts get rolled out (point-estimate gate).",
+            group_size=8, clip_low=0.2, clip_high=0.2,
+            importance_level="token", dynamic_sampling=True,
+            notes="Zheng et al. 2025 'Act Only When It Pays' (arXiv:2506.02177). "
+                  "Point-estimate gate: skip if rolling p_hat outside "
+                  "[tau, 1-tau], tau=0.1, window=3 encounters. Runner flag: "
+                  "--prompt-filter greso. Matched budget counts only EXECUTED "
+                  "rollouts, so recycling is budget-neutral.",
+        ),
+        Arm(
+            name="zvf_ci_gated", loss="grpo",
+            description="ZVF CI-gated controller (ours): identical prompt-skip "
+                        "action to greso, but gated on the Wilson 95% interval "
+                        "of the rolling estimate (T1) with m>=64 groups of "
+                        "history — act only when the CI excludes the useful "
+                        "band. Below m=64 history the gate stays open "
+                        "(no filtering), so early training is unbiased.",
+            group_size=8, clip_low=0.2, clip_high=0.2,
+            importance_level="token", dynamic_sampling=True,
+            notes="The E-C positioning arm: calibrated controller vs "
+                  "point-estimate heuristics at matched compute. Gate: skip "
+                  "prompt iff Wilson-95 interval for its stratum's "
+                  "zero-variance probability lies entirely above 0.8. "
+                  "Requires shuffled batching (T1 estimand result: curriculum "
+                  "ordering changes the estimand). Runner flag: "
+                  "--prompt-filter zvf_ci_gated.",
+        ),
     ]
 
 

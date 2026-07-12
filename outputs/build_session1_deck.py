@@ -3,9 +3,46 @@
 title -> base paper & understanding -> architecture -> what I implemented
 -> results achieved -> demo. 14 slides, ~20 minutes, timed speaker notes."""
 from pptx import Presentation
-from pptx.util import Inches, Pt
+from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR
+import os
+
+# ---------- matplotlib assets (deterministic, regenerated on every build) ----
+os.makedirs('outputs/deck_assets', exist_ok=True)
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import numpy as np
+
+# U-shape kernel h_G(p) = p^G + (1-p)^G
+fig, ax = plt.subplots(figsize=(5.2, 3.1), dpi=160)
+p_ = np.linspace(0, 1, 400)
+for G, c in [(2, '#1f4e79'), (8, '#c0392b'), (16, '#e67e22')]:
+    ax.plot(p_, p_**G + (1-p_)**G, color=c, lw=2, label=f'G={G}')
+ax.set_xlabel('per-prompt success rate p', fontsize=9)
+ax.set_ylabel(r'$h_G(p)=p^G+(1{-}p)^G$', fontsize=9)
+ax.text(0.03, 0.55, 'all-incorrect\nwall', fontsize=7.5, color='#555')
+ax.text(0.80, 0.55, 'all-correct\nwall', fontsize=7.5, color='#555')
+ax.legend(fontsize=8, loc='lower center'); ax.tick_params(labelsize=8)
+ax.set_title('Zero-variance probability is U-shaped in difficulty', fontsize=9.5)
+fig.tight_layout(); fig.savefig('outputs/deck_assets/ushape.png'); plt.close(fig)
+
+# Matched-budget trajectory schematic (corrected E-R2b shape)
+fig, ax = plt.subplots(figsize=(5.2, 3.1), dpi=160)
+x = np.linspace(0, 1, 400)
+ax.plot(x, np.minimum(1, 0.35+0.95*x), color='#1f4e79', lw=2, label='G=2: train reward')
+ax.plot(x, 0.15+0.8*x**3, color='#1f4e79', lw=2, ls='--', label='G=2: ZVF')
+ax.plot(x, 0.33+0.12*x, color='#c0392b', lw=2, label='G=16: train reward')
+ax.plot(x, 0.10+0.10*x, color='#c0392b', lw=2, ls='--', label='G=16: ZVF')
+ax.axvline(0.72, color='gray', ls=':', lw=1.4)
+ax.text(0.735, 0.06, 'G=2 signal gone', fontsize=7.5, color='#555')
+ax.set_xlabel('fraction of the 2,560-rollout budget spent', fontsize=9)
+ax.set_ylabel('value', fontsize=9); ax.set_ylim(0, 1.05)
+ax.legend(fontsize=7.5, loc='upper left'); ax.tick_params(labelsize=8)
+ax.set_title('Same budget, opposite endings (schematic of measured runs)', fontsize=9.5)
+fig.tight_layout(); fig.savefig('outputs/deck_assets/budget_traj.png'); plt.close(fig)
 
 BLUE = RGBColor(0x1F, 0x4E, 0x79); INK = RGBColor(0x21, 0x21, 0x21)
 MUTED = RGBColor(0x5A, 0x5A, 0x5A); WHITE = RGBColor(0xFF, 0xFF, 0xFF)
@@ -33,12 +70,25 @@ def slide(title=None, page=None, notes=None):
         s.notes_slide.notes_text_frame.text = notes
     return s
 
-def bullets(s, items, top=1.25, size=15):
-    tb = s.shapes.add_textbox(Inches(0.8), Inches(top), Inches(11.8), Inches(5.7))
+def bullets(s, items, top=1.25, size=15, width=11.8, left=0.8):
+    tb = s.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(5.7))
     tf = tb.text_frame; tf.word_wrap = True
     for i, (t, kw) in enumerate(items):
         para(tf, t, size=size, bullet=True, bold=kw, first=(i == 0))
     return s
+
+def box(s, text, left, top, w, h, fill=BLUE, font=WHITE, size=12, bold=True, shape=MSO_SHAPE.ROUNDED_RECTANGLE):
+    sh = s.shapes.add_shape(shape, Inches(left), Inches(top), Inches(w), Inches(h))
+    sh.fill.solid(); sh.fill.fore_color.rgb = fill; sh.line.color.rgb = fill
+    tf = sh.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    tf.margin_left = Emu(45720); tf.margin_right = Emu(45720)
+    para(tf, text, size=size, color=font, bold=bold, align=PP_ALIGN.CENTER, first=True)
+    return sh
+
+def arrow(s, x1, y1, x2, y2, color=MUTED, w=2.0):
+    c = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(x1), Inches(y1), Inches(x2), Inches(y2))
+    c.line.color.rgb = color; c.line.width = Pt(w)
+    return c
 
 def table(s, rows, top=1.35, left=0.9, width=11.5, col_widths=None, size=13):
     n_r, n_c = len(rows), len(rows[0])
@@ -70,18 +120,40 @@ para(tf, 'Arvind C R (Arvind Chitra Rajasekaran)  ·  SRN: PES2PGE24DS140', size
 para(tf, 'Guide: Ramesh Prakash Guledgudd  ·  Dept. of CSE, PES University  ·  M.Tech Data Science & AI', size=14, color=MUTED, align=PP_ALIGN.CENTER)
 
 # ------------------------------------------------- 2 Base paper & understanding
-bullets(slide('Base Paper & My Understanding of It', 2, notes=
+s2 = slide('Base Paper & My Understanding of It', 2, notes=
   "(2 min) Base paper: GRPO from DeepSeekMath (Shao et al., 2024), the algorithm behind DeepSeek-R1. "
   "Explain the mechanism from first principles: no critic; sample G completions per prompt; each advantage "
   "is its reward minus the group mean. My understanding goes one step further than the paper: that subtraction "
   "has a structural blind spot — identical rewards zero out every advantage. Secondary anchor: Dr.GRPO "
-  "(Liu et al., 2025) which critiques GRPO's normalisation terms — my Result 4 tests it head-on."), [
+  "(Liu et al., 2025) which critiques GRPO's normalisation terms — my Result 4 tests it head-on.")
+_S2_BULLETS = [
     ('Base paper — GRPO, from "DeepSeekMath" (Shao et al., 2024; basis of DeepSeek-R1): replaces PPO\'s learned critic with a group-relative baseline — sample G completions per prompt, advantage = own reward − group mean.', True),
     ('Why it matters: critic-free means cheap and stable at LLM scale with verifiable (binary) rewards; it is now the default RL post-training family. The study runs GRPO against PPO, REINFORCE, DPO, GSPO, Dr.GRPO and audited variant labels (slide 5).', False),
     ('My understanding — the structural blind spot: if all G completions earn the SAME reward (all-correct or all-wrong), every centred advantage is exactly zero: the group consumes compute but contributes zero gradient. The reward curve cannot show this; it can read "success" precisely while learning has stopped.', True),
     ('Secondary anchor — Dr.GRPO (Liu et al., 2025): claims GRPO\'s per-length/std normalisation biases updates toward verbosity. I test this claim under controlled conditions (Result 4).', False),
     ('Thesis position: measure the blind spot (Zero-Variance Fraction, ZVF), calibrate it, budget it, and show what it changes in practice.', True),
-])
+]
+bullets(s2, _S2_BULLETS, width=7.5, size=13)
+
+# mechanism diagram (right panel): contrast group vs all-same group
+GREEN = RGBColor(0x2E, 0x7D, 0x32); RED = RGBColor(0xB3, 0x2D, 0x2D); GRAY = RGBColor(0xB0, 0xB7, 0xC0)
+dx = 8.55
+tb = s2.shapes.add_textbox(Inches(dx), Inches(1.15), Inches(4.3), Inches(0.4))
+para(tb.text_frame, 'one prompt → G=4 completions, reward r ∈ {0,1}', size=11, color=MUTED, align=PP_ALIGN.CENTER, first=True)
+tb = s2.shapes.add_textbox(Inches(dx), Inches(1.62), Inches(4.3), Inches(0.35))
+para(tb.text_frame, 'group with contrast', size=11, color=INK, bold=True, first=True)
+for i, r in enumerate([1, 0, 1, 0]):
+    box(s2, str(r), dx + i*0.62, 2.0, 0.5, 0.5, fill=BLUE if r else GRAY, size=13)
+arrow(s2, dx+2.6, 2.25, dx+3.15, 2.25)
+box(s2, 'A = ±0.5\ngradient flows', dx+3.2, 1.95, 1.15, 0.62, fill=GREEN, size=9)
+tb = s2.shapes.add_textbox(Inches(dx), Inches(2.85), Inches(4.3), Inches(0.35))
+para(tb.text_frame, 'all-correct group (the blind spot)', size=11, color=INK, bold=True, first=True)
+for i, r in enumerate([1, 1, 1, 1]):
+    box(s2, str(r), dx + i*0.62, 3.22, 0.5, 0.5, fill=BLUE, size=13)
+arrow(s2, dx+2.6, 3.47, dx+3.15, 3.47)
+box(s2, 'A = 0,0,0,0\nzero gradient', dx+3.2, 3.17, 1.15, 0.62, fill=RED, size=9)
+tb = s2.shapes.add_textbox(Inches(dx), Inches(4.0), Inches(4.35), Inches(1.1))
+para(tb.text_frame, 'A_i = r_i − mean(r): identical rewards zero every advantage.\nThe reward curve still reads 1.0 — training has silently stopped.', size=10.5, color=MUTED, first=True)
 
 # ---------------------------------------------------------- 3 Problem & RQs
 bullets(slide('Problem & Research Questions', 3, notes=
@@ -93,17 +165,25 @@ bullets(slide('Problem & Research Questions', 3, notes=
 ])
 
 # ---------------------------------------------------------- 4 Architecture
-bullets(slide('Overall Architecture', 4, notes=
+s4 = slide('Overall Architecture', 4, notes=
   "(1.5 min) Walk the four layers left to right: training on the managed Tinker API (LoRA, closed loss "
   "kernel — an audit constraint I exploit deliberately); evaluation on three vLLM backends so no single "
   "backend's quirks own the numbers; telemetry: per-step ZVF/GU next to reward, mirrored to W&B; and the "
-  "audit layer: run manifests, checkpoint/resume, the runs-audit workbook. Everything downstream cites this."), [
-    ('Training layer — Tinker managed API: LoRA rank-4 GRPO/Dr.GRPO fleets with full state checkpointing and kill-and-resume (built after two mid-programme credit exhaustions; verified live).', True),
-    ('Evaluation layer — vLLM pass@k harness on three independent backends: Modal, Lightning AI, Colab; problem-clustered bootstrap CIs; seeded per problem.', False),
-    ('Telemetry layer — per-step (reward, ZVF, GU) traces for every training run, mirrored to W&B (zvf-training project); reward-parser v2 with false-positive audit.', True),
-    ('Library — zvf-triage (Apache-2.0, 82 tests): drop-in triage callback — classifies starvation regime, adapts G, drops dead prompts, auto-stops doomed runs; veRL / OpenRLHF / NeMo-RL adapters.', False),
-    ('Audit layer — 983 Tinker runs enumerated and classified; 19 claim-critical runs identified, each linked to its W&B page, checkpoint, and result JSON (workbook in outputs/).', False),
-])
+  "audit layer: run manifests, checkpoint/resume, the runs-audit workbook. Everything downstream cites this.")
+LY = 1.35; LH = 1.02; LW = 6.4; LX = 0.9
+box(s4, 'TRAINING — Tinker managed API\nLoRA rank-4 GRPO / Dr.GRPO fleets · full-state checkpoint · kill-and-resume (verified live)', LX, LY, LW, LH, size=11)
+box(s4, 'TELEMETRY — per-step (reward, ZVF, GU)\nlogged beside every reward point · parser v2 with false-positive audit', LX, LY+1.22, LW, LH, size=11)
+box(s4, 'EVALUATION — vLLM pass@k harness\nModal · Lightning AI · Colab — three independent backends · clustered bootstrap CIs', LX, LY+2.44, LW, LH, size=11)
+box(s4, 'AUDIT TRAIL — 983 runs enumerated & classified\n19 claim-critical runs linked: W&B page + checkpoint + result JSON', LX, LY+3.66, LW, LH, size=11)
+for k in range(3):
+    arrow(s4, LX+LW/2, LY+LH+1.22*k, LX+LW/2, LY+1.22*(k+1))
+RX = 8.1; RW = 4.6
+box(s4, 'zvf-triage (Apache-2.0, 82 tests)\nregime classifier · adaptive-G · dead-prompt drop · auto-stop\nveRL / OpenRLHF / NeMo-RL adapters', RX, LY+0.55, RW, 1.25, fill=RGBColor(0x2E,0x7D,0x32), size=10.5)
+box(s4, 'MIRRORS & ARTIFACTS\nW&B: 1,034 runs / 17 projects\nHuggingFace: 49 adapter repos', RX, LY+2.35, RW, 1.15, fill=MUTED, size=10.5)
+arrow(s4, LX+LW, LY+1.22+LH/2, RX, LY+0.55+0.62)
+arrow(s4, LX+LW, LY+2.44+LH/2, RX, LY+2.35+0.57)
+tb = s4.shapes.add_textbox(Inches(0.9), Inches(6.35), Inches(11.9), Inches(0.7))
+para(tb.text_frame, 'Design rule: no number enters a paper without a path back through this stack — run → telemetry → artifact → audit row.', size=12, color=MUTED, first=True)
 
 # ------------------------------------------------- 5 Algorithms & methods run
 s = slide('Not Only GRPO — Algorithms & Methods Run, and Why', 5, notes=
@@ -151,22 +231,25 @@ table(s, [
 ], col_widths=[2.6, 3.4, 3.2, 2.3])
 bullets(s, [
     ('Same rollout budget (2,560/arm), seeds 123/456: reward alone declares G=2 the winner; the (reward, ZVF) pair shows its lead ended in zero-gradient compute.', True),
-    ('ZVF is a diagnostic, not a predictor: in every collapse we measured, ZVF rose AFTER the reward plateau — a cheap alarm, not a cause. Pooled cross-task correlations do not survive stratification and are never used as claims.', False),
-    ('Population form is the U-shaped kernel h_G(p)=p^G+(1−p)^G: starvation at both walls (too hard / mastered); larger G narrows both.', False),
-], top=3.15)
+    ('ZVF is a diagnostic, not a predictor: ZVF rose AFTER the reward plateau in every measured collapse — a cheap alarm, not a cause.', False),
+    ('Population form: the U-shaped kernel — starvation at both walls (too hard / mastered); larger G narrows both.', False),
+], top=3.3, width=7.2, size=13)
+s.shapes.add_picture('outputs/deck_assets/ushape.png', Inches(8.3), Inches(3.3), width=Inches(4.5))
 
 # ------------------------------------------------------- 7 Result 2: Claim 2
-bullets(slide('Result 2 — Group Size Is a Schedule Variable (Claim 2)', 8, notes=
+s8 = slide('Result 2 — Group Size Is a Schedule Variable (Claim 2)', 8, notes=
   "(2 min) The decisive experiment design point: hold the ROLLOUT BUDGET fixed, not the step count. "
   "Small G converts the budget into more optimiser steps early — then exhausts its own signal as accuracy "
   "rises (the p->1 wall of the kernel). Large G pays for contrast it doesn't need early and retains signal late. "
   "So group size controls WHICH END of training starves — a schedule question, not a constant. The naive "
-  "static sweep is confounded by what the budget is held in — I show both views."), [
+  "static sweep is confounded by what the budget is held in — I show both views.")
+bullets(s8, [
     ('Design: matched budget of 2,560 rollouts per arm — G=2×160 steps vs G=16×20 steps (batch 8, 512-token completions, LoRA rank 4, seeds 123/456).', True),
     ('Finding: G=2 races to reward ≈1.0 on the sampled pool, then terminates inside the all-correct zero-variance wall; G=16 ends mid-learning with ZVF ≤ 0.25 and signal intact.', True),
-    ('Interpretation: small G buys early optimiser steps and starves the endgame; large G holds signal throughout. Group size selects which end of training starves — it is a schedule variable.', True),
-    ('Honesty check: static fixed-step sweeps are non-monotone and confounded by what the budget is held in; the controller that would exploit this is designed but its efficacy is NOT claimed (pre-registered test is future work).', False),
-])
+    ('Interpretation: small G buys early steps and starves the endgame; large G holds signal throughout. Group size selects WHICH END of training starves — a schedule variable.', True),
+    ('Honesty check: static fixed-step sweeps are confounded by what the budget is held in; controller efficacy is NOT claimed (pre-registered test is future work).', False),
+], width=7.2, size=13)
+s8.shapes.add_picture('outputs/deck_assets/budget_traj.png', Inches(8.25), Inches(1.6), width=Inches(4.6))
 
 # ------------------------------------------------- 8 Result 3: theory calibrated
 bullets(slide('Result 3 — The Estimator Is Calibrated, the Budget Is Exact', 9, notes=
